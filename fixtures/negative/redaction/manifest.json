@@ -1,0 +1,62 @@
+[
+  {
+    "file": "baseline.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "an unmodified slice of a real recording -- the control for every probe below"
+  },
+  {
+    "file": "p1-stub-without-owner.jsonl",
+    "level": "fail",
+    "expect": "is missing \"owner\"",
+    "why": "amendment P1: the redacted stub is five keys, and `owner` is the fifth"
+  },
+  {
+    "file": "p15-card-without-token.jsonl",
+    "level": "fail",
+    "expect": "is missing \"token\"",
+    "why": "amendment P15: every full card carries `token` (CardView.isToken)"
+  },
+  {
+    "file": "p3-card-without-alt.jsonl",
+    "level": "fail",
+    "expect": "is missing \"alt\"",
+    "why": "amendment P3: every full card carries `alt`, `null` unless the seat may flip it"
+  },
+  {
+    "file": "p2-library-without-cards.jsonl",
+    "level": "fail",
+    "expect": "has no \"cards\" array",
+    "why": "amendment P2: a library is {count, cards}, not a bare count"
+  },
+  {
+    "file": "p3-facedownhidden-revived.jsonl",
+    "level": "fail",
+    "expect": "faceDownHidden",
+    "why": "amendment P3 retired the eleven-key faceDownHidden object; no emitter writes one"
+  },
+  {
+    "file": "a1-stub-with-a-name.jsonl",
+    "level": "fail",
+    "expect": "leaks extra keys: name",
+    "why": "A1: a sixth key on a stub is a leak, and a name is the worst one"
+  },
+  {
+    "file": "a6-opponent-hand-named.jsonl",
+    "level": "fail",
+    "expect": "carries a name",
+    "why": "A4/A6: a full named card in the opponent hand, for an id nothing ever revealed"
+  },
+  {
+    "file": "a3-opponent-library-revealed.jsonl",
+    "level": "warn",
+    "expect": "NOT the viewing seat",
+    "why": "A3: an opponent library dumped as full cards -- legal but the largest surface there is"
+  },
+  {
+    "file": "a6-library-reveal-is-not-a-whitelist.jsonl",
+    "level": "fail",
+    "expect": "nothing earlier in this log",
+    "why": "A6: an opponent-library reveal must not excuse the same id later in their HAND"
+  }
+]

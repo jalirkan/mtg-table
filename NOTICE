@@ -1,0 +1,127 @@
+mtg-table — NOTICE
+==================
+
+mtg-table is Copyright (C) 2026 the mtg-table contributors and is licensed under
+the GNU General Public License, version 3 or (at your option) any later version.
+See LICENSE for the full text.
+
+This file records third-party attributions and the terms under which third-party
+material is used. It is informational; it does not grant additional rights and it
+does not modify LICENSE.
+
+
+1. Forge (Card-Forge/forge)
+---------------------------
+
+mtg-table uses Forge as its rules engine and AI opponent.
+
+    Project:  Card-Forge/forge
+    Source:   https://github.com/Card-Forge/forge
+    Licence:  GNU General Public License v3.0 or later (GPL-3.0-or-later)
+    Version:  2.0.14 (installed locally by the user; jar manifest reads
+              "2.0.14-SNAPSHOT-08.08")
+
+How it is used:
+
+  * Forge is used UNMODIFIED. mtg-table contains no Forge source code and applies
+    no patches to Forge.
+  * Forge is a compile-time and runtime dependency only. The bridge in bridge/
+    compiles against, and runs on, a Forge jar that is already installed on the
+    user's machine (default:
+    /home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar).
+    The jar path is read from config.json or the FORGE_JAR environment variable.
+  * This repository NEVER redistributes Forge. The Forge jar, Forge's res/ tree,
+    Forge's cardsfolder card scripts, Forge's editions files and Forge's skin art
+    are not committed here and are not shipped in any build output. *.jar is
+    gitignored; forge-home/res is a symlink into the user's own Forge install and
+    is gitignored.
+  * mtg-table's Java bridge implements Forge interfaces (forge.gui.interfaces.IGuiBase,
+    forge.gamemodes.match.AbstractGuiGame) on the same classpath, in the same JVM.
+    That makes mtg-table a derivative work of Forge, which is why the whole of this
+    repository is GPL-3.0-or-later.
+
+Forge bundles its own third-party dependencies inside that jar (Netty, Jetty,
+Guava, XStream, JGraphT, tinylog, Sentry and others), each under its own licence.
+Those licences are carried by the Forge distribution the user installed; mtg-table
+neither redistributes nor relicenses them.
+
+Forge is not affiliated with Wizards of the Coast. Neither is mtg-table.
+
+
+2. Scryfall (card data and card images)
+---------------------------------------
+
+    Service:  Scryfall
+    Site:     https://scryfall.com
+    API docs: https://scryfall.com/docs/api
+    Terms:    https://scryfall.com/docs/api  (see also /docs/api/rate-limits)
+
+mtg-table resolves card art through the Scryfall API (tools/fetch-art.ts) and
+displays card images served from cards.scryfall.io. Card data and images from
+Scryfall are used subject to Scryfall's API terms, which mtg-table honours as
+follows:
+
+  * User-Agent: every request to api.scryfall.com sends an accurate, identifying
+    User-Agent (configured as "scryfallUserAgent" in config.json) and an explicit
+    Accept: application/json header. HTTP libraries are never left to choose these
+    headers.
+  * Rate limits: requests to /cards/search, /cards/named, /cards/random and
+    /cards/collection are throttled to at most 2 per second (>= 500 ms apart);
+    all other API methods to at most 10 per second. HTTP 429 responses are backed
+    off, honouring Retry-After. Image file origins under *.scryfall.io are not
+    rate-limited but are still fetched sparingly.
+  * Caching: resolved art is written once to web/public/art.json and reused, so a
+    session makes no repeat API calls. Bulk endpoints are used for anything at
+    scale.
+  * Artist credit: wherever card art is shown, the artist name and the card's
+    copyright line are shown in the same interface (card-detail panel). Card
+    images are not distorted, skewed, stretched, blurred, sharpened, desaturated,
+    colour-shifted, watermarked or overlaid with logos, and the printed copyright
+    and artist credit on a card image are never cropped or covered.
+  * No paywalling, no implication of Scryfall endorsement, and no bare
+    repackaging or proxying of Scryfall data.
+
+Scryfall is not affiliated with Wizards of the Coast, and its own footer notes
+that portions of Scryfall are unofficial Fan Content permitted under the Wizards
+of the Coast Fan Content Policy.
+
+
+3. Wizards of the Coast — Fan Content Policy
+--------------------------------------------
+
+mtg-table is unofficial Fan Content permitted under the Wizards of the Coast Fan
+Content Policy. Not approved, endorsed, or affiliated with Wizards. Portions of
+the materials used are property of Wizards of the Coast. (C) Wizards of the Coast
+LLC.
+
+    Policy: https://company.wizards.com/en/legal/fancontentpolicy
+
+Magic: The Gathering, all card names, card text, mana symbols, set symbols, card
+frames, trade dress and all related properties are trademarks and/or copyright of
+Wizards of the Coast LLC. mtg-table claims no ownership of any of it.
+
+Consistent with that policy, mtg-table is non-commercial: it is not sold, it is
+not paywalled, no advertising runs against this content, and it uses no Wizards
+logos or trade dress in its own branding.
+
+
+4. Marvel
+---------
+
+The user's deck is built from Magic: The Gathering's Marvel Super Heroes (MSH)
+and Marvel Super Heroes Commander (MSC) sets. MARVEL and all Marvel character
+names, likenesses and related indicia are trademarks of and copyright Marvel
+Characters, Inc. and/or its affiliates. mtg-table is not affiliated with,
+approved by, or endorsed by Marvel. No Marvel artwork is committed to this
+repository; card images are fetched at runtime from Scryfall (section 2).
+
+
+5. Code that is deliberately NOT used
+-------------------------------------
+
+    witchesofthehill/manabrew — AGPL-3.0-or-later
+
+Its forge-harness module solves the same problem as bridge/. NO code, and no
+line-by-line transliteration, is taken from it: doing so would relicense
+mtg-table to AGPL-3.0-or-later. It has been read as prose guidance only. If you
+are extending this project, do not copy from it.

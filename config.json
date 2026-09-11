@@ -1,0 +1,8 @@
+{
+  "forgeJar": "/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar",
+  "forgeHome": "forge-home",
+  "deck": "decks/pacho-shield.dck",
+  "wsPort": 8642,
+  "webPort": 5173,
+  "scryfallUserAgent": "mtg-table/0.1 (local hobby client; github.com/<user>/mtg-table)"
+}

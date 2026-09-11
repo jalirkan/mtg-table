@@ -1,0 +1,432 @@
+/*
+ * mtg-table — styles.css
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * One plain stylesheet, no framework. M1's board is a text board on purpose:
+ * the point of this milestone is that the protocol, the reducer and the replay
+ * transport are right, not that it is pretty. M4 is where it starts to look like
+ * Magic.
+ */
+
+:root {
+  color-scheme: dark light;
+  --bg: #14161a;
+  --panel: #1c1f25;
+  --panel-2: #22262e;
+  --ink: #e6e8ec;
+  --muted: #8d95a3;
+  --line: #2e333d;
+  --accent: #6fb4ff;
+  --select: #ffcf5c;
+  --highlight: #b98bff;
+  --warn: #ffb454;
+  --error: #ff6b6b;
+  --ok: #7ddf87;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.45 var(--mono);
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  color: var(--accent);
+}
+
+.pad {
+  padding: 1rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.k {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin-right: 0.25em;
+}
+
+.hint {
+  color: var(--warn);
+}
+
+/* --- shell ---------------------------------------------------------------- */
+
+.app__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.app__head h1 {
+  font-size: 14px;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.app__foot {
+  padding: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+}
+
+/* --- replay controls ------------------------------------------------------ */
+
+.replay {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 1rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.replay__buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.replay__scrub {
+  flex: 1 1 260px;
+  min-width: 180px;
+  accent-color: var(--accent);
+}
+
+.replay__count strong {
+  color: var(--accent);
+}
+
+button,
+select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- banners -------------------------------------------------------------- */
+
+.banner {
+  margin: 0.5rem 1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  border-left: 4px solid var(--line);
+  background: var(--panel);
+}
+
+.banner--error {
+  border-left-color: var(--error);
+  color: var(--error);
+}
+
+.banner--warn {
+  border-left-color: var(--warn);
+  color: var(--warn);
+}
+
+.banner--over {
+  border-left-color: var(--ok);
+  color: var(--ok);
+}
+
+.banner pre {
+  white-space: pre-wrap;
+  max-height: 16rem;
+  overflow: auto;
+  color: var(--muted);
+}
+
+/* --- board ---------------------------------------------------------------- */
+
+.board {
+  padding: 0 1rem 2rem;
+}
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.75rem;
+}
+
+.strip__cell--phase {
+  color: var(--accent);
+}
+
+.player {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: var(--panel);
+}
+
+.player--you {
+  border-color: var(--accent);
+}
+
+.player h2 {
+  font-size: 13px;
+  margin: 0 0 0.35rem;
+}
+
+.vitals {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.zone {
+  margin: 0.4rem 0;
+}
+
+.zone h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0.4rem 0 0.2rem;
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.25rem;
+}
+
+.card {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0.2rem 0.35rem;
+  background: var(--panel-2);
+}
+
+/* The only rules answer the client renders is the one the engine handed it:
+   an id in input.selectable.cardIds. Nothing here is computed. */
+.card--selectable {
+  border-color: var(--select);
+  box-shadow: 0 0 0 1px var(--select) inset;
+}
+
+.card--highlighted {
+  border-color: var(--highlight);
+}
+
+.card--focus {
+  outline: 1px dashed var(--accent);
+}
+
+.card--hidden {
+  opacity: 0.75;
+}
+
+.card__name {
+  font-weight: 700;
+}
+
+.card__types {
+  font-size: 11px;
+}
+
+.cost {
+  color: var(--accent);
+}
+
+.thumb {
+  display: inline-block;
+  vertical-align: middle;
+  width: 30px;
+  height: 42px;
+  margin-right: 0.4rem;
+  border-radius: 2px;
+  object-fit: cover;
+  background: #0d0f12;
+  border: 1px solid var(--line);
+}
+
+.thumb--back {
+  background: repeating-linear-gradient(45deg, #2a2f38, #2a2f38 3px, #1e222a 3px, #1e222a 6px);
+}
+
+.thumb--text {
+  font-size: 11px;
+  text-align: center;
+  line-height: 42px;
+  color: var(--muted);
+}
+
+.marks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+}
+
+.mark {
+  font-size: 10px;
+  padding: 0 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+}
+
+.abilities {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ability--can {
+  color: var(--ok);
+}
+
+/* --- panels --------------------------------------------------------------- */
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel);
+}
+
+.panel h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+
+.panel--meta dl {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0;
+}
+
+.panel--meta dt {
+  color: var(--muted);
+}
+
+.panel--meta dd {
+  margin: 0;
+}
+
+.stack,
+.bands,
+.events,
+.notices,
+.ask__options {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.stack__top {
+  color: var(--accent);
+}
+
+.targets {
+  color: var(--muted);
+  padding-left: 0.5rem;
+}
+
+.prompt {
+  color: var(--ink);
+  margin: 0.2rem 0;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.3rem 0;
+}
+
+.notice--warn {
+  color: var(--warn);
+}
+
+.notice--error {
+  color: var(--error);
+}
+
+.events {
+  max-height: 18rem;
+  overflow: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Amendment P2/P3/P20 — the revealed slice of a library, the face a viewer is
+   entitled to look at, and the running log ring.
+   --------------------------------------------------------------------------- */
+
+/* §3.4 amended: a library is a count PLUS whatever a continuous "may look"
+   effect reveals. Marked so it never reads as "the library is public". */
+.zone--library {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.4rem;
+}
+
+/* P3: the real face of a face-down card THIS SEAT may look at. Visually apart
+   from the card's name, because the table sees a nameless 2/2 and only this
+   seat sees what it is. */
+.card__alt {
+  font-size: 11px;
+  color: var(--ink);
+  border-left: 2px solid var(--accent);
+  padding-left: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.log {
+  margin: 0;
+  padding-left: 1.2rem;
+  max-height: 18rem;
+  overflow: auto;
+}
+
+.panel--log {
+  margin-top: 0.5rem;
+}
