@@ -11,33 +11,80 @@
 #   3. bridge/build.sh            javac + the Json self-test (build.sh re-runs 2)
 #   4. mtgtable.Smoke             boots the engine, proves the prefs and the card overlay
 #   5. mtgtable.RecordMatch       a FRESH recording into var/, not a committed fixture
-#   6. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
-#                                 AND that fresh recording
-#   7. check-redaction-selftest   the checker's own negative controls: ten
+#   6. the VALUE-LEVEL drift diff  normalise that fresh recording and the committed
+#                                 fixtures/games/g1.jsonl and diff them
+#   7. mtgtable.MtgTable         a FRESH human-seat game (--transport null): the
+#                                 input path, the ask path and exactly one `over`
+#   8. mtgtable.MtgTable         the DOCUMENTED console smoke, scripted: the line
+#                                 protocol, the quit thread and the exit code
+#   9. mtgtable.MtgTable         one --transport auto game at a seed no fixture
+#                                 uses: the transport that produced five of them
+#  10. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
+#                                 AND all four fresh recordings
+#  11. check-redaction-selftest   the checker's own negative controls: twelve
 #                                 one-defect probes that must be REJECTED
-#   8. web: npm run build && npm test
+#  12. web: npm run build && npm test   (tsc, node --test, and the vitest render
+#                                 smoke test that actually mounts <Board/>)
+#
+# Steps 8 and 9 exist because step 7 runs `--transport null` and nothing else,
+# which left ConsoleTransport (788 lines: the whole line protocol, the quit
+# thread, the Runtime.halt path) and AutoTransport (607 lines, and the producer
+# of five committed fixtures) with no automated coverage at all.
 #
 # Step 5 is the one that makes this more than a replay of old evidence: the
 # committed fixtures were produced by whatever Snap.java looked like the day they
 # were recorded, so a checker that only ever reads them cannot see a change made
 # an hour ago.  Re-recording and checking that is the actual drift test.
 #
-# Step 7 is the one that makes step 6 mean anything.  A checker can only prove
+# Step 6 is the half of that test step 8 (the checker) structurally cannot do.  A checker
+# asserts SHAPES: it would pass a Snap.java that started writing every `power`
+# as a number, every phase name lowercased, or one fewer event per flush,
+# because all of those are still "a string where a string belongs".  The fresh
+# recording and the committed one are the same seed against the same jar, so
+# after normalising away the four per-run values -- `t`, `startedAt`, `gameId`
+# and the fresh file's own name -- they are byte-identical, and any difference
+# at all is a change to the wire that the committed corpus no longer reflects.
+# (Measured 2026-09-11: 377 lines each, diff empty.  Section 8.7 warns against
+# promising byte-identical replay because thread interleaving is not
+# deterministic; if this step ever goes flaky rather than failing consistently,
+# that is the reason, and the fix is to compare the two normalised files
+# frame-type-by-frame rather than to delete the step.)
+#
+# Step 9 is the one that makes step 8 mean anything.  A checker can only prove
 # an emitter did not drift if the checker itself would notice; this one once
 # accepted five separate reverted amendments without a word, so its own
 # regressions now have a corpus (fixtures/negative/redaction/, one defect per
 # file, every one of which must be rejected).
 #
-# Usage:  ./tools/check-all.sh            # ~3-5 minutes, mostly the two games
+# Every JVM step runs under `timeout` (see GAME_TIMEOUT below).  A gate whose
+# failure mode is "hangs until someone notices" is not a gate: the whole point
+# of the M2 threading work is that a wedged game thread is the defect class that
+# costs the most to find, and the GameLog.close() self-deadlock the verification
+# pass found had already burned a silent 30 s per run without failing anything.
+# A run that hits the cap dies with its own message naming the cap.
+#
+# Usage:  ./tools/check-all.sh            # ~2-5 minutes, mostly the four games
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
+#         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Seconds any single JVM step may take.  Measured 2026-09-11: the slowest game
+# in the gate is ~45 s, so 300 is ~6x headroom and still fails a wedge fast
+# enough to be useful.  `bridge/run.sh` ends in `exec java`, so TERM reaches the
+# JVM itself rather than a wrapper shell; --kill-after adds the KILL that
+# follows if it ignores TERM.
+GAME_TIMEOUT="${GAME_TIMEOUT:-300}"
+jvm() { timeout --kill-after=15s "${GAME_TIMEOUT}s" "$@"; }
+
 step=0
 say() { step=$((step + 1)); printf '\n=== %d. %s ===\n' "$step" "$1"; }
 die() { echo "check-all FAILED at step $step: $1" >&2; exit 1; }
+# 124 is `timeout`'s own "the cap fired"; 137 is the KILL that --kill-after sent
+# when the JVM ignored the TERM.
+capped() { case "$1" in 124 | 137) return 0 ;; *) return 1 ;; esac; }
 
 say "check-forge.sh -- the jar and the eight classes"
 ./tools/check-forge.sh || die "check-forge.sh"
@@ -50,33 +97,175 @@ say "bridge/build.sh -- javac + Json self-test"
 
 say "Smoke -- boot the engine, prove the prefs (D13) and the card overlay (D14)"
 mkdir -p var
-./bridge/run.sh mtgtable.Smoke > var/check-all-smoke.log 2>&1 || {
+rc=0
+jvm ./bridge/run.sh mtgtable.Smoke > var/check-all-smoke.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
   tail -40 var/check-all-smoke.log >&2
+  capped "$rc" && die "mtgtable.Smoke did not finish within ${GAME_TIMEOUT}s (full log: var/check-all-smoke.log)"
   die "mtgtable.Smoke (full log: var/check-all-smoke.log)"
-}
+fi
 grep -E '^(pref |A\.I\.M\. Scientists|deck conformance|cards in DB|SMOKE OK)' var/check-all-smoke.log || true
 grep -q '^SMOKE OK$' var/check-all-smoke.log || die "Smoke did not print SMOKE OK"
 
 say "RecordMatch -- a FRESH recording (seed 42) into var/, not a committed fixture"
 FRESH="var/check-all-record.jsonl"
 rm -f "$FRESH"
-./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 \
-    --out "$FRESH" > var/check-all-record.log 2>&1 || {
+rc=0
+jvm ./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 \
+    --out "$FRESH" > var/check-all-record.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
   tail -40 var/check-all-record.log >&2
+  capped "$rc" && die "mtgtable.RecordMatch did not finish within ${GAME_TIMEOUT}s (raise GAME_TIMEOUT, or the recorder is wedged)"
   die "mtgtable.RecordMatch (full log: var/check-all-record.log)"
-}
+fi
 grep -E '^(frames|snapshot errors|events dropped|unzoned cards|UNIMPL members)' var/check-all-record.log || true
 grep -q '^RECORD OK$' var/check-all-record.log || die "RecordMatch did not print RECORD OK"
+
+say "value-level drift -- normalise the fresh recording and diff it against fixtures/games/g1.jsonl"
+# Why a diff and not just the shape checker (step 8): a checker asserts the key
+# set and the runtime TYPE of every key, so it would happily pass a Snap.java
+# that started emitting phase names lowercased, `power` as a number, one fewer
+# event per flush, or a stack ordered top-first.  Same deck, same seed, same
+# jar -> the same bytes, once the four per-run values are normalised away.
+NORM="var/check-all-normalise.mjs"
+cat > "$NORM" <<'NORMALISER'
+// Written by tools/check-all.sh. Replaces the per-run values of a frame log
+// with a constant, everywhere they appear at any depth, so two recordings of
+// the same seed can be compared byte for byte:
+//   t          epoch ms, different every run (envelope, section 1)
+//   startedAt  ISO-8601, session header only (section 8.1)
+//   gameId     the --out basename: "g1" vs "check-all-record" (header, hello_ok
+//              body and every state body)
+// Nothing else is touched. In particular seq, forgeJarSha256, the deck sha256s
+// and every value inside a card stay exactly as the emitter wrote them -- those
+// ARE the wire, and a difference in one is the finding.
+import { readFileSync } from 'node:fs';
+const PER_RUN = new Set(['t', 'startedAt', 'gameId']);
+const scrub = (v) => {
+  if (Array.isArray(v)) return v.map(scrub);
+  if (v !== null && typeof v === 'object') {
+    const out = {};
+    for (const [k, val] of Object.entries(v)) out[k] = PER_RUN.has(k) ? '<per-run>' : scrub(val);
+    return out;
+  }
+  return v;
+};
+const lines = readFileSync(process.argv[2], 'utf8').split('\n').filter((l) => l.length > 0);
+process.stdout.write(lines.map((l) => JSON.stringify(scrub(JSON.parse(l)))).join('\n') + '\n');
+NORMALISER
+node "$NORM" "$FRESH" > var/check-all-fresh.norm.jsonl || die "normalising $FRESH"
+node "$NORM" fixtures/games/g1.jsonl > var/check-all-g1.norm.jsonl || die "normalising fixtures/games/g1.jsonl"
+if ! diff -q var/check-all-g1.norm.jsonl var/check-all-fresh.norm.jsonl > /dev/null; then
+  echo "--- fixtures/games/g1.jsonl (committed)   +++ $FRESH (just recorded)" >&2
+  diff var/check-all-g1.norm.jsonl var/check-all-fresh.norm.jsonl | head -20 >&2
+  echo "   (full diff: diff var/check-all-g1.norm.jsonl var/check-all-fresh.norm.jsonl)" >&2
+  die "Snap.java changed the wire: re-record fixtures/games/*.jsonl"
+fi
+echo "OK: $(wc -l < var/check-all-fresh.norm.jsonl) normalised lines identical to fixtures/games/g1.jsonl"
+
+say "MtgTable --transport null -- the M2 seam, end to end, with every ask answered null"
+# The gate's only coverage of WireGuiGame. RecordMatch above has no seat, so it
+# exercises neither the input path, nor the ask path, nor `over`. This does all
+# three in ~30 s: every ask resolves to protocol section 5.4's documented
+# default, which is what proves no member throws and no thread wedges -- and the
+# log it writes is then held to the same redaction standard as a fixture.
+#
+# `over` is asserted explicitly. It used to be emitted only from finishGame(),
+# which Forge does not reliably call after a concede, and the failure mode was a
+# session that never terminates plus a green exit code (protocol section 7).
+M2LOG="var/check-all-m2"
+rm -rf "$M2LOG" var/games/check-all-m2
+rc=0
+jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 42 --game-id check-all-m2 \
+    > var/check-all-m2.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
+  tail -40 var/check-all-m2.log >&2
+  capped "$rc" && die "the --transport null session did not finish within ${GAME_TIMEOUT}s -- a wedged game thread is exactly what this step exists to catch (full log: var/check-all-m2.log)"
+  die "mtgtable.MtgTable --transport null (full log: var/check-all-m2.log)"
+fi
+grep -E '^(finished|ask kinds|UNIMPL members|emit errors|notices swept)' var/check-all-m2.log || true
+grep -q '^MTGTABLE OK$' var/check-all-m2.log || die "MtgTable did not print MTGTABLE OK"
+M2FRAMES="var/games/check-all-m2/frames.jsonl"
+[ -s "$M2FRAMES" ] || die "MtgTable wrote no frame log at $M2FRAMES"
+overs="$(grep -c '"type":"over"' "$M2FRAMES" || true)"
+[ "$overs" = "1" ] || die "the M2 session wrote $overs \`over\` frames; section 7 and section 8.4 say exactly one"
+[ "$(tail -1 "$M2FRAMES" | grep -c '"type":"over"')" = "1" ] || \
+  die "the M2 session's last frame is not \`over\` -- the terminal frame of a session (section 8.4)"
+
+say "MtgTable --transport console -- the documented smoke, scripted"
+# CLAUDE.md documents this exact command, and until now nothing ran it: the
+# console transport is the biggest untested file in the bridge, and its quit
+# path can halt() the JVM with a non-zero code of its own (QUIT_NO_OVER_EXIT).
+# Four Enters answer the pre-game prompts (the empty line is "OK when OK is
+# enabled, Cancel otherwise"); `q` concedes and quits. It ends BEFORE a card is
+# dealt, which is why check-redaction.mjs's two "this file proves nothing"
+# assertions are warnings on a session whose every `state` is turn 0 -- the
+# documented command used to produce an artifact this gate rejected.
+CONLOG="var/games/check-all-console/frames.jsonl"
+rm -rf var/games/check-all-console
+rc=0
+printf '\n\n\n\nq\n' | jvm ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
+    --game-id check-all-console > var/check-all-console.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
+  tail -40 var/check-all-console.log >&2
+  capped "$rc" && die "the console session did not finish within ${GAME_TIMEOUT}s -- the reader thread is parked on a prompt the script did not answer (full log: var/check-all-console.log)"
+  die "mtgtable.MtgTable --transport console exited $rc (2 is the quit path's own \
+'the game never reported \`over\`' code; full log: var/check-all-console.log)"
+fi
+grep -q '^MTGTABLE OK$' var/check-all-console.log || die "the console session did not print MTGTABLE OK"
+[ -s "$CONLOG" ] || die "the console session wrote no frame log at $CONLOG"
+overs="$(grep -c '"type":"over"' "$CONLOG" || true)"
+[ "$overs" = "1" ] || die "the console session wrote $overs \`over\` frames; section 7 says exactly one"
+[ "$(tail -1 "$CONLOG" | grep -c '"type":"over"')" = "1" ] || \
+  die "the console session's last frame is not \`over\` (section 8.4)"
+
+say "MtgTable --transport auto --seed 11 -- the policy transport, on a seed no fixture uses"
+# AutoTransport produced five of the committed fixtures and was itself never run
+# by the gate. Seed 11 is deliberately not one of the recorded seeds (42/7/2026/
+# 99), so this is a game nobody has seen: a new UNIMPL member or an emit error
+# here is a real degradation, not a replay of an old one.
+AUTOLOG="var/games/check-all-auto/frames.jsonl"
+rm -rf var/games/check-all-auto
+rc=0
+jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11 --game-id check-all-auto \
+    > var/check-all-auto.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
+  tail -40 var/check-all-auto.log >&2
+  capped "$rc" && die "the --transport auto session did not finish within ${GAME_TIMEOUT}s (AutoTransport's own STUCK_MS watchdog is 60 s, so reaching this cap means the watchdog thread is wedged too; full log: var/check-all-auto.log)"
+  die "mtgtable.MtgTable --transport auto (full log: var/check-all-auto.log)"
+fi
+grep -E '^(finished|winner|player turns|ask kinds|UNIMPL members|emit errors)' var/check-all-auto.log || true
+grep -q '^MTGTABLE OK$' var/check-all-auto.log || die "the auto session did not print MTGTABLE OK"
+grep -q '^finished       = true' var/check-all-auto.log || die "the auto session did not finish (the game thread is wedged)"
+grep -q '^UNIMPL members = none$' var/check-all-auto.log || \
+  die "the auto session hit an unimplemented IGuiGame member: $(grep '^UNIMPL members' var/check-all-auto.log)"
+grep -q '^emit errors    = 0$' var/check-all-auto.log || \
+  die "the auto session logged an emit error: $(grep '^emit errors' var/check-all-auto.log)"
+overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
+[ "$overs" = "1" ] || die "the auto session wrote $overs \`over\` frames; section 7 says exactly one"
+[ "$(tail -1 "$AUTOLOG" | grep -c '"type":"over"')" = "1" ] || \
+  die "the auto session's last frame is not \`over\` (section 8.4)"
 
 say "check-redaction.mjs -- every committed fixture, then the fresh recording"
 # NO --pre-amendment anywhere in this file, deliberately: the flag downgrades a
 # missing `owner` / `token` / `alt` / `library.cards` to a warning, and this is
 # the gate that has to see exactly that.  fixtures/synthetic/ is checked too --
 # it is hand-written, which is a reason to audit it, not a reason to skip it.
+#
+# And no --opponent-library-ok either, for the same reason: full cards in a seat
+# other than the viewer's `library.cards` is a FAILURE here.  The shape is
+# reachable (Opposition Agent, Bribery, Gonti) and no card in any committed deck
+# reaches it, so the day a recording needs the flag is the day someone should
+# have to type it -- and say in the commit why.
 for f in fixtures/games/*.jsonl fixtures/synthetic/*.jsonl; do
   node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
 done
 node tools/check-redaction.mjs "$FRESH" || die "check-redaction.mjs on the fresh recording $FRESH"
+# The human-seat logs from the three steps above: asks, answers, notices and c2s
+# lines, none of which an AI-vs-AI recording contains.
+node tools/check-redaction.mjs "$M2FRAMES" || die "check-redaction.mjs on the fresh M2 session $M2FRAMES"
+node tools/check-redaction.mjs "$CONLOG" || die "check-redaction.mjs on the console session $CONLOG"
+node tools/check-redaction.mjs "$AUTOLOG" || die "check-redaction.mjs on the auto session $AUTOLOG"
 
 say "check-redaction-selftest.mjs -- the checker's own negative controls"
 node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"

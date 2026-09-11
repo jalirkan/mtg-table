@@ -47,6 +47,12 @@
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
  *       them is `open_zones` -- deleted, because opening a floating zone panel
  *       is not a question (report 06 section 3).
+ *   A12 every `answer` closes an `ask` this same log opened, exactly once, and
+ *       its `value` has the shape section 5.2 declares FOR THAT ASK'S KIND --
+ *       including the three kinds whose answer may never be `null` (section 5.4
+ *       / invariant 6: `order`, `choose_list` and `manipulate_list` all have
+ *       call sites that dereference the result unguarded, so a null there does
+ *       not degrade, it wedges or NPEs the game thread).
  *
  * A8 is a reducer unit test, not a log check: it lives in
  * web/test/reduce.test.ts, because a log cannot show what a client remembers.
@@ -90,6 +96,26 @@
  *
  * tools/check-redaction-selftest.sh is the negative control for all of this:
  * it mutates one fixture in one place per probe and asserts THIS SCRIPT FAILS.
+ *
+ * ---------------------------------------------------------------------------
+ * AN OPPONENT'S LIBRARY DUMPED AS FULL CARDS IS A FAILURE, NOT A WARNING.
+ *
+ * A3 used to WARN when a seat other than the viewer carried full cards in
+ * `library.cards`, on the grounds that Opposition Agent / Bribery / Gonti make
+ * the shape legitimately reachable.  That is true and it was still the wrong
+ * default: an opponent's library is the single largest hidden-information
+ * surface in the game, the effects that open it are rare enough that no
+ * committed recording contains one, and a warning in a 1,200-line script's
+ * output is indistinguishable from silence in CI.  So it FAILS, and a recording
+ * that genuinely exercises a look-at-an-opponent's-library effect declares that
+ * on the command line:
+ *
+ *   node tools/check-redaction.mjs --opponent-library-ok fixtures/games/bribery.jsonl
+ *
+ * The flag downgrades exactly that one assertion back to a WARN and nothing
+ * else -- in particular it does NOT relax A6, so an id revealed out of an
+ * opponent's library still buys no permanent name-before-reveal exemption
+ * (fixtures/negative/redaction/a6-library-reveal-is-not-a-whitelist.jsonl).
  * ---------------------------------------------------------------------------
  */
 
@@ -112,6 +138,144 @@ const ASK_KINDS = new Set([
   'choose_entities', 'assign_damage', 'assign_amount', 'manipulate_list',
   'sideboard',
 ]);
+
+/**
+ * A12 / protocol section 5.2 -- the shape of `answer.value`, per ask kind.
+ *
+ * The checker only ever saw `ask` frames before: an answer was an opaque blob,
+ * so `{"askId":"a7","value":null}` for an `order` -- which
+ * `IGuiGame.java:229,232` and `PlayerControllerHuman.java:2317` all dereference
+ * with a bare `.ordered()` -- read exactly like a legal cancel.  Each entry
+ * says whether `null` is a legal answer for that kind and validates the
+ * non-null shape; `count` is the size of the ask's option array (see
+ * `optionCount`) so an index can be bounds-checked, or `null` when the ask body
+ * did not carry one.
+ *
+ * A rule returns `null` when the value is fine, or a phrase naming what
+ * section 5.2 wanted instead.
+ */
+const ANSWER_RULES = {
+  // "option index, or null" -- getAbilityToPlay / showOptionDialog.
+  ability_menu: { nullOk: true, rule: (v, n) => indexValue(v, n) },
+  options: { nullOk: true, rule: (v, n) => indexValue(v, n) },
+  // "true | false | null".
+  confirm: { nullOk: true, rule: (v) => (bool(v) ? null : 'a boolean') },
+  // "string, or null".
+  text: { nullOk: true, rule: (v) => (str(v) ? null : 'a string') },
+  /*
+   * NOT nullable.  Section 5.4 and invariant 6: `AbstractGuiGame.java:767,
+   * 780-781` dereference `getChoices`'s result, so the bridge synthesises a
+   * default rather than completing the future with null.
+   */
+  choose_list: { nullOk: false, rule: (v, n) => indexArrayValue(v, n) },
+  /*
+   * NOT nullable, and not an array either: Forge's `OrderResult` is
+   * `record(List<T> ordered, boolean rememberDecision)`, and `ordered`
+   * addresses `dest ++ source` as ONE array (section 5.1, "one ask, one option
+   * array").
+   */
+  order: { nullOk: false, rule: (v, n) => orderValue(v, n) },
+  choose_entities: { nullOk: true, rule: (v, n) => indexArrayValue(v, n) },
+  // `{ "<index>": n, ... }`, or null -- null means "let Forge assign"
+  // (PlayerControllerHuman.java:302-304).
+  assign_damage: { nullOk: true, rule: (v, n) => amountMapValue(v, n) },
+  assign_amount: { nullOk: true, rule: (v, n) => amountMapValue(v, n) },
+  /*
+   * NOT nullable: `PlayerControllerHuman.java:986` indexes the result
+   * directly, so its null default is the input list in its original order --
+   * which means the answer is always the FULL list, permuted.
+   */
+  manipulate_list: { nullOk: false, rule: (v, n) => permutationValue(v, n) },
+  sideboard: { nullOk: true, rule: (v, n) => indexArrayValue(v, n) },
+};
+
+/** The size of the option array an `answer`'s indices address, or null. */
+function optionCount(body) {
+  if (!plainObject(body)) return null;
+  const len = (a) => (Array.isArray(a) ? a.length : null);
+  switch (body.kind) {
+    case 'ability_menu':
+    case 'options':
+    case 'choose_list':
+    case 'choose_entities':
+      return len(body.options);
+    case 'assign_damage':
+    case 'assign_amount':
+      return len(body.targets);
+    case 'manipulate_list':
+      return len(body.cards);
+    // Section 5.1: a kind with two lists is presenting ONE server-side array in
+    // two halves, and the ids run across both in the order section 5.2 names.
+    case 'order':
+      return len(body.dest) === null || len(body.source) === null
+        ? null
+        : body.dest.length + body.source.length;
+    case 'sideboard':
+      return len(body.main) === null || len(body.side) === null
+        ? null
+        : body.main.length + body.side.length;
+    default:
+      return null;
+  }
+}
+
+/**
+ * `n` is the ask's option count, or `null` when the body carried no option list
+ * this checker knows how to count -- in which case an index is bounds-free and
+ * only its type is asserted.  Better a narrower check than a wrong one.
+ */
+const inRange = (v, n) => num(v) && Number.isInteger(v) && v >= 0 && (n === null || v < n);
+const rangeText = (n) => (n === null ? 'a non-negative integer' : `in [0, ${n})`);
+
+function indexValue(v, n) {
+  if (!num(v) || !Number.isInteger(v)) return 'an option index (an integer)';
+  if (!inRange(v, n)) return `an option index ${rangeText(n)} -- got ${v}`;
+  return null;
+}
+
+function indexArrayValue(v, n) {
+  if (!Array.isArray(v)) return 'an array of option indices';
+  for (const i of v) {
+    if (!inRange(i, n)) return `every entry to be an option index ${rangeText(n)}`;
+  }
+  return null;
+}
+
+function orderValue(v, n) {
+  if (!plainObject(v) || !sameKeys(v, ['ordered', 'remember'])) {
+    return '`{ordered, remember}` -- Forge\'s OrderResult is (List, boolean), not {top, bottom}';
+  }
+  if (!bool(v.remember)) return '`remember` to be a boolean';
+  // `ordered` is the DESTINATION list and may be shorter than the option array
+  // (section 5.3: min/max are Forge's remainingMin/remainingMax, constraining
+  // what is LEFT in source), so this bounds the indices and not the length.
+  return indexArrayValue(v.ordered, n) === null
+    ? null
+    : `\`ordered\` to be option indices into dest ++ source, ${rangeText(n)}`;
+}
+
+function amountMapValue(v, n) {
+  if (!plainObject(v)) return 'a `{"<option index>": amount}` object';
+  for (const [k, amount] of Object.entries(v)) {
+    if (!/^\d+$/.test(k) || !inRange(Number(k), n)) {
+      return `every key to be an option index ${rangeText(n)} -- got ${JSON.stringify(k)}`;
+    }
+    if (!num(amount) || !Number.isInteger(amount)) return 'every value to be an integer amount';
+  }
+  return null;
+}
+
+function permutationValue(v, n) {
+  const bad = indexArrayValue(v, n);
+  if (bad !== null) return bad;
+  if (n === null) return null;
+  // Section 5.2: manipulate_list's answer is "the full list in its new order",
+  // and PlayerControllerHuman indexes it -- a short answer is an index error
+  // waiting to happen, not a partial selection.
+  if (v.length !== n) return `all ${n} indices (the full list, reordered) -- got ${v.length}`;
+  if (new Set(v).size !== v.length) return 'each index exactly once (it is a permutation)';
+  return null;
+}
 
 /** A5: keys that carry a card identity and may never appear under `events`. */
 const NAME_BEARING_KEYS = [
@@ -375,6 +539,111 @@ const STATE_SHAPE = {
 };
 
 /**
+ * Section 6.  A notice is a toast and carries three keys, and BOTH of its
+ * strings are engine strings: `IGuiGame.message(message, title)` is passed
+ * `CardView.get(sa.getHostCard()).toString()` as the title by
+ * `PlayerControllerHuman.notifyOfValue`, i.e. Forge's own `name (id)`.  Until
+ * the bridge gated them, a `notice` body got no shape check and no scan at all
+ * -- and a measured one read `{"title":"Thriving Isle (49)"}` in a game where
+ * card 49 was a hidden stub in the opponent's hand.
+ */
+const NOTICE_SHAPE = {
+  level: oneOf('info', 'warn', 'error'),
+  title: str,
+  text: str,
+};
+
+/** Section 7.  The same three keys as `state.gameOver`, and the same nullability. */
+const OVER_SHAPE = {
+  winner: nullable(num),
+  reason: nullable(str),
+  matchOver: bool,
+};
+
+/**
+ * Section 5.1.  An option's identity keys are "present iff" -- `cardId` iff it
+ * is a CardView, `playerId` iff a PlayerView, and so on -- so the key SET
+ * legitimately varies and only the common three are required.  What is checked
+ * is that every key is one this document names: a new key on an option is how a
+ * second, ungated stringifier arrives.
+ */
+const OPTION_KEYS = new Set([
+  'id', 'label', 'kind', 'cardId', 'playerId', 'abilityId', 'card',
+  'canPlay', 'isSpell', 'lethal', 'defender', 'max',
+]);
+const OPTION_KINDS = new Set([
+  'card', 'player', 'ability', 'color', 'number', 'text', 'other', 'entity',
+]);
+const askOption = (v) =>
+  plainObject(v) && num(v.id) && str(v.label) && OPTION_KINDS.has(v.kind) &&
+  Object.keys(v).every((k) => OPTION_KEYS.has(k));
+
+/** Section 5.3.  `DelayedReveal` is the context, not the choice. */
+const delayedRevealShape = (v) =>
+  plainObject(v) && sameKeys(v, ['owner', 'zones', 'messagePrefix', 'cards']) &&
+  nullable(num)(v.owner) && arrayOf(str)(v.zones) && str(v.messagePrefix) && Array.isArray(v.cards);
+
+/**
+ * Section 5.2, per kind: the exact key set of an `ask` body beyond the three
+ * envelope keys every kind carries, and the runtime type of each.
+ *
+ * **This is where declared nullability lives.**  Three fields had a live null
+ * path in the emitter that neither section 5.2 nor `web/src/protocol.ts`
+ * admitted -- `ability_menu.cardId` (null host), `assign_damage.attackerId`
+ * (null attacker) and `text.initial` (a null `initialInput` writes a JSON
+ * null) -- and nothing compared the two ends, because an `ask` body had no
+ * shape check at all.  Nine of the eleven kinds have never been dispatched by
+ * Forge in a recording, so for those this table and
+ * `fixtures/synthetic/sample-handwritten.jsonl` are the whole of the contract.
+ */
+const ASK_COMMON = { askId: str, kind: str, timeoutMs: num };
+const ASK_SHAPES = {
+  // cardId is NOT nullable: with no host card there is nothing to attach a menu
+  // to, so the bridge skips the ask entirely rather than emitting a null.
+  ability_menu: { cardId: num, options: arrayOf(askOption) },
+  confirm: {
+    prompt: str, title: str, yesLabel: str, noLabel: str,
+    defaultYes: bool, card: nullable(plainObject),
+  },
+  options: {
+    prompt: str, title: str, options: arrayOf(askOption),
+    defaultIndex: num, card: nullable(plainObject),
+  },
+  // `initial` is a string, "" when Forge has none -- like every other string
+  // field on the wire.  A null here was a shape neither end declared.
+  text: { prompt: str, title: str, initial: str, suggestions: arrayOf(str), numeric: bool },
+  choose_list: {
+    prompt: str, options: arrayOf(askOption), preselected: arrayOf(num),
+    min: num, max: num, reveal: bool,
+  },
+  order: {
+    prompt: str, destLabel: str, source: arrayOf(askOption), dest: arrayOf(askOption),
+    min: num, max: num, referenceCardId: nullable(num),
+    sideboardMode: bool, showRemember: bool,
+  },
+  choose_entities: {
+    prompt: str, options: arrayOf(askOption), min: num, max: num,
+    delayedReveal: nullable(delayedRevealShape),
+  },
+  // attackerId IS nullable, declared at both ends: Forge's signature allows a
+  // null attacker and the emitter cannot prove it never happens, so the type
+  // says what the code can do rather than what a run happened to produce.
+  assign_damage: {
+    attackerId: nullable(num), total: num, overrideOrder: bool, maySkip: bool,
+    targets: arrayOf(askOption),
+  },
+  assign_amount: {
+    sourceCardId: nullable(num), total: num, atLeastOne: bool, label: str,
+    targets: arrayOf(askOption),
+  },
+  manipulate_list: {
+    prompt: str, cards: arrayOf(askOption), manipulable: arrayOf(num),
+    toTop: bool, toBottom: bool, toAnywhere: bool,
+  },
+  sideboard: { prompt: str, main: arrayOf(askOption), side: arrayOf(askOption) },
+};
+
+/**
  * Assert one object against a shape: the exact key set, then every type.
  * Returns an array of complaints (empty when it matches).
  */
@@ -634,7 +903,7 @@ function checkStateShape(body, missed) {
   return out;
 }
 
-function checkFile(path, preAmendment = false) {
+function checkFile(path, { preAmendment = false, opponentLibraryOk = false } = {}) {
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
 
@@ -660,6 +929,21 @@ function checkFile(path, preAmendment = false) {
   for (const k of ['gameId', 'startedAt', 'seat', 'decks']) {
     if (header[k] === undefined) note(1, `session header is missing "${k}"`);
   }
+  /*
+   * Section 8.1.  `transport` says which client produced this log, and it is
+   * present only on a log a SEAT played (M2+): an AI-vs-AI recording has no
+   * transport at all.  It exists because one of them answers every ask with a
+   * literal null on purpose -- see A12 below, where it is the difference
+   * between "the de-risking transport did its job" and "the bridge handed Forge
+   * a null it dereferences".
+   */
+  const TRANSPORTS = ['null', 'auto', 'console', 'ws'];
+  if (header.transport !== undefined && !TRANSPORTS.includes(header.transport)) {
+    note(1, `session header transport=${JSON.stringify(header.transport)} is not one of ` +
+      `${TRANSPORTS.join(' | ')} (section 8.1)`);
+  }
+  const nullTransport = header.transport === 'null';
+
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
   } else {
@@ -693,7 +977,9 @@ function checkFile(path, preAmendment = false) {
     viewerHandNamed: 0, opponentHandCards: 0, events: 0, shapeChecks: 0,
     texts: 0, textsConcealed: 0,
     libraryRevealed: 0, altBlocks: 0, tokens: 0, asks: 0, promptsScanned: 0,
-    everRevealed: 0,
+    everRevealed: 0, answers: 0, answerKinds: new Set(), unanswered: 0,
+    askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
+    maxTurn: 0,
   };
   const seq = { s2c: 0, c2s: 0 };
   let sawState = false;
@@ -725,6 +1011,14 @@ function checkFile(path, preAmendment = false) {
   const wasConcealed = new Map();
   /** Was an `ask` outstanding when this frame was written?  (A7) */
   let pendingAsk = null;
+  /**
+   * A12.  `askId` -> what the `answer` that closes it must look like.  The kind
+   * and the option count both come from the `ask` body, because section 5.2's
+   * answer shape is per-kind and its indices are ask-local (section 5.1).
+   */
+  const openAsks = new Map();
+  /** `askId` -> the line the answer arrived on, so a second one can say where. */
+  const closedAsks = new Map();
   /** The most recent state's card->zone/owner map, for the ask-body check. */
   let lastZoneOf = new Map();
 
@@ -748,6 +1042,26 @@ function checkFile(path, preAmendment = false) {
             : ' (A11)'));
       }
       pendingAsk = body.askId ?? true;
+
+      // --- the drift half, per kind: exact key set + declared nullability ---
+      const shape = ASK_SHAPES[body.kind];
+      if (shape !== undefined) {
+        stats.askShapeChecks++;
+        for (const complaint of checkShape({ ...body }, { ...ASK_COMMON, ...shape }, `ask.${body.kind}`)) {
+          note(lineNo, complaint);
+        }
+      }
+
+      // --- A12: remember what a legal answer to THIS ask looks like ---------
+      if (!str(body.askId) || body.askId === '') {
+        note(lineNo, 'ask has no "askId" -- section 2.3 says exactly one answer per ask, ' +
+          'which cannot be checked without one (A12)');
+      } else if (openAsks.has(body.askId) || closedAsks.has(body.askId)) {
+        note(lineNo, `ask reuses askId ${JSON.stringify(body.askId)}, which this log already ` +
+          `opened -- section 5 says an askId is unique for the life of the connection (A12)`);
+      } else {
+        openAsks.set(body.askId, { kind: body.kind, count: optionCount(body), line: lineNo });
+      }
 
       // Every card inside an ask body goes through the one gated function, so
       // it gets the same audit as a card in `state`.
@@ -785,6 +1099,23 @@ function checkFile(path, preAmendment = false) {
       // "<zone> <name> (<id>)" for ANY card in ANY zone.  We do not build them,
       // so this warns rather than fails until section 4's filtering exists.
       scanPrompt(body.prompt, `ask.prompt`, lineNo);
+      /*
+       * A10, the half that was missing until a human-seat recording existed to
+       * show it: OPTION LABELS are engine strings too, and section 5 is explicit
+       * that "every option label goes through the same gate -- the label is the
+       * leak that will actually happen".  Measured in
+       * fixtures/games/human-auto-42.jsonl, an `order` option's label is
+       *
+       *   "Thriving Isle (9) - Thriving Isle enters tapped."
+       *
+       * i.e. Forge's own `name (id)` join, in a string the client renders
+       * verbatim.  That one is the viewer's own land and leaks nothing; the
+       * point is that nothing was looking.  Same treatment as a prompt: a WARN
+       * when the id belongs to a card this seat's last snapshot concealed.
+       */
+      for (const { label, where } of askLabels(body)) {
+        scanPrompt(label, `ask.${where}`, lineNo);
+      }
       return;
     }
 
@@ -817,7 +1148,138 @@ function checkFile(path, preAmendment = false) {
       return;
     }
 
-    if (f.type === 'answer') pendingAsk = null;
+    if (f.type === 'notice') {
+      stats.notices++;
+      for (const complaint of checkShape(body, NOTICE_SHAPE, 'notice')) note(lineNo, complaint);
+      /*
+       * A10, promoted from WARN to FAIL for this one frame type.
+       *
+       * `ask.prompt` and `input.prompt` are Forge's strings and the bridge does
+       * not build them, which is why naming a concealed card there is documented
+       * residual risk (report 06 section 10, risk 3) and warns.  A `notice` is
+       * different now: both of its strings pass through `Snap.sweepText` against
+       * the ids the last snapshot concealed, so an id that reaches the wire here
+       * is OUR gate failing, not Forge's phrasing.  That is a failure.
+       */
+      scanPrompt(body.title, 'notice.title', lineNo, note);
+      scanPrompt(body.text, 'notice.text', lineNo, note);
+      return;
+    }
+
+    if (f.type === 'over') {
+      stats.overs++;
+      for (const complaint of checkShape(body, OVER_SHAPE, 'over')) note(lineNo, complaint);
+      return;
+    }
+
+    if (f.type === 'answer') {
+      pendingAsk = null;
+      auditAnswer(body, lineNo);
+    }
+  }
+
+  /**
+   * A12 -- the half of the ask path a log can actually prove.
+   *
+   * Section 2.3: exactly one `answer` per `ask`, addressing options by
+   * ask-local index; section 5.2 gives the value shape per kind; section 5.4
+   * names the three kinds that may never answer `null` because Forge
+   * dereferences their result unguarded.  None of that was checked here at all
+   * before -- an `answer` was an opaque body -- so `{"value":null}` for an
+   * `order` read exactly like a legal cancel, and the first log with a human
+   * seat in it would have been the place that got discovered.
+   */
+  function auditAnswer(body, lineNo) {
+    stats.answers++;
+    const askId = body.askId;
+    if (!str(askId) || askId === '') {
+      note(lineNo, 'answer has no "askId" -- section 2.3 keys an answer to its ask (A12)');
+      return;
+    }
+    const open = openAsks.get(askId);
+    if (open === undefined) {
+      const closedAt = closedAsks.get(askId);
+      note(lineNo, closedAt === undefined
+        ? `answer for askId ${JSON.stringify(askId)}, which no ask in this log opened -- ` +
+          `section 2.3: exactly one answer per ask (A12)`
+        : `a SECOND answer for askId ${JSON.stringify(askId)} (the first was line ${closedAt}) -- ` +
+          `section 2.3 drops it with a notice and never applies it, so a log carrying two is ` +
+          `either a replayed frame or a ReplyPool that completed twice (A12)`);
+      return;
+    }
+    openAsks.delete(askId);
+    closedAsks.set(askId, lineNo);
+    stats.answerKinds.add(open.kind);
+
+    const spec = ANSWER_RULES[open.kind];
+    if (spec === undefined) return;   // unknown kind: already failed under A11
+    if (!('value' in body)) {
+      note(lineNo, `answer for ${open.kind} ask ${JSON.stringify(askId)} has no "value" key -- ` +
+        `it is always present, a null included (A12)`);
+      return;
+    }
+    if (body.value === null) {
+      if (spec.nullOk) return;
+      /*
+       * Invariant 6 has two halves and they are about different ends of the
+       * wire: a CLIENT may answer null to any ask ("every ask must be
+       * answerable with null"), and the BRIDGE must not hand Forge a null for
+       * these two kinds -- it synthesises the default instead. A log can only
+       * see the first half.
+       *
+       * For a real client a null here is still the finding it was written to
+       * be: it says the player's answer was thrown away and the engine's
+       * default played the turn. For `--transport null`, whose entire purpose
+       * is to answer null to everything so the defaults get exercised, it is
+       * the expected result, and the session header is what tells the two
+       * apart. It stays visible as a warning either way.
+       */
+      const msg = `answer for the ${open.kind} ask ${JSON.stringify(askId)} (opened line ` +
+        `${open.line}) is null. That kind has NO usable null default: docs/protocol.md ` +
+        `section 5.4 and invariant 6 -- Forge dereferences the result unguarded, so the ` +
+        `bridge must synthesise a default rather than complete the future with null (A12)`;
+      if (nullTransport) {
+        stats.nullDefaults++;
+        warn(lineNo, `${msg} -- expected here: the session header says transport="null", ` +
+          `whose whole job is to answer null and let the documented defaults play the game`);
+      } else {
+        note(lineNo, msg);
+      }
+      return;
+    }
+    const wanted = spec.rule(body.value, open.count);
+    if (wanted !== null) {
+      note(lineNo, `answer for the ${open.kind} ask ${JSON.stringify(askId)} (opened line ` +
+        `${open.line}) is ${JSON.stringify(body.value)}; docs/protocol.md section 5.2 wants ` +
+        `${wanted} (A12)`);
+    }
+  }
+
+  /**
+   * Every option LABEL an `ask` body carries, plus the two button labels of a
+   * `confirm`.  Section 5: the client renders these verbatim and never parses
+   * them, so whatever the bridge put in one is what the user reads.
+   */
+  function askLabels(body) {
+    const out = [];
+    const fromOptions = (list, where) => {
+      if (!Array.isArray(list)) return;
+      list.forEach((opt, i) => {
+        if (plainObject(opt) && str(opt.label)) out.push({ label: opt.label, where: `${where}[${i}].label` });
+      });
+    };
+    for (const key of ['options', 'targets', 'cards', 'main', 'side', 'source', 'dest']) {
+      fromOptions(body[key], key);
+    }
+    for (const key of ['yesLabel', 'noLabel', 'destLabel', 'label', 'title']) {
+      if (str(body[key])) out.push({ label: body[key], where: key });
+    }
+    if (Array.isArray(body.suggestions)) {
+      body.suggestions.forEach((s, i) => {
+        if (str(s)) out.push({ label: s, where: `suggestions[${i}]` });
+      });
+    }
+    return out;
   }
 
   /** Every card object an `ask` body carries, wherever the kind puts them. */
@@ -853,7 +1315,7 @@ function checkFile(path, preAmendment = false) {
    * "<zoneText> <name> (<id>)" for a card in ANY zone -- including a library one.
    * Low frequency, high embarrassment; a warning until we filter prompts.
    */
-  function scanPrompt(text, where, lineNo) {
+  function scanPrompt(text, where, lineNo, report = warn) {
     if (!str(text) || text === '') return;
     stats.promptsScanned++;
     for (const m of text.matchAll(CARD_REF)) {
@@ -861,8 +1323,11 @@ function checkFile(path, preAmendment = false) {
       const known = lastZoneOf.get(id);
       if (known === undefined) continue;
       if (known.concealed || (known.owner !== seat && (known.zone === 'hand' || known.zone === 'library'))) {
-        warn(lineNo, `${where} names card #${id}, which the last snapshot concealed from ` +
-          `seat ${seat}: ${JSON.stringify(text)} (A10 -- the engine builds this string, we do not)`);
+        report(lineNo, `${where} names card #${id}, which the last snapshot concealed from ` +
+          `seat ${seat}: ${JSON.stringify(text)} (A10 -- ` +
+          (report === warn
+            ? 'the engine builds this string, we do not)'
+            : 'this one goes through Snap.sweepText, so it is OUR gate that failed)'));
       }
     }
   }
@@ -905,6 +1370,7 @@ function checkFile(path, preAmendment = false) {
     }
     stats.state++;
     sawState = true;
+    if (typeof f.body?.turn === 'number' && f.body.turn > stats.maxTurn) stats.maxTurn = f.body.turn;
 
     const body = f.body;
     const players = body.players;
@@ -960,13 +1426,19 @@ function checkFile(path, preAmendment = false) {
           stats.libraryRevealed += lib.cards.length;
           // An opponent's library IS the largest hidden-information surface in
           // the game. The shape is legitimately reachable -- Opposition Agent,
-          // Bribery, Gonti -- so this is not a failure, but an emitter
-          // regression that dumped a library as full cards must not be silent.
+          // Bribery, Gonti -- but "reachable by three cards nobody in this repo
+          // owns" is not a reason to default to a warning nobody reads. It
+          // FAILS, and a recording that really does exercise one of those
+          // effects says so on the command line.
           if (!isViewer && lib.cards.length > 0) {
-            warn(lineNo, `players[${pi}] (id ${p.id}, NOT the viewing seat ${seat}) has ` +
-              `${lib.cards.length} full card(s) in library.cards. Legal only while a ` +
+            const msg =
+              `players[${pi}] (id ${p.id}, NOT the viewing seat ${seat}) has ` +
+              `${lib.cards.length} full card(s) in library.cards. Legal ONLY while a ` +
               `canBeShownTo-true effect is running on THEIR library (Opposition Agent, ` +
-              `Bribery); anything else is the largest possible leak (A3)`);
+              `Bribery, Gonti); anything else is the largest possible leak. Pass ` +
+              `--opponent-library-ok if this recording really exercises one (A3)`;
+            if (opponentLibraryOk) warn(lineNo, msg);
+            else note(lineNo, msg);
           }
           for (const c of lib.cards) {
             stats.cardsChecked++;
@@ -1144,15 +1616,45 @@ function checkFile(path, preAmendment = false) {
   }
 
   if (!sawState) note(lines.length, 'no state frames at all');
+
+  // A12, the other half of "exactly one answer per ask". An ask still open at
+  // EOF is a WARN, not a failure: a log truncated by a kill, or one whose game
+  // ended while the thread was parked, legitimately ends mid-question. What it
+  // must never be is invisible -- an ask nobody answered is the shape of a
+  // wedged game thread (section 5.4).
+  stats.unanswered = openAsks.size;
+  for (const [askId, open] of openAsks) {
+    warn(lines.length, `ask ${JSON.stringify(askId)} (${open.kind}, line ${open.line}) is never ` +
+      `answered in this log. Every ask blocks the game thread until an answer arrives, so an ` +
+      `unanswered one is either a truncated recording or a wedge (A12)`);
+  }
   // "every state frame has a session header before it" -- the header is line 0,
   // so this is the same statement as: the first line is the header and no state
   // frame precedes it.  Both are checked above.
 
+  // The two "this file proves nothing" assertions.  They are not leak checks --
+  // they are the guard against a green run over a recording with no hidden
+  // information in it at all -- so on a session that never dealt a card they are
+  // a WARNING, not a failure.  `turn: 0` in every state is exactly that session:
+  // the documented console smoke (`printf "\n\n\n\nq\n" | ... --transport
+  // console`) concedes during the pre-game prompts, and before this the repo's
+  // own documented command produced an artifact the repo's own gate rejected.
+  // A file that reached turn 1 has had a card dealt, and both stay failures.
+  const preGameOnly = stats.state > 0 && stats.maxTurn === 0;
+  const provesNothing = (msg) => {
+    if (preGameOnly) {
+      warn(lines.length, `${msg}. Every \`state\` in this file is turn 0, so no card was ever ` +
+        `dealt: this is a pre-game session (a concede during the opening prompts), and the ` +
+        `assertion is a WARN rather than a failure because there was nothing to conceal`);
+    } else {
+      problems.push(`${path}: ${msg}`);
+    }
+  };
   if (stats.redacted === 0) {
-    problems.push(`${path}: not one card was redacted -- either the opponent never held a card, or canBeShownTo is not being consulted`);
+    provesNothing('not one card was redacted -- either the opponent never held a card, or canBeShownTo is not being consulted');
   }
   if (stats.viewerHandNamed === 0) {
-    problems.push(`${path}: the viewer never saw a named card in their own hand -- the test proves nothing`);
+    provesNothing('the viewer never saw a named card in their own hand -- the test proves nothing');
   }
   stats.everRevealed = everRevealed.size;
   stats.missed = [...missed].sort();
@@ -1188,26 +1690,43 @@ const argv = process.argv.slice(2);
  * files land, which is how the tolerance became invisible the first time.
  */
 const preAmendment = argv.includes('--pre-amendment');
+/**
+ * The ONE way to accept a recording in which a seat other than the viewer has
+ * full cards in `library.cards` (A3).  Like `--pre-amendment` it is global and
+ * opt-in, and nothing in check-all.sh passes it: an opponent's library is the
+ * largest hidden-information surface there is, so the recording that opens one
+ * has to say so out loud.
+ */
+const opponentLibraryOk = argv.includes('--opponent-library-ok');
+const FLAGS = ['--pre-amendment', '--opponent-library-ok'];
 const files = argv.filter((a) => !a.startsWith('--'));
-const unknownFlag = argv.find((a) => a.startsWith('--') && a !== '--pre-amendment');
+const unknownFlag = argv.find((a) => a.startsWith('--') && !FLAGS.includes(a));
 if (unknownFlag !== undefined) {
   console.error(`unknown flag ${unknownFlag}`);
   process.exit(2);
 }
 if (files.length === 0) {
-  console.error('usage: node tools/check-redaction.mjs [--pre-amendment] <frames.jsonl> [...]');
-  console.error('  --pre-amendment  accept a log recorded before the 2026-09-11 amendments');
-  console.error('                   (a four-key stub, a library with no `cards`, a card with');
-  console.error('                   no `token`/`alt`, a `faceDownHidden` object) as a WARN.');
+  console.error('usage: node tools/check-redaction.mjs [--pre-amendment] ' +
+    '[--opponent-library-ok] <frames.jsonl> [...]');
+  console.error('  --pre-amendment       accept a log recorded before the 2026-09-11 amendments');
+  console.error('                        (a four-key stub, a library with no `cards`, a card with');
+  console.error('                        no `token`/`alt`, a `faceDownHidden` object) as a WARN.');
+  console.error('  --opponent-library-ok accept full cards in a NON-viewer library.cards as a');
+  console.error('                        WARN -- for a recording that really exercises a');
+  console.error('                        look-at-an-opponent\'s-library effect (Opposition Agent,');
+  console.error('                        Bribery, Gonti). It relaxes A3 and nothing else.');
   process.exit(2);
 }
 if (preAmendment) {
   console.log('--pre-amendment: missing P1/P2/P3/P15 keys are WARNings, not failures');
 }
+if (opponentLibraryOk) {
+  console.log('--opponent-library-ok: a non-viewer library.cards with content is a WARN, not a failure');
+}
 
 let failed = 0;
 for (const path of files) {
-  const { problems, warnings = [], stats } = checkFile(path, preAmendment);
+  const { problems, warnings = [], stats } = checkFile(path, { preAmendment, opponentLibraryOk });
   const ok = problems.length === 0;
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${path}`);
@@ -1223,6 +1742,13 @@ for (const path of files) {
   console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
     + `${stats.libraryRevealed}  alt blocks=${stats.altBlocks}  tokens=${stats.tokens}  `
     + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`);
+  console.log(`      A12 answers=${stats.answers} (kinds: `
+    + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
+    + `the matching ask.kind, unanswered asks=${stats.unanswered}`
+    + `${stats.nullDefaults ? `, ${stats.nullDefaults} answered null on purpose (transport="null")` : ''}`);
+  console.log(`      shape-checked ask bodies=${stats.askShapeChecks} (exact key set + declared `
+    + `nullability, section 5.2)  notices=${stats.notices} (both strings swept and scanned, `
+    + `section 6)  over frames=${stats.overs}`);
   if ((stats.missed ?? []).length > 0) {
     // Not a failure: the file is simply older than the amendment. It is printed
     // every run so a corpus cannot quietly stay on a superseded shape.

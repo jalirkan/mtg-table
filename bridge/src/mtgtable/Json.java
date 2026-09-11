@@ -321,6 +321,33 @@ public final class Json {
             return afterValue();
         }
 
+        /**
+         * Splice in a value this writer produced <b>earlier</b>.
+         *
+         * <p>There is exactly one caller and one reason: {@code input.focusCard}
+         * is a serialised card, a card may only be serialised on the Forge game
+         * thread, and an {@code input} frame is assembled on the EDT.  So the
+         * card is written by {@code Snap.card} into its own {@code JsonOut} when
+         * the game thread has it, and the finished text is spliced in here.
+         *
+         * <p>It is <b>not</b> a general escape hatch: the argument must be a
+         * complete JSON value that this class produced, never anything derived
+         * from an engine string (that is what {@code Snap.stackText} is for).
+         *
+         * @throws IllegalArgumentException if the text is empty
+         */
+        public JsonOut raw(final String json) {
+            if (json == null) {
+                return vNull();
+            }
+            if (json.isEmpty()) {
+                throw new IllegalArgumentException("raw(\"\") is not a JSON value");
+            }
+            beforeValue();
+            sb.append(json);
+            return afterValue();
+        }
+
         // -------- finish --------
 
         /**

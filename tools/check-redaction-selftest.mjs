@@ -106,6 +106,29 @@ for (const file of ['a1-stub-with-a-name.jsonl', 'a6-opponent-hand-named.jsonl']
   else console.log(`  ok    ${file} is still rejected under --pre-amendment`);
 }
 
+// --- and so does the other flag -------------------------------------------
+// `--opponent-library-ok` is the ONLY way to land a recording in which a seat
+// other than the viewer has full cards in `library.cards` (A3 is a failure by
+// default since 2026-09-11). It must downgrade exactly that one assertion, and
+// it must not excuse A6: an id revealed out of an opponent's library is still
+// no licence to name the same card in their HAND later.
+{
+  const file = 'a3-opponent-library-revealed.jsonl';
+  const { code, out } = check(file, ['--opponent-library-ok']);
+  if (code !== 0) bad(`--opponent-library-ok did not accept ${file}, which is what the flag is for`);
+  else if (!/^\s+~ /m.test(out)) bad(`--opponent-library-ok accepted ${file} with no warning line`);
+  else console.log(`  ok    ${file} is a WARN under --opponent-library-ok`);
+}
+for (const file of ['a6-library-reveal-is-not-a-whitelist.jsonl', 'a6-opponent-hand-named.jsonl']) {
+  const { code } = check(file, ['--opponent-library-ok']);
+  if (code === 0) {
+    bad(`--opponent-library-ok excused ${file} -- the flag relaxes A3 and nothing else, and ` +
+      `an opponent-library reveal is TRANSIENT: it confers no name-before-reveal exemption`);
+  } else {
+    console.log(`  ok    ${file} is still rejected under --opponent-library-ok`);
+  }
+}
+
 if (failures > 0) {
   console.log(`\ncheck-redaction self-test FAILED (${failures})`);
   process.exit(1);

@@ -201,11 +201,15 @@ probe('a6-opponent-hand-named.jsonl',
     throw new Error('no opponent hand stub in the slice');
   });
 
-// A3 / finding 5: legitimately reachable (Opposition Agent, Bribery), so it is
-// a WARNING rather than a failure -- but it must not be SILENT, and the ids in
-// it must not buy a permanent name-before-reveal exemption.
+// A3 / finding 5. Legitimately reachable (Opposition Agent, Bribery, Gonti),
+// and it used to be a WARNING for exactly that reason -- which meant the single
+// largest hidden-information surface in the game was guarded by a line of text
+// in a 1,200-line script's output. It now FAILS by default, and a recording
+// that really does open an opponent's library declares that with
+// `--opponent-library-ok` (2026-09-11, M1 follow-up 1). The selftest asserts
+// both halves: rejected by default, a WARN under the flag.
 probe('a3-opponent-library-revealed.jsonl',
-  'A3: an opponent library dumped as full cards -- legal but the largest surface there is',
+  'A3: an opponent library dumped as full cards -- reachable, but it must be declared',
   'NOT the viewing seat',
   (fs) => {
     for (const f of fs) {
@@ -216,8 +220,7 @@ probe('a3-opponent-library-revealed.jsonl',
       opponent.zones.library.cards = [donor];
       return;
     }
-  },
-  'warn');
+  });
 
 // The other half of finding 5: an opponent-library reveal is TRANSIENT (the
 // search ends), so it must not confer a permanent name-before-reveal exemption.
@@ -240,6 +243,68 @@ probe('a6-library-reveal-is-not-a-whitelist.jsonl',
     if (stub === undefined) throw new Error('no opponent hand stub in the last slice frame');
     them2.zones.hand.cards[them2.zones.hand.cards.indexOf(stub)] =
       { ...donor, zone: 'hand' };
+  });
+
+// ---------------------------------------------------------------------------
+// The M2 frame types.  g1 is an AI-vs-AI recording and carries no `notice` and
+// no `ask` at all (section 8.4), so these three probes INJECT one frame rather
+// than mutating one -- the only kind of defect this corpus cannot express by
+// editing what is already there.  They are still one defect each, in an
+// otherwise real slice, and each is a rule that had no test until M2 shipped
+// the emitter that can break it.
+// ---------------------------------------------------------------------------
+
+/** Splice a frame in just before `over`, then renumber the s2c sequence. */
+function inject(fs, frame) {
+  const at = fs.findIndex((f) => f.type === 'over');
+  fs.splice(at < 0 ? fs.length : at, 0, frame);
+  let seq = 0;
+  for (const f of fs) {
+    if (f.dir !== 'c2s') f.seq = ++seq;
+  }
+}
+
+probe('notice-names-a-concealed-card.jsonl',
+  'section 6: both notice strings go through Snap.sweepText, so an id here is OUR gate failing',
+  'notice.title names card',
+  (fs) => {
+    // Exactly the leak measured in five recordings: Forge's
+    // PlayerControllerHuman.notifyOfValue passes
+    // CardView.get(sa.getHostCard()).toString() -- `name (id)` -- as the title,
+    // for a card the same frame conceals.
+    const stub = firstStub(fs).card;
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 1, dir: 's2c', type: 'notice',
+      body: { level: 'info', title: `Thriving Isle (${stub.id})`, text: 'Forge AI picked White' },
+    });
+  });
+
+probe('ask-text-initial-null.jsonl',
+  'section 5.2: `text.initial` is a string, "" when Forge has none -- never null',
+  'ask.text.initial',
+  (fs) => {
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 1, dir: 's2c', type: 'ask',
+      body: {
+        askId: 'n1', kind: 'text', timeoutMs: 120000,
+        prompt: 'Name a card', title: 'Choose a card name',
+        initial: null, suggestions: [], numeric: false,
+      },
+    });
+  });
+
+probe('ask-ability-menu-cardid-null.jsonl',
+  'section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send',
+  'ask.ability_menu.cardId',
+  (fs) => {
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 1, dir: 's2c', type: 'ask',
+      body: {
+        askId: 'n2', kind: 'ability_menu', timeoutMs: 120000,
+        cardId: null,
+        options: [{ id: 0, label: 'Equip {1}', kind: 'ability', abilityId: 7, canPlay: true, isSpell: false }],
+      },
+    });
   });
 
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');

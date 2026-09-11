@@ -194,6 +194,25 @@ import mtgtable.Json.JsonOut;
  *   rules.</li>
  * </ol>
  *
+ * <h2>The third path: notices</h2>
+ *
+ * {@code IGuiGame.message(message, title)} and {@code showErrorDialog} are
+ * engine strings too, and they reach the wire as a {@code notice} (protocol
+ * section 6).  {@code PlayerControllerHuman.notifyOfValue} passes
+ * {@code CardView.get(sa.getHostCard()).toString()} as the <em>title</em> --
+ * Forge's own {@code name (id)} join -- so a notice can name a card the very
+ * same frame concealed, and one measurably did:
+ * {@code {"level":"info","title":"Thriving Isle (49)","text":"Forge AI picked
+ * White"}} while card 49 was a five-key stub in the opponent's hand.  Rule 2
+ * above is the half that applies (there is no source card to gate on and no
+ * annotation to strip), so it is factored out as {@link #sweepText} and
+ * {@link WireGuiGame} calls it on both strings of every notice, against the
+ * concealed-id set of the last frame.  That is what makes invariant 4's
+ * "exactly one function that puts an engine string on the wire" true of the
+ * <em>rule</em> rather than of one call site: {@link #stackText} and
+ * {@link #sweepText} are the same sweep, and nothing else may emit an engine
+ * string ungated.
+ *
  * <p><b>Libraries carry a count and the revealed subset</b> (protocol section
  * 3.4).  {@code library.cards} holds only those library cards for which
  * {@code canBeShownTo(viewer)} is already true and <b>never</b> a redacted stub:
@@ -254,6 +273,56 @@ public final class Snap {
     /** @return how many distinct cards were serialised with no {@code ZoneType}. */
     public static int unzonedCards() {
         return UNZONED_SEEN.size();
+    }
+
+    /**
+     * Legitimate reveals already reported, keyed {@code id@zone}, so the line
+     * fires once per card per zone instead of once per frame (report 06 W6).
+     */
+    private static final Set<String> REVEAL_SEEN = java.util.Collections.synchronizedSet(new HashSet<>());
+
+    /**
+     * How many distinct {@code REVEAL <id> <zone> <owner>} lines this process
+     * has written -- a full card emitted for a hidden zone (Forge's own
+     * {@code ZoneType.isHidden()}) that the viewer does not own.
+     *
+     * <p>Report 06 W6: over ten games this log is the ground truth for whether
+     * the reveal surface behaves as the audit claims.  A reveal is <b>not</b> a
+     * leak -- {@code canBeShownTo} said yes, because a search, a
+     * {@code DelayedReveal} or a continuous {@code MayLookAt} static is running
+     * -- but an unexplained one is, and the only way to tell is to count them.
+     */
+    public static int reveals() {
+        return REVEAL_SEEN.size();
+    }
+
+    /**
+     * Report 06 W6.  Called from {@link #card}'s full branch only, i.e. after
+     * every gate has already said yes.
+     *
+     * <p>A card with <b>no</b> {@code ZoneType} counts as a reveal rather than
+     * being skipped: the zone is exactly what {@code canBeShownTo} is fail-open
+     * about (CardView.java:625-626), so an unzoned card emitted in full is the
+     * one case most worth a line in the log.  It used to return early here, so
+     * the live paths for an unzoned view -- an LKI copy, {@code getCardForUi},
+     * an ask option built from a list rather than from a zone walk -- were
+     * invisible to the counter that exists to watch them.
+     */
+    private static void reveal(final CardView cv, final String zone, final Integer owner,
+                               final PlayerView viewer) {
+        final ZoneType zt = cv.getZone();
+        // ZoneType.isHidden() is Forge's own answer for "a zone whose contents
+        // are secret": library, hand, sideboard.  A public zone is not a reveal;
+        // a zone we do not know is.
+        if (zt != null && !zt.isHidden()) {
+            return;
+        }
+        if (viewer != null && owner != null && owner.intValue() == viewer.getId()) {
+            return;                            // your own hand is not a reveal
+        }
+        if (REVEAL_SEEN.add(cv.getId() + "@" + zone) && REVEAL_SEEN.size() <= 200) {
+            System.err.println("REVEAL " + cv.getId() + " " + zone + " " + owner);
+        }
     }
 
     /**
@@ -526,6 +595,142 @@ public final class Snap {
     }
 
     // ==================================================================
+    // M2 entry points -- report 06 S8, "one function, two entry points"
+    //
+    // WireGuiGame's IGuiGame signatures hand it CardViews (an ask option list, a
+    // DelayedReveal, a focus card, a blocker in an assign_damage body).  Every
+    // one of them comes back through here, so there is still exactly ONE
+    // function that serialises a card and exactly ONE that puts a card's name in
+    // a label.  tools/lint-bridge.sh keeps it that way mechanically: no file but
+    // this one and the IGuiGame implementations may even NAME the type.
+    // ==================================================================
+
+    /**
+     * Serialise one card that did not come from a zone walk -- an {@code ask}
+     * option, {@code input.focusCard}, a {@code DelayedReveal} entry.
+     *
+     * <p>Game thread only, like every other view walk.  The zone and owner hints
+     * come from the card itself because there is no caller-side walk to know
+     * better; gate 1 ({@code canBeShownTo}) and gate 2
+     * ({@code canFaceDownBeShownTo}) are unchanged and are what actually decide.
+     */
+    public static void card(final JsonOut o, final CardView cv, final PlayerView viewer) {
+        assertGameThread("Snap.card");
+        final ZoneType zt = cv.getZone();
+        card(o, cv, viewer, zt == null ? "unknown" : lower(zt.name()), cv.getOwner());
+    }
+
+    /**
+     * The one gated <b>label</b> for a card: report 06 S8, and the leak that
+     * will actually happen otherwise.
+     *
+     * <p>Forge's own dialogs label a generic {@code T} with
+     * {@code String.valueOf(t)}, and {@code CardView.toString()} is
+     * {@code "<zone> <name> (<id>)"} for a card in <em>any</em> zone, an
+     * opponent's hand included.  So every option label in {@link WireGuiGame}
+     * comes from here instead.
+     *
+     * @return {@code "???"} when the viewer may not see the card at all,
+     *         {@code "Face-down card"} when they may see it but not its face,
+     *         the card's name otherwise
+     */
+    public static String label(final CardView cv, final PlayerView viewer) {
+        assertGameThread("Snap.label");
+        if (cv == null) {
+            return "";
+        }
+        final ZoneType zt = cv.getZone();
+        final String zoneHint = zt == null ? "unknown" : lower(zt.name());
+        if (hiddenByGates(cv, viewer, zoneHint, cv.getOwner())) {
+            return "???";
+        }
+        if (cv.isFaceDown()) {
+            // Even when the viewer MAY see the face (their own morph), the
+            // label stays generic: the name lives in the card object's `alt`
+            // block, which is the one place getAlternateState() may be read.
+            return "Face-down card";
+        }
+        final String name = nz(cv.getName());
+        return name.isEmpty() ? "???" : name;
+    }
+
+    /**
+     * <b>May this viewer know which card this is?</b>  All three gates, as one
+     * predicate, for callers that must decide whether a <em>string</em> may name
+     * it -- a {@code SpellAbilityView.getDescription()} on an ability menu, for
+     * instance, which is built from the host card's name.
+     */
+    public static boolean concealed(final CardView cv, final PlayerView viewer) {
+        assertGameThread("Snap.concealed");
+        if (cv == null) {
+            return true;
+        }
+        final ZoneType zt = cv.getZone();
+        return identityConcealed(cv, viewer, zt == null ? "unknown" : lower(zt.name()), cv.getOwner());
+    }
+
+    /**
+     * Remaining toughness of a blocker, for {@code assign_damage.targets[].lethal}
+     * (protocol section 5.3).  Game thread; {@code null} when the card has no
+     * printed toughness.
+     */
+    public static Integer lethal(final CardView cv) {
+        assertGameThread("Snap.lethal");
+        final CardView.CardStateView st = cv == null ? null : cv.getCurrentState();
+        if (st == null || !(st.isCreature() || st.hasPrintedPT())) {
+            return null;
+        }
+        return Integer.valueOf(st.getToughness() - cv.getDamage());
+    }
+
+    /**
+     * Every card the snapshot can see, by id -- the map an {@code act} uses to
+     * turn a {@code cardId} back into the {@code CardView}
+     * {@code IGameController.selectCard} wants.
+     *
+     * <p>Built here, on the <b>game thread</b>, and cached by the caller,
+     * because an act is dispatched on the EDT where walking the view graph is
+     * forbidden (report 07 R1).  The client only ever echoes an id; this is the
+     * only place an id becomes an object again.
+     */
+    public static Map<Integer, CardView> cardIndex(final GameView game) {
+        assertGameThread("Snap.cardIndex");
+        final Map<Integer, CardView> out = new java.util.HashMap<>(256);
+        for (final PlayerView p : players(game)) {
+            indexZone(out, p.getHand());
+            indexZone(out, p.getBattlefield());
+            indexZone(out, p.getGraveyard());
+            indexZone(out, p.getExile());
+            indexZone(out, p.getCommand());
+            indexZone(out, p.getLibrary());
+        }
+        for (final StackItemView si : stackBottomFirst(game)) {
+            final CardView src = si.getSourceCard();
+            if (src != null) {
+                out.putIfAbsent(Integer.valueOf(src.getId()), src);
+            }
+        }
+        return out;
+    }
+
+    private static void indexZone(final Map<Integer, CardView> out, final Iterable<CardView> cards) {
+        if (cards == null) {
+            return;
+        }
+        for (final CardView cv : cards) {
+            if (cv != null) {
+                out.putIfAbsent(Integer.valueOf(cv.getId()), cv);
+            }
+        }
+    }
+
+    /** The game's players, in engine order.  Game thread (it is a view walk). */
+    public static List<PlayerView> playerList(final GameView game) {
+        assertGameThread("Snap.playerList");
+        return players(game);
+    }
+
+    // ==================================================================
     // THE card function.  Nothing else in the bridge serialises a CardView.
     // ==================================================================
 
@@ -615,7 +820,15 @@ public final class Snap {
         if (zt == null) {
             unzoned(cv);
         }
-        final String zone = zt == null ? zoneHint : lower(zt.name());
+        // PLAN.md "M1 follow-ups": `zone` is declared non-null by protocol.ts
+        // and by tools/check-redaction.mjs while protocol.md tolerated a null on
+        // the redacted stub.  One end has to win, and the cheapest answer is a
+        // non-null fallback here: a card with no ZoneType whose caller had no
+        // hint either -- an LKI copy, a synthetic pile header, an ask option
+        // built from a list rather than from a zone walk -- is "unknown", which
+        // every reader can render and nobody has to test for absence.
+        final String zone = zt != null ? lower(zt.name())
+                : zoneHint != null ? zoneHint : "unknown";
         final PlayerView controllerView =
                 cv.getController() != null ? cv.getController()
                         : cv.getOwner() != null ? cv.getOwner() : ownerHint;
@@ -645,6 +858,11 @@ public final class Snap {
              .end();
             return;
         }
+
+        // Every gate has said yes: this is a full card.  If it lives in a zone
+        // Forge itself calls hidden and the viewer does not own it, that is a
+        // legitimate reveal and report 06 W6 wants it on the record.
+        reveal(cv, zone, owner, viewer);
 
         // Face down: the object is public, the face is not.  `faceVisible` is
         // the ONLY thing that lets the real card reach the wire, through `alt`.
@@ -889,11 +1107,43 @@ public final class Snap {
         //    exactly that, and its LKI view passes both of Forge's gates.  The
         //    id in the text is what makes the concealed card identifiable, so
         //    the id is what we test, against this frame's own answer.
-        if (mentionsConcealedId(raw, concealed)) {
+        if (sweepText(raw, concealed).isEmpty()) {
             return "";
         }
         // 3. Strip the engine annotation from what survives.
         return ENGINE_ANNOTATION.matcher(raw).replaceAll("");
+    }
+
+    /**
+     * <b>Rule 2 of {@link #stackText}, on its own, for the other strings the
+     * engine hands us</b> -- {@code IGuiGame.message} / {@code showErrorDialog},
+     * whose title is frequently {@code CardView.get(sa.getHostCard()).toString()},
+     * i.e. Forge's own {@code name (id)} join
+     * ({@code PlayerControllerHuman.notifyOfValue}).
+     *
+     * <p>Measured, before this existed: a {@code notice} frame carrying
+     * {@code "title":"Thriving Isle (49)"} in a game whose very same snapshot
+     * held card 49 as a five-key hidden stub in the opponent's hand.  That is
+     * the {@code cast.text} leak of protocol section 3.6 rule 1 in a second
+     * channel, and nothing was looking at it: {@code notice} bodies had no
+     * gate, no shape check and no scan.
+     *
+     * <p>Ids, not names -- for the same three reasons rule 1 gives: names are
+     * unbounded, localisable, and the id is what makes a concealed card
+     * identifiable in the first place.  The whole string is blanked rather than
+     * the {@code (id)} join alone, because a string that was <em>built</em> out
+     * of a concealed card is not made safe by deleting the join.
+     *
+     * @param raw       the engine's string, or null
+     * @param concealed the ids this frame conceals from the viewer -- from
+     *                  {@link #concealedIds(GameView, PlayerView)}, captured on
+     *                  the game thread
+     * @return {@code raw}, or {@code ""} when it names a concealed id.  Never
+     *         null.
+     */
+    public static String sweepText(final String raw, final Set<Integer> concealed) {
+        final String s = nz(raw);
+        return concealed != null && mentionsConcealedId(s, concealed) ? "" : s;
     }
 
     /** True if {@code text} contains {@code (<id>)} for an id this frame conceals. */
@@ -960,12 +1210,30 @@ public final class Snap {
      * {@code true} for a {@code CardView} whose {@code getZone()} is null
      * ("cards outside any zone are visible to all", CardView.java:625-626); a
      * card we found by iterating an opponent's hand is not such a card.
+     *
+     * <p>The {@code "unknown"} arm is the same rule for the caller who has
+     * <b>no</b> walk to know better: {@link #card(JsonOut, CardView, PlayerView)}
+     * and {@link #label} derive their hint from {@code cv.getZone()} itself, so
+     * a null zone there used to mean hint {@code "unknown"}, no match on the
+     * two named zones, and a fall-through to gate 1 -- which is unconditionally
+     * true for a zoneless card.  A card owned by somebody who is not the viewer
+     * is concealed even when Forge cannot say where it is; protocol section 3.3
+     * is explicit that a redaction decision must not depend on which property
+     * Forge happened to populate.  A <b>null owner</b> deliberately stays
+     * visible: {@code PlayerControllerHuman.chooseCardsPile}'s synthetic pile
+     * headers ({@code new CardView(Integer.MIN_VALUE, null, "-- Pile 1 --")})
+     * have no owner and no zone, and section 3.3 names them as cards that must
+     * survive this branch.
      */
     private static boolean concealedByZoneHint(final CardView cv, final PlayerView viewer,
                                                final String zoneHint, final PlayerView ownerHint) {
-        return cv.getZone() == null
-                && ("hand".equals(zoneHint) || "library".equals(zoneHint))
-                && ownerHint != null && !ownerHint.equals(viewer);
+        if (cv.getZone() != null) {
+            return false;
+        }
+        if ("hand".equals(zoneHint) || "library".equals(zoneHint)) {
+            return ownerHint != null && !ownerHint.equals(viewer);
+        }
+        return "unknown".equals(zoneHint) && ownerHint != null && !ownerHint.equals(viewer);
     }
 
     /**
@@ -983,6 +1251,24 @@ public final class Snap {
      * is emitted before {@code stackCards} and the sweep needs the whole frame's
      * answer.
      */
+    /**
+     * The same set, for a caller that has a {@link GameView} rather than the
+     * two lists {@link #state} already walked.
+     *
+     * <p>{@link WireGuiGame} caches this per frame, on the game thread, exactly
+     * the way it caches {@code cardIndex} / {@code playerIndex}: the strings
+     * {@link #sweepText} gates arrive on the EDT and on our io thread, where
+     * walking the view graph is forbidden, so the answer has to be computed
+     * where it is legal and read where it is needed.
+     */
+    public static Set<Integer> concealedIds(final GameView game, final PlayerView viewer) {
+        assertGameThread("Snap.concealedIds");
+        if (game == null || viewer == null) {
+            return Set.of();
+        }
+        return concealedIds(players(game), stackBottomFirst(game), viewer);
+    }
+
     private static Set<Integer> concealedIds(final List<PlayerView> players,
                                              final List<StackItemView> stack,
                                              final PlayerView viewer) {

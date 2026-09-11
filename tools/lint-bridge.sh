@@ -152,6 +152,13 @@ allow_cardview() {
     # them reads a field off the card.  M2's WireGuiGame will need the same
     # exemption and the same scrutiny.
     RecordMatch.java) return 0 ;;
+    # WireGuiGame is M2's IGuiGame: 37 abstract members whose own signatures take
+    # CardView (showPromptMessage, setCard, setSelectables, assignCombatDamage,
+    # manipulateCardList, getAbilityToPlay, ...).  It never reads a field off one:
+    # a push takes getId() and nothing else (report 07 R1), and every card and
+    # every option LABEL that reaches the wire goes through Snap.card / Snap.label
+    # -- the same single gate the zone walk uses.
+    WireGuiGame.java) return 0 ;;
     *)                return 1 ;;
   esac
 }
@@ -165,6 +172,58 @@ while IFS= read -r f; do
     fail=1
   fi
 done < <(find "$SRC" -name '*.java' | sort)
+
+# --------------------------------------------------------------------------
+# 6. Thread names: every thread we create is named, from a constant, "mtg-table-*"
+#
+# forge.util.ThreadUtil.isGameThread() is a bare
+# getName().startsWith("Game") -- no registry, no identity, just a prefix match
+# on a string.  Snap's game-thread assert, Transport's assertGameThread and
+# WireGuiGame's R1 rule are all built on it, so a thread of OURS that drifted
+# into that prefix would be allowed to walk the view graph and would corrupt the
+# Tracker silently.
+#
+# HeadlessGuiBase asserts the same thing at class-init, over the same seven
+# names.  This rule is the half that assert cannot do: it catches a name that is
+# never constructed in the run that happens to execute the assert (the console's
+# quit watcher only exists after a `q`), and it catches an unnamed thread, whose
+# name would be "Thread-0" today and whatever the JDK feels like tomorrow.
+#
+# The name must be on the `new Thread(` line itself, which is also why
+# ConsoleTransport.quit() hands a method reference to a named quitWatch() rather
+# than an inline lambda: a grep can only see one line.
+# --------------------------------------------------------------------------
+thread_ok() {
+  # $1: the name expression from a `new Thread(...)` call site.
+  case "$1" in
+    '"mtg-table-'*'"') return 0 ;;             # a literal, right prefix
+    '"'*) return 1 ;;                          # a literal, wrong prefix
+  esac
+  # An identifier (possibly qualified): find its declaration and check the literal.
+  local ident="${1##*.}" decl
+  decl="$(grep -rhoE "String +${ident} *= *\"[^\"]*\"" "$SRC" 2>/dev/null | head -1 || true)"
+  [ -n "$decl" ] || return 1
+  case "${decl##*= }" in
+    '"mtg-table-'*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+while IFS= read -r hit; do
+  [ -n "$hit" ] || continue
+  expr_="$(printf '%s' "$hit" | sed -E 's/.*new Thread\(//; s/\).*$//; s/.*, *//; s/[[:space:]]*$//')"
+  if ! thread_ok "$expr_"; then
+    echo "LINT FAIL: unnamed or misnamed thread -- every \`new Thread(\` under bridge/src must" >&2
+    echo "  pass a name on the same line, as a constant (or an \"mtg-table-...\" literal) whose" >&2
+    echo "  value starts with \"mtg-table-\". ThreadUtil.isGameThread() is nothing but" >&2
+    echo "  getName().startsWith(\"Game\"), so an unnamed or drifting thread of ours can be" >&2
+    echo "  handed the view graph. Got: ${expr_:-<no name argument>}" >&2
+    echo "  $hit" >&2
+    fail=1
+  fi
+done < <(grep -rn --include='*.java' -F 'new Thread(' "$SRC" 2>/dev/null | strip_comments || true)
+
+ban 'defaultThreadFactory' \
+  'Executors.defaultThreadFactory() names its threads "pool-N-thread-M", which nothing in this repo asserts on. Pass a factory that names the thread from a constant (see HeadlessGuiBase).'
 
 if [ "$fail" -ne 0 ]; then
   echo "bridge lint FAILED" >&2

@@ -82,13 +82,20 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-It chains `check-forge.sh` → `lint-bridge.sh` (the banned-accessor grep over
-`bridge/src`) → `bridge/build.sh` → `Smoke` → a `RecordMatch` re-record into
-`var/` → `check-redaction.mjs` over the committed fixtures (games *and*
-synthetic) *and* that fresh recording → `check-redaction-selftest.mjs`, which
-asserts the checker still rejects ten one-defect probes → `npm run build && npm
-test` in `web/`. It exits non-zero on the first failure. If it is green, the Java emitter, the TypeScript reducer and the
-committed fixtures still agree.
+Twelve steps, stopping at the first failure: `check-forge.sh` →
+`lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
+`bridge/build.sh` (javac plus three self-tests) → `Smoke` → a `RecordMatch`
+re-record into `var/` → **a value-level drift diff** of that recording against
+`fixtures/games/g1.jsonl` → **three fresh human-seat games** (`--transport
+null`, the scripted `--transport console` smoke, and `--transport auto --seed
+11`, each asserted to end in exactly one `over` as its last frame) →
+`check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
+all four fresh recordings → `check-redaction-selftest.mjs`, which asserts the
+checker still rejects twelve one-defect probes → `npm run build && npm test` in
+`web/`. Two to five minutes, most of it the four games; every JVM step runs
+under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
+the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
+reducer and the committed fixtures still agree.
 
 Then, per milestone (see [`PLAN.md`](PLAN.md)):
 
@@ -114,8 +121,8 @@ npm --prefix web run dev:replay                  # opens /?replay=games/g1.jsonl
 node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
 npm --prefix web test && npm --prefix web run build
 
-# M2+ — a full game against the AI, in the terminal
-./bridge/run.sh mtgtable.MtgTable --transport console
+# M2 — a full game against the AI, in the terminal (--transport null|auto|console)
+./bridge/run.sh mtgtable.MtgTable --transport console --seed 42
 
 # M3+ — the same game in a browser tab; this is the one command you type
 ./scripts/play.sh             # check-forge -> build -> boot the JVM -> vite dev --open
@@ -124,8 +131,44 @@ npm --prefix web test && npm --prefix web run build
 node tools/fetch-art.ts
 ```
 
-The `M2+` / `M3+` / `M4+` commands name programs and scripts that **do not exist
-yet** — they are what those milestones deliver. Everything above them runs today.
+The `M3+` / `M4+` commands name programs and scripts that **do not exist yet** —
+they are what those milestones deliver. Everything above them runs today,
+`mtgtable.MtgTable` included.
+
+### Playing the console game
+
+`--transport console` is a real seat against the Forge AI with no browser. It
+prints the board, the current prompt with the engine's own button labels, and
+any question with its options numbered, then reads one line from stdin. `?`
+prints the help; the whole vocabulary is:
+
+| you type | it does |
+|---|---|
+| `<id>` or `c <id>` | click that card. The `selectable` line lists the ids the engine explicitly named, but **any** id is sent — Forge judges the click, and a rejected one comes back as `notice: Not selectable` |
+| `p <id>` | click that player (targeting, attacking) |
+| `a <card> <ab>` | activate an ability by id |
+| `ok` | press OK — **its label is the engine's**, so it is `Auto` during mana payment |
+| `no`, `x`, `cancel` | press Cancel — likewise `Undo (2)` or `End Turn` when the engine says so |
+| *(empty line)* | OK when OK is enabled, Cancel otherwise |
+| `m W\|U\|B\|R\|G\|C` | spend one floating mana |
+| `u` / `undo` | undo the last mana ability (Forge undoes mana abilities, not spells) |
+| `pass` | pass priority |
+| `!` | alpha strike — attack with everything |
+| `s` / `i` | reprint the last board / the last prompt |
+| `q` / `concede` | concede and exit |
+| `?` | the help above |
+
+While a question is outstanding **every** line answers it, and the question
+itself prints the spellings it accepts (`0,2`, an empty line for none, and so
+on). A lone `.` answers "no answer", which is always legal: the bridge
+substitutes Forge's own documented default. There is no timeout — the console
+waits as long as you do.
+
+Redaction is visible in the terminal: your hand is listed by name, the AI's is
+`??` lines with ids and nothing else. Every session writes the same frame log a
+browser would have consumed, to `var/games/<gameId>/frames.jsonl` — copy one
+under `fixtures/` (the only tree the dev server mounts) and
+`?replay=<that path>` scrubs through the game you just played.
 
 `bridge/build.sh` compiles with the JRE's compiler module and **never** passes
 `--release` (there is no `ct.sym` in a JRE image). `bridge/run.sh` launches with
@@ -151,7 +194,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the fourteen load-bearing decisions, dated
+  DECISIONS.md               the nineteen load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -163,6 +206,10 @@ mtg-table/
   decks/future-sight-probe.dck  throwaway: 22 Island + 18 Future Sight. It exists so one
                              fixture has a NON-EMPTY library.cards -- no card in either
                              deck above runs a continuous MayLookAt static
+  decks/trample-probe.dck    throwaway, M2: the only deck that makes Forge dispatch the
+                             assign_damage ask (one trampler, two blockers)
+  decks/scry-probe.dck       throwaway, M2: forces input.focusCard, which no AI-vs-AI
+                             recording produces
 
   docs/
     protocol.md              the living spec of the wire protocol and the frame log
@@ -174,8 +221,9 @@ mtg-table/
   bridge/                    the only Java. Hosts the engine, redacts, serialises, serves /ws.
     build.sh  run.sh
     src/mtgtable/            Bootstrap Config HeadlessGuiBase Json JsonSelfTest Snap
-                             GameLog RecordMatch Smoke
-                             M2+: WireGuiGame ReplyPool Transport ConsoleTransport MtgTable
+                             GameLog GameLogSelfTest RecordMatch Smoke
+                             WireGuiGame ReplyPool Transport MtgTable Ask AskSelfTest
+                             NullTransport AutoTransport ConsoleTransport
                              M3+: WsTransport
     out/                     gitignored
 
@@ -192,6 +240,13 @@ mtg-table/
       render/                Board.tsx describe.ts ErrorBoundary.tsx ReplayControls.tsx
                              M4+: Zone.tsx CardTile.tsx Stack.tsx AskModal.tsx PhaseStrip.tsx
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
+                             human-seat.test.ts (the M2 corpus: ask/answer pairing, the
+                             M8 clickability rule) and render.test.tsx, which mounts
+                             <Board/> over every fixture. `npm test` is `node --test`
+                             THEN `vitest run` -- Node's type stripping does not
+                             transform JSX, so the render test needs vitest (a dev
+                             dependency; a checkout with no node_modules fails the gate
+                             with a message saying exactly that)
     public/art.json          generated, gitignored
 
   tools/
@@ -208,14 +263,20 @@ mtg-table/
     fetch-art.ts             deck -> web/public/art.json
 
   fixtures/
-    games/*.jsonl            committed AI-vs-AI recordings. ENGINE-PRODUCED ONLY — this
-                             directory is the Java-to-TypeScript drift contract and
+    games/*.jsonl            committed recordings. ENGINE-PRODUCED ONLY — this directory
+                             is the Java-to-TypeScript drift contract and
                              web/test/fixtures.test.ts globs exactly it.
-                             g1/g2/g3 are pacho-shield.dck at seeds 42/7/2026;
-                             morph.jsonl is morph-probe.dck (the only fixture with a
-                             face-down card); disjoint.jsonl and future-sight.jsonl are
-                             the two-deck recordings, and future-sight.jsonl is the only
-                             one whose library.cards is ever non-empty
+                             AI-vs-AI (RecordMatch, no seat): g1/g2/g3 are
+                             pacho-shield.dck at seeds 42/7/2026; morph.jsonl is
+                             morph-probe.dck (the only fixture with a face-down card);
+                             disjoint.jsonl and future-sight.jsonl are the two-deck
+                             recordings, and future-sight.jsonl is the only one whose
+                             library.cards is ever non-empty.
+                             HUMAN-SEAT (M2, MtgTable --transport auto, so the only ones
+                             carrying input/ask/answer/notice/over frames and a
+                             `transport` session-header key): human-auto-42/-7/-2026,
+                             plus human-trample-7 (the assign_damage ask) and
+                             human-scry-7 (input.focusCard)
     synthetic/*.jsonl        hand-built logs for shapes an AI-vs-AI game never emits: an
                              input whose focusCard is not in the snapshot, all ELEVEN ask
                              kinds with their answers, a face-down card in three
@@ -247,7 +308,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Fourteen load-bearing decisions, dated, each with the alternatives that were rejected. |
+| [`DECISIONS.md`](DECISIONS.md) | Nineteen load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

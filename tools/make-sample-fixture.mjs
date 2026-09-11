@@ -29,6 +29,14 @@
 //     card has NO public body: `types: ""` and null P/T (§3.2).
 //   * `library.cards` with content, the `surveil` / `phased` / `foretold` event
 //     kinds, and a `zone` event with a null `from` and one with a null `to`.
+//   * a **token** (amendment P15, `CardView.isToken()`): the card the null-`from`
+//     zone event is about, so the event and the card it created are in the same
+//     frame and a renderer can be checked against both.
+//   * **all ten frame types of section 2**, which no other artifact in the repo
+//     has: an AI-vs-AI recording carries `hello_ok`, `state` and `over` and
+//     nothing else, so `notice` (section 6), `ping`/`pong` (section 2.5) and
+//     `resync` (section 2.4) reached the reducer only through hand-built unit
+//     tests until this file carried one of each.
 //
 // TWO THINGS THIS FILE IS NOT EVIDENCE FOR. It is hand-built, so a shape here
 // proves the *renderer* is total over it and nothing about what Snap.java
@@ -160,6 +168,24 @@ const myForetold = () => card({
   power: null, toughness: null, controller: 0, zone: 'exile', faceDown: true, alt: null,
 });
 
+/**
+ * §3.2, amendment P15 — `CardView.isToken()`. A token has a card id like any
+ * other permanent, `manaCost: null` like a land, and **no printing behind it**:
+ * `art.json` can never have an entry, and the renderer draws its generated
+ * frame and says "token" rather than reporting an art miss.
+ *
+ * Shape copied from a real one in `fixtures/games/g1.jsonl` (`Soldier Token`,
+ * MSH, 1/1, `abilities: []`) so the hand-built file cannot drift from what the
+ * emitter actually writes. Its id is **90 on purpose**: that is the id of the
+ * `zone` event below whose `from` is `null`, so the event that says "a token
+ * came from nowhere" and the token it created are in the same frame.
+ */
+const soldierToken = (o = {}) => card({
+  id: 90, name: 'Soldier Token', setCode: 'MSH', manaCost: null,
+  types: 'Creature - Soldier', power: '1', toughness: '1',
+  controller: 0, zone: 'battlefield', token: true, sick: true, ...o,
+});
+
 const handPlains = card({ id: 101, name: 'Plains', manaCost: null, types: 'Basic Land - Plains',
   zone: 'hand', controller: 0 });
 const handQuantum = card({ id: 102, name: 'Quantum Reduction', setCode: 'MSC', manaCost: '{1}{U}',
@@ -193,6 +219,10 @@ const header = {
   v: 1, kind: 'session', gameId: 'sample-handwritten',
   startedAt: '2026-09-11T20:14:03Z', seed: 42,
   forgeVersion: '2.0.14', forgeJarSha256: JAR_SHA, seat: 0,
+  // section 8.1: which client played this seat. Absent from an AI-vs-AI
+  // recording, which has no transport; this file stands in for the M3 browser
+  // session, so it carries the key the engine recordings cannot.
+  transport: 'ws',
   // section 8.1: one entry per seat, but `path`/`sha256` belong to the viewing
   // seat alone -- they identify a decklist exactly, and section 8.3 promises the
   // log holds only what this seat was allowed to see. `cards` is public.
@@ -469,6 +499,24 @@ const surveilInput = f(++seqS, clock + 400, 's2c', 'input', {
   openZones: [{ playerId: 1, zones: ['graveyard', 'exile'] }],
 });
 
+// --- the four frame types no recording carries (§2) -------------------------
+//
+// An AI-vs-AI log is `hello_ok`, a run of `state`, and `over` (§8.4). These four
+// are the rest of §2's table, and the reducer has a branch for each: without
+// them, every one of those branches was covered only by a frame hand-built
+// inside a unit test, which is a different artifact from the one the transport
+// actually parses.
+
+// §2.5 — keepalive, in both directions. It carries no game meaning and the
+// reducer ignores it; what it must not do is throw or advance the board.
+const pingOut = f(++seqS, clock + 100, 's2c', 'ping', {});
+const pongBack = f(++seqC, clock + 120, 'c2s', 'pong', {});
+
+// §2.4 — a client asking for a fresh snapshot after a reconnect. It is a
+// request, not an effect: the `state` that answers it is the next frame, which
+// is exactly the order a replay reads them in.
+const resyncRequest = f(++seqC, clock + 5000, 'c2s', 'resync', {});
+
 const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
   gameId: 'sample-handwritten', turn: 9, round: 5, phase: 'COMBAT_DECLARE_BLOCKERS',
   activePlayer: 0, priority: 0, gameOver: null,
@@ -484,6 +532,9 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
           quake({ tapped: true }),
           spyKit({}),
           myManifest({ tapped: true, attacking: true }),
+          // The token the null-`from` zone event in this frame's `events`
+          // created (P15). Summoning sick, so it is not among the attackers.
+          soldierToken(),
         ]),
         graveyard: zone([myGrave]),
         exile: zone([myForetold()]),
@@ -560,6 +611,21 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
   ],
 });
 
+/*
+ * §6 — a `notice`. A toast, never a question: anything the user must answer is
+ * an `ask`, and a notice never blocks. Two of its three levels have a caller
+ * today — `warn` for `flashIncorrectAction` / an `act` the engine refused, and
+ * `error` for an `UNIMPL <name>` (an unimplemented `IGuiGame` member firing),
+ * which §6 says must be visible in the browser *and* greppable in `var/*.log`.
+ * This is the `warn` one: the shape a client sees when it clicks a creature
+ * that cannot block.
+ */
+const noticeFrame = f(++seqS, clock + 9000, 's2c', 'notice', {
+  level: 'warn',
+  title: 'Illegal action',
+  text: 'That creature cannot block.',
+});
+
 const over = f(++seqS, clock + 12000, 's2c', 'over', {
   winner: 0,
   reason: 'Opponent has lost the game.',
@@ -569,7 +635,7 @@ const over = f(++seqS, clock + 12000, 's2c', 'over', {
 const lines = [
   header, helloOk, mainOne, mainOneInput, clickQuantum,
   ...asks,
-  surveilInput, declareBlockers, over,
+  surveilInput, pingOut, pongBack, resyncRequest, declareBlockers, noticeFrame, over,
 ];
 
 writeFileSync(
@@ -578,6 +644,8 @@ writeFileSync(
   'utf8',
 );
 const kinds = new Set(asks.filter((l) => l.type === 'ask').map((l) => l.body.kind));
+const types = new Set(lines.filter((l) => l.kind !== 'session').map((l) => l.type));
 console.log(`wrote ${process.argv[2]}: 1 session header + ${lines.length - 1} frames ` +
   `(${lines.filter((l) => l.dir === 's2c').length} s2c, ${lines.filter((l) => l.dir === 'c2s').length} c2s), ` +
   `${kinds.size}/11 ask kinds: ${[...kinds].sort().join(', ')}`);
+console.log(`  ${types.size}/11 frame types: ${[...types].sort().join(', ')}`);

@@ -47,4 +47,24 @@ java -m jdk.compiler/com.sun.tools.javac.Main \
 # org.eclipse.jetty.util.ajax.JSON, which is bundled in it.
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.JsonSelfTest
 
+# Unit-check the ask path's answer marshalling on every build, for the same
+# reason and in the same shape.  Forge dispatched only 2 of the 11 ask kinds in
+# every game recorded for M2, so for the other nine this is the ONLY check that
+# runs at all -- and assign_damage's "index 0 is the defending player, index i is
+# blockers.get(i-1)" (protocol section 5.3) is a one-off error that produces a
+# perfectly well-formed answer either way.  It parses its answers with
+# Json.parse, hence the Forge jar on the classpath (Jetty is bundled in it).
+java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.AskSelfTest
+
+# Unit-check the frame log's close path, with the same mutation discipline.  The
+# defect it exists for was invisible in a green run: close() held this object's
+# monitor across its own thread.join(30s) while the appender needed that monitor
+# after every line, so close() burned the whole timeout and returned a TRUNCATED
+# file (measured: 12,089 of 20,001 lines on disk), and MtgTable/RecordMatch call
+# System.exit next, which kills the daemon appender mid-write.  Every `frames =
+# N` in a run summary and every `tail -1 == over` assertion downstream depends on
+# this being correct, so it is asserted in time and in line count, not in shape.
+# It writes only under var/.
+java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.GameLogSelfTest "$REPO_ROOT/var/gamelog-selftest"
+
 echo "build OK"

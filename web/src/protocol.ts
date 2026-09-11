@@ -948,6 +948,11 @@ export interface AskBase<K extends AskKind> {
 
 /** `getAbilityToPlay` → the chosen option index, or `null`. */
 export interface AbilityMenuAsk extends AskBase<'ability_menu'> {
+  /**
+   * Never `null`: with no host card there is nothing to attach a menu to, so
+   * the bridge skips the ask entirely rather than emitting one this type would
+   * be wrong about (the emitter used to write a null here).
+   */
   cardId: number;
   /** `label` is `SpellAbilityView.getDescription()`; `canPlay` is the engine's answer. */
   options: Array<AskOption & { canPlay: boolean; isSpell: boolean }>;
@@ -984,6 +989,7 @@ export interface OptionsAsk extends AskBase<'options'> {
 export interface TextAsk extends AskBase<'text'> {
   prompt: string;
   title: string;
+  /** `""` when Forge has no initial value — never `null`, like every other string field. */
   initial: string;
   suggestions: string[];
   numeric: boolean;
@@ -1072,7 +1078,15 @@ export interface ChooseEntitiesAsk extends AskBase<'choose_entities'> {
  * player". Blockers follow, each with its remaining toughness as `lethal`.
  */
 export interface AssignDamageAsk extends AskBase<'assign_damage'> {
-  attackerId: number;
+  /**
+   * **Nullable, and declared so at both ends.** Forge's `assignCombatDamage`
+   * signature allows a null attacker and the emitter has a live path to it, so
+   * the type says what the bridge can produce rather than what a run happened
+   * to produce. Never observed; `tools/check-redaction.mjs` asserts the
+   * declared nullability of every `ask` field, so the next drift fails in CI
+   * instead of in a browser tab.
+   */
+  attackerId: number | null;
   total: number;
   /** Forge's own flags, passed through. */
   overrideOrder: boolean;
@@ -1143,7 +1157,17 @@ export type AskBody =
 
 export type NoticeLevel = 'info' | 'warn' | 'error';
 
-/** §6. A toast, never a question. Anything the user must answer is an `ask`. */
+/**
+ * §6. A toast, never a question. Anything the user must answer is an `ask`.
+ *
+ * **Both strings are gated.** They are Forge's own — `IGuiGame.message` /
+ * `showErrorDialog` — and `PlayerControllerHuman.notifyOfValue` passes
+ * `CardView.get(sa.getHostCard()).toString()`, i.e. `name (id)`, as the
+ * *title*. So each goes through `Snap.sweepText` against the ids the current
+ * snapshot conceals and arrives as `""` when it named one (§3.6 rule 1's sweep,
+ * in its second channel). A client renders both verbatim and must be total over
+ * an empty title or an empty text.
+ */
 export interface NoticeBody {
   level: NoticeLevel;
   title: string;
@@ -1366,6 +1390,17 @@ export interface SessionHeader {
   forgeVersion: string;
   forgeJarSha256: string;
   seat: number;
+  /**
+   * §8.1. Which client played this seat — **absent from an AI-vs-AI recording**,
+   * which has no transport and nobody at the keyboard.
+   *
+   * It is not decoration. `--transport null` answers *every* ask with a literal
+   * `null` on purpose, so that Forge's documented defaults (§5.4) get played,
+   * and `tools/check-redaction.mjs` needs this key to tell that apart from a
+   * bridge that completed an `order` future with `null` — which wedges the game
+   * thread.
+   */
+  transport?: 'null' | 'auto' | 'console' | 'ws';
   decks: DeckRef[];
 }
 

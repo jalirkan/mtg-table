@@ -112,9 +112,12 @@ public final class HeadlessGuiBase implements IGuiBase {
     /** The name given to {@link #runBackgroundTask} threads. */
     public static final String BG_NAME = "mtg-table-bg";
 
+    /** The prefix every thread this repo creates must carry.  See the static block. */
+    public static final String THREAD_PREFIX = "mtg-table-";
+
     /**
-     * Every thread name this class creates, checked at class-init against the
-     * one test Forge uses to decide what the game thread is.
+     * <b>Every thread name this repo creates</b>, checked at class-init against
+     * the one test Forge uses to decide what the game thread is.
      *
      * <p>{@code forge.util.ThreadUtil.isGameThread()} is a bare
      * {@code Thread.currentThread().getName().startsWith("Game")}
@@ -125,14 +128,37 @@ public final class HeadlessGuiBase implements IGuiBase {
      * the view graph and would corrupt the {@code Tracker} <em>silently</em>.
      * The cost of this check is one string comparison per JVM; the cost of
      * discovering it the other way is a corrupted snapshot with no exception.
+     *
+     * <p>The list used to be {@code {EDT_NAME, BG_NAME}}, which was the whole
+     * set when it was written and stopped being it the day M2 added five more
+     * threads -- the io reader, the frame-log appender, two watchdogs and the
+     * console's quit watcher.  {@code CLAUDE.md} rule 10 says this assert covers
+     * "no thread name we create", so the set is now complete and the test is the
+     * stronger one: a name must <em>start with</em> {@value #THREAD_PREFIX},
+     * which cannot start with {@code "Game"}.  Each entry is a compile-time
+     * constant, so naming it here loads no class.
+     *
+     * <p>{@code tools/lint-bridge.sh} section 6 is the other half: it greps every
+     * {@code new Thread(} under {@code bridge/src} and fails one that does not
+     * name its thread from a constant, which catches a name that is never
+     * constructed in any run this assert happens to execute.
      */
     static {
-        for (final String name : new String[] {EDT_NAME, BG_NAME}) {
-            if (name.startsWith("Game")) {
+        for (final String name : new String[] {
+            EDT_NAME,
+            BG_NAME,
+            GameLog.THREAD_NAME,
+            Transport.IO_THREAD_NAME,
+            ReplyPool.WATCHDOG_THREAD_NAME,
+            AutoTransport.WATCHDOG_THREAD_NAME,
+            ConsoleTransport.QUIT_THREAD_NAME,
+        }) {
+            if (!name.startsWith(THREAD_PREFIX)) {
                 throw new ExceptionInInitializerError(
-                    "thread name \"" + name + "\" starts with \"Game\", which is the WHOLE of "
-                    + "ThreadUtil.isGameThread(): Forge would treat this thread as the game "
-                    + "thread and let it walk the Tracker off-thread, which corrupts it silently");
+                    "thread name \"" + name + "\" does not start with \"" + THREAD_PREFIX
+                    + "\". ThreadUtil.isGameThread() is nothing but getName().startsWith(\"Game\"), "
+                    + "so a drifting name lets one of our threads walk the Tracker off-thread, "
+                    + "which corrupts it silently");
             }
         }
     }

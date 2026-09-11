@@ -24,6 +24,33 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-11 — M2 verification pass
+
+Applied after an independent verifier replayed the M2 recordings and found the
+spec disagreeing with them. Neither row bumps `v`; the first changes no bytes at
+all and every byte of the second is one nobody has ever seen.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M8 | §4, §4.1, §4.2 | **`selectable` is the explicit selection set, not the set of clickable cards.** §4 called `selectable.cardIds` "the ids the engine will accept a click on" and §4.1 said "a card is clickable iff its id is in `state.input.selectable.cardIds`" — and **every human-seat recording falsifies it**. `InputPassPriority` never calls `setSelectables`, so the commonest interaction in Magic — clicking a card in your own hand at your own main phase — happens while `selectable` is `{"cardIds":[],"min":0,"max":0,"mode":"none"}`. Measured over the committed corpus: **78 of 86** `clickCard` acts in `human-auto-42.jsonl` name an id that is absent from the preceding `input.selectable.cardIds` (57/63 at seed 7, 48/51 at seed 2026, 96/96 and 49/49 in the two probes), all of them while `mode === "none"`, and they work — card 38 is clicked at a `Main phase, precombat` prompt with an empty `selectable` and is on the battlefield as `Island` four frames later. Reproduced by hand through the console. A board written to the old rule cannot play a land or cast a spell. `setSelectables` populates `selectable` for the *explicit* choices — targeting, discard, declare blockers, `InputSelectEntities` — and **Forge is the judge of every other click**: send the `clickCard` act and a rejected one comes back as `notice {level:"warn", title:"Not selectable"}` (5 of 152 notices at seed 42). Pinned by a test over the fixtures (`web/test/human-seat.test.ts`), because the next reader would otherwise re-derive the wrong rule from the spec. | M2 verification |
+| M9 | §1, §8.1 | **A frame produced before the session header still gets a real `seq`.** `WireGuiGame.emit` wrote `seq: 0` for any frame emitted before `openView` — reachable through `applyAct`'s pre-`ready` `notice("warn","Not yet",…)` and through the `over` of a concede during the pre-game prompts — while §1 declares `seq` "monotonic, per direction, starting at 1" and says a gap means a dropped frame, so a client saw `0` and then `1`. `GameLog` now numbers such a frame, holds it (bounded), and writes it immediately after line 0 when the header arrives; a header that never arrives leaves the file empty and says so on stderr. No committed recording contains a `seq: 0`. | M2 verification |
+
+### 2026-09-11 — M2 review pass
+
+Applied after `WireGuiGame` shipped and a reviewer read the first human-seat
+recordings. Every row is a rule the emitter could break and nothing was
+watching; none of them bumps `v`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M1 | §6 | **Both `notice` strings are gated.** They are Forge's own — `IGuiGame.message` / `showErrorDialog` — and `PlayerControllerHuman.notifyOfValue` passes `CardView.get(sa.getHostCard()).toString()`, i.e. `name (id)`, as the *title*. Measured in five independent recordings: `{"level":"info","title":"Thriving Isle (49)","text":"Forge AI picked White"}` one frame before card 49 was legitimately revealed, while the client's model held 49 as a hidden stub in the opponent's hand. Each string now goes through `Snap.sweepText` — §3.6 rule 1's sweep, in its third channel — and is `""` when it named a concealed id. `check-redaction.mjs` scans both and **fails**, not warns: it is our gate now, not Forge's phrasing. | M2 review |
+| M2 | §5.2 | **Three declared nullabilities, one per end.** `assign_damage.attackerId` is `number \| null` (Forge's signature allows a null attacker and the emitter has a live path to it). `ability_menu.cardId` stays `number` — with no host card there is nothing to attach a menu to, so the bridge **skips the ask** instead of emitting a null. `text.initial` is always a string, `""` when Forge has none. The checker now asserts the exact key set and the declared type of every `ask` body, per kind. | M2 review |
+| M3 | §8.1 | The session header gains **`transport`** (`"null" \| "auto" \| "console" \| "ws"`), **absent from an AI-vs-AI recording**, which has none. `--transport null` answers every ask with a literal `null` on purpose, and without this key a null-transport log is indistinguishable on disk from a wedge (A12). | M2 review |
+| M4 | §7, §8.4 | **`over` is emitted by the outcome capture, not by `finishGame`.** Forge calls neither `finishGame` nor `afterGameEnd` reliably after a concede during the pre-game prompts: two of four identical console runs ended with a final `state` carrying `gameOver` and **no `over` frame at all**, and still exited 0. The frame is now emitted the instant the result exists, after the `state` that carries it, and the console's quit path exits non-zero when there is still no `over`. | M2 review |
+| M5 | §3.2 | `abilities` is **`[]` in every recording to date, human-seat ones included**, and the milestone that fills it is **M5**, not M2. Report 06 §S10's route needs `Card.getAllPossibleAbilities`, which takes a `Card` and not a `CardView`, so `getAbilityToPlay`'s menu — the one place the array could come from today — only ever fires for the one-ability shortcut, which never reaches an ask. | M2 review |
+| M6 | §8.4, §8.5 | **Human-seat recordings are described and listed.** §8.4 said `input` / `ask` / `notice` / `c2s` lines are absent from `fixtures/games/`; five of its files now carry them. | M2 review |
+| M7 | §3.6 | The `blockers` event's **unblocked attackers map to themselves**. `PhaseHandler.java:728-736` builds the payload as `putAll(att, blockers.isEmpty() ? List.of(att) : blockers)`, so an unblocked attacker arrives as `{attackerId: n, blockerIds: [n]}`. That is Forge's encoding, faithfully relayed; a reader must not render it as "blocked by itself". `state.combat` is the authority on who blocked what. | M2 review |
+
 ### 2026-09-11 — M1 hardening pass
 
 Applied from `docs/research/06-hidden-information-audit.md` (the reveal-path
@@ -370,11 +397,17 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   itself does no payability prediction for humans.
 - `abilities[].id` is what `act: clickAbility` sends back. The client echoes the
   id; it never reconstructs an ability.
-- **`abilities` is `[]` in every AI-vs-AI recording, and that is the true
-  answer,** not a stub. The playable-ability list is not a property of `CardView`;
-  Forge asks the GUI for it through `IGuiGame.getAbilityToPlay`, which only fires
-  for a human seat. M2's `WireGuiGame` is where the array becomes non-empty, and
-  it is filled only for cards where `canBeShownTo(viewer)` is true.
+- **`abilities` is `[]` in every recording, human-seat ones included, and that
+  is the true answer,** not a stub. The playable-ability list is not a property
+  of `CardView`; Forge asks the GUI for it through `IGuiGame.getAbilityToPlay`,
+  which fires only for a human seat **and only at the moment of a click** — and
+  M2 measured it firing only as the one-ability shortcut, which is answered
+  locally and never reaches an ask. **M5 is the milestone that fills the array**
+  (amendment M5): report 06 §S10's route is `Card.getAllPossibleAbilities`,
+  which takes a `Card` and not a `CardView`, so it needs a game-thread hop that
+  does not exist yet. Until then, `act: clickAbility` is resolvable only against
+  the `abilityId`s the last `ability_menu` filled, and a client must not expect
+  a card object to carry its own playable list.
 - `setCode` is a string, or **`null` when Forge has no current state for the
   card** (`CardView.getCurrentState()` is a plain property read; the bridge
   writes `null` rather than inventing a set code). `setCode` plus `name` is what
@@ -825,7 +858,7 @@ Every enum goes on the wire as `.name()`, never `toString()`.
 | `resolved` | `GameEventSpellResolved` | `cardId`, `fizzled`. **`stackDescription()` is never emitted.** |
 | `unstacked` | `GameEventSpellRemovedFromStack` | `cardId` — left the stack without resolving (countered, etc.) |
 | `attackers` | `GameEventAttackersDeclared` | `player`, `bands:[{defender:{kind,id}` or `null`, `attackerIds:[]}]` |
-| `blockers` | `GameEventBlockersDeclared` | `defendingPlayer`, `blocks:[{attackerId, blockerIds:[]}]` |
+| `blockers` | `GameEventBlockersDeclared` | `defendingPlayer`, `blocks:[{attackerId, blockerIds:[]}]`. **An unblocked attacker maps to itself** — `{attackerId: 12, blockerIds: [12]}` — because that is how Forge builds the payload (`PhaseHandler.java:728-736`: `putAll(att, blockers.isEmpty() ? List.of(att) : blockers)`). It is relayed verbatim rather than second-guessed; render it as "unblocked", never as "blocked by itself", and take `state.combat` as the authority on who blocked what (amendment M7). |
 | `damage` | `GameEventPlayerDamaged`, `GameEventCardDamaged` | `target:{kind,id}`, `sourceCardId`, `amount`, `combat` (players: `combat()`; cards: `true` iff `type().name()` contains `Combat`), `damageType` (the enum name for cards, `null` for players) |
 | `life` | `GameEventPlayerLivesChanged` | `player`, `from`, `to` |
 | `poison` | `GameEventPlayerPoisoned` | `player`, `sourcePlayer`, `from`, `amount` |
@@ -881,9 +914,9 @@ the EDT**, not the game thread.
 | `focusCardId` | Card id the prompt is about, or `null`. |
 | `focusCard` | **The serialised card** for `focusCardId`, or `null`. `IGuiGame.setCard` / `setPanelSelection` are frequently pushed with a card that is **not in the snapshot** — a library card during surveil or `willPutCardOnTop` — so an id alone renders blank. Produced by the one serialising function (§3.3). |
 | `buttons.ok` / `.cancel` | Label and enabled flag, straight from `updateButtons`. **Render the label verbatim**: `Undo (2)`, `End Turn` and `Auto` are engine labels, not client features (§2.2). |
-| `selectable.cardIds` | The ids the engine will accept a click on. May contain an id that is **not** in this frame's `state` (a library card that is a legal target): render nothing for it, never throw. |
-| `selectable.min` / `.max` | How many. |
-| `selectable.mode` | `"cards"` \| `"players"` \| `"none"`. |
+| `selectable.cardIds` | **The explicit selection set** — the ids `setSelectables` named for a *choice*: targeting, discard, declare blockers, `InputSelectEntities`. It is **not** the set of cards the engine will accept a click on (amendment M8): `InputPassPriority` never calls `setSelectables`, so at your own main phase this is `[]` and your hand is still clickable. May contain an id that is **not** in this frame's `state` (a library card that is a legal target): render nothing for it, never throw. |
+| `selectable.min` / `.max` | How many, for that explicit choice. Both `0` when there is none. |
+| `selectable.mode` | `"cards"` \| `"players"` \| `"none"`. `"none"` means *no explicit selection is outstanding* — not "nothing is clickable". |
 | `highlighted` | Card ids to emphasise without making clickable. |
 | `weak` | Card ids from `setWeaklySelectable` — Forge's "this would be tapped by Auto" hint. It is a multiset on Forge's side (a count of 2 means *Auto would tap it*); the wire carries the distinct ids. `[]` until M5. |
 | `openZones` | Zone panels the engine asked the client to open: `[{playerId, zones:["graveyard","exile"]}]`. A **hint**, not a question — see §4.3. `[]` most of the time. |
@@ -897,9 +930,29 @@ frame without fighting the thread model.
 
 Resolution: **two frames on the wire, one object in the client.** `reduce()` merges
 `input` into the single `GameState`, so `render(state)` is total and the view never
-sees two streams. A button is enabled iff the engine said so; a card is clickable
-iff its id is in `state.input.selectable.cardIds`. **The client computes legality
-for nothing** — not mana payability, not targeting, not stops.
+sees two streams. A button is enabled iff the engine said so. **The client computes
+legality for nothing** — not mana payability, not targeting, not stops.
+
+**What is clickable (amendment M8).** This paragraph used to say "a card is
+clickable iff its id is in `state.input.selectable.cardIds`", and the recordings
+say otherwise:
+
+- when `selectable.mode !== "none"` the engine is asking for an **explicit
+  selection** and `cardIds` is that set: outline those cards, and count the
+  clicks against `min`/`max`;
+- when `selectable.mode === "none"` and no `ask` is outstanding, the seat has
+  **priority** and the viewer's own cards are clickable anyway — that is
+  `InputPassPriority`, which sets a prompt and two buttons and never calls
+  `setSelectables`. 78 of the 86 `clickCard` acts in `human-auto-42.jsonl` are
+  this case.
+
+**Forge is the judge.** The client does not decide which of its own cards may be
+clicked (that would be rules logic, invariant 8); it sends `act: clickCard` and
+Forge answers. A click the engine will not take comes back as
+`notice {level:"warn", title:"Not selectable", text:"card <id> cannot be selected
+now"}` — `IGameController.selectCard` returning `false` — and nothing else
+happens. A board that greys out everything outside `selectable.cardIds` cannot
+play a land.
 
 ### 4.2 Invariant: disabled OK means "click a card"
 
@@ -909,6 +962,14 @@ stalls a button-only client at the discard step.
 
 A UI that only renders buttons will appear to hang with no error. Whenever
 `selectable.cardIds` is non-empty, the cards are the interaction.
+
+**The converse does not hold** (amendment M8). An empty `selectable.cardIds` does
+*not* mean the buttons are the only interaction: it is also the ordinary state of
+having priority, where OK is enabled (`OK`, `End Turn`, `Auto` — the engine's own
+labels) *and* every card in your hand is clickable. The diagnostic that matters is
+narrower: **OK disabled, `selectable` empty, no outstanding `ask`, game not over**
+is the signature of a wedged game thread and must be rendered loudly
+(`docs/research/10-board-ui-spec.md` §5.2).
 
 ### 4.3 `openZones` is a hint, and was never a question
 
@@ -1000,14 +1061,14 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
 
 | `kind` | `IGuiGame` method(s) | extra body | `answer.value` |
 |---|---|---|---|
-| `ability_menu` | `getAbilityToPlay` | `cardId`, `options:[opt]` (each with `abilityId`, `label` from `SpellAbilityView.getDescription()`, `canPlay`, `isSpell`) | option index, or `null` |
+| `ability_menu` | `getAbilityToPlay` | `cardId` (**never null** — with no host card the bridge skips the ask), `options:[opt]` (each with `abilityId`, `label` from `SpellAbilityView.getDescription()`, `canPlay`, `isSpell`) | option index, or `null` |
 | `confirm` | `confirm(CardView,…)`, `showConfirmDialog` | `prompt`, `title`, `yesLabel`, `noLabel`, `defaultYes`, **`card`** (`Card` or `null`) | `true` \| `false` \| `null` |
 | `options` | `showOptionDialog` | `prompt`, `title`, `options:[opt]`, `defaultIndex`, **`card`** (`Card` or `null`) | option index, or `null` |
-| `text` | `showInputDialog` | `prompt`, `title`, `initial`, `suggestions:[string]`, `numeric` | string, or `null` |
+| `text` | `showInputDialog` | `prompt`, `title`, `initial` (**a string, `""` when Forge has none**), `suggestions:[string]`, `numeric` | string, or `null` |
 | `choose_list` | `getChoices` — and everything `AbstractGuiGame` builds on it: `one` / `oneOrNone` / `many` / `reveal` / `getInteger` / `insertInList` | `prompt`, `options:[opt]`, `preselected:[index]`, `min`, `max`, **`reveal`** | `[index…]` (length in `[min,max]`), or `null` |
 | `order` | `order` → `OrderResult` | `prompt`, `destLabel`, `source:[opt]`, `dest:[opt]`, `min`, `max`, `referenceCardId`, `sideboardMode`, `showRemember` | `{ "ordered": [index…], "remember": bool }` — **never `null`** |
 | `choose_entities` | `chooseSingleEntityForEffect` (min=max=1, or min=0 when optional), `chooseEntitiesForEffect` | `prompt`, `options:[opt]`, `min`, `max`, **`delayedReveal`** | `[index…]`, or `null` |
-| `assign_damage` | `assignCombatDamage` | `attackerId`, `total`, `overrideOrder`, `maySkip`, `targets:[opt]` — **the defender is index 0** | `{ "<index>": n, … }`, or `null` |
+| `assign_damage` | `assignCombatDamage` | `attackerId` (**or `null`**: Forge's signature allows a null attacker), `total`, `overrideOrder`, `maySkip`, `targets:[opt]` — **the defender is index 0** | `{ "<index>": n, … }`, or `null` |
 | `assign_amount` | `assignGenericAmount` | `sourceCardId`, `total`, `atLeastOne`, `label`, `targets:[opt]` | `{ "<index>": n, … }`, or `null` |
 | `manipulate_list` | `manipulateCardList` (surveil, scry-likes) | `prompt`, `cards:[opt]` (full list, in order), `manipulable:[index]`, `toTop`, `toBottom`, `toAnywhere` | `[index…]` — the full list in its new order |
 | `sideboard` | `sideboard` | `prompt`, `main:[opt]`, `side:[opt]` | `[index…]` = the new main deck, or `null` |
@@ -1033,8 +1094,18 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
   plus `playerId` or `cardId`; the blockers follow, each with `cardId` and
   `lethal` (remaining toughness, computed on the game thread). The bridge
   marshals index 0 back to the map key `null`, which is what
-  `PlayerControllerHuman.java:305-311` accepts for "the defending player". A
-  `null` answer is legal here and means "let Forge assign" (`PCH:302-304`).
+  `PlayerControllerHuman.java:305-311` accepts for "the defending player", and
+  index `i` back to `blockers.get(i - 1)`. A `null` answer is legal here and
+  means "let Forge assign" (`PCH:302-304`).
+  **A one-off error in that marshalling is invisible on the wire** — both
+  spellings are a well-formed `{"<index>": n}` object — so it is not left to a
+  recording to catch: `mtgtable.Ask` holds the marshalling for all eleven kinds
+  with no Forge types in it, and `mtgtable.AskSelfTest` drives each one from real
+  JSON in `bridge/build.sh`, beside the `Json` self-test. Forge dispatched only
+  `choose_list` and `order` in the games recorded for M2 and
+  `assign_damage` in the trample probe, so for the remaining eight kinds that
+  self-test and `fixtures/synthetic/sample-handwritten.jsonl` are the whole of
+  the contract.
 - **`assign_amount` keys may be colours.** `assignGenericAmount` takes a
   `Map<Object,Integer>` whose keys are `GameEntityView` **or** `MagicColor.Color`
   ("mana of any combination of colours"), so each target carries
@@ -1102,6 +1173,22 @@ The machinery, all of which must exist before the first `ask` is emitted:
 `showErrorDialog`, `alertUser` and `flashIncorrectAction`. Never blocks — a
 `notice` is a toast, not a question. Anything the user must answer is an `ask`.
 
+**Both strings are gated** (amendment M1). They are the engine's, and one of
+them is routinely a card: `PlayerControllerHuman.notifyOfValue` calls
+`message(value, CardView.get(sa.getHostCard()).toString())`, and
+`CardView.toString()` is `name (id)`. So `title` and `text` each pass through
+`Snap.sweepText` — rule 2 of §3.6's gate/sweep/strip, applied on its own — and
+arrive as `""` when the string named an id the current snapshot conceals. Both
+are always present and always strings; a client renders them verbatim and must
+be total over an empty one.
+
+This is invariant 4's second half stated as a rule rather than as a call site:
+**`Snap.stackText` and `Snap.sweepText` are the same sweep**, and nothing else in
+the bridge may put an engine string on the wire ungated.
+`tools/check-redaction.mjs` scans `notice.title` and `notice.text` and **fails**
+on a hit — unlike `ask.prompt` and `input.prompt`, which only warn, because those
+are strings Forge builds and we do not (report 06 §10, residual risk 3).
+
 `UNIMPL <name>` conditions (an unimplemented `IGuiGame` member firing) are emitted
 as a `notice` at `level: "error"` **and** logged server-side, so they are visible
 in the browser and greppable in `var/*.log`. Zero `UNIMPL` lines over ten
@@ -1117,10 +1204,20 @@ consecutive games is the M5 exit criterion.
             "matchOver": false } }
 ```
 
-From `finishGame`. `winner` is a player `id`, or `null` for a draw. `matchOver`
-distinguishes the end of a game from the end of the match; when it is `false` the
-client may send `act: nextGame` — and the next game opens with a **new
-`hello_ok`** that invalidates every cached id (§2.1).
+**From the outcome, not from `finishGame`** (amendment M4). `winner` is a player
+`id`, or `null` for a draw. `matchOver` distinguishes the end of a game from the
+end of the match; when it is `false` the client may send `act: nextGame` — and the
+next game opens with a **new `hello_ok`** that invalidates every cached id (§2.1).
+
+The emitter's trigger is `GameEventGameOutcome`, read on the game thread and
+shipped immediately after the `state` frame that carries the same body as
+`gameOver`. It used to be `IGuiGame.finishGame` / `afterGameEnd`, and **Forge
+does not reliably call either**: two of four identical console runs (four button
+presses, then a concede during the pre-game prompts) ended with a final `state`
+carrying `gameOver: {winner: 1, reason: "AllOpponentsLost"}`, no `over` frame at
+all, and exit 0. `finishGame` and `afterGameEnd` remain as late triggers, and the
+emission is idempotent, so whichever comes first wins. A session that cannot end
+is not a cosmetic problem: it is a client that waits forever.
 
 **`reason` is a string, or `null` when the engine had not published a win
 condition yet.** `Snap.state()` writes this body the instant `Game.isGameOver()`
@@ -1163,7 +1260,17 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `seed` | The value passed to `MyRandom.setRandom(new Random(seed))`, or `null`. |
 | `forgeVersion`, `forgeJarSha256` | Exactly which engine produced this log. |
 | `seat` | **The player id this log was redacted for** (§8.3). In a two-player game ids and `players[]` indices coincide, but readers should use ids. |
+| `transport` | Which client played this seat: `"null"` \| `"auto"` \| `"console"` \| `"ws"`. **Absent from an AI-vs-AI recording**, which has no transport and nobody at the keyboard. It is not decoration: `--transport null` answers every ask with a literal `null` so that §5.4's documented defaults get exercised, and without this key that log is indistinguishable on disk from a wedged session (§8.3, A12). |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
+
+**A frame produced before the header is held, not dropped** (amendment M9). The
+emitter can reach a `notice` or an `over` before the seat exists — an act typed
+ahead of the game, or a concede during the pre-game prompts — and those frames
+go on the wire with a real `seq` (§1: monotonic per direction, starting at 1).
+`GameLog` buffers them, bounded, and writes them immediately after line 0. If
+the header never arrives at all, the file is left **empty** rather than
+headerless, and the close says so on stderr: a reader identifies line 0 by
+position, so a file that begins with a frame is worse than no file.
 
 **Why the opponent's deck is not named.** A path plus a sha256 identifies a
 decklist exactly, and §8.3 promises the log contains only what *this* player was
@@ -1228,9 +1335,21 @@ carrying it.
 
 Line 0 is the session header; then exactly one `hello_ok`, then a run of `state`,
 then exactly one `over`. There is no `input`, no `ask`, no `notice` and no `c2s`
-line, because nobody is playing — those arrive in M2/M3. **A replay transport
-must not wait for an `input` frame before rendering.** `abilities` is `[]` on
-every card for the same reason (§3.2).
+line, because nobody is playing. **A replay transport must not wait for an
+`input` frame before rendering.** The header carries no `transport` key (§8.1).
+
+**A human-seat recording** (`fixtures/games/human-*.jsonl`, written by
+`mtgtable.MtgTable`, M2) is the same envelope stream with the interactive half
+present: line 0 carries `transport`, and between the `state` frames come `input`
+frames (one per EDT push — a prompt and a button update are two), `ask` /
+`answer` pairs, `notice` toasts, and `c2s` `act` lines for every click the seat
+made. `seq` counts per direction, so the two series interleave. It still ends
+with **exactly one `over`**, and that frame is now emitted from the outcome
+capture rather than from `finishGame` (§7), which is what makes "exactly one"
+true of a conceded game as well as of a played-out one.
+
+`abilities` is `[]` on every card of every recording, human-seat ones included —
+**M5** is the milestone that fills it (§3.2, amendment M5).
 
 ### 8.5 The fixture corpus, and why it is split
 
@@ -1245,6 +1364,9 @@ a reason:
 | `morph.jsonl` | `decks/morph-probe.dck` (18 Mountain + 22 morph creatures) — the only recording that produces a **face-down card** at all (`faceDown: true`, `name: ""`, and an `alt` block on the 121 the viewing seat controls), because `pacho-shield.dck` has no morph, manifest, disguise or cloak card |
 | `disjoint.jsonl` | the first recording whose two seats play **different** decks, which is the only way a name-based redaction assertion can tell a leak from a coincidence (§8.3). `pacho-shield` vs `morph-probe`, seed 99 |
 | `future-sight.jsonl` | `decks/future-sight-probe.dck` (22 Island + 18 Future Sight) vs `morph-probe` — the only recording in which **`library.cards` is non-empty**. No card in `pacho-shield` or `morph-probe` runs a continuous `MayLookAt` static, so before it, §3.4's amendment was proved only by the shape of an empty array. 98 frames carry a revealed top card; it is a two-deck recording as well |
+| `human-auto-{42,7,2026}.jsonl` | **the first recordings with a seat in them** (M2): `pacho-shield` played by `AutoTransport`'s scripted policy against the AI, at seeds 42 / 7 / 2026. They are where `input`, `ask`, `answer`, `act` and `notice` stop being hand-written (§8.4). Ask kinds actually dispatched: `choose_list` and `order` |
+| `human-trample-7.jsonl` | `decks/trample-probe.dck` (18 Forest + 22 Garruk's Companion, a 3/2 **trampler**) vs `morph-probe`, seed 7 — the only recording that reaches **`assign_damage`**, the kind §5.3 calls the worst trap of the eleven. `PlayerControllerHuman.java:289` only asks the GUI when the attacker has trample or is blocked by more than one creature, and neither deck above can produce either. Its one ask carries the defender at index 0 with `lethal: null` and a **face-down** blocker at index 1 with `lethal: 2` — so it is evidence for the option gate as well |
+| `human-scry-7.jsonl` | `decks/scry-probe.dck` (24 Island + 16 Opt) vs `morph-probe`, seed 7 — the only recording in which **`input.focusCard` is non-null**. Scry 1 with `UI_SELECT_FROM_CARD_DISPLAYS` off (decision **D13**) routes to `willPutCardOnTop`, which pushes `setCard` on the **game thread** with a card that is in the viewer's *library* and therefore not in the snapshot (amendment H's whole reason). 24 such pushes, 12 of them naming a card no frame of the log contains |
 
 `fixtures/synthetic/sample-handwritten.jsonl` is hand-built by
 `tools/make-sample-fixture.mjs` and lives **apart** because it was written from
@@ -1305,10 +1427,11 @@ it.
    no longer emitted). **Every** card on the wire goes through it — `players[].zones`,
    `stackCards`, `library.cards`, `input.focusCard`, every ask option's `card`,
    `delayedReveal.cards`. **Libraries carry a count plus only the cards
-   `canBeShownTo` allows** (§3.4). And exactly **one** function that puts an
-   engine *string* on the wire — `Snap.stackText`, feeding both `stack[].text`
-   and `events[].cast.text` — because that was the second path, and it was
-   ungated (§3.6 rule 1).
+   `canBeShownTo` allows** (§3.4). And exactly **one sweep** for every
+   engine *string* that reaches the wire: `Snap.stackText` (`stack[].text` and
+   `events[].cast.text`, §3.6 rule 1) and `Snap.sweepText` (`notice.title` and
+   `notice.text`, §6) are the same rule, tested on the same ids, because the
+   string path was the second leak and the notice path was the third.
 5. **`ok.enabled === false` means the engine wants a card click**, not a button.
 6. **Every `ask` must be answerable with `null`**, and Concede must be reachable
    from every UI state. The two kinds with no null default (`order`,

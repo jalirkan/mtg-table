@@ -23,6 +23,39 @@
  * rules logic anywhere. A card is outlined iff the engine put its id in
  * `input.selectable.cardIds`; a button is enabled iff the engine said so.
  * Nothing is clickable yet — that is M3.
+ *
+ * **`selectable` is not the clickable set** (protocol amendment M8). It is the
+ * *explicit* selection set — what `setSelectables` names for targeting, discard
+ * or declare-blockers — and `InputPassPriority` never calls it, so at your own
+ * main phase it is `{cardIds: [], min: 0, max: 0, mode: 'none'}` while your
+ * whole hand is clickable: 78 of the 86 `clickCard` acts in
+ * `fixtures/games/human-auto-42.jsonl` name an id outside it. So the outline
+ * below means "the engine is asking for these", and when M3 makes tiles
+ * clickable it must not gate the click on `selectable`: it sends `act:
+ * clickCard` and renders the `notice {title: 'Not selectable'}` Forge sends back
+ * for a click it will not take. Deciding that here would be rules logic.
+ *
+ * ---------------------------------------------------------------------------
+ * 2026-09-11 — the `ask` block and the button labels.
+ *
+ * An `ask` **blocks the Forge game thread** until an answer arrives (§5): it is
+ * the only frame the server waits on, and while one is outstanding the game is
+ * doing nothing at all. Rendering that in a column beside the event log, the way
+ * M1 did, is the wrong shape for the thing — a reader scrolling the board cannot
+ * tell a stopped game from a slow one. So an outstanding question is drawn as a
+ * **modal-like block at the top of the board**, before the seats, listing the
+ * option labels the engine sent. It is **read-only**: M1 renders questions and
+ * M2/M5 answer them, and a button here that did nothing would be worse than no
+ * button.
+ *
+ * The option labels and `input.buttons.*.label` are rendered **verbatim**, and
+ * that is a rule, not a default (§2.2, report 11 §0.1). `Undo (2)`, `End Turn`
+ * and `Auto` are Forge's own labels on the OK/Cancel buttons — `InputPassPriority`
+ * and `InputPayMana` write them — so a client that renders its own "Pass" and
+ * invents an `autoPay` action has thrown the engine's answer away and built a
+ * second source of truth for what the button does. The client sends `buttonOk` /
+ * `buttonCancel` and prints what it was given.
+ * ---------------------------------------------------------------------------
  */
 
 import { artFor, type ArtIndex } from '../art.ts';
@@ -43,6 +76,7 @@ import {
   type GameEvent,
   type GameStateBody,
   type InputBody,
+  type InputButton,
   type LibraryZone,
   type PlayerState,
   type StackItem,
@@ -92,6 +126,11 @@ export function Board({ state, art }: BoardProps): JSX.Element {
         </div>
       )}
 
+      {/* §5 — the game thread is parked inside this call. It goes above the
+          seats, not beside the log: an outstanding question is the single most
+          important thing on the board while it exists. */}
+      <AskModal ask={state.ask} />
+
       {seated.map((player) => (
         <PlayerPanel
           key={player.id}
@@ -110,11 +149,10 @@ export function Board({ state, art }: BoardProps): JSX.Element {
 
       <div className="columns">
         <InputPanel input={input} />
-        <AskPanel ask={state.ask} />
+        <EventList events={state.events} dropped={state.droppedEventKinds} />
       </div>
 
       <div className="columns">
-        <EventList events={state.events} dropped={state.droppedEventKinds} />
         <NoticeList notices={state.notices} />
       </div>
 
@@ -314,6 +352,11 @@ interface CardLineProps {
 
 function CardLine({ card, input, art, board }: CardLineProps): JSX.Element {
   // The engine's answer, echoed. The client computes no legality (§9 invariant 8).
+  //
+  // This is the EXPLICIT selection set (§4.1, amendment M8): the engine is
+  // asking for these cards right now. It is not "what may be clicked" — that
+  // set is larger and Forge is its only judge — so this drives an outline and
+  // nothing else.
   const selectable =
     input !== null && input.selectable.mode === 'cards' && input.selectable.cardIds.includes(card.id);
   const highlighted = input !== null && input.highlighted.includes(card.id);
@@ -674,6 +717,38 @@ function entityLabel(board: GameStateBody, ref: EntityRef | null): string {
 // input / ask / notices / events
 // ---------------------------------------------------------------------------
 
+/**
+ * One of the engine's two buttons (§2.2, §4).
+ *
+ * **The label is Forge's and is printed exactly as it arrived.** `Undo (2)`,
+ * `End Turn` and `Auto` are not client features: `InputPassPriority` labels the
+ * *Cancel* button `Undo (n)` or `End Turn` depending on what is undoable and
+ * whose turn it is, and `InputPayMana` labels the *OK* button `Auto`
+ * (report 11 §0.1). The client sends `buttonOk` / `buttonCancel` and lets the
+ * engine say what they mean — which is why **there is no `autoPay` act and no
+ * `endTurn` act** (§10.3). Inventing a parallel action for a button the engine
+ * already labelled is the "the board threw the engine's answer away" failure
+ * mode, and it is a rules decision made in the client, which §9 invariant 8
+ * forbids outright.
+ *
+ * `disabled` is likewise the engine's answer and nothing else — and a disabled
+ * OK is not "nothing to do", it is "click a card" (§4.2, the invariant that
+ * silently stalls a button-only client at the discard step).
+ */
+function EngineButton({ button, act }: { button: InputButton; act: string }): JSX.Element {
+  return (
+    <button
+      type="button"
+      disabled={!button.enabled}
+      // Nothing is clickable in M1; the title says whose label this is, because
+      // "Auto" and "Undo (2)" read like client features and are not.
+      title={`the engine's own label — clicking would send act: ${act}`}
+    >
+      {button.label}
+    </button>
+  );
+}
+
 function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
   return (
     <section className="panel">
@@ -682,14 +757,12 @@ function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
         <p className="muted">the engine has not asked for anything yet</p>
       ) : (
         <>
+          {/* The engine's own prompt text, rendered verbatim and never
+              rewritten (§4). */}
           <p className="prompt">{input.prompt}</p>
           <div className="buttons">
-            <button type="button" disabled={!input.buttons.ok.enabled}>
-              {input.buttons.ok.label}
-            </button>
-            <button type="button" disabled={!input.buttons.cancel.enabled}>
-              {input.buttons.cancel.label}
-            </button>
+            <EngineButton button={input.buttons.ok} act="buttonOk" />
+            <EngineButton button={input.buttons.cancel} act="buttonCancel" />
           </div>
           <p className="muted">
             selectable ({input.selectable.mode}): {input.selectable.cardIds.length} ids, choose{' '}
@@ -736,29 +809,67 @@ function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
   );
 }
 
-function AskPanel({ ask }: { ask: AskBody | null }): JSX.Element {
+/**
+ * §5 — the outstanding blocking question, as a modal-like block.
+ *
+ * `null` renders **nothing at all**, deliberately: an empty "no outstanding
+ * question" panel occupying the top of the board every frame would train the
+ * reader to ignore the place the question appears. When there is one, the block
+ * says what kind it is, what the engine asked, and the option labels the engine
+ * sent — read-only, because M1 renders questions and M2/M5 answer them.
+ *
+ * Labels are printed **verbatim** and never parsed (§5.1). The bridge already
+ * decided what each option may be called: an option whose card is concealed
+ * arrives labelled `"???"`, because `String.valueOf(CardView)` prints the real
+ * name and an option label is the one place outside `Snap.card` where that can
+ * reach the wire (report 07 §7). A client that built its own label from
+ * `option.card` would be re-opening exactly that hole.
+ */
+function AskModal({ ask }: { ask: AskBody | null }): JSX.Element | null {
+  if (ask === null) return null;
+  const rows = askOptionRows(ask);
   return (
-    <section className="panel">
-      <h2>Ask</h2>
-      {ask === null ? (
-        <p className="muted">no outstanding question</p>
+    <section
+      className="ask-modal"
+      role="dialog"
+      // Not `aria-modal`: nothing is trapped and nothing is clickable — the
+      // board behind it is still the truth, and saying otherwise to a screen
+      // reader would be a lie about a read-only block.
+      aria-label={`The engine is asking: ${ask.kind}`}
+    >
+      <div className="ask-modal__head">
+        <span className="k">{ask.kind}</span>{' '}
+        <span className="muted">
+          {ask.askId} · timeout {ask.timeoutMs} ms
+        </span>
+        <span className="ask-modal__blocked">the game thread is blocked on this</span>
+      </div>
+      <p className="prompt">{askPrompt(ask)}</p>
+      {rows.length === 0 ? (
+        <p className="muted">this kind carries no option list</p>
       ) : (
-        <div className="ask">
-          <p>
-            <span className="k">{ask.kind}</span> <span className="muted">{ask.askId}</span>{' '}
-            <span className="muted">timeout {ask.timeoutMs} ms</span>
-          </p>
-          <p className="prompt">{askPrompt(ask)}</p>
-          <ul className="ask__options">
-            {askOptions(ask).map((line, i) => (
-              <li key={`${String(i)}-${line}`}>{line}</li>
-            ))}
-          </ul>
-          <p className="hint">
-            The game thread is blocked on this. M1 renders it; M2/M5 answer it.
-          </p>
-        </div>
+        <ol className="ask-modal__options">
+          {rows.map((row, i) => (
+            <li key={`${String(i)}-${row.label}`} className="ask-modal__option">
+              {/* §5.1: the ask-LOCAL index, which is what an answer echoes. It
+                  is not a Forge id, and the two must never be confused: a
+                  single ask's options can be colours, abilities, integers and
+                  cards at once, where `Integer 3` and `CardView 3` collide. */}
+              <span className="ask-modal__index">
+                {row.id === null ? '·' : `[${String(row.id)}]`}
+              </span>{' '}
+              {/* The engine's own label. Verbatim, always. */}
+              <span className="ask-modal__label">{row.label}</span>
+              {row.detail !== '' && <span className="muted"> — {row.detail}</span>}
+            </li>
+          ))}
+        </ol>
       )}
+      <p className="hint">
+        Read-only: M1 renders the question, M2/M5 answer it. Every ask must be answerable with{' '}
+        <code>null</code> (§5.4), and Concede must be reachable from every UI state — so a wedge is
+        always escapable.
+      </p>
     </section>
   );
 }
@@ -784,7 +895,10 @@ function askPrompt(ask: AskBody): string {
     case 'ability_menu':
       return `Choose an ability of card #${String(ask.cardId)}`;
     case 'assign_damage':
-      return `Assign ${String(ask.total)} combat damage from #${String(ask.attackerId)}` +
+      // `attackerId` is declared nullable (§5.2): Forge's signature allows a
+      // null attacker, so the label names the attacker only when there is one.
+      return `Assign ${String(ask.total)} combat damage` +
+        `${ask.attackerId === null ? '' : ` from #${String(ask.attackerId)}`}` +
         `${ask.overrideOrder ? ' (order overridden)' : ''}${ask.maySkip ? ' (may skip)' : ''}`;
     case 'sideboard':
       return ask.prompt ?? 'Sideboard';
@@ -792,20 +906,42 @@ function askPrompt(ask: AskBody): string {
 }
 
 /**
- * A label for one ask option (P7). The option already carries the label the
- * engine wants shown — `"???"` when the card behind it is concealed — so this
- * only adds the ask-local index and, when the option carries a serialised card,
- * the card's own line. It never builds a name of its own: report 07 §7 notes
- * that `String.valueOf(CardView)` prints the card's name, and an option label is
- * the one place outside `Snap.card` where that can leak.
+ * One line of the ask block: the ask-local index, the engine's label **exactly
+ * as it arrived**, and whatever the client can add without inventing a name.
+ *
+ * `id` is `null` for a row that is not an option at all — `confirm`'s two button
+ * labels, `text`'s initial value, `choose_entities`'s delayed reveal — so the
+ * renderer can tell "index 0" from "no index" instead of printing a plausible
+ * lie.
  */
-function askOptionLine(option: AskOption): string {
-  const bits: string[] = [`[${String(option.id)}]`, option.label];
-  if (option.card !== undefined) bits.push(`— ${cardOptionLabel(option.card)}`);
-  else if (option.cardId !== undefined) bits.push(`— card #${String(option.cardId)}`);
-  else if (option.playerId !== undefined) bits.push(`— player ${String(option.playerId)}`);
-  else if (option.abilityId !== undefined) bits.push(`— ability #${String(option.abilityId)}`);
-  return bits.join(' ');
+interface AskRow {
+  /** The ask-local index an answer would echo, or `null` if this is not an option. */
+  id: number | null;
+  /** The engine's own label. Never parsed, never rebuilt, never prefixed. */
+  label: string;
+  /** What the client knows about the option. `""` when it knows nothing. */
+  detail: string;
+}
+
+/**
+ * What the client may add beside one option's label (P7). The option already
+ * carries the label the engine wants shown — `"???"` when the card behind it is
+ * concealed — so this adds only the resolved card/player/ability reference. It
+ * never builds a name of its own: report 07 §7 notes that
+ * `String.valueOf(CardView)` prints the card's name, and an option label is the
+ * one place outside `Snap.card` where that can leak.
+ */
+function askOptionDetail(option: AskOption): string {
+  if (option.card !== undefined) return cardOptionLabel(option.card);
+  if (option.cardId !== undefined) return `card #${String(option.cardId)}`;
+  if (option.playerId !== undefined) return `player ${String(option.playerId)}`;
+  if (option.abilityId !== undefined) return `ability #${String(option.abilityId)}`;
+  return option.kind === 'other' ? '' : option.kind;
+}
+
+function optionRow(option: AskOption, extra = ''): AskRow {
+  const detail = [askOptionDetail(option), extra].filter((bit) => bit !== '').join(' · ');
+  return { id: option.id, label: option.label, detail };
 }
 
 /** A card inside an ask/input body, through the same three-shape discipline. */
@@ -815,68 +951,92 @@ function cardOptionLabel(card: AnyCard): string {
   return `${displayName(card)} #${String(card.id)}`;
 }
 
-function askOptions(ask: AskBody): string[] {
+/**
+ * Every row the ask block shows, per kind (§5.2). Total over all eleven: the
+ * `switch` has no `default`, so adding a twelfth kind to `protocol.ts` fails the
+ * typecheck here rather than rendering a blank question at runtime.
+ *
+ * The two kinds that carry **two** lists — `order`'s `dest`/`source` and
+ * `sideboard`'s `main`/`side` — are one server-side option array presented in
+ * two halves, and their ids run across both in that order (§5.1). So the rows
+ * are concatenated in the same order the answer indexes them, and each half is
+ * labelled in `detail`; a reader who takes the second list's first row for
+ * "index 0" is reading the bug `order` answers were written wrong from.
+ */
+function askOptionRows(ask: AskBody): AskRow[] {
   switch (ask.kind) {
     case 'ability_menu':
-      return ask.options.map(askOptionLine);
+      return ask.options.map((o) => optionRow(o, o.canPlay ? 'can play' : 'cannot play'));
     case 'confirm':
+      // No option array at all: the two rows are the button labels Forge sent,
+      // and they answer `true` / `false`, not an index. §5.2: `confirm(CardView,
+      // …)` is how surveil's single-card case, `willPutCardOnTop` and
+      // `confirmAction` ask about a card that is usually in a LIBRARY — not in
+      // the snapshot at all — so the card itself travels with the question.
       return [
-        ask.yesLabel,
-        ask.noLabel,
-        // §5.2: `confirm(CardView, …)` is how surveil's single-card case,
-        // willPutCardOnTop and confirmAction ask about a card that is usually in
-        // a LIBRARY — not in the snapshot at all, so the card itself travels.
-        ...(ask.card !== null && ask.card !== undefined ? [`about ${cardOptionLabel(ask.card)}`] : []),
+        { id: null, label: ask.yesLabel, detail: `answers true${ask.defaultYes ? ' · default' : ''}` },
+        { id: null, label: ask.noLabel, detail: `answers false${ask.defaultYes ? '' : ' · default'}` },
+        ...(ask.card !== null
+          ? [{ id: null, label: cardOptionLabel(ask.card), detail: 'the card in question' }]
+          : []),
       ];
     case 'options':
-      return ask.options.map((o) =>
-        o.id === ask.defaultIndex ? `${askOptionLine(o)} (default)` : askOptionLine(o),
-      );
+      return ask.options.map((o) => optionRow(o, o.id === ask.defaultIndex ? 'default' : ''));
     case 'text':
-      return [`initial: ${JSON.stringify(ask.initial)}`];
+      return [
+        { id: null, label: ask.initial === '' ? '(empty)' : ask.initial, detail: 'initial value' },
+        ...ask.suggestions.map((s) => ({ id: null, label: s, detail: 'suggestion' })),
+      ];
     case 'choose_list':
-      return ask.options.map(askOptionLine);
+      // Report 07 A7 (P7): `reveal` means min/max were -1 — show these, select
+      // nothing. The prompt already says so; the rows are still the cards.
+      return ask.options.map((o) =>
+        optionRow(o, ask.preselected.includes(o.id) ? 'preselected' : ''),
+      );
     case 'choose_entities':
       return [
-        ...ask.options.map(askOptionLine),
+        ...ask.options.map((o) => optionRow(o)),
         // P7 / report 06 §6.8: the delayed reveal is the CONTEXT — "here is what
         // you are looking at" — as distinct from the options, "here is what you
-        // may pick". A deck search reveals a library and offers a few targets.
+        // may pick". A deck search reveals a library and offers a few targets,
+        // and it is the single largest legitimate reveal on the wire.
         ...(ask.delayedReveal !== null
-          ? [
-              `${ask.delayedReveal.messagePrefix} (${ask.delayedReveal.zones.join('/')} of player ` +
-                `${String(ask.delayedReveal.owner ?? -1)}): ` +
-                ask.delayedReveal.cards.map(cardOptionLabel).join(', '),
-            ]
+          ? ask.delayedReveal.cards.map((card) => ({
+              id: null,
+              label: cardOptionLabel(card),
+              detail:
+                `${ask.delayedReveal?.messagePrefix ?? ''}` +
+                `${(ask.delayedReveal?.zones ?? []).join('/')} of player ` +
+                `${String(ask.delayedReveal?.owner ?? -1)}`,
+            }))
           : []),
       ];
     case 'order':
       // Report 07 A2 (P7): the jar's OrderResult is (List ordered, boolean
       // remember), not {top, bottom}; indices address `dest ++ source`.
       return [
-        `${ask.destLabel ?? 'destination'}: ${ask.dest.map(askOptionLine).join(', ')}`,
-        `source: ${ask.source.map(askOptionLine).join(', ')}`,
+        ...ask.dest.map((o) => optionRow(o, ask.destLabel === '' ? 'destination' : ask.destLabel)),
+        ...ask.source.map((o) => optionRow(o, 'source')),
       ];
     case 'assign_damage':
       // P7: the defender is index 0, flagged, and marshals back to the `null`
-      // key PlayerControllerHuman reads as "the defending player".
-      return ask.targets.map(
-        (t) =>
-          `${askOptionLine(t)}${t.lethal === undefined ? '' : ` (lethal ${String(t.lethal)})`}` +
-          `${t.defender === true ? ' — the defender' : ''}`,
+      // key `PlayerControllerHuman` reads as "the defending player".
+      return ask.targets.map((t) =>
+        optionRow(
+          t,
+          [t.defender === true ? 'the defender' : '', t.lethal === undefined ? '' : `lethal ${String(t.lethal)}`]
+            .filter((bit) => bit !== '')
+            .join(' · '),
+        ),
       );
     case 'assign_amount':
-      return ask.targets.map((t) =>
-        t.max === undefined ? askOptionLine(t) : `${askOptionLine(t)} (max ${String(t.max)})`,
-      );
+      return ask.targets.map((t) => optionRow(t, t.max === undefined ? '' : `max ${String(t.max)}`));
     case 'manipulate_list':
-      return ask.cards.map((c) =>
-        ask.manipulable.includes(c.id) ? `${askOptionLine(c)} (movable)` : askOptionLine(c),
-      );
+      return ask.cards.map((c) => optionRow(c, ask.manipulable.includes(c.id) ? 'movable' : 'fixed'));
     case 'sideboard':
       return [
-        `main: ${ask.main.map((o) => o.label).join(', ')}`,
-        `side: ${ask.side.map((o) => o.label).join(', ')}`,
+        ...ask.main.map((o) => optionRow(o, 'main deck')),
+        ...ask.side.map((o) => optionRow(o, 'sideboard')),
       ];
   }
 }

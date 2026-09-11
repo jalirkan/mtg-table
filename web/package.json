@@ -11,7 +11,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/*.test.ts"
+    "test": "node --test test/*.test.ts && vitest run",
+    "test:node": "node --test test/*.test.ts",
+    "test:render": "vitest run"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -23,6 +25,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.2.0",
     "typescript": "~5.9.3",
-    "vite": "^7.3.6"
+    "vite": "^7.3.6",
+    "vitest": "^5.0.0"
   }
 }

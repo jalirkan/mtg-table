@@ -26,6 +26,7 @@ import { test } from 'node:test';
 
 import {
   ASK_KINDS,
+  FRAME_TYPES,
   altFace,
   isFaceDown,
   isFaceDownHidden,
@@ -285,12 +286,25 @@ test(`${FILE}: input carries a focusCard that is NOT in the snapshot, plus weak 
 
 test(`${FILE}: a library carries a revealed card, and a face-down card outside play has no body`, () => {
   const log = parseFrameLog(text);
+  const seat = log.header?.seat ?? null;
   let revealed = 0;
   let faceDownOutsidePlay = 0;
   for (const frame of log.frames) {
     if (frame.type !== 'state') continue;
     const body: GameStateBody = (frame as StateFrame).body;
     for (const player of body.players) {
+      // The seat check, matching `fixtures.test.ts` and `check-redaction.mjs`'s
+      // A3: an opponent's library is the largest hidden-information surface in
+      // the game, so the hand-built fixture must not normalise the shape of a
+      // leak by carrying one "for coverage".
+      if (player.id !== seat) {
+        assert.equal(
+          player.zones.library.cards.length,
+          0,
+          `player ${String(player.id)} is not the viewing seat (${String(seat)}) and has full ` +
+            `cards in library.cards`,
+        );
+      }
       // §3.4 / P2 — the renderable half. `future-sight.jsonl` is the engine's
       // evidence for the same shape; this is the renderer's.
       for (const card of player.zones.library.cards) {
@@ -321,6 +335,52 @@ test(`${FILE}: a library carries a revealed card, and a face-down card outside p
     faceDownOutsidePlay > 0,
     'no face-down card outside battlefield/stack: no engine fixture has one either, so ' +
       '§3.2\'s "no public body outside play" rule would be proved only by its absence',
+  );
+});
+
+test(`${FILE}: carries all eleven frame types of §2, and a token (P15)`, () => {
+  // An AI-vs-AI recording is `hello_ok` + a run of `state` + `over` (§8.4), so
+  // `notice`, `ping`, `pong` and `resync` had a branch in `reduce()` and no
+  // artifact behind it — they were reachable only from frames hand-built inside
+  // a unit test, which is not the same thing as a log the transport parses.
+  const log = parseFrameLog(text);
+  const types = new Set(log.frames.map((frame) => frame.type));
+  assert.deepEqual(
+    [...types].sort(),
+    [...FRAME_TYPES].sort(),
+    'the sample must carry one of every frame type §2 declares — and only those',
+  );
+
+  // P15 — `CardView.isToken()`. `g1.jsonl` has 694 of them, so the emitter's
+  // evidence is elsewhere; this is the renderer's, and it is the card the
+  // null-`from` zone event created.
+  const tokens: Card[] = [];
+  for (const frame of log.frames) {
+    if (frame.type !== 'state') continue;
+    for (const player of (frame as StateFrame).body.players) {
+      for (const card of player.zones.battlefield.cards) {
+        if (!isHidden(card) && card.token) tokens.push(card);
+      }
+    }
+  }
+  assert.ok(tokens.length > 0, 'no token — P15 has no renderer evidence in this file');
+  for (const token of tokens) {
+    // §3.2: a token has no printing behind it, so `manaCost` is null and an
+    // art miss for it is expected rather than a hole in art.json.
+    assert.equal(token.manaCost, null, `token #${String(token.id)} has a mana cost`);
+  }
+  const created = new Set<number>();
+  for (const frame of log.frames) {
+    if (frame.type !== 'state') continue;
+    for (const event of (frame as StateFrame).body.events) {
+      if (event.kind === 'zone' && event.from === null) created.add(event.cardId);
+    }
+  }
+  assert.ok(
+    tokens.some((token) => created.has(token.id)),
+    'no token is the subject of the null-`from` zone event, so the event that says "a token ' +
+      'came from nowhere" and the card it created are in different frames — which is exactly ' +
+      'the join a renderer needs and cannot test',
   );
 });
 

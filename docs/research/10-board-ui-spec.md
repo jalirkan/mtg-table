@@ -11,10 +11,13 @@ screenshot into components, CSS numbers, protocol field reads and a test.
 **Scope discipline, restated so it survives contact with a pretty UI.** M4 is a *renderer*.
 `README.md`'s NON-GOALS and `CLAUDE.md` §Scope are binding: no mana-payability prediction,
 no targeting validation, no phase-stop logic, no client-side stack resolution, no second card
-serialiser, no rules anywhere. A card is clickable **iff** its id is in
-`input.selectable.cardIds`; a button is enabled **iff** the engine said so (`docs/protocol.md`
-§4.1, §9 invariant 8). Everything in here that looks like a decision is a *label* or a
-*coordinate*, never an answer.
+serialiser, no rules anywhere. A button is enabled **iff** the engine said so, and a card is
+**outlined** iff its id is in `input.selectable.cardIds` — which, since protocol amendment
+**M8**, is *not* the same as "clickable": `selectable` is the explicit selection set
+(targeting, discard, blockers) and is empty at your own main phase, where your hand is
+clickable anyway. **Forge is the judge of a click**; a rejected one comes back as a `notice`
+(`docs/protocol.md` §4.1, §4.2, §9 invariant 8, and §0.0 item 6 below). Everything in here that
+looks like a decision is a *label* or a *coordinate*, never an answer.
 
 ---
 
@@ -51,6 +54,20 @@ changed after this spec was drafted, and four of them touch the card renderer:
    moved to `fixtures/synthetic/`. §15's fixture list and the 873-frame count in
    §0 are therefore stale: it is now g1 374 + g2 223 + g3 274 + morph 233 state
    frames.
+6. **`input.selectable` is the explicit selection set, not the clickable set**
+   (protocol amendment **M8**, 2026-09-11, from the M2 human-seat recordings —
+   which did not exist when this document was written). `setSelectables` is
+   called for targeting, discard and declare-blockers; `InputPassPriority` never
+   calls it, so at your own main phase `selectable` is
+   `{cardIds: [], min: 0, max: 0, mode: "none"}` **and your hand is still
+   clickable** — 78 of the 86 `clickCard` acts in
+   `fixtures/games/human-auto-42.jsonl` are exactly that. §5.1's
+   `.tile--selectable` is therefore an **outline for an outstanding choice**, and
+   the tile must be a `<button>` (i.e. clickable) for the viewer's own cards even
+   when nothing is selectable. **Forge is the judge**: send `act: clickCard` and
+   render the `notice {level:"warn", title:"Not selectable"}` that comes back for
+   a click it will not take. Deciding clickability locally would be rules logic
+   (§18.3), and a board written to the old rule cannot play a land.
 
 Also new and worth reusing rather than reinventing: `web/src/render/describe.ts`
 (pure, testable label functions) and `web/src/render/ErrorBoundary.tsx`. A
@@ -685,9 +702,18 @@ const isFocus       = input?.focusCardId === card.id;
 | selectable | `.tile--selectable` | `<button type="button">` | 3 px solid outline **+ a corner caret** | `act: clickCard` |
 | highlighted | `.tile--highlighted` | `<li>` | violet dashed outline + a dotted top edge | none |
 | focus | `.tile--focus` | either | a soft ring + a thumbnail in the DecisionPanel | none |
+| none of the three, **viewer's own card** | — | `<button type="button">` | no outline | `act: clickCard` |
 
 `selectable` wins over `highlighted` when both apply. Using real `<button>` elements for
 selectable cards buys keyboard and screen-reader support for free and is why §14 is short.
+
+**The fourth row is amendment M8 and it is the one M5 depends on.** `isSelectable` decides the
+*outline*, never the element: `selectable` is empty for the whole of your main phase, so a tile
+that is only a `<button>` when `isSelectable` is true cannot play a land or cast a spell. Every
+card the viewer controls or owns in a visible zone is a button; Forge rejects the ones it will
+not take, with a `notice`. (An opponent's battlefield permanent is clickable too — that is how
+targeting works when the engine *has* set selectables — so the simple rule is: a tile with a
+real id is a button unless the card is a hidden stub.)
 
 ### 5.2 `ok.enabled === false` means "click a card" (§4.2)
 
@@ -1415,8 +1441,12 @@ depend on the board identity and the observer, not the whole state.
    name in the DOM, no `title`, no `alt` and no `aria-label` that names them.
 2. The rect registry is **namespaced** — `c:` / `p:` / `s:` — because `stack[].id` and `Card.id`
    are different id spaces that collide (§10.1).
-3. A card is clickable iff its id is in `input.selectable.cardIds`; a button is enabled iff the
-   engine said so. The client computes no rules answer, including for phase stops and mana.
+3. A card is **outlined** iff its id is in `input.selectable.cardIds`; a button is enabled iff
+   the engine said so. The client computes no rules answer, including for phase stops, mana —
+   and **for whether a click is legal**: `selectable` is the explicit selection set (amendment
+   M8), it is empty while you hold priority, the viewer's own cards are clickable anyway, and a
+   click Forge will not take returns `notice {title: "Not selectable"}`. Deciding that locally
+   would be the rules logic this milestone does not have.
 4. `input.prompt` and the two button labels are rendered **verbatim**.
 5. `ok.enabled === false` with selectable cards renders a visible "click a card" line; with
    *nothing* selectable and no open `ask`, it renders a loud stall warning.

@@ -49,14 +49,32 @@
   },
   {
     "file": "a3-opponent-library-revealed.jsonl",
-    "level": "warn",
+    "level": "fail",
     "expect": "NOT the viewing seat",
-    "why": "A3: an opponent library dumped as full cards -- legal but the largest surface there is"
+    "why": "A3: an opponent library dumped as full cards -- reachable, but it must be declared"
   },
   {
     "file": "a6-library-reveal-is-not-a-whitelist.jsonl",
     "level": "fail",
     "expect": "nothing earlier in this log",
     "why": "A6: an opponent-library reveal must not excuse the same id later in their HAND"
+  },
+  {
+    "file": "notice-names-a-concealed-card.jsonl",
+    "level": "fail",
+    "expect": "notice.title names card",
+    "why": "section 6: both notice strings go through Snap.sweepText, so an id here is OUR gate failing"
+  },
+  {
+    "file": "ask-text-initial-null.jsonl",
+    "level": "fail",
+    "expect": "ask.text.initial",
+    "why": "section 5.2: `text.initial` is a string, \"\" when Forge has none -- never null"
+  },
+  {
+    "file": "ask-ability-menu-cardid-null.jsonl",
+    "level": "fail",
+    "expect": "ask.ability_menu.cardId",
+    "why": "section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send"
   }
 ]

@@ -233,6 +233,7 @@ for (const file of files) {
     // invisible forever. What it may NOT do is complete the count with stubs:
     // `cards` holds the revealed subset and nothing else.
     const log = parseFrameLog(text);
+    const seat = seatOf(log.header?.seat ?? null, log.frames);
     for (const frame of log.frames) {
       if (frame.type !== 'state') continue;
       for (const player of (frame as StateFrame).body.players) {
@@ -242,6 +243,27 @@ for (const file of files) {
         if (library.cards.length > 0) {
           libraryCardsWithContent.push(
             `${file}:p${String(player.id)}:${String(library.cards.length)}`,
+          );
+        }
+        // THE SEAT CHECK (M1 follow-up, 2026-09-11). P2 says `cards` holds the
+        // library cards `canBeShownTo(viewer)` allows — and until this line the
+        // suite never asked *whose* library. An opponent's library is the single
+        // largest hidden-information surface in the game: 30-odd cards, in
+        // order, naming the rest of their deck. The shape is legitimately
+        // reachable (Opposition Agent, Bribery, Gonti) but no card in any deck
+        // under `decks/` reaches it, so for the committed corpus the correct
+        // number is zero and any other number is the emitter walking the wrong
+        // player's library. `tools/check-redaction.mjs` fails the same thing
+        // from the other end, with an explicit `--opponent-library-ok` escape
+        // for the recording that one day needs it.
+        if (player.id !== seat) {
+          assert.equal(
+            library.cards.length,
+            0,
+            `${file}: player ${String(player.id)} is NOT the viewing seat (${String(seat)}) and ` +
+              `has ${String(library.cards.length)} full card(s) in library.cards. No deck in ` +
+              `decks/ runs a look-at-an-opponent's-library effect, so this is the gate walking ` +
+              `the wrong library — the largest leak the protocol allows.`,
           );
         }
         assert.ok(

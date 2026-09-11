@@ -24,8 +24,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The JSONL frame log of {@code docs/protocol.md} section 8.
@@ -57,15 +60,57 @@ import java.util.concurrent.LinkedBlockingQueue;
  *
  * <p>Thread safety: {@link #s2c} / {@link #c2s} are synchronized on this object
  * so the two counters and the queue stay consistent if a second thread ever
- * emits (M2's EDT-side {@code input} frames will).
+ * emits (M2's EDT-side {@code input} frames do).
+ *
+ * <h2>The appender thread never takes this object's monitor</h2>
+ *
+ * <p>It used to, for one line: {@code drain()} incremented a plain {@code long}
+ * inside {@code synchronized (this)} after every write, while {@link #close()}
+ * was itself {@code synchronized} and held that same monitor for the whole of
+ * {@code thread.join(30s)}.  If the appender had a line in flight when
+ * {@code close()} took the monitor it could never reach the {@code POISON}, so
+ * the join <b>always</b> timed out: measured at 30,000 ms for one queued line,
+ * and 12,089 of 20,001 lines on disk when {@code close()} returned for a large
+ * one -- with {@code System.exit} next in {@code MtgTable.main} killing the
+ * daemon appender mid-file.  It fired in real runs (two of six M2 games spent
+ * exactly 30 s in {@code close()}), and every {@code frames = N} and
+ * {@code bytes} a summary printed after it was wrong.
+ *
+ * <p>So: the counter is an {@link AtomicLong}, the appender takes no lock at
+ * all, and {@code close()} holds the monitor only long enough to set
+ * {@code closed} and queue the {@code POISON} -- the join happens outside it.
+ * A join that still times out {@code throw}s, because a silently truncated file
+ * is worse than a failure.  {@code mtgtable.GameLogSelfTest}, run by
+ * {@code bridge/build.sh}, is the regression test.
  */
 public final class GameLog implements AutoCloseable {
 
     /** Protocol major version.  {@code docs/protocol.md} section 1. */
     public static final int PROTOCOL_VERSION = 1;
 
-    /** The name of the appender thread.  Asserted by nothing; useful in a stack dump. */
+    /**
+     * The name of the appender thread.  Asserted at class-init by
+     * {@link HeadlessGuiBase} (it must not start with {@code "Game"}, which is
+     * the whole of {@code ThreadUtil.isGameThread()}) and by
+     * {@code tools/lint-bridge.sh} section 6.
+     */
     public static final String THREAD_NAME = "mtg-table-log";
+
+    /**
+     * How long {@link #close()} waits for the appender to reach the
+     * {@code POISON}.  A correct close returns in well under a millisecond; this
+     * bound exists so a wedged appender is a loud failure rather than a hang.
+     */
+    public static final long CLOSE_TIMEOUT_MS = 30_000L;
+
+    /**
+     * How many frames may be held before the session header arrives.  A frame
+     * emitted before {@link #header} is rare and bounded in practice (a notice
+     * from an act typed ahead of the game, and the {@code over} of a concede
+     * before the first prompt), and a buffer that can grow without limit in a
+     * path nobody watches is its own bug.
+     */
+    private static final int PRE_HEADER_MAX = 256;
 
     /** Queue sentinel: identity-compared, so it can never collide with a frame. */
     private static final String POISON = new String("--mtg-table-log-eof--");
@@ -79,11 +124,25 @@ public final class GameLog implements AutoCloseable {
     /** Set by the appender thread on the first write failure; re-thrown at close. */
     private volatile IOException failure;
 
-    private long lines;
+    /**
+     * Lines handed to the appender and written.  Atomic, <b>not</b> guarded by
+     * this object's monitor: the appender must never need a lock the closer
+     * might be holding (see the class javadoc).
+     */
+    private final AtomicLong lines = new AtomicLong();
+
+    /** Frames produced before {@link #header}; flushed in order when it arrives. */
+    private final List<String> preHeader = new ArrayList<>();
+
+    /** How many pre-header frames were dropped for exceeding {@link #PRE_HEADER_MAX}. */
+    private int preHeaderDropped;
+
     private int seqS2c;
     private int seqC2s;
     private boolean headerWritten;
-    private boolean closed;
+
+    /** Written under this object's monitor in {@link #close()}; read from everywhere. */
+    private volatile boolean closed;
 
     /**
      * Open a log, creating parent directories as needed.  Truncates an existing
@@ -108,10 +167,16 @@ public final class GameLog implements AutoCloseable {
     }
 
     /**
-     * Write line 0, the session header.  Must be called before any frame, and
-     * only once -- a reader distinguishes the header from a frame by its
-     * {@code "kind":"session"} field, and a header in the middle of a file is
-     * meaningless.
+     * Write line 0, the session header.  Exactly once, and before any frame
+     * reaches the file -- a reader distinguishes the header from a frame by its
+     * position, and a header in the middle of a file is meaningless.
+     *
+     * <p>Frames produced <em>before</em> this call are held (up to
+     * {@link #PRE_HEADER_MAX}) and written immediately after it, in the order
+     * they were produced -- they are not dropped and they do not get a
+     * {@code seq} of 0.  {@code docs/protocol.md} section 1 says {@code seq} is
+     * monotonic per direction and starts at 1, so an emitter that could produce
+     * a frame before the seat exists must still number it.
      *
      * @param json a complete JSON object, produced by {@link Json.JsonOut}
      */
@@ -119,8 +184,15 @@ public final class GameLog implements AutoCloseable {
         if (headerWritten) {
             throw new IllegalStateException("the session header has already been written");
         }
+        if (closed) {
+            throw new IllegalStateException("log already closed: " + file);
+        }
         headerWritten = true;
-        enqueue(json);
+        queue.add(json);                       // line 0, before anything held
+        for (final String held : preHeader) {
+            queue.add(held);
+        }
+        preHeader.clear();
     }
 
     /**
@@ -146,9 +218,6 @@ public final class GameLog implements AutoCloseable {
     }
 
     private int frame(final String dir, final int seq, final String type, final String body) {
-        if (!headerWritten) {
-            throw new IllegalStateException("frame written before the session header");
-        }
         if (body == null || body.isEmpty() || body.charAt(0) != '{') {
             // docs/protocol.md section 1: "body" is always an object, never a
             // scalar or array, never absent.
@@ -167,16 +236,35 @@ public final class GameLog implements AutoCloseable {
         return seq;
     }
 
+    /** Callers hold this object's monitor; the appender never does. */
     private void enqueue(final String line) {
         if (closed) {
             throw new IllegalStateException("log already closed: " + file);
         }
+        if (!headerWritten) {
+            // Line 0 must be the session header, so this frame waits for it
+            // rather than being thrown away with a seq of 0.
+            if (preHeader.size() < PRE_HEADER_MAX) {
+                preHeader.add(line);
+            } else {
+                preHeaderDropped++;
+            }
+            return;
+        }
         queue.add(line);
     }
 
-    /** How many lines have been handed to the appender, header included. */
-    public synchronized long lines() {
-        return lines;
+    /**
+     * How many lines the appender has <b>written</b>, header included.  A plain
+     * atomic read: it must not be able to block behind {@link #close()}.
+     */
+    public long lines() {
+        return lines.get();
+    }
+
+    /** How many frames are still waiting for a session header that has not come. */
+    public synchronized int pendingBeforeHeader() {
+        return preHeader.size() + preHeaderDropped;
     }
 
     /** How many bytes are on disk.  Accurate once {@link #close()} has returned. */
@@ -193,22 +281,49 @@ public final class GameLog implements AutoCloseable {
      * Drain, flush and close.  Blocks until the appender has written every
      * queued line, so the file is complete when this returns.
      *
-     * @throws IOException if any write failed
+     * <p><b>Not {@code synchronized}.</b>  The monitor is held only for the two
+     * statements that need it -- and never across the {@link Thread#join} --
+     * because holding it there is precisely the self-deadlock the class javadoc
+     * describes.  The {@code POISON} is queued <em>inside</em> that block, under
+     * the same monitor every {@link #enqueue} holds, so no frame can be queued
+     * behind it and then silently lost.
+     *
+     * @throws IOException if any write failed, or if the appender did not finish
+     *                     within {@link #CLOSE_TIMEOUT_MS} -- in which case the
+     *                     file on disk is incomplete and saying so is the whole
+     *                     point
      */
     @Override
-    public synchronized void close() throws IOException {
-        if (closed) {
-            return;
+    public void close() throws IOException {
+        final int held;
+        synchronized (this) {
+            if (closed) {
+                return;
+            }
+            closed = true;
+            queue.add(POISON);
+            held = preHeader.size() + preHeaderDropped;
         }
-        closed = true;
-        queue.add(POISON);
+        if (held > 0) {
+            // No header ever arrived, so there is no line 0 and the file cannot
+            // be written at all (a reader identifies the header by position).
+            System.err.println("GAME LOG: " + held + " frame(s) were produced before the session "
+                + "header, which never arrived -- " + file + " is empty");
+        }
+        boolean joined = false;
         try {
-            thread.join(30_000L);
+            thread.join(CLOSE_TIMEOUT_MS);
+            joined = !thread.isAlive();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         }
         if (failure != null) {
             throw failure;
+        }
+        if (!joined) {
+            throw new IOException("the frame-log appender (" + THREAD_NAME + ") did not finish "
+                + "within " + CLOSE_TIMEOUT_MS + " ms: " + file + " is INCOMPLETE ("
+                + lines.get() + " line(s) written, " + queue.size() + " still queued)");
         }
     }
 
@@ -227,9 +342,10 @@ public final class GameLog implements AutoCloseable {
                 // Per line.  See the class javadoc: a killed JVM must still
                 // leave a file that parses to its last complete frame.
                 writer.flush();
-                synchronized (this) {
-                    lines++;
-                }
+                // NO synchronized block here.  See the class javadoc: this
+                // thread taking the same monitor close() holds is what made
+                // close() wait out its whole timeout and return a truncated file.
+                lines.incrementAndGet();
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();

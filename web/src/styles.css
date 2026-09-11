@@ -358,10 +358,68 @@ button:disabled {
 .stack,
 .bands,
 .events,
-.notices,
-.ask__options {
+.notices {
   margin: 0;
   padding-left: 1.2rem;
+}
+
+/* --- the ask block --------------------------------------------------------
+ *
+ * docs/protocol.md §5: an `ask` BLOCKS the Forge game thread until an answer
+ * arrives, and it is the only frame the server waits on. So it is drawn at the
+ * top of the board, in the accent colour, and it is absent entirely when there
+ * is no question — an empty panel sitting there every frame would teach the
+ * reader to stop looking at it.
+ *
+ * "Modal-like", not modal: nothing is trapped, nothing is clickable, and the
+ * board behind it stays readable. M1 renders questions; M2/M5 answer them.
+ */
+
+.ask-modal {
+  border: 1px solid var(--accent);
+  border-left-width: 4px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.ask-modal__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.ask-modal__blocked {
+  margin-left: auto;
+  color: var(--warn);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ask-modal__options {
+  margin: 0;
+  padding-left: 1.2rem;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.ask-modal__option {
+  padding: 0.05rem 0;
+}
+
+/* The ask-local index (§5.1), which is what an answer echoes — never a Forge
+   id. Dimmed, so the eye lands on the engine's label first. */
+.ask-modal__index {
+  color: var(--muted);
+}
+
+/* The engine's own label, verbatim. Never parsed, never rebuilt. */
+.ask-modal__label {
+  color: var(--ink);
 }
 
 .stack__top {

@@ -353,3 +353,217 @@ sentinel in `CostTeamwork`, not in any card file, the computed amount is 0 eithe
 way, and all three rules paths skip it), so the card scripts stay honest and the
 warning is classified **informational** in `Smoke` / `RecordMatch` rather than
 treated as a finding.
+
+## D15 — The ask timeout is a transport policy, not a protocol constant
+
+**2026-09-11**
+
+**Decision.** `Transport.askTimeoutMs(kind)` is asked once per `ask`, and the
+game thread parks in `ReplyPool.await(askId, timeoutMs)` for exactly that long.
+Each transport answers for itself, and the three shipped answers are
+deliberately different:
+
+| transport | `askTimeoutMs` | why |
+|---|---|---|
+| `console` | **`0` — wait forever** | a human at a terminal is allowed to think, and there is no disconnect to recover from: the only exits are a typed answer, `concede`, or EOF |
+| `auto` | **30,000 ms** (`AutoTransport.ASK_TIMEOUT_MS`) | a policy that has not answered in 30 s is a bug in the policy, and a test suite should fail rather than hang |
+| `null` | inherits `auto`'s 30 s | it answers on the next worker tick; the cap is the wedge detector, not the schedule |
+
+A timeout is **not** an error. It resolves to Java `null`, which is the same
+value a disconnect, a `cancelAll()` and a literal JSON `null` produce, and
+`docs/protocol.md` §5.4 already defines what every kind does with it.
+`ReplyPool` prints `ASK TIMEOUT <askId> after <n>ms -> null` so the event is
+visible in the log without being fatal, and a separate 30 s `ASK PENDING`
+watchdog names an ask that is still outstanding, which is how an infinite
+console timeout stays debuggable.
+
+**Rationale.** The alternative — one constant in the protocol — is wrong in both
+directions at once. Any finite value is a bug for the console (the engine gives
+up while the user reads their hand, and Forge takes the default *silently*,
+which is worse than a hang because the game continues wrongly). Any infinite
+value is a bug for `auto` and `null`, whose whole job in `check-all.sh` is to
+fail fast. The value is genuinely a property of *who is answering*, so it lives
+on the transport. M3's `WsTransport` inherits the question and will need its own
+answer, tied to the socket's liveness rather than to a clock.
+
+**Rejected.** One `ASK_TIMEOUT_MS` constant for every transport. A per-kind
+table (`confirm` is fast, `manipulate_list` is slow) — the *kind* argument is
+there so a transport can do this if it ever needs to, but none does: the seat,
+not the question, is what makes an answer slow. Throwing on timeout (there is no
+caller that can handle it; §5.4's defaults exist precisely so there does not
+need to be).
+
+## D16 — `AutoTransport` is the automated human, and `NullTransport` overrides only its answer half
+
+**2026-09-11**
+
+**Decision.** `AutoTransport` is a full seat driven by a minimal policy: on an
+`input` frame it presses the enabled button (OK when OK is enabled, Cancel
+otherwise) and clicks the first selectable card when the engine demands a click;
+on an `ask` frame it answers with the minimal legal value for the kind. It
+carries two watchdogs — `STUCK_MS = 60 s` with no frame at all concedes, and
+`STEP_CAP_MS = 2 s` bounds any single decision — and a `SETTLE_MS = 120 ms`
+quiet period so it acts on a board that has stopped moving. `NullTransport`
+**extends** it and overrides exactly one method, `onAsk`, to answer the literal
+`null`.
+
+**Rationale.** Report 07 §10's build order says step 3 is a null transport that
+answers every ask with `null` and plays a game out on Forge's documented
+defaults. **Measured, that does not finish a game, and the reason is the finding
+the whole milestone turns on:** with `isLibgdxPort() == false` (D18) a human seat
+is driven by the *input* path, not by asks. The very first decision of the very
+first game — "you have won the coin toss, play or draw?" — is an `InputConfirm`:
+a prompt and two buttons, with no `IGuiGame.confirm` anywhere in it. The first
+build parked there after five frames, having proved nothing. So the input policy
+had to exist anyway, and the honest factoring is one policy class with the
+answer half swapped. What remains is the distinction actually worth testing:
+`null` proves every value-returning member survives Forge's own default, `auto`
+proves it survives a real value.
+
+`auto` plays **badly on purpose**. Clicking the first selectable card is not a
+strategy; it is a way to reach as many engine code paths as a real seat does —
+the mulligan, the Teamwork cost, blockers, damage assignment — without modelling
+any of them. It produced five of the committed human-seat fixtures and it is
+step 9 of `check-all.sh`.
+
+A null answer also travels the ordinary inbound path (`Inbound.onAnswer`, on
+`mtg-table-io`) rather than completing the future inside `ask`. Before that, a
+`null`-transport log held N asks and **zero** `answer` frames — on disk
+indistinguishable from a wedged session, which contradicts protocol §8.3 ("it is
+the same stream the client consumed") and would have made a real wedge
+unnoticeable.
+
+One decision per **settled board**, not one per frame, and that is not a
+detail. A single engine decision produces several frames —
+`showPromptMessage` and `updateButtons` are two EDT calls and therefore two
+`input` frames, with a `state` usually landing between them — so a policy that
+acts on every frame fires three clicks for one decision and queues them all on
+the EDT; measured, the first version of this class burned its whole plan during
+the mulligan that way. "Settled" cannot mean "no frames at all" either, because
+`AbstractGuiGame.awaitNextInput()` re-pushes the same prompt on a 250 ms timer
+while the engine thinks. So **an `input` frame identical to the last one is not
+activity**; only a changed input, a new `state` or a `notice` is.
+
+**Rejected.** Report 07 §10 step 3 as written (an asks-only null transport;
+report 07 is wrong here and has not been corrected — it is on the M2 follow-ups
+list in `PLAN.md`). Two unrelated policy classes (the input half is identical and
+would have drifted). A cleverer `auto` that tries to win (it would stop being a
+coverage tool the moment it started making choices for a reason). Acting once per
+frame (three clicks per decision, all queued on the EDT).
+
+## D17 — Acts run on the virtual EDT; answers arrive on `mtg-table-io`
+
+**2026-09-11**
+
+**Decision.** `Transport.Inbound` has two methods and they go to two different
+places. Both open with the same pair of asserts —
+`Transport.assertNotGameThread` and `Transport.assertNotEdt` — so the contract
+is mechanical and not a comment:
+
+- **`onAct`** logs the c2s frame, then dispatches the mutation through
+  `FThreads.invokeInEdtNowOrLater` — so every act reaches Forge on
+  `mtg-table-EDT`, and `IGameController` is only ever called from there.
+- **`onAnswer`** completes the `ReplyPool` future *on the calling thread*. The
+  parked game thread wakes up inside `ReplyPool.await` and hands the value back
+  to Forge itself.
+
+The calling thread is **`mtg-table-io`**, the reader thread every transport
+starts, with two named one-shot exceptions that are asserted like anybody else:
+`AutoTransport`'s progress watchdog concedes via `onAct` when no frame has
+arrived for a minute (it cannot go through the reader — the reader is what is
+not moving), and `ConsoleTransport`'s quit thread calls `onDisconnect` after a
+concede (the reader has already stopped, which is what quitting means). The
+contract written down is therefore the one the asserts enforce, **never a game
+thread and never the EDT**, because M3's `WsTransport` is being written against
+it.
+
+An act that throws is caught, logged, and turned into a `notice` — never a
+crash and never a block, because protocol §2.2 says the server tolerates **any**
+act at any time, including one that has become meaningless.
+
+**Rationale.** Desktop Forge is safe by accident of being single-threaded in the
+right place: `InputBase.finished` is a plain non-volatile field written by
+`stop()` via `invokeInEdtNowOrLater` and read by `selectCard` /
+`selectButtonOk`, and that is only correct because both ends are the EDT.
+Dispatching acts anywhere else reproduces a data race Forge has never had to
+think about. Routing them through the virtual EDT also serialises clicks against
+prompt rendering for free.
+
+Answers cannot take the same route, because the thread that must receive them is
+already parked in `await` — an EDT hop would deadlock a call whose entire
+purpose is to block the game thread. Pinning them to the io thread instead makes
+"who may complete a future" a one-line assert rather than a convention.
+
+**Rejected.** Completing the reply future from whatever thread the transport
+happened to be on (unassertable, and the console's reader thread and the
+policy's worker thread are different threads). Dispatching acts on the game
+thread (it is parked; that is the whole design). Letting an act exception
+propagate (it kills the io thread and takes the session with it).
+
+## D18 — `isLibgdxPort()` stays `false`, so the input path is the primary path
+
+**2026-09-11**
+
+**Decision.** `HeadlessGuiBase.isLibgdxPort()` returns `false`, permanently, and
+M2 was built **input path first, ask path second** as a consequence.
+
+**Rationale.** This one boolean reroutes most of the engine. Nearly every
+yes/no in Forge has two implementations, and every direct
+`getGui().confirm(...)` call site is guarded by
+`if (getGui().isLibgdxPort())` — so with the flag false, prompts arrive as
+`InputConfirm`: a prompt string plus two buttons whose **labels are the
+engine's**, not `IGuiGame.confirm`. A client that implements only the blocking
+value-returning members sits forever at a prompt it never receives. That is the
+single biggest scheduling fact in report 07's spec (§0.8), it is why
+`NullTransport` had to grow an input policy (D16), and it is why
+`docs/protocol.md` §4 requires `buttons.*.label` to be rendered verbatim rather
+than replaced with "Yes"/"No".
+
+Returning `true` would be claiming to be the libGDX mobile port, whose desktop
+assumptions (touch input, its own screen stack, a different assets layout) we do
+not satisfy anywhere else. The flag is a statement about which Forge front-end
+we *are*, not a switch to be tuned.
+
+**Rejected.** `true`, to collapse confirmations onto the ask path and write less
+input code. It would trade a well-specified prompt-and-buttons frame we already
+render for a mobile code path we do not otherwise implement, and it would throw
+away the engine's own button labels — which are half of M6's comfort features
+(`Undo (n)`, `End Turn`, `Auto`) arriving for free
+(`docs/research/11-engine-comfort-features.md`).
+
+## D19 — Phase stops live in `WireGuiGame`'s own map, seeded from the prefs and never saved
+
+**2026-09-11**
+
+**Decision.** `isUiSetToSkipPhase(PlayerView turn, PhaseType phase)` is answered
+from `WireGuiGame`'s own `ConcurrentHashMap<Integer, EnumSet<PhaseType>>` —
+**player id → the phases to skip** — seeded once per game from
+`FPref.PHASES_HUMAN` / `PHASES_AI`, mutated by `act: setPhaseStop`, and
+discarded when the game ends. `prefs.save()` is never called.
+
+**Rationale.** Report 11 §3.3: `PlayerControllerHuman.isUiSetToSkipPhase`
+consults `YieldController` **only** `if (isRemoteClient())`, and we are not one,
+so that map is dead code for us — a client that wrote its phase stops there
+would watch them have no effect. Forge's own desktop does exactly what we do:
+`CMatchUI.actuateMatchPreferences` seeds the phase strip from those prefs once
+per match and holds the state in the GUI object.
+
+Three details that are each a bug if missed. **The polarity is stop, not skip**:
+a pref that is `true` means *stop here*, so the set we store is the phases whose
+pref is `false` — which is also why `act: setPhaseStop {stop}` is named for the
+stop. **Which array applies is chosen by whose turn it is**, not by who is
+setting the stop: "stop at MAIN1 on my turn" and "stop at MAIN1 on the AI's
+turn" are separate switches, which is why there are two prefs. And the map is
+keyed by **id, never by `PlayerView`**: `endCurrentGame()` replaces every
+`PlayerView`, so a map keyed by the object would go silently stale exactly when
+M6's New Game ships.
+
+Not saving is the same reasoning as D13: a preference written to `var/forge/`
+makes behaviour depend on run order, and Forge's desktop only writes these back
+at teardown.
+
+**Rejected.** Reading `FPref` live on every call (it is a file-backed store read
+from the game thread, and it cannot represent a mid-game change). Writing
+through `YieldController` (dead code for a non-remote client). Computing phase
+stops in the browser — `README.md`'s NON-GOALS forbids it, and the engine is the
+only thing that knows when a phase is actually reached.

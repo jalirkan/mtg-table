@@ -97,9 +97,21 @@ code; if you think one is wrong, say so in prose first.
     `stackDescription(`, `outcomeStrings(`, `matchSummary(`. It also rejects the
     identifier **`CardView` in any `bridge/src/mtgtable/*.java` other than
     `Snap.java`** — that is how "one serialisation function" becomes mechanical.
-    A file that legitimately needs it (e.g. `RecordMatch`'s `IGuiGame` no-op stubs
-    take `CardView` parameters) goes in the lint's ALLOW list **with a one-line
-    justification**.
+    A file that legitimately needs it goes in the lint's ALLOW list (section 5 of
+    `tools/lint-bridge.sh`, the `allow_cardview` case) **with a one-line
+    justification**. The list is **three entries and is meant to stay short** —
+    adding a fourth is a decision, not a formality:
+    - `Snap.java` — THE serialiser. This is the point.
+    - `RecordMatch.java` — its `SpectatorGui` implements `IGuiGame`, whose own
+      signatures take `CardView`; every body is a logged no-op returning a
+      documented default and none of them reads a field off the card.
+    - `WireGuiGame.java` (**added in M2**) — the same exemption for the same
+      reason, over all 37 members: `showPromptMessage`, `setCard`,
+      `setSelectables`, `assignCombatDamage`, `manipulateCardList`,
+      `getAbilityToPlay` and the rest take `CardView` in their Forge signatures.
+      A push reads `getId()` and nothing else (report 07 R1), and **every** card
+      and **every** option label that reaches the wire goes through
+      `Snap.card` / `Snap.label` — the same single gate the zone walk uses.
 
     Three conventions the lint cannot check, stated in a comment block at the top
     of `Snap.java` (`docs/guides/java-for-typescript-people.md`): **enums go on
@@ -107,9 +119,21 @@ code; if you think one is wrong, say so in prose first.
     overrides `toString()`); **nullable integers use `JsonOut.nInt`, never
     `n(String,long)`**; and **every `CardStateView`-derived key is written in both
     branches of the null-state check**, so the renderer never tests for key
-    absence. `HeadlessGuiBase` asserts at class-init that no thread name we create
-    starts with `Game`, because `ThreadUtil.isGameThread()` is a bare
-    `getName().startsWith("Game")`.
+    absence.
+
+    **Threads.** `ThreadUtil.isGameThread()` is a bare
+    `getName().startsWith("Game")`, so a thread of ours that drifted into that
+    prefix would be allowed to walk the view graph. Two mechanical guards, and
+    both must stay complete: `HeadlessGuiBase` asserts at class-init that **every
+    one of the seven thread names we create** starts with `mtg-table-`
+    (`EDT_NAME`, `BG_NAME`, `GameLog.THREAD_NAME`, `Transport.IO_THREAD_NAME`,
+    `ReplyPool.WATCHDOG_THREAD_NAME`, `AutoTransport.WATCHDOG_THREAD_NAME`,
+    `ConsoleTransport.QUIT_THREAD_NAME` — all compile-time constants, so naming
+    them there loads no class and rule 1 is untouched), and **`tools/lint-bridge.sh` section 6** greps
+    every `new Thread(` under `bridge/src` for a name on the same line that
+    resolves to such a constant. The lint is the half that catches a thread no run
+    happens to construct; put the name on the `new Thread(` line (hand it a method
+    reference rather than an inline lambda) or the lint fails.
 
 11. **The bootstrap sets three things before the first game, in every process,
     and the ordering around `FModel.initialize` is load-bearing.** One
@@ -160,26 +184,86 @@ code; if you think one is wrong, say so in prose first.
     --out fixtures/games/g1.jsonl           # M1
 node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
 node tools/check-redaction-selftest.mjs      # the checker's own negative controls
+./bridge/run.sh mtgtable.MtgTable --transport console --seed 42   # M2: PLAY A GAME
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11      # the seat, automated
+./bridge/run.sh mtgtable.MtgTable --transport null --seed 42      # every ask -> null
+printf "\n\n\n\nq\n" | ./bridge/run.sh mtgtable.MtgTable --transport console \
+    --seed 42                               # the scripted smoke; check-all runs it
 npm --prefix web run dev:replay             # opens /?replay=games/g1.jsonl
-npm --prefix web test && npm --prefix web run build
+npm --prefix web test && npm --prefix web run build   # `test` = node --test THEN vitest
 node tools/fetch-art.ts                     # deck -> web/public/art.json (M4 needs it)
 ```
 
-Not written yet — these are what the milestone delivers, do not cite them as
-existing: `./bridge/run.sh mtgtable.MtgTable --transport console` (**M2+**) and
-`./scripts/play.sh` (**M3+**: check-forge → build → JVM → `vite dev --open`).
+Not written yet — this is what the milestone delivers, do not cite it as
+existing: `./scripts/play.sh` (**M3+**: check-forge → build → JVM →
+`vite dev --open`).
+
+**Playing the console game.** `--transport console` is a real seat: it prints the
+board, the `input` prompt with the engine's own button labels, and any `ask` with
+its numbered options, then reads one line. Type `?` for the full list; the whole
+vocabulary is
+
+| line | what it does |
+|---|---|
+| `<id>` or `c <id>` | click that card (`selectable` lists the ids the engine named; a click on any other id is still sent — amendment **M8** — and comes back as `notice{title:"Not selectable"}`) |
+| `p <id>` | click that player |
+| `a <card> <ab>` | activate an ability by id |
+| `ok` / `no`, `x`, `cancel` | press OK / Cancel — **the label is the engine's**, so OK is sometimes `Auto` and Cancel is sometimes `Undo (2)` |
+| *(empty line)* | OK when OK is enabled, Cancel otherwise |
+| `m W\|U\|B\|R\|G\|C` | spend one floating mana |
+| `u` / `undo` | undo the last mana ability |
+| `pass` | pass priority |
+| `!` | alpha strike (attack with everything) |
+| `s` / `i` | reprint the last `state` / `input` |
+| `q` / `concede` | concede and exit |
+| `?` | this help |
+
+While an `ask` is outstanding **every** line answers it, and the ask itself
+prints the spellings it accepts. `.` answers `null`, which is always legal: the
+bridge substitutes Forge's documented default (`docs/protocol.md` §5.4). The
+console's ask timeout is **0 — infinite** (D15): a human at a terminal is allowed
+to think.
+
+`npm --prefix web test` runs **two** suites: `node --test test/*.test.ts` and
+then `vitest run`, which is the only one that mounts `<Board/>` (Node's type
+stripping does not transform JSX). `vitest` is a dev dependency, so a checkout
+with no `web/node_modules` fails `check-all.sh` at its web step with a message
+saying exactly that.
+
+`bridge/build.sh` runs **three** self-tests after javac: `mtgtable.JsonSelfTest`,
+`mtgtable.AskSelfTest` (the ask path's answer marshalling — index 0 is the
+defending player, a wrong-length `manipulate_list` answer is the identity order,
+and so on) and `mtgtable.GameLogSelfTest` (the frame log's close path: close in
+under a second, exactly `N+1` lines on disk). Forge has dispatched **three** of
+the eleven ask kinds across every recording ever made here, so for the other
+eight `AskSelfTest` is the only check that runs at all; and the `GameLog` defect
+it now guards — a `close()` that self-deadlocked against its own appender,
+burned 30 s and returned a truncated file — was invisible in a green run.
 
 `check-forge.sh` is the gate for everything below it. Run it first when something
 behaves strangely. **`check-all.sh` is what you run before saying you are done**:
-lint → build → `Smoke` → a fresh `RecordMatch` into `var/` → `check-redaction.mjs`
-over the committed fixtures (`games/` **and** `synthetic/`) *and* that recording
-→ `check-redaction-selftest.mjs` → `npm run build && npm test`. It exits non-zero
-on the first failure.
+lint → build → `Smoke` → a fresh `RecordMatch` into `var/` → the value-level
+drift diff → three fresh `MtgTable` sessions (`--transport null`, the scripted
+`--transport console` smoke, and `--transport auto --seed 11`) →
+`check-redaction.mjs` over the committed fixtures (`games/` **and** `synthetic/`)
+*and* all four recordings → `check-redaction-selftest.mjs` →
+`npm run build && npm test`. It exits non-zero on the first failure, and takes
+two to three minutes, most of it the four games. **Every JVM step runs under
+`timeout`** (`GAME_TIMEOUT`, default 300 s, overridable in the environment): a
+gate whose failure mode is "hangs until someone notices" cannot catch the one
+defect class M2's threading work is most exposed to.
 
 **Never pass `--pre-amendment` to `check-redaction.mjs`.** It downgrades a
 missing `owner` / `token` / `alt` / `library.cards` to a warning, and those four
 absences are exactly what the gate exists to catch. It is there to read a log
 recorded before 2026-09-11, and nothing in the repo is one.
+
+**And never pass `--opponent-library-ok`,** which gets the identical treatment:
+it downgrades "a seat other than the viewer has full cards in `library.cards`" —
+the single largest hidden-information surface in the game — from a failure to a
+warning. The shape is legitimately reachable (Opposition Agent, Bribery, Gonti)
+and **nothing in the repo passes it**, so the day a recording needs it is the day
+someone types it on the command line and says why in the commit message.
 
 ## Treat forge-src as prose
 
@@ -254,7 +338,7 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
 | `PLAN.md` | The eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| `DECISIONS.md` | The fourteen load-bearing decisions, dated, with rejected alternatives. |
+| `DECISIONS.md` | The nineteen load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's). |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
