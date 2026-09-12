@@ -1354,3 +1354,377 @@ and is how you learn the strip exists — and even at 22 px the in-flow version
 took its bite out of both rows, so hiding it would have hidden the defect, not
 fixed it). A higher `z-index` than the captions (it would have made the fix
 un-escapable: the cards under the strip would have had no click path at all).
+
+---
+
+## D37 — The phase strip is LIVE, and D31's "read-only until M6" clause is superseded
+
+**2026-09-12**
+
+**Supersedes D31** (the read-only preview) on its behaviour clause only. D31's
+*layout* decision — thirteen rows, two dot columns, `UNTAP` printing `·` in both
+because there is no `PHASE_*_UNTAP` preference — stands unchanged, and so does its
+promise that "when `players[].phaseStops` ships, the markup does not change, only
+`onClick` and the data source". That is exactly what happened.
+
+**Decision.** Every dot is an enabled button whenever the stream carries
+`players[].phaseStops` (protocol §3.3, amendment **M32**) and there is no open
+ask and no game over. A click is `act: setPhaseStop {phase, turn, stop}`; the
+next `state` says what happened. `web/src/render/PhaseStrip.tsx` keeps **no stop
+state of its own** — the whole of D31's rationale — and `phaseStopsOf` is the one
+place a stream *with* the field is told apart from one without.
+
+**A stream without the field still draws Forge's defaults, disabled**, with the
+legend saying so. That is not a leftover: it is every recording made before
+2026-09-12, and `render.test.tsx` replays all of them.
+
+**D31's third paragraph is now wrong in one more place, and it is retracted
+here:** it also disabled a **"hold priority"** toggle with a tooltip naming
+`YieldController.setDisableAutoYields`. **There is no hold-priority feature in
+Forge** (`docs/research/11-engine-comfort-features.md`, PLAN.md §M6), so the
+control was removed rather than enabled — a toggle with no engine behind it is
+the one thing M6 was told not to render. `setDisableAutoYields` is a different
+feature (it suppresses *auto-yields*, not priority) and is not on the wire.
+
+**Rejected.** Editing D31 in place (CLAUDE.md §"Where the docs live" forbids it,
+and D31's layout half is still the reason the strip looks the way it does).
+Leaving D31 uncontradicted while the browser disproved it — which is what the
+M6 verification pass found and is the reason this entry exists.
+
+---
+
+## D38 — Phase stops are reseeded from Forge's defaults for every game of a match, not carried across it
+
+**2026-09-12**
+
+**Decision.** `WireGuiGame.resetForGame(n)` calls `seedPhaseStops()` for every
+game, including games 2 and 3 of a `--games N` match. A stop the player set in
+game 1 is **gone** in game 2; the map comes back as `FPref.PHASES_HUMAN` /
+`PHASES_AI` (`MAIN1`, `COMBAT_DECLARE_BLOCKERS`, `MAIN2` for the seat;
+`COMBAT_BEGIN`, `COMBAT_DECLARE_ATTACKERS`, `COMBAT_DECLARE_BLOCKERS`,
+`END_OF_TURN` for the AI). Measured in the browser: a DRAW stop set in game 1 and
+an UPKEEP-on-the-opponent's-turn stop were both absent from the `hello_ok` of
+game 2.
+
+**Rationale.** `openView` is the only reset hook Forge gives us and it is the
+hook that rebuilds **everything else** — the card, player and ability indexes,
+the `ReplyPool`, the frame log, the yield-handle table — because
+`endCurrentGame()` has by then nulled the `Game`, emptied
+`getHumanControllers()` and replaced every `PlayerView` (report 11 §8.3). The
+phase-stop map is keyed by `PlayerView` id, and those ids are among the things
+that are replaced. Carrying the map across would mean one cache surviving a reset
+that every neighbouring cache does not, keyed by ids that no longer mean what
+they meant — which is a bug waiting for the first game where the seat comes back
+as a different id. Seeding is one call and cannot be stale.
+
+This was an **accident of implementation before it was a decision**, and report
+11 §13 open question 6 asked in as many words that it be one. It is now one.
+
+**The cost, stated.** Forge's desktop does *not* do this: it seeds the map once
+per match, from the same preferences, and a stop you set in game 1 survives into
+game 2. So a player who sets a Draw-step stop in game 1 of a best-of-three has to
+set it again in game 2. That is a comfort regression against Forge and it is the
+price of not carrying a `PlayerView`-keyed cache across a `PlayerView`
+replacement.
+
+**Rejected.** Seeding once per match and re-keying the map onto the new
+`PlayerView` ids in `openView` (it is the same amount of code as seeding, buys
+one convenience, and adds the only cache in the process with a lifetime longer
+than the game — the exact shape of the bug M38's per-game reset exists to
+prevent). Persisting stops to `FPref` (we never `save()` — D13, and it is the
+user's real Forge profile). Keeping it undecided and writing it only into
+`docs/evidence/m6-engine.md` §9, which is where it was.
+
+---
+
+## D39 — The M6 refresh hop may walk the view graph only while the engine is parked
+
+**2026-09-12**
+
+**Decision.** `WireGuiGame.refreshState()` — the push that makes `setPhaseStop`,
+`yieldTo`, `setYield` and `undo` visible in the next `state`, since none of the
+four produces a game event — still hops to Forge's game pool, but the queued
+runnable (`refreshSnapshot`) now returns **without touching a view** unless
+**both** of these hold:
+
+1. `inputGen` has not moved since the act was applied on the EDT (**D22**'s guard,
+   verbatim); and
+2. `enginePausedForSeat()` is true — `ReplyPool.pending() > 0` (the game thread is
+   parked inside our own `ask()`) or `PlayerControllerHuman.getInputQueue()
+   .getInput() != null` (an `InputSynchronized` is on the input stack, so a
+   thread is sitting in `InputSyncronizedBase.awaitLatchRelease()` for it).
+
+A skipped refresh is **counted** (`refreshesSkipped()`, printed by the run
+summary) and nothing else: the act was already applied to the engine, and its
+effect reaches the board on the next engine-driven flush.
+
+**Rationale.** `ThreadUtil.invokeInGameThread` is
+`Executors.newCachedThreadPool(new WorkerThreadFactory("Game"))`, so the runnable
+lands on a **second** `Game-n` worker while `Game-0` runs the match. Both pass
+`ThreadUtil.isGameThread()` — a bare `getName().startsWith("Game")` — so
+`Snap.assertGameThread` cannot tell them apart, and hard rule 3's property
+("never walk while the game mutates") has to be arranged by hand. `captureOutcome`
+arranges it by only hopping at game end; `asyncAbilityMenu` arranges it with D22's
+generation stamp, which is sound there because that method is only ever reached
+from a click *inside* a live input.
+
+**The first cut of `refreshState()` arranged nothing**, and the four acts that
+call it are sendable from the browser at any time — the phase-strip dots, Undo,
+Pass-To and the yield toggles are enabled whenever there is no open ask and no
+game over, i.e. right through the AI's turn. So D22's stamp alone is not enough
+here: during the AI's turn the generation is stable for up to 250 ms at a time
+(`awaitNextInput`'s re-push is what moves it), and `Game-0` is mutating the graph
+the whole while. Condition 2 is what turns "probably parked" into "parked": both
+predicates are read from the engine, neither walks a view, and
+`InputQueue.getInput()` is a `BlockingDeque.isEmpty()` then `peek()` and nothing
+else (javap-confirmed).
+
+**Measured.** Three games over one socket at seed 13 with all five comfort acts:
+**2 refreshes skipped**, and every one of the five effects still observed in a
+later `state`. The cost of a skip is at most one flush of latency; the cost of
+not skipping is a silently corrupted `Tracker`, which is what hard rule 3 means
+by *silently* and why ~25 clean games are not evidence.
+
+**Rejected.** Keeping the unguarded hop and arguing the race is acceptable
+(nothing observed broke, which is exactly what "silently" predicts). Dropping the
+hop entirely for a `snapshotDirty` flag consumed by the next game-thread flush
+(sound, but while the engine is parked there IS no next flush — the four acts
+would show nothing until the player clicked something else, which is the whole
+defect `refreshState` exists to fix). Taking a lock around `flushState` (it would
+serialise two *walks* without stopping `Game-0` *mutating*, and `emitOver`'s wait
+for `captureInFlight` inside a held lock is a deadlock).
+
+---
+
+## D40 — The wait for `act: newGame` obeys the socket's timeout rule, not a wall clock
+
+**2026-09-12** (M6 verification fix)
+
+**Decision.** `MtgTable`'s two post-`over` waits — `NEXT_GAME_GRACE_MS` between
+games of a `--games N` match, and `KEEP_OPEN_MS` after the last one — are
+**unbounded while a `WsTransport` reports a connected client**, and the 30 s
+values apply only while none is. `MtgTable.awaitNextGame` is the one place that
+rule lives; `WsTransport.keepOpen(long)` is **deleted**, and a comment stands
+where it was saying why.
+
+Three exits, and the middle one is the reason the gate did not get slower:
+
+1. the next game started — keep playing;
+2. a client that **was** connected has gone — return at once, which is exactly
+   what `keepOpen()` used to do and is why every scripted client in
+   `tools/check-all.sh` still pays nothing for this;
+3. `graceMs` elapsed with nobody ever attached — return.
+
+A non-`ws` transport has no notion of a connection and keeps the flat grace it
+always had: `--transport auto` drives itself, `--transport null` answers nothing.
+
+**Why.** This is the rule **D24** already applies to the ask timeout (0 —
+infinite — while a client is connected, finite only while none is), and the
+argument is the same one: a person at a keyboard is allowed to think. It was not
+applied here, and the cost was M6's own headline flow. Measured twice by the
+verification pass: `--games 2 --keep-open` with one client connected the whole
+time closed the socket at ~30 s and the client never got game 2; and in the
+browser, 36 s after the final `over` the JVM had exited while the **New Game**
+row was still enabled on screen, so the click produced only a toast. Since
+`./scripts/play.sh` defaults to `--games 3`, a human had 30 seconds after each
+game to press the button or the session was gone.
+
+**Measured after the fix.** `--transport ws --games 2 --keep-open`, one client
+connected throughout, silent for **40,046 ms** after game 1's `over`
+(`ws-auto-play --new-game-delay-ms 40000`, itself added for this): the server
+printed *"a client is connected, so there is no deadline"*, game 2 began 39 ms
+after the act, `games = 2 played of 2`, `MTGTABLE OK`. After the last game the
+client disconnected and the server printed *"the client disconnected — the
+session ends here"* and exited immediately.
+
+**The board's half.** `DecisionPanel`'s `NewGameRow` takes `Board`'s new
+`connected` prop and, when the socket is not `open`, **disables both buttons and
+says why**. A socket can still go away for reasons the bridge does not control
+(the JVM was stopped, the machine slept), and a control that cannot do what it
+says is a dead end whoever closed it. Nothing else on the board reads
+`connected`: a click that cannot be sent is already reported by the transport's
+own notice, and greying the table out on a blip would be the client
+second-guessing the engine.
+
+**Rejected.** Raising the two constants to a bigger number (a longer fuse is
+still a fuse, and the number a person needs is "as long as I am looking at it").
+Dropping the finite fallback entirely (a `--keep-open` session nobody ever
+connected to would hold the JVM open forever, and `tools/check-all.sh` starts
+seven of them). Giving `WsTransport.keepOpen` a stop predicate so the logic
+stayed in the transport (the predicate is "has the next game begun", which is
+`WireGuiGame`'s clock and not the socket's — the transport would have had to be
+handed the gui to answer a question that is not about the wire).
+
+---
+
+## D41 — `players[].phaseStops` is ONE map per seat, `{own, opp}`, and the act is keyed by the TURN
+
+**2026-09-12** (M6, written into `docs/protocol.md` §3.3 **before** either half of
+M6 was built — amendments **M32** and **M33**)
+
+**Decision.** Every seat carries one field,
+`phaseStops: {"own": [PhaseType…], "opp": [PhaseType…]}` — `own` is where the
+game stops while **this** player is the turn player, `opp` while any other is —
+and the act is `setPhaseStop {phase, turn, stop}` with `turn` = `"own"` /
+`"opp"`, relative to the viewing seat. There is no `playerId` in the act: a seat
+may only change its own stops. In a two-player game `players[0].phaseStops.opp`
+and `players[1].phaseStops.own` are the same list, which is redundant **and
+deliberate** — a client renders one strip per seat and reads one field.
+
+**Rationale.** A phase stop in Forge is a per-(turn player, phase) bit:
+`FPref.PHASES_HUMAN` and `FPref.PHASES_AI` are two lists, and the desktop's strip
+has two dot columns for exactly that reason (report 11 §3.2). A flat array of
+`PhaseType` cannot say *whose turn*, so it cannot express the strip M4 already
+drew. Naming the **turn** rather than the player in the act is what makes `own` /
+`opp` one word across `state` and `act`: the same token the client read is the
+token it sends back, with no id arithmetic in between.
+
+This was also a **contract between two agents building at once**, which is why
+the shape went into `docs/protocol.md` first and the code second. Both halves
+landed against it without a round trip.
+
+**Rejected.** A flat `phaseStops: [PhaseType…]` (cannot express the opponent's
+column, which is half of Forge's own feature). Two fields, `phaseStops` and
+`phaseStopsOpp` (two fields that must always be read together are one field, and
+a client that read only the first would silently draw half a strip). Keying the
+act by `playerId` (the M3-era spelling: it makes the act's vocabulary differ from
+`state`'s for no gain, and invites a client to try to set the *opponent's* stops.
+The bridge still accepts it, because the server tolerates any act; nothing sends
+it). Answering the field from `FPref` or from `YieldController` (both are wrong
+for us — the prefs are the user's real Forge profile and
+`PlayerControllerHuman.isUiSetToSkipPhase` consults `YieldController` only
+`if (isRemoteClient())`; **D19**'s map in `WireGuiGame` is the source).
+
+---
+
+## D42 — A `yieldKey` on the wire is an opaque bridge-minted handle, never Forge's key
+
+**2026-09-12** (M6, amendment **M36**)
+
+**Decision.** `state.stack[].yieldKey` is `"y1"`, `"y2"`, … — minted by
+`WireGuiGame.handleFor()`, interned in a pair of maps for the life of **one
+game**, and resolved back to Forge's real key when `act: setYield {yieldKey,
+mode}` arrives. `rawYieldKey()` holds **the** call to
+`StackItemView.getKey()` in the bridge, tagged `// ALLOW getKey:`. The client
+passes the handle back and **never renders it**.
+
+Two mechanical guards, because "nobody will call that method" is not a property:
+`tools/lint-bridge.sh` **rule 4b** fails a build in which `getKey()` is called on
+any identifier *declared* `StackItemView` anywhere under `bridge/src` except that
+one tagged line — it derives the receivers from the declarations rather than
+matching the name `si`, precisely so that renaming the variable to `top` does not
+turn the rule off (it did, and the rule passed silently) — and
+`tools/check-redaction.mjs` fails any log whose `yieldKey` contains a space or a
+`(`.
+
+**Rationale.** `StackItemView.getKey()` is
+`CardView.toString() + ": " + the ability's text`: a card name, its id and its
+rules text (report 11 §5.2). That is report 06 §4's text channel and hard rule
+8's "the label is the leak that will actually happen" — on the stack, where a
+face-down creature's trigger is exactly the card whose identity is concealed. A
+handle is also *better* for the client than the key would be: it is stable while
+the item is on the stack, addressable, and obviously not something to print.
+
+**Rejected.** Shipping the real key gated through `Snap.label` (it would put a
+card name on the wire whenever the gate happens to allow it, making the leak
+conditional on a predicate instead of impossible — and a client would render a
+string that looks like a caption). Hashing the key (still derived from the name,
+still stable, and a hash is not *obviously* not-a-name to the next reader, who
+would be the one to log it). Addressing a yield by stack index (the index moves
+under the item, and a standing yield has to survive the item leaving and coming
+back — which is the whole feature).
+
+---
+
+## D43 — Forge's floating-mana prompt is ON by default, in memory
+
+**2026-09-12** (M6, amendment **M40**; answers PLAN.md's open question 9 and M5
+follow-up 2)
+
+**Decision.** `config.json` carries `"manaLostPrompt": true`; `MtgTable` sets
+`FPref.UI_MANA_LOST_PROMPT` from it **in memory and never `save()`s it**;
+`--mana-lost-prompt` / `--no-mana-lost-prompt` override either way, and the
+session header records it as `prefs: ["UI_MANA_LOST_PROMPT"]` (**M31**). So
+passing priority with mana that would be lost raises a `confirm` in **ordinary**
+games, not only under `--probe`.
+
+**Rationale.** The user is a hobbyist learning Magic, and mana lost from an empty
+pool is invisible on a board that draws six pips. Forge already wrote the
+warning; turning it on is rendering a feature rather than building one. It also
+moves `confirm` out of probe-only territory: `InputPassPriority` is its **one
+reachable call site** (**M24**), so with the pref off the kind occurs in no real
+game at all. Measured: the same seed plays the same game — 1,587 log lines and
+one fewer `buttonCancel`, which is a frame that swings both ways on its own
+(M5 follow-up 6).
+
+**Rejected.** Leaving it off, as stock Forge does (an ask kind that only exists
+under a probe flag, and a player who loses mana silently — the two halves of the
+same argument). `save()`ing the pref (D13's rule and CLAUDE.md's "never write
+outside this repo": `~/.forge` is the user's real profile). Making it a control
+on the board (it is a per-session engine preference read at bootstrap; a toggle
+in the browser would be a setting the engine does not learn about until the next
+process, i.e. a client state machine with a config file behind it).
+
+---
+
+## D44 — One `hello_ok` and one frame log per GAME, not per session
+
+**2026-09-12** (M6, amendment **M38**)
+
+**Decision.** A `--games N` session emits **N** handshakes and writes **N**
+files. Game 1 keeps the session's `gameId`; game *n* is `<gameId>-g<n>` and
+writes `var/games/<gameId>-g<n>/frames.jsonl`, line 0 its own session header.
+`WireGuiGame.openView` is the single reset hook: the card / player / ability
+indexes, the concealed-id set, the yield-handle table, the phase-stop map, the
+`input` struct, the over-latch and the `ReplyPool` are rebuilt there, and
+`askSeq` and `FModel` deliberately survive.
+
+**Rationale.** `HostedMatch.endCurrentGame()` empties `getHumanControllers()` and
+replaces every `PlayerView`, so **every id the client cached is invalid** — and
+the protocol already had the signal for that: a `hello_ok` means "drop your card
+map" (§2.1, invariant 10). Reusing it costs the client nothing and needs no new
+frame type. One file per game keeps "a frame log is a replayable game" true:
+`?replay=<file>`, the scrubber, `check-redaction.mjs`'s monotonic-`seq` rule and
+the frame counters all assume one header per file, and each header is then honest
+about *its* seed, policy, prefs and decks.
+
+**Rejected.** One file for the whole session with a second session header inside
+it (three tools would have needed a new mode, to buy a reader a convenience
+nobody asked for). Appending game 2 into game 1's file with no new header (the
+same, plus the header's `decks` / `policy` line becomes a claim about a game it
+did not describe). Keeping one `hello_ok` and patching the client's ids across
+the reset (the ids are Forge's and it does not offer a mapping; inventing one is
+the client second-guessing the engine, and it is unobservable until the first
+game where a seat comes back as a different id).
+
+---
+
+## D45 — `Space` activates the FOCUSED button, and sends nothing when the browser already will
+
+**2026-09-12** (M6, amendment **M39**)
+
+**Decision.** `input.buttons.focus` (`"ok"` / `"cancel"` / `null`) is
+`updateButtons`' sixth argument `focus1`, which the emitter had been dropping.
+The board draws the focus ring on that button and gives it the DOM focus;
+`planKey` binds `Space` to `buttonOk` or `buttonCancel` **per that field**, and
+returns **no plan at all** while a real button, link or `summary` has the focus,
+because the browser is already going to activate it. With `focus: null` — and in
+every recording made before 2026-09-12 — `Space` is OK, which is M4's behaviour.
+
+**Rationale.** *"Space = OK"* is not a Forge shortcut and never was: Forge's
+desktop has no global binding, `FLabel` activates the **focused** Swing label,
+and `focus1` is what decides which (report 11 §11). So the client had a rule
+where the engine had a field. The second half is a defect that has already
+happened twice in this repo: a key handler that also sends `buttonOk` for a
+focused button **answers the engine twice for one press**, and M3's attempt to
+avoid it dropped the *whole* keyboard for a focused element, so clicking a card
+turned `Escape` off. Hence: a focused button keeps `Space` and nothing else.
+
+**Rejected.** Keeping `Space = OK` unconditionally (a client rule standing in for
+a typed field — amendment **M30**'s rule in miniature). Binding `Space` to
+`passPriority` when `focus` is `null`, which protocol §4 offers as an option
+(pass priority is a different act with different consequences, and the player
+pressed a key that means "press the button"; `P` is the pass key and it is a row
+of its own). Rendering our own idea of which button *ought* to be focused (it is
+`updateButtons`' argument, and guessing it is how a board and an engine come to
+disagree about what `Space` does).

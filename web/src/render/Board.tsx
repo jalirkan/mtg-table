@@ -60,13 +60,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ArtIndex } from '../art.ts';
 import { planKey, type KeyContext, type KeyEventLike } from '../keys.ts';
 import {
+  buttonFocus,
   isHidden,
+  stackYield,
+  undoOf,
   type AnswerValue,
   type AnyCard,
   type GameStateBody,
   type InputBody,
   type ManaColor,
   type PlayerState,
+  type SetYieldMode,
+  type YieldKind,
 } from '../protocol.ts';
 import type { ClientState, TimestampedNotice } from '../reduce.ts';
 import { ArrowsOverlay } from './ArrowsOverlay.tsx';
@@ -80,7 +85,7 @@ import { HandFan } from './HandFan.tsx';
 import { HotkeysOverlay } from './HotkeysOverlay.tsx';
 import { isLandTypeLine } from './labels.ts';
 import { LogDrawer } from './LogDrawer.tsx';
-import { PhaseStrip } from './PhaseStrip.tsx';
+import { PhaseStrip, type StopTurn } from './PhaseStrip.tsx';
 import {
   boardPick,
   drawnEntities,
@@ -111,9 +116,13 @@ import { ZoneRow } from './ZoneRow.tsx';
  * The seat's outbound half (§2.2, §2.3). One object, passed down as far as the
  * card tiles; `null` is a replay, and every affordance renders disabled.
  *
- * There is deliberately **no `undo`, no `endTurn` and no `autoPay`**: those are
- * Forge's own labels on the OK and Cancel buttons, and the act to send is
- * `buttonOk` / `buttonCancel` (§2.2, §10.3, report 11 §0.1).
+ * There is deliberately **no `endTurn`, no `autoPay` and no `cancelYield`**:
+ * those are Forge's own labels on the OK and Cancel buttons, and the act to send
+ * is `buttonOk` / `buttonCancel` (§2.2, §10.3, report 11 §0.1). `undo` **is**
+ * here, and is not an exception to that rule: `IGameController.undoLastAction()`
+ * is a real engine call with its own gate (`state.undo.can`), and the engine's
+ * Cancel button reaching the same place when it happens to be labelled
+ * `Undo (n)` is two controls asking one question, not a second implementation.
  */
 export interface BoardActions {
   /** §2.2 — any card, not only a selectable one (amendment M8). */
@@ -132,6 +141,27 @@ export interface BoardActions {
   concede(): void;
   /** §2.3 — exactly one per ask; the value is per-kind (§5.2). */
   answer(askId: string, value: AnswerValue): void;
+
+  // ---- M6. Five acts, five engine calls (report 11), and not one of them a
+  // ---- client state machine: every effect comes back as the next `state`.
+  /** §2.2 — `undoLastAction()`, gated on `state.undo.can`. Mana abilities only. */
+  undo(): void;
+  /** §2.2 — `passPriority()`; a no-op unless the engine is asking for one. */
+  passPriority(): void;
+  /** §2.2 — `alphaStrike()`; only meaningful while declaring attackers. */
+  alphaStrike(): void;
+  /**
+   * §2.2 — `sendYieldUpdate(YieldUpdate)`, in all three of its shapes. `turn`
+   * is the marker's column: `END_OF_TURN` on `"opp"` is the opponent's end step
+   * ("just before my turn"), on `"own"` my own.
+   */
+  yieldTo(kind: YieldKind, phase?: string, turn?: StopTurn): void;
+  /** §2.2 — `setShouldAutoYield` / `setTriggerDecision`, by opaque handle. */
+  setYield(yieldKey: string, mode: SetYieldMode): void;
+  /** §2.2 — one bit of `WireGuiGame`'s stop map; `turn`, never a player id. */
+  setPhaseStop(phase: string, turn: StopTurn, stop: boolean): void;
+  /** §2.2 — `nextGameDecision(CONTINUE | NEW)`. Only meaningful after `over`. */
+  newGame(mode: 'continue' | 'restart'): void;
 }
 
 export interface BoardProps {
@@ -145,13 +175,32 @@ export interface BoardProps {
    * toast that says "not connected" must not look like something Forge said.
    */
   clientNotices?: readonly TimestampedNotice[];
+  /**
+   * **M6 fix** — is the socket actually `open`? `true`/`false` from a live
+   * transport, `null` for a replay (which has no socket and sends nothing).
+   *
+   * It exists for exactly one control: the New Game row appears at `over`, which
+   * is the one moment in a session when the bridge may be about to go away, and
+   * a row that offers `act: newGame` into a closed socket produces a toast and
+   * nothing else. Every OTHER control on the board is left alone — a click that
+   * cannot be sent is already reported by the transport's own notice, and
+   * greying the board out on a blip would be the client second-guessing the
+   * engine. Never treat this as game state: it is the wire, not the table.
+   */
+  connected?: boolean | null;
 }
 
 // ---------------------------------------------------------------------------
 // Board
 // ---------------------------------------------------------------------------
 
-export function Board({ state, art, actions = null, clientNotices = [] }: BoardProps): JSX.Element {
+export function Board({
+  state,
+  art,
+  actions = null,
+  clientNotices = [],
+  connected = null,
+}: BoardProps): JSX.Element {
   const { board, hello, input } = state;
   const you = hello?.you ?? state.session?.seat ?? null;
 
@@ -193,8 +242,8 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
   // How many clicks this seat has sent against the current `selectable` prompt.
   // The wire carries no running count; this is ours, and the panel says so.
   const [picksBox, setPicksBox] = useState<{ key: string; n: number }>({ key: '', n: 0 });
-  // **The snapshot a `useMana` was sent against** (M5 review). Forge pushes no
-  // `state` for a mana payment — measured in A.I.M. Scientists' landcycling,
+  // **The snapshot a `useMana` (or an `undo`) was sent against** (M5 review,
+  // extended in M6). Forge pushes no `state` for a mana payment — measured in A.I.M. Scientists' landcycling,
   // where the act took `Pay Mana Cost: {2}` to `{1}` and only `input` frames
   // followed — so while `state.board` is still the object we sent against, the
   // pool counts on screen are known to be behind and the rail says so. The
@@ -277,6 +326,12 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
   const mySeat = board === null ? null : (board.players.find((p) => p.id === mySeatId) ?? null);
   const poolColors = mySeat === null ? [] : spendableColors(mySeat.manaPool);
 
+  // M6 — the top of the stack is what `Y` / `N` address, which is Forge's own
+  // rule (`getGameView().peekStack()`), and `stackYield` is the one place the
+  // engine's two guards are read. The handle itself never reaches the DOM.
+  const topItem = state.board === null ? null : (state.board.stack.at(-1) ?? null);
+  const topYield = stackYield(topItem);
+
   const keyContext: KeyContext = {
     live: actions !== null && state.gameOver === null,
     askOpen: state.ask !== null,
@@ -284,6 +339,13 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
     cancelEnabled: input?.buttons.cancel.enabled === true,
     haveSelectable: (input?.selectable.cardIds.length ?? 0) > 0,
     poolColors,
+    // M6 — every one of these is the engine's own answer, read out of the
+    // snapshot: which button it focused, whether it has anything to undo, and
+    // whether the top of the stack is something it offers an auto-yield for.
+    focus: buttonFocus(input),
+    canUndo: undoOf(state.board).can,
+    topYieldKey: topYield.yieldKey,
+    topYielded: topYield.mode,
     overlay:
       zoomId !== null
         ? 'zoom'
@@ -339,6 +401,32 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
           setFlash(null);
           setManaSentAgainst(state.board);
           actions?.useMana(plan.color);
+          return;
+        // ---- M6. Each of these is one act; the effect arrives as the next
+        // ---- `state` / `input`, like every other act (§2.2).
+        case 'undo':
+          setFlash(null);
+          // Same bookkeeping as a mana pip: an undo refunds mana and the engine
+          // pushes no `state` for it, so the counts on screen are provisional
+          // until one arrives.
+          setManaSentAgainst(state.board);
+          actions?.undo();
+          return;
+        case 'passPriority':
+          setFlash(null);
+          actions?.passPriority();
+          return;
+        case 'alphaStrike':
+          setFlash(null);
+          actions?.alphaStrike();
+          return;
+        case 'yieldTo':
+          setFlash(null);
+          actions?.yieldTo(plan.yield, plan.phase, plan.turn);
+          return;
+        case 'setYield':
+          setFlash(null);
+          actions?.setYield(plan.yieldKey, plan.mode);
           return;
         case 'closeOverlay':
           setZoomId(null);
@@ -521,7 +609,7 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
         {/* No board means no tiles, so every ask is a modal here by
             construction — `boardPick` returns null with no snapshot. */}
         <AskModal ask={state.ask} art={art} onAnswer={actions?.answer ?? null} />
-        <Toasts notices={state.notices} clientNotices={clientNotices} yourTurn={false} />
+        <Toasts notices={state.notices} clientNotices={clientNotices} />
         <div className="board__drawer">
           <LogDrawer
             state={state}
@@ -595,7 +683,25 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
           actions.useMana(color);
         }
       : null;
+  // The panel's Undo does the same bookkeeping the pips do — see below.
+  const panelActions: BoardActions | null =
+    actions === null
+      ? null
+      : {
+          ...actions,
+          undo: () => {
+            setManaSentAgainst(state.board);
+            actions.undo();
+          },
+        };
+
   // Still the snapshot we spent against → no `state` has arrived since.
+  //
+  // **M6 measured the same shape for `undo`** (docs/evidence/m6-board.md): the
+  // act is applied — Forge's own Cancel goes straight from `Undo (1)` back to
+  // `End Turn`, through the `input` it does push — but no snapshot follows, so
+  // `state.undo` and `manaPool` are a frame behind until the next one. The pips
+  // and the Undo button both say so rather than showing a stale number as fact.
   const manaProvisional = manaSentAgainst !== null && manaSentAgainst === state.board;
 
   return (
@@ -646,9 +752,11 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
           you={you}
           input={input}
           art={art}
-          actions={actions}
+          actions={panelActions}
+          connected={connected}
           clicks={clicks}
           flash={flash}
+          manaProvisional={manaProvisional}
           askPicker={askPicker}
           picksSent={picksSent}
           onHotkeys={() => {
@@ -712,6 +820,18 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
             onToggle={() => {
               setStackOpen((open) => !open);
             }}
+            // M6 — `act: setYield`. Live whenever the seat is (an outstanding
+            // `ask` is no reason to refuse one: Forge's own `setTriggerDecision`
+            // answers the question in front of you as well as the later ones,
+            // report 11 §5.1), and `null` in a replay, where the badges still
+            // render and send nothing.
+            onSetYield={
+              actions === null || state.gameOver !== null
+                ? null
+                : (yieldKey, mode) => {
+                    actions.setYield(yieldKey, mode);
+                  }
+            }
           />
           {/* M5 — what has been declared so far, from `combat.bands` only.
               It is a child of `.table__middle` but NOT a row of it: the strip is
@@ -720,11 +840,9 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
               implicit third grid row and starved the two `1fr` strip rows to
               0 px at 1600 × 900 — `docs/evidence/m5-board.md` §6. */}
           <CombatBands board={board} input={input} art={art} clicks={clicks} you={you} />
-          <Toasts
-            notices={state.notices}
-            clientNotices={clientNotices}
-            yourTurn={yourTurn(state)}
-          />
+          <Toasts notices={state.notices} clientNotices={clientNotices} />
+          {/* M6 — "Your turn" is a tint over the table, not a fortieth toast. */}
+          <TurnFlash state={state} />
           {state.gameOver !== null && <GameOverBanner state={state} board={board} />}
         </div>
 
@@ -750,7 +868,21 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
       </main>
 
       {/* ---- right rail: the phase strip ------------------------------------ */}
-      <PhaseStrip board={board} you={you} />
+      {/* M6 — the dots are toggles now. They send `act: setPhaseStop` and read
+          `players[].phaseStops`; the board still computes no stop of its own
+          (**D31**). Inert inside an `ask` for the same reason every other act
+          is: the game thread is parked and is listening for one thing. */}
+      <PhaseStrip
+        board={board}
+        you={you}
+        onSetPhaseStop={
+          actions === null || asking || state.gameOver !== null
+            ? null
+            : (phase, turn, stop) => {
+                actions.setPhaseStop(phase, turn, stop);
+              }
+        }
+      />
 
       {/* §9.3 — one SVG over the whole board, `aria-hidden` and
           `pointer-events: none`. Every fact it draws is also text: the stack
@@ -1144,28 +1276,41 @@ function GameOverBanner({ state, board }: { state: ClientState; board: GameState
 }
 
 /**
- * The toast strip: the engine's recent notices (§6), the transport's own
- * complaints, and "Your turn".
+ * The toast strip: what the engine complained about (§6) and what the transport
+ * complained about, and — **as of M6** — nothing else.
+ *
+ * **Only `warn` and `error` are toasts.** The corpus is the argument: 952 of the
+ * 1,000-odd notices across `fixtures/games/` are `info` / `"Your turn"`, pushed
+ * at every priority pass, and a strip that says the same three words forty times
+ * a turn is a strip nobody reads — including the 21 `warn` / "Not selectable"
+ * lines that are the whole reason it exists. The filter is on `level`, which is
+ * a typed field (§6), and **never on the title**: deciding what a control does
+ * by matching an engine string is what amendment M30 forbids.
+ *
+ * `info` is not lost — the log drawer lists every notice, unfiltered, and that
+ * is where "a toast that disappears is not the only copy" is satisfied.
+ *
+ * "Your turn" became {@link TurnFlash}, which says the same thing from the
+ * *snapshot* (`state.priority`) rather than from a notice.
  *
  * Capped and newest-first, and **briefly** is done in CSS (`animation:
  * toast-fade`) rather than with a timer, because a timer here would be an effect
- * the render test cannot run. The full history stays in the log drawer — a toast
- * that disappears is not allowed to be the only copy of "Not selectable".
+ * the render test cannot run.
  */
 function Toasts({
   notices,
   clientNotices,
-  yourTurn: myTurn,
 }: {
   notices: TimestampedNotice[];
   clientNotices: readonly TimestampedNotice[];
-  yourTurn: boolean;
 }): JSX.Element | null {
-  const recent = collapse([...notices, ...clientNotices]).slice(-3);
-  if (recent.length === 0 && !myTurn) return null;
+  const loud = [...notices, ...clientNotices].filter(
+    (notice) => notice.level === 'warn' || notice.level === 'error',
+  );
+  const recent = collapse(loud).slice(-3);
+  if (recent.length === 0) return null;
   return (
     <div className="toasts" role="status" aria-live="polite">
-      {myTurn && <span className="toast toast--turn">Your turn</span>}
       {recent.map(({ notice, count }) => (
         <span key={`${String(notice.seq)}-${String(notice.t)}`} className={`toast toast--${notice.level}`}>
           {/* §6: both strings are gated and either may be "" — render verbatim
@@ -1177,6 +1322,35 @@ function Toasts({
         </span>
       ))}
     </div>
+  );
+}
+
+/**
+ * **M6 — "Your turn" is a flash, not a toast.**
+ *
+ * It is the same fact it always was — `state.priority` is this seat, the game is
+ * live and nothing is being asked (`yourTurn()`) — drawn as a brief tint across
+ * the table rather than as a card in the toast strip. Three reasons, all of them
+ * measured: Forge pushes the notice at *every* priority pass (952 of them in the
+ * committed corpus), the strip is where `warn` / `error` have to be legible, and
+ * a message that repeats forty times a turn stops being read.
+ *
+ * Keyed on the turn and the phase so the CSS animation restarts when the fact is
+ * new and not on every re-render, and `aria-hidden` because the same fact is
+ * already in the phase strip's header, the decision panel's title and the
+ * engine's own prompt — this is decoration over information that is already
+ * there (§14 rule 4).
+ */
+function TurnFlash({ state }: { state: ClientState }): JSX.Element | null {
+  if (!yourTurn(state)) return null;
+  const board = state.board;
+  return (
+    <span
+      key={`${String(board?.turn ?? 0)}-${board?.phase ?? ''}`}
+      className="turnflash"
+      aria-hidden="true"
+      data-turn={String(board?.turn ?? 0)}
+    />
   );
 }
 

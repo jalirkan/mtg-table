@@ -53,6 +53,15 @@ const FAKE_ACTIONS: BoardActions = {
   useMana: () => undefined,
   concede: () => undefined,
   answer: () => undefined,
+  // M6 — five more acts on the seam. The sink records nothing here on purpose;
+  // `board-m6.test.tsx` is where each one is driven and its act asserted.
+  undo: () => undefined,
+  passPriority: () => undefined,
+  alphaStrike: () => undefined,
+  yieldTo: () => undefined,
+  setYield: () => undefined,
+  setPhaseStop: () => undefined,
+  newGame: () => undefined,
 };
 
 function live(state: ClientState): string {

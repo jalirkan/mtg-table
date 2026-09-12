@@ -27,6 +27,26 @@
  *      — behind one confirming click, because it ends the game and there is no
  *      undo for it.
  *
+ * **M6 adds four controls, and every one of them is an engine call** (report 11):
+ *
+ *   5. **Pass-to** — three buttons for `YieldController`'s three mechanisms
+ *      (§4.1): end of turn, a marker on my upkeep, a marker on the opponent's
+ *      end step. While one is running, `state.yield` says which and the panel
+ *      says so; **the way out is the engine's own Cancel button**, which
+ *      `InputLockUI` keeps enabled for the whole of a yield. There is no
+ *      `cancelYield` act, and a second path into `clearActiveYieldAndDispatch`
+ *      is exactly what rule 2 exists to prevent.
+ *   6. **Undo** — `act: undo`, enabled from `state.undo.can` and labelled with
+ *      `state.undo.depth`. It sits *beside* the engine's own Cancel, which
+ *      `InputPassPriority` frequently labels `Undo (n)` itself: the two agree
+ *      because they ask the same question, and if they ever disagree the
+ *      engine's label wins (report 11 §7.3).
+ *   7. **New Game / Restart** — `act: newGame {mode}`, offered only once the
+ *      game is over, because `nextGameDecision` is only meaningful then.
+ *   8. **Pass priority** — `act: passPriority`, which the jar defines as "press
+ *      OK *if* the current input is `InputPassPriority`", i.e. a no-op
+ *      otherwise. That is why it is a separate control and not a second OK.
+ *
  * The stall warning is {@link wedgeSuspected} from `wedge.ts`, imported rather
  * than re-derived: it is a rule that has already been wrong once (amendment
  * M21), it has its own test, and the two qualifiers it grew — *this seat holds
@@ -37,9 +57,26 @@
 import { useEffect, useState } from 'react';
 
 import type { ArtIndex } from '../art.ts';
-import { isHidden, type AnyCard, type GameStateBody, type InputBody, type InputButton } from '../protocol.ts';
-import type { ClientState } from '../reduce.ts';
-import type { KeyActionId } from '../keys.ts';
+import {
+  buttonFocus,
+  isHidden,
+  undoOf,
+  yieldOf,
+  type AnyCard,
+  type GameStateBody,
+  type InputBody,
+  type InputButton,
+  type YieldKind,
+} from '../protocol.ts';
+import { gameLabel, type ClientState } from '../reduce.ts';
+import {
+  chordFor,
+  YIELD_MARKER_BEFORE_MY_TURN,
+  YIELD_MARKER_BEFORE_MY_TURN_SIDE,
+  YIELD_MARKER_MY_TURN,
+  YIELD_MARKER_MY_TURN_SIDE,
+  type KeyActionId,
+} from '../keys.ts';
 import type { BoardActions } from './Board.tsx';
 import { AskPicker, type AskPickerProps } from './AskPicker.tsx';
 import { CardTile, displayName, type Clicks } from './CardTile.tsx';
@@ -70,6 +107,8 @@ export function DecisionPanel({
   onHotkeys,
   askPicker = null,
   picksSent = 0,
+  manaProvisional = false,
+  connected = null,
 }: {
   state: ClientState;
   board: GameStateBody | null;
@@ -93,6 +132,19 @@ export function DecisionPanel({
    * "chosen so far" field, so this is what the browser did, labelled as such.
    */
   picksSent?: number;
+  /**
+   * M6 — an `undo` or a `useMana` has been sent and no `state` has arrived
+   * since, so `state.undo` and the pool counts are a frame behind (the engine
+   * pushes an `input` for both and a snapshot for neither). The Undo button says
+   * so rather than printing a stale depth as fact.
+   */
+  manaProvisional?: boolean;
+  /**
+   * **M6 fix** — the socket's own state (`Board`'s `connected` prop). `false`
+   * disables the New Game row and says why; `null` is a replay. Nothing else
+   * reads it.
+   */
+  connected?: boolean | null;
 }): JSX.Element {
   // §5: an outstanding ask owns the interaction. The buttons belong to the
   // `input` the engine pushed *before* it blocked, and pressing one now would
@@ -123,6 +175,9 @@ export function DecisionPanel({
               button={input.buttons.ok}
               act="buttonOk"
               hint="SPACE"
+              // §4 (M6): SPACE presses whichever button the engine focused, so
+              // the chip is on that one and not always on OK.
+              focused={buttonFocus(input) === 'ok'}
               flashed={flash?.id === 'ok'}
               onClick={live ? actions.buttonOk : null}
             />
@@ -130,14 +185,20 @@ export function DecisionPanel({
               button={input.buttons.cancel}
               act="buttonCancel"
               hint="ESC"
+              focused={buttonFocus(input) === 'cancel'}
               flashed={flash?.id === 'cancel'}
               onClick={live ? actions.buttonCancel : null}
             />
-            {/* Report 10 §7.2 / §2.2: `undo` is an engine feature that is not on
-                the wire yet, and a hint that lies is worse than no hint. It
-                renders disabled, naming the milestone that lights it up;
-                pressing the key flashes it (§12.2 rule 4) rather than doing
-                nothing.
+            {/* **M6 — Undo is real.** `state.undo` is `canUndoLastAction()` plus
+                `MagicStack.getUndoStackSize()`, both game-thread reads (report
+                11 §7), and the button is enabled from `can` and labelled with
+                `depth`. It undoes **mana abilities** — a tapped land, a mana
+                rock — never a cast, and the title says so, because a button that
+                promises more than the engine does is worse than no button.
+
+                It sits beside the engine's own Cancel, which `InputPassPriority`
+                labels `Undo (n)` itself. Two controls, one question; if they
+                ever disagree the engine's label wins.
 
                 **M4's third button is gone.** It said "Auto Pay", and there is
                 no such client feature: Forge's `InputPayMana` writes `Auto` on
@@ -145,14 +206,12 @@ export function DecisionPanel({
                 buttons to the left, rendered verbatim. M5 wired the rest of
                 mana payment where it actually lives — the lands are clicks and
                 the floating pool is the rail's pips (`act: useMana`). */}
-            <button
-              type="button"
-              className={`btn btn--future${flash?.id === 'undo' ? ' btn--flash' : ''}`}
-              disabled
-              title="act: undo exists in docs/protocol.md §2.2 and is gated on IGameController.canUndoLastAction, which the wire does not carry yet (input.canUndo — M6)"
-            >
-              Undo <span className="btn__key">CTRL+Z</span>
-            </button>
+            <UndoButton
+              board={board}
+              onUndo={live ? actions.undo : null}
+              flashed={flash?.id === 'undo'}
+              provisional={manaProvisional}
+            />
             {actions !== null && (
               <ConcedeButton onConcede={actions.concede} gameOver={state.gameOver !== null} />
             )}
@@ -167,6 +226,19 @@ export function DecisionPanel({
               </button>
             )}
           </div>
+
+          {/* M6 — the three yields, and what is running. Both halves are engine
+              state: the buttons send `yieldTo` and `state.yield` says what
+              happened, which is the same shape as every other control here. */}
+          <PassToRow live={live} actions={actions} board={board} flash={flash} />
+
+          {/* M6 — after `over`, the two `nextGameDecision`s. Never before: the
+              engine ignores the decision while a game is running, and a button
+              that silently does nothing is the dead end M5 spent an evening
+              removing. */}
+          {actions !== null && state.gameOver !== null && (
+            <NewGameRow state={state} actions={actions} connected={connected} />
+          )}
 
           {flash !== null && (
             <p className="hint hint--flash" role="status">
@@ -266,11 +338,273 @@ export function DecisionPanel({
       )}
 
       {input === null && actions !== null && (
-        <div className="decision__buttons">
-          <ConcedeButton onConcede={actions.concede} gameOver={state.gameOver !== null} />
-        </div>
+        <>
+          <div className="decision__buttons">
+            <ConcedeButton onConcede={actions.concede} gameOver={state.gameOver !== null} />
+          </div>
+          {/* Amendment M11's shape: an `over` with no `input` and no `gameOver`
+              `state` in front of it. New Game has to be reachable there too, or
+              a session that ended before this seat was asked anything is a dead
+              end with a JVM still running. */}
+          {state.gameOver !== null && (
+            <NewGameRow state={state} actions={actions} connected={connected} />
+          )}
+        </>
       )}
     </section>
+  );
+}
+
+/**
+ * **M6 — Pass To** (report 11 §4). Three buttons for `YieldController`'s three
+ * mechanisms, all of them through one act and one engine call,
+ * `sendYieldUpdate(YieldUpdate)`:
+ *
+ * | button | act | engine |
+ * |---|---|---|
+ * | End of turn | `yieldTo {kind:"endOfTurn"}` | `SetAutoPassUntilEndOfTurn` |
+ * | My next turn | `yieldTo {kind:"marker", phase:"UPKEEP"}` | `SetMarker(me, UPKEEP)` |
+ * | Before my turn | `yieldTo {kind:"marker", phase:"END_OF_TURN"}` | `SetMarker(opponent, END_OF_TURN)` |
+ *
+ * `UPKEEP` rather than `UNTAP` is Forge's own choice and its own comment:
+ * *UNTAP has no priority pass, so a marker on UNTAP could never fire*
+ * (`InputPassPriority.java:248-255`).
+ *
+ * While a yield is running the three buttons go quiet and the line below says
+ * what is happening. **Cancelling is the engine's Cancel button** — the panel
+ * points at it rather than growing a fourth control, because `InputLockUI`
+ * already labels it and `AbstractGuiGame.updateAutoPassPrompt` already writes
+ * the prompt above it (§4.2).
+ */
+function PassToRow({
+  live,
+  actions,
+  board,
+  flash,
+}: {
+  live: boolean;
+  actions: BoardActions | null;
+  board: GameStateBody | null;
+  flash: KeyFlash | null;
+}): JSX.Element | null {
+  if (actions === null) return null;
+  const yielding = yieldOf(board);
+  const running = yielding !== null;
+  const send = (kind: YieldKind, phase?: string, turn?: 'own' | 'opp') => () => {
+    actions.yieldTo(kind, phase, turn);
+  };
+  return (
+    <div className="decision__passto">
+      <span className="k">pass to</span>
+      <button
+        type="button"
+        className={`btn btn--small${flash?.id === 'passEndTurn' ? ' btn--flash' : ''}`}
+        disabled={!live || running}
+        data-act="yieldTo"
+        data-yield="endOfTurn"
+        title="act: yieldTo {kind:'endOfTurn'} — YieldController.endTurn; the engine passes priority until this turn ends, and its Cancel button stops it"
+        onClick={send('endOfTurn')}
+      >
+        End of turn <span className="btn__key">{chordFor('passEndTurn')}</span>
+      </button>
+      <button
+        type="button"
+        className={`btn btn--small${flash?.id === 'passMyTurn' ? ' btn--flash' : ''}`}
+        disabled={!live || running}
+        data-act="yieldTo"
+        data-yield="marker"
+        data-phase={YIELD_MARKER_MY_TURN}
+        data-turn={YIELD_MARKER_MY_TURN_SIDE}
+        title={`act: yieldTo {kind:'marker', phase:'${YIELD_MARKER_MY_TURN}', turn:'${YIELD_MARKER_MY_TURN_SIDE}'} — a marker on my own upkeep (UNTAP has no priority pass, so a marker there could never fire)`}
+        onClick={send('marker', YIELD_MARKER_MY_TURN, YIELD_MARKER_MY_TURN_SIDE)}
+      >
+        My next turn <span className="btn__key">{chordFor('passMyTurn')}</span>
+      </button>
+      <button
+        type="button"
+        className={`btn btn--small${flash?.id === 'passBeforeTurn' ? ' btn--flash' : ''}`}
+        disabled={!live || running}
+        data-act="yieldTo"
+        data-yield="marker"
+        data-phase={YIELD_MARKER_BEFORE_MY_TURN}
+        data-turn={YIELD_MARKER_BEFORE_MY_TURN_SIDE}
+        title={`act: yieldTo {kind:'marker', phase:'${YIELD_MARKER_BEFORE_MY_TURN}', turn:'${YIELD_MARKER_BEFORE_MY_TURN_SIDE}'} — the opponent's end step, the last stop before my turn (a marker is per-(player, phase): on my own cell this would skip my whole turn too)`}
+        onClick={send('marker', YIELD_MARKER_BEFORE_MY_TURN, YIELD_MARKER_BEFORE_MY_TURN_SIDE)}
+      >
+        Before my turn <span className="btn__key">{chordFor('passBeforeTurn')}</span>
+      </button>
+      <button
+        type="button"
+        className={`btn btn--small${flash?.id === 'passPriority' ? ' btn--flash' : ''}`}
+        disabled={!live}
+        data-act="passPriority"
+        title="act: passPriority — IGameController.passPriority() presses OK only when the engine is actually asking for a priority pass, so it is a no-op the rest of the time"
+        onClick={() => {
+          actions.passPriority();
+        }}
+      >
+        Pass <span className="btn__key">{chordFor('passPriority')}</span>
+      </button>
+      {running && (
+        <p className="hint hint--yield" role="status" data-yield={yielding.kind}>
+          <strong>Yielding</strong>{' '}
+          {yielding.kind === 'endOfTurn'
+            ? 'until the end of this turn'
+            : yielding.kind === 'stack'
+              ? 'until the stack clears'
+              : `until ${yielding.phase ?? 'the marked phase'}`}
+          {' — '}the engine keeps <strong>Cancel</strong> enabled above for as long as it runs; that
+          is the way out (there is no separate act for it).
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * **M6 — Undo** (report 11 §7). `state.undo`, and nothing derived.
+ *
+ * The label carries the depth because Forge's own Cancel does (`Undo (2)`), and
+ * the title says what is actually undoable, which is narrower than the word:
+ * mana abilities in the current priority window, cleared at every phase change.
+ */
+function UndoButton({
+  board,
+  onUndo,
+  flashed,
+  provisional = false,
+}: {
+  board: GameStateBody | null;
+  onUndo: (() => void) | null;
+  flashed: boolean;
+  /** An act was sent and no snapshot has arrived since; the depth may be behind. */
+  provisional?: boolean;
+}): JSX.Element {
+  const undo = undoOf(board);
+  const enabled = undo.can && onUndo !== null;
+  return (
+    <button
+      type="button"
+      className={`btn${enabled ? '' : ' btn--future'}${flashed ? ' btn--flash' : ''}${
+        provisional ? ' btn--provisional' : ''
+      }`}
+      disabled={!enabled}
+      data-act="undo"
+      data-undo-depth={String(undo.depth)}
+      data-provisional={provisional ? 'true' : 'false'}
+      title={
+        (provisional
+          ? 'the engine has not sent a snapshot since your last undo or mana action, so this depth may be one step behind — its own Cancel button is the live answer. '
+          : '') +
+        (undo.can
+          ? `act: undo — IGameController.undoLastAction(), ${String(undo.depth)} step${undo.depth === 1 ? '' : 's'} on the engine's undo stack. It rolls back MANA abilities (a tapped land, a mana rock), never a cast, and a phase change clears it.`
+          : 'state.undo.can is false — the engine has nothing undoable right now (undo holds mana abilities only, and it is cleared at every phase change and when priority leaves you)')
+      }
+      onClick={() => {
+        onUndo?.();
+      }}
+    >
+      Undo{undo.depth > 0 ? ` (${String(undo.depth)})` : ''}
+      {provisional && (
+        <span className="muted" title="provisional — no snapshot since the act">
+          {' '}
+          ·
+        </span>
+      )}{' '}
+      <span className="btn__key">{chordFor('undo')}</span>
+    </button>
+  );
+}
+
+/**
+ * **M6 — New Game** (report 11 §8.2). `act: newGame {mode}` →
+ * `nextGameDecision(CONTINUE | NEW)` → `HostedMatch.continueMatch()` /
+ * `restartMatch()`, both on the EDT, neither of them paying `FModel.initialize`
+ * again.
+ *
+ * `continue` is the next game of **this** match — the one that makes a
+ * `--games 3` session three games and lets the `sideboard` ask fire between
+ * them. Once `over.matchOver` is true there is no next game to continue to, so
+ * that button goes quiet and Restart is the live one; `matchOver` is a typed
+ * field on the wire (§7), not something read out of the result text.
+ */
+function NewGameRow({
+  state,
+  actions,
+  connected = null,
+}: {
+  state: ClientState;
+  actions: BoardActions;
+  /** The socket's state; `null` is a replay. See `BoardProps.connected`. */
+  connected?: boolean | null;
+}): JSX.Element {
+  const matchOver = state.gameOver?.matchOver === true;
+  const label = gameLabel(state);
+  // **M6 verification fix.** This row appears at `over`, which is the one moment
+  // in a session when the bridge may already have gone: the found defect was a
+  // 30-second fuse in `MtgTable` that closed the socket under a connected
+  // client, and the browser half of it was a row that stayed ENABLED afterwards
+  // and answered a click with a toast — "Not connected — act was not sent".
+  // The bridge no longer arms that fuse while somebody is attached; this is the
+  // other half, because a socket can always go away for other reasons (the JVM
+  // was stopped, the machine slept) and a button that cannot do what it says is
+  // a dead end whatever closed the socket.
+  const offline = connected === false;
+  const disableTitle =
+    'the bridge is not connected — `act: newGame` has nowhere to go. Reconnect from the ' +
+    'status bar, or start a session again with ./scripts/play.sh';
+  return (
+    <div className="decision__newgame">
+      {label !== null && <span className="pill pill--game">{label}</span>}
+      <button
+        type="button"
+        className={`btn btn--small${matchOver || offline ? '' : ' btn--primary'}`}
+        disabled={matchOver || offline}
+        data-act="newGame"
+        data-mode="continue"
+        title={
+          offline
+            ? disableTitle
+            : matchOver
+              ? 'the match is over — there is no next game to continue to; Restart starts a fresh match'
+              : "act: newGame {mode:'continue'} — nextGameDecision(CONTINUE) → HostedMatch.continueMatch(): the next game of this match, with the same JVM and the same card database"
+        }
+        onClick={() => {
+          actions.newGame('continue');
+        }}
+      >
+        New game
+      </button>
+      <button
+        type="button"
+        className={`btn btn--small${matchOver && !offline ? ' btn--primary' : ''}`}
+        disabled={offline}
+        data-act="newGame"
+        data-mode="restart"
+        title={
+          offline
+            ? disableTitle
+            : 'act: newGame {mode:\'restart\'} — nextGameDecision(NEW) → HostedMatch.restartMatch(): a fresh match from the same rules and players'
+        }
+        onClick={() => {
+          actions.newGame('restart');
+        }}
+      >
+        Restart match
+      </button>
+      {offline ? (
+        <span className="hint hint--loud hint--offline" role="status" data-newgame="offline">
+          <strong>The bridge is not connected.</strong> Neither button can send{' '}
+          <code>act: newGame</code> — reconnect from the status bar above, or run{' '}
+          <code>./scripts/play.sh</code> again.
+        </span>
+      ) : (
+        <span className="muted">
+          a new game means a new <code>hello_ok</code>: every card id the board holds is dropped and
+          rebuilt (§2.1).
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -308,6 +642,7 @@ function EngineButton({
   act,
   onClick,
   hint,
+  focused = false,
   flashed = false,
 }: {
   button: InputButton;
@@ -315,22 +650,33 @@ function EngineButton({
   /** `null` → a replay: the label still shows, the button does nothing. */
   onClick: (() => void) | null;
   hint: string;
+  /**
+   * **M6** — `input.buttons.focus` named this one, so SPACE presses it (§4).
+   * It draws a ring and the SPACE chip moves here; nothing else changes, and in
+   * particular the *label* and `enabled` are still the engine's alone.
+   */
+  focused?: boolean;
   /** Its key was pressed and the engine had it disabled (report 10 §12.2). */
   flashed?: boolean;
 }): JSX.Element {
   return (
     <button
       type="button"
-      className={`btn btn--engine${flashed ? ' btn--flash' : ''}`}
+      className={`btn btn--engine${focused ? ' btn--focus' : ''}${flashed ? ' btn--flash' : ''}`}
       disabled={!button.enabled || onClick === null}
       data-act={act}
+      data-focus={focused ? 'true' : 'false'}
       aria-label={button.label}
-      title={`the engine's own label — sends act: ${act} · ${hint}`}
+      title={
+        `the engine's own label — sends act: ${act}` +
+        (focused ? ` · the engine focused this button, so SPACE presses it` : ` · ${hint}`)
+      }
       onClick={() => {
         onClick?.();
       }}
     >
-      {button.label} <span className="btn__key">{hint}</span>
+      {button.label}{' '}
+      <span className="btn__key">{focused && act === 'buttonCancel' ? `SPACE / ${hint}` : hint}</span>
     </button>
   );
 }

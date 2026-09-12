@@ -161,6 +161,21 @@ public class AutoTransport implements Transport {
     private volatile boolean probe;
 
     /**
+     * How many games this seat intends to play (<b>M6</b>).  One, unless
+     * {@code MtgTable --games N} says otherwise.
+     *
+     * <p>It lives on the <em>client</em> and not on the bridge on purpose:
+     * nothing in {@link WireGuiGame} starts a game, and a session that survives
+     * {@code over} survives it because whoever is playing the seat sent
+     * {@code act: newGame} (protocol amendment M38).  This class is the seat
+     * with nobody at the keyboard, so it sends it too -- which is also what
+     * makes the {@code sideboard} ask between games reachable at all.
+     */
+    private volatile int games = 1;
+    /** How many {@code over} frames have arrived. */
+    private int gamesSeen;
+
+    /**
      * How many asks carrying each {@code confirm} / numeric {@code text} prompt
      * we have already answered.  Both kinds can be answered <em>legally</em> and
      * still not advance -- {@code AbstractGuiGame.getInteger}'s "Other..." branch
@@ -243,6 +258,11 @@ public class AutoTransport implements Transport {
     /** Turn the M5 probe policy on; see {@link #probe}.  Call before {@link #start}. */
     public void setProbe(final boolean on) {
         this.probe = on;
+    }
+
+    /** How many games to play before letting the session end (M6). */
+    public void setGames(final int n) {
+        this.games = Math.max(1, n);
     }
 
     // ==================================================================
@@ -337,11 +357,50 @@ public class AutoTransport implements Transport {
             onAsk(body);
             return true;
         case "over":
-            running = false;
+            onOver(body);
             return true;
         default:
             return true;
         }
+    }
+
+    /**
+     * <b>M6.</b>  One game ended; decide whether to ask for another.
+     *
+     * <p>The mode is read off the frame, not guessed: an {@code over} with
+     * {@code matchOver: false} is the middle of a match and
+     * {@code "continue"} is the next game of it; {@code matchOver: true} means
+     * the {@code Match} is finished and only {@code "restart"} can produce
+     * another game (report 11 section 8.2).  Both come back as a new
+     * {@code hello_ok} with a new {@code gameId}, which is why every cached id
+     * below is cleared here rather than after it arrives.
+     */
+    private void onOver(final Map<String, Object> body) {
+        gamesSeen++;
+        if (gamesSeen >= games) {
+            running = false;
+            return;
+        }
+        final Object mo = body.get("matchOver");
+        final boolean matchOver = mo instanceof Boolean ? ((Boolean) mo).booleanValue() : true;
+        final String mode = matchOver ? "restart" : "continue";
+        System.err.println("AUTO: game " + gamesSeen + " over (matchOver=" + matchOver
+                + "); asking for game " + (gamesSeen + 1) + " with newGame{" + mode + "}");
+        // Every id in these came from a game that no longer exists.
+        pendingInput = null;
+        lastSeenInputKey = "";
+        tries.clear();
+        askPromptsSeen.clear();
+        askRepeats.clear();
+        lastProgressKey = "";
+        myHand.clear();
+        myLands.clear();
+        myPriority = false;
+        myTurn = false;
+        myMainPhase = false;
+        stackEmpty = true;
+        java.util.Arrays.fill(myPool, 0);
+        act("newGame", Map.of("mode", mode));
     }
 
     // ---- the input path ---------------------------------------------------
@@ -827,8 +886,30 @@ public class AutoTransport implements Transport {
         }
         case "manipulate_list":
             return indices(0, size(body.get("cards")));          // unchanged order
-        case "sideboard":
-            return indices(0, size(body.get("main")));           // the deck, unchanged
+        case "sideboard": {
+            // The answer is the NEW main deck, as indices into `main ++ side`
+            // (protocol 5.1).  The default is the identity -- "no sideboarding"
+            // -- which PlayerControllerHuman:276 tolerates and which is what a
+            // player who clicks straight through produces.
+            final int main = size(body.get("main"));
+            final int side = size(body.get("side"));
+            if (!probe || side == 0 || main == 0) {
+                return indices(0, main);                         // the deck, unchanged
+            }
+            // THE SIDEBOARD PROBE (M6).  The identity answer is legal but it
+            // never exercises the marshalling: Ask.sideboardMain maps indices
+            // back onto `main ++ side`, and with the identity every index is
+            // already where it was.  Swap the LAST main card for the FIRST
+            // sideboard card -- same size, so no deck-size rule can reject it,
+            // and the resulting decklist is provably different from the one the
+            // game before it played.
+            final StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < main - 1; i++) {
+                sb.append(i).append(',');
+            }
+            sb.append(main).append(']');                         // main[main-1] -> side[0]
+            return sb.toString();
+        }
         case "assign_damage": {
             // Index 0 is the DEFENDER; a blocker follows it whenever there is
             // one, and all the damage goes on the first of those.  Piling it on

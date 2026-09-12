@@ -692,12 +692,75 @@ button:disabled {
   color: #14161a;
 }
 
-/* A control whose engine call exists and whose milestone has not arrived. It is
-   disabled and its tooltip names both (report 10 §7.2, §6.4). */
+/* A control whose engine call exists and whose milestone has not arrived — or,
+   as of M6, one the engine currently says is unavailable (an Undo with an empty
+   undo stack). It is disabled and its tooltip says which (report 10 §7.2). */
 .btn--future {
   border-style: dashed;
   color: var(--muted);
 }
+
+/* M6 — the button `input.buttons.focus` named: SPACE presses this one (§4). */
+.btn--focus {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* M6 — the auto-yield buttons on a stack item, and the pass-to row. Small,
+   because the stack panel is 260 px wide and the item's text comes first. */
+.btn--tiny {
+  font-size: 9px;
+  padding: 0 0.25rem;
+  line-height: 1.4;
+}
+
+.decision__passto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin: 0.25rem 0;
+}
+
+.decision__newgame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin: 0.35rem 0;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.25rem 0.3rem;
+  font-size: 10px;
+}
+
+.pill--game {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hint--yield {
+  flex-basis: 100%;
+  color: var(--accent);
+  font-size: 10px;
+  margin: 0.15rem 0 0;
+}
+
+/* M6 fix — the New Game row when the socket is not open. Its own line inside
+   the flex row, for the same reason `.hint--yield` has one: it is a sentence,
+   not a chip. */
+.hint--offline {
+  flex-basis: 100%;
+  margin: 0.15rem 0 0;
+}
+
+.stackitem__yield {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  margin-block-start: 0.15rem;
+}
+
 
 /* --- PhaseStrip ----------------------------------------------------------- */
 
@@ -828,9 +891,48 @@ button:disabled {
   margin: 0.2rem 0;
 }
 
-.strip__hold {
-  font-size: 10px;
+/* M6 — the dots are toggles now, so they have to be hittable and to look it.
+   Disabled (a replay, or a stream with no `players[].phaseStops`) they keep the
+   M4 look exactly. */
+.dot:not(:disabled) {
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.dot:not(:disabled):hover,
+.dot:not(:disabled):focus-visible {
+  outline: 1px solid var(--select);
+  outline-offset: 0;
+}
+
+/* M6 — `state.yield`'s marker, on the phase cell the engine is passing to. */
+.phase--marked {
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+}
+
+.phase__marker {
+  font-size: 9px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.phase--active .phase__marker {
+  color: #0d1318;
+}
+
+.strip__yield {
+  font-size: 9px;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 3px;
+  padding: 0.15rem 0.25rem;
+  margin: 0.2rem 0 0;
   margin-block-start: auto;
+}
+
+.strip__yieldglyph {
+  font-size: 10px;
 }
 
 /* --- the table ------------------------------------------------------------ */
@@ -1613,6 +1715,12 @@ button:disabled {
   color: var(--arrow-target);
 }
 
+/* M6 — `stack[].yielded`: this ability is on always-yes / always-no. */
+.chip--yielded {
+  border-color: var(--select);
+  color: var(--select);
+}
+
 /* --- the log drawer (report 10 §10) --------------------------------------- */
 
 .drawer__handle {
@@ -1726,10 +1834,28 @@ button:disabled {
   animation: toast-fade 8s ease-out forwards;
 }
 
-.toast--turn {
-  border-color: var(--ok);
-  color: var(--ok);
-  animation: none;
+/* M6 — "Your turn" left the toast strip (952 of the corpus's notices are that
+   one line). It is a tint across the table now, over information that is
+   already in the phase strip's header and the decision panel's title. */
+.turnflash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+  border: 1px solid var(--ok);
+  border-radius: 4px;
+  animation: turn-flash 1.6s ease-out forwards;
+}
+
+@keyframes turn-flash {
+  0% {
+    opacity: 0.55;
+    box-shadow: inset 0 0 22px -6px var(--ok);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: none;
+  }
 }
 
 .toast--warn {
@@ -2107,17 +2233,9 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* A key whose milestone has not arrived is listed and marked, never hidden:
-   the handler binds it, so the help must say what it does and when. */
-.hotkeys__later td:first-of-type {
-  color: var(--muted);
-}
-
-.pill--later {
-  border-color: var(--warn);
-  color: var(--warn);
-  margin-inline-start: 0.3rem;
-}
+/* M6 — the "not yet" row styling is gone with the rows it described: every
+   binding in KEYMAP now does something, so the milestone is provenance and the
+   help screen greys nothing out. */
 
 .cardzoom {
   display: flex;
@@ -2275,6 +2393,13 @@ button.pool__pip:focus-visible {
 .pool__pip--provisional .pool__n {
   font-family: var(--mono);
   color: var(--muted);
+}
+
+/* M6 — the same fact on the Undo button: an `undo` is applied by the engine and
+   answered with an `input` (Cancel goes from `Undo (1)` to `End Turn`) but with
+   no snapshot, so `state.undo.depth` is a frame behind until one arrives. */
+.btn--provisional {
+  border-style: dotted;
 }
 
 /* --- a tile the outstanding ask names (the 'ask' outline variant) ---------- */

@@ -211,24 +211,145 @@ test('CTRL+Q is reachable from every live state, an open ask included', () => {
 });
 
 test('a key whose milestone has not arrived says so instead of doing nothing', () => {
+  // **M6 emptied this list down to one.** `A` is the survivor and is not a gap:
+  // Forge writes `Auto` on `InputPayMana`'s own OK button, so the honest answer
+  // to "auto-pay" is "press SPACE, that IS the button" (report 11 §6.1). Every
+  // other row below it now sends an act, and the tests that follow drive them.
+  const resolved = planKey(ev('a'), LIVE);
+  assert.ok(resolved !== null, 'a is in the table but was not consumed');
+  assert.equal(resolved.plan.kind, 'inert');
+  assert.match(
+    resolved.plan.kind === 'inert' ? resolved.plan.why : '',
+    /M5|M6/,
+    'A must name the milestone that lights it up',
+  );
+});
+
+// ---------------------------------------------------------------------------
+// M6 — SPACE follows `input.buttons.focus`, and the six new acts
+// ---------------------------------------------------------------------------
+
+test('SPACE presses the button the engine focused, not always OK', () => {
+  // §4 / report 11 §11: `updateButtons(..., focus1)` decides which label the
+  // desktop activates, and that is the whole reason "Space = OK" is not a Forge
+  // shortcut. No focus (and every pre-M6 recording) is M4's behaviour, OK.
+  assert.deepEqual(planKey(ev(' '), LIVE)?.plan, { kind: 'buttonOk' });
+  assert.deepEqual(planKey(ev(' '), { ...LIVE, focus: null })?.plan, { kind: 'buttonOk' });
+  assert.deepEqual(planKey(ev(' '), { ...LIVE, focus: 'ok' })?.plan, { kind: 'buttonOk' });
+  assert.deepEqual(planKey(ev(' '), { ...LIVE, focus: 'cancel' })?.plan, { kind: 'buttonCancel' });
+  // The engine's own `enabled` still decides, on whichever button it focused:
+  // a focused Cancel that is disabled is not a Cancel this client may press.
+  const deadCancel = planKey(ev(' '), { ...LIVE, focus: 'cancel', cancelEnabled: false });
+  assert.equal(deadCancel?.plan.kind, 'inert');
+  assert.match(deadCancel?.plan.kind === 'inert' ? deadCancel.plan.why : '', /focused Cancel/);
+  // ...and a focused Cancel does NOT make SPACE follow OK's disabled flag.
+  assert.deepEqual(planKey(ev(' '), { ...LIVE, focus: 'cancel', okEnabled: false })?.plan, {
+    kind: 'buttonCancel',
+  });
+  // The physical spelling still matches, which is the only way a browser driver
+  // can press this key at all (M3 follow-up 9).
+  assert.deepEqual(planKey(ev('', { code: 'Space' }), { ...LIVE, focus: 'cancel' })?.plan, {
+    kind: 'buttonCancel',
+  });
+});
+
+test('E, T and B are the three engine yields, with the phases report 11 §4.1 names', () => {
+  assert.deepEqual(planKey(ev('e'), LIVE)?.plan, { kind: 'yieldTo', yield: 'endOfTurn' });
+  // UPKEEP and not UNTAP: UNTAP has no priority pass, so a marker there could
+  // never fire (Forge's own comment, InputPassPriority.java:248-255).
+  //
+  // **And the column is half the answer.** A marker is per-(player, phase):
+  // `END_OF_TURN` on my own cell is my end step, and only the opponent's is
+  // "just before my turn". Sent without it, the browser measured the marker
+  // landing on the viewer's own END_OF_TURN (docs/evidence/m6-board.md).
+  assert.deepEqual(planKey(ev('t'), LIVE)?.plan, {
+    kind: 'yieldTo',
+    yield: 'marker',
+    phase: 'UPKEEP',
+    turn: 'own',
+  });
+  assert.deepEqual(planKey(ev('b'), LIVE)?.plan, {
+    kind: 'yieldTo',
+    yield: 'marker',
+    phase: 'END_OF_TURN',
+    turn: 'opp',
+  });
+  assert.equal(chordFor('passEndTurn'), 'E  (CTRL+E)');
+});
+
+test('CTRL+Z is gated on the engine’s own state.undo.can', () => {
+  const canUndo: KeyContext = { ...LIVE, canUndo: true };
+  assert.deepEqual(planKey(ev('z', { ctrlKey: true }), canUndo)?.plan, { kind: 'undo' });
+  const dead = planKey(ev('z', { ctrlKey: true }), LIVE);
+  assert.equal(dead?.plan.kind, 'inert');
+  assert.match(dead?.plan.kind === 'inert' ? dead.plan.why : '', /mana abilities/);
+  // Bare `z` is still the zoom, which is what makes the ctrl flag load-bearing.
+  assert.deepEqual(planKey(ev('z'), canUndo)?.plan, { kind: 'view', id: 'zoom' });
+});
+
+test('P passes priority and CTRL+A alpha-strikes — both plain acts', () => {
+  assert.deepEqual(planKey(ev('p'), LIVE)?.plan, { kind: 'passPriority' });
+  assert.deepEqual(planKey(ev('a', { ctrlKey: true }), LIVE)?.plan, { kind: 'alphaStrike' });
+});
+
+test('Y and N address the TOP stack item by its opaque handle, or say why not', () => {
+  // The handle is the bridge's (`"y7"`), never Forge's own key, and the client
+  // echoes it without ever rendering it (report 11 §5.2).
+  const trigger: KeyContext = { ...LIVE, topYieldKey: 'y7', topYielded: null };
+  assert.deepEqual(planKey(ev('y'), trigger)?.plan, {
+    kind: 'setYield',
+    yieldKey: 'y7',
+    mode: 'yes',
+  });
+  assert.deepEqual(planKey(ev('n'), trigger)?.plan, {
+    kind: 'setYield',
+    yieldKey: 'y7',
+    mode: 'no',
+  });
+  // Nothing on the stack the engine offers one for: say so, do not send an act
+  // with a handle this client invented.
+  const none = planKey(ev('y'), LIVE);
+  assert.equal(none?.plan.kind, 'inert');
+  assert.match(none?.plan.kind === 'inert' ? none.plan.why : '', /top of the stack/);
+  // Already set: pressing it again is not a second act.
+  const already = planKey(ev('y'), { ...trigger, topYielded: 'yes' });
+  assert.equal(already?.plan.kind, 'inert');
+  assert.match(already?.plan.kind === 'inert' ? already.plan.why : '', /already set/);
+  // ...but the other answer is still a change.
+  assert.deepEqual(planKey(ev('n'), { ...trigger, topYielded: 'yes' })?.plan, {
+    kind: 'setYield',
+    yieldKey: 'y7',
+    mode: 'no',
+  });
+});
+
+test('every M6 act key is inert on a replay and while an ask is outstanding', () => {
+  const full: KeyContext = { ...LIVE, canUndo: true, topYieldKey: 'y3' };
   for (const [key, ctrl] of [
-    ['a', false],
     ['z', true],
     ['e', false],
     ['t', false],
     ['b', false],
-    ['y', false],
-    ['n', false],
+    ['p', false],
+    ['a', true],
   ] as const) {
-    const resolved = planKey(ev(key, { ctrlKey: ctrl }), LIVE);
-    assert.ok(resolved !== null, `${key} is in the table but was not consumed`);
-    assert.equal(resolved.plan.kind, 'inert');
-    assert.match(
-      resolved.plan.kind === 'inert' ? resolved.plan.why : '',
-      /M5|M6/,
-      `${key} must name the milestone that lights it up`,
-    );
+    const readOnly = planKey(ev(key, { ctrlKey: ctrl }), { ...full, live: false });
+    assert.equal(readOnly?.plan.kind, 'inert', `${key} must send nothing on a replay`);
+    assert.match(readOnly?.plan.kind === 'inert' ? readOnly.plan.why : '', /read-only/);
+    // §5 — the game thread is parked inside the ask and is listening for one
+    // thing; an act sent now reaches a controller nobody is reading.
+    const asking = planKey(ev(key, { ctrlKey: ctrl }), { ...full, askOpen: true });
+    assert.equal(asking?.plan.kind, 'inert', `${key} must send nothing inside an ask`);
+    assert.match(asking?.plan.kind === 'inert' ? asking.plan.why : '', /question is outstanding/);
   }
+  // Y / N are the exception, and it is Forge's: `setTriggerDecision` answers the
+  // question in front of you as well as the later ones (report 11 §5.1).
+  assert.deepEqual(planKey(ev('y'), { ...full, askOpen: true })?.plan, {
+    kind: 'setYield',
+    yieldKey: 'y3',
+    mode: 'yes',
+  });
+  assert.equal(planKey(ev('y'), { ...full, live: false })?.plan.kind, 'inert');
 });
 
 // ---------------------------------------------------------------------------

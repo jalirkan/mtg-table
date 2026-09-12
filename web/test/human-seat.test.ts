@@ -126,7 +126,9 @@ for (const file of FILES) {
     );
 
     const types = new Set(log.frames.map((frame) => frame.type));
-    for (const wanted of ['input', 'ask', 'answer'] as const) {
+    // `input` and `act` are what make a recording a *seat*: the engine prompted
+    // somebody and somebody answered. §8.4's AI-vs-AI log has neither.
+    for (const wanted of ['input', 'act'] as const) {
       assert.ok(
         types.has(wanted),
         `no ${wanted} frame in a human-seat recording. §8.4 says an AI-vs-AI log has none of ` +
@@ -134,6 +136,19 @@ for (const file of FILES) {
           `WireGuiGame path did not run.`,
       );
     }
+    // **`ask` is a corpus property, not a per-file one** (M6). It used to be
+    // asserted here, and `human-comfort-13.jsonl` is the counter-example the
+    // repo now carries: a whole game played through phase stops, yields and
+    // undo in which Forge never dispatched one of the eleven blocking calls to
+    // this seat. That is a real shape — asks are rare, and a game with no
+    // mulligan choice, no targeting and no discard has none — so the assertion
+    // that would have caught "the ask path never ran" moved to the bottom of
+    // this file, where it is made once over every recording.
+    assert.equal(
+      types.has('answer'),
+      types.has('ask'),
+      'a recording with asks but no answers (or the reverse) — §2.3 pairs them one to one',
+    );
     t.diagnostic(`${String(log.frames.length)} frames; types: ${[...types].sort().join(', ')}`);
   });
 
@@ -230,7 +245,7 @@ for (const file of FILES) {
     }
 
     assert.ok(inputs > 0, 'no input frames — §4 is unevidenced by this recording');
-    assert.ok(asks > 0, 'no ask frames — §5 is unevidenced by this recording');
+    // §5 is evidenced over the corpus, not by every file (see the note above).
     t.diagnostic(`${String(inputs)} input, ${String(asks)} ask, ${String(answers)} answer frames`);
   });
 
@@ -285,7 +300,6 @@ for (const file of FILES) {
             `answer for a completed askId is dropped with a notice and never applied.`,
       );
     }
-    assert.ok(opened.size > 0, 'no asks at all');
     t.diagnostic(`${String(opened.size)} asks, each answered exactly once`);
   });
 
@@ -536,6 +550,35 @@ test('clickCard acts routinely name ids outside input.selectable (amendment M8)'
     `corpus: ${String(corpusOutside)} of ${String(corpusClicks)} clickCard acts fall outside ` +
       `the preceding input.selectable.cardIds`,
   );
+});
+
+test('the ask path ran SOMEWHERE in the corpus (§5 is evidenced, once)', (t) => {
+  // **The per-file assertion this replaces** (M6). Every `human-*` recording used
+  // to have to contain an `ask`, and `human-comfort-13.jsonl` is a legitimate one
+  // that does not: a game played through phase stops, yields and undo in which
+  // Forge dispatched none of the eleven blocking calls to this seat. The thing
+  // that assertion was really guarding — "the WireGuiGame ask path never ran at
+  // all, so every §5 assertion in this file is vacuous" — is a property of the
+  // corpus, and this is it, stated once and unable to pass by being empty.
+  if (FILES.length === 0) {
+    t.skip('no human-seat recording has been made yet');
+    return;
+  }
+  const withAsks: string[] = [];
+  let asks = 0;
+  for (const file of FILES) {
+    const n = load(file).frames.filter((frame) => frame.type === 'ask').length;
+    if (n > 0) withAsks.push(`${file} (${String(n)})`);
+    asks += n;
+  }
+  assert.ok(
+    asks > 0,
+    `not one of the ${String(FILES.length)} human-seat recordings contains an ask frame. §8.4 ` +
+      `says an AI-vs-AI log has none because nobody is playing; a corpus of seat recordings ` +
+      `with none means the WireGuiGame ask path did not run anywhere, and every §5 assertion ` +
+      `in this file is vacuous.`,
+  );
+  t.diagnostic(`${String(asks)} asks across ${String(withAsks.length)} of ${String(FILES.length)} recordings: ${withAsks.join(', ')}`);
 });
 
 test('the corpus contains the human-seat recording PLAN.md names', (t) => {

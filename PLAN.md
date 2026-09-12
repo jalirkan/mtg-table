@@ -15,7 +15,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M3 | The same game, in a browser tab | 2 evenings | **done** — a review pass and a fix pass, all 21 findings closed; eleven follow-ups open, none blocking M4 |
 | M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
-| M6 | Comfort | 2 evenings | not started |
+| M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: weeks) | not started |
 
 ---
@@ -516,9 +516,13 @@ session is logged and replayable.
   thing in the repo that exercises `ReplyPool.cancelAll()` with a game thread
   genuinely parked). Every JVM step is under `GAME_TIMEOUT`. Re-run for the
   documentation pass on 2026-09-11: **exit 0, 163.2 s**
-  (`var/check-all-doc-pass.log`; `docs/evidence/m3-ws.md` §14). **It is five ws
-  servers as of 2026-09-12** — follow-up 5 added 10e — and the gate now takes
-  3 m 19–32 s.
+  (`var/check-all-doc-pass.log`; `docs/evidence/m3-ws.md` §14). **It is seven ws
+  servers as of 2026-09-12** — M5 follow-up 5 added 10e, M5 added 10f and M6
+  added 10g. **The count and the wall time live in one place, CLAUDE.md's
+  §"Build and run" gate paragraph**, and this bullet deliberately no longer
+  repeats them: two dated numbers in two files is how the repo ended up saying
+  "five servers, 3 m 19 s" on the same day as "seven servers, eleven and a
+  half minutes".
 - **The protocol grew twelve rows and no new `v`.** M10–M13 while the socket was
   written, M14–M19 in the review pass, M20–M21 in the fix pass. Only **M14** (the
   asynchronous `ability_menu`) changes what a recording contains; every M1/M2
@@ -1294,12 +1298,13 @@ actually found, row by row, against the amendments they produced:
 | `text` | none | **`fixtures/games/human-number-7.jsonl`** — `decks/number-probe.dck`, Volcano Hellion, through `getInteger`'s "Other…" (**M25**) |
 | `options` | none | **unreachable, and not only for a human seat** — `IGuiGame.showOptionDialog` has **no call site anywhere** in the 2.0.14 jar (**M22**). A documented ceiling, not a gap. |
 | `manipulate_list` | none | **unreachable while D13 holds** — one caller, pref-gated on `UI_SELECT_FROM_CARD_DISPLAYS`, confirmed in the jar's bytecode (**M23**). |
-| `sideboard` | none | **still none.** `--games 2` is necessary and not sufficient: `emitOver` ends the session on game 1's `matchOver:false` (**M27**). `decks/sideboard-probe.dck` and the flag exist; making it fire is M6's `HostedMatch.restartMatch` row. |
+| `sideboard` | none | **still none** *(as of M5)*. `--games 2` is necessary and not sufficient: `emitOver` ends the session on game 1's `matchOver:false` (**M27**). `decks/sideboard-probe.dck` and the flag exist; making it fire is M6's `HostedMatch.restartMatch` row. **Closed by M6**: `fixtures/games/human-sideboard-7.jsonl`, asserted by gate step 9d (**M38**). |
 
-So: **four kinds recorded, two proved unreachable, one still open and handed to
-M6.** `ability_menu` came from the live browser games and `choose_list`, `order`
-and `assign_damage` were already in the corpus, which makes nine of eleven
-evidenced and the two ceilings documented.
+So: **four kinds recorded, two proved unreachable, one handed to M6 and closed
+there.** `ability_menu` came from the live browser games and `choose_list`,
+`order` and `assign_damage` were already in the corpus, which makes **nine of
+eleven** evidenced and the two ceilings documented — the count `docs/protocol.md`
+§5.2 now prints as a census.
 
 **Two shapes a new panel must not assume away**, the same two M4 was handed: an
 `over` with no `gameOver` `state` in front of it (**M11** — now measured, M3
@@ -1317,14 +1322,30 @@ facts about what Forge asks or about the browser harness**, not defects (7, 13);
 **one is corrected in place today** (12); and **one is carried over from M4**
 (11).
 
-1. **`sideboard` still has no recording, and only M6 can give it one.**
+**After M6, 2026-09-12:** of the four that belonged to M6, **1 and 2 are
+closed** — `sideboard` has an engine recording and the mana-lost prompt is on by
+default — and **9 and 10 are not**; both are carried onto the M6 follow-ups list
+below (items 4 and 3 there) rather than being closed by proximity. 13 is
+unchanged and is M6 follow-up 13.
+
+1. **CLOSED BY M6.** ~~`sideboard` still has no recording, and only M6 can give
+   it one.~~ It has one: `fixtures/games/human-sideboard-7.jsonl`, game 2 of a
+   `--games 2` match, asserted by gate step **9d**. The paragraph below is why it
+   could not happen before amendment M38.
+   **`sideboard` still has no recording, and only M6 can give it one.**
    `decks/sideboard-probe.dck` is correct and `MtgTable --games 2` exists; the
    ask cannot fire because the session does not survive game 1's `over` with
    `matchOver: false` — `WireGuiGame.emitOver` counts the `finished` latch down
    and sets `overEmitted`, after which `ask()` returns `null` before emitting
    (**M27**). The wire is right; the session ends too early. M6's
    `HostedMatch.restartMatch` row.
-2. **`confirm` is invisible on stock Forge preferences.**
+2. **CLOSED BY M6 — the decision was taken, and it is "on".**
+   `config.json` carries `"manaLostPrompt": true`, `MtgTable` sets
+   `FPref.UI_MANA_LOST_PROMPT` from it **in memory** (never `save()`), and
+   `--mana-lost-prompt` / `--no-mana-lost-prompt` override it either way
+   (amendment M40). So `confirm` now occurs in ordinary games. The open question
+   table's row 9 below is answered by this. The paragraph as written:
+   **`confirm` is invisible on stock Forge preferences.**
    `FPref.UI_MANA_LOST_PROMPT` defaults to `"false"`; `--mana-lost-prompt` sets
    it in memory for probe runs only (**M24**). Whether to turn it on for the user
    — it is a genuinely useful warning — is an M6 comfort decision, deliberately
@@ -1360,13 +1381,21 @@ facts about what Forge asks or about the browser harness**, not defects (7, 13);
    60, so the zone browser stays reachable and its tiles clickable. A graveyard
    card Forge makes clickable while bands are on screen must be clicked in the
    browser panel rather than on the strip.
-6. **9b prints `MULTISET DIFFERS: 2 frame instance(s)` under machine load.** It
-   is one frame — `input {prompt:"Waiting for Forge AI..."}` at ×16 against ×14 —
-   i.e. two ticks of `awaitNextInput()`'s 250 ms re-push with vite and a browser
-   on the same machine. `MULTISET IDENTICAL: 1588` on a quiet one — twice by
-   hand, and again on the documentation pass's own gate run — and no `.java` file
-   is in M5's fix diff. The step is advisory by design; either teach the diff
-   about that one prompt or leave it loud.
+6. **ACCEPTED, and now said where it prints.** 9b prints
+   `MULTISET DIFFERS: 2 frame instance(s)` under machine load. Two frame shapes
+   drift between runs of the same seed and neither is emitter drift:
+   `input {prompt:"Waiting for Forge AI..."}` (ticks of `awaitNextInput()`'s
+   250 ms `java.util.Timer` re-push — ×16 against ×14 with vite and a browser on
+   the same machine) and a trailing `act {"action":"buttonCancel"}` (whether the
+   last priority window of a finished game gets one more press). M6 measured the
+   second one directly: re-recording `human-auto-42` gave 45 `buttonCancel`
+   against the M3-era fixture's 46, and a later fresh seed-42 run gave 46 again.
+   The choice offered here was "teach the diff about it or leave it loud": the
+   decision is **leave it loud and say so at the point of failure** —
+   `tools/fixture-multiset-diff.mjs` now prints a NOTE naming both shapes and
+   telling the reader to check the per-frame listing before believing it.
+   Teaching the diff to ignore them was rejected: a filter that hides two frame
+   shapes hides them for every future defect that happens to wear one.
 7. **The board picker reaches exactly one kind here** — 3 of the 108 asks in
    `fixtures/games/`, all `assign_damage`. The `choose_list` branch is exercised
    only by `fixtures/synthetic/sample-handwritten.jsonl`, so half the picker is
@@ -1377,12 +1406,13 @@ facts about what Forge asks or about the browser harness**, not defects (7, 13);
 8. **`assign_amount` is not a picker** even when its targets are entities the
    board draws: §5.3's keys may be colours and the corpus's eleven all are. A
    one-line change to `boardPick` on the day a recording shows entity keys.
-9. **`clickAbility` still never leaves the browser.** It is proven end-to-end
+9. **STILL OPEN after M6.** **`clickAbility` still never leaves the browser.** It is proven end-to-end
    over the socket (`check-all.sh` 10f, 7 acts) and from `AutoTransport`, but the
    board's own path for a multi-ability card is still the asynchronous
    `ability_menu` (**D20**/**D22**), which reaches the same
    `IGameController.selectAbility`.
-10. **`input.weak` is still `[]` on the wire** (M4's tile style has no data), and
+10. **STILL OPEN after M6** (`docs/evidence/m6-engine.md` §9 item 3).
+    **`input.weak` is still `[]` on the wire** (M4's tile style has no data), and
     `input` still carries no typed *"the engine is collecting mana"* field. The
     second is the protocol row that would let a client offer the mana pips only
     during a payment without matching a button label — **M30** leaves it to M6
@@ -1399,9 +1429,15 @@ facts about what Forge asks or about the browser harness**, not defects (7, 13);
     `sideboardMode: true` — which is the `sideboard` row's neighbour and blocked
     on the same M6 work.
 13. **The user still has not pressed the space bar.** Unchanged from M3
-    follow-up 9: the browser driver delivers `Space` as
+    follow-up 9 and **unchanged by M6**: the browser driver delivers `Space` as
     `{key:"", code:"", keyCode:0}`, so the binding is covered by `keys.test.ts`
-    and by the buttons being clicked directly, and by nothing else.
+    and by the buttons being clicked directly, and by nothing else. M6 bound
+    Space to `input.buttons.focus` (amendment M39) and everything *around* the
+    space bar is measured — `focus` is `"ok"` on 546 of 844 input frames in
+    `human-comfort-13` and never `"cancel"`, the focused button carries
+    `btn--focus` and is the document's `activeElement`, and `planKey` returns
+    null for a focused button so the browser's own activation is not doubled —
+    but the key itself is still pressed by nothing but a human.
 
 ### What M5 hands to M6
 
@@ -1458,11 +1494,15 @@ automated seat answers one terminatingly.
 
 ## M6 — Comfort
 
-**Status: not started.** Read **"What M5 hands to M6"** above before planning the
-two evenings: five of these features are already on the wire and one of them is
-already a rendered button, and **one piece of work —
-`HostedMatch.restartMatch` — unblocks three separate rows at once** (New Game,
-the `sideboard` ask, and `order` with `sideboardMode`).
+**Status: done, 2026-09-12.** What shipped and what it was measured against are
+in [`docs/evidence/m6-engine.md`](docs/evidence/m6-engine.md) (the bridge half)
+and [`docs/evidence/m6-board.md`](docs/evidence/m6-board.md) (the browser half);
+the wire is `docs/protocol.md` amendments **M32–M40**, promoted out of that
+file's §10 and into the live sections. The corrections below were the plan and
+they held: five of the features were already on the wire, one was already a
+rendered button, and **one piece of work — `HostedMatch.restartMatch` —
+unblocked three separate rows at once** (New Game, the `sideboard` ask, and
+`order` with `sideboardMode`, of which the first two landed).
 **Effort: 2 evenings.**
 
 **Command**
@@ -1471,11 +1511,83 @@ the `sideboard` ask, and `order` with `sideboardMode`).
 ./scripts/play.sh   # three games back to back, one command typed
 ```
 
+That command means what it says as of M6, and it did not at first: `play.sh`
+now defaults to **`--games 3`** and **`--keep-open`** (override with your own
+`--games`, or `--no-keep-open`). Both are load-bearing — without the first the
+JVM stops after game 1, and without the second the socket closes the instant the
+last `over` lands, which is the moment the board draws its **New Game** row.
+The first verification pass found exactly that dead end on this line.
+
 **Deliverable.** New Game without restarting the JVM (`HostedMatch.restartMatch`),
 Undo, Concede, phase stops, Pass-To, always-yes/no, keyboard shortcuts mirroring
 Forge's own `SHORTCUT_*` keycodes, mana-font pips, error toasts.
 
 **Every one of these is an engine feature rendered, not a client state machine.**
+
+**What the evidence actually shows** (`docs/evidence/m6-engine.md` for the bridge,
+`m6-board.md` for the browser, plus the verification pass below):
+
+- **Three games in one JVM, from one command.** `act: newGame {mode}` →
+  `nextGameDecision(CONTINUE|NEW)` → `HostedMatch.continueMatch()` /
+  `restartMatch()`. **`openView` is the reset hook**: a new `gameId`
+  (`<base>-g<n>`), a new `var/games/<gameId>/frames.jsonl` with its own session
+  header, and the card / player / ability indexes, the concealed-id set, the
+  yield-handle table, the phase-stop map, the `input` struct, the over-latch and
+  the `ReplyPool` all rebuilt (**M38**, **D44**). The client is told by the **new
+  `hello_ok`**, whose changed `gameId` is what makes the reducer drop its card
+  map. Gate step **10g** plays three games over one socket in **85.7 s**, one
+  JVM, and exercises both `continueMatch` and `restartMatch`.
+- **The five typed acts are gated by their EFFECT, not by a count.**
+  `setPhaseStop`, `yieldTo`, `setYield` and `undo` are each asserted by the
+  `state` that followed them; `passPriority` is asserted by a count, which is all
+  it can be, and the gate step **says so** rather than claiming five effects. The
+  push that makes the other four visible
+  while the engine is parked is `WireGuiGame.refreshState()`, and it walks the
+  view graph only under **D39**'s two-part guard (D22's generation stamp **plus**
+  a positive "the engine is parked" predicate), with skips counted and printed.
+- **The phase-strip dots are live and the engine really stops.** 24 dots drawn
+  from `players[].phaseStops` (**M32**, the `{own, opp}` shape of **D41**), a
+  click is `act: setPhaseStop {phase, turn, stop}` (**M33**), and the next
+  `state` says what happened. Measured in the browser: after setting the `DRAW` /
+  own dot, turn 3 gave this seat priority at ***Your draw step*** — which Forge
+  does not do by default.
+- **Auto-yield's behaviour is asserted, not merely measured.**
+  `decks/yield-probe.dck` (22 Thallids, one mandatory upkeep trigger each) puts
+  the same `yieldKey` back on top of the stack every turn, and after
+  `yielded:"yes"` the engine raises **zero** `input` frames carrying
+  `buttons.ok.enabled` while that key is on top:
+  `fixtures/games/human-yield-13.jsonl`, `repeats=4 promptsWhileOnTop=0`, gate
+  step **10g** with `--require-yield-repeat`. The handle itself is opaque
+  (`"y3"`) and never rendered (**D42**).
+- **The `sideboard` ask has an engine recording at last** — game 2 of a
+  `--games 2` match, gate step **9d**, `fixtures/games/human-sideboard-7.jsonl`
+  — which makes it **nine of the eleven ask kinds** evidenced, the other two
+  being the documented ceilings `options` and `manipulate_list`.
+- **`input.buttons.focus` is on the wire and Space follows it** (**M39**,
+  **D45**): `"ok"` on **546 of 844** `input` frames in `human-comfort-13` and
+  never `"cancel"`, the focused button is the document's `activeElement`, and
+  `planKey` returns *no* plan for it so the browser's own activation is never
+  doubled into a second `buttonOk`.
+- **`UI_MANA_LOST_PROMPT` is on by default** (**M40**, **D43**): `config.json`'s
+  `"manaLostPrompt": true`, set in memory and never `save()`d, so the floating-mana
+  `confirm` now occurs in ordinary games and every session header carries
+  `prefs: ["UI_MANA_LOST_PROMPT"]`. The same seed plays the same game (1,587
+  lines, one fewer `buttonCancel` — a frame that swings both ways on its own).
+- **Undo is the engine's undo and nothing more.** `state.undo {can, depth}` is
+  `canUndoLastAction()` / `getUndoStackSize()` (**M35**) — mana abilities only,
+  cleared at every phase change — and the board's button promises exactly that.
+- **The browser half computes nothing.** A dot draws `players[].phaseStops`, a
+  yield line draws `state.yield`, the Undo button draws `state.undo`, a badge
+  draws `stack[].yielded`; not one of them remembers anything between frames, and
+  D31's **hold-priority toggle is gone** rather than enabled, because Forge has no
+  such feature. Every M6 field is optional in `protocol.ts` behind one reader
+  apiece, so the fourteen recordings that predate 2026-09-12 still render.
+- **The gate grew two steps and about two and a half minutes, and stayed green.**
+  Thirteen numbered steps with **five** lettered sub-steps (9b, 9c, **9d**, 10f,
+  **10g**) and **seven** ws servers. The count and the wall time live in
+  CLAUDE.md §"Build and run" and in one place only — two dated numbers in two
+  files is how this repo once said "five servers, 3 m 19 s" and "seven servers,
+  eleven and a half minutes" on the same day.
 
 **Corrections from [`docs/research/11-engine-comfort-features.md`](docs/research/11-engine-comfort-features.md)
 — read it before planning the two evenings.**
@@ -1516,9 +1628,220 @@ Forge's own `SHORTCUT_*` keycodes, mana-font pips, error toasts.
 - **There is no "hold priority" in Forge.** Do not render a toggle with no engine
   behind it.
 
+### M6 verification pass — one major and seven minors, all closed, 2026-09-12
+
+An independent pass played the board in a browser, re-ran the gate from a deleted
+`bridge/out` and read the jar. Its verdict was that M6's features are engine
+features rather than client state — four proved behaviourally in a live browser,
+the fifth (auto-yield) at the wire and bytecode level — and it found **one
+major**, which was M6's own headline flow dead-ending on itself.
+
+1. **[major] New Game had a 30-second fuse that fired with a client connected.**
+   `MtgTable`'s two post-`over` waits were a flat wall clock that ran whether or
+   not anybody was attached, so the board's **New Game** row — which appears at
+   `over` — had half a minute to live, and `./scripts/play.sh` defaults to
+   `--games 3`. **Fixed** by applying the rule the ask timeout already uses
+   (**D24**, CLAUDE.md §"The socket's own two rules"): `MtgTable.awaitNextGame`
+   waits with **no deadline while a `WsTransport` reports a connected client**,
+   falls back to 30 s while none is, and returns at once when a client that
+   *was* connected leaves — so no scripted client in the gate pays for it.
+   `WsTransport.keepOpen(long)` is deleted. Decision **D40**. Measured: a client
+   silent for **40,046 ms** after game 1's `over` still got game 2, 39 ms after
+   the act. The board's half: `NewGameRow` disables both buttons and says why
+   when the socket is not `open` (`Board`'s new `connected` prop).
+2. **[minor] `web/src/protocol.ts` numbered the M6 rows `M1..M8`,** which are
+   real amendment ids meaning something else. **Renumbered** to `M32..M41`.
+3. **[minor] Amendment `M34` said `playerId` is null for two of the three yield
+   kinds.** It is the yielding seat for all three; only `phase` is null.
+   **Corrected**, matching §3.1 and the emitter.
+4. **[minor] `hello_ok.gameNumber` / `.gameCount` were read by the client and
+   written by nobody.** **Fixed by emitting them** — amendment **M41** — because
+   the client's fallback (its own count of `hello_ok`s) restarts at 1 on a page
+   reload and can never say *of 3*. `gameLabel()` still falls back for the
+   recordings that predate it, and now says nothing at all for a one-game match.
+5. **[minor] `scripts/play.sh`'s banner still said "Space press the engine's OK
+   button",** which M6 itself retired, and listed none of M6's keys.
+   **Rewritten**: the focused button, plus `E`/`T`/`B`, `P`, `CTRL+Z`, `Y`/`N`
+   and `H`.
+6. **[minor] Two dated statements disagreed about the gate.** PLAN's M3 bullet
+   said five ws servers and 3 m 19 s; CLAUDE.md said seven and eleven and a half
+   minutes. **The count and the wall time now live in CLAUDE.md only.**
+7. **[minor] `tools/check-redaction.mjs` relaxed the hidden-information gate in
+   two places for M6** and the verifier asked for a second signature on one of
+   them. Added: **`reveal: true` on any `ask` kind other than `choose_list` is a
+   failure**, so a flag the emitter writes cannot switch amendment P12's
+   option-card audit off for a kind nobody argued for. Negative control
+   `fixtures/negative/redaction/a7-reveal-flag-on-the-wrong-ask-kind.jsonl`.
+8. **[minor] Auto-yield's BEHAVIOUR was measured, never asserted** — no run
+   anywhere had shown the engine skipping a prompt because of `setYield`, and
+   the committed proof set its yield on a creature *spell*, which the engine's
+   ability-scoped store can never consult. **Both closed.**
+   `decks/yield-probe.dck` (18 Forest + 22 **Thallid**, one mandatory upkeep
+   trigger each) puts the same `yieldKey` back on top of the stack every turn;
+   gate step **10g** plays it with `--require-yield-repeat`; and the rule is now
+   an assertion on every deck — after `yielded:"yes"`, **zero** `input` frames
+   with `buttons.ok.enabled` while that key is `stack[stack.length-1]`.
+   `fixtures/games/human-yield-13.jsonl` is the recording:
+   `repeats=4 promptsWhileOnTop=0`. `human-comfort-13` is re-recorded and its
+   yield is on a triggered ability; `docs/evidence/m6-engine.md` §4's line
+   references were redone against it.
+
+### M6 follow-ups — thirteen, 2026-09-12
+
+From the two builders' own "problems" notes, the verification pass and the fix
+pass. **None of them stops a game or blocks M7**: the milestone's command plays
+three games back to back in a browser, every M6 control is an engine feature
+rendered, and the gate is green. Four are gaps in *evidence* (1, 2, 5, 13), two
+are protocol rows nobody has needed yet (3, 9), two are a test that does not
+exist yet or a reading that wants a second pair of eyes (7, 8), three are
+deliberate non-changes named here so they stay decisions rather than becoming
+oversights (10, 11, 12), and two are carried forward unchanged (4, 6).
+
+1. **`order` with `sideboardMode: true` is still unrecorded** (M5 follow-up 12's
+   last corner). `sideboard` itself now has a recording; the *reorder* the same
+   between-games hook can raise needs a deck whose main/sideboard swap forces
+   one, and `decks/sideboard-probe.dck` does not.
+2. **Only the `endOfTurn` yield has an engine recording.** `marker` and `stack`
+   are on the wire, in the synthetic fixture and driven from the board (`T`,
+   `B`, the stack's own controls), but no committed recording carries one —
+   pressing `T` in a browser session and copying that log under `fixtures/` is
+   the whole of the work (`docs/evidence/m6-engine.md` §9.2).
+3. **`input.weak[]` is still `[]` and `input` still carries no typed
+   `payingMana`** (M5 follow-up 10, amendment **M30**) — so the mana pips stay
+   live whenever the pool is non-empty, and the "Auto would tap this" outline is
+   not drawn on the tile. **Do not** solve either by matching a button label.
+4. **`clickAbility` still never leaves the browser** (M5 follow-up 9, unchanged).
+   It is proven end to end from a script (gate 10f) and the board's own path for
+   a multi-ability card is still the asynchronous `ability_menu` (**D20**/**D22**),
+   which reaches the same `IGameController.selectAbility`.
+5. **`newGame` is absent from the frame log.** The act is applied before the log
+   for the next game exists, so a reader of `var/games/` alone sees only the
+   stderr line and the next game's header; a client log has the act
+   (`docs/evidence/m6-engine.md` §2.3).
+6. **The undo race is Forge's own and is caught, not fixed.** `undo` can arrive
+   after the engine has already cleared its own stack; the bridge answers with a
+   correction rather than a rejection (§4.3, §4.7). Nothing here can make Forge's
+   undo stack transactional.
+7. **D40's fix is not in the gate.** Proving "a connected client waits as long as
+   it likes" costs ~40 s of wall clock, so `ws-auto-play --new-game-delay-ms`
+   defaults to 0 and `tools/check-all.sh` does not pass it: the major is
+   evidenced by a manual socket run (40,046 ms of silence, game 2 39 ms after the
+   act) and by the browser, and **a regression would not turn the gate red**.
+   Adding it is an eighth ws server and about a minute.
+8. **`tools/check-redaction.mjs`'s two M6 relaxations want a second human
+   reader.** An `ask` may now justify the `state` **immediately** before it (and
+   nothing further back), and a `reveal: true` `choose_list` is its own delayed
+   reveal. Both are negative-controlled in `fixtures/negative/redaction/`, and
+   the verification pass narrowed the second (the flag on any other kind is now a
+   failure, control `a7-…`) — but this file is the last automated thing between
+   an emitter regression and shipping the opponent's hand, and both edits were
+   made by the agent that needed them. Re-read `preAskReveals` and the
+   `reveal === true` branch before trusting them.
+9. **Three protocol rows are still specified and not emitted**:
+   `state.autoPassNoActions`, `attachedToPlayerId` and `input.selectable.playerIds`
+   (protocol §10). Nothing on the board needs them today.
+10. **No AI profile picker and no yield settings, deliberately.** The profile
+    picker is report 11 §9 and stays on the deferred list (it is one string
+    passed as `profileOverride`, and the no-override branch **saves** a pref);
+    `YIELD_*` prefs, yield suggestions and `DeclineScope` are out of scope by
+    report 11 §12 and nothing in the bridge reads or writes them.
+11. **Phase stops are reseeded for every game** (**D38**), which Forge's desktop
+    does not do: a stop set in game 1 must be set again in game 2. The decision
+    and its rejected alternative are written down; this line exists so the
+    comfort cost is on the follow-up list rather than only in the rationale.
+12. **`useMana` still has no post-act snapshot push**, so the mana pool is one
+    frame stale after it and the board marks the pips *provisional* (M5's
+    mechanism, extended). The four M6 acts got `refreshState()`; `useMana` did
+    not, because Forge's own flush usually follows it — measure before widening
+    D39's guarded hop to a fifth caller.
+13. **The user still has not pressed the space bar** (M3 follow-up 9, M5
+    follow-up 13, unchanged by M6). Everything *around* it is measured —
+    `buttons.focus`, the focus ring, `planKey` declining to double the
+    activation — and the browser driver still delivers `Space` as
+    `{key:"", code:"", keyCode:0}`.
+14. **The gate never enters amendment M42's branch.** `RESYNC BEFORE THE FIRST
+   INPUT` appears in none of check-all's ws-server logs, because the /health poll
+   sleeps a second between tries and no gate client connects inside the ~130 ms
+   pre-input window. The branch is proven only by the forced-race harness under
+   `var/` (gitignored; `docs/evidence/m6-engine.md` §11). Close it with a fast
+   /health poll on one of the seven ws servers asserting that line and no `input`
+   before the engine's first push.
+15. **`comfortNotYet()`'s retry path in `tools/ws-auto-play.mjs` has no automated
+   test** — it is unreachable against a fixed bridge. Extract the comfort
+   bookkeeping into an importable module and unit-test it under `node --test`.
+16. **`WsTransport` caches `lastState` and does not clear it on `hello_ok`**, so a
+   client connecting between a new game's handshake and its first snapshot could
+   be re-delivered the previous game's final `state` (possibly one carrying
+   `gameOver`). Unmeasured; the reducer's per-game reset (M38) partly masks it.
+   Clear it the way `lastInput` is now cleared, and decide whether a connect
+   before the first snapshot should send `hello_ok` alone.
+
+### What M6 hands to M7
+
+Written 2026-09-12, from the tree as it stands. M7 is a **second renderer over
+the same frame stream** (`docs/ideas/arena-mode.md`, `docs/research/09-arena-tier1-plan.md`),
+so what matters is what that stream now carries and what it does not promise.
+
+**The animation vocabulary is already on the wire, and it has a shape.**
+`state.events` (protocol §3.6) was added in M1 *for* M7 and M6 did not touch it:
+every `state` carries the engine events that snapshot already reflects, in engine
+order, **ids only**. Across the eighteen committed recordings —
+**15,866 frames, 3,677 `state` frames, 3,291 of them carrying at least one
+event** — there are **19,184 events in 21 kinds**:
+
+| | |
+|---|---|
+| the bulk | `stats` 8,232 · `phase` 4,049 · `tap` 1,949 · `zone` 1,881 |
+| the film | `cast` 412 · `resolved` 412 · `unstacked` 412 · `turn` 318 · `attackers` 317 · `combat_end` 300 · `land` 258 · `damage` 236 · `life` 113 · `blockers` 109 |
+| the long tail | `counters` 55 · `shuffle` 54 · `attach` 28 · `outcome` 18 · `scry` 17 · `mulligan` 9 · `sacrificed` 5 |
+
+That distribution is the schedule: six kinds carry the cinematic, four are
+bookkeeping a renderer will want to *suppress*, and the tail is one animation
+each. A kind that never fires here cannot be tuned here either.
+
+**M6 gives the arena its first multi-game corpus, and it is one command away.**
+One `frames.jsonl` **per game** (**M38**, **D44**), each with its own session
+header, its own `gameId` and its own `hello_ok`, so `./scripts/play.sh` — three
+games back to back — writes **three replayable files in one sitting**. Copy them
+under `fixtures/` (the only tree the dev server mounts) and each one scrubs on
+its own; a three-game arena reel is three loads, not one stream with three games
+in it. Nothing multi-game is *committed*: `fixtures/games/` is 18 files and every
+one of them is a single game — though one, `human-sideboard-7.jsonl`
+(`gameId: sideboard-7-g2`), is **game 2** of a `--games 2` match and is therefore
+what a second game's header and its opening `hello_ok` actually look like.
+
+**Five things a second renderer must not assume away** — four are old and one is
+M6's:
+
+- **An `over` can arrive with no `gameOver` `state` in front of it** (**M11**).
+- **`seq` is not an ordering primitive.** A `resync` re-delivers cached frames
+  verbatim, so a client log's series is neither contiguous nor monotonic
+  (**M10**/**M17**); the reducer's order is arrival order.
+- **Events carry ids only, and an id that does not resolve is correct** — it is a
+  card the viewer may not see (§3.6 rule 1). The one string, `cast.text`, is
+  gated and swept by `Snap.stackText`; an arena that captions an animation must
+  use *that* string and never rebuild one from a name it has cached.
+- **A `hello_ok` mid-stream invalidates every cached id** (**M38**, invariant 10)
+  — the arena's own scene graph is a card map by another name, so it drops on a
+  changed `gameId` exactly as the reducer does.
+- **Every M6 field is optional.** Fourteen committed recordings predate
+  2026-09-12; `protocol.ts`'s five readers are where "absent" is turned into
+  "this recording is older", and a new renderer reads *them*, not the raw field.
+
+**And the renderer's half of hard rule 8 does not come for free in 3D.** On the
+board it is mechanical — `CardTile` is the one card renderer, imported by exactly
+ten files, and `render.test.tsx` checks every `data-card-name` in the markup
+against what that frame serialised in the clear. A Three.js scene draws no such
+markup, so **M7 owes an equivalent assertion before it draws its first textured
+plane**: the per-frame check that nothing on screen names a card this frame
+concealed. `drawnEntities()` in `web/src/render/picker.ts` is the other file that
+has to learn about a new surface that mounts cards (**D33**).
+
 ## M7 — Arena mode: the game as a cinematic
 
-**Status: not started. Scheduled after M6.**
+**Status: not started. M6 has landed, so it is next** — what the frame stream now
+carries, and the five things a second renderer must not assume away, are in
+*"What M6 hands to M7"* above.
 **Effort: open-ended; Tier 1 is a few weeks of evenings.**
 
 **Command**
@@ -1544,9 +1867,11 @@ what the engine said. Rules stay in Forge.
 
 ---
 
-## Deferred — explicitly out of scope until M6 ships
+## Deferred — out of scope for M0–M6
 
-Not cancelled, not scheduled. Revisit only after M6 lands.
+Not cancelled, not scheduled. **M6 has landed**, so these are now revisitable
+rather than blocked; nothing below is scheduled by that, and each still needs a
+decision of its own before it becomes work.
 
 - A second deck, a deck picker, and an AI profile / difficulty selector. (Now
   specified, if it ever comes forward: there is no "difficulty" in Forge, only
@@ -1584,4 +1909,4 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 6 | Install a JDK? Not needed for this plan, but it would bring `jar`, `jshell`, a debugger and Maven. Unpack Temurin 21 into `tools/jdk/` (no sudo) or `apt install openjdk-21-jdk` (sudo)? | **No JDK. The JRE's `jdk.compiler` / `jdk.jdeps` modules suffice.** |
 | 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | Undecided — **NOTICE is written to publication quality anyway**, so either answer works. |
 | 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **AI difficulty stays deferred.** |
-| 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **Off, as Forge ships it** — turning it on is an M6 comfort decision, and nothing else has to move if it is taken (the board renders a `confirm` already). M5 follow-up 2. |
+| 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **ANSWERED BY M6: ON.** `config.json` `"manaLostPrompt": true`, set in memory only (never `save()`), overridable with `--mana-lost-prompt` / `--no-mana-lost-prompt` (amendment M40). `confirm` therefore occurs in ordinary games; nothing else moved. Raise it again if the prompt turns out to be a nuisance. |

@@ -13,13 +13,23 @@ import { test } from 'node:test';
 
 import {
   eventIds,
+  gameLabel,
   initialState,
   MAX_LOG_ENTRIES,
   MAX_NOTICES,
   reduce,
   replayFrames,
 } from '../src/reduce.ts';
-import { EVENT_KINDS, type Frame, type GameEvent } from '../src/protocol.ts';
+import {
+  buttonFocus,
+  EVENT_KINDS,
+  phaseStopsOf,
+  stackYield,
+  undoOf,
+  yieldOf,
+  type Frame,
+  type GameEvent,
+} from '../src/protocol.ts';
 
 function frame(overrides: Record<string, unknown>): Frame {
   return { v: 1, seq: 1, t: 1757600000000, type: 'notice', body: {}, ...overrides } as unknown as Frame;
@@ -432,3 +442,222 @@ function player(id: number, zones: Record<string, unknown>): Record<string, unkn
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// M6 — a new `hello_ok` per game (§2.1, amendment M38), and the new fields
+// ---------------------------------------------------------------------------
+
+/** A `hello_ok` body for one game of a match. */
+function hello(gameId: string, extra: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    gameId,
+    you: 0,
+    seed: 42,
+    forgeVersion: '2.0.14',
+    forgeJarSha256: 'abc',
+    unsupportedCards: [],
+    players: [
+      { id: 0, name: 'Pacho', isAi: false },
+      { id: 1, name: 'Forge AI', isAi: true },
+    ],
+    ...extra,
+  };
+}
+
+/** A minimal `state` body — enough to be replaced, and to carry one event. */
+function stateBody(gameId: string, extra: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    gameId,
+    turn: 3,
+    round: 2,
+    phase: 'MAIN1',
+    activePlayer: 0,
+    priority: 0,
+    gameOver: null,
+    players: [player(0, {}), player(1, {})],
+    stack: [],
+    stackCards: [],
+    combat: null,
+    events: [{ kind: 'turn', player: 0, turn: 3 }],
+    ...extra,
+  };
+}
+
+test('a hello_ok with the SAME gameId is a resync re-delivery and resets nothing', () => {
+  // §2.4 / amendment M10: a resync re-delivers the cached hello_ok verbatim —
+  // same seq, same gameId. Treating that as a new game would blank the board
+  // every time the socket hiccupped.
+  let state = initialState();
+  state = reduce(state, frame({ seq: 1, type: 'hello_ok', body: hello('g1') }));
+  state = reduce(state, frame({ seq: 2, type: 'state', body: stateBody('g1') }));
+  state = reduce(state, frame({ seq: 3, type: 'notice', body: { level: 'warn', title: 'a', text: 'b' } }));
+  const before = state;
+  state = reduce(state, frame({ seq: 1, type: 'hello_ok', body: hello('g1') }));
+  assert.equal(state.gameNumber, 1);
+  assert.equal(state.board?.turn, 3);
+  assert.equal(state.log.length, before.log.length);
+  assert.equal(state.notices.length, 1);
+});
+
+test('a hello_ok with a NEW gameId drops the finished game entirely', () => {
+  // Amendment M38: `HostedMatch.endCurrentGame()` replaces every PlayerView and
+  // every CardView, so card id 41 in game 2 is a different card. Everything the
+  // client holds that is keyed on the old game goes with it.
+  let state = initialState({ kind: 'session' } as never);
+  state = reduce(state, frame({ seq: 1, type: 'hello_ok', body: hello('g1') }));
+  state = reduce(state, frame({ seq: 2, type: 'state', body: stateBody('g1') }));
+  state = reduce(state, frame({ seq: 3, type: 'notice', body: { level: 'warn', title: 'a', text: 'b' } }));
+  state = reduce(
+    state,
+    frame({
+      seq: 4,
+      type: 'ask',
+      body: { askId: 'a1', kind: 'confirm', timeoutMs: 1000, prompt: 'p', yesLabel: 'y', noLabel: 'n' },
+    }),
+  );
+  state = reduce(state, frame({ seq: 5, type: 'over', body: { winner: 0, reason: 'Life', matchOver: false } }));
+  // An unknown event kind is drift in the BRIDGE, not in the game: it is the one
+  // thing deliberately carried across.
+  state = reduce(
+    state,
+    frame({ seq: 6, type: 'state', body: stateBody('g1', { events: [{ kind: 'wormhole' }] }) }),
+  );
+  assert.deepEqual(state.droppedEventKinds, ['wormhole']);
+  assert.ok(state.log.length > 0);
+  assert.notEqual(state.gameOver, null);
+
+  const framesBefore = state.framesApplied;
+  state = reduce(state, frame({ seq: 1, type: 'hello_ok', body: hello('g1-g2') }));
+
+  assert.equal(state.gameNumber, 2);
+  assert.equal(state.hello?.gameId, 'g1-g2');
+  // The finished game's board, question, result, event ring and toasts are gone:
+  // a game that starts already over is the bug this test exists for.
+  assert.equal(state.board, null);
+  assert.equal(state.input, null);
+  assert.equal(state.ask, null);
+  assert.equal(state.gameOver, null);
+  assert.deepEqual(state.log, []);
+  assert.deepEqual(state.events, []);
+  assert.deepEqual(state.notices, []);
+  assert.equal(state.lastAct, null);
+  // Kept: the frame log's own header, protocol drift, and the frame counter.
+  assert.notEqual(state.session, null);
+  assert.deepEqual(state.droppedEventKinds, ['wormhole']);
+  assert.equal(state.framesApplied, framesBefore + 1);
+
+  // Game 3 counts on from there.
+  state = reduce(state, frame({ seq: 2, type: 'hello_ok', body: hello('g1-g3') }));
+  assert.equal(state.gameNumber, 3);
+});
+
+test('gameLabel prefers the engine’s number and says nothing about a lone game 1', () => {
+  let state = initialState();
+  assert.equal(gameLabel(state), null);
+  state = reduce(state, frame({ type: 'hello_ok', body: hello('g1') }));
+  assert.equal(gameLabel(state), null, 'a single game needs no chrome');
+  state = reduce(state, frame({ type: 'hello_ok', body: hello('g1-g2') }));
+  assert.equal(gameLabel(state), 'Game 2');
+  // `gameCount` is the only half the client cannot derive.
+  state = reduce(
+    state,
+    frame({ type: 'hello_ok', body: hello('g1-g3', { gameNumber: 3, gameCount: 3 }) }),
+  );
+  assert.equal(gameLabel(state), 'Game 3 of 3');
+});
+
+test('the M6 state fields survive the fold and read back through their helpers', () => {
+  let state = initialState();
+  state = reduce(state, frame({ type: 'hello_ok', body: hello('g1') }));
+  const seat = player(0, {});
+  seat['phaseStops'] = { own: ['MAIN1'], opp: ['END_OF_TURN'] };
+  state = reduce(
+    state,
+    frame({
+      type: 'state',
+      body: stateBody('g1', {
+        players: [seat, player(1, {})],
+        yield: { kind: 'marker', playerId: 0, phase: 'UPKEEP' },
+        undo: { can: true, depth: 2 },
+        stack: [
+          {
+            id: 88,
+            sourceCardId: 41,
+            controller: 0,
+            text: 'a trigger',
+            targetCardIds: [],
+            targetPlayerIds: [],
+            yieldKey: 'y1',
+            isAbility: true,
+            isOptionalTrigger: true,
+            yielded: 'yes',
+          },
+        ],
+      }),
+    }),
+  );
+
+  assert.deepEqual(phaseStopsOf(state.board?.players[0]), { own: ['MAIN1'], opp: ['END_OF_TURN'] });
+  // The opponent's seat carries its own object; absence is NOT "stops nowhere".
+  assert.equal(phaseStopsOf(state.board?.players[1]), null);
+  assert.deepEqual(yieldOf(state.board), { kind: 'marker', playerId: 0, phase: 'UPKEEP' });
+  assert.deepEqual(undoOf(state.board), { can: true, depth: 2 });
+  assert.deepEqual(stackYield(state.board?.stack[0]), {
+    offered: true,
+    yieldKey: 'y1',
+    mode: 'yes',
+    optionalTrigger: true,
+  });
+});
+
+test('every M6 field is optional, because fifteen recordings predate them', () => {
+  // A pre-M6 `state` — no phaseStops, no yield, no undo, no stack extras — must
+  // fold and read back as "the bridge does not carry this", never as a crash and
+  // never as a false "stops nowhere".
+  let state = initialState();
+  state = reduce(state, frame({ type: 'hello_ok', body: hello('g1') }));
+  state = reduce(
+    state,
+    frame({
+      type: 'state',
+      body: stateBody('g1', {
+        stack: [
+          { id: 1, sourceCardId: 2, controller: 0, text: 't', targetCardIds: [], targetPlayerIds: [] },
+        ],
+      }),
+    }),
+  );
+  assert.equal(phaseStopsOf(state.board?.players[0]), null);
+  assert.equal(yieldOf(state.board), null);
+  assert.deepEqual(undoOf(state.board), { can: false, depth: 0 });
+  assert.deepEqual(stackYield(state.board?.stack[0]), {
+    offered: false,
+    yieldKey: null,
+    mode: null,
+    optionalTrigger: false,
+  });
+  assert.equal(buttonFocus(state.input), null);
+  // An `input` with a focus reads it back; one without is OK, which is M4's
+  // behaviour and what every pre-M6 fixture gets.
+  state = reduce(
+    state,
+    frame({
+      type: 'input',
+      body: {
+        prompt: 'p',
+        focusCardId: null,
+        focusCard: null,
+        buttons: {
+          ok: { label: 'OK', enabled: true },
+          cancel: { label: 'Cancel', enabled: true },
+          focus: 'cancel',
+        },
+        selectable: { cardIds: [], min: 0, max: 0, mode: 'none' },
+        highlighted: [],
+        weak: [],
+        openZones: [],
+      },
+    }),
+  );
+  assert.equal(buttonFocus(state.input), 'cancel');
+});

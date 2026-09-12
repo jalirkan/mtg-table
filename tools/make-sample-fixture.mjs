@@ -234,8 +234,25 @@ const header = {
 
 const f = (seq, dt, dir, type, body) => ({ v: 1, seq, t: T0 + dt, dir, type, body });
 
+/**
+ * §3.1 / amendment M32 — `players[].phaseStops`, the two sets a phase strip
+ * draws. These are Forge's own defaults (report 11 §3.2): a human stops at
+ * MAIN1, DECLARE_BLOCKERS and MAIN2 on their own turn, and at the four combat
+ * and end-step cells on the opponent's. `own` for one seat is `opp` for the
+ * other, which is redundant on purpose: each seat's strip reads its own object.
+ */
+const HUMAN_STOPS = ['MAIN1', 'COMBAT_DECLARE_BLOCKERS', 'MAIN2'];
+const AI_STOPS = ['COMBAT_BEGIN', 'COMBAT_DECLARE_ATTACKERS', 'COMBAT_DECLARE_BLOCKERS', 'END_OF_TURN'];
+const humanPhaseStops = () => ({ own: [...HUMAN_STOPS], opp: [...AI_STOPS] });
+const aiPhaseStops = () => ({ own: [...AI_STOPS], opp: [...HUMAN_STOPS] });
+
 const helloOk = f(1, 0, 's2c', 'hello_ok', {
   gameId: 'sample-handwritten', you: 0, seed: 42,
+  // §2.1, amendment M41. Game 1 of a three-game match, which is what this
+  // file's own `over` says (`matchOver: false`). They are here because this is
+  // the one place every shape is written out by hand -- and a `--games 1`
+  // session carries NEITHER key, which is why no engine fixture has them.
+  gameNumber: 1, gameCount: 3,
   forgeVersion: '2.0.14', forgeJarSha256: JAR_SHA, unsupportedCards: [],
   players: [
     { id: 0, name: 'Pacho', isAi: false },
@@ -249,6 +266,7 @@ const mainOne = f(2, 2400, 's2c', 'state', {
   players: [
     {
       id: 0, name: 'Pacho', isAi: false, life: 17, poison: 0, counters: {}, manaPool: pool(),
+      phaseStops: humanPhaseStops(),
       zones: {
         hand: zone([handPlains, handQuantum, handDoombot]),
         battlefield: zone([
@@ -269,6 +287,7 @@ const mainOne = f(2, 2400, 's2c', 'state', {
     },
     {
       id: 1, name: 'Opponent', isAi: true, life: 2, poison: 0, counters: {}, manaPool: pool(),
+      phaseStops: aiPhaseStops(),
       zones: {
         hand: zone([hidden(201, 1), hidden(202, 1)]),
         battlefield: zone([ISLAND(210, 1, true), doombot({}), oppFaceDown()]),
@@ -281,6 +300,11 @@ const mainOne = f(2, 2400, 's2c', 'state', {
   ],
   stack: [],
   stackCards: [],
+  // M6, amendments M34 and M35. The quiet case: no yield running, nothing on
+  // the undo stack. `undo` is an object and never null once a seat exists, so
+  // the renderer reads `undo.can` without a guard.
+  yield: null,
+  undo: { can: false, depth: 0 },
   combat: null,
   // One GameEventForwarder flush can span a turn boundary: this batch carries the
   // end of the opponent's turn 8 and the start of our turn 9. The last four are
@@ -308,7 +332,9 @@ const mainOneInput = f(3, 2450, 's2c', 'input', {
   prompt: 'Play a land or cast a spell',
   focusCardId: null,
   focusCard: null,
-  buttons: { ok: { label: 'OK', enabled: true }, cancel: { label: 'Cancel', enabled: false } },
+  // M6, amendment M39: Space activates the FOCUSED button, and `focus1` is the
+  // engine's word for which one that is.
+  buttons: { ok: { label: 'OK', enabled: true }, cancel: { label: 'Cancel', enabled: false }, focus: 'ok' },
   selectable: { cardIds: [101, 102, 104, 110, 111, 113, 116], min: 0, max: 1, mode: 'cards' },
   highlighted: [],
   weak: [],
@@ -492,7 +518,9 @@ const surveilInput = f(++seqS, clock + 400, 's2c', 'input', {
   prompt: 'Choose a card to put into your graveyard',
   focusCardId: 107,
   focusCard: libDepower,
-  buttons: { ok: { label: 'OK', enabled: false }, cancel: { label: 'Undo (1)', enabled: true } },
+  // A disabled OK means the engine wants a card click (§4.2), and nothing is
+  // focused: Space must not press the Undo button by accident.
+  buttons: { ok: { label: 'OK', enabled: false }, cancel: { label: 'Undo (1)', enabled: true }, focus: null },
   selectable: { cardIds: [106, 107], min: 1, max: 1, mode: 'cards' },
   highlighted: [112],
   weak: [110, 113],
@@ -523,6 +551,7 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
   players: [
     {
       id: 0, name: 'Pacho', isAi: false, life: 17, poison: 0, counters: {}, manaPool: pool(),
+      phaseStops: humanPhaseStops(),
       zones: {
         hand: zone([handPlains, handDoombot]),
         battlefield: zone([
@@ -544,6 +573,7 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
     },
     {
       id: 1, name: 'Opponent', isAi: true, life: 2, poison: 0, counters: {}, manaPool: pool(),
+      phaseStops: aiPhaseStops(),
       zones: {
         hand: zone([hidden(201, 1), hidden(202, 1)]),
         battlefield: zone([ISLAND(210, 1, true), doombot({ blocking: true }), oppFaceDown({ blocking: true })]),
@@ -559,6 +589,11 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
       id: 88, sourceCardId: 102, controller: 0,
       text: 'Quantum Reduction (enchant creature) — targeting Aerial Doombot',
       targetCardIds: [211], targetPlayerIds: [],
+      // M6, amendment M36. A SPELL: `isAbility` is false, so a client offers no
+      // auto-yield control at all for it. The handle is still minted, because
+      // the emitter mints one for every keyed item and the client's rule about
+      // which ones it acts on is the client's.
+      yieldKey: 'y1', isAbility: false, isOptionalTrigger: false, yielded: null,
     },
     // section 3.6 rule 1: `text` is "" when the bridge concealed it -- the
     // source card's identity is hidden from this seat, or the engine's string
@@ -568,6 +603,11 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
       id: 89, sourceCardId: 213, controller: 1,
       text: '',
       targetCardIds: [], targetPlayerIds: [],
+      // An optional trigger with a standing "always yes", on an item whose TEXT
+      // is concealed — which is the pair worth pinning: the handle is opaque, so
+      // it says nothing about the card it came from, and a client may render the
+      // yielded badge next to a stack item it cannot name.
+      yieldKey: 'y2', isAbility: true, isOptionalTrigger: true, yielded: 'yes',
     },
   ],
   // §3.3: the card behind stack item 88. It is in ZoneType.Stack, so it is in no
@@ -582,6 +622,13 @@ const declareBlockers = f(++seqS, clock + 6000, 's2c', 'state', {
     // that item's `text` is "". Its state is public; its face is not.
     oppFaceDown({ blocking: true }),
   ],
+  // M6. The two states no engine recording in this corpus carries: a MARKER
+  // yield (`yieldTo {kind:"marker"}` — "pass to their end step"), and an undo
+  // stack with something on it. `fixtures/games/human-comfort-13.jsonl` is the
+  // emitter's evidence for the endOfTurn kind and for undo; this is the
+  // renderer's for the other one.
+  yield: { kind: 'marker', playerId: 1, phase: 'END_OF_TURN' },
+  undo: { can: true, depth: 2 },
   combat: {
     bands: [
       { attackerIds: [112], defender: { kind: 'player', id: 1 }, blockerIds: [211], damageOrder: [211] },

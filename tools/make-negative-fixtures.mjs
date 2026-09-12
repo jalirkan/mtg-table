@@ -307,5 +307,93 @@ probe('ask-ability-menu-cardid-null.jsonl',
     });
   });
 
+/*
+ * The two probes that guard 2026-09-12's ONE-FRAME LOOKAHEAD.
+ *
+ * `WireGuiGame.ask()` flushes a `state` BEFORE it emits the ask (report 06 W4:
+ * that is the snapshot in which a temporarily revealed card is visible), so a
+ * legitimate hand-reveal shows the card one frame before the ask that justifies
+ * it. check-redaction.mjs therefore lets an `ask` justify the `state`
+ * IMMEDIATELY before it, and treats a `choose_list` with `reveal: true` as its
+ * own delayed reveal. Both relaxations are exactly one step wide, and these two
+ * probes are what keep them that way: move the ask one frame further, or turn
+ * the flag off, and the checker must still fail.
+ */
+const revealProbe = (name, why, expect, mutate) =>
+  probe(name, why, expect, (fs) => {
+    // Name an opponent hand card in the LAST state of the slice, exactly the way
+    // a6-opponent-hand-named.jsonl does, and remember which id.
+    const states = fs.filter((f) => f.type === 'state');
+    const last = states[states.length - 1];
+    const opponent = last.body.players.find((p) => !isViewerSeat(p));
+    const stub = opponent.zones.hand.cards.find((c) => c.hidden === true);
+    if (stub === undefined) throw new Error('no opponent hand stub in the last state');
+    const donor = structuredClone(firstViewerNamed(fs).card);
+    Object.assign(donor, { id: stub.id, zone: 'hand', controller: opponent.id, owner: opponent.id });
+    opponent.zones.hand.cards[opponent.zones.hand.cards.indexOf(stub)] = donor;
+    mutate(fs, structuredClone(donor));
+  });
+
+revealProbe('a6-reveal-ask-one-frame-too-late.jsonl',
+  'the lookahead is ONE frame: a reveal ask two frames after the state does not justify it',
+  'carries a name',
+  (fs, card) => {
+    // The ask that WOULD justify it -- but a `notice` is emitted in between, so
+    // it is no longer the frame this snapshot was flushed for.
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 2, dir: 's2c', type: 'notice',
+      body: { level: 'info', title: 'spacer', text: 'one frame of distance' },
+    });
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 1, dir: 's2c', type: 'ask',
+      body: {
+        askId: 'n3', kind: 'choose_list', timeoutMs: 0,
+        prompt: "Looking at cards in the opponent's hand",
+        options: [{ id: 0, label: card.name, kind: 'card', cardId: card.id, card }],
+        preselected: [], min: -1, max: -1, reveal: true,
+      },
+    });
+  });
+
+revealProbe('p12-choose-list-reveals-without-the-flag.jsonl',
+  'P12: only `reveal: true` (or a delayedReveal) lets a list-shaped ask carry an opponent hand card',
+  'an option list may only show what the effect reveals',
+  (fs, card) => {
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 1, dir: 's2c', type: 'ask',
+      body: {
+        askId: 'n4', kind: 'choose_list', timeoutMs: 0,
+        prompt: 'Choose a card',
+        options: [{ id: 0, label: card.name, kind: 'card', cardId: card.id, card }],
+        preselected: [], min: 1, max: 1, reveal: false,
+      },
+    });
+  });
+
+/*
+ * The second signature on that same relaxation (M6 verification finding 8).
+ * `reveal` is a flag the EMITTER writes, and `reveal: true` switches P12's
+ * option-card audit off for the ask that carries it -- an argument made for
+ * `choose_list` alone, because `reveal` is only ever `getChoices(min < 0)`,
+ * Forge's own `AbstractGuiGame.reveal` channel. This probe is the flag having
+ * spread: a `manipulate_list` that claims to be a reveal. The exact-key-set
+ * check would also catch this one, and that is the point of having both -- the
+ * key set is a table somebody can edit, and this check is not.
+ */
+probe('a7-reveal-flag-on-the-wrong-ask-kind.jsonl',
+  'amendment A7: `reveal: true` is Forge\'s getChoices(min < 0) channel and is a `choose_list` only',
+  'ask.reveal is true on kind',
+  (fs) => {
+    inject(fs, {
+      v: 1, seq: 0, t: over.t - 1, dir: 's2c', type: 'ask',
+      body: {
+        askId: 'n5', kind: 'manipulate_list', timeoutMs: 0,
+        prompt: 'Reorder these', cards: [], manipulable: [],
+        toTop: true, toBottom: false, toAnywhere: false,
+        reveal: true,
+      },
+    });
+  });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

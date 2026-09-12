@@ -140,6 +140,19 @@ export interface ClientState {
   lastAct: ActBody | null;
   /** How many frames have been folded in. Handy for the replay scrubber. */
   framesApplied: number;
+  /**
+   * §2.1 (**M6**) — how many games this stream has seen, 1-based; `0` before the
+   * first `hello_ok`.
+   *
+   * It is counted here rather than read off the wire because it is a fact about
+   * *this stream* and the client can always answer it: a bridge that ships
+   * `hello_ok.gameNumber` overrides it (the board prefers the engine's number),
+   * and one that ships nothing still gets an honest "Game 2". A `resync`
+   * re-delivers the same `hello_ok` verbatim (amendment M10), same `gameId` and
+   * all, and must not count — which is why the test is on `gameId` and not on
+   * "another `hello_ok` arrived".
+   */
+  gameNumber: number;
 }
 
 export function initialState(session: SessionHeader | null = null): ClientState {
@@ -156,7 +169,34 @@ export function initialState(session: SessionHeader | null = null): ClientState 
     droppedEventKinds: [],
     lastAct: null,
     framesApplied: 0,
+    gameNumber: 0,
   };
+}
+
+/**
+ * §2.1 (M6, amendment **M41**) — "Game 2 of 3", or `null` when there is nothing
+ * worth saying.
+ *
+ * **The engine's own number wins when the bridge ships one** (`gameNumber`), and
+ * that is the whole point of M41: the fallback below is this *stream's* count of
+ * `hello_ok`s with distinct `gameId`s, which restarts at 1 when the page is
+ * reloaded — a `resync` re-delivers the cached handshake, not the ones the tab
+ * missed (§2.4) — so mid-match it is wrong in exactly the case a player notices.
+ * It stays as the fallback because every committed recording predates M41 (and
+ * because a bridge omits both keys for a one-game match, which is most of them).
+ *
+ * **A one-game match says nothing.** `Game 1` on a single-game session is chrome
+ * nobody asked for, and so is `Game 1 of 1`: `gameCount` has to be greater than
+ * one before the total is worth printing.
+ */
+export function gameLabel(state: ClientState): string | null {
+  const engineNumber = state.hello?.gameNumber;
+  const number =
+    typeof engineNumber === 'number' && engineNumber > 0 ? engineNumber : state.gameNumber;
+  if (number <= 0) return null;
+  const total = state.hello?.gameCount ?? null;
+  if (total !== null && total > 1) return `Game ${String(number)} of ${String(total)}`;
+  return number > 1 ? `Game ${String(number)}` : null;
 }
 
 /** A short human description of a frame, for error messages. */
@@ -185,7 +225,7 @@ export function reduce(state: ClientState, frame: Frame): ClientState {
 
   switch (frame.type) {
     case 'hello_ok':
-      return { ...state, hello: frame.body, framesApplied: applied };
+      return applyHello(state, frame.body, applied);
 
     case 'state':
       return applyState(state, frame.body, frame.seq, frame.t, applied);
@@ -241,6 +281,45 @@ export function reduce(state: ClientState, frame: Frame): ClientState {
       );
     }
   }
+}
+
+/**
+ * §2.1 (**M6**) — a `hello_ok` whose `gameId` changed is a **new game**, and
+ * every id the client holds died with the old one.
+ *
+ * `HostedMatch.endCurrentGame()` nulls the `Game`, clears the human controllers
+ * and replaces every `PlayerView` and every `CardView` (report 11 §8.3), so card
+ * id 41 in game 2 is a different card from card id 41 in game 1. This reducer
+ * never held a card map to begin with — the file header says why, and that rule
+ * is what makes the reset cheap rather than delicate — but it *does* hold three
+ * things that outlive a frame, and all three are the finished game's:
+ *
+ *   - `board` / `input` / `ask` / `gameOver` / `events`: the last snapshot of a
+ *     game that no longer exists. `gameOver` especially: it is sticky by design
+ *     (§3.1), so without this the new game would start already over;
+ *   - `log`: the event ring, whose entries are ids resolved late against the
+ *     current frame — ids that now mean different cards, which is the P5 leak
+ *     shape one level up;
+ *   - `notices`: game 1's toasts, which would fade in over game 2's board.
+ *
+ * Deliberately **kept**: `session` (the frame log's line 0, one per file),
+ * `droppedEventKinds` (protocol drift is a property of the bridge, not of the
+ * game) and `framesApplied` (the scrubber counts frames, not games).
+ *
+ * A `resync` re-delivers the cached `hello_ok` **verbatim** — same `seq`, same
+ * `gameId` (amendment M10/D27) — and must reset nothing, which is why the test
+ * is a `gameId` comparison and not "a second `hello_ok` arrived".
+ */
+function applyHello(state: ClientState, body: HelloOkBody, applied: number): ClientState {
+  const sameGame = state.hello !== null && state.hello.gameId === body.gameId;
+  if (sameGame) return { ...state, hello: body, framesApplied: applied };
+  return {
+    ...initialState(state.session),
+    hello: body,
+    droppedEventKinds: state.droppedEventKinds,
+    gameNumber: state.gameNumber + 1,
+    framesApplied: applied,
+  };
 }
 
 function applyState(

@@ -37,7 +37,13 @@
 #                                 "step 10d" in the docs stays correct, and it is
 #                                 the single most expensive thing in this file:
 #                                 ~4-8 minutes.  SKIP_TEN=1 skips it.
-#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: six fresh servers on a
+#                                 9d (M6) is the SIDEBOARD ask: two games of one
+#                                 match on decks/sideboard-probe.dck, which is
+#                                 the only way the eleventh ask kind is reachable
+#                                 at all (amendments M27/M38), asserted for the
+#                                 ask, for a legal non-identity answer, and for
+#                                 one frame log per game.
+#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: seven fresh servers on a
 #                                 loopback socket -- the ws-smoke doorstep test
 #                                 (connect -> resync -> concede), the same test's
 #                                 --disconnect-mid-ask variant, a full unattended
@@ -55,7 +61,17 @@
 #                                 and 10f (M5), ws-auto-play --probe at seed 42,
 #                                 which is the only thing anywhere that sends the
 #                                 `clickAbility` ACT from a client rather than
-#                                 answering an ability_menu by index.
+#                                 answering an ability_menu by index, and 10g
+#                                 (M6), THREE GAMES BACK TO BACK over one socket
+#                                 with --games 3 --comfort: three `over`s, three
+#                                 `hello_ok`s with distinct gameIds, three frame
+#                                 logs, both HostedMatch.continueMatch and
+#                                 restartMatch, and M6's five acts each asserted
+#                                 for the EFFECT it had on the next `state` --
+#                                 plus (M6 fix) the BEHAVIOUR of auto-yield on
+#                                 decks/yield-probe.dck, whose key ability
+#                                 repeats every upkeep, with
+#                                 --require-yield-repeat.
 #                                 Each asserts exactly one `over`, `over` last,
 #                                 and its log through check-redaction.mjs.
 #  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
@@ -393,10 +409,65 @@ else
   ./tools/ten-games.sh || die "tools/ten-games.sh (the M5 exit criterion; logs in var/ten-games/)"
 fi
 
+# 9d. M6: THE SIDEBOARD ASK, which needs a session that survives `over`.
+#
+#     The eleventh ask kind had no engine recording of any sort until M6, and
+#     the reason was never the wire (protocol amendment M27): `IGuiGame.sideboard`
+#     is called by `Match.prepareAllZones` BETWEEN games, and the session used to
+#     end at game 1's `over`.  With `act: newGame {mode}` it reaches the seat, on
+#     the game thread, like any other ask.
+#
+#     Two games, so there is a "between"; --probe, so the answer is a real swap
+#     (the last main card for the first sideboard card) rather than the identity
+#     that a player clicking straight through would send -- the identity is legal
+#     and is the default policy, and it never exercises the index marshalling.
+printf '\n=== 9d. the sideboard ask: two games of one match, and a legal swap (M6) ===\n'
+rm -rf var/games/check-all-sideboard var/games/check-all-sideboard-g2
+jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --games 2 --seed 7 \
+    --deck decks/sideboard-probe.dck --game-id check-all-sideboard \
+    > var/check-all-sideboard.log 2>&1 \
+  || { tail -30 var/check-all-sideboard.log >&2; die "the two-game sideboard probe did not finish"; }
+grep -q "^MTGTABLE OK$" var/check-all-sideboard.log || die "the sideboard probe did not print MTGTABLE OK"
+grep -q "games          = 2 played of 2" var/check-all-sideboard.log \
+  || { grep '^games ' var/check-all-sideboard.log >&2; die "the sideboard probe did not play two games"; }
+SB_G1="var/games/check-all-sideboard/frames.jsonl"
+SB_G2="var/games/check-all-sideboard-g2/frames.jsonl"
+for f in "$SB_G1" "$SB_G2"; do
+  [ -s "$f" ] || die "the sideboard probe wrote no frame log at $f (one file per game, amendment M38)"
+  overs="$(grep -c '"type":"over"' "$f" || true)"
+  [ "$overs" = "1" ] || die "$f has $overs \`over\` frames; section 7 says exactly one per game"
+  [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || die "the last frame of $f is not \`over\`"
+done
+grep -q '"gameId":"check-all-sideboard"' "$SB_G1" || die "$SB_G1 does not carry its own gameId"
+grep -q '"gameId":"check-all-sideboard-g2"' "$SB_G2" \
+  || die "$SB_G2 does not carry a NEW gameId -- a new game must emit a new hello_ok (amendment M38)"
+grep -q '"type":"ask","body":{"askId":"[^"]*","kind":"sideboard"' "$SB_G2" \
+  || die "no \`sideboard\` ask in game 2 of the match -- the kind M27 said only M6 could reach"
+# The answer is the new main deck as indices into `main ++ side` (section 5.1),
+# and --probe's swap is what makes it different from the identity: the last index
+# is `main`, i.e. the FIRST SIDEBOARD CARD, and the array is still main-sized.
+node -e '
+  const fs = require("node:fs");
+  const lines = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map(JSON.parse);
+  const ask = lines.find((f) => f.type === "ask" && f.body.kind === "sideboard");
+  const ans = lines.find((f) => f.type === "answer" && f.body.askId === ask.body.askId);
+  const main = ask.body.main.length, side = ask.body.side.length, v = ans.body.value;
+  const fail = (m) => { console.error("SIDEBOARD: " + m); process.exit(1); };
+  if (side === 0) fail("the probe deck has no sideboard, so the ask proves nothing");
+  if (!Array.isArray(v)) fail("the answer is not an array of indices (section 5.1)");
+  if (v.length !== main) fail(`the answer is ${v.length} cards, the deck was ${main}`);
+  if (new Set(v).size !== v.length) fail("the answer repeats an index");
+  if (!v.every((i) => Number.isInteger(i) && i >= 0 && i < main + side)) fail("an index is out of range");
+  if (!v.some((i) => i >= main)) fail("the answer is the identity -- --probe must swap a card in");
+  console.log(`OK: sideboard ask ${main} main + ${side} side, answered with ${v.length} indices, `
+    + `${v.filter((i) => i >= main).length} from the sideboard`);
+' "$SB_G2" || die "the sideboard answer is not a legal new main deck"
+node tools/check-redaction.mjs "$SB_G1" "$SB_G2" || die "check-redaction.mjs on the sideboard probe"
+
 say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
-# M3.  Six servers, because each client run ends its own game: the three
-# ws-smoke variants concede, and the three ws-auto-play runs play to a natural
-# end.  Every one
+# M3, plus M6's 10g.  Seven servers, because each client run ends its own
+# session: the three ws-smoke variants concede, and the four ws-auto-play runs
+# play to a natural end -- the last of them three games long.  Every one
 # of them is asserted the way steps 7-9 are -- exactly one `over`, `over` last,
 # and the seat log through check-redaction.mjs -- plus the server's own exit
 # code, which is MtgTable's `MTGTABLE OK` path and nothing else.
@@ -712,6 +783,123 @@ the server and did nothing, which is exactly the failure this step exists to cat
   node tools/check-redaction.mjs var/ws-auto-probe-42.jsonl \
     || die "check-redaction.mjs on the CLIENT log var/ws-auto-probe-42.jsonl"
   WS_LOGS="${WS_LOGS:-},var/ws-auto-probe-42.jsonl,var/games/check-all-ws-probe/frames.jsonl"
+fi
+
+# 10g. M6, and the milestone's own command: THREE GAMES BACK TO BACK over ONE
+#      socket, plus the five comfort acts with the EFFECT each is supposed to
+#      have.  A seventh server, and the only step in the gate where a session
+#      outlives an `over`.
+#
+#      Three games and not two because `--games 3` is a best-of-three: the match
+#      can be decided 2-0, so `over` #2 arrives with `matchOver: true` and the
+#      client must ask for a RESTART rather than a continue -- which is how both
+#      HostedMatch.continueMatch() and HostedMatch.restartMatch() get exercised
+#      by one flag.  Each game writes its own var/games/<id>/frames.jsonl with
+#      its own session header, its own seq series and its own terminal `over`
+#      (amendment M38), and each `hello_ok` carries a DIFFERENT gameId, which is
+#      what tells a client "drop every id you cached" apart from "you
+#      reconnected".
+#
+#      `--comfort` is the other half, and it is here rather than in a step of
+#      its own because a typed act earns its gate with its effect and not with a
+#      count (CLAUDE.md, M5 convention 6): setPhaseStop must make UPKEEP a stop
+#      in the next `state`, undo must lower `state.undo.depth`, setYield must
+#      turn `stack[].yielded` to "yes", yieldTo must turn `state.yield` on and
+#      `buttonCancel` must turn it back off.  ws-auto-play exits 7 if any of
+#      them went out and nothing moved.  FIVE acts with an effect; the sixth,
+#      `passPriority`, is a COUNT and is labelled as one below -- it is a no-op
+#      unless the engine is on an InputPassPriority, so no field of the next
+#      `state` is uniquely its doing.
+#
+#      THE DECK IS decks/yield-probe.dck, and that is the M6 verification fix.
+#      `setYield` used to be asserted only at the STORE -- `stack[].yielded`
+#      turning "yes" -- because no deck in the repo could be relied on to put the
+#      same ability back on the stack, so what the store is FOR
+#      (PlayerControllerHuman.chooseSpellAbilityToPlay returning null without
+#      raising an InputPassPriority at all) was measured and printed rather than
+#      asserted.  22 Thallids, one MANDATORY upkeep trigger each, removes the
+#      excuse: the same yieldKey comes back to the top of the stack every turn,
+#      and `--require-yield-repeat` fails a run in which it does not.  The
+#      assertion itself -- zero `input` frames with buttons.ok.enabled while that
+#      key is on top, after the occurrence the yield was set on -- is always on,
+#      on every deck.  Nothing else about this step changed: three games, three
+#      ids, three logs, five acts by effect.
+if [ -f tools/ws-auto-play.mjs ]; then
+  printf '\n=== 10g. three games over one socket, and M6'"'"'s five acts with their effects ===\n'
+  rm -rf var/games/check-all-ws-3g var/games/check-all-ws-3g-g2 var/games/check-all-ws-3g-g3
+  WS_SEED=13 WS_EXTRA="--games 3 --deck decks/yield-probe.dck" \
+    ws_start check-all-ws-3g var/check-all-ws-3g.log
+  if ! node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 900 --games 3 --comfort --quiet \
+      --require-yield-repeat \
+      --log var/ws-auto-3g.jsonl > var/check-all-ws-3g-client.log 2>&1; then
+    cat var/check-all-ws-3g-client.log >&2
+    die "tools/ws-auto-play.mjs --games 3 --comfort did not finish against 127.0.0.1:$WSPORT"
+  fi
+  cat var/check-all-ws-3g-client.log
+  wait "$WS_PID" || {
+    rc=$?
+    WS_PID=""
+    tail -40 var/check-all-ws-3g.log >&2
+    die "the three-game ws server exited $rc (log: var/check-all-ws-3g.log)"
+  }
+  WS_PID=""
+  grep -q "^MTGTABLE OK$" var/check-all-ws-3g.log || die "the three-game ws server did not print MTGTABLE OK"
+  grep -q "games          = 3 played of 3" var/check-all-ws-3g.log \
+    || { grep '^games ' var/check-all-ws-3g.log >&2; die "the ws session did not play three games"; }
+  THREE_IDS=""
+  for g in check-all-ws-3g check-all-ws-3g-g2 check-all-ws-3g-g3; do
+    f="var/games/$g/frames.jsonl"
+    [ -s "$f" ] || die "game $g wrote no frame log at $f -- one file per game (amendment M38)"
+    overs="$(grep -c '"type":"over"' "$f" || true)"
+    [ "$overs" = "1" ] || die "$f has $overs \`over\` frames; exactly one per game (section 7)"
+    [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || \
+      die "the last frame of $f is not \`over\` (section 8.4)"
+    [ "$(grep -c '"type":"hello_ok"' "$f")" = "1" ] || die "$f does not carry exactly one hello_ok"
+    grep -q "\"gameId\":\"$g\"" "$f" || die "$f does not carry its own gameId \"$g\""
+    THREE_IDS="$THREE_IDS $g"
+    node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
+    WS_LOGS="${WS_LOGS:-},$f"
+  done
+  [ "$(printf '%s\n' $THREE_IDS | sort -u | wc -l)" = "3" ] || die "the three games do not have three distinct ids"
+  echo "OK: three games, three hello_oks, three frame logs:$THREE_IDS"
+  # The client's own three logs, one per game, same rules -- checked, and
+  # deliberately NOT added to WS_LOGS.  Games 2 and 3 open with the `newGame`
+  # act that asked for them, held until their header the way amendment M9 holds
+  # any early frame, so their first line is a c2s frame rather than the
+  # `hello_ok` web/test/ws-log.test.ts replays a board from.  The bridge's own
+  # three copies ARE added, above, and they are the same game.
+  for f in var/ws-auto-3g.jsonl var/ws-auto-3g-g2.jsonl var/ws-auto-3g-g3.jsonl; do
+    [ -s "$f" ] || die "the client wrote no log at $f (--games rolls one file per game)"
+    node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on the CLIENT log $f"
+  done
+  # The comfort acts, from the server's own side: every one of them was applied,
+  # not merely received.  (ws-auto-play already failed the run if an effect was
+  # missing; this is the assertion that the acts existed at all.)
+  grep -q "^M6 acts        = newGame 2, setYield 1, yieldTo 1, setPhaseStop 1, undo 1$" \
+      var/check-all-ws-3g.log || {
+    grep '^M6 acts' var/check-all-ws-3g.log >&2
+    die "the server did not apply the expected M6 acts (2 newGame for three games, one of each other)"
+  }
+  # Five acts with an EFFECT, and one with a count -- said plainly, because the
+  # earlier wording of this line claimed six effects.  ws-auto-play's
+  # comfortReport() returns passPriority's own "sent" flag in its effect column:
+  # `passPriority` is a no-op unless the engine is on an InputPassPriority
+  # (report 11 §4.3), which is the point of it, so there is nothing in the next
+  # `state` that is uniquely its doing.
+  echo "OK: setPhaseStop, undo, setYield, yieldTo and buttonCancel(yield) each moved the board; passPriority sent (a count, no-op by design)"
+  # The BEHAVIOURAL half of auto-yield, from the client's own summary line.
+  # ws-auto-play already exited 7 if the key repeated and the engine prompted
+  # anyway, or (under --require-yield-repeat) if it never repeated at all; this
+  # asserts the line exists and says what it is supposed to say, so a future
+  # edit that quietly drops the flag is visible here.
+  grep -qE 'autoYield key=y[0-9]+ isAbility=true repeats=[1-9][0-9]* promptsWhileOnTop=0' \
+      var/check-all-ws-3g-client.log || {
+    grep -o 'autoYield[^·]*' var/check-all-ws-3g-client.log >&2
+    die "10g did not prove the BEHAVIOUR of auto-yield: the yielded key must be an ability, must \
+come back to the top of the stack at least once more, and must draw no ok-enabled \`input\` while \
+it is there (decks/yield-probe.dck exists to guarantee the repeat)"
+  }
+  echo "OK: the yielded ability came back to the top of the stack and the engine never asked again"
 fi
 
 say "check-redaction.mjs -- every committed fixture, then the fresh recording"

@@ -30,7 +30,8 @@ import { StrictMode, useCallback, useEffect, useMemo, useReducer, useState } fro
 import { createRoot, type Root } from 'react-dom/client';
 
 import { EMPTY_ART_INDEX, loadArtIndex, preloadArt, type ArtIndex } from './art.ts';
-import type { AnswerValue, ManaColor } from './protocol.ts';
+import type { AnswerValue, ManaColor, SetYieldMode, YieldKind, YieldToAct } from './protocol.ts';
+import { gameLabel } from './reduce.ts';
 import { Board, type BoardActions } from './render/Board.tsx';
 import { ErrorBoundary } from './render/ErrorBoundary.tsx';
 import { ReplayControls } from './render/ReplayControls.tsx';
@@ -247,6 +248,37 @@ function LiveApp({ port }: { port: number }): JSX.Element {
       answer: (askId: string, value: AnswerValue) => {
         transport.answer(askId, value);
       },
+
+      // M6 — five more acts, and not a line of logic between the control and
+      // the wire: every one of them is `transport.act` with the body §2.2
+      // spells out, and every effect arrives as the next `state` / `input`.
+      undo: () => {
+        transport.act({ action: 'undo' });
+      },
+      passPriority: () => {
+        transport.act({ action: 'passPriority' });
+      },
+      alphaStrike: () => {
+        transport.act({ action: 'alphaStrike' });
+      },
+      yieldTo: (kind: YieldKind, phase?: string, turn?: 'own' | 'opp') => {
+        const body: YieldToAct = { action: 'yieldTo', kind };
+        if (phase !== undefined) body.phase = phase;
+        // The marker's column. Without it the bridge defaults to the viewer,
+        // and "before my turn" lands on the viewer's OWN end step — measured in
+        // the browser, 2026-09-12 (docs/evidence/m6-board.md).
+        if (turn !== undefined) body.turn = turn;
+        transport.act(body);
+      },
+      setYield: (yieldKey: string, mode: SetYieldMode) => {
+        transport.act({ action: 'setYield', yieldKey, mode });
+      },
+      setPhaseStop: (phase: string, turn: 'own' | 'opp', stop: boolean) => {
+        transport.act({ action: 'setPhaseStop', phase, turn, stop });
+      },
+      newGame: (mode: 'continue' | 'restart') => {
+        transport.act({ action: 'newGame', mode });
+      },
     }),
     [transport],
   );
@@ -272,8 +304,12 @@ function LiveApp({ port }: { port: number }): JSX.Element {
       <div className="app__bar">
         <h1>mtg-table</h1>
         <span className="muted">
-          live · seat {state.hello === null ? '—' : state.hello.you} · Space = OK, Escape = Cancel,
-          H = keys
+          live · seat {state.hello === null ? '—' : state.hello.you}
+          {/* M6 — a match is more than one game, and each one is a new
+              `hello_ok` with a new `gameId` (§2.1). The number is the reducer's
+              own count unless the bridge ships one. */}
+          {gameLabel(state) !== null && <> · {gameLabel(state)}</>} · Space = the focused button,
+          Escape = Cancel, H = keys
         </span>
         <StatusBar status={status} onResync={resync} onReconnect={reconnect} />
         <ArtMisses art={art} />
@@ -312,6 +348,10 @@ function LiveApp({ port }: { port: number }): JSX.Element {
           art={art}
           actions={actions}
           clientNotices={transport.clientNotices}
+          // M6 fix — the New Game row is the one control that must know. It
+          // appears at `over`, and an act sent into a closed socket is a toast
+          // and nothing else (`DecisionPanel`'s `NewGameRow`).
+          connected={status.status === 'open'}
         />
       </ErrorBoundary>
     </div>

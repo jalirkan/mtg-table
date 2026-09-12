@@ -32,6 +32,17 @@ code; if you think one is wrong, say so in prose first.
    `forge.gui.control.GameEventForwarder` / `handleGameEvents` — **never** in
    `updateCards` / `updateZones`, which arrive on the EDT. Off-thread walks
    corrupt the `Tracker` *silently*.
+   **`isGameThread()` is not the whole rule.** It is a bare
+   `getName().startsWith("Game")` and `ThreadUtil.invokeInGameThread` is a
+   **cached pool** named `Game`, so anything hopped onto it runs on a *second*
+   `Game-n` worker while `Game-0` runs the match — and passes the assert. Three
+   places in the bridge make that hop, and each one carries a written exclusion
+   argument: `captureOutcome` (only at game end), `asyncAbilityMenu`
+   (**D22**'s `inputGen` stamp, sound because it is only reached from inside a
+   live input) and `refreshState` (**D39**: the stamp *plus* a positive
+   "the engine is parked" predicate, because its four acts can arrive at any
+   time). **A fourth hop needs a fourth argument, in `DECISIONS.md`** — a green
+   run is not one, which is what *silently* means.
 4. **Never call `FModel.getDecks()`** or anything reaching
    `DeckStorage.adjustFileLocation` — it renames a `.dck` to its `Name=` metadata,
    moves it up a directory, and deletes unparseable ones. Load decks with
@@ -117,6 +128,18 @@ code; if you think one is wrong, say so in prose first.
     netty server that never names a `CardView` — it moves strings the emitter has
     already gated. A transport that needed the type would be a transport that had
     grown a second serialiser.
+
+    **M6 added a second budgeted call: lint rule 4b,
+    `StackItemView.getKey()` — allowed exactly once**, on the tagged
+    `// ALLOW getKey:` line in `WireGuiGame.rawYieldKey()`. That key is
+    `CardView.toString() + ": " + the ability's text`, i.e. a card name, its id
+    and its rules text, so the wire carries an opaque **bridge-minted handle**
+    (`"y3"`) instead and `act: setYield` resolves it back (**D42**, amendment
+    **M36**). The rule derives its receivers from every identifier *declared*
+    `StackItemView` under `bridge/src` rather than matching the variable name —
+    it matched `si.` once, and `top.getKey()` sailed through — so renaming the
+    variable cannot turn it off. `tools/check-redaction.mjs` is the other half:
+    a log whose `yieldKey` contains a space or a `(` fails.
 
     Three conventions the lint cannot check, stated in a comment block at the top
     of `Snap.java` (`docs/guides/java-for-typescript-people.md`): **enums go on
@@ -208,17 +231,30 @@ node tools/fetch-art.ts                     # deck -> web/public/art.json (M4 ne
     --deck decks/amount-probe.dck --deck2 decks/morph-probe.dck   # M5: a probe run
 ```
 
-**`./scripts/play.sh` is the M3 command** — check-forge → `bridge/build.sh` → the
-ws bridge in the background (`var/play/server.log`) → poll `GET /health` → vite,
-with the board at `http://127.0.0.1:<webPort>/?ws=1`. Ctrl-C stops both halves:
-vite is exec'd directly (`env -C web web/node_modules/.bin/vite`) so the pid the
-script holds is the server and not an `npm` wrapper that leaves it reparented.
+**`./scripts/play.sh` is the M3 command and M6's headline one** — check-forge →
+`bridge/build.sh` → the ws bridge in the background (`var/play/server.log`) → poll
+`GET /health` → vite, with the board at `http://127.0.0.1:<webPort>/?ws=1`. Ctrl-C
+stops both halves: vite is exec'd directly
+(`env -C web web/node_modules/.bin/vite`) so the pid the script holds is the
+server and not an `npm` wrapper that leaves it reparented.
+
+**M6 changed two defaults and PLAN.md §M6's one-line command is why.** A bare
+`./scripts/play.sh` now passes **`--games 3`** (unless you gave a `--games` of
+your own) and **`--keep-open`** (unless you pass `--no-keep-open`). Both are
+needed for the board's New Game row to have a session to act in: without
+`--games` the JVM stops after game 1, and without `--keep-open` it closes the
+socket the instant the LAST `over` lands — which is the moment the row appears.
+The linger lasts **as long as the browser is connected** — it is the window the
+New Game row lives in — and returns the moment the client disconnects, so a
+scripted client pays nothing for it. `KEEP_OPEN_MS` = 30 s is only the cap for a
+session nobody ever attached to.
 
 ```bash
-./scripts/play.sh                                   # config.json's ports, a random seed
+./scripts/play.sh                                   # THREE games, config.json's ports, a random seed
 ./scripts/play.sh --seed 42                         # a reproducible shuffle
 ./scripts/play.sh --port 8643 --web-port 5174       # beside a running one
-./scripts/play.sh --no-open --keep-open --game-id x # no browser; linger 30 s after `over`
+./scripts/play.sh --no-open --no-keep-open          # no browser; exit the moment the match ends
+./scripts/play.sh -- --games 1                      # one game (your --games wins)
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
 ```
 
@@ -236,7 +272,14 @@ node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (amendme
 
 **The socket's own two rules.** The ask timeout over ws is **0 — infinite —
 while a client is connected**, and `NO_CLIENT_ASK_TIMEOUT_MS` (120 s) only while
-none is; what ends a wait is `onDisconnect()` → `ReplyPool.cancelAll()`, after
+none is; **and as of the M6 verification fix the two post-`over` waits obey the
+same rule** — `MtgTable.awaitNextGame` waits for `act: newGame` with **no
+deadline while a client is connected**, falls back to 30 s while nobody is, and
+returns immediately once a client that *was* connected leaves, so a scripted
+client still pays nothing. Before that they were a flat 30 s wall clock that
+fired under a connected browser, which closed the socket out from under the
+board's own **New Game** row — the milestone's headline flow, dead-ended by its
+own linger; what ends a wait is `onDisconnect()` → `ReplyPool.cancelAll()`, after
 which the pool is reopened so the next ask parks and is re-delivered on reconnect
 (**D24**, amendment M19). And **one client at a time**: a second socket gets one
 `notice` and close code **4001**, the client treats any code ≥ 4000 as terminal
@@ -244,7 +287,13 @@ which the pool is reopened so the next ask parks and is re-delivered on reconnec
 outstanding ask **verbatim** — same `seq`, same `t` — and re-emits the `input`
 for real through `onResync()` (**D27**, amendments M10/M16), so a client log's
 `seq` series is neither contiguous nor monotonic and needs
-`check-redaction.mjs --client-log`.
+`check-redaction.mjs --client-log`. **The `input` half is conditional as of
+amendment M42**: it is emitted only once the engine has pushed one for this game
+(`inputSeen`), so a connect or a `resync` before the first prompt is `hello_ok` +
+`state` and then silence — the same flag that makes `applyAct` answer
+`notice{title:"Not yet"}`, so the wire can no longer say "the engine is asking
+you something" while every act is being dropped. A client may read its first
+`input` as that guard lifting.
 
 **`GET /health` is the session's readiness, not the port's** (amendment M15): 503
 `starting` until `openView` has emitted `hello_ok`, 200 `ok` after. Poll it before
@@ -270,6 +319,7 @@ vocabulary is
 | `u` / `undo` | undo the last mana ability |
 | `pass` | pass priority |
 | `!` | alpha strike (attack with everything) |
+| `next` / `new` | **M6**, only after `over`: `act: newGame {mode}` — `continue` (`HostedMatch.continueMatch()`, the next game of the match) or `restart` (`restartMatch()`). A new `gameId`, a new `hello_ok` and a new frame log follow (**D44**) |
 | `s` / `i` | reprint the last `state` / `input` |
 | `q` / `concede` | concede and exit |
 | `?` | this help |
@@ -298,9 +348,9 @@ burned 30 s and returned a truncated file — was invisible in a green run.
 
 `check-forge.sh` is the gate for everything below it. Run it first when something
 behaves strangely. **`check-all.sh` is what you run before saying you are done**,
-and it is **thirteen numbered steps** (plus **three** lettered sub-steps — 9b, 9c
-and 10f — so the numbering and every reference to "10d" stayed correct when they
-were added): lint
+and it is **thirteen numbered steps** (plus **five** lettered sub-steps — 9b, 9c,
+**9d**, 10f and **10g**, the last two of each pair added by **M6** — so the
+numbering and every reference to "10d" stayed correct when they were added): lint
 → build → `Smoke` → a fresh `RecordMatch` into `var/` → the value-level drift diff
 → three fresh `MtgTable` sessions (`--transport null`, the scripted
 `--transport console` smoke, and `--transport auto --seed 11`) → **9b**, the
@@ -310,10 +360,14 @@ and compare it against `fixtures/games/human-auto-42.jsonl` as a multiset with
 never an exit code unless you pass `DRIFT_FATAL=1`, skipped by `SKIP_DRIFT=1`) →
 **9c**, **M5's exit criterion** (`tools/ten-games.sh`: ten consecutive
 `--transport auto` games at seeds 1..10 alternating `decks/pacho-shield.dck` and
-the five probe decks, eight assertions each — see that file's own header — and
-the single most expensive thing in the gate; `SKIP_TEN=1` skips it, and skipping
-it means the exit criterion did NOT run) →
-**six fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
+the five probe decks, eight assertions each plus **M6's 6b**, which requires
+every seat recording of the run to carry the comfort block — see that file's own
+header — and the single most expensive thing in the gate; `SKIP_TEN=1` skips it,
+and skipping it means the exit criterion did NOT run) → **9d** (**M6**), the
+**`sideboard` ask**, which needs a session that survives `over`
+(`--probe --games 2` on `decks/sideboard-probe.dck`: the ask fires between the
+two games and is answered with a legal, main-sized, non-identity deck) →
+**seven fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
 `--disconnect-mid-ask` variant (10b), a whole game through
 `tools/ws-auto-play.mjs` (10c), that same client with `--refuse-first-ask` (10d),
 which drops the socket on the first `ask` FRAME and is the only thing in the repo
@@ -328,15 +382,33 @@ four-line session has no `state` frame and the checker calls that a failure (see
 PLAN's M4 follow-up 8), and **10f** (M5), `ws-auto-play --probe` at seed 42,
 which is the only thing anywhere that sends the `clickAbility` **act** from a
 client rather than answering an `ability_menu` by index (asserted `>= 1`, and
-none of them unresolvable). Each of the six is asserted for exactly one `over`,
+none of them unresolvable), and **10g** (**M6**), the milestone's own command:
+**three games back to back over one socket** (`--games 3 --comfort`), which is
+the only step where a session outlives an `over`, exercises both
+`HostedMatch.continueMatch()` and `restartMatch()`, and asserts M6's five typed
+acts by the **effect** each had on the next `state` (`passPriority` is a count
+and the step says so). **It plays `decks/yield-probe.dck`** — 22 Thallids, one
+mandatory upkeep trigger each — and passes `--require-yield-repeat`, which is
+what turned auto-yield's *behavioural* half from a printed number into an
+assertion: the same `yieldKey` comes back to the top of the stack every turn,
+and after `yielded:"yes"` the engine must raise **no** `input` carrying
+`buttons.ok.enabled` while it is there (`chooseSpellAbilityToPlay` returns null
+without raising an `InputPassPriority` at all). Measured at seed 13:
+`repeats=4`, `promptsWhileOnTop=0`. Each of the seven is asserted for exactly one `over`,
 `over` last, and its log through `check-redaction.mjs` — including the CLIENT
 log, which is a different shape on purpose. Then `check-redaction.mjs` over the
 committed fixtures (`games/` **and** `synthetic/`) *and* every fresh recording →
 `check-redaction-selftest.mjs` → `npm run build && npm test`. It exits non-zero
-on the first failure and takes **about nine minutes from a deleted `bridge/out`**
-(8 m 52–57 s measured over four green runs), of which **9c's ten games are
-267–269 s**; `SKIP_TEN=1` brings it back to roughly four. **Pass `WSPORT=<n>` if
-8643 is busy** — step 10 starts six servers on it, one after another.
+on the first failure and takes **about eleven and a half minutes from a deleted
+`bridge/out`** (682 s and 706 s on two clean M6 runs, then 711 s, 712 s and
+711 s on three more after the verification fixes — the last is M6's
+documentation pass, `var/check-all-m6-docs.log` at `WSPORT=8666`, which did not
+delete `bridge/out` first and landed in the same band because `build.sh`
+recompiles every source anyway; 10g's new deck plays faster and its new
+assertion costs nothing; it was 8 m 52–57 s before M6 added 9d and 10g), of
+which **9c's ten games are 265–269 s**; `SKIP_TEN=1`
+brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
+**seven** servers on it, one after another.
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
 overridable in the environment): a gate whose failure mode is "hangs until
 someone notices" cannot catch the one defect class M2's threading work is most
@@ -411,8 +483,8 @@ together, and each is a defect that was actually hit.
    the post-render sweep and never inside render; the sweep bumps a version only
    when a rect actually moved. Use the isomorphic layout-effect shim already in
    that file, or `renderToStaticMarkup` starts printing SSR warnings.
-4. **One keymap table.** `web/src/keys.ts` is the 16 rows plus two pure functions
-   (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
+4. **One keymap table.** `web/src/keys.ts` is the **18** rows plus two pure
+   functions (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
    and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
    Adding a key is a row, never a new branch in a handler. Two rules live in
    `planKey` and are tested there: **a focused button keeps `Space` and nothing
@@ -433,13 +505,20 @@ together, and each is a defect that was actually hit.
 
 And two rules that did not change and are easy to lose in a restyle: **never gate
 a click on `selectable`** (amendment M8), and **render `buttons.*.label`
-verbatim**. The board draws no phase-stop state of its own either — the dots are
-Forge's documented defaults, disabled, until `players[].phaseStops` ships in M6
-(**D31**).
+verbatim**. The board still draws no phase-stop state of its own — but **the dots
+are live as of M6** (**D37**, superseding D31): they render from
+`players[].phaseStops` and from nothing else, a click is
+`act: setPhaseStop {phase, turn, stop}`, and the next `state` says what happened.
+A stream *without* the field — every recording made before 2026-09-12 — still
+draws Forge's documented defaults, disabled, with the legend saying so;
+`phaseStopsOf` is the one place the two cases are told apart. There is **no
+"hold priority" control**: Forge has no such feature, so D31's disabled toggle
+was removed rather than enabled.
 
-`npm --prefix web test` is now **377 `node --test`** (372 pass, 0 fail, **5
+`npm --prefix web test` is now **456 `node --test`** (448 pass, 0 fail, **8
 skipped** — the ws-log suite skips what `MTGTABLE_WS_LOGS` does not name, so a
-standalone run reports 373/373 and the gate reports 377) **+ 55 vitest**;
+standalone run is 446 with none skipped and the gate reports 456) **+ 75
+vitest** (455/445/74 before amendment M42 added one test to each suite);
 `render.test.tsx` renders every frame of every fixture **twice**, once as a
 replay and once as a seat, which is what makes the read-only assertion and the
 hidden-information assertions per-frame rather than per-suite.
@@ -502,6 +581,58 @@ Six more, and like M4's each one is a defect that was actually hit.
    it. The other assertion worth knowing about is the **ask-kind ceiling** (no
    more than 150 asks of one kind in one game): an ask loop is the one wedge
    every other assertion is blind to, and one shipped.
+
+## The conventions M6 added
+
+Six, and the thesis under all of them is one sentence: **every comfort feature is
+an engine feature rendered, never a client state machine.** A control that
+remembers something the engine did not tell it is the defect, not the feature.
+
+1. **Every M6 field is OPTIONAL on the wire, and there is exactly one reader per
+   field.** `phaseStopsOf`, `yieldOf`, `undoOf`, `buttonFocus` and `stackYield`
+   in `web/src/protocol.ts` are where "the key is absent" becomes "this recording
+   predates M6", and a component must not test for the key itself — fourteen
+   committed fixtures were recorded before 2026-09-12 and `render.test.tsx`
+   replays all of them, twice each. The same rule on the emitter side is
+   all-or-nothing: `tools/check-redaction.mjs` **fails** a file that carries
+   *some* comfort keys and not others (*"M6's comfort block is HALF PRESENT"*),
+   because "absent is fine" once made a bridge that stopped writing
+   `players[].phaseStops` pass over every fixture.
+2. **A `hello_ok` whose `gameId` changed is a RESET, not an update** (**D44**,
+   amendment **M38**). The reducer drops board, input, ask, game-over, log,
+   events, notices and `lastAct`, keeps the session, and bumps the game number; a
+   `hello_ok` with the *same* id is a `resync` re-delivery and keeps everything.
+   On the bridge, `WireGuiGame.openView` is the **one** reset hook — every cache
+   keyed by a Forge id is rebuilt there, because `endCurrentGame()` has replaced
+   every `PlayerView`. **A new cache goes in that method or it is a stale one.**
+3. **Two narrow relaxations of the hidden-information gate, and both are
+   negative-controlled.** An `ask` may justify the `state` **immediately** before
+   it and nothing further back (`WireGuiGame.ask()` deliberately flushes that
+   snapshot one frame ahead — report 06 W4), and a `reveal: true` `choose_list`
+   is its own delayed reveal; `reveal: true` on **any other kind** is a failure,
+   so the flag cannot switch amendment P12's option-card audit off. If you widen
+   either one, add the control in the same change —
+   `fixtures/negative/redaction/` and `check-redaction-selftest.mjs` are the
+   pattern, and PLAN.md's M6 follow-up 8 is a standing request for a second
+   reader of both.
+4. **A typed act earns its gate step by its EFFECT** (M5 convention 6, extended).
+   Step **10g** asserts `setPhaseStop`, `yieldTo`, `setYield` and `undo` by the
+   `state` each one changed, and names `passPriority` as a **count** because that
+   is all it can be. A *behavioural* claim needs an engine that can repeat itself:
+   auto-yield went from a printed number to an assertion only when
+   `decks/yield-probe.dck` put the same `yieldKey` back on top of the stack every
+   turn (`--require-yield-repeat`).
+5. **The four acts that produce no game event are pushed by `refreshState()`, and
+   that hop is guarded twice** (**D39**, hard rule 3). D22's `inputGen` stamp
+   **and** a positive "the engine is parked" predicate; a skipped refresh is
+   counted and printed. `useMana` is deliberately **not** a fifth caller — the
+   board marks the pool provisional instead.
+6. **No control for a feature Forge does not have.** D31's "hold priority" toggle
+   was **removed, not enabled** (**D37**): `YieldController.setDisableAutoYields`
+   is a different feature and is not on the wire. The same rule retires
+   `autoPay` and `endTurn` — those arrive as the engine's own *labels* on OK and
+   Cancel, rendered verbatim, and inventing an act for them throws the engine's
+   answer away.
 
 ## Treat forge-src as prose
 
@@ -576,7 +707,7 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
 | `PLAN.md` | The eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| `DECISIONS.md` | The thirty-six load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, **D32–D36 M5's**; **D21's scope is corrected by D23**, and **D29's "overridden rather than forked" clause by D32**). D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `DECISIONS.md` | The **forty-five** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's** — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

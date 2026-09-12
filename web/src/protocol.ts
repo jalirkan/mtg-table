@@ -22,6 +22,36 @@
  *   P6  the `open_zones` ask kind is deleted — eleven kinds remain.
  *   P7  ask options are ask-local indices with an optional serialised card.
  *   P15 `Card.token`.
+ *
+ * 2026-09-12 — **M6 promotes §10's planned additions to live protocol**
+ * (report 11 §10; `docs/protocol.md` §10 → §2.1 / §2.2 / §3 / §4). The ids are
+ * the real amendment ids from docs/protocol.md's Amendments table, exactly as
+ * P4/P5/P6/P7/P15 above are: M1..M8 are M1-era amendments about something else
+ * entirely (M1 gates notice strings, M5 empties `abilities`, M8 is the
+ * `selectable`-is-not-the-clickable-set rule), and numbering this block 1..8
+ * sent a reader to the wrong row of the shared contract file.
+ *   M32 `players[].phaseStops: {own, opp}` — the two columns of Forge's own
+ *       phase strip, answered from `WireGuiGame`'s map, never from `FPref`.
+ *   M33 `setPhaseStop {phase, turn, stop}` — keyed by `turn`, not by player.
+ *   M34 `state.yield` — which of the three engine yields is running.
+ *   M35 `state.undo {can, depth}` — mana abilities only (report 11 §7).
+ *   M36 `stack[].yieldKey` (an opaque **bridge-minted handle**, never rendered),
+ *       plus `isAbility`, `isOptionalTrigger`, `yielded`.
+ *   M37 acts `yieldTo`, `setYield {yieldKey, mode}`, `newGame {mode}`;
+ *       `passPriority` and `undo` go live.
+ *   M38 a new `hello_ok` per game; a changed `gameId` invalidates every id.
+ *   M39 `input.buttons.focus` — which button SPACE activates (§4).
+ *   M40 `sideboard` is reachable; `UI_MANA_LOST_PROMPT` is on by default.
+ *   M41 `hello_ok.gameNumber` / `.gameCount` — "Game 2 of 3" from the bridge,
+ *       because the client's own count restarts at 1 on a page reload.
+ *
+ * **Every M6 field is declared optional here**, and that is not defensiveness
+ * for its own sake: fifteen committed recordings predate them,
+ * `web/test/render.test.tsx` folds every frame of all of them, and a required
+ * key would make each one a type error and a runtime `undefined` in the
+ * renderer. A live M6 bridge writes all of them; the readers below
+ * (`phaseStopsOf`, `yieldOf`, `undoOf`, `buttonFocus`, `stackYield`) are the
+ * one place the absence is turned into "this recording predates the field".
  */
 
 /** §1. Protocol major. `reduce()` throws on a frame whose `v` differs from this. */
@@ -90,6 +120,23 @@ export interface HelloOkBody {
   /** Whatever `Match.prepareAllZones` → `revealUnsupported` complained about. */
   unsupportedCards: string[];
   players: PlayerIdentity[];
+  /**
+   * §2.1, amendment **M41** — which game of the match this is, 1-based, and how
+   * many the match is played to (`--games N`). A live bridge writes both
+   * whenever the match is more than one game, and **omits both for `--games 1`**:
+   * a one-game session has no "where in the match", which is also why
+   * `gameLabel()` prints nothing for it.
+   *
+   * Optional because **every recording made before 2026-09-12 predates them**,
+   * and `web/test/render.test.tsx` folds every frame of all of them: a required
+   * key would make each one a type error and a runtime `undefined` in the
+   * renderer. `gameLabel()` in reduce.ts is the one place the absence is turned
+   * into "this stream predates the field" — it falls back to its own count of
+   * distinct `gameId`s, which restarts at 1 on a page reload and can never say
+   * *of 3*. That fallback is why M41 exists, not a reason it does not.
+   */
+  gameNumber?: number;
+  gameCount?: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +210,25 @@ export interface ManaPool {
 export const MANA_COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
 export type ManaColor = (typeof MANA_COLORS)[number];
 
+/**
+ * §3.3 (**M6**, report 11 §3) — the phase stops of one seat, as the two columns
+ * Forge's own phase strip draws.
+ *
+ * `own` is "stop here when it is **this player's** turn" (`FPref.PHASES_HUMAN`
+ * for the local seat), `opp` "when it is the other seat's" (`FPref.PHASES_AI`).
+ * Two lists and not one, because Forge really does hold 24 booleans in a
+ * two-player game: *stop at MAIN1 on my turn* and *stop at MAIN1 on theirs* are
+ * separate switches (`CMatchUI.actuateMatchPreferences`, report 11 §3.2).
+ *
+ * Values are `PhaseType` names, exactly as {@link GameStateBody.phase} spells
+ * them. The client never derives one: it renders the list and sends
+ * {@link SetPhaseStopAct}, and the next `state` says what happened.
+ */
+export interface PhaseStops {
+  own: string[];
+  opp: string[];
+}
+
 export interface PlayerState {
   id: number;
   name: string;
@@ -173,6 +239,49 @@ export interface PlayerState {
   counters: Record<string, number>;
   manaPool: ManaPool;
   zones: Zones;
+  /**
+   * §3.3 (M6). Absent in every recording made before 2026-09-12 — read it with
+   * {@link phaseStopsOf}, which answers `null` for those rather than `{own:[],
+   * opp:[]}`: "this bridge does not carry stops" and "this seat stops nowhere"
+   * are different facts and the strip draws them differently.
+   */
+  phaseStops?: PhaseStops;
+}
+
+/** §3 (M6) — which of the three engine yields is running (report 11 §4.1). */
+export const YIELD_KINDS = ['endOfTurn', 'marker', 'stack'] as const;
+export type YieldKind = (typeof YIELD_KINDS)[number];
+
+/**
+ * §3 (M6, report 11 §4.4). The active pass-to, straight off `YieldController`:
+ * `SetAutoPassUntilEndOfTurn` → `endOfTurn`, `SetMarker` → `marker` (with the
+ * marked seat and phase), `StackYield` → `stack`. `null` when none is running.
+ *
+ * Forge enforces **one at a time** (`YieldController:127-158`), so this is one
+ * object and not three flags. Every one of them is cancelled by the engine's own
+ * Cancel button while `InputLockUI` is up — there is no `cancelYield` act, and
+ * inventing one would be a second path into `clearActiveYieldAndDispatch`.
+ */
+export interface YieldState {
+  kind: YieldKind;
+  /** The seat the marker belongs to; `null` for a yield that names no seat. */
+  playerId: number | null;
+  /** The marked `PhaseType`; `null` for `endOfTurn` and `stack`. */
+  phase: string | null;
+}
+
+/**
+ * §3 (M6, report 11 §7). `PlayerControllerHuman.canUndoLastAction()` and
+ * `MagicStack.getUndoStackSize()`, both read on the game thread.
+ *
+ * **It undoes mana abilities, not spells** — the undo stack only ever receives
+ * `SpellAbility`s for which `isUndoable()` holds, and it is cleared on every
+ * phase change and the moment priority leaves this seat. The UI must not promise
+ * more than that.
+ */
+export interface UndoState {
+  can: boolean;
+  depth: number;
 }
 
 /** §3.2. An ability as the engine offers it. `canPlay` is the engine's own answer. */
@@ -415,6 +524,27 @@ export interface StackItem {
   text: string;
   targetCardIds: number[];
   targetPlayerIds: number[];
+  /**
+   * §3 (**M6**, report 11 §5.2). The handle `act: setYield` echoes — and the
+   * one string on the wire the client must **never render**.
+   *
+   * Forge's own `StackItemView.getKey()` is `CardView.toString() + ": " + …`,
+   * i.e. *a card name, its zone and its id* — the exact text channel report 06
+   * §4 opens with — and it is explicitly not stable across Forge versions. So
+   * the bridge mints an opaque handle (`"y7"`), interns it for the life of the
+   * game, and resolves it back on the EDT. `null` when the item has no key.
+   */
+  yieldKey?: string | null;
+  /** `StackItemView.isAbility()`. Only an ability can be auto-yielded. */
+  isAbility?: boolean;
+  /** `StackItemView.isOptionalTrigger()` — the "always yes / always no" case. */
+  isOptionalTrigger?: boolean;
+  /**
+   * What this seat has already told the engine about this key:
+   * `"yes"` (trigger ACCEPT + auto-yield), `"no"` (DECLINE + auto-yield),
+   * `null` (the engine still asks). Absent on a pre-M6 recording.
+   */
+  yielded?: YieldMode | null;
 }
 
 export interface CombatBand {
@@ -462,6 +592,51 @@ export interface GameStateBody {
   combat: Combat | null;
   /** §3.6. The `GameEventForwarder` batch this snapshot already reflects. */
   events: GameEvent[];
+  /**
+   * §3 (M6) — the running pass-to, or `null`. Read it with {@link yieldOf}:
+   * absent (a pre-M6 recording) and `null` (no yield) are different, and only
+   * the second is something to draw a marker for.
+   */
+  yield?: YieldState | null;
+  /** §3 (M6) — see {@link UndoState}. Read it with {@link undoOf}. */
+  undo?: UndoState | null;
+}
+
+// ---------------------------------------------------------------------------
+// §3 / §4 — the M6 readers. One place each where "the field is absent" becomes
+// "this recording predates M6", so no component has to know the difference.
+// ---------------------------------------------------------------------------
+
+/**
+ * This seat's phase stops, or `null` when the stream does not carry them (every
+ * fixture recorded before 2026-09-12). A `null` is what makes the strip say
+ * *Forge's defaults, not this session's map*; `{own: [], opp: []}` would be the
+ * lie that the engine stops nowhere.
+ */
+export function phaseStopsOf(player: PlayerState | null | undefined): PhaseStops | null {
+  const stops = player?.phaseStops;
+  if (stops === undefined || stops === null) return null;
+  return {
+    own: Array.isArray(stops.own) ? stops.own : [],
+    opp: Array.isArray(stops.opp) ? stops.opp : [],
+  };
+}
+
+/** The running yield, or `null` — for an absent field as much as for no yield. */
+export function yieldOf(board: GameStateBody | null | undefined): YieldState | null {
+  return board?.yield ?? null;
+}
+
+/**
+ * `state.undo`, or `{can: false, depth: 0}` when the field is absent. An undo
+ * the wire says nothing about is an undo that cannot be offered, which is the
+ * same shape as one the engine says is unavailable — unlike the stops, there is
+ * nothing a client could usefully draw differently.
+ */
+export function undoOf(board: GameStateBody | null | undefined): UndoState {
+  const undo = board?.undo;
+  if (undo === undefined || undo === null) return { can: false, depth: 0 };
+  return { can: undo.can === true, depth: typeof undo.depth === 'number' ? undo.depth : 0 };
 }
 
 /*
@@ -785,9 +960,20 @@ export interface InputButton {
   enabled: boolean;
 }
 
+/** §4 (M6) — `updateButtons(owner, label1, label2, enable1, enable2, **focus1**)`. */
+export type ButtonFocus = 'ok' | 'cancel' | null;
+
 export interface InputButtons {
   ok: InputButton;
   cancel: InputButton;
+  /**
+   * §4 (**M6**, §10.2). Which button the engine focused — the sixth argument of
+   * `updateButtons`, which Forge's desktop turns into Swing focus and which is
+   * the whole reason "Space = OK" is **not** a Forge shortcut: the desktop
+   * activates the *focused* label (`FLabel.java:220-223`). So SPACE follows this
+   * field, and falls back to OK when it is `null` or absent (report 11 §11).
+   */
+  focus?: ButtonFocus;
 }
 
 export type SelectableMode = 'cards' | 'players' | 'none';
@@ -855,6 +1041,15 @@ export interface InputBody {
    * the time.
    */
   openZones: OpenZoneHint[];
+}
+
+/**
+ * §4 (M6) — the button SPACE should press, from {@link InputButtons.focus},
+ * with M4's behaviour as the fallback: OK. Absent on every pre-M6 recording,
+ * and `null` whenever the engine focused neither.
+ */
+export function buttonFocus(input: InputBody | null | undefined): ButtonFocus {
+  return input?.buttons.focus ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1220,9 +1415,18 @@ export const ACT_ACTIONS = [
   'undo',
   'alphaStrike',
   'concede',
+  /**
+   * **M3's spelling, kept only so an old frame log still types.** M6's act is
+   * `newGame {mode}`: `HostedMatch` has three `NextGameDecision`s and a bare
+   * `nextGame` can express one of them.
+   */
   'nextGame',
   'setPhaseStop',
   'setYield',
+  /** M6 — one act for all three of `YieldController`'s mechanisms (report 11 §4). */
+  'yieldTo',
+  /** M6 — `nextGameDecision(CONTINUE | NEW)`; valid only after `over` (§7). */
+  'newGame',
 ] as const;
 export type ActAction = (typeof ACT_ACTIONS)[number];
 
@@ -1266,14 +1470,66 @@ export interface AlphaStrikeAct {
 export interface ConcedeAct {
   action: 'concede';
 }
+/** M3's bare act; superseded by {@link NewGameAct}. Nothing sends it any more. */
 export interface NextGameAct {
   action: 'nextGame';
 }
+/**
+ * §2.2 (**M6**) — `HostedMatch.nextGameDecision`. `"continue"` is
+ * `continueMatch()` (the next game of this match, sideboarding intact);
+ * `"restart"` is `restartMatch()` (a fresh match from the same rules and
+ * players). Valid **only after `over`**; a new `hello_ok` follows, and the
+ * client drops everything it had cached for the finished game (§2.1).
+ */
+export interface NewGameAct {
+  action: 'newGame';
+  mode: 'continue' | 'restart';
+}
+/**
+ * §2.2 (**M6**) — one bit of `WireGuiGame`'s own stop map (report 11 §3.3).
+ *
+ * **`turn`, not `playerId`.** Which of the two columns a stop lives in is
+ * decided by *whose turn it is* — `isLocalPlayer(player) ? PHASES_HUMAN :
+ * PHASES_AI` — so the viewer's seat is implied and the thing the client has to
+ * name is the column: `"own"` is this seat's own turns, `"opp"` the other's.
+ * The polarity is **stop**, never `skip` (report 11 §0.4).
+ */
 export interface SetPhaseStopAct {
   action: 'setPhaseStop';
-  playerId: number;
+  /** A `PhaseType` name, as `state.phase` spells it. `UNTAP` has no stop pref. */
   phase: string;
+  turn: 'own' | 'opp';
   stop: boolean;
+}
+/**
+ * §2.2 (**M6**) — `IGameController.sendYieldUpdate(YieldUpdate)`, whichever of
+ * the three it is (report 11 §4.1):
+ *
+ * | `kind` | `phase` | engine |
+ * |---|---|---|
+ * | `endOfTurn` | — | `SetAutoPassUntilEndOfTurn` |
+ * | `marker` | `UPKEEP` | `SetMarker(me, UPKEEP)` — *pass to my next turn* |
+ * | `marker` | `END_OF_TURN` | `SetMarker(opponent, END_OF_TURN)` — *pass to just before my turn* |
+ * | `stack` | — | `StackYield` — let the stack resolve |
+ *
+ * **`turn` names whose phase cell the marker goes on**, in the same two words
+ * `setPhaseStop` uses, and it is not optional in practice: a marker is a
+ * per-(player, phase) cell, so `END_OF_TURN` on `"own"` is *my* end step and on
+ * `"opp"` is the opponent's — and only the second one means "just before my
+ * turn". Measured live on 2026-09-12: sent without it, "Before my turn" put the
+ * marker on the viewer's own `END_OF_TURN` (`state.yield.playerId` came back as
+ * the viewer) and would have skipped the whole of the next turn. The bridge
+ * defaults to the viewer and also accepts a raw `playerId`; the client sends
+ * `turn`, because the seat is the bridge's to resolve and the *column* is the
+ * thing the user chose. **Cancelling is `buttonCancel`** — `InputLockUI` puts an
+ * enabled Cancel on screen for the whole of a yield.
+ */
+export interface YieldToAct {
+  action: 'yieldTo';
+  kind: YieldKind;
+  phase?: string;
+  /** Marker only: whose phase cell. `"own"` is the viewer's own turns. */
+  turn?: 'own' | 'opp';
 }
 /**
  * Report 07 A6 / amendment P7: a yield **cannot** be addressed by `cardId`.
@@ -1285,7 +1541,40 @@ export interface SetPhaseStopAct {
 export interface SetYieldAct {
   action: 'setYield';
   yieldKey: string;
-  mode: string;
+  mode: SetYieldMode;
+}
+
+/**
+ * §2.2 (M6) — what `setYield` is saying. `"yes"` is Forge's *Always Yes*
+ * (`setTriggerDecision(ACCEPT)` **and** `setShouldAutoYield(true)`), `"no"` its
+ * *Always No* (`DECLINE` + auto-yield), `"clear"` puts the question back.
+ */
+export const SET_YIELD_MODES = ['yes', 'no', 'clear'] as const;
+export type SetYieldMode = (typeof SET_YIELD_MODES)[number];
+
+/** What {@link StackItem.yielded} reports back: the two live modes, or `null`. */
+export type YieldMode = 'yes' | 'no';
+
+/**
+ * The auto-yield state of one stack item, normalised. `offered` is the engine's
+ * own two guards — it is an ability, and it has a key — and **not** a rule this
+ * client invented: `KeyboardShortcuts.java:159-200` checks exactly those before
+ * it touches `setShouldAutoYield` (report 11 §5.1).
+ */
+export function stackYield(item: StackItem | null | undefined): {
+  offered: boolean;
+  yieldKey: string | null;
+  mode: YieldMode | null;
+  optionalTrigger: boolean;
+} {
+  const key = item?.yieldKey ?? null;
+  const mode = item?.yielded === 'yes' || item?.yielded === 'no' ? item.yielded : null;
+  return {
+    offered: item?.isAbility === true && typeof key === 'string' && key !== '',
+    yieldKey: typeof key === 'string' && key !== '' ? key : null,
+    mode,
+    optionalTrigger: item?.isOptionalTrigger === true,
+  };
 }
 
 export type ActBody =
@@ -1300,8 +1589,10 @@ export type ActBody =
   | AlphaStrikeAct
   | ConcedeAct
   | NextGameAct
+  | NewGameAct
   | SetPhaseStopAct
-  | SetYieldAct;
+  | SetYieldAct
+  | YieldToAct;
 
 /**
  * §5.1 — `order`'s answer (report 07 A2 / amendment P7). The jar's

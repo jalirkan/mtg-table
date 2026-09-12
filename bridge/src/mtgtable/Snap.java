@@ -334,8 +334,61 @@ public final class Snap {
      * @param events the {@code GameEventForwarder} batch this snapshot already
      *               reflects, mapped per protocol section 3.6; null for none
      */
+    /**
+     * The per-seat comfort state a snapshot carries and the view graph does not
+     * hold (<b>M6</b>; report 11 sections 3, 4, 5 and 7, protocol amendments
+     * M32, M34, M35, M36).
+     *
+     * <p>It is an interface rather than four more parameters because every one
+     * of its answers lives in {@link WireGuiGame} -- the phase-stop map, the
+     * yield-handle table, the seat's own controller -- and {@code Snap} is a
+     * pure serialiser that must not reach for a controller or a
+     * {@code HostedMatch}.  <b>Every method is called on the game thread</b>,
+     * inside {@link #state}, so an implementation may read the controller and
+     * the rules engine and must not block.
+     *
+     * <p>A recorder with no seat passes {@code null} and the fields are
+     * <b>omitted</b>: an AI-vs-AI {@code RecordMatch} log has no phase stops, no
+     * undo and no yields to report, and writing empty ones would invent state
+     * that does not exist.  Protocol section 3.1 declares them optional for
+     * exactly that reason.
+     */
+    public interface Comfort {
+        /**
+         * {@code PhaseType} names at which the game stops while this player is
+         * the <b>turn player</b> -- protocol section 3.1's
+         * {@code players[].phaseStops.own}.
+         */
+        List<String> stopsOnTurnOf(int playerId);
+
+        /** The same while <b>anybody else</b> is the turn player ({@code .opp}). */
+        List<String> stopsOffTurnOf(int playerId);
+
+        /** Raw JSON for {@code state.yield}, or null for "no yield running". */
+        String yieldJson();
+
+        /** Raw JSON for {@code state.undo}; never null once a seat exists. */
+        String undoJson();
+
+        /**
+         * The <b>opaque, bridge-minted</b> handle for this stack item, or null.
+         * Never {@code StackItemView.getKey()}, which is a card name plus an id
+         * plus its rules text (report 11 section 5.2).
+         */
+        String yieldHandle(StackItemView si);
+
+        /** {@code "yes"}, {@code "no"} or null -- the standing answer for this item. */
+        String yieldMode(StackItemView si);
+    }
+
+    /** The four-argument form: no seat, therefore no comfort fields (RecordMatch). */
     public static String state(final String gameId, final GameView game, final PlayerView viewer,
                                final List<GameEvent> events) {
+        return state(gameId, game, viewer, events, null);
+    }
+
+    public static String state(final String gameId, final GameView game, final PlayerView viewer,
+                               final List<GameEvent> events, final Comfort comfort) {
         assertGameThread("Snap.state");
         if (game == null) {
             throw new IllegalArgumentException("game view is null");
@@ -399,13 +452,13 @@ public final class Snap {
 
         o.key("players").arr();
         for (final PlayerView p : players) {
-            player(o, p, viewer);
+            player(o, p, viewer, comfort);
         }
         o.end();
 
         o.key("stack").arr();
         for (final StackItemView si : stack) {
-            stackItem(o, si, viewer, concealed);
+            stackItem(o, si, viewer, concealed, comfort);
         }
         o.end();
 
@@ -436,6 +489,27 @@ public final class Snap {
             o.key("combat").obj().key("bands").arr();
             bands(o, combat);
             o.end().end();
+        }
+
+        // M6, protocol amendments M34 and M35.  Both are server-owned answers to
+        // "what is the engine already doing for me" -- the active pass-to and
+        // the undo depth -- and both are omitted, not faked, when there is no
+        // seat to answer for (an AI-vs-AI recording).
+        if (comfort != null) {
+            final String yield = comfort.yieldJson();
+            o.key("yield");
+            if (yield == null) {
+                o.vNull();
+            } else {
+                o.raw(yield);
+            }
+            final String undo = comfort.undoJson();
+            o.key("undo");
+            if (undo == null) {
+                o.vNull();
+            } else {
+                o.raw(undo);
+            }
         }
 
         o.key("events").arr();
@@ -485,7 +559,8 @@ public final class Snap {
         return out;
     }
 
-    private static void player(final JsonOut o, final PlayerView p, final PlayerView viewer) {
+    private static void player(final JsonOut o, final PlayerView p, final PlayerView viewer,
+                               final Comfort comfort) {
         o.obj();
         o.n("id", p.getId());
         o.n("name", p.getName());
@@ -522,6 +597,27 @@ public final class Snap {
             o.n(MANA_KEYS[i], p.getMana(MANA_COLORS[i]));
         }
         o.end();
+
+        // M6, protocol amendment M32.  TWO sets, because a phase stop in Forge
+        // is a per-(turn player, phase) bit: "stop at MAIN1 on my turn" and
+        // "stop at MAIN1 on the AI's turn" are different switches, seeded from
+        // different preference arrays (FPref.PHASES_HUMAN / PHASES_AI).  A flat
+        // array cannot say which, and the client must never derive one from the
+        // other.
+        if (comfort != null) {
+            o.key("phaseStops").obj();
+            o.key("own").arr();
+            for (final String s : comfort.stopsOnTurnOf(p.getId())) {
+                o.v(s);
+            }
+            o.end();
+            o.key("opp").arr();
+            for (final String s : comfort.stopsOffTurnOf(p.getId())) {
+                o.v(s);
+            }
+            o.end();
+            o.end();
+        }
 
         o.key("zones").obj();
         zone(o, "hand", p.getHand(), viewer, p);
@@ -1024,7 +1120,7 @@ public final class Snap {
      * {@code state.stackCards}.
      */
     private static void stackItem(final JsonOut o, final StackItemView si, final PlayerView viewer,
-                                  final Set<Integer> concealed) {
+                                  final Set<Integer> concealed, final Comfort comfort) {
         o.obj();
         o.n("id", si.getId());
         o.nInt("sourceCardId", id(si.getSourceCard()));
@@ -1050,6 +1146,30 @@ public final class Snap {
             }
         }
         o.end();
+        // M6, protocol amendment M36.  `yieldKey` is an OPAQUE HANDLE minted by
+        // WireGuiGame -- "y3", not StackItemView.getKey(), which is
+        // CardView.toString() + ": " + the ability's text, i.e. a card name, an
+        // id and its rules text (report 11 section 5.2).  This file never sees
+        // the raw key: the handle table is the only thing that calls getKey(),
+        // and tools/lint-bridge.sh fails a build where that stops being true.
+        if (comfort != null) {
+            final String handle = comfort.yieldHandle(si);
+            o.key("yieldKey");
+            if (handle == null) {
+                o.vNull();
+            } else {
+                o.v(handle);
+            }
+            o.n("isAbility", si.isAbility());
+            o.n("isOptionalTrigger", si.isOptionalTrigger());
+            final String mode = comfort.yieldMode(si);
+            o.key("yielded");
+            if (mode == null) {
+                o.vNull();
+            } else {
+                o.v(mode);
+            }
+        }
         o.end();
     }
 

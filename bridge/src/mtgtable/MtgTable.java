@@ -89,8 +89,29 @@ public final class MtgTable {
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 900L;
 
-    /** {@code --keep-open}: how long the WebSocket server lingers after {@code over}. */
+    /**
+     * {@code --keep-open}: how long the WebSocket server lingers after
+     * {@code over} <b>while nobody is connected</b>.
+     *
+     * <p><b>M6 fix.</b>  This was a flat 30 s wall clock and it fired under a
+     * connected client, which dead-ended the milestone's own headline command:
+     * the board's New Game row appears at {@code over} and the socket was closed
+     * out from under it half a minute later.  The cap now applies only when no
+     * client is attached -- see {@link #awaitNextGame}.
+     */
     private static final long KEEP_OPEN_MS = 30_000L;
+
+    /**
+     * How long a multi-game session waits, after an {@code over}, for somebody
+     * to send {@code act: newGame} (<b>M6</b>) <b>while nobody is connected</b>.
+     *
+     * <p>Same fix, same reason: a person looking at the final board of game 1 of
+     * a {@code --games 3} match is not on a clock.  See {@link #awaitNextGame}.
+     */
+    private static final long NEXT_GAME_GRACE_MS = 30_000L;
+
+    /** How often {@link #awaitNextGame} re-reads "is a client connected?". */
+    private static final long CONNECT_POLL_MS = 200L;
 
     public static void main(final String[] args) {
         final long t0 = System.nanoTime();
@@ -112,6 +133,13 @@ public final class MtgTable {
     private static void run(final String[] args, final long t0) throws Exception {
         final Args a = Args.parse(args);
         final Config cfg = Config.load();
+        // config.json decides, the flags override (M6, protocol amendment M40).
+        // --mana-lost-prompt and --no-mana-lost-prompt are still both accepted:
+        // a recording that says which one it ran under is the whole point of the
+        // session header's `prefs` key (M31).
+        if (a.manaLostPromptFlag == null) {
+            a.manaLostPrompt = cfg.flag("manaLostPrompt", true);
+        }
         final File deck1File = resolve(cfg, a.deck != null ? a.deck : cfg.deck().getPath());
         final File deck2File = a.deck2 == null ? deck1File : resolve(cfg, a.deck2);
 
@@ -152,6 +180,10 @@ public final class MtgTable {
         // would be lost -- which is the ONLY IGuiGame confirm call site a human
         // seat reaches in this configuration (docs/evidence/m5-probes.md).  In
         // memory, never save(): same rule as D13.
+        // M6 / protocol amendment M40: the default now comes from config.json
+        // ("manaLostPrompt": true) rather than from a flag nobody types, because
+        // it is a genuinely useful warning and M5 follow-up 2 left the decision
+        // to M6.  Still in memory, still never save(): same rule as D13.
         if (a.manaLostPrompt) {
             prefs.setPref(FPref.UI_MANA_LOST_PROMPT, "true");
         }
@@ -188,17 +220,29 @@ public final class MtgTable {
 
         final Transport transport = transport(a, cfg);
         final WireGuiGame gui = new WireGuiGame(gameId, transport, log);
+        // M6 / protocol amendment M38: one frames.jsonl per GAME, not per
+        // process.  Line 0 of a log is its session header, so a second game
+        // writing into the first game's file would put a header in the middle of
+        // it.  Game n is <gameId>-g<n>, which is also its directory.
+        gui.setLogFactory(id -> new GameLog(new File(cfg.root(), "var/games/" + id + "/frames.jsonl")));
         transport.start(gui, gui.pool());
 
         final HostedMatch hosted = new HostedMatch();
         gui.setHostedMatch(hosted);
         gui.setSession(new WireGuiGame.Session() {
+            // gui.gameId(), not the local `gameId`: game 2 of a match has its own
+            // id, its own log and its own hello_ok (protocol amendment M38).
             @Override public String header(final PlayerView viewer, final List<PlayerView> players) {
-                return sessionHeader(cfg, gameId, a, viewer, players, deck1File, deck2File, deck1, deck2);
+                return sessionHeader(cfg, gui.gameId(), a, viewer, players,
+                        deck1File, deck2File, deck1, deck2);
             }
 
             @Override public String helloOk(final PlayerView viewer, final List<PlayerView> players) {
-                return helloOkBody(cfg, gameId, a, viewer, players, unsupported(deck1));
+                // gui.gamesStarted() is already bumped for THIS game when
+                // openView calls us (WireGuiGame.openView), so it is the 1-based
+                // number of the game whose handshake this is (amendment M41).
+                return helloOkBody(cfg, gui.gameId(), a, viewer, players, unsupported(deck1),
+                        gui.gamesStarted());
             }
         });
 
@@ -221,16 +265,58 @@ public final class MtgTable {
             System.out.flush();
         }
 
-        // 7. Park until `over`.
-        final boolean finished = gui.awaitFinish(GAME_TIMEOUT_SEC * 1000L);
-        final long gameMs = ms(tGame);
-        if (a.keepOpen && transport instanceof WsTransport) {
-            // The last frames are already queued on the socket; this is time for
-            // a client to read them, and for a person to look at the final board
-            // before the process exits.  It returns the moment the client goes
-            // away, so a scripted client does not pay for it.
-            ((WsTransport) transport).keepOpen(KEEP_OPEN_MS);
+        // 7. Park until `over` -- once per game.
+        //
+        // M6: the session outlives a game.  Nothing here starts the next one:
+        // that is `act: newGame {mode}` from whoever is playing the seat (the
+        // browser, tools/ws-auto-play.mjs, AutoTransport), which reaches
+        // HostedMatch.continueMatch / restartMatch and comes back as a new
+        // `hello_ok` from openView.  This loop only watches: after each `over`
+        // it waits a bounded moment for the next game to BEGIN, and exits when
+        // none does.  A transport with nobody at the keyboard (`--transport
+        // null`) therefore still plays exactly one game and exits, as it always
+        // did.
+        boolean finished = true;
+        int played = 0;
+        while (true) {
+            final int n = played + 1;
+            finished = gui.awaitGameEnd(n, GAME_TIMEOUT_SEC * 1000L);
+            if (!finished) {
+                break;
+            }
+            played = n;
+            if (played >= a.games) {
+                // The match we were asked for is done.  `--keep-open` is the
+                // flag that says somebody is watching, and it is also the window
+                // in which a browser's New Game button can still be pressed: if
+                // one is, keep playing rather than tearing the session down
+                // under the game the client just started.  awaitNextGame()
+                // returns the instant a client that WAS connected leaves, so a
+                // scripted client pays nothing for this.
+                if (!(a.keepOpen && transport instanceof WsTransport)) {
+                    break;
+                }
+                if (!awaitNextGame(gui, transport, played + 1, KEEP_OPEN_MS, "--keep-open")) {
+                    break;
+                }
+                System.out.println("game " + (played + 1) + " began during --keep-open: "
+                        + gui.gameId());
+                continue;
+            }
+            if (!awaitNextGame(gui, transport, played + 1, NEXT_GAME_GRACE_MS,
+                    "between games " + played + " and " + (played + 1))) {
+                System.out.println("no `newGame` after game " + played
+                        + " -- the session ends here");
+                break;
+            }
+            System.out.println("game " + (played + 1) + " began: " + gui.gameId());
         }
+        final long gameMs = ms(tGame);
+        // `--keep-open`'s linger is INSIDE the loop above (M6), because it is
+        // also the window in which a client may ask for another game.  Every
+        // path that leaves the loop has already waited in awaitNextGame(), and
+        // that wait is unbounded while a client is connected: nothing below here
+        // runs while somebody could still press New Game.
         transport.close();
         gui.close();
 
@@ -248,6 +334,18 @@ public final class MtgTable {
         System.out.println("== summary ==");
         System.out.println("finished       = " + finished + (finished ? "" : "  (TIMED OUT after "
                 + GAME_TIMEOUT_SEC + "s -- the game thread is wedged)"));
+        System.out.println("games          = " + gui.gamesFinished() + " played of " + a.games
+                + " asked for, last game id " + gui.gameId()
+                + ", matchOver = " + gui.matchOver());
+        final int[] acts = gui.comfortActs();
+        System.out.println("M6 acts        = newGame " + acts[0] + ", setYield " + acts[1]
+                + ", yieldTo " + acts[2] + ", setPhaseStop " + acts[3] + ", undo " + acts[4]);
+        // D39.  An M6 act whose only effect is a snapshot asks for a flush, and
+        // the flush is skipped rather than raced when the engine is running: the
+        // effect then arrives with the next engine-driven `state`.  Printed
+        // because a guard nobody can see the cost of is a guard nobody checks.
+        System.out.println("refresh skips  = " + gui.refreshesSkipped()
+                + " (M6 refresh hops that found the engine running, not parked -- D39)");
         System.out.println("winner         = " + winner + (reason.isEmpty() ? "" : ", reason = " + reason));
         System.out.println("player turns   = " + turns + " (round " + ((turns + 1) / 2) + ")");
         System.out.println("frames         = " + gui.stateFrames() + " state, " + log.lines()
@@ -293,12 +391,93 @@ public final class MtgTable {
         System.out.println("MTGTABLE OK");
     }
 
+    /**
+     * Wait for game {@code n} to <b>begin</b> -- i.e. for somebody to send
+     * {@code act: newGame} -- applying the socket's own timeout rule.
+     *
+     * <p><b>This is the M6 verification fix.</b>  Both of the windows that
+     * follow an {@code over} used to be a flat 30 s wall clock that ran whether
+     * or not anybody was there, so the board's New Game row -- which appears at
+     * exactly that moment -- was offering an act whose socket was about to be
+     * closed underneath it.  The rule now is the one
+     * {@link WsTransport#askTimeoutMs} has always used and CLAUDE.md calls "the
+     * socket's own two rules": <b>while a client is connected the wait is
+     * unbounded</b>, because a person reading the final board is allowed to
+     * think, and {@code graceMs} applies only while nobody is attached.
+     *
+     * <p>Three exits, and the middle one is what keeps the gate fast:
+     * <ul>
+     *   <li>game {@code n} started -- {@code true};</li>
+     *   <li>a client that <i>was</i> connected has gone -- {@code false}
+     *       immediately, which is the old {@code keepOpen()} behaviour and why a
+     *       scripted client still costs this loop nothing;</li>
+     *   <li>{@code graceMs} elapsed with nobody ever attached -- {@code false}.</li>
+     * </ul>
+     *
+     * <p>A non-{@code ws} transport has no notion of a connection, so it keeps
+     * the flat {@code graceMs} it always had: {@code --transport auto} drives
+     * itself and {@code --transport null} answers nothing.
+     *
+     * @param graceMs the cap that applies only while no client is connected
+     * @param why     what this wait is, for the one line it prints
+     */
+    private static boolean awaitNextGame(final WireGuiGame gui, final Transport transport,
+                                         final int n, final long graceMs, final String why)
+            throws InterruptedException {
+        final WsTransport ws = transport instanceof WsTransport ? (WsTransport) transport : null;
+        if (ws == null) {
+            return gui.awaitGameStart(n, graceMs);
+        }
+        boolean sawClient = false;
+        boolean announced = false;
+        long left = graceMs;
+        while (true) {
+            if (ws.connected()) {
+                sawClient = true;
+                if (!announced) {
+                    announced = true;
+                    System.out.println("WAITING for `act: newGame` (" + why + ") -- a client is "
+                            + "connected, so there is no deadline; it ends when the client does");
+                    System.out.flush();
+                }
+                if (gui.awaitGameStart(n, CONNECT_POLL_MS)) {
+                    return true;
+                }
+                continue;
+            }
+            if (sawClient) {
+                // It read the final frames and left.  Check the clock BEFORE
+                // saying so: a client that sends `newGame` and closes the socket
+                // in the same breath is not a session that ended.
+                if (gui.awaitGameStart(n, 0L)) {
+                    return true;
+                }
+                // Nothing is going to press New Game, and holding the JVM open
+                // for 30 s more would only slow every scripted run in
+                // tools/check-all.sh down.
+                System.out.println("the client disconnected (" + why + ") -- the session ends here");
+                return false;
+            }
+            final long slice = Math.min(CONNECT_POLL_MS, left);
+            if (gui.awaitGameStart(n, slice)) {
+                return true;
+            }
+            left -= slice;
+            if (left <= 0) {
+                System.out.println("no `newGame` within " + graceMs + " ms (" + why
+                        + ") and no client is connected");
+                return false;
+            }
+        }
+    }
+
     private static Transport transport(final Args a, final Config cfg) {
         switch (a.transport) {
         case "null":    return new NullTransport();
         case "auto": {
             final AutoTransport t = new AutoTransport();
             t.setProbe(a.probe);
+            t.setGames(a.games);               // M6: it sends `newGame` after each `over`
             return t;
         }
         case "console": return new ConsoleTransport();
@@ -372,14 +551,34 @@ public final class MtgTable {
         return o.end().done();
     }
 
-    /** {@code unsupportedCards} is the VIEWING seat's deck alone: each entry is a card name. */
+    /**
+     * {@code unsupportedCards} is the VIEWING seat's deck alone: each entry is a
+     * card name.
+     *
+     * <p>{@code gameNumber} / {@code gameCount} are amendment <b>M41</b>: which
+     * game of the match this handshake opens, and how many the match is played
+     * to ({@code --games N}).  The client counted {@code hello_ok}s itself
+     * before this existed, which restarted at 1 on a page reload and could never
+     * say "of 3"; both numbers are known here and neither is derivable there.
+     * <b>Both are omitted for a {@code --games 1} session</b> -- see below.
+     */
     private static String helloOkBody(final Config cfg, final String gameId, final Args a,
                                       final PlayerView viewer, final List<PlayerView> players,
-                                      final List<String> unsupported) {
+                                      final List<String> unsupported, final int gameNumber) {
         final JsonOut o = new JsonOut().obj();
         o.n("gameId", gameId);
         o.n("you", viewer.getId());
         o.n("seed", a.seed);
+        // Omitted ENTIRELY for a one-game match: "where in the match are we"
+        // has no answer when there is one game, `gameLabel()` in reduce.ts
+        // prints nothing for that case either, and the session header's own
+        // optional keys (`policy`, `prefs` -- M31) set the precedent.  It also
+        // keeps every single-game recording byte-comparable against a fresh one,
+        // which is what gate step 9b reads.
+        if (a.games > 1) {
+            o.n("gameNumber", gameNumber);
+            o.n("gameCount", a.games);
+        }
         o.n("forgeVersion", BuildInfo.getVersionString());
         o.n("forgeJarSha256", sha256(cfg.forgeJar()));
         o.key("unsupportedCards").arr();
@@ -415,8 +614,14 @@ public final class MtgTable {
         int games = 1;
         /** {@code --probe}: {@code AutoTransport}'s M5 probe policy. */
         boolean probe;
-        /** {@code --mana-lost-prompt}: {@code FPref.UI_MANA_LOST_PROMPT}, in memory. */
+        /**
+         * {@code FPref.UI_MANA_LOST_PROMPT}, in memory.  The value that is used;
+         * {@code config.json}'s {@code "manaLostPrompt"} fills it in when neither
+         * flag was typed.
+         */
         boolean manaLostPrompt;
+        /** Null when neither {@code --mana-lost-prompt} nor {@code --no-…} was given. */
+        Boolean manaLostPromptFlag;
 
         static Args parse(final String[] argv) {
             final Args a = new Args();
@@ -434,13 +639,20 @@ public final class MtgTable {
                 case "--keep-open": a.keepOpen = true; break;
                 case "--games":     a.games = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--probe":     a.probe = true; break;
-                case "--mana-lost-prompt": a.manaLostPrompt = true; break;
+                case "--mana-lost-prompt":
+                    a.manaLostPrompt = true;
+                    a.manaLostPromptFlag = Boolean.TRUE;
+                    break;
+                case "--no-mana-lost-prompt":
+                    a.manaLostPrompt = false;
+                    a.manaLostPromptFlag = Boolean.FALSE;
+                    break;
                 default:
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2 <path>] [--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--games <n>] "
-                        + "[--probe] [--mana-lost-prompt]");
+                        + "[--probe] [--mana-lost-prompt] [--no-mana-lost-prompt]");
                 }
             }
             if (a.seat != 0) {

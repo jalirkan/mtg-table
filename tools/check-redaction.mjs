@@ -38,6 +38,23 @@
  *       `library.cards`.  An opponent-library reveal (Opposition Agent,
  *       Bribery) is real but always transient, so it confers no permanent
  *       exemption and is WARNED about where it appears.
+ *       ONE FRAME OF SLACK, and exactly one (2026-09-12): `WireGuiGame.ask()`
+ *       flushes the `state` BEFORE it emits the ask, because report 06 W4 says
+ *       that is the snapshot in which a temporarily revealed card is visible --
+ *       so an `ask` may justify the `state` immediately before it, and nothing
+ *       further back.  Negative control:
+ *       fixtures/negative/redaction/a6-reveal-ask-one-frame-too-late.jsonl.
+ *       P12's companion half: a `choose_list` with `reveal: true` is Forge's own
+ *       `AbstractGuiGame.reveal(message, items)`, i.e. THE reveal channel, so
+ *       its options are its own delayed reveal.  Without the flag, nothing
+ *       changes.  Negative control:
+ *       fixtures/negative/redaction/p12-choose-list-reveals-without-the-flag.jsonl.
+ *       And the assertion that keeps that relaxation from spreading (added by
+ *       the M6 verification pass): `reveal: true` on ANY kind other than
+ *       `choose_list` is a FAILURE, because `reveal` is only ever
+ *       `getChoices(min < 0)` and a flag the emitter writes cannot be allowed to
+ *       switch P12 off for a kind nobody argued for.  Negative control:
+ *       fixtures/negative/redaction/a7-reveal-flag-on-the-wrong-ask-kind.jsonl.
  *   A7  a hidden -> full transition with no `ask` behind it is WARNED about:
  *       continuous "may look" statics and mind-slave effects do that legally.
  *   A9  a face-down card names nothing unless this seat may flip it, and has no
@@ -320,6 +337,40 @@ const sinceAmendment = (f, amendment) => {
   g.sinceAmendment = amendment;
   return g;
 };
+/**
+ * A key whose ABSENCE is protocol, not drift (M6, amendments M32-M36 and M39).
+ *
+ * The comfort fields -- `players[].phaseStops`, `state.yield`, `state.undo`,
+ * `stack[].yieldKey` and friends, `input.buttons.focus` -- are answered by a
+ * SEAT.  An AI-vs-AI `RecordMatch` recording has no seat, no phase stops and no
+ * undo stack, and writing empty ones would invent state that does not exist; and
+ * every log recorded before 2026-09-12 predates them.  So: present means
+ * type-checked, absent means counted.  That is deliberately weaker than
+ * `sinceAmendment`, which fails unless `--pre-amendment` is passed, because
+ * these keys have a legitimate permanent absence and those do not.
+ *
+ * **But absence is all-or-nothing, and that part IS a failure.**  A per-key
+ * "absent is fine" rule made every comfort key optional in every file, so a
+ * bridge that stopped writing `players[].phaseStops` while still writing
+ * `state.yield` and `state.undo` would have passed this checker over all 18
+ * committed fixtures and every fresh log in the gate -- the exact drift this
+ * file exists to catch, waved through by the tolerance meant for OLD files.
+ * An old file has NONE of them; a broken emitter has SOME.  So a file that
+ * carries any comfort key must carry every comfort key whose shape it
+ * evaluates, and a mixture is a hard problem (see `comfortSplit`).
+ *
+ * What this deliberately does not do is require the block of a seat recording
+ * that predates M6: eight committed `human-*.jsonl` fixtures are M5 probe
+ * evidence, were never re-recorded, and have a seat and a `transport` and no
+ * comfort fields at all.  That residual gap is covered by
+ * `tools/ten-games.sh` assertion 6b and by check-all 10g's effect assertions,
+ * which run against a FRESH bridge rather than against the corpus.
+ */
+const optional = (f) => {
+  const g = (v) => f(v);
+  g.optionalKey = true;
+  return g;
+};
 const arrayOf = (f) => (v) => Array.isArray(v) && v.every(f);
 const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const mapOf = (f) => (v) => plainObject(v) && Object.values(v).every(f);
@@ -484,6 +535,19 @@ const FACE_DOWN_CARD_SHAPE = {
   toughness: nullable(str),
 };
 
+/**
+ * Section 3.1, amendment M36.  A `yieldKey` is a BRIDGE-MINTED handle and the
+ * one thing this checker can prove about it mechanically is that it is not
+ * Forge's own key: `StackItemView.getKey()` is
+ * `CardView.toString() + ": " + the ability's text`, and `CardView.toString()`
+ * is `"<zone> <name> (<id>)"` -- so a raw key always contains **a space and a
+ * `(`**, and a handle never does.  Two characters are the whole assertion, and
+ * they are enough: every way of leaking the key leaks the parenthesised id with
+ * it.
+ */
+const yieldHandle = (v) =>
+  typeof v === 'string' && v.length > 0 && !v.includes(' ') && !v.includes('(');
+
 const STACK_ITEM_SHAPE = {
   id: num,
   // A stack item is never dropped, so these two are nullable by design
@@ -493,6 +557,13 @@ const STACK_ITEM_SHAPE = {
   text: str,
   targetCardIds: arrayOf(num),
   targetPlayerIds: arrayOf(num),
+  // M6 (amendment M36).  `yielded` is three-valued, not a boolean: it is the
+  // engine's standing answer for this key, and "no standing answer" is not the
+  // same statement as "declined".
+  yieldKey: optional(nullable(yieldHandle)),
+  isAbility: optional(bool),
+  isOptionalTrigger: optional(bool),
+  yielded: optional(nullable(oneOf('yes', 'no'))),
 };
 
 const COMBAT_BAND_SHAPE = {
@@ -512,6 +583,20 @@ const PLAYER_SHAPE = {
   manaPool: (v) =>
     plainObject(v) && sameKeys(v, ['W', 'U', 'B', 'R', 'G', 'C']) && Object.values(v).every(num),
   zones: plainObject,
+  // M6, amendment M32.  TWO sets: `own` is where the game stops while this
+  // player is the turn player, `opp` while anybody else is.  UNTAP is in
+  // neither -- it has no preference and no priority pass -- and this checker
+  // says so, because a client that saw UNTAP here would draw a cell that can
+  // never do anything.
+  phaseStops: optional(
+    (v) =>
+      plainObject(v) &&
+      sameKeys(v, ['own', 'opp']) &&
+      arrayOf(str)(v.own) &&
+      arrayOf(str)(v.opp) &&
+      !v.own.includes('UNTAP') &&
+      !v.opp.includes('UNTAP'),
+  ),
 };
 
 const STATE_SHAPE = {
@@ -536,6 +621,22 @@ const STATE_SHAPE = {
   stackCards: Array.isArray,
   combat: nullable((v) => plainObject(v) && sameKeys(v, ['bands']) && Array.isArray(v.bands)),
   events: Array.isArray,
+  // M6, amendment M34.  One object and not three flags, because Forge allows
+  // one yield at a time: every setter clears the other two.
+  yield: optional(
+    nullable(
+      (v) =>
+        plainObject(v) &&
+        sameKeys(v, ['kind', 'playerId', 'phase']) &&
+        oneOf('endOfTurn', 'marker', 'stack')(v.kind) &&
+        nullable(num)(v.playerId) &&
+        nullable(str)(v.phase),
+    ),
+  ),
+  // M6, amendment M35.
+  undo: optional(
+    nullable((v) => plainObject(v) && sameKeys(v, ['can', 'depth']) && bool(v.can) && num(v.depth)),
+  ),
 };
 
 /**
@@ -657,6 +758,12 @@ function checkShape(value, shape, where, missed = null) {
   }
   for (const k of expected) {
     if (!(k in value)) {
+      // A key the protocol allows to be absent (M6's comfort fields): counted
+      // for the summary, never a complaint.  See `optional`.
+      if (shape[k].optionalKey) {
+        if (missed !== null && missed.optional) missed.optional.add(k);
+        continue;
+      }
       // A key added by an amendment is tolerated ONLY under --pre-amendment
       // (see the header): otherwise an emitter that stopped writing it reads as
       // an old recording, and the drift this file exists to catch goes unseen.
@@ -673,6 +780,9 @@ function checkShape(value, shape, where, missed = null) {
               `genuinely predates the amendment, pass --pre-amendment`),
       );
       continue;
+    }
+    if (shape[k].optionalKey && missed !== null && missed.optionalPresent) {
+      missed.optionalPresent.add(k);
     }
     if (!shape[k](value[k])) {
       out.push(
@@ -1010,6 +1120,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     libraryRevealed: 0, altBlocks: 0, tokens: 0, asks: 0, promptsScanned: 0,
     everRevealed: 0, answers: 0, answerKinds: new Set(), unanswered: 0,
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
+    stackItems: 0,
     maxTurn: 0,
   };
   const seq = { s2c: 0, c2s: 0 };
@@ -1062,6 +1173,18 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
    * on exactly the drift step 6 exists to catch.
    */
   missed.tolerant = preAmendment;
+  /**
+   * The M6 comfort keys this file does not carry (see `optional`).  Absence is
+   * legitimate -- an AI-vs-AI recording has no seat to answer them and every
+   * pre-M6 log predates them -- so this is reported, never failed.
+   */
+  missed.optional = new Set();
+  /**
+   * The M6 comfort keys this file DOES carry.  Together with `missed.optional`
+   * it is the all-or-nothing rule: a file that has some of them and not others
+   * is a broken emitter, not an old recording.
+   */
+  missed.optionalPresent = new Set();
 
   /**
    * A6 -- the temporal half.  An id joins this set the moment the viewer was
@@ -1136,6 +1259,47 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
           if (num(c?.id)) inReveal.add(c.id);
         }
       }
+      /*
+       * A `choose_list` with `reveal: true` IS the reveal (§5.2, amendment A7).
+       * Forge's `AbstractGuiGame.reveal(message, items)` is
+       * `getChoices(message, -1, -1, items)` -- a negative `min` meaning *show
+       * these, select nothing* -- and the emitter writes `reveal: min < 0`. Its
+       * whole purpose is to put cards in front of this seat, so its own options
+       * are its own delayed reveal and P12 below must not read them as a leak.
+       * Measured: a game in which the seat looked at the AI's hand produced
+       * `{"kind":"choose_list","prompt":"Looking at cards in Forge AI's hand",
+       * "reveal":true,"options":[{"cardId":76,…}]}` and this checker called it a
+       * leak -- while the card had gone through `Snap.card`'s
+       * `canBeShownTo(viewer)` gate, i.e. Forge itself had said the seat may see
+       * it.
+       *
+       * This widens nothing else: `reveal: true` is only emitted for
+       * `getChoices` with `min < 0`, every card in the body still gets the full
+       * per-card audit above, and a `choose_list` WITHOUT the flag is unchanged.
+       */
+      /*
+       * ...and the assertion that makes the paragraph above self-policing (M6
+       * verification finding 8). `reveal` is a flag the EMITTER writes, and the
+       * relaxation below turns it into "stop auditing this ask's option cards
+       * against P12". That is only sound while the flag means what
+       * `WireGuiGame.getChoices` makes it mean -- `min < 0`, i.e. Forge's own
+       * `AbstractGuiGame.reveal` channel, which is a `choose_list` and nothing
+       * else. So: the flag on ANY other kind is a failure, whatever else the
+       * file contains. Without this, an emitter regression that started writing
+       * `reveal: true` on, say, a `manipulate_list` would silently switch P12
+       * off for a kind it was never argued for.
+       */
+      if (body.reveal === true && body.kind !== 'choose_list') {
+        note(lineNo, `ask.reveal is true on kind ${JSON.stringify(body.kind)}: \`reveal\` is `
+          + 'Forge\'s getChoices(min < 0) channel and is only ever a `choose_list` (§5.2, '
+          + 'amendment A7). On any other kind it would switch amendment P12\'s option-card '
+          + 'audit off for a kind that was never argued for');
+      }
+      if (body.kind === 'choose_list' && body.reveal === true) {
+        for (const { card } of askCards(body)) {
+          if (num(card?.id) && card.hidden !== true) inReveal.add(card.id);
+        }
+      }
       for (const { card, where } of askCards(body)) {
         for (const complaint of checkCard(card, `ask.${where}`, false, missed)) note(lineNo, complaint);
         if (!num(card.id)) continue;
@@ -1185,6 +1349,22 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
 
     if (f.type === 'input') {
       scanPrompt(body.prompt, 'input.prompt', lineNo);
+      // M6, amendment M39. `buttons.focus` says which button Space activates.
+      // Three-valued and never a boolean: a client that read `true` as "OK" and
+      // `false` as "Cancel" would press Cancel on every ordinary prompt.
+      if (plainObject(body.buttons)) {
+        if ('focus' in body.buttons) {
+          missed.optionalPresent.add('input.buttons.focus');
+          if (!nullable(oneOf('ok', 'cancel'))(body.buttons.focus)) {
+            note(lineNo, `input.buttons.focus = ${JSON.stringify(body.buttons.focus)} is not ` +
+              '"ok", "cancel" or null (section 4, amendment M39)');
+          }
+        } else {
+          // Counted, not complained about, and then held to the all-or-nothing
+          // rule with the rest of the comfort block below.
+          missed.optional.add('input.buttons.focus');
+        }
+      }
       // Amendment P6: openZones is a HINT on input, never an ask.  It carries
       // zone names only -- a card in it would mean the hint grew a payload.
       if (body.openZones !== undefined) {
@@ -1396,6 +1576,58 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
+  /*
+   * A6, THE ONE-FRAME LOOKAHEAD, and why it is exactly one frame.
+   *
+   * `WireGuiGame.ask()` is `flushState(List.of()); … emit("ask", …)` -- the
+   * snapshot is deliberately pushed FIRST, because report 06 W4 says that is
+   * the snapshot in which a temporarily revealed card is visible, and a client
+   * rendering the ask must have a board that matches it. So when an effect
+   * reveals an opponent's hand, the `state` that shows the card and the `ask`
+   * that justifies it are the same instant, with the `state` written first.
+   *
+   * A6's temporal rule -- "a full card in someone else's hidden zone must have
+   * been revealed EARLIER in this log" -- therefore fails that pair by one
+   * frame. Measured: `{"kind":"choose_list","prompt":"Looking at cards in Forge
+   * AI's hand","reveal":true,"options":[{"cardId":76,…}]}`, whose card the
+   * preceding `state` showed in player 1's hand, produced three complaints on
+   * a recording that was correct.
+   *
+   * So: an `ask` is allowed to justify the `state` IMMEDIATELY BEFORE IT, and
+   * nothing further back. This map is built here, in a pre-pass, keyed by that
+   * state's line: for each `ask`, walk backwards past c2s frames (an act or an
+   * answer may interleave in a client log) to the nearest preceding s2c frame,
+   * and if that frame is a `state`, its line gets the ask's card ids. One ask,
+   * one state, one frame of slack. An id revealed by an ask two frames later is
+   * still a failure, which is the property the rule is for.
+   */
+  const preAskReveals = new Map();
+  {
+    const parsed = [];
+    for (let i = 1; i < lines.length; i++) {
+      try {
+        parsed.push({ line: i + 1, f: JSON.parse(lines[i]) });
+      } catch {
+        parsed.push({ line: i + 1, f: null });
+      }
+    }
+    for (let k = 0; k < parsed.length; k++) {
+      const { f } = parsed[k];
+      if (f === null || f.type !== 'ask' || !plainObject(f.body)) continue;
+      let j = k - 1;
+      while (j >= 0 && parsed[j].f !== null && parsed[j].f.dir === 'c2s') j--;
+      if (j < 0 || parsed[j].f === null || parsed[j].f.type !== 'state') continue;
+      const ids = preAskReveals.get(parsed[j].line) ?? new Set();
+      for (const { card } of askCards(f.body)) {
+        if (num(card?.id) && card.hidden !== true) ids.add(card.id);
+      }
+      if (ids.size > 0) preAskReveals.set(parsed[j].line, ids);
+    }
+  }
+  /** Was `id` revealed by this frame, or by the `ask` this frame was flushed for? */
+  const revealedBy = (id, lineNo) =>
+    everRevealed.has(id) || (preAskReveals.get(lineNo)?.has(id) ?? false);
+
   for (let i = 1; i < lines.length; i++) {
     const lineNo = i + 1;
     let f;
@@ -1482,6 +1714,10 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
     if (Array.isArray(body.events)) stats.events += body.events.length;
     if (Array.isArray(body.stackCards)) stats.stackCards += body.stackCards.length;
+    // How many stack ITEMS were shape-checked (not stackCards): the summary's
+    // "yieldKey asserted opaque" claim is only true if this is non-zero, and a
+    // file whose stack was empty in every frame never checked one.
+    if (Array.isArray(body.stack)) stats.stackItems += body.stack.length;
 
     // --- the drift half: exact key sets and runtime types (section 3) ---
     stats.shapeChecks++;
@@ -1653,7 +1889,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
           const hiddenZone = zname === 'hand';
           if (!concealed) {
             if (hiddenZone && !isViewer) {
-              if (!everRevealed.has(c.id)) {
+              if (!revealedBy(c.id, lineNo)) {
                 note(lineNo, `players[${pi}] (not the viewing seat) has a FULL card ${c.id} ` +
                   `${JSON.stringify(c.name)} in their ${zname}, and nothing earlier in this log ` +
                   `ever revealed that id to seat ${seat} -- either a reveal is missing from the ` +
@@ -1679,10 +1915,10 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       if (!isViewer && Array.isArray(zones.hand?.cards)) {
         for (const c of zones.hand.cards) {
           stats.opponentHandCards++;
-          if ('name' in c && !everRevealed.has(c.id)) {
+          if ('name' in c && !revealedBy(c.id, lineNo)) {
             note(lineNo, `players[${pi}] (the opponent) hand card ${c.id} carries a name: ${JSON.stringify(c.name)}`);
           }
-          if (c.hidden !== true && !everRevealed.has(c.id)) {
+          if (c.hidden !== true && !revealedBy(c.id, lineNo)) {
             note(lineNo, `players[${pi}] (the opponent) hand card ${c.id} is not marked hidden`);
           }
         }
@@ -1760,6 +1996,31 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   }
   stats.everRevealed = everRevealed.size;
   stats.missed = [...missed].sort();
+  stats.optionalAbsent = [...missed.optional].sort();
+  stats.optionalPresent = [...missed.optionalPresent].sort();
+  /*
+   * The all-or-nothing rule (see `optional`).  An OLD recording carries none of
+   * M6's comfort keys; a BROKEN emitter carries some.  Only the second is a
+   * failure, and before this existed neither was -- `optional()` made every one
+   * of them absent-is-fine in every file, so the only thing in the repo that
+   * required a seat recording to carry them was one assertion in
+   * tools/ten-games.sh.
+   */
+  if (stats.optionalPresent.length > 0 && stats.optionalAbsent.length > 0) {
+    const both = stats.optionalAbsent.filter((k) => missed.optionalPresent.has(k));
+    const never = stats.optionalAbsent.filter((k) => !missed.optionalPresent.has(k));
+    problems.push(
+      `${path}: M6's comfort block is HALF PRESENT. This file carries ` +
+      `${stats.optionalPresent.join(', ')}` +
+      (never.length > 0 ? ` but never ${never.join(', ')}` : '') +
+      (both.length > 0
+        ? `${never.length > 0 ? ', and' : ' but'} writes ${both.join(', ')} in some frames ` +
+          `and not others`
+        : '') +
+      `. A recording older than M6 has NONE of them and is fine; an emitter that ` +
+      `stopped writing one of them looks exactly like this (protocol section 3, ` +
+      `amendments M32-M36 and M39).`);
+  }
   stats.clientLog = isClientLog;
   stats.redelivered = redelivered;
 
@@ -1869,6 +2130,24 @@ for (const path of files) {
   console.log(`      shape-checked ask bodies=${stats.askShapeChecks} (exact key set + declared `
     + `nullability, section 5.2)  notices=${stats.notices} (both strings swept and scanned, `
     + `section 6)  over frames=${stats.overs}`);
+  // M6.  Which comfort fields this recording carries, and which it does not:
+  // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,
+  // and both are protocol (amendments M32-M36).  Printed either way so the
+  // corpus says out loud which half of it evidences the M6 wire.
+  if ((stats.optionalAbsent ?? []).length > 0) {
+    console.log(`      M6 comfort fields absent: ${stats.optionalAbsent.join(', ')} `
+      + `(legitimate -- no seat, or recorded before M6; protocol section 3.1)`);
+  } else if (stats.shapeChecks > 0) {
+    // The stack half of the claim is only true if a stack item was actually
+    // shape-checked: a file whose stack was empty in every frame never looked at
+    // a `yieldKey`, and the earlier version of this line said it had anyway.
+    console.log('      M6 comfort fields present: phaseStops{own,opp}, yield, undo, '
+      + 'input.buttons.focus'
+      + (stats.stackItems > 0
+        ? `, stack[].yieldKey/isAbility/isOptionalTrigger/yielded over ${stats.stackItems} `
+          + 'stack item(s) (yieldKey asserted opaque)'
+        : ' — no stack item in any frame, so stack[].yieldKey was never checked here'));
+  }
   if ((stats.missed ?? []).length > 0) {
     // Not a failure: the file is simply older than the amendment. It is printed
     // every run so a corpus cannot quietly stay on a superseded shape.

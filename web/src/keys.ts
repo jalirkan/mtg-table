@@ -14,9 +14,12 @@
  * decodes every one against the jar), and the four we take that Forge does not
  * have are marked as divergences in the table itself rather than in a comment:
  *
- *   - `Space` = OK. Forge has **no global binding**: `FLabel.java:220-223`
- *     activates the *focused* Swing label, which is a different thing. Adopted
- *     from the reference look, and this is the divergence the user sees most.
+ *   - `Space` = **the focused button** (M6). Forge has no global binding:
+ *     `FLabel.java:220-223` activates the *focused* Swing label, and which
+ *     label that is is the sixth argument of `updateButtons`, which now reaches
+ *     us as `input.buttons.focus` (docs/protocol.md §4, report 11 §11). So this
+ *     row is no longer a divergence in behaviour, only in mechanism: the engine
+ *     says which button, and with no answer it is OK, exactly as in M4.
  *   - `Esc` = Cancel. Forge binds it on the two prompt buttons
  *     (`VPrompt.java:74-84`), guarded by `UI_ALLOW_ESC_TO_END_TURN` when Cancel
  *     reads "End Turn" — we do not have that pref, so we always bind it and the
@@ -39,7 +42,7 @@
  * `node --test`, which is where the assertion that this table is total lives.
  */
 
-import type { ManaColor } from './protocol.ts';
+import type { ButtonFocus, ManaColor, YieldKind, YieldMode } from './protocol.ts';
 import { manaColorForKey } from './render/pool.ts';
 
 // ---------------------------------------------------------------------------
@@ -58,6 +61,7 @@ export type KeyActionId =
   | 'toggleHotkeys'
   | 'autoPay'
   | 'undo'
+  | 'passPriority'
   | 'passEndTurn'
   | 'passMyTurn'
   | 'passBeforeTurn'
@@ -77,7 +81,7 @@ export interface KeyBinding {
   what: string;
   /** Forge's own binding, or the divergence, verbatim from report 10 §12.1. */
   forge: string;
-  /** The milestone that makes it do something. Anything past M4 is inert today. */
+  /** The milestone that made it do something. Every row is live as of M6. */
   milestone: 'M4' | 'M5' | 'M6';
 }
 
@@ -87,8 +91,8 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'SPACE',
     keys: [' ', 'spacebar', 'space'],
     ctrl: false,
-    what: "press the engine's OK button (usually pass priority)",
-    forge: 'divergence — Forge activates the focused label, it has no global Space',
+    what: "press the button the engine focused — OK unless input.buttons.focus says Cancel",
+    forge: 'FLabel.java:220-223 — the desktop activates the FOCUSED label; focus1 is updateButtons’ sixth argument and reaches us as input.buttons.focus (M6)',
     milestone: 'M4',
   },
   {
@@ -169,8 +173,18 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'CTRL+Z',
     keys: ['z'],
     ctrl: true,
-    what: 'undo the last action',
-    forge: 'SHORTCUT_UNDO = 17 90',
+    what: 'undo the last mana ability — tapping a land, a mana rock; never a cast',
+    forge: 'SHORTCUT_UNDO = 17 90 → IGameController.undoLastAction(), gated on state.undo.can',
+    milestone: 'M6',
+  },
+  {
+    id: 'passPriority',
+    chord: 'P',
+    keys: ['p'],
+    ctrl: false,
+    what: 'pass priority — a no-op unless the engine is asking for one',
+    forge:
+      'IGameController.passPriority() [jar]: presses OK only when the current input is InputPassPriority, which is why it is safer than SPACE for this. Forge’s own P is SHORTCUT_YIELD_AUTO_PASS, which writes and SAVES a pref — deliberately not that (report 11 §11)',
     milestone: 'M6',
   },
   {
@@ -178,8 +192,8 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'E  (CTRL+E)',
     keys: ['e'],
     ctrl: false,
-    what: 'pass priority until end of turn',
-    forge: 'SHORTCUT_ENDTURN = 17 69 — we bind the bare key as well',
+    what: 'pass to the end of this turn (act: yieldTo endOfTurn) — Cancel stops it',
+    forge: 'SHORTCUT_ENDTURN = 17 69 → YieldController.endTurn — we bind the bare key as well',
     milestone: 'M6',
   },
   {
@@ -187,8 +201,9 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'T',
     keys: ['t'],
     ctrl: false,
-    what: 'pass to my next turn',
-    forge: "divergence — Forge's T is SHORTCUT_SHOWTARGETING, and our arrows are always on",
+    what: 'pass to my next turn (a marker on my UPKEEP)',
+    forge:
+      "YieldUpdate.SetMarker(me, UPKEEP) — UNTAP has no priority pass, so a marker there could never fire (InputPassPriority:248-255). Divergence: Forge's T is SHORTCUT_SHOWTARGETING and our arrows are always on",
     milestone: 'M6',
   },
   {
@@ -196,8 +211,8 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'B',
     keys: ['b'],
     ctrl: false,
-    what: 'pass to just before my turn',
-    forge: 'divergence — unbound in Forge',
+    what: 'pass to just before my turn — the opponent’s end step (a marker on END_OF_TURN)',
+    forge: 'YieldUpdate.SetMarker(opponent, END_OF_TURN) — divergence: unbound in Forge',
     milestone: 'M6',
   },
   {
@@ -205,8 +220,8 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'CTRL+A',
     keys: ['a'],
     ctrl: true,
-    what: 'attack with everything',
-    forge: 'SHORTCUT_ALPHASTRIKE = 17 65',
+    what: 'attack with everything (only meaningful while declaring attackers)',
+    forge: 'SHORTCUT_ALPHASTRIKE = 17 65 → IGameController.alphaStrike()',
     milestone: 'M6',
   },
   {
@@ -214,8 +229,9 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'Y',
     keys: ['y'],
     ctrl: false,
-    what: 'auto-yield: always yes to this ability',
-    forge: 'SHORTCUT_AUTOYIELD_ALWAYS_YES = 89',
+    what: 'always yes to the ability on top of the stack (and answer this one)',
+    forge:
+      'SHORTCUT_AUTOYIELD_ALWAYS_YES = 89 → setTriggerDecision(ACCEPT) + setShouldAutoYield, exactly the guards KeyboardShortcuts.java:159-174 checks',
     milestone: 'M6',
   },
   {
@@ -223,8 +239,8 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'N',
     keys: ['n'],
     ctrl: false,
-    what: 'auto-yield: always no to this ability',
-    forge: 'SHORTCUT_AUTOYIELD_ALWAYS_NO = 78',
+    what: 'always no to the ability on top of the stack',
+    forge: 'SHORTCUT_AUTOYIELD_ALWAYS_NO = 78 → setTriggerDecision(DECLINE) + setShouldAutoYield',
     milestone: 'M6',
   },
   {
@@ -340,6 +356,22 @@ export interface KeyContext {
   poolColors: readonly string[];
   /** An overlay that Escape should close before it reaches the engine. */
   overlay: 'none' | 'zoom' | 'hotkeys' | 'zones';
+  /**
+   * **M6** — `input.buttons.focus`, verbatim (§4). SPACE presses the button the
+   * engine focused; `null` (and every pre-M6 recording) means OK, which is M4's
+   * behaviour unchanged. Never guessed: the engine sent it or it is `null`.
+   */
+  focus?: ButtonFocus;
+  /** **M6** — `state.undo.can`, verbatim. The engine's answer, not a rule. */
+  canUndo?: boolean;
+  /**
+   * **M6** — the opaque `yieldKey` of the stack item Y / N would act on: the
+   * **top** item, and only when the engine called it an ability with a key
+   * (`stackYield().offered`). `null` means the two keys have nothing to address.
+   */
+  topYieldKey?: string | null;
+  /** **M6** — whether that top item already carries a yield (for the flash text). */
+  topYielded?: YieldMode | null;
 }
 
 export type KeyPlan =
@@ -353,8 +385,43 @@ export type KeyPlan =
   | { kind: 'closeOverlay' }
   /** A local view toggle: legal in a replay too, because it sends nothing. */
   | { kind: 'view'; id: KeyActionId }
+  /** §2.2 (M6) — `act: undo`, gated on the engine's own `state.undo.can`. */
+  | { kind: 'undo' }
+  /** §2.2 (M6) — `act: passPriority`; a no-op in the engine outside a priority pass. */
+  | { kind: 'passPriority' }
+  /** §2.2 (M6) — `act: alphaStrike`. */
+  | { kind: 'alphaStrike' }
+  /** §2.2 (M6) — `act: yieldTo {kind, phase?, turn?}`; the three engine yields. */
+  | { kind: 'yieldTo'; yield: YieldKind; phase?: string; turn?: 'own' | 'opp' }
+  /** §2.2 (M6) — `act: setYield {yieldKey, mode}` on the top stack item. */
+  | { kind: 'setYield'; yieldKey: string; mode: YieldMode }
   /** Bound, understood, and deliberately does nothing yet — with the reason. */
   | { kind: 'inert'; why: string };
+
+/**
+ * §2.2 / report 11 §4.1 — what "pass to my next turn" and "pass to just before
+ * my turn" mean as engine calls. Both are the per-(player, phase) **marker**;
+ * the phase is what picks the seat, so the client names a phase and never a
+ * player.
+ *
+ * `UPKEEP` and not `UNTAP` for `passMyTurn`: UNTAP has no priority pass at all,
+ * so a marker on it could never fire — Forge's own comment, at
+ * `InputPassPriority.java:248-255`, and the reason its own "no actions
+ * available" suggestion marks `(me, UPKEEP)`.
+ */
+export const YIELD_MARKER_MY_TURN = 'UPKEEP';
+/** The opponent's end step — the last point before the turn passes to me. */
+export const YIELD_MARKER_BEFORE_MY_TURN = 'END_OF_TURN';
+
+/**
+ * Whose phase cell each marker goes on. A marker is per-(player, phase), so the
+ * phase alone does not say it: `END_OF_TURN` on **my** cell is my own end step,
+ * and only the **opponent's** is "just before my turn". Measured in the browser
+ * on 2026-09-12, where the act sent without a `turn` came back as
+ * `state.yield {kind:"marker", playerId:<me>, phase:"END_OF_TURN"}`.
+ */
+export const YIELD_MARKER_MY_TURN_SIDE = 'own';
+export const YIELD_MARKER_BEFORE_MY_TURN_SIDE = 'opp';
 
 export interface KeyResolution {
   binding: KeyBinding;
@@ -394,11 +461,25 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
   if (binding.id === 'ok' && ownsActivationKeys(event.target)) return null;
 
   switch (binding.id) {
-    case 'ok':
+    case 'ok': {
       if (ctx.askOpen) {
         return { binding, plan: { kind: 'inert', why: 'a question is outstanding — answer it first' } };
       }
       if (!ctx.live) return { binding, plan: { kind: 'inert', why: 'this board is read-only' } };
+      // **M6 — SPACE follows the engine's focus** (§4, report 11 §11). Forge's
+      // desktop activates the focused label and `updateButtons`' sixth argument
+      // is what decides which; with no focus this is M4's behaviour, OK.
+      if (ctx.focus === 'cancel') {
+        return ctx.cancelEnabled
+          ? { binding, plan: { kind: 'buttonCancel' } }
+          : {
+              binding,
+              plan: {
+                kind: 'inert',
+                why: 'the engine focused Cancel and then disabled it',
+              },
+            };
+      }
       if (!ctx.okEnabled) {
         return {
           binding,
@@ -411,6 +492,7 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
         };
       }
       return { binding, plan: { kind: 'buttonOk' } };
+    }
 
     case 'cancel':
       if (ctx.overlay !== 'none') return { binding, plan: { kind: 'closeOverlay' } };
@@ -453,6 +535,91 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
     case 'toggleHotkeys':
       return { binding, plan: { kind: 'view', id: binding.id } };
 
+    // ---- M6. Every one of these is an act the engine already answers; the
+    // ---- only gates are the engine's own flags, read out of the context.
+    case 'undo':
+      if (!ctx.live) return readOnly(binding);
+      if (ctx.askOpen) return askFirst(binding);
+      return ctx.canUndo === true
+        ? { binding, plan: { kind: 'undo' } }
+        : {
+            binding,
+            plan: {
+              kind: 'inert',
+              why: 'nothing to undo — the engine says state.undo.can is false (undo holds mana abilities only, and a phase change clears it)',
+            },
+          };
+
+    case 'passPriority':
+      if (!ctx.live) return readOnly(binding);
+      if (ctx.askOpen) return askFirst(binding);
+      return { binding, plan: { kind: 'passPriority' } };
+
+    case 'passEndTurn':
+      if (!ctx.live) return readOnly(binding);
+      if (ctx.askOpen) return askFirst(binding);
+      return { binding, plan: { kind: 'yieldTo', yield: 'endOfTurn' } };
+
+    case 'passMyTurn':
+      if (!ctx.live) return readOnly(binding);
+      if (ctx.askOpen) return askFirst(binding);
+      return {
+        binding,
+        plan: {
+          kind: 'yieldTo',
+          yield: 'marker',
+          phase: YIELD_MARKER_MY_TURN,
+          turn: YIELD_MARKER_MY_TURN_SIDE,
+        },
+      };
+
+    case 'passBeforeTurn':
+      if (!ctx.live) return readOnly(binding);
+      if (ctx.askOpen) return askFirst(binding);
+      return {
+        binding,
+        plan: {
+          kind: 'yieldTo',
+          yield: 'marker',
+          phase: YIELD_MARKER_BEFORE_MY_TURN,
+          turn: YIELD_MARKER_BEFORE_MY_TURN_SIDE,
+        },
+      };
+
+    case 'alphaStrike':
+      if (!ctx.live) return readOnly(binding);
+      if (ctx.askOpen) return askFirst(binding);
+      return { binding, plan: { kind: 'alphaStrike' } };
+
+    case 'alwaysYes':
+    case 'alwaysNo': {
+      if (!ctx.live) return readOnly(binding);
+      // An ask is NOT a reason to refuse this one: Forge's own
+      // `setTriggerDecision` presses the button in front of you when the current
+      // input is the `InputConfirm` for that same key (report 11 §5.1). But the
+      // key has to exist, and only the engine can say that.
+      const key = ctx.topYieldKey ?? null;
+      if (key === null) {
+        return {
+          binding,
+          plan: {
+            kind: 'inert',
+            why: 'nothing on top of the stack that the engine offers an auto-yield for (it must be an ability with a key)',
+          },
+        };
+      }
+      const mode: YieldMode = binding.id === 'alwaysYes' ? 'yes' : 'no';
+      return ctx.topYielded === mode
+        ? {
+            binding,
+            plan: {
+              kind: 'inert',
+              why: `already set to always ${mode} — clear it from the stack panel`,
+            },
+          }
+        : { binding, plan: { kind: 'setYield', yieldKey: key, mode } };
+    }
+
     default:
       return {
         binding,
@@ -462,6 +629,22 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
         },
       };
   }
+}
+
+/** A replay: every key that would send an act says so, rather than doing nothing. */
+function readOnly(binding: KeyBinding): KeyResolution {
+  return { binding, plan: { kind: 'inert', why: 'this board is read-only' } };
+}
+
+/**
+ * §5 — the game thread is parked inside an `ask` and is listening for exactly
+ * one thing. An act sent now reaches a controller nobody is reading.
+ */
+function askFirst(binding: KeyBinding): KeyResolution {
+  return {
+    binding,
+    plan: { kind: 'inert', why: 'a question is outstanding — answer it first' },
+  };
 }
 
 /**

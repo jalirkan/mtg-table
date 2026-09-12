@@ -56,6 +56,7 @@ import forge.game.zone.ZoneType;
 import forge.gamemodes.match.AbstractGuiGame;
 import forge.gamemodes.match.HostedMatch;
 import forge.gamemodes.match.NextGameDecision;
+import forge.gamemodes.match.input.InputQueue;
 import forge.gui.FThreads;
 import forge.gui.control.GameEventForwarder;
 import forge.interfaces.IGameController;
@@ -64,6 +65,7 @@ import forge.localinstance.properties.ForgePreferences;
 import forge.localinstance.properties.ForgePreferences.FPref;
 import forge.localinstance.skin.FSkinProp;
 import forge.model.FModel;
+import forge.player.AutoYieldStore;
 import forge.player.PlayerControllerHuman;
 import forge.player.PlayerZoneUpdate;
 import forge.player.PlayerZoneUpdates;
@@ -119,9 +121,24 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     // Construction and injected wiring
     // ==================================================================
 
-    private final String gameId;
+    /** Game 1's id, and the stem every later game's id is built from. */
+    private final String baseGameId;
+    /**
+     * The id of the game being played <b>now</b>: {@link #baseGameId} for game 1,
+     * {@code <base>-g<n>} after that (protocol amendment M38).  Volatile because
+     * the swap happens on the EDT inside {@link #openView} and every emitter
+     * thread reads it.
+     */
+    private volatile String gameId;
     private final Transport transport;
-    private final GameLog log;
+    /**
+     * The frame log of the game being played now -- <b>one file per game</b>,
+     * because line 0 of a log is its session header and a second header in the
+     * middle of a file is not a frame (protocol section 8).
+     */
+    private volatile GameLog log;
+    /** Opens game <i>n</i>'s log; injected by {@link MtgTable}. */
+    private LogFactory logs;
     private final ReplyPool pool = new ReplyPool();
 
     /** Injected by {@link MtgTable} before {@code HostedMatch.startMatch}. */
@@ -157,6 +174,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     private final AtomicLong inputGen = new AtomicLong();
     private final AtomicInteger errors = new AtomicInteger();
+    /** M6 acts the seat actually used, for the run summary and the evidence table. */
+    private final AtomicInteger newGamesRequested = new AtomicInteger();
+    private final AtomicInteger yieldsSet = new AtomicInteger();
+    private final AtomicInteger yieldsTo = new AtomicInteger();
+    private final AtomicInteger phaseStopsSet = new AtomicInteger();
+    private final AtomicInteger undosRequested = new AtomicInteger();
+    /** D39: refresh hops that found the engine running and skipped the walk. */
+    private final AtomicInteger refreshesSkipped = new AtomicInteger();
 
     // ---- the ask path ----------------------------------------------------
     /** askId -> the ask-local option array.  The ONE identity map in the ask path. */
@@ -191,6 +216,31 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
     // ---- phase stops: ours, per game, seeded from prefs (report 11 section 3.3)
     private final Map<Integer, EnumSet<PhaseType>> skips = new ConcurrentHashMap<>();
+    /** Every seat's id, in {@code openView} order, so "the other seats" is answerable. */
+    private volatile List<Integer> seatIds = List.of();
+
+    // ---- auto-yield: the opaque handle table (report 11 section 5.2) ------
+    /**
+     * {@code StackItemView.getKey()} -&gt; the handle we ship, and back.
+     *
+     * <p><b>This pair of maps is the only place a raw Forge yield key exists in
+     * this process</b>, and that is the point: the key is
+     * {@code CardView.toString() + ": " + the ability's text}, i.e. a card name,
+     * its id and its rules text -- the text channel report 06 section 4 opens
+     * with.  {@code state.stack[].yieldKey} carries {@code "y7"} instead,
+     * interned for the life of one game, and {@code act: setYield} resolves it
+     * back here.  {@code tools/lint-bridge.sh} rule 4b fails a build in which
+     * {@code getKey()} is called on <b>any</b> identifier declared
+     * {@code StackItemView} anywhere under {@code bridge/src} except the single
+     * tagged line in {@link #rawYieldKey} -- the rule works from the declared
+     * type rather than from the receiver's spelling precisely so that renaming
+     * {@code si} to {@code top} does not turn it off -- and
+     * {@code tools/check-redaction.mjs} fails a log whose {@code yieldKey}
+     * contains a space or a {@code (}.
+     */
+    private final Map<String, String> keyToHandle = new ConcurrentHashMap<>();
+    private final Map<String, String> handleToKey = new ConcurrentHashMap<>();
+    private final AtomicInteger handleSeq = new AtomicInteger();
 
     // ---- the `input` struct, assembled from four threads ------------------
     private final Object inputLock = new Object();
@@ -228,13 +278,33 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * client frame must never arm it; {@code onResync} used to, through
      * {@code mutateInput}, which handed a reconnecting browser the crash this
      * flag exists to prevent.
+     *
+     * <p><b>It has a second reader, and it is on the wire</b> (amendment
+     * <b>M42</b>): {@link #onResync} re-emits an {@code input} only once this is
+     * armed, so the client's first {@code input} is a truthful proxy for "the
+     * engine has asked this seat something" and a client may treat it as this
+     * guard lifting.  Before M42 a connect re-delivered the empty pre-engine
+     * struct and a client that acted on it had its act dropped.
      */
     private volatile boolean inputSeen;
 
-    /** Counted down when {@code over} has been emitted, so main can stop parking. */
-    private final java.util.concurrent.CountDownLatch finished = new java.util.concurrent.CountDownLatch(1);
+    /**
+     * The session's own clock, in games (<b>M6</b>).
+     *
+     * <p>A {@code CountDownLatch} was the right shape while a process played
+     * exactly one game; it cannot be reset, and a match now plays several.  These
+     * two counters plus one monitor say everything {@link MtgTable}'s loop needs:
+     * {@code gamesStarted} is bumped by {@link #openView}, {@code gamesFinished}
+     * by {@link #emitOver}, and every waiter parks on {@code lifecycle}.
+     */
+    private final Object lifecycle = new Object();
+    private int gamesStarted;
+    private int gamesFinished;
+    /** {@code over.matchOver} of the last game that ended -- which mode a `newGame` needs. */
+    private volatile boolean matchOver;
 
     public WireGuiGame(final String gameId, final Transport transport, final GameLog log) {
+        this.baseGameId = gameId;
         this.gameId = gameId;
         this.transport = transport;
         this.log = log;
@@ -262,6 +332,21 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         this.session = s;
     }
 
+    /**
+     * Injected before {@code startMatch}: how to open game <i>n</i>'s frame log
+     * (<b>M6</b>).  Without one, a session that survives {@code over} keeps
+     * writing into game 1's file, which would put a second session header in the
+     * middle of it.
+     */
+    public void setLogFactory(final LogFactory f) {
+        this.logs = f;
+    }
+
+    /** Opens the frame log for one game.  {@code MtgTable} knows where {@code var/} is. */
+    public interface LogFactory {
+        GameLog open(String gameId) throws java.io.IOException;
+    }
+
     /** What {@link MtgTable} knows and this class does not: decks, seed, jar hashes. */
     public interface Session {
         /** Line 0 of the log ({@code docs/protocol.md} section 8.1). */
@@ -276,9 +361,52 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         return pool;
     }
 
-    /** Blocks until {@code over} has been emitted. */
-    public boolean awaitFinish(final long ms) throws InterruptedException {
-        return finished.await(ms, java.util.concurrent.TimeUnit.MILLISECONDS);
+    /** Blocks until game {@code n} has emitted its {@code over}. */
+    public boolean awaitGameEnd(final int n, final long ms) throws InterruptedException {
+        return await(ms, () -> gamesFinished >= n);
+    }
+
+    /** Blocks until game {@code n} has run {@code openView}, i.e. has begun. */
+    public boolean awaitGameStart(final int n, final long ms) throws InterruptedException {
+        return await(ms, () -> gamesStarted >= n);
+    }
+
+    /** How many games this session has started / finished. */
+    public int gamesStarted() {
+        synchronized (lifecycle) {
+            return gamesStarted;
+        }
+    }
+
+    public int gamesFinished() {
+        synchronized (lifecycle) {
+            return gamesFinished;
+        }
+    }
+
+    /** {@code over.matchOver} of the game that ended last. */
+    public boolean matchOver() {
+        return matchOver;
+    }
+
+    /** The id of the game being played now (protocol amendment M38). */
+    public String gameId() {
+        return gameId;
+    }
+
+    private boolean await(final long ms, final java.util.function.BooleanSupplier done)
+            throws InterruptedException {
+        final long deadline = System.nanoTime() + ms * 1_000_000L;
+        synchronized (lifecycle) {
+            while (!done.getAsBoolean()) {
+                final long left = (deadline - System.nanoTime()) / 1_000_000L;
+                if (left <= 0) {
+                    return false;
+                }
+                lifecycle.wait(left);
+            }
+            return true;
+        }
     }
 
     // ---- summary accessors -----------------------------------------------
@@ -328,6 +456,26 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         return errors.get();
     }
 
+    /**
+     * The M6 acts this seat used, for the run summary: {@code {newGame, setYield,
+     * yieldTo, setPhaseStop, undo}}.  A typed act with no count anywhere is an
+     * act nothing proves end to end (CLAUDE.md, M5 convention 6).
+     */
+    public int[] comfortActs() {
+        return new int[] {newGamesRequested.get(), yieldsSet.get(), yieldsTo.get(),
+                          phaseStopsSet.get(), undosRequested.get()};
+    }
+
+    /**
+     * How many M6 refresh hops declined to walk the view graph because the
+     * engine was running rather than parked (decision <b>D39</b>).  Not an
+     * error: the act was applied and the next engine-driven flush carries its
+     * effect.  A number here is the trade being visible instead of silent.
+     */
+    public int refreshesSkipped() {
+        return refreshesSkipped.get();
+    }
+
     public PlayerView seat() {
         return viewer;
     }
@@ -371,8 +519,12 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // synchronized on the same object, so this is one reentrant
             // acquisition; every `push` implementation is non-blocking by
             // Transport's own contract, which is what makes it safe to hold.
-            synchronized (log) {
-                final int seq = log.s2c(type, body);
+            // Read the volatile field ONCE: M6 swaps it between games, and
+            // synchronizing on one object while writing to another is a lock
+            // that protects nothing.
+            final GameLog l = log;
+            synchronized (l) {
+                final int seq = l.s2c(type, body);
                 transport.push(envelope(seq, type, body));
             }
         } catch (final RuntimeException e) {
@@ -487,6 +639,19 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             throw new IllegalStateException("openView with no local players -- this client is a seat, "
                     + "not a spectator, and every redaction decision needs one");
         }
+        final int n;
+        synchronized (lifecycle) {
+            n = ++gamesStarted;
+        }
+        if (n > 1) {
+            // M6, protocol amendment M38.  HostedMatch.endCurrentGame() nulled
+            // the Game, cleared the human controllers and replaced every
+            // PlayerView, so everything we cached is stale -- and openView is
+            // the hook Forge gives us for exactly this moment (report 11
+            // section 8.3).  It runs BEFORE the handshake below, so the first
+            // frame of the new game is a `hello_ok` written into a new file.
+            resetForGame(n);
+        }
         viewer = myPlayers.iterator().next();
         gameView = getGameView();
         if (gameView == null && hosted != null) {
@@ -511,6 +676,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
 
         seedPhaseStops(players);
+        synchronized (lifecycle) {
+            lifecycle.notifyAll();             // "game n has begun" -- MtgTable's loop waits on it
+        }
 
         // 1. Our forwarder on the game's event bus.  Guava's EventBus dispatches
         //    synchronously on the posting thread, i.e. the game thread, so
@@ -548,6 +716,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private void seedPhaseStops(final List<PlayerView> players) {
         final ForgePreferences prefs = FModel.getPreferences();
         final PhaseType[] phases = PhaseType.values();
+        final List<Integer> ids = new ArrayList<>();
         for (final PlayerView pv : players) {
             // Which array applies is chosen by WHOSE TURN it is, not by who is
             // setting the stop: "stop at MAIN1 on my turn" and "stop at MAIN1 on
@@ -563,7 +732,90 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // Keyed by player ID, never by PlayerView: a new game replaces every
             // PlayerView and a map keyed by the object would go silently stale.
             skips.put(Integer.valueOf(pv.getId()), skip);
+            ids.add(Integer.valueOf(pv.getId()));
         }
+        seatIds = List.copyOf(ids);
+    }
+
+    /**
+     * <b>M6.</b>  Everything a new game invalidates, in one place.
+     *
+     * <p>Runs on the EDT, from {@link #openView}, between
+     * {@code HostedMatch.endCurrentGame()} and the first frame of game
+     * <i>n</i>.  The reset list is report 11 section 8.3's, and every line of it
+     * is a stale cache that would otherwise resolve an {@code act} against a
+     * dead object:
+     *
+     * <ul>
+     *   <li>the card / player / ability indexes and the concealed-id set -- every
+     *       view object in them belongs to a finished game;</li>
+     *   <li>the yield-handle table -- its keys embed card ids from that game;</li>
+     *   <li>the phase-stop map -- reseeded from the preferences by
+     *       {@link #seedPhaseStops}, so a per-game toggle really is per game
+     *       -- report 11 section 13's open question 6, now decision <b>D38</b>
+     *       (Forge's desktop seeds once per MATCH; the rejected alternative and
+     *       the comfort cost are written down there);</li>
+     *   <li>the ask bookkeeping and the {@link ReplyPool}, reopened so the next
+     *       ask can park;</li>
+     *   <li>the over latch and the {@code input} struct;</li>
+     *   <li>and the frame log, which becomes a <b>new file</b> under a new
+     *       {@code gameId}.</li>
+     * </ul>
+     *
+     * <p>What is deliberately <b>not</b> reset: {@link #askSeq}, so an askId is
+     * unique for the life of the socket and a late answer from the previous game
+     * cannot complete this game's ask by collision; the transport; and
+     * {@code FModel}.  The whole point of the feature is not paying
+     * {@code FModel.initialize} again.
+     */
+    private void resetForGame(final int n) {
+        final GameLog old = log;
+        gameId = baseGameId + "-g" + n;
+        if (logs != null) {
+            try {
+                log = logs.open(gameId);
+            } catch (final java.io.IOException e) {
+                // Keep playing into the old file rather than killing the match:
+                // a game that cannot be recorded is still a game, and the
+                // summary prints the failure.
+                errors.incrementAndGet();
+                System.err.println("LOG OPEN FAILED for " + gameId + ": " + e);
+            }
+        }
+        if (log != old) {
+            try {
+                old.close();
+            } catch (final java.io.IOException e) {
+                System.err.println("LOG CLOSE FAILED for the previous game: " + e);
+            }
+        }
+        cardIndex = Map.of();
+        playerIndex = Map.of();
+        concealedNow = Set.of();
+        abilityIndex.clear();
+        pendingOpts.clear();
+        asyncAsks.clear();
+        keyToHandle.clear();
+        handleToKey.clear();
+        handleSeq.set(0);
+        skips.clear();
+        synchronized (deferred) {
+            deferred.clear();
+        }
+        synchronized (inputLock) {
+            in.reset();
+        }
+        overBody = null;
+        gameOverStateEmitted = false;
+        captureInFlight = false;
+        inputSeen = false;
+        forwarder = null;
+        pool.reopen();
+        // LAST: `emit` drops every non-`over` frame while this is set, and the
+        // handshake below is the first frame of the new game.
+        overEmitted = false;
+        System.err.println("NEW GAME " + n + " " + gameId + ": caches, phase stops, reply pool and "
+                + "frame log rebuilt from openView (protocol amendment M38)");
     }
 
     // ==================================================================
@@ -624,7 +876,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 overBody = Snap.over(gameView);
                 captured = true;
             }
-            final String body = Snap.state(gameId, gameView, viewer, all);
+            final String body = Snap.state(gameId, gameView, viewer, all, comfort);
             // The id -> view maps an `act` resolves against, and the ids this
             // frame conceals.  All three are built on the game thread and read
             // from the EDT and the io thread: the click path and the notice path
@@ -704,6 +956,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
         try {
             overBody = Snap.over(gameView);
+            // Which mode a `newGame` needs: `continue` is the next game of this
+            // match, `restart` a fresh one.  Read here, on the game thread, with
+            // the body it is part of.
+            matchOver = gameView.isMatchOver();
             if (forwarder != null) {
                 forwarder.flush();             // ship the final state with gameOver set
             }
@@ -757,12 +1013,37 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         private String cancelLabel = "Cancel";
         private boolean okEnabled;
         private boolean cancelEnabled;
+        /**
+         * {@code updateButtons}' sixth argument (protocol amendment M39).  It
+         * names <b>button 1</b>, so it is a boolean on Forge's side and
+         * {@code "ok"} or null on ours; Space activates the focused button, and
+         * that is the whole reason "space = OK" is not a Forge shortcut.
+         */
+        private boolean okFocused;
         private final Set<Integer> selectable = new LinkedHashSet<>();
         private int selMin;
         private int selMax;
         private final Set<Integer> highlighted = new LinkedHashSet<>();
         private final Set<Integer> weak = new LinkedHashSet<>();
         private final Map<Integer, Set<String>> openZones = new LinkedHashMap<>();
+
+        /** Back to the constructed state, for a new game (M6). */
+        private void reset() {
+            prompt = "";
+            focusCardId = null;
+            focusCardJson = null;
+            okLabel = "OK";
+            cancelLabel = "Cancel";
+            okEnabled = false;
+            cancelEnabled = false;
+            okFocused = false;
+            selectable.clear();
+            selMin = 0;
+            selMax = 0;
+            highlighted.clear();
+            weak.clear();
+            openZones.clear();
+        }
     }
 
     /**
@@ -815,6 +1096,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         o.key("buttons").obj();
         o.key("ok").obj().n("label", s.okLabel).n("enabled", s.okEnabled).end();
         o.key("cancel").obj().n("label", s.cancelLabel).n("enabled", s.cancelEnabled).end();
+        // Protocol amendment M39.  "cancel" is in the declared type and is not
+        // reachable from this emitter: Forge's focus1 is a boolean naming button
+        // one.  Writing the string rather than the boolean is what lets a later
+        // focus2 land without a v bump.
+        o.n("focus", s.okFocused ? "ok" : null);
         o.end();
         o.key("selectable").obj();
         o.key("cardIds").arr();
@@ -873,12 +1159,15 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // what InputPassPriority and InputPayMana put on these two buttons.  They
         // are rendered verbatim and answered with buttonOk / buttonCancel; there
         // is no autoPay act and no endTurn act (protocol section 2.2, report 11
-        // section 0.1).  `focus1` is protocol section 10.2 and not emitted yet.
+        // section 0.1).  `focus1` is protocol amendment M39 -- M6 stopped
+        // dropping it, because "Space presses OK" is not a Forge behaviour:
+        // Space presses the FOCUSED button, and this argument is which one.
         engineInput(s -> {
             s.okLabel = label1 == null ? "" : label1;
             s.cancelLabel = label2 == null ? "" : label2;
             s.okEnabled = enable1;
             s.cancelEnabled = enable2;
+            s.okFocused = focus1;
         });
     }
 
@@ -1155,9 +1444,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // game thread.  Protocol section 7 declares `reason` nullable for
             // exactly this window; "" would misreport it as a known empty one.
             body = new JsonOut().obj().nNull("winner").nNull("reason").n("matchOver", true).end().done();
+            matchOver = true;                  // nothing to continue into
         }
         emit("over", body);
-        finished.countDown();
+        synchronized (lifecycle) {
+            gamesFinished++;
+            lifecycle.notifyAll();
+        }
     }
 
     // ==================================================================
@@ -1289,6 +1582,222 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
         final EnumSet<PhaseType> set = skips.get(Integer.valueOf(turnPlayer.getId()));
         return set != null && set.contains(phase);
+    }
+
+    // ==================================================================
+    // 6b. The comfort snapshot -- phase stops, yield, undo, yield handles
+    // ==================================================================
+    //
+    // Snap is a pure serialiser and must not reach for a controller or a
+    // HostedMatch, so the four M6 answers it cannot compute are handed to it as
+    // this object (protocol amendments M32, M34, M35, M36).  Every method runs
+    // on the GAME THREAD, inside Snap.state.
+
+    private final Snap.Comfort comfort = new Snap.Comfort() {
+        @Override public List<String> stopsOnTurnOf(final int playerId) {
+            return stopNames(skips.get(Integer.valueOf(playerId)));
+        }
+
+        @Override public List<String> stopsOffTurnOf(final int playerId) {
+            // "while anybody else is the turn player".  With one opponent this
+            // is exactly that seat's set; the union is what makes it total for
+            // a table that has more, without pretending we support one.
+            EnumSet<PhaseType> others = null;
+            for (final Integer id : seatIds) {
+                if (id.intValue() == playerId) {
+                    continue;
+                }
+                final EnumSet<PhaseType> set = skips.get(id);
+                final EnumSet<PhaseType> theirs =
+                        set == null ? EnumSet.noneOf(PhaseType.class) : set;
+                if (others == null) {
+                    others = EnumSet.copyOf(theirs);
+                } else {
+                    // Skipped only where EVERY other seat skips -- i.e. STOPPED
+                    // wherever any of them stops, which is what "opp" means.
+                    // `null` rather than isEmpty() as the first-iteration test:
+                    // a seat that legitimately skips nothing is an empty set,
+                    // and treating that as "no data" would let the next seat
+                    // overwrite it.
+                    others.retainAll(theirs);
+                }
+            }
+            return others == null ? List.of() : stopNames(others);
+        }
+
+        @Override public String yieldJson() {
+            return activeYieldJson();
+        }
+
+        @Override public String undoJson() {
+            return undoStateJson();
+        }
+
+        @Override public String yieldHandle(final forge.game.spellability.StackItemView si) {
+            return handleFor(si);
+        }
+
+        @Override public String yieldMode(final forge.game.spellability.StackItemView si) {
+            return standingYield(si);
+        }
+    };
+
+    /**
+     * The complement of a skip set: every phase the game <b>stops</b> at, in
+     * {@code PhaseType} order.  {@code UNTAP} is never in it -- it has no
+     * preference and no priority pass, so it can be neither stopped at nor
+     * skipped (report 11 section 3.2).
+     */
+    private static List<String> stopNames(final EnumSet<PhaseType> skipped) {
+        final PhaseType[] phases = PhaseType.values();
+        final List<String> out = new ArrayList<>(phases.length);
+        for (int p = 1; p < phases.length; p++) {
+            if (skipped == null || !skipped.contains(phases[p])) {
+                out.add(phases[p].name());
+            }
+        }
+        return out;
+    }
+
+    /**
+     * {@code state.yield} (protocol amendment M34).  Forge allows exactly one
+     * yield at a time -- each setter clears the other two -- so this reads as a
+     * three-way discrimination and not as three flags.
+     */
+    private String activeYieldJson() {
+        final IGameController c = controller();
+        if (c == null) {
+            return null;
+        }
+        final forge.gamemodes.match.YieldController y = c.getYieldController();
+        if (y == null) {
+            return null;
+        }
+        final PlayerView me = viewer;
+        final JsonOut o = new JsonOut().obj();
+        if (y.autoPassUntilEndOfTurn()) {
+            o.n("kind", "endOfTurn").nInt("playerId", me == null ? null : Integer.valueOf(me.getId()))
+             .nNull("phase");
+        } else if (y.autoPassUntilStackEmpty()) {
+            o.n("kind", "stack").nInt("playerId", me == null ? null : Integer.valueOf(me.getId()))
+             .nNull("phase");
+        } else {
+            final forge.gamemodes.match.YieldMarker m = y.getAutoPassUntilMarker();
+            if (m == null) {
+                return null;
+            }
+            final PlayerView owner = m.getPhaseOwner();
+            o.n("kind", "marker")
+             .nInt("playerId", owner == null ? null : Integer.valueOf(owner.getId()))
+             .n("phase", m.getPhase() == null ? null : m.getPhase().name());
+        }
+        return o.end().done();
+    }
+
+    /**
+     * {@code state.undo} (protocol amendment M35).  {@code canUndoLastAction()}
+     * is on {@code PlayerControllerHuman} and <b>not</b> on
+     * {@code IGameController}, and the depth is the rules engine's own undo
+     * stack -- both game-thread reads, taken with the rest of the snapshot.
+     *
+     * <p>It holds <b>mana abilities only</b> and Forge clears it at every phase
+     * change and whenever priority leaves this seat, so a client that renders
+     * "Undo" as "take back my last move" is promising something the engine does
+     * not do.
+     */
+    private String undoStateJson() {
+        boolean can = false;
+        int depth = 0;
+        final PlayerControllerHuman h = humanController();
+        if (h != null) {
+            can = h.canUndoLastAction();
+        }
+        if (hosted != null && hosted.getGame() != null && hosted.getGame().getStack() != null) {
+            depth = hosted.getGame().getStack().getUndoStackSize();
+        }
+        return new JsonOut().obj().n("can", can).n("depth", depth).end().done();
+    }
+
+    /** Our seat's controller as the concrete type, for the two members not on the interface. */
+    private PlayerControllerHuman humanController() {
+        if (hosted == null) {
+            return null;
+        }
+        final PlayerView me = viewer;
+        PlayerControllerHuman first = null;
+        for (final PlayerControllerHuman h : hosted.getHumanControllers()) {
+            if (first == null) {
+                first = h;
+            }
+            if (me != null && h.getPlayer() != null && h.getPlayer().getView() != null
+                    && h.getPlayer().getView().getId() == me.getId()) {
+                return h;
+            }
+        }
+        // One human seat is the whole configuration (MtgTable rejects --seat 1),
+        // so the fallback is the same object; it is a fallback and not the rule
+        // because `undo` must never be answered for somebody else's stack.
+        return me == null ? first : null;
+    }
+
+    /**
+     * <b>THE</b> call to {@code StackItemView.getKey()} in this bridge.
+     *
+     * <p>Its value is {@code CardView.toString() + ": " + the ability's text} --
+     * a card name, its id and its rules text (report 11 section 5.2) -- which is
+     * the text channel report 06 section 4 opens with.  It never leaves this
+     * class: {@link #handleFor} interns it behind an opaque {@code "y<n>"} and
+     * that is what {@code state.stack[].yieldKey} carries.
+     * {@code tools/lint-bridge.sh} fails a build in which {@code getKey()}
+     * appears on a stack item anywhere else.
+     */
+    private static String rawYieldKey(final forge.game.spellability.StackItemView si) {
+        return si == null ? null : si.getKey();   // ALLOW getKey: the yield-handle table
+    }
+
+    /** Mint or recall this item's opaque handle.  Interned for the life of one game. */
+    private String handleFor(final forge.game.spellability.StackItemView si) {
+        final String raw = rawYieldKey(si);
+        if (raw == null || raw.isEmpty()) {
+            return null;
+        }
+        final String known = keyToHandle.get(raw);
+        if (known != null) {
+            return known;
+        }
+        final String minted = "y" + handleSeq.incrementAndGet();
+        final String won = keyToHandle.putIfAbsent(raw, minted);
+        if (won != null) {
+            return won;
+        }
+        handleToKey.put(minted, raw);
+        return minted;
+    }
+
+    /**
+     * {@code stack[].yielded}: {@code "yes"}, {@code "no"} or null -- the
+     * engine's standing answer for this item.  A trigger decision wins over a
+     * plain auto-yield because it is the more specific statement; a plain
+     * auto-yield reads as {@code "yes"} because that is what it does (the
+     * priority loop passes and the ability resolves).
+     */
+    private String standingYield(final forge.game.spellability.StackItemView si) {
+        final String raw = rawYieldKey(si);
+        if (raw == null || raw.isEmpty()) {
+            return null;
+        }
+        final IGameController c = controller();
+        if (c == null) {
+            return null;
+        }
+        final AutoYieldStore.TriggerDecision d = c.getTriggerDecision(raw);
+        if (d == AutoYieldStore.TriggerDecision.ACCEPT) {
+            return "yes";
+        }
+        if (d == AutoYieldStore.TriggerDecision.DECLINE) {
+            return "no";
+        }
+        return c.shouldAutoYield(raw) ? "yes" : null;
     }
 
     @Override
@@ -2187,6 +2696,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 // including one that is now meaningless.  Drop it with a notice;
                 // never crash, never block.
                 System.err.println("ACT FAILED " + action + ": " + e);
+                e.printStackTrace();           // the message alone is never enough to fix one
                 notice("warn", "Action failed", action + ": " + e);
             }
         });
@@ -2264,28 +2774,56 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             break;
         }
         case "undo":
+            undosRequested.incrementAndGet();
             c.undoLastAction();                // self-gated on canUndoLastAction (PCH:2698)
+            refreshState();
             break;
         case "alphaStrike":
             c.alphaStrike();
             break;
         case "nextGame":
-            c.nextGameDecision(NextGameDecision.CONTINUE);
+            // The M3 spelling of newGame {mode:"continue"} (protocol 2.2).
+            newGame(c, "continue");
+            break;
+        case "newGame":
+            newGame(c, body.get("mode") == null ? "continue" : String.valueOf(body.get("mode")));
             break;
         case "concede":
             concedeAll();
             break;
         case "setPhaseStop": {
-            final Integer pid = asInt(body.get("playerId"));
             final Object phase = body.get("phase");
             final Boolean stop = asBool(body.get("stop"));
-            if (pid == null || phase == null || stop == null) {
-                notice("warn", "setPhaseStop", "needs {playerId, phase, stop}");
+            if (phase == null || stop == null) {
+                notice("warn", "setPhaseStop", "needs {phase, turn, stop}");
                 return;
             }
-            setPhaseStop(pid.intValue(), String.valueOf(phase), stop.booleanValue());
+            // Protocol amendment M33: the act names a TURN, relative to this
+            // seat -- a seat may only change its own stops, and "own"/"opp" is
+            // the same word state.players[].phaseStops uses.  The M3-era
+            // {playerId, ...} spelling is still accepted, because the server
+            // tolerates any act and nothing is served by breaking one.
+            final Object turn = body.get("turn");
+            final Integer pid = asInt(body.get("playerId"));
+            if (turn == null && pid == null) {
+                notice("warn", "setPhaseStop", "needs a turn (\"own\"|\"opp\") or a playerId");
+                return;
+            }
+            phaseStopsSet.incrementAndGet();
+            setPhaseStop(turn == null ? null : String.valueOf(turn), pid,
+                    String.valueOf(phase), stop.booleanValue());
+            refreshState();
             break;
         }
+        case "yieldTo":
+            yieldsTo.incrementAndGet();
+            yieldTo(c, body);
+            refreshState();
+            break;
+        case "setYield":
+            setYield(c, body);
+            refreshState();
+            break;
         case "resync":
             // reEmitInput, NOT onResync: we are on mtg-table-EDT here (onAct
             // dispatches through FThreads.invokeInEdtNowOrLater) and onResync
@@ -2309,8 +2847,25 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
     }
 
-    /** Flip one bit in our own stop map; the next priority pass reads it. */
-    private void setPhaseStop(final int playerId, final String phaseName, final boolean stop) {
+    /**
+     * Flip one bit in our own stop map, and tell the controller (report 11
+     * section 3.3).
+     *
+     * <p>The map is what {@link #isUiSetToSkipPhase} answers from, and that is
+     * the whole of the feature for a local seat:
+     * {@code PlayerControllerHuman.isUiSetToSkipPhase} consults
+     * {@code YieldController} only {@code if (isRemoteClient())} and we are not
+     * one (asserted in the constructor).  The {@code SkipPhase} update is sent
+     * anyway, because it costs one line and it buys Forge's own
+     * {@code applyYieldUpdate -> tryAutoPassNow()}: turning a stop <b>off</b>
+     * while the game is parked on an {@code InputPassPriority} presses pass
+     * immediately, instead of doing nothing until the next priority pass.
+     *
+     * @param turn {@code "own"} / {@code "opp"} (amendment M33), or null when
+     *             the caller named a {@code playerId} instead
+     */
+    private void setPhaseStop(final String turn, final Integer playerId, final String phaseName,
+                              final boolean stop) {
         final PhaseType phase;
         try {
             phase = PhaseType.valueOf(phaseName);
@@ -2318,14 +2873,391 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             notice("warn", "setPhaseStop", "unknown phase " + phaseName);
             return;
         }
-        final EnumSet<PhaseType> set = skips.computeIfAbsent(
-                Integer.valueOf(playerId), k -> EnumSet.noneOf(PhaseType.class));
-        // We store SKIPS; a "stop" is the absence of one.
-        if (stop) {
-            set.remove(phase);
-        } else {
-            set.add(phase);
+        if (phase == PhaseType.UNTAP) {
+            // No preference, no priority pass: neither stoppable nor skippable.
+            notice("warn", "setPhaseStop", "UNTAP has no priority pass and cannot be a stop");
+            return;
         }
+        final List<Integer> targets = new ArrayList<>();
+        if (turn != null) {
+            final PlayerView me = viewer;
+            final int mine = me == null ? -1 : me.getId();
+            if ("own".equals(turn)) {
+                targets.add(Integer.valueOf(mine));
+            } else if ("opp".equals(turn)) {
+                for (final Integer id : seatIds) {
+                    if (id.intValue() != mine) {
+                        targets.add(id);
+                    }
+                }
+                if (targets.isEmpty()) {
+                    // openView seeds seatIds, so this is "before the game
+                    // exists" and never "a game with one player".  Say it
+                    // rather than dropping the act silently.
+                    notice("warn", "setPhaseStop", "no opponent seat yet");
+                    return;
+                }
+            } else {
+                notice("warn", "setPhaseStop", "turn must be \"own\" or \"opp\", got " + turn);
+                return;
+            }
+        } else {
+            targets.add(playerId);
+        }
+        for (final Integer id : targets) {
+            final EnumSet<PhaseType> set = skips.computeIfAbsent(
+                    id, k -> EnumSet.noneOf(PhaseType.class));
+            // We store SKIPS; a "stop" is the absence of one.
+            if (stop) {
+                set.remove(phase);
+            } else {
+                set.add(phase);
+            }
+            pushSkipPhase(id.intValue(), phase, !stop);
+        }
+    }
+
+    /**
+     * Mirror one stop bit to the controller as Forge's own
+     * {@code NetworkGuiGame.pushSkipPhaseToControllers} does.  Harmless when the
+     * game is not parked on a priority prompt; the point is that it is <b>not</b>
+     * harmless when it is.
+     */
+    private void pushSkipPhase(final int playerId, final PhaseType phase, final boolean skip) {
+        final IGameController c = controller();
+        PlayerView pv = playerIndex.get(Integer.valueOf(playerId));
+        if (pv == null && viewer != null && viewer.getId() == playerId) {
+            // playerIndex is built on the game thread with the first snapshot,
+            // and a client may set a stop before one exists -- a browser does,
+            // from the hello_ok handler.  The map is already updated either way;
+            // this is only the mirror to the controller.
+            pv = viewer;
+        }
+        if (c == null || pv == null) {
+            return;
+        }
+        try {
+            c.sendYieldUpdate(new forge.gamemodes.match.YieldUpdate.SkipPhase(pv, phase, skip));
+        } catch (final RuntimeException e) {
+            System.err.println("SKIPPHASE PUSH FAILED: " + e);
+        }
+    }
+
+    /**
+     * {@code act: newGame {mode}} -- protocol amendment M38, report 11 section
+     * 8.2.
+     *
+     * <p>We are on the EDT, which is where {@code HostedMatch.addNextGameDecision}
+     * dispatches {@code continueMatch()} / {@code restartMatch()}, so the whole
+     * teardown-and-restart runs inline inside this act: by the time it returns,
+     * {@link #openView} has emitted the next game's {@code hello_ok}.
+     *
+     * <p>It is the one act deliberately <b>absent from the frame log</b>:
+     * {@code over} is the terminal frame of a file (protocol section 8.4) and an
+     * act written after it would take that place.  The server prints it on
+     * stderr instead, and the next game's log opens with its own header.
+     */
+    private void newGame(final IGameController c, final String mode) {
+        if (!overEmitted) {
+            notice("warn", "newGame", "the game is still running");
+            return;
+        }
+        NextGameDecision decision;
+        if ("restart".equals(mode) || "new".equals(mode)) {
+            decision = NextGameDecision.NEW;
+        } else if ("continue".equals(mode)) {
+            decision = NextGameDecision.CONTINUE;
+        } else {
+            // A notice would be dropped here -- `emit` refuses every non-`over`
+            // frame once `over` has gone out (protocol section 8.4), which is
+            // also why the two corrections below are corrections and not
+            // refusals: between games there is no channel to say "no" on.
+            System.err.println("NEW GAME with an unknown mode " + mode + ", reading it as "
+                    + "\"continue\" (protocol section 2.2)");
+            decision = NextGameDecision.CONTINUE;
+        }
+        if (decision == NextGameDecision.CONTINUE && matchOver) {
+            // `continueMatch()` on a finished match would start a game the Match
+            // does not think exists.  The client asked for another game and a
+            // fresh match is the only thing that can be one, so give it that
+            // rather than dead-ending on a mode the client could only have got
+            // right by reading `over.matchOver` first.
+            System.err.println("NEW GAME continue after matchOver: reading it as \"restart\", "
+                    + "which is the only mode that can produce another game");
+            decision = NextGameDecision.NEW;
+        }
+        System.err.println("NEW GAME REQUESTED mode=" + mode + " (" + decision + ") after "
+                + gameId);
+        newGamesRequested.incrementAndGet();
+        c.nextGameDecision(decision);
+    }
+
+    /**
+     * {@code act: yieldTo {kind, phase?, turn?}} -- report 11 section 4.
+     *
+     * <p>Three different engine mechanisms behind one act, all of them reached
+     * through {@code IGameController.sendYieldUpdate} and all of them cancelled
+     * by the same {@code buttonCancel}: {@code InputLockUI} labels Cancel while
+     * a yield runs and its {@code selectButtonCancel()} is
+     * {@code clearActiveYieldAndDispatch()}.  There is no {@code cancelYield}
+     * act and there must not be one.
+     */
+    private void yieldTo(final IGameController c, final Map<String, Object> body) {
+        final PlayerView me = viewer;
+        if (me == null) {
+            return;
+        }
+        final String kind = body.get("kind") == null ? "" : String.valueOf(body.get("kind"));
+        switch (kind) {
+        case "endOfTurn":
+            // Forge's own two-line helper, copied by call and not by body.
+            forge.gamemodes.match.YieldController.endTurn(c, me);
+            break;
+        case "stack":
+            c.sendYieldUpdate(new forge.gamemodes.match.YieldUpdate.StackYield(me, true, true));
+            break;
+        case "marker": {
+            final Object phaseName = body.get("phase");
+            if (phaseName == null) {
+                notice("warn", "yieldTo", "kind \"marker\" needs a phase");
+                return;
+            }
+            final PhaseType phase;
+            try {
+                phase = PhaseType.valueOf(String.valueOf(phaseName));
+            } catch (final IllegalArgumentException e) {
+                notice("warn", "yieldTo", "unknown phase " + phaseName);
+                return;
+            }
+            // Whose phase cell: the viewer's own (pass to MY next upkeep) or the
+            // opponent's (pass to their end step).  `turn` mirrors setPhaseStop;
+            // a playerId is accepted for the same reason it is there.
+            final PlayerView owner = markerOwner(body);
+            if (owner == null) {
+                notice("warn", "yieldTo", "no such player for the marker");
+                return;
+            }
+            // AbstractGuiGame.handleYieldMarkerToggle is protected final and
+            // does the whole dance: same cell twice clears the marker, the
+            // at-or-past test is taken BEFORE the cell is un-skipped, and only
+            // then is the marker set.  Our runnable is its "make this phase a
+            // stop" step -- a marker on a phase we skip could never fire.
+            handleYieldMarkerToggle(owner, phase, () -> {
+                final EnumSet<PhaseType> set = skips.computeIfAbsent(
+                        Integer.valueOf(owner.getId()), k -> EnumSet.noneOf(PhaseType.class));
+                set.remove(phase);
+                pushSkipPhase(owner.getId(), phase, false);
+            });
+            break;
+        }
+        default:
+            notice("warn", "yieldTo", "kind must be endOfTurn|marker|stack, got " + kind);
+        }
+    }
+
+    /** Which phase cell a {@code yieldTo {kind:"marker"}} means; the viewer by default. */
+    private PlayerView markerOwner(final Map<String, Object> body) {
+        final PlayerView me = viewer;
+        final Integer pid = asInt(body.get("playerId"));
+        if (pid != null) {
+            return playerIndex.get(pid);
+        }
+        final Object turn = body.get("turn");
+        if (turn != null && "opp".equals(String.valueOf(turn))) {
+            for (final Integer id : seatIds) {
+                if (me == null || id.intValue() != me.getId()) {
+                    return playerIndex.get(id);
+                }
+            }
+            return null;
+        }
+        return me;
+    }
+
+    /**
+     * {@code act: setYield {yieldKey, mode}} -- report 11 section 5, the
+     * desktop's own Y / N recipe.
+     *
+     * <p>The handle is resolved back to Forge's key <b>here</b> and nowhere
+     * else. {@code isAbilityScope()} is read from the controller rather than
+     * hardcoded: with the default {@code UI_AUTO_DECISION_MODE} it is true, and
+     * passing false would store a key Forge then strips and never matches.
+     */
+    private void setYield(final IGameController c, final Map<String, Object> body) {
+        final Object handle = body.get("yieldKey");
+        final String mode = body.get("mode") == null ? "" : String.valueOf(body.get("mode"));
+        if (handle == null) {
+            notice("warn", "setYield", "needs a yieldKey from state.stack[]");
+            return;
+        }
+        final String raw = handleToKey.get(String.valueOf(handle));
+        if (raw == null) {
+            // A handle from a previous game, or one this seat never saw.
+            notice("warn", "setYield", "unknown yieldKey " + handle);
+            return;
+        }
+        final forge.gamemodes.match.YieldController y = c.getYieldController();
+        final boolean abilityScope = y != null && y.isAbilityScope();
+        final AutoYieldStore.TriggerDecision decision;
+        final boolean yield;
+        switch (mode) {
+        case "yes":
+            decision = AutoYieldStore.TriggerDecision.ACCEPT;
+            yield = true;
+            break;
+        case "no":
+            decision = AutoYieldStore.TriggerDecision.DECLINE;
+            yield = true;
+            break;
+        case "clear":
+            decision = AutoYieldStore.TriggerDecision.ASK;
+            yield = false;
+            break;
+        default:
+            notice("warn", "setYield", "mode must be yes|no|clear, got " + mode);
+            return;
+        }
+        // The trigger decision first: PlayerControllerHuman.setTriggerDecision
+        // also presses the button NOW when the current input is the InputConfirm
+        // for this same key, so "Always Yes" answers the question in front of
+        // you as well as every later one.
+        c.setTriggerDecision(raw, decision, abilityScope);
+        c.setShouldAutoYield(raw, yield, abilityScope);
+        yieldsSet.incrementAndGet();
+    }
+
+    /**
+     * Push a fresh {@code state} after an act whose effect is <b>only</b> visible
+     * in a snapshot (<b>M6</b>).
+     *
+     * <p>Protocol section 2.2 says an act's effect "arrives as the next
+     * {@code state} / {@code input}", and for every M2 act that is automatic:
+     * clicking a card makes the engine do something and something makes events.
+     * {@code setYield} does not.  It changes {@code stack[].yielded} and nothing
+     * else, produces no game event, and the engine is parked waiting for this
+     * seat -- so with no push the board would never show the toggle it just
+     * asked for, and would show it later only by accident.  The same is true of
+     * {@code setPhaseStop} on a turn the map is not consulted on.
+     *
+     * <p>We are on the EDT here and a snapshot may only be built on a game
+     * thread (hard rule 3), so it hops -- the same hop {@code captureOutcome} and
+     * {@link #asyncAbilityMenu} make for the same reason.  <b>And like
+     * {@code asyncAbilityMenu}, the hop needs an exclusion argument, because the
+     * thread it lands on is not the one running the game</b> (decision
+     * <b>D39</b>; the first cut of this method had none, which is the defect
+     * that entry records).  {@code ThreadUtil.invokeInGameThread} is
+     * {@code Executors.newCachedThreadPool(new WorkerThreadFactory("Game"))}, so
+     * the runnable lands on a <b>second</b> {@code Game-n} worker while
+     * {@code Game-0} runs the match; both pass {@code ThreadUtil.isGameThread()}
+     * (a bare {@code startsWith("Game")}), so {@code Snap.assertGameThread}
+     * cannot tell them apart and the "never walk while the game mutates"
+     * property has to be arranged by hand.
+     *
+     * <p>Unlike {@code asyncAbilityMenu}, which is only ever reached from a click
+     * <em>inside</em> a live input, these four acts can arrive at any time: the
+     * board's phase-strip dots, Undo, Pass-To and the yield toggles are enabled
+     * whenever there is no open ask and no game over -- i.e. right through the
+     * AI's turn.  So the stamp is not enough on its own and there are two
+     * conditions, both checked on the worker in {@link #refreshSnapshot}:
+     * <ol>
+     *   <li><b>The input generation has not moved</b> ({@link #inputGen}, read
+     *       here on the EDT inside the act that is asking) -- D22's guard,
+     *       verbatim; and</li>
+     *   <li><b>the engine is parked waiting for this seat</b>
+     *       ({@link #enginePausedForSeat()}), which is what makes "{@code Game-0}
+     *       is not mutating the graph" a fact rather than a hope.</li>
+     * </ol>
+     *
+     * <p>When either fails the walk is <b>skipped</b>, not forced: the act has
+     * already been applied to the engine, and its effect reaches the board on the
+     * next engine-driven flush, which while the engine is running is the next
+     * {@code handleGameEvents} batch -- milliseconds, not a turn.  The skips are
+     * counted and printed by the run summary so the trade is measurable rather
+     * than invisible.
+     */
+    private void refreshState() {
+        if (closed || overEmitted || gameView == null || viewer == null) {
+            return;
+        }
+        // D22/D39: read HERE, on the EDT, inside the act that is asking -- so it
+        // is the generation of the input the engine is parked on.
+        final long gen = inputGen.get();
+        try {
+            ThreadUtil.invokeInGameThread(() -> refreshSnapshot(gen));
+        } catch (final RuntimeException e) {
+            errors.incrementAndGet();
+            refreshesSkipped.incrementAndGet();
+            System.err.println("REFRESH NOT SCHEDULED: " + e);
+        }
+    }
+
+    /**
+     * <b>A second {@code Game-n} worker from Forge's cached pool.</b>  Flush one
+     * {@code state} -- but only while {@code Game-0} is demonstrably parked on
+     * the input this act arrived under (decision <b>D39</b>).
+     *
+     * @param gen the {@link #inputGen} the act was applied at.  If it has moved,
+     *            the engine has left that input and the real game thread is free
+     *            to mutate the graph.
+     */
+    private void refreshSnapshot(final long gen) {
+        if (closed || overEmitted || gameView == null || viewer == null) {
+            return;
+        }
+        if (inputGen.get() != gen) {
+            // D22's own words: a build that sees a moved generation is a build
+            // the parked thread is no longer parked for.
+            refreshesSkipped.incrementAndGet();
+            return;
+        }
+        if (!enginePausedForSeat()) {
+            refreshesSkipped.incrementAndGet();
+            return;
+        }
+        flushState(List.of());
+    }
+
+    /**
+     * Is the game thread parked waiting for <b>this</b> seat?  Asked of the
+     * engine, never guessed -- and never by matching a prompt string
+     * (CLAUDE.md, M5 convention 4).
+     *
+     * <p>Two ways it can be, and both are ours to see:</p>
+     * <ul>
+     *   <li><b>Parked inside our own {@code ask()}</b>: {@link ReplyPool#pending()}
+     *       is non-zero from {@code pool.register} -- which {@link #ask} calls
+     *       before it hands the frame to the transport -- until the game thread
+     *       itself removes the entry on the way out.  Between those two points
+     *       the game thread is inside {@code ReplyPool}, not inside the game.</li>
+     *   <li><b>Parked inside a Forge input</b>:
+     *       {@code InputQueue.getInput()} is a plain
+     *       {@code BlockingDeque.peek()} over the input stack (javap-confirmed:
+     *       {@code isEmpty} then {@code peek}, no view touched, no lock taken).
+     *       {@code InputSyncronizedBase.showAndWait()} is
+     *       {@code inputQueue.setInput(this); awaitLatchRelease();} and
+     *       {@code stop()} runs {@code onStop()} -> our {@code engineInput}
+     *       pushes -> {@code removeInput} -> {@code countDown}, in that order.
+     *       So a non-null input means a thread is sitting in
+     *       {@code cdlDone.await()} for it, and for a one-human match that
+     *       thread is {@code Game-0}.  {@code InputLockUI} -- what Forge shows
+     *       while a yield runs -- is an {@code Input} and not an
+     *       {@code InputSynchronized}, so it never enters this stack and never
+     *       reads as parked, which is the conservative answer we want.</li>
+     * </ul>
+     *
+     * <p>Both are false while the engine is running (the AI's turn, a resolving
+     * stack, a yield), which is exactly when the walk must not happen.
+     */
+    private boolean enginePausedForSeat() {
+        if (pool.pending() > 0) {
+            return true;
+        }
+        final IGameController c = controller();
+        if (!(c instanceof PlayerControllerHuman)) {
+            return false;                      // no controller yet, or not ours
+        }
+        final InputQueue q = ((PlayerControllerHuman) c).getInputQueue();
+        return q != null && q.getInput() != null;
     }
 
     private IGameController controller() {
@@ -2387,6 +3319,26 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // engine-driven one.  A (re)connect's implicit resync is written too --
         // it is the same request, made by connecting rather than by asking.
         logC2s("resync", "{}");
+        // Amendment M42.  An `input` frame is only ever delivered AFTER the
+        // engine has asked this seat for something -- on connect and on resync
+        // alike.  Before `inputSeen` is armed the struct reEmitInput() would
+        // re-emit is the EMPTY pre-engine one, and putting it on the wire told
+        // the client "the engine is asking you something" while `applyAct` was
+        // still dropping every act with notice{title:"Not yet"}.  It is not a
+        // theoretical inversion: under gate load `tools/ws-auto-play.mjs
+        // --comfort` armed its own `pendingInput` from this frame and sent
+        // `act: setPhaseStop` 128 ms BEFORE the engine's first real input, the
+        // act was dropped, and step 10g failed on the effect that never
+        // arrived (var/ws-auto-3g.jsonl and var/check-all-ws-3g.log,
+        // 2026-09-12).  So a (re)connect before the first engine push gets
+        // `hello_ok` + `state` and nothing else, and a client may treat its
+        // first `input` as this guard lifting.  The `resync` line above is
+        // still written: the client did ask, and section 8.2 records the ask.
+        if (!inputSeen) {
+            System.err.println("RESYNC BEFORE THE FIRST INPUT: hello_ok + state only, no `input` "
+                    + "(amendment M42 -- the engine has not asked this seat anything yet)");
+            return;
+        }
         reEmitInput();
     }
 

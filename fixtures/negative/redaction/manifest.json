@@ -76,5 +76,23 @@
     "level": "fail",
     "expect": "ask.ability_menu.cardId",
     "why": "section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send"
+  },
+  {
+    "file": "a6-reveal-ask-one-frame-too-late.jsonl",
+    "level": "fail",
+    "expect": "carries a name",
+    "why": "the lookahead is ONE frame: a reveal ask two frames after the state does not justify it"
+  },
+  {
+    "file": "p12-choose-list-reveals-without-the-flag.jsonl",
+    "level": "fail",
+    "expect": "an option list may only show what the effect reveals",
+    "why": "P12: only `reveal: true` (or a delayedReveal) lets a list-shaped ask carry an opponent hand card"
+  },
+  {
+    "file": "a7-reveal-flag-on-the-wrong-ask-kind.jsonl",
+    "level": "fail",
+    "expect": "ask.reveal is true on kind",
+    "why": "amendment A7: `reveal: true` is Forge's getChoices(min < 0) channel and is a `choose_list` only"
   }
 ]

@@ -486,9 +486,22 @@ public final class ConsoleTransport implements Transport {
     /** No ask outstanding: the line is an act (report 07 section 8.2). */
     private void act(final String line) {
         if (line.isEmpty()) {
-            // Enter is OK when OK is enabled, Cancel otherwise -- which is what a
-            // desktop player's space bar does.
+            // Enter presses the FOCUSED button when the engine named one
+            // (M6, protocol amendment M39: `buttons.focus`), and otherwise OK
+            // when OK is enabled and Cancel when it is not.  That is what a
+            // desktop player's space bar does -- Swing activates the focused
+            // button, which is why "space = OK" is not a Forge shortcut and
+            // never was.
             final Map<String, Object> buttons = map(lastInput == null ? null : lastInput.get("buttons"));
+            final Object focus = buttons == null ? null : buttons.get("focus");
+            if ("ok".equals(focus)) {
+                send("buttonOk", Map.of());
+                return;
+            }
+            if ("cancel".equals(focus)) {
+                send("buttonCancel", Map.of());
+                return;
+            }
             final Map<String, Object> ok = map(buttons == null ? null : buttons.get("ok"));
             send(ok != null && Boolean.TRUE.equals(ok.get("enabled")) ? "buttonOk" : "buttonCancel",
                  Map.of());
@@ -515,8 +528,17 @@ public final class ConsoleTransport implements Transport {
             send("passPriority", Map.of());
             break;
         case "next":
-            send("nextGame", Map.of());
+        case "new": {
+            // M6.  A session outlives `over` now, and this is the console's way
+            // of saying so: `next` continues the match, `new` restarts it.  The
+            // engine decides which is legal -- a `continue` after `matchOver`
+            // comes back as a notice -- so the seat does not guess.
+            final String mode = "new".equals(w[0]) ? "restart" : "continue";
+            final Map<String, Object> body = new LinkedHashMap<>();
+            body.put("mode", mode);
+            send("newGame", body);
             break;
+        }
         case "s":
             if (lastState != null) {
                 printState(lastState);
@@ -707,6 +729,7 @@ public final class ConsoleTransport implements Transport {
             + "    u | undo        undo the last mana ability\n"
             + "    pass            pass priority\n"
             + "    !               alpha strike (attack with everything)\n"
+            + "    next | new      after `over`: the next game of the match / a new match\n"
             + "    s | i           reprint the last state / input\n"
             + "    q | concede     concede and exit        ?   this help\n"
             + "  While a question is outstanding every line answers it; the ask\n"

@@ -10,6 +10,18 @@
  *     node tools/ws-auto-play.mjs --port 8642 [--timeout 300] [--log var/ws-auto.jsonl]
  *     node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask [--reconnect-after 5000]
  *     node tools/ws-auto-play.mjs --port 8642 --probe
+ *     node tools/ws-auto-play.mjs --port 8642 --games 3 --comfort
+ *
+ * `--games N` (M6) plays N games over one socket: after each `over` it sends
+ * `act: newGame {mode}` -- `continue` in the middle of a match, `restart` once
+ * `matchOver` is true -- and rolls its own log to the next file, because one
+ * game is one `frames.jsonl` (protocol amendment M38). `--comfort` sends M6's
+ * five acts once each and FAILS the run (exit 7) if one of them went out and
+ * the next `state` did not move: a typed act earns its gate with its effect.
+ * An act the bridge answers with `notice {title:"Not yet"}` never went out at
+ * all — the engine had not asked this seat anything yet (§2.1, amendment
+ * **M42**) — so that step is UN-SENT and retried after the next real `input`,
+ * and the summary line carries `retries=N` so a run that raced says so.
  *
  * `--probe` is M5's: the same policy with four decisions taken the other way, so
  * that `useMana` and `clickAbility` — the two typed acts PLAN.md M5 records as
@@ -51,7 +63,7 @@
  */
 
 import { mkdirSync, createWriteStream } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, extname } from 'node:path';
 
 const PROTOCOL_VERSION = 1;
 
@@ -91,6 +103,9 @@ function usage(message) {
     'usage: node tools/ws-auto-play.mjs [--port 8642] [--url ws://127.0.0.1:8642/ws]\n' +
       '                                  [--timeout 300] [--log var/ws-auto.jsonl]\n' +
       '                                  [--resync-after 12] [--quiet] [--probe]\n' +
+      '                                  [--games 3] [--comfort]\n' +
+      '                                  [--new-game-delay-ms 40000]\n' +
+      '                                  [--require-yield-repeat]\n' +
       '                                  [--refuse-first-ask [--reconnect-after 5000]]\n',
   );
   process.exit(2);
@@ -98,7 +113,8 @@ function usage(message) {
 
 const args = {
   port: 8642, url: null, timeoutS: 300, log: null, resyncAfter: 12, quiet: false,
-  refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false,
+  refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false, games: 1, comfort: false,
+  newGameDelayMs: 0, requireYieldRepeat: false,
 };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
@@ -116,6 +132,33 @@ for (let i = 2; i < process.argv.length; i++) {
     case '--quiet': args.quiet = true; break;
     case '--refuse-first-ask': args.refuseFirstAsk = true; break;
     case '--probe': args.probe = true; break;
+    // M6, protocol amendment M38. After each `over` this seat sends
+    // `act: newGame {mode}` and plays on, exactly as AutoTransport does: nothing
+    // in the bridge starts a game, so a multi-game session is a CLIENT
+    // behaviour. `mode` is read off the frame — `matchOver:false` is the middle
+    // of a match and continues it, `matchOver:true` needs a restart.
+    case '--games': args.games = Number.parseInt(next(), 10); break;
+    // M6. The five comfort acts, each sent once and each checked for its
+    // EFFECT in a later `state` -- see comfortStep().
+    case '--comfort': args.comfort = true; break;
+    // M6 verification fix. How long to SIT STILL, connected, after an `over`
+    // before asking for the next game. The default is 0 -- every gate step is
+    // unchanged -- and a non-zero value is the only thing in the repo that
+    // measures the bridge's end-of-game grace: both of MtgTable's post-`over`
+    // waits used to be a flat 30 s wall clock that ran whether or not a client
+    // was attached, so a person reading the final board for 31 seconds lost the
+    // session. Pass more than 30000 and a fixed bridge still plays the next
+    // game; a bridge with the fuse closes the socket first (code 1000) and this
+    // client exits 6, "socket closed before `over`".
+    case '--new-game-delay-ms': args.newGameDelayMs = Number.parseInt(next(), 10); break;
+    // M6 verification fix, the behavioural half of auto-yield. `--comfort`
+    // ALWAYS fails a run in which the yielded key came back to the top of the
+    // stack and the engine asked this seat to act anyway; this flag additionally
+    // fails a run in which it never came back at all, i.e. one where the
+    // assertion had nothing to bite on. It needs a deck whose key ability
+    // repeats on its own -- decks/yield-probe.dck, 22 Thallids, one mandatory
+    // upkeep trigger each.
+    case '--require-yield-repeat': args.requireYieldRepeat = true; break;
     case '--reconnect-after': args.reconnectAfterMs = Number.parseInt(next(), 10); break;
     case '--help': case '-h': usage(null); break;
     default: usage(`unknown argument ${JSON.stringify(a)}`);
@@ -124,6 +167,8 @@ for (let i = 2; i < process.argv.length; i++) {
 if (!Number.isFinite(args.port) || args.port <= 0) usage('--port must be a positive integer');
 if (!Number.isFinite(args.timeoutS) || args.timeoutS <= 0) usage('--timeout must be a positive integer');
 if (!Number.isFinite(args.reconnectAfterMs) || args.reconnectAfterMs < 0) usage('--reconnect-after must be a non-negative integer');
+if (!Number.isFinite(args.games) || args.games <= 0) usage('--games must be a positive integer');
+if (!Number.isFinite(args.newGameDelayMs) || args.newGameDelayMs < 0) usage('--new-game-delay-ms must be a non-negative integer');
 const URL_ = args.url ?? `ws://127.0.0.1:${args.port}/ws`;
 
 // ---------------------------------------------------------------------------
@@ -154,11 +199,34 @@ function say(line) {
 let logStream = null;
 let headerWritten = false;
 const heldLines = [];
+/** Every log file this run wrote, in order — one per game (amendment M38). */
+const logPaths = [];
 
-if (args.log !== null) {
-  mkdirSync(dirname(args.log), { recursive: true });
-  logStream = createWriteStream(args.log, { flags: 'w' });
+/**
+ * Game 1 writes `--log` as given; game *n* writes `<stem>-g<n><ext>` beside it.
+ *
+ * One file per game, mirroring the bridge: line 0 of a log is its session
+ * header, and a second header in the middle of a file is not a frame. It also
+ * keeps every existing assertion true — one header, one `over`, `over` last —
+ * for a session that now plays several games.
+ */
+function logPathFor(n) {
+  if (n <= 1) return args.log;
+  const ext = extname(args.log);
+  return `${args.log.slice(0, args.log.length - ext.length)}-g${n}${ext}`;
 }
+
+function openLog(n) {
+  if (args.log === null) return;
+  const path = logPathFor(n);
+  mkdirSync(dirname(path), { recursive: true });
+  logStream = createWriteStream(path, { flags: 'w' });
+  headerWritten = false;
+  heldLines.length = 0;
+  logPaths.push(path);
+}
+
+openLog(1);
 
 function writeLine(object) {
   if (logStream === null) return;
@@ -225,7 +293,23 @@ const ASK_REPEAT_CAP = 20;
 /** AutoTransport.lastProgressKey — `turn|phase|activePlayer` of the last snapshot. */
 let lastProgressKey = '';
 
+/** How many `over` frames have arrived, and the gameId of each game seen (M6). */
+let gamesSeen = 0;
+const gameIds = [];
+
 let pendingInput = null;
+/**
+ * How many `input` frames this GAME has delivered (amendment M42's client half).
+ *
+ * Per game, because the bridge's own `inputSeen` is reset per game
+ * (`WireGuiGame.resetForGame`) and a retry armed in game 1 must not be satisfied
+ * by game 1's own frames after `nextGame()` has moved on. It counts frames
+ * rather than tracking a boolean because the retry below needs "a NEW input
+ * arrived since the notice", not "an input has ever arrived".
+ */
+let inputsThisGame = 0;
+/** The `--comfort` step the most recent `act` belonged to, or null. See act(). */
+let lastComfortStep = null;
 let lastSeenInputKey = '';
 const tries = new Map();
 let lastActivity = Date.now();
@@ -256,9 +340,20 @@ function send(type, body) {
   writeLine({ ...frame, dir: 'c2s' });
 }
 
-function act(action, extra = {}) {
+/**
+ * Send one `act`.
+ *
+ * `step` names the `--comfort` step this act belongs to, or is null for an
+ * ordinary policy act. It exists so that a `notice {title:"Not yet"}` — the
+ * bridge saying it dropped the act because the engine has not asked this seat
+ * anything yet (§2.1 amendment M42) — can UN-SEND exactly the step that was
+ * dropped, rather than guessing from the act name or failing the run over a
+ * frame the bridge told us it threw away.
+ */
+function act(action, extra = {}, step = null) {
   stats.acts += 1;
   if (action in probeActs) probeActs[action] += 1;
+  lastComfortStep = step;
   const prompt = pendingInput === null ? '(no input)' : String(pendingInput.prompt ?? '');
   say(`ACT  ${action}${Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ''}  <- ${JSON.stringify(prompt)}`);
   send('act', { action, ...extra });
@@ -273,6 +368,63 @@ function answer(askId, kind, prompt, value) {
   stats.answers += 1;
   say(`ANSW ${kind} ${askId} = ${JSON.stringify(value)}  <- ${JSON.stringify(prompt)}`);
   send('answer', { askId, value });
+}
+
+/**
+ * One game ended and we want another (M6, `--games N`).
+ *
+ * Everything below is an id from a game that no longer exists —
+ * `HostedMatch.endCurrentGame()` replaces every `PlayerView` and the bridge
+ * rebuilds its own caches from `openView` — so the client drops its state here
+ * rather than after the new `hello_ok` arrives, and rolls its log to the next
+ * file before the first frame of the next game can reach it.
+ */
+function nextGame(overBody) {
+  const mode = overBody.matchOver === false ? 'continue' : 'restart';
+  me = null;
+  myHand = [];
+  myLands = [];
+  myPriority = false;
+  myTurn = false;
+  myMainPhase = false;
+  stackEmpty = true;
+  myPool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+  pendingInput = null;
+  // The bridge's `inputSeen` is reset per game, so ours is too: a comfort step
+  // that spills into game 2 waits for game 2's first input (amendment M42).
+  inputsThisGame = 0;
+  comfort.retryAfterInput = 0;
+  lastComfortStep = null;
+  lastSeenInputKey = '';
+  tries.clear();
+  answered.clear();
+  askPromptsSeen.clear();
+  askRepeats.clear();
+  lastProgressKey = '';
+  lastActivity = Date.now();
+  lastFrameAt = Date.now();
+  // Roll FIRST, then send: game n's file must end with its `over` (§8.4), so
+  // the act that asks for game n+1 belongs at the head of game n+1's file, held
+  // until its header the way amendment M9 holds any early frame. The bridge
+  // writes this act to neither file, and says so on stderr instead.
+  openLog(gamesSeen + 1);
+  if (args.newGameDelayMs > 0) {
+    // The deliberate pause (`--new-game-delay-ms`). The socket stays OPEN and
+    // this client sends nothing at all: that is the whole measurement. The
+    // watchdog is fed so its own quiet-stream check does not fire in the gap.
+    say(`sitting still for ${args.newGameDelayMs} ms, connected and silent, before newGame {${mode}}`);
+    const keepAlive = setInterval(() => { lastActivity = Date.now(); lastFrameAt = Date.now(); }, 1000);
+    setTimeout(() => {
+      clearInterval(keepAlive);
+      if (over || failure !== null) return;
+      say(`newGame {${mode}} — asking for game ${gamesSeen + 1} of ${args.games}`
+        + ` after ${args.newGameDelayMs} ms of silence`);
+      act('newGame', { mode });
+    }, args.newGameDelayMs);
+    return;
+  }
+  say(`newGame {${mode}} — asking for game ${gamesSeen + 1} of ${args.games}`);
+  act('newGame', { mode });
 }
 
 function fail(message, code = 3) {
@@ -320,6 +472,16 @@ function onFrame(text) {
   switch (frame.type) {
     case 'hello_ok':
       me = typeof body.you === 'number' ? body.you : null;
+      // §2.1 / amendment M38: one `hello_ok` per GAME, and a new one invalidates
+      // every id this client cached. A re-delivered one (a resync, a reconnect)
+      // carries the SAME gameId and is not a new game — that is the whole
+      // difference, and it is why the check is on the id and not on the arrival.
+      if (gameIds.length > 0 && body.gameId !== gameIds[gameIds.length - 1]) {
+        gameIds.push(String(body.gameId));
+        say(`NEW GAME ${gameIds.length}: ${gameIds[gameIds.length - 2]} -> ${String(body.gameId)}`);
+      } else if (gameIds.length === 0) {
+        gameIds.push(String(body.gameId));
+      }
       writeHeader(body);
       say(`HELLO game=${String(body.gameId)} seat=${String(me)} seed=${String(body.seed)} ` +
         `forge=${String(body.forgeVersion)} players=${(body.players ?? []).map((p) => p.name).join(' vs ')}`);
@@ -335,7 +497,21 @@ function onFrame(text) {
       break;
     case 'input': {
       stats.inputs += 1;
+      inputsThisGame += 1;
       pendingInput = body;
+      // --comfort 3b: an `input` that asks this seat to ACT while the yielded
+      // key sits on TOP of the stack is the engine NOT consulting the store.
+      // `buttons.ok.enabled` is the typed field for "there is something to
+      // press" (never a label match -- CLAUDE.md, M5 convention 4).
+      // `repeatSeen > 0` excludes the occurrence the yield was SET on: the
+      // engine was already parked in an InputPassPriority for it and writing the
+      // store does not retract an input already on screen. `setYieldGame`
+      // excludes every later game, whose handles are new (amendment M38).
+      if (args.comfort && comfort.repeatOnStack && comfort.repeatSeen > 0
+          && gamesSeen === comfort.setYieldGame
+          && body.buttons?.ok?.enabled === true) {
+        comfort.repeatPrompts += 1;
+      }
       // AutoTransport: `awaitNextInput()` re-pushes the same prompt every 250 ms
       // while the engine thinks, so an identical input frame is NOT activity —
       // otherwise the settle detector never fires and the policy acts only when
@@ -355,12 +531,21 @@ function onFrame(text) {
     case 'notice':
       stats.notices += 1;
       say(`NOTE ${String(body.level)} ${JSON.stringify(body.title)} ${JSON.stringify(body.text)}`);
+      // §2.1 amendment M42: "Not yet" is `applyAct`'s pre-input guard saying it
+      // DROPPED the act. A comfort step whose act was dropped has not been
+      // sent — so un-send it and try again after the next real `input`.
+      if (args.comfort && String(body.title) === 'Not yet') comfortNotYet();
       lastActivity = Date.now();
       break;
     case 'over':
-      over = true;
-      say(`OVER winner=${String(body.winner)} reason=${String(body.reason)} matchOver=${String(body.matchOver)}`);
-      finish();
+      gamesSeen += 1;
+      say(`OVER #${gamesSeen} winner=${String(body.winner)} reason=${String(body.reason)} matchOver=${String(body.matchOver)}`);
+      if (gamesSeen >= args.games) {
+        over = true;
+        finish();
+      } else {
+        nextGame(body);
+      }
       break;
     case 'ping':
       send('pong', {});
@@ -403,6 +588,325 @@ function onState(body) {
       if (String(card.types ?? '').includes('Land')) myLands.push(card.id);
     }
   }
+  if (args.comfort) comfortStep(body);
+}
+
+// ---------------------------------------------------------------------------
+// --comfort: M6's five acts, each with the EFFECT it is supposed to have
+// ---------------------------------------------------------------------------
+
+/**
+ * The M6 probe (`--comfort`).
+ *
+ * `--probe` exists because a typed act with no client that sends it is an act
+ * nothing proves; this is the same argument for M6's five. Each step sends one
+ * act **and then looks for its effect in a later `state`** — a phase that was
+ * not a stop becoming one, `state.yield` turning on and back off, the undo
+ * depth falling, `stack[].yielded` turning `"yes"` — and the run fails if an act
+ * went out and nothing moved. A count alone would still pass if the client sent
+ * the act and the bridge dropped it (CLAUDE.md, M5 convention 6).
+ *
+ * While a step is waiting for its effect the ordinary policy is HELD: the
+ * policy's own rule is "press the enabled button", and an enabled Cancel is
+ * exactly how a yield is cancelled, so without the hold the policy would cancel
+ * the yield before the snapshot that shows it was ever running.
+ */
+const comfort = {
+  stopSent: false, stopSeen: false,
+  undoSent: false, undoDepth: 0, undoSeen: false,
+  yieldSent: false, yieldSeen: false, cancelSent: false, cancelSeen: false,
+  setYieldSent: false, setYieldKey: null, setYieldSeen: false, setYieldWasAbility: null,
+  setYieldWaited: 0,
+  // WHICH GAME the yield was set in (0-based, i.e. `gamesSeen` at the time).
+  // A handle is interned for the life of ONE game -- `openView` rebuilds the
+  // bridge's whole yield-handle table and `endCurrentGame()` empties the human
+  // controllers with the store in them (amendment M38) -- so "y2" in game 2 is
+  // a DIFFERENT stack item that was never yielded on. Measuring across the
+  // boundary is how this probe first reported 6 repeats and 8 prompts on a run
+  // whose actual game-1 numbers were 4 repeats and 0 prompts.
+  setYieldGame: -1,
+  // The BEHAVIOURAL half of auto-yield, and it is now ASSERTED (M6 verification
+  // finding). Setting the yield is proven at the store level by
+  // `yielded:"yes"`; what the store is FOR is
+  // `PlayerControllerHuman.skipsPromptForStackOrPhase`, i.e. a LATER occurrence
+  // of the same key resolving without asking this seat.
+  //
+  // The first version of this could only MEASURE it, because no seed could be
+  // made to guarantee a second occurrence and an assertion that fires only when
+  // the engine happens to cooperate is worse than a number. `decks/yield-probe.dck`
+  // is what removed that excuse: 22 Thallids, each with a MANDATORY upkeep
+  // trigger, so the same yieldKey returns to the top of the stack every turn
+  // (measured at seed 13: one handle on the stack in 21 separate `state`
+  // frames). So the rule is now in two halves --
+  //   * always: `repeatSeen > 0` and `repeatPrompts > 0` is a FAILURE, on any
+  //     deck. The engine consulted the store and asked anyway.
+  //   * `--require-yield-repeat`: `repeatSeen === 0` is also a failure, for the
+  //     run that is supposed to produce a repeat.
+  repeatSeen: 0, repeatOnStack: false, repeatPrompts: 0,
+  passSent: false,
+  // Amendment M42's client half. `retries` is how many comfort acts the bridge
+  // answered with `notice {title:"Not yet"}` and this client therefore UN-SENT;
+  // `retryAfterInput` is the `inputsThisGame` value one must exceed before the
+  // step is allowed to go out again — i.e. "wait for an input that arrived
+  // after the notice". Both are printed in the summary line: a retry is not a
+  // failure, but a run that needed one has raced something and should say so.
+  retries: 0, retryAfterInput: 0,
+};
+let comfortHoldUntil = 0;
+
+/**
+ * The bridge dropped a comfort act with `notice {title:"Not yet"}` — un-send it.
+ *
+ * `applyAct` drops every act except `concede` until `inputSeen` is armed, and
+ * that flag is armed by Forge alone. A dropped act is an act that never
+ * happened, so the honest thing is to clear the step's `*Sent` flag and let
+ * `comfortStep()` raise it again on a later `state` — after a **real** `input`,
+ * which since amendment M42 is the only kind the bridge ever sends.
+ *
+ * This is the belt to the bridge's braces. With M42 in place `pendingInput` is
+ * null until the engine has asked and this path should never run at all; it is
+ * kept because the alternative is a probe whose verdict on a dropped act is
+ * `setPhaseStop (sent, no effect seen)` — a true statement about a dropped act
+ * and a false alarm about the bridge, which is exactly how step 10g failed on
+ * 2026-09-12.
+ */
+/** The `seen` flag of each step, so a retry can never un-send a proven one. */
+const COMFORT_SEEN = {
+  setPhaseStop: () => comfort.stopSeen,
+  undo: () => comfort.undoSeen,
+  setYield: () => comfort.setYieldSeen,
+  yieldTo: () => comfort.yieldSeen,
+  buttonCancel: () => comfort.cancelSeen,
+  passPriority: () => comfort.passSent,        // a count, not an effect
+};
+
+function comfortNotYet() {
+  const step = lastComfortStep;
+  lastComfortStep = null;
+  if (step === null) return;                   // an ordinary policy act, not ours
+  // Unreachable by argument — the notice arrives ~1 ms after the act and the
+  // effect cannot precede the act that causes it — and cheap to state anyway: a
+  // retry that cleared a `*Sent` flag whose effect was already seen would turn
+  // a green run red by bookkeeping (`[sent=false, seen=true]` reads as "never
+  // reached"). If it ever fires, the notice belonged to something else.
+  if (COMFORT_SEEN[step]?.() === true) {
+    say(`COMFORT: a "Not yet" followed ${step}, whose effect was already seen — not un-sent`);
+    return;
+  }
+  switch (step) {
+    case 'setPhaseStop':
+      comfort.stopSent = false;
+      break;
+    case 'undo':
+      comfort.undoSent = false;
+      comfort.undoDepth = 0;
+      break;
+    case 'setYield':
+      comfort.setYieldSent = false;
+      comfort.setYieldKey = null;
+      comfort.setYieldGame = -1;
+      comfort.setYieldWasAbility = null;
+      break;
+    case 'yieldTo':
+      comfort.yieldSent = false;
+      break;
+    case 'buttonCancel':
+      // The cancel is raised from the `yieldSeen` edge, so clearing `cancelSent`
+      // alone would leave no branch that can fire again: `yieldSeen` has to go
+      // back too, and `state.yield` is still non-null (the cancel was dropped),
+      // so the edge re-fires on the next state.
+      comfort.cancelSent = false;
+      comfort.yieldSeen = false;
+      break;
+    case 'passPriority':
+      comfort.passSent = false;
+      break;
+    default:
+      return;
+  }
+  comfort.retries += 1;
+  comfort.retryAfterInput = inputsThisGame;    // a NEW input must arrive first
+  comfortHoldUntil = 0;                        // nothing to wait for; it never landed
+  say(`COMFORT retry: ${step} was dropped ("Not yet" — the engine had not asked this seat `
+    + `anything yet), un-sent; it goes out again after the next input (retries=${comfort.retries})`);
+}
+
+/** The phase this probe turns into a stop: not one by default, for either seat. */
+const COMFORT_STOP_PHASE = 'UPKEEP';
+
+function comfortStep(body) {
+  // NOT BEFORE THE FIRST `input`. `WireGuiGame.applyAct` drops every act (except
+  // `concede`) until `inputSeen` is armed -- "the game has not asked for
+  // anything yet", protocol §2.4 -- and the FIRST `state` of a game is pushed
+  // before the engine has asked this seat anything. A probe that fires on that
+  // frame races the engine for the first `input` and loses under load: the act
+  // came back as `notice {title:"Not yet"}` and the step then reported
+  // `setPhaseStop=NO EFFECT`, which is a true statement about a dropped act and
+  // a false alarm about the bridge.
+  //
+  // `pendingInput` and not `stats.inputs`, because `inputSeen` is reset PER GAME
+  // (`WireGuiGame.resetForGame`) and `nextGame()` below clears `pendingInput` to
+  // match: a comfort step that spills into game 2 has to wait for game 2's first
+  // input, not for the whole match's first one.
+  //
+  // **That guard was not enough on its own, and this is the second half of the
+  // 2026-09-12 fix.** `pendingInput` was armed by the input frame the bridge
+  // re-delivered ON CONNECT, which before any engine push was the EMPTY
+  // pre-engine struct -- so the client's first `input` was not a truthful proxy
+  // for "the engine has asked this seat something" and the act still went out
+  // 128 ms early (var/ws-auto-3g.jsonl). The bridge no longer sends that frame
+  // at all (amendment **M42**), which is the real fix; `retryAfterInput` is the
+  // client's own recovery, armed by comfortNotYet() when a `Not yet` notice
+  // says an act was dropped anyway -- a bridge that regresses, a mid-game
+  // reconnect, an older server.
+  if (pendingInput === null) return;
+  if (inputsThisGame <= comfort.retryAfterInput) return;
+  const mine = (body.players ?? []).find((p) => p.id === me);
+  const hold = (ms) => { comfortHoldUntil = Date.now() + ms; };
+
+  // 1. setPhaseStop {phase, turn:"own", stop:true} -> players[me].phaseStops.own
+  //    UPKEEP is `false` in FPref.PHASES_HUMAN, so seeing it in `own` can only
+  //    be this act's doing.
+  if (mine?.phaseStops) {
+    if (!comfort.stopSent) {
+      if (mine.phaseStops.own.includes(COMFORT_STOP_PHASE)) {
+        fail(`${COMFORT_STOP_PHASE} is already a stop before the act — the probe proves nothing`);
+        return;
+      }
+      comfort.stopSent = true;
+      act('setPhaseStop', { phase: COMFORT_STOP_PHASE, turn: 'own', stop: true }, 'setPhaseStop');
+      hold(400);
+    } else if (!comfort.stopSeen && mine.phaseStops.own.includes(COMFORT_STOP_PHASE)) {
+      comfort.stopSeen = true;
+      say(`COMFORT setPhaseStop: ${COMFORT_STOP_PHASE} is now a stop on my own turn`);
+    }
+  }
+
+  // 2. undo -> state.undo.depth falls. `can` is the engine's own gate
+  //    (priority is mine and the undo stack is mine), so this never guesses.
+  if (!comfort.undoSent && comfort.stopSeen && body.undo?.can === true && body.undo.depth > 0) {
+    comfort.undoSent = true;
+    comfort.undoDepth = body.undo.depth;
+    act('undo', {}, 'undo');
+    hold(400);
+  } else if (comfort.undoSent && !comfort.undoSeen && typeof body.undo?.depth === 'number'
+             && body.undo.depth < comfort.undoDepth) {
+    comfort.undoSeen = true;
+    say(`COMFORT undo: depth ${comfort.undoDepth} -> ${body.undo.depth}`);
+  }
+
+  // 3. setYield {yieldKey, mode:"yes"} -> stack[].yielded === "yes".
+  //    PREFER an item with `isAbility: true`. Any keyed item proves the wire,
+  //    but `PlayerControllerHuman.setShouldAutoYield` is called with the
+  //    controller's `isAbilityScope()` (true on the default
+  //    UI_AUTO_DECISION_MODE), which strips the key to its ability portion --
+  //    so a yield set on a plain creature SPELL is a key the engine can never
+  //    consult again, and the board would not have offered the control there
+  //    either. The first version of this probe took the top of the stack
+  //    whatever it was and committed a fixture whose proof was exactly that.
+  const stack = Array.isArray(body.stack) ? body.stack : [];
+  const keyed = stack.filter((si) => typeof si.yieldKey === 'string');
+  const abilityItem = [...keyed].reverse().find((si) => si.isAbility === true) ?? null;
+  if (!comfort.setYieldSent && keyed.length > 0) {
+    // Wait for an ability before settling for a spell: at the gate's seed one
+    // arrives well inside the first few turns. The fallback exists so a deck or
+    // seed that never raises one still proves the act rather than reporting
+    // "never reached".
+    comfort.setYieldWaited += 1;
+    const pick = abilityItem ?? (comfort.setYieldWaited > 40 ? keyed[keyed.length - 1] : null);
+    if (pick !== null) {
+      comfort.setYieldSent = true;
+      comfort.setYieldKey = pick.yieldKey;
+      comfort.setYieldGame = gamesSeen;
+      comfort.setYieldWasAbility = pick.isAbility === true;
+      act('setYield', { yieldKey: pick.yieldKey, mode: 'yes' }, 'setYield');
+      hold(400);
+    }
+  } else if (comfort.setYieldSent && !comfort.setYieldSeen) {
+    for (const item of stack) {
+      if (item.yieldKey === comfort.setYieldKey && item.yielded === 'yes') {
+        comfort.setYieldSeen = true;
+        // The item is on the stack right now, and that occurrence is the one
+        // the yield was SET on -- not a repeat. Arm the edge detector as
+        // "already on the stack" so 3b counts the NEXT appearance as the first.
+        comfort.repeatOnStack = true;
+        say(`COMFORT setYield: ${String(item.yieldKey)} now yielded="yes"`
+          + ` (isAbility=${String(comfort.setYieldWasAbility)})`);
+      }
+    }
+  }
+
+  // 3b. The behavioural half, ASSERTED in finish() -- see `comfort`.
+  //     Every later APPEARANCE of the yielded key on TOP of the stack is
+  //     counted, and so is every `input` that asked this seat to act while it
+  //     was there. Zero prompts across one or more repeats is the engine
+  //     consulting the store; one prompt is the engine NOT consulting it, and
+  //     that fails the run. Zero repeats is a fact about the deck and the seed,
+  //     and is a failure only under `--require-yield-repeat`.
+  if (comfort.setYieldSeen && gamesSeen !== comfort.setYieldGame) {
+    // A new game: the handle is dead and so is the store behind it. Stop.
+    comfort.repeatOnStack = false;
+  } else if (comfort.setYieldSeen) {
+    // TOP of the stack, not anywhere on it: report 11 §4.2 --
+    // `skipsPromptForStackOrPhase()` is `top.isAbility() &&
+    // shouldAutoYield(top.getKey())`, so the store is only ever consulted for
+    // the topmost item and a count taken over the whole stack would measure
+    // something the engine never reads.
+    const top = stack.length > 0 ? stack[stack.length - 1] : null;
+    const onTop = top !== null && top.yieldKey === comfort.setYieldKey;
+    if (onTop && !comfort.repeatOnStack) comfort.repeatSeen += 1;
+    comfort.repeatOnStack = onTop;
+  }
+
+  // 4. yieldTo {kind:"endOfTurn"} -> state.yield, then buttonCancel -> null.
+  //    Cancelling a yield needs no act of its own and must not get one: Forge's
+  //    InputLockUI puts a labelled Cancel on screen for exactly this.
+  if (!comfort.yieldSent && comfort.stopSeen && myTurn && myPriority && stackEmpty
+      && body.phase === 'MAIN1' && body.yield === null) {
+    comfort.yieldSent = true;
+    act('yieldTo', { kind: 'endOfTurn' }, 'yieldTo');
+    hold(1200);
+  } else if (comfort.yieldSent && !comfort.yieldSeen && body.yield !== null
+             && body.yield !== undefined) {
+    comfort.yieldSeen = true;
+    say(`COMFORT yieldTo: state.yield = ${JSON.stringify(body.yield)}`);
+    comfort.cancelSent = true;
+    act('buttonCancel', {}, 'buttonCancel');
+    hold(600);
+  } else if (comfort.cancelSent && !comfort.cancelSeen && body.yield === null) {
+    comfort.cancelSeen = true;
+    say('COMFORT buttonCancel: the yield is cancelled, state.yield = null');
+  }
+
+  // 5. passPriority — a no-op unless the engine is on an InputPassPriority, and
+  //    that is the point of it (report 11 §4.3): it is the SAFE keyboard pass.
+  if (!comfort.passSent && comfort.cancelSeen && myPriority && stackEmpty) {
+    comfort.passSent = true;
+    act('passPriority', {}, 'passPriority');
+  }
+}
+
+/**
+ * What `--comfort` proved, for the summary and for check-all's assertion.
+ *
+ * `[name, sent, seen, countOnly]`. **Five rows carry a real effect and the
+ * sixth does not**, and saying so is the point of the fourth field: a
+ * `passPriority` that reaches an engine which is NOT on an `InputPassPriority`
+ * is a no-op by design (report 11 §4.3 — it is the *safe* keyboard pass), so
+ * there is no field of the next `state` that is uniquely its doing and its
+ * "effect" column would otherwise be its own "sent" flag wearing a disguise.
+ * It is a count, it is labelled a count, and `docs/evidence/m6-engine.md` §4.5
+ * says the same.
+ */
+function comfortReport() {
+  return [
+    ['setPhaseStop', comfort.stopSent, comfort.stopSeen, false],
+    ['undo', comfort.undoSent, comfort.undoSeen, false],
+    ['setYield', comfort.setYieldSent, comfort.setYieldSeen, false],
+    ['yieldTo', comfort.yieldSent, comfort.yieldSeen, false],
+    ['buttonCancel(yield)', comfort.cancelSent, comfort.cancelSeen, false],
+    ['passPriority', comfort.passSent, comfort.passSent, true],
+  ];
 }
 
 /** Everything about an input frame a decision depends on (AutoTransport.key). */
@@ -589,8 +1093,17 @@ function answerFor(kind, body) {
     }
     case 'manipulate_list':
       return indices(len(body.cards));         // unchanged order
-    case 'sideboard':
-      return indices(len(body.main));          // the deck, unchanged
+    case 'sideboard': {
+      // AutoTransport's branch, line for line. The identity is "no
+      // sideboarding" and is what the default policy sends; --probe swaps the
+      // last main card for the first sideboard card, which is the same deck
+      // size and a provably different decklist, so the index marshalling is
+      // actually executed (M6).
+      const main = len(body.main);
+      const side = len(body.side);
+      if (!args.probe || side === 0 || main === 0) return indices(main);
+      return [...indices(main - 1), main];
+    }
     case 'assign_damage': {
       // §5.3: index 0 is the DEFENDER and a blocker follows whenever there is
       // one. All of it on the first blocker; piling it on the defending player
@@ -778,6 +1291,7 @@ function tick() {
   }
 
   if (pendingInput === null) return;
+  if (now < comfortHoldUntil) return;          // --comfort: see comfortStep()
   const quiet = now - lastActivity;
   const sinceDecision = now - lastDecisionAt;
   if (quiet >= SETTLE_MS || sinceDecision >= STEP_CAP_MS) {
@@ -791,11 +1305,69 @@ function tick() {
 }
 
 function finish() {
+  if (args.comfort && failure === null && over) {
+    // A comfort act that went out and moved nothing is the failure this mode
+    // exists to catch: the client sent it, the bridge dropped it, and a count
+    // would still have been green.
+    const missed = comfortReport().filter(([, sent, seen]) => !sent || !seen);
+    if (missed.length > 0) {
+      failure = {
+        message: `--comfort: ${missed.map(([n, sent, , countOnly]) => `${n} (${
+          sent ? (countOnly ? 'sent' : 'sent, no effect seen') : 'never reached'})`).join(', ')}`,
+        code: 7,
+      };
+    }
+  }
+  if (args.comfort && failure === null && over) {
+    // The behavioural half of auto-yield (step 3b). `yielded:"yes"` proves the
+    // STORE was written; this proves the engine READS it --
+    // `PlayerControllerHuman.chooseSpellAbilityToPlay` returns null without
+    // raising an InputPassPriority at all when `peekAbility().isAbility()` and
+    // `shouldAutoYield(yieldKey())`, so a prompt while that key is on top is
+    // the feature not working.
+    if (comfort.repeatSeen > 0 && comfort.repeatPrompts > 0) {
+      failure = {
+        message: `--comfort: the yielded key ${String(comfort.setYieldKey)} came back to the top of `
+          + `the stack ${comfort.repeatSeen} time(s) and the engine asked this seat to act `
+          + `${comfort.repeatPrompts} time(s) anyway -- setYield wrote the store and nothing read it`,
+        code: 7,
+      };
+    } else if (args.requireYieldRepeat && comfort.repeatSeen === 0) {
+      failure = {
+        message: '--require-yield-repeat: the yielded key never came back to the top of the stack, '
+          + 'so the behavioural half of auto-yield was not exercised at all '
+          + '(use decks/yield-probe.dck, whose key ability repeats every upkeep)',
+        code: 7,
+      };
+    } else if (args.requireYieldRepeat && comfort.setYieldWasAbility !== true) {
+      failure = {
+        message: '--require-yield-repeat: the yield was set on a stack item with isAbility:false, '
+          + 'which the engine\'s ability-scoped store can never consult',
+        code: 7,
+      };
+    }
+  }
   const code = failure !== null ? failure.code : over ? 0 : 1;
   const summary =
     `frames in ${stats.in}, out ${stats.out} · states ${stats.states} · inputs ${stats.inputs} · ` +
     `acts ${stats.acts} · asks ${stats.asks} answered ${stats.answers} · notices ${stats.notices} · ` +
     `ask kinds ${askKinds.size === 0 ? 'none' : [...askKinds].sort().join(',')} · ` +
+    (args.games > 1 ? `games ${gamesSeen}/${args.games} [${gameIds.join(' ')}] · ` : '') +
+    (args.comfort
+      ? `comfort ${comfortReport().map(([n, sent, seen, countOnly]) => `${n}=${
+          sent ? (countOnly ? 'sent(count)' : seen ? 'ok' : 'NO EFFECT') : 'not reached'}`).join(' ')}`
+        // Amendment M42: how many comfort acts came back as `notice
+        // {title:"Not yet"}` and were un-sent and retried. Zero is the expected
+        // number against a bridge that has M42; a non-zero one is not a failure
+        // and IS a thing a reader should see, because it says this run raced
+        // the engine's first push and recovered rather than silently passing.
+        + ` retries=${comfort.retries}`
+        + ` · autoYield key=${comfort.setYieldKey ?? 'none'}`
+        + ` isAbility=${String(comfort.setYieldWasAbility)}`
+        + ` repeats=${comfort.repeatSeen} promptsWhileOnTop=${comfort.repeatPrompts}`
+        + ` (asserted: a prompt while that key is on top fails the run`
+        + `${args.requireYieldRepeat ? ', and so does repeats=0' : ''}) · `
+      : '') +
     (args.probe ? `probe acts ${probeActs.useMana} useMana, ${probeActs.clickAbility} clickAbility · ` : '') +
     (refusedAskId === null ? '' : `refused ${refusedAskId} and reconnected · `) +
     `${((Date.now() - started) / 1000).toFixed(1)}s`;
@@ -811,7 +1383,7 @@ function finish() {
           `${args.log} is empty on purpose (§8.1, amendment M9)\n`,
       );
     }
-    process.stderr.write(`[ws-auto] log: ${args.log}\n`);
+    for (const path of logPaths) process.stderr.write(`[ws-auto] log: ${path}\n`);
   }
   try { socket?.close(1000, 'done'); } catch { /* already gone */ }
   if (logStream !== null) logStream.end();

@@ -85,7 +85,8 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-Thirteen numbered steps and three lettered sub-steps, stopping at the first
+Thirteen numbered steps and five lettered sub-steps (9b, 9c, **9d**, 10f and
+**10g** — the last of each pair added by M6), stopping at the first
 failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
 `bridge/build.sh` (javac plus three self-tests) → `Smoke` → a `RecordMatch`
@@ -97,21 +98,25 @@ advisory **9b** that re-records seed 42 and compares it against
 `fixtures/games/human-auto-42.jsonl` as an order-insensitive multiset, and
 **9c**, M5's exit criterion — `tools/ten-games.sh`, ten consecutive games across
 six decks, the single most expensive thing in the file, which `SKIP_TEN=1`
-turns off) → **six
+turns off, and **9d**, M6's `sideboard` ask, which needs a session that survives
+game 1) → **seven
 fresh `--transport ws` servers** (the two `ws-smoke` variants, a whole game
 through `tools/ws-auto-play.mjs`, that client again with `--refuse-first-ask`,
 which drops the socket on the first `ask` frame so `ReplyPool.cancelAll()` runs
 with a game thread genuinely parked, `ws-smoke --concede-before-input`, which
 concedes from the handshake handler before the engine has asked this seat
-anything — amendment M11's exception path — and **10f**, `ws-auto-play --probe`,
+anything — amendment M11's exception path — **10f**, `ws-auto-play --probe`,
 the only thing anywhere that sends the `clickAbility` **act** from a client
-rather than answering an ability menu by index) →
+rather than answering an ability menu by index, and **10g**, M6's own command:
+three games back to back over one socket, with the five comfort acts each
+asserted by the **effect** it had on the next `state`) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
 every fresh recording → `check-redaction-selftest.mjs`, which asserts the
-checker still rejects twelve one-defect probes → `npm run build && npm test` in
-`web/`. **About nine minutes** from a deleted `bridge/out` (8 m 52 s over three
-green M5 runs), of which 9c's ten games are 268 s and the sixth ws server most of
-the rest; `SKIP_TEN=1` brings it back to roughly four. Every JVM step runs
+checker still rejects fourteen one-defect probes → `npm run build && npm test` in
+`web/`. **About eleven and a half minutes** from a deleted `bridge/out` (682 s
+and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added 9d and 10g), of
+which 9c's ten games are 265–269 s and the seven ws servers most of
+the rest; `SKIP_TEN=1` brings it back to roughly six. Every JVM step runs
 under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
 the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
 reducer and the committed fixtures still agree.
@@ -145,12 +150,17 @@ npm --prefix web test && npm --prefix web run build
 ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11   # the seat, automated
 ./bridge/run.sh mtgtable.MtgTable --transport null --seed 42   # every ask -> null
 
-# M3 — the same game in a browser tab; this is the one command you type
+# M3/M6 — the same game in a browser tab; this is the one command you type
 ./scripts/play.sh             # check-forge -> build -> the JVM -> /health -> vite --open
-./scripts/play.sh --seed 42 --no-open --keep-open --port 8643
+#   M6: a bare run is THREE games back to back (--games 3) and lingers after the
+#   last `over` (--keep-open) for as long as the browser stays connected, which
+#   is the window the board's New Game row needs.  Pass your own --games to
+#   override, --no-keep-open to turn the linger off.
+./scripts/play.sh --seed 42 --no-open --port 8643
+./scripts/play.sh -- --games 1          # one game (your --games wins)
 #   --port/--web-port override config.json's wsPort/webPort; --no-open skips the
-#   browser; --keep-open leaves the bridge up 30 s after `over`; everything after
-#   `--` goes to mtgtable.MtgTable untouched.  Ctrl-C stops both halves.
+#   browser; everything after `--` goes to mtgtable.MtgTable untouched.
+#   Ctrl-C stops both halves.
 
 # M3 — the socket by itself, without a browser
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
@@ -199,8 +209,9 @@ strip, a stack panel, targeting and combat arrows, and a keyboard — and as of
 questions are answered on the board, every zone can be opened and read, and the
 declared attackers and blockers are a strip of their own.
 
-**The probe decks.** Five throwaway forty-card decks whose only job is to make
-Forge ask something `decks/pacho-shield.dck` never makes it ask. They are how an
+**The probe decks.** Seven throwaway forty-card decks whose only job is to make
+Forge do something `decks/pacho-shield.dck` never makes it do — usually ask a
+question, and once (`yield-probe`) repeat an ability. They are how an
 ask kind stops being "implemented against a spec" and becomes "recorded from the
 engine", and each one has a committed fixture to show for it:
 
@@ -211,7 +222,8 @@ engine", and each one has a committed fixture to show for it:
 | `decks/search-probe.dck` | 20 Rampant Growth | `choose_entities` **with a `delayedReveal`** — the engine handing over cards out of a hidden zone |
 | `decks/amount-probe.dck` | 20 Manamorphose | `assign_amount`, in its **colour-keyed** form, and (with `--mana-lost-prompt`) `confirm` |
 | `decks/number-probe.dck` | 16 Volcano Hellion | `text`, through `getInteger`'s *"Other…"* option |
-| `decks/sideboard-probe.dck` | 22 Garruk's Companion + a sideboard | `sideboard` — **does not fire yet**: it needs a session that survives game 1, which is M6's |
+| `decks/sideboard-probe.dck` | 22 Garruk's Companion + a sideboard | `sideboard` — **fires since M6**, between the two games of a `--games 2` match (`fixtures/games/human-sideboard-7.jsonl`) |
+| `decks/yield-probe.dck` | 22 Thallid (a mandatory upkeep trigger) | not an ask: **a repeating ability**, so the same `stack[].yieldKey` returns to the top of the stack every turn. It is what turned auto-yield's *behaviour* from a measured number into a gate assertion (`fixtures/games/human-yield-13.jsonl`, gate step 10g) |
 
 Two of the eleven ask kinds have no recording and never will in this
 configuration: `options` has **no call site anywhere** in the Forge 2.0.14 jar,
@@ -234,11 +246,22 @@ the background with its output in `var/play/server.log`, polls
 http://127.0.0.1:5173/?ws=1
 ```
 
-Ctrl-C stops both halves. So does the bridge: it plays **one** game and exits
-after `over`, and the script stops vite with it. `--seed 42` makes the shuffle
-reproducible, `--port` / `--web-port` move either half, `--no-open` skips the
-browser, `--keep-open` leaves the bridge up 30 s after `over`, and everything
-after `--` is handed to `mtgtable.MtgTable` untouched.
+Ctrl-C stops both halves. So does the bridge, when it is finished: since **M6** a
+bare run is **three games back to back** (`--games 3`) and the socket stays up
+after the last `over` (`--keep-open`) **for as long as this browser stays
+connected** — which is the window in which the board's **New Game** row still has
+a session to act in. (It was a flat 30 s at first, fuse and all, and that was a
+defect: the row appears at `over`, so the one control M6 exists for had half a
+minute to live. It now ends when the tab does — 30 s is only the cap for a
+session nobody ever connected to.) Press it and the JVM keeps going instead of
+exiting; `HostedMatch.continueMatch()` deals the next game
+of the match and `restartMatch()` starts a fresh one, each with its own
+`hello_ok`, its own `gameId` and its own `var/games/<gameId>/frames.jsonl`.
+
+`--seed 42` makes the shuffle reproducible, `--port` / `--web-port` move either
+half, `--no-open` skips the browser, `--no-keep-open` closes the socket the moment
+the match ends, and everything after `--` is handed to `mtgtable.MtgTable`
+untouched — including a `--games` of your own, which wins.
 
 **The page.** One line of chrome across the top — the seat, the socket's state
 (`open` / `reconnecting` / `refused`) and its URL, the frames in and out, the
@@ -287,9 +310,13 @@ Everything under it is the board, and the board never scrolls sideways at
   engine has named in `selectable` gets a gold outline and a corner caret.
 - **The right rail** is the turn readout and the thirteen steps of the turn, with
   the current one lit — blue on your turn, orange on the opponent's. The two dot
-  columns are phase stops: they show **Forge's own defaults and are read-only
-  until M6**, because there is no `phaseStops` field on the wire yet and a client
-  that remembered its own would be putting rules logic in the browser.
+  columns are phase stops, and **since M6 they are live**: they render from
+  `players[].phaseStops` on the wire, a click sends `act: setPhaseStop` and the
+  engine answers with the next `state`. The browser still remembers nothing —
+  a client that remembered its own stops would be putting rules logic in the
+  browser. Replaying a recording made before M6 draws Forge's own defaults,
+  disabled, and says so in the legend. Phase stops are **reseeded for each game**
+  of a match (D38), so a stop set in game 1 has to be set again in game 2.
 - **Arrows** are drawn over the whole table: dashed purple from a spell on the
   stack to what it targets, solid red from an attacker to what it is attacking,
   dotted green from a blocker to what it blocks. They are decoration — every one
@@ -336,13 +363,58 @@ so it never claims a band Forge has not declared. It floats over the graveyard
 and exile strips while it is tall; the captions stay clickable through it, which
 is how you reach a card it covers.
 
+**Comfort — and every one of these is a Forge feature, rendered.** M6 added no
+rule to the browser. Each control below reads a typed field off the wire and
+sends an act; the next `state` is what says it happened, and the page remembers
+nothing between frames.
+
+- **Phase stops** are the two dot columns on the right rail, described above:
+  they draw `players[].phaseStops` and a click is `act: setPhaseStop`. They are
+  **reseeded for every game** of a match, so a stop set in game 1 is gone in
+  game 2 — that is Forge's map being rebuilt, not the page forgetting.
+- **Pass-To** is a row in the decision panel and three keys: **End of turn**
+  (`E`), **My next turn** (`T`), **Before my turn** (`B`). They are *three*
+  engine mechanisms behind one act (`yieldTo`) — an auto-pass until end of turn,
+  and two per-(player, phase) markers — and while one is running the phase strip
+  draws it from `state.yield` and the engine's own **Cancel** button stops it.
+  There is no "cancel the yield" act: Forge's `InputLockUI` puts the label on
+  Cancel, and pressing Cancel is the cancel.
+- **Auto-yield** is a pair of buttons on each stack item, `Y` and `N` for the one
+  on top: **Always yes / Always no** for an optional trigger, **Auto-yield /
+  Never** for an ability that simply resolves. Pressing one is
+  `act: setYield {yieldKey, mode}`; Forge's own auto-yield store is what answers
+  from then on, and `stack[].yielded` is what the chip reports. Press the same
+  button again to clear it. The `yieldKey` is an opaque handle the bridge mints
+  (`y3`) and the page never displays it, because Forge's real key is a card name
+  plus its rules text. One thing worth knowing: the store is **scoped to
+  abilities**, so a yield set on a creature *spell* is remembered and never
+  consulted.
+- **Undo** is `Ctrl+Z` or the Undo button, and it is the engine's undo:
+  **mana abilities only**, cleared at every phase change and whenever priority
+  leaves you. The button is enabled from `state.undo.can` and carries the depth
+  (`Undo (2)`) because Forge's own Cancel button often carries the same number —
+  two controls, one question, and they agree because both read the engine.
+- **New Game** appears when the game is over: **New game** continues the match
+  (`HostedMatch.continueMatch()`) and **Restart match** starts a fresh one
+  (`restartMatch()`), both in the same JVM with the same card database. The board
+  drops everything it knew and rebuilds from a new `hello_ok` with a new
+  `gameId`; the bar then says `Game 2 of 3` and the new game writes its own
+  `var/games/<gameId>/frames.jsonl`. Both buttons go quiet, with the reason
+  written out, if the socket is not `open`.
+- **The floating-mana warning is on by default.** Passing priority with mana in
+  your pool that would be lost asks you to confirm first — Forge's
+  `UI_MANA_LOST_PROMPT`, set **in memory only** (nothing is ever written to your
+  Forge profile). `./scripts/play.sh -- --no-mana-lost-prompt` turns it off for a
+  session. It is also the only way Forge asks a `confirm` at all in an ordinary
+  game.
+
 **The keyboard.** Press **`H`** (or `?`) for this list in the page itself — it is
 rendered from the same table the handler reads, so it cannot list a key that does
 nothing.
 
 | key | what it does | works from |
 |---|---|---|
-| `Space` | press the engine's OK button (usually pass priority) | **now** |
+| `Space` | press the **focused** button — `input.buttons.focus` says which, and its label is the engine's (`OK` / `Auto` / `Keep`…) | **now** |
 | `Esc` | close an overlay; otherwise answer an open question with "no answer"; otherwise press Cancel | **now** |
 | `Ctrl+Q` | concede — twice, like the button | **now** |
 | `Z` | zoom the card under the pointer | **now** |
@@ -352,15 +424,20 @@ nothing.
 | `H` / `?` | this list | **now** |
 | `W` `U` `B` `R` `G` `C` | spend one floating mana of that colour, while the pool holds it | **now** |
 | `A` | auto-pay a mana cost — **press `Space` instead**: it is the engine's own OK button, labelled `Auto` | — |
-| `Ctrl+Z` | undo the last mana ability | *M6* |
-| `E` | pass priority until end of turn | *M6* |
-| `T` | pass to your next turn | *M6* |
-| `B` | pass to just before your turn | *M6* |
-| `Ctrl+A` | attack with everything | *M6* |
-| `Y` / `N` | auto-yield: always yes / always no | *M6* |
+| `P` | pass priority — a no-op unless the engine is asking for one, which is what makes it safer than `Space` | **now** |
+| `Ctrl+Z` | undo the last mana ability | **now** |
+| `E` | pass priority until end of turn | **now** |
+| `T` | pass to your next turn | **now** |
+| `B` | pass to just before your turn | **now** |
+| `Ctrl+A` | attack with everything | **now** |
+| `Y` / `N` | auto-yield: always yes / always no | **now** |
 
-The nine rows marked **now** work today. The rest flash the key and say in the
-decision panel which milestone brings it, rather than doing nothing quietly.
+**Every row works today** — M6 turned the last seven on, and the milestone
+column in the in-page overlay is now provenance rather than a warning. (`A` is
+the exception and always was: there is no `autoPay` act, because Forge writes
+`Auto` on `InputPayMana`'s own OK button, so `Space` is the binding.) A key whose
+act the engine cannot use at that moment flashes and says so in the decision
+panel, rather than doing nothing quietly.
 Where Forge has its own binding for one of these, the overlay prints it in the
 third column, and the four places we deliberately differ say so there too.
 
@@ -446,8 +523,10 @@ Three cases the automatic reconnect will not fix:
   time** is allowed (the server sends one notice and closes with code 4001), so
   you have a second tab open on the same bridge. Close it and press
   **Reconnect**.
-- **The bridge exited.** It plays one game and quits after `over`; there is
-  nothing to reconnect to. Run `./scripts/play.sh` again.
+- **The bridge exited.** It plays the match it was asked for — three games by
+  default — and quits once the linger window after the last `over` closes; there
+  is nothing to reconnect to. Run `./scripts/play.sh` again. (Pressing **New
+  Game** inside that window keeps the same JVM and the same socket.)
 - **A red banner naming a frame.** That is protocol drift, not a network
   problem: the reducer stopped rather than render something it does not
   understand. `var/play/server.log` and the frame log are what to read.
@@ -492,6 +571,7 @@ prints the help; the whole vocabulary is:
 | `u` / `undo` | undo the last mana ability (Forge undoes mana abilities, not spells) |
 | `pass` | pass priority |
 | `!` | alpha strike — attack with everything |
+| `next` / `new` | **M6**, and only after `over`: play the next game of the match (`HostedMatch.continueMatch()`) or start a fresh one (`restartMatch()`) in the same JVM. A new game means a new `gameId`, a new frame log and a new session header |
 | `s` / `i` | reprint the last board / the last prompt |
 | `q` / `concede` | concede and exit |
 | `?` | the help above |
@@ -523,7 +603,7 @@ is a file, not a story.
 
 ## Repo layout
 
-Everything listed exists today (M0-M5); `M6+` marks what a later milestone adds.
+Everything listed exists today (M0-M6); `M7+` marks what a later milestone adds.
 
 ```
 mtg-table/
@@ -531,7 +611,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the thirty-six load-bearing decisions, dated
+  DECISIONS.md               the forty-five load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -556,8 +636,13 @@ mtg-table/
   decks/number-probe.dck     throwaway, M5: 16 Volcano Hellion. Forces the text ask,
                              through getInteger's "Other..." option
   decks/sideboard-probe.dck  throwaway, M5: a deck with a sideboard. The sideboard ask
-                             still does not fire -- it needs a session that survives
-                             game 1, which is M6's (docs/protocol.md amendment M27)
+                             fires between the two games of a --games 2 match, since
+                             M6's session survives `over` (protocol amendment M38)
+  decks/yield-probe.dck      throwaway, M6 fix: 22 Thallid. Not an ask -- a MANDATORY
+                             upkeep trigger, so the same yieldKey is back on top of the
+                             stack every turn, which is the only way to assert that the
+                             engine READS the auto-yield store rather than that the
+                             bridge wrote it (gate step 10g, --require-yield-repeat)
 
   docs/
     protocol.md              the living spec of the wire protocol and the frame log
@@ -702,7 +787,8 @@ mtg-table/
                              var/forge/custom/cards/ by make-forge-home.sh (D14)
 
   var/                       gitignored: Forge's redirected profile, logs, frame logs
-  scripts/play.sh            M3: check-forge -> build -> the ws bridge -> /health -> vite
+  scripts/play.sh            M3/M6: check-forge -> build -> the ws bridge -> /health ->
+                             vite.  Defaults to --games 3 --keep-open (M6)
 ```
 
 ## The documents
@@ -711,7 +797,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Thirty-six load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. |
+| [`DECISIONS.md`](DECISIONS.md) | Forty-five load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -720,7 +806,7 @@ mtg-table/
 | [`docs/research/08-deck-card-coverage.md`](docs/research/08-deck-card-coverage.md) | Does Forge implement this deck's 28 cards faithfully? (One does not — see D14.) |
 | [`docs/research/10-board-ui-spec.md`](docs/research/10-board-ui-spec.md) | The M4 board: component tree, layout, card tiles, arrows, the three evenings. (One number in §2.2 is 23 px out against the built board — PLAN's M4 follow-up 2.) |
 | [`docs/research/11-engine-comfort-features.md`](docs/research/11-engine-comfort-features.md) | M6: phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — all as engine features, not client state machines. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). |
 
 ## Licence
 

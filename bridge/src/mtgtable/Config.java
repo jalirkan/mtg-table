@@ -116,6 +116,27 @@ public final class Config {
     }
 
     /**
+     * An optional boolean value.
+     *
+     * <p>M6 uses it for exactly one key, {@code "manaLostPrompt"}, which decides
+     * whether {@code FPref.UI_MANA_LOST_PROMPT} is set <b>in memory</b> for
+     * every session (protocol amendment M40).  A missing key means
+     * {@code dflt}: an older {@code config.json} still parses, and a checkout
+     * that wants Forge's stock behaviour writes {@code false} rather than
+     * deleting the line.
+     */
+    public boolean flag(final String key, final boolean dflt) {
+        final Object v = values.get(key);
+        if (v == null) {
+            return dflt;
+        }
+        if (v instanceof Boolean) {
+            return ((Boolean) v).booleanValue();
+        }
+        return Boolean.parseBoolean(String.valueOf(v));
+    }
+
+    /**
      * A required path value, resolved against the repo root when it is relative.
      * That is how {@code "forgeHome": "forge-home"} and
      * {@code "deck": "decks/pacho-shield.dck"} stay portable while the Java side

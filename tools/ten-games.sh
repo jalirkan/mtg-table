@@ -8,7 +8,7 @@
 #
 # This is that sentence as a command.  Ten `--transport auto` games at seeds
 # 1..10, **alternating the user's own deck and the probe decks**, and every one
-# of them held to seven assertions:
+# of them held to eight assertions:
 #
 #   1. the process exits 0 and prints `MTGTABLE OK`;
 #   2. `finished = true` -- the game reached `over` rather than timing out,
@@ -25,6 +25,11 @@
 #   6. `tools/check-redaction.mjs` over the whole frame log -- the same standard
 #      the committed fixtures are held to, with no flags (CLAUDE.md: never
 #      `--pre-amendment`, never `--opponent-library-ok`);
+#   6b. **(M6)** every `state` frame carries `players[].phaseStops {own,opp}`,
+#      `state.yield` and `state.undo`.  check-redaction declares those optional
+#      because a recording with no seat legitimately has none (protocol section
+#      3.1); every file in this loop HAS a seat, so an emitter that stopped
+#      writing them would otherwise fail nothing at all;
 #   7. **no more than $ASK_KIND_CAP asks of any one kind in one game.**  An ask
 #      loop is the one wedge every assertion above is blind to: the game is not
 #      silent (the engine re-asks the instant the policy answers), it still
@@ -83,7 +88,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --games) WANT="$2"; shift 2 ;;
     -h | --help)
-      sed -n '2,68p' "$0"
+      sed -n '2,73p' "$0"
       exit 0
       ;;
     *) echo "ten-games: unknown argument $1" >&2; exit 2 ;;
@@ -197,6 +202,35 @@ for row in "${ROWS[@]}"; do
     die "check-redaction.mjs on seed $seed ($frames)"
   }
   head -1 "$OUT_DIR/$id.redaction.txt"
+
+  # Assertion 6b (M6): every `state` a SEAT recorded carries the comfort fields.
+  #
+  # `players[].phaseStops`, `state.yield` and `state.undo` are server-owned and
+  # the client derives none of them, so a game that stopped writing them would
+  # not fail anything above -- check-redaction declares them optional, because an
+  # AI-vs-AI recording legitimately has none (protocol section 3.1). Every file
+  # in THIS loop has a seat, so here they are required.
+  node -e '
+    const fs = require("node:fs");
+    let states = 0, missing = 0, first = null;
+    const lines = fs.readFileSync(process.argv[1], "utf8").split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] === "" || !lines[i].includes("\"state\"")) continue;
+      let f; try { f = JSON.parse(lines[i]); } catch { continue; }
+      if (f.type !== "state") continue;
+      states += 1;
+      const ok = f.body.undo !== undefined && f.body.yield !== undefined
+        && (f.body.players ?? []).every((p) => p.phaseStops && Array.isArray(p.phaseStops.own)
+                                               && Array.isArray(p.phaseStops.opp));
+      if (!ok) { missing += 1; first ??= i + 1; }
+    }
+    if (states === 0) { console.error("no state frames at all"); process.exit(1); }
+    if (missing > 0) {
+      console.error(`${missing} of ${states} state frames are missing phaseStops/yield/undo `
+        + `(first at line ${first})`);
+      process.exit(1);
+    }
+  ' "$frames" || die "seed $seed wrote state frames without M6's comfort fields ($frames)"
 
   # Assertion 7: no one ask kind may run away inside a single game.
   worst="$(node -e '

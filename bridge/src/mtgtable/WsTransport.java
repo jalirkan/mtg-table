@@ -108,6 +108,16 @@ import io.netty.util.ReferenceCountUtil;
  * then the current {@code input}; a {@code resync} frame re-sends the last two;
  * a reconnect after a disconnect gets all three again and the game continues.
  *
+ * <p><b>...with one frame conditional, as of amendment M42: the {@code input}
+ * is sent only once the engine has pushed one for this game.</b>  There is no
+ * "current input" before that -- only the empty struct the seat was constructed
+ * with -- and a client told "the engine is asking you something" while
+ * {@code applyAct} is still answering every act with
+ * {@code notice{title:"Not yet"}} acts into a drop.  A pre-input connect
+ * therefore sees {@code hello_ok} + {@code state} and then waits, which is what
+ * it would have done anyway; and a client may read its first {@code input} as
+ * the pre-input guard lifting.
+ *
  * <p><b>"Connects" means after {@code openView}.</b>  The port is bound ~1.2 s
  * earlier, and all three halves of that window are now closed (M15 did the first
  * two, amendment <b>M20</b> the third): {@code GET /health} answers <b>503</b>
@@ -355,7 +365,17 @@ public final class WsTransport implements Transport {
     @Override
     public void push(final String frameJson) {
         switch (frameType(frameJson)) {
-        case "hello_ok": lastHello = frameJson; break;
+        case "hello_ok":
+            lastHello = frameJson;
+            // Amendment M42, the transport's own half: a handshake opens a NEW
+            // game (M38) and the cached `input` belongs to the one that just
+            // ended, so nothing may re-deliver it.  The rule -- an `input`
+            // reaches a client only after the engine has asked -- is kept in
+            // WireGuiGame.onResync, which owns `inputSeen`; this line is what
+            // makes it true for the fallback below it as well, and it costs one
+            // assignment per game.
+            lastInput = null;
+            break;
         case "state":    lastState = frameJson; break;
         case "input":    lastInput = frameJson; break;
         case "over":     sawOver = true; break;
@@ -447,24 +467,18 @@ public final class WsTransport implements Transport {
         }
     }
 
-    /**
-     * Hold the process open after {@code over} so a client can read the final
-     * frames, returning early the moment it disconnects.  {@code --keep-open}.
-     *
-     * @param ms the cap; called from the main thread, never from a game thread
+    /*
+     * There is deliberately no `keepOpen(long)` here any more (M6 verification
+     * fix).  It used to hold the process open for a flat 30 s after `over` and
+     * return early on disconnect, which read as a transport concern but was not
+     * one: the same window is where `act: newGame` arrives, so the wait has to
+     * end on "a new game began" as well as on "the client left", and only
+     * MtgTable knows the first.  `MtgTable.awaitNextGame` is that wait, and it
+     * applies THIS class's rule -- unbounded while {@link #connected()},
+     * finite only while nobody is -- to the linger as well as to the ask
+     * timeout.  A 30 s fuse under a connected client closed the socket out from
+     * under the board's own New Game button; that is what it cost.
      */
-    public void keepOpen(final long ms) {
-        final long deadline = System.nanoTime() + ms * 1_000_000L;
-        System.out.println("WS KEEP-OPEN for up to " + ms + " ms (or until the client disconnects)");
-        while (System.nanoTime() < deadline && connected()) {
-            try {
-                Thread.sleep(100L);
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-        }
-    }
 
     // ==================================================================
     // Outbound
@@ -622,8 +636,16 @@ public final class WsTransport implements Transport {
 
     /**
      * Contract (b) and (c), in one place: {@code hello_ok} (on connect only),
-     * then the last {@code state}, then the current {@code input}, then any ask
-     * still outstanding.
+     * then the last {@code state}, then the current {@code input} <b>if the
+     * engine has asked for one</b>, then any ask still outstanding.
+     *
+     * <p><b>The {@code input} is conditional as of amendment M42.</b>  Before
+     * the engine's first push there is no {@code input} to re-send -- only the
+     * empty pre-engine struct -- and sending that says "the engine is asking
+     * you something" to a client whose acts {@code applyAct} is still dropping
+     * with {@code notice{title:"Not yet"}}.  The condition itself lives in
+     * {@link Transport.Inbound#onResync()}, because {@code inputSeen} is
+     * {@code WireGuiGame}'s to know; what this method promises is the order.
      *
      * @param ch      the channel to re-deliver on -- passed explicitly, because
      *                on connect it is the channel whose handshake just completed
@@ -659,7 +681,12 @@ public final class WsTransport implements Transport {
         // a replay of the cached frame, because onResync is the call whose guard
         // the M3 doorstep test exists to keep fixed: a resync must not arm
         // `inputSeen`, or a browser that autoconnects and then concedes removes a
-        // player while Match.prepareAllZones is still iterating them.
+        // player while Match.prepareAllZones is still iterating them.  That same
+        // guard now also decides whether the frame is emitted AT ALL (amendment
+        // M42): before the engine's first push, onResync writes its log line and
+        // sends nothing, so this call may legitimately put no frame on the wire.
+        // The fallback is for a transport with no inbound at all, and `lastInput`
+        // is nulled by every `hello_ok` so it can never be another game's.
         if (inbound != null) {
             inbound.onResync();
         } else if (lastInput != null) {

@@ -25,6 +25,39 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-12 — M6 fix pass, the pre-input `input`
+
+Applied after gate step **10g** failed once under load and passed three times
+standalone — a race, not a regression. One row, one rule, and it is the rule the
+`Not yet` guard always implied: the wire must not say "the engine is asking you
+something" before the engine has asked. Evidence: `docs/evidence/m6-engine.md`
+§11.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M42 | §2.1, §2.4 | **An `input` frame is only ever delivered after the engine has asked; a client may treat the first `input` as the pre-input guard lifting.** A connect and a `resync` re-deliver `hello_ok` and the last `state` unconditionally; the `input` half goes through `Transport.Inbound.onResync()` and is now emitted **only once `WireGuiGame.inputSeen` is armed** — which `engineInput` does and no client frame ever can (M3's doorstep test). Before this, a pre-input connect got the empty struct the seat was constructed with, and a client that read it as "I may act now" had its act dropped by `applyAct`'s pre-input guard with `notice {title: "Not yet"}`. Measured, and it is why this row exists: under gate load `tools/ws-auto-play.mjs --comfort` armed `pendingInput` from that frame and sent `act: setPhaseStop` **128 ms before** the engine's first real `input` (`var/ws-auto-3g.jsonl` lines 3–7: `input`@t=…646, `input`@…649, `state`@…728, the act@…730, `notice {"title":"Not yet"}`@…731, the first engine `input`@…858); the act was dropped, the effect never arrived, and step 10g failed on a true statement about a dropped act. The guard is per **game** — `resetForGame` re-arms it with every `hello_ok` (M38), and `WsTransport` nulls its cached `input` there for the same reason. The client half is a retry: a `Not yet` notice that follows a comfort act un-sends that step, which is counted in ws-auto-play's summary as `retries=N`. | M6 fix |
+
+### 2026-09-12 — M6, §10 becomes live protocol
+
+M6 is where **§10's planned additions stop being planned**. Every row below is an
+added field inside a `body` or a new `act.action`, so none of them is a `v` bump
+and every existing fixture stays parseable. The shapes were fixed **before**
+either end was written, because two agents build against them at once. Evidence:
+`docs/evidence/m6-engine.md`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M32 | §3, §3.1 | **`players[].phaseStops` is `{"own": [PhaseType…], "opp": [PhaseType…]}`**, not a flat array. A phase stop in Forge is a per-(turn player, phase) bit — "stop at MAIN1 **on my turn**" and "stop at MAIN1 **on the AI's turn**" are two different switches (`FPref.PHASES_HUMAN` vs `PHASES_AI`, report 11 §3.2), and a flat array cannot say which. `own` is the set that applies while **this** player is the turn player; `opp` is the set that applies while any other player is. In a two-player game `players[0].phaseStops.opp` and `players[1].phaseStops.own` are therefore the same list, which is redundant and deliberate: a client renders one strip per seat and reads one field. Server-owned, seeded per game from the prefs, **never saved**. | M6 |
+| M33 | §2.2 | **`setPhaseStop` takes `{phase, turn, stop}`** — `turn` is `"own"` or `"opp"`, relative to the **viewing seat**, and there is no `playerId`. A seat may only change its own stops, and naming the turn rather than the player is what makes `own`/`opp` in `state` and in the act the same word. The bridge still accepts the M3-era `{playerId, phase, stop}` spelling (the server tolerates any act), and nothing sends it. | M6 |
+| M34 | §3, §3.1 | **`state.yield` gains its discriminator**: `{kind: "endOfTurn" \| "marker" \| "stack", playerId, phase} \| null`. §10.1 left `kind` out and said adding it was a one-line amendment; this is that line. `phase` is `null` for the two kinds that have no phase; `playerId` is the **yielding seat for all three** (§3.1), and is never null. The three kinds are three different engine mechanisms behind one call (`sendYieldUpdate`), and **all three are cancelled by `buttonCancel`** — there is no `cancelYield` act. | M6 |
+| M35 | §3, §3.1 | **`state.undo` is `{can, depth}`**, refreshed with every snapshot. `can` is `PlayerControllerHuman.canUndoLastAction()` **[jar]**, `depth` is `MagicStack.getUndoStackSize()` **[jar]**. Undo holds **mana abilities only** and is cleared at every phase change and whenever priority leaves you (report 11 §7.1): a UI that promises to un-cast a spell is promising something the engine does not do. | M6 |
+| M36 | §3.1 | **`stack[]` gains `yieldKey`, `isAbility`, `isOptionalTrigger`, `yielded`.** `yieldKey` is a **bridge-minted opaque handle** (`"y1"`, `"y2"`, …) interned for the life of one game — never `StackItemView.getKey()`, which is `CardView.toString() + ": " + …`, i.e. a card name, an id and its rules text (report 11 §5.2). It is `null` for an item with no key. The client passes it back in `setYield` and **never renders it**; `tools/check-redaction.mjs` fails any log whose `yieldKey` contains a space or a `(`, and `tools/lint-bridge.sh` fails a build where `getKey()` appears outside the one handle table. `yielded` is `"yes" \| "no" \| null` — the engine's standing answer for this key (`ACCEPT` / `DECLINE` / a plain auto-yield / nothing), not a boolean. | M6 |
+| M37 | §2.2 | **Three new acts**: `yieldTo {kind, phase?}`, `setYield {yieldKey, mode}` with `mode ∈ {"yes","no","clear"}`, and `newGame {mode}` with `mode ∈ {"continue","restart"}`. `newGame` **supersedes the bare `nextGame`** of M3 (kept as an alias for `{mode:"continue"}`) and is only meaningful after an `over`. `passPriority` and `undo`, listed since M3 as "from M6", are now live. | M6 |
+| M38 | §2.1, §8 | **A new `hello_ok` per game, with a new `gameId`, and a new frame-log file.** Game 1 of a session keeps the session's `gameId`; game *n* is `<gameId>-g<n>` and writes `var/games/<gameId>-g<n>/frames.jsonl`, line 0 its own session header. `HostedMatch.endCurrentGame()` replaces every `PlayerView` and empties `getHumanControllers()`, so **every id the client cached is invalid**: the reducer drops its card map on `hello_ok` (invariant 10) and the bridge rebuilds the card/player indexes, the ability index, the yield-handle table, the phase-stop map, the `ReplyPool` and the log from `openView`. | M6 |
+| M39 | §4 | **`input.buttons.focus` is `"ok" \| "cancel" \| null`** — `updateButtons`' sixth argument `focus1`, which the emitter had been dropping. Space activates the **focused** button; "space = OK" is not a Forge shortcut and never was (report 11 §11). | M6 |
+| M40 | §5.2, §8.1 | **`sideboard` is reachable, and `UI_MANA_LOST_PROMPT` is on by default.** The first is M27's other half: with a session that survives `matchOver: false`, `Match.prepareAllZones` → `PlayerController.sideboard` fires **on the game thread** between games of a `--games N` match, which is where `fixtures/games/human-sideboard-7.jsonl` comes from. The second is M5 follow-up 2 taken: `config.json`'s `"manaLostPrompt": true` sets `FPref.UI_MANA_LOST_PROMPT` **in memory, never saved**, so the floating-mana `confirm` now appears in ordinary games and every session header carries `prefs: ["UI_MANA_LOST_PROMPT"]` (M31). `--no-mana-lost-prompt` turns it back off. | M6 |
+| M41 | §2.1 | **`hello_ok` gains `gameNumber` and `gameCount`** — which game of the match this handshake opens (1-based) and how many the match is played to (`--games N`). Both are known to the bridge at `openView` (`WireGuiGame.gamesStarted()` and the CLI's `--games`) and neither is derivable by a client: counting `hello_ok`s restarts at 1 on a page reload, and "of 3" has no client-side source at all. **Both keys are absent from a `--games 1` session** — "where in the match are we" has no answer when there is one game, and the header's own `policy` / `prefs` (M31) set the precedent for an optional key that is omitted when it says nothing. Added by the M6 verification pass, which found the client reading two fields no emitter wrote. | M6 fix |
+
 ### 2026-09-12 — M5 verification, the three dead ends a review found
 
 Applied after an independent verification pass played the board in a browser and
@@ -216,12 +249,27 @@ s2c frame ahead of the handshake, which is exactly what this rule forbids. The
 drop costs the client nothing: the three frames it would have asked for are
 already on their way.
 
+**An `input` frame is only ever delivered after the engine has asked, and a
+client may treat its first `input` as the pre-input guard lifting** (amendment
+**M42**). A connect and a `resync` (§2.4) re-deliver `hello_ok` and the last
+`state` unconditionally, and the `input` **only once the engine has pushed one
+for this game** — `WireGuiGame.inputSeen`, armed by Forge and by nothing else.
+Before that there is no "current input" to re-send: the struct holds the empty
+prompt and two disabled buttons the seat was constructed with, and delivering it
+told the client the engine was asking for something while `applyAct` was still
+dropping every act (`concede` excepted) with `notice {title: "Not yet"}`. So a
+pre-input connect reads `hello_ok`, `state`, *silence* — and the silence is
+honest. The rule is per **game**, not per session: a new `hello_ok` (**M38**)
+re-arms the guard, and the next `input` is that game's first.
+
 ```json
 { "v": 1, "seq": 1, "t": 1757600000000, "type": "hello_ok",
   "body": {
     "gameId": "g1",
     "you": 0,
     "seed": 42,
+    "gameNumber": 1,
+    "gameCount": 3,
     "forgeVersion": "2.0.14",
     "forgeJarSha256": "3f6c…",
     "unsupportedCards": [],
@@ -246,6 +294,27 @@ replaces every `PlayerView`, so **every id the client cached is invalid the mome
 a new `hello_ok` arrives** (`HostedMatch.java:369-407`, report 11 §8.3). The
 reducer resets its card map on `hello_ok`; it does not merge across games.
 
+**`gameId` changes with it** (amendment **M38**). Game 1 keeps the session's id;
+game *n* is `<gameId>-g<n>`, and that is also the directory of its own frame log
+(§8). The two ids are how a reader tells "the client reconnected" (same `gameId`,
+a **verbatim** re-delivery — §2.4) from "a new game started" (a different
+`gameId`, a fresh `seq` series, new `players[]` objects behind the same names).
+The seat, the seed and the jar hashes do not change; the players' **ids** may.
+
+**`gameNumber` and `gameCount` say where in the match that is** (amendment
+**M41**). `gameNumber` is 1-based and counts the games this *session* has begun,
+so it is `1` for the first handshake and `n` for `<gameId>-g<n>`; `gameCount` is
+`--games N`, i.e. what the match is played *to*. **Both are absent when
+`--games` is 1**, which is most recordings in the corpus: a one-game session has
+no "where in the match", the client prints nothing for it either, and an optional
+key omitted when it says nothing is what the session header already does with
+`policy` and `prefs` (M31). They exist because neither is derivable on the client: a client
+that counts `hello_ok`s restarts at 1 on a page reload — a `resync` re-delivers
+the **cached** handshake, not the ones it missed (§2.4) — and nothing on the wire
+otherwise says how long the match is. A reader that predates M41 sees neither
+key; `web/src/reduce.ts` falls back to its own count and says *Game 2* instead of
+*Game 2 of 3*.
+
 ### 2.2 `act` (c→s)
 
 An action the user took without being asked. Never expects a reply; its effect
@@ -265,17 +334,58 @@ arrives as the next `state` / `input`.
 | `buttonCancel` | — | `selectButtonCancel()` | M2 |
 | `passPriority` | — | `IGameController.passPriority()` **[jar]** — genuinely distinct from `buttonOk`, and what "pass until something happens" needs (§10.3) | M6 |
 | `concede` | — | `getOriginalGameControllers().forEach(IGameController::concede)` — **never** `AbstractGuiGame.concede()`, which runs a nested confirm dialog off the game thread | M2 |
-| `nextGame` | — | `nextGameDecision(NextGameDecision.CONTINUE)` | M3 |
-| `undo` | — | `undoLastAction()`, gated on `canUndoLastAction` | M6 |
+| `newGame` | `mode` = `"continue"` \| `"restart"` | `nextGameDecision(CONTINUE)` / `nextGameDecision(NEW)` → `HostedMatch.continueMatch()` / `restartMatch()`. **Only meaningful after an `over`**; a new `hello_ok` follows and the client drops its card map (§2.1). See below | M6 |
+| `nextGame` | — | the M3 spelling of `newGame {mode:"continue"}`, kept as an alias | M3 |
+| `undo` | — | `undoLastAction()`, gated on `canUndoLastAction` — read `state.undo` (§3.1) for whether it will do anything | M6 |
 | `alphaStrike` | — | `alphaStrike()` — only meaningful during `InputAttack` | M5 |
 | `useMana` | `color` | `useMana(byte)`, `byte = MagicColor.fromName(...)`. **A `cardId` is a `clickCard`, not a `useMana`.** | M5 |
-| `setPhaseStop` | `playerId`, `phase`, `stop` | `WireGuiGame`'s own stop map (§10) — *not* `FPref`, and *not* `YieldController` | M6 |
-| `setYield` | `yieldKey`, `mode` | `setShouldAutoYield(key, …)`; `yieldKey` is the **bridge-minted handle** from `state.stack[]`, never Forge's own key (§10) | M6 |
+| `setPhaseStop` | `phase`, `turn` = `"own"` \| `"opp"`, `stop` | `WireGuiGame`'s own stop map — *not* `FPref`, and *not* `YieldController` — mirrored to the controller with `YieldUpdate.SkipPhase` so Forge's own `tryAutoPassNow()` fires. `turn` is relative to the **viewing seat**; `{playerId, phase, stop}` is still accepted (amendment **M33**) | M6 |
+| `yieldTo` | `kind` = `"endOfTurn"` \| `"marker"` \| `"stack"`; `phase` and an optional `turn` (`"own"`/`"opp"`, default own) for `marker` | `IGameController.sendYieldUpdate` with `SetAutoPassUntilEndOfTurn` / `AbstractGuiGame.handleYieldMarkerToggle` / `StackYield`. **Cancelled by `buttonCancel`**, which is the Cancel button `InputLockUI` labels while a yield runs | M6 |
+| `setYield` | `yieldKey`, `mode` = `"yes"` \| `"no"` \| `"clear"` | `setShouldAutoYield(key, on, isAbilityScope)` plus `setTriggerDecision(key, ACCEPT\|DECLINE\|ASK, …)`; `yieldKey` is the **bridge-minted handle** from `state.stack[]`, never Forge's own key | M6 |
+
+**`newGame`, exactly** (amendment **M38**). It is answered by
+`IGameController.nextGameDecision`, which votes on the `Match`'s event bus;
+`HostedMatch.addNextGameDecision` acts once every human controller has voted, and
+we have exactly one. `"continue"` is the next game of the same match
+(`continueMatch()` = `endCurrentGame(); startGame()`), which is what an `over`
+with `matchOver: false` invites; `"restart"` is a fresh match from the same rules
+and players (`restartMatch()`), which is the only one of the two that means
+anything after `matchOver: true`. **Both run on the EDT and both emit a new
+`hello_ok`**, so a client that sends one waits for that frame and rebuilds from
+it rather than trying to patch the board it has. An act sent while a game is
+still running is dropped with a `notice`: a client that has not seen `over`
+cannot know the engine is between games.
+
+**Between games there is no channel to say "no" on**, because `emit` refuses
+every non-`over` frame once `over` has gone out (§8.4). So a `newGame` the
+server cannot take literally is **corrected rather than refused**, loudly on
+stderr: an unknown `mode` reads as `"continue"`, and `"continue"` after
+`matchOver: true` reads as `"restart"` — which is the only mode that can produce
+another game, and "another game" is the only thing the act can have meant.
+
+**The session has to be there to continue into.** Nothing in the bridge starts a
+game, so a process that has played the games it was asked for exits: a server
+that means to offer New Game is started with `--games N` (play N, then exit) or
+with `--keep-open` (after the last game, 30 s in which a connected client may
+ask for another — and if it does, the session plays on). A `newGame` that
+arrives after the process has gone is not a protocol error; the socket is
+simply closed, which the client already handles (§2.4).
 
 The server must tolerate any `act` arriving at any time, including one that is now
 meaningless (a click on a card that just left the battlefield). The response to a
 meaningless `act` is to drop it — optionally with a `notice` — never to crash and
 never to block.
+
+**Four acts are answered with a `state` the engine did not ask for** (M6).
+"Its effect arrives as the next `state` / `input`" is automatic for every M2
+act: a click makes the engine do something and something makes events. It is
+**not** automatic for `setYield`, `setPhaseStop`, `yieldTo` and `undo`, whose
+whole effect can be a field in a snapshot — `setYield` changes
+`stack[].yielded` and produces no game event at all, and the engine is parked
+waiting for this seat, so with no push the board would never show the toggle it
+just asked for. The bridge therefore flushes a fresh `state` after each of those
+four. A client needs no special handling: it is an ordinary snapshot arriving
+slightly sooner than it otherwise would.
 
 **`useMana`, exactly** (amendment **M26**). `IGameController.useMana(byte)` is
 
@@ -349,6 +459,12 @@ The server replies with a fresh full `state` followed by the current `input`, an
 re-sends any `ask` still outstanding. Used after a reconnect. Because `state` is a
 full snapshot, resync is cheap and always correct.
 
+**The `input` is the one conditional frame** (amendment **M42**, §2.1): it is
+re-emitted only once the engine has pushed one for this game, so a `resync` sent
+before the first prompt answers with `state` alone. A client must not wait on an
+`input` that a `resync` it sent in that window would have produced — it waits on
+the engine, which is what it was doing anyway.
+
 "Fresh" means *current*, not *rebuilt*: the `state` and any outstanding `ask` are
 the last ones the **game thread** produced, re-delivered verbatim with the `seq`
 and `t` they were born with (amendment **M10** — a snapshot can only be built on
@@ -406,6 +522,9 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
       "poison": 0,
       "counters": {},
       "manaPool": { "W": 1, "U": 0, "B": 0, "R": 0, "G": 0, "C": 0 },
+      "phaseStops": { "own": ["MAIN1", "COMBAT_DECLARE_BLOCKERS", "MAIN2"],
+                      "opp": ["COMBAT_BEGIN", "COMBAT_DECLARE_ATTACKERS",
+                              "COMBAT_DECLARE_BLOCKERS", "END_OF_TURN"] },
       "zones": {
         "hand":        { "count": 5, "cards": [ /* Card */ ] },
         "battlefield": { "count": 4, "cards": [ /* Card */ ] },
@@ -418,9 +537,13 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   ],
   "stack": [
     { "id": 88, "sourceCardId": 41, "controller": 0, "text": "…",
-      "targetCardIds": [17], "targetPlayerIds": [] }
+      "targetCardIds": [17], "targetPlayerIds": [],
+      "yieldKey": "y3", "isAbility": true, "isOptionalTrigger": false,
+      "yielded": null }
   ],
   "stackCards": [ /* Card — the card behind each stack item, §3.3 */ ],
+  "yield": null,
+  "undo": { "can": false, "depth": 0 },
   "combat": {
     "bands": [
       { "attackerIds": [12],
@@ -488,6 +611,44 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
 - `stack[].text` is **`""` when the viewer may not have it** (§3.6 rule 1). It is
   a string, never null; the client labels the absence and never prints an empty
   line.
+- **`players[].phaseStops` is `{own, opp}`, two arrays of `PhaseType` names**
+  (amendment **M32**). `own` is where the game stops while **this player** is the
+  turn player; `opp` is where it stops while anybody else is. Both are
+  server-owned: they are `WireGuiGame`'s own map, seeded once per game from
+  `FPref.PHASES_HUMAN` / `PHASES_AI` and **never saved** — which is exactly what
+  Forge's desktop does (`CMatchUI.java:1389-1441`). `UNTAP` is never in either
+  (it has no preference and no priority pass). The client renders a toggle per
+  cell and sends `act: setPhaseStop {phase, turn, stop}`; **it derives
+  nothing** — the next `state` says what happened. In a two-player game
+  `players[0].phaseStops.opp === players[1].phaseStops.own`, and that is not a
+  bug: each seat's strip reads its own object.
+- **`yield` is the active pass-to, or `null`** (amendment **M34**):
+  `{kind: "endOfTurn" | "marker" | "stack", playerId, phase}`. `endOfTurn` and
+  `stack` carry `playerId` (the yielding seat) and `phase: null`; `marker` carries
+  the `(playerId, phase)` cell priority is being fast-forwarded to. Forge allows
+  **one at a time** — setting any of the three clears the other two
+  (`YieldController.java:127-158`) — so this is one object, not three flags.
+  While it is non-null the engine is driving the prompt itself
+  (`AbstractGuiGame.updateAutoPassPrompt`): `input.prompt` says *"Yielding
+  until…"* in Forge's own words and `buttons.cancel` is enabled, which is how the
+  yield is cancelled. There is no `cancelYield` act and an enabled Cancel is by
+  construction not a wedge (§4.2, amendment M28).
+- **`undo` is `{can, depth}`** (amendment **M35**), both read on the game thread
+  with the rest of the snapshot. `can` is false whenever priority is not this
+  seat's. `depth` is how many *mana abilities* are on the undo stack — Forge
+  clears it at every phase change and whenever a non-undoable ability is
+  activated — and `buttons.cancel.label` is independently `Undo (n)` whenever
+  `InputPassPriority` is up, which is the same fact arriving through the button
+  the engine labelled. If the two ever disagree, the label wins.
+- **`stack[].yieldKey` is an opaque handle** (amendment **M36**) such as `"y3"`,
+  or `null` for an item Forge gave no key. It is minted by the bridge, interned
+  for the life of one game, and **must never be rendered**: Forge's own key is a
+  card name plus an id plus rules text. `isAbility` and `isOptionalTrigger` come
+  from `StackItemView` **[jar]** and gate the affordance (an *Always* control for
+  an ability; *Always Yes* / *Always No* only for an optional trigger this seat
+  controls). `yielded` is `"yes" | "no" | null`: the engine's standing answer for
+  that key — `ACCEPT`, `DECLINE`, or nothing outstanding. A plain auto-yield with
+  no trigger decision reads as `"yes"`, because that is what it does.
 
 ### 3.2 The `Card` shape
 
@@ -1052,7 +1213,8 @@ the EDT**, not the game thread.
     "focusCard": null,
     "buttons": {
       "ok":     { "label": "OK",     "enabled": true  },
-      "cancel": { "label": "Cancel", "enabled": false }
+      "cancel": { "label": "Cancel", "enabled": false },
+      "focus":  "ok"
     },
     "selectable": { "cardIds": [31, 32], "min": 0, "max": 2, "mode": "cards" },
     "highlighted": [],
@@ -1067,6 +1229,7 @@ the EDT**, not the game thread.
 | `focusCardId` | Card id the prompt is about, or `null`. |
 | `focusCard` | **The serialised card** for `focusCardId`, or `null`. `IGuiGame.setCard` / `setPanelSelection` are frequently pushed with a card that is **not in the snapshot** — a library card during surveil or `willPutCardOnTop` — so an id alone renders blank. Produced by the one serialising function (§3.3). |
 | `buttons.ok` / `.cancel` | Label and enabled flag, straight from `updateButtons`. **Render the label verbatim**: `Undo (2)`, `End Turn` and `Auto` are engine labels, not client features (§2.2). |
+| `buttons.focus` | `"ok"` \| `"cancel"` \| `null` — `updateButtons`' sixth argument, `focus1` **[jar]**, which says which button the desktop would have focused (amendment **M39**). **Space activates the focused button**, and that is the whole reason the field exists: "space = OK" is not a Forge shortcut, it is Swing button focus. A client binds Space to `buttonOk` / `buttonCancel` per this field and to `passPriority` when it is `null`. **`focus1` is a `boolean`** — it names button 1, the OK button — so this emitter writes `"ok"` or `null` and never `"cancel"`. The type keeps the third value because a client must not assume the engine can only focus one of the two buttons, and because `"cancel"` is the honest encoding the day `updateButtons` grows a `focus2`. |
 | `selectable.cardIds` | **The explicit selection set** — the ids `setSelectables` named for a *choice*: targeting, discard, declare blockers, `InputSelectEntities`. It is **not** the set of cards the engine will accept a click on (amendment M8): `InputPassPriority` never calls `setSelectables`, so at your own main phase this is `[]` and your hand is still clickable. May contain an id that is **not** in this frame's `state` (a library card that is a legal target): render nothing for it, never throw. |
 | `selectable.min` / `.max` | How many, for that explicit choice. Both `0` when there is none. |
 | `selectable.mode` | `"cards"` \| `"players"` \| `"none"`. `"none"` means *no explicit selection is outstanding* — not "nothing is clickable". |
@@ -1254,16 +1417,24 @@ them to a human seat:
 | `assign_damage` | yes | `human-trample-7`, `human-ability-42` |
 | `choose_entities` (+ `delayedReveal`) | yes | `human-search-7` — `decks/search-probe.dck` |
 | `assign_amount` | yes | `human-amount-7` — `decks/amount-probe.dck` |
-| `confirm` | yes, **with `FPref.UI_MANA_LOST_PROMPT` on** | `human-amount-7` |
+| `confirm` | yes, **and `FPref.UI_MANA_LOST_PROMPT` is now on by default** (M40) | `human-amount-7` |
 | `text` | yes | `human-number-7` — `decks/number-probe.dck` |
 | `manipulate_list` | **unreachable while D13 holds** (M23) | — |
 | `options` | **unreachable: no call site in the jar** (M22) | — |
-| `sideboard` | **needs a multi-game session** (M27) | — |
+| `sideboard` | **yes, since M6** — between games of a `--games N` match | `human-sideboard-7` — `decks/sideboard-probe.dck` |
 
-The last three are implemented, driven by `mtgtable.AskSelfTest`, shape-pinned by
-`ASK_SHAPES` and rendered by `AskModal`, and that is now a **documented ceiling**
-rather than an open gap. Do not delete them: the ceiling is a property of one
-preference (D13), of Forge 2.0.14, and of the one-game session M6 replaces.
+`manipulate_list` and `options` are implemented, driven by
+`mtgtable.AskSelfTest`, shape-pinned by `ASK_SHAPES` and rendered by
+`AskModal`, and that is a **documented ceiling** rather than an open gap: it is
+a property of one preference (D13) and of Forge 2.0.14. `sideboard` was the
+third of them and is no longer — the session that survives `matchOver: false`
+(amendment **M38**) is exactly what M27 said it was waiting for, and
+`fixtures/games/human-sideboard-7.jsonl` is game 2 of a two-game match. **Nine
+of the eleven kinds now have an engine recording; the other two are the
+documented ceilings above.** (The census over `fixtures/games/*.jsonl`:
+`choose_list` 56, `ability_menu` 20, `assign_amount` 10, `choose_entities` 7,
+`text` 6, `order` 4, `assign_damage` 3, `confirm` 2, `sideboard` 1 — nine
+recorded plus `manipulate_list` and `options` unreachable is the eleven.)
 
 ### 5.3 Per-kind notes that a reader will otherwise get wrong
 
@@ -1302,6 +1473,25 @@ preference (D13), of Forge 2.0.14, and of the one-game session M6 replaces.
   OK button and answers `[]`. Without this flag it renders as an impossible "pick
   −1 cards". `getChoices` must also never return `null`
   (`AbstractGuiGame.java:767, 780-781` dereference it).
+  **It is also a reveal channel in its own right**, which matters to
+  `tools/check-redaction.mjs`: the whole purpose of the call is to put those
+  cards in front of this seat, so a `reveal: true` list may legitimately carry a
+  card the last snapshot had in an opponent's hand — measured,
+  `{"prompt":"Looking at cards in Forge AI's hand","reveal":true,
+  "options":[{"cardId":76,…}]}`. Every card in it still goes through
+  `Snap.card`'s `canBeShownTo(viewer)` gate; what the flag says is that
+  amendment **P12** ("a list-shaped ask must not carry more than the effect
+  reveals") is satisfied by the ask itself rather than by a `delayedReveal`.
+  **Without the flag, P12 is unchanged and a card from an opponent's hidden zone
+  is still a failure.**
+  And because `WireGuiGame.ask()` flushes a `state` *before* it emits the ask
+  (report 06 W4 — that is the snapshot in which a temporarily revealed card is
+  visible), the snapshot showing the revealed card is written **one frame
+  earlier** than the ask that justifies it. The checker allows an `ask` to
+  justify the `state` immediately before it, and **nothing further back**; both
+  halves are negative-controlled in `fixtures/negative/redaction/`
+  (`a6-reveal-ask-one-frame-too-late.jsonl`,
+  `p12-choose-list-reveals-without-the-flag.jsonl`).
 - **`assign_damage`'s defender is option index 0**, carrying `"defender": true`
   plus `playerId` or `cardId`; the blockers follow, each with `cardId` and
   `lethal` (remaining toughness, computed on the game thread). The bridge
@@ -1346,7 +1536,12 @@ preference (D13), of Forge 2.0.14, and of the one-game session M6 replaces.
   redaction question. Never emit the opponent's pool; Forge never gives it to us.
   Its one caller runs **between games** (`Match.java:278`) and returns early
   unless the deck has a sideboard, so it needs `--games 2` *and* a session that
-  survives an `over` with `matchOver: false` (amendment **M27**).
+  survives an `over` with `matchOver: false` (amendments **M27** and **M38**).
+  It is raised **on the game thread** — `Match.startGame` runs under
+  `game.getAction().invoke(...)` — so it parks like any other ask, and the
+  answer is the new main deck as indices into `main ++ side`. The identity
+  ("no sideboarding") is legal and is what a player clicking straight through
+  sends.
 - **`confirm`'s one reachable call site is the floating-mana warning**
   (amendment **M24**). Eleven of the twelve `IGuiGame.confirm` /
   `showConfirmDialog` sites are inside `if (getGui().isLibgdxPort())` — including
@@ -1459,8 +1654,11 @@ consecutive games is the M5 exit criterion.
 
 **From the outcome, not from `finishGame`** (amendment M4). `winner` is a player
 `id`, or `null` for a draw. `matchOver` distinguishes the end of a game from the
-end of the match; when it is `false` the client may send `act: nextGame` — and the
-next game opens with a **new `hello_ok`** that invalidates every cached id (§2.1).
+end of the match; when it is `false` the client may send
+`act: newGame {mode:"continue"}`, and when it is `true` only
+`{mode:"restart"}` can produce another game (§2.2, amendment **M38**). Either
+way the next game opens with a **new `hello_ok`**, carrying a **new `gameId`**,
+that invalidates every cached id (§2.1) — and writes its own frame log (§8).
 
 The emitter's trigger is `GameEventGameOutcome`, read on the game thread and
 shipped immediately after the `state` frame that carries the same body as
@@ -1491,6 +1689,13 @@ replay renders the result without special-casing the final frame.
 
 `var/games/<gameId>/frames.jsonl`, written by the `mtg-table-log` thread, **flushed
 per line** so a killed JVM still leaves a complete, parseable file.
+
+**One file per game, not per process** (amendment **M38**). A session that plays
+three games writes three directories — `<gameId>/`, `<gameId>-g2/`,
+`<gameId>-g3/` — each with its own session header on line 0, its own `seq`
+series starting at 1, and its own terminal `over`. The alternative (one file with
+three headers) would break the one property every reader depends on: line 0 is
+the header and every other line is a frame.
 
 ### 8.1 Line 0 — the session header
 
@@ -1634,6 +1839,7 @@ a reason:
 | `future-sight.jsonl` | `decks/future-sight-probe.dck` (22 Island + 18 Future Sight) vs `morph-probe` — the only recording in which **`library.cards` is non-empty**. No card in `pacho-shield` or `morph-probe` runs a continuous `MayLookAt` static, so before it, §3.4's amendment was proved only by the shape of an empty array. 98 frames carry a revealed top card; it is a two-deck recording as well |
 | `human-auto-{42,7,2026}.jsonl` | **the first recordings with a seat in them** (M2): `pacho-shield` played by `AutoTransport`'s scripted policy against the AI, at seeds 42 / 7 / 2026. They are where `input`, `ask`, `answer`, `act` and `notice` stop being hand-written (§8.4). Ask kinds actually dispatched, after amendment **M14** re-recorded them: `choose_list`, `order`, **`ability_menu`** (7 at seed 42, 1 at seed 7) and **`assign_damage`** (1 at seed 42 — the primary deck reaches it for the first time, because the menu is what lets this policy cast a creature at all). Before M14 the three of them dispatched `choose_list` and `order` and nothing else |
 | `human-trample-7.jsonl` | `decks/trample-probe.dck` (18 Forest + 22 Garruk's Companion, a 3/2 **trampler**) vs `morph-probe`, seed 7 — the only recording that reaches **`assign_damage`**, the kind §5.3 calls the worst trap of the eleven. `PlayerControllerHuman.java:289` only asks the GUI when the attacker has trample or is blocked by more than one creature, and neither deck above can produce either. Its one ask carries the defender at index 0 with `lethal: null` and a **face-down** blocker at index 1 with `lethal: 2` — so it is evidence for the option gate as well |
+| `human-yield-13.jsonl` | `decks/yield-probe.dck` (18 Forest + 22 **Thallid**) at seed 13, recorded by `tools/ws-auto-play.mjs --comfort --require-yield-repeat` — the only recording that proves **auto-yield's behaviour** rather than its wire. Thallid's `At the beginning of your upkeep…` trigger is mandatory, so the same `stack[].yieldKey` returns to the top of the stack every turn: after `setYield {mode:"yes"}` the handle reappears on top four times (turns 5, 7, 9, 11) and **no `input` carrying `buttons.ok.enabled` is pushed while it is there**, which is `PlayerControllerHuman.chooseSpellAbilityToPlay` returning null without raising an `InputPassPriority` at all. Every other recording could only show `yielded:"yes"`, i.e. the store being *written* |
 | `human-scry-7.jsonl` | `decks/scry-probe.dck` (24 Island + 16 Opt) vs `morph-probe`, seed 7 — the only recording in which **`input.focusCard` is non-null**. Scry 1 with `UI_SELECT_FROM_CARD_DISPLAYS` off (decision **D13**) routes to `willPutCardOnTop`, which pushes `setCard` on the **game thread** with a card that is in the viewer's *library* and therefore not in the snapshot (amendment H's whole reason). 24 such pushes, 12 of them naming a card no frame of the log contains |
 
 `fixtures/synthetic/sample-handwritten.jsonl` is hand-built by
@@ -1730,9 +1936,22 @@ it.
 
 ---
 
-## 10. Planned additions (M3/M6) — **not yet emitted**
+## 10. Planned additions — **most of this shipped in M6**
 
-Everything in this section is specified but **not on the wire today**. It is
+**Read the live sections first.** As of 2026-09-12 (amendments **M32**–**M40**)
+`players[].phaseStops`, `state.yield`, `state.undo`, `stack[].yieldKey` /
+`isAbility` / `isOptionalTrigger` / `yielded`, `input.buttons.focus` and the acts
+`passPriority`, `yieldTo`, `setYield`, `newGame` and `undo` are **live protocol**,
+specified in §2.2, §3, §3.1 and §4 — and where the two descriptions differ, the
+live one wins (`phaseStops` is `{own,opp}`, not a flat array; `yield` carries its
+`kind`; `setPhaseStop` names a `turn`, not a `playerId`; `setYield`'s modes are
+`yes` / `no` / `clear`; `newGame`'s are `continue` / `restart`). What is left
+below and **still not emitted** is `state.autoPassNoActions`,
+`attachedToPlayerId` on a `Card`, and `input.selectable.playerIds`.
+
+The rest of this section is kept as written, because it is the reasoning the live
+shapes came out of. Everything in it was specified but **not on the wire** when it
+was written. It is
 written down now, while M3 is being built, because each item is an added field
 inside a `body` — not a `v` bump — and adding them later means touching a frozen
 reducer and invalidating every fixture. A client may read these fields

@@ -17,16 +17,26 @@
 #
 #        http://127.0.0.1:<webPort>/?ws=1
 #
-#   Ctrl-C stops both.  So does the bridge exiting: the JVM plays ONE game and
-#   exits 0 after `over`, and this script notices and stops vite with it.
+#   Ctrl-C stops both.  So does the bridge exiting: when the match is over and
+#   the linger window has closed, the JVM exits 0 and this script stops vite.
+#
+# M6 CHANGED THE DEFAULTS, and PLAN.md's M6 command block is why: a bare
+# `./scripts/play.sh` is "three games back to back, one command typed".  So this
+# script now passes `--games 3` (unless the caller gave a --games of their own)
+# AND `--keep-open` (unless `--no-keep-open`).  Both are needed for the board's
+# New Game row to have a session to act in: without --games the JVM stops after
+# game 1, and without --keep-open it closes the socket the instant the LAST
+# `over` lands -- which is the moment the row appears.  M6's verification found
+# exactly that dead end on the milestone's own headline command.
 #
 # Usage:
-#   ./scripts/play.sh                       # config.json's deck, ports and a random seed
+#   ./scripts/play.sh                       # three games, config.json's deck/ports, random seed
 #   ./scripts/play.sh --seed 42             # a reproducible shuffle
 #   ./scripts/play.sh --deck decks/pacho-shield.dck --deck2 decks/morph-probe.dck
 #   ./scripts/play.sh --port 8643           # a second bridge beside a running one
 #   ./scripts/play.sh --no-open             # do not launch a browser
-#   ./scripts/play.sh --keep-open           # leave the bridge up 30 s after `over`
+#   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
+#   ./scripts/play.sh -- --games 1          # one game only (your --games wins)
 #
 # Everything after `--` goes to `mtgtable.MtgTable` untouched, so a flag this
 # script has never heard of still reaches the bridge:
@@ -45,7 +55,8 @@ cd "$REPO_ROOT"
 WS_PORT="$(cfg_get wsPort || echo 8642)"
 WEB_PORT="$(cfg_get webPort || echo 5173)"
 OPEN=1
-KEEP_OPEN=0
+KEEP_OPEN=1                      # M6: the default, see the header
+GAMES_DEFAULT=3                  # M6: "three games back to back, one command typed"
 PASSTHROUGH=()
 
 while [ $# -gt 0 ]; do
@@ -54,7 +65,8 @@ while [ $# -gt 0 ]; do
     --web-port)  WEB_PORT="$2"; shift 2 ;;
     --no-open)   OPEN=0; shift ;;
     --keep-open) KEEP_OPEN=1; shift ;;
-    --help|-h)   sed -n '5,39p' "$0"; exit 0 ;;
+    --no-keep-open) KEEP_OPEN=0; shift ;;
+    --help|-h)   sed -n '5,49p' "$0"; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
   esac
@@ -117,6 +129,13 @@ trap stop INT TERM EXIT
 say "bridge — ws://127.0.0.1:$WS_PORT/ws"
 KEEP_ARGS=()
 [ "$KEEP_OPEN" = "1" ] && KEEP_ARGS+=(--keep-open)
+# --games: the caller's wins.  `--games` may arrive either before `--` (this
+# script does not parse it, so it lands in PASSTHROUGH) or after it, and both
+# spellings end up in the same array -- so one scan of that array decides.
+case " ${PASSTHROUGH[*]+${PASSTHROUGH[*]}} " in
+  *" --games "*|*" --games="*) : ;;
+  *) KEEP_ARGS+=(--games "$GAMES_DEFAULT") ;;
+esac
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port "$WS_PORT" \
     "${KEEP_ARGS[@]+"${KEEP_ARGS[@]}"}" "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}" \
     >>"$SERVER_LOG" 2>&1 &
@@ -159,10 +178,17 @@ URL="http://127.0.0.1:$WEB_PORT/?ws=1"
 
 say "board — $URL"
 cat <<EOF
-  Space  press the engine's OK button      (its label is Forge's: OK / Auto / …)
+  Space  press the button the engine FOCUSED (input.buttons.focus, amendment
+         M39 — its label is Forge's: OK / Auto / …). "Space = OK" was never a
+         Forge shortcut.
   Esc    press the engine's Cancel button  (… / Undo (2) / End Turn)
+  E T B  pass to end of turn / my next turn / just before my turn (act: yieldTo)
+  P      pass priority          CTRL+Z  undo the last mana ability
+  Y N    always yes / always no for the ability on top of the stack
+  H      the full 18-row key table, rendered from the one keymap
   click  any card, any player name — Forge judges the click (protocol §4.1, M8)
-  the bridge plays ONE game and exits; Ctrl-C stops both halves.
+  the bridge plays the whole match and then waits for New Game for as long as
+  this browser stays connected; Ctrl-C stops both halves.
 EOF
 
 # vite DIRECTLY, not `npm run dev`.  Contract (e) says Ctrl-C stops both halves,

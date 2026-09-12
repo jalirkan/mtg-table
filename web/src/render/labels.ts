@@ -95,11 +95,15 @@ export const STEP_TITLE: Record<string, string> = {
 
 /**
  * **Forge's own stop defaults**, verbatim from `ForgePreferences.java:239-264`
- * (report 10 §0, `[src]`). These are a *preview* and nothing more: the wire has
- * no `players[].phaseStops` yet (docs/protocol.md §10, M6), so the strip renders
- * what Forge would have started with rather than pretending to know this
- * session's map. The client never computes a stop — that would be the phase-stop
- * logic `CLAUDE.md` §Scope forbids outright.
+ * (report 10 §0, `[src]`).
+ *
+ * **M6 demoted these to a fallback.** `players[].phaseStops` is live protocol
+ * now (§3.3), and the strip draws that; these two sets are what it draws for a
+ * stream that does not carry the field — every recording made before
+ * 2026-09-12, and every replay of one — beside a legend that says so. They are
+ * never mixed with the live map and never used to *decide* anything: the client
+ * still computes no stop, which is the phase-stop logic `CLAUDE.md` §Scope
+ * forbids outright (**D31**).
  */
 export const FORGE_DEFAULT_STOPS_YOURS: ReadonlySet<string> = new Set([
   'MAIN1',
@@ -107,7 +111,10 @@ export const FORGE_DEFAULT_STOPS_YOURS: ReadonlySet<string> = new Set([
   'MAIN2',
 ]);
 
-/** `FPref.PHASES_AI` defaults — the stops that apply on the opponent's turn. */
+/**
+ * `FPref.PHASES_AI` defaults — the stops that apply on the opponent's turn, and
+ * the same fallback-only status as the set above.
+ */
 export const FORGE_DEFAULT_STOPS_OPPONENT: ReadonlySet<string> = new Set([
   'COMBAT_BEGIN',
   'COMBAT_DECLARE_ATTACKERS',

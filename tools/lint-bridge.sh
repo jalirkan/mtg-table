@@ -135,6 +135,57 @@ elif [ "$alt_n" != "1" ]; then
 fi
 
 # --------------------------------------------------------------------------
+# 4b. StackItemView.getKey(): allowed EXACTLY ONCE, in WireGuiGame's handle table
+#
+# M6, protocol amendment M36.  `StackItemView.getKey()` is
+# `CardView.toString() + ": " + the ability's text` -- a card NAME, its id and
+# its rules text -- i.e. the same text channel report 06 section 4 opens with,
+# reached from an accessor whose name says nothing about cards at all.  The wire
+# carries an opaque bridge-minted handle ("y7") instead, and `act: setYield`
+# resolves it back.
+#
+# This is a budget rather than a ban because the key is how an auto-yield is
+# addressed at all.  One occurrence, in WireGuiGame.rawYieldKey(), tagged
+# `// ALLOW getKey:`.  A second one anywhere is a second place that can put
+# Forge's string on the wire.
+#
+# `Map.Entry.getKey()` is everywhere in this codebase and is not what this rule
+# is about, so the rule has to separate the two.  The FIRST cut matched the
+# literal receiver name `si.`, which meant a second reader who spelled it
+# `top.getKey()` / `item.getKey()` / `stack.get(0).getKey()` passed the lint
+# silently -- the one thing the rule exists to stop.  It now works from the
+# DECLARED TYPE instead: every identifier introduced as `StackItemView <name>`
+# anywhere under bridge/src (locals, parameters, enhanced-for variables) becomes
+# a receiver to watch, so a rename is caught by construction.  A
+# `stack.get(0).getKey()` with no named variable does not type-check against
+# this rule, so `rawYieldKey(StackItemView)` is deliberately the only accessor
+# and the negative control in tools/check-redaction-selftest.mjs backstops the
+# wire itself (a `yieldKey` containing a space or a `(` is a failure there).
+# --------------------------------------------------------------------------
+si_names="$(grep -rhoE --include='*.java' 'StackItemView[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' "$SRC" 2>/dev/null \
+  | awk '{print $2}' | sort -u || true)"
+if [ -n "$si_names" ]; then
+  si_alt="$(printf '%s' "$si_names" | paste -sd '|' -)"
+  key_pattern="\\b(${si_alt})\\.getKey\\(\\)"
+else
+  key_pattern='\bsi\.getKey\(\)'
+fi
+key_hits="$(grep -rn --include='*.java' -E "$key_pattern" "$SRC" 2>/dev/null | strip_comments || true)"
+key_n=0
+[ -n "$key_hits" ] && key_n="$(printf '%s\n' "$key_hits" | wc -l)"
+key_elsewhere="$(printf '%s' "$key_hits" | grep -v '/WireGuiGame\.java:' || true)"
+key_untagged="$(printf '%s' "$key_hits" | grep -v 'ALLOW getKey:' || true)"
+if [ -n "$key_elsewhere" ]; then
+  echo "LINT FAIL: StackItemView.getKey() outside WireGuiGame.java -- a yield key is a card name, an id and its rules text (protocol amendment M36). The wire carries the opaque handle WireGuiGame mints; nothing else may read the key." >&2
+  echo "$key_elsewhere" | sed 's/^/  /' >&2
+  fail=1
+elif [ "$key_n" != "1" ] || [ -n "$key_untagged" ]; then
+  echo "LINT FAIL: StackItemView.getKey() appears $key_n time(s) in WireGuiGame.java (receivers watched: $(printf '%s' "$si_names" | paste -sd ',' -)), expected exactly 1 tagged \`// ALLOW getKey:\` (the yield-handle table)." >&2
+  [ -n "$key_hits" ] && echo "$key_hits" | sed 's/^/  /' >&2
+  fail=1
+fi
+
+# --------------------------------------------------------------------------
 # 5. Rule 8 made mechanical: only Snap.java may name a CardView
 #
 # "Exactly one card-serialisation function" is a rule about code nobody has

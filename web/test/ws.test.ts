@@ -132,6 +132,30 @@ const INPUT = {
   },
 };
 
+/**
+ * A minimal `state` body — enough for the reducer, which stores the snapshot
+ * whole (§3.5) and reads only `events` and `gameOver` on the way past.
+ */
+const STATE = {
+  v: 1,
+  seq: 2,
+  t: 2,
+  type: 'state',
+  body: {
+    gameId: 'g1',
+    turn: 1,
+    phase: 'UPKEEP',
+    activePlayer: 0,
+    priority: 0,
+    players: [],
+    stack: [],
+    stackCards: [],
+    combat: null,
+    events: [],
+    gameOver: null,
+  },
+};
+
 // ---------------------------------------------------------------------------
 
 test('the default URL is loopback, on config.json\'s wsPort', () => {
@@ -152,6 +176,36 @@ test('a FIRST connect sends nothing — §2.1 volunteers hello_ok, state and inp
   last().deliver(HELLO);
   assert.equal(transport.state.hello?.you, 0);
   assert.equal(transport.status.framesIn, 1);
+  transport.close();
+});
+
+test('a connect with NO `input` frame is legal and leaves input null (amendment M42)', () => {
+  // §2.1: an `input` is delivered only after the engine has asked, so a client
+  // that connects before the first prompt gets `hello_ok` + `state` and then
+  // waits. Before M42 the bridge re-delivered the EMPTY pre-engine struct here,
+  // and a client that read "there is an input, so I may act" had its act
+  // dropped with `notice {title:"Not yet"}` — which is how gate step 10g failed
+  // on 2026-09-12. The client half of the fix is that this shape is ordinary:
+  // `input` is nullable in the reducer and every reader of it guards, so the
+  // board renders "the engine has not asked for anything yet" and nothing else
+  // changes.
+  const { transport, last } = harness();
+  transport.connect();
+  last().open();
+  last().deliver(HELLO);
+  last().deliver(STATE);
+
+  assert.equal(transport.error, null, 'a missing `input` is not a protocol error');
+  assert.equal(transport.state.input, null);
+  assert.notEqual(transport.state.board, null, 'the board arrived without it');
+  assert.equal(transport.state.board?.turn, 1);
+  assert.equal(transport.status.framesIn, 2);
+
+  // …and the engine's first push lands normally when it comes. (A fresh read:
+  // `assert.equal(x, null)` above narrowed the old one to `null`.)
+  last().deliver(INPUT);
+  const pushed = transport.state;
+  assert.equal(pushed.input?.prompt, 'Main phase, precombat');
   transport.close();
 });
 

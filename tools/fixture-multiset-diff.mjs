@@ -371,4 +371,26 @@ process.stderr.write(
   `MULTISET DIFFERS: ${String(countDiff(onlyA))} frame instance(s) only in ${a.path}, ` +
     `${String(countDiff(onlyB))} only in ${b.path}\n`,
 );
+// PLAN.md M5 follow-up 6, said WHERE IT PRINTS rather than only in the plan.
+// Two frame shapes drift by one or two instances between runs of the same seed
+// and are NOT emitter drift; the step is advisory because of them.
+//
+//   * `input {prompt:"Waiting for Forge AI..."}` -- AbstractGuiGame's
+//     awaitNextInput() re-pushes the same prompt on a 250 ms java.util.Timer
+//     while the engine thinks, so a loaded machine records one or two more
+//     ticks than a quiet one;
+//   * a trailing `act {"action":"buttonCancel"}` -- the automated seat presses
+//     the enabled button, and whether the LAST window of a finished game gets
+//     one more press depends on the same timing.
+//
+// A difference confined to those two is noise. Anything else -- a changed key
+// set, a changed value, a frame type that moved -- is the drift this step
+// exists to show, and it will be in the per-frame listing above.
+process.stderr.write(
+  'NOTE: this step is ADVISORY and is permanently a little noisy. A difference ' +
+    'of one or two `input {prompt:"Waiting for Forge AI..."}` frames (250 ms ' +
+    'awaitNextInput re-pushes) or one trailing `act buttonCancel` is timing, not ' +
+    'drift -- read the per-frame listing above before believing it. ' +
+    'DRIFT_FATAL=1 makes it an exit code anyway.\n',
+);
 process.exit(1);
