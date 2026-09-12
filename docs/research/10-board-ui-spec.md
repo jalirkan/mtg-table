@@ -167,7 +167,11 @@ web/src/
 │   ├── div.table__middle
 │   │   ├── <ZoneRow kind="graveyard-strip" owner={opponent} />   (small, right-aligned)
 │   │   ├── <StackPanel />                      floating, right of centre
-│   │   └── <ZoneRow kind="graveyard-strip" owner={you} />
+│   │   ├── <ZoneRow kind="graveyard-strip" owner={you} />
+│   │   └── <CombatBands />           (M5) floating, bottom-left — NOT a third row:
+│   │                                 the middle is `grid-template-rows: 1fr 1fr`
+│   │                                 and an in-flow third child starves both
+│   │                                 (docs/evidence/m5-board.md §11)
 │   ├── <ZoneRow kind="permanents" owner={you} />
 │   ├── <ZoneRow kind="lands"      owner={you} />
 │   └── <HandFan />

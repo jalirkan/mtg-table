@@ -85,7 +85,8 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-Thirteen steps, stopping at the first failure: `check-forge.sh` →
+Thirteen numbered steps and three lettered sub-steps, stopping at the first
+failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
 `bridge/build.sh` (javac plus three self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift diff** of that recording against
@@ -93,18 +94,24 @@ re-record into `var/` → **a value-level drift diff** of that recording against
 null`, the scripted `--transport console` smoke, and `--transport auto --seed
 11`, each asserted to end in exactly one `over` as its last frame, plus the
 advisory **9b** that re-records seed 42 and compares it against
-`fixtures/games/human-auto-42.jsonl` as an order-insensitive multiset) → **five
+`fixtures/games/human-auto-42.jsonl` as an order-insensitive multiset, and
+**9c**, M5's exit criterion — `tools/ten-games.sh`, ten consecutive games across
+six decks, the single most expensive thing in the file, which `SKIP_TEN=1`
+turns off) → **six
 fresh `--transport ws` servers** (the two `ws-smoke` variants, a whole game
 through `tools/ws-auto-play.mjs`, that client again with `--refuse-first-ask`,
 which drops the socket on the first `ask` frame so `ReplyPool.cancelAll()` runs
-with a game thread genuinely parked, and `ws-smoke --concede-before-input`, which
+with a game thread genuinely parked, `ws-smoke --concede-before-input`, which
 concedes from the handshake handler before the engine has asked this seat
-anything — amendment M11's exception path) →
+anything — amendment M11's exception path — and **10f**, `ws-auto-play --probe`,
+the only thing anywhere that sends the `clickAbility` **act** from a client
+rather than answering an ability menu by index) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
 every fresh recording → `check-redaction-selftest.mjs`, which asserts the
 checker still rejects twelve one-defect probes → `npm run build && npm test` in
-`web/`. Three to four minutes (3 m 32 s on the M4 documentation run), most of it
-the nine games; every JVM step runs
+`web/`. **About nine minutes** from a deleted `bridge/out` (8 m 52 s over three
+green M5 runs), of which 9c's ten games are 268 s and the sixth ws server most of
+the rest; `SKIP_TEN=1` brings it back to roughly four. Every JVM step runs
 under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
 the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
 reducer and the committed fixtures still agree.
@@ -163,11 +170,55 @@ node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (M17)
 # M4 — card art for the deck in play (run once; cached in web/public/art.json,
 #      which is gitignored.  Without it the board draws generated text frames.)
 node tools/fetch-art.ts
+
+# M5 — the exit criterion, as a command: ten consecutive games across six decks,
+#      each asserted for `over`, zero UNIMPL, one-kind ask ceiling, the typed
+#      acts a row exists to prove, and check-redaction.mjs.  ~270 s.
+./tools/ten-games.sh
+./tools/ten-games.sh --games 3     # the first three rows, for a quick look
+
+# M5 — the probe runs behind it, one at a time.  --probe is a POLICY flag on the
+#      automated seat (it picks a card in a library search, takes getInteger's
+#      "Other...", spends floating mana and sends clickAbility); --mana-lost-prompt
+#      turns on one Forge preference, in memory, and is the only way the `confirm`
+#      ask kind is reachable at all.  --deck2 is load-bearing: leaving it off
+#      changes what the engine asks.
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --seed 7 \
+    --game-id human-search-7 --deck decks/search-probe.dck --deck2 decks/morph-probe.dck
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt --seed 7 \
+    --game-id human-amount-7 --deck decks/amount-probe.dck --deck2 decks/morph-probe.dck
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --seed 7 \
+    --game-id human-number-7 --deck decks/number-probe.dck --deck2 decks/morph-probe.dck
+node tools/ws-auto-play.mjs --port 8642 --probe   # the same policy over the socket
 ```
 
-Everything above runs today, and as of **M4** the board those frames feed is a
-real Magic table: card art, tapped cards rotated 90°, two player rails, a phase
-strip, a stack panel, targeting and combat arrows, and a keyboard.
+Everything above runs today. As of **M4** the board those frames feed is a real
+Magic table — card art, tapped cards rotated 90°, two player rails, a phase
+strip, a stack panel, targeting and combat arrows, and a keyboard — and as of
+**M5** nothing on it dead-ends: floating mana is spendable, the board-shaped
+questions are answered on the board, every zone can be opened and read, and the
+declared attackers and blockers are a strip of their own.
+
+**The probe decks.** Five throwaway forty-card decks whose only job is to make
+Forge ask something `decks/pacho-shield.dck` never makes it ask. They are how an
+ask kind stops being "implemented against a spec" and becomes "recorded from the
+engine", and each one has a committed fixture to show for it:
+
+| deck | the card | what it forces |
+|---|---|---|
+| `decks/trample-probe.dck` | 22 Garruk's Companion (trample) | `assign_damage` — a trampler through a blocker (M2) |
+| `decks/scry-probe.dck` | 16 Opt | `input.focusCard` — not an ask at all (M2) |
+| `decks/search-probe.dck` | 20 Rampant Growth | `choose_entities` **with a `delayedReveal`** — the engine handing over cards out of a hidden zone |
+| `decks/amount-probe.dck` | 20 Manamorphose | `assign_amount`, in its **colour-keyed** form, and (with `--mana-lost-prompt`) `confirm` |
+| `decks/number-probe.dck` | 16 Volcano Hellion | `text`, through `getInteger`'s *"Other…"* option |
+| `decks/sideboard-probe.dck` | 22 Garruk's Companion + a sideboard | `sideboard` — **does not fire yet**: it needs a session that survives game 1, which is M6's |
+
+Two of the eleven ask kinds have no recording and never will in this
+configuration: `options` has **no call site anywhere** in the Forge 2.0.14 jar,
+and `manipulate_list` has exactly one, gated on a preference this project sets to
+`false` because turning it on ships your whole library to the client. Both are
+documented ceilings rather than open gaps
+([`docs/evidence/m5-probes.md`](docs/evidence/m5-probes.md)).
 
 ### Playing in the browser
 
@@ -215,15 +266,22 @@ Everything under it is the board, and the board never scrolls sideways at
 
 - **The left rail** is both seats and then your decision panel: life, poison,
   counters, the zone counts (`▤` library, `✋` hand, `⚰` graveyard, `◇` exile) and
-  the mana pool as coloured pips. Under them the panel names the step, prints
+  the mana pool as coloured pips. **On your own rail a pip with mana under it is
+  a button** — click it to spend one floating mana of that colour (below). Under
+  them the panel names the step, prints
   Forge's own prompt **verbatim**, and carries the engine's two buttons, Concede,
   and a line of help when the engine wants a *card* click rather than a button.
+  While a selection is open it also prints **`chosen k of min..max`** — the
+  clicks you have sent since this prompt, not a count the engine published, and
+  never enforced: Forge is the judge of every click.
 - **The table** is five rows and a hand: the opponent's permanents and lands,
   a middle strip with both graveyards, exile and the stack panel, then your
   permanents, your lands, and your hand fanned along the bottom. Cards are real
   Scryfall images; a card with no art (a token, or a deck you have not fetched art
   for) draws a generated frame with its name, its mana pips, its type line and its
-  P/T, and it is clicked exactly the same way.
+  P/T, and it is clicked exactly the same way. **Each strip's caption opens that
+  zone** at a readable size (below), and during combat a **band strip** across the
+  bottom of the middle lists the declared attackers and blockers.
 - **Tapped is rotated 90°**, summoning sickness is a tint, counters and damage are
   badges, an Aura or Equipment is drawn attached to what it is on, and a card the
   engine has named in `selectable` gets a gold outline and a corner caret.
@@ -246,6 +304,38 @@ targeting and attacking. **The two buttons wear the engine's own labels** — OK
 `Play`, `Keep`, `Auto` or `OK` depending on what Forge is asking, and Cancel is
 `Undo (2)` or `End Turn` when it says so.
 
+**Spending floating mana.** Tapping a land puts mana in your pool, and the pool
+is not spent for you on an ordinary cast — Forge auto-pays from it only when the
+cost is mandatory. So each coloured pip on **your** rail that has mana under it
+is a button: click it, or press `W` `U` `B` `R` `G` `C`, to spend one. This is
+the one thing M4's board genuinely could not do, and it is the whole of the
+difference between "the engine is waiting" and "the game is stuck". The usual way
+to pay a cost is still the engine's own **`Auto`** button (that is what Forge
+writes on OK during a mana payment) plus clicking lands; the pips are for the
+mana already floating. A pip pressed when nothing is being paid is a *meaningless
+act*, which the bridge drops on the floor by design — the board neither hangs nor
+invents a local rule about when a pip may be pressed, because the only signal on
+the wire for "a payment is in progress" is the text of a button label, and this
+client does not read engine prose to decide what a control means.
+
+**Opening a zone.** Every graveyard, exile and command strip's caption is a
+button: click `human · graveyard 2 ⤢` and a panel lists that zone as full-size
+cards. So does the library count on a rail, which shows the revealed slice and
+says `n shown of count` rather than drawing card backs for cards it was never
+sent. A hand can only be opened at your own seat, ever. And when Forge itself
+asks you to look somewhere — `input.openZones`, which is a **view hint and
+reveals nothing** — the panel opens by itself and closes again when the hint
+goes away. `Esc` closes a panel, unless a question is open, in which case
+answering the question comes first.
+
+**Combat.** Once attackers are declared, a strip along the bottom of the middle
+row lists each band as the engine reports it: the attacker, what it is attacking,
+and the blockers on it, each as a real card. It is the same three facts the red
+and green arrows draw, written down — and it is read from `combat.bands` only,
+so it never claims a band Forge has not declared. It floats over the graveyard
+and exile strips while it is tall; the captions stay clickable through it, which
+is how you reach a card it covers.
+
 **The keyboard.** Press **`H`** (or `?`) for this list in the page itself — it is
 rendered from the same table the handler reads, so it cannot list a key that does
 nothing.
@@ -260,7 +350,8 @@ nothing.
 | `C` | emphasise the combat arrows | **now** |
 | `L` | open or close the log drawer | **now** |
 | `H` / `?` | this list | **now** |
-| `A` | auto-pay a mana cost | *M5* |
+| `W` `U` `B` `R` `G` `C` | spend one floating mana of that colour, while the pool holds it | **now** |
+| `A` | auto-pay a mana cost — **press `Space` instead**: it is the engine's own OK button, labelled `Auto` | — |
 | `Ctrl+Z` | undo the last mana ability | *M6* |
 | `E` | pass priority until end of turn | *M6* |
 | `T` | pass to your next turn | *M6* |
@@ -268,10 +359,17 @@ nothing.
 | `Ctrl+A` | attack with everything | *M6* |
 | `Y` / `N` | auto-yield: always yes / always no | *M6* |
 
-The eight marked **now** work today. The rest flash the key and say in the
+The nine rows marked **now** work today. The rest flash the key and say in the
 decision panel which milestone brings it, rather than doing nothing quietly.
 Where Forge has its own binding for one of these, the overlay prints it in the
 third column, and the four places we deliberately differ say so there too.
+
+The six mana letters are a special case, and the rule is worth knowing: **a
+letter spends only while that colour is actually floating.** With an empty pool
+`C` is still "emphasise the combat arrows" and `B` is still M6's pass-to, so
+nothing you already use is taken away; with mana in the pool the letter spends it
+and says so. A letter pressed with no mana behind it tells you *"no floating mana
+of that colour — tap a land first"* rather than doing nothing.
 
 Three rules the keyboard follows, because getting them wrong is worse than having
 no keyboard at all: **a focused button keeps `Space` for itself** (the browser is
@@ -281,13 +379,39 @@ has a strict precedence — an overlay first, then an open question, then the
 engine's Cancel button. Every key is inert while the socket is not `open`, and on
 a replay the board plans no action at all.
 
-**Questions.** When Forge asks something, a dialog takes over: a scrim over the
-board, focus moved into it and handed back where it came from when it closes,
-`Tab` cycling inside it, and the board's own clicks inert until you answer.
-`Esc` answers it with "no answer", which is always legal — the bridge substitutes
-Forge's own documented default. Every kind can also be answered in one click with
-that default; `order`, `choose_list` and `manipulate_list` deliberately offer no
-cancel, because Forge dereferences their result. **There is no timeout while you
+**Questions.** Forge asks two sorts of question, and they are answered in two
+different places.
+
+- **If every option is something the board is already drawing** — a card with a
+  tile, a player with a rail — the question is answered **on the board**. The
+  candidates get a purple outline with a `?` caret (deliberately not the gold
+  `selectable` outline: they are different states), clicking one chooses it and
+  turns it green with a `✓`, and the decision panel lists the same candidates
+  with the engine's own labels, a running count, and **Answer / Default / Cancel
+  / Reset**. Combat damage is assigned this way too: the number boxes appear on
+  the blockers themselves, with the defending player keeping its row in the
+  panel. Nothing is covered up, so you can see the board you are deciding about.
+- **Otherwise a dialog takes over**: a scrim over the board, focus moved into it
+  and handed back where it came from when it closes, `Tab` cycling inside it, and
+  the board's own clicks inert until you answer. That is where a colour choice, a
+  cost choice, an ability menu, a number, and every *reveal* goes — a library
+  search or a "these are the cards" acknowledgement is not a choice made on the
+  board, and the cards it hands you have no tile to point at, so the dialog draws
+  them as real cards instead.
+
+The rule is one sentence — **a question is answered on the board if and only if
+*every* option is already drawn there** — and one option that is not sends the
+whole question to the dialog, because a picker that can express four of five
+options is exactly the dead end M5 exists to remove.
+
+Either way, `Esc` answers with "no answer", which is always legal — the bridge
+substitutes Forge's own documented default. Every kind can also be answered in
+one click with that default; `order`, `choose_list` and `manipulate_list`
+deliberately offer no cancel, because Forge dereferences their result. One
+subtlety worth knowing: for a question that wants **a number**, the default is
+*cancel* rather than an empty box — Forge re-asks until the number is in a range
+it never tells the client, so an empty answer would be the same question forever.
+**There is no timeout while you
 are connected** — the ws ask timeout is 0, the same as the console's, and it is
 your connection rather than a clock that bounds it, so no countdown bar is drawn.
 A bar appears only if a question genuinely carries a deadline.
@@ -399,8 +523,7 @@ is a file, not a story.
 
 ## Repo layout
 
-Only files that exist today are listed without a marker; `M5+` marks what a later
-milestone adds.
+Everything listed exists today (M0-M5); `M6+` marks what a later milestone adds.
 
 ```
 mtg-table/
@@ -408,7 +531,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the twenty-three load-bearing decisions, dated
+  DECISIONS.md               the thirty-six load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -424,6 +547,17 @@ mtg-table/
                              assign_damage ask (one trampler, two blockers)
   decks/scry-probe.dck       throwaway, M2: forces input.focusCard, which no AI-vs-AI
                              recording produces
+  decks/search-probe.dck     throwaway, M5: 20 Rampant Growth. Forces choose_entities
+                             WITH a delayedReveal -- a library search, i.e. the engine
+                             handing the client cards out of a hidden zone
+  decks/amount-probe.dck     throwaway, M5: 20 Manamorphose. Forces assign_amount in its
+                             colour-keyed form, and (with --mana-lost-prompt) the only
+                             confirm ask a human seat can reach
+  decks/number-probe.dck     throwaway, M5: 16 Volcano Hellion. Forces the text ask,
+                             through getInteger's "Other..." option
+  decks/sideboard-probe.dck  throwaway, M5: a deck with a sideboard. The sideboard ask
+                             still does not fire -- it needs a session that survives
+                             game 1, which is M6's (docs/protocol.md amendment M27)
 
   docs/
     protocol.md              the living spec of the wire protocol and the frame log
@@ -454,6 +588,9 @@ mtg-table/
       transport/transport.ts interface Transport { onFrame(cb); send(f) }
       transport/replay.ts    LogReplayTransport (fetch a .jsonl; play/step/scrub)
       transport/ws.ts        WebSocketTransport (M3: reconnect + resync)
+      mana.css               (M5) a FILTERED extract of mana-font's stylesheet: the
+                             package's two @font-face blocks replaced by one woff2, so
+                             the build carries 1 font and not 9 (D32)
       render/                Board.tsx describe.ts ErrorBoundary.tsx ReplayControls.tsx
                              AskModal.tsx (M3)
                              M4: CardTile.tsx (THE card renderer -- every card in every
@@ -462,6 +599,11 @@ mtg-table/
                              Mana.tsx CardZoom.tsx HotkeysOverlay.tsx ArrowsOverlay.tsx
                              and four pure modules `node --test` can import without a
                              DOM: labels.ts resolve.ts arrows.ts rects.ts useKeyboard.ts
+                             M5: AskPicker.tsx (a question answered on the board)
+                             ZoneBrowser.tsx CombatBands.tsx, and three more pure
+                             modules: picker.ts (IS this question board-shaped?)
+                             zones.ts (which zones may be browsed, by whom)
+                             pool.ts (the mana pip -> useMana act mapping)
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
                              M8 clickability rule), ws.test.ts (the M3 transport:
@@ -476,7 +618,14 @@ mtg-table/
                              dependency; a checkout with no node_modules fails the gate
                              with a message saying exactly that), plus (M4)
                              keys.test.ts and arrows.test.ts -- both pure, the second
-                             building arrows for all 2,473 committed `state` frames
+                             building arrows for all 2,473 committed `state` frames;
+                             and (M5) picker.test.ts (the board-shaped rule over every
+                             ask in the corpus, printing the picker/modal census on
+                             every run), zones.test.ts (no panel can show another
+                             seat's hand), pool.test.ts, board-m5.test.tsx and
+                             hooks-order.test.ts (a SOURCE SCAN: no React hook below a
+                             component's early return -- the repo has no DOM test
+                             environment and cannot catch a hook-count change)
     public/art.json          generated, gitignored
 
   tools/
@@ -496,7 +645,17 @@ mtg-table/
                              dumb-human policy; --log writes a CLIENT frame log.
                              --refuse-first-ask drops the socket on the first `ask`
                              FRAME (the only cancelAll() coverage with a game
-                             thread actually parked), reconnects and finishes
+                             thread actually parked), reconnects and finishes.
+                             --probe (M5) mirrors AutoTransport's probe policy line for
+                             line, and is the only client that sends clickAbility
+    ten-games.sh             M5's exit criterion as a command: ten --transport auto
+                             games at seeds 1..10 alternating pacho-shield and the probe
+                             decks, each asserted for `over`, zero UNIMPL (the summary
+                             AND a raw grep), emit errors = 0, an ask-kind ceiling, the
+                             typed acts the row exists to prove AND their effect, and
+                             check-redaction.mjs.  check-all.sh runs it as step 9c
+    fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare
+                             it to its committed fixture as a multiset, `seq` stripped
     fetch-art.ts             deck -> web/public/art.json
 
   fixtures/
@@ -513,7 +672,14 @@ mtg-table/
                              carrying input/ask/answer/notice/over frames and a
                              `transport` session-header key): human-auto-42/-7/-2026,
                              plus human-trample-7 (the assign_damage ask) and
-                             human-scry-7 (input.focusCard)
+                             human-scry-7 (input.focusCard).
+                             M5 added four more, each one an ask kind that had never
+                             been recorded from the engine: human-search-7
+                             (choose_entities + delayedReveal), human-amount-7
+                             (assign_amount, and confirm under --mana-lost-prompt),
+                             human-number-7 (text) and human-ability-42 (ability_menu
+                             plus 7 clickAbility ACTS).  A --probe recording says so in
+                             its session header (policy/prefs, amendment M31)
     synthetic/*.jsonl        hand-built logs for shapes an AI-vs-AI game never emits: an
                              input whose focusCard is not in the snapshot, all ELEVEN ask
                              kinds with their answers, a face-down card in three
@@ -545,7 +711,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Thirty-one load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. |
+| [`DECISIONS.md`](DECISIONS.md) | Thirty-six load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -554,7 +720,7 @@ mtg-table/
 | [`docs/research/08-deck-card-coverage.md`](docs/research/08-deck-card-coverage.md) | Does Forge implement this deck's 28 cards faithfully? (One does not — see D14.) |
 | [`docs/research/10-board-ui-spec.md`](docs/research/10-board-ui-spec.md) | The M4 board: component tree, layout, card tiles, arrows, the three evenings. (One number in §2.2 is 23 px out against the built board — PLAN's M4 follow-up 2.) |
 | [`docs/research/11-engine-comfort-features.md`](docs/research/11-engine-comfort-features.md) | M6: phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — all as engine features, not client state machines. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). |
 
 ## Licence
 

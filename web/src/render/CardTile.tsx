@@ -39,6 +39,24 @@
  *     only under `canFaceDownBeShownTo`) draws the back the table sees plus a
  *     marked "you may look" ribbon. The table sees a 2/2 with no name; only this
  *     seat sees what it is, and the tile says which is which.
+ *
+ * **M5 added one thing and no second renderer** (`PLAN.md`: *"Whatever M5 adds,
+ * it adds through `CardTile`"*). A board-shaped `ask` — a targeting choice, a
+ * discard, a combat-damage assignment — now happens on the tiles themselves,
+ * and the tile learns that from {@link useTargeting} rather than from a prop
+ * threaded through six callers. Three consequences:
+ *
+ *   - the **anchor tile is the pickable one**. A card can be mounted more than
+ *     once in a frame (the stack thumbnail, the decision panel's focus, the
+ *     zone browser, the zoom); `anchor` already says which copy *is* the card
+ *     for the arrows overlay, and it now says which copy answers the question.
+ *   - a click means `answer` instead of `act: clickCard` while a picker owns the
+ *     tile, and `data-act` says which — a lie there would be a control that
+ *     claims to do something it does not.
+ *   - hover handlers exist **only on a candidate** (report 10's note that the
+ *     board has no `onMouseEnter` on eighty tiles stands): the pending-target
+ *     arrow needs to know what the pointer is over, and only a candidate can be
+ *     the far end of one.
  */
 
 import { useState } from 'react';
@@ -53,6 +71,7 @@ import {
 } from '../protocol.ts';
 import { counterLabel, tileAriaLabel } from './labels.ts';
 import { ManaCost } from './Mana.tsx';
+import { useTargeting } from './picker.ts';
 import { cardKey, useRects } from './rects.ts';
 
 /** What a tile may do when clicked, or `null` for "nothing, and say so". */
@@ -127,6 +146,20 @@ export function CardTile({
   const rects = useRects();
   const registerRect = anchor ? rects.register(cardKey(card.id)) : undefined;
 
+  // ---- M5: is this tile part of an outstanding choice? Only the anchor copy.
+  const targeting = useTargeting();
+  const option = anchor ? targeting.option('card', card.id) : null;
+  const isCandidate = anchor && targeting.candidate('card', card.id);
+  // A `choice` picker answers by clicking the tile; a `damage` picker answers
+  // through the number input below, and the button stays out of the way.
+  const picking = option !== null && targeting.live && targeting.shape === 'choice';
+  // The number input renders on a replay too, disabled — every affordance
+  // renders and every affordance is inert is the seam the whole client is built
+  // around (report 10 §1), and an input that vanished would make a replay of a
+  // damage assignment unreadable.
+  const assigning = option !== null && targeting.shape === 'damage';
+  const chosen = option !== null && targeting.chosen(option.optionId);
+
   // The engine's answer, echoed. The client computes no legality (§9 invariant 8).
   const selectable =
     input !== null && input.selectable.mode === 'cards' && input.selectable.cardIds.includes(card.id);
@@ -146,6 +179,8 @@ export function CardTile({
     tapped ? 'tile--tapped' : '',
     concealed ? 'tile--concealed' : '',
     selectable ? 'tile--selectable' : '',
+    option !== null ? 'tile--ask' : '',
+    chosen ? 'tile--picked' : '',
     highlighted ? 'tile--highlighted' : '',
     focused ? 'tile--focus' : '',
     weak ? 'tile--weak' : '',
@@ -190,22 +225,88 @@ export function CardTile({
       // Only ever the name this frame made public. The render test reads these.
       data-card-name={full === null || full.name === '' ? undefined : full.name}
       data-selectable={selectable ? 'true' : undefined}
+      data-ask-option={option === null ? undefined : String(option.optionId)}
+      // The hover half of M5's pending-target arrow. A candidate only: the
+      // board still has no pointer handler on eighty ordinary tiles.
+      onMouseEnter={
+        isCandidate
+          ? () => {
+              targeting.hover({ kind: 'card', id: card.id });
+            }
+          : undefined
+      }
+      onMouseLeave={
+        isCandidate
+          ? () => {
+              targeting.hover(null);
+            }
+          : undefined
+      }
     >
       <button
         type="button"
         className="tile__btn"
-        disabled={clicks === null}
-        data-act="clickCard"
-        aria-label={`${label} — card ${String(card.id)}`}
-        title={`act: clickCard ${String(card.id)} — Forge is the judge of every click (§4.1)`}
+        disabled={picking ? false : clicks === null}
+        data-act={picking ? 'answer' : 'clickCard'}
+        aria-pressed={picking ? chosen : undefined}
+        aria-label={
+          picking
+            ? `${label} — card ${String(card.id)} — option ${String(option.optionId)}${chosen ? ', chosen' : ''}`
+            : `${label} — card ${String(card.id)}`
+        }
+        title={
+          picking
+            ? `answer: option ${String(option.optionId)} of the outstanding ask (§5.1 — the client echoes an index)`
+            : `act: clickCard ${String(card.id)} — Forge is the judge of every click (§4.1)`
+        }
         onClick={() => {
-          clicks?.card(card.id);
+          if (picking) targeting.pick(option.optionId);
+          else clicks?.card(card.id);
         }}
+        onFocus={
+          isCandidate
+            ? () => {
+                targeting.hover({ kind: 'card', id: card.id });
+              }
+            : undefined
+        }
+        onBlur={
+          isCandidate
+            ? () => {
+                targeting.hover(null);
+              }
+            : undefined
+        }
       >
         <Face card={card} kind={kind} art={art} />
       </button>
 
       <Overlays card={card} note={note} />
+
+      {/* §5.3 — `assign_damage` on the blockers themselves. The defending
+          player is option 0 and keeps its row in the decision panel; these are
+          the creatures, each with the remaining toughness the engine computed
+          on the game thread. The client enforces nothing: it shows the running
+          total and Forge judges the answer. */}
+      {assigning && (
+        <label className="tile__amount" title={`option ${String(option.optionId)} — ${option.label}`}>
+          <span className="sr-only">
+            damage for option {option.optionId}: {option.label}
+          </span>
+          <input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={targeting.amount(option.optionId)}
+            disabled={!targeting.live}
+            onChange={(event) => {
+              const n = Number.parseInt(event.target.value, 10);
+              targeting.setAmount(option.optionId, Number.isFinite(n) && n > 0 ? n : 0);
+            }}
+          />
+          {option.lethal !== null && <span className="tile__lethal">lethal {option.lethal}</span>}
+        </label>
+      )}
 
       {attachments.length > 0 && (
         <span className="tile__attachments" aria-hidden="true">

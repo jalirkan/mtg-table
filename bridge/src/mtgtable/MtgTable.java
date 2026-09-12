@@ -121,6 +121,12 @@ public final class MtgTable {
         System.out.println("deck (ai)     = " + deck2File);
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
+        System.out.println("games/match   = " + a.games);
+        System.out.println("probe policy  = " + a.probe
+                + (a.probe ? "  (M5: useMana, clickAbility, getInteger's Other..., a real search pick)" : ""));
+        System.out.println("mana-lost pref= " + a.manaLostPrompt
+                + (a.manaLostPrompt ? "  (FPref.UI_MANA_LOST_PROMPT, in memory only -- the "
+                        + "floating-mana confirm; Forge's default is false)" : ""));
 
         // 1. GuiBase FIRST, then FModel.  The one shared boot sequence; the
         //    preference decisions D13/D14 live in Bootstrap, not here, so a game
@@ -138,6 +144,18 @@ public final class MtgTable {
             prefs.setPref(FPref.PLAYER_NAME, "Human");
         }
 
+        // --mana-lost-prompt.  Forge's own option, default "false"
+        // (ForgePreferences.java:123).  With it on, InputPassPriority.passPriority
+        // hops to a GAME THREAD (ThreadUtil.invokeInGameThread, "must invoke in
+        // game thread so dialog can be shown on mobile game") and calls
+        // IGuiGame.showConfirmDialog before letting priority pass with mana that
+        // would be lost -- which is the ONLY IGuiGame confirm call site a human
+        // seat reaches in this configuration (docs/evidence/m5-probes.md).  In
+        // memory, never save(): same rule as D13.
+        if (a.manaLostPrompt) {
+            prefs.setPref(FPref.UI_MANA_LOST_PROMPT, "true");
+        }
+
         // 2. Seed: after initialize, before anything shuffles.
         MyRandom.setRandom(new Random(a.seed));
 
@@ -151,7 +169,11 @@ public final class MtgTable {
         //    makes the seat a PlayerControllerHuman, which is what makes an
         //    InputQueue (and therefore a prompt) exist at all.
         final GameRules rules = new GameRules(GameType.Constructed);
-        rules.setGamesPerMatch(1);
+        // One game per match unless --games says otherwise.  More than one is the
+        // only way Forge ever calls IGuiGame.sideboard (Match.java:278 ->
+        // PlayerControllerHuman.java:275), and it is NOT sufficient on its own:
+        // see docs/evidence/m5-probes.md, the `sideboard` row.
+        rules.setGamesPerMatch(a.games);
         final RegisteredPlayer me = new RegisteredPlayer(deck1);
         me.setPlayer(GamePlayerUtil.getGuiPlayer());
         final RegisteredPlayer ai = new RegisteredPlayer(deck2);
@@ -274,7 +296,11 @@ public final class MtgTable {
     private static Transport transport(final Args a, final Config cfg) {
         switch (a.transport) {
         case "null":    return new NullTransport();
-        case "auto":    return new AutoTransport();
+        case "auto": {
+            final AutoTransport t = new AutoTransport();
+            t.setProbe(a.probe);
+            return t;
+        }
         case "console": return new ConsoleTransport();
         case "ws":      return new WsTransport(a.port > 0 ? a.port : cfg.wsPort());
         default:
@@ -314,6 +340,22 @@ public final class MtgTable {
         // tools/check-redaction.mjs's A12 needs to tell that apart from a bridge
         // that completed an `order` future with null, which wedges Forge.
         o.n("transport", a.transport);
+        // Protocol section 8.1 / amendment M31: the two flags that change what
+        // the ENGINE is asked, recorded so a fixture says why it is shaped the
+        // way it is.  Both optional and OMITTED when unset, so no recording made
+        // before this existed changes; check-redaction tolerates them and
+        // requires neither.
+        //
+        // Without them, fixtures/games/human-amount-7.jsonl carries two
+        // `confirm` asks that cannot occur on stock Forge preferences with
+        // nothing in the file saying why, and a reader who re-records it on
+        // defaults concludes the emitter changed.
+        if (a.probe) {
+            o.n("policy", "probe");
+        }
+        if (a.manaLostPrompt) {
+            o.key("prefs").arr().v("UI_MANA_LOST_PROMPT").end();
+        }
         o.key("decks").arr();
         for (final PlayerView p : players) {
             final boolean isViewer = p.getId() == viewer.getId();
@@ -369,6 +411,12 @@ public final class MtgTable {
         /** {@code --transport ws} only; 0 means "whatever config.json's wsPort says". */
         int port;
         boolean keepOpen;
+        /** {@code --games}: {@code GameRules.setGamesPerMatch}. */
+        int games = 1;
+        /** {@code --probe}: {@code AutoTransport}'s M5 probe policy. */
+        boolean probe;
+        /** {@code --mana-lost-prompt}: {@code FPref.UI_MANA_LOST_PROMPT}, in memory. */
+        boolean manaLostPrompt;
 
         static Args parse(final String[] argv) {
             final Args a = new Args();
@@ -384,11 +432,15 @@ public final class MtgTable {
                 case "--seed":      a.seed = Long.parseLong(need(argv, ++i, k)); break;
                 case "--port":      a.port = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--keep-open": a.keepOpen = true; break;
+                case "--games":     a.games = Integer.parseInt(need(argv, ++i, k)); break;
+                case "--probe":     a.probe = true; break;
+                case "--mana-lost-prompt": a.manaLostPrompt = true; break;
                 default:
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2 <path>] [--seed <n>] [--seat 0|1] [--ai-name <name>] "
-                        + "[--game-id <id>] [--port <n>] [--keep-open]");
+                        + "[--game-id <id>] [--port <n>] [--keep-open] [--games <n>] "
+                        + "[--probe] [--mana-lost-prompt]");
                 }
             }
             if (a.seat != 0) {
@@ -399,6 +451,9 @@ public final class MtgTable {
                 // lied about which seat it was redacted for.
                 throw new IllegalArgumentException("--seat 1 is not supported: HostedMatch sorts "
                         + "human seats first, so the human seat is always player 0");
+            }
+            if (a.games < 1) {
+                throw new IllegalArgumentException("--games must be at least 1, got " + a.games);
             }
             return a;
         }

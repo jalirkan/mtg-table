@@ -49,6 +49,7 @@ import {
   askOptions,
   defaultAnswer,
   defaultDraft,
+  draftIsSendable,
   nullIsLegal,
   toggleChoice,
 } from '../src/render/AskModal.tsx';
@@ -140,16 +141,33 @@ for (const ask of asks) {
       expect(html).toContain(escapeHtml(ask.noLabel));
     }
 
-    // The two affordances §5.4 requires, both enabled.
+    // The two affordances §5.4 requires. "Default" is always enabled — it is
+    // the one-click way out of every kind. "Answer" is too, with exactly one
+    // exception: a `numeric` `text` ask whose box is empty or not a number
+    // (§5.3/M25 — sending that string is the infinite re-ask, and "Default"
+    // sends `null` instead, which terminates).
+    const numericText = ask.kind === 'text' && ask.numeric;
     expect(html).toMatch(/<button[^>]*>Answer<\/button>/);
     expect(html).toMatch(/<button[^>]*>Default<\/button>/);
-    expect(html).not.toMatch(/<button[^>]*disabled[^>]*>Answer<\/button>/);
+    expect(html).not.toMatch(/<button[^>]*disabled[^>]*>Default<\/button>/);
+    if (!numericText || draftIsSendable(ask, defaultDraft(ask))) {
+      expect(html).not.toMatch(/<button[^>]*disabled[^>]*>Answer<\/button>/);
+    }
 
     // 2. The default answer is producible — through the same two functions the
     // "Default" button calls, not through a reimplementation of them.
     const fromDraft = answerFromDraft(ask, defaultDraft(ask));
     const canned = defaultAnswer(ask);
-    expect(canned).toEqual(fromDraft);
+    if (numericText) {
+      // The one kind whose one-click answer is NOT its draft: §5.4 as amended by
+      // M25 says of it in as many words that `null` is the answer that
+      // terminates and `""` is not, and `initial` is `""` whenever Forge has
+      // none (§5.2). Measured in the browser: "Default" on this ask used to
+      // produce a3, a4, a5, a6 — the same question every time.
+      expect(canned, 'a numeric `text` ask defaults to null (§5.4, M25)').toBeNull();
+    } else {
+      expect(canned).toEqual(fromDraft);
+    }
     expect(fromDraft).not.toBeUndefined();
     expect(
       EXPECTED_SHAPE[ask.kind],
@@ -174,6 +192,40 @@ for (const ask of asks) {
     ).toBe(shapeOf(fromDraft));
   });
 }
+
+test('a numeric `text` ask defaults to null, and an empty box is not sendable (§5.4, M25)', () => {
+  // The regression this pins, in full: `defaultDraft` returns `{shape:'text',
+  // text: ask.initial}` and §5.2 says `initial` is `""` when Forge has none, so
+  // the board's "Default" button was sending `""` into
+  // `AbstractGuiGame.getInteger`'s `while (true)` — the identical question back,
+  // forever. Verified live in the browser on `decks/number-probe.dck` (Volcano
+  // Hellion → choose_list → "Other…" → text a2): Default produced a3, a4, a5,
+  // a6. `Cancel (null)` escaped, so it was recoverable and not a hard wedge —
+  // but the tooltip said "always legal" and §5.4/M25 says the opposite.
+  const numeric: AskBody = {
+    kind: 'text',
+    askId: 'a2',
+    timeoutMs: 0,
+    prompt: 'Enter a number between 0 and 99:',
+    title: '',
+    initial: '',
+    suggestions: [],
+    numeric: true,
+  };
+  expect(defaultAnswer(numeric)).toBeNull();
+  expect(draftIsSendable(numeric, { shape: 'text', text: '' })).toBe(false);
+  expect(draftIsSendable(numeric, { shape: 'text', text: '   ' })).toBe(false);
+  expect(draftIsSendable(numeric, { shape: 'text', text: 'seven' })).toBe(false);
+  expect(draftIsSendable(numeric, { shape: 'text', text: '7' })).toBe(true);
+  // …and the free-text kind is untouched: `""` is a legal answer to
+  // `showInputDialog` when it is not getInteger's box, and `defaultDraft`
+  // still opens on the engine's own `initial`.
+  const free: AskBody = { ...numeric, numeric: false, initial: 'Island' };
+  expect(defaultAnswer(free)).toBe('Island');
+  expect(draftIsSendable(free, { shape: 'text', text: '' })).toBe(true);
+  // The draft is deliberately NOT changed: the form opens on `initial`.
+  expect(defaultDraft(numeric)).toEqual({ shape: 'text', text: '' });
+});
 
 test('the indices a default answer names are ask-local and in range (§5.1)', () => {
   for (const ask of asks) {

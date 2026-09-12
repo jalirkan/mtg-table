@@ -30,6 +30,21 @@
  *      in the component (`WedgeBanner`), because a pure reducer has no clock.
  *
  * This function is qualifier 1 plus the original four clauses. Amendment M21.
+ *
+ * ---------------------------------------------------------------------------
+ * **M5 verification adds a third qualifier: an enabled Cancel.** Measured live
+ * on `decks/pacho-shield.dck`, 2026-09-12: with six Islands I clicked
+ * `Quake, Agent of S.H.I.E.L.D.` ({2}{W}). Forge pushed `Pay Mana Cost: {2}{W}`
+ * with OK (labelled `Auto`) disabled, `selectable` empty, no ask, game not over,
+ * my priority, and no further frame — all six clauses held after 2.5 s and the
+ * board told a hobbyist learning Magic to *concede* while an enabled button
+ * labelled `Cancel` sat next to the banner. Clicking it recovered instantly.
+ *
+ * Clicking a spell you cannot pay for is the most likely mistake this user
+ * makes, so the state is not rare; and the clause is not a weakening, because a
+ * state the engine is offering a labelled way out of is **by construction** not
+ * "nothing to do". A genuinely wedged game thread is not pushing an enabled
+ * Cancel at you — it is not pushing anything.
  * ---------------------------------------------------------------------------
  */
 
@@ -57,6 +72,27 @@ export function viewerSeat(state: ClientState): number | null {
  * user stopped scrubbing.
  */
 export function wedgeSuspected(state: ClientState): boolean {
+  const input = state.input;
+  if (input === null) return false;
+  if (input.buttons.ok.enabled) return false;
+  // The engine is offering a labelled way out — an unaffordable cast's `Cancel`,
+  // `InputPassPriority`'s `Undo (2)` / `End Turn`. That is a decision, not a
+  // wedge. See the M5 note above.
+  if (input.buttons.cancel.enabled) return false;
+  if (input.selectable.cardIds.length > 0) return false;
+  if (state.ask !== null) return false;
+  if (state.gameOver !== null) return false;
+  const you = viewerSeat(state);
+  return you !== null && state.board !== null && state.board.priority === you;
+}
+
+/**
+ * The rule as it stood after M21 and before the Cancel clause, kept for the same
+ * reason as {@link wedgeSuspectedPreM21}: so `web/test/wedge.test.ts` can
+ * measure what the seventh clause changed instead of asserting it from memory.
+ * Not used by the UI.
+ */
+export function wedgeSuspectedPreCancelClause(state: ClientState): boolean {
   const input = state.input;
   if (input === null) return false;
   if (input.buttons.ok.enabled) return false;

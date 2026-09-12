@@ -13,6 +13,9 @@
  *     docs/protocol.md §3.4). The revealed slice is drawn as real tiles because
  *     those cards ride on no `ask` — nothing blocks for them — so before P2 they
  *     were invisible forever.
+ *   - **M5**: the pips are controls when the pool is not empty and the seat is
+ *     yours (`act: useMana {color}`, §2.2 — the one real dead end M4 handed
+ *     over), and the revealed slice opens the zone browser.
  *   - **The name is a `<button>`** that sends `act: clickPlayer`, with the same
  *     `aria-label` M1 gave it, whatever `selectable.mode` says: Forge is the
  *     judge of a click (amendment M8). `selectable.mode === 'players'` is the
@@ -21,10 +24,11 @@
  */
 
 import type { ArtIndex } from '../art.ts';
-import type { GameStateBody, InputBody, PlayerState } from '../protocol.ts';
+import type { GameStateBody, InputBody, ManaColor, PlayerState } from '../protocol.ts';
 import { CardTile, type Clicks } from './CardTile.tsx';
 import { counterLabel } from './labels.ts';
 import { ManaPoolPips } from './Mana.tsx';
+import { useTargeting } from './picker.ts';
 import { playerKey, useRects } from './rects.ts';
 
 export function PlayerRail({
@@ -34,6 +38,9 @@ export function PlayerRail({
   input,
   art,
   clicks,
+  onSpendMana = null,
+  manaProvisional = false,
+  onBrowseLibrary,
 }: {
   player: PlayerState;
   you: number | null;
@@ -41,8 +48,19 @@ export function PlayerRail({
   input: InputBody | null;
   art: ArtIndex;
   clicks: Clicks | null;
+  /** M5 — `act: useMana {color}`. Only ever passed for the viewer's own seat. */
+  onSpendMana?: ((color: ManaColor) => void) | null;
+  /** True between sending a `useMana` and the next `state` — see {@link ManaPoolPips}. */
+  manaProvisional?: boolean;
+  /** M5 — open the zone browser on this seat's revealed library slice. */
+  onBrowseLibrary?: (() => void) | null;
 }): JSX.Element {
   const rects = useRects();
+  const targeting = useTargeting();
+  const seatOption = targeting.option('player', player.id);
+  const seatPicking = seatOption !== null && targeting.live && targeting.shape === 'choice';
+  const seatChosen = seatOption !== null && targeting.chosen(seatOption.optionId);
+  const seatCandidate = targeting.candidate('player', player.id);
   const isYou = you !== null && player.id === you;
   const active = board.activePlayer === player.id;
   const priority = board.priority === player.id;
@@ -61,15 +79,42 @@ export function PlayerRail({
           vitals block is where `p:<id>` is measured. The whole rail would put the
           arrowhead somewhere the eye does not read as "the player". */}
       <h2 className="rail__head" ref={rects.register(playerKey(player.id))}>
+        {/* M5 — a seat is a candidate like any other entity when the ask names
+            it (§5.1's `playerId` option), and then the name button answers
+            instead of sending `act: clickPlayer`. */}
         <button
           type="button"
-          className={`rail__name${selectable ? ' rail__name--selectable' : ''}`}
-          disabled={clicks === null}
-          data-act="clickPlayer"
+          className={
+            `rail__name${selectable ? ' rail__name--selectable' : ''}` +
+            `${seatOption !== null ? ' rail__name--ask' : ''}${seatChosen ? ' rail__name--picked' : ''}`
+          }
+          disabled={seatPicking ? false : clicks === null}
+          data-act={seatPicking ? 'answer' : 'clickPlayer'}
+          data-ask-option={seatOption === null ? undefined : String(seatOption.optionId)}
+          aria-pressed={seatPicking ? seatChosen : undefined}
           aria-label={`${player.name} — player ${String(player.id)}`}
-          title={`act: clickPlayer ${String(player.id)}`}
+          title={
+            seatPicking
+              ? `answer: option ${String(seatOption.optionId)} of the outstanding ask (§5.1)`
+              : `act: clickPlayer ${String(player.id)}`
+          }
+          onMouseEnter={
+            seatCandidate
+              ? () => {
+                  targeting.hover({ kind: 'player', id: player.id });
+                }
+              : undefined
+          }
+          onMouseLeave={
+            seatCandidate
+              ? () => {
+                  targeting.hover(null);
+                }
+              : undefined
+          }
           onClick={() => {
-            clicks?.player(player.id);
+            if (seatPicking) targeting.pick(seatOption.optionId);
+            else clicks?.player(player.id);
           }}
         >
           {player.name}
@@ -117,7 +162,7 @@ export function PlayerRail({
       </div>
 
       <div className="rail__mana">
-        <ManaPoolPips pool={player.manaPool} />
+        <ManaPoolPips pool={player.manaPool} onSpend={onSpendMana} provisional={manaProvisional} />
       </div>
 
       {counters.length > 0 && (
@@ -133,9 +178,15 @@ export function PlayerRail({
 
       {revealed.length > 0 && (
         <div className="rail__revealed">
-          <span className="k">
-            library — revealed {revealed.length} of {player.zones.library.count}
-          </span>
+          {onBrowseLibrary === undefined || onBrowseLibrary === null ? (
+            <span className="k">
+              library — revealed {revealed.length} of {player.zones.library.count}
+            </span>
+          ) : (
+            <button type="button" className="k zonerow__open" onClick={onBrowseLibrary}>
+              library — revealed {revealed.length} of {player.zones.library.count} ⤢
+            </button>
+          )}
           <ul className="row row--strip" style={{ '--slots': String(revealed.length) } as React.CSSProperties}>
             {revealed.map((card, i) => (
               <CardTile

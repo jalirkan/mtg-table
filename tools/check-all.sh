@@ -25,7 +25,19 @@
 #                                 -- content drift without byte-order flakiness.
 #                                 Loud, never an exit code (SKIP_DRIFT=1 to skip,
 #                                 DRIFT_FATAL=1 to make it fatal).
-#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: five fresh servers on a
+#                                 Then 9c, THE M5 EXIT CRITERION:
+#                                 tools/ten-games.sh -- ten consecutive
+#                                 --transport auto games at seeds 1..10,
+#                                 alternating decks/pacho-shield.dck and the five
+#                                 probe decks, each asserted for `over`, for zero
+#                                 UNIMPL (both the summary line and a raw grep of
+#                                 the server log and the frame log) and for
+#                                 check-redaction.mjs.  It is a NUMBERED SUB-STEP
+#                                 rather than a step of its own so that every
+#                                 "step 10d" in the docs stays correct, and it is
+#                                 the single most expensive thing in this file:
+#                                 ~4-8 minutes.  SKIP_TEN=1 skips it.
+#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: six fresh servers on a
 #                                 loopback socket -- the ws-smoke doorstep test
 #                                 (connect -> resync -> concede), the same test's
 #                                 --disconnect-mid-ask variant, a full unattended
@@ -39,7 +51,11 @@
 #                                 which is the only thing that reaches amendment
 #                                 M11's exception path (`over` with no `gameOver`
 #                                 state in front of it, asserted through the
-#                                 bridge's own `OVER WITHOUT A gameOver STATE`).
+#                                 bridge's own `OVER WITHOUT A gameOver STATE`),
+#                                 and 10f (M5), ws-auto-play --probe at seed 42,
+#                                 which is the only thing anywhere that sends the
+#                                 `clickAbility` ACT from a client rather than
+#                                 answering an ability_menu by index.
 #                                 Each asserts exactly one `over`, `over` last,
 #                                 and its log through check-redaction.mjs.
 #  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
@@ -99,11 +115,12 @@
 # pass found had already burned a silent 30 s per run without failing anything.
 # A run that hits the cap dies with its own message naming the cap.
 #
-# Usage:  ./tools/check-all.sh            # ~3-6 minutes, mostly the nine games
+# Usage:  ./tools/check-all.sh            # ~8-12 minutes, mostly the nineteen games
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
 #         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
 #         SKIP_DRIFT=1 ./tools/check-all.sh       # no 9b re-recording (~30 s)
 #         DRIFT_FATAL=1 ./tools/check-all.sh      # 9b's advisory becomes a failure
+#         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~4-8 minutes)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -359,9 +376,26 @@ frame-order noise a byte diff would report."
   fi
 fi
 
+# 9c. THE M5 EXIT CRITERION (PLAN.md M5: "ten consecutive games with zero UNIMPL
+#     lines and no state where the board is stuck waiting on something the
+#     browser cannot express").  Everything above this line plays at most one
+#     game per deck; five of these ten play the probe decks, which are the only
+#     decks that reach `choose_entities` with a delayedReveal, `assign_amount`,
+#     `confirm` and `text` at all (docs/evidence/m5-probes.md).
+#
+#     A sub-step of 9, not a step of its own: it is ten more `--transport auto`
+#     games, it catches step 9's failure modes, and numbering it 11 would make
+#     every "step 10d" reference in CLAUDE.md and the evidence files wrong.
+if [ "${SKIP_TEN:-0}" = "1" ]; then
+  printf '\n(9c ten-games.sh skipped: SKIP_TEN=1 -- the M5 exit criterion did NOT run)\n'
+else
+  printf '\n=== 9c. ten-games.sh -- the M5 exit criterion: ten consecutive games, zero UNIMPL ===\n'
+  ./tools/ten-games.sh || die "tools/ten-games.sh (the M5 exit criterion; logs in var/ten-games/)"
+fi
+
 say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
-# M3.  Four servers, because each client run ends its own game: the two
-# ws-smoke variants concede, and the two ws-auto-play runs play to a natural
+# M3.  Six servers, because each client run ends its own game: the three
+# ws-smoke variants concede, and the three ws-auto-play runs play to a natural
 # end.  Every one
 # of them is asserted the way steps 7-9 are -- exactly one `over`, `over` last,
 # and the seat log through check-redaction.mjs -- plus the server's own exit
@@ -406,9 +440,12 @@ ws_start() {   # $1 gameId, $2 server log, $3 (optional) "no-health-wait"
   # the JVM.  --keep-open on every one of these: the flag has to be exercised
   # somewhere, and it costs nothing here because keepOpen() returns the instant
   # the client disconnects, which all three clients do the moment they see `over`.
+  # WS_EXTRA lets one caller change the seed or add a flag without disturbing the
+  # positional contract $3 already uses ("no-health-wait").  10f is the only user.
+  # shellcheck disable=SC2086
   timeout --kill-after=15s "${GAME_TIMEOUT}s" \
-      ./bridge/run.sh mtgtable.MtgTable --transport ws --seed 13 --port "$WSPORT" \
-      --keep-open --game-id "$1" > "$2" 2>&1 &
+      ./bridge/run.sh mtgtable.MtgTable --transport ws --seed "${WS_SEED:-13}" --port "$WSPORT" \
+      --keep-open --game-id "$1" ${WS_EXTRA:-} > "$2" 2>&1 &
   WS_PID=$!
   if [ "${3:-}" = "no-health-wait" ]; then
     # 10e only.  Readiness is `lastHello != null` (amendment M15), so by the time
@@ -629,6 +666,53 @@ else
 fi
 # NOT added to WS_LOGS: web/test/ws-log.test.ts replays those as boards, and a
 # four-line session with no `state` in it is not a board.
+
+# 10f. M5's two typed acts, OVER THE SOCKET -- a sixth server, at seed 42 on the
+#      user's own deck, driven by tools/ws-auto-play.mjs --probe.
+#
+#      PLAN.md M5, "Typed acts with no control on the board", names two:
+#      `useMana` ("this is the one real dead end") and `clickAbility` ("the
+#      console seat sends it; THE BROWSER NEVER HAS").  Both now have a client
+#      that sends them, and this is the step that keeps it true: `--probe`
+#      declines every `ability_menu` with `null` and makes the same choice again
+#      as an `act`, so the ACT -- not the answer -- is what reaches
+#      IGameController.selectAbility.
+#
+#      Seed 42 and pacho-shield, not 13, because `ability_menu` is only raised by
+#      a card with two playable abilities, A.I.M. Scientists' cast + landcycling
+#      is the one in this deck, and seed 42 is the shuffle measured to raise
+#      seven of them (it is also what fixtures/games/human-ability-42.jsonl was
+#      recorded at).  `useMana` is REPORTED here and asserted elsewhere: it needs
+#      floating mana the user's deck cannot reliably make, so its gate is
+#      ten-games.sh **assertion 8** on seed 4 / decks/amount-probe.dck --
+#      `>= 1` act AND the seat's `manaPool` strictly lower in the `state` after
+#      one than in the `state` before it.  That assertion was WRITTEN because
+#      this comment claimed it: until 2026-09-12 the string `useMana` did not
+#      appear in ten-games.sh at all, and nothing outside web/test/pool.test.ts
+#      would have failed if the act had stopped working end to end.
+if [ -f tools/ws-auto-play.mjs ]; then
+  WS_SEED=42 ws_start check-all-ws-probe var/check-all-ws-probe.log
+  if ! node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --probe --quiet \
+      --log var/ws-auto-probe-42.jsonl > var/check-all-ws-probe-client.log 2>&1; then
+    cat var/check-all-ws-probe-client.log >&2
+    die "tools/ws-auto-play.mjs --probe did not finish a game against 127.0.0.1:$WSPORT"
+  fi
+  cat var/check-all-ws-probe-client.log
+  ws_finish check-all-ws-probe var/check-all-ws-probe.log "the probe-policy game"
+  PROBEFRAMES="var/games/check-all-ws-probe/frames.jsonl"
+  CLICKABILITY="$(grep -c '"action":"clickAbility"' "$PROBEFRAMES" || true)"
+  [ "$CLICKABILITY" -ge 1 ] || die "the --probe ws game sent $CLICKABILITY \`clickAbility\` act(s). \
+That act had no client that sends it at all before M5 (PLAN.md M5), so a zero here means its only \
+coverage is a unit test again (log: $PROBEFRAMES)"
+  if grep -q '"title":"Unknown ability"' "$PROBEFRAMES"; then
+    die "a \`clickAbility\` act named an abilityId the bridge could not resolve: the act reached \
+the server and did nothing, which is exactly the failure this step exists to catch (log: $PROBEFRAMES)"
+  fi
+  echo "OK: $CLICKABILITY \`clickAbility\` act(s) over the socket, none of them unresolvable"
+  node tools/check-redaction.mjs var/ws-auto-probe-42.jsonl \
+    || die "check-redaction.mjs on the CLIENT log var/ws-auto-probe-42.jsonl"
+  WS_LOGS="${WS_LOGS:-},var/ws-auto-probe-42.jsonl,var/games/check-all-ws-probe/frames.jsonl"
+fi
 
 say "check-redaction.mjs -- every committed fixture, then the fresh recording"
 # NO --pre-amendment anywhere in this file, deliberately: the flag downgrades a

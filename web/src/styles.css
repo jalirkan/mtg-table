@@ -568,17 +568,12 @@ button:disabled {
   font-size: 10px;
 }
 
-/* The 187 KB woff2 instead of the 408 KB woff (report 10 §13). mana.css 1.18.0
-   lists eot/woff/ttf/svg and not woff2, although the file ships in the package;
-   a later @font-face for the same family wins, so this override must come after
-   the `mana-font/css/mana.css` import in main.tsx. */
-@font-face {
-  font-family: "Mana";
-  src: url("mana-font/fonts/mana.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: block;
-}
+/* The `@font-face` moved to `src/mana.css` (M4 follow-up 1): it used to be an
+   OVERRIDE that had to come after the package's stylesheet, because
+   `mana.css@1.18.0` lists eot/woff/ttf/svg and not the woff2 it ships, and a
+   later @font-face for the same family wins (report 10 §13, D29). Nothing
+   declares the other five formats any more, so it is just the declaration —
+   and the build stopped emitting 3.72 MB of faces nothing fetched. */
 
 .ms {
   font-size: 10px;
@@ -921,6 +916,26 @@ button:disabled {
 
 .zonerow__n {
   color: var(--muted);
+}
+
+/*
+ * Belt and braces for the collapse the band strip caused (see `.bands`): a
+ * caption is `position: absolute` at the TOP of its row, so two adjacent short
+ * rows put two 13 px captions within a row gap of each other and the upper one
+ * becomes unhittable. Taking `.bands` out of the flow is what actually fixed it
+ * — the two strip rows are `1fr` of a box with a 120 px floor, so neither can be
+ * shorter than 58 px again — but a row that is ever shorter than its own caption
+ * is a defect waiting to come back, so the strips carry a floor of their own and
+ * their caption starts at the row's very top edge (the caption BUTTON already
+ * did; the plain M4 caption was 2 px lower, which is the 2 px that made the
+ * overlap read as a near-miss rather than as a bug).
+ */
+.zonerow--strip {
+  min-block-size: 18px;
+}
+
+.zonerow--strip > .zonerow__label {
+  inset-block-start: 0;
 }
 
 /*
@@ -1456,6 +1471,18 @@ button:disabled {
 
 /* --- the hand ------------------------------------------------------------- */
 
+/* M4 follow-up 7: the fan's outer tiles left their grid cell — 121 x 159 in a
+   150 px row at 1280 x 720. A rotated box is taller than the card it holds
+   (h·cos θ + w·sin θ), and the row is exactly `--ch-hand`, so the TILE is what
+   has to give: 0.88 of the row, and the angle clamped at ±10°, makes the bounding
+   box fit for any hand up to about twenty cards. Nothing is clipped, and the
+   hover lift still reads. */
+.row--hand {
+  --cw: calc(var(--cw-hand) * 0.88);
+  --ch: calc(var(--ch-hand) * 0.88);
+  --fan-step: 1.6deg;
+}
+
 .hand {
   position: relative;
   block-size: 100%;
@@ -1487,7 +1514,9 @@ button:disabled {
 
 .hand__fan > li {
   transform-origin: 50% 150%;
-  transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 2deg));
+  transform: rotate(
+    clamp(-10deg, (var(--i) - (var(--n) - 1) / 2) * var(--fan-step, 1.6deg), 10deg)
+  );
   transition:
     transform 120ms ease,
     filter 120ms ease;
@@ -1593,11 +1622,17 @@ button:disabled {
   background: #151b21cc;
 }
 
+/* M4 follow-up 6: 520 px over a 264 px rail covered the rail plus ~256 px of the
+   table. Report 10 §10 says "left edge, over the rail", so the width comes down
+   to the rail — and then every string in it has to wrap, because a log line is a
+   sentence and the drawer no longer has room for one on a line. */
 .drawer {
   position: absolute;
   inset-block: var(--pad);
   inset-inline-start: var(--pad);
-  inline-size: min(520px, 60vw);
+  inline-size: var(--rail-l);
+  overflow-wrap: anywhere;
+  word-break: normal;
   background: #0f141af2;
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -2183,4 +2218,439 @@ button:disabled {
     transition: none;
     animation: none;
   }
+}
+
+/* ===========================================================================
+ * M5 — nothing dead-ends: the pool as a control, the ask on the board, the
+ * zone browsers, the declared bands, the pending arrow.
+ * =========================================================================== */
+
+/* --- the mana pool, when it is a control (act: useMana, §2.2) -------------- */
+
+.pool--live {
+  padding: 1px 3px;
+  border: 1px dashed var(--select);
+  border-radius: 999px;
+}
+
+button.pool__pip {
+  border: 0;
+  background: none;
+  padding: 0 1px;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pool__pip--live {
+  color: var(--ink);
+}
+
+button.pool__pip:hover,
+button.pool__pip:focus-visible {
+  outline: 1px solid var(--select);
+  border-radius: 999px;
+}
+
+.pool__key {
+  font-size: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+/* --- the pool between a `useMana` and the next snapshot -------------------- */
+
+/* Forge pushes no `state` for a mana payment (§2.2, amendment M30), so between
+   the act and the next snapshot the counts on screen are known to be behind.
+   Dimmed, with `·` in place of the number: still clickable, because paying {2}
+   with two blue mana is two clicks and the second one is real, but no longer
+   printing a number the wire has not confirmed. "A hint that lies is worse than
+   no hint" (report 10 §5). */
+.pool--provisional {
+  border-style: dotted;
+  opacity: 0.55;
+}
+
+.pool__pip--provisional .pool__n {
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+/* --- a tile the outstanding ask names (the 'ask' outline variant) ---------- */
+
+/* Deliberately NOT `--select`: `selectable` is the engine's explicit selection
+   set inside an `input`, and this is a candidate of a blocking `ask`. Two
+   different states, two colours, and the caret below is the third cue (§14
+   rule 3) so it is never colour alone. */
+.tile--ask .tile__face {
+  box-shadow:
+    0 0 0 3px var(--arrow-target),
+    0 2px 12px #c79bff55;
+}
+
+.tile--ask::before {
+  content: "?";
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-start: -4px;
+  z-index: 3;
+  font-size: 10px;
+  font-weight: 700;
+  color: #17111f;
+  background: var(--arrow-target);
+  border-radius: 999px;
+  inline-size: 13px;
+  block-size: 13px;
+  line-height: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.tile--picked .tile__face {
+  box-shadow:
+    0 0 0 3px var(--ok),
+    0 2px 12px #7ddf8766;
+}
+
+.tile--picked::before {
+  content: "✓";
+  background: var(--ok);
+}
+
+/* §5.3 — assign_damage, on the blockers themselves. */
+.tile__amount {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #0f141aee;
+  border: 1px solid var(--arrow-attack);
+  border-radius: 4px;
+  padding: 1px 2px;
+}
+
+.tile__amount input {
+  inline-size: 34px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: center;
+}
+
+.tile__lethal {
+  font-size: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.rail__name--ask {
+  outline: 2px solid var(--arrow-target);
+}
+
+.rail__name--picked {
+  outline: 2px solid var(--ok);
+}
+
+/* --- the ask picker, in the decision panel -------------------------------- */
+
+.askpick {
+  border: 1px solid var(--arrow-target);
+  border-radius: 5px;
+  background: #1a1524cc;
+  padding: 0.3rem 0.4rem;
+  margin-block-end: 0.35rem;
+}
+
+.askpick__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: baseline;
+  font-size: 10px;
+}
+
+.askpick__blocked {
+  color: var(--warn);
+}
+
+.askpick__count {
+  margin: 0.2rem 0;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.askpick__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-block-size: 30vh;
+  overflow-y: auto;
+}
+
+.askpick__row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-block-end: 1px solid var(--felt-line);
+  padding: 1px 0;
+}
+
+.askpick__row--on {
+  background: #1d2a1f;
+}
+
+.askpick__thumb,
+.ask-modal__thumb {
+  inline-size: var(--cw-strip);
+  block-size: var(--ch-strip);
+  flex: 0 0 auto;
+}
+
+.askpick__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-block-start: 0.3rem;
+}
+
+.decision__chosen {
+  margin: 0.2rem 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+/* --- the zone browser ----------------------------------------------------- */
+
+button.zonerow__label,
+button.zonerow__open {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: start;
+  padding: 0;
+  font: inherit;
+}
+
+/* The caption overlaps the row by design (report 10 §2.3), and on a `--start`
+   strip the first tile lands directly under it — measured in the browser on
+   2026-09-12, where the click reached the tile and not the button. A control
+   has to be on top of what it overlaps, so the button (and only the button,
+   never the plain caption) rises above the tiles and takes a chip background to
+   stay readable over card art. It covers the top ~11 px of the first tile's
+   left edge; the rest of that tile is still its own click. */
+button.zonerow__label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 2px;
+  z-index: 60;
+  font-size: 9px;
+  color: #7d8794;
+  background: #0f141ad9;
+  border-radius: 3px;
+  padding: 0 3px;
+  /* M4's caption is `pointer-events: none` — it is decoration over the row, and
+     a caption that ate a card's click would be worse than no caption. A BUTTON
+     has to take its own clicks back, and the measurement that found this is in
+     `docs/evidence/m5-board.md` §4: with the property inherited, the click
+     reached the `ul.row` underneath and the panel never opened. */
+  pointer-events: auto;
+}
+
+button.zonerow__label:hover,
+button.zonerow__open:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.zonebrowser {
+  position: absolute;
+  inset-block-start: var(--pad);
+  inset-inline-end: calc(var(--rail-r) + var(--pad) * 2);
+  inline-size: min(560px, 52vw);
+  max-block-size: 70vh;
+  overflow: auto;
+  z-index: 90;
+  background: #0f141af5;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 12px 44px #000c;
+}
+
+.zonebrowser__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.zonebrowser__head h2 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.zonebrowser__panel h3 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 11px;
+}
+
+.zonebrowser__cards {
+  --cw: var(--cw-bf);
+  --ch: var(--ch-bf);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-card);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* The browser's tiles sit in a wrapping grid, not a shingled row: the whole
+   point of opening a zone is that nothing overlaps. */
+.zonebrowser__cards > li {
+  margin-inline-start: 0;
+}
+
+/* --- the declared bands --------------------------------------------------- */
+
+/*
+ * **The band strip is an OVERLAY, not a row** — and that is a correction, not a
+ * preference. It shipped as an in-flow child of `.table__middle`, whose
+ * `grid-template-rows` is `1fr 1fr` (the two seats' graveyard/exile/command
+ * strips). A third child therefore landed in an IMPLICIT auto row, and an auto
+ * row is sized to its content *before* the `1fr` rows are given anything. At the
+ * repo's own reference viewport — 1600 × 900, where the middle is already
+ * sitting on its `--middle-min` floor of 120 px — that measured
+ * `gridTemplateRows: "0px 0px 112px"`: both strip rows collapsed to zero, their
+ * 62 px tiles spilled over everything below, and the two absolutely-positioned
+ * caption BUTTONS of adjacent rows landed 4 px apart, so the opponent's zone
+ * control was 4 px of hit area under the player's own. Measured again at 1366 ×
+ * 768, 1440 × 900 and 1600 × 900, live and in replay (`docs/evidence/m5-board.md`
+ * §11, which carries the before/after `gridTemplateRows` at four viewports —
+ * this repo has no DOM test environment to assert one in).
+ *
+ * There is no in-flow answer at that viewport: two 62 px strip rows plus a gap
+ * already want 128 px of a 120 px box. So the strip leaves the flow the way
+ * `.stackpanel` next to it already has — anchored to the middle's bottom edge,
+ * stopping short of the stack column, capped at the middle's height and
+ * scrolling past that. The two `1fr` rows go back to the 58 px they had in M4.
+ *
+ * `z-index: 55` is above any tile (a tile's z-index is its `--i`, i.e. its index
+ * in the row) and below the 60 the caption buttons carry, so the two zone-browser
+ * controls stay clickable *over* the strip — which is the whole reason the number
+ * is 55 and not 65. The background goes from `cc` to `e6` because it now sits
+ * over card art rather than over felt.
+ */
+.bands {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  /* Shrink-to-fit rather than stretched, so the strip covers only as much of the
+     two zone rows as it actually needs. `.table__middle` reserves the stack
+     column with `padding-inline-end`, and an absolute inset resolves against the
+     PADDING box — so the reservation has to be repeated here or a wide strip
+     would slide under `.stackpanel`. */
+  max-inline-size: calc(100% - var(--stack-w) - 10px);
+  z-index: 55;
+  border: 1px solid var(--felt-line);
+  border-radius: 5px;
+  background: #131a20e6;
+  padding: 0.2rem 0.35rem;
+  max-block-size: 100%;
+  overflow: auto;
+}
+
+.bands__head {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: baseline;
+}
+
+.bands__list {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.band {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  font-size: 10px;
+}
+
+.band__side {
+  display: inline-flex;
+}
+
+.band__row {
+  inline-size: auto;
+  block-size: var(--ch-stack);
+  justify-content: flex-start;
+}
+
+.band__row > li {
+  margin-inline-start: 0;
+}
+
+.band__arrow {
+  color: var(--arrow-attack);
+}
+
+.band__defender {
+  color: var(--ink);
+}
+
+.band__blocked {
+  color: var(--arrow-block);
+}
+
+/* --- the pending-target arrow (M5) ---------------------------------------- */
+
+.arrow--pending .arrow__line,
+.arrow--pending .arrow__head {
+  stroke: var(--select);
+  fill: var(--select);
+}
+
+.arrow--pending .arrow__line {
+  stroke-dasharray: 3 4;
+  stroke-width: 2.5;
+}
+
+/* --- the modal's card rows ------------------------------------------------ */
+
+.ask-modal__row--card {
+  align-items: center;
+}
+
+.ask-modal__reveal-cards {
+  --cw: var(--cw-strip);
+  --ch: var(--ch-strip);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-card);
+  list-style: none;
+  margin: 0.2rem 0;
+  padding: 0;
+}
+
+.ask-modal__reveal-cards > li {
+  margin-inline-start: 0;
 }

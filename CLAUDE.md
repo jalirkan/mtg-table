@@ -201,6 +201,11 @@ printf "\n\n\n\nq\n" | ./bridge/run.sh mtgtable.MtgTable --transport console \
 npm --prefix web run dev:replay             # opens /?replay=games/g1.jsonl
 npm --prefix web test && npm --prefix web run build   # `test` = node --test THEN vitest
 node tools/fetch-art.ts                     # deck -> web/public/art.json (M4 needs it)
+./tools/ten-games.sh                        # M5's exit criterion; check-all runs it as 9c
+./tools/ten-games.sh --games 3              # the first three rows, for a quick look
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt \
+    --seed 7 --game-id human-amount-7 \
+    --deck decks/amount-probe.dck --deck2 decks/morph-probe.dck   # M5: a probe run
 ```
 
 **`./scripts/play.sh` is the M3 command** — check-forge → `bridge/build.sh` → the
@@ -293,8 +298,9 @@ burned 30 s and returned a truncated file — was invisible in a green run.
 
 `check-forge.sh` is the gate for everything below it. Run it first when something
 behaves strangely. **`check-all.sh` is what you run before saying you are done**,
-and it is **thirteen numbered steps** (plus two lettered sub-steps, so the
-numbering and every reference to "10d" stayed correct when they were added): lint
+and it is **thirteen numbered steps** (plus **three** lettered sub-steps — 9b, 9c
+and 10f — so the numbering and every reference to "10d" stayed correct when they
+were added): lint
 → build → `Smoke` → a fresh `RecordMatch` into `var/` → the value-level drift diff
 → three fresh `MtgTable` sessions (`--transport null`, the scripted
 `--transport console` smoke, and `--transport auto --seed 11`) → **9b**, the
@@ -302,7 +308,12 @@ ADVISORY fixture-drift check (`tools/fixture-multiset-diff.mjs`: re-record seed 
 and compare it against `fixtures/games/human-auto-42.jsonl` as a multiset with
 `seq` stripped, because the fixtures are stable in content and not in frame order;
 never an exit code unless you pass `DRIFT_FATAL=1`, skipped by `SKIP_DRIFT=1`) →
-**five fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
+**9c**, **M5's exit criterion** (`tools/ten-games.sh`: ten consecutive
+`--transport auto` games at seeds 1..10 alternating `decks/pacho-shield.dck` and
+the five probe decks, eight assertions each — see that file's own header — and
+the single most expensive thing in the gate; `SKIP_TEN=1` skips it, and skipping
+it means the exit criterion did NOT run) →
+**six fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
 `--disconnect-mid-ask` variant (10b), a whole game through
 `tools/ws-auto-play.mjs` (10c), that same client with `--refuse-first-ask` (10d),
 which drops the socket on the first `ask` FRAME and is the only thing in the repo
@@ -314,13 +325,18 @@ thing that reaches amendment **M11**'s `over`-with-no-`gameOver`-`state` branch,
 asserting `OVER WITHOUT A gameOver STATE` and `CONCEDE BEFORE START` on the
 server's stderr and deliberately NOT running `check-redaction.mjs`, because a
 four-line session has no `state` frame and the checker calls that a failure (see
-PLAN's M4 follow-up 8). Each of the five is asserted for exactly one `over`,
+PLAN's M4 follow-up 8), and **10f** (M5), `ws-auto-play --probe` at seed 42,
+which is the only thing anywhere that sends the `clickAbility` **act** from a
+client rather than answering an `ability_menu` by index (asserted `>= 1`, and
+none of them unresolvable). Each of the six is asserted for exactly one `over`,
 `over` last, and its log through `check-redaction.mjs` — including the CLIENT
 log, which is a different shape on purpose. Then `check-redaction.mjs` over the
 committed fixtures (`games/` **and** `synthetic/`) *and* every fresh recording →
 `check-redaction-selftest.mjs` → `npm run build && npm test`. It exits non-zero
-on the first failure and takes **three to four minutes** (3 m 19–32 s measured
-over four green runs), most of it the nine games.
+on the first failure and takes **about nine minutes from a deleted `bridge/out`**
+(8 m 52–57 s measured over four green runs), of which **9c's ten games are
+267–269 s**; `SKIP_TEN=1` brings it back to roughly four. **Pass `WSPORT=<n>` if
+8643 is busy** — step 10 starts six servers on it, one after another.
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
 overridable in the environment): a gate whose failure mode is "hangs until
 someone notices" cannot catch the one defect class M2's threading work is most
@@ -372,12 +388,18 @@ together, and each is a defect that was actually hit.
    `@font-face` wins and `styles.css` overrides it to the woff2 (**D29**).
 2. **`CardTile` is THE card renderer.** Every card in every zone — battlefield,
    hand, graveyard, exile, stack, the revealed slice of a library, the decision
-   panel's thumbnail, the zoom — goes through it, and it is imported by
-   `ZoneRow`, `HandFan`, `PlayerRail`, `StackPanel`, `DecisionPanel`, `CardZoom`
-   and by nothing else (`Board.tsx` takes only its `Clicks` type). This is the renderer's half of hard rule 8: a new surface
-   that draws its own card markup is how a name for a `hidden: true` id gets back
-   on screen, and it is exactly what the per-frame `data-card-name` check in
-   `web/test/render.test.tsx` would stop catching.
+   panel's thumbnail, the zoom, an `ask`'s options, the board picker, the zone
+   browser, the combat bands — goes through it, and it is imported by exactly
+   **ten** files and by nothing else: `ZoneRow`, `HandFan`, `PlayerRail`,
+   `StackPanel`, `DecisionPanel`, `CardZoom` (M4) and `AskModal`, `AskPicker`,
+   `ZoneBrowser`, `CombatBands` (**M5**). `Board.tsx` imports the file too but
+   takes only its `Clicks` **type**, which is why it is not on the list. This is
+   the renderer's half of hard rule 8: a new surface that draws its own card
+   markup is how a name for a `hidden: true` id gets back on screen, and it is
+   exactly what the per-frame `data-card-name` check in
+   `web/test/render.test.tsx` would stop catching. Keep the list closed — adding
+   an eleventh importer is a decision, and `grep -rl "from './CardTile.tsx'"
+   web/src` is how you check it.
 3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
    set-valued.** Keys are `c:<cardId>` / `p:<playerId>` / `s:<stackId>` because
    **the id spaces collide** — 40 frames in the committed corpus have a
@@ -415,10 +437,71 @@ verbatim**. The board draws no phase-stop state of its own either — the dots a
 Forge's documented defaults, disabled, until `players[].phaseStops` ships in M6
 (**D31**).
 
-`npm --prefix web test` is now **271 `node --test` + 41 vitest**; `render.test.tsx`
-renders every frame of every fixture **twice**, once as a replay and once as a
-seat, which is what makes the read-only assertion and the hidden-information
-assertions per-frame rather than per-suite.
+`npm --prefix web test` is now **377 `node --test`** (372 pass, 0 fail, **5
+skipped** — the ws-log suite skips what `MTGTABLE_WS_LOGS` does not name, so a
+standalone run reports 373/373 and the gate reports 377) **+ 55 vitest**;
+`render.test.tsx` renders every frame of every fixture **twice**, once as a
+replay and once as a seat, which is what makes the read-only assertion and the
+hidden-information assertions per-frame rather than per-suite.
+
+## The conventions M5 added
+
+Six more, and like M4's each one is a defect that was actually hit.
+
+1. **A question is answered on the board iff EVERY one of its options is already
+   drawn there** (**D33**). The decision is `web/src/render/picker.ts`, pure and
+   corpus-tested; one option outside the board sends the whole ask to the modal.
+   `drawnEntities()` is written against **what `Board.tsx` mounts**, never
+   against `resolve.findCard` — the snapshot contains another seat's hand as
+   five-key stubs and an unrevealed library, and a rule written against it would
+   offer a click on a card the player cannot see, which is hard rule 8 arriving
+   through the picker. **If you add or remove a surface that mounts cards, update
+   `drawnEntities` in the same change**; `web/test/picker.test.ts` prints the
+   picker/modal census every run and fails if either column is empty. The picker
+   **marshals nothing**: the answer is built by `AskModal`'s own
+   `answerFromDraft`, so the two surfaces cannot disagree.
+2. **Nothing new may be an in-flow child of `.table__middle`** (**D36**). Its
+   `grid-template-rows` is `1fr 1fr` — one row per seat — and a third child lands
+   in an implicit **auto** row that is sized to its content *before* the `1fr`
+   rows get anything: at 1600 × 900 both zone rows measured **0 px**, the strips'
+   tiles overflowed, and the two caption buttons overlapped by 9 px — leaving
+   **4 px** of the opponent's zone control hittable. `.stackpanel` and `.bands` are
+   absolute; so is the next one. The z-index budget in that box is **a tile = its
+   own `--i`, `.bands` = 55, the `.zonerow__label` buttons = 60**, and the order
+   matters: the captions must stay clickable *through* an overlay, because the
+   zone browser is the escape hatch for the cards it covers.
+3. **No React hook below a component's early return.** `Board` has
+   `if (board === null) return …`; a `useMemo` under it shipped, threw *"Rendered
+   more hooks than during the previous render"* on the first real frame, and the
+   **whole suite stayed green** — `render.test.tsx` mounts each frame fresh with
+   `renderToStaticMarkup` and can never see a hook count change between renders.
+   `web/test/hooks-order.test.ts` is a **source scan** (negative-controlled: put
+   a `useMemo` back below the guard and it goes red) and it is all the repo has —
+   there is no eslint and no DOM test environment.
+4. **Never decide what a control *does* by matching an engine string** (§Scope,
+   amendment **M30**). Render `buttons.*.label` verbatim; never branch on it. The
+   mana pips are live whenever the pool is non-empty precisely because the only
+   alternative was matching the word `Auto` to detect a mana payment. When the
+   client needs to know a *state*, the answer is a typed field on the wire, not a
+   regex over prose.
+5. **The probe policy is a flag, and a recording says which one it ran under.**
+   `--probe` (`AutoTransport`'s four decisions taken the other way) and
+   `--mana-lost-prompt` (`FPref.UI_MANA_LOST_PROMPT`, **in memory, never
+   `save()`**) are what make the four new ask kinds reachable; the **default** is
+   what M5's exit criterion and every M2/M3 fixture measure, and 9b's multiset
+   diff is the standing proof that the default did not move. Both appear in the
+   session header as `policy` / `prefs` (**M31**). **Do not re-record a committed
+   fixture with `--probe`** unless you mean to change what it is evidence of.
+   `tools/ws-auto-play.mjs` mirrors the policy line for line, on purpose.
+6. **A typed act earns its gate in `tools/ten-games.sh`'s sixth `ROWS` field —
+   with its EFFECT, not just its count.** `useMana` had no end-to-end guard
+   anywhere while `check-all.sh` step 10f said in as many words that it was
+   "asserted elsewhere"; elsewhere was `ten-games.sh`, which did not contain the
+   string. A count alone would still pass if the client sent the act and the
+   bridge dropped it, so seed 4 also asserts the seat's `manaPool` shrinks across
+   it. The other assertion worth knowing about is the **ask-kind ceiling** (no
+   more than 150 asks of one kind in one game): an ask loop is the one wedge
+   every other assertion is blind to, and one shipped.
 
 ## Treat forge-src as prose
 
@@ -489,11 +572,11 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/08-deck-card-coverage.md` | Card-by-card fidelity for the deck in play; D13 and D14 come from it. |
 | `docs/research/09-arena-tier1-plan.md` | M7 tier 1. |
 | `docs/research/10-board-ui-spec.md` | **The M4 board.** Component tree, layout tokens, card tiles, arrows, wireframes. |
-| `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. |
+| `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
 | `PLAN.md` | The eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| `DECISIONS.md` | The thirty-one load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's; **D21's scope is corrected by D23**). D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip. |
+| `DECISIONS.md` | The thirty-six load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, **D32–D36 M5's**; **D21's scope is corrected by D23**, and **D29's "overridden rather than forked" clause by D32**). D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

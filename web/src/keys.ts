@@ -24,6 +24,11 @@
  *   - `T` = pass to my next turn. Forge's `T` is `SHORTCUT_SHOWTARGETING`; our
  *     targeting overlay is always on, so there is nothing to toggle (§16.4.3).
  *   - `B` = pass to before my turn. Unbound in Forge.
+ *   - **M5**: `W U B R G C` spend one floating mana (`act: useMana`, §2.2) —
+ *     Forge's desktop client spends from its mana pool panel and binds no key,
+ *     and our own console seat has taken `m W|U|B|R|G|C` since M2. `C` and `B`
+ *     keep their M4/M6 meanings whenever the pool does not hold that colour;
+ *     the pool is the engine's own count (§3.1) and nothing here predicts it.
  *
  * **No rules live here.** A plan is "send this act" or "toggle this panel" or
  * "nothing, and here is why" — never "this would be legal". `planKey` reads the
@@ -34,6 +39,9 @@
  * `node --test`, which is where the assertion that this table is total lives.
  */
 
+import type { ManaColor } from './protocol.ts';
+import { manaColorForKey } from './render/pool.ts';
+
 // ---------------------------------------------------------------------------
 // The table
 // ---------------------------------------------------------------------------
@@ -41,6 +49,7 @@
 export type KeyActionId =
   | 'ok'
   | 'cancel'
+  | 'useMana'
   | 'concede'
   | 'zoom'
   | 'toggleStack'
@@ -150,8 +159,9 @@ export const KEYMAP: readonly KeyBinding[] = [
     chord: 'A',
     keys: ['a'],
     ctrl: false,
-    what: 'auto-pay a mana cost',
-    forge: "InputPayMana.supportAutoPay() — Forge sends it as the OK button's own 'Auto' label",
+    what: "auto-pay a mana cost — press SPACE instead: it is the engine's OK button",
+    forge:
+      "InputPayMana.supportAutoPay() — Forge sends it as the OK button's own 'Auto' label, so M5 wired the rest of payment (lands are clicks, the pool is W/U/B/R/G/C) and left this one to the button that already exists",
     milestone: 'M5',
   },
   {
@@ -216,6 +226,22 @@ export const KEYMAP: readonly KeyBinding[] = [
     what: 'auto-yield: always no to this ability',
     forge: 'SHORTCUT_AUTOYIELD_ALWAYS_NO = 78',
     milestone: 'M6',
+  },
+  {
+    // **M5 — the one real dead end M4 handed over.** LAST on purpose:
+    // `bindingFor` is a first-match lookup, so with an empty pool `C` is still
+    // Forge's SHORTCUT_SHOWCOMBAT and `B` is still pass-to-before-my-turn, and
+    // only `W`/`U`/`R`/`G` — which nothing else binds — reach this row. When the
+    // pool actually holds the colour, `planKey`'s pre-pass takes the key before
+    // the table is consulted at all: floating mana is transient, and the two
+    // panels it borrows for a moment are not going anywhere.
+    id: 'useMana',
+    chord: 'W U B R G C',
+    keys: ['w', 'u', 'b', 'r', 'g', 'c'],
+    ctrl: false,
+    what: 'spend one floating mana of that colour, while the pool holds it',
+    forge: "no desktop shortcut — Forge spends from its mana pool panel; the console seat's own `m W|U|B|R|G|C` (act: useMana, §2.2)",
+    milestone: 'M5',
   },
 ];
 
@@ -305,8 +331,15 @@ export interface KeyContext {
   cancelEnabled: boolean;
   /** Whether a card is selectable right now — only for the `why` of a dead Space. */
   haveSelectable: boolean;
+  /**
+   * The colours this seat's floating mana pool actually holds (§3.1), which is
+   * the engine's own number echoed — never a prediction of what is payable.
+   * `W` through `C` spend one while the pool has it, and mean their M4/M6
+   * bindings when it does not.
+   */
+  poolColors: readonly string[];
   /** An overlay that Escape should close before it reaches the engine. */
-  overlay: 'none' | 'zoom' | 'hotkeys';
+  overlay: 'none' | 'zoom' | 'hotkeys' | 'zones';
 }
 
 export type KeyPlan =
@@ -314,6 +347,8 @@ export type KeyPlan =
   | { kind: 'buttonCancel' }
   /** §5.4 — answering an open ask with `null` is always legal. */
   | { kind: 'answerNull' }
+  /** §2.2 — `act: useMana {color}`, the colour being one the pool holds. */
+  | { kind: 'useMana'; color: ManaColor }
   | { kind: 'concede' }
   | { kind: 'closeOverlay' }
   /** A local view toggle: legal in a replay too, because it sends nothing. */
@@ -335,6 +370,21 @@ export interface KeyResolution {
  */
 export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | null {
   if (isTypingTarget(event.target)) return null;
+
+  // **Floating mana wins its letter while it is floating.** `C` is
+  // SHORTCUT_SHOWCOMBAT and `B` is pass-to-before-my-turn the rest of the time,
+  // and `bindingFor` still resolves them that way; this pre-pass is the only
+  // place the pool changes what a key means, and it is gated on the engine's
+  // own `manaPool` count (§3.1) plus a live seat with no ask outstanding —
+  // inside an ask the engine is parked and is listening for one thing (§5).
+  const color = manaKeyColor(event);
+  if (color !== null && ctx.live && !ctx.askOpen && ctx.poolColors.includes(color)) {
+    const manaBinding = KEYMAP.find((b) => b.id === 'useMana');
+    if (manaBinding !== undefined) {
+      return { binding: manaBinding, plan: { kind: 'useMana', color } };
+    }
+  }
+
   const binding = bindingFor(event);
   if (binding === null) return null;
   // A focused button activates itself on Space; sending `buttonOk` as well would
@@ -383,6 +433,19 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
         ? { binding, plan: { kind: 'concede' } }
         : { binding, plan: { kind: 'inert', why: 'this board is read-only' } };
 
+    case 'useMana':
+      // Bound, understood, and the pool is empty of it: say which, rather than
+      // doing nothing. (A pool that HAS it never reaches this branch.)
+      return {
+        binding,
+        plan: {
+          kind: 'inert',
+          why: ctx.live
+            ? 'no floating mana of that colour — tap a land first (M5: act useMana, §2.2)'
+            : 'this board is read-only',
+        },
+      };
+
     case 'zoom':
     case 'toggleStack':
     case 'toggleCombat':
@@ -399,6 +462,20 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
         },
       };
   }
+}
+
+/**
+ * The colour a bare letter names, or `null`. `code` is read as well as `key` for
+ * the same reason `bindingFor` reads it: an automation driver can deliver one
+ * and not the other.
+ */
+export function manaKeyColor(event: KeyEventLike): ManaColor | null {
+  if (event.isComposing === true || event.altKey === true) return null;
+  if (event.ctrlKey === true || event.metaKey === true) return null;
+  const fromKey = manaColorForKey(event.key || '');
+  if (fromKey !== null) return fromKey;
+  const code = event.code ?? '';
+  return code.length === 4 && code.startsWith('Key') ? manaColorForKey(code.slice(3)) : null;
 }
 
 /** The binding for one action id, for a button that wants to print its chord. */

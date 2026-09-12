@@ -207,6 +207,12 @@ public final class RecordMatch {
         // ------------------------------------------------------------------
         final GameRules rules = new GameRules(GameType.Constructed);
         rules.setAppliedVariants(EnumSet.of(GameType.Constructed));
+        // One game, and there is no `--games` here on purpose (M5).  More than
+        // one game per match is what makes Forge call `sideboard` at all, but
+        // the call site is `PlayerControllerHuman.sideboard` and both seats here
+        // are AI -- `PlayerControllerAi` answers it without the gui.  The probe
+        // for that kind is `MtgTable --games 2`, and even there the session ends
+        // at the first `over`: docs/evidence/m5-probes.md section 5.
         rules.setGamesPerMatch(1);
 
         final List<RegisteredPlayer> seats = new ArrayList<>();

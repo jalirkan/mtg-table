@@ -41,6 +41,13 @@ export interface ZoneRowProps {
   /** One extra line of already-resolved combat text per card. */
   noteFor?: (card: AnyCard) => string | null;
   align?: 'centre' | 'start';
+  /**
+   * M5 — open this zone in the browser panel. The strips are 45 px and a
+   * graveyard of twelve shingles into a smear; the row's own caption becomes
+   * the way in (`PLAN.md`: *"there is nothing to open"*). Absent → the M4
+   * caption, which is what every battlefield row still gets.
+   */
+  onOpen?: (() => void) | null;
 }
 
 export function ZoneRow({
@@ -55,15 +62,27 @@ export function ZoneRow({
   attachmentsFor,
   noteFor,
   align = 'centre',
+  onOpen = null,
 }: ZoneRowProps): JSX.Element {
   const tapped = cards.filter((card) => 'tapped' in card && card.tapped === true).length;
   const slots = cards.length - tapped + tapped * CARD_ASPECT;
 
   return (
     <div className={`zonerow zonerow--${kind} zonerow--${align}`}>
-      <span className="zonerow__label" aria-hidden="true">
-        {label} <span className="zonerow__n">{cards.length}</span>
-      </span>
+      {onOpen === null ? (
+        <span className="zonerow__label" aria-hidden="true">
+          {label} <span className="zonerow__n">{cards.length}</span>
+        </span>
+      ) : (
+        <button
+          type="button"
+          className="zonerow__label zonerow__open"
+          title={`open ${label} — every card in the zone, at a readable size`}
+          onClick={onOpen}
+        >
+          {label} <span className="zonerow__n">{cards.length}</span> ⤢
+        </button>
+      )}
       <ul
         className={`row row--${kind}`}
         style={{ '--slots': String(Math.max(slots, 1)) } as React.CSSProperties}

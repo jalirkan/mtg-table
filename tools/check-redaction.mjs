@@ -952,6 +952,29 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   }
   const nullTransport = header.transport === 'null';
 
+  /*
+   * Section 8.1, amendment M31.  Two OPTIONAL keys that say what shaped this
+   * run beyond the seed: `policy` (only `"probe"` today -- AutoTransport's M5
+   * policy, which takes four decisions the other way) and `prefs`, the Forge
+   * preferences the process set in memory.  Tolerated, never required: every
+   * recording made before M31 has neither, and a log without them is a log made
+   * on defaults.  They are checked for SHAPE so that a typo is a failure rather
+   * than a silently ignored key -- `fixtures/games/human-amount-7.jsonl` carries
+   * two `confirm` asks that cannot occur on stock preferences, and `prefs` is
+   * the only thing in the file that says why.
+   */
+  const POLICIES = ['probe'];
+  if (header.policy !== undefined && !POLICIES.includes(header.policy)) {
+    note(1, `session header policy=${JSON.stringify(header.policy)} is not one of ` +
+      `${POLICIES.join(' | ')} (section 8.1, M31)`);
+  }
+  if (header.prefs !== undefined) {
+    if (!Array.isArray(header.prefs) || !header.prefs.every((x) => str(x))) {
+      note(1, `session header "prefs" must be an array of FPref names (section 8.1, M31), got ` +
+        `${JSON.stringify(header.prefs)}`);
+    }
+  }
+
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
   } else {

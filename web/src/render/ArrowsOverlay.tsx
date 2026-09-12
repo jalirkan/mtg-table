@@ -22,24 +22,39 @@
  */
 
 import type { GameStateBody } from '../protocol.ts';
-import { buildArrows, type ArrowSpec } from './arrows.ts';
-import { useRects } from './rects.ts';
+import { buildArrows, pendingArrow, type ArrowSpec } from './arrows.ts';
+import { useRects, type RectKey } from './rects.ts';
 
 export function ArrowsOverlay({
   board,
   emphasiseCombat = false,
+  pendingFrom = null,
+  pendingTo = null,
 }: {
   board: GameStateBody;
   /** `C` — Forge's own SHORTCUT_SHOWCOMBAT, as an emphasis rather than a panel. */
   emphasiseCombat?: boolean;
+  /** M5 — the source of the choice being made right now (a focus card, a stack item). */
+  pendingFrom?: RectKey | null;
+  /** M5 — the candidate under the pointer. */
+  pendingTo?: RectKey | null;
 }): JSX.Element {
   const rects = useRects();
   // Deliberately not memoised on `rects.version`: the registry object is
   // replaced whenever a sweep found movement, so this component re-renders
   // exactly when the numbers changed, and a few dozen arcs cost less than the
   // dependency array that would track them.
-  const arrows = buildArrows(board, (key) => rects.get(key));
-  return <ArrowPaths arrows={arrows} emphasiseCombat={emphasiseCombat} />;
+  const get = (key: RectKey) => rects.get(key);
+  const arrows = buildArrows(board, get);
+  // Last, so it paints over the resolved ones: it is the thing the player is
+  // doing, and the others are what has already happened.
+  const pending = pendingArrow(pendingFrom, pendingTo, get);
+  return (
+    <ArrowPaths
+      arrows={pending === null ? arrows : [...arrows, pending]}
+      emphasiseCombat={emphasiseCombat}
+    />
+  );
 }
 
 /**

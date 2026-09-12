@@ -65,24 +65,42 @@ import {
   type AnyCard,
   type GameStateBody,
   type InputBody,
+  type ManaColor,
   type PlayerState,
 } from '../protocol.ts';
 import type { ClientState, TimestampedNotice } from '../reduce.ts';
 import { ArrowsOverlay } from './ArrowsOverlay.tsx';
-import { AskModal } from './AskModal.tsx';
+import { AskModal, defaultDraft, type AskDraft } from './AskModal.tsx';
+import type { AskPickerProps } from './AskPicker.tsx';
 import type { Clicks } from './CardTile.tsx';
 import { CardZoom } from './CardZoom.tsx';
+import { CombatBands } from './CombatBands.tsx';
 import { ConcedeButton, DecisionPanel, type KeyFlash } from './DecisionPanel.tsx';
 import { HandFan } from './HandFan.tsx';
 import { HotkeysOverlay } from './HotkeysOverlay.tsx';
 import { isLandTypeLine } from './labels.ts';
 import { LogDrawer } from './LogDrawer.tsx';
 import { PhaseStrip } from './PhaseStrip.tsx';
+import {
+  boardPick,
+  drawnEntities,
+  toggleChoice,
+  viewerSeatId,
+  NOTHING_DRAWN,
+  TargetingContext,
+  type BoardPick,
+  type PickCandidate,
+  type TargetRef,
+  type Targeting,
+} from './picker.ts';
 import { PlayerRail } from './PlayerRail.tsx';
-import { RectsContext, useRectRegistry } from './rects.ts';
+import { spendableColors } from './pool.ts';
+import { cardKey, playerKey, RectsContext, stackKey, useRectRegistry, type RectKey } from './rects.ts';
 import { cardLabel, entityLabel, findCard, playerName } from './resolve.ts';
 import { StackPanel } from './StackPanel.tsx';
 import { useWindowKeydown } from './useKeyboard.ts';
+import { ZoneBrowser } from './ZoneBrowser.tsx';
+import { hintedPanels, panelKey, type ZonePanelRef } from './zones.ts';
 import { ZoneRow } from './ZoneRow.tsx';
 
 // ---------------------------------------------------------------------------
@@ -103,6 +121,13 @@ export interface BoardActions {
   clickPlayer(playerId: number): void;
   buttonOk(): void;
   buttonCancel(): void;
+  /**
+   * §2.2 — `useMana {color}`, `IGameController.useMana(byte)`. **M5's one real
+   * dead end**: a state where Forge expects floating mana to be spent could not
+   * be resolved from the browser at all before this existed. A colour and
+   * nothing else — tapping a land is a `clickCard`.
+   */
+  useMana(color: ManaColor): void;
   /** §9 invariant 6 — reachable from every UI state, so a wedge is escapable. */
   concede(): void;
   /** §2.3 — exactly one per ask; the value is per-kind (§5.2). */
@@ -141,6 +166,42 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
   const [flash, setFlash] = useState<KeyFlash | null>(null);
   const [concedeArmed, setConcedeArmed] = useState(false);
 
+  // ---- M5 view state. Still none of it game state, and still no effect:
+  // ---- every one of these is keyed on something the engine sent, so a new
+  // ---- ask / a new prompt / a new `openZones` hint discards it by itself.
+  //
+  // The draft answer to a board-shaped ask (`picker.ts`), keyed by `askId`: a
+  // second question can never inherit the first's half-built answer, which is
+  // the same rule `AskModal` keeps by remounting on the id.
+  const [draftBox, setDraftBox] = useState<{ askId: string; draft: AskDraft } | null>(null);
+  // Which zone panels are open, keyed by the `openZones` hint they were opened
+  // against (§4.3). No entry, or a stale key, means "follow the engine".
+  const [zoneBox, setZoneBox] = useState<{ hint: string; panels: ZonePanelRef[] } | null>(null);
+  // What the pointer is over, for the pending-target arrow. Set only by a
+  // candidate tile, so an ordinary board carries no pointer handlers at all.
+  const [hover, setHover] = useState<TargetRef | null>(null);
+  // The last card this seat clicked — the *source* half of the pending arrow.
+  //
+  // It is needed because the engine does not always say: at `InputSelectTargets`
+  // for a spell being cast, `input.focusCardId` is null and the spell is not on
+  // the stack yet (measured live, 2026-09-12 — the prompt names the card and the
+  // prompt is the ONE thing the client may not parse). So the board remembers
+  // the gesture the player made, which is not rules logic and not engine state:
+  // it is "the card you clicked". It is only ever *used* while a selection is
+  // outstanding, and only if that card still has a tile.
+  const [lastClicked, setLastClicked] = useState<number | null>(null);
+  // How many clicks this seat has sent against the current `selectable` prompt.
+  // The wire carries no running count; this is ours, and the panel says so.
+  const [picksBox, setPicksBox] = useState<{ key: string; n: number }>({ key: '', n: 0 });
+  // **The snapshot a `useMana` was sent against** (M5 review). Forge pushes no
+  // `state` for a mana payment — measured in A.I.M. Scientists' landcycling,
+  // where the act took `Pay Mana Cost: {2}` to `{1}` and only `input` frames
+  // followed — so while `state.board` is still the object we sent against, the
+  // pool counts on screen are known to be behind and the rail says so. The
+  // reducer replaces `board` wholesale on every `state` frame (reduce.ts), so
+  // object identity is exactly the question "has a snapshot arrived since?".
+  const [manaSentAgainst, setManaSentAgainst] = useState<GameStateBody | null>(null);
+
   // ---- the rect registry (report 10 §9.1). One provider, one
   // ---- `ResizeObserver`, on this root; under `renderToStaticMarkup` it
   // ---- measures nothing and the overlay draws nothing.
@@ -169,13 +230,71 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
     };
   }, [concedeArmed]);
 
+  // ---- M5: is this ask answerable on the board? (`picker.ts` is the whole of
+  // ---- the decision, and it is pure.)
+  const drawn = useMemo(
+    () => (board === null ? NOTHING_DRAWN : drawnEntities(board, you)),
+    [board, you],
+  );
+  const pick: BoardPick | null = useMemo(
+    () => (state.ask === null || board === null ? null : boardPick(state.ask, drawn)),
+    [state.ask, board, drawn],
+  );
+  const draft: AskDraft | null =
+    state.ask === null
+      ? null
+      : draftBox !== null && draftBox.askId === state.ask.askId
+        ? draftBox.draft
+        : defaultDraft(state.ask);
+  const setDraft = useCallback(
+    (next: AskDraft): void => {
+      if (state.ask === null) return;
+      setDraftBox({ askId: state.ask.askId, draft: next });
+    },
+    [state.ask],
+  );
+
+  // ---- M5: the zone panels. `openZones` is a hint, never a question (§4.3),
+  // ---- so the engine's list is the default and the player's click is an
+  // ---- override that lives exactly as long as that hint does.
+  const hintPanels = useMemo(() => hintedPanels(input, board, you), [input, board, you]);
+  const hintKey = hintPanels.map(panelKey).join('|');
+  const followingHint = zoneBox === null || zoneBox.hint !== hintKey;
+  const zonePanels = followingHint ? hintPanels : zoneBox.panels;
+  const openZone = useCallback(
+    (ref: ZonePanelRef): void => {
+      setZoneBox({ hint: hintKey, panels: [ref] });
+    },
+    [hintKey],
+  );
+  const closeZones = useCallback((): void => {
+    setZoneBox({ hint: hintKey, panels: [] });
+  }, [hintKey]);
+
+  // The seat whose pool the keyboard spends from — the same seat whose rail
+  // carries the live pips.
+  const mySeatId = board === null ? null : viewerSeatId(board, you);
+  const mySeat = board === null ? null : (board.players.find((p) => p.id === mySeatId) ?? null);
+  const poolColors = mySeat === null ? [] : spendableColors(mySeat.manaPool);
+
   const keyContext: KeyContext = {
     live: actions !== null && state.gameOver === null,
     askOpen: state.ask !== null,
     okEnabled: input?.buttons.ok.enabled === true,
     cancelEnabled: input?.buttons.cancel.enabled === true,
     haveSelectable: (input?.selectable.cardIds.length ?? 0) > 0,
-    overlay: zoomId !== null ? 'zoom' : hotkeysOpen ? 'hotkeys' : 'none',
+    poolColors,
+    overlay:
+      zoomId !== null
+        ? 'zoom'
+        : hotkeysOpen
+          ? 'hotkeys'
+          : // An open question outranks a zone panel for `Esc`: §5.4's
+            // always-legal `null` is the more important escape hatch, and the
+            // panel has its own close button.
+            zonePanels.length > 0 && state.ask === null
+            ? 'zones'
+            : 'none',
   };
 
   const onKey = useCallback(
@@ -213,9 +332,18 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
             setFlash({ id: binding.id, chord: binding.chord, why: 'press again to concede' });
           }
           return;
+        case 'useMana':
+          // §2.2 — the act the console seat has had since M2 (`m W|U|B|R|G|C`).
+          // Same bookkeeping as the pip: no `state` follows a mana payment, so
+          // the pool counts are provisional until one does.
+          setFlash(null);
+          setManaSentAgainst(state.board);
+          actions?.useMana(plan.color);
+          return;
         case 'closeOverlay':
           setZoomId(null);
           setHotkeysOpen(false);
+          closeZones();
           return;
         case 'view':
           switch (plan.id) {
@@ -253,20 +381,130 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
     },
     // `keyContext` and `state.ask` are read fresh on every render; the listener
     // itself is registered once and reads this through a ref (`useKeyboard.ts`).
-    [actions, concedeArmed, keyContext, state.ask, zoomId],
+    [actions, closeZones, concedeArmed, keyContext, state.ask, zoomId],
   );
   useWindowKeydown(onKey);
 
   // §5: while an ask is outstanding the game thread is parked inside that call
   // and is listening for exactly one thing. A board click then is a click into a
   // void, so the board stops taking them — and says why.
+  //
+  // **M5 narrows that, it does not widen it.** While a board-shaped ask is
+  // outstanding the candidate tiles ARE the control — they answer the question
+  // through `TargetingContext` rather than sending an `act` — and every other
+  // tile stays inert, because the engine is still listening for exactly one
+  // thing.
   const asking = state.ask !== null;
+
+  // M5 — "chosen k of min..max". The wire has no running count (§4 carries the
+  // id set and the bounds, nothing else), so this counts what this browser sent
+  // since the prompt appeared and the panel labels it as exactly that. It is
+  // never enforced anywhere: Forge is the judge (CLAUDE.md §Scope).
+  const selKey =
+    input === null
+      ? ''
+      : `${input.prompt}|${input.selectable.mode}|${input.selectable.cardIds.join(',')}` +
+        `|${String(input.selectable.min)}-${String(input.selectable.max)}`;
+  const picksSent = picksBox.key === selKey ? picksBox.n : 0;
+  const countPick = (): void => {
+    if (input === null || input.selectable.mode === 'none') return;
+    setPicksBox({ key: selKey, n: picksSent + 1 });
+  };
+
   const clicks: Clicks | null =
     actions === null || asking || state.gameOver !== null
       ? null
-      : { card: actions.clickCard, player: actions.clickPlayer };
+      : {
+          card: (cardId: number) => {
+            countPick();
+            setLastClicked(cardId);
+            actions.clickCard(cardId);
+          },
+          player: (playerId: number) => {
+            countPick();
+            actions.clickPlayer(playerId);
+          },
+        };
 
   const readOnly = actions === null;
+
+  // ---- M5: the ask that is answered on the board -------------------------
+  const answerable = pick !== null && actions !== null && state.gameOver === null;
+  const cardOptions = new Map<number, PickCandidate>();
+  const playerOptions = new Map<number, PickCandidate>();
+  for (const candidate of pick?.candidates ?? []) {
+    if (candidate.cardId !== null) cardOptions.set(candidate.cardId, candidate);
+    else if (candidate.playerId !== null) playerOptions.set(candidate.playerId, candidate);
+  }
+  const chosenSet = new Set<number>(
+    draft === null
+      ? []
+      : draft.shape === 'indices'
+        ? draft.indices
+        : draft.shape === 'index' && draft.index >= 0
+          ? [draft.index]
+          : [],
+  );
+
+  const sendAnswer = (value: AnswerValue): void => {
+    if (state.ask === null) return;
+    setDraftBox(null);
+    setHover(null);
+    actions?.answer(state.ask.askId, value);
+  };
+  const pickOption = (optionId: number): void => {
+    if (draft === null || pick === null) return;
+    if (draft.shape === 'index') {
+      setDraft({ shape: 'index', index: draft.index === optionId ? -1 : optionId });
+    } else if (draft.shape === 'indices') {
+      // The engine's own `max`, echoed — `max === 1` is a radio button, which
+      // is a measurement and not a guess (`picker.ts`).
+      setDraft({ shape: 'indices', indices: toggleChoice(draft.indices, optionId, pick.max) });
+    }
+  };
+  const setAmount = (optionId: number, n: number): void => {
+    if (draft === null || draft.shape !== 'amounts') return;
+    setDraft({ shape: 'amounts', amounts: { ...draft.amounts, [String(optionId)]: n } });
+  };
+
+  const targeting: Targeting = {
+    option: (kind, id) =>
+      (kind === 'card' ? cardOptions.get(id) : playerOptions.get(id)) ?? null,
+    candidate: (kind, id) => {
+      if (pick !== null) return (kind === 'card' ? cardOptions : playerOptions).has(id);
+      if (input === null) return false;
+      // No ask: the engine's explicit selection set (§4, amendment M8). It is
+      // an outline and a hover target — never a gate on the click.
+      if (kind === 'card') {
+        return input.selectable.mode === 'cards' && input.selectable.cardIds.includes(id);
+      }
+      return input.selectable.mode === 'players';
+    },
+    chosen: (optionId) => chosenSet.has(optionId),
+    amount: (optionId) =>
+      draft !== null && draft.shape === 'amounts' ? (draft.amounts[String(optionId)] ?? 0) : 0,
+    shape: pick?.shape ?? 'none',
+    live: answerable,
+    pick: pickOption,
+    setAmount,
+    hover: setHover,
+  };
+
+  const askPicker: AskPickerProps | null =
+    pick === null || state.ask === null || draft === null || board === null
+      ? null
+      : {
+          ask: state.ask,
+          pick,
+          draft,
+          board,
+          art,
+          live: answerable,
+          onDraft: setDraft,
+          onAnswer: sendAnswer,
+          onPick: pickOption,
+          onAmount: setAmount,
+        };
 
   if (board === null) {
     return (
@@ -280,7 +518,9 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
             <ConcedeButton onConcede={actions.concede} gameOver={state.gameOver !== null} />
           )}
         </div>
-        <AskModal ask={state.ask} onAnswer={actions?.answer ?? null} />
+        {/* No board means no tiles, so every ask is a modal here by
+            construction — `boardPick` returns null with no snapshot. */}
+        <AskModal ask={state.ask} art={art} onAnswer={actions?.answer ?? null} />
         <Toasts notices={state.notices} clientNotices={clientNotices} yourTurn={false} />
         <div className="board__drawer">
           <LogDrawer
@@ -306,8 +546,61 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
   // keeping a picture of something that is no longer there.
   const zoomCard = zoomId === null ? undefined : findCard(board, zoomId);
 
+  // M5 — the tail of the pending-target arrow: what the engine says this
+  // choice is about. The head is whatever candidate the pointer is over, and
+  // both ends must be on the board or `pendingArrow` draws nothing (§9.2).
+  const selecting = pick !== null || (input !== null && input.selectable.mode !== 'none');
+  const pendingFrom: RectKey | null =
+    !selecting
+      ? null
+      : state.ask !== null && state.ask.kind === 'assign_damage' && state.ask.attackerId !== null
+        ? // §5.3 — the attacker whose damage is being assigned.
+          cardKey(state.ask.attackerId)
+        : input !== null && input.focusCardId !== null
+          ? // §4 — the card the engine says the prompt is about.
+            cardKey(input.focusCardId)
+          : board.stack.length > 0
+            ? stackKey(board.stack[board.stack.length - 1]!.id)
+            : lastClicked !== null
+              ? // The gesture, when the engine named nothing: the card you
+                // clicked to start this. A missing rect drops the arrow, which
+                // is what happens the moment that card leaves the board.
+                cardKey(lastClicked)
+              : null;
+  //
+  // **The hover is only a target while it is still a candidate.** A tile that
+  // leaves the board under the pointer — the card you just clicked to discard —
+  // fires no `mouseleave`, because React unmounts it rather than moving it, so
+  // the last hover would otherwise keep an arrow pointing at a card that is now
+  // in the graveyard. Measured in the browser, 2026-09-12. Re-asking the same
+  // question the outline asks is also exactly right: an arrow may only end on
+  // something the engine is currently offering.
+  const pendingTo: RectKey | null =
+    hover === null || !targeting.candidate(hover.kind, hover.id)
+      ? null
+      : hover.kind === 'card'
+        ? cardKey(hover.id)
+        : playerKey(hover.id);
+
+  // **Not a hook.** This sits below the `board === null` early return above, and
+  // a `useMemo` here changes the hook count between the empty board and the real
+  // one — "Rendered more hooks than during the previous render", caught in the
+  // browser on frame 3 and invisible to `render.test.tsx`, which mounts each
+  // frame fresh rather than re-rendering one component. A fresh closure per
+  // render costs nothing: `PlayerRail` is not memoised either.
+  const spendMana: ((color: ManaColor) => void) | null =
+    actions !== null && !asking && state.gameOver === null
+      ? (color: ManaColor): void => {
+          setManaSentAgainst(state.board);
+          actions.useMana(color);
+        }
+      : null;
+  // Still the snapshot we spent against → no `state` has arrived since.
+  const manaProvisional = manaSentAgainst !== null && manaSentAgainst === state.board;
+
   return (
     <RectsContext.Provider value={rects}>
+    <TargetingContext.Provider value={targeting}>
     <div className="board" data-readonly={readOnly ? 'true' : 'false'} ref={rootRef}>
       {/* ---- left rail: the seats and the decision -------------------------- */}
       <aside className="board__rail board__rail--left">
@@ -325,6 +618,9 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
             input={input}
             art={art}
             clicks={clicks}
+            onBrowseLibrary={() => {
+              openZone({ playerId: player.id, zone: 'library' });
+            }}
           />
         ))}
         {mine !== undefined && (
@@ -335,6 +631,13 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
             input={input}
             art={art}
             clicks={clicks}
+            // M5 — the pips are controls on YOUR rail only, and only while the
+            // engine is not parked inside an ask (§2.2, `pool.ts`).
+            onSpendMana={spendMana}
+            manaProvisional={manaProvisional}
+            onBrowseLibrary={() => {
+              openZone({ playerId: mine.id, zone: 'library' });
+            }}
           />
         )}
         <DecisionPanel
@@ -346,6 +649,8 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
           actions={actions}
           clicks={clicks}
           flash={flash}
+          askPicker={askPicker}
+          picksSent={picksSent}
           onHotkeys={() => {
             setHotkeysOpen((open) => !open);
           }}
@@ -381,8 +686,22 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
         />
 
         <div className="table__middle">
-          <SeatStrips player={opponent} board={board} input={input} art={art} clicks={clicks} you={you} />
-          <SeatStrips player={mine} board={board} input={input} art={art} clicks={clicks} you={you} />
+          <SeatStrips
+            player={opponent}
+            input={input}
+            art={art}
+            clicks={clicks}
+            you={you}
+            onBrowse={openZone}
+          />
+          <SeatStrips
+            player={mine}
+            input={input}
+            art={art}
+            clicks={clicks}
+            you={you}
+            onBrowse={openZone}
+          />
           <StackPanel
             board={board}
             input={input}
@@ -394,6 +713,13 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
               setStackOpen((open) => !open);
             }}
           />
+          {/* M5 — what has been declared so far, from `combat.bands` only.
+              It is a child of `.table__middle` but NOT a row of it: the strip is
+              positioned, anchored to the middle's bottom edge beside the stack
+              panel (`styles.css`, `.bands`). Mounted in the flow it landed in an
+              implicit third grid row and starved the two `1fr` strip rows to
+              0 px at 1600 × 900 — `docs/evidence/m5-board.md` §6. */}
+          <CombatBands board={board} input={input} art={art} clicks={clicks} you={you} />
           <Toasts
             notices={state.notices}
             clientNotices={clientNotices}
@@ -429,12 +755,33 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
       {/* §9.3 — one SVG over the whole board, `aria-hidden` and
           `pointer-events: none`. Every fact it draws is also text: the stack
           panel's target chips and the tiles' combat notes (§14 rule 4). */}
-      <ArrowsOverlay board={board} emphasiseCombat={combatEmphasis} />
+      <ArrowsOverlay
+        board={board}
+        emphasiseCombat={combatEmphasis}
+        pendingFrom={pendingFrom}
+        pendingTo={pendingTo}
+      />
 
       {/* §5 — the game thread is parked inside this call, so it draws over
           everything: an outstanding question is the single most important thing
-          on the board while it exists. */}
-      <AskModal ask={state.ask} onAnswer={actions?.answer ?? null} />
+          on the board while it exists.
+          **M5**: only when the board cannot express it. A board-shaped ask is
+          answered on the tiles, with the prompt and the buttons in the decision
+          panel; the modal remains for colours, modes, numbers, text, and every
+          card in a zone this board is not drawing (`picker.ts`). */}
+      <AskModal ask={pick === null ? state.ask : null} art={art} onAnswer={actions?.answer ?? null} />
+
+      {/* M5 — the zone browser (`zones.ts`). Opened by a strip's caption, or
+          by `input.openZones`, which is a view hint and reveals nothing (§4.3). */}
+      <ZoneBrowser
+        panels={zonePanels}
+        board={board}
+        you={you}
+        art={art}
+        clicks={clicks}
+        fromHint={followingHint}
+        onClose={closeZones}
+      />
 
       {zoomCard !== undefined && (
         <CardZoom
@@ -455,6 +802,7 @@ export function Board({ state, art, actions = null, clientNotices = [] }: BoardP
         />
       )}
     </div>
+    </TargetingContext.Provider>
     </RectsContext.Provider>
   );
 }
@@ -592,24 +940,32 @@ function Seat({
   );
 }
 
-/** The graveyard and exile strips for one seat, in the middle row. */
+/**
+ * The graveyard and exile strips for one seat, in the middle row.
+ *
+ * **M5**: each strip's caption opens the zone browser. The strips themselves are
+ * unchanged — 45 px, shingled, every card through `CardTile` — because they are
+ * the at-a-glance reading and the panel is the readable one.
+ */
 function SeatStrips({
   player,
-  board,
   input,
   art,
   clicks,
   you,
+  onBrowse,
 }: {
   player: PlayerState | undefined;
-  board: GameStateBody;
   input: InputBody | null;
   art: ArtIndex;
   clicks: Clicks | null;
   you: number | null;
+  onBrowse?: (ref: ZonePanelRef) => void;
 }): JSX.Element {
   if (player === undefined) return <div className="middle__strips" />;
   const mine = you !== null && player.id === you;
+  const browse = (zone: ZonePanelRef['zone']): (() => void) | null =>
+    onBrowse === undefined ? null : () => { onBrowse({ playerId: player.id, zone }); };
   return (
     <div className={`middle__strips${mine ? ' middle__strips--you' : ''}`}>
       <ZoneRow
@@ -622,6 +978,7 @@ function SeatStrips({
         mine={mine}
         zoom={mine ? 'up' : 'down'}
         align="start"
+        onOpen={browse('graveyard')}
       />
       {player.zones.exile.cards.length > 0 && (
         <ZoneRow
@@ -634,6 +991,7 @@ function SeatStrips({
           mine={mine}
           zoom={mine ? 'up' : 'down'}
           align="start"
+          onOpen={browse('exile')}
         />
       )}
       {player.zones.command.cards.length > 0 && (
@@ -647,14 +1005,12 @@ function SeatStrips({
           mine={mine}
           zoom={mine ? 'up' : 'down'}
           align="start"
+          onOpen={browse('command')}
         />
       )}
-      {board.combat !== null && board.combat.bands.length > 0 && mine && (
-        <span className="middle__combat muted">
-          {board.combat.bands.length} attacking band
-          {board.combat.bands.length === 1 ? '' : 's'} — see the log drawer
-        </span>
-      )}
+      {/* M4 printed "N attacking bands — see the log drawer" here. M5 draws the
+          bands themselves, once, in `<CombatBands/>`, which is positioned over
+          the bottom of the middle rather than stacked under them. */}
     </div>
   );
 }

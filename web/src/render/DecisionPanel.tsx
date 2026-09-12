@@ -41,6 +41,7 @@ import { isHidden, type AnyCard, type GameStateBody, type InputBody, type InputB
 import type { ClientState } from '../reduce.ts';
 import type { KeyActionId } from '../keys.ts';
 import type { BoardActions } from './Board.tsx';
+import { AskPicker, type AskPickerProps } from './AskPicker.tsx';
 import { CardTile, displayName, type Clicks } from './CardTile.tsx';
 import { STEP_TITLE } from './labels.ts';
 import { WEDGE_QUIET_MS, wedgeSuspected } from './wedge.ts';
@@ -67,6 +68,8 @@ export function DecisionPanel({
   clicks,
   flash = null,
   onHotkeys,
+  askPicker = null,
+  picksSent = 0,
 }: {
   state: ClientState;
   board: GameStateBody | null;
@@ -78,6 +81,18 @@ export function DecisionPanel({
   flash?: KeyFlash | null;
   /** The mouse's way to the `?` overlay; the keyboard's is `H`. */
   onHotkeys?: () => void;
+  /**
+   * M5 — a board-shaped `ask` (`picker.ts`). Non-null means the tiles are the
+   * control and this panel holds the prompt, the count and the two buttons;
+   * `AskModal` is not mounted at all for that ask.
+   */
+  askPicker?: AskPickerProps | null;
+  /**
+   * M5 — how many clicks this seat has sent since the current `selectable`
+   * prompt appeared. **Not the engine's count**: the wire carries no
+   * "chosen so far" field, so this is what the browser did, labelled as such.
+   */
+  picksSent?: number;
 }): JSX.Element {
   // §5: an outstanding ask owns the interaction. The buttons belong to the
   // `input` the engine pushed *before* it blocked, and pressing one now would
@@ -88,6 +103,10 @@ export function DecisionPanel({
   return (
     <section className="decision" aria-label="Decision">
       <h2 className="decision__title">{stepTitle(board, you)}</h2>
+
+      {/* §5 — the question owns the panel while it is outstanding. The board's
+          tiles are the control; these are the words and the buttons. */}
+      {askPicker !== null && <AskPicker {...askPicker} />}
 
       {input === null ? (
         <p className="muted">the engine has not asked for anything yet</p>
@@ -114,18 +133,18 @@ export function DecisionPanel({
               flashed={flash?.id === 'cancel'}
               onClick={live ? actions.buttonCancel : null}
             />
-            {/* Report 10 §7.2: both are engine features that are not on the wire
-                yet, and a hint that lies is worse than no hint. They render
-                disabled, naming the milestone that lights them up. Pressing the
-                key flashes the button (§12.2 rule 4) rather than doing nothing. */}
-            <button
-              type="button"
-              className={`btn btn--future${flash?.id === 'autoPay' ? ' btn--flash' : ''}`}
-              disabled
-              title="Forge's own Auto lives in InputPayMana.supportAutoPay() and arrives as the OK button's label — M5 wires the mana payment UI behind it"
-            >
-              Auto Pay <span className="btn__key">A</span>
-            </button>
+            {/* Report 10 §7.2 / §2.2: `undo` is an engine feature that is not on
+                the wire yet, and a hint that lies is worse than no hint. It
+                renders disabled, naming the milestone that lights it up;
+                pressing the key flashes it (§12.2 rule 4) rather than doing
+                nothing.
+
+                **M4's third button is gone.** It said "Auto Pay", and there is
+                no such client feature: Forge's `InputPayMana` writes `Auto` on
+                its own OK button (`InputPayMana.java:376-395`), which is two
+                buttons to the left, rendered verbatim. M5 wired the rest of
+                mana payment where it actually lives — the lands are clicks and
+                the floating pool is the rail's pips (`act: useMana`). */}
             <button
               type="button"
               className={`btn btn--future${flash?.id === 'undo' ? ' btn--flash' : ''}`}
@@ -177,6 +196,22 @@ export function DecisionPanel({
             suspect={wedgeSuspected(state)}
             framesApplied={state.framesApplied}
           />
+
+          {/* M5 — "chosen k of min..max" while a selection is outstanding.
+              The wire carries no running count (§4 has `min`/`max` and the id
+              set, and nothing else), so this is the number of clicks THIS
+              browser has sent since the prompt appeared, and it says so. It is
+              never enforced: Forge judges, and a board that refused the click
+              that completes a choice would be rules logic (CLAUDE.md §Scope). */}
+          {input.selectable.mode !== 'none' && (
+            <p className="decision__chosen">
+              chosen <strong>{picksSent}</strong> of {input.selectable.min}
+              {input.selectable.max > input.selectable.min ? `..${String(input.selectable.max)}` : ''}{' '}
+              <span className="muted">
+                — clicks sent since this prompt; the engine is the judge of every one
+              </span>
+            </p>
+          )}
 
           <p className="decision__meta muted">
             selectable ({input.selectable.mode}): {input.selectable.cardIds.length} ids, choose{' '}

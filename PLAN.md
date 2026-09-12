@@ -13,8 +13,8 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M1 | Record a game and scrub through it in the browser | 2 evenings | **done** — hardened, all six follow-ups closed |
 | M2 | A full game against the AI, in the terminal | 2 evenings | **done** — two review passes closed; M3 closed four of its eight follow-ups |
 | M3 | The same game, in a browser tab | 2 evenings | **done** — a review pass and a fix pass, all 21 findings closed; eleven follow-ups open, none blocking M4 |
-| M4 | A board that looks like Magic | 3 evenings | not started |
-| M5 | Nothing dead-ends | 3 evenings | not started |
+| M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
+| M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | not started |
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: weeks) | not started |
 
@@ -317,7 +317,7 @@ thread — with no WebSocket and no DOM. Every unimplemented member logs
 degrades instead of dead-ending and the log says which of the 37 actually fire for
 a W/U deck.
 
-### M2 follow-ups — four closed by M3, one partly, two open, one standing (2026-09-11)
+### M2 follow-ups — four closed by M3, one by M5, two open, one standing (2026-09-11)
 
 M2 is **done**, not perfect. Everything below was carried from the builders' and
 the verifiers' own "problems" notes; none of it blocked M3, and each line says
@@ -329,7 +329,7 @@ the M3 follow-ups list below, and left 3, 4 and 7 exactly where they were.
 | # | what it was | status after M3 |
 |---|---|---|
 | 1 | the last `state` before `over` | **closed** — the emitter flushes it; amendment **M11** names the one path that cannot |
-| 2 | ask kinds with no engine evidence | **partly** — was seven, now **six**; `ability_menu` and `assign_damage` are in the corpus |
+| 2 | ask kinds with no engine evidence | **closed by M5, 2026-09-12** — was seven, then six; now nine of eleven are engine recordings and the other two (`options`, `manipulate_list`) are proved unreachable in the jar's bytecode. `sideboard` alone remains, as M5 follow-up 1 |
 | 3 | gate 0's `"unknown"` arm never observed | **open**, unchanged |
 | 4 | M9's pre-header path is self-test-only | **open**, unchanged |
 | 5 | the `transport` header key optional or mandatory | **closed** — it stays optional (**D26**) |
@@ -360,7 +360,7 @@ the M3 follow-ups list below, and left 3, 4 and 7 exactly where they were.
    never did, and its banner now says *"No result — the session ended before the
    engine published an outcome"* rather than "Draw." for that shape. The five
    human fixtures were re-recorded with the final snapshot present.
-2. **partly closed — six of the eleven ask kinds still have no engine evidence**
+2. **closed by M5 — six of the eleven ask kinds still had no engine evidence**
    (was seven; **`ability_menu` closed it in M3's review pass**). The committed corpus now
    contains **four** — `choose_list`, `order`, `assign_damage` and `ability_menu`
    — and a fifth, `choose_entities`, fired in an uncommitted console session
@@ -371,7 +371,8 @@ the M3 follow-ups list below, and left 3, 4 and 7 exactly where they were.
    against report 07 §7, unit-tested by `mtgtable.AskSelfTest`, and shape-pinned
    by `ASK_SHAPES` plus the hand-written fixture — **none of which can prove the
    emitter**. Two of them are reveal surfaces and are already scheduled as M5's
-   first move (the probe decks).
+   first move (the probe decks). **CLOSED 2026-09-12**, by four probe decks and
+   two bytecode proofs — see M3 follow-up 4 below and §M5.
 3. **Gate 0's `"unknown"` arm has never been observed at runtime.** `unzoned
    cards = 0` in every game run so far, so the null-`ZoneType` branch of
    `Snap`'s concealment gate is reasoned and reviewed, not measured. Reaching it
@@ -722,7 +723,7 @@ before a human seat exists:
 strings, we do not): the checker **warns** on it, and it is accepted residual
 risk, documented in report 06 §10 (residual risk 3).
 
-### M3 follow-ups — eleven, two closed 2026-09-12 (5 and 7), nine open
+### M3 follow-ups — eleven, three closed 2026-09-12 (4, 5 and 7), eight open
 
 M3 is **done**, not perfect. Every line below is carried verbatim from the two
 builders' and the two verifiers' own "problems" notes, and none of it blocks M4.
@@ -730,6 +731,8 @@ builders' and the two verifiers' own "problems" notes, and none of it blocks M4.
 sub-steps, no change to `bridge/` and none to `web/` — and both are struck through
 below with what closed them (evidence:
 [`docs/evidence/m3-followups.md`](docs/evidence/m3-followups.md)).
+**Follow-up 4 was closed by M5's probe decks the same day** (evidence:
+[`docs/evidence/m5-probes.md`](docs/evidence/m5-probes.md)).
 Nothing here is a known leak: the redaction gate now runs over a socket
 recording and a client log as well as the fixtures. They are gaps in *evidence*,
 two races that are shrunk rather than eliminated, and a handful of decisions
@@ -760,13 +763,23 @@ worth re-reading when their assumptions change.
    own input has moved, so the call lands on an input that no longer wants it. A
    second outstanding-ask registry on the `Transport` interface for one kind was
    judged too much for M3; that judgement is what M5 should re-take.
-4. **Six of the eleven ask kinds still have no engine evidence** — `confirm`,
-   `options`, `text`, `assign_amount`, `manipulate_list`, `sideboard`. They are
-   implemented against report 07 §7, unit-tested by `mtgtable.AskSelfTest`,
-   shape-pinned by `ASK_SHAPES`, rendered by `AskModal.tsx` and mounted by
-   `web/test/ask-modal.test.tsx` — **none of which can prove the emitter**. This
-   is M2 follow-up 2, now one kind shorter, and **M5's first move** is the two
-   probe decks for the two that are reveal surfaces.
+   **M5 did not re-take it, and said why** (`m5-board.md` §10): the browser still
+   answers a multi-ability card through the `ability_menu` and still never sends
+   the `clickAbility` act, so asynchronous asks did not become common and neither
+   this nor follow-up 2 changed. The act itself is now proven end to end from a
+   script (`check-all.sh` 10f), which is the half that was missing.
+4. ~~**Six of the eleven ask kinds still have no engine evidence**~~ — `confirm`,
+   `options`, `text`, `assign_amount`, `manipulate_list`, `sideboard`.
+   **CLOSED 2026-09-12**, by four probe decks rather than the two this item asked
+   for: `confirm`, `text`, `assign_amount` and `choose_entities`-with-a-
+   `delayedReveal` are now committed engine recordings; `options` and
+   `manipulate_list` are **proved unreachable** in this configuration, in the
+   jar's own bytecode (amendments **M22**/**M23**), which is a stronger answer
+   than a recording would have been; and `sideboard` alone is still open and is
+   now M5 follow-up 1, blocked on M6's multi-game session (**M27**). The probes
+   also caught two *answers* that were legal and non-terminating — the class of
+   defect an un-evidenced kind hides, and the reason this item was worth the
+   evenings. Full table: §M5 above and `docs/evidence/m5-probes.md` §1.
 5. ~~**Amendment M11's exception path has never been observed.**~~ **CLOSED
    2026-09-12.** `tools/ws-smoke.mjs --concede-before-input` connects on a retry
    loop *before* `GET /health` says `ok` (the port binds ~1 s earlier), sends
@@ -963,13 +976,24 @@ how a rule that took two verification passes to get right gets lost:
 never gated on `selectable`; and `<Board actions={…}/>` is still the whole of the
 difference between a replay and a seat.
 
-### M4 follow-ups — open, 2026-09-12
+### M4 follow-ups — five closed by M5, one not reproduced, two open (2026-09-12)
 
 Eight items, from the builders' own "problems" notes and the verifier's findings.
-**None is a defect you can see from the board**, and none blocks M5: four are
-documentation or test-quality debt (2, 4, 5, 8), two are cosmetic (6, 7), one is
-the size of a build output in a gitignored directory (1), and one is a crash seen
-exactly once and not reproduced (3).
+**None was a defect you could see from the board**, and none blocked M5.
+
+| # | what | status |
+|---|---|---|
+| 1 | `mana-font` drags 3.72 MB of faces into the build | **closed** — the fork was taken; `dist/assets` is 4 files / 1,432,461 B with **one** 187,400 B font (**D32**, `docs/evidence/m5-board.md` §7.1) |
+| 2 | report 10 §2.2's middle-row arithmetic is 23 px out | **open** — spec debt, not CSS; do not "fix" the CSS to match the table |
+| 3 | `TypeError: set is not iterable`, once | **not reproduced** — hunted again over a full live game and both replay passes; the stale-HMR-module explanation stands and no guard was added |
+| 4 | `render.test.tsx`'s "no `useState`, no `useEffect`" paragraph is false | **closed** — rewritten on today's terms |
+| 5 | the selectable-outline assertion is order- and name-coupled | **closed** — the id/selectable pair is matched independently of the name and of attribute order |
+| 6 | the log drawer is 520 px against a 264 px rail | **closed** — drawer x=12 w=264 against rail x=12 w=264 at 1600×900, 216/216 at 1280×720, measured live |
+| 7 | the hand fan's outer tiles leave their grid cell | **closed** — hand row 190 px vs tallest tile 177 px (lowest bottom 882 ≤ 888) at 1600×900, 150 vs 139 (705 ≤ 710) at 1280×720; no horizontal body scroll at either size |
+| 8 | `check-redaction.mjs` cannot read a four-line M11 session | **open** — 10e still asserts the stronger property directly instead; widening `preGameOnly` is whoever owns the checker's call |
+
+The detail of each closed row is below, as it was written; the table above is the
+status.
 
 1. **`mana-font`'s CSS drags ~3.5 MB of faces nothing fetches into the build.**
    Measured on the M4 documentation gate run: nine font files totalling
@@ -1047,19 +1071,67 @@ one tool call per click; an agent driving the board does not.
 
 ## M5 — Nothing dead-ends
 
-**Status: not started.**
+**Status: built, verified, and fixed — 2026-09-12.** The probe decks, the board
+work and **two** independent verification passes are all in
+`docs/evidence/m5-probes.md`, `docs/evidence/m5-board.md` and
+`docs/evidence/m5-fixes.md`. Amendments **M22–M27** (the probes) and **M28–M31**
+(the first verification's three dead ends) are in `docs/protocol.md`. The second
+pass found one major and two minors and no new wire shape: the combat-band strip
+was an implicit grid row that collapsed both middle zone rows at 1600 × 900
+(`m5-board.md` §11), `useMana` had no end-to-end gate although `check-all.sh`
+said it did (now `ten-games.sh` assertion 8), and the picker's reach was
+overstated (the census below). All three are `m5-fixes.md` §10.
 **Effort: 3 evenings.**
 
-**Command**
+**Commands**
 
 ```bash
-./scripts/play.sh   # ten consecutive games
-grep UNIMPL var/*.log
+./scripts/play.sh                  # play it: the bridge, /health, vite, the board
+./tools/ten-games.sh               # THE exit criterion, as a command (seeds 1..10)
+./tools/ten-games.sh --games 3     # the first three rows, for a quick look
+./tools/check-all.sh               # runs ten-games.sh as step 9c; SKIP_TEN=1 skips it
+```
+
+The probe runs the exit criterion is built out of, for when one row fails and you
+want the session by hand (`--deck2 morph-probe` is load-bearing on all three —
+`docs/evidence/m2-console.md` §9.3):
+
+```bash
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --seed 7 \
+    --game-id human-search-7 --deck decks/search-probe.dck --deck2 decks/morph-probe.dck
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt --seed 7 \
+    --game-id human-amount-7 --deck decks/amount-probe.dck --deck2 decks/morph-probe.dck
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --seed 7 \
+    --game-id human-number-7 --deck decks/number-probe.dck --deck2 decks/morph-probe.dck
 ```
 
 **Deliverable / exit criterion.** Ten consecutive games with **zero `UNIMPL`
 lines** and no state where the board is stuck waiting on something the browser
 cannot express.
+
+**Met, as a script rather than as a memory.** `tools/ten-games.sh` is that
+sentence: ten `--transport auto` games at seeds 1..10, **alternating
+`decks/pacho-shield.dck` and the five probe decks** — ten games of one deck would
+only prove the engine does not dead-end on the paths that deck reaches — and each
+one held to eight assertions: exit 0 and `MTGTABLE OK`; `finished = true`;
+`UNIMPL members = none` **and** not one raw `UNIMPL` line in either log; `emit
+errors = 0`; exactly one `over`, last; `check-redaction.mjs` over the whole frame
+log with no flags; **no more than 150 asks of one kind in one game** (the one
+wedge every other assertion is blind to — a `confirm` backstop that latched
+produced 2,278 identical asks and a 35 MB log inside one 300 s step); and **the
+typed acts a row exists to prove, plus their effect** — seed 4 must send
+`useMana` *and* the seat's `manaPool` must be strictly smaller in the `state`
+after it than in the `state` before. The run: `10/10 … 268 s`, 165 player turns,
+**seven of the eleven ask kinds in one command**, ten `PASS` lines from
+`check-redaction.mjs` (`docs/evidence/m5-probes.md` §10). It asserts that
+**nothing dead-ends**, not that every kind fires — which kinds a seed raises is a
+property of the shuffle, so a missing one prints `ADVISORY:` and is never an exit
+code.
+
+**The deliverable as it was written, before any of it existed** — kept verbatim,
+because what it got wrong is worth seeing: it treats "a modal for these kinds" as
+the job (M4 had already shipped those, and M5's job turned out to be the
+opposite), and it asks for arrows M4 had already drawn.
 
 Every `ask` kind gets real UI: mana payment (tap lands plus the engine's own Auto
 button, which runs `ComputerUtilMana.payManaCost` inside `InputPayMana`),
@@ -1068,17 +1140,83 @@ targeting from `selectable` min/max, attacker and blocker declaration,
 `assign_amount`; click-to-open graveyard and exile browsers; SVG targeting arrows
 from `stack[].targetCardIds` and `combat.bands`.
 
-**Start with two probe decks, before any UI.** The committed corpus contains
-**three** of the eleven ask kinds — `choose_list`, `order` and `assign_damage`,
-the last only because `decks/trample-probe.dck` was built to force it — plus
-`choose_entities` in an uncommitted console session
-(`docs/evidence/m2-console.md` §3.2, §8, §11). The two worth forcing next are the
-largest *reveal* surfaces, where being wrong is a leak and not a dead end: a deck
-that forces `choose_entities` **with a `delayedReveal`** (a library search) and
-one that forces `manipulate_list`. Same move as `trample-probe` and `scry-probe`:
-a deck, a recording committed as a fixture, and the checker run over it. Until
-then those two kinds are evidenced by `AskSelfTest` and a fixture we wrote
-ourselves, which cannot prove the *emitter* is right.
+**It did start with probe decks, and that was the right order.** Four new decks
+(`search-probe`, `amount-probe`, `number-probe`, `sideboard-probe`) and four new
+committed fixtures turned four of the six evidence-less kinds into recordings,
+and **proved two of the other two unreachable in this configuration rather than
+merely un-recorded** (amendments M22/M23). The probes also found the two answers
+that were legal and still non-terminating — a `confirm` and a numeric `text` —
+which no shape check could ever have seen. The current state of all eleven kinds
+is the table in `docs/evidence/m5-probes.md` §1.
+
+**What the evidence shows — all eleven kinds, where each one's evidence lives.**
+Nine of eleven are now engine recordings; the other two are **documented
+ceilings** rather than gaps, and the proof for both is bytecode in the 2.0.14 jar
+rather than a search that came up empty.
+
+| kind | engine evidence | where |
+|---|---|---|
+| `choose_list` | yes, since M2 | every human-seat fixture (57 in the corpus) |
+| `order` | yes, since M2 | `human-auto-42`, `human-scry-7`, … |
+| `assign_damage` | yes, since M2 | `human-trample-7` (the deck exists to force it), `human-ability-42` |
+| `ability_menu` | yes, since M3 | `human-ability-42.jsonl` — 7 asks and **7 `clickAbility` acts** |
+| `choose_entities` + `delayedReveal` | **new, M5** | `human-search-7.jsonl` — `decks/search-probe.dck`, Rampant Growth |
+| `assign_amount` | **new, M5** | `human-amount-7.jsonl` — `decks/amount-probe.dck`, Manamorphose; §5.3's **colour-keyed** branch |
+| `confirm` | **new, M5**, behind a non-default pref | `human-amount-7.jsonl` + `--mana-lost-prompt` (**M24**) |
+| `text` | **new, M5** | `human-number-7.jsonl` — `decks/number-probe.dck`, Volcano Hellion, `getInteger`'s *"Other…"* (**M25**) |
+| `options` | **unreachable** | `IGuiGame.showOptionDialog` has **zero** call sites in the jar (**M22**) |
+| `manipulate_list` | **unreachable while D13 holds** | one caller, pref-gated on `UI_SELECT_FROM_CARD_DISPLAYS` (**M23**) |
+| `sideboard` | **still none** | `--games 2` is necessary and not sufficient (**M27**) — M6 owns it |
+
+**No wire shape changed.** Every body the probes produced already matched
+`docs/protocol.md` §5.2 as written, all four new fixtures passed
+`check-redaction.mjs` with no flags, and the 2026-09-12 amendments record
+*reachability*, not a change of shape. What the probes did change is two
+**answers**: a `confirm` answered `false` forever and a numeric `text` answered
+`""` forever are both legal and both non-terminating (`m5-probes.md` §9), which
+is the defect shape a kind without engine evidence hides and which no shape check
+could have caught.
+
+**And the headline is narrower than it sounds, so here is the number.** "The
+board-shaped ones stop being a modal" is true and, against this engine and these
+decks, reaches **exactly one kind**: over the 15 recordings in
+`fixtures/games/` — **108 asks** — `boardPick` accepts **3**, and all three are
+`assign_damage`. The `choose_list` branch of the picker is exercised only by the
+hand-written `fixtures/synthetic/sample-handwritten.jsonl`, and no live browser
+session has produced a card picker yet. That is not a gap in the rule: the only
+other card-optioned asks in the corpus are 22 `choose_list` **reveals**
+(`min = max = −1`, §5.3) and 7 `choose_entities` that all carry a
+`delayedReveal` (§5.3), and both are modals *by design*, while the rest have no
+board entity to point at — `ability`, `color`, `other`, `number` options, or no
+options at all. `options` would be the last candidate and is unreachable
+(**M22**). The full table is `docs/evidence/m5-board.md` §1.1, and
+`web/test/picker.test.ts` prints the census on every run so the number moves the
+day a card picker appears.
+
+**What the board gained**, against the list "What M4 hands to M5" below wrote:
+
+1. **`useMana`** — a colour the pool actually holds is a `<button>` on your own
+   rail, and `W U B R G C` spend it from the keyboard. **The one real dead end,
+   closed** (`m5-board.md` §2, and the wire line is quoted there).
+2. **Board-shaped asks stop being modals** — `render/picker.ts` decides it,
+   purely, and `AskPicker` is the decision panel's half (`m5-board.md` §1;
+   the rule and its rejected alternatives are **D33**).
+3. **Zone browsers** — a graveyard / exile / command caption and the rail's
+   revealed library slice open a panel of full-size `CardTile`s, and
+   `input.openZones` opens one *by itself* (`m5-board.md` §3).
+4. **The declared combat bands** as a strip, read from `combat.bands` only.
+5. **A pending-target arrow** — from the source of the choice to the candidate
+   under the pointer, and honestly absent where the source is not on the board
+   (`m5-board.md` §5).
+6. **`chosen k of min..max`** while a selection is open — printed, never
+   enforced, and labelled as clicks sent rather than as a count the engine
+   published (`m5-board.md` §6).
+7. **Five of the eight M4 follow-ups**, including `mana-font` (**D32**).
+
+All of it through the one `CardTile`, which is now imported by exactly ten files
+(CLAUDE.md §"The web client"); the picker marshals nothing — the answer is built
+by `AskModal`'s own `answerFromDraft`, so the two surfaces cannot disagree about
+what an answer looks like.
 
 ### What M4 hands to M5 — what the board can and cannot express
 
@@ -1144,36 +1282,187 @@ a name for a `hidden: true` id gets back onto the screen, and it is exactly what
 `render.test.tsx`'s per-frame name check would *not* catch if the markup stopped
 carrying `data-card-name`.
 
-**The six ask kinds still without engine evidence** are unchanged (M3 follow-up
-4): `confirm`, `options`, `text`, `assign_amount`, `manipulate_list`, `sideboard`.
-The committed corpus has three kinds from the engine — `choose_list`, `order`,
-`assign_damage` — plus `choose_entities` in an uncommitted console session and
-`ability_menu` from the live browser games. The six are implemented against report
-07 §7, unit-tested by `mtgtable.AskSelfTest`, shape-pinned by `ASK_SHAPES`,
-rendered by `AskModal.tsx` and mounted over `fixtures/synthetic/` —
-**none of which can prove the emitter.**
+**The six ask kinds without engine evidence — settled, 2026-09-12** (this
+supersedes M3 follow-up 4). Written before M5; here is what the probe decks
+actually found, row by row, against the amendments they produced:
 
-**So M5's first move is still two probe decks, before any UI**, for the two kinds
-that are *reveal* surfaces, where being wrong is a leak rather than a dead end:
+| kind | before M5 | now |
+|---|---|---|
+| `choose_entities` + `delayedReveal` | one uncommitted console session | **`fixtures/games/human-search-7.jsonl`** — `decks/search-probe.dck`, Rampant Growth |
+| `assign_amount` | none | **`fixtures/games/human-amount-7.jsonl`** — `decks/amount-probe.dck`, Manamorphose; the colour-keyed branch of §5.3 |
+| `confirm` | none | **`fixtures/games/human-amount-7.jsonl`** — the same deck plus `--mana-lost-prompt` (**M24**: one reachable call site, `InputPassPriority`, behind `FPref.UI_MANA_LOST_PROMPT`) |
+| `text` | none | **`fixtures/games/human-number-7.jsonl`** — `decks/number-probe.dck`, Volcano Hellion, through `getInteger`'s "Other…" (**M25**) |
+| `options` | none | **unreachable, and not only for a human seat** — `IGuiGame.showOptionDialog` has **no call site anywhere** in the 2.0.14 jar (**M22**). A documented ceiling, not a gap. |
+| `manipulate_list` | none | **unreachable while D13 holds** — one caller, pref-gated on `UI_SELECT_FROM_CARD_DISPLAYS`, confirmed in the jar's bytecode (**M23**). |
+| `sideboard` | none | **still none.** `--games 2` is necessary and not sufficient: `emitOver` ends the session on game 1's `matchOver:false` (**M27**). `decks/sideboard-probe.dck` and the flag exist; making it fire is M6's `HostedMatch.restartMatch` row. |
 
-1. a deck that forces **`choose_entities` with a `delayedReveal`** — a library
-   search, i.e. the engine handing the client cards out of a hidden zone;
-2. a deck that forces **`manipulate_list`** (`UI_SELECT_FROM_CARD_DISPLAYS` is off
-   in every process — **D13** — so what arrives is the list, not a board click).
-
-Same move as `decks/trample-probe.dck`, `scry-probe`, `morph-probe` and
-`future-sight-probe`: a deck, a recording committed under `fixtures/games/`,
-`tools/check-redaction.mjs` over it, and `web/test/render.test.tsx` picking it up
-for free because it globs the fixture tree.
+So: **four kinds recorded, two proved unreachable, one still open and handed to
+M6.** `ability_menu` came from the live browser games and `choose_list`, `order`
+and `assign_damage` were already in the corpus, which makes nine of eleven
+evidenced and the two ceilings documented.
 
 **Two shapes a new panel must not assume away**, the same two M4 was handed: an
 `over` with no `gameOver` `state` in front of it (**M11** — now measured, M3
 follow-up 5) and a `seq` that can arrive lower than the frame before it after a
 `resync` (**M10**).
 
+### M5 follow-ups — thirteen, 2026-09-12
+
+From the two builders' own "problems" notes and the two verification passes.
+**None of them stops a game**: the exit criterion is met, ten games run with zero
+`UNIMPL`, and the one real dead end M4 named is closed. **Four belong to M6** by
+ownership (1, 2, 9, 10); **three are test- or tooling-quality debt** (3, 4, 6);
+**two are accepted trades** with the escape hatch measured (5, 8); **two are
+facts about what Forge asks or about the browser harness**, not defects (7, 13);
+**one is corrected in place today** (12); and **one is carried over from M4**
+(11).
+
+1. **`sideboard` still has no recording, and only M6 can give it one.**
+   `decks/sideboard-probe.dck` is correct and `MtgTable --games 2` exists; the
+   ask cannot fire because the session does not survive game 1's `over` with
+   `matchOver: false` — `WireGuiGame.emitOver` counts the `finished` latch down
+   and sets `overEmitted`, after which `ask()` returns `null` before emitting
+   (**M27**). The wire is right; the session ends too early. M6's
+   `HostedMatch.restartMatch` row.
+2. **`confirm` is invisible on stock Forge preferences.**
+   `FPref.UI_MANA_LOST_PROMPT` defaults to `"false"`; `--mana-lost-prompt` sets
+   it in memory for probe runs only (**M24**). Whether to turn it on for the user
+   — it is a genuinely useful warning — is an M6 comfort decision, deliberately
+   not taken here.
+3. **The default auto-answer policy changed for two kinds, in a shared file.**
+   `AutoTransport.answerFor` (mirrored line for line in `tools/ws-auto-play.mjs`)
+   now answers a `confirm` with the body's own `defaultYes` instead of `false`,
+   and a **numeric** `text` with `null` instead of `""`; from the third identical
+   prompt *with no progress in between* the confirm answer alternates, the
+   counters clear whenever a `state` changes `turn|phase|activePlayer`, and
+   `ASK_REPEAT_CAP = 20` answers and then concedes. No committed fixture contains
+   either kind and 9b's multiset diff of `human-auto-42` is unchanged, so nothing
+   was re-recorded — but **it is a policy change to a shared file and should be
+   read as one**, and the alternating backstop is a heuristic: it guarantees no
+   single prompt loops forever, not that the answer it lands on is the one a
+   human would have given. `AskSelfTest` (106 checks) and ten-games' 150-asks-of-
+   one-kind ceiling are what would notice it regressing.
+4. **There is no DOM test environment**, so three of M5's load-bearing
+   measurements are pinned by numbers in a document rather than by an assertion:
+   the `.table__middle` grid tracks after the band fix, the caption
+   hit-testing, and `dist/assets`' font count. `node --test` type-strips and
+   vitest runs in the `node` environment (CLAUDE.md §"The web client").
+   `web/test/hooks-order.test.ts` is a **source scan** — negative-controlled, and
+   it exists because a `useMemo` below `Board`'s early return shipped and the
+   whole suite stayed green — but it is not a rules-of-hooks check, and any other
+   component with an early return is still unguarded. Adding jsdom is a
+   dependency decision nobody has taken.
+5. **The combat-band strip is an overlay, and while it is tall it covers the
+   graveyard / exile strips behind it** (**D36**). That is a trade, not a free
+   fix: at 1600 × 900 the middle is on its 120 px floor and two 62 px strip rows
+   already want 128 px. Mitigated and measured — the strip shrink-wraps (453 px
+   of a 910 px middle) and sits at `z-index: 55`, **below** the caption buttons'
+   60, so the zone browser stays reachable and its tiles clickable. A graveyard
+   card Forge makes clickable while bands are on screen must be clicked in the
+   browser panel rather than on the strip.
+6. **9b prints `MULTISET DIFFERS: 2 frame instance(s)` under machine load.** It
+   is one frame — `input {prompt:"Waiting for Forge AI..."}` at ×16 against ×14 —
+   i.e. two ticks of `awaitNextInput()`'s 250 ms re-push with vite and a browser
+   on the same machine. `MULTISET IDENTICAL: 1588` on a quiet one — twice by
+   hand, and again on the documentation pass's own gate run — and no `.java` file
+   is in M5's fix diff. The step is advisory by design; either teach the diff
+   about that one prompt or leave it loud.
+7. **The board picker reaches exactly one kind here** — 3 of the 108 asks in
+   `fixtures/games/`, all `assign_damage`. The `choose_list` branch is exercised
+   only by `fixtures/synthetic/sample-handwritten.jsonl`, so half the picker is
+   pinned by a file we wrote. Not a gap in the rule (§1 above says why every
+   other card-optioned ask is modal *by* a stated rule), and
+   `web/test/picker.test.ts` prints the census every run so the number moves
+   visibly the day a live card picker appears.
+8. **`assign_amount` is not a picker** even when its targets are entities the
+   board draws: §5.3's keys may be colours and the corpus's eleven all are. A
+   one-line change to `boardPick` on the day a recording shows entity keys.
+9. **`clickAbility` still never leaves the browser.** It is proven end-to-end
+   over the socket (`check-all.sh` 10f, 7 acts) and from `AutoTransport`, but the
+   board's own path for a multi-ability card is still the asynchronous
+   `ability_menu` (**D20**/**D22**), which reaches the same
+   `IGameController.selectAbility`.
+10. **`input.weak` is still `[]` on the wire** (M4's tile style has no data), and
+    `input` still carries no typed *"the engine is collecting mana"* field. The
+    second is the protocol row that would let a client offer the mana pips only
+    during a payment without matching a button label — **M30** leaves it to M6
+    explicitly.
+11. **Two M4 follow-ups carry over unchanged**: report 10 §2.2's middle-row
+    arithmetic is 23 px out against the built board (spec debt — do not "fix" the
+    CSS to match the table), and `check-redaction.mjs` still cannot read a
+    four-line M11 session, which is why 10e asserts the stronger property
+    directly instead.
+12. **`docs/evidence/m5-probes.md` §12 overstates its own un-recorded corners**,
+    and the correction is appended there: `reveal: true` is **22** asks across
+    five engine fixtures and `maySkip: true` is **2**, so the only corner of an
+    otherwise-evidenced kind that no engine recording carries is `order` with
+    `sideboardMode: true` — which is the `sideboard` row's neighbour and blocked
+    on the same M6 work.
+13. **The user still has not pressed the space bar.** Unchanged from M3
+    follow-up 9: the browser driver delivers `Space` as
+    `{key:"", code:"", keyCode:0}`, so the binding is covered by `keys.test.ts`
+    and by the buttons being clicked directly, and by nothing else.
+
+### What M5 hands to M6
+
+Read [`docs/research/11-engine-comfort-features.md`](docs/research/11-engine-comfort-features.md)
+in full first — the corrections under **M6** below are its summary, not a
+replacement for it. What follows is only what M5 changed about M6's starting
+position.
+
+**Already on the wire, so do not build it twice.**
+
+- **`useMana` is a real control with a real gate.** The pips are buttons, the
+  keyboard spends, and `ten-games.sh` assertion 8 asserts both the act *and* its
+  effect on the seat's `manaPool`. M6's "auto-pay" is therefore **not** a new
+  act: Forge writes `Auto` on `InputPayMana`'s own OK button and M3 already
+  renders `buttons.*.label` verbatim, which is why the keymap's `A` row now reads
+  *"press SPACE instead: it is the engine's OK button"*. There is no `autoPay`
+  act and inventing one is the "board threw the engine's answer away" failure.
+- **`clickAbility` works end to end** (`check-all.sh` 10f asserts 7 acts over the
+  socket, none unresolvable), so a yield feature that needs to name an ability
+  has a proven path.
+- **Every M6 key is already a row in the one keymap** — `CTRL+Z`, `E`, `T`, `B`,
+  `CTRL+A`, `Y`, `N` — flashing their milestone rather than doing nothing
+  quietly. M6 adds acts and a row's `milestone`, never a new branch in the
+  handler (`web/src/keys.ts`, CLAUDE.md §"The web client" rule 4).
+- **The session header records what shaped a run** (**M31**): `policy: "probe"`
+  and `prefs: ["UI_MANA_LOST_PROMPT"]`, optional and omitted when unset. A
+  multi-game session has to keep that honest per game.
+- **The wedge banner has a seventh clause** (**M28**): an **enabled `Cancel`** is
+  by construction not a wedge. M6's yields put an enabled Cancel on screen
+  constantly (`InputLockUI` labels it while a yield runs), so that clause is what
+  keeps the red banner off an ordinary auto-yield.
+
+**The three things M6 has to do that M5 proved it has to do.**
+
+1. **A session that survives `matchOver: false`** — `HostedMatch.restartMatch`,
+   a **new `hello_ok`** so the client drops its card map (§2.1), and the
+   `ReplyPool`, the cached ids, the phase-stop map and the frame log all rebuilt
+   from `openView`. That single piece of work unlocks the `sideboard` ask
+   (follow-up 1), `order` with `sideboardMode: true` (follow-up 12) and the
+   `nextGame` act at once.
+2. **A typed field for "the engine is collecting mana"** on `input`
+   (follow-up 10, **M30**). Without it, a client that wants to offer the pips
+   only during a payment has to match an engine button label, which
+   `CLAUDE.md` §Scope forbids.
+3. **`players[].phaseStops`** (**D31**) — the dots are Forge's documented
+   defaults and read-only until the field exists, answered from `WireGuiGame`'s
+   own map and never from `FPref` or `YieldController` (the `isRemoteClient()`
+   branch is dead code for us).
+
+**And one comfort decision M5 deliberately left to M6 and to the user:**
+whether `UI_MANA_LOST_PROMPT` goes on for real games (follow-up 2). If it does,
+nothing else has to move — the board already renders a `confirm`, and the
+automated seat answers one terminatingly.
+
 ## M6 — Comfort
 
-**Status: not started.**
+**Status: not started.** Read **"What M5 hands to M6"** above before planning the
+two evenings: five of these features are already on the wire and one of them is
+already a rendered button, and **one piece of work —
+`HostedMatch.restartMatch` — unblocks three separate rows at once** (New Game,
+the `sideboard` ask, and `order` with `sideboardMode`).
 **Effort: 2 evenings.**
 
 **Command**
@@ -1295,3 +1584,4 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 6 | Install a JDK? Not needed for this plan, but it would bring `jar`, `jshell`, a debugger and Maven. Unpack Temurin 21 into `tools/jdk/` (no sudo) or `apt install openjdk-21-jdk` (sudo)? | **No JDK. The JRE's `jdk.compiler` / `jdk.jdeps` modules suffice.** |
 | 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | Undecided — **NOTICE is written to publication quality anyway**, so either answer works. |
 | 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **AI difficulty stays deferred.** |
+| 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **Off, as Forge ships it** — turning it on is an M6 comfort decision, and nothing else has to move if it is taken (the board renders a `confirm` already). M5 follow-up 2. |

@@ -983,7 +983,10 @@ fetch ladder landed on (`art.ts`'s own header rule 2).
 
 ## D29 — `mana-font` is a bundled dependency, and its `@font-face` is overridden rather than forked
 
-**2026-09-12**
+**2026-09-12** — **the "overridden rather than forked" clause is superseded by
+D32 (2026-09-12).** The bundling decision, the licence accounting and the cost
+measured below all stand; what changed is that the fork was taken, and the
+3.5 MB this entry predicted is the reason.
 
 **Decision.** `mana-font@1.18.0` (MIT for the CSS, OFL-1.1 for the glyphs) is the
 web client's one runtime style dependency, as report 10 §13 allows. `main.tsx`
@@ -1104,3 +1107,250 @@ turn/phase readout is useful on its own). A live toggle with client-side state
 (see above). An enabled dot that sends `setPhaseStop` into a bridge that ignores
 it (a control that does nothing when pressed is worse than one that says why it
 is disabled).
+
+---
+
+## D32 — `mana-font`'s stylesheet is FORKED after all, and D29's "overridden rather than forked" clause is superseded
+
+**2026-09-12**
+
+**Decision.** The web client no longer imports `mana-font/css/mana.css`. It
+imports `web/src/mana.css`, a **filtered extract** of that file (MIT for the CSS,
+the glyphs SIL OFL 1.1, the symbols © Wizards of the Coast — NOTICE §5/§6) with
+the package's two `@font-face` blocks replaced by **one** naming the woff2 the
+package ships. This **supersedes the "overridden rather than forked" half of
+D29**, and only that half: D29's decision to bundle `mana-font` rather than draw
+pips by hand or hot-link a CDN stands unchanged, as does its licence accounting.
+
+D29 is left as it was written, per this file's own rule. Read the two together.
+
+**Rationale — the number D29 stated as a cost and this closes.** Importing the
+package stylesheet makes Vite resolve every `url()` in it into the build:
+**nine font files, 3.72 MB** in `web/dist/assets/`, of which the browser fetches
+exactly one — the 187.40 kB `mana.woff2` that `styles.css` overrode the rest
+with. `mana.svg` alone is 1.9 MB, and **MPlantin** (four files) is a font this
+project never names. An override wins the `@font-face` race at *run* time and
+does nothing at *build* time, which is where the bytes are.
+
+**Measured after the fork**, `npm --prefix web run build`: `web/dist/assets/` is
+**4 files, 1,432,461 B**, with **one** font — `mana-D0absDf6.woff2`, 187,400 B —
+and 922,040 B of that total is the JS source map. The eight faces totalling
+3,532,778 B are gone.
+
+**What the fork keeps, and why it is not a curated subset.** Every rule whose
+selector is composed only of classes this client can produce, including **all 612**
+`.ms-<symbol>` content rules. `manaSymbolClass()` turns whatever is inside a pair
+of braces into a class name, and the deck in play is not the only deck the
+opponent can be holding; a curated subset renders a blank pip for the first
+unexpected symbol. The derivation is a one-off script, kept in
+`docs/evidence/m5-board.md` §7.1 so the fork can be re-derived on an upgrade
+rather than hand-merged.
+
+**Rejected.** Keeping the override and living with 3.5 MB of dead assets (it is a
+localhost app, so nobody downloads them — but `dist/` is what a reader measures
+to see whether the client is small, and 3.72 MB of fonts for one 187 kB face is
+a number that invites the wrong conclusion). Curating the symbol list (above).
+Patching the package in `node_modules` or via a postinstall step (invisible,
+and it does not survive `npm ci`). Vendoring the whole `mana.css` unfiltered (the
+MPlantin block would come with it).
+
+---
+
+## D33 — A question is answered on the board iff EVERY option is already drawn there
+
+**2026-09-12**
+
+**Decision.** `web/src/render/picker.ts` holds one rule, pure and testable:
+
+> An `ask` is board-shaped **iff every one of its options is a card the board is
+> already drawing a tile for, or a player it is drawing a rail for.**
+
+Such an ask is answered with clicks on the board itself plus `AskPicker` in the
+decision panel (candidates, running count, Answer / Default / Cancel / Reset).
+Every other ask stays the M3 modal, unchanged. Two shapes are **never** pickers
+even when their options are cards: a `choose_list` with `reveal: true`
+(`min = max = -1`, acknowledge only) and a `choose_entities` with a
+`delayedReveal`. And the picker **marshals nothing** — the answer is built by
+`AskModal`'s own `answerFromDraft` / `defaultDraft` from the same `AskDraft`, so
+the two surfaces cannot disagree about what an answer looks like.
+
+**Rationale — each clause is load-bearing.**
+
+- **Every, not most.** A picker that can express four of five options is a dead
+  end for the fifth, and "nothing dead-ends" is the whole milestone. One option
+  outside the board sends the whole ask to the modal.
+- **Already drawing, not "the id resolves".** `drawnEntities()` is written
+  against what `Board.tsx` mounts, not against `resolve.findCard`. The two are
+  different sets on purpose: another seat's hand is in the snapshot as five-key
+  stubs and is **never** drawn, and an unrevealed library card has no tile. A
+  rule written against the snapshot would have offered a click on a card the
+  player cannot see — hard rule 8's failure mode, arriving through the picker.
+  `stackCards` are excluded too, because `S` can collapse the stack panel.
+- **A reveal is not a choice made on the board.** The engine handing you cards
+  out of a hidden zone has no tiles to point at; drawing them is the modal's job,
+  and it now draws them as real `CardTile`s.
+- **`assign_damage` is the same question about a different answer shape**: it is
+  board-shaped when every *blocker* has a tile, because that is where the number
+  inputs go. The defending player is option 0 and keeps its panel row; the index
+  is never renumbered.
+
+**What it actually reaches, so nobody oversells it.** Over the 15 engine
+recordings in `fixtures/games/` — 108 asks — the rule accepts **3**, all
+`assign_damage`. The `choose_list` branch is exercised only by
+`fixtures/synthetic/sample-handwritten.jsonl`. That is a fact about what Forge
+asks, not a gap in the rule: the other card-optioned asks in the corpus are 22
+reveals and 7 delayed reveals, modal *by* the clause above, and the rest have no
+board entity at all (`ability`, `color`, `other`, `number`). `options` would be
+the last candidate and has no call site in the jar (**M22**).
+`web/test/picker.test.ts` prints the census on every run and asserts both columns
+non-empty, so the number moves visibly the day a card picker appears.
+
+**Rejected.** A per-kind allow-list ("`choose_list` and `choose_entities` are
+pickers") — it says nothing about whether *this* ask's options are on screen, and
+it is how the fifth option becomes a dead end. A partial picker with a "the rest
+are in the dialog" link (two surfaces for one question, and a count that has to
+be reconciled between them). Resolving option ids against the snapshot instead of
+against the mounted board (above — it offers clicks on concealed cards).
+Marshalling the answer in the picker (a second place for §5.3's index and key
+rules to be got wrong, and a recording cannot catch a divergence between them).
+
+---
+
+## D34 — The mana-pool pips ARE the `useMana` control, and they are live whenever the pool is non-empty
+
+**2026-09-12**
+
+**Decision.** `ManaPoolPips` takes an `onSpend`. On **your own** rail, a colour
+the engine's published pool actually holds renders as
+`<button data-act="useMana" data-mana="U">`; everywhere else (a replay, the
+opponent's rail, while an ask is outstanding) the six pips stay the M4 read-only
+badges. `W U B R G C` do the same from the keyboard, as a **pre-pass** in
+`planKey` so that with an empty pool `C` is still Forge's combat-arrow key and
+`B` is still M6's pass-to. The act body is exactly `{action, color}` and the
+colour is the **single letter** `protocol.ts` has typed since M1. The pips are
+offered whenever the pool is non-empty and no ask is open — **not** only during a
+mana payment.
+
+**Rationale.** This is the one real dead end M4 handed over: the console seat has
+`m W|U|B|R|G|C` and the board had nothing, so a state in which Forge expects
+floating mana to be spent could not be resolved from the browser at all. Two
+sub-decisions:
+
+- **The single letter is safe, and it was checked rather than assumed.**
+  `MagicColor.fromName` tests `length == 2` on the raw string **first** (that
+  branch parses a colour *pair*) and only then lowercases and switches on
+  `w u b r g c`. A one-character `ManaColor` can never reach the pair branch, so
+  `"U"` arrives as blue. The other two transports send `"blue"`; both work
+  (**M26**, corrected by **M30**).
+- **Conditioning the control on "a payment is in progress" would mean reading
+  engine prose.** The only signal on the wire for that state is the *text* of a
+  button label (`Auto`), and deciding what a control does by matching an engine
+  string is exactly what `CLAUDE.md` §Scope forbids — the labels are Forge's, we
+  render them verbatim, and they are not a protocol. A pip pressed outside a
+  payment is a *meaningless act*, which §2.2 says the server drops: no exception,
+  no notice, no state change. Measured live, and the board neither hung nor
+  guessed. The honest fix is a typed field on `input`, which is an M6 protocol
+  row, not a board one.
+
+**Guarded end to end, not only as a pure mapping.** `tools/ten-games.sh`
+assertion 8 asserts both that seed 4 sends the act **and** that the seat's
+`manaPool` is strictly smaller in the `state` after it than in the `state`
+before — the half that would catch a bridge which accepted the act and dropped
+it. Until that assertion existed, `useMana` had no end-to-end coverage anywhere
+while `check-all.sh` said it did.
+
+**Rejected.** A separate "spend mana" panel or a modal (the pool is already drawn
+in exactly one place, and a second one is a second truth). Matching the `Auto`
+label to enable the pips (above). Sending a `cardId` with the act — "a `cardId`
+is a `clickCard`, not a `useMana`", and `web/test/pool.test.ts` asserts the body
+has exactly two keys. Making the six letters ordinary `KEYMAP` rows (a
+first-match lookup would have taken `C` and `B` away from the panels they already
+open); the row is last in the table and the pre-pass runs before it.
+
+---
+
+## D35 — Two ask kinds are documented CEILINGS, not gaps; and the probe policy is a flag, never a default
+
+**2026-09-12**
+
+**Decision.** `options` and `manipulate_list` are recorded as **unreachable in
+this configuration**, with the proof in the 2.0.14 jar's bytecode rather than in
+a search that came up empty: `IGuiGame.showOptionDialog` has **zero** call sites
+anywhere (**M22**), and `IGuiGame.manipulateCardList` has exactly one caller,
+gated on `UI_SELECT_FROM_CARD_DISPLAYS`, which `Bootstrap` sets to `"false"` in
+every process (**D13**, **M23**). Both kinds stay implemented, `AskSelfTest`-
+driven and shape-pinned by `ASK_SHAPES` and `fixtures/synthetic/`. Separately,
+everything that makes a probe recording reach further is a **flag**:
+`--probe` (`AutoTransport`'s four policy decisions taken the other way) and
+`--mana-lost-prompt` (`FPref.UI_MANA_LOST_PROMPT`, in memory, never `save()`d),
+both recorded in the session header as `policy` / `prefs` (**M31**).
+
+**Rationale.** "We never saw it" and "it cannot happen" are different claims, and
+only the second one lets a later reader stop looking. Writing the second one down
+costs a bytecode scan and buys a permanent answer — including the fact that
+turning D13's preference on is not a missing feature but the library leak §5.3
+warns about.
+
+The flags are flags because **the default policy is what the exit criterion and
+every M2/M3 fixture were recorded with**. A policy that reaches further also
+loses more games and takes longer to do it; conflating the two would mean the ten
+games no longer measure the game the user actually plays. 9b's multiset diff of
+`human-auto-42` is the proof that the default did not move.
+
+`confirm` is the same shape of answer with the opposite sign: it **is** reachable,
+from exactly one call site (`InputPassPriority`'s floating-mana warning), and only
+with a preference whose Forge default is off (**M24**). So it has a recording and
+is still invisible in an ordinary game — whether to turn it on for the user is an
+M6 comfort decision, deliberately left open.
+
+**Rejected.** Deleting the two unreachable kinds from the eleven (they are on the
+interface, `RemoteClientGuiGame` implements them, and a later Forge may use them;
+`ASK_SHAPES` and the synthetic fixture are their contract). Turning
+`UI_SELECT_FROM_CARD_DISPLAYS` on to get a `manipulate_list` recording (it ships
+the whole library to the client — the exact thing D13 exists to prevent, and a
+recording bought that way would be evidence of the leak, not of the kind).
+Making `--probe` the default for the automated seat (above). Writing
+`--mana-lost-prompt` to the preferences file (we never `save()`; it is the user's
+Forge profile).
+
+---
+
+## D36 — The combat-band strip is an OVERLAY, not a row of the middle grid
+
+**2026-09-12**
+
+**Decision.** `.bands` leaves the flow the way `.stackpanel` already had:
+`position: absolute`, anchored to the bottom-left of `.table__middle`,
+shrink-to-fit with `max-inline-size: calc(100% - var(--stack-w) - 10px)`, and
+`z-index: 55` — above any card tile (a tile's z-index is its `--i`) and
+**below the 60 the zone-row caption buttons carry**.
+
+**Rationale.** Mounted in the flow it was an implicit **third** row of a
+`grid-template-rows: 1fr 1fr` box, and an auto row is sized to its content before
+the `1fr` rows are given anything. At 1600 × 900 — where the middle is already on
+its 120 px floor — both zone rows measured **0 px**
+(`gridTemplateRows: "0px 0px 112px"`), the 62 px strip tiles overflowed, and the
+two absolutely-positioned caption buttons landed 9 px apart, leaving **4 px** of
+the opponent's zone control hittable. There is no in-flow answer at that
+viewport: two 62 px rows plus the gap want 128 px of a 120 px box. After the fix
+the same frame measures `58px 58px` — exactly what it measures with the strip
+removed altogether — at 1600 × 900, 1440 × 900, 1366 × 768 and 1920 × 1080.
+
+**The trade, stated.** While the strip is tall it **covers** part of the
+graveyard / exile strips behind it. That is deliberate and it is mitigated rather
+than hidden: the strip shrink-wraps (453 px of a 910 px middle on the measured
+frame, so the right-hand part of the rows stays visible), and `z-index: 55` keeps
+both caption buttons clickable *through* it — so the escape hatch for a card the
+strip covers is the zone browser, whose tiles take the ordinary `clickCard`.
+Verified live by clicking a covered caption and then a card inside the panel.
+
+**Rejected.** Giving `.table__middle` a third explicit row (it takes height from
+the two zone rows at exactly the viewport where they have none to give).
+Growing `--middle-min` (it steals from the battlefield rows, which is where the
+game is). Putting the bands in the stack panel's column (they are per-band rows
+of cards, not a list, and the stack panel is already the narrow column).
+Rendering the bands only during combat (the "nothing declared yet" strip is 22 px
+and is how you learn the strip exists — and even at 22 px the in-flow version
+took its bite out of both rows, so hiding it would have hidden the defect, not
+fixed it). A higher `z-index` than the captions (it would have made the fix
+un-escapable: the cards under the strip would have had no click path at all).

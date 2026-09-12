@@ -25,6 +25,40 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-12 — M5 verification, the three dead ends a review found
+
+Applied after an independent verification pass played the board in a browser and
+re-ran the gate from a deleted `bridge/out`. All three are **dead ends that
+survived M5** — the milestone whose name is "nothing dead-ends" — and none of
+them changes a frame shape. Evidence: `docs/evidence/m5-fixes.md`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M28 | §4.2 | **The wedge banner needs a _seventh_ clause: `buttons.cancel.enabled` → not a wedge.** Measured live on `decks/pacho-shield.dck`: clicking a spell whose cost you cannot pay pushes `Pay Mana Cost: {2}{W}` with OK (`Auto`) **disabled**, `selectable` empty, no ask, game not over and your own priority — all six M21 clauses — while an **enabled `Cancel`** sits next to the red *"Nothing to do … concede"* banner and recovers the game in one click. A state the engine is offering a labelled way out of is by construction not "nothing to do", and a genuinely wedged game thread is not pushing an enabled button at you. Corpus effect (`web/test/wedge.test.ts`): `human-auto-42.jsonl` 311 flagged frames → 40, `human-search-7.jsonl` 122 → 12, and still nothing anywhere in the corpus stays flagged for 2.5 s (worst gap after a flagged frame: 58 ms). | M5 review |
+| M29 | §5.4 | **A client's one-click "default" for a `numeric: true` `text` ask must be `null`, not `initial`.** M25 established the engine fact; this row states the client consequence, because the board shipped the other way and looped. `initial` is `""` whenever Forge has none (§5.2), and `""` into `AbstractGuiGame.getInteger`'s `while (true)` is the identical question back, forever — reproduced in the browser on `decks/number-probe.dck` (Volcano Hellion → `choose_list` → "Other…" → `text a2`; **Default** produced `a3`, `a4`, `a5`, `a6`). A UI may still offer a free-text box, but its *documented default* is the cancel, and it must not send a value it cannot know is in range: the body carries neither bound and CLAUDE.md §Scope forbids the client guessing one. | M5 review |
+| M30 | §2.2 | **`useMana`'s `color` accepts the single letters, and this client sends them; and this client offers the pips whenever the pool is non-empty.** M26 ended "send the full name", while the browser — the only human client — has sent `"U"` / `"R"` since M1 (`ManaColor` in `protocol.ts`). Verified in the 2.0.14 bytecode: `MagicColor.fromName` tests `length == 2` on the **raw** string first (offsets 18–44) and only then lowercases and switches on `w u b r g c` for length 1 (offsets 45–257, returning 1/2/4/8/16/0), so a one-character `ManaColor` can never reach the colour-pair branch. **A two-character string is still parsed as a pair.** Separately, M26's *"offer the control only while the engine is asking for mana (an `input` whose OK button the engine labelled `Auto`)"* is **not** what this client does and is not what it should do: matching an engine button label to decide what a control means is exactly what CLAUDE.md §Scope forbids. Until `input` carries a typed `payingMana` (an M6 row), the pips are live whenever the pool is non-empty and no ask is outstanding, and the pip's own title says the engine only accepts the act during a mana payment. | M5 review |
+| M31 | §8.1 | **The session header records the two run-shaping flags it was silently dropping.** `policy: "probe"` (`--probe`) and `prefs: ["UI_MANA_LOST_PROMPT"]` (`--mana-lost-prompt`), both **optional and omitted when unset**, so no existing recording changes. Without them `fixtures/games/human-amount-7.jsonl` carries two `confirm` asks that cannot occur on stock Forge preferences with nothing in the file saying why, and a reader who re-records it on defaults concludes the emitter changed. `tools/check-redaction.mjs` tolerates both and requires neither. The deck-path nulling for player 1 is deliberate and unchanged. | M5 review |
+
+### 2026-09-12 — M5, the probe decks
+
+Applied after five probe decks forced the engine to ask the six kinds that had
+no engine evidence. **No frame shape changed**: every ask body Forge produced
+already matched §5.2 as written, `tools/check-redaction.mjs`'s exact-key-set and
+declared-nullability checks passed on all four new fixtures, and no type,
+default, `min`/`max` or `delayedReveal` shape needed correcting. What these rows
+add is **reachability** — which kinds this configuration can ever see, and what a
+client has to send for the two acts nothing had sent. Evidence:
+`docs/evidence/m5-probes.md`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M22 | §5.2, §5.3 | **`options` is unreachable, and not only for a human seat: `IGuiGame.showOptionDialog` has no call site anywhere in the 2.0.14 jar.** Every `showOptionDialog` call resolves to `forge.gui.util.SOptionPane` (which delegates to **`IGuiBase`**, a different interface, implemented by `HeadlessGuiBase`) or to the desktop `forge.toolbox.FOptionPane`. Scanned over every class in the jar, not read: zero `invokeinterface forge/gui/interfaces/IGuiGame.showOptionDialog`. The kind stays in the eleven — it is on the interface, `RemoteClientGuiGame` implements it, and a later Forge may use it — but it is a **documented ceiling**, not an open gap, and `mtgtable.AskSelfTest` plus `fixtures/synthetic/` are the whole of its contract on purpose. | M5 |
+| M23 | §5.2, §5.3, §5.4 | **`manipulate_list` is unreachable while decision D13 holds.** `IGuiGame.manipulateCardList` has exactly one caller in the jar, `PlayerControllerHuman`, whose chain is one deep and pref-gated: `arrangeForScry` → (only when `UI_SELECT_FROM_CARD_DISPLAYS` **and** `!isLibgdxPort()`) → `arrangeForMove` → `manipulateCardList`. `Bootstrap` sets that pref to `"false"` in every process and `HeadlessGuiBase` is not the libGDX port, so the branch is never taken — confirmed in the jar's own bytecode (`ifeq 110` / `ifne 110`), not only in the 2.0.15 source. §5.3's warning that "this is where the whole library can arrive" is therefore a statement about the pref, and turning the pref on is the leak it describes. | M5 |
+| M24 | §5.2, §5.3 | **`confirm` is reachable, from exactly one call site, and only with one Forge preference on.** Eleven of the twelve `IGuiGame.confirm` / `showConfirmDialog` call sites are inside `if (getGui().isLibgdxPort())` (including `InputConfirm.confirm` itself, whose else branch is the **input** path) or are dev-mode cheats or the click-thread Serum Powder case, where R2 forbids blocking and the bridge answers `defaultIsYes` locally. The twelfth is `InputPassPriority.passPriority`'s floating-mana warning, which is not libgdx-guarded and which Forge itself runs on a game thread (`ThreadUtil.invokeInGameThread`, "must invoke in game thread so dialog can be shown on mobile game") — so it emits a real ask. It is gated on `FPref.UI_MANA_LOST_PROMPT`, whose default is `"false"`; `MtgTable --mana-lost-prompt` sets it in memory only. Measured body: `{prompt:"You have mana floating…", title:"Mana Floating", yesLabel:"OK", noLabel:"Cancel", defaultYes:true, card:null}`. | M5 |
+| M25 | §5.2, §5.3 | **`text` is reachable through `getInteger`'s "Other…" option, and a numeric one must not be answered with a non-number.** `IGuiGame.showInputDialog` has two call sites in the jar (both macro systems) plus `AbstractGuiGame.getInteger(String,int,int,int)`, which offers the numbers `min…cutoff` as a `choose_list` with **one extra `kind:"text"` option**, and calls `showInputDialog` only if that option is picked. Its loop is `while (true)`: an answer that is not a number **inside its own `[min,max]`** re-asks forever, and the `text` body carries neither bound. So `null` — "cancel", `AbstractGuiGame.java:857` — is the only universally safe answer to a `numeric: true` ask, and a client that offers a free-text box must expect the same question again if the number is out of range. | M5 |
+| M26 | §2.2 | **`useMana` and `clickAbility` now have a client that sends them, and two facts about `useMana` belong in the spec.** (1) `PlayerControllerHuman.useMana` is `if (inputQueue.getInput() instanceof InputPayMana ipm) ipm.useManaFromPool(mana)` — outside a mana payment the act is **silently ignored**: no exception, no `notice`, no state change. (2) Floating mana is **not** applied for you on an ordinary cast (`InputPayManaOfCostPayment` auto-pays from the pool only when the cost `isMandatory()`, CR 118.3c), so a pool pip is spent by this act or by the engine's own `Auto` button and by nothing else. `color` is a colour **name or letter** (`MagicColor.fromName` takes `white`…`colorless` and the single letters `w`…`c`; a **two-character** string is parsed as a *pair* of colours — **superseded in part by M30**, which records that this client sends the single letter and why that is safe). `clickAbility` carries **both** `cardId` and `abilityId`. | M5 |
+| M27 | §5.2, §7 | **`sideboard` needs a multi-game match, and a multi-game match needs more than `setGamesPerMatch(2)`.** `IGuiGame.sideboard`'s one caller runs between games (`Match.java:278`) and returns early unless the deck has a sideboard. `MtgTable --games 2` supplies the match and `decks/sideboard-probe.dck` the sideboard, and the ask still does not fire: game 1's `over` carries **`matchOver: false`** — which §7 already models — but `WireGuiGame.emitOver` counts the session's `finished` latch down and sets `overEmitted`, after which `WireGuiGame.ask` returns `null` before emitting anything ("degrade, never wedge"). The wire is right and the *session* ends too early. Making it fire is M6's `HostedMatch.restartMatch` row. | M5 |
+
 ### 2026-09-11 — M3, the WebSocket transport
 
 Applied while `WsTransport` was written. Every row is something the socket made
@@ -242,6 +276,48 @@ The server must tolerate any `act` arriving at any time, including one that is n
 meaningless (a click on a card that just left the battlefield). The response to a
 meaningless `act` is to drop it — optionally with a `notice` — never to crash and
 never to block.
+
+**`useMana`, exactly** (amendment **M26**). `IGameController.useMana(byte)` is
+
+```java
+// PlayerControllerHuman.java:2738-2742
+public void useMana(final byte mana) {
+    if (inputQueue.getInput() instanceof InputPayMana ipm) { ipm.useManaFromPool(mana); }
+}
+```
+
+so the act is **silently ignored outside a mana payment** — no exception, no
+`notice`, no state change. And floating mana is **not** applied for you:
+`InputPayManaOfCostPayment` auto-pays from the pool only when the cost
+`isMandatory()` (CR 118.3c), so on an ordinary cast a pool pip is spent by this
+act or by pressing the engine's own `Auto` and by nothing else.
+
+**When a client may offer the control** (amendment **M30**). M26 said "only while
+the engine is asking for mana (an `input` whose OK button the engine labelled
+`Auto`)", and that is the wrong rule for this repo: deciding what a control *does*
+by matching an engine button label is exactly what CLAUDE.md §Scope forbids, and
+the label is Forge's to change. There is no typed signal on the wire today —
+`input` carries no `payingMana` — so **this client offers the pips whenever the
+pool is non-empty and no `ask` is outstanding**, and says in the pip's own title
+that the engine only accepts the act during a mana payment. A pip clicked outside
+a payment puts an act on the wire that changes nothing, which is the documented
+behaviour of the act and not a client bug. Adding `input.payingMana` (a one-line
+emitter change reading `inputQueue.getInput() instanceof InputPayMana`) is an M6
+row; when it lands, gate the control on it and delete this paragraph.
+
+**The `color` value** (amendment **M30**). `MagicColor.fromName` accepts `white`,
+`blue`, `black`, `red`, `green`, `colorless` **and the single letters
+`w u b r g c`, case-insensitively** — verified in the 2.0.14 bytecode: it tests
+`length == 2` on the raw string first (offsets 18–44) and only then lowercases and
+switches on the single letters (offsets 45–257, returning 1/2/4/8/16/0). The
+browser sends the **single letter** (`"U"`, `"R"` — `ManaColor` in `protocol.ts`
+since M1); the console seat and `AutoTransport` send the full name. Both are
+correct. A **two-character** string is parsed as a *pair* of colours, so `"WU"` is
+not "white" and a client must never abbreviate to two letters.
+
+`clickAbility` carries **both** `cardId` and `abilityId`; the bridge resolves the
+ability id alone, and a client that sent only that would be relying on an emitter
+detail rather than on the row above.
 
 **There is no `autoPay` act, and there is no `endTurn` act.** Forge's own
 `InputPassPriority` labels the *Cancel* button `Undo (n)` or `End Turn`, and
@@ -1045,19 +1121,23 @@ A UI that only renders buttons will appear to hang with no error. Whenever
 having priority, where OK is enabled (`OK`, `End Turn`, `Auto` — the engine's own
 labels) *and* every card in your hand is clickable.
 
-The diagnostic that matters is narrower — and it needs **six** clauses, not four
-(amendment **M21**). **OK disabled, `selectable` empty, no outstanding `ask`,
-game not over, _this seat holds priority_, and _no s2c frame for ~2.5 s_** is the
-signature of a wedged game thread and must be rendered loudly
-(`docs/research/10-board-ui-spec.md` §5.2). The first four on their own are the
-ordinary state of *not holding priority* and of *waiting for a push that is
-already in flight*: stated as four, the banner fired twice in the first two turns
-of the first real browser game, under Forge's own `Waiting for Forge AI…` and
-`Yielding until end of turn`. A wedge persists and happens on your own priority,
-so neither qualifier can hide one; the corpus measurement behind the 2.5 s is in
-`web/test/wedge.test.ts` (worst gap after a flagged frame, over five human-seat
-recordings: **121 ms**, because `awaitNextInput()` re-pushes every 250 ms). A
-replay renders no banner at all: there is no thread there to be wedged.
+The diagnostic that matters is narrower — and it needs **seven** clauses, not
+four (amendments **M21** and **M28**). **OK disabled, _Cancel disabled_,
+`selectable` empty, no outstanding `ask`, game not over, _this seat holds
+priority_, and _no s2c frame for ~2.5 s_** is the signature of a wedged game
+thread and must be rendered loudly (`docs/research/10-board-ui-spec.md` §5.2).
+The first four on their own are the ordinary state of *not holding priority*, of
+*waiting for a push that is already in flight*, and of *a cast you cannot pay
+for*: stated as four, the banner fired twice in the first two turns of the first
+real browser game, under Forge's own `Waiting for Forge AI…` and `Yielding until
+end of turn`; stated as six, it fired on `Pay Mana Cost: {2}{W}` with an enabled
+`Cancel` beside it. A wedge persists, happens on your own priority, and is not
+offering you a labelled way out, so no qualifier can hide one; the corpus
+measurements are in `web/test/wedge.test.ts` (worst gap after a flagged frame,
+over nine human-seat recordings: **58 ms**, because `awaitNextInput()` re-pushes
+every 250 ms; and the Cancel clause takes 311 flagged frames to 40 in
+`human-auto-42.jsonl` while still flagging nothing that stays silent). A replay
+renders no banner at all: there is no thread there to be wedged.
 
 ### 4.3 `openZones` is a hint, and was never a question
 
@@ -1161,6 +1241,30 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
 | `manipulate_list` | `manipulateCardList` (surveil, scry-likes) | `prompt`, `cards:[opt]` (full list, in order), `manipulable:[index]`, `toTop`, `toBottom`, `toAnywhere` | `[index…]` — the full list in its new order |
 | `sideboard` | `sideboard` | `prompt`, `main:[opt]`, `side:[opt]` | `[index…]` = the new main deck, or `null` |
 
+**Which of the eleven this configuration can actually see** (amendment
+**M22**/**M23**/**M24**/**M27**, measured in `docs/evidence/m5-probes.md`). The
+kinds are a description of `IGuiGame`, not a promise that Forge dispatches all of
+them to a human seat:
+
+| kind | engine evidence | where |
+|---|---|---|
+| `choose_list` | yes | every human-seat fixture |
+| `order` | yes | `human-auto-*.jsonl` |
+| `ability_menu` | yes | `human-auto-42`, `human-ability-42` |
+| `assign_damage` | yes | `human-trample-7`, `human-ability-42` |
+| `choose_entities` (+ `delayedReveal`) | yes | `human-search-7` — `decks/search-probe.dck` |
+| `assign_amount` | yes | `human-amount-7` — `decks/amount-probe.dck` |
+| `confirm` | yes, **with `FPref.UI_MANA_LOST_PROMPT` on** | `human-amount-7` |
+| `text` | yes | `human-number-7` — `decks/number-probe.dck` |
+| `manipulate_list` | **unreachable while D13 holds** (M23) | — |
+| `options` | **unreachable: no call site in the jar** (M22) | — |
+| `sideboard` | **needs a multi-game session** (M27) | — |
+
+The last three are implemented, driven by `mtgtable.AskSelfTest`, shape-pinned by
+`ASK_SHAPES` and rendered by `AskModal`, and that is now a **documented ceiling**
+rather than an open gap. Do not delete them: the ceiling is a property of one
+preference (D13), of Forge 2.0.14, and of the one-game session M6 replaces.
+
 ### 5.3 Per-kind notes that a reader will otherwise get wrong
 
 - **`ability_menu` is usually asynchronous, and that is the only reason a card
@@ -1240,6 +1344,29 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
   unless it arrived via `delayedReveal`.
 - **`sideboard` options are `PaperCard`s, not `CardView`s** — your own pool, no
   redaction question. Never emit the opponent's pool; Forge never gives it to us.
+  Its one caller runs **between games** (`Match.java:278`) and returns early
+  unless the deck has a sideboard, so it needs `--games 2` *and* a session that
+  survives an `over` with `matchOver: false` (amendment **M27**).
+- **`confirm`'s one reachable call site is the floating-mana warning**
+  (amendment **M24**). Eleven of the twelve `IGuiGame.confirm` /
+  `showConfirmDialog` sites are inside `if (getGui().isLibgdxPort())` — including
+  `InputConfirm.confirm` itself, whose else branch is the **input** path, which
+  is why the mulligan, the coin toss and every "are you sure" a player actually
+  sees arrive as an `input` and not as this kind — or are dev-mode cheats, or run
+  on the click thread where the bridge must answer locally. The twelfth is
+  `InputPassPriority.passPriority`, which Forge itself hops to a game thread for.
+  It is gated on `FPref.UI_MANA_LOST_PROMPT` (default `"false"`).
+- **A `text` ask with `numeric: true` is a loop if you answer it badly**
+  (amendment **M25**). It is `AbstractGuiGame.getInteger`'s "Other…" branch, and
+  that branch re-asks in a `while (true)` until the string parses as a number
+  **inside its own `[min,max]`** — bounds this body does not carry. `null` is
+  "cancel" and is always safe; a free-text box must expect the same question
+  again when the number is out of range. The `choose_list` that offers the
+  "Other…" option is recognisable by its shape: every option `kind:"number"` plus
+  exactly one `kind:"text"`.
+- **`options` has no call site in Forge 2.0.14 at all** (amendment **M22**), and
+  `manipulate_list` has one that decision D13 turns off (amendment **M23**).
+  Neither can be given engine evidence in this configuration.
 
 The reducer **throws** on an unknown `kind` rather than ignoring it, so a new
 blocking method added on the Java side surfaces immediately as a red banner rather
@@ -1254,6 +1381,24 @@ null default and must synthesise one**: `order` (§5.3), `choose_list`
 (`AbstractGuiGame` dereferences the result), and `manipulate_list` — whose result
 `PlayerControllerHuman.java:986` indexes directly, so its default is the input
 list in its original order.
+
+**And one kind is answerable with `null` and still a dead end** (amendment
+**M25**): a `text` ask with `numeric: true` re-asks forever unless the string is
+a number in range, so `null` — *cancel* — is the answer that terminates and `""`
+is not. "Answerable with null" is about the game thread; it is not a promise that
+any *non*-null answer advances the game, and the two places where a legal answer
+does not are `text` and `confirm` (§5.3).
+
+**So a client's one-click "default" for that kind is `null`** (amendment
+**M29**). This is not a restatement of M25: the board shipped `initial` as its
+default, `initial` is `""` whenever Forge has none (§5.2), and pressing
+*Default* on a live `text a2` produced `a3`, `a4`, `a5`, `a6` — the identical
+question every time. A UI may still offer a free-text box; what it must not do is
+present a value it cannot know is in range as "the documented default, always
+legal". It cannot know: the body carries neither bound, and CLAUDE.md §Scope
+forbids the client inventing one. `AutoTransport.answerFor` and
+`tools/ws-auto-play.mjs` already answer `null` here; `web/test/ask-modal.test.tsx`
+now pins the board's.
 
 The machinery, all of which must exist before the first `ask` is emitted:
 
@@ -1369,6 +1514,8 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `forgeVersion`, `forgeJarSha256` | Exactly which engine produced this log. |
 | `seat` | **The player id this log was redacted for** (§8.3). In a two-player game ids and `players[]` indices coincide, but readers should use ids. |
 | `transport` | Which client played this seat: `"null"` \| `"auto"` \| `"console"` \| `"ws"`. **Absent from an AI-vs-AI recording**, which has no transport and nobody at the keyboard. It is not decoration: `--transport null` answers every ask with a literal `null` so that §5.4's documented defaults get exercised, and without this key that log is indistinguishable on disk from a wedged session (§8.3, A12). |
+| `policy` | **Optional** (amendment **M31**). `"probe"` when the run used `--probe`, `AutoTransport`'s M5 policy — four decisions taken the other way so that `useMana`, `clickAbility`, `showInputDialog` and a library search that actually fetches are reachable. **Absent** means the default policy; no recording made before M31 carries it. |
+| `prefs` | **Optional** (amendment **M31**). The Forge preferences this process set **in memory** beyond the bootstrap's own three, as `FPref` names: today only `["UI_MANA_LOST_PROMPT"]`, from `--mana-lost-prompt`. It is why `fixtures/games/human-amount-7.jsonl` carries two `confirm` asks that **cannot** occur on stock preferences; without it a reader who re-records that fixture on defaults concludes the emitter changed. `tools/check-redaction.mjs` tolerates it and requires it of nothing. |
 | `recordedBy` | `"client"` on a log a **client** wrote (`tools/ws-auto-play.mjs --log`); **absent** means the bridge wrote it. `tools/check-redaction.mjs` reads it and relaxes the `seq` continuity rule, and nothing else: a client legitimately sees a frame re-delivered verbatim and real forward gaps, both amendment **M10** (M17). |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 

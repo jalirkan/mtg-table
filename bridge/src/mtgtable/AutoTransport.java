@@ -40,12 +40,20 @@ import java.util.concurrent.atomic.AtomicLong;
  *       the discard step with no error.</li>
  *   <li><b>On an {@code ask} frame</b> -- the minimal legal value for the kind:
  *       the first option, the minimum count, the identity order, all the damage
- *       on the first blocker, {@code false} for a confirm, {@code ""} for text.
+ *       on the first blocker, the engine's own default button for a confirm.
  *       Never {@code null} for {@code order}, {@code choose_list} or
  *       {@code manipulate_list}, whose call sites dereference the result.</li>
+ *   <li><b>The M5 probe policy</b> ({@link #setProbe}, off by default) -- the
+ *       same policy with four decisions taken the other way, so that
+ *       {@code useMana}, {@code clickAbility}, {@code showInputDialog} and a
+ *       library search that actually fetches are reachable at all.</li>
  *   <li><b>A progress watchdog</b> -- {@value #STUCK_MS} ms with no frame at all
  *       and it concedes, so a wedged run fails in seconds rather than hanging a
  *       test suite.</li>
+ *   <li><b>An ask ceiling</b> -- {@value #ASK_REPEAT_CAP} identical asks with no
+ *       turn/phase change in between and it concedes too.  A loop on one ask is
+ *       the one wedge the silence watchdog cannot see, because answering it
+ *       produces a frame every time.</li>
  * </ul>
  *
  * <p>It plays badly on purpose.  Clicking the first selectable card is not a
@@ -65,6 +73,21 @@ public class AutoTransport implements Transport {
     static final long SETTLE_MS = 120L;
 
     /**
+     * How many times one identical ask may arrive <b>with no progress in
+     * between</b> before the policy concedes rather than go on answering it.
+     *
+     * <p>{@link #STUCK_MS} is a <em>silence</em> watchdog and an ask loop is not
+     * silent: the engine re-asks the instant we answer, so a policy stuck on one
+     * question produces frames as fast as the CPU allows and the silence
+     * watchdog never fires.  Measured, M5: a latched {@code confirm} answer
+     * produced <b>2,278</b> identical asks and a 35 MB frame log inside one
+     * 300 s gate step.  This is the other half of the guard -- the alternating
+     * answer below is what usually escapes, and this is what stops any ask, of
+     * any kind, from burning a gate step when it does not.
+     */
+    static final int ASK_REPEAT_CAP = 20;
+
+    /**
      * The policy watchdog's thread name.  A constant for the same reason every
      * other thread name in the bridge is one: {@link HeadlessGuiBase} asserts
      * the whole set at class-init and {@code tools/lint-bridge.sh} section 6 greps
@@ -72,6 +95,13 @@ public class AutoTransport implements Transport {
      * {@code getName().startsWith("Game")}.
      */
     static final String WATCHDOG_THREAD_NAME = "mtg-table-auto-watchdog";
+
+    /** The six wire spellings of {@code state.players[].manaPool}, in pool order. */
+    private static final String[] POOL_COLORS = {"W", "U", "B", "R", "G", "C"};
+
+    /** The {@code useMana} colour name for each of {@link #POOL_COLORS}. */
+    private static final String[] POOL_COLOR_NAMES =
+            {"white", "blue", "black", "red", "green", "colorless"};
 
     private final LinkedBlockingQueue<String> inbox = new LinkedBlockingQueue<>();
     private final AtomicLong frames = new AtomicLong();
@@ -104,6 +134,58 @@ public class AutoTransport implements Transport {
     private volatile boolean myTurn;
     private volatile boolean myMainPhase;
     private volatile boolean stackEmpty = true;
+    /** My six mana-pool counts, in {@link #POOL_COLORS} order, from the last snapshot. */
+    private final int[] myPool = new int[POOL_COLORS.length];
+
+    /**
+     * <b>The probe policy</b> (M5), off by default.
+     *
+     * <p>The default policy above is the <em>minimal legal answer</em>, and that
+     * is deliberately not the same thing as a policy that reaches every corner
+     * of the engine.  Three of the eleven ask kinds and two of the twelve acts
+     * are downstream of a decision the minimal policy never takes -- it answers
+     * a min-0 {@code choose_entities} with "none", so a library search fetches
+     * nothing; it never picks {@code getInteger}'s "Other..." entry, so
+     * {@code showInputDialog} is never reached; it presses the engine's own
+     * {@code Auto} button rather than spending floating mana, so
+     * {@code useMana} is never sent; and it answers an {@code ability_menu} by
+     * index rather than by a {@code clickAbility} act.
+     *
+     * <p>With this on, and <b>only</b> with it on, the policy takes the other
+     * branch in those four places.  It is a flag rather than a new default
+     * because the default is what ten consecutive games are asserted against
+     * (PLAN.md M5) and the committed fixtures were recorded with it; a policy
+     * change that reaches further is also a policy change that can lose more
+     * games and take longer to do it.
+     */
+    private volatile boolean probe;
+
+    /**
+     * How many asks carrying each {@code confirm} / numeric {@code text} prompt
+     * we have already answered.  Both kinds can be answered <em>legally</em> and
+     * still not advance -- {@code AbstractGuiGame.getInteger}'s "Other..." branch
+     * re-asks forever unless the string is a number inside its own
+     * {@code [min,max]} (bounds the {@code text} body does not carry), and a
+     * floating-mana confirm answered "no" simply does not pass priority -- so
+     * the second identical prompt is answered differently from the first.
+     */
+    private final Map<String, Integer> askPromptsSeen = new HashMap<>();
+
+    /**
+     * How many asks carrying each {@code kind|prompt|title} have arrived since
+     * the game last made visible progress -- see {@link #ASK_REPEAT_CAP} and
+     * {@link #progressKey}.  Every kind, not just the two above: the ceiling is
+     * a property of "the same question over and over", not of any one kind.
+     */
+    private final Map<String, Integer> askRepeats = new HashMap<>();
+
+    /**
+     * {@code turn|phase|activePlayer} of the last snapshot, so that "the same
+     * prompt again" can mean "the same prompt again <em>with nothing having
+     * happened</em>".  An honest repeat later in the game starts its count, and
+     * therefore its answer, from the engine's own default again.
+     */
+    private String lastProgressKey = "";
 
     @Override
     public void start(final Inbound in, final ReplyPool replyPool) {
@@ -156,6 +238,11 @@ public class AutoTransport implements Transport {
 
     public long answers() {
         return answers.get();
+    }
+
+    /** Turn the M5 probe policy on; see {@link #probe}.  Call before {@link #start}. */
+    public void setProbe(final boolean on) {
+        this.probe = on;
     }
 
     // ==================================================================
@@ -312,11 +399,23 @@ public class AutoTransport implements Transport {
             // the watchdog concede rather than hammer the engine.
             return;
         }
+        play(move);
+    }
+
+    /**
+     * A planned move is {@code {action}} or {@code {action, bodyKey, bodyValue}}.
+     * The value is a number when it looks like one ({@code clickCard}'s
+     * {@code cardId}) and a string otherwise ({@code useMana}'s {@code color},
+     * which protocol section 2.2 declares as a colour <em>name</em>).
+     */
+    private void play(final String[] move) {
         if (move.length == 1) {
             act(move[0], Map.of());
-        } else {
-            act(move[0], Map.of(move[1], Integer.valueOf(move[2])));
+            return;
         }
+        final Object value = move[2].matches("-?\\d+")
+                ? (Object) Integer.valueOf(move[2]) : move[2];
+        act(move[0], Map.of(move[1], value));
     }
 
     /**
@@ -379,6 +478,21 @@ public class AutoTransport implements Transport {
         // engine wants mana, not another spell.  Clicking a hand card there just
         // makes a notice.
         final boolean payingMana = prompt.contains("Pay Mana Cost") || prompt.contains("Pay ");
+        if (probe && payingMana) {
+            // THE `useMana` PROBE (protocol section 2.2).  Forge only accepts
+            // this act while the current input is an InputPayMana
+            // (PlayerControllerHuman.java:2738-2742: `if (inputQueue.getInput()
+            // instanceof InputPayMana ipm) ipm.useManaFromPool(mana)`), and
+            // nothing else in the repo sends it from a client.  Spending the
+            // floating mana first is also the only way the act can be SEEN to
+            // work: press the engine's own Auto button and ComputerUtilMana
+            // drains the pool for us, which proves nothing about the act.
+            for (int i = 0; i < myPool.length; i++) {
+                if (myPool[i] > 0) {
+                    out.add(new String[] {"useMana", "color", POOL_COLOR_NAMES[i]});
+                }
+            }
+        }
         if (!mustClick && !payingMana && myPriority && myMainPhase && stackEmpty) {
             // Lands first: a land drop is the one play that is always legal, and
             // without it this policy never has mana and never reaches a spell,
@@ -414,6 +528,17 @@ public class AutoTransport implements Transport {
         final Object priority = body.get("priority");
         final Object active = body.get("activePlayer");
         final String phase = String.valueOf(body.get("phase"));
+        // PROGRESS.  A repeated prompt only means "stuck" while nothing else has
+        // moved; once the turn, the phase or the active player changes, the
+        // counters that drive the alternating answer and the repeat ceiling
+        // start again, so a confirm the game asks once per turn is answered with
+        // the engine's own default every turn.
+        final String progress = progressKey(body);
+        if (!progress.equals(lastProgressKey)) {
+            lastProgressKey = progress;
+            askPromptsSeen.clear();
+            askRepeats.clear();
+        }
         myPriority = me != null && priority instanceof Number
                 && ((Number) priority).intValue() == me.intValue();
         myTurn = me != null && active instanceof Number
@@ -422,11 +547,20 @@ public class AutoTransport implements Transport {
         stackEmpty = size(body.get("stack")) == 0;
         myHand.clear();
         myLands.clear();
+        java.util.Arrays.fill(myPool, 0);
         for (final Object po : arr(body.get("players"))) {
             final Map<String, Object> p = map(po);
             if (p == null || me == null || !(p.get("id") instanceof Number)
                     || ((Number) p.get("id")).intValue() != me.intValue()) {
                 continue;
+            }
+            // protocol section 3.1: manaPool always carries all six keys.
+            final Map<String, Object> pool = map(p.get("manaPool"));
+            if (pool != null) {
+                for (int i = 0; i < POOL_COLORS.length; i++) {
+                    final Integer n = intOf(pool.get(POOL_COLORS[i]));
+                    myPool[i] = n == null ? 0 : n.intValue();
+                }
             }
             final Map<String, Object> zones = map(p.get("zones"));
             final Map<String, Object> hand = map(zones == null ? null : zones.get("hand"));
@@ -455,7 +589,100 @@ public class AutoTransport implements Transport {
     protected void onAsk(final Map<String, Object> body) {
         final String askId = String.valueOf(body.get("askId"));
         final String kind = String.valueOf(body.get("kind"));
-        answer(askId, answerFor(kind, body));
+        if (probe && "ability_menu".equals(kind)) {
+            // THE `clickAbility` PROBE (protocol section 2.2, decision D20/D22).
+            // Answering the menu by index is the ordinary path and it is already
+            // evidenced; the ACT is not.  So the menu is declined with `null`
+            // ("never mind" -- section 5.3: Forge's input is still the one that
+            // asked, nothing is spent) and the same choice is then made again as
+            // an `act`, which resolves through `abilityIndex` to the identical
+            // IGameController.selectAbility call the answer would have made.
+            answer(askId, null);
+            final Map<String, Object> opt = firstPlayableAbility(body);
+            final Integer host = intOf(body.get("cardId"));
+            if (opt != null && host != null) {
+                // BOTH keys, as protocol section 2.2's row declares them: the
+                // bridge resolves `abilityId` alone through `abilityIndex`, and a
+                // client that sent only that would be relying on an emitter
+                // detail rather than on the documented act.
+                act("clickAbility", new LinkedHashMap<>(Map.of(
+                        "cardId", host, "abilityId", intOf(opt.get("abilityId")))));
+            }
+            return;
+        }
+        if (overAskRepeatCap(askRepeats, kind, body)) {
+            // Answer FIRST, then concede: the game thread is parked on this ask,
+            // and a concede dispatched while it is parked would sit behind it.
+            answer(askId, answerFor(kind, body, probe, askPromptsSeen));
+            giveUp(kind, body);
+            return;
+        }
+        answer(askId, answerFor(kind, body, probe, askPromptsSeen));
+    }
+
+    /** {@code turn|phase|activePlayer} -- what "the game moved" means here. */
+    private static String progressKey(final Map<String, Object> body) {
+        return body.get("turn") + "|" + body.get("phase") + "|" + body.get("activePlayer");
+    }
+
+    /**
+     * Bump {@code repeats} for this question and say whether it has now arrived
+     * more than {@link #ASK_REPEAT_CAP} times with no progress in between.
+     * Counts every kind; see the field {@link #askRepeats}.
+     *
+     * <p>Static and package-private so {@code AskSelfTest} can walk the cap
+     * without a running game -- the whole point of the ceiling is that it fires
+     * on a path no green run reaches.
+     */
+    static boolean overAskRepeatCap(final Map<String, Integer> repeats, final String kind,
+                                    final Map<String, Object> body) {
+        final String key = kind + "|" + body.get("prompt") + "|" + body.get("title");
+        final int seen = repeats.merge(key, Integer.valueOf(1),
+                (a, b) -> Integer.valueOf(a + b)).intValue();
+        return seen > ASK_REPEAT_CAP;
+    }
+
+    /**
+     * The ask ceiling's exit: say so on stderr and concede once.  {@link #conceded}
+     * is the same flag the silence watchdog sets, so the two can never concede
+     * twice, and the run still ends in an ordinary {@code over}.
+     */
+    private void giveUp(final String kind, final Map<String, Object> body) {
+        if (conceded) {
+            return;
+        }
+        conceded = true;
+        System.err.println("AUTO ASK LOOP: more than " + ASK_REPEAT_CAP + " identical " + kind
+                + " asks with no progress (" + body.get("prompt") + ") -- conceding");
+        try {
+            inbound.onAct("concede", new HashMap<>());
+        } catch (final RuntimeException e) {
+            System.err.println("AUTO concede failed: " + e);
+        }
+    }
+
+    /**
+     * The first {@code ability_menu} option Forge says can actually be played,
+     * or the first option at all when it says that of none of them.  An option
+     * whose {@code canPlay} is false resolves to a {@code selectAbility} Forge
+     * will refuse, which is a legal act with no effect -- fine for the wire, no
+     * use as a probe.
+     */
+    private static Map<String, Object> firstPlayableAbility(final Map<String, Object> body) {
+        Map<String, Object> first = null;
+        for (final Object o : arr(body.get("options"))) {
+            final Map<String, Object> opt = map(o);
+            if (opt == null || !(opt.get("abilityId") instanceof Number)) {
+                continue;
+            }
+            if (first == null) {
+                first = opt;
+            }
+            if (Boolean.TRUE.equals(opt.get("canPlay"))) {
+                return opt;
+            }
+        }
+        return first;
     }
 
     /**
@@ -475,8 +702,15 @@ public class AutoTransport implements Transport {
         inbound.onAnswer(askId, value);
     }
 
-    /** The minimal legal answer for each of the eleven kinds (protocol section 5.2). */
-    protected static String answerFor(final String kind, final Map<String, Object> body) {
+    /**
+     * The minimal legal answer for each of the eleven kinds (protocol section
+     * 5.2), or -- with {@code probe} on -- the answer that reaches further into
+     * the engine.  See {@link #probe} for why that is a flag and not the default.
+     *
+     * @param askPromptsSeen per-prompt ask counter; see the field of that name
+     */
+    protected static String answerFor(final String kind, final Map<String, Object> body,
+                                      final boolean probe, final Map<String, Integer> askPromptsSeen) {
         switch (kind) {
         case "ability_menu":
         case "options": {
@@ -487,17 +721,92 @@ public class AutoTransport implements Transport {
             final Integer dflt = intOf(body.get("defaultIndex"));
             return String.valueOf(dflt != null && dflt >= 0 && dflt < n ? dflt.intValue() : 0);
         }
-        case "confirm":
-            // "No" unless there is no way to say no.  A mulligan confirm answered
-            // false keeps the hand, which is exactly what a dumb human does.
-            return "false";
-        case "text":
-            return "\"\"";
-        case "choose_list":
-        case "choose_entities": {
+        case "confirm": {
+            // **The engine's own default button**, which is also protocol section
+            // 5.4's null default (`RemoteClientGuiGame.java:451-454`:
+            // `result != null ? result : defaultIsYes`) -- and, unlike a flat
+            // "false", it makes progress.
+            //
+            // Measured, M5: the one IGuiGame confirm a human seat reaches is
+            // InputPassPriority's floating-mana prompt, whose "no" means DO NOT
+            // pass priority.  Answered false it re-asks immediately, and one
+            // probe game produced **969 identical confirm asks** before it was
+            // killed -- a legal answer that never advances, which is the exact
+            // shape of a dead end this milestone exists to remove.
+            //
+            // From the third identical prompt the answer ALTERNATES, and
+            // alternating is the whole point: a backstop that latches on `!dflt`
+            // is a backstop that has merely chosen the other non-advancing
+            // answer, and this one did.  Measured, M5 verification: the latching
+            // version answered prompts 1-2 `true` and prompts 3..infinity
+            // `false`, which on InputPassPriority's floating-mana confirm means
+            // "do not pass priority" forever -- 2,278 identical asks in one
+            // 300 s gate step, reproduced with and without --probe.
+            //
+            // `seen` counts only asks since the last turn/phase change (the
+            // caller clears the map on progress), so an honest once-a-turn
+            // confirm is always answered with the engine's own default.
+            final boolean dflt = bool(body.get("defaultYes"));
+            final String prompt = "confirm|" + body.get("prompt") + "|" + body.get("title");
+            final int seen = askPromptsSeen.merge(prompt, Integer.valueOf(1),
+                    (a, b) -> Integer.valueOf(a + b)).intValue();
+            return String.valueOf(seen <= 2 || seen % 2 == 0 ? dflt : !dflt);
+        }
+        case "text": {
+            // A NUMERIC text ask is AbstractGuiGame.getInteger's "Other..."
+            // branch (AbstractGuiGame.java:851-864), and it re-asks in a
+            // `while (true)` until the answer is a number inside its own
+            // [min,max] -- bounds the `text` body does not carry.  So "" is not
+            // a safe answer there: it is an infinite ask loop that looks exactly
+            // like a wedge.  `null` is, and it is section 5.4's own default
+            // ("that is 'cancel'", AbstractGuiGame.java:857).
+            if (!bool(body.get("numeric"))) {
+                return "\"\"";
+            }
+            if (!probe) {
+                return "null";
+            }
+            // The probe answers the FIRST such prompt with a real string, so the
+            // string actually travels the wire, and cancels every repeat -- a
+            // repeat means the engine rejected it as out of range.
+            final String prompt = "text|" + body.get("prompt");
+            final int seen = askPromptsSeen.merge(prompt, Integer.valueOf(1),
+                    (a, b) -> Integer.valueOf(a + b)).intValue();
+            return seen == 1 ? "\"0\"" : "null";
+        }
+        case "choose_list": {
             final int n = size(body.get("options"));
             final Integer min = intOf(body.get("min"));
             final int want = min == null || min.intValue() < 0 ? 0 : Math.min(min.intValue(), n);
+            if (probe) {
+                // THE `text` PROBE.  getInteger(message, min, max, cutoff) offers
+                // the numbers min..cutoff and then one STRING option, "Other...",
+                // and picking that string is the only route to
+                // IGuiGame.showInputDialog for a human seat (the only other two
+                // call sites in the 2.0.14 jar are the macro systems).  The
+                // shape is unmistakable: number options plus exactly one text
+                // option, and our emitter labels an Integer `kind:"number"` and
+                // a String `kind:"text"` (protocol section 5.1).
+                final int other = lastTextOptionAfterNumbers(body);
+                if (other >= 0 && want <= 1) {
+                    return "[" + other + "]";
+                }
+            }
+            return indices(0, want);
+        }
+        case "choose_entities": {
+            final int n = size(body.get("options"));
+            final Integer min = intOf(body.get("min"));
+            int want = min == null || min.intValue() < 0 ? 0 : Math.min(min.intValue(), n);
+            if (probe && want == 0 && n > 0) {
+                // An optional choose_entities is a library search offered as
+                // "you may".  Answering "none" is legal and is what the default
+                // policy does -- and it means the search fetches nothing, so the
+                // answer marshalling (index -> the option array -> a GameEntity)
+                // is never actually executed.  Take the first card instead.
+                final Integer max = intOf(body.get("max"));
+                want = max == null || max.intValue() >= 1 ? 1 : 0;
+            }
             return indices(0, want);
         }
         case "order": {
@@ -543,6 +852,33 @@ public class AutoTransport implements Transport {
         default:
             return "null";
         }
+    }
+
+    /**
+     * The index of the one {@code kind:"text"} option in a list that is
+     * otherwise all {@code kind:"number"}, or {@code -1}.  That is exactly
+     * {@code getInteger}'s "Other..." entry and nothing else in the corpus has
+     * the shape.
+     */
+    private static int lastTextOptionAfterNumbers(final Map<String, Object> body) {
+        final Object[] opts = arr(body.get("options"));
+        int text = -1;
+        int numbers = 0;
+        for (int i = 0; i < opts.length; i++) {
+            final Map<String, Object> o = map(opts[i]);
+            if (o == null) {
+                return -1;
+            }
+            final String k = String.valueOf(o.get("kind"));
+            if ("number".equals(k)) {
+                numbers++;
+            } else if ("text".equals(k) && text < 0) {
+                text = i;
+            } else {
+                return -1;                     // not a getInteger list
+            }
+        }
+        return numbers > 0 ? text : -1;
     }
 
     private static String indices(final int from, final int to) {

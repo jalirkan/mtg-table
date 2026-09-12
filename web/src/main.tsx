@@ -30,16 +30,19 @@ import { StrictMode, useCallback, useEffect, useMemo, useReducer, useState } fro
 import { createRoot, type Root } from 'react-dom/client';
 
 import { EMPTY_ART_INDEX, loadArtIndex, preloadArt, type ArtIndex } from './art.ts';
-import type { AnswerValue } from './protocol.ts';
+import type { AnswerValue, ManaColor } from './protocol.ts';
 import { Board, type BoardActions } from './render/Board.tsx';
 import { ErrorBoundary } from './render/ErrorBoundary.tsx';
 import { ReplayControls } from './render/ReplayControls.tsx';
 import { LogReplayTransport, parseFrameLog } from './transport/replay.ts';
 import { DEFAULT_WS_PORT, WebSocketTransport, type WsStatus } from './transport/ws.ts';
-// mana-font FIRST: `styles.css` overrides its @font-face with the 187 KB woff2
-// the package ships but `mana.css@1.18.0` does not list, and a later @font-face
-// for the same family is the one that wins (report 10 §13).
-import 'mana-font/css/mana.css';
+// M5 (M4 follow-up 1): our own extract of `mana-font`, in place of the
+// package's stylesheet. `mana.css@1.18.0` opens with two `@font-face` blocks
+// naming eot/woff/ttf/svg for Mana AND for MPlantin, which the bundler faithfully
+// emitted: nine font files, 3.72 MB, of which the browser ever fetched exactly
+// one — the 187 KB `mana.woff2` that `styles.css` overrode them with. `mana.css`
+// here is the same rules with those two blocks gone (see its header).
+import './mana.css';
 import './styles.css';
 
 /** Where `./bridge/run.sh mtgtable.RecordMatch --out fixtures/games/g1.jsonl` lands. */
@@ -232,6 +235,11 @@ function LiveApp({ port }: { port: number }): JSX.Element {
       },
       buttonCancel: () => {
         transport.act({ action: 'buttonCancel' });
+      },
+      // M5 — §2.2. A colour and nothing else: tapping a land for mana is a
+      // `clickCard` on the land, and this is what spends what that produced.
+      useMana: (color: ManaColor) => {
+        transport.act({ action: 'useMana', color });
       },
       concede: () => {
         transport.act({ action: 'concede' });

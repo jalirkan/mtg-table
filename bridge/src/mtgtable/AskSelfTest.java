@@ -69,6 +69,7 @@ public final class AskSelfTest {
         orderKind();
         sideboardKind();
         nullAnswers();
+        policy();
 
         System.out.println("AskSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -290,6 +291,144 @@ public final class AskSelfTest {
            Integer.valueOf(Ask.indexOfIdentity(opts, "b")));
         eq("indexOfIdentity misses cleanly", Integer.valueOf(-1),
            Integer.valueOf(Ask.indexOfIdentity(opts, "z")));
+    }
+
+    // ==================================================================
+    // The scripted seat's own policy (M5) -- the two answers that are legal
+    // and still dead ends
+    // ==================================================================
+
+    /**
+     * {@link AutoTransport#answerFor} is not marshalling and would normally not
+     * live here.  It is here because two of its answers were <b>legal, accepted
+     * by the engine, and non-terminating</b>, which no shape check can see:
+     *
+     * <ul>
+     *   <li>a {@code confirm} answered {@code false} when the "no" branch is
+     *       "do not pass priority" re-asks at once.  Measured, M5: <b>969</b>
+     *       identical {@code confirm} asks in one probe game before it was
+     *       killed;</li>
+     *   <li>a {@code text} answered {@code ""} when {@code numeric} is true.
+     *       {@code AbstractGuiGame.getInteger}'s "Other..." branch is a
+     *       {@code while (true)} that re-asks until the string is a number
+     *       inside its own {@code [min,max]} -- bounds the ask body does not
+     *       carry.</li>
+     * </ul>
+     *
+     * <p>The {@code confirm} backstop has a third failure mode of its own, and
+     * it is why the assertions below walk five prompts rather than three: a
+     * backstop that <b>latches</b> on the opposite answer (<code>seen &gt; 2 ?
+     * !dflt : dflt</code>) has merely chosen the other non-advancing value.  It
+     * shipped that way and reproduced the loop: <b>2,278</b> identical asks and
+     * a 35 MB frame log in one 300 s gate step, with and without {@code --probe}.
+     * The answer must <em>alternate</em>.
+     *
+     * <p>Both are now answered so that the game advances, and both are one line
+     * away from being reverted by someone tidying up.  Nothing else in the repo
+     * would notice: the corpus contains no {@code confirm} or {@code text} ask
+     * except the two M5 fixtures, and a fixture replays an answer rather than
+     * recomputing it.
+     */
+    private static void policy() {
+        final Map<String, Integer> seen = new java.util.HashMap<>();
+
+        // confirm: the engine's own default button, not a flat "false".
+        final String yes = "{\"kind\":\"confirm\",\"prompt\":\"p\",\"title\":\"t\",\"defaultYes\":true}";
+        final String no = "{\"kind\":\"confirm\",\"prompt\":\"q\",\"title\":\"t\",\"defaultYes\":false}";
+        eq("confirm answers defaultYes=true with true", "true", answer("confirm", yes, false, seen));
+        eq("confirm answers defaultYes=false with false", "false", answer("confirm", no, false, seen));
+        // ...and from the third identical prompt it ALTERNATES, so no confirm
+        // can loop.  Alternation, not a flip: the first version of this line
+        // latched -- `seen > 2 ? !dflt : dflt` -- which answers prompts 3..
+        // infinity with the SAME non-advancing value and reproduced the exact
+        // 969-ask loop the backstop was written to prevent (2,278 asks and a
+        // 35 MB frame log in one 300 s gate step, M5 verification).
+        eq("the same confirm prompt, 2nd time", "true", answer("confirm", yes, false, seen));
+        eq("the same confirm prompt, 3rd time FLIPS", "false", answer("confirm", yes, false, seen));
+        eq("the same confirm prompt, 4th time FLIPS BACK", "true", answer("confirm", yes, false, seen));
+        eq("the same confirm prompt, 5th time FLIPS again", "false", answer("confirm", yes, false, seen));
+        eq("the same confirm prompt, 6th time", "true", answer("confirm", yes, false, seen));
+        // The mirror image: a confirm whose engine default is `false` must reach
+        // `true` just as fast, or the backstop only works one way round.
+        eq("defaultYes=false, 2nd time", "false", answer("confirm", no, false, seen));
+        eq("defaultYes=false, 3rd time FLIPS to true", "true", answer("confirm", no, false, seen));
+        eq("defaultYes=false, 4th time FLIPS BACK", "false", answer("confirm", no, false, seen));
+        // A prompt the caller has cleared (a turn/phase change: AutoTransport
+        // clears the map on progress) is answered with the engine's default
+        // again -- an honest once-a-turn confirm never drifts off it.
+        seen.clear();
+        eq("after progress, the same prompt starts from the default again", "true",
+                answer("confirm", yes, false, seen));
+
+        // THE ASK CEILING.  Alternation is what usually escapes; this is what
+        // stops ANY ask, of any kind, from burning a 300 s gate step when it
+        // does not.  It fires on a path no green run reaches, so this is the
+        // only thing in the repo that walks it.
+        final Map<String, Integer> repeats = new java.util.HashMap<>();
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> loop = (Map<String, Object>) parse(yes);
+        for (int i = 1; i <= AutoTransport.ASK_REPEAT_CAP; i++) {
+            eq("ask repeat " + i + " of " + AutoTransport.ASK_REPEAT_CAP + " is under the cap",
+                    Boolean.FALSE,
+                    Boolean.valueOf(AutoTransport.overAskRepeatCap(repeats, "confirm", loop)));
+        }
+        eq("one past the cap concedes", Boolean.TRUE,
+                Boolean.valueOf(AutoTransport.overAskRepeatCap(repeats, "confirm", loop)));
+        eq("a DIFFERENT prompt has its own count", Boolean.FALSE,
+                Boolean.valueOf(AutoTransport.overAskRepeatCap(repeats, "confirm",
+                        castBody(no))));
+        repeats.clear();
+        eq("and progress clears it", Boolean.FALSE,
+                Boolean.valueOf(AutoTransport.overAskRepeatCap(repeats, "confirm", loop)));
+
+        // text: null is "cancel" and terminates; "" is an infinite ask loop.
+        final String numeric = "{\"kind\":\"text\",\"prompt\":\"Enter a number between 0 and 99:\","
+                + "\"numeric\":true}";
+        final String free = "{\"kind\":\"text\",\"prompt\":\"Name a card\",\"numeric\":false}";
+        eq("a NUMERIC text ask is cancelled by default", "null", answer("text", numeric, false, seen));
+        eq("a free-text ask is still answered \"\"", "\"\"", answer("text", free, false, seen));
+        final Map<String, Integer> probeSeen = new java.util.HashMap<>();
+        eq("--probe answers the first numeric text ask with a real number",
+                "\"0\"", answer("text", numeric, true, probeSeen));
+        eq("--probe cancels a REPEAT of the same numeric prompt (it was out of range)",
+                "null", answer("text", numeric, true, probeSeen));
+
+        // choose_list: --probe picks getInteger's one "Other..." option, and
+        // ONLY when the list has that exact shape.
+        final String getInteger = "{\"kind\":\"choose_list\",\"min\":0,\"max\":1,\"options\":["
+                + "{\"id\":0,\"kind\":\"number\",\"label\":\"0\"},"
+                + "{\"id\":1,\"kind\":\"number\",\"label\":\"1\"},"
+                + "{\"id\":2,\"kind\":\"text\",\"label\":\"Other...\"}]}";
+        final String cards = "{\"kind\":\"choose_list\",\"min\":0,\"max\":1,\"options\":["
+                + "{\"id\":0,\"kind\":\"card\",\"label\":\"Plains\"},"
+                + "{\"id\":1,\"kind\":\"text\",\"label\":\"Other...\"}]}";
+        eq("--probe picks the Other... option of a getInteger list",
+                "[2]", answer("choose_list", getInteger, true, probeSeen));
+        eq("the default policy does not", "[]", answer("choose_list", getInteger, false, probeSeen));
+        eq("--probe leaves a list of CARDS alone", "[]", answer("choose_list", cards, true, probeSeen));
+
+        // choose_entities: --probe takes one card from an OPTIONAL search, so
+        // the answer marshalling (index -> option array -> GameEntity) runs.
+        final String optional = "{\"kind\":\"choose_entities\",\"min\":0,\"max\":1,\"options\":["
+                + "{\"id\":0,\"kind\":\"card\"},{\"id\":1,\"kind\":\"card\"}]}";
+        eq("the default policy answers an optional search with none",
+                "[]", answer("choose_entities", optional, false, probeSeen));
+        eq("--probe takes one", "[0]", answer("choose_entities", optional, true, probeSeen));
+        eq("a mandatory choose_entities is unchanged by --probe", "[0]",
+                answer("choose_entities",
+                        "{\"kind\":\"choose_entities\",\"min\":1,\"max\":1,\"options\":["
+                        + "{\"id\":0},{\"id\":1}]}", true, probeSeen));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> castBody(final String bodyJson) {
+        return (Map<String, Object>) parse(bodyJson);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String answer(final String kind, final String bodyJson, final boolean probe,
+                                 final Map<String, Integer> seen) {
+        return AutoTransport.answerFor(kind, (Map<String, Object>) parse(bodyJson), probe, seen);
     }
 
     // ==================================================================

@@ -22,14 +22,35 @@
  * AI-vs-AI recording contains). A throw anywhere in the tree fails the fixture
  * and names the frame.
  *
- * **Why `renderToStaticMarkup` and not jsdom.** The board is a tree of pure
- * function components: no `useState`, no `useEffect`, no refs, and no browser
- * API beyond `<img src>`. A server render executes every component function and
- * evaluates every JSX expression in the tree — which is where all four classes
- * of board crash live (an unguarded `null`, a missing key, a bad `.map`, a label
- * function that throws) — so a DOM would add a dependency and catch nothing
- * extra. If the board ever grows an effect, this decision needs revisiting and
- * this paragraph is the place it is written down.
+ * **Why `renderToStaticMarkup` and not jsdom** — restated on today's terms
+ * (M4 follow-up 4; the paragraph this replaces said the board had *"no
+ * `useState`, no `useEffect`, no refs"*, which stopped being true on M4's third
+ * evening and was the paragraph that asked to be revisited).
+ *
+ * The board now has state (the open panels, the zoom, the concede arming, M5's
+ * ask draft and zone panels), refs (the rect registry) and three effects (the
+ * registry's post-render sweep, the `window` key listener, the flash and wedge
+ * timers). `renderToStaticMarkup` runs **none** of them, and that is still the
+ * right harness for what this file tests:
+ *
+ *   - a server render executes every component function and evaluates every JSX
+ *     expression in the tree, which is where all four classes of board crash
+ *     live (an unguarded `null`, a missing key, a bad `.map`, a label function
+ *     that throws) — the thing M1 shipped and 122 green tests missed;
+ *   - the effects that exist are all **measurement and input**, not rendering.
+ *     Nothing the board draws is computed in one: the rect registry's empty
+ *     branch is itself the negative control that `ArrowsOverlay` draws nothing
+ *     without a DOM, and the keyboard is a pure table with its own test
+ *     (`keys.test.ts`) rather than a behaviour only a browser can see.
+ *   - **what is NOT covered here, and where it is covered instead**: an event
+ *     handler firing. `renderToStaticMarkup` dispatches nothing, so the wiring
+ *     from a click to an act is asserted by calling the component function and
+ *     invoking the handler off the element tree (`board-m5.test.tsx`), by the
+ *     pure functions the handlers call (`pool.ts`, `picker.ts`, `AskModal`'s
+ *     draft functions), and for real in a browser in `docs/evidence/`.
+ *
+ * A DOM would still add a dependency and catch nothing above that, so the
+ * decision holds — on the new grounds, not the old ones.
  *
  * **The negative control.** A render test that cannot fail proves nothing —
  * exactly the argument that produced `tools/check-redaction-selftest.mjs`. The
@@ -160,6 +181,7 @@ const FAKE_ACTIONS: BoardActions = {
   clickPlayer: () => undefined,
   buttonOk: () => undefined,
   buttonCancel: () => undefined,
+  useMana: () => undefined,
   concede: () => undefined,
   answer: () => undefined,
 };
@@ -207,10 +229,44 @@ function visibleCards(board: GameStateBody): Card[] {
 }
 
 /**
+ * Every card an outstanding `ask` carries in its body, wherever the kind puts
+ * them (§5.2): the options, `order`'s two halves, `sideboard`'s two halves,
+ * `assign_*`'s targets, `manipulate_list`'s list, `confirm`/`options`' single
+ * card, and `choose_entities`' `delayedReveal`.
+ *
+ * These are public **by the same rule as everything else**: docs/protocol.md §5
+ * — *"Every card inside an `ask` (or `input`) body is produced by the one
+ * serialising function of §3.3"* — so a card here has already been through the
+ * three gates, and a concealed one arrives as a five-key stub labelled `"???"`.
+ * M5 draws them as tiles (the modal's `order` / `manipulate_list` rows, the
+ * delayed-reveal panel, the picker's thumbnails), which is why the two
+ * assertions below have to know about them: before M5 the modal printed labels
+ * only, and the question never came up.
+ */
+function askCards(ask: AskBody | null): AnyCard[] {
+  if (ask === null) return [];
+  const body = ask as unknown as Record<string, unknown>;
+  const out: AnyCard[] = [];
+  for (const key of ['options', 'dest', 'source', 'main', 'side', 'targets', 'cards']) {
+    const list = body[key];
+    if (!Array.isArray(list)) continue;
+    for (const option of list as Array<{ card?: AnyCard }>) {
+      if (option.card !== undefined) out.push(option.card);
+    }
+  }
+  const single = body['card'];
+  if (single !== null && single !== undefined) out.push(single as AnyCard);
+  const reveal = body['delayedReveal'] as { cards?: AnyCard[] } | null | undefined;
+  for (const card of reveal?.cards ?? []) out.push(card);
+  return out;
+}
+
+/**
  * The names this frame is entitled to show. `input.focusCard` is in the list
  * because `setCard` is frequently pushed with a card that is **not** in the
  * snapshot at all — a library card during surveil (amendment P7, report 06
- * §6.9) — and the decision panel draws it.
+ * §6.9) — and the decision panel draws it. The outstanding ask's own cards are
+ * in it for the reason {@link askCards} states.
  */
 function allowedNames(state: ClientState): Set<string> {
   const names = new Set<string>();
@@ -219,6 +275,9 @@ function allowedNames(state: ClientState): Set<string> {
   }
   const focus = state.input?.focusCard ?? null;
   if (focus !== null && !isHidden(focus) && focus.name !== '') names.add(focus.name);
+  for (const card of askCards(state.ask)) {
+    if (!isHidden(card) && card.name !== '') names.add(card.name);
+  }
   return names;
 }
 
@@ -337,8 +396,14 @@ for (const path of files) {
       const forbidden = opponentHandIds(state);
       if (forbidden.size > 0) {
         const focusId = state.input?.focusCard?.id ?? null;
+        // The engine handed these over explicitly, in the body of the question
+        // it is blocked on (§5) — a Duress or a Bribery is exactly that, and
+        // refusing to draw the card the player is being asked to choose would
+        // be a dead end, not a redaction.
+        const handed = new Set(askCards(state.ask).map((card) => card.id));
         for (const id of renderedCardIds(live)) {
           if (id === focusId) continue; // the engine pushed this one at us
+          if (handed.has(id)) continue;
           expect(
             forbidden.has(id),
             `${file}: frame ${String(i)} drew a tile for card #${String(id)}, which is in an ` +
@@ -351,10 +416,17 @@ for (const path of files) {
       // are exactly the rendered ids the engine named (report 10 §15.2 item 3).
       const input = state.input;
       if (input !== null && input.selectable.mode === 'cards') {
+        // M4 follow-up 5: this used to require `data-card-name` to be present
+        // AND to sit between the id and the flag, so a CONCEALED tile — which
+        // carries no name by design — was never counted, and re-ordering the
+        // attributes in `CardTile` would have emptied the set silently. Match
+        // the `<li>` and read its two attributes independently instead.
         const marked = new Set(
-          [...live.matchAll(/data-card-id="(\d+)" data-card-name="[^"]*" data-selectable="true"/g)].map(
-            (m) => Number(m[1]),
-          ),
+          [...live.matchAll(/<li\b[^>]*>/g)]
+            .map((m) => m[0])
+            .filter((tag) => tag.includes('data-selectable="true"'))
+            .map((tag) => Number(/data-card-id="(\d+)"/.exec(tag)?.[1] ?? NaN))
+            .filter((id) => Number.isFinite(id)),
         );
         const drawn = new Set(renderedCardIds(live));
         for (const id of marked) {

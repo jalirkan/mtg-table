@@ -35,11 +35,26 @@
 import type { GameStateBody } from '../protocol.ts';
 import { cardKey, playerKey, stackKey, type RectBox, type RectKey } from './rects.ts';
 
-/** The three classes of report 10 §9.2: three colours, three curvatures. */
-export type ArrowClass = 'target' | 'attack' | 'block';
+/**
+ * The three classes of report 10 §9.2 — three colours, three curvatures — plus
+ * **M5's fourth**: `pending`, the target being chosen right now out of
+ * `input.selectable` or an ask picker. `PLAN.md` "What M4 hands to M5" names it
+ * as the one arrow M4 did not draw: *"What M5 adds is an arrow for a pending
+ * target — the one being chosen out of `selectable` — not the resolved ones."*
+ *
+ * It is the same geometry with a different stroke, and it is still decoration
+ * (§14 rule 4): the count and the candidate list are text in the decision panel,
+ * so a pending arrow that cannot be drawn loses nothing.
+ */
+export type ArrowClass = 'target' | 'attack' | 'block' | 'pending';
 
 /** How much of the full bow each class uses. A block is nearly straight. */
-const BOW_SCALE: Record<ArrowClass, number> = { target: 1, attack: 0.5, block: 0.25 };
+const BOW_SCALE: Record<ArrowClass, number> = {
+  target: 1,
+  attack: 0.5,
+  block: 0.25,
+  pending: 0.8,
+};
 
 export interface ArrowSpec {
   /** Stable across frames, so React keys do not churn: `target:s12>c34`. */
@@ -186,4 +201,26 @@ export function buildArrows(board: GameStateBody, get: RectLookup): ArrowSpec[] 
   }
 
   return out;
+}
+
+/**
+ * M5 — the arrow from the source of a pending choice to the candidate under the
+ * pointer. `null` for every reason the others drop an arrow, plus two more: no
+ * source (the engine has pushed no focus card and the stack is empty) and no
+ * hover (the pointer is not on a candidate at all).
+ *
+ * Pure, like the rest of this file, so `web/test/arrows.test.ts` can build one
+ * without a browser.
+ */
+export function pendingArrow(
+  from: RectKey | null,
+  to: RectKey | null,
+  get: RectLookup,
+  title = 'pending target',
+): ArrowSpec | null {
+  if (from === null || to === null || from === to) return null;
+  const a = get(from);
+  const b = get(to);
+  if (a === undefined || b === undefined) return null;
+  return { key: `pending:${from}>${to}`, cls: 'pending', from, to, title, ...arcBetween(a, b, 'pending') };
 }

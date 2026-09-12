@@ -39,6 +39,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { EMPTY_ART_INDEX, type ArtIndex } from '../art.ts';
 import {
   isFaceDownHidden,
   isHidden,
@@ -47,6 +48,8 @@ import {
   type AskBody,
   type AskOption,
 } from '../protocol.ts';
+import { CardTile } from './CardTile.tsx';
+import { toggleChoice } from './picker.ts';
 
 // ---------------------------------------------------------------------------
 // The draft — what the user has built so far, before they press Answer
@@ -228,33 +231,51 @@ export function answerFromDraft(ask: AskBody, draft: AskDraft): AnswerValue {
   return answerFromDraft(ask, defaultDraft(ask));
 }
 
-/** The one-click answer: `answerFromDraft(ask, defaultDraft(ask))`. */
+/**
+ * The one-click answer — `answerFromDraft(ask, defaultDraft(ask))`, with **one
+ * kind that is not its draft**.
+ *
+ * A `text` ask with `numeric: true` is `AbstractGuiGame.getInteger`'s "Other…"
+ * branch, and §5.4 as amended by M25 says of it in as many words: *"`null` —
+ * cancel — is the answer that terminates and `""` is not."* Its `initial` is
+ * `""` whenever Forge has none (§5.2), so a button whose tooltip promises "the
+ * kind's documented default, always legal" was sending the one string the
+ * documented default explicitly is not. Verified in the browser, 2026-09-12
+ * (`decks/number-probe.dck`, Volcano Hellion): pressing **Default** on the
+ * resulting `text` ask produced `a3`, `a4`, `a5`, `a6` — the identical question
+ * every time — because the engine's loop is `while (true)` and the body carries
+ * neither `min` nor `max` for the client to check against.
+ *
+ * The draft is left alone: the form still opens on `initial`, because a form
+ * pre-filled with "nothing" is what a numeric box should look like. It is the
+ * one-click answer that must be the terminating one.
+ */
 export function defaultAnswer(ask: AskBody): AnswerValue {
+  if (ask.kind === 'text' && ask.numeric) return null;
   return answerFromDraft(ask, defaultDraft(ask));
 }
 
 /**
- * What clicking option `id` does to a multi-select draft, given the engine's
- * `max`.
+ * Is this draft a legal thing to send for this ask?
  *
- * **`max === 1` is a radio button, not a checkbox.** "Choose a color" is
- * `min = max = 1`, so the form opens with one option already chosen — and a
- * literal reading of the bound then disables every other option, leaving the
- * user unable to change their mind without first finding the deselect. Measured
- * in a browser against a live `choose_list`, 2026-09-11.
- *
- * Above 1, the bound is enforced by refusing the extra click (the caller
- * disables the control), because silently dropping someone else's earlier
- * choice to make room is worse than not moving. Neither branch is rules logic:
- * `max` is the number Forge sent, echoed back.
+ * One kind only, and for the same reason as above: a `numeric` `text` ask whose
+ * box is empty or not a number is the infinite re-ask. The client does **not**
+ * range-check (it has no `[min,max]` — §5.3, and CLAUDE.md §Scope: no rules
+ * logic in the client); it only refuses to send something that cannot possibly
+ * be a number.
  */
-export function toggleChoice(chosen: readonly number[], id: number, max: number): number[] {
-  const on = chosen.includes(id);
-  if (max === 1) return on ? [] : [id];
-  if (on) return chosen.filter((x) => x !== id);
-  if (max >= 0 && chosen.length >= max) return [...chosen];
-  return [...chosen, id];
+export function draftIsSendable(ask: AskBody, draft: AskDraft): boolean {
+  if (ask.kind !== 'text' || !ask.numeric) return true;
+  if (draft.shape !== 'text') return true;
+  return draft.text.trim() !== '' && Number.isFinite(Number(draft.text));
 }
+
+/**
+ * Re-exported from `picker.ts`, which is where it lives now that M5 gave it a
+ * second caller (the board picker). **One function**: the modal and the tiles
+ * cannot disagree about what a click does to a multi-select draft.
+ */
+export { toggleChoice };
 
 /**
  * May this kind be answered with a literal `null`?
@@ -316,6 +337,34 @@ function IndexTag({ id }: { id: number }): JSX.Element {
   return <span className="ask-modal__index">[{id}]</span>;
 }
 
+/**
+ * M5 — one option's card, drawn as a card.
+ *
+ * Through `CardTile` and nothing else (hard rule 8's renderer half): the cards
+ * in an ask body come off the wire through the same gated serialiser as every
+ * other card, and a concealed one is a five-key stub that the tile draws as a
+ * card back. `anchor={false}` — if this card is also on the board, the board's
+ * tile is where it *is* for the arrows overlay (report 10 §9.1); `clicks={null}`
+ * because inside an ask the only thing the engine is listening for is the
+ * answer, and the row's own controls are what send it.
+ */
+function OptionCard({ option, art }: { option: AskOption; art: ArtIndex }): JSX.Element | null {
+  if (option.card === undefined) return null;
+  return (
+    <ul className="row row--strip ask-modal__thumb" style={{ '--slots': '1' } as React.CSSProperties}>
+      <CardTile
+        card={option.card}
+        kind="strip"
+        input={null}
+        art={art}
+        clicks={null}
+        zoom="down"
+        anchor={false}
+      />
+    </ul>
+  );
+}
+
 function OptionLabel({ option, extra = '' }: { option: AskOption; extra?: string }): JSX.Element {
   const detail = [optionDetail(option), extra].filter((bit) => bit !== '').join(' · ');
   return (
@@ -340,9 +389,20 @@ export interface AskModalProps {
    * server, and a control that did nothing would be worse than a disabled one.
    */
   onAnswer?: AnswerFn | null;
+  /**
+   * M5 — the art index, so the cards in an ask body are drawn as cards.
+   * Optional and defaulted, because a missing image is cosmetic by
+   * construction (`CardTile` renders the generated text frame underneath) and
+   * every existing caller that only wanted the labels still gets them.
+   */
+  art?: ArtIndex;
 }
 
-export function AskModal({ ask, onAnswer = null }: AskModalProps): JSX.Element | null {
+export function AskModal({
+  ask,
+  onAnswer = null,
+  art = EMPTY_ART_INDEX,
+}: AskModalProps): JSX.Element | null {
   // `null` renders NOTHING, deliberately: an empty "no outstanding question"
   // panel at the top of every frame trains the reader to ignore the place the
   // question appears.
@@ -392,7 +452,7 @@ export function AskModal({ ask, onAnswer = null }: AskModalProps): JSX.Element |
       {/* Remounting on a new askId is how the draft resets: no effect, no
           derived-state dance, and a second ask can never inherit the first's
           half-built answer. */}
-      <AskForm key={ask.askId} ask={ask} onAnswer={onAnswer} />
+      <AskForm key={ask.askId} ask={ask} onAnswer={onAnswer} art={art} />
       </FocusTrap>
     </>
   );
@@ -468,22 +528,39 @@ function focusables(root: HTMLElement | null): HTMLElement[] {
   );
 }
 
-function AskForm({ ask, onAnswer }: { ask: AskBody; onAnswer: AnswerFn | null }): JSX.Element {
+function AskForm({
+  ask,
+  onAnswer,
+  art,
+}: {
+  ask: AskBody;
+  onAnswer: AnswerFn | null;
+  art: ArtIndex;
+}): JSX.Element {
   const [draft, setDraft] = useState<AskDraft>(() => defaultDraft(ask));
   const live = onAnswer !== null;
+  /** §5.3/M25 — the one kind whose "default" is a cancel and whose box can lie. */
+  const numericText = ask.kind === 'text' && ask.numeric;
   const send = (value: AnswerValue): void => {
     onAnswer?.(ask.askId, value);
   };
 
   return (
     <>
-      <div className="ask-modal__body">{body(ask, draft, setDraft, live)}</div>
+      <div className="ask-modal__body">{body(ask, draft, setDraft, live, art)}</div>
 
       <div className="ask-modal__actions">
         <button
           type="button"
           className="btn btn--primary"
-          disabled={!live}
+          // A numeric `text` box that is empty or not a number is the M25
+          // re-ask loop, and the engine's own dialog does not accept it either.
+          disabled={!live || !draftIsSendable(ask, draft)}
+          title={
+            draftIsSendable(ask, draft)
+              ? 'send this draft as the answer (§5.2)'
+              : 'this ask is numeric — an empty or non-numeric answer comes back as the same question (§5.3, M25)'
+          }
           onClick={() => {
             send(answerFromDraft(ask, draft));
           }}
@@ -494,7 +571,11 @@ function AskForm({ ask, onAnswer }: { ask: AskBody; onAnswer: AnswerFn | null })
           type="button"
           className="btn"
           disabled={!live}
-          title="the kind's documented default (§5.4) — always legal, always one click away"
+          title={
+            numericText
+              ? 'cancel (null) — §5.4/M25: for a numeric ask this is the only answer that terminates'
+              : 'the kind’s documented default (§5.4) — always legal, always one click away'
+          }
           onClick={() => {
             send(defaultAnswer(ask));
           }}
@@ -534,6 +615,15 @@ function AskForm({ ask, onAnswer }: { ask: AskBody; onAnswer: AnswerFn | null })
           wedge is always escapable.
         </p>
       )}
+      {live && numericText && (
+        <p className="hint">
+          This is <code>getInteger</code>&rsquo;s &ldquo;Other&hellip;&rdquo; box (§5.3, amendment
+          M25). Forge re-asks in a <code>while (true)</code> until the string is a number inside a
+          range <em>this frame does not carry</em>, so <strong>a number outside the engine&rsquo;s
+          range comes back as the same question</strong>. &ldquo;Default&rdquo; sends{' '}
+          <code>null</code> — cancel — which is the answer that terminates.
+        </p>
+      )}
       {live && !nullIsLegal(ask) && (
         <p className="hint">
           This kind has no usable <code>null</code> (§5.3): Forge dereferences the result, so
@@ -568,7 +658,13 @@ type SetDraft = (draft: AskDraft) => void;
  * the typecheck here rather than rendering a blank question at runtime — the
  * same discipline `reduce()` applies to an unknown kind at the other end.
  */
-function body(ask: AskBody, draft: AskDraft, setDraft: SetDraft, live: boolean): JSX.Element {
+function body(
+  ask: AskBody,
+  draft: AskDraft,
+  setDraft: SetDraft,
+  live: boolean,
+  art: ArtIndex,
+): JSX.Element {
   switch (ask.kind) {
     case 'ability_menu':
       return (
@@ -713,6 +809,27 @@ function body(ask: AskBody, draft: AskDraft, setDraft: SetDraft, live: boolean):
                   {ask.delayedReveal.owner === null ? '—' : ask.delayedReveal.owner}
                 </span>
               </h4>
+              {/* M5 — the revealed cards, as cards. This is the single largest
+                  legitimate reveal on the wire (§5.3), and every one of them
+                  came through the one gated serialiser; drawing them as tiles
+                  adds no name the frame did not carry, and the `sr-only` label
+                  under each keeps the text rendering that a screen reader and a
+                  pasted screenshot both need (§14 rule 4). */}
+              <ul className="ask-modal__reveal-cards">
+                {ask.delayedReveal.cards.map((card, i) => (
+                  <CardTile
+                    key={card.id}
+                    card={card}
+                    kind="strip"
+                    input={null}
+                    art={art}
+                    clicks={null}
+                    index={i}
+                    zoom="down"
+                    anchor={false}
+                  />
+                ))}
+              </ul>
               <ul className="cards">
                 {ask.delayedReveal.cards.map((card) => (
                   <li key={card.id} className="card">
@@ -754,7 +871,10 @@ function body(ask: AskBody, draft: AskDraft, setDraft: SetDraft, live: boolean):
                     {option === undefined ? (
                       <span className="muted">#{id}</span>
                     ) : (
-                      <OptionLabel option={option} />
+                      <>
+                        <OptionCard option={option} art={art} />
+                        <OptionLabel option={option} />
+                      </>
                     )}
                     <span className="ask-modal__row-actions">
                       <button
@@ -814,7 +934,10 @@ function body(ask: AskBody, draft: AskDraft, setDraft: SetDraft, live: boolean):
                     {option === undefined ? (
                       <span className="muted">#{id}</span>
                     ) : (
-                      <OptionLabel option={option} />
+                      <>
+                        <OptionCard option={option} art={art} />
+                        <OptionLabel option={option} />
+                      </>
                     )}
                     <button
                       type="button"
@@ -876,12 +999,18 @@ function body(ask: AskBody, draft: AskDraft, setDraft: SetDraft, live: boolean):
               const option = ask.cards.find((o) => o.id === id);
               const movable = ask.manipulable.includes(id);
               return (
-                <li key={id} className="ask-modal__row">
+                <li key={id} className="ask-modal__row ask-modal__row--card">
                   <IndexTag id={id} />{' '}
                   {option === undefined ? (
                     <span className="muted">#{id}</span>
                   ) : (
-                    <OptionLabel option={option} extra={movable ? 'movable' : 'fixed'} />
+                    <>
+                      {/* M5 — the list you are re-ordering is a list of cards,
+                          so it is drawn as cards. No drag: two buttons, which
+                          is the accessible gesture and the testable one. */}
+                      <OptionCard option={option} art={art} />
+                      <OptionLabel option={option} extra={movable ? 'movable' : 'fixed'} />
+                    </>
                   )}
                   <span className="ask-modal__row-actions">
                     <button

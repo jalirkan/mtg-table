@@ -9,6 +9,14 @@
  *
  *     node tools/ws-auto-play.mjs --port 8642 [--timeout 300] [--log var/ws-auto.jsonl]
  *     node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask [--reconnect-after 5000]
+ *     node tools/ws-auto-play.mjs --port 8642 --probe
+ *
+ * `--probe` is M5's: the same policy with four decisions taken the other way, so
+ * that `useMana` and `clickAbility` — the two typed acts PLAN.md M5 records as
+ * having no client that sends them — actually travel this socket, and so that
+ * `showInputDialog` and a library search that fetches something are reachable at
+ * all. It mirrors `AutoTransport.setProbe(true)` line for line; the two must
+ * agree for the same reason the rest of this file mirrors that class.
  *
  * `--refuse-first-ask` is the cancelAll() coverage nothing else in the repo has:
  * it plays normally until the first `ask` FRAME, drops the socket while a game
@@ -64,6 +72,10 @@ const STUCK_MS = 60_000;
 const STEP_CAP_MS = 2_000;
 /** AutoTransport.SETTLE_MS — a quiet inbox for this long means the board settled. */
 const SETTLE_MS = 120;
+/** AutoTransport.POOL_COLORS — §3.1's six manaPool keys, in pool order. */
+const POOL_COLORS = ['W', 'U', 'B', 'R', 'G', 'C'];
+/** AutoTransport.POOL_COLOR_NAMES — the `useMana` colour NAME for each (§2.2). */
+const POOL_COLOR_NAMES = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless' };
 /** How long to wait for the socket to open before giving up. */
 const CONNECT_TIMEOUT_MS = 30_000;
 /** After conceding, how long to wait for `over` before failing anyway. */
@@ -78,7 +90,7 @@ function usage(message) {
   process.stderr.write(
     'usage: node tools/ws-auto-play.mjs [--port 8642] [--url ws://127.0.0.1:8642/ws]\n' +
       '                                  [--timeout 300] [--log var/ws-auto.jsonl]\n' +
-      '                                  [--resync-after 12] [--quiet]\n' +
+      '                                  [--resync-after 12] [--quiet] [--probe]\n' +
       '                                  [--refuse-first-ask [--reconnect-after 5000]]\n',
   );
   process.exit(2);
@@ -86,7 +98,7 @@ function usage(message) {
 
 const args = {
   port: 8642, url: null, timeoutS: 300, log: null, resyncAfter: 12, quiet: false,
-  refuseFirstAsk: false, reconnectAfterMs: 5000,
+  refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false,
 };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
@@ -103,6 +115,7 @@ for (let i = 2; i < process.argv.length; i++) {
     case '--resync-after': args.resyncAfter = Number.parseInt(next(), 10); break;
     case '--quiet': args.quiet = true; break;
     case '--refuse-first-ask': args.refuseFirstAsk = true; break;
+    case '--probe': args.probe = true; break;
     case '--reconnect-after': args.reconnectAfterMs = Number.parseInt(next(), 10); break;
     case '--help': case '-h': usage(null); break;
     default: usage(`unknown argument ${JSON.stringify(a)}`);
@@ -184,6 +197,8 @@ function writeHeader(hello) {
 // ---------------------------------------------------------------------------
 
 const stats = { in: 0, out: 0, acts: 0, answers: 0, states: 0, inputs: 0, notices: 0, asks: 0 };
+/** The two acts `--probe` exists to send; counted so a run SAYS whether it sent them. */
+const probeActs = { useMana: 0, clickAbility: 0 };
 const askKinds = new Set();
 /** askId → true, so a second answer for one ask is impossible by construction (§2.3). */
 const answered = new Map();
@@ -195,6 +210,20 @@ let myPriority = false;
 let myTurn = false;
 let myMainPhase = false;
 let stackEmpty = true;
+/** §3.1 — always all six keys; the M5 `useMana` probe spends what is in here. */
+let myPool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+/** AutoTransport.askPromptsSeen — how often each confirm / numeric-text prompt has been answered. */
+const askPromptsSeen = new Map();
+/**
+ * AutoTransport.askRepeats / ASK_REPEAT_CAP — how many asks carrying each
+ * `kind|prompt|title` have arrived since the game last made visible progress.
+ * STUCK_MS is a *silence* watchdog and an ask loop is not silent (the engine
+ * re-asks the instant we answer), so this is the other half of the guard.
+ */
+const askRepeats = new Map();
+const ASK_REPEAT_CAP = 20;
+/** AutoTransport.lastProgressKey — `turn|phase|activePlayer` of the last snapshot. */
+let lastProgressKey = '';
 
 let pendingInput = null;
 let lastSeenInputKey = '';
@@ -229,6 +258,7 @@ function send(type, body) {
 
 function act(action, extra = {}) {
   stats.acts += 1;
+  if (action in probeActs) probeActs[action] += 1;
   const prompt = pendingInput === null ? '(no input)' : String(pendingInput.prompt ?? '');
   say(`ACT  ${action}${Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ''}  <- ${JSON.stringify(prompt)}`);
   send('act', { action, ...extra });
@@ -342,14 +372,28 @@ function onFrame(text) {
 
 /** Remember just enough of the board to answer "is it my turn, and what is in my hand". */
 function onState(body) {
+  // PROGRESS (AutoTransport.progressKey). A repeated prompt only means "stuck"
+  // while nothing else has moved; a turn/phase change clears both counters, so
+  // the alternating confirm answer and the repeat ceiling start again.
+  const progress = `${String(body.turn)}|${String(body.phase)}|${String(body.activePlayer)}`;
+  if (progress !== lastProgressKey) {
+    lastProgressKey = progress;
+    askPromptsSeen.clear();
+    askRepeats.clear();
+  }
   myPriority = me !== null && body.priority === me;
   myTurn = me !== null && body.activePlayer === me;
   myMainPhase = body.phase === 'MAIN1' || body.phase === 'MAIN2';
   stackEmpty = !Array.isArray(body.stack) || body.stack.length === 0;
   myHand = [];
   myLands = [];
+  myPool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
   for (const player of body.players ?? []) {
     if (me === null || player.id !== me) continue;
+    for (const c of POOL_COLORS) {
+      const n = player.manaPool?.[c];
+      if (typeof n === 'number') myPool[c] = n;
+    }
     for (const card of player.zones?.hand?.cards ?? []) {
       // §3.3: a five-key stub has `hidden: true` and no type line at all. Your
       // own hand is never one, but a control-change effect can put someone
@@ -407,6 +451,18 @@ function plan(body) {
   // "Pay Mana Cost" / an "Auto" OK means InputPayMana is up: the engine wants
   // mana, not another spell. Clicking a hand card there only makes a notice.
   const payingMana = prompt.includes('Pay Mana Cost') || prompt.includes('Pay ');
+  if (args.probe && payingMana) {
+    // THE `useMana` PROBE (§2.2), AutoTransport.plan transcribed. Forge takes
+    // this act only while the current input is an InputPayMana
+    // (PlayerControllerHuman.java:2738-2742), and nothing else in the repo sends
+    // it from a client — the browser has no control for it at all (PLAN.md M5,
+    // "the one real dead end"). Spending the pool BEFORE pressing the engine's
+    // own Auto button is also the only way the act can be seen to work: Auto
+    // drains the pool for us and proves nothing.
+    for (const c of POOL_COLORS) {
+      if (myPool[c] > 0) out.push(['useMana', { color: POOL_COLOR_NAMES[c] }]);
+    }
+  }
   if (!mustClick && !payingMana && myPriority && myMainPhase && stackEmpty) {
     // Lands first: a land drop is the one play that is always legal, and without
     // it this policy never has mana, never casts, never reaches combat or an ask.
@@ -459,17 +515,61 @@ function answerFor(kind, body) {
       const d = intOf(body.defaultIndex);
       return d !== null && d >= 0 && d < n ? d : 0;
     }
-    case 'confirm':
-      // "No" unless there is no way to say no. A mulligan confirm answered false
-      // keeps the hand, which is exactly what a dumb human does.
-      return false;
-    case 'text':
-      return '';
-    case 'choose_list':
-    case 'choose_entities': {
+    case 'confirm': {
+      // **The engine's own default button**, which is also §5.4's null default
+      // (`RemoteClientGuiGame.java:451-454`) — and, unlike a flat `false`, it
+      // makes progress. Measured (M5): the one IGuiGame confirm a human seat
+      // reaches is InputPassPriority's floating-mana prompt, whose "no" means DO
+      // NOT pass priority; answered false it re-asks at once, and one probe game
+      // produced 969 identical confirm asks before it was killed.
+      //
+      // From the third identical prompt the answer ALTERNATES. A backstop that
+      // LATCHES on `!dflt` has merely chosen the other non-advancing answer, and
+      // the first version of this line did: prompts 1–2 `true`, prompts 3..∞
+      // `false`, 2,278 identical asks in one 300 s gate step. `seen` counts only
+      // asks since the last turn/phase change (see `onState`).
+      const dflt = body.defaultYes === true;
+      const seen = bumpPrompt(`confirm|${String(body.prompt)}|${String(body.title)}`);
+      return seen <= 2 || seen % 2 === 0 ? dflt : !dflt;
+    }
+    case 'text': {
+      // A numeric text ask is AbstractGuiGame.getInteger's "Other…" branch, and
+      // it re-asks in a `while (true)` until the string is a number inside its
+      // own [min,max] — bounds the `text` body does not carry. So '' is not a
+      // safe answer there: it is an infinite ask loop that looks like a wedge.
+      // `null` is, and it is §5.4's own default ("that is 'cancel'").
+      if (body.numeric !== true) return '';
+      if (!args.probe) return null;
+      return bumpPrompt(`text|${String(body.prompt)}`) === 1 ? '0' : null;
+    }
+    case 'choose_list': {
       const n = len(body.options);
       const min = intOf(body.min);
       const want = min === null || min < 0 ? 0 : Math.min(min, n);
+      if (args.probe) {
+        // THE `text` PROBE. getInteger(message, min, max, cutoff) offers the
+        // numbers min..cutoff and then one STRING option, "Other…", and picking
+        // that string is the only route a human seat has to
+        // IGuiGame.showInputDialog (the only other two call sites in the 2.0.14
+        // jar are the macro systems). §5.1: an Integer option is `kind:"number"`
+        // and a String option is `kind:"text"`.
+        const other = otherIntegerOption(body);
+        if (other >= 0 && want <= 1) return [other];
+      }
+      return indices(want);
+    }
+    case 'choose_entities': {
+      const n = len(body.options);
+      const min = intOf(body.min);
+      let want = min === null || min < 0 ? 0 : Math.min(min, n);
+      if (args.probe && want === 0 && n > 0) {
+        // An optional choose_entities is a library search offered as "you may".
+        // Answering "none" is legal and is what the default policy does — and
+        // it means the search fetches nothing, so the answer marshalling
+        // (index → the option array → a GameEntity) is never executed.
+        const max = intOf(body.max);
+        want = max === null || max >= 1 ? 1 : 0;
+      }
       return indices(want);
     }
     case 'order': {
@@ -511,6 +611,46 @@ function answerFor(kind, body) {
   }
 }
 
+/** AutoTransport.askPromptsSeen.merge — 1 on the first sighting of this prompt. */
+function bumpPrompt(key) {
+  const n = (askPromptsSeen.get(key) ?? 0) + 1;
+  askPromptsSeen.set(key, n);
+  return n;
+}
+
+/**
+ * The index of the one `kind:"text"` option in a list that is otherwise all
+ * `kind:"number"`, or -1. That is exactly getInteger's "Other…" entry and
+ * nothing else in the corpus has the shape. (AutoTransport.lastTextOptionAfterNumbers.)
+ */
+function otherIntegerOption(body) {
+  const opts = Array.isArray(body.options) ? body.options : [];
+  let text = -1;
+  let numbers = 0;
+  for (let i = 0; i < opts.length; i++) {
+    const k = String(opts[i]?.kind);
+    if (k === 'number') numbers += 1;
+    else if (k === 'text' && text < 0) text = i;
+    else return -1;
+  }
+  return numbers > 0 ? text : -1;
+}
+
+/**
+ * The first `ability_menu` option Forge says can actually be played, or the
+ * first option at all. (AutoTransport.firstPlayableAbility.)
+ */
+function firstPlayableAbility(body) {
+  const opts = Array.isArray(body.options) ? body.options : [];
+  let first = null;
+  for (const o of opts) {
+    if (typeof o?.abilityId !== 'number') continue;
+    if (first === null) first = o;
+    if (o.canPlay === true) return o;
+  }
+  return first;
+}
+
 function onAsk(body) {
   const askId = String(body.askId);
   const kind = String(body.kind);
@@ -532,7 +672,34 @@ function onAsk(body) {
     say(`SKIP ${askId} — this is the ask we refused; the server cancelled it at the drop`);
     return;
   }
+  if (args.probe && kind === 'ability_menu') {
+    // THE `clickAbility` PROBE (§2.2, D20/D22). PLAN.md M5: "the console seat
+    // sends it; THE BROWSER NEVER HAS." Answering the menu by index is the
+    // ordinary path and is already evidenced by the committed fixtures; the ACT
+    // is not. So the menu is declined with `null` — "never mind" (§5.3: Forge's
+    // input is still the one that asked, nothing is spent) — and the same choice
+    // is made again as an act, which resolves through the bridge's abilityIndex
+    // to the identical IGameController.selectAbility call.
+    answer(askId, kind, body.prompt ?? body.title ?? '', null);
+    const opt = firstPlayableAbility(body);
+    if (opt !== null && typeof body.cardId === 'number') {
+      act('clickAbility', { cardId: body.cardId, abilityId: opt.abilityId });
+    }
+    return;
+  }
   answer(askId, kind, body.prompt ?? body.title ?? '', answerFor(kind, body));
+  // THE ASK CEILING (AutoTransport.repeatedTooOften). Answering came first on
+  // purpose: the server's game thread is parked on this ask, so a concede
+  // dispatched while it is parked would sit behind it.
+  const repeatKey = `${kind}|${String(body.prompt)}|${String(body.title)}`;
+  const repeats = (askRepeats.get(repeatKey) ?? 0) + 1;
+  askRepeats.set(repeatKey, repeats);
+  if (repeats > ASK_REPEAT_CAP && !conceded) {
+    conceded = true;
+    concededAt = Date.now();
+    say(`ASK LOOP: more than ${ASK_REPEAT_CAP} identical ${kind} asks with no progress — conceding`);
+    act('concede');
+  }
 }
 
 /**
@@ -629,6 +796,7 @@ function finish() {
     `frames in ${stats.in}, out ${stats.out} · states ${stats.states} · inputs ${stats.inputs} · ` +
     `acts ${stats.acts} · asks ${stats.asks} answered ${stats.answers} · notices ${stats.notices} · ` +
     `ask kinds ${askKinds.size === 0 ? 'none' : [...askKinds].sort().join(',')} · ` +
+    (args.probe ? `probe acts ${probeActs.useMana} useMana, ${probeActs.clickAbility} clickAbility · ` : '') +
     (refusedAskId === null ? '' : `refused ${refusedAskId} and reconnected · `) +
     `${((Date.now() - started) / 1000).toFixed(1)}s`;
   process.stderr.write(`[ws-auto] ${summary}\n`);

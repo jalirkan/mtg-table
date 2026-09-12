@@ -36,13 +36,14 @@ import {
   type KeyEventLike,
 } from '../src/keys.ts';
 
-/** A live seat holding priority with both engine buttons enabled. */
+/** A live seat holding priority with both engine buttons enabled, pool empty. */
 const LIVE: KeyContext = {
   live: true,
   askOpen: false,
   okEnabled: true,
   cancelEnabled: true,
   haveSelectable: false,
+  poolColors: [],
   overlay: 'none',
 };
 
@@ -228,6 +229,46 @@ test('a key whose milestone has not arrived says so instead of doing nothing', (
       `${key} must name the milestone that lights it up`,
     );
   }
+});
+
+// ---------------------------------------------------------------------------
+// M5 — W U B R G C, but only while the pool holds that colour
+// ---------------------------------------------------------------------------
+
+test('a floating colour takes its letter; an empty pool leaves the letter alone', () => {
+  const withU: KeyContext = { ...LIVE, poolColors: ['U'] };
+  assert.deepEqual(planKey(ev('u'), withU)?.plan, { kind: 'useMana', color: 'U' });
+  assert.equal(planKey(ev('u'), withU)?.binding.id, 'useMana');
+  // The physical spelling, like Space: a driver may send one and not the other.
+  assert.deepEqual(planKey(ev('', { code: 'KeyU' }), withU)?.plan, { kind: 'useMana', color: 'U' });
+  // A colour the pool does not hold says which, rather than doing nothing.
+  const dead = planKey(ev('w'), withU);
+  assert.equal(dead?.plan.kind, 'inert');
+  assert.match(dead?.plan.kind === 'inert' ? dead.plan.why : '', /floating mana/);
+});
+
+test('C and B keep their panels unless that colour is actually floating', () => {
+  // `bindingFor` is a first-match lookup and `useMana` is LAST in the table, so
+  // with an empty pool these are M4's combat emphasis and M6's pass-to-before.
+  assert.deepEqual(planKey(ev('c'), LIVE)?.plan, { kind: 'view', id: 'toggleCombat' });
+  assert.equal(planKey(ev('b'), LIVE)?.binding.id, 'passBeforeTurn');
+  // With the colour floating, the pre-pass takes the key first.
+  const rich: KeyContext = { ...LIVE, poolColors: ['B', 'C'] };
+  assert.deepEqual(planKey(ev('c'), rich)?.plan, { kind: 'useMana', color: 'C' });
+  assert.deepEqual(planKey(ev('b'), rich)?.plan, { kind: 'useMana', color: 'B' });
+  // ...and `S`, `L`, `Z` are not colours and never move.
+  assert.deepEqual(planKey(ev('s'), rich)?.plan, { kind: 'view', id: 'toggleStack' });
+});
+
+test('mana keys are dead on a replay, inside an ask, and in a text field', () => {
+  const withW = { ...LIVE, poolColors: ['W'] };
+  assert.equal(planKey(ev('w'), { ...withW, live: false })?.plan.kind, 'inert');
+  // §5 — the game thread is parked inside the ask and is listening for one
+  // thing; spending mana into it would be a click into a void.
+  assert.equal(planKey(ev('w'), { ...withW, askOpen: true })?.plan.kind, 'inert');
+  assert.equal(planKey(ev('w', { target: { tagName: 'INPUT' } }), withW), null);
+  // Ctrl+W is the browser's, not ours.
+  assert.equal(planKey(ev('w', { ctrlKey: true }), withW), null);
 });
 
 test('H and ? are the same binding', () => {
