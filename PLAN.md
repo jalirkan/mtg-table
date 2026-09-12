@@ -509,13 +509,15 @@ session is logged and replayable.
   `resync` → concede; disconnect mid-decision → reconnect → the game is still
   there; `ping`/`pong`; a second client refused with one `notice` and close code
   **4001**; garbage in answered with a `notice` rather than a dropped socket.
-- **The gate is thirteen steps** and step 10 runs **four** fresh ws servers on
+- **The gate is thirteen steps** and step 10 ran **four** fresh ws servers on
   port 8643 (10a `ws-smoke`, 10b `ws-smoke --disconnect-mid-ask`, 10c a whole
   game through `ws-auto-play`, 10d `ws-auto-play --refuse-first-ask`, the only
   thing in the repo that exercises `ReplyPool.cancelAll()` with a game thread
   genuinely parked). Every JVM step is under `GAME_TIMEOUT`. Re-run for the
   documentation pass on 2026-09-11: **exit 0, 163.2 s**
-  (`var/check-all-doc-pass.log`; `docs/evidence/m3-ws.md` §14).
+  (`var/check-all-doc-pass.log`; `docs/evidence/m3-ws.md` §14). **It is five ws
+  servers as of 2026-09-12** — follow-up 5 added 10e — and the gate now takes
+  3 m 19–32 s.
 - **The protocol grew twelve rows and no new `v`.** M10–M13 while the socket was
   written, M14–M19 in the review pass, M20–M21 in the fix pass. Only **M14** (the
   asynchronous `ability_menu`) changes what a recording contains; every M1/M2
@@ -548,7 +550,7 @@ session is logged and replayable.
 sends `act: clickCard` for **any** card and never gates on `selectable`: 78 of 86
 clicks in the scripted socket game and 9 of 10 in the hand-played browser game
 name an id outside it, and `web/test/ws-log.test.ts` pins the property to the
-corpus. (3) Step 10 runs four fresh ws servers, each with those four assertions,
+corpus. (3) Step 10 ran four fresh ws servers, each with those four assertions,
 plus the **client** log through `check-redaction.mjs` in its own `--client-log`
 mode (amendment **M17**).
 
@@ -720,10 +722,14 @@ before a human seat exists:
 strings, we do not): the checker **warns** on it, and it is accepted residual
 risk, documented in report 06 §10 (residual risk 3).
 
-### M3 follow-ups — open, 2026-09-11
+### M3 follow-ups — eleven, two closed 2026-09-12 (5 and 7), nine open
 
 M3 is **done**, not perfect. Every line below is carried verbatim from the two
 builders' and the two verifiers' own "problems" notes, and none of it blocks M4.
+**Follow-ups 5 and 7 were closed by a tooling pass on 2026-09-12** — two new gate
+sub-steps, no change to `bridge/` and none to `web/` — and both are struck through
+below with what closed them (evidence:
+[`docs/evidence/m3-followups.md`](docs/evidence/m3-followups.md)).
 Nothing here is a known leak: the redaction gate now runs over a socket
 recording and a client log as well as the fixtures. They are gaps in *evidence*,
 two races that are shrunk rather than eliminated, and a handful of decisions
@@ -761,14 +767,21 @@ worth re-reading when their assumptions change.
    `web/test/ask-modal.test.tsx` — **none of which can prove the emitter**. This
    is M2 follow-up 2, now one kind shorter, and **M5's first move** is the two
    probe decks for the two that are reveal surfaces.
-5. **Amendment M11's exception path has never been observed.** `over` with no
-   `gameOver` `state` in front of it needs a concede *before* the engine has asked
-   this seat for anything; `grep -rl 'OVER WITHOUT A gameOver STATE' var/` finds
-   **nothing** across every run on disk, because `ws-smoke`'s concede lands after
-   the first `input` (it ends `winner=1 reason=AllOpponentsLost`). The client
-   handles the shape and a test pins the banner, but the emitter's branch is
-   reasoned, not measured. A gate step that concedes from the `open` handler
-   before any `input` would close it.
+5. ~~**Amendment M11's exception path has never been observed.**~~ **CLOSED
+   2026-09-12.** `tools/ws-smoke.mjs --concede-before-input` connects on a retry
+   loop *before* `GET /health` says `ok` (the port binds ~1 s earlier), sends
+   nothing until `hello_ok` — amendment **M20** drops a pre-session c2s frame in
+   silence — and then writes `act: concede` synchronously from inside the
+   `hello_ok` handler. Measured margin: `hello_ok` → concede **0–3 ms** against
+   `hello_ok` → first engine `input` **~150 ms**, ~50×, and the window was hit **9
+   times out of 9** at four seeds. The bridge does exactly what M11 documents:
+   `over {winner: null, reason: null, matchOver: true}`, no `state` in front of
+   it, `CONCEDE BEFORE START: ending the session` and `OVER WITHOUT A gameOver
+   STATE` on stderr, a four-line frame log, and `members fired = 2 of 37`. Wired
+   as gate sub-step **10e** (a fifth ws server, under the same `GAME_TIMEOUT`),
+   which asserts the stderr line, the guard line, no `"gameOver":{` in the log and
+   M20's `0 read before the session existed`. `check-redaction.mjs` is
+   deliberately **not** run on that log — see M4 follow-up 8 below.
 6. **Amendment M10's `seq: 0` reservation is true by construction, not by an
    assertion.** On the bridge it holds because one private helper
    (`WsTransport.oob`) is the only thing that writes `"seq":0`, and it has three
@@ -783,13 +796,18 @@ worth re-reading when their assumptions change.
    from a header key rather than from the frames. Every gate run says so out loud:
    *"a CLIENT log's series is neither contiguous … nor monotonic … In a
    server-side `var/games/` log the same shape IS a dropped frame."*
-7. **Fixture drift has no gate step, deliberately.** All five human-seat fixtures
-   are stable in *content* and none is reliably stable in *byte order* — measured
-   at 2 of 3 runs differing for `human-auto-42`, by the `seq` assignment of the
-   same three frames. A byte-level normalised diff would therefore be flaky. The
-   sound shape is **order-insensitive**: the multiset of frames with `seq`
-   stripped. Nobody has written it; the harness used for the measurement is kept
-   at `var/verify/m3fix-rerecord.sh` (`m3-ws.md` §13.5).
+7. ~~**Fixture drift has no gate step, deliberately.**~~ **CLOSED 2026-09-12.**
+   `tools/fixture-multiset-diff.mjs` is the order-insensitive shape the follow-up
+   asked for: frames with `seq` stripped, compared as a multiset, with
+   `--only-dir s2c` to ask the narrower question "did the **emitter's** output
+   change?". It is gate sub-step **9b** and it is **advisory on purpose** —
+   identical prints `OK`; a difference that vanishes under `--only-dir s2c` prints
+   a loud advisory naming the wall-clock cause; a difference that survives it
+   prints a loud advisory saying it reaches the emitter. None of the three is an
+   exit code (`DRIFT_FATAL=1` makes it one, `SKIP_DRIFT=1` skips the ~31 s
+   re-recording). Two of the four gate runs in that pass took the middle branch,
+   so the advisory is observed firing rather than asserted. `m3-ws.md` §13.5's
+   "Nobody has written it" is now false.
 8. **`--refuse-first-ask` lives in `tools/ws-auto-play.mjs`, not `ws-smoke.mjs`.**
    The fix text said otherwise. Reaching an `ask` at all needs a client that can
    play a game, and a second copy of the dumb-human policy in `ws-smoke` could
@@ -816,8 +834,11 @@ worth re-reading when their assumptions change.
 
 ## M4 — A board that looks like Magic
 
-**Status: not started.**
-**Effort: 3 evenings.**
+**Status: done** — three evenings, built and verified, with eight follow-ups open
+below and none of them a defect you can see from the board (evidence:
+[`docs/evidence/m4-board.md`](docs/evidence/m4-board.md) — §1–§9 are evenings 1
+and 2, §10–§18 evening 3, §19 the status).
+**Effort: 3 evenings. Actual: 3.**
 
 **Command**
 
@@ -833,13 +854,76 @@ A missing image renders a generated text card frame and never blocks a click.
 
 Spec: [`docs/research/10-board-ui-spec.md`](docs/research/10-board-ui-spec.md)
 (component tree, layout tokens, wireframes at 1600×900 and 1280×720, the arrow
-geometry, the three evenings). Write the components against the **post-hardening**
-wire from the start rather than retrofitting: **one** concealed shape (the
+geometry, the three evenings). The components were written against the
+**post-hardening** wire from the start rather than retrofitted onto it: **one**
+concealed shape (the
 five-key stub) plus a face-down card that is an ordinary `Card` with `name: ""`
 and `alt: null` — report 10 §0.0's "three card shapes, not two" was superseded by
 amendment P3 the same day — `Card.token`, `Card.alt`, `library.cards`,
 `input.focusCard`, and a `card` on every ask option (`docs/protocol.md`
 §3.2–§3.4, §4, §5.1).
+
+**What the evidence actually shows** (`docs/evidence/m4-board.md`; two live
+bridges against the Forge AI, the replay corpus, and the whole gate green with
+these changes in the tree):
+
+- **The layout is report 10 §2.2's, measured in the live page.** At 1600 × 900 the
+  columns are rail **264** / table **1160** / rail **128** and the rows
+  104 / 132 / **141** / 132 / 104 / 190; at 1280 × 720, **216 / 912 / 112** and
+  84 / 104 / **111** / 104 / 84 / 150. Every number is the spec's to the pixel
+  **except the middle row** (§2.2 computes 164 / 134 from a board that owns the
+  whole viewport; this one sits under a 23 px application bar carrying title,
+  seat, socket status and credits). `document.scrollWidth === innerWidth` at both
+  sizes: the body never scrolls sideways, and transient banners are absolute
+  overlays so they never shorten the board either.
+- **The component tree of §1 is real files.** `Board` (grid, seat ordering, the
+  land/permanent split, attachment hoisting, combat notes), `PlayerRail` ×2,
+  `PhaseStrip`, `ZoneRow`, `HandFan`, `CardTile`, `StackPanel`, `DecisionPanel`,
+  `LogDrawer`, `Mana`, `ArrowsOverlay`, `CardZoom`, `HotkeysOverlay`, plus the
+  pure `labels.ts`, `resolve.ts`, `arrows.ts`, `rects.ts` and `keys.ts`.
+  **`CardTile` is THE card renderer** — every card in every zone, everywhere,
+  goes through it (`m4-board.md` §7).
+- **Real art, with the text frame underneath it, not beside it** (**D28**):
+  `grid` 488×680 WEBP on the board, `thumb` on the stack and in the drawer,
+  `display` for the zoom, all derived from the `scryfallId` and hot-linked
+  (open question 5's default). `?replay=games/morph.jsonl` — a deck with **no**
+  `art.json` entry at all — renders a complete board of generated frames, which
+  is report 10's own exit check ("delete `art.json` and reload") without touching
+  a generated file.
+- **Arrows, and every fact they draw is also text** (**D30**). Three classes
+  (target / attack / block), three curvatures, three dash patterns,
+  `aria-hidden`, `pointer-events: none`. Seen live: `target:s:11>c:44`,
+  `attack:c:44>p:0`, a double block as `block:c:90>c:31` + `block:c:91>c:31`, and
+  on the replay board `target:s:76>c:28` **and** `attack:c:65>p:0` on one frame
+  with `data-readonly="true"` and **0 of 20** `data-act` affordances enabled.
+  `web/test/arrows.test.ts` builds arrows for all **2,473** committed `state`
+  frames (35 target, 575 attack, 62 block) and counts **40 frames where a
+  `stack[].id` is also a battlefield `Card.id`** — the collision the namespaced
+  registry exists for.
+- **One keymap table, 16 rows, and `H` renders it from the same table**, so the
+  help cannot list a key nothing implements. Eight are live at M4 (`SPACE`,
+  `ESC`, `CTRL+Q`, `Z`, `S`, `C`, `L`, `H`/`?`); the other seven flash their chip
+  and name their milestone. Two rules that are easy to get wrong are pure
+  functions with tests: a focused button keeps `Space` **and nothing else** (M3's
+  handler dropped the whole keyboard for a focused button, so clicking a card
+  turned `Escape` off), and `Esc`'s precedence is overlay → open `ask` (answer
+  `null`, §5.4) → the engine's Cancel button.
+- **The hidden-information rules are asserted per frame, not asserted once.**
+  `web/test/render.test.tsx` renders **every frame of every fixture twice** —
+  once as a replay (`actions` null) and once as a seat — over 12 fixtures and
+  7,615 frames, checking that every `data-card-name` in the markup is a name that
+  same frame serialised in the clear, that no tile is drawn for a card in an
+  opponent's hand, and that the replay board stays read-only. All three have
+  negative controls.
+- **The phase strip ships read-only** (**D31**), drawing Forge's own documented
+  defaults with every dot `disabled` and a tooltip naming the act, the missing
+  read field and M6. A live toggle would have had to keep its own state, which is
+  the phase-stop logic `CLAUDE.md` §Scope forbids.
+- **Tests and gate.** `npm --prefix web test` → **271 `node --test` (267 pass,
+  4 skipped) + 41 vitest**, `npm --prefix web run build` → **0 TypeScript
+  errors**. The whole gate is green with these changes in the tree: the
+  documentation run on 2026-09-12 was **`check-all OK`, exit 0, 211.99 s**
+  (`var/verify/m4docs/check-all.log`; `docs/evidence/m4-board.md` §19).
 
 **What M3 hands to M4: the board is already interactive, so M4 is layout and
 art.** Nothing on this list needs to be built again, and re-deriving any of it is
@@ -872,6 +956,94 @@ how a rule that took two verification passes to get right gets lost:
   `state` in front of it (**M11**), and a `seq` that can arrive lower than the
   frame before it after a `resync` (**M10**). The reducer already tolerates both;
   a component that counts frames or trusts `seq` for ordering would not.
+
+**None of that list was rebuilt.** `wedge.ts` is still the stall rule, imported;
+`buttons.*.label` is still rendered verbatim (the live game shows `Play`, `Keep`,
+`Auto`, `Alpha Strike` and `End Turn` on Forge's own terms); clicks are still
+never gated on `selectable`; and `<Board actions={…}/>` is still the whole of the
+difference between a replay and a seat.
+
+### M4 follow-ups — open, 2026-09-12
+
+Eight items, from the builders' own "problems" notes and the verifier's findings.
+**None is a defect you can see from the board**, and none blocks M5: four are
+documentation or test-quality debt (2, 4, 5, 8), two are cosmetic (6, 7), one is
+the size of a build output in a gitignored directory (1), and one is a crash seen
+exactly once and not reproduced (3).
+
+1. **`mana-font`'s CSS drags ~3.5 MB of faces nothing fetches into the build.**
+   Measured on the M4 documentation gate run: nine font files totalling
+   **3.72 MB** in `web/dist/assets/`, of which only the 187.40 kB
+   `mana-*.woff2` is ever requested — `mana.woff`, `mana.eot`, `mana.ttf`,
+   `mana.svg` (1.9 MB on its own) and four `mplantin.*` are emitted because
+   `main.tsx` imports the package's CSS wholesale. (`m4-board.md` §5's "about
+   3.2 MB" undercounts by one file, `mana.woff`.) **D29** records why this was
+   accepted — a gitignored build directory for a localhost app, against a forked
+   `mana.css` that must be re-diffed on every upgrade — and says plainly that it
+   becomes worth fixing the moment anything is packaged or served over a network.
+2. **Report 10 §2.2's middle-row arithmetic is 23 px out, and the spec is the
+   half that is wrong.** The middle row measures **141.42 px** at 1600 × 900 and
+   **111.42 px** at 1280 × 720 against §2.2's 164 / 134, because the board sits
+   under a 23 px application bar the spec's arithmetic does not know about. Every
+   other number in §2.2 is exact. Either §2.2 gains the bar or the bar moves into
+   the board's own rows; **do not "fix" the CSS to match a table that assumed a
+   different viewport.**
+3. **`TypeError: set is not iterable`, once, from a layout effect.** Seen in the
+   browser console during the live-play pass, caught by `ErrorBoundary`, with the
+   React frame at `commitRoot` — so it came from `rects.ts`'s sweep or a ref
+   callback, not from render. The only candidate is `for (const el of set)`
+   (`web/src/render/rects.ts:142`), and a stale Vite-HMR module still holding the
+   pre-fix one-element-per-key shape (`m4-board.md` §12) would produce exactly
+   that message.
+   **Reproduce it before changing anything**: an `instanceof Set` guard would hide
+   the cause rather than explain it, and the same symptom after a cold load would
+   mean something quite different.
+4. **`web/test/render.test.tsx`'s own decision paragraph (lines 25–32) is now
+   false** — and it is the paragraph that says to revisit it. It reads *"The board
+   is a tree of pure function components: no `useState`, no `useEffect`, no refs
+   … If the board ever grows an effect, this decision needs revisiting and this
+   paragraph is the place it is written down."* Evening 3 grew several (the rect
+   registry, the `window` key listener, the concede timer). `renderToStaticMarkup`
+   may well still be the right harness — the empty-registry SSR branch is itself a
+   negative control — but the paragraph has to say so on today's terms.
+5. **The selectable-outline assertion is order- and name-coupled.**
+   `render.test.tsx`'s regex requires `data-card-name` to be present *and* to sit
+   between `data-card-id` and `data-selectable`, so a **concealed** tile (which
+   carries no `data-card-name` by design) is never counted, and reordering the
+   attributes in `CardTile` would silently empty the set while the test stayed
+   green. Match the id/selectable pair independently of the name and of attribute
+   order.
+6. **The log drawer is 520 px wide against a 264 px rail.** Report 10 §10 says
+   *"left edge, over the rail"*; open, it covers the rail plus ~256 px of the
+   1160 px table column. Either the width comes down to the rail or §10 says it
+   is a panel over the table.
+7. **The hand fan's outer tiles leave their grid cell.** At 1280 × 720 the hand
+   row is 150 px (`--ch-hand`) but the outermost tiles are 121 × 159 and their
+   bottom edge sits ~5 px below the row. Nothing clips and the body still does not
+   scroll; it is a tile that is not inside the box that is supposed to contain it.
+8. **`check-redaction.mjs` cannot read a four-line M11 session,** so gate
+   sub-step 10e does not run it. The checker treats "no `state` frames at all" as
+   a failure, and downgrades its two *"this file proves nothing"* assertions only
+   for `preGameOnly = stats.state > 0 && stats.maxTurn === 0` — which a session
+   that ends before the first snapshot fails on all three counts. 10e asserts the
+   stronger property directly instead (*the only s2c frames are `hello_ok` and
+   `over`*, therefore not one card was serialised). Widening `preGameOnly` to
+   include "no `state` frames and a four-line session" is a small change for
+   whoever owns the checker; it was deliberately not made silently.
+
+**Still open from M3 and unchanged by this milestone:** follow-up 9 — one human
+press of the space bar. The browser automation driver delivers `Space` as
+`{key: "", code: "", keyCode: 0}`, the same measurement M3 recorded, so the
+binding is covered by `web/test/keys.test.ts` (both the `key` and the `code`
+spelling) and by the engine buttons being clicked directly, but no finger has
+pressed it. Every letter key and `Escape` were driven for real.
+
+**One harness note, not a board defect.** The first live M4 game ended with the
+bridge's own `IllegalStateException: the game did not reach 'over'`: thirteen
+player turns driven one browser round-trip at a time exceeded `MtgTable`'s 900 s
+game timeout and the JVM tore the session down mid-`assign_damage`. Every frame
+up to that point rendered and every click was answered. A human plays faster than
+one tool call per click; an agent driving the board does not.
 
 ## M5 — Nothing dead-ends
 
@@ -907,6 +1079,97 @@ one that forces `manipulate_list`. Same move as `trample-probe` and `scry-probe`
 a deck, a recording committed as a fixture, and the checker run over it. Until
 then those two kinds are evidenced by `AskSelfTest` and a fixture we wrote
 ourselves, which cannot prove the *emitter* is right.
+
+### What M4 hands to M5 — what the board can and cannot express
+
+Written 2026-09-12, from the M4 code as it stands. **Two lines of M5's
+deliverable paragraph above predate M4 and are already shipped** — do not build
+them twice:
+
+- **SVG targeting arrows from `stack[].targetCardIds` and `combat.bands`** are
+  done (**D30**): three classes, pure geometry, a namespaced rect registry, and a
+  test that builds them for all 2,473 committed `state` frames. What M5 adds is an
+  arrow for a *pending* target — the one being chosen out of `selectable` — not
+  the resolved ones.
+- **Modals for `choose_list` / `choose_entities` / `order` / `assign_amount`**
+  have existed since M3, and evening 3 gave `AskModal` a real dialog shell:
+  `role="dialog"`, focus moved on open and restored on close, a `Tab` trap, `Esc`
+  answers `null` (§5.4), and a `timeoutMs` bar that draws **only when
+  `timeoutMs > 0`** — over the socket it is 0 (**D24**), so no bar is drawn, which
+  is the honest rendering. M5's job is not "a modal for these kinds"; it is
+  "the board-shaped ones stop being a modal".
+
+**The whole vocabulary the board can speak today is five acts plus `answer`:**
+`clickCard` (for **any** card — never gated on `selectable`, amendment M8),
+`clickPlayer`, `buttonOk`, `buttonCancel`, `concede`, and an `answer` for all
+eleven ask kinds.
+
+**Typed acts with no control on the board:**
+
+- **`useMana` — this is the one real dead end, and it goes first.** The console
+  seat can spend floating mana (`m W|U|B|R|G|C`); the board has no control for it
+  and the mana pool is six read-only pips in the rail. A state in which Forge
+  expects floating mana to be spent through `useMana` cannot be resolved from the
+  browser at all. Everything else on this list is a missing comfort.
+- **`clickAbility`** — the console seat sends it (`a <card> <ab>`,
+  `ConsoleTransport.java:534`); **the browser never has**. A multi-ability card
+  goes through the asynchronous `ability_menu` instead (**D20**/**D22**), whose
+  answer is applied with the same `IGameController.selectAbility` call, so the
+  engine path is exercised and the *act* is not.
+- **`passPriority`, `undo`, `alphaStrike`, `nextGame`, `setPhaseStop`,
+  `setYield`** — all M6 by their own §2.2 rows. Their keys exist (`A`, `CTRL+Z`,
+  `E`, `T`, `B`, `CTRL+A`, `Y`, `N`) and flash their milestone rather than doing
+  nothing quietly.
+
+**What the board draws but cannot be opened or manipulated:**
+
+- **No zone browsers.** Graveyard and exile are always-visible 45 px strips in the
+  middle row; there is no click-to-open browser for either, none for the library's
+  revealed slice, and none for a revealed list. `input.openZones` renders as a
+  text hint (*"a view hint; it reveals no cards"* — P6 / report 06 §3), which is
+  correct, but there is nothing to open.
+- **Attackers and blockers** are declared by clicking tiles and pressing the
+  engine's button, which is how Forge's inputs genuinely work — but there is no
+  band-building gesture, no drag, and no "this blocker on that attacker" beyond
+  the clicks the engine asks for.
+- **`assign_damage`** is answered in the modal (defender at index 0, §5.3), not on
+  the blockers themselves.
+- **Targeting** is `selectable` outlines plus clicks. The ask's min/max are
+  *printed*, never enforced — Forge judges, and `CLAUDE.md` §Scope is why.
+
+**Whatever M5 adds, it adds through `CardTile`.** One card renderer for every card
+in every zone is the renderer's half of hard rule 8 (`docs/evidence/m4-board.md`
+§7): a zone browser or a targeting picker that draws its own card component is how
+a name for a `hidden: true` id gets back onto the screen, and it is exactly what
+`render.test.tsx`'s per-frame name check would *not* catch if the markup stopped
+carrying `data-card-name`.
+
+**The six ask kinds still without engine evidence** are unchanged (M3 follow-up
+4): `confirm`, `options`, `text`, `assign_amount`, `manipulate_list`, `sideboard`.
+The committed corpus has three kinds from the engine — `choose_list`, `order`,
+`assign_damage` — plus `choose_entities` in an uncommitted console session and
+`ability_menu` from the live browser games. The six are implemented against report
+07 §7, unit-tested by `mtgtable.AskSelfTest`, shape-pinned by `ASK_SHAPES`,
+rendered by `AskModal.tsx` and mounted over `fixtures/synthetic/` —
+**none of which can prove the emitter.**
+
+**So M5's first move is still two probe decks, before any UI**, for the two kinds
+that are *reveal* surfaces, where being wrong is a leak rather than a dead end:
+
+1. a deck that forces **`choose_entities` with a `delayedReveal`** — a library
+   search, i.e. the engine handing the client cards out of a hidden zone;
+2. a deck that forces **`manipulate_list`** (`UI_SELECT_FROM_CARD_DISPLAYS` is off
+   in every process — **D13** — so what arrives is the list, not a board click).
+
+Same move as `decks/trample-probe.dck`, `scry-probe`, `morph-probe` and
+`future-sight-probe`: a deck, a recording committed under `fixtures/games/`,
+`tools/check-redaction.mjs` over it, and `web/test/render.test.tsx` picking it up
+for free because it globs the fixture tree.
+
+**Two shapes a new panel must not assume away**, the same two M4 was handed: an
+`over` with no `gameOver` `state` in front of it (**M11** — now measured, M3
+follow-up 5) and a `seq` that can arrive lower than the frame before it after a
+`resync` (**M10**).
 
 ## M6 — Comfort
 

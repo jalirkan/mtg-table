@@ -91,15 +91,20 @@ Thirteen steps, stopping at the first failure: `check-forge.sh` →
 re-record into `var/` → **a value-level drift diff** of that recording against
 `fixtures/games/g1.jsonl` → **three fresh human-seat games** (`--transport
 null`, the scripted `--transport console` smoke, and `--transport auto --seed
-11`, each asserted to end in exactly one `over` as its last frame) → **four
+11`, each asserted to end in exactly one `over` as its last frame, plus the
+advisory **9b** that re-records seed 42 and compares it against
+`fixtures/games/human-auto-42.jsonl` as an order-insensitive multiset) → **five
 fresh `--transport ws` servers** (the two `ws-smoke` variants, a whole game
-through `tools/ws-auto-play.mjs`, and that client again with
-`--refuse-first-ask`, which drops the socket on the first `ask` frame so
-`ReplyPool.cancelAll()` runs with a game thread genuinely parked) →
+through `tools/ws-auto-play.mjs`, that client again with `--refuse-first-ask`,
+which drops the socket on the first `ask` frame so `ReplyPool.cancelAll()` runs
+with a game thread genuinely parked, and `ws-smoke --concede-before-input`, which
+concedes from the handshake handler before the engine has asked this seat
+anything — amendment M11's exception path) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
 every fresh recording → `check-redaction-selftest.mjs`, which asserts the
 checker still rejects twelve one-defect probes → `npm run build && npm test` in
-`web/`. Two to five minutes, most of it the eight games; every JVM step runs
+`web/`. Three to four minutes (3 m 32 s on the M4 documentation run), most of it
+the nine games; every JVM step runs
 under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
 the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
 reducer and the committed fixtures still agree.
@@ -150,17 +155,19 @@ node tools/ws-smoke.mjs --port 8642                      # connect -> resync -> 
 node tools/ws-smoke.mjs --port 8642 --disconnect-mid-ask # drop, reconnect, finish
 node tools/ws-auto-play.mjs --port 8642 --log var/ws-auto.jsonl   # a whole game
 node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask  # drop the socket ON an `ask`
+node tools/ws-smoke.mjs --port 8642 --concede-before-input  # concede before the first input
 node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (M17)
 # the board in ws mode, if you started the bridge yourself:
 #   http://127.0.0.1:5173/?ws=1        (&port=<n> for a bridge that is not on 8642)
 
-# M4+ — card art for the deck in play (once; cached in web/public/art.json)
+# M4 — card art for the deck in play (run once; cached in web/public/art.json,
+#      which is gitignored.  Without it the board draws generated text frames.)
 node tools/fetch-art.ts
 ```
 
-Everything above runs today. `tools/fetch-art.ts` writes
-`web/public/art.json` now; what **M4** delivers is the board that puts those
-images on the table.
+Everything above runs today, and as of **M4** the board those frames feed is a
+real Magic table: card art, tapped cards rotated 90°, two player rails, a phase
+strip, a stack panel, targeting and combat arrows, and a keyboard.
 
 ### Playing in the browser
 
@@ -182,11 +189,54 @@ reproducible, `--port` / `--web-port` move either half, `--no-open` skips the
 browser, `--keep-open` leaves the bridge up 30 s after `over`, and everything
 after `--` is handed to `mtgtable.MtgTable` untouched.
 
-**The page.** A status bar at the top says `open` / `reconnecting` / `refused`
-with the socket's URL, the frames in and out, and two buttons — **Resync** (ask
-the bridge to re-send the state and the current input) and **Reconnect** (drop
-the socket and open a new one). Under it is the board: both players, every zone,
-the stack, the prompt, and the engine's two buttons.
+**The page.** One line of chrome across the top — the seat, the socket's state
+(`open` / `reconnecting` / `refused`) and its URL, the frames in and out, the
+Scryfall credit, and two buttons: **Resync** (ask the bridge to re-send the state
+and the current input) and **Reconnect** (drop the socket and open a new one).
+Everything under it is the board, and the board never scrolls sideways at
+1600 × 900 or at 1280 × 720.
+
+```
++--------------+----------------------------------------+--------------+
+| mtg-table  ·  seat: Human  ·  open  ·  in 1368 / out 236             |
++--------------+----------------------------------------+--------------+
+| FORGE AI     | forge ai · lands      (tapped = 90 deg)| ROUND 9      |
+| life 14      | forge ai · permanents                  | turn 18      |
+| lib 26  h 1  |                                        | - - - - - -  |
+|              | graveyard · exile     THE STACK (2)    | Upkeep       |
+| YOU          |                                        | Draw         |
+| life 20      | human · permanents                     | > MAIN 1   o |
+| lib 22  h 3  | human · lands                          |   Attackers o|
+| - - - - - -  |                                        |   Blockers  o|
+| DECISION     |     your hand, fanned                  |   MAIN 2    o|
+| [Auto][Undo] |                                        |   End step   |
++--------------+----------------------------------------+--------------+
+```
+
+- **The left rail** is both seats and then your decision panel: life, poison,
+  counters, the zone counts (`▤` library, `✋` hand, `⚰` graveyard, `◇` exile) and
+  the mana pool as coloured pips. Under them the panel names the step, prints
+  Forge's own prompt **verbatim**, and carries the engine's two buttons, Concede,
+  and a line of help when the engine wants a *card* click rather than a button.
+- **The table** is five rows and a hand: the opponent's permanents and lands,
+  a middle strip with both graveyards, exile and the stack panel, then your
+  permanents, your lands, and your hand fanned along the bottom. Cards are real
+  Scryfall images; a card with no art (a token, or a deck you have not fetched art
+  for) draws a generated frame with its name, its mana pips, its type line and its
+  P/T, and it is clicked exactly the same way.
+- **Tapped is rotated 90°**, summoning sickness is a tint, counters and damage are
+  badges, an Aura or Equipment is drawn attached to what it is on, and a card the
+  engine has named in `selectable` gets a gold outline and a corner caret.
+- **The right rail** is the turn readout and the thirteen steps of the turn, with
+  the current one lit — blue on your turn, orange on the opponent's. The two dot
+  columns are phase stops: they show **Forge's own defaults and are read-only
+  until M6**, because there is no `phaseStops` field on the wire yet and a client
+  that remembered its own would be putting rules logic in the browser.
+- **Arrows** are drawn over the whole table: dashed purple from a spell on the
+  stack to what it targets, solid red from an attacker to what it is attacking,
+  dotted green from a blocker to what it blocks. They are decoration — every one
+  of those facts is also written down, on the tile, in the stack panel and in the
+  log drawer — so nothing is lost if you cannot tell the colours apart.
 
 **Clicking.** Click **any** card, not only a highlighted one. `selectable` is the
 engine's *explicit* selection set and it is empty for most of your own main
@@ -196,22 +246,51 @@ targeting and attacking. **The two buttons wear the engine's own labels** — OK
 `Play`, `Keep`, `Auto` or `OK` depending on what Forge is asking, and Cancel is
 `Undo (2)` or `End Turn` when it says so.
 
-| key | what it does |
-|---|---|
-| `Space` | press OK — only when the engine has enabled it |
-| `Escape` | press Cancel — likewise |
+**The keyboard.** Press **`H`** (or `?`) for this list in the page itself — it is
+rendered from the same table the handler reads, so it cannot list a key that does
+nothing.
 
-Both are ignored while a question is open, while the game is over, while the
-socket is not `open`, and while the focus is in a field or on a button — a
-control has its own idea of what Space and Escape mean, and the page never takes
-them from it.
+| key | what it does | works from |
+|---|---|---|
+| `Space` | press the engine's OK button (usually pass priority) | **now** |
+| `Esc` | close an overlay; otherwise answer an open question with "no answer"; otherwise press Cancel | **now** |
+| `Ctrl+Q` | concede — twice, like the button | **now** |
+| `Z` | zoom the card under the pointer | **now** |
+| `S` | show or hide the stack panel | **now** |
+| `C` | emphasise the combat arrows | **now** |
+| `L` | open or close the log drawer | **now** |
+| `H` / `?` | this list | **now** |
+| `A` | auto-pay a mana cost | *M5* |
+| `Ctrl+Z` | undo the last mana ability | *M6* |
+| `E` | pass priority until end of turn | *M6* |
+| `T` | pass to your next turn | *M6* |
+| `B` | pass to just before your turn | *M6* |
+| `Ctrl+A` | attack with everything | *M6* |
+| `Y` / `N` | auto-yield: always yes / always no | *M6* |
 
-**Questions.** When Forge asks something, a modal takes over and the board's own
-clicks go inert until you answer it. Every kind can be answered in one click with
-its documented default; `order`, `choose_list` and `manipulate_list` deliberately
-offer no cancel, because Forge dereferences their result. **There is no timeout
-while you are connected** — the ws ask timeout is 0, the same as the console's,
-and it is your connection rather than a clock that bounds it.
+The eight marked **now** work today. The rest flash the key and say in the
+decision panel which milestone brings it, rather than doing nothing quietly.
+Where Forge has its own binding for one of these, the overlay prints it in the
+third column, and the four places we deliberately differ say so there too.
+
+Three rules the keyboard follows, because getting them wrong is worse than having
+no keyboard at all: **a focused button keeps `Space` for itself** (the browser is
+already going to press it, and sending `buttonOk` as well would answer the engine
+twice) **and keeps nothing else**; **a text field keeps everything**; and `Esc`
+has a strict precedence — an overlay first, then an open question, then the
+engine's Cancel button. Every key is inert while the socket is not `open`, and on
+a replay the board plans no action at all.
+
+**Questions.** When Forge asks something, a dialog takes over: a scrim over the
+board, focus moved into it and handed back where it came from when it closes,
+`Tab` cycling inside it, and the board's own clicks inert until you answer.
+`Esc` answers it with "no answer", which is always legal — the bridge substitutes
+Forge's own documented default. Every kind can also be answered in one click with
+that default; `order`, `choose_list` and `manipulate_list` deliberately offer no
+cancel, because Forge dereferences their result. **There is no timeout while you
+are connected** — the ws ask timeout is 0, the same as the console's, and it is
+your connection rather than a clock that bounds it, so no countdown bar is drawn.
+A bar appears only if a question genuinely carries a deadline.
 
 **Concede** is always visible and takes two clicks: the first arms it
 (*Concede — click again to confirm*), the second sends it. After `over` it
@@ -252,6 +331,23 @@ Three cases the automatic reconnect will not fix:
 Your browser game is logged exactly like a console one, to
 `var/games/<gameId>/frames.jsonl` — copy it under `fixtures/` and
 `?replay=<that path>` scrubs back through it with no JVM running.
+
+**Replay mode** is the same board, read-only. `npm --prefix web run dev:replay`
+opens `?replay=games/g1.jsonl`; any other fixture is a query parameter
+(`?replay=games/morph.jsonl`, `?replay=synthetic/sample-handwritten.jsonl`).
+A scrubber above the board steps frame by frame, forwards and backwards, and
+everything the live board draws is drawn here — art, rotations, counters, the
+rails, the phase strip, the stack panel, the arrows — with an amber **Read-only**
+pill and **every** affordance `disabled`. That is not a styling choice: a replay
+has no transport to answer with, and the whole of the difference between a seat
+and a replay is one prop (`<Board actions={…}/>` — `null` means read-only), which
+the test suite asserts over every frame of every committed recording. Scrubbing
+backwards is a real fold from the start of the file, not an undo stack, so the
+log drawer's entry count falls as you scrub back.
+
+`?replay=games/morph.jsonl` is the one to open if you have not run
+`tools/fetch-art.ts`: that deck has no art entries at all, so every card on the
+board is the generated text frame, which is what a missing image looks like.
 
 ### Playing the console game
 
@@ -303,7 +399,7 @@ is a file, not a story.
 
 ## Repo layout
 
-Only files that exist today are listed without a marker; `M4+` marks what a later
+Only files that exist today are listed without a marker; `M5+` marks what a later
 milestone adds.
 
 ```
@@ -353,12 +449,19 @@ mtg-table/
       reduce.ts              (GameState, Frame) => GameState — pure, no DOM, no IO
       art.ts                 art.json lookup + generated text-card fallback
       main.tsx  styles.css
+      keys.ts                (M4) ONE keymap table + two pure functions; the handler
+                             and the `?` overlay both read it, so they cannot drift
       transport/transport.ts interface Transport { onFrame(cb); send(f) }
       transport/replay.ts    LogReplayTransport (fetch a .jsonl; play/step/scrub)
       transport/ws.ts        WebSocketTransport (M3: reconnect + resync)
       render/                Board.tsx describe.ts ErrorBoundary.tsx ReplayControls.tsx
                              AskModal.tsx (M3)
-                             M4+: Zone.tsx CardTile.tsx Stack.tsx PhaseStrip.tsx
+                             M4: CardTile.tsx (THE card renderer -- every card in every
+                             zone goes through it) ZoneRow.tsx HandFan.tsx PlayerRail.tsx
+                             PhaseStrip.tsx StackPanel.tsx DecisionPanel.tsx LogDrawer.tsx
+                             Mana.tsx CardZoom.tsx HotkeysOverlay.tsx ArrowsOverlay.tsx
+                             and four pure modules `node --test` can import without a
+                             DOM: labels.ts resolve.ts arrows.ts rects.ts useKeyboard.ts
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
                              M8 clickability rule), ws.test.ts (the M3 transport:
@@ -371,7 +474,9 @@ mtg-table/
                              THEN `vitest run` -- Node's type stripping does not
                              transform JSX, so the render test needs vitest (a dev
                              dependency; a checkout with no node_modules fails the gate
-                             with a message saying exactly that)
+                             with a message saying exactly that), plus (M4)
+                             keys.test.ts and arrows.test.ts -- both pure, the second
+                             building arrows for all 2,473 committed `state` frames
     public/art.json          generated, gitignored
 
   tools/
@@ -440,16 +545,16 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Twenty-one load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D21 are M3's: the asynchronous ability menu, and /health as the session's readiness. |
+| [`DECISIONS.md`](DECISIONS.md) | Thirty-one load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
 | [`docs/research/06-hidden-information-audit.md`](docs/research/06-hidden-information-audit.md) | Every reveal path in Forge, its wire channel, and its leak signature. The basis of hard rule 8. |
 | [`docs/research/07-wireguigame-spec.md`](docs/research/07-wireguigame-spec.md) | The M2 implementation spec: 37 members, the thread model, the eleven ask kinds. |
 | [`docs/research/08-deck-card-coverage.md`](docs/research/08-deck-card-coverage.md) | Does Forge implement this deck's 28 cards faithfully? (One does not — see D14.) |
-| [`docs/research/10-board-ui-spec.md`](docs/research/10-board-ui-spec.md) | The M4 board: component tree, layout, card tiles, arrows, the three evenings. |
+| [`docs/research/10-board-ui-spec.md`](docs/research/10-board-ui-spec.md) | The M4 board: component tree, layout, card tiles, arrows, the three evenings. (One number in §2.2 is 23 px out against the built board — PLAN's M4 follow-up 2.) |
 | [`docs/research/11-engine-comfort-features.md`](docs/research/11-engine-comfort-features.md) | M6: phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — all as engine features, not client state machines. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. |
 
 ## Licence
 

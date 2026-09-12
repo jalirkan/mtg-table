@@ -37,7 +37,7 @@
  * component.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   isFaceDownHidden,
@@ -348,12 +348,20 @@ export function AskModal({ ask, onAnswer = null }: AskModalProps): JSX.Element |
   // question appears.
   if (ask === null) return null;
   return (
-    <section
-      className="ask-modal"
-      role="dialog"
-      aria-modal={onAnswer !== null}
-      aria-label={`The engine is asking: ${ask.kind}`}
-    >
+    <>
+      {/* M4 §11 — a scrim, so the dialog reads as blocking (it is: the Forge
+          game thread is parked inside this call). It is not a click target:
+          there is no "dismiss" for an ask, only an answer, and `Esc` sends the
+          one that is always legal. */}
+      <div className="ask-modal__scrim" aria-hidden="true" />
+      <FocusTrap
+        className="ask-modal"
+        modal={onAnswer !== null}
+        label={`The engine is asking: ${ask.kind}`}
+        // Remounting the trap on a new askId re-runs the focus move, so a second
+        // question that arrives while the first is on screen takes the focus.
+        key={ask.askId}
+      >
       <div className="ask-modal__head">
         <span className="k">{ask.kind}</span>{' '}
         <span className="muted">
@@ -367,12 +375,96 @@ export function AskModal({ ask, onAnswer = null }: AskModalProps): JSX.Element |
             engine is worse than one that states less. */}
         <span className="ask-modal__blocked">the engine is waiting for this</span>
       </div>
+      {/* §5 — advisory for the client, enforced by the server: show it, do not
+          enforce it. A bar that ran out and then did nothing would be a lie
+          about who is counting, so this is a static width, not a countdown. */}
+      {ask.timeoutMs > 0 && (
+        <div
+          className="ask-modal__timeout"
+          role="img"
+          aria-label={`the server will substitute the default after ${String(ask.timeoutMs)} ms`}
+          title={`timeout ${String(ask.timeoutMs)} ms — advisory here, enforced by the bridge (§5)`}
+        >
+          <span className="ask-modal__timeoutbar" />
+        </div>
+      )}
       <p className="prompt">{askPrompt(ask)}</p>
       {/* Remounting on a new askId is how the draft resets: no effect, no
           derived-state dance, and a second ask can never inherit the first's
           half-built answer. */}
       <AskForm key={ask.askId} ask={ask} onAnswer={onAnswer} />
+      </FocusTrap>
+    </>
+  );
+}
+
+/**
+ * The dialog shell (report 10 §11): focus moves in on open, returns to whatever
+ * had it on close, and Tab cycles inside.
+ *
+ * **`CTRL+Q` is deliberately outside this trap** (§5.2, §9 invariant 6): concede
+ * is bound at `window` in `Board`, so a question you cannot answer is still a
+ * game you can leave. `Esc` is handled there too, and answers `null` — which
+ * §5.4 guarantees is always legal.
+ *
+ * No `useLayoutEffect`: this is one focus call, and `renderToStaticMarkup` runs
+ * no effects at all, so the render test sees the markup and none of this.
+ */
+function FocusTrap({
+  className,
+  modal,
+  label,
+  children,
+}: {
+  className: string;
+  modal: boolean;
+  label: string;
+  children: React.ReactNode;
+}): JSX.Element {
+  const box = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    focusables(box.current)[0]?.focus();
+    return () => {
+      // Returning focus matters more than taking it: a keyboard user who
+      // answers an ask must land back on the board, not at the top of the page.
+      previous?.focus?.();
+    };
+  }, []);
+
+  return (
+    <section
+      className={className}
+      role="dialog"
+      aria-modal={modal}
+      aria-label={label}
+      ref={box}
+      onKeyDown={(event) => {
+        if (event.key !== 'Tab') return;
+        const stops = focusables(box.current);
+        if (stops.length === 0) return;
+        const first = stops[0]!;
+        const last = stops[stops.length - 1]!;
+        const active = document.activeElement;
+        if (event.shiftKey && active === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}
+    >
+      {children}
     </section>
+  );
+}
+
+function focusables(root: HTMLElement | null): HTMLElement[] {
+  if (root === null) return [];
+  return [...root.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]')].filter(
+    (el) => !el.hasAttribute('disabled') && el.getAttribute('tabindex') !== '-1',
   );
 }
 

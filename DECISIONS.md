@@ -931,3 +931,176 @@ would have to know which frames were re-delivered, which is exactly what the
 verbatim rule refuses to encode on the wire). A per-connection `seq` (contract (c)
 asks for one session across many connections, which is the thing that would stop
 being true).
+
+---
+
+## D28 — Card images are three Scryfall variants derived from the id, hot-linked, with a generated text frame underneath
+
+**2026-09-12**
+
+**Decision.** `web/public/art.json` stores an `scryfallId` per card name, and the
+renderer *derives* the image URL rather than storing one per size:
+`https://cards.scryfall.io/{size}/{side}/{id[0]}/{id[1]}/{id}.{ext}`
+(`web/src/art.ts`, `imageUrl(entry, size, side)`). Exactly **three** variants are
+used, one per job:
+
+| where | tile size | variant | bytes |
+|---|---|---|---|
+| battlefield, lands, hand | 60–136 px | `grid` 488×680 WEBP | ~37 kB |
+| stack panel, log drawer, decision-panel thumbnails | 39–44 px | `thumb` 146×204 WEBP | ~8 kB |
+| hover / focus zoom and `Z` | 196–420 px | `display` 672×936 WEBP | ~50 kB |
+
+Images are **hot-linked from `cards.scryfall.io`** — open question 5's default,
+unchanged — and `preloadArt()` warms the `grid` set once per session. Under every
+image is the same generated text frame (name, `mana-font` pips, the type line
+verbatim, P/T), which is what renders when `art.json` is absent, when a name does
+not resolve, and for every token. **A missing image never blocks a click.**
+
+**Rationale.** `grid` rather than `display` on the board is a decode-memory
+decision, not a bandwidth one: 672×936×4 B across 28 distinct cards is ≈ 70 MB of
+decoded bitmap against ≈ 37 MB for `grid`, on a board that can hold thirty tiles.
+Deriving the URL from the id keeps `art.json` a name→id map instead of a
+name→six-URLs map, so adding a fourth variant is a renderer change and not a
+regenerate. Storing one URL per size would also have frozen Scryfall's path
+layout into a generated file that is gitignored and therefore never reviewed.
+
+The text frame is not a fallback bolted on afterwards — it is the *bottom layer* of
+every tile, and the art is drawn over it. That is why `?replay=games/morph.jsonl`
+(a deck with no `art.json` entry at all) renders a complete, playable-looking
+board: report 10 §6's exit check without deleting a generated file.
+
+**Rejected.** A local image cache or an `/api/images` proxy (deferred list; it is
+a second origin, a cache-invalidation problem and a packaging problem for a
+localhost-only app). `art_crop` on the tile (it is the illustration only — no
+name, no cost, no P/T — so every tile would need its own frame drawn around it,
+and the Scryfall terms' "never crop the artist credit" rule gets harder, not
+easier). `normal`/`large` JPEG on the board (2–3× the bytes of `grid` WEBP for
+pixels the tile throws away). Per-print art selection: the engine's view carries
+`Name` + `SetCode` and **no collector number**, so v1 takes whatever print the
+fetch ladder landed on (`art.ts`'s own header rule 2).
+
+---
+
+## D29 — `mana-font` is a bundled dependency, and its `@font-face` is overridden rather than forked
+
+**2026-09-12**
+
+**Decision.** `mana-font@1.18.0` (MIT for the CSS, OFL-1.1 for the glyphs) is the
+web client's one runtime style dependency, as report 10 §13 allows. `main.tsx`
+imports `mana-font/css/mana.css` **before** `styles.css`, and `styles.css`
+redeclares `@font-face` for family `Mana` pointing at the **woff2** the package
+ships (187 kB) instead of the woff its own CSS lists (408 kB); a later
+`@font-face` wins, so the loaded face is ours. NOTICE section 5 records the two
+licences and the Wizards-owned symbols. No mana symbol is drawn by hand and no
+font file is committed.
+
+**Rationale.** The symbols are a solved problem with a permissive licence, they
+are a real accessibility win over `{3}{U}` as text (the pips carry `aria-label`s
+and the cost is still in the tile's accessible name), and every other MTG client
+uses the same font, so they read as mana to anyone who has seen a card. Bundling
+is what the OFL and MIT both permit; hot-linking a font from a CDN would add a
+second origin to a localhost-only app.
+
+**The cost, stated rather than discovered later.** Importing the package's CSS
+wholesale makes Vite emit the faces nothing fetches. Measured on the M4
+documentation run: nine font files totalling **3.72 MB**, of which only the
+187.40 kB `mana-*.woff2` is ever requested — `mana.woff` (408.28), `mana.eot`
+(408.36), `mana.ttf` (408.20), `mana.svg` (1,907.69) and four `mplantin.*`
+(400.24 together), i.e. **~3.5 MB** of `web/dist/assets/` that no browser fetches.
+Report 10 §13 predicted the MPlantin half.
+`web/dist/` is a gitignored build directory for a local app, so the fix — forking
+`mana.css` into the repo and carrying its MIT header forward — buys nothing today
+and costs a file that must be re-diffed on every upgrade. It is recorded in
+`docs/evidence/m4-board.md` §5 and as **M4 follow-up 1**, and it becomes worth
+doing the moment anything is packaged or served over a network.
+
+**Rejected.** Hand-drawn SVG pips (twenty-odd symbols, hybrid and Phyrexian
+included, and they would drift from the printed ones). Unicode circles with
+letters in them (unreadable at 10 px, wrong for hybrid, and no `{T}`). Forking
+`mana.css` now (see above). Hot-linking the font from a CDN (a second origin).
+
+---
+
+## D30 — Arrows are hand-rolled SVG geometry over a namespaced rect registry, with no dependency
+
+**2026-09-12**
+
+**Decision.** Targeting and combat arrows are drawn by our own code:
+`web/src/render/rects.ts` is a registry of measured rectangles keyed
+`c:<cardId>` / `p:<playerId>` / `s:<stackId>`, and `web/src/render/arrows.ts` is
+pure geometry (`edgePoint`, `arcBetween`, `buildArrows`) that turns the registry
+plus a `state` frame into a list of quadratic arcs. `ArrowsOverlay.tsx` is ~20
+lines of `aria-hidden` SVG over it. Report 10 §9.2's documented fallback,
+`perfect-arrows@0.3.7`, was **not** taken.
+
+**Three properties the registry must have**, each of which is a defect that was
+actually hit:
+
+- **The key spaces are namespaced**, because they collide: `web/test/arrows.test.ts`
+  counts **40 frames** in the committed corpus where a `stack[].id` is also a
+  battlefield `Card.id`. An un-namespaced registry draws an arrow to the wrong
+  element on those frames and looks right on every other one.
+- **A key maps to a set of elements, not one**, and a `null` ref callback removes
+  nothing. The same card can be mounted more than once (the row tile, the stack
+  thumbnail, the zoom overlay); when the zoom closed, its callback deleted the
+  shared key and **every arrow touching that card vanished** — measured live at
+  four arrows before `Z` and one after. The sweep prunes what has left the
+  document and measures the first element still in it, so the row tile wins by
+  registration order. `anchor={false}` on the secondary copies says which tile
+  *is* the card; the registry no longer depends on nobody getting that wrong.
+- **One `ResizeObserver`, on the board root**, plus a sweep after every render
+  that bumps a version only when a rect actually moved — not an observer per tile
+  and not a measurement inside render.
+
+**Rationale.** The geometry is 60 lines including the three bow scales, and being
+ours makes it *pure*, so `node --test` builds arrows for all **2,473** committed
+`state` frames without a DOM. A dependency would have moved the same 60 lines
+behind an API and still left the registry — which is where all three real defects
+lived — for us to write.
+
+**The arrows are decoration and carry no information of their own.** The SVG is
+`aria-hidden`, `focusable="false"` and `pointer-events: none`, and every fact it
+draws is also text: the stack panel's target chips, the tiles' `→ defender` /
+`blocks …` notes, and the log drawer's band list. The three classes differ in
+curvature, colour **and** dash pattern, so colour is never the only cue.
+
+**Rejected.** `perfect-arrows` (see above). Measuring in render (layout thrash and
+a render that reads the DOM it is about to write). An observer per tile (thirty
+observers on a full board). Canvas (it would need its own hit-testing and its own
+accessibility story for facts that are already text).
+
+---
+
+## D31 — The phase strip ships as a read-only preview of Forge's own defaults until M6 puts `phaseStops` on the wire
+
+**2026-09-12**
+
+**Decision.** The right rail's thirteen-row phase strip renders, and both dot
+columns render, but **every dot is a `disabled` button** whose tooltip names the
+act (`setPhaseStop`), the missing read field (`players[].phaseStops`) and the
+milestone (M6). The values shown are Forge's own documented defaults, verbatim
+from `ForgePreferences.java:239-264` — `MAIN1`, `COMBAT_DECLARE_BLOCKERS`,
+`MAIN2` for you; `COMBAT_BEGIN`, `COMBAT_DECLARE_ATTACKERS`,
+`COMBAT_DECLARE_BLOCKERS`, `END_OF_TURN` for the opponent — and the legend under
+the strip says *"Forge defaults, read-only until M6"*. `UNTAP` prints `·` in both
+columns because there is no `PHASE_*_UNTAP` preference to toggle. Hold priority
+is disabled the same way, with a tooltip naming `YieldController.setDisableAutoYields`.
+
+**Rationale.** `act: setPhaseStop` **is** in `docs/protocol.md` §2.2, but its row
+says M6 and `WireGuiGame` does not implement it; the read side (§10) is not on the
+wire at all. A live toggle would therefore have to remember its own state in the
+browser — and a client that remembers which phases it stops on has put phase-stop
+logic in the client, which `CLAUDE.md` §Scope forbids outright and **D19** already
+decided belongs in `WireGuiGame`'s own map. Drawing the strip with the engine's
+real defaults, and saying out loud that it is read-only, is honest about both
+halves: the layout is finished, the behaviour is not.
+
+When `players[].phaseStops` ships, **the markup does not change** — only `onClick`
+and the data source.
+
+**Rejected.** Omitting the strip until M6 (the right rail is a layout column; a
+strip that appears later changes every measured number in report 10 §2.2, and the
+turn/phase readout is useful on its own). A live toggle with client-side state
+(see above). An enabled dot that sends `setPhaseStop` into a bridge that ignores
+it (a control that does nothing when pressed is worse than one that says why it
+is disabled).

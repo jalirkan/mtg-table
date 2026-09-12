@@ -223,6 +223,7 @@ The socket on its own, with no browser:
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
 node tools/ws-smoke.mjs --port 8642                      # connect → resync → concede
 node tools/ws-smoke.mjs --port 8642 --disconnect-mid-ask # drop mid-ask, reconnect, finish
+node tools/ws-smoke.mjs --port 8642 --concede-before-input   # M11's exception path
 node tools/ws-auto-play.mjs --port 8642 --log var/ws-auto.jsonl   # a whole game
 node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask        # drop ON an `ask`
 node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (amendment M17)
@@ -292,21 +293,34 @@ burned 30 s and returned a truncated file — was invisible in a green run.
 
 `check-forge.sh` is the gate for everything below it. Run it first when something
 behaves strangely. **`check-all.sh` is what you run before saying you are done**,
-and it is **thirteen steps**: lint → build → `Smoke` → a fresh `RecordMatch` into
-`var/` → the value-level drift diff → three fresh `MtgTable` sessions
-(`--transport null`, the scripted `--transport console` smoke, and
-`--transport auto --seed 11`) → **four fresh `--transport ws` servers** (the
-`ws-smoke` doorstep test, its `--disconnect-mid-ask` variant, a whole game
-through `tools/ws-auto-play.mjs`, and that same client with
-`--refuse-first-ask`, which drops the socket on the first `ask` FRAME and is the
-only thing in the repo that exercises `ReplyPool.cancelAll()` with a game thread
-actually parked — the gate asserts the server's own `cancelling 1 pending ask(s)`
-line), each asserted for exactly one `over`, `over`
-last, and its log through `check-redaction.mjs` — including the CLIENT log, which
-is a different shape on purpose) → `check-redaction.mjs` over the committed
-fixtures (`games/` **and** `synthetic/`) *and* all four recordings →
+and it is **thirteen numbered steps** (plus two lettered sub-steps, so the
+numbering and every reference to "10d" stayed correct when they were added): lint
+→ build → `Smoke` → a fresh `RecordMatch` into `var/` → the value-level drift diff
+→ three fresh `MtgTable` sessions (`--transport null`, the scripted
+`--transport console` smoke, and `--transport auto --seed 11`) → **9b**, the
+ADVISORY fixture-drift check (`tools/fixture-multiset-diff.mjs`: re-record seed 42
+and compare it against `fixtures/games/human-auto-42.jsonl` as a multiset with
+`seq` stripped, because the fixtures are stable in content and not in frame order;
+never an exit code unless you pass `DRIFT_FATAL=1`, skipped by `SKIP_DRIFT=1`) →
+**five fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
+`--disconnect-mid-ask` variant (10b), a whole game through
+`tools/ws-auto-play.mjs` (10c), that same client with `--refuse-first-ask` (10d),
+which drops the socket on the first `ask` FRAME and is the only thing in the repo
+that exercises `ReplyPool.cancelAll()` with a game thread actually parked (the
+gate asserts the server's own `cancelling 1 pending ask(s)` line), and
+`ws-smoke --concede-before-input` (**10e**), which concedes from inside the
+`hello_ok` handler before the engine has asked this seat anything and is the only
+thing that reaches amendment **M11**'s `over`-with-no-`gameOver`-`state` branch,
+asserting `OVER WITHOUT A gameOver STATE` and `CONCEDE BEFORE START` on the
+server's stderr and deliberately NOT running `check-redaction.mjs`, because a
+four-line session has no `state` frame and the checker calls that a failure (see
+PLAN's M4 follow-up 8). Each of the five is asserted for exactly one `over`,
+`over` last, and its log through `check-redaction.mjs` — including the CLIENT
+log, which is a different shape on purpose. Then `check-redaction.mjs` over the
+committed fixtures (`games/` **and** `synthetic/`) *and* every fresh recording →
 `check-redaction-selftest.mjs` → `npm run build && npm test`. It exits non-zero
-on the first failure and takes two to four minutes, most of it the seven games.
+on the first failure and takes **three to four minutes** (3 m 19–32 s measured
+over four green runs), most of it the nine games.
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
 overridable in the environment): a gate whose failure mode is "hangs until
 someone notices" cannot catch the one defect class M2's threading work is most
@@ -340,6 +354,71 @@ the single largest hidden-information surface in the game — from a failure to 
 warning. The shape is legitimately reachable (Opposition Agent, Bribery, Gonti)
 and **nothing in the repo passes it**, so the day a recording needs it is the day
 someone types it on the command line and says why in the commit message.
+
+## The web client — the conventions M4 added
+
+The board is now a real Magic table (`docs/research/10-board-ui-spec.md` is its
+spec, `docs/evidence/m4-board.md` what was measured). Six conventions hold it
+together, and each is a defect that was actually hit.
+
+1. **Nothing under `web/src/render/` may import CSS at module level.** There is
+   exactly one stylesheet import in the app — `web/src/styles.css` from
+   `main.tsx` — plus `mana-font/css/mana.css` immediately before it. The render
+   tests run under `node --test` (type stripping, no bundler) and under vitest's
+   **`node`** environment, and neither can load a stylesheet; a component that
+   imports its own CSS breaks both suites at import time, before a single
+   assertion runs. Per-component CSS modules are allowed *in principle* and are
+   not used for that reason. The `mana-font` import is first because a later
+   `@font-face` wins and `styles.css` overrides it to the woff2 (**D29**).
+2. **`CardTile` is THE card renderer.** Every card in every zone — battlefield,
+   hand, graveyard, exile, stack, the revealed slice of a library, the decision
+   panel's thumbnail, the zoom — goes through it, and it is imported by
+   `ZoneRow`, `HandFan`, `PlayerRail`, `StackPanel`, `DecisionPanel`, `CardZoom`
+   and by nothing else (`Board.tsx` takes only its `Clicks` type). This is the renderer's half of hard rule 8: a new surface
+   that draws its own card markup is how a name for a `hidden: true` id gets back
+   on screen, and it is exactly what the per-frame `data-card-name` check in
+   `web/test/render.test.tsx` would stop catching.
+3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
+   set-valued.** Keys are `c:<cardId>` / `p:<playerId>` / `s:<stackId>` because
+   **the id spaces collide** — 40 frames in the committed corpus have a
+   `stack[].id` that is also a battlefield `Card.id`. One key maps to a **Set** of
+   elements and a `null` ref callback removes nothing, because the same card can
+   be mounted more than once and the copy that unmounts must not delete the key
+   the row tile registered (it did, and every arrow touching that card vanished).
+   There is **one** `ResizeObserver`, on the board root; measurement happens in
+   the post-render sweep and never inside render; the sweep bumps a version only
+   when a rect actually moved. Use the isomorphic layout-effect shim already in
+   that file, or `renderToStaticMarkup` starts printing SSR warnings.
+4. **One keymap table.** `web/src/keys.ts` is the 16 rows plus two pure functions
+   (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
+   and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
+   Adding a key is a row, never a new branch in a handler. Two rules live in
+   `planKey` and are tested there: **a focused button keeps `Space` and nothing
+   else** (the browser will already activate it; sending `buttonOk` too answers
+   the engine twice — and M3's handler dropped the *whole* keyboard for a focused
+   button, so clicking a card turned `Escape` off), and `Esc` goes overlay → open
+   `ask` (answer `null`, §5.4) → the engine's Cancel button, in that order.
+5. **Arrows are decoration and never the only channel** (**D30**). The overlay is
+   `aria-hidden`, `focusable="false"`, `pointer-events: none`, and every fact it
+   draws is also text somewhere: the stack panel's target chips, the tile's
+   `→ defender` / `blocks …` notes, the log drawer's band list. Three cues —
+   curvature, colour **and** dash pattern — so colour alone never carries it.
+6. **Keep the testable half pure.** `labels.ts`, `resolve.ts`, `arrows.ts` and
+   `keys.ts` contain no JSX, no React and no DOM types, which is why `node --test`
+   can import them and why `arrows.test.ts` can build arrows for all 2,473
+   committed `state` frames without a browser. Put geometry, label composition and
+   id resolution there, not in a component.
+
+And two rules that did not change and are easy to lose in a restyle: **never gate
+a click on `selectable`** (amendment M8), and **render `buttons.*.label`
+verbatim**. The board draws no phase-stop state of its own either — the dots are
+Forge's documented defaults, disabled, until `players[].phaseStops` ships in M6
+(**D31**).
+
+`npm --prefix web test` is now **271 `node --test` + 41 vitest**; `render.test.tsx`
+renders every frame of every fixture **twice**, once as a replay and once as a
+seat, which is what makes the read-only assertion and the hidden-information
+assertions per-frame rather than per-suite.
 
 ## Treat forge-src as prose
 
@@ -414,7 +493,7 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
 | `PLAN.md` | The eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| `DECISIONS.md` | The twenty-seven load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's; **D21's scope is corrected by D23**). D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics. |
+| `DECISIONS.md` | The thirty-one load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's; **D21's scope is corrected by D23**). D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

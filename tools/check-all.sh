@@ -18,20 +18,30 @@
 #   8. mtgtable.MtgTable         the DOCUMENTED console smoke, scripted: the line
 #                                 protocol, the quit thread and the exit code
 #   9. mtgtable.MtgTable         one --transport auto game at a seed no fixture
-#                                 uses: the transport that produced five of them
-#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: four fresh servers on a
+#                                 uses: the transport that produced five of them.
+#                                 Then 9b, ADVISORY: re-record human-auto-42 at
+#                                 seed 42 and compare it to the committed fixture
+#                                 as a MULTISET (tools/fixture-multiset-diff.mjs)
+#                                 -- content drift without byte-order flakiness.
+#                                 Loud, never an exit code (SKIP_DRIFT=1 to skip,
+#                                 DRIFT_FATAL=1 to make it fatal).
+#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: five fresh servers on a
 #                                 loopback socket -- the ws-smoke doorstep test
 #                                 (connect -> resync -> concede), the same test's
 #                                 --disconnect-mid-ask variant, a full unattended
-#                                 game through tools/ws-auto-play.mjs, and that
+#                                 game through tools/ws-auto-play.mjs, that
 #                                 same client with --refuse-first-ask, which
 #                                 drops the socket on the first `ask` FRAME and
 #                                 is the only thing in the repo that exercises
 #                                 ReplyPool.cancelAll() with a game thread
 #                                 actually parked (`cancelling 1 pending ask(s)`,
-#                                 asserted).  Each asserts exactly one `over`,
-#                                 `over` last, and its log through
-#                                 check-redaction.mjs.
+#                                 asserted), and 10e's --concede-before-input,
+#                                 which is the only thing that reaches amendment
+#                                 M11's exception path (`over` with no `gameOver`
+#                                 state in front of it, asserted through the
+#                                 bridge's own `OVER WITHOUT A gameOver STATE`).
+#                                 Each asserts exactly one `over`, `over` last,
+#                                 and its log through check-redaction.mjs.
 #  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
 #                                 AND every fresh recording this run produced
 #  12. check-redaction-selftest   the checker's own negative controls: twelve
@@ -89,9 +99,11 @@
 # pass found had already burned a silent 30 s per run without failing anything.
 # A run that hits the cap dies with its own message naming the cap.
 #
-# Usage:  ./tools/check-all.sh            # ~2-5 minutes, mostly the four games
+# Usage:  ./tools/check-all.sh            # ~3-6 minutes, mostly the nine games
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
 #         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
+#         SKIP_DRIFT=1 ./tools/check-all.sh       # no 9b re-recording (~30 s)
+#         DRIFT_FATAL=1 ./tools/check-all.sh      # 9b's advisory becomes a failure
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -272,6 +284,81 @@ overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
 [ "$(tail -1 "$AUTOLOG" | grep -c '"type":"over"')" = "1" ] || \
   die "the auto session's last frame is not \`over\` (section 8.4)"
 
+# 9b. ADVISORY, and deliberately non-fatal: HUMAN-SEAT fixture drift, compared as
+#     a multiset (M3 follow-up 7).
+#
+#     Step 6 diffs a fresh AI-vs-AI recording against fixtures/games/g1.jsonl
+#     byte for byte, and can, because nothing in a RecordMatch run competes for
+#     the log.  The five human-seat fixtures are different: they are recorded
+#     through a seat, so a `state` written by the game thread and two `input`s
+#     written by the EDT can be assigned their `seq` in either order.  Measured
+#     over three re-recordings of human-auto-42 (docs/evidence/m3-ws.md 13.5): 0,
+#     then 8, then 8 differing lines -- the same three frames, reordered.  A
+#     byte-level step here would be flaky, and a flaky gate step is worse than no
+#     gate step because it teaches everyone to re-run until it is green.
+#
+#     tools/fixture-multiset-diff.mjs asks the question that IS stable: is any
+#     frame's content different, or has one appeared or vanished?  It says
+#     nothing about order.  It is advisory because the remaining instability is
+#     real and is not drift either -- human-trample-7 re-records with two extra
+#     `input` frames, which is Forge's awaitNextInput() re-pushing the same
+#     prompt every 250 ms while it thinks, i.e. wall-clock.  So a difference here
+#     is a REASON TO LOOK, printed loudly, and never an exit code.
+#
+#     DRIFT_FATAL=1 makes it one for someone who wants that; SKIP_DRIFT=1 skips
+#     the 30 s re-recording entirely.
+DRIFT_FIXTURE="fixtures/games/human-auto-42.jsonl"
+DRIFT_ID="check-all-drift-42"
+DRIFT_LOG="var/games/$DRIFT_ID/frames.jsonl"
+drift_advisory() {   # $1 what happened
+  printf '\n'
+  echo "  *** ADVISORY (not a failure): $1"
+  echo "  *** Reproduce:  ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 42 --game-id $DRIFT_ID"
+  echo "  ***             node tools/fixture-multiset-diff.mjs $DRIFT_FIXTURE $DRIFT_LOG"
+  echo "  *** If the wire really changed, re-record the five human fixtures"
+  echo "  *** (var/verify/m3fix-rerecord.sh) and say so in the commit message."
+  printf '\n'
+  [ "${DRIFT_FATAL:-0}" = "1" ] && die "fixture drift, and DRIFT_FATAL=1"
+  return 0
+}
+if [ "${SKIP_DRIFT:-0}" = "1" ]; then
+  echo "(9b fixture-drift advisory skipped: SKIP_DRIFT=1)"
+elif [ ! -f "$DRIFT_FIXTURE" ]; then
+  drift_advisory "$DRIFT_FIXTURE is not there to compare against"
+else
+  rm -rf "var/games/$DRIFT_ID"
+  rc=0
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 42 --game-id "$DRIFT_ID" \
+      > var/check-all-drift.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ] || [ ! -s "$DRIFT_LOG" ]; then
+    tail -20 var/check-all-drift.log >&2
+    drift_advisory "the seed-42 re-recording exited $rc (full log: var/check-all-drift.log). \
+Step 9 above already proves a fresh --transport auto game finishes, at seed 11, so this is not \
+the gate's only chance to catch that -- but a seed-specific crash is worth a look."
+  elif node tools/fixture-multiset-diff.mjs "$DRIFT_FIXTURE" "$DRIFT_LOG" --limit 6; then
+    echo "OK: $DRIFT_FIXTURE re-records to the same multiset of frames (order ignored)"
+  elif node tools/fixture-multiset-diff.mjs "$DRIFT_FIXTURE" "$DRIFT_LOG" --only-dir s2c --quiet \
+      > /dev/null 2>&1; then
+    # The emitter's half is identical and only the seat's own frames moved.
+    # That is AutoTransport's policy meeting Forge's awaitNextInput(), which
+    # re-pushes the same prompt every 250 ms while it thinks: how many acts land
+    # on one prompt is wall-clock.  Measured over seven re-recordings of
+    # human-auto-42: five identical, two with a single duplicate
+    # `act {"action":"buttonCancel"}` fewer -- and an s2c half identical in all
+    # seven.  Still printed, because "known noise" is a judgement that should be
+    # re-made by a human and not by this script.
+    drift_advisory "$DRIFT_FIXTURE and a fresh seed-42 recording differ, but ONLY in dir=c2s \
+frames -- the seat's own acts.  The emitter's half (dir=s2c) is identical, so THE WIRE DID NOT \
+CHANGE: this is AutoTransport reacting to one extra or one missing wall-clock re-push of the same \
+prompt, which is the known instability of a human-seat fixture (docs/evidence/m3-ws.md 13.5)."
+  else
+    drift_advisory "the committed $DRIFT_FIXTURE and a fresh seed-42 recording are NOT the same \
+multiset of frames, AND the difference reaches dir=s2c -- the emitter's own output.  That is a \
+CONTENT difference in the wire, which is exactly what this check exists to find, and is not the \
+frame-order noise a byte diff would report."
+  fi
+fi
+
 say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
 # M3.  Four servers, because each client run ends its own game: the two
 # ws-smoke variants concede, and the two ws-auto-play runs play to a natural
@@ -311,7 +398,7 @@ ws_wait_health() {
   return 1
 }
 
-ws_start() {   # $1 gameId, $2 server log
+ws_start() {   # $1 gameId, $2 server log, $3 (optional) "no-health-wait"
   rm -rf "var/games/$1"
   # `timeout` is backgrounded DIRECTLY rather than through jvm(): with an EXIT
   # trap installed bash cannot exec-optimise the last command of a subshell, so
@@ -323,6 +410,17 @@ ws_start() {   # $1 gameId, $2 server log
       ./bridge/run.sh mtgtable.MtgTable --transport ws --seed 13 --port "$WSPORT" \
       --keep-open --game-id "$1" > "$2" 2>&1 &
   WS_PID=$!
+  if [ "${3:-}" = "no-health-wait" ]; then
+    # 10e only.  Readiness is `lastHello != null` (amendment M15), so by the time
+    # /health says `ok` the engine is already ~0 ms into the ~150 ms window that
+    # step measures, and one `sleep 1` of this poll loop would be the whole
+    # margin.  The client does its own retry-until-the-port-accepts instead
+    # (ws-smoke's Conn.openEarly), which is also the only way to be the client
+    # that arrives BEFORE the session exists -- a case WsTransport handles by
+    # name and nothing else in the gate reaches.  The WS LISTENING assertion
+    # moves to the caller, after the client has finished.
+    return 0
+  fi
   ws_wait_health "$WSPORT" 90 || {
     cat "$2" >&2
     die "the ws server never answered GET /health on 127.0.0.1:$WSPORT (log: $2)"
@@ -331,7 +429,7 @@ ws_start() {   # $1 gameId, $2 server log
     die "the ws server did not print its WS LISTENING line (contract (a); log: $2)"
 }
 
-ws_finish() {  # $1 gameId, $2 server log, $3 what
+ws_finish() {  # $1 gameId, $2 server log, $3 what, $4 (optional) "no-redaction"
   wait "$WS_PID" || {
     rc=$?
     WS_PID=""
@@ -347,6 +445,9 @@ ws_finish() {  # $1 gameId, $2 server log, $3 what
   [ "$overs" = "1" ] || die "the ws session $3 wrote $overs \`over\` frames; section 7 says exactly one"
   [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || \
     die "the last frame of the ws session $3 is not \`over\` (section 8.4)"
+  if [ "${4:-}" = "no-redaction" ]; then
+    return 0     # the caller runs its own, conditionally -- see 10e
+  fi
   node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on the ws session $f"
 }
 
@@ -452,6 +553,82 @@ else
   printf "\n"
   WS_LOGS="var/games/check-all-ws-smoke/frames.jsonl,var/games/check-all-ws-drop/frames.jsonl"
 fi
+
+# 10e. Amendment M11's EXCEPTION path -- a fifth server, and M3 follow-up 5.
+#      `over` is documented to follow the `state` that carries `gameOver` on
+#      every path where Forge published an outcome, and there is exactly one path
+#      where it does not: a concede before the engine has asked this seat for
+#      anything, which applyAct's pre-`inputSeen` guard answers by ending the
+#      session without entering Forge's game-over at all.  There is then no
+#      outcome to snapshot and no thread it would be legal to build one on (the
+#      act runs on the EDT), so `over` carries {winner: null, reason: null,
+#      matchOver: true} with nothing in front of it and the bridge says so on
+#      stderr.  Until this step that branch was REASONED, not measured:
+#      `grep -rl 'OVER WITHOUT A gameOver STATE' var/` found nothing across every
+#      run on disk, because 10a and 10b both concede after the first `input` and
+#      end `winner=1 reason=AllOpponentsLost`.
+#
+#      The server is started WITHOUT the /health wait, and the client connects on
+#      a retry loop and writes its concede from inside the `hello_ok` handler:
+#      measured at seed 13, `hello_ok` -> concede is 0-3 ms and `hello_ok` -> the
+#      first engine `input` is ~150 ms.  ws-smoke asserts the client's half (no
+#      state/input/ask in front of the concede, and the M11 body); this asserts
+#      the server's half, which is the stderr line and the absence of a
+#      `gameOver` snapshot in the frame log.
+ws_start check-all-ws-m11 var/check-all-ws-m11.log no-health-wait
+node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --concede-before-input \
+    --log var/check-all-ws-m11-frames.jsonl \
+  || die "tools/ws-smoke.mjs --concede-before-input failed against 127.0.0.1:$WSPORT -- if it \
+says \"the window was missed\" this is a timing failure on a loaded machine and not a bridge \
+failure: the concede has to beat the engine's first prompt (~150 ms) to reach amendment M11's \
+branch at all (server log: var/check-all-ws-m11.log)"
+ws_finish check-all-ws-m11 var/check-all-ws-m11.log "the pre-input concede" no-redaction
+grep -q "^WS LISTENING ws://127.0.0.1:$WSPORT/ws$" var/check-all-ws-m11.log || \
+  die "the ws server did not print its WS LISTENING line (contract (a); log: var/check-all-ws-m11.log)"
+# THE assertion of this step: the bridge's own stderr line for the branch.
+grep -q "^OVER WITHOUT A gameOver STATE" var/check-all-ws-m11.log || \
+  die "the pre-input concede did NOT take amendment M11's exception path: the bridge never printed \
+\`OVER WITHOUT A gameOver STATE\`, so this run conceded through Forge's own game-over like every \
+other step and M11's branch is still unmeasured (log: var/check-all-ws-m11.log)"
+grep -q "^CONCEDE BEFORE START: ending the session$" var/check-all-ws-m11.log || \
+  die "the concede did not hit applyAct's pre-\`inputSeen\` guard (log: var/check-all-ws-m11.log)"
+# A c2s frame that arrived before the session existed would be dropped in silence
+# (amendment M20), and a client that tripped that would be waiting for an answer
+# that is never coming -- so this step doubles as M20's live assertion: it
+# connects inside the window on purpose and sends nothing until `hello_ok`.
+grep -qE ', 0 read before the session existed' var/check-all-ws-m11.log || \
+  die "the pre-input concede sent a frame BEFORE the session existed (amendment M20 drops those \
+in silence): $(grep '^ws frames' var/check-all-ws-m11.log) (log: var/check-all-ws-m11.log)"
+M11LOG="var/games/check-all-ws-m11/frames.jsonl"
+grep -q '"gameOver":{' "$M11LOG" && \
+  die "M11's exception path emitted a \`gameOver\` snapshot after all -- then this is the ordinary \
+path and the stderr line above is wrong (log: $M11LOG)"
+# check-redaction.mjs is run only if a `state` reached the log at all.  This
+# session's whole wire is header + hello_ok + act + over: with no `state`, the
+# checker's two "this file proves nothing" assertions are FAILURES rather than
+# the warnings it grants a turn-0 pre-game session, and its "no state frames at
+# all" rule fires as well -- correctly, because a file with no state in it proves
+# nothing about redaction.  The stronger statement is made directly instead: not
+# one card was serialised, because the only s2c frames are `hello_ok` and `over`.
+m11states="$(grep -c '"type":"state"' "$M11LOG" || true)"
+if [ "$m11states" = "0" ]; then
+  # Cards only ever reach the wire inside a `state`, an `input` or an `ask`, so
+  # "the only s2c frames are hello_ok and over" is the whole statement.  (Not a
+  # grep for `"cards"`: the session header and hello_ok both carry the deck
+  # LENGTHS, decks[].cards, which is a count and not a card.)
+  m11bad="$(grep '"dir":"s2c"' "$M11LOG" | grep -cvE '"type":"(hello_ok|over)"' || true)"
+  [ "$m11bad" = "0" ] || die "the pre-input concede's log has $m11bad s2c frame(s) that are neither \
+\`hello_ok\` nor \`over\`, and no \`state\` to hold to check-redaction.mjs (log: $M11LOG)"
+  echo "OK: the pre-input concede put NO \`state\` on the wire at all -- $(wc -l < "$M11LOG") log lines \
+(header, hello_ok, the act, over) and not one card serialised"
+else
+  # The game thread landed its first snapshot inside the ~1 ms before the session
+  # closed.  It is a turn-0 pre-game state, which is the shape the checker grants
+  # its warnings to, so hold it to the same standard as every other session.
+  node tools/check-redaction.mjs "$M11LOG" || die "check-redaction.mjs on the pre-input concede $M11LOG"
+fi
+# NOT added to WS_LOGS: web/test/ws-log.test.ts replays those as boards, and a
+# four-line session with no `state` in it is not a board.
 
 say "check-redaction.mjs -- every committed fixture, then the fresh recording"
 # NO --pre-amendment anywhere in this file, deliberately: the flag downgrades a

@@ -44,9 +44,21 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 
 import { EMPTY_ART_INDEX, parseArtFile, type ArtIndex } from '../src/art.ts';
-import type { AskBody, GameStateBody, InputBody, StateFrame } from '../src/protocol.ts';
+import { KEYMAP } from '../src/keys.ts';
+import {
+  isHidden,
+  type AnyCard,
+  type AskBody,
+  type Card,
+  type GameStateBody,
+  type InputBody,
+  type StateFrame,
+} from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
-import { Board } from '../src/render/Board.tsx';
+import { ArrowsOverlay } from '../src/render/ArrowsOverlay.tsx';
+import { Board, type BoardActions } from '../src/render/Board.tsx';
+import { HotkeysOverlay } from '../src/render/HotkeysOverlay.tsx';
+import { RectsContext, type RectBox, type Rects } from '../src/render/rects.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 const GAMES_DIR = fileURLToPath(new URL('../../fixtures/games/', import.meta.url));
@@ -133,6 +145,95 @@ function render(state: ClientState): string {
   return renderToStaticMarkup(<Board state={state} art={art} />);
 }
 
+/**
+ * M4. The same state rendered as a **seat**: `actions` non-null is the whole of
+ * the difference between the two modes (report 10 §1, `PLAN.md` M4), and it is
+ * the branch a replay never exercises — every tile becomes an enabled
+ * `<button>`, the engine's two buttons become live, and Concede arms.
+ *
+ * The sink records nothing on purpose: a server render dispatches no events, so
+ * what this proves is that the *live* tree renders at all, over every frame of
+ * every fixture, which is exactly what M3's replay-only test could not say.
+ */
+const FAKE_ACTIONS: BoardActions = {
+  clickCard: () => undefined,
+  clickPlayer: () => undefined,
+  buttonOk: () => undefined,
+  buttonCancel: () => undefined,
+  concede: () => undefined,
+  answer: () => undefined,
+};
+
+function renderLive(state: ClientState): string {
+  return renderToStaticMarkup(<Board state={state} art={art} actions={FAKE_ACTIONS} />);
+}
+
+/** Every `data-card-name="…"` the markup carries, un-escaped. */
+function renderedNames(html: string): string[] {
+  return [...html.matchAll(/data-card-name="([^"]*)"/g)].map((m) => unescapeHtml(m[1] ?? ''));
+}
+
+/** Every `data-card-id="…"` the markup carries. */
+function renderedCardIds(html: string): number[] {
+  return [...html.matchAll(/data-card-id="(\d+)"/g)].map((m) => Number(m[1]));
+}
+
+function unescapeHtml(text: string): string {
+  return text
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&');
+}
+
+/** Every card this frame serialised in the clear, wherever it lives. */
+function visibleCards(board: GameStateBody): Card[] {
+  const out: AnyCard[] = [];
+  for (const card of board.stackCards) out.push(card);
+  for (const player of board.players) {
+    for (const zone of [
+      player.zones.battlefield,
+      player.zones.hand,
+      player.zones.graveyard,
+      player.zones.exile,
+      player.zones.command,
+    ]) {
+      out.push(...zone.cards);
+    }
+    out.push(...player.zones.library.cards);
+  }
+  return out.filter((card): card is Card => !isHidden(card));
+}
+
+/**
+ * The names this frame is entitled to show. `input.focusCard` is in the list
+ * because `setCard` is frequently pushed with a card that is **not** in the
+ * snapshot at all — a library card during surveil (amendment P7, report 06
+ * §6.9) — and the decision panel draws it.
+ */
+function allowedNames(state: ClientState): Set<string> {
+  const names = new Set<string>();
+  if (state.board !== null) {
+    for (const card of visibleCards(state.board)) if (card.name !== '') names.add(card.name);
+  }
+  const focus = state.input?.focusCard ?? null;
+  if (focus !== null && !isHidden(focus) && focus.name !== '') names.add(focus.name);
+  return names;
+}
+
+/** The ids in every seat's hand except the viewer's. Never drawn as tiles. */
+function opponentHandIds(state: ClientState): Set<number> {
+  const you = state.hello?.you ?? state.session?.seat ?? null;
+  const ids = new Set<number>();
+  if (state.board === null || you === null) return ids;
+  for (const player of state.board.players) {
+    if (player.id === you) continue;
+    for (const card of player.zones.hand.cards) ids.add(card.id);
+  }
+  return ids;
+}
+
 test('the fixture corpus is non-empty, and this is the art index it rendered with', () => {
   expect(files.length).toBeGreaterThan(0);
   // Printed so a run that silently fell back to the empty index is visible.
@@ -153,6 +254,7 @@ for (const path of files) {
 
     let rendered = 0;
     let stateFrames = 0;
+    let selectablesChecked = 0;
     for (let i = 0; i < log.frames.length; i++) {
       const frame = log.frames[i]!;
       state = reduce(state, frame);
@@ -181,9 +283,95 @@ for (const path of files) {
       expect(html, `${file}: frame ${String(i)} rendered "[object Object]"`).not.toContain(
         '[object Object]',
       );
+
+      // ---- M4 -----------------------------------------------------------
+      // The SAME frame rendered as a seat. `actions` non-null is the only
+      // difference between the two modes, and until M4 nothing rendered the
+      // live branch over the corpus at all.
+      let live: string;
+      try {
+        live = renderLive(state);
+      } catch (cause) {
+        expect.fail(
+          `${file}: <Board actions={…}/> threw on frame ${String(i)} ` +
+            `(seq=${String(frame.seq)} type=${frame.type}): ${String(cause)}`,
+        );
+      }
+      expect(live, `${file}: frame ${String(i)} (live) rendered "undefined"`).not.toContain(
+        'undefined',
+      );
+      expect(live, `${file}: frame ${String(i)} (live) rendered "[object Object]"`).not.toContain(
+        '[object Object]',
+      );
+      expect(live).toContain('data-readonly="false"');
+
+      // **The replay board stays read-only.** Every affordance is rendered and
+      // every affordance is inert: a `<button data-act="…">` with no `disabled`
+      // in replay markup is a control that would send an act to a server that
+      // does not exist (report 10 §1, `PLAN.md` M4).
+      expect(html).toContain('data-readonly="true"');
+      for (const button of html.match(/<button[^>]*data-act="[^"]*"[^>]*>/g) ?? []) {
+        expect(
+          button,
+          `${file}: frame ${String(i)} rendered a LIVE affordance on the replay board`,
+        ).toContain('disabled');
+      }
+
+      // **No name the frame did not make public.** Strictly stronger than the
+      // wire-level check in `fixtures.test.ts`, which cannot see a renderer that
+      // kept a name for an id whose latest serialisation is `hidden: true` —
+      // report 06 §0.6 calls that the worst remaining leak and places it here,
+      // in the client, rather than in `Snap.java`.
+      const permitted = allowedNames(state);
+      for (const markup of [html, live]) {
+        for (const name of renderedNames(markup)) {
+          expect(
+            permitted.has(name),
+            `${file}: frame ${String(i)} rendered the card name ${JSON.stringify(name)}, which ` +
+              `this frame did not serialise in the clear`,
+          ).toBe(true);
+        }
+      }
+
+      // **An opponent's hand is a count in their rail and is never drawn.**
+      const forbidden = opponentHandIds(state);
+      if (forbidden.size > 0) {
+        const focusId = state.input?.focusCard?.id ?? null;
+        for (const id of renderedCardIds(live)) {
+          if (id === focusId) continue; // the engine pushed this one at us
+          expect(
+            forbidden.has(id),
+            `${file}: frame ${String(i)} drew a tile for card #${String(id)}, which is in an ` +
+              `opponent's hand`,
+          ).toBe(false);
+        }
+      }
+
+      // The outline is the engine's answer, echoed: the ids marked selectable
+      // are exactly the rendered ids the engine named (report 10 §15.2 item 3).
+      const input = state.input;
+      if (input !== null && input.selectable.mode === 'cards') {
+        const marked = new Set(
+          [...live.matchAll(/data-card-id="(\d+)" data-card-name="[^"]*" data-selectable="true"/g)].map(
+            (m) => Number(m[1]),
+          ),
+        );
+        const drawn = new Set(renderedCardIds(live));
+        for (const id of marked) {
+          expect(
+            input.selectable.cardIds.includes(id),
+            `${file}: frame ${String(i)} outlined card #${String(id)}, which the engine did not name`,
+          ).toBe(true);
+        }
+        for (const id of input.selectable.cardIds) {
+          if (!drawn.has(id)) continue; // in a zone this board does not draw
+          selectablesChecked += 1;
+        }
+      }
     }
 
     expect(rendered).toBe(log.frames.length);
+    void selectablesChecked;
     expect(stateFrames, `${file}: no state frames — the render test proves nothing`).toBeGreaterThan(
       0,
     );
@@ -331,6 +519,189 @@ test('the corpus renders at least one ask and one input (the synthetic half)', (
   }
   expect(asks, 'no fixture carries an `ask` frame').toBeGreaterThan(0);
   expect(inputs, 'no fixture carries an `input` frame').toBeGreaterThan(0);
+});
+
+test('M4 NEGATIVE CONTROLS: the three new assertions can actually fail', () => {
+  /*
+   * A check that cannot fail proves nothing — the argument that produced
+   * `tools/check-redaction-selftest.mjs` after a checker quietly accepted five
+   * reverted amendments. Each of M4's three new per-frame assertions is
+   * exercised here against a state where it MUST fire.
+   */
+  const log = parseFrameLog(readFileSync(GAMES_DIR + 'human-auto-42.jsonl', 'utf8'));
+  let state = initialState(log.header);
+  let rich: ClientState | null = null;
+  let withOpponentHand: ClientState | null = null;
+
+  for (const frame of log.frames) {
+    state = reduce(state, frame);
+    if (state.board === null) continue;
+    if (rich === null && visibleCards(state.board).length > 4) rich = state;
+    if (withOpponentHand === null && opponentHandIds(state).size > 0) withOpponentHand = state;
+    if (rich !== null && withOpponentHand !== null) break;
+  }
+  expect(rich, 'no frame with several visible cards').not.toBeNull();
+  expect(
+    withOpponentHand,
+    'no frame in human-auto-42 has cards in an opponent hand, so the "never drawn" assertion is vacuous',
+  ).not.toBeNull();
+
+  // 1. The name check reads real attributes, and rejects a name the frame did
+  //    not serialise. (A renderer that cached a name across frames produces
+  //    exactly this: an attribute whose value is not in the permitted set.)
+  const html = render(rich!);
+  const names = renderedNames(html);
+  expect(names.length, 'no data-card-name in the markup — the regex matches nothing').toBeGreaterThan(
+    0,
+  );
+  const permitted = allowedNames(rich!);
+  for (const name of names) expect(permitted.has(name)).toBe(true);
+  expect(permitted.has('Black Lotus'), 'the permitted set accepts a card that is not there').toBe(
+    false,
+  );
+  expect(renderedNames('<li data-card-name="Black Lotus">').every((n) => permitted.has(n))).toBe(
+    false,
+  );
+
+  // 2. The read-only check would notice a live affordance: the SAME state
+  //    rendered with actions has enabled `data-act` buttons, and the replay
+  //    render has none.
+  const live = renderLive(rich!);
+  const liveButtons = live.match(/<button[^>]*data-act="[^"]*"[^>]*>/g) ?? [];
+  const replayButtons = html.match(/<button[^>]*data-act="[^"]*"[^>]*>/g) ?? [];
+  expect(liveButtons.length, 'the live board rendered no affordances at all').toBeGreaterThan(0);
+  expect(replayButtons.length, 'the replay board rendered no affordances at all').toBeGreaterThan(0);
+  expect(
+    liveButtons.some((b) => !b.includes('disabled')),
+    'no enabled affordance in the LIVE markup — the read-only assertion is vacuous',
+  ).toBe(true);
+  expect(replayButtons.every((b) => b.includes('disabled'))).toBe(true);
+
+  // 3. The opponent-hand check is non-vacuous, and those ids really are absent.
+  const hidden = opponentHandIds(withOpponentHand!);
+  const drawn = new Set(renderedCardIds(renderLive(withOpponentHand!)));
+  for (const id of hidden) expect(drawn.has(id)).toBe(false);
+});
+
+// ---------------------------------------------------------------------------
+// M4 evening 3 — the arrows (report 10 §9, §15)
+// ---------------------------------------------------------------------------
+
+/**
+ * A rect for every entity the frame mentions. Stands in for the DOM: the
+ * registry's whole contract is "a box, or nothing", and under
+ * `renderToStaticMarkup` there is no element to measure, so this is the only way
+ * to render a board that actually has arrows on it.
+ */
+function fakeRects(board: GameStateBody): Rects {
+  const boxes = new Map<string, RectBox>();
+  let n = 0;
+  const put = (key: string): void => {
+    if (boxes.has(key)) return;
+    boxes.set(key, { x: (n % 8) * 120 + 6, y: Math.floor(n / 8) * 150 + 6, width: 95, height: 132 });
+    n += 1;
+  };
+  for (const player of board.players) {
+    put(`p:${String(player.id)}`);
+    for (const card of player.zones.battlefield.cards) put(`c:${String(card.id)}`);
+    for (const card of player.zones.graveyard.cards) put(`c:${String(card.id)}`);
+  }
+  for (const item of board.stack) put(`s:${String(item.id)}`);
+  return { register: () => () => undefined, get: (key) => boxes.get(key), version: 1 };
+}
+
+function renderArrows(board: GameStateBody, emphasiseCombat = false): string {
+  return renderToStaticMarkup(
+    <RectsContext.Provider value={fakeRects(board)}>
+      <ArrowsOverlay board={board} emphasiseCombat={emphasiseCombat} />
+    </RectsContext.Provider>,
+  );
+}
+
+/** The first folded state whose board satisfies `want`, across the whole corpus. */
+function findBoard(want: (board: GameStateBody) => boolean): { file: string; board: GameStateBody } | null {
+  for (const path of files) {
+    const log = parseFrameLog(readFileSync(path, 'utf8'));
+    let state = initialState(log.header);
+    for (const frame of log.frames) {
+      state = reduce(state, frame);
+      if (state.board !== null && want(state.board)) {
+        return { file: shortName(path), board: state.board };
+      }
+    }
+  }
+  return null;
+}
+
+test('the stack-target and combat frames render real <path> elements', () => {
+  /*
+   * Report 10 §17's exit check for evening 3: "arrows land on the right cards on
+   * a frame from g1.jsonl with a targeted spell on the stack, and a
+   * declared-blockers frame". The arrow's tail is the stack ROW (`s:`), never the
+   * stack item's id resolved against card rects — §10.1's two id spaces collide,
+   * and 40 frames of the committed corpus have a stack item whose id is also a
+   * battlefield card's.
+   */
+  const targeted = findBoard((board) =>
+    board.stack.some((item) => item.targetCardIds.length > 0),
+  );
+  expect(targeted, 'no fixture frame has a stack item with a target').not.toBeNull();
+  const targetHtml = renderArrows(targeted!.board);
+  expect(targetHtml, `${targeted!.file}: no <path> drawn for a stack target`).toContain('<path');
+  expect(targetHtml).toContain('arrow--target');
+  // The tail is the stack row, not a card tile that happens to share the id.
+  // `>` inside an attribute comes back HTML-escaped from renderToStaticMarkup.
+  expect(targetHtml).toMatch(/data-arrow="target:s:\d+&gt;[cp]:\d+"/);
+
+  const combat = findBoard(
+    (board) => (board.combat?.bands ?? []).some((band) => band.blockerIds.length > 0),
+  );
+  expect(combat, 'no fixture frame has a blocked combat band').not.toBeNull();
+  const combatHtml = renderArrows(combat!.board);
+  expect(combatHtml).toContain('arrow--attack');
+  expect(combatHtml).toContain('arrow--block');
+  expect(combatHtml).toMatch(/data-arrow="block:c:\d+&gt;c:\d+"/);
+  // `C` (Forge's SHORTCUT_SHOWCOMBAT) emphasises combat rather than opening a
+  // panel: the class is the whole of the difference.
+  expect(renderArrows(combat!.board, true)).toContain('arrows--combat');
+
+  // Every path is finite, and every head is a triangle.
+  for (const html of [targetHtml, combatHtml]) {
+    expect(html).not.toContain('NaN');
+    for (const points of [...html.matchAll(/points="([^"]+)"/g)].map((m) => m[1] ?? '')) {
+      expect(points.split(' ')).toHaveLength(3);
+    }
+  }
+});
+
+test('NEGATIVE CONTROL: an empty registry draws no arrows at all', () => {
+  /*
+   * This is the branch every other test in this file renders: a server render
+   * registers nothing, so `<Board/>` draws the overlay and no paths. If it ever
+   * started drawing them, the arrows would be coming from somewhere other than a
+   * measured DOM — which is the only thing that can know where a card is.
+   */
+  const combat = findBoard((board) => (board.combat?.bands ?? []).some((b) => b.blockerIds.length > 0));
+  expect(combat).not.toBeNull();
+  const empty = renderToStaticMarkup(<ArrowsOverlay board={combat!.board} />);
+  expect(empty).toContain('data-arrows="0"');
+  expect(empty).not.toContain('<path');
+  // And the same frame through the real board: the overlay is there, inert.
+  const withRects = renderArrows(combat!.board);
+  expect(withRects).not.toContain('data-arrows="0"');
+  expect(withRects).toContain('aria-hidden="true"');
+});
+
+test('the hotkeys overlay is rendered from the keymap itself', () => {
+  // Report 10 §12.2: one table, consumed by both the handler and the help. A
+  // help screen built from a second list is one that will list a key nothing
+  // implements — so this asserts the rendered rows ARE the table.
+  const html = renderToStaticMarkup(<HotkeysOverlay onClose={() => undefined} />);
+  for (const binding of KEYMAP) {
+    expect(html, `the overlay does not list ${binding.id}`).toContain(escapeHtml(binding.chord));
+  }
+  expect(html).toContain('Keyboard');
+  expect(KEYMAP.length).toBeGreaterThan(10);
 });
 
 test('NEGATIVE CONTROL: the harness still notices when the board cannot draw a state', () => {

@@ -2,14 +2,27 @@
  * mtg-table — styles.css
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * One plain stylesheet, no framework. M1's board is a text board on purpose:
- * the point of this milestone is that the protocol, the reducer and the replay
- * transport are right, not that it is pretty. M4 is where it starts to look like
- * Magic.
+ * One plain stylesheet, no framework, two explicit breakpoints — the whole of
+ * M4's layout (docs/research/10-board-ui-spec.md §2).
+ *
+ * M1's board was a text board on purpose. M4 is the same data laid out as a
+ * table: a CSS grid, real card tiles with Scryfall art over a generated text
+ * frame, a left rail of seats and the decision, a right rail of thirteen phase
+ * rows. Nothing under `web/src/render/` imports CSS — every rule is here, and
+ * `main.tsx` imports this file once — because `web/test/render.test.tsx` imports
+ * that whole component tree into a `node` environment with no CSS loader
+ * (report 10 §1's hard rule for the component tree, §15).
+ *
+ * The numbers are explicit rather than `clamp()`ed for one reason: two fixed
+ * blocks can be screenshot-verified and a fluid one cannot (report 10 §2.1).
+ * The two blocks are 1600×900 and 1280×720, and `docs/evidence/m4-board.md` has
+ * a screenshot of each.
  */
 
 :root {
-  color-scheme: dark light;
+  color-scheme: dark;
+
+  /* --- M1's tokens, unchanged ------------------------------------------- */
   --bg: #14161a;
   --panel: #1c1f25;
   --panel-2: #22262e;
@@ -23,24 +36,86 @@
   --error: #ff6b6b;
   --ok: #7ddf87;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* --- M4 geometry: 1600 × 900 and anything wider (report 10 §2.1) ------- */
+  --pad: 12px;
+  --gap-col: 12px;
+  --gap-row: 10px;
+  --gap-card: 8px;
+  --rail-l: 264px;
+  --rail-r: 128px;
+
+  --ch-bf: 132px;   --cw-bf: 95px;    /* permanents: 132 / 1.3934 = 94.7 */
+  --ch-land: 104px; --cw-land: 75px;  /* lands:      104 / 1.3934 = 74.6 */
+  --ch-hand: 190px; --cw-hand: 136px; /* hand:       190 / 1.3934 = 136.4 */
+  --ch-strip: 62px; --cw-strip: 45px; /* graveyard / exile strips          */
+  --ch-stack: 61px; --cw-stack: 44px; /* stack-panel thumbnails            */
+  --middle-min: 120px;
+  --stack-w: 240px;
+  /* The hover zoom. 300px covered most of the opponent's two rows while a hand
+     card was hovered (evening 2's own note); 232 is still 1.7x the hand tile and
+     `Z` is the one that goes big (report 10 §12.2). */
+  --zoom-w: 232px;
+
+  /* --- M4 board palette — extends M1's, does not replace it -------------- */
+  --felt: #10161c;
+  --felt-line: #1d2731;
+  --you: #6fb4ff;
+  --opp: #ff8a6b;
+  --tap: #b9772f;
+  --arrow-target: #c79bff;
+  --arrow-attack: #ff6b6b;
+  --arrow-block: #7ddf87;
+}
+
+/* 1280 × 720. Same areas, tighter tokens (report 10 §2.5). */
+@media (max-width: 1439px) {
+  :root {
+    --pad: 10px;
+    --gap-col: 10px;
+    --gap-row: 8px;
+    --gap-card: 6px;
+    --rail-l: 216px;
+    --rail-r: 112px;
+
+    --ch-bf: 104px;   --cw-bf: 75px;
+    --ch-land: 84px;  --cw-land: 60px;
+    --ch-hand: 150px; --cw-hand: 108px;
+    --ch-strip: 48px; --cw-strip: 34px;
+    --ch-stack: 54px; --cw-stack: 39px;
+    --middle-min: 96px;
+    --stack-w: 200px;
+    --zoom-w: 196px;
+  }
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  block-size: 100%;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 13px/1.45 var(--mono);
+  font: 12px/1.4 var(--ui);
+  /* The page never scrolls sideways. Rows compress instead (report 10 §2.3). */
+  overflow-x: hidden;
 }
 
 a {
   color: var(--accent);
 }
 
-code {
+code,
+kbd {
+  font-family: var(--mono);
   color: var(--accent);
 }
 
@@ -55,35 +130,96 @@ code {
 .k {
   color: var(--muted);
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   margin-right: 0.25em;
 }
 
 .hint {
   color: var(--warn);
+  margin: 0.25rem 0;
+}
+
+.hint--loud {
+  border-left: 3px solid var(--warn);
+  padding-left: 0.4rem;
+}
+
+/* Visually hidden, still announced. Every fact an arrow or a glyph carries is
+   also text (report 10 §14 rule 4). */
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* --- shell ---------------------------------------------------------------- */
 
-.app__head {
+/*
+ * The board is the page. One thin bar above it carries the title, the mode, the
+ * socket status and the credits, because every pixel that bar takes is a pixel
+ * the hand row does not have: at 1600×900 the fixed rows plus gaps plus padding
+ * are 736 px, which leaves 164 px for the middle row and nothing at all for a
+ * second chrome strip.
+ */
+.app {
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--line);
+  flex-direction: column;
+  block-size: 100dvh;
+  overflow: hidden;
 }
 
-.app__head h1 {
-  font-size: 14px;
+.app__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.app__bar h1 {
+  font-size: 12px;
   margin: 0;
   letter-spacing: 0.04em;
+  font-family: var(--mono);
 }
 
-.app__foot {
-  padding: 1rem;
-  border-top: 1px solid var(--line);
-  font-size: 11px;
+.app__bar .app__credit {
+  margin-left: auto;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Banners float over the board rather than pushing it: a transient warning must
+   not cost the hand row 40 px of height for the rest of the game. */
+.app__overlays {
+  position: fixed;
+  inset-block-start: 28px;
+  inset-inline: 0;
+  z-index: 90;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.app__overlays > * {
+  pointer-events: auto;
+  max-inline-size: min(900px, 90vw);
+  box-shadow: 0 6px 24px #0009;
 }
 
 /* --- replay controls ------------------------------------------------------ */
@@ -91,24 +227,24 @@ code {
 .replay {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding: 0.5rem 1rem;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  padding: 0.15rem 0.6rem;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  font-size: 11px;
+  flex: 0 0 auto;
+  overflow: hidden;
 }
 
 .replay__buttons {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .replay__scrub {
   flex: 1 1 260px;
-  min-width: 180px;
+  min-inline-size: 120px;
   accent-color: var(--accent);
 }
 
@@ -123,20 +259,26 @@ select {
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 3px;
-  padding: 0.2rem 0.6rem;
+  padding: 0.1rem 0.45rem;
   cursor: pointer;
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
+}
+
+:focus-visible {
+  /* Visibly distinct from `.tile--selectable`'s outline, so "focused" and "the
+     engine will accept this" never look the same (report 10 §14 rule 5). */
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
 }
 
 /* --- banners -------------------------------------------------------------- */
 
 .banner {
-  margin: 0.5rem 1rem;
-  padding: 0.6rem 0.8rem;
+  padding: 0.5rem 0.7rem;
   border-radius: 4px;
   border-left: 4px solid var(--line);
   background: var(--panel);
@@ -155,348 +297,351 @@ button:disabled {
 .banner--over {
   border-left-color: var(--ok);
   color: var(--ok);
+  background: #0d1318f2;
 }
 
 .banner pre {
   white-space: pre-wrap;
-  max-height: 16rem;
+  max-block-size: 16rem;
   overflow: auto;
   color: var(--muted);
 }
 
-/* --- board ---------------------------------------------------------------- */
+/* --- the connection bar (inline in the top bar) --------------------------- */
+
+.wsbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wsbar__dot {
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.wsbar__dot--open {
+  background: var(--ok);
+}
+
+.wsbar__dot--connecting,
+.wsbar__dot--reconnecting {
+  background: var(--warn);
+}
+
+.wsbar__dot--closed,
+.wsbar__dot--refused {
+  background: var(--error);
+}
+
+/* ===========================================================================
+ * THE BOARD (report 10 §2.2)
+ * =========================================================================== */
 
 .board {
-  padding: 0 1rem 2rem;
-}
-
-.strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 0.75rem;
-}
-
-.strip__cell--phase {
-  color: var(--accent);
-}
-
-.player {
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.75rem;
-  background: var(--panel);
-}
-
-.player--you {
-  border-color: var(--accent);
-}
-
-.player h2 {
-  font-size: 13px;
-  margin: 0 0 0.35rem;
-}
-
-.vitals {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-}
-
-.zone {
-  margin: 0.4rem 0;
-}
-
-.zone h3 {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 0.4rem 0 0.2rem;
-}
-
-.cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 0.25rem;
+  grid-template-columns: var(--rail-l) minmax(0, 1fr) var(--rail-r);
+  gap: var(--gap-row) var(--gap-col);
+  padding: var(--pad);
+  background:
+    radial-gradient(120% 80% at 50% 0%, #16202a 0%, var(--felt) 70%),
+    var(--felt);
+  position: relative; /* arrows overlay and the drawer anchor here */
+  overflow: hidden; /* the page never scrolls; rows compress instead */
+  flex: 1 1 auto;
+  min-block-size: 0;
 }
 
-.card {
-  border: 1px solid transparent;
-  border-radius: 3px;
-  padding: 0.2rem 0.35rem;
-  background: var(--panel-2);
+.board--empty {
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr;
 }
 
-/* The only rules answer the client renders is the one the engine handed it:
-   an id in input.selectable.cardIds. Nothing here is computed. */
-.card--selectable {
-  border-color: var(--select);
-  box-shadow: 0 0 0 1px var(--select) inset;
+.board__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.card--highlighted {
-  border-color: var(--highlight);
+/* --- the rails ------------------------------------------------------------ */
+
+.board__rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-row);
+  min-block-size: 0;
 }
 
-.card--focus {
-  outline: 1px dashed var(--accent);
+.board__rail--left {
+  grid-column: 1;
 }
 
-.card--hidden {
-  opacity: 0.75;
+.board__drawer {
+  margin-block-start: auto;
 }
 
-.card__name {
-  font-weight: 700;
-}
-
-.card__types {
-  font-size: 11px;
-}
-
-.cost {
-  color: var(--accent);
-}
-
-.thumb {
+.pill {
   display: inline-block;
-  vertical-align: middle;
-  width: 30px;
-  height: 42px;
-  margin-right: 0.4rem;
-  border-radius: 2px;
-  object-fit: cover;
-  background: #0d0f12;
   border: 1px solid var(--line);
-}
-
-.thumb--back {
-  background: repeating-linear-gradient(45deg, #2a2f38, #2a2f38 3px, #1e222a 3px, #1e222a 6px);
-}
-
-.thumb--text {
-  font-size: 11px;
-  text-align: center;
-  line-height: 42px;
-  color: var(--muted);
-}
-
-.marks {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-left: 0.4rem;
-}
-
-.mark {
+  border-radius: 999px;
+  padding: 0 0.4rem;
   font-size: 10px;
-  padding: 0 0.3rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
   color: var(--muted);
 }
 
-.abilities {
-  list-style: none;
-  margin: 0.2rem 0 0;
-  padding: 0;
-  font-size: 11px;
-  color: var(--muted);
+.pill--readonly {
+  border-color: var(--warn);
+  color: var(--warn);
 }
 
-.ability--can {
+.pill--active {
+  border-color: var(--ok);
   color: var(--ok);
 }
 
-/* --- panels --------------------------------------------------------------- */
-
-.columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+.pill--priority {
+  border-color: var(--select);
+  color: var(--select);
 }
 
-.panel {
+/* --- PlayerRail ----------------------------------------------------------- */
+
+.rail {
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  background: var(--panel);
+  border-radius: 5px;
+  background: #151b21cc;
+  padding: 0.3rem 0.45rem;
+  flex: 0 0 auto;
 }
 
-.panel h2 {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 0 0 0.4rem;
+.rail--you {
+  border-inline-start: 3px solid var(--you);
 }
 
-.panel--meta dl {
-  display: grid;
-  grid-template-columns: 8rem 1fr;
-  gap: 0.15rem 0.75rem;
-  margin: 0;
+.rail--opp {
+  border-inline-start: 3px solid var(--opp);
 }
 
-.panel--meta dt {
-  color: var(--muted);
+.rail--active {
+  background: #1b242dcc;
+  box-shadow: inset 0 0 0 1px #ffffff12;
 }
 
-.panel--meta dd {
-  margin: 0;
-}
-
-.stack,
-.bands,
-.events,
-.notices {
-  margin: 0;
-  padding-left: 1.2rem;
-}
-
-/* --- the ask block --------------------------------------------------------
- *
- * docs/protocol.md §5: an `ask` BLOCKS the Forge game thread until an answer
- * arrives, and it is the only frame the server waits on. So it is drawn at the
- * top of the board, in the accent colour, and it is absent entirely when there
- * is no question — an empty panel sitting there every frame would teach the
- * reader to stop looking at it.
- *
- * "Modal-like", not modal: nothing is trapped, nothing is clickable, and the
- * board behind it stays readable. M1 renders questions; M2/M5 answer them.
- */
-
-.ask-modal {
-  border: 1px solid var(--accent);
-  border-left-width: 4px;
-  border-radius: 4px;
-  background: var(--panel-2);
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.75rem;
-}
-
-.ask-modal__head {
+.rail__head {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.2rem;
+  gap: 0.35rem;
+  margin: 0 0 0.15rem;
+  font-size: 13px;
 }
 
-.ask-modal__blocked {
-  margin-left: auto;
-  color: var(--warn);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.rail__name {
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: start;
 }
 
-.ask-modal__options {
-  margin: 0;
-  padding-left: 1.2rem;
-  max-height: 22rem;
-  overflow: auto;
+.rail__name:hover:not(:disabled) {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
-.ask-modal__option {
-  padding: 0.05rem 0;
+.rail__name--selectable {
+  color: var(--select);
+  text-decoration: underline dotted;
 }
 
-/* The ask-local index (§5.1), which is what an answer echoes — never a Forge
-   id. Dimmed, so the eye lands on the engine's label first. */
-.ask-modal__index {
+.rail__tags {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.rail__vitals {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.life {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.life__glyph {
+  color: var(--error);
+}
+
+.life__n {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--mono);
+  line-height: 1;
+}
+
+.poison {
   color: var(--muted);
 }
 
-/* The engine's own label, verbatim. Never parsed, never rebuilt. */
-.ask-modal__label {
+.poison--on {
+  color: var(--ok);
+}
+
+.rail__turnmark {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 0.2rem;
+}
+
+.rail__zones {
+  display: flex;
+  gap: 0.45rem;
+  margin-block-start: 0.15rem;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.zc__n {
   color: var(--ink);
 }
 
-.stack__top {
-  color: var(--accent);
+.rail__mana {
+  margin-block-start: 0.15rem;
 }
 
-.targets {
+.rail__counters,
+.rail__revealed {
+  margin-block-start: 0.2rem;
+}
+
+.rail__revealed .row {
+  block-size: var(--ch-strip);
+  justify-content: flex-start;
+}
+
+/* --- mana pips (mana-font, report 10 §13) --------------------------------- */
+
+.mana {
+  display: inline-flex;
+  gap: 1px;
+  align-items: center;
+}
+
+.mana--md .ms {
+  font-size: 13px;
+}
+
+.mana__raw {
+  font-family: var(--mono);
+}
+
+.pool {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.pool__pip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  opacity: 0.35;
+  font-family: var(--mono);
+}
+
+.pool__pip--on {
+  opacity: 1;
+  color: var(--ink);
+}
+
+.pool__n {
+  font-size: 10px;
+}
+
+/* The 187 KB woff2 instead of the 408 KB woff (report 10 §13). mana.css 1.18.0
+   lists eot/woff/ttf/svg and not woff2, although the file ships in the package;
+   a later @font-face for the same family wins, so this override must come after
+   the `mana-font/css/mana.css` import in main.tsx. */
+@font-face {
+  font-family: "Mana";
+  src: url("mana-font/fonts/mana.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.ms {
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* --- DecisionPanel -------------------------------------------------------- */
+
+.decision {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #151b21cc;
+  padding: 0.35rem 0.45rem;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.decision__title {
+  margin: 0 0 0.2rem;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  padding-left: 0.5rem;
 }
 
 .prompt {
   color: var(--ink);
   margin: 0.2rem 0;
+  font-size: 13px;
 }
 
-.buttons {
+.decision__buttons {
   display: flex;
-  gap: 0.4rem;
-  margin: 0.3rem 0;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.35rem 0;
 }
 
-.notice--warn {
-  color: var(--warn);
+.decision__meta,
+.decision__zones {
+  font-size: 10px;
+  margin: 0.25rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: baseline;
 }
 
-.notice--error {
-  color: var(--error);
+.decision__focus {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-block-start: 0.25rem;
 }
 
-.events {
-  max-height: 18rem;
-  overflow: auto;
+.decision__focus .row {
+  inline-size: auto;
+  block-size: var(--ch-strip);
 }
 
-/* ---------------------------------------------------------------------------
-   Amendment P2/P3/P20 — the revealed slice of a library, the face a viewer is
-   entitled to look at, and the running log ring.
-   --------------------------------------------------------------------------- */
-
-/* §3.4 amended: a library is a count PLUS whatever a continuous "may look"
-   effect reveals. Marked so it never reads as "the library is public". */
-.zone--library {
-  border-left: 2px solid var(--accent);
-  padding-left: 0.4rem;
-}
-
-/* P3: the real face of a face-down card THIS SEAT may look at. Visually apart
-   from the card's name, because the table sees a nameless 2/2 and only this
-   seat sees what it is. */
-.card__alt {
-  font-size: 11px;
-  color: var(--ink);
-  border-left: 2px solid var(--accent);
-  padding-left: 0.4rem;
-  margin-top: 0.15rem;
-}
-
-.log {
-  margin: 0;
-  padding-left: 1.2rem;
-  max-height: 18rem;
-  overflow: auto;
-}
-
-.panel--log {
-  margin-top: 0.5rem;
-}
-
-/* ===========================================================================
- * M3 — the board is a seat
- *
- * Everything below is an affordance, not a decision: what is clickable is every
- * card (amendment M8), and what a button says is the engine's own label. The
- * outline on a card still means exactly one thing — the engine named that id in
- * `input.selectable.cardIds` — and it is not what gates the click.
- * =========================================================================== */
+/* --- buttons -------------------------------------------------------------- */
 
 .btn {
   font: inherit;
@@ -504,13 +649,13 @@ button:disabled {
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 3px;
-  padding: 0.2rem 0.6rem;
+  padding: 0.15rem 0.5rem;
   cursor: pointer;
 }
 
 .btn--small {
   padding: 0 0.35rem;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .btn--primary {
@@ -524,13 +669,25 @@ button:disabled {
 }
 
 .btn--engine {
-  min-width: 6rem;
+  min-inline-size: 5.5rem;
+  border-color: var(--accent);
+}
+
+.btn--engine:disabled {
+  border-color: var(--line);
+}
+
+.btn__key {
+  color: var(--muted);
+  font-size: 9px;
+  margin-inline-start: 0.3rem;
+  letter-spacing: 0.06em;
 }
 
 /* §9 invariant 6: reachable from every UI state, and visibly not an ordinary
    button — it ends the game and there is no undo for it. */
 .btn--concede {
-  margin-left: auto;
+  margin-inline-start: auto;
   border-color: var(--error);
   color: var(--error);
 }
@@ -540,75 +697,997 @@ button:disabled {
   color: #14161a;
 }
 
-/* --- a clickable card ----------------------------------------------------- */
+/* A control whose engine call exists and whose milestone has not arrived. It is
+   disabled and its tooltip names both (report 10 §7.2, §6.4). */
+.btn--future {
+  border-style: dashed;
+  color: var(--muted);
+}
 
-/* The card line's own button. It wraps the name rather than the <li> so that it
-   is focusable and announced as a button — and so the window-level Space/Escape
-   handler in main.tsx can tell "a control has focus" from "the board does". */
-.card__btn {
-  display: inline;
+/* --- PhaseStrip ----------------------------------------------------------- */
+
+.strip {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-block-size: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #151b21cc;
+  padding: 0.3rem 0.25rem;
+}
+
+.strip__turn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-block-end: 1px solid var(--line);
+  padding-block-end: 0.2rem;
+  margin-block-end: 0.2rem;
+}
+
+.strip__round {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.strip__turnno {
+  font-size: 10px;
+}
+
+.strip__whose {
+  font-size: 10px;
+}
+
+.strip__whose--you {
+  color: var(--you);
+}
+
+.strip__whose--opp {
+  color: var(--opp);
+}
+
+.strip__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strip__divider {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-block-start: 1px solid var(--felt-line);
+  margin: 2px 0 1px;
+  padding-inline-start: 2px;
+}
+
+.phase {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.phase--combat .phase__label {
+  padding-inline-start: 0.35rem;
+}
+
+.phase__label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phase--active {
+  color: #0d1318;
+  font-weight: 700;
+}
+
+.phase--active-you {
+  background: var(--you);
+}
+
+.phase--active-opp {
+  background: var(--opp);
+}
+
+.phase__dots {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.dot {
   font: inherit;
-  color: inherit;
   background: none;
   border: 0;
+  padding: 0 1px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.dot--on {
+  color: var(--select);
+}
+
+.dot--none {
+  opacity: 0.5;
+}
+
+.phase--active .dot {
+  color: #0d1318;
+}
+
+.strip__legend {
+  font-size: 9px;
+  margin: 0.2rem 0;
+}
+
+.strip__hold {
+  font-size: 10px;
+  margin-block-start: auto;
+}
+
+/* --- the table ------------------------------------------------------------ */
+
+.table {
+  grid-column: 2;
+  display: grid;
+  grid-template-rows:
+    var(--ch-land) /* opponent lands      */
+    var(--ch-bf) /* opponent permanents */
+    minmax(var(--middle-min), 1fr) /* the table           */
+    var(--ch-bf) /* your permanents     */
+    var(--ch-land) /* your lands          */
+    var(--ch-hand); /* your hand           */
+  gap: var(--gap-row);
+  min-block-size: 0;
+}
+
+/* The two rows of a seat are grid items of `.table`, not of a wrapper. */
+.table__seat {
+  display: contents;
+}
+
+.table__row {
+  position: relative;
+  min-inline-size: 0;
+  border-radius: 4px;
+  background: linear-gradient(#ffffff05, #ffffff00);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+}
+
+.table__middle {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  padding-inline-end: calc(var(--stack-w) + 10px);
+  min-block-size: 0;
+}
+
+.middle__strips {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.middle__combat {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.table__hand {
+  position: relative;
+  min-block-size: 0;
+}
+
+/* --- a zone row (report 10 §2.3) ------------------------------------------ */
+
+.zonerow {
+  position: relative;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  block-size: 100%;
+}
+
+.zonerow__label {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 4px;
+  font-size: 9px;
+  color: #6b7482;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 1;
+  max-inline-size: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zonerow__n {
+  color: var(--muted);
+}
+
+/*
+ * A row packs tighter as it fills and never scrolls. `--slots` counts SLOTS,
+ * not cards: a tapped tile is rotated and therefore 1.3934× wider (§2.3, §4.3).
+ * Past the threshold the margin goes negative and the tiles shingle
+ * left-over-right; `--i` as the z-index keeps that consistent.
+ */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
   padding: 0;
-  text-align: left;
+  list-style: none;
+  --step: min(
+    calc(var(--cw) + var(--gap-card)),
+    calc((100% - var(--cw)) / max(calc(var(--slots) - 1), 1))
+  );
+}
+
+.row > li + li {
+  margin-inline-start: calc(var(--step) - var(--cw));
+}
+
+.zonerow--start .row {
+  justify-content: flex-start;
+  padding-inline-start: 2px;
+}
+
+.row--bf {
+  --cw: var(--cw-bf);
+  --ch: var(--ch-bf);
+}
+
+.row--land {
+  --cw: var(--cw-land);
+  --ch: var(--ch-land);
+}
+
+.row--hand {
+  --cw: var(--cw-hand);
+  --ch: var(--ch-hand);
+}
+
+.row--strip {
+  --cw: var(--cw-strip);
+  --ch: var(--ch-strip);
+}
+
+.row--stack {
+  --cw: var(--cw-stack);
+  --ch: var(--ch-stack);
+}
+
+/* --- CardTile (report 10 §4) ---------------------------------------------- */
+
+.tile {
+  position: relative;
+  flex: 0 0 auto;
+  inline-size: var(--cw);
+  block-size: var(--ch);
+  z-index: var(--i, 0);
+}
+
+/* A tapped tile claims the ROTATED footprint, so nothing overlaps a neighbour
+   and `--slots` has already paid for the extra width (§4.3). */
+.tile--tapped {
+  inline-size: var(--ch);
+}
+
+.tile__btn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
   cursor: pointer;
 }
 
-.card__btn:disabled {
+.tile__btn:disabled {
   cursor: default;
   opacity: 1;
 }
 
-.card__btn:hover:not(:disabled) .card__name {
-  color: var(--accent);
-  text-decoration: underline;
+.tile__face {
+  position: relative;
+  inline-size: var(--cw);
+  block-size: var(--ch);
+  border-radius: calc(var(--cw) * 0.05);
+  overflow: hidden;
+  background: #0b0f13;
+  box-shadow:
+    0 1px 2px #000a,
+    inset 0 0 0 1px #ffffff14;
+  transition: transform 140ms ease;
 }
 
-.card__btn:focus-visible {
-  outline: 2px solid var(--accent);
+.tile--tapped .tile__face {
+  transform: rotate(90deg);
+  box-shadow:
+    0 1px 2px #000a,
+    inset 0 0 0 2px var(--tap);
 }
 
-.player__name {
-  font: inherit;
-  font-size: 15px;
+.tile__img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.tile__img--loaded {
+  opacity: 1;
+}
+
+/* The generated text card frame, always underneath the image: a 404, a slow CDN
+   or a fresh checkout with no art.json renders this and changes nothing about
+   the layout (§4.1). */
+.frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--cw) * 0.05);
+  gap: 1px;
+  font-size: calc(var(--cw) * 0.095);
+  line-height: 1.15;
+  background: linear-gradient(160deg, #2b3340, #171d25 45%, #10151b);
+  color: #dfe4ea;
+  overflow: hidden;
+}
+
+.frame__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.frame__name {
   font-weight: 700;
-  color: inherit;
-  background: none;
-  border: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.frame__art {
+  flex: 1 1 auto;
+  margin: 2px 0;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(45deg, #ffffff08 0 6px, #ffffff03 6px 12px),
+    #0f151c;
+}
+
+.frame__type {
+  color: #aab3c0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.frame__foot {
+  display: flex;
+  justify-content: flex-end;
+  color: #aab3c0;
+}
+
+.frame__pt {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: #e8edf4;
+}
+
+/* The card back is drawn in CSS, never fetched: Scryfall has no generic-back
+   endpoint and Forge's own art is not ours to ship (§4.2). */
+.tile__face--back .back {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 45% at 50% 40%, #3a2c52 0%, #241c36 55%, #140f20 100%);
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.06) #0b0813;
+}
+
+.tile__face--back .back::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 38%;
+  inset-inline-start: 50%;
+  inline-size: calc(var(--cw) * 0.3);
+  block-size: calc(var(--cw) * 0.3);
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: #6d5aa0;
+  opacity: 0.8;
+}
+
+/* P3 — the face only THIS seat may look at. Marked apart from the card's name,
+   because the table sees a nameless 2/2 and only this seat sees what it is. */
+.back__alt {
+  position: absolute;
+  inset-inline: 2px;
+  inset-block-end: 2px;
+  display: flex;
+  flex-direction: column;
+  background: #0b0f13e0;
+  border-inline-start: 2px solid var(--accent);
+  padding: 1px 2px;
+  font-size: calc(var(--cw) * 0.085);
+}
+
+.back__altname {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back__altpt {
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+/* Overlays live on `.tile`, NOT inside `.tile__face` — the face is what rotates
+   when a card taps, and a P/T pill that rotated with it is the single most
+   common way this goes wrong (§4.3). */
+.tile__overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 9px;
+}
+
+.tile__stripe {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: var(--opp);
+}
+
+.tile--mine .tile__stripe {
+  background: var(--you);
+}
+
+.tile__bottom {
+  position: absolute;
+  inset-inline-end: 2px;
+  inset-block-end: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tile__pt,
+.tile__loyalty,
+.tile__dmg {
+  font-family: var(--mono);
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 3px;
+  background: #0b0f13e6;
+  box-shadow: inset 0 0 0 1px #ffffff26;
+}
+
+.tile__loyalty {
+  background: #2a2118e6;
+  color: var(--warn);
+}
+
+/* Never subtracted from toughness — that would be a rules computation (§4.5). */
+.tile__dmg {
+  color: var(--error);
+  background: #2a1212e6;
+}
+
+.tile__counters {
+  position: absolute;
+  inset-inline-start: 5px;
+  inset-block-end: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-start;
+}
+
+.ctr {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 3px;
+  padding: 0 3px;
+  background: #0b0f13e6;
+  box-shadow: inset 0 0 0 1px #ffffff26;
+  font-size: 9px;
+}
+
+.ctr__n {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.ctr__t {
+  color: var(--muted);
+}
+
+.tile--bf .ctr__t,
+.tile--land .ctr__t,
+.tile--strip .ctr__t,
+.tile--stack .ctr__t {
+  /* No room on a small tile: the count and the glyph carry it, and the full
+     text is in the tile's aria-label. */
+  display: none;
+}
+
+.ctr--plus {
+  color: var(--ok);
+}
+
+.ctr--minus {
+  color: var(--error);
+}
+
+.tile__badge {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 5px;
+  border-radius: 999px;
+  padding: 0 3px;
+  background: #0b0f13e6;
+}
+
+.tile__badge--sick {
+  color: var(--highlight);
+}
+
+/* Summoning sickness, only on the battlefield (§4.5). */
+.tile--sick .tile__face {
+  filter: grayscale(0.35) brightness(0.86);
+}
+
+.tile__tapmark {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 3px;
+  color: var(--tap);
+}
+
+.tile__mark {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 3px;
+  font-size: 11px;
+}
+
+.tile__mark--attack {
+  color: var(--arrow-attack);
+}
+
+.tile__mark--block {
+  color: var(--arrow-block);
+  inset-block-start: 14px;
+}
+
+.tile__micro {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline: 4px;
+  text-align: center;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: #0b0f13c0;
+  border-radius: 2px;
+}
+
+.tile--token .tile__face {
+  box-shadow:
+    0 1px 2px #000a,
+    inset 0 0 0 1px #ffffff14,
+    inset 0 0 0 2px #8d95a366;
+}
+
+.tile__note {
+  position: absolute;
+  inset-inline: 1px;
+  inset-block-end: -1px;
+  /* Was 8px on one truncated line, which lost the defender's name exactly when
+     it mattered (evening 2's own note). Two lines, and the `title` carries the
+     whole string for a hover. */
+  font-size: 9px;
+  line-height: 1.15;
+  color: var(--ink);
+  background: #0b0f13e6;
+  border-radius: 2px;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.tile--strip .tile__note,
+.tile--stack .tile__note {
+  font-size: 8px;
+  -webkit-line-clamp: 1;
+}
+
+/* Attachments render behind and down-right of their host, peeking out — the
+   standard tabletop read (§4.4). They take no slot of their own. */
+.tile__attachments {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.tile__attachment {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: translate(calc(var(--a) * 14% + 12%), calc(var(--a) * 8% + 8%)) scale(0.82);
+}
+
+/* --- the three card states (report 10 §5.1) ------------------------------- */
+
+/* The engine named this id in `input.selectable.cardIds`. It is an OUTLINE for
+   an outstanding choice and it is NOT what gates the click (amendment M8). */
+.tile--selectable .tile__face {
+  box-shadow:
+    0 0 0 3px var(--select),
+    0 2px 10px #ffcf5c55;
+}
+
+/* Not colour alone: a corner caret says the same thing (§14 rule 3). */
+.tile--selectable::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -4px;
+  inset-inline-end: -4px;
+  border: 6px solid transparent;
+  border-block-start-color: var(--select);
+  border-inline-end-color: var(--select);
+  pointer-events: none;
+}
+
+.tile--highlighted .tile__face {
+  outline: 2px dashed var(--highlight);
+  outline-offset: -2px;
+}
+
+.tile--focus .tile__face {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 12px #6fb4ff66;
+}
+
+.tile--weak .tile__face {
+  outline: 1px dotted var(--muted);
+}
+
+.tile--attacking .tile__face {
+  box-shadow:
+    0 0 0 2px var(--arrow-attack),
+    0 2px 8px #ff6b6b44;
+}
+
+.tile--blocking .tile__face {
+  box-shadow:
+    0 0 0 2px var(--arrow-block),
+    0 2px 8px #7ddf8744;
+}
+
+.tile__btn:hover:not(:disabled) .tile__face {
+  filter: brightness(1.12);
+}
+
+/* --- hover / focus zoom (§4.2's `display` variant) ------------------------ */
+
+.tile__zoom {
+  display: none;
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  inline-size: var(--zoom-w);
+  z-index: 80;
+  pointer-events: none;
+}
+
+.tile__zoom--up {
+  inset-block-end: calc(100% + 6px);
+}
+
+.tile__zoom--down {
+  inset-block-start: calc(100% + 6px);
+}
+
+.tile:hover > .tile__zoom,
+.tile:focus-within > .tile__zoom {
+  display: block;
+}
+
+.tile__zoomimg {
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: calc(var(--zoom-w) * 0.045);
+  box-shadow: 0 10px 34px #000c;
+  background: #0b0f13;
+}
+
+/* The Fan Content Policy and Scryfall's terms both require the credit to travel
+   with the image. */
+.tile__credit {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  background: #0b0f13e0;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-block-start: 2px;
+  text-align: center;
+}
+
+/* --- the hand ------------------------------------------------------------- */
+
+.hand {
+  position: relative;
+  block-size: 100%;
+}
+
+.hand__label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 4px;
+  font-size: 9px;
+  color: #6b7482;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hand__more {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 4px;
+  font-size: 9px;
+}
+
+.hand__empty {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  margin: 0;
+}
+
+.hand__fan > li {
+  transform-origin: 50% 150%;
+  transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 2deg));
+  transition:
+    transform 120ms ease,
+    filter 120ms ease;
+}
+
+.hand__fan > li:hover,
+.hand__fan > li:focus-within {
+  transform: translateY(-12px) scale(1.04);
+  z-index: 70;
+}
+
+/* --- the stack panel (report 10 §8) --------------------------------------- */
+
+.stackpanel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: var(--stack-w);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #131920e6;
+  padding: 0.25rem 0.35rem;
+  overflow: auto;
+  z-index: 20;
+}
+
+.stackpanel__head {
+  margin: 0 0 0.2rem;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.stackpanel__list {
+  list-style: none;
+  margin: 0;
   padding: 0;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.player__name:hover:not(:disabled) {
+.stackitem {
+  display: flex;
+  gap: 0.3rem;
+  align-items: flex-start;
+}
+
+.stackitem--next .stackitem__text {
   color: var(--accent);
-  text-decoration: underline;
 }
 
-.player__name--selectable {
-  color: var(--select);
+.stackitem__thumb .row {
+  inline-size: auto;
+  block-size: var(--ch-stack);
+}
+
+.stackitem__body {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stackitem__text {
+  font-size: 11px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.stackitem__meta {
+  font-size: 9px;
+}
+
+.stackitem__targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-block-start: 2px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.chip--target {
+  border-color: var(--arrow-target);
+  color: var(--arrow-target);
+}
+
+/* --- the log drawer (report 10 §10) --------------------------------------- */
+
+.drawer__handle {
+  inline-size: 100%;
+  text-align: start;
+  font-size: 10px;
+  background: #151b21cc;
+}
+
+.drawer {
+  position: absolute;
+  inset-block: var(--pad);
+  inset-inline-start: var(--pad);
+  inline-size: min(520px, 60vw);
+  background: #0f141af2;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.4rem 0.6rem;
+  overflow: auto;
+  z-index: 85;
+  box-shadow: 0 10px 40px #000b;
+}
+
+.drawer__section {
+  border-block-end: 1px solid var(--felt-line);
+  padding-block-end: 0.3rem;
+  margin-block-end: 0.3rem;
+}
+
+.drawer__section h3 {
+  margin: 0 0 0.2rem;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.drawer__log,
+.drawer__events {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  max-block-size: 18rem;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.drawer__notices,
+.drawer__bands,
+.drawer__cards {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  font-size: 11px;
+}
+
+.drawer__meta {
+  margin: 0;
+  font-size: 10px;
+}
+
+.drawer__meta dt {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.drawer__meta dd {
+  margin: 0 0 0.2rem;
+  font-family: var(--mono);
+}
+
+.notice--warn {
+  color: var(--warn);
+}
+
+.notice--error {
+  color: var(--error);
 }
 
 /* --- toasts --------------------------------------------------------------- */
 
-/* "Briefly" is a CSS animation and not a timer, deliberately: a timer in
-   Board.tsx would be its first effect, and the render test folds every frame of
-   every fixture through `renderToStaticMarkup`, which runs none. The full
-   history stays in the Notices panel — a toast is never the only copy. */
+/* "Briefly" is a CSS animation and not a timer, deliberately: a timer in the
+   board would be an effect, and the render test folds every frame of every
+   fixture through `renderToStaticMarkup`, which runs none. The full history
+   stays in the log drawer — a toast is never the only copy. */
 .toasts {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  padding: 0.3rem 1rem;
-  min-height: 1.6rem;
+  gap: 0.3rem;
+  pointer-events: none;
+  z-index: 30;
 }
 
 .toast {
   border: 1px solid var(--line);
   border-radius: 3px;
-  padding: 0.1rem 0.5rem;
-  background: var(--panel-2);
+  padding: 0.05rem 0.4rem;
+  background: #151b21e6;
+  font-size: 11px;
   animation: toast-fade 8s ease-out forwards;
 }
 
@@ -640,49 +1719,79 @@ button:disabled {
   }
 }
 
-/* --- the connection bar --------------------------------------------------- */
+.banner--over {
+  position: absolute;
+  inset-block-start: 40%;
+  inset-inline: 10%;
+  z-index: 40;
+  text-align: center;
+}
 
-.wsbar {
+/* ===========================================================================
+ * The ask modal (report 10 §11; M4 restyles the shell, M5 replaces the bodies)
+ * =========================================================================== */
+
+.ask-modal {
+  position: absolute;
+  inset-block-start: 8%;
+  inset-inline: 12%;
+  z-index: 100;
+  border: 1px solid var(--accent);
+  border-left-width: 4px;
+  border-radius: 5px;
+  background: #141a21f7;
+  padding: 0.6rem 0.8rem;
+  max-block-size: 80%;
+  overflow: auto;
+  box-shadow: 0 16px 60px #000c;
+}
+
+.ask-modal__head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.3rem 1rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  gap: 0.4rem;
+  margin-block-end: 0.2rem;
 }
 
-.wsbar__dot {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: var(--muted);
+.ask-modal__blocked {
+  margin-inline-start: auto;
+  color: var(--warn);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.wsbar__dot--open {
-  background: var(--ok);
+.ask-modal__options {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  max-block-size: 22rem;
+  overflow: auto;
 }
 
-.wsbar__dot--connecting,
-.wsbar__dot--reconnecting {
-  background: var(--warn);
+.ask-modal__option {
+  padding: 0.05rem 0;
 }
 
-.wsbar__dot--closed,
-.wsbar__dot--refused {
-  background: var(--error);
+/* The ask-local index (§5.1), which is what an answer echoes — never a Forge
+   id. Dimmed, so the eye lands on the engine's label first. */
+.ask-modal__index {
+  color: var(--muted);
 }
 
-/* --- the ask form --------------------------------------------------------- */
+/* The engine's own label, verbatim. Never parsed, never rebuilt. */
+.ask-modal__label {
+  color: var(--ink);
+}
 
 .ask-modal__body {
-  max-height: 26rem;
+  max-block-size: 26rem;
   overflow: auto;
 }
 
 .ask-modal__list {
   margin: 0.2rem 0;
-  padding-left: 0;
+  padding-inline-start: 0;
   list-style: none;
 }
 
@@ -698,7 +1807,7 @@ button:disabled {
 }
 
 .ask-modal__row-actions {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   gap: 0.2rem;
 }
@@ -709,7 +1818,7 @@ button:disabled {
   background: none;
   border: 0;
   padding: 0.05rem 0.2rem;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   flex: 1 1 auto;
 }
@@ -727,7 +1836,7 @@ button:disabled {
   align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
-  margin-top: 0.4rem;
+  margin-block-start: 0.4rem;
 }
 
 .ask-modal__two {
@@ -742,8 +1851,8 @@ button:disabled {
 }
 
 .ask-modal__amount {
-  width: 4rem;
-  margin-left: auto;
+  inline-size: 4rem;
+  margin-inline-start: auto;
   font: inherit;
   color: var(--ink);
   background: var(--panel);
@@ -758,7 +1867,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 3px;
   padding: 0.15rem 0.4rem;
-  min-width: 14rem;
+  min-inline-size: 14rem;
 }
 
 .ask-modal__suggestions {
@@ -775,8 +1884,8 @@ button:disabled {
 }
 
 .ask-modal__reveal {
-  border-top: 1px dashed var(--line);
-  margin-top: 0.4rem;
+  border-block-start: 1px dashed var(--line);
+  margin-block-start: 0.4rem;
 }
 
 .ask-modal__card {
@@ -789,6 +1898,289 @@ button:disabled {
   color: var(--muted);
 }
 
-.panel--input {
-  border-color: var(--accent);
+/* The ask modal still renders M1's plain card lines in its option bodies. */
+.cards {
+  list-style: none;
+  margin: 0.2rem 0;
+  padding: 0;
+}
+
+.card {
+  padding: 0.05rem 0;
+}
+
+/* ===========================================================================
+ * M4 evening 3 — arrows, overlays, the stack toggle (report 10 §9, §11, §12)
+ * =========================================================================== */
+
+/* One SVG over the whole board. `aria-hidden` in the markup, inert here: every
+   fact it draws is also text (§14 rule 4), so it may never eat a click. */
+.arrows {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  z-index: 60;
+  overflow: visible;
+}
+
+/* Two strokes, dark under light, so an arrow stays readable over card art
+   (report 10 §9.2). */
+.arrow__under {
+  fill: none;
+  stroke: #05080bcc;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.arrow__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.arrow--target .arrow__line,
+.arrow--target .arrow__head {
+  stroke: var(--arrow-target);
+  fill: var(--arrow-target);
+}
+
+.arrow--attack .arrow__line,
+.arrow--attack .arrow__head {
+  stroke: var(--arrow-attack);
+  fill: var(--arrow-attack);
+}
+
+.arrow--block .arrow__line,
+.arrow--block .arrow__head {
+  stroke: var(--arrow-block);
+  fill: var(--arrow-block);
+}
+
+/* The targeting arrow is also dashed, so the three classes differ in more than
+   hue (§14 rule 3) — curvature, colour and dash between them. */
+.arrow--target .arrow__line {
+  stroke-dasharray: 7 4;
+}
+
+.arrow--block .arrow__line {
+  stroke-dasharray: 2 3;
+}
+
+.arrow__head {
+  stroke-width: 1;
+}
+
+/* `C` — Forge's SHORTCUT_SHOWCOMBAT. Forge opens a panel; ours are always drawn,
+   so the key emphasises them and dims everything else. */
+.arrows--combat .arrow--attack .arrow__line,
+.arrows--combat .arrow--block .arrow__line {
+  stroke-width: 3.5;
+}
+
+.arrows--combat .arrow--target {
+  opacity: 0.4;
+}
+
+/* --- the stack panel's toggle (S) ----------------------------------------- */
+
+.stackpanel__toggle {
+  inline-size: 100%;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stackpanel--shut {
+  block-size: auto;
+  inset-block-end: auto;
+  background: #131920cc;
+}
+
+/* --- Z / H — the two full overlays (report 10 §11, §12) ------------------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+}
+
+.overlay__scrim {
+  position: absolute;
+  inset: 0;
+  background: #05080bcc;
+}
+
+.overlay__panel {
+  position: relative;
+  max-block-size: 92%;
+  overflow: auto;
+  background: #131920f7;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  box-shadow: 0 18px 60px #000d;
+}
+
+.overlay__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.overlay__head h2 {
+  margin: 0 0 0.3rem;
+  font-size: 13px;
+}
+
+.hotkeys {
+  inline-size: min(780px, 86vw);
+}
+
+.hotkeys__table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-size: 11px;
+}
+
+.hotkeys__table th,
+.hotkeys__table td {
+  text-align: start;
+  padding: 0.12rem 0.4rem;
+  border-block-end: 1px solid var(--felt-line);
+  vertical-align: top;
+}
+
+.hotkeys__table thead th {
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+.hotkeys__table kbd {
+  white-space: nowrap;
+}
+
+/* A key whose milestone has not arrived is listed and marked, never hidden:
+   the handler binds it, so the help must say what it does and when. */
+.hotkeys__later td:first-of-type {
+  color: var(--muted);
+}
+
+.pill--later {
+  border-color: var(--warn);
+  color: var(--warn);
+  margin-inline-start: 0.3rem;
+}
+
+.cardzoom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.row--zoom {
+  --cw: min(420px, 34vw, 46vh);
+  --ch: calc(var(--cw) * 1.3934);
+  inline-size: auto;
+}
+
+/* `Z` is "let me read this card", so the zoom draws it upright even when it is
+   tapped — the ⭮ mark and the aria-label still say that it is. A rotated card
+   filling the overlay is the state the BOARD is for. */
+.row--zoom .tile--tapped {
+  inline-size: var(--cw);
+}
+
+.row--zoom .tile--tapped .tile__face {
+  transform: none;
+}
+
+.cardzoom__credit {
+  font-size: 10px;
+  margin: 0;
+}
+
+/* --- the ask modal's shell (report 10 §11) -------------------------------- */
+
+.ask-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background: #05080bb0;
+  z-index: 99;
+}
+
+/* §5 — advisory for the client, enforced by the server. A static bar, because a
+   countdown that expired and then did nothing would misstate who is counting. */
+.ask-modal__timeout {
+  block-size: 3px;
+  background: var(--felt-line);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-block-end: 0.3rem;
+}
+
+.ask-modal__timeoutbar {
+  display: block;
+  block-size: 100%;
+  inline-size: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--warn));
+}
+
+/* --- a key that was pressed and did nothing (report 10 §12.2 rule 4) ------ */
+
+.btn--flash {
+  outline: 2px solid var(--warn);
+  outline-offset: 1px;
+}
+
+.hint--flash {
+  color: var(--warn);
+}
+
+/* ===========================================================================
+ * Motion (report 10 §14 rule 5) — the end states are unchanged.
+ * =========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .tile__face,
+  .tile__img,
+  .hand__fan > li {
+    transition: none;
+  }
+
+  .hand__fan > li:hover,
+  .hand__fan > li:focus-within {
+    transform: none;
+  }
+
+  .toast {
+    animation: none;
+  }
+
+  /* Arrows are decoration; their end state is what carries the meaning. The
+     dash pattern STAYS — it is one of the three non-colour cues (§14 rule 3)
+     and nothing about it moves. Only animation goes. */
+  .arrow__line {
+    animation: none;
+  }
+
+  .tile__zoom,
+  .overlay,
+  .ask-modal {
+    transition: none;
+    animation: none;
+  }
 }

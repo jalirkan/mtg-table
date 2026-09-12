@@ -16,28 +16,30 @@
  * `ClientState` either way; what M3 adds is an `actions` object, and a replay
  * passes `null` for it because a replay has no server to send an `act` to.
  *
- * The keyboard lives here rather than in `Board.tsx`:
- *
- *   - **Space = OK, Escape = Cancel**, and only when the engine has that button
- *     enabled. They are not Forge shortcuts we are reimplementing — `Space`
- *     activates the *focused* button in Forge's own desktop UI, which is what
- *     `input.buttons.focus` (§10.2, not yet on the wire) will let us honour
- *     properly. Until then this is the two-button case, which is every case;
- *   - a window listener is an effect, and `Board.tsx` has none on purpose:
- *     `web/test/render.test.tsx` renders every frame of every fixture with
- *     `renderToStaticMarkup`, which runs no effects at all.
+ * **The keyboard moved into `<Board>` in M4** (report 10 §12.2 rule 1). M3 kept
+ * it here because `Board.tsx` had no effects and the render test folds every
+ * frame of every fixture through `renderToStaticMarkup`, which runs none — but
+ * that is still true with the listener inside the board: an effect that never
+ * runs under SSR costs the test nothing, and the alternative was two handlers
+ * for one keyboard, only one of which the `?` overlay could describe. The map
+ * itself is `web/src/keys.ts`: pure, unit-tested, and the single source for both
+ * the handler and the help screen.
  */
 
 import { StrictMode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
-import { EMPTY_ART_INDEX, loadArtIndex, type ArtIndex } from './art.ts';
+import { EMPTY_ART_INDEX, loadArtIndex, preloadArt, type ArtIndex } from './art.ts';
 import type { AnswerValue } from './protocol.ts';
 import { Board, type BoardActions } from './render/Board.tsx';
 import { ErrorBoundary } from './render/ErrorBoundary.tsx';
 import { ReplayControls } from './render/ReplayControls.tsx';
 import { LogReplayTransport, parseFrameLog } from './transport/replay.ts';
 import { DEFAULT_WS_PORT, WebSocketTransport, type WsStatus } from './transport/ws.ts';
+// mana-font FIRST: `styles.css` overrides its @font-face with the 187 KB woff2
+// the package ships but `mana.css@1.18.0` does not list, and a later @font-face
+// for the same family is the one that wins (report 10 §13).
+import 'mana-font/css/mana.css';
 import './styles.css';
 
 /** Where `./bridge/run.sh mtgtable.RecordMatch --out fixtures/games/g1.jsonl` lands. */
@@ -82,18 +84,29 @@ function modeFromQuery(): Mode {
 function useArt(): ArtIndex {
   const [art, setArt] = useState<ArtIndex>(EMPTY_ART_INDEX);
   useEffect(() => {
-    void loadArtIndex().then(setArt);
+    void loadArtIndex().then((index) => {
+      setArt(index);
+      // Report 10 §4.2: ~1.0 MB of `grid` WEBP, once. Scryfall answers
+      // `cache-control: public, max-age=31556952`, so the second game and every
+      // reload are instant. A failure here is cosmetic by construction.
+      preloadArt(index);
+    });
   }, []);
   return art;
 }
 
-function Footer(): JSX.Element {
+/**
+ * The credit line, in the top bar rather than in a footer of its own: at
+ * 1600x900 the board's fixed rows already claim 736 px of the 900, and a second
+ * chrome strip would come out of the hand row (report 10 §2.2).
+ */
+function Credits(): JSX.Element {
   return (
-    <footer className="app__foot muted">
-      Card images and data from <a href="https://scryfall.com">Scryfall</a>. Rules engine:{' '}
-      <a href="https://github.com/Card-Forge/forge">Forge</a> (GPLv3). Unofficial Fan Content — not
-      approved or endorsed by Wizards of the Coast.
-    </footer>
+    <span className="app__credit">
+      Card images and data from <a href="https://scryfall.com">Scryfall</a> · engine{' '}
+      <a href="https://github.com/Card-Forge/forge">Forge</a> (GPLv3) · mana symbols via mana-font
+      (MIT/OFL) · Unofficial Fan Content — not approved or endorsed by Wizards of the Coast.
+    </span>
   );
 }
 
@@ -237,83 +250,51 @@ function LiveApp({ port }: { port: number }): JSX.Element {
     transport.reconnect();
   }, [transport]);
 
-  // Space = OK, Escape = Cancel — and only when the engine enabled that button.
-  const okEnabled = state.input?.buttons.ok.enabled === true;
-  const cancelEnabled = state.input?.buttons.cancel.enabled === true;
-  const live = state.ask === null && state.gameOver === null && status.status === 'open';
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as (HTMLElement & { isContentEditable?: boolean }) | null;
-      // `target?.tagName.toLowerCase()` is not enough: an event dispatched at
-      // `window` or `document` has a target with no `tagName` at all, and the
-      // optional chain guards only the null target, so the handler threw for
-      // exactly the events that are hardest to notice. Measured in the browser.
-      const tag = typeof target?.tagName === 'string' ? target.tagName.toLowerCase() : '';
-      // A control has its own idea of what these keys mean: Space presses the
-      // focused button, Escape leaves a field. Never take them from it.
-      if (tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button') return;
-      if (target?.isContentEditable === true) return;
-      if (!live) return;
-      // `event.code === 'Space'` is the physical-key spelling, and it is here
-      // because `key` alone is not testable: an automation driver delivers Space
-      // as `{key: "", code: "", keyCode: 0}` (measured with a keydown recorder
-      // in the live page, while Escape arrived correctly as `{key: "Escape"}`),
-      // and a remapped layout can report anything at all in `key`. Any driver or
-      // layout that sets `code` agrees on this one.
-      if (event.key === ' ' || event.key === 'Spacebar' || event.code === 'Space') {
-        if (!okEnabled) return;
-        event.preventDefault();
-        actions.buttonOk();
-      } else if (event.key === 'Escape' || event.key === 'Esc') {
-        if (!cancelEnabled) return;
-        event.preventDefault();
-        actions.buttonCancel();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [actions, live, okEnabled, cancelEnabled]);
+  // M4 evening 3: the keyboard moved into `<Board>` (report 10 §12.2 rule 1 —
+  // ONE listener, registered once, reading the current state through a ref) and
+  // is driven by the pure table in `web/src/keys.ts`, which is also what the `?`
+  // overlay renders. Two handlers for one keyboard is how `H` opens a help
+  // screen that lists a key nothing implements.
 
   return (
     <div className="app">
-      <header className="app__head">
+      {/* One thin bar. Every pixel of chrome above the board is a pixel the hand
+          row does not have (report 10 §2.2), so the title, the seat, the socket
+          status and the credits share a single 26 px line. */}
+      <div className="app__bar">
         <h1>mtg-table</h1>
         <span className="muted">
-          live · seat {state.hello === null ? '—' : state.hello.you} · Space = OK, Escape = Cancel
+          live · seat {state.hello === null ? '—' : state.hello.you} · Space = OK, Escape = Cancel,
+          H = keys
         </span>
-      </header>
+        <StatusBar status={status} onResync={resync} onReconnect={reconnect} />
+        <ArtMisses art={art} />
+        <Credits />
+      </div>
 
-      <StatusBar status={status} onResync={resync} onReconnect={reconnect} />
+      {/* Banners float over the board instead of shortening it. */}
+      <div className="app__overlays">
+        {transport.error !== null && (
+          <FrameErrorBanner
+            message={transport.error.message}
+            frameIndex={transport.error.frameIndex}
+            frame={transport.error.frame}
+            onResync={() => {
+              transport.clearErrorAndResync();
+            }}
+          />
+        )}
 
-      {transport.error !== null && (
-        <FrameErrorBanner
-          message={transport.error.message}
-          frameIndex={transport.error.frameIndex}
-          frame={transport.error.frame}
-          onResync={() => {
-            transport.clearErrorAndResync();
-          }}
-        />
-      )}
-
-      {state.board === null && status.status !== 'open' && (
-        <div className="banner banner--warn">
-          <strong>Waiting for the bridge.</strong>
-          <div>
-            Start it with <code>./scripts/play.sh</code>, or{' '}
-            <code>./bridge/run.sh mtgtable.MtgTable --transport ws --port {port}</code>.
+        {state.board === null && status.status !== 'open' && (
+          <div className="banner banner--warn">
+            <strong>Waiting for the bridge.</strong>
+            <div>
+              Start it with <code>./scripts/play.sh</code>, or{' '}
+              <code>./bridge/run.sh mtgtable.MtgTable --transport ws --port {port}</code>.
+            </div>
           </div>
-        </div>
-      )}
-
-      {art.misses.length > 0 && (
-        <p className="pad muted">
-          art misses ({art.misses.length}): {art.misses.join(', ')} — these render as text cards.
-        </p>
-      )}
+        )}
+      </div>
 
       {/* The render half of §1's unknown-frame policy: a drift that survives
           `reduce()` must be a banner naming the frame, not a blank page. */}
@@ -325,9 +306,22 @@ function LiveApp({ port }: { port: number }): JSX.Element {
           clientNotices={transport.clientNotices}
         />
       </ErrorBoundary>
-
-      <Footer />
     </div>
+  );
+}
+
+/**
+ * `art.json` is gitignored and generated; a miss renders as the text card frame
+ * and blocks nothing, so this is a chip in the bar rather than a banner. It is
+ * never swallowed, because "why is that one card text" is otherwise unanswerable
+ * without reading the console.
+ */
+function ArtMisses({ art }: { art: ArtIndex }): JSX.Element | null {
+  if (art.misses.length === 0) return null;
+  return (
+    <span className="muted" title={art.misses.join(', ')}>
+      art misses: {art.misses.length} (text frames)
+    </span>
   );
 }
 
@@ -450,10 +444,12 @@ function ReplayApp({ requested }: { requested: string }): JSX.Element {
 
   return (
     <div className="app">
-      <header className="app__head">
+      <div className="app__bar">
         <h1>mtg-table — replay</h1>
         <span className="muted">/fixtures/{load.path}</span>
-      </header>
+        <ArtMisses art={art} />
+        <Credits />
+      </div>
 
       <ReplayControls
         index={transport.index}
@@ -475,30 +471,26 @@ function ReplayApp({ requested }: { requested: string }): JSX.Element {
         }}
       />
 
-      {transport.error !== null && (
-        <FrameErrorBanner
-          message={transport.error.message}
-          frameIndex={transport.error.frameIndex}
-          frame={transport.error.frame}
-        />
-      )}
+      <div className="app__overlays">
+        {transport.error !== null && (
+          <FrameErrorBanner
+            message={transport.error.message}
+            frameIndex={transport.error.frameIndex}
+            frame={transport.error.frame}
+          />
+        )}
 
-      {transport.warnings.length > 0 && (
-        <div className="banner banner--warn">
-          <strong>Log warnings:</strong>
-          <ul>
-            {transport.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {art.misses.length > 0 && (
-        <p className="pad muted">
-          art misses ({art.misses.length}): {art.misses.join(', ')} — these render as text cards.
-        </p>
-      )}
+        {transport.warnings.length > 0 && (
+          <div className="banner banner--warn">
+            <strong>Log warnings:</strong>
+            <ul>
+              {transport.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       {/* §1's unknown-frame policy, applied to the render half: a drift that
           survives `reduce()` must be a banner naming the frame, not a blank
@@ -507,11 +499,11 @@ function ReplayApp({ requested }: { requested: string }): JSX.Element {
           a different frame clears it. */}
       <ErrorBoundary resetKey={transport.index} label="The board" frame={frame}>
         {/* No `actions`: a replay has no server, and a control that did nothing
-            would be worse than a disabled one. */}
+            would be worse than a disabled one. The board renders Read-only and
+            every affordance is inert — that is the whole of the difference
+            between the two modes. */}
         <Board state={transport.state} art={art} />
       </ErrorBoundary>
-
-      <Footer />
     </div>
   );
 }

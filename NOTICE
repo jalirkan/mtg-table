@@ -116,7 +116,30 @@ approved by, or endorsed by Marvel. No Marvel artwork is committed to this
 repository; card images are fetched at runtime from Scryfall (section 2).
 
 
-5. Code that is deliberately NOT used
+5. mana-font (mana symbols)
+---------------------------
+
+    Package:  mana-font 1.18.0 (npm), https://github.com/andrewgioia/mana
+    Code:     MIT License (the CSS and the build)
+    Font:     SIL Open Font License 1.1 (the glyphs in fonts/mana.*)
+    Symbols:  the mana symbols themselves are copyright Wizards of the Coast
+
+Added in M4 (docs/research/10-board-ui-spec.md §13). It is the web client's only
+runtime style dependency: `web/src/main.tsx` imports `mana-font/css/mana.css` and
+`web/src/styles.css` overrides its `@font-face` to load the woff2 the package
+ships (187 KB) instead of the woff its own CSS lists (408 KB). Vite emits the
+font files into `web/dist/assets/`; nothing is hot-linked and no font file is
+committed to this repository.
+
+MIT and OFL-1.1 are both GPL-3.0-compatible, so bundling it changes nothing about
+this repository's licence. The symbols it draws are Wizards of the Coast's, and
+their use here falls under the Fan Content Policy recorded in section 3 — the
+same basis as the card images in section 2.
+
+mana-font is not affiliated with Wizards of the Coast. Neither is mtg-table.
+
+
+6. Code that is deliberately NOT used
 -------------------------------------
 
     witchesofthehill/manabrew — AGPL-3.0-or-later

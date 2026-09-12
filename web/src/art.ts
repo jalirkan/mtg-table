@@ -178,3 +178,79 @@ export function artFor(index: ArtIndex, card: AnyCard): CardArt {
     collectorNumber: entry.collectorNumber,
   };
 }
+
+/**
+ * The same gate as {@link artFor}, returning the whole entry so the caller can
+ * pick an image *variant* (see {@link imageUrl}). `null` means "draw the
+ * generated text frame": either the card's identity is concealed, or `art.json`
+ * has no entry for it (a token, a miss, a fresh checkout with no `art.json` at
+ * all). Never throws, never blocks, never decides a click.
+ */
+export function artEntryFor(index: ArtIndex, card: AnyCard): ArtEntry | null {
+  if (isHidden(card)) return null;
+  return lookupArt(index, card.name);
+}
+
+// ---------------------------------------------------------------------------
+// M4 — image variants (report 10 §4.2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Scryfall's image variants. `art.json` stores `normal` as the interoperable
+ * baseline (report 03 §2.1); every other variant is a string substitution away
+ * from the `scryfallId`, so switching sizes needs no refetch and no regenerated
+ * file.
+ */
+export type ImgSize = 'thumb' | 'small' | 'normal' | 'large' | 'grid' | 'display';
+
+/** The three variants Scryfall serves as WEBP. The rest are JPG. */
+const WEBP: ReadonlySet<ImgSize> = new Set<ImgSize>(['thumb', 'grid', 'display']);
+
+/**
+ * `https://cards.scryfall.io/{size}/{side}/{id[0]}/{id[1]}/{id}.{ext}`
+ * (report 03 §2.2, measured live in report 10 §0).
+ *
+ * Which variant, and why — all three sizes measured live:
+ *
+ * | where | CSS width | size | bytes |
+ * |---|---|---|---|
+ * | battlefield, lands, hand | 60–136 px | `grid` 488×680 WEBP | 37,270 |
+ * | stack panel, log drawer | 39–44 px | `thumb` 146×204 WEBP | ~8 K |
+ * | hover / focus zoom | ~440 px | `display` 672×936 WEBP | 50,338 |
+ *
+ * `grid` is the board default rather than `display` for decode memory:
+ * 672×936×4 B × 28 distinct cards ≈ 70 MB against ≈ 37 MB for `grid`.
+ *
+ * A `scryfallId` that is too short to index falls back to the URL `art.json`
+ * already carries, so this is total over a hand-written or older art file.
+ */
+export function imageUrl(entry: ArtEntry, size: ImgSize, side: 'front' | 'back' = 'front'): string {
+  const id = entry.scryfallId;
+  if (id.length < 2) return side === 'back' ? (entry.back ?? entry.front) : entry.front;
+  const ext = WEBP.has(size) ? 'webp' : 'jpg';
+  return `https://cards.scryfall.io/${size}/${side}/${id[0] ?? ''}/${id[1] ?? ''}/${id}.${ext}`;
+}
+
+/**
+ * Warm the browser cache once, with the variant the board actually draws.
+ *
+ * ≈ 1.0 MB one-off for the 28 entries of `decks/pacho-shield.dck`. Scryfall
+ * answers `cache-control: public, max-age=31556952` (verified live, report 10
+ * §0), so the second game and every reload are instant. `thumb` and `display`
+ * are deliberately not preloaded: they are small and rare.
+ *
+ * No-ops where there is no `Image` constructor (the render test renders the
+ * board under `react-dom/server`, in Node).
+ */
+export function preloadArt(index: ArtIndex, size: ImgSize = 'grid'): number {
+  if (typeof Image !== 'function') return 0;
+  let started = 0;
+  for (const entry of Object.values(index.cards)) {
+    const image = new Image();
+    image.decoding = 'async';
+    image.referrerPolicy = 'no-referrer';
+    image.src = imageUrl(entry, size);
+    started += 1;
+  }
+  return started;
+}

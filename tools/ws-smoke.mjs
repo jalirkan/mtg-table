@@ -32,12 +32,52 @@
 //       must then resume: `hello_ok` + `state` + `input` again, and a game that
 //       still plays.
 //
+//   node tools/ws-smoke.mjs --port 8643 --concede-before-input
+//       connect the INSTANT the port accepts one — before `GET /health` says
+//       `ok`, which is the one moment a client can be earlier than the engine —
+//       then send `act: concede` from inside the `hello_ok` handler itself,
+//       before any `input` has arrived.  Expect `over` with `winner: null`,
+//       `reason: null`, `matchOver: true`, and NO `state` in front of it.
+//
+//       This is M3 follow-up 5: amendment M11's exception path, which until now
+//       had never been observed (`grep -rl 'OVER WITHOUT A gameOver STATE' var/`
+//       found nothing across every run on disk).  The other two variants concede
+//       *after* the first `input`, so `inputSeen` is armed, the concede reaches
+//       Forge's own game-over and the session ends `winner=1
+//       reason=AllOpponentsLost` with a `gameOver` snapshot in front of `over`.
+//       Reaching the other branch — `applyAct`'s pre-`inputSeen` guard, which
+//       ends the session without ever entering Forge's game-over — needs a
+//       concede that beats the engine's first prompt to the socket.
+//
+//       Two things make that a race this can win rather than one it hopes to:
+//
+//         * it does NOT wait for `/health`.  Readiness is `lastHello != null`
+//           (amendment M15), so a client that polls health has already lost
+//           ~1 s of the window and starts counting from the wrong end; the port
+//           binds about a second before `openView`, and `WsTransport` handles a
+//           connection in that window explicitly ("WS CONNECT before the session
+//           exists -- no resend"), so the earliest legal arrival is a retry loop
+//           on `connect`.  Nothing is SENT before `hello_ok`: amendment M20
+//           drops a pre-session c2s frame in silence, so a concede sent from the
+//           `open` handler proper would be thrown away and this test would hang
+//           to its timeout instead of measuring anything.
+//         * the concede is written from inside the frame handler, synchronously,
+//           on the same turn of the event loop that received `hello_ok` — not
+//           after an `await`.
+//
+//       Measured 2026-09-11 at seed 13: `hello_ok` → concede = 0–3 ms; `hello_ok`
+//       → the first engine `input` = ~150 ms.  That is the whole margin, and it
+//       is why a failure here reads "the window was missed" rather than "the
+//       bridge is wrong" — see the message this prints when `winner` comes back
+//       non-null.
+//
 // Options:
-//   --port <n>            default 8642
-//   --timeout <seconds>   whole-run cap, default 120
-//   --log <path>          write every frame received (one JSON per line)
-//   --disconnect-mid-ask  the second variant
-//   --quiet               only the verdict
+//   --port <n>                 default 8642
+//   --timeout <seconds>        whole-run cap, default 120
+//   --log <path>               write every frame received (one JSON per line)
+//   --disconnect-mid-ask       the second variant
+//   --concede-before-input     the third variant (amendment M11's exception path)
+//   --quiet                    only the verdict
 //
 // Exit: 0 on success, non-zero with a reason on stderr otherwise.
 
@@ -49,7 +89,14 @@ import { dirname } from 'node:path';
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
-const opt = { port: 8642, timeout: 120, log: null, disconnectMidAsk: false, quiet: false };
+const opt = {
+  port: 8642,
+  timeout: 120,
+  log: null,
+  disconnectMidAsk: false,
+  concedeBeforeInput: false,
+  quiet: false,
+};
 for (let i = 0; i < args.length; i++) {
   const k = args[i];
   const need = (name) => {
@@ -61,16 +108,21 @@ for (let i = 0; i < args.length; i++) {
   else if (k === '--timeout') opt.timeout = Number.parseInt(need(k), 10);
   else if (k === '--log') opt.log = need(k);
   else if (k === '--disconnect-mid-ask') opt.disconnectMidAsk = true;
+  else if (k === '--concede-before-input') opt.concedeBeforeInput = true;
   else if (k === '--quiet') opt.quiet = true;
   else if (k === '--help' || k === '-h') { usage(); process.exit(0); }
   else die(`unknown argument ${k}`);
 }
 if (!Number.isFinite(opt.port) || opt.port <= 0) die(`--port must be a positive integer`);
+if (opt.disconnectMidAsk && opt.concedeBeforeInput) {
+  die('--disconnect-mid-ask and --concede-before-input are different variants; pass one');
+}
 
 function usage() {
   process.stdout.write(
     'usage: node tools/ws-smoke.mjs [--port 8642] [--timeout 120] [--log path]\n' +
-      '                              [--disconnect-mid-ask] [--quiet]\n',
+      '                              [--disconnect-mid-ask | --concede-before-input]\n' +
+      '                              [--quiet]\n',
   );
 }
 
@@ -107,12 +159,54 @@ class Conn {
   #queue = [];
   #waiters = [];
   #seq = 0;
+  #hook = null;
   closed = null; // {code, reason} once the socket closes
 
   static async open() {
     const c = new Conn();
     await c.#connect();
     return c;
+  }
+
+  /**
+   * Open as soon as the port accepts a connection, retrying until `ms` is up.
+   *
+   * The `--concede-before-input` variant's whole margin is here: `GET /health`
+   * answers `ok` only once `openView` has emitted `hello_ok` (amendment M15),
+   * and by then the engine is already walking towards its first prompt.  The
+   * port itself binds about a second earlier, and a connection in that window is
+   * a case `WsTransport` handles by name, so the earliest a client can legally
+   * arrive is "the first `connect` that does not get ECONNREFUSED".
+   */
+  static async openEarly(ms = 60_000) {
+    const deadline = Date.now() + ms;
+    for (;;) {
+      try {
+        return await Conn.open();
+      } catch (err) {
+        if (Date.now() >= deadline) {
+          throw new Error(
+            `nothing accepted a connection on ${URL_WS} within ${String(ms)} ms ` +
+              `(last: ${err instanceof Error ? err.message : String(err)})`,
+          );
+        }
+        await sleep(25);
+      }
+    }
+  }
+
+  /**
+   * Run `fn` on every frame, synchronously, on the same turn of the event loop
+   * that received it — before anything parked on `expect()` is woken.
+   *
+   * `await conn.expect('hello_ok')` would be a few hundred microseconds later,
+   * which is nothing against a 150 ms window; this exists so the claim "the
+   * concede was written from the handshake handler" is literally true rather
+   * than nearly true, and so that a slow machine cannot quietly turn the
+   * measurement into a different one.
+   */
+  onFrame(fn) {
+    this.#hook = fn;
   }
 
   #connect() {
@@ -154,6 +248,7 @@ class Conn {
       return;
     }
     this.#queue.push(frame);
+    if (this.#hook) this.#hook(frame);
     for (const w of this.#waiters.splice(0)) w.wake();
   }
 
@@ -314,6 +409,90 @@ async function variantDisconnect() {
   return `dropped the socket at a live \`${live.type}\`, reconnected, and the game still reached \`over\``;
 }
 
+/** connect before the engine is ready → concede on `hello_ok` → M11's `over`. */
+async function variantConcedeBeforeInput() {
+  say(`ws-smoke: concede from the handshake handler, before any input, at ${URL_WS}`);
+
+  // No /health poll, on purpose: see Conn.openEarly.  `--timeout` is the cap.
+  const c = await Conn.openEarly(Math.max(5_000, opt.timeout * 500));
+  say('  open     (before GET /health says `ok`, which is the point)');
+
+  // The concede is written from inside the hello_ok handler.  Before it: not one
+  // c2s frame, because amendment M20 drops anything that arrives before the
+  // session exists — in silence, since a reply would itself be a frame ahead of
+  // `hello_ok`.  So "as early as possible" is "the moment `hello_ok` lands", not
+  // "the moment the socket opens".
+  let helloAt = 0;
+  let sentAt = 0;
+  let beforeConcede = null; // the frames received up to and including hello_ok
+  c.onFrame((f) => {
+    if (f.type !== 'hello_ok' || sentAt !== 0) return;
+    helloAt = Date.now();
+    beforeConcede = [...c.frames];
+    say('  s2c  hello_ok');
+    c.send('act', { action: 'concede' });
+    sentAt = Date.now();
+  });
+
+  const over = await c.expect('over', 0, 60_000);
+  say(
+    `  s2c  over    winner=${JSON.stringify(over.body.winner)} ` +
+      `reason=${JSON.stringify(over.body.reason)} matchOver=${JSON.stringify(over.body.matchOver)}`,
+  );
+
+  if (beforeConcede === null) throw new Error('an `over` arrived but `hello_ok` never did');
+  const early = beforeConcede.filter((f) => f.type === 'input' || f.type === 'state' || f.type === 'ask');
+  say(`  concede written ${String(sentAt - helloAt)} ms after hello_ok, with ${String(early.length)} state/input/ask frame(s) in front of it`);
+
+  // The assertion, in the order a reader would want it.
+  //
+  // (1) The window.  If the engine got its first prompt in first, `inputSeen` is
+  //     armed, the concede went through Forge's own game-over and this is a
+  //     perfectly healthy `winner=1 reason=AllOpponentsLost` session — it is just
+  //     not the branch this variant exists to measure.  Say which one it is.
+  if (early.length > 0) {
+    throw new Error(
+      `the window was missed: ${String(early.length)} frame(s) (` +
+        `${early.map((f) => f.type).join(', ')}) arrived before the concede could be written, ` +
+        'so this run took the ordinary `inputSeen` path and proves nothing about amendment ' +
+        "M11's exception.  This is a timing failure, not a bridge failure: retry, and if it " +
+        'persists the hello_ok→first-input window (~150 ms at seed 13) has closed.',
+    );
+  }
+  // (2) The shape.  Protocol amendment M11: `{winner: null, reason: null,
+  //     matchOver: true}` and no `gameOver` state in front of it, because there
+  //     is no outcome to snapshot and no thread it would be legal to build one
+  //     on (applyAct runs on the EDT).
+  const want = (k, v) => {
+    if (over.body[k] !== v) {
+      throw new Error(
+        `amendment M11 says a concede before the first input ends with ${k}: ${JSON.stringify(v)}; ` +
+          `this \`over\` carried ${k}: ${JSON.stringify(over.body[k])}` +
+          (k === 'winner' && over.body[k] !== null
+            ? ' — which is the ordinary path, so the concede reached Forge after all'
+            : ''),
+      );
+    }
+  };
+  want('winner', null);
+  want('reason', null);
+  want('matchOver', true);
+  const states = c.frames.filter((f) => f.type === 'state');
+  if (states.length > 0) {
+    throw new Error(
+      `amendment M11's exception path has no \`state\` in front of \`over\`, and this run ` +
+        `received ${String(states.length)} (gameOver: ` +
+        `${String(states.filter((f) => f.body?.gameOver != null).length)})`,
+    );
+  }
+  c.drop();
+  return (
+    'a concede written from the `hello_ok` handler, before any input, ended the session with ' +
+    '`over {winner: null, reason: null, matchOver: true}` and no `state` in front of it ' +
+    '(amendment M11)'
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
@@ -325,7 +504,12 @@ const wholeRun = setTimeout(() => {
 wholeRun.unref?.();
 
 try {
-  const verdict = opt.disconnectMidAsk ? await variantDisconnect() : await variantResync();
+  const variant = opt.disconnectMidAsk
+    ? variantDisconnect
+    : opt.concedeBeforeInput
+      ? variantConcedeBeforeInput
+      : variantResync;
+  const verdict = await variant();
   clearTimeout(wholeRun);
   process.stdout.write(`ws-smoke OK: ${verdict}\n`);
   process.exit(0);
