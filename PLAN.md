@@ -11,8 +11,8 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 |---|---|---|---|
 | M0 | The engine runs our code | 1 evening | **done** |
 | M1 | Record a game and scrub through it in the browser | 2 evenings | **done** — hardened, all six follow-ups closed |
-| M2 | A full game against the AI, in the terminal | 2 evenings | **done** — two review passes closed; eight follow-ups open, none blocking |
-| M3 | The same game, in a browser tab | 2 evenings | not started |
+| M2 | A full game against the AI, in the terminal | 2 evenings | **done** — two review passes closed; M3 closed four of its eight follow-ups |
+| M3 | The same game, in a browser tab | 2 evenings | **done** — a review pass and a fix pass, all 21 findings closed; eleven follow-ups open, none blocking M4 |
 | M4 | A board that looks like Magic | 3 evenings | not started |
 | M5 | Nothing dead-ends | 3 evenings | not started |
 | M6 | Comfort | 2 evenings | not started |
@@ -290,11 +290,12 @@ passes below):
   in the session header: `human-auto-{42,7,2026}.jsonl` plus the two probe-deck
   recordings `human-trample-7.jsonl` (the `assign_damage` ask) and
   `human-scry-7.jsonl` (`input.focusCard`).
-- **The gate runs the seat.** `tools/check-all.sh` is twelve steps and green,
-  three of them fresh human-seat games (null, the scripted console smoke, and
-  `auto` at a seed no fixture uses), each asserted to end in exactly one `over`
-  as its last frame, each log put through `check-redaction.mjs`. Every JVM step
-  is under a `timeout`.
+- **The gate runs the seat.** `tools/check-all.sh` was twelve steps and green at
+  the end of M2 (it is **thirteen** now that M3 added the ws step), three of them
+  fresh human-seat games (null, the scripted console smoke, and `auto` at a seed
+  no fixture uses), each asserted to end in exactly one `over` as its last frame,
+  each log put through `check-redaction.mjs`. Every JVM step is under a
+  `timeout`.
 - **`docs/protocol.md` needed no new shape for M2** — every body emitted already
   conformed to §2.2/§3/§4/§5. The nine amendments **M1–M9** it did gain are
   corrections the two review passes forced, not M2 discovering the spec was
@@ -316,14 +317,27 @@ thread — with no WebSocket and no DOM. Every unimplemented member logs
 degrades instead of dead-ending and the log says which of the 37 actually fire for
 a W/U deck.
 
-### M2 follow-ups — open, 2026-09-11
+### M2 follow-ups — four closed by M3, one partly, two open, one standing (2026-09-11)
 
-M2 is **done**, not perfect. Everything below is carried from the builders' and
-the verifiers' own "problems" notes; none of it blocks M3, and each line says who
-should pick it up. Nothing here is a known leak — the redaction gate is closed
-and tested — they are gaps in *evidence* and two small decisions left standing.
+M2 is **done**, not perfect. Everything below was carried from the builders' and
+the verifiers' own "problems" notes; none of it blocked M3, and each line says
+who should pick it up. Nothing here is a known leak — the redaction gate is
+closed and tested — they are gaps in *evidence* and two small decisions left
+standing. **M3 closed items 1, 5, 6 and 8**, moved the live half of item 2 onto
+the M3 follow-ups list below, and left 3, 4 and 7 exactly where they were.
 
-1. **A decision nobody has made: the last `state` before `over`.** Amendment
+| # | what it was | status after M3 |
+|---|---|---|
+| 1 | the last `state` before `over` | **closed** — the emitter flushes it; amendment **M11** names the one path that cannot |
+| 2 | ask kinds with no engine evidence | **partly** — was seven, now **six**; `ability_menu` and `assign_damage` are in the corpus |
+| 3 | gate 0's `"unknown"` arm never observed | **open**, unchanged |
+| 4 | M9's pre-header path is self-test-only | **open**, unchanged |
+| 5 | the `transport` header key optional or mandatory | **closed** — it stays optional (**D26**) |
+| 6 | report 07 §10 step 3 is wrong | **closed** — corrected in place, 2026-09-11 |
+| 7 | `emitOver`'s wait loop was kept, not deleted | **standing** — still a decision, still kept |
+| 8 | two transport tests belong to M3 | **closed** — `tools/ws-smoke.mjs` and check-all step 10 |
+
+1. **closed — the last `state` before `over`.** Amendment
    **M4** says `over` is emitted "after the `state` that carries it", but today
    the emitter reaches `over` through `captureOutcome()` rather than through a
    final `flushState`, so `over` can arrive with no `gameOver` snapshot in front
@@ -334,16 +348,30 @@ and tested — they are gaps in *evidence* and two small decisions left standing
    reverted produces the same 1,610). Either emit the final `state`
    unconditionally or soften M4's wording — and then re-record. See
    `docs/evidence/m2-console.md` §10.4.
-2. **Seven of the eleven ask kinds still have no engine evidence.** The
-   committed corpus contains **three** — `choose_list`, `order` and
-   `assign_damage` (the last only because `decks/trample-probe.dck` was built to
-   force it) — and a fourth, `choose_entities`, fired in an uncommitted console
-   session (`m2-console.md` §3.2). `confirm`, `options`, `text`, `assign_amount`,
-   `manipulate_list`, `sideboard` and a real multi-option `ability_menu` are
-   implemented against report 07 §7, unit-tested by `mtgtable.AskSelfTest`, and
-   shape-pinned by `ASK_SHAPES` plus the hand-written fixture — **none of which
-   can prove the emitter**. Two of them are reveal surfaces and are already
-   scheduled as M5's first move (the probe decks).
+   **Closed in M3, and the answer was both halves** (`docs/evidence/m3-ws.md`
+   §6.1): `captureOutcome` now emits that final snapshot itself, on the game
+   thread, when nothing else has — M4 as written — and amendment **M11** softens
+   M4 for the one path where it provably cannot, a concede *before* the engine
+   has asked this seat for anything, which `applyAct`'s pre-`inputSeen` guard
+   ends on the EDT with no Forge outcome to snapshot. There `over` is
+   `{winner: null, reason: null, matchOver: true}` with no `gameOver` `state` in
+   front of it and the bridge prints `OVER WITHOUT A gameOver STATE` on stderr.
+   **A client must not require the preceding snapshot**; the board's reducer
+   never did, and its banner now says *"No result — the session ended before the
+   engine published an outcome"* rather than "Draw." for that shape. The five
+   human fixtures were re-recorded with the final snapshot present.
+2. **partly closed — six of the eleven ask kinds still have no engine evidence**
+   (was seven; **`ability_menu` closed it in M3's review pass**). The committed corpus now
+   contains **four** — `choose_list`, `order`, `assign_damage` and `ability_menu`
+   — and a fifth, `choose_entities`, fired in an uncommitted console session
+   (`m2-console.md` §3.2). `assign_damage` no longer needs
+   `decks/trample-probe.dck` to appear: the primary deck reaches it at seed 42
+   now that a multi-ability card can be cast at all. `confirm`, `options`,
+   `text`, `assign_amount`, `manipulate_list` and `sideboard` are implemented
+   against report 07 §7, unit-tested by `mtgtable.AskSelfTest`, and shape-pinned
+   by `ASK_SHAPES` plus the hand-written fixture — **none of which can prove the
+   emitter**. Two of them are reveal surfaces and are already scheduled as M5's
+   first move (the probe decks).
 3. **Gate 0's `"unknown"` arm has never been observed at runtime.** `unzoned
    cards = 0` in every game run so far, so the null-`ZoneType` branch of
    `Snap`'s concealment gate is reasoned and reviewed, not measured. Reaching it
@@ -354,28 +382,37 @@ and tested — they are gaps in *evidence* and two small decisions left standing
    `openView`: `printf "q\n" | … --transport console` still delivers the concede
    after the seat exists. The bounded buffer and the empty-file-plus-stderr
    behaviour have no engine evidence.
-5. **The `transport` session-header key is optional, deliberately.** `RecordMatch`
+5. **closed — the `transport` session-header key stays optional, deliberately.**
+   `RecordMatch`
    does not write it, so an absent key means "an engine recording with no seat"
    and the six AI-vs-AI fixtures did not have to be regenerated. The cost is that
    the checker's A12 rule is conditional: a `null` answer to `order` or
    `choose_list` is a **warning** when the header says `transport: "null"` and a
    failure otherwise. Making the key mandatory means regenerating every fixture;
    that is the decision, and it is cheapest to take before M3 adds `"ws"`.
-6. **`docs/research/07-wireguigame-spec.md` §10 step 3 is wrong and has not been
-   corrected.** It prescribes a null transport that answers only asks and
+   **Taken in M3** (`docs/evidence/m3-ws.md` §7.2, now **D26**): it stays
+   optional, `RecordMatch` stays untouched, and the six AI-vs-AI fixtures keep
+   their bytes. A ws session's header says `transport: "ws"` like any other seat
+   log, so nothing about M3 needed the key to be mandatory, and the price —
+   regenerating six fixtures on a non-deterministic emitter to sharpen a rule
+   that already catches its case — got worse with `ws`, not better.
+6. **closed — `docs/research/07-wireguigame-spec.md` §10 step 3 was wrong.**
+   It prescribed a null transport that answers only asks and
    expects a finished game; measured, that parks at the coin toss after five
    frames, because with `isLibgdxPort() == false` the seat is driven by the input
-   path (D18). `NullTransport` therefore extends `AutoTransport`. Whoever next
-   owns report 07 should fix that step so the next reader does not rebuild the
-   same dead end.
-7. **`emitOver`'s wait loop was kept, not deleted.** The verification pass
-   considered removing it and did not; it is redundant with the outcome capture
+   path (D18). `NullTransport` therefore extends `AutoTransport`. The step now
+   says so, in place, with a dated correction note, so the next reader does not
+   rebuild the same dead end.
+7. **standing — `emitOver`'s wait loop was kept, not deleted.** The verification
+   pass considered removing it and did not; it is redundant with the outcome capture
    in the common path but still the thing that makes `finishGame` idempotent
    under a concede. Left as-is, named here so it is a decision rather than an
    oversight.
-8. **Two transport tests belong to M3, not here** — the `connect → resync →
-   concede` case and a scripted `--transport ws` step in `check-all.sh`. Both
-   are on M3's doorstep below.
+8. **closed — two transport tests belonged to M3, not here** — the
+   `connect → resync → concede` case and a scripted `--transport ws` step in
+   `check-all.sh`. **Both landed**: `tools/ws-smoke.mjs` (and its
+   `--disconnect-mid-ask` variant) and check-all's step 10, which now runs
+   **four** fresh ws servers (10a-10d).
 
 **Five findings from `docs/research/07-wireguigame-spec.md` that change how this
 evening is spent.** Read that document before writing a line; it is the M2
@@ -417,7 +454,11 @@ is frequently a colour, an integer or a cost rather than a view object
 
 ## M3 — The same game, in a browser tab
 
-**Status: not started.**
+**Status: done** — a review pass and a fix pass, all 21 findings closed, with
+eleven follow-ups open below and none of them blocking M4 (evidence:
+[`docs/evidence/m3-ws.md`](docs/evidence/m3-ws.md) — §14 is the current status —
+and [`docs/evidence/m3-web.md`](docs/evidence/m3-web.md) §12, plus the two passes
+below).
 **Effort: 2 evenings.**
 
 **Command**
@@ -437,7 +478,51 @@ reconnect via `resync`, `cancelAll()` on disconnect, per-ask timeout. `web/` swa
 `ReplayTransport` for `WsTransport` — **the board component is unchanged**. Every
 session is logged and replayable.
 
-**Three things the M2 verification pass leaves on M3's doorstep.**
+**What the evidence actually shows** (`docs/evidence/m3-ws.md` for the socket,
+`m3-web.md` for the board, plus the two passes below):
+
+- **`./scripts/play.sh` is the whole command.** check-forge → `bridge/build.sh` →
+  the bridge in the background (`var/play/server.log`) → poll `GET /health` until
+  it answers `200 ok` → vite, opening **`http://127.0.0.1:5173/?ws=1`**. Ctrl-C
+  stops both halves, and so does the bridge exiting on its own after `over`.
+  `/health` is the **session's** readiness, not the port's (**D21**): 503
+  `starting` for the ~1.2 s between `bind` and `openView`, 200 after.
+- **A game is played in a browser by clicking.** Real mouse clicks in Chrome
+  carried a session from the coin toss to `over`: land drops, a creature cast
+  through Forge's own `Pay Mana Cost` prompt with the OK button relabelled
+  `Auto`, a discard chosen from `selectable`, a multi-ability card played through
+  the `ability_menu` modal, `Escape` = Cancel (the `End Turn` label), Space = OK,
+  and a two-click Concede that ended it (`m3-web.md` §2, §3, §10, §11).
+  **9 of 10 card clicks in that session named an id the engine had not listed** —
+  amendment **M8**, and the reason a board that gated clicks on `selectable`
+  could not play a land.
+- **A whole game unattended over the socket.** `tools/ws-auto-play.mjs` at seed
+  42: 1,368 frames in, 236 out, 230 `state`, 226 acts, 8 asks all answered,
+  36.4 s, exit 0; server side 22 player turns, 1,603 log lines, **zero
+  `UNIMPL`**, zero emit errors, one `over` and `over` last. The gate runs the
+  same client at seed 13 every time (step 10c): 1,318 frames, 183 acts, 3 asks,
+  15 turns. The redaction gate runs on those socket recordings — **833 opponent
+  hand cards in the gate's, every one the five-key stub**, engine strings swept,
+  nothing joinable to a concealed card — and on the **client's** log too, in
+  `--client-log` mode (amendment **M17**).
+- **The socket's five behaviours are each measured** (`m3-ws.md` §4): connect →
+  `resync` → concede; disconnect mid-decision → reconnect → the game is still
+  there; `ping`/`pong`; a second client refused with one `notice` and close code
+  **4001**; garbage in answered with a `notice` rather than a dropped socket.
+- **The gate is thirteen steps** and step 10 runs **four** fresh ws servers on
+  port 8643 (10a `ws-smoke`, 10b `ws-smoke --disconnect-mid-ask`, 10c a whole
+  game through `ws-auto-play`, 10d `ws-auto-play --refuse-first-ask`, the only
+  thing in the repo that exercises `ReplyPool.cancelAll()` with a game thread
+  genuinely parked). Every JVM step is under `GAME_TIMEOUT`. Re-run for the
+  documentation pass on 2026-09-11: **exit 0, 163.2 s**
+  (`var/check-all-doc-pass.log`; `docs/evidence/m3-ws.md` §14).
+- **The protocol grew twelve rows and no new `v`.** M10–M13 while the socket was
+  written, M14–M19 in the review pass, M20–M21 in the fix pass. Only **M14** (the
+  asynchronous `ability_menu`) changes what a recording contains; every M1/M2
+  recording is still valid, and the five human-seat fixtures were re-recorded for
+  M14 and M11.
+
+**Three things the M2 verification pass left on M3's doorstep — all closed.**
 
 1. **A transport test for connect → `resync` → `concede`,** asserting no
    exception and an `over` frame. `resync` is a first-class client frame
@@ -457,7 +542,17 @@ session is logged and replayable.
    `GAME_TIMEOUT`, exactly one `over`, `over` last, and its log through
    `check-redaction.mjs`.
 
-**Three more that M2 hands over with the socket.**
+**How the three were closed.** (1) `tools/ws-smoke.mjs` is that test — connect →
+`resync` → concede, no exception, one `over`, `over` last — and it is gate step
+**10a**; the guard it protects is measured in `m3-ws.md` §4.1. (2) The board
+sends `act: clickCard` for **any** card and never gates on `selectable`: 78 of 86
+clicks in the scripted socket game and 9 of 10 in the hand-played browser game
+name an id outside it, and `web/test/ws-log.test.ts` pins the property to the
+corpus. (3) Step 10 runs four fresh ws servers, each with those four assertions,
+plus the **client** log through `check-redaction.mjs` in its own `--client-log`
+mode (amendment **M17**).
+
+**Three more that M2 handed over with the socket — all closed.**
 
 4. **`WsTransport` owes an `askTimeoutMs` of its own** (**D15**). The console
    answers `0` — wait forever, because a human is thinking — and `auto`/`null`
@@ -473,6 +568,134 @@ session is logged and replayable.
    asserted at the top of `onAct` and `onAnswer` (**D17**). Netty's event-loop
    thread satisfies it; a handler that hops to its own executor must still
    satisfy it.
+
+**How those three were closed.** (4) **D24**: the ws ask timeout is **0 —
+infinite — while a client is connected**, with a finite 120 s
+`NO_CLIENT_ASK_TIMEOUT_MS` fallback only while nobody is on the socket, and
+`cancelAll()` on disconnect as the thing that actually unblocks a parked game
+thread. Neither existing value was copied; D15's "liveness, not a clock" is the
+rule, and the ask is **re-delivered** on reconnect rather than spent on a §5.4
+default (amendment **M19**). (5) `transport: "ws"` is in every ws session header,
+and M2 follow-up 5 is settled the other way: the key **stays optional**
+(**D26**). (6) `WsTransport` is the first transport with **no reader thread of
+its own** — inbound frames are parsed and dispatched straight from netty's event
+loop, named `mtg-table-ws`, which is neither a game thread nor the EDT, so every
+`Transport.Inbound` assert stayed armed through every run (`m3-ws.md` §5). The
+name is the eighth entry in `HeadlessGuiBase`'s static thread-name assert.
+
+### M3 review pass — 2026-09-11, all findings closed
+
+An independent verifier ran the gate, played the socket with three scripted
+clients and one hand-written raw client, played a real game in Chrome, and read
+the logs. Eleven findings; every one is closed, and each one that changed the
+wire is in `docs/protocol.md`'s **M3 review pass** amendment table (M14–M19).
+
+**The three that mattered.**
+
+1. **A card with two or more playable abilities could not be played from any
+   client, and the click was a silent no-op** — no `state`, no `input`, not even
+   a `notice`. `getAbilityToPlay` is reached from inside a click, i.e. on the
+   virtual EDT, where R2 forbids blocking, so it returned `null` while
+   `selectCard` still returned `true`. The menu is now **asynchronous**
+   (amendment **M14**): a normal `ability_menu` ask that no game thread is parked
+   on, applied afterwards through `IGameController.selectAbility`. The kind had
+   never been dispatched by the engine in any recording; re-recording the seat
+   corpus produced **7** of them in `human-auto-42.jsonl` alone, each answered,
+   each followed by Forge's own `Pay Mana Cost` prompt — and, because the policy
+   can now cast a creature at all, the primary deck reaches **`assign_damage`**
+   for the first time. That closes M2 follow-up 2 for two of its seven kinds.
+2. **`GET /health` answered 200 about 1.2 s before `hello_ok` existed**, and a
+   client that connected in that window got `input`, `notice`, `notice`,
+   `hello_ok` — §2.1 inverted, and a readiness signal `scripts/play.sh` trusts
+   that was not true. Amendment **M15**: 503 `starting` until the session exists,
+   no resend to a socket that beats it, and `WS LISTENING` printed after
+   `startMatch`.
+3. **`npm --prefix web test` was not hermetic.** `web/test/ws-log.test.ts` globbed
+   `var/` and asserted two properties of `ws-auto-play`'s *policy* as if they were
+   properties of the protocol, so three leftover scratch directories turned a
+   green suite red with nothing in the repo changed. The corpus is now given to it
+   in `MTGTABLE_WS_LOGS` (check-all sets it to the logs step 10 just produced) and
+   the committed fixtures otherwise; the answer-order rule is a **subsequence**,
+   so an ask cancelled by `cancelAll()` at a disconnect is legal; and the M8 click
+   assertion runs only on a dumb-human-policy transcript.
+
+**The eight smaller ones.** `ReplyPool.cancelAll()` no longer latches the seat
+shut after a socket drop, so an ask raised while nobody is connected parks up to
+`NO_CLIENT_ASK_TIMEOUT_MS` and is re-delivered on reconnect instead of spending
+the player's decision on a §5.4 default (amendment **M19**, measured). A client
+`resync` is written to the frame log (**M16**). `Transport.Inbound.onResync`
+asserts its two threads like its three siblings. `check-redaction.mjs` grew a
+`--client-log` mode, auto-detected from a new `recordedBy` header key (**M17**),
+and check-all now runs it over the client log it just wrote. Inbound websocket
+frames are aggregated and size-capped explicitly, and a dropped frame comes back
+as a `notice` instead of silence (**M18**). `scripts/play.sh` execs vite directly,
+so Ctrl-C stops both halves instead of leaving a reparented dev server listening.
+Every clickable card carries an `aria-label` naming the card rather than the act.
+These four documents were brought up to date.
+
+**One finding was stale rather than wrong.** The verifier reported that cards are
+`<li>`s with no button role and are absent from the accessibility tree; in the
+working tree they are real `<button>`s (`CardButton`), and `read_page
+filter=interactive` on a live board lists all fourteen of them by id. What was
+missing was the accessible *name* — the `title` explaining the act shadowed the
+card — and that is what the `aria-label` fixes.
+
+### M3 fix pass — 2026-09-11, a second verification, all ten findings closed
+
+A second independent verifier re-ran the gate from a wiped `bridge/out`, drove
+the socket on three seeds nobody had used, raced a client at a booting server,
+sampled the live thread list, and played in Chrome. Three majors, seven minors,
+all closed. The full write-ups are `docs/evidence/m3-ws.md` §13 and
+`docs/evidence/m3-web.md` §11; the wire-level rows are amendments **M20** and
+**M21**, and the two new decisions are **D22** and **D23** (which corrects D21's
+scope).
+
+**The three majors, and the shape they share:** two of them were *sentences this
+repo had already written as guarantees* while the code kept only part of them.
+
+1. **The pre-`hello_ok` window was open from the inbound side.** M15 closed the
+   connect path and §2.1 claimed "both halves"; a c2s frame that *arrived* in the
+   window was still answered, ahead of the handshake — `act` → `notice@1` then
+   `hello_ok@2`, `resync` → `input@1` then `hello_ok@2`, the second being byte
+   for byte the inversion M15's own row quotes as the bug. Reachable from this
+   repo's own documented commands (both socket clients send `resync` from their
+   `open` handler); only the `/health` poll in check-all and `play.sh` hid it.
+   Now every inbound frame is dropped with **no reply** while no session exists
+   (**M20**, **D23**), `resend()` carries the same guard, and the run summary
+   counts the drops.
+2. **The asynchronous `ability_menu` built its body on a second `Game-n` thread
+   with nothing enforcing exclusion** — the javadoc's claim that the game thread
+   is parked was true at submit time and unchecked at run time, on a per-click
+   path, with silent `Tracker` corruption as the failure mode. The menu is now
+   stamped with the input generation it was raised for and abandoned without
+   walking anything if that generation moved (**D22**); it fires on none of the
+   five re-recorded fixtures.
+3. **§4.2's red "wedged game thread" banner fired on ordinary play** — twice in
+   the first two turns of a real browser game, because its four clauses are also
+   the ordinary state of not holding priority. It needs six (**M21**): and this
+   seat holds priority, and no frame has arrived for 2.5 s. Measured over the
+   corpus in `web/test/wedge.test.ts`: the old rule is true on 103–359 frames per
+   recording and the worst gap to the next frame after any of them is **121 ms**,
+   because Forge re-pushes every 250 ms while it thinks.
+
+**The seven minors.** `ReplyPool.cancelAll()` with a genuinely parked ask is now in
+the gate as step **10d** (`tools/ws-auto-play.mjs --refuse-first-ask`, asserting
+the server's `cancelling 1 pending ask(s)`), which also makes M19's
+`timeoutMs: 120000` measurement reproducible at seed 13 — the cap itself has
+still never *fired*, and both the protocol row and the gate now say so.
+`WsTransport.ask` recomputes its deadline at the point of parking, closing a
+read-found race where a disconnect during body serialisation could park a thread
+with no peer and no clock. `oob()`'s javadoc names all three seq-0 frames.
+Space also matches `event.code === 'Space'`, so the binding is testable by a
+driver that sets `code`. Concede disarms and disables itself after `over`.
+Fixture drift was re-measured and the earlier reading corrected: **all five human
+fixtures are stable in content and none is reliably stable in byte order** —
+`human-auto-42` re-recorded identically once and differed twice in three runs, by
+the `seq` assignment of the same three frames (identical multiset), and
+`human-trample-7` differs by two of Forge's own `awaitNextInput` re-pushes and
+nothing else. A byte-level drift step over these files would therefore be flaky
+and is **not** added; an order-insensitive one is the shape a future attempt
+should take (§13.5).
 
 **Gate before this ships — now closed.** The `DelayedReveal` / `tempShowZones` /
 `openZones` enumeration is
@@ -496,6 +719,100 @@ before a human seat exists:
 `input.prompt` can still name a card the viewer may not see (Forge builds those
 strings, we do not): the checker **warns** on it, and it is accepted residual
 risk, documented in report 06 §10 (residual risk 3).
+
+### M3 follow-ups — open, 2026-09-11
+
+M3 is **done**, not perfect. Every line below is carried verbatim from the two
+builders' and the two verifiers' own "problems" notes, and none of it blocks M4.
+Nothing here is a known leak: the redaction gate now runs over a socket
+recording and a client log as well as the fixtures. They are gaps in *evidence*,
+two races that are shrunk rather than eliminated, and a handful of decisions
+worth re-reading when their assumptions change.
+
+1. **`NO_CLIENT_ASK_TIMEOUT_MS` (120 s) has never fired.** Step 10d now shows the
+   cap being *set* on the wire (`timeoutMs: 120000`, seed 13, 7 ms after a drop),
+   which is the half M19 cites; whether a disconnected window actually catches an
+   `ask` is **seed-dependent** — at seed 17 the next ask arrives after the
+   reconnect with `timeoutMs: 0` — so the gate reports that half instead of
+   asserting it. If a deck or seed change stops producing it the gate stays green
+   and only the `note:` line changes. The cap firing, and the §5.4 default it
+   would spend, are still unmeasured.
+2. **D22 shrinks the `ability_menu` race; it does not mathematically eliminate
+   it.** A generation could still move between the check and the first field
+   read. The argument that this is safe rests on Forge's `stop()` ordering
+   (`onStop()` → `clearWeaklySelectable` → our `engineInput` bump, all before
+   `cdlDone.countDown()`), which is read from the **2.0.15** forge-src as prose
+   and is not a signature `javap` can confirm against the 2.0.14 jar. D22 says so
+   rather than claiming the race is gone. If M5 makes asynchronous asks common,
+   this is the first thing to revisit.
+3. **The asynchronous `ability_menu` is not re-delivered by `resync`, and a stale
+   answer is applied blind.** It never enters `ReplyPool`, so `WsTransport.resend`
+   does not know about it; it self-heals, because Forge's input is still the one
+   that asked and the client clicks the card again (protocol §5.3, **D20**). And
+   if the player answers one long after the engine moved on,
+   `applyAsyncAbilityMenu` still calls `IGameController.selectAbility` — Forge's
+   own input has moved, so the call lands on an input that no longer wants it. A
+   second outstanding-ask registry on the `Transport` interface for one kind was
+   judged too much for M3; that judgement is what M5 should re-take.
+4. **Six of the eleven ask kinds still have no engine evidence** — `confirm`,
+   `options`, `text`, `assign_amount`, `manipulate_list`, `sideboard`. They are
+   implemented against report 07 §7, unit-tested by `mtgtable.AskSelfTest`,
+   shape-pinned by `ASK_SHAPES`, rendered by `AskModal.tsx` and mounted by
+   `web/test/ask-modal.test.tsx` — **none of which can prove the emitter**. This
+   is M2 follow-up 2, now one kind shorter, and **M5's first move** is the two
+   probe decks for the two that are reveal surfaces.
+5. **Amendment M11's exception path has never been observed.** `over` with no
+   `gameOver` `state` in front of it needs a concede *before* the engine has asked
+   this seat for anything; `grep -rl 'OVER WITHOUT A gameOver STATE' var/` finds
+   **nothing** across every run on disk, because `ws-smoke`'s concede lands after
+   the first `input` (it ends `winner=1 reason=AllOpponentsLost`). The client
+   handles the shape and a test pins the banner, but the emitter's branch is
+   reasoned, not measured. A gate step that concedes from the `open` handler
+   before any `input` would close it.
+6. **Amendment M10's `seq: 0` reservation is true by construction, not by an
+   assertion.** On the bridge it holds because one private helper
+   (`WsTransport.oob`) is the only thing that writes `"seq":0`, and it has three
+   callers — `pong`, the refusal `notice`, the dropped-frame `notice`; nothing
+   checks that a fourth is not added. On the client `seq` is type-checked and
+   otherwise ignored. The same amendment makes the cached frames' re-delivery
+   **verbatim** (same `seq`, same `t`, no new log line; the `input` half is a real
+   re-emission and the client's `resync` *is* logged — **D27**, amendment M16), so
+   a mid-stream `resync` hands back a `seq` *lower* than the frame before it and a
+   client connecting mid-game sees a forward gap. Neither is a dropped frame; only
+   `check-redaction.mjs --client-log` (M17) knows the difference, and it knows it
+   from a header key rather than from the frames. Every gate run says so out loud:
+   *"a CLIENT log's series is neither contiguous … nor monotonic … In a
+   server-side `var/games/` log the same shape IS a dropped frame."*
+7. **Fixture drift has no gate step, deliberately.** All five human-seat fixtures
+   are stable in *content* and none is reliably stable in *byte order* — measured
+   at 2 of 3 runs differing for `human-auto-42`, by the `seq` assignment of the
+   same three frames. A byte-level normalised diff would therefore be flaky. The
+   sound shape is **order-insensitive**: the multiset of frames with `seq`
+   stripped. Nobody has written it; the harness used for the measurement is kept
+   at `var/verify/m3fix-rerecord.sh` (`m3-ws.md` §13.5).
+8. **`--refuse-first-ask` lives in `tools/ws-auto-play.mjs`, not `ws-smoke.mjs`.**
+   The fix text said otherwise. Reaching an `ask` at all needs a client that can
+   play a game, and a second copy of the dumb-human policy in `ws-smoke` could
+   drift from `AutoTransport`'s — the one thing `ws-auto-play`'s own header says
+   must not happen. `ws-smoke.mjs` is unchanged; the gate's step 10d runs
+   `ws-auto-play`. Named here so it is a decision and not a discrepancy.
+9. **Space = OK is proved by a synthetic `KeyboardEvent`, not by a finger.** The
+   browser driver used for the evidence delivers Space as
+   `{key: "", code: "", keyCode: 0}`, so the handler now also matches
+   `event.code === 'Space'` and the binding was verified by dispatching exactly
+   what the driver delivers. Escape = Cancel *was* a real key press. One human
+   press of the space bar closes this.
+10. **Two socket properties are closed by construction rather than by a test.**
+    The second-client refusal is decided on netty's event loop, which serialises
+    it, and nothing has tried to open two sockets in the same millisecond; and the
+    1 MB `HttpObjectAggregator` bounds only the **handshake** — websocket frames
+    are not aggregated by it, and `WebSocketServerProtocolHandler`'s own
+    `maxFrameSize` is left at netty's default while a `state` frame already runs
+    to ~30 kB.
+11. **Two M2 follow-ups are untouched and still open here**: gate 0's `"unknown"`
+    (null-`ZoneType`) arm has never been observed at runtime, and amendment M9's
+    pre-header buffer is still self-test-only. Both need an engine shape no
+    committed deck produces.
 
 ## M4 — A board that looks like Magic
 
@@ -523,6 +840,38 @@ and `alt: null` — report 10 §0.0's "three card shapes, not two" was supersede
 amendment P3 the same day — `Card.token`, `Card.alt`, `library.cards`,
 `input.focusCard`, and a `card` on every ask option (`docs/protocol.md`
 §3.2–§3.4, §4, §5.1).
+
+**What M3 hands to M4: the board is already interactive, so M4 is layout and
+art.** Nothing on this list needs to be built again, and re-deriving any of it is
+how a rule that took two verification passes to get right gets lost:
+
+- **The affordances exist.** Cards and player names are real `<button>`s with an
+  `aria-label` naming the card (the `title` carries the act), the two engine
+  buttons are wired to `buttonOk` / `buttonCancel`, Concede is a two-click button
+  reachable from every state, `Space` / `Escape` are bound, and `AskModal.tsx`
+  renders **all eleven** ask kinds. M4 restyles these; it does not re-invent them.
+- **The `actions` prop is the seam.** `<Board actions={…}/>` is `null` in replay
+  mode and non-null in ws mode, which is the whole of the difference between the
+  two — `web/test/render.test.tsx` asserts the replay board still renders
+  **Read-only** over the fixture corpus, and that assertion must survive M4.
+- **Never gate a click on `selectable`** (amendment **M8**). Outline what the
+  engine named; send the click for anything the player presses. 78 of 86 acts in
+  the scripted game and 9 of 10 in the hand-played one are outside the set.
+- **Render `buttons.*.label` verbatim.** `Auto`, `Undo (2)`, `End Turn` and
+  `Play` are Forge's own strings, and half of M6 is already on the wire because
+  of them (report 11). A relabelled button throws the engine's answer away.
+- **The stall banner's rule is `web/src/render/wedge.ts`,** six clauses after
+  amendment **M21** (including "this seat holds priority" and "no s2c frame for
+  2.5 s"). Import it; do not re-derive it from §4.2's prose.
+- **Art is already fetched.** `node tools/fetch-art.ts` exists and writes
+  `web/public/art.json` (gitignored, ~28 cards, Scryfall URLs plus `artist` and
+  `copyright` for the credit line); `web/src/art.ts` and `useArt()` already read
+  it and the board already reports its misses. What M4 adds is the *image* on the
+  card tile and the fallback text frame — hot-linked, per open question 5.
+- **Two shapes the layout must not assume away**: an `over` with no `gameOver`
+  `state` in front of it (**M11**), and a `seq` that can arrive lower than the
+  frame before it after a `resync` (**M10**). The reducer already tolerates both;
+  a component that counts frames or trusts `seq` for ordering would not.
 
 ## M5 — Nothing dead-ends
 

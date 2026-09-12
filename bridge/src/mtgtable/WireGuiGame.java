@@ -148,6 +148,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     /** Notices whose title or text {@link Snap#sweepText} blanked. */
     private final AtomicInteger noticeStringsSwept = new AtomicInteger();
     private final AtomicLong askSeq = new AtomicLong();
+    /**
+     * Bumped by <b>every</b> {@code input} re-emission ({@link #mutateInput}, so
+     * {@link #engineInput} and {@code onResync} both count).  It exists for one
+     * reader: {@link #emitAbilityMenu}, which builds an ask body on a
+     * <em>second</em> {@code Game-n} thread and must not walk the view graph
+     * after Forge has left the input that asked for it (decision <b>D22</b>).
+     */
+    private final AtomicLong inputGen = new AtomicLong();
     private final AtomicInteger errors = new AtomicInteger();
 
     // ---- the ask path ----------------------------------------------------
@@ -155,6 +163,17 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private final Map<String, List<Object>> pendingOpts = new ConcurrentHashMap<>();
     /** abilityId -> view, filled by every {@code ability_menu}, read by {@code clickAbility}. */
     private final Map<Integer, SpellAbilityView> abilityIndex = new ConcurrentHashMap<>();
+    /**
+     * askId -&gt; the ask-local option array of an ask <b>no game thread is parked
+     * on</b>.  Today that is exactly one kind: the asynchronous
+     * {@code ability_menu} {@link #asyncAbilityMenu} pushes when the engine asks
+     * which of a card's abilities to play from inside a click, i.e. on the EDT,
+     * where blocking is forbidden.  Its answer arrives through {@link #onAnswer}
+     * like any other and is applied with {@code IGameController.selectAbility};
+     * it is never registered with {@link ReplyPool}, because there is nothing to
+     * unpark.
+     */
+    private final Map<String, List<Object>> asyncAsks = new ConcurrentHashMap<>();
 
     // ---- the snapshot index an `act` resolves against (built on the game thread)
     private volatile Map<Integer, CardView> cardIndex = Map.of();
@@ -178,6 +197,16 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private final InputState in = new InputState();
 
     private volatile String overBody;
+    /**
+     * True once a {@code state} carrying a non-null {@code gameOver} has been
+     * emitted.  M2 follow-up 1 / amendment M4: {@code over} is emitted "after
+     * the state that carries it", and the committed
+     * {@code fixtures/games/human-auto-42.jsonl} was one state short of that,
+     * because {@code captureOutcome} reached {@code emitOver} through the
+     * forwarder rather than through a flush of its own.  {@link #captureOutcome}
+     * now reads this flag and emits the missing snapshot itself.
+     */
+    private volatile boolean gameOverStateEmitted;
     /** A {@link #captureOutcome} is queued on Forge's game pool; {@link #emitOver} waits for it. */
     private volatile boolean captureInFlight;
     private volatile boolean overEmitted;
@@ -312,6 +341,17 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (closed) {
             return;
         }
+        if (overEmitted && !"over".equals(type)) {
+            // Protocol sections 7 and 8.4: `over` is the TERMINAL frame of a
+            // session.  Forge goes on pushing after it -- a concede's wind-down
+            // calls afterGameEnd, which calls updateButtons and showPromptMessage,
+            // and measured over a WebSocket that put an empty `input` on the wire
+            // and on disk AFTER `over` (seq 10 after seq 9).  Nothing downstream
+            // wants it: the client has torn the board down and the gate asserts
+            // `tail -1` is `over`.  Dropped here rather than raced against
+            // close(), so the invariant is structural and not lucky.
+            return;
+        }
         try {
             // Line 0 of the log is the session header and it is written in
             // openView, where the seat first exists.  A frame produced before
@@ -322,8 +362,19 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // protocol section 1 forbids ("monotonic, per direction, starting at
             // 1"; a gap means a dropped frame) and which a client would read as
             // 0 followed by 1.
-            final int seq = log.s2c(type, body);
-            transport.push(envelope(seq, type, body));
+            // The monitor is held across the push, not just across the
+            // numbering.  `emit` is reached from four threads, and with the two
+            // steps apart two of them can take seq 5 and seq 6 and then push in
+            // the order 6, 5 -- which is invisible in the frame log (GameLog
+            // writes in seq order) and visible on a socket, where it is a client
+            // applying an older snapshot over a newer one.  GameLog.s2c is
+            // synchronized on the same object, so this is one reentrant
+            // acquisition; every `push` implementation is non-blocking by
+            // Transport's own contract, which is what makes it safe to hold.
+            synchronized (log) {
+                final int seq = log.s2c(type, body);
+                transport.push(envelope(seq, type, body));
+            }
         } catch (final RuntimeException e) {
             errors.incrementAndGet();
             System.err.println("EMIT FAILED " + type + ": " + e);
@@ -339,6 +390,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     private void logC2s(final String type, final String body) {
         if (closed) {
+            return;
+        }
+        if (overEmitted) {
+            // The same rule from the other direction: section 8.4's terminal
+            // frame is terminal for the FILE, and a click that arrives after the
+            // game ended has nothing to act on.  It is still dispatched (the
+            // caller does that); it is only not written after the end.
+            System.err.println("C2S AFTER OVER not logged: " + type);
             return;
         }
         try {
@@ -579,6 +638,12 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             concealedNow = Snap.concealedIds(gameView, viewer);
             emit("state", body);
             stateFrames.incrementAndGet();
+            if (gameView.isGameOver()) {
+                // Snap.state writes `gameOver` iff GameView.isGameOver(), so
+                // this is the same predicate the frame was built from, read on
+                // the same thread one line later.
+                gameOverStateEmitted = true;
+            }
             if (captured) {
                 // The RESULT is the trigger, not finishGame(): see emitOver.
                 // After the state that carries `gameOver`, so the terminal frame
@@ -641,6 +706,19 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             overBody = Snap.over(gameView);
             if (forwarder != null) {
                 forwarder.flush();             // ship the final state with gameOver set
+            }
+            if (!gameOverStateEmitted) {
+                // M2 follow-up 1.  `forwarder.flush()` ships whatever the
+                // forwarder happens to be holding, and on the concede path it is
+                // routinely holding nothing -- so the run ended with `over` and
+                // no `gameOver` snapshot in front of it, which is exactly what
+                // amendment M4 promises does not happen.  Measured before this
+                // line existed: fixtures/games/human-auto-42.jsonl had 1,611
+                // lines / 227 `state` frames and the same seed re-recorded gave
+                // 1,610 / 226.  We are on the game thread here (the method
+                // hopped if it had to), so emitting it is legal exactly here and
+                // nowhere else.
+                flushState(List.of());
             }
         } catch (final RuntimeException e) {
             System.err.println("OUTCOME CAPTURE FAILED: " + e);
@@ -715,6 +793,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         final String frame;
         synchronized (inputLock) {
             f.accept(in);
+            // D22: the generation moves BEFORE the frame is built, and inside the
+            // lock, so a reader that saw generation N is reading a board no later
+            // than the one frame N described.
+            inputGen.incrementAndGet();
             frame = inputBody(in);
         }
         emit("input", frame);                  // pushed outside the lock
@@ -1054,6 +1136,18 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 Thread.currentThread().interrupt();
                 break;
             }
+        }
+        if (!gameOverStateEmitted) {
+            // Amendment M4 as softened on 2026-09-11 (amendment M11): `over`
+            // follows the `state` that carries `gameOver` on every path that has
+            // one, and this is the path that does not.  A concede during the
+            // pre-game prompts is answered by applyAct's pre-`inputSeen` guard,
+            // which ends the session without ever reaching Forge's own
+            // game-over: there is no outcome to snapshot and nowhere legal to
+            // build one (we are on the EDT).  Say so on stderr rather than let a
+            // reader infer it from a missing frame.
+            System.err.println("OVER WITHOUT A gameOver STATE: the game ended before Forge "
+                    + "published an outcome (protocol amendment M11)");
         }
         String body = overBody;
         if (body == null) {
@@ -1396,7 +1490,26 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             }
         }
         if (!ThreadUtil.isGameThread()) {
-            return null;                       // R2; the caller null-checks (PCH:226)
+            // We are on mtg-table-EDT, inside a click: `act: clickCard` ->
+            // IGameController.selectCard -> InputPassPriority.onCardSelected ->
+            // PlayerControllerHuman.getAbilityToPlay.  R2 forbids blocking here,
+            // so this used to return a bare null -- and a card with two or more
+            // playable abilities was therefore UNPLAYABLE from any client, as a
+            // SILENT no-op: no state, no input, not even a notice, because
+            // selectCard still returns true.  Measured in Chrome on A.I.M.
+            // Scientists ({3}{U} cast + `K:TypeCycling:Basic:2` landcycling):
+            // `act clickCard 2` was the last line of the frame log and zero
+            // frames came back.
+            //
+            // So the menu goes out ASYNCHRONOUSLY instead -- an `ability_menu`
+            // ask that no game thread is parked on, applied later by
+            // {@link #applyAsyncAbilityMenu} through
+            // IGameController.selectAbility.  That is the same path
+            // `act: clickAbility` uses, and Forge implements it as
+            // InputPassPriority.selectAbility(sa): set chosenSa, stop() -- which
+            // is exactly what a non-null return from here would have caused.
+            asyncAbilityMenu(host, abilities);
+            return null;                       // the caller null-checks (PCH:226)
         }
         if (host == null) {
             // Protocol section 5.2 declares `ability_menu.cardId` a number and
@@ -1418,6 +1531,176 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         });
         final Integer i = asInt(v);
         return i == null || i < 0 || i >= abilities.size() ? null : abilities.get(i);
+    }
+
+    /**
+     * Push an {@code ability_menu} that <b>nobody is parked on</b>, from off the
+     * game thread.  Never blocks; returns immediately.
+     *
+     * <p>Two hops, and both are forced.  The caller is {@code mtg-table-EDT},
+     * where R2 forbids blocking <em>and</em> hard rule 3 forbids walking the
+     * Forge view graph -- and an ask body carries option <b>labels</b>, which are
+     * read off {@code SpellAbilityView} and {@code CardView}.  So the body is
+     * built on Forge's own game pool ({@code ThreadUtil.invokeInGameThread},
+     * whose threads are named {@code Game-n} and where the walk is legal), which
+     * is the identical hop {@link #captureOutcome} makes for the identical
+     * reason.
+     *
+     * <p><b>Which thread that is, and what actually excludes it</b> (decision
+     * <b>D22</b>; the earlier wording here claimed more than was true).
+     * {@code ThreadUtil.invokeInGameThread} is
+     * {@code Executors.newCachedThreadPool(new WorkerThreadFactory("Game"))}, and
+     * {@code Game-0} is busy running this match for the whole game, so the body
+     * is necessarily built on a <b>second</b> {@code Game-n} thread -- measured:
+     * {@code Game-0} and {@code Game-1} are both live for the duration of a
+     * {@code --transport auto} game that raises menus.  Both pass
+     * {@code ThreadUtil.isGameThread()} (a bare {@code startsWith("Game")}), so
+     * hard rule 3's mechanical check cannot tell them apart, and the property the
+     * rule protects -- never walk while the game mutates -- is the one that has
+     * to be arranged by hand.
+     *
+     * <p>It is arranged by {@link #inputGen}.  The menu is stamped with the input
+     * generation it was raised for and {@link #emitAbilityMenu} returns without
+     * touching a view if the generation has moved.  That is sound rather than
+     * lucky because of the order inside Forge: the only thing that can free
+     * {@code Game-0} is the input being stopped, and
+     * {@code InputSyncronizedBase.stop()} runs {@code onStop()} first --
+     * {@code InputPassPriority.onStop} &rarr;
+     * {@code PlayerControllerHuman.clearActionableCards} &rarr;
+     * {@code IGuiGame.clearWeaklySelectable}, i.e. one of our
+     * {@link #engineInput} calls -- and only then counts the latch down.  So the
+     * generation has already moved by the time the game thread can resume, and a
+     * build that sees the old generation is a build the parked thread is still
+     * parked for.  A menu dropped this way is stale regardless: Forge has left
+     * the input that asked, and the player's click is a no-op they can repeat.
+     *
+     * <p><b>Not re-delivered by {@code resync}.</b>  The ask never enters
+     * {@link ReplyPool}, so {@code WsTransport.resend} does not know about it; a
+     * client that reconnects mid-menu simply clicks the card again and gets a
+     * fresh one, because Forge's input is still the one that asked.  Answering
+     * it with {@code null} is "never mind" and is always legal (protocol
+     * section 5.4).
+     */
+    private void asyncAbilityMenu(final CardView host, final List<SpellAbilityView> abilities) {
+        if (host == null) {
+            unimpl("getAbilityToPlay(host=null)");
+            return;
+        }
+        if (closed || overEmitted) {
+            return;
+        }
+        final int hostId = host.getId();       // R1: getId() and nothing else, on this thread
+        final List<SpellAbilityView> chosen = new ArrayList<>(abilities);
+        // D22: the generation is read HERE, on the EDT, inside the click that is
+        // asking -- so it is the generation of the input Forge is parked on.
+        final long gen = inputGen.get();
+        try {
+            ThreadUtil.invokeInGameThread(() -> emitAbilityMenu(hostId, chosen, gen));
+        } catch (final RuntimeException e) {
+            errors.incrementAndGet();
+            System.err.println("ASYNC ABILITY MENU NOT SCHEDULED: " + e);
+            notice("warn", "Cannot play that yet", "card " + hostId
+                    + " has more than one thing it could do, and the menu could not be opened");
+        }
+    }
+
+    /**
+     * <b>A second {@code Game-n} thread from Forge's cached pool, so the view
+     * walk passes {@code isGameThread()}.</b>  Build the {@code ability_menu}
+     * body and emit it -- unless the input that asked for it is gone.
+     *
+     * @param gen the {@link #inputGen} the menu was raised at.  If it has moved,
+     *            Forge has left that input, the real game thread is free to
+     *            mutate the graph, and this method must not read one field off a
+     *            view (decision <b>D22</b>).  Checked before the walk and again
+     *            before the frame goes out.
+     */
+    private void emitAbilityMenu(final int hostId, final List<SpellAbilityView> abilities,
+                                 final long gen) {
+        if (closed || overEmitted) {
+            return;
+        }
+        if (inputGen.get() != gen) {
+            // Not an error: the player clicked again (or Forge moved on) inside
+            // the millisecond it took to get here.  The click is a no-op they can
+            // repeat, and repeating it is much cheaper than a silently corrupted
+            // Tracker.
+            System.err.println("ABILITY MENU STALE for card " + hostId
+                    + ": the input moved on before the body was built (D22)");
+            return;
+        }
+        try {
+            final List<Object> opts = new ArrayList<>(abilities);
+            for (final SpellAbilityView sav : abilities) {
+                abilityIndex.put(Integer.valueOf(sav.getId()), sav);
+            }
+            final String askId = "a" + askSeq.incrementAndGet();
+            // Only the newest menu is live.  A stale one would apply a choice the
+            // player has already moved past, and the board is modal while an ask
+            // is outstanding, so there is never more than one to lose.
+            asyncAsks.clear();
+            asyncAsks.put(askId, opts);
+            askKinds.add("ability_menu");
+            final JsonOut o = new JsonOut().obj();
+            o.n("askId", askId).n("kind", "ability_menu")
+             .n("timeoutMs", transport.askTimeoutMs("ability_menu"));
+            o.n("cardId", hostId);
+            options(o, "options", opts, 0, opts.size(), null);
+            final String body = o.end().done();
+            if (inputGen.get() != gen) {
+                // The walk finished, but the input moved while it ran: the menu
+                // would open over a board the player has already left, and
+                // answering it would call selectAbility on a finished input.
+                asyncAsks.remove(askId);
+                System.err.println("ABILITY MENU STALE after the build for card " + hostId
+                        + ", not emitted (D22)");
+                return;
+            }
+            emit("ask", body);
+        } catch (final RuntimeException e) {
+            errors.incrementAndGet();
+            System.err.println("ASYNC ABILITY MENU FAILED: " + e);
+            notice("warn", "Cannot play that yet", "card " + hostId
+                    + " has more than one thing it could do, and the menu could not be built");
+        }
+    }
+
+    /**
+     * Apply the answer to an asynchronous {@code ability_menu}.
+     *
+     * <p>Runs on the inbound thread (never a game thread, never the EDT -- see
+     * {@link #onAnswer}), and hops to the EDT for the act itself, exactly as
+     * {@link #onAct} does: {@code InputBase.finished} is a plain non-volatile
+     * field and desktop Forge is safe only because both ends of it are the EDT.
+     */
+    private void applyAsyncAbilityMenu(final String askId, final List<Object> opts,
+                                       final String valueJson) {
+        final Integer i = asInt(decode(valueJson));
+        if (i == null || i.intValue() < 0 || i.intValue() >= opts.size()) {
+            // Section 5.4: every ask is answerable with null.  Here that means
+            // "never mind" -- Forge's input is still the one that asked, so the
+            // player just keeps playing.
+            return;
+        }
+        final Object chosen = opts.get(i.intValue());
+        if (!(chosen instanceof SpellAbilityView)) {
+            notice("warn", "Unknown ability", askId + " option " + i);
+            return;
+        }
+        final SpellAbilityView sav = (SpellAbilityView) chosen;
+        FThreads.invokeInEdtNowOrLater(() -> {
+            try {
+                final IGameController c = controller();
+                if (c == null) {
+                    notice("warn", "No controller", "the game has no controller for this seat yet");
+                    return;
+                }
+                c.selectAbility(sav);
+            } catch (final RuntimeException e) {
+                System.err.println("ABILITY MENU APPLY FAILED " + askId + ": " + e);
+                notice("warn", "Action failed", "ability_menu: " + e);
+            }
+        });
     }
 
     @Override
@@ -2004,7 +2287,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             break;
         }
         case "resync":
-            onResync();
+            // reEmitInput, NOT onResync: we are on mtg-table-EDT here (onAct
+            // dispatches through FThreads.invokeInEdtNowOrLater) and onResync
+            // now asserts it is not.  This act is already in the log as an
+            // `act`, so it needs no second c2s line either.
+            reEmitInput();
             break;
         default:
             notice("warn", "Unknown act", action);
@@ -2069,6 +2356,15 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         sb.append(",\"value\":").append(value == null ? "null" : value).append('}');
         logC2s("answer", sb.toString());
 
+        // An ask nobody is parked on is not in the reply pool, so it is resolved
+        // here instead: see `asyncAsks`.  Checked BEFORE the pool, because a
+        // pool miss is what produces the "Late answer" notice.
+        final List<Object> async = asyncAsks.remove(askId);
+        if (async != null) {
+            applyAsyncAbilityMenu(askId, async, value);
+            return;
+        }
+
         if (!pool.complete(askId, value)) {
             // Protocol section 2.3: a second answer for a completed askId is
             // dropped with a notice, never applied.
@@ -2078,15 +2374,36 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
     @Override
     public void onResync() {
-        // Re-push the last input; the next flush re-pushes state.  requestResync
-        // is Forge's delta-sync recovery and is a no-op for a snapshot protocol.
-        //
-        // mutateInput, NOT engineInput: a resync is a CLIENT frame (protocol
-        // section 2.4) and any transport may send one at any time, including
-        // before Forge has asked this seat for anything.  Arming `inputSeen`
-        // here disarmed applyAct's pre-input guard, so M3's browser -- which
-        // autoconnects, sends `resync`, and may then send `concede` -- would
-        // have conceded into Match.prepareAllZones and crashed Forge's setup.
+        // Asserted like onAct/onAnswer/onDisconnect.  Transport.Inbound's own
+        // contract is "never a game thread and never the EDT", and this was the
+        // one method of the four that did not say so mechanically -- while being
+        // the one that EMITS a frame.  A future caller on a game thread or on
+        // mtg-table-EDT would have violated the model with nothing to catch it.
+        Transport.assertNotGameThread("Transport.Inbound.onResync");
+        Transport.assertNotEdt("Transport.Inbound.onResync");
+        // Section 8.2: a client `resync` is a c2s frame and belongs in the log.
+        // Without this line the re-emitted `input` below appeared with no cause
+        // and an auditor could not tell a resync-driven re-emission from an
+        // engine-driven one.  A (re)connect's implicit resync is written too --
+        // it is the same request, made by connecting rather than by asking.
+        logC2s("resync", "{}");
+        reEmitInput();
+    }
+
+    /**
+     * Re-push the last {@code input}; the next flush re-pushes {@code state}.
+     * ({@code requestResync} is Forge's delta-sync recovery and is a no-op for a
+     * snapshot protocol.)
+     *
+     * <p>{@code mutateInput}, <b>not</b> {@code engineInput}: a resync is a
+     * CLIENT frame (protocol section 2.4) and any transport may send one at any
+     * time, including before Forge has asked this seat for anything.  Arming
+     * {@code inputSeen} here disarmed {@code applyAct}'s pre-input guard, so
+     * M3's browser -- which autoconnects, sends {@code resync}, and may then
+     * send {@code concede} -- would have conceded into
+     * {@code Match.prepareAllZones} and crashed Forge's setup.
+     */
+    private void reEmitInput() {
         mutateInput(s -> { });
     }
 
@@ -2097,6 +2414,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // from mtg-table-io (EOF) and from mtg-table-quit (a console quit).
         Transport.assertNotGameThread("Transport.Inbound.onDisconnect");
         Transport.assertNotEdt("Transport.Inbound.onDisconnect");
+        // A menu nobody is parked on cannot be cancelled by the reply pool, and
+        // the client that could have answered it is gone.
+        asyncAsks.clear();
         pool.cancelAll();                      // every parked game thread degrades to its default
     }
 

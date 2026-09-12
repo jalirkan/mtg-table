@@ -113,6 +113,11 @@ code; if you think one is wrong, say so in prose first.
       and **every** option label that reaches the wire goes through
       `Snap.card` / `Snap.label` — the same single gate the zone walk uses.
 
+    **M3 added no fourth entry**, and that is worth noticing: `WsTransport` is a
+    netty server that never names a `CardView` — it moves strings the emitter has
+    already gated. A transport that needed the type would be a transport that had
+    grown a second serialiser.
+
     Three conventions the lint cannot check, stated in a comment block at the top
     of `Snap.java` (`docs/guides/java-for-typescript-people.md`): **enums go on
     the wire via `.name()`, never `toString()`** (`forge.card.CardRarity`
@@ -121,15 +126,19 @@ code; if you think one is wrong, say so in prose first.
     branches of the null-state check**, so the renderer never tests for key
     absence.
 
+
     **Threads.** `ThreadUtil.isGameThread()` is a bare
     `getName().startsWith("Game")`, so a thread of ours that drifted into that
     prefix would be allowed to walk the view graph. Two mechanical guards, and
     both must stay complete: `HeadlessGuiBase` asserts at class-init that **every
-    one of the seven thread names we create** starts with `mtg-table-`
+    one of the eight thread names we create** starts with `mtg-table-`
     (`EDT_NAME`, `BG_NAME`, `GameLog.THREAD_NAME`, `Transport.IO_THREAD_NAME`,
     `ReplyPool.WATCHDOG_THREAD_NAME`, `AutoTransport.WATCHDOG_THREAD_NAME`,
-    `ConsoleTransport.QUIT_THREAD_NAME` — all compile-time constants, so naming
-    them there loads no class and rule 1 is untouched), and **`tools/lint-bridge.sh` section 6** greps
+    `ConsoleTransport.QUIT_THREAD_NAME`, `WsTransport.WS_THREAD_NAME` (**M3** —
+    netty's event loop, `mtg-table-ws`; its factory is `this::newEventLoopThread`
+    rather than `Executors.defaultThreadFactory()`, which the lint also bans) —
+    all compile-time constants, so naming them there loads no class and rule 1 is
+    untouched), and **`tools/lint-bridge.sh` section 6** greps
     every `new Thread(` under `bridge/src` for a name on the same line that
     resolves to such a constant. The lint is the half that catches a thread no run
     happens to construct; put the name on the `new Thread(` line (hand it a method
@@ -194,9 +203,50 @@ npm --prefix web test && npm --prefix web run build   # `test` = node --test THE
 node tools/fetch-art.ts                     # deck -> web/public/art.json (M4 needs it)
 ```
 
-Not written yet — this is what the milestone delivers, do not cite it as
-existing: `./scripts/play.sh` (**M3+**: check-forge → build → JVM →
-`vite dev --open`).
+**`./scripts/play.sh` is the M3 command** — check-forge → `bridge/build.sh` → the
+ws bridge in the background (`var/play/server.log`) → poll `GET /health` → vite,
+with the board at `http://127.0.0.1:<webPort>/?ws=1`. Ctrl-C stops both halves:
+vite is exec'd directly (`env -C web web/node_modules/.bin/vite`) so the pid the
+script holds is the server and not an `npm` wrapper that leaves it reparented.
+
+```bash
+./scripts/play.sh                                   # config.json's ports, a random seed
+./scripts/play.sh --seed 42                         # a reproducible shuffle
+./scripts/play.sh --port 8643 --web-port 5174       # beside a running one
+./scripts/play.sh --no-open --keep-open --game-id x # no browser; linger 30 s after `over`
+./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
+```
+
+The socket on its own, with no browser:
+
+```bash
+./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
+node tools/ws-smoke.mjs --port 8642                      # connect → resync → concede
+node tools/ws-smoke.mjs --port 8642 --disconnect-mid-ask # drop mid-ask, reconnect, finish
+node tools/ws-auto-play.mjs --port 8642 --log var/ws-auto.jsonl   # a whole game
+node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask        # drop ON an `ask`
+node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (amendment M17)
+```
+
+**The socket's own two rules.** The ask timeout over ws is **0 — infinite —
+while a client is connected**, and `NO_CLIENT_ASK_TIMEOUT_MS` (120 s) only while
+none is; what ends a wait is `onDisconnect()` → `ReplyPool.cancelAll()`, after
+which the pool is reopened so the next ask parks and is re-delivered on reconnect
+(**D24**, amendment M19). And **one client at a time**: a second socket gets one
+`notice` and close code **4001**, the client treats any code ≥ 4000 as terminal
+(**D25**, amendment M13). A `resync` re-delivers the cached `hello_ok` / `state` /
+outstanding ask **verbatim** — same `seq`, same `t` — and re-emits the `input`
+for real through `onResync()` (**D27**, amendments M10/M16), so a client log's
+`seq` series is neither contiguous nor monotonic and needs
+`check-redaction.mjs --client-log`.
+
+**`GET /health` is the session's readiness, not the port's** (amendment M15): 503
+`starting` until `openView` has emitted `hello_ok`, 200 `ok` after. Poll it before
+you connect — the port is listening about a second earlier, and a client that
+connects in that window is deliberately sent nothing until the real handshake,
+**and anything it sends in that window is dropped with no reply** (amendment M20
+/ D23: an answer to it would be an s2c frame ahead of `hello_ok`, which is the
+inversion the rule exists to prevent). The run summary prints how many.
 
 **Playing the console game.** `--transport console` is a real seat: it prints the
 board, the `input` prompt with the engine's own button labels, and any `ask` with
@@ -241,22 +291,48 @@ it now guards — a `close()` that self-deadlocked against its own appender,
 burned 30 s and returned a truncated file — was invisible in a green run.
 
 `check-forge.sh` is the gate for everything below it. Run it first when something
-behaves strangely. **`check-all.sh` is what you run before saying you are done**:
-lint → build → `Smoke` → a fresh `RecordMatch` into `var/` → the value-level
-drift diff → three fresh `MtgTable` sessions (`--transport null`, the scripted
-`--transport console` smoke, and `--transport auto --seed 11`) →
-`check-redaction.mjs` over the committed fixtures (`games/` **and** `synthetic/`)
-*and* all four recordings → `check-redaction-selftest.mjs` →
-`npm run build && npm test`. It exits non-zero on the first failure, and takes
-two to three minutes, most of it the four games. **Every JVM step runs under
-`timeout`** (`GAME_TIMEOUT`, default 300 s, overridable in the environment): a
-gate whose failure mode is "hangs until someone notices" cannot catch the one
-defect class M2's threading work is most exposed to.
+behaves strangely. **`check-all.sh` is what you run before saying you are done**,
+and it is **thirteen steps**: lint → build → `Smoke` → a fresh `RecordMatch` into
+`var/` → the value-level drift diff → three fresh `MtgTable` sessions
+(`--transport null`, the scripted `--transport console` smoke, and
+`--transport auto --seed 11`) → **four fresh `--transport ws` servers** (the
+`ws-smoke` doorstep test, its `--disconnect-mid-ask` variant, a whole game
+through `tools/ws-auto-play.mjs`, and that same client with
+`--refuse-first-ask`, which drops the socket on the first `ask` FRAME and is the
+only thing in the repo that exercises `ReplyPool.cancelAll()` with a game thread
+actually parked — the gate asserts the server's own `cancelling 1 pending ask(s)`
+line), each asserted for exactly one `over`, `over`
+last, and its log through `check-redaction.mjs` — including the CLIENT log, which
+is a different shape on purpose) → `check-redaction.mjs` over the committed
+fixtures (`games/` **and** `synthetic/`) *and* all four recordings →
+`check-redaction-selftest.mjs` → `npm run build && npm test`. It exits non-zero
+on the first failure and takes two to four minutes, most of it the seven games.
+**Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
+overridable in the environment): a gate whose failure mode is "hangs until
+someone notices" cannot catch the one defect class M2's threading work is most
+exposed to.
+
+**`npm --prefix web test` is hermetic, and it is kept that way by
+`MTGTABLE_WS_LOGS`.** `web/test/ws-log.test.ts` replays whatever that variable
+names — check-all sets it to the four logs step 10 just produced — and falls back
+to the committed `fixtures/games/human-*.jsonl` when it is unset. It must never
+go back to globbing `var/`: it did, and three leftover scratch directories were
+enough to turn a green suite red with nothing in the repo changed (282 pass / 3
+fail with them present, 279 / 0 with them moved aside). A test whose result
+depends on what is lying around in `var/` is not a test.
 
 **Never pass `--pre-amendment` to `check-redaction.mjs`.** It downgrades a
 missing `owner` / `token` / `alt` / `library.cards` to a warning, and those four
 absences are exactly what the gate exists to catch. It is there to read a log
 recorded before 2026-09-11, and nothing in the repo is one.
+
+**`--client-log` is different and is safe to pass** (amendment M17): it relaxes
+the `seq` continuity rule, and nothing else, for a log a *client* wrote
+(`tools/ws-auto-play.mjs --log`), where a verbatim re-delivery and a forward gap
+are amendment M10 rather than a dropped frame. It is auto-detected from the
+header's `recordedBy:"client"`, so you rarely have to type it; every content
+assertion is unchanged either way, and a bridge log under `var/games/` keeps the
+hard monotonic rule.
 
 **And never pass `--opponent-library-ok`,** which gets the identical treatment:
 it downgrades "a seat other than the viewer has full cards in `library.cards`" —
@@ -338,7 +414,7 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
 | `PLAN.md` | The eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| `DECISIONS.md` | The nineteen load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's). |
+| `DECISIONS.md` | The twenty-seven load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's; **D21's scope is corrected by D23**). D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

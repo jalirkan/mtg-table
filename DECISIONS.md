@@ -567,3 +567,367 @@ from the game thread, and it cannot represent a mid-game change). Writing
 through `YieldController` (dead code for a non-remote client). Computing phase
 stops in the browser — `README.md`'s NON-GOALS forbids it, and the engine is the
 only thing that knows when a phase is actually reached.
+
+## D20 — A multi-ability card opens an **asynchronous** `ability_menu`, applied through `selectAbility`
+
+**2026-09-11**
+
+**Decision.** When `IGuiGame.getAbilityToPlay` is reached off the game thread —
+which is every click, because Forge asks it from inside
+`InputPassPriority.onCardSelected` and our acts run on the virtual EDT (**D17**)
+— the bridge returns `null` to Forge *and* pushes an ordinary `ability_menu`
+`ask` that **no game thread is parked on**. The answer arrives through the
+normal `Transport.Inbound.onAnswer` path and is applied with
+`IGameController.selectAbility(SpellAbilityView)`, which is the same call
+`act: clickAbility` makes. The ask is not registered with `ReplyPool`; it lives
+in `WireGuiGame.asyncAsks` until answered, and only the newest one is live.
+The body is built on **Forge's own game pool** (`ThreadUtil.invokeInGameThread`,
+threads named `Game-n`), because an ask body carries option labels read off
+`SpellAbilityView` and `CardView` and hard rule 3 allows that walk nowhere else.
+Protocol amendment **M14**.
+
+**Rationale.** The `null` on its own was a **silent** dead end: `selectCard`
+still returns `true`, so no `notice` fired either, and a card with two or more
+playable abilities could not be played from any client — measured in Chrome on
+A.I.M. Scientists (`{3}{U}` cast + `K:TypeCycling:Basic:2` landcycling), where
+`act clickCard 2` was the last line of the frame log and zero frames came back.
+The same hole was in the console seat from M2, and it is why `ability_menu` had
+never been dispatched in any recording.
+
+Blocking was not available: R2 forbids parking the EDT (it is a single-thread
+executor, and everything queued behind it — every prompt — would stall), and
+Forge's own desktop client gets away with it only because Swing's EDT pumps
+events inside a modal popup. Forge's network client (`RemoteClientGuiGame`)
+blocks its caller for the same call, which is the shape we cannot copy.
+
+The asynchronous path is not a workaround but Forge's own second entry point:
+`InputPassPriority.selectAbility(sa)` sets `chosenSa` and calls `stop()` —
+byte for byte what a non-null return from `getAbilityToPlay` causes —
+and `PlayerControllerHuman.selectAbility` resolves the view through the
+`spellViewCache` that `getAbilityToPlay` itself populated a moment earlier.
+`InputPayMana.selectAbility` does the mana-ability half.
+
+**Three properties a reader must not assume away.** It is **not re-delivered by
+`resync`** (nothing to unpark, so `WsTransport.resend` does not know it): Forge's
+input is still the one that asked, so a client that lost the menu clicks the card
+again. Answering `null` is **"never mind"** — legal by §5.4, and the game simply
+does not advance. And the modal's banner had to stop saying *"the game thread is
+blocked on this"*, because for this kind it is usually false and the client
+cannot tell.
+
+**Evidence.** Re-recording the seat corpus produced **7** `ability_menu` asks in
+`fixtures/games/human-auto-42.jsonl` and 1 at seed 7, each answered, each
+followed by Forge's own `Pay Mana Cost` prompt — and, because the scripted policy
+can now cast a creature at all, `pacho-shield` reaches **`assign_damage`** for the
+first time without a probe deck. Driven end to end in Chrome: menu → answer `1` →
+`Pay Mana Cost: {2}` → tap → Cancel → back at priority, no dead end.
+
+**Rejected.** Returning `null` and firing a `notice` only (honest, but the card
+is still unplayable — it is the minimum, not the fix). Blocking the EDT (R2, and
+it stalls every prompt). Picking an ability locally by policy — that is rules
+logic in the bridge, and `README.md`'s NON-GOALS puts the choice with the player.
+Building the ask body on the EDT (hard rule 3: an off-game-thread view walk
+corrupts the `Tracker` silently, and an ask body is nothing but view reads).
+
+## D21 — `GET /health` reports the **session's** readiness, not the port's
+
+**2026-09-11**
+
+**Decision.** `WsTransport`'s health endpoint answers **503 `starting`** until
+`hello_ok` exists and **200 `ok`** afterwards; a WebSocket that completes its
+handshake before that is handed **nothing**, and `MtgTable` prints
+`WS LISTENING` after `HostedMatch.startMatch` rather than after `bind`.
+Protocol amendment **M15**.
+
+**Rationale.** The port is listening about **1.2 s** before `openView` runs, and
+in that window the server had no handshake frame to send. `resend(ch, true)`
+found `lastHello == null`, sent nothing, and then called `onResync()`, which
+emitted an `input` at `seq: 1` — so a client that retried the connect every 20 ms
+saw `input@1`, `notice@2`, `notice@3`, `hello_ok@4`. That is §2.1 ("sent once,
+immediately after the socket opens, before the first `state`") and contract (b)
+both inverted, and it was silent: `tools/ws-auto-play.mjs` handles the window by
+writing an **empty** `--log` on purpose, so a recording made there was simply
+lost.
+
+A readiness signal that says ready while it is not is worse than one that makes
+the caller wait — `scripts/play.sh` polls this endpoint and then opens a browser
+on the strength of it. Gating on `lastHello != null` makes "listening", "ready"
+and "the handshake exists" one statement; skipping the resend closes the other
+half, because `openView`'s own `hello_ok` + `state` + `input` reach a
+connected client in order anyway.
+
+**Corrected 2026-09-11 (D23, protocol amendment M20).** As shipped, this decision
+closed **the connect path only**, and the sentence above ("skipping the resend
+closes the other half") was wrong about what the other half was. A c2s frame that
+*arrived* in the window was still dispatched and still answered, so an `act` came
+back as `notice@1` then `hello_ok@2`, and a `resync` came back as `input@1` then
+`hello_ok@2` — the same inversion, through the same `onResync` call, reached from
+the door instead of from the handshake. Both are reproducible against a booting
+server, and both are on disk as well as on the wire. See **D23** for the fix; the
+`/health` half of this decision stands unchanged.
+
+**Rejected.** A second port for health (two things to wait for, and
+`scripts/play.sh` would have to get both right). Queuing the early connection's
+frames until the session exists (the cache already does exactly that, one layer
+down — the fix is to not send *before* it). Leaving `/health` as a liveness probe
+and documenting the race (the race is what a reader would then have to know, and
+nothing would be enforcing it).
+
+---
+
+## D22 — An asynchronous `ability_menu` is stamped with the input generation it was raised for
+
+**2026-09-11**
+
+**Decision.** `WireGuiGame` keeps an `inputGen` counter, bumped inside
+`mutateInput` — so by every `input` re-emission, engine-driven or resync-driven.
+`asyncAbilityMenu` reads it on the EDT, inside the click that is asking, and
+`emitAbilityMenu` **returns without touching a single view** if the counter has
+moved by the time Forge's pool runs it (and drops the built frame if it moves
+during the build). Protocol amendment **M14** is otherwise unchanged.
+
+**Rationale.** D20 hands the menu body to `ThreadUtil.invokeInGameThread`, whose
+javadoc here claimed the walk was safe because "the real game thread is parked
+inside `InputSyncronizedBase.showAndWait`". That is true at *submit* time and was
+not enforced at *run* time, and the pool is
+`Executors.newCachedThreadPool(new WorkerThreadFactory("Game"))`
+(`forge-core/src/main/java/forge/util/ThreadUtil.java`), with `Game-0` occupied
+running the match — so the body is built on a **second** `Game-n` thread.
+Measured: sampling `/proc/<pid>/task/*/comm` once a second through a
+`--transport auto --seed 23` game with 17 `ability_menu` asks shows `Game-0` and
+`Game-1` both live throughout. Hard rule 3's mechanical check
+(`getName().startsWith("Game")`) passes for both, so the rule's *property* —
+never walk the view graph while the game mutates it — had nothing enforcing it on
+a hot per-click path. A second act (a double click; `AutoTransport` and
+`ws-auto-play` decide on a 120 ms settle) finishes the input, `stop()`s it and
+resumes `Game-0` while `Game-1` is still reading views. The failure mode is the
+silent `Tracker` corruption CLAUDE.md rule 3 names: no assert, no lint and no
+fixture would catch it.
+
+The generation check is sound rather than incidental because of the order inside
+Forge: the only thing that frees `Game-0` is the input being stopped, and
+`InputSyncronizedBase.stop()` runs `onStop()` **before** `cdlDone.countDown()` —
+`InputPassPriority.onStop` → `PlayerControllerHuman.clearActionableCards` →
+`IGuiGame.clearWeaklySelectable`, which is one of our `engineInput` calls. The
+generation has therefore already moved by the time the game thread can resume, so
+a build that still sees the old generation is a build the parked thread is still
+parked for.
+
+**Cost, and why it is the right one.** A menu can now be dropped: the click
+becomes a no-op the player repeats, exactly as it was for every card before M14.
+Measured by re-recording all five committed human-seat fixtures with the check in
+place: **zero** `ABILITY MENU STALE` lines, and the same ask counts as the
+committed corpus (7 `ability_menu` in `human-auto-42`, 6 in `human-auto-7`). The
+stderr line is how a run says it happened.
+
+**Rejected.** Building the body on the EDT (hard rule 3 forbids the walk).
+Blocking the EDT until `Game-n` finishes (R2, and it re-creates the deadlock D20
+exists to avoid). A lock of our own around the walk (the mutating side is Forge's
+code and would never take it, so the lock would document an exclusion rather than
+enforce one). Leaving the javadoc's claim in place (it is the claim that made the
+race invisible).
+
+---
+
+## D23 — The whole inbound path is gated on the session existing, not just the connect-time resend
+
+**2026-09-11**
+
+**Decision.** While `lastHello == null`, `WsTransport` drops **every** c2s frame
+at the door with **no reply**, counts it, and names it on stderr
+(`WS PRE-SESSION c2s frame dropped`); `resend()` carries the same guard at its own
+top so the invariant does not depend on `handshake()` being its only caller. The
+run summary prints `N read before the session existed`. Protocol amendment
+**M20**; it corrects the scope claimed by **D21**.
+
+**Rationale.** D21 closed the window from the connect side and the file went on
+to state the closure as a guarantee. It was not one: M15 suppressed only the
+connect-time `resend`, and a frame that arrived in the window still produced an
+s2c frame ahead of the handshake — `act` → `notice@seq1`, `hello_ok@seq2`;
+`resync` → `input@seq1`, `hello_ok@seq2`, which is the exact inversion M15's own
+row quotes as the bug. Reproduced twice from scratch by retrying the connect every
+20 ms against a booting server, and visible on disk (the s2c frame on line 2 of
+`frames.jsonl`, `hello_ok` on line 3). It is reachable from the repo's own
+documented commands: both `tools/ws-auto-play.mjs` and `tools/ws-smoke.mjs` send
+`resync` from their `open` handler, and only the `/health` poll inside
+`tools/check-all.sh` and `scripts/play.sh` kept the gate from ever seeing it. A
+false guarantee is worse than a documented race, because the next reader builds on
+it.
+
+**Why no reply.** M18's rule is "a dropped frame comes back as a `notice` rather
+than as silence", and here that notice would itself be the pre-handshake frame the
+rule exists to prevent — the `act` case above *is* M18's notice. §2.1's ordering
+outranks it, and nothing is actually lost: `openView`'s own `hello_ok` + `state` +
+`input` reach the channel in order, which is everything a `resync` in the window
+could have asked for.
+
+**Rejected.** Buffering the frames and replaying them after `hello_ok` (it makes
+the ordering depend on a second queue draining at the right moment, and the only
+frame anyone sends in the window — `resync` — asks for what the handshake is
+already about to send). Answering with a `notice` that carries `seq: 0` (a
+handshake-less client cannot tell a seq-0 notice from the session's own stream
+before it has a session; and it is still a frame arriving before `hello_ok`).
+Leaving it and documenting the race (D21 already tried documenting; the
+documentation was what turned out to be wrong).
+
+---
+
+## D24 — The socket's ask timeout is the connection's liveness, not a clock
+
+**2026-09-11**
+
+**Decision.** `WsTransport.askTimeoutMs(kind)` returns **`0` — park forever —
+while a client is connected**, and `NO_CLIENT_ASK_TIMEOUT_MS` (**120 s**) while
+none is. The thing that actually ends a wait is
+`Transport.Inbound.onDisconnect()` → `ReplyPool.cancelAll()`, called from
+`WsHandler.channelInactive` on netty's event loop; the pool is then **reopened
+immediately**, so an ask raised while nobody is connected parks up to the cap and
+is **re-delivered** to whoever comes back (amendment **M19**) rather than being
+spent on a §5.4 default. The deadline is **recomputed at the point of parking**,
+not trusted from the caller: `WireGuiGame.ask` reads `askTimeoutMs` and then
+serialises the whole ask body — every option, with a full card each — and a
+disconnect inside that gap could otherwise park a game thread with no peer and no
+clock. `resend` re-sends any ask the pool still wants (§2.4). This is **D15
+extended**, not replaced: the timeout stays a transport policy.
+
+**Rationale.** D15's own closing sentence said M3 "will need its own answer, tied
+to the socket's liveness rather than to a clock", and copying either existing
+number is the bug it warned about. The console's `0` alone is wrong for a socket:
+a peer that vanishes leaves a game thread parked against nobody, which is the one
+failure a socket must not have. `auto`'s 30 s is wrong in the other direction: a
+human reading their hand over a websocket is not a stalled test, and Forge takes
+the §5.4 default **silently**, so the game continues wrongly rather than
+visibly. Liveness answers both — while the peer is there the player may think as
+long as they like; the instant it is gone the wait is over, by an event rather
+than by a timer.
+
+The 120 s cap is the residual case, and it is deliberately generous: it exists
+only so that a server nobody ever connects to cannot hold a thread forever. It is
+**still unmeasured** — see PLAN.md's M3 follow-up 1 — because reaching it needs an
+engine that asks a blocking question during a window with no client; the gate
+(step 10d) proves the number reaches the wire (`timeoutMs: 120000`), not that it
+fires.
+
+**Rejected.** A single finite cap for the socket (any value is either a wedge
+detector that fires on a thinking human or a liveness check that outlives the
+peer — this is the same "wrong in both directions" D15 rejected). Latching the
+reply pool shut after a disconnect (measured: every ask raised between the drop
+and the reconnect resolved to its default *instantly*, spending the player's
+decisions during a browser refresh, and making the cap unreachable after the
+first disconnect). A heartbeat-driven timeout of our own (netty already tells us
+`channelInactive`; a second liveness mechanism would only disagree with it).
+
+---
+
+## D25 — One client at a time, refused with a `notice` and close code 4001
+
+**2026-09-11**
+
+**Decision.** The seat belongs to one socket. A second WebSocket that completes
+its handshake while a client is connected — or any socket after the server has
+closed — receives **one `notice`** (`{level:"error", title:"Connection refused"}`,
+`seq: 0` per amendment M10) and is then closed with WebSocket close code
+**4001**; `REFUSED_CLOSE_CODE` and the refusal counter are named in the run
+summary (`ws connections = N accepted, M refused`). The refusal is decided inside
+the handshake handler, on netty's event loop, which serialises it. The client
+treats **any** code ≥ 4000 as the server saying no: status `refused`, no
+automatic retry, and a manual **Reconnect** button. Protocol amendment **M13**.
+
+**Rationale.** Two boards answering the same prompt is not a state this bridge can
+make coherent: there is one `ReplyPool`, one `inputSeen` guard and one seat, and
+an interleaved second answer would be indistinguishable from the first player
+changing their mind. The honest failure is to say so. 4001 is in the
+application-defined range (≥ 4000) **precisely so a browser can tell "the server
+said no" from "the network broke"** and stop reconnecting — a client that treated
+it as a transport error would reconnect-loop forever against a server doing
+exactly what it was told. The `notice` before the close is what makes the reason
+readable in the refused tab rather than only in the server log.
+
+This is not authentication. The socket is loopback and trusts whatever connects
+(README's NON-GOALS); "one client" is a coherence rule, not a security boundary.
+
+**Rejected.** Handing the seat to the newest connection (a stray second tab would
+silently steal a live game). Accepting both and broadcasting (two answers, one
+pool). A generic 1008 policy-violation close (a browser cannot distinguish it
+from the ordinary ones and would retry). Refusing silently (the refused tab would
+show a closed socket with no reason, and the first thing anyone would do is
+reconnect).
+
+---
+
+## D26 — The `transport` session-header key stays optional
+
+**2026-09-11**
+
+**Decision.** `transport` in the §8.1 session header remains **optional**.
+`RecordMatch` (AI-vs-AI, no seat) does not write it and is not changed; the six
+AI-vs-AI fixtures are **not** regenerated. A ws session writes `transport: "ws"`
+like every other seat log. This settles M2 follow-up 5, which asked whether M3
+was the moment to make it mandatory.
+
+**Rationale.** An absent key is *information* — "an engine recording with no
+seat" — rather than a gap, and every log that has a seat has the key. Making it
+mandatory would buy exactly one thing: `check-redaction.mjs`'s A12 rule could
+fail instead of warn on a `null` answer to `order` or `choose_list` without
+special-casing `transport: "null"`. The price is regenerating six fixtures that
+nothing else is asking anyone to touch, on an emitter now measured as
+non-deterministic in byte order (`docs/evidence/m3-ws.md` §7.1 — the same seed
+re-records with the same frames in a different `seq` assignment), to sharpen a
+rule that already catches its case through the header it already has. Adding
+`"ws"` to the key's domain made that trade worse, not better.
+
+**Rejected.** Mandatory plus a regeneration of every fixture (see above).
+Inferring the transport from the frames (a recording with `input`/`ask` frames
+has a seat, but *which* seat is what the key says, and the checker's rule is
+about the answering policy). A second key (`hasSeat`) that says the same thing
+less directly.
+
+---
+
+## D27 — A `resync` re-delivers cached frames verbatim, and re-emits the input for real
+
+**2026-09-11**
+
+**Decision.** `seq` is **per session, not per connection**, and re-delivery keeps
+the number and the timestamp the frame was born with. On a connect, `resend` sends
+the cached `hello_ok`, then the cached last `state`, then **calls
+`Transport.Inbound.onResync()`** — a real re-emission of the current `input`, with
+a fresh `seq`, written to the frame log — and then re-sends **verbatim** any ask
+the `ReplyPool` still wants. A client `resync` frame does the same without the
+`hello_ok`. The client `resync` line is itself logged (amendment **M16**), and the
+run summary counts what was re-delivered. Protocol amendments **M10** and **M16**;
+the pre-session case is **D23**.
+
+**Rationale.** Contract (b) says a connecting client gets `hello_ok`, a full
+`state` and the current `input`; contract (c) says a reconnecting one gets all
+three again. Re-numbering the cached frames on the way out would make `seq` a
+property of the connection instead of the session, and then two clients — or one
+client across a reconnect — would disagree about what frame 340 was; keeping the
+original `seq` and `t` makes a re-delivered frame *identifiable as* a
+re-delivery instead of forging a new one.
+
+The `input` half is the exception **because of a defect this repo already
+had**: `onResync()` is the call whose guard the M3 doorstep test exists to keep
+fixed — a resync must not arm `inputSeen`, or a browser that autoconnects and
+then concedes removes a player while `Match.prepareAllZones` is still iterating
+them, which throws inside Forge's own setup. Routing the input through the live
+path rather than replaying a cached string is what keeps that guard on the code
+path a real client exercises.
+
+**The cost, stated rather than discovered later.** A mid-stream `resync` hands
+back a `state` whose `seq` is **lower** than the frame before it, and a client
+connecting mid-game starts at a `seq` far above 1 with a gap behind it. Neither is
+a dropped frame. The reducer therefore does not check `seq` monotonicity at all —
+it reads `v`, `type` and `body` — and `tools/check-redaction.mjs` needs its
+`--client-log` mode (amendment **M17**, auto-detected from `recordedBy`) to tell
+the two apart: in a **server-side** `var/games/` log the same shape *is* a dropped
+frame and still fails.
+
+**Rejected.** Re-numbering on re-delivery (see above; and it would put two
+different frames on disk with the same `seq` across a reconnect). Replaying a
+cached `input` string instead of calling `onResync()` (it would take the guard off
+the path every real client uses). Making the client validate `seq` continuity (it
+would have to know which frames were re-delivered, which is exactly what the
+verbatim rule refuses to encode on the wire). A per-connection `seq` (contract (c)
+asks for one session across many connections, which is the thing that would stop
+being true).

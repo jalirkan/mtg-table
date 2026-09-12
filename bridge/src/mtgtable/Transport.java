@@ -43,7 +43,8 @@ import forge.util.ThreadUtil;
  *   <li><b>R3</b> -- no thread we create may be named {@code Game*}, because
  *       {@code ThreadUtil.isGameThread()} is a bare
  *       {@code getName().startsWith("Game")}.  Ours are {@code mtg-table-EDT},
- *       {@value #IO_THREAD_NAME} and {@code mtg-table-log}.</li>
+ *       {@value #IO_THREAD_NAME}, {@code mtg-table-log} and (M3)
+ *       {@code mtg-table-ws}.</li>
  * </ul>
  */
 public interface Transport {
@@ -128,7 +129,12 @@ public interface Transport {
      * <p>This paragraph used to say "called on {@value #IO_THREAD_NAME}", which
      * those two calls made false.  The contract that matters is the one the
      * asserts enforce, so it is the one written down: M3's WebSocket transport
-     * is being written against this comment.
+     * was written against this comment, and it has <b>no</b> reader thread at
+     * all -- {@code WsTransport} dispatches straight from netty's event loop
+     * ({@code mtg-table-ws}), which is neither a game thread nor the EDT and
+     * therefore satisfies the contract exactly as written.  That is the third
+     * caller, and it is why the rule is phrased as a property rather than as a
+     * thread name.
      */
     interface Inbound {
         /** An unsolicited user action: {@code docs/protocol.md} section 2.2. */

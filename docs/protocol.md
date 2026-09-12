@@ -8,7 +8,8 @@ Derived from `docs/research/05-architecture-synthesis.md` §3 and §4, and amend
 by the audits listed below.
 
 Transport: JSON text frames over `ws://127.0.0.1:8642/ws`, one message per frame.
-Loopback bind only, no auth (an explicit non-goal). The same frames, in the same
+`GET /health` on the same port answers `200 ok` and is the readiness check, not a
+frame (amendment **M13**). Loopback bind only, no auth (an explicit non-goal). The same frames, in the same
 shapes, are what `var/games/<id>/frames.jsonl` contains (§8), so a log replays
 through exactly the reducer a live socket feeds.
 
@@ -23,6 +24,46 @@ A browser is not one.
 ---
 
 ## Amendments
+
+### 2026-09-11 — M3, the WebSocket transport
+
+Applied while `WsTransport` was written. Every row is something the socket made
+true that the file did not yet say; none of them bumps `v`, and none of them
+changes a byte of any frame an M1 or M2 recording contains.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M10 | §1, §2.1, §2.4, §2.5, §8 | **`seq` is per *session*, not per connection, and a re-delivered frame keeps the one it was born with.** Contract (b) says a client that connects gets `hello_ok`, a full `state` and the current `input`; contract (c) says a reconnecting one gets all three again. `WsTransport` satisfies both by **re-delivering the cached frames verbatim** — same `seq`, same `t`, and **not written to the frame log a second time**, because §8's log records what the *session* produced and a repeat on a socket is a repeat, not a new frame. Three consequences a reader must not mistake for defects: a client connecting mid-game sees its first `state` at (say) `seq: 340` and **that gap is not a dropped frame**, it is the frames it was not connected for; a mid-stream `resync` re-sends the *last* `state`, whose `seq` is therefore lower than the frame before it; and §2.1's "one `hello_ok` per **game**, not per connection" still holds exactly — only one is ever *generated*, and a reconnecting client is handed a copy of that one. (The `input` half of a resync is the exception and is deliberate: it goes through `Transport.Inbound.onResync`, a real re-emission with a fresh `seq`, because that call carries the guard M3's doorstep test exists to keep fixed.) **Two server frames carry `seq: 0`**, which amendment M9 otherwise forbids: the `pong` that answers a keepalive, and the single `notice` a refused second connection receives before it is closed. Both belong to no session stream — the `pong` is not game state and the refused connection is not a session at all — and `seq: 0` is now reserved to say exactly that. A session frame still starts at 1. | M3 |
+| M11 | §7, §8.4 | **Amendment M4 is softened: `over` follows the `state` that carries `gameOver` on every path where Forge published an outcome, and there is one path where it does not.** M4 said the frame is emitted "after the `state` that carries it" and the emitter did not guarantee it: `captureOutcome` reached `emitOver` through the event forwarder, which on a concede is routinely holding nothing to flush, so a run ended with `over` and no `gameOver` snapshot in front of it (measured: `fixtures/games/human-auto-42.jsonl` had 227 `state` frames and the same seed re-recorded gave 226). `captureOutcome` now emits that snapshot itself, on the game thread, when nothing else has — which is M4 as written. The exception is **a concede before the engine has asked this seat for anything**: `applyAct`'s pre-`inputSeen` guard ends the session without reaching Forge's game-over at all, so there is no outcome to snapshot and no thread it would be legal to build one on (the act is dispatched on the EDT). There, `over` carries `{winner: null, reason: null, matchOver: true}` and has no `gameOver` `state` in front of it, and the bridge says `OVER WITHOUT A gameOver STATE` on stderr. A client must not require the preceding snapshot. | M3 |
+| M12 | §7, §8.4 | **`over` is terminal for the log as well as for the wire, and that is now enforced rather than observed.** Forge keeps pushing after the game ends — a concede's wind-down calls `afterGameEnd`, which calls `updateButtons` and `showPromptMessage` — and over a socket that put an empty `input` frame on the wire and on disk *after* `over` (`seq: 10` after `seq: 9`), which is precisely what §8.4's "the terminal frame of a session" and the gate's `tail -1` assertion say cannot happen. `WireGuiGame.emit` now drops every s2c frame after `over` (the `over` itself excepted), and `logC2s` drops every c2s line, with a stderr note. An `act` that arrives after `over` is still *dispatched*; it is only not written. | M3 |
+| M13 | §2, §8.1 | **`GET /health` on the same port answers `200 ok`.** It is not a protocol frame and carries no game meaning: it exists because `scripts/play.sh` has to know the bridge is ready before it opens a browser, and a second port to wait on would be a second thing to get wrong. The server also prints `WS LISTENING ws://127.0.0.1:<port>/ws` on stdout once bound. **One client at a time**: a second connection receives one `notice` (`seq: 0`, per M10) and is then closed with WebSocket close code **4001** — an application code (≥ 4000) precisely so a browser can tell "the server said no" from "the network broke" and stop reconnecting. | M3 |
+
+### 2026-09-11 — M3 fix pass
+
+Applied after a second independent verifier played a real browser game, raced
+the socket against a booting server, and read the threads a live server runs.
+Every row is a rule this file *stated* and the code did not keep — two of them
+stated as guarantees. Neither bumps `v`, and no committed recording changes.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M20 | §2.1, §2.5, M15 | **The pre-`hello_ok` window is closed from the INBOUND side too, and M15's "both halves" was two of three.** M15 suppressed the connect-time `resend`; it did nothing about a c2s frame that *arrives* in the window, and any such frame still produced an s2c frame **ahead of the handshake**. Reproduced twice, from scratch, by retrying the connect every 20 ms against a booting server: an `act` came back as `notice@seq1` then `hello_ok@seq2`, and a `resync` came back as `input@seq1` then `hello_ok@seq2` — which is byte for byte the inversion M15's own row quotes as the bug, and it is on disk as well as on the wire. It is reachable from this repo's own documented commands: `tools/ws-auto-play.mjs` and `tools/ws-smoke.mjs` both send `resync` from their `open` handler, and only the `/health` poll inside `tools/check-all.sh` and `scripts/play.sh` hid it. **Now: while no session exists, every inbound frame is dropped at the door with no reply** (the `dropped()` notice of M18 would itself be a pre-handshake frame), counted, and named on stderr (`WS PRE-SESSION c2s frame dropped`); the run summary prints `N read before the session existed`. `resend()` carries the same guard at its own top, so the invariant does not depend on `handshake()` being the only caller. Nothing is lost by the drop: `openView`'s own `hello_ok` + `state` + `input` reach that channel in order, which is all a `resync` in the window could have asked for. | M3 fix |
+| M21 | §4.2 | **§4.2's wedged-game-thread banner needs two qualifiers, because as stated it fires on ordinary play.** The four clauses — OK disabled, `selectable` empty, no outstanding `ask`, game not over — are *also* the ordinary state of not holding priority, and the red "the signature of a wedged game thread" banner duly fired twice inside the first two turns of a real browser game: under Forge's own `Waiting for Forge AI…` at turn 1 upkeep, and under `Yielding until end of turn`. The rule gains **"and this seat holds priority"** (`state.priority === hello.you`) and **"and no s2c frame has arrived for ~2.5 s"**. Neither weakens a real wedge, which by definition persists and happens on your own priority; both are measured against the committed corpus (`web/test/wedge.test.ts`): the unqualified rule is true on 103–359 frames per human-seat recording, the priority clause removes 5–7% of them, and **the largest gap to the next frame after any flagged frame in the whole corpus is 121 ms** — because Forge's own `awaitNextInput()` re-pushes the prompt every 250 ms while it thinks, so a stream that is silent for 2.5 s really has stopped. | M3 fix |
+
+### 2026-09-11 — M3 review pass
+
+Applied after an independent verifier played the socket in a real browser and
+read the logs it produced. Every row is something M3 shipped and the file did not
+yet say; none bumps `v`, and only **M14** changes what a recording contains.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M14 | §2.3, §5.2, §5.3 | **An `ability_menu` can be asked with no game thread parked on it, and that is how a card with two or more abilities becomes playable at all.** `getAbilityToPlay` is reached from inside a click — `act: clickCard` → `IGameController.selectCard` → `InputPassPriority.onCardSelected` → `PlayerControllerHuman.getAbilityToPlay` — which runs on the virtual EDT, where R2 forbids blocking. The bridge therefore returned `null` there, and the effect was that **clicking such a card was a silent no-op**: no `state`, no `input`, not even a `notice`, because `selectCard` still returns `true`. Reproduced in Chrome on A.I.M. Scientists (`{3}{U}` cast + `K:TypeCycling:Basic:2` landcycling): `act clickCard 2` was the last line of the frame log and zero frames came back. The menu is now pushed **asynchronously** — a normal `ask` frame, same body, same `answer` shape — and the answer is applied with `IGameController.selectAbility`, which is the path `act: clickAbility` already used and which Forge implements as `InputPassPriority.selectAbility(sa)`: set `chosenSa`, `stop()`, i.e. exactly what a non-null return would have done. Three consequences for a reader. (1) It is **not re-delivered by `resync`**: it is not in `ReplyPool`, because there is nothing to unpark. Forge's input is still the one that asked, so a client that lost the menu clicks the card again. (2) Answering it `null` is "never mind" and is always legal (§5.4) — the game does not advance and nothing is spent. (3) Only the newest menu is live; a board is modal while an ask is outstanding, so there is never a second one to lose. The kind now has engine evidence for the first time: 7 asks in `fixtures/games/human-auto-42.jsonl`, each answered, each followed by Forge's own `Pay Mana Cost` prompt. **Amended by decision D22:** the body is built on a *second* `Game-n` thread from Forge's cached pool (`Game-0` is running the match), so the menu is stamped with the input generation it was raised for and is **abandoned without walking anything** if that generation moved — a fourth consequence for a reader, and a menu dropped that way is a click the player simply repeats. It fires on none of the five committed recordings. | M3 review |
+| M15 | §2.1, §8.1 (M13) | **`GET /health` is the SESSION's readiness, not the port's: 503 `starting` until `hello_ok` exists, 200 `ok` after.** The port binds ~1.2 s before `openView` runs, and a client that connected in that window was sent nothing — `resend` found no cached handshake, sent no `state`, and then re-emitted an `input` at `seq: 1`. Measured with a client retrying the connect every 20 ms: `input@1`, `notice@2`, `notice@3`, `hello_ok@4`, which is §2.1's "immediately after the socket opens, before the first `state`" inverted. Both halves are closed: `/health` answers 503 until the session exists, and a socket that gets in during the window is handed **nothing** — `openView`'s own `hello_ok` + `state` + `input` reach it in order instead. `WS LISTENING` is printed after `startMatch` for the same reason, so the line and the readiness say the same thing. **"Both halves" was two of three, and this row overstated what shipped: see M20.** M15 suppressed only the connect-time `resend`; a c2s frame that *arrived* in the window was still dispatched and still answered, ahead of the handshake. | M3 review |
+| M16 | §8.2 | **A client `resync` is written to the frame log; a re-delivered s2c frame deliberately is not.** §8 claimed "the whole frame stream, both directions", and a `resync` was the one c2s frame that vanished — so §8's record showed a re-emitted `input` with no cause, and an auditor could not tell a resync-driven re-emission from an engine-driven one. `Transport.Inbound.onResync` now writes a `{"type":"resync","body":{},"dir":"c2s"}` line, for an explicit `resync` frame **and** for the implicit one a (re)connect performs — it is the same request, made by connecting rather than by asking. The other direction stays as M10 left it: a frame re-delivered verbatim keeps its original `seq` and is **not** written a second time, because the log records what the session produced. | M3 review |
+| M17 | §8.1 | **The session header may carry `recordedBy: "client"`.** Present only on a log a client wrote (`tools/ws-auto-play.mjs --log`); absent means the bridge wrote it. One reader uses it: `tools/check-redaction.mjs` relaxes the `seq` continuity rule — and nothing else — for a client log, because a client legitimately sees a frame re-delivered verbatim and real forward gaps (the frames it was not connected for), both M10. In a bridge log the same shapes are a dropped frame and stay a failure. Before this, running the repo's own checker over the repo's own documented `--log` output exited non-zero on five `gap or reorder` lines with every content assertion passing. | M3 review |
+| M18 | §2.5, §6 | **A dropped c2s frame comes back as an out-of-band `notice`**, `seq: 0` like the `pong` and the refusal (M10): unparseable JSON, a frame that is not an object, an unknown `type`, an `act` with no `action`, an `answer` with no `askId`, a binary frame. M10 said there were exactly two `seq: 0` frames; there are now three kinds, and the rule they share is unchanged — they belong to no session stream and are not in the frame log. The server also **enforces** "one protocol frame per websocket message" rather than assuming it: a `WebSocketFrameAggregator` reassembles a fragmented message and the inbound frame size is stated (1 MB) instead of inheriting netty's 64 KB, which the 1 MB HTTP aggregator never covered — it bounds the handshake alone. | M3 review |
+| M19 | §5.4, contract (c) | **`ReplyPool.cancelAll()` cancels what is parked; it does not latch the seat shut.** A WebSocket disconnect used to leave the pool closed until the next handshake, so every ask raised between the drop and the reconnect resolved **instantly** to its §5.4 default with no `answer` line at all — a browser refresh spent the player's decisions, and `NO_CLIENT_ASK_TIMEOUT_MS` (120 s) was unreachable after the first disconnect. The latch is now lifted the moment the socket goes away (never during shutdown), so an ask raised with nobody connected parks up to that cap and `resend` hands it to a client that comes back inside it. Measured: a client that refused ask `a1` (`order`, `timeoutMs: 0`) and dropped the socket saw `a2` (`choose_list`) raised 7 ms later with **`timeoutMs: 120000`**, park for 9 s, and be answered by the reconnecting client. Asks outstanding *at* the drop stay cancelled — those game threads have already degraded and cannot be un-degraded. **Provenance, corrected — and now committed.** The `a2 @ timeoutMs: 120000` measurement above was made with a throwaway client in a scratch directory, and for a while no committed tool reproduced it: an independent attempt (drop at `a1`, stay away 40 s) raised no ask at all in the window, because every ask in these decks is downstream of a client act. It is reproducible now, in the gate itself. `tools/ws-auto-play.mjs --refuse-first-ask` drops the socket on the first `ask` **frame**, and `tools/check-all.sh` step 10d asserts the server's `cancelling 1 pending ask(s)` and the absence of any `ASK TIMEOUT` line. At the gate's seed 13 the whole row is visible on disk in one file: `a1` (`order`, `timeoutMs: 0`) cancelled at the drop with **no `answer` line at all**, `a2` (`choose_list`) raised **7 ms later carrying `timeoutMs: 120000`**, parked for the 5 s nobody was connected, re-delivered verbatim to the reconnecting client and answered by it, and the game reached `over`. **Whether that window catches an ask is a property of the seed** (at seed 17 the next ask is raised after the reconnect and carries `timeoutMs: 0`), so step 10d *reports* that half instead of asserting it. `NO_CLIENT_ASK_TIMEOUT_MS` has still never **fired**: no ask has ever timed out, and the cap is a deadline that has been set and never reached. | M3 review |
 
 ### 2026-09-11 — M2 verification pass
 
@@ -47,7 +88,7 @@ watching; none of them bumps `v`.
 | M2 | §5.2 | **Three declared nullabilities, one per end.** `assign_damage.attackerId` is `number \| null` (Forge's signature allows a null attacker and the emitter has a live path to it). `ability_menu.cardId` stays `number` — with no host card there is nothing to attach a menu to, so the bridge **skips the ask** instead of emitting a null. `text.initial` is always a string, `""` when Forge has none. The checker now asserts the exact key set and the declared type of every `ask` body, per kind. | M2 review |
 | M3 | §8.1 | The session header gains **`transport`** (`"null" \| "auto" \| "console" \| "ws"`), **absent from an AI-vs-AI recording**, which has none. `--transport null` answers every ask with a literal `null` on purpose, and without this key a null-transport log is indistinguishable on disk from a wedge (A12). | M2 review |
 | M4 | §7, §8.4 | **`over` is emitted by the outcome capture, not by `finishGame`.** Forge calls neither `finishGame` nor `afterGameEnd` reliably after a concede during the pre-game prompts: two of four identical console runs ended with a final `state` carrying `gameOver` and **no `over` frame at all**, and still exited 0. The frame is now emitted the instant the result exists, after the `state` that carries it, and the console's quit path exits non-zero when there is still no `over`. | M2 review |
-| M5 | §3.2 | `abilities` is **`[]` in every recording to date, human-seat ones included**, and the milestone that fills it is **M5**, not M2. Report 06 §S10's route needs `Card.getAllPossibleAbilities`, which takes a `Card` and not a `CardView`, so `getAbilityToPlay`'s menu — the one place the array could come from today — only ever fires for the one-ability shortcut, which never reaches an ask. | M2 review |
+| M5 | §3.2 | `abilities` is **`[]` in every recording to date, human-seat ones included**, and the milestone that fills it is **M5**, not M2. Report 06 §S10's route needs `Card.getAllPossibleAbilities`, which takes a `Card` and not a `CardView`, so `getAbilityToPlay`'s menu — the one place the array could come from today — only ever fires for the one-ability shortcut, which never reaches an ask. **The second half is superseded by M14**: the menu now fires as an asynchronous ask (7 of them in `human-auto-42.jsonl`). `abilities` is still `[]` in every recording and still M5's job. | M2 review |
 | M6 | §8.4, §8.5 | **Human-seat recordings are described and listed.** §8.4 said `input` / `ask` / `notice` / `c2s` lines are absent from `fixtures/games/`; five of its files now carry them. | M2 review |
 | M7 | §3.6 | The `blockers` event's **unblocked attackers map to themselves**. `PhaseHandler.java:728-736` builds the payload as `putAll(att, blockers.isEmpty() ? List.of(att) : blockers)`, so an unblocked attacker arrives as `{attackerId: n, blockerIds: [n]}`. That is Forge's encoding, faithfully relayed; a reader must not render it as "blocked by itself". `state.combat` is the authority on who blocked what. | M2 review |
 
@@ -128,6 +169,18 @@ There is no separate "card updated" or "zone updated" message.
 ### 2.1 `hello_ok` (s→c)
 
 Sent once, immediately after the socket opens, before the first `state`.
+
+"Opens" means **after the session exists** (amendments **M15** and **M20**). The
+port binds about a second before `openView` has a seat to hand out, and the
+server closes that window on all three sides rather than sending a
+handshake-less stream: `GET /health` answers **503 `starting`** until the frame
+exists; a socket that connects in the window is sent nothing at all until
+`openView`'s own `hello_ok`, `state` and `input` reach it, in that order; and a
+**c2s frame sent in the window is dropped with no reply**, because an answer to
+it — a `notice` for a rejected `act`, the `input` a `resync` re-emits — is an
+s2c frame ahead of the handshake, which is exactly what this rule forbids. The
+drop costs the client nothing: the three frames it would have asked for are
+already on their way.
 
 ```json
 { "v": 1, "seq": 1, "t": 1757600000000, "type": "hello_ok",
@@ -220,11 +273,35 @@ The server replies with a fresh full `state` followed by the current `input`, an
 re-sends any `ask` still outstanding. Used after a reconnect. Because `state` is a
 full snapshot, resync is cheap and always correct.
 
+"Fresh" means *current*, not *rebuilt*: the `state` and any outstanding `ask` are
+the last ones the **game thread** produced, re-delivered verbatim with the `seq`
+and `t` they were born with (amendment **M10** — a snapshot can only be built on
+the game thread, and the socket's thread is not one). The `input` is genuinely
+re-emitted and carries a new `seq`.
+
+A `resync` **is written to the frame log** as a `c2s` line (§8.2, amendment
+**M16**), including the implicit one a connect or a reconnect performs — without
+it the re-emitted `input` appeared in the log with no cause at all.
+
 ### 2.5 `ping` / `pong`
 
 `{"v":1,"seq":n,"t":…,"type":"ping","body":{}}` in either direction; the peer
 replies `pong` with the same body. Keepalive only — it carries no game meaning and
-the reducer ignores it.
+the reducer ignores it. The server's `pong` carries **`seq: 0`** (amendment
+**M10**): it belongs to no session stream, and numbering it would put a gap in
+the one the client is counting.
+
+**Three kinds of server frame carry `seq: 0`** and no others: this `pong`, the
+single `notice` a refused second connection receives before it is closed (M13),
+and the `notice` that answers a **dropped** c2s frame — unparseable JSON, a
+non-object, an unknown `type`, an `act` with no `action`, an `answer` with no
+`askId`, a binary frame (amendment **M18**). None is in the frame log; a session
+frame still starts at 1.
+
+**One drop gets no reply at all** (amendment **M20**): a frame that arrives
+before the session exists. A `notice` for it would be a pre-handshake frame, and
+§2.1's ordering outranks M18's "say so rather than nothing" — the server says so
+on stderr and in the run summary instead.
 
 ---
 
@@ -966,10 +1043,21 @@ A UI that only renders buttons will appear to hang with no error. Whenever
 **The converse does not hold** (amendment M8). An empty `selectable.cardIds` does
 *not* mean the buttons are the only interaction: it is also the ordinary state of
 having priority, where OK is enabled (`OK`, `End Turn`, `Auto` — the engine's own
-labels) *and* every card in your hand is clickable. The diagnostic that matters is
-narrower: **OK disabled, `selectable` empty, no outstanding `ask`, game not over**
-is the signature of a wedged game thread and must be rendered loudly
-(`docs/research/10-board-ui-spec.md` §5.2).
+labels) *and* every card in your hand is clickable.
+
+The diagnostic that matters is narrower — and it needs **six** clauses, not four
+(amendment **M21**). **OK disabled, `selectable` empty, no outstanding `ask`,
+game not over, _this seat holds priority_, and _no s2c frame for ~2.5 s_** is the
+signature of a wedged game thread and must be rendered loudly
+(`docs/research/10-board-ui-spec.md` §5.2). The first four on their own are the
+ordinary state of *not holding priority* and of *waiting for a push that is
+already in flight*: stated as four, the banner fired twice in the first two turns
+of the first real browser game, under Forge's own `Waiting for Forge AI…` and
+`Yielding until end of turn`. A wedge persists and happens on your own priority,
+so neither qualifier can hide one; the corpus measurement behind the 2.5 s is in
+`web/test/wedge.test.ts` (worst gap after a flagged frame, over five human-seat
+recordings: **121 ms**, because `awaitNextInput()` re-pushes every 250 ms). A
+replay renders no banner at all: there is no thread there to be wedged.
 
 ### 4.3 `openZones` is a hint, and was never a question
 
@@ -1061,7 +1149,7 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
 
 | `kind` | `IGuiGame` method(s) | extra body | `answer.value` |
 |---|---|---|---|
-| `ability_menu` | `getAbilityToPlay` | `cardId` (**never null** — with no host card the bridge skips the ask), `options:[opt]` (each with `abilityId`, `label` from `SpellAbilityView.getDescription()`, `canPlay`, `isSpell`) | option index, or `null` |
+| `ability_menu` | `getAbilityToPlay` | `cardId` (**never null** — with no host card the bridge skips the ask), `options:[opt]` (each with `abilityId`, `label` from `SpellAbilityView.getDescription()`, `canPlay`, `isSpell`) | option index, or `null`. **The one kind that may be asked with no game thread parked on it** — amendment **M14**, §5.3 |
 | `confirm` | `confirm(CardView,…)`, `showConfirmDialog` | `prompt`, `title`, `yesLabel`, `noLabel`, `defaultYes`, **`card`** (`Card` or `null`) | `true` \| `false` \| `null` |
 | `options` | `showOptionDialog` | `prompt`, `title`, `options:[opt]`, `defaultIndex`, **`card`** (`Card` or `null`) | option index, or `null` |
 | `text` | `showInputDialog` | `prompt`, `title`, `initial` (**a string, `""` when Forge has none**), `suggestions:[string]`, `numeric` | string, or `null` |
@@ -1074,6 +1162,26 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
 | `sideboard` | `sideboard` | `prompt`, `main:[opt]`, `side:[opt]` | `[index…]` = the new main deck, or `null` |
 
 ### 5.3 Per-kind notes that a reader will otherwise get wrong
+
+- **`ability_menu` is usually asynchronous, and that is the only reason a card
+  with two abilities is playable** (amendment **M14**). Forge asks
+  `getAbilityToPlay` from *inside the click* — on the virtual EDT, where the
+  bridge may not block — so the menu is pushed as an ordinary `ask` with **no
+  game thread parked on it**, and the answer is applied afterwards with
+  `IGameController.selectAbility`. The frame, the body and the `answer` are
+  identical to a blocking ask; three things differ, and only for a reader who
+  cares:
+  - it is **not re-sent by `resync`** (it is not in the reply pool, because there
+    is nothing to unpark). Forge's input is still the one that asked, so a client
+    that lost it clicks the card again and gets a fresh menu;
+  - answering it `null` means "never mind" — the game does not advance, and
+    nothing is spent. §5.4 applies as written;
+  - only the newest menu is live. The board is modal while an ask is
+    outstanding, so there is never a second one to lose.
+
+  It still blocks when Forge asks from a game thread (a `PlayEffect`, a
+  `DiscoverEffect`), which is the path the one-ability shortcut and the
+  `host == null` skip were written for.
 
 - **`order` is not top/bottom.** Forge's `OrderResult` is
   `(List<T> ordered, boolean rememberDecision)` **[jar]**, and `ordered()` is the
@@ -1261,6 +1369,7 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `forgeVersion`, `forgeJarSha256` | Exactly which engine produced this log. |
 | `seat` | **The player id this log was redacted for** (§8.3). In a two-player game ids and `players[]` indices coincide, but readers should use ids. |
 | `transport` | Which client played this seat: `"null"` \| `"auto"` \| `"console"` \| `"ws"`. **Absent from an AI-vs-AI recording**, which has no transport and nobody at the keyboard. It is not decoration: `--transport null` answers every ask with a literal `null` so that §5.4's documented defaults get exercised, and without this key that log is indistinguishable on disk from a wedged session (§8.3, A12). |
+| `recordedBy` | `"client"` on a log a **client** wrote (`tools/ws-auto-play.mjs --log`); **absent** means the bridge wrote it. `tools/check-redaction.mjs` reads it and relaxes the `seq` continuity rule, and nothing else: a client legitimately sees a frame re-delivered verbatim and real forward gaps, both amendment **M10** (M17). |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 
 **A frame produced before the header is held, not dropped** (amendment M9). The
@@ -1295,6 +1404,18 @@ Each subsequent line is a §1 envelope with **one added field, `dir`**:
 each count independently; `t` gives the true ordering. A replay transport reads the
 file in file order and feeds only `s2c` frames to the reducer, using `c2s` lines to
 show what the player did.
+
+**A `resync` is logged; a re-delivered s2c frame is not** (amendment **M16**).
+Every c2s frame the server acts on is written, `resync` included — and so is the
+implicit resync a (re)connect performs, because it is the same request made by
+connecting rather than by asking. In the other direction, a frame the socket
+re-delivers verbatim on a resync or a reconnect keeps the `seq` and `t` it was
+born with and is **not** written a second time: this file records what the
+session *produced*, and a repeat on a socket is a repeat, not a new frame. So a
+bridge log is contiguous per direction and a gap in it **is** a dropped frame —
+while a **client's** log (`recordedBy: "client"`, §8.1) is neither contiguous nor
+monotonic, and `tools/check-redaction.mjs` reads the header to know which rule to
+apply.
 
 ### 8.3 The log is per seat
 
@@ -1364,7 +1485,7 @@ a reason:
 | `morph.jsonl` | `decks/morph-probe.dck` (18 Mountain + 22 morph creatures) — the only recording that produces a **face-down card** at all (`faceDown: true`, `name: ""`, and an `alt` block on the 121 the viewing seat controls), because `pacho-shield.dck` has no morph, manifest, disguise or cloak card |
 | `disjoint.jsonl` | the first recording whose two seats play **different** decks, which is the only way a name-based redaction assertion can tell a leak from a coincidence (§8.3). `pacho-shield` vs `morph-probe`, seed 99 |
 | `future-sight.jsonl` | `decks/future-sight-probe.dck` (22 Island + 18 Future Sight) vs `morph-probe` — the only recording in which **`library.cards` is non-empty**. No card in `pacho-shield` or `morph-probe` runs a continuous `MayLookAt` static, so before it, §3.4's amendment was proved only by the shape of an empty array. 98 frames carry a revealed top card; it is a two-deck recording as well |
-| `human-auto-{42,7,2026}.jsonl` | **the first recordings with a seat in them** (M2): `pacho-shield` played by `AutoTransport`'s scripted policy against the AI, at seeds 42 / 7 / 2026. They are where `input`, `ask`, `answer`, `act` and `notice` stop being hand-written (§8.4). Ask kinds actually dispatched: `choose_list` and `order` |
+| `human-auto-{42,7,2026}.jsonl` | **the first recordings with a seat in them** (M2): `pacho-shield` played by `AutoTransport`'s scripted policy against the AI, at seeds 42 / 7 / 2026. They are where `input`, `ask`, `answer`, `act` and `notice` stop being hand-written (§8.4). Ask kinds actually dispatched, after amendment **M14** re-recorded them: `choose_list`, `order`, **`ability_menu`** (7 at seed 42, 1 at seed 7) and **`assign_damage`** (1 at seed 42 — the primary deck reaches it for the first time, because the menu is what lets this policy cast a creature at all). Before M14 the three of them dispatched `choose_list` and `order` and nothing else |
 | `human-trample-7.jsonl` | `decks/trample-probe.dck` (18 Forest + 22 Garruk's Companion, a 3/2 **trampler**) vs `morph-probe`, seed 7 — the only recording that reaches **`assign_damage`**, the kind §5.3 calls the worst trap of the eleven. `PlayerControllerHuman.java:289` only asks the GUI when the attacker has trample or is blocked by more than one creature, and neither deck above can produce either. Its one ask carries the defender at index 0 with `lethal: null` and a **face-down** blocker at index 1 with `lethal: 2` — so it is evidence for the option gate as well |
 | `human-scry-7.jsonl` | `decks/scry-probe.dck` (24 Island + 16 Opt) vs `morph-probe`, seed 7 — the only recording in which **`input.focusCard` is non-null**. Scry 1 with `UI_SELECT_FROM_CARD_DISPLAYS` off (decision **D13**) routes to `willPutCardOnTop`, which pushes `setCard` on the **game thread** with a card that is in the viewer's *library* and therefore not in the snapshot (amendment H's whole reason). 24 such pushes, 12 of them naming a card no frame of the log contains |
 

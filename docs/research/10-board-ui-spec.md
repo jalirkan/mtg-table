@@ -737,6 +737,20 @@ outstanding `ask`, game not over — is the signature of a wedged game thread, a
 *visible*, because a wedge is otherwise indistinguishable from a hung app (synthesis §11). §15.2
 asserts branch one on every fixture frame that reaches it.
 
+> **Amended 2026-09-11 (protocol amendment M21), after M3 shipped this branch.**
+> Those four clauses are **not sufficient**: they are also the ordinary state of
+> *not holding priority* and of *waiting for a push already in flight*, and as
+> written the branch fired twice inside the first two turns of the first real
+> browser game (under Forge's own `Waiting for Forge AI…` and `Yielding until end
+> of turn`), and on 16 of 54 `input` frames in a four-turn session. Branch two
+> needs two more clauses: **this seat holds priority** (`state.priority ===
+> hello.you`) and **no s2c frame has arrived for ~2.5 s**. Measured: the largest
+> gap to the next frame at any four-clause frame is 121 ms across the five
+> committed human-seat recordings and 4 ms in the live browser session, because
+> Forge's `awaitNextInput()` re-pushes every 250 ms while it thinks. Branch one —
+> the amber "click a card" hint — is unchanged and still correct.
+
+
 ### 5.3 What is never computed
 
 No mana-payability preview. No "you can't cast this" grey-out beyond

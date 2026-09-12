@@ -13,10 +13,13 @@ Forge's own network client uses it.
 The design principle is that the browser contains **no rules logic at all**. Forge
 already knows which cards are targetable, which buttons are enabled, whether mana
 can be paid and what the AI is doing; the bridge serialises that into a redacted
-snapshot and the client renders it. A card is clickable if and only if the engine
-put its id in `state.input.selectable`; a button is enabled if and only if the
-engine said so. The client never predicts legality, never guesses, and never
-decides anything. That keeps the whole class of "the board threw the engine's
+snapshot and the client renders it. A button is enabled if and only if the engine
+said so, and it wears the engine's own label. A card click is **judged by the
+engine, not by the board**: `state.input.selectable` is the explicit selection
+set and the board outlines it, but every click is sent and Forge decides
+(amendment M8 — for most of your own main phase that set is empty, and gating on
+it means you cannot play a land). The client never predicts legality, never
+guesses, and never decides anything. That keeps the whole class of "the board threw the engine's
 answer away" bugs out of the project, and it is why the wire protocol
 ([`docs/protocol.md`](docs/protocol.md)) is the real specification of this
 repository — the Java emitter and the TypeScript reducer are both written against
@@ -82,17 +85,21 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-Twelve steps, stopping at the first failure: `check-forge.sh` →
+Thirteen steps, stopping at the first failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
 `bridge/build.sh` (javac plus three self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift diff** of that recording against
 `fixtures/games/g1.jsonl` → **three fresh human-seat games** (`--transport
 null`, the scripted `--transport console` smoke, and `--transport auto --seed
-11`, each asserted to end in exactly one `over` as its last frame) →
+11`, each asserted to end in exactly one `over` as its last frame) → **four
+fresh `--transport ws` servers** (the two `ws-smoke` variants, a whole game
+through `tools/ws-auto-play.mjs`, and that client again with
+`--refuse-first-ask`, which drops the socket on the first `ask` frame so
+`ReplyPool.cancelAll()` runs with a game thread genuinely parked) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
-all four fresh recordings → `check-redaction-selftest.mjs`, which asserts the
+every fresh recording → `check-redaction-selftest.mjs`, which asserts the
 checker still rejects twelve one-defect probes → `npm run build && npm test` in
-`web/`. Two to five minutes, most of it the four games; every JVM step runs
+`web/`. Two to five minutes, most of it the eight games; every JVM step runs
 under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
 the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
 reducer and the committed fixtures still agree.
@@ -123,17 +130,128 @@ npm --prefix web test && npm --prefix web run build
 
 # M2 — a full game against the AI, in the terminal (--transport null|auto|console)
 ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11   # the seat, automated
+./bridge/run.sh mtgtable.MtgTable --transport null --seed 42   # every ask -> null
 
-# M3+ — the same game in a browser tab; this is the one command you type
-./scripts/play.sh             # check-forge -> build -> boot the JVM -> vite dev --open
+# M3 — the same game in a browser tab; this is the one command you type
+./scripts/play.sh             # check-forge -> build -> the JVM -> /health -> vite --open
+./scripts/play.sh --seed 42 --no-open --keep-open --port 8643
+#   --port/--web-port override config.json's wsPort/webPort; --no-open skips the
+#   browser; --keep-open leaves the bridge up 30 s after `over`; everything after
+#   `--` goes to mtgtable.MtgTable untouched.  Ctrl-C stops both halves.
+
+# M3 — the socket by itself, without a browser
+./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
+#   ws://127.0.0.1:8642/ws   the frames        (one client at a time; a second is
+#                                               refused with close code 4001)
+#   http://127.0.0.1:8642/health   200 "ok" once the game is ready, 503 "starting"
+#                                  before it — what scripts/play.sh polls
+node tools/ws-smoke.mjs --port 8642                      # connect -> resync -> concede
+node tools/ws-smoke.mjs --port 8642 --disconnect-mid-ask # drop, reconnect, finish
+node tools/ws-auto-play.mjs --port 8642 --log var/ws-auto.jsonl   # a whole game
+node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask  # drop the socket ON an `ask`
+node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (M17)
+# the board in ws mode, if you started the bridge yourself:
+#   http://127.0.0.1:5173/?ws=1        (&port=<n> for a bridge that is not on 8642)
 
 # M4+ — card art for the deck in play (once; cached in web/public/art.json)
 node tools/fetch-art.ts
 ```
 
-The `M3+` / `M4+` commands name programs and scripts that **do not exist yet** —
-they are what those milestones deliver. Everything above them runs today,
-`mtgtable.MtgTable` included.
+Everything above runs today. `tools/fetch-art.ts` writes
+`web/public/art.json` now; what **M4** delivers is the board that puts those
+images on the table.
+
+### Playing in the browser
+
+```bash
+./scripts/play.sh                 # this is the whole command
+```
+
+It runs `tools/check-forge.sh`, builds the bridge, starts it on the ws port in
+the background with its output in `var/play/server.log`, polls
+`GET /health` until the game exists, and then starts vite and opens
+
+```
+http://127.0.0.1:5173/?ws=1
+```
+
+Ctrl-C stops both halves. So does the bridge: it plays **one** game and exits
+after `over`, and the script stops vite with it. `--seed 42` makes the shuffle
+reproducible, `--port` / `--web-port` move either half, `--no-open` skips the
+browser, `--keep-open` leaves the bridge up 30 s after `over`, and everything
+after `--` is handed to `mtgtable.MtgTable` untouched.
+
+**The page.** A status bar at the top says `open` / `reconnecting` / `refused`
+with the socket's URL, the frames in and out, and two buttons — **Resync** (ask
+the bridge to re-send the state and the current input) and **Reconnect** (drop
+the socket and open a new one). Under it is the board: both players, every zone,
+the stack, the prompt, and the engine's two buttons.
+
+**Clicking.** Click **any** card, not only a highlighted one. `selectable` is the
+engine's *explicit* selection set and it is empty for most of your own main
+phase; Forge judges every click, and one it does not want comes back as a
+`Not selectable` toast (amendment M8). Player names are clickable too, for
+targeting and attacking. **The two buttons wear the engine's own labels** — OK is
+`Play`, `Keep`, `Auto` or `OK` depending on what Forge is asking, and Cancel is
+`Undo (2)` or `End Turn` when it says so.
+
+| key | what it does |
+|---|---|
+| `Space` | press OK — only when the engine has enabled it |
+| `Escape` | press Cancel — likewise |
+
+Both are ignored while a question is open, while the game is over, while the
+socket is not `open`, and while the focus is in a field or on a button — a
+control has its own idea of what Space and Escape mean, and the page never takes
+them from it.
+
+**Questions.** When Forge asks something, a modal takes over and the board's own
+clicks go inert until you answer it. Every kind can be answered in one click with
+its documented default; `order`, `choose_list` and `manipulate_list` deliberately
+offer no cancel, because Forge dereferences their result. **There is no timeout
+while you are connected** — the ws ask timeout is 0, the same as the console's,
+and it is your connection rather than a clock that bounds it.
+
+**Concede** is always visible and takes two clicks: the first arms it
+(*Concede — click again to confirm*), the second sends it. After `over` it
+disarms and disables itself.
+
+**If the socket drops** — a vite hot reload, a laptop sleep, a restarted
+bridge — the page reconnects by itself: backoff 250 ms, 500, 1 s, 2 s, 4 s, then
+5 s, up to twelve attempts, and it sends `resync` on every reconnect, so the
+board comes back with the full state, the current input and any question still
+outstanding. **The game is still there** — your seat is not given up and the
+bridge keeps playing.
+
+Two details worth knowing, because they are the difference between "nothing was
+lost" and "something was decided for me":
+
+- **A question that was on screen when the socket died is answered by the
+  engine's own default.** Dropping the connection unparks the game thread
+  (`cancelAll()`), and Forge takes the documented default for that kind — the
+  same value a deliberate "no answer" would have given (`docs/protocol.md` §5.4).
+  It cannot be taken back.
+  A question the engine asks *after* the drop is different: it waits (up to two
+  minutes) and is handed to you when you come back.
+- **Clicks made while the bar does not say `open` are dropped, not queued.**
+  Nothing is replayed at you later; click again once it is open.
+
+Three cases the automatic reconnect will not fix:
+
+- **`refused`** — the bar says so and stops retrying. Only **one client at a
+  time** is allowed (the server sends one notice and closes with code 4001), so
+  you have a second tab open on the same bridge. Close it and press
+  **Reconnect**.
+- **The bridge exited.** It plays one game and quits after `over`; there is
+  nothing to reconnect to. Run `./scripts/play.sh` again.
+- **A red banner naming a frame.** That is protocol drift, not a network
+  problem: the reducer stopped rather than render something it does not
+  understand. `var/play/server.log` and the frame log are what to read.
+
+Your browser game is logged exactly like a console one, to
+`var/games/<gameId>/frames.jsonl` — copy it under `fixtures/` and
+`?replay=<that path>` scrubs back through it with no JVM running.
 
 ### Playing the console game
 
@@ -185,8 +303,8 @@ is a file, not a story.
 
 ## Repo layout
 
-Only files that exist today are listed without a marker; `M2+` / `M3+` / `M4+`
-mark what a later milestone adds.
+Only files that exist today are listed without a marker; `M4+` marks what a later
+milestone adds.
 
 ```
 mtg-table/
@@ -194,7 +312,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the nineteen load-bearing decisions, dated
+  DECISIONS.md               the twenty-three load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -224,7 +342,8 @@ mtg-table/
                              GameLog GameLogSelfTest RecordMatch Smoke
                              WireGuiGame ReplyPool Transport MtgTable Ask AskSelfTest
                              NullTransport AutoTransport ConsoleTransport
-                             M3+: WsTransport
+                             WsTransport (M3: netty, ws://127.0.0.1:<port>/ws,
+                             GET /health, one client, cancelAll on disconnect)
     out/                     gitignored
 
   web/                       the SPA. A pure function of the frame stream.
@@ -236,12 +355,18 @@ mtg-table/
       main.tsx  styles.css
       transport/transport.ts interface Transport { onFrame(cb); send(f) }
       transport/replay.ts    LogReplayTransport (fetch a .jsonl; play/step/scrub)
-      transport/ws.ts        M3+: WebSocketTransport
+      transport/ws.ts        WebSocketTransport (M3: reconnect + resync)
       render/                Board.tsx describe.ts ErrorBoundary.tsx ReplayControls.tsx
-                             M4+: Zone.tsx CardTile.tsx Stack.tsx AskModal.tsx PhaseStrip.tsx
+                             AskModal.tsx (M3)
+                             M4+: Zone.tsx CardTile.tsx Stack.tsx PhaseStrip.tsx
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
-                             M8 clickability rule) and render.test.tsx, which mounts
+                             M8 clickability rule), ws.test.ts (the M3 transport:
+                             reconnect, resync, a dropped act), ws-log.test.ts (a
+                             recorded socket session folded through the real reducer;
+                             its corpus is MTGTABLE_WS_LOGS, which check-all sets to
+                             the logs step 10 just produced, and the committed fixtures
+                             otherwise), ask-modal.test.tsx, and render.test.tsx, which mounts
                              <Board/> over every fixture. `npm test` is `node --test`
                              THEN `vitest run` -- Node's type stripping does not
                              transform JSX, so the render test needs vitest (a dev
@@ -260,6 +385,13 @@ mtg-table/
                              assert every one-defect probe is REJECTED
     make-sample-fixture.mjs  writes fixtures/synthetic/sample-handwritten.jsonl
     make-negative-fixtures.mjs  writes fixtures/negative/redaction/ from a real recording
+    ws-smoke.mjs             M3: the two socket doorstep tests — connect/resync/concede,
+                             and drop-mid-ask/reconnect/finish
+    ws-auto-play.mjs         M3: a whole game over the socket with AutoTransport's own
+                             dumb-human policy; --log writes a CLIENT frame log.
+                             --refuse-first-ask drops the socket on the first `ask`
+                             FRAME (the only cancelAll() coverage with a game
+                             thread actually parked), reconnects and finishes
     fetch-art.ts             deck -> web/public/art.json
 
   fixtures/
@@ -299,7 +431,7 @@ mtg-table/
                              var/forge/custom/cards/ by make-forge-home.sh (D14)
 
   var/                       gitignored: Forge's redirected profile, logs, frame logs
-  scripts/play.sh            M3+
+  scripts/play.sh            M3: check-forge -> build -> the ws bridge -> /health -> vite
 ```
 
 ## The documents
@@ -308,7 +440,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Nineteen load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. |
+| [`DECISIONS.md`](DECISIONS.md) | Twenty-one load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D21 are M3's: the asynchronous ability menu, and /health as the session's readiness. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

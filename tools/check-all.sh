@@ -19,12 +19,38 @@
 #                                 protocol, the quit thread and the exit code
 #   9. mtgtable.MtgTable         one --transport auto game at a seed no fixture
 #                                 uses: the transport that produced five of them
-#  10. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
-#                                 AND all four fresh recordings
-#  11. check-redaction-selftest   the checker's own negative controls: twelve
+#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: four fresh servers on a
+#                                 loopback socket -- the ws-smoke doorstep test
+#                                 (connect -> resync -> concede), the same test's
+#                                 --disconnect-mid-ask variant, a full unattended
+#                                 game through tools/ws-auto-play.mjs, and that
+#                                 same client with --refuse-first-ask, which
+#                                 drops the socket on the first `ask` FRAME and
+#                                 is the only thing in the repo that exercises
+#                                 ReplyPool.cancelAll() with a game thread
+#                                 actually parked (`cancelling 1 pending ask(s)`,
+#                                 asserted).  Each asserts exactly one `over`,
+#                                 `over` last, and its log through
+#                                 check-redaction.mjs.
+#  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
+#                                 AND every fresh recording this run produced
+#  12. check-redaction-selftest   the checker's own negative controls: twelve
 #                                 one-defect probes that must be REJECTED
-#  12. web: npm run build && npm test   (tsc, node --test, and the vitest render
-#                                 smoke test that actually mounts <Board/>)
+#  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
+#                                 smoke test that actually mounts <Board/>), with
+#                                 MTGTABLE_WS_LOGS naming the logs step 10
+#                                 just produced so web/test/ws-log.test.ts
+#                                 replays THOSE and not whatever is in var/
+#
+# Step 10 is M3's half of the same argument steps 7-9 make for M2: WsTransport is
+# the only transport with a network in it, and the two failure modes it adds --
+# a client that goes away while a game thread is parked on an ask, and a client
+# that comes back and expects the game to still be there -- are invisible to
+# every other step.  10d is the first of those two, measured rather than assumed:
+# before it, every committed drop test landed on an `input` and printed
+# `cancelling 0 pending ask(s)`.  It is also the only step that runs the browser's own client
+# code path (tools/ws-auto-play.mjs speaks the same frames web/src/transport/ws.ts
+# speaks), so drift between the two hand-written ends shows up here first.
 #
 # Steps 8 and 9 exist because step 7 runs `--transport null` and nothing else,
 # which left ConsoleTransport (788 lines: the whole line protocol, the quit
@@ -246,6 +272,187 @@ overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
 [ "$(tail -1 "$AUTOLOG" | grep -c '"type":"over"')" = "1" ] || \
   die "the auto session's last frame is not \`over\` (section 8.4)"
 
+say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
+# M3.  Four servers, because each client run ends its own game: the two
+# ws-smoke variants concede, and the two ws-auto-play runs play to a natural
+# end.  Every one
+# of them is asserted the way steps 7-9 are -- exactly one `over`, `over` last,
+# and the seat log through check-redaction.mjs -- plus the server's own exit
+# code, which is MtgTable's `MTGTABLE OK` path and nothing else.
+#
+# Port 8643, not config.json's 8642: a developer with `scripts/play.sh` running
+# should be able to run the gate without the two fighting over a port.
+WSPORT="${WSPORT:-8643}"
+WS_PID=""
+ws_stop() {
+  if [ -n "${WS_PID:-}" ]; then
+    # GNU timeout forwards a signal it receives to the command it manages, so
+    # this reaches the JVM and not just the wrapper.
+    kill "$WS_PID" 2>/dev/null || true
+    wait "$WS_PID" 2>/dev/null || true
+    WS_PID=""
+  fi
+}
+trap ws_stop EXIT
+
+# Readiness is GET /health on the socket's own port (contract (a)), polled with
+# node because node is already a dependency of this gate and curl is not.
+ws_wait_health() {
+  local i
+  for i in $(seq 1 "${2}"); do
+    if node -e 'fetch("http://127.0.0.1:" + process.argv[1] + "/health")
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+        .then((t) => process.exit(t.trim() === "ok" ? 0 : 1))
+        .catch(() => process.exit(1));' "$1" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+ws_start() {   # $1 gameId, $2 server log
+  rm -rf "var/games/$1"
+  # `timeout` is backgrounded DIRECTLY rather than through jvm(): with an EXIT
+  # trap installed bash cannot exec-optimise the last command of a subshell, so
+  # `jvm ... &` would make $! the subshell and ws_stop would kill that and orphan
+  # the JVM.  --keep-open on every one of these: the flag has to be exercised
+  # somewhere, and it costs nothing here because keepOpen() returns the instant
+  # the client disconnects, which all three clients do the moment they see `over`.
+  timeout --kill-after=15s "${GAME_TIMEOUT}s" \
+      ./bridge/run.sh mtgtable.MtgTable --transport ws --seed 13 --port "$WSPORT" \
+      --keep-open --game-id "$1" > "$2" 2>&1 &
+  WS_PID=$!
+  ws_wait_health "$WSPORT" 90 || {
+    cat "$2" >&2
+    die "the ws server never answered GET /health on 127.0.0.1:$WSPORT (log: $2)"
+  }
+  grep -q "^WS LISTENING ws://127.0.0.1:$WSPORT/ws$" "$2" || \
+    die "the ws server did not print its WS LISTENING line (contract (a); log: $2)"
+}
+
+ws_finish() {  # $1 gameId, $2 server log, $3 what
+  wait "$WS_PID" || {
+    rc=$?
+    WS_PID=""
+    tail -40 "$2" >&2
+    capped "$rc" && die "the ws server for $3 did not finish within ${GAME_TIMEOUT}s (log: $2)"
+    die "the ws server for $3 exited $rc (log: $2)"
+  }
+  WS_PID=""
+  grep -q "^MTGTABLE OK$" "$2" || die "the ws server for $3 did not print MTGTABLE OK (log: $2)"
+  local f="var/games/$1/frames.jsonl"
+  [ -s "$f" ] || die "the ws session $3 wrote no frame log at $f"
+  overs="$(grep -c '"type":"over"' "$f" || true)"
+  [ "$overs" = "1" ] || die "the ws session $3 wrote $overs \`over\` frames; section 7 says exactly one"
+  [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || \
+    die "the last frame of the ws session $3 is not \`over\` (section 8.4)"
+  node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on the ws session $f"
+}
+
+# 10a. The M3 doorstep test: connect -> resync -> concede, no exception, an
+#      `over`.  A browser autoconnects and sends `resync` before Forge has asked
+#      this seat for anything, and `onResync` must NOT arm `inputSeen` -- when it
+#      did, the concede that follows removed a player while
+#      Match.prepareAllZones was iterating them and Forge threw inside its own
+#      setup.
+ws_start check-all-ws-smoke var/check-all-ws-smoke.log
+node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --log var/check-all-ws-smoke-frames.jsonl \
+  || die "tools/ws-smoke.mjs (connect -> resync -> concede) failed against 127.0.0.1:$WSPORT"
+ws_finish check-all-ws-smoke var/check-all-ws-smoke.log "the resync smoke"
+
+# 10b. The cancelAll test.  Contract (c): the ask timeout over a socket is 0
+#      (infinite) WHILE A CLIENT IS CONNECTED, and what unparks a game thread is
+#      the disconnect, not a clock.  Drop the socket at a live decision, come
+#      back two seconds later, and the game must still be there.
+ws_start check-all-ws-drop var/check-all-ws-drop.log
+node tools/ws-smoke.mjs --port "$WSPORT" --timeout 180 --disconnect-mid-ask \
+    --log var/check-all-ws-drop-frames.jsonl \
+  || die "tools/ws-smoke.mjs --disconnect-mid-ask failed against 127.0.0.1:$WSPORT"
+ws_finish check-all-ws-drop var/check-all-ws-drop.log "the disconnect/reconnect smoke"
+
+# 10c. A whole game, unattended, over the socket.  tools/ws-auto-play.mjs is the
+#      web side's file: if it is not written yet this step SKIPS loudly rather
+#      than failing, because the bridge half of M3 is testable without it and a
+#      red gate that means "the other agent has not landed yet" teaches everyone
+#      to ignore the gate.
+if [ -f tools/ws-auto-play.mjs ]; then
+  ws_start check-all-ws-auto var/check-all-ws-auto.log
+  node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --log var/ws-auto-13.jsonl \
+    || die "tools/ws-auto-play.mjs did not finish a game against 127.0.0.1:$WSPORT"
+  ws_finish check-all-ws-auto var/check-all-ws-auto.log "the full ws game"
+  grep -E "^(winner|player turns|ask kinds|ws connections|ws frames)" var/check-all-ws-auto.log || true
+  grep -q "^UNIMPL members = none$" var/check-all-ws-auto.log || \
+    die "the ws game hit an unimplemented IGuiGame member: $(grep "^UNIMPL members" var/check-all-ws-auto.log)"
+  grep -q "^emit errors    = 0$" var/check-all-ws-auto.log || \
+    die "the ws game logged an emit error: $(grep "^emit errors" var/check-all-ws-auto.log)"
+  # The CLIENT's own copy of that same session, through the same checker. It is
+  # a different shape on purpose (amendment M10: a resync re-delivers frames
+  # verbatim, and the frames emitted while nobody was connected are missing), and
+  # until this line existed nothing in the gate ever ran the combination -- so
+  # `node tools/check-redaction.mjs var/ws-auto-*.jsonl`, a documented command,
+  # exited non-zero on five seq complaints with every content assertion passing.
+  # The mode is auto-detected from the header's recordedBy:"client" (§8.1).
+  node tools/check-redaction.mjs var/ws-auto-13.jsonl \
+    || die "check-redaction.mjs on the CLIENT log var/ws-auto-13.jsonl"
+  # 10d. THE cancelAll() test, with a real pending ask.  10b settles for "an
+  #      `ask` OR an `input` whose OK is enabled", and in every deck here the
+  #      input always comes first -- both committed runs print `cancelling 0
+  #      pending ask(s)`, so the defect amendment M19 was written for (a
+  #      disconnect while a game thread is parked inside ReplyPool.await) had no
+  #      coverage at all.  --refuse-first-ask drops the socket on the first `ask`
+  #      FRAME, which is the only way to be inside that window, and reaching one
+  #      needs a client that can play a game: every ask in these decks is
+  #      downstream of an act, which is why this is ws-auto-play's flag and not a
+  #      third ws-smoke variant (a second copy of the policy would be a policy
+  #      that can drift from AutoTransport's).
+  #
+  #      The assertion is the server's own line.  `cancelling 1 pending ask(s)`
+  #      is the whole point: 1, not 0, means a game thread really was parked.
+  ws_start check-all-ws-refuse var/check-all-ws-refuse.log
+  node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --refuse-first-ask \
+      --reconnect-after 5000 --quiet --log var/ws-auto-refuse-13.jsonl \
+    || die "tools/ws-auto-play.mjs --refuse-first-ask did not finish a game against 127.0.0.1:$WSPORT"
+  ws_finish check-all-ws-refuse var/check-all-ws-refuse.log "the refused-ask game"
+  grep -q "cancelling 1 pending ask(s)" var/check-all-ws-refuse.log || \
+    die "the refused-ask run never cancelled a PENDING ask -- $(grep -c 'cancelling' var/check-all-ws-refuse.log) disconnect line(s), \
+none with a parked game thread, so ReplyPool.cancelAll() is still uncovered (log: var/check-all-ws-refuse.log)"
+  grep -q "^ASK TIMEOUT" var/check-all-ws-refuse.log && \
+    die "an ask TIMED OUT in the refused-ask run: the disconnect is supposed to cancel it, not a clock (log: var/check-all-ws-refuse.log)"
+  grep -q "^emit errors    = 0$" var/check-all-ws-refuse.log || \
+    die "the refused-ask game logged an emit error: $(grep "^emit errors" var/check-all-ws-refuse.log)"
+  grep -E "^(ws connections|ws frames)" var/check-all-ws-refuse.log || true
+  # M19's other half, REPORTED and not asserted, because whether the engine
+  # raises an ask inside the five seconds nobody is connected is a property of
+  # the seed, not of the code: at seed 13 it does (`a2` 7 ms after the cancelled
+  # `a1`), at seed 17 it does not.  When it happens, this is the only place in
+  # the repo where NO_CLIENT_ASK_TIMEOUT_MS reaches the wire.
+  if grep -q '"timeoutMs":120000' "var/games/check-all-ws-refuse/frames.jsonl"; then
+    echo "OK: an ask raised while nobody was connected carried timeoutMs=120000 (NO_CLIENT_ASK_TIMEOUT_MS, M19)"
+  else
+    echo "note: no ask was raised during the disconnected window in this run -- M19's 120 s cap saw no traffic (seed-dependent)"
+  fi
+  # Its CLIENT log is checked but deliberately NOT added to WS_LOGS: ws-log.test.ts
+  # requires every ask in a client log to carry an answer, and this client refused
+  # one on purpose.  The bridge's own copy IS added, where an ask completed by
+  # cancelAll() with no `answer` line is the documented shape (section 5.4).
+  node tools/check-redaction.mjs var/ws-auto-refuse-13.jsonl \
+    || die "check-redaction.mjs on the CLIENT log var/ws-auto-refuse-13.jsonl"
+
+  # Step 13 replays exactly these five and nothing else: see WS_LOGS below.
+  WS_LOGS="var/ws-auto-13.jsonl,var/games/check-all-ws-auto/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-smoke/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-drop/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-refuse/frames.jsonl"
+else
+  printf "\n"
+  echo "  *** SKIPPED: tools/ws-auto-play.mjs does not exist yet, so NO FULL GAME"
+  echo "  *** was played over the socket in this run.  The two ws-smoke variants"
+  echo "  *** above still ran.  This step is not green until that file lands."
+  printf "\n"
+  WS_LOGS="var/games/check-all-ws-smoke/frames.jsonl,var/games/check-all-ws-drop/frames.jsonl"
+fi
+
 say "check-redaction.mjs -- every committed fixture, then the fresh recording"
 # NO --pre-amendment anywhere in this file, deliberately: the flag downgrades a
 # missing `owner` / `token` / `alt` / `library.cards` to a warning, and this is
@@ -276,7 +483,15 @@ else
   say "web -- npm run build && npm test"
   [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
   (cd web && npm run build) || die "npm run build"
-  (cd web && npm test) || die "npm test"
+  # MTGTABLE_WS_LOGS is THE corpus web/test/ws-log.test.ts replays, and it names
+  # the logs step 10 just produced -- the client's own --log plus the bridge's
+  # three copies.  It used to glob var/ instead, which made `npm test` depend on
+  # whatever scratch state was lying around: three leftover probe directories
+  # were enough to turn a green suite red with nothing in the repo changed
+  # (measured: 282 pass / 3 fail with them present, 279 / 0 with them moved
+  # aside).  With the variable unset the test falls back to the committed
+  # fixtures alone and says on stderr that it proved less.
+  (cd web && MTGTABLE_WS_LOGS="${WS_LOGS:-}" npm test) || die "npm test"
 fi
 
 printf '\ncheck-all OK\n'

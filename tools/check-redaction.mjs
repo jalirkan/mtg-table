@@ -903,7 +903,15 @@ function checkStateShape(body, missed) {
   return out;
 }
 
-function checkFile(path, { preAmendment = false, opponentLibraryOk = false } = {}) {
+/**
+ * Does this frame-log line carry a `dir` key?  Cheap and textual on purpose: it
+ * runs once, on line 1, only to decide whether a file is a client log.
+ */
+function hasDir(line) {
+  return /"dir"\s*:/.test(line);
+}
+
+function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false } = {}) {
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
 
@@ -984,6 +992,39 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false } = {
   const seq = { s2c: 0, c2s: 0 };
   let sawState = false;
   const seat = header.seat;
+
+  /*
+   * CLIENT LOG MODE (amendment M10, the reader's half).
+   *
+   * `tools/ws-auto-play.mjs --log` and `tools/ws-smoke.mjs --log` write the
+   * frames a CLIENT received, and a client's view of the stream is legitimately
+   * not contiguous:
+   *
+   *   - a `resync` or a reconnect re-delivers `hello_ok`, the last `state` and
+   *     any outstanding `ask` VERBATIM -- same `seq`, same `t`, same body -- so
+   *     the same line appears twice and the second one may carry a LOWER `seq`
+   *     than the line before it;
+   *   - every frame the server emitted while nobody was connected is missing,
+   *     so the client's `seq` series has real forward gaps.
+   *
+   * Both are M10 working as designed, and holding a client log to the
+   * server-side monotonic rule made `node tools/check-redaction.mjs
+   * var/ws-auto-*.jsonl` -- a documented command -- fail every time with five
+   * `gap or reorder` lines and every content assertion passing.  So: a
+   * byte-identical repeat is treated as THE SAME FRAME (warned, and not audited
+   * a second time -- otherwise it would also trip A12's "an askId is unique for
+   * the life of the connection"), a forward gap is a warning, and anything else
+   * -- a lower `seq` whose body is NOT a verbatim repeat -- is still a failure,
+   * because that is a reorder and no amendment permits it.  Server-side logs
+   * under `var/games/` keep the hard rule unchanged: the bridge writes every
+   * frame it produced exactly once, in order, and a gap there IS a dropped
+   * frame.
+   */
+  const isClientLog = clientLog || header.recordedBy === 'client'
+    || (lines.length > 1 && !hasDir(lines[1]));
+  /** "<dir>:<seq>" -> {line, at}: the raw text of that frame and where it was audited. */
+  const seenLines = new Map();
+  let redelivered = 0;
 
   /** Non-fatal: things worth saying out loud that are not failures. */
   const warnings = [];
@@ -1351,16 +1392,54 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false } = {
     if (f.v !== PROTOCOL_VERSION) note(lineNo, `v=${f.v}, expected ${PROTOCOL_VERSION}`);
     if (typeof f.seq !== 'number') note(lineNo, `seq is ${typeof f.seq}, expected a number`);
     if (typeof f.t !== 'number') note(lineNo, `t is ${typeof f.t}, expected epoch ms`);
-    if (f.dir !== 's2c' && f.dir !== 'c2s') note(lineNo, `dir=${JSON.stringify(f.dir)}, expected "s2c" or "c2s"`);
+    if (f.dir !== 's2c' && f.dir !== 'c2s' && !(isClientLog && f.dir === undefined)) {
+      note(lineNo, `dir=${JSON.stringify(f.dir)}, expected "s2c" or "c2s"`);
+    }
     if (typeof f.type !== 'string' || f.type.length === 0) note(lineNo, 'type is missing');
     if (f.body === null || typeof f.body !== 'object' || Array.isArray(f.body)) {
       note(lineNo, 'body must be an object');
       continue;
     }
-    if (f.dir === 's2c' || f.dir === 'c2s') {
-      const expected = seq[f.dir] + 1;
-      if (f.seq !== expected) note(lineNo, `seq=${f.seq} for dir=${f.dir}, expected ${expected} (gap or reorder)`);
-      seq[f.dir] = f.seq;
+    const dir = f.dir ?? 's2c';
+    if ((dir === 's2c' || dir === 'c2s') && !isClientLog) {
+      const expected = seq[dir] + 1;
+      if (f.seq !== expected) note(lineNo, `seq=${f.seq} for dir=${dir}, expected ${expected} (gap or reorder)`);
+      seq[dir] = f.seq;
+    } else if (dir === 's2c' || dir === 'c2s') {
+      /*
+       * A CLIENT log's seq series is not contiguous and is not even monotonic,
+       * and both are M10 by design: `resend` hands a reconnecting client the
+       * CACHED `hello_ok` / `state` / outstanding `ask` (born earlier, so lower
+       * seq) interleaved with the freshly emitted `input` (higher), and every
+       * frame emitted while nobody was connected is simply absent.  What is
+       * still checkable, and is checked here, is that ONE seq means ONE frame:
+       * a seq re-used for a DIFFERENT body is a real defect in either direction.
+       */
+      const key = `${dir}:${f.seq}`;
+      const prior = seenLines.get(key);
+      if (prior !== undefined) {
+        if (prior.line === lines[i]) {
+          redelivered++;
+          stats.frames--;
+          warn(lineNo, `frame ${f.type} seq=${f.seq} re-delivered verbatim (amendment M10: a `
+            + `resync or a reconnect re-sends hello_ok / the last state / an outstanding ask `
+            + `with the seq and t they were born with) -- audited once, on line ${prior.at}`);
+          continue;                          // the same frame; auditing it twice trips A12
+        }
+        note(lineNo, `seq=${f.seq} for dir=${dir} was already used on line ${prior.at} by a `
+          + `DIFFERENT frame -- section 1 numbers one frame per seq for the life of the `
+          + `session, and M10 permits a REPEAT, not a re-use`);
+      } else {
+        seenLines.set(key, { line: lines[i], at: lineNo });
+        const expected = seq[dir] + 1;
+        if (f.seq !== expected) {
+          warn(lineNo, `seq=${f.seq} for dir=${dir}, expected ${expected} -- a CLIENT log's `
+            + `series is neither contiguous (the frames it was not connected for are missing) `
+            + `nor monotonic (a resync re-delivers cached frames after newer ones); amendment `
+            + `M10. In a server-side var/games/ log the same shape IS a dropped frame`);
+        }
+        if (f.seq > seq[dir]) seq[dir] = f.seq;
+      }
     }
 
     if (f.type !== 'state') {
@@ -1658,6 +1737,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false } = {
   }
   stats.everRevealed = everRevealed.size;
   stats.missed = [...missed].sort();
+  stats.clientLog = isClientLog;
+  stats.redelivered = redelivered;
 
   return { problems, warnings, stats };
 }
@@ -1698,7 +1779,15 @@ const preAmendment = argv.includes('--pre-amendment');
  * has to say so out loud.
  */
 const opponentLibraryOk = argv.includes('--opponent-library-ok');
-const FLAGS = ['--pre-amendment', '--opponent-library-ok'];
+/**
+ * Force client-log mode (amendment M10, the reader's half -- see `isClientLog`).
+ * It is auto-detected from `recordedBy:"client"` in the session header, or from
+ * a file whose frames carry no `dir` key at all; this flag is for a client log
+ * that predates that header key.  It relaxes the seq rule and NOTHING else --
+ * every content assertion (redaction, shapes, labels, prompts) is unchanged.
+ */
+const clientLog = argv.includes('--client-log');
+const FLAGS = ['--pre-amendment', '--opponent-library-ok', '--client-log'];
 const files = argv.filter((a) => !a.startsWith('--'));
 const unknownFlag = argv.find((a) => a.startsWith('--') && !FLAGS.includes(a));
 if (unknownFlag !== undefined) {
@@ -1707,7 +1796,7 @@ if (unknownFlag !== undefined) {
 }
 if (files.length === 0) {
   console.error('usage: node tools/check-redaction.mjs [--pre-amendment] ' +
-    '[--opponent-library-ok] <frames.jsonl> [...]');
+    '[--opponent-library-ok] [--client-log] <frames.jsonl> [...]');
   console.error('  --pre-amendment       accept a log recorded before the 2026-09-11 amendments');
   console.error('                        (a four-key stub, a library with no `cards`, a card with');
   console.error('                        no `token`/`alt`, a `faceDownHidden` object) as a WARN.');
@@ -1715,6 +1804,11 @@ if (files.length === 0) {
   console.error('                        WARN -- for a recording that really exercises a');
   console.error('                        look-at-an-opponent\'s-library effect (Opposition Agent,');
   console.error('                        Bribery, Gonti). It relaxes A3 and nothing else.');
+  console.error('  --client-log          the file is a CLIENT\'s view of the stream (what');
+  console.error('                        tools/ws-auto-play.mjs --log writes), so a verbatim');
+  console.error('                        re-delivery and a forward gap are amendment M10, not');
+  console.error('                        a dropped frame. Auto-detected from the header\'s');
+  console.error('                        recordedBy:"client". It relaxes the seq rule alone.');
   process.exit(2);
 }
 if (preAmendment) {
@@ -1726,12 +1820,15 @@ if (opponentLibraryOk) {
 
 let failed = 0;
 for (const path of files) {
-  const { problems, warnings = [], stats } = checkFile(path, { preAmendment, opponentLibraryOk });
+  const { problems, warnings = [], stats } = checkFile(path, { preAmendment, opponentLibraryOk, clientLog });
   const ok = problems.length === 0;
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${path}`);
   console.log(`      frames=${stats.frames} (state=${stats.state}, other=${stats.other})`
-    + `  bytes=${stats.bytes}  events=${stats.events}`);
+    + `  bytes=${stats.bytes}  events=${stats.events}`
+    + (stats.clientLog
+      ? `  [CLIENT log: ${stats.redelivered} frame(s) re-delivered verbatim, M10]`
+      : ''));
   console.log(`      cards checked=${stats.cardsChecked}  redacted=${stats.redacted}`
     + `  face-down=${stats.faceDown}  stack cards=${stats.stackCards}`
     + `  opponent-hand cards=${stats.opponentHandCards}  viewer-hand named=${stats.viewerHandNamed}`);

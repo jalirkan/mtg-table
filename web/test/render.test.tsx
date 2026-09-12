@@ -223,7 +223,9 @@ test('an outstanding ask renders as a read-only block listing the engine\'s opti
       // The kind, the id and the fact that something is blocked.
       expect(html).toContain(ask!.kind);
       expect(html).toContain(ask!.askId);
-      expect(html).toContain('the game thread is blocked on this');
+      // Amendment M14: "waiting", not "blocked" — an `ability_menu` is usually
+      // asked with no game thread parked on it.
+      expect(html).toContain('the engine is waiting for this');
       // Read-only: M1 renders questions, M2/M5 answer them. If a clickable
       // affordance ever appears here it must send a real `answer`, and this
       // assertion is where that decision gets made on purpose.

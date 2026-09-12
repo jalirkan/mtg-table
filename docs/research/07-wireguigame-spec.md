@@ -871,6 +871,21 @@ Unused in v1: `mayLookAtAllCards`, `canPlayUnlimitedLands`, `cheat()`,
    replaced by a `NullTransport` (all asks → `null` → defaults). *This is the
    real de-risking step — a game that plays itself to the end on defaults proves
    no member throws and no thread wedges.*
+
+   > **Correction, 2026-09-11 (M2 follow-up 6).** As written, step 3 does not
+   > work, and the M2 build measured it: a transport that answers only **asks**
+   > parks at the coin toss after **five frames**. With `isLibgdxPort() == false`
+   > (**D18**) the seat is driven by the **input** path, not by the blocking
+   > `IGuiGame` calls — §0.8, this document's own "single biggest scheduling
+   > fact", says exactly that, and this step contradicts it. Nothing ever asks,
+   > so nothing is ever answered, and the game never starts. What ships instead
+   > (**D16**): `AutoTransport` is a full seat that presses buttons and clicks
+   > cards on a minimal policy, and `NullTransport` **extends** it, overriding
+   > only the answer half so that every `ask` resolves to `null` and Forge's
+   > §5.4 defaults apply. The
+   > de-risking value of the step is real and survives the correction — run it as
+   > `./bridge/run.sh mtgtable.MtgTable --transport null`, which is step 7 of
+   > `tools/check-all.sh`.
 4. Wire `openView` (§4.1) and `handleGameEvents` (§4.2). Now `state` frames flow.
 5. `input` assembly (§6.5). Now the console shows prompts and buttons.
 6. Acts → EDT → `IGameController` (§9). Now you can click.

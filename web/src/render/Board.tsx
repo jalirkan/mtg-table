@@ -22,7 +22,36 @@
  * (docs/protocol.md §4.1), so there is no correlation state machine here and no
  * rules logic anywhere. A card is outlined iff the engine put its id in
  * `input.selectable.cardIds`; a button is enabled iff the engine said so.
- * Nothing is clickable yet — that is M3.
+ *
+ * ---------------------------------------------------------------------------
+ * 2026-09-11 — M3: the board is now a seat.
+ *
+ * `actions` is the whole of the change. When it is `null` — a replay — every
+ * affordance renders exactly as it did in M1/M2 and is inert; when it is a
+ * transport, the same affordances send `act` frames:
+ *
+ *   - **clicking any card sends `clickCard`** (amendment M8), not only a
+ *     selectable one. `selectable` is the EXPLICIT selection set and is empty
+ *     for the whole of your main phase; 78 of the 86 `clickCard` acts in
+ *     `human-auto-42.jsonl` name an id outside it. Forge is the judge: a click
+ *     it will not take comes back as `notice{title:"Not selectable"}`, which the
+ *     toast list shows. A board that greys out everything outside `selectable`
+ *     cannot play a land;
+ *   - **clicking a player name sends `clickPlayer`**;
+ *   - the two buttons send `buttonOk` / `buttonCancel` and print
+ *     `input.buttons.*.label` **verbatim** — `Undo (2)`, `End Turn` and `Auto`
+ *     are the engine's labels, which is why there is no `undo` button and no
+ *     `autoPay` act (§2.2, report 11 §0.1);
+ *   - **Concede is reachable from every UI state** (§9 invariant 6), behind one
+ *     confirming click, including while an ask is blocking the game thread;
+ *   - **an outstanding `ask` blocks the board's clicks.** The engine is parked
+ *     inside that call and is listening for exactly one thing.
+ *
+ * Keyboard (Space = OK, Escape = Cancel) lives in `main.tsx`, not here: it is a
+ * window-level listener, and keeping this file free of effects is what lets
+ * `web/test/render.test.tsx` render every frame of every fixture with
+ * `renderToStaticMarkup`.
+ * ---------------------------------------------------------------------------
  *
  * **`selectable` is not the clickable set** (protocol amendment M8). It is the
  * *explicit* selection set — what `setSelectables` names for targeting, discard
@@ -30,10 +59,10 @@
  * main phase it is `{cardIds: [], min: 0, max: 0, mode: 'none'}` while your
  * whole hand is clickable: 78 of the 86 `clickCard` acts in
  * `fixtures/games/human-auto-42.jsonl` name an id outside it. So the outline
- * below means "the engine is asking for these", and when M3 makes tiles
- * clickable it must not gate the click on `selectable`: it sends `act:
- * clickCard` and renders the `notice {title: 'Not selectable'}` Forge sends back
- * for a click it will not take. Deciding that here would be rules logic.
+ * below means "the engine is asking for these", and the click is **not** gated
+ * on it: the board sends `act: clickCard` for any card and renders the
+ * `notice {title: 'Not selectable'}` Forge sends back for a click it will not
+ * take. Deciding that here would be rules logic.
  *
  * ---------------------------------------------------------------------------
  * 2026-09-11 — the `ask` block and the button labels.
@@ -43,10 +72,9 @@
  * doing nothing at all. Rendering that in a column beside the event log, the way
  * M1 did, is the wrong shape for the thing — a reader scrolling the board cannot
  * tell a stopped game from a slow one. So an outstanding question is drawn as a
- * **modal-like block at the top of the board**, before the seats, listing the
- * option labels the engine sent. It is **read-only**: M1 renders questions and
- * M2/M5 answer them, and a button here that did nothing would be worse than no
- * button.
+ * **modal-like block at the top of the board**, before the seats. It moved to
+ * `AskModal.tsx` in M3, where it grew the form that answers it; with no
+ * transport attached it renders exactly as it did here, every control disabled.
  *
  * The option labels and `input.buttons.*.label` are rendered **verbatim**, and
  * that is a rule, not a default (§2.2, report 11 §0.1). `Undo (2)`, `End Turn`
@@ -58,6 +86,8 @@
  * ---------------------------------------------------------------------------
  */
 
+import { useEffect, useState } from 'react';
+
 import { artFor, type ArtIndex } from '../art.ts';
 import {
   altFace,
@@ -65,9 +95,8 @@ import {
   isHidden,
   MANA_COLORS,
   type AltFace,
+  type AnswerValue,
   type AnyCard,
-  type AskBody,
-  type AskOption,
   type Card,
   type CardZone,
   type Combat,
@@ -82,27 +111,76 @@ import {
   type StackItem,
 } from '../protocol.ts';
 import type { ClientState, LogEntry, TimestampedNotice } from '../reduce.ts';
+import { AskModal } from './AskModal.tsx';
 import { describeEvent, phaseLabel, stackTextLabel } from './describe.ts';
+import { WEDGE_QUIET_MS, wedgeSuspected } from './wedge.ts';
 
 // ---------------------------------------------------------------------------
 // Board
 // ---------------------------------------------------------------------------
 
+/**
+ * The seat's outbound half (§2.2, §2.3). One object, passed down as far as the
+ * card lines; `null` is a replay, and every affordance renders disabled.
+ *
+ * There is deliberately **no `undo`, no `endTurn` and no `autoPay`**: those are
+ * Forge's own labels on the OK and Cancel buttons, and the act to send is
+ * `buttonOk` / `buttonCancel` (§2.2, §10.3, report 11 §0.1).
+ */
+export interface BoardActions {
+  /** §2.2 — any card, not only a selectable one (amendment M8). */
+  clickCard(cardId: number): void;
+  clickPlayer(playerId: number): void;
+  buttonOk(): void;
+  buttonCancel(): void;
+  /** §9 invariant 6 — reachable from every UI state, so a wedge is escapable. */
+  concede(): void;
+  /** §2.3 — exactly one per ask; the value is per-kind (§5.2). */
+  answer(askId: string, value: AnswerValue): void;
+}
+
+/** What a card line may do when clicked, or `null` for "nothing, and say so". */
+interface Clicks {
+  card: (cardId: number) => void;
+  player: (playerId: number) => void;
+}
+
 export interface BoardProps {
   state: ClientState;
   art: ArtIndex;
+  /** M3. `null`/absent → the M1 read-only board. */
+  actions?: BoardActions | null;
+  /**
+   * Client-side complaints from the transport (a dropped click, a socket
+   * error). Kept apart from `state.notices`, which are the engine's (§6): a
+   * toast that says "not connected" must not look like something Forge said.
+   */
+  clientNotices?: readonly TimestampedNotice[];
 }
 
-export function Board({ state, art }: BoardProps): JSX.Element {
+export function Board({ state, art, actions = null, clientNotices = [] }: BoardProps): JSX.Element {
   const { board, hello, input } = state;
   const you = hello?.you ?? state.session?.seat ?? null;
+
+  // §5: while an ask is outstanding the game thread is parked inside that call
+  // and is listening for exactly one thing. A board click then is a click into
+  // a void, so the board stops taking them — and says why.
+  const asking = state.ask !== null;
+  const clicks: Clicks | null =
+    actions === null || asking || state.gameOver !== null
+      ? null
+      : { card: actions.clickCard, player: actions.clickPlayer };
 
   if (board === null) {
     return (
       <div className="board board--empty">
         <p className="muted">
-          No <code>state</code> frame yet — step forward, or press play.
+          No <code>state</code> frame yet — step forward, press play, or wait for the bridge.
         </p>
+        <AskModal ask={state.ask} onAnswer={actions?.answer ?? null} />
+        {actions !== null && (
+          <ConcedeButton onConcede={actions.concede} gameOver={state.gameOver !== null} />
+        )}
         {state.hello !== null && <HelloPanel state={state} />}
         <NoticeList notices={state.notices} />
       </div>
@@ -115,13 +193,22 @@ export function Board({ state, art }: BoardProps): JSX.Element {
   return (
     <div className="board">
       <TurnStrip board={board} you={you} />
+      <Toasts notices={state.notices} clientNotices={clientNotices} yourTurn={yourTurn(state)} />
       {state.gameOver !== null && (
         <div className="banner banner--over" role="status">
           <strong>Game over.</strong>{' '}
-          {state.gameOver.winner === null
-            ? 'Draw.'
-            : `Winner: ${playerName(board, state.gameOver.winner)}.`}{' '}
-          {state.gameOver.reason ?? '(the engine had not published a win condition yet)'}
+          {state.gameOver.winner !== null
+            ? `Winner: ${playerName(board, state.gameOver.winner)}.`
+            : // §7 + amendment M11: `winner: null` is a draw — EXCEPT when
+              // `reason` is null too, which is the one path where the engine
+              // never published an outcome at all (a concede before this seat
+              // was asked for anything: `applyAct`'s pre-`inputSeen` guard ends
+              // the session without reaching Forge's game-over). Printing
+              // "Draw" there would report a result nobody played for.
+              state.gameOver.reason === null
+              ? 'No result — the session ended before the engine published an outcome.'
+              : 'Draw.'}{' '}
+          {state.gameOver.reason ?? ''}
           {!state.gameOver.matchOver && ' (the match continues)'}
         </div>
       )}
@@ -129,7 +216,12 @@ export function Board({ state, art }: BoardProps): JSX.Element {
       {/* §5 — the game thread is parked inside this call. It goes above the
           seats, not beside the log: an outstanding question is the single most
           important thing on the board while it exists. */}
-      <AskModal ask={state.ask} />
+      <AskModal ask={state.ask} onAnswer={actions?.answer ?? null} />
+
+      {/* The seat's controls: the engine's prompt, the engine's two buttons, and
+          Concede — at the top, because in M3 this is where the game is played
+          from. The panel itself is unchanged from M1 apart from being wired. */}
+      <InputPanel input={input} state={state} actions={actions} />
 
       {seated.map((player) => (
         <PlayerPanel
@@ -139,20 +231,17 @@ export function Board({ state, art }: BoardProps): JSX.Element {
           board={board}
           input={input}
           art={art}
+          clicks={clicks}
         />
       ))}
 
       <div className="columns">
-        <StackPanel stack={board.stack} board={board} input={input} art={art} />
+        <StackPanel stack={board.stack} board={board} input={input} art={art} clicks={clicks} />
         <CombatPanel combat={board.combat} board={board} />
       </div>
 
       <div className="columns">
-        <InputPanel input={input} />
         <EventList events={state.events} dropped={state.droppedEventKinds} />
-      </div>
-
-      <div className="columns">
         <NoticeList notices={state.notices} />
       </div>
 
@@ -160,6 +249,137 @@ export function Board({ state, art }: BoardProps): JSX.Element {
 
       <HelloPanel state={state} />
     </div>
+  );
+}
+
+/**
+ * Is it this seat's move?
+ *
+ * Derived from the snapshot the engine sent — `priority` is a player id (§3.1)
+ * — and nothing else. It decides what a toast says, never what is legal:
+ * §9 invariant 8, the client computes no rules answers.
+ */
+function yourTurn(state: ClientState): boolean {
+  const you = state.hello?.you ?? state.session?.seat ?? null;
+  return (
+    you !== null &&
+    state.board !== null &&
+    state.board.priority === you &&
+    state.gameOver === null &&
+    state.ask === null
+  );
+}
+
+/**
+ * The toast strip: the engine's recent notices (§6), the transport's own
+ * complaints, and "Your turn".
+ *
+ * Capped and newest-first, and **briefly** is done in CSS (`animation:
+ * toast-fade`) rather than with a timer, because a timer here would be the first
+ * effect in this file and `web/test/render.test.tsx` renders every frame of
+ * every fixture with `renderToStaticMarkup`, which runs no effects at all. The
+ * full history stays in the Notices panel below — a toast that disappears is not
+ * allowed to be the only copy of "Not selectable".
+ */
+function Toasts({
+  notices,
+  clientNotices,
+  yourTurn: myTurn,
+}: {
+  notices: TimestampedNotice[];
+  clientNotices: readonly TimestampedNotice[];
+  yourTurn: boolean;
+}): JSX.Element | null {
+  const recent = collapse([...notices, ...clientNotices]).slice(-3);
+  if (recent.length === 0 && !myTurn) return null;
+  return (
+    <div className="toasts" role="status" aria-live="polite">
+      {myTurn && <span className="toast toast--turn">Your turn</span>}
+      {recent.map(({ notice, count }) => (
+        <span
+          key={`${String(notice.seq)}-${String(notice.t)}`}
+          className={`toast toast--${notice.level}`}
+        >
+          {/* §6: both strings are gated and either may be "" — render verbatim
+              and be total over an empty one. */}
+          {notice.title !== '' && <strong>{notice.title}</strong>}
+          {notice.title !== '' && notice.text !== '' && ' '}
+          {notice.text}
+          {count > 1 && <span className="muted"> ×{count}</span>}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Collapse a run of identical notices into one, with a count.
+ *
+ * Forge repeats itself: it pushes `notice{title:"Your turn"}` at every priority
+ * it hands back, which is several times a turn, and five identical toasts in a
+ * row is a strip that stops being read. The Notices panel below still lists
+ * every one of them individually — this is presentation, not filtering, and the
+ * strings themselves are never rewritten (§6).
+ */
+function collapse(
+  notices: readonly TimestampedNotice[],
+): Array<{ notice: TimestampedNotice; count: number }> {
+  const out: Array<{ notice: TimestampedNotice; count: number }> = [];
+  for (const notice of notices) {
+    const last = out[out.length - 1];
+    if (
+      last !== undefined &&
+      last.notice.level === notice.level &&
+      last.notice.title === notice.title &&
+      last.notice.text === notice.text
+    ) {
+      // Keep the LATEST of the run, so the fade animation restarts on a repeat.
+      out[out.length - 1] = { notice, count: last.count + 1 };
+      continue;
+    }
+    out.push({ notice, count: 1 });
+  }
+  return out;
+}
+
+/**
+ * §9 invariant 6 — **Concede must be reachable from every UI state**, so a wedge
+ * is always escapable. Two clicks, because it ends the game and there is no undo
+ * for it; the second click is the confirmation and it says so.
+ *
+ * Every UI state except one: **a game that is already over**. The button used to
+ * stay armed across `over`, so a finished game offered "Concede — click again to
+ * confirm" over its own result banner — a second irreversible-looking click on a
+ * game that no longer exists (observed in the live browser session immediately
+ * after `Game over. Winner: Forge AI`). It disarms and disables itself instead.
+ */
+function ConcedeButton({
+  onConcede,
+  gameOver,
+}: {
+  onConcede: () => void;
+  gameOver: boolean;
+}): JSX.Element {
+  const [armed, setArmed] = useState(false);
+  const live = !gameOver;
+  return (
+    <button
+      type="button"
+      className={`btn btn--concede${armed && live ? ' btn--armed' : ''}`}
+      disabled={!live}
+      title={
+        live
+          ? 'act: concede — reachable from every UI state (§9 invariant 6)'
+          : 'the game is over; there is nothing left to concede'
+      }
+      onClick={() => {
+        if (!live) return;
+        if (armed) onConcede();
+        else setArmed(true);
+      }}
+    >
+      {armed && live ? 'Concede — click again to confirm' : 'Concede'}
+    </button>
   );
 }
 
@@ -215,17 +435,34 @@ interface PlayerPanelProps {
   board: GameStateBody;
   input: InputBody | null;
   art: ArtIndex;
+  clicks: Clicks | null;
 }
 
-function PlayerPanel({ player, you, board, input, art }: PlayerPanelProps): JSX.Element {
+function PlayerPanel({ player, you, board, input, art, clicks }: PlayerPanelProps): JSX.Element {
   const isYou = you !== null && player.id === you;
   const mana = MANA_COLORS.map((c) => `${c}:${String(player.manaPool[c])}`).join(' ');
   const counters = Object.entries(player.counters);
+  // §4: `mode: "players"` is the engine naming seats as the explicit selection
+  // set. `selectable.playerIds` is a planned §10.2 field and is not on the wire,
+  // so this is the only signal there is — and, like a card, a player click is
+  // sent whatever the mode says (M8: Forge is the judge).
+  const selectable = input !== null && input.selectable.mode === 'players';
 
   return (
     <section className={`player${isYou ? ' player--you' : ''}`}>
       <h2>
-        {player.name}
+        <button
+          type="button"
+          className={`player__name${selectable ? ' player__name--selectable' : ''}`}
+          disabled={clicks === null}
+          aria-label={`${player.name} — player ${String(player.id)}`}
+          title={`act: clickPlayer ${String(player.id)}`}
+          onClick={() => {
+            clicks?.player(player.id);
+          }}
+        >
+          {player.name}
+        </button>
         <span className="muted">
           {' '}
           #{player.id} {player.isAi ? 'AI' : 'human'}
@@ -256,12 +493,12 @@ function PlayerPanel({ player, you, board, input, art }: PlayerPanelProps): JSX.
         </span>
       </div>
 
-      <ZoneList label="Battlefield" zone={player.zones.battlefield} input={input} art={art} board={board} />
-      <ZoneList label="Hand" zone={player.zones.hand} input={input} art={art} board={board} />
-      <ZoneList label="Graveyard" zone={player.zones.graveyard} input={input} art={art} board={board} />
-      <ZoneList label="Exile" zone={player.zones.exile} input={input} art={art} board={board} />
-      <ZoneList label="Command" zone={player.zones.command} input={input} art={art} board={board} />
-      <LibraryPanel library={player.zones.library} input={input} art={art} board={board} />
+      <ZoneList label="Battlefield" zone={player.zones.battlefield} input={input} art={art} board={board} clicks={clicks} />
+      <ZoneList label="Hand" zone={player.zones.hand} input={input} art={art} board={board} clicks={clicks} />
+      <ZoneList label="Graveyard" zone={player.zones.graveyard} input={input} art={art} board={board} clicks={clicks} />
+      <ZoneList label="Exile" zone={player.zones.exile} input={input} art={art} board={board} clicks={clicks} />
+      <ZoneList label="Command" zone={player.zones.command} input={input} art={art} board={board} clicks={clicks} />
+      <LibraryPanel library={player.zones.library} input={input} art={art} board={board} clicks={clicks} />
     </section>
   );
 }
@@ -281,11 +518,13 @@ function LibraryPanel({
   input,
   art,
   board,
+  clicks,
 }: {
   library: LibraryZone;
   input: InputBody | null;
   art: ArtIndex;
   board: GameStateBody;
+  clicks: Clicks | null;
 }): JSX.Element | null {
   const cards = library.cards;
   if (cards.length === 0) return null;
@@ -299,7 +538,7 @@ function LibraryPanel({
       </h3>
       <ul className="cards">
         {cards.map((card) => (
-          <CardLine key={card.id} card={card} input={input} art={art} board={board} />
+          <CardLine key={card.id} card={card} input={input} art={art} board={board} clicks={clicks} />
         ))}
       </ul>
       <p className="muted">
@@ -316,9 +555,10 @@ interface ZoneListProps {
   input: InputBody | null;
   art: ArtIndex;
   board: GameStateBody;
+  clicks: Clicks | null;
 }
 
-function ZoneList({ label, zone, input, art, board }: ZoneListProps): JSX.Element | null {
+function ZoneList({ label, zone, input, art, board, clicks }: ZoneListProps): JSX.Element | null {
   if (zone.count === 0 && zone.cards.length === 0) return null;
   return (
     <div className="zone">
@@ -327,7 +567,7 @@ function ZoneList({ label, zone, input, art, board }: ZoneListProps): JSX.Elemen
       </h3>
       <ul className="cards">
         {zone.cards.map((card) => (
-          <CardLine key={card.id} card={card} input={input} art={art} board={board} />
+          <CardLine key={card.id} card={card} input={input} art={art} board={board} clicks={clicks} />
         ))}
       </ul>
       {zone.count > zone.cards.length && (
@@ -348,9 +588,58 @@ interface CardLineProps {
   input: InputBody | null;
   art: ArtIndex;
   board: GameStateBody;
+  clicks: Clicks | null;
 }
 
-function CardLine({ card, input, art, board }: CardLineProps): JSX.Element {
+/**
+ * The click affordance on one card line (M3, amendment M8).
+ *
+ * It wraps the name rather than the whole `<li>` so it is a real `<button>`:
+ * focusable, reachable by keyboard, and announced as a button — which also means
+ * a card click and the window-level Space/Escape handler in `main.tsx` cannot
+ * fight over the same key, because that handler ignores events whose target is
+ * a control.
+ *
+ * **Any card, not only a selectable one.** The title says which act it sends,
+ * because "why did clicking my land do nothing" is otherwise answerable only by
+ * reading the frame log.
+ */
+function CardButton({
+  card,
+  label,
+  clicks,
+  children,
+}: {
+  card: AnyCard;
+  /**
+   * What this tile says, in words — the accessible name. Given explicitly
+   * rather than left to the button's contents, because the contents are a
+   * thumbnail (`aria-hidden`), a name, a mana cost and a `#id` fragment, and a
+   * `title` that explains the *act* would otherwise be the best name a reader
+   * could compute. A concealed card names itself as concealed and nothing else:
+   * §3.3's five-key stub has no name to announce.
+   */
+  label: string;
+  clicks: Clicks | null;
+  children: React.ReactNode;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      className="card__btn"
+      disabled={clicks === null}
+      aria-label={`${label} — card ${String(card.id)}`}
+      title={`act: clickCard ${String(card.id)} — Forge is the judge of every click (§4.1)`}
+      onClick={() => {
+        clicks?.card(card.id);
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CardLine({ card, input, art, board, clicks }: CardLineProps): JSX.Element {
   // The engine's answer, echoed. The client computes no legality (§9 invariant 8).
   //
   // This is the EXPLICIT selection set (§4.1, amendment M8): the engine is
@@ -378,9 +667,11 @@ function CardLine({ card, input, art, board }: CardLineProps): JSX.Element {
   if (isFaceDownHidden(card)) {
     return (
       <li className={className}>
-        <span className="thumb thumb--back" aria-hidden="true" />
-        <span className="card__name">face-down card</span>
-        <span className="muted"> #{card.id}</span>
+        <CardButton card={card} label="face-down card" clicks={clicks}>
+          <span className="thumb thumb--back" aria-hidden="true" />
+          <span className="card__name">face-down card</span>
+          <span className="muted"> #{card.id}</span>
+        </CardButton>
         <FaceDownMarkers card={card} board={board} />
       </li>
     );
@@ -392,15 +683,17 @@ function CardLine({ card, input, art, board }: CardLineProps): JSX.Element {
   if (isHidden(card)) {
     return (
       <li className={className}>
-        <span className="thumb thumb--back" aria-hidden="true" />
-        <span className="card__name">card back</span>
-        <span className="muted">
-          {' '}
-          #{card.id}
-          {card.owner !== null && card.owner !== undefined && card.owner !== card.controller && (
-            <> · owned by {playerName(board, card.owner)}</>
-          )}
-        </span>
+        <CardButton card={card} label="card back" clicks={clicks}>
+          <span className="thumb thumb--back" aria-hidden="true" />
+          <span className="card__name">card back</span>
+          <span className="muted">
+            {' '}
+            #{card.id}
+            {card.owner !== null && card.owner !== undefined && card.owner !== card.controller && (
+              <> · owned by {playerName(board, card.owner)}</>
+            )}
+          </span>
+        </CardButton>
       </li>
     );
   }
@@ -416,27 +709,33 @@ function CardLine({ card, input, art, board }: CardLineProps): JSX.Element {
 
   return (
     <li className={className}>
-      {card.faceDown ? (
-        <span className="thumb thumb--back" aria-hidden="true" />
-      ) : thumb.kind === 'image' ? (
-        <img
-          className="thumb"
-          src={thumb.url}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          title={`${card.name} — ${thumb.setCode} #${thumb.collectorNumber} — art by ${thumb.artist}`}
-        />
-      ) : (
-        <span className="thumb thumb--text" aria-hidden="true">
-          {shownName.slice(0, 2).toUpperCase()}
-        </span>
-      )}
-      <span className="card__name">{shownName}</span>
-      {/* §3.2: null is the one spelling of "no mana cost" — every land, every
-          token. There is no "" and no "no cost" to paper over any more. */}
-      {card.manaCost !== null && <span className="cost"> {card.manaCost}</span>}
-      <span className="muted"> #{card.id}</span>
+      <CardButton
+        card={card}
+        label={`${shownName}${card.manaCost !== null ? ` ${card.manaCost}` : ''}`}
+        clicks={clicks}
+      >
+        {card.faceDown ? (
+          <span className="thumb thumb--back" aria-hidden="true" />
+        ) : thumb.kind === 'image' ? (
+          <img
+            className="thumb"
+            src={thumb.url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            title={`${card.name} — ${thumb.setCode} #${thumb.collectorNumber} — art by ${thumb.artist}`}
+          />
+        ) : (
+          <span className="thumb thumb--text" aria-hidden="true">
+            {shownName.slice(0, 2).toUpperCase()}
+          </span>
+        )}
+        <span className="card__name">{shownName}</span>
+        {/* §3.2: null is the one spelling of "no mana cost" — every land, every
+            token. There is no "" and no "no cost" to paper over any more. */}
+        {card.manaCost !== null && <span className="cost"> {card.manaCost}</span>}
+        <span className="muted"> #{card.id}</span>
+      </CardButton>
       <Markers card={card} board={board} />
       {alt !== null && <AltBlock alt={alt} />}
       {/* §3.2: "" is the one spelling of "no type line" — a face-down card
@@ -561,11 +860,13 @@ function StackPanel({
   board,
   input,
   art,
+  clicks,
 }: {
   stack: StackItem[];
   board: GameStateBody;
   input: InputBody | null;
   art: ArtIndex;
+  clicks: Clicks | null;
 }): JSX.Element {
   return (
     <section className="panel">
@@ -615,7 +916,7 @@ function StackPanel({
           </h3>
           <ul className="cards">
             {board.stackCards.map((card) => (
-              <CardLine key={card.id} card={card} input={input} art={art} board={board} />
+              <CardLine key={card.id} card={card} input={input} art={art} board={board} clicks={clicks} />
             ))}
           </ul>
         </div>
@@ -735,23 +1036,57 @@ function entityLabel(board: GameStateBody, ref: EntityRef | null): string {
  * OK is not "nothing to do", it is "click a card" (§4.2, the invariant that
  * silently stalls a button-only client at the discard step).
  */
-function EngineButton({ button, act }: { button: InputButton; act: string }): JSX.Element {
+function EngineButton({
+  button,
+  act,
+  onClick,
+  hint,
+}: {
+  button: InputButton;
+  act: string;
+  /** `null` → a replay: the label still shows, the button does nothing. */
+  onClick: (() => void) | null;
+  /** The keyboard shortcut this button also answers to (`main.tsx`). */
+  hint: string;
+}): JSX.Element {
   return (
     <button
       type="button"
-      disabled={!button.enabled}
-      // Nothing is clickable in M1; the title says whose label this is, because
-      // "Auto" and "Undo (2)" read like client features and are not.
-      title={`the engine's own label — clicking would send act: ${act}`}
+      className="btn btn--engine"
+      // The engine's answer and nothing else. A disabled OK is not "nothing to
+      // do", it is "click a card" (§4.2).
+      disabled={!button.enabled || onClick === null}
+      // The title says whose label this is, because "Auto" and "Undo (2)" read
+      // like client features and are not -- and the aria-label keeps the
+      // ENGINE's word as the accessible name, so a reader is not told the
+      // footnote instead of the button.
+      aria-label={button.label}
+      title={`the engine's own label — sends act: ${act} · ${hint}`}
+      onClick={() => {
+        onClick?.();
+      }}
     >
       {button.label}
     </button>
   );
 }
 
-function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
+function InputPanel({
+  input,
+  state,
+  actions,
+}: {
+  input: InputBody | null;
+  state: ClientState;
+  actions: BoardActions | null;
+}): JSX.Element {
+  // §5: an outstanding ask owns the interaction. The buttons belong to the
+  // `input` the engine pushed *before* it blocked, and pressing one now would
+  // answer nothing.
+  const asking = state.ask !== null;
+  const live = actions !== null && !asking && state.gameOver === null;
   return (
-    <section className="panel">
+    <section className="panel panel--input">
       <h2>Input</h2>
       {input === null ? (
         <p className="muted">the engine has not asked for anything yet</p>
@@ -761,8 +1096,27 @@ function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
               rewritten (§4). */}
           <p className="prompt">{input.prompt}</p>
           <div className="buttons">
-            <EngineButton button={input.buttons.ok} act="buttonOk" />
-            <EngineButton button={input.buttons.cancel} act="buttonCancel" />
+            <EngineButton
+              button={input.buttons.ok}
+              act="buttonOk"
+              hint="Space"
+              onClick={live ? actions.buttonOk : null}
+            />
+            <EngineButton
+              button={input.buttons.cancel}
+              act="buttonCancel"
+              hint="Escape"
+              onClick={live ? actions.buttonCancel : null}
+            />
+            {actions !== null && (
+              <ConcedeButton onConcede={actions.concede} gameOver={state.gameOver !== null} />
+            )}
+            {asking && (
+              <span className="muted">
+                a question is outstanding — answer it above; the buttons belong to the input the
+                engine pushed before it blocked
+              </span>
+            )}
           </div>
           <p className="muted">
             selectable ({input.selectable.mode}): {input.selectable.cardIds.length} ids, choose{' '}
@@ -803,6 +1157,21 @@ function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
               not a button.
             </p>
           )}
+          {/* §4.2's narrower diagnostic, and report 10 §5.2: OK disabled, the
+              selection set empty, no outstanding ask and the game not over is
+              the signature of a WEDGED GAME THREAD — *on your own priority,
+              after the stream has gone quiet*. Those last two clauses are M3's
+              review fix and they are not decoration: without them the banner
+              fires on every ordinary opponent priority window (measured twice
+              inside the first two turns of a live browser game — at turn 1
+              upkeep under `Waiting for Forge AI…`, and under `Yielding until
+              end of turn`), which is exactly the same four clauses and is the
+              normal state of simply not holding priority. See `WedgeBanner`. */}
+          <WedgeBanner
+            live={actions !== null}
+            suspect={wedgeSuspected(state)}
+            framesApplied={state.framesApplied}
+          />
         </>
       )}
     </section>
@@ -810,138 +1179,52 @@ function InputPanel({ input }: { input: InputBody | null }): JSX.Element {
 }
 
 /**
- * §5 — the outstanding blocking question, as a modal-like block.
+ * §4.2's wedged-game-thread diagnostic, with the two qualifiers the rule was
+ * missing.
  *
- * `null` renders **nothing at all**, deliberately: an empty "no outstanding
- * question" panel occupying the top of the board every frame would train the
- * reader to ignore the place the question appears. When there is one, the block
- * says what kind it is, what the engine asked, and the option labels the engine
- * sent — read-only, because M1 renders questions and M2/M5 answer them.
+ * `suspect` is {@link wedgeSuspected}: the four-clause condition §4.2 states (OK
+ * disabled, `selectable` empty, no ask, game not over) **plus** "and this seat
+ * holds priority". A seat that does not hold priority has nothing to do
+ * *because it is not its turn to do anything*, which is not a wedge and is the
+ * commonest state in the game.
  *
- * Labels are printed **verbatim** and never parsed (§5.1). The bridge already
- * decided what each option may be called: an option whose card is concealed
- * arrives labelled `"???"`, because `String.valueOf(CardView)` prints the real
- * name and an option label is the one place outside `Snap.card` where that can
- * reach the wire (report 07 §7). A client that built its own label from
- * `option.card` would be re-opening exactly that hole.
+ * The timer is the other half. A wedge is a thread that has stopped; an engine
+ * push in flight is a thread that has not. Every fold of a frame resets the
+ * clock ({@link ClientState.framesApplied} counts them), so the banner only
+ * appears when the seat owns the decision *and* nothing at all has arrived for
+ * {@link WEDGE_QUIET_MS}.
+ *
+ * `live` keeps it out of a replay, where "no frame for 2.5 s" means the user
+ * stopped scrubbing and there is no thread to be wedged in the first place.
  */
-function AskModal({ ask }: { ask: AskBody | null }): JSX.Element | null {
-  if (ask === null) return null;
-  const rows = askOptionRows(ask);
+function WedgeBanner({
+  live,
+  suspect,
+  framesApplied,
+}: {
+  live: boolean;
+  suspect: boolean;
+  framesApplied: number;
+}): JSX.Element | null {
+  const [quiet, setQuiet] = useState(false);
+  useEffect(() => {
+    setQuiet(false);
+    const timer = setTimeout(() => {
+      setQuiet(true);
+    }, WEDGE_QUIET_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [framesApplied]);
+  if (!live || !suspect || !quiet) return null;
   return (
-    <section
-      className="ask-modal"
-      role="dialog"
-      // Not `aria-modal`: nothing is trapped and nothing is clickable — the
-      // board behind it is still the truth, and saying otherwise to a screen
-      // reader would be a lie about a read-only block.
-      aria-label={`The engine is asking: ${ask.kind}`}
-    >
-      <div className="ask-modal__head">
-        <span className="k">{ask.kind}</span>{' '}
-        <span className="muted">
-          {ask.askId} · timeout {ask.timeoutMs} ms
-        </span>
-        <span className="ask-modal__blocked">the game thread is blocked on this</span>
-      </div>
-      <p className="prompt">{askPrompt(ask)}</p>
-      {rows.length === 0 ? (
-        <p className="muted">this kind carries no option list</p>
-      ) : (
-        <ol className="ask-modal__options">
-          {rows.map((row, i) => (
-            <li key={`${String(i)}-${row.label}`} className="ask-modal__option">
-              {/* §5.1: the ask-LOCAL index, which is what an answer echoes. It
-                  is not a Forge id, and the two must never be confused: a
-                  single ask's options can be colours, abilities, integers and
-                  cards at once, where `Integer 3` and `CardView 3` collide. */}
-              <span className="ask-modal__index">
-                {row.id === null ? '·' : `[${String(row.id)}]`}
-              </span>{' '}
-              {/* The engine's own label. Verbatim, always. */}
-              <span className="ask-modal__label">{row.label}</span>
-              {row.detail !== '' && <span className="muted"> — {row.detail}</span>}
-            </li>
-          ))}
-        </ol>
-      )}
-      <p className="hint">
-        Read-only: M1 renders the question, M2/M5 answer it. Every ask must be answerable with{' '}
-        <code>null</code> (§5.4), and Concede must be reachable from every UI state — so a wedge is
-        always escapable.
-      </p>
-    </section>
+    <p className="banner banner--error" role="alert">
+      <strong>Nothing to do.</strong> You have priority, OK is disabled, nothing is selectable, no
+      question is outstanding and nothing has arrived from the bridge for{' '}
+      {(WEDGE_QUIET_MS / 1000).toFixed(1)} s — docs/protocol.md §4.2 calls that the signature of a
+      wedged game thread. Resync; if that does not help, concede.
+    </p>
   );
-}
-
-function askPrompt(ask: AskBody): string {
-  switch (ask.kind) {
-    case 'confirm':
-    case 'options':
-    case 'text':
-    case 'order':
-    case 'choose_entities':
-    case 'manipulate_list':
-      return ask.prompt;
-    case 'assign_amount':
-      // This kind has no prompt of its own: Forge gives an `amountLabel` for
-      // what the amount IS ("damage", "counters"), and the source card.
-      return `Assign ${String(ask.total)} ${ask.label}${ask.sourceCardId === null ? '' : ` from #${String(ask.sourceCardId)}`}`;
-    case 'choose_list':
-      // Report 07 A7 (P7): `AbstractGuiGame.reveal` is `getChoices(msg, -1, -1,
-      // items)`. A min/max of -1 is not a choice — it is "look at these" — and a
-      // client that renders it literally asks the user to pick minus one card.
-      return ask.reveal ? `${ask.prompt} (reveal — acknowledge only)` : ask.prompt;
-    case 'ability_menu':
-      return `Choose an ability of card #${String(ask.cardId)}`;
-    case 'assign_damage':
-      // `attackerId` is declared nullable (§5.2): Forge's signature allows a
-      // null attacker, so the label names the attacker only when there is one.
-      return `Assign ${String(ask.total)} combat damage` +
-        `${ask.attackerId === null ? '' : ` from #${String(ask.attackerId)}`}` +
-        `${ask.overrideOrder ? ' (order overridden)' : ''}${ask.maySkip ? ' (may skip)' : ''}`;
-    case 'sideboard':
-      return ask.prompt ?? 'Sideboard';
-  }
-}
-
-/**
- * One line of the ask block: the ask-local index, the engine's label **exactly
- * as it arrived**, and whatever the client can add without inventing a name.
- *
- * `id` is `null` for a row that is not an option at all — `confirm`'s two button
- * labels, `text`'s initial value, `choose_entities`'s delayed reveal — so the
- * renderer can tell "index 0" from "no index" instead of printing a plausible
- * lie.
- */
-interface AskRow {
-  /** The ask-local index an answer would echo, or `null` if this is not an option. */
-  id: number | null;
-  /** The engine's own label. Never parsed, never rebuilt, never prefixed. */
-  label: string;
-  /** What the client knows about the option. `""` when it knows nothing. */
-  detail: string;
-}
-
-/**
- * What the client may add beside one option's label (P7). The option already
- * carries the label the engine wants shown — `"???"` when the card behind it is
- * concealed — so this adds only the resolved card/player/ability reference. It
- * never builds a name of its own: report 07 §7 notes that
- * `String.valueOf(CardView)` prints the card's name, and an option label is the
- * one place outside `Snap.card` where that can leak.
- */
-function askOptionDetail(option: AskOption): string {
-  if (option.card !== undefined) return cardOptionLabel(option.card);
-  if (option.cardId !== undefined) return `card #${String(option.cardId)}`;
-  if (option.playerId !== undefined) return `player ${String(option.playerId)}`;
-  if (option.abilityId !== undefined) return `ability #${String(option.abilityId)}`;
-  return option.kind === 'other' ? '' : option.kind;
-}
-
-function optionRow(option: AskOption, extra = ''): AskRow {
-  const detail = [askOptionDetail(option), extra].filter((bit) => bit !== '').join(' · ');
-  return { id: option.id, label: option.label, detail };
 }
 
 /** A card inside an ask/input body, through the same three-shape discipline. */
@@ -949,96 +1232,6 @@ function cardOptionLabel(card: AnyCard): string {
   if (isFaceDownHidden(card)) return `face-down card #${String(card.id)}`;
   if (isHidden(card)) return `card back #${String(card.id)}`;
   return `${displayName(card)} #${String(card.id)}`;
-}
-
-/**
- * Every row the ask block shows, per kind (§5.2). Total over all eleven: the
- * `switch` has no `default`, so adding a twelfth kind to `protocol.ts` fails the
- * typecheck here rather than rendering a blank question at runtime.
- *
- * The two kinds that carry **two** lists — `order`'s `dest`/`source` and
- * `sideboard`'s `main`/`side` — are one server-side option array presented in
- * two halves, and their ids run across both in that order (§5.1). So the rows
- * are concatenated in the same order the answer indexes them, and each half is
- * labelled in `detail`; a reader who takes the second list's first row for
- * "index 0" is reading the bug `order` answers were written wrong from.
- */
-function askOptionRows(ask: AskBody): AskRow[] {
-  switch (ask.kind) {
-    case 'ability_menu':
-      return ask.options.map((o) => optionRow(o, o.canPlay ? 'can play' : 'cannot play'));
-    case 'confirm':
-      // No option array at all: the two rows are the button labels Forge sent,
-      // and they answer `true` / `false`, not an index. §5.2: `confirm(CardView,
-      // …)` is how surveil's single-card case, `willPutCardOnTop` and
-      // `confirmAction` ask about a card that is usually in a LIBRARY — not in
-      // the snapshot at all — so the card itself travels with the question.
-      return [
-        { id: null, label: ask.yesLabel, detail: `answers true${ask.defaultYes ? ' · default' : ''}` },
-        { id: null, label: ask.noLabel, detail: `answers false${ask.defaultYes ? '' : ' · default'}` },
-        ...(ask.card !== null
-          ? [{ id: null, label: cardOptionLabel(ask.card), detail: 'the card in question' }]
-          : []),
-      ];
-    case 'options':
-      return ask.options.map((o) => optionRow(o, o.id === ask.defaultIndex ? 'default' : ''));
-    case 'text':
-      return [
-        { id: null, label: ask.initial === '' ? '(empty)' : ask.initial, detail: 'initial value' },
-        ...ask.suggestions.map((s) => ({ id: null, label: s, detail: 'suggestion' })),
-      ];
-    case 'choose_list':
-      // Report 07 A7 (P7): `reveal` means min/max were -1 — show these, select
-      // nothing. The prompt already says so; the rows are still the cards.
-      return ask.options.map((o) =>
-        optionRow(o, ask.preselected.includes(o.id) ? 'preselected' : ''),
-      );
-    case 'choose_entities':
-      return [
-        ...ask.options.map((o) => optionRow(o)),
-        // P7 / report 06 §6.8: the delayed reveal is the CONTEXT — "here is what
-        // you are looking at" — as distinct from the options, "here is what you
-        // may pick". A deck search reveals a library and offers a few targets,
-        // and it is the single largest legitimate reveal on the wire.
-        ...(ask.delayedReveal !== null
-          ? ask.delayedReveal.cards.map((card) => ({
-              id: null,
-              label: cardOptionLabel(card),
-              detail:
-                `${ask.delayedReveal?.messagePrefix ?? ''}` +
-                `${(ask.delayedReveal?.zones ?? []).join('/')} of player ` +
-                `${String(ask.delayedReveal?.owner ?? -1)}`,
-            }))
-          : []),
-      ];
-    case 'order':
-      // Report 07 A2 (P7): the jar's OrderResult is (List ordered, boolean
-      // remember), not {top, bottom}; indices address `dest ++ source`.
-      return [
-        ...ask.dest.map((o) => optionRow(o, ask.destLabel === '' ? 'destination' : ask.destLabel)),
-        ...ask.source.map((o) => optionRow(o, 'source')),
-      ];
-    case 'assign_damage':
-      // P7: the defender is index 0, flagged, and marshals back to the `null`
-      // key `PlayerControllerHuman` reads as "the defending player".
-      return ask.targets.map((t) =>
-        optionRow(
-          t,
-          [t.defender === true ? 'the defender' : '', t.lethal === undefined ? '' : `lethal ${String(t.lethal)}`]
-            .filter((bit) => bit !== '')
-            .join(' · '),
-        ),
-      );
-    case 'assign_amount':
-      return ask.targets.map((t) => optionRow(t, t.max === undefined ? '' : `max ${String(t.max)}`));
-    case 'manipulate_list':
-      return ask.cards.map((c) => optionRow(c, ask.manipulable.includes(c.id) ? 'movable' : 'fixed'));
-    case 'sideboard':
-      return [
-        ...ask.main.map((o) => optionRow(o, 'main deck')),
-        ...ask.side.map((o) => optionRow(o, 'sideboard')),
-      ];
-  }
 }
 
 /**

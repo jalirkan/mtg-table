@@ -132,7 +132,10 @@ public final class HeadlessGuiBase implements IGuiBase {
      * <p>The list used to be {@code {EDT_NAME, BG_NAME}}, which was the whole
      * set when it was written and stopped being it the day M2 added five more
      * threads -- the io reader, the frame-log appender, two watchdogs and the
-     * console's quit watcher.  {@code CLAUDE.md} rule 10 says this assert covers
+     * console's quit watcher -- and M3 an eighth, the netty event loop that
+     * carries the WebSocket ({@code WsTransport} hands netty its own
+     * {@code ThreadFactory} rather than letting it name the thread
+     * {@code nioEventLoopGroup-2-1}).  {@code CLAUDE.md} rule 10 says this assert covers
      * "no thread name we create", so the set is now complete and the test is the
      * stronger one: a name must <em>start with</em> {@value #THREAD_PREFIX},
      * which cannot start with {@code "Game"}.  Each entry is a compile-time
@@ -152,6 +155,7 @@ public final class HeadlessGuiBase implements IGuiBase {
             ReplyPool.WATCHDOG_THREAD_NAME,
             AutoTransport.WATCHDOG_THREAD_NAME,
             ConsoleTransport.QUIT_THREAD_NAME,
+            WsTransport.WS_THREAD_NAME,
         }) {
             if (!name.startsWith(THREAD_PREFIX)) {
                 throw new ExceptionInInitializerError(

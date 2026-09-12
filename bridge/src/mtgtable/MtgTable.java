@@ -53,9 +53,10 @@ import mtgtable.Json.JsonOut;
  *   ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42
  *   ./bridge/run.sh mtgtable.MtgTable --transport auto    --seed 42
  *   ./bridge/run.sh mtgtable.MtgTable --transport null    --seed 42
+ *   ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --keep-open
  * </pre>
  *
- * <p>Three transports, in the order they were built, because each one proves
+ * <p>Four transports, in the order they were built, because each one proves
  * something the next one depends on:
  *
  * <ul>
@@ -69,6 +70,11 @@ import mtgtable.Json.JsonOut;
  *       person.</li>
  *   <li><b>console</b> -- a human at a terminal.  The board, the prompt, the two
  *       button labels verbatim, and asks as numbered menus.</li>
+ *   <li><b>ws</b> (M3) -- the same seat on {@code ws://127.0.0.1:<port>/ws}, for
+ *       the browser.  {@code GET /health} on the same port answers {@code ok}
+ *       once the game is ready, {@code --keep-open} lingers for 30 s after
+ *       {@code over} so a client can read the final frames, and the process
+ *       plays exactly one game and exits, like every other transport.</li>
  * </ul>
  *
  * <p>The whole frame stream, both directions, is written to
@@ -82,6 +88,9 @@ public final class MtgTable {
 
     /** Give up rather than hang forever if the engine wedges. */
     private static final long GAME_TIMEOUT_SEC = 900L;
+
+    /** {@code --keep-open}: how long the WebSocket server lingers after {@code over}. */
+    private static final long KEEP_OPEN_MS = 30_000L;
 
     public static void main(final String[] args) {
         final long t0 = System.nanoTime();
@@ -155,7 +164,7 @@ public final class MtgTable {
         final GameLog log = new GameLog(out);
         System.out.println("log           = " + out);
 
-        final Transport transport = transport(a);
+        final Transport transport = transport(a, cfg);
         final WireGuiGame gui = new WireGuiGame(gameId, transport, log);
         transport.start(gui, gui.pool());
 
@@ -176,9 +185,30 @@ public final class MtgTable {
         final long tGame = System.nanoTime();
         hosted.startMatch(rules, EnumSet.of(GameType.Constructed), seats, me, gui);
 
+        if (transport instanceof WsTransport) {
+            // THE readiness line, and it is printed HERE rather than next to
+            // start(): the port is bound ~1.2 s earlier, and a client that got
+            // in during that window was handed no `hello_ok` at all.  startMatch
+            // runs openView on this thread, so by this line the handshake frame
+            // exists, GET /health has flipped from 503 to 200, and "listening"
+            // and "ready" are the same statement.  stdout, not stderr, because a
+            // script reads it.
+            final int p = ((WsTransport) transport).port();
+            System.out.println("WS LISTENING ws://127.0.0.1:" + p + "/ws");
+            System.out.println("WS HEALTH    http://127.0.0.1:" + p + "/health");
+            System.out.flush();
+        }
+
         // 7. Park until `over`.
         final boolean finished = gui.awaitFinish(GAME_TIMEOUT_SEC * 1000L);
         final long gameMs = ms(tGame);
+        if (a.keepOpen && transport instanceof WsTransport) {
+            // The last frames are already queued on the socket; this is time for
+            // a client to read them, and for a person to look at the final board
+            // before the process exits.  It returns the moment the client goes
+            // away, so a scripted client does not pay for it.
+            ((WsTransport) transport).keepOpen(KEEP_OPEN_MS);
+        }
         transport.close();
         gui.close();
 
@@ -224,6 +254,15 @@ public final class MtgTable {
         System.out.println("events dropped = " + Snap.incompleteEventsDropped() + " (missing a required id)");
         System.out.println("unzoned cards  = " + Snap.unzonedCards());
         System.out.println("emit errors    = " + gui.errors());
+        if (transport instanceof WsTransport) {
+            final WsTransport ws = (WsTransport) transport;
+            System.out.println("ws connections = " + ws.connects() + " accepted, "
+                    + ws.refusals() + " refused (one client at a time)");
+            System.out.println("ws frames      = " + ws.framesOut() + " written, "
+                    + ws.framesDropped() + " emitted with nobody connected, "
+                    + ws.framesIn() + " read, "
+                    + ws.preSessionDrops() + " read before the session existed (amendment M20)");
+        }
         System.out.println("game wall time = " + gameMs + " ms");
         System.out.println("total wall     = " + ms(t0) + " ms");
         if (!finished) {
@@ -232,13 +271,15 @@ public final class MtgTable {
         System.out.println("MTGTABLE OK");
     }
 
-    private static Transport transport(final Args a) {
+    private static Transport transport(final Args a, final Config cfg) {
         switch (a.transport) {
         case "null":    return new NullTransport();
         case "auto":    return new AutoTransport();
         case "console": return new ConsoleTransport();
+        case "ws":      return new WsTransport(a.port > 0 ? a.port : cfg.wsPort());
         default:
-            throw new IllegalArgumentException("--transport must be null|auto|console, got " + a.transport);
+            throw new IllegalArgumentException("--transport must be null|auto|console|ws, got "
+                    + a.transport);
         }
     }
 
@@ -325,6 +366,9 @@ public final class MtgTable {
         String gameId;
         long seed;
         int seat;
+        /** {@code --transport ws} only; 0 means "whatever config.json's wsPort says". */
+        int port;
+        boolean keepOpen;
 
         static Args parse(final String[] argv) {
             final Args a = new Args();
@@ -338,11 +382,13 @@ public final class MtgTable {
                 case "--game-id":   a.gameId = need(argv, ++i, k); break;
                 case "--seat":      a.seat = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--seed":      a.seed = Long.parseLong(need(argv, ++i, k)); break;
+                case "--port":      a.port = Integer.parseInt(need(argv, ++i, k)); break;
+                case "--keep-open": a.keepOpen = true; break;
                 default:
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
-                        + "usage: MtgTable [--transport null|auto|console] [--deck <path>] "
+                        + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2 <path>] [--seed <n>] [--seat 0|1] [--ai-name <name>] "
-                        + "[--game-id <id>]");
+                        + "[--game-id <id>] [--port <n>] [--keep-open]");
                 }
             }
             if (a.seat != 0) {

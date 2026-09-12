@@ -163,6 +163,36 @@ public final class ReplyPool {
         }
     }
 
+    /**
+     * Lift the latch {@link #cancelAll} set, so the next ask can park again.
+     *
+     * <p>{@code cancelAll()} latches on purpose: at <b>shutdown</b> a game that
+     * is still winding down must not be able to park on a question nobody can
+     * answer.  A <b>WebSocket</b> disconnect is a different event -- protocol
+     * contract (c): a client that reconnects gets {@code hello_ok} +
+     * {@code state} + {@code input} again and the game continues -- so
+     * {@code WsTransport} lifts the latch <b>immediately</b> after a disconnect
+     * (unless it is closing) and again at the next handshake, and nothing else
+     * does.
+     *
+     * <p>Leaving it latched between the drop and the reconnect was a defect, and
+     * it cost the player their decisions: {@link #register} was a no-op and
+     * {@link #await} returned {@code null} at once, so every ask raised in that
+     * window resolved instantly to its section 5.4 default -- a browser refresh
+     * spent two asks in the ~3 s it took to come back (measured:
+     * {@code var/games/verify-cancelall-13}, ask {@code a2} auto-defaulted with
+     * no {@code answer} line at all).  It also made
+     * {@code WsTransport.NO_CLIENT_ASK_TIMEOUT_MS} unreachable after the first
+     * disconnect, which is not what that constant is documented to be for.
+     * Every ask cancelled <em>at</em> the drop stays cancelled -- those game
+     * threads have already degraded and cannot be un-degraded -- but the next
+     * one parks up to that cap and is re-delivered by {@code resend()} to a
+     * client that comes back inside it.
+     */
+    public void reopen() {
+        closed = false;
+    }
+
     /** Whether an askId is still outstanding. */
     public boolean isPending(final String askId) {
         return pool.containsKey(askId);
@@ -174,7 +204,13 @@ public final class ReplyPool {
     }
 
     private void watch() {
-        while (!closed) {
+        // Not `while (!closed)`: cancelAll() latches `closed` on every WebSocket
+        // disconnect (contract (c)), and a reconnect lifts it again -- so a
+        // watchdog that stopped there would report nothing for the rest of a
+        // session that had one dropped socket in it.  It is a daemon thread that
+        // prints only when something is actually parked, so looping for the life
+        // of the JVM costs one wakeup every WATCHDOG_MS.
+        while (true) {
             try {
                 Thread.sleep(WATCHDOG_MS);
             } catch (final InterruptedException e) {

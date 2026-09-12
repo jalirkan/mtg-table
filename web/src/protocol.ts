@@ -1401,6 +1401,18 @@ export interface SessionHeader {
    * thread.
    */
   transport?: 'null' | 'auto' | 'console' | 'ws';
+  /**
+   * §8.1. Present, and `"client"`, only on a log written by a CLIENT
+   * (`tools/ws-auto-play.mjs --log`) rather than by the bridge. Absent means the
+   * bridge wrote it.
+   *
+   * It exists for one reader: `tools/check-redaction.mjs` relaxes the `seq`
+   * continuity rule — and nothing else — for a client log, because a client
+   * legitimately sees a frame re-delivered verbatim (a `resync`, a reconnect)
+   * and real forward gaps (the frames it was not connected for). Both are
+   * amendment **M10**; in a bridge log the same shapes would be a dropped frame.
+   */
+  recordedBy?: 'client';
   decks: DeckRef[];
 }
 

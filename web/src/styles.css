@@ -488,3 +488,307 @@ button:disabled {
 .panel--log {
   margin-top: 0.5rem;
 }
+
+/* ===========================================================================
+ * M3 — the board is a seat
+ *
+ * Everything below is an affordance, not a decision: what is clickable is every
+ * card (amendment M8), and what a button says is the engine's own label. The
+ * outline on a card still means exactly one thing — the engine named that id in
+ * `input.selectable.cardIds` — and it is not what gates the click.
+ * =========================================================================== */
+
+.btn {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.btn--small {
+  padding: 0 0.35rem;
+  font-size: 11px;
+}
+
+.btn--primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn--on {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+.btn--engine {
+  min-width: 6rem;
+}
+
+/* §9 invariant 6: reachable from every UI state, and visibly not an ordinary
+   button — it ends the game and there is no undo for it. */
+.btn--concede {
+  margin-left: auto;
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.btn--armed {
+  background: var(--error);
+  color: #14161a;
+}
+
+/* --- a clickable card ----------------------------------------------------- */
+
+/* The card line's own button. It wraps the name rather than the <li> so that it
+   is focusable and announced as a button — and so the window-level Space/Escape
+   handler in main.tsx can tell "a control has focus" from "the board does". */
+.card__btn {
+  display: inline;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card__btn:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.card__btn:hover:not(:disabled) .card__name {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.card__btn:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.player__name {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.player__name:hover:not(:disabled) {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.player__name--selectable {
+  color: var(--select);
+}
+
+/* --- toasts --------------------------------------------------------------- */
+
+/* "Briefly" is a CSS animation and not a timer, deliberately: a timer in
+   Board.tsx would be its first effect, and the render test folds every frame of
+   every fixture through `renderToStaticMarkup`, which runs none. The full
+   history stays in the Notices panel — a toast is never the only copy. */
+.toasts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.3rem 1rem;
+  min-height: 1.6rem;
+}
+
+.toast {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.1rem 0.5rem;
+  background: var(--panel-2);
+  animation: toast-fade 8s ease-out forwards;
+}
+
+.toast--turn {
+  border-color: var(--ok);
+  color: var(--ok);
+  animation: none;
+}
+
+.toast--warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.toast--error {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+@keyframes toast-fade {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+/* --- the connection bar --------------------------------------------------- */
+
+.wsbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.3rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.wsbar__dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.wsbar__dot--open {
+  background: var(--ok);
+}
+
+.wsbar__dot--connecting,
+.wsbar__dot--reconnecting {
+  background: var(--warn);
+}
+
+.wsbar__dot--closed,
+.wsbar__dot--refused {
+  background: var(--error);
+}
+
+/* --- the ask form --------------------------------------------------------- */
+
+.ask-modal__body {
+  max-height: 26rem;
+  overflow: auto;
+}
+
+.ask-modal__list {
+  margin: 0.2rem 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ask-modal__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.05rem 0;
+}
+
+.ask-modal__row--on {
+  background: rgba(255, 207, 92, 0.12);
+}
+
+.ask-modal__row-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.2rem;
+}
+
+.ask-modal__pick {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0.05rem 0.2rem;
+  text-align: left;
+  cursor: pointer;
+  flex: 1 1 auto;
+}
+
+.ask-modal__pick:hover:not(:disabled) {
+  background: var(--panel);
+}
+
+.ask-modal__tick {
+  color: var(--select);
+}
+
+.ask-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+.ask-modal__two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.6rem;
+}
+
+.ask-modal__two h4 {
+  margin: 0.2rem 0;
+  font-size: 12px;
+}
+
+.ask-modal__amount {
+  width: 4rem;
+  margin-left: auto;
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.ask-modal__text {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.15rem 0.4rem;
+  min-width: 14rem;
+}
+
+.ask-modal__suggestions {
+  display: inline-flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.ask-modal__choices {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.ask-modal__reveal {
+  border-top: 1px dashed var(--line);
+  margin-top: 0.4rem;
+}
+
+.ask-modal__card {
+  margin: 0.2rem 0;
+}
+
+.ask-modal__remember {
+  display: block;
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+
+.panel--input {
+  border-color: var(--accent);
+}

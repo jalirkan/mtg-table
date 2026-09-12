@@ -613,6 +613,38 @@ build exit=1
 | `decks/trample-probe.dck` (18 Forest + 22 Garruk's Companion, 3/2 trample) | `assign_damage` — `PlayerControllerHuman.java:289` asks the GUI only for a trampler or a double block | `fixtures/games/human-trample-7.jsonl` |
 | `decks/scry-probe.dck` (24 Island + 16 Opt) | `input.focusCard` — scry 1 with **D13**'s pref off routes to `willPutCardOnTop`, which pushes `setCard` on the game thread with a *library* card | `fixtures/games/human-scry-7.jsonl` |
 
+**The re-record recipe, in full — `--deck2` is load-bearing.** Both probe
+recordings are `pacho-shield`'s *opponent* replaced as well, and leaving
+`--deck2` off changes what the engine asks: six re-records of
+`human-trample-7` without it produced **no `assign_damage` ask at all**, which
+would silently destroy the only engine evidence for that kind. The five
+committed seat fixtures are exactly:
+
+```bash
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 42   --game-id human-auto-42
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 7    --game-id human-auto-7
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 2026 --game-id human-auto-2026
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 7 --game-id human-trample-7 \
+    --deck decks/trample-probe.dck --deck2 decks/morph-probe.dck
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 7 --game-id human-scry-7 \
+    --deck decks/scry-probe.dck    --deck2 decks/morph-probe.dck
+# then, for each:  cp var/games/<id>/frames.jsonl fixtures/games/<id>.jsonl
+```
+
+The `--game-id` is not cosmetic either: it is written into the session header and
+into every `state.gameId`, so a fixture recorded under a different id differs from
+the committed one on every line.
+
+**Re-recorded 2026-09-11** for amendment **M14** (the asynchronous
+`ability_menu`). `human-auto-42` went from 1,611 to 1,588 lines and from two ask
+kinds to four — `choose_list`, `order`, **`ability_menu`** (7) and
+**`assign_damage`** (1, from the primary deck, which had never reached it).
+`human-auto-7` gained one `ability_menu`; `human-auto-2026`, `human-trample-7`
+and `human-scry-7` are unchanged in shape (their policies never clicked a
+multi-ability card), and the two probe properties this section exists for survive
+intact: 24 `input.focusCard` pushes in `human-scry-7`, one `assign_damage` ask in
+`human-trample-7`. All five PASS `check-redaction.mjs`.
+
 The `assign_damage` ask, from the engine, first try:
 
 ```json
