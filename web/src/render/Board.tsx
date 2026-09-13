@@ -74,6 +74,7 @@ import {
   type YieldKind,
 } from '../protocol.ts';
 import type { ClientState, TimestampedNotice } from '../reduce.ts';
+import type { View } from '../useView.ts';
 import { ArrowsOverlay } from './ArrowsOverlay.tsx';
 import { AskModal, defaultDraft, type AskDraft } from './AskModal.tsx';
 import type { AskPickerProps } from './AskPicker.tsx';
@@ -81,6 +82,7 @@ import type { Clicks } from './CardTile.tsx';
 import { CardZoom } from './CardZoom.tsx';
 import { CombatBands } from './CombatBands.tsx';
 import { ConcedeButton, DecisionPanel, type KeyFlash } from './DecisionPanel.tsx';
+import { GameOverBanner } from './GameOver.tsx';
 import { HandFan } from './HandFan.tsx';
 import { HotkeysOverlay } from './HotkeysOverlay.tsx';
 import { isLandTypeLine } from './labels.ts';
@@ -101,7 +103,7 @@ import {
 import { PlayerRail } from './PlayerRail.tsx';
 import { spendableColors } from './pool.ts';
 import { cardKey, playerKey, RectsContext, stackKey, useRectRegistry, type RectKey } from './rects.ts';
-import { cardLabel, entityLabel, findCard, playerName } from './resolve.ts';
+import { cardLabel, entityLabel, findCard } from './resolve.ts';
 import { StackPanel } from './StackPanel.tsx';
 import { useWindowKeydown } from './useKeyboard.ts';
 import { ZoneBrowser } from './ZoneBrowser.tsx';
@@ -188,6 +190,20 @@ export interface BoardProps {
    * engine. Never treat this as game state: it is the wire, not the table.
    */
   connected?: boolean | null;
+  /**
+   * **M7 — `V`, the board's half of the view switch** (report 09 §2.2).
+   *
+   * `keys.ts` grew two M7 rows in E6 and the `?`/`H` overlay — which only the
+   * *board* draws — listed both from the day they were added, but only
+   * `arena/Arena.tsx` handled `toggleView`. On the board the key fell into the
+   * `view` switch's `default: return`, **after** `event.preventDefault()`, so
+   * `V` was swallowed with no act, no flash and no clue: the one renderer that
+   * prints the key table was the one renderer in which the key did nothing.
+   *
+   * `null`/absent leaves it inert, and the key then *says* so rather than being
+   * eaten — a replay-only embed and every test render take that path.
+   */
+  onSetView?: ((view: View) => void) | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,6 +216,7 @@ export function Board({
   actions = null,
   clientNotices = [],
   connected = null,
+  onSetView = null,
 }: BoardProps): JSX.Element {
   const { board, hello, input } = state;
   const you = hello?.you ?? state.session?.seat ?? null;
@@ -459,6 +476,33 @@ export function Board({
               }
               return;
             }
+            // **M7 — the board's half of `V`.** It sends nothing and touches
+            // neither transport nor reducer: both renderers are functions of the
+            // same `ClientState` and `main.tsx` owns it, so a live game survives
+            // the switch and a replay keeps its frame.
+            case 'toggleView':
+              setFlash(null);
+              if (onSetView === null) {
+                setFlash({
+                  id: binding.id,
+                  chord: binding.chord,
+                  why: 'this board has no arena to switch to',
+                });
+                return;
+              }
+              onSetView('arena');
+              return;
+            // `K` belongs to the arena's cue queue; there is nothing on the
+            // board for it to skip. **Say so** rather than swallowing it — a key
+            // the `?` overlay lists and the handler eats is exactly the shape of
+            // defect this branch exists to stop (report 10 §12.2 rule 4).
+            case 'skipCues':
+              setFlash({
+                id: binding.id,
+                chord: binding.chord,
+                why: 'K skips the arena’s animations — there are none on the board; press V',
+              });
+              return;
             default:
               return;
           }
@@ -469,7 +513,7 @@ export function Board({
     },
     // `keyContext` and `state.ask` are read fresh on every render; the listener
     // itself is registered once and reads this through a ref (`useKeyboard.ts`).
-    [actions, closeZones, concedeArmed, keyContext, state.ask, zoomId],
+    [actions, closeZones, concedeArmed, keyContext, onSetView, state.ask, zoomId],
   );
   useWindowKeydown(onKey);
 
@@ -843,7 +887,7 @@ export function Board({
           <Toasts notices={state.notices} clientNotices={clientNotices} />
           {/* M6 — "Your turn" is a tint over the table, not a fortieth toast. */}
           <TurnFlash state={state} />
-          {state.gameOver !== null && <GameOverBanner state={state} board={board} />}
+          {state.gameOver !== null && <GameOverBanner state={state} />}
         </div>
 
         <Seat
@@ -1253,27 +1297,6 @@ function yourTurn(state: ClientState): boolean {
   );
 }
 
-function GameOverBanner({ state, board }: { state: ClientState; board: GameStateBody }): JSX.Element {
-  const over = state.gameOver;
-  if (over === null) return <></>;
-  return (
-    <div className="banner banner--over" role="status">
-      <strong>Game over.</strong>{' '}
-      {over.winner !== null
-        ? `Winner: ${playerName(board, over.winner)}.`
-        : // §7 + amendment M11: `winner: null` is a draw — EXCEPT when `reason`
-          // is null too, which is the one path where the engine never published
-          // an outcome at all (a concede before this seat was asked for
-          // anything). Printing "Draw" there would report a result nobody
-          // played for.
-          over.reason === null
-          ? 'No result — the session ended before the engine published an outcome.'
-          : 'Draw.'}{' '}
-      {over.reason ?? ''}
-      {!over.matchOver && ' (the match continues)'}
-    </div>
-  );
-}
 
 /**
  * The toast strip: what the engine complained about (§6) and what the transport

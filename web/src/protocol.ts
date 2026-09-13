@@ -809,7 +809,13 @@ export interface TapEvent {
 export interface CountersEvent {
   kind: 'counters';
   cardId: number;
-  /** The `CounterType` name, e.g. `P1P1`. */
+  /**
+   * Forge's **display** name for the counter — `CounterType.getName()`, i.e.
+   * `+1/+1`, `-1/-1`, `Spore` — and **never** the enum constant `P1P1`
+   * (docs/protocol.md §3.6, amendment **M43**). It is an opaque string: a
+   * consumer that wants an identifier-shaped token normalises one itself
+   * (`counterToken()` in `arena/cues/types.ts`).
+   */
   counter: string;
   from: number;
   to: number;

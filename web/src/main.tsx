@@ -12,6 +12,13 @@
  * `/fixtures/` (see vite.config.ts). `?port=` overrides the WebSocket port,
  * whose default is a build-time constant (`transport/ws.ts`).
  *
+ * **M7 adds a second renderer, not a second app.** `#arena` (or `?view=arena`)
+ * swaps `<Board>` for `<Arena>` over the *same* `ClientState`: the transport,
+ * the reducer and the frame stream are untouched, and switching views mid-game
+ * drops nothing. The arena is `lazy()`-imported so the 2D entry chunk does not
+ * grow by the 3D stack — measured, and it is the reason the import below is
+ * dynamic (report 09 §1.3).
+ *
  * **The mode switch is the whole of the difference.** `<Board>` takes the same
  * `ClientState` either way; what M3 adds is an `actions` object, and a replay
  * passes `null` for it because a replay has no server to send an `act` to.
@@ -26,17 +33,34 @@
  * the handler and the help screen.
  */
 
-import { StrictMode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import {
+  StrictMode,
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 import { EMPTY_ART_INDEX, loadArtIndex, preloadArt, type ArtIndex } from './art.ts';
-import type { AnswerValue, ManaColor, SetYieldMode, YieldKind, YieldToAct } from './protocol.ts';
+import type {
+  ActBody,
+  AnswerValue,
+  ManaColor,
+  SetYieldMode,
+  YieldKind,
+  YieldToAct,
+} from './protocol.ts';
 import { gameLabel } from './reduce.ts';
 import { Board, type BoardActions } from './render/Board.tsx';
 import { ErrorBoundary } from './render/ErrorBoundary.tsx';
 import { ReplayControls } from './render/ReplayControls.tsx';
 import { LogReplayTransport, parseFrameLog } from './transport/replay.ts';
 import { DEFAULT_WS_PORT, WebSocketTransport, type WsStatus } from './transport/ws.ts';
+import { useView, type View } from './useView.ts';
 // M5 (M4 follow-up 1): our own extract of `mana-font`, in place of the
 // package's stylesheet. `mana.css@1.18.0` opens with two `@font-face` blocks
 // naming eot/woff/ttf/svg for Mana AND for MPlantin, which the bundler faithfully
@@ -55,6 +79,16 @@ const DEFAULT_REPLAY = 'games/g1.jsonl';
  * cannot detect Java↔TypeScript drift and must not inflate the contract test.
  */
 const FALLBACK_REPLAY = 'synthetic/sample-handwritten.jsonl';
+
+/**
+ * **The arena chunk, fetched only when someone opens it** (report 09 §1.3).
+ *
+ * `three` + `@react-three/fiber` + `@react-three/drei` are ~240 kB gzip. A
+ * static import would put every byte of that in the entry chunk, on the 2D
+ * board's critical path, for a renderer most sessions never open. `npm run
+ * build` prints both chunk sizes and `docs/evidence/m7-arena.md` records them.
+ */
+const Arena = lazy(() => import('./arena/Arena.tsx'));
 
 // ---------------------------------------------------------------------------
 // Mode
@@ -81,9 +115,96 @@ function modeFromQuery(): Mode {
   return { kind: 'ws', port: Number.isFinite(port) && port > 0 ? port : DEFAULT_WS_PORT };
 }
 
+/**
+ * The arena's two debug switches, read once. Both default off: a grid under 40
+ * cards is noise, and drei's `<Stats>` panel is a DOM overlay in the corner.
+ *
+ *     ?stats=1   drei <Stats> — the fps / ms / MB panel
+ *     ?grid=1    a debug grid in card-height units
+ */
+interface ArenaFlags {
+  stats: boolean;
+  grid: boolean;
+  /**
+   * `?arena=off` — the kill switch (report 09 §11, E6).
+   *
+   * WebGL is the one thing in this app that can fail for a reason the user
+   * cannot see: a driver, a blocklisted GPU, a remote session with no hardware
+   * context. With it set, `#arena` renders the 2D board and says why, so a
+   * bookmarked arena URL can never be a page that will not come up.
+   */
+  off: boolean;
+  /**
+   * `?dpr=0.75` — pin the arena's render resolution (report 09 §9.2 rule 9).
+   *
+   * The automatic ladder is `<PerformanceMonitor>` inside the arena; this is the
+   * hand control beside it, and it exists because the scene is **fill-rate
+   * bound** (measured: SwiftShader at 1920×1080 p50 19.4 ms, at 1280×633 p50
+   * 8.0 ms, same 35 draw calls) — so on a machine that cannot hold 60, the one
+   * number worth turning down is this one.
+   */
+  dpr: number | null;
+  /**
+   * `?glinfo=1` — expose `gl.info`'s counters on `window.__mtgArena.info()` from
+   * a **production** build (report 09 §9.1's draw-call budget).
+   *
+   * `tools/arena-bench.mjs` measures the built bundle on purpose, and the dev
+   * handle it was reading is `import.meta.env.DEV`-only, so its draw-call line
+   * silently came from a dev build while the frame times beside it came from the
+   * production one. Off by default; six numbers and nothing else.
+   */
+  glinfo: boolean;
+}
+
+function arenaFlagsFromQuery(): ArenaFlags {
+  const params = new URLSearchParams(window.location.search);
+  const on = (key: string): boolean => {
+    const value = params.get(key);
+    return value !== null && value !== '0' && value !== 'false';
+  };
+  const arena = params.get('arena');
+  const dpr = Number.parseFloat(params.get('dpr') ?? '');
+  return {
+    stats: on('stats'),
+    grid: on('grid'),
+    off: arena === 'off' || arena === '0',
+    dpr: Number.isFinite(dpr) && dpr >= 0.25 && dpr <= 3 ? dpr : null,
+    glinfo: on('glinfo'),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Shared bits
 // ---------------------------------------------------------------------------
+
+/**
+ * Board ⇄ Arena. A link and not a `<button>` because it really is a URL: the
+ * hash is the state (`web/src/useView.ts`), so middle-click, bookmark and Back
+ * all behave, and `npm run dev:arena` opens the same page the toggle would.
+ *
+ * **It is not the only way across.** `V` is a row of `web/src/keys.ts` — the one
+ * tested table both renderers read (CLAUDE.md, M4 convention 4) — and E6 added
+ * it there rather than as a handler of its own, so the `?`/`H` overlay lists it
+ * for free. The key is handled in `arena/Arena.tsx` (arena → board) and in
+ * `render/Board.tsx` (board → arena); this link and that row do the same thing
+ * through the same `setView`, which is why neither can drift from the other.
+ */
+function ViewToggle({ view, onSet }: { view: View; onSet: (view: View) => void }): JSX.Element {
+  const next: View = view === 'arena' ? 'board' : 'arena';
+  return (
+    <a
+      className="viewtoggle"
+      href={next === 'arena' ? '#arena' : '#'}
+      onClick={(event) => {
+        event.preventDefault();
+        onSet(next);
+      }}
+      title={next === 'arena' ? 'Open the 3D arena (#arena)' : 'Back to the 2D board'}
+    >
+      {next === 'arena' ? '▣ arena' : '▤ board'}
+    </a>
+  );
+}
 
 function useArt(): ArtIndex {
   const [art, setArt] = useState<ArtIndex>(EMPTY_ART_INDEX);
@@ -198,8 +319,9 @@ function StatusBar({
   );
 }
 
-function LiveApp({ port }: { port: number }): JSX.Element {
+function LiveApp({ port, view, onSetView }: { port: number; view: View; onSetView: (view: View) => void }): JSX.Element {
   const art = useArt();
+  const flags = useMemo(arenaFlagsFromQuery, []);
   const transport = useMemo(() => liveTransport(port), [port]);
   // The transport is mutable; this counter is what tells React to re-read it.
   const [, bump] = useReducer((n: number) => n + 1, 0);
@@ -283,6 +405,15 @@ function LiveApp({ port }: { port: number }): JSX.Element {
     [transport],
   );
 
+  // The arena sends acts the same way the board's `actions` object does — one
+  // function, the act verbatim, no logic between the click and the wire.
+  const onAct = useCallback(
+    (act: ActBody) => {
+      transport.act(act);
+    },
+    [transport],
+  );
+
   const resync = useCallback(() => {
     transport.resync();
   }, [transport]);
@@ -311,6 +442,10 @@ function LiveApp({ port }: { port: number }): JSX.Element {
           {gameLabel(state) !== null && <> · {gameLabel(state)}</>} · Space = the focused button,
           Escape = Cancel, H = keys
         </span>
+        <ViewToggle view={view} onSet={onSetView} />
+        {flags.off && view === 'arena' && (
+          <span className="muted">?arena=off — the 3D arena is disabled; this is the board</span>
+        )}
         <StatusBar status={status} onResync={resync} onReconnect={reconnect} />
         <ArtMisses art={art} />
         <Credits />
@@ -343,16 +478,42 @@ function LiveApp({ port }: { port: number }): JSX.Element {
       {/* The render half of §1's unknown-frame policy: a drift that survives
           `reduce()` must be a banner naming the frame, not a blank page. */}
       <ErrorBoundary resetKey={state.framesApplied} label="The board">
-        <Board
-          state={state}
-          art={art}
-          actions={actions}
-          clientNotices={transport.clientNotices}
-          // M6 fix — the New Game row is the one control that must know. It
-          // appears at `over`, and an act sent into a closed socket is a toast
-          // and nothing else (`DecisionPanel`'s `NewGameRow`).
-          connected={status.status === 'open'}
-        />
+        {view === 'arena' && !flags.off ? (
+          <Suspense fallback={<p className="pad muted">loading the arena…</p>}>
+            <Arena
+              state={state}
+              art={art}
+              onAct={onAct}
+              // The arena is a seat, not a spectator: the same act function the
+              // board's `actions` object wraps, the same `answer` the ask modals
+              // send, and the same socket state the New Game row reads.
+              onAnswer={(askId, value) => {
+                transport.answer(askId, value);
+              }}
+              connected={status.status === 'open'}
+              onSetView={onSetView}
+              showStats={flags.stats}
+              showGrid={flags.grid}
+              dpr={flags.dpr}
+              glInfo={flags.glinfo}
+            />
+          </Suspense>
+        ) : (
+          <Board
+            state={state}
+            art={art}
+            actions={actions}
+            clientNotices={transport.clientNotices}
+            // M6 fix — the New Game row is the one control that must know. It
+            // appears at `over`, and an act sent into a closed socket is a toast
+            // and nothing else (`DecisionPanel`'s `NewGameRow`).
+            connected={status.status === 'open'}
+            // M7 verification fix — `V` is a row of the one keymap and the board
+            // has to handle it, or the only view that prints the key table is
+            // the one view where the key is dead.
+            onSetView={onSetView}
+          />
+        )}
       </ErrorBoundary>
     </div>
   );
@@ -412,8 +573,17 @@ async function fetchLog(path: string): Promise<string> {
   return pending;
 }
 
-function ReplayApp({ requested }: { requested: string }): JSX.Element {
+function ReplayApp({
+  requested,
+  view,
+  onSetView,
+}: {
+  requested: string;
+  view: View;
+  onSetView: (view: View) => void;
+}): JSX.Element {
   const art = useArt();
+  const flags = useMemo(arenaFlagsFromQuery, []);
   const [load, setLoad] = useState<LoadState>({ status: 'loading', path: requested });
   // The transport is mutable; this counter is what tells React to re-read it.
   const [, bump] = useReducer((n: number) => n + 1, 0);
@@ -495,6 +665,10 @@ function ReplayApp({ requested }: { requested: string }): JSX.Element {
       <div className="app__bar">
         <h1>mtg-table — replay</h1>
         <span className="muted">/fixtures/{load.path}</span>
+        <ViewToggle view={view} onSet={onSetView} />
+        {flags.off && view === 'arena' && (
+          <span className="muted">?arena=off — the 3D arena is disabled; this is the board</span>
+        )}
         <ArtMisses art={art} />
         <Credits />
       </div>
@@ -546,11 +720,33 @@ function ReplayApp({ requested }: { requested: string }): JSX.Element {
           mounted and the user can step back off the frame that threw; moving to
           a different frame clears it. */}
       <ErrorBoundary resetKey={transport.index} label="The board" frame={frame}>
-        {/* No `actions`: a replay has no server, and a control that did nothing
-            would be worse than a disabled one. The board renders Read-only and
-            every affordance is inert — that is the whole of the difference
-            between the two modes. */}
-        <Board state={transport.state} art={art} />
+        {/* No `actions` / no `onAct`: a replay has no server, and a control that
+            did nothing would be worse than a disabled one. Both renderers are
+            read-only and every affordance is inert — that is the whole of the
+            difference between the two modes, and the arena inherits it for free
+            because it takes the same prop the board does.
+
+            The controls above drive BOTH: prev / next / play / speed / scrub are
+            transport controls, they move the same `LogReplayTransport` through
+            the same pure `reduce()`, and the arena is a function of its output.
+            Scrubbing backwards re-folds from the session header (M1), which is
+            why a 3D scene can follow it at all. */}
+        {view === 'arena' && !flags.off ? (
+          <Suspense fallback={<p className="pad muted">loading the arena…</p>}>
+            <Arena
+              state={transport.state}
+              art={art}
+              onAct={null}
+              onSetView={onSetView}
+              showStats={flags.stats}
+              showGrid={flags.grid}
+              dpr={flags.dpr}
+              glInfo={flags.glinfo}
+            />
+          </Suspense>
+        ) : (
+          <Board state={transport.state} art={art} onSetView={onSetView} />
+        )}
       </ErrorBoundary>
     </div>
   );
@@ -562,10 +758,13 @@ function ReplayApp({ requested }: { requested: string }): JSX.Element {
 
 function App(): JSX.Element {
   const mode = useMemo(modeFromQuery, []);
+  // One `useView` for the page, above both modes: the view is a property of the
+  // window, not of the transport, and neither app may re-mount when it changes.
+  const [view, setView] = useView();
   return mode.kind === 'replay' ? (
-    <ReplayApp requested={mode.path} />
+    <ReplayApp requested={mode.path} view={view} onSetView={setView} />
   ) : (
-    <LiveApp port={mode.port} />
+    <LiveApp port={mode.port} view={view} onSetView={setView} />
   );
 }
 

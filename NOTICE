@@ -139,7 +139,49 @@ same basis as the card images in section 2.
 mana-font is not affiliated with Wizards of the Coast. Neither is mtg-table.
 
 
-6. Code that is deliberately NOT used
+6. three.js, react-three-fiber, react-three-drei (the M7 arena)
+---------------------------------------------------------------
+
+    Package:  three 0.186.0 (npm), https://github.com/mrdoob/three.js
+    Licence:  MIT — its LICENSE reads "The MIT License / Copyright (c) 2010-2026
+              three.js authors"
+
+    Package:  @react-three/fiber 8.18.0 (npm),
+              https://github.com/pmndrs/react-three-fiber
+    Licence:  MIT — declared in package.json; the published tarball carries no
+              LICENSE file of its own
+
+    Package:  @react-three/drei 9.122.0 (npm), https://github.com/pmndrs/drei
+    Licence:  MIT — its LICENSE reads "Copyright (c) 2020 react-spring"
+
+    Package:  @types/three 0.185.4 (npm, devDependency only — three ships no
+              types of its own), https://github.com/DefinitelyTyped/DefinitelyTyped
+    Licence:  MIT (DefinitelyTyped; "Copyright (c) Microsoft Corporation")
+
+Added in M7 (docs/research/09-arena-tier1-plan.md §1). They are the arena's
+renderer: the 3D presentation of the same frame stream the 2D board renders.
+Versions are pinned EXACTLY, with no caret, for a stated reason — fiber 8 and
+drei 9 are the React-18 line, frozen since 2025-02-19 with no maintenance
+branch, and fiber 8's `three` peer range (">=0.133") has no upper bound, so a
+floating range would eventually install a `three` that the frozen line cannot
+be fixed for (report 09 §1.2, §13).
+
+They are bundled into the browser client and lazily code-split: nothing is
+hot-linked, and the 2D board's entry chunk does not carry them. Vite emits the
+minified code into web/dist/assets/; their MIT copyright notices are carried in
+the license comments the bundler preserves.
+
+MIT is GPL-3.0-compatible in the direction that matters here (MIT code may be
+combined into a GPL-3.0-or-later work), so bundling them changes nothing about
+this repository's licence and adds no AGPL exposure. None of them is affiliated
+with Wizards of the Coast, and none ships any Magic content: the card images the
+arena puts on its quads are the same Scryfall images as section 2, fetched at
+runtime and never committed. The card back the arena draws is generated
+procedurally in code (web/src/arena/scene/textFrame.ts) rather than scanned,
+because the printed Magic card back is trademarked artwork.
+
+
+7. Code that is deliberately NOT used
 -------------------------------------
 
     witchesofthehill/manabrew — AGPL-3.0-or-later

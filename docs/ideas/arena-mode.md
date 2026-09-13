@@ -4,6 +4,21 @@ Raised 2026-09-11. **Scheduled as M7, after M6** (see `PLAN.md`). The protocol
 change it needs — an id-only `events` list on every `state` frame — was pulled
 forward into M1 (`docs/protocol.md` §3.6, `DECISIONS.md` D12).
 
+> **STATUS, 2026-09-13 — Tier 1 is BUILT.** Six evenings E1–E6 of
+> [`../research/09-arena-tier1-plan.md`](../research/09-arena-tier1-plan.md) §11
+> plus two verification passes; `web/src/arena/`, lazily imported, on the
+> React-18 3D line (**D47**, **D48**). Open it with
+> `npm --prefix web run dev:arena` or `./scripts/play.sh --arena`, or press `V`
+> in any browser session. All **25** of the protocol's event kinds have a cue,
+> the S.H.I.E.L.D. table below is implemented as `web/src/arena/cues/cues.json`
+> (28 cards, 7 archetypes), and a whole game has been played from the 3D seat.
+> What was measured: [`../evidence/m7-arena.md`](../evidence/m7-arena.md). What
+> is still owed, and the Tier 2 hand-over: `PLAN.md` §M7.
+>
+> **Tiers 2 and 3 are NOT started.** They are on `PLAN.md`'s deferred list, and
+> the summary of what Tier 1 already built for them (the archetype key, the cue
+> file, the offset model, the one frame loop, the pure camera) is there too.
+
 ## Why it fits this architecture
 
 The client is `render(reduce(frames))`: a pure function of a frame stream that
@@ -22,18 +37,18 @@ scratch.
 
 ## Tiers, cheapest first
 
-- **Tier 1, the 3D table (weeks of evenings, no art assets).** Cards are
+- **Tier 1, the 3D table (weeks of evenings, no art assets). ← BUILT.** Cards are
   textured planes using the Scryfall images we already fetch. `cast` = card
   rises and glows in its mana colour; `tap` = rotate; `attackers` = card lunges
   at the defender with a camera swoop; `damage` = numbers; `zone`
   battlefield→graveyard = dissolve; `life` = HUD pulse. Looks dramatic already.
-- **Tier 2, creature manifestations (months).** A small library of stylised
+- **Tier 2, creature manifestations (months). ← not started.** A small library of stylised
   generic models keyed by creature type and colour with idle / attack / hit /
   die animations (Mixamo-style rigs). The MSH deck has a handful of types —
   Human Spy Hero, Robot Villain, Insect, Scientist — so about eight archetypes
   cover it. Two duelist avatars stand at either end; creatures appear as
   holograms between them. This is the Yu-Gi-Oh look.
-- **Tier 3, per-card models (open-ended).** Unique meshes per card, hand-made or
+- **Tier 3, per-card models (open-ended). ← not started.** Unique meshes per card, hand-made or
   generated from the card art with an image-to-3D tool.
 
 ## Source-material-informed animation
@@ -72,6 +87,49 @@ Cue table for the current deck (first pass; refine when we build it):
 | Robotics Mastery / Depower | Tech buffs and shutdowns | Circuit-trace glow on the target / lights flicker out | `cast`, `stats` |
 | Thriving Heath / Thriving Isle, Plains, Island | Lands | Terrain tiles that rise from the table on `land`; mana taps ripple | `land`, `tap` |
 
+### Which rows Tier 1 implements — all of them, three with a stated deviation
+
+`web/src/arena/cues/cues.json`, 2026-09-13: **28 card entries and 7 archetypes**,
+with a `_note` on every entry saying which event kinds it keys off and what the
+source material is. Every row of the table above has an entry. The census
+`web/test/replay-cues.test.ts` prints on every run, over all eighteen committed
+recordings: **1,156 of 19,208 events resolve to a per-card cue** across 40
+distinct entries, and 1,007 more to an archetype.
+
+| row | what Tier 1 does | faithful? |
+|---|---|---|
+| Ant-Man, Reformed Rogue | `attackers:alone` → `attack.shrink` (shrinks to a speck, 0.18 scale); `damage` → `damage.hit` pops him back | yes |
+| Wasp, Shrinking Savior | `presence` hover; `cast` → `fx.scaleBeam` (the target visibly shrinks); `attackers` → `attack.jet` | yes |
+| Giant-Sized Flying Ant | `zone`→battlefield → `zone.enters`; `attackers` → `attack.jet` | yes, minus the rider silhouette (a model — Tier 2) |
+| Ant-Man's Air Force | `cast` **and** `resolved` → `fx.swarm`, a particle sweep | yes |
+| Pym Particles | `cast` → `fx.scaleBeam` | **partly** — the beam fires on the cast; it does not re-key off the `counters`/`stats` that follow |
+| Quantum Reduction | `cast` → `fx.collapse` (target collapses to a point of light) | yes |
+| Quake, Agent of S.H.I.E.L.D. | `tap:on` → `fx.shockwave`, two cyan rings + a bounded camera shake | **deviation** — the ring is centred on **her own** tap. The engine never says which card caused another card's tap, and inventing that link is rules logic in a renderer |
+| Nick Fury, Spymaster | `zone`→battlefield **and** `attackers` → `fx.agents`, played *beside* him | yes — and it never creates, names or counts the tokens; each one enters with its own `zone` event and its own cue |
+| Agent Phil Coulson | his own `counters:P1P1+` → `fx.badge`, plus the `creature/W` archetype's badge on every Hero that receives one | **deviation** — the badge is keyed to the card that **received** the counter. §3.6's `counters` event carries no *source*, so "Coulson did this" is not on the wire. His own entry fired **0 times** in eighteen recordings; only a census tells you that |
+| Peggy Carter, Secret Agent | `attackers:alone` → `attack.aegis`, a gold halo and a held ring | yes |
+| Agent 13, Sharon Carter | `attackers` → `attack.lunge` | the generic lunge — a pistol-draw *pose* needs a rigged model (Tier 2) |
+| Agents of S.H.I.E.L.D. | `attackers` → `attack.lunge` | as above; "the squad steps forward together" is Tier 2 |
+| S.H.I.E.L.D. Helicarrier | `zone`→battlefield → `fx.flyIn` (enters through the top of the frame, downwash particles, a camera move at priority 3) and then **stays** up — `presence: hoverY 0.9`, a *layout* rule, so it survives `skip all` | yes |
+| Helicarrier Strike | `cast` → `fx.strike`, a reticle and a beam from above | yes |
+| S.H.I.E.L.D. Spy Kit / Super Suit | `attach:on` → `attach.snap` (and `attach.release` on the way off) | yes |
+| Strategic Intervention | `cast` → `cast.rise`, `resolved` → `resolved.pop` | **partly** — the generic pair. The "freeze-frame and mission-control overlay" is a full-screen effect Tier 1 did not buy |
+| Web Up | `cast` → `fx.webWrap` | yes |
+| Aerial Doombot | `presence` hover + bob, tilted toward the camera; `attackers` → `attack.jet` | yes |
+| A.I.M. Scientists / Bold Biochemist | `zone`→battlefield and `counters` → `fx.hologram` | yes |
+| Robotics Mastery / Depower | `cast` → `fx.circuit`, a circuit-trace glow | yes |
+| Thriving Heath / Thriving Isle / Plains / Island | `zone`→battlefield → `fx.terrain` (the tile rises); `tap` → `fx.ripple` | yes — and these are the bulk of the census: `Island · tap` alone is 433 of the 1,156 |
+
+One card not in the table above has an entry too: **Borough Backup** (`cast` →
+`fx.swarm`). The seven archetypes — `creature/W`, `creature/U`, `creature/*`,
+`land/*`, `equipment/*`, `instant/*`, `sorcery/*` — are the middle rung, and they
+are the same keys a Tier 2 model library would be keyed by.
+
+**The one rule the file lives by, learned the hard way:** a cue keys off an event
+that is about **that card**. The ladder resolves an event through the card the
+event *names*, so where the source material's beat belongs to another card, the
+entry goes on the card the **engine** named and the `_note` says so.
+
 Rules of thumb for cues:
 
 - The engine decides what happened; a cue only decides how it looks. A cue
@@ -90,10 +148,20 @@ Rules of thumb for cues:
 - Keep the arena a *renderer*. Rules stay in Forge; the arena never decides
   anything.
 
-## First concrete step, when M7 starts
+## First concrete step, when M7 starts — DONE, 2026-09-13
 
-`web/src/arena/` with a `Scene` that consumes the same `ClientState` and its
-`events`, developed entirely against `fixtures/games/*.jsonl` with the replay
-controls. Milestone: a recorded AI-vs-AI game plays back as a Tier 1 cinematic
-with no human seat involved, with the cue table above driving at least the
-S.H.I.E.L.D. cards.
+*As written before the milestone:* `web/src/arena/` with a `Scene` that consumes
+the same `ClientState` and its `events`, developed entirely against
+`fixtures/games/*.jsonl` with the replay controls. Milestone: a recorded AI-vs-AI
+game plays back as a Tier 1 cinematic with no human seat involved, with the cue
+table above driving at least the S.H.I.E.L.D. cards.
+
+**That is what happened, and it went one step further than it asked.** The
+cinematic was developed entirely against the committed corpus with the board's
+own replay controls (`npm --prefix web run dev:arena` needs no JVM), the cue
+table above drives 28 cards, and then the *live seat* moved into the arena as
+well: `./scripts/play.sh --arena` plays a whole game against the Forge AI in 3D —
+mulligan, lands, casts, an `ability_menu` answered in M5's own modal over the
+canvas, an attack declared, a concede — with `V` switching back to the 2D board
+mid-session over the same socket. Evidence:
+[`../evidence/m7-arena.md`](../evidence/m7-arena.md) §4.

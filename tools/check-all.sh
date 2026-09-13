@@ -929,7 +929,18 @@ node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (th
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 else
-  say "web -- npm run build && npm test"
+  # `npm test` is `node --test test/*.test.ts` AND `vitest run`, and the arena's
+  # headless suites are already in that glob -- camera.test.ts, cues-exhaustive,
+  # replay-cues (the fixture sweep over all eighteen recordings), layout,
+  # liveness, colour. Nothing extra is needed here, and that is the point of
+  # report 09 section 2.4's [NO three] annotations: the whole cue engine, the
+  # pose math and the layout are importable in bare Node.
+  #
+  # NOT here: tools/arena-bench.mjs (report 09 section 9.4). It needs a built
+  # dist, a preview server and a headless Chromium, which is a different kind of
+  # dependency from everything else this gate has -- run it by hand, see
+  # docs/evidence/m7-arena.md.
+  say "web -- npm run build && npm test (includes the arena's six headless suites)"
   [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
   (cd web && npm run build) || die "npm run build"
   # MTGTABLE_WS_LOGS is THE corpus web/test/ws-log.test.ts replays, and it names

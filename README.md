@@ -200,6 +200,20 @@ node tools/fetch-art.ts
 ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --seed 7 \
     --game-id human-number-7 --deck decks/number-probe.dck --deck2 decks/morph-probe.dck
 node tools/ws-auto-play.mjs --port 8642 --probe   # the same policy over the socket
+
+# M7 — the ARENA: the same frame stream, rendered as a 3D cinematic
+npm --prefix web run dev:arena     # opens /?replay=games/g1.jsonl#arena — no JVM
+./scripts/play.sh --arena          # a LIVE game, in 3D (add --no-arena to force 2D)
+#   `V` switches renderer mid-game over the same socket; `K` skips every
+#   animation; `#arena` / `?view=arena` is the whole of the difference.
+#   Escape hatches: ?arena=off renders the 2D board even at #arena, ?dpr=0.75
+#   pins the render resolution, ?stats=1 / ?grid=1 / ?glinfo=1 are the debug flags.
+npm --prefix web run build && npm --prefix web run preview -- --port 5182 &
+node tools/arena-bench.mjs         # report 09 §9.4's frame-time measurement:
+#   headless Chromium + SwiftShader against the PRODUCTION build on 5182.
+#   --url overrides it, --settle separates a cold table from the steady state.
+#   Deliberately NOT in check-all.sh: it wants a dist, a preview server and a
+#   browser, so a performance regression does not turn the gate red.
 ```
 
 Everything above runs today. As of **M4** the board those frames feed is a real
@@ -552,6 +566,148 @@ log drawer's entry count falls as you scrub back.
 `tools/fetch-art.ts`: that deck has no art entries at all, so every card on the
 board is the generated text frame, which is what a missing image looks like.
 
+### Arena mode — the same game, in 3D
+
+**M7, Tier 1.** The arena is a **second renderer for the same frame stream**, not
+a second app: the socket, the reducer and the frame log are untouched and
+`#arena` is the whole of the difference.
+
+```bash
+npm --prefix web run dev:arena                # a recorded game as a cinematic
+./scripts/play.sh --arena                     # a LIVE game in the arena
+```
+
+**Three ways in, and they are the same page.** `#arena` (what the **V** key
+writes, and what `play.sh --arena` appends to the URL it prints), `#/arena`, or
+`?view=arena` (what `npm run dev:arena` opens). There is no router and nothing is
+persisted: the fragment *is* the state. Any replay URL takes it —
+`?replay=games/g3.jsonl#arena` — which is also how you point the cinematic at a
+fixture other than the default `g1`, because `vite` takes no positional file
+argument.
+
+Press **V** to switch between the board and the arena at any moment — mid-game,
+mid-combat, mid-question — without dropping a frame or touching the socket. Cards
+are textured planes on a 3D table, the transitions in `state.events` play as
+animations, and the S.H.I.E.L.D. deck's own cards have cues of their own
+(`web/src/arena/cues/cues.json`): the Helicarrier flies in and hovers for the
+rest of the game, Quake's tap sends a shockwave across the table, Peggy Carter
+attacking alone wears a shield.
+
+**Spectator mode is the replay corpus, and it needs no JVM.** `fixtures/games/`
+holds eighteen recorded games — the M1 AI-vs-AI duels and the later human-seat
+sessions — and every one of them plays as a cinematic with nothing running but
+`vite`:
+
+```bash
+npm --prefix web run dev                      # then edit the URL:
+#   /?replay=games/g1.jsonl#arena             an AI-vs-AI duel, as an episode
+#   /?replay=games/g3.jsonl#arena             another seed
+#   /?replay=games/morph.jsonl#arena          the deck with no art — every card
+#                                             is the generated text frame
+```
+
+The scrubber above the canvas is the board's own: step forward and back, jump,
+change speed. Scrubbing **backwards** is a fold from the start of the file, not
+an undo stack, and the arena handles it the same way it handles a `resync` or a
+new game — it flushes every animation and snaps to the frame's own resting pose,
+because a cue is only ever a transient offset on top of it. A replay is read-only
+in the arena exactly as it is on the board, and for the same reason and by the
+same mechanism: there is no transport to answer with, so `onAct` is `null` and
+every button, card and control is inert. That is one prop, not two code paths.
+
+**Keys.** There is **one keymap** for both renderers (`web/src/keys.ts`), so
+**`?` or `H`** lists all twenty rows in the arena as well — the same table the
+handler reads. The two that are the arena's own:
+
+| key | what it does |
+|---|---|
+| **V** | switch renderer: 2D board ↔ 3D arena, the same game and the same socket |
+| **K** | **skip every animation on screen.** It is `apply(t = 1)` then `end()`, so the table lands on exactly what the engine described. Nothing can be missed by pressing it |
+
+Everything else is unchanged and works in 3D: **SPACE** presses the button the
+engine focused, **ESC** is Cancel (or closes an overlay, or answers an open
+question with `null`), **CTRL+Q** concedes with a confirm, **Z** zooms, **P**
+passes priority, **E / T / B** pass to the end of the turn / your next turn /
+just before it, **Y / N** always-yes and always-no, **CTRL+Z** undoes a mana
+ability, **CTRL+A** is alpha strike, and **W U B R G C** spend floating mana.
+
+**Cue controls.** A small strip in the arena's own DOM layer carries **⏸ / ▶**, **step batch**
+(play the earliest queued batch to its end), **skip cue** (snap the one that is
+playing and pull the rest forward), **skip all** (the **K** key), and a
+**speed** selector — 0.5×, 1×, 2×, 4×. The animation clock is separate from the
+replay clock, so pausing cues does not pause the frame log. Cues never delay a
+question: while the engine is waiting on you, long cues are compressed and the
+queue says so.
+
+**Reduced motion.** With `prefers-reduced-motion: reduce` the arena drops every
+camera move and every shake outright, and plays what is left at **30% of its
+duration** — not zero. That distinction is deliberate and was a bug once: several
+cues are the only channel for a *fact* (the damage number, the counter pip, the
+life delta), so deleting them removes information rather than motion.
+
+**The seat is the same seat.** A click on a card is the same `act: clickCard` the
+board sends, the prompt and the two buttons are the engine's own words rendered
+verbatim, and every one of M5's twelve question modals is the same component,
+mounted over the canvas. Each seat's **life total, poison, hand / library /
+graveyard / exile counts and floating mana** sit on a plate at its own edge of
+the frame, drawn with the *same components* the 2D rail uses — so the two
+renderers cannot disagree about a number, and pressing **V** mid-game shows the
+same totals on the board.
+
+Two escape hatches, because WebGL can fail for reasons a player cannot see:
+`?arena=off` renders the 2D board even at `#arena` and says why, and `?dpr=0.75`
+pins the render resolution — which also switches the automatic ladder below off,
+because a pin is the player's answer and it should not be argued with.
+
+**The resolution looks after itself, and this is what it is worth.** The scene is
+**fill-rate** bound — 40 draw calls and 80 triangles in a production build, so
+there is nothing to win by drawing fewer things and everything to win by drawing
+fewer pixels. So the arena watches its own frame intervals and gives back a rung
+of resolution when too many of them arrive late, which is the one number that
+matters here. Under a software rasteriser (SwiftShader, an explicit lower bound
+and **not** the machine you will run this on), at 1920×993 on a device ratio of
+1:
+
+| | p50 | p95 | max | verdict |
+|---|---:|---:|---:|---|
+| pinned `?dpr=1` (what shipped before the ladder worked) | 19.4–20.3 ms | **22.4–23.6 ms** | 37–39 ms | fails the ≤ 20 ms gate |
+| **default, no pin** — the ladder settles on render dpr 0.75 | 8.6–9.0 ms | **13.5–14.2 ms** | 29–31 ms | passes |
+| pinned `?dpr=0.75` | 12.0–12.2 ms | 14.0–14.2 ms | 30–32 ms | passes |
+
+The **first** render of each card's Scryfall texture costs an upload — 1–3 frames
+over 50 ms in the half second after a scrub, and none after it, at *every*
+resolution including a pinned one — which is a hitch when a card first appears
+and not a frame rate. `tools/arena-bench.mjs` is how all of that was measured,
+`--settle` is the flag that separates the cold table from the steady state, and
+`docs/evidence/m7-arena.md` §5 and §W.3 have the runs — including the honest
+caveat that a software rasteriser is a lower bound and nobody has measured this
+on the machine you are reading it on.
+
+**Iterating on a cue.** There is no `?cue=<id>` loop route — report 09 §10.7 asks
+for one and it is not built — and no `?cues=<url>` override either, because §2.1
+rule 1 says in as many words that the arena *never calls `fetch`*, and a cue file
+pulled over the network is a fetch. What exists instead is a **dev-only handle**,
+and it is more general than either: in `npm run dev`, `window.__mtgArena` carries
+the live `queue`, `stage`, `pool`, `rigs`, `director`, `gl`, `scene` and
+`camera`. (A production build carries **none** of that; `?glinfo=1` adds one
+function, `info()`, returning `gl.info`'s six counters, which is what
+`tools/arena-bench.mjs` reads and all it reads.) The cue clock is virtual and
+injected, so a cue can be frozen at any point of its arc:
+
+```js
+const q = window.__mtgArena.queue
+q.setPaused(true)          // stop the animation clock (the frame log keeps playing)
+q.advance(220)             // …and step it 220 ms by hand: a tap, a third of the way in
+q.seen                     // Map of event kind -> how many cues it has produced
+window.__mtgArena.stage.offsets      // what is displaced from layout(state) right now
+window.__mtgArena.director.stats     // camera moves taken / dropped / retired
+```
+
+`advance()` moves the clock whether or not the queue is paused, which is also the
+only way to photograph the middle of a cue in an environment whose animation
+frames do not fire. It is `import.meta.env.DEV`-only and is dropped from the
+production bundle entirely.
+
 ### Playing the console game
 
 `--transport console` is a real seat against the Forge AI with no browser. It
@@ -603,7 +759,8 @@ is a file, not a story.
 
 ## Repo layout
 
-Everything listed exists today (M0-M6); `M7+` marks what a later milestone adds.
+Everything listed exists today (M0-M7, arena Tier 1); `Tier 2+` marks what a
+later pass would add.
 
 ```
 mtg-table/
@@ -611,7 +768,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the forty-five load-bearing decisions, dated
+  DECISIONS.md               the fifty-two load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -649,7 +806,7 @@ mtg-table/
     guides/java-for-typescript-people.md   the Java the bridge actually uses
     research/*.md            the eleven reports this plan rests on
     evidence/*.md            what was actually run, with real numbers
-    ideas/arena-mode.md      M7
+    ideas/arena-mode.md      M7: the tiers, the per-card cue table, the constraints
 
   bridge/                    the only Java. Hosts the engine, redacts, serialises, serves /ws.
     build.sh  run.sh
@@ -669,7 +826,9 @@ mtg-table/
       art.ts                 art.json lookup + generated text-card fallback
       main.tsx  styles.css
       keys.ts                (M4) ONE keymap table + two pure functions; the handler
-                             and the `?` overlay both read it, so they cannot drift
+                             and the `?` overlay both read it, so they cannot drift.
+                             M7 added two rows (V, K) rather than a second keyboard
+      useView.ts             (M7) #arena / #/arena / ?view=arena, with no router
       transport/transport.ts interface Transport { onFrame(cb); send(f) }
       transport/replay.ts    LogReplayTransport (fetch a .jsonl; play/step/scrub)
       transport/ws.ts        WebSocketTransport (M3: reconnect + resync)
@@ -689,6 +848,27 @@ mtg-table/
                              modules: picker.ts (IS this question board-shaped?)
                              zones.ts (which zones may be browsed, by whom)
                              pool.ts (the mana pip -> useMana act mapping)
+      arena/                 (M7) THE SECOND RENDERER. Lazily imported, so none of it
+                             is in the 2D entry chunk. Arena.tsx (the <Canvas>, the
+                             keyboard, the cue strip) DecisionLayer.tsx (the seat: the
+                             engine's prompt and its two buttons, the per-seat HUD
+                             plates, the ask modals over the canvas) and four pure
+                             modules `node --test` imports with no three and no DOM:
+                             layout.ts (THE resting pose -- the only thing that knows a
+                             coordinate) camera.ts (the seven camera rules as numbers)
+                             colour.ts perf.ts (the dpr governor's ladder)
+      arena/cues/            (M7) the cue engine, and it is data + arithmetic:
+                             cues.json (28 cards + 7 archetypes) defaults.ts (every one
+                             of the 25 event kinds) registry.ts (cue id -> arithmetic
+                             over t in [0,1]) resolve.ts (the per-card -> archetype ->
+                             default ladder) queue.ts stage.ts types.ts archetype.ts
+                             validate.ts intake.ts. No three, no React, no timers
+      arena/scene/           (M7) the three half. CardPlane.tsx is THE card renderer of
+                             the arena, the way CardTile.tsx is the board's;
+                             CueRunner.tsx is the ONE useFrame; effects.ts is a fixed
+                             pool of 26 meshes; useCardTexture.ts, textFrame.ts,
+                             cardMaterial.ts, geometry.ts (one quad for every card),
+                             HitProxy.tsx, Table.tsx, rigs.ts, SceneStage.ts
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
                              M8 clickability rule), ws.test.ts (the M3 transport:
@@ -710,7 +890,19 @@ mtg-table/
                              seat's hand), pool.test.ts, board-m5.test.tsx and
                              hooks-order.test.ts (a SOURCE SCAN: no React hook below a
                              component's early return -- the repo has no DOM test
-                             environment and cannot catch a hook-count change)
+                             environment and cannot catch a hook-count change; as of M7
+                             it walks all 27 .tsx under render/ and arena/, 65
+                             components, not just Board.tsx);
+                             and (M7) layout.test.ts (the resting pose over the whole
+                             corpus, including hard rule 8's 3D half: every concealed
+                             card is placed as a BACK) colour.test.ts
+                             replay-cues.test.ts (every committed recording through the
+                             real reducer and the real queue against a NullStage, with
+                             the per-kind and per-card cue census printed each run)
+                             cues-exhaustive.test.ts (the ladder is total; the cue file
+                             is valid) camera.test.ts liveness.test.ts (the arena
+                             imports no transport and decides nothing) perf.test.ts
+                             and arena-hud.test.tsx (the life plates, over every frame)
     public/art.json          generated, gitignored
 
   tools/
@@ -739,6 +931,9 @@ mtg-table/
                              AND a raw grep), emit errors = 0, an ask-kind ceiling, the
                              typed acts the row exists to prove AND their effect, and
                              check-redaction.mjs.  check-all.sh runs it as step 9c
+    arena-bench.mjs          M7: report 09 §9.4's frame-time measurement -- headless
+                             Chromium + SwiftShader against a PRODUCTION build served by
+                             `vite preview`. Deliberately NOT in check-all.sh
     fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare
                              it to its committed fixture as a multiset, `seq` stripped
     fetch-art.ts             deck -> web/public/art.json

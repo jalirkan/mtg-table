@@ -152,12 +152,12 @@ export function PlayerRail({
       </div>
 
       <div className="rail__zones">
-        <Count glyph="▤" label="library" n={player.zones.library.count} />
-        <Count glyph="✋" label="hand" n={player.zones.hand.count} />
-        <Count glyph="⚰" label="graveyard" n={player.zones.graveyard.count} />
-        <Count glyph="◇" label="exile" n={player.zones.exile.count} />
+        <ZoneCount glyph="▤" label="library" n={player.zones.library.count} />
+        <ZoneCount glyph="✋" label="hand" n={player.zones.hand.count} />
+        <ZoneCount glyph="⚰" label="graveyard" n={player.zones.graveyard.count} />
+        <ZoneCount glyph="◇" label="exile" n={player.zones.exile.count} />
         {player.zones.command.count > 0 && (
-          <Count glyph="⌘" label="command" n={player.zones.command.count} />
+          <ZoneCount glyph="⌘" label="command" n={player.zones.command.count} />
         )}
       </div>
 
@@ -208,7 +208,18 @@ export function PlayerRail({
   );
 }
 
-function Count({ glyph, label, n }: { glyph: string; label: string; n: number }): JSX.Element {
+/**
+ * One zone count — the `▤ 30 ✋ 7 ⚰ 2` row.
+ *
+ * **Exported because the arena mounts it too** (M7 verification fix): the 3D
+ * renderer's per-seat HUD plate is plain DOM in the layer above the canvas
+ * (report 09 §12.1, *"HUD overlays — plain DOM above the canvas — free"*), and
+ * it prints the same counts this rail does. One component, so the two renderers
+ * cannot disagree about what a hand size looks like. It takes no context and no
+ * props but its three numbers, which is what makes it safe to mount outside the
+ * board's `rects`/`targeting` providers.
+ */
+export function ZoneCount({ glyph, label, n }: { glyph: string; label: string; n: number }): JSX.Element {
   return (
     <span className="zc" title={label}>
       <span className="zc__g" aria-hidden="true">

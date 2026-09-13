@@ -123,6 +123,36 @@ export interface ClientState {
   /** §3.6 — the event batch the most recent `state` reflected, known kinds only. */
   events: GameEvent[];
   /**
+   * The envelope `seq` of the `state` frame {@link ClientState.events} came from;
+   * `0` before the first one (report 09 §2.3 — M7's only ask of this reducer).
+   *
+   * It exists because a second renderer has to answer a question the board never
+   * had to: *is this batch the next one, or did the stream jump?* The 2D board
+   * renders the snapshot and does not care; the arena queues animations, and a
+   * scrub, a `resync` or a reconnect must flush the queue and snap to
+   * `layout(state)` rather than play a batch from somewhere else in the game.
+   *
+   * **Read it as an identity, not as a counter.** Report 09 §2.3 sketches
+   * `s !== last + 1 ⇒ flush`, which cannot be right here: `seq` numbers *every*
+   * frame (§1), so two consecutive `state` frames are routinely 5 or 20 apart,
+   * and PLAN's *"What M6 hands to M7"* says in as many words that `seq` is not
+   * an ordering primitive — a `resync` re-delivers cached frames **verbatim**
+   * (amendments M10/M17), so the series is neither contiguous nor monotonic. The
+   * rule that does hold, and the one the arena uses:
+   *
+   *   - `s === last` → nothing new (a re-delivered frame, or a non-`state`
+   *     frame folded since); do nothing.
+   *   - `s > last` → a new batch; enqueue `state.events`.
+   *   - `s < last` → the stream moved backwards (a replay scrub, a new game's
+   *     `hello_ok` reset it to 0); flush and snap.
+   *
+   * A *forward* scrub is indistinguishable from live progress by `seq` alone —
+   * both go up — so the arena also flushes on a `gameId` change (invariant 10)
+   * and on a jump in {@link ClientState.framesApplied}. Neither of those belongs
+   * in this file: they are already here to be read.
+   */
+  eventSeq: number;
+  /**
    * The running game log: every event of every `state` frame folded so far,
    * capped at {@link MAX_LOG_ENTRIES}, oldest first (amendment P20).
    *
@@ -165,6 +195,7 @@ export function initialState(session: SessionHeader | null = null): ClientState 
     gameOver: null,
     notices: [],
     events: [],
+    eventSeq: 0,
     log: [],
     droppedEventKinds: [],
     lastAct: null,
@@ -335,6 +366,11 @@ function applyState(
     // P5: the board is REPLACED, never merged into. See the header of this file.
     board: { ...body, events },
     events,
+    // report 09 §2.3 — the arena's "is this the next batch?" handle. The
+    // envelope's own seq, verbatim: a `resync` re-delivery carries the seq it
+    // carried the first time (amendment M10), which is exactly what makes
+    // "same seq ⇒ nothing new" the right reading.
+    eventSeq: seq,
     log: appendLog(state.log, events, seq, t),
     droppedEventKinds: mergeDropped(state.droppedEventKinds, dropped),
     // §3.1 — `gameOver` mirrors the `over` body once set, and is sticky: a later

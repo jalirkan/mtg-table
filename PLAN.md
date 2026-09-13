@@ -16,7 +16,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
-| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: weeks) | not started |
+| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2 |
 
 ---
 
@@ -1697,6 +1697,13 @@ exist yet or a reading that wants a second pair of eyes (7, 8), three are
 deliberate non-changes named here so they stay decisions rather than becoming
 oversights (10, 11, 12), and two are carried forward unchanged (4, 6).
 
+**After M7, 2026-09-13: none of them is closed, and none was expected to be.**
+M7 added a second *renderer* and touched no Java — `bridge/` is byte-identical to
+M6 — so every item below stands exactly as written. The one M7 change that
+touches this list's subject matter is a **document** fix: `docs/protocol.md`'s
+counter-type rows were wrong from M1 (amendment **M43**, **D46**), and the bridge
+is deliberately not changing. See *"M6 follow-ups closed by M7"* under §M7 below.
+
 1. **`order` with `sideboardMode: true` is still unrecorded** (M5 follow-up 12's
    last corner). `sideboard` itself now has a recording; the *reorder* the same
    between-games hook can raise needs a deck whose main/sideboard swap forces
@@ -1839,39 +1846,285 @@ has to learn about a new surface that mounts cards (**D33**).
 
 ## M7 — Arena mode: the game as a cinematic
 
-**Status: not started. M6 has landed, so it is next** — what the frame stream now
-carries, and the five things a second renderer must not assume away, are in
-*"What M6 hands to M7"* above.
-**Effort: open-ended; Tier 1 is a few weeks of evenings.**
+**Status: Tier 1 done** — six evenings E1–E6 of
+[`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md)
+§11, then two independent verification passes (eight findings, then six; all
+fourteen closed, each with a test that goes red without the fix). Evidence:
+[`docs/evidence/m7-arena.md`](docs/evidence/m7-arena.md). **Nothing is
+committed** — the work is the `m7` branch in a worktree, per CLAUDE.md.
+**Effort: Tier 1 was 6 evenings + 2 verification passes. Tier 2 is open-ended and
+not started.**
 
 **Command**
 
 ```bash
-npm run dev:arena -- fixtures/games/g1.jsonl   # first: a recorded AI-vs-AI game as a cinematic
-./scripts/play.sh --arena                       # later: the live game
+npm --prefix web run dev:arena            # a recorded AI-vs-AI game as a cinematic
+./scripts/play.sh --arena                 # a LIVE game, played in the arena
 ```
 
-**Deliverable.** A second renderer for the same frame stream, in Three.js via
-react-three-fiber inside the existing Vite app: the board as a 3D table, cards as
-textured planes, and the transitions in `state.events` played as animations —
-cast, enters, attack, block, damage, death, life change — with a choreographed
-camera. Tier 1 needs no art assets beyond the Scryfall images we already fetch.
-Tier 2 adds duelist avatars and stylised creature manifestations keyed by creature
-type and colour. Per-card animation cues draw on the cards' source material (these
-are Marvel characters with famous powers), kept as data files, never in the rules.
-Design notes, tiers, constraints and the source-material approach:
-[`docs/ideas/arena-mode.md`](docs/ideas/arena-mode.md).
+`dev:arena` is `vite --open "/?replay=games/g1.jsonl#arena"`. **Another fixture
+is a URL edit, not a positional argument** (`?replay=games/g3.jsonl#arena`) —
+`vite` takes no positional file, so the command line M6 wrote here was never
+runnable. `./scripts/play.sh --arena` appends `#arena` to the URL it already
+prints and changes nothing else: same bridge, same socket, same `--games 3`
+default. **`V` switches renderer mid-game**, over the same socket, without
+dropping a frame.
 
-**Hard rule.** The arena is a *renderer*. It never decides anything; it plays back
-what the engine said. Rules stay in Forge.
+**Deliverable, delivered.** A second renderer for the same frame stream, in
+Three.js via react-three-fiber inside the existing Vite app, under
+`web/src/arena/`. It shares `reduce.ts`, `protocol.ts`, the transports, the art
+index, the keymap and M5's `<AskModal>` with the 2D board, and it imports no
+transport of its own (`web/test/liveness.test.ts` asserts that from the source).
+The board is a 3D table, every card is a textured plane, `state.events` play as
+animations, the camera is choreographed, and the seat is playable: a click is
+`act: clickCard` sent verbatim, the prompt and the two buttons are the engine's
+own strings, and every question is answered in the same modal component the
+board uses.
+
+**What the evidence shows.**
+
+- **Chunk sizes** (`npm --prefix web run build`, 682 modules, 0 TypeScript
+  errors). The 2D entry chunk went **83.99 → 85.62 kB gzip** across the whole
+  milestone: **+1.63 kB**, and not one byte of it is `three` — it is `useView`,
+  the view toggle, the `Suspense` boundary, two keymap rows, the `?arena=off` /
+  `?dpr=` parses and the arena's CSS. The arena itself is **996.38 kB / 274.30 kB
+  gzip in a lazy chunk** (`lazy(() => import('./arena/Arena.tsx'))`), fetched on
+  the first `#arena` and never before; `dist/index.html` carries no
+  `modulepreload` for it.
+- **Cue coverage.** All **25** of `protocol.ts`'s `EVENT_KINDS` have a default
+  cue, and the table is exhaustive *by type* (`defaults.ts` is a
+  `Record<EventKind, CueSpec>`, so a new kind on the wire will not compile until
+  it has one). Over the eighteen committed recordings, printed by
+  `replay-cues.test.ts` on every run: **3,679 `state` frames · 3,293 non-empty
+  batches · 19,208 events**, of which **1,156 resolve to a per-card cue** (40
+  distinct entries from `cues.json`'s 28 cards) and **1,007 to an archetype**;
+  **16,083 event targets resolve and 483 do not — and an unresolvable target is
+  correct**, it is a card the viewer may not see (§3.6 rule 1). **0 effects over
+  the §9.3 cap.** After every one of the 3,293 batches the offset map is
+  **empty**, which is the mechanical form of the one property the whole design
+  rests on (**D50**).
+- **Performance — and the fps number is the honest part.** The scene is **40 draw
+  calls, 80 triangles, 1 geometry** in a production build, against §9.1's budget
+  of ≤120 / ≤2,000 / ≤12, and the frame *body* (tick, offset write, effect bind,
+  camera, `gl.render`) measured **p50 0.1 ms / p95 0.2 ms / max 0.5 ms** over 200
+  frames of a live game. The renderer is **fill-rate** bound, so the control that
+  matters is resolution, and `arena/perf.ts`'s `DprGovernor` steps it on a
+  48-frame window of frame intervals. `tools/arena-bench.mjs` (headless Chromium,
+  SwiftShader, the production build over `vite preview`) is §9.4's measurement:
+  **default, no pin — p50 8.6 ms, p95 13.8–15.5 ms, ladder settling on render
+  dpr 0.75, which passes §9.4's p95 ≤ 20 ms gate**; pinned `?dpr=1` is p95
+  22.4–23.6 ms and **fails** it. Two caveats are load-bearing and are not
+  rounded off: **SwiftShader is a software rasteriser and an explicit lower
+  bound** — no measurement on the user's own GPU or iGPU is possible in this
+  sandbox — and the **`max ≤ 50 ms` half still fails on a cold table** (1–3
+  frames in the first ~40, at every resolution including pinned ones), which is
+  the first GPU upload of a card's Scryfall texture and is a hitch when a card
+  first appears rather than a frame rate. **No frame-*rate* figure from the
+  Claude browser pane is real**: `requestAnimationFrame` fires 0 times there, so
+  drei's `<Stats>` reads `0 FPS` and every mid-cue screenshot in the evidence was
+  taken by advancing the cue queue's virtual clock by hand.
+- **Tests.** `npm --prefix web test` is **534 `node --test` + 79 vitest (5
+  files)** standalone, up from 456 + 75 at M6, and **544 / 536 pass / 0 fail /
+  8 skipped** inside `check-all.sh` (where `MTGTABLE_WS_LOGS` names the logs step
+  10 just produced). The arena's suites are `layout.test.ts`,
+  `colour.test.ts`, `replay-cues.test.ts`, `cues-exhaustive.test.ts`,
+  `camera.test.ts`, `liveness.test.ts`, `perf.test.ts` and `arena-hud.test.tsx`;
+  all but the last run under `node --test` with no DOM, because `cues/`,
+  `camera.ts`, `layout.ts` and `colour.ts` import neither three nor React.
+  `tools/check-all.sh`'s web step runs every one of them.
+
+**Hard rule, and it held.** The arena is a *renderer*. It never decides anything;
+it plays back what the engine said. Rules stay in Forge. The three mechanical
+halves of that: no file under `web/src/arena/` imports a transport or a rules
+predicate (`liveness.test.ts`), a click is never gated on `selectable`
+(`HitProxy` has no such prop to gate on), and every concealed card in every frame
+of every committed recording is placed as a **back** before anything asks for a
+face (`layout.test.ts`'s corpus sweep — the assertion *"What M6 hands to M7"*
+asked for above).
+
+### M6 follow-ups closed by M7 — none, and that is the expected answer
+
+M7 added a renderer and touched no Java: `bridge/` is byte-identical to M6 and
+all sixteen M6 follow-ups are open exactly as written. What M7 *did* close, and
+what it found, belongs on other lists:
+
+- **The hooks-order half of M5 follow-up 4 is closed.**
+  `web/test/hooks-order.test.ts` was a scan of `Board.tsx`'s one early return;
+  it now walks **every `.tsx` under `web/src/render/` and `web/src/arena/` — 27
+  files, 65 components** — finds each component's own early returns by tracking
+  braces through blanked strings and comments, and flags any `use*(` below one.
+  Negative-controlled at both ends. The rest of that follow-up (there is still no
+  DOM test environment) is unchanged.
+- **The assertion *"What M6 hands to M7"* owed is delivered**, in the form a 3D
+  scene allows: `layout.test.ts` asserts `isHidden(card) ⇒ placement.back` for
+  **84,418 placements across 3,679 frames**, and `CardPlane` branches on
+  `placement.back` before it reads `art.json` at all. It is a check on the
+  *placement*, upstream of the texture, because a canvas has no `data-card-name`
+  for `render.test.tsx` to scan — see M7 follow-up 9.
+- **`docs/protocol.md` §3.1, §3.2 and §3.6 were wrong about counter types since
+  M1** (amendment **M43**, decision **D46**): the wire carries Forge's *display*
+  name (`+1/+1`, `Spore`) and there is no `P1P1` anywhere in `fixtures/`. The
+  doc is corrected; the bridge is not changing. The arena found it because its
+  selector grammar was written from the doc and matched nothing.
+- **The space bar is still unpressed by a human** (M3 follow-up 9 → M5 13 → M6
+  13). E6's live arena game did activate the engine's focused button with SPACE
+  three times through the browser pane's key driver
+  (`docs/evidence/m7-arena.md` §4), which is more than any previous milestone
+  managed — but the standing item is a *person* pressing it, and that has still
+  not happened.
+
+### M7 follow-ups — twelve, 2026-09-13
+
+From the four builders' own "problems" notes and the two verification passes.
+**None of them stops a game or blocks Tier 2**: the milestone's two commands both
+work, the seat is playable end to end in 3D, the gate is green. Three are
+measurement limits of this sandbox (1, 2, 3), two are deliberate non-changes
+named here so they stay decisions (7, 8), two are dev-loop conveniences that were
+specified and not built (4, 5), and the rest are small debts with a stated cost.
+
+1. **`max ≤ 50 ms` fails on a cold table, and the cause is measured.** 1–3 frames
+   over 50 ms in the first ~40 after a scrub (max 63.6–80.7 ms), at *every*
+   resolution including a pinned `?dpr=0.75` with the governor and every canvas
+   resize out of the picture — so it is not the ladder. It is the first GPU
+   upload of each card's Scryfall texture, and the bench prints how many outliers
+   coincided with the texture count going up. **Pre-warming the textures a scrub
+   is about to reveal would remove it; nothing does that today.**
+2. **Every performance number in this milestone is from SwiftShader**, a software
+   rasteriser and an explicit lower bound — a fair proxy for draw-call and CPU
+   work, one to two orders of magnitude off for fill rate, which is what this
+   scene is bound by. The measurement report 09 §9.4 also asks for (the actual
+   iGPU, `DRI_PRIME=1`) is impossible here: no display, and headless Chromium has
+   no path to that device. **"Passes the gate" means "passes it on a CPU
+   rasteriser at 1920 × 993."**
+3. **The dpr governor cannot climb back on a vsync-locked display.** A browser
+   pinned to 60 Hz reports 16.7 ms whether the GPU had 2 ms of work or 16, so
+   there is no headroom to read out of frame intervals. It therefore sits where
+   it is — right for the common case, since it never declined, and a stale low
+   resolution only for a machine that was slow earlier in the same session. A
+   reload starts at the ceiling; `?dpr=` pins it outright.
+4. **§10.7's `?cue=<id>` loop route is not built.** What exists is the dev handle
+   (`window.__mtgArena`, `import.meta.env.DEV`-only): pause the queue, advance
+   its virtual clock by hand, look. That is strictly more general — it works on a
+   real frame of a real recording — and it is what every mid-cue photograph in
+   the evidence was taken with, but a route that loops one cue on a dummy card
+   against a neutral table would still be nicer for tuning. It is a
+   `queue.enqueueBatch` away.
+5. **§7.1's `?cues=<url>` override is a documented refusal, not an omission.**
+   Loading a cue file over the network is a `fetch`, and §2.1 rule 1 says the
+   arena never calls one. Written down in `Arena.tsx` and in the README rather
+   than left implied.
+6. **`<AdaptiveDpr />` is mounted and dormant.** It acts on
+   `performance.current`, which only moves when something calls `regress()`, and
+   the only candidate is drei's `<OrbitControls regress>` — a prop we do not
+   pass. It is harmless and the plan asks for it, but its trap is real and is
+   written next to it: it writes `current × viewport.initialDpr`, the resolution
+   the canvas *started* at, so turning `regress` on would undo a governor
+   decision on every mouse-up. **Turn one on and the other off.**
+7. **`drawnEntities()` in `web/src/render/picker.ts` was deliberately not
+   extended** (**D33**). The arena answers **every** ask in the modal; a shared
+   `drawnEntities` would be wrong for one of the two renderers, and wrong in the
+   direction hard rule 8 cares about. The file says so at the top, including what
+   it would take to change.
+8. **`COUNTER_LABELS` in `web/src/render/labels.ts` is keyed by the enum-constant
+   spelling** (`P1P1`, `M1M1`), so on the **2D board** `counterLabel('+1/+1')`
+   falls through to its default: correct text, generic class, no `mana-font`
+   glyph. Found while fixing the protocol doc (**D46**) and deliberately left —
+   it is a board rendering change with its own evidence to gather.
+9. **There is no canvas equivalent of `render.test.tsx`'s `data-card-name`
+   sweep.** The arena's half of hard rule 8 is asserted one step upstream, on
+   `Placement.back` (above), plus `arena-hud.test.tsx` over the DOM layer. A
+   check on what is actually *on the quads* would need to read back a rendered
+   texture, which needs a GPU and a DOM. Know which assertion you have.
+10. **`tools/arena-bench.mjs` is not in `check-all.sh`**, and should not be
+    without a decision: it wants a built `dist`, a `vite preview` server and a
+    headless Chromium, and it takes tens of seconds per configuration. A
+    performance regression therefore does **not** turn the gate red.
+11. **The frozen React-18 3D line prints one deprecation warning at runtime** —
+    `THREE.Clock: This module has been deprecated. Please use THREE.Timer
+    instead.`, once per `<Canvas>` mount, from fiber 8.18.0's loop against three
+    0.186.0. The loop runs, so §1.2's trip-wire has not fired (**D48**), but it is
+    the first visible crack in a line with no maintenance branch.
+12. **A second JVM started at the same `--seed` truncates the first's frame log.**
+    `var/games/human-ws-42/frames.jsonl` was left beginning with NUL bytes when
+    `play.sh` was started twice at seed 42 and the second process opened the
+    per-`gameId` log path before dying on the port bind. A pre-existing property
+    of that path, triggered by a mistake rather than by the arena; the file is
+    under `var/` and gitignored, and no redaction check is claimed on it.
+
+### What Tier 1 hands to Tier 2 — avatars and creature manifestations
+
+Tier 2 is [`docs/ideas/arena-mode.md`](docs/ideas/arena-mode.md)'s second tier:
+*"a small library of stylised generic models keyed by creature type and colour
+with idle / attack / hit / die animations… two duelist avatars stand at either
+end; creatures appear as holograms between them."* It is **not scheduled**, and
+the honest summary is that Tier 1 built the *routing* it needs and none of the
+*assets*.
+
+**What already supports it, unchanged:**
+
+- **The archetype key is the Tier 2 model key.** `cues/archetype.ts` already maps
+  a `Card` to `creature/W`, `land/*`, `equipment/*`, `instant/*` from fields the
+  protocol ships (the first recognised word of `types`, plus `colour.ts`'s parse
+  of `manaCost`), with a documented fallback for a hidden card (it archetypes as
+  the colourless wildcard and takes the defaults, because we are not allowed to
+  know what it is). *"About eight archetypes cover the deck"* is the same eight
+  keys the cue ladder already resolves through, and a mesh library keyed by them
+  needs no new classification code and no new protocol field.
+- **The cue file is already the place a per-card override goes.**
+  `cues/cues.json` is one validated data file (**D51**): `archetypes` and `cards`
+  maps, values naming a cue in `registry.ts` plus `ms` and `params`, `_`-prefixed
+  keys as comments, closed key sets so an unknown field is an error, and a
+  validator that drops a bad *entry* and never the file. A Tier 2 entry is a new
+  cue id in the registry and a row in this file; the ladder (per-card → archetype
+  → §6 default) needs no change to reach it.
+- **The offset model is already what an animated mesh wants.** `finalTransform =
+  layout(state) ⊕ offsets[id]` (**D50**): `layout.ts` owns the resting pose,
+  including `presence` (a hover and a bob folded *into* the pose — the Helicarrier
+  and the Aerial Doombot already float), and a cue only ever contributes a
+  transient that starts and ends at identity. A creature manifestation is another
+  thing anchored to a placement; skip, scrub, `resync` and a new `gameId` stay one
+  call (`flushAndSnap()`) whatever is anchored there.
+- **The scene already has one `useFrame`, one geometry and a fixed effect pool.**
+  `CueRunner.tsx` is the only frame loop (begin frame → tick → write offsets →
+  bind effects), `effects.ts` is a fixed pool of 26 meshes, and the hot path
+  allocates nothing — checked field-for-field by `cues-exhaustive.test.ts`, not
+  claimed in a comment. A model library plugs into the same loop; it must keep
+  the same two properties, and §9.1's budget (≤120 draw calls) is where the
+  headroom is: Tier 1 uses 40.
+- **The camera is a separate, pure module.** `camera.ts` has no three and no
+  React: orbit coordinates, §3.5's clamps, a framing solver, the projection, and
+  a `CameraDirector` with one lane, priority preemption, dwell caps and a bounded
+  shake. A Tier 2 shot is a request on that lane, not a second camera.
+- **The corpus is the test input.** `replay-cues.test.ts` runs every committed
+  recording through the real reducer and the real queue against a `NullStage` —
+  no GPU, no DOM — and prints the per-kind and per-card census every run. A Tier 2
+  cue that never fires will say so there on the day it is added.
+
+**What Tier 2 must bring, and the two things it must not assume:**
+
+- Assets: rigged meshes, an animation set per archetype, two duelist avatars, and
+  a licence story for every one of them. **Nothing derived from card art may be
+  committed** (Marvel art is licensed to Wizards; NOTICE §2 and the Fan Content
+  Policy) — the same rule the Scryfall images already live under.
+- Lights and materials. Tier 1 has **no lights at all** (every material is unlit,
+  which is why 40 draw calls buy a whole table); a lit, shaded model library is a
+  different renderer budget and should be measured before it is designed.
+- **It must not learn anything the engine did not say.** Two Tier 1 findings are
+  the standing examples, both written up in the evidence: §3.6's `counters` event
+  carries no *source*, so "Coulson gave this counter" is not on the wire and a
+  badge keyed to Coulson can never fire; and the engine never says which card
+  caused another card's tap, so Quake's ring is centred on **her own** tap.
+  Inventing either link is rules logic in a renderer.
 
 ---
 
-## Deferred — out of scope for M0–M6
+## Deferred — out of scope for M0–M7
 
-Not cancelled, not scheduled. **M6 has landed**, so these are now revisitable
-rather than blocked; nothing below is scheduled by that, and each still needs a
-decision of its own before it becomes work.
+Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
+are now revisitable rather than blocked; nothing below is scheduled by that, and
+each still needs a decision of its own before it becomes work. The arena's own
+Tier 2 and Tier 3 belong on this list too — see *"What Tier 1 hands to Tier 2"*
+above for what is already built for them.
 
 - A second deck, a deck picker, and an AI profile / difficulty selector. (Now
   specified, if it ever comes forward: there is no "difficulty" in Forge, only

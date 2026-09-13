@@ -2779,3 +2779,381 @@ button.zonerow__open:hover {
 .ask-modal__reveal-cards > li {
   margin-inline-start: 0;
 }
+
+/* --- M7: the arena ------------------------------------------------------- */
+
+/*
+ * The 3D renderer is one flex child of `.app`, exactly where `<Board>` goes, so
+ * the bar and the replay controls above it are unchanged and the canvas gets
+ * every remaining pixel. `min-block-size: 0` is load-bearing: without it a flex
+ * item refuses to shrink below its content and the canvas grows the page
+ * instead of fitting it.
+ *
+ * Report 09 §2.1 rule 2: the decision UI is plain DOM stacked ABOVE the canvas,
+ * never drei `<Html>`. `.arena__layer` is that layer — `pointer-events: none` on
+ * the container so the canvas keeps every click, `auto` on each widget. E6
+ * mounts the decision strip and M5's twelve ask modals in it; E2 put the art
+ * credit there, because the Fan Content Policy requires the credit to travel
+ * with the art and a `<canvas>` has no markup to hang it on.
+ */
+.arena {
+  position: relative;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  background: #0a0d12;
+}
+
+.arena canvas {
+  display: block;
+  touch-action: none;
+}
+
+.arena__layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  /* Top, not bottom: the own hand fans across the bottom of the frame (the
+     camera rest pose frames it there deliberately, §8 rule 6) and a credit line
+     over it hides the cards the player is about to play. The felt above the
+     opponent's rank is the one part of the table that is always empty. */
+  justify-content: flex-start;
+  padding: 0.4rem 0.6rem;
+  z-index: 10;
+}
+
+/*
+ * **The layer's `pointer-events: none` is a default, and a widget that forgets
+ * to opt out of it ships INERT.** That is not a hypothetical: M5's `<AskModal>`
+ * was mounted here from the day E6 opened the seat and could not be clicked at
+ * all — `getComputedStyle(answerButton).pointerEvents === "none"`, and
+ * `elementsFromPoint` at the button's own centre returned the `<canvas>`, which
+ * wins the hit test through a transparent parent. Escape still answered `null`,
+ * so the arena quietly took the engine's default for every one of M5's twelve
+ * ask kinds: no option pickable, no list reorderable, no number typeable. The
+ * `?`/`H` overlay had the same defect (its Close button and its click-to-close
+ * scrim), for the same one-word reason.
+ *
+ * So every widget class the layer mounts is listed here, and
+ * `web/test/liveness.test.ts` asserts the list covers every component
+ * `Arena.tsx` puts inside `.arena__layer` — the next widget added to this layer
+ * cannot ship inert without that test going red.
+ *
+ * **The ask scrim catches clicks too, and that is deliberate.** While an `ask`
+ * is outstanding the Forge game thread is parked inside that call listening for
+ * exactly one thing (§5), so a card click then is a click into a void — which is
+ * precisely what the 2D board's scrim already prevents (`.ask-modal__scrim` is
+ * `inset: 0` inside `.board` and covers its decision panel too). The arena
+ * inherits M5's modality along with M5's modals; `Esc` (§5.4's always-legal
+ * `null`) and `CTRL+Q` are the keyboard's way past it, exactly as on the board.
+ */
+.arena__layer .ask-modal,
+.arena__layer .ask-modal__scrim,
+.arena__layer .overlay,
+.arena__layer .arena__over {
+  pointer-events: auto;
+}
+
+.arena__credit {
+  pointer-events: auto;
+  align-self: flex-start;
+  max-inline-size: min(980px, 92vw);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #0b0e13c4;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__credit strong {
+  color: var(--ink);
+}
+
+/* Board ⇄ arena. A link, because the hash really is the state. */
+.viewtoggle {
+  flex: 0 0 auto;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.viewtoggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/*
+ * M7 E4 — the cue controls, in the DOM sibling layer above the canvas.
+ *
+ * They drive the CUE QUEUE, not the transport: `<ReplayControls>` above the
+ * canvas moves the frame log, and these move the film played over it. Both can
+ * run, and either can be paused, without the other noticing — which is what
+ * makes "pause the animation and read the board" and "step one batch with the
+ * log stopped" two different, useful things.
+ *
+ * `pointer-events: auto` here and nowhere else on the layer: the canvas must
+ * keep every click these buttons do not want (report 09 §2.1 rule 2).
+ */
+.arena__cues {
+  pointer-events: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-block-end: 0.3rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13d9;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.arena__cues button,
+.arena__cues select {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.arena__cues button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__cues button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.arena__cues label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--muted);
+}
+
+/*
+ * M7 E6 — the decision strip: the arena's seat.
+ *
+ * It is the top line of the layer because that is the one part of the table
+ * that is always empty (the hand fans across the bottom), and because the
+ * engine's prompt is the thing a player looks at between every pair of clicks.
+ * The buttons carry the ENGINE's labels, verbatim, and the focus ring is
+ * `input.buttons.focus` — which button SPACE presses (§4, D45).
+ */
+.arena__decision {
+  pointer-events: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-block-end: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  /* **The last 15rem of the row belong to the opponent's plate.** The strip grows
+     with the engine's own prompt, and at 1280 a full-width one reached x=1110
+     while `.arena__seats` starts at 1108 — two pixels of overlap, and a longer
+     prompt is a plate with a sentence through it. The plates are absolutely
+     positioned, so nothing else reserves the space for them. */
+  max-inline-size: min(1100px, calc(100% - 15rem));
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13e6;
+  font-size: 12px;
+}
+
+.arena__decision .prompt {
+  margin: 0;
+  max-inline-size: 46ch;
+  color: var(--ink);
+}
+
+.arena__decision .btn--focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/*
+ * M7 verification fix — **the life totals.**
+ *
+ * The arena shipped with no persistent player HUD at all: the layer held the
+ * prompt, the two engine buttons, Concede, the cue strip and the art credit, and
+ * not one number about either seat. `life.tick` and `damage.player` put a plate
+ * in the 3D scene, but a cue decays to identity by construction (report 09
+ * §5.1), so the number existed for 400 ms when it changed and was then gone. On
+ * 11 life, in a live game, the arena could not say so and `V` to the board could.
+ *
+ * Report 09 prices this three times — §9.1's "~12 `<Text>`" HUD slots, §9.3's
+ * risk 2 (*"life totals change often"*, so pre-create the slot and mutate it)
+ * and §12.1's **"HUD overlays — plain DOM above the canvas — free"**. This is
+ * the free one: no SDF re-tessellation, no draw call, nothing a cue can cover
+ * and nothing the camera can swing off-screen.
+ *
+ * **On the right edge, vertically opposed**: the opponent's plate above and
+ * yours below, which is the seating the table already has (§3.1 — you at +Z).
+ * Not the top-left, because `.arena__decision` is up to 1100 px of engine prompt
+ * there; not the bottom centre, because that is where the hand fans (§8 rule 6).
+ * The container passes clicks through and only the plates take them, so the
+ * canvas keeps the felt between them.
+ */
+.arena__seats {
+  position: absolute;
+  inset-block: 2.6rem 0.5rem;
+  inset-inline-end: 0.6rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+.arena__seat {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-inline-size: 9.5rem;
+  max-inline-size: 14rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13e6;
+  font-size: 12px;
+}
+
+/* Forge's own "whose turn is it": `state.activePlayer`, and nothing the client
+   worked out for itself. */
+.arena__seat--active {
+  border-color: var(--accent);
+}
+
+.arena__seat-who {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.arena__seat-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.arena__seat-tags {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.arena__seat-vitals {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.arena__seat-zones {
+  display: flex;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.arena__seat-counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.arena__hint,
+.arena__notice {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--muted);
+}
+
+.arena__notice--warn,
+.arena__notice--error {
+  color: var(--warn, #e0b050);
+}
+
+/*
+ * M7 verification fix — **the end of the game, in the arena.**
+ *
+ * The arena showed nothing at all when a game ended: conceding from it greyed
+ * the two buttons out (that is `live === false`, i.e. `state.gameOver !== null`)
+ * and said not one word about who won or why, and M6's headline flow — three
+ * games back to back, New Game clicked from the renderer you are sitting in —
+ * was reachable only by pressing `V` to the board. It is the same
+ * `<GameOverBanner>` and the same `<NewGameRow>` the board mounts, over the
+ * canvas: the engine's own `winner` and `reason`, verbatim, and D40's rule that
+ * the row goes quiet when the socket does.
+ *
+ * Centred rather than stacked with the strip, because it is the one thing on
+ * screen that ends the session.
+ *
+ * **It is `position: absolute` and the banner inside it is not.** `.banner--over`
+ * carries its own `position: absolute; inset-block-start: 40%` for the 2D board,
+ * where it is a child of `.board`; dropped into a flex column it left the panel
+ * with nothing in flow — measured in the browser as a **24 × 18 px** empty
+ * bordered box at the top of the frame with the banner floating 170 px below it.
+ * So the panel owns the position and the banner is reset to static inside it.
+ */
+.arena__over {
+  position: absolute;
+  inset-block-start: 34%;
+  inset-inline: 0;
+  z-index: 40;
+  margin-inline: auto;
+  inline-size: fit-content;
+  max-inline-size: min(760px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #0b0e13f2;
+  box-shadow: 0 16px 60px #000c;
+  text-align: center;
+}
+
+.arena__over .banner {
+  position: static;
+  inset: auto;
+  inline-size: 100%;
+  margin: 0;
+}
+
+/* The New Game row is a grid on the board's decision panel; here it is one line
+   under the banner, and it must stay clickable (see `.arena__layer` above). */
+.arena__over .decision__newgame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+}

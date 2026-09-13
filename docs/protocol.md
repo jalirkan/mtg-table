@@ -25,6 +25,17 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-13 — M7 verification, the counter spelling
+
+Applied after an independent verification pass read this file against the bytes
+in `fixtures/`. One row; it changes **no bytes at all** — it corrects a spelling
+this file has asserted since M1 and that no emitter has ever written. Evidence:
+`docs/evidence/m7-arena.md` §7; decision **D46**.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M43 | §3.1, §3.2, §3.6 | **Every counter type on the wire is Forge's DISPLAY name — `+1/+1`, `-1/-1`, `Spore` — never its enum constant.** §3.6's `counters` row said the field carried *"the `CounterType` name, e.g. `P1P1`"*, and §3.1/§3.2 gave `P1P1` as the example key of the `counters` map on a player and on a `Card`. The emitter has always called `CounterType.getName()` (`Snap.java`, three call sites), and `getName()` returns the printed name: **all 1,316 counter values in the committed corpus are `+1/+1` or `Spore`**, and there is not one `P1P1` anywhere in `fixtures/`. The enum-constant spelling was never on the wire; the spec simply named the wrong accessor's output. A second consumer written from the old text would look up a key that cannot occur — which is exactly what happened: the arena's §7.3 selector grammar spells the counter `P1P1`, so `counters:P1P1+` matched nothing until `counterToken()` in `web/src/arena/cues/types.ts` normalised the wire's spelling into it. **The wire is not changing** (D46): `getName()` is what Forge shows a player, fourteen committed recordings carry it, and a client that wants a token spelling normalises one. A consumer must therefore treat the key as **an opaque display string**, match it case-sensitively or normalise it, and never assume an identifier shape. | M7 verification |
+
 ### 2026-09-12 — M6 fix pass, the pre-input `input`
 
 Applied after gate step **10g** failed once under load and passed three times
@@ -576,7 +587,9 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
 - `gameOver` is `null` while the game is live. When it is set it mirrors the `over`
   body (§7), so a replay scrubbed to its last frame still renders the result.
 - `counters` on a player is a map of counter name → int, keyed by
-  `CounterType.getName()` (`P1P1`, `ENERGY`, …), and **excludes poison**;
+  `CounterType.getName()` — Forge's **display** name, so `+1/+1`, `-1/-1`,
+  `Spore`, `Energy`, **not** the enum constant `P1P1` (amendment **M43**) — and
+  **excludes poison**;
   `players[].poison` carries that, because the UI always shows it. On a `Card`,
   `counters` carries every type with no exclusion.
 - `manaPool` always has all six keys, zeros included, so the renderer never
@@ -663,7 +676,7 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   "toughness": "2",
   "loyalty": null,
   "damage": 0,
-  "counters": { "P1P1": 1 },
+  "counters": { "+1/+1": 1 },
   "tapped": false,
   "sick": false,
   "attacking": false,
@@ -1177,7 +1190,7 @@ Every enum goes on the wire as `.name()`, never `toString()`.
 | `life` | `GameEventPlayerLivesChanged` | `player`, `from`, `to` |
 | `poison` | `GameEventPlayerPoisoned` | `player`, `sourcePlayer`, `from`, `amount` |
 | `tap` | `GameEventCardTapped` | `cardId`, `tapped` |
-| `counters` | `GameEventCardCounters` | `cardId`, `counter` (the `CounterType` name, e.g. `P1P1`), `from`, `to` |
+| `counters` | `GameEventCardCounters` | `cardId`, `counter` — **Forge's display name**, `CounterType.getName()`: `+1/+1`, `-1/-1`, `Spore`, **never** the enum constant `P1P1` (amendment **M43**; every one of the 1,316 counter values in `fixtures/` is a display name) — `from`, `to`. Treat it as an opaque string. A consumer that needs an identifier-shaped token normalises it itself, as `counterToken()` in `web/src/arena/cues/types.ts` does for the arena's §7.3 selector grammar. |
 | `attach` | `GameEventCardAttachment` | `cardId`, `to:{kind,id}` or `null` when unattached |
 | `sacrificed` | `GameEventCardSacrificed` | `cardId` |
 | `land` | `GameEventLandPlayed` | `player`, `cardId` |

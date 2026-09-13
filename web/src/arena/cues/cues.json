@@ -1,0 +1,215 @@
+{
+  "_comment": [
+    "mtg-table — the arena's cue file (report 09 §7). GPL-3.0-or-later.",
+    "ONE file, not one per card (§7.1): 28 distinct cards, one fetch, one parse,",
+    "one validation pass, one diff in review, and no filename-escaping problem",
+    "for names with '.', ',' and '/' in them (A.I.M. Scientists, S.H.I.E.L.D.",
+    "Spy Kit, Quake, Agent of S.H.I.E.L.D.).",
+    "",
+    "It is DATA. Keys are card names and archetype keys; values name a cue in",
+    "web/src/arena/cues/registry.ts and tune it. A wrong entry is dropped by",
+    "validate.ts and the ladder falls through to the §6 default, so this file",
+    "can never stop the arena — but web/test/cues-exhaustive.test.ts fails on any",
+    "error in it, which is where a typo is cheap. Any key beginning with '_' is",
+    "a comment and is ignored; EVERY other key is checked, and an unknown field",
+    "is an error rather than something that silently does nothing.",
+    "",
+    "E4 shipped the archetypes. E5 added the per-card table below, from",
+    "docs/ideas/arena-mode.md's cue table and report 09 §12.2's Tier-1 verdicts.",
+    "",
+    "THE ONE RULE THIS FILE LIVES BY: a cue keys off an event that is about THAT",
+    "CARD. The ladder resolves an event through the card the event NAMES, so",
+    "'Coulson points and every other Hero flashes' cannot be keyed on Coulson —",
+    "§3.6's `counters` event carries the card, the type and the two values and no",
+    "source at all, so 'who caused this' is not on the wire and no renderer may",
+    "invent it. Where the source material's beat belongs to another card, the",
+    "entry is on the card the ENGINE named and the _note says so."
+  ],
+  "version": 1,
+
+  "archetypes": {
+    "creature/W": {
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 460, "params": { "colour": "#f6f0d8" } },
+      "_note": "the S.H.I.E.L.D. Heroes: a warm arrival, and the +1/+1 badge below",
+      "counters:P1P1+": { "cue": "fx.badge", "ms": 420, "params": { "colour": "#e3c46a" } }
+    },
+    "creature/U": {
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 460, "params": { "colour": "#9ec7f0" } }
+    },
+    "creature/*": {
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 450, "params": { "impact": 1.1 } }
+    },
+    "land/*": {
+      "zone:*>battlefield": { "cue": "land.rise", "ms": 550 },
+      "tap": { "cue": "fx.ripple", "ms": 220, "params": { "radius": 0.8 } }
+    },
+    "equipment/*": {
+      "attach:on": { "cue": "attach.snap", "ms": 500, "params": { "colour": "#e3c46a" } }
+    },
+    "instant/*": {
+      "cast": { "cue": "cast.rise", "ms": 620, "params": { "speed": 1.3 } }
+    },
+    "sorcery/*": {
+      "cast": { "cue": "cast.rise", "ms": 700 }
+    }
+  },
+
+  "cards": {
+    "Ant-Man, Reformed Rogue": {
+      "_note": "Scott Lang shrinks to a speck to get past a blocker, and pops back to size when he is hit. Keys off `attackers` (with exactly one attacker) and `damage`.",
+      "attackers:alone": { "cue": "attack.shrink", "ms": 760, "params": { "scale": 0.18, "colour": "#9ec7f0" } },
+      "damage": { "cue": "damage.hit", "ms": 520, "params": { "popScale": 1.4 } }
+    },
+
+    "Wasp, Shrinking Savior": {
+      "_note": "Janet hovers over the table for as long as she is on it (a `presence`, not a cue — it cannot decay), and her spell's target visibly shrinks. Keys off `cast` and the presence rule.",
+      "presence": { "hoverY": 0.24, "bobAmp": 0.026, "bobHz": 0.55 },
+      "cast": { "cue": "fx.scaleBeam", "ms": 760, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026 } },
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#9ec7f0" } }
+    },
+
+    "Quake, Agent of S.H.I.E.L.D.": {
+      "_note": "Daisy Johnson's seismic powers: a ground shockwave and a bounded camera shake. Keys off `tap` — which is the event her own attack raises, and the honest version of arena-mode.md's `tap` caused by her trigger: the engine does not say which card caused another card's tap, so the ring is centred on HER tap and the creature her trigger taps keeps its own default.",
+      "tap:on": { "cue": "fx.shockwave", "ms": 720, "params": { "colour": "#7fd4ff", "shake": 0.35, "radius": 2.6 } },
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 620, "params": { "impact": 1.6, "colour": "#7fd4ff" } }
+    },
+
+    "Nick Fury, Spymaster": {
+      "_note": "He calls it in and agents appear at his shoulder. Keys off `attackers` and `zone`→battlefield. The agents themselves are TOKENS and enter with their own zone event and their own cue — this one never creates, names or counts them.",
+      "attackers": { "cue": "fx.agents", "ms": 900, "params": { "lunge": true, "spread": 1.1, "colour": "#e3c46a" } },
+      "zone:*>battlefield": { "cue": "fx.agents", "ms": 820, "params": { "spread": 1.1, "colour": "#e3c46a" } }
+    },
+
+    "Agent Phil Coulson": {
+      "_note": "The badge flash. Keys off `counters` — on the card that GOT the counter, because that is the only card §3.6's counters event names. Coulson's own entry covers his own counters; the creature/W archetype above covers the Heroes he hands them to.",
+      "counters:P1P1+": { "cue": "fx.badge", "ms": 460, "params": { "colour": "#e3c46a" } },
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 520, "params": { "colour": "#e3c46a", "impact": 1.2 } }
+    },
+
+    "Peggy Carter, Secret Agent": {
+      "_note": "Indestructible while she attacks alone — a shield aura for exactly as long as the lunge. Keys off `attackers` with exactly one attacker.",
+      "attackers:alone": { "cue": "attack.aegis", "ms": 900, "params": { "colour": "#f2d98c" } }
+    },
+
+    "Agents of S.H.I.E.L.D.": {
+      "_note": "The squad steps forward together and the lone attacker takes the spotlight. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 850, "params": { "spotlight": 1, "colour": "#f6f0d8" } }
+    },
+
+    "Agent 13, Sharon Carter": {
+      "_note": "The pistol draw is a pose and therefore Tier 2 (§12.2). The Tier-1 substitute is a fast lunge and a muzzle flash. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 620, "params": { "spotlight": 1, "colour": "#ffe9b0" } }
+    },
+
+    "S.H.I.E.L.D. Helicarrier": {
+      "_note": "Flies in overhead and HOVERS FOR THE REST OF THE GAME. The fly-in is a cue (and one of §8's four camera cues); the hover is a `presence` — a layout rule — so pressing `skip all` leaves it in the air instead of dropping it into the rank. Keys off `zone`→battlefield.",
+      "presence": { "hoverY": 0.9, "bobAmp": 0.032, "bobHz": 0.25 },
+      "zone:*>battlefield": { "cue": "fx.flyIn", "ms": 1400, "params": { "height": 2.2, "colour": "#9ec7f0", "camera": true } }
+    },
+
+    "Helicarrier Strike": {
+      "_note": "A reticle closes on the target from above and the beam comes down. Keys off `cast`; the target is the id in this frame's stack[].targetCardIds, never a description.",
+      "cast": { "cue": "fx.strike", "ms": 900, "params": { "height": 4, "colour": "#f6f0d8" } }
+    },
+
+    "Web Up": {
+      "_note": "The target is wrapped and lifted off the table; the engine exiles it a beat later and that arrives as its own zone→exile event. Keys off `cast`.",
+      "cast": { "cue": "fx.webWrap", "ms": 860, "params": { "lift": 0.6, "colour": "#ffffff" } }
+    },
+
+    "Aerial Doombot": {
+      "_note": "A hovering drone with a laser eye and jet exhaust on the attack. The drone and the eye are model-bound at Tier 2 (§12.2); the hover is a presence, the exhaust is particles. Keys off `zone`→battlefield (via the presence) and `attackers`.",
+      "presence": { "hoverY": 0.2, "bobAmp": 0.018, "bobHz": 0.75 },
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#ff8f6a" } }
+    },
+
+    "A.I.M. Scientists": {
+      "_note": "The lab bench is Tier 2; the glowing vials and the bench LIGHT are Tier 1, and 'cards fly to hand' is already Tier 1 because zone→hand animates every draw the engine reports. Keys off `zone`→battlefield and `counters`.",
+      "zone:*>battlefield": { "cue": "fx.hologram", "ms": 760, "params": { "colour": "#7fd4ff" } },
+      "counters": { "cue": "fx.hologram", "ms": 520, "params": { "colour": "#7fd4ff" } }
+    },
+
+    "Bold Biochemist": {
+      "_note": "Same bench, smaller experiment. Keys off `zone`→battlefield and `counters`.",
+      "zone:*>battlefield": { "cue": "fx.hologram", "ms": 640, "params": { "colour": "#8ee0c0" } },
+      "counters": { "cue": "fx.hologram", "ms": 460, "params": { "colour": "#8ee0c0" } }
+    },
+
+    "Pym Particles": {
+      "_note": "The serum: a beam out of the card and the target changes size. Keys off `cast`. `counters` / `stats` carry the real change and keep their own cues, which is what makes the number and the size agree.",
+      "cast": { "cue": "fx.scaleBeam", "ms": 820, "params": { "targetScale": 1.45, "colour": "#9ec7f0", "width": 0.036 } }
+    },
+
+    "Quantum Reduction": {
+      "_note": "The Quantum Realm takes it: the target collapses to a point of light. Keys off `cast`; the exile (if it comes) is the target's own zone event.",
+      "cast": { "cue": "fx.collapse", "ms": 880, "params": { "colour": "#c9b8ff" } }
+    },
+
+    "Ant-Man's Air Force": {
+      "_note": "A swarm of flying ants sweeping the table. Keys off `cast` and `resolved`.",
+      "cast": { "cue": "fx.swarm", "ms": 820, "params": { "colour": "#9ec7f0", "radius": 1.3 } },
+      "resolved": { "cue": "fx.swarm", "ms": 520, "params": { "colour": "#9ec7f0", "radius": 0.9 } }
+    },
+
+    "Giant-Sized Flying Ant": {
+      "_note": "The insect and its rider are a model (Tier 2). The Tier-1 substitute §12.2 names: enters oversized, with a wing flutter. Keys off `zone`→battlefield.",
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 640, "params": { "impact": 1.5, "colour": "#9ec7f0" } },
+      "attackers": { "cue": "attack.jet", "ms": 780, "params": { "colour": "#9ec7f0" } }
+    },
+
+    "Robotics Mastery": {
+      "_note": "Circuit traces light up across the target. Keys off `cast`.",
+      "cast": { "cue": "fx.circuit", "ms": 760, "params": { "colour": "#7fd4ff" } }
+    },
+
+    "Depower": {
+      "_note": "The same traces, flickering out. Keys off `cast`; `off: true` is the whole difference.",
+      "cast": { "cue": "fx.circuit", "ms": 700, "params": { "off": true } }
+    },
+
+    "Strategic Intervention": {
+      "_note": "Mission control: a freeze and a hold on the table. Keys off `cast` and `resolved`.",
+      "cast": { "cue": "cast.rise", "ms": 820, "params": { "speed": 0.8, "glowFloor": 0.35, "colour": "#f6f0d8" } },
+      "resolved": { "cue": "resolved.pop", "ms": 420, "params": { "colour": "#f6f0d8" } }
+    },
+
+    "S.H.I.E.L.D. Spy Kit": {
+      "_note": "Gear-up: the kit snaps onto the creature with a HUD flourish. Keys off `attach`.",
+      "attach:on": { "cue": "attach.snap", "ms": 560, "params": { "colour": "#e3c46a" } }
+    },
+
+    "Super Suit": {
+      "_note": "The same snap, blue. Keys off `attach`.",
+      "attach:on": { "cue": "attach.snap", "ms": 560, "params": { "colour": "#7fd4ff" } }
+    },
+
+    "Borough Backup": {
+      "_note": "The reinforcements arrive. Keys off `cast`.",
+      "cast": { "cue": "fx.swarm", "ms": 760, "params": { "colour": "#f6f0d8", "radius": 1.1 } }
+    },
+
+    "Thriving Heath": {
+      "_note": "A terrain tile rising out of the table, and a ripple when it taps for mana. Keys off `zone`→battlefield and `tap`.",
+      "zone:*>battlefield": { "cue": "fx.terrain", "ms": 700, "params": { "colour": "#f6f0d8", "radius": 1.7, "depth": 0.6 } },
+      "tap": { "cue": "fx.ripple", "ms": 260, "params": { "radius": 1, "colour": "#f6f0d8" } }
+    },
+
+    "Thriving Isle": {
+      "_note": "The same tile, blue water. Keys off `zone`→battlefield and `tap`.",
+      "zone:*>battlefield": { "cue": "fx.terrain", "ms": 700, "params": { "colour": "#9ec7f0", "radius": 1.7, "depth": 0.6 } },
+      "tap": { "cue": "fx.ripple", "ms": 260, "params": { "radius": 1, "colour": "#9ec7f0" } }
+    },
+
+    "Plains": {
+      "_note": "Basic terrain. Keys off `zone`→battlefield and `tap`.",
+      "zone:*>battlefield": { "cue": "fx.terrain", "ms": 600, "params": { "colour": "#f6f0d8", "radius": 1.2 } },
+      "tap": { "cue": "fx.ripple", "ms": 220, "params": { "radius": 0.8, "colour": "#f6f0d8" } }
+    },
+
+    "Island": {
+      "_note": "Basic terrain. Keys off `zone`→battlefield and `tap`.",
+      "zone:*>battlefield": { "cue": "fx.terrain", "ms": 600, "params": { "colour": "#9ec7f0", "radius": 1.2 } },
+      "tap": { "cue": "fx.ripple", "ms": 220, "params": { "radius": 0.8, "colour": "#9ec7f0" } }
+    }
+  }
+}

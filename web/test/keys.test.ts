@@ -24,7 +24,9 @@
  */
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   KEYMAP,
@@ -398,4 +400,95 @@ test('H and ? are the same binding', () => {
     kind: 'view',
     id: 'toggleHotkeys',
   });
+});
+
+// ---------------------------------------------------------------------------
+// The other half of "one keymap": somebody has to HANDLE the row
+// ---------------------------------------------------------------------------
+
+/**
+ * **Every row of the table is dispatched by at least one renderer.**
+ *
+ * The existing overlay test proves the `?`/`H` screen lists every chord. It
+ * cannot prove anything *happens*, and M7 shipped the gap: `keys.ts` gained
+ * `toggleView` and `skipCues` in E6, the overlay listed both ("V  switch between
+ * the 2D board and the 3D arena") and README promised `V` "at any moment", but
+ * the only handler for `toggleView` in the whole tree was `arena/Arena.tsx`.
+ * On the board the plan fell through the `view` switch's `default: return`
+ * **after** `event.preventDefault()` — so the key was swallowed silently, in the
+ * one renderer that draws the key table.
+ *
+ * The scan is crude on purpose, like `hooks-order.test.ts`: `planKey` is asked
+ * what each row plans, and the plan's discriminator has to appear as a `case`
+ * in one of the two dispatchers. It cannot prove the branch does the right
+ * thing; it can prove the branch exists, which is the defect that shipped.
+ */
+test('every KeyActionId is handled in at least one renderer’s dispatcher', () => {
+  const sources = ['../src/render/Board.tsx', '../src/arena/Arena.tsx'].map((rel) => ({
+    name: rel,
+    src: readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8'),
+  }));
+
+  // Everything on at once, so no row is planned `inert` for want of context.
+  const rich: KeyContext = {
+    ...LIVE,
+    haveSelectable: true,
+    canUndo: true,
+    topYieldKey: 'y1',
+    // `null` = the engine has set no auto-yield on the top item, so BOTH `Y`
+    // and `N` plan a real `setYield` rather than "already set to that".
+    topYielded: null,
+  };
+
+  const unhandled: string[] = [];
+  const census: string[] = [];
+  for (const binding of KEYMAP) {
+    // `useMana` is the one row the table never reaches on its own: `planKey`'s
+    // pre-pass takes W/U/B/R/G/C while the pool holds them, which is exactly
+    // what makes `C` mean "show combat" with an empty pool.
+    const ctx = binding.id === 'useMana' ? { ...rich, poolColors: ['W'] } : rich;
+    const key = binding.id === 'useMana' ? 'w' : binding.keys[0]!;
+    const resolved = planKey(ev(key, { ctrlKey: binding.ctrl, shiftKey: key === '?' }), ctx);
+    assert.ok(resolved !== null, `${binding.id}: its own key plans nothing at all`);
+    const plan = resolved.plan;
+    // A `view` plan is dispatched by its id inside the `case 'view'` switch;
+    // every other plan by its kind.
+    // A `view` plan is dispatched by its id inside the `case 'view'` switch;
+    // every other plan by its kind. Both dispatch styles this repo uses count —
+    // `Board.tsx`'s nested `switch` and `Arena.tsx`'s `if (plan.id === …)`.
+    const token = plan.kind === 'view' ? plan.id : plan.kind;
+    const needle = `case '${token}':`;
+    const where = sources
+      .filter((s) => s.src.includes(needle) || s.src.includes(`=== '${token}'`))
+      .map((s) => s.name);
+    if (plan.kind === 'inert') {
+      // A row that is inert even with everything switched on is a row whose
+      // milestone has not arrived (`autoPay`). `inert` is itself dispatched.
+      census.push(`${binding.id.padEnd(15)} inert — ${plan.why.slice(0, 48)}`);
+      continue;
+    }
+    if (where.length === 0) unhandled.push(`${binding.id} → ${needle}`);
+    else census.push(`${binding.id.padEnd(15)} ${needle.padEnd(24)} ${where.join(' ')}`);
+    // **M7's two rows have to be live in BOTH**, because both renderers draw a
+    // `V` that means "go to the other one" and `?`/`H` promises both keys
+    // everywhere. This is the assertion the shipped defect needed: `V` was
+    // handled in `Arena.tsx` alone and swallowed on the board.
+    if (binding.id === 'toggleView' || binding.id === 'skipCues') {
+      assert.equal(
+        where.length,
+        sources.length,
+        `${binding.id} (${binding.chord}) is an M7 row and must be dispatched by BOTH renderers; ` +
+          `only ${where.join(', ') || 'nobody'} handles it`,
+      );
+    }
+  }
+
+  for (const line of census) console.log(`  ${line}`);
+  assert.deepEqual(
+    unhandled,
+    [],
+    'these keymap rows are listed in the `?` overlay and dispatched by nobody — the key is ' +
+      'consumed (`preventDefault` has already run) and then does nothing at all:\n  ' +
+      unhandled.join('\n  '),
+  );
 });

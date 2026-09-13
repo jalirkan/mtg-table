@@ -36,6 +36,25 @@
  * number inputs go (§5.3 — and index 0 is the defending player, which is a rail
  * and not a tile; it keeps its row in the panel).
  *
+ * ---------------------------------------------------------------------------
+ * **M7 — the arena is not a second caller of this file, and that is a
+ * decision** (D33).
+ *
+ * `drawnEntities()` is written against what `Board.tsx` mounts. The 3D arena
+ * mounts cards too, in different zones and with a different set drawn as backs,
+ * so a shared answer would be wrong for one of the two renderers — and wrong in
+ * the direction hard rule 8 cares about: offering a click on a card that seat
+ * cannot see. So **the arena answers every `ask` in the modal**
+ * (`arena/DecisionLayer.tsx` mounts `<AskModal>` and nothing else), which is
+ * always correct, never dead-ends, and costs the arena the board-click
+ * shortcut for the handful of asks that have one.
+ *
+ * If the arena ever *does* want the board-click path, it needs its **own**
+ * `drawnEntities` written against `layout()` — not this one — in the same
+ * change. That is what D33's "update it in the same change" means for a second
+ * renderer.
+ * ---------------------------------------------------------------------------
+ *
  * **This file marshals nothing.** The answer is still built by
  * `AskModal.answerFromDraft`, from the same `AskDraft` the modal uses, so the
  * picker and the modal cannot disagree about what an answer looks like — which

@@ -1918,7 +1918,14 @@ public final class Snap {
         return s == null ? "" : s;
     }
 
-    /** {@code "counters": {"P1P1": 1}} -- the same object for a card and a face-down card. */
+    /**
+     * {@code "counters": {"+1/+1": 1}} -- the same object for a card and a face-down card.
+     *
+     * <p>The key is {@code CounterType.getName()}, Forge's DISPLAY name, not the
+     * enum constant: {@code +1/+1}, {@code -1/-1}, {@code Spore}. That is what
+     * every byte in {@code fixtures/} carries and what docs/protocol.md §3.1 /
+     * §3.2 / §3.6 say as of amendment M43 (decision D46 keeps it).
+     */
     private static void counters(final JsonOut o, final Multiset<CounterType> counters) {
         o.key("counters").obj();
         if (counters != null) {

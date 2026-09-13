@@ -258,6 +258,25 @@ session nobody ever attached to.
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
 ```
 
+**M7 adds `--arena`, and it is one URL fragment.** The arena is a second
+*renderer* over the same frame stream, so the bridge, the socket, the reducer and
+the frame log are untouched and `#arena` is the whole of the difference:
+
+```bash
+npm --prefix web run dev:arena       # vite --open "/?replay=games/g1.jsonl#arena"
+                                     # another fixture is a URL edit, not an argument
+./scripts/play.sh --arena            # the live game, in 3D (--no-arena forces 2D)
+node tools/arena-bench.mjs           # report 09 §9.4's frame times; NOT in check-all
+```
+
+`V` switches renderer mid-game over the same socket without dropping a frame and
+`K` skips every animation on screen. The escape hatches are `?arena=off` (render
+the 2D board even at `#arena` — WebGL can fail for a reason the player cannot
+see) and `?dpr=<n>` (pin the render resolution, which also turns the automatic
+ladder off); `?stats=1`, `?grid=1` and `?glinfo=1` are the debug flags, and
+`window.__mtgArena` is the dev-only handle the cue-tuning loop uses
+(`import.meta.env.DEV` only — a production build carries none of it).
+
 The socket on its own, with no browser:
 
 ```bash
@@ -471,7 +490,9 @@ together, and each is a defect that was actually hit.
    exactly what the per-frame `data-card-name` check in
    `web/test/render.test.tsx` would stop catching. Keep the list closed — adding
    an eleventh importer is a decision, and `grep -rl "from './CardTile.tsx'"
-   web/src` is how you check it.
+   web/src` is how you check it. **M7's arena has its own single card renderer,
+   `arena/scene/CardPlane.tsx`** — the same rule for a different renderer, and
+   without the `data-card-name` backstop; see the M7 conventions below.
 3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
    set-valued.** Keys are `c:<cardId>` / `p:<playerId>` / `s:<stackId>` because
    **the id spaces collide** — 40 frames in the committed corpus have a
@@ -515,10 +536,13 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is now **456 `node --test`** (448 pass, 0 fail, **8
-skipped** — the ws-log suite skips what `MTGTABLE_WS_LOGS` does not name, so a
-standalone run is 446 with none skipped and the gate reports 456) **+ 75
-vitest** (455/445/74 before amendment M42 added one test to each suite);
+`npm --prefix web test` is **534 `node --test` + 79 vitest (5 files)** standalone
+as of **M7** (it was 456 + 75 at M6), and **544 / 536 pass / 0 fail / 8 skipped**
+inside `check-all.sh`, where `MTGTABLE_WS_LOGS` names the four logs step 10 just
+produced and the ws-log suite skips the candidates it does not name. M7's eight
+suites (`layout`, `colour`, `replay-cues`, `cues-exhaustive`, `camera`,
+`liveness`, `perf`, plus the vitest `arena-hud`) are in the same glob and need no
+GPU and no DOM — which is what report 09 §2.4's `[NO three]` annotations bought.
 `render.test.tsx` renders every frame of every fixture **twice**, once as a
 replay and once as a seat, which is what makes the read-only assertion and the
 hidden-information assertions per-frame rather than per-suite.
@@ -634,6 +658,88 @@ remembers something the engine did not tell it is the defect, not the feature.
    Cancel, rendered verbatim, and inventing an act for them throws the engine's
    answer away.
 
+## The conventions M7 added — the arena
+
+Six, and the thesis under all of them is the same one sentence as the milestone:
+**the arena is a RENDERER.** It is a second renderer over the same frame stream —
+`web/src/arena/`, lazily imported, sharing `reduce.ts`, `protocol.ts`, the
+transports, `art.ts`, `keys.ts` and M5's `<AskModal>` with the 2D board. Read
+[`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md) in
+full before touching it; `docs/evidence/m7-arena.md` is what was measured.
+
+1. **It decides nothing, and that is mechanical.** No file under
+   `web/src/arena/` imports a transport; `reduce.ts` is imported **as a type
+   only**; `DecisionLayer` imports nothing from `cues/` or `scene/` and branches
+   on **no engine string**; `camera.ts`, `layout.ts`, `colour.ts` and everything
+   in `cues/` import no renderer, no three, no React and start **no timer**.
+   `web/test/liveness.test.ts` is a source scan that asserts every clause of
+   that, and it is the file to extend when the arena grows a module. The two
+   board rules hold here unchanged and for the same reasons: **never gate a click
+   on `selectable`** (`HitProxy` has no such prop to gate on) and **render
+   `buttons.*.label` verbatim**.
+2. **`CardPlane` is THE card renderer of the arena**, exactly as `CardTile` is
+   the board's (M4 convention 2), and for the identical reason: it is the
+   renderer's half of hard rule 8. Every card in every zone goes through it —
+   battlefield, hand, piles, the stack, attachments — and `layout.ts` sets
+   `Placement.back` for a redacted stub **and** for any face-down card *before*
+   `CardPlane` asks `art.json` for a face. `web/test/layout.test.ts` asserts
+   `isHidden(card) ⇒ placement.back` over **84,418 placements in 3,679 frames**
+   of the committed corpus. A second surface that draws its own quad is how a
+   concealed name gets on screen, and a canvas has no `data-card-name` for
+   `render.test.tsx` to catch it with. `CardBack.tsx` is deliberately a *texture
+   hook*, not a second renderer.
+3. **`layout(state)` is authoritative; a cue only ever adds an offset that decays
+   to identity** (**D50**). `finalTransform = layout(state)[id] ⊕ offsets[id]`.
+   `layout.ts` is pure — no three, no React, no time — and is the **only** thing
+   in the arena that knows a coordinate; a cue that wants a card to *stay*
+   somewhere adds a `presence` rule to the resting pose instead (the Helicarrier
+   hovers that way, which is why it survives `skip all`). This is what makes
+   skip, scrub-backwards, `resync` and a new `gameId` one call —
+   `flushAndSnap()` — with no rewind path. `replay-cues.test.ts` asserts the
+   offset map is **empty** after every one of the corpus's 3,293 batches. **Do
+   not animate the scene graph directly**; that is the defect this prevents.
+4. **Cues are DATA, and the table is exhaustive by type.**
+   `cues/cues.json` (**D51**) is the whole per-card and archetype table;
+   `cues/defaults.ts` is a `Record<EventKind, CueSpec>`, so a new event kind on
+   the wire **will not compile** until it has a default. The ladder is per-card →
+   archetype → default and a bad entry is dropped by `validate.ts`, never the
+   file. The rule the file lives by: **a cue keys off an event that is about THAT
+   card.** §3.6's `counters` event carries no *source*, so "Coulson gave this
+   counter" is not on the wire; the engine never says which card caused another
+   card's tap, so Quake's ring is centred on **her own**. Inventing either link
+   is rules logic in a renderer.
+5. **One `useFrame`, one geometry, and no allocation in the hot path.**
+   `scene/CueRunner.tsx` is THE frame loop (begin frame → tick → write offsets →
+   bind effects); `scene/geometry.ts` is one `PlaneGeometry` for every card in
+   the game; `scene/effects.ts` is a **fixed pool of 26 meshes**. Three
+   allocations hid in that loop behind a header claiming there were none — a
+   `bind` closure, a `new Set()` plus a sorted key array, and a compose pair —
+   and `web/test/cues-exhaustive.test.ts` now checks the pooled compose
+   field-for-field against the naive one rather than taking the claim on trust.
+   `frameloop` is `demand` while the queue is idle and nothing bobs, so an idle
+   table costs nothing.
+6. **The DOM layer over the canvas is `pointer-events: none`, so every widget in
+   it must opt back in.** `.arena__layer` lets the `<canvas>` keep every click
+   the DOM does not want — and `pointer-events` inherits, so a widget with no
+   `auto` rule of its own is **completely inert**. That shipped: the ask modals
+   and the `?`/`H` overlay were dead at every button's own centre.
+   `web/test/liveness.test.ts` parses the layer's JSX block, requires its table
+   of widget classes to **cover every component mounted there**, and requires
+   each class to carry a `pointer-events: auto` rule — so the next widget added
+   to that layer cannot ship inert.
+
+Two more things worth knowing before you change anything here. **The arena chunk
+must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
+way in, nothing under `arena/` may be imported statically from the 2D path, and
+`npm run build`'s own output is the check — the 2D entry chunk is 85.62 kB gzip
+and none of it is `three`. And **`tools/arena-bench.mjs` is not in the gate**, on
+purpose: it wants a built `dist`, a `vite preview` server and a headless
+Chromium. Every performance number in `docs/evidence/m7-arena.md` is from
+**SwiftShader**, a software rasteriser and an explicit lower bound; no
+measurement on the user's own GPU is possible here, and a frame *rate* read from
+a Claude browser pane is not a measurement at all (`requestAnimationFrame` fires
+0 times there).
+
 ## Treat forge-src as prose
 
 A Forge **2.0.15-SNAPSHOT** source checkout may be available in the session
@@ -701,13 +807,13 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/06-hidden-information-audit.md` | **Every reveal path in Forge**, its wire channel, its leak signature; the basis of hard rule 8 and of `tools/check-redaction.mjs`'s assertions. |
 | `docs/research/07-wireguigame-spec.md` | **The M2 spec.** 37 abstract members, the five threads, the eleven ask kinds, the null defaults. |
 | `docs/research/08-deck-card-coverage.md` | Card-by-card fidelity for the deck in play; D13 and D14 come from it. |
-| `docs/research/09-arena-tier1-plan.md` | M7 tier 1. |
+| `docs/research/09-arena-tier1-plan.md` | **M7 Tier 1 — the spec for the arena.** Dependencies and the React 18/19 fork, the scene graph, the texture pipeline, the offset model, the event→cue table, the camera rules, the performance budget and the six evenings E1–E6. Read in full before touching `web/src/arena/`. |
 | `docs/research/10-board-ui-spec.md` | **The M4 board.** Component tree, layout tokens, card tiles, arrows, wireframes. |
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
-| `PLAN.md` | The eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| `DECISIONS.md` | The **forty-five** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's** — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and its follow-ups and the Tier 2 hand-over are there — plus the deferred list and the open questions only the user can settle. |
+| `DECISIONS.md` | The **fifty-two** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's** — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

@@ -34,6 +34,7 @@
 #   ./scripts/play.sh --seed 42             # a reproducible shuffle
 #   ./scripts/play.sh --deck decks/pacho-shield.dck --deck2 decks/morph-probe.dck
 #   ./scripts/play.sh --port 8643           # a second bridge beside a running one
+#   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser
 #   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
 #   ./scripts/play.sh -- --games 1          # one game only (your --games wins)
@@ -42,6 +43,12 @@
 # script has never heard of still reaches the bridge:
 #
 #   ./scripts/play.sh -- --ai-name "Doom"
+#
+# M7 adds --arena, and it is one URL fragment: the arena is a SECOND RENDERER
+# for the same frame stream, not a second app, so the socket, the bridge and the
+# reducer are untouched and `#arena` is all that changes.  `V` switches back to
+# the board mid-game without dropping a frame; `?arena=off` is the kill switch
+# if WebGL will not start.
 #
 # The ports come from config.json (`wsPort`, `webPort`) and are overridable with
 # --port / --web-port.  The web port is vite's `strictPort: false`, so if 5173 is
@@ -55,6 +62,7 @@ cd "$REPO_ROOT"
 WS_PORT="$(cfg_get wsPort || echo 8642)"
 WEB_PORT="$(cfg_get webPort || echo 5173)"
 OPEN=1
+ARENA=0                          # M7: --arena opens /#arena instead of the board
 KEEP_OPEN=1                      # M6: the default, see the header
 GAMES_DEFAULT=3                  # M6: "three games back to back, one command typed"
 PASSTHROUGH=()
@@ -64,9 +72,11 @@ while [ $# -gt 0 ]; do
     --port)      WS_PORT="$2"; shift 2 ;;
     --web-port)  WEB_PORT="$2"; shift 2 ;;
     --no-open)   OPEN=0; shift ;;
+    --arena)     ARENA=1; shift ;;
+    --no-arena)  ARENA=0; shift ;;
     --keep-open) KEEP_OPEN=1; shift ;;
     --no-keep-open) KEEP_OPEN=0; shift ;;
-    --help|-h)   sed -n '5,49p' "$0"; exit 0 ;;
+    --help|-h)   sed -n '5,56p' "$0"; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
   esac
@@ -175,8 +185,11 @@ echo "ready"
 
 URL="http://127.0.0.1:$WEB_PORT/?ws=1"
 [ "$WS_PORT" = "8642" ] || URL="$URL&port=$WS_PORT"
+# The hash is the view (web/src/useView.ts), so it goes LAST and survives a
+# bookmark, a reload and the Back button.
+[ "$ARENA" = "1" ] && URL="$URL#arena"
 
-say "board — $URL"
+say "$([ "$ARENA" = "1" ] && echo "arena" || echo "board") — $URL"
 cat <<EOF
   Space  press the button the engine FOCUSED (input.buttons.focus, amendment
          M39 — its label is Forge's: OK / Auto / …). "Space = OK" was never a
@@ -185,7 +198,9 @@ cat <<EOF
   E T B  pass to end of turn / my next turn / just before my turn (act: yieldTo)
   P      pass priority          CTRL+Z  undo the last mana ability
   Y N    always yes / always no for the ability on top of the stack
-  H      the full 18-row key table, rendered from the one keymap
+  V      board <-> 3D arena (M7) -- the same game, two renderers, one state
+  K      skip every animation playing in the arena
+  H      the full key table, rendered from the one keymap
   click  any card, any player name — Forge judges the click (protocol §4.1, M8)
   the bridge plays the whole match and then waits for New Game for as long as
   this browser stays connected; Ctrl-C stops both halves.
@@ -201,7 +216,11 @@ EOF
 VITE_BIN="$REPO_ROOT/web/node_modules/.bin/vite"
 [ -x "$VITE_BIN" ] || die "$VITE_BIN is missing or not executable — run: npm --prefix web install"
 VITE_ARGS=(--port "$WEB_PORT")
-[ "$OPEN" = "1" ] && VITE_ARGS+=(--open "/?ws=1$([ "$WS_PORT" = "8642" ] || printf '&port=%s' "$WS_PORT")")
+if [ "$OPEN" = "1" ]; then
+  OPEN_PATH="/?ws=1$([ "$WS_PORT" = "8642" ] || printf '&port=%s' "$WS_PORT")"
+  [ "$ARENA" = "1" ] && OPEN_PATH="$OPEN_PATH#arena"
+  VITE_ARGS+=(--open "$OPEN_PATH")
+fi
 env -C "$REPO_ROOT/web" "$VITE_BIN" "${VITE_ARGS[@]}" &
 VITE_PID=$!
 

@@ -67,7 +67,9 @@ export type KeyActionId =
   | 'passBeforeTurn'
   | 'alphaStrike'
   | 'alwaysYes'
-  | 'alwaysNo';
+  | 'alwaysNo'
+  | 'toggleView'
+  | 'skipCues';
 
 export interface KeyBinding {
   id: KeyActionId;
@@ -82,7 +84,7 @@ export interface KeyBinding {
   /** Forge's own binding, or the divergence, verbatim from report 10 §12.1. */
   forge: string;
   /** The milestone that made it do something. Every row is live as of M6. */
-  milestone: 'M4' | 'M5' | 'M6';
+  milestone: 'M4' | 'M5' | 'M6' | 'M7';
 }
 
 export const KEYMAP: readonly KeyBinding[] = [
@@ -242,6 +244,36 @@ export const KEYMAP: readonly KeyBinding[] = [
     what: 'always no to the ability on top of the stack',
     forge: 'SHORTCUT_AUTOYIELD_ALWAYS_NO = 78 → setTriggerDecision(DECLINE) + setShouldAutoYield',
     milestone: 'M6',
+  },
+  {
+    // **M7.** The view switch, and report 09 §2.2 asks for exactly this key and
+    // exactly this reason: `V` is deliberately NOT one Forge uses (M6 mirrors
+    // its SHORTCUT_* set — Y/N/P, space, Esc), so binding it collides with
+    // nothing a Forge player already has in their fingers. It lives in this
+    // table rather than in a handler of its own because the alternative is two
+    // keyboards for one page, only one of which the `?` overlay can describe.
+    id: 'toggleView',
+    chord: 'V',
+    keys: ['v'],
+    ctrl: false,
+    what: 'switch between the 2D board and the 3D arena (the same game, two renderers)',
+    forge: 'divergence: Forge has one renderer and no such key (report 09 §2.2)',
+    milestone: 'M7',
+  },
+  {
+    // **M7, and it is an accessibility control before it is a comfort one.**
+    // The arena's whole vocabulary is motion; `prefers-reduced-motion` turns
+    // every cue into a snap, and this is the same escape hatch for someone who
+    // has not set that pref — or who has, for one animation, changed their mind.
+    // Skipping is `apply(t = 1)` then `end()`, so the board it lands on is
+    // exactly `layout(state)`: the board the engine described.
+    id: 'skipCues',
+    chord: 'K',
+    keys: ['k'],
+    ctrl: false,
+    what: 'skip every animation playing in the arena — the board jumps to what the engine said',
+    forge: 'divergence: Forge animates nothing, so it has nothing to skip (report 09 §5.1)',
+    milestone: 'M7',
   },
   {
     // **M5 — the one real dead end M4 handed over.** LAST on purpose:
@@ -533,6 +565,11 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
     case 'toggleCombat':
     case 'toggleLog':
     case 'toggleHotkeys':
+    // **M7 — both are local and send nothing**, so both are legal on a replay:
+    // switching renderer and skipping an animation are things you do to the
+    // *picture*, and a read-only board has a picture.
+    case 'toggleView':
+    case 'skipCues':
       return { binding, plan: { kind: 'view', id: binding.id } };
 
     // ---- M6. Every one of these is an act the engine already answers; the

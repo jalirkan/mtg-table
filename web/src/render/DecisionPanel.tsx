@@ -68,7 +68,7 @@ import {
   type InputButton,
   type YieldKind,
 } from '../protocol.ts';
-import { gameLabel, type ClientState } from '../reduce.ts';
+import type { ClientState } from '../reduce.ts';
 import {
   chordFor,
   YIELD_MARKER_BEFORE_MY_TURN,
@@ -78,6 +78,7 @@ import {
   type KeyActionId,
 } from '../keys.ts';
 import type { BoardActions } from './Board.tsx';
+import { NewGameRow } from './GameOver.tsx';
 import { AskPicker, type AskPickerProps } from './AskPicker.tsx';
 import { CardTile, displayName, type Clicks } from './CardTile.tsx';
 import { STEP_TITLE } from './labels.ts';
@@ -237,7 +238,16 @@ export function DecisionPanel({
               that silently does nothing is the dead end M5 spent an evening
               removing. */}
           {actions !== null && state.gameOver !== null && (
-            <NewGameRow state={state} actions={actions} connected={connected} />
+            <NewGameRow
+              state={state}
+              // Wrapped rather than passed bare: `BoardActions` is an interface,
+              // and a caller is entitled to implement `newGame` as a method that
+              // reads `this`.
+              onNewGame={(mode) => {
+                actions.newGame(mode);
+              }}
+              connected={connected}
+            />
           )}
 
           {flash !== null && (
@@ -347,7 +357,16 @@ export function DecisionPanel({
               a session that ended before this seat was asked anything is a dead
               end with a JVM still running. */}
           {state.gameOver !== null && (
-            <NewGameRow state={state} actions={actions} connected={connected} />
+            <NewGameRow
+              state={state}
+              // Wrapped rather than passed bare: `BoardActions` is an interface,
+              // and a caller is entitled to implement `newGame` as a method that
+              // reads `this`.
+              onNewGame={(mode) => {
+                actions.newGame(mode);
+              }}
+              connected={connected}
+            />
           )}
         </>
       )}
@@ -516,97 +535,6 @@ function UndoButton({
   );
 }
 
-/**
- * **M6 — New Game** (report 11 §8.2). `act: newGame {mode}` →
- * `nextGameDecision(CONTINUE | NEW)` → `HostedMatch.continueMatch()` /
- * `restartMatch()`, both on the EDT, neither of them paying `FModel.initialize`
- * again.
- *
- * `continue` is the next game of **this** match — the one that makes a
- * `--games 3` session three games and lets the `sideboard` ask fire between
- * them. Once `over.matchOver` is true there is no next game to continue to, so
- * that button goes quiet and Restart is the live one; `matchOver` is a typed
- * field on the wire (§7), not something read out of the result text.
- */
-function NewGameRow({
-  state,
-  actions,
-  connected = null,
-}: {
-  state: ClientState;
-  actions: BoardActions;
-  /** The socket's state; `null` is a replay. See `BoardProps.connected`. */
-  connected?: boolean | null;
-}): JSX.Element {
-  const matchOver = state.gameOver?.matchOver === true;
-  const label = gameLabel(state);
-  // **M6 verification fix.** This row appears at `over`, which is the one moment
-  // in a session when the bridge may already have gone: the found defect was a
-  // 30-second fuse in `MtgTable` that closed the socket under a connected
-  // client, and the browser half of it was a row that stayed ENABLED afterwards
-  // and answered a click with a toast — "Not connected — act was not sent".
-  // The bridge no longer arms that fuse while somebody is attached; this is the
-  // other half, because a socket can always go away for other reasons (the JVM
-  // was stopped, the machine slept) and a button that cannot do what it says is
-  // a dead end whatever closed the socket.
-  const offline = connected === false;
-  const disableTitle =
-    'the bridge is not connected — `act: newGame` has nowhere to go. Reconnect from the ' +
-    'status bar, or start a session again with ./scripts/play.sh';
-  return (
-    <div className="decision__newgame">
-      {label !== null && <span className="pill pill--game">{label}</span>}
-      <button
-        type="button"
-        className={`btn btn--small${matchOver || offline ? '' : ' btn--primary'}`}
-        disabled={matchOver || offline}
-        data-act="newGame"
-        data-mode="continue"
-        title={
-          offline
-            ? disableTitle
-            : matchOver
-              ? 'the match is over — there is no next game to continue to; Restart starts a fresh match'
-              : "act: newGame {mode:'continue'} — nextGameDecision(CONTINUE) → HostedMatch.continueMatch(): the next game of this match, with the same JVM and the same card database"
-        }
-        onClick={() => {
-          actions.newGame('continue');
-        }}
-      >
-        New game
-      </button>
-      <button
-        type="button"
-        className={`btn btn--small${matchOver && !offline ? ' btn--primary' : ''}`}
-        disabled={offline}
-        data-act="newGame"
-        data-mode="restart"
-        title={
-          offline
-            ? disableTitle
-            : 'act: newGame {mode:\'restart\'} — nextGameDecision(NEW) → HostedMatch.restartMatch(): a fresh match from the same rules and players'
-        }
-        onClick={() => {
-          actions.newGame('restart');
-        }}
-      >
-        Restart match
-      </button>
-      {offline ? (
-        <span className="hint hint--loud hint--offline" role="status" data-newgame="offline">
-          <strong>The bridge is not connected.</strong> Neither button can send{' '}
-          <code>act: newGame</code> — reconnect from the status bar above, or run{' '}
-          <code>./scripts/play.sh</code> again.
-        </span>
-      ) : (
-        <span className="muted">
-          a new game means a new <code>hello_ok</code>: every card id the board holds is dropped and
-          rebuilt (§2.1).
-        </span>
-      )}
-    </div>
-  );
-}
 
 /**
  * "Your first main phase" / "Forge AI's declare attackers" (report 10 §7.1).

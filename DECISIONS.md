@@ -1728,3 +1728,290 @@ pressed a key that means "press the button"; `P` is the pass key and it is a row
 of its own). Rendering our own idea of which button *ought* to be focused (it is
 `updateButtons`' argument, and guessing it is how a board and an engine come to
 disagree about what `Space` does).
+
+---
+
+## D46 — A counter type on the wire is Forge's DISPLAY name, and the doc was wrong rather than the bridge
+
+**2026-09-13** (M7 verification, amendment **M43**)
+
+**Decision.** `counters` — the map on a `PlayerState` and on a `Card`, and the
+`counter` field of the §3.6 `counters` event — carries
+`CounterType.getName()`, i.e. Forge's **printed** name: `+1/+1`, `-1/-1`,
+`Spore`, `Energy`. **The bridge does not change.** `docs/protocol.md` §3.1, §3.2
+and §3.6 are corrected to say so, and the key is now declared an **opaque display
+string**: a consumer that wants an identifier-shaped token normalises one itself.
+
+**Rationale.** The spec named the wrong accessor's output and had done since M1.
+`Snap.java` has always called `getName()` (three call sites), and **all 1,316
+counter values in the committed corpus are `+1/+1` or `Spore`** — there is not
+one `P1P1` anywhere in `fixtures/`. So `P1P1` was never a wire fact, and
+changing the bridge to emit `CounterType.name()` would invalidate fourteen
+recordings, require a compatibility shim for them, and replace the string Forge
+itself shows a player with one it does not. It would also be a change made to
+suit one consumer's selector grammar, which is the tail wagging the dog.
+
+That it went unnoticed for six milestones is the interesting part, and it is the
+cost this entry is really recording. The arena's §7.3 selector grammar spells the
+counter `P1P1`, written from this file, so `counters:P1P1+` — the selector behind
+Agent Phil Coulson's badge cue and the `creature/W` archetype — **matched nothing
+at all** until `counterToken()` normalised the wire's spelling into it. That is
+the failure mode CLAUDE.md's *"change the doc first, then both ends"* exists to
+prevent: a second consumer written from the doc repeats the dead lookup.
+
+**Known cost, not fixed here.** `COUNTER_LABELS` in `web/src/render/labels.ts` is
+keyed by the same enum-constant spelling (`P1P1`, `M1M1`, `LOYALTY`, …), so on
+the 2D board `counterLabel('+1/+1')` never hits the table and falls through to
+its own default. The result is *correct text* — the default prints the raw name,
+which is already `+1/+1` — with the generic `ctr--other` class and no
+`mana-font` glyph. It is cosmetic, it is on the board rather than in the arena,
+and it is a separate change with its own board-render evidence; it is written
+down here so the next reader does not rediscover it as a new bug.
+
+**Rejected.** Emitting `CounterType.name()` from the bridge (breaks the corpus,
+demotes `counterToken()` from a translator to a permanent shim for the fourteen
+pre-change fixtures, and throws away Forge's own display string). Widening the
+arena's selector grammar to accept `counters:+1/+1+` (the `+` and `-` direction
+qualifiers collide with the name itself, and `validate.ts` would have to parse
+its way out). Leaving the doc alone because the client works around it (the
+workaround *is* the evidence that the doc misleads a reader who trusts it).
+
+---
+
+## D47 — The arena stays on the React-18 3D line; the app does not move to React 19
+
+**2026-09-12** (M7, E1 — report 09 §1.2's go/no-go)
+
+**Decision.** The arena runs on **`@react-three/fiber` 8.18.0 + `@react-three/drei`
+9.122.0 against `react` 18.3.1**, which is the frozen React-18 line. The rest of
+the app is untouched: no React 19, no `react-dom/client` change, no migration of
+the 2D board, and no second React in the bundle.
+
+**Rationale.** Report 09 §1 budgeted 45 minutes for a spike that could have ended
+three ways — the frozen v8 line, `three@0.173.0` under it, or moving the whole
+app to React 19 + fiber 9 + drei 10 — and the first one worked, so the budget was
+never spent. `npm i -E three@0.186.0 @react-three/fiber@8.18.0
+@react-three/drei@9.122.0` resolved with **no peer conflict**, `tsc --noEmit`
+exits 0, `vite build` succeeds, and it renders a real WebGL scene with real
+Scryfall textures. The alternative was a React major upgrade that would have had
+to re-green **every existing test and the whole 2D board** to buy a renderer
+nobody had written yet — a migration taken on spec, to remove a risk that had not
+materialised.
+
+**Known cost, and it is the trip-wire.** Fiber 8.18.0's loop calls a deprecated
+`three` API, so every `<Canvas>` mount prints `THREE.Clock: This module has been
+deprecated. Please use THREE.Timer instead.` once. It is a warning and the loop
+runs, so §1.2's named trip-wire (*"the frozen line stops working against a
+current `three`"*) has **not** fired — but it is the first visible crack, the
+line has no maintenance branch (frozen 2025-02-19), and the next `three` minor
+could turn it into a break. **The day it does, the answer is the React 19 move,
+not a patch**: it is written up in report 09 §1.2 and §13, and this entry is what
+tells the next reader the spike was already run once.
+
+**Rejected.** Moving the app to React 19 + fiber 9 + drei 10 pre-emptively (a
+React major upgrade to the working half of the app, bought before the risk was
+real). Pinning `three@0.173.0` under fiber 8 (0.186.0 works; a deliberately old
+`three` costs the texture and colour-space fixes for nothing). Two React copies,
+one per renderer (two reconcilers, two hook registries, and the `V` switch stops
+being one component tree).
+
+---
+
+## D48 — `three`, `fiber` and `drei` are pinned EXACTLY, with no caret
+
+**2026-09-12** (M7, E1)
+
+**Decision.** `web/package.json` carries `"three": "0.186.0"`,
+`"@react-three/fiber": "8.18.0"`, `"@react-three/drei": "9.122.0"` and
+`"@types/three": "0.185.4"` — **no `^`, no `~`** — against every other dependency
+in the file, which floats on a caret. `NOTICE` section 6 records the versions,
+their MIT licences and this reason.
+
+**Rationale.** Fiber 8's `three` peer range is `">=0.133"` with **no upper
+bound**, and the React-18 line is frozen with no maintenance branch. A caret
+would therefore let `npm install` pull, at some arbitrary future moment, a
+`three` the frozen line cannot be fixed for — and the failure would land on
+whoever ran `npm ci` next, not on whoever changed something. An exact pin makes
+that a deliberate edit with a diff, which is where **D47**'s trip-wire can
+actually be read.
+
+`@types/three` is a `devDependency` (three ships no types of its own) and is
+pinned for the same reason from the other side: the types must describe the
+runtime we installed, and 0.185.4 against 0.186.0 is the pairing that
+type-checks.
+
+**Rejected.** Carets like the rest of the file (consistency, bought with the one
+failure mode this dependency set actually has). A lockfile alone (it pins for
+`npm ci` and says nothing about intent — the next person to run `npm update` or
+`npm i three` gets no warning). Vendoring `three` into the repo (a 1.2 MB blob
+under GPL review for a dependency that is not moving).
+
+---
+
+## D49 — The arena is ONE lazily-imported chunk, and the 2D board pays ~1 kB for its existence
+
+**2026-09-12** (M7, E1/E2)
+
+**Decision.** `web/src/main.tsx` reaches the arena through
+`lazy(() => import('./arena/Arena.tsx'))` behind a `<Suspense>`, in both the live
+and the replay trees. Nothing under `web/src/arena/` may be imported statically
+from the 2D path, and `web/src/useView.ts` (the `#arena` / `#/arena` /
+`?view=arena` reader) is deliberately a **110-line module with no router
+dependency and no persistence**.
+
+**Rationale.** The 2D board is the thing that works; it must not get slower
+because a second renderer exists. Measured, before and after, on the same machine:
+the entry chunk went **83.99 → 85.62 kB gzip (+1.63 kB)** across the whole
+milestone and the arena is **996 kB / 274 kB gzip in a chunk of its own**, fetched
+on the first `#arena` and never before — `dist/index.html` carries one module
+script, no `modulepreload` for it, and exactly one `import("./Arena-….js")` in the
+entry. That +1.63 kB is `useView`, the view toggle, the `Suspense` boundary, two
+keymap rows, the `?arena=off` / `?dpr=` parses and the arena's CSS. **Not one byte
+of `three` is on the 2D path**, and `npm run build`'s own output is how that is
+checked — no bundle-analysis tooling was added to assert it.
+
+A router would have been the ordinary answer to "two views, one app" and is a
+dependency, a URL scheme and a history model bought for one boolean. A fragment
+fires `hashchange` without touching the transport, which is precisely why `V` can
+switch renderer mid-game without dropping a frame.
+
+**Rejected.** A static import guarded by a flag (the bundler still puts `three` in
+the entry chunk; the flag saves render time and no bytes). A separate HTML entry
+point for the arena (two apps, two sockets, and the `V` switch becomes a
+navigation that reconnects). `react-router` (see above). Persisting the chosen
+view in `localStorage` (a player who hits a WebGL failure would then reopen into
+it; `?arena=off` is the escape hatch and it is per-URL on purpose).
+
+---
+
+## D50 — `layout(state)` is authoritative and a cue only contributes an offset that decays to identity
+
+**2026-09-13** (M7, E3 — report 09 §5.1)
+
+**Decision.** Every card's transform in the arena is
+
+```
+finalTransform(card) = layout(state)[card.id]  ⊕  offsets[card.id]
+```
+
+`layout.ts` is a **pure function of the `ClientState`** — no three, no React, no
+time — and is the only thing in the codebase that knows a coordinate. A cue may
+**never** write a card's position; it contributes a transient `Offset` that
+**starts at identity and returns to identity**, composed per frame by the one
+`useFrame` in `CueRunner.tsx`. A cue that wants a card to *stay* somewhere asks
+`layout.ts` for it instead — the Helicarrier's hover is `presence`, a **layout**
+rule, which is why it survives `skip all`.
+
+**Rationale.** This is the property that makes a 3D renderer safe to point at a
+scrubbable frame log. Because the resting pose is a function of the state and the
+animation is a decaying delta on top of it, **skip, scrub backwards, `resync` and
+a new `gameId` are all the same call** — `flushAndSnap()` — and none of them needs
+a rewind path, an inverse animation or a tween cancellation graph. The arena never
+has to ask "where was this card mid-cue"; it asks the engine's own snapshot where
+the card *is*. `replay-cues.test.ts` asserts it mechanically rather than in a
+comment: after every one of the **3,293 non-empty batches across all eighteen
+committed recordings**, the offset map is **empty**.
+
+The same rule is what keeps hard rule 8's renderer half mechanical in 3D: a
+concealed card is placed as a **back** by `layout.ts` before any cue runs and
+before `CardPlane` asks for a face, so no animation can put a face on screen that
+the frame concealed.
+
+**Rejected.** Animating the scene graph directly (the usual approach, and the one
+that makes a scrub backwards into a rewind problem — every in-flight tween becomes
+state the reducer does not own). Keeping a shadow "animated state" beside
+`ClientState` (a second source of truth for where a card is, which is the defect
+this entry exists to prevent). Letting a cue write `layout`'s output for
+"permanent" effects (the Helicarrier proves it is unnecessary: `presence` is one
+field on the resting pose and it composes with everything).
+
+---
+
+## D51 — Cues are ONE validated data file, keyed by card name, resolved through a three-rung ladder
+
+**2026-09-13** (M7, E3/E5 — report 09 §7)
+
+**Decision.** `web/src/arena/cues/cues.json` is the whole cue table: a `version`,
+an `archetypes` map (`creature/W`, `land/*`, `equipment/*`, …) and a `cards` map
+keyed by the card's **name**, whose values name a cue in `registry.ts` and tune it
+with `ms` and `params`. Any key beginning with `_` is a comment; every other key
+is validated against a **closed** set, so an unknown field is an *error* rather
+than something that silently does nothing. Resolution is a three-rung ladder:
+**per-card → archetype (primary type + colour) → the §6 default for the event
+kind**, and the default table is a `Record<EventKind, CueSpec>` so it is
+exhaustive *by type* — a new kind on the wire does not compile until it has one.
+
+A bad entry is dropped by `validate.ts` and falls through the ladder; **the file
+can never stop the arena**. `cues-exhaustive.test.ts` fails on any error in it,
+which is where a typo is cheap.
+
+**Rationale.** `docs/ideas/arena-mode.md` proposed either `<card-name>.json` per
+card or one file, and one file wins on four counts measured against this deck:
+one fetch, one parse, one validation pass, one diff in review — and **no
+filename-escaping problem** for `A.I.M. Scientists`, `S.H.I.E.L.D. Spy Kit` and
+`Quake, Agent of S.H.I.E.L.D.`. Keying by name rather than by Scryfall id or
+Forge id keeps the file readable and editable by the person who knows the source
+material, and the name is already on the wire for any card the viewer may see.
+
+**The rule this file lives by, and it is a hard rule.** *A cue keys off an event
+that is about **that card**.* The ladder resolves an event through the card the
+event **names**, so a beat that belongs to another card cannot be keyed on its
+author: §3.6's `counters` event carries the card, the type and the two values and
+**no source**, so *"Coulson points and every Hero flashes"* is not expressible and
+must not be invented — the badge is keyed to the card that *received* the counter.
+Inventing that link would be rules logic in a renderer (CLAUDE.md §Scope).
+
+**Rejected.** One file per card (filename escaping, N fetches, N parses, and a
+review diff that hides a table-wide change). Keying by Forge card id (ids are
+per-game and a new `hello_ok` invalidates them — invariant 10). Keying by Scryfall
+id (stable, but nobody writing a cue knows one by sight, and `art.json` is
+gitignored). Open key sets with unknown fields ignored (a misspelled `ms` is then
+a cue that silently plays at its default duration, which is exactly the class of
+bug a data file makes easy and cheap to prevent).
+
+---
+
+## D52 — The arena's card texture is Scryfall `normal`, with ONE shared rounded-corner alpha map
+
+**2026-09-12** (M7, E2 — report 09 §4.2, §9.2 rule 1)
+
+**Decision.** `CardPlane` requests `imageUrl(entry, 'normal')` — the 488×680 JPEG
+— for every card face in the 3D scene, and rounds the corners with **one**
+256×256 rounded-rect alpha texture generated at startup and used as the `alphaMap`
+of every card in the game. The cache is keyed by **URL, never by card id**, so
+seven `Plains` share one texture and one upload. D28's three board variants
+(`thumb` / `grid` / `display`) are unchanged; the arena simply adds a fourth use
+of the same `art.json`.
+
+**Rationale.** Three numbers decided it, all measured. **`large` costs ~90 MiB of
+VRAM including mip chains against ~47 MiB for `normal`** across the deck's 28
+distinct faces, and a card is ~136 px tall on screen — there is nothing to see for
+the other 43 MiB. The **`png` variant has a real rounded-corner alpha and is
+605,487 bytes against 73,417** — 8.2× the bytes and ~2× the VRAM per card, to buy
+a silhouette one shared 256×256 mask provides for every card at once. And 488×680
+needs **no resize and no filter hack**: three 0.186 is WebGL 2 only, which does
+NPOT mipmaps, so the file uploads as it arrives.
+
+Four lines around it are not obvious and each is verified against the installed
+`three`: `colorSpace` must be set to `SRGBColorSpace` **by hand** (the `Texture`
+constructor defaults to `NoColorSpace` and `TextureLoader` never touches it, so a
+card left alone renders washed out); anisotropy is off by default and is **the
+single biggest visual win here**, because a table camera views cards at ~50° from
+their normal, which is exactly the case trilinear filtering blurs;
+`gl.initTexture()` uploads immediately rather than at first draw; and CORS is fine
+— `cards.scryfall.io` answers `access-control-allow-origin: *`, without which the
+texture would fail to upload to WebGL entirely rather than merely taint a canvas.
+
+**Known cost.** The *first* GPU upload of each face is tens of milliseconds under
+a software rasteriser, which is the `max ≤ 50 ms` breach on a cold table in report
+09 §9.4's gate (M7 follow-up 1). It is per face, once, and never again.
+
+**Rejected.** `large` (2× the VRAM for pixels no camera angle resolves). The `png`
+variant for its alpha (8.2× the bytes per card to replace one shared 256×256
+mask). `grid` — the board's own WEBP at the same 488×680 — which would share the
+board's warm HTTP cache and is genuinely tempting; `normal` is the interoperable
+baseline `art.json` already stores and the one variant guaranteed present for
+every face, and the saving is HTTP bytes rather than VRAM, which is not what this
+scene is short of. Revisit it if a cold arena load ever needs to be faster.
+Per-card rounded-corner geometry (more triangles and a second geometry, against
+§9.1's one-geometry budget, for a silhouette an alpha map already gives).
