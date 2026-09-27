@@ -2,6 +2,7 @@
   "version": 1,
   "_file": "THE figure table (report 13 §3.7). Text, keyed by card name and archetype key, committed beside cues.json for the same reason cues.json is: it is art direction, not code.",
   "_rule": "Tier 2 is ARCHETYPES. A per-card entry may choose a model and alias a clip; it may NOT introduce a model used by exactly one card — that is Tier 3 (§12).",
+  "_identity": "Slice 3: this file says which BODY a card stands in; traits.json (validated by the same validator module) says what makes it THAT card — size, hover, colour, props, swarm, silhouette. `scale` stays in the schema and multiplies with the trait's; no card row here uses it any more.",
   "_pose": "Every entry here keys off the SNAPSHOT — this card is on the battlefield and this is its type line — never off an event. That is what makes a figure survive `skip all`, a backwards scrub and a `resync` (§1.3).",
   "_names": "Card keys are the wire's string VERBATIM, including the word `Token`: the wire says \"Soldier Token\", and a key of \"Soldier\" would never match (§2's measured trap).",
 
@@ -23,7 +24,7 @@
     },
     "creature/subtype:soldier": { "model": "agent", "tint": "#cfd6de" },
 
-    "_vehicle": "creature/subtype:vehicle is deliberately ABSENT: there is no carrier model in models.json yet, so the Helicarrier takes the disc and keeps the presence hover it already has (T10).",
+    "_vehicle": "creature/subtype:vehicle is deliberately ABSENT here: a Vehicle is not a BODY. Since slice 3 (T10) it is traits.json's `subtype:vehicle` silhouette — a procedural carrier drawn over its card, crewed or not — and never a model.",
 
     "creature/W": { "model": "agent", "tint": "#f6f0d8" },
     "creature/U": { "model": "agent", "tint": "#9ec7f0" },
@@ -40,11 +41,13 @@
       "clips": { "attack": "jet" },
       "_note": "Also reached by creature/subtype:robot; the entry exists for the jet alias, not for the model."
     },
-    "Giant-Sized Flying Ant": { "model": "insect", "scale": 1.35 },
+    "Giant-Sized Flying Ant": {
+      "model": "insect",
+      "_note": "Its size (1.35, flown side-on so the strict clamp lets it be giant), its hover, its wings and its rider are IDENTITY and live in traits.json since slice 3 — one place for what makes a card itself. A `scale` here would MULTIPLY with that one."
+    },
     "Ant-Man's Air Force": {
       "model": "insect",
-      "scale": 0.7,
-      "_note": "One small insect for now. The swarm of five is T9 and needs a `swarm` key this schema does not have yet."
+      "_note": "The insect rig stands at the centre for the clip lane and is not drawn: traits.json's `swarm: 5` (slice 3, T9) draws five small bees round it in one instanced call."
     },
     "Ant-Man, Reformed Rogue": {
       "model": "hero",
@@ -117,7 +120,7 @@
 
   "attachments": {
     "_note": "T5's auras and Equipment (report 13 §4). THE SAME THREE-RUNG LADDER: per-name, then an attachment subtype, then `*`. Every entry keys off the SNAPSHOT — `card.attachedToId` — never off the `attach` event, which fires 28 times in the whole corpus against 985 frames that show an attachment (§4.1).",
-    "_kinds": "`shrink` and `halo` are what T5 draws. `shell`, `circuit`, `glints` and `cocoon` are §4.3's per-card table and are T12's: they are in the vocabulary so adding them is a data edit, and until then scene/overlays.ts draws them as the halo.",
+    "_kinds": "`shrink` and `halo` are T5's; `shell`, `circuit`, `glints` and `cocoon` are §4.3's per-card table, drawn since Tier 2 slice 3 (T12) by scene/overlays.ts, one instanced mesh per KIND. Every kind keeps the halo ring at the host's feet and replaces its chest glow; an anonymous host (a face-down creature) wears the ring and nothing else (hard rule 8). The three deck rows below landed with slice 3's verification fixes — before that the per-name rung was empty and all three drew the plain halo.",
     "_hosts": "Measured: 2,030 of 2,030 attachment instances in the corpus have a CREATURE host, so every entry here lands on a figure. An attachment on a land or an artifact draws its card and nothing else, which is correct.",
 
     "Quantum Reduction": {
@@ -127,16 +130,34 @@
       "_note": "944 frame-instances, the most-seen attachment in the corpus. The Quantum Realm takes it: the host figure is less than half its height and a ring closes at its feet. The SHRINK is the pose — it survives `skip all` because the snapshot still says the Aura is attached — and `fx.collapse` is the cast beat."
     },
 
+    "Super Suit": {
+      "kind": "shell",
+      "metal": true,
+      "strength": 0.9,
+      "_note": "T12: the armour shell — a plated capsule round the whole figure, a bright rim and two seams, metal-cooled. 409 frame-instances in the corpus."
+    },
+    "S.H.I.E.L.D. Spy Kit": {
+      "kind": "glints",
+      "metal": true,
+      "strength": 0.95,
+      "_note": "T12: three four-point gadget glints orbiting at hand height, twinkling on the overlay's gated clock. 362 frame-instances."
+    },
+    "Robotics Mastery": {
+      "kind": "circuit",
+      "strength": 0.9,
+      "_note": "T12: bold circuit traces over the body, pulsing. 315 frame-instances."
+    },
+
     "subtype:aura": {
       "kind": "halo",
       "strength": 0.85,
-      "_note": "1,259 frame-instances of the type line `Enchantment - Aura`. Robotics Mastery is the other user; its circuit overlay is T12 and until then it is the halo in its own colour, which reads."
+      "_note": "1,259 frame-instances of the type line `Enchantment - Aura` — Quantum Reduction and Robotics Mastery, both of which have rows of their own above. This rung is for any other Aura: the halo, in its own colour."
     },
     "subtype:equipment": {
       "kind": "halo",
       "metal": true,
       "strength": 0.8,
-      "_note": "771 frame-instances of `Artifact - Equipment` — Super Suit and the S.H.I.E.L.D. Spy Kit. §4.4's metallic variant of the same halo: a harder, colder rim. The armour shell and the orbiting glints are T12."
+      "_note": "771 frame-instances of `Artifact - Equipment` — Super Suit and the S.H.I.E.L.D. Spy Kit, both with rows of their own above. This rung is §4.4's metallic variant of the halo for any other Equipment: a harder, colder rim."
     },
 
     "*": {

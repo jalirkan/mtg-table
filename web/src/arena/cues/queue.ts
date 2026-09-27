@@ -190,7 +190,7 @@ function retimeStep(step: Step): void {
 }
 
 /**
- * The six suppression rules. Each one is a thing the engine legitimately says
+ * The seven suppression rules. Each one is a thing the engine legitimately says
  * twice, and each would otherwise animate twice.
  *
  *  1. **`zone` → stack is folded into `cast`** (§6). Forge emits both for every
@@ -218,6 +218,15 @@ function retimeStep(step: Step): void {
  *     targets, same batch. Frame 175 again: two `resolved` events for one card,
  *     which composed into a pop **twice** the size of either — `scale` is
  *     multiplied by `composeOffsets`, not taken once.
+ *  7. **One card's `cast` and `resolved` that name the same cue play once**
+ *     (Tier 2 slice 3). Slice 3 keyed a card's RESOLUTION to its own cue (Web
+ *     Up's wrap, Wasp's beam, Quake's shockwave), and an enchantment whose spell
+ *     resolves and whose enter trigger goes on the stack in one snapshot then
+ *     plays the same cue twice on one card under two selectors — `g1.jsonl`
+ *     frame 139, Web Up: its spell's `resolved`, then its trigger's `cast` — and
+ *     two lifts compose into one twice as high. The survivor is the one that
+ *     carries an AIM (`beamTo` / `strikeCard`), because that is the one with
+ *     something to show; failing that, the first in engine order.
  */
 function suppress(cues: Cue[]): Cue[] {
   const castCards = new Set<number>();
@@ -235,10 +244,24 @@ function suppress(cues: Cue[]): Cue[] {
     }
   }
 
+  // Rule 7's winners: `<cue id>|<card>` → the one cast-or-resolved cue that plays.
+  const castOrResolved = new Map<string, Cue>();
+  for (const cue of cues) {
+    if (cue.kind !== 'cast' && cue.kind !== 'resolved') continue;
+    const card = cue.targets[0];
+    if (card === undefined) continue;
+    const key = `${cue.id}|${String(card)}`;
+    const incumbent = castOrResolved.get(key);
+    if (incumbent === undefined || (!isAimed(incumbent) && isAimed(cue))) castOrResolved.set(key, cue);
+  }
+
   const seen = new Set<string>();
   const claimed = new Map<string, Set<number>>();
   const out: Cue[] = [];
   for (const cue of cues) {
+    if ((cue.kind === 'cast' || cue.kind === 'resolved') && cue.targets[0] !== undefined) {
+      if (castOrResolved.get(`${cue.id}|${String(cue.targets[0])}`) !== cue) continue;
+    }
     if (cue.kind === 'zone' && cue.id === 'zone.toStack' && cue.targets.some((id) => castCards.has(id))) {
       continue;
     }
@@ -274,6 +297,13 @@ function suppress(cues: Cue[]): Cue[] {
     out.push(targets === cue.targets ? cue : { ...cue, targets });
   }
   return out;
+}
+
+/** Rule 7: does this cue carry an aim the wire stated — a stack target, now or a frame ago? */
+function isAimed(cue: Cue): boolean {
+  const beam = cue.params['beamTo'];
+  const strike = cue.params['strikeCard'];
+  return (typeof beam === 'number' && beam >= 0) || (typeof strike === 'number' && strike >= 0);
 }
 
 /**

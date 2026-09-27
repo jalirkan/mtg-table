@@ -439,7 +439,11 @@ was not idle; Tier 2 added no step. Slice 2's fix pass ran it from a deleted
 its second fix pass the same way at `WSPORT=8665`: **729 s**, exit 0
 (`var/check-all-t2-fix2.log`); and its documentation pass at `WSPORT=8666`,
 without deleting `bridge/out`: **727 s**, exit 0 (`var/check-all-t2s2-docs.log`).
-Slice 2 added no step.
+Slice 2 added no step. Slice 3's fix pass ran it from a deleted `bridge/out` in
+the `tier2-slice3` worktree at `WSPORT=8666`: **731 s**, exit 0; its second fix
+pass the same way at `WSPORT=8665`: **729 s**, exit 0; and its documentation pass
+at `WSPORT=8666`, without deleting `bridge/out`: **726 s**, exit 0
+(`var/check-all-t2s3-docs.log`). Slice 3 added no step either.
 `SKIP_TEN=1`
 brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
 **seven** servers on it, one after another.
@@ -552,16 +556,18 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **655 `node --test` + 79 vitest (5 files)** standalone
-as of **M7 Tier 2's second slice** after its second fix pass (652 before it,
-610 + 79 after the first slice, 534 + 79 at M7 Tier 1, 456 + 75 at M6), and
-**665 / 657 pass / 0 fail / 8 skipped** inside `check-all.sh` (662 / 654 before
-slice 2's second fix pass, 620 / 612 after
+`npm --prefix web test` is **704 `node --test` + 79 vitest (5 files)** standalone
+as of **M7 Tier 2's third slice** after its second fix pass (698 after its first,
+690 before that, 655 after the second slice, 610 + 79 after the first slice,
+534 + 79 at M7 Tier 1, 456 + 75 at M6), and **714 / 706 pass / 0 fail / 8
+skipped** inside `check-all.sh` (708 / 700 after slice 3's first fix pass, 665 / 657
+after slice 2, 662 / 654 before slice 2's second fix pass, 620 / 612 after
 Tier 2's first slice, 544 / 536 at Tier 1), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
 produced and the ws-log suite skips the candidates it does not name. M7's eight
 suites (`layout`, `colour`, `replay-cues`, `cues-exhaustive`, `camera`,
-`liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's six (`figures`,
-`figure-pose`, `clips`, `tiles`, `attach`, `stack`) are in the same glob and need
+`liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's eight (`figures`,
+`figure-pose`, `clips`, `tiles`, `attach`, `stack`, and slice 3's `traits` and
+`facing`) are in the same glob and need
 no GPU and no DOM — which is what report 09 §2.4's `[NO three]` annotations
 bought, and report 13 §10 bought again for `figures/`.
 `render.test.tsx` renders every frame of every fixture **twice**, once as a
@@ -733,7 +739,8 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
    `scene/CueRunner.tsx` is THE frame loop (begin frame → tick → write offsets →
    bind effects); `scene/geometry.ts` is one `PlaneGeometry` for every card in
    the game; `scene/effects.ts` is a **fixed pool of meshes** — 26 at Tier 1,
-   **38** since Tier 2's twelve mana-mote slots (**D60**). Three
+   38 with Tier 2's twelve mana-mote slots (**D60**), **45** since slice 3's
+   per-card beats (**D79**). Three
    allocations hid in that loop behind a header claiming there were none — a
    `bind` closure, a `new Set()` plus a sorted key array, and a compose pair —
    and `web/test/cues-exhaustive.test.ts` now checks the pooled compose
@@ -781,7 +788,9 @@ is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
 **D53–D63** are the decisions, the user's nine among them; slice 2 (T8,
 `docs/evidence/m7-tier2-slice2.md`) added **D64–D68** and **D73** for the figures
 and **D72** for the cue clock under them, and its camera rules are the next
-section's.
+section's; slice 3 (T9–T12, `docs/evidence/m7-tier2-slice3.md`) added
+**D75–D81**, its second verification pass **D82–D87** and its documentation pass
+**D88–D89**, and its per-card identity rules are the section after that.
 
 1. **If the snapshot says it, it is a POSE; if only the event says it, it is a
    CUE** (**D56**). A creature's figure, its stance (tapped kneels, it does not
@@ -880,7 +889,9 @@ section's.
    breathe **only while the queue is awake**. The hot path still allocates
    nothing: colours go through `scene/colourCache.ts`'s `parsedColour`, never a
    per-frame `Color.set('#…')`; anchors are pooled. The budgets are separate on
-   purpose: the effect pool is **fixed at 38** (26 + 12 motes; at most
+   purpose: the effect pool is **fixed at 45** (glow 8, ring 8, beam 5,
+   particles 3, text 6, plate 3, mote 12 — 26 at Tier 1, 38 with the motes, 45
+   since slice 3's T11 beats, **D79**; at most
    `MAX_LIVE_EFFECTS = 8` blended transients and `MAX_LIVE_MOTES = 12` motes
    live at once), pose overlays have their own
    `MAX_POSE_OVERLAYS = 12`, and at most `MAX_FIGURES = 12` creatures carry a
@@ -991,6 +1002,105 @@ and because rule 5 now waits for a live seat, **camera cues play in replays of
 human games** where they used to be dropped on every frame whose recorded OK was
 enabled.
 
+## The conventions Tier 2's slice 3 added — per-card identity
+
+Six, and the thesis is one sentence: **a card reads as ITSELF through data, and
+every piece of that data is a pose.** The user's verdict on slice 2 was
+"everything still looks very generic" — five bodies in a colour — and slice 3
+(T9–T12) answered it without a model per card. **D75–D81** are the decisions
+(**D82–D87** its second verification pass's, **D88–D89** written up by its
+documentation pass), `docs/evidence/m7-tier2-slice3.md` is what was measured,
+PLAN.md's *Slice 3* has the status and the fourteen follow-ups, and README's *Tier
+2, slice 3 — every card reads as itself* is how to give a card its identity.
+
+1. **Identity is `figures/traits.json`, validated like `cues.json`** (**D75**).
+   `figures.json` says which BODY a card stands in; `traits.json` says what makes
+   it that card — `scale`, `hover`, `idle`, `tint`, `accent`, `shade`, `turn` +
+   `turnedRatio`, `props`, `swarm` + `formation`, `silhouette`, `shrink`. The
+   ladder is default ⊕ subtype rungs (least specific first) ⊕ the card's row;
+   `props` is replaced, never appended. A bad row is dropped and the ladder falls
+   through; `traits.test.ts` fails on any error and prints the census (which card
+   got which rungs and props over 3,679 board frames) every run, and its "task
+   list" reads each deck card's identity back off the census — extend it when you
+   add a row.
+2. **A prop is a SHARED KIND from `figures/props.ts`'s closed kit, procedural and
+   instanced — one draw call per kind on the table, never per figure.** Eighteen
+   nameable kinds (the second verification pass added `visor`) and three derived
+   ones (`squad`, `swarmBee`, `carrier`), each with a blend, a colour role
+   (`accent` / `tint` / a fixed hex) and anchors per body family (the three Kenney
+   bodies share one 7-joint rig); a kind may have more than one anchor (the
+   badge's chest and back). Every kind is open to every row (Bold Biochemist's lab
+   coat is Fury's `coat`). **Size is identity, and so is the side it is on**: a
+   figure is 45–75 px tall in the table view at 1600 × 1000, and **the opponent's
+   figures show that view their BACKS** (D81) — both verification passes found
+   props judged only on the viewer's own figures. `traits.test.ts` now rasterises
+   every deck card's props through the table camera on BOTH seats, standing and
+   kneeling, with the real `figures.glb` and the real `PropField`
+   (`web/test/prop-raster.ts`, **D83**): every identity prop ≥ 48 px on both
+   seats, except a documented ONE-SIDED detail (`tie`, `laserEye`, `exhaust`)
+   whose partner carries the card on the other side. Extend that list only with a
+   reason; judge a new prop at 1× from views 1 and 4 as well. A new kind needs a
+   `LOOKS` entry, a `buildKindGeometry` case (≤ 1,200 triangles, asserted) and an
+   anchor; nothing is ever a model used by exactly one card (report 13 §12).
+   **Several bodies are still one pose** (**D88**): a `swarm` is instances of ONE
+   derived kind round the card's one rig — the Air Force's five procedural bees
+   round an insect rig that is kept for the clip lane and never drawn, the Agents'
+   followers baked once from the library and riding the leader's root — clamped
+   as a whole formation (`swarmSpan`, D65 strict). Never a figure per member: the
+   engine names one card, so the cue layer gets one body.
+3. **The prop field rides the one frame loop** (**D78**). `scene/props.ts`'s
+   `PropField` is built, installed and committed only by `FigureLayer` (once per
+   snapshot, after the rigs and the departing bodies), bound only from
+   `DiscField.bind`, and its frame-loop body is in liveness's allocation scan. A
+   dying figure keeps its props (`DepartureField.bodies()`), and the field follows
+   `prefers-reduced-motion` live. **Hard rule 8:** an anonymous figure gets no
+   prop, no hover, no swarm, no silhouette and no trait rung (asserted over 1,179
+   corpus instances); a prop carries a kind and a colour, never a name, and takes
+   no click.
+4. **ONE definition of a figure's front** (**D81**). Figure space faces **+Z**
+   (`layout.ts`'s `FIGURE_FRONT_Z`); `seatFacingY` is which way a seat's figures
+   stand; `figurePointInto` / `figureAnchorOf` are the only resolution of a beat's
+   `fwd` / `side` (right = front × up). A cue that lands a beat ON a prop derives
+   its anchor from the prop's own point (Agent 13's muzzle flash from
+   `PISTOL_MUZZLE`). `facing.test.ts` resolves every front-anchored beat against
+   its prop for both seats. **Your figures face YOU** — measured, deliberately not
+   changed, and PLAN.md's question 13: turning them is one line in `seatFacingY`
+   and everything else follows. **An attacker FACES its defender while it
+   attacks** whichever way it rests (**D82**): the offset's **`dRotY`** is the
+   figure's own vocabulary (a card ignores it, as a figure ignores `dRotZ`), and a
+   cue gets the angle from `Stage.yawTo` — `layout.ts`'s answer, never a yaw of
+   its own — times its lunge envelope, so it decays to 0. Every consumer of a
+   figure's facing adds it: the rig, the prop field's root props and the `figure`
+   anchor.
+5. **A beat is drawn on the BODY, and every cue param is closed** (**D79**). The
+   `figure` anchor is resolved only by `scene/effects.ts`'s `#figurePoint` (the
+   camera can never be handed one); `cues/validate.ts`'s `PARAM_SPECS` is the
+   whole param vocabulary — an unknown name, an out-of-range value or an event
+   fact (`beamTo`, `strikeCard`, …) is an error. Add a param as a row there, with
+   its range, and to `cues-exhaustive.test.ts`'s all-params-on sweep. **An aim is
+   the stack's, or nothing** (**D89**): Quake's shockwave keys off her trigger
+   RESOLVING and reaches a target only when the previous frame's stack names one
+   (4 of 13 in the corpus); pairing the batch's `tap` events to her would close the
+   gap and is the heuristic that stays declined — the engine never says which card
+   caused a tap. An unaimed beat plays on its own card and the census says so.
+6. **Overhead and beside things cover nothing from the table view, and nothing
+   goes under the HUD** (**D77**, **D80**, **D85**). Your carrier flies over your
+   rank at `SILHOUETTE_ALTITUDE` (2.05), 1.5 long; the OPPONENT's over the table's
+   centre line, low and a fifth smaller (`silhouettePlacementOf`) — over their
+   rank it was either under the arena's chrome or over their figures. The chrome
+   is `layout.ts`'s `HUD_TOP_PX` (128 CSS px over the canvas top, fixed), a
+   keep-out band `figure-pose.test.ts` holds every carrier out of at every live
+   aspect. A station (Strategic Intervention's console, Web Up's cocoon) stands
+   figure-sized at its own slot's stand point. `figure-pose.test.ts` and
+   `attach.test.ts` project every carrier, station and figure through the table
+   view's camera and assert a cover under 5% (negative-controlled). The attachment
+   looks (`shell`, `glints`, `circuit`) are per-name rows in `figures.json` — if a
+   test lays data over the committed file, it proves the pipeline and not the game.
+   **An attachment's card lies UNDER its host** (`ATTACH_DY` −0.002, **D86**), so
+   the click order is the drawing order: `attach.test.ts` raycasts `HitProxy`'s
+   planes from the three seat-safe views and every host-centre click hits the host.
+   Never "route" a click to a host instead — that is gating on `selectable`.
+
 ## Treat forge-src as prose
 
 A Forge **2.0.15-SNAPSHOT** source checkout may be available in the session
@@ -1065,8 +1175,8 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
-| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so are Tier 2's first slice (T0–T7) and its second (T8 and the camera views): *M7 Tier 2* has both slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2), slice 2's own follow-ups and the T9–T14 hand-over — plus the deferred list and the open questions only the user can settle. |
-| `DECISIONS.md` | The **seventy-four** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D74 M7 Tier 2's** — slice 2's first: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so are Tier 2's first slice (T0–T7), its second (T8 and the camera views) and its third (T9–T12, per-card identity): *M7 Tier 2* has the three slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). |
+| `DECISIONS.md` | The **eighty-nine** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

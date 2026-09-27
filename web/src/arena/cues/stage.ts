@@ -61,6 +61,17 @@ export interface Offset {
   dRotX: number;
   /** Added to the card's in-plane spin. A tap is `TAP_ANGLE` of this. */
   dRotZ: number;
+  /**
+   * **Added to the card's FIGURE's facing** — a turn about y, radians (Tier 2
+   * slice 3's second verification pass). It is the figure's vocabulary exactly as
+   * `dRotZ` is the card's: a card IGNORES it (a card lying on the table has no
+   * front), and a figure ignores `dRotZ` (a tapped creature kneels; it does not
+   * pirouette). An attack turns its attacker toward its defender with it
+   * ({@link Stage.yawTo}) for the length of the lunge and decays it to 0, so the
+   * muzzle, the laser eye and the pistol point at what they fire at whichever way
+   * the figure rests (`layout.ts`'s `seatFacingY`, PLAN question 13).
+   */
+  dRotY: number;
   /** Multiplies the resting scale. */
   scale: number;
   /** Squashes in the card's own x only — the "shatter" and "flip" shapes. */
@@ -85,6 +96,7 @@ export const IDENTITY: Offset = Object.freeze({
   dz: 0,
   dRotX: 0,
   dRotZ: 0,
+  dRotY: 0,
   scale: 1,
   squashX: 1,
   squashY: 1,
@@ -107,6 +119,7 @@ export function resetOffset(target: Offset): void {
   target.dz = IDENTITY.dz;
   target.dRotX = IDENTITY.dRotX;
   target.dRotZ = IDENTITY.dRotZ;
+  target.dRotY = IDENTITY.dRotY;
   target.scale = IDENTITY.scale;
   target.squashX = IDENTITY.squashX;
   target.squashY = IDENTITY.squashY;
@@ -136,6 +149,7 @@ export function composeInto(a: Offset, b: Partial<Offset>): void {
   if (b.dz !== undefined) a.dz += b.dz;
   if (b.dRotX !== undefined) a.dRotX += b.dRotX;
   if (b.dRotZ !== undefined) a.dRotZ += b.dRotZ;
+  if (b.dRotY !== undefined) a.dRotY += b.dRotY;
   if (b.scale !== undefined) a.scale *= b.scale;
   if (b.squashX !== undefined) a.squashX *= b.squashX;
   if (b.squashY !== undefined) a.squashY *= b.squashY;
@@ -162,6 +176,7 @@ export function composeOffsets(a: Offset, b: Offset): Offset {
     dz: a.dz + b.dz,
     dRotX: a.dRotX + b.dRotX,
     dRotZ: a.dRotZ + b.dRotZ,
+    dRotY: a.dRotY + b.dRotY,
     scale: a.scale * b.scale,
     squashX: a.squashX * b.squashX,
     squashY: a.squashY * b.squashY,
@@ -212,7 +227,56 @@ export type AnchorRef =
    * it stays a relative statement (§8 rule 3) and `layout.ts` is still the only
    * module that knows what a card width is.
    */
-  | { kind: 'beside'; id: number; dx: number };
+  | { kind: 'beside'; id: number; dx: number }
+  /**
+   * **A point on the card's FIGURE** (Tier 2 slice 3, T11) — the one anchor a
+   * per-card cue needed and the kit did not have.
+   *
+   * Every other anchor names a place on the table, and a `card` anchor is the
+   * card's REST position: an effect put there stays behind while the cue's own
+   * offset carries the card and its figure into the combat lane, and it hangs over
+   * the card's art rather than on the body standing 0.52 in front of it. So Peggy's
+   * shield, Agent 13's muzzle flash, Coulson's badge and the Doombot's exhaust were
+   * all drawn somewhere the body was not.
+   *
+   * `at` is a fraction of the figure's drawn height (0 its feet, 0.5 its chest, 1
+   * the top of its head); `fwd` and `side` are in figure heights along the way it
+   * faces and to its right. **It is resolved by the effect binding, not by
+   * `layout.ts`**, against the frame's figure poses and the card's live offset —
+   * so it follows a lunge, a hover and a shrink — and it is a statement about a
+   * body, not a coordinate: `layout.ts` still owns the stand point it starts from.
+   * A card with no figure (an instant, a card on its way to the graveyard) falls
+   * back to its card's rest position **plus its live offset**, which is how a
+   * wrap follows a card to exile. `anchorPosition` answers `null` for it, so the
+   * camera and `deltaTo` never see one.
+   */
+  | { kind: 'figure'; id: number; at: number; fwd?: number; side?: number };
+
+/**
+ * **The shapes a billboard or a ring can be drawn in** (T11). A shape is a
+ * texture, not a mesh: every one is drawn by the same pooled quad the soft glow
+ * is, so a shape costs no draw call a glow would not, and a cue that asks for one
+ * the pool has not drawn yet simply gets the soft glow.
+ *
+ * | shape | what reads | used by |
+ * |---|---|---|
+ * | `soft` | the radial glow (the default) | everything Tier 1 wrote |
+ * | `badge` | a shield-shaped emblem | Coulson's +1/+1 flash on a Hero |
+ * | `shield` | a hexagonal force-field bubble | Peggy's aegis |
+ * | `reticle` | a crosshair ring | Helicarrier Strike's lock |
+ * | `web` | radial strands and rings | Web Up's wrap |
+ * | `circuit` | traces and pads | Robotics Mastery, Depower |
+ * | `star` | a four-point glint | muzzle flash, vials, the Spy Kit |
+ * | `hex` | a plated honeycomb | Super Suit's armour snapping on |
+ */
+export const EFFECT_SHAPES = ['soft', 'badge', 'shield', 'reticle', 'web', 'circuit', 'star', 'hex'] as const;
+export type EffectShape = (typeof EFFECT_SHAPES)[number];
+
+const EFFECT_SHAPE_SET: ReadonlySet<string> = new Set<string>(EFFECT_SHAPES);
+
+export function isEffectShape(value: string): value is EffectShape {
+  return EFFECT_SHAPE_SET.has(value);
+}
 
 // ---------------------------------------------------------------------------
 // Effects — the Tier-1 primitive kit (§12.1)
@@ -252,7 +316,7 @@ export type EffectKind = 'glow' | 'ring' | 'beam' | 'particles' | 'text' | 'plat
 export interface Effect {
   kind: EffectKind;
   at: AnchorRef;
-  /** `beam` only: the far end. */
+  /** `beam` and `mote`: the far end. `particles`: where a travelling cloud goes (T11). */
   to?: AnchorRef;
   colour: string;
   /** 0…1 — opacity for most kinds, emission for `glow`. */
@@ -288,8 +352,31 @@ export interface Effect {
    * `mote` only: how high it arcs above the straight line at mid-flight, in world
    * units. Absent is the mana mote's 0.55 — a thing that rises and lands. T6's
    * fizzle passes 0: a form that *falls* does not hop first.
+   *
+   * **`particles` too, since slice 3**: a burst given a {@link Effect.to} is a
+   * cloud that TRAVELS — its centre goes from `at` to `to` over `travel`, arcing by
+   * `arc` (absent is 0.35) — which is how Ant-Man's Air Force sweeps the table
+   * rather than bursting in one place. One `Points` system, one draw call, the
+   * same as a burst.
    */
   arc?: number;
+  /**
+   * `glow` and `ring` only: the texture the quad is drawn with ({@link EffectShape}).
+   * Absent is `soft` for a glow and the plain annulus for a ring.
+   */
+  shape?: EffectShape;
+  /**
+   * `glow` only: width ÷ height of the billboard. Absent is 1. A shield around a
+   * standing figure is taller than it is wide; a badge is not.
+   */
+  aspect?: number;
+  /**
+   * `glow` and `ring` at a `figure` anchor only: `radius` is in that figure's drawn
+   * HEIGHTS rather than world units, so a shield or a wrap fits a figure Quantum
+   * Reduction has shrunk as well as a full-size one — and shrinks with Ant-Man as
+   * he does. Ignored at any other anchor.
+   */
+  fit?: boolean;
 }
 
 /**
@@ -373,6 +460,18 @@ export interface Stage {
    * see every cue run its full arithmetic with no scene behind it.
    */
   deltaTo(cardId: number, anchor: AnchorRef): Vec3;
+  /**
+   * **The turn about y that faces this card's FIGURE toward an anchor** —
+   * radians in (−π, π], measured from the way its seat's figures stand, or `0`
+   * when either end is unknown (Tier 2 slice 3's second verification pass).
+   *
+   * The second geometry query a cue has, and a query for the same reason
+   * {@link deltaTo} is: a cue knows no coordinates and no facing, so "turn toward
+   * the player you attack" is asked of `layout.ts` and scaled by the cue's own
+   * envelope into {@link Offset.dRotY}, which decays to 0 by construction. A
+   * `NullStage` answers 0.
+   */
+  yawTo(cardId: number, anchor: AnchorRef): number;
   /** Replace this cue's contribution for one card. */
   setOffset(cardId: number, offset: Partial<Offset>): void;
   clearOffset(cardId: number): void;
@@ -445,6 +544,10 @@ export class NullStage implements Stage {
 
   deltaTo(): Vec3 {
     return ZERO3;
+  }
+
+  yawTo(): number {
+    return 0;
   }
 
   setOffset(cardId: number, offset: Partial<Offset>): void {
@@ -521,6 +624,7 @@ export class NullStage implements Stage {
     for (const op of this.ops) {
       if (op.effect?.text !== undefined) out.push(op.effect.text);
       if (op.effect?.colour !== undefined) out.push(op.effect.colour);
+      if (op.effect?.shape !== undefined) out.push(op.effect.shape);
       if (op.offset?.tint != null) out.push(op.offset.tint);
       if (op.offset?.glowColour != null) out.push(op.offset.glowColour);
       if (op.clip !== undefined) {

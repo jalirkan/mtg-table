@@ -23,30 +23,39 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import * as THREE from 'three';
+
 import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' };
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import {
   ATTACH_SUBTYPE_ORDER,
   MAX_POSE_OVERLAYS,
+  MAX_STATIONS,
+  STATION_LIFT,
+  STATION_SIZE,
   attachFor,
   attachSubtypeKey,
   attachSubtypesOf,
   manifestationOf,
+  stationsOf,
 } from '../src/arena/figures/attach.ts';
+import { validateCues } from '../src/arena/cues/validate.ts';
 import { figurePose } from '../src/arena/figures/pose.ts';
 import { colourHex } from '../src/arena/colour.ts';
 import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { NullStage } from '../src/arena/cues/stage.ts';
 import { ATTACH_KINDS, attachDataOf, isAttachKind } from '../src/arena/figures/types.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
-import { FIGURE_HEIGHT, layout } from '../src/arena/layout.ts';
+import { REST_POSE, projectToNdc } from '../src/arena/camera.ts';
+import { FIGURE_HEIGHT, FIGURE_MAX_WIDTH, layout, standPointOf } from '../src/arena/layout.ts';
 import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 const FIXTURES = fileURLToPath(new URL('../../fixtures/', import.meta.url));
 
-const MODEL_IDS = new Set(Object.keys(validateModels(modelsJson).data.models));
+const MODELS = validateModels(modelsJson).data;
+const MODEL_IDS = new Set(Object.keys(MODELS.models));
 const VALIDATION = validateFigures(figuresJson, { modelIds: MODEL_IDS });
 const DATA = VALIDATION.data;
 const ATTACH = attachDataOf(DATA);
@@ -121,13 +130,29 @@ test('attach: the ladder is per-name, then subtype, then `*`', () => {
   assert.equal(quantum.spec.kind, 'shrink');
   assert.ok(quantum.spec.hostScale < 0.5, 'Quantum Reduction should halve its host');
 
-  const aura = attachFor(card({ name: 'Robotics Mastery', types: 'Enchantment - Aura' }), ATTACH);
+  // T12's rows are per-name: each of the deck's three other attachments has a look of its own.
+  const mastery = attachFor(card({ name: 'Robotics Mastery', types: 'Enchantment - Aura' }), ATTACH);
+  assert.equal(mastery.rung, 'card');
+  assert.equal(mastery.spec.kind, 'circuit');
+  assert.equal(mastery.spec.hostScale, 1);
+  const suit = attachFor(card({ name: 'Super Suit', types: 'Artifact - Equipment' }), ATTACH);
+  assert.equal(suit.rung, 'card');
+  assert.equal(suit.spec.kind, 'shell');
+  assert.equal(suit.spec.metal, true, '§4.4 — an Equipment is the metallic variant');
+  const spyKit = attachFor(card({ name: 'S.H.I.E.L.D. Spy Kit', types: 'Artifact - Equipment' }), ATTACH);
+  assert.equal(spyKit.rung, 'card');
+  assert.equal(spyKit.spec.kind, 'glints');
+  assert.equal(spyKit.spec.metal, true);
+
+  // Any OTHER Aura or Equipment falls to its subtype rung: the halo, metal for gear.
+  const aura = attachFor(card({ name: 'Some Other Aura', types: 'Enchantment - Aura' }), ATTACH);
   assert.equal(aura.rung, 'subtype:aura');
   assert.equal(aura.spec.kind, 'halo');
   assert.equal(aura.spec.hostScale, 1);
 
-  const kit = attachFor(card({ name: 'S.H.I.E.L.D. Spy Kit', types: 'Artifact - Equipment' }), ATTACH);
+  const kit = attachFor(card({ name: 'Some Other Gear', types: 'Artifact - Equipment' }), ATTACH);
   assert.equal(kit.rung, 'subtype:equipment');
+  assert.equal(kit.spec.kind, 'halo');
   assert.equal(kit.spec.metal, true, '§4.4 — an Equipment is the metallic variant');
 
   // Anything else attached to anything: the `*` halo, in its own colour.
@@ -295,8 +320,15 @@ test('attach: every attachment of every committed recording manifests on its hos
   }
   assert.equal(census.get('Quantum Reduction')?.kind, 'shrink');
   assert.equal(census.get('Quantum Reduction')?.rung, 'card');
-  assert.equal(census.get('Robotics Mastery')?.rung, 'subtype:aura');
-  assert.equal(census.get('Super Suit')?.rung, 'subtype:equipment');
+  // T12, committed: every attachment the deck plays has a per-name look.
+  assert.deepEqual(
+    ['Robotics Mastery', 'Super Suit', 'S.H.I.E.L.D. Spy Kit'].map((n) => [n, census.get(n)?.rung, census.get(n)?.kind]),
+    [
+      ['Robotics Mastery', 'card', 'circuit'],
+      ['Super Suit', 'card', 'shell'],
+      ['S.H.I.E.L.D. Spy Kit', 'card', 'glints'],
+    ],
+  );
   assert.ok(shrunkHosts > 900, `only ${String(shrunkHosts)} shrink manifestations`);
   // Every kind the data uses must be one the renderer draws or the declared halo.
   assert.ok((ATTACH_KINDS as readonly string[]).includes('halo'));
@@ -446,4 +478,381 @@ test('attach: the snap poses the HOST, and Quantum Reduction’s host shrinks', 
   const qr = cues.cards['Quantum Reduction']?.['attach:on'];
   assert.equal(qr?.cue, 'attach.snap');
   assert.equal(qr?.params?.['hostClip'], 'shrink');
+});
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 (T12) — the four looks, and the two stations
+// ---------------------------------------------------------------------------
+
+test('attach: T12’s four looks are data — a row names the kind and the host wears it', () => {
+  // The three rows T12 asks for (report 13 §4.3), read from the COMMITTED
+  // `figures.json` — slice 3 first laid them over the data here because they had
+  // not landed, and the real games drew the plain halo (the verification pass).
+  const rows: Record<string, { kind: string; metal: boolean }> = {
+    'Super Suit': { kind: 'shell', metal: true },
+    'S.H.I.E.L.D. Spy Kit': { kind: 'glints', metal: true },
+    'Robotics Mastery': { kind: 'circuit', metal: false },
+  };
+  for (const [name, row] of Object.entries(rows)) {
+    assert.equal(ATTACH.attachments[name]?.kind, row.kind, `figures.json has no T12 row for ${name}`);
+    assert.equal(ATTACH.attachments[name]?.metal, row.metal, `${name}: metal`);
+  }
+  const data = DATA;
+  console.log('  T12 rows in figures.json: 3 of 3 (committed)');
+  const seen = new Map<string, number>();
+  let anonymousHosts = 0;
+  for (const file of fixtureFiles()) {
+    for (const state of framesOf(file)) {
+      const board = state.board;
+      if (board === null) continue;
+      for (const pose of figurePose(layout(state, {}), board.combat ?? null, data).values()) {
+        for (const m of pose.attachments) seen.set(m.kind, (seen.get(m.kind) ?? 0) + 1);
+        if (pose.anonymous && pose.attachments.length > 0) anonymousHosts += 1;
+      }
+    }
+  }
+  console.log(`  looks over the corpus: ${JSON.stringify(Object.fromEntries(seen))} · anonymous hosts with one: ${String(anonymousHosts)}`);
+  // 944 shrink + 409 shell + 362 glints + 315 circuit = the 2,030 of §4.1.
+  assert.equal(seen.get('shrink'), 944);
+  assert.equal(seen.get('shell'), 409);
+  assert.equal(seen.get('glints'), 362);
+  assert.equal(seen.get('circuit'), 315);
+  assert.equal(seen.get('halo') ?? 0, 0, 'with the three rows, nothing in this deck falls back to the halo');
+  for (const kind of ['shell', 'glints', 'circuit', 'cocoon'] as const) assert.ok(isAttachKind(kind));
+});
+
+test('attach: the stations — Strategic Intervention’s console and Web Up’s cocoon — are a pose of the frame', () => {
+  const cues = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/cues/cues.json', import.meta.url)), 'utf8'),
+  ) as unknown;
+  const stations = validateCues(cues, { cueIds: new Set(REGISTRY.keys()) }).data.stations;
+  assert.ok(stations !== undefined);
+  const byKind = new Map<string, number>();
+  let frames = 0;
+  let framesWithStation = 0;
+  let checkedAgainstSnapshot = 0;
+  let exileLinks = 0;
+  for (const file of fixtureFiles()) {
+    for (const state of framesOf(file)) {
+      const board = state.board;
+      if (board === null) continue;
+      frames += 1;
+      const placed = layout(state, {});
+      const found = stationsOf(placed, stations);
+      if (found.length > 0) framesWithStation += 1;
+      assert.ok(found.length <= MAX_STATIONS);
+      // Counted independently of `stationsOf`: every face-up, unattached copy of a
+      // station card on a battlefield, and nothing else.
+      let expected = 0;
+      for (const player of board.players) {
+        for (const c of player.zones.battlefield.cards) {
+          if (isHidden(c) || (c as { faceDown?: boolean }).faceDown === true) continue;
+          if (((c as { attachedToId?: number | null }).attachedToId ?? null) !== null) continue;
+          const name = (c as { name?: string }).name ?? '';
+          if (stations[name] !== undefined) expected += 1;
+        }
+        // Report 13 §4.5's measurement, as an assertion: nothing in an exile zone
+        // is ever related to the card that put it there.
+        for (const c of player.zones.exile.cards) {
+          if (((c as { attachedToId?: number | null }).attachedToId ?? null) !== null) exileLinks += 1;
+        }
+      }
+      assert.equal(found.length, expected, `${file}: ${String(found.length)} stations for ${String(expected)} cards`);
+      checkedAgainstSnapshot += expected;
+      for (const station of found) {
+        byKind.set(station.kind, (byKind.get(station.kind) ?? 0) + 1);
+        const placement = placed.byKey.get(`c:${String(station.cardId)}`);
+        assert.ok(placement !== undefined && !placement.back, `${file}: a station on a card drawn as a back`);
+        assert.deepEqual(station.position, standPointOf(placement), 'a station stands in its OWN rank slot');
+        assert.ok(!/Web|Intervention|Strategic/i.test(JSON.stringify(station)), 'a station carries a name');
+      }
+    }
+  }
+  console.log(
+    `  ${String(frames)} board frames · ${String(framesWithStation)} with a station · ` +
+      `${JSON.stringify(Object.fromEntries(byKind))} · exile cards linked to anything: ${String(exileLinks)}`,
+  );
+  assert.ok((byKind.get('missionControl') ?? 0) > 100, 'Strategic Intervention’s console almost never shows');
+  assert.ok((byKind.get('cocoon') ?? 0) > 100, 'Web Up’s cocoon almost never shows');
+  assert.equal(exileLinks, 0, 'the wire now relates an exiled card to something — report 13 §4.5 can build the pose on it');
+  assert.ok(checkedAgainstSnapshot > 200);
+});
+
+/** Screen rectangle (NDC) of a set of world points through the table view's camera, 1600 × 1000. */
+function screenRect(points: ReadonlyArray<readonly [number, number, number]>): [number, number, number, number] | null {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const p of points) {
+    const ndc = projectToNdc(REST_POSE, [p[0], p[1], p[2]], undefined, 1.6);
+    if (ndc === null) return null;
+    x0 = Math.min(x0, ndc[0]);
+    y0 = Math.min(y0, ndc[1]);
+    x1 = Math.max(x1, ndc[0]);
+    y1 = Math.max(y1, ndc[1]);
+  }
+  return [x0, y0, x1, y1];
+}
+
+/** How much of `b`'s screen area `a` covers, 0–1. */
+function coverOf(a: readonly number[], b: readonly number[]): number {
+  const w = Math.min(a[2]!, b[2]!) - Math.max(a[0]!, b[0]!);
+  const h = Math.min(a[3]!, b[3]!) - Math.max(a[1]!, b[1]!);
+  return w > 0 && h > 0 ? (w * h) / ((b[2]! - b[0]!) * (b[3]! - b[1]!)) : 0;
+}
+
+test('attach: from the table view, a station covers no figure — it stands in its own slot (verification fix)', () => {
+  // Slice 3 hung a 1.1-wide console 0.85 above its CARD; from the table view's
+  // steep camera it projected onto the figures standing in front of the cards
+  // beside it (`g2`@224: over your Ant-Man). Now it is figure-sized at its slot's
+  // stand point. The camera's right and up, for a camera-facing quad's corners:
+  const cues = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/cues/cues.json', import.meta.url)), 'utf8'),
+  ) as unknown;
+  const stations = validateCues(cues, { cueIds: new Set(REGISTRY.keys()) }).data.stations;
+  const [px, py, pz] = REST_POSE.position;
+  const [tx, ty, tz] = REST_POSE.target;
+  const f = [tx - px, ty - py, tz - pz];
+  const fl = Math.hypot(f[0]!, f[1]!, f[2]!);
+  const fwd = [f[0]! / fl, f[1]! / fl, f[2]! / fl];
+  const r0 = [-fwd[2]!, 0, fwd[0]!];
+  const rl = Math.hypot(r0[0]!, r0[2]!);
+  const right = [r0[0]! / rl, 0, r0[2]! / rl];
+  const up = [
+    right[1]! * fwd[2]! - right[2]! * fwd[1]!,
+    right[2]! * fwd[0]! - right[0]! * fwd[2]!,
+    right[0]! * fwd[1]! - right[1]! * fwd[0]!,
+  ];
+  let pairs = 0;
+  let worst = 0;
+  let where = '';
+  for (const kind of Object.keys(STATION_SIZE) as Array<keyof typeof STATION_SIZE>) {
+    assert.ok(STATION_SIZE[kind].w <= FIGURE_MAX_WIDTH, `${kind} is wider than a figure's slot`);
+  }
+  for (const file of fixtureFiles()) {
+    let index = 0;
+    for (const state of framesOf(file)) {
+      index += 1;
+      const board = state.board;
+      if (board === null) continue;
+      const placed = layout(state, {});
+      const found = stationsOf(placed, stations);
+      if (found.length === 0) continue;
+      const poses = figurePose(placed, board.combat ?? null, DATA, { models: MODELS });
+      for (const station of found) {
+        const size = STATION_SIZE[station.kind];
+        const c = [station.position[0], station.position[1] + station.lift, station.position[2]];
+        const corners: Array<[number, number, number]> = [];
+        for (const sx of [-0.5, 0.5]) {
+          for (const sy of [-0.5, 0.5]) {
+            corners.push([
+              c[0]! + right[0]! * sx * size.w + up[0]! * sy * size.h,
+              c[1]! + right[1]! * sx * size.w + up[1]! * sy * size.h,
+              c[2]! + right[2]! * sx * size.w + up[2]! * sy * size.h,
+            ]);
+          }
+        }
+        const drawn = screenRect(corners);
+        assert.ok(drawn !== null);
+        for (const figure of poses.values()) {
+          if (figure.silhouette !== null || figure.ghost) continue;
+          const [x, y, z] = figure.position;
+          const d = figure.height * 0.3;
+          const box: Array<[number, number, number]> = [];
+          for (const bx of [x - figure.width / 2, x + figure.width / 2]) {
+            for (const by of [y, y + figure.height]) for (const bz of [z - d, z + d]) box.push([bx, by, bz]);
+          }
+          const body = screenRect(box);
+          if (body === null) continue;
+          pairs += 1;
+          const cover = coverOf(drawn, body);
+          if (cover > worst) {
+            worst = cover;
+            where = `${file.slice(file.lastIndexOf('/') + 1)}#${String(index)} ${station.kind} over figure ${String(figure.cardId)}`;
+          }
+        }
+      }
+    }
+  }
+  console.log(`  stations × figures on screen: ${String(pairs)} pairs · worst cover ${worst.toFixed(3)} ${where}`);
+  assert.ok(pairs > 1000, 'the sweep compared almost nothing');
+  assert.ok(worst < 0.05, `a station covers ${(worst * 100).toFixed(1)}% of a figure from the table view (${where})`);
+});
+
+test('attach: a station is never drawn for a card drawn as a back, a concealed card or an attached one', () => {
+  const stations = { 'Web Up': { kind: 'cocoon' as const } };
+  const card = (over: Record<string, unknown>): AnyCard =>
+    ({
+      id: 5,
+      name: 'Web Up',
+      types: 'Enchantment',
+      manaCost: '{2}{W}',
+      power: null,
+      toughness: null,
+      tapped: false,
+      sick: false,
+      attacking: false,
+      blocking: false,
+      faceDown: false,
+      token: false,
+      alt: null,
+      attachedToId: null,
+      attachmentIds: [],
+      controller: 0,
+      owner: 0,
+      zone: 'battlefield',
+      abilities: [],
+      counters: {},
+      damage: 0,
+      loyalty: null,
+      setCode: 'MSH',
+      ...over,
+    }) as unknown as AnyCard;
+  const board = (c: AnyCard): ClientState =>
+    ({
+      board: {
+        gameId: 'g', turn: 1, round: 1, phase: 'MAIN1', activePlayer: 0, priority: 0, gameOver: null,
+        stack: [], stackCards: [], combat: null, events: [],
+        players: [
+          {
+            id: 0, name: 'p', isAi: false, life: 20, poison: 0, counters: {},
+            manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
+            zones: {
+              hand: { count: 0, cards: [] },
+              battlefield: { count: 1, cards: [c] },
+              graveyard: { count: 0, cards: [] },
+              exile: { count: 0, cards: [] },
+              command: { count: 0, cards: [] },
+              library: { count: 30, cards: [] },
+            },
+          },
+        ],
+      },
+      hello: { you: 0 },
+    }) as unknown as ClientState;
+  assert.equal(stationsOf(layout(board(card({}))), stations).length, 1, 'the control case draws one');
+  assert.equal(stationsOf(layout(board(card({ faceDown: true, name: '' }))), stations).length, 0, 'face down');
+  assert.equal(
+    stationsOf(layout(board({ id: 5, zone: 'battlefield', controller: 0, owner: 0, hidden: true } as unknown as AnyCard)), stations).length,
+    0,
+    'redacted',
+  );
+  assert.equal(stationsOf(layout(board(card({ attachedToId: 9 }))), stations).length, 0, 'attached');
+  assert.equal(stationsOf(layout(board(card({}))), undefined).length, 0, 'no table, no station');
+  const [one] = stationsOf(layout(board(card({}))), { 'Web Up': { kind: 'cocoon', colour: '#123456', lift: 1.2, scale: 2 } });
+  assert.deepEqual(
+    { kind: one?.kind, colour: one?.colour, lift: one?.lift, scale: one?.scale },
+    { kind: 'cocoon', colour: '#123456', lift: 1.2, scale: 2 },
+  );
+  const [plain] = stationsOf(layout(board(card({}))), stations);
+  assert.equal(plain?.lift, STATION_LIFT.cocoon, 'the kind’s own lift when the data says none');
+  assert.equal(plain?.colour, colourHex('W'), 'the card’s own colour identity when the data says none');
+});
+
+// ---------------------------------------------------------------------------
+// The second verification pass: a click on a host reaches the HOST
+// ---------------------------------------------------------------------------
+
+test('attach: a click on a host’s face hits the host, and its attachment keeps a strip of its own — three seat-safe views (second verification pass)', async () => {
+  // Live, seed 11, view 2: the opponent's Quantum Reduction on the viewer's Peggy
+  // Carter took every click on her card ("Not selectable: card 45"). The proxy is
+  // `HitProxy`'s, exactly: a unit plane at the placement, `CARD_W × 1.1` by `1.1`,
+  // two-sided, raycast by three's own Raycaster from each seat-safe view.
+  const { CAMERA, VIEW_BY_ID } = await import('../src/arena/camera.ts');
+  const { ATTACH_DY, CARD_W } = await import('../src/arena/layout.ts');
+  const plane = new THREE.PlaneGeometry(1, 1);
+  const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+  const cameras = (['table', 'shoulder', 'low'] as const).map((id) => {
+    const camera = new THREE.PerspectiveCamera(CAMERA.fov, 1.6, CAMERA.near, CAMERA.far);
+    const pose = VIEW_BY_ID[id].pose;
+    camera.position.set(...pose.position);
+    camera.lookAt(...pose.target);
+    camera.updateMatrixWorld(true);
+    return { id, camera };
+  });
+  const ray = new THREE.Raycaster();
+  const at = new THREE.Vector3();
+  let hosts = 0;
+  let hostMisses = 0;
+  let attachments = 0;
+  let unreachable = 0;
+  let oldMisses = 0;
+  const misses: string[] = [];
+  const buried: string[] = [];
+  const files = fixtureFiles();
+  for (const file of files) {
+    let n = 0;
+    for (const state of framesOf(file)) {
+      // Every eighth frame is plenty: attachments persist for dozens of frames.
+      if (n++ % 8 !== 0) continue;
+      const placed = layout(state);
+      const pairs = placed.placements
+        .filter((p) => p.kind === 'attachment')
+        .map((p) => ({ att: p, host: placed.byKey.get(`c:${String((p.card as { attachedToId?: number | null }).attachedToId ?? -1)}`) }))
+        .filter((pair) => pair.host !== undefined);
+      if (pairs.length === 0) continue;
+      const build = (lift: number): THREE.Mesh[] =>
+        placed.placements.map((p) => {
+          const mesh = new THREE.Mesh(plane, material);
+          mesh.position.set(p.position[0], p.position[1] + (p.kind === 'attachment' ? lift : 0), p.position[2]);
+          mesh.rotation.set(p.rotation[0], p.rotation[1], p.rotation[2]);
+          mesh.scale.set(CARD_W * p.scale * 1.1, p.scale * 1.1, 1);
+          mesh.userData = { cardId: p.cardId };
+          mesh.updateMatrixWorld(true);
+          return mesh;
+        });
+      const meshes = build(0);
+      // The control: the attachment 2 mm ABOVE its host, as slice 3 laid it out.
+      const before = build(0.002 - ATTACH_DY);
+      const firstHit = (list: THREE.Mesh[], camera: THREE.PerspectiveCamera, x: number, y: number, z: number): number | null => {
+        at.set(x, y, z).project(camera);
+        ray.setFromCamera(new THREE.Vector2(at.x, at.y), camera);
+        const hit = ray.intersectObjects(list, false)[0];
+        return hit === undefined ? null : (hit.object.userData as { cardId: number }).cardId;
+      };
+      for (const { att, host } of pairs) {
+        for (const { id, camera } of cameras) {
+          hosts += 1;
+          const got = firstHit(meshes, camera, host!.position[0], host!.position[1], host!.position[2]);
+          if (got !== host!.cardId) {
+            hostMisses += 1;
+            if (misses.length < 5) misses.push(`${file}: view ${id}, host ${String(host!.cardId)}'s centre hit ${String(got)}`);
+          }
+          if (firstHit(before, camera, host!.position[0], host!.position[1], host!.position[2]) !== host!.cardId) oldMisses += 1;
+          // The attachment's own strip: a grid over its card; one sample must be its.
+          attachments += 1;
+          let own = false;
+          const local = new THREE.Vector3();
+          const mesh = meshes[placed.placements.indexOf(att)]!;
+          for (let u = -0.45; u <= 0.45 && !own; u += 0.15) {
+            for (let v = -0.45; v <= 0.45 && !own; v += 0.15) {
+              local.set(u / 1.1, v / 1.1, 0).applyMatrix4(mesh.matrixWorld);
+              if (firstHit(meshes, camera, local.x, local.y, local.z) === att.cardId) own = true;
+            }
+          }
+          if (!own) {
+            unreachable += 1;
+            // Only ever under a CROWDED board: its host, a wrapped rank's back row
+            // (which lies above the front row, `RANK_WRAP_Y`) and the neighbours
+            // between them cover the whole card — and then it is not DRAWN either,
+            // so the click order is still the drawing order.
+            const wrapped = placed.placements.some((p) => p.seat === host!.seat && p.kind === 'creature' && (p.row ?? 0) > 0);
+            if (!wrapped) buried.push(`${file}: view ${id}, attachment ${String(att.cardId)} on host ${String(host!.cardId)}`);
+          }
+        }
+      }
+    }
+  }
+  console.log(
+    `attach: ${String(hosts)} host-centre clicks (3 views) · ${String(hostMisses)} missed the host · ` +
+      `${String(attachments - unreachable)} of ${String(attachments)} attachments keep a clickable strip ` +
+      `(the rest lie wholly under their host and a wrapped rank's back row, and are not drawn either) · ` +
+      `with the attachment 2 mm above its host (slice 3), ${String(oldMisses)} missed`,
+  );
+  assert.ok(hosts > 300, 'the sweep reached almost no attachment');
+  assert.deepEqual(misses, [], `${String(hostMisses)} host clicks landed on something else`);
+  assert.deepEqual(buried, [], 'an attachment on an uncrowded board has no clickable strip left');
+  assert.ok(unreachable <= attachments / 100, `${String(unreachable)} attachments have no clickable strip`);
+  assert.ok(oldMisses > hosts / 2, 'the old layout passes too — this test could not have caught the defect');
 });

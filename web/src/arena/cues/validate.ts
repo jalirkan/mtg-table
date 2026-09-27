@@ -27,7 +27,17 @@
  * the *reason* for a cue can live, since the file is JSON and has no comments.
  */
 
-import { isKnownEventKind, type CueData, type CueSpec, type CueTable, type Problem } from './types.ts';
+import { isClipName } from '../figures/types.ts';
+import { isEffectShape } from './stage.ts';
+import {
+  STATION_KINDS,
+  isKnownEventKind,
+  type CueData,
+  type CueSpec,
+  type CueTable,
+  type Problem,
+  type Station,
+} from './types.ts';
 
 export interface ValidationResult {
   /** The usable subset: every entry that survived. Never `null`. */
@@ -78,7 +88,7 @@ const ZONE_WORD = /^[a-z_]+$|^\*$/;
 const COUNTER_QUALIFIER = /^[A-Z][A-Z0-9]*[+-]?$/;
 
 export function isValidSelector(selector: string): boolean {
-  if (selector === 'presence') return true;
+  if (selector === 'presence' || selector === 'station') return true;
   const colon = selector.indexOf(':');
   const kind = colon < 0 ? selector : selector.slice(0, colon);
   if (!isKnownEventKind(kind)) return false;
@@ -123,6 +133,137 @@ const PRESENCE_RANGE: Readonly<Record<string, readonly [number, number]>> = {
   bobHz: [0, 4],
 };
 
+/** T12's `station` (see `types.ts`'s {@link Station}), and these are all of its fields. */
+const STATION_KEYS = new Set(['kind', 'colour', 'lift', 'scale']);
+const STATION_RANGE: Readonly<Record<string, readonly [number, number]>> = {
+  lift: [0, 3],
+  scale: [0.2, 3],
+};
+const STATION_KIND_SET: ReadonlySet<string> = new Set<string>(STATION_KINDS);
+
+const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
+/** A clip alias is a model's own key: `pistolDraw`, `radioCall`, `jet`. Never a sentence. */
+const CLIP_ALIAS = /^[A-Za-z][A-Za-z0-9]{0,31}$/;
+
+/**
+ * **Every param a cue file may set, with its type and its range** (Tier 2 slice
+ * 3; the task's "every new param validated").
+ *
+ * Until slice 3 a param was only type-checked as *a primitive* — `{"scale":
+ * "big"}` or `{"specK": 1}` passed, did nothing, and looked like it worked, which
+ * is exactly the failure the unknown-FIELD rule above exists to prevent one level
+ * up. So the set is CLOSED here too: a name that is not in this table is an
+ * error, and so is a value outside its range.
+ *
+ * What is **not** in it is as deliberate: the event facts `cues/resolve.ts`
+ * writes (`beamTo`, `strikeCard`, `toId`, `fromZone`, `amount`, `defenderId`,
+ * `foe`, …). They are the ENGINE's, merged under the file's params at resolution,
+ * and a cue file that set one would be a cue file inventing a fact — an aim the
+ * wire never stated. `cues-exhaustive.test.ts` holds both halves.
+ */
+type ParamSpec =
+  | { type: 'number'; min: number; max: number; int?: boolean }
+  | { type: 'boolean' }
+  | { type: 'colour' }
+  | { type: 'clip' }
+  | { type: 'hostClip' }
+  | { type: 'shape' };
+
+export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
+  // -- Tier 1 (report 09 §12.2) and Tier 2 slices 1–2 ------------------------
+  colour: { type: 'colour' },
+  scale: { type: 'number', min: 0.05, max: 3 },
+  popScale: { type: 'number', min: 0.5, max: 3 },
+  targetScale: { type: 'number', min: 0.05, max: 3 },
+  width: { type: 'number', min: 0.002, max: 0.3 },
+  radius: { type: 'number', min: 0, max: 6 },
+  impact: { type: 'number', min: 0, max: 4 },
+  shake: { type: 'number', min: 0, max: 1 },
+  spotlight: { type: 'number', min: 0, max: 2 },
+  spread: { type: 'number', min: 0, max: 4 },
+  height: { type: 'number', min: 0, max: 8 },
+  lift: { type: 'number', min: 0, max: 3 },
+  depth: { type: 'number', min: 0, max: 3 },
+  speed: { type: 'number', min: 0.1, max: 4 },
+  glowFloor: { type: 'number', min: 0, max: 1 },
+  mote: { type: 'number', min: 0.01, max: 0.5 },
+  padding: { type: 'number', min: 0, max: 8 },
+  tilt: { type: 'number', min: -1, max: 1 },
+  camera: { type: 'boolean' },
+  collapse: { type: 'boolean' },
+  lunge: { type: 'boolean' },
+  off: { type: 'boolean' },
+  /** T3 — the per-card clip alias, resolved against the model (§3.6 rung 1). */
+  clip: { type: 'clip' },
+  /** T5 — the host's reaction to a snap: one of the ten clip names. */
+  hostClip: { type: 'hostClip' },
+
+  // -- Tier 2 slice 3 — T11's per-card beats -----------------------------------
+  /** `attack.shrink`: how bright the speck he shrinks to is. */
+  speck: { type: 'number', min: 0, max: 2 },
+  /** `attack.lunge`: a muzzle flash at the figure's hands, twice, in the hold. */
+  muzzle: { type: 'boolean' },
+  /** `attack.jet`: the eye fires a laser at the player the band attacks. */
+  laser: { type: 'boolean' },
+  /** `attack.jet`: `false` is a flier on the jet's lunge — no robot's eye (default true). */
+  eye: { type: 'boolean' },
+  /** `fx.scaleBeam`: grow or shrink by what the struck card's P/T did (`strikeGrew`). */
+  follow: { type: 'boolean' },
+  /** `fx.shockwave`: a fissure along the table to what her trigger was aimed at. */
+  fissure: { type: 'boolean' },
+  /** `fx.agents`: a beam from him to each place an agent materialises. */
+  beams: { type: 'boolean' },
+  /** `fx.strike`: the reticle locks and holds — the cast, before the beam. */
+  lock: { type: 'boolean' },
+  /** `fx.hologram`: the vials at the figure's hands glow in turn. */
+  vials: { type: 'boolean' },
+  /** `fx.hologram`: this many cards fly from the figure to its controller's hand. */
+  toHand: { type: 'number', min: 0, max: 4, int: true },
+  /** `fx.swarm`: the cloud travels — to the target, or across the table. */
+  sweep: { type: 'boolean' },
+  /** `cast.rise`: the freeze-frame and the mission-control banner. */
+  freeze: { type: 'boolean' },
+  /** `attach.snap`: the HUD flourish that closes on the host, in this shape. */
+  flourish: { type: 'shape' },
+  /** `fx.badge`, `attack.aegis`: the billboard's shape. */
+  shape: { type: 'shape' },
+
+  // -- the second verification pass --------------------------------------------
+  /** `attack.aegis`: the ring at her feet in its own colour (else the cue's colour). */
+  rim: { type: 'colour' },
+  /** `attack.aegis`: a second, wider ring in its own colour — her shield's red, white and blue. */
+  rim2: { type: 'colour' },
+};
+
+/** A param value against its spec, or the complaint. */
+function checkParam(key: string, value: unknown): string | null {
+  const spec = PARAM_SPECS[key];
+  if (spec === undefined) {
+    return `unknown param "${key}" — a cue file sets art direction; event facts are the ladder's`;
+  }
+  switch (spec.type) {
+    case 'number':
+      if (typeof value !== 'number' || !Number.isFinite(value)) return `param ${key} must be a number`;
+      if (value < spec.min || value > spec.max) {
+        return `param ${key} must be within [${String(spec.min)}, ${String(spec.max)}]`;
+      }
+      if (spec.int === true && !Number.isInteger(value)) return `param ${key} must be a whole number`;
+      return null;
+    case 'boolean':
+      return typeof value === 'boolean' ? null : `param ${key} must be true or false`;
+    case 'colour':
+      return typeof value === 'string' && HEX_COLOUR.test(value) ? null : `param ${key} must be #rrggbb`;
+    case 'clip':
+      return typeof value === 'string' && CLIP_ALIAS.test(value) ? null : `param ${key} must be a clip alias`;
+    case 'hostClip':
+      return typeof value === 'string' && isClipName(value) ? null : `param ${key} must be a clip name`;
+    case 'shape':
+      return typeof value === 'string' && isEffectShape(value) ? null : `param ${key} must be an effect shape`;
+    default:
+      return `param ${key} has no type`;
+  }
+}
+
 /** Complain about any key an object should not have. */
 function unknownKeys(
   where: string,
@@ -148,6 +289,7 @@ export function validateCues(raw: unknown, options: ValidateOptions = {}): Valid
   const archetypes: Record<string, CueTable> = {};
   let defaults: CueTable | undefined;
   const presence: Record<string, Record<string, number>> = {};
+  const stations: Record<string, Station> = {};
 
   if (!isObject(raw)) {
     errors.push({ where: '$', message: 'the cue file is not an object' });
@@ -209,6 +351,17 @@ export function validateCues(raw: unknown, options: ValidateOptions = {}): Valid
           else presence[key] = spec as Record<string, number>;
           continue;
         }
+        if (selector === 'station') {
+          const checked = checkStation(spec);
+          if (typeof checked === 'string') {
+            errors.push({ where: `${where}["${key}"].station`, message: checked });
+          } else if (kindOfKey !== 'card') {
+            errors.push({ where: `${where}["${key}"].station`, message: 'a station is per card, never per archetype' });
+          } else {
+            stations[key] = checked;
+          }
+          continue;
+        }
         const where2 = `${where}["${key}"]["${selector}"]`;
         if (!isValidSelector(selector)) {
           errors.push({ where: where2, message: 'not a selector §7.3 can emit' });
@@ -247,7 +400,41 @@ export function validateCues(raw: unknown, options: ValidateOptions = {}): Valid
   const data: CueData = { version: 1, cards, archetypes };
   if (defaults !== undefined) data.defaults = defaults;
   if (Object.keys(presence).length > 0) data.presence = presence;
+  if (Object.keys(stations).length > 0) data.stations = stations;
   return { data, errors, warnings };
+}
+
+/**
+ * T12's `station`: a closed key set, a kind from the closed list, and two bounded
+ * numbers. Returns the station or the complaint — a bad station is dropped whole,
+ * because a half-understood one would draw the wrong thing somewhere.
+ */
+function checkStation(raw: unknown): Station | string {
+  if (!isObject(raw)) return 'station must be an object';
+  for (const key of Object.keys(raw)) {
+    if (isCommentKey(key)) continue;
+    if (!STATION_KEYS.has(key)) return `unknown station field "${key}"`;
+  }
+  const kind = raw['kind'];
+  if (typeof kind !== 'string' || !STATION_KIND_SET.has(kind)) {
+    return `station.kind must be one of ${STATION_KINDS.join(', ')}`;
+  }
+  const out: Station = { kind: kind as Station['kind'] };
+  const colour = raw['colour'];
+  if (colour !== undefined) {
+    if (typeof colour !== 'string' || !HEX_COLOUR.test(colour)) return 'station.colour must be #rrggbb';
+    out.colour = colour;
+  }
+  for (const key of ['lift', 'scale'] as const) {
+    const value = raw[key];
+    if (value === undefined) continue;
+    const range = STATION_RANGE[key]!;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < range[0] || value > range[1]) {
+      return `station.${key} must be within [${String(range[0])}, ${String(range[1])}]`;
+    }
+    out[key] = value;
+  }
+  return out;
 }
 
 function checkSpec(
@@ -299,15 +486,21 @@ function checkSpec(
       return null;
     }
     for (const [key, value] of Object.entries(rawParams)) {
-      if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
-        params[key] = value;
-      } else {
+      if (isCommentKey(key)) continue;
+      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
         errors.push({
           where: `${where}.params.${key}`,
           message: 'a param must be a number, a string or a boolean',
         });
         return null;
       }
+      // Slice 3: the name and the range are checked too (`PARAM_SPECS`).
+      const problem = checkParam(key, value);
+      if (problem !== null) {
+        errors.push({ where: `${where}.params.${key}`, message: problem });
+        return null;
+      }
+      params[key] = value;
     }
   }
 
@@ -367,5 +560,7 @@ export function mergeCueData(base: CueData, extra: CueData): CueData {
   if (Object.keys(defaults).length > 0) merged.defaults = defaults;
   const presence = { ...(base.presence ?? {}), ...(extra.presence ?? {}) };
   if (Object.keys(presence).length > 0) merged.presence = presence;
+  const stations = { ...(base.stations ?? {}), ...(extra.stations ?? {}) };
+  if (Object.keys(stations).length > 0) merged.stations = stations;
   return merged;
 }

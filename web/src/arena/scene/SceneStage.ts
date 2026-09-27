@@ -29,7 +29,7 @@ import {
   type Stage,
   type Vec3,
 } from '../cues/stage.ts';
-import { anchorDelta, anchorPosition, type Layout } from '../layout.ts';
+import { anchorDelta, anchorPosition, figureYawTo, type Layout } from '../layout.ts';
 
 const EMPTY_LAYOUT_DELTA: Vec3 = [0, 0, 0];
 
@@ -106,6 +106,12 @@ export class SceneStage implements Stage {
   deltaTo(cardId: number, anchor: AnchorRef): Vec3 {
     if (this.layout.placements.length === 0) return EMPTY_LAYOUT_DELTA;
     return anchorDelta(this.layout, cardId, anchor);
+  }
+
+  /** The turn that faces this card's figure toward `anchor` — `layout.ts`'s answer, never the cue's. */
+  yawTo(cardId: number, anchor: AnchorRef): number {
+    if (this.layout.placements.length === 0) return 0;
+    return figureYawTo(this.layout, cardId, anchor);
   }
 
   /**

@@ -901,3 +901,136 @@ function assertStringIsClean(value: string, names: ReadonlySet<string>, where: s
   // concealed card to its id, and nothing the arena draws may look like it.
   assert.ok(!/\(\d+\)/.test(value), `${where}: ${JSON.stringify(value)} looks like an id join`);
 }
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 (T11) — the per-card beats, measured on the corpus
+// ---------------------------------------------------------------------------
+
+/**
+ * **Which of T11's beats the committed corpus actually plays, and how often the
+ * wire AIMED them.** The planner is driven exactly as `Arena.tsx`'s intake drives
+ * it — with the previous frame's board — so a `resolved` carries T6's `strikeCard`
+ * when the previous frame's stack said what the item targeted, and a `cast` its
+ * `beamTo` when this frame's does.
+ *
+ * It prints the census and pins the beats that are this slice's claims: Quake's
+ * fissure reaching what her trigger targeted, Helicarrier Strike's lock and its
+ * beam, Web Up's wrap on a named target, Pym Particles following the target's
+ * size, the Air Force's aimed sweep, the scientists' power-up flights and
+ * Coulson's badges. The beats the corpus never plays are named — Wasp's trigger is
+ * never on the wire long enough to aim (its evidence is a synthetic event).
+ */
+test('replay-cues: slice 3 — the per-card beats fire on the corpus, and say when the wire aimed them', () => {
+  const rows = new Map<string, { fired: number; aimed: number }>();
+  const bump = (key: string, aimed: boolean): void => {
+    const row = rows.get(key) ?? { fired: 0, aimed: 0 };
+    row.fired += 1;
+    if (aimed) row.aimed += 1;
+    rows.set(key, row);
+  };
+  let rule7 = 0;
+  for (const file of fixtureFiles()) {
+    let previous: ClientState['board'] = null;
+    for (const { state, events } of framesOf(file)) {
+      const steps = planBatch(events, state, CUES, previous);
+      const cues = steps.flatMap((step) => step.cues);
+      for (const cue of cues) {
+        const subject = cue.targets[0] === undefined || state.board === null ? undefined : findCard(state.board, cue.targets[0]);
+        const name = (subject as { name?: string } | undefined)?.name ?? '';
+        const p = cue.params;
+        const aimed =
+          (typeof p['beamTo'] === 'number' && p['beamTo'] >= 0) || (typeof p['strikeCard'] === 'number' && p['strikeCard'] >= 0);
+        if (name === 'Quake, Agent of S.H.I.E.L.D.' && cue.id === 'fx.shockwave') bump('Quake · fx.shockwave (fissure)', aimed);
+        if (name === 'Helicarrier Strike' && cue.id === 'fx.strike') bump(`Helicarrier Strike · fx.strike ${p['lock'] === true ? '(lock)' : '(beam)'}`, aimed);
+        if (name === 'Web Up' && cue.id === 'fx.webWrap') bump(`Web Up · fx.webWrap [${cue.selector}]`, aimed);
+        if (name === 'Pym Particles' && cue.id === 'fx.scaleBeam') bump(`Pym Particles · fx.scaleBeam [${cue.selector}] grew=${String(p['strikeGrew'] ?? 0)}`, aimed);
+        if (name === 'Wasp, Shrinking Savior' && cue.id === 'fx.scaleBeam') bump(`Wasp · fx.scaleBeam [${cue.selector}]`, aimed);
+        if (name === "Ant-Man's Air Force" && cue.id === 'fx.swarm') bump(`Air Force · fx.swarm sweep [${cue.selector}]`, aimed);
+        if (cue.id === 'fx.hologram' && typeof p['toHand'] === 'number' && p['toHand'] > 0) bump(`${name} · power-up (${String(p['toHand'])} to hand)`, false);
+        if (cue.id === 'fx.badge') bump(`${cue.selector === 'resolved' ? 'Coulson · his own badge' : 'a Hero · badge on the receiver'}`, false);
+        if (cue.id === 'attack.shrink') bump('Ant-Man · attack.shrink (speck)', false);
+        if (cue.id === 'attack.aegis') bump('Peggy · attack.aegis (shield)', false);
+        if (cue.id === 'attack.jet' && p['laser'] === true) bump('Doombot · attack.jet (laser)', false);
+        if (cue.id === 'attack.lunge' && p['muzzle'] === true) bump('Agent 13 · attack.lunge (muzzle)', false);
+        if (cue.id === 'attack.lunge' && name === 'Agents of S.H.I.E.L.D.') bump(`Agents · attack.lunge [${cue.selector}]${p['spotlight'] === 1 ? ' spotlight' : ''}`, false);
+        if (cue.id === 'fx.agents' && p['beams'] === true) bump('Fury · fx.agents (radio call, beams)', false);
+        if (cue.id === 'cast.rise' && p['freeze'] === true) bump('Strategic Intervention · freeze-frame', false);
+        if (cue.id === 'attach.snap' && typeof p['flourish'] === 'string') bump(`${name} · attach.snap flourish ${p['flourish']}`, false);
+      }
+      // Rule 7, counted from the RAW ladder output: one card whose `cast` and whose
+      // `resolved` both resolved to the same cue id in this batch.
+      const kinds = new Map<string, Set<string>>();
+      for (const event of events) {
+        if (event.kind !== 'cast' && event.kind !== 'resolved') continue;
+        for (const cue of cuesFor(event, state, CUES, previous)) {
+          const key = `${cue.id}|${String(cue.targets[0])}`;
+          const set = kinds.get(key) ?? new Set<string>();
+          set.add(cue.kind);
+          kinds.set(key, set);
+        }
+      }
+      for (const set of kinds.values()) if (set.size === 2) rule7 += 1;
+      previous = state.board;
+    }
+  }
+  console.log('  slice 3 per-card beat                                     fired  aimed');
+  for (const [key, row] of [...rows.entries()].sort()) {
+    console.log(`    ${key.padEnd(56)} ${String(row.fired).padStart(4)}  ${String(row.aimed).padStart(4)}`);
+  }
+  const row = (key: string): { fired: number; aimed: number } => rows.get(key) ?? { fired: 0, aimed: 0 };
+  // Quake: her trigger's resolution shakes the table, and the fissure reaches its
+  // target whenever the previous frame said what that was.
+  assert.ok(row('Quake · fx.shockwave (fissure)').fired >= 10, 'Quake’s resolution is not the shockwave');
+  assert.ok(row('Quake · fx.shockwave (fissure)').aimed >= 4, 'Quake’s fissure never had an aim');
+  // Helicarrier Strike: the lock on the cast, the beam on the resolution.
+  assert.ok(row('Helicarrier Strike · fx.strike (lock)').aimed >= 2);
+  assert.ok(row('Helicarrier Strike · fx.strike (beam)').aimed >= 1);
+  // Web Up: the wrap reaches a named target on both of its events.
+  assert.ok(row('Web Up · fx.webWrap [cast]').aimed >= 1);
+  assert.ok(row('Web Up · fx.webWrap [resolved]').aimed >= 3);
+  // The Air Force sweeps to a named target at least once.
+  const sweeps = [...rows.entries()].filter(([k]) => k.startsWith('Air Force'));
+  assert.ok(sweeps.some(([, r]) => r.aimed > 0), 'the Air Force never swept at a named target');
+  // Pym Particles: aimed on its resolution, with the direction off the snapshot.
+  assert.ok([...rows.entries()].some(([k, r]) => k.startsWith('Pym Particles · fx.scaleBeam [resolved]') && r.aimed > 0));
+  // Wasp's attack trigger is never aimed in the corpus — said, not hidden.
+  const wasp = [...rows.entries()].filter(([k]) => k.startsWith('Wasp'));
+  assert.ok(wasp.length > 0 && wasp.every(([, r]) => r.aimed === 0), 'the corpus now aims a Wasp trigger — update the evidence');
+  // The power-ups, the badges, the attackers' beats.
+  assert.ok([...rows.keys()].some((k) => k.includes('power-up')), 'no scientist power-up sent a card to hand');
+  assert.ok(row('a Hero · badge on the receiver').fired >= 9);
+  assert.ok(row('Coulson · his own badge').fired >= 1);
+  assert.ok(row('Ant-Man · attack.shrink (speck)').fired >= 1);
+  assert.ok(row('Peggy · attack.aegis (shield)').fired >= 4);
+  assert.ok(row('Doombot · attack.jet (laser)').fired >= 5);
+  assert.ok(row('Strategic Intervention · freeze-frame').fired >= 1);
+  console.log(`  suppression rule 7 (one card's cast AND resolved naming one cue) fired ${String(rule7)}×`);
+});
+
+test('queue: rule 7 — a card whose cast and resolved name one cue plays it once, the aimed one', () => {
+  // g1.jsonl frame 139's shape: Web Up's spell resolves and its enter trigger goes
+  // on the stack in one snapshot. Built by hand so the aim can be placed on either.
+  const state = initialState();
+  const webUp = (castAim: boolean): string[] => {
+    const cues = planBatch(
+      [
+        { kind: 'resolved', cardId: 27, fizzled: false },
+        { kind: 'cast', stackId: 5, cardId: 27, controller: 0, text: '' },
+      ],
+      state,
+      { version: 1, cards: {}, archetypes: {}, defaults: { resolved: { cue: 'fx.webWrap', ms: 400 }, cast: { cue: 'fx.webWrap', ms: 400 } } },
+      castAim
+        ? null
+        : ({
+            players: [],
+            stackCards: [],
+            stack: [{ id: 4, sourceCardId: 27, controller: 0, text: '', targetCardIds: [80], targetPlayerIds: [] }],
+          } as unknown as ClientState['board']),
+    ).flatMap((s) => s.cues);
+    return cues.map((c) => `${c.kind}${typeof c.params['strikeCard'] === 'number' ? '*' : ''}`);
+  };
+  // With the resolution aimed (the previous frame named its target), it wins.
+  assert.deepEqual(webUp(false), ['resolved*']);
+  // With neither aimed, the first in engine order plays, once.
+  assert.deepEqual(webUp(true), ['resolved']);
+});

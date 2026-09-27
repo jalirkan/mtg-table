@@ -309,6 +309,22 @@ asset: the stand discs, the land slabs and their water shader, the aura halos,
 the spell forms, the mana motes, the duelist silhouette busts and the
 holographic figure material (web/src/arena/scene/*.ts).
 
+Tier 2's third slice (per-card identity, 2026-09-27) added NO asset — nothing
+downloaded, no line in tools/assets-manifest.json except the note closing its
+deferred "carrier" entry, no byte of figures.glb. Every identity prop is built
+from primitives in code (web/src/arena/scene/props.ts): wings, a helmet, a hood,
+a jetpack and its exhaust, a laser eye and a visor band, a pistol and its muzzle,
+a coat, an eyepatch, a badge, a tie, gauntlets, a shield, a hat, a lab bench, the
+Air Force's bees and the Helicarrier's carrier silhouette; so are the attachment
+looks and the two stations (scene/overlays.ts) and the effect shapes
+(scene/effects.ts). Two prop kinds are not primitives: the giant ant's rider and
+the Agents' squad followers are the library's own CC0 bodies above, frozen in one
+frame of their own clips when the page loads, so they carry the same provenance
+and add none. Coulson's "badge" — the prop, a shield-shaped plate with a dark
+roundel, and the flash, a shield crest with a star — is generic geometry drawn in
+code, not the S.H.I.E.L.D. emblem, which is Marvel's (section 4); and nothing in
+it, as in the rest of this library, is derived from card art.
+
 The pipeline itself is a DEVELOPMENT tool and ships nothing:
 
     Package:  @gltf-transform/cli 4.5.0 (npm, web/ devDependency),

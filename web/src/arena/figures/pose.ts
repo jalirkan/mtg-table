@@ -37,9 +37,12 @@ import {
   DEPARTURE_STEP,
   FIGURE_HEIGHT,
   FIGURE_MAX_WIDTH,
+  SILHOUETTE_ALTITUDE,
   anchorsFor,
   footprintContains,
+  seatFacingY,
   seatSign,
+  silhouettePlacementOf,
   standPointOf,
   type Layout,
   type Placement,
@@ -50,7 +53,22 @@ import {
   manifestationOf,
   type AttachmentManifestation,
 } from './attach.ts';
+import {
+  CARRIER_LENGTH,
+  CARRIER_THICKNESS,
+  PROP_KIT,
+  SWARM_BEE_RATIO,
+  familyOf,
+  fitsFamily,
+  swarmSpan,
+  type Family,
+  type FigureProp,
+  type Formation,
+  type SceneKind,
+  type Silhouette,
+} from './props.ts';
 import { figureFor, type FigureRung } from './resolve.ts';
+import { DEFAULT_TRAIT, TRAITS, traitFor, type TraitData, type TraitSpec } from './traits.ts';
 import { attachDataOf, type FigureData, type ModelData, type Stance } from './types.ts';
 
 /**
@@ -82,7 +100,12 @@ export interface FigurePose {
   seat: Seat;
   /** The stand point: `layout.ts`'s, never computed here (§1.1). */
   position: [number, number, number];
-  /** It faces the other seat. */
+  /**
+   * `0` at the viewer's seat, `π` at the opponent's (plus a trait's `turn`).
+   * **Measured in slice 3:** the models' fronts are at +z, so the viewer's own
+   * figures face the viewer's camera and the opponent's face away from it — not
+   * "the other seat", as this comment used to say.
+   */
   facingY: number;
   /**
    * World units, after the archetype's and the card's own scale, every
@@ -173,6 +196,37 @@ export interface FigurePose {
    * `ON_CARD_DISC_ORDER`). Always `false` for a ghost and for the front row.
    */
   onCard: boolean;
+  // -- slice 3: per-card identity (`figures/traits.ts`, `figures/props.ts`) ----
+  /**
+   * **How far this figure hovers**, world units, ALREADY folded into
+   * `position[1]` — so the renderer, the tether and the aura ring all see the
+   * hovering figure where it is. The stand disc subtracts it back out and stays
+   * on the ground under a flier (`scene/discs.ts`). 0 for everything that stands.
+   */
+  lift: number;
+  /**
+   * The props this figure carries — kind and colour, never a name. Resolved from
+   * `traits.json` against the kit and filtered to what fits this body (a helmet
+   * has no anchor on a drone); a swarm's members, a squad's followers and a
+   * vehicle's silhouette are here too, as the derived kinds. **Always empty for an
+   * anonymous figure** (hard rule 8).
+   */
+  props: readonly FigureProp[];
+  /** The colour a prop whose kit colour is `accent` is drawn in. */
+  accent: string;
+  /** How many copies a swarm draws (0 = one figure), and how they stand. */
+  swarm: number;
+  formation: Formation | null;
+  /** A vehicle drawn as its silhouette (T10); `null` for a body. No disc is drawn under one. */
+  silhouette: Silhouette | null;
+  /**
+   * True for a pose that is NOT a creature — a Vehicle that is not crewed, drawn
+   * as its silhouette because the snapshot says it is on the battlefield. A
+   * creature Vehicle (crewed) is an ordinary pose with a silhouette.
+   */
+  vehicle: boolean;
+  /** Which trait rungs contributed — categories (`card`, `subtype:insect`), never a name. */
+  traitRungs: readonly string[];
 }
 
 /** The whole stage for one frame, keyed by card id. */
@@ -197,6 +251,71 @@ export interface FigurePoseOptions {
    * every test that does not care about the clamp working unchanged.
    */
   models?: ModelData;
+  /**
+   * **Slice 3 — the identity table** (`traits.json`). Optional, and absent means
+   * the committed file (`figures/traits.ts`'s `TRAITS`) — which is how the arena
+   * picks it up with no new prop through `Arena.tsx`. A test passes its own, or
+   * {@link EMPTY_TRAIT_DATA} for slice 2's generic poses.
+   */
+  traits?: TraitData;
+}
+
+/**
+ * **Slice 3 — a flier's idle bob**, for a `hover` trait on a card that has no
+ * `presence` bob of its own (a card's own bob wins: the figure rides its card).
+ * Like the `presence` bob it is a function of TIME added in the frame loop, and
+ * like the breathing it only moves while frames are being drawn (D58).
+ */
+const HOVER_BOB_AMP = 0.022;
+const HOVER_BOB_HZ = 0.45;
+
+const NO_PROPS: readonly FigureProp[] = Object.freeze([]);
+const NO_RUNGS: readonly string[] = Object.freeze([]);
+
+/** `#rrggbb` × k, per channel, clamped — a villain's darker tint (`shade`). Pure. */
+export function shadeHex(hex: string, k: number): string {
+  if (k === 1 || !/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
+  let out = '#';
+  for (let i = 1; i < 7; i += 2) {
+    const channel = Math.max(0, Math.min(255, Math.round(Number.parseInt(hex.slice(i, i + 2), 16) * k)));
+    out += channel.toString(16).padStart(2, '0');
+  }
+  return out;
+}
+
+/**
+ * **A pose's props, resolved** — the trait's named kinds that fit this body, in
+ * the trait's order, then the derived kinds its swarm and silhouette produce.
+ * Pure; the colour is decided here so the scene never parses a trait.
+ */
+export function propsOf(
+  trait: TraitSpec,
+  family: Family | null,
+  tint: string,
+  accent: string,
+  modelId: string | null,
+): FigureProp[] {
+  const out: FigureProp[] = [];
+  const colourOf = (kind: SceneKind): string => {
+    const colour = PROP_KIT[kind].colour;
+    if (colour === 'accent') return accent;
+    if (colour === 'tint') return tint;
+    return colour;
+  };
+  if (trait.silhouette !== null) {
+    // A silhouette IS the manifestation: it carries nothing else.
+    out.push({ kind: 'carrier', colour: colourOf('carrier') });
+    return out;
+  }
+  for (const kind of trait.props) {
+    if (fitsFamily(kind, family)) out.push({ kind, colour: colourOf(kind) });
+  }
+  if (trait.swarm > 0) {
+    if (trait.formation === 'ring') out.push({ kind: 'swarmBee', colour: colourOf('swarmBee') });
+    // A squad's followers are the leader's own body, baked: no model, no squad.
+    else if (modelId !== null && family === 'humanoid') out.push({ kind: 'squad', colour: colourOf('squad') });
+  }
+  return out;
 }
 
 /**
@@ -297,6 +416,20 @@ function isGhostCard(placement: Placement): boolean {
   return isCreatureTypeLine((card as { types?: string }).types ?? '');
 }
 
+/**
+ * **Slice 3 (T10) — a battlefield permanent that is not a creature but may be a
+ * silhouette** (an uncrewed Vehicle). Only a face-up card with a type line can be
+ * one; whether it IS one is the trait's `silhouette`, decided by the caller. A
+ * card drawn as a back never is (hard rule 8): "there is a Vehicle here" is not
+ * something the face-down side says.
+ */
+function isVehicleCandidate(placement: Placement): boolean {
+  if (placement.kind !== 'creature' || placement.back) return false;
+  const card = placement.card;
+  if (isHidden(card)) return false;
+  return !isCreatureTypeLine((card as { types?: string }).types ?? '');
+}
+
 /** `"3"`, `"*"`, `"1+*"`, `null` → a number or `null`. `"*"` is not a size. */
 function statOf(value: string | null | undefined): number | null {
   if (typeof value !== 'string' || value === '') return null;
@@ -377,26 +510,37 @@ export function figurePose(
   let overlays = 0;
   let ghostIndex = 0;
 
+  const traitData = options.traits ?? TRAITS;
   let withModel = 0;
   for (const placement of placed.placements) {
     const ghost = isGhostCard(placement);
-    if (!ghost && !isFigureCard(placement)) continue;
+    const creature = !ghost && isFigureCard(placement);
+    const candidate = !ghost && !creature && isVehicleCandidate(placement);
+    if (!ghost && !creature && !candidate) continue;
     // One card is placed at most once as a `creature` (the stack copy is `s:`
     // keyed and a different kind), but the map is keyed by card id and the test
     // asserts one pose per creature, so a duplicate would be a silent overwrite.
     if (out.has(placement.cardId)) continue;
 
     const card = placement.card;
-    const match = figureFor(card, data);
-    const spec = match.spec;
-
     // §1.4 rule 1, explicit: **a model is only ever chosen for a card drawn face
     // up.** A face-down creature is a figure — it is on the battlefield and it
     // fights — but it is the anonymous one, and its tint is the colourless grey,
     // because a mesh and a colour are both statements about what a card is.
+    // Slice 3 extends the same branch to identity: an anonymous figure gets the
+    // default traits — no props, no hover, no swarm — and its name is never read.
     const anonymous = placement.back;
+    const traitMatch = anonymous ? null : traitFor(card, traitData);
+    const trait = traitMatch?.spec ?? DEFAULT_TRAIT;
+    // T10: a non-creature permanent is posed ONLY as a silhouette.
+    if (candidate && trait.silhouette === null) continue;
+    const silhouette = trait.silhouette;
+
+    const match = figureFor(card, data);
+    const spec = match.spec;
+
     const overBudget = withModel >= MAX_FIGURES;
-    const modelId = anonymous || overBudget ? null : spec.model;
+    const modelId = anonymous || overBudget || silhouette !== null ? null : spec.model;
     if (modelId !== null) withModel += 1;
 
     const interposesId = ghost ? null : (interposes.get(placement.cardId) ?? null);
@@ -419,35 +563,88 @@ export function figurePose(
     }
 
     // **T7's width clamp**, and it is why `width` is on the pose: a figure's drawn
-    // height depends on how wide its model is, and only the manifest knows.
+    // height depends on how wide its model is, and only the manifest knows. Slice
+    // 3 adds two footprints the manifest cannot know — a figure turned side-on
+    // (the trait's measured `turnedRatio`) and a swarm (`swarmSpan`) — and the
+    // clamp stays strict for both (D65): no exemption, a different width.
     const baseline = FIGURE_HEIGHT * hostScale * (ghost ? GHOST_SCALE : 1);
-    const nominal = baseline * spec.scale;
+    const nominal = baseline * spec.scale * trait.scale;
     const entry = modelId === null ? undefined : options.models?.models[modelId];
-    const ratio = entry === undefined || entry.height <= 0 ? 0 : entry.width / entry.height;
-    const height = ratio > 0 ? fitHeight(nominal, ratio) : nominal;
-    const width = ratio > 0 ? height * ratio : discRadiusFor(card) * hostScale * 2;
+    const modelRatio = entry === undefined || entry.height <= 0 ? 0 : entry.width / entry.height;
+    const bodyRatio = trait.turn !== 0 && trait.turnedRatio !== null && modelRatio > 0 ? trait.turnedRatio : modelRatio;
+    const swarm = silhouette === null && !anonymous ? trait.swarm : 0;
+    const formation: Formation | null = swarm > 0 ? trait.formation : null;
+    let ratio = bodyRatio;
+    if (formation === 'ring') ratio = swarmSpan(swarm, 'ring', SWARM_BEE_RATIO, 0);
+    else if (formation === 'squad' && bodyRatio > 0) ratio = swarmSpan(swarm, 'squad', bodyRatio, bodyRatio);
 
-    const position = ghost ? ghostPointOf(placement, ghostIndex) : standPointOf(placement);
+    let height: number;
+    let width: number;
+    // Where a silhouette flies is layout.ts's (the opponent's over the centre line
+    // since the second verification pass): its ground point, lift and scale.
+    const flight = silhouette !== null && !ghost ? silhouettePlacementOf(placement, trait.hover) : null;
+    if (silhouette !== null) {
+      // A silhouette is sized by its LENGTH: `width` is the hull's length and
+      // `height` its thickness, so a tether aimed at it hits the hull.
+      const length = CARRIER_LENGTH * spec.scale * trait.scale * hostScale * (flight?.scale ?? 1);
+      width = length;
+      height = length * (CARRIER_THICKNESS / CARRIER_LENGTH);
+    } else {
+      height = ratio > 0 ? fitHeight(nominal, ratio) : nominal;
+      width = ratio > 0 ? height * ratio : discRadiusFor(card) * hostScale * 2;
+    }
+
+    // Slice 3: the tint, the villain's shade, the accent, the props.
+    const baseTint = anonymous
+      ? colourHex('C')
+      : (trait.tint ??
+        spec.tint ??
+        colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)));
+    const tint = anonymous ? baseTint : shadeHex(baseTint, trait.shade);
+    const accent = trait.accent ?? tint;
+    const family = familyOf(modelId, options.models);
+    const props = anonymous ? NO_PROPS : propsOf(trait, family, tint, accent, modelId);
+
+    const stand = ghost ? ghostPointOf(placement, ghostIndex) : flight !== null ? flight.ground : standPointOf(placement);
+    // A silhouette flies where `silhouettePlacementOf` says — yours at least at
+    // `SILHOUETTE_ALTITUDE` over your rank, presence rule or none.
+    // (A spell on the stack that is a silhouette — none in this deck — keeps the
+    // altitude floor at its casting anchor.)
+    const lift = anonymous
+      ? 0
+      : flight !== null
+        ? flight.lift
+        : silhouette !== null
+          ? Math.max(trait.hover, SILHOUETTE_ALTITUDE - stand[1])
+          : trait.hover;
+    const position: [number, number, number] = [stand[0], stand[1] + lift, stand[2]];
+    // A flier with no `presence` bob of its own bobs gently; a card's own bob wins.
+    const hovering = !anonymous && trait.idle === 'hover' && placement.bobAmp === 0 && !ghost;
+    const bobAmp = ghost ? 0 : hovering ? HOVER_BOB_AMP : placement.bobAmp;
+    const bobHz = hovering ? HOVER_BOB_HZ : placement.bobHz;
+    // `layout.ts`'s one definition of which way a seat's figures face (D81).
+    const facing = seatFacingY(placement.seat);
+    const turn = anonymous ? 0 : (trait.turn * Math.PI) / 180;
+
     out.set(placement.cardId, {
       cardId: placement.cardId,
       seat: placement.seat,
       position,
-      facingY: placement.seat === 'you' ? 0 : Math.PI,
+      facingY: facing + turn,
       height,
       width,
-      radius: discRadiusFor(card) * hostScale,
+      // No disc under a silhouette: it flies, and T10 replaced its disc.
+      radius: silhouette !== null ? 0 : discRadiusFor(card) * hostScale,
       modelId,
       clips: anonymous ? EMPTY_CLIPS : spec.clips,
-      tint: anonymous
-        ? colourHex('C')
-        : (spec.tint ?? colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null))),
+      tint,
       // A spell is not on the battlefield, so it has no combat stance and it is
       // not summoning-sick: it rests, and it solidifies when it resolves.
       stance: ghost ? 'ready' : stanceOf(card, interposesId),
       opacity: ghost ? GHOST_OPACITY : sick ? SICK_OPACITY : 1,
       interposesId,
-      bobAmp: ghost ? 0 : placement.bobAmp,
-      bobHz: placement.bobHz,
+      bobAmp,
+      bobHz,
       rung: anonymous ? 'default' : match.rung,
       anonymous,
       attachments,
@@ -458,7 +655,17 @@ export function figurePose(
       // the battlefield holds.
       frozen: frozen && !ghost,
       ghost,
-      onCard: !ghost && footprintContains(placement, position[0], position[2]),
+      // A stand point inside its own card's footprint — measured on the GROUND
+      // point, which is where the disc lies.
+      onCard: !ghost && footprintContains(placement, stand[0], stand[2]),
+      lift,
+      props,
+      accent,
+      swarm,
+      formation,
+      silhouette,
+      vehicle: candidate,
+      traitRungs: traitMatch?.rungs ?? NO_RUNGS,
     });
     if (ghost) ghostIndex += 1;
   }
@@ -526,6 +733,9 @@ export function departureStand(departed: FigurePose, present: FigureLayout): [nu
 function crowded(present: FigureLayout, body: FigurePose, x: number, z: number): boolean {
   for (const pose of present.values()) {
     if (pose.cardId === body.cardId) continue;
+    // A silhouette flies over the rank (T10): it crowds nobody on the ground.
+    // (`?? null`: a pose built before slice 3 has no such field at all.)
+    if ((pose.silhouette ?? null) !== null) continue;
     if (Math.abs(pose.position[2] - z) >= DEPARTURE_STEP - 1e-9) continue;
     if (Math.abs(pose.position[0] - x) < (pose.width + body.width) / 2) return true;
   }

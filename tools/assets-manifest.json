@@ -194,7 +194,7 @@
   },
 
   "_deferred": {
-    "carrier": "S.H.I.E.L.D. Helicarrier (T10). No CC0 vehicle mesh has been chosen; the card keeps its presence hover and its disc.",
+    "carrier": "S.H.I.E.L.D. Helicarrier (T10). CLOSED by Tier 2 slice 3 without an asset: no CC0 vehicle mesh was chosen or downloaded, because a PROCEDURAL carrier silhouette (web/src/arena/scene/props.ts — hull, flight deck, island, four rotor pods, 456 triangles) is drawn for every Vehicle through traits.json's `subtype:vehicle` archetype rung, overhead at layout.ts's SILHOUETTE_ALTITUDE, crewed or not, with no stand disc (DECISIONS.md D77). Nothing here, in figures.glb or in NOTICE changed for it.",
     "clipLibrary2": "Universal Animation Library 2 (CC0, 130+ more clips) is not downloaded: nothing T8 needs is missing from UAL 1 except a shrink, and UAL 2's list (parkour, combos, farming, zombie locomotion) has none either."
   }
 }

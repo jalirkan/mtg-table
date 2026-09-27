@@ -19,14 +19,27 @@
  * (`MAX_POSE_OVERLAYS = 12`, `figures/attach.ts`) and **two draw calls whatever
  * is on the table**.
  *
- * **What it draws, and what it does not.** T5 implements §4.3's two kinds:
- * `shrink` (Quantum Reduction — a ring that closes slowly at the figure's feet,
- * over a host figure the *pose* has already halved) and the default `halo` (a
- * ring plus a soft chest glow, in the ATTACHING card's colour, with §4.4's
- * metallic variant for an Equipment). `shell`, `circuit`, `glints` and `cocoon`
- * are §4.3's per-card table and are **T12's**; they arrive here as the halo,
- * which is the declared fallback and reads correctly rather than silently
- * drawing nothing.
+ * **What it draws.** T5 implemented §4.3's two kinds: `shrink` (Quantum
+ * Reduction — a ring that closes slowly at the figure's feet, over a host figure
+ * the *pose* has already halved) and the default `halo` (a ring plus a soft chest
+ * glow, in the ATTACHING card's colour, with §4.4's metallic variant for an
+ * Equipment). **T12 (Tier 2 slice 3) draws the other four** — each keeps the ring
+ * at the host's feet and replaces the chest glow with its own look:
+ *
+ * | kind | the look | per attachment |
+ * |---|---|---|
+ * | `shell` | an armour capsule around the whole figure, plated, metal-cooled | 1 billboard |
+ * | `circuit` | circuit traces over the body, pulsing | 1 billboard |
+ * | `glints` | three gadget glints orbiting the figure's hands | 3 billboards |
+ * | `cocoon` | webbing wrapped over the body | 1 billboard |
+ *
+ * …and T12's two **stations** (`figures/attach.ts`'s `stationsOf`): the ops
+ * console in Strategic Intervention's rank slot and the cocoon in Web Up's.
+ * Every look is one `InstancedMesh` for the whole table — **one draw call per KIND,
+ * never per figure**, and none at all while no card on the table wears it (an
+ * invisible `InstancedMesh` is skipped by the renderer outright). An **anonymous**
+ * host — a face-down creature — wears the halo ring and nothing else: a look is
+ * drawn ON a body, and hard rule 8 gives a concealed card none (§1.4).
  *
  * **The time term is gated, like everything else that moves with no cue behind
  * it.** `CueRunner` passes `dt` and passes **0 while the queue is idle** (user
@@ -37,15 +50,22 @@
 
 import * as THREE from 'three';
 
-import type { AttachmentManifestation } from '../figures/attach.ts';
-import type { FigureLayout } from '../figures/pose.ts';
+import { STATION_SIZE, type AttachmentManifestation, type StationPose } from '../figures/attach.ts';
+import type { FigureLayout, FigurePose } from '../figures/pose.ts';
 import { parsedColour } from './colourCache.ts';
+import { shapeTexture } from './effects.ts';
 import { UNIT_PLANE } from './geometry.ts';
 import type { OffsetSource } from './discs.ts';
 import { initTexture } from './useCardTexture.ts';
 
 /** §4.4's cap, with room: four is the measured ceiling and twelve is the budget. */
 export const OVERLAY_CAPACITY = 16;
+
+/** T12 — the glints are three per Spy Kit. */
+const GLINTS_PER = 3;
+
+/** An empty station list, shared — the frame loop passes it when there is none. */
+const NO_STATIONS: readonly StationPose[] = Object.freeze([]) as readonly StationPose[];
 
 /** Flat on the table, like every other ring in the arena. */
 const FLAT = -Math.PI / 2;
@@ -129,6 +149,7 @@ const POSITION = new THREE.Vector3();
 const QUATERNION = new THREE.Quaternion();
 const EULER = new THREE.Euler();
 const SCALE = new THREE.Vector3();
+const TOWARD = new THREE.Vector3();
 const COLOUR = new THREE.Color();
 const METAL_COLOUR = new THREE.Color(METAL);
 
@@ -151,6 +172,14 @@ export class OverlayField {
   #glows: THREE.InstancedMesh | null = null;
   #ringCount = 0;
   #glowCount = 0;
+  // T12's looks and stations — one instanced mesh per kind (see the header).
+  #shells: THREE.InstancedMesh | null = null;
+  #circuits: THREE.InstancedMesh | null = null;
+  #glints: THREE.InstancedMesh | null = null;
+  #webs: THREE.InstancedMesh | null = null;
+  #consoles: THREE.InstancedMesh | null = null;
+  #cocoons: THREE.InstancedMesh | null = null;
+  #looks = { shells: 0, circuits: 0, glints: 0, webs: 0, consoles: 0, cocoons: 0 };
   /** Advanced by the frame's `dt`; **`CueRunner` passes 0 while idle**. */
   #clock = 0;
 
@@ -168,10 +197,16 @@ export class OverlayField {
   #build(): void {
     this.#rings = this.#add(additive(ringTexture()), 12);
     this.#glows = this.#add(additive(glowTexture()), 13);
+    this.#shells = this.#add(additive(shapeTexture('capsule')), 14);
+    this.#circuits = this.#add(additive(shapeTexture('circuit')), 14);
+    this.#glints = this.#add(additive(shapeTexture('star')), 15, this.capacity * GLINTS_PER);
+    this.#webs = this.#add(additive(shapeTexture('web')), 14);
+    this.#consoles = this.#add(additive(shapeTexture('console')), 16);
+    this.#cocoons = this.#add(additive(shapeTexture('cocoon')), 16);
   }
 
-  #add(material: THREE.Material, renderOrder: number): THREE.InstancedMesh {
-    const mesh = new THREE.InstancedMesh(UNIT_PLANE, material, this.capacity);
+  #add(material: THREE.Material, renderOrder: number, capacity = this.capacity): THREE.InstancedMesh {
+    const mesh = new THREE.InstancedMesh(UNIT_PLANE, material, capacity);
     mesh.frustumCulled = false;
     mesh.count = 0;
     mesh.visible = false;
@@ -180,10 +215,7 @@ export class OverlayField {
     // and is the only thing the raycaster sees; an aura's halo hangs over the
     // card whose click it would otherwise steal.
     mesh.raycast = () => {};
-    mesh.instanceColor = new THREE.InstancedBufferAttribute(
-      new Float32Array(this.capacity * 3),
-      3,
-    );
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
     mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.group.add(mesh);
@@ -209,6 +241,7 @@ export class OverlayField {
     offsets: OffsetSource,
     camera: THREE.Camera,
     dt: number,
+    stations: readonly StationPose[] = NO_STATIONS,
   ): void {
     if (this.group.children.length === 0) this.#build();
     const rings = this.#rings;
@@ -216,6 +249,13 @@ export class OverlayField {
     if (rings === null || glows === null) return;
     this.#clock += dt;
     const breath = 0.5 + 0.5 * Math.cos((this.#clock / SHRINK_PERIOD_S) * Math.PI * 2);
+    const looks = this.#looks;
+    looks.shells = 0;
+    looks.circuits = 0;
+    looks.glints = 0;
+    looks.webs = 0;
+    looks.consoles = 0;
+    looks.cocoons = 0;
 
     let ring = 0;
     let glow = 0;
@@ -249,6 +289,13 @@ export class OverlayField {
         rings.setColorAt(ring, COLOUR);
         ring += 1;
 
+        // T12: a look drawn ON the body replaces the chest glow. An anonymous host
+        // (a face-down creature) wears none — only the ring above (§1.4).
+        if (attachment.kind !== 'halo' && attachment.kind !== 'shrink' && !pose.anonymous) {
+          this.#look(attachment, pose, offset, alpha, camera);
+          continue;
+        }
+
         // The chest glow is what makes a halo read as *on the creature* rather
         // than as a mark on the table. `shrink` deliberately has none: the thing
         // that reads there is how small the host has become.
@@ -272,6 +319,9 @@ export class OverlayField {
       }
     }
 
+    // T12's stations: a pose of the card itself, over its own rest position.
+    for (let i = 0; i < stations.length; i++) this.#station(stations[i]!, offsets, camera);
+
     this.#ringCount = ring;
     this.#glowCount = glow;
     rings.count = ring;
@@ -285,6 +335,158 @@ export class OverlayField {
     glows.instanceMatrix.needsUpdate = true;
     if (rings.instanceColor !== null) rings.instanceColor.needsUpdate = true;
     if (glows.instanceColor !== null) glows.instanceColor.needsUpdate = true;
+    commit(this.#shells, looks.shells);
+    commit(this.#circuits, looks.circuits);
+    commit(this.#glints, looks.glints);
+    commit(this.#webs, looks.webs);
+    commit(this.#consoles, looks.consoles);
+    commit(this.#cocoons, looks.cocoons);
+  }
+
+  /**
+   * **T12 — one attachment's look on its host's body** (report 13 §4.3's table).
+   * Billboards, sized in the host's drawn height (so a Quantum-Reduced host wears
+   * a smaller shell), riding the host's live offset (so the look goes where the
+   * figure goes), in the ATTACHING card's colour (§4.4) — cooled toward metal for
+   * an Equipment, exactly as the halo is.
+   */
+  #look(
+    attachment: AttachmentManifestation,
+    pose: FigurePose,
+    offset: { dx: number; dy: number; dz: number; scale: number },
+    alpha: number,
+    camera: THREE.Camera,
+  ): void {
+    const h = pose.height * offset.scale;
+    const x = pose.position[0] + offset.dx;
+    const y = pose.position[1] + offset.dy;
+    const z = pose.position[2] + offset.dz;
+    const looks = this.#looks;
+    const kind = attachment.kind;
+    if (kind === 'shell') {
+      // Super Suit: a plated capsule the shape of a standing body's box, a
+      // little larger than the figure, so the figure reads as INSIDE armour.
+      const mesh = this.#shells;
+      if (mesh === null || looks.shells >= this.capacity) return;
+      const width = Math.max(pose.width * 1.08, h * 0.7);
+      this.#billboard(mesh, looks.shells, x, y + h * 0.54, z, width, h * 1.16, camera, h * 0.42);
+      this.#tint(attachment, alpha, 1.05);
+      mesh.setColorAt(looks.shells, COLOUR);
+      looks.shells += 1;
+      return;
+    }
+    if (kind === 'circuit') {
+      // Robotics Mastery: traces over the body, pulsing slowly (on the gated
+      // clock — a still table shows still traces).
+      const mesh = this.#circuits;
+      if (mesh === null || looks.circuits >= this.capacity) return;
+      const beat = 0.72 + 0.28 * Math.sin(this.#clock * Math.PI * 1.4);
+      this.#billboard(mesh, looks.circuits, x, y + h * 0.52, z, h * 1.12, h * 1.2, camera, h * 0.45);
+      this.#tint(attachment, alpha, 1.7 * beat);
+      mesh.setColorAt(looks.circuits, COLOUR);
+      looks.circuits += 1;
+      return;
+    }
+    if (kind === 'glints') {
+      // The Spy Kit: three gadget glints orbiting at hand height, each on its
+      // own phase so they twinkle rather than blink together.
+      const mesh = this.#glints;
+      if (mesh === null) return;
+      const reach = Math.max(pose.width * 0.48, h * 0.32);
+      for (let i = 0; i < GLINTS_PER; i++) {
+        if (looks.glints >= this.capacity * GLINTS_PER) return;
+        const a = this.#clock * 1.7 + (i * Math.PI * 2) / GLINTS_PER;
+        const twinkle = 0.55 + 0.45 * Math.abs(Math.sin(this.#clock * 3.1 + i * 1.9));
+        const size = Math.max(0.12, h * 0.34) * (0.8 + 0.4 * twinkle);
+        this.#billboard(
+          mesh,
+          looks.glints,
+          x + Math.cos(a) * reach,
+          y + h * (0.44 + 0.05 * Math.sin(this.#clock * 2.3 + i)),
+          z + Math.sin(a) * reach,
+          size,
+          size,
+          camera,
+        );
+        this.#tint(attachment, alpha, 1.3 * twinkle);
+        mesh.setColorAt(looks.glints, COLOUR);
+        looks.glints += 1;
+      }
+      return;
+    }
+    if (kind === 'cocoon') {
+      const mesh = this.#webs;
+      if (mesh === null || looks.webs >= this.capacity) return;
+      this.#billboard(mesh, looks.webs, x, y + h * 0.5, z, h * 0.78, h * 1.08, camera, h * 0.42);
+      this.#tint(attachment, alpha, 1);
+      mesh.setColorAt(looks.webs, COLOUR);
+      looks.webs += 1;
+    }
+  }
+
+  /**
+   * **T12 — a station in its own rank slot**: Strategic Intervention's ops
+   * console, Web Up's cocoon, figure-sized at the slot's stand point
+   * (`figures/attach.ts`'s `STATION_SIZE` / `STATION_LIFT`). It rides its card's
+   * live offset (a cast rising, a snap), so it never floats away from the card it
+   * belongs to.
+   */
+  #station(station: StationPose, offsets: OffsetSource, camera: THREE.Camera): void {
+    const offset = offsets.offsetOf(station.cardId);
+    const alpha = Math.max(0, Math.min(1, offset.opacity * (1 - offset.dissolve)));
+    if (alpha <= 0.01) return;
+    const x = station.position[0] + offset.dx;
+    const y = station.position[1] + offset.dy + station.lift;
+    const z = station.position[2] + offset.dz;
+    const looks = this.#looks;
+    if (station.kind === 'missionControl') {
+      const mesh = this.#consoles;
+      if (mesh === null || looks.consoles >= this.capacity) return;
+      const size = STATION_SIZE.missionControl;
+      this.#billboard(mesh, looks.consoles, x, y, z, size.w * station.scale, size.h * station.scale, camera);
+      COLOUR.copy(parsedColour(station.colour)).multiplyScalar(1.05 * alpha);
+      mesh.setColorAt(looks.consoles, COLOUR);
+      looks.consoles += 1;
+      return;
+    }
+    const mesh = this.#cocoons;
+    if (mesh === null || looks.cocoons >= this.capacity) return;
+    const size = STATION_SIZE.cocoon;
+    this.#billboard(mesh, looks.cocoons, x, y, z, size.w * station.scale, size.h * station.scale, camera);
+    COLOUR.copy(parsedColour(station.colour)).multiplyScalar(1.1 * alpha);
+    mesh.setColorAt(looks.cocoons, COLOUR);
+    looks.cocoons += 1;
+  }
+
+  /**
+   * A camera-facing quad of `w × h` at `(x, y, z)`, written into instance `i` —
+   * pulled `toward` world units toward the camera first. A look worn ON a body
+   * (the shell's glass, the circuit traces) is drawn in front of it that way:
+   * the holographic figure writes depth, and a billboard through its centre is
+   * hidden by the half of the body in front of it (measured in the browser —
+   * Robotics Mastery's traces were invisible on Wasp until this).
+   */
+  #billboard(
+    mesh: THREE.InstancedMesh,
+    i: number,
+    x: number,
+    y: number,
+    z: number,
+    w: number,
+    h: number,
+    camera: THREE.Camera,
+    toward = 0,
+  ): void {
+    POSITION.set(x, y, z);
+    if (toward > 0) {
+      TOWARD.subVectors(camera.position, POSITION);
+      const length = TOWARD.length();
+      if (length > 1e-4) POSITION.addScaledVector(TOWARD, toward / length);
+    }
+    QUATERNION.copy(camera.quaternion);
+    SCALE.set(w, h, 1);
+    MATRIX.compose(POSITION, QUATERNION, SCALE);
+    mesh.setMatrixAt(i, MATRIX);
   }
 
   /** The attaching card's colour, cooled toward metal for an Equipment (§4.4). */
@@ -306,18 +508,52 @@ export class OverlayField {
   }
 
   /** What was drawn last frame — the evidence document's numbers. */
-  counts(): { rings: number; glows: number } {
-    return { rings: this.#ringCount, glows: this.#glowCount };
+  counts(): {
+    rings: number;
+    glows: number;
+    shells: number;
+    circuits: number;
+    glints: number;
+    webs: number;
+    consoles: number;
+    cocoons: number;
+  } {
+    return { rings: this.#ringCount, glows: this.#glowCount, ...this.#looks };
   }
 
   dispose(): void {
-    for (const mesh of [this.#rings, this.#glows]) {
+    for (const mesh of [
+      this.#rings,
+      this.#glows,
+      this.#shells,
+      this.#circuits,
+      this.#glints,
+      this.#webs,
+      this.#consoles,
+      this.#cocoons,
+    ]) {
       if (mesh === null) continue;
       mesh.dispose();
       (mesh.material as THREE.Material).dispose();
     }
     this.#rings = null;
     this.#glows = null;
+    this.#shells = null;
+    this.#circuits = null;
+    this.#glints = null;
+    this.#webs = null;
+    this.#consoles = null;
+    this.#cocoons = null;
     this.group.clear();
   }
+}
+
+/** Park or show one look's mesh for this frame, and flag its buffers. */
+function commit(mesh: THREE.InstancedMesh | null, count: number): void {
+  if (mesh === null) return;
+  mesh.count = count;
+  mesh.visible = count > 0;
+  if (count === 0) return;
+  mesh.instanceMatrix.needsUpdate = true;
+  if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
 }

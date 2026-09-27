@@ -830,3 +830,57 @@ test('clips: every dying body is drawn from the snapshot it dies in to the end o
   }
   for (const line of summary) console.log(line);
 });
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 (T11) — the per-card clips are aliases the models actually have
+// ---------------------------------------------------------------------------
+
+test('clips: every `params.clip` in cues.json is a clip some model carries (T11)', () => {
+  const cues = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/cues/cues.json', import.meta.url)), 'utf8'),
+  ) as { cards: Record<string, Record<string, unknown>>; archetypes: Record<string, Record<string, unknown>> };
+  const models = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/figures/models.json', import.meta.url)), 'utf8'),
+  ) as { models: Record<string, { clips: Record<string, string> }> };
+  const keys = new Set<string>();
+  for (const model of Object.values(models.models)) for (const key of Object.keys(model.clips)) keys.add(key);
+  const aliases: string[] = [];
+  for (const table of [cues.cards, cues.archetypes]) {
+    for (const [name, entry] of Object.entries(table)) {
+      for (const [selector, spec] of Object.entries(entry)) {
+        if (selector.startsWith('_') || typeof spec !== 'object' || spec === null) continue;
+        const clip = (spec as { params?: Record<string, unknown> }).params?.['clip'];
+        if (clip === undefined) continue;
+        aliases.push(`${name} ${selector} → ${String(clip)}`);
+        assert.ok(typeof clip === 'string' && keys.has(clip), `${name} ${selector}: clip "${String(clip)}" is in no model`);
+      }
+    }
+  }
+  console.log(`  cues.json clip aliases: ${aliases.join(' · ')}`);
+  assert.ok(aliases.some((a) => a.includes('radioCall')), 'Fury’s radio call is not an alias in cues.json');
+});
+
+test('clips: Quake’s seismic takedown is HER gesture (fx.shockwave → channel)', () => {
+  assert.equal(CLIP_FOR['fx.shockwave'], 'channel');
+});
+
+test('clips: Ant-Man’s shrink is one number — cues.json’s attack and traits.json’s `shrink` agree', () => {
+  // `traits.json` (the identity table) says the size a card's body takes; the cue
+  // that plays the shrink takes its scale from `cues.json` like every cue does.
+  // Two files, one number: this is what keeps them from drifting apart.
+  const cues = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/cues/cues.json', import.meta.url)), 'utf8'),
+  ) as { cards: Record<string, Record<string, { params?: Record<string, unknown> }>> };
+  const scale = cues.cards['Ant-Man, Reformed Rogue']?.['attackers:alone']?.params?.['scale'];
+  assert.equal(scale, 0.18);
+  let traits: { cards?: Record<string, { shrink?: number }> } | null = null;
+  try {
+    traits = JSON.parse(
+      readFileSync(fileURLToPath(new URL('../src/arena/figures/traits.json', import.meta.url)), 'utf8'),
+    ) as { cards?: Record<string, { shrink?: number }> };
+  } catch {
+    traits = null; // a checkout from before the identity table: nothing to agree with
+  }
+  const shrink = traits?.cards?.['Ant-Man, Reformed Rogue']?.shrink;
+  if (shrink !== undefined) assert.equal(scale, shrink, 'cues.json and traits.json disagree on Ant-Man’s shrink');
+});

@@ -33,7 +33,8 @@
 
 import { clipEnvelope, clipForCue, type ClipRequest } from '../figures/clips.ts';
 import { isClipName, type ClipName } from '../figures/types.ts';
-import { TAP_ANGLE } from '../layout.ts';
+import { PISTOL_MUZZLE } from '../figures/props.ts';
+import { TAP_ANGLE, figureAnchorOf } from '../layout.ts';
 import {
   clamp01,
   easeInCubic,
@@ -42,6 +43,7 @@ import {
   easeOutCubic,
   outHoldBack,
   pulse,
+  isEffectShape,
   type AnchorRef,
   type CueContext,
   type CueImpl,
@@ -244,7 +246,41 @@ function cue(def: CueDef): CueImpl {
  */
 function beamTargetOf(ctx: CueContext): number {
   const beam = num(ctx, 'beamTo', -1);
-  return beam >= 0 ? beam : num(ctx, 'toId', -1);
+  if (beam >= 0) return beam;
+  const to = num(ctx, 'toId', -1);
+  if (to >= 0) return to;
+  // **T11: a `resolved` aims too** — `strikeCard` is what the PREVIOUS frame's
+  // stack item targeted (T6's one frame of look-behind, D63), so Wasp's shrink,
+  // Pym's beam, Web Up's wrap and Depower's flicker land on the thing the engine
+  // said they were aimed at when they RESOLVE, not only when they are cast.
+  return num(ctx, 'strikeCard', -1);
+}
+
+/**
+ * Every param {@link beamTargetOf} can read an id from — the `alsoClears` of any
+ * cue that offsets or poses the card it aims at, so `end()` stays total over all
+ * three (the fixture sweep's decay assertion is the proof).
+ */
+const AIMED: readonly string[] = ['beamTo', 'toId', 'strikeCard'];
+
+/**
+ * **T11 — a point on a card's figure** (`stage.ts`'s `figure` anchor): `at` in
+ * figure heights from its feet, `fwd`/`side` in figure heights along its facing
+ * and to its right. It follows the figure through a lunge, a hover and a shrink,
+ * because the effect binding resolves it against the live offset; a card with no
+ * figure resolves to its card plus that offset.
+ */
+function figureAt(id: number, at: number, fwd = 0, side = 0): AnchorRef {
+  return { kind: 'figure', id, at, fwd, side };
+}
+
+/** Agent 13's muzzle flash sits on her pistol's lit tip (`figures/props.ts`). */
+const MUZZLE_ANCHOR = figureAnchorOf(PISTOL_MUZZLE);
+
+/** A flash that is on for `width` of `t` around `centre`, 0 elsewhere — a muzzle, a flicker. */
+function blip(t: number, centre: number, width: number): number {
+  const d = Math.abs(t - centre);
+  return d >= width ? 0 : 1 - d / width;
 }
 
 /**
@@ -262,11 +298,38 @@ function lunge(
   t: number,
   stage: Stage,
   id: number,
-): { dx: number; dy: number; dz: number; dRotX: number; k: number } {
+): { dx: number; dy: number; dz: number; dRotX: number; dRotY: number; k: number } {
   const player = ctx.players[0] ?? 0;
   const k = outHoldBack(t, 0.3, 0.7);
   const d = decay(stage, id, { kind: 'combat', player }, k * 0.9);
-  return { dx: d[0], dy: d[1] + 0.06 * k, dz: d[2], dRotX: 0.21 * k * (d[2] <= 0 ? 1 : -1), k };
+  return {
+    dx: d[0],
+    dy: d[1] + 0.06 * k,
+    dz: d[2],
+    dRotX: 0.21 * k * (d[2] <= 0 ? 1 : -1),
+    dRotY: stage.yawTo(id, defenderOf(ctx)) * k,
+    k,
+  };
+}
+
+/**
+ * **What an attacker turns to face** (Tier 2 slice 3's second verification
+ * pass): the player or planeswalker its attack BAND names — the `attackers`
+ * event's own `defenderKind` / `defenderId`, the same fields the Doombot's laser
+ * aims at — else its own combat lane, which is always toward the other seat.
+ *
+ * The turn itself is `Stage.yawTo` (`layout.ts` knows where both ends are and
+ * which way the figure rests) scaled by the lunge's envelope into the offset's
+ * `dRotY`, so it is 0 at the start and the end of the cue, whichever way a
+ * seat's figures stand (PLAN question 13): the muzzle, the eye and the laser
+ * fire at the target instead of out of the far side of the body.
+ */
+function defenderOf(ctx: CueContext): AnchorRef {
+  const id = num(ctx, 'defenderId', -1);
+  const kind = str(ctx, 'defenderKind', 'none');
+  if (id >= 0 && kind === 'player') return { kind: 'player', id };
+  if (id >= 0 && kind === 'card') return { kind: 'card', id };
+  return { kind: 'combat', player: ctx.players[0] ?? 0 };
 }
 
 /** The commonest shape: one offset per target, computed from `t` and the index. */
@@ -449,7 +512,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'cast.rise',
     cue({
-      effects: ['glow', 'beam', 'spend'],
+      effects: ['glow', 'beam', 'spend', 'freeze', 'banner'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -507,6 +570,37 @@ const ENTRIES: Array<[string, CueImpl]> = [
          * animate them into the spell would be remembering something the engine
          * never stated.
          */
+        /**
+         * **T11 — Strategic Intervention's freeze-frame** (`params.freeze`): the
+         * table flashes as if the shot had frozen, a fixed banner — two words, no
+         * name, the same rule as `turn.banner` — reads MISSION CONTROL over the ops
+         * console its card already carries (its T12 station). It never stops
+         * anything: the queue keeps its clock, the board keeps every click. (The
+         * FIGURES do hold while its trigger waits on the stack in combat — that is
+         * T6's combat freeze, a pose, and it is the literal freeze-frame.)
+         */
+        if (flag(ctx, 'freeze') && t < 0.9) {
+          const v = clamp01(t / 0.9);
+          stage.setEffect(`${ctx.key}:freeze`, {
+            kind: 'plate',
+            at: { kind: 'table' },
+            colour: colour(ctx, WHITE),
+            strength: 0.55 * (1 - easeOutCubic(clamp01(v / 0.35))),
+            radius: 3.2,
+          });
+          stage.setEffect(`${ctx.key}:banner`, {
+            kind: 'text',
+            at: { kind: 'table' },
+            colour: '#7fd4ff',
+            strength: 1.2 * pulse(v),
+            radius: 0.5,
+            text: 'MISSION CONTROL',
+            rise: 0.35 + 0.2 * easeOutCubic(v),
+          });
+        } else if (flag(ctx, 'freeze')) {
+          stage.clearEffect(`${ctx.key}:freeze`);
+          stage.clearEffect(`${ctx.key}:banner`);
+        }
         const caster = ctx.players[0];
         if (caster === undefined) return;
         stage.setEffect(`${ctx.key}:spend`, {
@@ -779,7 +873,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'attack.lunge',
     cue({
-      effects: ['spot'],
+      effects: ['spot', 'cone', 'muzzle'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -792,16 +886,61 @@ const ENTRIES: Array<[string, CueImpl]> = [
           dy: d[1] + 0.06 * k,
           dz: d[2],
           dRotX: tilt,
+          // The figure turns to face what it attacks, and back (the second
+          // verification pass): Agent 13's muzzle flash below fires AT the
+          // defender, not out of the far side of her body.
+          dRotY: stage.yawTo(id, defenderOf(ctx)) * k,
           scale: 1 + 0.04 * k,
         });
-        if (num(ctx, 'spotlight', 0) > 0) {
+        /**
+         * **The lone attacker's spotlight** (T11 — the Agents' "the lone attacker
+         * gets a spotlight", and every `attackers:alone` default with it). Tier 1
+         * drew it as a glow at the CARD's rest position, which stayed behind while
+         * the lunge carried the card and its figure into the lane; it is now a cone
+         * of light from above onto the FIGURE, with a pool of light at its feet,
+         * and both follow it out and back.
+         */
+        const spot = num(ctx, 'spotlight', 0);
+        if (spot > 0) {
           stage.setEffect(`${ctx.key}:spot`, {
-            kind: 'glow',
-            at: { kind: 'card', id },
+            kind: 'ring',
+            at: figureAt(id, 0),
             colour: colour(ctx, GOLD),
-            strength: 0.8 * k,
-            radius: 1.3,
+            strength: 0.9 * k * Math.min(1, spot),
+            radius: 0.62,
+            fit: true,
           });
+          stage.setEffect(`${ctx.key}:cone`, {
+            kind: 'beam',
+            at: figureAt(id, 3.4),
+            to: figureAt(id, 0),
+            colour: colour(ctx, GOLD),
+            strength: 0.55 * k * Math.min(1, spot),
+            radius: 0.1,
+          });
+        }
+        /**
+         * **Agent 13's pistol draw, fired** (T11, `params.muzzle`). The draw itself
+         * is the model's two-handed shooting pose through her `attack → pistolDraw`
+         * alias (T3); this is the two shots it fires in the hold — a four-point
+         * glint just in front of the figure's hands, a flash and gone.
+         */
+        if (flag(ctx, 'muzzle')) {
+          const flash = Math.max(blip(t, 0.36, 0.05), blip(t, 0.52, 0.05));
+          if (flash > 0) {
+            stage.setEffect(`${ctx.key}:muzzle`, {
+              kind: 'glow',
+              // ON the pistol's lit muzzle — the prop's own point, through the
+              // one definition of a figure's front and right (D81).
+              at: figureAt(id, MUZZLE_ANCHOR.at, MUZZLE_ANCHOR.fwd, MUZZLE_ANCHOR.side),
+              colour: colour(ctx, '#ffe9b0'),
+              strength: 1.2 * flash,
+              radius: 0.3,
+              shape: 'star',
+            });
+          } else {
+            stage.clearEffect(`${ctx.key}:muzzle`);
+          }
         }
         /**
          * **§8's first camera cue: the low swoop down the combat lane.**
@@ -930,7 +1069,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'attach.snap',
     cue({
-      effects: ['ring'],
+      effects: ['ring', 'flourish'],
       alsoClears: ['toId'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
@@ -953,11 +1092,35 @@ const ENTRIES: Array<[string, CueImpl]> = [
           const collapse = flag(ctx, 'collapse');
           stage.setEffect(`${ctx.key}:ring`, {
             kind: 'ring',
-            at: { kind: 'card', id: host },
+            at: figureAt(host, 0),
             colour: colour(ctx, GOLD),
             strength: 1 - u,
             radius: collapse ? 0.65 - u * 0.5 : 0.2 + u * 0.45,
           });
+        }
+        /**
+         * **T11 — the HUD flourish** (`params.flourish`, a shape): as the gear
+         * lands, a billboard in that shape closes onto the host's chest and fades —
+         * Super Suit's plating (`hex`) snapping shut, the Spy Kit's gadgets
+         * (`star`) blinking on. It is the TRANSITION into the look the attachment
+         * then keeps as a pose (`scene/overlays.ts`, T12), and it is on the figure,
+         * not on the card.
+         */
+        const flourish = str(ctx, 'flourish', '');
+        if (host >= 0 && isEffectShape(flourish) && t > 0.35) {
+          const u = clamp01((t - 0.35) / 0.65);
+          stage.setEffect(`${ctx.key}:flourish`, {
+            kind: 'glow',
+            at: figureAt(host, 0.52),
+            colour: colour(ctx, GOLD),
+            strength: 1.1 * pulse(u),
+            radius: 1.3 - 0.5 * easeOutCubic(u),
+            shape: flourish,
+            aspect: flourish === 'star' ? 1 : 0.78,
+            fit: true,
+          });
+        } else {
+          stage.clearEffect(`${ctx.key}:flourish`);
         }
       },
     }),
@@ -1408,15 +1571,27 @@ const ENTRIES: Array<[string, CueImpl]> = [
     }),
   ],
 
-  /** `fx.shockwave` — a bigger ring and a bounded shake. Quake's cue. */
+  /**
+   * `fx.shockwave` — a bigger ring and a bounded shake. Quake's cue.
+   *
+   * **T11: centred on HER, and aimed where the engine said.** The rings leave her
+   * figure's feet; with `params.fissure`, a crack runs along the table from her
+   * to the card her trigger was aimed at and it jolts when the crack arrives. The
+   * aim is `beamTargetOf` — this frame's stack target on a `cast`, and on a
+   * `resolved` the PREVIOUS frame's (`strikeCard`, T6's look-behind, D63) — so the
+   * crack is drawn only when the wire said what "Seismic Takedown" targeted, and
+   * never from the batch's `tap` events: the engine does not say which card caused
+   * another card's tap, and pairing them up would be rules logic in a renderer.
+   */
   [
     'fx.shockwave',
     cue({
-      effects: ['ring', 'ring2'],
+      effects: ['ring', 'ring2', 'crack', 'hit'],
+      alsoClears: AIMED,
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
-        const at: AnchorRef = { kind: 'card', id };
+        const at: AnchorRef = figureAt(id, 0);
         const e = easeOutCubic(t);
         stage.setEffect(`${ctx.key}:ring`, {
           kind: 'ring',
@@ -1436,10 +1611,38 @@ const ENTRIES: Array<[string, CueImpl]> = [
           });
         }
         stage.setOffset(id, { dy: 0.05 * pulse(t), glow: 0.7 * pulse(t), glowColour: colour(ctx, '#7fd4ff') });
+        const target = flag(ctx, 'fissure') ? beamTargetOf(ctx) : -1;
+        if (target >= 0 && target !== id) {
+          const run = clamp01(t / 0.45);
+          stage.setEffect(`${ctx.key}:crack`, {
+            kind: 'beam',
+            at,
+            to: figureAt(target, 0),
+            colour: colour(ctx, '#7fd4ff'),
+            strength: 0.95 * pulse(clamp01(t * 1.25)) * run,
+            radius: 0.035,
+          });
+          if (t > 0.4) {
+            const u = clamp01((t - 0.4) / 0.6);
+            stage.setEffect(`${ctx.key}:hit`, {
+              kind: 'ring',
+              at: figureAt(target, 0),
+              colour: colour(ctx, '#7fd4ff'),
+              strength: 1 - easeOutCubic(u),
+              radius: 0.2 + 0.7 * easeOutCubic(u),
+            });
+            stage.setOffset(target, { dy: 0.04 * pulse(u), squashY: 1 - 0.08 * pulse(u) });
+            clipOn(ctx, u, stage, target, 'hit');
+          }
+        }
         if (!ctx.reducedMotion && num(ctx, 'shake', 0) > 0) {
           stage.requestCamera({
-            frame: [at],
-            padding: 0.25,
+            // The camera frames the CARDS — `figure` anchors are the effect
+            // binding's, and the director resolves through `layout.ts` alone — and
+            // with an aim it frames BOTH ends of the fissure, so the push-in never
+            // crops the thing her trigger struck.
+            frame: target >= 0 && target !== id ? [{ kind: 'card', id }, { kind: 'card', id: target }] : [{ kind: 'card', id }],
+            padding: target >= 0 && target !== id ? 0.7 : 0.25,
             tilt: 0,
             shake: Math.min(num(ctx, 'shake', 0), 1),
             priority: 2,
@@ -1507,18 +1710,57 @@ const ENTRIES: Array<[string, CueImpl]> = [
    */
   [
     'attack.shrink',
-    perTarget([], (ctx, t, stage, id) => {
-      const move = lunge(ctx, t, stage, id);
-      const to = num(ctx, 'scale', 0.2);
-      return {
-        dx: move.dx,
-        dy: move.dy,
-        dz: move.dz,
-        dRotX: move.dRotX,
-        scale: 1 + (to - 1) * outHoldBack(t, 0.25, 0.72),
-        glow: 0.35 * pulse(t),
-        glowColour: colour(ctx),
-      };
+    cue({
+      effects: ['speck', 'trail'],
+      apply(ctx, t, stage) {
+        const to = num(ctx, 'scale', 0.2);
+        const hold = outHoldBack(t, 0.25, 0.72);
+        for (const id of ctx.targets) {
+          const move = lunge(ctx, t, stage, id);
+          stage.setOffset(id, {
+            dx: move.dx,
+            dy: move.dy,
+            dz: move.dz,
+            dRotX: move.dRotX,
+            dRotY: move.dRotY,
+            scale: 1 + (to - 1) * hold,
+            glow: 0.35 * pulse(t),
+            glowColour: colour(ctx),
+          });
+        }
+        /**
+         * **The speck** (T11, `params.speck`). The offset's `scale` already takes
+         * his figure down to 0.18 of itself — `CueRunner` multiplies a figure's
+         * height by it — and at 0.18 a hologram is a few pixels: what reads at
+         * table distance is a bright point where he was, darting down the lane with
+         * him, and a faint trail behind. Both hang on the FIGURE anchor, so they go
+         * where he goes and are gone when he is full size again.
+         */
+        const speck = num(ctx, 'speck', 0);
+        const id = ctx.targets[0];
+        if (speck <= 0 || id === undefined) return;
+        const twinkle = 0.75 + 0.25 * Math.sin(t * Math.PI * 10);
+        stage.setEffect(`${ctx.key}:speck`, {
+          kind: 'glow',
+          at: figureAt(id, 0.5),
+          colour: colour(ctx),
+          strength: Math.min(1.4, speck * hold * twinkle),
+          radius: 0.2,
+          shape: 'star',
+        });
+        if (!ctx.reducedMotion && hold > 0.4) {
+          stage.setEffect(`${ctx.key}:trail`, {
+            kind: 'particles',
+            at: figureAt(id, 0.3, -0.6),
+            colour: colour(ctx),
+            strength: 0.55 * hold,
+            radius: 0.16,
+            burst: t,
+          });
+        } else {
+          stage.clearEffect(`${ctx.key}:trail`);
+        }
+      },
     }),
   ],
 
@@ -1532,7 +1774,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'attack.aegis',
     cue({
-      effects: ['halo', 'rim'],
+      effects: ['halo', 'rim', 'rim2'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -1543,24 +1785,56 @@ const ENTRIES: Array<[string, CueImpl]> = [
           dy: move.dy,
           dz: move.dz,
           dRotX: move.dRotX,
+          dRotY: move.dRotY,
           scale: 1 + 0.05 * move.k,
           glow: 0.8 * hold,
           glowColour: colour(ctx, GOLD),
         });
+        /**
+         * **The shield is on HER** (T11). Tier 1 drew the halo at her card's rest
+         * position, which stayed behind as she charged; it is now a hexagonal
+         * force-field bubble around her figure — sized in her own heights, so it
+         * fits her after Quantum Reduction too — that goes down the lane with her,
+         * and a ring at her feet. Still two blended objects, inside §9.3's cap.
+         */
+        const shape = str(ctx, 'shape', 'shield');
         stage.setEffect(`${ctx.key}:halo`, {
           kind: 'glow',
-          at: { kind: 'card', id },
+          at: figureAt(id, 0.5),
           colour: colour(ctx, GOLD),
           strength: hold,
-          radius: 1.25 + 0.15 * hold,
+          radius: 1.05 + 0.12 * hold,
+          shape: isEffectShape(shape) ? shape : 'shield',
+          aspect: 0.82,
+          fit: true,
         });
         stage.setEffect(`${ctx.key}:rim`, {
           kind: 'ring',
-          at: { kind: 'card', id },
-          colour: colour(ctx, GOLD),
+          at: figureAt(id, 0),
+          colour: str(ctx, 'rim', '') || colour(ctx, GOLD),
           strength: 0.85 * hold,
-          radius: 0.62 + 0.08 * Math.sin(t * Math.PI * 3),
+          radius: 0.58 + 0.06 * Math.sin(t * Math.PI * 3),
+          fit: true,
         });
+        /**
+         * **Her shield's own colours** (the second verification pass): with a
+         * `rim2` the rings at her feet are two — `rim` and `rim2`, red and white in
+         * the data, round a blue bubble — because a white-gold bubble merged with
+         * the white armour shell Super Suit leaves on her as a pose (`g1`@142).
+         */
+        const rim2 = str(ctx, 'rim2', '');
+        if (rim2 !== '') {
+          stage.setEffect(`${ctx.key}:rim2`, {
+            kind: 'ring',
+            at: figureAt(id, 0),
+            colour: rim2,
+            strength: 0.9 * hold,
+            radius: 0.8 + 0.06 * Math.sin(t * Math.PI * 3 + 1.4),
+            fit: true,
+          });
+        } else {
+          stage.clearEffect(`${ctx.key}:rim2`);
+        }
       },
     }),
   ],
@@ -1577,7 +1851,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'attack.jet',
     cue({
       lane: 'particle',
-      effects: ['exhaust', 'eye'],
+      effects: ['exhaust', 'eye', 'laser'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -1587,25 +1861,70 @@ const ENTRIES: Array<[string, CueImpl]> = [
           dy: move.dy + 0.1 * move.k,
           dz: move.dz,
           dRotX: move.dRotX,
+          // Turned to face the defender for the length of the lunge, so the eye
+          // and the laser below leave the side of the drone that faces it.
+          dRotY: move.dRotY,
           scale: 1 + 0.03 * move.k,
         });
-        stage.setEffect(`${ctx.key}:eye`, {
-          kind: 'glow',
-          at: { kind: 'card', id },
-          colour: colour(ctx, RED),
-          strength: 0.5 + 0.5 * Math.abs(Math.sin(t * Math.PI * 4)),
-          radius: 0.3,
-        });
+        // **T11: on the body, not on the card.** The eye burns at the front of the
+        // figure's head and the exhaust streams from BEHIND it — both on the
+        // `figure` anchor, so they fly down the lane with it (Tier 1 put both at
+        // the card's rest position, which stayed behind). Front and behind are the
+        // prop field's own (D81): the eye on the drone's `laserEye`, the exhaust
+        // on its `jetpack` side — `facing.test.ts` holds them there, both seats.
+        //
+        // `eye: false` is a FLIER on the same cue (Wasp, the giant ant): the lunge
+        // and the wing-wash behind it, and no robot's eye — slice 3 gave them the
+        // Doombot's star (the verification pass).
+        const eye = figureAt(id, 0.62, 0.32);
+        if (flag(ctx, 'eye', true)) {
+          stage.setEffect(`${ctx.key}:eye`, {
+            kind: 'glow',
+            at: eye,
+            colour: colour(ctx, RED),
+            strength: 0.55 + 0.45 * Math.abs(Math.sin(t * Math.PI * 4)),
+            radius: 0.16,
+            shape: 'star',
+          });
+        } else {
+          stage.clearEffect(`${ctx.key}:eye`);
+        }
         if (!ctx.reducedMotion && t < 0.8) {
           stage.setEffect(`${ctx.key}:exhaust`, {
             kind: 'particles',
-            at: { kind: 'card', id },
+            at: figureAt(id, 0.3, -0.55),
             colour: colour(ctx, '#9ec7f0'),
             strength: 1 - t,
-            radius: 0.45,
+            radius: 0.3,
             burst: t,
           });
+        } else {
+          stage.clearEffect(`${ctx.key}:exhaust`);
         }
+        /**
+         * **The Doombot's laser eye, fired** (T11, `params.laser`) — at the
+         * player or planeswalker its attack BAND names (`defenderKind` /
+         * `defenderId`, the `attackers` event's own fields), in the hold of the
+         * lunge. It aims at what the engine said it attacks and at nothing else.
+         */
+        if (!flag(ctx, 'laser')) return;
+        const defender = num(ctx, 'defenderId', -1);
+        const kind = str(ctx, 'defenderKind', 'none');
+        const to: AnchorRef | null =
+          defender < 0 ? null : kind === 'player' ? { kind: 'player', id: defender } : kind === 'card' ? { kind: 'card', id: defender } : null;
+        const on = t > 0.34 && t < 0.72 ? 0.6 + 0.4 * Math.abs(Math.sin(t * Math.PI * 14)) : 0;
+        if (to === null || on <= 0) {
+          stage.clearEffect(`${ctx.key}:laser`);
+          return;
+        }
+        stage.setEffect(`${ctx.key}:laser`, {
+          kind: 'beam',
+          at: eye,
+          to,
+          colour: RED,
+          strength: on,
+          radius: 0.014,
+        });
       },
     }),
   ],
@@ -1690,8 +2009,8 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'fx.strike',
     cue({
-      effects: ['reticle', 'beam', 'impact'],
-      alsoClears: ['beamTo'],
+      effects: ['reticle', 'beam', 'impact', 'flash'],
+      alsoClears: AIMED,
       apply(ctx, t, stage) {
         const source = ctx.targets[0];
         if (source !== undefined) {
@@ -1703,43 +2022,79 @@ const ENTRIES: Array<[string, CueImpl]> = [
         }
         const target = beamTargetOf(ctx);
         if (target < 0) return;
-        const at: AnchorRef = { kind: 'card', id: target };
-        if (t < 0.55) {
-          const u = clamp01(t / 0.55);
+        // **T11 — the reticle is a crosshair, and it is on the BODY** (the
+        // `figure` anchor): it closes on the creature standing in front of the card
+        // rather than on the card's art, and follows it if it moves.
+        const at: AnchorRef = figureAt(target, 0);
+        /**
+         * `params.lock` is the CAST: the reticle closes and HOLDS on its target —
+         * "target acquired", for as long as the spell waits on the stack — and the
+         * beam is the RESOLUTION's (`resolved`, aimed by `strikeCard`). Two beats
+         * of one strike, each on the event that is about it. With `lock` off it is
+         * Tier 1's whole shot: a short lock, then the beam.
+         */
+        const lock = flag(ctx, 'lock');
+        const closeUntil = lock ? 1 : 0.55;
+        if (t < closeUntil) {
+          const u = clamp01(t / (lock ? 0.6 : 0.55));
           stage.setEffect(`${ctx.key}:reticle`, {
             kind: 'ring',
             at,
             colour: colour(ctx, '#f6f0d8'),
-            strength: 0.35 + 0.65 * u,
+            strength: lock ? (0.35 + 0.65 * u) * (1 - clamp01((t - 0.82) / 0.18)) : 0.35 + 0.65 * u,
             // A reticle CLOSES: the radius runs down, which is the one ring in
             // the kit that does.
             radius: 1.6 - 1.05 * easeOutCubic(u),
             spin: u * 3.2,
+            shape: 'reticle',
           });
         } else {
-          const u = clamp01((t - 0.55) / 0.45);
-          stage.setEffect(`${ctx.key}:beam`, {
-            kind: 'beam',
-            at: { kind: 'above', id: target, height: num(ctx, 'height', 4) },
-            to: at,
-            colour: colour(ctx, '#f6f0d8'),
-            strength: pulse(u),
-            radius: 0.05 + 0.05 * (1 - u),
-          });
-          stage.setEffect(`${ctx.key}:impact`, {
-            kind: 'ring',
-            at,
-            colour: colour(ctx, '#f6f0d8'),
-            strength: 1 - u,
-            radius: 0.2 + u * 1.3,
-          });
-          stage.setOffset(target, {
-            dy: -0.05 * pulse(u),
-            squashY: 1 - 0.12 * pulse(u),
-            glow: pulse(u),
-            glowColour: colour(ctx, '#f6f0d8'),
-          });
+          stage.clearEffect(`${ctx.key}:reticle`);
         }
+        if (lock) return;
+        /**
+         * **The resolution reads from the table** (the second verification pass:
+         * at `g3`@116 a 0.05 beam came down behind the giant ant and nobody saw
+         * it). The beam is twice as thick and a star flashes on the body as it
+         * lands. No camera move: the struck card is usually in the graveyard by the
+         * snapshot the resolution arrives in, and a camera frames CARDS — it
+         * swung away to the graveyard when this was tried.
+         */
+        if (t < 0.55) return;
+        const u = clamp01((t - 0.55) / 0.45);
+        stage.setEffect(`${ctx.key}:beam`, {
+          kind: 'beam',
+          // From high over the BODY (the `figure` anchor, in its heights), so the
+          // beam comes straight down on it — on a dying body too.
+          at: figureAt(target, num(ctx, 'height', 4) / 0.85),
+          to: figureAt(target, 0.4),
+          colour: colour(ctx, '#f6f0d8'),
+          strength: pulse(u),
+          radius: 0.1 + 0.08 * (1 - u),
+        });
+        stage.setEffect(`${ctx.key}:flash`, {
+          kind: 'glow',
+          at: figureAt(target, 0.6),
+          colour: colour(ctx, '#f6f0d8'),
+          strength: 1.4 * pulse(clamp01(u * 1.6)),
+          radius: 0.62,
+          shape: 'star',
+          fit: true,
+        });
+        stage.setEffect(`${ctx.key}:impact`, {
+          kind: 'ring',
+          at,
+          colour: colour(ctx, '#f6f0d8'),
+          strength: 1 - u,
+          radius: 0.2 + u * 1.3,
+        });
+        stage.setOffset(target, {
+          dy: -0.05 * pulse(u),
+          squashY: 1 - 0.12 * pulse(u),
+          glow: pulse(u),
+          glowColour: colour(ctx, '#f6f0d8'),
+        });
+        clipOn(ctx, u, stage, target, 'hit');
       },
     }),
   ],
@@ -1755,21 +2110,32 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'fx.webWrap',
     cue({
-      effects: ['strand', 'wrap'],
-      alsoClears: ['beamTo'],
+      effects: ['strand', 'strand2', 'wrap'],
+      alsoClears: AIMED,
       apply(ctx, t, stage) {
         const source = ctx.targets[0];
         const target = beamTargetOf(ctx);
         if (source !== undefined) {
           stage.setOffset(source, { dy: 0.25 * pulse(t), glow: 0.5 * pulse(t), glowColour: colour(ctx, WHITE) });
           if (target >= 0) {
+            // Two strands from the web to the thing it catches — from above Web
+            // Up's card, where its cocoon station hangs (T12), to the body.
+            const reach = pulse(clamp01(t * 1.6));
             stage.setEffect(`${ctx.key}:strand`, {
               kind: 'beam',
-              at: { kind: 'card', id: source },
-              to: { kind: 'card', id: target },
+              at: { kind: 'above', id: source, height: 0.55 },
+              to: figureAt(target, 0.62),
               colour: colour(ctx, WHITE),
-              strength: pulse(clamp01(t * 1.6)),
-              radius: 0.018,
+              strength: reach,
+              radius: 0.016,
+            });
+            stage.setEffect(`${ctx.key}:strand2`, {
+              kind: 'beam',
+              at: { kind: 'card', id: source },
+              to: figureAt(target, 0.28),
+              colour: colour(ctx, WHITE),
+              strength: 0.7 * reach,
+              radius: 0.012,
             });
           }
         }
@@ -1783,13 +2149,24 @@ const ENTRIES: Array<[string, CueImpl]> = [
           tint: '#d8dde6',
           opacity: 1 - 0.1 * hold,
         });
+        /**
+         * **T11/T12 — the cocoon closes over the BODY**: a web-shaped billboard on
+         * the `figure` anchor, sized in the figure's own heights and closing from
+         * wide strands to a tight wrap, lifted with it. On a `resolved` the target
+         * is usually already on its way to exile (its own `zone` cue), and the
+         * anchor's card-plus-offset fallback is what carries the wrap along with it.
+         */
         stage.setEffect(`${ctx.key}:wrap`, {
           kind: 'glow',
-          at: { kind: 'card', id: target },
+          at: figureAt(target, 0.5),
           colour: colour(ctx, WHITE),
-          strength: 0.7 * hold,
-          radius: 0.7,
+          strength: 0.9 * hold,
+          radius: 1.35 - 0.45 * hold,
+          shape: 'web',
+          aspect: 0.72,
+          fit: true,
         });
+        clipOn(ctx, t, stage, target, 'shrink');
       },
     }),
   ],
@@ -1805,8 +2182,8 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'fx.scaleBeam',
     cue({
-      effects: ['beam', 'flare'],
-      alsoClears: ['beamTo'],
+      effects: ['beam', 'flare', 'ring'],
+      alsoClears: AIMED,
       apply(ctx, t, stage) {
         const source = ctx.targets[0];
         if (source !== undefined) {
@@ -1819,17 +2196,36 @@ const ENTRIES: Array<[string, CueImpl]> = [
         }
         const target = beamTargetOf(ctx);
         if (target < 0) return;
+        // T11: from the caster's BODY (Wasp hovering on her figure) to the target's
+        // — a card with no figure (Pym Particles, a sorcery) beams from its card.
         if (source !== undefined && t > 0.15) {
           stage.setEffect(`${ctx.key}:beam`, {
             kind: 'beam',
-            at: { kind: 'card', id: source },
-            to: { kind: 'card', id: target },
+            at: figureAt(source, 0.62),
+            to: figureAt(target, 0.5),
             colour: colour(ctx),
             strength: pulse(clamp01((t - 0.15) / 0.85)),
             radius: num(ctx, 'width', 0.03),
           });
         }
-        const to = num(ctx, 'targetScale', 0.55);
+        /**
+         * **Which way the target changes size** (T11). By default the data says —
+         * Wasp's `targetScale: 0.6` is her −3/−0. With `params.follow` the SNAPSHOT
+         * says: `strikeGrew` is the sign of the struck card's P/T change across this
+         * very transition (`resolve.ts`'s `sizeChange`), so Pym Particles' target
+         * grows when it got bigger and shrinks when it got smaller, by the data's
+         * magnitude — and when nothing about it changed (a cast, before anything
+         * has; the vigilance mode) it only pulses, claiming no change at all.
+         */
+        const magnitude = Math.abs(num(ctx, 'targetScale', 0.55) - 1);
+        const grew = num(ctx, 'strikeGrew', 0);
+        const to = flag(ctx, 'follow')
+          ? grew > 0
+            ? 1 + magnitude
+            : grew < 0
+              ? 1 / (1 + magnitude)
+              : 1 + 0.18 * magnitude
+          : num(ctx, 'targetScale', 0.55);
         const hold = outHoldBack(t, 0.35, 0.75);
         stage.setOffset(target, {
           scale: 1 + (to - 1) * hold,
@@ -1838,11 +2234,23 @@ const ENTRIES: Array<[string, CueImpl]> = [
         });
         stage.setEffect(`${ctx.key}:flare`, {
           kind: 'glow',
-          at: { kind: 'card', id: target },
+          at: figureAt(target, 0.5),
           colour: colour(ctx),
           strength: 0.8 * pulse(t),
           radius: 0.65,
         });
+        // The ring at its feet says which way: it CLOSES on a shrink and opens on
+        // a grow, exactly as `attach.snap`'s collapse does for Quantum Reduction.
+        const e = easeOutCubic(t);
+        stage.setEffect(`${ctx.key}:ring`, {
+          kind: 'ring',
+          at: figureAt(target, 0),
+          colour: colour(ctx),
+          strength: 0.9 * pulse(t),
+          radius: to < 1 ? 0.95 - 0.6 * e : 0.3 + 0.7 * e,
+          fit: true,
+        });
+        clipOn(ctx, t, stage, target, to < 1 ? 'shrink' : 'grow');
       },
     }),
   ],
@@ -1859,7 +2267,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.collapse',
     cue({
       effects: ['point'],
-      alsoClears: ['beamTo'],
+      alsoClears: AIMED,
       apply(ctx, t, stage) {
         const source = ctx.targets[0];
         if (source !== undefined) {
@@ -1881,12 +2289,14 @@ const ENTRIES: Array<[string, CueImpl]> = [
         // the 520 ms of it happening. `alsoClears: ['beamTo']` above is what makes
         // `end()` total over the clip as well as the offset.
         clipOn(ctx, t, stage, target, 'shrink');
+        // T11: the point of light the Realm leaves is where the BODY was.
         stage.setEffect(`${ctx.key}:point`, {
           kind: 'glow',
-          at: { kind: 'card', id: target },
+          at: figureAt(target, 0.4),
           colour: WHITE,
           strength: wave * wave,
           radius: 0.12 + 0.9 * (1 - wave),
+          shape: wave > 0.6 ? 'star' : 'soft',
         });
       },
     }),
@@ -1921,17 +2331,26 @@ const ENTRIES: Array<[string, CueImpl]> = [
         }
         const first = ctx.targets[0];
         if (first === undefined) return;
-        const at: AnchorRef = { kind: 'card', id: first };
+        /**
+         * **T11 — the badge is on the Hero's CHEST**: a shield-shaped emblem on the
+         * figure (`figure` anchor, a little in front of it), flashing up and out,
+         * and a ring at its feet. Tier 1's soft glow sat on the card's art. Still
+         * keyed to the card that RECEIVED the counter — the only card §3.6's
+         * `counters` event names — and never to Coulson as its cause.
+         */
+        const shape = str(ctx, 'shape', 'badge');
+        const up = easeOutBack(clamp01(t / 0.45), 2.2);
         stage.setEffect(`${ctx.key}:badge`, {
           kind: 'glow',
-          at,
+          at: figureAt(first, 0.62 + 0.25 * clamp01(t), 0.22),
           colour: colour(ctx, GOLD),
-          strength: pulse(t),
-          radius: 0.55,
+          strength: 1.1 * pulse(t),
+          radius: 0.3 + 0.14 * Math.max(0, up),
+          shape: isEffectShape(shape) ? shape : 'badge',
         });
         stage.setEffect(`${ctx.key}:flash`, {
           kind: 'ring',
-          at,
+          at: figureAt(first, 0),
           colour: colour(ctx, GOLD),
           strength: 1 - easeOutCubic(t),
           radius: 0.25 + easeOutCubic(t) * 0.65,
@@ -1952,12 +2371,12 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'fx.hologram',
     cue({
-      effects: ['grid', 'grid2', 'motes'],
+      effects: ['grid', 'grid2', 'motes', 'vial0', 'vial1', 'vial2', 'card0', 'card1', 'card2', 'card3'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
         const tone = colour(ctx, '#7fd4ff');
-        const at: AnchorRef = { kind: 'card', id };
+        const feet = figureAt(id, 0);
         stage.setOffset(id, {
           dy: 0.08 * pulse(t),
           glow: 0.75 * pulse(t),
@@ -1967,25 +2386,80 @@ const ENTRIES: Array<[string, CueImpl]> = [
         const e = easeOutCubic(t);
         stage.setEffect(`${ctx.key}:grid`, {
           kind: 'ring',
-          at,
+          at: feet,
           colour: tone,
           strength: (1 - e) * 0.9,
           radius: 0.25 + e * 1.1,
         });
-        if (t > 0.3) {
+        // The second ring gives way to the vials: six blended objects in one cue
+        // was over half of §9.3's eight, and the power-up is the vials.
+        if (t > 0.3 && !flag(ctx, 'vials')) {
           const u = easeOutCubic(clamp01((t - 0.3) / 0.7));
           stage.setEffect(`${ctx.key}:grid2`, {
             kind: 'ring',
-            at,
+            at: feet,
             colour: tone,
             strength: (1 - u) * 0.6,
             radius: 0.25 + u * 0.7,
           });
         }
+        /**
+         * **T11 — the Power-up: the vials glow in turn** (`params.vials`). Three
+         * glints at the figure's hands — left, centre, right, a little in front of
+         * it, where the lab bench stands — each lighting up a beat after the last.
+         */
+        if (flag(ctx, 'vials')) {
+          for (let i = 0; i < 3; i++) {
+            const lit = pulse(clamp01((t - 0.08 - i * 0.16) / 0.5));
+            stage.setEffect(`${ctx.key}:vial${String(i)}`, {
+              kind: 'glow',
+              at: figureAt(id, 0.4, 0.34, (i - 1) * 0.36),
+              colour: tone,
+              strength: 1.1 * lit,
+              radius: 0.13,
+              shape: 'star',
+            });
+          }
+        }
+        /**
+         * **…and the cards fly to hand** (`params.toHand`, the count the card's own
+         * text draws — art direction, like every number in this file). Each is a
+         * mote from the figure to ITS CONTROLLER's hand anchor — `ctx.players[0]`,
+         * read off the snapshot by `resolve.ts`, so an opponent's scientist sends
+         * them across the table. The draws themselves still arrive as their own
+         * `zone` events with their own `zone.draw`; this is the scientist's half.
+         */
+        const toHand = Math.min(4, Math.max(0, Math.round(num(ctx, 'toHand', 0))));
+        const player = ctx.players[0];
+        if (player !== undefined) {
+          for (let i = 0; i < toHand; i++) {
+            const travel = clamp01((t - 0.3 - i * 0.12) / 0.5);
+            const key = `${ctx.key}:card${String(i)}`;
+            if (travel <= 0 || travel >= 1) {
+              stage.clearEffect(key);
+              continue;
+            }
+            // A card-sized light, not a dot, that appears OVER the scientist's head
+            // and holds there for a beat before it goes: the second verification
+            // pass found the 0.09 flight to the opponent's hand — off the top of the
+            // table view — a faint line that was gone before it read, and a mote
+            // leaving the figure's chest starts inside the body, which hides it.
+            stage.setEffect(key, {
+              kind: 'mote',
+              at: figureAt(id, 1.2),
+              to: { kind: 'zone', player, zone: 'hand' },
+              colour: '#eef8ff',
+              strength: 0.85 + 0.15 * pulse(travel),
+              radius: 0.16,
+              travel: easeInOutCubic(clamp01((travel - 0.3) / 0.7)),
+              arc: 1.1,
+            });
+          }
+        }
         if (!ctx.reducedMotion) {
           stage.setEffect(`${ctx.key}:motes`, {
             kind: 'particles',
-            at,
+            at: figureAt(id, 0.5),
             colour: tone,
             strength: 0.7 * (1 - t),
             radius: 0.5,
@@ -2012,7 +2486,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'fx.agents',
     cue({
-      effects: ['left', 'right', 'call'],
+      effects: ['left', 'right', 'call', 'beamL', 'beamR', 'wave'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -2026,6 +2500,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
           dy: (move?.dy ?? 0) + 0.1 * pulse(t),
           dz: move?.dz ?? 0,
           dRotX: move?.dRotX ?? 0,
+          dRotY: move?.dRotY ?? 0,
           glow: 0.6 * pulse(t),
           glowColour: tone,
         });
@@ -2043,7 +2518,49 @@ const ENTRIES: Array<[string, CueImpl]> = [
             radius: 0.3 + rise * 0.5,
           });
         }
-        if (!ctx.reducedMotion) {
+        /**
+         * **T11 — the call goes OUT from him** (`params.beams`): the radio call is
+         * his figure's own gesture (`params.clip: "radioCall"`, an alias of the
+         * rig's `interact-left`), a broadcast ring at his feet, and a beam from him
+         * to each place an agent materialises. The beams go to the `beside`
+         * anchors, not to any token: which card made a token is not on the wire,
+         * and each token still enters with its own `zone` event and its own cue.
+         */
+        if (flag(ctx, 'beams') && t > 0.12 && t < 0.8) {
+          const u = clamp01((t - 0.12) / 0.68);
+          stage.setEffect(`${ctx.key}:beamL`, {
+            kind: 'beam',
+            at: figureAt(id, 0.7),
+            to: { kind: 'beside', id, dx: -spread },
+            colour: tone,
+            strength: 0.8 * pulse(u),
+            radius: 0.02,
+          });
+          stage.setEffect(`${ctx.key}:beamR`, {
+            kind: 'beam',
+            at: figureAt(id, 0.7),
+            to: { kind: 'beside', id, dx: spread },
+            colour: tone,
+            strength: 0.8 * pulse(u),
+            radius: 0.02,
+          });
+        } else {
+          stage.clearEffect(`${ctx.key}:beamL`);
+          stage.clearEffect(`${ctx.key}:beamR`);
+        }
+        if (flag(ctx, 'beams')) {
+          const w = (t * 2.2) % 1;
+          stage.setEffect(`${ctx.key}:wave`, {
+            kind: 'ring',
+            at: figureAt(id, 0),
+            colour: tone,
+            strength: 0.7 * (1 - w) * (1 - clamp01((t - 0.8) / 0.2)),
+            radius: 0.2 + 0.9 * w,
+          });
+        }
+        // With the beams on, the broadcast ring is the call and the particles
+        // give way (§9.3's eight-object cap).
+        if (!ctx.reducedMotion && !flag(ctx, 'beams')) {
           stage.setEffect(`${ctx.key}:call`, {
             kind: 'particles',
             at: { kind: 'card', id },
@@ -2068,7 +2585,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.swarm',
     cue({
       lane: 'particle',
-      effects: ['swarm', 'sweep'],
+      effects: ['swarm', 'sweep', 'core'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id !== undefined) {
@@ -2083,13 +2600,59 @@ const ENTRIES: Array<[string, CueImpl]> = [
         if (id !== undefined) {
           stage.setEffect(`${ctx.key}:swarm`, {
             kind: 'particles',
-            at: { kind: 'card', id },
+            at: figureAt(id, 0.5),
             colour: colour(ctx, '#9ec7f0'),
             strength: 1 - t,
             radius: num(ctx, 'radius', 1.2),
             burst: t,
           });
         }
+        /**
+         * **T11 — the swarm SWEEPS** (`params.sweep`): one travelling cloud that
+         * leaves the card and crosses the table — to what the trigger was aimed
+         * at when the wire says (`beamTargetOf`: this frame's stack target on a
+         * cast, the previous frame's on a resolution), and otherwise across to the
+         * other seat's creature rank (`foe`, a direction and not a claim). Tier 1's
+         * sweep was a burst parked in the middle of the table.
+         */
+        const aimed = beamTargetOf(ctx);
+        const foe = num(ctx, 'foe', -1);
+        const to: AnchorRef | null = !flag(ctx, 'sweep')
+          ? null
+          : aimed >= 0
+            ? figureAt(aimed, 0.5)
+            : foe >= 0
+              ? { kind: 'zone', player: foe, zone: 'battlefield' }
+              : null;
+        if (to !== null && id !== undefined) {
+          const travel = easeInOutCubic(clamp01((t - 0.1) / 0.75));
+          stage.setEffect(`${ctx.key}:sweep`, {
+            kind: 'particles',
+            at: figureAt(id, 0.5),
+            to,
+            colour: colour(ctx, '#9ec7f0'),
+            strength: pulse(clamp01(t * 1.1)),
+            radius: 0.8,
+            burst: 0.35 + 0.25 * Math.sin(t * Math.PI * 5),
+            travel,
+            arc: 0.7,
+          });
+          // …and a bright core riding the same arc (the second verification pass:
+          // at `g2`@219 the cloud alone was a faint dust nobody saw cross the
+          // table). A mote, so it costs the mote bucket, not the eight-slot cap.
+          stage.setEffect(`${ctx.key}:core`, {
+            kind: 'mote',
+            at: figureAt(id, 0.5),
+            to,
+            colour: '#e4f2ff',
+            strength: pulse(clamp01(t * 1.1)),
+            radius: 0.2,
+            travel,
+            arc: 0.7,
+          });
+          return;
+        }
+        stage.clearEffect(`${ctx.key}:core`);
         stage.setEffect(`${ctx.key}:sweep`, {
           kind: 'particles',
           at: { kind: 'table' },
@@ -2116,7 +2679,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.circuit',
     cue({
       effects: ['trace', 'trace2'],
-      alsoClears: ['beamTo'],
+      alsoClears: AIMED,
       apply(ctx, t, stage) {
         const off = flag(ctx, 'off');
         const source = ctx.targets[0];
@@ -2124,23 +2687,30 @@ const ENTRIES: Array<[string, CueImpl]> = [
           stage.setOffset(source, { dy: 0.22 * pulse(t), glow: 0.55 * pulse(t), glowColour: colour(ctx) });
         }
         const target = beamTargetOf(ctx);
-        const at: AnchorRef = target >= 0 ? { kind: 'card', id: target } : { kind: 'card', id: source ?? -1 };
+        const hit = target >= 0 ? target : (source ?? -1);
         if (target < 0 && source === undefined) return;
         const flicker = off ? Math.max(0, Math.sin(t * Math.PI * 7)) * (1 - t) : 1;
         const e = easeOutCubic(t);
         stage.setEffect(`${ctx.key}:trace`, {
           kind: 'ring',
-          at,
+          at: figureAt(hit, 0),
           colour: colour(ctx, off ? GREY : '#7fd4ff'),
           strength: (off ? flicker : 1 - e) * 0.95,
           radius: off ? 0.8 - 0.5 * e : 0.25 + e * 0.9,
         });
+        // **T11 — the traces are ON the body**: a circuit-board billboard over the
+        // figure, sized in its heights, lighting up (Robotics Mastery) or
+        // flickering out (Depower, `off`). The same shape the Aura keeps as a pose
+        // on its host once it is attached (T12, `scene/overlays.ts`).
         stage.setEffect(`${ctx.key}:trace2`, {
           kind: 'glow',
-          at,
+          at: figureAt(hit, 0.5),
           colour: colour(ctx, off ? GREY : '#7fd4ff'),
-          strength: off ? flicker * 0.8 : 0.8 * pulse(t),
-          radius: 0.55,
+          strength: off ? flicker * 0.9 : 0.9 * pulse(t),
+          radius: 1.05,
+          shape: 'circuit',
+          aspect: 0.7,
+          fit: true,
         });
         if (target >= 0) {
           stage.setOffset(target, {
@@ -2210,7 +2780,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
 /** §6's `damage.hit` / `damage.lethal`: one function, two intensities. */
 function damageCue(intensity: number): CueImpl {
   return cue({
-    effects: ['num', 'rim'],
+    effects: ['num', 'rim', 'pop'],
     apply(ctx, t, stage) {
       const id = ctx.targets[0];
       if (id === undefined) return;
@@ -2238,6 +2808,20 @@ function damageCue(intensity: number): CueImpl {
         // damage number, which is the part that carries information.
         scale: (1 - 0.04 * wave * intensity) * (1 + (num(ctx, 'popScale', 1) - 1) * wave),
       });
+      // **T11 — "pops back to size on damage"**, made visible: a card whose data
+      // gives it a `popScale` over 1 (Ant-Man) throws a ring out from its figure's
+      // feet as it overshoots, so the pop reads as a pop and not as a flinch.
+      if (num(ctx, 'popScale', 1) > 1) {
+        const u = easeOutCubic(t);
+        stage.setEffect(`${ctx.key}:pop`, {
+          kind: 'ring',
+          at: figureAt(id, 0),
+          colour: colour(ctx, WHITE),
+          strength: 0.9 * (1 - u),
+          radius: 0.25 + 0.75 * u,
+          fit: true,
+        });
+      }
       stage.setEffect(`${ctx.key}:num`, {
         kind: 'text',
         at: { kind: 'card', id },

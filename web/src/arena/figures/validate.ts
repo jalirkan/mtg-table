@@ -40,6 +40,9 @@ import {
   type ModelLibraryRecord,
   type TileSpec,
 } from './types.ts';
+import { FORMATIONS, IDLE_STYLES, PROP_KINDS, SILHOUETTES, isPropKind, type PropKind } from './props.ts';
+import { SUBTYPE_ORDER } from './resolve.ts';
+import type { TraitData, TraitRow } from './traits.ts';
 
 export interface FigureValidation<T> {
   /** The usable subset: every entry that survived. Never `null`. */
@@ -709,5 +712,194 @@ export function validateModels(raw: unknown): FigureValidation<ModelData> {
     };
   }
 
+  return done();
+}
+
+// ---------------------------------------------------------------------------
+// Slice 3 — `traits.json`, the per-card identity table (figures/traits.ts)
+// ---------------------------------------------------------------------------
+
+const TRAIT_FILE_KEYS = new Set(['version', 'cards', 'archetypes', 'default']);
+const TRAIT_KEYS = new Set([
+  'scale',
+  'hover',
+  'idle',
+  'tint',
+  'accent',
+  'shade',
+  'turn',
+  'turnedRatio',
+  'props',
+  'swarm',
+  'formation',
+  'silhouette',
+  'shrink',
+]);
+/** `subtype:insect` — and only a word `resolve.ts`'s `SUBTYPE_ORDER` can produce. */
+const TRAIT_ARCHETYPE_KEY = /^subtype:([a-z]+)$/;
+/** Each numeric trait's legal range: outside it is a typo, not art direction. */
+const TRAIT_RANGES: Readonly<Record<string, readonly [number, number]>> = {
+  scale: [0.2, 4],
+  hover: [0, 2],
+  shade: [0.3, 1.5],
+  turn: [-180, 180],
+  turnedRatio: [0.1, 4],
+  swarm: [0, 8],
+  shrink: [0.05, 1],
+};
+/** A swarm is a handful of copies: more is a crowd the budget was not sized for. */
+const MAX_SWARM = 8;
+
+/** One `TraitRow`, or `null` when it must be dropped. */
+function checkTraitRow(where: string, raw: unknown, errors: FigureProblem[]): TraitRow | null {
+  if (!isObject(raw)) {
+    errors.push({ where, message: 'must be an object' });
+    return null;
+  }
+  unknownKeys(where, raw, TRAIT_KEYS, errors, 'trait');
+  let bad = false;
+  const row: Record<string, unknown> = {};
+
+  for (const [key, [min, max]] of Object.entries(TRAIT_RANGES)) {
+    const value = raw[key];
+    if (value === undefined) continue;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+      errors.push({ where: `${where}.${key}`, message: `must be a number in [${String(min)}, ${String(max)}]` });
+      bad = true;
+      continue;
+    }
+    if (key === 'swarm' && (!Number.isInteger(value) || value > MAX_SWARM)) {
+      errors.push({ where: `${where}.swarm`, message: `must be a whole number of copies, at most ${String(MAX_SWARM)}` });
+      bad = true;
+      continue;
+    }
+    row[key] = value;
+  }
+  for (const key of ['tint', 'accent'] as const) {
+    const value = raw[key];
+    if (value === undefined) continue;
+    if (typeof value !== 'string' || !HEX.test(value)) {
+      errors.push({ where: `${where}.${key}`, message: 'must be a #rrggbb colour or absent' });
+      bad = true;
+      continue;
+    }
+    row[key] = value;
+  }
+  const idle = raw['idle'];
+  if (idle !== undefined) {
+    if (typeof idle !== 'string' || !(IDLE_STYLES as readonly string[]).includes(idle)) {
+      errors.push({ where: `${where}.idle`, message: `must be one of ${IDLE_STYLES.join(', ')}` });
+      bad = true;
+    } else row['idle'] = idle;
+  }
+  const formation = raw['formation'];
+  if (formation !== undefined) {
+    if (typeof formation !== 'string' || !(FORMATIONS as readonly string[]).includes(formation)) {
+      errors.push({ where: `${where}.formation`, message: `must be one of ${FORMATIONS.join(', ')}` });
+      bad = true;
+    } else row['formation'] = formation;
+  }
+  const silhouette = raw['silhouette'];
+  if (silhouette !== undefined) {
+    if (silhouette !== null && (typeof silhouette !== 'string' || !(SILHOUETTES as readonly string[]).includes(silhouette))) {
+      errors.push({ where: `${where}.silhouette`, message: `must be one of ${SILHOUETTES.join(', ')} or null` });
+      bad = true;
+    } else row['silhouette'] = silhouette;
+  }
+  const props = raw['props'];
+  if (props !== undefined) {
+    if (!Array.isArray(props)) {
+      errors.push({ where: `${where}.props`, message: 'must be an array of prop kinds' });
+      bad = true;
+    } else {
+      const kinds: PropKind[] = [];
+      for (const [i, kind] of props.entries()) {
+        if (typeof kind !== 'string' || !isPropKind(kind)) {
+          errors.push({
+            where: `${where}.props[${String(i)}]`,
+            message: `"${String(kind)}" is not one of ${PROP_KINDS.join(', ')}`,
+          });
+          bad = true;
+          continue;
+        }
+        if (kinds.includes(kind)) {
+          errors.push({ where: `${where}.props[${String(i)}]`, message: `"${kind}" is listed twice` });
+          bad = true;
+          continue;
+        }
+        kinds.push(kind);
+      }
+      row['props'] = kinds;
+    }
+  }
+  // A turned figure needs its turned footprint, or the width clamp is a guess.
+  if (row['turn'] !== undefined && row['turn'] !== 0 && row['turnedRatio'] === undefined) {
+    errors.push({ where: `${where}.turnedRatio`, message: 'a turned figure must say its turned width/height ratio' });
+    bad = true;
+  }
+  if (bad) return null;
+  return row as TraitRow;
+}
+
+/**
+ * Validate a parsed `traits.json`. Same contract as {@link validateFigures}: a
+ * bad row is dropped and the ladder falls through; never throws, never `null`.
+ */
+export function validateTraits(raw: unknown): FigureValidation<TraitData> {
+  const errors: FigureProblem[] = [];
+  const warnings: FigureProblem[] = [];
+  const cards: Record<string, TraitRow> = {};
+  const archetypes: Record<string, TraitRow> = {};
+  let fallback: TraitRow = {};
+  const done = (): FigureValidation<TraitData> => ({
+    data: { version: 1, cards, archetypes, default: fallback },
+    errors,
+    warnings,
+  });
+
+  if (!isObject(raw)) {
+    errors.push({ where: '$', message: 'the trait file is not an object' });
+    return done();
+  }
+  unknownKeys('$', raw, TRAIT_FILE_KEYS, errors, 'top-level');
+  if (raw['version'] !== 1) {
+    errors.push({ where: '$.version', message: `version must be 1, saw ${JSON.stringify(raw['version'])}` });
+  }
+
+  const rawCards = raw['cards'];
+  if (rawCards !== undefined) {
+    if (!isObject(rawCards)) errors.push({ where: '$.cards', message: 'must be an object' });
+    else {
+      for (const [name, entry] of Object.entries(rawCards)) {
+        if (isCommentKey(name)) continue;
+        const row = checkTraitRow(`$.cards["${name}"]`, entry, errors);
+        if (row !== null) cards[name] = row;
+      }
+    }
+  }
+  const rawArchetypes = raw['archetypes'];
+  if (rawArchetypes !== undefined) {
+    if (!isObject(rawArchetypes)) errors.push({ where: '$.archetypes', message: 'must be an object' });
+    else {
+      for (const [key, entry] of Object.entries(rawArchetypes)) {
+        if (isCommentKey(key)) continue;
+        const match = TRAIT_ARCHETYPE_KEY.exec(key);
+        if (match === null || !(SUBTYPE_ORDER as readonly string[]).includes(match[1]!)) {
+          // A rung the ladder can never produce is a row nothing will ever read.
+          errors.push({
+            where: `$.archetypes["${key}"]`,
+            message: `not a subtype rung — one of ${SUBTYPE_ORDER.map((s) => `subtype:${s}`).join(', ')}`,
+          });
+          continue;
+        }
+        const row = checkTraitRow(`$.archetypes["${key}"]`, entry, errors);
+        if (row !== null) archetypes[key] = row;
+      }
+    }
+  }
+  if (raw['default'] !== undefined) {
+    const row = checkTraitRow('$.default', raw['default'], errors);
+    if (row !== null) fallback = row;
+  }
   return done();
 }

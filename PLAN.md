@@ -16,7 +16,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
-| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice and fixed twice**, not committed (branch `tier2-slice2`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened; T9–T14 handed over |
+| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice and fixed twice**, not committed (branch `tier2-slice3`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened; T13–T14 handed over, with a Tier 3 note |
 
 ---
 
@@ -1853,7 +1853,8 @@ fourteen closed, each with a test that goes red without the fix). Evidence:
 [`docs/evidence/m7-arena.md`](docs/evidence/m7-arena.md). **Nothing is
 committed** — the work is the `m7` branch in a worktree, per CLAUDE.md.
 **Effort: Tier 1 was 6 evenings + 2 verification passes. Tier 2 is open-ended;
-its first slice, T0–T7, is built and verified — see *M7 Tier 2* below.**
+its first three slices — T0–T7, T8 and the camera views, T9–T12 — are built and
+verified — see *M7 Tier 2* below.**
 
 **Command**
 
@@ -2120,10 +2121,11 @@ slice 1 was built against.)
 
 ---
 
-## M7 Tier 2 — the manifestation stage (slice 1: T0–T7; slice 2: T8 and the camera views)
+## M7 Tier 2 — the manifestation stage (slice 1: T0–T7; slice 2: T8 and the camera views; slice 3: T9–T12, per-card identity)
 
 **Slice 2 (2026-09-27) is further below** — *Slice 2 — T8*, its own follow-ups,
-and *What slice 2 hands to T9–T14*. **The user played several games on slice 1
+and *What slice 2 hands to T9–T14* — **and slice 3 (2026-09-27) below that** —
+*Slice 3 — T9–T12*, its follow-ups, and *What slice 3 hands to T13–T14*. **The user played several games on slice 1
 before slice 2 was built and reported nothing major** ("this seems to be on
 track"), so nothing in slice 1 was redesigned; that play-test is the one slice
 1's hand-over asked for before T8, and it did not flag the live combat budget
@@ -2178,7 +2180,9 @@ and records the output's own bytes and sha256 in `models.json`
 
 T0–T7 are slice 1; **T8 and the camera views are slice 2** (the camera views are
 not one of report 13 §11's evenings — the user asked for them with T8, and they
-are the row below it).
+are the row below it); **T9–T12 and per-card identity are slice 3** (identity is
+not one of the evenings either — it is the answer to the user's verdict on slice
+2, *"everything still looks very generic"*, and it is the last row).
 
 | | deliverable | status | what proves it |
 |---|---|---|---|
@@ -2192,6 +2196,11 @@ are the row below it).
 | **T7** | measure and tune | **done** | busts; the width clamp; the bench on SwiftShader **and on the GTX 1080**; bloom's default decided by measurement; a live game on port 8660 |
 | **T8** | the rest of the humanoids | **done (slice 2)** — plus two things T8 found: the death, and slice 1's drone | hero `character-female-b` and scientist `character-male-e` on the agent's one 7-joint rig (**D73**); the Universal Animation Library retargeted offline and judged clip by clip — its `hit` and `die` kept, the rest of the pack's own clips better (**D68**); `figures.glb` 143,920 B, five models, 9,759 triangles, **no texture**, two builds byte-identical, every source verified by the build (**D67**); the width clamp strict for every archetype, 7,331 neighbouring pairs, worst overlap 0.000 (**D65**); the back row on its own card, 216 → 0 stand points inside another card (**D66**); **a creature that dies is seen dying**, all 17 corpus deaths drawn without a gap from the snapshot to the end of the death cue (**D64**) |
 | **cam** | camera views | **done (slice 2)** | five views on keys `1`–`5` (table, shoulder, opponent's shoulder, side-on, low), each the camera's home; the three that keep the seat's hand and ranks on screen usable live, the other two spectator-only (**D69**); spectator mode `O`, on by itself in a replay and when a live game ends; the auto director `6`/`0`, pure, 596 cuts over all 19 recordings at two paces with no shot under 2.4 s and no cooldown violation (**D70**); rule 5 at a live seat only, `change` only under the user's hand, the choice kept in `localStorage` (**D71**); three keymap rows, `inert` on the board (**D74**) |
+| **T9** | drone and insect | **done (slice 3)** | the Doombot with a red laser eye, a red visor band round its head, twin thrusters and a lit exhaust that flares with its jet (**D83**'s `visor`); Ant-Man's Air Force as **five procedural bees in a turning ring**, one instanced draw call, its insect rig kept hidden at the centre for the clip lane (**D88**); the Giant-Sized Flying Ant **0.867 tall against 0.490** because it flies side-on, with a crouching rider baked from the hero body — no exemption from the strict clamp (**D76**) |
+| **T10** | the vehicle | **done (slice 3), with no asset** | a procedural carrier silhouette (hull, flight deck with runway lights, island, four rotor pods; 456 triangles, one draw call) for every Vehicle through the `subtype:vehicle` trait rung, **crewed or not** (599 uncrewed poses in the corpus); yours at `SILHOUETTE_ALTITUDE` 2.05 over your rank, the opponent's lower, a fifth smaller, over the centre line and clear of the HUD's keep-out band; table-view cover of any figure **0.000** over 5,103 pairs (**D77**, **D85**); the manifest's `_deferred.carrier` closed |
+| **T11** | per-card beats | **done (slice 3)** | the `figure` anchor puts a beat ON the body and follows it through a lunge, a hover, a shrink and a death; every cue param closed and ranged (`PARAM_SPECS`, 15 negative controls); shapes (badge, shield, reticle, web, circuit, star, hex) and a travelling particle cloud; suppression rule 7; the pool 38 → 45 with `MAX_LIVE_EFFECTS` unmoved (**D79**); an attacker turns to face its defender for the length of its attack (**D82**); Quake keyed off her trigger's resolution, never a paired tap (**D89**); four quiet beats made to read (**D87**); the census prints fired and aimed per beat every run |
+| **T12** | the remaining attachments | **done (slice 3)** | Super Suit's armour shell, the Spy Kit's glints, Robotics Mastery's circuits — per-name rows in `figures.json`, **944 shrink · 409 shell · 362 glints · 315 circuit** over the corpus, nothing of this deck on the halo; Web Up **measured first** (no exile card is ever linked to anything) and drawn as a cocoon over its own card; Strategic Intervention's ops console as a 3D station in its own rank slot rather than a DOM widget (**D80**); an attachment lies under its host so a click on the host hits the host, 765 of 765 (**D86**) |
+| **id** | per-card identity | **done (slice 3)** | `figures/traits.json`, validated like `cues.json`, and a closed kit of **eighteen** shared, procedural, instanced prop kinds plus three derived ones — **one draw call per kind on the table, never per figure** (**D75**); every deck card's props rasterised through the table camera on **both** seats, standing and kneeling, ≥ 48 px each with the real `figures.glb` and the real prop field (**D83**); the Agents three heads side by side (**D84**); `g1`@355 **78 draw calls, 27,906 triangles, 12 programs** with bloom off, against ≤ 90 and ≤ 30,000; idle still **0 frames in 5 s** |
 
 ### What the evidence shows
 
@@ -2300,12 +2309,13 @@ changes that contradict earlier documents; now **D53–D63** and CLAUDE.md's Tie
 section), and NOTICE did not list the two bloom packages bundled into the `Post`
 chunk (now §6). The other eight are follow-ups 2, 3, 4, 5, 7, 8, 9 and 10 below.
 
-### Tier 2 follow-ups — nineteen from slice 1, 2026-09-27; six closed by slice 2
+### Tier 2 follow-ups — nineteen from slice 1, 2026-09-27; six closed by slice 2, one by slice 3
 
 From the builders' own "problems" notes and the verification pass. **None of them
 stops a game, and the gate is green.** **Slice 2 closed 2, 3, 8, 9, 11 and 18**
 (struck through below, each with what closed it) and added a second cause to 1;
-the other thirteen are open, and slice 2's own list follows its section. Three are properties of the wire or of
+**slice 3 closed 15** (Web Up measured before its cocoon was built); the other
+twelve are open, and slice 2's and slice 3's own lists follow their sections. Three are properties of the wire or of
 Tier 1's queue policy that a renderer must not paper over (1, 2, 13), four are
 measurement limits or caveats (4, 6, 12, 14), and the rest are small debts with
 a stated cost.
@@ -2374,7 +2384,11 @@ a stated cost.
    `presence` bob (the Doombot, the Helicarrier, Wasp) keeps the loop at `always`
    while such a card is on the table — from `g1` frame 176 onward in that replay —
    and since Tier 2 every pose layer is bound on each of those frames. A table
-   without one still renders nothing while idle.
+   without one still renders nothing while idle. **Slice 3 declined to add a
+   fourth**: the giant ant's "wing hum" was built as a `presence` bob and taken
+   out after measuring `human-comfort-13`@1262 go from 0 to 300 frames in 5 s of
+   idle for a vibration of about a pixel; its flight is `traits.json`'s
+   `idle: hover`, which moves only while frames are drawn.
 8. ~~**The "no CDN" liveness clause is a hostname denylist**~~ — **closed by
    slice 2's verification fix**: the clause is now an allow-list over every string
    literal under `web/src/arena/` that carries a URL scheme (only the Scryfall
@@ -2419,7 +2433,15 @@ a stated cost.
 14. **The SwiftShader cold start** is still max 65–78 ms: the first GPU upload of
     a card face plus the governor settling inside a 600 ms window (M7 follow-up 1,
     unchanged). The GTX 1080's cold run has no hitch.
-15. **Web Up's cocoon is measurable now and unmeasured.** The live game played
+15. ~~**Web Up's cocoon is measurable now and unmeasured.**~~ — **closed by
+    slice 3 (D80)**: measured over the whole committed corpus before anything was
+    built (`human-comfort-13` plays Web Up, cast at 1034 and resolving at 1044) —
+    **no card in any exile zone ever carries an `attachedToId`**, and Web Up's own
+    is `null` in every frame, which `attach.test.ts` now asserts. So the wire never
+    relates Web Up to what it exiled: the cocoon hangs over **Web Up's own card**
+    as a station, and the wrap is a cue on its own `cast` and `resolved`, aimed by
+    the stack. (The local `human-ws-7` recording this item named was not the one
+    read.) Originally: **Web Up's cocoon was measurable and unmeasured.** The live game played
     Web Up (the AI cast it on our Quantum Reduction), so report 13 §4.5's
     "measure before building" recording exists — `var/games/human-ws-7/frames.jsonl`,
     **local and gitignored** — and nobody has read it for `attachedToId` on the
@@ -2449,7 +2471,8 @@ a stated cost.
 
 **Status: built in two tracks, verified twice, fixed twice, and documented** — in
 the worktree `/home/justin-a/code/mtg-table-t2b`, branch `tier2-slice2`,
-**nothing committed**. The first verification pass found one major (every death
+**nothing committed** — since **committed by the user on `main` as `5891444`**,
+which slice 3 branches from. The first verification pass found one major (every death
 blinked) and six minors; the second found one major and three minors, the major a
 **Tier 1** defect (the cue clock played an idle gap as film). All eleven are fixed
 — the bust-coverage minor only partly (follow-up 10 above). Evidence:
@@ -2547,22 +2570,34 @@ node tools/build-figures.mjs --clip-source experiment --no-manifest \
   for a live seat); "Low" is a corner now rather than a crouch, the price of
   keeping the land rank in view.
 
-### Slice 2 follow-ups — ten, 2026-09-27
+### Slice 2 follow-ups — ten, 2026-09-27; two closed by slice 3, one partly
 
 From the builders' and fixers' own "problems" notes and both verification passes.
 **None stops a game.** Two are the renderer declining to remember (4, 5), three
 are limits of how slice 2 was measured (6, 7, 10), and the rest are small debts
-with a stated cost.
+with a stated cost. **Slice 3 closed 2 and 3 and partly answered 10** (struck
+through or marked below).
 
 1. **`shrink` and `block` still borrow `crouch`.** No CC0 library read has a
    shrink or a cower — the Universal Animation Library's 44 clips were read, and
    its crouch face-plants on the chibi; UAL 2's list has none either (the
    manifest's `_deferred`). `clips.test.ts` pins the borrowing so a new one shows
    up on the day it is added (**D68**).
-2. **The scientist is the agent's outline from behind** — on the viewer's own
+2. ~~**The scientist is the agent's outline from behind**~~ — **closed by slice
+   3 (D75, D83)**: from behind a scientist now reads by what it carries rather than
+   by its body — the lab bench at its left hand (both scientists), Bold
+   Biochemist's long white lab coat and A.I.M.'s bucket hood — and `traits.test.ts`
+   rasterises each through the table camera from the OPPONENT's seat, where the
+   figures show their backs: coat 1,912 px, hood 2,345, benches 165–171.
+   Originally: **the scientist was the agent's outline from behind** — on the viewer's own
    side the braces and the lab tint tell them apart, not the shape; face-on, the
    glasses read (**D73**).
-3. **The Giant-Sized Flying Ant is not giant.** Its `scale: 1.35` clamps to the
+3. ~~**The Giant-Sized Flying Ant is not giant.**~~ — **closed by slice 3
+   (D76)**, and with neither a wider slot nor an exemption: it flies side-on
+   (`traits.json`'s `turn` 90), so the clamp measures its body's length rather than
+   its wingspan, and at `scale: 1.35` it stands **0.867** tall against any other
+   insect's 0.490, inside the same 0.720 slot, with a rider on its back.
+   Originally: **the Giant-Sized Flying Ant was not giant.** Its `scale: 1.35` clamps to the
    same 0.49 as any insect under the strict clamp (**D65**), as it already did
    under slice 1's floor. A giant needs a wider slot — a `layout.ts` question —
    not an exemption, which D65 rejected. **T9**'s.
@@ -2600,11 +2635,18 @@ with a stated cost.
 10. **Nobody has play-tested slice 2.** The user's games were on slice 1; the
     views, the director and the deaths have been seen only by headless Chromium on
     the GTX 1080 (follow-up 4's caveat). The first play-test of slice 2 is the
-    input T9–T12 should be ordered by.
+    input T9–T12 should be ordered by. — **Partly answered before slice 3**: the
+    user played slice 2 (committed as `5891444`) and the verdict was about
+    identity — *"everything still looks very generic"*, with a screenshot of Wasp
+    as a full-size gold chibi standing on her card — which is what slice 3 was
+    ordered around. The three questions this item asked (the deaths, the views'
+    trade in follow-up 8, and the live combat in slice 1 follow-up 1) were not
+    reported on either way, so they stay open.
 
 ### What slice 2 hands to T9–T14
 
-Report 13 §11's second table, updated for both slices. **Before T9, play three
+*Kept as written; slice 3 built T9–T12 from it, and* **What slice 3 hands to
+T13–T14** *below is the current table.* Report 13 §11's second table, updated for both slices. **Before T9, play three
 games in the arena** — `./scripts/play.sh --arena` — once from the shoulder and
 once from low, and write down, in the moment, what reads wrong: the deaths, the
 views' trade (slice 2 follow-up 8) and the live combat (follow-up 1) are the
@@ -2625,6 +2667,309 @@ three questions it answers.
 used by exactly one card — that is Tier 3, and it is the seam where "a small
 library of archetypes" quietly becomes "a model per card" (report 13 §12).
 
+### Slice 3 — T9–T12 (per-card identity, the carrier, the beats, the looks), 2026-09-27
+
+**Status: built in two tracks (identity — T9/T10; cues and attachments —
+T11/T12), verified twice, fixed twice, and documented** — in the worktree
+`/home/justin-a/code/mtg-table-t2c`, branch `tier2-slice3` (from `5891444`),
+**nothing committed**. The first verification pass found three majors and five
+minors, the second four majors and five minors; every one has a fix in the tree,
+**but the second pass's fixes have not been through a third, independent
+verification** — they were checked by the pass that made them (the gate, the new
+raster test, photographs) — **and one of its majors is only partly answered by
+that pass's own account**: Nick Fury reads as a dark figure in a long black coat,
+and his eyepatch at 1× as a dark disc ringed pale (follow-up 10).
+
+It answers the user's verdict on slice 2 — *"everything still looks
+very generic"* — with **identity as data**: `figures/traits.json` (size, hover,
+tint, props, swarm, silhouette per card and per subtype rung) and a kit of
+eighteen shared, procedural, instanced prop kinds (one draw call per kind, never
+per figure; the second verification pass added the eighteenth, `visor`); Ant-Man's Air Force as a ring of five bees, the Agents as a squad,
+the Giant-Sized Flying Ant giant because it flies side-on, the Helicarrier as a
+carrier silhouette overhead; T11's per-card beats drawn ON the body; T12's
+attachment looks and the two stations. Evidence:
+[`docs/evidence/m7-tier2-slice3.md`](docs/evidence/m7-tier2-slice3.md) — the cue
+track, the identity track, the verification fixes and the second verification
+pass's fixes. Decisions **D75–D81**, **D82–D87** from the second pass, and
+**D88–D89** written up by the documentation pass (the swarm and squad as
+instanced members; Quake's resolution). No
+asset was added (`figures.glb`, `models.json` and the manifest's sources are
+unchanged, and NOTICE §7 gained only a paragraph saying what is built in code),
+nothing on the wire moved, `bridge/` is untouched, no fixture was re-recorded and
+no npm dependency was added.
+
+**The verification pass** (headless Chromium on the GTX 1080, every deck card
+photographed in views 1 and 4, both corpus cinematics played in real time, one
+live game) found **three majors and five minors**, all fixed:
+
+- **The two tracks disagreed about which way a figure faces** (major): the effect
+  binding's `figure` anchor resolved `fwd` backwards, so the Doombot's exhaust
+  streamed out of its face while its flame prop burned behind it, and every
+  front-anchored beat landed behind its prop. Now one definition in `layout.ts`
+  (`FIGURE_FRONT_Z`, `seatFacingY`, `figurePointInto`), and `facing.test.ts`
+  holds every beat to its prop for both seats (**D81**).
+- **T12 was not delivered in real games** (major): the three attachment rows were
+  never committed to `figures.json`, so Super Suit, the Spy Kit and Robotics
+  Mastery drew the plain halo. Committed, with `attach.test.ts` reading the
+  committed file (**D80**).
+- **Agent 13 and Coulson were not recognisable at table distance** (two majors),
+  and Fury, Peggy, Ant-Man and Bold Biochemist only partly (minor). Agent 13 is in
+  indigo with a 0.3 silver pistol raised at chest height and a lit muzzle (new
+  kind `muzzle`; her muzzle-flash cue lands on it); Coulson is darker navy with a
+  0.13 normal-blended gold badge and a white shirt-front and tie (new kind `tie`);
+  Peggy wears a red hat (new kind `hat`) and a 1.5× shield turned out; Fury's
+  patch and strap are bigger and his coat closes further; Ant-Man's helmet has a
+  crest and thick lit antennae; Bold Biochemist wears a white lab coat.
+- **The ops console and the carrier covered figures from the table view**
+  (minor): stations now stand figure-sized in their own rank slot; the carrier
+  flies at 2.05 and is 1.5 long. Both are asserted by projecting through the table
+  camera (**D77**, **D80**).
+- **A dying figure dropped its props; the prop field read reduced motion once;
+  Wasp and the ant attacked with the Doombot's eye** (minor): the departing bodies
+  are a second input to `PropField.commit`, the field listens for the media
+  query's change, and `attack.jet` takes `eye: false` (**D78**, **D79**).
+- **The docs were stale** (minor): this section, **D75–D81**, CLAUDE.md's slice-3
+  conventions and pool count (45), and the manifest's `_deferred.carrier`.
+
+**Budgets** (bloom off, GTX 1080): `g1`@355 is **77 draw calls, 27,474
+triangles, 12 programs** (slice 2: 65 / 24,406 / 11), of which the prop field is
+8 kinds and 3,062 triangles — inside report 13 §8.2's ≤ 90 and ≤ 30,000. The
+census asserts ≤ 12 prop kinds and ≤ 96 instances in any corpus frame (measured
+10 and 19). Entry chunk 86.23 kB gzip (unchanged, no `three`); Arena 346.14 kB,
+`Post` 16.54 kB. **The gate**: `rm -rf bridge/out && WSPORT=8666
+./tools/check-all.sh` — **731 s, exit 0**, node --test 708 / 700 pass / 0 fail /
+8 skipped plus 79 vitest inside it, every one of 9c's ten games, 9d and 10a–10g;
+standalone `npm --prefix web test` is **698 + 79**, 0 failures.
+
+**Command**
+
+```bash
+./scripts/play.sh --arena                  # live
+npm --prefix web run dev:arena             # a replay; `1` table, `4` side-on
+#   g1.jsonl @355 — the budget frame; @316 — your carrier over your rank, the opponent's over the centre line
+#   g2.jsonl @224 — the ops console in its own slot beside Ant-Man
+#   disjoint.jsonl @109 — Coulson's badge; @265 — Fury (`3` shows his back); @179 — Peggy's hat
+#   human-comfort-13.jsonl @1279 — the opponent's Agents (three heads) and Coulson's back emblem
+#   g2.jsonl @125 — the opponent's Agent 13 from behind; human-auto-7.jsonl @916 — yours
+#   g2.jsonl 156 -> 157 and g1.jsonl 231 -> 232 — an attacker turning to face you as it fires
+```
+
+**The second verification pass** (headless Chromium on the GTX 1080 again, 4×
+zooms of the committed frames, both seats; a live game at seed 11) found **four
+majors and five minors**, all fixed — decisions **D82–D87**, evidence in
+[`docs/evidence/m7-tier2-slice3.md`](docs/evidence/m7-tier2-slice3.md)'s *Second
+verification pass*, stills in `var/shots-t2s3/fx5/` (local, gitignored):
+
+- **The opponent's figures show the table view their backs, and every front prop
+  vanished there** (major): Coulson's badge, Agent 13's pistol, Fury's patch, the
+  Doombot's eye. The badge kind has a back emblem, the pistol is at her hip out
+  beside her body, the new shared `visor` kind is a robot's eye as a band round its
+  head, and `traits.test.ts` rasterises every deck card's props through the table
+  camera on BOTH seats with the real bodies and the real prop field — ≥ 48 px each,
+  one-sided details with a named partner (**D83**, `web/test/prop-raster.ts`).
+- **The Agents did not read as a squad** (major): a wedge 0.46 aside and a step
+  back, clamped into one slot, in a steel blue of its own; the test requires three
+  heads side by side from both seats, and slice 3's formation fails it 8 of 8
+  (**D84**).
+- **Nick Fury was a grey agent in sunglasses** (major): a slate body in a nearly
+  opaque black coat flared wider than his head with slate trim, a black patch with a
+  pale rim and a black strap that runs DIAGONALLY (**D83**).
+- **Front-anchored attack beats fired away from their target** (major): an attack
+  now turns its attacker to face its defender and back (`dRotY`, `Stage.yawTo`),
+  whichever way figures rest; `facing.test.ts` runs the real cues on both seats
+  (**D82**). Question 13 is still the user's — it now decides only how the table
+  looks at rest.
+- **The opponent's carrier sat under the HUD** (minor): it flies over the centre
+  line, low and a fifth smaller; the chrome is a keep-out band in
+  `figure-pose.test.ts` (**D85**).
+- **Coulson and Agent 13 only partly readable on your own side** (minor): the
+  badge is lower and bigger (0.155, tilted up), the tie runs to the belt, the
+  pistol shows its length (**D83**).
+- **Four beats did not read** (minor): Peggy's aegis in her shield's blue with red
+  and white rings (`rim`, `rim2`), the strike's beam doubled with a star on the
+  body, the sweep's bright core, the power-up's card lingering (**D87**).
+- **A click on an enchanted creature hit its aura** (minor, a Tier 1 layout
+  defect): attachments lie under their hosts; `attach.test.ts` raycasts the real
+  proxies (**D86**).
+- **The evidence cited scratchpad paths** (minor): the fix pass's stills are now in
+  `var/shots-t2s3/fx4/`, this pass's in `var/shots-t2s3/fx5/`, and the evidence
+  cites those.
+
+**Budgets after it** (bloom off, GTX 1080): `g1`@355 is **78 draw calls, 27,906
+triangles, 12 programs**; sweeps of `g1` 300–376, `g2` 140–225 and
+`human-comfort-13` 1100–1316 peak at 78 / 27,906. Idle `human-comfort-13`@1262:
+**0 frames in 5 s**. Entry chunk **86.24 kB** gzip (no `three`; +0.01 is the
+lazy chunk's hashed file name), Arena 347.70 kB, `Post` 16.54 kB.
+`npm --prefix web test`: **704 + 79**, 0 failures. **The gate**: `rm -rf
+bridge/out && WSPORT=8665 ./tools/check-all.sh` — **`check-all OK`, exit 0, 729 s**;
+node --test 714 / 706 pass / 0 fail / 8 skipped and 79 vitest inside it.
+
+**The documentation pass** changed no code: this section and the evenings table,
+the follow-ups below, the Tier 3 note and question 14, **D88** (the swarm and the
+squad as instanced members) and **D89** (Quake keyed off her trigger's resolution,
+and the tap heuristic declined), README's *Tier 2, slice 3 — every card reads as itself* (with how to
+give a card its identity as data), CLAUDE.md's slice-3 conventions,
+`docs/ideas/arena-mode.md`'s cue table marked row by row, NOTICE §7's list of
+what is generated in code, and a status section at the end of the evidence.
+
+**The gate, once more**: `WSPORT=8666 ./tools/check-all.sh` (without deleting
+`bridge/out`) — **`check-all OK`, exit 0, 726 s** (`var/check-all-t2s3-docs.log`):
+9b's re-recording multiset-identical (1,587 frames), 9c's ten games in 269 s, 9d
+and 10a–10g, `check-redaction` over every fixture and fresh recording, node --test
+**714 / 706 pass / 0 fail / 8 skipped** and **79** vitest; entry chunk 86.24 kB
+gzip, Arena 347.70 kB, `Post` 16.54 kB — the second fix pass's numbers exactly,
+as a pass that changed no code should. Standalone, `npm --prefix web test` is
+**704 + 79**, 0 failures.
+
+### Slice 3 follow-ups — fourteen, 2026-09-27 (updated by its second verification pass and its documentation pass)
+
+From both tracks' "problems" notes, both verification passes and both fix passes'
+own admissions. **None stops a game, and the gate is green.** One is the user's
+call (1), four are limits of how slice 3 was measured (8, 11, 12, 13), one is
+the wire not naming what a beat would aim at (3), and the rest are small debts
+with a stated cost.
+
+1. **Your figures face you** — measured, not changed: PLAN question 13 below.
+   Since the second verification pass an ATTACKER turns to face its defender
+   (**D82**), so the question now decides only how the table looks at rest.
+2. **Three props sit on one side of a body by nature** — Coulson's shirt and tie
+   (front), the Doombot's laser eye (front) and its exhaust (back) — so each shows
+   from one seat only, and `traits.test.ts` asks them only half the bar (24 px) on
+   their own side while a partner carries the card on the other (**D83**): the
+   tie is 37 px at its worst from your seat and 0 from the opponent's, where the
+   badge's back emblem carries Coulson (273 px); the laser eye 48 / 0 and the
+   exhaust 0 / 43, with the `visor` band (135 / 87) and the thrusters carrying
+   the Doombot. A partner list is extended only with a reason.
+3. **Most beats are unaimed in the corpus, and Wasp's never is** (0 of 10
+   recordings): the AI puts her trigger on and takes it off the stack inside one
+   snapshot, so the wire never names its target; her shrink beam works on a
+   synthetic resolution, and a human game where her trigger waits on the stack
+   would show it live. Pym Particles only ever chose its vigilance mode, so its
+   grow/shrink branch (`strikeGrew`) is evidenced by `stack.test.ts` and not by a
+   game; Quake's fissure is aimed in 4 of 13 resolutions. The census prints fired
+   and aimed per beat every run, and `replay-cues.test.ts` asserts that Wasp is
+   never aimed, so the day a recording aims one the evidence is told.
+4. **At the table view the T12 looks are small**: the shell's rim and the glints
+   read, the circuit traces read as a sheen; the shoulder views show them properly.
+5. **The carriers**: your carrier over your rank still projects onto the far rank
+   from the two over-the-shoulder views (**D77**'s known cost), and since the
+   second pass the opponent's — over the centre line, out from under the HUD
+   (**D85**) — does the same from views 2 and 5, and where BOTH seats have one at
+   overlapping x (mirror games: `g1`@316) the two hulls overlap on screen like a
+   formation. A layout rule that separates them in x would be the next step.
+6. **Cast cues on a TRIGGER still rise out of the hand** (Tier 1's `cast.rise` on a
+   card already on the battlefield); Strategic Intervention's freeze rides it.
+7. **The CDP drivers that took every photograph are scratch scripts**, not in
+   `tools/` (slice 2 follow-up 7's pattern), and the photographs themselves are
+   local and gitignored (`var/shots-t2c3/`, `var/shots-t2s3/`). **Still owed: `node
+   tools/build-figures.mjs --verify-only`** (and a rebuild compared byte for byte
+   with the committed `figures.glb`) once the user has re-downloaded the four CC0
+   sources into `var/assets/figures/` — neither this worktree nor the main
+   checkout has them, and fetching them is the user's call. `figures.glb` is
+   unchanged since slice 2 (sha256 `c09ac552…a981a3`, which `figures.test.ts`
+   checks), and slice 3 added no asset, so nothing it built depends on that run.
+8. **Nobody has play-tested slice 3.** It was seen only by headless Chromium on the
+   GTX 1080 and a few scripted live games (seed 11: a land, Peggy cast and declared
+   an attacker by canvas clicks). No live game has seen a death, a carrier or a
+   T11 beat in the human's own turn — the live combat budget snaps those batches
+   (slice 1 follow-up 1, question 12).
+9. **Four attachments in one crowded `g3` board have no clickable strip** (the
+   second pass, **D86**): each lies wholly under its host and a wrapped rank's back
+   row, and is not drawn either — the click order is the drawing order. A layout
+   rule for attachments in a wrapped rank would give them one.
+10. **Nick Fury is still the least legible identity** — the user named him ("Nick
+    Fury with a coat and eyepatch"), both verification passes flagged him, and the
+    second fix pass says so itself: at 1× from the table view he is the darkest
+    figure on the table, in a long black coat, but the eyepatch reads as a dark
+    disc ringed pale (arguably a monocle), and nobody has judged him on a real
+    desktop GPU. A hologram is translucent (core alpha 0.38), which is why the
+    body is slate and not black (**D83**); a bigger patch or a lit rim would be
+    the next thing to try, judged at 1× in views 1 and 4 on both seats.
+11. **The second verification pass's fixes have not been independently
+    verified.** **D82–D87** were checked by the pass that made them — the gate
+    (729 s, exit 0), the new raster test, `facing.test.ts`, photographs — and by
+    this documentation pass's gate run, which proves the tree is green and not
+    that the table reads. A third look, by a verifier or by the user (follow-up 8),
+    is owed before the slice is called done.
+12. **The raster test counts pixels, not contrast** (**D83**'s rejected
+    alternative): a prop that clears 48 px in a colour close to its body's passes.
+    Legibility was judged from photographs at 1× and 4×, not measured.
+13. **No frame-time bench was run on slice 3.** Its budget numbers are
+    `gl.info` counts — `g1`@355 **78 draw calls, 27,906 triangles, 12 programs**
+    with bloom off, against ≤ 90 and ≤ 30,000, and idle **0 frames in 5 s** — and
+    the prop field's frame-loop body is a fixed walk over 192 preallocated
+    bindings; `tools/arena-bench.mjs --index 316 --gpu gl` (and under SwiftShader)
+    was not re-run, and the draw-call headroom left under the budget line is 12.
+    Tier 2 follow-up 4's caveat (headless Chromium on the GTX 1080, never an
+    integrated GPU) applies to every number here.
+14. **A dying Air Force is not seen dying** (**D88**'s known cost — deliberate in
+    the code's own comments, but reported by no pass and never photographed): a ring swarm's
+    insect rig is never drawn, so `FigureLayer` collects no departing body for it
+    and the prop field binds no bees to a departed ring — it leaves the table with
+    its snapshot, the one exception to **D64**. A beat aimed at it (Helicarrier
+    Strike at `g3`@116) still lands where it stood. Letting the bees fall and fade
+    with the hidden body would close it. (A squad's followers do fall with their
+    leader.)
+
+### What slice 3 hands to T13–T14
+
+Report 13 §11's table, updated for three slices. **Before T13, play three games in
+the arena** — `./scripts/play.sh --arena` — and write down, in the moment, which
+cards do NOT read as themselves at the table view (the answer to "everything still
+looks very generic" is only as good as that list; follow-ups 2, 4 and 10 are the
+suspects), and decide **question 13** by looking at the table rather than at this
+page. The deaths, the views and the live combat (slice 2 follow-up 10) are the
+same game's other three questions.
+
+| | deliverable | what slices 1–3 already did | what is left |
+|---|---|---|---|
+| **T9** | drone and insect | **done (slice 3)**: the Doombot's eye, visor, thrusters and exhaust; the Air Force as a swarm of five instanced bees (**D88**); the giant ant side-on with a rider (**D76**) | the insect's missing `summon`, the drone's missing `hit` (deliberate absences) |
+| **T10** | the vehicle | **done (slice 3)**: a procedural carrier silhouette, crewed or not (**D77**, **D85**) | follow-up 5 |
+| **T11** | per-card beats | **done (slice 3)**: the `figure` anchor, the closed params, the shapes, rule 7 (**D79**); the attacker's turn (**D82**); Quake's resolution (**D89**); four quiet beats (**D87**) | follow-ups 3 and 6 |
+| **T12** | the remaining attachments | **done (slice 3)**: shell, glints, circuit, the cocoon and the console (**D80**); a click on the host hits the host (**D86**) | follow-ups 4 and 9 |
+| **id** | per-card identity | **done (slice 3)**: `traits.json`, the eighteen-kind prop kit (**D75**), read from both seats as a number (**D83**), the Agents' wedge (**D84**) | follow-ups 2, 10 and 12, and question 13 |
+| **T13** | duelists | **done in T7**: two silhouette busts in one draw call | slice 1 follow-up 10's placement (37–89% of the opponent's bust under chrome); full avatars stay Tier 2.5, only if the play-test says anyone missed them |
+| **T14** | verification pass | slice 1: one pass (passed, ten minors); slice 2: two passes (two majors and nine minors, all fixed); slice 3: two passes (seven majors and ten minors, each with a fix in the tree) and this documentation pass | a third look at slice 3's second fix pass (follow-up 11); the bench on the user's own desktop browser (Tier 2 follow-up 4, slice 3 follow-up 13); a play-test by the user, and question 13 |
+
+**The one line Tier 2 must not cross, restated for slice 3.** A per-card row in
+`traits.json` may choose a size, a hover, a colour and props from the shared kit; a
+new kind goes into the kit for every card, and nothing in the kit is a model used
+by exactly one card. Slice 3's two baked kinds are the library's own CC0 bodies
+frozen in a pose (the rider, the squad followers), and the carrier is an archetype
+rung — which is why none of it is Tier 3.
+
+### Tier 3 — a note, not a plan (likeness models, personal-only)
+
+Slice 3 is as far as **identity** goes inside Tier 2: a card reads as itself by
+what it carries, how big it is and where it flies, on one of five CC0 bodies. What
+the user may have in mind by "the desired end goal" — a Wasp who LOOKS like Wasp,
+a Fury who looks like Fury — is **likeness**, and likeness is Tier 3: a model per
+card, which report 13 §13 option (c) describes as the most work by an order of
+magnitude and the option with a real licence problem, and which the user's art
+direction for Tier 2 set aside (**D53**). If it is ever wanted, three things are already decided and would bind it:
+
+- **Likeness models are personal-only.** A mesh that depicts a Marvel character is
+  a depiction of someone else's property whoever made it; like the Scryfall card
+  images (NOTICE §2 and §4), it may live on this machine, **gitignored, never
+  committed, never published, never redistributed**, and recorded in
+  `tools/assets-manifest.json` as `committable: false` (report 13 §13 question
+  2's rule). The public repo stays CC0-and-code, and the arena must still play
+  every card without one — the disc, the archetype body and its traits are the
+  fallback, exactly as a missing `figures.glb` is today.
+- **D54 still stands**: no model is made from card art by any image-to-3D tool,
+  hosted or local, and nothing from Mixamo. A likeness model would have to come
+  from somewhere else — hand-made, or a CC0 / personally-licensed source the user
+  chooses — and choosing one is the user's decision, not a builder's.
+- **The seam is already there**: `figures.json`'s `cards` block can point a card
+  at a model, and `traits.json` layers on top of whatever body it names, so a
+  Tier 3 model would replace a card's body without touching the ladder, the prop
+  kit, the pose rules or hard rule 8 (a face-down card is still the anonymous
+  disc).
+
+Tier 3 is **not started and not scheduled**; it stays on the deferred list below,
+and it needs a decision of its own before it becomes work — **question 14** in
+*Only the user can decide*.
+
 ---
 
 ## Deferred — out of scope for M0–M7
@@ -2633,8 +2978,11 @@ Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so thes
 are now revisitable rather than blocked; nothing below is scheduled by that, and
 each still needs a decision of its own before it becomes work. The arena's
 **Tier 3** (per-card models) belongs on this list too; **Tier 2** left it on
-2026-09-13 — its first two slices are built (T0–T8 and the camera views) and its
-remaining evenings T9–T14 are handed over in *M7 Tier 2* above.
+2026-09-13 — its first three slices are built (T0–T12, the camera views and
+per-card identity) and its remaining evenings T13–T14 are handed over in *M7 Tier
+2* above. **Tier 3 means likeness**, and a likeness model of a Marvel character
+would be **personal-only** — local, gitignored, never committed or published, and
+never made from card art (**D54**): *Tier 3 — a note, not a plan*, above.
 
 - A second deck, a deck picker, and an AI profile / difficulty selector. (Now
   specified, if it ever comes forward: there is no "difficulty" in Forge, only
@@ -2676,3 +3024,5 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 10 | **New, Tier 2.** Report 13 §13's first six questions — art direction, models from card art, the GPU, idle breathing, duelists, lights. | **ANSWERED by the user before T0**, as nine decisions, recorded as **D53–D62**: stylised low-poly CC0 figures under a holographic, unlit treatment; figures at their card with the card plane kept; **no** AI-generated models from card art; **no** Mixamo; procedural slab lands; bloom on if the bench allows (it did, on the GTX 1080); breathing only while something else animates; silhouette busts, avatars deferred; mana motes to the controller's casting anchor. |
 | 11 | **New, Tier 2.** Commit `web/public/models/figures.glb` (143,920 bytes since slice 2 — 126,404 in slice 1 — CC0, built by `tools/build-figures.mjs`), or gitignore it and regenerate it like `web/public/art.json`? | **Undecided — nothing in the code depends on the answer.** A checkout without it draws every creature as its disc and says so once in the console, and `figures.test.ts` skips its hash check. If it is committed, `figures.test.ts` holds it to the bytes and sha256 `models.json` records, and `@gltf-transform/cli` should be pinned exactly first (Tier 2 follow-up 17). |
 | 12 | **New, Tier 2.** Should the live combat budget let the clip lane play (Tier 2 follow-up 1)? Today a combat batch in the human's own turn is snapped, so the lunge and the hit are replay-only. | **Unchanged: Tier 1's budgets stand.** The user's play-test of slice 1 (2026-09-27) reported nothing major, so the default holds; slice 2 fixed a second cause (the idle-gap clock, **D72**) and measured the first live (17 of 44 batches still snapped). Raise it again if the next play-test — *"What slice 2 hands to T9–T14"* — says the combat reads wrong live. |
+| 13 | **New, Tier 2 slice 3.** Should your figures face the OTHER seat? Measured in slice 3 (**D81**): the models' fronts are at +Z and `layout.ts`'s `seatFacingY('you')` is 0, so **your figures face your camera and the opponent's face away** — both sides face outward, away from the combat lanes. For: a badge, an eyepatch, a pistol, a laser eye and a face read on YOUR side. Against: an attacking figure lunges toward the opponent back first — the Doombot's exhaust leads its lunge and its laser leaves its eye on the far side and crosses its own body — and Agent 13's `pistolDraw` aims at you. | **Unchanged: your figures face you.** Turning them is one line (`seatFacingY`), and every prop and every T11 beat follows it through the one definition of a front — but it changes what the whole table looks like, so it is yours to decide after a play-test. Since the second verification pass two of the "against" points are gone whichever way you decide: an attacker turns to face its defender for the length of its attack (**D82**), and every identity prop reads from behind too (**D83**). |
+| 14 | **New, Tier 2 slice 3.** Is **likeness** — figures that look like the characters, a model per card — part of the end goal, or is identity-through-props (slice 3) where the arena should stop? | **Undecided; Tier 3 is not started and nothing assumes it.** Slice 3 is as far as identity goes inside Tier 2. If likeness is wanted, it is **personal-only** (local, gitignored, never committed or published, `committable: false` in the manifest), never generated from card art and never from Mixamo (**D54**), and its source is yours to choose — *Tier 3 — a note, not a plan*, in *M7 Tier 2* above. A play-test of slice 3 is the input: if the cards read as themselves at the table, the answer may be "no". |

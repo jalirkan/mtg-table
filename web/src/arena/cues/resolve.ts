@@ -334,7 +334,11 @@ function strikeParams(
     const board = state.board;
     const target = board === null ? undefined : findCard(board, card);
     const owner = (target as { controller?: number | null } | undefined)?.controller ?? null;
-    return { strikeCard: card, strikeFoe: owner !== null && caster !== null && owner !== caster };
+    return {
+      strikeCard: card,
+      strikeFoe: owner !== null && caster !== null && owner !== caster,
+      strikeGrew: sizeChange(findCard(previous, card), target),
+    };
   }
   const player = item.targetPlayerIds[0];
   if (player !== undefined) {
@@ -424,6 +428,7 @@ export function cuesFor(
         stackId: event.stackId,
         fromZone: 'hand',
         fromPlayer: event.controller,
+        foe: foeOf(event.controller, state),
         ...beam,
       });
     }
@@ -447,6 +452,7 @@ export function cuesFor(
       const caster = casterOf(subject);
       return one([event.cardId], caster, {
         fizzled: event.fizzled,
+        foe: foeOf(caster[0] ?? null, state),
         ...strikeParams(event.cardId, caster[0] ?? null, state, previous),
       });
     }
@@ -476,8 +482,11 @@ export function cuesFor(
       });
     }
 
+    // **T11 — the controller, off the snapshot**, exactly as `tap` reads it (T4):
+    // a scientist's power-up sends the cards it draws to ITS controller's hand
+    // (`fx.hologram`'s `toHand`), and the counters event carries no player at all.
     case 'counters':
-      return one([event.cardId], [], {
+      return one([event.cardId], casterOf(subject), {
         counter: event.counter,
         from: event.from,
         to: event.to,
@@ -600,6 +609,44 @@ export function cuesFor(
     default:
       return [];
   }
+}
+
+/**
+ * **T11 — did the struck card get bigger or smaller across this transition?**
+ * `+1`, `-1` or `0`, from `power + toughness` in the previous frame against this
+ * one: two snapshot facts about ONE card, compared. It is what lets Pym Particles'
+ * beam grow or shrink its target by what the engine actually did to it, rather
+ * than by what the art direction guessed the spell does (report 09 §12.2's
+ * "partly" row: the beam used to fire the same way whatever followed).
+ *
+ * It claims nothing about *why*: a size that changed in the batch the spell
+ * resolved in is reported as the change, and a card whose P/T is `*`, absent or
+ * gone (it died) is `0` — no growth is claimed that the snapshot does not show.
+ */
+function sizeChange(before: AnyCard | undefined, after: AnyCard | undefined): number {
+  const size = (card: AnyCard | undefined): number | null => {
+    if (card === undefined) return null;
+    const p = Number.parseInt(String((card as { power?: string | null }).power ?? ''), 10);
+    const t = Number.parseInt(String((card as { toughness?: string | null }).toughness ?? ''), 10);
+    return Number.isFinite(p) && Number.isFinite(t) ? p + t : null;
+  };
+  const a = size(before);
+  const b = size(after);
+  if (a === null || b === null || a === b) return 0;
+  return b > a ? 1 : -1;
+}
+
+/**
+ * **T11 — "the other side of the table"**, as an id: the first seat in the
+ * snapshot that is not `player`. A DIRECTION for a cue that sweeps across the
+ * table (the Air Force's swarm) — never a claim about what the spell affected,
+ * which is the strike's job and only when the wire says so. `-1` when there is no
+ * such seat (a pre-game frame), and a cue then simply does not sweep.
+ */
+function foeOf(player: number | null, state: ClientState): number {
+  if (player === null) return -1;
+  for (const seat of state.board?.players ?? []) if (seat.id !== player) return seat.id;
+  return -1;
 }
 
 function playersOf(event: Extract<GameEvent, { kind: 'zone' }>): number[] {

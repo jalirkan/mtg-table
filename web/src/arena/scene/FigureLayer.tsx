@@ -68,6 +68,7 @@ import {
   type LoadedModel,
   type ModelLibrary,
 } from './models.ts';
+import { PropField, type PropBody } from './props.ts';
 
 export interface FigureLayerProps {
   poses: FigureLayout;
@@ -144,6 +145,8 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
     departures.commit(poses);
     if (library === null || before === null || before === poses) return;
     for (const pose of departedFigures(before, poses)) {
+      // Slice 3: a ring swarm's body is never drawn, so it has no body to die.
+      if (pose.swarm > 0 && pose.formation === 'ring') continue;
       const model = pose.modelId === null ? undefined : library.get(pose.modelId);
       // Where it is drawn is decided here, at commit, from the frame it left and
       // the frame it left for: out of the rank that has just closed up.
@@ -151,6 +154,29 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
     }
   }, [poses, library, departures]);
 
+  /**
+   * **Slice 3 — the prop field** (`scene/props.ts`): every figure's props, the
+   * swarms and squads, and the vehicle silhouettes, one instanced mesh per kind.
+   * Built once, installed into the disc field for the layer's lifetime so the one
+   * `useFrame` binds it (after the rigs are posed), handed the library when it
+   * loads, and COMMITTED here, once per snapshot, after every `<Figure>` below has
+   * registered its rig (a child's layout effect runs before its parent's).
+   */
+  const props = useMemo(() => new PropField(), []);
+  useEffect(() => {
+    discs.setProps(props);
+    return () => {
+      discs.setProps(null);
+      props.dispose();
+    };
+  }, [discs, props]);
+  useEffect(() => {
+    // §8.3 rule 3: one compile of the prop program at mount, not on the frame the
+    // first prop appears. `compile` skips invisible objects, so show them for it.
+    props.setPrimeVisible(true);
+    gl.compile(scene, camera);
+    props.setPrimeVisible(false);
+  }, [props, gl, scene, camera]);
   const mounted = useMemo(() => {
     const out: Array<{ pose: FigurePose; model: LoadedModel }> = [];
     if (library === null) return out;
@@ -173,6 +199,14 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
     gl.compile(scene, camera);
   }, [library, mounted.length, gl, scene, camera]);
 
+  // The props of THIS snapshot, bound against the rigs its figures registered —
+  // and against the bodies dying in it (added by the departures' layout effect
+  // above, which runs first), so a falling figure keeps what it carried.
+  useLayoutEffect(() => {
+    if (library !== null) props.setLibrary(library, models);
+    props.commit(poses, rigs, models, departures.bodies());
+  }, [props, poses, rigs, models, library, mounted, departures]);
+
   return (
     <>
       {/* One draw call for every stand disc on the table (§9.4) — and a second,
@@ -182,6 +216,8 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
       <primitive object={discs.onCardMesh} />
       {/* T8: the bodies of the creatures that just died, drawn until their deaths end. */}
       <primitive object={departures.group} />
+      {/* Slice 3: what every figure carries, and the vehicles overhead — one draw call per kind. */}
+      <primitive object={props.group} />
       {mounted.map(({ pose, model }) => (
         <Figure key={`${String(pose.cardId)}:${model.id}`} pose={pose} model={model} rigs={rigs} />
       ))}
@@ -289,6 +325,14 @@ const Figure = memo(function Figure({
     if (rig !== undefined && rig.root === built.instance.object) rig.pose = pose;
     invalidate();
   }, [rigs, built, pose, invalidate]);
+
+  // **Slice 3 — a ring swarm is its members, not its body** (Ant-Man's Air Force):
+  // the rig still stands at the centre for the clip lane and the camera, but is
+  // not drawn — the prop field draws the five bees round it.
+  const ring = pose.swarm > 0 && pose.formation === 'ring';
+  useLayoutEffect(() => {
+    for (const mesh of built.instance.meshes) mesh.visible = !ring;
+  }, [built, ring]);
 
   useEffect(
     () => () => {
@@ -537,6 +581,21 @@ export class DepartureField implements DepartureBinder {
 
   drawn(): number {
     return this.shown;
+  }
+
+  /**
+   * Commit phase: the bodies held now, for the prop field (`scene/props.ts`'s
+   * `PropBody`) — so a dying Doombot falls with its eye and thrusters. Built at
+   * commit, never in the frame loop; the field draws a body's props only while
+   * the body itself is drawn.
+   */
+  bodies(): PropBody[] {
+    const out: PropBody[] = [];
+    for (let i = 0; i < MAX_DEPARTURES; i++) {
+      const entry = this.slots[i] ?? null;
+      if (entry !== null) out.push({ root: entry.instance.object, material: entry.material, pose: entry.pose });
+    }
+    return out;
   }
 
   /** Let every body go (unmount, or StrictMode's rehearsal of one). The group survives. */

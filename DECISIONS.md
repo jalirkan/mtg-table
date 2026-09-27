@@ -2966,3 +2966,532 @@ its `input !== null` branch, so on a recording with no `input` frame (`g1.jsonl`
 `VIEWS` into `keys.ts` (it would pull `arena/` into the 2D entry chunk, **D49**).
 Leaving the rows unbound on the board (a key the overlay lists that does
 nothing and says nothing).
+
+---
+
+## D75 — Identity is DATA: a per-card traits file and a shared kit of procedural props, one draw call per KIND
+
+**2026-09-27** (M7 Tier 2, slice 3 — T9/T10's identity track; recorded by the
+slice's verification-fix and documentation pass. Within **D53**, **D54** and **D56**)
+
+**Decision.** What makes a card read as ITSELF — size, hover, colour, what it
+carries — is `web/src/arena/figures/traits.json`, validated by
+`figures/validate.ts`'s `validateTraits` exactly as `cues.json` is (closed keys,
+ranges, a bad row dropped and the ladder falling through), beside `figures.json`,
+which still says only which BODY a card stands in. The ladder is `default ⊕ every
+matching subtype rung, least specific first ⊕ the card's row`; scalars take the
+most specific rung, `props` is replaced, never appended. A row names props from
+`figures/props.ts`'s **closed kit** — seventeen nameable kinds since the
+verification pass (`wings`, `helmet`, `hood`, `jetpack`, `exhaust`, `laserEye`,
+`pistol`, `muzzle`, `coat`, `eyepatch`, `badge`, `tie`, `gauntlets`, `shield`,
+`hat`, `rider`, `labBench`) and three derived ones (`squad`, `swarmBee`,
+`carrier`) — each a **procedural primitive**, anchored per body family on a
+joint's base name (the Kenney rig's seven), `root` or `stand`, in figure space.
+`scene/props.ts` draws **one `InstancedMesh` per kind**, all one shader program,
+so the field's cost is the number of kinds on the table, never the number of
+figures. Every kind is open to every row: Bold Biochemist's white lab coat is
+Fury's `coat` kind in another colour. A trait is a pose (the snapshot says the
+card is face up on the battlefield), so it survives `skip all`, a scrub and a
+`resync`; a card drawn as a back never reaches the file (hard rule 8).
+
+**Rationale.** The user's verdict on slice 2 was "everything still looks very
+generic": five bodies in a colour. Per-card MODELS are Tier 3 (report 13 §12), and
+a model per card is the seam Tier 2 must not cross; a small kit of shared props,
+chosen by data, gives every deck card a silhouette of its own at a cost the budget
+can carry — measured at `g1`@355, bloom off: 77 calls, 27,474 triangles, 12
+programs, of which the prop field is 8 kinds and 3,062 triangles (report 13 §8.2's
+≤ 90 and ≤ 30,000). No asset was added: nothing in `tools/assets-manifest.json`,
+`NOTICE` or `figures.glb` moved.
+
+**Known cost.** Readability at the table view is a matter of SIZE, and slice 3's
+first props were measured too small by the verification pass (Agent 13's pistol
+invisible, Coulson's badge a 1–2 px glint, Fury's patch a dot, Peggy's roundel
+hidden side-on): the fix enlarged them and added `muzzle`, `tie` and `hat`. Your
+own figures face you (**D81**), so front props read on your side and back props
+(the coat, the jetpack) on the other.
+
+**Rejected.** A model per card (Tier 3). A glTF prop pack merged into
+`figures.glb` (no prop needed a mesh the kit could not build, and a pack is a new
+provenance to carry). Props keyed off events (a pose that vanishes on a skip).
+Appending `props` down the ladder (a rung could then never take a prop away).
+
+---
+
+## D76 — The giant is giant because it flies side-on: D65 stays strict
+
+**2026-09-27** (M7 Tier 2, slice 3 — T9; closes slice 2 follow-up 3. Within **D65**)
+
+**Decision.** `traits.json` flies the Giant-Sized Flying Ant turned 90° (`turn`),
+and declares its turned footprint (`turnedRatio` 0.83), so the strict width clamp
+measures its body's LENGTH along the rank rather than its wingspan: at
+`scale: 1.35` it clamps to **0.867** tall against 0.490 facing, inside the same
+0.720 slot. `traits.test.ts` loads the committed `figures.glb` in Node, poses the
+insect in its resting stances as `build-figures.mjs` measures width, and fails if
+the declaration is below the measured 0.783 or more than 0.1 above it. A swarm is
+clamped by its whole ring (`swarmSpan`) and a squad by its whole rank.
+
+**Rationale.** D65 rejected exemptions for a reason — the overlap sweep's 0.000 is
+what keeps a rank readable — and a different ORIENTATION is not an exemption: the
+clamp still holds the drawn footprint to one slot.
+
+**Rejected.** An exemption from the clamp, or a wider slot for one card (a
+`layout.ts` rule keyed to a name).
+
+---
+
+## D77 — A Vehicle is a carrier SILHOUETTE overhead, crewed or not, flying high enough to cover no figure from the table view
+
+**2026-09-27** (M7 Tier 2, slice 3 — T10; the altitude and length from its
+verification pass. Closes the manifest's `_deferred.carrier`)
+
+**Decision.** The `subtype:vehicle` trait rung (an ARCHETYPE, so no model belongs
+to one card) draws a Vehicle as a procedural carrier — hull, flight deck with
+runway lights, island, four rotor pods, 456 triangles, one draw call — posed at
+its stand point lifted by the rung's `hover` (1.25) on top of the card's own
+`presence` hover, never below `layout.ts`'s **`SILHOUETTE_ALTITUDE` (2.05)**, and
+`CARRIER_LENGTH` **1.5** long. It is posed **crewed or not**: 613 of the corpus's
+728 Helicarrier frame-instances are an uncrewed `Artifact - Vehicle`, and the
+snapshot says it is on the battlefield either way — so figures are no longer only
+creatures and ghosts (`vehicle: true`, `modelId: null`, no disc, no props; 599
+such poses). No stand disc under a silhouette.
+
+**Rationale.** A CC0 vehicle mesh was never chosen, and a primitive carrier reads
+as the Helicarrier at table distance. The verification pass found the first
+numbers (1.65, 1.85 long) put its rotor pods on the heads of the figures below it
+from the table view (`g1`@323: on Wasp; 352 of 799 own-seat pairs overlapped on
+screen by more than 5%). A grid of altitude, inboard shift and scale was measured
+through every view's camera: raising it 0.4 and shortening it 20% takes the
+table-view overlap to **0.000 on both seats**, and `figure-pose.test.ts` now
+projects every carrier and figure through the table camera and asserts it
+(negative-controlled with the old numbers: 0.569).
+
+**Known cost.** From the two over-the-shoulder views a carrier over YOUR rank still
+projects onto the FAR rank (342 of 621 pairs in the shoulder view, as before the
+fix): an aircraft between you and the far side of a table does that in
+perspective, and no single position satisfies the table view and the shoulder
+views at once (moving it inboard fixes the shoulder and breaks the table). The
+hull is translucent.
+
+**Rejected.** A seat-dependent inboard shift (it moves the conflict to the other
+view). A card-row silhouette for the Helicarrier alone (a model per card). Drawing
+it only while crewed (the snapshot says it is there either way).
+
+---
+
+## D78 — The prop field is bound through `DiscField.bind`, committed once per snapshot, and rides the dying bodies too
+
+**2026-09-27** (M7 Tier 2, slice 3 — the identity track's frame-loop seam; the
+departing bodies and the reduced-motion subscription from its verification pass.
+Within **D57**, **D58** and **D64**)
+
+**Decision.** `scene/props.ts`'s `PropField` is built and installed by
+`FigureLayer` only, **committed** there in a layout effect once per snapshot
+(after every `<Figure>` below has registered its rig, and after the departures'
+effect has added this snapshot's dying bodies), and **bound** from
+`DiscField.bind` — the seam **D64**'s bodies already use, after `applyFigures` has
+posed every rig — so from `CueRunner`'s one `useFrame`, without touching it. The
+frame-loop body walks a fixed array of 192 preallocated bindings by index and
+allocates nothing (liveness reads it, junk lines spliced in). A joint prop is
+re-expressed in its joint's bind frame at load, so it follows whatever the clip
+lane does to that joint; a `root` prop follows `pose ⊕ offset`; a `stand` prop
+ignores the offset. **A dying figure keeps its props**: `DepartureField.bodies()`
+is a second input to `commit`, its joint props ride the body's own joints, its
+other props its root, all fading with its material and drawn only while the body
+is. The field **follows** `prefers-reduced-motion` (a `matchMedia` change
+listener, dropped in `dispose`), rather than reading it once at construction.
+
+**Rationale.** One frame loop (M7 convention 5). A slice-3 field that read the
+reduced-motion query once kept the wing flutter and the ring's turn for a user who
+turned it on mid-game, and a Doombot fell without its eye because the departing
+body was a clone the field never bound (both the verification pass).
+
+**Rejected.** A `useFrame` of the field's own. Mixers for the baked kinds (the
+rider and squad followers are sampled track by track at load, because the arena's
+mixers are ticked in exactly two files).
+
+---
+
+## D79 — T11's beats are drawn ON the body (the `figure` anchor), their params are a closed table, and one card's cast and resolved play once
+
+**2026-09-27** (M7 Tier 2, slice 3 — T11's cue track; recorded by the slice's
+verification-fix and documentation pass. Within **D50** and **D51**)
+
+**Decision.** Three rules. **The `figure` anchor** (`cues/stage.ts`):
+`{kind: 'figure', id, at, fwd?, side?}`, a point on a card's BODY in figure
+heights, resolved only by the effect binding (`scene/effects.ts`'s
+`#figurePoint`) against the frame's poses, each card's live offset and the
+presence bob, and through `layout.ts`'s `figurePointInto` since the verification
+pass (**D81**); `layout.ts`'s `anchorPosition` answers `null` for it, so the camera
+can never be handed one; a creature that died in the snapshot resolves to its
+departing body's stand. **Every cue param is closed, typed and ranged**
+(`cues/validate.ts`'s `PARAM_SPECS`): a name outside the table is an error, and so
+is an event fact (`beamTo`, `strikeCard`, `defenderId`, `foe`) — a cue file that
+set one would be inventing an aim. The verification pass added one param,
+`attack.jet`'s `eye` (default `true`): Wasp and the giant ant fly on the jet's
+lunge without the Doombot's robot eye. **Suppression rule 7** (`cues/queue.ts`): a
+card whose `cast` and `resolved` name the same cue in one batch plays it once — the
+aimed one, else the first (`g1.jsonl` frame 139 otherwise lifted Web Up twice). The
+effect pool grew once, **38 → 45** slots (glow 8, ring 8, beam 5, particles 3,
+text 6, plate 3, mote 12); `MAX_LIVE_EFFECTS` did not move.
+
+**Rationale.** Every Tier 1 effect sat at a card's REST position, which stays
+behind while the lunge carries the body into the lane. A param that is only
+type-checked as a primitive passes a typo and looks like it worked — the
+unknown-FIELD rule one level down.
+
+**Rejected.** Resolving the figure anchor in `layout.ts` (it has no offsets and no
+poses; the director would then frame a body mid-lunge). An open param bag.
+
+---
+
+## D80 — T12's looks are poses; the deck's three attachment rows are committed; a station stands in its own rank slot
+
+**2026-09-27** (M7 Tier 2, slice 3 — T12; the rows and the stations' placement
+from its verification pass. Within **D56**)
+
+**Decision.** `figures.json`'s `attachments` block carries per-name rows for every
+attachment the deck plays: Quantum Reduction `shrink` (T5), and — committed by the
+verification pass — **Super Suit `shell`**, **S.H.I.E.L.D. Spy Kit `glints`**,
+**Robotics Mastery `circuit`**. `scene/overlays.ts` draws each look as one
+instanced mesh per KIND, keeps the halo ring at the host's feet, and gives an
+anonymous host the ring and nothing else. Over the corpus: **944 shrink · 409
+shell · 362 glints · 315 circuit**, nothing of this deck on the halo.
+`subtype:aura` / `subtype:equipment` stay the halo for any other card. The
+**stations** (`cues.json`'s per-card `station`, `figures/attach.ts`'s
+`stationsOf`) — Strategic Intervention's ops console, Web Up's cocoon — are a pose
+of the card being face up on the battlefield, and since the verification pass each
+**stands in its own rank slot**: at the slot's stand point (where a creature's
+figure would stand), figure-sized (`STATION_SIZE`, never wider than
+`FIGURE_MAX_WIDTH`), `STATION_LIFT` 0.3 / 0.4.
+
+**Rationale.** Slice 3's cue track built the looks but could not commit the rows
+(they live in the identity track's file, and its test pinned the old rungs), so
+real games drew the plain halo. The first stations hung 1.1 wide, 0.85 above the
+CARD, and from the table view's steep camera the console covered the figures
+standing in front of the neighbouring cards (`g2`@224: your Ant-Man).
+`attach.test.ts` now projects every station and figure through the table camera and
+asserts a cover under 5% (measured 0.004; 0.564 with the old placement).
+
+**Rejected.** A cocoon on the exile pile (the wire never relates Web Up to what it
+exiled, measured over the whole corpus). A DOM widget for the console (it would
+be a click target and a second renderer). Keeping the rows out of `figures.json`
+and laying them over in a test (the test passed while the game drew the halo).
+
+---
+
+## D81 — One definition of a figure's FRONT; your figures face you, and that is the user's call
+
+**2026-09-27** (M7 Tier 2, slice 3 — its verification pass's major finding.
+Supersedes the "it faces the other seat" comments of report 13 §3.1 and slice 1)
+
+**Decision.** Figure space's front is **+Z** — `layout.ts`'s `FIGURE_FRONT_Z`,
+because `scene/models.ts` turns every model's face to +Z and `figures/props.ts`
+writes every anchor in that space (measured on `figures.glb`: 69 of the agent's
+127 eye-band vertices sit within 0.03 of z = +0.25, 8 near the back). The pose
+turns a body by `facingY`; `layout.ts`'s `seatFacingY` is the one statement of it
+(`0` for you, `π` for the opponent), and `figurePointInto` / `figureAnchorOf` are
+the one resolution of a beat's `fwd` / `side` (right = front × up, −X for a figure
+facing +Z). The effect binding's `figure` anchor had resolved `fwd` along
+−(sin, cos): every beat meant for a body's front landed behind it — the Doombot's
+exhaust streamed out of its face while its flame prop burned behind it (`g1`@231→232,
+photographed from both sides). Agent 13's muzzle flash is now placed ON her
+pistol's lit tip through `figureAnchorOf(PISTOL_MUZZLE)`. `web/test/facing.test.ts`
+resolves the jet's eye and exhaust, the muzzle and the badge flash against the
+props they are about, for both seats, and carries its own negative control (the
+old resolution fails every case).
+
+**Not changed, and why.** With fronts at +Z and `seatFacingY('you') === 0`, **your
+figures face YOUR camera and the opponent's face away** — both sides face outward,
+away from the combat lanes. That is why a badge, an eyepatch, a pistol and a laser
+eye read on your side and a coat or a jetpack on the other; it is also why an
+attacking figure lunges toward the opponent BACK first (the Doombot's exhaust leads
+its lunge and its laser leaves its eye on the far side and crosses its own body),
+and Agent 13's `pistolDraw` aims at you. Turning every figure to face the other seat
+is one line (`seatFacingY`), and every prop and every T11 anchor follows it through
+the definitions above — but it changes what the whole table looks like, so it is
+**question 13** in PLAN.md's *Only the user can decide*, not a fix.
+
+**Rejected.** Flipping the prop kit's anchors to match the cue track (the cue track
+was the one that did not match the models). A second, local "front" in either file.
+
+---
+
+## D82 — An attack turns its attacker to FACE its defender: `dRotY`, the figure's own vocabulary, asked of `layout.ts`
+
+**2026-09-27** (M7 Tier 2, slice 3 — its second verification pass. Within **D50**
+and **D81**; question 13 stays open)
+
+**Decision.** `Offset` gains **`dRotY`**, a turn about y added to a FIGURE's facing
+(`CueRunner.applyFigures`, the prop field's root props, the effect binding's
+`figure` anchor) — the figure's vocabulary exactly as `dRotZ` is the card's: a card
+ignores it, a figure ignores `dRotZ`. `Stage` gains a second geometry query,
+**`yawTo(cardId, anchor)`**: the turn that brings the card's figure, standing at
+its stand point and facing the way its seat's figures stand, round to face the
+anchor (`layout.ts`'s `figureYawTo` / `yawToward`, the short way, in (−π, π]); a
+`NullStage` answers 0. Every lunging attack — `attack.lunge`, `attack.jet`,
+`attack.aegis`, `attack.shrink` and Fury's `fx.agents` with `lunge` — writes
+`dRotY = yawTo(id, defender) × k`, where the defender is the `attackers` band's
+own `defenderKind` / `defenderId` (else the attacker's own combat lane), and `k` is
+the lunge's envelope: 0 at the start and the end, so the turn decays to identity
+(D50). A trait's `turn` (the side-on giant ant) is not taken out: a side-on flier
+stays side-on to its target.
+
+**Rationale.** Slice 3's front-anchored beats — Agent 13's muzzle flash, the
+Doombot's eye and laser — shipped firing out of the far side of the body, because
+both seats' figures rest facing OUTWARD (D81). Question 13 (which way figures rest)
+is the user's; which way an attacker faces while it attacks is not a question, it
+is what the beat says. `facing.test.ts` runs the real cues against a `SceneStage`
+over a two-seat board, for both seats: at the flash and the laser peak the beat's
+point is on the defender's side of the lunged body and the body's front is within
+10° of the line to its defender (6° measured, from the lunged position); the turn
+is 0 at t = 0 and t = 1; and the negative control — no turn — faces every attacker
+away from its defender.
+
+**Rejected.** Flipping `seatFacingY` (question 13, the user's). A cue computing a
+yaw from coordinates it was never given (D50, report 09 §8 rule 3). A turn keyed
+off a card name.
+
+---
+
+## D83 — Identity reads from BOTH seats and from above, and that is a number: `traits.test.ts` rasterises every deck card's props
+
+**2026-09-27** (M7 Tier 2, slice 3 — its second verification pass. Extends **D75**)
+
+**Decision.** `web/test/prop-raster.ts` (test support, not a test) is a small
+software rasteriser over the REAL figure pipeline: `figures.glb` parsed by three's
+`GLTFLoader` in Node and indexed by `scene/models.ts`'s own `indexLibrary` (now
+exported), the bodies in their resting clip, the props read back out of a real
+`PropField`, every triangle projected through the table view's camera into a depth
+buffer at 1600 × 1000. `traits.test.ts` poses every deck card alone and at the end
+of a five-card rank, standing and kneeling, on BOTH seats, and requires every
+identity prop to put **≥ 48 px** (about 7 × 7) on screen — except the three that
+sit on one side of a body by nature (`tie`, `laserEye`, `exhaust`), which must
+show on their own side at half the bar while a named partner (`badge`, `visor`)
+carries the card at the full bar on the other. The negative control: Coulson's
+chest badge alone, from the opponent's seat, is 0 px.
+
+To pass it: the **badge** kind has a second anchor, a larger emblem between the
+shoulder blades, and the chest badge sits lower, out from under the chibi's chin;
+the **pistol** moved from the chest to her right hip, out beside the body and 49°
+out from straight ahead (0.32), so it shows in silhouette from the front, the back
+and side-on; a new shared kind, **`visor`** — a robot's eye as a lit band round its
+head — gives the Doombot (and the Robot token, through the robot rung) its red from
+behind; **Nick Fury** is a slate body (`#566076`) in a nearly opaque black coat
+(`#15181e`, a new `CLOTH` look lit only at its silhouette) flared wider than his
+head, with trim ×30 of the coat's colour down its front, round a stand-up collar
+and its hem, and a big black patch with a thin pale rim and a black strap running
+DIAGONALLY up across his forehead (a level strap read as sunglasses); the **tie**
+runs to the belt, tilted to the camera.
+
+**Rationale.** Both earlier passes judged the props on the viewer's own figures,
+and the opponent's figures show the table view their backs (D81): on half the
+table Coulson and Agent 13 were a colour. A photograph cannot be a regression
+test; a raster of the real meshes can. Fury is slate and not black because a
+hologram is translucent (`holoMaterial`'s core alpha 0.38) — a black body over a
+bright card reads grey, and the black patch and strap need a head to be darker
+than.
+
+**Rejected.** A second figure per seat facing the camera. Props on the back only
+(the viewer's own figures face the camera). An absolute contrast test (the raster
+counts pixels, not contrast; the evidence still photographs at 1×).
+
+---
+
+## D84 — The Agents are a WEDGE clamped into one slot, and "three heads side by side" is the test
+
+**2026-09-27** (M7 Tier 2, slice 3 — its second verification pass. Within **D65**)
+
+**Decision.** A `squad` formation stands its followers one each side and a step
+back — `SQUAD_OFFSET_X` **0.46**, `SQUAD_OFFSET_Z` **−0.2**, at **0.78** of the
+leader — and the strict width clamp shrinks the whole squad to fit its one rank
+slot (0.396 tall against a lone agent's 0.626). The squad wears a steel blue of its
+own (`#6c86c0`). `traits.test.ts` rasterises the three heads from the table view on
+both seats, standing and kneeling, centre and edge: each head shows ≥ 150 px, and
+every pair of head centres is ≥ 15 px apart ACROSS the screen and further across
+than up it (two heads one above the other are one agent with a doubled outline from
+that camera). Measured: 18.4–22.9 px; slice 3's first formation (0.16 aside, 0.32
+behind, 0.8) fails in all 8 cases — its followers projected just above or below
+the leader.
+
+**Rejected.** An exemption from the clamp so the squad could be full size. A
+shoulder-to-shoulder row (the heads overlap more, and the wedge's depth separates
+them on screen).
+
+---
+
+## D85 — The OPPONENT's carrier flies over the centre line, low and a fifth smaller; the HUD is a keep-out band
+
+**2026-09-27** (M7 Tier 2, slice 3 — its second verification pass. Amends **D77**
+for the opponent's seat; yours is unchanged)
+
+**Decision.** `layout.ts`'s `silhouettePlacementOf` places a vehicle's silhouette:
+YOUR carrier over your own rank at least `SILHOUETTE_ALTITUDE` (2.05) up, as D77;
+the OPPONENT's at its card's x over the table's centre line (`OPP_SILHOUETTE_Z`
+0.25) at `OPP_SILHOUETTE_ALTITUDE` **0.8**, `OPP_SILHOUETTE_SCALE` **0.8**. The
+arena's chrome over the top of the canvas — the decision bar, the cue and camera
+strips, the credit line and the opponent's seat card — is `HUD_TOP_PX` **128**
+CSS pixels, fixed, measured at five window sizes; `figure-pose.test.ts` holds every
+carrier's projected top under that band at every live aspect on a 745 px and a
+946 px canvas (measured: NDC 0.353 against a band from 0.656), with the old
+placement as the control (1.058 — above the canvas top).
+
+**Rationale.** From the table view the opponent's whole side is packed between the
+chrome and the middle of the screen — its land rank starts about 15 px under the
+credit line at 1600 × 1000 — so a carrier over the opponent's rank is either under
+the HUD (as it was, "half hidden behind the camera strip and the attribution
+line") or over the opponent's own figures. A grid of altitude, inboard shift and
+scale over the corpus found no place over that half satisfying both; the middle
+band does, with no cover of any figure from the table view (5,103 pairs, 0.000).
+
+**Known cost.** From the two over-the-shoulder views (2, 5) the centre-line carrier
+projects onto the far rank (the cost D77 already accepted for your own carrier
+there), and where BOTH seats have a carrier at overlapping x (mirror games — g1@316)
+the two hulls overlap on screen like a formation. PLAN.md's slice-3 follow-ups carry
+both.
+
+**Rejected.** Lowering and moving it inboard over the opponent's half (it covers
+the opponent's figures). A carrier that depends on the camera view (a pose is a
+function of the snapshot). Shrinking the HUD (the strips are the controls).
+
+---
+
+## D86 — An attachment lies UNDER its host: the click order is the drawing order
+
+**2026-09-27** (M7 Tier 2, slice 3 — its second verification pass; a Tier 1
+layout defect found live. Amendment **M8** unchanged)
+
+**Decision.** `layout.ts`'s `ATTACH_DY` is **−0.002** (it was +0.002). An Aura or
+Equipment was drawn behind its host by `renderOrder` but lay 2 mm ABOVE it, so its
+click proxy — 10% larger than the card — was the nearer hit over most of the host:
+live, seed 11, view 2, a click on Peggy Carter under the opponent's Quantum
+Reduction answered "Not selectable: card 45", and she could be declared an attacker
+only through Alpha Strike. `attach.test.ts` builds `HitProxy`'s exact planes for
+every eighth corpus frame and raycasts with three's own `Raycaster` from the three
+seat-safe views: **765 of 765** host-centre clicks hit the host (with the old
+height, 765 of 765 missed), and 761 of 765 attachments keep a strip of their own —
+the other 4 lie wholly under their host and a wrapped rank's back row in one
+crowded `g3` board, where they are not drawn either. In the browser, raycasting the
+real scene's proxies at every host's centre at `g1`@250, @355 and `g3`@200 in views
+1, 2 and 5 hits the host every time.
+
+**Rejected.** Routing a click on an attachment the engine did not name to its host
+— that is gating a click on `selectable` (M8). A larger fan offset for the second
+attachment on a host (measured: it moved the second one under a neighbour instead).
+
+---
+
+## D87 — Four quiet beats made to read at table distance, and the camera kept out of the one that tried it
+
+**2026-09-27** (M7 Tier 2, slice 3 — its second verification pass. Within **D79**)
+
+**Decision.** Peggy's `attack.aegis` takes two new closed params, **`rim`** and
+**`rim2`** (colours, `PARAM_SPECS`): her bubble is her shield's blue and the rings
+at her feet its red and white, because a white-gold bubble merged with the white
+armour shell Super Suit leaves on her as a pose (`g1`@142). Helicarrier Strike's
+resolution beam is twice as thick (0.10–0.18) and a star flashes on the body as it
+lands (`g3`@116: the thin beam came down behind the giant ant unseen). The Air
+Force's sweep cloud is 60% wider and carries a bright `mote` core along its arc
+(`g2`@219: a faint dust), which costs the mote bucket, not the eight-slot cap. The
+Power-up's cards are card-sized lights that appear over the scientist's head and
+hold there for a beat before they fly toward a hand that is off the top of the
+table view for the opponent (`g2`@163) — a light leaving the figure's chest starts
+inside the body, which hides it.
+
+**Rejected.** A camera excursion on the strike: tried, and taken out — the struck
+card is usually in the graveyard by the snapshot the resolution arrives in, and a
+camera frames CARDS, so it swung away to the graveyard. Hard-coding the aegis's
+red, white and blue in the registry (colours are data).
+
+---
+
+## D88 — A swarm is its members and a squad is its followers: instanced copies of ONE kind round one rig, clamped as a whole
+
+**2026-09-27** (M7 Tier 2, slice 3 — T9's swarm and the Agents' squad, as built by
+the identity track and reshaped by the second verification pass; written up by the
+slice's documentation pass. Within **D65**, **D75** and **D84**)
+
+**Decision.** A card that is several bodies is still ONE figure pose — one rig, one
+stand point, one clip lane — plus members the prop field draws as instances of a
+single derived kind, so a swarm costs one draw call whatever its count.
+`traits.json`'s `swarm` is the member count and `formation` their arrangement:
+
+- **`ring`** (Ant-Man's Air Force, `swarm: 5`): five small **procedural** bees
+  (`swarmBee`, built to exactly `SWARM_BEE_RATIO` 1.4 wide) evenly round the stand
+  point at `RING_RADIUS` 0.42, stepped in height so they read as a cloud, the ring
+  turning slowly only while frames are drawn and never under reduced motion. The
+  card's insect rig **still stands at the centre and is not drawn**
+  (`FigureLayer` hides its meshes), so the clip lane, the `figure` anchor and the
+  director have the one body they already know how to address.
+- **`squad`** (Agents of S.H.I.E.L.D., `swarm: 2`): the leader is the card's own
+  rig; the followers are the `squad` kind — the same humanoid body **baked once at
+  load** from `figures.glb`, frozen in its idle — in **D84**'s wedge, riding the
+  leader's root, so the squad steps forward together on the leader's lunge and
+  falls with it.
+
+The width clamp (**D65**, strict) measures the WHOLE formation (`swarmSpan`): the
+Air Force stands 0.504 tall, each bee 0.21; the squad 0.396 against a lone agent's
+0.626. `swarmMembers` / `swarmSpan` are pure (`figures/props.ts`, `[NO three]`), so
+`traits.test.ts` holds the procedural bee to its declared ratio and the clamp to
+the corpus without a browser. An anonymous (face-down) card never has a swarm
+(hard rule 8, asserted over 1,179 corpus instances).
+
+**Rationale.** The user asked for the Air Force as a swarm of bees rather than one,
+and the Agents as a squad. Slice 2's hand-over had pencilled the swarm in as "a
+small swarm of the insect" — copies of the model; slice 3 drew procedural bees round
+one hidden rig instead, and the cost is why that stands: five copies of the insect
+would be five skinned rigs, five mixers for the one frame loop to tick, five draw
+calls and five of `MAX_FIGURES`' twelve modelled creatures spent on one card — and
+five bodies for the cue layer to choose between, when the engine only ever names
+one card. Members as
+instances of one kind keep the prop field's rule: cost bounded by the number of
+KINDS on the table, never the number of figures (**D75**). Baking the followers
+rather than animating them follows **D78**: the arena's mixers are ticked in
+exactly two files.
+
+**Known cost.** The members do not play clips: a squad follower is frozen in its
+idle while its leader shoots or kneels, and the bees only ring-turn and ride the
+lunge. **A dying Air Force is not seen dying**: its body is never drawn, so
+`FigureLayer` collects no departing body for a ring swarm and the prop field binds
+no bees to one — it leaves the table with its snapshot, the one exception to
+**D64** (a beat aimed at it, such as Helicarrier Strike's beam at `g3`@116, still
+lands where it stood, through the `figure` anchor's departure stand). A squad's
+followers do fall with their leader.
+
+**Rejected.** One figure per member (above). An exemption from the clamp for a
+formation (**D65**, **D84**).
+
+---
+
+## D89 — Quake's shockwave is keyed off her trigger RESOLVING, aimed only by the stack; no tap is ever paired to her
+
+**2026-09-27** (M7 Tier 2, slice 3 — T11's cue track; written up by the slice's
+documentation pass. Supersedes Tier 1's `tap:on` substitute in
+`docs/ideas/arena-mode.md`'s *Which rows Tier 1 implements*. Within **D51** and
+**D63**)
+
+**Decision.** `cues.json`'s Quake row moved from her own `tap:on` to **`resolved`**
+— the event that IS her trigger going off. `fx.shockwave` leaves two cyan rings
+from HER feet; with `fissure`, a crack runs across the table to what the trigger
+was aimed at, read from the **previous frame's stack** (T6's `strikeCard`, **D63**'s
+one frame of look-behind), a ring bursts at the target's feet and it plays `hit`;
+the bounded camera shake frames both cards. When the trigger went on and off the
+stack inside one snapshot there is no aim on the wire, and the shockwave is hers
+alone. The census prints it every run: **13 resolutions, 4 aimed**.
+
+**Rationale.** The idea table's beat is "a shockwave when her trigger taps a
+creature or land". Tier 1 could only centre it on her own tap, which fired on
+every tap of hers and on none of the taps her trigger caused. The heuristic that
+would have closed the gap — pairing the batch's `tap` events with her trigger,
+because they arrive together — **was considered and not taken**: the engine never
+says which card caused another card's tap, and a renderer that joins a cause to an
+effect the wire did not state is rules logic in a renderer (M7 convention 4: a cue
+keys off an event that is about THAT card). Her resolution is about her, and the
+stack is the wire's own statement of what it targeted.
+
+**Known cost.** 9 of the corpus's 13 resolutions are unaimed — the AI casts and
+resolves most triggers inside one snapshot — so most of the time the shockwave
+reaches no one; a live game where the trigger waits on the stack aims it
+(PLAN.md's slice-3 follow-up 3).
+
+**Rejected.** Pairing the batch's taps to her (above). Keeping Tier 1's `tap:on`
+(a beat about the wrong event).

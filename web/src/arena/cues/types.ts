@@ -139,6 +139,39 @@ export interface Presence {
 
 export interface CardCueEntry extends CueTable {}
 
+/**
+ * **A station: what a non-creature permanent keeps above its own card while it is
+ * on the battlefield** (Tier 2 slice 3, T12) — `presence`'s sibling, and the
+ * second persistent presentation rule this file carries.
+ *
+ * Two cards in this deck are enchantments that are neither creatures (no figure)
+ * nor attached to one (no aura overlay), and each has one thing the source
+ * material says it IS:
+ *
+ *  - **Strategic Intervention** is mission control: a holographic ops console
+ *    over its card for as long as it is on the table;
+ *  - **Web Up** holds something in a web: a cocoon hanging over its card.
+ *
+ * It is a **pose** — the snapshot says the card is on the battlefield, face up —
+ * so it survives `skip all`, a scrub and a `resync` with no history, and it is
+ * drawn by `scene/overlays.ts` from `figures/attach.ts`'s `stationsOf`. It is
+ * deliberately NOT a link to another card: the wire never relates Web Up to the
+ * card it exiled (measured — `attachedToId` is `null` on both in every frame of
+ * the corpus), so the cocoon hangs over Web Up's own card and names nothing.
+ */
+export const STATION_KINDS = ['missionControl', 'cocoon'] as const;
+export type StationKind = (typeof STATION_KINDS)[number];
+
+export interface Station {
+  kind: StationKind;
+  /** `#rrggbb`; absent ⇒ the card's own colour identity. */
+  colour?: string;
+  /** How high above its card it hangs, in card heights. Absent ⇒ the kind's own. */
+  lift?: number;
+  /** Multiplies the kind's own size. Absent ⇒ 1. */
+  scale?: number;
+}
+
 export interface CueData {
   version: number;
   /** Card **name** → selector → cue. Names, because that is what a cue is about. */
@@ -158,6 +191,8 @@ export interface CueData {
   defaults?: CueTable;
   /** Card name → persistent presentation (§5.1). */
   presence?: Readonly<Record<string, Presence>>;
+  /** Card name → what it keeps above its card while on the battlefield (T12). */
+  stations?: Readonly<Record<string, Station>>;
 }
 
 export const EMPTY_CUE_DATA: CueData = Object.freeze({

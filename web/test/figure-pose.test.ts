@@ -20,9 +20,12 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import cuesJson from '../src/arena/cues/cues.json' with { type: 'json' };
 import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' };
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import { MAX_FIGURES, discRadiusFor, figurePose, fitHeight } from '../src/arena/figures/pose.ts';
+import { CARRIER_BOUNDS } from '../src/arena/figures/props.ts';
+import { LIVE_ASPECTS, REST_POSE, projectToNdc } from '../src/arena/camera.ts';
 import { STANCES } from '../src/arena/figures/types.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import {
@@ -31,11 +34,16 @@ import {
   FIGURE_MAX_WIDTH,
   FIGURE_STANDOFF,
   ON_CARD_DISC_ORDER,
+  SILHOUETTE_ALTITUDE,
+  HUD_TOP_PX,
+  OPP_SILHOUETTE_ALTITUDE,
+  OPP_SILHOUETTE_SCALE,
   TABLE_HALF_X,
   TABLE_HALF_Z,
   anchorsFor,
   layout,
   seatSign,
+  silhouettePlacementOf,
   standPointOf,
   type Placement,
 } from '../src/arena/layout.ts';
@@ -48,6 +56,15 @@ const FIXTURES = fileURLToPath(new URL('../../fixtures/', import.meta.url));
 const MODELS = validateModels(modelsJson).data;
 const MODEL_IDS = new Set(Object.keys(MODELS.models));
 const DATA = validateFigures(figuresJson, { modelIds: MODEL_IDS }).data;
+/** The cue file's `presence` rules — read, never written: what lifts the Helicarrier's card in the arena. */
+const PRESENCE = (() => {
+  const out: Record<string, { hoverY?: number; bobAmp?: number; bobHz?: number }> = {};
+  for (const [name, entry] of Object.entries((cuesJson as { cards?: Record<string, unknown> }).cards ?? {})) {
+    const presence = (entry as { presence?: { hoverY?: number; bobAmp?: number; bobHz?: number } }).presence;
+    if (presence !== undefined) out[name] = presence;
+  }
+  return out;
+})();
 
 // ---------------------------------------------------------------------------
 // Hand-built frames — the cases the corpus does not happen to contain
@@ -153,7 +170,9 @@ test('figure-pose: the figure stands off the front edge of its card', () => {
     seatSign('you') * FIGURE_STANDOFF,
     'the figure stands FIGURE_STANDOFF toward the centre of the table',
   );
-  assert.equal(pose.facingY, 0, 'the viewer’s own figures face the opponent');
+  // `0` at the viewer's seat. The models face +z (measured in slice 3), so this
+  // turns the viewer's own figures toward the viewer's camera.
+  assert.equal(pose.facingY, 0, 'the viewer’s own figures are not turned');
 });
 
 test('figure-pose: a tapped card’s figure keeps its slot and does NOT turn with it', () => {
@@ -279,6 +298,7 @@ test('figure-pose: every board frame of every committed recording poses', () => 
   let withModel = 0;
   let maxInFrame = 0;
   let ghostCount = 0;
+  let vehicleCount = 0;
   const stances = new Map<string, number>();
 
   for (const { file, state } of frames) {
@@ -329,7 +349,15 @@ test('figure-pose: every board frame of every committed recording poses', () => 
       // know that: recompute it from the placement and require a match.
       const placement = placed.byKey.get(`c:${String(cardId)}`);
       assert.ok(placement !== undefined, `${file}: posed a card with no placement`);
-      assert.deepEqual(pose.position, standPointOf(placement), `${file}: pose left layout.ts`);
+      // Slice 3: a flier's hover (`lift`) is folded into y, and is the ONLY thing
+      // added to layout.ts's stand point.
+      assert.ok(pose.lift >= 0, `${file}: a negative hover`);
+      // A vehicle's silhouette flies where layout.ts's `silhouettePlacementOf` says
+      // (the opponent's over the centre line since the second verification pass).
+      const standAt = pose.silhouette !== null ? silhouettePlacementOf(placement, pose.lift).ground : standPointOf(placement);
+      assert.equal(pose.position[0], standAt[0], `${file}: pose left layout.ts (x)`);
+      assert.equal(pose.position[2], standAt[2], `${file}: pose left layout.ts (z)`);
+      assert.ok(Math.abs(pose.position[1] - pose.lift - standAt[1]) < 1e-9, `${file}: pose left layout.ts (y)`);
 
       if (pose.interposesId !== null) {
         const bands = combat?.bands ?? [];
@@ -373,18 +401,34 @@ test('figure-pose: every board frame of every committed recording poses', () => 
       assert.ok(map.has(c.id), `${file}: creature spell ${String(c.id)} has no ghost`);
       assert.equal(map.get(c.id)?.ghost, true, `${file}: ${String(c.id)} should be a ghost`);
     }
+    // Slice 3 (T10): plus one per face-up NON-creature Vehicle — the uncrewed
+    // Helicarrier — drawn as its silhouette and nothing else. Counted from the
+    // placements, independently of the pose.
+    let vehicles = 0;
+    for (const placement of placed.placements) {
+      if (placement.kind !== 'creature' || placement.back || isHidden(placement.card)) continue;
+      const types = (placement.card as { types?: string }).types ?? '';
+      if (/(^|\s)Creature(\s|$|—|-)/.test(types) || !/\bVehicle\b/.test(types)) continue;
+      vehicles += 1;
+      const pose = map.get(placement.cardId);
+      assert.ok(pose !== undefined, `${file}: vehicle ${String(placement.cardId)} has no silhouette`);
+      assert.equal(pose.vehicle, true);
+      assert.equal(pose.silhouette, 'carrier');
+      assert.equal(pose.modelId, null, `${file}: a silhouette picked a body`);
+    }
     assert.equal(
       map.size,
-      creatures + ghosts,
-      `${file}: ${String(map.size)} poses for ${String(creatures)} creatures + ${String(ghosts)} ghosts`,
+      creatures + ghosts + vehicles,
+      `${file}: ${String(map.size)} poses for ${String(creatures)} creatures + ${String(ghosts)} ghosts + ${String(vehicles)} vehicles`,
     );
     ghostCount += ghosts;
+    vehicleCount += vehicles;
   }
 
   console.log(
     `figure-pose: ${String(frames.length)} board frames · ${String(poses)} poses · ` +
       `${String(withModel)} with a model · ${String(anonymous)} anonymous · ` +
-      `${String(ghostCount)} ghosted creature spells (T6) · ` +
+      `${String(ghostCount)} ghosted creature spells (T6) · ${String(vehicleCount)} uncrewed vehicle silhouettes (T10) · ` +
       `max ${String(maxInFrame)} figures in one frame\n` +
       `  stances: ${[...stances].sort((a, b) => b[1] - a[1]).map(([s, n]) => `${s}=${String(n)}`).join(' ')}`,
   );
@@ -392,6 +436,8 @@ test('figure-pose: every board frame of every committed recording poses', () => 
   // T6: the corpus really does cast creatures, so the ghost branch is live data
   // rather than a branch nothing reaches.
   assert.ok(ghostCount > 100, `only ${String(ghostCount)} ghosted creature spells in the corpus`);
+  // T10: the uncrewed Helicarrier is live data (613 frame-instances), not a branch.
+  assert.ok(vehicleCount > 500, `only ${String(vehicleCount)} uncrewed vehicle silhouettes`);
 });
 
 test('figure-pose: it is a pure function — twice is byte-identical', () => {
@@ -462,6 +508,9 @@ test('figure-pose: no two neighbours in a rank overlap, over the whole corpus', 
     const byRow = new Map<string, Array<{ x: number; w: number; id: number }>>();
     for (const pose of poses.values()) {
       if (pose.ghost) continue;
+      // A silhouette flies over the rank, above every head (asserted below): it
+      // is not a neighbour on the ground.
+      if (pose.silhouette !== null) continue;
       const key = `${pose.seat}:${pose.position[2].toFixed(2)}`;
       const list = byRow.get(key) ?? [];
       list.push({ x: pose.position[0], w: pose.width, id: pose.cardId });
@@ -627,7 +676,8 @@ test('figure-pose: every disc that lies on a card is drawn after it — the back
     const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
     const flat = placed.placements.filter((p) => FLAT.has(p.kind));
     for (const pose of poses.values()) {
-      if (pose.ghost) continue;
+      // A silhouette flies and draws no stand disc (T10) — nothing to paint over.
+      if (pose.ghost || pose.silhouette !== null) continue;
       const own = placed.byKey.get(`c:${String(pose.cardId)}`)!;
       const under = flat.filter((card) => onCard(card, pose.position[0], pose.position[2]));
       if (under.length > 0 && !pose.onCard) {
@@ -649,8 +699,182 @@ test('figure-pose: every disc that lies on a card is drawn after it — the back
       `${String(ON_CARD_DISC_ORDER)} · human-sideboard-7 @1181 and @1195: ${String(sideboard1181)} of them`,
   );
   assert.deepEqual(wrong.slice(0, 10), [], `${String(wrong.length)} discs would be painted over`);
-  assert.ok(onCardPoses >= 200, `only ${String(onCardPoses)} on-card discs — the back row is test data`);
+  // 199 since the second verification pass stopped counting the one back-row
+  // carrier (a silhouette draws no disc, and the opponent's flies over the centre).
+  assert.ok(onCardPoses >= 199, `only ${String(onCardPoses)} on-card discs — the back row is test data`);
   assert.equal(sideboard1181, 20, 'the verifier’s two frames: five back-row discs a seat, both seats, both frames');
   // The pass is between the table's ranks and the hand fan (renderOrder 100 + i).
   assert.ok(ON_CARD_DISC_ORDER < 100);
+});
+
+// ---------------------------------------------------------------------------
+// Slice 3 — T10's carrier flies OVER the rank, which is why it is not a neighbour
+// ---------------------------------------------------------------------------
+
+test('figure-pose: a vehicle silhouette flies above every figure on its seat (T10)', () => {
+  let silhouettes = 0;
+  let lowest = Number.POSITIVE_INFINITY;
+  let lowestOpp = Number.POSITIVE_INFINITY;
+  let tallest = 0;
+  let under = 0;
+  // Twice: with the cue file's `presence` rules (what the arena draws — Wasp and
+  // the Doombot hover higher then), and with none (the altitude floor alone).
+  for (const [{ file, state }, presence] of fixtureStates().flatMap((f) => [
+    [f, PRESENCE],
+    [f, {}],
+  ] as const)) {
+    const placed = layout(state, presence);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    for (const carrier of poses.values()) {
+      if (carrier.silhouette === null) continue;
+      silhouettes += 1;
+      assert.equal(carrier.radius, 0, `${file}: a silhouette draws a stand disc`);
+      assert.equal(carrier.props.length, 1, `${file}: a silhouette carries props`);
+      assert.equal(carrier.props[0]?.kind, 'carrier');
+      const underside = carrier.position[1] - carrier.height / 2;
+      if (carrier.seat === 'you') lowest = Math.min(lowest, underside);
+      else lowestOpp = Math.min(lowestOpp, underside);
+      for (const figure of poses.values()) {
+        if (figure.silhouette !== null || figure.ghost) continue;
+        const top = figure.position[1] + figure.height;
+        if (figure.seat === carrier.seat) tallest = Math.max(tallest, top);
+        // Only a figure it passes over can be under it: within its length in x,
+        // and within its footprint in z (its pods reach 0.36 of its length).
+        if (Math.abs(figure.position[0] - carrier.position[0]) > (carrier.width + figure.width) / 2) continue;
+        if (Math.abs(figure.position[2] - carrier.position[2]) > carrier.width * 0.36 + figure.width / 2) continue;
+        under += 1;
+        assert.ok(
+          top < underside,
+          `${file}: the carrier's underside (${underside.toFixed(2)}) is below a figure's head (${top.toFixed(2)})`,
+        );
+      }
+    }
+  }
+  console.log(
+    `figure-pose: ${String(silhouettes)} carrier silhouettes · lowest underside ${lowest.toFixed(2)} (yours) / ` +
+      `${lowestOpp.toFixed(2)} (the opponent's, over the centre line) · tallest head on a carrier's seat ${tallest.toFixed(2)} · ` +
+      `${String(under)} figure-under-carrier pairs, every one clear`,
+  );
+  assert.ok(silhouettes > 1200, `only ${String(silhouettes)} carrier silhouettes over the corpus (both passes)`);
+  assert.ok(lowest >= SILHOUETTE_ALTITUDE - 0.2, `your carrier flew at ${lowest.toFixed(2)}`);
+  assert.ok(lowestOpp >= OPP_SILHOUETTE_ALTITUDE - 0.1, `the opponent's carrier flew at ${lowestOpp.toFixed(2)}`);
+  assert.ok(under > 100, 'no figure ever stood under a carrier — the clearance check is idle');
+});
+
+test('figure-pose: from the table view, no carrier is drawn over a figure — and none under the HUD — on either seat (verification fixes)', () => {
+  // Slice 3 first flew the carrier at 1.65, 1.85 long: from the table view's steep
+  // camera one over YOUR rank projected onto your own figures (`g1`@323, a rotor
+  // disc on Wasp's head; 352 of 799 own-seat pairs overlapped by more than 5%).
+  // Raised to `SILHOUETTE_ALTITUDE` 2.05 and 1.5 long, it projects above the rank
+  // it flies over. The box is the geometry's own bounds (`CARRIER_BOUNDS`, which
+  // traits.test.ts holds the built geometry to), turned by the pose.
+  const rect = (points: Array<[number, number, number]>): number[] | null => {
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (const p of points) {
+      const ndc = projectToNdc(REST_POSE, p, undefined, 1.6);
+      if (ndc === null) return null;
+      x0 = Math.min(x0, ndc[0]);
+      y0 = Math.min(y0, ndc[1]);
+      x1 = Math.max(x1, ndc[0]);
+      y1 = Math.max(y1, ndc[1]);
+    }
+    return [x0, y0, x1, y1];
+  };
+  const cover = (a: number[], b: number[]): number => {
+    const w = Math.min(a[2]!, b[2]!) - Math.max(a[0]!, b[0]!);
+    const h = Math.min(a[3]!, b[3]!) - Math.max(a[1]!, b[1]!);
+    return w > 0 && h > 0 ? (w * h) / ((b[2]! - b[0]!) * (b[3]! - b[1]!)) : 0;
+  };
+  let pairs = 0;
+  let worst = 0;
+  let where = '';
+  // **The chrome's keep-out band** (the second verification pass): the arena's
+  // own strips, credit line and seat card sit over the top HUD_TOP_PX of the
+  // canvas, fixed in pixels — so the band is widest in NDC on the shortest
+  // canvas. Checked at every live aspect, on a 745 px canvas (a 1280 × 800
+  // window) and a 946 px one (1600 × 1000); the opponent's carrier used to sit
+  // half under it (g1@316, @355; g3@270).
+  const bands = [745, 946].map((canvas) => 1 - (2 * HUD_TOP_PX) / canvas);
+  let highest = Number.NEGATIVE_INFINITY;
+  let highestWhere = '';
+  let oldHighest = Number.NEGATIVE_INFINITY;
+  for (const { file, state } of fixtureStates()) {
+    const placed = layout(state, PRESENCE);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    for (const carrier of poses.values()) {
+      if (carrier.silhouette === null) continue;
+      if (carrier.seat === 'opp') {
+        // The control: where slice 3 flew the opponent's carrier — over its own
+        // stand point, at least SILHOUETTE_ALTITUDE up, full size.
+        const stand = standPointOf(placed.byKey.get(`c:${String(carrier.cardId)}`)!);
+        const y = stand[1] + Math.max(1.25, SILHOUETTE_ALTITUDE - stand[1]);
+        const L0 = carrier.width / OPP_SILHOUETTE_SCALE;
+        for (const x of CARRIER_BOUNDS.x) {
+          for (const yy of CARRIER_BOUNDS.y) {
+            for (const z of CARRIER_BOUNDS.z) {
+              const ndc = projectToNdc(REST_POSE, [stand[0] - L0 * x, y + L0 * yy, stand[2] - L0 * z], undefined, 1.6);
+              if (ndc !== null) oldHighest = Math.max(oldHighest, ndc[1]);
+            }
+          }
+        }
+      }
+      const L = carrier.width;
+      const c = Math.cos(carrier.facingY);
+      const sn = Math.sin(carrier.facingY);
+      const hull: Array<[number, number, number]> = [];
+      for (const x of CARRIER_BOUNDS.x) {
+        for (const y of CARRIER_BOUNDS.y) {
+          for (const z of CARRIER_BOUNDS.z) {
+            // Figure space → world: a turn of facingY about y, then the pose.
+            hull.push([
+              carrier.position[0] + L * (x * c + z * sn),
+              carrier.position[1] + L * y,
+              carrier.position[2] + L * (-x * sn + z * c),
+            ]);
+          }
+        }
+      }
+      const drawn = rect(hull);
+      if (drawn === null) continue;
+      for (const aspect of LIVE_ASPECTS) {
+        for (const p of hull) {
+          const ndc = projectToNdc(REST_POSE, p, undefined, aspect);
+          if (ndc === null || ndc[1] <= highest) continue;
+          highest = ndc[1];
+          highestWhere = `${file} carrier ${String(carrier.cardId)} (${carrier.seat}) at aspect ${aspect.toFixed(2)}`;
+        }
+      }
+      for (const figure of poses.values()) {
+        if (figure.silhouette !== null || figure.ghost) continue;
+        const [x, y, z] = figure.position;
+        const d = figure.height * 0.3;
+        const box: Array<[number, number, number]> = [];
+        for (const bx of [x - figure.width / 2, x + figure.width / 2]) {
+          for (const by of [y, y + figure.height]) for (const bz of [z - d, z + d]) box.push([bx, by, bz]);
+        }
+        const body = rect(box);
+        if (body === null) continue;
+        pairs += 1;
+        const covered = cover(drawn, body);
+        if (covered > worst) {
+          worst = covered;
+          where = `${file} carrier ${String(carrier.cardId)} (${carrier.seat}) over figure ${String(figure.cardId)} (${figure.seat})`;
+        }
+      }
+    }
+  }
+  console.log(
+    `figure-pose: carriers × figures on screen (table view): ${String(pairs)} pairs · worst cover ${worst.toFixed(3)} ${where}\n` +
+      `  the highest a carrier reaches: NDC y ${highest.toFixed(3)} (${highestWhere}) · the HUD band starts at ${bands.map((b) => b.toFixed(3)).join(' / ')}` +
+      ` · slice 3's opponent carrier reached ${oldHighest.toFixed(3)}`,
+  );
+  assert.ok(pairs > 2000, 'the sweep compared almost nothing');
+  assert.ok(worst < 0.05, `a carrier covers ${(worst * 100).toFixed(1)}% of a figure from the table view: ${where}`);
+  for (const band of bands) {
+    assert.ok(highest < band, `a carrier reaches NDC ${highest.toFixed(3)}, into the HUD band above ${band.toFixed(3)}: ${highestWhere}`);
+    assert.ok(oldHighest > band, `slice 3's opponent carrier (NDC ${oldHighest.toFixed(3)}) is under ${band.toFixed(3)} — the band check is idle`);
+  }
 });

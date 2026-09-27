@@ -634,3 +634,276 @@ test('composeInto is composeOffsets ∘ offsetFrom, field for field', () => {
   resetOffset(dirty);
   assert.deepEqual(dirty, { ...IDENTITY });
 });
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 (T11/T12) — the params are closed, the stations are data, and
+// the per-card beats are drawn on the BODY
+// ---------------------------------------------------------------------------
+
+test('validate: every param is named, typed and ranged — and event facts are refused (slice 3)', () => {
+  const cueIds = new Set(REGISTRY.keys());
+  const entry = (params: Record<string, unknown>) => ({
+    version: 1,
+    cards: { X: { cast: { cue: 'fx.glow', ms: 100, params } } },
+    archetypes: {},
+  });
+  const errorsOf = (params: Record<string, unknown>): string =>
+    validateCues(entry(params), { cueIds }).errors.map((e) => `${e.where}: ${e.message}`).join('\n');
+
+  // Every shape of mistake a hand-edited art-direction file makes, each caught.
+  const bad: Array<[Record<string, unknown>, string]> = [
+    [{ specK: 1 }, 'unknown param "specK"'],
+    [{ scale: 'big' }, 'param scale must be a number'],
+    [{ scale: 9 }, 'param scale must be within'],
+    [{ toHand: 1.5 }, 'must be a whole number'],
+    [{ toHand: 7 }, 'param toHand must be within'],
+    [{ muzzle: 1 }, 'param muzzle must be true or false'],
+    [{ colour: 'gold' }, 'param colour must be #rrggbb'],
+    [{ clip: 'pistol draw' }, 'param clip must be a clip alias'],
+    [{ hostClip: 'pistolDraw' }, 'param hostClip must be a clip name'],
+    [{ shape: 'heart' }, 'param shape must be an effect shape'],
+    [{ flourish: 'soft glow' }, 'param flourish must be an effect shape'],
+    // An event FACT in the file is a cue file inventing an aim the wire never
+    // stated — the whole reason the set is closed rather than open.
+    [{ beamTo: 3 }, 'unknown param "beamTo"'],
+    [{ strikeCard: 3 }, 'unknown param "strikeCard"'],
+    [{ defenderId: 1 }, 'unknown param "defenderId"'],
+    [{ foe: 1 }, 'unknown param "foe"'],
+  ];
+  for (const [params, expected] of bad) {
+    const messages = errorsOf(params);
+    assert.ok(messages.includes(expected), `${JSON.stringify(params)} was not refused with "${expected}":\n${messages}`);
+  }
+  // …and the good ones pass, the new ones among them.
+  assert.equal(
+    errorsOf({
+      speck: 1,
+      muzzle: true,
+      laser: true,
+      follow: true,
+      fissure: true,
+      beams: true,
+      lock: true,
+      vials: true,
+      toHand: 2,
+      sweep: true,
+      freeze: true,
+      flourish: 'hex',
+      shape: 'badge',
+      clip: 'radioCall',
+      hostClip: 'shrink',
+      colour: '#7fd4ff',
+      rim: '#e8453c',
+      rim2: '#f4f6fa',
+    }),
+    '',
+  );
+  assert.ok(errorsOf({ rim: 'red' }).includes('param rim must be #rrggbb'));
+  // A comment key inside params is still a comment.
+  assert.equal(errorsOf({ _why: 'a note', colour: '#ffffff' }), '');
+});
+
+test('validate: a station is per card, closed and ranged (T12)', () => {
+  const cueIds = new Set(REGISTRY.keys());
+  const good = validateCues(
+    {
+      version: 1,
+      cards: { 'Web Up': { station: { kind: 'cocoon', colour: '#f4f6fa', lift: 0.6, scale: 1.2 } } },
+      archetypes: {},
+    },
+    { cueIds },
+  );
+  assert.deepEqual(good.errors, []);
+  assert.deepEqual(good.data.stations?.['Web Up'], { kind: 'cocoon', colour: '#f4f6fa', lift: 0.6, scale: 1.2 });
+  // The selector grammar knows the key, so it is not "not a selector".
+  assert.ok(isValidSelector('station'));
+
+  const bad = validateCues(
+    {
+      version: 1,
+      cards: {
+        A: { station: { kind: 'hologram' } },
+        B: { station: { kind: 'cocoon', lift: 9 } },
+        C: { station: { kind: 'cocoon', colour: 'white' } },
+        D: { station: { kind: 'missionControl', size: 2 } },
+        E: { station: 'cocoon' },
+      },
+      archetypes: { 'enchantment/*': { station: { kind: 'cocoon' } } },
+    },
+    { cueIds },
+  );
+  const messages = bad.errors.map((e) => `${e.where}: ${e.message}`).join('\n');
+  for (const expected of [
+    'station.kind must be one of',
+    'station.lift must be within',
+    'station.colour must be #rrggbb',
+    'unknown station field "size"',
+    'station must be an object',
+    'a station is per card, never per archetype',
+  ]) {
+    assert.ok(messages.includes(expected), `missing "${expected}":\n${messages}`);
+  }
+  assert.equal(bad.data.stations, undefined, 'a bad station was kept');
+
+  // The committed file carries exactly the two T12 stations.
+  const { data } = validateCues(CUES_JSON, { cueIds });
+  assert.deepEqual(Object.keys(data.stations ?? {}).sort(), ['Strategic Intervention', 'Web Up']);
+  assert.equal(data.stations?.['Strategic Intervention']?.kind, 'missionControl');
+  assert.equal(data.stations?.['Web Up']?.kind, 'cocoon');
+});
+
+/** Every slice-3 param on at once, plus the event facts that aim them. */
+const SLICE3_PARAMS = {
+  amount: 3,
+  dir: 1,
+  counter: 'P1P1',
+  delta: 1,
+  toId: 2,
+  attackerId: 1,
+  turn: 4,
+  speck: 1,
+  muzzle: true,
+  laser: true,
+  follow: true,
+  fissure: true,
+  beams: true,
+  vials: true,
+  toHand: 3,
+  sweep: true,
+  freeze: true,
+  flourish: 'hex',
+  shape: 'badge',
+  spotlight: 1,
+  popScale: 1.4,
+  strikeCard: 2,
+  strikeGrew: -1,
+  beamTo: 2,
+  defenderKind: 'player',
+  defenderId: 1,
+  foe: 1,
+  rim: '#e8453c',
+  rim2: '#f4f6fa',
+  shake: 0.3,
+} as const;
+
+test('cues: every registered cue still decays to identity with every slice-3 param on', () => {
+  for (const lock of [false, true]) {
+    for (const [id, impl] of REGISTRY) {
+      const stage = new NullStage();
+      const ctx = {
+        id,
+        targets: [1, 5],
+        players: [0, 1],
+        params: { ...SLICE3_PARAMS, lock },
+        ms: 500,
+        key: `k-${id}`,
+        reducedMotion: false,
+      };
+      for (let t = 0; t <= 1.0001; t += 0.05) impl.apply(ctx, Math.min(1, t), stage);
+      impl.end(ctx, stage);
+      assert.equal(stage.offsets.size, 0, `${id}: left ${String(stage.offsets.size)} offsets behind (lock ${String(lock)})`);
+      assert.equal(stage.effects.size, 0, `${id}: left ${String(stage.effects.size)} effects behind (lock ${String(lock)})`);
+      assert.equal(stage.clips.size, 0, `${id}: left ${String(stage.clips.size)} clips behind (lock ${String(lock)})`);
+    }
+  }
+});
+
+test('cues: the T11 beats are drawn on the FIGURE, not the card', () => {
+  // (cue id, effect suffix, t) → the anchor must be a `figure` anchor. These are
+  // the effects that used to sit at the card's REST position and stay behind while
+  // the lunge carried the body away (report 09 §12.2's substitutes).
+  const cases: Array<[string, string, number]> = [
+    ['attack.aegis', 'halo', 0.5],
+    ['attack.aegis', 'rim', 0.5],
+    ['fx.strike', 'flash', 0.8],
+    ['attack.jet', 'eye', 0.5],
+    ['attack.jet', 'exhaust', 0.5],
+    ['attack.jet', 'laser', 0.5],
+    ['attack.lunge', 'spot', 0.5],
+    ['attack.lunge', 'cone', 0.5],
+    ['attack.lunge', 'muzzle', 0.36],
+    ['attack.shrink', 'speck', 0.5],
+    ['fx.badge', 'badge', 0.5],
+    ['fx.shockwave', 'ring', 0.3],
+    ['fx.shockwave', 'crack', 0.3],
+    ['fx.scaleBeam', 'beam', 0.5],
+    ['fx.webWrap', 'wrap', 0.5],
+    ['fx.circuit', 'trace2', 0.5],
+    ['fx.hologram', 'vial0', 0.3],
+    ['fx.strike', 'reticle', 0.3],
+    ['attach.snap', 'flourish', 0.7],
+  ];
+  for (const [id, suffix, t] of cases) {
+    const impl = REGISTRY.get(id);
+    assert.ok(impl !== undefined, id);
+    const stage = new NullStage();
+    const ctx = { id, targets: [1], players: [0], params: { ...SLICE3_PARAMS, lock: false }, ms: 500, key: 'k', reducedMotion: false };
+    impl.apply(ctx, t, stage);
+    const effect = stage.effects.get(`k:${suffix}`);
+    assert.ok(effect !== undefined, `${id}: no ${suffix} at t = ${String(t)}`);
+    assert.equal(effect.at.kind, 'figure', `${id}:${suffix} is anchored at ${effect.at.kind}, not on the body`);
+  }
+  // …and the fissure, the spotlight's cone and the laser aim at what the wire named.
+  const shock = new NullStage();
+  REGISTRY.get('fx.shockwave')!.apply(
+    { id: 'fx.shockwave', targets: [1], players: [0], params: { fissure: true, strikeCard: 7 }, ms: 500, key: 'k', reducedMotion: false },
+    0.3,
+    shock,
+  );
+  assert.deepEqual(shock.effects.get('k:crack')?.to, { kind: 'figure', id: 7, at: 0, fwd: 0, side: 0 });
+  const jet = new NullStage();
+  REGISTRY.get('attack.jet')!.apply(
+    { id: 'attack.jet', targets: [1], players: [0], params: { laser: true, defenderKind: 'player', defenderId: 1 }, ms: 500, key: 'k', reducedMotion: false },
+    0.5,
+    jet,
+  );
+  assert.deepEqual(jet.effects.get('k:laser')?.to, { kind: 'player', id: 1 });
+  // No fissure without an aim: the shockwave does not invent one from a `tap`.
+  const alone = new NullStage();
+  REGISTRY.get('fx.shockwave')!.apply(
+    { id: 'fx.shockwave', targets: [1], players: [0], params: { fissure: true }, ms: 500, key: 'k', reducedMotion: false },
+    0.3,
+    alone,
+  );
+  assert.equal(alone.effects.get('k:crack'), undefined, 'a fissure was drawn with nothing on the wire to aim it');
+});
+
+test('cues: no camera request ever frames a `figure` anchor — the director resolves through layout.ts alone', () => {
+  // `layout.ts`'s `anchorPosition` answers null for a figure anchor, so a camera
+  // frame that named one would silently lose that end of the shot.
+  let requests = 0;
+  for (const [id, impl] of REGISTRY) {
+    const frames: string[] = [];
+    class Spy extends NullStage {
+      override requestCamera(request: Parameters<NullStage['requestCamera']>[0]): void {
+        if (request !== null) for (const anchor of request.frame) frames.push(anchor.kind);
+        super.requestCamera(request);
+      }
+    }
+    const stage = new Spy();
+    const ctx = { id, targets: [1], players: [0, 1], params: { ...SLICE3_PARAMS, shake: 0.4, lock: false }, ms: 500, key: 'k', reducedMotion: false };
+    for (let t = 0; t <= 1.0001; t += 0.1) impl.apply(ctx, Math.min(1, t), stage);
+    requests += frames.length;
+    assert.ok(!frames.includes('figure'), `${id} asked the camera to frame a figure anchor`);
+  }
+  assert.ok(requests > 0, 'no cue asked for the camera at all — the scan scanned nothing');
+});
+
+test('cues: under reduced motion the slice-3 beats move nothing they should not', () => {
+  // §8 rule 7: no shake, no camera, no particles — and still the facts: the
+  // badge, the shield, the reticle and the beams are drawn, only shorter.
+  for (const [id, impl] of REGISTRY) {
+    const stage = new NullStage();
+    const ctx = { id, targets: [1], players: [0, 1], params: { ...SLICE3_PARAMS, shake: 0.4, lock: false }, ms: 150, key: 'k', reducedMotion: true };
+    let camera = false;
+    for (let t = 0; t <= 1.0001; t += 0.1) {
+      impl.apply(ctx, Math.min(1, t), stage);
+      if (stage.camera !== null) camera = true;
+      for (const effect of stage.effects.values()) {
+        assert.notEqual(effect.kind, 'particles', `${id} drew particles under reduced motion`);
+      }
+    }
+    assert.ok(!camera, `${id} moved the camera under reduced motion`);
+    assert.equal(stage.clips.size, 0, `${id} posed a figure under reduced motion`);
+  }
+});

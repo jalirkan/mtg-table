@@ -72,6 +72,8 @@ export const CLIP_FOR: Readonly<Record<string, ClipName>> = Object.freeze({
   'counters.pop': 'grow',
   'counters.drop': 'shrink',
   'fx.badge': 'channel',
+  // T11: Quake's seismic takedown is a gesture of hers — the rings leave her feet.
+  'fx.shockwave': 'channel',
   'fx.scaleBeam': 'grow',
   'fx.collapse': 'shrink',
   'fx.circuit': 'channel',

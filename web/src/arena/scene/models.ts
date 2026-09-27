@@ -155,7 +155,13 @@ export function loadFigureModels(data: ModelData): Promise<ModelLibrary> {
 const BOX = new THREE.Box3();
 const SIZE = new THREE.Vector3();
 
-function indexLibrary(
+/**
+ * A parsed document → the library, one {@link LoadedModel} per manifest entry.
+ * Exported for the tests that load `figures.glb` in Node (`web/test/prop-raster.ts`
+ * parses it with the same loader and indexes it HERE, so a test measures exactly
+ * the normalisation the arena draws with).
+ */
+export function indexLibrary(
   scene: THREE.Object3D,
   animations: THREE.AnimationClip[],
   data: ModelData,

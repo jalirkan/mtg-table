@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "_file": "THE per-card identity table (Tier 2 slice 3, T9 and T10). figures.json says which BODY a card stands in; this file says what makes it THAT card — size, hover, colour, what it carries or wears, whether it is a swarm, whether it is a vehicle's silhouette. Validated by figures/validate.ts's validateTraits exactly as cues.json is: a bad row is dropped and the ladder falls through, and web/test/traits.test.ts fails on any error.",
+  "_ladder": "default ⊕ every matching `subtype:<word>` rung, least specific first (the word order is resolve.ts's SUBTYPE_ORDER) ⊕ the card's own row. Scalars: the most specific rung that says one wins. `props` is REPLACED by a more specific rung that names it, never appended — so a row lists every prop it wants.",
+  "_pose": "Every row keys off the SNAPSHOT (this card is face up on the battlefield, this is its name and type line), never off an event: a trait is a POSE and survives `skip all`, a scrub and a resync (D56). A card drawn as a back — redacted or face down — never reaches this file: it is the anonymous disc with no props (hard rule 8, report 13 §1.4).",
+  "_rule": "A prop is a SHARED kind from figures/props.ts's kit, procedural and instanced — one draw call per kind on the table. No row here introduces a model used by exactly one card (report 13 §12): the carrier is the `subtype:vehicle` archetype's silhouette, and every prop kind is open to every row.",
+  "_hooks": "Two keys the CUE layer reads rather than the pose. `shrink` is the scale Ant-Man's attack takes him to (the attack.shrink cue owns the transition). And every glowing prop (exhaust, laserEye, gauntlets, badge, muzzle) is the EMITTER HOOK: it burns at its kit's rest level as a pose, and flares with the clip lane's weight on its card (any `attack` / `summon` / `channel` / `grow` request — so attack.jet on the Doombot is its jet burn) and with the cue offset's `glow`. A cue drives it by asking for a clip or a glow on the card; there is no second API.",
+
+  "default": {},
+
+  "archetypes": {
+    "_note": "Only the words SUBTYPE_ORDER recognises can be a rung: robot, insect, vehicle, scientist, spy, hero, soldier, villain, human. A Hero gets nothing extra — the hero body (figures.json) is its identity.",
+
+    "subtype:insect": {
+      "idle": "hover",
+      "hover": 0.2,
+      "props": ["wings"],
+      "_note": "Any Insect flies: it hovers, bobs, and carries a pair of translucent wings over the bee's own stubby ones. Both of the deck's insects have rows of their own below; this rung is for any other."
+    },
+    "subtype:robot": {
+      "idle": "hover",
+      "hover": 0.12,
+      "accent": "#7fe8ff",
+      "props": ["laserEye", "visor"],
+      "_note": "A robot has a lit eye — cyan for the Robot token, red for the Doombot (its own row) — and a visor, the eye's glow as a band round its head, so it reads as red- or cyan-eyed from BEHIND too (the second verification pass: the opponent's figures show the table view their backs)."
+    },
+    "subtype:villain": {
+      "shade": 0.78,
+      "_note": "A Villain reads darker: the body tint at 78% brightness. The Doombot (Robot Villain) keeps its Doom green, darkened; A.I.M. (Scientist Villain) opts out with shade 1 — their suits are bright yellow."
+    },
+    "subtype:scientist": {
+      "props": ["labBench"],
+      "_note": "A scientist works at a lab bench: a slab, legs, a flask and three lit vials, standing between the figure and the centre line. Bold Biochemist and A.I.M. Scientists."
+    },
+    "subtype:vehicle": {
+      "silhouette": "carrier",
+      "hover": 1.25,
+      "tint": "#a8c6ea",
+      "_note": "T10 — S.H.I.E.L.D. Helicarrier reaches it through this rung and has NO row of its own, so the silhouette stays an archetype. A Vehicle is drawn as a flying carrier silhouette — hull, flight deck, island and four rotor discs — high over its card, riding the card's own presence hover and bob. `hover` 1.25 (slice 3 first flew it 0.4 lower, and 20% longer, and from the table view its rotor pods sat on the heads of the figures below it: layout.ts's SILHOUETTE_ALTITUDE). It is drawn crewed or not (613 of the corpus's 728 Helicarrier frame-instances are an uncrewed Artifact - Vehicle), because the snapshot says it is on the battlefield either way; it is an archetype so no model belongs to one card."
+    }
+  },
+
+  "cards": {
+    "Wasp, Shrinking Savior": {
+      "scale": 0.55,
+      "hover": 0.35,
+      "idle": "hover",
+      "tint": "#f7c843",
+      "accent": "#d8f0ff",
+      "props": ["wings"],
+      "_note": "Janet van Dyne: small, flying, in gold. Half a hero's height, hovering 0.35 over her stand point (on top of the card's own presence hover), with four iridescent insect wings on her back — pale blue-white so they separate from the gold body, each darkening toward its root."
+    },
+    "Ant-Man, Reformed Rogue": {
+      "tint": "#e8594c",
+      "accent": "#dfe6f0",
+      "props": ["helmet"],
+      "shrink": 0.18,
+      "_note": "Scott Lang in red, full size at rest, in the helmet — a glass dome with antennae and red lenses. `shrink` is the cue layer's key: his attack takes him to 0.18 (attack.shrink); the pose never shrinks him."
+    },
+    "Ant-Man's Air Force": {
+      "swarm": 5,
+      "formation": "ring",
+      "hover": 0.22,
+      "idle": "hover",
+      "props": [],
+      "_note": "A swarm, not a bee: five small procedural bees in a slowly turning ring round the stand point, one draw call for all of them (instanced). The insect rig still stands at the centre for the clip lane, and is not drawn."
+    },
+    "Giant-Sized Flying Ant": {
+      "scale": 1.35,
+      "hover": 0.3,
+      "turn": 90,
+      "turnedRatio": 0.83,
+      "props": ["wings", "rider"],
+      "_note": "T9's giant (slice 2 follow-up 3). The strict width clamp (D65) held every insect to 0.49 tall because the bee's WINGSPAN is its width; flown side-on (turn 90) its width is its body's length, 0.78 of its height (measured from figures.glb by traits.test.ts; 0.83 declared), so at scale 1.35 it clamps to 0.87 — nearly twice any other insect, with no exemption. A tiny crouching rider sits on its back."
+    },
+    "Aerial Doombot": {
+      "hover": 0.3,
+      "tint": "#6fe08c",
+      "accent": "#ff4232",
+      "props": ["laserEye", "visor", "jetpack", "exhaust"],
+      "_note": "T9. Doom green (the villain rung darkens it), a red laser eye and its red visor band, twin thrusters on its back and a faint resting exhaust under them that flares when its attack.jet cue drives the clip lane."
+    },
+    "Robot Token": {
+      "hover": 0.1,
+      "_note": "The robot rung's cyan eye and hover, a little lower than the Doombot's, so the token and the card read as the same kind of thing and not the same thing."
+    },
+    "Nick Fury, Spymaster": {
+      "tint": "#566076",
+      "accent": "#15181e",
+      "props": ["coat", "eyepatch"],
+      "_note": "The director, as a BLACK figure (the second verification pass: at #8e98b0 he was 'a grey agent with sunglasses'): a dark slate body in a long, nearly opaque black coat flared wider than his head, with slate trim down its front, round its stand-up collar and its hem, so it reads from above and from both seats; a big black eyepatch with a thin pale rim over HIS left eye, and a black strap running diagonally up across his forehead and round the back of his head. The body is slate rather than black on purpose: a hologram is translucent (holoMaterial's core alpha is 0.38), so a black body over a bright card reads grey, and the black patch and strap need a head to be darker than."
+    },
+    "Agent Phil Coulson": {
+      "tint": "#3f5fbf",
+      "props": ["badge", "tie"],
+      "_note": "A navy suit, a white shirt-front and dark tie down his chest, and the S.H.I.E.L.D. badge in gold on his left breast AND as a bigger emblem on his back. Slice 3 first drew a 0.055 additive badge on a mid-blue body: from the table view it was a 1–2 px white glint on 'just another blue agent' (the verification pass). The second pass found the chest badge under his chin from your seat and invisible from the opponent's — whose figures show the table view their backs — so the badge kind has a back anchor and the chest badge sits lower."
+    },
+    "Quake, Agent of S.H.I.E.L.D.": {
+      "tint": "#5fe3d2",
+      "accent": "#8ff8ff",
+      "props": ["gauntlets"],
+      "_note": "Daisy Johnson in teal, both fists glowing — her gauntlets flare with the clip lane when she acts."
+    },
+    "Peggy Carter, Secret Agent": {
+      "tint": "#f3ede4",
+      "accent": "#d8352e",
+      "props": ["shield", "hat"],
+      "_note": "The founder: a warm white body, her red hat on top — the part of a figure the table view sees most of — and a round red-white-and-blue shield on her left arm, 1.5× slice 3's first roundel and turned out so it shows side-on."
+    },
+    "Agent 13, Sharon Carter": {
+      "tint": "#5b52c4",
+      "accent": "#e4e9f2",
+      "props": ["pistol", "muzzle"],
+      "_note": "The field agent in a dark indigo suit — her own colour, so she is never the pale agent a Soldier Token or Peggy is — with a silver pistol at her right hip, held out beside her body and angled out, its muzzle lit. Slice 3's first pistol hung at her right hand at 0.17 in her body's grey-cream; its fix raised it at her chest, barrel forward, where it pointed at your camera and was hidden from the opponent's seat (both verification passes). Out to the side it shows in silhouette from the front, the back and side-on. Her attack's pistolDraw alias and the muzzle-flash cue fire from the lit tip, turned toward the player she attacks."
+    },
+    "Agents of S.H.I.E.L.D.": {
+      "swarm": 2,
+      "formation": "squad",
+      "tint": "#6c86c0",
+      "_note": "A squad, not one agent: the leader and two followers in a WEDGE — one each side, a step back — one draw call for the followers, the whole squad clamped into its one rank slot. The followers ride the leader's transform, so the squad steps forward together when it attacks. Slice 3 stood the followers almost straight behind the leader and it read as one pale agent with a doubled outline (the second verification pass); and it wears a squad's steel blue of its own, not the cream a Soldier Token and Peggy share."
+    },
+    "Bold Biochemist": {
+      "accent": "#eef5f2",
+      "props": ["coat", "labBench"],
+      "_note": "The lab tint in a long WHITE lab coat — the coat kind Fury wears, in another colour, which is the point of a shared kit — at the white bench. Slice 3 first gave it only the scientist rung's small bench, and it read as 'a mint scientist' (the verification pass)."
+    },
+    "A.I.M. Scientists": {
+      "tint": "#f2cf4a",
+      "accent": "#e9c33c",
+      "shade": 1,
+      "props": ["hood", "labBench"],
+      "_note": "A.I.M.'s beekeeper suits: bright yellow, the bucket hood with its dark visor, and the lab bench."
+    }
+  }
+}

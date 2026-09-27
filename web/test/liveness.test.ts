@@ -26,7 +26,7 @@ import { CueQueue, awaitingHuman } from '../src/arena/cues/queue.ts';
 import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { NullStage } from '../src/arena/cues/stage.ts';
 import { EMPTY_CUE_DATA } from '../src/arena/cues/types.ts';
-import { layout } from '../src/arena/layout.ts';
+import { anchorDelta, anchorPosition, layout } from '../src/arena/layout.ts';
 import type { Frame, GameEvent } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 
@@ -448,7 +448,7 @@ test('liveness: no arena module names an off-origin address, and every model pat
     for (const url of urls) assert.ok(stringLiterals(code).includes(url), `URL_ALLOW["${path}"] names ${url}, which is gone`);
   }
 
-  for (const json of ['figures/models.json', 'figures/figures.json', 'cues/cues.json']) {
+  for (const json of ['figures/models.json', 'figures/figures.json', 'figures/traits.json', 'cues/cues.json']) {
     const data = JSON.parse(readFileSync(ARENA + json, 'utf8')) as unknown;
     assert.deepEqual(offOriginJson(data), [], `${json} has a URL outside a provenance field`);
   }
@@ -861,12 +861,72 @@ test('liveness: the on-card stand discs are their own pass, after the cards', ()
   assert.match(layer, /<primitive object=\{discs\.onCardMesh\} \/>/, 'the on-card disc pass is not mounted');
 });
 
+/**
+ * **Slice 3 — the prop field is a pose layer on the one frame loop** (per-card
+ * identity, T9/T10). Every prop, swarm, squad and vehicle silhouette is drawn by
+ * `scene/props.ts`'s `PropField`, and four source facts hold its shape — the same
+ * four the departing bodies are held to:
+ *
+ *  - its per-frame half is called from `DiscField.bind` and nowhere else, so from
+ *    `CueRunner`'s single `useFrame` (the previous clauses pin `discs.bind` there),
+ *    AFTER `applyFigures` has posed the rigs whose joints it reads;
+ *  - it is installed (`setProps`) and fed (`props.commit`) only by `FigureLayer`,
+ *    at commit time — once per snapshot, never per frame;
+ *  - its frame loop builds nothing (no geometry, no bake, no `new`) — the
+ *    allocation scan below reads the body;
+ *  - it is renderer-only: no transport, no cue engine, no click (`raycast`
+ *    cleared on every mesh), no clock of its own and no mixer of its own (the
+ *    zero-delta clause already allows only two files to tick one, and a baked pose
+ *    samples its clip's tracks by hand for that reason).
+ */
+test('liveness: the prop field is bound from the disc field, fed by FigureLayer, and decides nothing (slice 3)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const callers = (pattern: RegExp): string[] =>
+    [...files].filter(([, code]) => pattern.test(code)).map(([path]) => path).sort();
+  assert.deepEqual(callers(/\bprops\??\.bind\(/), ['scene/discs.ts'], 'the prop field is bound outside the disc field');
+  assert.deepEqual(callers(/\.setProps\(/), ['scene/FigureLayer.tsx'], 'something else installs the prop field');
+  assert.deepEqual(callers(/\bprops\.commit\(/), ['scene/FigureLayer.tsx'], 'something else commits the props');
+  assert.deepEqual(callers(/new PropField\(/), ['scene/FigureLayer.tsx'], 'a second prop field was built');
+
+  const source = files.get('scene/props.ts') ?? '';
+  assert.ok(source.length > 1000, 'scene/props.ts is gone — move this test with it');
+  for (const imported of importsOf(source)) {
+    assert.ok(!imported.from.includes('transport/'), `scene/props.ts imports ${imported.from}`);
+    assert.ok(
+      !imported.from.includes('cues/queue') && !imported.from.includes('cues/registry'),
+      'scene/props.ts imports the cue engine — a field is written by the frame loop, it does not drive itself',
+    );
+  }
+  assert.ok(!/\bonAct\b|\bclickCard\b|\bselectable\b/.test(source), 'the prop field reaches a click');
+  assert.match(source, /raycast = \(\) => \{\}/, 'a prop mesh is a raycast target');
+  assert.ok(
+    !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(source),
+    'the prop field reads a clock of its own — the frame loop hands it one',
+  );
+  const bindBody = bodyOf(source.slice(source.indexOf('export class PropField')), 'bind');
+  assert.ok(bindBody.length > 200, 'could not find PropField.bind');
+  assert.ok(
+    !/buildKindGeometry|bakePose|instantiateFigure|makePropMaterial|swarmMembers\(/.test(bindBody),
+    'the prop field builds geometry or bindings in the frame loop',
+  );
+  // It reads the rigs the frame loop just posed, and the joint it follows.
+  assert.match(bindBody, /updateMatrixWorld\(true\)/, 'the joint props no longer refresh their rigs before reading');
+  assert.match(bindBody, /\.matrixWorld/, 'the joint props no longer follow their joints');
+  // The emitter hook: a glowing prop reads the clip lane (and nothing else of the cue engine).
+  assert.match(bindBody, /\.clipOf\(/, 'the glowing props no longer read the clip lane');
+
+  // The pure half is covered by the figures/ purity scan; say so, so a move is noticed.
+  assert.ok(files.has('figures/props.ts') && files.has('figures/traits.ts'), 'the prop kit or the trait ladder moved out of figures/');
+});
+
 test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc field, the departing bodies, the death query', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
   const layer = files.get('scene/FigureLayer.tsx') ?? '';
   const field = layer.slice(layer.indexOf('class DepartureField'));
   const discs = files.get('scene/discs.ts') ?? '';
   const discField = discs.slice(discs.indexOf('class DiscField'));
+  const propsSource = files.get('scene/props.ts') ?? '';
+  const propField = propsSource.slice(propsSource.indexOf('export class PropField'));
   const bodies: Array<[string, string]> = [
     ['DiscField.bind', bodyOf(discField, 'bind')],
     ['discs.ts commitCount', bodyOf(discs, 'commitCount')],
@@ -878,6 +938,9 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
     ['clips.ts departureWeight', bodyOf(files.get('figures/clips.ts') ?? '', 'departureWeight')],
     ['clips.ts departureOpacity', bodyOf(files.get('figures/clips.ts') ?? '', 'departureOpacity')],
     ['clips.ts departureDrain', bodyOf(files.get('figures/clips.ts') ?? '', 'departureDrain')],
+    // Slice 3: the prop field, bound from `DiscField.bind` after the departing bodies.
+    ['PropField.bind', bodyOf(propField, 'bind')],
+    ['props.ts commitKind', bodyOf(files.get('scene/props.ts') ?? '', 'commitKind')],
   ];
   // The bodies were found, and they are the frame loop's: bind calls the rest.
   for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
@@ -886,6 +949,8 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
     assert.ok(bind.includes(callee), `DepartureField.bind no longer calls ${callee} — update the body list`);
   }
   assert.ok(bodies[0]![1].includes('departures?.bind('), 'DiscField.bind no longer binds the departing bodies');
+  assert.ok(bodies[0]![1].includes('props?.bind('), 'DiscField.bind no longer binds the prop field');
+  assert.ok(bodies[10]![1].includes('commitKind('), 'PropField.bind no longer commits its kinds — update the body list');
 
   // The negative controls: every junk line, spliced into every body, is caught.
   const junk = [
@@ -1191,4 +1256,88 @@ test('liveness: what the seat can click does not depend on what the queue is doi
   // waiting, rather than being paused or dropped.
   queue.retimeToBudget(250);
   assert.ok(queue.totalRemainingMs() <= 250);
+});
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 (T11/T12) — the effect binding's figure anchor and the looks
+// ---------------------------------------------------------------------------
+
+/**
+ * **The slice-3 bodies the frame loop reaches allocate nothing.** T11's `figure`
+ * anchor is resolved for every effect a per-card cue sets, every frame it runs,
+ * and T12's looks and stations are written into instance buffers every frame
+ * they are on the table — the same hot path as the disc field, held to the same
+ * scan, with the same negative controls spliced in.
+ */
+test('liveness: slice 3’s frame-loop bodies allocate nothing — the figure anchor, the looks, the stations', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const effects = files.get('scene/effects.ts') ?? '';
+  const pool = effects.slice(effects.indexOf('class EffectPool'));
+  const overlays = files.get('scene/overlays.ts') ?? '';
+  const field = overlays.slice(overlays.indexOf('class OverlayField'));
+  const bodies: Array<[string, string]> = [
+    ['EffectPool.setFigures', bodyOf(pool, 'setFigures')],
+    ['EffectPool.#figurePoint', bodyOf(pool, '#figurePoint')],
+    ['EffectPool.#fitOf', bodyOf(pool, '#fitOf')],
+    ['EffectPool.#groundOf', bodyOf(pool, '#groundOf')],
+    ['EffectPool.#setMap', bodyOf(pool, '#setMap')],
+    ['OverlayField.#look', bodyOf(field, '#look')],
+    ['OverlayField.#station', bodyOf(field, '#station')],
+    ['OverlayField.#billboard', bodyOf(field, '#billboard')],
+    ['overlays.ts commit', bodyOf(overlays, 'commit')],
+  ];
+  for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
+  // The anchor arrow routes a figure anchor to `#figurePoint`, and bind uses the arrow.
+  assert.match(pool, /readonly #anchor = \(ref: AnchorRef\)[\s\S]{0,200}this\.#figurePoint\(ref\)/);
+  assert.match(pool, /this\.#apply\(slot, effect, this\.#anchor, camera\)/);
+  // The look dispatch reaches every one of its bodies from `bind`.
+  const bind = bodyOf(field, 'bind');
+  assert.ok(bind.includes('this.#look(') && bind.includes('this.#station('), 'OverlayField.bind no longer draws the looks and the stations');
+
+  const junk = [
+    'const _junk = [t, t];',
+    'const o = { a: 1 };',
+    'for (const e of this.entries.values()) {}',
+    'const f = () => 1;',
+    'const s = `${1}`;',
+    'const v = new THREE.Vector3();',
+    'const c = [...xs];',
+  ];
+  for (const [name, body] of bodies) {
+    for (const line of junk) {
+      assert.ok(allocationsIn(`\n${line}\n${body}`).length > 0, `the allocation scan misses \`${line}\` in ${name}`);
+    }
+    assert.deepEqual(allocationsIn(body), [], `${name} allocates in the frame loop (§9.2 rule 6)`);
+  }
+});
+
+test('liveness: a `figure` anchor is the effect binding’s — layout.ts never resolves one', () => {
+  // So the camera director (which resolves through `layout.ts`) and `deltaTo` can
+  // never be handed a body's point, and a cue cannot move a CARD toward a figure.
+  const log = readFileSync(fileURLToPath(new URL('../../fixtures/games/g1.jsonl', import.meta.url)), 'utf8')
+    .split('\n')
+    .filter((line) => line.trim() !== '');
+  let state = initialState();
+  for (const line of log.slice(1, 300)) state = reduce(state, JSON.parse(line) as Frame);
+  const placed = layout(state);
+  const card = placed.placements.find((p) => p.kind === 'creature');
+  assert.ok(card !== undefined, 'g1 has a creature by frame 300');
+  assert.equal(anchorPosition(placed, { kind: 'figure', id: card.cardId, at: 0.5 }), null);
+  assert.deepEqual(anchorDelta(placed, card.cardId, { kind: 'figure', id: card.cardId, at: 0.5 }), [0, 0, 0]);
+  // …and it IS the effect pool's: the one file that resolves the kind.
+  const resolvers = arenaFiles()
+    // An ANCHOR's kind (`ref.kind`, `at.kind`, `to.kind`) — not the stack form of
+    // the same name in `scene/casting.ts`, which is a creature spell's ghost.
+    .filter((f) => /\b(?:ref|at|to|anchor)\.kind\s*[!=]==\s*'figure'/.test(codeOf(f.source)))
+    .map((f) => f.path)
+    .sort();
+  assert.deepEqual(resolvers, ['scene/effects.ts'], `the figure anchor is resolved outside the effect pool: ${resolvers.join(', ')}`);
+  // The effect pool reads no clock of its own either: `CueRunner` hands it the
+  // frame's seconds, for the one term that is a function of time (the bob).
+  assert.ok(
+    !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(
+      codeOf(readFileSync(ARENA + 'scene/effects.ts', 'utf8')),
+    ),
+    'scene/effects.ts reads a clock of its own',
+  );
 });

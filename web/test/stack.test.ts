@@ -544,3 +544,83 @@ test('duelists: a bust flinches for exactly as long as an effect at its player l
   effects.delete('c:plate');
   assert.equal(bustReactionInto(out, effects, 1).strength, 0, 'the flinch outlived its cue');
 });
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 (T11) — the two facts a per-card beat reads off the snapshot
+// ---------------------------------------------------------------------------
+
+test('stack: `strikeGrew` is the struck card’s own P/T change across the transition, and nothing else', () => {
+  // Over the corpus: every resolution that is aimed at a card carries a
+  // `strikeGrew` of -1, 0 or +1, and it agrees with the two frames' P/T.
+  const counts = { up: 0, flat: 0, down: 0 };
+  const size = (c: AnyCard | undefined): number | null => {
+    if (c === undefined) return null;
+    const p = Number.parseInt(String((c as { power?: string | null }).power ?? ''), 10);
+    const t = Number.parseInt(String((c as { toughness?: string | null }).toughness ?? ''), 10);
+    return Number.isFinite(p) && Number.isFinite(t) ? p + t : null;
+  };
+  const find = (board: ClientState['board'], id: number): AnyCard | undefined => {
+    if (board === null) return undefined;
+    for (const c of board.stackCards) if (c.id === id) return c;
+    for (const pl of board.players) {
+      for (const zone of [pl.zones.battlefield, pl.zones.hand, pl.zones.graveyard, pl.zones.exile, pl.zones.command]) {
+        for (const c of zone.cards) if (c.id === id) return c;
+      }
+    }
+    return undefined;
+  };
+  for (const file of fixtureFiles()) {
+    let previous: ClientState['board'] = null;
+    for (const state of framesOf(file)) {
+      for (const cue of planBatch(state.events, state, CUES, previous).flatMap((s) => s.cues)) {
+        const struck = cue.params['strikeCard'];
+        if (cue.kind !== 'resolved' || typeof struck !== 'number') continue;
+        const grew = cue.params['strikeGrew'];
+        assert.ok(grew === -1 || grew === 0 || grew === 1, `${file}: strikeGrew ${String(grew)}`);
+        const a = size(find(previous, struck));
+        const b = size(find(state.board, struck));
+        const expected = a === null || b === null || a === b ? 0 : b > a ? 1 : -1;
+        assert.equal(grew, expected, `${file}: strikeGrew ${String(grew)} for ${String(a)} → ${String(b)}`);
+        counts[grew === 1 ? 'up' : grew === -1 ? 'down' : 'flat'] += 1;
+      }
+      previous = state.board;
+    }
+  }
+  console.log(`  strikeGrew over the corpus: ${JSON.stringify(counts)}`);
+  assert.ok(counts.flat + counts.up + counts.down >= 35);
+});
+
+test('stack: `foe` is the other seat — a direction for a sweep, never an aim', () => {
+  let casts = 0;
+  for (const file of fixtureFiles()) {
+    for (const state of framesOf(file)) {
+      for (const cue of planBatch(state.events, state, CUES, null).flatMap((s) => s.cues)) {
+        if (cue.kind !== 'cast') continue;
+        const foe = cue.params['foe'];
+        const caster = cue.players[0];
+        assert.equal(typeof foe, 'number');
+        const seats = state.board?.players.map((p) => p.id) ?? [];
+        assert.ok(foe === -1 || (seats.includes(foe as number) && foe !== caster), `${file}: foe ${String(foe)} for caster ${String(caster)}`);
+        casts += 1;
+      }
+    }
+  }
+  assert.ok(casts > 100, `only ${String(casts)} casts`);
+});
+
+test('stack: Pym Particles grows or shrinks by what the SNAPSHOT did, and only pulses when it did nothing', () => {
+  const impl = REGISTRY.get('fx.scaleBeam');
+  assert.ok(impl !== undefined);
+  const peak = (params: CueContext['params']): number => {
+    const stage = new NullStage();
+    impl.apply({ id: 'fx.scaleBeam', targets: [10], players: [0], params, ms: 700, key: 'k', reducedMotion: false }, 0.5, stage);
+    return stage.offsets.get(20)?.scale ?? 1;
+  };
+  const base = { targetScale: 1.45, follow: true, strikeCard: 20 };
+  assert.ok(peak({ ...base, strikeGrew: 1 }) > 1.4, 'a target that got bigger did not grow');
+  assert.ok(peak({ ...base, strikeGrew: -1 }) < 0.72, 'a target that got smaller did not shrink');
+  const flat = peak({ ...base, strikeGrew: 0 });
+  assert.ok(flat > 1 && flat < 1.1, `no change claimed no more than a pulse (saw ${String(flat)})`);
+  // Without `follow` the data decides: Wasp's −3/−0 is a shrink whatever happened.
+  assert.ok(peak({ targetScale: 0.6, strikeCard: 20, strikeGrew: 1 }) < 0.7);
+});

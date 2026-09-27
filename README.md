@@ -583,14 +583,16 @@ board is the generated text frame, which is what a missing image looks like.
 
 ### Arena mode — the same game, in 3D
 
-**M7, Tier 1, and Tier 2's first two slices.** The arena is a **second renderer
+**M7, Tier 1, and Tier 2's first three slices.** The arena is a **second renderer
 for the same frame stream**, not a second app: the socket, the reducer and the
 frame log are untouched and `#arena` is the whole of the difference. Tier 1
 (below) is the table, the cards and the choreography; **Tier 2** (further below)
 stands a figure at every creature, lays the lands out as terrain, gives every
-spell on the stack a form and lets you watch a creature die; and **the camera**
-has five views, a spectator mode and a director of its own (*Camera views*,
-below).
+spell on the stack a form and lets you watch a creature die; **the camera** has
+five views, a spectator mode and a director of its own (*Camera views*, below);
+and since **slice 3** every card in the deck reads as itself — Wasp small and
+winged, Fury in a black coat, the Air Force a swarm, the Helicarrier a carrier
+overhead (*Tier 2, slice 3 — every card reads as itself*, below).
 
 ```bash
 npm --prefix web run dev:arena                # a recorded game as a cinematic
@@ -610,8 +612,8 @@ mid-combat, mid-question — without dropping a frame or touching the socket. Ca
 are textured planes on a 3D table, the transitions in `state.events` play as
 animations, and the S.H.I.E.L.D. deck's own cards have cues of their own
 (`web/src/arena/cues/cues.json`): the Helicarrier flies in and hovers for the
-rest of the game, Quake's tap sends a shockwave across the table, Peggy Carter
-attacking alone wears a shield.
+rest of the game, Quake's trigger sends a shockwave across the table, Peggy
+Carter attacking alone wears a shield.
 
 **Watching is the replay corpus, and it needs no JVM.** `fixtures/games/`
 holds eighteen recorded games — the M1 AI-vs-AI duels and the later human-seat
@@ -767,7 +769,10 @@ function of the frame on screen, and only the transitions between frames are
 animated (**D56**):
 
 - **A figure at every creature.** Each creature on the battlefield gets a small
-  low-poly figure standing at the front edge of its card, facing the other seat —
+  low-poly figure standing at the front edge of its card — facing outward, yours
+  toward you and the opponent's away from you, until an attack turns one to face
+  what it attacks (**D81**, **D82**; which way they should rest is PLAN.md's
+  question 13) —
   a suited agent for the S.H.I.E.L.D. agents and the Soldier tokens, a hero with
   two round buns for Wasp, Ant-Man and the Hero tokens, a scientist in glasses and
   a tie for Bold Biochemist and the A.I.M. Scientists (**D73**), a flying robot for
@@ -778,7 +783,7 @@ animated (**D56**):
   creature kneels rather than lying down with its card, an attacker holds its
   lean for the whole of combat, a summoning-sick one is translucent, and a
   blocker stands where `state.combat` says it blocks. A creature with no figure —
-  a face-down one, a probe-deck beast, the Helicarrier for now — stands on a
+  a face-down one, a probe-deck beast — stands on a
   glowing **disc** sized by its power and toughness, and every figure has one at
   its feet. No two figures overlap, and when a battlefield row wraps onto a
   second line, the back row's figures stand on their own cards (**D65**, **D66**).
@@ -793,7 +798,9 @@ animated (**D56**):
   motion work on the figures too** (**D57**). Figures breathe only while something
   else is animating, so an idle table still renders nothing (**D58**).
 - **Auras and equipment on the figure.** Quantum Reduction shrinks its host to
-  0.45× and keeps it shrunk through any skip or scrub; every other aura or
+  0.45× and keeps it shrunk through any skip or scrub; since slice 3 Super Suit
+  is an armour shell round its host, the Spy Kit three gadget glints at its hands
+  and Robotics Mastery circuit traces over its body (**D80**); any other aura or
   equipment draws a halo at the figure's feet in its own colour (metallic for an
   equipment).
 - **Lands are terrain.** Every land sits on a rounded slab under its card —
@@ -907,13 +914,118 @@ window.__mtgArena.director.stats     // camera moves taken / dropped / retired
 window.__mtgArena.stage.clips        // Tier 2: the clip each figure is playing, its t and weight
 window.__mtgArena.figures            // Tier 2: who stands where, which model, which stance, which rung
 window.__mtgArena.tileField.counts() // Tier 2: land slabs drawn, per kind
-window.__mtgArena.discs.counts()     // slice 2: discs, back-row discs, and dying bodies drawn
+window.__mtgArena.discs.counts()     // slice 2: discs, back-row discs, and dying bodies drawn;
+                                     // slice 3: prop instances and the prop kinds drawn
 ```
 
 `advance()` moves the clock whether or not the queue is paused, which is also the
 only way to photograph the middle of a cue in an environment whose animation
 frames do not fire. It is `import.meta.env.DEV`-only and is dropped from the
 production bundle entirely.
+
+#### Tier 2, slice 3 — every card reads as itself
+
+**M7 Tier 2, slice 3** (evenings T9–T12 of report 13, plus per-card identity;
+evidence in [`docs/evidence/m7-tier2-slice3.md`](docs/evidence/m7-tier2-slice3.md);
+decisions **D75–D89**). After slice 2 the verdict was *"everything still looks very
+generic"* — and it was: every card was one of five bodies in a colour. Slice 3
+answers it without a model per card. **What makes a card read as itself is data**
+— its size, whether it flies, its colour, what it carries or wears, whether it is
+one body or several — and every piece of that data is drawn from a small kit of
+shared props that any card may name:
+
+| card | what you see at the table |
+|---|---|
+| Wasp, Shrinking Savior | half a hero's height, gold, hovering, four pale-blue wings |
+| Ant-Man, Reformed Rogue | red, in a glass helmet with antennae; attacking alone he shrinks to a bright speck |
+| Ant-Man's Air Force | a ring of five small bees, not one insect |
+| Giant-Sized Flying Ant | nearly twice any other insect's height, flying side-on, a rider on its back |
+| Aerial Doombot | Doom green, a red laser eye and a red band round its head, twin thrusters with a lit exhaust |
+| Nick Fury, Spymaster | a slate figure in a long black coat, a black eyepatch with a strap |
+| Agent Phil Coulson | a navy suit, a shirt and tie, a gold badge on his chest and a bigger one on his back |
+| Quake, Agent of S.H.I.E.L.D. | teal, both fists glowing |
+| Peggy Carter, Secret Agent | a red hat and a round red-white-and-blue shield |
+| Agent 13, Sharon Carter | indigo, a silver pistol at her hip with a lit muzzle |
+| Agents of S.H.I.E.L.D. | a squad of three in steel blue, side by side |
+| S.H.I.E.L.D. Helicarrier | an actual carrier silhouette flying over its card, crewed or not |
+| Bold Biochemist / A.I.M. Scientists | at a lab bench; the Biochemist in a white lab coat, A.I.M. in yellow under a bucket hood |
+| Super Suit · Spy Kit · Robotics Mastery | worn by their host: an armour shell, gadget glints, circuit traces |
+
+The per-card beats moved **onto the body** too: Agent 13's muzzle flashes come from
+her pistol's tip, the Doombot's laser from its eye, Peggy's shield bubble and
+Ant-Man's speck ride down the lane with them, and an attacker turns to face what it
+attacks while it does. **All of it is a pose** — a function of the frame on screen,
+so it survives skip, scrub and a `resync` — and **a face-down or hidden creature
+gets none of it**: it stays the anonymous disc, with no props, no hover and no
+swarm, whatever its name would have been.
+
+Two things to know when you watch. **Your own figures face you**, so you see their
+fronts (Coulson's badge, Fury's patch, the Doombot's eye) and the opponent's backs
+(Fury's coat, the Doombot's thrusters, Coulson's back emblem); every card is built
+to read from both sides, and whether figures should rest facing the other seat
+instead is PLAN.md's question 13 — one line to change, and your call after a game.
+And the small looks — Robotics Mastery's traces, Agent 13's muzzle — are small from
+the table view; the shoulder views (**2**, **5**) show them properly.
+
+**It costs** one draw call per prop KIND on the table, never one per figure: at
+`g1.jsonl`@355, bloom off, the table is 78 draw calls and 27,906 triangles against
+the Tier 2 budget of 90 and 30,000, and an idle table still renders nothing. No
+asset was added — every prop is built in code, and the two that are not primitives
+(the ant's rider, the Agents' followers) are the existing CC0 bodies frozen in a
+pose — so `figures.glb`, the asset manifest and NOTICE's figure list are unchanged.
+
+**Giving a card its identity — a data edit, not code.** The identity table is
+`web/src/arena/figures/traits.json`, next to `figures.json` (which says only which
+BODY a card stands in) and `cues/cues.json` (which says how its events play):
+
+1. **Add a row under `cards`**, keyed by the card's name **exactly as the wire
+   spells it** (a token is `"Soldier Token"`, not `"Soldier"`). Every key is
+   optional and checked by `figures/validate.ts`'s `validateTraits`:
+
+   | key | what it does | legal values |
+   |---|---|---|
+   | `scale` | size against the body's normal height | 0.2–4 (the width clamp still fits it to its slot) |
+   | `hover` | world units above its stand point | 0–2 |
+   | `idle` | `hover` bobs gently while anything is animating; `static` stands still | `hover`, `static` |
+   | `tint` / `accent` | the body's colour / the props' colour | `#rrggbb` |
+   | `shade` | darker or brighter than its tint (villains are 0.78) | 0.3–1.5 |
+   | `turn` + `turnedRatio` | fly side-on (degrees), and the turned width over height, which the test measures | −180–180; 0.1–4 |
+   | `props` | what it carries or wears — see the kit below | a list, no repeats |
+   | `swarm` + `formation` | several bodies: `ring` (a turning ring of small members) or `squad` (followers in a wedge) | 0–8, whole |
+   | `silhouette` | draw a flying `carrier` over the card instead of a body | `carrier` or `null` |
+   | `shrink` | the size Ant-Man's attack cue shrinks him to (the cue reads it; the pose never does) | 0.05–1 |
+
+   Keys starting with `_` are notes; write one saying where the look comes from.
+2. **The kit** is `figures/props.ts`'s closed list: `wings`, `helmet`, `hood`,
+   `jetpack`, `exhaust`, `laserEye`, `visor`, `pistol`, `muzzle`, `coat`,
+   `eyepatch`, `badge`, `tie`, `gauntlets`, `shield`, `hat`, `rider`, `labBench`.
+   **`props` replaces, it does not add**: a row that names `props` lists every one
+   it wants, including any its subtype rung would have given it. The glowing ones
+   (`exhaust`, `laserEye`, `gauntlets`, `badge`, `muzzle`) burn softly at rest and
+   flare whenever one of the card's cues plays an attack, a summon, a channel or a
+   grow on it — a cue drives them by asking for a clip or a glow, and there is no
+   second switch.
+3. **For every card of a type**, add a `subtype:<word>` rung under `archetypes`
+   instead — only the words the figure ladder knows: `robot`, `insect`, `vehicle`,
+   `scientist`, `spy`, `hero`, `soldier`, `villain`, `human`. The ladder is
+   default → every matching rung, least specific first → the card's own row; the
+   most specific value wins.
+4. **Run `npm --prefix web test`.** `traits.test.ts` fails on any validation error
+   (a bad row is also dropped at runtime, so the game never breaks on one), prints
+   the census — which card got which rungs and props over every recorded game —
+   and, for a card in `decks/pacho-shield.dck`, rasterises its props through the
+   table camera from **both** seats: each must show at least 48 pixels.
+5. **Look at it**: `npm --prefix web run dev:arena`, `?replay=games/<file>.jsonl#arena`,
+   scrubbed to a frame where the card is on the battlefield, at 1× from views **1**
+   and **4**, on your side and the opponent's.
+
+**A new prop kind is code**, and it is shared: a name in `PROP_KINDS` and a
+`PROP_KIT` entry with its anchors per body in `figures/props.ts`, a `LOOKS` entry
+and a `buildKindGeometry` case (at most 1,200 triangles, asserted) in
+`scene/props.ts` — after which any row may name it. What is never allowed is a
+model used by exactly one card: that is Tier 3 (*per-card models*), which is not
+started, and a model that looks like a Marvel character would stay on your own
+machine and out of this repository (PLAN.md, *Tier 3 — a note, not a plan*).
 
 ### Playing the console game
 
@@ -966,9 +1078,9 @@ is a file, not a story.
 
 ## Repo layout
 
-Everything listed exists today (M0-M7: arena Tier 1, Tier 2's first slice —
-committed — and its second, which is on branch `tier2-slice2` and not yet
-committed).
+Everything listed exists today (M0-M7: arena Tier 1 and Tier 2's first two
+slices — committed — and its third, per-card identity, which is on branch
+`tier2-slice3` and not yet committed).
 
 ```
 mtg-table/
@@ -976,7 +1088,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the seventy-four load-bearing decisions, dated
+  DECISIONS.md               the eighty-nine load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -1085,11 +1197,16 @@ mtg-table/
                              pose of every creature) clips.ts (CLIP_FOR, the clip
                              arbitration, the rest stances) tiles.ts attach.ts
                              casting.ts (motes, spell forms, the combat freeze)
-                             duelists.ts validate.ts
+                             duelists.ts validate.ts; and (slice 3) traits.json
+                             (THE per-card identity table: scale, hover, tint,
+                             props, swarm, silhouette) traits.ts (its ladder)
+                             props.ts (the closed prop kit, as data: kinds,
+                             anchors per body, swarm layout)
       arena/scene/           (M7) the three half. CardPlane.tsx is THE card renderer of
                              the arena, the way CardTile.tsx is the board's;
                              CueRunner.tsx is the ONE useFrame; effects.ts is a fixed
-                             pool of 38 meshes (26 at Tier 1, plus 12 mana motes);
+                             pool of 45 meshes (26 at Tier 1, 38 with the 12 mana
+                             motes, 45 with slice 3's per-card beats);
                              useCardTexture.ts, textFrame.ts,
                              cardMaterial.ts, geometry.ts (one quad for every card),
                              HitProxy.tsx, Table.tsx, rigs.ts, SceneStage.ts.
@@ -1100,7 +1217,9 @@ mtg-table/
                              the disc fallback) holoMaterial.ts (the one figure
                              shader) discs.ts tiles.ts casting.ts overlays.ts
                              busts.ts (each one InstancedMesh-based) colourCache.ts
-                             and Post.tsx (the bloom pass, lazily imported)
+                             and Post.tsx (the bloom pass, lazily imported); and
+                             (slice 3) props.ts (the prop field: one InstancedMesh
+                             per prop KIND, bound from DiscField.bind)
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
                              M8 clickability rule), ws.test.ts (the M3 transport:
@@ -1137,7 +1256,11 @@ mtg-table/
                              and arena-hud.test.tsx (the life plates, over every frame);
                              and (Tier 2) figures.test.ts figure-pose.test.ts
                              clips.test.ts tiles.test.ts attach.test.ts stack.test.ts
-                             -- every one a sweep of the whole corpus with no GPU
+                             -- every one a sweep of the whole corpus with no GPU --
+                             and (slice 3) traits.test.ts (the identity census, and
+                             every deck card's props rasterised from BOTH seats by
+                             prop-raster.ts, a software rasteriser over the real
+                             figures.glb) and facing.test.ts (one front, both seats)
     public/art.json          generated, gitignored
     public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from four CC0
                              packs: 143,920 bytes, recorded in models.json and checked

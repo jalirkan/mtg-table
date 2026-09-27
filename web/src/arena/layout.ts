@@ -133,7 +133,19 @@ const PILE_STEP_Z = -0.006;
 
 /** §3.2 — an attachment sits behind and below-right of its host. */
 const ATTACH_DX = 0.2;
-const ATTACH_DY = 0.002;
+/**
+ * **UNDER its host, not over it** (the second verification pass). It was +0.002:
+ * drawn behind the host by `renderOrder` but lying 2 mm ABOVE it, so its click
+ * proxy — 10% larger than the card — was the nearer hit over most of the host,
+ * and a click on Peggy Carter under the opponent's Quantum Reduction answered
+ * "Not selectable: card 45" (live, seed 11, view 2); she could be declared an
+ * attacker only through Alpha Strike. Below the host the host wins every click
+ * on its own face, and the attachment keeps the strip it shows —
+ * `layout.test.ts` raycasts both over every corpus attachment from the three
+ * seat-safe views. (Never "route a click to the host": that would be gating a
+ * click on `selectable`, amendment M8.)
+ */
+export const ATTACH_DY = -0.002;
 const ATTACH_DZ = 0.14;
 const ATTACH_FAN_X = 0.1;
 
@@ -237,6 +249,89 @@ export const ON_CARD_DISC_ORDER = 70;
  */
 export const DEPARTURE_STEP = 0.85;
 
+/**
+ * **The lowest a vehicle's silhouette flies** (Tier 2 slice 3, T10), world units
+ * above the table. The carrier is posed at its stand point lifted by its trait's
+ * `hover` — on top of the card's own `presence` hover (0.9 for the Helicarrier in
+ * `cues.json`) — and never below this, so it is overhead whether or not a
+ * presence rule lifts its card: its underside clears the tallest head on the
+ * table (a hovering Wasp, ≈ 1.1) with room, which `figure-pose.test.ts` asserts
+ * over the corpus. It lives here because an altitude is a coordinate.
+ *
+ * **2.05, not slice 3's first 1.65** (the verification pass, `g1`@323): at 1.65
+ * a carrier over YOUR rank projected, from the table view's steep camera, straight
+ * onto your own figures — a rotor disc sat on Wasp's head, and 352 of the corpus's
+ * 799 carrier/own-figure pairs overlapped on screen by more than 5%. Raised 0.4
+ * (and drawn 20% shorter, `figures/props.ts`'s `CARRIER_LENGTH`) it projects above
+ * the rank it flies over: `figure-pose.test.ts` projects every carrier and every
+ * figure through the table view's camera and asserts no overlap on either seat.
+ * From the two over-the-shoulder views a carrier over your rank still projects
+ * onto the FAR rank — that is what an aircraft between you and the far side of a
+ * table does in perspective, the hull is translucent, and it was so before.
+ */
+export const SILHOUETTE_ALTITUDE = 2.05;
+
+/**
+ * **Where the OPPONENT's carrier flies: over the table's centre line, low, and a
+ * fifth smaller** (the second verification pass). From the table view (view 1)
+ * the opponent's whole side is packed between the arena's own chrome and the
+ * middle of the screen: its land rank starts some 15 px below the credit line
+ * at 1600 × 1000, so anything flying over the opponent's rank is either under
+ * the HUD (as the opponent's carrier at {@link SILHOUETTE_ALTITUDE} was — "half
+ * hidden behind the camera strip and the attribution line", `g1`@316/355,
+ * `g3`@270) or over the opponent's own figures. A grid of altitude, inboard shift
+ * and scale over the corpus (every seat-safe view, every live aspect) found no
+ * place over the opponent's half that satisfies both; the centre line does:
+ * `figure-pose.test.ts` holds its projected top under {@link HUD_TOP_PX} at every
+ * aspect in `LIVE_ASPECTS` and its cover of every figure under 5%. What it costs,
+ * measured the same way: from the two over-the-shoulder views (2, 5) it projects
+ * onto the far rank — the cost D77 already accepted for YOUR carrier there — and
+ * where both players have one at the same x the two hulls overlap on screen.
+ * Your own carrier is unchanged: over your rank at {@link SILHOUETTE_ALTITUDE}.
+ */
+export const OPP_SILHOUETTE_Z = 0.25;
+export const OPP_SILHOUETTE_ALTITUDE = 0.8;
+export const OPP_SILHOUETTE_SCALE = 0.8;
+
+/**
+ * **The chrome over the top of the canvas**, in CSS pixels below its top edge
+ * (the second verification pass): the decision bar, the cue and camera strips,
+ * the credit line and the opponent's seat card, measured in the browser at
+ * 1600 × 1000, 1280 × 800, 1920 × 1080, 1000 × 1000 and 2560 × 1080 — fixed
+ * pixel heights, so the band a pose must keep out of is `HUD_TOP_PX / canvas
+ * height` of the frame. The canvas starts 54 px down the window, under the app's
+ * own header.
+ */
+export const HUD_TOP_PX = 128;
+
+/** Where a vehicle's silhouette flies: the ground point under it, how high above that, and its scale. */
+export interface SilhouettePlacement {
+  ground: [number, number, number];
+  lift: number;
+  scale: number;
+}
+
+/**
+ * **A vehicle's silhouette, placed** (T10; the opponent's since the second
+ * verification pass): YOUR carrier over your own rank, at least
+ * {@link SILHOUETTE_ALTITUDE} up and no lower than its trait's `hover`; the
+ * OPPONENT's over the centre line at {@link OPP_SILHOUETTE_ALTITUDE}, a fifth
+ * smaller, at its card's x. Pure; `figures/pose.ts` reads it and
+ * `figure-pose.test.ts` holds a pose to it.
+ */
+export function silhouettePlacementOf(placement: Placement, hover: number): SilhouettePlacement {
+  const stand = standPointOf(placement);
+  if (placement.seat === 'you') {
+    return { ground: stand, lift: Math.max(hover, SILHOUETTE_ALTITUDE - stand[1]), scale: 1 };
+  }
+  const table = anchorsFor('opp').combat.y;
+  return {
+    ground: [stand[0], table, OPP_SILHOUETTE_Z],
+    lift: OPP_SILHOUETTE_ALTITUDE - table,
+    scale: OPP_SILHOUETTE_SCALE,
+  };
+}
+
 /** The placement kinds that lie FLAT on the table — the footprints a figure may not stand in. */
 const FLAT_KINDS: ReadonlySet<SlotKind> = new Set<SlotKind>([
   'creature',
@@ -250,6 +345,129 @@ const FLAT_KINDS: ReadonlySet<SlotKind> = new Set<SlotKind>([
 /** Which way a seat faces: `you` stands at +Z and steps toward −Z, and back. */
 export function seatSign(seat: Seat): number {
   return seat === 'you' ? 1 : -1;
+}
+
+// ---------------------------------------------------------------------------
+// Tier 2 slice 3 — which way a figure's FRONT is (D81), one definition
+// ---------------------------------------------------------------------------
+
+/**
+ * **A figure's front, in figure space: +Z.** `scene/models.ts` turns every model
+ * so its face is at +Z (`models.json`'s `facing`, `FACING_TURN`), and
+ * `figures/props.ts` writes every prop anchor in that space — the Kenney face
+ * detail on the z = +0.25 plane, the drone's eye at +z, its thrusters at −z. The
+ * figure pose then turns the whole body by `facingY` about y, so its front in the
+ * WORLD is `FIGURE_FRONT_Z · (sin facingY, cos facingY)`.
+ *
+ * It is here, beside the rest of the arena's coordinates, because two tracks have
+ * to agree on it and once did not: the prop field (`scene/props.ts`, which
+ * rotates figure space by `facingY`) put the Doombot's eye at the front, and the
+ * effect binding's `figure` anchor (`scene/effects.ts`) resolved `fwd` along
+ * `−(sin, cos)` — so every T11 beat anchored in front of a body (the jet's eye and
+ * laser, Agent 13's muzzle, Coulson's badge flash, the Power-up's vials) landed
+ * BEHIND it, and the jet's exhaust streamed out of the drone's face (slice-3
+ * verification, `g1`@231→232). {@link figurePointInto} is now the only
+ * resolution of `fwd` / `side`, and `web/test/facing.test.ts` resolves both
+ * tracks for both seats and asserts they land on the same side.
+ */
+export const FIGURE_FRONT_Z = 1;
+
+/**
+ * **The turn about y a seat's figures stand at**, before a trait's own `turn`.
+ *
+ * `0` for `you`: with their fronts at +Z ({@link FIGURE_FRONT_Z}) your figures
+ * face YOUR camera, and the opponent's (`π`) face away from it — so the faces,
+ * badges, eyes and pistols read on your side and the coats and jetpacks on the
+ * other. Measured in slice 3 and deliberately NOT changed (D81): turning every
+ * figure to face the other seat is this one line, and it moves every prop and
+ * every T11 anchor with it, but it changes what the whole table looks like and is
+ * the user's call (PLAN.md, M7 Tier 2 slice 3 follow-ups).
+ *
+ * Two things no longer depend on the answer (the second verification pass):
+ * an attack turns its attacker to FACE its defender for the length of the lunge
+ * (`Stage.yawTo` → the offset's `dRotY`, {@link figureYawTo}), so a muzzle and a
+ * laser fire at their target whichever way figures rest; and every
+ * identity-critical prop reads from behind as well as from the front
+ * (`traits.test.ts` rasterises each from both seats).
+ */
+export function seatFacingY(seat: Seat): number {
+  return seat === 'you' ? 0 : Math.PI;
+}
+
+/**
+ * **A figure-space point → the `figure` anchor's terms** (`at` / `fwd` / `side`,
+ * in figure heights): how a cue lands a beat ON a prop — Agent 13's muzzle flash
+ * on `figures/props.ts`'s `PISTOL_MUZZLE` — with the same front and the same right
+ * hand {@link figurePointInto} resolves them against. Right is `front × up`.
+ */
+export function figureAnchorOf(point: readonly [number, number, number]): { at: number; fwd: number; side: number } {
+  return { at: point[1], fwd: point[2] * FIGURE_FRONT_Z, side: -point[0] * FIGURE_FRONT_Z };
+}
+
+/**
+ * **A point on a figure → world**, written into `out` and returned (no
+ * allocation: the effect binding calls it on the frame loop's path).
+ *
+ * `(px, py, pz)` is the figure's origin — its feet — and `facingY` its turn.
+ * `fwd` is along its FRONT, `side` toward its RIGHT hand and `up` straight up,
+ * all in world units. Its right hand is `front × up`: for a figure facing +Z
+ * that is −X, which is where `figures/props.ts` puts the pistol's `arm-right`.
+ */
+export function figurePointInto(
+  out: [number, number, number],
+  px: number,
+  py: number,
+  pz: number,
+  facingY: number,
+  fwd: number,
+  up: number,
+  side: number,
+): [number, number, number] {
+  const fx = FIGURE_FRONT_Z * Math.sin(facingY);
+  const fz = FIGURE_FRONT_Z * Math.cos(facingY);
+  out[0] = px + fx * fwd - fz * side;
+  out[1] = py + up;
+  out[2] = pz + fz * fwd + fx * side;
+  return out;
+}
+
+/**
+ * **The turn about y that brings a figure facing `facingY` round to face a
+ * point** — radians in (−π, π], the short way round; `0` when the point is on
+ * top of it. Pure, and written against {@link FIGURE_FRONT_Z}'s one definition
+ * of a front, so a figure turned by it points its muzzle, its eye and its pistol
+ * at `(toX, toZ)` whichever way its seat's figures stand.
+ */
+export function yawToward(facingY: number, fromX: number, fromZ: number, toX: number, toZ: number): number {
+  const dx = toX - fromX;
+  const dz = toZ - fromZ;
+  if (dx * dx + dz * dz < 1e-9) return 0;
+  // The front in the world is FIGURE_FRONT_Z · (sin θ, cos θ): solve for θ.
+  const want = Math.atan2(FIGURE_FRONT_Z * dx, FIGURE_FRONT_Z * dz);
+  let turn = want - facingY;
+  while (turn > Math.PI) turn -= 2 * Math.PI;
+  while (turn <= -Math.PI) turn += 2 * Math.PI;
+  return turn;
+}
+
+/**
+ * **`Stage.yawTo`, in coordinates** (Tier 2 slice 3's second verification pass):
+ * the turn that faces the figure standing for `cardId` toward `ref`, from its
+ * seat's facing ({@link seatFacingY}) at its stand point ({@link standPointOf}).
+ *
+ * A trait's own `turn` (the giant ant flies side-on) is deliberately NOT taken
+ * out: the delta is measured from the seat's facing, so a side-on flier stays
+ * side-on to its target rather than swinging nose-first — the one figure with a
+ * `turn` attacks with no front-anchored beat (`attack.jet`'s `eye: false`).
+ * `0` for a card with no placement or an anchor that does not resolve.
+ */
+export function figureYawTo(placed: Layout, cardId: number, ref: AnchorRef): number {
+  const placement = placementOf(placed, cardId);
+  if (placement === null) return 0;
+  const to = anchorPosition(placed, ownSideOf(ref, placement));
+  if (to === null) return 0;
+  const stand = standPointOf(placement);
+  return yawToward(seatFacingY(placement.seat), stand[0], stand[2], to[0], to[2]);
 }
 
 // ---------------------------------------------------------------------------

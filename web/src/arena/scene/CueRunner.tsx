@@ -41,7 +41,7 @@
  */
 
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 import {
@@ -57,7 +57,8 @@ import {
   REST_PHASE_FOR,
   type ClipRequest,
 } from '../figures/clips.ts';
-import type { FigureLayout } from '../figures/pose.ts';
+import { stationsOf } from '../figures/attach.ts';
+import { departureStand, type FigureLayout } from '../figures/pose.ts';
 import type { ManaMote, SpellForm } from '../figures/casting.ts';
 import type { DuelistBust } from '../figures/duelists.ts';
 import type { TileLayout } from '../figures/tiles.ts';
@@ -65,7 +66,7 @@ import { anchorsFor, type Layout } from '../layout.ts';
 import type { CastingField } from './casting.ts';
 import type { DiscField } from './discs.ts';
 import type { BustField } from './busts.ts';
-import type { EffectPool } from './effects.ts';
+import type { DepartedBody, EffectPool } from './effects.ts';
 import { actionFor, type FigureRig, type FigureRigMap } from './figureRigs.ts';
 import type { OverlayField } from './overlays.ts';
 import type { RigMap } from './rigs.ts';
@@ -224,6 +225,32 @@ export function CueRunner({
   formsRef.current = forms;
   const bustsRef = useRef(busts);
   bustsRef.current = busts;
+  // ── Tier 2 slice 3 (T12) — effect/overlay binding input ─────────────────
+  // The stations of the frame on screen: a pure function of `layout(state)` and
+  // the cue file's `stations` table (`figures/attach.ts`), recomputed when either
+  // changes and never in the frame loop.
+  const stations = useMemo(() => stationsOf(placed, queue.data.stations), [placed, queue.data]);
+  const stationsRef = useRef(stations);
+  stationsRef.current = stations;
+  // T11 — the bodies that left the table in THIS snapshot, where their departing
+  // bodies stand: one frame of look-behind, computed when the figure layout
+  // changes (never in the frame loop), so a `figure` anchor on a creature that
+  // just died resolves to its falling body. Compared by identity against the
+  // layout it was computed for, so a StrictMode double render keeps the result.
+  const departedRef = useRef<{ figures: FigureLayout; departed: Map<number, DepartedBody> }>({
+    figures,
+    departed: new Map(),
+  });
+  if (departedRef.current.figures !== figures) {
+    const before = departedRef.current.figures;
+    const departed = new Map<number, DepartedBody>();
+    for (const pose of before.values()) {
+      if (pose.ghost || figures.has(pose.cardId)) continue;
+      departed.set(pose.cardId, { pose, stand: departureStand(pose, figures) });
+    }
+    departedRef.current = { figures, departed };
+  }
+  // ── end slice 3 input ────────────────────────────────────────────────────
   /** The previous frame's `now`, for the one term that is a function of TIME. */
   const lastRef = useRef<number | null>(null);
 
@@ -479,11 +506,19 @@ export function CueRunner({
       figuresRef.current,
       awake ? dt : 0,
     );
-    overlays.bind(figuresRef.current, stage, camera, awake ? dt : 0);
+    // ── Tier 2 slice 3 (T12): the attachment looks and the stations ride the
+    // overlay field's one bind, with the same gated `dt`.
+    overlays.bind(figuresRef.current, stage, camera, awake ? dt : 0, stationsRef.current);
     bustField.bind(bustsRef.current, camera, stage.effects);
+    // ── EFFECT BINDING (Tier 2 slice 3, T11) ────────────────────────────────
+    // The `figure` anchor is resolved against THIS frame's bodies and offsets:
+    // three references and a number handed to the pool, nothing allocated.
+    pool.setFigures(figuresRef.current, stage, now / 1000, departedRef.current.departed);
     // `stage.positionOf` is a bound arrow property, passed rather than wrapped:
     // an arrow here would be a new closure on every frame (§9.2 rule 6).
     pool.bind(stage.effects, stage.positionOf, camera);
+    // ── end effect binding — a prop step, if one is added, goes AFTER this
+    // line and before the prime block, and owns no effect slot. ──────────────
     if (primeRef.current > 0) {
       // §8.3 rule 3: compile now, at mount, not on the first cue that needs it.
       primeRef.current -= 1;
@@ -684,8 +719,11 @@ function applyFigures(
     // figure that inherited it would pirouette every time its creature tapped —
     // and a figure that inherited the resting tap would lie down sideways. A
     // tap is a **stance** here (`crouch`), which is T3's clip lane. Same fact,
-    // two vocabularies. The only rotation a figure has is which seat it faces.
-    rig.root.rotation.set(0, pose.facingY, 0);
+    // two vocabularies. The rotation a figure has is which seat it faces, plus
+    // `dRotY` — the FIGURE's vocabulary (a card ignores it): an attack turning
+    // its attacker toward its defender and back (slice 3's second verification
+    // pass), so a muzzle and a laser eye point at what they fire at.
+    rig.root.rotation.set(0, pose.facingY + offset.dRotY, 0);
     rig.root.scale.setScalar(Math.max(0.0001, pose.height * offset.scale));
 
     const uniforms = rig.material.uniforms;

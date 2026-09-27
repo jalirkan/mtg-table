@@ -34,7 +34,9 @@
 
 import { isHidden, type AnyCard } from '../../protocol.ts';
 import { primaryTypeOf } from '../cues/archetype.ts';
+import type { Station, StationKind } from '../cues/types.ts';
 import { colourHex, colourIdOf } from '../colour.ts';
+import { standPointOf, type Layout, type Placement, type Seat } from '../layout.ts';
 import type { AttachData, AttachKind, AttachSpec } from './types.ts';
 
 /**
@@ -163,4 +165,117 @@ export function manifestationOf(card: AnyCard, data: AttachData): AttachmentMani
     metal: spec.metal,
     rung: match.rung,
   };
+}
+
+// ---------------------------------------------------------------------------
+// T12 — the stations: what a non-creature, unattached permanent keeps in its own slot
+// ---------------------------------------------------------------------------
+
+/**
+ * **A station on the table this frame** (Tier 2 slice 3, T12; `cues/types.ts`'s
+ * {@link Station}). Two cards in this deck are enchantments that are neither a
+ * creature (no figure) nor attached to one (no aura overlay), and each carries one
+ * thing the source material says it IS: Strategic Intervention's ops console,
+ * Web Up's cocoon. It stands in the card's OWN rank slot — at the slot's stand
+ * point, where a creature's figure would stand, and no wider than a figure — and
+ * it names nothing else: the wire never relates Web Up to the card it exiled
+ * (measured over the whole committed corpus: `attachedToId` is `null` on Web Up and on every card in
+ * an exile zone, in every frame), and a cocoon over the exile pile would be a
+ * renderer asserting a link the engine did not state (report 13 §4.5).
+ *
+ * Ids, a seat, a coordinate `layout.ts` computed, a kind and a colour — never a
+ * name (§3.10 rule 1).
+ */
+export interface StationPose {
+  cardId: number;
+  seat: Seat;
+  /**
+   * Its rank slot's stand point (`layout.ts`'s `standPointOf`) — where a figure
+   * would stand for this card, so the overlay covers nothing a figure would not.
+   */
+  position: [number, number, number];
+  kind: StationKind;
+  colour: string;
+  /** World units from the stand point to the overlay's centre. */
+  lift: number;
+  /** Multiplies the kind's own size. */
+  scale: number;
+}
+
+/**
+ * How high each kind's centre stands when the data does not say, in world units
+ * above its stand point: low enough that it sits in its own slot like a figure.
+ *
+ * **Not slice 3's first 0.85 / 0.6 over the CARD** (the verification pass, `g2`@224
+ * and `g1`@323): a 1.1-wide console 0.85 above a card on YOUR creature rank
+ * projected, from the table view's steep camera, onto the figures standing in
+ * front of the cards beside it — it was drawn over your Ant-Man. At the stand
+ * point and figure-sized ({@link STATION_SIZE}) it stands where
+ * a creature of that card would, and `attach.test.ts` projects it through the
+ * table camera and asserts it covers no figure.
+ */
+export const STATION_LIFT: Readonly<Record<StationKind, number>> = Object.freeze({
+  missionControl: 0.3,
+  cocoon: 0.4,
+});
+
+/**
+ * Each kind's drawn size at `scale` 1, world units — a camera-facing quad
+ * (`scene/overlays.ts`). Neither is wider than a figure (`layout.ts`'s
+ * `FIGURE_MAX_WIDTH`, 0.72): a station occupies its own rank slot and no other.
+ */
+export const STATION_SIZE: Readonly<Record<StationKind, { w: number; h: number }>> = Object.freeze({
+  missionControl: { w: 0.68, h: 0.425 },
+  cocoon: { w: 0.34, h: 0.68 },
+});
+
+/** A frame can hold at most this many (the deck has one of each card). */
+export const MAX_STATIONS = 8;
+
+/** A station's point: its slot's stand point, copied (a placement's own array is layout's). */
+function stationPoint(placement: Placement): [number, number, number] {
+  const stand = standPointOf(placement);
+  return [stand[0], stand[1], stand[2]];
+}
+
+/**
+ * **The stations of one frame, as a pure function of it** — `layout(state)` and
+ * the cue file's `stations` table, and nothing else, so a scrub, a `skip all` and
+ * a `resync` show the console exactly when the snapshot shows the card.
+ *
+ * Only a card that is **face up, not redacted and on the battlefield** — the
+ * battlefield rank, which is where `layout.ts` puts every permanent that is not a
+ * land and not attached (`kind === 'creature'`, whatever its type line) — may
+ * carry one: a station is a statement about what a card is, and hard rule 8 says
+ * a face-down or concealed card makes none (§1.4 one layer down). An attached
+ * card is the aura overlay's (`attachments`), never a station's.
+ */
+export function stationsOf(
+  placed: Layout,
+  stations: Readonly<Record<string, Station>> | undefined,
+): StationPose[] {
+  const out: StationPose[] = [];
+  if (stations === undefined || placed.placements.length === 0) return out;
+  for (const placement of placed.placements) {
+    if (out.length >= MAX_STATIONS) break;
+    if (placement.kind !== 'creature' || placement.back) continue;
+    const card = placement.card;
+    if (isHidden(card)) continue;
+    if (((card as { attachedToId?: number | null }).attachedToId ?? null) !== null) continue;
+    const name = (card as { name?: string }).name;
+    if (typeof name !== 'string' || name === '') continue;
+    const station = stations[name];
+    if (station === undefined) continue;
+    out.push({
+      cardId: placement.cardId,
+      seat: placement.seat,
+      position: stationPoint(placement),
+      kind: station.kind,
+      colour:
+        station.colour ?? colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)),
+      lift: station.lift ?? STATION_LIFT[station.kind],
+      scale: station.scale ?? 1,
+    });
+  }
+  return out;
 }

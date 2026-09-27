@@ -93,6 +93,21 @@ export interface DepartureBinder {
   drawn(): number;
 }
 
+/**
+ * **Slice 3 — the prop field's per-frame half** (`scene/props.ts`): every
+ * figure's props, swarms, squads and vehicle silhouettes, one instanced mesh per
+ * kind. Bound HERE, from inside the one `useFrame`'s call to {@link DiscField.bind}
+ * and after `CueRunner.applyFigures` has posed every rig, exactly as the departing
+ * bodies are: a figure's footprint and what it carries are the same layer of the
+ * table. Typed by shape so this file imports nothing from the prop field.
+ */
+export interface PropBinder {
+  bind(source: OffsetSource, seconds: number): void;
+  /** Prop instances drawn last frame, and how many kinds — `?glinfo=1`'s census. */
+  drawn(): number;
+  kindsDrawn(): number;
+}
+
 let discTex: THREE.Texture | null | undefined;
 
 /**
@@ -144,6 +159,8 @@ export class DiscField {
   readonly capacity: number;
   /** T8 — the departing figures, installed by `FigureLayer` for its lifetime. */
   private departures: DepartureBinder | null = null;
+  /** Slice 3 — the prop field, installed by `FigureLayer` for its lifetime. */
+  private props: PropBinder | null = null;
   /**
    * The poses of the layout last bound, as an ARRAY — refilled only when the
    * layout object changes (once per snapshot), so the frame loop walks a fixed
@@ -189,18 +206,24 @@ export class DiscField {
     let onCard = 0;
     for (let n = 0; n < list.length; n++) {
       const pose = list[n]!;
+      // T10: a vehicle's silhouette flies; it has no footprint on the table.
+      if (pose.silhouette !== null) continue;
       const mesh = pose.onCard ? this.onCardMesh : this.mesh;
       const i = pose.onCard ? onCard : front;
       if (i >= this.capacity) continue;
       const offset = offsets.offsetOf(pose.cardId);
       const radius = pose.radius * offset.scale;
       // The card's own `presence` bob, so a hovering Helicarrier's footprint
-      // rides with it instead of staying nailed to the table.
+      // rides with it instead of staying nailed to the table. **Slice 3:** a
+      // flier's own hover (`pose.lift`) is taken back out — its disc stays on the
+      // ground under it, where it would stand, and does not bob with it.
       const bob =
-        pose.bobAmp > 0 ? pose.bobAmp * Math.sin(seconds * 2 * Math.PI * pose.bobHz) : 0;
+        pose.bobAmp > 0 && pose.lift === 0
+          ? pose.bobAmp * Math.sin(seconds * 2 * Math.PI * pose.bobHz)
+          : 0;
       POSITION.set(
         pose.position[0] + offset.dx,
-        pose.position[1] + offset.dy + bob + DISC_LIFT,
+        pose.position[1] - pose.lift + offset.dy + bob + DISC_LIFT,
         pose.position[2] + offset.dz,
       );
       EULER.set(FLAT, 0, 0);
@@ -223,6 +246,8 @@ export class DiscField {
     commitCount(this.onCardMesh, onCard);
     // T8: the bodies of the creatures that just left, drawn until their deaths end.
     this.departures?.bind(offsets, deaths);
+    // Slice 3: what every figure carries — AFTER the rigs are posed this frame.
+    this.props?.bind(offsets, seconds);
   }
 
   /**
@@ -244,12 +269,20 @@ export class DiscField {
     this.departures = binder;
   }
 
+  /** Install (or, with `null`, remove) the prop field. `FigureLayer` calls it; the frame loop never does. */
+  setProps(binder: PropBinder | null): void {
+    this.props = binder;
+  }
+
   /** How many discs (and T8's departing bodies) were drawn last frame — `?glinfo=1`'s census. */
-  counts(): { discs: number; onCardDiscs: number; departures: number } {
+  counts(): { discs: number; onCardDiscs: number; departures: number; props: number; propKinds: number } {
     return {
       discs: this.mesh.count + this.onCardMesh.count,
       onCardDiscs: this.onCardMesh.count,
       departures: this.departures?.drawn() ?? 0,
+      // Slice 3: prop instances and the kinds they fill — each kind one draw call.
+      props: this.props?.drawn() ?? 0,
+      propKinds: this.props?.kindsDrawn() ?? 0,
     };
   }
 
