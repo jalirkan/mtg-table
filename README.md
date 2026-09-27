@@ -221,8 +221,14 @@ node tools/arena-bench.mjs --index 316 --gpu gl   # Tier 2's bench frame (g1 @31
 #   --no-bloom / --reduced-motion / --dpr 1, and --settle 4000 for a warm table
 #   ?bloom=0 / ?bloom=1 on any arena URL sets where bloom starts (default: on)
 node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/models/
-#   figures.glb + web/src/arena/figures/models.json from the three CC0 downloads
-#   named in tools/assets-manifest.json (see "Arena mode" below)
+#   figures.glb + web/src/arena/figures/models.json from the four CC0 downloads
+#   named in tools/assets-manifest.json, each verified by bytes and sha256 first
+#   (--verify-only checks them and stops; see "Arena mode" below)
+
+# M7 Tier 2, slice 2 — the camera views (keys in the arena, replay or live)
+#   1 table · 2 your shoulder · 3 opponent's shoulder · 4 side-on · 5 low
+#   6 or 0 the auto director · O spectator mode (3, 4 and the director only when
+#   no seat is live; spectator is on by itself in a replay and when a game ends)
 ```
 
 Everything above runs today. As of **M4** the board those frames feed is a real
@@ -577,12 +583,14 @@ board is the generated text frame, which is what a missing image looks like.
 
 ### Arena mode — the same game, in 3D
 
-**M7, Tier 1, and Tier 2's first slice.** The arena is a **second renderer for
-the same frame stream**, not a second app: the socket, the reducer and the frame
-log are untouched and `#arena` is the whole of the difference. Tier 1 (below) is
-the table, the cards and the choreography; **Tier 2** (further below) stands a
-figure at every creature, lays the lands out as terrain and gives every spell on
-the stack a form.
+**M7, Tier 1, and Tier 2's first two slices.** The arena is a **second renderer
+for the same frame stream**, not a second app: the socket, the reducer and the
+frame log are untouched and `#arena` is the whole of the difference. Tier 1
+(below) is the table, the cards and the choreography; **Tier 2** (further below)
+stands a figure at every creature, lays the lands out as terrain, gives every
+spell on the stack a form and lets you watch a creature die; and **the camera**
+has five views, a spectator mode and a director of its own (*Camera views*,
+below).
 
 ```bash
 npm --prefix web run dev:arena                # a recorded game as a cinematic
@@ -605,7 +613,7 @@ animations, and the S.H.I.E.L.D. deck's own cards have cues of their own
 rest of the game, Quake's tap sends a shockwave across the table, Peggy Carter
 attacking alone wears a shield.
 
-**Spectator mode is the replay corpus, and it needs no JVM.** `fixtures/games/`
+**Watching is the replay corpus, and it needs no JVM.** `fixtures/games/`
 holds eighteen recorded games — the M1 AI-vs-AI duels and the later human-seat
 sessions — and every one of them plays as a cinematic with nothing running but
 `vite`:
@@ -628,13 +636,20 @@ same mechanism: there is no transport to answer with, so `onAct` is `null` and
 every button, card and control is inert. That is one prop, not two code paths.
 
 **Keys.** There is **one keymap** for both renderers (`web/src/keys.ts`), so
-**`?` or `H`** lists all twenty rows in the arena as well — the same table the
-handler reads. The two that are the arena's own:
+**`?` or `H`** lists all twenty-three rows in the arena as well — the same table
+the handler reads. The ones that are the arena's own:
 
 | key | what it does |
 |---|---|
 | **V** | switch renderer: 2D board ↔ 3D arena, the same game and the same socket |
-| **K** | **skip every animation on screen.** It is `apply(t = 1)` then `end()`, so the table lands on exactly what the engine described. Nothing can be missed by pressing it |
+| **K** | **skip every animation on screen.** It is `apply(t = 1)` then `end()`, so the table lands on exactly what the engine described. Nothing can be missed by pressing it — and the camera goes home with it |
+| **1 2 3 4 5** | a camera view: table, your shoulder, the opponent's shoulder, side-on, low. Pressing the view you are on drops your own drag of it |
+| **6** or **0** | the auto director (spectating only) |
+| **O** | spectator mode on / off — on by itself in a replay and when your game ends, never while your seat is live |
+
+On the 2D board the camera keys do nothing and say so ("the board has no camera;
+press V"). They never answer the engine, so they work behind an open question
+too, but a focused text field keeps its digits.
 
 Everything else is unchanged and works in 3D: **SPACE** presses the button the
 engine focused, **ESC** is Cancel (or closes an overlay, or answers an open
@@ -652,8 +667,8 @@ question: while the engine is waiting on you, long cues are compressed and the
 queue says so.
 
 **Reduced motion.** With `prefers-reduced-motion: reduce` the arena drops every
-camera move and every shake outright, and plays what is left at **30% of its
-duration** — not zero. That distinction is deliberate and was a bug once: several
+camera move and every shake outright (a camera view you pick is a cut), and plays
+what is left at **30% of its duration** — not zero. That distinction is deliberate and was a bug once: several
 cues are the only channel for a *fact* (the damage number, the counter pip, the
 life delta), so deleting them removes information rather than motion.
 
@@ -695,11 +710,57 @@ and not a frame rate. `tools/arena-bench.mjs` is how all of that was measured,
 caveat that a software rasteriser is a lower bound and nobody has measured this
 on the machine you are reading it on.
 
+#### Camera views — five views, a spectator mode and a director
+
+**M7 Tier 2, slice 2** (evidence in
+[`docs/evidence/m7-tier2-slice2.md`](docs/evidence/m7-tier2-slice2.md);
+decisions **D69–D71** and **D74**). The camera has five named views, picked with
+**1**–**5** or from the switcher that sits in the cue strip's row (below 1,400 px
+wide it shows only the keys):
+
+| key | view | what you see | at your seat |
+|---|---|---|---|
+| **1** | Table | the whole table from above — both battlefields, both hands, the stack. Tier 1's rest pose | yes |
+| **2** | Shoulder | over your shoulder: your hand large in the foreground, your land and creature ranks above it, the opponent across the table | yes |
+| **3** | Opp. shoulder | the same shot from their side — their cards in the foreground, their hand as card backs | spectating only |
+| **4** | Side-on | from the graveyard end at figure height: the two battle lines face each other across the frame | spectating only |
+| **5** | Low | a three-quarter angle from your corner, looking up the table at the figures | yes |
+
+**Whichever view you choose is the camera's home**, so a cue's swoop (an attack,
+a big hit) leaves from it and comes back to it. Changing view is a short glide —
+0.65 s at a seat, 1.4 s when spectating — and a hard cut under
+`prefers-reduced-motion`. Drag to orbit as before: each view remembers where you
+dragged it, and pressing the key of the view you are already on puts it back.
+Your choice is remembered in this browser; a view you cannot use at a seat shows
+the table there and comes back in the next replay.
+
+**Why two of the five are for spectating.** At a live seat the camera must keep
+your hand on screen *and* must not let the hand cover your own land and creature
+rows — the view you choose stays up the whole game, so that is a property of the
+view, not of a move. From the opponent's shoulder your hand is at the top of the
+frame facing away, and side-on it is edge-on at the frame's edge, so those two are
+greyed while you are playing and say why. (A strip of hand cards drawn over the
+canvas would have made them usable, and was rejected: it would be a second card
+renderer and a second place to click the same card.)
+
+**Spectator mode** (**O**) widens the orbit to the whole way round, slows the
+camera's own moves and lets every view in. It is **on by itself in a replay and
+the moment your live game ends**, and never on while your seat is live.
+
+**The director** (**6** or **0**, spectating only) cuts between the views on the
+game's own events: combat side-on, a spell from its caster's shoulder, a strike
+from the target's side, a new turn and the outcome from the table. It holds every
+shot at least 2.4 s, will not go back to a view it left within 4.8 s (combat and
+the outcome may), and drops a beat it has held for 1.6 s. It reads player ids and
+public controllers, never a card name, and it never fights you: for 5 s after you
+stop dragging, nothing cuts.
+
 #### Tier 2 — the creatures, the land and the spells, manifested
 
-**M7 Tier 2, slice 1** (evenings T0–T7 of
+**M7 Tier 2, slices 1 and 2** (evenings T0–T8 of
 [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md);
-evidence in [`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md)) puts
+evidence in [`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md) and
+[`docs/evidence/m7-tier2-slice2.md`](docs/evidence/m7-tier2-slice2.md)) put
 things *on* the table. It is still the same renderer over the same frame stream,
 and it still decides nothing — every figure, tile and form below is a pure
 function of the frame on screen, and only the transitions between frames are
@@ -707,9 +768,11 @@ animated (**D56**):
 
 - **A figure at every creature.** Each creature on the battlefield gets a small
   low-poly figure standing at the front edge of its card, facing the other seat —
-  a man for the S.H.I.E.L.D. agents, heroes, scientists and tokens, a flying robot
-  for the Doombot and the Robot token, a bee-like insect for the two ants —
-  drawn as a **hologram**: unlit, tinted by the card's colour identity, with a
+  a suited agent for the S.H.I.E.L.D. agents and the Soldier tokens, a hero with
+  two round buns for Wasp, Ant-Man and the Hero tokens, a scientist in glasses and
+  a tie for Bold Biochemist and the A.I.M. Scientists (**D73**), a flying robot for
+  the Doombot and the Robot token, a bee-like insect for the two ants — drawn as a
+  **hologram**: unlit, tinted by the card's colour identity, with a
   bright rim (**D53**). The card stays exactly where it was and is still the thing
   you read and click; a figure carries no name and cannot take a click. A tapped
   creature kneels rather than lying down with its card, an attacker holds its
@@ -717,7 +780,13 @@ animated (**D56**):
   blocker stands where `state.combat` says it blocks. A creature with no figure —
   a face-down one, a probe-deck beast, the Helicarrier for now — stands on a
   glowing **disc** sized by its power and toughness, and every figure has one at
-  its feet.
+  its feet. No two figures overlap, and when a battlefield row wraps onto a
+  second line, the back row's figures stand on their own cards (**D65**, **D66**).
+- **A creature that dies is seen dying** (**D64**). It stays where it stood — or
+  steps one pace forward out of the row that closes up behind it — takes the
+  blow, and falls, fading as its death animation ends. Nothing is remembered but
+  its last pose: skip, scrub or start a new game and it is gone with the
+  animation.
 - **Animations are the cues you already have.** The attack lunge, the damage hit,
   a summon, a counter's grow are played by the same cues as Tier 1's, scrubbed
   frame-exactly from the cue clock, so **pause, speed, step, skip and reduced
@@ -766,40 +835,53 @@ measured an integrated GPU; and with bloom on the renderer only counts the
 composer's final pass, so draw calls are read with it off. The full tables, the
 cold-start numbers and the live game are in the evidence.
 
-**Where the figures come from.** Three free packs, all **CC0** (public domain),
-and nothing else: Kenney's *Mini Characters* 1.0 and Quaternius's *Robot Enemy
-Flying* and *Bee Enemy* (both via Poly Pizza). **No model is from Mixamo and none
-was generated from card art** (**D54**). `tools/assets-manifest.json` is the
-written provenance of each — page and download URL, byte count, sha256, the
-download date and the licence badge **verbatim as it read that day** — and
-[`NOTICE`](NOTICE) §7 is the attribution. `tools/build-figures.mjs` turns the
-three downloads into **one** file, `web/public/models/figures.glb` (126,404 bytes:
-three models, 8,307 triangles, 19 clips, meshopt-compressed), and writes
-`web/src/arena/figures/models.json` from what it measured; that JSON is
-generated, so do not edit it by hand. The arena loads the library from
-`web/public/models/` and nowhere else — no CDN, no Draco decoder from gstatic.
+**Where the figures come from.** Four free packs, all **CC0** (public domain),
+and nothing else: Kenney's *Mini Characters* 1.0 (the agent, the hero and the
+scientist — three bodies of one kit on one rig), Quaternius's *Robot Enemy
+Flying* and *Bee Enemy* (both via Poly Pizza), and — for **animation only** —
+Quaternius's *Universal Animation Library* [Standard], whose recoil (`Hit_Chest`)
+and death (`Death01`) are retargeted onto the Kenney rig by the build; every
+other humanoid clip is Kenney's own, because the library's idle, punch, landing
+and crouch face-plant on a head-heavy chibi (**D68**). **No model or clip is from
+Mixamo and none was generated from card art** (**D54**).
+`tools/assets-manifest.json` is the written provenance of each — page and
+download URL, byte count, sha256, the download date and the licence badge
+**verbatim as it read that day** — and [`NOTICE`](NOTICE) §7 is the attribution.
+`tools/build-figures.mjs` turns the four downloads into **one** file,
+`web/public/models/figures.glb` (143,920 bytes: five models, 9,759 triangles, 39
+clips, no textures, meshopt-compressed), and writes
+`web/src/arena/figures/models.json` from what it measured, including the built
+file's own byte count and sha256; that JSON is generated, so do not edit it by
+hand. The arena loads the library from `web/public/models/` and nowhere else — no
+CDN, no Draco decoder from gstatic.
 
 **Rebuilding `figures.glb`**, e.g. after changing a clip mapping in
 `tools/assets-manifest.json`:
 
 ```bash
 npm --prefix web install                          # @gltf-transform/cli is a web/ dev dependency
-mkdir -p var/assets/figures && cd var/assets/figures
-#   download the three files named in tools/assets-manifest.json ("downloadUrl"),
-#   check each against its "sha256", and unzip the Kenney zip here so that
-#   kenney_mini-characters/Models/GLB format/character-male-a.glb exists
-cd - && node tools/build-figures.mjs --src var/assets/figures
-#   prints every step's size, asserts one primitive per model, <= 4 MB and
-#   <= 30,000 triangles, and rewrites web/src/arena/figures/models.json;
-#   --no-manifest leaves models.json alone
+mkdir -p var/assets/figures
+#   download the four files named in tools/assets-manifest.json ("downloadUrl";
+#   the Universal Animation Library's page is a name-your-own-price itch.io page,
+#   and "_download" says which button) into var/assets/figures/, exactly as
+#   downloaded -- do NOT unzip anything
+node tools/build-figures.mjs --verify-only        # bytes + sha256 of every source
+node tools/build-figures.mjs --src var/assets/figures
+#   refuses a source whose bytes or sha256 differ (and prints its URL), reads the
+#   members it needs out of the verified zips, prints every step's size, asserts
+#   one primitive per model, one shared rig for the humanoids, no texture, <= 400 kB
+#   and <= 30,000 triangles, and rewrites web/src/arena/figures/models.json;
+#   --no-manifest leaves models.json alone; --clip-source experiment builds the
+#   all-retargeted comparison
 ```
 
-The build does not yet check the sources' sha256 for you, so check them by hand
-(`sha256sum`). **Without `figures.glb` at all** — a fresh checkout, if it is not
-committed — the arena still plays everything: each creature draws its disc and
-the console says `no model library … every creature draws its disc` once.
-Whether the built file is committed is an open decision (PLAN.md, *Only the user
-can decide*).
+Two builds from the same sources are byte-identical, and `web/test/figures.test.ts`
+fails when the `figures.glb` on disk is not the file `models.json` records.
+**Without `figures.glb` at all** — a fresh checkout, if it is not committed — the
+arena still plays everything: each creature draws its disc, the console says `no
+model library … every creature draws its disc` once, and the hash check is
+skipped. Whether the built file is committed is an open decision (PLAN.md, *Only
+the user can decide*).
 
 **Iterating on a cue.** There is no `?cue=<id>` loop route — report 09 §10.7 asks
 for one and it is not built — and no `?cues=<url>` override either, because §2.1
@@ -825,6 +907,7 @@ window.__mtgArena.director.stats     // camera moves taken / dropped / retired
 window.__mtgArena.stage.clips        // Tier 2: the clip each figure is playing, its t and weight
 window.__mtgArena.figures            // Tier 2: who stands where, which model, which stance, which rung
 window.__mtgArena.tileField.counts() // Tier 2: land slabs drawn, per kind
+window.__mtgArena.discs.counts()     // slice 2: discs, back-row discs, and dying bodies drawn
 ```
 
 `advance()` moves the clock whether or not the queue is paused, which is also the
@@ -883,8 +966,9 @@ is a file, not a story.
 
 ## Repo layout
 
-Everything listed exists today (M0-M7: arena Tier 1, and Tier 2's first slice,
-which is on branch `tier2-slice1` and not yet committed).
+Everything listed exists today (M0-M7: arena Tier 1, Tier 2's first slice —
+committed — and its second, which is on branch `tier2-slice2` and not yet
+committed).
 
 ```
 mtg-table/
@@ -892,7 +976,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the sixty-three load-bearing decisions, dated
+  DECISIONS.md               the seventy-four load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -978,10 +1062,13 @@ mtg-table/
                              is in the 2D entry chunk. Arena.tsx (the <Canvas>, the
                              keyboard, the cue strip) DecisionLayer.tsx (the seat: the
                              engine's prompt and its two buttons, the per-seat HUD
-                             plates, the ask modals over the canvas) and four pure
+                             plates, the ask modals over the canvas, and since slice 2
+                             the camera switcher) and four pure
                              modules `node --test` imports with no three and no DOM:
                              layout.ts (THE resting pose -- the only thing that knows a
-                             coordinate) camera.ts (the seven camera rules as numbers)
+                             coordinate) camera.ts (the seven camera rules as numbers;
+                             since slice 2 also the five views as poses, the seat
+                             rule, and the director as a pure function)
                              colour.ts perf.ts (the dpr governor's ladder)
       arena/cues/            (M7) the cue engine, and it is data + arithmetic:
                              cues.json (28 cards + 7 archetypes) defaults.ts (every one
@@ -1007,7 +1094,8 @@ mtg-table/
                              cardMaterial.ts, geometry.ts (one quad for every card),
                              HitProxy.tsx, Table.tsx, rigs.ts, SceneStage.ts.
                              Tier 2: FigureLayer.tsx (THE figure renderer: one
-                             <Figure> per pose, no useFrame of its own) figureRigs.ts
+                             <Figure> per pose, no useFrame of its own; since slice 2
+                             also the DepartureField, the dying bodies) figureRigs.ts
                              models.ts (GLTFLoader + meshopt from web/public/models/,
                              the disc fallback) holoMaterial.ts (the one figure
                              shader) discs.ts tiles.ts casting.ts overlays.ts
@@ -1051,8 +1139,9 @@ mtg-table/
                              clips.test.ts tiles.test.ts attach.test.ts stack.test.ts
                              -- every one a sweep of the whole corpus with no GPU
     public/art.json          generated, gitignored
-    public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from three CC0
-                             packs: 126,404 bytes. Whether it is committed is open;
+    public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from four CC0
+                             packs: 143,920 bytes, recorded in models.json and checked
+                             by figures.test.ts. Whether it is committed is open;
                              without it every creature draws its disc
     t0-spike.html            (Tier 2) T0's go/no-go page; not part of the app
 
@@ -1087,10 +1176,13 @@ mtg-table/
                              `vite preview`. Deliberately NOT in check-all.sh. Tier 2
                              added --index/--figures, --bloom/--no-bloom,
                              --reduced-motion, --dpr and --gpu gl (the real GPU)
-    build-figures.mjs        Tier 2: three CC0 downloads -> web/public/models/figures.glb
-                             + web/src/arena/figures/models.json (gltf-transform:
-                             prune dedup palette join weld unlit resample merge
-                             meshopt, then an assertion). Run by hand, not in the gate
+    build-figures.mjs        Tier 2: four CC0 downloads, each verified by bytes and
+                             sha256 -> web/public/models/figures.glb +
+                             web/src/arena/figures/models.json (gltf-transform: prune
+                             dedup, one plain material, a skin-aware join, the UAL's
+                             hit and die retargeted in three, weld unlit resample
+                             merge meshopt, then the assertions). Run by hand, not in
+                             the gate
     assets-manifest.json     Tier 2: where every model came from -- URL, bytes, sha256,
                              date, and the CC0 licence badge verbatim on the day
     fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare

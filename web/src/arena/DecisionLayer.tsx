@@ -340,3 +340,117 @@ function ArenaButton({
     </button>
   );
 }
+
+/**
+ * One entry of the camera switcher: a view or the director, and whether this
+ * mode allows it. Plain data from `Arena.tsx`, so this file needs nothing from
+ * `camera.ts` and nothing at all from the cue engine or the scene.
+ */
+export interface ViewSwitcherItem {
+  id: string;
+  key: string;
+  label: string;
+  what: string;
+  available: boolean;
+}
+
+/**
+ * **T8 — the camera switcher**: the five views, the director and the
+ * spectator toggle, with the one on screen marked.
+ *
+ * Three rules, each one a defect this layer has already had:
+ *
+ *  1. **It opts back into pointer events** (`.arena__views` in `styles.css`,
+ *     and a row in `liveness.test.ts`'s table) — the layer is `none`.
+ *  2. **It never takes keyboard focus from a click.** A mouse-focused button
+ *     keeps SPACE for itself (`planKey`), so a switcher button that kept focus
+ *     would turn the next SPACE — the player's "pass" — into "choose this
+ *     camera again". `preventDefault` on `mousedown` stops the focus and not
+ *     the click; Tab still reaches every button.
+ *  3. **A greyed view is still clickable**, and says why: `aria-disabled`, not
+ *     `disabled`, because a disabled button swallows the click and shows no
+ *     tooltip, and "why can't I pick this?" deserves an answer (the arena's
+ *     hint line gives it — spectator only, §8 rule 6).
+ *
+ * It shares one row with the cue strip (`.arena__strips`), and below 1400 px of
+ * width each button collapses to its key — the label is a separate span that
+ * `styles.css` hides, and the full name stays in the tooltip and the accessible
+ * name. Both answer the slice-2 verification pass: as a row of its own the
+ * switcher was a fourth row of chrome in the top-left column, over the
+ * opponent's bust (Tier 2 follow-up 10, which is otherwise unchanged).
+ */
+export function ViewSwitcher({
+  items,
+  active,
+  shot,
+  spectator,
+  spectatorAllowed,
+  onChoose,
+  onToggleSpectator,
+}: {
+  items: readonly ViewSwitcherItem[];
+  /** The view actually on screen — the choice, or the table when it is not allowed here. */
+  active: string;
+  /** The auto director's current shot, while the director is on. */
+  shot: string | null;
+  spectator: boolean;
+  spectatorAllowed: boolean;
+  onChoose: (id: string) => void;
+  onToggleSpectator: () => void;
+}): JSX.Element {
+  return (
+    <div className="arena__views" role="group" aria-label="Camera">
+      <span className="arena__views-title">camera</span>
+      {items.map((item) => {
+        const on = item.id === active;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            className={`arena__view${on ? ' arena__view--on' : ''}${item.available ? '' : ' arena__view--off'}`}
+            aria-pressed={on}
+            aria-disabled={!item.available}
+            aria-label={`${item.label} (${item.key})`}
+            data-view={item.id}
+            title={
+              item.available
+                ? `${item.key} — ${item.what}`
+                : `${item.key} — ${item.what}. Spectator only: from here your own hand is not on screen`
+            }
+            onMouseDown={(event) => {
+              event.preventDefault();
+            }}
+            onClick={() => {
+              onChoose(item.id);
+            }}
+          >
+            <span className="btn__key">{item.key}</span>
+            <span className="arena__view-label"> {item.label}</span>
+            {on && shot !== null && <span className="arena__view-shot"> · {shot}</span>}
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        className={`arena__view arena__view--spectator${spectator ? ' arena__view--on' : ''}${spectatorAllowed ? '' : ' arena__view--off'}`}
+        aria-pressed={spectator}
+        aria-disabled={!spectatorAllowed}
+        aria-label="Spectator mode (O)"
+        data-view="spectator"
+        title={
+          spectatorAllowed
+            ? 'O — spectator mode: a wider orbit, slower camera moves, every view and the director'
+            : 'O — spectator mode is for replays and finished games, never while your seat is live'
+        }
+        onMouseDown={(event) => {
+          event.preventDefault();
+        }}
+        onClick={onToggleSpectator}
+      >
+        <span className="btn__key">O</span>
+        <span className="arena__view-label"> spectator</span>
+        {spectator ? ' ✓' : ''}
+      </button>
+    </div>
+  );
+}

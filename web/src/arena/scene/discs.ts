@@ -35,7 +35,9 @@
 import * as THREE from 'three';
 
 import type { Offset } from '../cues/stage.ts';
-import type { FigureLayout } from '../figures/pose.ts';
+import type { ClipRequest } from '../figures/clips.ts';
+import type { FigureLayout, FigurePose } from '../figures/pose.ts';
+import { ON_CARD_DISC_ORDER } from '../layout.ts';
 import { parsedColour } from './colourCache.ts';
 import { UNIT_PLANE } from './geometry.ts';
 import { initTexture } from './useCardTexture.ts';
@@ -57,6 +59,38 @@ const DISC_LIFT = 0.003;
 /** The minimal read of a `SceneStage` this file needs. Passed, never closed over. */
 export interface OffsetSource {
   offsetOf(cardId: number): Offset;
+  /** T8 — the clip lane, read by the departing figures (see {@link DepartureBinder}). */
+  clipOf(cardId: number): ClipRequest | null;
+}
+
+/**
+ * **T8 fix — the queue's answer to "is this card's death still to come?"**
+ * (`CueQueue.deathPending`). Typed here, by shape, so that neither this file nor
+ * `FigureLayer.tsx` imports the cue engine: `CueRunner` hands the queue in.
+ */
+export interface DeathSource {
+  deathPending(cardId: number): boolean;
+}
+
+/**
+ * **T8 — the departing figures' per-frame half** (Tier 2 follow-up 2).
+ *
+ * A figure whose creature has just left the battlefield has no pose, so
+ * `CueRunner.applyFigures` — which walks the living rigs — never sees it. Its
+ * body is drawn from the snapshot it departs in until its own death cue has
+ * ended (`figures/clips.ts`'s `stepDeparture`), and the thing that reads the queue
+ * and the clip lane each frame is bound HERE, from inside the one `useFrame`'s call
+ * to {@link DiscField.bind}: a dying creature's stand disc and its dying body are
+ * the same layer of the table.
+ *
+ * The implementation lives in `FigureLayer.tsx` (which builds the bodies and is
+ * one of the two files allowed to tick a mixer); this file only knows the shape,
+ * so it imports nothing from React and the frame loop stays auditable.
+ */
+export interface DepartureBinder {
+  bind(source: OffsetSource, deaths: DeathSource): void;
+  /** How many departing bodies drew last frame — `?glinfo=1`'s census. */
+  drawn(): number;
 }
 
 let discTex: THREE.Texture | null | undefined;
@@ -96,9 +130,27 @@ const SCALE = new THREE.Vector3();
 const COLOUR = new THREE.Color();
 
 export class DiscField {
+  /** The front row's discs — and every disc that is not standing on a card. */
   readonly mesh: THREE.InstancedMesh;
+  /**
+   * **T8 fix — the discs of figures standing ON their own card** (a wrapped
+   * rank's back row, `FigurePose.onCard`), drawn in a second pass at
+   * `ON_CARD_DISC_ORDER`, after the cards. In the first pass the back-row card
+   * (`renderOrder` 20 + i) painted over its own disc. Empty — and so not drawn —
+   * on every frame of the corpus that does not wrap a rank.
+   */
+  readonly onCardMesh: THREE.InstancedMesh;
   /** How many instances the buffers hold. `mesh.count` is how many are drawn. */
   readonly capacity: number;
+  /** T8 — the departing figures, installed by `FigureLayer` for its lifetime. */
+  private departures: DepartureBinder | null = null;
+  /**
+   * The poses of the layout last bound, as an ARRAY — refilled only when the
+   * layout object changes (once per snapshot), so the frame loop walks a fixed
+   * array instead of allocating a `Map` iterator every frame (§9.2 rule 6).
+   */
+  private readonly list: FigurePose[] = [];
+  private listOf: FigureLayout | null = null;
 
   constructor(capacity = DISC_CAPACITY) {
     this.capacity = capacity;
@@ -114,18 +166,11 @@ export class DiscField {
       side: THREE.DoubleSide,
       forceSinglePass: true,
     });
-    this.mesh = new THREE.InstancedMesh(UNIT_PLANE, material, capacity);
-    this.mesh.frustumCulled = false;
-    this.mesh.count = 0;
-    this.mesh.renderOrder = 5;
-    // A figure is never a click target (§3.10 rule 2) and neither is its
-    // footprint: `HitProxy` is the only thing the raycaster sees.
-    this.mesh.raycast = () => {};
-    // `InstancedMesh` allocates `instanceColor` lazily on the first
-    // `setColorAt`; doing it here means the frame loop never allocates.
-    this.mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
-    this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
-    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh = discMesh(material, capacity, 5);
+    // The same material, so the second pass is the same program: one more draw
+    // call on a frame that wraps a rank, and none on any other.
+    this.onCardMesh = discMesh(material, capacity, ON_CARD_DISC_ORDER);
+    this.onCardMesh.name = 'discs:on-card';
   }
 
   /**
@@ -137,10 +182,16 @@ export class DiscField {
    * with the card, so a lunging creature's disc lunges too and a dissolving one
    * fades with it.
    */
-  bind(poses: FigureLayout, offsets: OffsetSource, seconds: number): void {
-    let i = 0;
-    for (const pose of poses.values()) {
-      if (i >= this.capacity) break;
+  bind(poses: FigureLayout, offsets: OffsetSource, seconds: number, deaths: DeathSource): void {
+    if (poses !== this.listOf) this.refill(poses);
+    const list = this.list;
+    let front = 0;
+    let onCard = 0;
+    for (let n = 0; n < list.length; n++) {
+      const pose = list[n]!;
+      const mesh = pose.onCard ? this.onCardMesh : this.mesh;
+      const i = pose.onCard ? onCard : front;
+      if (i >= this.capacity) continue;
       const offset = offsets.offsetOf(pose.cardId);
       const radius = pose.radius * offset.scale;
       // The card's own `presence` bob, so a hovering Helicarrier's footprint
@@ -156,7 +207,7 @@ export class DiscField {
       QUATERNION.setFromEuler(EULER);
       SCALE.set(radius * 2, radius * 2, 1);
       MATRIX.compose(POSITION, QUATERNION, SCALE);
-      this.mesh.setMatrixAt(i, MATRIX);
+      mesh.setMatrixAt(i, MATRIX);
 
       // Additive blending has no alpha to fade, so the opacity is folded into
       // the colour — which is also how a summoning-sick creature's disc reads
@@ -164,21 +215,71 @@ export class DiscField {
       COLOUR.copy(parsedColour(pose.tint));
       const strength = pose.opacity * offset.opacity * (1 - offset.dissolve);
       COLOUR.multiplyScalar(Math.max(0, Math.min(1, strength)) * (pose.modelId === null ? 0.85 : 0.55));
-      this.mesh.setColorAt(i, COLOUR);
-      i += 1;
+      mesh.setColorAt(i, COLOUR);
+      if (pose.onCard) onCard += 1;
+      else front += 1;
     }
-    this.mesh.count = i;
-    this.mesh.instanceMatrix.needsUpdate = true;
-    if (this.mesh.instanceColor !== null) this.mesh.instanceColor.needsUpdate = true;
+    commitCount(this.mesh, front);
+    commitCount(this.onCardMesh, onCard);
+    // T8: the bodies of the creatures that just left, drawn until their deaths end.
+    this.departures?.bind(offsets, deaths);
   }
 
-  /** How many discs were drawn last frame — `?glinfo=1`'s layer census (T7). */
-  counts(): { discs: number } {
-    return { discs: this.mesh.count };
+  /**
+   * Once per snapshot, never per frame: copy the layout's poses into the reused
+   * array the frame loop walks. (A `Map` iterator is an allocation, and `bind`
+   * runs sixty times a second.)
+   */
+  private refill(poses: FigureLayout): void {
+    this.listOf = poses;
+    this.list.length = 0;
+    for (const pose of poses.values()) this.list.push(pose);
+  }
+
+  /**
+   * Install (or, with `null`, remove) the departing figures. `FigureLayer` calls
+   * it on mount and unmount; the frame loop never does.
+   */
+  setDepartures(binder: DepartureBinder | null): void {
+    this.departures = binder;
+  }
+
+  /** How many discs (and T8's departing bodies) were drawn last frame — `?glinfo=1`'s census. */
+  counts(): { discs: number; onCardDiscs: number; departures: number } {
+    return {
+      discs: this.mesh.count + this.onCardMesh.count,
+      onCardDiscs: this.onCardMesh.count,
+      departures: this.departures?.drawn() ?? 0,
+    };
   }
 
   dispose(): void {
     this.mesh.dispose();
+    this.onCardMesh.dispose();
     (this.mesh.material as THREE.Material).dispose();
   }
+}
+
+function discMesh(material: THREE.Material, capacity: number, renderOrder: number): THREE.InstancedMesh {
+  const mesh = new THREE.InstancedMesh(UNIT_PLANE, material, capacity);
+  mesh.frustumCulled = false;
+  mesh.count = 0;
+  mesh.renderOrder = renderOrder;
+  // A figure is never a click target (§3.10 rule 2) and neither is its
+  // footprint: `HitProxy` is the only thing the raycaster sees.
+  mesh.raycast = () => {};
+  // `InstancedMesh` allocates `instanceColor` lazily on the first
+  // `setColorAt`; doing it here means the frame loop never allocates.
+  mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+  mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  return mesh;
+}
+
+/** An empty pass is not drawn at all: `visible` false costs the renderer nothing. */
+function commitCount(mesh: THREE.InstancedMesh, count: number): void {
+  mesh.count = count;
+  mesh.visible = count > 0;
+  mesh.instanceMatrix.needsUpdate = true;
+  if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
 }

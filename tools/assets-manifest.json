@@ -1,9 +1,10 @@
 {
-  "version": 1,
-  "_what": "The provenance record for every third-party asset the arena's Tier 2 figure library is built from (report 13 §9.1, §9.2). tools/build-figures.mjs reads it, builds web/public/models/figures.glb from the sources named here, and WRITES web/src/arena/figures/models.json from what it measured — so the manifest is the hand-written half (where a file came from, what its licence badge said on the day) and models.json is the measured half (heights, bones, triangles, the clip names that really exist).",
-  "_licence_rule": "Only CC0 assets are used at all. The badge text below is what the download page said ON THE DAY, verbatim, because that is the only evidence that survives the page changing — Quaternius relicensed one of its 83 packs sixteen days before this was written (report 12 §0.2), and QAL §7 says the version in force when you obtained the asset governs.",
-  "_never": "Nothing derived from card art may ever appear here. Marvel art is licensed to Wizards; the Fan Content Policy's line is \"If you don't have the rights to use another person's stuff in your Fan Content—don't\" (https://company.wizards.com/en/legal/fancontentpolicy). NOTICE §2 and the Scryfall images already live under that rule.",
-  "_where": "The downloaded archives are NOT committed. They live under var/assets/figures/ (var/ is gitignored) and `tools/build-figures.mjs --src` points at them. Re-download with the URLs and sha256s below.",
+  "version": 2,
+  "_what": "The provenance record for every third-party asset the arena's Tier 2 figure library is built from (report 13 §9.1, §9.2). tools/build-figures.mjs reads it, VERIFIES every source archive against the sha256 and byte count below before it builds anything, extracts the members it needs from the verified archives itself, builds web/public/models/figures.glb, and WRITES web/src/arena/figures/models.json from what it measured — so the manifest is the hand-written half (where a file came from, what its licence badge said on the day) and models.json is the measured half (heights, widths, bones, triangles, the clip names that really exist, and the built file's own sha256).",
+  "_licence_rule": "Only CC0 assets are used at all (user decision). The badge text below is what the download page said ON THE DAY, verbatim, because that is the only evidence that survives the page changing — Quaternius relicensed one of its 83 packs sixteen days before slice 1 (report 12 §0.2), and QAL §7 says the version in force when you obtained the asset governs.",
+  "_never": "Nothing derived from card art may ever appear here, nothing from Mixamo (D54), and no AI-generated mesh. Marvel art is licensed to Wizards; the Fan Content Policy's line is \"If you don't have the rights to use another person's stuff in your Fan Content—don't\" (https://company.wizards.com/en/legal/fancontentpolicy). NOTICE §2 and the Scryfall images already live under that rule.",
+  "_where": "The downloaded archives are NOT committed. They live under var/assets/figures/ (var/ is gitignored) exactly as downloaded — a zip is NOT unzipped by hand any more: the build reads the member it needs out of the verified zip. Re-download with the URLs below; the build refuses a file whose sha256 or byte count differs, and prints the URL.",
+  "_reverified": "2026-09-27: all three slice-1 sources were re-downloaded from the URLs below into a fresh worktree and matched their recorded sha256 and byte count exactly; the three badges were re-read and are unchanged. The Universal Animation Library is new on that date.",
 
   "packs": {
     "kenney-mini-characters": {
@@ -14,6 +15,7 @@
       "page": "https://kenney.nl/assets/mini-characters",
       "downloadUrl": "https://kenney.nl/media/pages/assets/mini-characters/bfc7e272b4-1774770718/kenney_mini-characters.zip",
       "file": "kenney_mini-characters.zip",
+      "archive": "zip",
       "bytes": 2403059,
       "sha256": "9e1d48e6d7b8479ebbe84df71eb5bd8e1b3f0da546dea641890dccc8a02d0999",
       "retrieved": "2026-09-13",
@@ -22,7 +24,7 @@
       "licenceBadge": "License · Creative Commons CC0",
       "licenceFileText": "License: (Creative Commons Zero, CC0) — http://creativecommons.org/publicdomain/zero/1.0/ — You can use this content for personal, educational, and commercial purposes. Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)",
       "committable": true,
-      "_note": "The licence text above is quoted from License.txt INSIDE the downloaded zip, not only from the web page. 25 files; 12 characters, 32 clips each, one 512² colormap for the whole kit."
+      "_note": "The licence text above is quoted from License.txt INSIDE the downloaded zip, not only from the web page. 12 characters (male-a…f, female-a…f), one 7-joint rig shared by all twelve (measured: identical joint names and bind transforms), 32 clips each, one 512² colormap for the whole kit."
     },
     "quaternius-robot-enemy-flying": {
       "title": "Robot Enemy Flying",
@@ -32,6 +34,7 @@
       "page": "https://poly.pizza/m/lF3jeRJwiH",
       "downloadUrl": "https://static.poly.pizza/abb31ff6-3e2d-43a6-bf13-dba39b0c596d.glb",
       "file": "quaternius-robot-enemy-flying.glb",
+      "archive": "none",
       "bytes": 298324,
       "sha256": "7e3a27532b43807b375e3d3ad9cbe1f7e20d8bb723f2dcc2a3c9efb38da73a5b",
       "retrieved": "2026-09-13",
@@ -39,7 +42,7 @@
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "licenceBadge": "Aug 28, 2022 • FBX /GLTF format • Public Domain (CC0)",
       "committable": true,
-      "_note": "Read on https://poly.pizza/m/lF3jeRJwiH on 2026-09-13; the page's own JSON carries \"Licence\":\"CC0 1.0\". Report 13 §9.1 is more cautious about Quaternius than report 12 §0.2 is, because quaternius.com's OWN pack pages have begun moving to the QAL. This file was obtained from the Poly Pizza listing under an explicit CC0 badge, which is what QAL §7 makes decisive — but see docs/evidence/m7-tier2.md for the open question about committing the built .glb."
+      "_note": "Read on https://poly.pizza/m/lF3jeRJwiH on 2026-09-13 and again on 2026-09-27; the page's own JSON carries \"Licence\":\"CC0 1.0\". Obtained from the Poly Pizza listing under an explicit CC0 badge, which is what QAL §7 makes decisive."
     },
     "quaternius-bee-enemy": {
       "title": "Bee Enemy",
@@ -49,6 +52,7 @@
       "page": "https://poly.pizza/m/6HsU6GQt3a",
       "downloadUrl": "https://static.poly.pizza/19203489-125b-41f5-b9c9-801a522cb775.glb",
       "file": "quaternius-bee-enemy.glb",
+      "archive": "none",
       "bytes": 193200,
       "sha256": "29a3ac29e6859208bdab9db3d34387e1d154f14564bd17cdc57eda669cb557cf",
       "retrieved": "2026-09-13",
@@ -56,23 +60,62 @@
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "licenceBadge": "Dec 21, 2021 • FBX /GLTF format • Public Domain (CC0)",
       "committable": true,
-      "_note": "Same reading as the robot, same day, same page shape."
+      "_note": "Same reading as the robot, same days, same page shape. Measured on 2026-09-27: 12 of its vertices carry NaN skin weights (an FBX2glTF export defect); the build rebinds them to the first joint and says so, because a NaN weight makes three's skinned bounding box NaN."
+    },
+    "quaternius-universal-animation-library": {
+      "title": "Universal Animation Library [Standard]",
+      "creator": "Quaternius",
+      "packVersion": "itch.io upload of 2026-06-16 (\"Added Root Motion and other fixes\"; the Standard zip carries both the no-root-motion and the _RM files)",
+      "created": "2026-06-16",
+      "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+      "downloadUrl": "https://quaternius.itch.io/universal-animation-library",
+      "_download": "itch.io's 'name your own price' page: 'Download Now' → 'No thanks, just take me to the downloads' → 'Universal Animation Library[Standard].zip' (15 MB, $0). The file is served from a short-lived signed URL, so the page, not the CDN link, is what is recorded. The [Pro] and [Source] zips are paid and are NOT used.",
+      "file": "Universal Animation Library[Standard].zip",
+      "archive": "zip",
+      "bytes": 15904933,
+      "sha256": "cc73fc4e495b82958207316596317a3f40b9fa38065bde1027937452da537724",
+      "retrieved": "2026-09-27",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License CC0",
+      "licenceBadgeItch": "Asset license: Creative Commons Zero v1.0 Universal",
+      "licenceFileText": "License: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication — https://creativecommons.org/publicdomain/zero/1.0/ — Models by @Quaternius",
+      "committable": true,
+      "_note": "Report 12 §0 finding 4: the CC0 replacement for Mixamo. The badge on quaternius.com's pack page read 'License CC0' on 2026-09-27 and the itch page's 'Asset license' row read 'Creative Commons Zero v1.0 Universal'; License.txt INSIDE the zip says it a third time. One 65-joint Unreal-named humanoid rig (root, pelvis, spine_01…03, neck_01, Head, clavicle/upperarm/lowerarm/hand_{l,r}, thigh/calf/foot/ball_{l,r}, fingers), T-posed, facing +Z; the no-root-motion GLB carries 44 clips. Only animation data is taken from it: the mannequin mesh is never built into anything."
     }
   },
 
-  "models": {
-    "agent": {
-      "pack": "kenney-mini-characters",
-      "source": "kenney_mini-characters/Models/GLB format/character-male-a.glb",
-      "facing": "+z",
-      "_role": "human agent / hero / scientist / Soldier token — every humanoid archetype in the deck, separated by tint until T8 gives them their own meshes.",
+  "rigs": {
+    "kenney-mini": {
+      "_what": "THE humanoid rig. Every humanoid archetype (agent, hero, scientist) is a Kenney Mini character, and all twelve of those share this rig exactly — so every humanoid shares ONE clip set, written once here and baked into each model by the build. The build asserts that every model naming this rig has exactly these joints.",
+      "joints": ["root", "leg-left", "leg-right", "torso", "arm-left", "arm-right", "head"],
+      "retarget": {
+        "_what": "Report 13 §9.5's experiment: SkeletonUtils.retargetClip from the Universal Animation Library onto this rig, run offline by the build (three in Node), so the browser never ships the 7.6 MB source rig. A clip written 'ual:<name>' below is one of these; every other clip is the pack's own.",
+        "pack": "quaternius-universal-animation-library",
+        "member": "Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+        "names": {
+          "leg-left": "thigh_l",
+          "leg-right": "thigh_r",
+          "torso": "spine_03",
+          "arm-left": "upperarm_l",
+          "arm-right": "upperarm_r",
+          "head": "Head"
+        },
+        "_names": "Both rigs are T-posed and face +Z with their left side at +x (measured), so a joint's WORLD rotation delta from its bind pose transfers directly; localOffsets = inverse(sourceBind) × targetBind is what makes the two joint-axis conventions agree. The chibi has no elbows, knees, clavicles or neck, so the upper arm, the thigh and the chest carry the whole limb.",
+        "hip": {
+          "joint": "root",
+          "source": "pelvis",
+          "_hip": "The chibi's root is at its FEET and its legs and torso hang from it, where the source's pelvis is at its hips; so the root takes the pelvis's TRANSLATION only (scaled by hip height, 0.176 / 0.917) and never its rotation — a rotating root would swing both legs about the ground point."
+        },
+        "fps": 30
+      },
       "clips": {
         "idle": "idle",
         "summon": "jump",
         "attack": "attack-melee-right",
         "block": "crouch",
-        "hit": "fall",
-        "die": "die",
+        "hit": "ual:Hit_Chest",
+        "die": "ual:Death01",
         "grow": "emote-yes",
         "shrink": "crouch",
         "channel": "interact-right",
@@ -80,11 +123,50 @@
         "pistolDraw": "holding-both-shoot",
         "radioCall": "interact-left"
       },
-      "_clips_note": "Kenney's Mini set has no hit-react, so `hit` borrows `fall` and `shrink` borrows `crouch`. Provisional: T3 is the evening that actually plays them and is where these choices get looked at."
+      "_clips": "THE DECISION, measured in docs/evidence/m7-tier2-slice2.md (the figures section, §3; var/shots-t8/clips-compare.png): retargeted onto a 7-joint chibi, the library's HIT and DEATH read — and supply the two clips the pack does not have (slice 1 borrowed `fall` for hit, and the pack's own `die` is a 0.33 s topple) — while its idle, attack, crouch and landing read WORSE than the pack's hand-made ones: a human spine lean on a head-heavy chibi reads as a face-plant. So the set is the pack's own clips with the library's hit and death retargeted in. `shrink` still borrows `crouch`: the library's 44 clips have no shrink or cower either, and its Crouch_Idle_Loop face-plants on this rig. `block` still borrows `crouch` for the same reason.",
+      "experiment": {
+        "_what": "`node tools/build-figures.mjs --clip-source experiment --out var/assets/figures/build/figures-ual.glb --no-manifest` builds the library with THIS map instead — every rig clip the library can supply, retargeted — which is how §3's comparison is reproduced.",
+        "idle": "ual:Idle_Loop",
+        "summon": "ual:Jump_Land",
+        "attack": "ual:Punch_Cross",
+        "block": "ual:Sword_Idle",
+        "hit": "ual:Hit_Chest",
+        "die": "ual:Death01",
+        "grow": "ual:Spell_Simple_Enter",
+        "shrink": "ual:Crouch_Idle_Loop",
+        "channel": "ual:Spell_Simple_Shoot",
+        "crouch": "ual:Crouch_Idle_Loop",
+        "pistolDraw": "ual:Pistol_Shoot",
+        "radioCall": "ual:Idle_Talking_Loop"
+      }
+    }
+  },
+
+  "models": {
+    "agent": {
+      "pack": "kenney-mini-characters",
+      "member": "Models/GLB format/character-male-a.glb",
+      "rig": "kenney-mini",
+      "facing": "+z",
+      "_role": "The spy / agent archetype (creature/subtype:spy, the colour rungs) and the Soldier token in its token tint. Kenney's character-male-a: short hair, plain jacket — the plainest body in the kit, which is right for the most-seen archetype."
+    },
+    "hero": {
+      "pack": "kenney-mini-characters",
+      "member": "Models/GLB format/character-female-b.glb",
+      "rig": "kenney-mini",
+      "facing": "+z",
+      "_role": "creature/subtype:hero — Wasp, the Hero token, Ant-Man. Kenney's character-female-b, chosen (T8) for the silhouette that reads from EVERY side of the table: two round buns on top of the head, visible from above, from the front (the opponent's figures) and from behind (yours). Twelve bodies were rendered side by side before choosing; see the evidence."
+    },
+    "scientist": {
+      "pack": "kenney-mini-characters",
+      "member": "Models/GLB format/character-male-e.glb",
+      "rig": "kenney-mini",
+      "facing": "+z",
+      "_role": "creature/subtype:scientist — Bold Biochemist, A.I.M. Scientists. Kenney's character-male-e: round glasses and a shirt-and-tie front with braces on the back — the one body in the kit that reads as a scientist face-on. Its head is the agent's shape, so from BEHIND it is told apart by the braces and by the lab tint; that is the trade, and it is written down."
     },
     "drone": {
       "pack": "quaternius-robot-enemy-flying",
-      "source": "quaternius-robot-enemy-flying.glb",
+      "member": null,
       "facing": "+z",
       "_role": "Aerial Doombot, Robot Token — creature/subtype:robot.",
       "clips": {
@@ -94,11 +176,11 @@
         "die": "Dead",
         "jet": "Shoot"
       },
-      "_clips_note": "There is no hit-react in this pack either, and `hit` is deliberately ABSENT rather than borrowed: §3.6 rung 3 is that a missing clip removes only the part of the animation a model was going to add, and that branch is worth having live data behind."
+      "_clips_note": "There is no hit-react in this pack, and `hit` is deliberately ABSENT rather than borrowed: §3.6 rung 3 is that a missing clip removes only the part of the animation a model was going to add. The library's humanoid Hit_Chest was not retargeted onto it: an 11-joint flying robot has no legs, spine or neck for a humanoid clip to drive."
     },
     "insect": {
       "pack": "quaternius-bee-enemy",
-      "source": "quaternius-bee-enemy.glb",
+      "member": null,
       "facing": "+z",
       "_role": "Giant-Sized Flying Ant, Ant-Man's Air Force — creature/subtype:insect.",
       "clips": {
@@ -113,8 +195,6 @@
 
   "_deferred": {
     "carrier": "S.H.I.E.L.D. Helicarrier (T10). No CC0 vehicle mesh has been chosen; the card keeps its presence hover and its disc.",
-    "hero": "A hero mesh of its own (T8). Today the hero archetype is the agent in a gold tint.",
-    "scientist": "A scientist mesh of its own (T8). Today it is the agent in a lab-green tint.",
-    "clipLibrary": "Quaternius Universal Animation Library 1+2 (CC0, 250+ clips, Mixamo-compatible rig) is the retarget experiment of §9.5. Not downloaded: the packs above already carry idle/attack/die, which is what T2 and T3 need."
+    "clipLibrary2": "Universal Animation Library 2 (CC0, 130+ more clips) is not downloaded: nothing T8 needs is missing from UAL 1 except a shrink, and UAL 2's list (parkour, combos, farming, zombie locomotion) has none either."
   }
 }

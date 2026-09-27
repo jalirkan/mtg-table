@@ -166,51 +166,86 @@ export const FIGURE_HEIGHT = 0.85;
  * **How wide a figure may be, and it is a rank slot** (T7's tuning pass; report
  * 13 §3.1 gave a height and no width).
  *
- * The measurement that forced this, from `tools/build-figures.mjs`'s own output on
- * 2026-09-26 — every model's bounding box in its own units, before meshopt:
- *
- *     agent    height 0.671 · width 0.767 · ratio 1.14
- *     drone    height 0.764 · width 2.271 · ratio 2.97
- *     insect   height 1.871 · width 2.867 · ratio 1.53
- *
- * The Kenney Mini character is a **chibi**, and the Quaternius drone is a flying
- * robot that is three times wider than it is tall. Normalising by HEIGHT alone to
- * {@link FIGURE_HEIGHT} therefore makes the agent 0.97 units wide and the drone
- * **2.53**, against a creature-rank pitch of {@link RANK_PITCH} = 0.796: measured
- * in T2's own evidence as two Soldier Tokens standing shoulder to shoulder, and
- * a crowded rank reading as a row of shoulders rather than as creatures.
+ * The Kenney Mini characters are **chibis** — measured on the skinned mesh by
+ * `tools/build-figures.mjs` (T8), 1.07–1.15× wider than tall in their widest
+ * resting stance — and the Quaternius drone is a flying robot 1.66× wider than
+ * tall. Normalising by HEIGHT alone to {@link FIGURE_HEIGHT} therefore makes a
+ * figure wider than the creature-rank pitch of {@link RANK_PITCH} = 0.796: two
+ * Soldier Tokens shoulder to shoulder in T2's own photograph.
  *
  * So the figure's drawn height is clamped so that its *width* fits one slot minus
- * a gutter, and {@link FIGURE_MIN_FIT} floors it so a very wide model is squat
- * rather than invisible. The clamp lives here because the pitch lives here; it is
- * applied by `figures/pose.ts`, which is pure, so `web/test/figure-pose.test.ts`
- * asserts the footprint over the whole corpus with no browser.
+ * a gutter, **for every archetype, with no exemption** (T8, Tier 2 follow-up 11).
+ * The clamp lives here because the pitch lives here; it is applied by
+ * `figures/pose.ts`, which is pure, so `web/test/figure-pose.test.ts` asserts the
+ * footprint over the whole corpus with no browser.
+ *
+ * T7 floored the clamp (`FIGURE_MIN_FIT` 0.55) because the drone, measured then at
+ * 2.97× wider than tall, would have been drawn 0.24 units tall. **That measurement
+ * was the build's, not the drone's**: `getBounds()` applied the skinned mesh's own
+ * node transform, which glTF ignores, and slice 1's join had carried the body's
+ * primitives onto the eyes' skin, which moved them. Rebuilt and measured as three
+ * draws it, the drone is 1.66× — so the strict clamp costs it 0.03 units of height
+ * against the old floor, and the floor, and the one archetype allowed to overflow
+ * its slot, are gone.
  */
 export const FIGURE_MAX_WIDTH = RANK_PITCH - 0.076;
 
 /**
- * A figure never shrinks below this fraction of its nominal height, however wide
- * its model is.
+ * **A wrapped rank's back row** (T8, Tier 2 follow-up 3).
  *
- * The drone is the case that needs it: a strict width clamp would draw it 0.21
- * units tall — a 21 cm robot beside a 63 cm agent — so it is floored and stays the
- * one archetype that overflows its slot, which is honest (it *is* mostly wingspan,
- * and it hovers above its neighbours on the `presence` rule it already has). A
- * narrower drone is T9's, not a number to fudge here.
+ * {@link RANK_WRAP_Z} is 0.55 and {@link FIGURE_STANDOFF} is 0.52, so a back-row
+ * figure standing off its card's front edge lands on the FRONT row's cards — and
+ * report 13 §3.1's own falloff (`0.52 × (1 − 0.45 × row)`) still left it there,
+ * measured by the verification pass and by `figure-pose.test.ts`: 216 back-row
+ * stand points inside another card over the corpus (g3, human-auto-2026 and
+ * human-sideboard-7 all wrap).
+ *
+ * A back-row figure therefore stands **on its own card**, in the strip the front
+ * row leaves uncovered: an untapped front-row card reaches `anchor + 0.5`, the
+ * land rank starts at `anchor + 0.6`, and the back row's card centre is at
+ * `anchor + 0.55`. The one card that can still lie there is a front-row host's
+ * **attachment** (drawn 0.14 behind its host) — so if the centre is covered, the
+ * figure steps back from the table's centre line by {@link BACK_ROW_STEP} until
+ * it is clear, at most {@link BACK_ROW_MAX_STEPS} times. Measured over the corpus's
+ * 200 back-row stand points (g3, human-auto-2026, human-sideboard-7): 189 stand on
+ * their card's centre and 11 step back twice (0.10), all of them clearing an
+ * Aura or Equipment on the front-row creature beside them.
  */
-export const FIGURE_MIN_FIT = 0.55;
+const BACK_ROW_STEP = 0.05;
+const BACK_ROW_MAX_STEPS = 6;
 
 /**
- * **The wrapped-rank correction, and it is the one geometric interaction Tier 2
- * has with Tier 1's layout** (report 13 §3.1).
- *
- * {@link RANK_WRAP_Z} is 0.55 and {@link FIGURE_STANDOFF} is 0.52, so a figure in
- * row 0 of a wrapped rank would stand almost exactly on row 1's cards. The
- * standoff therefore shrinks with the row, and it shrinks **here**, in the file
- * that owns every coordinate in the arena (§3.2), rather than being reinvented in
- * the figure module.
+ * **The stand disc of a figure standing ON its card is drawn after the cards**
+ * (T8 fix; the slice-2 verification pass). The disc is additive, transparent and
+ * writes no depth, and a back-row card's `renderOrder` is `20 + i` (`rank`,
+ * `+ 20` again while it hovers), so a back-row disc drawn in the front row's pass
+ * (`renderOrder` 5) was painted over by its own card: at `human-sideboard-7`
+ * frames 1181 and 1195, five discs a seat were invisible. The on-card discs get a
+ * second instanced pass at this order — above every battlefield rank (at most
+ * `2 × 20 + MAX_PER_RANK`, and a hover's `+ 20`) and below the hand fan's `100`.
  */
-const FIGURE_STANDOFF_ROW_FALLOFF = 0.45;
+export const ON_CARD_DISC_ORDER = 70;
+
+/**
+ * **How far a dying body steps out of its rank** (T8 fix — `figures/pose.ts`'s
+ * `departureStand`). A rank closes up in the snapshot a creature leaves it, so the
+ * body cannot stay in its slot without its neighbours walking through it. One step
+ * toward the centre line puts it in its own combat lane (a front-row figure stands
+ * at `z ≈ 1.78`, the lane is at `0.9`): 0.85 is a clamped humanoid's height (0.63)
+ * plus a gutter, so a body that falls on its back, as `Death01` does, still lies
+ * clear of the figures it stepped out from.
+ */
+export const DEPARTURE_STEP = 0.85;
+
+/** The placement kinds that lie FLAT on the table — the footprints a figure may not stand in. */
+const FLAT_KINDS: ReadonlySet<SlotKind> = new Set<SlotKind>([
+  'creature',
+  'land',
+  'attachment',
+  'graveyard',
+  'exile',
+  'command',
+]);
 
 /** Which way a seat faces: `you` stands at +Z and steps toward −Z, and back. */
 export function seatSign(seat: Seat): number {
@@ -419,6 +454,13 @@ export interface Placement {
    * alone cannot tell it (report 13 §3.1).
    */
   row: number;
+  /**
+   * **T8 — where a figure stands for this placement**, decided by `layout()` once
+   * every card on the table has been placed (a back-row stand point depends on
+   * its neighbours' attachments). `null` for everything that is not a creature
+   * rank slot; read through {@link standPointOf}, never directly.
+   */
+  stand: [number, number, number] | null;
 }
 
 /** The whole resting pose of a frame. */
@@ -494,6 +536,80 @@ export function fanSlot(
 }
 
 /**
+ * **T8 fix — the hand fan as an OCCLUDER** (`camera.ts`'s `keepsSeat`).
+ *
+ * The world corners of every card of an `n`-card fan at `seat`, exactly as
+ * `layout()` places it and `CardPlane` draws it: `UNIT_PLANE` scaled to
+ * `CARD_W × 1`, turned by the Euler `[pitch, 0, spin]` (three's default `XYZ`
+ * order, so the in-plane spin first and the tilt toward the camera second), at the
+ * {@link fanSlot} position. The slice-2 verification pass found the shoulder and
+ * low views letting the fan cover most of the viewer's own land rank; the camera
+ * now proves a seat's view keeps the ranks visible above it, and this is the
+ * geometry it proves that against. Pure; seven cards is the widest fan there is
+ * (`FAN_MAX_DEG` is reached at seven).
+ */
+export function fanCorners(n: number, seat: Seat): Array<Array<[number, number, number]>> {
+  const anchors = anchorsFor(seat);
+  const radius = seat === 'you' ? FAN_RADIUS_YOU : FAN_RADIUS_OPP;
+  const out: Array<Array<[number, number, number]>> = [];
+  for (let i = 0; i < n; i++) {
+    const slot = fanSlot(n, i, anchors.hand, radius);
+    const pitch = anchors.hand.pitch;
+    const cp = Math.cos(pitch);
+    const sp = Math.sin(pitch);
+    const cs = Math.cos(slot.spin);
+    const ss = Math.sin(slot.spin);
+    const corners: Array<[number, number, number]> = [];
+    for (const [lx, ly] of [
+      [-CARD_W / 2, -0.5],
+      [CARD_W / 2, -0.5],
+      [CARD_W / 2, 0.5],
+      [-CARD_W / 2, 0.5],
+    ] as const) {
+      // Rz(spin), then Rx(pitch): the card's own plane is z = 0.
+      const x1 = lx * cs - ly * ss;
+      const y1 = lx * ss + ly * cs;
+      corners.push([x1 + slot.x, y1 * cp + slot.y, y1 * sp + slot.z]);
+    }
+    out.push(corners);
+  }
+  return out;
+}
+
+/**
+ * How far toward its seat each of {@link seatRankLines}' two lines is drawn from
+ * the rank's own centre line. The verification pass asked for the centre lines;
+ * a view tuned against exactly that clears them by a rounding error (the first
+ * one did, by 0.002 of the frame's height) and shows half a land. At 0.15 the far
+ * 65% of every card in either rank is above the hand — measured live on a Plains
+ * with a raycast grid, 41 of 96 samples on the card from the shoulder where slice
+ * 2 had 20 of 103 (the table view, which nothing covers: 81 of 92). A larger
+ * margin buys the rest of the card only by lifting both views most of the way
+ * back to the table view.
+ */
+export const SIGHTLINE_MARGIN = 0.15;
+
+/**
+ * **T8 fix — the two lines a seat has to be able to see**: the centre lines of its
+ * own land rank and creature rank ({@link SIGHTLINE_MARGIN} toward the seat),
+ * sampled every `step` across the widest rank (`MAX_PER_RANK` slots at
+ * `RANK_PITCH`). `camera.ts`'s `keepsSeat` requires none of these points to be
+ * covered by the hand fan in a view a live seat may use — tapping a land, reading
+ * which are tapped and targeting your own creatures all happen on these two lines,
+ * so the far two-thirds of every card in either rank is above the hand.
+ */
+export function seatRankLines(seat: Seat, step = 0.2): Array<[number, number, number]> {
+  const anchors = anchorsFor(seat);
+  const half = rankX(MAX_PER_RANK - 1, MAX_PER_RANK, RANK_PITCH);
+  const toward = seatSign(seat) * SIGHTLINE_MARGIN;
+  const out: Array<[number, number, number]> = [];
+  for (const rank of [anchors.lands, anchors.creatures]) {
+    for (let x = -half; x <= half + 1e-9; x += step) out.push([rank.x + x, rank.y, rank.z + toward]);
+  }
+  return out;
+}
+
+/**
  * Battlefield rows: lands in their own rank, everything else in the creature
  * rank.
  *
@@ -553,6 +669,8 @@ export function layout(
   layoutStack(board, viewerId, placements);
 
   const bobbing = applyPresence(placements, presence);
+  // **After** presence: a hovering card's figure hovers with it (§3.1).
+  placeStands(placements);
 
   const byKey = new Map<string, Placement>();
   for (const placement of placements) byKey.set(placement.key, placement);
@@ -870,29 +988,94 @@ function place(
     bobAmp: 0,
     bobHz: 0,
     row: options.row ?? 0,
+    stand: null,
   };
 }
 
 /**
- * **Where a figure stands for this placement** (report 13 §3.1).
+ * **Where a figure stands for this placement** (report 13 §3.1, T8).
  *
- * Off the front edge of its card, toward the centre of the table, with the
- * standoff scaled down for a wrapped rank's back row so a figure never stands on
- * the cards behind it. `layout.ts` answers this rather than `figures/pose.ts`
+ * Off the front edge of its card, toward the centre of the table — and, for a
+ * wrapped rank's back row, on its own card behind the front row (see
+ * {@link BACK_ROW_STEP}). `layout.ts` answers this rather than `figures/pose.ts`
  * because `layout.ts` is the only module in the arena that knows a coordinate
- * (§3.2), and because {@link FIGURE_STANDOFF} has to compose with
- * {@link RANK_WRAP_Z}, which lives here.
+ * (§3.2), and because both rules compose with {@link RANK_WRAP_Z} and with where
+ * the other cards lie, which live here.
  *
  * The y is the placement's own, so a `presence` hover (the Helicarrier, the
  * Doombot) lifts the figure with the card for free.
  */
 export function standPointOf(placement: Placement): [number, number, number] {
-  const standoff = FIGURE_STANDOFF * Math.max(0, 1 - FIGURE_STANDOFF_ROW_FALLOFF * placement.row);
+  return placement.stand ?? frontStand(placement);
+}
+
+function frontStand(placement: Placement): [number, number, number] {
+  if (placement.row > 0) return [placement.position[0], placement.position[1], placement.position[2]];
   return [
     placement.position[0],
     placement.position[1],
-    placement.position[2] - seatSign(placement.seat) * standoff,
+    placement.position[2] - seatSign(placement.seat) * FIGURE_STANDOFF,
   ];
+}
+
+/**
+ * Does this card's footprint on the table contain the point `(x, z)`?
+ *
+ * A flat card is `CARD_W × 1` in its own plane, turned by its in-plane spin
+ * (`rotation[2]`: the seat's half-turn plus `TAP_ANGLE` when tapped), so a tapped
+ * card is one unit wide in x and `CARD_W` deep in z.
+ */
+export function footprintContains(placement: Placement, x: number, z: number): boolean {
+  const spin = placement.rotation[2];
+  const dx = x - placement.position[0];
+  const dz = z - placement.position[2];
+  const c = Math.cos(spin);
+  const s = Math.sin(spin);
+  const along = c * dx + s * dz;
+  const across = -s * dx + c * dz;
+  return (
+    Math.abs(along) < (CARD_W * placement.scale) / 2 - 1e-9 &&
+    Math.abs(across) < 0.5 * placement.scale - 1e-9
+  );
+}
+
+/** Is `other` one of `host`'s own attachments? A figure may stand on its own aura. */
+function attachedTo(other: Placement, host: Placement): boolean {
+  if (other.kind !== 'attachment') return false;
+  return ((other.card as { attachedToId?: number | null }).attachedToId ?? null) === host.cardId;
+}
+
+/**
+ * T8's stand points, for every creature-rank slot of the frame.
+ *
+ * The front row needs no search — 0.52 off a card that is 0.5 deep is clear of
+ * everything by construction — and the back row is rare (four fixtures ever wrap
+ * a rank), so the O(n²) footprint scan runs only for it.
+ */
+function placeStands(placements: Placement[]): void {
+  let flat: Placement[] | null = null;
+  for (const placement of placements) {
+    if (placement.kind !== 'creature') continue;
+    if (placement.row === 0) {
+      placement.stand = frontStand(placement);
+      continue;
+    }
+    flat ??= placements.filter((p) => FLAT_KINDS.has(p.kind));
+    const [x, y, z0] = frontStand(placement);
+    const away = seatSign(placement.seat);
+    let stand: [number, number, number] = [x, y, z0];
+    for (let step = 0; step <= BACK_ROW_MAX_STEPS; step += 1) {
+      const z = z0 + away * step * BACK_ROW_STEP;
+      const covered = flat.some(
+        (other) => other !== placement && !attachedTo(other, placement) && footprintContains(other, x, z),
+      );
+      if (!covered) {
+        stand = [x, y, z];
+        break;
+      }
+    }
+    placement.stand = stand;
+  }
 }
 
 // ---------------------------------------------------------------------------

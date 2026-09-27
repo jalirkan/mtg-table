@@ -11,15 +11,15 @@
     "creature/subtype:robot": { "model": "drone", "tint": "#9fb4c8" },
     "creature/subtype:insect": { "model": "insect", "tint": "#9ec7f0" },
     "creature/subtype:scientist": {
-      "model": "agent",
+      "model": "scientist",
       "tint": "#8ee0c0",
-      "_note": "T8 gives the scientist its own head; until then it is the agent mesh in the lab tint."
+      "_note": "T8: a body of its own — Kenney's character-male-e (round glasses, shirt and tie, braces) in the lab tint. Bold Biochemist and A.I.M. Scientists. Keys off the snapshot's type line, never an event."
     },
     "creature/subtype:spy": { "model": "agent", "tint": "#f6f0d8" },
     "creature/subtype:hero": {
-      "model": "agent",
+      "model": "hero",
       "tint": "#f2d98c",
-      "_note": "T8 gives the hero its own mesh; the tint is what separates it today."
+      "_note": "T8: a body of its own — Kenney's character-female-b, whose two buns read from every side of the table — in gold. Wasp and the Hero token reach it through this rung; Quake and every other Spy Hero stop at subtype:spy first, which is the rung order doing its job."
     },
     "creature/subtype:soldier": { "model": "agent", "tint": "#cfd6de" },
 
@@ -47,9 +47,9 @@
       "_note": "One small insect for now. The swarm of five is T9 and needs a `swarm` key this schema does not have yet."
     },
     "Ant-Man, Reformed Rogue": {
-      "model": "agent",
+      "model": "hero",
       "clips": { "attack": "shrink" },
-      "_note": "He attacks by getting smaller. T8 moves him to the hero mesh."
+      "_note": "He attacks by getting smaller. On the hero body since T8 (he is a Human Rogue Hero, and `rogue` is not a recognised subtype, so without this entry he would stop at the colour rung)."
     },
     "Agent 13, Sharon Carter": {
       "model": "agent",
@@ -65,7 +65,13 @@
       "model": "agent",
       "tint": "#cfd6de",
       "token": true,
-      "_note": "1,193 frame-instances in the corpus — the most-seen creature the deck makes."
+      "_note": "1,193 frame-instances in the corpus — the most-seen creature the deck makes. Keeps the agent body (T8) in the cool token grey; the key is the wire's name VERBATIM, `Soldier Token`."
+    },
+    "Hero Token": {
+      "model": "hero",
+      "tint": "#e8dcb4",
+      "token": true,
+      "_note": "T8: the hero body in a paler, token gold, so a 3/2 Hero token and Wasp are the same kind of thing and not the same card. `Hero Token` is the wire's name verbatim (it would otherwise reach creature/subtype:hero)."
     }
   },
 

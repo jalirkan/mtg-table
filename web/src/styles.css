@@ -2948,6 +2948,98 @@ button.zonerow__open:hover {
 }
 
 /*
+ * M7 Tier 2 (T8) — the camera switcher: five views, the director, spectator.
+ *
+ * Beside the cue strip, in the same top-left column, because that is the part of
+ * the frame the table never needs (the own hand fans across the bottom, the seat
+ * plates hold the right edge). `pointer-events: auto` for the same reason as
+ * every other widget in `.arena__layer`, and `liveness.test.ts` holds the class
+ * to it. The view on screen is outlined; a view this seat may not use is dimmed
+ * but still takes the click, and the hint line says why.
+ *
+ * **One row with the cue strip, not a row of its own** (slice-2 verification
+ * fix). As a fourth row it sat at y 146–175, 670 px wide at every width, over the
+ * opponent's bust (Tier 2 follow-up 10 — which this does not close: the decision
+ * strip, the cue strip and the credit line still cover most of the bust at
+ * 1024 × 700, exactly as they did in slice 1). `.arena__strips` is a layout wrapper
+ * only: it keeps the layer's `pointer-events: none`, so the canvas still owns
+ * every pixel between the two strips. It stops 15rem short of the right edge for
+ * the same reason `.arena__decision` does — the opponent's plate is there — and
+ * wraps rather than running under it. Below 1400 px each view button collapses
+ * to its key; the name stays in the tooltip and in `aria-label`.
+ */
+.arena__strips {
+  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 0.4rem;
+  max-inline-size: calc(100% - 15rem);
+}
+
+@media (max-width: 1399px) {
+  .arena__view-label,
+  .arena__views-title {
+    display: none;
+  }
+}
+
+.arena__views {
+  pointer-events: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-block-end: 0.3rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13d9;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.arena__views-title {
+  color: var(--muted);
+}
+
+.arena__view {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.arena__view:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__view--on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  color: var(--accent);
+}
+
+.arena__view--off {
+  opacity: 0.45;
+  cursor: help;
+}
+
+.arena__view-shot {
+  color: var(--muted);
+}
+
+.arena__view--spectator {
+  margin-inline-start: 0.35rem;
+}
+
+/*
  * M7 E6 — the decision strip: the arena's seat.
  *
  * It is the top line of the layer because that is the one part of the table

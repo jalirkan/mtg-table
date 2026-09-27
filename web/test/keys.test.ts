@@ -28,7 +28,9 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { VIEWS, VIEW_IDS, isCameraChoice } from '../src/arena/camera.ts';
 import {
+  CAMERA_KEYS,
   KEYMAP,
   bindingFor,
   chordFor,
@@ -92,7 +94,9 @@ test('Z and CTRL+Z are different bindings, and so are A and CTRL+A', () => {
 });
 
 test('an unbound key is left alone entirely', () => {
-  for (const key of ['x', 'F5', 'ArrowLeft', 'Tab', '1']) {
+  // `1` was on this list until T8 bound the digits to the arena's camera;
+  // `7`–`9` are still nobody's.
+  for (const key of ['x', 'F5', 'ArrowLeft', 'Tab', '7', '9']) {
     assert.equal(planKey(ev(key), LIVE), null, `${key} should not be consumed`);
   }
   // Alt is never ours: Alt+S is a browser/OS menu on most platforms.
@@ -438,6 +442,9 @@ test('every KeyActionId is handled in at least one renderer’s dispatcher', () 
     // `null` = the engine has set no auto-yield on the top item, so BOTH `Y`
     // and `N` plan a real `setYield` rather than "already set to that".
     topYielded: null,
+    // T8: the arena's camera rows plan `camera` / `spectator` only where there
+    // is a camera; with this on, their dispatch in Arena.tsx is checked too.
+    arena: true,
   };
 
   const unhandled: string[] = [];
@@ -490,5 +497,85 @@ test('every KeyActionId is handled in at least one renderer’s dispatcher', () 
     'these keymap rows are listed in the `?` overlay and dispatched by nobody — the key is ' +
       'consumed (`preventDefault` has already run) and then does nothing at all:\n  ' +
       unhandled.join('\n  '),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// M7 Tier 2 (T8) — the arena's camera keys
+// ---------------------------------------------------------------------------
+
+const ARENA: KeyContext = { ...LIVE, arena: true };
+
+test('1–5 choose the five views, 6 and 0 the director, O spectator — in the arena', () => {
+  const expected: Record<string, string> = {
+    '1': 'table',
+    '2': 'shoulder',
+    '3': 'oppShoulder',
+    '4': 'side',
+    '5': 'low',
+    '6': 'director',
+    '0': 'director',
+  };
+  for (const [key, choice] of Object.entries(expected)) {
+    assert.deepEqual(planKey(ev(key), ARENA)?.plan, { kind: 'camera', choice }, `key ${key}`);
+  }
+  assert.deepEqual(planKey(ev('o'), ARENA)?.plan, { kind: 'spectator' });
+  assert.deepEqual(planKey(ev('O', { shiftKey: true }), ARENA)?.plan, { kind: 'spectator' });
+  assert.equal(chordFor('cameraView'), '1 2 3 4 5');
+  assert.equal(chordFor('toggleSpectator'), 'O');
+});
+
+test('the camera keys are picture controls: legal on a replay, behind an ask, sending nothing', () => {
+  for (const ctx of [
+    { ...ARENA, live: false },
+    { ...ARENA, askOpen: true },
+    { ...ARENA, live: false, askOpen: true },
+  ]) {
+    assert.deepEqual(planKey(ev('4'), ctx)?.plan, { kind: 'camera', choice: 'side' });
+    assert.deepEqual(planKey(ev('o'), ctx)?.plan, { kind: 'spectator' });
+  }
+  // A focused text field still owns its digits — a `choose_number` ask types
+  // into one, and a 2 there is a two, not a camera.
+  assert.equal(planKey(ev('2', { target: { tagName: 'INPUT' } }), ARENA), null);
+  // Modifiers are never ours: Ctrl+1 is the browser's first tab.
+  assert.equal(planKey(ev('1', { ctrlKey: true }), ARENA), null);
+  assert.equal(planKey(ev('1', { altKey: true }), ARENA), null);
+});
+
+test('on the board the camera keys are bound, and say why they do nothing', () => {
+  // **CLAUDE.md M4 convention 4's defect, avoided.** The board's `view` switch
+  // has a silent `default:` after `preventDefault()`, so a camera row planned
+  // as a `view` there would be a swallowed key. Without `arena`, the row plans
+  // `inert` — which the board flashes — naming the renderer that has a camera.
+  for (const key of ['1', '3', '5', '6', '0', 'o']) {
+    const plan = planKey(ev(key), LIVE)?.plan;
+    assert.equal(plan?.kind, 'inert', `${key} on the board`);
+    assert.match(plan?.kind === 'inert' ? plan.why : '', /press V/, `${key} must point at V`);
+  }
+});
+
+test('CAMERA_KEYS spells camera.ts’s views, key for key (keys.ts may not import arena/)', () => {
+  // D49: keys.ts is on the 2D path and the arena chunk stays lazy, so the list
+  // is written twice — and this is what keeps the two copies one list.
+  for (const view of VIEWS) {
+    assert.equal(CAMERA_KEYS[view.key], view.id, `key ${view.key}`);
+  }
+  assert.deepEqual(
+    Object.values(CAMERA_KEYS).filter((choice) => choice !== 'director').sort(),
+    [...VIEW_IDS].sort(),
+  );
+  for (const choice of Object.values(CAMERA_KEYS)) assert.ok(isCameraChoice(choice), choice);
+  const row = KEYMAP.find((b) => b.id === 'cameraView');
+  assert.ok(row !== undefined);
+  assert.deepEqual([...row.keys], VIEWS.map((view) => view.key));
+  // The overlay says which views are spectator-only; that sentence is a claim
+  // about `seatSafe`, so hold it to the flag.
+  const spectatorOnly = VIEWS.filter((view) => !view.seatSafe).map((view) => view.key);
+  assert.match(row.what, new RegExp(`${spectatorOnly.join(' and ')} are for spectating`));
+
+  const source = readFileSync(fileURLToPath(new URL('../src/keys.ts', import.meta.url)), 'utf8');
+  assert.ok(
+    !/from '\.\/arena\//.test(source),
+    'keys.ts imports from arena/ — it is on the 2D path, and D49 keeps three out of the entry chunk',
   );
 });

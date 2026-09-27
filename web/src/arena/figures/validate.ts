@@ -31,11 +31,13 @@ import {
   isTileKind,
   TILE_KINDS,
   type AttachSpec,
+  type ClipLibraryRecord,
   type FigureData,
   type FigureProblem,
   type FigureSpec,
   type ModelData,
   type ModelEntry,
+  type ModelLibraryRecord,
   type TileSpec,
 } from './types.ts';
 
@@ -65,7 +67,21 @@ const ATTACH_KEYS = new Set(['kind', 'tint', 'hostScale', 'strength', 'metal']);
 const HOST_SCALE_RANGE = [0.2, 2] as const;
 /** `"Thriving Isle"`, `"subtype:island"` or `"*"` — the three rungs and nothing else. */
 const LAND_KEY = /^(\*|subtype:[a-z]+|[^_].*)$/;
-const MODELS_FILE_KEYS = new Set(['version', 'models']);
+const MODELS_FILE_KEYS = new Set(['version', 'models', 'library', 'clipLibraries']);
+/** T8 — the built file's identity (Tier 2 follow-up 9). */
+const LIBRARY_KEYS = new Set(['path', 'bytes', 'sha256']);
+/** T8 — a clip library's provenance: a model row's licence fields, and no mesh. */
+const CLIP_LIBRARY_KEYS = new Set([
+  'title',
+  'source',
+  'licence',
+  'licenceUrl',
+  'licenceBadge',
+  'retrieved',
+  'committable',
+]);
+/** `"ual:Hit_Chest"` — a library prefix, a colon, a clip name with no `|`. */
+const RETARGETED = /^([a-z][a-z0-9-]*):([^|:]+)$/;
 const MODEL_KEYS = new Set([
   'path',
   'node',
@@ -76,6 +92,8 @@ const MODEL_KEYS = new Set([
   'bones',
   'triangles',
   'clips',
+  'rig',
+  'retargeted',
   'source',
   'licence',
   'licenceUrl',
@@ -418,10 +436,17 @@ export function validateModels(raw: unknown): FigureValidation<ModelData> {
   const errors: FigureProblem[] = [];
   const warnings: FigureProblem[] = [];
   const models: Record<string, ModelEntry> = {};
+  const clipLibraries: Record<string, ClipLibraryRecord> = {};
+  let library: ModelLibraryRecord | null = null;
+  const done = (): FigureValidation<ModelData> => ({
+    data: { version: 1, models, library, clipLibraries },
+    errors,
+    warnings,
+  });
 
   if (!isObject(raw)) {
     errors.push({ where: '$', message: 'the model manifest is not an object' });
-    return { data: { version: 1, models }, errors, warnings };
+    return done();
   }
   unknownKeys('$', raw, MODELS_FILE_KEYS, errors, 'top-level');
 
@@ -430,11 +455,80 @@ export function validateModels(raw: unknown): FigureValidation<ModelData> {
     errors.push({ where: '$.version', message: `version must be 1, saw ${JSON.stringify(version)}` });
   }
 
+  // -- T8: the built file's identity (Tier 2 follow-up 9) --------------------
+  const rawLibrary = raw['library'];
+  if (rawLibrary !== undefined) {
+    if (!isObject(rawLibrary)) {
+      errors.push({ where: '$.library', message: 'must be an object' });
+    } else {
+      unknownKeys('$.library', rawLibrary, LIBRARY_KEYS, errors, 'library');
+      const path = rawLibrary['path'];
+      const bytes = rawLibrary['bytes'];
+      const sha256 = rawLibrary['sha256'];
+      let ok = true;
+      if (typeof path !== 'string' || !/^[A-Za-z0-9._/-]+$/.test(path) || path.startsWith('/') || path.includes('..')) {
+        errors.push({ where: '$.library.path', message: 'must be a relative path under web/public/' });
+        ok = false;
+      }
+      if (typeof bytes !== 'number' || !Number.isInteger(bytes) || bytes <= 0) {
+        errors.push({ where: '$.library.bytes', message: 'must be a positive integer' });
+        ok = false;
+      }
+      if (typeof sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(sha256)) {
+        errors.push({ where: '$.library.sha256', message: 'must be 64 lowercase hex digits' });
+        ok = false;
+      }
+      if (ok) library = { path: path as string, bytes: bytes as number, sha256: sha256 as string };
+    }
+  }
+
+  // -- T8: clip libraries (a retarget source contributes animation, no mesh) --
+  const rawLibraries = raw['clipLibraries'];
+  if (rawLibraries !== undefined) {
+    if (!isObject(rawLibraries)) {
+      errors.push({ where: '$.clipLibraries', message: 'must be an object' });
+    } else {
+      for (const [prefix, entry] of Object.entries(rawLibraries)) {
+        if (isCommentKey(prefix)) continue;
+        const where = `$.clipLibraries["${prefix}"]`;
+        if (!isObject(entry)) {
+          errors.push({ where, message: 'must be an object' });
+          continue;
+        }
+        unknownKeys(where, entry, CLIP_LIBRARY_KEYS, errors, 'clip library');
+        const fields: Record<string, string> = {};
+        let ok = true;
+        for (const key of ['title', 'source', 'licence', 'licenceUrl', 'licenceBadge', 'retrieved'] as const) {
+          const v = entry[key];
+          if (typeof v !== 'string' || v === '') {
+            errors.push({ where: `${where}.${key}`, message: 'must be a non-empty string' });
+            ok = false;
+          } else fields[key] = v;
+        }
+        if (typeof entry['committable'] !== 'boolean') {
+          errors.push({ where: `${where}.committable`, message: 'must be a boolean' });
+          ok = false;
+        }
+        if (ok) {
+          clipLibraries[prefix] = {
+            title: fields['title']!,
+            source: fields['source']!,
+            licence: fields['licence']!,
+            licenceUrl: fields['licenceUrl']!,
+            licenceBadge: fields['licenceBadge']!,
+            retrieved: fields['retrieved']!,
+            committable: entry['committable'] as boolean,
+          };
+        }
+      }
+    }
+  }
+
   const rawModels = raw['models'];
-  if (rawModels === undefined) return { data: { version: 1, models }, errors, warnings };
+  if (rawModels === undefined) return done();
   if (!isObject(rawModels)) {
     errors.push({ where: '$.models', message: 'must be an object' });
-    return { data: { version: 1, models }, errors, warnings };
+    return done();
   }
 
   for (const [id, entry] of Object.entries(rawModels)) {
@@ -551,6 +645,48 @@ export function validateModels(raw: unknown): FigureValidation<ModelData> {
       }
     }
 
+    // -- T8: the shared rig, and which clips were retargeted into it ----------
+    const rawRig = entry['rig'] ?? null;
+    if (rawRig !== null && (typeof rawRig !== 'string' || rawRig === '')) {
+      errors.push({ where: `${where}.rig`, message: 'must be a rig id or absent' });
+      bad = true;
+    }
+    const retargeted: Record<string, string> = {};
+    const rawRetargeted = entry['retargeted'];
+    if (rawRetargeted !== undefined) {
+      if (!isObject(rawRetargeted)) {
+        errors.push({ where: `${where}.retargeted`, message: 'must be an object' });
+        bad = true;
+      } else {
+        for (const [key, value] of Object.entries(rawRetargeted)) {
+          if (isCommentKey(key)) continue;
+          const match = typeof value === 'string' ? RETARGETED.exec(value) : null;
+          if (match === null) {
+            errors.push({ where: `${where}.retargeted.${key}`, message: 'must be "<library>:<clip>"' });
+            bad = true;
+            continue;
+          }
+          if (clips[key] === undefined) {
+            errors.push({ where: `${where}.retargeted.${key}`, message: 'names a clip this model does not carry' });
+            bad = true;
+            continue;
+          }
+          // **A retargeted clip's provenance must be written down too** — the
+          // same rule as a model's. A library prefix nobody recorded is a clip
+          // nobody can decide whether to ship.
+          if (clipLibraries[match[1]!] === undefined) {
+            errors.push({
+              where: `${where}.retargeted.${key}`,
+              message: `no clip library "${match[1]!}" in $.clipLibraries`,
+            });
+            bad = true;
+            continue;
+          }
+          retargeted[key] = value as string;
+        }
+      }
+    }
+
     if (bad) continue;
     models[id] = {
       path,
@@ -562,6 +698,8 @@ export function validateModels(raw: unknown): FigureValidation<ModelData> {
       bones,
       triangles,
       clips,
+      rig: rawRig as string | null,
+      retargeted,
       source,
       licence,
       licenceUrl,
@@ -571,5 +709,5 @@ export function validateModels(raw: unknown): FigureValidation<ModelData> {
     };
   }
 
-  return { data: { version: 1, models }, errors, warnings };
+  return done();
 }

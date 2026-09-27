@@ -34,10 +34,12 @@ import { isHidden, type AnyCard, type Combat } from '../../protocol.ts';
 import { isCreatureTypeLine } from '../../render/labels.ts';
 import { colourHex, colourIdOf } from '../colour.ts';
 import {
+  DEPARTURE_STEP,
   FIGURE_HEIGHT,
   FIGURE_MAX_WIDTH,
-  FIGURE_MIN_FIT,
   anchorsFor,
+  footprintContains,
+  seatSign,
   standPointOf,
   type Layout,
   type Placement,
@@ -161,6 +163,16 @@ export interface FigurePose {
    * standing there and it solidifies when it resolves.
    */
   ghost: boolean;
+  /**
+   * **The figure stands ON its own card** — a wrapped rank's back row (T8,
+   * `layout.ts`'s back-row stand rule), where the stand point lies inside the
+   * card's own footprint. The stand disc is transparent and writes no depth, so
+   * a disc drawn in the same pass as the front row's (before the back-row card,
+   * whose `renderOrder` is `20 + i`) is painted over by its own card: the disc
+   * field draws these in a second, later pass (`layout.ts`'s
+   * `ON_CARD_DISC_ORDER`). Always `false` for a ghost and for the front row.
+   */
+  onCard: boolean;
 }
 
 /** The whole stage for one frame, keyed by card id. */
@@ -188,26 +200,20 @@ export interface FigurePoseOptions {
 }
 
 /**
- * **T7's width clamp**: the drawn height of a figure whose model is `ratio` times
- * wider than it is tall.
+ * **The width clamp**: the drawn height of a figure whose model is `ratio` times
+ * wider than it is tall (T7; strict for every archetype since T8).
  *
- * `FIGURE_MAX_WIDTH` is a rank slot minus a gutter and `FIGURE_MIN_FIT` floors the
- * result, so the agent fits its slot exactly and the drone — three times wider
- * than tall — is squat rather than invisible. Pure, and exported so the test can
- * assert the arithmetic rather than the pixels.
- *
- * **`floorBase` is deliberately not `nominal`** at the one call site that matters.
- * The floor is about *legibility at the default size*, so it is computed against
- * `FIGURE_HEIGHT` and the host's attachments — never against the card's own
- * `scale`. Measured: with the floor taken from `nominal`, the Giant-Sized Flying
- * Ant's `scale: 1.35` lifted it back to 0.97 units wide and it overlapped its
- * neighbour by 0.17 again; and if the floor ignored `hostScale` instead, Quantum
- * Reduction's 0.45 shrink — the whole of T5 — would be floored away.
+ * `FIGURE_MAX_WIDTH` is a rank slot minus a gutter, so no resting figure is wider
+ * than its slot and no two neighbours overlap. T7 floored the result so the drone
+ * — measured then at 2.97× wider than tall — would be "squat rather than
+ * invisible"; T8 found that number was the build's mistake (`layout.ts`'s
+ * {@link FIGURE_MAX_WIDTH} says how), measured the drone again as three draws it
+ * (1.66×), and dropped the floor with the exemption. Pure, and exported so the
+ * test can assert the arithmetic rather than the pixels.
  */
-export function fitHeight(nominal: number, ratio: number, floorBase = nominal): number {
+export function fitHeight(nominal: number, ratio: number): number {
   if (!(ratio > 0) || !Number.isFinite(ratio)) return nominal;
-  const limit = FIGURE_MAX_WIDTH / ratio;
-  return Math.max(floorBase * FIGURE_MIN_FIT, Math.min(nominal, limit));
+  return Math.min(nominal, FIGURE_MAX_WIDTH / ratio);
 }
 
 const EMPTY_CLIPS: Readonly<Record<string, string>> = Object.freeze({});
@@ -418,13 +424,14 @@ export function figurePose(
     const nominal = baseline * spec.scale;
     const entry = modelId === null ? undefined : options.models?.models[modelId];
     const ratio = entry === undefined || entry.height <= 0 ? 0 : entry.width / entry.height;
-    const height = ratio > 0 ? fitHeight(nominal, ratio, baseline) : nominal;
+    const height = ratio > 0 ? fitHeight(nominal, ratio) : nominal;
     const width = ratio > 0 ? height * ratio : discRadiusFor(card) * hostScale * 2;
 
+    const position = ghost ? ghostPointOf(placement, ghostIndex) : standPointOf(placement);
     out.set(placement.cardId, {
       cardId: placement.cardId,
       seat: placement.seat,
-      position: ghost ? ghostPointOf(placement, ghostIndex) : standPointOf(placement),
+      position,
       facingY: placement.seat === 'you' ? 0 : Math.PI,
       height,
       width,
@@ -451,9 +458,76 @@ export function figurePose(
       // the battlefield holds.
       frozen: frozen && !ghost,
       ghost,
+      onCard: !ghost && footprintContains(placement, position[0], position[2]),
     });
     if (ghost) ghostIndex += 1;
   }
 
   return out;
+}
+
+/**
+ * **T8 — the figures that left between two frames** (Tier 2 follow-up 2).
+ *
+ * Every pose of `before` that carried a model and has no pose in `after`, in
+ * `before`'s order. A departure is not yet a death: the renderer holds each one,
+ * and **the queue decides its fate** (**D64**) — `figures/clips.ts`'s
+ * `stepDeparture`, asked on the body's first frame whether a death cue for its
+ * card is queued or running (`CueQueue.deathPending`). A dying body is drawn from
+ * that first frame until its death cue ends, its own `hit` included; a figure
+ * that left for the hand, the library or a face-down turn has no death cue
+ * queued and is never drawn. (The first slice-2 rule — drawn only while the
+ * card's `die` REQUEST was on the stage — blinked on every death, and was
+ * replaced by the verification fix: `docs/evidence/m7-tier2-slice2.md`, fix §1.)
+ *
+ * Ghosts are excluded — a creature spell that leaves the stack either becomes
+ * the battlefield figure (the same card id, still posed) or fizzles, which has a
+ * cue of its own — and so is anything without a model, because the disc has no
+ * body to die.
+ */
+export function departedFigures(before: FigureLayout, after: FigureLayout): FigurePose[] {
+  const out: FigurePose[] = [];
+  for (const pose of before.values()) {
+    if (pose.modelId === null || pose.ghost || pose.anonymous) continue;
+    if (after.has(pose.cardId)) continue;
+    out.push(pose);
+  }
+  return out;
+}
+
+/**
+ * **T8 fix — where a dying body stands** (the slice-2 verification pass).
+ *
+ * `layout()` re-centres a rank in the snapshot a creature leaves it, so both of
+ * its neighbours move half a slot toward where it stood: a body drawn at its last
+ * stand point overlaps each of them by about a third of a figure for the whole of
+ * its death. The rank does not wait for it — `layout(state)` is authoritative, and
+ * holding the slot would be a layout that remembers — so the BODY moves: it is
+ * drawn one {@link DEPARTURE_STEP} toward the table's centre line, out of the rank
+ * and into its own combat lane, where it falls. If that spot is taken too (a
+ * figure standing there), it steps back toward its own seat instead; if both are,
+ * it takes the lane anyway. A body with nothing beside it stays where it stood.
+ *
+ * Pure, over the previous frame's pose of the body and the new frame's figures,
+ * and computed once, at commit — never in the frame loop.
+ */
+export function departureStand(departed: FigurePose, present: FigureLayout): [number, number, number] {
+  const [x, y, z] = departed.position;
+  if (!crowded(present, departed, x, z)) return [x, y, z];
+  const towardCentre = -seatSign(departed.seat);
+  for (const direction of [towardCentre, -towardCentre]) {
+    const stepped = z + direction * DEPARTURE_STEP;
+    if (!crowded(present, departed, x, stepped)) return [x, y, stepped];
+  }
+  return [x, y, z + towardCentre * DEPARTURE_STEP];
+}
+
+/** Does any figure of the new frame stand within one step of `(x, z)`, overlapping in x? */
+function crowded(present: FigureLayout, body: FigurePose, x: number, z: number): boolean {
+  for (const pose of present.values()) {
+    if (pose.cardId === body.cardId) continue;
+    if (Math.abs(pose.position[2] - z) >= DEPARTURE_STEP - 1e-9) continue;
+    if (Math.abs(pose.position[0] - x) < (pose.width + body.width) / 2) return true;
+  }
+  return false;
 }

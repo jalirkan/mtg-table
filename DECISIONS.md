@@ -2524,3 +2524,445 @@ sorts, so this is reported rather than reordered.
 caster's anchor only (the interrupted draft: the strike never reached a target).
 Remembering targets for longer than one frame (a shadow history of the stack is a
 second source of truth, **D50**'s defect).
+
+---
+
+## D64 — A creature that dies is SEEN dying: its body is drawn from the snapshot it dies in until its death cue ends
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8's figure track, then the slice-2
+verification fix. **Supersedes D56's "was not worked around" clause** and Tier 2
+follow-up 2's "not to be worked around")
+
+**Decision.** When a figure with a model leaves the table between two frames,
+`FigureLayer` builds its body at COMMIT time from the previous frame's pose
+(`departedFigures`) and `DepartureField` holds it in a fixed array of
+`MAX_DEPARTURES = 8` slots. On the body's first frame its fate is decided **once**
+from the queue: `CueQueue.deathPending(cardId)` — a cue that `CLIP_FOR` maps to
+`die` (`zone.dissolve`, `sacrifice.crush`, `zone.exile`, `isDeathCue`) targets the
+card and is scheduled and not finished. A dying body is then drawn on **every**
+frame until that cue has ended (`figures/clips.ts`'s `stepDeparture`, the one rule
+the renderer and `clips.test.ts`'s corpus timeline both call): at its last stance
+while the batch's earlier cues play, taking its own `hit` on that cue's `t`; then
+the die clip takes over from whatever it was doing (the transient is held and
+faded with the stance, never snapped back) and never hands back; it fades over the
+death cue's last 40% and drains toward grey. It is drawn one `DEPARTURE_STEP`
+(0.85) toward the table's centre line when a figure of the new frame would stand
+in it (`departureStand`), because the rank closes up in the same snapshot. A
+departure with no death cue — bounced, flickered, turned face down — is never
+drawn. `Arena.tsx`'s batch intake is a **`useLayoutEffect`**, so the batch is in
+the queue before the body's first frame.
+
+**Rationale.** D56 said a figure outliving its frame would be "the renderer
+remembering something the engine did not say". The engine does say it: the
+`zone battlefield → graveyard` event is about that card, its cue already writes a
+`die` request for that id, and Tier 1's own card plane is drawn by its dissolve
+offset *at the battlefield* in the frame whose snapshot already has it in the
+graveyard. The body is the same shape — its identity, what it decays to, is
+absence — and the one thing it remembers is the previous frame's pose, the same
+one frame of look-behind as **D63**. Skip, flush, a backwards scrub and a new
+`gameId` end the death cue, so they end the body in the same frame with no
+bookkeeping of their own; reduced motion writes no clip and stamps no cue as a
+death, so the figure snaps like its stance.
+
+**The first version blinked, and the fix is why this entry names the queue.** T8
+first drew the body only while its `die` REQUEST was on the stage. The death cue
+plays after the batch's damage cues, so every creature vanished when the blow
+landed, took its own `hit` with no body, and popped back to fall — the
+verification pass sampled 1.32 s, 0.77 s and 0.51 s of nothing on `g1.jsonl`'s
+three deaths of a modelled creature, and every photograph had been taken inside
+the die cue. With the queue deciding: 0 frames without a body on every rendered
+frame of all three (headless Chromium on the GTX 1080, sampled after each
+`gl.render`), and the corpus test walks the queue's timeline over every death:
+all 17 drawn without a gap with each batch drained, and at the replay's 1× pace
+15 drawn without a gap and 2 snapped by a §5.2 flush before their first frame. The
+slice-2 rule, put back as a negative control, fails it on the first tick of the
+first death it meets (`g1.jsonl`'s Soldier Token) and on every one after.
+
+**Why the intake became a layout effect.** `<Canvas>` is a second React root
+with its own reconciler **and its own scheduler** (react-reconciler 0.27 ships
+scheduler 0.21 beside react-dom's 0.23), so a passive effect in the DOM root and
+the canvas root's commit are two queues whose order is not guaranteed. A layout
+effect runs inside the DOM root's commit, before anything the canvas root can do.
+Nothing else in the intake cares which kind of effect it is.
+
+**Known cost.** A body steps out of its rank the moment its neighbours close up —
+the whole rank moves at once, as Tier 1's cards always have. A death snapped by a
+§5.2 flush (two in the corpus at the 1× replay pace) has no body at all, exactly as
+a snapped cue has no clip.
+
+**Rejected.** Keeping the living figure one frame longer (a figure pose that is
+not a function of the frame on screen). Drawing only while the `die` request is on
+the stage (the blink). Holding the dying creature's slot in `layout()` (a layout
+that remembers; the rank's cards would disagree with its figures). Deciding the
+fate in `FigureLayer` from `state.events` (the figure layer may not import the cue
+engine, and it would be a second definition of which events are deaths). A timer
+for the body's life (a second clock, **D57**).
+
+---
+
+## D65 — The width clamp is strict for every archetype: `FIGURE_MIN_FIT` and the drone's overflow are retired
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8. **Supersedes D55's floor clause and its
+"Known cost"**; closes Tier 2 follow-up 11 and the build half of 18)
+
+**Decision.** `fitHeight(nominal, ratio) = min(nominal, FIGURE_MAX_WIDTH / ratio)`
+for every model — no floor, no exemption — and `figure-pose.test.ts`'s overlap
+test fails on any overlap at all. A model's width is the widest RESTING stance
+(`REST_CLIP_FOR`'s `ready` and `crouch` at `REST_PHASE_FOR`, read from
+`figures/clips.ts`) along the axis that becomes x after the facing turn, measured
+on the skinned mesh by `tools/build-figures.mjs` in three itself.
+
+**Rationale.** D55's floor existed because the drone measured 2.97× wider than
+tall. That was the build's number, not the drone's: `getBounds()` applied the
+skinned mesh's own node transform (a ×100 scale and a turn), which glTF ignores,
+and slice 1's skin-aware join had carried the body's arms onto the eye's skin, so
+they were drawn detached. Rebuilt, the drone is 1.66×, and the strict clamp costs
+it 0.03 units of height against the old floor. Over the corpus: 7,331 neighbouring
+pairs, worst overlap 0.000.
+
+**Known cost.** The Giant-Sized Flying Ant's `scale: 1.35` is clamped to the same
+0.49 as any insect — it was under the floor too.
+
+**Rejected.** Keeping the floor for a narrower drone later (T9's task, made moot
+by measuring the drone correctly). A per-archetype exemption list.
+
+---
+
+## D66 — A wrapped rank's back row stands ON its own card, and its disc is drawn after the cards
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8, then the verification fix for the disc.
+**Supersedes report 13 §3.1's row falloff** as D55 quoted it; closes Tier 2
+follow-up 3)
+
+**Decision.** `layout.ts`'s `placeStands`: a front-row figure stands
+`FIGURE_STANDOFF` off its card's front edge as before; a back-row figure stands on
+its own card's centre, in the strip the front row leaves uncovered, stepping back
+from the centre line by 0.05 at a time (at most six) while a front-row host's
+Aura or Equipment covers the point. `Placement.stand` carries it and
+`standPointOf` reads it. `FigurePose.onCard` marks a stand point inside its own
+card's footprint, and `DiscField` draws those discs in a **second instanced pass
+at `ON_CARD_DISC_ORDER` (70)** — above every battlefield rank's `renderOrder`
+(`row × 20 + i`, `+20` hovering) and below the hand fan's 100 — sharing the first
+pass's material, so it costs one draw call on a frame that wraps a rank and none
+on any other.
+
+**Rationale.** `0.52 × (1 − 0.45 × row)` put a back-row figure on the FRONT row's
+cards: 216 stand points inside another card, in g3, human-auto-2026 and
+human-sideboard-7 (every fixture that wraps). Now 0 — 189 on their card's centre,
+11 stepped back 0.10 beside an attachment. The disc: additive, transparent,
+`depthWrite: false` and drawn at `renderOrder` 5, it was painted over by its own
+back-row card (`20 + i`) — at human-sideboard-7 @1181 and @1195 five discs a seat
+were invisible. `figure-pose.test.ts` asserts over the corpus that every disc on a
+card is flagged and ordered after every card it lies on (200 of them); the
+browser shows all ten.
+
+**Rejected.** A per-instance `renderOrder` (an `InstancedMesh` has one). Raising
+the whole disc pass above the cards (the front row's discs would glow over the
+edges of cards they do not stand on). The falloff with a smaller factor (any
+falloff lands somewhere on the front row).
+
+---
+
+## D67 — The figure library carries no texture, and the build verifies its sources and records its output
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8. Closes Tier 2 follow-up 9's code half)
+
+**Decision.** Every primitive in `figures.glb` gets one plain unlit material and
+the file carries **no image and no texture** (asserted by the build); slice 1's
+`palette` texture is gone. `tools/build-figures.mjs` checks every source
+archive's byte count and sha256 against `tools/assets-manifest.json` before it
+builds anything (a tampered file fails with both hashes and the download URL),
+reads zip members itself (central directory → `inflateRawSync`, CRC-32 checked)
+rather than through `unzip`, and writes the built file's bytes and sha256 into
+`models.json` (`"library"`); `figures.test.ts` fails when
+`web/public/models/figures.glb` is not that file (a checkout with none is still
+the supported disc fallback).
+
+**Rationale.** The runtime replaces every figure material with the holographic
+`ShaderMaterial` (**D53**), which reads no texture and no UV, so a texture in the
+file was bytes nobody drew. And a provenance record (**D54**) is only worth the
+check that reads it: slice 1 printed hashes when a file was missing and verified
+nothing. Two builds from the same four sources are byte-identical (143,920 B,
+sha256 `c09ac552…`).
+
+**Rejected.** Keeping the palette "for a future lit look" (the scene is unlit by
+decision, **D53**). `unzip -p` (`[` and `]` in `…[Standard].zip` are wildcards to
+it). Trusting the manifest without reading the file.
+
+---
+
+## D68 — One clip set for every humanoid: the pack's own clips, with the Universal Animation Library's `hit` and `die` retargeted in
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8, report 13 §9.5's experiment. Within
+**D54**: CC0 only, never Mixamo)
+
+**Decision.** The agent, the hero (`character-female-b`) and the scientist
+(`character-male-e`) share Kenney's one 7-joint rig and one clip set (the build
+asserts the skin). Its `hit` is the UAL's `Hit_Chest` and its `die` the UAL's
+`Death01`, retargeted **offline by the build** with three's
+`SkeletonUtils.retargetClip` (world-space rotation deltas from the T-pose; the
+chibi's feet-level root takes the pelvis's translation only, scaled by hip height);
+every other clip is the pack's own. `models.json` records which clips were
+retargeted and the library's provenance (`clipLibraries.ual`, CC0), and
+`clips.test.ts` pins the remaining borrowings (`block = crouch = shrink`) and
+asserts `hit` and `die` share their clip with nothing.
+
+**Rationale.** Measured, not assumed: a recoil and a death read on a head-heavy
+chibi; a human idle, a punch, a landing and a crouch do not (the head block
+pitches forward into a face-plant). Kenney's hand-made clips beat the library at
+every one of those. The all-retargeted set is still buildable
+(`--clip-source experiment`, +24 kB) so the comparison can be re-run. Clips cost no
+draw calls; the price was bytes.
+
+**Rejected.** Retargeting every clip (above). Mixamo (**D54**). Retargeting in the
+browser (it would ship the library's 7.6 MB source). The library's root-motion
+variant (root motion is refused, **D57**).
+
+---
+
+## D69 — Five camera views; the two that lose the hand are SPECTATOR-only; a seat's view must keep its own ranks uncovered by its hand
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8's camera track, then the verification
+fix. Extends report 09 §8 rule 6; the evidence is
+`docs/evidence/m7-tier2-slice2.md`)
+
+**Decision.** `camera.ts`'s `VIEWS` — table, shoulder, opponent's shoulder,
+side-on, low — keys `1`–`5`; the chosen view **is** `CameraDirector.home`, so a
+cue's swoop leaves from it and returns to it. A view is usable at a live seat
+iff `keepsSeat`: inside `ORBIT_CLAMPS`, the hand and battlefield anchors framed
+(`framesSeat`), **and** (the verification fix) no point of the seat's own land
+and creature rank lines, drawn `SIGHTLINE_MARGIN` (0.15) toward the seat, covered
+by any card of a seven-card fan (`ranksUncovered`, conservative: a point that
+projects inside a card counts as covered) — at every aspect in `LIVE_ASPECTS`.
+`ViewSpec.seatSafe` is a literal that `camera.test.ts` recomputes. Table, shoulder
+and low pass; the opponent's shoulder and side-on are **spectator-only**, greyed
+with the reason at a live seat. **Spectator mode** (`O`: the whole azimuth, polar
+6°–86°, 0.45×–1.9× distance, slower cue moves, no hand band) is on by itself in a
+replay **and the moment a live game ends** (the verification fix: it used to wait
+for `O`), never while a seat is live, and the flip is forgotten when the next game
+starts.
+
+**Rationale.** Rule 6 is about the player being able to act, and a view the
+player chose stays on screen the whole game, so the rule is a property of the
+pose, not only of a move. The first shoulder and low poses passed `framesSeat` at
+every aspect while the fan covered most of the land rank: a raycast grid over a
+Plains hit it 20 times in 103 from the shoulder and 8 in 109 from low (81 of 92 at
+the table). With the occlusion term they were re-tuned (shoulder polar 66° → 55°,
+low 74° → 59°): 41 of 96 and 34 of 86, the far two-thirds of the card; hand clicks
+still reach the engine from both. A larger margin buys the rest of the card only
+by lifting both views most of the way back to the table.
+
+**The poses, as they stand** (position → target; the orbit numbers are
+`orbitFromPose` of it; the change from the camera builder's first cut is the
+verification fix):
+
+| key | view | position → target | azimuth · polar · distance | live seat |
+|---|---|---|---|---|
+| 1 | table | report 09 §3.5's `REST_POSE`, unchanged | 0° · 38.9° · 11.95 | yes |
+| 2 | shoulder | `[0.9, 5.35, 9.5] → [−0.4, 0, 2]` | 9.8° · 54.9° · 9.30 (was 10° · 66° · 10.5) | yes |
+| 3 | opponent's shoulder | `[−0.9, 5.35, −9.5] → [0.4, 0, −2]`, the shoulder mirrored through the table centre | −170.2° · 54.9° · 9.30 | spectator only |
+| 4 | side-on | `[−7.4, 2.05, 0.6] → [0, 0.4, 0.2]` — the graveyard end, lens a little above figure height | −86.9° · 77.4° · 7.59 | spectator only |
+| 5 | low | `[3.35, 5.8, 10.1] → [0, 0.4, 1.75]` | 21.9° · 59.0° · 10.49 (was 22° · 74° · 10.5) | yes |
+
+A view change is an ease — `VIEW_EASE_MS` 650 ms at a seat, 1,400 ms for a
+spectator — and a **cut** under `prefers-reduced-motion` and on page load. A drag
+is remembered per view (and per clamp box); pressing the key of the view on
+screen drops it and returns to the canonical pose.
+
+**Known cost.** "Low" is a corner now rather than a crouch — the rule costs it 15°
+of polar. From the opponent's shoulder your hand is at the top of the frame, facing
+away: that view was never going to be a seat's.
+
+**Rejected.** A DOM hand strip so every view is usable live (a second card
+renderer beside `CardPlane`, M7 convention 2, and a second place to click the same
+card). Tilting or lowering the hand fan per view (`layout()` would take the camera
+as an input, and the hit proxies would move with it). The centre lines with no
+margin (a pose tuned against it cleared the land line by 0.002 of the frame and
+showed half a card).
+
+---
+
+## D70 — The auto director: a pure `directShot`, three numbers, and combat and the outcome exempt from the cooldown
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8's camera track)
+
+**Decision.** `6`/`0` selects the director, spectators only. `beatsOf(events,
+lookup)` turns a batch into beats reading only player ids, a card's public
+`controller` and the previous frame's `stack[].target*Ids` — never a name; a
+combat beat cuts to side-on, a cast (or a resolution with no target) to the
+caster's shoulder, a strike to the target's side, a new turn and the outcome to
+the table. `directShot(beats, shot, now)` is pure, and the director is fed the
+same batch the queue is, at the same moment. **The three numbers**
+(`DIRECTOR`): a shot lasts at least **2,400 ms**, a view is not re-entered within
+**4,800 ms** (no A → B → A), and a beat held back by either is kept **1,600 ms**
+before it is dropped as stale. **Combat and the outcome are exempt from the
+cooldown** (`COOLDOWN_EXEMPT`), never from the minimum shot. Cuts are cuts. Within
+`userOverrideMs` (5 s) of the user's last drag — counted from when the camera stops
+moving under their hand — nothing cuts and nothing waits to.
+
+**Rationale.** The first run exempted only the outcome, and the second combat of
+a turn was shot entirely from the caster's shoulder because side-on had been left
+2.4 s before: the cooldown protected the viewer from the one shot they came for.
+Over all 19 recordings at two paces the corpus test finds no shot under 2.4 s and
+no cooldown violation in 596 cuts; with the two numbers at 0 it finds 632 and 309,
+so the assertion has teeth.
+
+**Rejected.** Easing between director shots (a cut reads as editing; an ease reads
+as a camera that cannot decide). Cutting on every beat (no minimum shot). Reading
+a card name to choose a shot (hard rule 8's renderer half).
+
+---
+
+## D71 — Rule 5 is about a live SEAT; `OrbitControls`' `change` counts only under the user's hand; the chosen view persists in this browser
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8's camera track, found while building it)
+
+**Decision.** Three rules the camera track changed, each a behaviour a user could
+see. (1) **Report 09 §8 rule 5** — the camera does not move while the engine is
+waiting on the human — is applied only in live mode: `CueRunner` hands the
+director `awaitingHuman` only when `mode === 'live'`, as the queue's `budgetFor`
+already did. (2) **`OrbitControls`' `change` is the user's only between `start`
+and `end` plus `USER_TAIL_MS` (1.5 s) of damping tail**, and never while the
+director holds the camera. (3) **The camera choice is kept in `localStorage`**
+under `mtg-table.arena.camera`, every access inside `try`, the table view when
+nothing valid is stored; a stored spectator-only view shows the table at a live
+seat and comes back when the seat is not live.
+
+**Rationale.** (1) In a replay nobody is waiting to click; the recording's `input`
+is history, and reading it dropped every camera cue on any frame whose recorded OK
+was enabled. (2) `OrbitControls` fires one `change` on its first update after the
+director hands the camera back (its `lastPosition` is from before the move), so
+every finished move and view change registered as a drag: home re-set to itself
+and cue moves dropped for five seconds — fatal for the director, which would have
+held every shot for five seconds after every cut. (3) The view is a per-viewer
+convenience, exactly what browser storage is for; nothing about the game is in it.
+
+**Rejected.** Treating a replay's recorded `input` as a seat (above). Filtering
+`change` by comparing poses (a real drag can move less than any threshold).
+Storing the spectator toggle too (it is derived from whether a seat is live).
+
+---
+
+## D72 — The cue clock runs only while there is film; a late frame adds at most 100 ms; `<Canvas frameloop>` is the runner's ref, never a literal
+
+**2026-09-27** (M7 Tier 2, slice 2 — the second verification pass's fixes; both
+defects are Tier 1's, found by measuring D64's promise)
+
+**Decision.** (1) **`CueQueue.tick(now)` does not run the virtual clock while the
+queue is idle, and a batch that lands on an idle queue starts its own clock**: the
+first tick after it is that batch's `t = 0`. While cues ARE running, one tick adds
+at most `MAX_TICK_MS` = 100 ms of film, so a late frame resumes the film instead of
+swallowing it. (2) **`<Canvas>` is rendered with `frameloop={loopRef.current}`**, a
+ref `Arena.tsx` owns and `CueRunner`'s queue sync writes in the same statement
+pair as `setFrameloop`; no `frameloop` prop anywhere in the arena is a literal, and
+nothing but that sync calls `setFrameloop` (`liveness.test.ts` holds all three).
+
+**Rationale.** (1) `frameloop="demand"` parks the loop whenever the queue drains
+and nothing hovers, so the next tick arrives after the whole idle gap — and `tick`
+added that gap to the cue clock, so the next batch's first frame jumped past its
+own start: the damage `hit`, the death cue and D64's departing body were consumed
+before a frame was drawn. Measured in headless Chromium on the GTX 1080:
+`human-auto-7` 794→795 stepped after a 3 s pause drew its two dying bodies on
+**0** frames with the old clock and on **86 of 89** with this one — the same as
+after a 30 ms pause. D64's "a creature that dies is seen dying" had been true only
+on tables that keep rendering (something hovering). (2) fiber 8.18's `configure`
+runs on every render of `<Canvas>` and does `if (state.frameloop !== frameloop)
+state.setFrameloop(frameloop)` against the PROP, so the literal reverted the
+runner's `always` whenever a hint, a same-view key press or a greyed switcher click
+re-rendered `Arena` mid-batch: `human-auto-42`@717 with `1` pressed 120 ms into the
+batch drew 11 frames in 3.5 s with six cues still queued; with the ref, 88 — the
+same as with no press.
+
+**Rejected.** *The clamp alone* (the verifier's second option): after every pause
+it would still eat the first 100 ms of the next batch — at the live budget that is
+a whole compressed `tap` and most of a `hit`. *The loop mode as React state in
+`Arena`*: a re-render of the whole scene graph on every drain, set from the frame
+loop (§9.2 rule 7). *A dependency-free layout effect in `CueRunner` re-asserting the
+mode*: it works only if the canvas root re-renders after every `configure`, which
+is an ordering across two reconcilers with two schedulers — exactly the kind of
+ordering D64's intake had to make mechanical rather than trust.
+
+---
+
+## D73 — The hero is Kenney's `character-female-b` and the scientist `character-male-e`, chosen by silhouette, because the hologram keeps only geometry
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8's figure track; recorded by the slice's
+documentation pass. Replaces slice 1's "hero and scientist are the agent mesh in
+gold and lab-green"; within **D53** and **D54**, and the rig and clips are **D68**'s)
+
+**Decision.** Three humanoid bodies from the one CC0 kit, *Mini Characters* 1.0:
+the **agent** stays `character-male-a`; the **hero** (`creature/subtype:hero` —
+Wasp; the Hero token and Ant-Man by their per-card entries in `figures.json`) is
+**`character-female-b`**; the **scientist** (`creature/subtype:scientist` — Bold
+Biochemist, A.I.M. Scientists) is **`character-male-e`**. The Soldier token keeps
+the agent body in its token grey; the Hero token takes the hero body in a paler
+token gold, so a token and Wasp read as the same kind of thing and not the same
+card. The rungs are unchanged — subtype before colour — and the census
+`figures.test.ts` prints every run carries both as models of their own (hero 722
+frame-instances, scientist 717).
+
+**Rationale.** The holographic material throws texture and vertex colour away
+(**D53**; the library carries none at all since **D67**), so **only geometry can
+tell two bodies apart** — and the table camera sees the viewer's own figures from
+behind and the opponent's from the front, so the outline of the head is what
+reads. All twelve bodies of the kit were rendered side by side under the shader,
+from the front, from behind, from the side and from the table's angle
+(`var/shots-t8/kenney-*.png`, local): `female-b`'s two round buns are the most
+distinct outline in the kit **from every side**, and `male-e`'s round glasses and
+shirt-and-tie front are the one body that reads as a scientist face-on. All
+twelve share one rig exactly (joint names and bind transforms, measured), which
+is what lets the three share one clip set, and the build asserts the skin. Cost:
+742 and 710 triangles against the agent's 723, one draw call each; the library is
+143,920 bytes for five models.
+
+**Known cost.** **From behind, the scientist has the agent's outline** — on the
+viewer's own side the braces and the lab tint tell them apart, not the shape;
+face-on, the glasses do. `g1.jsonl` never has a scientist on the battlefield, so
+the three bodies together were photographed at `g2.jsonl` @200, not at T7's bench
+frame.
+
+**Rejected.** Three tints of one body (slice 1's stand-in: one outline in three
+colours, which the hologram reduces to one colour ramp). Choosing by face or
+costume detail (the shader discards it). The kit's other ten bodies (rendered and
+compared; none has an outline as distinct as the buns, and none other reads as a
+scientist). A body used by exactly one card (Tier 3's seam, report 13 §12).
+
+---
+
+## D74 — The camera keys are three rows of the one keymap; on the board they are `inert`, with a reason
+
+**2026-09-27** (M7 Tier 2, slice 2 — T8's camera track; recorded by the slice's
+documentation pass. Extends M4 convention 4 and **D49**)
+
+**Decision.** `web/src/keys.ts` grows from twenty rows to **twenty-three**:
+`cameraView` (`1 2 3 4 5`), `cameraDirector` (`6` or `0`) and `toggleSpectator` (`O`),
+so the `?`/`H` overlay lists them from the same table the handler reads. Their
+plans (`camera`, `spectator`) are local and send nothing, so they plan in the
+arena on a replay and behind an open `ask`; a focused text field keeps its
+digits (an ask that takes a number types into one), and `Ctrl`/`Alt` + digit are left
+to the browser (`Ctrl+1` is its first tab). `keys.ts` is on the 2D
+path and may not import `arena/` (**D49**), so it spells the view ids out as
+`CAMERA_KEYS`, and `keys.test.ts` asserts the two maps agree key for key and that
+`keys.ts` imports nothing from `arena/`. The arena opts in with
+`KeyContext.arena`; **on the board every camera row plans an `inert`** whose
+reason names `V` ("picks the 3D arena's camera — the board has no camera; press
+V"). Whether a view is usable at a live seat is `camera.ts`'s to say
+(`seatSafe`, **D69**), and the overlay's "3 and 4 are for spectating" sentence is
+held to it by a test.
+
+**Rationale.** Adding a key is a row, never a branch in a handler (M4 convention
+4). `Board.tsx`'s view switch ends in a silent `default:` after
+`preventDefault()`, so a camera key planned as a `view` on the board would be
+swallowed with no feedback — M4 convention 4's swallowed-key defect exactly. And
+a camera key answers nothing, so there is no reason to gate it behind an `ask`
+the way an act is gated.
+
+**Known cost.** The board's inert flash is drawn by `DecisionPanel` only inside
+its `input !== null` branch, so on a recording with no `input` frame (`g1.jsonl`)
+**no** inert key flashes at all — pre-existing, and not a keymap defect; on
+`human-auto-42` the camera keys' flash shows.
+
+**Rejected.** A digit handler of the arena's own (a second keymap). Importing
+`VIEWS` into `keys.ts` (it would pull `arena/` into the 2D entry chunk, **D49**).
+Leaving the rows unbound on the board (a key the overlay lists that does
+nothing and says nothing).

@@ -31,12 +31,17 @@
  *     calls and one geometry (measured in T0: 12 figures → 12 calls, 1 material,
  *     1 program, frame body p50 0.30 ms). A naive `Object3D.clone()` shares the
  *     skeleton and every copy animates identically.
- *  4. **Normalise at load, never in the data file.** The three source packs are
- *     0.671, 0.764 and 1.871 units tall in their own units and face whichever
- *     way their author modelled them. Measuring the bounding box and scaling to
- *     one world unit is the only way two models from two libraries stand the
- *     same height; no amount of per-card fiddling in `figures.json` achieves it
- *     reliably.
+ *  4. **Normalise at load, never in the data file.** The five models are
+ *     0.671, 0.723, 0.676, 0.774 and 1.881 units tall in their own units (agent,
+ *     hero, scientist, drone, insect — T8's build, measured on the skinned mesh)
+ *     and face whichever way their author modelled them. Measuring the bounding
+ *     box and scaling to one world unit is the only way models from two libraries
+ *     stand the same height; no amount of per-card fiddling in `figures.json`
+ *     achieves it reliably. `Box3.setFromObject` on the loaded source measures a
+ *     `SkinnedMesh` through its bones — which is what `tools/build-figures.mjs`
+ *     now measures too; T8 checked in the browser that the two agree — at
+ *     `g1.jsonl`@355 no drawn figure is wider than its pose says (all ≤ 0.720
+ *     against a 0.720 slot), and a standing one is its pose's height to 0.01.
  *  5. **`null` is not an error state.** No manifest entry, no file, a 404, a
  *     parse failure, a clip that does not exist → the Tier-1 glow disc (§9.4).
  *     The card plane is untouched, every cue still plays, and the game is fully

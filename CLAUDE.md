@@ -273,7 +273,10 @@ node tools/build-figures.mjs --src var/assets/figures   # Tier 2: rebuild figure
 ```
 
 `V` switches renderer mid-game over the same socket without dropping a frame and
-`K` skips every animation on screen. The escape hatches are `?arena=off` (render
+`K` skips every animation on screen. **Since Tier 2's slice 2** `1`–`5` pick a
+camera view (table, shoulder, opponent's shoulder, side-on, low), `6` or `0` the
+auto director and `O` spectator mode — 3, 4 and the director only when no seat is
+live — and the switcher beside the cue strip does the same by click. The escape hatches are `?arena=off` (render
 the 2D board even at `#arena` — WebGL can fail for a reason the player cannot
 see) and `?dpr=<n>` (pin the render resolution, which also turns the automatic
 ladder off); `?stats=1`, `?grid=1` and `?glinfo=1` are the debug flags, and
@@ -431,7 +434,13 @@ assertion costs nothing; it was 8 m 52–57 s before M6 added 9d and 10g), of
 which **9c's ten games are 265–269 s**. Tier 2's documentation pass ran it once
 more, in the `tier2-slice1` worktree at `WSPORT=8661` without deleting
 `bridge/out`: **727 s**, exit 0 (`var/check-all-t2-docs.log`), on a desktop that
-was not idle; Tier 2 added no step. `SKIP_TEN=1`
+was not idle; Tier 2 added no step. Slice 2's fix pass ran it from a deleted
+`bridge/out` in the `tier2-slice2` worktree at `WSPORT=8662`: **731 s**, exit 0;
+its second fix pass the same way at `WSPORT=8665`: **729 s**, exit 0
+(`var/check-all-t2-fix2.log`); and its documentation pass at `WSPORT=8666`,
+without deleting `bridge/out`: **727 s**, exit 0 (`var/check-all-t2s2-docs.log`).
+Slice 2 added no step.
+`SKIP_TEN=1`
 brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
 **seven** servers on it, one after another.
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
@@ -510,7 +519,8 @@ together, and each is a defect that was actually hit.
    the post-render sweep and never inside render; the sweep bumps a version only
    when a rect actually moved. Use the isomorphic layout-effect shim already in
    that file, or `renderToStaticMarkup` starts printing SSR warnings.
-4. **One keymap table.** `web/src/keys.ts` is the **18** rows plus two pure
+4. **One keymap table.** `web/src/keys.ts` is the **23** rows (18 at M4; M7 added
+   `V` and `K`, Tier 2's slice 2 the three camera rows) plus two pure
    functions (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
    and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
    Adding a key is a row, never a new branch in a handler. Two rules live in
@@ -542,10 +552,12 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **610 `node --test` + 79 vitest (5 files)** standalone
-as of **M7 Tier 2's first slice** (534 + 79 at M7 Tier 1, 456 + 75 at M6), and
-**620 / 612 pass / 0 fail / 8 skipped** inside `check-all.sh` (it was 544 / 536
-at Tier 1), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
+`npm --prefix web test` is **655 `node --test` + 79 vitest (5 files)** standalone
+as of **M7 Tier 2's second slice** after its second fix pass (652 before it,
+610 + 79 after the first slice, 534 + 79 at M7 Tier 1, 456 + 75 at M6), and
+**665 / 657 pass / 0 fail / 8 skipped** inside `check-all.sh` (662 / 654 before
+slice 2's second fix pass, 620 / 612 after
+Tier 2's first slice, 544 / 536 at Tier 1), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
 produced and the ws-log suite skips the candidates it does not name. M7's eight
 suites (`layout`, `colour`, `replay-cues`, `cues-exhaustive`, `camera`,
 `liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's six (`figures`,
@@ -727,7 +739,12 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
    and `web/test/cues-exhaustive.test.ts` now checks the pooled compose
    field-for-field against the naive one rather than taking the claim on trust.
    `frameloop` is `demand` while the queue is idle and nothing bobs, so an idle
-   table costs nothing.
+   table costs nothing — and two things follow from that which each shipped
+   broken (**D72**): **the cue clock does not run while the queue is idle** (the
+   first frame after a parked loop is a batch's `t = 0`, never the idle gap played
+   as film, and a late frame mid-cue adds at most `MAX_TICK_MS`), and **`<Canvas
+   frameloop>` is `CueRunner`'s ref, never a literal** — fiber re-applies the prop
+   on every render, so a literal `demand` froze a running batch on every hint.
 6. **The DOM layer over the canvas is `pointer-events: none`, so every widget in
    it must opt back in.** `.arena__layer` lets the `<canvas>` keep every click
    the DOM does not want — and `pointer-events` inherits, so a widget with no
@@ -761,7 +778,10 @@ pure function of the frame on screen except the transitions. Read
 in full before touching `web/src/arena/figures/` or the Tier 2 files under
 `scene/`; [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md)
 is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
-**D53–D63** are the decisions, the user's nine among them.
+**D53–D63** are the decisions, the user's nine among them; slice 2 (T8,
+`docs/evidence/m7-tier2-slice2.md`) added **D64–D68** and **D73** for the figures
+and **D72** for the cue clock under them, and its camera rules are the next
+section's.
 
 1. **If the snapshot says it, it is a POSE; if only the event says it, it is a
    CUE** (**D56**). A creature's figure, its stance (tapped kneels, it does not
@@ -773,11 +793,20 @@ is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
    with no history. Summon, lunge, hit, the snap-on, the ripple, a mote's
    flight, the strike, the fizzle — cues, which decay to identity. Build a thing
    on the wrong side and it is either invisible after a skip or stuck on screen.
-   **The defect this prevents is a renderer that remembers**: the `die` clip
-   never plays, because the snapshot that carries a creature's death already has
-   it in the graveyard, and keeping its figure alive one frame longer would be
-   the renderer knowing something the engine did not say. That was measured and
-   deliberately left alone. `attach.test.ts`, `tiles.test.ts` and
+   **The defect this prevents is a renderer that remembers.** A death is the one
+   place that line was argued twice (**D64**, superseding D56's clause): the
+   snapshot that carries it has already removed the living figure, so the body is
+   a transient of its own — `FigureLayer`'s `DepartureField`, built at commit from
+   the PREVIOUS frame's pose (one frame of look-behind, like **D63**), drawn from
+   that snapshot until the card's own death cue has ended, decided once by
+   `CueQueue.deathPending` through `figures/clips.ts`'s `stepDeparture`, and
+   stepped out of the rank that closed up behind it (`departureStand`). **Its fate
+   is the queue's, not the clip lane's**: slice 2 first drew it only while the `die`
+   REQUEST was on the stage, and every death blinked for up to 1.3 s while the
+   batch's damage cues played — `clips.test.ts` now walks the queue's timeline over
+   all 17 corpus deaths. It also depends on `Arena.tsx`'s intake being a
+   **`useLayoutEffect`** (the canvas is a second React root with its own scheduler;
+   a liveness clause holds it). `attach.test.ts`, `tiles.test.ts` and
    `stack.test.ts` sweep the corpus for the pose half.
 2. **`figurePose` is THE pose and `FigureLayer` is THE figure renderer** — the
    same rule as `CardPlane` (M7 convention 2), and the renderer's half of hard
@@ -786,7 +815,12 @@ is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
    pure, and `figures/` imports no three, no React, no DOM and starts no timer
    (`liveness.test.ts`). **`layout.ts` is still the only module that knows a
    coordinate** — `standPointOf`, `FIGURE_STANDOFF`, `FIGURE_MAX_WIDTH`, the
-   `casting` anchor all live there. A figure is placed only for a card whose
+   `casting` anchor, `DEPARTURE_STEP` and `ON_CARD_DISC_ORDER` all live there.
+   **The width clamp is strict for every archetype** (**D65**: no floor, no
+   overflowing drone — slice 1's drone numbers were the build's mismeasurement),
+   and **a wrapped rank's back row stands ON its own card** (**D66**), its disc in
+   the disc field's second pass, after the cards, because a transparent disc that
+   writes no depth is painted over by any card drawn after it. A figure is placed only for a card whose
    `Placement.back` is `false`; a **face-down creature is always the anonymous
    disc** (`figure-pose.test.ts` asserts it over 1,138 corpus instances); a
    redacted permanent gets no figure at all. A figure **carries no name** (no
@@ -821,14 +855,22 @@ is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
    `tools/build-figures.mjs` — never edit it by hand. Models load from
    `web/public/models/` through three's own `GLTFLoader` + `MeshoptDecoder` and
    from nowhere else: **never drei's `useGLTF`**, whose DRACO decoder defaults to
-   `https://www.gstatic.com/…` (liveness asserts no CDN — as a hostname
-   denylist, which is weaker than it looks; Tier 2 follow-up 8). A missing
+   `https://www.gstatic.com/…`. Liveness holds that as an **allow-list**, not a
+   hostname denylist (Tier 2 follow-up 8, closed in slice 2): no string literal
+   under `web/src/arena/` may carry a URL scheme unless `URL_ALLOW` names it with a
+   reason (today only the Scryfall credit link), and in the arena's JSON only
+   provenance keys may. The negative controls live in the test. A missing
    `figures.glb` is a **supported state**: every creature draws its disc. Three
    pipeline traps, each measured: **`meshopt` is the last step** (a `prune` after
    it undid the compression); **`prune --keep-attributes true` after `unlit`**
    (the default strips `NORMAL`, and the fresnel shader then draws every figure
    solid black in a file that still validates); and the skinned join is the
-   script's own, because `gltf-transform join` skips skins. **The Tier 3 seam:**
+   script's own, because `gltf-transform join` skips skins. Since slice 2 the
+   build **verifies every source's bytes and sha256** against the manifest before
+   it builds, the library carries **no texture** (**D67**), and `figures.test.ts`
+   fails when the committed `figures.glb` is not the file `models.json` records;
+   the humanoids share one rig and one clip set, the pack's own with the Universal
+   Animation Library's `hit` and `die` retargeted offline (**D68**). **The Tier 3 seam:**
    a per-card entry in `figures.json` may choose a model and alias a clip; it may
    not introduce a model used by exactly one card.
 5. **The scene stays unlit, and an idle table still renders nothing** (**D53**,
@@ -845,7 +887,14 @@ is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
    model (the rest draw discs). Anything that parks a mesh invisible must
    **`prime()`** it at mount — three compiles a program the first frame an
    object is drawn, and under bloom that compile landed mid-game as a 52–62 ms
-   frame.
+   frame. **The "allocates nothing" claim is a liveness clause now**, not a
+   header comment: it reads the bodies the frame loop reaches through the disc
+   field (`DiscField.bind`, `DepartureField.bind` and its helpers,
+   `CueQueue.deathPending`, the lane functions) and rejects every allocating
+   construct a grep can see — `new`, array and object literals, spreads,
+   closures, template strings, `for…of` and `.values()` iterators — with the
+   junk lines that must be caught spliced into every body as it runs. Extend its
+   body list when the frame loop grows.
 6. **Bloom is the one post pass, and it is lazy** (**D61**). `scene/Post.tsx` is
    imported only when bloom is first on (its own `Post` chunk); a liveness clause
    keeps it lazy and the only pass. `BLOOM_DEFAULT` lives in `arena/perf.ts`, not
@@ -868,6 +917,79 @@ for a repaint, so every mid-cue reading in the evidence was taken by pumping
 fiber's own `advance()` — imported from the app's **pre-bundled** instance
 (`/node_modules/.vite/deps/@react-three_fiber.js`; a second copy has its own root
 registry and advances nothing) — a few frames after each `queue.advance()`.
+(Slice 2's refinement: headless Chromium, unlike the pane, **does** run
+`requestAnimationFrame`, so a camera move or a batch that keeps the loop awake
+plays out with no pump at all — the camera track needed none. It is only a
+*paused* queue stepped by hand that needs the pump. When counting what was drawn,
+hook `gl.render`; a separate rAF sampler runs out of order with fiber's own
+callback and reports a phantom one-frame gap.)
+
+## The conventions Tier 2's slice 2 added — the camera views
+
+Five, and the thesis is the arena's own sentence applied to the lens: **a camera
+view is a POSE and the director is a PURE FUNCTION** — the camera decides what
+you look at, never what happened. Slice 2 (T8) built five named views, spectator
+mode and an auto director; **D69–D71** and **D74** are the decisions,
+`docs/evidence/m7-tier2-slice2.md` is what was measured, and report 09 §8's seven
+camera rules still hold under all of it.
+
+1. **A view is a row of data in `camera.ts`'s `VIEWS`, and `camera.ts` is still
+   pure.** Each `ViewSpec` is a position and a target (`orbitFromPose` gives the
+   orbit), a key and a `seatSafe` literal — no three, no React, no DOM, no
+   storage and no clock of its own (the cue engine only as a type), which a
+   liveness clause asserts. **The chosen view is `CameraDirector.home`**, so a
+   cue's swoop is an excursion from it that comes back to it — the camera's
+   version of **D50**'s offset that decays to identity; there is no second
+   "rest pose". Only `scene/CueRunner.tsx` calls `director.tick`, `applyView` or
+   `request` (liveness). A view change is an ease (650 ms at a seat, 1,400 ms for
+   a spectator) and a **cut** under reduced motion. Add a view as a row, with its
+   `seatSafe`, and let `camera.test.ts` recompute the flag.
+2. **A view is usable at a live seat iff `keepsSeat`** (**D69**) — inside
+   `ORBIT_CLAMPS`, the hand and battlefield anchors framed (§8 rule 6's
+   `framesSeat`), **and no point of the seat's own land and creature rank lines
+   covered by a seven-card hand fan** (`ranksUncovered`, the verification pass's
+   addition: rule 6 alone had let the fan cover most of the land rank) — at every
+   aspect in `LIVE_ASPECTS`, against `layout.ts`'s own geometry. `seatSafe` is a
+   literal so the switcher needs no anchors to grey a button, and the test
+   recomputes it, so it cannot drift. **A view that fails is spectator-only —
+   never "allowed with a DOM hand strip"**, which would be a second card renderer
+   beside `CardPlane` (M7 convention 2) and a second place to click the same
+   card. **Spectator mode** is on by itself in a replay and from the moment a live
+   game ends, never while a seat is live.
+3. **The auto director is `directShot(beats, shot, now)` and `beatsOf(events,
+   lookup)`, both pure** (**D70**). A beat reads player ids, a card's public
+   `controller` and the previous frame's `stack[].target*Ids` — **never a name**
+   (hard rule 8's renderer half) — and the director is fed the same batch the
+   queue is, at the same moment. Its three numbers live in `DIRECTOR`: a 2.4 s
+   minimum shot, a 4.8 s cooldown that **combat and the outcome are exempt from**
+   (never from the minimum shot), and a 1.6 s held beat. Cuts are cuts, never
+   eases, and nothing cuts within 5 s of the user's last drag.
+   `camera.test.ts` runs the director over every batch of all 19 committed
+   recordings at two paces and asserts both numbers on every cut (596 cuts; the
+   evidence re-ran it with both at 0 and it found 632 short shots and 309
+   cooldown violations, so the assertion has teeth — re-run that control when a
+   number moves).
+4. **Rule 5 is about a live SEAT, `change` is the user's only under their hand,
+   and the choice lives in this browser** (**D71**). The camera applies "do not
+   move while the engine waits on the human" only in live mode — a replay's
+   recorded `input` is history. `OrbitControls`' `change` counts as the user's
+   only between `start` and `end` plus `USER_TAIL_MS` (1.5 s) of damping tail,
+   because its first update after a programmatic move fires a stale `change`.
+   The choice persists under `localStorage` `mtg-table.arena.camera` — **every
+   access in `Arena.tsx`, inside `try`** (liveness), the table when nothing valid
+   is stored — and a stored spectator-only view shows the table at a live seat.
+5. **The camera keys are keymap rows, and on the board they are `inert`**
+   (**D74**, M4 convention 4). `1`–`5`, `6`/`0` and `O` are three of `keys.ts`'s
+   23 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
+   `CAMERA_KEYS` and `keys.test.ts` holds the two maps together. On the board each
+   plans an `inert` whose reason names `V` — never a `view`, which `Board.tsx`'s
+   silent `default:` would swallow.
+
+Two things the camera track changed that a reviewer should know are deliberate:
+**`reset()` and `K` snap the camera home** (a scrub used to abandon it mid-swoop),
+and because rule 5 now waits for a live seat, **camera cues play in replays of
+human games** where they used to be dropped on every frame whose recorded OK was
+enabled.
 
 ## Treat forge-src as prose
 
@@ -943,8 +1065,8 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
-| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so is Tier 2's first slice (T0–T7): its status, bench numbers, nineteen follow-ups and the T8–T14 hand-over are in *M7 Tier 2* — plus the deferred list and the open questions only the user can settle. |
-| `DECISIONS.md` | The **sixty-three** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D63 M7 Tier 2's** — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so are Tier 2's first slice (T0–T7) and its second (T8 and the camera views): *M7 Tier 2* has both slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2), slice 2's own follow-ups and the T9–T14 hand-over — plus the deferred list and the open questions only the user can settle. |
+| `DECISIONS.md` | The **seventy-four** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D74 M7 Tier 2's** — slice 2's first: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

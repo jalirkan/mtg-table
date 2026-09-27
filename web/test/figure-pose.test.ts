@@ -26,16 +26,18 @@ import { MAX_FIGURES, discRadiusFor, figurePose, fitHeight } from '../src/arena/
 import { STANCES } from '../src/arena/figures/types.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import {
+  CARD_W,
   FIGURE_HEIGHT,
   FIGURE_MAX_WIDTH,
-  FIGURE_MIN_FIT,
   FIGURE_STANDOFF,
+  ON_CARD_DISC_ORDER,
   TABLE_HALF_X,
   TABLE_HALF_Z,
   anchorsFor,
   layout,
   seatSign,
   standPointOf,
+  type Placement,
 } from '../src/arena/layout.ts';
 import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
@@ -246,6 +248,28 @@ function fixtureStates(): Array<{ file: string; state: ClientState }> {
   return out;
 }
 
+/**
+ * The same corpus, with each state frame's TRANSPORT index — the number of frames
+ * applied, which is what the replay slider and every evidence file call "index".
+ */
+function fixtureStatesIndexed(): Array<{ file: string; index: number; state: ClientState }> {
+  const out: Array<{ file: string; index: number; state: ClientState }> = [];
+  for (const dir of ['games/', 'synthetic/']) {
+    for (const name of readdirSync(FIXTURES + dir).sort()) {
+      if (!name.endsWith('.jsonl')) continue;
+      const log = parseFrameLog(readFileSync(FIXTURES + dir + name, 'utf8'));
+      let state = initialState(log.header);
+      const frames = log.frames as Frame[];
+      for (let index = 0; index < frames.length; index++) {
+        const frame = frames[index]!;
+        state = reduce(state, frame);
+        if (frame.type === 'state') out.push({ file: dir + name, index: index + 1, state });
+      }
+    }
+  }
+  return out;
+}
+
 test('figure-pose: every board frame of every committed recording poses', () => {
   const frames = fixtureStates();
   assert.ok(frames.length > 1000, `expected the whole corpus, saw ${String(frames.length)} frames`);
@@ -385,47 +409,43 @@ test('figure-pose: it is a pure function — twice is byte-identical', () => {
 // T7's tuning pass — the footprint
 // ---------------------------------------------------------------------------
 
-test('figure-pose: a figure fits its rank slot, and the one that cannot is named', () => {
+test('figure-pose: every model fits its rank slot — no exemption (T8)', () => {
   /**
    * **The defect this pins, measured rather than photographed.** T2 normalised every
-   * model by HEIGHT to `FIGURE_HEIGHT` 0.85, and the pipeline's own numbers say what
-   * that does: the Kenney agent is 1.14× wider than tall (0.97 units wide), the
-   * Quaternius drone **2.97×** (2.53 units) and the insect 1.53× (1.30) — against a
-   * creature-rank pitch of 0.796. Two Soldier Tokens stood shoulder to shoulder in
-   * T3's own attack photograph.
+   * model by HEIGHT to `FIGURE_HEIGHT` 0.85, and a chibi is wider than it is tall:
+   * two Soldier Tokens stood shoulder to shoulder in T3's own attack photograph. T7
+   * clamped by width and FLOORED the clamp so the drone — measured then at 2.97×
+   * wider than tall — would not vanish, which left the drone overlapping by up to
+   * 0.634 units (Tier 2 follow-up 11).
+   *
+   * T8 found the 2.97 was the build's mistake (a skinned mesh measured with its
+   * node transform, and a join that moved half the drone off its skin), rebuilt the
+   * library measuring what three DRAWS, and made the clamp strict. So: every model,
+   * in its widest resting stance, fits the slot.
    */
   for (const [id, entry] of Object.entries(MODELS.models)) {
     const ratio = entry.width / entry.height;
     const unclamped = FIGURE_HEIGHT * ratio;
-    const clamped = fitHeight(FIGURE_HEIGHT, ratio) * ratio;
-    console.log(
-      `  ${id.padEnd(8)} ratio ${ratio.toFixed(2)} · at FIGURE_HEIGHT ${unclamped.toFixed(2)} wide · ` +
-        `clamped ${clamped.toFixed(2)} wide (slot ${FIGURE_MAX_WIDTH.toFixed(3)})`,
-    );
-    assert.ok(clamped <= unclamped + 1e-9, `${id}: the clamp made it wider`);
-    assert.ok(clamped < unclamped || ratio * FIGURE_HEIGHT <= FIGURE_MAX_WIDTH, `${id}: not clamped`);
-    // The floor is what keeps a very wide model visible at all, and the drone is
-    // the one archetype it saves — and therefore the one that still overflows.
     const height = fitHeight(FIGURE_HEIGHT, ratio);
-    assert.ok(height >= FIGURE_HEIGHT * FIGURE_MIN_FIT - 1e-9, `${id}: below the floor`);
-    if (ratio <= FIGURE_MAX_WIDTH / (FIGURE_HEIGHT * FIGURE_MIN_FIT)) {
-      assert.ok(
-        clamped <= FIGURE_MAX_WIDTH + 1e-9,
-        `${id} is ${clamped.toFixed(2)} wide against a ${FIGURE_MAX_WIDTH.toFixed(2)} slot`,
-      );
-    }
+    const drawn = height * ratio;
+    console.log(
+      `  ${id.padEnd(10)} ratio ${ratio.toFixed(2)} · at FIGURE_HEIGHT ${unclamped.toFixed(2)} wide · ` +
+        `clamped ${drawn.toFixed(3)} wide × ${height.toFixed(3)} tall (slot ${FIGURE_MAX_WIDTH.toFixed(3)})`,
+    );
+    assert.ok(drawn <= FIGURE_MAX_WIDTH + 1e-9, `${id} is ${drawn.toFixed(3)} wide against a ${FIGURE_MAX_WIDTH.toFixed(3)} slot`);
+    assert.ok(drawn <= unclamped + 1e-9, `${id}: the clamp made it wider`);
+    // …and nothing is clamped into invisibility: the narrowest figure is still
+    // more than half a card tall.
+    assert.ok(height > 0.4, `${id} would be drawn ${height.toFixed(3)} units tall`);
   }
   // `fitHeight` is the pure half and is asserted directly: a square model is
-  // untouched, a wide one is limited, an absurd one is floored.
+  // untouched, a wide one is limited, and there is no floor any more.
   assert.equal(fitHeight(0.85, 0), 0.85, 'no ratio means no clamp — a pose with no manifest');
   assert.equal(fitHeight(0.85, 0.5), 0.85, 'a tall narrow model is not made shorter');
   assert.ok(Math.abs(fitHeight(0.85, 1.14) - FIGURE_MAX_WIDTH / 1.14) < 1e-9);
-  assert.equal(fitHeight(0.85, 99), 0.85 * FIGURE_MIN_FIT, 'the floor holds');
-  // The floor is taken from the BASELINE, not from the card's own scale: a
-  // Giant-Sized anything is allowed to be limited by the slot, and a shrunk
-  // creature is allowed below the floor.
-  assert.equal(fitHeight(0.85 * 1.35, 1.53, 0.85), FIGURE_MAX_WIDTH / 1.53);
-  assert.ok(fitHeight(0.85 * 0.45, 1.14, 0.85 * 0.45) < 0.4, 'a shrunk host stays shrunk');
+  assert.equal(fitHeight(0.85, 99), FIGURE_MAX_WIDTH / 99, 'no floor: the slot wins');
+  // A shrunk host stays shrunk: the clamp only ever lowers a height.
+  assert.ok(fitHeight(0.85 * 0.45, 1.14) < 0.4, 'a shrunk host stays shrunk');
 });
 
 test('figure-pose: no two neighbours in a rank overlap, over the whole corpus', () => {
@@ -438,7 +458,7 @@ test('figure-pose: no two neighbours in a rank overlap, over the whole corpus', 
     const placed = layout(state);
     const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
     // Neighbours are figures of the same seat standing at (nearly) the same z: a
-    // wrapped rank's second row is 0.55 behind the first and is a different row.
+    // wrapped rank's back row stands on its own cards and is a different row.
     const byRow = new Map<string, Array<{ x: number; w: number; id: number }>>();
     for (const pose of poses.values()) {
       if (pose.ghost) continue;
@@ -455,7 +475,7 @@ test('figure-pose: no two neighbours in a rank overlap, over the whole corpus', 
         const gap = right.x - left.x - (left.w + right.w) / 2;
         checked += 1;
         if (-gap > worst.overlap) worst = { overlap: -gap, where: `${file} ${key}` };
-        if (gap < 0) {
+        if (gap < -1e-9) {
           const modelA = poses.get(left.id)?.modelId ?? 'disc';
           const modelB = poses.get(right.id)?.modelId ?? 'disc';
           const pair = [modelA, modelB].sort().join(' + ');
@@ -474,20 +494,163 @@ test('figure-pose: no two neighbours in a rank overlap, over the whole corpus', 
   }
 
   assert.ok(checked > 5000, `only ${String(checked)} pairs — the sweep is not running`);
-  /**
-   * **Every overlap that remains involves the drone**, and that is the declared
-   * exception: it is 2.97× wider than tall, `FIGURE_MIN_FIT` floors its height so it
-   * is squat rather than invisible, and it hovers above its neighbours on the
-   * `presence` rule it already has. A narrower drone is T9's. Anything else
-   * overlapping is a regression in the clamp.
-   */
-  for (const pair of overflowing.keys()) {
-    assert.ok(
-      pair.includes('drone'),
-      `${pair} overlap — the width clamp no longer holds for models that should fit`,
-    );
+  // **No exemption** (T8): slice 1 allowed the drone to overflow and named it here;
+  // with the drone measured as it is drawn and the clamp strict, any overlap at
+  // all is a regression in the clamp or in the pipeline's measurement.
+  assert.deepEqual([...overflowing.keys()], [], 'neighbouring figures overlap');
+});
+
+// ---------------------------------------------------------------------------
+// T8 — a wrapped rank's back row (Tier 2 follow-up 3)
+// ---------------------------------------------------------------------------
+
+/** The kinds that lie flat on the table — an independent copy of layout.ts's set. */
+const FLAT = new Set(['creature', 'land', 'attachment', 'graveyard', 'exile', 'command']);
+
+/**
+ * **Written here, independently of `layout.ts`'s `footprintContains`**, so the test
+ * does not grade the code with the code's own ruler: a flat card is `CARD_W × 1`
+ * turned in the table plane by `rotation[2]`, which is how `CardPlane` draws it.
+ */
+function onCard(card: Placement, x: number, z: number): boolean {
+  const spin = card.rotation[2];
+  // The card's two in-plane axes, in world x/z: width along (cos, sin), depth
+  // along (−sin, cos) — the same quarter turn a tap is.
+  const ux = Math.cos(spin);
+  const uz = Math.sin(spin);
+  const dx = x - card.position[0];
+  const dz = z - card.position[2];
+  const along = dx * ux + dz * uz;
+  const across = -dx * uz + dz * ux;
+  return Math.abs(along) < (CARD_W * card.scale) / 2 - 1e-6 && Math.abs(across) < card.scale / 2 - 1e-6;
+}
+
+test('figure-pose: no figure stands inside another card — the crowded ranks, and the whole corpus', () => {
+  const frames = fixtureStates();
+  let stands = 0;
+  let backRow = 0;
+  let stepped = 0;
+  let crowded = 0;
+  const sideboard = { frames: 0, backRow: 0 };
+  const inside: string[] = [];
+
+  for (const { file, state } of frames) {
+    const placed = layout(state);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    const flat = placed.placements.filter((p) => FLAT.has(p.kind));
+    const wraps = placed.placements.some((p) => p.kind === 'creature' && p.row > 0);
+    if (wraps) crowded += 1;
+    if (wraps && file.endsWith('human-sideboard-7.jsonl')) sideboard.frames += 1;
+
+    for (const pose of poses.values()) {
+      // A ghost is a spell hovering at its caster's casting anchor, not a figure
+      // standing on the table.
+      if (pose.ghost) continue;
+      const own = placed.byKey.get(`c:${String(pose.cardId)}`)!;
+      stands += 1;
+      if (own.row > 0) {
+        backRow += 1;
+        if (file.endsWith('human-sideboard-7.jsonl')) sideboard.backRow += 1;
+        if (Math.abs(pose.position[2] - own.position[2]) > 1e-9) stepped += 1;
+      }
+      const [x, , z] = pose.position;
+      for (const card of flat) {
+        if (card === own) continue;
+        // Its own attachments lie under its own card: a figure may stand on its aura.
+        if ((card.card as { attachedToId?: number | null }).attachedToId === pose.cardId) continue;
+        if (onCard(card, x, z)) {
+          inside.push(
+            `${file}: card ${String(pose.cardId)} (row ${String(own.row)}) stands inside ` +
+              `${card.kind} ${String(card.cardId)}${card.tapped ? ' (tapped)' : ''}`,
+          );
+        }
+      }
+    }
   }
-  // And the pair T2's evidence photographed — two agents shoulder to shoulder — is
-  // gone, which is the whole point of the clamp.
-  assert.ok(!overflowing.has('agent + agent'), 'two agents still overlap');
+
+  console.log(
+    `figure-pose: ${String(stands)} stand points in ${String(frames.length)} frames · ` +
+      `${String(crowded)} frames wrap a rank · ${String(backRow)} back-row stand points ` +
+      `(${String(stepped)} stepped back off a front-row attachment) · ` +
+      `human-sideboard-7: ${String(sideboard.frames)} crowded frames, ${String(sideboard.backRow)} back-row figures · ` +
+      `${String(inside.length)} inside another card`,
+  );
+  // The crowded frames are real test data, not an empty loop: human-sideboard-7
+  // is the corpus's most crowded game (up to 11 creatures a seat).
+  assert.ok(sideboard.frames >= 20, `only ${String(sideboard.frames)} crowded human-sideboard-7 frames`);
+  assert.ok(sideboard.backRow >= 20, `only ${String(sideboard.backRow)} back-row figures in human-sideboard-7`);
+  assert.deepEqual(inside.slice(0, 10), [], `${String(inside.length)} stand points inside another card`);
+});
+
+test('figure-pose: a back-row figure stands on its own card, behind the front row', () => {
+  // Eleven creatures on one seat: six in front, five behind (layout.ts's wrap).
+  const many = Array.from({ length: 11 }, (_, i) => card(i + 1));
+  const placed = layout(stateWith(many));
+  const poses = figurePose(placed, null, DATA, { models: MODELS });
+  let back = 0;
+  for (const pose of poses.values()) {
+    const own = placed.byKey.get(`c:${String(pose.cardId)}`)!;
+    if (own.row === 0) {
+      assert.equal(pose.position[2], own.position[2] - seatSign('you') * FIGURE_STANDOFF);
+      continue;
+    }
+    back += 1;
+    assert.equal(pose.position[0], own.position[0], 'a back-row figure keeps its card’s x');
+    assert.equal(pose.position[2], own.position[2], 'on an empty table it stands on its card’s centre');
+    // …which is behind every front-row card: further from the table's centre
+    // line than any front-row card reaches.
+    for (const other of placed.placements) {
+      if (other.kind !== 'creature' || other.row !== 0) continue;
+      assert.ok(!onCard(other, pose.position[0], pose.position[2]), 'a back-row figure on a front-row card');
+    }
+  }
+  assert.equal(back, 5, 'the wrap put five creatures in the back row');
+});
+
+/**
+ * **A back-row stand disc is drawn AFTER its own card** (T8 fix, the slice-2
+ * verification pass). The disc is additive, transparent and writes no depth, so a
+ * disc drawn before the card it lies on is painted over by it: at
+ * `human-sideboard-7` frames 1181 and 1195 the verifier found five discs a seat
+ * invisible. `FigurePose.onCard` routes a disc into the second pass at
+ * `ON_CARD_DISC_ORDER`; this asserts, over every frame of the corpus, that every
+ * stand point lying on a flat card belongs to a pose flagged `onCard`, and that
+ * the second pass is ordered after every card it can lie on — its own, and any
+ * other flat card whose footprint the disc's centre is inside.
+ */
+test('figure-pose: every disc that lies on a card is drawn after it — the back row is visible', () => {
+  let onCardPoses = 0;
+  let sideboard1181 = 0;
+  const wrong: string[] = [];
+  for (const { file, index, state } of fixtureStatesIndexed()) {
+    const placed = layout(state);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    const flat = placed.placements.filter((p) => FLAT.has(p.kind));
+    for (const pose of poses.values()) {
+      if (pose.ghost) continue;
+      const own = placed.byKey.get(`c:${String(pose.cardId)}`)!;
+      const under = flat.filter((card) => onCard(card, pose.position[0], pose.position[2]));
+      if (under.length > 0 && !pose.onCard) {
+        wrong.push(`${file}@${String(index)}: card ${String(pose.cardId)} stands on a card and is not onCard`);
+      }
+      if (!pose.onCard) continue;
+      onCardPoses += 1;
+      if (file.endsWith('human-sideboard-7.jsonl') && (index === 1181 || index === 1195)) sideboard1181 += 1;
+      if (own.row === 0) wrong.push(`${file}@${String(index)}: a front-row figure flagged onCard`);
+      for (const card of under) {
+        if (card.renderOrder >= ON_CARD_DISC_ORDER) {
+          wrong.push(`${file}@${String(index)}: card ${String(card.cardId)} (order ${String(card.renderOrder)}) draws over its disc`);
+        }
+      }
+    }
+  }
+  console.log(
+    `figure-pose: ${String(onCardPoses)} stand discs lie on a card, all in the pass at renderOrder ` +
+      `${String(ON_CARD_DISC_ORDER)} · human-sideboard-7 @1181 and @1195: ${String(sideboard1181)} of them`,
+  );
+  assert.deepEqual(wrong.slice(0, 10), [], `${String(wrong.length)} discs would be painted over`);
+  assert.ok(onCardPoses >= 200, `only ${String(onCardPoses)} on-card discs — the back row is test data`);
+  assert.equal(sideboard1181, 20, 'the verifier’s two frames: five back-row discs a seat, both seats, both frames');
+  // The pass is between the table's ranks and the hand fan (renderOrder 100 + i).
+  assert.ok(ON_CARD_DISC_ORDER < 100);
 });

@@ -19,7 +19,9 @@
  */
 
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' };
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
@@ -35,12 +37,35 @@ import {
   clipForCue,
   clipRank,
   clipsRequestedByCues,
+  DEPARTURE_FADE_IN,
+  DEPARTURE_FADE_OUT_FROM,
+  departureDrain,
+  departureOpacity,
+  departureWeight,
+  isDeathCue,
+  keepDeparture,
+  stepDeparture,
   type ClipRequest,
+  type DepartureLane,
 } from '../src/arena/figures/clips.ts';
+import {
+  departedFigures,
+  departureStand,
+  figurePose,
+  type FigureLayout,
+  type FigurePose,
+} from '../src/arena/figures/pose.ts';
+import { DEPARTURE_STEP, seatSign } from '../src/arena/layout.ts';
+import { BASE_FRAME_INTERVAL_MS } from '../src/transport/replay.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { CLIP_NAMES, STANCES, isClipName, type ClipName } from '../src/arena/figures/types.ts';
+import { CueQueue } from '../src/arena/cues/queue.ts';
 import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { NullStage } from '../src/arena/cues/stage.ts';
+import { validateCues } from '../src/arena/cues/validate.ts';
+import { layout } from '../src/arena/layout.ts';
+import { initialState, reduce, type ClientState } from '../src/reduce.ts';
+import { parseFrameLog } from '../src/transport/replay.ts';
 
 const MODELS = validateModels(modelsJson).data;
 const FIGURES = validateFigures(figuresJson, {
@@ -340,8 +365,10 @@ test('clips: every alias figures.json names exists in that model, or is a known 
   for (const [id, model] of Object.entries(MODELS.models)) {
     const have = wanted.filter((clip) => Object.hasOwn(model.clips, clip));
     const missing = wanted.filter((clip) => !Object.hasOwn(model.clips, clip));
+    const retargeted = Object.keys(model.retargeted);
     console.log(
-      `  ${id.padEnd(9)} has ${have.join(', ')}${missing.length > 0 ? `  · MISSING ${missing.join(', ')}` : ''}`,
+      `  ${id.padEnd(10)} has ${have.join(', ')}${missing.length > 0 ? `  · MISSING ${missing.join(', ')}` : ''}` +
+        `${retargeted.length > 0 ? `  · retargeted: ${retargeted.join(', ')}` : ''}`,
     );
   }
   // Every model must carry the four §3.6 calls required, or say which it lacks —
@@ -383,4 +410,423 @@ test('clips: only a resting stance breathes — user decision 7', () => {
   assert.ok(!BREATHING_STANCES.has('attacking'));
   assert.ok(!BREATHING_STANCES.has('blocking'));
   assert.ok(!BREATHING_STANCES.has('crouch'));
+});
+
+// ---------------------------------------------------------------------------
+// T8 — one clip set for every humanoid, and no borrowed hit or death
+// ---------------------------------------------------------------------------
+
+test('clips: every humanoid shares ONE rig and ONE clip set (T8)', () => {
+  const humanoids = Object.entries(MODELS.models).filter(([, m]) => m.rig === 'kenney-mini');
+  const ids = humanoids.map(([id]) => id).sort();
+  assert.deepEqual(ids, ['agent', 'hero', 'scientist'], 'the three humanoid archetypes are three models');
+  // One clip set: the same keys, each one the same source clip renamed per model.
+  const strip = (id: string, name: string): string => name.slice(id.length + 1);
+  const [firstId, first] = humanoids[0]!;
+  for (const [id, model] of humanoids) {
+    assert.deepEqual(Object.keys(model.clips).sort(), Object.keys(first.clips).sort(), `${id}'s clip keys`);
+    for (const [key, name] of Object.entries(model.clips)) {
+      assert.equal(strip(id, name), strip(firstId, first.clips[key]!), `${id}.${key} is not ${firstId}.${key}`);
+    }
+    assert.deepEqual(model.retargeted, first.retargeted, `${id} retargets a different set`);
+    assert.equal(model.bones, 7, `${id} is not on the 7-joint Kenney rig`);
+  }
+});
+
+test('clips: hit and die are real clips, not borrowings (T8)', () => {
+  /**
+   * Slice 1's humanoid borrowed `fall` for `hit` and `crouch` for `shrink`
+   * (`tools/assets-manifest.json`'s old `_clips_note`, "provisional"). T8 takes
+   * `hit` and `die` from the Universal Animation Library, retargeted; the borrowings
+   * that REMAIN are printed and pinned, so a new one shows up here on the day it is
+   * added — `shrink` and `block` still borrow `crouch`, because the library has no
+   * shrink either and its crouch face-plants on a chibi (the evidence says how).
+   */
+  for (const [id, model] of Object.entries(MODELS.models)) {
+    const byFile = new Map<string, string[]>();
+    for (const [key, name] of Object.entries(model.clips)) {
+      const list = byFile.get(name) ?? [];
+      list.push(key);
+      byFile.set(name, list);
+    }
+    const shared = [...byFile.values()].filter((keys) => keys.length > 1).map((keys) => keys.sort().join('='));
+    console.log(`  ${id.padEnd(10)} borrowings: ${shared.length === 0 ? '(none)' : shared.join(' · ')}`);
+    for (const key of ['hit', 'die'] as const) {
+      const name = model.clips[key];
+      if (name === undefined) continue; // the drone's missing hit: rung 3, deliberate
+      assert.equal(byFile.get(name)?.length, 1, `${id}.${key} shares its clip with ${String(byFile.get(name))}`);
+    }
+    if (model.rig === 'kenney-mini') {
+      assert.equal(model.retargeted['hit'], 'ual:Hit_Chest', `${id}'s hit is not the library's`);
+      assert.equal(model.retargeted['die'], 'ual:Death01', `${id}'s die is not the library's`);
+      assert.deepEqual(shared, ['block=crouch=shrink'], `${id}'s borrowings changed`);
+    }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// T8 — the departing figure (Tier 2 follow-up 2)
+// ---------------------------------------------------------------------------
+
+test('clips: a departing body takes the die clip, never hands it back, and is gone by t = 1', () => {
+  assert.equal(departureWeight(0), 0, 'it starts in its last stance');
+  assert.equal(departureWeight(DEPARTURE_FADE_IN), 1);
+  // Monotone, and still 1 at the end — unlike clipEnvelope, which falls back to 0.
+  let last = -1;
+  for (let i = 0; i <= 100; i++) {
+    const w = departureWeight(i / 100);
+    assert.ok(w >= last - 1e-12, `the die weight fell at t = ${String(i / 100)}`);
+    last = w;
+  }
+  assert.equal(departureWeight(1), 1, 'a death does not stand back up');
+  assert.equal(clipEnvelope(1), 0, '…which is exactly what the living envelope does, and why this is not it');
+  assert.equal(departureOpacity(0), 1);
+  assert.equal(departureOpacity(DEPARTURE_FADE_OUT_FROM), 1);
+  assert.equal(departureOpacity(1), 0, 'the body is gone when the request is');
+  assert.ok(departureOpacity(0.8) > 0 && departureOpacity(0.8) < 1);
+  assert.equal(departureDrain(0), 0);
+  assert.ok(departureDrain(1) > departureDrain(0.5));
+});
+
+const FIXTURES = fileURLToPath(new URL('../../fixtures/', import.meta.url));
+const CUES = (() => {
+  const raw = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/cues/cues.json', import.meta.url)), 'utf8'),
+  ) as unknown;
+  return validateCues(raw, { cueIds: new Set(REGISTRY.keys()) }).data;
+})();
+
+/** Where a card is in this frame: a zone name, or `gone` (a token that ceased to exist). */
+function whereIs(state: ClientState, cardId: number): string {
+  for (const player of state.board?.players ?? []) {
+    for (const [zone, cards] of Object.entries(player.zones)) {
+      if ((cards as { cards: Array<{ id: number }> }).cards.some((c) => c.id === cardId)) return zone;
+    }
+  }
+  if ((state.board?.stackCards ?? []).some((c) => c.id === cardId)) return 'stack';
+  return 'gone';
+}
+
+test('clips: every figure that dies over the corpus is carried by its own die request', () => {
+  /**
+   * **The sweep that says the death is now SEEN**, run exactly the way
+   * `replay-cues.test.ts` runs the corpus: the real reducer, the real queue, a
+   * `NullStage`, a 25 ms virtual frame. For every figure with a model that is on the
+   * table in one frame and not the next, it records whether its own card received a
+   * `die` request mid-cue (0 < t < 1) while that frame's batch drained — which is
+   * the condition `DepartureField` draws the body under, and the only one.
+   */
+  const FRAME_MS = 25;
+  let departed = 0;
+  let died = 0;
+  let snapped = 0;
+  const elsewhere = new Map<string, number>();
+  const unseen: string[] = [];
+  for (const dir of ['games/', 'synthetic/']) {
+    for (const name of readdirSync(FIXTURES + dir).sort()) {
+      if (!name.endsWith('.jsonl')) continue;
+      const log = parseFrameLog(readFileSync(FIXTURES + dir + name, 'utf8'));
+      const stage = new NullStage();
+      const queue = new CueQueue({ stage, registry: REGISTRY, data: CUES, mode: 'replay' });
+      let state = initialState(log.header);
+      let previous: ClientState['board'] = null;
+      let before: FigureLayout | null = null;
+      let now = 0;
+      for (const frame of log.frames) {
+        state = reduce(state, frame);
+        if (frame.type !== 'state') continue;
+        const after = figurePose(layout(state), state.board?.combat ?? null, FIGURES, { models: MODELS });
+        const leaving = before === null ? [] : departedFigures(before, after);
+        before = after;
+        const from = stage.ops.length;
+        queue.enqueueBatch(state.events, state, undefined, previous);
+        previous = state.board;
+        for (let elapsed = 0; !queue.idle && elapsed < 8000; elapsed += FRAME_MS) {
+          now += FRAME_MS;
+          queue.tick(now);
+        }
+        const ops = stage.ops.slice(from);
+        for (const pose of leaving) {
+          departed += 1;
+          const zone = whereIs(state, pose.cardId);
+          const requests: ClipRequest[] = [];
+          for (const op of ops) {
+            const clip = (op as { clip?: ClipRequest }).clip;
+            if (op.op === 'setClip' && op.cardId === pose.cardId && clip?.clip === 'die') requests.push(clip);
+          }
+          const mid = requests.some((request) => request.t > 0 && request.t < 1);
+          if (mid) died += 1;
+          else if (requests.length > 0) snapped += 1;
+          else {
+            elsewhere.set(zone, (elsewhere.get(zone) ?? 0) + 1);
+            if (zone === 'graveyard' || zone === 'exile' || zone === 'gone') {
+              unseen.push(`${dir}${name}: card ${String(pose.cardId)} (${pose.modelId}) → ${zone}, no die request`);
+            }
+          }
+        }
+      }
+    }
+  }
+  console.log(
+    `clips: ${String(departed)} modelled figures left the table over the corpus · ` +
+      `${String(died)} died on their own die request, played mid-cue — the death is drawn · ` +
+      `${String(snapped)} got one only snapped (a flushed batch: nothing to draw) · ` +
+      `the rest left without one: ${[...elsewhere].map(([z, n]) => `${z}=${String(n)}`).join(' ') || '(none)'}`,
+  );
+  if (unseen.length > 0) console.log(`  deaths with no die request:\n    ${unseen.slice(0, 12).join('\n    ')}`);
+  // Measured when this was written: 17 departures, all 17 deaths, all 17 carried
+  // mid-cue — every one of them a body the renderer now draws dying.
+  assert.ok(died >= 10, `only ${String(died)} deaths played — the departing figure has nothing to draw`);
+  assert.deepEqual(unseen, [], 'a figure went to a graveyard or exile and its card got no die request');
+});
+
+// ---------------------------------------------------------------------------
+// T8 fix — the blink (slice-2 verification pass): the body is drawn from the
+// snapshot it dies in until its death cue ends
+// ---------------------------------------------------------------------------
+
+test('clips: the death cues are exactly the cues CLIP_FOR sends to die', () => {
+  const deaths = Object.keys(CLIP_FOR).filter(isDeathCue).sort();
+  assert.deepEqual(deaths, ['sacrifice.crush', 'zone.dissolve', 'zone.exile']);
+  assert.equal(isDeathCue('damage.lethal'), false, 'lethal damage is a hit on a body that is still standing');
+  assert.equal(isDeathCue('no.such.cue'), false);
+});
+
+test('clips: a departure lane — decided once, drawn while the death is queued, done when it is not', () => {
+  const die = (t: number): ClipRequest => ({ clip: 'die', t, weight: 1, alias: null, key: 'q1' });
+  const hit: ClipRequest = { clip: 'hit', t: 0.5, weight: 1, alias: null, key: 'q0' };
+
+  // A death: queued behind the damage, the hit plays on the body, then the fall.
+  const dying: DepartureLane = { dying: null, done: false };
+  assert.equal(stepDeparture(dying, true, null), true, 'drawn from the first frame — the blow has not landed yet');
+  assert.equal(stepDeparture(dying, true, hit), true, 'drawn while its own hit plays');
+  assert.equal(stepDeparture(dying, true, die(0.4)), true);
+  assert.equal(stepDeparture(dying, false, die(0.99)), true, 'the last frame of the fall (the cue ends this tick)');
+  assert.equal(stepDeparture(dying, false, null), false, 'the cue has ended: absence');
+  assert.equal(dying.done, true);
+  assert.equal(stepDeparture(dying, true, die(0.2)), false, 'a done body never comes back');
+  assert.equal(keepDeparture(dying, false, 0), false, 'and is disposed at the next snapshot');
+
+  // A bounce: no death queued on its first frame, so it is never drawn — even if
+  // the same card is discarded (and dissolves) later.
+  const bounced: DepartureLane = { dying: null, done: false };
+  assert.equal(stepDeparture(bounced, false, null), false);
+  assert.equal(bounced.dying, false);
+  assert.equal(stepDeparture(bounced, true, die(0.5)), false, 'the fate was decided on the first frame');
+  assert.equal(keepDeparture(bounced, false, 0), false);
+
+  // Undecided: held for DEPARTURE_PATIENCE snapshots, and never once its card is back.
+  const undecided: DepartureLane = { dying: null, done: false };
+  assert.equal(keepDeparture(undecided, false, 1), true);
+  assert.equal(keepDeparture(undecided, false, 3), false);
+  assert.equal(keepDeparture({ dying: true, done: false }, true, 0), false, 'back on the table: the living figure has it');
+  assert.equal(keepDeparture({ dying: true, done: false }, false, 99), true, 'a dying body waits for its cue, however long the queue');
+});
+
+test('clips: a dying body steps out of the rank that closed up behind it', () => {
+  const pose = (cardId: number, x: number, seat: 'you' | 'opp' = 'you', width = 0.72): FigurePose =>
+    ({ cardId, seat, position: [x, 0.02, seat === 'you' ? 1.78 : -1.78], width }) as FigurePose;
+  const body = pose(1, 0);
+  // Alone: it dies where it stood.
+  assert.deepEqual(departureStand(body, new Map()), [0, 0.02, 1.78]);
+  // Its two neighbours closed up half a slot each: one step toward the centre.
+  const closed = new Map([
+    [2, pose(2, -0.398)],
+    [3, pose(3, 0.398)],
+  ]);
+  assert.deepEqual(departureStand(body, closed), [0, 0.02, 1.78 - DEPARTURE_STEP]);
+  // The opponent's body steps toward the centre from the other side.
+  const theirs = pose(4, 0, 'opp');
+  const stepped = departureStand(theirs, new Map([[5, pose(5, 0.398, 'opp')]]));
+  assert.equal(stepped[2], -1.78 + DEPARTURE_STEP);
+  assert.equal(Math.sign(stepped[2] - theirs.position[2]), -seatSign('opp'));
+  // The other seat's figures are a lane and more away: they never crowd it.
+  assert.deepEqual(departureStand(body, new Map([[6, pose(6, 0, 'opp')]])), [0, 0.02, 1.78]);
+});
+
+/**
+ * **The verification pass's finding, as a corpus test.** Every death of a figure
+ * with a model, walked through the queue's own timeline exactly as the arena runs
+ * it — the real reducer, the real planner and queue, a `NullStage`, a 25 ms frame,
+ * the batch enqueued before the body's first frame (Arena.tsx's layout-effect
+ * intake) — with `stepDeparture` deciding on every tick whether the body is drawn.
+ *
+ * Asserted for every death: the body is drawn on the FIRST tick after the snapshot
+ * that removed the living figure, on every tick after that while its death cue is
+ * queued or running — including all of the batch's earlier cues, its own `hit`
+ * among them — and on no tick after the death cue has ended. Run three times: once
+ * with each batch drained before the next frame arrives, once at the replay's own
+ * 1× pace (a frame every 400 ms), where a death's batch can wait seconds behind
+ * the one before it and the body must be there for all of it — and once with
+ * **an idle gap**: each batch drained, then {@link IDLE_GAP_MS} of wall clock with
+ * no tick at all, which is what `frameloop="demand"` does to a table with nothing
+ * hovering on it (stepping a replay and pausing to read; live play after any
+ * pause). That third run is the slice-2 verification pass's major finding: the
+ * queue added the whole gap to the cue clock on the next batch's first frame, so
+ * the hit, the death cue and the body were consumed before a frame was drawn —
+ * and a continuous 25 ms clock could never see it.
+ */
+const IDLE_GAP_MS = 3000;
+
+test('clips: every dying body is drawn from the snapshot it dies in to the end of its death cue — no blink', () => {
+  const FRAME_MS = 25;
+  const summary: string[] = [];
+  for (const pace of ['drained', 'paced', 'idle'] as const) {
+    let deaths = 0;
+    let snappedDeaths = 0;
+    let fell = 0;
+    let waited = 0;
+    let longestWait = 0;
+    let withHit = 0;
+    const failures: string[] = [];
+    for (const dir of ['games/', 'synthetic/']) {
+      for (const name of readdirSync(FIXTURES + dir).sort()) {
+        if (!name.endsWith('.jsonl')) continue;
+        const log = parseFrameLog(readFileSync(FIXTURES + dir + name, 'utf8'));
+        const stage = new NullStage();
+        const queue = new CueQueue({ stage, registry: REGISTRY, data: CUES, mode: 'replay' });
+        let state = initialState(log.header);
+        let previous: ClientState['board'] = null;
+        let before: FigureLayout | null = null;
+        let now = 0;
+        interface Body {
+          lane: DepartureLane;
+          age: number;
+          label: string;
+          ticks: number;
+          drawnTicks: number;
+          firstMissing: number;
+          stopped: boolean;
+          redrawn: boolean;
+          fellMid: boolean;
+          hitDrawn: boolean;
+          firstDieAt: number;
+          /** Its death cue was applied at t = 1 and ended before its first frame: a snap. */
+          snapped: boolean;
+        }
+        const bodies = new Map<number, Body>();
+        const settle = (body: Body): void => {
+          if (body.lane.dying === false && body.snapped) snappedDeaths += 1;
+          if (body.lane.dying !== true) return;
+          deaths += 1;
+          if (body.fellMid) fell += 1;
+          if (body.hitDrawn) withHit += 1;
+          if (body.firstDieAt > 0) {
+            waited += 1;
+            longestWait = Math.max(longestWait, body.firstDieAt);
+          }
+          if (body.firstMissing >= 0) failures.push(`${body.label}: not drawn on tick ${String(body.firstMissing)} while its death was still queued`);
+          if (body.redrawn) failures.push(`${body.label}: drawn again after its death cue ended`);
+          if (!body.stopped) failures.push(`${body.label}: still drawn when the fixture ended`);
+        };
+        const tick = (): void => {
+          now += FRAME_MS;
+          const from = stage.ops.length;
+          queue.tick(now);
+          for (const [cardId, body] of bodies) {
+            if (body.lane.dying === null) {
+              for (let i = from; i < stage.ops.length; i++) {
+                const op = stage.ops[i]!;
+                if (op.op === 'setClip' && op.cardId === cardId && op.clip?.clip === 'die' && op.clip.t >= 1) body.snapped = true;
+              }
+            }
+            const pending = queue.deathPending(cardId);
+            const request = stage.clips.get(cardId) ?? null;
+            const wasDecided = body.lane.dying !== null;
+            const drawn = stepDeparture(body.lane, pending, request);
+            if (!wasDecided && body.lane.dying === true && !drawn) body.firstMissing = body.ticks;
+            if (body.lane.dying !== true) continue;
+            if (drawn) {
+              if (body.stopped) body.redrawn = true;
+              body.drawnTicks += 1;
+              if (request?.clip === 'hit') body.hitDrawn = true;
+              if (request?.clip === 'die' && request.t > 0 && request.t < 1) body.fellMid = true;
+              if (request?.clip === 'die' && body.firstDieAt === 0) body.firstDieAt = body.ticks * FRAME_MS;
+            } else {
+              if (pending && body.firstMissing < 0) body.firstMissing = body.ticks;
+              body.stopped = true;
+            }
+            body.ticks += 1;
+          }
+        };
+        for (const frame of log.frames) {
+          state = reduce(state, frame);
+          if (frame.type !== 'state') continue;
+          const after = figurePose(layout(state), state.board?.combat ?? null, FIGURES, { models: MODELS });
+          // Commit, exactly as DepartureField.commit: age the undecided, drop what is done.
+          for (const [cardId, body] of bodies) {
+            if (body.lane.dying === null) body.age += 1;
+            if (!keepDeparture(body.lane, after.has(cardId), body.age)) {
+              settle(body);
+              bodies.delete(cardId);
+            }
+          }
+          if (before !== null) {
+            for (const pose of departedFigures(before, after)) {
+              const old = bodies.get(pose.cardId);
+              if (old !== undefined) settle(old);
+              bodies.set(pose.cardId, {
+                lane: { dying: null, done: false },
+                age: 0,
+                label: `${dir}${name} card ${String(pose.cardId)} (${String(pose.modelId)})`,
+                ticks: 0,
+                drawnTicks: 0,
+                firstMissing: -1,
+                stopped: false,
+                redrawn: false,
+                fellMid: false,
+                hitDrawn: false,
+                firstDieAt: 0,
+                snapped: false,
+              });
+            }
+          }
+          before = after;
+          // The intake runs BEFORE the body's first frame (Arena.tsx, a layout effect).
+          // A batch the queue cannot hold is flushed and snapped on arrival (§5.2):
+          // its deaths are applied at t = 1 there and then, with nothing to draw.
+          const opsBefore = stage.ops.length;
+          queue.enqueueBatch(state.events, state, undefined, previous);
+          for (let i = opsBefore; i < stage.ops.length; i++) {
+            const op = stage.ops[i]!;
+            const body = op.cardId === undefined ? undefined : bodies.get(op.cardId);
+            if (body !== undefined && op.op === 'setClip' && op.clip?.clip === 'die' && op.clip.t >= 1) body.snapped = true;
+          }
+          previous = state.board;
+          if (pace === 'drained' || pace === 'idle') {
+            for (let elapsed = 0; !queue.idle && elapsed < 8000; elapsed += FRAME_MS) tick();
+            tick();
+            // The loop is parked while the queue is idle: wall clock passes and
+            // no frame is drawn, so nothing ticks until the next batch arrives.
+            if (pace === 'idle') now += IDLE_GAP_MS;
+          } else {
+            for (let elapsed = 0; elapsed < BASE_FRAME_INTERVAL_MS; elapsed += FRAME_MS) tick();
+          }
+        }
+        for (let elapsed = 0; !queue.idle && elapsed < 20000; elapsed += FRAME_MS) tick();
+        tick();
+        for (const body of bodies.values()) settle(body);
+      }
+    }
+    summary.push(
+      `clips (${pace}): ${String(deaths)} dying bodies (+ ${String(snappedDeaths)} deaths snapped by a flush, ` +
+        `nothing to draw) · drawn without a gap from the snapshot to the end of the ` +
+        `death cue: ${String(deaths - failures.length)} · fell mid-cue ${String(fell)} · took their own hit ` +
+        `${String(withHit)} · drawn before the fall began ${String(waited)} (longest ${String(longestWait)} ms ` +
+        '— the gap slice 2 left empty)',
+    );
+    assert.deepEqual(failures, [], `${pace}: a dying body blinked`);
+    // Measured when this was written: 17 deaths in the corpus, every one of them
+    // a body the renderer draws from the moment the living figure leaves.
+    assert.ok(
+      deaths + snappedDeaths >= 17,
+      `${pace}: ${String(deaths)} dying bodies and ${String(snappedDeaths)} snapped — the corpus has 17 deaths of a modelled figure`,
+    );
+    if (pace !== 'paced') assert.equal(snappedDeaths, 0, `${pace}: a drained queue never flushes a death`);
+    // The idle run's whole point: after a 3 s parked loop every death still plays
+    // its fall on a drawn body, exactly as it does with no gap at all.
+    if (pace !== 'paced') assert.ok(fell >= 17, `${pace}: only ${String(fell)} deaths played their fall mid-cue`);
+    if (pace === 'idle') assert.ok(withHit >= 1, `idle: no dying body took its own hit on screen (${String(withHit)})`);
+  }
+  for (const line of summary) console.log(line);
 });

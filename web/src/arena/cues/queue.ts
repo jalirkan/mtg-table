@@ -26,6 +26,7 @@
 
 import type { GameEvent, GameStateBody } from '../../protocol.ts';
 import type { ClientState } from '../../reduce.ts';
+import { isDeathCue } from '../figures/clips.ts';
 import { cuesFor } from './resolve.ts';
 import type { CueContext, CueImpl, CueRegistry, Stage } from './stage.ts';
 import { EMPTY_CUE_DATA, type Cue, type CueData, type Step } from './types.ts';
@@ -50,6 +51,18 @@ export const BUDGET_MS = { replay: 2500, live: 1200, awaitingHuman: 250 } as con
 
 /** §5.2 — below this compression factor, cues snap instead of being squeezed flat. */
 export const MIN_COMPRESSION = 0.25;
+
+/**
+ * **The most real time one tick may add to the cue clock** (slice-2 verification
+ * fix). A defence, not the mechanism: the mechanism is that a batch arriving on
+ * an IDLE queue starts its own clock (`enqueueBatch`), because the frame loop is
+ * parked while the queue is idle and the first frame after it is a gap, not
+ * elapsed film. This clamp is for the frames that are late while the queue is
+ * NOT idle — a hidden tab coming back, a loop that some future defect parks
+ * mid-cue — so a late frame resumes the film instead of swallowing it. 100 ms is
+ * six frames at 60 Hz: below 10 fps the film slows down rather than skipping.
+ */
+export const MAX_TICK_MS = 100;
 
 /**
  * §8 rule 7, **as written**: `prefers-reduced-motion: reduce` *"disables shake
@@ -302,6 +315,13 @@ interface Scheduled {
   step: number;
   started: boolean;
   done: boolean;
+  /**
+   * **T8 fix — a death cue that will write a `die` clip** (`figures/clips.ts`'s
+   * `isDeathCue`), stamped at enqueue. Under reduced motion no clip is ever
+   * written, so no body is ever drawn dying either — the figure snaps, exactly
+   * as its stance does.
+   */
+  dies: boolean;
 }
 
 export interface CueQueueOptions {
@@ -391,6 +411,31 @@ export class CueQueue {
   /** §10.3's budget assertion reads this. */
   totalRemainingMs(): number {
     return Math.max(0, this.#endOfQueue - this.#virtualNow);
+  }
+
+  /**
+   * **T8 fix — is this card's death still to come, or playing?** True while a
+   * death cue (`zone.dissolve`, `sacrifice.crush`, `zone.exile` — every cue
+   * `CLIP_FOR` maps to `die`) that targets it is scheduled and not finished,
+   * whether it has started or is still waiting behind the rest of its batch.
+   *
+   * It is what `DepartureField` decides a departing figure's fate by
+   * (`figures/clips.ts`'s `stepDeparture`): the snapshot that carries a death has
+   * already removed the living figure, and the death cue plays after the batch's
+   * damage cues — so a body drawn only once its `die` REQUEST appeared vanished
+   * when the blow landed and popped back to fall. Called once per departing body
+   * per frame from the one `useFrame`, so it is an indexed loop over the schedule
+   * and allocates nothing.
+   */
+  deathPending(cardId: number): boolean {
+    const items = this.#scheduled;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]!;
+      if (!item.dies || item.done) continue;
+      const targets = item.cue.targets;
+      for (let j = 0; j < targets.length; j++) if (targets[j] === cardId) return true;
+    }
+    return false;
   }
 
   // -- controls (E4's replay strip) ----------------------------------------
@@ -494,6 +539,9 @@ export class CueQueue {
     const scale = compressionFor(steps, budget, this.reducedMotion);
     const batch = this.#batchSeq++;
     let cursor = Math.max(this.#virtualNow, this.#endOfQueue);
+    // **A batch that lands on an idle queue starts its own clock** (see `tick`):
+    // the real time since the last drain is the loop being parked, not film.
+    if (this.#scheduled.length === 0) this.#lastReal = null;
 
     for (let s = 0; s < steps.length; s++) {
       const step = steps[s]!;
@@ -527,6 +575,7 @@ export class CueQueue {
           step: s,
           started: false,
           done: false,
+          dies: !this.reducedMotion && isDeathCue(cue.id),
         });
       }
       cursor += (1 - OVERLAP) * step.ms * scale;
@@ -593,12 +642,28 @@ export class CueQueue {
    * Advance to real time `now` and drive every live cue. Called from the
    * arena's **one** `useFrame` and from tests; it allocates nothing per cue and
    * touches React not at all (§9.2 rules 6 and 7).
+   *
+   * **The clock only runs while there is film to play** (slice-2 verification
+   * fix). An idle queue lets `frameloop="demand"` park the loop, so the next
+   * tick can arrive seconds after the last one; that gap used to be added to the
+   * cue clock whole, and the first frame of the next batch jumped past its own
+   * start — the damage `hit`, the death cue and with it the departing body, all
+   * consumed before they were drawn (measured: `human-auto-7` 794→795 stepped
+   * after a 3 s pause drew its two dying bodies on 0 frames, against 84 of 87
+   * after a 30 ms one). So an idle tick forgets the real time it saw, and
+   * `enqueueBatch` does the same when a batch lands on an idle queue: the first
+   * tick after it is that batch's `t = 0`. A late frame while cues ARE running
+   * adds at most {@link MAX_TICK_MS}.
    */
   tick(now: number): void {
+    if (this.#scheduled.length === 0) {
+      this.#lastReal = null;
+      return;
+    }
     const last = this.#lastReal;
     this.#lastReal = now;
     if (last !== null && !this.#paused) {
-      const dt = now - last;
+      const dt = Math.min(now - last, MAX_TICK_MS);
       if (dt > 0) this.#virtualNow += dt * this.#speed;
     }
     this.#drive();

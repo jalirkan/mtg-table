@@ -224,41 +224,60 @@ rather than scanned, because the printed Magic card back is trademarked artwork.
 ------------------------------------------------------------------
 
     File:     web/public/models/figures.glb — BUILT, not authored here, by
-              tools/build-figures.mjs from the three CC0 sources below.
-              126,404 bytes, sha256
-              c870a53330cf20f0d1edb536e6bab67ffcbe213fd54f081195a062365c5658fa
-              (the file in the tier2-slice1 worktree, built 2026-09-26; a
-              rebuild from the same sources should reproduce it, and nothing
-              yet asserts that it does). tools/assets-manifest.json is the
-              long-form record of the SOURCES (pack, version, download URL,
-              licence badge text, download date, sha256);
-              web/src/arena/figures/models.json is the measured manifest the
-              loader reads. Whether the built file is committed or regenerated
-              like web/public/art.json is the user's decision (PLAN.md, "Only
-              the user can decide"); it is CC0 either way.
+              tools/build-figures.mjs from the four CC0 sources below.
+              143,920 bytes, sha256
+              c09ac552f7daed93fabb6549b83211beaeb3e895614134575f388d485da981a3
+              (T8, 2026-09-27: five models — agent, hero, scientist, drone,
+              insect). Since T8 the build VERIFIES every source archive's byte
+              count and sha256 against tools/assets-manifest.json before it
+              builds, reads the members it needs out of the verified archives
+              itself, and writes the built file's byte count and sha256 into
+              web/src/arena/figures/models.json ("library"), which
+              web/test/figures.test.ts checks against the file on disk. Two
+              builds from the same sources are byte-identical. (Slice 1's file
+              was 126,404 bytes, sha256 c870a53330cf…5c5658fa.)
+              tools/assets-manifest.json is the long-form record of the SOURCES
+              (pack, version, download URL, licence badge text, download date,
+              sha256); models.json is the measured manifest the loader reads.
 
-    Source:   Kenney — "Mini Characters" 1.0 (character-male-a)
+    Source:   Kenney — "Mini Characters" 1.0 (character-male-a, the agent;
+              character-female-b, the hero; character-male-e, the scientist)
               https://kenney.nl/assets/mini-characters
     Licence:  CC0 1.0 Universal (public domain dedication)
               https://creativecommons.org/publicdomain/zero/1.0/
     Badge:    "License · Creative Commons CC0", read on the pack page on
-              2026-09-13; the License.txt inside the zip says the same:
-              "License: (Creative Commons Zero, CC0) … You can use this
-              content for personal, educational, and commercial purposes.
-              Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a
-              requirement)". We credit Kenney here anyway.
+              2026-09-13 and again on 2026-09-27; the License.txt inside the zip
+              says the same: "License: (Creative Commons Zero, CC0) … You can
+              use this content for personal, educational, and commercial
+              purposes. Support by crediting 'Kenney' or 'www.kenney.nl' (this
+              is not a requirement)". We credit Kenney here anyway.
 
     Source:   Quaternius — "Robot Enemy Flying", via Poly Pizza
               https://poly.pizza/m/lF3jeRJwiH
     Licence:  CC0 1.0 Universal
     Badge:    "Aug 28, 2022 • FBX /GLTF format • Public Domain (CC0)", read on
-              2026-09-13.
+              2026-09-13 and again on 2026-09-27.
 
     Source:   Quaternius — "Bee Enemy", via Poly Pizza
               https://poly.pizza/m/6HsU6GQt3a
     Licence:  CC0 1.0 Universal
     Badge:    "Dec 21, 2021 • FBX /GLTF format • Public Domain (CC0)", read on
-              2026-09-13.
+              2026-09-13 and again on 2026-09-27.
+
+    Source:   Quaternius — "Universal Animation Library" [Standard] (T8)
+              https://quaternius.com/packs/universalanimationlibrary.html
+              (downloaded from https://quaternius.itch.io/universal-animation-library,
+              "Universal Animation Library[Standard].zip", 15,904,933 bytes,
+              sha256 cc73fc4e495b82958207316596317a3f40b9fa38065bde1027937452da537724)
+    Licence:  CC0 1.0 Universal
+    Badge:    "License CC0" on the quaternius.com pack page and "Asset license:
+              Creative Commons Zero v1.0 Universal" on the itch.io page, both
+              read on 2026-09-27; the License.txt inside the zip says "CC0 1.0
+              Universal (CC0 1.0) Public Domain Dedication". ANIMATION ONLY: two
+              of its clips (Hit_Chest, Death01) are retargeted offline by the
+              build onto the Kenney rig and baked into each humanoid as that
+              model's `hit` and `die`; the library's own mannequin mesh is never
+              built into anything.
 
 CC0 is a public-domain dedication: redistribution, modification and commercial
 use are all permitted with no attribution requirement. Crediting the authors
@@ -268,10 +287,12 @@ survives the page changing: Quaternius published a new, non-redistributable
 "Quaternius Asset License" on 2026-08-28 and has begun moving packs onto it
 (https://quaternius.com/license.html), and that licence's §7 says the version in
 force when you obtained the asset governs. Both Quaternius models above were
-obtained from Poly Pizza listings carrying an explicit CC0 badge on 2026-09-13.
+obtained from Poly Pizza listings carrying an explicit CC0 badge on 2026-09-13,
+and the Universal Animation Library from pages carrying a CC0 badge on
+2026-09-27.
 
 **Nothing in this library is derived from card art.** The figures are generic
-stylised meshes — a man, a flying robot, a bee — chosen by the creature's TYPE
+stylised meshes — three chibi people, a flying robot, a bee — chosen by the creature's TYPE
 LINE and tinted by its colour identity, which is what report 13 §1.4 and
 docs/ideas/arena-mode.md specify and why they specify it: a CC0 man in a suit
 standing where "Agent 13, Sharon Carter" is played is not a derivative of Sharon
@@ -302,6 +323,14 @@ binaries (@img/sharp-libvips-*, LGPL- 3.0-or-later), which gltf-transform uses
 for texture work. They are downloaded by npm on the developer's machine, never
 committed and never redistributed from this repository, and LGPL-3.0-or-later is
 GPL-3.0-compatible in any case.
+
+Since T8 the build also runs three.js — the same three@0.186.0 section 6 already
+lists, MIT — in Node, for two things: SkeletonUtils.retargetClip, which turns the
+two Universal Animation Library clips above into keyframes on the Kenney rig, and
+the width and height measurements written into models.json. No code from three
+is copied into figures.glb; what the build writes there is keyframe and vertex
+data derived from the CC0 sources. The build adds no npm dependency of its own:
+its zip reader is its own code over Node's built-in zlib.
 
 
 8. Code that is deliberately NOT used

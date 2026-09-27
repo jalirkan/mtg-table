@@ -69,7 +69,29 @@ export type KeyActionId =
   | 'alwaysYes'
   | 'alwaysNo'
   | 'toggleView'
-  | 'skipCues';
+  | 'skipCues'
+  | 'cameraView'
+  | 'cameraDirector'
+  | 'toggleSpectator';
+
+/**
+ * **M7 Tier 2 (T8) — the arena's camera, by key.** The ids are `camera.ts`'s
+ * `ViewId`s plus `director`. They are spelled out here rather than imported
+ * because this file is on the 2D path and **nothing under `arena/` may be
+ * imported statically from it** (D49 — the arena chunk stays lazy);
+ * `web/test/keys.test.ts` asserts the two lists agree, key for key.
+ */
+export type CameraKeyChoice = 'table' | 'shoulder' | 'oppShoulder' | 'side' | 'low' | 'director';
+
+export const CAMERA_KEYS: Readonly<Record<string, CameraKeyChoice>> = {
+  '1': 'table',
+  '2': 'shoulder',
+  '3': 'oppShoulder',
+  '4': 'side',
+  '5': 'low',
+  '6': 'director',
+  '0': 'director',
+};
 
 export interface KeyBinding {
   id: KeyActionId;
@@ -276,6 +298,38 @@ export const KEYMAP: readonly KeyBinding[] = [
     milestone: 'M7',
   },
   {
+    // **M7 Tier 2 (T8) — the arena's five named camera views.** Digits because
+    // Forge binds none of them (its SHORTCUT_MACRO_* use Shift+2 / Shift+3,
+    // which arrive as `@` / `#` and never reach this row), and one row for all
+    // five because the overlay is a list of keys, not of views. On the 2D board
+    // the row is bound and says why it does nothing (`KeyContext.arena`).
+    id: 'cameraView',
+    chord: '1 2 3 4 5',
+    keys: ['1', '2', '3', '4', '5'],
+    ctrl: false,
+    what: "arena camera: 1 table · 2 your shoulder · 3 opponent's shoulder · 4 side-on · 5 low angle — press the one you are on to drop your own orbit of it; 3 and 4 are for spectating (they cannot keep your hand on screen)",
+    forge: 'divergence: Forge has one fixed 2D view and no camera (report 09 §8)',
+    milestone: 'M7',
+  },
+  {
+    id: 'cameraDirector',
+    chord: '6  or  0',
+    keys: ['6', '0'],
+    ctrl: false,
+    what: 'arena camera: the director — cuts between the five views on the game’s own events (combat side-on, a spell from its caster’s shoulder); replays and spectating only',
+    forge: 'divergence: Forge has no camera (report 09 §8)',
+    milestone: 'M7',
+  },
+  {
+    id: 'toggleSpectator',
+    chord: 'O',
+    keys: ['o'],
+    ctrl: false,
+    what: 'arena camera: spectator mode on / off — a wider orbit, slower camera moves, every view; on by itself in a replay and when your game ends, never while your seat is live',
+    forge: 'divergence: unbound in Forge (its CTRL+O is card overlays)',
+    milestone: 'M7',
+  },
+  {
     // **M5 — the one real dead end M4 handed over.** LAST on purpose:
     // `bindingFor` is a first-match lookup, so with an empty pool `C` is still
     // Forge's SHORTCUT_SHOWCOMBAT and `B` is still pass-to-before-my-turn, and
@@ -404,6 +458,13 @@ export interface KeyContext {
   topYieldKey?: string | null;
   /** **M6** — whether that top item already carries a yield (for the flash text). */
   topYielded?: YieldMode | null;
+  /**
+   * **M7 Tier 2 (T8)** — the renderer on screen has a camera: the arena. The
+   * board leaves it unset, and the camera rows then plan an `inert` that says
+   * "press V" instead of being swallowed — the board's `view` dispatcher has
+   * no branch for them and must not grow one (CLAUDE.md M4 convention 4).
+   */
+  arena?: boolean;
 }
 
 export type KeyPlan =
@@ -427,6 +488,14 @@ export type KeyPlan =
   | { kind: 'yieldTo'; yield: YieldKind; phase?: string; turn?: 'own' | 'opp' }
   /** §2.2 (M6) — `act: setYield {yieldKey, mode}` on the top stack item. */
   | { kind: 'setYield'; yieldKey: string; mode: YieldMode }
+  /**
+   * **M7 Tier 2 (T8)** — point the arena's camera. Local and sends nothing, so
+   * it is legal on a replay and while an ask is open; whether the view may be
+   * used at a live seat is the arena's to say (`camera.ts`'s `seatSafe`).
+   */
+  | { kind: 'camera'; choice: CameraKeyChoice }
+  /** **M7 Tier 2 (T8)** — spectator mode on / off. Local, sends nothing. */
+  | { kind: 'spectator' }
   /** Bound, understood, and deliberately does nothing yet — with the reason. */
   | { kind: 'inert'; why: string };
 
@@ -571,6 +640,37 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
     case 'toggleView':
     case 'skipCues':
       return { binding, plan: { kind: 'view', id: binding.id } };
+
+    case 'cameraView':
+    case 'cameraDirector': {
+      // **T8.** A picture control: no act, no engine flag, legal on a replay
+      // and behind an open ask. The board has no camera, and says so.
+      const pressed = (event.key || '').toLowerCase();
+      if (ctx.arena !== true) {
+        return {
+          binding,
+          plan: {
+            kind: 'inert',
+            why: "picks the 3D arena's camera — the board has no camera; press V",
+          },
+        };
+      }
+      const choice = CAMERA_KEYS[pressed];
+      if (choice === undefined) return null;
+      return { binding, plan: { kind: 'camera', choice } };
+    }
+
+    case 'toggleSpectator':
+      if (ctx.arena !== true) {
+        return {
+          binding,
+          plan: {
+            kind: 'inert',
+            why: "switches the 3D arena's camera to spectating — the board has no camera; press V",
+          },
+        };
+      }
+      return { binding, plan: { kind: 'spectator' } };
 
     // ---- M6. Every one of these is an act the engine already answers; the
     // ---- only gates are the engine's own flags, read out of the context.

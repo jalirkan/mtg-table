@@ -278,6 +278,19 @@ export interface ModelEntry {
   triangles: number;
   /** `ClipName` → the clip's name in the file, already normalised of any `Armature|` prefix. */
   clips: Readonly<Record<string, string>>;
+  /**
+   * **T8 — the rig this model shares with others**, or `null` for a model with a
+   * skeleton of its own. Every humanoid (agent, hero, scientist) is on
+   * `kenney-mini`: one rig, one clip set, asserted by the build.
+   */
+  rig: string | null;
+  /**
+   * **T8 — which of `clips` were retargeted** from a clip library rather than
+   * shipped by the model's own pack: clip key → `"<library>:<clip>"` (e.g.
+   * `"hit": "ual:Hit_Chest"`). The library's provenance is
+   * {@link ModelData.clipLibraries}. Empty for a model whose every clip is its own.
+   */
+  retargeted: Readonly<Record<string, string>>;
   source: string;
   licence: string;
   licenceUrl: string;
@@ -288,15 +301,47 @@ export interface ModelEntry {
   committable: boolean;
 }
 
+/**
+ * **T8 — the built file, identified** (Tier 2 follow-up 9): its path, byte count
+ * and sha256 as `tools/build-figures.mjs` wrote them, so a rebuild — or a
+ * checkout's `web/public/models/figures.glb` — can be compared with `sha256sum`.
+ */
+export interface ModelLibraryRecord {
+  path: string;
+  bytes: number;
+  sha256: string;
+}
+
+/**
+ * **T8 — a clip library's provenance** — the same licence fields a model row
+ * carries, for a source that contributed animation and no mesh (Quaternius's
+ * Universal Animation Library, retargeted offline by the build).
+ */
+export interface ClipLibraryRecord {
+  title: string;
+  source: string;
+  licence: string;
+  licenceUrl: string;
+  licenceBadge: string;
+  retrieved: string;
+  committable: boolean;
+}
+
 /** `figures/models.json`, after validation. */
 export interface ModelData {
   version: number;
   models: Readonly<Record<string, ModelEntry>>;
+  /** `null` for a manifest written before T8. */
+  library: ModelLibraryRecord | null;
+  /** Keyed by the prefix a `retargeted` entry names (`ual`). */
+  clipLibraries: Readonly<Record<string, ClipLibraryRecord>>;
 }
 
 export const EMPTY_MODEL_DATA: ModelData = Object.freeze({
   version: 1,
   models: Object.freeze({}),
+  library: null,
+  clipLibraries: Object.freeze({}),
 });
 
 /** A validator complaint, in `cues/validate.ts`'s shape. */

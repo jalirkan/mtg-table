@@ -35,18 +35,36 @@
  */
 
 import { useThree } from '@react-three/fiber';
-import { memo, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import type * as THREE from 'three';
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import * as THREE from 'three';
 
-import type { FigureLayout, FigurePose } from '../figures/pose.ts';
-import type { ModelData } from '../figures/types.ts';
-import type { DiscField } from './discs.ts';
-import type { FigureRigMap } from './figureRigs.ts';
-import { makeHoloMaterial } from './holoMaterial.ts';
 import {
+  REST_CLIP_FOR,
+  REST_PHASE_FOR,
+  departureDrain,
+  departureOpacity,
+  departureWeight,
+  keepDeparture,
+  stepDeparture,
+  type ClipRequest,
+  type DepartureLane,
+} from '../figures/clips.ts';
+import {
+  departedFigures,
+  departureStand,
+  type FigureLayout,
+  type FigurePose,
+} from '../figures/pose.ts';
+import type { ModelData } from '../figures/types.ts';
+import type { DeathSource, DepartureBinder, DiscField, OffsetSource } from './discs.ts';
+import type { FigureRigMap } from './figureRigs.ts';
+import { makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
+import {
+  clipFor,
   instantiateFigure,
   loadFigureModels,
   peekFigureModels,
+  type FigureInstance,
   type LoadedModel,
   type ModelLibrary,
 } from './models.ts';
@@ -105,6 +123,34 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
 
+  /**
+   * **T8 — the departing figures** (Tier 2 follow-up 2; see {@link DepartureField}).
+   * Built once, installed into the disc field for the layer's lifetime so the one
+   * `useFrame` binds them, and fed at COMMIT time — never from the frame loop —
+   * with the figures that left between the previous frame and this one.
+   */
+  const departures = useMemo(() => new DepartureField(), []);
+  useEffect(() => {
+    discs.setDepartures(departures);
+    return () => {
+      discs.setDepartures(null);
+      departures.dispose();
+    };
+  }, [discs, departures]);
+  const previousPoses = useRef<FigureLayout | null>(null);
+  useLayoutEffect(() => {
+    const before = previousPoses.current;
+    previousPoses.current = poses;
+    departures.commit(poses);
+    if (library === null || before === null || before === poses) return;
+    for (const pose of departedFigures(before, poses)) {
+      const model = pose.modelId === null ? undefined : library.get(pose.modelId);
+      // Where it is drawn is decided here, at commit, from the frame it left and
+      // the frame it left for: out of the rank that has just closed up.
+      if (model !== undefined) departures.add(pose, model, departureStand(pose, poses));
+    }
+  }, [poses, library, departures]);
+
   const mounted = useMemo(() => {
     const out: Array<{ pose: FigurePose; model: LoadedModel }> = [];
     if (library === null) return out;
@@ -129,8 +175,13 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
 
   return (
     <>
-      {/* One draw call for every stand disc on the table (§9.4). */}
+      {/* One draw call for every stand disc on the table (§9.4) — and a second,
+          after the cards, for the discs of a wrapped rank's back row, which stand
+          ON their own card (T8 fix; empty on any frame that does not wrap). */}
       <primitive object={discs.mesh} />
+      <primitive object={discs.onCardMesh} />
+      {/* T8: the bodies of the creatures that just died, drawn until their deaths end. */}
+      <primitive object={departures.group} />
       {mounted.map(({ pose, model }) => (
         <Figure key={`${String(pose.cardId)}:${model.id}`} pose={pose} model={model} rigs={rigs} />
       ))}
@@ -252,3 +303,306 @@ const Figure = memo(function Figure({
 
   return <primitive object={built.instance.object} />;
 });
+
+// ---------------------------------------------------------------------------
+// T8 — the departing figures (Tier 2 follow-up 2; the blink fixed in D64)
+// ---------------------------------------------------------------------------
+
+/**
+ * At most this many departing bodies are held at once — the length of the fixed
+ * slot array the frame loop walks. A board wipe of more drops the oldest.
+ */
+export const MAX_DEPARTURES = 8;
+/** The dissolve cue's own grey (`cues/registry.ts`'s `GREY`): a dying hologram drains toward it. */
+const DYING_GREY = new THREE.Color('#8b939e');
+
+interface Departure {
+  cardId: number;
+  /** Commit order, for "drop the oldest" when every slot is full. */
+  seq: number;
+  instance: FigureInstance;
+  material: HoloMaterial;
+  /** Every clip of the model, as an action on this body — built at commit. */
+  actions: Map<string, THREE.AnimationAction>;
+  /** The model's `die` clip, or `null` (§3.6 rung 3: the body still fades). */
+  die: THREE.AnimationAction | null;
+  /** The stance it held on its last frame, which every clip plays over. */
+  rest: THREE.AnimationAction | null;
+  /**
+   * The transient playing on the body before its death cue starts — the `hit`
+   * of the blow that killed it, usually — or `null`. When the die clip takes
+   * over it is held where it was and faded out with the stance, so the fall
+   * starts from the recoil rather than snapping back to the stance first.
+   */
+  clip: THREE.AnimationAction | null;
+  /** The weight {@link Departure.clip} was last drawn at. */
+  clipWeight: number;
+  /** Its last pose — the previous frame's, and the only thing it remembers. */
+  pose: FigurePose;
+  /** Its tint, parsed once at commit so the frame loop never parses a string. */
+  base: THREE.Color;
+  /** Its fate: `figures/clips.ts`'s `stepDeparture` is the whole rule. */
+  lane: DepartureLane;
+  /** Snapshots since it departed, while its fate is undecided. */
+  age: number;
+}
+
+/**
+ * **The body of a creature that has just died, from the snapshot it dies in
+ * until its death cue has ended** (Tier 2 follow-up 2, D56's clause superseded,
+ * **D64** — see `figures/clips.ts`).
+ *
+ * `figurePose` is a pure function of the snapshot, and the snapshot that carries
+ * a `zone → graveyard` event already shows the creature in the graveyard: no pose,
+ * no figure. This field holds the body the last frame had — built at COMMIT time
+ * from the previous frame's pose, never from the frame loop — and decides its fate
+ * on its first frame from the queue (`CueQueue.deathPending`): a creature whose
+ * death cue is queued or running is **dying**, and is drawn on every frame from
+ * then until that cue has ended —
+ *
+ *   - at its last stance, one step out of the rank that has closed up behind it
+ *     (`departureStand`), while the batch's earlier cues play: the `hit` of the
+ *     blow that killed it plays on the body, on that cue's `t`;
+ *   - then the die clip takes over (`departureWeight`) from whatever the body was
+ *     doing, and never hands back — a death does not stand up again;
+ *   - it fades out over the death cue's last 40% (`departureOpacity`) and drains
+ *     toward grey, so it is already gone when the cue is;
+ *   - the frame the death cue has ended — played out, or skipped, flushed,
+ *     scrubbed away, a new `gameId` — the lane is `done` and the body is not
+ *     drawn again.
+ *
+ * A departure with no death cue — bounced, flickered, turned face down — is
+ * never drawn and is let go at the next snapshot. The slice-2 version drew a body
+ * only while its `die` REQUEST was on the stage, and every death blinked: the
+ * creature vanished when the blow landed and popped back to fall (verification
+ * pass, `g1.jsonl` frames 202, 298 and 359). `clips.test.ts` now walks the queue's
+ * timeline over every death in the corpus with this rule.
+ *
+ * Everything the frame loop does here is a weight, a time, an opacity and a colour
+ * lerp against objects built at commit — an indexed walk over a fixed array of
+ * {@link MAX_DEPARTURES} slots, no iterator, no allocation, no React state, and
+ * `mixer.update(0)`: the cue's clock is the only clock (§3.4).
+ */
+export class DepartureField implements DepartureBinder {
+  readonly group = new THREE.Group();
+  /** Fixed length for the life of the field: the frame loop walks it by index. */
+  private readonly slots: Array<Departure | null> = new Array<Departure | null>(MAX_DEPARTURES).fill(null);
+  private seq = 0;
+  private shown = 0;
+
+  constructor() {
+    this.group.name = 'departures';
+  }
+
+  /**
+   * Commit phase: a figure that was on the table last frame and is not now,
+   * drawn at `stand` (`departureStand`) if it turns out to be dying.
+   */
+  add(pose: FigurePose, model: LoadedModel, stand: readonly [number, number, number]): void {
+    this.dropCard(pose.cardId);
+    const instance = instantiateFigure(model);
+    const material = makeHoloMaterial(pose.tint);
+    for (const mesh of instance.meshes) mesh.material = material;
+    const object = instance.object;
+    object.position.set(stand[0], stand[1], stand[2]);
+    object.rotation.set(0, pose.facingY, 0);
+    object.scale.setScalar(Math.max(0.0001, pose.height));
+    object.visible = false;
+
+    const mixer = instance.mixer;
+    const actions = new Map<string, THREE.AnimationAction>();
+    for (const [key, clip] of model.clips) {
+      const action = mixer.clipAction(clip);
+      action.enabled = false;
+      actions.set(key, action);
+    }
+    const restClip =
+      clipFor(model, REST_CLIP_FOR[pose.stance], pose.clips[REST_CLIP_FOR[pose.stance]]) ??
+      clipFor(model, 'idle', pose.clips['idle']);
+    const rest = restClip === null ? null : mixer.clipAction(restClip);
+    if (rest !== null) {
+      rest.enabled = true;
+      rest.setLoop(THREE.LoopRepeat, Number.POSITIVE_INFINITY);
+      rest.play();
+      rest.time = REST_PHASE_FOR[pose.stance] * rest.getClip().duration;
+      rest.setEffectiveWeight(1);
+    }
+    const dieClip = clipFor(model, 'die', pose.clips['die']);
+    const die = dieClip === null ? null : mixer.clipAction(dieClip);
+    if (die !== null) {
+      die.enabled = true;
+      die.setLoop(THREE.LoopOnce, 1);
+      die.clampWhenFinished = true;
+      die.play();
+      die.time = 0;
+      die.setEffectiveWeight(0);
+    }
+    mixer.update(0);
+
+    this.group.add(object);
+    const entry: Departure = {
+      cardId: pose.cardId,
+      seq: this.seq++,
+      instance,
+      material,
+      actions,
+      die,
+      rest,
+      clip: null,
+      clipWeight: 0,
+      pose,
+      base: new THREE.Color(pose.tint),
+      lane: { dying: null, done: false },
+      age: 0,
+    };
+    let free = -1;
+    let oldest = 0;
+    for (let i = 0; i < MAX_DEPARTURES; i++) {
+      const slot = this.slots[i] ?? null;
+      if (slot === null) {
+        if (free < 0) free = i;
+        continue;
+      }
+      if (slot.seq < (this.slots[oldest]?.seq ?? Number.POSITIVE_INFINITY)) oldest = i;
+    }
+    // A board wipe bigger than the field drops the oldest body first.
+    if (free < 0) {
+      this.dropSlot(oldest);
+      free = oldest;
+    }
+    this.slots[free] = entry;
+  }
+
+  /**
+   * Commit phase: the figures standing now. A departed card that is back on the
+   * table is the living figure's again; a body whose death has played, or that
+   * was never dying, is disposed; an undecided one ages out
+   * (`figures/clips.ts`'s `keepDeparture`).
+   */
+  commit(present: FigureLayout): void {
+    for (let i = 0; i < MAX_DEPARTURES; i++) {
+      const entry = this.slots[i] ?? null;
+      if (entry === null) continue;
+      if (entry.lane.dying === null) entry.age += 1;
+      if (!keepDeparture(entry.lane, present.has(entry.cardId), entry.age)) this.dropSlot(i);
+    }
+  }
+
+  /**
+   * **The frame loop's half** — called once per frame from `DiscField.bind`,
+   * i.e. from `CueRunner`'s one `useFrame`, after the queue has ticked.
+   */
+  bind(source: OffsetSource, deaths: DeathSource): void {
+    let shown = 0;
+    for (let i = 0; i < MAX_DEPARTURES; i++) {
+      const entry = this.slots[i] ?? null;
+      if (entry === null) continue;
+      const object = entry.instance.object;
+      const request = source.clipOf(entry.cardId);
+      if (!stepDeparture(entry.lane, deaths.deathPending(entry.cardId), request)) {
+        object.visible = false;
+        continue;
+      }
+      shown += 1;
+      object.visible = true;
+      const uniforms = entry.material.uniforms;
+      if (request !== null && request.clip === 'die') {
+        // The death cue is running: the fall, on its own clock.
+        const t = request.t;
+        const weight = departureWeight(t);
+        const others = 1 - weight;
+        if (entry.die !== null) {
+          const duration = entry.die.getClip().duration;
+          entry.die.time = duration > 0 ? Math.min(duration, t * duration) : 0;
+          entry.die.setEffectiveWeight(entry.rest === null && entry.clip === null ? 1 : weight);
+        }
+        // Whatever the body was doing hands over to the fall: the transient is
+        // HELD where it was (its time is not written) and both fade together.
+        const held = entry.die === null ? 1 : others;
+        if (entry.clip !== null) entry.clip.setEffectiveWeight(entry.clipWeight * held);
+        if (entry.rest !== null) entry.rest.setEffectiveWeight((1 - entry.clipWeight) * held);
+        uniforms.uOpacity.value = entry.pose.opacity * departureOpacity(t);
+        uniforms.uTint.value.copy(entry.base).lerp(DYING_GREY, departureDrain(t));
+      } else {
+        // Before its death cue: the body as it last stood, taking the blow.
+        this.driveTransient(entry, request);
+        if (entry.die !== null) entry.die.setEffectiveWeight(0);
+        uniforms.uOpacity.value = entry.pose.opacity;
+        uniforms.uTint.value.copy(entry.base);
+      }
+      entry.instance.mixer.update(0);
+    }
+    this.shown = shown;
+  }
+
+  drawn(): number {
+    return this.shown;
+  }
+
+  /** Let every body go (unmount, or StrictMode's rehearsal of one). The group survives. */
+  dispose(): void {
+    for (let i = 0; i < MAX_DEPARTURES; i++) this.dropSlot(i);
+    this.shown = 0;
+  }
+
+  /**
+   * A cue's transient on a dying body before its death cue starts — the same
+   * two-action blend `CueRunner.driveClips` gives a living figure, and the same
+   * three-rung alias ladder (`actionFor`): the cue's alias, this card's alias,
+   * the generic clip. `enabled` is toggled only when the selection changes.
+   */
+  private driveTransient(entry: Departure, request: ClipRequest | null): void {
+    const wanted =
+      request === null || request.weight <= 0.001 ? null : this.actionOf(entry, request.clip, request.alias);
+    const next = wanted === entry.rest || wanted === entry.die ? null : wanted;
+    if (entry.clip !== next) {
+      if (entry.clip !== null) {
+        entry.clip.stop();
+        entry.clip.enabled = false;
+      }
+      entry.clip = next;
+      if (next !== null) {
+        next.enabled = true;
+        next.setLoop(THREE.LoopOnce, 1);
+        next.clampWhenFinished = true;
+        next.play();
+      }
+    }
+    const weight = next === null || request === null ? 0 : Math.max(0, Math.min(1, request.weight));
+    if (next !== null && request !== null) {
+      const duration = next.getClip().duration;
+      next.time = duration > 0 ? Math.min(duration, request.t * duration) : 0;
+      next.setEffectiveWeight(weight);
+    }
+    entry.clipWeight = weight;
+    if (entry.rest !== null) entry.rest.setEffectiveWeight(1 - weight);
+  }
+
+  private actionOf(entry: Departure, clip: string, alias: string | null): THREE.AnimationAction | null {
+    if (alias !== null) {
+      const byCue = entry.actions.get(alias);
+      if (byCue !== undefined) return byCue;
+    }
+    const byCard = entry.pose.clips[clip];
+    if (byCard !== undefined) {
+      const found = entry.actions.get(byCard);
+      if (found !== undefined) return found;
+    }
+    return entry.actions.get(clip) ?? null;
+  }
+
+  private dropCard(cardId: number): void {
+    for (let i = 0; i < MAX_DEPARTURES; i++) if (this.slots[i]?.cardId === cardId) this.dropSlot(i);
+  }
+
+  private dropSlot(i: number): void {
+    const entry = this.slots[i] ?? null;
+    if (entry === null) return;
+    this.slots[i] = null;
+    this.group.remove(entry.instance.object);
+    entry.instance.mixer.stopAllAction();
+    // Geometry and the source material are shared by every clone; the holographic
+    // material is this body's own.
+    entry.material.dispose();
+  }
+}

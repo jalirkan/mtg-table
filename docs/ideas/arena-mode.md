@@ -15,8 +15,8 @@ forward into M1 (`docs/protocol.md` §3.6, `DECISIONS.md` D12).
 > What was measured: [`../evidence/m7-arena.md`](../evidence/m7-arena.md). What
 > is still owed, and the Tier 2 hand-over: `PLAN.md` §M7.
 >
-> **STATUS, 2026-09-27 — Tier 2's first slice is BUILT and verified** (not yet
-> committed: branch `tier2-slice1`). Evenings T0–T7 of
+> **STATUS, 2026-09-27 — Tier 2's first slice is BUILT and verified** (committed
+> as `4f84613`; built on branch `tier2-slice1`). Evenings T0–T7 of
 > [`../research/13-arena-tier2-plan.md`](../research/13-arena-tier2-plan.md)
 > §11, on the assets surveyed in
 > [`../research/12-arena-tier2-assets.md`](../research/12-arena-tier2-assets.md):
@@ -27,6 +27,21 @@ forward into M1 (`docs/protocol.md` §3.6, `DECISIONS.md` D12).
 > bloom. What was measured: [`../evidence/m7-tier2.md`](../evidence/m7-tier2.md).
 > The user's nine Tier 2 decisions are `DECISIONS.md` **D53–D62**; the follow-ups
 > and the hand-over to T8–T14 are `PLAN.md`'s *M7 Tier 2*.
+>
+> **STATUS, 2026-09-27 — Tier 2's second slice (T8 and the camera views) is BUILT,
+> verified twice and fixed twice** (not yet committed: branch `tier2-slice2`).
+> The humanoids are three bodies of one CC0 kit — the agent, a hero with two round
+> buns, a scientist in glasses and a tie — on one rig with one clip set, the
+> Universal Animation Library's recoil and death retargeted in (the rest of its
+> clips did not read on a chibi, so Kenney's own stay); a creature that dies is
+> now **seen dying** rather than vanishing with its card; and the camera has
+> **five views** (table, your shoulder, the opponent's shoulder, side-on at figure
+> height, low), a **spectator mode** and an **auto director** that cuts between
+> them on combat, casts and strikes. What was measured:
+> [`../evidence/m7-tier2-slice2.md`](../evidence/m7-tier2-slice2.md); decisions
+> **D64–D74**; the follow-ups and the hand-over to T9–T14 are `PLAN.md`'s *M7
+> Tier 2*. The camera swoops in the tiers below are still Tier 1's cue moves —
+> the chosen view is where they now leave from and come back to.
 >
 > **Three lines below are superseded by those decisions and are kept as
 > written:** Tier 2's rigs are **not** Mixamo (**D54** — CC0 packs, and
@@ -59,7 +74,7 @@ scratch.
   rises and glows in its mana colour; `tap` = rotate; `attackers` = card lunges
   at the defender with a camera swoop; `damage` = numbers; `zone`
   battlefield→graveyard = dissolve; `life` = HUD pulse. Looks dramatic already.
-- **Tier 2, creature manifestations (months). ← FIRST SLICE BUILT (T0–T7); T8–T14 handed over.** A small library of stylised
+- **Tier 2, creature manifestations (months). ← SLICES 1 AND 2 BUILT (T0–T8 and the camera views); T9–T14 handed over.** A small library of stylised
   generic models keyed by creature type and colour with idle / attack / hit /
   die animations (Mixamo-style rigs). The MSH deck has a handful of types —
   Human Spy Hero, Robot Villain, Insect, Scientist — so about eight archetypes
@@ -151,7 +166,7 @@ figure (Super Suit's shell, Spy Kit's glints and Robotics Mastery's circuits are
 T12). **The lands** are terrain slabs and their taps send mana motes to the
 caster. Still Tier 2 work: Fury's radio call, the squad stepping forward
 together, Web Up's cocoon, Strategic Intervention's mission-control overlay and
-the Doombot's eye (`PLAN.md`, *What slice 1 hands to T8–T14*).
+the Doombot's eye (`PLAN.md`, *What slice 2 hands to T9–T14*).
 
 One card not in the table above has an entry too: **Borough Backup** (`cast` →
 `fx.swarm`). The seven archetypes — `creature/W`, `creature/U`, `creature/*`,

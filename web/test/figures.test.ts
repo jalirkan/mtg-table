@@ -17,7 +17,8 @@
  */
 
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
@@ -66,6 +67,52 @@ test('figures: every model row carries its provenance', () => {
     // rather than remembered.
     assert.match(entry.licence, /^CC0/, `${id} is not CC0 (${entry.licence})`);
   }
+});
+
+test('figures: every retargeted clip names a recorded CC0 clip library (T8)', () => {
+  // A clip taken from a library the mesh did not come from has provenance of its
+  // own, and the same rule applies to it as to a model: written down, and CC0.
+  let retargeted = 0;
+  for (const [id, entry] of Object.entries(MODELS.data.models)) {
+    for (const [key, spec] of Object.entries(entry.retargeted)) {
+      retargeted += 1;
+      const prefix = spec.slice(0, spec.indexOf(':'));
+      const library = MODELS.data.clipLibraries[prefix];
+      assert.ok(library !== undefined, `${id}.${key} = "${spec}" names no recorded library`);
+      assert.match(library.licence, /^CC0/, `${id}.${key} comes from a library that is not CC0`);
+      for (const field of ['title', 'source', 'licenceUrl', 'licenceBadge', 'retrieved'] as const) {
+        assert.ok(library[field] !== '', `clip library "${prefix}" has no ${field}`);
+      }
+    }
+  }
+  assert.ok(retargeted > 0, 'no model carries a retargeted clip — the T8 experiment is not in the manifest');
+});
+
+test('figures: models.json records the built library, and the committed file IS it (T8)', () => {
+  /**
+   * **Tier 2 follow-up 9, the code half.** `tools/build-figures.mjs` now verifies
+   * every source's sha256 before it builds and writes the OUTPUT's byte count and
+   * sha256 into `models.json`. This is the other end of that: the file a checkout
+   * actually serves must be the file the manifest describes, so a rebuild that was
+   * not committed with its `models.json` — or a hand-edited binary — fails here. A
+   * checkout with no `figures.glb` at all is a supported state (every creature draws
+   * its disc) and is skipped rather than failed.
+   */
+  const library = MODELS.data.library;
+  assert.ok(library !== null, 'models.json has no library record — rebuild with tools/build-figures.mjs');
+  const onDisk = fileURLToPath(new URL(`../public/${library.path}`, import.meta.url));
+  if (!existsSync(onDisk)) {
+    console.log(`figures: ${library.path} is not on disk — the disc fallback; the hash check is skipped`);
+    return;
+  }
+  const bytes = readFileSync(onDisk);
+  assert.equal(bytes.byteLength, library.bytes, `${library.path} is not the size models.json records`);
+  assert.equal(
+    createHash('sha256').update(bytes).digest('hex'),
+    library.sha256,
+    `${library.path} is not the file models.json records — rebuild, or commit the models.json it wrote`,
+  );
+  console.log(`figures: ${library.path} ${String(library.bytes)} bytes, sha256 ${library.sha256.slice(0, 16)}… — matches models.json`);
 });
 
 test('figures: every model named in figures.json exists in models.json', () => {
@@ -196,7 +243,7 @@ test('figures: every creature in every committed recording resolves', () => {
       `${key} resolved to model "${String(row.model)}", which models.json does not define`,
     );
     census.push(
-      `  ${String(row.frames).padStart(5)}  ${model.padEnd(8)} ${row.rung.padEnd(22)} ${key.split('|')[0]}`,
+      `  ${String(row.frames).padStart(5)}  ${model.padEnd(10)} ${row.rung.padEnd(22)} ${key.split('|')[0]}`,
     );
   }
 

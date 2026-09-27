@@ -154,6 +154,8 @@ test('liveness: every widget the arena layer mounts can be clicked', () => {
       '.arena__over',
     ],
     CueControls: ['.arena__cues'],
+    // T8's camera switcher: five views, the director, spectator.
+    ViewSwitcher: ['.arena__views'],
     ArtCredit: ['.arena__credit'],
     HotkeysOverlay: ['.overlay'],
   };
@@ -347,27 +349,90 @@ test('liveness: the arena has exactly one useFrame, and it is CueRunner’s', ()
 });
 
 /**
- * **Every model is loaded from `web/public/models/`, and nothing else.**
+ * **Every model is loaded from `web/public/models/`, and nothing else — and no
+ * arena module names ANY off-origin address** (Tier 2 follow-up 8, closed).
  *
  * Two CDN traps are already documented in this tree and both are one line to
- * fall into: drei's `useGLTF(path, true)` sets the DRACO decoder path to
- * `https://www.gstatic.com/draco/versioned/decoders/1.5.5/`
- * (`@react-three/drei/core/Gltf.js:8`), and drei's `<Text>` fetches its default
- * font from `fonts.gstatic.com` — which is why `scene/numberSprite.ts` draws its
- * numbers on a canvas instead. A local-only game whose figures need a CDN is a
- * game that silently loses its figures offline.
+ * fall into: drei's `useGLTF(path, true)` sets the DRACO decoder path to a
+ * gstatic.com URL (`@react-three/drei/core/Gltf.js:8`), and drei's `<Text>`
+ * fetches its default font from Google's font CDN — which is why
+ * `scene/numberSprite.ts` draws its numbers on a canvas instead. A local-only
+ * game whose figures need a CDN is a game that silently loses its figures
+ * offline.
+ *
+ * **This clause used to be a hostname DENYLIST** (gstatic, unpkg, jsdelivr, …),
+ * and a denylist is only as good as its author's imagination: the slice-1 and
+ * slice-2 verification passes each put `'https://example.com/figures.glb'` into
+ * `scene/models.ts` on a scratch copy and the clause stayed green. It is now an
+ * ALLOW-list over every string literal in the tree: a string that carries a URL
+ * scheme (`https://`, `wss://`, protocol-relative `//host`) is a failure unless
+ * it is one of the few that are provenance or credit — a link the viewer may
+ * click, never an address the arena loads. The negative controls are in the test
+ * itself, so the check proves it can fail every run.
  */
-test('liveness: no arena module names a CDN, and every model path is local', () => {
-  const hosts = /gstatic\.com|unpkg\.com|jsdelivr|cdnjs|cdn\.|googleapis\.com/;
+/** `scheme://` anywhere, or a protocol-relative `//host` at the start. */
+const URL_SCHEME = /[a-z][a-z0-9+.-]*:\/\/|^\/\/[a-z0-9]/i;
+/** Every '…', "…" and `…` literal in some code — JSX attribute strings included. */
+function stringLiterals(code: string): string[] {
+  return [...code.matchAll(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g)].map((m) =>
+    m[0].slice(1, -1),
+  );
+}
+/**
+ * The allow-list: `file → the URL literals it may contain`, each with its reason.
+ * Adding an entry is a decision (and a line here saying why), not a formality.
+ */
+const URL_ALLOW: Readonly<Record<string, readonly string[]>> = {
+  // The art credit's link (`ArtCredit`, Scryfall's image-use guidelines): an
+  // `href` the viewer may click, never fetched by the page.
+  'Arena.tsx': ['https://scryfall.com'],
+};
+/** In the arena's JSON data, only these keys may hold a URL — provenance, never a load path. */
+const URL_KEYS_ALLOWED: ReadonlySet<string> = new Set(['source', 'licenceUrl', 'url', 'page']);
+
+function offOriginLiterals(path: string, code: string): string[] {
+  const allowed = URL_ALLOW[path] ?? [];
+  return stringLiterals(code).filter((literal) => URL_SCHEME.test(literal) && !allowed.includes(literal));
+}
+
+/** Every `"key": "value"` pair of a JSON document whose value has a URL scheme and whose key may not. */
+function offOriginJson(value: unknown, key = ''): string[] {
+  if (typeof value === 'string') return URL_SCHEME.test(value) && !URL_KEYS_ALLOWED.has(key) ? [`${key}: ${value}`] : [];
+  if (Array.isArray(value)) return value.flatMap((item) => offOriginJson(item, key));
+  if (value !== null && typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).flatMap(([k, v]) => offOriginJson(v, k));
+  }
+  return [];
+}
+
+test('liveness: no arena module names an off-origin address, and every model path is local', () => {
+  // The negative controls first — each of these must be caught, every run.
+  const controls: Array<[string, string]> = [
+    ['scene/models.ts', "const FALLBACK_URL = 'https://example.com/figures.glb';"],
+    ['scene/models.ts', 'loader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.5/");'],
+    ['scene/models.ts', 'const u = `https://${host}/figures.glb`;'],
+    ['scene/models.ts', "fetch('//cdn.example.com/figures.glb');"],
+    ['scene/models.ts', "const socket = new WebSocket('wss://example.com/frames');"],
+    ['Arena.tsx', "const art = 'https://cards.scryfall.io/normal/front/x.jpg';"],
+  ];
+  for (const [path, line] of controls) {
+    assert.ok(offOriginLiterals(path, line).length === 1, `the URL clause no longer catches: ${line}`);
+  }
+  assert.deepEqual(offOriginJson({ models: { agent: { path: 'https://example.com/figures.glb' } } }), [
+    'path: https://example.com/figures.glb',
+  ]);
+  assert.deepEqual(offOriginJson({ source: 'https://kenney.nl/assets/mini-characters' }), []);
+
+  // Then the tree.
+  let literals = 0;
   for (const file of arenaFiles()) {
-    // The comments that DOCUMENT the trap name the host, so only code is read:
-    // block comments and `//` lines are stripped first.
-    const hit = hosts.exec(codeOf(file.source));
-    assert.equal(
-      hit,
-      null,
-      `${file.path} names ${String(hit?.[0])} in code — the arena fetches models and fonts from ` +
-        'web/public/ only',
+    const code = codeOf(file.source);
+    literals += stringLiterals(code).length;
+    assert.deepEqual(
+      offOriginLiterals(file.path, code),
+      [],
+      `${file.path} names an off-origin address in code — the arena loads models and fonts from ` +
+        'web/public/ only; a provenance or credit link goes in URL_ALLOW with its reason',
     );
     for (const imported of importsOf(file.source)) {
       assert.ok(
@@ -375,6 +440,17 @@ test('liveness: no arena module names a CDN, and every model path is local', () 
         `${file.path} imports drei's useGLTF, which carries the gstatic DRACO default`,
       );
     }
+  }
+  assert.ok(literals > 500, `expected the arena's string literals, saw ${String(literals)}`);
+  // Every allow-listed literal is still there — an entry nothing uses is a stale permission.
+  for (const [path, urls] of Object.entries(URL_ALLOW)) {
+    const code = codeOf(arenaFiles().find((f) => f.path === path)?.source ?? '');
+    for (const url of urls) assert.ok(stringLiterals(code).includes(url), `URL_ALLOW["${path}"] names ${url}, which is gone`);
+  }
+
+  for (const json of ['figures/models.json', 'figures/figures.json', 'cues/cues.json']) {
+    const data = JSON.parse(readFileSync(ARENA + json, 'utf8')) as unknown;
+    assert.deepEqual(offOriginJson(data), [], `${json} has a URL outside a provenance field`);
   }
 
   const models = JSON.parse(
@@ -656,6 +732,186 @@ test('liveness: only the frame loop writes action.time', () => {
   );
 });
 
+/**
+ * **T8 — a departing figure is drawn by its own death cue and by nothing else**
+ * (Tier 2 follow-up 2).
+ *
+ * The body of a creature that has just died has no pose, so the only thing
+ * allowed to decide that it is drawn is its card's `die` request on the stage —
+ * which is what makes skip, flush, a scrub and a new `gameId` end it in the same
+ * frame as they end the cue. Four source facts hold that shape:
+ *
+ *  - the per-frame half (`departures.bind`) is called from `DiscField.bind` and
+ *    nowhere else — so from the one `useFrame`, through a layer the previous clause
+ *    already pins to `CueRunner`;
+ *  - the field is installed (`setDepartures`) and fed (`departures.add`) only by
+ *    `FigureLayer`, at commit time;
+ *  - `FigureLayer`'s field reads the stage's clip lane (`clipOf`) and gates on the
+ *    `'die'` clip — a body with no request is not drawn;
+ *  - and it builds nothing in the frame loop: `instantiateFigure` and
+ *    `makeHoloMaterial` appear in `add`, which `DiscField` never calls.
+ */
+test('liveness: a departing figure is drawn by its own death cue and nothing else (T8)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const callers = (pattern: RegExp): string[] =>
+    [...files].filter(([, code]) => pattern.test(code)).map(([path]) => path).sort();
+
+  assert.deepEqual(callers(/\bdepartures\??\.bind\(/), ['scene/discs.ts'], 'the departures are bound outside the disc field');
+  assert.deepEqual(callers(/\.setDepartures\(/), ['scene/FigureLayer.tsx'], 'something else installs the departures');
+  assert.deepEqual(callers(/\bdepartures\.add\(/), ['scene/FigureLayer.tsx'], 'something else feeds the departures');
+
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const field = layer.slice(layer.indexOf('class DepartureField'));
+  assert.ok(field.length > 100, 'FigureLayer.tsx no longer defines DepartureField — move this test with it');
+  const bindBody = field.slice(field.indexOf('bind(source'), field.indexOf('drawn()'));
+  assert.match(bindBody, /\.clipOf\(/, 'the departing body no longer reads the clip lane');
+  assert.match(bindBody, /'die'/, 'the departing body is no longer gated on the die clip');
+  // D64: the fate is the QUEUE's (a death cue queued or running), decided by the
+  // one pure rule the corpus timeline test also walks.
+  assert.match(bindBody, /\.deathPending\(/, 'the departing body no longer asks the queue whether it is dying');
+  assert.match(bindBody, /\bstepDeparture\(/, 'the departing body no longer decides by stepDeparture');
+  assert.ok(
+    !/instantiateFigure|makeHoloMaterial|new THREE\./.test(bindBody),
+    'the departing figures build or allocate in the frame loop',
+  );
+  assert.match(bindBody, /mixer\.update\(0\)/, 'the departing body no longer scrubs on the cue clock');
+
+  // …and that only holds if the batch is in the queue BEFORE the body's first
+  // frame: the intake is a LAYOUT effect of the DOM root, which runs before the
+  // canvas root can commit the body (Arena.tsx's comment on it says why).
+  const arena = files.get('Arena.tsx') ?? '';
+  const enqueue = arena.indexOf('queue.enqueueBatch(state.events');
+  assert.ok(enqueue > 0, 'Arena.tsx no longer enqueues the batch — move this test with it');
+  const effect = arena.lastIndexOf('Effect(() => {', enqueue);
+  assert.ok(
+    effect > 0 && arena.slice(effect - 10, effect).endsWith('useLayout'),
+    'the batch intake is no longer a useLayoutEffect: a dying body could have its first frame before its ' +
+      'death is queued, and would never be drawn',
+  );
+});
+
+/**
+ * **The frame loop allocates nothing — mechanically, for the Tier 2 code in it**
+ * (M7 convention 5; the slice-2 verification pass).
+ *
+ * `cues-exhaustive.test.ts` checks the pooled offset compose field for field, but
+ * nothing read the NEW frame-loop code: the verifier put `const _junk = [t, t];`
+ * into `DepartureField.bind` on a scratch copy and liveness stayed green, and
+ * `bind` itself walked `this.entries.values()` — an iterator a frame. So this reads
+ * the bodies the one `useFrame` reaches through the disc field — the disc field's
+ * own `bind`, the departing bodies' `bind` and its two helpers, the queue's
+ * `deathPending` and the pure lane functions they call — and rejects every
+ * allocating construct a grep can see. The negative controls are in the test: each
+ * junk line is spliced into every body and must be caught.
+ */
+const ALLOCATIONS: ReadonlyArray<[string, RegExp]> = [
+  ['`new`', /\bnew\s+[A-Za-z_$]/],
+  ['an array literal', /(?:^|[=(,:?&|!]|\breturn)\s*\[/m],
+  ['an object literal', /(?:^|[=(,:?&|]|\breturn)\s*\{/m],
+  ['a spread', /\.\.\./],
+  ['a closure', /=>|\bfunction\b/],
+  ['a template string', /`/],
+  ['an iterator (for…of)', /\bfor\s*\([^)]*\bof\b/],
+  ['an iterator (.values/.keys/.entries)', /\.(?:values|keys|entries)\(\s*\)/],
+  ['an allocating array or string method', /\.(?:map|filter|slice|concat|flat|flatMap|split|join|clone)\(/],
+  ['an allocating builtin', /\bArray\.from\b|\bObject\.(?:keys|values|entries|assign|fromEntries)\b|\bString\(|\bJSON\./],
+];
+
+/**
+ * The body of `name`'s DEFINITION in `code`, braces matched. A line that starts
+ * with `name(` is a definition only if its parameter list is followed by a return
+ * type or a `{` — `commitCount(this.mesh, front);` is a call.
+ */
+function bodyOf(code: string, name: string): string {
+  const headers = new RegExp(`^\\s*(?:export\\s+)?(?:function\\s+|private\\s+)?${name}\\(`, 'gm');
+  let header: RegExpExecArray | null;
+  while ((header = headers.exec(code)) !== null) {
+    let i = header.index + header[0].length;
+    for (let depth = 1; depth > 0 && i < code.length; i++) {
+      if (code[i] === '(') depth++;
+      else if (code[i] === ')') depth--;
+    }
+    const after = code.slice(i).trimStart()[0];
+    if (after !== ':' && after !== '{') continue;
+    const open = code.indexOf('{', i);
+    let depth = 0;
+    for (let j = open; j < code.length; j++) {
+      if (code[j] === '{') depth++;
+      else if (code[j] === '}' && --depth === 0) return code.slice(open + 1, j);
+    }
+  }
+  return '';
+}
+
+function allocationsIn(body: string): string[] {
+  return ALLOCATIONS.filter(([, pattern]) => pattern.test(body)).map(([what]) => what);
+}
+
+/**
+ * **A disc on a card is drawn after the card** (T8 fix). `figure-pose.test.ts`
+ * proves over the corpus that `ON_CARD_DISC_ORDER` is above every card a disc can
+ * lie on; this pins the renderer to that constant — the on-card pass is built at
+ * it, both passes are mounted, and a pose flagged `onCard` goes to it.
+ */
+test('liveness: the on-card stand discs are their own pass, after the cards', () => {
+  const discs = codeOf(readFileSync(ARENA + 'scene/discs.ts', 'utf8'));
+  assert.match(discs, /this\.onCardMesh = discMesh\(material, capacity, ON_CARD_DISC_ORDER\)/);
+  assert.match(discs, /pose\.onCard \? this\.onCardMesh : this\.mesh/);
+  const layer = codeOf(readFileSync(ARENA + 'scene/FigureLayer.tsx', 'utf8'));
+  assert.match(layer, /<primitive object=\{discs\.onCardMesh\} \/>/, 'the on-card disc pass is not mounted');
+});
+
+test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc field, the departing bodies, the death query', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const field = layer.slice(layer.indexOf('class DepartureField'));
+  const discs = files.get('scene/discs.ts') ?? '';
+  const discField = discs.slice(discs.indexOf('class DiscField'));
+  const bodies: Array<[string, string]> = [
+    ['DiscField.bind', bodyOf(discField, 'bind')],
+    ['discs.ts commitCount', bodyOf(discs, 'commitCount')],
+    ['DepartureField.bind', bodyOf(field, 'bind')],
+    ['DepartureField.driveTransient', bodyOf(field, 'driveTransient')],
+    ['DepartureField.actionOf', bodyOf(field, 'actionOf')],
+    ['CueQueue.deathPending', bodyOf(files.get('cues/queue.ts') ?? '', 'deathPending')],
+    ['clips.ts stepDeparture', bodyOf(files.get('figures/clips.ts') ?? '', 'stepDeparture')],
+    ['clips.ts departureWeight', bodyOf(files.get('figures/clips.ts') ?? '', 'departureWeight')],
+    ['clips.ts departureOpacity', bodyOf(files.get('figures/clips.ts') ?? '', 'departureOpacity')],
+    ['clips.ts departureDrain', bodyOf(files.get('figures/clips.ts') ?? '', 'departureDrain')],
+  ];
+  // The bodies were found, and they are the frame loop's: bind calls the rest.
+  for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
+  const bind = bodies[2]![1];
+  for (const callee of ['deathPending(', 'stepDeparture(', 'driveTransient(', 'departureWeight(', 'departureOpacity(', 'departureDrain(']) {
+    assert.ok(bind.includes(callee), `DepartureField.bind no longer calls ${callee} — update the body list`);
+  }
+  assert.ok(bodies[0]![1].includes('departures?.bind('), 'DiscField.bind no longer binds the departing bodies');
+
+  // The negative controls: every junk line, spliced into every body, is caught.
+  const junk = [
+    'const _junk = [t, t];',
+    'const o = { a: 1 };',
+    'for (const e of this.entries.values()) {}',
+    'for (const e of list) {}',
+    'const f = () => 1;',
+    'const s = `${1}`;',
+    'const v = new THREE.Vector3();',
+    'const c = [...xs];',
+    'xs.map(id);',
+    'const k = Object.keys(o);',
+    'const p = entry.pose.position.slice();',
+  ];
+  for (const [name, body] of bodies) {
+    for (const line of junk) {
+      assert.ok(allocationsIn(`\n${line}\n${body}`).length > 0, `the allocation scan misses \`${line}\` in ${name}`);
+    }
+  }
+
+  for (const [name, body] of bodies) {
+    assert.deepEqual(allocationsIn(body), [], `${name} allocates in the frame loop (§9.2 rule 6)`);
+  }
+});
+
 test('liveness: camera.ts and layout.ts are pure too — the pose math has no renderer', () => {
   for (const name of ['camera.ts', 'layout.ts', 'colour.ts']) {
     const file = arenaFiles().find((f) => f.path === name);
@@ -666,6 +922,132 @@ test('liveness: camera.ts and layout.ts are pure too — the pose math has no re
         `${name} imports ${imported.from}`,
       );
     }
+  }
+});
+
+/**
+ * **T8 — the camera grew five views, a spectator mode and a director, and it is
+ * still arithmetic.** `camera.ts` is where §8's seven rules are checkable with
+ * plain numbers (`camera.test.ts` drives the auto director over every batch in
+ * the corpus with an injected clock), and that only holds while the module has
+ * no renderer, no DOM, no storage and no clock of its own: time is always an
+ * argument. The storage the view choice needs is `Arena.tsx`'s, not this file's.
+ */
+test('liveness: camera.ts has no renderer, no DOM, no storage and no clock of its own', () => {
+  const file = arenaFiles().find((f) => f.path === 'camera.ts');
+  assert.ok(file !== undefined, 'camera.ts is missing');
+  for (const imported of importsOf(file.source)) {
+    assert.ok(
+      imported.from !== 'three' &&
+        !imported.from.startsWith('three/') &&
+        !imported.from.startsWith('react') &&
+        !imported.from.includes('@react-three'),
+      `camera.ts imports ${imported.from}`,
+    );
+    assert.ok(!imported.from.includes('scene/'), `camera.ts imports the renderer (${imported.from})`);
+    assert.ok(!imported.from.includes('transport/'), `camera.ts imports ${imported.from}`);
+    // The cue engine is a TYPE here (`AnchorRef`, `CameraRequest`): the lane is
+    // told what a cue asked for; it never runs one.
+    if (imported.from.includes('cues/')) {
+      assert.ok(imported.typeOnly, `camera.ts imports ${imported.from} as a value`);
+    }
+  }
+  const code = codeOf(file.source);
+  assert.ok(
+    !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(code),
+    'camera.ts reads a clock or starts a timer — every function takes `now`',
+  );
+  assert.ok(
+    !/\bdocument\.|\bwindow\.|localStorage|matchMedia/.test(code),
+    'camera.ts touches the DOM — reduced motion and the stored view are handed in by Arena.tsx',
+  );
+});
+
+/**
+ * **T8 — one writer of the camera.** A view change, a director cut and a cue
+ * swoop all become a pose in exactly one place, `CueRunner`'s frame loop, after
+ * `OrbitControls` has had its say. A second caller of the lane's tick or of
+ * `applyView` would be a second camera, and the two would fight every frame.
+ */
+test('liveness: only CueRunner drives the camera lane', () => {
+  const callers = new Map<string, string[]>();
+  for (const file of arenaFiles()) {
+    const code = codeOf(file.source);
+    for (const call of ['director.tick(', 'director.applyView(', 'director.request(']) {
+      if (!code.includes(call)) continue;
+      callers.set(call, [...(callers.get(call) ?? []), file.path]);
+    }
+  }
+  for (const call of ['director.tick(', 'director.applyView(', 'director.request(']) {
+    assert.deepEqual(callers.get(call), ['scene/CueRunner.tsx'], `${call} is called from ${String(callers.get(call))}`);
+  }
+});
+
+/**
+ * **The loop mode is CueRunner's decision, and a re-render cannot revert it**
+ * (slice-2 verification fix; the root is Tier 1's).
+ *
+ * fiber 8.18's `configure` runs on EVERY render of `<Canvas>` and does
+ * `if (state.frameloop !== frameloop) state.setFrameloop(frameloop)` against the
+ * prop. `Arena.tsx` passed a literal `frameloop="demand"`, so any re-render of
+ * the arena that did not also re-run CueRunner's sync — a key hint, pressing the
+ * view you are already on, a greyed switcher click — parked the loop mid-batch:
+ * measured on `human-auto-42`@717, a `1` pressed 120 ms into the batch left
+ * `gl.info.render.frame` stuck at 10 for 3 s with five cues still queued. The
+ * behaviour cannot be exercised here (no WebGL under `node --test`), so the
+ * shape that makes it impossible is held instead:
+ *
+ *  1. no `frameloop` prop anywhere in the arena is a string literal;
+ *  2. `<Canvas>` reads the ref CueRunner writes;
+ *  3. CueRunner writes that ref in the same breath as every `setFrameloop`, and
+ *     nothing else in the arena calls `setFrameloop` at all.
+ *
+ * Negative-controlled when written: restoring `frameloop="demand"`, or dropping
+ * the `loopRef.current = mode` line, turns this red.
+ */
+test('liveness: the Canvas loop mode is CueRunner’s decision, never a literal a re-render reverts', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  for (const [path, code] of files) {
+    assert.doesNotMatch(
+      code,
+      /\bframeloop\s*=\s*(?:["'`]|\{\s*["'`])/,
+      `${path} passes a literal frameloop — fiber re-applies it on every render and parks a running batch`,
+    );
+    if (path === 'scene/CueRunner.tsx') continue;
+    assert.doesNotMatch(code, /\bsetFrameloop\(/, `${path} sets the loop mode; only CueRunner's sync may`);
+  }
+  const arena = files.get('Arena.tsx') ?? '';
+  assert.match(arena, /<Canvas[\s\S]*?\bframeloop=\{loopRef\.current\}/, '<Canvas> no longer reads loopRef');
+  const runner = files.get('scene/CueRunner.tsx') ?? '';
+  const calls = [...runner.matchAll(/\bsetFrameloop\(([^)]*)\)/g)];
+  assert.ok(calls.length >= 1, 'CueRunner no longer sets the loop mode at all');
+  for (const call of calls) {
+    const arg = (call[1] ?? '').trim();
+    const before = runner.slice(Math.max(0, call.index - 200), call.index);
+    assert.ok(
+      /^[A-Za-z_$][\w$]*$/.test(arg) && new RegExp(`loopRef\\.current\\s*=\\s*${arg}\\s*;`).test(before),
+      `setFrameloop(${arg}) is not preceded by loopRef.current = ${arg} — the next Arena re-render would revert it`,
+    );
+  }
+});
+
+/**
+ * **T8 — the stored view never breaks the page.** `localStorage` can throw (a
+ * private window, blocked site data) and can come back empty; the arena renders
+ * the table view either way. So every touch of it is inside a `try`, and only
+ * `Arena.tsx` touches it at all.
+ */
+test('liveness: every localStorage access in the arena is Arena.tsx’s, inside try', () => {
+  for (const file of arenaFiles()) {
+    const code = codeOf(file.source);
+    if (!code.includes('localStorage')) continue;
+    assert.equal(file.path, 'Arena.tsx', `${file.path} touches localStorage`);
+    const lines = code.split('\n');
+    lines.forEach((line, i) => {
+      if (!line.includes('localStorage')) return;
+      const before = lines.slice(Math.max(0, i - 3), i).join('\n');
+      assert.match(before, /try \{/, `Arena.tsx line ${String(i + 1)} reads or writes localStorage outside a try`);
+    });
   }
 });
 

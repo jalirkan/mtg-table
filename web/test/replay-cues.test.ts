@@ -39,6 +39,7 @@ import {
   BUDGET_MS,
   CueQueue,
   MAX_PENDING_STEPS,
+  MAX_TICK_MS,
   REDUCED_MOTION_SCALE,
   awaitingHuman,
   compressionFor,
@@ -48,7 +49,7 @@ import {
 import { archetypeKey } from '../src/arena/cues/archetype.ts';
 import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { cuesFor, resolve, selectorsFor, subjectOf } from '../src/arena/cues/resolve.ts';
-import { NullStage } from '../src/arena/cues/stage.ts';
+import { NullStage, type CueRegistry } from '../src/arena/cues/stage.ts';
 import { EMPTY_CUE_DATA, NO_OP, type Cue } from '../src/arena/cues/types.ts';
 import { validateCues } from '../src/arena/cues/validate.ts';
 import { layout } from '../src/arena/layout.ts';
@@ -521,6 +522,92 @@ test('queue: pause stops the clock and speed multiplies it', () => {
   queue.setSpeed(4);
   queue.tick(1100);
   assert.equal(queue.idle, true, 'and 100 ms at 4× is 400 ms of cue');
+});
+
+/**
+ * **A batch that lands on an idle queue starts at its own `t = 0`** (the slice-2
+ * verification pass's major finding, a Tier 1 defect).
+ *
+ * `frameloop="demand"` parks the loop whenever the queue drains, so the arena's
+ * next tick can arrive seconds after its last one. `tick()` used to add that whole
+ * gap to the cue clock, and the first frame of the next batch then jumped past
+ * its start: stepping `human-auto-7` 794→795 after a 3 s pause drew its two dying
+ * bodies on 0 frames. The spy registry below records the progress every cue is
+ * applied at, which is exactly what the renderer would draw.
+ */
+test('queue: an idle gap is not film — the next batch starts at t = 0', () => {
+  const state = initialState();
+  const applied: Array<{ id: string; t: number }> = [];
+  const spy: CueRegistry = new Map(
+    [...REGISTRY].map(([id, impl]) => [
+      id,
+      {
+        lane: impl.lane,
+        apply: (ctx, t, stage) => {
+          applied.push({ id: ctx.id, t });
+          impl.apply(ctx, t, stage);
+        },
+        end: (ctx, stage) => impl.end(ctx, stage),
+      },
+    ]),
+  );
+  const queue = new CueQueue({ stage: new NullStage(), registry: spy, data: EMPTY_CUE_DATA, mode: 'replay' });
+
+  // One batch played through to idle, at 60 fps.
+  let now = 1000;
+  queue.enqueueBatch([{ kind: 'tap', cardId: 1, tapped: true }], state);
+  for (let i = 0; i < 200 && !queue.idle; i++) queue.tick((now += 16));
+  assert.equal(queue.idle, true, 'the first batch drained');
+
+  // The loop is parked: 3 s pass with no tick at all. Then a batch arrives and
+  // the next frame is drawn.
+  now += 3000;
+  applied.length = 0;
+  queue.enqueueBatch(
+    [
+      { kind: 'damage', target: { kind: 'card', id: 2 }, sourceCardId: 3, amount: 3, combat: true, damageType: null },
+      { kind: 'tap', cardId: 4, tapped: true },
+    ],
+    state,
+  );
+  assert.equal(queue.idle, false, 'the batch queued something');
+  queue.tick(now);
+  assert.ok(applied.length > 0, 'the first frame after the gap drew the batch');
+  const first = applied[0]!;
+  assert.ok(first.t < 0.1, `the first cue opened at t = ${first.t.toFixed(3)} — the idle gap was played as film`);
+  assert.equal(queue.idle, false, 'one frame did not consume the whole batch');
+
+  // The same with an idle tick in between (a frame the loop drew for something
+  // else — a texture, a camera move — while the queue had nothing to play).
+  for (let i = 0; i < 400 && !queue.idle; i++) queue.tick((now += 16));
+  assert.equal(queue.idle, true);
+  queue.tick((now += 16));
+  now += 3000;
+  applied.length = 0;
+  queue.enqueueBatch([{ kind: 'tap', cardId: 5, tapped: true }], state);
+  queue.tick(now);
+  assert.ok(applied.length > 0 && applied[0]!.t < 0.1, `after an idle tick: t = ${String(applied[0]?.t)}`);
+});
+
+test('queue: a late frame while cues run adds at most MAX_TICK_MS of film', () => {
+  const state = initialState();
+  const queue = new CueQueue({ stage: new NullStage(), registry: REGISTRY, data: EMPTY_CUE_DATA, mode: 'replay' });
+  queue.enqueueBatch(
+    [
+      { kind: 'tap', cardId: 1, tapped: true },
+      { kind: 'life', player: 0, from: 20, to: 17 },
+    ],
+    state,
+  );
+  queue.tick(0);
+  const before = queue.totalRemainingMs();
+  // A hidden tab, or a loop parked mid-cue: 5 s between two frames.
+  queue.tick(5000);
+  assert.equal(queue.idle, false, 'the batch was not swallowed by one late frame');
+  assert.ok(
+    Math.abs(before - queue.totalRemainingMs() - MAX_TICK_MS) < 1e-6,
+    `one late frame advanced the film ${String(before - queue.totalRemainingMs())} ms`,
+  );
 });
 
 test('queue: the 24-step cap flushes rather than queueing a cutscene', () => {

@@ -2,12 +2,29 @@
   "version": 1,
   "_generated": "WRITTEN BY tools/build-figures.mjs — do not edit by hand. The hand-written half (where each file came from, what its licence badge said) is tools/assets-manifest.json; everything here was measured from the built figures.glb.",
   "_fallback": "A model id named here that has no file on disk is not an error: scene/models.ts falls back to the glow disc (report 13 §9.4), which is also what a fresh checkout with no binaries gets.",
+  "_measure": "`height` is the bind-pose height three normalises by at load; `width` is the widest RESTING stance (idle, crouch) along the axis that becomes x once `facing` is turned to +Z — both measured on the SKINNED mesh, in three, before meshopt.",
+  "library": {
+    "path": "models/figures.glb",
+    "bytes": 143920,
+    "sha256": "c09ac552f7daed93fabb6549b83211beaeb3e895614134575f388d485da981a3"
+  },
+  "clipLibraries": {
+    "ual": {
+      "title": "Universal Animation Library [Standard]",
+      "source": "https://quaternius.com/packs/universalanimationlibrary.html",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License CC0",
+      "retrieved": "2026-09-27",
+      "committable": true
+    }
+  },
   "models": {
     "agent": {
       "path": "models/figures.glb",
       "node": "agent",
       "height": 0.6713,
-      "width": 0.7672,
+      "width": 0.7725,
       "facing": "+z",
       "rootMotion": false,
       "bones": 7,
@@ -17,14 +34,89 @@
         "summon": "agent_jump",
         "attack": "agent_attack-melee-right",
         "block": "agent_crouch",
-        "hit": "agent_fall",
-        "die": "agent_die",
+        "hit": "agent_ual-Hit_Chest",
+        "die": "agent_ual-Death01",
         "grow": "agent_emote-yes",
         "shrink": "agent_crouch",
         "channel": "agent_interact-right",
         "crouch": "agent_crouch",
         "pistolDraw": "agent_holding-both-shoot",
         "radioCall": "agent_interact-left"
+      },
+      "rig": "kenney-mini",
+      "retargeted": {
+        "hit": "ual:Hit_Chest",
+        "die": "ual:Death01"
+      },
+      "source": "https://kenney.nl/assets/mini-characters",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License · Creative Commons CC0",
+      "retrieved": "2026-09-13",
+      "committable": true
+    },
+    "hero": {
+      "path": "models/figures.glb",
+      "node": "hero",
+      "height": 0.7234,
+      "width": 0.7725,
+      "facing": "+z",
+      "rootMotion": false,
+      "bones": 7,
+      "triangles": 742,
+      "clips": {
+        "idle": "hero_idle",
+        "summon": "hero_jump",
+        "attack": "hero_attack-melee-right",
+        "block": "hero_crouch",
+        "hit": "hero_ual-Hit_Chest",
+        "die": "hero_ual-Death01",
+        "grow": "hero_emote-yes",
+        "shrink": "hero_crouch",
+        "channel": "hero_interact-right",
+        "crouch": "hero_crouch",
+        "pistolDraw": "hero_holding-both-shoot",
+        "radioCall": "hero_interact-left"
+      },
+      "rig": "kenney-mini",
+      "retargeted": {
+        "hit": "ual:Hit_Chest",
+        "die": "ual:Death01"
+      },
+      "source": "https://kenney.nl/assets/mini-characters",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License · Creative Commons CC0",
+      "retrieved": "2026-09-13",
+      "committable": true
+    },
+    "scientist": {
+      "path": "models/figures.glb",
+      "node": "scientist",
+      "height": 0.676,
+      "width": 0.7725,
+      "facing": "+z",
+      "rootMotion": false,
+      "bones": 7,
+      "triangles": 710,
+      "clips": {
+        "idle": "scientist_idle",
+        "summon": "scientist_jump",
+        "attack": "scientist_attack-melee-right",
+        "block": "scientist_crouch",
+        "hit": "scientist_ual-Hit_Chest",
+        "die": "scientist_ual-Death01",
+        "grow": "scientist_emote-yes",
+        "shrink": "scientist_crouch",
+        "channel": "scientist_interact-right",
+        "crouch": "scientist_crouch",
+        "pistolDraw": "scientist_holding-both-shoot",
+        "radioCall": "scientist_interact-left"
+      },
+      "rig": "kenney-mini",
+      "retargeted": {
+        "hit": "ual:Hit_Chest",
+        "die": "ual:Death01"
       },
       "source": "https://kenney.nl/assets/mini-characters",
       "licence": "CC0-1.0",
@@ -36,8 +128,8 @@
     "drone": {
       "path": "models/figures.glb",
       "node": "drone",
-      "height": 0.764,
-      "width": 2.2709,
+      "height": 0.7737,
+      "width": 1.2872,
       "facing": "+z",
       "rootMotion": false,
       "bones": 11,
@@ -59,8 +151,8 @@
     "insect": {
       "path": "models/figures.glb",
       "node": "insect",
-      "height": 1.8709,
-      "width": 2.8672,
+      "height": 1.8812,
+      "width": 2.7635,
       "facing": "+z",
       "rootMotion": false,
       "bones": 9,

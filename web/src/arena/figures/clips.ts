@@ -264,3 +264,151 @@ export function clipForCue(cueId: string): ClipName | null {
   const clip = CLIP_FOR[cueId];
   return clip !== undefined && isClipName(clip) ? clip : null;
 }
+
+// ---------------------------------------------------------------------------
+// T8 — the departing figure (Tier 2 follow-up 2)
+// ---------------------------------------------------------------------------
+
+/**
+ * **A death is a transition, so it is a cue — and until T8 it had no body to
+ * play on.** The snapshot that carries a creature's `zone → graveyard` event
+ * already shows it in the graveyard, so `figurePose` (a pure function of that
+ * snapshot) correctly gives it no figure, and in a full 1× replay of `g1` 69 `die`
+ * requests reached the stage with no rig to receive them (D56).
+ *
+ * The fix is Tier 1's own pattern for a card: the card plane that leaves the
+ * battlefield is drawn by its `zone.dissolve` cue *starting where it was*, as an
+ * offset that decays to its new resting place. A departing figure is the same
+ * thing for a body — **drawn from the snapshot it departs in until its own death
+ * cue has ended, at the pose it last had, the fall on that cue's clock** — and its
+ * identity, the thing it decays to, is ABSENCE. It never outlives the cue: skip,
+ * flush, a scrub or a new `gameId` end the cue, and the body is gone that frame.
+ * The one thing it remembers is the previous frame's pose, which is the same one
+ * frame of look-behind the strike already reads (D63). (Slice 2 first drew it only
+ * while the `die` REQUEST was on the stage, and every death blinked — see
+ * {@link DepartureLane}; **D64**.)
+ *
+ * These are the pure halves: the die clip's weight against the last stance, the
+ * body's opacity, and how much colour it has lost — all functions of the cue's
+ * `t` and nothing else, so a paused cue holds the body mid-fall.
+ */
+
+/** The die clip takes over from the last stance over the first 12% of the cue. */
+export const DEPARTURE_FADE_IN = 0.12;
+/** …and the body fades out over the last 40%, so it is gone BEFORE the request is. */
+export const DEPARTURE_FADE_OUT_FROM = 0.6;
+/** How far toward grey a dying hologram drains by the end. */
+export const DEPARTURE_DRAIN = 0.6;
+
+function clampUnit(t: number): number {
+  return t < 0 ? 0 : t > 1 ? 1 : t;
+}
+
+/**
+ * The die clip's weight against the departing body's last stance. **It never
+ * falls back to 0** — unlike {@link clipEnvelope}, whose return to the stance is
+ * exactly what a living figure needs and exactly what a dying one must not do: a
+ * death that stood back up at `t = 1` would be the figure contradicting the
+ * snapshot.
+ */
+export function departureWeight(t: number): number {
+  return clampUnit(clampUnit(t) / DEPARTURE_FADE_IN);
+}
+
+/** The departing body's opacity multiplier: 1, then to exactly 0 at `t = 1`. */
+export function departureOpacity(t: number): number {
+  const x = clampUnit(t);
+  if (x <= DEPARTURE_FADE_OUT_FROM) return 1;
+  return 1 - (x - DEPARTURE_FADE_OUT_FROM) / (1 - DEPARTURE_FADE_OUT_FROM);
+}
+
+/** How far the body's tint has drained toward grey, 0 … {@link DEPARTURE_DRAIN}. */
+export function departureDrain(t: number): number {
+  return DEPARTURE_DRAIN * clampUnit(t);
+}
+
+// ---------------------------------------------------------------------------
+// T8 fix — the body is drawn from the snapshot it departs in, not from its die cue
+// ---------------------------------------------------------------------------
+
+/**
+ * **Which cue ids end a figure's life.** Every cue whose clip is `die` — derived
+ * from {@link CLIP_FOR} rather than listed a second time, so a new death cue in
+ * that table is a death here with no second edit. `cues/queue.ts` stamps each
+ * scheduled cue with it at ENQUEUE time.
+ */
+export function isDeathCue(cueId: string): boolean {
+  return clipForCue(cueId) === 'die';
+}
+
+/**
+ * One departing body's fate, and the only state it keeps.
+ *
+ * The slice-2 verification pass found every death **blinking**: the body was
+ * drawn only while its card's `die` request was on the stage, but the snapshot
+ * that carries the death has already removed the living figure, and the death
+ * cue plays AFTER the batch's damage cues — so the creature vanished when the
+ * blow landed (0.51–1.32 s in `g1.jsonl`), took its own `hit` with no body, and
+ * popped back to fall. The fate is therefore decided from the QUEUE, not from the
+ * clip lane: a departure whose card has a death cue queued or running in the frame
+ * after it left (`CueQueue.deathPending`, stamped at enqueue) is **dying**, and a
+ * dying body is drawn on every frame from then until that cue has ended. A
+ * departure with none — bounced, flickered, turned face down — is never drawn.
+ *
+ * `dying` is decided ONCE, on the body's first frame, so a creature bounced to
+ * its owner's hand and discarded three turns later does not come back to die on
+ * the battlefield it left.
+ */
+export interface DepartureLane {
+  /** `null` until the body's first frame; then whether its death was queued. */
+  dying: boolean | null;
+  /** The death has played out (or was skipped, flushed or scrubbed away). */
+  done: boolean;
+}
+
+/**
+ * **One frame of a departing body: is it drawn?** A state step over a lane the
+ * caller owns (so the frame loop allocates nothing), and the whole of the rule —
+ * `DepartureField.bind` and `clips.test.ts`'s corpus timeline both call it, so the
+ * test walks the renderer's own decision rather than a copy of it.
+ *
+ *  - `deathQueued`: the queue holds an unfinished death cue for this card —
+ *    waiting behind the rest of its batch, or running;
+ *  - `request`: the card's winning clip request this frame, or `null`.
+ *
+ * The death ends the body in the frame it ends the cue: `flushAndSnap` (skip, a
+ * scrub, a `resync`, a new `gameId`) ends every cue, and so every body, at once.
+ */
+export function stepDeparture(
+  lane: DepartureLane,
+  deathQueued: boolean,
+  request: ClipRequest | null,
+): boolean {
+  if (lane.done) return false;
+  const dieNow = request !== null && request.clip === 'die';
+  if (lane.dying === null) lane.dying = deathQueued || dieNow;
+  if (!lane.dying) return false;
+  if (deathQueued || dieNow) return true;
+  lane.done = true;
+  return false;
+}
+
+/**
+ * How many snapshots an UNDECIDED departure is held for before it is let go.
+ * A body's fate is decided on its first frame, and a frame always follows a
+ * snapshot (`CueRunner` invalidates on every new layout); two is for two
+ * snapshots landing inside one frame.
+ */
+export const DEPARTURE_PATIENCE = 2;
+
+/**
+ * Commit time: does a departure survive the snapshot that has just arrived?
+ * Not if its card is on the table again (the living figure has it back), not if
+ * its death has played, not if it was decided NOT dying — and not if it has
+ * waited {@link DEPARTURE_PATIENCE} snapshots without a frame to decide it.
+ */
+export function keepDeparture(lane: DepartureLane, onTable: boolean, age: number): boolean {
+  if (onTable || lane.done || lane.dying === false) return false;
+  if (lane.dying === null) return age <= DEPARTURE_PATIENCE;
+  return true;
+}

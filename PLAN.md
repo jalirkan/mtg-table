@@ -16,7 +16,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
-| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built and verified**, not committed (branch `tier2-slice1`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups; T8–T14 handed over |
+| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice and fixed twice**, not committed (branch `tier2-slice2`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened; T9–T14 handed over |
 
 ---
 
@@ -2120,15 +2120,23 @@ slice 1 was built against.)
 
 ---
 
-## M7 Tier 2 — the manifestation stage (slice 1: T0–T7)
+## M7 Tier 2 — the manifestation stage (slice 1: T0–T7; slice 2: T8 and the camera views)
+
+**Slice 2 (2026-09-27) is further below** — *Slice 2 — T8*, its own follow-ups,
+and *What slice 2 hands to T9–T14*. **The user played several games on slice 1
+before slice 2 was built and reported nothing major** ("this seems to be on
+track"), so nothing in slice 1 was redesigned; that play-test is the one slice
+1's hand-over asked for before T8, and it did not flag the live combat budget
+(follow-up 1, question 12).
 
 **Status: slice 1 built and verified — T0 to T7 of
 [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md)
 §11, then one independent verification pass (verdict: passed; ten findings, all
 minor).** Evidence:
 [`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md), in three parts (T0–T2,
-T3–T4, T5–T7) plus a status section. **Nothing is committed**: the work is branch
-`tier2-slice1` in the worktree `/home/justin-a/code/mtg-table-t2`, per CLAUDE.md.
+T3–T4, T5–T7) plus a status section. **The user committed it on `main` as
+`4f84613`**; it was built on branch `tier2-slice1` in the worktree
+`/home/justin-a/code/mtg-table-t2`, and slice 2 branches from that commit.
 The user's nine Tier 2 decisions are recorded as **D53–D62**, and the builders'
 own as **D56, D57, D59, D60, D63**. The spec is report 13; the asset landscape it
 rests on is [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md).
@@ -2157,11 +2165,20 @@ node tools/arena-bench.mjs --index 316 --settle 4000            # ... and under 
 
 A fresh checkout with no `web/public/models/figures.glb` plays the whole film:
 every creature draws its stand disc, the console says so once, and nothing errors
-(evidence §4.3). Rebuilding the file needs the three CC0 sources under
-`var/assets/figures/` — `tools/assets-manifest.json` has their download URLs and
-sha256s, and the Kenney zip must be unzipped in place.
+(evidence §4.3). Rebuilding the file needs the CC0 sources under
+`var/assets/figures/` exactly as downloaded — **four since slice 2** (the
+Universal Animation Library joined the three) — and `tools/assets-manifest.json`
+has their download URLs, byte counts and sha256s. **Since slice 2 nothing is
+unzipped by hand**: the build verifies every archive against the manifest,
+refuses one that differs, reads the members it needs out of the verified zips,
+and records the output's own bytes and sha256 in `models.json`
+(`--verify-only` checks the sources and stops; **D67**).
 
-### The eight evenings
+### The evenings
+
+T0–T7 are slice 1; **T8 and the camera views are slice 2** (the camera views are
+not one of report 13 §11's evenings — the user asked for them with T8, and they
+are the row below it).
 
 | | deliverable | status | what proves it |
 |---|---|---|---|
@@ -2173,6 +2190,8 @@ sha256s, and the Kenney zip must be unzipped in place.
 | **T5** | one aura, properly, and the default halo | **done** | all 985 attachment frames show their aura; Quantum Reduction holds its host at 0.45× through a skip; every other attachment draws the halo |
 | **T6** | the stack | **done** | 389 stack frames, 417 forms, max depth 4; the ghosted creature spell *is* the figure that lands; 44 tethers; **41 aimed strikes** from one frame of look-behind (**D63**); the combat freeze spares the spell; the fizzle shown with a synthetic event (the corpus has none) |
 | **T7** | measure and tune | **done** | busts; the width clamp; the bench on SwiftShader **and on the GTX 1080**; bloom's default decided by measurement; a live game on port 8660 |
+| **T8** | the rest of the humanoids | **done (slice 2)** — plus two things T8 found: the death, and slice 1's drone | hero `character-female-b` and scientist `character-male-e` on the agent's one 7-joint rig (**D73**); the Universal Animation Library retargeted offline and judged clip by clip — its `hit` and `die` kept, the rest of the pack's own clips better (**D68**); `figures.glb` 143,920 B, five models, 9,759 triangles, **no texture**, two builds byte-identical, every source verified by the build (**D67**); the width clamp strict for every archetype, 7,331 neighbouring pairs, worst overlap 0.000 (**D65**); the back row on its own card, 216 → 0 stand points inside another card (**D66**); **a creature that dies is seen dying**, all 17 corpus deaths drawn without a gap from the snapshot to the end of the death cue (**D64**) |
+| **cam** | camera views | **done (slice 2)** | five views on keys `1`–`5` (table, shoulder, opponent's shoulder, side-on, low), each the camera's home; the three that keep the seat's hand and ranks on screen usable live, the other two spectator-only (**D69**); spectator mode `O`, on by itself in a replay and when a live game ends; the auto director `6`/`0`, pure, 596 cuts over all 19 recordings at two paces with no shot under 2.4 s and no cooldown violation (**D70**); rule 5 at a live seat only, `change` only under the user's hand, the choice kept in `localStorage` (**D71**); three keymap rows, `inert` on the board (**D74**) |
 
 ### What the evidence shows
 
@@ -2281,10 +2300,12 @@ changes that contradict earlier documents; now **D53–D63** and CLAUDE.md's Tie
 section), and NOTICE did not list the two bloom packages bundled into the `Post`
 chunk (now §6). The other eight are follow-ups 2, 3, 4, 5, 7, 8, 9 and 10 below.
 
-### Tier 2 follow-ups — nineteen, 2026-09-27
+### Tier 2 follow-ups — nineteen from slice 1, 2026-09-27; six closed by slice 2
 
 From the builders' own "problems" notes and the verification pass. **None of them
-stops a game, and the gate is green.** Three are properties of the wire or of
+stops a game, and the gate is green.** **Slice 2 closed 2, 3, 8, 9, 11 and 18**
+(struck through below, each with what closed it) and added a second cause to 1;
+the other thirteen are open, and slice 2's own list follows its section. Three are properties of the wire or of
 Tier 1's queue policy that a renderer must not paper over (1, 2, 13), four are
 measurement limits or caveats (4, 6, 12, 14), and the rest are small debts with
 a stated cost.
@@ -2299,8 +2320,24 @@ a stated cost.
    photographed live for the same reason. Loosening this — exempting the clip lane
    from `MIN_COMPRESSION`, or an attackers batch keeping a ~400 ms floor while the
    human is awaited — is a **Tier 1 policy change**, and it wants the play-test
-   (report 13 §13 question 7), not a guess.
-2. **The `die` clip never plays anywhere** (**D56**). The snapshot carrying a
+   (report 13 §13 question 7), not a guess. **A second cause, found and fixed by
+   slice 2's second verification pass (D72):** the cue clock added the whole idle
+   gap of a parked loop to the next batch's first frame (the verifier measured
+   live AI-turn batches jumping 734–1000 ms), so after any pause a batch could be
+   consumed by its first tick whatever its budget. The budget cause above is
+   unchanged and still open, and now measured live: after the D72 fix, 17 of a
+   live game's 44 batches still finished on their first tick with the clock
+   advanced 0 ms — which can only be zero-duration cues, the 250 ms budget
+   compressed below `MIN_COMPRESSION`. The user's play-test of slice 1 did not
+   flag it (question 12).
+2. ~~**The `die` clip never plays anywhere**~~ — **closed by slice 2 (D64)**: a
+   creature that dies is drawn as a departing body from the snapshot it dies in
+   until its own death cue ends, the fate decided by the queue
+   (`CueQueue.deathPending`), stepped out of the rank that closed up. The first
+   version (drawn only while the `die` request was on the stage) blinked on every
+   death; the verification fix and `clips.test.ts`'s corpus timeline are in
+   `docs/evidence/m7-tier2-slice2.md`. The original text, for the record:
+   **The `die` clip never plays anywhere** (**D56**). The snapshot carrying a
    creature's `zone → graveyard` event already shows it in the graveyard, so it
    has no figure; in a full 1× replay of `g1` the verification pass saw 69
    `die` requests reach `stage.clips` and no rig ever show a death clip. Not a
@@ -2308,7 +2345,11 @@ a stated cost.
    would be the renderer remembering something the engine did not say. `die`
    stays in `CLIP_FOR` so that the day the wire says "dying" one frame earlier it
    plays.
-3. **A wrapped rank's second-row figures stand inside the first row's cards.**
+3. ~~**A wrapped rank's second-row figures stand inside the first row's cards.**~~
+   **Closed by slice 2 (D66)**: a back-row figure stands on its own card (216 stand
+   points inside another card → 0), and its disc is drawn in a second pass after
+   the cards (the verification pass found five discs a seat hidden under their own
+   back-row cards). Originally:
    `standPointOf`'s row falloff is report 13 §3.1's own formula, and the
    verification pass found it still lands row-1 figures on row-0 cards. Measured
    during the documentation pass: only `human-sideboard-7` ever has ten or more
@@ -2319,7 +2360,9 @@ a stated cost.
    iGPU. With the default on, the SwiftShader bench **fails** until the governor
    switches bloom off (~40 slow frames). M7 follow-up 2 is answered for this GPU
    and still open for an integrated one; the check is a real browser on the
-   user's desktop with `?stats=1&glinfo=1`, bloom on and off.
+   user's desktop with `?stats=1&glinfo=1`, bloom on and off. **Slice 2 is under
+   the same caveat**: every browser number it has — the views, the director, the
+   deaths, the loop — is headless Chromium on the GTX 1080.
 5. **The program budget is exceeded under bloom**: 25 programs (22 after the
    governor turns it off) against report 13 §8.2's ≤ 14; bloom off is 11. Draw
    calls and triangles are inside budget. Either the budget line is amended to
@@ -2332,12 +2375,22 @@ a stated cost.
    while such a card is on the table — from `g1` frame 176 onward in that replay —
    and since Tier 2 every pose layer is bound on each of those frames. A table
    without one still renders nothing while idle.
-8. **The "no CDN" liveness clause is a hostname denylist** (**D54**): the
+8. ~~**The "no CDN" liveness clause is a hostname denylist**~~ — **closed by
+   slice 2's verification fix**: the clause is now an allow-list over every string
+   literal under `web/src/arena/` that carries a URL scheme (only the Scryfall
+   credit link is allowed, with its reason), plus provenance-only keys in the
+   arena's JSON, with the negative controls — `'https://example.com/figures.glb'`
+   among them — in the test itself. Originally: **the clause was a hostname denylist** (**D54**): the
    verification pass pointed the loader's fallback at `https://example.com/…` in a
    scratch copy and the clause stayed green. The robust form is "no string
    literal with a URL scheme anywhere under `web/src/arena/`", negative-controlled
    the same way.
-9. **`tools/build-figures.mjs` never verifies a source's sha256** against
+9. ~~**`tools/build-figures.mjs` never verifies a source's sha256**~~ — **closed
+   by slice 2 (D67)**: the build checks every source's bytes and sha256 against the
+   manifest before building, records the built file's own in `models.json`, and
+   `figures.test.ts` fails when the committed `figures.glb` is not that file (the
+   check lives there rather than in a separate `tools/check-models.mjs`).
+   Originally: **`tools/build-figures.mjs` never verified a source's sha256** against
    `tools/assets-manifest.json` (it prints them when a file is missing), and
    **nothing checks the built file's own hash**. The documentation pass recorded
    it — 126,404 bytes, sha256 `c870a53330cf…5c5658fa` (NOTICE §7, **D54**) — so the
@@ -2346,8 +2399,16 @@ a stated cost.
    live.
 10. **The busts sit badly at 1600 × 1000**: the opponent's is mostly hidden under
     the top-left decision panel and cue strip, and the viewer's takes the
-    bottom-left corner (**D62**).
-11. **The drone overlaps its neighbours** by up to 0.634 units — every
+    bottom-left corner (**D62**). **Measured by slice 2's second fix pass**, as the
+    share of the opponent's bust quad where `elementFromPoint` is not the canvas:
+    **37–38% at 1600 × 1000, 33% at 1280 × 720, 89% at 1024 × 700** — unchanged by
+    folding the camera switcher into the cue strip's row, because what covers it
+    is the decision strip, the cue strip and the credit line. The anchor is
+    **T13**'s to move.
+11. ~~**The drone overlaps its neighbours**~~ — **closed by slice 2 (D65)**: the
+    drone was mismeasured, not too wide (1.66× wider than tall, not 2.97×); the
+    clamp is strict for every archetype and the worst overlap over 7,331 pairs is
+    0.000. Originally: **the drone overlapped its neighbours** by up to 0.634 units — every
     overlapping pair in the corpus has a drone in it. It is mostly wingspan and
     the width clamp's floor keeps it from vanishing; a narrower drone is **T9**'s.
 12. **The fizzle is evidenced only by a synthetic event**: 0 of the corpus's 412
@@ -2371,30 +2432,193 @@ a stated cost.
     keep legal comments. Pre-existing since M7; found now.
 17. **`@gltf-transform/cli` floats on a caret (`^4.5.0`)** while every Tier 2
     runtime dependency is exact. A minor release could change the bytes of
-    `figures.glb`; pin it if the built file is committed.
-18. **`tools/build-figures.mjs`'s comment gives the wrong reason for measuring
+    `figures.glb`; pin it if the built file is committed. Since slice 2 such a
+    change can no longer pass silently — `figures.test.ts` fails when the file on
+    disk is not the one `models.json` records — but the pin is still open.
+18. ~~**`tools/build-figures.mjs`'s comment gives the wrong reason**~~ — **closed
+    by slice 2**: width is now measured on the skinned mesh along the axis that
+    becomes x after the facing turn, and the comment says so. Originally: **the
+    comment gave the wrong reason for measuring
     `max(x, z)`** ("a figure turns to face the other seat" — a π turn keeps x along
     x). The number is right for all three models. Left for the file's owner.
 19. **`web/t0-spike.html` is kept** as T0's go/no-go page. It is not reachable
     from the app and never reaches `dist/` (`vite build`'s only input is
     `index.html`); keep it or delete it, but decide.
 
-### What slice 1 hands to T8–T14
+### Slice 2 — T8 (the humanoids, the retarget, the death) and the camera views, 2026-09-27
 
-Report 13 §11's second table, updated for what slice 1 already did. **Before
-T8, play three games** — `./scripts/play.sh --arena --games 3` — and write down,
-in the moment, the three things that read wrong (report 13 §13 question 7); that
-list is what T8–T12 should be re-ordered around, and follow-up 1 needs it.
+**Status: built in two tracks, verified twice, fixed twice, and documented** — in
+the worktree `/home/justin-a/code/mtg-table-t2b`, branch `tier2-slice2`,
+**nothing committed**. The first verification pass found one major (every death
+blinked) and six minors; the second found one major and three minors, the major a
+**Tier 1** defect (the cue clock played an idle gap as film). All eleven are fixed
+— the bust-coverage minor only partly (follow-up 10 above). Evidence:
+[`docs/evidence/m7-tier2-slice2.md`](docs/evidence/m7-tier2-slice2.md) — the
+camera track, the figure track, both fix passes and a status section. Decisions
+**D64–D74**. **`docs/protocol.md` needs no amendment**: nothing on the wire moved,
+`bridge/` is untouched, no fixture was re-recorded, and no npm dependency was
+added (the build runs the three already installed, in Node, for the retarget).
 
-| | deliverable | what slice 1 already did | what is left |
+**Command**
+
+```bash
+./scripts/play.sh --arena                  # live: 1 table · 2 shoulder · 5 low
+npm --prefix web run dev:arena             # a replay: all five views, 6/0 the director,
+#                                            O spectator (on by itself in a replay)
+#   g1.jsonl scrubbed to 322-348 is the evidence's director sequence (two combats);
+#   g2.jsonl at 200 has all three humanoid bodies on the table at once;
+#   human-auto-7.jsonl stepped 794 -> 795 after a pause is two deaths (D64, D72)
+node tools/build-figures.mjs --verify-only # the four sources against the manifest
+node tools/build-figures.mjs               # figures.glb (143,920 B) + models.json
+node tools/build-figures.mjs --clip-source experiment --no-manifest \
+     --out var/assets/figures/build/figures-ual.glb   # every clip retargeted (+24 kB)
+```
+
+**What it built**
+
+- **Three humanoid bodies on one rig** (**D73**, **D68**): the agent
+  (`character-male-a`), the hero (`character-female-b`, two round buns — the
+  outline that reads from every side) and the scientist (`character-male-e`,
+  glasses and tie — the one body that reads as a scientist face-on), all on
+  Kenney's one 7-joint rig with **one clip set**: the pack's own clips, plus the
+  Universal Animation Library's `Hit_Chest` and `Death01` retargeted **offline by
+  the build** as `hit` and `die`. The experiment's verdict, from renders: the
+  library's recoil and death read on a head-heavy chibi; its idle, punch, landing
+  and crouch pitch the head block into a face-plant, and Kenney's hand-made clips
+  win every one of those.
+- **A library that is verified and reproducible** (**D67**): every source checked
+  by bytes and sha256 before a build, zips read by the build itself, no texture,
+  the output's own hash in `models.json` and checked by `figures.test.ts`; two
+  builds byte-identical at **143,920 B** (five models, 9,759 triangles). The new
+  build also found that **slice 1's drone was never whole** (its arms were joined
+  onto the eye's skin and drawn floating) and that every width it measured for a
+  skinned mesh was wrong.
+- **The strict width clamp** (**D65**) and **the back row on its own card**
+  (**D66**), closing follow-ups 11 and 3 above.
+- **The death is seen** (**D64**, closing follow-up 2): a creature that dies is
+  drawn as a departing body from the snapshot it dies in until its own death cue
+  ends, its fate decided by the queue (`CueQueue.deathPending`), stepped out of
+  the rank that closed up behind it. The first version blinked on every death for
+  0.5–1.3 s; after the fix, 0 frames without a body on all three of `g1`'s
+  modelled deaths in the browser, and all 17 corpus deaths drawn without a gap by
+  `clips.test.ts` at three paces.
+- **Five camera views, spectator mode and an auto director** (**D69–D71**,
+  **D74**): the views are homes the cue swoops leave from and return to; table,
+  shoulder and low keep the seat's hand **and** its own ranks on screen and are
+  usable live, the opponent's shoulder and side-on are spectator-only; spectator
+  mode is on by itself in a replay and the moment a live game ends; the director
+  is pure, cuts on combat, casts, strikes, turns and the outcome, and is held to
+  its three numbers over the whole corpus. A switcher in the cue strip's row
+  (collapsing to its keys below 1,400 px) does the same by click, and the choice
+  persists in this browser.
+- **Two Tier 1 defects, found by measuring D64's promise** (**D72**): the cue clock
+  added a parked loop's whole idle gap to the next batch's first frame
+  (`human-auto-7` 794 → 795 after a 3 s pause: 0 body frames before, 86 of 89
+  now, the same as with no pause; live, the first tick of 42 batches that landed
+  on an idle queue advanced the clock 0 ms, where the verifier had measured
+  734–1,000 ms), and a literal `<Canvas frameloop="demand">` froze a running
+  batch on any re-render (11 frames in 3.5 s with six cues queued → 88).
+
+**What the evidence shows**
+
+- **Budgets** (dev build, GTX 1080, bloom off): `g1`@316 — T7's bench frame —
+  **60** draw calls and **20,982** triangles; `g1`@355 **65** / **24,406**; `g2`@200,
+  all three bodies, **51** / **19,669**; against ≤ 90 and ≤ 30,000. No frame-time
+  bench was run by slice 2: nothing it added costs more per frame than slice 1's
+  agent did.
+- **The 2D board did not move.** Entry chunk **86.23 kB gzip** (slice 1: 85.72 —
+  the three keymap rows' text; still no `three` in it, and `camera.ts`'s strings
+  appear only in the Arena chunk); Arena chunk **322.48 kB** gzip (slice 1:
+  315.13); `Post` unchanged at 16.54.
+- **Tests.** `npm --prefix web test` is **655 `node --test` + 79 vitest**
+  standalone (slice 1: 610 + 79). `camera.test.ts` grew from 16 tests to 35,
+  `keys.test.ts` from 23 to 27, and `liveness.test.ts` gained the camera's purity,
+  the one director caller, `localStorage` only inside `try`, the switcher's
+  pointer events, the URL allow-list (follow-up 8), the frame-loop allocation scan,
+  the layout-effect intake and the loop-mode ref — each with its negative control.
+  `./tools/check-all.sh` passed three times on this branch: **731 s** (first fix
+  pass, `WSPORT=8662`), **729 s** (second fix pass, `WSPORT=8665`) and **727 s**
+  (the documentation pass, `WSPORT=8666`, `var/check-all-t2s2-docs.log`) — each
+  exit 0, 9b's re-recording multiset-identical or within its documented noise,
+  9c 10/10, all seven ws servers, and the web step at **665 `node --test` (657
+  pass / 0 fail / 8 skipped) + 79 vitest**.
+- **Behaviour a reviewer should know is deliberate**: `reset()` and `K` now snap
+  the camera home; camera cues now play in replays of human games (rule 5 waits
+  for a live seat); "Low" is a corner now rather than a crouch, the price of
+  keeping the land rank in view.
+
+### Slice 2 follow-ups — ten, 2026-09-27
+
+From the builders' and fixers' own "problems" notes and both verification passes.
+**None stops a game.** Two are the renderer declining to remember (4, 5), three
+are limits of how slice 2 was measured (6, 7, 10), and the rest are small debts
+with a stated cost.
+
+1. **`shrink` and `block` still borrow `crouch`.** No CC0 library read has a
+   shrink or a cower — the Universal Animation Library's 44 clips were read, and
+   its crouch face-plants on the chibi; UAL 2's list has none either (the
+   manifest's `_deferred`). `clips.test.ts` pins the borrowing so a new one shows
+   up on the day it is added (**D68**).
+2. **The scientist is the agent's outline from behind** — on the viewer's own
+   side the braces and the lab tint tell them apart, not the shape; face-on, the
+   glasses read (**D73**).
+3. **The Giant-Sized Flying Ant is not giant.** Its `scale: 1.35` clamps to the
+   same 0.49 as any insect under the strict clamp (**D65**), as it already did
+   under slice 1's floor. A giant needs a wider slot — a `layout.ts` question —
+   not an exemption, which D65 rejected. **T9**'s.
+4. **The dying body steps out in the frame the rank closes.** `departureStand`
+   puts it one `DEPARTURE_STEP` (0.85) into its combat lane in the same frame its
+   neighbours snap together; there is no slide, because the only clock outside a
+   cue is the cue clock — the same snap Tier 1's cards make, but visible.
+5. **A death flushed before its first frame has no body**: 2 of the corpus's 17
+   at the replay's 1× pace (§5.2's cap flushes the batch on arrival), 0 when
+   drained. Deliberate — a snapped clip on a living figure is the same — but a
+   very busy live batch can still skip the fall.
+6. **No live death has been seen, and the retargeted `hit` was not photographed
+   in the arena.** The second fix pass's live check used a scripted autopilot that
+   never got a creature of ours onto the battlefield; deaths are evidenced by
+   stepping replays in headless Chromium and by the corpus test. The `hit` was
+   judged from lab renders (`clips-compare.png`) and clip-state readings; only the
+   retargeted `die` was photographed in the arena. The photographs themselves are
+   in `var/shots-t8/` and the session scratchpad — local, not committed.
+7. **The in-browser checks are not repeatable from the repo.** The loop-mode
+   guard (**D72**) and the intake-order guard (**D64**) are source scans, because
+   node and vitest have no WebGL; the behaviour behind them was measured only by
+   scratch CDP drivers that are not in `tools/`. `tools/arena-bench.mjs` is the
+   pattern if they are ever worth keeping.
+8. **The views' trade, and a flash nobody sees.** To keep the land rank above the
+   hand, the shoulder moved from polar 66° to 55° and low from 74° to 59°; the
+   Plains' near third is still behind the hand in both (41 of 96 and 34 of 86
+   raycast samples on the card), and clearing the whole card would put both views
+   back near the table's (polar ≈ 50°). Separately, the board's inert-key flash is
+   invisible on a recording with no `input` frame (**D74**'s known cost — a
+   `DecisionPanel` change, pre-existing).
+9. **A spectator's swoop is a close-up.** With no hand band to keep, the
+   lethal-damage cue's jolt becomes a real push-in for a spectator (clamped at
+   0.45× the rest distance). It reads well in `g1`; if it is too much, the fix is a
+   `cues.json` parameter, not the director.
+10. **Nobody has play-tested slice 2.** The user's games were on slice 1; the
+    views, the director and the deaths have been seen only by headless Chromium on
+    the GTX 1080 (follow-up 4's caveat). The first play-test of slice 2 is the
+    input T9–T12 should be ordered by.
+
+### What slice 2 hands to T9–T14
+
+Report 13 §11's second table, updated for both slices. **Before T9, play three
+games in the arena** — `./scripts/play.sh --arena` — once from the shoulder and
+once from low, and write down, in the moment, what reads wrong: the deaths, the
+views' trade (slice 2 follow-up 8) and the live combat (follow-up 1) are the
+three questions it answers.
+
+| | deliverable | what slices 1 and 2 already did | what is left |
 |---|---|---|---|
-| **T8** | the rest of the humanoids | hero and scientist are the agent mesh in gold and lab-green; the Soldier and Hero tokens have their tints | a hero mesh and a scientist mesh of their own (Kenney's *Mini Characters* has twelve bodies in one CC0 kit); the retarget experiment of report 13 §9.5 against Quaternius's CC0 **Universal Animation Library**, with per-model clips as the named fallback — **never Mixamo** (**D54**) |
-| **T9** | drone and insect | both archetypes exist; the Giant-Sized Flying Ant stands at 1.35×; the Doombot's attack aliases `jet` | a **narrower drone** (follow-up 11); `Ant-Man's Air Force` as a small swarm of the insect (`figures.json` deliberately has no `swarm` key until something reads it); the Doombot's eye; the insect's missing `summon`, the drone's missing `hit` (deliberate absences today) |
-| **T10** | the vehicle | the Helicarrier keeps its Tier 1 `presence` hover and draws its disc | a CC0 vehicle silhouette overhead — none has been chosen, and `figures.json` declares no `creature/subtype:vehicle` rung until one exists |
-| **T11** | per-card clips, as `params.clip` | Agent 13's `pistolDraw` (seen live as her attacking stance); Fury's `radioCall` is aliased on `channel` in `figures.json`, but his own cues (`fx.agents`) drive `summon`, so the gesture is not yet on the beat `arena-mode.md` describes | Fury's radio call on his agents beat; the S.H.I.E.L.D. squad stepping forward together; Coulson's badge gesture; any per-card entry that would need a model used by exactly one card is **Tier 3**, not T11 |
-| **T12** | the remaining attachments | Quantum Reduction's shrink; every other aura and equipment draws the default halo (metallic for an Equipment) | Super Suit's shell (the host's own geometry, scaled), Spy Kit's glints, Robotics Mastery's circuits, Web Up's cocoon **after** follow-up 15's measurement, Strategic Intervention's mission-control overlay (a DOM widget in `.arena__layer`, which must carry its own `pointer-events: auto`) |
-| **T13** | duelists | **done in T7**: two silhouette busts in one draw call, reacting to damage and life | follow-up 10's placement; full avatars stay Tier 2.5, only if the play-test says anyone missed them |
-| **T14** | verification pass | one independent pass over slice 1 (passed; ten minor findings), and this documentation pass (CLAUDE.md's Tier 2 conventions, this section, **D53–D63**, README, NOTICE) | the same for T8–T13, and a re-run of the bench on the user's own desktop browser (follow-up 4) |
+| **T8** | the rest of the humanoids | **done (slice 2)**: hero and scientist bodies of their own on the agent's rig (**D73**), the retarget experiment run and decided (**D68**), and the death seen (**D64**) | slice 2 follow-ups 1 and 2 (the `crouch` borrowings; the scientist from behind) |
+| **T9** | drone and insect | both archetypes; **the drone rebuilt whole and measured correctly, so no narrower drone is needed** (**D65**); the Giant-Sized Flying Ant at `scale: 1.35`; the Doombot's attack aliases `jet` | `Ant-Man's Air Force` as a small swarm of the insect (`figures.json` deliberately has no `swarm` key until something reads it); the Doombot's eye; the insect's missing `summon`, the drone's missing `hit` (deliberate absences today); **a giant ant that reads as giant** (slice 2 follow-up 3) |
+| **T10** | the vehicle | the Helicarrier keeps its Tier 1 `presence` hover and draws its disc | a CC0 vehicle silhouette overhead — none has been chosen (the manifest's `_deferred.carrier`), and `figures.json` declares no `creature/subtype:vehicle` rung until one exists |
+| **T11** | per-card clips, as `params.clip` | Agent 13's `pistolDraw`; Fury's `radioCall` aliased on `channel`; **a CC0 clip library now builds in** — any UAL clip can be retargeted onto the humanoid rig by naming it `ual:<name>` in the manifest, and `--clip-source experiment` is the side-by-side bench | Fury's radio call on his agents beat; the S.H.I.E.L.D. squad stepping forward together; Coulson's badge gesture — **each judged on the chibi the way D68 judged the library**, because most of its clips face-plant; any entry that needs a model used by exactly one card is **Tier 3**, not T11 |
+| **T12** | the remaining attachments | Quantum Reduction's shrink; every other aura and equipment draws the default halo (metallic for an Equipment) | Super Suit's shell, Spy Kit's glints, Robotics Mastery's circuits, Web Up's cocoon **after** follow-up 15's measurement, Strategic Intervention's mission-control overlay (a DOM widget in `.arena__layer`, which must carry its own `pointer-events: auto`) |
+| **T13** | duelists | **done in T7**: two silhouette busts in one draw call | follow-up 10's placement, now measured at three window sizes (37–89% of the opponent's bust under chrome) — the bust's anchor, not the chrome, is what moves; full avatars stay Tier 2.5, only if the play-test says anyone missed them |
+| **T14** | verification pass | slice 1: one pass (passed, ten minors); slice 2: two passes (two majors and nine minors, all fixed) and this documentation pass | the same for T9–T13; the bench on the user's own desktop browser (follow-up 4); and a person watching a live death and the seat views (slice 2 follow-ups 6 and 10) |
 
 **The one line Tier 2 must not cross, restated.** A per-card entry in
 `figures.json` may choose a model and alias a clip; it may not introduce a model
@@ -2409,8 +2633,8 @@ Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so thes
 are now revisitable rather than blocked; nothing below is scheduled by that, and
 each still needs a decision of its own before it becomes work. The arena's
 **Tier 3** (per-card models) belongs on this list too; **Tier 2** left it on
-2026-09-13 — its first slice is built and its remaining evenings T8–T14 are
-handed over in *M7 Tier 2* above.
+2026-09-13 — its first two slices are built (T0–T8 and the camera views) and its
+remaining evenings T9–T14 are handed over in *M7 Tier 2* above.
 
 - A second deck, a deck picker, and an AI profile / difficulty selector. (Now
   specified, if it ever comes forward: there is no "difficulty" in Forge, only
@@ -2450,5 +2674,5 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **AI difficulty stays deferred.** |
 | 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **ANSWERED BY M6: ON.** `config.json` `"manaLostPrompt": true`, set in memory only (never `save()`), overridable with `--mana-lost-prompt` / `--no-mana-lost-prompt` (amendment M40). `confirm` therefore occurs in ordinary games; nothing else moved. Raise it again if the prompt turns out to be a nuisance. |
 | 10 | **New, Tier 2.** Report 13 §13's first six questions — art direction, models from card art, the GPU, idle breathing, duelists, lights. | **ANSWERED by the user before T0**, as nine decisions, recorded as **D53–D62**: stylised low-poly CC0 figures under a holographic, unlit treatment; figures at their card with the card plane kept; **no** AI-generated models from card art; **no** Mixamo; procedural slab lands; bloom on if the bench allows (it did, on the GTX 1080); breathing only while something else animates; silhouette busts, avatars deferred; mana motes to the controller's casting anchor. |
-| 11 | **New, Tier 2.** Commit `web/public/models/figures.glb` (126,404 bytes, CC0, built by `tools/build-figures.mjs`), or gitignore it and regenerate it like `web/public/art.json`? | **Undecided — nothing in the code depends on the answer.** A checkout without it draws every creature as its disc and says so once in the console. If it is committed, pin `@gltf-transform/cli` exactly first (Tier 2 follow-up 17). |
-| 12 | **New, Tier 2.** Should the live combat budget let the clip lane play (Tier 2 follow-up 1)? Today a combat batch in the human's own turn is snapped, so the lunge and the hit are replay-only. | **Unchanged: Tier 1's budgets stand** until the play-test in *"What slice 1 hands to T8–T14"* says the combat reads wrong live. |
+| 11 | **New, Tier 2.** Commit `web/public/models/figures.glb` (143,920 bytes since slice 2 — 126,404 in slice 1 — CC0, built by `tools/build-figures.mjs`), or gitignore it and regenerate it like `web/public/art.json`? | **Undecided — nothing in the code depends on the answer.** A checkout without it draws every creature as its disc and says so once in the console, and `figures.test.ts` skips its hash check. If it is committed, `figures.test.ts` holds it to the bytes and sha256 `models.json` records, and `@gltf-transform/cli` should be pinned exactly first (Tier 2 follow-up 17). |
+| 12 | **New, Tier 2.** Should the live combat budget let the clip lane play (Tier 2 follow-up 1)? Today a combat batch in the human's own turn is snapped, so the lunge and the hit are replay-only. | **Unchanged: Tier 1's budgets stand.** The user's play-test of slice 1 (2026-09-27) reported nothing major, so the default holds; slice 2 fixed a second cause (the idle-gap clock, **D72**) and measured the first live (17 of 44 batches still snapped). Raise it again if the next play-test — *"What slice 2 hands to T9–T14"* — says the combat reads wrong live. |

@@ -40,7 +40,17 @@
 
 import { AdaptiveDpr, OrbitControls, PerspectiveCamera, Stats } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
 import { artEntryFor, type ArtIndex } from '../art.ts';
 import { planKey, type KeyContext, type KeyEventLike } from '../keys.ts';
@@ -49,9 +59,25 @@ import type { ClientState } from '../reduce.ts';
 import type { AnswerFn } from '../render/AskModal.tsx';
 import { HotkeysOverlay } from '../render/HotkeysOverlay.tsx';
 import type { View } from '../useView.ts';
-import { CAMERA, CameraDirector, ORBIT_CLAMPS, REST_POSE } from './camera.ts';
+import {
+  CAMERA,
+  CameraDirector,
+  ORBIT_CLAMPS,
+  REST_POSE,
+  SPECTATOR_CLAMPS,
+  VIEWS,
+  VIEW_BY_ID,
+  beatsOf,
+  effectiveView,
+  isCameraChoice,
+  lookupFor,
+  viewAvailable,
+  type CameraChoice,
+  type OrbitClamps,
+  type ViewId,
+} from './camera.ts';
 import { colourHex, colourIdOf } from './colour.ts';
-import { DecisionLayer } from './DecisionLayer.tsx';
+import { DecisionLayer, ViewSwitcher, type ViewSwitcherItem } from './DecisionLayer.tsx';
 import cuesJson from './cues/cues.json';
 import figuresJson from './figures/figures.json';
 import modelsJson from './figures/models.json';
@@ -77,12 +103,13 @@ import {
   TABLE_HALF_X,
   TABLE_HALF_Z,
   layout,
+  viewerIdOf,
   type Layout,
   type Placement,
 } from './layout.ts';
 import { BLOOM_DEFAULT, DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, rungFrom, worstOf } from './perf.ts';
 import { CardPlane } from './scene/CardPlane.tsx';
-import { CueRunner } from './scene/CueRunner.tsx';
+import { CueRunner, type Frameloop } from './scene/CueRunner.tsx';
 import { CastingField } from './scene/casting.ts';
 import { DiscField } from './scene/discs.ts';
 import { BustField } from './scene/busts.ts';
@@ -259,7 +286,11 @@ function DprGovernor({
  * the requests are recorded and nothing acts on them, which is exactly the
  * budget §8 sets: four camera cues, chosen in E5, not five accreted here.
  */
-function CameraRig(): JSX.Element {
+function CameraRig({ clamps }: { clamps: OrbitClamps }): JSX.Element {
+  // **T8: the box follows the mode** — {@link ORBIT_CLAMPS} at a seat,
+  // {@link SPECTATOR_CLAMPS} for a spectator. `position` and `target` are
+  // module constants, so fiber applies them once at mount and never again; the
+  // view the camera is on is `CueRunner`'s to write (`CameraDirector.home`).
   return (
     <>
       <PerspectiveCamera
@@ -269,9 +300,37 @@ function CameraRig(): JSX.Element {
         far={CAMERA.far}
         position={REST_POSE.position}
       />
-      <OrbitControls makeDefault target={REST_POSE.target} {...ORBIT_CLAMPS} />
+      <OrbitControls makeDefault target={REST_POSE.target} {...clamps} />
     </>
   );
+}
+
+/**
+ * **T8 — where the chosen view is kept: this browser, and nothing else.**
+ *
+ * A per-viewer convenience, so `localStorage` and not the frame log or the
+ * server; every read and write is inside `try` because the storage can throw
+ * (a private window, blocked site data) and the arena must render the same
+ * with nothing stored — which is the table view. The spectator toggle is
+ * deliberately NOT stored: it is derived from the transport every time.
+ */
+const CAMERA_STORE_KEY = 'mtg-table.arena.camera';
+
+function readStoredView(): CameraChoice {
+  try {
+    const stored = window.localStorage.getItem(CAMERA_STORE_KEY);
+    return isCameraChoice(stored) ? stored : 'table';
+  } catch {
+    return 'table';
+  }
+}
+
+function storeView(choice: CameraChoice): void {
+  try {
+    window.localStorage.setItem(CAMERA_STORE_KEY, choice);
+  } catch {
+    // Nothing to do: the choice still holds for this page.
+  }
 }
 
 /**
@@ -312,8 +371,12 @@ function Scene({
   waiting,
   mode,
   reducedMotion,
+  cameraView,
+  spectator,
+  viewPress,
   glInfo,
   primeRef,
+  loopRef,
 }: {
   state: ClientState;
   placed: Layout;
@@ -341,8 +404,12 @@ function Scene({
   waiting: boolean;
   mode: QueueMode;
   reducedMotion: boolean;
+  cameraView: CameraChoice;
+  spectator: boolean;
+  viewPress: number;
   glInfo: boolean;
   primeRef: { current: number };
+  loopRef: { current: Frameloop };
 }): JSX.Element {
   const selectable = useMemo(
     () => new Set(state.input?.selectable.cardIds ?? []),
@@ -448,11 +515,15 @@ function Scene({
         awaitingHuman={waiting}
         mode={mode}
         reducedMotion={reducedMotion}
+        cameraView={cameraView}
+        spectator={spectator}
+        viewPress={viewPress}
         glInfo={glInfo}
         primeRef={primeRef}
+        loopRef={loopRef}
       />
 
-      <CameraRig />
+      <CameraRig clamps={spectator ? SPECTATOR_CLAMPS : ORBIT_CLAMPS} />
     </>
   );
 }
@@ -565,6 +636,13 @@ export default function Arena({
   const [bloomOn, setBloomOn] = useState<boolean>(bloom ?? BLOOM_DEFAULT);
   /** T7's program warm-up counter — see `EffectPool.prime`. Two frames at mount. */
   const primeRef = useRef(2);
+  /**
+   * **The loop mode `<Canvas>` is rendered with** — `CueRunner` writes it, the
+   * `frameloop` prop reads it (slice-2 verification fix; `CueRunner.tsx`'s
+   * `Frameloop` says why a literal froze running cues). Read during render on
+   * purpose: it is what the loop IS, so a re-render re-states it.
+   */
+  const loopRef = useRef<Frameloop>('demand');
   /**
    * The composer renders into its own target, which is a second set of program
    * variants: warm them too when it mounts. **Stable**, because `Post` runs its
@@ -697,6 +775,92 @@ export default function Arena({
    * it with everything else.
    */
   const director = useMemo(() => new CameraDirector(), []);
+
+  /**
+   * **T8 — the camera views** (`camera.ts`'s `VIEWS`, keys `1`–`6`, the
+   * switcher in the layer).
+   *
+   * Three pieces of state, all presentation, none of them the game's:
+   *
+   *  - **the choice** — what the viewer asked for, kept in this browser
+   *    (`localStorage`, try/catch, the table when nothing is stored);
+   *  - **spectator mode** — derived, not stored: ON by itself in a replay AND
+   *    the moment a live game ends (verification fix: it used to wait for `O`,
+   *    so the views the summary said "come back" stayed greyed), never while a
+   *    seat is live (a seat's hand has to stay on screen, §8 rule 6), and `O`
+   *    flips it whenever it is allowed. The flip is forgotten when the next game
+   *    starts, so every finished game opens as a spectator's;
+   *  - **the view on screen** — the choice if this mode allows it, else the
+   *    table. A view that cannot keep the hand is greyed at a live seat and
+   *    comes back the moment the game ends; the choice is not forgotten.
+   *
+   * `viewPress` counts presses so that pressing the view you are on is a
+   * command (drop your orbit of it), and `shotView` is the auto director's
+   * current shot, for the switcher to name.
+   */
+  const [cameraChoice, setCameraChoice] = useState<CameraChoice>(readStoredView);
+  const [spectatorPref, setSpectatorPref] = useState<boolean | null>(null);
+  const [viewPress, setViewPress] = useState(0);
+  const [shotView, setShotView] = useState<ViewId>('table');
+  const seatLive = onAct !== null && state.gameOver === null;
+  const spectatorAllowed = !seatLive;
+  // A replay, or a live seat whose game is over: nobody is waiting to click.
+  const spectator = spectatorAllowed && (spectatorPref ?? true);
+  // `O` pressed after one game says nothing about the next: a seat that goes
+  // live again drops the flip, so the next game's end opens as a spectator's too.
+  useEffect(() => {
+    if (seatLive) setSpectatorPref(null);
+  }, [seatLive]);
+  const cameraView = effectiveView(cameraChoice, spectator);
+  const cameraRef = useRef({ spectator, spectatorAllowed });
+  cameraRef.current = { spectator, spectatorAllowed };
+
+  const chooseView = useCallback((choice: CameraChoice): void => {
+    const { spectator: spectating, spectatorAllowed: allowed } = cameraRef.current;
+    if (!viewAvailable(choice, spectating)) {
+      const what =
+        choice === 'director'
+          ? 'the director is spectator-only — it moves the camera by itself'
+          : `${VIEW_BY_ID[choice].label} is spectator-only — your hand is off screen from there (§8 rule 6)`;
+      setHint(allowed ? `${what}: press O` : `${what}: back in a replay or when this game ends`);
+      return;
+    }
+    setHint(null);
+    setCameraChoice(choice);
+    storeView(choice);
+    if (choice === 'director') setShotView('table');
+    setViewPress((n) => n + 1);
+  }, []);
+
+  const toggleSpectator = useCallback((): void => {
+    const { spectator: spectating, spectatorAllowed: allowed } = cameraRef.current;
+    if (!allowed) {
+      setHint('spectator mode is for replays and finished games — never while your seat is live (§8 rule 6)');
+      return;
+    }
+    setHint(null);
+    setSpectatorPref(!spectating);
+  }, []);
+
+  const viewItems = useMemo(
+    (): ViewSwitcherItem[] => [
+      ...VIEWS.map((view) => ({
+        id: view.id,
+        key: view.key,
+        label: view.label,
+        what: view.what,
+        available: viewAvailable(view.id, spectator),
+      })),
+      {
+        id: 'director',
+        key: '6',
+        label: 'Director',
+        what: 'cuts between the five views on the game’s own events — combat side-on, a spell from its caster’s shoulder, a strike from its target’s side, a new turn wide',
+        available: viewAvailable('director', spectator),
+      },
+    ],
+    [spectator],
+  );
   const queue = useMemo(
     () =>
       new CueQueue({
@@ -843,6 +1007,8 @@ export default function Arena({
     poolColors: [],
     focus: buttonFocus(state.input),
     overlay: hotkeysOpen ? 'hotkeys' : 'none',
+    // T8: this renderer has a camera, so `1`–`6` and `O` mean something here.
+    arena: true,
   };
 
   useEffect(() => {
@@ -922,6 +1088,14 @@ export default function Arena({
             setHint(`${resolved.binding.chord} opens a board panel — press V`);
           }
           return;
+        // **T8 — the camera.** Local, sends nothing, legal on a replay; whether
+        // a view may be used at a live seat is `chooseView`'s to say.
+        case 'camera':
+          chooseView(plan.choice);
+          return;
+        case 'spectator':
+          toggleSpectator();
+          return;
         case 'inert':
           setHint(plan.why);
           return;
@@ -937,7 +1111,7 @@ export default function Arena({
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [onAct, onAnswer, onSetView, queue, director, state.ask]);
+  }, [onAct, onAnswer, onSetView, queue, director, state.ask, chooseView, toggleSpectator]);
 
   // -- batch intake (§2.3) ---------------------------------------------------
   //
@@ -957,12 +1131,36 @@ export default function Arena({
    * nothing, which is the snap a flush already is.
    */
   const previousBoard = useRef<ClientState['board']>(null);
-  useEffect(() => {
+  /**
+   * **A LAYOUT effect, and the order is load-bearing** (T8 fix, **D64**). A
+   * creature that dies leaves the snapshot's figures, and `FigureLayer` holds its
+   * body at commit; the body's fate is decided on its first frame by asking the
+   * queue whether a death cue for it is queued (`CueQueue.deathPending`). So this
+   * batch must be in the queue before that frame. The scene is a SEPARATE React
+   * root (`<Canvas>`'s reconciler, with its own scheduler): `<Canvas>`'s own layout
+   * effect only *schedules* that root's render, and a passive effect here could
+   * run after it — measured orderings are not guarantees. A layout effect runs
+   * inside this root's commit, before anything the canvas root can do, so the
+   * batch is always enqueued before the body it decides exists. (`liveness.test.ts`
+   * holds the effect to this.)
+   */
+  useLayoutEffect(() => {
     const next = cursorOf(state);
     const action = intakeFor(cursor.current, next);
     cursor.current = next;
     const previous = previousBoard.current;
     previousBoard.current = state.board;
+    /**
+     * **T8 — the auto director reads the same batch the queue does**, at the
+     * same moment, so a cut lands on the beat its cues play. An empty batch is
+     * fed too: a beat held back by the minimum shot length is taken on the next
+     * frame that arrives after the shot has run.
+     */
+    const feedDirector = (beats: Parameters<typeof director.direct>[0]): void => {
+      if (director.view !== 'director') return;
+      const now = typeof performance === 'undefined' ? Date.now() : performance.now();
+      if (director.direct(beats, now) && director.shot !== null) setShotView(director.shot.view);
+    };
     if (action === 'flush') {
       queue.flushAndSnap();
       pool.clear();
@@ -975,9 +1173,13 @@ export default function Arena({
       // Still re-budget: "the engine started waiting on the human" arrives as a
       // new `input`, not as a new event batch (§5.3).
       queue.retimeToBudget(budgetFor(state, mode));
+      feedDirector([]);
       return;
     }
     queue.enqueueBatch(state.events, state, undefined, previous);
+    if (director.view === 'director') {
+      feedDirector(beatsOf(state.events, lookupFor(state.board, previous, viewerIdOf(state))));
+    }
   }, [state, queue, pool, mode, director]);
 
   return (
@@ -994,8 +1196,11 @@ export default function Arena({
         // except shift the card art away from what Scryfall drew.
         flat
         // §5.4 — start on demand. `CueRunner` switches to `always` the moment
-        // the queue has something to play and back when it drains.
-        frameloop="demand"
+        // the queue has something to play and back when it drains — and it is
+        // a REF, never a literal: fiber re-applies this prop on every render of
+        // `Arena`, so a literal `demand` froze a running batch whenever a hint or
+        // a same-view key press re-rendered it (`CueRunner.tsx`'s `Frameloop`).
+        frameloop={loopRef.current}
         // `performance.min` is the floor drei's PerformanceMonitor would drop to
         // (§9.2 rule 9); it is set now so the number has one home.
         performance={{ min: 0.5 }}
@@ -1076,8 +1281,12 @@ export default function Arena({
           waiting={waiting}
           mode={mode}
           reducedMotion={reducedMotion}
+          cameraView={cameraView}
+          spectator={spectator}
+          viewPress={viewPress}
           glInfo={glInfo}
           primeRef={primeRef}
+          loopRef={loopRef}
         />
         {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three
             things about this line are deliberate. It is **last inside the
@@ -1110,7 +1319,28 @@ export default function Arena({
           concedeArmed={concedeArmed}
           onArmConcede={setConcedeArmed}
         />
-        <CueControls queue={queue} bloom={bloomOn} onBloom={setBloomOn} />
+        {/* **One row for the cue strip and the camera switcher** (slice-2
+            verification fix): the switcher had added a fourth row of chrome to
+            this column, over the opponent's bust (Tier 2 follow-up 10); slice 1
+            had three. The wrapper is layout only and stays `pointer-events:
+            none` — each strip opts in on its own. */}
+        <div className="arena__strips">
+          <CueControls queue={queue} bloom={bloomOn} onBloom={setBloomOn} />
+          {/* **T8's view switcher.** Its root class is in liveness.test.ts's table
+              and carries `pointer-events: auto` in styles.css — this layer is
+              `none`, and a widget that forgets is inert. */}
+          <ViewSwitcher
+            items={viewItems}
+            active={cameraView}
+            shot={cameraView === 'director' ? VIEW_BY_ID[shotView].label : null}
+            spectator={spectator}
+            spectatorAllowed={spectatorAllowed}
+            onChoose={(id) => {
+              if (isCameraChoice(id)) chooseView(id);
+            }}
+            onToggleSpectator={toggleSpectator}
+          />
+        </div>
         <ArtCredit art={art} placements={placed.placements} hovered={hovered} />
         {hotkeysOpen && (
           <HotkeysOverlay
