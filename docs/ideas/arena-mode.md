@@ -15,9 +15,26 @@ forward into M1 (`docs/protocol.md` §3.6, `DECISIONS.md` D12).
 > What was measured: [`../evidence/m7-arena.md`](../evidence/m7-arena.md). What
 > is still owed, and the Tier 2 hand-over: `PLAN.md` §M7.
 >
-> **Tiers 2 and 3 are NOT started.** They are on `PLAN.md`'s deferred list, and
-> the summary of what Tier 1 already built for them (the archetype key, the cue
-> file, the offset model, the one frame loop, the pure camera) is there too.
+> **STATUS, 2026-09-27 — Tier 2's first slice is BUILT and verified** (not yet
+> committed: branch `tier2-slice1`). Evenings T0–T7 of
+> [`../research/13-arena-tier2-plan.md`](../research/13-arena-tier2-plan.md)
+> §11, on the assets surveyed in
+> [`../research/12-arena-tier2-assets.md`](../research/12-arena-tier2-assets.md):
+> a holographic low-poly figure at every creature (three CC0 archetypes — agent,
+> drone, insect — and a glowing disc for everything else), auras and equipment
+> on the figure, lands as terrain slabs, mana motes flowing to the caster's side,
+> the stack as spell forms with tethers and strikes, two silhouette busts, and
+> bloom. What was measured: [`../evidence/m7-tier2.md`](../evidence/m7-tier2.md).
+> The user's nine Tier 2 decisions are `DECISIONS.md` **D53–D62**; the follow-ups
+> and the hand-over to T8–T14 are `PLAN.md`'s *M7 Tier 2*.
+>
+> **Three lines below are superseded by those decisions and are kept as
+> written:** Tier 2's rigs are **not** Mixamo (**D54** — CC0 packs, and
+> Quaternius's CC0 *Universal Animation Library* where more clips are needed);
+> the two duelists are **silhouette busts**, with full avatars deferred
+> (**D62**); and Tier 3's "generated from the card art with an image-to-3D tool"
+> is **ruled out** — no model is made from card art, locally or hosted (**D54**).
+> **Tier 3 is NOT started**, and stays on `PLAN.md`'s deferred list.
 
 ## Why it fits this architecture
 
@@ -42,14 +59,15 @@ scratch.
   rises and glows in its mana colour; `tap` = rotate; `attackers` = card lunges
   at the defender with a camera swoop; `damage` = numbers; `zone`
   battlefield→graveyard = dissolve; `life` = HUD pulse. Looks dramatic already.
-- **Tier 2, creature manifestations (months). ← not started.** A small library of stylised
+- **Tier 2, creature manifestations (months). ← FIRST SLICE BUILT (T0–T7); T8–T14 handed over.** A small library of stylised
   generic models keyed by creature type and colour with idle / attack / hit /
   die animations (Mixamo-style rigs). The MSH deck has a handful of types —
   Human Spy Hero, Robot Villain, Insect, Scientist — so about eight archetypes
   cover it. Two duelist avatars stand at either end; creatures appear as
   holograms between them. This is the Yu-Gi-Oh look.
 - **Tier 3, per-card models (open-ended). ← not started.** Unique meshes per card, hand-made or
-  generated from the card art with an image-to-3D tool.
+  generated from the card art with an image-to-3D tool. *(Superseded in part: generating
+  from card art is ruled out — D54.)*
 
 ## Source-material-informed animation
 
@@ -119,6 +137,21 @@ distinct entries, and 1,007 more to an archetype.
 | A.I.M. Scientists / Bold Biochemist | `zone`→battlefield and `counters` → `fx.hologram` | yes |
 | Robotics Mastery / Depower | `cast` → `fx.circuit`, a circuit-trace glow | yes |
 | Thriving Heath / Thriving Isle / Plains / Island | `zone`→battlefield → `fx.terrain` (the tile rises); `tap` → `fx.ripple` | yes — and these are the bulk of the census: `Island · tap` alone is 433 of the 1,156 |
+
+**What Tier 2's first slice adds to those rows** (with no edit to `cues.json` for
+most of them — a clip is keyed by the cue id the row already resolves to): every
+creature row now also has a **figure** — the agents, heroes and scientists as the
+holographic humanoid, the Doombot and Robot tokens as the drone, both ants as the
+insect (the Giant-Sized Flying Ant at 1.35×; still no rider), the Helicarrier
+still on its disc until T10. **Agent 13's pistol draw is done** — her attacking
+stance is the model's two-handed shooting pose, through `params.clip`, and it was
+seen in a live game. **Quantum Reduction** now also shrinks the figure it
+enchants to 0.45× and keeps it shrunk; the other attachments draw a halo on the
+figure (Super Suit's shell, Spy Kit's glints and Robotics Mastery's circuits are
+T12). **The lands** are terrain slabs and their taps send mana motes to the
+caster. Still Tier 2 work: Fury's radio call, the squad stepping forward
+together, Web Up's cocoon, Strategic Intervention's mission-control overlay and
+the Doombot's eye (`PLAN.md`, *What slice 1 hands to T8–T14*).
 
 One card not in the table above has an entry too: **Borough Backup** (`cast` →
 `fx.swarm`). The seven archetypes — `creature/W`, `creature/U`, `creature/*`,

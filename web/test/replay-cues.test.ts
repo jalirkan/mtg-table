@@ -161,6 +161,10 @@ test('replay-cues: every event of every committed recording plays without throwi
       onNote: (message) => notes.add(`${file}: ${message}`),
     });
     let now = 0;
+    // T6: the planner is handed the board of the frame before, exactly as
+    // `Arena.tsx`'s intake does, so the strike's aim (`strikeParams`) is part of
+    // the sweep — its clip on the struck figure must decay like every other.
+    let previous: ClientState['board'] = null;
 
     for (const { state, events } of frames) {
       framesSeen += 1;
@@ -169,7 +173,7 @@ test('replay-cues: every event of every committed recording plays without throwi
       for (const event of events) {
         const row = coverage.get(event.kind) ?? { emitted: 0, cued: 0, cues: new Set<string>() };
         row.emitted += 1;
-        const cues = cuesFor(event, state, CUES);
+        const cues = cuesFor(event, state, CUES, previous);
         if (cues.length > 0) row.cued += 1;
         for (const cue of cues) row.cues.add(cue.id);
         coverage.set(event.kind, row);
@@ -180,7 +184,8 @@ test('replay-cues: every event of every committed recording plays without throwi
 
       // -- the queue ---------------------------------------------------------
       if (events.length > 0) batches += 1;
-      queue.enqueueBatch(events, state);
+      queue.enqueueBatch(events, state, undefined, previous);
+      previous = state.board;
       assert.ok(
         queue.pendingSteps <= MAX_PENDING_STEPS,
         `${file}: ${String(queue.pendingSteps)} pending steps — the §5.2 cap did not hold`,
@@ -216,6 +221,21 @@ test('replay-cues: every event of every committed recording plays without throwi
         `${file}: ${String(stage.offsets.size)} offsets survived the batch — §5.1's decay is broken`,
       );
       assert.equal(stage.effects.size, 0, `${file}: ${String(stage.effects.size)} effects survived`);
+      /**
+       * **T3's one line, and it is the whole proof that the clip lane was built
+       * on the right side of §1.1** (report 13 §1.1, §10.2).
+       *
+       * A clip is a *pose*, and a pose that survived its cue is a figure frozen
+       * mid-lunge — the exact failure `skip all`, a backwards scrub and a
+       * `resync` would all produce if the lane remembered anything. `cue()`
+       * clears every target's clip in `end()`, whether the cue set one or not,
+       * and this is the assertion that says so over all 3,293 batches.
+       */
+      assert.equal(
+        stage.clips.size,
+        0,
+        `${file}: ${String(stage.clips.size)} clips survived the batch — the clip lane does not decay`,
+      );
     }
 
     for (const op of stage.strings()) {
@@ -691,7 +711,13 @@ test('replay-cues: the S.H.I.E.L.D. per-card cues fire on the real corpus', () =
   const cues = new Set([...fired.values()].map((row) => row.cue));
   for (const id of [
     'fx.terrain',
-    'fx.ripple',
+    // **T4 renamed the land tap.** It was `fx.ripple`; it is now `land.tap`,
+    // which is the ripple *and* the mana mote, and the rename is the point: the
+    // mote is a claim that this card is a land, and the cue id is where the
+    // ladder's decision to say so is recorded. `fx.ripple` is still in the
+    // registry and is still what a tapping *creature* gets — no card in this deck
+    // does that anywhere in the corpus, which is why it left this list.
+    'land.tap',
     'fx.flyIn',
     'fx.shockwave',
     'attack.shrink',

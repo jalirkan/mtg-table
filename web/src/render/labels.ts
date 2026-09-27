@@ -170,6 +170,25 @@ export function isLandTypeLine(types: string): boolean {
 }
 
 /**
+ * The same presentation bucket, for the other half of the battlefield: does this
+ * type line name a creature?
+ *
+ * It lives **here, beside {@link isLandTypeLine}**, because the arena's Tier 2
+ * manifestation stage needs it and CLAUDE.md's M4 convention 6 is that there is
+ * one definition of "is this card a <type>" in the app. The arena already learnt
+ * that lesson once: `layout.ts` carried its own `/\bland\b/i` until the M7
+ * verification pass replaced it with this file's.
+ *
+ * A face-down permanent's type line is exactly `"Creature"` (report 06 §1.4:
+ * `CardUtil.getFaceDownCharacteristic`, which the wire relays verbatim on the
+ * battlefield), so it matches — and that is correct. It is a creature; what it
+ * *is* is what we may not know.
+ */
+export function isCreatureTypeLine(types: string): boolean {
+  return /(^|\s)Creature(\s|$|—|-)/.test(types);
+}
+
+/**
  * A card's accessible name, composed from fields already on screen
  * (report 10 §14 rule 2). A concealed card never reaches this function — the
  * tile answers `"face-down card"` for those and nothing else.

@@ -214,6 +214,15 @@ node tools/arena-bench.mjs         # report 09 §9.4's frame-time measurement:
 #   --url overrides it, --settle separates a cold table from the steady state.
 #   Deliberately NOT in check-all.sh: it wants a dist, a preview server and a
 #   browser, so a performance regression does not turn the gate red.
+
+# M7 Tier 2 — figures, terrain, auras and the stack, in the same arena
+node tools/arena-bench.mjs --index 316 --gpu gl   # Tier 2's bench frame (g1 @316, 11
+#   figures) on the machine's real GPU; drop --gpu for SwiftShader, add --bloom /
+#   --no-bloom / --reduced-motion / --dpr 1, and --settle 4000 for a warm table
+#   ?bloom=0 / ?bloom=1 on any arena URL sets where bloom starts (default: on)
+node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/models/
+#   figures.glb + web/src/arena/figures/models.json from the three CC0 downloads
+#   named in tools/assets-manifest.json (see "Arena mode" below)
 ```
 
 Everything above runs today. As of **M4** the board those frames feed is a real
@@ -568,9 +577,12 @@ board is the generated text frame, which is what a missing image looks like.
 
 ### Arena mode — the same game, in 3D
 
-**M7, Tier 1.** The arena is a **second renderer for the same frame stream**, not
-a second app: the socket, the reducer and the frame log are untouched and
-`#arena` is the whole of the difference.
+**M7, Tier 1, and Tier 2's first slice.** The arena is a **second renderer for
+the same frame stream**, not a second app: the socket, the reducer and the frame
+log are untouched and `#arena` is the whole of the difference. Tier 1 (below) is
+the table, the cards and the choreography; **Tier 2** (further below) stands a
+figure at every creature, lays the lands out as terrain and gives every spell on
+the stack a form.
 
 ```bash
 npm --prefix web run dev:arena                # a recorded game as a cinematic
@@ -683,13 +695,122 @@ and not a frame rate. `tools/arena-bench.mjs` is how all of that was measured,
 caveat that a software rasteriser is a lower bound and nobody has measured this
 on the machine you are reading it on.
 
+#### Tier 2 — the creatures, the land and the spells, manifested
+
+**M7 Tier 2, slice 1** (evenings T0–T7 of
+[`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md);
+evidence in [`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md)) puts
+things *on* the table. It is still the same renderer over the same frame stream,
+and it still decides nothing — every figure, tile and form below is a pure
+function of the frame on screen, and only the transitions between frames are
+animated (**D56**):
+
+- **A figure at every creature.** Each creature on the battlefield gets a small
+  low-poly figure standing at the front edge of its card, facing the other seat —
+  a man for the S.H.I.E.L.D. agents, heroes, scientists and tokens, a flying robot
+  for the Doombot and the Robot token, a bee-like insect for the two ants —
+  drawn as a **hologram**: unlit, tinted by the card's colour identity, with a
+  bright rim (**D53**). The card stays exactly where it was and is still the thing
+  you read and click; a figure carries no name and cannot take a click. A tapped
+  creature kneels rather than lying down with its card, an attacker holds its
+  lean for the whole of combat, a summoning-sick one is translucent, and a
+  blocker stands where `state.combat` says it blocks. A creature with no figure —
+  a face-down one, a probe-deck beast, the Helicarrier for now — stands on a
+  glowing **disc** sized by its power and toughness, and every figure has one at
+  its feet.
+- **Animations are the cues you already have.** The attack lunge, the damage hit,
+  a summon, a counter's grow are played by the same cues as Tier 1's, scrubbed
+  frame-exactly from the cue clock, so **pause, speed, step, skip and reduced
+  motion work on the figures too** (**D57**). Figures breathe only while something
+  else is animating, so an idle table still renders nothing (**D58**).
+- **Auras and equipment on the figure.** Quantum Reduction shrinks its host to
+  0.45× and keeps it shrunk through any skip or scrub; every other aura or
+  equipment draws a halo at the figure's feet in its own colour (metallic for an
+  equipment).
+- **Lands are terrain.** Every land sits on a rounded slab under its card —
+  plateau for Plains, animated water for Islands, two-tone for the Thriving
+  lands, a tinted slab for anything else — and a tapped land's slab dims
+  (**D59**).
+- **Mana goes to the caster.** Tapping a land sends a mote of light from its
+  slab to its controller's casting spot above their land row (**D60**). It never
+  claims which land paid for which spell, because the engine never says.
+- **The stack, manifested.** A spell on the stack is a form at its caster's
+  casting spot — a dart for an instant, a sigil for a sorcery, a ring for an
+  enchantment, a shard for an artifact, and **a translucent copy of the creature
+  itself** for a creature spell, which becomes the real figure when it resolves.
+  A tether runs to whatever it targets, and on resolution the form strikes along
+  it (**D63**). With a spell on the stack during combat, the battlefield's
+  figures freeze and grey out — the spell's own form does not.
+- **The duelists** are two silhouette busts at the seats' HUD anchors, one at
+  each end of the table. They flinch and redden when that player takes damage
+  (**D62**); full avatars are deferred.
+- **Bloom** — a soft glow on the holographic rims and the effects — is **on by
+  default**, because it costs about 0.7 ms a frame on this machine's GeForce GTX
+  1080 (**D61**). Untick it in the cue strip, or start with `?bloom=0`. On a
+  machine too slow for it the arena turns it off by itself once the resolution
+  ladder is at its floor, and says so in the console.
+
+**What it costs**, at the most crowded table in the corpus that has models on it
+(`g1.jsonl` from transport index 316: eleven figures, seventeen land slabs, two
+busts), measured with `tools/arena-bench.mjs --index 316`:
+
+| | draw calls | p95 frame | verdict |
+|---|---:|---:|---|
+| GeForce GTX 1080 (`--gpu gl`), bloom off / on | 64–66 / — | **0.4 ms / 1.1 ms** | passes |
+| SwiftShader (the lower bound), bloom off, governor at its 0.6 floor | 64–66 | **16.2–17.2 ms** | passes the ≤ 20 ms gate |
+| SwiftShader, bloom on | — | 82.3 ms | fails until the governor switches bloom off |
+
+Two caveats that are not rounded off: the GTX 1080 numbers are headless Chromium
+reaching the GPU through ANGLE, not a desktop browser window, and nobody has
+measured an integrated GPU; and with bloom on the renderer only counts the
+composer's final pass, so draw calls are read with it off. The full tables, the
+cold-start numbers and the live game are in the evidence.
+
+**Where the figures come from.** Three free packs, all **CC0** (public domain),
+and nothing else: Kenney's *Mini Characters* 1.0 and Quaternius's *Robot Enemy
+Flying* and *Bee Enemy* (both via Poly Pizza). **No model is from Mixamo and none
+was generated from card art** (**D54**). `tools/assets-manifest.json` is the
+written provenance of each — page and download URL, byte count, sha256, the
+download date and the licence badge **verbatim as it read that day** — and
+[`NOTICE`](NOTICE) §7 is the attribution. `tools/build-figures.mjs` turns the
+three downloads into **one** file, `web/public/models/figures.glb` (126,404 bytes:
+three models, 8,307 triangles, 19 clips, meshopt-compressed), and writes
+`web/src/arena/figures/models.json` from what it measured; that JSON is
+generated, so do not edit it by hand. The arena loads the library from
+`web/public/models/` and nowhere else — no CDN, no Draco decoder from gstatic.
+
+**Rebuilding `figures.glb`**, e.g. after changing a clip mapping in
+`tools/assets-manifest.json`:
+
+```bash
+npm --prefix web install                          # @gltf-transform/cli is a web/ dev dependency
+mkdir -p var/assets/figures && cd var/assets/figures
+#   download the three files named in tools/assets-manifest.json ("downloadUrl"),
+#   check each against its "sha256", and unzip the Kenney zip here so that
+#   kenney_mini-characters/Models/GLB format/character-male-a.glb exists
+cd - && node tools/build-figures.mjs --src var/assets/figures
+#   prints every step's size, asserts one primitive per model, <= 4 MB and
+#   <= 30,000 triangles, and rewrites web/src/arena/figures/models.json;
+#   --no-manifest leaves models.json alone
+```
+
+The build does not yet check the sources' sha256 for you, so check them by hand
+(`sha256sum`). **Without `figures.glb` at all** — a fresh checkout, if it is not
+committed — the arena still plays everything: each creature draws its disc and
+the console says `no model library … every creature draws its disc` once.
+Whether the built file is committed is an open decision (PLAN.md, *Only the user
+can decide*).
+
 **Iterating on a cue.** There is no `?cue=<id>` loop route — report 09 §10.7 asks
 for one and it is not built — and no `?cues=<url>` override either, because §2.1
 rule 1 says in as many words that the arena *never calls `fetch`*, and a cue file
 pulled over the network is a fetch. What exists instead is a **dev-only handle**,
 and it is more general than either: in `npm run dev`, `window.__mtgArena` carries
 the live `queue`, `stage`, `pool`, `rigs`, `director`, `gl`, `scene` and
-`camera`. (A production build carries **none** of that; `?glinfo=1` adds one
+`camera` — and, since Tier 2, `figures` (the poses of the frame on screen),
+`figureRigs`, `discs`, `tiles` / `tileField`, `motes` / `forms` /
+`castingField`, `overlays`, `frozen`, `busts` / `bustField` and the current
+`state`. (A production build carries **none** of that; `?glinfo=1` adds one
 function, `info()`, returning `gl.info`'s six counters, which is what
 `tools/arena-bench.mjs` reads and all it reads.) The cue clock is virtual and
 injected, so a cue can be frozen at any point of its arc:
@@ -701,6 +822,9 @@ q.advance(220)             // …and step it 220 ms by hand: a tap, a third of t
 q.seen                     // Map of event kind -> how many cues it has produced
 window.__mtgArena.stage.offsets      // what is displaced from layout(state) right now
 window.__mtgArena.director.stats     // camera moves taken / dropped / retired
+window.__mtgArena.stage.clips        // Tier 2: the clip each figure is playing, its t and weight
+window.__mtgArena.figures            // Tier 2: who stands where, which model, which stance, which rung
+window.__mtgArena.tileField.counts() // Tier 2: land slabs drawn, per kind
 ```
 
 `advance()` moves the clock whether or not the queue is paused, which is also the
@@ -759,8 +883,8 @@ is a file, not a story.
 
 ## Repo layout
 
-Everything listed exists today (M0-M7, arena Tier 1); `Tier 2+` marks what a
-later pass would add.
+Everything listed exists today (M0-M7: arena Tier 1, and Tier 2's first slice,
+which is on branch `tier2-slice1` and not yet committed).
 
 ```
 mtg-table/
@@ -768,7 +892,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the fifty-two load-bearing decisions, dated
+  DECISIONS.md               the sixty-three load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -804,9 +928,11 @@ mtg-table/
   docs/
     protocol.md              the living spec of the wire protocol and the frame log
     guides/java-for-typescript-people.md   the Java the bridge actually uses
-    research/*.md            the eleven reports this plan rests on
+    research/*.md            the thirteen reports this plan rests on (12 and 13 are
+                             Tier 2's: the asset landscape, and the plan)
     evidence/*.md            what was actually run, with real numbers
     ideas/arena-mode.md      M7: the tiers, the per-card cue table, the constraints
+    licences are in NOTICE; Tier 2's asset provenance is tools/assets-manifest.json
 
   bridge/                    the only Java. Hosts the engine, redacts, serialises, serves /ws.
     build.sh  run.sh
@@ -863,12 +989,30 @@ mtg-table/
                              over t in [0,1]) resolve.ts (the per-card -> archetype ->
                              default ladder) queue.ts stage.ts types.ts archetype.ts
                              validate.ts intake.ts. No three, no React, no timers
+      arena/figures/         (Tier 2) the manifestation stage, pure like cues/: no
+                             three, no React, no clock. figures.json (card name /
+                             subtype / archetype -> model, tint, scale, clip aliases,
+                             land tiles) models.json (GENERATED by
+                             tools/build-figures.mjs -- never edit by hand) types.ts
+                             resolve.ts (the figure ladder) pose.ts (figurePose: THE
+                             pose of every creature) clips.ts (CLIP_FOR, the clip
+                             arbitration, the rest stances) tiles.ts attach.ts
+                             casting.ts (motes, spell forms, the combat freeze)
+                             duelists.ts validate.ts
       arena/scene/           (M7) the three half. CardPlane.tsx is THE card renderer of
                              the arena, the way CardTile.tsx is the board's;
                              CueRunner.tsx is the ONE useFrame; effects.ts is a fixed
-                             pool of 26 meshes; useCardTexture.ts, textFrame.ts,
+                             pool of 38 meshes (26 at Tier 1, plus 12 mana motes);
+                             useCardTexture.ts, textFrame.ts,
                              cardMaterial.ts, geometry.ts (one quad for every card),
-                             HitProxy.tsx, Table.tsx, rigs.ts, SceneStage.ts
+                             HitProxy.tsx, Table.tsx, rigs.ts, SceneStage.ts.
+                             Tier 2: FigureLayer.tsx (THE figure renderer: one
+                             <Figure> per pose, no useFrame of its own) figureRigs.ts
+                             models.ts (GLTFLoader + meshopt from web/public/models/,
+                             the disc fallback) holoMaterial.ts (the one figure
+                             shader) discs.ts tiles.ts casting.ts overlays.ts
+                             busts.ts (each one InstancedMesh-based) colourCache.ts
+                             and Post.tsx (the bloom pass, lazily imported)
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
                              M8 clickability rule), ws.test.ts (the M3 transport:
@@ -902,8 +1046,15 @@ mtg-table/
                              cues-exhaustive.test.ts (the ladder is total; the cue file
                              is valid) camera.test.ts liveness.test.ts (the arena
                              imports no transport and decides nothing) perf.test.ts
-                             and arena-hud.test.tsx (the life plates, over every frame)
+                             and arena-hud.test.tsx (the life plates, over every frame);
+                             and (Tier 2) figures.test.ts figure-pose.test.ts
+                             clips.test.ts tiles.test.ts attach.test.ts stack.test.ts
+                             -- every one a sweep of the whole corpus with no GPU
     public/art.json          generated, gitignored
+    public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from three CC0
+                             packs: 126,404 bytes. Whether it is committed is open;
+                             without it every creature draws its disc
+    t0-spike.html            (Tier 2) T0's go/no-go page; not part of the app
 
   tools/
     config.sh                sourced by the other scripts; reads config.json / $FORGE_JAR
@@ -933,7 +1084,15 @@ mtg-table/
                              check-redaction.mjs.  check-all.sh runs it as step 9c
     arena-bench.mjs          M7: report 09 §9.4's frame-time measurement -- headless
                              Chromium + SwiftShader against a PRODUCTION build served by
-                             `vite preview`. Deliberately NOT in check-all.sh
+                             `vite preview`. Deliberately NOT in check-all.sh. Tier 2
+                             added --index/--figures, --bloom/--no-bloom,
+                             --reduced-motion, --dpr and --gpu gl (the real GPU)
+    build-figures.mjs        Tier 2: three CC0 downloads -> web/public/models/figures.glb
+                             + web/src/arena/figures/models.json (gltf-transform:
+                             prune dedup palette join weld unlit resample merge
+                             meshopt, then an assertion). Run by hand, not in the gate
+    assets-manifest.json     Tier 2: where every model came from -- URL, bytes, sha256,
+                             date, and the CC0 licence badge verbatim on the day
     fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare
                              it to its committed fixture as a multiset, `seq` stripped
     fetch-art.ts             deck -> web/public/art.json
@@ -992,7 +1151,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Forty-five load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. |
+| [`DECISIONS.md`](DECISIONS.md) | Sixty-three load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -1001,7 +1160,10 @@ mtg-table/
 | [`docs/research/08-deck-card-coverage.md`](docs/research/08-deck-card-coverage.md) | Does Forge implement this deck's 28 cards faithfully? (One does not — see D14.) |
 | [`docs/research/10-board-ui-spec.md`](docs/research/10-board-ui-spec.md) | The M4 board: component tree, layout, card tiles, arrows, the three evenings. (One number in §2.2 is 23 px out against the built board — PLAN's M4 follow-up 2.) |
 | [`docs/research/11-engine-comfort-features.md`](docs/research/11-engine-comfort-features.md) | M6: phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — all as engine features, not client state machines. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). |
+| [`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md) | M7 Tier 1: the arena's spec — the offset model, the cue table, the camera, the performance budget. |
+| [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md) | M7 Tier 2's asset landscape: which packs are really CC0, what is inside the files, the gltf-transform pipeline, and the two drei traps. |
+| [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md) | M7 Tier 2's plan, written against the Tier 1 code: the manifestation stage, the pose-versus-cue rule, the clip lane, the evenings T0–T14. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game). |
 
 ## Licence
 

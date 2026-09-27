@@ -31,9 +31,12 @@
  * ---------------------------------------------------------------------------
  */
 
+import { clipEnvelope, clipForCue, type ClipRequest } from '../figures/clips.ts';
+import { isClipName, type ClipName } from '../figures/types.ts';
 import { TAP_ANGLE } from '../layout.ts';
 import {
   clamp01,
+  easeInCubic,
   easeInOutCubic,
   easeOutBack,
   easeOutCubic,
@@ -132,21 +135,100 @@ interface CueDef {
 }
 
 /**
+ * §9.2 rule 6 — one {@link ClipRequest} for the whole page.
+ *
+ * `setClip` is called once per running cue per target per frame and both `Stage`
+ * implementations **copy** what they are handed (`SceneStage` into its pooled
+ * object, `NullStage` into a fresh one), so filling one scratch object is exact
+ * and allocates nothing in the hot path.
+ */
+const CLIP_SCRATCH: ClipRequest = { clip: 'idle', t: 0, weight: 0, alias: null, key: '' };
+
+/**
+ * **The clip lane, driven from the cue id and from nothing else** (report 13
+ * §3.5).
+ *
+ * It is here, in the shared builder, rather than in each cue's own `apply` for
+ * the same reason `end()` is total by construction: a cue cannot forget to play
+ * its clip, and a cue that has no entry in `CLIP_FOR` cannot accidentally grow
+ * one. **`params.clip` is the per-card override** — `CueParamValue` is already
+ * `number | string | boolean` and `validate.ts` already type-checks it, so
+ * `{"cue": "attack.lunge", "params": {"clip": "pistolDraw"}}` is legal in
+ * `cues.json` today and needs no new cue id (§3.5, report 09 §12.2's "the pose
+ * is the point, and the pose is a model").
+ */
+function playClip(ctx: CueContext, t: number, stage: Stage): void {
+  // **Reduced motion collapses every clip to a snap** (T7; §8 rule 7). The cue
+  // still runs — at 30% of its length, and it may carry a fact — but the figure
+  // does not animate a body: it holds the stance `figurePose` derived from the
+  // snapshot, which is exactly where the clip would have ended (`clipEnvelope`
+  // is 0 at t = 1). No request is written, so there is nothing for `end()` to
+  // release and nothing for the decay assertion to find.
+  if (ctx.reducedMotion) return;
+  const clip = clipForCue(ctx.id);
+  if (clip === null) return;
+  const alias = ctx.params['clip'];
+  CLIP_SCRATCH.clip = clip;
+  CLIP_SCRATCH.t = clamp01(t);
+  CLIP_SCRATCH.weight = clipEnvelope(t);
+  CLIP_SCRATCH.alias = typeof alias === 'string' && alias !== '' ? alias : null;
+  CLIP_SCRATCH.key = ctx.key;
+  for (const id of ctx.targets) stage.setClip(id, CLIP_SCRATCH);
+}
+
+/** The same scratch, for the one cue that poses a card it does not target. */
+const CLIP_SCRATCH_2: ClipRequest = { clip: 'idle', t: 0, weight: 0, alias: null, key: '' };
+
+/**
+ * **A clip on a card this cue does not target** (T5, report 13 §4.3).
+ *
+ * Two cues need it and both are about a *host*: `attach.snap` (an Equipment flies
+ * onto a creature — the creature is the body that reacts) and `fx.collapse`
+ * (Quantum Reduction shrinks the creature it beams at). The card the cue
+ * *targets* in both cases is the Aura or the Equipment, which has no figure at
+ * all, so the clip has to be addressed to the second id.
+ *
+ * **The id must be named in the cue's `alsoClears`**, which is what makes `end()`
+ * total over it — exactly the discipline `alsoClears` already exists for on the
+ * offset lane, and what `replay-cues.test.ts`'s decay assertion checks.
+ */
+function clipOn(ctx: CueContext, t: number, stage: Stage, id: number, clip: ClipName): void {
+  if (id < 0 || ctx.reducedMotion) return;
+  CLIP_SCRATCH_2.clip = clip;
+  CLIP_SCRATCH_2.t = clamp01(t);
+  CLIP_SCRATCH_2.weight = clipEnvelope(t);
+  CLIP_SCRATCH_2.alias = null;
+  CLIP_SCRATCH_2.key = ctx.key;
+  stage.setClip(id, CLIP_SCRATCH_2);
+}
+
+/**
  * Build a {@link CueImpl} whose `end` is total by construction: it clears every
- * target's offset and every declared effect key, whether the cue set them or
- * not. A cue cannot leak an offset by forgetting one branch.
+ * target's offset, **every target's clip** and every declared effect key,
+ * whether the cue set them or not. A cue cannot leak an offset or a pose by
+ * forgetting one branch — which is exactly what `replay-cues.test.ts`'s decay
+ * assertion, now reading `stage.clips` as well, is the proof of.
  */
 function cue(def: CueDef): CueImpl {
   const effects = def.effects ?? [];
   const alsoClears = def.alsoClears ?? [];
   return {
     lane: def.lane ?? 'card',
-    apply: def.apply,
+    apply(ctx, t, stage) {
+      def.apply(ctx, t, stage);
+      playClip(ctx, t, stage);
+    },
     end(ctx, stage) {
-      for (const id of ctx.targets) stage.clearOffset(id);
+      for (const id of ctx.targets) {
+        stage.clearOffset(id);
+        stage.clearClip(id);
+      }
       for (const key of alsoClears) {
         const id = num(ctx, key, -1);
-        if (id >= 0) stage.clearOffset(id);
+        if (id >= 0) {
+          stage.clearOffset(id);
+          stage.clearClip(id);
+        }
       }
       for (const suffix of effects) stage.clearEffect(`${ctx.key}:${suffix}`);
     },
@@ -367,7 +449,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
   [
     'cast.rise',
     cue({
-      effects: ['glow', 'beam'],
+      effects: ['glow', 'beam', 'spend'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -409,38 +491,279 @@ const ENTRIES: Array<[string, CueImpl]> = [
             radius: 0.02,
           });
         }
+        /**
+         * **The mana being consumed** (T4, report 13 §5.4; user decision 9).
+         *
+         * A ring at the caster's own casting anchor, closing **inward** — the
+         * mirror of the mote's outward flight, and the beat that ties the two
+         * together. `ctx.players[0]` is `CastEvent.controller`, so the only claim
+         * made is "this player cast a spell", which is exactly what the engine
+         * said.
+         *
+         * It deliberately does **not** reach for the motes themselves. The motes
+         * are a pose read from `manaPool`, and by this frame the pool is already
+         * empty — they are gone because the snapshot says they are gone. A
+         * renderer that remembered "there were three motes here" in order to
+         * animate them into the spell would be remembering something the engine
+         * never stated.
+         */
+        const caster = ctx.players[0];
+        if (caster === undefined) return;
+        stage.setEffect(`${ctx.key}:spend`, {
+          kind: 'ring',
+          at: { kind: 'casting', player: caster },
+          colour: colour(ctx),
+          strength: 0.85 * (1 - easeOutCubic(u)),
+          radius: 0.45 * (1 - 0.8 * easeOutCubic(u)),
+        });
       },
     }),
   ],
 
-  /** **resolved.pop** (320 ms) — the stack item flashes and pops. */
+  /**
+   * **resolved.pop** — the stack item flashes and pops, and **T6's strike**: the
+   * form leaves the caster's casting anchor, travels the tether and bursts at the
+   * target (report 13 §6.3).
+   *
+   * ---------------------------------------------------------------------------
+   * **Where the aim comes from.** `ResolvedEvent` is `{cardId, fizzled}` — no
+   * stack id, no targets — and by the frame that carries it the item has left
+   * `state.stack`. The planner therefore hands `resolve.ts` the board of the frame
+   * **immediately before** the batch, and `strikeParams` reads the resolving
+   * item's first target out of it as `strikeCard` / `strikePlayer`. Measured over
+   * the corpus on 2026-09-26: **333 of 412** resolutions have their item on the
+   * previous frame's stack and **41** of those carry a target — against **7** if
+   * the same frame is read, which is why the earlier version of this cue (T6's
+   * first draft) concluded the strike could not be aimed at all.
+   *
+   * **An untargeted spell discharges into its own card** — a beam from the anchor
+   * to the spell — because it has nothing to strike, and the rest of what it did
+   * (damage, counters, a zone move) arrives as its own events in the same batch
+   * with cues of their own. The strike claims one thing: *this spell was aimed at
+   * that*, which the previous frame said in ids.
+   *
+   * The struck figure plays `hit` when it belongs to someone other than the caster
+   * and `channel` when it does not (`strikeFoe`, two `controller` fields read by
+   * the planner). Its clip is addressed through `alsoClears: ['strikeCard']`, which
+   * is what keeps `end()` total over it (T5's `clipOn` discipline).
+   * ---------------------------------------------------------------------------
+   */
   [
     'resolved.pop',
-    perTarget([], (ctx, t) => ({
-      scale: 1 + 0.14 * pulse(t),
-      glow: pulse(t),
-      glowColour: colour(ctx, WHITE),
-    })),
+    cue({
+      effects: ['ring', 'beam', 'bolt', 'burst', 'impact'],
+      alsoClears: ['strikeCard'],
+      apply(ctx, t, stage) {
+        const id = ctx.targets[0];
+        if (id === undefined) return;
+        const wave = pulse(t);
+        stage.setOffset(id, {
+          scale: 1 + 0.14 * wave,
+          glow: wave,
+          glowColour: colour(ctx, WHITE),
+        });
+        // `players[0]` is the source card's controller, read off the SNAPSHOT by
+        // `resolve.ts` — the `resolved` event carries no player at all, exactly as
+        // `tap` carries none (T4's precedent). 365 of the corpus's 412 resolutions
+        // have one; the other 47 simply flash, which is the honest fallback.
+        const caster = ctx.players[0];
+        if (caster === undefined) return;
+        const at: AnchorRef = { kind: 'casting', player: caster };
+        // The form lets go: a ring at the anchor it stood at, over the first half.
+        stage.setEffect(`${ctx.key}:ring`, {
+          kind: 'ring',
+          at,
+          colour: colour(ctx, WHITE),
+          strength: 0.9 * (1 - easeOutCubic(clamp01(t / 0.6))),
+          radius: 0.18 + 0.6 * easeOutCubic(clamp01(t / 0.6)),
+        });
+
+        const strikeCard = num(ctx, 'strikeCard', -1);
+        const strikePlayer = num(ctx, 'strikePlayer', -1);
+        const to: AnchorRef | null =
+          strikeCard >= 0
+            ? { kind: 'card', id: strikeCard }
+            : strikePlayer >= 0
+              ? { kind: 'player', id: strikePlayer }
+              : null;
+        if (to === null) {
+          // Untargeted: the form discharges into the card it was.
+          stage.setEffect(`${ctx.key}:beam`, {
+            kind: 'beam',
+            at,
+            to: { kind: 'card', id },
+            colour: colour(ctx, WHITE),
+            strength: 0.85 * wave,
+            radius: 0.025,
+          });
+          return;
+        }
+
+        // **The strike.** 0 → 0.55: the form travels the tether (a `mote` is the
+        // one primitive that interpolates between two anchors) with the tether
+        // flaring behind it; 0.5 → 1: it bursts at the target.
+        const travel = clamp01(t / 0.55);
+        if (t < 0.6) {
+          stage.setEffect(`${ctx.key}:bolt`, {
+            kind: 'mote',
+            at,
+            to,
+            colour: colour(ctx, WHITE),
+            strength: 1,
+            radius: 0.17,
+            travel: easeInCubic(travel) * 0.35 + travel * 0.65,
+          });
+          stage.setEffect(`${ctx.key}:beam`, {
+            kind: 'beam',
+            at,
+            to,
+            colour: colour(ctx, WHITE),
+            strength: 0.7 * (1 - 0.6 * travel),
+            radius: 0.03,
+          });
+        }
+        if (t > 0.5) {
+          const u = clamp01((t - 0.5) / 0.5);
+          stage.setEffect(`${ctx.key}:impact`, {
+            kind: 'ring',
+            at: to,
+            colour: colour(ctx, WHITE),
+            strength: 1 - easeOutCubic(u),
+            radius: 0.2 + 0.75 * easeOutCubic(u),
+          });
+          if (!ctx.reducedMotion) {
+            stage.setEffect(`${ctx.key}:burst`, {
+              kind: 'particles',
+              at: to,
+              colour: colour(ctx, WHITE),
+              strength: 1 - easeOutCubic(u),
+              radius: 0.5,
+              burst: u,
+            });
+          }
+          // The struck figure reacts as the burst lands. `strikeCard` is named in
+          // `alsoClears`, so `end()` releases this clip whether or not it ran.
+          if (strikeCard >= 0) {
+            clipOn(ctx, u, stage, strikeCard, flag(ctx, 'strikeFoe') ? 'hit' : 'channel');
+          }
+        }
+      },
+    }),
   ],
 
-  /** **resolved.fizzle** (320 ms) — it greys and shrinks instead. */
+  /**
+   * **resolved.fizzle** — it greys and shrinks instead, and the form **goes grey
+   * and drops through the table** (§6.3).
+   *
+   * The form itself is a pose and is already gone from the snapshot, so the fall
+   * is drawn by a grey `mote` from the caster's casting anchor to the table
+   * directly under it (`{kind: 'casting', ground: true}` — a named place, so the
+   * cue still knows no coordinate), and a dull ring where it lands.
+   *
+   * **The corpus has no fizzle at all** — 0 of 412 `resolved` events carry
+   * `fizzled: true` — so this cue is exercised by `cues-exhaustive.test.ts` and by
+   * a synthetic event in the browser evidence, and by nothing a real game has
+   * produced here yet. That is said rather than hidden.
+   */
   [
     'resolved.fizzle',
-    perTarget([], (_ctx, t) => ({
-      scale: 1 - 0.16 * pulse(t),
-      tint: GREY,
-      opacity: 1 - 0.35 * pulse(t),
-    })),
+    cue({
+      effects: ['sink', 'drop', 'grey'],
+      apply(ctx, t, stage) {
+        for (const id of ctx.targets) {
+          stage.setOffset(id, {
+            scale: 1 - 0.16 * pulse(t),
+            tint: GREY,
+            opacity: 1 - 0.35 * pulse(t),
+          });
+        }
+        const caster = ctx.players[0];
+        if (caster === undefined) return;
+        const at: AnchorRef = { kind: 'casting', player: caster };
+        const ground: AnchorRef = { kind: 'casting', player: caster, ground: true };
+        // The form goes grey where it stood…
+        if (t < 0.35) {
+          stage.setEffect(`${ctx.key}:grey`, {
+            kind: 'glow',
+            at,
+            colour: GREY,
+            strength: 0.9 * pulse(t / 0.35),
+            radius: 0.34,
+          });
+        }
+        // …and falls through the table.
+        if (t > 0.12 && t < 0.88) {
+          const fall = clamp01((t - 0.12) / 0.76);
+          stage.setEffect(`${ctx.key}:drop`, {
+            kind: 'mote',
+            at,
+            to: ground,
+            colour: GREY,
+            strength: 1 - 0.35 * fall,
+            radius: 0.21 * (1 - 0.35 * fall),
+            travel: easeInCubic(fall),
+            arc: 0,
+          });
+        }
+        if (t > 0.7) {
+          const u = clamp01((t - 0.7) / 0.3);
+          stage.setEffect(`${ctx.key}:sink`, {
+            kind: 'ring',
+            at: ground,
+            colour: GREY,
+            strength: 0.8 * (1 - u),
+            radius: 0.15 + 0.35 * easeOutCubic(u),
+          });
+        }
+      },
+    }),
   ],
 
-  /** **unstacked.shatter** (380 ms) — a quick squash and fade, no flash. */
+  /**
+   * **unstacked.shatter** (380 ms) — a quick squash and fade, and **the form
+   * cracks** (§6.3).
+   *
+   * Note the planner's existing suppression rule 2 (`queue.ts`): `unstacked` fires
+   * for *every* spell that leaves the stack, resolution included (412 of each in
+   * the corpus), and is dropped when a `resolved` covers it. Tier 2 inherits that
+   * for free and must not re-derive it — which is why this cue may assume it is a
+   * **counter**, not a resolution.
+   */
   [
     'unstacked.shatter',
-    perTarget([], (_ctx, t) => ({
-      squashX: 1 - 0.55 * pulse(t),
-      squashY: 1 + 0.12 * pulse(t),
-      opacity: 1 - 0.45 * pulse(t),
-    })),
+    cue({
+      effects: ['shards', 'crack'],
+      apply(ctx, t, stage) {
+        for (const id of ctx.targets) {
+          stage.setOffset(id, {
+            squashX: 1 - 0.55 * pulse(t),
+            squashY: 1 + 0.12 * pulse(t),
+            opacity: 1 - 0.45 * pulse(t),
+          });
+        }
+        const caster = ctx.players[0];
+        if (caster === undefined) return;
+        const at: AnchorRef = { kind: 'casting', player: caster };
+        // The crack: a hard ring that snaps outward and is gone — the one shape
+        // that still reads under reduced motion, where the shards are not drawn.
+        stage.setEffect(`${ctx.key}:crack`, {
+          kind: 'ring',
+          at,
+          colour: colour(ctx, GREY),
+          strength: 0.9 * (1 - easeOutCubic(t)),
+          radius: 0.12 + 0.5 * easeOutCubic(t),
+        });
+        if (ctx.reducedMotion) return;
+        stage.setEffect(`${ctx.key}:shards`, {
+          kind: 'particles',
+          at,
+          colour: colour(ctx, GREY),
+          strength: 1 - easeOutCubic(t),
+          radius: 0.4,
+          burst: clamp01(t),
+        });
+      },
+    }),
   ],
 
   /**
@@ -594,11 +917,21 @@ const ENTRIES: Array<[string, CueImpl]> = [
   /** **counters.drop** (380 ms) — the same, reversed and grey. */
   ['counters.drop', counterCue(true)],
 
-  /** **attach.snap** (500 ms) — the Equipment flies to the host and snaps on. */
+  /**
+   * **attach.snap** (500 ms) — the Equipment flies to the host and snaps on.
+   *
+   * **T5 adds the host's own reaction and nothing else** (report 13 §4.3): the
+   * creature plays `channel` while the thing lands on it. The *manifestation* —
+   * the halo, the metallic rim, Quantum Reduction's shrink — is a **pose** read
+   * from `card.attachedToId` (`figures/attach.ts`), because the corpus has 28
+   * `attach` events against 985 frames that show an attachment. This cue is the
+   * 500 ms; the aura is the other 984 frames.
+   */
   [
     'attach.snap',
     cue({
       effects: ['ring'],
+      alsoClears: ['toId'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -606,21 +939,39 @@ const ENTRIES: Array<[string, CueImpl]> = [
         const d = decay(stage, id, { kind: 'zone', player: null, zone: 'battlefield' }, k);
         stage.setOffset(id, { dx: d[0], dy: d[1] + 0.18 * Math.max(0, k), dz: d[2] });
         const host = num(ctx, 'toId', -1);
+        // **The host's reaction is data** (T5, report 13 §4.3): `channel` by
+        // default, and `params.hostClip` for an attachment whose landing is a
+        // different body — Quantum Reduction's is `shrink`. A name outside the
+        // closed clip vocabulary falls back rather than failing (§3.6 rung 3).
+        const wanted = str(ctx, 'hostClip', 'channel');
+        clipOn(ctx, t, stage, host, isClipName(wanted) ? wanted : 'channel');
         if (host >= 0 && t > 0.55) {
           const u = clamp01((t - 0.55) / 0.45);
+          // `params.collapse`: the ring closes INTO the host instead of opening
+          // out of it — Quantum Reduction's "collapsing ring" as the transition,
+          // over the contracting ring its pose keeps at the host's feet.
+          const collapse = flag(ctx, 'collapse');
           stage.setEffect(`${ctx.key}:ring`, {
             kind: 'ring',
             at: { kind: 'card', id: host },
             colour: colour(ctx, GOLD),
             strength: 1 - u,
-            radius: 0.2 + u * 0.45,
+            radius: collapse ? 0.65 - u * 0.5 : 0.2 + u * 0.45,
           });
         }
       },
     }),
   ],
 
-  /** **attach.release** (420 ms) — `to: null` *is* the unattach event (§3.6). */
+  /**
+   * **attach.release** (420 ms) — `to: null` *is* the unattach event (§3.6).
+   *
+   * The host is **not** posed here, and that is deliberate: an `attach:off` names
+   * no host (`AttachEvent.to` is `null`, which is the whole of the event), so
+   * there is no id to react and inventing one would mean guessing which creature
+   * had been carrying it. The snapshot has already dropped the manifestation,
+   * which is the fact the player needs.
+   */
   [
     'attach.release',
     perTarget([], (_ctx, t, stage, id) => {
@@ -953,6 +1304,106 @@ const ENTRIES: Array<[string, CueImpl]> = [
           radius: 0.2 + easeOutCubic(t) * num(ctx, 'radius', 0.9),
         });
         stage.setOffset(id, { dRotZ: -num(ctx, 'dir', 1) * TAP_ANGLE * (1 - easeOutBack(t)) });
+      },
+    }),
+  ],
+
+  /**
+   * **`land.tap`** (T4, report 13 §5.4 and user decision 9) — the ripple, **and
+   * the mana mote**.
+   *
+   * It is a cue of its own rather than a widening of `fx.ripple` because the mote
+   * is a statement that *this card is a land*, and a cue is not allowed to decide
+   * that: the **ladder** decided it, at the `land/*` archetype rung, and the cue
+   * id is where that decision is recorded. `fx.ripple` stays exactly what it was
+   * and is still what a tapping *creature* gets.
+   *
+   * The mote's two anchors are the whole of its honesty. It goes from **this
+   * card** to **`ctx.players[0]`'s casting anchor**, and `ctx.players[0]` is the
+   * land's own `controller` off the snapshot (`cues/resolve.ts`'s `tap` case) —
+   * so the reading is "the mana this land made went to the player who owns it",
+   * which is two facts the engine stated and no link it did not. §5.4 measured the
+   * alternative: a `cast` shares a batch with a land `tap` in only **234 of 414**
+   * casts, so a land→spell beam would show nothing at all 43.5% of the time.
+   */
+  [
+    'land.tap',
+    cue({
+      effects: ['ring', 'mote'],
+      apply(ctx, t, stage) {
+        const id = ctx.targets[0];
+        if (id === undefined) return;
+        const e = easeOutCubic(t);
+        stage.setEffect(`${ctx.key}:ring`, {
+          kind: 'ring',
+          at: { kind: 'card', id },
+          colour: colour(ctx),
+          strength: 1 - e,
+          radius: 0.2 + e * num(ctx, 'radius', 0.9),
+        });
+        // The tile's own quarter-turn back, exactly as `fx.ripple` does it: the
+        // snapshot already shows the land tapped, so the cue starts a turn back
+        // and decays to identity.
+        stage.setOffset(id, {
+          dRotZ: -num(ctx, 'dir', 1) * TAP_ANGLE * (1 - easeOutBack(t)),
+          // The tile lights up as it is spent. `TileField` reads this glow, which
+          // is how the cue reaches the terrain without knowing a tile exists.
+          glow: 0.8 * pulse(t),
+          glowColour: colour(ctx),
+        });
+        // **An untap emits no mote** — `dir` is −1 then, and mana does not flow
+        // out of a land that is being untapped.
+        const player = ctx.players[0];
+        if (player === undefined || num(ctx, 'dir', 1) < 0) return;
+        // The mote leaves once the ring is on its way, and the last 15% is it
+        // arriving: `travel` reaches 1 before `t` does, so the mote is *at* the
+        // anchor for a moment rather than winking out in flight.
+        const travel = clamp01((t - 0.12) / 0.73);
+        if (travel <= 0) return;
+        stage.setEffect(`${ctx.key}:mote`, {
+          kind: 'mote',
+          at: { kind: 'card', id },
+          to: { kind: 'casting', player },
+          colour: colour(ctx),
+          strength: 0.6 + 0.4 * pulse(travel),
+          radius: num(ctx, 'mote', 0.075),
+          travel,
+        });
+      },
+    }),
+  ],
+
+  /**
+   * **`land.untap`** (T4) — the tile comes back.
+   *
+   * Tapped is a **pose** (`figures/tiles.ts`), so the dimming and the brightening
+   * are both free and correct after a scrub; this is the *transition*, and it is
+   * deliberately the quietest cue in the file. Untaps arrive in rows — every
+   * permanent a player controls, in one batch — so anything louder than a short
+   * inward ring makes the beginning of every turn strobe.
+   */
+  [
+    'land.untap',
+    cue({
+      effects: ['ring'],
+      apply(ctx, t, stage) {
+        const id = ctx.targets[0];
+        if (id === undefined) return;
+        const e = easeOutCubic(t);
+        stage.setOffset(id, {
+          dRotZ: -num(ctx, 'dir', -1) * TAP_ANGLE * (1 - easeOutBack(t)),
+          glow: 0.4 * pulse(t),
+          glowColour: colour(ctx),
+        });
+        stage.setEffect(`${ctx.key}:ring`, {
+          kind: 'ring',
+          at: { kind: 'card', id },
+          colour: colour(ctx),
+          strength: 0.7 * (1 - e),
+          // Inward, which is the shape that reads as "coming back" rather than
+          // as "being spent".
+          radius: num(ctx, 'radius', 0.7) * (1 - 0.75 * e),
+        });
       },
     }),
   ],
@@ -1424,6 +1875,12 @@ const ENTRIES: Array<[string, CueImpl]> = [
           glow: wave,
           glowColour: WHITE,
         });
+        // **T5** (report 13 §4.3): the victim's figure crouches as the Realm
+        // pulls. The *lasting* shrink is the pose — `figures.json`'s
+        // `"Quantum Reduction": { kind: "shrink", hostScale: 0.45 }` — and this is
+        // the 520 ms of it happening. `alsoClears: ['beamTo']` above is what makes
+        // `end()` total over the clip as well as the offset.
+        clipOn(ctx, t, stage, target, 'shrink');
         stage.setEffect(`${ctx.key}:point`, {
           kind: 'glow',
           at: { kind: 'card', id: target },

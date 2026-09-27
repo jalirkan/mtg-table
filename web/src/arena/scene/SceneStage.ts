@@ -14,10 +14,13 @@
  * no WebGL and lets the renderer be read without reading the cues.
  */
 
+import { clipBeats, NO_CLIP, type ClipRequest } from '../figures/clips.ts';
 import {
   IDENTITY,
-  MAX_LIVE_EFFECTS,
+  bucketSize,
   composeInto,
+  effectBucketOf,
+  effectCapOf,
   resetOffset,
   type AnchorRef,
   type CameraRequest,
@@ -37,6 +40,13 @@ export class SceneStage implements Stage {
   readonly offsets = new Map<number, Offset>();
   /** Live effects, keyed by `<cue key>:<suffix>`. */
   readonly effects = new Map<string, Effect>();
+  /**
+   * **The clip lane** (report 13 §3.3): this frame's winning pose request per
+   * card id. Cleared by `beginFrame` like the offsets, so a cue that has ended
+   * contributes nothing because it is no longer applied — never because anything
+   * remembered to undo it.
+   */
+  readonly clips = new Map<number, ClipRequest>();
   /**
    * §8 — this frame's camera request, or `null`.
    *
@@ -69,6 +79,8 @@ export class SceneStage implements Stage {
    * retains one, which is what makes reuse safe.
    */
   readonly #pool = new Map<number, Offset>();
+  /** The same trick for the clip lane: one mutable request object per card id. */
+  readonly #clipPool = new Map<number, ClipRequest>();
 
   constructor(layout: Layout) {
     this.layout = layout;
@@ -86,6 +98,7 @@ export class SceneStage implements Stage {
   beginFrame(layout?: Layout): void {
     if (layout !== undefined) this.layout = layout;
     this.offsets.clear();
+    this.clips.clear();
     this.camera = null;
     this.cameraTouched = false;
   }
@@ -129,7 +142,13 @@ export class SceneStage implements Stage {
   }
 
   setEffect(key: string, effect: Effect): void {
-    if (!this.effects.has(key) && this.effects.size >= MAX_LIVE_EFFECTS) {
+    // Two buckets, not one (report 13 §5.4): a `mote` is a 0.07-unit dot and the
+    // eight-slot cap was sized against full-size blended quads. See
+    // `cues/stage.ts`'s `EffectKind`.
+    if (
+      !this.effects.has(key) &&
+      bucketSize(this.effects, effectBucketOf(effect.kind)) >= effectCapOf(effect.kind)
+    ) {
       // §9.3 rule 1: over budget, an effect is simply not drawn. The cue keeps
       // playing — "degrade, don't stutter" — and the card motion, which is the
       // part that carries the meaning, is untouched.
@@ -143,6 +162,42 @@ export class SceneStage implements Stage {
     this.effects.delete(key);
   }
 
+  /**
+   * **One request per card, chosen by a total order** (report 13 §3.3).
+   *
+   * The arbitration is `figures/clips.ts`'s `clipBeats` — the same function
+   * `NullStage` uses and the one `clips.test.ts` drives over shuffled
+   * permutations — so the pose a figure holds when two cues want it is a pure
+   * function of the two requests and not of which cue the queue reached first.
+   *
+   * The stored object is pooled per card id for the same reason `setOffset`'s is
+   * (§9.2 rule 6): this is called once per running cue per target per frame.
+   */
+  setClip(cardId: number, request: ClipRequest): void {
+    const incumbent = this.clips.get(cardId);
+    if (incumbent !== undefined && !clipBeats(request, incumbent)) return;
+    let target = this.#clipPool.get(cardId);
+    if (target === undefined) {
+      target = { ...NO_CLIP };
+      this.#clipPool.set(cardId, target);
+    }
+    target.clip = request.clip;
+    target.t = request.t;
+    target.weight = request.weight;
+    target.alias = request.alias;
+    target.key = request.key;
+    this.clips.set(cardId, target);
+  }
+
+  clearClip(cardId: number): void {
+    this.clips.delete(cardId);
+  }
+
+  /** The winning clip for one card this frame, or `null` — hold the stance. */
+  clipOf(cardId: number): ClipRequest | null {
+    return this.clips.get(cardId) ?? null;
+  }
+
   requestCamera(request: CameraRequest | null): void {
     this.camera = request;
     this.cameraTouched = true;
@@ -151,6 +206,7 @@ export class SceneStage implements Stage {
   clearAll(): void {
     this.offsets.clear();
     this.effects.clear();
+    this.clips.clear();
     this.camera = null;
     this.cameraTouched = false;
   }

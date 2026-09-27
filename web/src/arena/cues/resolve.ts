@@ -32,7 +32,7 @@
  * ---------------------------------------------------------------------------
  */
 
-import type { AnyCard, GameEvent } from '../../protocol.ts';
+import type { AnyCard, GameEvent, GameStateBody, StackItem } from '../../protocol.ts';
 import type { ClientState } from '../../reduce.ts';
 import { findCard } from '../../render/resolve.ts';
 import { colourHex, colourIdOf } from '../colour.ts';
@@ -274,6 +274,76 @@ export function cardIdsOf(event: GameEvent): number[] {
 }
 
 /**
+ * The controller of a card the snapshot still carries, as the `players` list a cue
+ * reads `ctx.players[0]` out of. Empty when the wire does not say (T6, §6.3).
+ */
+function casterOf(subject: AnyCard | null): number[] {
+  const controller = (subject as { controller?: number | null } | null)?.controller ?? null;
+  return controller === null ? [] : [controller];
+}
+
+/**
+ * **T6's strike: what the resolving spell was aimed at** (report 13 §6.3), read off
+ * the frame **immediately before** the one carrying the `resolved` event.
+ *
+ * `ResolvedEvent` is `{cardId, fizzled}` — no stack id and no targets — and by the
+ * frame that carries it the item has left `state.stack`. But an event batch *is*
+ * the transition from the previous frame to this one, and the previous frame said,
+ * in so many ids, "this spell is on top of the stack and it targets that". Both
+ * are facts the engine stated; reading them one frame back is the same one-frame
+ * window an `ask` is allowed to be justified by (CLAUDE.md M6 convention 3), and
+ * nothing is remembered past the batch — a cue is built from it and the cue decays.
+ *
+ * Measured over the whole committed corpus on 2026-09-26:
+ *
+ *     412 `resolved` events · the item is on the PREVIOUS frame's stack in 333 ·
+ *     41 of those carry a target · the SAME frame would give 7
+ *
+ * The 79 with no previous item are triggers and abilities that went on and came
+ * off inside one engine step; they have nothing to aim at and simply discharge at
+ * the caster's anchor, which is not an inconsistency — an untargeted spell has no
+ * target to strike. A flush (a scrub, a `resync`) passes no previous frame at
+ * all, and then there is no strike, which is the snap a flush always is.
+ *
+ * The stack is **bottom first** (protocol §3.3), so the resolving item is the
+ * *last* entry with this source — two triggers from one permanent are the case
+ * that makes the direction matter. Ids and one boolean only: `strikeCard` /
+ * `strikePlayer` are numbers, which the redaction net passes because a number
+ * cannot be a name (report 13 §3.5), and `strikeFoe` says whether the thing
+ * struck belongs to someone other than the caster — `hit` if so, `channel` if not
+ * — which is a reading of two `controller` fields and not of what the spell did.
+ */
+function strikeParams(
+  cardId: number,
+  caster: number | null,
+  state: ClientState,
+  previous: GameStateBody | null,
+): Record<string, number | boolean> {
+  if (previous === null) return {};
+  let item: StackItem | null = null;
+  for (let i = previous.stack.length - 1; i >= 0; i--) {
+    const candidate = previous.stack[i];
+    if (candidate !== undefined && candidate.sourceCardId === cardId) {
+      item = candidate;
+      break;
+    }
+  }
+  if (item === null) return {};
+  const card = item.targetCardIds[0];
+  if (card !== undefined) {
+    const board = state.board;
+    const target = board === null ? undefined : findCard(board, card);
+    const owner = (target as { controller?: number | null } | undefined)?.controller ?? null;
+    return { strikeCard: card, strikeFoe: owner !== null && caster !== null && owner !== caster };
+  }
+  const player = item.targetPlayerIds[0];
+  if (player !== undefined) {
+    return { strikePlayer: player, strikeFoe: caster !== null && player !== caster };
+  }
+  return {};
+}
+
+/**
  * One event → zero or more cues, each already targeted and parameterised.
  *
  * Most events give exactly one cue. Two give several on purpose:
@@ -281,7 +351,12 @@ export function cardIdsOf(event: GameEvent): number[] {
  * attacker" is per *attacker* rather than per band, and **`blockers`** to one
  * per blocker so each can lunge at the attacker it actually blocked.
  */
-export function cuesFor(event: GameEvent, state: ClientState, data: CueData): Cue[] {
+export function cuesFor(
+  event: GameEvent,
+  state: ClientState,
+  data: CueData,
+  previous: GameStateBody | null = null,
+): Cue[] {
   const selectors = selectorsFor(event, state);
   const kind: string = event.kind;
 
@@ -353,20 +428,53 @@ export function cuesFor(event: GameEvent, state: ClientState, data: CueData): Cu
       });
     }
 
-    case 'resolved':
-      return one([event.cardId], [], { fizzled: event.fizzled });
+    /**
+     * **T6** (report 13 §6.3): the spell's controller comes from the SNAPSHOT,
+     * not from the event, exactly as T4's `tap` reads a land's controller.
+     *
+     * `ResolvedEvent` is `{cardId, fizzled}` and `UnstackedEvent` is `{cardId}` —
+     * neither carries a player — and the strike, the fizzle and the shatter all
+     * happen at the **caster's casting anchor**, which is where the form stood.
+     * `controller` is protocol §3.3's own field on every card including a
+     * `stackCards` entry, so this is the engine's answer to "whose spell was
+     * that", not a renderer's guess. Measured: 365 of the corpus's 412
+     * resolutions resolve a controller this way; the other 47 get no anchor
+     * effect at all, which is the honest fallback rather than a guessed seat.
+     *
+     * The strike's AIM comes from the previous frame — see {@link strikeParams}.
+     */
+    case 'resolved': {
+      const caster = casterOf(subject);
+      return one([event.cardId], caster, {
+        fizzled: event.fizzled,
+        ...strikeParams(event.cardId, caster[0] ?? null, state, previous),
+      });
+    }
 
     case 'unstacked':
+      return one([event.cardId], casterOf(subject));
+
     case 'sacrificed':
       return one([event.cardId], []);
 
     case 'land':
       return one([event.cardId], [event.player]);
 
-    case 'tap':
+    case 'tap': {
       // The snapshot already shows the card tapped, so the cue animates the
       // approach: it starts a quarter-turn *back* and decays to identity.
-      return one([event.cardId], [], { dir: event.tapped ? 1 : -1 });
+      //
+      // **The controller comes from the SNAPSHOT, not from the event** (T4,
+      // report 13 §5.4). `TapEvent` is `{cardId, tapped}` and carries no player
+      // at all, and the mana mote has to know whose casting anchor to drift to.
+      // `controller` is protocol §3.3's own field — present on every card,
+      // redacted or not — so this is the engine's answer to "whose land is this",
+      // not a renderer's guess. Every other cue keyed on `tap` ignores it.
+      const controller = (subject as { controller?: number | null } | null)?.controller ?? null;
+      return one([event.cardId], controller === null ? [] : [controller], {
+        dir: event.tapped ? 1 : -1,
+      });
+    }
 
     case 'counters':
       return one([event.cardId], [], {

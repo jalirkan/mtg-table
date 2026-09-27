@@ -20,6 +20,32 @@
  * stopped being worth rendering at all. `<Canvas performance={{ min: 0.5 }}>`
  * is the same number from the other end.
  */
+/**
+ * **Whether bloom is on when nobody said** (user decision 6, `scene/Post.tsx`):
+ * "default ON if the bench stays within budget on this machine (GeForce GTX 1080
+ * present; the sandbox bench uses SwiftShader as a lower bound), else default off
+ * with a toggle".
+ *
+ * **It is ON, because the bench on this machine's GTX 1080 says so** — measured by
+ * T7 with `tools/arena-bench.mjs --gpu gl` (headless Chromium, ANGLE on the NVIDIA
+ * driver) at `g1.jsonl` transport index 316 with 11 figures on the table, warm,
+ * 1920×993 at render dpr 1: **p95 1.1 ms, max 18.1–19.3 ms over three runs**, all
+ * inside §9.4's gate (p95 ≤ 20, max ≤ 50), against p95 0.4 ms with bloom off. The
+ * max passed only after `EffectPool.prime` moved a lazy shader compile to mount;
+ * before that one frame per run landed at 52–62 ms.
+ *
+ * **Under SwiftShader it fails by four times** — p95 82.3 ms at the dpr-0.6 floor,
+ * against 16.4 ms without it — which is why the DPR governor has a rung below its
+ * floor that turns bloom off on a machine that is still late there (`Arena.tsx`'s
+ * `onFloor`), and why the cue controls carry the checkbox. `?bloom=0` / `?bloom=1`
+ * set where it starts. Numbers and caveats: `docs/evidence/m7-tier2.md`, T7.
+ *
+ * It lives here rather than beside the component for one mechanical reason: the
+ * component is **lazily imported**, so reading its default would load the 16.5 kB
+ * (gzip) of `postprocessing` before anyone had decided to use it.
+ */
+export const BLOOM_DEFAULT = true;
+
 export const DPR_FLOOR = 0.6;
 
 /** Never render more pixels than the screen can show. A ceiling is not a target. */

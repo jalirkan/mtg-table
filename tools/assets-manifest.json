@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "_what": "The provenance record for every third-party asset the arena's Tier 2 figure library is built from (report 13 §9.1, §9.2). tools/build-figures.mjs reads it, builds web/public/models/figures.glb from the sources named here, and WRITES web/src/arena/figures/models.json from what it measured — so the manifest is the hand-written half (where a file came from, what its licence badge said on the day) and models.json is the measured half (heights, bones, triangles, the clip names that really exist).",
+  "_licence_rule": "Only CC0 assets are used at all. The badge text below is what the download page said ON THE DAY, verbatim, because that is the only evidence that survives the page changing — Quaternius relicensed one of its 83 packs sixteen days before this was written (report 12 §0.2), and QAL §7 says the version in force when you obtained the asset governs.",
+  "_never": "Nothing derived from card art may ever appear here. Marvel art is licensed to Wizards; the Fan Content Policy's line is \"If you don't have the rights to use another person's stuff in your Fan Content—don't\" (https://company.wizards.com/en/legal/fancontentpolicy). NOTICE §2 and the Scryfall images already live under that rule.",
+  "_where": "The downloaded archives are NOT committed. They live under var/assets/figures/ (var/ is gitignored) and `tools/build-figures.mjs --src` points at them. Re-download with the URLs and sha256s below.",
+
+  "packs": {
+    "kenney-mini-characters": {
+      "title": "Mini Characters",
+      "creator": "Kenney",
+      "packVersion": "1.0",
+      "created": "2024-07-17",
+      "page": "https://kenney.nl/assets/mini-characters",
+      "downloadUrl": "https://kenney.nl/media/pages/assets/mini-characters/bfc7e272b4-1774770718/kenney_mini-characters.zip",
+      "file": "kenney_mini-characters.zip",
+      "bytes": 2403059,
+      "sha256": "9e1d48e6d7b8479ebbe84df71eb5bd8e1b3f0da546dea641890dccc8a02d0999",
+      "retrieved": "2026-09-13",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License · Creative Commons CC0",
+      "licenceFileText": "License: (Creative Commons Zero, CC0) — http://creativecommons.org/publicdomain/zero/1.0/ — You can use this content for personal, educational, and commercial purposes. Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)",
+      "committable": true,
+      "_note": "The licence text above is quoted from License.txt INSIDE the downloaded zip, not only from the web page. 25 files; 12 characters, 32 clips each, one 512² colormap for the whole kit."
+    },
+    "quaternius-robot-enemy-flying": {
+      "title": "Robot Enemy Flying",
+      "creator": "Quaternius",
+      "packVersion": "poly.pizza upload 2022-08-28",
+      "created": "2022-08-28",
+      "page": "https://poly.pizza/m/lF3jeRJwiH",
+      "downloadUrl": "https://static.poly.pizza/abb31ff6-3e2d-43a6-bf13-dba39b0c596d.glb",
+      "file": "quaternius-robot-enemy-flying.glb",
+      "bytes": 298324,
+      "sha256": "7e3a27532b43807b375e3d3ad9cbe1f7e20d8bb723f2dcc2a3c9efb38da73a5b",
+      "retrieved": "2026-09-13",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "Aug 28, 2022 • FBX /GLTF format • Public Domain (CC0)",
+      "committable": true,
+      "_note": "Read on https://poly.pizza/m/lF3jeRJwiH on 2026-09-13; the page's own JSON carries \"Licence\":\"CC0 1.0\". Report 13 §9.1 is more cautious about Quaternius than report 12 §0.2 is, because quaternius.com's OWN pack pages have begun moving to the QAL. This file was obtained from the Poly Pizza listing under an explicit CC0 badge, which is what QAL §7 makes decisive — but see docs/evidence/m7-tier2.md for the open question about committing the built .glb."
+    },
+    "quaternius-bee-enemy": {
+      "title": "Bee Enemy",
+      "creator": "Quaternius",
+      "packVersion": "poly.pizza upload 2021-12-21",
+      "created": "2021-12-21",
+      "page": "https://poly.pizza/m/6HsU6GQt3a",
+      "downloadUrl": "https://static.poly.pizza/19203489-125b-41f5-b9c9-801a522cb775.glb",
+      "file": "quaternius-bee-enemy.glb",
+      "bytes": 193200,
+      "sha256": "29a3ac29e6859208bdab9db3d34387e1d154f14564bd17cdc57eda669cb557cf",
+      "retrieved": "2026-09-13",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "Dec 21, 2021 • FBX /GLTF format • Public Domain (CC0)",
+      "committable": true,
+      "_note": "Same reading as the robot, same day, same page shape."
+    }
+  },
+
+  "models": {
+    "agent": {
+      "pack": "kenney-mini-characters",
+      "source": "kenney_mini-characters/Models/GLB format/character-male-a.glb",
+      "facing": "+z",
+      "_role": "human agent / hero / scientist / Soldier token — every humanoid archetype in the deck, separated by tint until T8 gives them their own meshes.",
+      "clips": {
+        "idle": "idle",
+        "summon": "jump",
+        "attack": "attack-melee-right",
+        "block": "crouch",
+        "hit": "fall",
+        "die": "die",
+        "grow": "emote-yes",
+        "shrink": "crouch",
+        "channel": "interact-right",
+        "crouch": "crouch",
+        "pistolDraw": "holding-both-shoot",
+        "radioCall": "interact-left"
+      },
+      "_clips_note": "Kenney's Mini set has no hit-react, so `hit` borrows `fall` and `shrink` borrows `crouch`. Provisional: T3 is the evening that actually plays them and is where these choices get looked at."
+    },
+    "drone": {
+      "pack": "quaternius-robot-enemy-flying",
+      "source": "quaternius-robot-enemy-flying.glb",
+      "facing": "+z",
+      "_role": "Aerial Doombot, Robot Token — creature/subtype:robot.",
+      "clips": {
+        "idle": "Idle",
+        "summon": "Run",
+        "attack": "Attack",
+        "die": "Dead",
+        "jet": "Shoot"
+      },
+      "_clips_note": "There is no hit-react in this pack either, and `hit` is deliberately ABSENT rather than borrowed: §3.6 rung 3 is that a missing clip removes only the part of the animation a model was going to add, and that branch is worth having live data behind."
+    },
+    "insect": {
+      "pack": "quaternius-bee-enemy",
+      "source": "quaternius-bee-enemy.glb",
+      "facing": "+z",
+      "_role": "Giant-Sized Flying Ant, Ant-Man's Air Force — creature/subtype:insect.",
+      "clips": {
+        "idle": "Flying",
+        "attack": "Bite_Front",
+        "hit": "HitRecieve",
+        "die": "Death"
+      },
+      "_clips_note": "`summon` is absent — same rung-3 case as the drone's `hit`."
+    }
+  },
+
+  "_deferred": {
+    "carrier": "S.H.I.E.L.D. Helicarrier (T10). No CC0 vehicle mesh has been chosen; the card keeps its presence hover and its disc.",
+    "hero": "A hero mesh of its own (T8). Today the hero archetype is the agent in a gold tint.",
+    "scientist": "A scientist mesh of its own (T8). Today it is the agent in a lab-green tint.",
+    "clipLibrary": "Quaternius Universal Animation Library 1+2 (CC0, 250+ clips, Mixamo-compatible rig) is the retarget experiment of §9.5. Not downloaded: the packs above already carry idle/attack/die, which is what T2 and T3 need."
+  }
+}

@@ -1,0 +1,575 @@
+/*
+ * mtg-table — arena/figures/validate.ts
+ * Copyright (C) 2026 the mtg-table authors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * **The figure file's validator**, mirroring `cues/validate.ts` exactly (report
+ * 13 §9.2) — hand-written, no `ajv`, consistent with decision D4 and adding no
+ * dependency.
+ *
+ * The two behaviours are the cue file's, for the same reasons:
+ *
+ *   - **At runtime the arena never throws because a data file is wrong.** An
+ *     entry with an error is *dropped*, the ladder falls through to the next
+ *     rung, and the worst case is a glow disc. A renderer that refused to start
+ *     over a typo in an art-direction file would be a renderer that could be
+ *     stopped by an art-direction file.
+ *   - **In the tests an error is a failure.** `web/test/models-data.test.ts`
+ *     asserts zero errors over the committed data.
+ *
+ * **Unknown fields are errors** and **a key beginning with `_` is a comment** —
+ * the same two rules, so `figures.json` can carry the `_note` that says which
+ * event or which fact each entry keys off (§12's mitigation).
+ */
+
+import {
+  ATTACH_KINDS,
+  DEFAULT_ATTACH_SPEC,
+  DEFAULT_TILE_SPEC,
+  isAttachKind,
+  isClipName,
+  isTileKind,
+  TILE_KINDS,
+  type AttachSpec,
+  type FigureData,
+  type FigureProblem,
+  type FigureSpec,
+  type ModelData,
+  type ModelEntry,
+  type TileSpec,
+} from './types.ts';
+
+export interface FigureValidation<T> {
+  /** The usable subset: every entry that survived. Never `null`. */
+  data: T;
+  errors: FigureProblem[];
+  warnings: FigureProblem[];
+}
+
+const FILE_KEYS = new Set([
+  'version',
+  'cards',
+  'archetypes',
+  'default',
+  'lands',
+  'landDefault',
+  'attachments',
+  'attachDefault',
+]);
+const SPEC_KEYS = new Set(['model', 'tint', 'scale', 'clips', 'token']);
+/** T4 — the terrain table's own entry shape (report 13 §5.2). */
+const TILE_KEYS = new Set(['tile', 'tint', 'rim']);
+/** T5 — the attachment table's own entry shape (report 13 §4.2). */
+const ATTACH_KEYS = new Set(['kind', 'tint', 'hostScale', 'strength', 'metal']);
+/** A `hostScale` outside this is a typo, not art direction. */
+const HOST_SCALE_RANGE = [0.2, 2] as const;
+/** `"Thriving Isle"`, `"subtype:island"` or `"*"` — the three rungs and nothing else. */
+const LAND_KEY = /^(\*|subtype:[a-z]+|[^_].*)$/;
+const MODELS_FILE_KEYS = new Set(['version', 'models']);
+const MODEL_KEYS = new Set([
+  'path',
+  'node',
+  'height',
+  'width',
+  'facing',
+  'rootMotion',
+  'bones',
+  'triangles',
+  'clips',
+  'source',
+  'licence',
+  'licenceUrl',
+  'licenceBadge',
+  'retrieved',
+  'committable',
+]);
+
+/** A hex colour, the only colour spelling the arena accepts anywhere. */
+const HEX = /^#[0-9a-fA-F]{6}$/;
+/** `creature/subtype:spy`, `creature/W`, `creature/*`, `*​/*`. */
+const ARCHETYPE_KEY = /^[a-z*]+\/(subtype:[a-z]+|[A-Z*]+)$/;
+/** A scale outside this is a typo, not art direction. */
+const SCALE_RANGE = [0.2, 4] as const;
+const FACINGS = new Set(['+z', '-z', '+x', '-x']);
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function isCommentKey(key: string): boolean {
+  return key.startsWith('_');
+}
+
+function unknownKeys(
+  where: string,
+  value: Readonly<Record<string, unknown>>,
+  allowed: ReadonlySet<string>,
+  errors: FigureProblem[],
+  what: string,
+): void {
+  for (const key of Object.keys(value)) {
+    if (isCommentKey(key) || allowed.has(key)) continue;
+    errors.push({ where: `${where}.${key}`, message: `unknown ${what} field "${key}"` });
+  }
+}
+
+export interface ValidateFiguresOptions {
+  /** Every model id `models.json` defines. A spec naming another is an error. */
+  modelIds?: ReadonlySet<string>;
+}
+
+/** One `FigureSpec`, or `null` when it must be dropped. */
+function checkSpec(
+  where: string,
+  raw: unknown,
+  options: ValidateFiguresOptions,
+  errors: FigureProblem[],
+): FigureSpec | null {
+  if (!isObject(raw)) {
+    errors.push({ where, message: 'must be an object' });
+    return null;
+  }
+  unknownKeys(where, raw, SPEC_KEYS, errors, 'figure');
+  let bad = false;
+
+  const model = raw['model'] ?? null;
+  if (model !== null && typeof model !== 'string') {
+    errors.push({ where: `${where}.model`, message: 'must be a model id or null' });
+    bad = true;
+  } else if (
+    typeof model === 'string' &&
+    options.modelIds !== undefined &&
+    !options.modelIds.has(model)
+  ) {
+    // **Dropped, not warned.** A spec naming a model the manifest does not
+    // define would resolve to a figure the loader can never build, and the
+    // ladder falling through to the disc is the declared fallback (§9.4).
+    errors.push({ where: `${where}.model`, message: `no model "${model}" in models.json` });
+    bad = true;
+  }
+
+  const tint = raw['tint'] ?? null;
+  if (tint !== null && (typeof tint !== 'string' || !HEX.test(tint))) {
+    errors.push({ where: `${where}.tint`, message: 'must be a #rrggbb colour or absent' });
+    bad = true;
+  }
+
+  const scale = raw['scale'] ?? 1;
+  if (typeof scale !== 'number' || !Number.isFinite(scale) || scale < SCALE_RANGE[0] || scale > SCALE_RANGE[1]) {
+    errors.push({
+      where: `${where}.scale`,
+      message: `must be a number in [${String(SCALE_RANGE[0])}, ${String(SCALE_RANGE[1])}]`,
+    });
+    bad = true;
+  }
+
+  const clips: Record<string, string> = {};
+  const rawClips = raw['clips'];
+  if (rawClips !== undefined) {
+    if (!isObject(rawClips)) {
+      errors.push({ where: `${where}.clips`, message: 'must be an object' });
+      bad = true;
+    } else {
+      for (const [name, alias] of Object.entries(rawClips)) {
+        if (isCommentKey(name)) continue;
+        if (!isClipName(name)) {
+          errors.push({ where: `${where}.clips.${name}`, message: 'not one of CLIP_NAMES' });
+          bad = true;
+          continue;
+        }
+        if (typeof alias !== 'string' || alias === '') {
+          errors.push({ where: `${where}.clips.${name}`, message: 'must be a non-empty clip alias' });
+          bad = true;
+          continue;
+        }
+        clips[name] = alias;
+      }
+    }
+  }
+
+  const token = raw['token'] ?? false;
+  if (typeof token !== 'boolean') {
+    errors.push({ where: `${where}.token`, message: 'must be a boolean' });
+    bad = true;
+  }
+
+  if (bad) return null;
+  return {
+    model: model as string | null,
+    tint: tint as string | null,
+    scale: scale as number,
+    clips,
+    token: token as boolean,
+  };
+}
+
+/**
+ * One `TileSpec`, or `null` when it must be dropped (T4, report 13 §5.2).
+ *
+ * Same two behaviours as {@link checkSpec}: at runtime a bad entry falls through
+ * the ladder to the neutral slab, and in the tests it is a failure.
+ */
+function checkTile(where: string, raw: unknown, errors: FigureProblem[]): TileSpec | null {
+  if (!isObject(raw)) {
+    errors.push({ where, message: 'must be an object' });
+    return null;
+  }
+  unknownKeys(where, raw, TILE_KEYS, errors, 'tile');
+  let bad = false;
+
+  const tile = raw['tile'];
+  if (typeof tile !== 'string' || !isTileKind(tile)) {
+    errors.push({
+      where: `${where}.tile`,
+      message: `must be one of ${TILE_KINDS.join(', ')}`,
+    });
+    bad = true;
+  }
+  const tint = raw['tint'] ?? null;
+  if (tint !== null && (typeof tint !== 'string' || !HEX.test(tint))) {
+    errors.push({ where: `${where}.tint`, message: 'must be a #rrggbb colour or absent' });
+    bad = true;
+  }
+  const rim = raw['rim'] ?? null;
+  if (rim !== null && (typeof rim !== 'string' || !HEX.test(rim))) {
+    errors.push({ where: `${where}.rim`, message: 'must be a #rrggbb colour or absent' });
+    bad = true;
+  }
+  if (bad) return null;
+  return { tile: tile as TileSpec['tile'], tint: tint as string | null, rim: rim as string | null };
+}
+
+/**
+ * One `AttachSpec`, or `null` when it must be dropped (T5, report 13 §4.2).
+ *
+ * Same two behaviours as {@link checkSpec}: at runtime a bad entry falls through
+ * the ladder to the default halo — which is the whole point of §4.4 having one —
+ * and in the tests it is a failure.
+ */
+function checkAttach(where: string, raw: unknown, errors: FigureProblem[]): AttachSpec | null {
+  if (!isObject(raw)) {
+    errors.push({ where, message: 'must be an object' });
+    return null;
+  }
+  unknownKeys(where, raw, ATTACH_KEYS, errors, 'attachment');
+  let bad = false;
+
+  const kind = raw['kind'];
+  if (typeof kind !== 'string' || !isAttachKind(kind)) {
+    errors.push({ where: `${where}.kind`, message: `must be one of ${ATTACH_KINDS.join(', ')}` });
+    bad = true;
+  }
+  const tint = raw['tint'] ?? null;
+  if (tint !== null && (typeof tint !== 'string' || !HEX.test(tint))) {
+    errors.push({ where: `${where}.tint`, message: 'must be a #rrggbb colour or absent' });
+    bad = true;
+  }
+  const hostScale = raw['hostScale'] ?? 1;
+  if (
+    typeof hostScale !== 'number' ||
+    !Number.isFinite(hostScale) ||
+    hostScale < HOST_SCALE_RANGE[0] ||
+    hostScale > HOST_SCALE_RANGE[1]
+  ) {
+    errors.push({
+      where: `${where}.hostScale`,
+      message: `must be a number in [${String(HOST_SCALE_RANGE[0])}, ${String(HOST_SCALE_RANGE[1])}]`,
+    });
+    bad = true;
+  }
+  const strength = raw['strength'] ?? DEFAULT_ATTACH_SPEC.strength;
+  if (typeof strength !== 'number' || !Number.isFinite(strength) || strength < 0 || strength > 1) {
+    errors.push({ where: `${where}.strength`, message: 'must be a number in [0, 1]' });
+    bad = true;
+  }
+  const metal = raw['metal'] ?? false;
+  if (typeof metal !== 'boolean') {
+    errors.push({ where: `${where}.metal`, message: 'must be a boolean' });
+    bad = true;
+  }
+  if (bad) return null;
+  return {
+    kind: kind as AttachSpec['kind'],
+    tint: tint as string | null,
+    hostScale: hostScale as number,
+    strength: strength as number,
+    metal: metal as boolean,
+  };
+}
+
+/** Validate a parsed `figures.json`. Never throws, never returns `null` data. */
+export function validateFigures(
+  raw: unknown,
+  options: ValidateFiguresOptions = {},
+): FigureValidation<FigureData> {
+  const errors: FigureProblem[] = [];
+  const warnings: FigureProblem[] = [];
+  const cards: Record<string, FigureSpec> = {};
+  const archetypes: Record<string, FigureSpec> = {};
+  const lands: Record<string, TileSpec> = {};
+  const attachments: Record<string, AttachSpec> = {};
+  let fallback: FigureSpec = { model: null, tint: null, scale: 1, clips: {}, token: false };
+  let landFallback: TileSpec = { ...DEFAULT_TILE_SPEC };
+  let attachFallback: AttachSpec = { ...DEFAULT_ATTACH_SPEC };
+
+  const done = (): FigureValidation<FigureData> => ({
+    data: {
+      version: 1,
+      cards,
+      archetypes,
+      default: fallback,
+      lands,
+      landDefault: landFallback,
+      attachments,
+      attachDefault: attachFallback,
+    },
+    errors,
+    warnings,
+  });
+
+  if (!isObject(raw)) {
+    errors.push({ where: '$', message: 'the figure file is not an object' });
+    return done();
+  }
+  unknownKeys('$', raw, FILE_KEYS, errors, 'top-level');
+
+  const version = raw['version'];
+  if (version !== 1) {
+    errors.push({ where: '$.version', message: `version must be 1, saw ${JSON.stringify(version)}` });
+  }
+
+  const table = (where: string, value: unknown, into: Record<string, FigureSpec>, checkKey: boolean): void => {
+    if (value === undefined) return;
+    if (!isObject(value)) {
+      errors.push({ where, message: 'must be an object' });
+      return;
+    }
+    for (const [key, entry] of Object.entries(value)) {
+      if (isCommentKey(key)) continue;
+      if (checkKey && !ARCHETYPE_KEY.test(key)) {
+        errors.push({ where: `${where}["${key}"]`, message: 'not an archetype key §3.7 can produce' });
+        continue;
+      }
+      const spec = checkSpec(`${where}["${key}"]`, entry, options, errors);
+      if (spec !== null) into[key] = spec;
+    }
+  };
+
+  table('$.cards', raw['cards'], cards, false);
+  table('$.archetypes', raw['archetypes'], archetypes, true);
+
+  if (raw['default'] !== undefined) {
+    const spec = checkSpec('$.default', raw['default'], options, errors);
+    // A broken `default` falls back to the disc, which is what a default is for.
+    if (spec !== null) fallback = spec;
+  }
+
+  // -- T4's terrain table (report 13 §5.2) ---------------------------------
+  const rawLands = raw['lands'];
+  if (rawLands !== undefined) {
+    if (!isObject(rawLands)) {
+      errors.push({ where: '$.lands', message: 'must be an object' });
+    } else {
+      for (const [key, entry] of Object.entries(rawLands)) {
+        if (isCommentKey(key)) continue;
+        if (!LAND_KEY.test(key)) {
+          errors.push({ where: `$.lands["${key}"]`, message: 'not a land key §5.2 can produce' });
+          continue;
+        }
+        const spec = checkTile(`$.lands["${key}"]`, entry, errors);
+        if (spec !== null) lands[key] = spec;
+      }
+    }
+  }
+  if (raw['landDefault'] !== undefined) {
+    const spec = checkTile('$.landDefault', raw['landDefault'], errors);
+    if (spec !== null) landFallback = spec;
+  }
+
+  // -- T5's attachment table (report 13 §4.3) ------------------------------
+  const rawAttach = raw['attachments'];
+  if (rawAttach !== undefined) {
+    if (!isObject(rawAttach)) {
+      errors.push({ where: '$.attachments', message: 'must be an object' });
+    } else {
+      for (const [key, entry] of Object.entries(rawAttach)) {
+        if (isCommentKey(key)) continue;
+        // The same key shape the terrain table uses: a card name, a
+        // `subtype:<word>` rung, or `*`.
+        if (!LAND_KEY.test(key)) {
+          errors.push({ where: `$.attachments["${key}"]`, message: 'not an attachment key §4.3 can produce' });
+          continue;
+        }
+        const spec = checkAttach(`$.attachments["${key}"]`, entry, errors);
+        if (spec !== null) attachments[key] = spec;
+      }
+    }
+  }
+  if (raw['attachDefault'] !== undefined) {
+    const spec = checkAttach('$.attachDefault', raw['attachDefault'], errors);
+    if (spec !== null) attachFallback = spec;
+  }
+
+  return done();
+}
+
+/** Validate a parsed `models.json`. Same contract. */
+export function validateModels(raw: unknown): FigureValidation<ModelData> {
+  const errors: FigureProblem[] = [];
+  const warnings: FigureProblem[] = [];
+  const models: Record<string, ModelEntry> = {};
+
+  if (!isObject(raw)) {
+    errors.push({ where: '$', message: 'the model manifest is not an object' });
+    return { data: { version: 1, models }, errors, warnings };
+  }
+  unknownKeys('$', raw, MODELS_FILE_KEYS, errors, 'top-level');
+
+  const version = raw['version'];
+  if (version !== 1) {
+    errors.push({ where: '$.version', message: `version must be 1, saw ${JSON.stringify(version)}` });
+  }
+
+  const rawModels = raw['models'];
+  if (rawModels === undefined) return { data: { version: 1, models }, errors, warnings };
+  if (!isObject(rawModels)) {
+    errors.push({ where: '$.models', message: 'must be an object' });
+    return { data: { version: 1, models }, errors, warnings };
+  }
+
+  for (const [id, entry] of Object.entries(rawModels)) {
+    if (isCommentKey(id)) continue;
+    const where = `$.models["${id}"]`;
+    if (!isObject(entry)) {
+      errors.push({ where, message: 'must be an object' });
+      continue;
+    }
+    unknownKeys(where, entry, MODEL_KEYS, errors, 'model');
+    let bad = false;
+
+    const str = (key: string, extra?: (v: string) => string | null): string => {
+      const v = entry[key];
+      if (typeof v !== 'string' || v === '') {
+        errors.push({ where: `${where}.${key}`, message: 'must be a non-empty string' });
+        bad = true;
+        return '';
+      }
+      const problem = extra?.(v) ?? null;
+      if (problem !== null) {
+        errors.push({ where: `${where}.${key}`, message: problem });
+        bad = true;
+      }
+      return v;
+    };
+    const num = (key: string, min: number, max: number): number => {
+      const v = entry[key];
+      if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) {
+        errors.push({
+          where: `${where}.${key}`,
+          message: `must be a number in [${String(min)}, ${String(max)}]`,
+        });
+        bad = true;
+        return 0;
+      }
+      return v;
+    };
+    const bool = (key: string): boolean => {
+      const v = entry[key];
+      if (typeof v !== 'boolean') {
+        errors.push({ where: `${where}.${key}`, message: 'must be a boolean' });
+        bad = true;
+        return false;
+      }
+      return v;
+    };
+
+    // **No leading slash, and no scheme.** The loader resolves every path
+    // against the page's own origin under `web/public/`, and report 09 §2.1
+    // rule 1 forbids the arena a network fetch: a model id whose path was an
+    // absolute URL would be exactly that, spelled in a data file.
+    const path = str('path', (v) =>
+      /^[A-Za-z0-9._/-]+$/.test(v) && !v.startsWith('/') && !v.includes('..')
+        ? null
+        : 'must be a relative path under web/public/ with no scheme and no ".."',
+    );
+    const node = str('node');
+    const height = num('height', 0.01, 100);
+    // T7: measured by `tools/build-figures.mjs`, and the clamp in `figures/pose.ts`
+    // is meaningless without it — so it is required rather than defaulted.
+    const width = num('width', 0.01, 100);
+    const facing = str('facing', (v) => (FACINGS.has(v) ? null : 'must be one of +z, -z, +x, -x'));
+    const rootMotion = bool('rootMotion');
+    const bones = num('bones', 0, 300);
+    const triangles = num('triangles', 0, 200000);
+    const source = str('source');
+    const licence = str('licence');
+    const licenceUrl = str('licenceUrl');
+    const licenceBadge = str('licenceBadge');
+    const retrieved = str('retrieved', (v) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : 'must be an ISO date (YYYY-MM-DD)',
+    );
+    const committable = bool('committable');
+
+    // §3.4 — a clip that translates the root fights `figurePose ⊕ offset`,
+    // which owns position. The manifest declares it and the loader enforces it.
+    if (rootMotion) {
+      errors.push({
+        where: `${where}.rootMotion`,
+        message: 'root motion is forbidden (§3.4): clips animate bones about a fixed root',
+      });
+      bad = true;
+    }
+
+    const clips: Record<string, string> = {};
+    const rawClips = entry['clips'];
+    if (!isObject(rawClips)) {
+      errors.push({ where: `${where}.clips`, message: 'must be an object' });
+      bad = true;
+    } else {
+      for (const [name, actual] of Object.entries(rawClips)) {
+        if (isCommentKey(name)) continue;
+        if (typeof actual !== 'string' || actual === '') {
+          errors.push({ where: `${where}.clips.${name}`, message: 'must be a non-empty clip name' });
+          bad = true;
+          continue;
+        }
+        // **`Armature|Attack` is not a clip name here.** FBX2glTF prefixes the
+        // armature (report 12 §2.4) and the loader normalises on the substring
+        // after `|`; a manifest that carried the prefix would silently miss.
+        if (actual.includes('|')) {
+          errors.push({
+            where: `${where}.clips.${name}`,
+            message: 'clip names are stored normalised — strip the "Armature|" prefix',
+          });
+          bad = true;
+          continue;
+        }
+        clips[name] = actual;
+      }
+      if (clips['idle'] === undefined) {
+        warnings.push({ where: `${where}.clips`, message: 'no idle clip: the figure holds its bind pose' });
+      }
+    }
+
+    if (bad) continue;
+    models[id] = {
+      path,
+      node,
+      height,
+      width,
+      facing: facing as ModelEntry['facing'],
+      rootMotion,
+      bones,
+      triangles,
+      clips,
+      source,
+      licence,
+      licenceUrl,
+      licenceBadge,
+      retrieved,
+      committable,
+    };
+  }
+
+  return { data: { version: 1, models }, errors, warnings };
+}

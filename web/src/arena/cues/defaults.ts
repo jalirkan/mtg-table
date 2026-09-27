@@ -42,7 +42,7 @@ export const DEFAULT_CUES: Readonly<Record<EventKind, CueSpec>> = Object.freeze(
   life: { cue: 'life.tick', ms: 400 },
 
   // The rest of §6's table.
-  resolved: { cue: 'resolved.pop', ms: 320 },
+  resolved: { cue: 'resolved.pop', ms: 480 },
   unstacked: { cue: 'unstacked.shatter', ms: 380 },
   poison: { cue: 'poison.tick', ms: 400 },
   tap: { cue: 'tap.rotate', ms: 180 },
@@ -108,7 +108,7 @@ export const DEFAULT_SELECTOR_CUES: CueTable = Object.freeze({
   'damage:lethal': { cue: 'damage.lethal', ms: 620 },
 
   // -- the rest ----------------------------------------------------------
-  'resolved:fizzled': { cue: 'resolved.fizzle', ms: 320 },
+  'resolved:fizzled': { cue: 'resolved.fizzle', ms: 460 },
   'attackers:alone': { cue: 'attack.lunge', ms: 850, params: { spotlight: 1 } },
   'stats:transform': { cue: 'stats.flip', ms: 400 },
   'counters:-': { cue: 'counters.drop', ms: 380 },

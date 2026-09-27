@@ -141,6 +141,83 @@ const ATTACH_FAN_X = 0.1;
 const SICK_DY = -0.015;
 
 // ---------------------------------------------------------------------------
+// Tier 2 — where a figure stands (report 13 §3.1)
+// ---------------------------------------------------------------------------
+
+/**
+ * How far a figure stands off the front edge of its card, **toward the centre of
+ * the table** (report 13 §3.1).
+ *
+ * Three reasons, in the order they matter. **The card stays readable:** the rest
+ * camera is a steep three-quarter view (`camera.ts`'s `REST_POSE`) and a figure
+ * standing *on* its card occludes the art from exactly that angle. **It stands
+ * where it will fight:** the creature rank is at `z = 2.3` and the combat lane at
+ * `z = 0.9`, so 0.52 puts the figure at `z ≈ 1.78` and the attack lunge is a
+ * short step toward the centre line rather than a leap over its own card. **It
+ * inherits `presence` for free**, because it is derived from
+ * `placement.position`, which {@link applyPresence} has already lifted.
+ */
+export const FIGURE_STANDOFF = 0.52;
+
+/** A figure's nominal height in world units — about one card long. */
+export const FIGURE_HEIGHT = 0.85;
+
+/**
+ * **How wide a figure may be, and it is a rank slot** (T7's tuning pass; report
+ * 13 §3.1 gave a height and no width).
+ *
+ * The measurement that forced this, from `tools/build-figures.mjs`'s own output on
+ * 2026-09-26 — every model's bounding box in its own units, before meshopt:
+ *
+ *     agent    height 0.671 · width 0.767 · ratio 1.14
+ *     drone    height 0.764 · width 2.271 · ratio 2.97
+ *     insect   height 1.871 · width 2.867 · ratio 1.53
+ *
+ * The Kenney Mini character is a **chibi**, and the Quaternius drone is a flying
+ * robot that is three times wider than it is tall. Normalising by HEIGHT alone to
+ * {@link FIGURE_HEIGHT} therefore makes the agent 0.97 units wide and the drone
+ * **2.53**, against a creature-rank pitch of {@link RANK_PITCH} = 0.796: measured
+ * in T2's own evidence as two Soldier Tokens standing shoulder to shoulder, and
+ * a crowded rank reading as a row of shoulders rather than as creatures.
+ *
+ * So the figure's drawn height is clamped so that its *width* fits one slot minus
+ * a gutter, and {@link FIGURE_MIN_FIT} floors it so a very wide model is squat
+ * rather than invisible. The clamp lives here because the pitch lives here; it is
+ * applied by `figures/pose.ts`, which is pure, so `web/test/figure-pose.test.ts`
+ * asserts the footprint over the whole corpus with no browser.
+ */
+export const FIGURE_MAX_WIDTH = RANK_PITCH - 0.076;
+
+/**
+ * A figure never shrinks below this fraction of its nominal height, however wide
+ * its model is.
+ *
+ * The drone is the case that needs it: a strict width clamp would draw it 0.21
+ * units tall — a 21 cm robot beside a 63 cm agent — so it is floored and stays the
+ * one archetype that overflows its slot, which is honest (it *is* mostly wingspan,
+ * and it hovers above its neighbours on the `presence` rule it already has). A
+ * narrower drone is T9's, not a number to fudge here.
+ */
+export const FIGURE_MIN_FIT = 0.55;
+
+/**
+ * **The wrapped-rank correction, and it is the one geometric interaction Tier 2
+ * has with Tier 1's layout** (report 13 §3.1).
+ *
+ * {@link RANK_WRAP_Z} is 0.55 and {@link FIGURE_STANDOFF} is 0.52, so a figure in
+ * row 0 of a wrapped rank would stand almost exactly on row 1's cards. The
+ * standoff therefore shrinks with the row, and it shrinks **here**, in the file
+ * that owns every coordinate in the arena (§3.2), rather than being reinvented in
+ * the figure module.
+ */
+const FIGURE_STANDOFF_ROW_FALLOFF = 0.45;
+
+/** Which way a seat faces: `you` stands at +Z and steps toward −Z, and back. */
+export function seatSign(seat: Seat): number {
+  return seat === 'you' ? 1 : -1;
+}
+
+// ---------------------------------------------------------------------------
 // Anchors
 // ---------------------------------------------------------------------------
 
@@ -167,7 +244,8 @@ export type AnchorName =
   | 'graveyard'
   | 'exile'
   | 'command'
-  | 'library';
+  | 'library'
+  | 'casting';
 
 /** Every anchor of one seat. The opponent's is this mirrored through z = 0. */
 export interface SeatAnchors {
@@ -179,6 +257,17 @@ export interface SeatAnchors {
   exile: Anchor;
   command: Anchor;
   library: Anchor;
+  /**
+   * **Report 13 §6.2's casting anchor** (T4): where this seat's floating mana
+   * hovers and where a spell it is casting stands.
+   *
+   * It is above the seat's own land rank and inboard of the library, so it is
+   * clear of the hand fan, of the stack column at `x = +4.8` and of the
+   * graveyard/exile column at `x = −4.8`. It is a *layout* fact like
+   * {@link playerAnchorFor}, which is why the mana cue can aim at it without
+   * learning a number.
+   */
+  casting: Anchor;
 }
 
 /**
@@ -201,6 +290,7 @@ const YOU_ANCHORS: SeatAnchors = {
   exile: { x: -4.8, y: 0.004, z: 2.8, pitch: FLAT },
   command: { x: -4.8, y: 0.004, z: 0, pitch: FLAT },
   library: { x: 3.9, y: 0.004, z: 4.55, pitch: FLAT },
+  casting: { x: 1.9, y: 0.75, z: 3.6, pitch: -0.6 },
 };
 
 /** §3.4 — the stack column is shared, at +X, climbing in +Y. */
@@ -256,6 +346,7 @@ export function anchorsFor(seat: Seat): SeatAnchors {
     exile: mirror(YOU_ANCHORS.exile),
     command: mirror(YOU_ANCHORS.command),
     library: mirror(YOU_ANCHORS.library),
+    casting: mirror(YOU_ANCHORS.casting),
   };
 }
 
@@ -321,6 +412,13 @@ export interface Placement {
    */
   bobAmp: number;
   bobHz: number;
+  /**
+   * Which row of a wrapped rank this placement is in — 0 for everything that is
+   * not a wrapped battlefield rank. Read by {@link standPointOf} and by nothing
+   * else, because the row is the only thing a figure needs that the position
+   * alone cannot tell it (report 13 §3.1).
+   */
+  row: number;
 }
 
 /** The whole resting pose of a frame. */
@@ -669,6 +767,7 @@ function rank(
         pitch: anchor.pitch,
         // The across-the-table half-turn, in the plane (see {@link seatSpin}).
         spin: seatSpin(seat),
+        row,
       }),
     );
   }
@@ -737,6 +836,7 @@ interface PlaceOptions {
   scale?: number;
   ignoreTap?: boolean;
   stackItemId?: number;
+  row?: number;
 }
 
 function place(
@@ -769,7 +869,30 @@ function place(
     // Identity until `applyPresence` says otherwise: no card hovers by default.
     bobAmp: 0,
     bobHz: 0,
+    row: options.row ?? 0,
   };
+}
+
+/**
+ * **Where a figure stands for this placement** (report 13 §3.1).
+ *
+ * Off the front edge of its card, toward the centre of the table, with the
+ * standoff scaled down for a wrapped rank's back row so a figure never stands on
+ * the cards behind it. `layout.ts` answers this rather than `figures/pose.ts`
+ * because `layout.ts` is the only module in the arena that knows a coordinate
+ * (§3.2), and because {@link FIGURE_STANDOFF} has to compose with
+ * {@link RANK_WRAP_Z}, which lives here.
+ *
+ * The y is the placement's own, so a `presence` hover (the Helicarrier, the
+ * Doombot) lifts the figure with the card for free.
+ */
+export function standPointOf(placement: Placement): [number, number, number] {
+  const standoff = FIGURE_STANDOFF * Math.max(0, 1 - FIGURE_STANDOFF_ROW_FALLOFF * placement.row);
+  return [
+    placement.position[0],
+    placement.position[1],
+    placement.position[2] - seatSign(placement.seat) * standoff,
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -887,6 +1010,13 @@ export function anchorPosition(
       const anchors = anchorsFor(seatOfPlayer(ref.player));
       return [anchors.combat.x, anchors.combat.y, anchors.combat.z];
     }
+    case 'casting': {
+      const anchors = anchorsFor(seatOfPlayer(ref.player));
+      // `ground` is the table under the anchor (T6's fizzle): the land rank's own
+      // height, so a falling form meets the terrain rather than stopping in air.
+      const y = ref.ground === true ? anchors.lands.y : anchors.casting.y;
+      return [anchors.casting.x, y, anchors.casting.z];
+    }
     case 'stack':
       return [STACK_ANCHOR.x, STACK_ANCHOR.y, STACK_ANCHOR.z];
     case 'table':
@@ -945,6 +1075,14 @@ function ownSideOf(ref: AnchorRef, placement: Placement): AnchorRef {
   if (placement.playerId === null) return ref;
   if (ref.kind === 'zone' && ref.player === null) {
     return { kind: 'zone', player: placement.playerId, zone: ref.zone };
+  }
+  // T4's casting anchor takes the same rule, and needs it for the same reason: a
+  // mana mote rises from a land to **that land's controller's** anchor, and the
+  // cue is not allowed to name a seat (report 13 §5.4 — "no invented link").
+  if (ref.kind === 'casting' && ref.player === null) {
+    return ref.ground === true
+      ? { kind: 'casting', player: placement.playerId, ground: true }
+      : { kind: 'casting', player: placement.playerId };
   }
   return ref;
 }

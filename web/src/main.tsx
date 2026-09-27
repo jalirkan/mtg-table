@@ -154,6 +154,18 @@ interface ArenaFlags {
    * production one. Off by default; six numbers and nothing else.
    */
   glinfo: boolean;
+  /**
+   * `?bloom=1` / `?bloom=0` — where **user decision 6's toggle** starts, for the
+   * one post pass the arena has (`arena/scene/Post.tsx`); the checkbox in the
+   * arena's cue controls flips it at runtime.
+   *
+   * `null` means "nobody said", and the default is then `BLOOM_DEFAULT`, which is a
+   * measurement (`arena/perf.ts`): ON, because on this machine's GTX 1080 bloom
+   * costs p95 1.1 ms against 0.4 without it. Under SwiftShader it is p95 82 ms, so
+   * `?bloom=0` is the escape hatch on weak hardware — and the DPR governor drops it
+   * by itself when frames are still late at its lowest rung.
+   */
+  bloom: boolean | null;
 }
 
 function arenaFlagsFromQuery(): ArenaFlags {
@@ -170,6 +182,10 @@ function arenaFlagsFromQuery(): ArenaFlags {
     off: arena === 'off' || arena === '0',
     dpr: Number.isFinite(dpr) && dpr >= 0.25 && dpr <= 3 ? dpr : null,
     glinfo: on('glinfo'),
+    // A tri-state, unlike every other flag here: absent is "use the measured
+    // default", and `?bloom=0` has to be able to turn it OFF again if that default
+    // is ever flipped on.
+    bloom: params.get('bloom') === null ? null : on('bloom'),
   };
 }
 
@@ -496,6 +512,7 @@ function LiveApp({ port, view, onSetView }: { port: number; view: View; onSetVie
               showGrid={flags.grid}
               dpr={flags.dpr}
               glInfo={flags.glinfo}
+              bloom={flags.bloom}
             />
           </Suspense>
         ) : (
@@ -742,6 +759,7 @@ function ReplayApp({
               showGrid={flags.grid}
               dpr={flags.dpr}
               glInfo={flags.glinfo}
+              bloom={flags.bloom}
             />
           </Suspense>
         ) : (

@@ -139,8 +139,8 @@ same basis as the card images in section 2.
 mana-font is not affiliated with Wizards of the Coast. Neither is mtg-table.
 
 
-6. three.js, react-three-fiber, react-three-drei (the M7 arena)
----------------------------------------------------------------
+6. three.js, react-three-fiber, drei and postprocessing (the M7 arena)
+-----------------------------------------------------------------------
 
     Package:  three 0.186.0 (npm), https://github.com/mrdoob/three.js
     Licence:  MIT — its LICENSE reads "The MIT License / Copyright (c) 2010-2026
@@ -158,30 +158,153 @@ mana-font is not affiliated with Wizards of the Coast. Neither is mtg-table.
               types of its own), https://github.com/DefinitelyTyped/DefinitelyTyped
     Licence:  MIT (DefinitelyTyped; "Copyright (c) Microsoft Corporation")
 
-Added in M7 (docs/research/09-arena-tier1-plan.md §1). They are the arena's
-renderer: the 3D presentation of the same frame stream the 2D board renders.
-Versions are pinned EXACTLY, with no caret, for a stated reason — fiber 8 and
-drei 9 are the React-18 line, frozen since 2025-02-19 with no maintenance
-branch, and fiber 8's `three` peer range (">=0.133") has no upper bound, so a
-floating range would eventually install a `three` that the frozen line cannot
-be fixed for (report 09 §1.2, §13).
+  Added in M7 Tier 2 (the bloom pass, user decision 6; DECISIONS.md D61):
+
+    Package:  @react-three/postprocessing 2.19.1 (npm),
+              https://github.com/pmndrs/react-postprocessing
+    Licence:  MIT — its LICENSE reads "Copyright (c) 2020 react-spring"
+
+    Package:  postprocessing 6.39.5 (npm), https://github.com/pmndrs/postprocessing
+    Licence:  Zlib — its LICENSE.md reads "Copyright © 2015 Raoul van Rüschen";
+              the build banner reads "Copyright 2015-2026 Raoul van Rüschen"
+
+    Also bundled, and already covered by three's own MIT licence above: the
+    glTF loader (three/examples/jsm/loaders/GLTFLoader.js) and SkeletonUtils,
+    which load and clone the Tier 2 figures, and the meshoptimizer decoder three
+    ships at three/examples/jsm/libs/meshopt_decoder.module.js, whose own header
+    reads "This file is part of meshoptimizer library and is distributed under
+    the terms of MIT License. Copyright (C) 2016-2026, by Arseny Kapoulkine".
+
+    In the lockfile but NOT in any built chunk: @react-three/postprocessing's
+    own dependencies maath 0.6.0 (MIT) and n8ao 1.10.3 (ISC). The bloom chunk's
+    source map (web/dist/assets/Post-*.js.map, 2026-09-27) lists exactly
+    three-stdlib's misc/WebGL.js (already present through drei), postprocessing,
+    three files of @react-three/postprocessing and web/src/arena/scene/Post.tsx;
+    everything else was tree-shaken out.
+
+The first four were added in M7 (docs/research/09-arena-tier1-plan.md §1). They
+are the arena's renderer: the 3D presentation of the same frame stream the 2D
+board renders. Versions are pinned EXACTLY, with no caret, for a stated reason —
+fiber 8 and drei 9 are the React-18 line, frozen since 2025-02-19 with no
+maintenance branch, and fiber 8's `three` peer range (">=0.133") has no upper
+bound, so a floating range would eventually install a `three` that the frozen
+line cannot be fixed for (report 09 §1.2, §13).
+
+The two postprocessing packages were added in M7 Tier 2 for one optional
+full-screen bloom pass, and are pinned EXACTLY for the same reason:
+@react-three/postprocessing 2.19.1 is on fiber 8's React-18 line (its peer range
+is "@react-three/fiber": "^8.0", "react": "^18.0"), and D47 keeps the app there.
 
 They are bundled into the browser client and lazily code-split: nothing is
-hot-linked, and the 2D board's entry chunk does not carry them. Vite emits the
-minified code into web/dist/assets/; their MIT copyright notices are carried in
-the license comments the bundler preserves.
+hot-linked, and the 2D board's entry chunk does not carry them. The bloom
+packages are split one level further — into a Post-*.js chunk the arena fetches
+only when bloom is first switched on. Vite emits the minified code into
+web/dist/assets/. **The minified chunks do NOT carry these licence notices**:
+measured 2026-09-27, the entry, Arena and Post chunks contain no "Copyright" and
+no "@license" comment at all (the production build strips the banners,
+postprocessing's own included). THIS FILE is therefore where the notices live,
+and a built web/dist/ that ever leaves this machine must travel with it. (This
+corrects the claim, written for M7, that the bundler preserved them.)
 
-MIT is GPL-3.0-compatible in the direction that matters here (MIT code may be
-combined into a GPL-3.0-or-later work), so bundling them changes nothing about
-this repository's licence and adds no AGPL exposure. None of them is affiliated
-with Wizards of the Coast, and none ships any Magic content: the card images the
-arena puts on its quads are the same Scryfall images as section 2, fetched at
-runtime and never committed. The card back the arena draws is generated
-procedurally in code (web/src/arena/scene/textFrame.ts) rather than scanned,
-because the printed Magic card back is trademarked artwork.
+MIT and Zlib are both GPL-3.0-compatible in the direction that matters here
+(code under either may be combined into a GPL-3.0-or-later work), so bundling
+them changes nothing about this repository's licence and adds no AGPL exposure.
+Zlib asks that altered versions be marked as such and that the notice stay on
+source distributions; nothing here alters postprocessing, and its source is not
+redistributed from this repository (it arrives from npm).
+
+None of them is affiliated with Wizards of the Coast, and none ships any Magic
+content: the card images the arena puts on its quads are the same Scryfall
+images as section 2, fetched at runtime and never committed. The card back the
+arena draws is generated procedurally in code (web/src/arena/scene/textFrame.ts)
+rather than scanned, because the printed Magic card back is trademarked artwork.
 
 
-7. Code that is deliberately NOT used
+7. The Tier 2 figure library (the arena's creature manifestations)
+------------------------------------------------------------------
+
+    File:     web/public/models/figures.glb — BUILT, not authored here, by
+              tools/build-figures.mjs from the three CC0 sources below.
+              126,404 bytes, sha256
+              c870a53330cf20f0d1edb536e6bab67ffcbe213fd54f081195a062365c5658fa
+              (the file in the tier2-slice1 worktree, built 2026-09-26; a
+              rebuild from the same sources should reproduce it, and nothing
+              yet asserts that it does). tools/assets-manifest.json is the
+              long-form record of the SOURCES (pack, version, download URL,
+              licence badge text, download date, sha256);
+              web/src/arena/figures/models.json is the measured manifest the
+              loader reads. Whether the built file is committed or regenerated
+              like web/public/art.json is the user's decision (PLAN.md, "Only
+              the user can decide"); it is CC0 either way.
+
+    Source:   Kenney — "Mini Characters" 1.0 (character-male-a)
+              https://kenney.nl/assets/mini-characters
+    Licence:  CC0 1.0 Universal (public domain dedication)
+              https://creativecommons.org/publicdomain/zero/1.0/
+    Badge:    "License · Creative Commons CC0", read on the pack page on
+              2026-09-13; the License.txt inside the zip says the same:
+              "License: (Creative Commons Zero, CC0) … You can use this
+              content for personal, educational, and commercial purposes.
+              Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a
+              requirement)". We credit Kenney here anyway.
+
+    Source:   Quaternius — "Robot Enemy Flying", via Poly Pizza
+              https://poly.pizza/m/lF3jeRJwiH
+    Licence:  CC0 1.0 Universal
+    Badge:    "Aug 28, 2022 • FBX /GLTF format • Public Domain (CC0)", read on
+              2026-09-13.
+
+    Source:   Quaternius — "Bee Enemy", via Poly Pizza
+              https://poly.pizza/m/6HsU6GQt3a
+    Licence:  CC0 1.0 Universal
+    Badge:    "Dec 21, 2021 • FBX /GLTF format • Public Domain (CC0)", read on
+              2026-09-13.
+
+CC0 is a public-domain dedication: redistribution, modification and commercial
+use are all permitted with no attribution requirement. Crediting the authors
+here is courtesy, not obligation — and it is also the evidence. The licence
+badge text and the date are recorded because the badge is the only proof that
+survives the page changing: Quaternius published a new, non-redistributable
+"Quaternius Asset License" on 2026-08-28 and has begun moving packs onto it
+(https://quaternius.com/license.html), and that licence's §7 says the version in
+force when you obtained the asset governs. Both Quaternius models above were
+obtained from Poly Pizza listings carrying an explicit CC0 badge on 2026-09-13.
+
+**Nothing in this library is derived from card art.** The figures are generic
+stylised meshes — a man, a flying robot, a bee — chosen by the creature's TYPE
+LINE and tinted by its colour identity, which is what report 13 §1.4 and
+docs/ideas/arena-mode.md specify and why they specify it: a CC0 man in a suit
+standing where "Agent 13, Sharon Carter" is played is not a derivative of Sharon
+Carter's art. Generating a mesh from a Marvel card's image would be, and section
+4's rule applies to it exactly as it applies to the Scryfall JPEGs.
+
+No model, texture or animation in this repository comes from Mixamo, whose terms
+permit use but forbid redistributing the raw character and animation files; and
+no model was generated from card art by an image-to-3D tool, locally or hosted.
+Both are standing decisions (DECISIONS.md D54), not omissions.
+
+Everything else Tier 2 draws is generated in code and uses no third-party
+asset: the stand discs, the land slabs and their water shader, the aura halos,
+the spell forms, the mana motes, the duelist silhouette busts and the
+holographic figure material (web/src/arena/scene/*.ts).
+
+The pipeline itself is a DEVELOPMENT tool and ships nothing:
+
+    Package:  @gltf-transform/cli 4.5.0 (npm, web/ devDependency),
+              https://gltf-transform.dev/ — with @gltf-transform/core,
+              /functions and /extensions 4.5.0
+    Licence:  MIT — "Copyright (c) 2024 Don McCurdy"
+
+It adds 193 lockfile entries (167 packages installed on this Linux machine),
+none of which is imported by the app or reaches web/dist/. Most are MIT, ISC,
+Apache-2.0, BSD or BlueOak-1.0.0; the exception worth naming is sharp's libvips
+binaries (@img/sharp-libvips-*, LGPL- 3.0-or-later), which gltf-transform uses
+for texture work. They are downloaded by npm on the developer's machine, never
+committed and never redistributed from this repository, and LGPL-3.0-or-later is
+GPL-3.0-compatible in any case.
+
+
+8. Code that is deliberately NOT used
 -------------------------------------
 
     witchesofthehill/manabrew — AGPL-3.0-or-later

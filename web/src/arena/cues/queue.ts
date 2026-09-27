@@ -24,7 +24,7 @@
  * ---------------------------------------------------------------------------
  */
 
-import type { GameEvent } from '../../protocol.ts';
+import type { GameEvent, GameStateBody } from '../../protocol.ts';
 import type { ClientState } from '../../reduce.ts';
 import { cuesFor } from './resolve.ts';
 import type { CueContext, CueImpl, CueRegistry, Stage } from './stage.ts';
@@ -123,13 +123,21 @@ export function budgetFor(state: ClientState, mode: QueueMode): number {
  * ladder, apply the four suppression rules, and coalesce consecutive same-cue
  * events into one staggered step.
  *
- * Pure: `(events, state, data) → Step[]`, no clock, no stage. The fixture sweep
- * calls it 3,291 times.
+ * Pure: `(events, state, data, previous) → Step[]`, no clock, no stage. The
+ * fixture sweep calls it 3,291 times.
+ *
+ * `previous` is the board of the frame **immediately before** this batch, or
+ * `null` when there is none (the first frame, or the frame after a flush). Only
+ * `resolved` reads it — T6's strike, which aims at what the resolving item
+ * targeted one frame earlier (`resolve.ts`'s `strikeParams`). A batch *is* the
+ * transition between those two frames, so this is the transition's own other end,
+ * not a history.
  */
 export function planBatch(
   events: readonly GameEvent[],
   state: ClientState,
   data: CueData = EMPTY_CUE_DATA,
+  previous: GameStateBody | null = null,
 ): Step[] {
   const raw: Cue[] = [];
   for (const event of events) {
@@ -138,7 +146,7 @@ export function planBatch(
     // would ever play, so it is dropped here rather than given a duration of
     // zero and scheduled anyway.
     if (event.kind === 'phase') continue;
-    raw.push(...cuesFor(event, state, data));
+    raw.push(...cuesFor(event, state, data, previous));
   }
 
   const cues = suppress(raw);
@@ -464,8 +472,13 @@ export class CueQueue {
    * re-compressed on arrival, so a queue that is falling behind gets faster
    * rather than longer.
    */
-  enqueueBatch(events: readonly GameEvent[], state: ClientState, budgetMs?: number): number {
-    const steps = planBatch(events, state, this.data);
+  enqueueBatch(
+    events: readonly GameEvent[],
+    state: ClientState,
+    budgetMs?: number,
+    previous: GameStateBody | null = null,
+  ): number {
+    const steps = planBatch(events, state, this.data, previous);
     if (steps.length === 0) {
       // Still re-budget: a batch of nothing but `phase` events is exactly when
       // the engine hands priority back, and the tail should hurry up.
@@ -497,6 +510,10 @@ export class CueQueue {
           cue,
           impl,
           ctx: {
+            // Report 13 §3.5 — the clip lane is keyed on the cue id, so the
+            // running cue has to know its own. It is the registry key, which is
+            // what `CLIP_FOR` is indexed by.
+            id: cue.id,
             targets: cue.targets,
             players: cue.players,
             params: cue.params,

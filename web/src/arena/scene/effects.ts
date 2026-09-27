@@ -28,6 +28,7 @@
 import * as THREE from 'three';
 
 import type { Effect, EffectKind } from '../cues/stage.ts';
+import { parsedColour } from './colourCache.ts';
 import { UNIT_PLANE } from './geometry.ts';
 import { SPRITE_ASPECT, textTexture } from './numberSprite.ts';
 import { initTexture } from './useCardTexture.ts';
@@ -37,7 +38,7 @@ import { initTexture } from './useCardTexture.ts';
  * by `MAX_LIVE_EFFECTS` in `cues/stage.ts`, so these are generous by design:
  * a slot that is never used costs one invisible mesh.
  */
-const POOL = { glow: 6, ring: 6, beam: 3, particles: 2, text: 6, plate: 3 } as const;
+const POOL = { glow: 6, ring: 6, beam: 3, particles: 2, text: 6, plate: 3, mote: 12 } as const;
 
 /** Points per burst. One buffer, re-aimed rather than re-allocated (§9.2 rule 6). */
 const PARTICLE_COUNT = 48;
@@ -198,6 +199,11 @@ export class EffectPool {
     const dot = dotTexture();
 
     for (let i = 0; i < POOL.glow; i++) this.#addQuad('glow', glow);
+    // T4's mana motes (report 13 §5.4). Twelve, matching `MAX_LIVE_MOTES`: they
+    // are their own bucket because a 0.07-unit dot is not the thing the
+    // eight-slot blended cap was sized against, and a five-land mana ability
+    // would otherwise cap itself out against its own ripples.
+    for (let i = 0; i < POOL.mote; i++) this.#addQuad('mote', glow);
     for (let i = 0; i < POOL.ring; i++) this.#addQuad('ring', ring);
     for (let i = 0; i < POOL.beam; i++) this.#addQuad('beam', glow);
     for (let i = 0; i < POOL.text; i++) this.#addQuad('text', null);
@@ -291,6 +297,38 @@ export class EffectPool {
     }
   }
 
+  /**
+   * **Compile every slot's program now rather than on first use** (T7; report 13
+   * §8.3 rule 3, "warm the programs"). Call it AFTER `bind()`, for one frame.
+   *
+   * A slot is parked invisible, and three compiles a program on the first frame
+   * an object is drawn — so the first ring, number or burst of a game paid a shader
+   * compile mid-cue. With bloom on, every material also needs a second variant for
+   * the composer's render target, and T7's bench caught exactly that: bloom-off
+   * held 12 programs for the whole sample, bloom-on started at 23 and compiled a
+   * 24th *during* it, on the one frame that went over 50 ms. Drawing every idle
+   * slot once at opacity 0 (and every `text` slot with a map, which is its own
+   * variant) moves those compiles to the frame the arena — or the composer —
+   * mounts, where a hitch is expected. The next `bind()` parks them again.
+   */
+  prime(): void {
+    if (this.#slots.length === 0) this.#build();
+    for (const slot of this.#slots) {
+      if (slot.object.visible) continue;
+      slot.object.visible = true;
+      slot.material.opacity = 0;
+      slot.object.position.set(0, 0.01, 0);
+      if (slot.kind === 'text') {
+        const mat = slot.material as THREE.MeshBasicMaterial;
+        if (mat.map === null) {
+          mat.map = textTexture('0', '#ffffff');
+          mat.needsUpdate = true;
+        }
+        mat.blending = THREE.NormalBlending;
+      }
+    }
+  }
+
   #apply(
     slot: Slot,
     effect: Effect,
@@ -311,7 +349,8 @@ export class EffectPool {
     }
     object.visible = true;
     material.opacity = Math.min(1, strength);
-    material.color?.set(effect.colour);
+    // Parsed once per string, not once per effect per frame (§9.2 rule 6).
+    material.color?.copy(parsedColour(effect.colour));
 
     switch (effect.kind) {
       case 'glow': {
@@ -367,6 +406,36 @@ export class EffectPool {
         this.#dir.normalize();
         object.quaternion.setFromUnitVectors(UP, this.#dir);
         object.scale.set(Math.max(0.01, effect.radius * 2), length, 1);
+        break;
+      }
+      /**
+       * **A mote of mana in flight** (report 13 §5.4, user decision 9).
+       *
+       * The only primitive that interpolates between two anchors. `travel` is the
+       * cue's own progress, so the flight is on the queue's virtual clock like
+       * everything else — pause it and the mote hangs in mid-air.
+       *
+       * The arc is the whole of the reading: a straight line between a land and a
+       * casting anchor looks like a laser, and a mote has to look like something
+       * rising. `sin(πu)` peaks at the midpoint and is 0 at both ends, so the
+       * mote leaves the tile and arrives at the anchor exactly, whatever the
+       * distance.
+       */
+      case 'mote': {
+        const to = effect.to === undefined ? null : resolve(effect.to);
+        if (to === null) {
+          object.visible = false;
+          return;
+        }
+        const u = Math.max(0, Math.min(1, effect.travel ?? 0));
+        const lift = (effect.arc ?? 0.55) * Math.sin(Math.PI * u);
+        object.position.set(
+          at[0] + (to[0] - at[0]) * u,
+          at[1] + (to[1] - at[1]) * u + lift,
+          at[2] + (to[2] - at[2]) * u,
+        );
+        object.quaternion.copy(camera.quaternion);
+        object.scale.setScalar(effect.radius * (2.2 + 1.4 * strength));
         break;
       }
       case 'particles': {

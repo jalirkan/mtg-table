@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "_generated": "WRITTEN BY tools/build-figures.mjs — do not edit by hand. The hand-written half (where each file came from, what its licence badge said) is tools/assets-manifest.json; everything here was measured from the built figures.glb.",
+  "_fallback": "A model id named here that has no file on disk is not an error: scene/models.ts falls back to the glow disc (report 13 §9.4), which is also what a fresh checkout with no binaries gets.",
+  "models": {
+    "agent": {
+      "path": "models/figures.glb",
+      "node": "agent",
+      "height": 0.6713,
+      "width": 0.7672,
+      "facing": "+z",
+      "rootMotion": false,
+      "bones": 7,
+      "triangles": 723,
+      "clips": {
+        "idle": "agent_idle",
+        "summon": "agent_jump",
+        "attack": "agent_attack-melee-right",
+        "block": "agent_crouch",
+        "hit": "agent_fall",
+        "die": "agent_die",
+        "grow": "agent_emote-yes",
+        "shrink": "agent_crouch",
+        "channel": "agent_interact-right",
+        "crouch": "agent_crouch",
+        "pistolDraw": "agent_holding-both-shoot",
+        "radioCall": "agent_interact-left"
+      },
+      "source": "https://kenney.nl/assets/mini-characters",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License · Creative Commons CC0",
+      "retrieved": "2026-09-13",
+      "committable": true
+    },
+    "drone": {
+      "path": "models/figures.glb",
+      "node": "drone",
+      "height": 0.764,
+      "width": 2.2709,
+      "facing": "+z",
+      "rootMotion": false,
+      "bones": 11,
+      "triangles": 4544,
+      "clips": {
+        "idle": "drone_Idle",
+        "summon": "drone_Run",
+        "attack": "drone_Attack",
+        "die": "drone_Dead",
+        "jet": "drone_Shoot"
+      },
+      "source": "https://poly.pizza/m/lF3jeRJwiH",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "Aug 28, 2022 • FBX /GLTF format • Public Domain (CC0)",
+      "retrieved": "2026-09-13",
+      "committable": true
+    },
+    "insect": {
+      "path": "models/figures.glb",
+      "node": "insect",
+      "height": 1.8709,
+      "width": 2.8672,
+      "facing": "+z",
+      "rootMotion": false,
+      "bones": 9,
+      "triangles": 3040,
+      "clips": {
+        "idle": "insect_Flying",
+        "attack": "insect_Bite_Front",
+        "hit": "insect_HitRecieve",
+        "die": "insect_Death"
+      },
+      "source": "https://poly.pizza/m/6HsU6GQt3a",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "Dec 21, 2021 • FBX /GLTF format • Public Domain (CC0)",
+      "retrieved": "2026-09-13",
+      "committable": true
+    }
+  }
+}

@@ -17,6 +17,48 @@
  *
  * Node 24 has a global `WebSocket` and `fetch`, so this needs no dependency.
  * It starts its own Chromium and kills it by pid on the way out.
+ *
+ * ---------------------------------------------------------------------------
+ * **T7 (Tier 2) added four things, and each one is a claim report 13 §8.5 asks
+ * for.**
+ *
+ *   --index <n>        Scrub the replay slider to exactly this transport index
+ *                      before sampling (it wins over the 0.55 heuristic, and over
+ *                      the `--figures` search, which then only reports). T7's
+ *                      bench frame is `g1.jsonl` at 316 — the first of the 61
+ *                      consecutive frames (316–376) that carry >= 10 modelled
+ *                      figures, so a 4x replay from there stays on a crowded board
+ *                      for the whole sample.
+ *   --figures <n>      **Scrub to a frame that has at least n FIGURES on it**, by
+ *                      stepping the replay slider and reading the layer census off
+ *                      `?glinfo=1`. §8.5's first bullet is "the frame must have
+ *                      figures on it", and the old 0.55-of-the-way-in heuristic
+ *                      could not know: T2's own evidence found that
+ *                      `human-sideboard-7`'s most crowded frame is 21 creatures of
+ *                      which **zero** carry a model, while `g1.jsonl@355` has 12
+ *                      figures and 11 models. Prints the census it settled on.
+ *   --bloom            Append `?bloom=1` — user decision 6's condition, measured
+ *                      rather than assumed. `--no-bloom` appends `?bloom=0`; with
+ *                      neither, the app's own default is measured (ON since T7).
+ *                      With bloom on, `gl.info.render` counts only the composer's
+ *                      last pass (`calls: 1`), so read draw calls with it off.
+ *   --reduced-motion   Emulate `prefers-reduced-motion: reduce` through CDP, which
+ *                      is the only way to measure §8 rule 7's path: every cue
+ *                      collapses to a snap and the clip lane collapses with it.
+ *   --gpu <mode>       Which rasteriser Chromium uses: `swiftshader` (the default,
+ *                      and the lower bound every earlier number in this repo is),
+ *                      `gl` (ANGLE on the machine's OpenGL driver) or `vulkan`
+ *                      (ANGLE on Vulkan). T7 found the sandbox CAN reach a real
+ *                      GPU headlessly — `--gpu gl` renders on the GeForce GTX 1080
+ *                      this machine has — and the report prints WebGL's unmasked
+ *                      renderer string so a number always says what drew it.
+ *   --dpr <n>          Pin `?dpr=` so the governor's decision can be compared
+ *                      against a fixed rung. Unpinned is the default and the
+ *                      governor's chosen rung is printed either way.
+ *
+ * It stays **out of `check-all.sh`** (M7 follow-up 10): it wants a built `dist`, a
+ * `vite preview` server and a headless Chromium.
+ * ---------------------------------------------------------------------------
  */
 
 import { spawn } from 'node:child_process';
@@ -50,8 +92,45 @@ function withGlInfo(raw) {
   }
 }
 
-const URL_ = withGlInfo(arg('url', 'http://127.0.0.1:5182/?replay=games/g1.jsonl#arena'));
+/** `--bloom` / `--dpr` are URL flags of the app, so they go in the URL. */
+function withAppFlags(raw) {
+  try {
+    const url = new URL(raw);
+    // Both spellings, because the app's default is ON since T7 (`perf.ts`'s
+    // BLOOM_DEFAULT): a bench that says nothing measures the default.
+    if (args.includes('--bloom')) url.searchParams.set('bloom', '1');
+    if (args.includes('--no-bloom')) url.searchParams.set('bloom', '0');
+    const dpr = arg('dpr', null);
+    if (dpr !== null) url.searchParams.set('dpr', String(dpr));
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
+
+const URL_ = withAppFlags(
+  withGlInfo(arg('url', 'http://127.0.0.1:5182/?replay=games/g1.jsonl#arena')),
+);
+/** T7 — §8.5's "the frame must have figures on it", as a number and a search. */
+const WANT_FIGURES = Number(arg('figures', '0'));
+/** T7 — an exact transport index to bench, or -1 for the search / the 0.55 heuristic. */
+const INDEX = Number(arg('index', '-1'));
+const REDUCED_MOTION = args.includes('--reduced-motion');
 const PORT = Number(arg('port', '9223'));
+/**
+ * T7 — the rasteriser. SwiftShader stays the default so an old command line keeps
+ * measuring what it always measured; `gl` / `vulkan` are the real-GPU runs.
+ */
+const GPU = arg('gpu', 'swiftshader');
+const GPU_FLAGS = {
+  swiftshader: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'],
+  gl: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu'],
+  vulkan: ['--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist'],
+}[GPU];
+if (GPU_FLAGS === undefined) {
+  console.error(`arena-bench: --gpu must be swiftshader, gl or vulkan (got ${GPU})`);
+  process.exit(2);
+}
 const SAMPLE_MS = Number(arg('ms', '5000'));
 /**
  * How long to let the scrubbed-to frame settle before sampling.
@@ -81,8 +160,7 @@ const chromium = spawn(
   arg('chromium', 'chromium'),
   [
     '--headless=new',
-    '--use-gl=swiftshader',
-    '--enable-unsafe-swiftshader',
+    ...GPU_FLAGS,
     '--no-sandbox',
     '--disable-dev-shm-usage',
     // **Without these the measurement measures the compositor, not us.** With
@@ -176,6 +254,19 @@ try {
   await cdp.send('Runtime.enable');
   await cdp.send('Page.enable');
 
+  /**
+   * **§8 rule 7's path, and CDP is the only way in.** `prefers-reduced-motion` is
+   * a media query: there is no URL flag and no app setting for it, and the arena
+   * reads it with `matchMedia` at mount. Emulating it here is what makes "reduced
+   * motion collapses every cue to a snap" a measurement rather than a claim — the
+   * frame times below are then of a table that is *snapping* rather than animating.
+   */
+  if (REDUCED_MOTION) {
+    await cdp.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+    });
+  }
+
   // The arena chunk is lazy and the textures are fetched from Scryfall, so give
   // it a real chance to settle before measuring anything.
   await sleep(6000);
@@ -186,9 +277,85 @@ try {
   if (!ready.canvas) throw new Error('no <canvas>: the arena did not mount');
 
   /**
+   * **T7 — find a frame with figures on it, and say which one** (report 13 §8.5).
+   *
+   * The slider is the replay's own transport index, so this steps it across the
+   * middle of the recording and reads the layer census off `?glinfo=1`'s
+   * `info().layers` — a count of figures, discs, tiles, forms and busts, written by
+   * the frame loop. Two `requestAnimationFrame`s per step, because under
+   * `frameloop='demand'` the counts are only current once a frame has actually
+   * rendered.
+   *
+   * It is a search rather than a hard-coded index because the index depends on the
+   * recording: `--url` names the fixture and `--figures` names the load.
+   */
+  let chosen = null;
+  if (INDEX >= 0) {
+    chosen = await evaluate(
+      cdp,
+      `(async () => {
+        const range = document.querySelector('input[type=range]');
+        if (!range) return null;
+        const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        set.call(range, String(${String(INDEX)}));
+        range.dispatchEvent(new Event('input', { bubbles: true }));
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const info = window.__mtgArena && window.__mtgArena.info;
+        const layers = info ? (info().layers ?? null) : null;
+        return { index: ${String(INDEX)}, figures: layers ? layers.figures : -1, layers, total: Number(range.max) };
+      })()`,
+    );
+    if (chosen !== null) {
+      console.log(
+        `arena-bench: scrubbed to transport index ${String(chosen.index)} of ${String(chosen.total)} — ` +
+          `${String(chosen.figures)} figures · layers ${JSON.stringify(chosen.layers)}`,
+      );
+    }
+  } else if (WANT_FIGURES > 0) {
+    chosen = await evaluate(
+      cdp,
+      `(async () => {
+        const range = document.querySelector('input[type=range]');
+        if (!range) return null;
+        const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        const total = Number(range.max);
+        const info = window.__mtgArena && window.__mtgArena.info;
+        if (!info) return null;
+        const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        let best = { index: -1, figures: -1, layers: null };
+        for (let i = 0; i <= 48; i++) {
+          const index = Math.round((total * (0.25 + (0.7 * i) / 48)));
+          set.call(range, String(index));
+          range.dispatchEvent(new Event('input', { bubbles: true }));
+          await frame();
+          const layers = info().layers ?? {};
+          const figures = layers.figures ?? 0;
+          if (figures > best.figures) best = { index, figures, layers };
+          if (figures >= ${String(WANT_FIGURES)}) break;
+        }
+        // Leave the slider on the best frame found.
+        set.call(range, String(best.index));
+        range.dispatchEvent(new Event('input', { bubbles: true }));
+        await frame();
+        return { ...best, total };
+      })()`,
+    );
+    if (chosen !== null) {
+      console.log(
+        `arena-bench: scrubbed to transport index ${String(chosen.index)} of ${String(chosen.total)} — ` +
+          `${String(chosen.figures)} figures · layers ${JSON.stringify(chosen.layers)}`,
+      );
+    }
+  }
+
+  /**
    * Scrub to the busiest frame of the recording — §9.4 says "a fixture scrubbed
    * to its busiest frame (a full combat)" — then play the replay at 4× so the
    * cue queue is never empty, and sample `requestAnimationFrame` deltas.
+   *
+   * **T7:** when `--figures` already scrubbed to a figure-rich frame, that frame is
+   * kept and the 0.55 heuristic is skipped — a bench of a frame with no figures on
+   * it is exactly the mistake §8.5 exists to prevent.
    */
   const sample = await evaluate(
     cdp,
@@ -196,9 +363,11 @@ try {
       const range = document.querySelector('input[type=range]');
       const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
       const total = Number(range.max);
-      // 0.55 of the way in: the corpus' combats are in the middle third.
-      set.call(range, String(Math.round(total * 0.55)));
-      range.dispatchEvent(new Event('input', { bubbles: true }));
+      if (${String(WANT_FIGURES)} <= 0 && ${String(INDEX)} < 0) {
+        // 0.55 of the way in: the corpus' combats are in the middle third.
+        set.call(range, String(Math.round(total * 0.55)));
+        range.dispatchEvent(new Event('input', { bubbles: true }));
+      }
       await new Promise((r) => setTimeout(r, ${String(SETTLE_MS)}));
       // Play, fast, so the queue always has something to animate.
       const speed = [...document.querySelectorAll('select')][0];
@@ -210,6 +379,9 @@ try {
       // The texture count beside each frame, so a spike can be told apart from a
       // slow renderer: a first upload of a 745x1040 card face is not fill rate.
       const textures = [];
+      // …and the program count, so a first-use shader compile is told apart from
+      // an upload (T7: the bloom run's one long frame).
+      const programs = [];
       const infoFn = window.__mtgArena && window.__mtgArena.info;
       let last = null;
       await new Promise((done) => {
@@ -217,7 +389,9 @@ try {
         const tick = (now) => {
           if (last !== null) {
             deltas.push(now - last);
-            textures.push(infoFn ? infoFn().memory.textures : -1);
+            const mem = infoFn ? infoFn().memory : null;
+            textures.push(mem ? mem.textures : -1);
+            programs.push(mem ? (mem.programs ?? -1) : -1);
           }
           last = now;
           if (now < stop) requestAnimationFrame(tick);
@@ -254,9 +428,12 @@ try {
       return {
         deltas,
         textures,
+        programs,
         body,
         render: counters ? counters.render : gl ? { ...gl.info.render } : null,
         memory: counters ? counters.memory : gl ? { ...gl.info.memory } : null,
+        // T7's layer census: how many instances each pose layer drew. Numbers only.
+        layers: counters ? (counters.layers ?? null) : null,
         dpr: window.devicePixelRatio,
         // The dev handle does not exist in a production build, so the render
         // resolution is read off the canvas itself: backing pixels / CSS pixels.
@@ -265,6 +442,14 @@ try {
           return c && c.clientWidth > 0 ? Number((c.width / c.clientWidth).toFixed(2)) : null;
         })(),
         size: [window.innerWidth, window.innerHeight],
+        // What actually rasterised the frames above — SwiftShader or a real GPU.
+        renderer: (() => {
+          const c = document.querySelector('canvas');
+          const g = c && (c.getContext('webgl2') || c.getContext('webgl'));
+          if (!g) return null;
+          const x = g.getExtension('WEBGL_debug_renderer_info');
+          return x ? g.getParameter(x.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER);
+        })(),
         // Dev-only: the queue is not on the production handle (the draw-call
         // counters are; a cue census is a debugging aid and stays behind DEV).
         cues: handle?.queue ? Object.fromEntries(handle.queue.seen) : null,
@@ -282,7 +467,8 @@ try {
   const max = deltas[deltas.length - 1];
   const fps = 1000 / p50;
 
-  console.log('arena-bench — report 09 §9.4, SwiftShader');
+  console.log(`arena-bench — report 09 §9.4, --gpu ${GPU}`);
+  console.log(`  renderer   ${String(sample.renderer)}`);
   console.log(`  url        ${URL_}`);
   console.log(
     `  viewport   ${sample.size[0]}x${sample.size[1]} @ device dpr ${String(sample.dpr)} · RENDER dpr ${String(sample.renderDpr)} (§9.2 rule 9 adapts it)`,
@@ -294,6 +480,14 @@ try {
     console.log(
       `  frame body p50 ${sample.body.p50.toFixed(3)} · p95 ${sample.body.p95.toFixed(3)} · max ${sample.body.max.toFixed(3)} ms (§9.1 budget: 2 ms CPU)`,
     );
+  }
+  console.log(
+    `  mode       ${REDUCED_MOTION ? 'prefers-reduced-motion: REDUCE' : 'normal motion'} · ` +
+      `${args.includes('--bloom') ? 'BLOOM on' : args.includes('--no-bloom') ? 'bloom off' : 'bloom = app default'} · settle ${String(SETTLE_MS)} ms ` +
+      `(${SETTLE_MS >= 2000 ? 'warm' : 'COLD'})`,
+  );
+  if (sample.layers) {
+    console.log(`  layers     ${JSON.stringify(sample.layers)}`);
   }
   if (sample.render) {
     console.log(
@@ -318,17 +512,32 @@ try {
     const slow = [];
     for (let i = 0; i < ordered.length; i++) if (ordered[i] > MAX_MS) slow.push(i);
     const withUpload = slow.filter((i) => i > 0 && (tex[i] ?? 0) > (tex[i - 1] ?? 0));
+    const prog = sample.programs ?? [];
+    const withCompile = slow.filter((i) => i > 0 && (prog[i] ?? 0) > (prog[i - 1] ?? 0));
     const lastSlow = slow.length > 0 ? slow[slow.length - 1] : -1;
     console.log(
       `  over ${String(MAX_MS)} ms  ${String(slow.length)} of ${String(ordered.length)} frames` +
         (slow.length === 0
           ? ''
           : ` · last at frame ${String(lastSlow)} of ${String(ordered.length)}` +
-            ` · ${String(withUpload.length)} coincide with a new texture (settle was ${String(SETTLE_MS)} ms)`),
+            ` · ${String(withUpload.length)} coincide with a new texture, ${String(withCompile.length)} with a new program` +
+            ` (settle was ${String(SETTLE_MS)} ms)`),
     );
+    if (prog.length > 0) {
+      console.log(`  programs   ${String(prog[0])} at the first sampled frame → ${String(prog[prog.length - 1])} at the last`);
+    }
   }
 
   const failures = [];
+  // **T7's own gate**: a bench of a frame with no figures on it is not a Tier 2
+  // measurement at all (report 13 §8.5), so asking for figures and not getting
+  // them is a failure rather than a footnote.
+  if (WANT_FIGURES > 0) {
+    const got = sample.layers?.figures ?? (chosen ? chosen.figures : 0);
+    if (got < WANT_FIGURES) {
+      failures.push(`${String(got)} figures on the benched frame, asked for ${String(WANT_FIGURES)}`);
+    }
+  }
   if (p95 > P95_MS) failures.push(`p95 ${p95.toFixed(2)} ms > ${String(P95_MS)} ms`);
   if (max > MAX_MS) failures.push(`max ${max.toFixed(2)} ms > ${String(MAX_MS)} ms`);
   if (sample.render && sample.render.calls > 120) failures.push(`${String(sample.render.calls)} draw calls > 120`);

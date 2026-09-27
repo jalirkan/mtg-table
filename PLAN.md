@@ -16,7 +16,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
-| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2 |
+| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built and verified**, not committed (branch `tier2-slice1`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups; T8–T14 handed over |
 
 ---
 
@@ -1852,8 +1852,8 @@ has to learn about a new surface that mounts cards (**D33**).
 fourteen closed, each with a test that goes red without the fix). Evidence:
 [`docs/evidence/m7-arena.md`](docs/evidence/m7-arena.md). **Nothing is
 committed** — the work is the `m7` branch in a worktree, per CLAUDE.md.
-**Effort: Tier 1 was 6 evenings + 2 verification passes. Tier 2 is open-ended and
-not started.**
+**Effort: Tier 1 was 6 evenings + 2 verification passes. Tier 2 is open-ended;
+its first slice, T0–T7, is built and verified — see *M7 Tier 2* below.**
 
 **Command**
 
@@ -2056,9 +2056,11 @@ specified and not built (4, 5), and the rest are small debts with a stated cost.
 Tier 2 is [`docs/ideas/arena-mode.md`](docs/ideas/arena-mode.md)'s second tier:
 *"a small library of stylised generic models keyed by creature type and colour
 with idle / attack / hit / die animations… two duelist avatars stand at either
-end; creatures appear as holograms between them."* It is **not scheduled**, and
-the honest summary is that Tier 1 built the *routing* it needs and none of the
-*assets*.
+end; creatures appear as holograms between them."* When this was written it was
+**not scheduled**, and the honest summary was that Tier 1 built the *routing* it
+needs and none of the *assets*. (It has since been scheduled and its first slice
+built: *M7 Tier 2* below. The hand-over is kept as written, because it is what
+slice 1 was built against.)
 
 **What already supports it, unchanged:**
 
@@ -2118,13 +2120,297 @@ the honest summary is that Tier 1 built the *routing* it needs and none of the
 
 ---
 
+## M7 Tier 2 — the manifestation stage (slice 1: T0–T7)
+
+**Status: slice 1 built and verified — T0 to T7 of
+[`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md)
+§11, then one independent verification pass (verdict: passed; ten findings, all
+minor).** Evidence:
+[`docs/evidence/m7-tier2.md`](docs/evidence/m7-tier2.md), in three parts (T0–T2,
+T3–T4, T5–T7) plus a status section. **Nothing is committed**: the work is branch
+`tier2-slice1` in the worktree `/home/justin-a/code/mtg-table-t2`, per CLAUDE.md.
+The user's nine Tier 2 decisions are recorded as **D53–D62**, and the builders'
+own as **D56, D57, D59, D60, D63**. The spec is report 13; the asset landscape it
+rests on is [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md).
+
+*Tier 2 in one sentence:* every creature on the battlefield now has a figure
+standing at its card, auras sit on the figure they enchant, lands are terrain,
+tapping a land sends mana to its controller's side, and a spell on the stack is a
+form at its caster's side with a tether to what it targets — **and all of it is a
+pure function of the snapshot except the transitions**, which are cues that decay
+exactly like Tier 1's (**D56**).
+
+**Command**
+
+```bash
+npm --prefix web run dev:arena                 # the replay cinematic, now with Tier 2
+#   /?replay=games/g1.jsonl#arena, scrubbed to transport index 316-376, is the
+#   crowded table (>= 10 modelled figures) every T7 number was measured on
+./scripts/play.sh --arena                      # a live game in 3D, with Tier 2
+#   ?bloom=0 / ?bloom=1 sets where bloom starts; the cue strip carries the checkbox
+node tools/build-figures.mjs --src var/assets/figures   # rebuild figures.glb + models.json
+npm --prefix web run build && npm --prefix web run preview -- --port 5182 &
+node tools/arena-bench.mjs --index 316 --gpu gl --settle 4000   # the bench frame, on the real GPU
+node tools/arena-bench.mjs --index 316 --settle 4000            # ... and under SwiftShader
+#   --bloom / --no-bloom, --reduced-motion, --dpr 1, --settle 600 (cold); NOT in check-all
+```
+
+A fresh checkout with no `web/public/models/figures.glb` plays the whole film:
+every creature draws its stand disc, the console says so once, and nothing errors
+(evidence §4.3). Rebuilding the file needs the three CC0 sources under
+`var/assets/figures/` — `tools/assets-manifest.json` has their download URLs and
+sha256s, and the Kenney zip must be unzipped in place.
+
+### The eight evenings
+
+| | deliverable | status | what proves it |
+|---|---|---|---|
+| **T0** | the spike and the go/no-go | **passed with room** — the named billboard fallback was not needed | 12 cloned figures = **12 draw calls, 1 material, 1 geometry, 1 program**, frame body p50 0.30 / p95 0.50 ms; 21 figures = 21 calls, p95 0.60 ms (SwiftShader; `web/t0-spike.html`) |
+| **T1** | the pose layer, no assets | **done** | `figures.test.ts` + `figure-pose.test.ts` over all 3,679 board frames: 26 distinct creatures resolved, 11,901 poses, max 21 in a frame, **1,138 face-down instances all anonymous**; one instanced disc per creature |
+| **T2** | the loader and the first models | **done — three archetypes, not one** | `figures.glb`, 126,404 bytes, CC0: agent (Kenney), drone and insect (Quaternius, via Poly Pizza); `g1.jsonl`@355 = 12 figures, 11 models, 59 draw calls, one figure program used 11 times; the missing-file fallback proved by removing the file |
+| **T3** | the clip lane | **done** | `stage.clips` empty after all 3,293 batches; every `mixer.update` is a literal `0` (negative-controlled); 23 of 57 cues drive a clip; the per-card alias works end to end (the Doombot's `jet`) |
+| **T4** | lands as terrain, and the mana motes | **done** | 29,389 tile-instances, a tile and its card never disagree about tapped; 20 lands of one kind = **1** draw call, `g1`'s 17 = **3**; motes in flight photographed; the casting anchor |
+| **T5** | one aura, properly, and the default halo | **done** | all 985 attachment frames show their aura; Quantum Reduction holds its host at 0.45× through a skip; every other attachment draws the halo |
+| **T6** | the stack | **done** | 389 stack frames, 417 forms, max depth 4; the ghosted creature spell *is* the figure that lands; 44 tethers; **41 aimed strikes** from one frame of look-behind (**D63**); the combat freeze spares the spell; the fizzle shown with a synthetic event (the corpus has none) |
+| **T7** | measure and tune | **done** | busts; the width clamp; the bench on SwiftShader **and on the GTX 1080**; bloom's default decided by measurement; a live game on port 8660 |
+
+### What the evidence shows
+
+- **The corpus resolves, and says how.** `figures.test.ts` prints the figure
+  census every run: by frame-instance, the disc 5,120 (the probe decks' beasts,
+  the face-down creatures, the Helicarrier), agent 4,272, drone 1,431, insect
+  1,078 — and it names the four declared rungs that never fire, so an entry that
+  is decorative says so on the day it is added. Hard rule 8's new shape is
+  asserted rather than trusted: a face-down creature is always the anonymous
+  disc, and a redacted permanent gets no figure at all.
+- **The scene, at T7's bench frame** (`g1.jsonl` index 316, 11 figures, 17
+  tiles, 2 busts, 1920 × 993): **64–66 draw calls** against report 13 §8.2's
+  ≤ 90, **21,305–24,351 triangles** against ≤ 30,000, **11 programs** with bloom
+  off and **25** with it on, against ≤ 14 — the one budget line that is over, paid
+  once at mount (Tier 2 follow-up 5).
+- **Frame times** — `tools/arena-bench.mjs`, production build, `vite preview`,
+  headless Chromium, `--disable-gpu-vsync --disable-frame-rate-limit`:
+
+  | rasteriser | configuration | render dpr | p95 | max | verdict |
+  |---|---|---:|---:|---:|---|
+  | SwiftShader | warm, bloom off (×4) | 0.6 | **16.2–17.2 ms** | 33.7–35.9 ms | **passes** T7's gate |
+  | SwiftShader | cold (`--settle 600`), bloom off (×2) | 0.6 | 17.6 / 30.8 ms | 78.2 / 65.0 ms | fails on max (M7 follow-up 1's first-upload hitch, plus the governor settling) |
+  | SwiftShader | warm, reduced motion (×2) | 0.6 | 17.1–17.2 ms | 34.4–34.7 ms | passes |
+  | SwiftShader | warm, pinned `?dpr=1` | 1.0 | 29.1 ms | 43.5 ms | fails, as Tier 1 did |
+  | SwiftShader | warm, **bloom on** | 0.6 | **82.3 ms** | 102.1 ms | fails by 4× |
+  | **GTX 1080** | warm, bloom off (×3) | 1.0 | **0.4 ms** | 17.7–17.8 ms | passes |
+  | **GTX 1080** | warm, bloom on, after priming (×4) | 1.0 | **1.1 ms** | 18.1–19.3 ms | passes |
+  | **GTX 1080** | cold, bloom on, after priming | 1.0 | 1.0 ms | 18.2 ms | passes |
+
+  **Read the caveats with the numbers.** SwiftShader is a software rasteriser and
+  an explicit lower bound, and on it Tier 2's 66 draw calls push the governor
+  down to its **floor** (0.6), where Tier 1's 40 settled at 0.75. The GTX 1080
+  numbers are **headless Chromium reaching this machine's GPU through
+  ANGLE-on-GL** (`--gpu gl`, which T7 found works) — not a headed browser on the
+  user's desktop compositor, and not the integrated GPU report 13 §8 was sized
+  for, which is still unmeasured. The live game on the GTX 1080 (bloom on, five
+  figures, vsync-locked) ran at **60 fps, rAF p95 16.8 ms**, with 0.2 ms p50 /
+  0.3 ms p95 of frame work. The verification pass re-measured the GTX 1080 with
+  bloom on at p95 0.7–0.8 ms, max ~18 ms, warm and cold.
+- **Bloom is ON by default (D61)**, because user decision 6's condition — "within
+  budget on this machine" — holds on the GTX 1080: +0.7 ms at p95, and the one
+  long frame per run disappeared once `EffectPool.prime()` moved a lazy shader
+  compile to mount. On a machine that cannot afford it the DPR governor now has a
+  **rung below its floor** that turns bloom off: under SwiftShader that takes
+  ~40 frames over 50 ms first, and a 15-second sample containing the switch reads
+  p95 32.4 ms because the ladder then oscillates between 0.6 and 0.75. The
+  checkbox in the cue strip and `?bloom=0` are the manual escape.
+- **Idle is still zero.** `frameloop='demand'` holds with figures on the table:
+  0 renders in 5 s on `human-comfort-13` @1262, bloom on and off (verification
+  pass). Breathing runs only while a cue is already running (**D58**).
+- **The 2D board did not move.** Entry chunk **85.72 kB gzip** (Tier 1: 85.62;
+  still no `three` in it); the arena chunk 315.13 kB gzip (Tier 1: 274.30); the
+  bloom composer is its own lazy `Post` chunk, 16.54 kB gzip, fetched only when
+  bloom is first on. `render.test.tsx` still renders every frame of every fixture
+  twice.
+- **Tests.** `npm --prefix web test` is **610 `node --test` + 79 vitest**
+  standalone (Tier 1: 534 + 79); the new suites are `figures`, `figure-pose`,
+  `clips`, `tiles`, `attach` and `stack`, and `liveness.test.ts` grew from 8
+  clauses to 19 — among them the zero-delta mixer, the lazy bloom pass as the
+  only post pass, the pose layers bound only from `CueRunner`, and "no arena
+  module names a CDN".
+  **`./tools/check-all.sh` was run once during the documentation pass
+  (`WSPORT=8661`): exit 0 in 727 s (12 min 7 s)** — 9b's re-recording of
+  `human-auto-42` multiset-identical, 9c's ten games 10/10 in 269 s, all seven ws
+  servers, every fixture and fresh recording through `check-redaction.mjs`, and
+  the web step at **620 `node --test` (612 pass / 0 fail / 8 skipped) + 79
+  vitest**. It ran concurrently with edits to documentation files only, none of
+  which any step reads. Log: `var/check-all-t2-docs.log` in the worktree.
+- **The live seat.** A whole game on port 8660, seed 7, driven by real CDP mouse
+  events on the card's own hit proxy: a two-tone water tile, Quantum Reduction
+  on the stack with its tether, the AI's insect shrunk to 0.268 tall, Agent 13 as
+  a ghost at the casting anchor becoming the same object on the battlefield, her
+  `pistolDraw` alias as her attacking stance, the live combat freeze, a live
+  `block` clip, a concede. The frame log passes `check-redaction.mjs`, and
+  `~/.forge/decks` hashed the same before and after.
+
+### Deviations from report 13, each argued in the evidence
+
+Three archetypes rather than one at T2, and three tile kinds rather than five
+(**D59**). The disc is drawn under every creature, not only as the fallback
+(**D55**). `ClipRequest` lives in `figures/clips.ts` and carries a `key`
+(**D57**). A `tap` cue carries its card's controller, read off the snapshot
+(**D60**). `mote` is a seventh `Effect` kind with its own cap (**D60**). The spell
+form arrived in T4 because the motes needed somewhere to land. `land.tap` /
+`land.untap` replace `fx.ripple` on the five land entries of `cues.json`. The
+strike reads the previous frame (**D63**), and the fizzle's fall added
+`casting.ground` to `AnchorRef` and `arc` to `Effect`. The busts are one draw call
+with a `vigour` term (**D62**). Quantum Reduction's shrink is on `attach:on`
+through `params.hostClip` / `params.collapse`, because `queue.ts`'s rule 5 drops a
+`cast` whose card lands in the same batch, which is how the AI plays. `resolved.*`
+defaults are 480 / 460 ms, up from 320, so the strike can travel. Shell, circuit,
+glints and cocoon still draw as the halo (T12). **The benchmark frame is not
+report 13's**: `human-sideboard-7`'s 21-creature frame is all probe-deck beasts on
+the disc — the busiest board in the corpus has no models in it — so T7 measured
+`g1.jsonl` at 316, the first of 61 consecutive frames with ≥ 10 modelled figures.
+**`docs/protocol.md` needs no amendment**: Tier 2 changed nothing on the wire,
+`bridge/` is untouched, and no fixture was re-recorded.
+
+### The verification pass — passed, ten minor findings
+
+An independent verifier re-ran the evidence and found nothing blocking. Two of its
+ten findings are **closed by the documentation pass**: the docs lagged the code
+(CLAUDE.md still said the effect pool was 26 meshes — it is 38 — quoted M7's test
+counts and had no Tier 2 conventions, and DECISIONS.md had no entry for the
+changes that contradict earlier documents; now **D53–D63** and CLAUDE.md's Tier 2
+section), and NOTICE did not list the two bloom packages bundled into the `Post`
+chunk (now §6). The other eight are follow-ups 2, 3, 4, 5, 7, 8, 9 and 10 below.
+
+### Tier 2 follow-ups — nineteen, 2026-09-27
+
+From the builders' own "problems" notes and the verification pass. **None of them
+stops a game, and the gate is green.** Three are properties of the wire or of
+Tier 1's queue policy that a renderer must not paper over (1, 2, 13), four are
+measurement limits or caveats (4, 6, 12, 14), and the rest are small debts with
+a stated cost.
+
+1. **In the human's own combat the transient clips mostly do not play live.**
+   Forge hands the human priority with each combat batch, so the 250 ms
+   awaiting-human budget applies, the batch would need compressing below
+   `MIN_COMPRESSION` (0.25), and a snapped cue is applied at `t = 1`, where clip
+   weight is 0. The attack lunge and the damage hit were therefore **not
+   observed live** (the block clip and the summons were); both were photographed
+   in replay, where the budget is 2.5 s. The land's *rise* could not be
+   photographed live for the same reason. Loosening this — exempting the clip lane
+   from `MIN_COMPRESSION`, or an attackers batch keeping a ~400 ms floor while the
+   human is awaited — is a **Tier 1 policy change**, and it wants the play-test
+   (report 13 §13 question 7), not a guess.
+2. **The `die` clip never plays anywhere** (**D56**). The snapshot carrying a
+   creature's `zone → graveyard` event already shows it in the graveyard, so it
+   has no figure; in a full 1× replay of `g1` the verification pass saw 69
+   `die` requests reach `stage.clips` and no rig ever show a death clip. Not a
+   renderer bug, and not to be worked around: a figure that outlives its frame
+   would be the renderer remembering something the engine did not say. `die`
+   stays in `CLIP_FOR` so that the day the wire says "dying" one frame earlier it
+   plays.
+3. **A wrapped rank's second-row figures stand inside the first row's cards.**
+   `standPointOf`'s row falloff is report 13 §3.1's own formula, and the
+   verification pass found it still lands row-1 figures on row-0 cards. Measured
+   during the documentation pass: only `human-sideboard-7` ever has ten or more
+   creatures on one seat (22 frames, at most 11), and its creatures are discs, so
+   no model has yet stood in the wrong place in a recording.
+4. **Bloom's default rests on one headless measurement.** It is the GTX 1080
+   through ANGLE-on-GL in headless Chromium — not a headed desktop browser, not an
+   iGPU. With the default on, the SwiftShader bench **fails** until the governor
+   switches bloom off (~40 slow frames). M7 follow-up 2 is answered for this GPU
+   and still open for an integrated one; the check is a real browser on the
+   user's desktop with `?stats=1&glinfo=1`, bloom on and off.
+5. **The program budget is exceeded under bloom**: 25 programs (22 after the
+   governor turns it off) against report 13 §8.2's ≤ 14; bloom off is 11. Draw
+   calls and triangles are inside budget. Either the budget line is amended to
+   exclude the composer's own passes, or bloom's variants are reduced.
+6. **With bloom on, `gl.info.render` counts only the composer's last pass**
+   (`calls: 1`), so every draw-call number above was read with bloom off. A bench
+   that reports draw calls must say which.
+7. **The idle cost of a table with a bobber on it rose** (**D58**). Tier 1's
+   `presence` bob (the Doombot, the Helicarrier, Wasp) keeps the loop at `always`
+   while such a card is on the table — from `g1` frame 176 onward in that replay —
+   and since Tier 2 every pose layer is bound on each of those frames. A table
+   without one still renders nothing while idle.
+8. **The "no CDN" liveness clause is a hostname denylist** (**D54**): the
+   verification pass pointed the loader's fallback at `https://example.com/…` in a
+   scratch copy and the clause stayed green. The robust form is "no string
+   literal with a URL scheme anywhere under `web/src/arena/`", negative-controlled
+   the same way.
+9. **`tools/build-figures.mjs` never verifies a source's sha256** against
+   `tools/assets-manifest.json` (it prints them when a file is missing), and
+   **nothing checks the built file's own hash**. The documentation pass recorded
+   it — 126,404 bytes, sha256 `c870a53330cf…5c5658fa` (NOTICE §7, **D54**) — so the
+   next rebuild can be compared by hand; making the build assert both is the code
+   half, and report 13 §9.2's `tools/check-models.mjs` is where it was meant to
+   live.
+10. **The busts sit badly at 1600 × 1000**: the opponent's is mostly hidden under
+    the top-left decision panel and cue strip, and the viewer's takes the
+    bottom-left corner (**D62**).
+11. **The drone overlaps its neighbours** by up to 0.634 units — every
+    overlapping pair in the corpus has a drone in it. It is mostly wingspan and
+    the width clamp's floor keeps it from vanishing; a narrower drone is **T9**'s.
+12. **The fizzle is evidenced only by a synthetic event**: 0 of the corpus's 412
+    resolutions fizzled.
+13. **Engine order puts `attach` before `resolved`** in an Aura's batch, so the
+    Aura snaps on and *then* the bolt flies. The planner never sorts; reported,
+    not reordered (**D63**).
+14. **The SwiftShader cold start** is still max 65–78 ms: the first GPU upload of
+    a card face plus the governor settling inside a 600 ms window (M7 follow-up 1,
+    unchanged). The GTX 1080's cold run has no hitch.
+15. **Web Up's cocoon is measurable now and unmeasured.** The live game played
+    Web Up (the AI cast it on our Quantum Reduction), so report 13 §4.5's
+    "measure before building" recording exists — `var/games/human-ws-7/frames.jsonl`,
+    **local and gitignored** — and nobody has read it for `attachedToId` on the
+    exiled card. T12's first step.
+16. **The minified chunks carry no licence banners** — measured during the
+    documentation pass: the entry, Arena and Post chunks contain no `Copyright` and
+    no `@license` comment, so NOTICE §6's M7 claim that the bundler preserved them
+    was wrong. NOTICE now says so and is where the notices live; a `web/dist/` that
+    leaves this machine must carry NOTICE with it, or the build must be told to
+    keep legal comments. Pre-existing since M7; found now.
+17. **`@gltf-transform/cli` floats on a caret (`^4.5.0`)** while every Tier 2
+    runtime dependency is exact. A minor release could change the bytes of
+    `figures.glb`; pin it if the built file is committed.
+18. **`tools/build-figures.mjs`'s comment gives the wrong reason for measuring
+    `max(x, z)`** ("a figure turns to face the other seat" — a π turn keeps x along
+    x). The number is right for all three models. Left for the file's owner.
+19. **`web/t0-spike.html` is kept** as T0's go/no-go page. It is not reachable
+    from the app and never reaches `dist/` (`vite build`'s only input is
+    `index.html`); keep it or delete it, but decide.
+
+### What slice 1 hands to T8–T14
+
+Report 13 §11's second table, updated for what slice 1 already did. **Before
+T8, play three games** — `./scripts/play.sh --arena --games 3` — and write down,
+in the moment, the three things that read wrong (report 13 §13 question 7); that
+list is what T8–T12 should be re-ordered around, and follow-up 1 needs it.
+
+| | deliverable | what slice 1 already did | what is left |
+|---|---|---|---|
+| **T8** | the rest of the humanoids | hero and scientist are the agent mesh in gold and lab-green; the Soldier and Hero tokens have their tints | a hero mesh and a scientist mesh of their own (Kenney's *Mini Characters* has twelve bodies in one CC0 kit); the retarget experiment of report 13 §9.5 against Quaternius's CC0 **Universal Animation Library**, with per-model clips as the named fallback — **never Mixamo** (**D54**) |
+| **T9** | drone and insect | both archetypes exist; the Giant-Sized Flying Ant stands at 1.35×; the Doombot's attack aliases `jet` | a **narrower drone** (follow-up 11); `Ant-Man's Air Force` as a small swarm of the insect (`figures.json` deliberately has no `swarm` key until something reads it); the Doombot's eye; the insect's missing `summon`, the drone's missing `hit` (deliberate absences today) |
+| **T10** | the vehicle | the Helicarrier keeps its Tier 1 `presence` hover and draws its disc | a CC0 vehicle silhouette overhead — none has been chosen, and `figures.json` declares no `creature/subtype:vehicle` rung until one exists |
+| **T11** | per-card clips, as `params.clip` | Agent 13's `pistolDraw` (seen live as her attacking stance); Fury's `radioCall` is aliased on `channel` in `figures.json`, but his own cues (`fx.agents`) drive `summon`, so the gesture is not yet on the beat `arena-mode.md` describes | Fury's radio call on his agents beat; the S.H.I.E.L.D. squad stepping forward together; Coulson's badge gesture; any per-card entry that would need a model used by exactly one card is **Tier 3**, not T11 |
+| **T12** | the remaining attachments | Quantum Reduction's shrink; every other aura and equipment draws the default halo (metallic for an Equipment) | Super Suit's shell (the host's own geometry, scaled), Spy Kit's glints, Robotics Mastery's circuits, Web Up's cocoon **after** follow-up 15's measurement, Strategic Intervention's mission-control overlay (a DOM widget in `.arena__layer`, which must carry its own `pointer-events: auto`) |
+| **T13** | duelists | **done in T7**: two silhouette busts in one draw call, reacting to damage and life | follow-up 10's placement; full avatars stay Tier 2.5, only if the play-test says anyone missed them |
+| **T14** | verification pass | one independent pass over slice 1 (passed; ten minor findings), and this documentation pass (CLAUDE.md's Tier 2 conventions, this section, **D53–D63**, README, NOTICE) | the same for T8–T13, and a re-run of the bench on the user's own desktop browser (follow-up 4) |
+
+**The one line Tier 2 must not cross, restated.** A per-card entry in
+`figures.json` may choose a model and alias a clip; it may not introduce a model
+used by exactly one card — that is Tier 3, and it is the seam where "a small
+library of archetypes" quietly becomes "a model per card" (report 13 §12).
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
 are now revisitable rather than blocked; nothing below is scheduled by that, and
-each still needs a decision of its own before it becomes work. The arena's own
-Tier 2 and Tier 3 belong on this list too — see *"What Tier 1 hands to Tier 2"*
-above for what is already built for them.
+each still needs a decision of its own before it becomes work. The arena's
+**Tier 3** (per-card models) belongs on this list too; **Tier 2** left it on
+2026-09-13 — its first slice is built and its remaining evenings T8–T14 are
+handed over in *M7 Tier 2* above.
 
 - A second deck, a deck picker, and an AI profile / difficulty selector. (Now
   specified, if it ever comes forward: there is no "difficulty" in Forge, only
@@ -2163,3 +2449,6 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | Undecided — **NOTICE is written to publication quality anyway**, so either answer works. |
 | 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **AI difficulty stays deferred.** |
 | 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **ANSWERED BY M6: ON.** `config.json` `"manaLostPrompt": true`, set in memory only (never `save()`), overridable with `--mana-lost-prompt` / `--no-mana-lost-prompt` (amendment M40). `confirm` therefore occurs in ordinary games; nothing else moved. Raise it again if the prompt turns out to be a nuisance. |
+| 10 | **New, Tier 2.** Report 13 §13's first six questions — art direction, models from card art, the GPU, idle breathing, duelists, lights. | **ANSWERED by the user before T0**, as nine decisions, recorded as **D53–D62**: stylised low-poly CC0 figures under a holographic, unlit treatment; figures at their card with the card plane kept; **no** AI-generated models from card art; **no** Mixamo; procedural slab lands; bloom on if the bench allows (it did, on the GTX 1080); breathing only while something else animates; silhouette busts, avatars deferred; mana motes to the controller's casting anchor. |
+| 11 | **New, Tier 2.** Commit `web/public/models/figures.glb` (126,404 bytes, CC0, built by `tools/build-figures.mjs`), or gitignore it and regenerate it like `web/public/art.json`? | **Undecided — nothing in the code depends on the answer.** A checkout without it draws every creature as its disc and says so once in the console. If it is committed, pin `@gltf-transform/cli` exactly first (Tier 2 follow-up 17). |
+| 12 | **New, Tier 2.** Should the live combat budget let the clip lane play (Tier 2 follow-up 1)? Today a combat batch in the human's own turn is snapped, so the lunge and the hit are replay-only. | **Unchanged: Tier 1's budgets stand** until the play-test in *"What slice 1 hands to T8–T14"* says the combat reads wrong live. |

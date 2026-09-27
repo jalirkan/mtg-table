@@ -40,8 +40,10 @@
       "zone:*>battlefield": { "cue": "zone.enters", "ms": 450, "params": { "impact": 1.1 } }
     },
     "land/*": {
+      "_note": "T4: a land's tap is `land.tap` — the ripple AND the mana mote — and its untap is `land.untap`. `fx.ripple` is still what a tapping CREATURE gets; the difference is the ladder, not the cue.",
       "zone:*>battlefield": { "cue": "land.rise", "ms": 550 },
-      "tap": { "cue": "fx.ripple", "ms": 220, "params": { "radius": 0.8 } }
+      "tap:on": { "cue": "land.tap", "ms": 260, "params": { "radius": 0.8 } },
+      "tap:off": { "cue": "land.untap", "ms": 220, "params": { "radius": 0.7 } }
     },
     "equipment/*": {
       "attach:on": { "cue": "attach.snap", "ms": 500, "params": { "colour": "#e3c46a" } }
@@ -141,8 +143,9 @@
     },
 
     "Quantum Reduction": {
-      "_note": "The Quantum Realm takes it: the target collapses to a point of light. Keys off `cast`; the exile (if it comes) is the target's own zone event.",
-      "cast": { "cue": "fx.collapse", "ms": 880, "params": { "colour": "#c9b8ff" } }
+      "_note": "The Quantum Realm takes it: the target collapses to a point of light. Keys off `cast`; the exile (if it comes) is the target's own zone event. T5: `attach:on` is the SNAP — the host's figure plays `shrink` and a ring closes into it — because the AI usually casts and resolves inside one snapshot, and then queue.ts's rule 5 drops the cast cue for the arrival (g1.jsonl frame 93). The lasting shrink is figures.json's pose, not this.",
+      "cast": { "cue": "fx.collapse", "ms": 880, "params": { "colour": "#c9b8ff" } },
+      "attach:on": { "cue": "attach.snap", "ms": 620, "params": { "colour": "#c9b8ff", "hostClip": "shrink", "collapse": true } }
     },
 
     "Ant-Man's Air Force": {
@@ -191,25 +194,29 @@
     "Thriving Heath": {
       "_note": "A terrain tile rising out of the table, and a ripple when it taps for mana. Keys off `zone`→battlefield and `tap`.",
       "zone:*>battlefield": { "cue": "fx.terrain", "ms": 700, "params": { "colour": "#f6f0d8", "radius": 1.7, "depth": 0.6 } },
-      "tap": { "cue": "fx.ripple", "ms": 260, "params": { "radius": 1, "colour": "#f6f0d8" } }
+      "tap:on": { "cue": "land.tap", "ms": 300, "params": { "radius": 1, "colour": "#f6f0d8" } },
+      "tap:off": { "cue": "land.untap", "ms": 240, "params": { "radius": 0.8, "colour": "#f6f0d8" } }
     },
 
     "Thriving Isle": {
       "_note": "The same tile, blue water. Keys off `zone`→battlefield and `tap`.",
       "zone:*>battlefield": { "cue": "fx.terrain", "ms": 700, "params": { "colour": "#9ec7f0", "radius": 1.7, "depth": 0.6 } },
-      "tap": { "cue": "fx.ripple", "ms": 260, "params": { "radius": 1, "colour": "#9ec7f0" } }
+      "tap:on": { "cue": "land.tap", "ms": 300, "params": { "radius": 1, "colour": "#9ec7f0" } },
+      "tap:off": { "cue": "land.untap", "ms": 240, "params": { "radius": 0.8, "colour": "#9ec7f0" } }
     },
 
     "Plains": {
       "_note": "Basic terrain. Keys off `zone`→battlefield and `tap`.",
       "zone:*>battlefield": { "cue": "fx.terrain", "ms": 600, "params": { "colour": "#f6f0d8", "radius": 1.2 } },
-      "tap": { "cue": "fx.ripple", "ms": 220, "params": { "radius": 0.8, "colour": "#f6f0d8" } }
+      "tap:on": { "cue": "land.tap", "ms": 260, "params": { "radius": 0.8, "colour": "#f6f0d8" } },
+      "tap:off": { "cue": "land.untap", "ms": 220, "params": { "radius": 0.7, "colour": "#f6f0d8" } }
     },
 
     "Island": {
       "_note": "Basic terrain. Keys off `zone`→battlefield and `tap`.",
       "zone:*>battlefield": { "cue": "fx.terrain", "ms": 600, "params": { "colour": "#9ec7f0", "radius": 1.2 } },
-      "tap": { "cue": "fx.ripple", "ms": 220, "params": { "radius": 0.8, "colour": "#9ec7f0" } }
+      "tap:on": { "cue": "land.tap", "ms": 260, "params": { "radius": 0.8, "colour": "#9ec7f0" } },
+      "tap:off": { "cue": "land.untap", "ms": 220, "params": { "radius": 0.7, "colour": "#9ec7f0" } }
     }
   }
 }

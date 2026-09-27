@@ -47,6 +47,20 @@ function arenaFiles(dir = ARENA, prefix = ''): Array<{ path: string; source: str
   return out;
 }
 
+/**
+ * Source with its comments removed.
+ *
+ * The scans below are crude greps, and the files they read **document the traps
+ * they are guarding** — `FigureLayer.tsx`'s header quotes drei's
+ * `useFrame((state, delta) => mixer.update(delta))` verbatim and `models.ts`'s
+ * names `gstatic.com`. A grep that cannot tell a warning from a call would make
+ * writing the warning down a test failure, which is the wrong incentive by
+ * exactly one order.
+ */
+function codeOf(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+}
+
 /** `import … from '<specifier>'` and `import('<specifier>')`, with the `type` flag. */
 function importsOf(source: string): Array<{ from: string; typeOnly: boolean }> {
   const out: Array<{ from: string; typeOnly: boolean }> = [];
@@ -263,6 +277,383 @@ test('liveness: cues/ is pure — no three, no React, no DOM, no clock', () => {
       `cues/${file.path} starts a timer`,
     );
   }
+});
+
+/**
+ * **Tier 2's half of the same rule** (report 13 §1.2, §10.9).
+ *
+ * `figures/` is the manifestation stage's pure half — the vocabulary, the
+ * ladder, the pose function and the validator — and it is what lets
+ * `figures.test.ts` and `figure-pose.test.ts` run the REAL resolver over all
+ * 3,679 board frames of the corpus in bare Node, with no browser, no GPU and no
+ * `figures.glb` on disk. CLAUDE.md's M7 convention 1 says in as many words that
+ * `liveness.test.ts` is "the file to extend when the arena grows a module".
+ */
+test('liveness: figures/ is pure — no three, no React, no DOM, no clock', () => {
+  const files = arenaFiles().filter((f) => f.path.startsWith('figures/'));
+  assert.ok(files.length >= 4, `expected the figure module, saw ${String(files.length)} files`);
+  for (const file of files) {
+    for (const imported of importsOf(file.source)) {
+      assert.ok(
+        imported.from !== 'three' && !imported.from.startsWith('three/'),
+        `figures/${file.path} imports three — §1.2's [NO three] is what makes node --test possible`,
+      );
+      assert.ok(
+        !imported.from.startsWith('react') && !imported.from.includes('@react-three'),
+        `figures/${file.path} imports React`,
+      );
+      assert.ok(
+        !imported.from.includes('scene/'),
+        `figures/${file.path} imports the renderer — the pose layer must not know one exists`,
+      );
+    }
+    assert.ok(
+      !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(/.test(file.source),
+      `figures/${file.path} starts a timer`,
+    );
+    assert.ok(
+      !/\bdocument\.|\bwindow\./.test(file.source),
+      `figures/${file.path} touches the DOM`,
+    );
+  }
+});
+
+/**
+ * **One `useFrame`, and Tier 2 did not add a second.**
+ *
+ * The figure layer mounts objects and registers rigs; every transform it owns is
+ * written by `CueRunner`'s single loop. The trap this guards is a real one and
+ * is measured: drei's `useAnimations` is
+ * `useFrame((state, delta) => mixer.update(delta))` — **one extra frame callback
+ * per creature** (report 12 §5.4, `@react-three/drei@9.122.0`) — and using it
+ * would put twelve of them on a busy board while also giving every mixer its own
+ * wall clock, which loses pause, 0.5×–4×, skip and reduced motion at once (§3.4).
+ */
+test('liveness: the arena has exactly one useFrame, and it is CueRunner’s', () => {
+  const owners: string[] = [];
+  for (const file of arenaFiles()) {
+    if (!/\buseFrame\(/.test(codeOf(file.source))) continue;
+    owners.push(file.path);
+  }
+  // `Arena.tsx` owns the DPR governor's own `useFrame`, which §9.2 rule 7 calls
+  // out as the deliberate exception (the resolution IS React state). Everything
+  // else in the arena must go through `CueRunner`.
+  assert.deepEqual(
+    owners.sort(),
+    ['Arena.tsx', 'scene/CueRunner.tsx'],
+    'a new `useFrame` appeared in the arena. There is one frame loop and it is ' +
+      'CueRunner.tsx (report 09 §9.2); a second one is how a figure gets a clock of its own.',
+  );
+});
+
+/**
+ * **Every model is loaded from `web/public/models/`, and nothing else.**
+ *
+ * Two CDN traps are already documented in this tree and both are one line to
+ * fall into: drei's `useGLTF(path, true)` sets the DRACO decoder path to
+ * `https://www.gstatic.com/draco/versioned/decoders/1.5.5/`
+ * (`@react-three/drei/core/Gltf.js:8`), and drei's `<Text>` fetches its default
+ * font from `fonts.gstatic.com` — which is why `scene/numberSprite.ts` draws its
+ * numbers on a canvas instead. A local-only game whose figures need a CDN is a
+ * game that silently loses its figures offline.
+ */
+test('liveness: no arena module names a CDN, and every model path is local', () => {
+  const hosts = /gstatic\.com|unpkg\.com|jsdelivr|cdnjs|cdn\.|googleapis\.com/;
+  for (const file of arenaFiles()) {
+    // The comments that DOCUMENT the trap name the host, so only code is read:
+    // block comments and `//` lines are stripped first.
+    const hit = hosts.exec(codeOf(file.source));
+    assert.equal(
+      hit,
+      null,
+      `${file.path} names ${String(hit?.[0])} in code — the arena fetches models and fonts from ` +
+        'web/public/ only',
+    );
+    for (const imported of importsOf(file.source)) {
+      assert.ok(
+        !/useGLTF|drei\/core\/Gltf/.test(imported.from),
+        `${file.path} imports drei's useGLTF, which carries the gstatic DRACO default`,
+      );
+    }
+  }
+
+  const models = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../src/arena/figures/models.json', import.meta.url)), 'utf8'),
+  ) as { models: Record<string, { path: string }> };
+  for (const [id, entry] of Object.entries(models.models)) {
+    assert.match(
+      entry.path,
+      /^models\/[A-Za-z0-9._-]+\.glb$/,
+      `models.json["${id}"].path is "${entry.path}" — it must be a relative path under web/public/models/`,
+    );
+  }
+});
+
+/**
+ * **`FigureLayer` mounts; it does not decide and it does not animate.** The
+ * figure layer is downstream of everything: it may not reach a transport, may
+ * not import the cue engine, and may not touch `onAct`.
+ */
+test('liveness: the figure layer mounts objects and reaches no decision', () => {
+  const layer = codeOf(
+    readFileSync(fileURLToPath(new URL('../src/arena/scene/FigureLayer.tsx', import.meta.url)), 'utf8'),
+  );
+  for (const imported of importsOf(layer)) {
+    assert.ok(!imported.from.includes('transport/'), `FigureLayer imports ${imported.from}`);
+    assert.ok(!imported.from.includes('cues/'), `FigureLayer imports the cue engine`);
+  }
+  // Word boundaries, because `AnimationAction` contains the substring `onAct`
+  // and a grep without them fails on the type name three hands you.
+  assert.ok(
+    !/\bonAct\b|\bclickCard\b|\bselectable\b/.test(layer),
+    'the figure layer reaches a click',
+  );
+  // §3.10 rule 2 — a figure is never a raycast target, and the clearing happens
+  // in `models.ts`'s `instantiateFigure`, on every child of every clone.
+  const models = readFileSync(
+    fileURLToPath(new URL('../src/arena/scene/models.ts', import.meta.url)),
+    'utf8',
+  );
+  assert.match(
+    models,
+    /raycast = \(\) => \{\}/,
+    'instantiateFigure no longer clears `raycast` on the clone: a lunging figure would become a ' +
+      'moving click target and report 09 §5.5’s guarantee unravels',
+  );
+});
+
+/**
+ * **T3/T4's half of the same rule** (report 13 §1.2, CLAUDE.md M7 convention 1 —
+ * "the file to extend when the arena grows a module").
+ *
+ * The clip lane and the terrain grew the arena by five files, three of them pure
+ * and two of them renderers, and the split is what the tests below stand on:
+ * `figures/clips.ts`, `figures/tiles.ts` and `figures/casting.ts` are covered by
+ * the `figures/` purity scan above automatically, which is the point of putting
+ * them there. These are the clauses that scan is too general to make.
+ */
+test('liveness: T3/T4 grew the arena by five files, and each is on the right side', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, f.source]));
+  // The three pure ones exist and are in `figures/`, so the scan above covers them.
+  for (const name of ['figures/clips.ts', 'figures/tiles.ts', 'figures/casting.ts']) {
+    assert.ok(files.has(name), `${name} is missing — T3/T4's pure layer`);
+  }
+  // The two renderers exist and are in `scene/`.
+  for (const name of ['scene/tiles.ts', 'scene/casting.ts']) {
+    const source = files.get(name);
+    assert.ok(source !== undefined, `${name} is missing — T4's renderers`);
+    for (const imported of importsOf(source)) {
+      assert.ok(!imported.from.includes('transport/'), `${name} imports ${imported.from}`);
+      assert.ok(
+        !imported.from.includes('cues/queue') && !imported.from.includes('cues/registry'),
+        `${name} imports the cue engine — a field is written by CueRunner, it does not drive itself`,
+      );
+    }
+    const code = codeOf(source);
+    assert.ok(!/\bonAct\b|\bclickCard\b|\bselectable\b/.test(code), `${name} reaches a click`);
+    // §3.10 rule 2, for two more surfaces: neither a tile nor a mote may be a
+    // raycast target. A tile lies UNDER the card whose click it would steal.
+    assert.match(
+      code,
+      /raycast = \(\) => \{\}/,
+      `${name} does not clear \`raycast\`: a tile or a mote would become a click target`,
+    );
+  }
+  // The terrain and the casting layer own no clock of their own: `dt` is handed to
+  // them by the one frame loop, and `CueRunner` passes **0 while the queue is
+  // idle** (user decision 7, §8.3 rule 1) so `frameloop='demand'` keeps its
+  // measured zero idle frames.
+  for (const name of ['scene/tiles.ts', 'scene/casting.ts']) {
+    const code = codeOf(files.get(name) ?? '');
+    assert.ok(
+      !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(code),
+      `${name} reads a clock of its own — the queue's virtual clock is the only clock (§3.4)`,
+    );
+  }
+});
+
+/**
+ * **T5/T6's half of the same rule** (report 13 §1.2, CLAUDE.md M7 convention 1).
+ *
+ * The attachment manifestation and the stack grew the arena by two files — one
+ * pure (`figures/attach.ts`, covered by the `figures/` purity scan above, which is
+ * the point of putting it there) and one renderer (`scene/overlays.ts`) — and
+ * extended two more. These are the clauses that scan is too general to make.
+ */
+test('liveness: T5–T7 grew the arena by four files, and each is on the right side', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, f.source]));
+  assert.ok(files.has('figures/attach.ts'), 'figures/attach.ts is missing — T5’s pure layer');
+
+  assert.ok(files.has('figures/duelists.ts'), 'figures/duelists.ts is missing — T7’s pure layer');
+
+  for (const name of ['scene/overlays.ts', 'scene/busts.ts']) {
+    const source = files.get(name);
+    assert.ok(source !== undefined, `${name} is missing — T5/T7’s renderers`);
+    for (const imported of importsOf(source)) {
+      assert.ok(!imported.from.includes('transport/'), `${name} imports ${imported.from}`);
+      assert.ok(
+        !imported.from.includes('cues/queue') && !imported.from.includes('cues/registry'),
+        `${name} imports the cue engine — a pose layer is written by CueRunner`,
+      );
+    }
+    const code = codeOf(source);
+    assert.ok(!/\bonAct\b|\bclickCard\b|\bselectable\b/.test(code), `${name} reaches a click`);
+    // §3.10 rule 2, for two more surfaces: a halo hangs OVER the card whose click
+    // it would otherwise steal, and a bust stands where the life plate is.
+    assert.match(
+      code,
+      /raycast = \(\) => \{\}/,
+      `${name} does not clear \`raycast\`: it would become a click target`,
+    );
+    // The queue's virtual clock is the only clock (§3.4): `dt` is handed in, and
+    // `CueRunner` passes 0 while the queue is idle (user decision 7).
+    assert.ok(
+      !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(code),
+      `${name} reads a clock of its own`,
+    );
+  }
+});
+
+/**
+ * **Bloom is one lazily-imported module, and nothing else reaches the composer**
+ * (user decision 6; **D49**'s rule one level in).
+ *
+ * The arena chunk is itself lazy so the 2D board never downloads `three`; the
+ * composer is lazy *inside* it so a table with bloom off never downloads
+ * `postprocessing`. That only holds while exactly one file imports the library
+ * and exactly one file reaches that file, through `import()` — a static import
+ * anywhere would put the composer back on the arena's critical path, and nothing
+ * but `npm run build`'s chunk list would say so.
+ */
+test('liveness: the bloom pass is lazy, and it is the only post pass', () => {
+  const importers: string[] = [];
+  const reachers: string[] = [];
+  for (const file of arenaFiles()) {
+    for (const imported of importsOf(file.source)) {
+      if (/^(@react-three\/postprocessing|postprocessing)$/.test(imported.from)) importers.push(file.path);
+      if (/scene\/Post(\.tsx)?$/.test(imported.from)) reachers.push(file.path);
+    }
+  }
+  assert.deepEqual([...new Set(importers)].sort(), ['scene/Post.tsx'], 'the composer is imported outside Post.tsx');
+  assert.deepEqual(reachers, ['Arena.tsx'], 'Post.tsx is reached from somewhere other than Arena.tsx');
+  const arena = arenaFiles().find((f) => f.path === 'Arena.tsx')?.source ?? '';
+  assert.match(
+    codeOf(arena),
+    /lazy\(\(\) =>\s*import\('\.\/scene\/Post\.tsx'\)/,
+    'Arena.tsx no longer reaches Post.tsx through lazy(() => import(...))',
+  );
+  assert.ok(
+    !/from '\.\/scene\/Post/.test(arena),
+    'Arena.tsx imports Post.tsx statically — the composer is back on the critical path',
+  );
+});
+
+/**
+ * **Every pose layer is bound from the ONE frame loop.**
+ *
+ * Tier 2 added four fields that are written once a frame — the discs, the terrain,
+ * the casting anchor and T5's overlays — and each of them is a `bind()` that takes
+ * the frame's `dt`. A second caller anywhere would be a second writer of the same
+ * instance buffers, and the symptom would be a layer that is one frame stale or
+ * drawn twice with different data. `useFrame` is already asserted to live in one
+ * file; this asserts that what it drives is driven from there too.
+ */
+test('liveness: the pose layers are bound only from CueRunner’s frame loop', () => {
+  const callers = new Map<string, string[]>();
+  for (const file of arenaFiles()) {
+    const code = codeOf(file.source);
+    for (const field of ['discs', 'tileField', 'castingField', 'overlays', 'bustField']) {
+      if (!new RegExp(`\\b${field}\\.bind\\(`).test(code)) continue;
+      const list = callers.get(field) ?? [];
+      list.push(file.path);
+      callers.set(field, list);
+    }
+  }
+  assert.equal(callers.size, 5, `expected five pose layers, saw ${[...callers.keys()].join(', ')}`);
+  for (const [field, paths] of callers) {
+    assert.deepEqual(
+      paths.sort(),
+      ['scene/CueRunner.tsx'],
+      `${field}.bind() is called from ${paths.join(', ')} — there is one frame loop`,
+    );
+  }
+});
+
+/**
+ * **§6.4's freeze is about CLIPS, and about nothing else.**
+ *
+ * Report 13 §6.4 gives it two guards in as many words: it freezes clips only —
+ * never the HUD, never the decision layer, never a click — and it must not freeze
+ * the spell form, which is the thing the player is being asked to look at. The
+ * first is a source fact and is asserted here; the second is `CastingField`'s own
+ * clock, which `web/test/stack.test.ts` covers on the data side.
+ */
+test('liveness: the combat freeze cannot reach the decision layer', () => {
+  const layer = codeOf(
+    readFileSync(fileURLToPath(new URL('../src/arena/DecisionLayer.tsx', import.meta.url)), 'utf8'),
+  );
+  assert.ok(
+    !/\bfrozen\b|combatFreeze/.test(layer),
+    'the decision layer reads the combat freeze — §6.4 freezes clips and nothing else',
+  );
+  const runner = codeOf(
+    readFileSync(fileURLToPath(new URL('../src/arena/scene/CueRunner.tsx', import.meta.url)), 'utf8'),
+  );
+  assert.match(runner, /pose\.frozen/, 'CueRunner no longer reads the freeze — move this test with it');
+});
+
+/**
+ * **The clip lane is driven from ONE place, and it is the one `useFrame`.**
+ *
+ * The trap is measured and named in report 12 §5.4: drei's `useAnimations` is
+ * `useFrame((state, delta) => mixer.update(delta))`, one callback per creature,
+ * each with its own wall clock. `mixer.update` must therefore appear exactly
+ * twice in the arena — once in `CueRunner`'s loop, and once in `FigureLayer`'s
+ * mount-time pose — and **every** call must pass a literal `0`, because a
+ * non-zero delta is a mixer that advances a clock the cue queue does not own
+ * (§3.4). That is what buys pause, 0.5×–4×, skip and reduced motion for the
+ * animations with no new code.
+ */
+test('liveness: every mixer tick is a ZERO delta, and only two files tick one', () => {
+  const owners: string[] = [];
+  for (const file of arenaFiles()) {
+    const code = codeOf(file.source);
+    const ticks = [...code.matchAll(/mixer\.update\(([^)]*)\)/g)].map((m) => m[1] ?? '');
+    if (ticks.length === 0) continue;
+    owners.push(file.path);
+    for (const arg of ticks) {
+      assert.equal(
+        arg.trim(),
+        '0',
+        `${file.path} calls mixer.update(${arg}) — a non-zero delta gives the mixer a clock of ` +
+          'its own and loses pause, speed, skip and reduced motion at once (report 13 §3.4)',
+      );
+    }
+  }
+  assert.deepEqual(
+    owners.sort(),
+    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx'],
+    'a new file ticks an AnimationMixer. There is one frame loop and it is CueRunner.tsx.',
+  );
+});
+
+/**
+ * **`action.time` is written in exactly one place.**
+ *
+ * The clip lane's whole mechanism is "the cue owns `t`" (§3.4). A second writer
+ * would be a second clock, and the symptom is the one report 13 §3.4 spells out:
+ * skipping a cue leaves a creature frozen mid-lunge.
+ */
+test('liveness: only the frame loop writes action.time', () => {
+  const writers: string[] = [];
+  for (const file of arenaFiles()) {
+    if (/\.time\s*=/.test(codeOf(file.source))) writers.push(file.path);
+  }
+  assert.deepEqual(
+    writers.sort(),
+    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx'],
+    'something other than the frame loop scrubs a clip',
+  );
 });
 
 test('liveness: camera.ts and layout.ts are pure too — the pose math has no renderer', () => {

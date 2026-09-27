@@ -25,9 +25,18 @@
  *     library" asks {@link Stage.deltaTo} for the displacement and decays it;
  *     an effect is positioned by an {@link AnchorRef}, never by an `x, y, z`
  *     the cue made up. Change the table size and every cue still aims.
+ *
+ * **Tier 2 adds one lane and obeys both rules with it** (report 13 §3.3): a
+ * {@link ClipRequest} carries a clip name, a `t`, a weight and an optional alias
+ * — numbers and strings from a closed set, no `Object3D`, no coordinate — and
+ * {@link Stage.clearClip} is what returns the figure to the pose `figurePose`
+ * says it holds. `replay-cues.test.ts` asserts the clip map is **empty** after
+ * every batch drains, exactly as it does for offsets, and that assertion is the
+ * mechanical proof that the lane was built on the right side of §1.1.
  * ---------------------------------------------------------------------------
  */
 
+import { clipBeats, type ClipRequest } from '../figures/clips.ts';
 import type { CueParams } from './types.ts';
 
 export type Vec3 = readonly [number, number, number];
@@ -181,6 +190,19 @@ export type AnchorRef =
   | { kind: 'zone'; player: number | null; zone: string }
   | { kind: 'stack' }
   | { kind: 'combat'; player: number }
+  /**
+   * **Report 13 §6.2's casting anchor** (T4): where a seat's floating mana hovers
+   * and where the spell it is casting stands. `player: null` means *the card's
+   * own side of the table*, which `ownSideOf` resolves exactly as it does for a
+   * `zone` — so a mana mote from an opponent's land drifts to the **opponent's**
+   * anchor with no cue naming a seat.
+   *
+   * `ground: true` is the **table surface directly under it** (T6) — where a
+   * fizzled spell's form falls to, "through the table" (report 13 §6.3). It is a
+   * flag rather than a number so the cue still names a place and `layout.ts` is
+   * still the only module that knows how high the anchor hangs.
+   */
+  | { kind: 'casting'; player: number | null; ground?: boolean }
   | { kind: 'table' }
   | { kind: 'above'; id: number; height: number }
   /**
@@ -210,8 +232,22 @@ export type AnchorRef =
  *
  * §9.3's first risk is transparency overdraw, not geometry: all six are blended
  * with `depthWrite: false`. Hence {@link MAX_LIVE_EFFECTS}.
+ *
+ * ---------------------------------------------------------------------------
+ * **Tier 2 adds a seventh, and it is the only one** (report 13 §5.4, user
+ * decision 9): `mote`, a small additive dot that **travels between two
+ * anchors**. It is not a `beam` with a short radius — a beam is a line and a
+ * mote is a thing that arrives — and it is not `particles`, whose burst is
+ * centred on one anchor. The whole of the difference is {@link Effect.travel}.
+ *
+ * Its budget is separate ({@link MAX_LIVE_MOTES}) and §4.4 is the precedent: the
+ * eight-slot cap exists to bound *overdraw*, and a 0.07-unit dot is not the
+ * thing it was sized against. A five-land mana ability emits five ripples and
+ * five motes in one step, which is 10 of 8 — so without a second bucket the
+ * feature would have been capped out by its own step on the day it shipped.
+ * ---------------------------------------------------------------------------
  */
-export type EffectKind = 'glow' | 'ring' | 'beam' | 'particles' | 'text' | 'plate';
+export type EffectKind = 'glow' | 'ring' | 'beam' | 'particles' | 'text' | 'plate' | 'mote';
 
 export interface Effect {
   kind: EffectKind;
@@ -238,6 +274,22 @@ export interface Effect {
   driftX?: number;
   /** `particles` only: 0…1 through the burst. */
   burst?: number;
+  /**
+   * `mote` only: 0…1 from {@link Effect.at} to {@link Effect.to} (report 13
+   * §5.4).
+   *
+   * The two anchors are what keep rule 2: a mote cue says "from this land to
+   * this player's casting anchor" and never learns where either is, so the mote
+   * is correct on a wrapped rank, on the far side of the table and at whatever
+   * table size `layout.ts` is using.
+   */
+  travel?: number;
+  /**
+   * `mote` only: how high it arcs above the straight line at mid-flight, in world
+   * units. Absent is the mana mote's 0.55 — a thing that rises and lands. T6's
+   * fizzle passes 0: a form that *falls* does not hop first.
+   */
+  arc?: number;
 }
 
 /**
@@ -249,6 +301,39 @@ export interface Effect {
  * over-budget cue renders **without its particle layer**, not not at all.
  */
 export const MAX_LIVE_EFFECTS = 8;
+
+/**
+ * Report 13 §5.4 / §4.4 — **the mote's own bucket.** See {@link EffectKind}: the
+ * eight-slot cap bounds full-size blended quads, and a mana mote is a 0.07-unit
+ * dot. Twelve is a five-land mana ability (5) plus the pool it lands in (up to
+ * 6 floating mana) with one to spare.
+ */
+export const MAX_LIVE_MOTES = 12;
+
+/** Which budget an effect kind is counted against. */
+export function effectBucketOf(kind: EffectKind): 'mote' | 'effect' {
+  return kind === 'mote' ? 'mote' : 'effect';
+}
+
+export function effectCapOf(kind: EffectKind): number {
+  return kind === 'mote' ? MAX_LIVE_MOTES : MAX_LIVE_EFFECTS;
+}
+
+/**
+ * How many live effects share `kind`'s bucket. Both `Stage` implementations
+ * count this way rather than keeping a counter, because a counter has to be
+ * maintained in four places (`setEffect`, `clearEffect`, `clearAll`, and the
+ * replace-in-place path) and one missed decrement is a cap that silently tightens
+ * over a session. The map is bounded at 20 by the two caps above, so the scan is
+ * cheaper than the bookkeeping it replaces.
+ */
+export function bucketSize(effects: ReadonlyMap<string, Effect>, bucket: 'mote' | 'effect'): number {
+  let n = 0;
+  for (const effect of effects.values()) {
+    if (effectBucketOf(effect.kind) === bucket) n += 1;
+  }
+  return n;
+}
 
 // ---------------------------------------------------------------------------
 // The camera lane (§8) — recorded here, wired in E5
@@ -293,6 +378,19 @@ export interface Stage {
   clearOffset(cardId: number): void;
   setEffect(key: string, effect: Effect): void;
   clearEffect(key: string): void;
+  /**
+   * **The fifth transient** (report 13 §3.3): the pose a figure holds while this
+   * cue runs.
+   *
+   * It decays exactly like an {@link Offset} — identity is *no request at all*,
+   * {@link ClipRequest.weight} reaches 0 at `t = 1` (`clipEnvelope`), and
+   * `clearClip` releases it — but it **arbitrates** rather than composing,
+   * because a figure cannot be 30% dying and 70% attacking. The winner is a pure
+   * function of the requests (`figures/clips.ts`'s `chooseClip`), never of the
+   * order the queue iterated.
+   */
+  setClip(cardId: number, request: ClipRequest): void;
+  clearClip(cardId: number): void;
   /** §8 rule 2. `null` releases the lane. */
   requestCamera(request: CameraRequest | null): void;
   /** Drop everything: the scene is then exactly `layout(state)` (§5.1). */
@@ -304,11 +402,21 @@ export interface Stage {
 // ---------------------------------------------------------------------------
 
 export interface RecordedOp {
-  op: 'setOffset' | 'clearOffset' | 'setEffect' | 'clearEffect' | 'camera' | 'clearAll' | 'deltaTo';
+  op:
+    | 'setOffset'
+    | 'clearOffset'
+    | 'setEffect'
+    | 'clearEffect'
+    | 'setClip'
+    | 'clearClip'
+    | 'camera'
+    | 'clearAll'
+    | 'deltaTo';
   cardId?: number;
   key?: string;
   offset?: Offset;
   effect?: Effect;
+  clip?: ClipRequest;
 }
 
 /**
@@ -323,10 +431,17 @@ export interface RecordedOp {
 export class NullStage implements Stage {
   readonly offsets = new Map<number, Offset>();
   readonly effects = new Map<string, Effect>();
+  /**
+   * The clip lane's live map, and the third thing §10.2's decay assertion reads.
+   * Same rule as {@link NullStage.offsets}: empty after a batch drains.
+   */
+  readonly clips = new Map<number, ClipRequest>();
   readonly ops: RecordedOp[] = [];
   camera: CameraRequest | null = null;
   /** Effects refused by the {@link MAX_LIVE_EFFECTS} cap, for the budget test. */
   refusedEffects = 0;
+  /** Motes refused by {@link MAX_LIVE_MOTES}, counted separately for the same reason. */
+  refusedMotes = 0;
 
   deltaTo(): Vec3 {
     return ZERO3;
@@ -344,8 +459,10 @@ export class NullStage implements Stage {
   }
 
   setEffect(key: string, effect: Effect): void {
-    if (!this.effects.has(key) && this.effects.size >= MAX_LIVE_EFFECTS) {
-      this.refusedEffects += 1;
+    const bucket = effectBucketOf(effect.kind);
+    if (!this.effects.has(key) && bucketSize(this.effects, bucket) >= effectCapOf(effect.kind)) {
+      if (bucket === 'mote') this.refusedMotes += 1;
+      else this.refusedEffects += 1;
       return;
     }
     this.effects.set(key, effect);
@@ -357,6 +474,27 @@ export class NullStage implements Stage {
     this.ops.push({ op: 'clearEffect', key });
   }
 
+  setClip(cardId: number, request: ClipRequest): void {
+    const incumbent = this.clips.get(cardId);
+    // The same arbitration the real stage does, and deliberately the same code:
+    // `web/test/clips.test.ts` checks the winner is order-independent, and a test
+    // double with a different rule would make that check worthless.
+    if (incumbent !== undefined && !clipBeats(request, incumbent)) return;
+    // **A copy, because the caller may hand us a scratch object.** `registry.ts`
+    // fills one module-scope `ClipRequest` per `setClip` call rather than
+    // allocating per target per frame (§9.2 rule 6), and `SceneStage` copies it
+    // into its own pooled object; a test double that stored the caller's
+    // reference would alias every entry in the map to the last write.
+    const stored: ClipRequest = { ...request };
+    this.clips.set(cardId, stored);
+    this.ops.push({ op: 'setClip', cardId, clip: stored });
+  }
+
+  clearClip(cardId: number): void {
+    this.clips.delete(cardId);
+    this.ops.push({ op: 'clearClip', cardId });
+  }
+
   requestCamera(request: CameraRequest | null): void {
     this.camera = request;
     this.ops.push({ op: 'camera' });
@@ -365,11 +503,19 @@ export class NullStage implements Stage {
   clearAll(): void {
     this.offsets.clear();
     this.effects.clear();
+    this.clips.clear();
     this.camera = null;
     this.ops.push({ op: 'clearAll' });
   }
 
-  /** Every string this stage was ever handed — the redaction assertion's input. */
+  /**
+   * Every string this stage was ever handed — the redaction assertion's input.
+   *
+   * **Tier 2 widened it to clip names and aliases** (report 13 §1.4): a model id
+   * like `"helicarrier"` or an alias like `"pistolDraw"` in an op log is a name
+   * by another spelling, and `figures.json` is a file whose keys *are* card
+   * names. The alias is the field an author could most easily paste one into.
+   */
   strings(): string[] {
     const out: string[] = [];
     for (const op of this.ops) {
@@ -377,6 +523,10 @@ export class NullStage implements Stage {
       if (op.effect?.colour !== undefined) out.push(op.effect.colour);
       if (op.offset?.tint != null) out.push(op.offset.tint);
       if (op.offset?.glowColour != null) out.push(op.offset.glowColour);
+      if (op.clip !== undefined) {
+        out.push(op.clip.clip);
+        if (op.clip.alias !== null) out.push(op.clip.alias);
+      }
     }
     return out;
   }
@@ -388,6 +538,19 @@ export class NullStage implements Stage {
 
 /** Everything one running cue knows about itself. */
 export interface CueContext {
+  /**
+   * **The registry id of the cue that is running** — `zone.enters`,
+   * `attack.shrink` (report 13 §3.5).
+   *
+   * Tier 2's addition, and the reason the clip lane needs no new data at all:
+   * the ladder has already run by the time a cue exists, so the cue id is the
+   * most specific thing anyone said about this card and this event, and
+   * `figures/clips.ts`'s `CLIP_FOR` is keyed on it. Ant-Man's
+   * `attackers:alone → attack.shrink` and Peggy's `attackers:alone →
+   * attack.aegis` are different entries for the same kind and get `shrink` and
+   * `attack` with nothing added to `cues.json`.
+   */
+  id: string;
   /** Card ids this cue moves. */
   targets: number[];
   /** Player ids this cue is about. */

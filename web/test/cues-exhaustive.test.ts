@@ -256,6 +256,12 @@ test('cues: every registered cue survives a full run and leaves the stage empty'
   for (const [id, impl] of REGISTRY) {
     const stage = new NullStage();
     const ctx = {
+      // T3: the running cue knows its own registry id, because the clip lane is
+      // keyed on it (report 13 §3.5). Passing the real id here is what makes this
+      // the unit-level version of the fixture sweep's decay assertion for the
+      // CLIP lane too — a cue with a `CLIP_FOR` entry sets a clip on both its
+      // targets when `apply` runs, and `end()` has to release both.
+      id,
       targets: [1, 2],
       players: [0, 1],
       params: { amount: 3, dir: 1, counter: 'P1P1', delta: 1, toId: 2, attackerId: 1, turn: 4 },
@@ -267,6 +273,7 @@ test('cues: every registered cue survives a full run and leaves the stage empty'
     impl.end(ctx, stage);
     assert.equal(stage.offsets.size, 0, `${id}: left ${String(stage.offsets.size)} offsets behind`);
     assert.equal(stage.effects.size, 0, `${id}: left ${String(stage.effects.size)} effects behind`);
+    assert.equal(stage.clips.size, 0, `${id}: left ${String(stage.clips.size)} clips behind`);
   }
 });
 

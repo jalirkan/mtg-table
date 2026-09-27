@@ -2015,3 +2015,512 @@ every face, and the saving is HTTP bytes rather than VRAM, which is not what thi
 scene is short of. Revisit it if a cold arena load ever needs to be faster.
 Per-card rounded-corner geometry (more triangles and a second geometry, against
 §9.1's one-geometry budget, for a silhouette an alpha map already gives).
+
+---
+
+## D53 — Tier 2's figures are stylised low-poly CC0 meshes under ONE unlit holographic material
+
+**2026-09-13** (M7 Tier 2 — user decision 1, given before T0; the material is
+T2's. Recorded 2026-09-27)
+
+**Decision.** Creatures on the battlefield are manifested by **stylised low-poly
+figures** — Kenney's *Mini Characters* for every humanoid (agents, heroes,
+scientists, the Soldier and Hero tokens), Quaternius's *Robot Enemy Flying* for
+the drone (Aerial Doombot, the Robot token) and Quaternius's *Bee Enemy* for the
+insect (the two ants) — and every figure is drawn with **one holographic
+`ShaderMaterial`** (`web/src/arena/scene/holoMaterial.ts`): unlit, tinted by the
+card's colour identity through a uniform, a fresnel rim computed in **view
+space**, and scanlines that are a function of the model's own Y rather than of a
+clock. The scene still has **no lights** and no shadow maps, and the card planes
+are never lit.
+
+**Rationale.** The user's art direction, and report 13 §13 question 1's option
+(b) layered on option (a): the holographic treatment *forgives* model quality,
+keeps the scene unlit (report 13 §8.3 rule 2's option (a), for free), and lets one
+humanoid serve several archetypes with only a tint — which is what lets three
+CC0 packs give a model to every creature of `decks/pacho-shield.dck` the corpus
+has seen on a battlefield, tokens included, except the Helicarrier (T10). Measured (`docs/evidence/m7-tier2.md`
+§3.4): at `g1.jsonl` frame 355, **11 figures are 11 material instances of one
+program**, and the whole scene has 9 programs. Nothing in the material reads a
+clock, so nothing in it can wake `frameloop='demand'`.
+
+Two lines in it are not obvious and each was a defect first: the rim is a
+view-space dot product (a view-space normal against a world-space view vector is
+the classic fresnel bug — the rim swims as the camera orbits), and the shader ends
+with `#include <colorspace_fragment>`, without which every tint is wrong in the
+same direction the card textures were before `useCardTexture.ts` set `colorSpace`
+by hand. And the pipeline must keep `NORMAL`: `gltf-transform unlit` declares the
+material uses no normals, the default `prune` then strips them, and a fresnel of
+`normalize(vec3(0))` drew every figure as a **solid black silhouette** in a file
+that still validated (`tools/build-figures.mjs` runs `prune --keep-attributes
+true`).
+
+**Known cost.** *Hero* and *scientist* are the agent mesh in a gold and a
+lab-green tint until T8; the Helicarrier has no mesh (T10) and draws its disc.
+The Kenney character is a chibi (bounding box 0.767 × 0.671) and the drone is
+mostly wingspan, which is why **D55**'s width clamp exists.
+
+**Rejected.** Likeness (report 13 §13 option (c): Tier 3 in all but name, and the
+option with the licence problem — see **D54**). Lit figures with a hemisphere and
+a directional light (a second renderer budget, and the "one light" that turns
+into a lighting rewrite — report 13 §12). Plain stylised figures without the
+hologram (reads as a boardgame and shows every seam in a free model).
+
+---
+
+## D54 — Only CC0 assets are used at all, each with a written provenance; no Mixamo, and no model is ever made from card art
+
+**2026-09-13** (M7 Tier 2 — user decisions 1, 3 and 4 and the brief's CC0-only
+rule, given before T0; the manifest split is T2's. Recorded 2026-09-27)
+
+**Decision.** A third-party model, texture or clip enters the arena **only if
+its source page badged it CC0 on the day it was downloaded**, and that fact is
+recorded, per pack, in **`tools/assets-manifest.json`** — hand-written: creator,
+pack version, page URL, download URL, byte count, **sha256**, download date,
+licence, licence URL and **the licence badge text verbatim**. Anything not CC0
+is not used at all, not even locally. **Mixamo is not used** (user decision 4);
+where a humanoid needs clips its own pack lacks, the source is Quaternius's CC0
+*Universal Animation Library* (not yet downloaded: slice 1's packs carry the
+clips T2–T7 needed). **No model is generated from card art** by any image-to-3D
+tool, hosted or local (user decision 3).
+
+`web/src/arena/figures/models.json` is the **other**, measured half: written by
+`tools/build-figures.mjs` from the file it just built (node names, heights, bone
+and triangle counts, the clip names that really exist), and never edited by
+hand. The downloaded archives live under `var/assets/figures/` (gitignored); the
+built library is one file, `web/public/models/figures.glb` (126,404 bytes, sha256
+`c870a533…58fa`). The arena loads it with three's own `GLTFLoader` and
+`MeshoptDecoder`, from `web/public/models/` and nowhere else.
+
+**Rationale.** A figure library is committed binary art in a public GPL
+repository, so the licence has to be provable *after the page changes* — and the
+pages do change: Quaternius published a non-redistributable **Quaternius Asset
+License** on 2026-08-28 and has begun moving packs onto it, and that licence's §7
+says the version in force when you obtained an asset governs (report 12 §0.2).
+The badge text and the date are the only evidence that survives. Mixamo's terms
+allow use but forbid distributing the raw character and animation files, which
+puts its output in the same "local only" bucket as the Scryfall art; a CC0 clip
+library that retargets onto a Mixamo-shaped rig removes the reason to want it. A
+mesh generated from a Marvel card image is a derivative of art licensed to
+Wizards, and the Fan Content Policy's line is *"If you don't have the rights to
+use another person's stuff in your Fan Content—don't"*.
+
+`@gltf-transform/cli` became a **`web/` dev dependency**, where reports 12 and 13
+§9.3 said "nothing new enters `web/package.json`": pinning it there is what makes
+`tools/build-figures.mjs` reproducible offline rather than dependent on whatever
+`npx` resolves on the day. It ships nothing (193 lockfile entries, none imported
+by the app; NOTICE §7).
+
+**This supersedes report 13 §9.1's default** that the models directory is
+gitignored: a CC0 file *may* be committed. Whether `figures.glb` *is* committed,
+or regenerated like `web/public/art.json`, is still the user's call, and nothing
+in the code depends on the answer — a missing file draws every creature as its
+disc (evidence §4.3).
+
+**Known cost.** `build-figures.mjs` prints the manifest's sha256 when a source is
+missing but never *verifies* one, and nothing records or checks the built file's
+own hash except this entry and NOTICE §7. The liveness clause that guards "no
+CDN" is a **hostname denylist** (`gstatic`, `unpkg`, `jsdelivr`, `cdnjs`, `cdn.`,
+`googleapis`): the verification pass pointed the loader's fallback at
+`https://example.com/…` in a scratch copy and the clause stayed green. Both are
+Tier 2 follow-ups in PLAN.md.
+
+**Rejected.** Mixamo clips kept local (usable, but a second "never commit" bucket
+for the thing a CC0 library already provides). QAL-licensed Quaternius packs
+(usable, not redistributable — a public repo is arguably exactly the
+"repackaging" §3(a) forbids). Image-to-3D from card art, even paid-tier and
+private (report 13 §13 question 2; the user said no). drei's `useGLTF` (suspends
+inside the canvas and defaults its DRACO decoder to
+`https://www.gstatic.com/draco/…`). Draco and KTX2 (a second decoder to host for a
+126 kB library; meshopt's decoder is 29 kB inside the installed `three`).
+
+---
+
+## D55 — A figure stands at its card's front edge, the card plane stays, and its width is clamped to the rank slot
+
+**2026-09-13** (M7 Tier 2 — user decision 2, given before T0; the disc is T1's,
+the width clamp T7's. Recorded 2026-09-27)
+
+**Decision.** Every battlefield creature keeps its card plane exactly where
+`layout.ts` puts it, and gains a figure at
+
+```
+standPointOf(p) = [ p.x, p.y, p.z − seatSign(p.seat) × 0.52 × (1 − 0.45 × p.row) ]
+```
+
+— `FIGURE_STANDOFF = 0.52` toward the table centre, the spec's number, falling off
+on a wrapped rank's second row; facing the other seat; `FIGURE_HEIGHT = 0.85`,
+then scaled so no figure is wider than **`FIGURE_MAX_WIDTH`** (the rank pitch less
+a gutter, 0.72) unless that would make it shorter than **`FIGURE_MIN_FIT`** (0.55
+of its nominal height). A **stand disc** — tinted by colour identity, sized by P/T — is
+drawn under **every** creature as one `InstancedMesh`; when no model resolves it
+is the whole figure. `figurePose` never gives more than `MAX_FIGURES = 12`
+figures a model; the surplus draw their discs. All of it is in `layout.ts`'s units
+(`standPointOf`, `Placement.row`) — no coordinate moved into `figures/`.
+
+The user's words were *"figures stand ON their card (0.52 units toward the table
+centre per the spec), the card plane stays"*. A card is one unit long, so a stand
+point 0.52 from its centre is its **front edge**: the figure's feet are at the
+edge of its own card and the card face behind it stays readable from the rest
+camera. That is report 13 §3.1's geometry, taken as given.
+
+**Rationale.** Report 13 §3.1's three reasons: the card stays readable from the
+steep rest camera; the figure stands where it will fight (the lunge is a short
+step toward the combat lane, not a leap over its own card); and it inherits
+`presence` for free — both Aerial Doombots stand at `y = 0.24` on their existing
+hover with no line of new code (evidence §4.2). The disc is always on because it
+is also the footprint that ties a figure 0.52 away back to its card, and it costs
+**one** draw call for the whole table — it is not an `Effect`, so 21 of them do
+not starve `MAX_LIVE_EFFECTS = 8`.
+
+The width clamp is correction (b) of T2's finding: normalising the Kenney chibi
+by *height* made it 0.97 units wide against a 0.796 pitch, so a crowded rank read
+as a row of shoulders. Measured over 12,029 poses (evidence §19.7): the agent and
+the insect now fit their slot exactly.
+
+**Known cost.** The drone does **not** fit, by the floor's own choice (a strict
+clamp would make it about a quarter of a unit tall beside a 0.63-unit agent):
+worst overlap 0.634 units, every
+overlapping pair has a drone in it — T9's narrower drone. And the row falloff is
+the spec's formula, which the verification pass found still puts a wrapped
+rank's **second-row figures inside the first row's cards**
+(`human-sideboard-7`, whose crowded ranks are discs). Both are Tier 2 follow-ups.
+
+**Rejected.** A figure centred *on* the card (it occludes the art from exactly
+the camera angle the table is read from). A figure that turns with its tapped
+card (it would lie down sideways; a tap is a *stance*, **D56**). A label over the
+figure (the card plane is the identity; a figure never carries a name, and never
+takes a click — `raycast` is cleared on every clone and `HitProxy` stays the only
+thing the raycaster sees). A smaller `FIGURE_HEIGHT` instead of the clamp (shrinks
+every figure to fix the widest).
+
+---
+
+## D56 — If the snapshot says it, it is a POSE; if only the event says it, it is a CUE
+
+**2026-09-13** (M7 Tier 2 — report 13 §1.3, applied in T1–T6. Recorded
+2026-09-27)
+
+**Decision.** **D50** generalised to everything Tier 2 draws. A manifestation is
+a **pose** — a pure function of the frame on screen, correct after `skip all`, a
+backwards scrub, a `resync` and a new `gameId` with no history — whenever the
+snapshot carries the fact; it is a **cue** — a transient that decays to identity —
+only when nothing but the event does.
+
+| pose (a pure function of the snapshot) | cue (a transition) |
+|---|---|
+| a creature has a figure at all | summon |
+| stance: `attacking` → `blocking` → `sick` → `crouch` (tapped) → `ready`, in that precedence | the attack lunge, the block interpose |
+| who blocks whom — from `state.combat`, never from the `blockers` event | damage `hit` |
+| an aura or equipment on its host, from `attachedToId`, including Quantum Reduction's 0.45× | the snap-on (`attach.snap`, with `params.hostClip`) |
+| a land's tile, its kind and its tapped dimming | the tap ripple, the untap ring, the rise |
+| the standing mana pool (`manaPool`) | a mote's flight (**D60**) |
+| a spell form at its caster's casting anchor, the ghosted creature spell | cast, strike, fizzle, shatter |
+| a tether from a stack item to its target | the strike along it (**D63**) |
+| the combat freeze: a stack during a combat phase holds the battlefield's clips (never the spell form, never the HUD, never a click) | — |
+
+**Rationale.** Two measurements, both in the evidence. **28 `attach` events
+against 985 frames showing an attachment**: an aura built as a cue is invisible
+97% of the time it should be on screen (§17.1: all 985 frames show it). And
+**`manaPool` is non-zero in 47 of 3,679 frames**: a mote built as a pose would
+almost never appear (§11.5). The rule decides both, the opposite way round, from
+the same question.
+
+**The case that proves the rule is a rule.** The `die` clip is requested and
+**never plays**: the snapshot that carries a `zone → graveyard` event already has
+the creature in the graveyard (2 of 45 leave-the-battlefield events arrive with
+the creature still on a battlefield, both face-down), so `figurePose` correctly
+gives it no figure. It was **not** worked around. Keeping a figure alive past the
+frame that says it is gone would be the renderer remembering something the engine
+did not say; the death is carried by `damage.lethal → hit` on a live body (19 of
+44 card-damage events) and the card's own dissolve. A real death collapse needs
+the engine to say "this creature is dying" one frame earlier than it does.
+
+**Rejected.** Auras as a cue (above). A figure that outlives its frame for the
+`die` clip (above). Blocking read from the `blockers` event (amendment **M7**: an
+unblocked attacker arrives as `{attackerId: n, blockerIds: [n]}`, and
+`state.combat` is the authority). A tapped figure that rotates with its card.
+
+---
+
+## D57 — The clip lane: the cue drives `action.time`, and every mixer tick in the arena is a literal zero
+
+**2026-09-26** (M7 Tier 2, T3 — report 13 §3.3–§3.6)
+
+**Decision.** Skinned animation is a **fifth transient on the `Stage`**:
+`setClip(cardId, {clip, t, weight, alias, key})` / `clearClip(cardId)`, decaying
+exactly like an `Offset`. `CueRunner`'s frame loop writes
+`action.time = t × duration`, sets the weight and calls **`mixer.update(0)`** —
+which, because `AnimationAction._updateTime` returns `this.time` untouched on a
+zero delta in `three@0.186.0`, is a deterministic *scrub*, not an advance. The
+lane is driven by the shared `cue()` builder, keyed by **cue id** through
+`figures/clips.ts`'s `CLIP_FOR` (23 of the registry's 57 cues), so `cues.json`'s
+existing 28 cards and 7 archetypes light up figures with no edit; a per-card
+override is `params.clip`, resolved alias → generic clip → *nothing* (a missing
+clip removes only what the model would have added). Clips **arbitrate** rather
+than compose: one request per card, chosen by a total order (`die > hit > block >
+attack > summon > shrink > grow > channel > crouch > idle`, ties by weight, then
+name) in **one** function, `clipBeats`, that `SceneStage` and `NullStage` both
+call; a request with the **same `key`** replaces its own. The resting stance is
+`REST_CLIP_FOR[stance]`. Under `prefers-reduced-motion` no clip is written at all.
+
+**Rationale.** The queue's clock is virtual, and pause, 0.5×–4×, step, skip,
+`flushAndSnap`, the three live budgets and reduced motion are all properties of
+it. A mixer on its own clock keeps none of them: a skipped cue would leave a
+creature frozen mid-lunge and a 4× replay would play its cues fast and its
+animations at 1×. Driving `action.time` from `t` means **the clip is the cue**.
+Mechanical, not remembered: `liveness.test.ts` asserts every `mixer.update(…)`
+under `web/src/arena/` has the literal argument `0` and lives in exactly
+`scene/CueRunner.tsx` and `scene/FigureLayer.tsx` (negative-controlled: `update(dt)`
+turns it red and nothing else notices), and that only the frame loop writes
+`action.time`. `replay-cues.test.ts` asserts `stage.clips` is **empty** after
+every one of the corpus's 3,293 batches, and `clips.test.ts` that a cue's clip
+weight is already 0 at `t = 1`, so a skipped cue lands on the stance.
+
+The `key` exists because the test double found a defect the real stage hid:
+"highest priority wins" let a cue's own request at `t = 0.5` refuse the same cue
+at `t = 1`, freezing the figure at the first weight it saw — invisible in
+`SceneStage`, which empties the map every frame.
+
+**Known cost.** In the human's own combat the transient clips mostly **do not
+play live**: Forge hands the human priority with each combat batch, the 250 ms
+awaiting-human budget applies, the batch would need compressing below
+`MIN_COMPRESSION` (0.25), and a snapped cue is applied at `t = 1`, where the clip
+weight is 0. What carries combat live is the pose (**D56**). Loosening that is a
+Tier 1 queue-policy change and a PLAN follow-up, not part of this decision.
+
+**Rejected.** drei's `useAnimations` (it *is* `useFrame((_, dt) =>
+mixer.update(dt))`, one per creature, and a wall clock per mixer). Clips composed
+by blending like offsets (a figure cannot be 30% dying and 70% attacking). Root
+motion (a clip that moves the root fights `figurePose ⊕ offset`, which owns
+position; the build's validator refuses one). Keying clips by event kind (Ant-Man's
+`attack.shrink` and Peggy's `attack.aegis` answer the same event differently).
+
+---
+
+## D58 — Idle breathing runs only while something else is animating
+
+**2026-09-13** (M7 Tier 2 — user decision 7, given before T0; built in T3.
+Recorded 2026-09-27)
+
+**Decision.** A resting figure's idle clip (`rig.restTime`) advances **only while
+the cue queue is not idle** — `CueRunner` passes that as `awake` — and only for
+the `ready` and `sick` stances (`BREATHING_STANCES`); `restTime` is *held*, not
+reset, when the queue drains, so a figure never snaps back to frame 0 of its
+idle. `frameloop='demand'` is unchanged.
+
+**Rationale.** Report 13 §1.5 and §8.3 rule 1: the correct number of frames while
+the AI thinks is **zero**, and one always-on motion costs the whole idle budget.
+The loop is already awake whenever a cue plays, so breathing then costs nothing,
+and the table still breathes during every animated moment. Verified by the
+verification pass: **0 renders in 5 s** on `human-comfort-13` frame 1262 (7
+figures), with bloom on and off.
+
+**Known cost.** Tier 1's `presence` **bob** (the Doombot, the Helicarrier,
+Wasp) already keeps the loop at `always` while such a card is on the table, and
+since Tier 2 every pose layer is bound on each of those frames too — so the idle
+cost of a table with a bobber rose, though the idle cost of a table without one
+did not. A PLAN follow-up.
+
+**Rejected.** Always-on breathing (a permanent 60 fps loop on a laptop that is
+otherwise at zero). No breathing at all (report 13's default; the user chose the
+middle path).
+
+---
+
+## D59 — Lands are procedural extruded rounded-rect slabs: three instanced kinds and one water shader
+
+**2026-09-26** (M7 Tier 2, T4 — user decision 5 gave the shape; the three kinds
+are T4's)
+
+**Decision.** A land on the battlefield draws a **tile under its card**: an
+`ExtrudeGeometry` rounded rectangle, bevelled, generated in code, one
+`InstancedMesh` per **kind** — `plateau` (Plains, Thriving Heath), `water`
+(Island, Thriving Isle; the one new shader, a `MeshBasicMaterial` patched with
+`onBeforeCompile` and one constant program cache key) and `slab` (anything else,
+tinted by colour identity) — plus one **rim** instance for a two-tone Thriving
+land. The ladder is per-name → land subtype → default, per-name first because
+both Thriving lands have the bare type line `Land`. The footprint is the rank
+pitch less a 0.005-unit gutter, so a row of lands reads as a paved strip; the top face
+is a constant `TILE_TOP_Y` measured from the table (terrain does not stack).
+**Tapped is a pose** (the tile dims to 0.42, from `card.tapped`); the ripple and
+the untap ring are cues (`land.tap`, `land.untap`, which replace `fx.ripple` on
+the five land entries of `cues.json`).
+
+**Rationale.** The user chose slabs over hex tiles. A kind is a geometry-and-
+material family; a crag and a grove are **tints**, which are per-instance and
+free, so report 13 §5.2's five kinds collapse to three and the probe decks'
+Mountains and Forests cost no draw call of their own. Measured: **20 lands of one
+kind are one draw call**, `g1.jsonl`'s 17 lands of two kinds with three duals are
+**three**, and the worst case is four. `tiles.test.ts` asserts, for every one of
+29,389 tile-instances, that a tile and its card agree about being tapped.
+
+**Known cost.** Two geometry defects were invisible to every test and found by
+looking (tiles under the table; `ExtrudeGeometry`'s bevel extends *beyond*
+`depth`, so the tiles drew over the cards) — the fix asks the bounding box rather
+than computing it. The land's *rise* was never photographed live (the live
+budget snaps it; **D57**'s known cost).
+
+**Rejected.** Hex tiles (the user). Five kinds (two draw calls for two lands not
+in this deck). Reflections, render targets or a second camera for the water (the
+arena has never rendered the scene twice).
+
+---
+
+## D60 — Mana is a mote from the tapped land to its controller's casting anchor, and `mote` is a seventh `Effect` kind with its own cap
+
+**2026-09-26** (M7 Tier 2, T4 — user decision 9 gave the reading; the effect
+kind and its budget are T4's)
+
+**Decision.** `land.tap` emits a **mote** that rises from the tapped tile and
+travels to **that land's controller's** casting anchor
+(`{kind:'casting', player}`, resolved by `layout.ts` to `{x: 1.9, y: 0.75, z:
+±3.6}`); `cast.rise` closes an inward ring at the caster's own anchor — the
+"consumed" beat. The mana standing in a pool is a **pose** read from
+`PlayerState.manaPool`. No land is ever linked to a spell. `mote` is a **seventh
+`Effect` kind**, and it has its own budget, `MAX_LIVE_MOTES = 12`, beside
+`MAX_LIVE_EFFECTS = 8`; `scene/effects.ts`'s fixed pool grows from 26 meshes to
+**38**. The `TapEvent` carries no player, so `cues/resolve.ts` reads the
+controller off the **snapshot subject** (`card.controller`, protocol §3.3).
+
+**Rationale.** Every step is a fact the engine stated: this land tapped, it
+belongs to this player, this player cast a spell. The reading — "the mana this
+player made went into the spell this player cast" — is true of the game even when
+a mote count is not exact, and no renderer claims a link the engine did not make.
+The flight is a cue rather than a pose because **`manaPool` is non-zero in 47 of
+3,679 board frames and never holds more than 2** — Forge's AI taps and spends
+inside one engine step (**D56**). The mote needs its own cap because a five-land
+mana ability emits five ripples *and* five motes in one step, which is 10 of 8.
+
+**This supersedes** report 09 §12.1's "six `Effect` kinds and no others" and the
+"fixed pool of 26 meshes" in CLAUDE.md's M7 convention 5 (updated with this
+entry). The pool is still fixed and still allocation-free.
+
+**Rejected.** Report 13 §5.4's literal land→spell beam as a declared heuristic
+(only **234 of 414** casts share a batch with a land tap, so 43.5% of spells would
+show nothing at all). Reading a mana *delta* by diffing consecutive `manaPool`s
+(the thing `events` exists to avoid). Sharing the eight-slot blended cap (the
+feature would have capped itself out on the day it shipped).
+
+---
+
+## D61 — Bloom is ON by default, lazily loaded, with a checkbox, `?bloom=0|1`, and a governor rung below the floor
+
+**2026-09-27** (M7 Tier 2, T7 — user decision 6: "default ON if the bench stays
+within budget on this machine, else default off with a toggle")
+
+**Decision.** One full-screen bloom pass (`@react-three/postprocessing` 2.19.1 +
+`postprocessing` 6.39.5, pinned exactly; threshold 0.62, above the table and the
+card paint) in `scene/Post.tsx`, which is **lazily imported** — the `Post-*.js`
+chunk (67.78 kB / 16.54 kB gzip) is fetched only when bloom is first on, and a
+negative-controlled liveness clause keeps it that way and keeps it the only post
+pass. `arena/perf.ts`'s **`BLOOM_DEFAULT` is `true`**. The toggle is a checkbox in
+the cue controls (no new layer widget, no keymap row); `?bloom=0` / `?bloom=1`
+set where it starts. And the DPR governor gained **a rung below its floor**: when
+it wants to step down and is already at `DPR_FLOOR` (0.6), `onFloor` turns bloom
+off, once per cooldown, with one `console.info`.
+
+**Rationale.** The condition was measured, not assumed. T7 found that headless
+Chromium reaches this machine's **GeForce GTX 1080** (`--use-angle=gl`;
+`tools/arena-bench.mjs --gpu gl`), and on it, at `g1.jsonl` index 316 with 11
+figures at render dpr 1: bloom off **p95 0.4 ms**, bloom on **p95 1.1 ms, max
+18.1–19.3 ms** over four warm runs and p95 1.0 ms, max 18.2 ms cold (the
+verification pass re-measured p95 0.7–0.8 ms, max ~18 ms, warm and cold) — inside
+report 09 §9.4's gate (p95 ≤ 20 ms, max ≤ 50 ms). The max passed only
+after `EffectPool.prime()` and the fields' `prime()` moved a lazy shader compile
+from mid-game to mount (bloom's render target needs its own variant of every
+material; before the fix, one frame per run landed at 52–62 ms).
+
+The rung below the floor is because the default is wrong for a weak GPU: under
+**SwiftShader** bloom is **p95 82.3 ms** at the floor, four times over the gate.
+With the default on there, the governor walks down, 39–41 frames exceed 50 ms
+(the last at frame 46), bloom goes off (programs 25 → 22), and a 15-second sample
+containing that transition reads p95 32.4 ms because the ladder then oscillates
+between 0.6 and 0.75.
+
+**Known cost.** The GPU number is **headless Chromium on the GTX 1080 through
+ANGLE-on-GL**, not a headed browser on the user's desktop compositor and not the
+integrated GPU report 13 §8 was sized for; the iGPU is still unmeasured. The
+**default SwiftShader bench run fails** until the governor intervenes. Bloom
+raises the scene to **25 programs** against report 13 §8.2's ≤ 14 (11 with bloom
+off; the difference is the composer's passes and render-target variants, paid
+once at mount). And with bloom on `gl.info.render` counts only the composer's
+last pass (`calls: 1`), so draw calls are read with it off.
+
+**This amends** the M7 governor's contract (DPR only): the ladder now has one
+rung that is not a resolution.
+
+**Rejected.** Default off (the user's condition was met on the named machine).
+A URL-only toggle (decision 6 asks for a toggle; the interrupted attempt had
+only the flag). Bloom in the arena chunk statically (16.5 kB gzip paid by every
+arena load that never turns it on). Leaving bloom on at the floor on a machine
+that is still late ("degrade, don't stutter", report 09 §9.2 rule 9).
+
+---
+
+## D62 — The duelists are two billboard silhouette busts at the HUD anchors; rigged avatars are deferred
+
+**2026-09-13** (M7 Tier 2 — user decision 8, given before T0; built in T7.
+Recorded 2026-09-27)
+
+**Decision.** Each seat gets a dark, unlit, billboarded **silhouette bust** at
+its existing `playerAnchorFor(seat)` HUD anchor — both drawn by **one**
+`InstancedMesh` from a canvas-generated texture (one draw call, where report 13
+§7 budgeted two). A bust **reacts**: `bustReactionInto` reads the live effects
+anchored at that player, so on `damage:player` or `life.tick` it recoils, grows
+7% and takes the hit's colour for exactly as long as the cue; a `vigour` term
+dims a worn-down seat, from `PlayerState.life`. The busts are **never** in the
+camera solver's required set.
+
+**Rationale.** Report 13 §7: rigged avatars stand at the table ends, which is
+exactly where the frame would have to grow to include them, and they carry no
+rule, no event and no piece of information; the camera already bent once
+(`HAND_BAND`) to keep the viewer's hand framed. A silhouette gives
+`damage:player` and `life.tick` a body to play on for zero rigs and zero clips.
+The number the player reads is still the HUD's.
+
+**Known cost.** At 1600 × 1000 the opponent's bust sits under the top-left
+decision panel and cue strip and is mostly hidden, and the viewer's takes the
+bottom-left corner (the verification pass, seen live and in replay). A PLAN
+follow-up.
+
+**Rejected.** Two rigged duelist avatars (Tier 2.5 at the earliest, and only
+after a play-test says anyone missed them). Putting the busts in the framing
+solver's required set (decoration may leave frame; the hand and the battlefield
+may not).
+
+---
+
+## D63 — The strike reads ONE frame of look-behind: the planner is handed the previous board
+
+**2026-09-27** (M7 Tier 2, T6)
+
+**Decision.** `Arena.tsx`'s intake keeps the last board it saw and passes it to
+`queue.enqueueBatch`; the planner's `resolved` case reads the **last** stack entry
+with that source card *in the previous frame* (the stack is bottom-first,
+protocol §3.3) and hands the cue its first target as numbers —
+`params.strikeCard` / `strikePlayer`, plus `strikeFoe`. The spell form then
+travels its tether and bursts at the target, and the target's figure takes a
+`hit` or `channel` clip. A flush passes no previous frame, so it has no aim, which
+is the snap a flush already is. Nothing outlives the cue built from it.
+
+**Rationale.** `ResolvedEvent` is `{cardId, fizzled}` — no stack id, no targets —
+and the item has left `state.stack` by the frame that carries the event. But an
+event batch **is** the transition from the previous frame to this one, and the
+previous frame said, in ids, "this spell is on top of the stack and it targets
+that". Measured over the corpus: of **412** resolutions, **333** have their item
+on the previous frame's stack (31 on the same frame), and **41** of those carry a
+target (**7** on the same frame); the 79 with no previous item are triggers that
+went on and off inside one engine step and discharge into their own card. That is
+not report 13 §5.4's refused 56.5%-coverage heuristic: an untargeted spell has
+nothing to strike. The targets are ids, which the redaction net passes because a
+number cannot be a name.
+
+**Known cost.** Engine order puts `attach` before `resolved` in an Aura's batch,
+so the Aura snaps onto its host and *then* the bolt flies; the planner never
+sorts, so this is reported rather than reordered.
+
+**Rejected.** Aiming from the current frame (7 of 412). Discharging at the
+caster's anchor only (the interrupted draft: the strike never reached a target).
+Remembering targets for longer than one frame (a shadow history of the stack is a
+second source of truth, **D50**'s defect).

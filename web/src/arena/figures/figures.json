@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "_file": "THE figure table (report 13 §3.7). Text, keyed by card name and archetype key, committed beside cues.json for the same reason cues.json is: it is art direction, not code.",
+  "_rule": "Tier 2 is ARCHETYPES. A per-card entry may choose a model and alias a clip; it may NOT introduce a model used by exactly one card — that is Tier 3 (§12).",
+  "_pose": "Every entry here keys off the SNAPSHOT — this card is on the battlefield and this is its type line — never off an event. That is what makes a figure survive `skip all`, a backwards scrub and a `resync` (§1.3).",
+  "_names": "Card keys are the wire's string VERBATIM, including the word `Token`: the wire says \"Soldier Token\", and a key of \"Soldier\" would never match (§2's measured trap).",
+
+  "archetypes": {
+    "_note": "The subtype rung is tried BEFORE the colour rung: a Robot Villain and a Human Spy Hero are both mono-white, and the colour key cannot tell them apart (§3.7).",
+
+    "creature/subtype:robot": { "model": "drone", "tint": "#9fb4c8" },
+    "creature/subtype:insect": { "model": "insect", "tint": "#9ec7f0" },
+    "creature/subtype:scientist": {
+      "model": "agent",
+      "tint": "#8ee0c0",
+      "_note": "T8 gives the scientist its own head; until then it is the agent mesh in the lab tint."
+    },
+    "creature/subtype:spy": { "model": "agent", "tint": "#f6f0d8" },
+    "creature/subtype:hero": {
+      "model": "agent",
+      "tint": "#f2d98c",
+      "_note": "T8 gives the hero its own mesh; the tint is what separates it today."
+    },
+    "creature/subtype:soldier": { "model": "agent", "tint": "#cfd6de" },
+
+    "_vehicle": "creature/subtype:vehicle is deliberately ABSENT: there is no carrier model in models.json yet, so the Helicarrier takes the disc and keeps the presence hover it already has (T10).",
+
+    "creature/W": { "model": "agent", "tint": "#f6f0d8" },
+    "creature/U": { "model": "agent", "tint": "#9ec7f0" },
+
+    "creature/*": {
+      "model": null,
+      "_note": "The declared fallback, not a hole (§9.4): the glow disc at the stand point, in the card's own colour, sized by P/T. Every probe-deck creature lands here and that is correct — they are not the deck this is for."
+    }
+  },
+
+  "cards": {
+    "Aerial Doombot": {
+      "model": "drone",
+      "clips": { "attack": "jet" },
+      "_note": "Also reached by creature/subtype:robot; the entry exists for the jet alias, not for the model."
+    },
+    "Giant-Sized Flying Ant": { "model": "insect", "scale": 1.35 },
+    "Ant-Man's Air Force": {
+      "model": "insect",
+      "scale": 0.7,
+      "_note": "One small insect for now. The swarm of five is T9 and needs a `swarm` key this schema does not have yet."
+    },
+    "Ant-Man, Reformed Rogue": {
+      "model": "agent",
+      "clips": { "attack": "shrink" },
+      "_note": "He attacks by getting smaller. T8 moves him to the hero mesh."
+    },
+    "Agent 13, Sharon Carter": {
+      "model": "agent",
+      "clips": { "attack": "pistolDraw" },
+      "_note": "Report 09 §12.2's \"the pose is the point, and the pose is a model\", answered with one alias and no new cue id."
+    },
+    "Nick Fury, Spymaster": {
+      "model": "agent",
+      "clips": { "channel": "radioCall" },
+      "_note": "The radio call is his own gesture; the agents he makes are the existing fx.agents cue and are NOT keyed here."
+    },
+    "Soldier Token": {
+      "model": "agent",
+      "tint": "#cfd6de",
+      "token": true,
+      "_note": "1,193 frame-instances in the corpus — the most-seen creature the deck makes."
+    }
+  },
+
+  "default": {
+    "model": null,
+    "_note": "A card with no entry anywhere, and every card whose identity this seat may not know (§1.4): the anonymous disc."
+  },
+
+  "lands": {
+    "_note": "T4's terrain (report 13 §5). THE SAME THREE-RUNG LADDER: per-name, then a land subtype, then `*`. Per-name comes first because BOTH Thriving lands have the bare type line `Land` and no subtype at all — measured over the corpus, 2,291 frame-instances of it.",
+    "_kinds": "A `tile` is a geometry-and-material family and there are three (plateau, water, slab), not §5.2's five: the difference between a crag and a grove is a TINT, which is per-instance and free, and a fourth InstancedMesh is a fourth draw call for two lands that are not in this deck. See figures/tiles.ts.",
+    "_pose": "Tapped is NOT here: it comes off the snapshot (`card.tapped`), so a board scrubbed to mid-turn shows the right lands spent with no cue history (§5.3).",
+
+    "Thriving Heath": {
+      "tile": "plateau",
+      "tint": "#e8e2cc",
+      "rim": "#9ec7f0",
+      "_note": "Two-tone: a white plateau with a blue band at the rim, which is what a dual land is."
+    },
+    "Thriving Isle": {
+      "tile": "water",
+      "tint": "#7fb6e8",
+      "rim": "#f6f0d8",
+      "_note": "The same tile in water, with the white band."
+    },
+
+    "subtype:plains": { "tile": "plateau", "tint": "#e8e2cc" },
+    "subtype:island": { "tile": "water", "tint": "#7fb6e8" },
+    "subtype:mountain": { "tile": "slab", "tint": "#d08464" },
+    "subtype:forest": { "tile": "slab", "tint": "#7fae76" },
+    "subtype:swamp": { "tile": "slab", "tint": "#8d86a6" },
+
+    "*": {
+      "tile": "slab",
+      "_note": "The declared fallback: a neutral slab in the card's own colour identity. Every non-basic land that is not a Thriving land lands here, and that is correct."
+    }
+  },
+
+  "landDefault": {
+    "tile": "slab",
+    "_note": "Reached only by a land whose identity this seat may not know — of which the corpus has none. The branch is explicit rather than incidental (§1.4)."
+  },
+
+  "attachments": {
+    "_note": "T5's auras and Equipment (report 13 §4). THE SAME THREE-RUNG LADDER: per-name, then an attachment subtype, then `*`. Every entry keys off the SNAPSHOT — `card.attachedToId` — never off the `attach` event, which fires 28 times in the whole corpus against 985 frames that show an attachment (§4.1).",
+    "_kinds": "`shrink` and `halo` are what T5 draws. `shell`, `circuit`, `glints` and `cocoon` are §4.3's per-card table and are T12's: they are in the vocabulary so adding them is a data edit, and until then scene/overlays.ts draws them as the halo.",
+    "_hosts": "Measured: 2,030 of 2,030 attachment instances in the corpus have a CREATURE host, so every entry here lands on a figure. An attachment on a land or an artifact draws its card and nothing else, which is correct.",
+
+    "Quantum Reduction": {
+      "kind": "shrink",
+      "hostScale": 0.45,
+      "strength": 0.95,
+      "_note": "944 frame-instances, the most-seen attachment in the corpus. The Quantum Realm takes it: the host figure is less than half its height and a ring closes at its feet. The SHRINK is the pose — it survives `skip all` because the snapshot still says the Aura is attached — and `fx.collapse` is the cast beat."
+    },
+
+    "subtype:aura": {
+      "kind": "halo",
+      "strength": 0.85,
+      "_note": "1,259 frame-instances of the type line `Enchantment - Aura`. Robotics Mastery is the other user; its circuit overlay is T12 and until then it is the halo in its own colour, which reads."
+    },
+    "subtype:equipment": {
+      "kind": "halo",
+      "metal": true,
+      "strength": 0.8,
+      "_note": "771 frame-instances of `Artifact - Equipment` — Super Suit and the S.H.I.E.L.D. Spy Kit. §4.4's metallic variant of the same halo: a harder, colder rim. The armour shell and the orbiting glints are T12."
+    },
+
+    "*": {
+      "kind": "halo",
+      "_note": "The declared fallback, and it is what makes the feature FINISHED rather than seeded (§4.4): an aura nobody wrote an entry for still visibly does something to the creature it is on, in its own colour."
+    }
+  },
+
+  "attachDefault": {
+    "kind": "halo",
+    "_note": "Reached only by an attaching card whose identity this seat may not know — of which the corpus has none. `manifestationOf` gives it the colourless grey, because \"something is attached here\" is public and what it is is not."
+  }
+}

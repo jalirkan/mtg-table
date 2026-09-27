@@ -40,7 +40,7 @@
 
 import { AdaptiveDpr, OrbitControls, PerspectiveCamera, Stats } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { artEntryFor, type ArtIndex } from '../art.ts';
 import { planKey, type KeyContext, type KeyEventLike } from '../keys.ts';
@@ -50,13 +50,28 @@ import type { AnswerFn } from '../render/AskModal.tsx';
 import { HotkeysOverlay } from '../render/HotkeysOverlay.tsx';
 import type { View } from '../useView.ts';
 import { CAMERA, CameraDirector, ORBIT_CLAMPS, REST_POSE } from './camera.ts';
+import { colourHex, colourIdOf } from './colour.ts';
 import { DecisionLayer } from './DecisionLayer.tsx';
 import cuesJson from './cues/cues.json';
+import figuresJson from './figures/figures.json';
+import modelsJson from './figures/models.json';
 import { cursorOf, intakeFor, type StreamCursor } from './cues/intake.ts';
 import { CueQueue, awaitingHuman, budgetFor, type QueueMode } from './cues/queue.ts';
 import { REGISTRY } from './cues/registry.ts';
 import { EMPTY_CUE_DATA, type CueData } from './cues/types.ts';
 import { mergeCueData, validateCues } from './cues/validate.ts';
+import { combatFreeze, manaMotes, spellForms, type ManaMote, type SpellForm } from './figures/casting.ts';
+import { duelistBusts, type DuelistBust } from './figures/duelists.ts';
+import { figurePose, type FigureLayout } from './figures/pose.ts';
+import { tilePose, type TileLayout } from './figures/tiles.ts';
+import {
+  EMPTY_FIGURE_DATA,
+  EMPTY_MODEL_DATA,
+  tileDataOf,
+  type FigureData,
+  type ModelData,
+} from './figures/types.ts';
+import { validateFigures, validateModels } from './figures/validate.ts';
 import {
   CARD_W,
   TABLE_HALF_X,
@@ -65,14 +80,21 @@ import {
   type Layout,
   type Placement,
 } from './layout.ts';
-import { DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, rungFrom, worstOf } from './perf.ts';
+import { BLOOM_DEFAULT, DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, rungFrom, worstOf } from './perf.ts';
 import { CardPlane } from './scene/CardPlane.tsx';
 import { CueRunner } from './scene/CueRunner.tsx';
+import { CastingField } from './scene/casting.ts';
+import { DiscField } from './scene/discs.ts';
+import { BustField } from './scene/busts.ts';
 import { EffectPool } from './scene/effects.ts';
+import { OverlayField } from './scene/overlays.ts';
+import type { FigureRigMap } from './scene/figureRigs.ts';
+import { FigureLayer } from './scene/FigureLayer.tsx';
 import { HitProxy } from './scene/HitProxy.tsx';
 import type { RigMap } from './scene/rigs.ts';
 import { SceneStage } from './scene/SceneStage.ts';
 import { Table } from './scene/Table.tsx';
+import { TileField } from './scene/tiles.ts';
 
 export interface ArenaProps {
   state: ClientState;
@@ -91,6 +113,14 @@ export interface ArenaProps {
   showGrid?: boolean;
   /** `?dpr=` — pin the render resolution and switch the adaptive ladder off. */
   dpr?: number | null;
+  /**
+   * `?bloom=1` / `?bloom=0`, or `null` for {@link BLOOM_DEFAULT} — user decision 6.
+   * Where the bloom toggle STARTS; the checkbox in the cue controls flips it.
+   *
+   * It is the one post pass the arena has and its default is **a measurement**,
+   * not a preference: see `scene/Post.tsx` and `perf.ts`.
+   */
+  bloom?: boolean | null;
   /**
    * `?glinfo=1` — put `gl.info`'s six counters on `window.__mtgArena.info()`
    * **in a production build**, for `tools/arena-bench.mjs` (§9.1's draw-call
@@ -115,10 +145,18 @@ const SPEEDS = [0.5, 1, 2, 4] as const;
 function DprGovernor({
   dpr,
   onStep,
+  onFloor,
 }: {
   /** The rung the canvas is on, so a step that cannot move is not taken. */
   dpr: number;
   onStep: (direction: -1 | 1) => void;
+  /**
+   * **T7 — the rung below the floor.** Called when frames are still late at
+   * {@link DPR_FLOOR}: the one optional pass the arena has (bloom, user decision
+   * 6) is what goes next. Returns whether it changed anything, so a governor with
+   * nothing left to drop stays exactly as it was.
+   */
+  onFloor?: () => boolean;
 }): null {
   const state = useRef({
     samples: [] as number[],
@@ -144,7 +182,19 @@ function DprGovernor({
    */
   const step = (now: number, direction: -1 | 1): void => {
     const stuck = direction < 0 ? dpr <= DPR_FLOOR + 1e-6 : dpr >= dprCeiling() - 1e-6;
-    if (stuck) return;
+    if (stuck) {
+      // "Degrade, don't stutter" (§9.2 rule 9), one rung further: bloom was
+      // measured at p95 82 ms under SwiftShader at this very floor (T7), so a
+      // machine that is still late here gets its bloom turned off — and the
+      // window restarts, so the next decision is about the table without it.
+      if (direction < 0 && onFloor !== undefined && onFloor()) {
+        state.lastStep = now;
+        state.samples = [];
+        state.at = 0;
+        state.skip = GOVERNOR.settleFrames;
+      }
+      return;
+    }
     state.lastStep = now;
     state.samples = [];
     state.at = 0;
@@ -224,6 +274,16 @@ function CameraRig(): JSX.Element {
   );
 }
 
+/**
+ * **The one post pass, lazily** (user decision 6). Nothing under `scene/Post.tsx`
+ * is imported unless bloom is actually on, so the composer is not in the arena
+ * chunk's critical path — measured: the arena chunk is 329.54 kB gzip with it
+ * statically imported and 312.9 kB without.
+ */
+const Post = lazy(() =>
+  import('./scene/Post.tsx').then((module) => ({ default: module.Post })),
+);
+
 /** The scene graph. Everything below `<Canvas>` and nothing above it. */
 function Scene({
   state,
@@ -236,11 +296,24 @@ function Scene({
   stage,
   pool,
   rigs,
+  figures,
+  figureRigs,
+  discs,
+  tiles,
+  tileField,
+  motes,
+  forms,
+  castingField,
+  overlays,
+  busts,
+  bustField,
+  models,
   director,
   waiting,
   mode,
   reducedMotion,
   glInfo,
+  primeRef,
 }: {
   state: ClientState;
   placed: Layout;
@@ -252,11 +325,24 @@ function Scene({
   stage: SceneStage;
   pool: EffectPool;
   rigs: RigMap;
+  figures: FigureLayout;
+  figureRigs: FigureRigMap;
+  discs: DiscField;
+  tiles: TileLayout;
+  tileField: TileField;
+  motes: ManaMote[];
+  forms: SpellForm[];
+  castingField: CastingField;
+  overlays: OverlayField;
+  busts: DuelistBust[];
+  bustField: BustField;
+  models: ModelData;
   director: CameraDirector;
   waiting: boolean;
   mode: QueueMode;
   reducedMotion: boolean;
   glInfo: boolean;
+  primeRef: { current: number };
 }): JSX.Element {
   const selectable = useMemo(
     () => new Set(state.input?.selectable.cardIds ?? []),
@@ -309,6 +395,34 @@ function Scene({
         />
       ))}
 
+      {/* **Tier 2's manifestation stage** (report 13 §3): a figure standing at
+          each battlefield creature's stand point, plus one instanced mesh
+          drawing every creature's disc. It mounts objects and registers rigs;
+          every transform in it is written by `CueRunner`'s single `useFrame`,
+          and a missing `figures.glb` simply leaves the discs. */}
+      {/* **T4's terrain** (report 13 §5): three instanced slabs and one rim, under
+          the cards. It is mounted before the figures so the painter's order in
+          the coplanar group is table → tile → card → disc → figure. */}
+      <primitive object={tileField.group} />
+
+      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} />
+
+      {/* **T4's casting anchor and T6's stack**: the floating mana of each seat,
+          §6.2's five spell forms, and §6.3's tethers to what each one targets.
+          Seven instanced meshes, none of them drawn while empty, every one a
+          pose. The creature form is the ghosted FIGURE above, not a shape here. */}
+      <primitive object={castingField.group} />
+
+      {/* **T5's attachment manifestations** (report 13 §4): the ring at an
+          enchanted figure's feet and the glow at its chest, for every attachment
+          the snapshot says is there. Two instanced meshes, their own budget. */}
+      <primitive object={overlays.group} />
+
+      {/* **T7's duelists** (report 13 §7, user decision 8): a billboarded
+          silhouette bust at each seat's HUD anchor. One instanced mesh, no rig,
+          and deliberately not in the camera solver's required set. */}
+      <primitive object={bustField.group} />
+
       {/* The Tier-1 primitive kit: 26 meshes, parked invisible, bound to live
           effects once a frame. Invisible objects are skipped by the renderer
           outright, so an idle pool costs nothing (§9.1). */}
@@ -318,12 +432,24 @@ function Scene({
         stage={stage}
         pool={pool}
         rigs={rigs}
+        figures={figures}
+        figureRigs={figureRigs}
+        discs={discs}
+        tiles={tiles}
+        tileField={tileField}
+        motes={motes}
+        forms={forms}
+        castingField={castingField}
+        overlays={overlays}
+        busts={busts}
+        bustField={bustField}
         placed={placed}
         director={director}
         awaitingHuman={waiting}
         mode={mode}
         reducedMotion={reducedMotion}
         glInfo={glInfo}
+        primeRef={primeRef}
       />
 
       <CameraRig />
@@ -386,6 +512,35 @@ function useCueData(): CueData {
   }, []);
 }
 
+/**
+ * The figure file and the model manifest (report 13 §3.2, §9.2), validated at
+ * import, exactly as {@link useCueData} validates the cue file and for the same
+ * reason: **a broken entry is dropped and the ladder falls through**, so an
+ * art-direction file can never stop the renderer. The complaints go to the
+ * console and to `web/test/models-data.test.ts`, which fails on them.
+ *
+ * `figures.json` is validated **against** `models.json`: a spec naming a model
+ * the manifest does not define is dropped, and dropping it is what makes that
+ * card fall through to the disc rather than to a figure that can never load.
+ */
+function useFigureData(): { figures: FigureData; models: ModelData } {
+  return useMemo(() => {
+    const modelResult = validateModels(modelsJson);
+    for (const problem of modelResult.errors) {
+      console.warn(`[arena] models.json ${problem.where}: ${problem.message} — entry dropped`);
+    }
+    const modelIds = new Set(Object.keys(modelResult.data.models));
+    const figureResult = validateFigures(figuresJson, { modelIds });
+    for (const problem of figureResult.errors) {
+      console.warn(`[arena] figures.json ${problem.where}: ${problem.message} — entry dropped`);
+    }
+    return {
+      figures: { ...EMPTY_FIGURE_DATA, ...figureResult.data },
+      models: { ...EMPTY_MODEL_DATA, ...modelResult.data },
+    };
+  }, []);
+}
+
 export default function Arena({
   state,
   art,
@@ -397,9 +552,27 @@ export default function Arena({
   showGrid = false,
   dpr: pinnedDpr = null,
   glInfo = false,
+  bloom = null,
 }: ArenaProps): JSX.Element {
   const [hoverId, setHoverId] = useState<number | null>(null);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
+  /**
+   * **User decision 6's toggle.** The URL flag (`?bloom=1` / `?bloom=0`) sets where
+   * it starts and {@link BLOOM_DEFAULT} — a measurement — is where it starts when the
+   * URL says nothing; the checkbox in the cue controls flips it for this page. It
+   * is presentation state like the cue speed, so it lives here and nowhere else.
+   */
+  const [bloomOn, setBloomOn] = useState<boolean>(bloom ?? BLOOM_DEFAULT);
+  /** T7's program warm-up counter — see `EffectPool.prime`. Two frames at mount. */
+  const primeRef = useRef(2);
+  /**
+   * The composer renders into its own target, which is a second set of program
+   * variants: warm them too when it mounts. **Stable**, because `Post` runs its
+   * mount effect on this identity and an inline arrow would re-prime every render.
+   */
+  const primeForComposer = useCallback(() => {
+    primeRef.current = 2;
+  }, []);
   /** `planKey`'s `inert` reason, shown for a moment in the strip. */
   const [hint, setHint] = useState<string | null>(null);
   /** Shared by CTRL+Q and the button: conceding takes two presses of either. */
@@ -417,9 +590,85 @@ export default function Arena({
   const mode: QueueMode = onAct === null ? 'replay' : 'live';
   const reducedMotion = useReducedMotion();
   const data = useCueData();
+  const figureData = useFigureData();
   // §5.1's one exception: `presence` is a LAYOUT rule, so it goes in here and
   // not into the queue. That is what makes the Helicarrier survive `skip all`.
   const placed = useMemo(() => layout(state, data.presence ?? {}), [state, data]);
+  /**
+   * §3.8 — the manifestation stage, over the layout that is already computed.
+   *
+   * It takes `state.board.combat` and not the `blockers` event, because
+   * `state.combat` is the authority on who blocked what (amendment **M7**): an
+   * unblocked attacker arrives as its own blocker, and a pose derived from the
+   * event would have to un-derive that.
+   */
+  /**
+   * **T6's combat freeze is a pose** (report 13 §6.4): a stack during a combat
+   * phase, measured at **66 of the corpus's 3,679 board frames (1.8%)**. It is
+   * computed from the snapshot by `combatFreeze` and passed in, because
+   * `figurePose` takes a `Layout` rather than a `ClientState` and a phase name is
+   * not a coordinate.
+   */
+  const frozen = useMemo(() => combatFreeze(state.board), [state.board]);
+  const figures = useMemo(
+    () =>
+      figurePose(placed, state.board?.combat ?? null, figureData.figures, {
+        frozen,
+        // T7's width clamp needs the model's measured width/height ratio, and the
+        // manifest is where the asset pipeline put it. Without it a pose is exactly
+        // T1's — a square figure — which is the fallback a checkout with no
+        // manifest gets.
+        models: figureData.models,
+      }),
+    [placed, state.board?.combat, figureData, frozen],
+  );
+  /**
+   * T4 — **the terrain, and the casting anchor**, both pure functions of the
+   * frame on screen (report 13 §5.1, §5.4). Every one of the three survives
+   * `skip all`, a backwards scrub and a `resync`, because none of them is
+   * derived from a history.
+   */
+  const tiles = useMemo(
+    () => tilePose(placed, tileDataOf(figureData.figures)),
+    [placed, figureData],
+  );
+  const seatOfPlayer = useCallback(
+    (playerId: number): 'you' | 'opp' =>
+      placed.viewerId === null || playerId === placed.viewerId ? 'you' : 'opp',
+    [placed.viewerId],
+  );
+  const motes = useMemo(
+    () => manaMotes(state.board, seatOfPlayer),
+    [state.board, seatOfPlayer],
+  );
+  const forms = useMemo(() => {
+    // §3.3: a spell on the stack lives in `state.stackCards`, **never** in
+    // `players[].zones` — the stack is not one of the six zones a player carries.
+    const sourceOf = (cardId: number | null): AnyCard | null =>
+      cardId === null ? null : (state.board?.stackCards.find((c) => c.id === cardId) ?? null);
+    return spellForms(
+      state.board,
+      seatOfPlayer,
+      (cardId) => {
+        // The form takes the source card's colour identity through the arena's
+        // one colour table. A `null` source or a card this seat may not see is
+        // colourless, which is the honest answer rather than a guess.
+        const cost = (sourceOf(cardId) as { manaCost?: string | null } | null)?.manaCost ?? null;
+        return colourHex(colourIdOf(cost));
+      },
+      // §6.2's form ladder reads the source card's own type line, through
+      // `cues/archetype.ts`'s `primaryTypeOf` — the app's one definition of it.
+      sourceOf,
+    );
+  }, [state.board, seatOfPlayer]);
+  /**
+   * **T7's duelists** (report 13 §7; user decision 8). A pose like every other:
+   * two seats, read from the snapshot, with no rig and no clip.
+   */
+  const busts = useMemo(
+    () => duelistBusts(state.board, seatOfPlayer),
+    [state.board, seatOfPlayer],
+  );
   const hovered = useMemo(
     () => placed.placements.find((p) => p.cardId === hoverId) ?? null,
     [placed, hoverId],
@@ -431,8 +680,17 @@ export default function Arena({
   // pool of effect primitives. None of them holds a card, a name or an id from
   // a frame that has gone (P5).
   const rigs = useRef<RigMap>(new Map()).current;
+  const figureRigs = useRef<FigureRigMap>(new Map()).current;
   const stage = useMemo(() => new SceneStage(placed), []); // eslint-disable-line react-hooks/exhaustive-deps
   const pool = useMemo(() => new EffectPool(), []);
+  const discs = useMemo(() => new DiscField(), []);
+  /** T4's two fields. Both are pools of instanced meshes and hold no card (P5). */
+  const tileField = useMemo(() => new TileField(), []);
+  const castingField = useMemo(() => new CastingField(), []);
+  /** T5's. A pose layer with its own budget, never the cue engine's eight slots. */
+  const overlays = useMemo(() => new OverlayField(), []);
+  /** T7's. One instanced mesh for both seats, and it holds no card (P5). */
+  const bustField = useMemo(() => new BustField(), []);
   /**
    * §8's camera lane. One per arena, and like the queue it is *presentation*:
    * it holds a home pose and at most one live move, and `flushAndSnap()` resets
@@ -464,6 +722,11 @@ export default function Arena({
   }, [queue, mode, reducedMotion, data]);
 
   useEffect(() => () => pool.dispose(), [pool]);
+  useEffect(() => () => discs.dispose(), [discs]);
+  useEffect(() => () => tileField.dispose(), [tileField]);
+  useEffect(() => () => castingField.dispose(), [castingField]);
+  useEffect(() => () => overlays.dispose(), [overlays]);
+  useEffect(() => () => bustField.dispose(), [bustField]);
 
   /**
    * **The dev handle** (§10.7, "not automated, and honest about it").
@@ -492,8 +755,60 @@ export default function Arena({
     // `__mtgArena.gl` was `undefined` on a fresh load and present after a hot
     // update, which is the most confusing possible version of this bug. It is a
     // dev-only handle on `window`; leaving it there costs nothing.
-    handle.__mtgArena = { ...(handle.__mtgArena ?? {}), queue, stage, pool, rigs, director };
-  }, [queue, stage, pool, rigs, director]);
+    handle.__mtgArena = {
+      ...(handle.__mtgArena ?? {}),
+      queue,
+      stage,
+      pool,
+      rigs,
+      director,
+      figureRigs,
+      discs,
+      // Tier 2's half of the tuning loop: the poses of the frame on screen,
+      // which is what "which archetype is standing where" is read out of.
+      figures,
+      figureData,
+      // T4's: the terrain and the casting anchor. `tileField.counts()` and
+      // `castingField.counts()` are how the draw-call claims in
+      // `docs/evidence/m7-tier2.md` are read out of a real frame.
+      tiles,
+      tileField,
+      motes,
+      forms,
+      castingField,
+      // T5's overlays and T6's freeze: `overlays.counts()` and `frozen` are how
+      // the evidence document's numbers are read out of a real frame.
+      overlays,
+      frozen,
+      busts,
+      bustField,
+      // T6's synthetic-event loop: the corpus has 0 fizzles, so the evidence for
+      // `resolved.fizzle` is a hand-built event enqueued against the frame on
+      // screen — `queue.enqueueBatch([...], state)` needs the `ClientState` the
+      // ladder reads its subject from. DEV only, like everything on this handle.
+      state,
+    };
+  }, [
+    state,
+    queue,
+    stage,
+    pool,
+    rigs,
+    director,
+    figureRigs,
+    discs,
+    figures,
+    figureData,
+    tiles,
+    tileField,
+    motes,
+    forms,
+    castingField,
+    overlays,
+    frozen,
+    busts,
+    bustField,
+  ]);
 
   /**
    * **The keyboard, from the one table** (`web/src/keys.ts`, CLAUDE.md M4
@@ -632,10 +947,22 @@ export default function Arena({
   // scene is then exactly `layout(state)` — which is why scrubbing backwards
   // through a replay is correct by construction rather than by special case.
   const cursor = useRef<StreamCursor>({ eventSeq: -1, framesApplied: -1, gameId: null });
+  /**
+   * **The board of the last frame the intake saw** — T6's strike needs the other
+   * end of the transition a batch describes (`cues/resolve.ts`'s `strikeParams`:
+   * a `resolved` event names no target, and the frame before it does).
+   *
+   * It is replaced on every frame and read only by the next `enqueueBatch`, so it
+   * is one frame of look-behind and not a history: a flush hands the planner
+   * nothing, which is the snap a flush already is.
+   */
+  const previousBoard = useRef<ClientState['board']>(null);
   useEffect(() => {
     const next = cursorOf(state);
     const action = intakeFor(cursor.current, next);
     cursor.current = next;
+    const previous = previousBoard.current;
+    previousBoard.current = state.board;
     if (action === 'flush') {
       queue.flushAndSnap();
       pool.clear();
@@ -650,7 +977,7 @@ export default function Arena({
       queue.retimeToBudget(budgetFor(state, mode));
       return;
     }
-    queue.enqueueBatch(state.events, state);
+    queue.enqueueBatch(state.events, state, undefined, previous);
   }, [state, queue, pool, mode, director]);
 
   return (
@@ -699,6 +1026,14 @@ export default function Arena({
             onStep={(direction) => {
               setDpr((current: number) => rungFrom(current, direction));
             }}
+            onFloor={() => {
+              if (!bloomOn) return false;
+              setBloomOn(false);
+              console.info(
+                '[arena] frames still late at the lowest render resolution — bloom turned off (tick it in the cue controls to bring it back)',
+              );
+              return true;
+            }}
           />
         )}
         {/* **Dormant in this configuration, and kept so the next reader knows
@@ -725,12 +1060,39 @@ export default function Arena({
           stage={stage}
           pool={pool}
           rigs={rigs}
+          figures={figures}
+          figureRigs={figureRigs}
+          discs={discs}
+          tiles={tiles}
+          tileField={tileField}
+          motes={motes}
+          forms={forms}
+          castingField={castingField}
+          overlays={overlays}
+          busts={busts}
+          bustField={bustField}
+          models={figureData.models}
           director={director}
           waiting={waiting}
           mode={mode}
           reducedMotion={reducedMotion}
           glInfo={glInfo}
+          primeRef={primeRef}
         />
+        {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three
+            things about this line are deliberate. It is **last inside the
+            `<Canvas>`**, because `<EffectComposer>` takes over the render loop
+            from fiber and anything mounted after it would draw into a target
+            nothing presents. It is **lazy**, so a table with bloom off never
+            downloads the 16.6 kB gzip of `postprocessing` — the same argument
+            **D49** makes for the whole arena chunk, one level in. And whether it
+            starts on is a measurement, not a preference (`perf.ts`'s
+            BLOOM_DEFAULT; the governor's `onFloor` drops it on a slow machine). */}
+        {bloomOn && (
+          <Suspense fallback={null}>
+            <Post onMount={primeForComposer} />
+          </Suspense>
+        )}
         {showStats && <Stats />}
       </Canvas>
 
@@ -748,7 +1110,7 @@ export default function Arena({
           concedeArmed={concedeArmed}
           onArmConcede={setConcedeArmed}
         />
-        <CueControls queue={queue} />
+        <CueControls queue={queue} bloom={bloomOn} onBloom={setBloomOn} />
         <ArtCredit art={art} placements={placed.placements} hovered={hovered} />
         {hotkeysOpen && (
           <HotkeysOverlay
@@ -776,7 +1138,15 @@ export default function Arena({
  * followed by `end()`: the scene lands on `layout(state)`, which is the board
  * the engine actually described (§5.1).
  */
-function CueControls({ queue }: { queue: CueQueue }): JSX.Element {
+function CueControls({
+  queue,
+  bloom,
+  onBloom,
+}: {
+  queue: CueQueue;
+  bloom: boolean;
+  onBloom: (on: boolean) => void;
+}): JSX.Element {
   const [, bump] = useReducer((n: number) => n + 1, 0);
   useEffect(() => queue.onChange(bump), [queue]);
 
@@ -840,6 +1210,20 @@ function CueControls({ queue }: { queue: CueQueue }): JSX.Element {
             </option>
           ))}
         </select>
+      </label>
+      {/* User decision 6: bloom's default is a measurement (`perf.ts`'s
+          BLOOM_DEFAULT — ON on this machine's GTX 1080), and this is the toggle
+          that decision asks for. It is a renderer setting and reaches nothing but
+          the post pass. */}
+      <label title="The one post pass: the holographic layer glows. The DPR governor turns it off by itself on a machine that cannot afford it — see perf.ts">
+        <input
+          type="checkbox"
+          checked={bloom}
+          onChange={(event) => {
+            onBloom(event.currentTarget.checked);
+          }}
+        />{' '}
+        bloom
       </label>
       <span className="muted">
         {pending > 0 ? `${String(pending)} step${pending === 1 ? '' : 's'} · ${String(remaining)} ms` : 'idle'}
