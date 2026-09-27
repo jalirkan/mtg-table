@@ -224,6 +224,9 @@ printf "\n\n\n\nq\n" | ./bridge/run.sh mtgtable.MtgTable --transport console \
 npm --prefix web run dev:replay             # opens /?replay=games/g1.jsonl
 npm --prefix web test && npm --prefix web run build   # `test` = node --test THEN vitest
 node tools/fetch-art.ts                     # deck -> web/public/art.json (M4 needs it)
+node tools/card-library/build.ts            # D90: Scryfall bulk + MSH/MSC -> var/cards/cards.sqlite
+node tools/card-library/images.ts --all-decks   # D90: cache every decks/ card's image
+npm --prefix web run dev                    # then /#cards — the card browser (dev server ONLY)
 ./tools/ten-games.sh                        # M5's exit criterion; check-all runs it as 9c
 ./tools/ten-games.sh --games 3              # the first three rows, for a quick look
 ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt \
@@ -511,7 +514,10 @@ together, and each is a defect that was actually hit.
    an eleventh importer is a decision, and `grep -rl "from './CardTile.tsx'"
    web/src` is how you check it. **M7's arena has its own single card renderer,
    `arena/scene/CardPlane.tsx`** — the same rule for a different renderer, and
-   without the `data-card-name` backstop; see the M7 conventions below.
+   without the `data-card-name` backstop; see the M7 conventions below. **The card
+   browser (`#cards`) draws library cards with `cards/CardView.tsx`** and never
+   imports `CardTile` (**D94**, *Card library* below) — public card data, not a
+   game, so it is not an eleventh importer.
 3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
    set-valued.** Keys are `c:<cardId>` / `p:<playerId>` / `s:<stackId>` because
    **the id spaces collide** — 40 frames in the committed corpus have a
@@ -556,13 +562,16 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **704 `node --test` + 79 vitest (5 files)** standalone
-as of **M7 Tier 2's third slice** after its second fix pass (698 after its first,
+`npm --prefix web test` is **797 `node --test` + 91 vitest (6 files)** standalone
+as of **the card library (D90, 2026-09-27)** — its four suites `cards-lib` (49),
+`cards-api` (15), `cards-ui` (29) and the vitest `cards-render` (12) — and was
+**704 + 79 (5 files)** as of **M7 Tier 2's third slice** after its second fix pass (698 after its first,
 690 before that, 655 after the second slice, 610 + 79 after the first slice,
 534 + 79 at M7 Tier 1, 456 + 75 at M6), and **714 / 706 pass / 0 fail / 8
 skipped** inside `check-all.sh` (708 / 700 after slice 3's first fix pass, 665 / 657
 after slice 2, 662 / 654 before slice 2's second fix pass, 620 / 612 after
-Tier 2's first slice, 544 / 536 at Tier 1), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
+Tier 2's first slice, 544 / 536 at Tier 1; D90's 93 new `node --test` cases
+should make it 807 / 799, **not yet measured inside the gate**), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
 produced and the ws-log suite skips the candidates it does not name. M7's eight
 suites (`layout`, `colour`, `replay-cues`, `cues-exhaustive`, `camera`,
 `liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's eight (`figures`,
@@ -1101,6 +1110,89 @@ PLAN.md's *Slice 3* has the status and the fourteen follow-ups, and README's *Ti
    planes from the three seat-safe views and every host-centre click hits the host.
    Never "route" a click to a host instead — that is gating on `selectable`.
 
+## Card library — the conventions D90–D94 added
+
+Six, and the thesis is one sentence: **public card data, a tool beside the game,
+and nothing the game depends on.** On the user's request of 2026-09-27 README's
+card-library NON-GOAL was lifted *in part* (**D90**): a local index of every card
+(`tools/card-library/`) and a browser for it (`#cards`, `web/src/cards/`) exist as
+dev-server tools. Report 03 §4 is the spec, `tools/card-library/README.md` the
+manual, `docs/evidence/card-library.md` what was measured, and PLAN.md's *The card
+library and the card browser* the status and twelve follow-ups. Hard rule 8 is the
+engine wire's and does not govern public card data — but the web client's own
+conventions all still hold, and the list below is where they bite.
+
+1. **It is a tool, not a package, and the game never reads it** (**D90**,
+   **D91**). No `package.json`, no npm dependency: `node:sqlite` with FTS5, `fetch`,
+   `node:zlib` and type stripping, run from the repo root (hard rule 9). Everything
+   it writes is under the gitignored `var/cards/`; the only Scryfall data in git is
+   `fixtures/cards/`, **reduced to the fields the library reads** and regenerated
+   by `make-fixture.ts`, never hand-edited (whether it is committed at all is
+   PLAN.md question 15). The engine, the bridge, the board and the arena do not
+   import it, and the board still draws from `art.json` — a board that needed the
+   library would need a dev-only route to render a game.
+2. **One door to Scryfall.** `tools/card-library/scryfall.ts`'s `ScryfallClient`
+   is the only thing in the library that makes a request: `config.json`'s
+   `scryfallUserAgent` plus `Accept: application/json` on every API call, 2 req/s
+   on `/cards/search|named|random|collection` and 10 elsewhere, a 429 honoured for
+   its `Retry-After`, and a request log every run prints as measured rates. A new
+   call goes through it, never through a bare `fetch`. Anything at scale is the
+   bulk file; set icons are downloaded, never hotlinked; `query.ts` has **no
+   network in it**, so a search never reaches Scryfall. The committed User-Agent
+   still carries a placeholder contact (question 16) and the tools say so on every
+   run that talks to Scryfall.
+3. **A build writes a fresh file** (**D91**): `cards.sqlite.building`, then
+   `rename()`, with a `content_sha256` in `meta`. Never edit the index in place and
+   never migrate it — a schema change is a rebuild (`build.ts --offline`). Two
+   builds from the same data must carry the same digest; that is the idempotence
+   check.
+4. **The route is dev-only, and it never fetches** (**D92**). `/cards/api/*` and
+   `/cards/img/*` are mounted in `vite.config.ts`'s `configureServer` and nowhere
+   else — not `vite preview`, not the build (`cards-ui.test.ts` asserts it). An
+   image miss is a **404**; the page then hot-links the CDN URL itself, and with
+   neither draws a text frame. A route that fetched on a miss would be a Scryfall
+   proxy, which is what the terms warn against and what D90 kept out. `devApi.ts`
+   is Node-only — no browser module imports it — and loads `query.ts` with a
+   runtime `import()`, so a missing or half-built index is a **state**, never a
+   crash. **Every filter goes into the SQL before the scan cap**
+   (`CardLibrary.search`'s `sets`, `oracleIds`, `colorsAny`): filtering after the
+   1,000-hit cap made `creature` over MSH + MSC answer 1 card and `creature` in the
+   deck 0, and `cards-api` holds the fix with an injected cap (negative-controlled:
+   with the filters taken back out of the SQL, three of its tests fail). A new
+   filter goes into the library first, and the page tests `approximate` before
+   `total === 0`.
+5. **The image cache is keyed by Scryfall id + size + face** (**D93**).
+   `store.ts`'s `imagePathFor` is THE path — `var/cards/images/<id>/<size>[.back].<ext>`
+   — and throws on anything that is not a UUID; `model.ts`'s `imageSides` is THE
+   multi-face rule (top-level `image_uris` first, the faces only when it is
+   absent; faces-first is a negative control that fails three tests). Never key
+   an image by name. `.part` then `rename()`, never fetched twice. The browser
+   shows **whole card images only** (`normal`, never `art_crop`), never cropped,
+   stretched or filtered, with `Illus. <artist>` under **every** image, the
+   copyright line in the detail, and a credit bar that wraps rather than clips.
+6. **`CardView` is the browser's card renderer, and it is not `CardTile`**
+   (**D94**). Nothing under `cards/` imports `render/CardTile.tsx` (its importer
+   list stays closed at ten), anything from `render/` or `arena/`, or a stylesheet;
+   `Board.tsx`, `CardTile.tsx` and `Arena.tsx` never reach into `cards/`; `main.tsx`
+   reaches the browser only through `lazy()` — all asserted by `cards-ui.test.ts`.
+   The browser keeps the client's rules **per surface**: its own keymap table
+   (`cards/keys.ts` — `web/src/keys.ts` is the board's and the arena's, and
+   `keys.test.ts` would demand its chords in the board's `?` overlay), its rules
+   appended to `styles.css`, its logic in pure `.ts` for `node --test`, and its
+   components in `hooks-order.test.ts`'s scan. **`#cards` unmounts the mode app**
+   rather than hiding it, because a hidden board's `window` keydown listeners would
+   press OK or Cancel in a live game from under the browser; the socket is
+   page-scoped, a replay resumes at its frame (`replayCursors`), and the back link
+   returns to the renderer you came from.
+
+What stays a no, from D90: a package, a production route, any proxy of Scryfall,
+any deck editing (the *copy .dck line* button copies; nothing writes a deck, and
+it writes `|SET` only for MSH and MSC, the two sets whose code is checked against
+Forge's), and any rules logic — legalities are Scryfall's data, displayed. The real
+build needs the network and is **not** in `check-all.sh`; the four suites
+(`cards-lib` 49, `cards-api` 15, `cards-ui` 29, the vitest `cards-render` 12) run
+offline inside `npm --prefix web test` over `fixtures/cards/`.
+
 ## Treat forge-src as prose
 
 A Forge **2.0.15-SNAPSHOT** source checkout may be available in the session
@@ -1163,7 +1255,8 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/05-architecture-synthesis.md` | **The spec.** Read in full before any design work. |
 | `docs/research/01-forge-engine-seam.md` | The `IGuiGame` / `AbstractGuiGame` seam. |
 | `docs/research/02-forge-build-and-headless.md` | Build and the **verified headless boot recipe (§4)**. |
-| `docs/research/03-scryfall-card-library.md` | Scryfall, art resolution, the MSH/MSC split. |
+| `docs/research/03-scryfall-card-library.md` | Scryfall, art resolution, the MSH/MSC split — and §4, **the spec the card library was built to** (D90): endpoints, headers, rate limits, the bulk format, the multi-face rule, the index and the image cache. |
+| `tools/card-library/README.md` | **The card library (D90)**: the build, the image cache, the query CLI, what is on disk under `var/cards/`, Scryfall's terms as code, and what is not done. `docs/evidence/card-library.md` is what was measured, the card browser (`#cards`, `web/src/cards/`) included. |
 | `docs/research/04-prior-art-and-licensing.md` | Prior art, GPL/AGPL analysis, Fan Content Policy. |
 | `docs/research/06-hidden-information-audit.md` | **Every reveal path in Forge**, its wire channel, its leak signature; the basis of hard rule 8 and of `tools/check-redaction.mjs`'s assertions. |
 | `docs/research/07-wireguigame-spec.md` | **The M2 spec.** 37 abstract members, the five threads, the eleven ask kinds, the null defaults. |
@@ -1175,8 +1268,8 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
-| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so are Tier 2's first slice (T0–T7), its second (T8 and the camera views) and its third (T9–T12, per-card identity): *M7 Tier 2* has the three slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). |
-| `DECISIONS.md` | The **eighty-nine** load-bearing decisions, dated, with rejected alternatives (D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so are Tier 2's first slice (T0–T7), its second (T8 and the camera views) and its third (T9–T12, per-card identity): *M7 Tier 2* has the three slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). Off the plan, *The card library and the card browser* (**D90–D94**, 2026-09-27) has that tool's status, commands and twelve follow-ups, and questions 15–17 are its: commit `fixtures/cards/`?, the `scryfallUserAgent` contact, and every MSH + MSC image. |
+| `DECISIONS.md` | The **ninety-four** load-bearing decisions, dated, with rejected alternatives (**D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
@@ -1186,7 +1279,10 @@ new dated entry to `DECISIONS.md` — do not silently edit an old one.
 
 `README.md`'s NON-GOALS section is binding: no multiplayer, no deck builder, no
 card-library package, no accounts, no packaging, no delta protocol, localhost
-only, **no rules logic in the client**. The research reports describe a much
+only, **no rules logic in the client**. (**D90** lifted the card-library line in
+part: a local index under `tools/card-library/` and the `#cards` browser exist as
+dev-server tools — still no package, no production route, no proxy of Scryfall,
+and nothing the engine, the bridge or the board depends on.) The research reports describe a much
 larger system than we are building. Anything not on the straight line from
 `IGuiGame` to a DOM node is an issue, not a file.
 

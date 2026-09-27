@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin, type ViteDevServer } from 'vite';
 
+import { createCardsMiddleware } from './src/cards/devApi.ts';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..');
 /** Committed recordings live outside web/, so the dev server mounts them. */
@@ -54,8 +56,37 @@ function fixturesPlugin(): Plugin {
   };
 }
 
+/**
+ * The card browser's data route (`#cards`, web/src/cards/): `/cards/api/*` and
+ * `/cards/img/<scryfallId>/<size>`, answered from the local card library in
+ * `var/cards/` (docs/evidence/card-library.md).
+ *
+ * **Dev server only** — `configureServer` and nothing else: a production build
+ * has no Node behind it, and the page says so rather than showing an empty
+ * library. It reads the SQLite index and the image cache and never talks to
+ * Scryfall; a cache miss is a 404 and the page falls back to the CDN URL.
+ */
+function cardsPlugin(): Plugin {
+  return {
+    name: 'mtg-table-cards',
+    configureServer(server: ViteDevServer) {
+      // `MTG_TABLE_CARDS_DB=var/cards/test.sqlite` points the route at another
+      // index (a fixture build, or a path that does not exist — the empty state).
+      const db = process.env['MTG_TABLE_CARDS_DB'];
+      const { handle, backend } = createCardsMiddleware(
+        REPO_ROOT,
+        db === undefined || db.trim() === '' ? {} : { dbPath: resolve(REPO_ROOT, db) },
+      );
+      server.middlewares.use(handle);
+      server.httpServer?.once('close', () => {
+        backend.close();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), fixturesPlugin()],
+  plugins: [react(), fixturesPlugin(), cardsPlugin()],
   server: {
     port: 5173,
     strictPort: false,

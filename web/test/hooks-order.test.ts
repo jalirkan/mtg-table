@@ -32,6 +32,10 @@
  * it either. It now walks every `.tsx` under `web/src/render/` and
  * `web/src/arena/`, finds each component's own top-level `return`s by counting
  * braces, and flags any `use*(` below the first one.
+ *
+ * **The card browser's tree (`web/src/cards/`, `#cards`) joined it on
+ * 2026-09-27**, so its components — `CardBrowser`, `CardDetail`, `CardView`,
+ * `Pips` — are held by the same scan rather than by hand.
  * ---------------------------------------------------------------------------
  */
 
@@ -40,7 +44,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
-const TREES = ['../src/render/', '../src/arena/'];
+const TREES = ['../src/render/', '../src/arena/', '../src/cards/'];
 
 /** Every hook this repo calls, plus React's own. `use…` in a comment is blanked. */
 const HOOK =
@@ -222,7 +226,7 @@ test('no React hook is called after a component’s early return', () => {
   // The two files whose defect wrote this test, by name, so a rename or a move
   // cannot quietly drop the coverage.
   const paths = files.map((f) => f.path);
-  for (const required of ['render/Board.tsx', 'arena/Arena.tsx', 'arena/scene/CardPlane.tsx']) {
+  for (const required of ['render/Board.tsx', 'arena/Arena.tsx', 'arena/scene/CardPlane.tsx', 'cards/CardBrowser.tsx']) {
     assert.ok(paths.includes(required), `${required} is not being scanned — move this test with it`);
   }
 

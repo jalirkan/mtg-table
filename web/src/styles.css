@@ -3249,3 +3249,571 @@ button.zonerow__open:hover {
   gap: 0.35rem;
   margin: 0;
 }
+
+/* ==========================================================================
+ * The card browser — `#cards` (web/src/cards/, docs/evidence/card-library.md)
+ *
+ * A page of its own over the local card library: a control row, a results
+ * grid and a detail aside. Every class is `cardlib…` so nothing here can reach
+ * the board's `.cards` or the arena's layer. Card images are drawn whole —
+ * `object-fit: contain`, the printed aspect ratio, no filter — because
+ * Scryfall's image terms forbid cropping, stretching or recolouring them; the
+ * rounded corner is the card's own (≈ 3 mm on 63 × 88 mm), not a crop of the
+ * border text.
+ * ========================================================================== */
+
+.cardlib__keys {
+  display: inline-flex;
+  gap: 0.6rem;
+}
+
+.cardlib__keys kbd {
+  padding: 0 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-2);
+  font-size: 10px;
+}
+
+.cardlib__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex: 0 0 auto;
+}
+
+.cardlib__search {
+  flex: 1 1 320px;
+  min-inline-size: 200px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.3 var(--ui);
+}
+
+.cardlib__search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+.cardlib__chips {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cardlib__chips .btn {
+  padding: 0.1rem 0.45rem;
+  font-size: 11px;
+}
+
+.cardlib__color .ms {
+  font-size: 13px;
+}
+
+.cardlib__color:not(.btn--on) .ms {
+  opacity: 0.55;
+}
+
+.cardlib__select {
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+}
+
+.cardlib__select--on {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+.cardlib__body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 440px;
+}
+
+.cardlib__results {
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+.cardlib__summary {
+  margin: 0 0 0.6rem;
+  font-size: 12px;
+}
+
+.cardlib__aside {
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.cardlib__placeholder {
+  margin: 2rem 0.5rem;
+  font-size: 13px;
+}
+
+.cardlib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardlib-grid__cell {
+  min-inline-size: 0;
+}
+
+.cardlib-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.cardlib-tile:hover {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.cardlib-tile--selected {
+  border-color: var(--select);
+  background: var(--panel);
+  box-shadow: 0 0 0 1px var(--select);
+}
+
+.cardlib-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cardlib-tile__name {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cardlib-tile__print {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.cardlib-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.cardlib-card--detail {
+  inline-size: 100%;
+  max-inline-size: 340px;
+  margin-inline: auto;
+}
+
+.cardlib-card__img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 488 / 680;
+  object-fit: contain;
+  border-radius: 4.75% / 3.4%;
+  background: #000;
+}
+
+.cardlib-card__credit {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The generated frame, when there is no image (a miss, `image_status: missing`). */
+.cardlib-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  aspect-ratio: 488 / 680;
+  padding: 6px;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 4.75% / 3.4%;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  font-size: 11px;
+}
+
+.cardlib-frame__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.cardlib-frame__art {
+  flex: 1 1 40%;
+  border: 1px solid var(--felt-line);
+  border-radius: 2px;
+  background: var(--felt);
+}
+
+.cardlib-frame__type {
+  padding-block: 2px;
+  border-block: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cardlib-frame__text {
+  flex: 1 1 35%;
+  overflow: hidden;
+  font-size: 10px;
+}
+
+.cardlib-frame__text p {
+  margin: 0 0 3px;
+}
+
+.cardlib-frame__stats {
+  align-self: flex-end;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.cardlib-card--detail .cardlib-frame {
+  font-size: 13px;
+}
+
+.cardlib-card--detail .cardlib-frame__text,
+.cardlib-card--detail .cardlib-frame__type {
+  font-size: 12px;
+}
+
+/* --- pips ----------------------------------------------------------------- */
+
+.cardlib-cost {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.cardlib-cost--md .ms {
+  font-size: 16px;
+}
+
+.cardlib-pip--inline {
+  margin-inline: 1px;
+  font-size: 0.95em;
+  vertical-align: -0.08em;
+}
+
+.cardlib-pip--raw {
+  font-family: var(--mono);
+}
+
+/* --- the detail aside ----------------------------------------------------- */
+
+.cardlib-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 13px;
+}
+
+.cardlib-detail__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardlib-detail__ext {
+  font-size: 11px;
+}
+
+.cardlib-detail__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.cardlib-detail__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  font-size: 18px;
+}
+
+.cardlib-detail__type {
+  padding-block-end: 0.25rem;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.cardlib-rules p {
+  margin: 0 0 0.4rem;
+  line-height: 1.45;
+}
+
+.cardlib-reminder {
+  color: var(--muted);
+}
+
+.cardlib-flavor {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cardlib-detail__stats {
+  align-self: flex-start;
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cardlib-face {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-block-start: 0.35rem;
+  border-top: 1px dashed var(--line);
+}
+
+.cardlib-face__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 15px;
+}
+
+.cardlib-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+
+.cardlib-facts dt {
+  color: var(--muted);
+}
+
+.cardlib-facts dd {
+  margin: 0;
+}
+
+.cardlib-decks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardlib-decks li {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.cardlib-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cardlib-copy__line {
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg);
+  user-select: all;
+}
+
+.cardlib-copy__status {
+  color: var(--ok);
+  font-size: 11px;
+}
+
+.cardlib-legal h3 {
+  margin: 0.25rem 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cardlib-legal ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.cardlib-legal__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px dotted var(--line);
+}
+
+.cardlib-legal__status {
+  color: var(--muted);
+}
+
+.cardlib-legal--legal .cardlib-legal__status {
+  color: var(--ok);
+}
+
+.cardlib-legal--banned .cardlib-legal__status {
+  color: var(--error);
+}
+
+.cardlib-legal--restricted .cardlib-legal__status {
+  color: var(--warn);
+}
+
+/* --- empty and intro states ----------------------------------------------- */
+
+.cardlib-empty {
+  max-inline-size: 720px;
+  margin: 3rem auto;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cardlib-empty h2 {
+  margin: 0 0 0.5rem;
+  font-size: 18px;
+}
+
+.cardlib-empty__cmd {
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.cardlib-intro {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Narrow windows: the aside becomes a sheet over the grid, open only on a card. */
+@media (max-width: 900px) {
+  .cardlib__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cardlib__aside {
+    display: none;
+    position: fixed;
+    inset: auto 0 0;
+    max-block-size: 72dvh;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    box-shadow: 0 -12px 40px #000a;
+    z-index: 20;
+  }
+
+  .cardlib__body--open .cardlib__aside {
+    display: block;
+  }
+
+  .cardlib__keys {
+    display: none;
+  }
+
+  /* Wrapped onto a line of its own, the credit reads from the left. */
+  .cardlib .app__bar .app__credit {
+    margin-left: 0;
+  }
+}
+
+/* The credit line carries the Scryfall credit and the Fan Content notice, and
+   on #cards it is NEVER clipped: the bar wraps at every width rather than
+   hiding the notice under the board bar's `nowrap` + ellipsis. At 1024 px the
+   clipped version showed 378 of the credit's 754 px, and the missing half was
+   the notice. */
+.cardlib .app__bar {
+  flex-wrap: wrap;
+  row-gap: 0.15rem;
+  white-space: normal;
+  overflow: visible;
+}
+
+.cardlib .app__bar .app__credit {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.cardlib-copy__note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 11px;
+}
+
+.cardlib-prints h3 {
+  margin: 0.25rem 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cardlib-prints ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardlib-prints .btn {
+  font-family: var(--mono);
+}

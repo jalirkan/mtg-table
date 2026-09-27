@@ -90,6 +90,14 @@ const FALLBACK_REPLAY = 'synthetic/sample-handwritten.jsonl';
  */
 const Arena = lazy(() => import('./arena/Arena.tsx'));
 
+/**
+ * **The card browser, fetched only when someone opens `#cards`** — the same rule
+ * as the arena's, for the same reason: it is a page most sessions never open,
+ * and none of it belongs on the board's critical path. It needs no transport, so
+ * it is chosen above both modes in `App` (docs/evidence/card-library.md).
+ */
+const CardBrowser = lazy(() => import('./cards/CardBrowser.tsx'));
+
 // ---------------------------------------------------------------------------
 // Mode
 // ---------------------------------------------------------------------------
@@ -208,17 +216,24 @@ function arenaFlagsFromQuery(): ArenaFlags {
 function ViewToggle({ view, onSet }: { view: View; onSet: (view: View) => void }): JSX.Element {
   const next: View = view === 'arena' ? 'board' : 'arena';
   return (
-    <a
-      className="viewtoggle"
-      href={next === 'arena' ? '#arena' : '#'}
-      onClick={(event) => {
-        event.preventDefault();
-        onSet(next);
-      }}
-      title={next === 'arena' ? 'Open the 3D arena (#arena)' : 'Back to the 2D board'}
-    >
-      {next === 'arena' ? '▣ arena' : '▤ board'}
-    </a>
+    <>
+      <a
+        className="viewtoggle"
+        href={next === 'arena' ? '#arena' : '#'}
+        onClick={(event) => {
+          event.preventDefault();
+          onSet(next);
+        }}
+        title={next === 'arena' ? 'Open the 3D arena (#arena)' : 'Back to the 2D board'}
+      >
+        {next === 'arena' ? '▣ arena' : '▤ board'}
+      </a>
+      {/* The card browser (#cards) — a plain hash link, so the page never
+          reloads and a live game's socket is still there when you come back. */}
+      <a className="viewtoggle" href="#cards" title="Browse the card library (#cards)">
+        ▦ cards
+      </a>
+    </>
   );
 }
 
@@ -590,6 +605,13 @@ async function fetchLog(path: string): Promise<string> {
   return pending;
 }
 
+/**
+ * Where each replay was left, by fixture path, for the page's lifetime. `#cards`
+ * unmounts `ReplayApp` (see `App`), and without this a replay stepped to frame 5
+ * came back from the card browser at frame 0.
+ */
+const replayCursors = new Map<string, number>();
+
 function ReplayApp({
   requested,
   view,
@@ -638,7 +660,13 @@ function ReplayApp({
       }
       if (cancelled) return;
       created = new LogReplayTransport(parseFrameLog(text));
-      created.onState(() => {
+      // Back from the card browser (#cards unmounts this app — see `App`):
+      // resume at the frame the replay was left on, not at frame 0.
+      const resumeAt = replayCursors.get(path);
+      if (resumeAt !== undefined && resumeAt > 0) created.scrubTo(resumeAt);
+      const loaded = path;
+      created.onState((_state, index) => {
+        replayCursors.set(loaded, index);
         bump();
       });
       setLoad({ status: 'ready', path, transport: created });
@@ -777,8 +805,32 @@ function ReplayApp({
 function App(): JSX.Element {
   const mode = useMemo(modeFromQuery, []);
   // One `useView` for the page, above both modes: the view is a property of the
-  // window, not of the transport, and neither app may re-mount when it changes.
+  // window, not of the transport, so switching between the board and the arena
+  // never re-mounts the mode app.
   const [view, setView] = useView();
+  // The renderer the card browser was opened from: its back link returns there
+  // (to the arena when that is where you were), not always to the 2D board.
+  const [backTo, setBackTo] = useState<View>(view === 'arena' ? 'arena' : 'board');
+  useEffect(() => {
+    if (view !== 'cards') setBackTo(view);
+  }, [view]);
+  if (view === 'cards') {
+    // Not a renderer and not a seat: no transport, no reducer, no board.
+    //
+    // **`#cards` DOES unmount the mode app**, deliberately. Kept mounted and
+    // hidden, the board's and the arena's `window` keydown listeners would still
+    // be live under the card browser — Space, Enter and Esc typed there would
+    // press OK or Cancel in a live game. So the detour costs the mode app's own
+    // UI state (an open panel, a zoomed card, a camera dragged by hand): the live socket is
+    // page-scoped and survives (`liveTransport`), a replay resumes at the frame
+    // it was left on (`replayCursors`), and the back link returns to the view
+    // you came from.
+    return (
+      <Suspense fallback={<p className="pad muted">loading the card browser…</p>}>
+        <CardBrowser onSetView={setView} backTo={backTo} />
+      </Suspense>
+    );
+  }
   return mode.kind === 'replay' ? (
     <ReplayApp requested={mode.path} view={view} onSetView={setView} />
   ) : (

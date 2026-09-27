@@ -1,0 +1,31 @@
+{
+  "oracle": {
+    "file": "oracle-cards.slice.jsonl",
+    "updated_at": "2026-09-27T21:01:57.440+00:00",
+    "uri": "https://data.scryfall.io/oracle-cards/oracle-cards-20260927210157.jsonl.gz",
+    "compressed_size": null,
+    "fetched_at": "2026-09-27T21:45:37.259Z"
+  },
+  "sets": {
+    "file": "sets.slice.json",
+    "fetched_at": "2026-09-27T21:45:37.975Z"
+  },
+  "prints": [
+    {
+      "code": "msh",
+      "file": "prints-msh.slice.jsonl",
+      "synced_at": "2026-09-27T21:45:39.237Z",
+      "total_cards": 453,
+      "pages": 3,
+      "icon": null
+    },
+    {
+      "code": "msc",
+      "file": "prints-msc.slice.jsonl",
+      "synced_at": "2026-09-27T21:45:41.637Z",
+      "total_cards": 866,
+      "pages": 5,
+      "icon": null
+    }
+  ]
+}

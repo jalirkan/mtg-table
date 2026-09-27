@@ -57,14 +57,32 @@ Forge is not affiliated with Wizards of the Coast. Neither is mtg-table.
     Terms:    https://scryfall.com/docs/api  (see also /docs/api/rate-limits)
 
 mtg-table resolves card art through the Scryfall API (tools/fetch-art.ts) and
-displays card images served from cards.scryfall.io. Card data and images from
-Scryfall are used subject to Scryfall's API terms, which mtg-table honours as
-follows:
+displays card images served from cards.scryfall.io. Since 2026-09-27 it also
+builds a LOCAL card library from Scryfall's data (tools/card-library/, the card
+browser at #cards; DECISIONS.md D90):
+
+  * the oracle_cards BULK file — one gzipped JSONL download (~24 MB) from
+    data.scryfall.io, found through GET /bulk-data and re-downloaded only when
+    Scryfall publishes a new one; plus GET /sets and, for the two sets the deck
+    is built from (MSH, MSC), their prints through /cards/search (8 pages), and
+    those two sets' icon SVGs, downloaded rather than hotlinked;
+  * card IMAGES from cards.scryfall.io, prefetched by
+    tools/card-library/images.ts for the cards in decks/ (41 images, ~3.8 MB, at
+    `normal`); every print of MSH + MSC (~104 MiB) only with an explicit --yes.
+
+Everything it downloads, and the SQLite index built from it, lives under var/cards/
+(gitignored): the index, the bulk file, the set syncs, the icons and the image
+cache var/cards/images/<scryfallId>/<size>[.back].<ext>. None of it is committed.
+
+Card data and images from Scryfall are used subject to Scryfall's API terms,
+which mtg-table honours as follows:
 
   * User-Agent: every request to api.scryfall.com sends an accurate, identifying
     User-Agent (configured as "scryfallUserAgent" in config.json) and an explicit
     Accept: application/json header. HTTP libraries are never left to choose these
-    headers.
+    headers. The committed config.json identifies this client as
+    "mtg-table/0.1 (local hobby client; github.com/jalirkan/mtg-table)"; anyone
+    forking the project should put their own contact there.
   * Rate limits: requests to /cards/search, /cards/named, /cards/random and
     /cards/collection are throttled to at most 2 per second (>= 500 ms apart);
     all other API methods to at most 10 per second. HTTP 429 responses are backed
@@ -72,9 +90,36 @@ follows:
     rate-limited but are still fetched sparingly.
   * Caching: resolved art is written once to web/public/art.json and reused, so a
     session makes no repeat API calls. Bulk endpoints are used for anything at
-    scale.
+    scale: the card library searches its own local index (FTS5), so typing in the
+    card browser sends Scryfall nothing. The bulk file is kept and re-downloaded
+    only when Scryfall's /bulk-data listing names a newer one. Images are cached
+    on disk keyed by Scryfall print id, size and side (DECISIONS.md D93) and a
+    cached image is never fetched again; a card image that is NOT in the cache is
+    loaded by the user's browser straight from cards.scryfall.io, exactly as the
+    board loads its art. Nothing caches or serves images on demand: the cache is
+    filled only when the user runs tools/card-library/images.ts.
+  * The card browser's image route (/cards/img/<scryfallId>/<size>) exists only
+    in the Vite DEV server on 127.0.0.1 and serves the user's own cache to the
+    user's own browser. It never fetches: a miss is a 404, and the page then
+    loads the image from cards.scryfall.io itself. It is not a proxy, and it is
+    never part of a build: the card library adds nothing to web/dist/ — no
+    image, no index (DECISIONS.md D92).
+  * Test fixture: fixtures/cards/ commits a SLICE of Scryfall's data so the
+    library's tests run offline — 172 oracle_cards lines, 84 MSH/MSC print lines
+    and 6 set objects (~0.7 MB, no images), each REDUCED to the fields the library
+    reads (tools/card-library/model.ts SCRY_CARD_FIELDS): no prices, no purchase
+    or related URIs, no platform ids, no rulings. It is regenerated from var/cards/
+    by tools/card-library/make-fixture.ts, never hand-edited. Whether even that
+    slice should be committed is the user's call (DECISIONS.md D90).
   * Artist credit: wherever card art is shown, the artist name and the card's
-    copyright line are shown in the same interface (card-detail panel). Card
+    copyright line are shown in the same interface (card-detail panel). The card
+    browser shows only whole card images (Scryfall's `normal` size), never the
+    `art_crop`; every image, tile or detail, carries "Illus. <artist>" under it,
+    and the detail adds the artist and the card's copyright line
+    ("TM & (C) <year> Wizards of the Coast, LLC", plus "MARVEL (C) <year> MARVEL"
+    for the Marvel sets, dated by the set's release, since Scryfall's data has no
+    copyright field). Its top bar carries the Scryfall credit and the Fan Content
+    notice, and wraps rather than clipping them. Card
     images are not distorted, skewed, stretched, blurred, sharpened, desaturated,
     colour-shifted, watermarked or overlaid with logos, and the printed copyright
     and artist credit on a card image are never cropped or covered.
@@ -113,7 +158,10 @@ and Marvel Super Heroes Commander (MSC) sets. MARVEL and all Marvel character
 names, likenesses and related indicia are trademarks of and copyright Marvel
 Characters, Inc. and/or its affiliates. mtg-table is not affiliated with,
 approved by, or endorsed by Marvel. No Marvel artwork is committed to this
-repository; card images are fetched at runtime from Scryfall (section 2).
+repository; card images are fetched at runtime from Scryfall (section 2), and the
+card library's image cache lives only in the gitignored var/cards/images/.
+Screenshots that show card art (the card browser's evidence) are kept in the
+gitignored var/evidence/ for the same reason and are not committed.
 
 
 5. mana-font (mana symbols)

@@ -5,7 +5,8 @@ open-source [Forge](https://github.com/Card-Forge/forge) engine headless in a JV
 on your own machine as the rules engine and the AI opponent, and puts a
 TypeScript/React board in a browser tab in front of it. The two halves talk JSON
 over a WebSocket bound to `127.0.0.1`. Nothing leaves the machine except card-art
-lookups to Scryfall. The visual model is [endstep.cc](https://endstep.cc) — a
+lookups to Scryfall (and, if you build the optional card library, its downloads
+of Scryfall's card data and images). The visual model is [endstep.cc](https://endstep.cc) — a
 clean web board where you click cards instead of reading a Java Swing table — but
 none of its code; the engine underneath is Forge, unmodified, used exactly the way
 Forge's own network client uses it.
@@ -34,9 +35,13 @@ finishable. Anything on this list is a closed question, not a backlog item.
   lobby, no matchmaking, no spectators, no second human.
 - **No deck builder.** Decks are `.dck` files you already have. Editing them is
   Forge's job, or a text editor's.
-- **No card-library package.** No SQLite, no FTS5, no bulk Scryfall dump, no card
-  search, no card browser. v1's entire card library is a generated `art.json` for
-  the one deck in play.
+- **No card-library package.** Nothing published, nothing the engine, the bridge
+  or the board depends on: the board's card art is still a generated `art.json`
+  for the decks in play. *Lifted in part on 2026-09-27 by **D90**, on the user's
+  request:* a local card index (`tools/card-library/` — SQLite + FTS5 over
+  Scryfall's bulk file, and an image cache, all under `var/cards/`) and a card
+  browser at `#cards` now exist as **tools**. What is still a no: a package, a
+  route outside the Vite dev server, any proxy of Scryfall, and any deck editing.
 - **No accounts, no auth, no sessions, no users.** The socket binds loopback and
   trusts whatever connects. That is the security model.
 - **No packaging, no installer, no Docker, no release artifact.** You run it from
@@ -56,7 +61,7 @@ finishable. Anything on this list is a closed question, not a backlog item.
 |---|---|---|
 | Forge | 2.0.14 | `~/forge`, with the fat jar `forge-gui-desktop-2.0.14-jar-with-dependencies.jar` and the `res/` tree |
 | Java | 21 **JRE** is enough | no JDK needed — the JRE ships `jdk.compiler`, so `java -m jdk.compiler/com.sun.tools.javac.Main` compiles and `java -m jdk.jdeps/com.sun.tools.javap.Main` inspects |
-| Node | 24 | Node 24 runs `.ts` files directly via type stripping, so `tools/fetch-art.ts` needs no build step |
+| Node | 24 | Node 24 runs `.ts` files directly via type stripping, so `tools/fetch-art.ts` and `tools/card-library/` need no build step; `tools/card-library/` also uses Node's built-in `node:sqlite` (FTS5), so it needs no npm package either |
 
 No Maven, no Gradle, no source build of Forge, no downloads beyond npm for `web/`.
 There is no Maven coordinate for Forge anywhere — do not go looking for one.
@@ -180,6 +185,15 @@ node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (M17)
 # M4 — card art for the deck in play (run once; cached in web/public/art.json,
 #      which is gitignored.  Without it the board draws generated text frames.)
 node tools/fetch-art.ts
+
+# D90 — the local card library and the card browser (#cards).  The build fetches
+#      Scryfall's ~24 MB bulk file and the MSH/MSC prints into var/cards/ (under
+#      ten seconds); the second line caches the images of every card in decks/.
+#      Then open the DEV server's #cards (the route does not exist in a build).
+#      "Card library and browser" below has the rest (D90-D94).
+node tools/card-library/build.ts
+node tools/card-library/images.ts --all-decks
+npm --prefix web run dev            # then http://127.0.0.1:5173/#cards
 
 # M5 — the exit criterion, as a command: ten consecutive games across six decks,
 #      each asserted for `over`, zero UNIMPL, one-kind ask ceiling, the typed
@@ -1027,6 +1041,90 @@ model used by exactly one card: that is Tier 3 (*per-card models*), which is not
 started, and a model that looks like a Marvel character would stay on your own
 machine and out of this repository (PLAN.md, *Tier 3 — a note, not a plan*).
 
+### Card library and browser — `#cards`
+
+A local, offline-searchable index of every Magic card, and a page to browse it:
+search by name, type line or rules text, filter by set, colour, type and deck, and
+open a card for its cost, rules text, flavour, P/T, prints, artist, legalities and
+which of your decks it is in. It is a **tool beside the game**, not part of it —
+the engine, the bridge and the board do not use it, and the board still draws
+from `web/public/art.json` — and it exists on the user's request of 2026-09-27,
+which lifted the card-library line of the NON-GOALS above only in part (**D90**).
+Report 03 §4 is its spec, [`tools/card-library/README.md`](tools/card-library/README.md)
+the library's manual and [`docs/evidence/card-library.md`](docs/evidence/card-library.md)
+what was measured.
+
+```bash
+# 1. Build the index (once, and again whenever you want Scryfall's latest data).
+#    Downloads Scryfall's oracle_cards bulk file (~24 MB gzipped, skipped when the
+#    current one is already on disk), every MSH and MSC print (8 search pages at
+#    2 per second) and the two set icons, then indexes them into
+#    var/cards/cards.sqlite (~55 MB).  Under ten seconds on a first build.
+node tools/card-library/build.ts
+node tools/card-library/build.ts --offline      # re-index what is already in var/cards/
+
+# 2. Cache card images (optional).  The build fetches NO image.
+node tools/card-library/images.ts --all-decks    # every card in decks/: 41 images, ~3.8 MB
+node tools/card-library/images.ts --deck decks/pacho-shield.dck --size normal
+node tools/card-library/images.ts --all-prints --size normal   # prints the size, then STOPS
+#   (add --yes to fetch every MSH + MSC print: 1,338 images, ~104 MiB)
+
+# 3. Browse.  The route exists only in the Vite DEV server.
+npm --prefix web run dev                          # then http://127.0.0.1:5173/#cards
+#   /#cards?q=agent&set=msh                      the URL is the page's state:
+#   /#cards?q=creature&set=msh,msc&color=W       q, set, color (W U B R G, C, M),
+#   /#cards?deck=decks/pacho-shield.dck          type, deck and open=<scryfallId>
+#   `▦ cards` in the board's top bar opens it; the back link returns to the board
+#   or the arena you came from, a replay at the frame you left it on
+
+# The same index from a terminal, as JSON on stdout:
+node tools/card-library/query.ts name "Peggy Carter, Secret Agent"
+node tools/card-library/query.ts search shrink --set msc --limit 10
+node tools/card-library/query.ts resolve decks/pacho-shield.dck
+```
+
+**Keys:** `/` focuses the search; the arrows, `Home` and `End` move over the grid
+as it is actually laid out; `Enter` opens the selected card; `Esc` closes it. The
+browser has its own keymap table (`web/src/cards/keys.ts`), because the board's
+`?` overlay must list every row of the board's.
+
+**Where the pictures come from.** A tile tries the image cache first, served by
+the dev server from `var/cards/images/`; on a miss the route answers 404 — it
+**never fetches** — and the page loads the image from `cards.scryfall.io` itself,
+as the board does; with neither it draws a text frame, never a broken image
+(**D92**). So a card from your decks shows from disk, and anything else is
+hot-linked until you cache it. The cache is keyed by Scryfall id, size and side,
+never by name (**D93**). The browser draws its cards with its own renderer,
+`CardView`, not the board's `CardTile` (**D94**).
+
+**Scryfall's terms, as the library honours them** (NOTICE §2 is the long form):
+
+- **Headers.** Every API request carries `config.json`'s `scryfallUserAgent` and
+  `Accept: application/json`, through one client (`tools/card-library/scryfall.ts`).
+  **The committed User-Agent names this project's contact**
+  (`github.com/jalirkan/mtg-table`); a fork should put its own in `config.json`.
+- **Rate limits.** At most 2 requests a second on `/cards/search`, `/named`,
+  `/random` and `/collection`, 10 elsewhere; a 429 closes the API for its
+  `Retry-After`. Every run prints the rate it actually achieved, per bucket.
+- **Bulk data for anything at scale**: the whole card pool is one download, the
+  set icons are downloaded rather than hotlinked, and a search never touches the
+  network — typing in `#cards` sends Scryfall nothing.
+- **Images are shown whole** — the full card, never cropped, stretched or
+  recoloured — **with `Illus. <artist>` under every one**, the copyright line in
+  the detail panel, and the Scryfall and Fan Content credit in the page's top
+  bar. Nothing is paywalled, proxied or republished: everything downloaded stays
+  in the gitignored `var/cards/`, and the only Scryfall data in git is the
+  field-reduced test slice in `fixtures/cards/` (whether even that is committed is
+  PLAN.md question 15).
+
+What it is **not**: a package, a deck builder (the detail's *copy .dck line*
+button gives you a line to paste; nothing writes a deck), a production route (a
+`vite preview` or a built `dist/` shows the browser's empty state), or a rules
+engine (legalities are Scryfall's data, displayed). Its four test suites —
+`cards-lib`, `cards-api`, `cards-ui` and `cards-render` — run offline inside
+`npm --prefix web test` over `fixtures/cards/`; the real build needs the network
+and is not in `check-all.sh`.
+
 ### Playing the console game
 
 `--transport console` is a real seat against the Forge AI with no browser. It
@@ -1088,7 +1186,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the eighty-nine load-bearing decisions, dated
+  DECISIONS.md               the ninety-four load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -1150,7 +1248,8 @@ mtg-table/
       keys.ts                (M4) ONE keymap table + two pure functions; the handler
                              and the `?` overlay both read it, so they cannot drift.
                              M7 added two rows (V, K) rather than a second keyboard
-      useView.ts             (M7) #arena / #/arena / ?view=arena, with no router
+      useView.ts             (M7) #arena / #/arena / ?view=arena, with no router;
+                             (D90) #cards / ?view=cards, the card browser
       transport/transport.ts interface Transport { onFrame(cb); send(f) }
       transport/replay.ts    LogReplayTransport (fetch a .jsonl; play/step/scrub)
       transport/ws.ts        WebSocketTransport (M3: reconnect + resync)
@@ -1243,7 +1342,8 @@ mtg-table/
                              component's early return -- the repo has no DOM test
                              environment and cannot catch a hook-count change; as of M7
                              it walks all 27 .tsx under render/ and arena/, 65
-                             components, not just Board.tsx);
+                             components, not just Board.tsx -- and since D90 cards/
+                             too: 33 files and 86 components in all);
                              and (M7) layout.test.ts (the resting pose over the whole
                              corpus, including hard rule 8's 3D half: every concealed
                              card is placed as a BACK) colour.test.ts
@@ -1260,7 +1360,19 @@ mtg-table/
                              and (slice 3) traits.test.ts (the identity census, and
                              every deck card's props rasterised from BOTH seats by
                              prop-raster.ts, a software rasteriser over the real
-                             figures.glb) and facing.test.ts (one front, both seats)
+                             figures.glb) and facing.test.ts (one front, both seats);
+                             and (D90) cards-lib.test.ts (the library, offline: a fake
+                             Scryfall on a fake clock) cards-api.test.ts (the dev route
+                             on a real loopback socket over an index built from
+                             fixtures/cards/) cards-ui.test.ts (the browser's pure half
+                             and its import boundaries) and cards-render.test.tsx
+                             (the page mounted over canned route answers)
+    src/cards/               (D90) THE CARD BROWSER, #cards. Lazily imported; public
+                             card data, not a game. CardBrowser.tsx CardDetail.tsx
+                             CardView.tsx (its own card renderer -- never CardTile,
+                             D94) Pips.tsx; pure: search.ts decks.ts keys.ts text.ts
+                             model.ts api.ts; devApi.ts is the DEV-SERVER-ONLY route
+                             (vite.config.ts configureServer) over var/cards/ (D92)
     public/art.json          generated, gitignored
     public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from four CC0
                              packs: 143,920 bytes, recorded in models.json and checked
@@ -1311,6 +1423,13 @@ mtg-table/
     fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare
                              it to its committed fixture as a multiset, `seq` stripped
     fetch-art.ts             deck -> web/public/art.json
+    card-library/            (D90) the local card index: build.ts (Scryfall's bulk
+                             file + the MSH/MSC prints -> var/cards/cards.sqlite,
+                             SQLite + FTS5, D91) images.ts (the image cache, D93)
+                             query.ts (the read side and a JSON CLI) scryfall.ts
+                             (the one door to Scryfall: headers, pacing, 429s)
+                             deck.ts store.ts db.ts model.ts config.ts
+                             make-fixture.ts; README.md is how to use it
 
   fixtures/
     games/*.jsonl            committed recordings. ENGINE-PRODUCED ONLY — this directory
@@ -1348,6 +1467,9 @@ mtg-table/
     negative/redaction/      the CHECKER's negative controls: a clean slice of g1 plus
                              nine copies with exactly one defect each. A checker that
                              cannot fail proves nothing about the emitter it watches
+    cards/                   (D90) the card library's offline test slice: Scryfall
+                             lines REDUCED to the fields the library reads, cut by
+                             tools/card-library/make-fixture.ts; no images
 
   forge-home/
     res -> ~/forge/res       symlink, gitignored
@@ -1355,7 +1477,10 @@ mtg-table/
     custom-cards/            committed card-script overrides, copied into
                              var/forge/custom/cards/ by make-forge-home.sh (D14)
 
-  var/                       gitignored: Forge's redirected profile, logs, frame logs
+  var/                       gitignored: Forge's redirected profile, logs, frame logs;
+                             (D90) var/cards/ -- the card index, the bulk file, the set
+                             syncs and icons, and the image cache
+                             images/<scryfallId>/<size>[.back].<ext> (D93)
   scripts/play.sh            M3/M6: check-forge -> build -> the ws bridge -> /health ->
                              vite.  Defaults to --games 3 --keep-open (M6)
 ```
@@ -1366,10 +1491,12 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Sixty-three load-bearing decisions, dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. |
+| [`DECISIONS.md`](DECISIONS.md) | Ninety-four load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
+| [`docs/research/03-scryfall-card-library.md`](docs/research/03-scryfall-card-library.md) | Scryfall's API, images and terms, the Forge name mapping, and §4 — the spec the card library was built to (D90–D94). |
+| [`tools/card-library/README.md`](tools/card-library/README.md) | The card library's manual: the build, the image cache, the query CLI, what is on disk under `var/cards/`, Scryfall's terms as code, and what is not done. |
 | [`docs/research/06-hidden-information-audit.md`](docs/research/06-hidden-information-audit.md) | Every reveal path in Forge, its wire channel, and its leak signature. The basis of hard rule 8. |
 | [`docs/research/07-wireguigame-spec.md`](docs/research/07-wireguigame-spec.md) | The M2 implementation spec: 37 members, the thread model, the eleven ask kinds. |
 | [`docs/research/08-deck-card-coverage.md`](docs/research/08-deck-card-coverage.md) | Does Forge implement this deck's 28 cards faithfully? (One does not — see D14.) |
@@ -1378,7 +1505,7 @@ mtg-table/
 | [`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md) | M7 Tier 1: the arena's spec — the offset model, the cue table, the camera, the performance budget. |
 | [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md) | M7 Tier 2's asset landscape: which packs are really CC0, what is inside the files, the gltf-transform pipeline, and the two drei traps. |
 | [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md) | M7 Tier 2's plan, written against the Tier 1 code: the manifestation stage, the pose-versus-cue rule, the clip lane, the evenings T0–T14. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game). |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. |
 
 ## Licence
 

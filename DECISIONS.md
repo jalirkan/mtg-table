@@ -3495,3 +3495,310 @@ reaches no one; a live game where the trigger waits on the stack aims it
 
 **Rejected.** Pairing the batch's taps to her (above). Keeping Tier 1's `tap:on`
 (a beat about the wrong event).
+
+---
+
+## D90 — A local card library and a card browser, as dev-server tools: README's card-library NON-GOAL is lifted in part
+
+**2026-09-27** (the user's request, outside the milestone plan. **Supersedes, in
+part, README.md's NON-GOALS line** *"No card-library package. No SQLite, no
+FTS5, no bulk Scryfall dump, no card search, no card browser."* Brings PLAN.md's
+deferred item *"the SQLite + FTS5 card library, the `oracle_cards` bulk stream, a
+local image cache and an `/api/images` proxy"* forward, without the proxy.
+Report 03 §4 is the spec; `docs/evidence/card-library.md` is what was measured)
+
+**Decision.** The user asked to "expedite some of these" — PLAN.md's deferred
+list — and for "a card viewer … to see models and how they act", to help
+workshop the deck while the project continues. This entry covers the card-data
+half of that request (the models half is a separate change). Two things now
+exist:
+
+- **`tools/card-library/`** — a local index of every Magic card (Scryfall's
+  `oracle_cards` bulk file, one gzipped JSONL download) plus every print of the
+  two sets the deck is built from (MSH, MSC), in one SQLite file with FTS5
+  through Node 24's built-in `node:sqlite` (no npm dependency), a disk cache of
+  card images keyed by Scryfall id + size, and a JSON-on-stdout query CLI.
+  Everything it writes is under `var/cards/` (gitignored).
+- **The card browser, `#cards`** (`web/src/cards/`), a third view beside the board
+  and the arena: search by name, type or rules text; filter by set, colour, type
+  and deck; a detail panel with pips, rules text, artist, copyright, deck counts,
+  prints and legalities. It reads the index through `/cards/api/*` and
+  `/cards/img/*`, a route mounted **only in the Vite dev server**
+  (`configureServer`; never `vite preview`, never the build), on 127.0.0.1. The
+  route **never talks to Scryfall**: a search is local FTS5, and an image miss is
+  a 404 after which the page loads Scryfall's CDN URL itself — so it is not a
+  proxy. The chunk is lazy, like the arena's (**D49**).
+
+**What stays a NON-GOAL.** No *package*: nothing is published, there is no
+`package.json` under `tools/card-library/`, and the engine, the bridge and the
+board do not depend on it — the board still draws from `art.json`
+(`tools/fetch-art.ts`), untouched. No production route and no `/api/images`
+proxy. No deck builder: the browser copies a `.dck` line, it never writes a deck.
+No network in search. No rules logic: legality is Scryfall's data as shipped,
+displayed, never computed. Hard rule 8 is the engine wire's and does not apply to
+public card data — but the browser still draws its own cards (`CardView`) and
+never imports `render/CardTile.tsx`, whose importer list stays closed at ten.
+
+**The committed fixture — the user's call, defaulted conservatively.**
+`fixtures/cards/` (the library's offline test slice: 172 `oracle_cards` lines, 84
+MSH/MSC print lines, 6 sets, no images) is **reduced to the fields the library
+reads** (`model.ts` `SCRY_CARD_FIELDS`, held to the `ScryCard` interface at compile
+time; ~0.7 MB where the verbatim lines were 1.3 MB), and regenerated, never
+hand-edited, by `make-fixture.ts`. The index built from it has the same content
+digest as one built from the verbatim lines, so nothing the tests exercise was
+lost. The repo already keeps Scryfall-derived data out of git on purpose
+(`web/public/art.json`), and Scryfall's terms forbid simply republishing its
+data; a field-reduced test slice is the smallest thing that keeps the tests
+offline and hermetic. **If the user wants no Scryfall data in git at all**, the
+alternative is to gitignore `fixtures/cards/` and have `cards-lib`, `cards-api`
+and six `cards-ui` tests skip when it is absent — at the price of a suite whose
+result depends on what is lying around on the machine, which the repo has been
+bitten by once (`MTGTABLE_WS_LOGS`).
+
+**Rejected.** An `/api/images` production proxy (report 03's shape): a proxy of
+Scryfall's images is exactly what its terms warn against, and the dev route
+serving the user's own cache to the user's own browser does the job. Hotlinking
+only, with no cache (every browse re-fetches the same images). Building the index
+into the web bundle (55 MB). Search in the browser over a shipped JSON (the whole
+point of FTS5 is not shipping 38,690 cards to the page). Rows in `web/src/keys.ts`
+for the browser's keys: that table is the board's and the arena's, and
+`keys.test.ts` requires every chord in it to appear in the board's `?` overlay —
+so the browser has its own table (`cards/keys.ts`), one per surface.
+
+**Known cost.** `config.json`'s `scryfallUserAgent` still carries a placeholder
+contact (`github.com/<user>/mtg-table`), and Scryfall asks for an accurate one:
+the user must supply it. Report 03 §4.5's re-fetch on a newer `image_updated_at`
+and its dated retry for a `missing` / `placeholder` image are not implemented
+(`tools/card-library/README.md`, *Not done*). The `.dck` line carries `|SET` only
+for MSH and MSC, the two sets whose Scryfall code is checked against Forge's.
+
+---
+
+## D91 — The card library is `node:sqlite` + FTS5 with no npm dependency, and a build writes a fresh file
+
+**2026-09-27** (the card library, **D90**; written up by its documentation pass.
+Report 03 §4.1 and §4.4 are the spec — *"Runtime deps: none required"* — and
+`docs/evidence/card-library.md` is what was measured. Departs from §4.1's
+`packages/card-library/` layout on purpose: D90 says why there is no package)
+
+**Decision.** The index is one SQLite file, `var/cards/cards.sqlite`, written and
+read through Node 24's built-in `node:sqlite` (`DatabaseSync`; SQLite 3.53.4 on
+Node v24.20.0), with a real FTS5 table: `cards_fts`, **external content** over
+`cards`' normalised name, type line and Oracle text, tokenizer
+`porter unicode61 remove_diacritics 2`, ranked by `bm25` with the name weighted
+10, the type line 3 and the text 1. The library adds **no npm dependency and no
+`package.json`**: `fetch`, `node:zlib` (the gzipped JSONL), `node:readline`,
+`node:crypto` and `node:test` are all Node's own, and the `.ts` files run by type
+stripping with no build step, exactly like `tools/fetch-art.ts`. `web/tsconfig.json`
+already includes `../tools`, so `npm run build`'s `tsc --noEmit` type-checks the
+library with the client. `query.ts` — the read side the dev route imports — is
+synchronous, read-only and has no network in it.
+
+A build **never edits the index in place.** It writes a fresh database at
+`cards.sqlite.building`, bulk-loads the FTS table after the rows, records `meta`
+(`schema_version`, `built_at`, `oracle_bulk_updated_at`, the row counts, the
+measured request rates, and a `content_sha256` over every card, name, print, face
+and set row) and `rename()`s it over the old file. A failed build leaves the old
+index where it was, a reader never sees half a file, and two builds from the same
+data carry the same digest — which is how "idempotent" was checked rather than
+assumed (an online rebuild and an offline re-index agreed on `d39f2487…6a30`).
+
+**Rationale.** Report 03 §4.4 verified `node:sqlite` and FTS5 on this machine
+before a line was written, and this build verified it again. A native module
+(`better-sqlite3`) means `node-gyp` or prebuilt-binary roulette on a machine with
+no sudo, and a dependency tree for a tool the game does not even use. A JSON index
+means parsing all 38,690 oracle cards on every process start, and a search library
+over it (MiniSearch, Fuse, lunr) is a dependency with a ranking of its own to
+explain. SQLite answers a name lookup in ~21 µs and a ranked search in 80 µs to
+5.4 ms, warm (the evidence's *The queries*), and the dev route opens it with no
+warm-up. Storing the rules text once (FTS reads `cards` as external content) and
+packing each print's eleven `image_uris` down to a size list plus one version —
+after checking every one of the 461,956 URLs against Scryfall's pattern, so a
+print that deviated would keep its URIs verbatim (none did) — took the file from
+149.7 MiB to ~55 MiB.
+
+**Known cost.** `node:sqlite` is younger than the rest of Node's standard library
+and its API may still move; a Node upgrade is the trip-wire and
+`web/test/cards-lib.test.ts` (offline: a fake Scryfall on a fake clock) is the
+check. The index is ~55 MB under `var/cards/` and is rebuilt, never migrated: a
+`schema_version` change means running `build.ts --offline` again.
+
+**Rejected.** `better-sqlite3` (a native build and an npm dependency). A JSON
+index with an in-memory search library (the start-up cost, a dependency, a second
+ranking). Shelling out to the `sqlite3` CLI (a subprocess per query, and a binary
+the repo does not otherwise assume). An in-place incremental build (a failed run
+could leave a half-updated index; report 03's `/cards/manifest` incremental
+refresh stays on the *Not done* list). Report 03 §4.1's package with its own
+`package.json` (**D90**: a tool, not a package).
+
+---
+
+## D92 — The card browser reads a same-origin route in the Vite DEV server, and that route never fetches
+
+**2026-09-27** (the card browser, **D90**; written up by its documentation pass.
+Answers report 03 §1.8 and §4.5 — *cache to disk and serve from our own origin;
+never proxy an image request per page view*. PLAN.md's question 5, *hot-link or
+proxy*, is unchanged for the board)
+
+**Decision.** `web/vite.config.ts`'s `cardsPlugin()` mounts
+`web/src/cards/devApi.ts` in **`configureServer` and nowhere else** — not
+`vite preview`, not the build — on the dev server's `127.0.0.1`:
+
+    GET /cards/api/status | search?q=&set=&color=&type=&deck= | card/<scryfallId> | decks
+    GET /cards/img/<scryfallId>/<size>[?face=back]
+
+The page and its data share one loopback origin. The image route accepts only a
+Scryfall UUID and one of Scryfall's eleven sizes, serves the file the library
+already cached (`Cache-Control: public, max-age=86400`, because a file never
+changes under its name — **D93**), and **on a miss answers 404 and fetches
+nothing.** The tile's `<img>` then falls back to the CDN URL the search result
+already carries (`cards.scryfall.io`, the way the board hot-links today), and with
+neither it draws a generated text frame, never a broken image. Only
+`tools/card-library/images.ts` fills the cache, and only when asked: `--deck` /
+`--all-decks` (41 images, 3.8 MB for the ten decks), or every MSH + MSC print with
+`--all-prints --yes` (~104 MiB; without `--yes` it prints the estimate and stops).
+`query.ts` is loaded with a runtime `import()`, so the dev server starts on a
+checkout with no index and the page says how to build one; a production build or
+`vite preview` shows the same empty state, naming `npm --prefix web run dev`.
+`MTG_TABLE_CARDS_DB=<path>` points the route at another index. Because
+`scripts/play.sh` launches the same dev server (`web/node_modules/.bin/vite`),
+`#cards` should be there during a live game too, one link away from the board —
+read off the launcher, not measured: the evidence took the detour from replays
+and from the arena, never from a live socket.
+
+**Rationale.** Same-origin because the page wants the user's own disk cache and a
+browser cannot read `var/`; a *named* route can refuse anything that is not an id
+and a size, which a static mount cannot. Dev-only because the whole project runs
+from the checkout (README's NON-GOALS: no packaging, localhost only) and the dev
+server is already the process that serves `fixtures/`; a production route would
+need a Node server of its own. **Never fetching** is the line between serving the
+user's cache to the user's browser and proxying Scryfall: a route that fetched on
+a miss would put Scryfall behind our origin on every page view — the shape its
+terms warn against (report 03 §1.8), and the `/api/images` proxy PLAN.md deferred.
+Hot-linking on a miss keeps all 38,690 cards browsable without downloading them.
+
+**Known cost.** Browsing outside the decks hot-links: of `agent`'s first twelve
+tiles, one came from the cache and eleven from the CDN. `--all-prints --yes` is how
+MSH and MSC stop doing that, and it has not been run. And the browser does not
+exist in a built `dist/` at all.
+
+**Rejected.** An `/api/images` route that fetches and caches on a miss (a proxy —
+report 03 §4's original shape). Serving `var/cards/images` through Vite's `/@fs/`
+path (no validation, and a filesystem path in every URL) or copying it into
+`publicDir` (the cache would land in `dist/`, which is republishing). A second
+Node HTTP server on a port of its own (a second process and port for
+`scripts/play.sh` to manage, and a cross-origin request per image). Hot-linking
+only, with no cache (every browse re-fetches the same images).
+
+---
+
+## D93 — The image cache is keyed by Scryfall id + size + face, one directory per print
+
+**2026-09-27** (the card library, **D90**; written up by its documentation pass.
+Report 03 §4.5 is the spec for the key; the directory shape departs from it)
+
+**Decision.** `tools/card-library/store.ts`'s `imagePathFor(imagesDir, id, size,
+face)` is THE cache path, and nothing else computes one:
+
+    var/cards/images/<scryfallId>/<size>.<ext>        the front, or the only side
+    var/cards/images/<scryfallId>/<size>.back.<ext>   the back of a two-sided card
+
+`<ext>` is the size's own type (`model.ts`'s `IMAGE_EXT`: `jpg` for the five JPEG
+sizes, `png`, `webp` for the five WEBP variants). Which image a print has on which
+side is the multi-face rule, in one function, `model.ts`'s `imageSides`: the
+top-level `image_uris` when present, the faces' only when it is absent (report 03
+§2.3; putting the faces first is a negative control in `cards-lib` and fails
+three tests). `imagePathFor` throws on anything that is not a Scryfall UUID, so no
+id can walk the tree. A file is streamed to `<path>.<pid>.part`, checked (an
+`image/*` type, non-empty, exactly `Content-Length` bytes when one was sent) and
+`rename()`d into place; a present, non-empty file is never fetched again; two
+requests for one file share one download. Scryfall's `?<version>` cache-buster is
+dropped from the name — it is the print's `image_updated_at` as a Unix timestamp,
+which the index keeps.
+
+**Rationale.** A Scryfall id is immutable and names exactly one print; the size
+and the side then name exactly one image. A card *name* names neither: Plains has
+hundreds of prints, `Pym Particles` and `Agents of S.H.I.E.L.D.` share their names
+with `front_card` theme cards in today's bulk file, and a two-sided card has two
+images under one name — which is what is wrong with Forge's own name-keyed picture
+cache (report 03 §3.6). Because the path is a pure function of `(id, size, face)`,
+`query.ts`'s `imagePath` and the dev route find a file with one `stat` and no
+index lookup, and **D92**'s route can promise a day of `Cache-Control`. One
+directory per print, rather than report 03's `{size}/{id[0]}{id[1]}/` fan-out,
+keeps every size and side of a print together; nothing caches more than MSH + MSC
+(~1,340 prints), so the fan-out would buy nothing.
+
+**Known cost.** Dropping the version from the name is what makes a better scan
+invisible: report 03 §4.5's re-fetch when `image_updated_at` advances, and its
+dated retry for a `missing` / `placeholder` image, are not implemented
+(`tools/card-library/README.md`, *Not done*). Today a stale file is deleted by
+hand, and a print with no image is skipped and listed.
+
+**Rejected.** Keying by name (above). Keying by set + collector number (stable
+too, but not what the CDN, the API or a print row is addressed by, and it still
+needs the side). Keeping `?<version>` in the file name (every rescan would orphan
+the old file, and the path could no longer be computed without the index).
+Report 03's size-first two-character fan-out (it scatters one print's sizes
+across eleven trees, for a scale this cache is never used at).
+
+---
+
+## D94 — The card browser draws its own cards: `CardView` is not `CardTile`, and `#cards` is a view of its own
+
+**2026-09-27** (the card browser, **D90**; written up by its documentation pass.
+Within CLAUDE.md's M4 conventions 1, 2, 3 and 4, and **D49**)
+
+**Decision.** `web/src/cards/CardView.tsx` is the card browser's card renderer. It
+draws a `LibraryCard` (`cards/model.ts`: public Scryfall data, read through
+**D92**'s route) and nothing from a game, and it **never imports
+`render/CardTile.tsx`**, whose importer list stays closed at ten. The dependency
+runs one way and is held mechanically by `web/test/cards-ui.test.ts`: no file under
+`cards/` imports `CardTile` or anything from `render/` or `arena/`, or a
+stylesheet; `Board.tsx`, `CardTile.tsx` and `Arena.tsx` do not reach into
+`cards/`; `main.tsx` reaches the browser only through
+`lazy(() => import('./cards/CardBrowser.tsx'))`, never statically; and
+`devApi.ts` is imported by `vite.config.ts` and by no browser module. Around the
+renderer, the browser keeps the web client's rules *per surface* rather than
+sharing the board's instances: one keymap table of its own (`cards/keys.ts`,
+`CARDS_KEYMAP` + `planCardsKey`, which the handler and the help line both read),
+its CSS appended to `styles.css`, its logic in pure `.ts` that `node --test`
+reaches (`search.ts`, `decks.ts`, `text.ts`, `keys.ts`, `model.ts`), and its
+components in `hooks-order.test.ts`'s scan (which now walks 33 files and 86
+components across `render/`, `arena/` and `cards/`). `#cards`
+(also `#/cards`, `?view=cards`; its own state rides after a `?` in the hash) is
+chosen in `App` **above** both modes and **unmounts** the mode app: no transport
+is created for it, a live game's page-scoped socket survives the detour, a replay
+resumes at the frame it was left on (`replayCursors`), and the back link returns
+to the renderer you came from.
+
+**Rationale.** `CardTile` is the renderer's half of hard rule 8. Its input is the
+wire's `Card` — redacted five-key stubs and face-down faces included — and every
+surface that draws a card from a *game* goes through it so that
+`render.test.tsx`'s per-frame `data-card-name` check covers all of them. A library
+card is a different type from a different source with nothing concealed; feeding
+it to `CardTile` would mean inventing a wire-shaped `Card` for a card that was
+never in a game, and an eleventh importer of a list that is meant to stay closed.
+Keeping the dependency one-way lets either side change without the other, and
+keeps the browser out of the 2D entry chunk (the **D49** rule, for the same
+reason: most sessions never open it). The keymap is separate because
+`keys.test.ts` requires every chord in `web/src/keys.ts` to appear in the board's
+`?` overlay, where `/` and `Enter` would advertise keys the board does not
+handle. And the mode app is unmounted rather than hidden because a hidden board's
+`window` keydown listeners are still live: `Space`, `Enter` or `Esc` typed into the
+browser would press OK or Cancel in a live game.
+
+**Known cost.** Two card renderers in the 2D client, so a change to how a card
+*looks* is made twice if both should follow it. The live-socket half of the
+detour is true by construction (`liveTransport` is page-scoped) and has not yet
+been exercised by a live game; the replay and arena halves were measured. The
+detour loses the mode app's own UI state — an open panel, a zoomed card, a camera dragged by hand (the chosen
+camera view persists through **D71**'s `localStorage`). The entry chunk grew
+0.23 kB gzip (the `lazy()` import, the `view === 'cards'` branch, the replay
+cursor map, the link); the browser is a lazy chunk of 9.67 kB gzip.
+
+**Rejected.** Reusing `CardTile` through an adapter (a fake wire `Card`, an
+eleventh importer). A "library mode" prop on `CardTile` (the board's
+hidden-information renderer growing a branch that is not about the board). Rows
+in `web/src/keys.ts` (above). Keeping the mode app mounted and hidden under the
+browser (above). A per-component stylesheet for the browser (M4 convention 1:
+neither test runner can load one).

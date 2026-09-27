@@ -18,6 +18,16 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice and fixed twice**, not committed (branch `tier2-slice3`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened; T13–T14 handed over, with a Tier 3 note |
 
+**Off the milestone plan, 2026-09-27: the card library and the card browser**
+(**D90–D94**) — brought forward from the deferred list on the user's request, as
+dev-server **tools** rather than a milestone: a local SQLite + FTS5 index of every
+card under `tools/card-library/`, an image cache, and a `#cards` browser. Built,
+reviewed twice and fixed, **not committed** (worktree
+`/home/justin-a/code/mtg-table-t2g`, branch `card-library`). Nothing on the wire
+or in `bridge/` moved, and the board gained one link (`▦ cards`, beside the arena
+toggle) and nothing else. *The card library and the card browser*, just above
+*Deferred*, has the status, the commands and the follow-ups.
+
 ---
 
 ## M0 — The engine runs our code
@@ -2972,6 +2982,138 @@ and it needs a decision of its own before it becomes work — **question 14** in
 
 ---
 
+## The card library and the card browser — off the plan, 2026-09-27 (D90–D94)
+
+**Status: built, reviewed twice, every finding fixed, documented; not
+committed** — in the worktree `/home/justin-a/code/mtg-table-t2g`, branch
+`card-library` (from `0368a90`). It is the deferred list's *"SQLite + FTS5 card
+library, the `oracle_cards` bulk stream, a local image cache"*, brought forward on
+the user's request of 2026-09-27 — *"expedite some of these"* — **without** the
+`/api/images` proxy, and as **tools**, not a milestone: README's card-library
+NON-GOAL is lifted only in part (**D90**). The other half of that request, a
+viewer for the arena's models and how they act, is a separate change and not in
+this section.
+
+Report 03 §4 is the spec; [`docs/evidence/card-library.md`](docs/evidence/card-library.md)
+is what was measured; [`tools/card-library/README.md`](tools/card-library/README.md)
+is how to use the library. Decisions: **D90** (what the NON-GOAL lift covers, the
+dev-only route, the field-reduced fixture), **D91** (`node:sqlite` + FTS5, no npm
+dependency, a fresh file per build), **D92** (the same-origin route in the Vite
+dev server, which never fetches), **D93** (the image cache keyed by id + size +
+face), **D94** (`CardView` is not `CardTile`, and `#cards` is a view of its own).
+
+**What exists.**
+
+- **`tools/card-library/`** — `build.ts` streams Scryfall's `oracle_cards` bulk
+  file (one 24.5 MB gzipped JSONL, found through `/bulk-data`'s
+  `jsonl_download_uri` and skipped when the current one is already on disk), pages
+  every MSH and MSC print through `/cards/search` at 2 req/s (8 pages), saves
+  `/sets` and the two set icons, and indexes it all into a fresh
+  `var/cards/cards.sqlite` renamed into place: **38,690 cards, 39,167 prints,
+  1,053 sets, ~55 MiB, 8.5 s** for a first build. `images.ts` fills the image
+  cache (`var/cards/images/<id>/<size>[.back].<ext>`); `query.ts` is the read side
+  and a JSON CLI (name, set + number, search, a set, a deck, an image, stats);
+  `deck.ts` parses `.dck` and `.txt`; `make-fixture.ts` cuts the committed test
+  slice. No npm dependency, no `package.json`.
+- **The card browser, `#cards`** (`web/src/cards/`, a lazy chunk of 9.67 kB
+  gzip): search over name, type line and rules text; filters for set, colour,
+  type and deck; a results grid whose every image carries `Illus. <artist>`; a
+  detail panel with mana-font pips, rules text, flavour, P/T, set and number,
+  artist, the copyright line, legalities, `in decks/x.dck ×N`, a *copy .dck line*
+  button and every print of the card; `/`, the arrows, `Home`/`End`, `Enter` and
+  `Esc`. Its data comes from `/cards/api/*` and `/cards/img/*`, a route that
+  exists **only in the Vite dev server** and never talks to Scryfall.
+- **`fixtures/cards/`** — 172 `oracle_cards` lines, 84 MSH/MSC print lines and 6
+  sets, reduced to the fields the library reads (0.69 MB, no images), so the four
+  new suites run offline.
+
+**What the evidence shows.** `resolve decks/pacho-shield.dck`: **28 of 28 lines
+resolved**, every one by exact name, on the numbers report 03 §2.5 lists (Peggy
+Carter on MSC #523, the only print she has). All ten decks' **41 images,
+3.8 MB**, from the CDN — the deck's 28 in 0.9 s — and a second run fetched 0.
+Scryfall's API saw **21 requests in the whole session**, never more than 2 in any
+second on the search bucket, and no 429. A name lookup is ~21 µs warm and a ranked
+search 80 µs–5.4 ms;
+the route's broadest real search (`creature` over MSH + MSC, 1,021 cards) is
+127 ms. The review's major — filters applied after the 1,000-hit cap, so
+`creature` over both sets answered **1** card and `creature` in the deck **0** —
+is fixed by putting every filter into the SQL, and negative-controlled.
+`npm --prefix web test`: **797 `node --test` + 91 vitest, 0 failures** (704 + 79
+before; the difference is exactly `cards-lib` 49, `cards-api` 15, `cards-ui` 29
+and `cards-render` 12). `npm run build`: 0 errors; the 2D entry chunk grew
+0.23 kB gzip and carries none of the browser. **Not yet run inside
+`check-all.sh`**, where it should read 807 / 799 pass / 8 skipped.
+
+**Command**
+
+```bash
+node tools/card-library/build.ts                 # ~24 MB from Scryfall, under ten seconds
+node tools/card-library/images.ts --all-decks    # the ten decks' 41 images, ~3.8 MB
+npm --prefix web run dev                         # then http://127.0.0.1:5173/#cards
+#   /#cards?q=agent&set=msh                       a search, filtered; the URL is the state
+#   /#cards?deck=decks/pacho-shield.dck           the deck, in file order, every image cached
+#   /#cards?q=coulson, open Agent Phil Coulson   the prints row: MSH #4 and MSH #402
+./scripts/play.sh                                # the same dev server, so `▦ cards` should work
+                                                 # mid-game too (not yet tried on a live socket)
+node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdout
+```
+
+### Card library follow-ups — twelve, 2026-09-27
+
+1. **`tools/fetch-art.ts` can read from the library instead of Scryfall.** Today
+   it walks `/cards/named` at 2 req/s, up to four rungs per card, to write
+   `web/public/art.json`; `query.ts`'s `resolveDeckFile` and `imageUrl` already
+   answer every one of the deck's 28 lines offline, with the same MSH/MSC split
+   and the same multi-face rule. Reading the index when it exists (and falling
+   back to the API when it does not, so the board never *needs* the library —
+   **D90**) would make `art.json` a zero-request, reproducible build. Its header
+   comment — *"The SQLite/FTS5 library in report 03 is explicitly deferred"* — is
+   stale as of **D90**, and was left alone because `fetch-art.ts` was another
+   worktree's file during this pass.
+2. **Report 03 §4.5's refresh rules** (**D93**'s known cost): no re-fetch when a
+   print's `image_updated_at` advances, and no dated retry for a `missing` /
+   `placeholder` image — today it is skipped and listed, and a stale file is
+   deleted by hand.
+3. **`config.json`'s `scryfallUserAgent` still carries a placeholder contact**
+   (`github.com/<user>/mtg-table`). Scryfall asks for an accurate one; only the
+   user can supply it (question 16). `build.ts` and `images.ts` warn on every run
+   that talks to Scryfall until it changes.
+4. **Whether `fixtures/cards/` is committed at all** is the user's call
+   (question 15, **D90**).
+5. **Every MSH + MSC print's image** (`images.ts --all-prints --yes`, 1,338 images,
+   ~104 MiB by the tool's own estimate) has not been fetched, so browsing those
+   sets hot-links all but the decks' cards (question 17).
+6. The name ladder is local only: report 03 §4.6's last rung,
+   `/cards/named?fuzzy=`, is not called; a misspelt deck line comes back
+   unresolved with the local FTS5 guess as a `suggestion`, and is never
+   substituted.
+7. No `resolve --write` (a **copy** of the deck with `|MSC` on its ten unsuffixed
+   lines — question 4 says never rewrite it in place), no
+   `~/.cache/forge/cdn_uuid` warm start (report 03 §3.5), no `/cards/manifest`
+   incremental refresh (**D91** rebuilds instead).
+8. **The *copy .dck line* button** writes `|SET` only for MSH and MSC, the two
+   sets whose Scryfall code is checked equal to Forge's; any other print copies as
+   the bare name. Forge's `|[<collector number>]` grammar for one specific print
+   (Coulson #402) comes from the 2.0.15 source and was not checked against the
+   2.0.14 jar, so the button does not write it.
+9. **The real build is not in the gate**, on purpose: it needs the network. The
+   four suites run hermetically inside `check-all.sh`'s `npm test` over
+   `fixtures/cards/`; the in-gate count (807 / 799) has not been measured yet.
+10. **The browser loses the mode app's UI state across the detour** (an open
+    panel, a zoomed card, a camera dragged by hand) — **D94**, by design, because
+    a hidden board would still hear the keyboard. A replay's frame and the
+    renderer you came from survive (both measured); the live socket is
+    page-scoped and should survive too, but no live game has taken the detour
+    yet — the first one that does is this follow-up's check.
+11. **No production route** (**D92**): `vite preview` and a built `dist/` show the
+    browser's empty state. If the browser is ever wanted outside the dev server,
+    that is a new decision, not a follow-up.
+12. **The browser and the models viewer are not linked.** A card's detail panel
+    could open the same card's figure once both have landed; that join is left
+    for after the merge.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
@@ -2990,10 +3132,18 @@ never made from card art (**D54**): *Tier 3 — a note, not a plan*, above.
   a picker sets one string, passed as `profileOverride` to
   `GamePlayerUtil.createAiPlayer`, because the no-override branch **saves**
   `FPref.UI_CURRENT_AI_PROFILE`. `docs/research/11-engine-comfort-features.md` §9.)
-- The SQLite (`node:sqlite`) + FTS5 card library, the `oracle_cards` bulk stream,
-  a local image cache and an `/api/images` proxy. Report 03 is the spec when we
-  want it. (Note for then: the bulk field is **`jsonl_download_uri`**, gzipped
-  JSONL; `download_uri` no longer exists.)
+- ~~The SQLite (`node:sqlite`) + FTS5 card library, the `oracle_cards` bulk
+  stream, a local image cache and an `/api/images` proxy.~~ **Brought forward
+  2026-09-27** on the user's request (**D90**): `tools/card-library/` (the index,
+  the bulk stream, the image cache, the query CLI) and the card browser at
+  `#cards` (`web/src/cards/`), whose image route is **dev-server only** and never
+  fetches — so there is still no `/api/images` *proxy* (**D92**).
+  `docs/evidence/card-library.md` is what was measured, and *The card library
+  and the card browser*, above, has the status and twelve follow-ups. What stayed
+  out: report 03 §4.5's re-fetch on a newer `image_updated_at` and its dated retry
+  for a `missing` / `placeholder` image, `resolve --write`, the
+  `/cards/named?fuzzy=` rung, a production (non-Vite) route, and every-print
+  images without `--yes` (`tools/card-library/README.md`, *Not done*).
 - A deck builder.
 - `state_patch` / RFC 7386 merge-patch deltas.
 - Multiplayer. Accounts. Packaging.
@@ -3016,7 +3166,7 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 2 | Is the +2-evening M1 recorder worth it, or go straight for the browser seat (first game at evening 5, but no replay, no fixtures, JVM-coupled UI work)? | **Keep the M1 recorder.** |
 | 3 | React or vanilla TS for `web/`? | **React, with plain hooks.** |
 | 4 | Should anything ever rewrite `~/.forge/decks/constructed/Pacho SHIELD.dck` in place to add the missing `\|MSC` suffixes? | **Never rewrite it. Write a copy.** |
-| 5 | Card images hot-linked from `cards.scryfall.io`, or proxied through our own origin with a 302 (the way Endstep does)? | **Hot-link in v1.** |
+| 5 | Card images hot-linked from `cards.scryfall.io`, or proxied through our own origin with a 302 (the way Endstep does)? | **Hot-link in v1.** Unchanged for the board. The card browser (2026-09-27) serves the user's own image cache from the dev server's origin and hot-links on a miss — never a proxy (**D92**). |
 | 6 | Install a JDK? Not needed for this plan, but it would bring `jar`, `jshell`, a debugger and Maven. Unpack Temurin 21 into `tools/jdk/` (no sudo) or `apt install openjdk-21-jdk` (sudo)? | **No JDK. The JRE's `jdk.compiler` / `jdk.jdeps` modules suffice.** |
 | 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | Undecided — **NOTICE is written to publication quality anyway**, so either answer works. |
 | 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **AI difficulty stays deferred.** |
@@ -3026,3 +3176,6 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 12 | **New, Tier 2.** Should the live combat budget let the clip lane play (Tier 2 follow-up 1)? Today a combat batch in the human's own turn is snapped, so the lunge and the hit are replay-only. | **Unchanged: Tier 1's budgets stand.** The user's play-test of slice 1 (2026-09-27) reported nothing major, so the default holds; slice 2 fixed a second cause (the idle-gap clock, **D72**) and measured the first live (17 of 44 batches still snapped). Raise it again if the next play-test — *"What slice 2 hands to T9–T14"* — says the combat reads wrong live. |
 | 13 | **New, Tier 2 slice 3.** Should your figures face the OTHER seat? Measured in slice 3 (**D81**): the models' fronts are at +Z and `layout.ts`'s `seatFacingY('you')` is 0, so **your figures face your camera and the opponent's face away** — both sides face outward, away from the combat lanes. For: a badge, an eyepatch, a pistol, a laser eye and a face read on YOUR side. Against: an attacking figure lunges toward the opponent back first — the Doombot's exhaust leads its lunge and its laser leaves its eye on the far side and crosses its own body — and Agent 13's `pistolDraw` aims at you. | **Unchanged: your figures face you.** Turning them is one line (`seatFacingY`), and every prop and every T11 beat follows it through the one definition of a front — but it changes what the whole table looks like, so it is yours to decide after a play-test. Since the second verification pass two of the "against" points are gone whichever way you decide: an attacker turns to face its defender for the length of its attack (**D82**), and every identity prop reads from behind too (**D83**). |
 | 14 | **New, Tier 2 slice 3.** Is **likeness** — figures that look like the characters, a model per card — part of the end goal, or is identity-through-props (slice 3) where the arena should stop? | **Undecided; Tier 3 is not started and nothing assumes it.** Slice 3 is as far as identity goes inside Tier 2. If likeness is wanted, it is **personal-only** (local, gitignored, never committed or published, `committable: false` in the manifest), never generated from card art and never from Mixamo (**D54**), and its source is yours to choose — *Tier 3 — a note, not a plan*, in *M7 Tier 2* above. A play-test of slice 3 is the input: if the cards read as themselves at the table, the answer may be "no". |
+| 15 | **New, card library.** Commit `fixtures/cards/` — a 0.69 MB slice of Scryfall's data (172 `oracle_cards` lines, 84 MSH/MSC print lines, 6 sets, no images), reduced to the fields the library reads — or gitignore it? | **Committed as reduced** (**D90**): it keeps `cards-lib`, `cards-api` and six `cards-ui` tests offline and hermetic, and it is regenerated by `make-fixture.ts`, never hand-edited. The alternative is to gitignore it and let those tests skip when it is absent — a suite whose result depends on what is lying around, which the repo has been bitten by once (`MTGTABLE_WS_LOGS`). |
+| 16 | **New, card library.** What contact goes in `config.json`'s `scryfallUserAgent`? Scryfall asks for an accurate, identifying User-Agent; the committed one reads `github.com/<user>/mtg-table`. | **Only you can supply it.** Until then `build.ts` and `images.ts` warn on every run that talks to Scryfall, and NOTICE §2 says it must be replaced before anyone talks to Scryfall. |
+| 17 | **New, card library.** Fetch every MSH + MSC print's image (`images.ts --all-prints --yes`: 1,338 images, ~104 MiB into `var/cards/images/`), so browsing the two sets stops hot-linking? | **Not fetched**: only the ten decks' 41 images are cached, and the browser hot-links the rest from `cards.scryfall.io`. Nothing depends on the answer. |

@@ -24,14 +24,23 @@
  *
  * Pure enough to import anywhere: {@link viewFromLocation} takes the two strings
  * rather than reading `window`, so `node --test` can exercise every spelling.
+ *
+ * **The card browser is a third view, and not a renderer** (`web/src/cards/`,
+ * docs/evidence/card-library.md). `#cards` / `?view=cards` open it; it reads the
+ * local card library through a dev-only route and never touches the transport,
+ * so switching to it mid-game leaves the page-scoped socket alone. Its search
+ * state rides in the same hash after a `?` — `#cards?q=agent&set=msh` — which is
+ * why the hash is matched on the part before the first `?`.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 
-export type View = 'board' | 'arena';
+export type View = 'board' | 'arena' | 'cards';
 
 /** The hash spellings that mean "arena". Anything else is the board. */
 const ARENA_HASHES: ReadonlySet<string> = new Set(['arena', '/arena', '!arena', '#arena']);
+/** The hash spellings that mean "the card browser". */
+const CARDS_HASHES: ReadonlySet<string> = new Set(['cards', '/cards', '!cards', '#cards']);
 
 /**
  * Decide the view from a location's `hash` and `search`, in that order.
@@ -40,9 +49,11 @@ const ARENA_HASHES: ReadonlySet<string> = new Set(['arena', '/arena', '!arena', 
  * because a URL typo must not blank the page.
  */
 export function viewFromLocation(hash: string, search: string): View {
-  const cleanedHash = hash.replace(/^#+/, '').trim().toLowerCase();
+  // `#cards?q=agent` — the card browser's own state follows a `?` in the hash.
+  const cleanedHash = (hash.replace(/^#+/, '').split('?')[0] ?? '').trim().toLowerCase();
   if (cleanedHash !== '') {
-    return ARENA_HASHES.has(cleanedHash) ? 'arena' : 'board';
+    if (ARENA_HASHES.has(cleanedHash)) return 'arena';
+    return CARDS_HASHES.has(cleanedHash) ? 'cards' : 'board';
   }
   let view: string | null = null;
   try {
@@ -50,12 +61,15 @@ export function viewFromLocation(hash: string, search: string): View {
   } catch {
     view = null;
   }
-  return view !== null && view.trim().toLowerCase() === 'arena' ? 'arena' : 'board';
+  const named = view === null ? '' : view.trim().toLowerCase();
+  if (named === 'arena') return 'arena';
+  return named === 'cards' ? 'cards' : 'board';
 }
 
 /** The hash a view is written as. `board` clears the hash rather than writing `#board`. */
 export function hashForView(view: View): string {
-  return view === 'arena' ? '#arena' : '';
+  if (view === 'arena') return '#arena';
+  return view === 'cards' ? '#cards' : '';
 }
 
 /**
