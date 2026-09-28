@@ -86,11 +86,12 @@
  *     FigureData, ModelData, FigureProblem, ClipName, isClipName, tileDataOf,
  *     attachDataOf, EMPTY_FIGURE_DATA, EMPTY_MODEL_DATA (types.ts)
  *   arena/art.ts     the art palette, read off the hot path (lane BODIES, D144)
- *     useArtPalettes                         the tuning panel's swatch strip: this card's
- *                                            own art palette, face up only. Nothing here
- *                                            DRAWS the art rung: the pedestal (and the
- *                                            arena) pass no palettes until lane LOOK wires
- *                                            them in (PLAN.md's lane BODIES follow-up 13)
+ *     useArtPalettes, paletteNamesOf         the art rung as the arena draws it (D148):
+ *                                            the pedestal reads every face-up name on its
+ *                                            board and passes the palettes to `figurePose`
+ *                                            and `tilePose` exactly as `Arena.tsx` does; the
+ *                                            tuning panel's swatch strip and the framing's
+ *                                            poses read this card's, face up only
  *   arena/cues/      the cue engine — pure
  *     CueQueue (queue.ts) · REGISTRY (registry.ts)
  *     motionFromSearch, DEFAULT_MOTION, MotionFlags (motion.ts)
@@ -384,20 +385,20 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   // -- the resting board, and what the camera frames on it ---------------------
   const rest = useMemo(() => pedestalState(entry, options), [entry, options]);
   const presence = cueData.presence;
-  // Lane BODIES (D144): the card's own art palette, read once off the hot path by
-  // the arena's `art.ts`, for the tuning panel's swatch strip — never for a
-  // concealed entry. The poses below take none, exactly as the pedestal's do:
-  // the art rung is drawn only once LOOK passes palettes in (follow-up 13).
+  // Lane BODIES (D144, D148): the card's own art palette, read once off the hot
+  // path by the arena's `art.ts` — never for a concealed entry — for the tuning
+  // panel's swatch strip and for the framing's poses, which take it as the
+  // pedestal's do (the pedestal reads its whole board's, `paletteNamesOf`).
   const paletteNames = useMemo(() => (entry.concealed === null && entry.name !== '' ? [entry.name] : []), [entry]);
   const palettes = useArtPalettes(paletteNames, art);
   const focus = useMemo((): Framing[] => {
     const placed = layout(rest, presence ?? {});
     const poses = turnPoses(
-      figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits }),
+      figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits, palettes }),
       turn,
     );
     return figureIds(entry, options).map((id) => framingOf(placed, poses, id));
-  }, [rest, presence, traits, turn, entry, options]);
+  }, [rest, presence, traits, turn, entry, options, palettes]);
   const seat = `${entry.key}|${String(options.both)}|${mode}|${options.stance}`;
   // The caption's number: each framed body's DRAWN height in view 1 — its resting
   // rig projected through the table camera (legibility.ts), not the nominal scale.
@@ -1711,8 +1712,8 @@ function TuningPanel({
                   ? 'off for this card'
                   : traitFor(cardOf(entry, IDS.subject, 0), traits, artRow(artPalette)).spec.accent !== artPalette.accent
                     ? 'a hand-written accent outranks it'
-                    : 'the lowest rung here'}{' '}
-                — not drawn yet: the arena and the pedestal pass no palettes until lane LOOK wires them in (lane BODIES follow-up 13)
+                    : 'the lowest rung here'}
+                {artPalette.vivid ? '' : ' — nothing vivid, so no art tint (the colour identity speaks)'}
               </em>
             </span>
           )}

@@ -45,6 +45,7 @@ import {
   SQUAD_OFFSET_Z,
   SWARM_BEE_RATIO,
   anchorsOf,
+  expressionOf,
   familyOf,
   fitsFamily,
   swarmMembers,
@@ -416,7 +417,7 @@ test('traits: every deck humanoid wears its own costume — the task list read o
     ['Peggy Carter, Secret Agent', 'ready', 'waves'],
     ['Agent Phil Coulson', 'clasped', 'parted'],
     ['Quake, Agent of S.H.I.E.L.D.', 'braced', 'bob'],
-    ['Agent 13, Sharon Carter', 'aim', 'bun'],
+    ['Agent 13, Sharon Carter', 'highReady', 'bun'],
     ['Bold Biochemist', 'working', 'parted'],
     ['A.I.M. Scientists', 'working', null],
     ['Ant-Man, Reformed Rogue', 'akimbo', 'parted'],
@@ -496,10 +497,25 @@ function facesTheLens(seat: 'you' | 'opp'): boolean {
 }
 
 test('traits: every anonymous pose in the corpus carries no props, no hover, no swarm', () => {
+  // The second fix pass (D148; the verifier's round 2): the sweep hands the poses
+  // a palette map that answers EVERY name — so "no art colour" below is the
+  // pose's own gate speaking, not a map that was never passed. `palette.test.ts`'s
+  // hostile corpus is the stronger proof (it names the backs); this one also
+  // proves the face-up figures DO take the rung.
+  const vivid = { swatches: [], dominant: '#123456', accent: '#e08a2c', vivid: true, terrain: '#123456' };
+  const everyName = new (class extends Map<string, typeof vivid> {
+    override get(): typeof vivid {
+      return vivid;
+    }
+  })();
   let anonymous = 0;
+  let coloured = 0;
   for (const { file, state } of FRAMES) {
-    for (const pose of figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS }).values()) {
-      if (!pose.anonymous) continue;
+    for (const pose of figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS, palettes: everyName }).values()) {
+      if (!pose.anonymous) {
+        if (pose.art !== null) coloured += 1;
+        continue;
+      }
       anonymous += 1;
       assert.deepEqual(pose.props, [], `${file}: an anonymous figure carries props`);
       assert.equal(pose.lift, 0, `${file}: an anonymous figure hovers`);
@@ -515,8 +531,11 @@ test('traits: every anonymous pose in the corpus carries no props, no hover, no 
       assert.equal(pose.art, null, `${file}: an anonymous figure carries an art colour`);
     }
   }
-  console.log(`traits: ${String(anonymous)} anonymous figure-instances in the corpus, none with an identity, a costume, a pose, hair or a face`);
+  console.log(
+    `traits: ${String(anonymous)} anonymous figure-instances in the corpus, none with an identity, a costume, a pose, hair, a face or an art colour; ${String(coloured)} face-up ones took the art rung`,
+  );
   assert.ok(anonymous >= 1138, `only ${String(anonymous)} anonymous instances — the morph fixtures are not being read`);
+  assert.ok(coloured >= 1000, `only ${String(coloured)} face-up figures took the art rung — the map was not read`);
 });
 
 // ---------------------------------------------------------------------------
@@ -642,8 +661,11 @@ test('traits: the census — every deck card reads as itself, and every row fire
   // skirt and a sidearm (D141–D143): measured 16 at the corpus's worst frame
   // (disjoint.jsonl@241), 15 at g1@316 and 14 at @355, where the whole scene
   // draws 85 calls with bloom off on the GTX 1080 (docs/evidence/bodies.md) —
-  // inside the 90.
-  assert.ok(worstKinds.kinds <= 16, `${String(worstKinds.kinds)} prop kinds in one frame (${worstKinds.where})`);
+  // inside the 90. The second fix pass (D149) raised it to 17: a face in grit is
+  // a kind of its own while a kneeling, attacking or blocking person is on the
+  // table beside a resting one (human-auto-2026.jsonl@776 is the worst frame);
+  // docs/evidence/bodies.md §8 has the calls it costs at the budget frames.
+  assert.ok(worstKinds.kinds <= 17, `${String(worstKinds.kinds)} prop kinds in one frame (${worstKinds.where})`);
   assert.ok(worstInstances.n <= 96, `${String(worstInstances.n)} prop instances in one frame`);
 });
 
@@ -715,9 +737,11 @@ test('traits: with no trait data the poses are slice 2’s — identity is purel
       // for that body (carved off it, D141) and the face (D142) — and nothing else.
       const own = pose.modelId === null ? undefined : BODY_HAIR[baseModelOf(pose.modelId)];
       const head = own === undefined || own === 'none' ? [] : [HAIR_KIND[own]];
+      // …its face set in grit while it kneels, attacks or blocks (D149).
+      const face = expressionOf(pose.stance) === 'grit' ? 'faceGrit' : 'face';
       assert.deepEqual(
         pose.props.map((p) => p.kind),
-        pose.rest === null ? [] : [...head, 'face'],
+        pose.rest === null ? [] : [...head, face],
         'with no traits a figure carries only its own head',
       );
       assert.equal(pose.rest === null || pose.rest === 'stand', true, 'with no traits a body rests in its own idle');
@@ -950,6 +974,8 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
 const GENERIC: Readonly<Record<string, string>> = {
   face: 'on every person — it identifies no card; `traits: the face reads …` measures it',
   facePatched: 'the face under an eyepatch — the eyepatch is the identity, and is held to the bar',
+  faceGrit: 'the face in grit (D149): an expression of the stance, not of the card',
+  facePatchedGrit: 'the patched face in grit (D149)',
 };
 
 /**
@@ -1246,13 +1272,16 @@ test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles
     ['hairBun', 150, 600],
     ['face', 40, 150],
     ['facePatched', 30, 120],
-    ['coatTails', 16, 64],
-    ['cape', 16, 64],
+    ['faceGrit', 40, 150],
+    ['facePatchedGrit', 30, 120],
+    ['coatTails', 8, 64],
+    ['cape', 8, 64],
     ['coat', 60, 240],
     ['sidearm', 20, 80],
   ];
   for (const [kind, min, max] of budget) {
-    const geometry = buildKindGeometry(kind);
+    // What the prop field draws: one sheet (its material is DoubleSide).
+    const geometry = buildKindGeometry(kind, { lining: false });
     assert.ok(geometry !== null, `${kind} has no procedural geometry`);
     const triangles = geometry.getAttribute('position').count / 3;
     lines.push(`${kind} ${String(triangles)}`);
@@ -1262,6 +1291,72 @@ test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles
   assert.equal(buildKindGeometry('hairParted'), null);
   assert.equal(buildKindGeometry('hairLong'), null);
   console.log(`traits: lane BODIES' kinds, triangles an instance — ${lines.join(' · ')}`);
+});
+
+test('traits: a cloth kind carries its LINING for a renderer that culls back faces — the duelists’ bake — and the field draws one sheet (D147)', () => {
+  for (const kind of ['coatTails', 'cape'] as const) {
+    const sheet = buildKindGeometry(kind, { lining: false })!;
+    const lined = buildKindGeometry(kind)!;
+    const n = sheet.getAttribute('position').count;
+    assert.equal(lined.getAttribute('position').count, n * 2, `${kind}: the lining is not a second sheet`);
+    const p = lined.getAttribute('position');
+    const q = lined.getAttribute('normal');
+    const a = new THREE.Vector3();
+    const b = new THREE.Vector3();
+    const c = new THREE.Vector3();
+    for (let t = 0; t < n; t += 3) {
+      // The lining's triangle t is the sheet's, wound the other way (a, c, b), inset along the normal, facing in.
+      for (const [k, src] of [[0, 0], [1, 2], [2, 1]] as const) {
+        a.fromBufferAttribute(sheet.getAttribute('position'), t + src);
+        b.fromBufferAttribute(sheet.getAttribute('normal'), t + src);
+        c.fromBufferAttribute(p, n + t + k);
+        assert.ok(c.distanceTo(a.clone().addScaledVector(b, -0.0025)) < 1e-6, `${kind}: lining vertex ${String(t + k)} is not the sheet's, inset`);
+        c.fromBufferAttribute(q, n + t + k);
+        assert.ok(c.distanceTo(b.clone().negate()) < 1e-6, `${kind}: lining normal ${String(t + k)} does not face in`);
+      }
+      // The winding really is reversed: the geometric normal of the lining's triangle opposes the sheet's.
+      const face = (attr: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, i: number): THREE.Vector3 => {
+        const v0 = new THREE.Vector3().fromBufferAttribute(attr, i);
+        const v1 = new THREE.Vector3().fromBufferAttribute(attr, i + 1);
+        const v2 = new THREE.Vector3().fromBufferAttribute(attr, i + 2);
+        return v1.sub(v0).cross(v2.sub(v0));
+      };
+      assert.ok(face(sheet.getAttribute('position'), t).dot(face(p, n + t)) < 0, `${kind}: lining triangle ${String(t / 3)} is wound the same way`);
+    }
+  }
+  // Every other kind is one sheet either way (the helmet, the hat, the face — solids and details).
+  for (const kind of ['coat', 'hat', 'face', 'hairBob', 'eyepatch'] as const) {
+    assert.equal(buildKindGeometry(kind)!.getAttribute('position').count, buildKindGeometry(kind, { lining: false })!.getAttribute('position').count, `${kind} grew a lining`);
+  }
+  // The field asks for the sheet: its built coat is the unlined count.
+  const field = new PropField();
+  const mesh = field.group.children.find((c) => c.name === 'props:coatTails') as THREE.InstancedMesh | undefined;
+  assert.ok(mesh !== undefined);
+  assert.equal(mesh.geometry.getAttribute('position').count, buildKindGeometry('coatTails', { lining: false })!.getAttribute('position').count, 'the prop field draws the lined coat');
+  field.dispose();
+});
+
+test('traits: a face sets its jaw — grit while the figure kneels, attacks or blocks, neutral at rest, over the corpus (D149)', () => {
+  assert.equal(expressionOf('ready'), 'neutral');
+  assert.equal(expressionOf('sick'), 'neutral');
+  for (const stance of ['crouch', 'attacking', 'blocking'] as const) assert.equal(expressionOf(stance), 'grit');
+  const seen = { neutral: 0, grit: 0 };
+  for (const { file, state } of FRAMES) {
+    for (const pose of figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS }).values()) {
+      const faces = pose.props.filter((p) => /^face/.test(p.kind)).map((p) => p.kind);
+      if (pose.anonymous) {
+        assert.deepEqual(faces, [], `${file}: an anonymous figure has a face`);
+        continue;
+      }
+      if (faces.length === 0) continue;
+      assert.equal(faces.length, 1, `${file}: two faces on one figure`);
+      const grit = expressionOf(pose.stance) === 'grit';
+      assert.equal(/Grit$/.test(faces[0]!), grit, `${file}: a ${pose.stance} figure wears ${faces[0]!}`);
+      seen[grit ? 'grit' : 'neutral'] += 1;
+    }
+  }
+  console.log(`traits: faces over the corpus — ${String(seen.neutral)} neutral, ${String(seen.grit)} in grit`);
+  assert.ok(seen.grit > 100 && seen.neutral > 100, 'the corpus did not exercise both expressions');
 });
 
 // ---------------------------------------------------------------------------
@@ -1394,6 +1489,99 @@ test('traits: the coat DRAPES — no skirt link lies flat or flies out, at rest 
     );
   }
   console.log(`traits: the drape (idle, crouch, attack, block, hit, summon, 11 frames each)\n${lines.join('\n')}`);
+});
+
+/**
+ * **The coat's FIT at rest** (the second fix pass, D147): every body and skirt
+ * panel's hem, as the prop field draws it on a figure standing at rest, within
+ * `COAT_FIT` of a height of the body's own axis (its pelvis). The verifier's
+ * second round read D146's coat as "a wide bell that hides his legs" and "a huge
+ * white bell … that swallows the figure": its lower links' hems stood 0.26 out
+ * round hips 0.08 wide. The control is that bell — every panel 1.45× wider, D146's
+ * lower hem over D147's — swapped into the kit for the run; it must fail.
+ */
+const COAT_FIT = 0.2;
+
+async function restReachOf(card: AnyCard, filler: AnyCard): Promise<{ reach: number; front: number }> {
+  const library = await loadLibrary();
+  const pose = soloPose(card, filler, 'you', false, false)!;
+  const still: import('../src/arena/scene/props.ts').PropOffsetSource = {
+    offsetOf: () => ({ dx: 0, dy: 0, dz: 0, scale: 1, opacity: 1, dissolve: 0, glow: 0, dRotY: 0 }),
+    clipOf: () => null,
+  };
+  const rig = rigOf(pose, library)!;
+  rig.root.updateMatrixWorld(true);
+  const pelvis = new THREE.Vector3();
+  rig.root.traverse((node) => {
+    if (node.name.replace(/_[1-9]\d*$/, '') === 'pelvis') node.getWorldPosition(pelvis);
+  });
+  const field = new PropField();
+  field.setLibrary(library, MODELS);
+  field.commit(new Map([[pose.cardId, pose]]), new Map([[pose.cardId, rig]]), MODELS);
+  field.bind(still, 0);
+  const mesh = field.group.children.find((c) => c.name === 'props:coatTails') as THREE.InstancedMesh | undefined;
+  assert.ok(mesh !== undefined && mesh.count === 14);
+  const matrix = new THREE.Matrix4();
+  const hem = new THREE.Vector3();
+  let reach = 0;
+  // The front opening: the widest arc no panel covers within 90° of the figure's
+  // front, measured round the pelvis at each panel's mid-height (the idle turns the
+  // hips about 15°, so the opening is not centred on the stand's front — its WIDTH
+  // is what a coat worn open has).
+  const covered = new Array<boolean>(360).fill(false);
+  const facing = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), pose.facingY);
+  const angleOf = (v: THREE.Vector3): number => {
+    const dx = v.x - pelvis.x;
+    const dz = v.z - pelvis.z;
+    return (Math.atan2(dx * facing.z - dz * facing.x, dx * facing.x + dz * facing.z) * 180) / Math.PI;
+  };
+  for (let i = 0; i < mesh.count; i++) {
+    mesh.getMatrixAt(i, matrix);
+    hem.set(0, -COAT_PANEL.length, COAT_PANEL.hem).applyMatrix4(matrix);
+    reach = Math.max(reach, Math.hypot(hem.x - pelvis.x, hem.z - pelvis.z) / pose.height);
+    const half = ((COAT_PANEL.arc / 2) * Math.PI) / 180;
+    for (let k = 0; k <= 40; k++) {
+      const a = -half + (2 * half * k) / 40;
+      hem.set(Math.sin(a) * COAT_PANEL.hem, -COAT_PANEL.length / 2, Math.cos(a) * COAT_PANEL.hem).applyMatrix4(matrix);
+      covered[(Math.round(angleOf(hem)) + 360) % 360] = true;
+    }
+  }
+  let front = 0;
+  let run = 0;
+  for (let d = -90; d <= 90; d++) {
+    run = covered[(d + 360) % 360] ? 0 : run + 1;
+    front = Math.max(front, run);
+  }
+  field.dispose();
+  return { reach, front };
+}
+
+test('traits: the coat FITS — at rest every panel hangs close round the body, open down the front (D147; the D146 bell fails it)', async () => {
+  const cards = corpusCards();
+  const filler = cards.get('Soldier Token')!;
+  const kit = PROP_KIT.coatTails.anchors as Record<string, readonly PropAnchor[] | undefined>;
+  const committed = kit['human']!;
+  const bell = committed.map((a) => {
+    const size = typeof a.size === 'number' ? ([a.size, a.size, a.size] as const) : a.size;
+    return { ...a, size: [size[0] * 1.45, size[1], size[2] * 1.45] as const };
+  });
+  const lines: string[] = [];
+  for (const name of ['Nick Fury, Spymaster', 'Bold Biochemist']) {
+    const card = cards.get(name)!;
+    const fit = await restReachOf(card, filler);
+    kit['human'] = bell;
+    let control: { reach: number; front: number };
+    try {
+      control = await restReachOf(card, filler);
+    } finally {
+      kit['human'] = committed;
+    }
+    lines.push(`  ${name.padEnd(22)} hem ≤ ${fit.reach.toFixed(3)} of a height from the pelvis, open ${fit.front.toFixed(0)}° down the front; the D146 bell ${control.reach.toFixed(3)}`);
+    assert.ok(fit.reach <= COAT_FIT, `${name}: a hem stands ${fit.reach.toFixed(3)} of a height out at rest`);
+    assert.ok(fit.front >= 16, `${name}: the coat is closed down the front (an opening of ${fit.front.toFixed(0)}°)`);
+    assert.ok(control.reach > COAT_FIT, `${name}: the bell passes too (${control.reach.toFixed(3)}) — this test cannot see a bell`);
+  }
+  console.log(`traits: the coat's fit at rest\n${lines.join('\n')}`);
 });
 
 test('traits: the drape rule is well-formed — a hanging panel follows a joint panel of its own kind, and every joint it names is on the rig (D146)', async () => {

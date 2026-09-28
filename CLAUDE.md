@@ -2411,7 +2411,7 @@ look's two `uMaterialize` writers, the pool at 49), `camera` and `workshop` —
 rest). Its evidence drivers and PNGs are local, under `var/motion/` (the fix pass's
 under `var/motion/fix1/`, the merge's under `var/motion/merge/`).
 
-## Lane BODIES — the conventions D140–D146 added
+## Lane BODIES — the conventions D140–D149 added
 
 Five, and the thesis is one sentence: **a card's attitude, head and cloth are
 shared data on the shared bodies, and its art lends colour only where no row
@@ -2429,7 +2429,11 @@ convention holds; these are what a change here must also keep.
    through `baseModelOf` (the prop field's binds, the squad's followers, the
    manifest's widths); a new pose is a row in `REST_KIT`, and `clips.test.ts`
    holds its clips and joints to the rig. Never a new cue id, and never a pose
-   estimated from card art.
+   estimated from card art. **Judge a pose from above** (**D149**): the table
+   view and the workshop's 1× look down on a figure, so a barrel pointed at the
+   lens shortens to a stub, a hand in front of the belly draws low and an elbow
+   behind the back draws high — Agent 13 rests at `highReady`, and `atEase`,
+   `clasped` and `braced` were re-aimed for it.
 2. **A head is props** (**D141**, **D142**). Hair and the face are derived kinds
    rigid on `Head`, written in figure units round the measured head
    (`HEAD_SHAPE`), one draw call per kind on the table. The bodies are drawn bald
@@ -2437,9 +2441,12 @@ convention holds; these are what a change here must also keep.
    (`BODY_HAIR`); hair wears the costume's `hair` slot. `face` is `on`,
    `patched` (no eye under an eyepatch) or `none`. The face identifies no card,
    so it is held to its own bar (≥ 4 px at the table view, ≥ 8 over the shoulder,
-   from the seat facing the lens), not the identity raster's 48. **Hard rule 8**:
-   an anonymous figure has no rest pose, no hair, no face and no art colour
-   (asserted over 1,179 corpus instances).
+   from the seat facing the lens), not the identity raster's 48. **An expression
+   is a pose** (**D149**): `expressionOf(stance)` sets the jaw — `faceGrit` /
+   `facePatchedGrit` while the snapshot says the figure kneels, attacks or blocks —
+   and pain on a hit is a cue, lane MOTION's. **Hard rule 8**: an anonymous figure
+   has no rest pose, no hair, no face and no art colour (asserted over 1,179
+   corpus instances, with a palette map that answers every name).
 3. **Cloth drapes as a chain of rigid panels on joints** (**D143**, amended by
    **D146**) — no simulation, no clock, no rigid shell below the chest. `coat` is
    the yoke on `spine_03`; `coatTails` is the body on `spine_01` and a two-link
@@ -2454,7 +2461,14 @@ convention holds; these are what a change here must also keep.
    from hanging, against the kit's 6°). New cloth is more `COAT_PANEL` anchors,
    judged in the workshop at ready, kneeling, attacking and blocking. A kind's
    buffer holds `PROP_CAPACITY` = 64 instances — a coat is fourteen, and the
-   default mirror can put four on the table (a test holds it).
+   default mirror can put four on the table (a test holds it). **A coat is cut
+   to the body it is on** (**D147**): its axis is the body's, every hem within
+   0.2 of a height of the pelvis at rest, open down the front — `traits.test.ts`'s
+   fit test, with the D146 bell as its negative control. **Cloth is LINED**: a
+   `coatTails` or `cape` geometry carries a reversed, inset second sheet unless
+   the caller asks `{ lining: false }` — the prop field does (it is `DoubleSide`),
+   the duelists' `FrontSide` bake does not, and that is what makes a duelist's
+   coat a coat from behind and his cloak a cloak from the front.
 4. **The art palette is the LOWEST rung, runtime only, face up only** (**D144**).
    `arena/art.ts` is the only arena module that reads pixels, and
    `paletteNamesOf` its only entry point (it skips every back and every redacted
@@ -2466,11 +2480,13 @@ convention holds; these are what a change here must also keep.
    every back and every stub a real name, so removing any one gate fails it). A
    palette never paints a costume, a hand-written row always wins, `palette: off`
    turns it off, and **nothing derived from card art is committed** —
-   `palette.test.ts`'s pixels are synthetic. **No page passes palettes in yet**:
-   `Arena.tsx` and `workshop/Pedestal.tsx` are lane LOOK's files, so the edit that
-   switches the rung on is PLAN.md's lane BODIES follow-up 13, written out; until
-   it lands the workshop's tuning panel shows each card's swatches and nothing
-   draws them.
+   `palette.test.ts`'s pixels are synthetic. **It is switched on** (**D148**):
+   `Arena.tsx` and `workshop/Pedestal.tsx` — lane LOOK's files — each carry the
+   pass-through `paletteNamesOf(placed)` → `useArtPalettes` → `figurePose` /
+   `tilePose` and nothing else of this lane; liveness holds every caller of
+   `useArtPalettes` (the two that draw take only `paletteNamesOf`'s names, the
+   tuning panel only its own face-up card's, and no fourth file). The accent is
+   the vivid cluster with the best `share × (0.3 + saturation) × (0.4 + value)`.
 5. **The library's budget is the manifest's** (**D145**): `budget.libraryBytes`
    460,800 and `budget.triangles` 30,000 in `tools/assets-manifest.json`, read by
    `tools/build-figures.mjs` (still the only writer of `models.json`) and pinned
@@ -2478,16 +2494,20 @@ convention holds; these are what a change here must also keep.
    without the user's approval in chat (PLAN.md's lane BODIES follow-up 2).
 
 The lane's tests: `palette.test.ts` (new — the hostile corpus is the one that
-proves the gates), liveness's lane BODIES clause, and new cases in
-`traits.test.ts` (the task list of poses and hair, the face raster, kind triangle
-budgets, the drape test with the first cut as its negative control, the drape
-rule's form, the prop capacity), `clips.test.ts` (every pose's clips and joints,
-the bald body), `facing.test.ts` (the face on the front, the patched eye on the
-patch's side, the coat open at the front) and `figures.test.ts` (the budget).
-`npm --prefix web test` is **884 `node --test` + 94 vitest** on the branch.
-The gate ran green on the committed tree from a deleted `bridge/out` at
-`WSPORT=8720` in **912 s** (9c's fourteen games 378 s; 894 / 886 pass / 0 fail / 8
-skipped + 94 vitest inside it; `var/check-all-bodies-fix1.log`). The lane added no gate step.
+proves the gates), liveness's lane BODIES clause (now also every caller of
+`useArtPalettes`), and new cases in `traits.test.ts` (the task list of poses and
+hair, the face raster, kind triangle budgets, the drape test with the first cut
+as its negative control, the drape rule's form, the prop capacity, the coat's fit
+with the D146 bell as its control, the lining, and grit over the corpus),
+`clips.test.ts` (every pose's clips and joints, the bald body), `facing.test.ts`
+(the face on the front, the patched eye on the patch's side, the coat open at the
+front) and `figures.test.ts` (the budget). `npm --prefix web test` is **887
+`node --test` + 94 vitest** on the branch. The gate ran green on the committed
+tree from a deleted `bridge/out` at `WSPORT=8720` in **877 s** (9c's
+fourteen games 368 s; 897 / 889 pass / 0 fail / 8 skipped + 94 vitest inside it;
+`var/check-all-bodies-fix1.log`). The lane added no gate step. **Headroom is
+thin**: the worst `g1`@316 sample draws 88 calls and 29,371 triangles against the
+90 and 30,000 lines, so measure (`tools/arena-bench.mjs`) before the next kind.
 
 ## Treat forge-src as prose
 

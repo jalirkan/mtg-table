@@ -6201,14 +6201,16 @@ speed, the undo race) and over report 15 and LOOK; the spike's own commit
 
 ---
 
-## Lane BODIES — resting poses, hair, faces, coats that drape, and the art's own colours (art direction, 2026-09-28; D140–D146)
+## Lane BODIES — resting poses, hair, faces, coats that drape, and the art's own colours (art direction, 2026-09-28; D140–D149)
 
 **Status: built, measured and committed on branch `bodies`** (worktree
 `mtg-table-t2n`, off `c81f674` — `main`'s `a092d3a` plus report 15 and its
 `?look=comic` spike). This is report 15's **Lane BODIES** (§9.3), one of three
 lanes built in parallel with **LOOK** (materials, ink, stage) and **MOTION**
-(comic VFX). It edits no file the other two own; what it needs from them is
-written below as follow-ups with the exact edit. Decisions **D140–D146** are
+(comic VFX). It edits no file the other two own but two — `Arena.tsx` and
+`workshop/Pedestal.tsx`, LOOK's, which carry the art rung's pass-through since the
+second fix pass (**D148**) — and what else it needs from them is written below as
+follow-ups with the exact edit. Decisions **D140–D149** are
 numbered in the lane's reserved range and are renumbered contiguously at merge;
 `docs/evidence/bodies.md` is what was measured, with the before and after
 pictures under `var/bodies/`. The lane was cut off once by a usage limit and
@@ -6220,7 +6222,16 @@ plumbing had been written into `Arena.tsx` and `workshop/Pedestal.tsx`, which
 are lane LOOK's — reverted, and written out as follow-up 13; the palette test
 could not tell a missing gate — it now runs a hostile corpus and fails with any
 gate removed; and the coat's calf-riding skirt drew a sliver, ribbons and a flap
-— it now hangs from the pelvis (**D146**).
+— it now hangs from the pelvis (**D146**). **A verifier's second round** found
+one blocker (an abandoned, uncommitted attempt at a further pass left the tree
+failing a test — discarded, `var/bodies/fix3/abandoned-d147.diff`), five majors
+and four minors, and read the pictures; the **second fix pass** (evidence §8)
+cut the coat to the body and lined the cloth for the duelists' one-sided bake
+(**D147**), switched the art rung on with the pass-through follow-up 13 wrote
+out, proved not to collide with lane LOOK's branch (**D148**), and set every
+face's jaw in grit while it kneels, attacks or blocks, gave Agent 13 the high
+ready, re-aimed the poses a lens looking down misread, and re-cut the bob as hair
+(**D149**).
 
 ```bash
 npm --prefix web run dev     # /#workshop?card=Nick%20Fury — the rest, hair, face and
@@ -6231,44 +6242,56 @@ npm --prefix web run dev:arena   # g1.jsonl — frame 355 is the budget frame
 What landed, in the brief's order of value:
 
 1. **A signature resting pose per card** (**D140**). `figures/rests.ts` is a
-   closed table of nine poses — each a frame of a library clip, a few joint aims
+   closed table of ten poses — each a frame of a library clip, a few joint aims
    and a breathing clip — derived at load into model variants
    (`agent@folded`). `traits.json`'s `rest`: Fury `folded`, Peggy `ready`,
-   Coulson `clasped`, Quake `braced`, Agent 13 `aim`, the scientists `working`,
+   Coulson `clasped`, Quake `braced`, Agent 13 `highReady`, the scientists `working`,
    heroes `akimbo`, spies and soldiers `atEase`. Still a pose; still kneels when
    tapped.
+   The second fix pass added **`highReady`** (Agent 13: the pistol up beside her
+   face) and re-aimed `atEase`, `clasped` and `braced` for a lens that looks down
+   (**D149**).
 2. **Hair as shared kinds** (**D141**): the bodies' own two hairstyles carved off
    at load and baked as kinds, four procedural shells (`crop`, `bob`, `waves`,
    `bun`), one draw call per style on the table. **The pack was not downloaded**
-   (follow-up 2).
+   (follow-up 2). The bob is re-cut as hair — a swept fringe, open temples, lit
+   locks (**D149**).
 3. **A procedural comic face** (**D142**), 88 triangles, on every face-up person,
-   and `facePatched` under Fury's eyepatch.
+   and `facePatched` under Fury's eyepatch — **in grit** (`faceGrit`,
+   `facePatchedGrit`) while the figure kneels, attacks or blocks (**D149**).
 4. **Coats that drape** (**D143**, **D146**): `coat` is now the yoke,
    `coatTails` the coat's body (on the lowest spine joint) and its skirt (a
    two-link chain from the pelvis that follows each thigh part-way and hangs
-   toward the upright), `cape` a cloak — Doom's, on the villain duelist.
+   toward the upright), `cape` a cloak — Doom's, on the villain duelist. **Cut to
+   the body** since the second fix pass — a finger's width off the hips, to just
+   below the knee, open down the front — and **lined** for the duelists'
+   one-sided bake (**D147**).
 5. **The art's palette** (**D144**): k-means over each face-up card's own image,
-   off the hot path, as the lowest rung — accent, tint, land tile, aura. **Built
-   and tested, not yet switched on**: the two lines that pass it in are in lane
-   LOOK's files (follow-up 13). The workshop's tuning panel shows the swatches.
+   off the hot path, as the lowest rung — accent, tint, land tile, aura. **Switched
+   on** by the second fix pass (**D148**): `Arena.tsx` and `workshop/Pedestal.tsx`
+   pass the palettes in (follow-up 13's edit, a pass-through in lane LOOK's two
+   files that merges cleanly with LOOK's branch); the tuning panel's `palette:
+   art · off` switches what the pedestal draws.
 6. **`figures.glb`'s budget** re-set to 450 KiB by measurement (**D145**), read
    by the build from the manifest.
 
-What it costs, measured after the fix pass (evidence §7.5): **+6 draw calls and
-+1,826 triangles** over the base in every paired sample — at `g1`@316 with bloom
-off on the GTX 1080, 83 calls and 26,066 triangles with 10 figures drawn (the
-base 77 and 24,240), and 87 and 29,246 on a SwiftShader sample that drew 11 (the
-base 81 and 27,420). Report 13 §8.2's lines are 90 and 30,000; with lane LOOK's
-own budget (+2 calls, +500 triangles) the worst sample projects to 89 and 29,746,
-so the next kind on the table needs a measurement first. The 2D entry chunk is
-the base's size exactly and carries no `three`; `arena-scene` grows 6.9 kB gzip;
-`npm --prefix web test` is **884 `node --test` + 94 vitest** (+14 over the base's
-870). The gate ran green on the committed tree from a deleted `bridge/out` at
-`WSPORT=8720`: **912 s**, exit 0, 9c's fourteen games 378 s, at a load average of
-5–8 with other lanes' games running (`var/check-all-bodies-fix1.log`; the first
-cut's was 893 s, `var/check-all-bodies.log`). `~/forge` and `~/.forge` are unchanged.
+What it costs, measured after the second fix pass (evidence §8.5, the base and
+the branch benched back to back): **+6 to +7 draw calls and ~1,950 triangles**
+over the base — at `g1`@316 with bloom off on the GTX 1080, 84 calls and 26,167
+triangles with 10 figures drawn (the base 77 and 24,240), at @355 85 and 26,391
+(79 and 24,368), and 88 and 29,371 on a SwiftShader sample that drew 11 (the base
+81 and 27,420). The seventh call is a face in grit beside a face at rest. Report
+13 §8.2's lines are 90 and 30,000; with lane LOOK's own budget (+2 calls, +500
+triangles) the worst sample projects to **90 and 29,871 — on the line**, so the
+next kind on the table needs a measurement first. The 2D entry chunk is the base's
+size and carries no `three`; `arena-scene` grows 8.8 kB gzip. `npm --prefix web
+test` is **887 `node --test` + 94 vitest** (the base's 870). The gate ran
+green on the committed tree from a deleted `bridge/out` at `WSPORT=8720`:
+**877 s**, exit 0, 9c's fourteen games 368 s (`var/check-all-bodies-fix1.log`; the
+first fix pass's 912 s is `var/check-all-bodies-fix1-round1.log`, the first cut's
+893 s `var/check-all-bodies.log`). `~/forge` and `~/.forge` are unchanged.
 
-### Lane BODIES follow-ups — seventeen, 2026-09-28
+### Lane BODIES follow-ups — twenty-one, 2026-09-28 (four closed and three partly by the second fix pass)
 
 1. **A figure that mounts KNEELING blends the stock idle under the kneel —
    `scene/FigureLayer.tsx`, LOOK's file.** `FigureLayer` plays the body's `idle`
@@ -6302,21 +6325,26 @@ cut's was 893 s, `var/check-all-bodies.log`). `~/forge` and `~/.forge` are uncha
    each body's clips into one long clip with named ranges would roughly halve it;
    the clip lane already scrubs `action.time`, so it is a build change plus a
    range table in `models.json`.
-4. **Expressions.** Report 15 §6.2's neutral / grit / pain. Grit as a POSE (a
-   `faceGrit` kind chosen when `stance` is `tapped`, `attacking` or `blocking`)
-   is this lane's kind of change; pain on `hit` is a cue and belongs to MOTION.
+4. **Expressions** — *grit done by the second fix pass (**D149**); pain open,
+   and MOTION's.* Report 15 §6.2's neutral / grit / pain. Grit is a POSE: the
+   `faceGrit` and `facePatchedGrit` kinds, chosen when `stance` is `crouch`
+   (tapped), `attacking` or `blocking`. Pain on `hit` is a cue: it needs the prop
+   field to swap a figure's face kind for a cue's length, which is a new
+   offset-side API (follow-up 19).
 5. **A face on the director duelist.** `figures/duelists.ts`'s validator accepts
    only `PROP_KINDS`, and `face` is derived; `DuelistLayer`'s bake is generic, so
    allowing `face` in a look is a validator change. From three-quarters behind it
    would barely show; the villain wears a helm.
-6. **`FigurePose.art` is carried and not yet drawn** (and is `null` everywhere
-   until follow-up 13 passes the palettes in). It is the art rung's vivid
-   accent for LOOK's rim and MOTION's burst and mote colours (report 15 §7.2).
-7. **The palette's accent pick.** `share × (0.3 + saturation)` favours a large
-   muted cluster: Fury's accent is `#867448`, not his explosion's `#cba66e`.
-   A brightness term, or preferring a hue far from the dominant, is a tuning
-   question to judge in the workshop's swatch strip.
-8. **The coat close up.** Panels are rigid links, so a close view shows small
+6. **`FigurePose.art` is carried and not yet drawn** — *non-null since the
+   second fix pass passes the palettes in (**D148**).* It is the art rung's vivid
+   accent for LOOK's rim and MOTION's burst and mote colours (report 15 §7.2);
+   neither lane reads it yet.
+7. **The palette's accent pick** — *closed by the second fix pass (**D148**).*
+   `share × (0.3 + saturation)` favoured a large muted cluster: Fury's accent was
+   `#867448`, not his explosion's. The score is now `× (0.4 + value)`, and
+   `palette.test.ts` holds report 15 §7.1's own clusters to the explosion.
+8. **The coat close up** — *smaller since **D147** cut it to the body; still a
+   rigid-panel cost.* Panels are rigid links, so a close view shows small
    ledges where one overlaps the next (**D143**'s known cost; the calf swing it
    also named is gone with **D146**). A kneeling Biochemist's front lower link
    hangs in front of his knee, over the card — a coat draped over a knee, but a
@@ -6326,17 +6354,23 @@ cut's was 893 s, `var/check-all-bodies.log`). `~/forge` and `~/.forge` are uncha
 9. **The cape's shoulder panels are rigid on `spine_03`**, as the coat's body was
    before this lane's second pass. The duelists' gestures bend little; a card that
    wears a cape and a bending pose would want the same two-link split.
-10. **The procedural hair reads as a cap close up** (`crop` most). The pack's
+10. **The procedural hair reads as a cap close up** (`crop` most) — *the bob
+    re-cut as hair by **D149** (a swept fringe, open temples, lit locks); `crop`,
+    `waves` and `bun` unchanged.* The pack's
     hairstyles (follow-up 2) are the fix; until then the shells are judged at the
     table view, where they pass the identity raster from both seats.
 11. **`HEAD_SHAPE` and the face landmarks are measured constants** for the two
     Universal Base Characters bodies. A new body family needs them measured again
     (a test could derive them from the rig's `Head` and the skin slot's extent).
 12. **The palette runs on the main thread** in an idle callback, 3–22 ms a card
-    at ¼ scale. A Worker if a board of many new cards ever stutters on its first
-    frames.
+    at ¼ scale — in the arena too since **D148**. A Worker if a board of many new
+    cards ever stutters on its first frames.
 13. **Switch the art rung on — `web/src/arena/Arena.tsx` and
-    `web/src/workshop/Pedestal.tsx`, lane LOOK's files** (report 15 §9.1, §9.4).
+    `web/src/workshop/Pedestal.tsx`, lane LOOK's files** (report 15 §9.1, §9.4) —
+    *closed by the second fix pass (**D148**): the edit below is applied as written
+    (the palette's accent also gained follow-up 7's brightness term), and `git
+    merge-tree` of `bodies` and `look` reports no conflict in either file (evidence
+    §8.4). At merge, keep both hunks.*
     The first cut edited both; the fix pass reverted the hunks so the two lanes
     do not collide. Every pose function already takes `palettes`, so the rung
     switches on the day this lands, in both at once (the workshop must draw what
@@ -6400,7 +6434,10 @@ cut's was 893 s, `var/check-all-bodies.log`). `~/forge` and `~/.forge` are uncha
     under the lower links (`HANG_FROM`): the upper bands still read as rings round
     the coat from the table view (`var/bodies/fix1/coat-v3/`). The cape keeps its
     trim, which its shoulder panels hide.
-15. **Dark procedural hair still reads as a cap from above.** The fix pass
+15. **Dark procedural hair still reads as a cap from above** — *closed for the
+    bob by **D149**: a band of lit locks (`sheen`, a vertex colour over 1) and a
+    dark brown rather than a near-black; Quake's face now shows 8 px at the table
+    view.* The fix pass
     shaded every other meridian darker toward the hem (`strands`), which turns
     Agent 13's blonde bun into combed locks; on Quake's near-black bob a darker
     stripe does not show, and from the workshop's high framing a bob's hem tips
@@ -6412,7 +6449,9 @@ cut's was 893 s, `var/check-all-bodies.log`). `~/forge` and `~/.forge` are uncha
     card shares (slice 4's rule), so it is not his complexion — a per-card skin
     slot is a costume question for the user, not this lane's to decide.
 17. **The duelists' coats are single-sided — `scene/DuelistLayer.tsx`, LOOK's
-    file.** The prop field draws every kind `DoubleSide`; `DuelistLayer` bakes the
+    file** — *closed by the second fix pass (**D147**) without editing it: a cloth
+    kind's geometry carries its LINING unless the caller asks for none, and only
+    the prop field (drawn `DoubleSide`) asks.* The prop field draws every kind `DoubleSide`; `DuelistLayer` bakes the
     same panels into the duelist's own `SkinnedMesh`, drawn by `holoMaterial`'s
     `FrontSide`. So from three-quarters behind, the inside of the director's coat
     is culled and its side panels read as separate planks with the table showing
@@ -6423,6 +6462,30 @@ cut's was 893 s, `var/check-all-bodies.log`). `~/forge` and `~/.forge` are uncha
     `cape`) a second time with its winding reversed and its normals flipped (+24
     triangles a panel, ~790 for the two duelists), or give the duelist's material
     `side: THREE.DoubleSide` (+1 program).
+18. **The workshop cannot show a face at 1×.** Its close framing looks down on
+    the head, so a face — neutral or in grit (**D149**) — is a few pixels under
+    the hair from there; the second fix pass judged the grit from a lens at head
+    height moved by hand through the dev handle (`var/bodies/fix3/lowcam.js`,
+    `var/bodies/fix3/it6/s3.png`). A *face* framing in the workshop's toolbar
+    (`workshop/framing.ts`'s modes — lane LOOK's toolbar) would let the user judge
+    expressions without it.
+19. **Pain on a hit — lane MOTION's.** Report 15 §6.2's third expression is what
+    an EVENT says, so it is a cue: the clip lane's `hit` request would swap the
+    struck figure's face kind (`facePain`, a kind like `faceGrit`) for the cue's
+    length and hand it back — an offset-side read in `PropField.bind` of a
+    per-card face override, decaying to the pose's kind (**D50**). The kit side
+    is one more case in `proceduralKind`; the swap is `CueRunner`'s and the prop
+    field's.
+20. **Coulson's clasp is a judgement call.** The second fix pass lifted it to
+    y 0.63 (the belt is at 0.53) with the elbows out; at 0.665 he clutched his
+    chest. If it still reads low from the table view, his signature is a new
+    `REST_KIT` row (a hand to the earpiece, say), not a third set of aims on
+    `clasped`.
+21. **The bench on an idle machine.** The verifier could not reproduce
+    SwiftShader's numbers at a load average of 16; the second fix pass benched the
+    base and the lane back to back (evidence §8.5) at the load the machine had.
+    Both trees sit at SwiftShader's frame-interval floor with bloom off; a quiet
+    re-run before the merge is still worth one gate's time.
 
 ---
 

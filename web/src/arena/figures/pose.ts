@@ -59,8 +59,9 @@ import {
   CARRIER_LENGTH,
   CARRIER_THICKNESS,
   COSTUME_SLOTS,
-  FACE_KIND,
   HAIR_KIND,
+  expressionOf,
+  faceKindOf,
   PROP_KIT,
   SWARM_BEE_RATIO,
   familyOf,
@@ -68,6 +69,7 @@ import {
   swarmSpan,
   wearsCostume,
   type CostumeSlot,
+  type Expression,
   type FaceStyle,
   type Family,
   type FigureProp,
@@ -399,6 +401,8 @@ export function propsOf(
   hairColour: string = tint,
   /** Lane BODIES: the face this body wears (`none` for none). */
   face: FaceStyle = 'none',
+  /** …and its expression (D149): the stance's, `neutral` at rest. */
+  expression: Expression = 'neutral',
 ): FigureProp[] {
   const out: FigureProp[] = [];
   const colourOf = (kind: SceneKind): string => {
@@ -427,10 +431,8 @@ export function propsOf(
     const kind = HAIR_KIND[hair];
     if (fitsFamily(kind, family)) out.push({ kind, colour: colourOf(kind) });
   }
-  if (face !== 'none') {
-    const kind = FACE_KIND[face];
-    if (fitsFamily(kind, family)) out.push({ kind, colour: colourOf(kind) });
-  }
+  const faceKind = faceKindOf(face, expression);
+  if (faceKind !== null && fitsFamily(faceKind, family)) out.push({ kind: faceKind, colour: colourOf(faceKind) });
   return out;
 }
 
@@ -676,6 +678,9 @@ export function figurePose(
 
     const interposesId = ghost ? null : (interposes.get(placement.cardId) ?? null);
     const sick = !anonymous && (card as { sick?: boolean }).sick === true;
+    // A spell is not on the battlefield, so it has no combat stance and it is
+    // not summoning-sick: it rests, and it solidifies when it resolves.
+    const stance: Stance = ghost ? 'ready' : stanceOf(card, interposesId);
 
     // **T5 — the host's attachments, and the height they leave it at.** The
     // product is what keeps a shrunk creature shrunk through `skip all`: it is
@@ -757,6 +762,8 @@ export function figurePose(
           hair,
           costume?.[COSTUME_SLOTS.indexOf('hair')] ?? tint,
           family === 'human' ? trait.face : 'none',
+          // D149: the face sets its jaw while the figure kneels, attacks or blocks.
+          expressionOf(stance),
         );
 
     const stand = ghost ? ghostPointOf(placement, ghostIndex) : flight !== null ? flight.ground : standPointOf(placement);
@@ -792,9 +799,7 @@ export function figurePose(
       modelId,
       clips: anonymous ? EMPTY_CLIPS : spec.clips,
       tint,
-      // A spell is not on the battlefield, so it has no combat stance and it is
-      // not summoning-sick: it rests, and it solidifies when it resolves.
-      stance: ghost ? 'ready' : stanceOf(card, interposesId),
+      stance,
       opacity: ghost ? GHOST_OPACITY : sick ? SICK_OPACITY : 1,
       interposesId,
       bobAmp,

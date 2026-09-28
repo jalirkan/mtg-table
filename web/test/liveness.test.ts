@@ -1931,11 +1931,12 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
  * (the k-means) are pure, and the `figures/` scan above covers them — said here so
  * a move is noticed. `arena/art.ts` is the one arena module that reads PIXELS:
  * it imports no three and no renderer, nothing in `scene/` or `cues/` imports it
- * (the frame loop never waits on an image), only the workshop's swatch strip
- * calls it today (`Arena.tsx` will, the day lane LOOK applies lane BODIES'
- * follow-up 13 — `Arena.tsx` is LOOK's file), and the only names it reads art for
- * come through `paletteNamesOf`, which skips every placement drawn as a back and
- * every redacted stub (hard rule 8) — negative-controlled. On the pose side, a
+ * (the frame loop never waits on an image), and its hook is called from exactly
+ * three places — `Arena.tsx` and the workshop's `Pedestal.tsx`, which draw the
+ * rung (D148) and hand it ONLY the names `paletteNamesOf` returns, and the
+ * workshop's tuning panel, which asks for its own face-up card's — and
+ * `paletteNamesOf` skips every placement drawn as a back and every redacted stub
+ * (hard rule 8) — negative-controlled. On the pose side, a
  * palette map is read in exactly two places, `pose.ts`'s `paletteFor` and
  * `tilePose`'s land lookup, and each carries its own gate — also
  * negative-controlled here, and by `palette.test.ts`'s hostile corpus, which
@@ -1988,6 +1989,34 @@ test('liveness: lane BODIES — the poses and the palette are pure, and the art 
   assert.equal(tileGuarded(tileBody.replace('!placement.back &&', '')), false, 'the tilePose check cannot tell a missing back test');
   // extract() is only ever reached through the hook, which only reads names it is handed.
   assert.equal((codeOf(art).match(/\bextract\(/g) ?? []).length, 2, 'extract() is called from somewhere new');
+  // D148: the hook's callers, and where the two that DRAW the rung get their names.
+  const read = (rel: string): string => codeOf(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8'));
+  const callers: Record<string, string> = {
+    'arena/Arena.tsx': read('../src/arena/Arena.tsx'),
+    'workshop/Pedestal.tsx': read('../src/workshop/Pedestal.tsx'),
+    'workshop/Workshop.tsx': read('../src/workshop/Workshop.tsx'),
+  };
+  for (const [path, code] of Object.entries(callers)) {
+    assert.equal((code.match(/\buseArtPalettes\(/g) ?? []).length, 1, `${path} calls useArtPalettes other than once`);
+  }
+  const fedByGate = (code: string): boolean =>
+    /const paletteNames = useMemo\(\(\) => paletteNamesOf\(placed\)/.test(code) && /useArtPalettes\(paletteNames, art\)/.test(code);
+  assert.ok(fedByGate(callers['arena/Arena.tsx']!), "Arena.tsx hands useArtPalettes names that did not come through paletteNamesOf");
+  assert.ok(fedByGate(callers['workshop/Pedestal.tsx']!), "Pedestal.tsx hands useArtPalettes names that did not come through paletteNamesOf");
+  assert.equal(fedByGate(callers['arena/Arena.tsx']!.replace('paletteNamesOf(placed)', 'placed.placements.map(nameOf)')), false, 'the caller check cannot tell a bypassed gate');
+  // The panel's own list is its one face-up card's, and never a concealed entry's.
+  assert.ok(/entry\.concealed === null && entry\.name !== '' \? \[entry\.name\] : \[\]/.test(callers['workshop/Workshop.tsx']!), "the tuning panel reads art for a concealed entry");
+  // …and no other file under web/src calls the hook.
+  const walk = (dir: string, out: string[]): string[] => {
+    for (const name of readdirSync(dir)) {
+      const full = `${dir}/${name}`;
+      if (statSync(full).isDirectory()) walk(full, out);
+      else if (/\.tsx?$/.test(name) && /\buseArtPalettes\(/.test(codeOf(readFileSync(full, 'utf8')))) out.push(full.slice(full.indexOf('/src/') + 5));
+    }
+    return out;
+  };
+  const everyCaller = walk(fileURLToPath(new URL('../src', import.meta.url)), []).sort();
+  assert.deepEqual(everyCaller, ['arena/Arena.tsx', 'arena/art.ts', 'workshop/Pedestal.tsx', 'workshop/Workshop.tsx'], 'useArtPalettes is called from a new file');
   // The derivation samples; it never plays a clip through a mixer.
   const models = codeOf(files.get('scene/models.ts') ?? '');
   const derive = /export function deriveRestClip[\s\S]*?\n\}/.exec(models)?.[0] ?? '';

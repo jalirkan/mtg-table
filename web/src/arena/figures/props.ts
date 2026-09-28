@@ -34,7 +34,7 @@
  */
 
 import { baseModelOf } from './rests.ts';
-import type { ModelData } from './types.ts';
+import type { ModelData, Stance } from './types.ts';
 
 /**
  * The kinds a `traits.json` row may name in `props`. Closed: a kind nobody
@@ -92,6 +92,11 @@ export const DERIVED_KINDS = [
   // view's height the eye under it showed above it.
   'face',
   'facePatched',
+  // The second fix pass (D149): the same two faces set in GRIT — brows down in a
+  // V, eyes narrowed, teeth set — worn while the snapshot says the figure is
+  // kneeling (tapped), attacking or blocking. An expression is a pose.
+  'faceGrit',
+  'facePatchedGrit',
   'hairParted',
   'hairLong',
   'hairCrop',
@@ -167,6 +172,33 @@ export const FACE_KIND: Readonly<Record<Exclude<FaceStyle, 'none'>, DerivedKind>
 
 export function isFaceStyle(value: string): value is FaceStyle {
   return (FACE_STYLES as readonly string[]).includes(value);
+}
+
+/**
+ * **A face's expression** (the second fix pass, D149; report 15 §6.2's neutral /
+ * grit / pain): `neutral` at rest, `grit` while the figure kneels, attacks or
+ * blocks — a POSE, read off the stance the snapshot gives (`expressionOf`), so a
+ * skip, a scrub and a resync all draw it. Pain on a hit is a CUE (the clip lane's
+ * `hit`) and lane MOTION's; it is not here.
+ */
+export const EXPRESSIONS = ['neutral', 'grit'] as const;
+export type Expression = (typeof EXPRESSIONS)[number];
+
+/** The stance → the expression a face wears in it. */
+export function expressionOf(stance: Stance): Expression {
+  return stance === 'crouch' || stance === 'attacking' || stance === 'blocking' ? 'grit' : 'neutral';
+}
+
+/** A face style in grit → the scene kind that draws it (`FACE_KIND` is neutral's). */
+export const GRIT_FACE_KIND: Readonly<Record<Exclude<FaceStyle, 'none'>, DerivedKind>> = {
+  on: 'faceGrit',
+  patched: 'facePatchedGrit',
+};
+
+/** The kind a face style draws in an expression, or `null` for `none`. */
+export function faceKindOf(style: FaceStyle, expression: Expression): DerivedKind | null {
+  if (style === 'none') return null;
+  return expression === 'grit' ? GRIT_FACE_KIND[style] : FACE_KIND[style];
 }
 
 /**
@@ -394,7 +426,7 @@ function rad(degrees: number): number {
  * thighs pivot at y 0.51) and on the body's centre line, so every panel's arc is
  * centred on the body whichever leg bone carries it. The chibi's hips are at 0.26.
  */
-export const COAT_WAIST: readonly [number, number, number] = [0, 0.525, -0.012];
+export const COAT_WAIST: readonly [number, number, number] = [0, 0.525, -0.03];
 /**
  * **The coat's BODY link** (lane BODIES' second pass): where the panels between
  * the coat's yoke and its skirt hang from — just inside the yoke's hem, on
@@ -404,8 +436,8 @@ export const COAT_WAIST: readonly [number, number, number] = [0, 0.525, -0.012];
  * from the shoulders to the hip tilted as a whole and stood out behind the back
  * like a barrel. `COAT_BODY` scales `COAT_PANEL` to reach the skirt's top.
  */
-export const COAT_CHEST: readonly [number, number, number] = [0, 0.675, -0.012];
-const COAT_BODY: readonly [number, number, number] = [0.86, 0.6, 0.78];
+export const COAT_CHEST: readonly [number, number, number] = [0, 0.675, -0.024];
+const COAT_BODY: readonly [number, number, number] = [0.9, 0.75, 0.9];
 /**
  * **Where a hanging panel meets the one above it** (D146): this far down the
  * parent's length, not at its very hem — so the lower link wraps OUTSIDE the
@@ -413,18 +445,28 @@ const COAT_BODY: readonly [number, number, number] = [0.86, 0.6, 0.78];
  * them is an overlap, never a gap. `scene/props.ts` hangs the child from here.
  */
 export const HANG_FROM = 0.88;
-/** The two links of a skirt panel, as scales of `COAT_PANEL`: hip→knee, then knee→calf. */
-const COAT_UPPER: readonly [number, number, number] = [1, 0.84, 1];
-// D146: 1.3 wide (its top just outside the upper link's hem) and 0.6 long (the
-// hem where it was, below the higher pivot).
-const COAT_LOWER: readonly [number, number, number] = [1.3, 0.6, 1.3];
+/**
+ * The two links of a skirt panel, as scales of `COAT_PANEL`: hip→knee, then knee
+ * to just below it. **The second fix pass (D147) cut the coat to the body**: the
+ * verifier found Fury's coat "a wide bell that hides his legs" and the Bold
+ * Biochemist's "a huge white bell … that swallows the figure" — the panels were
+ * 0.16–0.26 from the body's axis round a waist 0.08 wide and 0.13 deep (measured
+ * on the bodies, docs/evidence/bodies.md §8), on an axis 2 cm in front of the
+ * body's own. Now the axis is the body's (`COAT_WAIST`'s z), the skirt stands a
+ * finger's width off the hips and flares only to cover a stance's knees, and the
+ * hem is just below the knee (y ≈ 0.25), where it was mid-calf (0.16).
+ */
+const COAT_UPPER: readonly [number, number, number] = [1.04, 0.91, 1.04];
+// D146's rule, D147's numbers: the lower link's top (0.145) just outside the
+// upper link's radius where it hangs from it (0.144), and 0.1 long.
+const COAT_LOWER: readonly [number, number, number] = [1.16, 0.45, 1.16];
 /**
  * The knee: where a skirt's lower link hangs from — `HANG_FROM` down the upper
  * link from the waist (the calves pivot at y 0.29). A rigid baker (the duelists)
  * puts the lower link here; the prop field hangs it from the upper link's own
  * point there, wherever the thigh has taken it.
  */
-export const COAT_KNEE: readonly [number, number, number] = [0, 0.525 - 0.27 * 0.84 * HANG_FROM, -0.012];
+export const COAT_KNEE: readonly [number, number, number] = [0, 0.525 - 0.22 * 0.91 * HANG_FROM, -0.03];
 /**
  * **How much of its leg a skirt panel follows** (D146), measured in the workshop
  * at ready, kneeling and attacking, from the table view and at 1×: the FRONT
@@ -446,7 +488,15 @@ const CHIBI_TAIL: readonly [number, number, number] = [1.5, 0.95, 1.5];
  * length` below, from radius `top` to `hem`, `arc` degrees wide. `scene/props.ts`
  * builds it to these numbers and `traits.test.ts` holds the two together.
  */
-export const COAT_PANEL = { top: 0.158, hem: 0.2, length: 0.27, arc: 80 } as const;
+export const COAT_PANEL = { top: 0.125, hem: 0.14, length: 0.22, arc: 80 } as const;
+
+/**
+ * **The coat's front panels' yaw**, degrees either side of the figure's front
+ * (D147): 54°, so with an 80° arc the coat is open 28° down the front — worn open,
+ * as a trench coat and a lab coat are. D146's 46° left it 12° open, and a closed
+ * bell is what the verifier read from above.
+ */
+export const COAT_FRONT = 54;
 
 /**
  * **One side of a skirt, as two links** (D146): hip → knee on the pelvis,
@@ -739,19 +789,20 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
       // standing out from its thigh as a shelf; the back hangs whole from the pelvis.
       human: [
         // The body link, chest to hip, on the lowest spine joint (COAT_CHEST).
-        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(46), 0], size: COAT_BODY },
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(COAT_FRONT), 0], size: COAT_BODY },
         { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(118), 0], size: COAT_BODY },
         { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(180), 0], size: COAT_BODY },
         { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-118), 0], size: COAT_BODY },
-        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-46), 0], size: COAT_BODY },
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-COAT_FRONT), 0], size: COAT_BODY },
         // The skirt, D146: each link hangs from the PELVIS; the upper one follows
         // its thigh part-way (SKIRT_FOLLOW), and the lower one hangs from the
         // upper one's hem toward the upright — never from the calf bone.
-        ...skirtLink(46, 'thigh_l', SKIRT_FOLLOW.front),
+        ...skirtLink(COAT_FRONT, 'thigh_l', SKIRT_FOLLOW.front),
         ...skirtLink(118, 'thigh_l', SKIRT_FOLLOW.side),
-        { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.04, 1.18, 1.04] },
+        // The back: one link, from the waist to the lower links' hem (D147).
+        { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.08, 1.25, 1.08] },
         ...skirtLink(-118, 'thigh_r', SKIRT_FOLLOW.side),
-        ...skirtLink(-46, 'thigh_r', SKIRT_FOLLOW.front),
+        ...skirtLink(-COAT_FRONT, 'thigh_r', SKIRT_FOLLOW.front),
       ],
       humanoid: [
         { joint: 'torso', at: CHIBI_CHEST, turn: [0, rad(46), 0], size: CHIBI_BODY },
@@ -779,26 +830,28 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     glow: null,
     anchors: {
       human: [
-        // The shoulder panels hang INSIDE the hip panels where they overlap (a
-        // hem radius of 0.2 × 0.76 against the hip panels' 0.161 top, flaring),
-        // so their trim — the cape's hem trim is on every panel — is hidden under
-        // them and the gold shows only at the cape's own hem (D146).
-        { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(145), 0], size: [0.76, 1.12, 0.76] },
-        { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(215), 0], size: [0.76, 1.12, 0.76] },
+        // The shoulder panels hang INSIDE the hip panels where they overlap (D147:
+        // a hem radius of 0.134 at y 0.51 against the hip panels' 0.15 top at
+        // 0.525), so their trim — the cape's hem trim is on every panel — is hidden
+        // under them and the gold shows only at the cape's own hem (D146). The
+        // shoulders' pair stands 0.12 off the spine (the back of the shoulders is
+        // 0.10 behind it); the hip panels outside every coat's back panel (0.135).
+        { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(145), 0], size: [0.96, 1.27, 0.96] },
+        { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(215), 0], size: [0.96, 1.27, 0.96] },
         {
           joint: 'pelvis',
           follow: { joint: 'thigh_l', weight: SKIRT_FOLLOW.side },
           at: COAT_WAIST,
           turn: [0, rad(135), 0],
-          size: [1.02, 1.3, 1.02],
+          size: [1.2, 1.25, 1.2],
         },
-        { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.04, 1.32, 1.04] },
+        { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.22, 1.27, 1.22] },
         {
           joint: 'pelvis',
           follow: { joint: 'thigh_r', weight: SKIRT_FOLLOW.side },
           at: COAT_WAIST,
           turn: [0, rad(225), 0],
-          size: [1.02, 1.3, 1.02],
+          size: [1.2, 1.25, 1.2],
         },
       ],
       humanoid: [
@@ -819,6 +872,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   face: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   // The same face with HIS left eye left out, under an eyepatch (`face: patched`).
   facePatched: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  // Both in grit (D149): the pose's expression while kneeling, attacking or blocking.
+  faceGrit: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  facePatchedGrit: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   // **The hairstyles** (D141), each rigid on `Head` in the costume's hair colour.
   hairParted: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   hairLong: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },

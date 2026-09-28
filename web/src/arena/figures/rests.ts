@@ -54,6 +54,7 @@ export const REST_POSES = [
   'folded',
   'ready',
   'aim',
+  'highReady',
   'akimbo',
   'clasped',
   'braced',
@@ -183,7 +184,10 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     ],
     what: 'pistol up at the ready, shield arm raised across the front',
   },
-  // Agent 13: the library's two-handed pistol aim, held.
+  // The library's two-handed pistol aim, held. Open to any row; Agent 13 rested in
+  // it until the verifier's second round, which read it from above as "the pistol
+  // low at her hip" — the barrel points at a lens that looks down on it, and a gun
+  // pointed at the camera is foreshortened to a stub (`highReady` below).
   aim: {
     from: 'pistolDraw',
     phase: 0.45,
@@ -191,6 +195,26 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     breathe: 'idle',
     aims: [],
     what: 'a two-handed pistol aim, held',
+  },
+  // **Agent 13 (the second fix pass, D149): the pistol at the HIGH READY** — the
+  // spy-poster stance: her right hand up beside her face, the barrel pointing at
+  // the sky, her left arm easy at her side. The arms start from the aim's own frame
+  // (`pistolDraw` at the phase `PISTOL_POSE` names), so the hand keeps its grip and
+  // the pistol, rigid on the hand, turns up with the forearm; the spine breathes.
+  // A vertical gun beside a head reads in silhouette from every camera the table
+  // has, where the aim's barrel pointed at the lens and vanished into itself.
+  highReady: {
+    from: 'pistolDraw',
+    phase: 0.45,
+    hold: 'arms',
+    breathe: 'idle',
+    aims: [
+      UP_ARM('r', [-0.5, -0.7, 0.5]),
+      FORE_ARM('r', [-0.14, 0.96, 0.24]),
+      UP_ARM('l', [0.2, -0.97, 0.12]),
+      FORE_ARM('l', [0.02, -0.86, 0.5]),
+    ],
+    what: 'the pistol at the high ready, barrel up beside the face',
   },
   // A hero's hands on the hips.
   akimbo: {
@@ -206,29 +230,36 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     ],
     what: 'hands on the hips',
   },
-  // Coulson: relaxed, hands clasped in front at the belt. The fix pass raised
-  // them: the forearms were 30° below level and the hands met at the crotch (the
-  // verifier's reading at 1×); now they are near level and meet at the buckle.
+  // Coulson: relaxed, hands clasped in front. The fix pass raised them from the
+  // crotch to the buckle; the verifier's second round still read them "low at the
+  // groin" from above, where a lens looking down puts anything in front of the
+  // belly lower on the screen than it stands. The second fix pass (D149) lifts the
+  // clasp above the belt (the hands at y 0.63, the belt at 0.53) with the elbows
+  // out, so the arms make a diamond round the shirt-front that the camera sees
+  // from above; at the solar plexus (0.665, tried) he clutched his chest.
   clasped: {
     from: 'idle',
     phase: 0,
     hold: 'arms',
     breathe: 'idle',
     aims: [
-      UP_ARM('l', [0.14, -0.92, 0.36]),
-      FORE_ARM('l', [-0.7, -0.2, 0.6]),
-      UP_ARM('r', [-0.14, -0.92, 0.36]),
-      FORE_ARM('r', [0.7, -0.16, 0.63]),
+      UP_ARM('l', [0.3, -0.86, 0.4]),
+      FORE_ARM('l', [-0.74, -0.15, 0.65]),
+      UP_ARM('r', [-0.3, -0.86, 0.4]),
+      FORE_ARM('r', [0.74, -0.11, 0.66]),
     ],
     what: 'relaxed, hands clasped at the belt',
   },
-  // Quake: the library's guard stance, both palms pushed forward.
+  // Quake: the library's guard stance, both palms pushed forward. The second fix
+  // pass (D149) lifts her head off the guard's downward look — the neck upright
+  // and a little forward — so a lens above her finds a face under the fringe.
   braced: {
     from: 'block',
     phase: 0,
     hold: 'none',
     breathe: 'block',
     aims: [
+      { joint: 'neck_01', child: 'Head', aim: [0, 0.97, 0.24] },
       UP_ARM('l', [0.42, -0.4, 0.81]),
       FORE_ARM('l', [0.08, 0.2, 0.98]),
       UP_ARM('r', [-0.42, -0.4, 0.81]),
@@ -252,17 +283,22 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     ],
     what: 'bent over the bench, hands at work',
   },
-  // A soldier at ease: hands behind the back.
+  // A soldier at ease: hands behind the back. The second fix pass (D149) brings
+  // the elbows DOWN to the waist: the first aims swung the upper arms 25° back,
+  // and a lens looking down from in front draws anything behind a figure HIGHER on
+  // the screen, so the elbows rose beside the head and the verifier read the
+  // Soldier tokens as "hands on head". Now the upper arms hang almost straight and
+  // only the forearms fold in behind the small of the back.
   atEase: {
     from: 'idle',
     phase: 0,
     hold: 'arms',
     breathe: 'idle',
     aims: [
-      UP_ARM('l', [0.14, -0.9, -0.42]),
-      FORE_ARM('l', [-0.72, -0.62, -0.3]),
-      UP_ARM('r', [-0.14, -0.9, -0.42]),
-      FORE_ARM('r', [0.72, -0.62, -0.3]),
+      UP_ARM('l', [0.1, -0.98, -0.16]),
+      FORE_ARM('l', [-0.7, -0.46, -0.55]),
+      UP_ARM('r', [-0.1, -0.98, -0.16]),
+      FORE_ARM('r', [0.7, -0.46, -0.55]),
     ],
     what: 'at ease, hands behind the back',
   },

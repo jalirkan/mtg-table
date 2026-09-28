@@ -7651,7 +7651,7 @@ named back — and fails with any one of `paletteFor`'s, `tilePose`'s or
 `paletteNamesOf`'s gates removed; liveness scans the first two as it scanned the
 third.)*
 
-**Not switched on yet** *(fix pass)*. The first cut passed the palettes in from
+**Not switched on yet** *(fix pass; superseded by **D148**, which switches it on)*. The first cut passed the palettes in from
 `Arena.tsx` and `workshop/Pedestal.tsx`, which report 15 §9.1 gives to lane LOOK;
 those hunks were reverted, and the edit is PLAN.md's lane BODIES follow-up 13,
 written out for LOOK (or the merge) to apply. Until then every pose function
@@ -7739,6 +7739,163 @@ inside its hip panels); a trimmed coat hem is PLAN.md's lane BODIES follow-up 14
 is a second rule for one fact, and the lunge and the stance flaps remain); clamping
 each panel's angle (a clamp is a discontinuity a blend does not have); a spring
 (a clock).
+
+## D147 — A coat is cut to the body it is on, and a cloth kind carries its LINING for a renderer that culls back faces
+
+**2026-09-28** (lane BODIES' second fix pass, after the verifier's second round;
+*branch `bodies`, reserved range D140–D149*). Amends **D143** and **D146**'s
+numbers, not their rule.
+
+**Decision.** Three changes to the coat and the cloak, all in the kit's data and
+the kit's geometry (`figures/props.ts`, `scene/props.ts`):
+
+- **The coat fits.** Its axis is the body's own (`COAT_WAIST` z −0.03, where
+  D146's was 2 cm in front of it), the panel is `COAT_PANEL` {top 0.125, hem
+  0.14, length 0.22} where it was {0.158, 0.2, 0.27}, and the links are sized to
+  stand a finger's width off the hips and flare only to cover a stance's knees:
+  the body link 0.113 → 0.126, the upper skirt link 0.13 → 0.146, the lower link
+  0.145 → 0.162, the hem just below the knee (y ≈ 0.25) where it was mid-calf
+  (0.16). The front panels turn to ±54° (`COAT_FRONT`), so the coat is worn open
+  down the front. The cloak's panels follow: its shoulder pair 0.12 off the spine,
+  its hip panels outside every coat's back panel.
+- **A cloth kind has a LINING.** `buildKindGeometry(kind)` returns, for
+  `coatTails` and `cape`, the sheet and a second sheet 0.0025 inside it, wound the
+  other way and facing in, in the same vertex colour. The prop field, whose
+  material is `DoubleSide`, asks for `{ lining: false }` and draws one sheet; the
+  duelists' bake (`DuelistLayer`, lane LOOK's file, which calls
+  `buildKindGeometry(kind)` and draws in the figures' `FrontSide` material) gets
+  the lining with no change to its file.
+- **A panel is 6 × 1 segments** (12 triangles) where it was 6 × 2: a cone's side
+  is straight from top to hem, so the second ring bought no shape.
+
+The duelists keep D143's draping coat and Doom's cloak (`duelists.json` is
+unchanged): the abandoned first attempt at this pass — a one-shell `longCoat`
+kind for both duelists, the cloak taken off the villain — is not taken
+(`var/bodies/fix3/abandoned-d147.diff`).
+
+**Rationale.** The verifier's second round, from the pictures: Fury's coat "a
+wide bell that hides his legs", the Bold Biochemist's lab coat "a huge white bell
+… [that] swallows the figure" with "stair-step ledges where the panels overlap",
+and both duelists' coats "detached planks". Measured on the bodies (the waist is
+0.08 wide and 0.13 deep round an axis at z −0.035; the knees of the idle's stance
+0.12 out), D146's lower links stood 0.26 from the axis. `traits.test.ts`'s new fit
+test puts every body and skirt panel's hem within **0.189** of a height of the
+pelvis at rest (the bar is 0.2; the D146 bell, swapped into the kit for the run,
+reads 0.262 and fails), with the front open **24°** (the idle turns the hips
+about 15°; the bar is 16°). The drape test still passes with the new numbers:
+lower links ≤ 6° from hanging, and the farthest hem through six clips at eleven
+phases 0.28 of a height from the pelvis where it was 0.40. The planks were not
+the drape: `DuelistLayer` bakes the panels into its `SkinnedMesh`, drawn
+`FrontSide`, so from three-quarters behind the inside of the director's coat was
+culled and the villain's cloak was a slab from the front (PLAN.md's lane BODIES
+follow-up 17). A lining in the geometry fixes it without editing LOOK's file, and
+costs the bake what one sheet cost before this pass (a panel's 12 triangles ×
+2 = D146's 24), where giving the duelists' material `DoubleSide` would have been a
+second program. `traits.test.ts` holds the lining (twice the triangles, each the
+sheet's inset along its normal, wound the other way, facing in), that no other
+kind grows one, and that the field's coat is one sheet.
+
+**Rejected.** A one-shell `longCoat` for the duelists (the abandoned attempt: the
+villain's cloak had to come off, and a rigid open shell drawn `FrontSide` is two
+planks from the front — the verifier saw it); `DoubleSide` on the duelists'
+material (LOOK's file, and +1 program); a per-card coat length (a second kind or
+a new trait key for one card — the knee-length cut reads as a trench coat and a
+lab coat both).
+
+## D148 — The art rung is switched ON: the arena and the pedestal pass the palettes in, and the accent prefers the brighter of two vivid colours
+
+**2026-09-28** (lane BODIES' second fix pass; *branch `bodies`, reserved range
+D140–D149*). Completes **D144**, whose "not switched on yet" this supersedes.
+
+**Decision.** `Arena.tsx` and `workshop/Pedestal.tsx` — lane LOOK's files by
+report 15 §9.1 — each gain the pass-through PLAN.md's lane BODIES follow-up 13
+wrote out: `paletteNamesOf(placed)` into `useArtPalettes`, and the map into
+`figurePose` and `tilePose`, in the memos that already make the poses. Nothing
+else in either file changes. The workshop's framing poses take the same map, and
+the tuning panel's `palette: art · off` now switches what the pedestal draws.
+The accent's score gains a brightness term: `share × (0.3 + saturation) ×
+(0.4 + value)`.
+
+**Rationale.** The verifier's second round: "Deliverable 5, the art palette,
+never reaches a pixel", and the workshop's palette select "has no visible
+effect", against the lane's rule that every visual change is visible at
+`#workshop` and switchable. The alternative it offered — say plainly that D144
+is dormant — leaves the deliverable undone, and no lane LOOK session was running
+to agree an edit with. So the edit is the smallest one that can be proved not to
+collide: ten lines added and three changed in `Arena.tsx` (an import, four
+comment lines, two hook calls, the argument and two dependency lists), seven and
+three in `Pedestal.tsx`, none inside a hunk of LOOK's branch (`look` at `de4e01f`), and `git merge-tree` of the two branches
+reports no conflict in either file (docs/evidence/bodies.md §8.4). The two files
+stay LOOK's; this is a pass-through, not a design change in them. Liveness now
+holds every caller of `useArtPalettes` (the two that draw hand it ONLY
+`paletteNamesOf`'s names, negative-controlled; the tuning panel asks for its own
+face-up card's; no fourth file may call it), and `traits.test.ts`'s anonymous
+sweep now hands the poses a map that answers every name, so "no art colour on an
+anonymous figure" is the pose's own gate speaking (1,179 anonymous instances, none
+coloured; 11,449 face-up ones took the rung). The brightness term is follow-up 7:
+Fury's accent was the khaki round his explosion (`#867448`) rather than the
+explosion, because a large muted cluster beat a smaller bright one of the same
+saturation; `palette.test.ts` now holds the pick with report 15 §7.1's own
+clusters.
+
+**What it changes on the table** (docs/evidence/bodies.md §8): a creature with
+no hand-written tint anywhere takes its painting's vivid colour (the Giant-Sized
+Flying Ant is brown, its painting's, where the colour identity made it blue); an
+aura with no attachment row takes its painting's accent; a land's tile its
+painting's terrain. Every hand-written row still wins, and `palette: off` keeps a
+card's colour identity.
+
+**Rejected.** Leaving D144 dormant (the deliverable, undone); moving the
+pass-through into a module the lane owns (every pose is made in a memo in those
+two files, and a hook cannot be called from `figurePose`); folding the palette
+into the workshop's trait overrides so only the workshop showed it (the workshop
+must draw what the arena draws, **D102**).
+
+## D149 — Faces and poses are judged from ABOVE: a face sets its jaw as a pose, the high ready, and a bob that is hair
+
+**2026-09-28** (lane BODIES' second fix pass; *branch `bodies`, reserved range
+D140–D149*). Extends **D140**, **D141** and **D142**.
+
+**Decision.**
+
+- **An expression is a pose.** `figures/props.ts`'s `expressionOf(stance)` is
+  `grit` while the snapshot says the figure kneels (tapped), attacks or blocks,
+  and `neutral` otherwise; `faceKindOf` picks `faceGrit` or `facePatchedGrit` for
+  it — the same face with its brows pulled down into a V, its eyes narrowed, and
+  its mouth a band of set teeth between two ink lines. Two derived kinds, rigid on
+  `Head` like the face. Pain on a hit is a CUE and lane MOTION's.
+- **`highReady`**, a tenth resting pose: the pistol held up beside the face, barrel
+  to the sky, from the aim's own frame so the grip holds. Agent 13 rests in it;
+  `aim` stays in the kit for any row.
+- **The resting poses are aimed against a lens that looks down.** `atEase`'s upper
+  arms hang almost straight (only the forearms fold behind the back);
+  `clasped` meets above the belt with the elbows out; `braced` lifts its head.
+- **The bob is re-cut as hair**: a fringe that stops high and sweeps to one side
+  (`sweep`), the hairline raised at the temples, half D141's flare, and a band of
+  lit locks across the crown (`sheen`, a vertex colour over 1, as the coat's trim
+  is). Quake's hair is a dark brown the locks show on.
+
+**Rationale.** The verifier's second round read the pictures: Agent 13's aim "keeps
+the pistol low at her hip", Coulson's clasp "low at the groin", the Soldier tokens
+"hands on head", and Quake's bob "like a helmet [that] hides her face from above".
+Every one is the same fact: the table view and the workshop's 1× framing look DOWN
+at a figure, so a barrel pointed at the lens shortens to a stub, anything in front
+of the belly draws lower than it stands, and anything behind the back draws higher
+— the at-ease elbows rose beside the head. A vertical pistol beside a head reads in
+silhouette from every camera the table has. With the new bob Quake's face shows
+8 px at the table view and 19 over the shoulder from the seat that faces the lens
+(5 and 13 before), and her hair keeps its identity pixels (142 · 174). The face
+cannot be seen at the workshop's steep 1× (it could not before either); at a lens
+at head height the grit is plain (`var/bodies/fix3/it6/s3.png`). `traits.test.ts`
+holds it over the corpus: 2,673 face-up faces neutral and 1,452 in grit, each
+where its stance says, none on an anonymous figure. The census of kinds in one
+frame rises from 16 to 17 (a face in grit beside a face at rest).
+
+**Rejected.** An expression as a uniform on one face kind (it is lane LOOK's
+shader, and a per-instance switch in the prop shader would be a second program
+key or a new attribute on every kind); pain as a pose (it is what an event says,
+so it is a cue); reshaping the Soldier token into another pose entirely (atEase
+reads as "arms at the sides" now, which is what a token standing easy is).
 
 ---
 

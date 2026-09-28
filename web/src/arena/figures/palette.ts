@@ -20,9 +20,13 @@
  * costume. What it is good for is accent and atmosphere, and three roles come
  * out of it:
  *
- *  - `accent` — the most VIVID colour (share × (0.3 + saturation), saturation
- *    over 0.45): Fury's explosion orange, Coulson's teal. The colour a colourist
- *    picks for a card's effects — a prop's accent, an aura's colour, a disc.
+ *  - `accent` — the most VIVID colour (share × (0.3 + saturation) × (0.4 +
+ *    value), saturation over 0.45): Fury's explosion orange, Coulson's teal. The
+ *    colour a colourist picks for a card's effects — a prop's accent, an aura's
+ *    colour, a disc. The brightness term is the second fix pass's (D148,
+ *    PLAN.md's lane BODIES follow-up 7): without it a large muted cluster beat a
+ *    bright one of the same saturation, and Fury's accent was `#867448`, the
+ *    khaki round his explosion, rather than the explosion.
  *  - `terrain` — the largest cluster that is neither near-black nor near-white:
  *    what a LAND's painting is mostly of, its tile's colour.
  *  - `dominant` — the largest cluster, whatever it is: for the workshop's strip.
@@ -220,7 +224,7 @@ export function paletteOf(swatches: readonly Swatch[]): ArtPalette | null {
   let score = -1;
   for (const s of swatches) {
     if (s.saturation <= VIVID_SATURATION || s.value < VIVID_VALUE) continue;
-    const v = s.share * (0.3 + s.saturation);
+    const v = s.share * (0.3 + s.saturation) * (0.4 + s.value);
     if (v > score) {
       score = v;
       accent = s;

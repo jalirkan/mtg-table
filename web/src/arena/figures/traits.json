@@ -210,7 +210,7 @@
       ],
       "rest": "braced",
       "hair": "bob",
-      "_note": "Daisy Johnson in teal, both fists glowing — her gauntlets flare with the clip lane when she acts.",
+      "_note": "Daisy Johnson in teal, both fists glowing — her gauntlets flare with the clip lane when she acts. Lane BODIES' second fix pass (D149): her bob read as a helmet over her face from above, so the bob was re-cut (a high side-swept fringe, the temples open, lit locks across the crown), her hair went from near-black to a dark brown the locks show on, and her braced guard lifts her head.",
       "costume": {
         "top": "#16181e",
         "shirt": "#16181e",
@@ -218,7 +218,7 @@
         "shoes": "#16181e",
         "gloves": "#3fd6c6",
         "belt": "#3fd6c6",
-        "hair": "#2b1d16"
+        "hair": "#31231b"
       },
       "_costume": "Slice 4: black with teal accents — a black bodysuit, teal gloves and belt, dark hair."
     },
@@ -250,9 +250,9 @@
         "pistol",
         "muzzle"
       ],
-      "rest": "aim",
+      "rest": "highReady",
       "hair": "bun",
-      "_note": "The field agent in a dark indigo suit — her own colour, so she is never the pale agent a Soldier Token or Peggy is — with a silver pistol at her right hip, held out beside her body and angled out, its muzzle lit. Slice 3's first pistol hung at her right hand at 0.17 in her body's grey-cream; its fix raised it at her chest, barrel forward, where it pointed at your camera and was hidden from the opponent's seat (both verification passes). Out to the side it shows in silhouette from the front, the back and side-on. Her attack's pistolDraw alias and the muzzle-flash cue fire from the lit tip, turned toward the player she attacks.",
+      "_note": "The field agent in a dark indigo suit — her own colour, so she is never the pale agent a Soldier Token or Peggy is — with a silver pistol, its muzzle lit — at REST held at the high ready, barrel up beside her face (lane BODIES' second fix pass, D149: the held two-handed aim pointed the barrel at the lens and read 'low at her hip' from above). Slice 3's first pistol hung at her right hand at 0.17 in her body's grey-cream; its fix raised it at her chest, barrel forward, where it pointed at your camera and was hidden from the opponent's seat (both verification passes). Out to the side it shows in silhouette from the front, the back and side-on. Her attack's pistolDraw alias and the muzzle-flash cue fire from the lit tip, turned toward the player she attacks.",
       "costume": {
         "top": "#3c3593",
         "shirt": "#3c3593",
@@ -280,13 +280,13 @@
       "_costume": "Slice 4: grey suits and white shirts — the leader's palette, and the followers (baked bodies) wear its top as their shade."
     },
     "Bold Biochemist": {
-      "accent": "#eef5f2",
+      "accent": "#d6e2dd",
       "props": [
         "coat",
         "coatTails",
         "labBench"
       ],
-      "_note": "The lab tint in a long WHITE lab coat — the coat kind Fury wears, in another colour, which is the point of a shared kit — at the white bench. Slice 3 first gave it only the scientist rung's small bench, and it read as 'a mint scientist' (the verification pass).",
+      "_note": "The lab tint in a long WHITE lab coat — the coat kind Fury wears, in another colour, which is the point of a shared kit — at the white bench. Slice 3 first gave it only the scientist rung's small bench, and it read as 'a mint scientist' (the verification pass). Lane BODIES' second fix pass (D147) greyed the coat a step off paper white (#eef5f2 → #d6e2dd): at paper white the hologram's rim blew it out to a white shape with no folds, and the comic look's bands had nowhere to go.",
       "costume": {
         "hair": "#4a3a2e"
       },
@@ -315,5 +315,5 @@
     }
   },
   "_costume": "Slice 4 — what the body WEARS. A `costume` names a colour per slot of the proportioned body (skin, hair, top, shirt, legs, shoes, gloves, belt — figures/props.ts's COSTUME_SLOTS; `tint` means the figure's own tint), MERGED slot by slot down the ladder (a card row that names only its hair keeps its rung's suit), and every slot nobody names follows the top (pose.ts's costumeOf). The holographic shader draws the body in its palette and rims its silhouette in the tint, so a figure reads as a person in a costume and still as a hologram. `body: chibi` stands a card in slices 1–3's Kenney body instead (kept in the library as `<id>-chibi`); no row does today. Only a body that carries slots wears a costume: the drone, the bee and the disc never do, and an anonymous figure never does (hard rule 8).",
-  "_bodies": "Lane BODIES (D140–D144). `rest` names the pose a card RESTS in — figures/rests.ts's closed table (stand, folded, ready, aim, akimbo, clasped, braced, working, atEase), each a frame of a library clip turned by a few joint aims; a pose, drawn whenever the card is untapped and out of combat, and never an anonymous figure's. `hair` names a hairstyle — parted and long are the pack's own two, carved off the bodies at load; crop, bob, waves and bun are procedural shells; none is bald — a shared kind rigid on the head, in the costume's hair colour; absent means the body's own (the man's parted, the woman's long). `face` is `on` for every person unless a row says `none` (A.I.M.'s bucket hood) or `patched` (the face without HIS left eye, under Fury's eyepatch). `palette` is `art` (the default: the card's own painting colours what no hand-written row does — the art rung, under every rung here) or `off`. Since this lane a long coat is two kinds: `coat` is the YOKE (shoulders, collar, lapels, to the chest, on the upper spine) and `coatTails` is its body and skirt, panels that ride the lowest spine joint and the legs — so a pose that bends the chest, or kneels, bends the coat with it."
+  "_bodies": "Lane BODIES (D140–D144). `rest` names the pose a card RESTS in — figures/rests.ts's closed table (stand, folded, ready, aim, highReady, akimbo, clasped, braced, working, atEase), each a frame of a library clip turned by a few joint aims; a pose, drawn whenever the card is untapped and out of combat, and never an anonymous figure's. `hair` names a hairstyle — parted and long are the pack's own two, carved off the bodies at load; crop, bob, waves and bun are procedural shells; none is bald — a shared kind rigid on the head, in the costume's hair colour; absent means the body's own (the man's parted, the woman's long). `face` is `on` for every person unless a row says `none` (A.I.M.'s bucket hood) or `patched` (the face without HIS left eye, under Fury's eyepatch). `palette` is `art` (the default: the card's own painting colours what no hand-written row does — the art rung, under every rung here) or `off`. Since this lane a long coat is two kinds: `coat` is the YOKE (shoulders, collar, lapels, to the chest, on the upper spine) and `coatTails` is its body and skirt, panels that ride the lowest spine joint and the legs — so a pose that bends the chest, or kneels, bends the coat with it."
 }

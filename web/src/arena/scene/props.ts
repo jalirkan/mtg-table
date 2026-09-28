@@ -172,6 +172,8 @@ const LOOKS: Readonly<Record<SceneKind, PropLook>> = {
   cape: PROP_LOOK.cloth,
   face: PROP_LOOK.fabric,
   facePatched: PROP_LOOK.fabric,
+  faceGrit: PROP_LOOK.fabric,
+  facePatchedGrit: PROP_LOOK.fabric,
   hairParted: PROP_LOOK.fabric,
   hairLong: PROP_LOOK.fabric,
   hairCrop: PROP_LOOK.fabric,
@@ -290,12 +292,84 @@ const BLUE: RGB = [0.22, 0.38, 1];
 const OFF_WHITE: RGB = [0.96, 0.96, 0.96];
 
 /**
+ * **The kinds that carry a LINING** (lane BODIES' second fix pass, D147): a sheet
+ * of cloth seen from both sides — a coat's panels and a cloak's. The prop field
+ * draws every kind `DoubleSide` (`makePropMaterial`) and asks for none; a renderer
+ * that culls back faces — the duelists' bake, drawn in the figures' own
+ * `FrontSide` material (`DuelistLayer`) — gets the sheet's inside as a second,
+ * reversed sheet, so from three-quarters behind the director's coat is a coat and
+ * not three planks with the table between them, and the villain's cloak is a cloak
+ * from the front (the verifier's second round; PLAN.md's lane BODIES follow-up 17).
+ */
+const LINED_KINDS: ReadonlySet<SceneKind> = new Set<SceneKind>(['coatTails', 'cape']);
+
+/** How far inside its sheet a lining lies, in the kind's own units: hidden behind it from outside, in front of it from inside. */
+const LINING_INSET = 0.0025;
+
+export interface KindGeometryOptions {
+  /**
+   * Add the lining to a cloth kind ({@link LINED_KINDS}) — the default, for a
+   * renderer that culls back faces. The prop field, drawn `DoubleSide`, passes
+   * `false` and pays for one sheet.
+   */
+  lining?: boolean;
+}
+
+/**
  * Every procedural kind's geometry, in its own unit space — the anchor's `at`,
  * `turn` and `size` (`figures/props.ts`) place it on a body. Exported for
  * `web/test/traits.test.ts`, which measures the bee and the carrier against the
- * numbers the pose's width clamp assumes.
+ * numbers the pose's width clamp assumes, and for the duelists' bake.
  */
-export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null {
+export function buildKindGeometry(kind: SceneKind, options: KindGeometryOptions = {}): THREE.BufferGeometry | null {
+  const geometry = proceduralKind(kind);
+  if (geometry === null || options.lining === false || !LINED_KINDS.has(kind)) return geometry;
+  return withLining(geometry);
+}
+
+/**
+ * A sheet and its lining: every triangle again, `LINING_INSET` inside it along its
+ * own normal, wound the other way and facing in, in the same vertex colour (so a
+ * baker that reads a slot off the colour puts the lining in the same slot).
+ */
+function withLining(sheet: THREE.BufferGeometry): THREE.BufferGeometry {
+  const position = sheet.getAttribute('position');
+  const normal = sheet.getAttribute('normal');
+  const colour = sheet.getAttribute('color');
+  const count = position.count;
+  const pos = new Float32Array(count * 6);
+  const nor = new Float32Array(count * 6);
+  const col = new Float32Array(count * 6);
+  for (let i = 0; i < count; i++) {
+    pos.set([position.getX(i), position.getY(i), position.getZ(i)], i * 3);
+    nor.set([normal.getX(i), normal.getY(i), normal.getZ(i)], i * 3);
+    col.set([colour.getX(i), colour.getY(i), colour.getZ(i)], i * 3);
+  }
+  for (let t = 0; t + 2 < count; t += 3) {
+    // (a, b, c) → (a, c, b): the other winding.
+    const order = [t, t + 2, t + 1];
+    for (let k = 0; k < 3; k++) {
+      const src = order[k]!;
+      const dst = count + t + k;
+      const nx = normal.getX(src);
+      const ny = normal.getY(src);
+      const nz = normal.getZ(src);
+      pos.set([position.getX(src) - nx * LINING_INSET, position.getY(src) - ny * LINING_INSET, position.getZ(src) - nz * LINING_INSET], dst * 3);
+      nor.set([-nx, -ny, -nz], dst * 3);
+      col.set([colour.getX(src), colour.getY(src), colour.getZ(src)], dst * 3);
+    }
+  }
+  sheet.dispose();
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  out.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  out.computeBoundingSphere();
+  return out;
+}
+
+/** {@link buildKindGeometry}'s switch: one sheet of every procedural kind. */
+function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
   switch (kind) {
     case 'wings': {
       // Two pairs, the upper ones longer, splayed wide so they show round a chibi's
@@ -601,7 +675,9 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
       ]);
     }
     case 'face':
-    case 'facePatched': {
+    case 'facePatched':
+    case 'faceGrit':
+    case 'facePatchedGrit': {
       // **Lane BODIES (D142) — a comic face**, in figure units on the
       // proportioned head's front (HEAD_SHAPE, measured on both bodies): two white
       // eyes with ink pupils, two brows set low at the inner end (a steady look),
@@ -609,35 +685,80 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
       // and no shader of its own: the vertices carry the colours, the kit's is white.
       // `facePatched` leaves out HIS left eye (+x) and keeps its brow: the eyepatch
       // is over it, and an eye under a patch showed from above it.
-      const patched = kind === 'facePatched';
+      const patched = kind === 'facePatched' || kind === 'facePatchedGrit';
+      // **Grit (D149)**: the brows pulled down into a V over narrowed eyes, and
+      // the mouth a band of set teeth between two ink lines — the comic's
+      // gritted jaw — where neutral's is one line. The same triangles' budget.
+      const grit = kind === 'faceGrit' || kind === 'facePatchedGrit';
       const { eye, brow, mouth } = HEAD_SHAPE;
       const INK: RGB = [0.03, 0.035, 0.05];
       const EYE: RGB = [1.2, 1.2, 1.15];
       // Tipped up toward the lens: the table view looks down at every face.
       const PITCH = -FACE_PITCH;
+      const eyeTall = grit ? 0.0048 : 0.0078;
+      const browTilt = grit ? 0.62 : 0.24;
+      const browDrop = grit ? -0.0015 : 0.002;
       const parts: THREE.BufferGeometry[] = [];
       for (const side of [1, -1]) {
         const x = side * eye.x * FACE_SCALE;
         const yaw = side * 0.34;
         if (!(patched && side === 1)) {
-          parts.push(part(new THREE.CircleGeometry(1, 14), EYE, [x, eye.y, eye.z], [PITCH, yaw, 0], [0.0106 * FACE_SCALE, 0.0078 * FACE_SCALE, 1]));
+          parts.push(part(new THREE.CircleGeometry(1, 14), EYE, [x, eye.y, eye.z], [PITCH, yaw, 0], [0.0106 * FACE_SCALE, eyeTall * FACE_SCALE, 1]));
           parts.push(
-            part(new THREE.CircleGeometry(1, 12), INK, [x - side * 0.0009, eye.y - 0.0006, eye.z + 0.0014], [PITCH, yaw, 0], [0.0052 * FACE_SCALE, 0.006 * FACE_SCALE, 1]),
+            part(
+              new THREE.CircleGeometry(1, 12),
+              INK,
+              [x - side * 0.0009, eye.y - 0.0006, eye.z + 0.0014],
+              [PITCH, yaw, 0],
+              [0.0052 * FACE_SCALE, Math.min(0.006, eyeTall * 0.8) * FACE_SCALE, 1],
+            ),
           );
         }
         parts.push(
-          part(new THREE.BoxGeometry(1, 1, 1), INK, [x + side * 0.001, brow.y + 0.002, brow.z], [PITCH, yaw, side * 0.24], [0.022 * FACE_SCALE, 0.0055 * FACE_SCALE, 0.003]),
+          part(
+            new THREE.BoxGeometry(1, 1, 1),
+            INK,
+            [x + side * 0.001, brow.y + browDrop, brow.z],
+            [PITCH, yaw, side * browTilt],
+            [0.022 * FACE_SCALE, (grit ? 0.0065 : 0.0055) * FACE_SCALE, 0.003],
+          ),
         );
       }
-      parts.push(part(new THREE.BoxGeometry(1, 1, 1), INK, [0, mouth.y, mouth.z], [PITCH, 0, 0], [0.024 * FACE_SCALE, 0.0042 * FACE_SCALE, 0.003]));
+      if (grit) {
+        // Set teeth: a white band, inked above and below, a little wider than a smile.
+        const w = 0.028 * FACE_SCALE;
+        parts.push(part(new THREE.BoxGeometry(1, 1, 1), EYE, [0, mouth.y, mouth.z], [PITCH, 0, 0], [w, 0.0062 * FACE_SCALE, 0.003]));
+        for (const dy of [0.0036, -0.0036]) {
+          parts.push(part(new THREE.BoxGeometry(1, 1, 1), INK, [0, mouth.y + dy * FACE_SCALE, mouth.z + 0.0004], [PITCH, 0, 0], [w * 1.04, 0.0022 * FACE_SCALE, 0.003]));
+        }
+      } else {
+        parts.push(part(new THREE.BoxGeometry(1, 1, 1), INK, [0, mouth.y, mouth.z], [PITCH, 0, 0], [0.024 * FACE_SCALE, 0.0042 * FACE_SCALE, 0.003]));
+      }
       return mergeParts(parts);
     }
     case 'hairCrop':
       // Close-cropped: a thin cap over the crown and the back, above the ears.
       return hairShell({ front: 56, side: 86, back: 108, scale: 1.035, flare: 0, strands: 0.1 });
     case 'hairBob':
-      // A bob: a fringe to the brows, the sides and back to the jaw, flared out.
-      return hairShell({ front: 63, side: 122, back: 126, scale: 1.1, flare: 0.14, tips: { count: 20, length: 14 }, strands: 0.3 });
+      // A bob: the sides and back to the jaw, a side-swept fringe. **The second fix
+      // pass (D149)**: the verifier read Quake's bob "like a helmet … [that] hides
+      // her face from above" — a fringe to the brows (63°), sides to 122° and a
+      // hem flared 14% out made a dome with a visor. The fringe now stops high on
+      // the forehead and sweeps (lower over her right brow than her left), the
+      // hairline rises at the temples so the cheeks show from above, the hem
+      // flares half as much, and a band of lit locks across the crown (`sheen`)
+      // says hair where a smooth dark shell said helmet.
+      return hairShell({
+        front: 50,
+        side: 114,
+        back: 126,
+        scale: 1.1,
+        flare: 0.1,
+        sweep: 9,
+        tips: { count: 20, length: 14 },
+        strands: 0.2,
+        sheen: 1.1,
+      });
     case 'hairWaves':
       // Swept-back waves with rolls at the nape — what shows under a hat.
       return mergeParts([hairShell({ front: 50, side: 104, back: 114, scale: 1.08, flare: 0.04, strands: 0.25 }), hairRolls()]);
@@ -671,14 +792,17 @@ const FACE_SCALE = 1.15;
 const FACE_PITCH = 0.3;
 
 /**
- * One skirt or cloak panel at size 1 (`figures/props.ts`'s `COAT_PANEL`): 6 × 2
- * segments, 24 triangles — a long coat's body and skirt is fourteen of them, and
- * both duelists wear one, so at `g1`@316 a panel is paid for about thirty times.
+ * One skirt or cloak panel at size 1 (`figures/props.ts`'s `COAT_PANEL`): 6 × 1
+ * segments, 12 triangles — a long coat's body and skirt is fourteen of them, and
+ * both duelists wear one (lined, D147), so at `g1`@316 a panel is paid for about
+ * thirty times. A cone's side is straight from top to hem, so a second ring of
+ * segments down its length (the 6 × 2 of D146) bought no shape — only the shading
+ * gradient, which one segment interpolates the same.
  */
 function coatPanel(trim: boolean): THREE.BufferGeometry {
   const { top, hem, length, arc } = COAT_PANEL;
   const a = (arc / 180) * Math.PI;
-  const cloth = part(new THREE.CylinderGeometry(top, hem, length, 6, 2, true, -a / 2, a), WHITE, [0, -length / 2, 0]);
+  const cloth = part(new THREE.CylinderGeometry(top, hem, length, 6, 1, true, -a / 2, a), WHITE, [0, -length / 2, 0]);
   // A little darker toward the waist, where the coat's own hem overlaps it.
   const pos = cloth.getAttribute('position');
   const col = cloth.getAttribute('color') as THREE.BufferAttribute;
@@ -731,6 +855,19 @@ function hairShell(style: {
   tips?: { count: number; length: number };
   /** How much darker every other lock is at the hem (0 = a smooth shell). */
   strands?: number;
+  /**
+   * **A comic hair highlight** (D149): every other lock LIGHTER by up to this
+   * much (× the hair colour) in a band across the crown — the lit streaks an
+   * inker leaves white on black hair. A vertex colour over 1 lifts the costume's
+   * hair slot there, as the coat's trim does (×30) at a larger scale.
+   */
+  sheen?: number;
+  /**
+   * **A side-swept fringe** (D149), degrees: the front hairline lower over the
+   * figure's right brow (−x) and higher over its left by this much, so a fringe
+   * has a part and a direction rather than the straight brim of a helmet.
+   */
+  sweep?: number;
 }): THREE.BufferGeometry {
   // 24 × 14: ~270–520 triangles a style — report 15 §9.3's 200–600 an instance,
   // measured by traits.test.ts (a first cut at 40 × 28 was 1,000–1,400 each and
@@ -746,7 +883,9 @@ function hairShell(style: {
   const [rx, ry, rz] = HEAD_SHAPE.radii;
   const limit = (phi: number): number => {
     const c = Math.cos(phi);
-    return c >= 0 ? style.side + (style.front - style.side) * c : style.side + (style.back - style.side) * -c;
+    // The sweep: +x is the figure's left, so sin(phi) > 0 raises the fringe there.
+    const front = style.front - (style.sweep ?? 0) * Math.sin(phi);
+    return c >= 0 ? style.side + (front - style.side) * c : style.side + (style.back - style.side) * -c;
   };
   const degrees = (y: number): number => (Math.acos(Math.max(-1, Math.min(1, y))) * 180) / Math.PI;
   for (let t = 0; t + 2 < src.count; t += 3) {
@@ -776,8 +915,12 @@ function hairShell(style: {
       // other meridian a little darker, deepening toward the hem, so the cel
       // bands break into combed locks radiating from the crown. The sphere's 24
       // meridians sit at 15° steps, so cos(12·azimuth) alternates ±1 exactly.
-      const strand = (style.strands ?? 0) * (0.5 + 0.5 * Math.min(1, theta / 90)) * Math.cos(12 * Math.atan2(x, z));
-      const shade = (0.74 + 0.32 * ((y + 1) / 2)) * (1 - Math.max(0, strand));
+      const lock = Math.cos(12 * Math.atan2(x, z));
+      const strand = (style.strands ?? 0) * (0.5 + 0.5 * Math.min(1, theta / 90)) * lock;
+      // The sheen: the OTHER locks, lit in a band from 25° to 75° off the crown.
+      const band = Math.max(0, 1 - Math.abs(theta - 50) / 25);
+      const lit = 1 + (style.sheen ?? 0) * band * Math.max(0, -lock);
+      const shade = (0.74 + 0.32 * ((y + 1) / 2)) * (1 - Math.max(0, strand)) * lit;
       colours.push(shade, shade, shade);
     }
   }
@@ -1168,7 +1311,8 @@ export class PropField {
     this.watchMotion();
     if (this.list.length > 0) return;
     for (const kind of SCENE_KINDS) {
-      const geometry = buildKindGeometry(kind);
+      // Drawn DoubleSide (`makePropMaterial`): a cloth kind needs no lining here.
+      const geometry = buildKindGeometry(kind, { lining: false });
       if (geometry !== null) this.addKind(kind, kind, geometry);
     }
   }

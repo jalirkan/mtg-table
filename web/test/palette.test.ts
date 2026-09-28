@@ -91,6 +91,12 @@ test('palette: the k-means is deterministic, and the art box is where it reads',
   assert.equal(grey.vivid, false);
   assert.equal(artTint(grey), null);
   assert.equal(artTint(a), a.accent);
+  // D148 (follow-up 7): of two clusters equally saturated, a BRIGHT one beats a
+  // larger dim one — Fury's explosion over the khaki round it (report 15 §7.1's
+  // #897748 18 % against #daad6d 15 %).
+  const fury = paletteFromPixels(bands(20, 100, [[9, 16, 17, 67], [137, 119, 72, 18], [218, 173, 109, 15]]), 20, 100)!;
+  assert.equal(fury.vivid, true);
+  assert.equal(fury.accent, '#daad6d', 'the bright explosion is the accent, not the larger khaki');
   // The window: a frame of pure red round a blue picture reads blue.
   const framed = new Uint8ClampedArray(100 * 100 * 4);
   for (let y = 0; y < 100; y++) {

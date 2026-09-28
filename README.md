@@ -1680,7 +1680,7 @@ checkboxes.
 
 #### Bodies — resting poses, hair, faces, coats that drape, and the art's own colours
 
-**Report 15's Lane BODIES** (decisions **D140–D146**; evidence in
+**Report 15's Lane BODIES** (decisions **D140–D149**; evidence in
 [`docs/evidence/bodies.md`](docs/evidence/bodies.md)). After slice 4 the verdict
 on the figures was *"dull and bare"* beside the card art. This lane adds detail
 where the camera looks, with no model per card: every person stands in a pose of
@@ -1690,25 +1690,27 @@ look (`holo` or `comic`), and all of it is data.
 
 | card | rests | hair | also |
 |---|---|---|---|
-| Nick Fury, Spymaster | arms folded | bald, as his card draws him | an eyepatch over the eye it hides; a long coat whose skirt drapes from his hips |
+| Nick Fury, Spymaster | arms folded | bald, as his card draws him | an eyepatch over the eye it hides; a coat to below the knee whose skirt drapes from his hips |
 | Peggy Carter, Secret Agent | at the ready, pistol low, shield arm raised across her front | waves under the hat | a sidearm in her right hand |
-| Agent Phil Coulson | hands clasped at the buckle | parted | — |
-| Quake, Agent of S.H.I.E.L.D. | braced, both palms forward | a bob | — |
-| Agent 13, Sharon Carter | a two-handed aim | a bun | — |
-| Bold Biochemist, A.I.M. Scientists | bent over the bench | parted / under the hood | the lab coat bends at the chest |
+| Agent Phil Coulson | hands clasped above the belt, elbows out | parted | — |
+| Quake, Agent of S.H.I.E.L.D. | braced, both palms forward, head up | a swept bob with lit locks | — |
+| Agent 13, Sharon Carter | the pistol at the high ready, barrel up beside her face | a bun | — |
+| Bold Biochemist, A.I.M. Scientists | bent over the bench | parted / under the hood | the lab coat bends at the chest and hangs open |
 | Ant-Man, Wasp, the Hero token | hands on hips | parted / a bob / long | — |
 | Agents of S.H.I.E.L.D., the Soldier token | at ease, hands behind the back | parted / close-cropped | — |
-| the opponent's villain duelist | — | — | a green cloak down his back |
+| the duelists | — | — | the director's long coat and the villain's green cloak, lined so they read from both sides |
 
 **Every one is a pose.** A tapped figure still kneels, an attacker still lunges,
-and a skip, a scrub or a reconnect lands on the same pose. A face-down card is
-still the anonymous disc: no pose, no hair, no face, no colours.
+and a skip, a scrub or a reconnect lands on the same pose. A face sets its jaw —
+brows down, teeth set — while its figure kneels, attacks or blocks, and relaxes
+when it stands again (**D149**). A face-down card is still the anonymous disc: no
+pose, no hair, no face, no colours.
 
 **Changing one is a data edit** in `web/src/arena/figures/traits.json`, and the
 workshop's tuning panel has a row for each key:
 
-- `rest`: `stand`, `folded`, `ready`, `aim`, `akimbo`, `clasped`, `braced`,
-  `working` or `atEase` (`figures/rests.ts` is what each one is);
+- `rest`: `stand`, `folded`, `ready`, `aim`, `highReady`, `akimbo`, `clasped`,
+  `braced`, `working` or `atEase` (`figures/rests.ts` is what each one is);
 - `hair`: `parted`, `long`, `crop`, `bob`, `waves`, `bun` or `none` — absent
   means the body's own;
 - `face`: `on`, `patched` (the eye under an eyepatch left out) or `none`;
@@ -1717,29 +1719,31 @@ workshop's tuning panel has a row for each key:
 **The coat drapes.** Its skirt hangs from the hips: each front panel follows its
 leg about a third of the way and each side panel about a fifth, and the lower
 half of each falls back toward straight down — so a kneeling or lunging figure's
-coat opens and folds without a panel flying out or lying flat (**D146**).
+coat opens and folds without a panel flying out or lying flat (**D146**). It is
+cut to the body it is on — close round the hips, to just below the knee, open
+down the front — so the legs and the pose show under it (**D147**).
 
 **The art's colours.** For every card face up, the page can read the card image
 it already downloaded, once, when the browser is idle, and find its main colours.
 They sit **under** every hand-written row: a card that has a row keeps it, and a
 card that has none — a new set's — gets its painting's vivid colour for its
-accent and body tint, its land tile and its aura. Nothing is saved or sent. **It
-is built but not switched on yet**: the two lines that pass the colours to the
-table belong to the parallel look lane's files (PLAN.md's lane BODIES follow-up
-13). Until they land, the workshop's tuning panel shows each card's swatches and
-nothing is drawn in them (**D144**).
+accent and body tint, its land tile and its aura. Nothing is saved or sent. The
+table and the workshop both draw it (**D148**): the Giant-Sized Flying Ant, which
+has no colour of its own in `traits.json`, is its painting's brown rather than its
+mana's blue. The workshop's tuning panel shows each card's swatches, and its
+`palette` row switches the rung off for a card to compare (**D144**).
 
 **What was not done.** The brief's plan for hair used the free Universal Base
 Characters pack's other hairstyles. Downloading it again needs your approval, so
 two of the hairstyles are the pack's own (already in the library) and four are
 drawn procedurally until then (PLAN.md's lane BODIES follow-up 2).
 
-**It costs** six draw calls and about 1,800 triangles on a busy table: at
-`g1.jsonl`@316 with bloom off on the GTX 1080, 83 calls and 26,066 triangles with
-ten figures drawn (77 and 24,240 before), and 87 and 29,246 when a sample catches
-an eleventh — inside the Tier 2 budget of 90 and 30,000, with little room left
-for the look lane's own two calls. The board's own code is unchanged, and an idle
-table still renders nothing.
+**It costs** six or seven draw calls and about 1,950 triangles on a busy table:
+at `g1.jsonl`@316 with bloom off on the GTX 1080, 84 calls and 26,167 triangles
+with ten figures drawn (77 and 24,240 before), and 88 and 29,371 when a sample
+catches an eleventh — inside the Tier 2 budget of 90 and 30,000, with only the
+look lane's own two calls of room left. The board's own code is unchanged, and an
+idle table still renders nothing.
 
 #### The workshop — one card on a pedestal (`#workshop`)
 

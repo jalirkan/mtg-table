@@ -88,6 +88,7 @@ import { CueQueue, awaitingHuman, budgetFor, type QueueMode } from './cues/queue
 import { REGISTRY } from './cues/registry.ts';
 import { EMPTY_CUE_DATA, type CueData } from './cues/types.ts';
 import { mergeCueData, validateCues } from './cues/validate.ts';
+import { paletteNamesOf, useArtPalettes } from './art.ts';
 import { combatFreeze, manaMotes, spellForms, type ManaMote, type SpellForm } from './figures/casting.ts';
 import {
   duelistBusts,
@@ -840,6 +841,11 @@ export default function Arena({
    * not a coordinate.
    */
   const frozen = useMemo(() => combatFreeze(state.board), [state.board]);
+  // Lane BODIES (D144, switched on by D148): the art rung — each face-up card's
+  // own painting, read once off the hot path (`arena/art.ts`); a new map only when
+  // a palette arrives, so the poses below recompute once per arrival, at commit.
+  const paletteNames = useMemo(() => paletteNamesOf(placed), [placed]);
+  const palettes = useArtPalettes(paletteNames, art);
   const figures = useMemo(
     () =>
       figurePose(placed, state.board?.combat ?? null, figureData.figures, {
@@ -849,8 +855,9 @@ export default function Arena({
         // T1's — a square figure — which is the fallback a checkout with no
         // manifest gets.
         models: figureData.models,
+        palettes,
       }),
-    [placed, state.board?.combat, figureData, frozen],
+    [placed, state.board?.combat, figureData, frozen, palettes],
   );
   /**
    * T4 — **the terrain, and the casting anchor**, both pure functions of the
@@ -859,8 +866,8 @@ export default function Arena({
    * derived from a history.
    */
   const tiles = useMemo(
-    () => tilePose(placed, tileDataOf(figureData.figures)),
-    [placed, figureData],
+    () => tilePose(placed, tileDataOf(figureData.figures), palettes),
+    [placed, figureData, palettes],
   );
   const seatOfPlayer = useCallback(
     (playerId: number): 'you' | 'opp' =>
