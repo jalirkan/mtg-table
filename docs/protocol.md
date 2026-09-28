@@ -25,6 +25,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-27 — the hardening pass, the end of a game
+
+Applied by the small-defect pass (branch `hardening`). Two rows, and neither
+changes a frame's shape: M45 changes WHEN a `newGame` is honoured, M46 says what
+a session whose engine crashed puts on the wire. Evidence:
+`docs/evidence/hardening.md`; decisions **D114** and **D115**. *(Numbered after
+match setup's M44, which landed on `main` while this pass was open.)*
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M45 | §2.2, §7 | **A `newGame` that arrives before Forge has FINISHED the game it follows is queued, and honoured the moment Forge has.** `over` is emitted at the outcome (M4), while Forge's game thread is still winding the game down: ownership changes, cache clears, `GameEventGameFinished`, and `FControlGameEventHandler`'s answer to that event — `showPromptMessage`, `updateButtons` and `finishGame()` queued on the EDT for this seat's GUI. A client that answers `over` with `newGame` at once could get its act onto the EDT first; the restart ran, the next game's `openView` re-armed the terminal-frame latch, and the previous game's late `finishGame()` then emitted the NEW game's `over` — before it had dealt a card, with no `gameOver` state (gate step 10g, once in two runs at a load average of 15–32: a four-frame game 3). The act is now held until the game's own `GameEventGameFinished` has been dispatched and the EDT has drained behind it, then applied exactly as before; the client sees the same frames, a moment later (a new `hello_ok`). One act is queued; a second before the release is dropped (stderr). There is still no frame to refuse with between games (§8.4). The pre-input concede (M11) never reaches Forge's game-over, so a `newGame` after ITS `over` is applied at once, as it always was. | 13(c) |
+| M46 | §6, §7, §8.4 | **An engine crash ends the game on the wire: an error `notice`, then amendment M11's null `over`.** When an exception escapes Forge's game loop (measured: a card script the 2.0.14 jar cannot build throws out of `Match.prepareAllZones` before turn 1), nothing in Forge catches it and no outcome is ever published. The bridge now sends `notice {level:"error", title:"Engine error", text:<our own words>}` and `over {winner:null, reason:null, matchOver:true}`, so the frame log ends in its terminal frame and a client stops waiting; the process exits non-zero with the cause on stderr, and a multi-game session plays no further game. **The notice never carries the engine's message**: it names the card ("check card script of …"), and the card can be in the opponent's deck (hard rule 8). A consumer that sees an error `notice` titled `Engine error` in front of a null `over` is looking at an INCOMPLETE game. `RecordMatch` writes the same two frames. | D115 |
+
 ### 2026-09-27 — match setup, the AI's deck and profile
 
 Applied when the bridge learned to seat the AI with a deck of its own and a
@@ -409,6 +422,14 @@ server cannot take literally is **corrected rather than refused**, loudly on
 stderr: an unknown `mode` reads as `"continue"`, and `"continue"` after
 `matchOver: true` reads as `"restart"` — which is the only mode that can produce
 another game, and "another game" is the only thing the act can have meant.
+
+**A `newGame` sent the instant `over` arrives is queued, not raced** (amendment
+**M45**). `over` goes out at the outcome, and Forge is still finishing the game
+for a few milliseconds after it — on a loaded machine, longer. An act that
+arrives in that window waits until the game's `GameEventGameFinished` has been
+handled (stderr: `NEW GAME QUEUED`, then `NEW GAME RELEASED`) and is then applied
+as above. The client needs to do nothing: it sends the act when it likes and
+waits for the new `hello_ok`, as it always did.
 
 **The session has to be there to continue into.** Nothing in the bridge starts a
 game, so a process that has played the games it was asked for exits: a server
@@ -1731,6 +1752,12 @@ or a concede is the likeliest way to reach it.
 
 The same object appears as `state.gameOver` in subsequent snapshots, so a scrubbed
 replay renders the result without special-casing the final frame.
+
+**An engine crash is the other way to reach the null body** (amendment **M46**):
+an exception out of Forge's game loop publishes no outcome, so the bridge sends
+an error `notice` titled `Engine error` and then this `over` with `winner`,
+`reason` null and `matchOver: true`. The notice is the marker that the game is
+incomplete; its text is the bridge's own and never the engine's message.
 
 ---
 

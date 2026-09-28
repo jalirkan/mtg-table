@@ -870,6 +870,114 @@ export function visibleShare(
 }
 
 /**
+ * **A rectangle of chrome fixed in CSS pixels against one corner of the canvas.**
+ * `insetX` is its distance from that corner's left or right edge (CSS
+ * `inset-inline-*`), `insetY` from its top or bottom edge (`inset-block-*`). The
+ * canvas scales and the rectangle does not, so where it falls in NDC depends on
+ * the canvas's own width and height.
+ */
+export interface CornerRect {
+  corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  insetX: number;
+  insetY: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * **The two seat plates** (`DecisionLayer.tsx`'s `SeatPlates`; `styles.css`'s
+ * `.arena__seats` and `.arena__seat`): the life-total HUD on the canvas's right
+ * edge, the opponent's at the top and yours at the bottom. Slice 4's follow-up 3
+ * asked for them as keep-outs beside {@link keepOutTop}'s band.
+ *
+ * The anchors and the width are the stylesheet's (root font 16 px):
+ * `.arena__seats` is `inset-block: 2.6rem 0.5rem` and `inset-inline-end: 0.6rem`
+ * inside the layer that covers the canvas, so a plate starts 41.6 px below the
+ * canvas top (the opponent's) or ends 8 px above its bottom (yours), 9.6 px in
+ * from the right. The width is `.arena__seat`'s `max-inline-size: 14rem`, 224 px.
+ * The plate shrinks to its content, and the measured widths are 162–224 px, so
+ * the cap is the conservative footprint.
+ *
+ * The height is content, measured in Chromium on `g1`@355 at 1600 × 1000 and
+ * 1024 × 768 (identical, because every size in the plate is fixed), and again on
+ * `sample-handwritten`, whose handshake carries match setup's `match`. It is the
+ * box, `2 × 0.3rem` of padding, `2 × 1px` of border and `3 × 0.1rem` of gap,
+ * 16.4 px, plus FOUR rows, each one line: the name row 16.8 (12 px at
+ * `line-height: 1.4`), life 21.8 (`.life__n` is 20 px), the zone counts 15.4
+ * (11 px) and the mana pips 14.0. That is **84.4 px**. When your name and its
+ * tags do not fit the 206-px content box, your name row wraps to 35.6 px (the
+ * tags are 10 px, under a `0.3rem` row gap), which is **103.2 px**:
+ *
+ * - **the opponent's**: 84.4 px, ending **126.0 px** below the canvas top, inside
+ *   `HUD_TOP_PX` (128), which was measured with this plate in it — so the plate
+ *   hides nothing the band does not, and `camera.test.ts` ASSERTS that. It holds
+ *   because every row is one line by the stylesheet, whatever the frame says:
+ *   the name is ellipsised (a long `--ai-name` is cut, not wrapped), the
+ *   opponent's name row never wraps, and match setup's deck name and profile and
+ *   any player counters ride the life row (the rebase onto match setup; its
+ *   deck line of its own took the plate to 101.4 px, and with the profile in
+ *   the tags the AI's own turn wrapped the name row to 120.1 — 143 and 162 px
+ *   down, over the opponent's duelist in the shoulder view).
+ * - **yours**: 103.2 px, because `· you · active · priority` wraps the name row
+ *   on your own turn. It is the one keep-out below the band, and it grows upward
+ *   from the bottom edge; the name is one line there too.
+ */
+export const PLAYER_PLATES: Readonly<Record<Seat, CornerRect>> = Object.freeze({
+  opp: Object.freeze({ corner: 'top-right', insetX: 9.6, insetY: 41.6, width: 224, height: 84.4 }),
+  you: Object.freeze({ corner: 'bottom-right', insetX: 9.6, insetY: 8, width: 224, height: 103.2 }),
+});
+
+/**
+ * Is a projected point under a {@link CornerRect} on a canvas `widthPx` ×
+ * `heightPx` CSS pixels? The rectangle's edges count as under it.
+ */
+export function underRect(
+  ndc: readonly [number, number],
+  rect: CornerRect,
+  widthPx: number,
+  heightPx: number,
+): boolean {
+  const x = ((ndc[0] + 1) / 2) * widthPx;
+  const y = ((1 - ndc[1]) / 2) * heightPx;
+  const left = rect.corner.endsWith('left') ? rect.insetX : widthPx - rect.insetX - rect.width;
+  const top = rect.corner.startsWith('top') ? rect.insetY : heightPx - rect.insetY - rect.height;
+  return x >= left && x <= left + rect.width && y >= top && y <= top + rect.height;
+}
+
+/** What covers the canvas: a band of `topPx` over its top edge and any corner rectangles. */
+export interface CanvasChrome {
+  topPx: number;
+  rects: readonly CornerRect[];
+}
+
+/**
+ * **{@link visibleShare} on a canvas of real pixels**: the share of the sample
+ * points inside the frame, below the chrome's top band and under none of its
+ * corner rectangles. The aspect is the canvas's own. `visibleShare` stays for a
+ * caller that has only an aspect and a band.
+ */
+export function visibleShareOnCanvas(
+  pose: Pose,
+  samples: readonly Point3[],
+  canvas: { width: number; height: number },
+  chrome: CanvasChrome,
+  fovDeg: number = CAMERA.fov,
+): number {
+  if (samples.length === 0) return 0;
+  const aspect = canvas.width / canvas.height;
+  const bandTop = keepOutTop(chrome.topPx, canvas.height);
+  let seen = 0;
+  for (const point of samples) {
+    const ndc = projectToNdc(pose, point, fovDeg, aspect);
+    if (ndc === null) continue;
+    if (Math.abs(ndc[0]) > 1 || ndc[1] < -1 || ndc[1] > bandTop) continue;
+    if (chrome.rects.some((rect) => underRect(ndc, rect, canvas.width, canvas.height))) continue;
+    seen += 1;
+  }
+  return seen / samples.length;
+}
+
+/**
  * Whether this choice may be used right now. A spectator may use every view
  * and the director; a seat only the views that keep its hand.
  */

@@ -46,6 +46,7 @@ import forge.game.card.IHasCardView;
 import com.google.common.eventbus.Subscribe;
 
 import forge.game.event.GameEvent;
+import forge.game.event.GameEventGameFinished;
 import forge.game.event.GameEventGameOutcome;
 import forge.game.phase.PhaseType;
 import forge.game.player.DelayedReveal;
@@ -267,6 +268,42 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     /** A {@link #captureOutcome} is queued on Forge's game pool; {@link #emitOver} waits for it. */
     private volatile boolean captureInFlight;
     private volatile boolean overEmitted;
+    /**
+     * <b>Forge has finished the current game</b> -- decision <b>D114</b>,
+     * protocol amendment <b>M45</b>.  Set on the EDT by {@link #engineFinished},
+     * which {@link FinishWatcher} queues there from the game's own thread once
+     * {@code GameEventGameFinished} has been dispatched to every subscriber.
+     *
+     * <p>Our {@code over} is emitted at the OUTCOME ({@link #captureOutcome}),
+     * which is well before Forge has finished with the game: after the outcome
+     * the game thread still runs {@code Match.startGame}'s tail (ownership
+     * changes, cache clears, {@code GameEventGameFinished}, a {@code System.gc()}),
+     * and {@code FControlGameEventHandler} answers {@code GameEventGameFinished}
+     * by queueing {@code showPromptMessage}, {@code updateButtons} and
+     * {@code finishGame()} on the EDT for this very object.  A client that
+     * answers {@code over} with {@code act: newGame} at once could get its act
+     * onto the EDT first -- measured once in two gate runs at a load average of
+     * 15-32 (PLAN.md slice-4 follow-up 13(c)) and every time with
+     * {@link #HOLD_GAME_END_MS} -- and then the restart ran, {@link #openView}
+     * re-armed {@link #overEmitted} for game n+1, and game n's late
+     * {@code finishGame()} emitted game n+1's {@code over} before it had dealt a
+     * card.  {@link #newGame} therefore QUEUES an act that arrives before this
+     * is set, and {@link #engineFinished} applies it.
+     */
+    private volatile boolean engineFinished;
+    /** The early {@code act: newGame} {@link #engineFinished} will apply.  Written and run on the EDT. */
+    private volatile Runnable queuedNewGame;
+    /**
+     * <b>A test hook, and nothing else</b> (decision D114): hold the game thread
+     * this many ms after it has emitted {@code over}, so the window between the
+     * outcome and {@code GameEventGameFinished} is wide open and an immediate
+     * {@code act: newGame} lands in it every time.  Read once from the
+     * environment variable {@code MTGTABLE_HOLD_GAME_END_MS}; unset (the only
+     * value anybody plays with) it is 0 and costs nothing.  Gate step 10g sets
+     * it, which is what turns 13(c) from a load-dependent flake into a
+     * deterministic regression test.
+     */
+    static final long HOLD_GAME_END_MS = holdGameEndMs();
     private volatile boolean closed;
     /**
      * True once {@link #openView} has written the session header and the game
@@ -760,6 +797,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
             // 3. The outcome, captured where it is legal to read it.
             hosted.getGame().subscribeToEvents(new OutcomeWatcher());
+
+            // 4. D114: "Forge has finished game n", from game n's own bus.
+            //    Subscribed LAST, so FControlGameEventHandler (subscribed by
+            //    HostedMatch.startGame before openView) has queued its EDT
+            //    wind-down and our forwarder has taken the event before this
+            //    sees it.  Keyed by n, so it can never release game n+1.
+            hosted.getGame().subscribeToEvents(new FinishWatcher(n));
         }
         pool.startWatchdog();
     }
@@ -871,6 +915,8 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         captureInFlight = false;
         inputSeen = false;
         forwarder = null;
+        engineFinished = false;                // D114: game n has only just begun
+        queuedNewGame = null;
         pool.reopen();
         // LAST: `emit` drops every non-`over` frame while this is set, and the
         // handshake below is the first frame of the new game.
@@ -997,7 +1043,87 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         public void receive(final GameEvent ev) {
             if (ev instanceof GameEventGameOutcome) {
                 captureOutcome();
+                holdGameEndForTest();
             }
+        }
+    }
+
+    /**
+     * <b>D114.</b>  Game {@code n}'s {@code GameEventGameFinished}, seen on game
+     * {@code n}'s own event bus and therefore on game {@code n}'s own thread,
+     * after every earlier subscriber.  It walks nothing: it only queues
+     * {@link #engineFinished} on the EDT, BEHIND the {@code showPromptMessage} /
+     * {@code updateButtons} / {@code finishGame()} that
+     * {@code FControlGameEventHandler} queued there a moment ago (our EDT is one
+     * FIFO thread), so the queued {@code act: newGame} runs after the last thing
+     * Forge does to this object for game {@code n}.  Nothing posts to game
+     * {@code n}'s bus after this event ({@code Match.startGame} returns), so our
+     * old forwarder never flushes again either.
+     */
+    private final class FinishWatcher {
+        private final int game;
+
+        FinishWatcher(final int game) {
+            this.game = game;
+        }
+
+        @Subscribe
+        public void receive(final GameEvent ev) {
+            if (ev instanceof GameEventGameFinished) {
+                FThreads.invokeInEdtLater(() -> engineFinished(game));
+            }
+        }
+    }
+
+    /** EDT.  Game {@code game} is finished on Forge's side: a queued {@code newGame} may now run. */
+    private void engineFinished(final int game) {
+        final int current;
+        synchronized (lifecycle) {
+            current = gamesStarted;
+        }
+        if (game != current) {
+            // Cannot happen while newGame waits for this -- game n+1 does not
+            // start until game n's finish has run -- but the pre-start concede
+            // (M11) lets a restart skip the wait, so say so rather than release
+            // the wrong game.
+            System.err.println("GAME FINISHED for game " + game + " while game " + current
+                    + " is being played: ignored (D114)");
+            return;
+        }
+        engineFinished = true;
+        final Runnable queued = queuedNewGame;
+        queuedNewGame = null;
+        if (queued != null) {
+            System.err.println("NEW GAME RELEASED: Forge has finished " + gameId
+                    + ", so the queued `newGame` runs now (D114, protocol amendment M45)");
+            queued.run();
+        }
+    }
+
+    private static long holdGameEndMs() {
+        final String v = System.getenv("MTGTABLE_HOLD_GAME_END_MS");
+        if (v == null || v.isEmpty()) {
+            return 0L;
+        }
+        try {
+            return Math.max(0L, Long.parseLong(v.trim()));
+        } catch (final NumberFormatException e) {
+            System.err.println("MTGTABLE_HOLD_GAME_END_MS=" + v + " is not a number; ignored");
+            return 0L;
+        }
+    }
+
+    /** {@link #HOLD_GAME_END_MS}: on the game thread, after {@code over}, and only in a test. */
+    private void holdGameEndForTest() {
+        if (HOLD_GAME_END_MS <= 0L || !ThreadUtil.isGameThread() || !overEmitted) {
+            return;
+        }
+        System.err.println("TEST HOOK: holding the game thread " + HOLD_GAME_END_MS + " ms after `over` "
+                + "(MTGTABLE_HOLD_GAME_END_MS) so an immediate newGame lands before Forge finishes the game");
+        try {
+            Thread.sleep(HOLD_GAME_END_MS);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1453,6 +1579,35 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     public void finishGame() {
         fired("finishGame");
         emitOver();
+    }
+
+    /** Set by {@link #engineCrashed}: why Forge's game loop died, or null. */
+    private volatile Throwable engineFailure;
+
+    /**
+     * <b>Forge's game loop died with an exception</b> (decision <b>D115</b>,
+     * {@link EngineCrash}).  Called on the dying {@code Game-n} thread by the
+     * default uncaught-exception handler {@link MtgTable} installs, after the
+     * trace is on stderr.  No outcome is coming, so this ends the game the only
+     * honest way: an error {@code notice} -- our own words, never the engine's,
+     * because the engine's names a card, and the card can be the opponent's
+     * (hard rule 8) -- and then {@code over}, which carries amendment M11's
+     * null body and prints {@code OVER WITHOUT A gameOver STATE}.  The frame log
+     * therefore ends in {@code over}, a client stops waiting, and
+     * {@link MtgTable} exits non-zero with the cause.  If {@code over} is
+     * already out (a death in {@code Match.startGame}'s tail) both frames are
+     * dropped by {@link #emit} and only the exit code changes.
+     */
+    public void engineCrashed(final Throwable e) {
+        engineFailure = e;
+        notice("error", "Engine error", "The rules engine stopped with an error, so this game cannot "
+                + "continue. The server log has the details.");
+        emitOver();
+    }
+
+    /** Why Forge's game loop died, or null if it did not (D115). */
+    public Throwable engineFailure() {
+        return engineFailure;
     }
 
     @Override
@@ -2800,6 +2955,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 // before the game has begun.  End the session rather than
                 // conceding into Forge's setup, which crashes it.
                 System.err.println("CONCEDE BEFORE START: ending the session");
+                // D114: Forge never reaches its own game-over on this path, so
+                // no GameEventGameFinished is coming for a newGame to wait on;
+                // one after this `over` is applied at once, as it always was.
+                engineFinished = true;
                 emitOver();
                 return;
             }
@@ -3042,6 +3201,15 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * teardown-and-restart runs inline inside this act: by the time it returns,
      * {@link #openView} has emitted the next game's {@code hello_ok}.
      *
+     * <p><b>Unless Forge has not finished the game yet</b> (decision D114,
+     * amendment M45): {@code over} goes out at the outcome, and an act that
+     * answers it at once can arrive while the game thread is still winding the
+     * game down.  Such an act is QUEUED -- one of them; a second is dropped --
+     * and {@link #engineFinished} applies it the moment Forge has finished, so the
+     * client sees the same thing a little later: the next game's
+     * {@code hello_ok}.  There is no refusal to send: {@code emit} drops every
+     * non-{@code over} frame between games (protocol section 8.4).
+     *
      * <p>It is the one act deliberately <b>absent from the frame log</b>:
      * {@code over} is the terminal frame of a file (protocol section 8.4) and an
      * act written after it would take that place.  The server prints it on
@@ -3076,10 +3244,33 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                     + "which is the only mode that can produce another game");
             decision = NextGameDecision.NEW;
         }
+        if (!engineFinished) {
+            if (queuedNewGame != null) {
+                System.err.println("NEW GAME mode=" + mode + " dropped: one is already queued for "
+                        + gameId + " (D114)");
+                return;
+            }
+            final NextGameDecision queued = decision;
+            System.err.println("NEW GAME QUEUED mode=" + mode + " (" + queued + ") after " + gameId
+                    + ": Forge has not finished that game yet (D114, protocol amendment M45)");
+            newGamesRequested.incrementAndGet();
+            queuedNewGame = () -> applyNewGame(c, mode, queued);
+            return;
+        }
+        newGamesRequested.incrementAndGet();
+        applyNewGame(c, mode, decision);
+    }
+
+    /** EDT.  Hand Forge the next-game decision; the restart runs inline, ending in {@link #openView}. */
+    private void applyNewGame(final IGameController c, final String mode, final NextGameDecision decision) {
         System.err.println("NEW GAME REQUESTED mode=" + mode + " (" + decision + ") after "
                 + gameId);
-        newGamesRequested.incrementAndGet();
         c.nextGameDecision(decision);
+    }
+
+    /** True while an early {@code act: newGame} waits for Forge to finish the game (D114). */
+    public boolean newGameQueued() {
+        return queuedNewGame != null;
     }
 
     /**

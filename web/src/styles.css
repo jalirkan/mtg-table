@@ -3137,29 +3137,52 @@ button.zonerow__open:hover {
   border-color: var(--accent);
 }
 
+/* **A plate is four rows and every row is ONE line** (the 2026-09-27 hardening
+   pass, rebased onto match setup). The opponent's plate sits under the arena's
+   top band, over the opponent's duelist (D100), and `camera.ts`'s
+   `PLAYER_PLATES` models it as a keep-out: its height is these rules, and
+   `camera.test.ts` asserts it ends inside `HUD_TOP_PX`. So the name is
+   ellipsised (the whole name in its `title`; `--ai-name` can be anything), the
+   opponent's name row never wraps, and the match and any player counters ride
+   the life row. Your plate's name row may still wrap its tags under the name —
+   it is anchored to the bottom, and modelled wrapped. */
 .arena__seat-who {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.3rem;
+  max-inline-size: 100%;
+}
+
+.arena__seat--opp .arena__seat-who {
+  flex-wrap: nowrap;
 }
 
 .arena__seat-name {
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--ink);
   font-weight: 600;
 }
 
 .arena__seat-tags {
+  flex: none;
+  white-space: nowrap;
   color: var(--muted);
   font-family: var(--mono);
   font-size: 10px;
 }
 
-/* Match setup (M44): the seat's deck NAME from `seatMatchOf`, on one line.
-   Ellipsised rather than wrapped — the plate sits beside the opponent's duelist
-   (D100), so it may grow by one line and no more; the tooltip has the rest. */
+/* Match setup (M44): the seat's deck NAME from `seatMatchOf`, on the life row,
+   ellipsised to what the row has left — the tooltip has the rest — and then the
+   AI's profile. The deck gives way first (its shrink factor dwarfs the
+   profile's); the profile only once the deck is gone, which takes poison and
+   player counters beside it. Life, poison and counters never shrink. */
 .arena__seat-deck {
-  max-inline-size: 13rem;
+  flex: 0 1000 auto;
+  min-inline-size: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -3167,10 +3190,28 @@ button.zonerow__open:hover {
   font-size: 11px;
 }
 
+.arena__seat-profile {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
 .arena__seat-vitals {
   display: flex;
+  flex-wrap: nowrap;
   align-items: baseline;
   gap: 0.5rem;
+  max-inline-size: 100%;
+}
+
+.arena__seat-vitals > .life,
+.arena__seat-vitals > .poison {
+  flex: none;
 }
 
 .arena__seat-zones {
@@ -3183,7 +3224,8 @@ button.zonerow__open:hover {
 
 .arena__seat-counters {
   display: flex;
-  flex-wrap: wrap;
+  flex: none;
+  flex-wrap: nowrap;
   gap: 0.2rem;
 }
 

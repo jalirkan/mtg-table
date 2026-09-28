@@ -41,6 +41,18 @@ the workshop and match setup) and gated there; not on `main`. *Engine and sets*,
 just above *Deferred*, has the rule, the measurements, the checklist for the day
 and the follow-ups.
 
+**Also off the plan, 2026-09-27: a hardening pass** (**D113–D115**, amendments
+**M45–M46**) — seven small defects from the follow-up lists, each fixed at its
+cause and each with a test or gate assertion that fails without the fix: gate
+step 6 no longer flakes or exits 141 under load, an instant `newGame` can no
+longer end the next game, an engine crash fails the run, the T-pose flash, the
+seat plates in `visibleShare`, the catalog drift check in the gate (12b), and the
+`@gltf-transform/cli` pin. Rebased onto match setup the same day and onto
+engine and sets on 2026-09-28, with the
+engine-crash check in the gate (12c) and the arena's seat plate held to four
+one-line rows inside the top band. *The 2026-09-27 hardening pass*, just above
+*Deferred*, has the table, the rebase and what is left open.
+
 ---
 
 ## M0 — The engine runs our code
@@ -2355,7 +2367,7 @@ changes that contradict earlier documents; now **D53–D63** and CLAUDE.md's Tie
 section), and NOTICE did not list the two bloom packages bundled into the `Post`
 chunk (now §6). The other eight are follow-ups 2, 3, 4, 5, 7, 8, 9 and 10 below.
 
-### Tier 2 follow-ups — nineteen from slice 1, 2026-09-27; six closed by slice 2, one by slice 3, one by slice 4
+### Tier 2 follow-ups — nineteen from slice 1, 2026-09-27; six closed by slice 2, one by slice 3, one by slice 4, one (17) by the hardening pass
 
 From the builders' own "problems" notes and the verification pass. **None of them
 stops a game, and the gate is green.** **Slice 2 closed 2, 3, 8, 9, 11 and 18**
@@ -2508,7 +2520,11 @@ a stated cost.
     was wrong. NOTICE now says so and is where the notices live; a `web/dist/` that
     leaves this machine must carry NOTICE with it, or the build must be told to
     keep legal comments. Pre-existing since M7; found now.
-17. **`@gltf-transform/cli` floats on a caret (`^4.5.0`)** while every Tier 2
+17. ~~**`@gltf-transform/cli` floats on a caret (`^4.5.0`)**~~ — **closed by the
+    hardening pass (2026-09-27)**: `web/package.json` pins the CLI at `4.5.0` and,
+    through `overrides`, its nested meshoptimizer at `1.2.0` and the three
+    `@gltf-transform` libraries the build imports at `4.5.0` (slice 4 follow-up 9;
+    *The 2026-09-27 hardening pass*, below). While it was open: every Tier 2
     runtime dependency is exact. A minor release could change the bytes of
     `figures.glb`; pin it if the built file is committed. Since slice 2 such a
     change can no longer pass silently — `figures.test.ts` fails when the file on
@@ -3225,7 +3241,7 @@ verdict on slice 3), and 10 (Fury — reworked, and still the least legible).
 **Moved**: slice 3 follow-up 2 (the eyepatch joined the one-sided list, **D98**)
 and Tier 2 follow-up 17 (the caret now also decides the simplifier, **D96**).
 
-### Slice 4 follow-ups — nineteen, 2026-09-27
+### Slice 4 follow-ups — nineteen, 2026-09-27; 3, 8, 9 and 13(b)/(c) closed by the hardening pass
 
 From both tracks' "problems" notes, the verification pass's eleven findings and
 this documentation pass. **None stops a game.** Four are the user's calls (1, 2,
@@ -3246,7 +3262,17 @@ cost.
    creature rank. That is not the Yu-Gi-Oh composition `docs/ideas/arena-mode.md`
    describes. Putting it at the far end means moving the chrome band, the table
    view's pose or the table's depth — a camera or layout decision, and the user's.
-3. **`visibleShare` models the top chrome band, not the player plates** (the
+3. ~~**`visibleShare` models the top chrome band, not the player plates**~~ —
+   **closed by the hardening pass (2026-09-27)**: `camera.ts`'s `PLAYER_PLATES`
+   and `visibleShareOnCanvas` model both seat plates as keep-outs (held to
+   `styles.css` by `camera.test.ts`), and **no duelist number changed**: the
+   "y ≈ 180" was a WINDOW coordinate, and in canvas pixels the opponent's plate
+   ends at 126.0, inside the 128-px band (*The 2026-09-27 hardening pass*, below).
+   **On the rebase onto match setup** the plate had grown a deck line and a
+   profile that wrapped its name row — 143 and 162 px down, below the band and
+   over the duelist in the shoulder view — and it is four one-line rows again,
+   with the band asserted (the hardening section's *The rebase*). The
+   original finding: (the
    verifier). The top-right AI plate reaches y ≈ 180 at 1600 × 1000, so the
    villain can be under it; at 1024 × 768 in the seat-safe shoulder view the
    villain's helm is under it. The camera test's ≥ 90% is therefore optimistic by
@@ -3281,15 +3307,25 @@ cost.
    The live concession's outcome entry did not visibly play either: the stances
    appeared at once. The gestures are evidenced in replay and by the corpus test.
    This is Tier 2 follow-up 1 and question 12 with a third casualty.
-8. **The T-pose flash is hidden, not fixed** (**D95**). `CueRunner.driveClips`
+8. ~~**The T-pose flash is hidden, not fixed**~~ — **closed by the hardening
+   pass (2026-09-27)**: `driveClips` gives the one action that is both lanes
+   weight 1, and `web/test/clip-lane.test.tsx` holds it on a model with no
+   `idle` (fails without the line: the bone drifts to 0.92 of the way to its bind
+   pose). The original finding (**D95**): `CueRunner.driveClips`
    still returns early when a stance's rest action IS the transient, leaving the
    blend weights below 1 for the ramp. Every clone now starts at its idle's first
    frame, so the mixer's fallback pose is the idle and nothing flashes, but a model
    with no `idle` would still flash its bind pose. The fix is one line in
    `CueRunner.tsx` (weight 1 on that action), which neither track owned.
-9. **Byte reproducibility rides a transitive dependency** (**D96**): the build
+9. ~~**Byte reproducibility rides a transitive dependency**~~ (**D96**) — **closed
+   by the hardening pass (2026-09-27)**: the CLI is pinned at `4.5.0` and its
+   meshoptimizer at `1.2.0` (`overrides`); `npm ci` installs the same versions the
+   lockfile always recorded. **Not re-proved by a rebuild**: the five source
+   archives are not on this machine and downloading them (~130 MB) is the user's
+   call (follow-up 12), so `figures.glb`'s reproducibility rests on the toolchain
+   being unchanged (*The 2026-09-27 hardening pass*, below). The original finding: the build
    decimates with the meshoptimizer nested under `@gltf-transform/cli`, which
-   still floats on `^4.5.0`. Pin the CLI exactly (Tier 2 follow-up 17).
+   still floated on `^4.5.0`. Pin the CLI exactly (Tier 2 follow-up 17).
 10. **The budget headroom is thin on three lines at once** (**D96**):
     `figures.glb` is 373,236 of 400 kB (27 kB to spare, most of the file is the
     humans' clips); `g1`@355 is 27,416 of 30,000 triangles, and a frame at
@@ -3308,7 +3344,13 @@ cost.
     sha256, and the licence badges are recorded. Whether to keep this asset — and
     so this slice — is the user's decision.
 13. **The gate is flaky under load, in two ways (a third since the rebase) — all
-    timing in the bridge, and none slice 4's.** (a) **Step 10's "the last frame is `over`" check.** The
+    timing in the bridge, and none slice 4's.** **(b) and (c) are closed by the
+    hardening pass (2026-09-27)**: (b) by **D113** (step 6 compares what load
+    cannot move, `tools/wire-drift.mjs`, and prints its own verdict), (c) by
+    **D114** / amendment **M45** (an early `newGame` is queued until Forge has
+    finished the game, and 10g now holds that window open on every run) — *The
+    2026-09-27 hardening pass*, below. (a) is match setup's, on `main` (`7364bea`: `emit`
+    re-checks `over` under the log's monitor). The original findings: (a) **Step 10's "the last frame is `over`" check.** The
     verifier's first run failed it at 10b (543 s), this documentation pass's third
     run at 10b (622 s), and a run in another worktree at 10a the same evening. The
     documentation pass's frame log shows the cause: after a concede at the
@@ -3832,7 +3874,7 @@ Against the tree, item by item:
    their full height).
 7. Build, tests and the gate: above.
 
-### Workshop follow-ups — fourteen, 2026-09-27; seven closed by the reconciliation, five new
+### Workshop follow-ups — fourteen, 2026-09-27; seven closed by the reconciliation, five new; 17 closed by the hardening pass
 
 1. ~~**The rebase onto slice 4.**~~ **Closed** (2026-09-27): rebased onto
    `23e26b3`; the checklist above says how each item went.
@@ -3893,7 +3935,11 @@ Against the tree, item by item:
     D102–D104 because `main` stopped at D101; whichever lands second renumbers.
     **Closed 2026-09-27**: match setup landed second and renumbered its four to
     **D105–D108**.
-17. **`catalog.json` now reads `cues.json`'s card names** (for `threeD`), so a new
+17. ~~**`catalog.json` now reads `cues.json`'s card names**~~ — **closed by the
+    hardening pass (2026-09-27)**: `check-all.sh` step **12b** runs
+    `node tools/build-workshop-catalog.ts --check`, byte for byte and even under
+    `SKIP_WEB=1`; a fake `cues.json` row for Giant Growth made it fail and removing
+    the row made it pass. The original note: (for `threeD`), so a new
     per-card cue entry for a deck card makes the workshop's drift test fail until
     `node tools/build-workshop-catalog.ts` is re-run — on the arena's desk. The
     test says so; the alternative was the card browser importing the arena.
@@ -4008,7 +4054,12 @@ declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
    beside the AI's tag, `AI (Reckless)`. `arena-hud.test.tsx` renders it from the
    synthetic sample (and no line for a pre-M44 recording), and a new
    `liveness.test.ts` clause holds the plates to that one reader and to never
-   comparing a deck name or a profile (evidence §R.3).
+   comparing a deck name or a profile (evidence §R.3). **Moved onto the life row by the
+   hardening pass's rebase** (2026-09-27): the deck line of its own and the
+   profile in the name row's tags took the opponent's plate below the top band
+   and over the opponent's duelist; the plate is four one-line rows now, and the
+   same reader and the same two facts are on it (*The 2026-09-27 hardening
+   pass*, follow-up 5).
 3. **A deck and profile picker in the browser** — on the deferred list below.
 4. **Dark Deed** was cast once by the AI in 38 games; it holds the card. If a
    later census shows it never leaving the hand, it is the next swap (**D108**).
@@ -4301,9 +4352,104 @@ fixed here; each is its own small change on `main`.
 14. **Numbers.** *Closed by the rebase onto `a092d3a`.* Match setup kept report
     08 §8 (its villains deck) and the FRA deck is **§9**; slice 4, the workshop and
     match setup landed as D95–D108, so **D109–D112 kept their numbers**; `main`'s
-    open questions stop at 17, so 18–22 stand. One collision remains possible: the
-    `hardening` branch also numbers from D109, and whichever lands second
-    renumbers (DECISIONS.md's italic note above D109 says so).
+    open questions stop at 17, so 18–22 stand. The one collision it foresaw, the
+    `hardening` branch also numbering from D109, was settled as DECISIONS.md's
+    italic note above D109 said it would be: `hardening` landed second and
+    renumbered its own D113–D115.
+
+---
+
+## The 2026-09-27 hardening pass — the small-defect backlog
+
+**Status: done, rebased onto `main`'s `a092d3a` (match setup)** on branch
+`hardening`. Built on `bf0392b` (the workshop's tree) while match setup was
+open, then rebased with both sides' behaviour kept (*The rebase*, below).
+Seven defects from the follow-up lists above, each fixed at its cause, each with
+a test or gate assertion that fails without the fix, and each negative control
+actually run. `docs/evidence/hardening.md` is what was measured.
+**D113–D115** are its decisions, numbered after match setup's D105–D108.
+Protocol amendments **M45** and **M46**, numbered after M44.
+
+| # | Defect | Fix | Proved by |
+|---|---|---|---|
+| 1 | Gate step 6 exited 141 with no message under load, and failed a byte-strict diff on an identical game (slice 4 follow-up 13(b)) | **D113**. `tools/wire-drift.mjs` compares the non-state frames, the event stream, the phase walk and the final board, prints its own verdict and exits 0 or 1. `STRICT_G1=1` is the old byte diff. 9b's multiset was measured and rejected: it fails the same loaded runs | seed 42 re-recorded with the JVM pinned to one core shared with 2/4/8 busy loops. 383/387/395 lines against 377: strict fails, the multiset fails, all four invariants hold. `tools/wire-drift-selftest.mjs` (in step 6) has 11 cases: 3 re-partitions accepted, 7 drifts rejected |
+| 2 | 10g's restarted game ended at once (13(c)) | **D114** / **M45**. The cause was not a wait armed late. It was game n's late `finishGame()`, queued on the EDT by `FControlGameEventHandler` after `GameEventGameFinished`, landing on game n+1 once an instant `newGame` had restarted first. An early `newGame` is now queued and released from game n's own `GameEventGameFinished` | `MTGTABLE_HOLD_GAME_END_MS` holds the window open. With the queue disabled, game 2 ended at once (`OVER WITHOUT A gameOver STATE`) and `ws-auto-play` exited **8**, its new check. Fixed, both acts queue and release and all three games play in full. 10g runs held (2000 ms) and asserts it |
+| 3 | `MtgTable` exited 0 when the engine crashed before turn 1 | **D115** / **M46**. `EngineCrash`, a default uncaught handler that chains, and a game-loop death ends the game (error `notice` + null `over`). The process exits 1 with the cause. `RecordMatch` closes its log the same way | `tools/check-engine-crash.sh` (gate step **12c** since the rebase, ~6 s): a scratch Forge home with a Depower that uses the 2.0.15 ApiType `Empower`. Pre-fix: MtgTable exit 0 after 65 s, RecordMatch's log stopped at `hello_ok` (9 assertions fail). Fixed: exit 1 in 4 s and 3 s, both logs end in `over` |
+| 4 | The T-pose flash hidden, not fixed (slice 4 follow-up 8) | `driveClips`: the action that is both lanes takes weight 1 | `web/test/clip-lane.test.tsx`, a one-bone model with no `idle`. Without the line the bone sits at y 0.92/0.52/0.24/0.68/0.96, not 0.2 |
+| 5 | `visibleShare` ignored the player plates (slice 4 follow-up 3) | `camera.ts`: `PLAYER_PLATES`, `underRect`, `visibleShareOnCanvas` (pure) | `camera.test.ts` recomputes every duelist share with both plates, and holds the rectangles to `styles.css`. Negative control: the plate alone hides exactly the 24 samples under it. **No view × aspect changed**: the opponent's plate ends at canvas y 126.0, inside `HUD_TOP_PX`. **On the rebase:** the plate is four one-line rows (a long `--ai-name` ellipsised, match setup's deck and profile on the life row), and the band is asserted; match setup's own plate fails the duelist threshold in 4 cells and is the negative control |
+| 6 | `catalog.json` drift reached the gate only through a web test (workshop follow-up 17) | step **12b**: `build-workshop-catalog.ts --check` | mutation: a fake `cues.json` row for Giant Growth fails it, removing the row passes it |
+| 7 | `@gltf-transform/cli` on a caret (slice 4 follow-up 9, Tier 2 follow-up 17) | exact `4.5.0`, and `overrides` for its meshoptimizer 1.2.0 and the three libraries | `npm ci`, then `npm ls`: every version is the one the lockfile recorded. **The rebuild itself was not run** (below) |
+
+**Commands**
+
+```bash
+./tools/check-engine-crash.sh                                   # item 3's self-check, ~6 s, gate step 12c
+node tools/wire-drift.mjs [--strict] fixtures/games/g1.jsonl var/check-all-record.jsonl
+node tools/wire-drift-selftest.mjs                              # step 6 runs it
+STRICT_G1=1 ./tools/check-all.sh                                # step 6 byte for byte, as before D113
+MTGTABLE_HOLD_GAME_END_MS=2000 ./bridge/run.sh mtgtable.MtgTable --transport ws ...   # 10g's held window
+node tools/build-workshop-catalog.ts --check                    # step 12b
+```
+
+### 2026-09-27 hardening follow-ups — six; 2, 5 and 6 closed on the rebase
+
+1. **`figures.glb` was not rebuilt.** The pin makes the toolchain exact. Whether
+   `node tools/build-figures.mjs` still reproduces 373,236 bytes needs the five
+   CC0 archives in `var/assets/figures/`. None of them is on this machine, and
+   downloading ~130 MB is the user's call (slice 4 follow-up 12).
+2. ~~**`tools/check-engine-crash.sh` is not in the gate.**~~ — **closed on the
+   rebase (2026-09-27)**, as decided on review: it is step **12c**, after 12b, and
+   the gate requires all twenty of its assertions (about 6 s; it needs no
+   `node_modules`, so it runs under `SKIP_WEB=1` and `SKIP_TEN=1`).
+3. **An exception that kills a `Game-n` thread other than the game loop is
+   only printed** (`THREAD DIED (not the game loop)`). If one ever strands a
+   game, it still ends by timeout as before.
+4. **Item 4 has a visible side:** when the stance's clip and the cue's clip are
+   the same action, the cue's own fade no longer shows. It holds at full weight
+   and returns to the stance's resting phase when the cue ends. The workshop, on
+   an attack cue, is the place to look.
+5. ~~**A long `--ai-name`, or a counters row,** would wrap the opponent's plate
+   below the band.~~ — **closed on the rebase (2026-09-27)**, as decided on
+   review (ellipsise the name) and for a reason the rebase found: match setup's plate
+   was already below the band on every live game — its deck on a line of its
+   own (101.4 px, ending 143.0) and its profile in the name row's tags, which
+   wrapped the row on the AI's own turn (120.1 px, ending 161.7), both measured
+   in Chromium — and in the shoulder view at 745 px, 16:10, it left 60% and 44%
+   of the opponent's duelist visible against the test's 70%. The plate is now
+   four one-line rows: the name ellipsised (whole in its `title`), the
+   opponent's name row unwrappable, and the deck, the profile and any player
+   counters on the life row. `camera.test.ts` asserts it ends inside the band
+   (126.0 px, measured 125.95 with a 77-character name, a counter pair, poison
+   and the `Experimental` profile) and fails without any of its seven one-line
+   rules; the old plates are its negative controls. `arena-hud.test.tsx` holds
+   the markup to four rows (six with match setup's plate).
+6. ~~**The rebase onto `main` (`a092d3a`, match setup).**~~ — **done
+   (2026-09-27)**; *The rebase*, below.
+
+### The rebase onto match setup (`a092d3a`, 2026-09-27)
+
+`WireGuiGame.java`, `MtgTable.java`, `RecordMatch.java` and
+`tools/ws-auto-play.mjs` merged without a textual conflict, and were read for a
+semantic one. **Both sides' post-`over` behaviour is kept**: match setup's
+re-check of `overEmitted` under the log's monitor in `emit`, `logC2s` and the
+ask path (once it is set only `over` is emitted; `emit` returns whether the
+frame went out, and `gameOverStateEmitted` is set only when it did) sits beside
+this pass's queued `newGame` (released from the game's own
+`GameEventGameFinished`), the 10g hold, and the crash path — whose error
+`notice` is emitted before `emitOver` sets the flag, so it is never one of the
+dropped frames. The conflicts were all prose plus `check-all.sh`'s usage lines
+and `docs/protocol.md`'s amendment list (M45–M46 above M44, newest first). No
+decision was renumbered (`main` stops at D108). `web/src/workshop/catalog.json`
+was already current: match setup regenerated it for `decks/doom-legion.dck`, and
+this branch changes no deck and no `cues.json` row. Three things changed on the
+rebase itself: step **12c**, the plate (follow-up 5 above), and `RecordMatch`'s
+`emitOver` javadoc, which the crash method had separated from its method. The
+gate from a deleted `bridge/out` at `WSPORT=8685`: **`check-all OK`, exit 0, 938.8
+s**, at a load average of 5–10 — 9c's fourteen games in 379 s, 10g's two early
+`newGame` acts queued and released, 12c's twenty assertions, and **881 / 873
+pass / 0 fail / 8 skipped** `node --test` plus 96 vitest in step 13
+(`var/check-all-hardening-rebased.log`,
+evidence §8).
 
 ---
 

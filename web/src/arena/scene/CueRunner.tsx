@@ -784,7 +784,7 @@ function applyFigures(
  * is running for some other reason, so `frameloop='demand'` keeps its measured
  * zero idle frames.
  */
-function driveClips(
+export function driveClips(
   rig: FigureRig,
   request: ClipRequest | null,
   dt: number,
@@ -841,6 +841,11 @@ function driveClips(
       rest.play();
     }
   }
+  // One action is both lanes, so it carries the whole weight. Left at the
+  // transient's ramp (< 1), three blends the remainder with the clone's original
+  // pose, which on a model with no `idle` is its bind pose (D95, slice-4
+  // follow-up 8; `test/clip-lane.test.tsx`).
+  if (rest !== null && rest === wanted) rest.setEffectiveWeight(1);
   if (rest === null || rest === wanted) return;
   const breathes = awake && !frozen && BREATHING_STANCES.has(pose.stance);
   if (breathes) rig.restTime += dt;

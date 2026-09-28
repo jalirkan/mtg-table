@@ -172,3 +172,76 @@ test('arena HUD: each plate names its deck and the AI plate its profile, from he
     expect(markup(s)).not.toContain('arena__seat-deck');
   }
 });
+
+/**
+ * The direct children of every `.arena__seat` in some static markup, as their
+ * class attributes. A tag walk, not a DOM: vitest runs these files in the `node`
+ * environment, as `render.test.tsx` does.
+ */
+function plateRows(html: string): string[][] {
+  const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+  const plates: string[][] = [];
+  const open: { depth: number; rows: string[] }[] = [];
+  let depth = 0;
+  for (const m of html.matchAll(/<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g)) {
+    const [, closing, tag, attrs, selfClosing] = m;
+    if (closing === '/') {
+      depth -= 1;
+      if (open.length > 0 && open[open.length - 1]!.depth === depth) plates.push(open.pop()!.rows);
+      continue;
+    }
+    const cls = /\bclass="([^"]*)"/.exec(attrs ?? '')?.[1] ?? '';
+    const top = open[open.length - 1];
+    if (top !== undefined && depth === top.depth + 1) top.rows.push(cls);
+    if (selfClosing === '/' || VOID.has(tag!.toLowerCase())) continue;
+    if (cls.split(/\s+/).includes('arena__seat')) open.push({ depth, rows: [] });
+    depth += 1;
+  }
+  return plates;
+}
+
+test('arena HUD: a plate is four one-line rows whatever the frame says — a long --ai-name is cut, not wrapped (hardening, rebased onto match setup)', () => {
+  // The plate is a keep-out over the opponent's duelist (`camera.ts`'s
+  // PLAYER_PLATES), and `camera.test.ts` asserts it ends inside the top band
+  // because every row is one line by the stylesheet. This is the markup half:
+  // no frame adds a row. The worst frame this file can build — match setup's
+  // deck and profile, a name far wider than the plate, player counters and
+  // poison, and the AI both active and holding priority — is still four rows,
+  // with the deck, the profile and the counters on the life row.
+  const base = statesOf('synthetic/sample-handwritten.jsonl').at(-1);
+  expect(base).toBeDefined();
+  const state = structuredClone(base!);
+  const board = state.board!;
+  const ai = board.players.find((p) => p.isAi);
+  expect(ai).toBeDefined();
+  const longName = 'Doctor Doom, Monarch of Latveria, and every Doombot of the Legion besides';
+  ai!.name = longName;
+  ai!.poison = 3;
+  ai!.counters = { ENERGY: 4, EXPERIENCE: 2 };
+  board.activePlayer = ai!.id;
+  board.priority = ai!.id;
+
+  const html = markup(state);
+  const plates = plateRows(html);
+  expect(plates.length).toBe(2);
+  for (const rows of plates) {
+    expect(rows).toEqual(['arena__seat-who', 'arena__seat-vitals', 'arena__seat-zones', 'pool']);
+  }
+  // The whole name is still there — in the tooltip, and in the text the
+  // ellipsis clips.
+  expect(html).toContain(`class="arena__seat-name" title="${longName}"`);
+  // The deck, the profile and the counters are inside the life row.
+  const vitals = html.split('class="arena__seat-vitals"').slice(1);
+  expect(vitals.length).toBe(2);
+  const oppVitals = vitals.find((v) => v.includes('arena__seat-counters'));
+  expect(oppVitals).toBeDefined();
+  const oppRow = oppVitals!.slice(0, oppVitals!.indexOf('class="arena__seat-zones"'));
+  expect(oppRow).toContain('class="arena__seat-deck"');
+  expect(oppRow).toContain('class="arena__seat-profile"');
+  expect(oppRow).toContain('class="arena__seat-counters"');
+  expect(text(oppRow)).toContain('AI (Reckless)');
+  // The profile is not in the name row's tags any more: there it wrapped the
+  // row on the AI's own turn.
+  expect(html).not.toMatch(/class="arena__seat-tags">[^<]*<span[^>]*>\s*\(/);
+});
+

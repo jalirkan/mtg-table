@@ -4929,8 +4929,9 @@ branch (cut from `754f504`). While it was open, `main` committed Tier 2 slice 4'
 **D95–D101**, the workshop's **D102–D104** and match setup's **D105–D108**, all
 above; the branch was rebased onto `main`'s `a092d3a` (2026-09-27), where those
 fourteen numbers were already taken, so these four kept the numbers they were
-written with. The `hardening` branch also numbers its own decisions from
-**D109**; whichever of the two lands second renumbers its own. They are cited from
+written with. The `hardening` branch also numbered its own decisions from
+**D109**; whichever of the two lands second renumbers its own, and `hardening`
+landed second, as **D113–D115** (below). They are cited from
 this file, PLAN.md's *Engine and sets*, README.md, CLAUDE.md, NOTICE,
 `decks/README.md` and one usage comment in `tools/check-deck.mjs`, and nowhere
 else in code.*
@@ -5143,3 +5144,220 @@ opponent). The mirror match the spikes used (a test, not a game). An MSH deck
 (`decks/pacho-shield.dck`, or match setup's `decks/doom-legion.dck`) — nothing stops
 `--deck2 decks/pacho-shield.dck`, but a cross-set opponent is not what the notes
 describe.
+
+---
+
+## D113 — Gate step 6 compares what a busy machine cannot move: the non-state frames, the event stream, the phase walk and the final board; byte for byte is `STRICT_G1=1`
+
+**2026-09-27** (the hardening pass, PLAN.md slice-4 follow-up 13(b);
+`docs/evidence/hardening.md` §1. *Written as D109 on the `hardening`
+branch, which was open at `bf0392b` while match setup's D105–D108 landed and was
+rebased onto `main`'s `a092d3a` on 2026-09-27 with nothing renumbered. On its
+rebase onto `main`'s `aead79d` (2026-09-28) the engine and sets' D109–D112 had
+landed first, so, as the note above D109 asks, this branch renumbered its own:
+D109–D111 became D113–D115, in every file that cites them.*)
+
+**Decision.** Step 6 of `tools/check-all.sh` no longer diffs the fresh seed-42
+`RecordMatch` recording against `fixtures/games/g1.jsonl` byte for byte. It
+runs `tools/wire-drift.mjs`, which normalises the per-run values as before (`t`,
+`startedAt`, `gameId`) and then requires four things to be identical:
+
+1. every **non-state frame** (session header, `hello_ok`, `over`), in order,
+   apart from its `seq`;
+2. the **event stream**: every `state.events[]` entry, concatenated in frame
+   order;
+3. the **phase walk**: the (turn, phase, active player) sequence the frames pass
+   through, consecutive repeats collapsed;
+4. the **final `state`**, events aside.
+
+`tools/wire-drift-selftest.mjs` runs first, in the same step, and proves the
+comparison still rejects drift. It builds eleven one-edit copies of g1: an
+identical copy, three re-partitions that the default must accept and `--strict`
+must reject, and seven drifts both must reject (a dropped or changed event,
+lowercased phase names, `power` as a number, a different winner, a changed
+`hello_ok`, no states). `STRICT_G1=1` puts the old byte-for-byte comparison
+back. The step now prints its own verdict and exits 1 on a difference. The
+old `diff | head -20` under `set -o pipefail` exited 141 with no message.
+
+**Rationale.** A recording's `state` frames are flushes, and where a flush cuts
+the event stream depends on timing. The forwarder flushes at 500 ms, at 50
+events, and when a batch posted off the game thread joins the next game-thread
+flush. So on a busy machine the same game comes back cut differently. This was
+measured, not assumed. Seed 42 was re-recorded with the JVM pinned to one core
+shared with 2, 4 and 8 busy loops. Against g1's 377 lines the runs gave 383, 387
+and 395 lines. In all three the four questions above held: 1,651 events, 322
+phase-walk steps, the same final board and the same three non-state frames. An
+unloaded run was byte-identical.
+
+The task asked whether step 6 should become 9b's multiset comparison. It should
+not. The multiset fails the same three loaded runs, with 7/13, 13/23 and 26/44
+frames only in the fixture / only in the fresh file. A re-partitioned batch is a
+different frame, not a reordered one. Even the set of distinct card objects
+moved (4 and 10 cards at 2 and 8 loops), because an intermediate board catches a
+card mid-change or it does not. So that set is not a question either. Each of
+the four questions is invariant by construction:
+
+- the non-state frames are not flushes;
+- a flush moves events between frames but never drops or reorders one;
+- the recorder flushes on every `GameEventTurnPhase`;
+- the final state is flushed after `Match.startGame` returns.
+
+**Known cost.** The board snapshots between phase boundaries are no longer
+compared. A `Snap.java` change to a field that appears only on an intermediate
+board, and in no event and not on the final board, would pass the default and
+fail `STRICT_G1=1`. The final board carries every card in every public zone, and
+the events carry every id-level fact, so the band is narrow. The strict mode is
+one variable away for a change to `Snap.java`, and it is worth running on an idle
+machine when you make one.
+
+**Rejected.** Keeping the byte diff and re-running until green. That teaches
+everyone to ignore the gate, which is the argument 9b's header already makes.
+9b's multiset, measured above. Making step 6 advisory, as the engine-upgrade
+lane did for its own runs: an advisory drift step is a step nobody reads.
+Comparing the set of distinct card objects, also measured above.
+
+---
+
+## D114 — An early `act: newGame` is QUEUED until Forge has finished the game it follows, and released from that game's own `GameEventGameFinished`
+
+**2026-09-27** (the hardening pass, PLAN.md slice-4 follow-up 13(c); protocol
+amendment **M45**; `docs/evidence/hardening.md` §2. *Numbered after the
+engine and sets' D109–D112; see D113's note.*)
+
+**Decision.** `WireGuiGame.newGame` applies the next-game decision at once only
+when Forge has finished the current game. It does not start game n+1 until
+Forge has finished game n. A `newGame` that arrives earlier waits, and only one
+waits: a second is dropped, with a line on stderr. `FinishWatcher` releases the
+waiting act. It is a subscriber registered **last** on game n's own event bus
+and keyed by n, and it sees `GameEventGameFinished` on game n's own thread,
+after every earlier subscriber. It then queues the release on the EDT, behind
+the wind-down Forge queued there a moment earlier. The release applies the act
+exactly as before (`continueMatch()` / `restartMatch()` inline, ending in the
+next `hello_ok`). Stderr shows `NEW GAME QUEUED`, then `NEW GAME RELEASED`, then
+the old `NEW GAME REQUESTED`.
+
+The pre-input concede (amendment M11) never reaches Forge's game-over, so after
+*its* `over` a `newGame` is applied at once, as it always was. `MtgTable`'s
+post-game wait gives a queued act up to 10 s to run when the client that sent it
+has already disconnected.
+
+Two things are for tests only. `MTGTABLE_HOLD_GAME_END_MS` holds the game
+thread that many ms after `over`, so the window is wide open. Gate step 10g
+sets it to 2000 and asserts that the acts were queued and released, that no
+game ended with `OVER WITHOUT A gameOver STATE`, and that every game's log
+carries a `gameOver` state. `tools/ws-auto-play.mjs` also exits **8** on an
+`over` with no `gameOver` state in front of it in the same game.
+
+**Rationale.** The race was found by reading Forge's bytecode, not guessed.
+`over` is emitted at the outcome (M4), but Forge is not done with the game then.
+`Match.startGame` still runs `executeOwnershipChanges`, `clearCaches`, fires
+`GameEventGameFinished` and calls `System.gc()`. `FControlGameEventHandler`
+answers that event with `invokeInEdtLater(processEvents)`, which ends in
+`showPromptMessage`, `updateButtons` and `IGuiGame.finishGame()` on **this**
+object.
+
+A client that answers `over` at once can get its act onto the EDT first. Then
+the restart runs, `openView(n+1)` re-arms the terminal-frame latch
+(`overEmitted = false`), and game n's late `finishGame()` emits game n+1's
+`over` — `OVER WITHOUT A gameOver STATE`, the four-frame game 3 of
+`var/check-all-t2s4-rebase-pre1`. Game n's old forwarder could also have
+flushed on game n's thread into game n+1's view, which is hard rule 3's silent
+corruption.
+
+With the hold and the queue check disabled (a negative-control build), the
+three-game session failed every time: game 2 ended at once and the client
+exited 8. With the fix, both acts queue and release and all three games play in
+full.
+
+**Known cost.** The next game starts a few milliseconds later, and up to the
+hold under the test hook. Game n's thread still has `HostedMatch`'s tail to run
+after `GameEventGameFinished`: the `endGameHook` (null here), a loop over
+`humanControllers` that only flushes a `RemoteClientGuiGame`'s forwarder, and
+`isMatchOver = match.isMatchOver()`. The EDT's restart can overlap that loop.
+The worst case is a `ConcurrentModificationException` on a thread that has
+nothing left to do, which `EngineCrash` prints as `THREAD DIED (not the game
+loop)`. Desktop Forge has the same window when a person clicks instantly.
+
+**Rejected.**
+- **Answering an early `newGame` with a `notice`.** Between games `emit` drops
+  every non-`over` frame (§8.4), so there is no channel, and "try again later"
+  asks the client to guess Forge's timing.
+- **Ignoring a late `finishGame()` that arrives while the new game is not
+  over.** That would silence the symptom but not game n's other late pushes, the
+  empty `input` of `showPromptMessage` / `updateButtons`, or the forwarder
+  flush.
+- **Releasing on `HostedMatch.setEndGameHook`.** It runs even later on the same
+  thread, but it cannot say which game it belongs to.
+- **A client-side delay.** The bridge would still be wrong for every client
+  that does not have one, AutoTransport included.
+
+---
+
+## D115 — An exception out of Forge's game loop fails the run: an error `notice` and a null `over` close the log, and the process exits non-zero with the cause
+
+**2026-09-27** (the hardening pass; the engine-upgrade lane's note; protocol
+amendment **M46**; `docs/evidence/hardening.md` §3. *Numbered after the
+engine and sets' D109–D112; see D113's note.*)
+
+**Decision.** `MtgTable` installs `EngineCrash` as the JVM's default
+uncaught-exception handler before the match starts. It still prints every trace
+exactly as before, and first. When a `Game-n` thread dies with `forge.game.Match.startGame`
+on the stack, the game loop itself has died, and `WireGuiGame.engineCrashed`
+runs:
+
+- an error `notice` titled `Engine error`, in the bridge's own words;
+- amendment M11's null `over`;
+- the session plays no further game;
+- the run summary prints `engine crash   = <cause chain>`;
+- the process exits 1 with `MTGTABLE FAILED: … the engine crashed (D115): …`.
+
+`RecordMatch` already caught the game runnable's throwable and exited 1. It now
+also writes the same two frames and closes its log before exiting, so its file
+ends in `over` rather than stopping at `hello_ok`.
+
+`tools/check-engine-crash.sh` reproduces the crash in a scratch Forge home under
+`var/crash-probe/`: its own config (`bridge/run.sh` now honours
+`MTG_TABLE_CONFIG`) and an overlay whose Depower script uses the 2.0.15 ApiType
+`Empower`. It asserts all of this for both mains, in about 8 s. It is not in the
+gate. **Amended on the rebase onto `a092d3a` (2026-09-27):** it is now gate step
+**12c**, beside the other self-checks, as decided when the pass was reviewed
+(PLAN.md's hardening follow-up 2, closed). The step requires all twenty of its
+assertions, and it needs no `node_modules`, so it runs under `SKIP_WEB=1` and
+`SKIP_TEN=1` too.
+
+**Rationale.** Nothing in Forge catches what the game runnable throws, because
+`ThreadUtil.invokeInGameThread` is a plain `ExecutorService.execute`. The failure
+was reproduced before it was fixed. A card the engine cannot build threw out of
+`Match.prepareAllZones` before turn 1. `MtgTable --transport null` produced no
+frame for 60 s. Then `AutoTransport`'s stuck watchdog conceded, the pre-start
+concede ended the session through M11's exception path, and the run printed
+`MTGTABLE OK` and exited **0**, in 65 s, with `player turns = 0`. Over a socket
+or the console there is no watchdog, and the session never ended. The fixed run
+exits 1 in 4 s.
+
+The trigger is a class and a method on the stack, not a message, so it survives
+an engine that rewords its exceptions. It is limited to the game loop so that a
+throw from some other pool thread does not end a playable game.
+
+The notice never carries the engine's message. That message names the card
+("check card script of Depower"), and the card can be the opponent's, so
+putting it on the wire would breach hard rule 8. The self-check asserts the card
+name is not in the frame log.
+
+**Known cost.** A default handler is process-global. It chains to the previous
+one, so nothing that was printed stops being printed, but it is one more thing
+installed at boot, next to Bootstrap's three (hard rule 11). An exception that
+kills a non-loop `Game-n` thread is still only printed: it could leave a game
+stuck, which then ends by timeout as before. The self-check was gate-free
+because the scratch home costs a second `FModel.initialize` per main (about 8 s
+in all), and whether it joined `check-all.sh` was left open — it did, on the
+rebase (the amendment above).
+
+**Rejected.**
+- **Catching around `hosted.startMatch`.** The game runs on another thread, so
+  there is nothing to catch there.
+- **Wrapping Forge's game runnable.** It is `HostedMatch`'s private lambda.
+- **Detecting "0 player turns" at the end.** That is the symptom, it takes 60 s
+  of watchdog to reach, and it never arrives over a socket.
+- **Relying on RecordMatch's existing catch for MtgTable.** HostedMatch owns
+  that runnable.

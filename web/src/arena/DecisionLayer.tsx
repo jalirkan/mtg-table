@@ -211,7 +211,18 @@ export function DecisionLayer({
  * the same call the board's rail makes — and from nothing else: a deck NAME
  * (the AI's list is never on the wire, D105) and, on the AI's seat, Forge's
  * profile word. It is rendered, never compared; a stream without `match` (every
- * recording made before 2026-09-27) draws no line.
+ * recording made before 2026-09-27) draws nothing.
+ *
+ * **Four rows, each ONE line, so a plate's height is fixed** (the 2026-09-27
+ * hardening pass, rebased onto match setup). The opponent's plate sits under the
+ * arena's top band, and `camera.ts`'s `PLAYER_PLATES` models it as a keep-out
+ * over the opponent's duelist: a plate that grows is a plate that hides more of
+ * it. So the name is one line and ellipsised (the whole name in its `title` —
+ * `--ai-name` can be anything), the opponent's name row never wraps, and the
+ * match (deck name, then the AI's profile) and any player counters ride the
+ * life row rather than adding rows of their own. `camera.test.ts` holds the
+ * stylesheet to that and asserts the plate ends inside `HUD_TOP_PX`;
+ * `arena-hud.test.tsx` holds the markup to four rows.
  */
 function SeatPlates({ state }: { state: ClientState }): JSX.Element | null {
   const board = state.board;
@@ -266,27 +277,19 @@ function SeatPlate({
       }
       aria-label={`${player.name} — ${isYou ? 'you' : 'opponent'}`}
     >
+      {/* One line: the name is ellipsised (whole in its `title`), and on the
+          opponent's plate the tags never wrap under it (styles.css). */}
       <span className="arena__seat-who">
-        <span className="arena__seat-name">{player.name}</span>
+        <span className="arena__seat-name" title={player.name}>
+          {player.name}
+        </span>
         <span className="arena__seat-tags">
           {player.isAi ? 'AI' : 'human'}
-          {match !== null && match.aiProfile !== null && (
-            <span title="Forge AI profile (hello_ok.match)"> ({match.aiProfile})</span>
-          )}
           {isYou && ' · you'}
           {active && ' · active'}
           {priority && ' · priority'}
         </span>
       </span>
-
-      {/* M44 — the deck by NAME, one line, the whole name in the tooltip: the
-          plate is 14rem wide and sits beside the opponent's duelist (D100), so
-          it grows by one line and no more. */}
-      {match !== null && match.deck !== null && (
-        <span className="arena__seat-deck" title={`deck: ${match.deck} (hello_ok.match)`}>
-          {match.deck}
-        </span>
-      )}
 
       <span className="arena__seat-vitals">
         <span className="life" title="life">
@@ -307,6 +310,35 @@ function SeatPlate({
             <span className="sr-only">poison</span>
           </span>
         )}
+
+        {/* Player counters beside life and poison, on this row: a row of their
+            own would grow the plate (see the component's note). */}
+        {counters.length > 0 && (
+          <span className="arena__seat-counters">
+            {counters.map(([name, n]) => (
+              <span key={name} className={`ctr ${counterLabel(name).cls}`}>
+                <span className="ctr__n">{n}</span>
+                <span className="ctr__t">{counterLabel(name).text}</span>
+              </span>
+            ))}
+          </span>
+        )}
+
+        {/* M44 — the deck by NAME, ellipsised to what is left of the row (the
+            whole name in the tooltip), then the AI's profile, which gives way
+            only once the deck has. On this row, not one of its own: the plate
+            sits beside the opponent's duelist (D100) and under the top band,
+            and may not grow. */}
+        {match !== null && match.deck !== null && (
+          <span className="arena__seat-deck" title={`deck: ${match.deck} (hello_ok.match)`}>
+            {match.deck}
+          </span>
+        )}
+        {match !== null && match.aiProfile !== null && (
+          <span className="arena__seat-profile" title="Forge AI profile (hello_ok.match)">
+            {`AI (${match.aiProfile})`}
+          </span>
+        )}
       </span>
 
       <span className="arena__seat-zones">
@@ -325,17 +357,6 @@ function SeatPlate({
           draws no mana pips (`Arena.tsx` keeps `poolColors` empty for exactly
           that reason). This is the pool as information. */}
       <ManaPoolPips pool={player.manaPool} />
-
-      {counters.length > 0 && (
-        <span className="arena__seat-counters">
-          {counters.map(([name, n]) => (
-            <span key={name} className={`ctr ${counterLabel(name).cls}`}>
-              <span className="ctr__n">{n}</span>
-              <span className="ctr__t">{counterLabel(name).text}</span>
-            </span>
-          ))}
-        </span>
-      )}
     </div>
   );
 }

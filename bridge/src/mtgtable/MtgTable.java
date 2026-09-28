@@ -130,6 +130,14 @@ public final class MtgTable {
     /** How often {@link #awaitNextGame} re-reads "is a client connected?". */
     private static final long CONNECT_POLL_MS = 200L;
 
+    /**
+     * How long a session whose client has gone still waits for a {@code newGame}
+     * the client sent before it went, while that act is queued behind Forge
+     * finishing the previous game (decision D114).  Forge's wind-down is
+     * milliseconds; this is a cap, not an expected wait.
+     */
+    private static final long QUEUED_NEW_GAME_GRACE_MS = 10_000L;
+
     public static void main(final String[] args) {
         final long t0 = System.nanoTime();
         int exit = 0;
@@ -254,6 +262,11 @@ public final class MtgTable {
         // it.  Game n is <gameId>-g<n>, which is also its directory.
         gui.setLogFactory(id -> new GameLog(new File(cfg.root(), "var/games/" + id + "/frames.jsonl")));
         transport.start(gui, gui.pool());
+        // D115: an exception out of Forge's game loop ends the game (notice +
+        // `over`) and, below, the process with a non-zero exit.  Before this, a
+        // card the engine could not build crashed zone preparation, and the run
+        // printed MTGTABLE OK with player turns = 0.
+        EngineCrash.install(gui::engineCrashed);
 
         final HostedMatch hosted = new HostedMatch();
         gui.setHostedMatch(hosted);
@@ -313,6 +326,11 @@ public final class MtgTable {
                 break;
             }
             played = n;
+            if (gui.engineFailure() != null) {
+                // D115: no next game after a crash -- the same deck crashes the
+                // same way, and the run has already failed.
+                break;
+            }
             if (played >= a.games) {
                 // The match we were asked for is done.  `--keep-open` is the
                 // flag that says somebody is watching, and it is also the window
@@ -414,10 +432,16 @@ public final class MtgTable {
                     + ws.framesIn() + " read, "
                     + ws.preSessionDrops() + " read before the session existed (amendment M20)");
         }
+        System.out.println("engine crash   = " + (gui.engineFailure() == null ? "none"
+                : EngineCrash.describe(gui.engineFailure())));
         System.out.println("game wall time = " + gameMs + " ms");
         System.out.println("total wall     = " + ms(t0) + " ms");
         if (!finished) {
             throw new IllegalStateException("the game did not reach `over`");
+        }
+        if (gui.engineFailure() != null) {
+            throw new IllegalStateException("the engine crashed (D115): "
+                    + EngineCrash.describe(gui.engineFailure()), gui.engineFailure());
         }
         System.out.println("MTGTABLE OK");
     }
@@ -481,6 +505,12 @@ public final class MtgTable {
                 // saying so: a client that sends `newGame` and closes the socket
                 // in the same breath is not a session that ended.
                 if (gui.awaitGameStart(n, 0L)) {
+                    return true;
+                }
+                // D114: a `newGame` that arrived before Forge finished the last
+                // game is queued, not lost, and it runs the moment Forge has --
+                // which is a moment, not a wait on a person.
+                if (gui.newGameQueued() && gui.awaitGameStart(n, QUEUED_NEW_GAME_GRACE_MS)) {
                     return true;
                 }
                 // Nothing is going to press New Game, and holding the JVM open

@@ -284,6 +284,11 @@ public final class RecordMatch {
                 gui.emitOver();
             } catch (final Throwable t) {
                 gameFailure[0] = t;
+                // D115: the log must not simply stop at `hello_ok`.  Mark it
+                // the way MtgTable does -- an error notice in our own words
+                // (the engine's names a card) and amendment M11's null `over`
+                // -- so the file ends in its terminal frame and says why.
+                gui.engineCrashed();
             } finally {
                 done.countDown();
             }
@@ -296,7 +301,9 @@ public final class RecordMatch {
             throw new IllegalStateException("game did not finish within " + GAME_TIMEOUT_SEC + "s");
         }
         if (gameFailure[0] != null) {
-            throw new IllegalStateException("the game thread threw", gameFailure[0]);
+            log.close();                       // flush the notice + `over` before exit(1)
+            System.err.println("ENGINE CRASHED: " + EngineCrash.describe(gameFailure[0]));
+            throw new IllegalStateException("the game thread threw (D115)", gameFailure[0]);
         }
 
         log.close();
@@ -426,6 +433,27 @@ public final class RecordMatch {
                 errors.incrementAndGet();
                 System.err.println("SNAPSHOT FAILED: " + e);
                 e.printStackTrace();
+            }
+        }
+
+        /**
+         * D115: the game thread threw.  An error notice and a null {@code over}
+         * (amendment M11's shape), unless {@code over} is already out.
+         */
+        void engineCrashed() {
+            if (overEmitted) {
+                return;
+            }
+            overEmitted = true;
+            try {
+                log.s2c("notice", new JsonOut().obj().n("level", "error").n("title", "Engine error")
+                        .n("text", "The rules engine stopped with an error, so this game cannot continue. "
+                                + "The recorder's log has the details.").end().done());
+                log.s2c("over", new JsonOut().obj().nNull("winner").nNull("reason").n("matchOver", true)
+                        .end().done());
+            } catch (final RuntimeException e) {
+                errors.incrementAndGet();
+                System.err.println("CRASH FRAMES FAILED: " + e);
             }
         }
 

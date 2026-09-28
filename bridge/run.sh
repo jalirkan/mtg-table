@@ -15,6 +15,11 @@
 #       uncaught-exception handler that swallows startup crashes and leaves a
 #       silent exit 1 with no stack trace.  Without this flag you cannot debug a
 #       boot failure at all.
+#   -Dmtgtable.config                         config.json -- or $MTG_TABLE_CONFIG,
+#       which Config.java already documents and which this line used to
+#       override.  tools/check-engine-crash.sh points it at a scratch config
+#       under var/ whose Forge home carries a card the engine cannot build;
+#       nothing else sets it (D115).
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/../tools" && pwd)/config.sh"
@@ -32,6 +37,6 @@ exec env -u DISPLAY java \
   -Dio.netty.tryReflectionSetAccessible=true \
   -Dfile.encoding=UTF-8 \
   -Dsentry.uncaught.handler.enabled=false \
-  -Dmtgtable.config="$REPO_ROOT/config.json" \
+  -Dmtgtable.config="${MTG_TABLE_CONFIG:-$REPO_ROOT/config.json}" \
   -cp "$REPO_ROOT/bridge/out:$FORGE_JAR" \
   "$@"

@@ -36,7 +36,13 @@
  * finishes the game (see `dropOnAsk`).
  *
  * Exit 0 when an `over` frame arrives; non-zero on timeout, on a protocol
- * violation, or on a socket that never opened. Every act and every answer is
+ * violation, or on a socket that never opened -- and **8 on an `over` with no
+ * `state` carrying `gameOver` in front of it in the same game** (decision D114):
+ * this client never concedes before the engine has asked it something, so the
+ * only way that shape reaches it is a game ended by something other than
+ * Forge's own game-over -- the late `finishGame()` of the PREVIOUS game, which
+ * ended game 2 or 3 of a `--games` session before it had dealt a card
+ * (PLAN.md slice-4 follow-up 13(c)), or an engine crash. Every act and every answer is
  * printed to stderr with the prompt it was answering, so a failed run is
  * readable without opening the log.
  *
@@ -297,6 +303,12 @@ let lastProgressKey = '';
 
 /** How many `over` frames have arrived, and the gameId of each game seen (M6). */
 let gamesSeen = 0;
+/**
+ * D114: has THIS game shown a `state` whose `gameOver` is set? An `over`
+ * without one is amendment M11's pre-input concede, which this client never
+ * sends -- so here it is a game ended from outside (exit 8).
+ */
+let gameOverStateSeen = false;
 const gameIds = [];
 
 let pendingInput = null;
@@ -561,6 +573,13 @@ function onFrame(text) {
     case 'over':
       gamesSeen += 1;
       say(`OVER #${gamesSeen} winner=${String(body.winner)} reason=${String(body.reason)} matchOver=${String(body.matchOver)}`);
+      if (!gameOverStateSeen) {
+        fail(`over #${gamesSeen} arrived with no \`state\` carrying \`gameOver\` in front of it: the game `
+          + `was ended from outside Forge's own game-over -- the previous game's late finishGame() `
+          + `(D114) or an engine crash (see the server's stderr)`, 8);
+        break;
+      }
+      gameOverStateSeen = false;
       if (gamesSeen >= args.games) {
         over = true;
         finish();
@@ -578,6 +597,7 @@ function onFrame(text) {
 
 /** Remember just enough of the board to answer "is it my turn, and what is in my hand". */
 function onState(body) {
+  if (body.gameOver !== null && body.gameOver !== undefined) gameOverStateSeen = true;
   // PROGRESS (AutoTransport.progressKey). A repeated prompt only means "stuck"
   // while nothing else has moved; a turn/phase change clears both counters, so
   // the alternating confirm answer and the repeat ceiling start again.

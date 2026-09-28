@@ -30,6 +30,7 @@ import {
   HAND_BAND,
   LIVE_ASPECTS,
   ORBIT_CLAMPS,
+  PLAYER_PLATES,
   REST_DISTANCE,
   REST_POSE,
   SHAKE,
@@ -59,11 +60,15 @@ import {
   shakeAt,
   solveFraming,
   startShot,
+  underRect,
   viewAvailable,
   viewForBeat,
   viewOrbit,
   visibleShare,
+  visibleShareOnCanvas,
   type Beat,
+  type CanvasChrome,
+  type CornerRect,
   type DirectorWorld,
   type Orbit,
   type Point3,
@@ -999,6 +1004,17 @@ test('camera: beatsOf reads public facts only — seats, never names', () => {
  * right-hand side of which fits, and the test says so rather than pretending.
  */
 const CANVASES = [745, 946] as const;
+/**
+ * **The chrome as `camera.ts` models it** (slice-4 follow-up 3): the top band
+ * (`HUD_TOP_PX`) and both seat plates (`PLAYER_PLATES`). Every duelist share
+ * below is computed against all three.
+ */
+const CHROME: CanvasChrome = { topPx: HUD_TOP_PX, rects: [PLAYER_PLATES.opp, PLAYER_PLATES.you] };
+const canvasOf = (height: number, aspect: number): { width: number; height: number } => ({
+  width: height * aspect,
+  height,
+});
+const pct = (share: number): string => `${(share * 100).toFixed(0)}%`;
 const DUELISTS = validateDuelists(duelistsJson).data;
 const heightOf = (seat: 'you' | 'opp'): number => {
   const id = DUELISTS.seats[seat];
@@ -1019,7 +1035,7 @@ test('camera: your duelist is never behind your hand — every seat-safe view, e
     }
     // Printed: how much of your own duelist each seat view shows at 16:9 (it may
     // leave the frame — it is decoration and never in the solver's required set).
-    const shown = visibleShare(view.pose, duelistSamples('you', height), keepOutTop(HUD_TOP_PX, 946), CAMERA.fov, ASPECT);
+    const shown = visibleShareOnCanvas(view.pose, duelistSamples('you', height), canvasOf(946, ASPECT), CHROME);
     lines.push(`  ${view.id.padEnd(9)} your duelist clear of the hand at every aspect; ${(shown * 100).toFixed(0)}% on screen at 16:9`);
   }
   // It covers none of your own ranks either: the land and creature lines a seat
@@ -1054,12 +1070,15 @@ test('camera: the opponent’s duelist is on screen and out from under the chrom
   const lines: string[] = [];
   let worstPlay = 1;
   let worst43 = 1;
+  // How much more the plates hide than the band alone, at worst (printed below).
+  let platesHid = 0;
   for (const view of VIEWS.filter((v) => v.seatSafe)) {
     const row: string[] = [];
     for (const canvas of CANVASES) {
       const band = keepOutTop(HUD_TOP_PX, canvas);
       for (const aspect of LIVE_ASPECTS) {
-        const share = visibleShare(view.pose, samples, band, CAMERA.fov, aspect);
+        const share = visibleShareOnCanvas(view.pose, samples, canvasOf(canvas, aspect), CHROME);
+        platesHid = Math.max(platesHid, visibleShare(view.pose, samples, band, CAMERA.fov, aspect) - share);
         row.push(`${(share * 100).toFixed(0).padStart(3)}`);
         if (aspect >= 1.6) {
           worstPlay = Math.min(worstPlay, share);
@@ -1077,7 +1096,7 @@ test('camera: the opponent’s duelist is on screen and out from under the chrom
   }
   // The spectator views see it too (asserted where it matters, printed here).
   for (const view of VIEWS.filter((v) => !v.seatSafe)) {
-    const share = visibleShare(view.pose, samples, keepOutTop(HUD_TOP_PX, 946), CAMERA.fov, ASPECT);
+    const share = visibleShareOnCanvas(view.pose, samples, canvasOf(946, ASPECT), CHROME);
     lines.push(`  ${view.id.padEnd(9)} (spectator) ${(share * 100).toFixed(0)}% visible at 16:9, 946 px`);
   }
   // It covers none of the opponent's own ranks from the table view.
@@ -1093,13 +1112,195 @@ test('camera: the opponent’s duelist is on screen and out from under the chrom
   // From the table view the whole of a body standing there is under the chrome.
   const anchor = playerAnchorFor('opp');
   const oldSamples = duelistSamples('opp', height, [anchor.x, 0, anchor.z - 0.55], duelistFacing('opp'));
-  const oldShare = visibleShare(REST_POSE, oldSamples, keepOutTop(HUD_TOP_PX, 946), CAMERA.fov, ASPECT);
+  const oldShare = visibleShareOnCanvas(REST_POSE, oldSamples, canvasOf(946, ASPECT), CHROME);
   lines.push(
     `  worst at 16:10 and wider ${(worstPlay * 100).toFixed(0)}%, at 4:3 ${(worst43 * 100).toFixed(0)}% · ` +
       `slice 1's bust anchor from the table view: ${(oldShare * 100).toFixed(0)}% visible · stands ${JSON.stringify(duelistStand('you'))} / ${JSON.stringify(duelistStand('opp'))}`,
+    `  the seat plates hide ${pct(platesHid)} more than the ${String(HUD_TOP_PX)}-px band at worst: the opponent's ends ` +
+      `${(PLAYER_PLATES.opp.insetY + PLAYER_PLATES.opp.height).toFixed(1)} px below the canvas top`,
   );
   for (const line of lines) console.log(line);
   assert.ok(oldShare < 0.2, `the bust anchor is ${(oldShare * 100).toFixed(0)}% visible — the check has no teeth`);
+});
+
+/**
+ * **The seat plates are keep-outs, and their rectangles are the stylesheet's**
+ * (slice-4 follow-up 3). The anchors, the width and the plate's box come out of
+ * `styles.css`. The rows are its fonts at `body`'s line height, except life and
+ * the mana pips, whose height is a glyph box and was measured. Change the
+ * plate's CSS and this fails until `PLAYER_PLATES` is measured again.
+ *
+ * **And the opponent's plate never leaves the top band** (the hardening pass's
+ * rebase onto match setup). That is asserted, not printed: every row of the
+ * plate is ONE line by the stylesheet — the name ellipsised, the opponent's name
+ * row unwrappable, the deck, the profile and any player counters on the life
+ * row — so its height is the four rows above whatever the frame says, and it
+ * ends inside `HUD_TOP_PX`. `arena-hud.test.tsx` holds the markup to those four
+ * rows. The negative control: the plates this replaces (a wrapped name row, and
+ * match setup's deck line of its own) each hide enough of the opponent's
+ * duelist to fail the duelist test's own threshold.
+ */
+test('camera: the seat plates are keep-outs — held to styles.css, and a point under one counts as hidden (slice-4 follow-up 3)', () => {
+  const css = readFileSync(fileURLToPath(new URL('../src/styles.css', import.meta.url)), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g,
+    '',
+  );
+  const rule = (selector: string): Record<string, string> => {
+    const at = css.indexOf(`\n${selector} {`);
+    assert.ok(at >= 0, `styles.css has no top-level ${selector} rule`);
+    const body = css.slice(css.indexOf('{', at) + 1, css.indexOf('}', at));
+    const out: Record<string, string> = {};
+    for (const declaration of body.split(';')) {
+      const colon = declaration.indexOf(':');
+      if (colon > 0) out[declaration.slice(0, colon).trim()] = declaration.slice(colon + 1).trim();
+    }
+    return out;
+  };
+  const px = (value: string | undefined): number => {
+    const m = /^([\d.]+)(rem|px)$/.exec(value ?? '');
+    assert.ok(m !== null, `not a length in rem or px: ${String(value)}`);
+    return Number(m[1]) * (m[2] === 'rem' ? 16 : 1);
+  };
+  const seats = rule('.arena__seats');
+  const plate = rule('.arena__seat');
+  const who = rule('.arena__seat-who');
+  const tags = rule('.arena__seat-tags');
+  const zones = rule('.arena__seat-zones');
+  for (const [name, r] of [['.arena__seat', plate], ['.arena__seat-who', who], ['.arena__seat-tags', tags], ['.arena__seat-zones', zones]] as const) {
+    assert.equal(r['line-height'], undefined, `${name} sets its own line-height; the rows below assume body's`);
+  }
+  const font = /^(\d+)px\/([\d.]+)\s/.exec(rule('body')['font'] ?? '');
+  assert.ok(font !== null, 'body is no longer `font: <px>/<line-height> …`');
+  const [uiPx, lineHeight] = [Number(font[1]), Number(font[2])];
+  const [insetTop, insetBottom] = (seats['inset-block'] ?? '').split(/\s+/).map(px);
+  const insetRight = px(seats['inset-inline-end']);
+  const width = px(plate['max-inline-size']);
+  const padBlock = px((plate['padding'] ?? '').split(/\s+/)[0]);
+  const border = px((plate['border'] ?? '').split(/\s+/)[0]);
+  const gap = px(plate['gap']);
+  /** Measured in Chromium on `g1`@355, identical at 1600 × 1000 and 1024 × 768. */
+  const LIFE_ROW = 21.8;
+  const POOL_ROW = 14.0;
+  const nameRow = uiPx * lineHeight;
+  const rows = [nameRow, LIFE_ROW, px(zones['font-size']) * lineHeight, POOL_ROW];
+  const oneLine = 2 * padBlock + 2 * border + (rows.length - 1) * gap + rows.reduce((a, b) => a + b, 0);
+  // The name row wrapped: the name, `.arena__seat-who`'s row gap, then the tags.
+  const wrapped = oneLine - nameRow + (nameRow + px(who['gap']) + px(tags['font-size']) * lineHeight);
+  const expectRect = (got: CornerRect, want: CornerRect, label: string): void => {
+    assert.equal(got.corner, want.corner, `${label}.corner`);
+    for (const key of ['insetX', 'insetY', 'width', 'height'] as const) {
+      assert.ok(
+        Math.abs(got[key] - want[key]) < 1e-6,
+        `${label}.${key} is ${String(got[key])}; styles.css and the measured rows say ${want[key].toFixed(2)}`,
+      );
+    }
+  };
+  expectRect(PLAYER_PLATES.opp, { corner: 'top-right', insetX: insetRight, insetY: insetTop!, width, height: oneLine }, 'PLAYER_PLATES.opp');
+  expectRect(PLAYER_PLATES.you, { corner: 'bottom-right', insetX: insetRight, insetY: insetBottom!, width, height: wrapped }, 'PLAYER_PLATES.you');
+
+  // **Every row is one line, so the height above is a bound and not a sample.**
+  // A long `--ai-name` is ellipsised, never wrapped; the opponent's name row
+  // cannot wrap its tags under the name; the deck name and the profile give way
+  // on the life row; and nothing on the life row, the zone counts or the pips can
+  // wrap. Take any of these away and a frame can grow the plate past the band.
+  const oneLineRules: ReadonlyArray<readonly [string, Record<string, string>]> = [
+    ['.arena__seat-name', { 'white-space': 'nowrap', overflow: 'hidden', 'text-overflow': 'ellipsis', 'min-inline-size': '0' }],
+    ['.arena__seat--opp .arena__seat-who', { 'flex-wrap': 'nowrap' }],
+    ['.arena__seat-tags', { 'white-space': 'nowrap', flex: 'none' }],
+    ['.arena__seat-vitals', { 'flex-wrap': 'nowrap' }],
+    ['.arena__seat-deck', { 'white-space': 'nowrap', overflow: 'hidden', 'text-overflow': 'ellipsis', 'min-inline-size': '0' }],
+    ['.arena__seat-profile', { 'white-space': 'nowrap', overflow: 'hidden', 'text-overflow': 'ellipsis', 'min-inline-size': '0' }],
+    ['.arena__seat-counters', { 'flex-wrap': 'nowrap' }],
+  ];
+  for (const [selector, want] of oneLineRules) {
+    const got = rule(selector);
+    for (const [property, value] of Object.entries(want)) {
+      assert.equal(got[property], value, `${selector} { ${property} } is ${String(got[property])}: a plate row that can wrap can grow the plate past the band`);
+    }
+  }
+  for (const [selector, r] of [['.arena__seat-zones', zones], ['.pool', rule('.pool')]] as const) {
+    assert.notEqual(r['flex-wrap'], 'wrap', `${selector} wraps: a plate row that can wrap can grow the plate past the band`);
+  }
+  assert.ok(
+    PLAYER_PLATES.opp.insetY + PLAYER_PLATES.opp.height <= HUD_TOP_PX,
+    `the opponent's plate ends ${(PLAYER_PLATES.opp.insetY + PLAYER_PLATES.opp.height).toFixed(1)} px down, below the ${String(HUD_TOP_PX)}-px band`,
+  );
+
+  // `underRect`, pixel by pixel, on a 1600 × 946 canvas.
+  const W = 1600;
+  const H = 946;
+  const at = (x: number, y: number): [number, number] => [(2 * x) / W - 1, 1 - (2 * y) / H];
+  const opp = PLAYER_PLATES.opp;
+  const oppLeft = W - opp.insetX - opp.width;
+  assert.ok(underRect(at(oppLeft + opp.width / 2, opp.insetY + opp.height / 2), opp, W, H), 'the centre of the opponent’s plate is not under it');
+  assert.ok(!underRect(at(oppLeft - 1, opp.insetY + 10), opp, W, H), 'a pixel left of the opponent’s plate is under it');
+  assert.ok(!underRect(at(oppLeft + 10, opp.insetY + opp.height + 1), opp, W, H), 'a pixel below the opponent’s plate is under it');
+  assert.ok(!underRect(at(oppLeft + 10, opp.insetY - 1), opp, W, H), 'a pixel above the opponent’s plate is under it');
+  const you = PLAYER_PLATES.you;
+  const youTop = H - you.insetY - you.height;
+  assert.ok(underRect(at(W - you.insetX - 1, H - you.insetY - 1), you, W, H), 'the corner of your plate is not under it');
+  assert.ok(!underRect(at(W - you.insetX - 10, youTop - 1), you, W, H), 'a pixel above your plate is under it');
+  assert.ok(!underRect(at(W - you.insetX + 1, H - 20), you, W, H), 'a pixel right of your plate is under it');
+
+  // **The negative control: the verifier's sighting.** On a 1024 × 768 window (a
+  // 1024 × 714 canvas) in the shoulder view, the opponent's helm is under its
+  // plate. With the band taken away, the plate alone must hide exactly the
+  // samples that project under it.
+  const shoulder = VIEW_BY_ID.shoulder;
+  const verifier = { width: 1024, height: 714 };
+  const samples = duelistSamples('opp', heightOf('opp'));
+  const under = samples.filter((point) => {
+    const ndc = projectToNdc(shoulder.pose, point, CAMERA.fov, verifier.width / verifier.height);
+    return ndc !== null && underRect(ndc, opp, verifier.width, verifier.height);
+  });
+  const bare = visibleShareOnCanvas(shoulder.pose, samples, verifier, { topPx: 0, rects: [] });
+  const plated = visibleShareOnCanvas(shoulder.pose, samples, verifier, { topPx: 0, rects: [opp] });
+  const banded = visibleShareOnCanvas(shoulder.pose, samples, verifier, { topPx: HUD_TOP_PX, rects: [] });
+  const both = visibleShareOnCanvas(shoulder.pose, samples, verifier, CHROME);
+  assert.ok(under.length > 0, 'no sample of the opponent’s body projects under its plate at 1024 × 714 in the shoulder view');
+  assert.ok(
+    Math.abs(bare - plated - under.length / samples.length) < 1e-9,
+    `${String(under.length)} samples are under the plate but it hid ${pct(bare - plated)} — a point under the plate must count as hidden`,
+  );
+  const lines = [
+    `  1024 × 714, shoulder: ${String(under.length)} of ${String(samples.length)} samples under the opponent's plate · ` +
+      `visible ${pct(bare)} bare, ${pct(plated)} plate only, ${pct(banded)} band only, ${pct(both)} band and plates · ` +
+      `the plate ends ${(opp.insetY + opp.height).toFixed(1)} px down, inside the ${String(HUD_TOP_PX)}-px band`,
+  ];
+
+  // **The negative control for the one-line rules: the plates they replace.** A
+  // name row that wraps (a long `--ai-name`, or match setup's profile in the
+  // tags on the AI's own turn) and match setup's deck on a line of its own each
+  // end below the band, and each must fail the opponent-duelist test's own
+  // threshold somewhere a seat plays (16:10 and wider: 90% at 946 px, 70% at
+  // 745). If one stopped failing, the band assertion above would be decoration.
+  const deckRow = px(rule('.arena__seat-deck')['font-size']) * lineHeight;
+  const grownPlates: ReadonlyArray<readonly [string, number]> = [
+    ['a wrapped name row', wrapped],
+    ["match setup's deck line of its own", oneLine + gap + deckRow],
+    ["match setup's plate on the AI's turn (deck line, profile wrapping the name row)", wrapped + gap + deckRow],
+  ];
+  for (const [label, height] of grownPlates) {
+    const grown: CanvasChrome = { topPx: HUD_TOP_PX, rects: [{ ...opp, height }, you] };
+    let failures = 0;
+    for (const view of VIEWS.filter((v) => v.seatSafe)) {
+      const row = CANVASES.flatMap((canvas) =>
+        LIVE_ASPECTS.map((aspect) => {
+          const share = visibleShareOnCanvas(view.pose, samples, canvasOf(canvas, aspect), grown);
+          if (aspect >= 1.6 && share < (canvas === 946 ? 0.9 : 0.7)) failures += 1;
+          return pct(share).padStart(4);
+        }),
+      );
+      lines.push(
+        `  ${label} (${(opp.insetY + height).toFixed(1)} px): ${view.id.padEnd(9)} 745 px | 946 px: ` +
+          `${row.slice(0, 6).join(' ')} | ${row.slice(6).join(' ')}`,
+      );
+    }
+    assert.ok(opp.insetY + height > HUD_TOP_PX, `${label} ends inside the band — the control has no teeth`);
+    assert.ok(failures > 0, `${label} hides no more of the opponent's duelist than the band — the one-line rules protect nothing`);
+    lines.push(`  ${label}: ${String(failures)} seat-safe view × canvas × aspect cell(s) below the duelist threshold`);
+  }
+  for (const line of lines) console.log(line);
 });
 
 test('camera: the duelists are never in the solver’s required set (report 13 §7)', () => {

@@ -11,8 +11,13 @@
 #   3. bridge/build.sh            javac + the Json self-test (build.sh re-runs 2)
 #   4. mtgtable.Smoke             boots the engine, proves the prefs and the card overlay
 #   5. mtgtable.RecordMatch       a FRESH recording into var/, not a committed fixture
-#   6. the VALUE-LEVEL drift diff  normalise that fresh recording and the committed
-#                                 fixtures/games/g1.jsonl and diff them
+#   6. the VALUE-LEVEL drift check  tools/wire-drift.mjs: that fresh recording is
+#                                 the same wire as fixtures/games/g1.jsonl -- the
+#                                 same non-state frames, event stream, phase walk
+#                                 and final board, flush boundaries aside (D113;
+#                                 STRICT_G1=1 for the old byte-for-byte diff),
+#                                 after tools/wire-drift-selftest.mjs has shown
+#                                 the comparison still rejects eleven drifts
 #   7. mtgtable.MtgTable         a FRESH human-seat game (--transport null): the
 #                                 input path, the ask path and exactly one `over`
 #   8. mtgtable.MtgTable         the DOCUMENTED console smoke, scripted: the line
@@ -90,7 +95,15 @@
 #  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
 #                                 AND every fresh recording this run produced
 #  12. check-redaction-selftest   the checker's own negative controls: twelve
-#                                 one-defect probes that must be REJECTED
+#                                 one-defect probes that must be REJECTED.
+#                                 Then 12b: build-workshop-catalog.ts --check --
+#                                 web/src/workshop/catalog.json is byte for byte
+#                                 what decks/, fixtures/games/ and cues.json make.
+#                                 Then 12c: tools/check-engine-crash.sh -- an
+#                                 engine crash, built on purpose in a scratch
+#                                 Forge home, fails MtgTable AND RecordMatch and
+#                                 ends each frame log in an error notice and a
+#                                 null `over` (D115)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -122,14 +135,17 @@
 # as a number, every phase name lowercased, or one fewer event per flush,
 # because all of those are still "a string where a string belongs".  The fresh
 # recording and the committed one are the same seed against the same jar, so
-# after normalising away the four per-run values -- `t`, `startedAt`, `gameId`
-# and the fresh file's own name -- they are byte-identical, and any difference
-# at all is a change to the wire that the committed corpus no longer reflects.
-# (Measured 2026-09-11: 377 lines each, diff empty.  Section 8.7 warns against
-# promising byte-identical replay because thread interleaving is not
-# deterministic; if this step ever goes flaky rather than failing consistently,
-# that is the reason, and the fix is to compare the two normalised files
-# frame-type-by-frame rather than to delete the step.)
+# after normalising away the per-run values -- `t`, `startedAt`, `gameId` --
+# they are the same game, and any difference in WHAT was said is a change to the
+# wire that the committed corpus no longer reflects.  (Measured 2026-09-11: 377
+# lines each, diff empty.)  Section 8.7 warned against promising byte-identical
+# replay because thread interleaving is not deterministic, and it went flaky
+# exactly that way: at a load average of 42-73 the same game came back with one
+# more `state` frame (PLAN.md slice-4 follow-up 13(b)), because WHERE a flush
+# cuts the event stream is wall-clock.  So since D113 the step compares what
+# a re-partition cannot move -- tools/wire-drift.mjs's four questions -- and its
+# selftest proves the relaxed comparison still rejects every drift above.
+# STRICT_G1=1 restores the byte-for-byte diff.
 #
 # Step 9 is the one that makes step 8 mean anything.  A checker can only prove
 # an emitter did not drift if the checker itself would notice; this one once
@@ -152,6 +168,7 @@
 #         DRIFT_FATAL=1 ./tools/check-all.sh      # 9b's advisory becomes a failure
 #         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~6-9 minutes); 9e still runs
 #         VILLAIN_DECK=decks/x.dck ./tools/check-all.sh   # 9c rows 11-14 and 9e play this deck
+#         STRICT_G1=1 ./tools/check-all.sh        # step 6 byte for byte (fails under load: D113)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -207,47 +224,43 @@ fi
 grep -E '^(frames|snapshot errors|events dropped|unzoned cards|UNIMPL members)' var/check-all-record.log || true
 grep -q '^RECORD OK$' var/check-all-record.log || die "RecordMatch did not print RECORD OK"
 
-say "value-level drift -- normalise the fresh recording and diff it against fixtures/games/g1.jsonl"
-# Why a diff and not just the shape checker (step 8): a checker asserts the key
-# set and the runtime TYPE of every key, so it would happily pass a Snap.java
+say "value-level drift -- the fresh recording against fixtures/games/g1.jsonl (tools/wire-drift.mjs)"
+# Why a comparison and not just the shape checker (step 8): a checker asserts the
+# key set and the runtime TYPE of every key, so it would happily pass a Snap.java
 # that started emitting phase names lowercased, `power` as a number, one fewer
 # event per flush, or a stack ordered top-first.  Same deck, same seed, same
-# jar -> the same bytes, once the four per-run values are normalised away.
-NORM="var/check-all-normalise.mjs"
-cat > "$NORM" <<'NORMALISER'
-// Written by tools/check-all.sh. Replaces the per-run values of a frame log
-// with a constant, everywhere they appear at any depth, so two recordings of
-// the same seed can be compared byte for byte:
-//   t          epoch ms, different every run (envelope, section 1)
-//   startedAt  ISO-8601, session header only (section 8.1)
-//   gameId     the --out basename: "g1" vs "check-all-record" (header, hello_ok
-//              body and every state body)
-// Nothing else is touched. In particular seq, forgeJarSha256, the deck sha256s
-// and every value inside a card stay exactly as the emitter wrote them -- those
-// ARE the wire, and a difference in one is the finding.
-import { readFileSync } from 'node:fs';
-const PER_RUN = new Set(['t', 'startedAt', 'gameId']);
-const scrub = (v) => {
-  if (Array.isArray(v)) return v.map(scrub);
-  if (v !== null && typeof v === 'object') {
-    const out = {};
-    for (const [k, val] of Object.entries(v)) out[k] = PER_RUN.has(k) ? '<per-run>' : scrub(val);
-    return out;
-  }
-  return v;
-};
-const lines = readFileSync(process.argv[2], 'utf8').split('\n').filter((l) => l.length > 0);
-process.stdout.write(lines.map((l) => JSON.stringify(scrub(JSON.parse(l)))).join('\n') + '\n');
-NORMALISER
-node "$NORM" "$FRESH" > var/check-all-fresh.norm.jsonl || die "normalising $FRESH"
-node "$NORM" fixtures/games/g1.jsonl > var/check-all-g1.norm.jsonl || die "normalising fixtures/games/g1.jsonl"
-if ! diff -q var/check-all-g1.norm.jsonl var/check-all-fresh.norm.jsonl > /dev/null; then
-  echo "--- fixtures/games/g1.jsonl (committed)   +++ $FRESH (just recorded)" >&2
-  diff var/check-all-g1.norm.jsonl var/check-all-fresh.norm.jsonl | head -20 >&2
-  echo "   (full diff: diff var/check-all-g1.norm.jsonl var/check-all-fresh.norm.jsonl)" >&2
-  die "Snap.java changed the wire: re-record fixtures/games/*.jsonl"
+# jar -> the same game, once the per-run values are normalised away.
+#
+# D113 (PLAN.md slice-4 follow-up 13(b)).  This was `diff | head -20` over the
+# two normalised files, byte for byte, and it failed twice at a load average of
+# 42-73 on one extra `state` frame of an otherwise identical game -- and under
+# `set -o pipefail` the `head` gave it exit 141 and no message at all.  Both are
+# fixed here: tools/wire-drift.mjs prints its own verdict and exits 0 or 1, and by
+# default it asks only what a busy machine cannot move (the non-state frames, the
+# event stream, the phase walk, the final board), because WHERE a flush cuts the
+# event stream is wall-clock.  Measured: 9b's multiset comparison fails those
+# loaded runs too, so it was not the answer.  The selftest runs first, so a
+# relaxed comparison that stopped rejecting drift fails the gate here and not
+# silently.  STRICT_G1=1 is the old step: byte for byte, flush boundaries and all.
+node tools/wire-drift-selftest.mjs > var/check-all-wire-drift-selftest.log 2>&1 || {
+  cat var/check-all-wire-drift-selftest.log >&2
+  die "tools/wire-drift-selftest.mjs: the step-6 comparison no longer gives the verdicts it must (log: var/check-all-wire-drift-selftest.log)"
+}
+tail -1 var/check-all-wire-drift-selftest.log
+WIRE_DRIFT_MODE=""
+[ "${STRICT_G1:-0}" = "1" ] && WIRE_DRIFT_MODE="--strict"
+# shellcheck disable=SC2086
+if ! node tools/wire-drift.mjs $WIRE_DRIFT_MODE fixtures/games/g1.jsonl "$FRESH" > var/check-all-wire-drift.log 2>&1; then
+  cat var/check-all-wire-drift.log >&2
+  if [ -n "$WIRE_DRIFT_MODE" ]; then
+    die "the fresh seed-42 recording is not byte-identical to fixtures/games/g1.jsonl under STRICT_G1=1 -- \
+if the default comparison passes, only the flush boundaries moved, which is load (D113); if it fails too, \
+Snap.java changed the wire: re-record fixtures/games/*.jsonl"
+  fi
+  die "Snap.java changed the wire: the fresh seed-42 recording is not the same game as fixtures/games/g1.jsonl \
+(the DIFFER line above says which of the four questions failed) -- re-record fixtures/games/*.jsonl"
 fi
-echo "OK: $(wc -l < var/check-all-fresh.norm.jsonl) normalised lines identical to fixtures/games/g1.jsonl"
+cat var/check-all-wire-drift.log
 
 say "MtgTable --transport null -- the M2 seam, end to end, with every ask answered null"
 # The gate's only coverage of WireGuiGame. RecordMatch above has no seat, so it
@@ -969,7 +982,13 @@ fi
 if [ -f tools/ws-auto-play.mjs ]; then
   printf '\n=== 10g. three games over one socket, and M6'"'"'s five acts with their effects ===\n'
   rm -rf var/games/check-all-ws-3g var/games/check-all-ws-3g-g2 var/games/check-all-ws-3g-g3
-  WS_SEED=13 WS_EXTRA="--games 3 --deck decks/yield-probe.dck" \
+  # MTGTABLE_HOLD_GAME_END_MS (D114, PLAN.md slice-4 follow-up 13(c)): the
+  # bridge holds each game's thread 2 s after its `over`, so the client's
+  # immediate `newGame` ALWAYS lands before Forge has finished the game -- the
+  # window that, unheld, opened once in two gate runs at a load average of
+  # 15-32 and let game 2's late finishGame() end game 3 before it had dealt a
+  # card.  Held, it is every run, and the queue that closes it is asserted below.
+  MTGTABLE_HOLD_GAME_END_MS=2000 WS_SEED=13 WS_EXTRA="--games 3 --deck decks/yield-probe.dck" \
     ws_start check-all-ws-3g var/check-all-ws-3g.log
   if ! node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 900 --games 3 --comfort --quiet \
       --require-yield-repeat \
@@ -997,12 +1016,31 @@ if [ -f tools/ws-auto-play.mjs ]; then
     [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || \
       die "the last frame of $f is not \`over\` (section 8.4)"
     [ "$(grep -c '"type":"hello_ok"' "$f")" = "1" ] || die "$f does not carry exactly one hello_ok"
+    # D114: every one of these games ends by Forge's own game-over, so its
+    # `over` follows a `state` carrying `gameOver`.  One that does not was ended
+    # from outside -- the late finishGame() of the game before it.
+    grep -q '"gameOver":{' "$f" || die "$f has no \`state\` carrying \`gameOver\`: the game was ended from \
+outside Forge's own game-over -- the previous game's late finishGame() (D114, PLAN.md slice-4 follow-up 13(c))"
     grep -q "\"gameId\":\"$g\"" "$f" || die "$f does not carry its own gameId \"$g\""
     THREE_IDS="$THREE_IDS $g"
     node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
     WS_LOGS="${WS_LOGS:-},$f"
   done
   [ "$(printf '%s\n' $THREE_IDS | sort -u | wc -l)" = "3" ] || die "the three games do not have three distinct ids"
+  # D114, the server's half.  With the 2 s hold, both `newGame` acts must have
+  # been QUEUED behind Forge finishing the game and then RELEASED -- one queued
+  # act that never ran is a session that silently stopped -- and no game may
+  # have ended through amendment M11's exception path.
+  if grep -q "^OVER WITHOUT A gameOver STATE" var/check-all-ws-3g.log; then
+    die "a game of the three-game session ended WITHOUT a gameOver state -- the race D114 closes \
+(log: var/check-all-ws-3g.log)"
+  fi
+  NG_QUEUED="$(grep -c '^NEW GAME QUEUED' var/check-all-ws-3g.log || true)"
+  NG_RELEASED="$(grep -c '^NEW GAME RELEASED' var/check-all-ws-3g.log || true)"
+  [ "$NG_QUEUED" -ge 1 ] && [ "$NG_QUEUED" = "$NG_RELEASED" ] || die "the early-newGame queue: \
+$NG_QUEUED queued, $NG_RELEASED released -- with MTGTABLE_HOLD_GAME_END_MS every newGame should have been \
+queued behind Forge finishing its game and then run (D114; log: var/check-all-ws-3g.log)"
+  echo "OK: $NG_QUEUED early \`newGame\` act(s) queued behind Forge finishing the game and released; no game ended from outside"
   echo "OK: three games, three hello_oks, three frame logs:$THREE_IDS"
   # The client's own three logs, one per game, same rules -- checked, and
   # deliberately NOT added to WS_LOGS.  Games 2 and 3 open with the `newGame`
@@ -1067,6 +1105,45 @@ node tools/check-redaction.mjs "$AUTOLOG" || die "check-redaction.mjs on the aut
 
 say "check-redaction-selftest.mjs -- the checker's own negative controls"
 node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+
+# 12b. The workshop's catalog is GENERATED (D104) from decks/*.dck, the
+#      committed recordings and the card names web/src/arena/cues/cues.json has
+#      an entry for (`threeD`, the card browser's View in 3D).  A new per-card
+#      cues.json row for a deck card, or a new deck, without a rebuild used to be
+#      caught only by web/test/workshop.test.ts deep in step 13, as a deepEqual
+#      over parsed JSON -- skipped under SKIP_WEB=1, and blind to a hand edit
+#      that reorders keys.  The builder's own --check is byte for byte, needs no
+#      node_modules (node type stripping and no imports), and names the command
+#      that fixes it (workshop follow-up 17).
+printf '\n=== 12b. build-workshop-catalog.ts --check -- the workshop catalog is what decks/, fixtures/games/ and cues.json make ===\n'
+node tools/build-workshop-catalog.ts --check \
+  || die "web/src/workshop/catalog.json is stale (a deck, a committed recording or a cues.json card entry changed without a rebuild) -- run: node tools/build-workshop-catalog.ts"
+
+# 12c. D115: an exception out of Forge's game loop FAILS the run.  Before the
+#      hardening pass a card the engine could not build crashed zone
+#      preparation before turn 1, MtgTable sat 60 s until the stuck watchdog
+#      conceded and then printed MTGTABLE OK with exit 0, and RecordMatch's log
+#      stopped at `hello_ok`.  Nothing else in this gate can reach that path:
+#      every deck here builds.  So the script builds the crash on purpose -- a
+#      Depower whose script uses the 2.0.15 ApiType `Empower`, in a SCRATCH
+#      Forge home under var/crash-probe/ (its own config through
+#      MTG_TABLE_CONFIG; forge-home/ keeps its one overlay file, hard rule 11)
+#      -- and asserts twenty things about both mains: exit 1, promptly, the
+#      cause on stderr, and a frame log ending in an error `notice` and a null
+#      `over` that never names the card (hard rule 8).  About ten seconds, no
+#      node_modules, so it runs under SKIP_WEB=1 and SKIP_TEN=1 too.  Added on
+#      the rebase onto match setup (PLAN.md's hardening follow-up 2).
+printf '\n=== 12c. check-engine-crash.sh -- an engine crash fails MtgTable and RecordMatch, and ends each log in `over` (D115) ===\n'
+rc=0
+jvm ./tools/check-engine-crash.sh > var/check-all-engine-crash.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
+  cat var/check-all-engine-crash.log >&2
+  capped "$rc" && die "check-engine-crash.sh did not finish within ${GAME_TIMEOUT}s"
+  die "check-engine-crash.sh exited $rc: an engine crash no longer fails the run the way D115 says (log: var/check-all-engine-crash.log)"
+fi
+grep -E '^(==|  FAIL|check-engine-crash)' var/check-all-engine-crash.log || true
+[ "$(grep -c '^  ok  ' var/check-all-engine-crash.log)" = "20" ] \
+  || die "check-engine-crash.sh passed $(grep -c '^  ok  ' var/check-all-engine-crash.log) assertion(s), not 20 (log: var/check-all-engine-crash.log)"
 
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
