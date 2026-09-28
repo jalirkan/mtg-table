@@ -35,7 +35,9 @@
  *
  * **The card browser's tree (`web/src/cards/`, `#cards`) joined it on
  * 2026-09-27**, so its components — `CardBrowser`, `CardDetail`, `CardView`,
- * `Pips` — are held by the same scan rather than by hand.
+ * `Pips` — are held by the same scan rather than by hand. **The story page's
+ * (`web/src/story/`, `#story`) joined it on 2026-09-28** — `Story`, `TurnBlock`,
+ * `MomentItem`, `SummaryCard`, `AtFrame`, `CardImage` and the rest.
  * ---------------------------------------------------------------------------
  */
 
@@ -44,10 +46,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
-// The card browser (`web/src/cards/`) and the workshop (`web/src/workshop/`)
-// joined the scan with their own components: the same defect is invisible there
-// for the same reason.
-const TREES = ['../src/render/', '../src/arena/', '../src/cards/', '../src/workshop/'];
+// The card browser (`web/src/cards/`), the workshop (`web/src/workshop/`) and the
+// story page (`web/src/story/`, D151) joined the scan with their own components:
+// the same defect is invisible there for the same reason.
+const TREES = ['../src/render/', '../src/arena/', '../src/cards/', '../src/workshop/', '../src/story/'];
 
 /** Every hook this repo calls, plus React's own. `use…` in a comment is blanked. */
 const HOOK =
@@ -229,7 +231,7 @@ test('no React hook is called after a component’s early return', () => {
   // The two files whose defect wrote this test, by name, so a rename or a move
   // cannot quietly drop the coverage.
   const paths = files.map((f) => f.path);
-  for (const required of ['render/Board.tsx', 'arena/Arena.tsx', 'arena/scene/CardPlane.tsx', 'cards/CardBrowser.tsx']) {
+  for (const required of ['render/Board.tsx', 'arena/Arena.tsx', 'arena/scene/CardPlane.tsx', 'cards/CardBrowser.tsx', 'story/Story.tsx']) {
     assert.ok(paths.includes(required), `${required} is not being scanned — move this test with it`);
   }
 

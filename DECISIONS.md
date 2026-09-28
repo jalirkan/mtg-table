@@ -5927,3 +5927,203 @@ turn-by-turn story for a beginner, and it is built on five rules:
 - **A web page in this lane** — the narrator's pure functions are what a
   `#story` page would call; building both at once would have been two surfaces
   to hold to hard rule 8 before either had been read by a person.
+
+---
+
+## D150 — The narrator is ONE pure TypeScript module, `web/src/story/narrate.ts`; `tools/narrate.mjs` is a shell over it and prints the same bytes
+
+*Branch `story` (worktree `mtg-table-t2r`, off `main`'s `4408283`). Numbered in
+the lane's reserved range D150–D159 while other lanes cut the same day number
+their own; renumbered contiguously when it merges.*
+
+**2026-09-28** (the `#story` page; `docs/evidence/story.md` is what was measured,
+PLAN.md *The story page* the status and follow-ups)
+
+**Decision.** The narration that **D123** built as `tools/narrate.mjs` moves, whole,
+into `web/src/story/narrate.ts` — the one face reader, the no-memory and
+latest-view rules, the client-log dedupe, every sentence, `renderStory`,
+`renderSummary`, `toJson` — and the CLI keeps only what a page cannot have: the
+file read (`node:fs`) and the flags. Node 24 imports the `.ts` by type stripping,
+so the module is written in erasable TypeScript and imports nothing at all. Every
+fact gains `frameIndex` (the index of the frame whose processing produced it),
+which the page needs to put a moment on the replay cursor; `toJson` leaves it
+out, so `--json` is byte for byte what it was. This supersedes **D123**'s rule 1
+("a tool, not a page … nothing in `web/` imports it") and nothing else of it.
+
+**Rationale.** A story told two ways by two implementations is two things to hold
+to hard rule 8, and the second one would be the page — the surface a person
+actually reads. One module means the CLI's gate (`tools/narrate-selftest.mjs`,
+12d, its five negative controls and its goldens) is the page's gate too, and a
+change to a sentence is a change to both readers. The byte-identity was measured,
+not assumed: every committed log × seven modes (story, `--summary`, `--seat`,
+`--json`, three `--turn` ranges) and eight error paths, stdout, stderr and exit
+code, before and after — 133 + 8 outputs, no difference — and the selftest's 79
+checks and two goldens pass unchanged.
+
+**Rejected.**
+- **A second narrator in the page** (or a port that "follows" the CLI) — two
+  implementations drift, and the drift would be in hard rule 8's territory.
+- **A build step for the CLI** (compile `narrate.ts` to `.mjs`) — Node 24 runs the
+  `.ts` as it is; a generated file is a file that goes stale.
+- **`frameIndex` on the `--json` output** — nothing reads `--json` yet (the
+  narrator's follow-up 6: it is unversioned), and "the CLI's output must not
+  change by one byte" was the lane's rule.
+
+---
+
+## D151 — `#story` is a PAGE over the replay, not a renderer and not a drawer: lazy, the mode app unmounted, handed frames and a cursor, importing no transport
+
+*Branch `story`, reserved range D150–D159 (see D150).*
+
+**2026-09-28**
+
+**Decision.** `#story` (or `?view=story`) mounts `web/src/story/Story.tsx` —
+through `lazy()`, like `#cards` and `#workshop` — **instead of** the mode app. It
+reads the replay the page already has: `main.tsx`'s `StoryReplay` loads the same
+`?replay=` log through the same `useReplayLoad` hook the replay app uses (the
+fetch cache, the follow-mode poller, the cursor maps), draws the same replay bar,
+and hands the page the frames the transport holds, the cursor, the state folded
+to it, the follow word and four callbacks. The page:
+
+- tells the story as a column of moments grouped by turn, one margin word per
+  phase, the moment on screen (the latest moment whose frame has happened)
+  highlighted and kept in view, and what comes after the cursor dimmed;
+- carries `--summary` as a card at its head (title, decks, whose view, the result
+  and how, the per-seat table), and a panel for the frame on screen (turn, phase,
+  life and card counts from the snapshot, the moment, and the Scryfall images of
+  the face-up cards it names);
+- moves the SAME cursor: a click on a moment scrubs to it; `←`/`→` are the
+  moments, `↑`/`↓` the turns, `,`/`.` a frame, Space plays (its own keymap,
+  `story/keys.ts`); `▣ arena` / `V` and `▤ board` / `B` leave for the renderers
+  at the frame on screen, and the replay bar's `☰ story` link comes back.
+
+It imports no transport, never fetches, starts no timer and imports nothing from
+`render/`, `arena/`, `cards/` or `workshop/`; `web/test/story.test.ts` holds each
+of those by source scan, and `hooks-order.test.ts` scans its components.
+
+**Rationale.** The arena and the board are renderers of one `ClientState`; a
+story is a different reading of the frame log — it needs every frame, not the
+state at the cursor — so it is a page with the log in hand, not a third renderer.
+Unmounting the mode app is `#cards`'s and `#workshop`'s reason again: a hidden
+board or arena would keep its `window` keydown listeners live under the story's
+own Space and arrows. Sharing `useReplayLoad` rather than writing a loader of its
+own is what makes "in step with the replay" true: one fetch cache, one poller
+shape, one cursor map, so the story opens on the arena's frame and the arena comes
+back on the story's.
+
+**Rejected.**
+- **A drawer on the board or a panel in the arena, now** — the arena is three
+  visual lanes' desk this week, and a panel there needs its own mount point,
+  pointer-events opt-in and keymap row (PLAN.md's story follow-up 1 names them).
+- **Keeping the mode app mounted and hidden** — the key-listener defect D94 found.
+- **The page owning a transport** — a second poller, a second fetch and a second
+  cursor, and the arena's rule (M7 convention 1: a renderer imports no
+  transport) is a good rule for a page too.
+
+---
+
+## D152 — The page re-tells the whole held log whenever it grows; with the future hidden, it tells only the frames the cursor has played
+
+*Branch `story`, reserved range D150–D159 (see D150).*
+
+**2026-09-28**
+
+**Decision.** `Story.tsx` calls `narrate()` over the frames the transport holds,
+memoised on how many there are: a finished replay is narrated once; a followed
+log is narrated again each time the poller appends (at most twice a second).
+**What comes after the cursor** has two settings (`S`): *dimmed* — the whole
+held log, every later moment marked — the default for a finished replay; and
+*hidden* — the page narrates `frames.slice(0, cursor)`, so nothing after the
+cursor is on the page at all, the summary card is the game so far, and the
+winner is not printed before the game has reached it — the default while a log
+is still being recorded.
+
+**Rationale.** Narration is cheap: g1's 376 frames take about 4 ms in Node
+(`story.test.ts` prints it every run; the bound it asserts is 250 ms, so a busy
+gate machine does not flake). A second, incremental narrator — tried first on
+this branch and correct over the corpus — would have needed its own rule for
+"the seqs the file holds" (a client log's gaps are judged against the whole file)
+and would have been a second thing to keep equal to the CLI. Re-telling keeps the
+story of a log still being written, frame for frame, the story the CLI tells of
+the same bytes. Hiding by narrating a prefix is exact, not approximate:
+`story.test.ts` cuts every committed bridge log at five places and asserts the
+prefix's story is the full story's facts before the cut, frame for frame.
+
+**Rejected.**
+- **The incremental narrator** — above; kept as the closure structure of
+  `narrate.ts` (push each frame, ask once), not as an API.
+- **Hiding by filtering the full story** — a turn whose heading exists but whose
+  moments are all ahead would read "(nothing but passes)", and the summary would
+  still name the winner.
+- **Spoilers always on** — a person following a live game would see the summary
+  card say who won the moment the recorder wrote `over`, before the page played it.
+
+---
+
+## D153 — Hard rule 8 on the page is held by rendering it over the corpus: no name the log does not show, by ids, by backing and by the decks, with a negative control
+
+*Branch `story`, reserved range D150–D159 (see D150).*
+
+**2026-09-28**
+
+**Decision.** The page prints only the narrator's sentences and marks only the
+names the narrator's facts carry (`segmentText` cuts a sentence at the names of
+the refs `faceOf` resolved; a ref with no name has nothing to find), and its card
+images are looked up by those names alone, face-up refs only. An unseen card
+stays the narrator's "a card" / "an unknown card", a face-down one "a face-down
+card". `web/test/story-render.test.tsx` renders `<Story/>` with
+`renderToStaticMarkup` over every committed fixture, at seven cursors each, dimmed
+and hidden (266 renderings, 16,225 marked names), against an oracle written apart
+from the narrator: an id concealed in every appearance is never marked with a
+name; every marked (id, name) pair is a name that id carries somewhere in the
+log; no `decks/*.dck` name the log never shows appears anywhere in the markup,
+attributes included; hidden means no moment after the cursor, dimmed means every
+such moment marked. Its negative control injects a name into an always-hidden
+stub of `disjoint.jsonl` with the `hidden` flag dropped — the page prints it and
+both the by-ids and the by-names checks catch it — and with the flag kept — the
+page prints nothing.
+
+**Rationale.** The narrator's own gate holds its text; the page adds markup —
+attributes, an image's `alt`, a summary card, a panel — and "the page only
+prints the narrator's text" is a claim that needs the same kind of test the
+board has (`render.test.tsx`), not a comment. The card image is M4 convention 2's
+third exemption (after `#cards`' `CardView` and the workshop's list thumbnail):
+public card art for a name the log showed this seat, never a game-state renderer,
+and written down in CLAUDE.md, which `story.test.ts` checks.
+
+**Rejected.**
+- **Marking cards by id with a name looked up elsewhere** (the art index, an
+  earlier frame) — the memory D123 forbids, arriving through the markup.
+- **Images for face-down refs the seat may name** (`alt`) — legitimate, but not
+  worth a second rule on a page whose images are an aid, not the story.
+
+---
+
+## D154 — A followed log keeps its cursor across the page's own views when the viewer had PAUSED; a viewer watching live rejoins the live edge
+
+*Branch `story`, reserved range D150–D159 (see D150).*
+
+**2026-09-28**
+
+**Decision.** `main.tsx` keeps a page-lifetime `followCursors` map beside
+`replayCursors`: every state change of a follow-mode transport records its cursor
+and whether it was playing. When a view that reads the replay mounts again
+(`#story` ⇄ `#arena` ⇄ the board, and back from `#cards` or `#workshop`), a cursor
+recorded while PAUSED is restored — the follower starts with `autoplay: false`
+and the new transport is scrubbed to it — and a cursor recorded while playing is
+not: the transport joins the live edge exactly as a fresh page does. A reload
+still starts at the live edge (the map lives as long as the page).
+`./scripts/spectate.sh --story` opens `/?replay=spectate/<name>.jsonl&follow=1#story`.
+
+**Rationale.** "The story links back to the arena at the same frame" has to hold
+while a game is being followed, and spectating's follow-up 8 (switching views
+restarts following at the live edge) broke it for exactly the viewer who had
+stopped to read. Watching live, the live edge IS the frame the viewer was on, so
+restoring nothing is right; paused, the frame they chose is.
+
+**Rejected.**
+- **Restoring every cursor** — a viewer watching live who switched views would
+  come back paused behind the game, the opposite of what follow mode is for.
+- **One transport kept alive across views** — the mode app is unmounted on
+  purpose (D151), and a transport outliving its page is the socket's exception
+  (`liveTransport`), not a pattern to copy.

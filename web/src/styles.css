@@ -4523,3 +4523,347 @@ button.zonerow__open:hover {
   opacity: 0.6;
   text-decoration: line-through dotted;
 }
+
+/* --- the story (web/src/story/, #story, D151) ------------------------------------
+ *
+ * The narrator in the browser: a side column (the summary card, the frame on
+ * screen and its cards, the switches, the keys) and the story itself, a column of
+ * moments grouped by turn that scrolls with the replay cursor. The moment on
+ * screen carries a colour, a bar AND the word "now" is not needed: it is the one
+ * line with a border, so colour alone never carries it (M4 convention 5). What
+ * comes after the cursor is dimmed, or not drawn at all (`data-ahead="hide"`).
+ */
+.app--story .app__bar h1 {
+  color: var(--highlight);
+}
+
+.story {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  background: var(--bg);
+}
+
+.story__side {
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  padding: 0.6rem 0.7rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 12px;
+}
+
+.story__column {
+  overflow-y: auto;
+  padding: 0 1.1rem 40vh;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.story__summary,
+.story__at {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+}
+
+.story__summary h2,
+.story__at h2 {
+  margin: 0 0 0.3rem;
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+.story__title {
+  color: var(--highlight);
+}
+
+.story__summary p,
+.story__at p {
+  margin: 0.2rem 0;
+}
+
+.story__result {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.story__sofar {
+  color: var(--warn);
+  font-family: var(--mono);
+}
+
+.story__totals {
+  margin-top: 0.35rem;
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.story__totals th,
+.story__totals td {
+  padding: 0.08rem 0.3rem;
+  border-top: 1px solid var(--line);
+}
+
+.story__totals thead th {
+  text-align: right;
+  color: var(--ink);
+  border-top: 0;
+  overflow-wrap: anywhere;
+}
+
+.story__totals th[scope='row'] {
+  text-align: left;
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.story__totals td {
+  text-align: right;
+}
+
+.story__where {
+  font-family: var(--mono);
+}
+
+.story__seats,
+.story__saying {
+  list-style: none;
+  margin: 0.25rem 0;
+  padding: 0;
+}
+
+.story__seats li {
+  padding: 0.05rem 0;
+}
+
+.story__saying li {
+  padding: 0.2rem 0.35rem;
+  margin: 0.15rem 0;
+  border-left: 3px solid var(--select);
+  background: var(--panel-2);
+}
+
+.story__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.story__cardimg {
+  margin: 0;
+}
+
+.story__cardframe {
+  position: relative;
+}
+
+.story__cardframe img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 4.75% / 3.5%;
+}
+
+.story__cardtext {
+  aspect-ratio: 488 / 680;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  font-weight: 600;
+}
+
+.story__cardframe--bare .story__cardtext {
+  aspect-ratio: auto;
+  min-block-size: 2.4rem;
+}
+
+.story__cardimg figcaption {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.story__switches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.story__keys summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.story__keys th {
+  text-align: left;
+  padding-right: 0.6rem;
+  white-space: nowrap;
+}
+
+/* The column: one section per turn, its heading sticky while you read it. */
+.story__gametitle {
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--highlight);
+  margin: 1rem 0 0.3rem;
+}
+
+.story__turn {
+  margin: 0 0 0.35rem;
+}
+
+.story__turnhead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0.45rem 0 0.2rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.story__turn[data-side='you'] .story__turnhead {
+  color: var(--you);
+}
+
+.story__turn[data-side='opp'] .story__turnhead {
+  color: var(--opp);
+}
+
+.story__turn--ahead .story__turnhead {
+  opacity: 0.6;
+}
+
+.story__runs,
+.story__moments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.story__run {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: 0.4rem;
+  padding: 0.1rem 0;
+}
+
+.story__phase {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding-top: 0.28rem;
+}
+
+.story__go {
+  display: block;
+  inline-size: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0 3px 3px 0;
+  padding: 0.12rem 0.45rem;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.story__go:hover {
+  background: var(--panel);
+}
+
+.story__go:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.story__moment--now .story__go {
+  background: #ffcf5c1f;
+  border-left-color: var(--select);
+}
+
+.story__moment--ahead .story__go {
+  opacity: 0.42;
+}
+
+.story__card {
+  font-weight: 600;
+  border-bottom: 1px dotted var(--muted);
+}
+
+.story__passes,
+.story__note {
+  margin: 0.2rem 0 0.2rem 5rem;
+  font-size: 12px;
+}
+
+.story__ending {
+  margin: 0.8rem 0;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--highlight);
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.story__tail {
+  margin: 0.6rem 0 0 5rem;
+}
+
+.story__empty {
+  margin: 1rem 0;
+}
+
+.story__nolog {
+  max-inline-size: 60ch;
+}
+
+@media (max-width: 900px) {
+  .story {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .story__side {
+    max-block-size: 38dvh;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .story__run {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .story__passes,
+  .story__note,
+  .story__tail {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story__column {
+    scroll-behavior: auto;
+  }
+}

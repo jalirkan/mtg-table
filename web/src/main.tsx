@@ -40,6 +40,17 @@
  * `App`'s — and only while the arena is really mounted, never under
  * `?arena=off`), and the workshop's links go back.
  *
+ * **The story is a page over the replay, not a renderer** (D151). `#story` (or
+ * `?view=story`) mounts `web/src/story/Story.tsx` — lazily, like the workshop —
+ * INSTEAD of the mode app, as `#cards` and `#workshop` do, and for their reason:
+ * a hidden board or arena would keep its `window` keydown listeners live under
+ * the story's own keys. Unlike those two it reads the replay: `StoryReplay`
+ * below loads the same `?replay=` log through the same `useReplayLoad` the
+ * replay app uses (the fetch cache, the follow-mode poller, `replayCursors`), so
+ * the story opens at the frame the arena was on and the arena comes back at the
+ * frame the story was on. The story page itself is handed frames and a cursor
+ * and imports no transport.
+ *
  * **The keyboard moved into `<Board>` in M4** (report 10 §12.2 rule 1). M3 kept
  * it here because `Board.tsx` had no effects and the render test folds every
  * frame of every fixture through `renderToStaticMarkup`, which runs none — but
@@ -124,6 +135,13 @@ const CardBrowser = lazy(() => import('./cards/CardBrowser.tsx'));
  * and a session that never opens it never downloads it.
  */
 const Workshop = lazy(() => import('./workshop/Workshop.tsx'));
+
+/**
+ * **The story page, fetched only when someone opens `#story`** (D151) — the same
+ * rule again: it is the narrator and a column of moments, a page most sessions
+ * never open, and nothing of it belongs in the 2D entry chunk.
+ */
+const StoryPage = lazy(() => import('./story/Story.tsx'));
 
 // ---------------------------------------------------------------------------
 // Mode
@@ -282,6 +300,27 @@ function WorkshopLink({ onSet }: { onSet: (view: View) => void }): JSX.Element {
       title="Open the workshop: one card on a pedestal — its figure, props, clips and cues (W in the arena)"
     >
       ⚒ workshop
+    </a>
+  );
+}
+
+/**
+ * **The story of this replay** (D151): the same log told turn by turn, at the
+ * frame on screen. A URL like the links beside it; the cursor survives the trip
+ * both ways through `replayCursors` / `followCursors` below.
+ */
+function StoryLink({ onSet }: { onSet: (view: View) => void }): JSX.Element {
+  return (
+    <a
+      className="viewtoggle"
+      href="#story"
+      onClick={(event) => {
+        event.preventDefault();
+        onSet('story');
+      }}
+      title="Read this game as a story, turn by turn, at this frame (#story)"
+    >
+      ☰ story
     </a>
   );
 }
@@ -691,20 +730,24 @@ async function fetchLog(path: string): Promise<string> {
  */
 const replayCursors = new Map<string, number>();
 
-function ReplayApp({
-  requested,
-  follow,
-  view,
-  onSetView,
-}: {
-  requested: string;
-  /** `&follow=1` on a spectate recording: follow the log as it is written. */
-  follow: boolean;
-  view: View;
-  onSetView: (view: View) => void;
-}): JSX.Element {
-  const art = useArt();
-  const flags = useMemo(arenaFlagsFromQuery, []);
+/**
+ * **Where each FOLLOWED log was left** (spectating's follow-up 8, closed for the
+ * page's own views by D154): the cursor, and whether the viewer had paused.
+ * Back from `#story` (or `#cards`, `#workshop`) a viewer who had PAUSED is put
+ * back on that frame, paused, while one who was watching live rejoins the live
+ * edge — which is where they were. A reload still starts at the live edge: this
+ * map lives as long as the page.
+ */
+const followCursors = new Map<string, { index: number; paused: boolean }>();
+
+/**
+ * **The replay, loaded** — the whole-file fetch or the follow-mode poller,
+ * whichever the URL asked for, and the cursor put back where this page last left
+ * it. The replay app (board and arena) and the story page (`#story`) both call
+ * it, which is what keeps them on one log and one cursor: switching between them
+ * unmounts one and mounts the other over the same cached text.
+ */
+function useReplayLoad(requested: string, follow: boolean): { load: LoadState; follower: LogFollower | null } {
   const [load, setLoad] = useState<LoadState>({ status: 'loading', path: requested });
   // The transport is mutable; this counter is what tells React to re-read it.
   const [, bump] = useReducer((n: number) => n + 1, 0);
@@ -723,13 +766,21 @@ function ReplayApp({
     let cancelled = false;
     let created: LogReplayTransport | null = null;
     let polling: LogFollower | null = null;
+    // Coming back from another view at the frame the viewer paused on (D154);
+    // a viewer who was watching live is not held back: the transport joins the
+    // live edge as it does on a fresh page.
+    const resume = followCursors.get(requested);
+    const resumeAt = resume !== undefined && resume.paused && resume.index > 0 ? resume.index : null;
     void import('./transport/follow.ts').then(({ LogFollower: Follower }) => {
       if (cancelled) return;
       polling = new Follower({
         url: logUrlFor(requested),
+        autoplay: resumeAt === null,
         onTransport: (transport) => {
           created = transport;
-          transport.onState(() => {
+          if (resumeAt !== null) transport.scrubTo(resumeAt);
+          transport.onState((_state, index) => {
+            followCursors.set(requested, { index, paused: !transport.playing });
             bump();
           });
           setLoad({ status: 'ready', path: requested, transport });
@@ -783,8 +834,9 @@ function ReplayApp({
       }
       if (cancelled) return;
       created = new LogReplayTransport(parseFrameLog(text));
-      // Back from the card browser (#cards unmounts this app — see `App`):
-      // resume at the frame the replay was left on, not at frame 0.
+      // Back from the card browser, the workshop or the story (each unmounts
+      // this app — see `App`): resume at the frame the replay was left on, not
+      // at frame 0.
       const resumeAt = replayCursors.get(path);
       if (resumeAt !== undefined && resumeAt > 0) created.scrubTo(resumeAt);
       const loaded = path;
@@ -801,6 +853,19 @@ function ReplayApp({
     };
   }, [requested, follow]);
 
+  return { load, follower };
+}
+
+/** The replay's two states before it has a transport: loading (or waiting for the recorder), and failed. */
+function ReplayNotReady({
+  load,
+  follow,
+  follower,
+}: {
+  load: Exclude<LoadState, { status: 'ready' }>;
+  follow: boolean;
+  follower: LogFollower | null;
+}): JSX.Element {
   if (load.status === 'loading') {
     if (follow) {
       return (
@@ -819,25 +884,95 @@ function ReplayApp({
     return <p className="pad muted">loading {logUrlFor(load.path)}…</p>;
   }
 
-  if (load.status === 'error') {
-    return (
-      <div className="pad">
-        <div className="banner banner--error">
-          <strong>Could not load {logUrlFor(load.path)}</strong>
-          <div>{load.message}</div>
-        </div>
-        <p className="muted">
-          Record one with{' '}
-          <code>
-            ./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 --out
-            fixtures/games/g1.jsonl
-          </code>
-          , or pass <code>?replay=synthetic/sample-handwritten.jsonl</code>. To play a live game
-          instead, drop the <code>?replay=</code> and start the bridge.
-        </p>
+  return (
+    <div className="pad">
+      <div className="banner banner--error">
+        <strong>Could not load {logUrlFor(load.path)}</strong>
+        <div>{load.message}</div>
       </div>
-    );
-  }
+      <p className="muted">
+        Record one with{' '}
+        <code>
+          ./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 --out
+          fixtures/games/g1.jsonl
+        </code>
+        , or pass <code>?replay=synthetic/sample-handwritten.jsonl</code>. To play a live game
+        instead, drop the <code>?replay=</code> and start the bridge.
+      </p>
+    </div>
+  );
+}
+
+/** The replay bar: prev / play / next / speed / scrub over one transport. The board, the arena and the story share it. */
+function ReplayBar({ transport }: { transport: LogReplayTransport }): JSX.Element {
+  const frame = transport.currentFrame;
+  return (
+    <ReplayControls
+      index={transport.index}
+      total={transport.total}
+      live={transport.live}
+      playing={transport.playing}
+      speed={transport.speed}
+      currentType={frame?.type ?? null}
+      currentDir={frame?.dir ?? null}
+      onPrev={() => transport.stepBack()}
+      onNext={() => transport.stepForward()}
+      onToggle={() => {
+        transport.toggle();
+      }}
+      onScrub={(index) => {
+        transport.scrubTo(index);
+      }}
+      onSpeed={(speed) => {
+        transport.setSpeed(speed);
+      }}
+    />
+  );
+}
+
+/** The replay's banners: a frame the reducer refused, and the parser's warnings. */
+function ReplayOverlays({ transport }: { transport: LogReplayTransport }): JSX.Element {
+  return (
+    <div className="app__overlays">
+      {transport.error !== null && (
+        <FrameErrorBanner
+          message={transport.error.message}
+          frameIndex={transport.error.frameIndex}
+          frame={transport.error.frame}
+        />
+      )}
+
+      {transport.warnings.length > 0 && (
+        <div className="banner banner--warn">
+          <strong>Log warnings:</strong>
+          <ul>
+            {transport.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReplayApp({
+  requested,
+  follow,
+  view,
+  onSetView,
+}: {
+  requested: string;
+  /** `&follow=1` on a spectate recording: follow the log as it is written. */
+  follow: boolean;
+  view: View;
+  onSetView: (view: View) => void;
+}): JSX.Element {
+  const art = useArt();
+  const flags = useMemo(arenaFlagsFromQuery, []);
+  const { load, follower } = useReplayLoad(requested, follow);
+
+  if (load.status !== 'ready') return <ReplayNotReady load={load} follow={follow} follower={follower} />;
 
   const transport = load.transport;
   const frame = transport.currentFrame;
@@ -850,6 +985,7 @@ function ReplayApp({
         <span className="muted">{logUrlFor(load.path)}</span>
         {follow && follower !== null && <FollowChip follower={follower} transport={transport} />}
         <ViewToggle view={view} onSet={onSetView} />
+        <StoryLink onSet={onSetView} />
         <WorkshopLink onSet={onSetView} />
         {flags.off && view === 'arena' && (
           <span className="muted">?arena=off — the 3D arena is disabled; this is the board</span>
@@ -858,47 +994,9 @@ function ReplayApp({
         <Credits />
       </div>
 
-      <ReplayControls
-        index={transport.index}
-        total={transport.total}
-        live={transport.live}
-        playing={transport.playing}
-        speed={transport.speed}
-        currentType={frame?.type ?? null}
-        currentDir={frame?.dir ?? null}
-        onPrev={() => transport.stepBack()}
-        onNext={() => transport.stepForward()}
-        onToggle={() => {
-          transport.toggle();
-        }}
-        onScrub={(index) => {
-          transport.scrubTo(index);
-        }}
-        onSpeed={(speed) => {
-          transport.setSpeed(speed);
-        }}
-      />
+      <ReplayBar transport={transport} />
 
-      <div className="app__overlays">
-        {transport.error !== null && (
-          <FrameErrorBanner
-            message={transport.error.message}
-            frameIndex={transport.error.frameIndex}
-            frame={transport.error.frame}
-          />
-        )}
-
-        {transport.warnings.length > 0 && (
-          <div className="banner banner--warn">
-            <strong>Log warnings:</strong>
-            <ul>
-              {transport.warnings.map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      <ReplayOverlays transport={transport} />
 
       {/* §1's unknown-frame policy, applied to the render half: a drift that
           survives `reduce()` must be a banner naming the frame, not a blank
@@ -974,6 +1072,124 @@ function FollowChip({ follower, transport }: { follower: LogFollower; transport:
         </span>
       );
   }
+}
+
+// ---------------------------------------------------------------------------
+// The story — a page over the replay (D151)
+// ---------------------------------------------------------------------------
+
+/**
+ * **`#story`**: the replay's log told turn by turn, beside the replay's own
+ * cursor. With no `?replay=` there is no log to tell — a live seat's story is
+ * PLAN.md's follow-up — so the page says so and offers the committed game.
+ */
+function StoryApp({ mode, onSetView }: { mode: Mode; onSetView: (view: View) => void }): JSX.Element {
+  if (mode.kind !== 'replay') return <StoryWithoutLog onSetView={onSetView} />;
+  return <StoryReplay requested={mode.path} follow={mode.follow} onSetView={onSetView} />;
+}
+
+function StoryWithoutLog({ onSetView }: { onSetView: (view: View) => void }): JSX.Element {
+  return (
+    <div className="pad story__nolog">
+      <h1>The story reads a recorded game</h1>
+      <p>
+        <code>#story</code> tells a frame log turn by turn, in step with its replay. Open one with{' '}
+        <a href="/?replay=games/g1.jsonl#story">?replay=games/g1.jsonl#story</a>, or watch two AIs play with{' '}
+        <code>./scripts/spectate.sh --story</code>. A live seat has no log on this page yet (PLAN.md, the story&apos;s
+        follow-ups).
+      </p>
+      <p>
+        <a
+          href="#"
+          onClick={(event) => {
+            event.preventDefault();
+            onSetView('board');
+          }}
+        >
+          back to the board
+        </a>
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The replay's chrome — the bar, the replay controls, the banners — around the
+ * story page. The transport, the poller and the cursor are the replay app's own
+ * (`useReplayLoad`), so the scrubber here and the scrubber over the arena are
+ * one cursor, and `▣ arena` comes back at this frame.
+ */
+function StoryReplay({
+  requested,
+  follow,
+  onSetView,
+}: {
+  requested: string;
+  follow: boolean;
+  onSetView: (view: View) => void;
+}): JSX.Element {
+  const art = useArt();
+  const { load, follower } = useReplayLoad(requested, follow);
+
+  if (load.status !== 'ready') return <ReplayNotReady load={load} follow={follow} follower={follower} />;
+
+  const transport = load.transport;
+  const followWord = follow ? followWordOf(follower?.status ?? null) : null;
+  const to = (view: View) => (event: { preventDefault(): void }) => {
+    event.preventDefault();
+    onSetView(view);
+  };
+
+  return (
+    <div className="app app--story">
+      <div className="app__bar">
+        <h1>mtg-table — story</h1>
+        <span className="muted">{logUrlFor(load.path)}</span>
+        {follow && follower !== null && <FollowChip follower={follower} transport={transport} />}
+        <a className="viewtoggle" href="#arena" onClick={to('arena')} title="The 3D arena, at this frame (V)">
+          ▣ arena
+        </a>
+        <a className="viewtoggle" href="#" onClick={to('board')} title="The 2D board, at this frame (B)">
+          ▤ board
+        </a>
+        <Credits />
+      </div>
+
+      <ReplayBar transport={transport} />
+
+      <ReplayOverlays transport={transport} />
+
+      <ErrorBoundary resetKey={transport.index} label="The story" frame={transport.currentFrame}>
+        <Suspense fallback={<p className="pad muted">loading the story…</p>}>
+          <StoryPage
+            header={transport.header}
+            frames={transport.frames}
+            total={transport.total}
+            cursor={transport.index}
+            state={transport.state}
+            playing={transport.playing}
+            follow={followWord}
+            art={art}
+            // Following a game still being recorded, the story shows what the
+            // cursor has played and nothing after it; a finished log shows it
+            // all, what is still to come dimmed (S switches).
+            initialAhead={follow && transport.live ? 'hide' : 'dim'}
+            onScrub={(index) => {
+              transport.scrubTo(index);
+            }}
+            onToggle={() => {
+              transport.toggle();
+            }}
+            onStep={(delta) => {
+              if (delta > 0) transport.stepForward();
+              else transport.stepBack();
+            }}
+            onSetView={onSetView}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1129,6 +1345,14 @@ function App(): JSX.Element {
     // and survives, a replay resumes at its frame (`replayCursors`), and the
     // header carries a chip while the live game is waiting on you.
     return <WorkshopApp onSetView={setView} waiting={waiting} />;
+  }
+  if (view === 'story') {
+    // A page over the replay (D151), and like the two above it unmounts the mode
+    // app: a hidden board or arena would keep its `window` keydown listeners
+    // live under the story's own keys (Space, the arrows, `,` `.` `V` `B`). It
+    // loads the same log through `useReplayLoad`, from the fetch cache, and the
+    // cursor maps put it on the frame the replay was on — and back.
+    return <StoryApp mode={mode} onSetView={setView} />;
   }
   return mode.kind === 'replay' ? (
     <ReplayApp requested={mode.path} follow={mode.follow} view={view} onSetView={setView} />

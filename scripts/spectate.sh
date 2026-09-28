@@ -17,6 +17,8 @@
 #                                 with its own output beside it (.log)
 #   4. vite (web/, dev server)    opening the arena on that file:
 #                                   /?replay=spectate/<name>.jsonl&follow=1#arena
+#                                 -- or, with --story, the story page on it:
+#                                   /?replay=spectate/<name>.jsonl&follow=1#story
 #
 # FOLLOW MODE is the default: the recorder runs in the background, PACED
 # (--pace, 600 ms after a frame where something happened and a quarter of that
@@ -56,6 +58,10 @@
 #   --pace <ms>            the recorder's pace in follow mode (default 600; 0 = engine speed)
 #   --no-follow            record first, then open the replay (engine speed unless --pace)
 #   --2d                   open the 2D board instead of the arena (--arena is the default)
+#   --story                open the STORY instead (#story, D151): the game told turn by
+#                          turn as it is played -- who cast what, who attacked, who
+#                          blocked, what died -- beside the replay bar; its `arena`
+#                          link switches to the 3D table at the same frame, and back
 #   --no-open              do not launch a browser; print the URL (the server still runs)
 #   --no-serve             do not start vite either: record, check, print the URL for a
 #                          dev server you already run (npm --prefix web run dev), exit
@@ -69,7 +75,9 @@
 #
 # The page's spectator mode is on by itself (a replay has no seat); press 6 (or
 # 0) for the auto director, 1-5 for the fixed views, K to skip the animation on
-# screen, V for the 2D board.  Ctrl-C stops the recorder and the server.
+# screen, V for the 2D board.  On the story page: the arrows walk the moments and
+# the turns, Space plays and pauses, V is the arena and B the board.  Ctrl-C
+# stops the recorder and the server.
 #
 # config.json's `match` block is read HERE and by scripts/play.sh -- the two
 # commands a person types -- and by nothing the gate runs (D106, D122).
@@ -104,7 +112,7 @@ PACE=""                                      # "" = the mode's default
 FOLLOW=1
 OPEN=1
 SERVE=1
-ARENA=1
+VIEW=arena                                   # arena | board | story
 BUILD=1
 NAME_OVERRIDE=""
 PASSTHROUGH=()
@@ -123,12 +131,13 @@ while [ $# -gt 0 ]; do
     --no-follow)            FOLLOW=0; shift ;;
     --no-open)              OPEN=0; shift ;;
     --no-serve)             SERVE=0; OPEN=0; shift ;;
-    --2d|--board)           ARENA=0; shift ;;
-    --arena)                ARENA=1; shift ;;
+    --2d|--board)           VIEW=board; shift ;;
+    --arena)                VIEW=arena; shift ;;
+    --story)                VIEW=story; shift ;;
     --web-port)             WEB_PORT="$2"; shift 2 ;;
     --no-build)             BUILD=0; shift ;;
     --name)                 NAME_OVERRIDE="$2"; shift 2 ;;
-    --help|-h)              sed -n '5,75p' "$0"; exit 0 ;;
+    --help|-h)              sed -n '5,83p' "$0"; exit 0 ;;
     --)                     shift; PASSTHROUGH+=("$@"); break ;;
     *) printf 'spectate.sh: unknown flag %s (see --help)\n' "$1" >&2; exit 2 ;;
   esac
@@ -193,7 +202,8 @@ REC_LOG="var/spectate/$NAME.log"
 
 PAGE="/?replay=spectate/$NAME.jsonl"
 [ "$FOLLOW" = "1" ] && PAGE="$PAGE&follow=1"
-[ "$ARENA" = "1" ] && PAGE="$PAGE#arena"
+[ "$VIEW" = "arena" ] && PAGE="$PAGE#arena"
+[ "$VIEW" = "story" ] && PAGE="$PAGE#story"
 URL="http://127.0.0.1:$WEB_PORT$PAGE"
 
 say "match"
@@ -295,6 +305,18 @@ serve() {   # vite DIRECTLY (not npm run dev), so the pid this script holds IS t
 }
 
 howto() {
+  if [ "$VIEW" = "story" ]; then
+    cat <<EOF
+  the page: $URL
+  the story of the game, turn by turn, as the recorder writes it (what comes
+  after the frame on screen stays hidden while it is being recorded; S shows it)
+  <- / ->   the moment before / the next moment      up / down   the turn
+  SPACE     play / pause                              , / .       one frame
+  V         the 3D arena at this frame                B           the 2D board
+  the replay bar: pause, step, scrub, speed (in follow mode, speed scales the recorder's pace)
+EOF
+    return
+  fi
   cat <<EOF
   the page: $URL
   1-5    camera views (the table, over each shoulder, side-on, low)

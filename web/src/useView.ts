@@ -36,12 +36,20 @@
  * (`web/src/workshop/`, docs/evidence/workshop.md). `#workshop` / `?view=workshop`
  * open it; it builds its own synthetic boards and draws them with the arena's
  * scene, and it never touches the transport. `?view=` takes the bare word only
- * (`arena`, `cards`, `workshop`) — the hash takes the spellings in the sets below.
+ * (`arena`, `cards`, `workshop`, `story`) — the hash takes the spellings in the
+ * sets below.
+ *
+ * **The story is a fifth view, and a page too** (`web/src/story/`, D151).
+ * `#story` / `?view=story` tell the replay's log as a story beside the replay's
+ * own cursor. Unlike the card browser and the workshop it reads the replay — the
+ * same `?replay=` log, the same transport machinery, the same cursor — but it
+ * draws no board, so `main.tsx` mounts it INSTEAD of the mode app, as it does
+ * those two.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 
-export type View = 'board' | 'arena' | 'cards' | 'workshop';
+export type View = 'board' | 'arena' | 'cards' | 'workshop' | 'story';
 
 /** The hash spellings that mean "arena". Anything else is the board. */
 const ARENA_HASHES: ReadonlySet<string> = new Set(['arena', '/arena', '!arena', '#arena']);
@@ -53,18 +61,21 @@ const CARDS_HASHES: ReadonlySet<string> = new Set(['cards', '/cards', '!cards', 
  * no frame stream, so `main.tsx` mounts it with no transport at all.
  */
 const WORKSHOP_HASHES: ReadonlySet<string> = new Set(['workshop', '/workshop', '!workshop', '#workshop']);
+/** **The story** (`web/src/story/`, D151): the replay's log told turn by turn, at the replay's cursor. */
+const STORY_HASHES: ReadonlySet<string> = new Set(['story', '/story', '!story', '#story']);
 
 /** A hash word (any of the spellings above) as a view; anything else is the board. */
 function viewOfHash(word: string): View {
   if (ARENA_HASHES.has(word)) return 'arena';
   if (CARDS_HASHES.has(word)) return 'cards';
   if (WORKSHOP_HASHES.has(word)) return 'workshop';
+  if (STORY_HASHES.has(word)) return 'story';
   return 'board';
 }
 
 /** A `?view=` word — the bare name only, as a command writes it. */
 function viewOfQuery(word: string): View {
-  return word === 'arena' || word === 'cards' || word === 'workshop' ? word : 'board';
+  return word === 'arena' || word === 'cards' || word === 'workshop' || word === 'story' ? word : 'board';
 }
 
 /**
@@ -92,6 +103,7 @@ export function hashForView(view: View): string {
   if (view === 'arena') return '#arena';
   if (view === 'cards') return '#cards';
   if (view === 'workshop') return '#workshop';
+  if (view === 'story') return '#story';
   return '';
 }
 
