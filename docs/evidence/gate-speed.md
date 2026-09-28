@@ -1,4 +1,4 @@
-## Gate speed — `tools/check-all.sh` in parallel (2026-09-28, D160–D166)
+## Gate speed — `tools/check-all.sh` in parallel (2026-09-28, D129–D135)
 
 The gate-speed lane, worked in the worktree `/home/justin-a/code/mtg-table-t2s`
 on branch `gate-speed`, from `main` at `4408283` (the narrator). The ask: the
@@ -7,30 +7,36 @@ knob, a log per step and a timing table, the order that matters kept as
 dependencies, three parallel runs back to back and one at `GATE_JOBS=8` with
 every flake reported, and two open PLAN.md notes closed (10g never asserted its
 games were played; a `| head` under `pipefail` once cost step 6 its message).
-The decisions are **D160–D166**, numbered in the lane's reserved range and
-renumbered at merge.
+The decisions are **D129–D135** — written as D160–D166 in the lane's reserved
+range D160–D169 and renumbered at merge, when the branch was rebased onto the
+story page's `0af97a9` (D124–D128); §10 is that rebase and the runs after it.
 
 Everything here ran on the user's desktop — AMD Ryzen 7 9700X (8 cores, 16
 threads), 30 GB, OpenJDK 21 JRE, Forge 2.0.14 (`3c0a7c38…8e5dd9`) — **while
 other worktrees ran their own gates and headless Chromium beside it**: the
 1-minute load average was 4–18 across these runs, never idle. Each run below
-says its load. Nothing was changed under `bridge/` or `web/`.
+says its load. Nothing was changed under `bridge/` or `web/` — until the merge,
+where `Config.java` learned one optional key, `repoRoot`, for the per-job Forge
+homes (§10).
 
 | | |
 |---|---|
-| **The parallel gate, `GATE_JOBS=4`, from a deleted `bridge/out`** | **253.4 s, 253.5 s, 253.6 s** back to back, exit 0 all three, load 9–16 (§2) |
+| **At merge — the parallel gate, `GATE_JOBS=4`, from a deleted `bridge/out`, after the last edit to `check-all.sh`** | **242.3 s, 258.4 s, 246.6 s**, exit 0, load 2.5–12 (§10); a first attempt at the second failed at step 8 on an engine race, not the gate's (§3.3) |
+| At merge — `GATE_JOBS=8` / `GATE_JOBS=1` | **151.2 s** / **906.9 s**, exit 0 (§10) |
+| At merge — isolation | every job and every ten-games row in a Forge home of its own: 60 distinct `userDir`s a run, no `SAXParseException` anywhere (§10) |
+| **The parallel gate, `GATE_JOBS=4`, from a deleted `bridge/out`** (the lane, before the merge) | **253.4 s, 253.5 s, 253.6 s** back to back, exit 0 all three, load 9–16 (§2) |
 | `GATE_JOBS=8` | **151.0 s**, exit 0, load 14–19 (§2) |
 | The serial gate, the old script on the same tree | **921 s**, exit 0, load 8.0 at the start, 3.7 at the end (§6) |
 | The serial gate, `GATE_JOBS=1` | **933 s**, exit 0, load 3.7, 7.3 at most (§6) |
 | The final run (`var/check-all-gate-speed.log`) | **274.4 s**, exit 0, `GATE_JOBS=4` (the default), `WSPORT=8790`, from a deleted `bridge/out`, load **5.76** at the start, 18.02 at most, 12.29 at the end — other lanes' gates and test suites started beside it (§2) |
-| Flakes in 6 parallel runs (5 green + the final) | **none** — and a Forge achievements file that a lone JVM's exit leaves empty (serial gates too) costs a printed stack trace, asserted on by nothing (§3.2) |
-| Findings | a preferences fingerprint that failed any fresh checkout's first ten-games row (D164, §3.1); a latent pipefail false negative in two UNIMPL checks (D163, §4) |
+| Flakes in 6 parallel runs (5 green + the final) | **none** — and a Forge achievements file that a lone JVM's exit leaves empty (serial gates too) costs a printed stack trace, asserted on by nothing (§3.2; closed for the gate at merge, §10). Since then: step 8's engine race, twice (§3.3) |
+| Findings | a preferences fingerprint that failed any fresh checkout's first ten-games row (D133, §3.1); a latent pipefail false negative in two UNIMPL checks (D132, §4) |
 
 ---
 
 ### 1. What was built
 
-- **`tools/check-all.sh` is a job table and a scheduler** (D160). Each step is a
+- **`tools/check-all.sh` is a job table and a scheduler** (D129). Each step is a
   function run in a subshell of its own (`set -e`, its step number for `die`,
   stdout and stderr to `var/check-all/<run>/<job>.log`); a job starts when every
   job it depends on has passed, in a fixed priority order, while fewer than
@@ -40,20 +46,20 @@ says its load. Nothing was changed under `bridge/` or `web/`.
   `GATE_JOBS=1` runs the jobs in the serial order with each one's output
   streamed to the console as well as its log (§6).
 - **Step 10's seven servers** listen on `WSPORT+0` .. `WSPORT+6` when
-  `GATE_JOBS > 1` (D162).
+  `GATE_JOBS > 1` (D131).
 - **Step 13 in parallel** is `npm run build`, `npm run test:render` (vitest) and
   `npm run test:node` (`node --test`, the only reader of `MTGTABLE_WS_LOGS`),
-  and only the last waits for step 10 (D162).
+  and only the last waits for step 10 (D131).
 - **`tools/ten-games.sh --jobs N`** (deck-smoke's pattern), plus `--run-row N`
-  and `--report`, the gate's per-row entry points (D160).
-- **The console** (D161): a line as each job starts and ends, then the table
+  and `--report`, the gate's per-row entry points (D129).
+- **The console** (D130): a line as each job starts and ends, then the table
   (`timing.txt`), and `gate.log`, every job's log in the serial order.
 - **A failure** stops new jobs, TERMs every running job's process tree (only
   processes this gate started), prints the failed job's log tail and the table,
   and always a `check-all FAILED at step N` line (§7).
-- **10g asserts each game was played** (D165, §5); **no `| head` / `| tail`** in
-  a judged pipeline (D163, §4); **the preferences fingerprint is of files**
-  (D164, §3.1).
+- **10g asserts each game was played** (D134, §5); **no `| head` / `| tail`** in
+  a judged pipeline (D132, §4); **the preferences fingerprint is of files**
+  (D133, §3.1).
 
 The dependencies, in the header of `tools/check-all.sh` and in CLAUDE.md's gate
 paragraph: everything after check-forge → lint → build; step 6 after step 5;
@@ -160,7 +166,7 @@ Every run's web counts were the ones spectating and the narrator recorded inside
 the gate: **903 / 895 pass / 0 fail / 8 skipped** `node --test` (13c) and **98**
 vitest in 7 files (13b); the lane touches nothing under `web/`.
 
-**`tools/ten-games.sh --jobs 4` standalone** (after D164, below): fourteen rows
+**`tools/ten-games.sh --jobs 4` standalone** (after D133, below): fourteen rows
 in **112 s** wall (1 m 52 s; 5 m 32 s of user CPU), every row `ok`, against
 370–385 s serially in the gate's recent history.
 
@@ -171,9 +177,9 @@ final run) — not step 6's value-level diff (D113), not 10e's ~150 ms
 concede-before-input window (it ran at t ≈ 230 s at load 6–9 in the four-slot
 runs, and at t ≈ 123 s at load 14–16 at eight), not 10g's queued `newGame`
 (D114), not 12c's "prompt" bound (45 s; its runs took 5–7 s). Nothing was
-retried (D166).
+retried (D135).
 
-#### 3.1 Finding — a fresh checkout failed ten-games' first row (fixed, D164)
+#### 3.1 Finding — a fresh checkout failed ten-games' first row (fixed, D133)
 
 The first `./tools/ten-games.sh --jobs 4` in this worktree — a new checkout,
 with no `var/forge/` — failed rows 1–4, every one on assertion 10:
@@ -194,7 +200,7 @@ or not, in `ten-games.sh` and 9e's `ms_prefs` alike. Checked both ways with the
 function itself: absent and empty print the same line; a file in the directory
 changes it.
 
-#### 3.2 Observed — an empty Forge achievements file, and the stack trace it costs (benign; NOT a concurrency defect; not fixed)
+#### 3.2 Observed — an empty Forge achievements file, and the stack trace it costs (benign; NOT a concurrency defect; closed for the gate at merge, §10)
 
 In the `GATE_JOBS=8` run one row's server log (`var/ten-games/ten-1.log`), and in
 the final run four JVM logs (`var/check-all-m2.log`, `var/check-all-ws-smoke.log`,
@@ -239,7 +245,70 @@ saved back as one. It is not fixed, and it is PLAN.md's gate-speed follow-up 1 �
 the fix belongs to the bridge's exit path (let the game thread's save finish
 before the JVM exits), which this lane does not touch, not to the gate.
 
-### 4. `pipefail` and early readers (D163)
+*At merge (§10):* the verifier pointed out what this section understated — the
+lane's own claim, in README and D129, that every JVM had "its own `var/`
+paths" was false while all of them shared `var/forge/`. Every job, and every
+ten-games row, now boots Forge in a home of its own, so no JVM of the gate
+reads an achievements file another JVM saved. The truncate-then-write is still
+Forge's; follow-up 1 is closed for the gate and open for everything else that
+boots in `var/forge/`.
+
+#### 3.3 Observed — an engine race at step 8, twice: the verifier's serial run and the merge's second parallel run (not the gate's; not retried)
+
+The verifier ran `GATE_JOBS=1` on this branch before the merge (run
+`20260928-121706-3076795`, `WSPORT=8770`, load 7.6 at the start and 13.0 when it
+stopped). It failed at **step 8**, the scripted console smoke, 93.9 s in, after
+steps 1–7 had passed:
+
+```text
+engine crash   = java.util.ConcurrentModificationException
+game wall time = 309 ms
+MTGTABLE FAILED: java.lang.IllegalStateException: the engine crashed (D115): java.util.ConcurrentModificationException
+Caused by: java.util.ConcurrentModificationException
+	at java.base/java.util.ArrayList$Itr.checkForComodification(ArrayList.java:1095)
+	at forge.game.Game.forEachCardInGame(Game.java:750)
+	at forge.game.Game.getCardsInGame(Game.java:787)
+	at forge.game.GameAction.runPreOpeningHandActions(GameAction.java:2448)
+	at forge.game.GameAction.startGame(GameAction.java:2333)
+	at forge.game.Match.startGame(Match.java:92)
+check-all FAILED at step 8: mtgtable.MtgTable --transport console exited 1 (2 is the quit path's own 'the game never reported `over`' code; full log: var/check-all-console.log)
+```
+
+The log is `var/check-all/20260928-121706-3076795/08-console.log` (the JVM's own
+`var/check-all-console.log` has since been overwritten by later runs; the job
+log carries its last 40 lines, the summary and the stack above among them). The
+summary says `winner = Forge AI, reason = AllOpponentsLost`, `player turns = 0`:
+the script's `q` conceded 309 ms into the game, while Forge's game thread was
+still iterating every card in `runPreOpeningHandActions` — and, the likeliest
+reading, the concede's zone changes, made from another thread, moved a card list
+under that iteration. That is D115's path doing its job — an
+exception out of Forge's game loop fails the run with the cause — and the same
+class as the story page's follow-up 9 (`act: undo` racing the game thread). It
+is not a gate defect and it was not retried (D135); it is PLAN.md's gate-speed
+follow-up 8, and its fix belongs to the bridge's concede path.
+
+**It happened again at merge**, in the second `GATE_JOBS=4` run (§10's first
+attempt at p2, run `20260928-133522-3410421`, `WSPORT=8830`, 237.0 s in, load
+9.27): the same stack, `game wall time = 248 ms`. The JVM's own log was copied
+before anything overwrote it — `var/check-all-gate-speed-merge-p2-failed-console.log`
+— and it shows the window: the last prompt it printed is the coin toss ("Play or
+Draw"), the four empty lines print nothing, and `q` — `-- conceding` — arrives
+while `Game-0` is walking every card in `runPreOpeningHandActions`, on the way
+to turn 1. `ENGINE CRASHED on Game-0`, an error `notice`, then
+`OVER WITHOUT A gameOver STATE` and a null `over`: D115 and M11 exactly as
+designed. The gate stopped every other job, printed the job's tail and
+`check-all FAILED at step 8`, and exited 1
+(`var/check-all-gate-speed-merge-p2-failed.log`). Nothing in the gate retried
+it; the lane recorded it here and ran p2 again, as a new run (§10).
+
+Two in about ten gate runs since the verifier's, both at a load average of
+9–13 and both on the same 250–310 ms window. A likely reason it was never seen
+before: until **D115** (the hardening pass, 2026-09-27) an exception out of
+Forge's game loop did not fail a run — a concede had already ended the session,
+so `MtgTable` printed `MTGTABLE OK` — and each step's JVM log is overwritten by
+the next run, so how long the race has been there is not measured.
+
+### 4. `pipefail` and early readers (D132)
 
 `grep -nE '\| *(head|tail)' tools/check-all.sh tools/ten-games.sh` now matches
 three comment lines and nothing else. What changed:
@@ -270,7 +339,7 @@ the old check was to miss them. The `tail -1 f | grep -c` form was never at risk
 (`grep -c` reads everything), and was replaced so the grep over both files has
 nothing left to explain.
 
-### 5. 10g: each game played (D165)
+### 5. 10g: each game played (D134)
 
 Every 10g in these runs printed, for its three games, a `state` count and the
 highest turn: `check-all-ws-3g` 117–118 state frames up to turn 13,
@@ -295,7 +364,7 @@ The twelve seconds are within the serial gate's own spread (9c alone moved 12 s
 between the two). `GATE_JOBS=1`'s table sums its thirty jobs to 933.0 s against
 933.1 s of wall: the runner itself costs nothing measurable.
 
-**The log is the old log.** Each console log from its second line to
+**The log is the old log's lines, not its bytes.** Each console log from its second line to
 `check-all OK`, with `tools/ws-auto-play.mjs`'s per-act trace lines dropped (the
 client's timing chatter, `[ws-auto  NNNms] ACT …`, different on every run) and
 every run of digits turned into `#`: 2,405 lines against 2,392, and the only
@@ -305,7 +374,7 @@ differences are
   count of `Waiting for Forge AI...` re-pushes is wall-clock (below), 16 lines
   shorter in the second run; and
 - 10g's three new lines, `OK: check-all-ws-3g… was played: N state frames, up
-  to turn T` (**D165**).
+  to turn T` (**D134**).
 
 Then `GATE_JOBS=1` prints the timing table after `check-all OK`. One stream
 changed and is PLAN.md's follow-up 5: each job runs under `2>&1 | tee`, so the
@@ -383,3 +452,115 @@ GATE_JOBS=8 WSPORT=8770 ./tools/check-all.sh      # step 10 on 8770..8776
 cat var/check-all/<run>/timing.txt                # a run's table
 less var/check-all/<run>/gate.log                 # a run's whole log, in the serial order
 ```
+
+### 10. At merge: the rebase, a Forge home per job, and the runs after the last edit
+
+**The rebase.** `git rebase 0af97a9` (the story page's tip, D124–D128, itself on
+`main`'s `4408283`): CLAUDE.md, DECISIONS.md and PLAN.md conflicted where both
+branches had appended to the same paragraph, table row or section, and each
+kept both sides, the story page's first; README.md, `tools/check-all.sh` and
+`tools/ten-games.sh` merged cleanly. The story page touched no gate script: its
+narrator runs inside 12d, which was already a job depending on every recorder
+(`RECORDERS`), so the job table needed nothing. D160–D166 became **D129–D135**
+in every file that cites them; DECISIONS.md runs D1–D135, each exactly once.
+
+**The verifier's four minors.**
+
+1. *The headline timings* are re-measured below, after the last edit to
+   `tools/check-all.sh`, and README, CLAUDE.md, PLAN.md and D129 quote these.
+2. *"`GATE_JOBS=1` prints the old log byte for byte"* (CLAUDE.md, and the same
+   claim in `check-all.sh`'s header, README and D129) was false — `die`'s stderr
+   is merged into stdout, 10g prints its new `was played` lines, and the table
+   follows `check-all OK` (§6 always said so). Each now says what is true.
+3. *"Each JVM its own `var/` paths"* (README, D129's rationale) was false: every
+   JVM of a parallel gate booted in the one `var/forge/` and wrote
+   `achievements/{constructed,challenges}.xml` there (§3.2). **Fixed rather than
+   reworded** — below.
+4. *The serial-mode flake at step 8* is §3.3, with its log — and it recurred
+   here, below.
+
+**A Forge home per job** (D129's amendment). `tools/config.sh` gained
+`forge_home_make DIR`: under `DIR` (which must be inside `var/`), a
+`forge-home/res` linked to the `res/` beside the jar, derived as
+`tools/make-forge-home.sh` derives it; a `forge.profile.properties` naming
+`DIR/forge/` and `DIR/cache/`; D14's overlay copied into `DIR/forge/custom/cards/`;
+and `DIR/config.json`, which is `config.json` with `forgeHome` pointed at
+`DIR/forge-home` and a `repoRoot` key naming the checkout. `check-all.sh`'s
+`job_home` calls it in every job's subshell before the job's function, for
+`var/check-all/<run>/<job>/`, and exports `MTG_TABLE_CONFIG`, which
+`bridge/run.sh` has honoured since D115. `tools/ten-games.sh` calls it for every
+row (`var/ten-games/home-<seed>/`), so the serial gate's fourteen rows and
+`--jobs` alike each get one. `scripts/spectate.sh` keeps a gate job's config
+instead of unsetting it, so 6b's two recordings get theirs. 12c keeps its
+scratch home.
+
+- **`repoRoot` is the one bridge change** (`Config.java`: the constructor and two doc comments): the bridge
+  resolves `var/games/<id>/frames.jsonl`, `--deck`, `--out` and the header's deck
+  `path` against `Config.root()`, which was the config file's own directory — so
+  a config beside its home would have moved every frame log. With the key the
+  root is the checkout. Probed before the runs: a `--transport null` game in a
+  scratch home wrote `var/games/<id>/frames.jsonl` with `"path":
+  "decks/pacho-shield.dck"` in its header, as `config.json` gives, and `Smoke`
+  passed its under-the-repo assertion for the new `userDir`.
+- **The preferences check covers every JVM.** Every home starts with no
+  preferences file, and `job_prefs_check` fails a job if any JVM of it saved one;
+  9c's rows and 9e also fingerprint their own home's directory beside
+  `~/.forge/preferences/` and `var/forge/preferences/`.
+- **Cost:** tens of milliseconds a job, and disk — a home a JVM booted in is
+  about 140 KB (152 KB for 10g's), an unused one 36 KB; a run's directory is
+  4.1–4.2 MB where it was ~660 KB.
+
+**Isolation, shown.** After each run the lane's watcher (`var/gs-merge-sax.txt`,
+not committed) listed the homes and grepped every job log of the run and every
+JVM log it wrote (`var/check-all-*.log`, `var/ten-games/*.log`,
+`var/spectate/check-all-*.log`, `var/crash-probe/*.log` — 41 files) before the
+next run could overwrite them (the serial run, the last, by hand afterwards):
+
+- every parallel run: **60 `userDir`s, all distinct** — 46 jobs' plus 14 rows'
+  — and the serial run 44, 30 jobs' plus 14 rows' (`var/gs-merge-homes-<run>.txt`;
+  `sort | uniq -d` over their `forge.profile.properties` printed nothing);
+- every run: **no `SAXParseException` and no `Premature end of file`** in any
+  job log or JVM log;
+- achievements files: 14 in each run's homes (9d and six of step 10's servers —
+  10e concedes before a game starts — two files each), all 16 bytes — except **p3, where row 14's home held a
+  0-byte `constructed.xml`**, stamped 5 ms after that row's JVM printed
+  `MTGTABLE OK` (`var/gs-merge-p3-achievements.txt`). That is §3.2's truncate
+  and exit, caught in the act — and nothing read it, because nothing boots in
+  that home again. It is why follow-up 1 closes for the gate and stays open for
+  the bridge's exit path.
+
+**The runs**, after the last edit to `tools/check-all.sh`, each from a deleted
+`bridge/out`, back to back (`var/check-all-gate-speed-merge-<run>.log`, each with
+its `var/check-all/<run>/`), with another worktree's games beside them. Wall is
+the table's own; exit and the load averages are the table's footer.
+
+| run | `GATE_JOBS` | `WSPORT` | wall | exit | jobs' seconds summed | load (1 min) start / max / end |
+|---|---|---|---|---|---|---|
+| **p1** | 4 | 8820 | **242.3 s** | 0 | 949.4 s | 2.52 / 5.34 / 5.34 |
+| p2, first attempt | 4 | 8830 | 240.2 s | **1** — step 8 (§3.3) | — | 5.34 / 9.99 / 9.27 |
+| **p2** | 4 | 8830 | **258.4 s** | 0 | 1,007.9 s | 8.23 / 12.02 / 8.94 |
+| **p3** | 4 | 8840 | **246.6 s** | 0 | 959.7 s | 8.94 / 9.37 / 6.38 |
+| **j8** | 8 | 8850 | **151.2 s** | 0 | 1,114.7 s | 6.38 / 14.37 / 11.90 |
+| **s1** | 1 | 8860 | **906.9 s** | 0 | 906.8 s | 11.90 / 11.90 / 2.62 |
+
+The four-slot runs are **242–258 s** at a load of 2.5–12, a little faster than
+the lane's 253 s at 9–16 and in the same shape: 10g 132.6–133.9 s from t ≈ 5 s,
+vitest 51.8–62.1 s, 9d ~49 s, 9e ~45 s, the rows 18–33 s each. At eight slots
+10g (139.1 s) is again the critical path (follow-up 2). The per-job homes cost
+nothing measurable. Serially, **906.9 s**, 9c's fourteen games
+367.2 s, against the lane's 933 s. Inside the gate the web counts are the
+story page's: **942 / 934 pass / 0 fail / 8 skipped** `node --test` and **120**
+vitest in 8 files; 12d, 106 checks.
+
+**The first attempt at p2 failed at step 8** on the engine race of §3.3, 240 s
+in, at a load of 9.3: the gate stopped every running job, printed the failed
+job's tail and `check-all FAILED at step 8`, and exited 1, as D130 says. It was
+not retried by anything; the lane saved its logs
+(`var/check-all-gate-speed-merge-p2-failed.log` and the JVM's own,
+`var/check-all-gate-speed-merge-p2-failed-console.log`), recorded it (§3.3,
+follow-up 8) and ran p2 again as a new run, which passed; p3, j8 and s1 followed.
+
+**`~/forge` and `~/.forge`**, taken the same way before the rebase (13:18) and
+after the last run (14:07): the jar's sha256 `3c0a7c38…8e5dd9`; a
+listing of every path under each with its size and mtime, hashed — identical;
+`~/.forge/decks/constructed/` still empty. **Unchanged.**

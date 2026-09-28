@@ -80,8 +80,9 @@ set -euo pipefail
 cd "$REPO_ROOT"
 
 # This script reads config.json (the ports, the `match` block) and the bridge
-# must read the same file: bridge/run.sh honours $MTG_TABLE_CONFIG, which only
-# tools/check-engine-crash.sh sets (D115), so an inherited one is dropped here.
+# must read the same file: bridge/run.sh honours $MTG_TABLE_CONFIG, which
+# tools/check-engine-crash.sh (D115) and the gate's jobs and ten-games' rows
+# (D129) set for runs of their own, so an inherited one is dropped here.
 unset MTG_TABLE_CONFIG
 
 WS_PORT="$(cfg_get wsPort || echo 8642)"

@@ -42,14 +42,27 @@ public final class Config {
 
     /** Absolute path of the config file this instance was read from. */
     private final File file;
-    /** Absolute path of the repo root, i.e. the config file's directory. */
+    /**
+     * Absolute path of the repo root: the config file's directory, unless the
+     * file names one in {@code "repoRoot"} (see {@link #root()}).
+     */
     private final File root;
     private final Map<String, Object> values;
 
     private Config(final File file, final Map<String, Object> values) {
         this.file = file.getAbsoluteFile();
-        this.root = this.file.getParentFile();
         this.values = values;
+        final Object repoRoot = values.get("repoRoot");
+        if (repoRoot == null) {
+            this.root = this.file.getParentFile();
+        } else {
+            final File r = new File(String.valueOf(repoRoot));
+            if (!r.isAbsolute() || !r.isDirectory()) {
+                throw new IllegalStateException("\"repoRoot\" in " + this.file
+                    + " must be an absolute path to a directory, got " + repoRoot);
+            }
+            this.root = r;
+        }
     }
 
     /**
@@ -92,7 +105,17 @@ public final class Config {
         return file;
     }
 
-    /** The repo root: the directory holding config.json. */
+    /**
+     * The repo root: the directory holding config.json -- or, when the file
+     * carries {@code "repoRoot"} (an absolute path), that directory.  Only
+     * {@code tools/config.sh}'s {@code forge_home_make} writes the key: the
+     * gate gives every job, and {@code tools/ten-games.sh} every row, a Forge
+     * home of its own through a config that lives beside that home under
+     * {@code var/} (decision D129, at merge), and {@code repoRoot} keeps every
+     * repo-relative path the bridge resolves -- {@code var/games/<id>/},
+     * {@code --deck decks/...}, {@code --out var/...}, the header's deck
+     * {@code path} -- exactly where and what it is with {@code config.json}.
+     */
     public File root() {
         return root;
     }

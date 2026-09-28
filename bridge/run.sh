@@ -18,10 +18,13 @@
 #   -Dmtgtable.config                         config.json -- or $MTG_TABLE_CONFIG,
 #       which Config.java already documents and which this line used to
 #       override.  tools/check-engine-crash.sh points it at a scratch config
-#       under var/ whose Forge home carries a card the engine cannot build;
-#       nothing else sets it (D115), and check-all.sh, scripts/play.sh and
-#       scripts/spectate.sh unset it.  Any other config is named on stderr, so
-#       a stray export shows.
+#       under var/ whose Forge home carries a card the engine cannot build
+#       (D115); tools/check-all.sh points each of its jobs, and
+#       tools/ten-games.sh each of its rows, at a config of its own under var/
+#       whose Forge home no other JVM uses (tools/config.sh's forge_home_make,
+#       D129 amended at merge).  scripts/play.sh unsets it, and so does
+#       scripts/spectate.sh unless it is one of the gate's.  Any other config
+#       is named on stderr, so a stray export shows.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/../tools" && pwd)/config.sh"

@@ -88,9 +88,17 @@ cd "$REPO_ROOT"
 
 # This script reads config.json (the web port, the `match` block) and the
 # recorder must read the same file: bridge/run.sh honours $MTG_TABLE_CONFIG,
-# which only tools/check-engine-crash.sh sets (D115), so an inherited one is
-# dropped here, exactly as scripts/play.sh and the gate drop it.
-unset MTG_TABLE_CONFIG
+# which tools/check-engine-crash.sh sets (D115), so an inherited one is dropped
+# here, exactly as scripts/play.sh drops it -- with one exception, the gate's
+# own: tools/check-all.sh runs every job with MTG_TABLE_CONFIG at
+# var/check-all/<run>/<job>/config.json (tools/config.sh's forge_home_make, D129
+# amended at merge), which is config.json with only `forgeHome` and `repoRoot`
+# changed.  Keeping it gives step 6b's two recordings a Forge home each and
+# changes nothing this script reads.
+case "${MTG_TABLE_CONFIG:-}" in
+  "$REPO_ROOT"/var/check-all/*/*/config.json) ;;
+  *) unset MTG_TABLE_CONFIG ;;
+esac
 
 cfg_match() {
   node -e '

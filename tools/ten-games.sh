@@ -98,14 +98,14 @@
 #
 # Usage:
 #   ./tools/ten-games.sh                 # all fourteen rows, one at a time, ~6-7 minutes
-#   ./tools/ten-games.sh --jobs 4        # four rows at a time, ~2 minutes (D160)
+#   ./tools/ten-games.sh --jobs 4        # four rows at a time, ~2 minutes (D129)
 #   ./tools/ten-games.sh --games 3       # the first three rows, for a quick look
 #   ./tools/ten-games.sh --seed 13       # one row: your deck vs the villain, Reckless
 #   VILLAIN_DECK=decks/x.dck ./tools/ten-games.sh --seed 13
 #   GAME_TIMEOUT=600 ./tools/ten-games.sh
 #   TEN_GAMES_DIR=var/ten ./tools/ten-games.sh
 #
-# **`--jobs N` (D160)** runs N rows at once -- tools/deck-smoke.sh's pattern.
+# **`--jobs N` (D129)** runs N rows at once -- tools/deck-smoke.sh's pattern.
 # Every row is the same eleven assertions whichever way it runs: each is its own
 # process with its own `--game-id ten-<seed>`, its own frame log under
 # var/games/ten-<seed>/ and its own server log, so nothing a row asserts can be
@@ -135,12 +135,15 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
+# forge_home_make (each row's own Forge home, below) and FORGE_JAR (hard rule 9).
+# shellcheck source=tools/config.sh
+. tools/config.sh
 
 GAME_TIMEOUT="${GAME_TIMEOUT:-300}"
 OUT_DIR="${TEN_GAMES_DIR:-var/ten-games}"
 WANT=""                          # every row unless --games N says the first N
 ONLY_SEED=""                     # --seed N: that one row
-JOBS=1                           # --jobs N: N rows at a time (D160)
+JOBS=1                           # --jobs N: N rows at a time (D129)
 MODE=run                         # run | row (--run-row) | report (--report)
 ROW_SEED=""
 # Assertion 7.  Generous on purpose: the busiest legitimate row in the rotation
@@ -214,13 +217,16 @@ ROWS=(
 
 # Assertion 10: every preferences file a run could write, fingerprinted.  A
 # directory with no file in it prints the same line whether it exists or not
-# (D164): the first engine boot in a fresh checkout creates an EMPTY
+# (D133): the first engine boot in a fresh checkout creates an EMPTY
 # var/forge/preferences/, which is not a preferences write, and the old "absent"
 # line failed row 1 of a first run on it -- serially too, where only the gate's
 # own earlier steps had ever hidden it.  Any FILE still changes the print.
+# Three directories since each row boots in a Forge home of its own (D129,
+# amended at merge): the user's real one, the checkout's default home (a JVM that
+# ignored its config would write there) and the row's own ($1).
 prefs_fingerprint() {
   local d
-  for d in "$HOME/.forge/preferences" var/forge/preferences; do
+  for d in "$HOME/.forge/preferences" var/forge/preferences "$1"; do
     if [ -d "$d" ] && [ -n "$(find "$d" -type f -print -quit)" ]; then
       find "$d" -type f -print0 | sort -z | xargs -0 -r sha256sum
       find "$d" -type f -print0 | sort -z | xargs -0 -r stat -c '%n %Y %s'
@@ -232,7 +238,7 @@ prefs_fingerprint() {
 # A deck's public name the way the bridge computes it (MtgTable.deckName):
 # its `Name=`, else the file's base name without `.dck`.  The first match is
 # taken by sed's own `q`, never `| head -1`: under `set -o pipefail` a reader
-# that stops early can SIGPIPE the writer and fail the pipeline with 141 (D163).
+# that stops early can SIGPIPE the writer and fail the pipeline with 141 (D132).
 deck_name() {
   local n
   n="$(sed -n '/^Name=/{s///p;q}' "$1" | tr -d '\r' | sed 's/^ *//; s/ *$//')"
@@ -283,6 +289,15 @@ run_row() {   # $1 index, $2 of, $3 the ROWS entry
   frames="var/games/$id/frames.jsonl"
   rm -rf "var/games/$id"
   rm -f "$OUT_DIR/$id.pass"
+  # A Forge home of the row's own (D129, amended at merge): $OUT_DIR/home-<seed>/,
+  # built fresh by tools/config.sh's forge_home_make, so the row's JVM never
+  # boots in a userDir another row -- beside it under --jobs or in the gate, or
+  # before it serially -- wrote: not Forge's achievements files, which a JVM that
+  # exits mid-save leaves empty for the next reader, not its preferences.  The
+  # export is the row's own: run_row always runs in a subshell.
+  local home="$OUT_DIR/home-$seed"
+  MTG_TABLE_CONFIG="$(forge_home_make "$home")" || die "seed $seed: could not build its Forge home under $home"
+  export MTG_TABLE_CONFIG
 
   local args=(--transport auto --seed "$seed" --game-id "$id" --deck "$deck")
   [ "$deck2" != "-" ] && args+=(--deck2 "$deck2")
@@ -292,15 +307,15 @@ run_row() {   # $1 index, $2 of, $3 the ROWS entry
   printf '=== %2d/%d  seed %-3s %-28s %s\n' "$idx" "$of" "$seed" "$(basename "$deck")" \
       "$flags${profile:+  vs $(basename "$deck2")}"
   local prefs_before t0 rc wall
-  prefs_before="$(prefs_fingerprint)"
+  prefs_before="$(prefs_fingerprint "$home/forge/preferences")"
   t0=$(date +%s)
   rc=0
   timeout --kill-after=15s "${GAME_TIMEOUT}s" ./bridge/run.sh mtgtable.MtgTable "${args[@]}" \
       > "$log" 2>&1 || rc=$?
   wall=$(( $(date +%s) - t0 ))
   # Assertion 10, first, because it is true or false whatever else happened.
-  if [ "$(prefs_fingerprint)" != "$prefs_before" ]; then
-    diff <(echo "$prefs_before") <(prefs_fingerprint) >&2 || true
+  if [ "$(prefs_fingerprint "$home/forge/preferences")" != "$prefs_before" ]; then
+    diff <(echo "$prefs_before") <(prefs_fingerprint "$home/forge/preferences") >&2 || true
     die "seed $seed CHANGED a Forge preferences file -- a run must never save prefs (CLAUDE.md; the empty-profileOverride branch of GamePlayerUtil.createAiPlayer is one way) (log: $log)"
   fi
 
@@ -320,7 +335,7 @@ run_row() {   # $1 index, $2 of, $3 the ROWS entry
   # (`grep UNIMPL var/*.log`).  `UNIMPL members = none` is the emitter's own
   # bookkeeping; this is the text `Transport.unimpl` prints and pushes.  Two
   # COUNTS, not `grep | grep -qv`: the -q reader stops at its first line, and
-  # under pipefail a writer it cut off turned the whole test false (D163).
+  # under pipefail a writer it cut off turned the whole test false (D132).
   if [ "$(grep -c 'UNIMPL' "$log" || true)" -gt "$(grep -c '^UNIMPL members = none$' "$log" || true)" ]; then
     grep -n 'UNIMPL' "$log" | grep -v 'UNIMPL members = none' >&2 || true
     die "seed $seed has UNIMPL line(s) in its server log ($log)"
@@ -539,7 +554,7 @@ echo "repo         = $REPO_ROOT"
 echo "game timeout = ${GAME_TIMEOUT}s each"
 echo "logs         = $OUT_DIR/"
 echo "rows 11-14   = $VILLAIN_NOTE"
-[ "$MODE" = run ] && [ "$JOBS" -gt 1 ] && echo "jobs         = $JOBS rows at a time (D160)"
+[ "$MODE" = run ] && [ "$JOBS" -gt 1 ] && echo "jobs         = $JOBS rows at a time (D129)"
 echo
 
 t_all=$(date +%s)

@@ -136,25 +136,32 @@ All commands are run from the repository root.
 **Before you commit, run the one command that runs everything:**
 
 ```bash
-./tools/check-all.sh                 # GATE_JOBS=min(4, nproc/4) steps at once: ~4-5 minutes
+./tools/check-all.sh                 # GATE_JOBS=min(4, nproc/4) steps at once: ~4 minutes
 GATE_JOBS=1 ./tools/check-all.sh     # the serial gate, one step after another: ~15 minutes
 GATE_JOBS=8 WSPORT=8750 ./tools/check-all.sh   # more at once; step 10 on 8750..8756
 ```
 
-**It runs its steps concurrently** (D160–D166). Every step is a job with its
+**It runs its steps concurrently** (D129–D135). Every step is a job with its
 own log under `var/check-all/<run>/`, and `GATE_JOBS` of them run at once —
 four on a 16-thread machine — each JVM a process of its own with its own game
-ids, `var/` paths and, for step 10's seven servers, its own port
-(`WSPORT`..`WSPORT+6`). The order that matters is kept as dependencies: lint and
-build first; step 6 after the recording it compares; the fourteen ten-games rows
-(`tools/ten-games.sh --run-row N`) before their report; the `node --test` half of
+ids, `var/` paths, **Forge home** and, for step 10's seven servers, its own port
+(`WSPORT`..`WSPORT+6`). The Forge home is what makes the `var/` paths honest:
+every job boots Forge in `var/check-all/<run>/<job>/` (and every ten-games row in
+`var/ten-games/home-<seed>/`) — its own `userDir`, `cacheDir` and `config.json`,
+built by `tools/config.sh`'s `forge_home_make` — where every JVM used to share
+`var/forge/` and write the same achievements files. The order that matters is
+kept as dependencies: lint and build first; step 6 after the recording it
+compares; the fourteen ten-games rows (`tools/ten-games.sh --run-row N`) before
+their report; the `node --test` half of
 `npm test` after the step-10 logs it replays; the redaction sweep and the
 narrator after every recorder. The console prints a line as each job starts and
 ends, then a **timing table** (every job's start, end, seconds, status and the
 load average), and `var/check-all/<run>/gate.log` is the whole log in the serial
 order. A failure stops everything this gate started, prints the failed job's log
 tail and the table, and exits 1; nothing is ever retried. `GATE_JOBS=1` is the
-serial gate and prints the old log.
+serial gate: the steps in the old order, each job's log streamed as it runs —
+the old log's lines, except that `die`'s stderr now arrives on stdout and 10g
+adds a "was played" line per game — and the timing table after `check-all OK`.
 
 Thirteen numbered steps and ten lettered sub-steps (**6b**, 9b, 9c, **9d**,
 **9e**, 10f, **10g**, **12b**, **12c** and **12d** — 9d and 10g added by M6, 9e
@@ -207,8 +214,11 @@ a scratch Forge home under `var/crash-probe/`) and asserts that `MtgTable` and
 fixture and every log the run recorded, with hard rule 8 held by ids and by the
 decks' card names (**D123**, about a second) → `npm run build && npm test` in
 `web/` — `npm run build`, `vitest run` and `node --test` as three jobs in
-parallel mode, the last waiting for step 10. **At `GATE_JOBS=4`, about four and a
-half minutes** from a deleted `bridge/out` (253–254 s three times back to back, 151 s at `GATE_JOBS=8`, 274 s on the final run, each beside other worktrees' work; `docs/evidence/gate-speed.md`).
+parallel mode, the last waiting for step 10. **At `GATE_JOBS=4`, about four
+minutes** from a deleted `bridge/out` (242, 258 and 247 s back to back, 151 s at
+`GATE_JOBS=8` and 906.9 s at `GATE_JOBS=1`, measured at merge after the last
+edit to the gate, beside another worktree's work; `docs/evidence/gate-speed.md`
+§10).
 Serially, **about fifteen to nineteen minutes** from a deleted `bridge/out` since
 match setup added five games (874 s on its first run; 1,141 s on its review fix
 pass and 1,143 s on its documentation pass, each on a machine running other gates
@@ -1982,12 +1992,13 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the one hundred and twenty-eight load-bearing decisions, dated
+  DECISIONS.md               the one hundred and thirty-five load-bearing decisions, dated
                              (the workshop's are D102–D104, match setup's D105–D108,
                              engine and sets D109–D112, the hardening pass's
                              D113–D115, more-villains' D116–D117, spectating's
                              D118–D122, the narrator's D123, the story
-                             page's D124–D128)
+                             page's D124–D128, the gate-speed lane's
+                             D129–D135)
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
@@ -2237,7 +2248,8 @@ mtg-table/
     t0-spike.html            (Tier 2) T0's go/no-go page; not part of the app
 
   tools/
-    config.sh                sourced by the other scripts; reads config.json / $FORGE_JAR
+    config.sh                sourced by the other scripts; reads config.json / $FORGE_JAR;
+                             forge_home_make: a gate job's or a ten-games row's own Forge home
     check-forge.sh           assert jar + every class we depend on; print sha256
     make-forge-home.sh       symlink, profile properties, custom-card overlay
     lint-bridge.sh           grep lint over bridge/src: the banned accessors (hard rule 8),
@@ -2251,7 +2263,7 @@ mtg-table/
     deck-smoke.sh            more-villains: 5 --transport auto games per AI deck;
                              over, redaction, the AI casts and attacks. NOT in the gate
     check-all.sh             the pre-commit gate; runs everything above, GATE_JOBS
-                             jobs at a time (D160), a log per job and a timing table
+                             jobs at a time (D129), a log per job and a timing table
                              under var/check-all/<run>/
     check-redaction.mjs      assert a recorded log leaks nothing (docs/protocol.md 9)
     check-redaction-selftest.mjs  run the checker over fixtures/negative/redaction/ and
@@ -2278,7 +2290,7 @@ mtg-table/
                              line, and is the only client that sends clickAbility
     ten-games.sh             M5's exit criterion as a command (--jobs N: N rows at a
                              time; --run-row N / --report: the gate's per-row jobs and
-                             its summary, D160): ten --transport auto
+                             its summary, D129): ten --transport auto
                              games at seeds 1..10 alternating pacho-shield and the probe
                              decks, each asserted for `over`, zero UNIMPL (the summary
                              AND a raw grep), emit errors = 0, an ask-kind ceiling, the
@@ -2405,7 +2417,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | One hundred and twenty-eight load-bearing decisions — D1–D128 (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent; **D113–D115** are the 2026-09-27 hardening pass's, written as D109–D111 and renumbered when it landed after the engine and sets: gate step 6 compares what load cannot move, an early `newGame` is queued until Forge has finished the game, and an engine crash fails the run; **D116–D117** are more-villains', written as D109–D110 and renumbered on its rebase onto the hardening pass: three more AI decks written from specs, and the deck smoke's spell count as a rate; **D118–D122** are spectating's, written as D109–D113 and renumbered on its rebase onto more villains: a paced recording the page follows, one seat's eyes and no omniscient view, `hello_ok.match` and `yourProfile` from `RecordMatch` only when asked, the pace's dwell before the boundary flush, the ids inside a `stats` event compared as a set, and `var/spectate/` served by the dev server alone; **D123** is the frame-log narrator, written as D109 and renumbered on its rebase onto spectating: a story told only from what the log's seat saw, every name read from the event's own frame or the one before and never remembered; **D124–D128** are the story page's, written as D150–D154 in the `story` branch's reserved range and renumbered at merge: the narrator as one pure TypeScript module the CLI and the page share, `#story` a page over the replay that imports no transport, the story re-told as the log grows (and only the played frames while the future is hidden), hard rule 8 on the page held by rendering it over the corpus, and a followed log's paused cursor kept across views), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. D116-D117 are more-villains': three more AI decks written from specs by `tools/build-deck.ts` (Masters of Evil, Hulk Family, Wakanda), and `tools/deck-smoke.sh`'s spell count asserted as a rate, `min(8, AI turns − 3)`. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and thirty-five load-bearing decisions — D1–D135 (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent; **D113–D115** are the 2026-09-27 hardening pass's, written as D109–D111 and renumbered when it landed after the engine and sets: gate step 6 compares what load cannot move, an early `newGame` is queued until Forge has finished the game, and an engine crash fails the run; **D116–D117** are more-villains', written as D109–D110 and renumbered on its rebase onto the hardening pass: three more AI decks written from specs, and the deck smoke's spell count as a rate; **D118–D122** are spectating's, written as D109–D113 and renumbered on its rebase onto more villains: a paced recording the page follows, one seat's eyes and no omniscient view, `hello_ok.match` and `yourProfile` from `RecordMatch` only when asked, the pace's dwell before the boundary flush, the ids inside a `stats` event compared as a set, and `var/spectate/` served by the dev server alone; **D123** is the frame-log narrator, written as D109 and renumbered on its rebase onto spectating: a story told only from what the log's seat saw, every name read from the event's own frame or the one before and never remembered; **D124–D128** are the story page's, written as D150–D154 in the `story` branch's reserved range and renumbered at merge: the narrator as one pure TypeScript module the CLI and the page share, `#story` a page over the replay that imports no transport, the story re-told as the log grows (and only the played frames while the future is hidden), hard rule 8 on the page held by rendering it over the corpus, and a followed log's paused cursor kept across views; **D129–D135** are the gate-speed lane's, written as D160–D166 in the `gate-speed` branch's reserved range and renumbered at merge: the gate's steps run concurrently from a job table with dependencies, `GATE_JOBS` at a time, a log per job and a timing table, step 10 on seven ports of its own and step 13 split, no early-exiting reader in a pipeline the gate judges, the preferences fingerprint taken of files, 10g's three games each asserted played, and nothing retried), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. D116-D117 are more-villains': three more AI decks written from specs by `tools/build-deck.ts` (Masters of Evil, Hulk Family, Wakanda), and `tools/deck-smoke.sh`'s spell count asserted as a rate, `min(8, AI turns − 3)`. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

@@ -6140,11 +6140,15 @@ restoring nothing is right; paused, the frame they chose is.
 
 ---
 
-## D160 — The gate runs its steps CONCURRENTLY: GATE_JOBS jobs at a time, from a job table with dependencies; GATE_JOBS=1 is the serial gate
+## D129 — The gate runs its steps CONCURRENTLY: GATE_JOBS jobs at a time, from a job table with dependencies; GATE_JOBS=1 is the serial gate
 
-*Branch `gate-speed` (worktree `mtg-table-t2s`, off `main`'s `4408283`),
-numbered in that lane's reserved range D160–D169; renumbered contiguously at
-merge, in every file that cites it.*
+*Branch `gate-speed` (worktree `mtg-table-t2s`, off `main`'s `4408283`, rebased
+onto the story page's `0af97a9`). Written as **D160–D166** in the lane's
+reserved range D160–D169, while other lanes cut the same day numbered their
+own, and renumbered contiguously at merge, after the story page's D124–D128:
+these seven are **D129–D135**, in every file that cites them — this file,
+CLAUDE.md, PLAN.md, README.md, `docs/evidence/gate-speed.md`, and comments in
+`tools/check-all.sh` and `tools/ten-games.sh`.*
 
 **2026-09-28** (the gate-speed lane; `docs/evidence/gate-speed.md` is what was
 measured)
@@ -6168,9 +6172,9 @@ longest-first with what feeds a dependency first (10g and vitest, because
 - **Split where the halves are independent, never where an assertion would
   move:** 6b is three jobs (paced, seat 1, the comparison); 9c is fourteen rows
   (`tools/ten-games.sh --run-row N`) and a report (`--report`); step 10 is seven
-  (10a..10g, **D162**); step 11 is the committed fixtures and the fresh
+  (10a..10g, **D131**); step 11 is the committed fixtures and the fresh
   recordings; step 13 is `npm run build`, `vitest run` and `node --test`
-  (**D162**). Every assertion is where it was, in the job that owns its files.
+  (**D131**). Every assertion is where it was, in the job that owns its files.
 - **`tools/ten-games.sh --jobs N`** is the same thing standalone, on
   `tools/deck-smoke.sh`'s pattern: each row a background subshell writing its
   block to `$TEN_GAMES_DIR/ten-<seed>.out`, a line per finished row, the blocks
@@ -6180,25 +6184,33 @@ longest-first with what feeds a dependency first (10g and vitest, because
   nothing a row asserts can be satisfied by another row's files.
 - **`GATE_JOBS=1` is the gate as it was**: the jobs in the serial order, each
   one's output streamed to the console as well as to its log, so the console
-  carries the old log byte for byte (plus 10g's new lines, **D165**) — then the
-  timing table (**D161**).
+  carries the old log's lines in the old order — then the timing table
+  (**D130**). *(Corrected at merge: this said "byte for byte". It is not: every
+  job runs under `2>&1 | tee`, so `die`'s stderr arrives on stdout; 10g prints
+  three new `was played` lines (**D134**); and the table follows `check-all OK`.
+  Evidence §6 lists the differences.)*
 
 **Rationale.** The gate had grown to 900–990 s, and a gate that long is run less
 often than it should be. Every JVM step is a separate process with its own
-`--game-id`, its own `var/` paths and (after **D162**) its own port, so almost
-nothing in it was ordered by anything but the file's line order. Measured on this
+`--game-id`, its own `var/` paths and (after **D131**) its own port, so almost
+nothing in it was ordered by anything but the file's line order. *(Corrected at
+merge: every JVM shared one Forge `userDir`, `var/forge/`, until the amendment
+below gave each job a home of its own.)* Measured on this
 box from a deleted `bridge/out`, with other worktrees' gates running beside it:
 **253.4, 253.5 and 253.6 s** at `GATE_JOBS=4`, three runs back to back, and
 **151.0 s** at `GATE_JOBS=8`, against **921 s** for `main`'s serial script and **933 s** at `GATE_JOBS=1`; the final run took **274.4 s** at a load average of 6–18 (evidence §2, §6). The makespan
 is the pool's: the jobs' seconds sum to ~985 s, so four slots finish in ~250 s,
 and 10g's three games (~134 s) are the longest single job — the whole critical
-path at eight.
+path at eight. *(At merge, after the last edit to the script and with every job
+in a Forge home of its own: 242.3, 258.4 and 246.6 s at four, 151.2 s at eight,
+906.9 s serially; evidence §10.)*
 
 **Known cost.** Concurrency adds load the gate makes itself, and can move any
-wall-clock race it has always had — which is why **D166** reports every flake
-instead of retrying (none in six parallel runs; evidence §3). All the
+wall-clock race it has always had — which is why **D135** reports every flake
+instead of retrying (none in six parallel runs; evidence §3). ~~All the
 JVMs share one Forge `userDir` (`var/forge/`), as every serial gate's did one
-after another and `tools/deck-smoke.sh --jobs` has since D117. The one file in it
+after another and `tools/deck-smoke.sh --jobs` has since D117.~~ *(Until the
+amendment below.)* The one file in it
 that more than one game writes is `achievements/constructed.xml`, which Forge
 saves at a human seat's game end by a truncate and a write; a JVM that exits
 between the two leaves it empty — serially too, measured — and the next reader
@@ -6208,25 +6220,78 @@ the rest.
 
 **Rejected.**
 
-- **A per-job Forge home** (a scratch config through `MTG_TABLE_CONFIG`, as
+- ~~**A per-job Forge home** (a scratch config through `MTG_TABLE_CONFIG`, as
   12c's crash check builds one): 24 profile directories per job, the redirect of
   every userDir path, and the gate's preferences fingerprint (9c rows 11–14 and
   9e) would then fingerprint a directory no other job shares — weaker, not
   stronger. The one shared file that games write is not the gate's to fix
-  (above).
+  (above).~~ **Adopted at merge** — see the amendment below, which says why the
+  fingerprint argument was wrong.
 - **A make-style jobserver** shared with `ten-games.sh` through a FIFO: one pool
   across two scripts, but a lost token deadlocks the gate, and 9c's output would
   still need assembling. The row jobs in the gate's own pool balance as well.
 - **`ten-games.sh --jobs N` as ONE gate job holding N slots**: the rows' tail
   would idle slots other games could use.
-- **Retrying a failed job**: see **D166**.
+- **Retrying a failed job**: see **D135**.
+
+**Amended at merge (2026-09-28, the rebase onto the story page's `0af97a9`).**
+The verifier found this entry's rationale and README's gate paragraph claiming
+"its own `var/` paths" for every JVM while every JVM of a parallel gate booted
+in the one `var/forge/` — and writing `achievements/{constructed,challenges}.xml`
+there, where one JVM's exit mid-save leaves an empty file the next one reads.
+This decision had not landed, so it is amended here rather than superseded:
+**every job boots Forge in a home of its own.**
+
+- `tools/check-all.sh`'s `job_home` runs in each job's subshell before its
+  function and builds `var/check-all/<run>/<job>/` with `tools/config.sh`'s
+  `forge_home_make`: `forge-home/res` linked to the `res/` beside the jar (as
+  `tools/make-forge-home.sh` derives it), a `forge.profile.properties` naming
+  the job's own `forge/` and `cache/`, D14's overlay copied into
+  `forge/custom/cards/` (the committed `forge-home/custom-cards/` still holds its
+  one file, hard rule 11), and a `config.json` — `config.json` itself with
+  `forgeHome` pointed there and `repoRoot` added — exported as
+  `MTG_TABLE_CONFIG`, which `bridge/run.sh` already honoured (D115). The jar
+  still comes from `forgeJar` or `$FORGE_JAR` (hard rule 9), and Bootstrap's
+  three preferences are set in memory exactly as before (hard rule 11).
+- **`repoRoot` is the one bridge change.** `Config.root()` was the config
+  file's own directory, and the bridge resolves `var/games/<id>/`, `--deck`,
+  `--out` and the session header's deck `path` against it; a config beside its
+  home under `var/` would have moved every frame log and changed every header.
+  With `repoRoot` (an absolute directory; a relative one or a missing one is an
+  error) the root is the checkout and nothing on the wire or on disk moves.
+  Only `forge_home_make` writes the key.
+- **`tools/ten-games.sh` gives each ROW its own home**
+  (`$TEN_GAMES_DIR/home-<seed>/`), serially and under `--jobs` alike, so the
+  serial gate's fourteen rows do not share one either. **`scripts/spectate.sh`
+  keeps a gate job's config** (a path under `var/check-all/<run>/<job>/`) where
+  it unsets every other, so 6b's two recordings get theirs. Step 12c keeps its
+  own scratch home.
+- **The preferences check got stronger, not weaker.** The rejection above
+  argued that per-job fingerprints would each watch "a directory no other job
+  shares". That was the point it missed: the shared fingerprint held only the
+  JVMs that happened to be running during 9c's rows and 9e — and could blame a
+  row for another job's write. Now every home starts with no preferences file,
+  and `job_prefs_check` fails any job one of whose JVMs saved one: every JVM the
+  gate runs is checked. 9c's rows and 9e still fingerprint `~/.forge/preferences/`
+  and `var/forge/preferences/`, plus their own home's.
+- **What it costs:** a `node` call and a few `mkdir`s per job (tens of
+  milliseconds), and disk: a home a JVM booted in is ~140 KB (the 24 profile
+  directories), an unused one ~36 KB, 4.1–4.2 MB a run under
+  `var/check-all/<run>/` (PLAN.md's gate-speed follow-up 4).
+- **What it does not fix:** Forge's truncate-then-write save itself. A JVM that
+  exits mid-save can still leave an empty achievements file in its own home,
+  and no JVM boots in that home afterwards: the one job that starts a second
+  JVM in its home is 9e, whose refusal run exits before the engine boots (12c's
+  two share its own scratch home and crash before a game can end). Measured in
+  evidence §10: once in the merge's runs, in a ten-games row's home, read by
+  nothing.
 
 ---
 
-## D161 — Every job logs to its own file; the console gets a start and an end line per job and a TIMING TABLE; `gate.log` is the serial log; a failed job always says so
+## D130 — Every job logs to its own file; the console gets a start and an end line per job and a TIMING TABLE; `gate.log` is the serial log; a failed job always says so
 
-*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
-merge.*
+*Branch `gate-speed`: written as D161 in the lane's reserved range D160–D169,
+and **D130** since the merge (see D129).*
 
 **2026-09-28** (the gate-speed lane)
 
@@ -6263,10 +6328,10 @@ opens.
 
 ---
 
-## D162 — Step 10's seven servers each get a port (WSPORT+0 .. WSPORT+6); step 13 splits into build, vitest and `node --test`, and only `node --test` waits for step 10
+## D131 — Step 10's seven servers each get a port (WSPORT+0 .. WSPORT+6); step 13 splits into build, vitest and `node --test`, and only `node --test` waits for step 10
 
-*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
-merge.*
+*Branch `gate-speed`: written as D162 in the lane's reserved range D160–D169,
+and **D131** since the merge (see D129).*
 
 **2026-09-28** (the gate-speed lane)
 
@@ -6292,10 +6357,10 @@ end of every run for no dependency.
 
 ---
 
-## D163 — No `| head`, no `| tail`, and no early-exiting reader in a pipeline the gate judges under `pipefail`
+## D132 — No `| head`, no `| tail`, and no early-exiting reader in a pipeline the gate judges under `pipefail`
 
-*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
-merge.*
+*Branch `gate-speed`: written as D163 in the lane's reserved range D160–D169,
+and **D132** since the merge (see D129).*
 
 **2026-09-28** (the gate-speed lane; PLAN.md's engine-and-sets follow-up 2)
 
@@ -6319,10 +6384,10 @@ script with 141 before its own message.
 
 ---
 
-## D164 — The preferences fingerprint is of FILES: a directory with none prints the same line whether it exists or not
+## D133 — The preferences fingerprint is of FILES: a directory with none prints the same line whether it exists or not
 
-*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
-merge.*
+*Branch `gate-speed`: written as D164 in the lane's reserved range D160–D169,
+and **D133** since the merge (see D129).*
 
 **2026-09-28** (the gate-speed lane)
 
@@ -6341,10 +6406,10 @@ steps 4–9 booting the engine first had ever hidden it. The assertion is about 
 
 ---
 
-## D165 — Step 10g asserts that each of its three games was PLAYED: a `state` frame at turn 1 or later
+## D134 — Step 10g asserts that each of its three games was PLAYED: a `state` frame at turn 1 or later
 
-*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
-merge.*
+*Branch `gate-speed`: written as D165 in the lane's reserved range D160–D169,
+and **D134** since the merge (see D129).*
 
 **2026-09-28** (the gate-speed lane; PLAN.md's engine-and-sets follow-up 3)
 
@@ -6362,10 +6427,10 @@ frames up to turns 13/16/22 on the first parallel run.
 
 ---
 
-## D166 — Nothing in the gate is retried: a step that fails under concurrent load and never serially is a finding
+## D135 — Nothing in the gate is retried: a step that fails under concurrent load and never serially is a finding
 
-*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
-merge.*
+*Branch `gate-speed`: written as D166 in the lane's reserved range D160–D169,
+and **D135** since the merge (see D129).*
 
 **2026-09-28** (the gate-speed lane)
 
@@ -6378,4 +6443,11 @@ reproduction.
 and D114's races were each "one failure in a few runs under load" before they
 were found and fixed at their causes. Concurrency is load the gate makes itself,
 so it is the cheapest place those races will ever show again. What the lane's own
-runs found is in `docs/evidence/gate-speed.md` §3.
+runs found is in `docs/evidence/gate-speed.md` §3. *(At merge:* it has found
+one since — step 8's scripted concede racing Forge's game thread through
+`runPreOpeningHandActions` into a `ConcurrentModificationException`, once in the
+verifier's serial run and once in the merge's second parallel run, both at a
+load average of 9–13. Each failed its run with the cause, as D115 says a crash
+must; neither was retried by the gate; the lane recorded both with their logs
+(evidence §3.3, PLAN.md's gate-speed follow-up 8) and started the failed run
+again as a new one.)

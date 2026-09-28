@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Runs everything that can tell you the two hand-written ends have drifted
-# apart, and stops at the FIRST failure.  Since D160 it runs them CONCURRENTLY:
+# apart, and stops at the FIRST failure.  Since D129 it runs them CONCURRENTLY:
 # GATE_JOBS (default min(4, nproc/4)) independent steps at a time, each in a
-# process of its own with its own ports, game ids and var/ paths, in the order
-# and under the dependencies set out under "THE PARALLEL GATE" below.
-# GATE_JOBS=1 is the gate as it always was -- the steps below, one after
-# another, in this order, printing this log.  The steps:
+# process of its own with its own ports, game ids, var/ paths and Forge home, in
+# the order and under the dependencies set out under "THE PARALLEL GATE" below.
+# GATE_JOBS=1 is the serial gate -- the steps below, one after another, in this
+# order, printing their log as they run.  The steps:
 #
 #   1. tools/check-forge.sh       the jar is present and carries the 8 classes
 #   2. tools/lint-bridge.sh       the grep bans (hidden info, data loss, 2.0.15-only APIs)
@@ -187,7 +187,7 @@
 # pass found had already burned a silent 30 s per run without failing anything.
 # A run that hits the cap dies with its own message naming the cap.
 #
-# THE PARALLEL GATE (D160-D166, the gate-speed lane, 2026-09-28).  Every step
+# THE PARALLEL GATE (D129-D135, the gate-speed lane, 2026-09-28).  Every step
 # above is a JOB: a shell function run in a subshell of its own, whose stdout
 # and stderr go to var/check-all/<run>/<job>.log.  Most steps are one job; a
 # few are split where the halves are independent -- 6b's two recordings and
@@ -203,9 +203,12 @@
 #   - step 6 depends on step 5 (it compares RecordMatch's fresh recording);
 #     6b's comparison on both of 6b's recordings; 9c's report on its fourteen
 #     rows;
-#   - 9c's rows and 9e fingerprint the preferences directories, so they wait
-#     for step 4's Smoke: a first engine boot on a fresh checkout creates an
-#     empty var/forge/preferences/, and D164 aside, nothing should race that;
+#   - 9c's rows and 9e wait for step 4's Smoke, so an engine that cannot boot
+#     fails once, at step 4, before fifteen games start.  (They waited first
+#     because a first boot on a fresh checkout creates an empty
+#     var/forge/preferences/ that their fingerprints read; since every job and
+#     every row boots in a Forge home of its own -- job_home, below; D129 as
+#     amended at merge -- nothing they fingerprint is shared any more.)
 #   - `node --test` (13) replays MTGTABLE_WS_LOGS, i.e. step 10's logs, so it
 #     depends on 10a, 10b, 10c, 10d, 10f and 10g (10e is not in the list);
 #   - step 11's fresh half and 12d's narrator read EVERY fresh recording, so
@@ -224,12 +227,16 @@
 # jobs, TERMs every running job's process tree (only processes this gate
 # started), prints the failed job's log tail, the table so far and a
 # `check-all FAILED at step N` line -- always, even for a job that died
-# without a message -- and exits 1.  GATE_JOBS=1 prints today's log byte for
-# byte and then the table.  GATE_TIMEOUT is still per JVM (GAME_TIMEOUT), and
-# nothing is ever retried: a step that fails under concurrent load and never
-# serially is a finding (D166), not a flake to paper over.
+# without a message -- and exits 1.  GATE_JOBS=1 streams each job's log to the
+# console as it runs: the pre-D129 gate's lines in its order, but not its bytes
+# -- each job runs under `2>&1 | tee`, so `die`'s stderr arrives on stdout
+# (PLAN.md's gate-speed follow-up 5), 10g adds a "was played" line per game
+# (D134), and the timing table follows `check-all OK`.  The timeout is still
+# per JVM (GAME_TIMEOUT), and nothing is ever retried: a step that fails under
+# concurrent load and never serially is a finding (D135), not a flake to paper
+# over.
 #
-# Usage:  ./tools/check-all.sh            # ~5 minutes at GATE_JOBS=4 (D160); ~15 serially
+# Usage:  ./tools/check-all.sh            # ~5 minutes at GATE_JOBS=4 (D129); ~15 serially
 #         GATE_JOBS=1 ./tools/check-all.sh        # the serial gate, one step at a time
 #         GATE_JOBS=8 ./tools/check-all.sh        # eight at a time (needs ~16 GB free)
 #         WSPORT=8750 ./tools/check-all.sh        # step 10's ports: 8750..8756 in parallel
@@ -249,14 +256,18 @@ cd "$REPO_ROOT"
 # its own runs at a scratch config under var/ and exports it itself).  A stray
 # export in the calling shell would silently point every other JVM step -- its
 # forgeHome, so Forge's userDir, and its deck -- at another config, so the gate
-# never inherits one.
+# never inherits one: every job gets its OWN instead (job_home, below).
 unset MTG_TABLE_CONFIG
+# REPO_ROOT, CONFIG_JSON, FORGE_JAR (config.json's forgeJar, or $FORGE_JAR: hard
+# rule 9) and forge_home_make, which builds each job's Forge home.
+# shellcheck source=tools/config.sh
+. tools/config.sh
 
 # Seconds any single JVM step may take.  Measured 2026-09-11: the slowest game
 # in the gate is ~45 s, so 300 is ~6x headroom and still fails a wedge fast
 # enough to be useful.  `bridge/run.sh` ends in `exec java`, so TERM reaches the
 # JVM itself rather than a wrapper shell; --kill-after adds the KILL that
-# follows if it ignores TERM.  Per JVM, whatever GATE_JOBS is (D160).
+# follows if it ignores TERM.  Per JVM, whatever GATE_JOBS is (D129).
 GAME_TIMEOUT="${GAME_TIMEOUT:-300}"
 jvm() { timeout --kill-after=15s "${GAME_TIMEOUT}s" "$@"; }
 
@@ -265,7 +276,7 @@ jvm() { timeout --kill-after=15s "${GAME_TIMEOUT}s" "$@"; }
 capped() { case "$1" in 124 | 137) return 0 ;; *) return 1 ;; esac; }
 
 # ---------------------------------------------------------------------------
-# The knobs of the parallel gate (D160).
+# The knobs of the parallel gate (D129).
 # ---------------------------------------------------------------------------
 # GATE_JOBS: how many jobs run at once.  min(4, nproc/4), at least 1: four on
 # this 16-thread box, where every JVM is an -Xmx4096m process and four of them
@@ -281,11 +292,11 @@ esac
 
 # Port 8643, not config.json's 8642: a developer with `scripts/play.sh` running
 # should be able to run the gate without the two fighting over a port.  With
-# GATE_JOBS > 1, 10a..10g listen on WSPORT+0 .. WSPORT+6 (D162).
+# GATE_JOBS > 1, 10a..10g listen on WSPORT+0 .. WSPORT+6 (D131).
 WSPORT="${WSPORT:-8643}"
 case "$WSPORT" in '' | *[!0-9]*) echo "check-all: WSPORT must be a port number, got '$WSPORT'" >&2; exit 2 ;; esac
 
-# One directory per run: every job's log, the timing table, gate.log (D161).
+# One directory per run: every job's log, the timing table, gate.log (D130).
 RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"
 RUN_DIR="var/check-all/$RUN_ID"
 mkdir -p "$RUN_DIR"
@@ -296,10 +307,36 @@ STEP=""
 die() { echo "check-all FAILED at step $STEP: $1" >&2; exit 1; }
 hdr() { printf '\n=== %s. %s ===\n' "$1" "$2"; }
 # The last line of a frame log is `over` (section 8.4).  A `$(tail -n 1 ...)`
-# and a pattern, never `tail | grep`: no pipe for pipefail to judge (D163).
+# and a pattern, never `tail | grep`: no pipe for pipefail to judge (D132).
 last_is_over() { [[ "$(tail -n 1 "$1")" == *'"type":"over"'* ]]; }
 # Step 10's port for sub-step k (0 = 10a .. 6 = 10g).
 ws_port() { if [ "$GATE_JOBS" -gt 1 ]; then echo $(( WSPORT + $1 )); else echo "$WSPORT"; fi; }
+
+# Every job boots Forge in a HOME OF ITS OWN (D129, amended at merge): before
+# its function runs, job_home builds var/check-all/<run>/<job>/ with
+# tools/config.sh's forge_home_make -- a forge-home/ whose res/ is the jar's, a
+# userDir and a cacheDir of the job's own, D14's overlay -- and exports
+# MTG_TABLE_CONFIG at its config.json, which every ./bridge/run.sh the job
+# starts reads.  So no two jobs' JVMs share a userDir: not Forge's achievements
+# files, which a JVM that exits mid-save leaves EMPTY for the next reader
+# (evidence section 3.2), not its preferences, not its profile directories.
+# tools/ten-games.sh goes one further and gives each ROW its own; step 12c's
+# crash check builds its own scratch home, as it always did.  JOB_HOME is the
+# directory; job_prefs_check, after the function, fails the job if any JVM of it
+# SAVED a Forge preferences file there -- every home starts with none, so this
+# covers every JVM the gate runs, where the old fingerprint of one shared
+# var/forge/preferences/ covered only what ran during 9c's rows and 9e.
+job_home() {
+  JOB_HOME="$REPO_ROOT/$RUN_DIR/$1"
+  MTG_TABLE_CONFIG="$(forge_home_make "$JOB_HOME")" \
+    || die "could not build job $1's Forge home under $JOB_HOME"
+  export JOB_HOME MTG_TABLE_CONFIG
+}
+job_prefs_check() {
+  local f
+  f="$(find "$JOB_HOME/forge/preferences" -type f -print -quit 2>/dev/null || true)"
+  [ -z "$f" ] || die "a JVM of this job SAVED a Forge preferences file, $f -- a run must never save prefs (CLAUDE.md, hard rule 11; the empty-profileOverride branch of GamePlayerUtil.createAiPlayer is one way)"
+}
 
 # ---------------------------------------------------------------------------
 # Every path more than one step reads, named once (the serial gate set these as
@@ -411,7 +448,7 @@ s06_drift() {
   # Both modes sort the ids inside a `stats` event first (D121, spectating: their
   # order follows HotSpot identity hashes, not the game); the SET is still compared,
   # and the selftest has a reorder both must accept and a dropped id both reject.
-  # (D163: no `| head` and no `| tail` anywhere in this file any more.)
+  # (D132: no `| head` and no `| tail` anywhere in this file any more.)
   node tools/wire-drift-selftest.mjs > var/check-all-wire-drift-selftest.log 2>&1 || {
     cat var/check-all-wire-drift-selftest.log >&2
     die "tools/wire-drift-selftest.mjs: the step-6 comparison no longer gives the verdicts it must (log: var/check-all-wire-drift-selftest.log)"
@@ -450,7 +487,7 @@ Snap.java changed the wire: re-record fixtures/games/*.jsonl"
 #     event, every phase-boundary state; the hands set aside) -- and must call a
 #     copy of the second with one life total changed NOT the same game, so the
 #     comparison can fail. ~20 s. Its own names, so it never overwrites a
-#     recording of yours in var/spectate/.  Three jobs (D160): the two
+#     recording of yours in var/spectate/.  Three jobs (D129): the two
 #     recordings are independent processes, and the comparison needs both.
 s06b_paced() {
   printf '\n=== 6b. spectating: a paced AI-vs-AI recording, and the same seed from the other chair (M47) ===\n'
@@ -569,7 +606,7 @@ s08_console() {
   # assertions are warnings on a session whose every `state` is turn 0 -- the
   # documented command used to produce an artifact this gate rejected.  The five
   # lines arrive as a here-string, not `printf | jvm`: no pipe for pipefail to
-  # judge (D163) -- the same bytes, "\n\n\n\nq\n".
+  # judge (D132) -- the same bytes, "\n\n\n\nq\n".
   rm -rf var/games/check-all-console
   local rc=0
   jvm ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
@@ -719,7 +756,7 @@ frame-order noise a byte diff would report."
 #     assertion of the row intact -- so rows interleave with every other game,
 #     and one more job, `ten-games.sh --report`, prints the fourteen blocks in
 #     row order, the UNIMPL sweep and the summary once all of them passed
-#     (D160).  `ten-games.sh --jobs N` is the same thing standalone.
+#     (D129).  `ten-games.sh --jobs N` is the same thing standalone.
 TEN_HDR='\n=== 9c. ten-games.sh -- the M5 exit criterion: ten consecutive games, zero UNIMPL (plus rows 11-14, match setup) ===\n'
 s09c_skipped() {
   printf '\n(9c ten-games.sh skipped: SKIP_TEN=1 -- the M5 exit criterion did NOT run)\n'
@@ -825,11 +862,14 @@ s09d_sideboard() {
 #
 #     Seed 21, not ten-games' 13: a second Reckless game rather than the same one.
 # A preferences directory with no file in it fingerprints the same whether it
-# exists or not (D164, as tools/ten-games.sh's): Forge's first boot in a fresh
+# exists or not (D133, as tools/ten-games.sh's): Forge's first boot in a fresh
 # checkout creates an EMPTY var/forge/preferences/, which is no preferences write.
+# Three directories: the user's real one, the checkout's default home (a JVM that
+# ignored its config would write there), and this job's own, where the game
+# boots (JOB_HOME, D129 amended at merge).
 ms_prefs() {
   local d
-  for d in "$HOME/.forge/preferences" var/forge/preferences; do
+  for d in "$HOME/.forge/preferences" var/forge/preferences "$JOB_HOME/forge/preferences"; do
     if [ -d "$d" ] && [ -n "$(find "$d" -type f -print -quit)" ]; then
       find "$d" -type f -print0 | sort -z | xargs -0 -r sha256sum
       find "$d" -type f -print0 | sort -z | xargs -0 -r stat -c '%n %Y %s'
@@ -862,7 +902,7 @@ s09e_match() {
   grep -q '^MTGTABLE OK$' var/check-all-match.log || die "the match-setup game did not print MTGTABLE OK"
   grep -q '^finished       = true' var/check-all-match.log || die "the match-setup game did not reach \`over\`"
   grep -q '^UNIMPL members = none$' var/check-all-match.log || die "the match-setup game hit an UNIMPL member"
-  # Two counts, not `grep | grep -qv` (D163): see tools/ten-games.sh.
+  # Two counts, not `grep | grep -qv` (D132): see tools/ten-games.sh.
   if [ "$(grep -c 'UNIMPL' var/check-all-match.log || true)" -gt \
        "$(grep -c '^UNIMPL members = none$' var/check-all-match.log || true)" ]; then
     die "UNIMPL line(s) in var/check-all-match.log"
@@ -874,7 +914,7 @@ s09e_match() {
   node tools/check-redaction.mjs "$MS_LOG" || die "check-redaction.mjs on the match-setup game"
   local MS_LINE MS_WANT_AGGRO MS_WANT_CHAIN
   MS_LINE="$(grep '^ai profile     = ' var/check-all-match.log || true)"
-  # The first match by sed's own `q`, never `| head -1` (D163).
+  # The first match by sed's own `q`, never `| head -1` (D132).
   MS_WANT_AGGRO="$(sed -n '/^PLAY_AGGRO=/{s///p;q}' forge-home/res/ai/Reckless.ai)"
   MS_WANT_CHAIN="$(sed -n '/^CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=/{s///p;q}' forge-home/res/ai/Reckless.ai)"
   case "$MS_LINE" in
@@ -910,7 +950,7 @@ s09e_match() {
     }
     console.log(`OK: hello_ok.match = ${JSON.stringify(m)}`);
   ' "$MS_LOG" decks/pacho-shield.dck "$MS_VILLAIN" || die "hello_ok.match does not describe the match that was played"
-  echo "OK: no Forge preferences file changed (~/.forge/preferences, var/forge/preferences)"
+  echo "OK: no Forge preferences file changed (~/.forge/preferences, var/forge/preferences, this job's own)"
   # The refusal half: a profile that is not a file never reaches the engine.
   rc=0
   jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 21 --game-id check-all-match-bad \
@@ -933,7 +973,7 @@ s09e_match() {
 # and the seat log through check-redaction.mjs -- plus the server's own exit
 # code, which is MtgTable's `MTGTABLE OK` path and nothing else.
 #
-# Seven JOBS since D160/D162, one per server, each on its own port -- WSPORT+0
+# Seven JOBS since D129/D131, one per server, each on its own port -- WSPORT+0
 # for 10a up to WSPORT+6 for 10g when GATE_JOBS > 1, all of them WSPORT
 # serially -- and each with its own game ids, server log and client log, so
 # nothing one of them asserts can be satisfied by another's files.  Every job
@@ -1347,7 +1387,7 @@ s10g_three() {
     grep -q '"gameOver":{' "$f" || die "$f has no \`state\` carrying \`gameOver\`: the game was ended from \
 outside Forge's own game-over -- the previous game's late finishGame() (D114, PLAN.md slice-4 follow-up 13(c))"
     grep -q "\"gameId\":\"$g\"" "$f" || die "$f does not carry its own gameId \"$g\""
-    # D165 (PLAN.md's engine-and-sets follow-up 3): the game was PLAYED -- it
+    # D134 (PLAN.md's engine-and-sets follow-up 3): the game was PLAYED -- it
     # has a `state` frame, and one of them is at turn 1 or later.  `over` last
     # and a `gameOver` state do not say that: a game born dead, or one whose
     # engine threw at the deal, still ends in both, and "OK: three games" once
@@ -1367,7 +1407,7 @@ outside Forge's own game-over -- the previous game's late finishGame() (D114, PL
       if (states === 0) { console.error(`${id}: no \`state\` frame at all -- the game was never played`); process.exit(1); }
       if (maxTurn < 1) { console.error(`${id}: ${states} state frame(s), none past turn ${maxTurn} -- the game was never played`); process.exit(1); }
       console.log(`OK: ${id} was played: ${states} state frames, up to turn ${maxTurn}`);
-    ' "$f" "$g" || die "$f: game $g was not PLAYED (no state frame at turn 1 or later) -- D165"
+    ' "$f" "$g" || die "$f: game $g was not PLAYED (no state frame at turn 1 or later) -- D134"
     THREE_IDS="$THREE_IDS $g"
     node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
   done
@@ -1449,7 +1489,7 @@ s11_fixtures() {
 
 # Step 11's second half: the fresh recordings of steps 5, 7, 8 and 9.  A job of
 # its own because the first half depends on nothing, and this one -- like 12d --
-# waits for EVERY recorder in the run, not only these four (D160).
+# waits for EVERY recorder in the run, not only these four (D129).
 s11_fresh() {
   node tools/check-redaction.mjs "$FRESH" || die "check-redaction.mjs on the fresh recording $FRESH"
   # The human-seat logs from the three steps above: asks, answers, notices and c2s
@@ -1586,7 +1626,7 @@ s13_skipped() {
 # aside).  With the variable unset the test falls back to the committed
 # fixtures alone and says on stderr that it proved less.
 #
-# Serially it is one job, as it always was.  In parallel it is three (D162):
+# Serially it is one job, as it always was.  In parallel it is three (D131):
 # `npm run build`, `npm run test:render` (vitest, ~55 s of render.test.tsx on
 # one thread, which reads only committed fixtures) and `npm run test:node`
 # (node --test, whose ws-log suite is the only reader of MTGTABLE_WS_LOGS) --
@@ -1613,7 +1653,7 @@ s13_node() {
 }
 
 # ===========================================================================
-# THE JOB TABLE (D160).  job ID STEP MODE FUNCTION DEPS
+# THE JOB TABLE (D129).  job ID STEP MODE FUNCTION DEPS
 #   ID      the job's name: its log is var/check-all/<run>/<ID>.log
 #   STEP    what `die` says ("step 9" for all of 9..9e, as the serial gate did)
 #   MODE    both | serial (GATE_JOBS=1 only) | parallel (GATE_JOBS > 1 only)
@@ -1695,7 +1735,7 @@ PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e
 PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 08-console 12c-crash 13a-build"
 
 # ---------------------------------------------------------------------------
-# The runner (D161).
+# The runner (D130).
 # ---------------------------------------------------------------------------
 declare -A J_START=() J_END=() J_STATUS=() J_LOAD=()
 T0_US="${EPOCHREALTIME/./}"
@@ -1771,7 +1811,7 @@ run_serial() {
     active "$id" || continue
     J_START[$id]="$(now_ms)"
     set +e
-    ( STEP="${J_STEP[$id]}"; set -e; ${J_FN[$id]} ) 2>&1 | tee "$RUN_DIR/$id.log"
+    ( STEP="${J_STEP[$id]}"; set -e; job_home "$id"; ${J_FN[$id]}; job_prefs_check ) 2>&1 | tee "$RUN_DIR/$id.log"
     rc="${PIPESTATUS[0]}"
     set -e
     J_END[$id]="$(now_ms)"
@@ -1863,7 +1903,8 @@ run_parallel() {
         deps_ok "$id" || continue
         unset "pending[$i]"
         J_START[$id]="$(now_ms)"
-        ( STEP="${J_STEP[$id]}"; set -e; ${J_FN[$id]} ) > "$RUN_DIR/$id.log" 2>&1 < /dev/null &
+        ( STEP="${J_STEP[$id]}"; set -e; job_home "$id"; ${J_FN[$id]}; job_prefs_check ) \
+            > "$RUN_DIR/$id.log" 2>&1 < /dev/null &
         RUNNING[$!]="$id"
         progress start "$id"
         launched=1
