@@ -169,6 +169,46 @@ of `e2aee03` (`var/bodies/merge/base/web`) and this tree served in turn on one
 The SwiftShader sample is **on report 13 §8.2's 90-call line** and 479 triangles
 under 30,000 — the lane's projection, met exactly.
 
+**The `g1`@355 census, bloom off, beside it** (the final skeptic's pass; Lane
+LOOK's own budget frame is @355, so this is the number LOOK's line is read
+against). `tools/arena-bench.mjs --index 355 --settle 4000 --no-bloom`, the same
+two production builds interleaved on one `vite preview` port, two rounds, load
+6.5–11.5 (`var/verify-final/bench/`, `var/verify-final/bench.sh`):
+
+| `g1`@355, bloom off | `e2aee03` | this tree |
+|---|---|---|
+| GTX 1080, p50 / p95 ms | 0.4 / 0.7 · 0.5 / 1.0 | 0.5 / 1.4 · 0.5 / 1.0 |
+| SwiftShader, p50 / p95 ms | 16.2 / 34.1 · 15.5 / 32.8 | 23.0 / 47.2 · 16.1 / 33.8 |
+| draw calls · triangles (GTX 1080) | 81 · 24,490 | **87 · 26,539** |
+| draw calls · triangles (SwiftShader) | 82 · 24,492 | **88 · 26,541** |
+
++6 calls and +2,049 triangles, the lane's cost at @316 again (+7, +1,953 on the
+GTX 1080). The frame fits more comfortably than @316's SwiftShader sample: 2 calls
+and 3,459 triangles under report 13 §8.2's 90 and 30,000. The first SwiftShader
+round's 23.0 / 47.2 ms is the load (the second round, and every GTX 1080 round,
+sits on the base).
+
+**Merged onto `main`'s `a08c15f`** (the three lanes together, 2026-09-28; the
+rebase and the gate are PLAN.md's *Lane BODIES* → *Onto `main`'s `a08c15f`*): the
+same frames re-measured on the rebased tree's production build, on an idle
+machine (load 0.9–3.4), two rounds each (`var/merge-main/bench/`,
+`var/merge-main/bench.sh`):
+
+| bloom off | `g1`@316 | `g1`@355 |
+|---|---|---|
+| GTX 1080, draw calls · triangles | 86 · 26,339 (both rounds) | 87 · 26,539 · 88 · 26,541 |
+| GTX 1080, p50 / p95 ms | 0.5 / 2.9 · 0.5 / 2.7 | 0.5 / 2.5 · 0.5 / 2.4 |
+| SwiftShader, draw calls · triangles | **90 · 29,521** (both rounds) | 88 · 26,541 (both rounds) |
+| SwiftShader, p50 / p95 ms | 15.4 / 17.8 · 15.3 / 17.5 | 15.3 / 32.4 · 15.2 / 32.8 |
+
+`main`'s side of the merge touched no arena file but `DecisionLayer.tsx`'s
+watching line, so the counts are the lane's: @316's SwiftShader sample is ON the
+90-call line and 479 triangles under 30,000, @355 two calls under it. The GTX 1080
+@316's 26,339 is 24 over the lane merge's 26,315: the bench samples a replay that
+plays on from its index, so a count is one sampled moment — the skeptic's two
+SwiftShader rounds on the same tree read 29,521 and 29,449 — and no mesh changed
+in between.
+
 **The gate** — `rm -rf bridge/out && GATE_JOBS=4 WSPORT=8920
 ./tools/check-all.sh`, tee'd to `var/check-all-bodies-merge.log` (run
 `20260928-181830-303926`): **exit 0 in 253.8 s**, 46 jobs whose seconds sum to

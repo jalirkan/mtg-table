@@ -298,13 +298,16 @@ test('follow: a recorder that goes quiet is STALLED (and polled still); a re-rec
 
 /**
  * **The word the page shows for each status** (polish-1, spectating's skeptic).
- * `followWordOf` and `arenaFollowOf` live in `main.tsx`, which a test cannot
- * import (it mounts the app), so they are EVALUATED FROM THAT FILE'S SOURCE:
- * each body is plain JavaScript under its typed signature. Every status in
- * `FollowStatus` must have a row here, so a new one cannot slip into the
- * `default:` branch's live word unnoticed.
+ * `followWordOf` lives in `main.tsx`, which a test cannot import (it mounts the
+ * app), so it is EVALUATED FROM THAT FILE'S SOURCE: the body is plain
+ * JavaScript under its typed signature. Every status in `FollowStatus` must have
+ * a row here, so a new one cannot slip into the `default:` branch's live word
+ * unnoticed. Since polish-1's follow-up 2 (applied at the art-direction lanes'
+ * merge) the arena has a `lost` word of its own, so it is handed the page's
+ * word as it is — `arenaFollowOf`, which mapped `lost` to no word, is gone —
+ * and its `ArenaFollow` must spell the same four words as `FollowWord`.
  */
-test('follow word: a 416 reads "lost" on the strip and on #story, and the arena gets no live word for it', () => {
+test('follow word: a 416 reads "lost" on the strip, on #story and in the arena', () => {
   const main = readFileSync(join(REPO, 'web/src/main.tsx'), 'utf8');
   const bodyOf = (name: string): string => {
     const m = new RegExp(`\\nfunction ${name}\\((?:status|word): [^)]*\\): [^{]*\\{([\\s\\S]*?)\\n\\}\\n`).exec(main);
@@ -312,7 +315,6 @@ test('follow word: a 416 reads "lost" on the strip and on #story, and the arena 
     return m[1]!;
   };
   const followWordOf = new Function('status', bodyOf('followWordOf')) as (s: FollowStatus | null) => string | null;
-  const arenaFollowOf = new Function('word', bodyOf('arenaFollowOf')) as (w: string | null) => string | null;
 
   const want: Record<FollowStatus, string> = {
     waiting: 'following',
@@ -332,11 +334,18 @@ test('follow word: a 416 reads "lost" on the strip and on #story, and the arena 
   for (const status of statuses) {
     assert.equal(followWordOf(status as FollowStatus), want[status as FollowStatus], `followWordOf('${status}')`);
   }
-  // The arena's three words have none for `lost`: it gets none at all, and
-  // every other word unchanged.
-  assert.equal(arenaFollowOf('lost'), null);
-  for (const w of ['following', 'stalled', 'finished', null]) assert.equal(arenaFollowOf(w), w);
-  assert.match(main, /follow=\{arenaFollowOf\(followWord\)\}/, 'the arena is handed its follow word through arenaFollowOf');
+  // The arena takes the page's word as it is, `lost` included: the same four
+  // words on both sides, and no mapping in between.
+  const wordsOf = (src: string, type: string): string[] => {
+    const u = new RegExp(`type ${type} = ([^;]+);`).exec(src)?.[1] ?? '';
+    return [...u.matchAll(/'([a-z]+)'/g)].map((m) => m[1]!).sort();
+  };
+  const arena = readFileSync(join(REPO, 'web/src/arena/Arena.tsx'), 'utf8');
+  const followWords = wordsOf(main, 'FollowWord');
+  assert.deepEqual(followWords, ['finished', 'following', 'lost', 'stalled'], 'could not read FollowWord from main.tsx');
+  assert.deepEqual(wordsOf(arena, 'ArenaFollow'), followWords, "the arena's ArenaFollow and main.tsx's FollowWord differ");
+  assert.match(main, /follow=\{followWord\}/, 'the arena is no longer handed the follow word as it is');
+  assert.doesNotMatch(main, /arenaFollowOf/, 'a mapping between the page\'s word and the arena\'s is back');
 
   // The strip (the app bar's FollowChip): `lost` is its own case, says so, and
   // carries no "●" -- the dot is the live word.

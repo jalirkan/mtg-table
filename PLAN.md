@@ -23,9 +23,9 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Gate speed: `check-all.sh` in parallel *(off the plan, for a faster gate)* | 1 day | **built, measured and documented**, committed on branch `gate-speed` (2026-09-28), rebased onto the story page's `0af97a9` — `GATE_JOBS` jobs at a time from a job table with dependencies, a log per job and a timing table; ~245 s at four, 151 s at eight, against ~900–950 s serially (907 s at merge); `GATE_JOBS=1` is the serial gate; every job its own Forge home (at merge); **D129–D135**; *Gate speed*, just above *Deferred* |
 | — | The undo race: `undo` waits for a parked engine *(a defect, from the story branch's gate run)* | 1 day | **built, gated and documented**, committed on branch `undo-race` (2026-09-28), rebased onto gate speed's `6b35054` — `undo` and `useMana` applied only while the engine is quiet on this seat, else `notice {title:"Not now"}`, and a `concede` from a running engine carried forward to the engine's own check (**D136**, written as D170; amendment **M48**); a deterministic reproduction (`tools/undo-race-repro.sh`, the held window, the guard-off negative control); `ActGuardSelfTest` in the build; 10g's job holds the window and asserts the refusal; M6 follow-up 6, the story page's follow-up 9 and gate speed's follow-up 8 closed; five follow-ups, one of them (4) closed at merge |
 | — | CI: the gate's engine-free half on GitHub Actions *(off the plan)* | ½ day | **built** on branch `ci` (2026-09-28), pull request to `main` — `.github/workflows/checks.yml`: `web` (`npm ci`, build, `npm test`), `bridge` (lint, `check-forge.sh`, `bridge/build.sh` and its five self-tests against the official `forge-2.0.14` release's jar, checked against the pin and cached alone) and `redaction` (the committed corpus, the checker's, the narrator's and the drift check's selftests, the catalog check); `check-all.sh`, which plays games, stays local; the stray `.vite/` cache untracked and ignored; README's *Continuous integration* |
-| — | Polish 1: the skeptics' nine minors *(off the plan)* | ½ day | **built, gated and documented** on branch `polish-1` (2026-09-28), off `main`'s `f6bad35` — `ActGuard`'s wiring under its self-test, 10g holding both halves of the late undo, the narrator's N1 from the decks alone and its pair check both ways, a 416 read as `lost`, `same-game.mjs` saying what it sets aside, a docs correction, a liveness clause written for the merge pass, and `var/check-all/` pruned to 20 runs; no wire change, no step, no decision; *Polish 1*, just above *Deferred* |
-| — | Lane LOOK: the comic look, to production *(report 15 §9.1, the first art-direction lane; the user approved the direction)* | 1 day | **built, verified, documented and committed** on branch `look` (2026-09-28), rebased onto the undo race's `f6bad35` — every figure, dying body, duelist and painted prop in the comic look by default: three cel bands from a lens-fixed key, halftone, a rim, an ink line inside bloom's pass that inks only what is painted, a contact shadow, a mid-value stage in each seat's shown colours; `?look=holo` the hologram; a seat's figures facing the opponent (question 13, answered); **D137–D146**, written as D120–D129; one verification pass; twenty-one follow-ups, half of one closed at merge; *Lane LOOK*, just above *Deferred* |
-| — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; *Lane BODIES*, just above *Deferred* |
+| — | Polish 1: the skeptics' nine minors *(off the plan)* | ½ day | **built, gated and documented** on branch `polish-1` (2026-09-28), off `main`'s `f6bad35` — `ActGuard`'s wiring under its self-test, 10g holding both halves of the late undo, the narrator's N1 from the decks alone and its pair check both ways, a 416 read as `lost`, `same-game.mjs` saying what it sets aside, a docs correction, a liveness clause written for the merge pass, and `var/check-all/` pruned to 20 runs; no wire change, no step, no decision; *Polish 1*, after *The undo race* |
+| — | Lane LOOK: the comic look, to production *(report 15 §9.1, the first art-direction lane; the user approved the direction)* | 1 day | **built, verified, documented and committed** on branch `look` (2026-09-28), rebased onto the undo race's `f6bad35` — every figure, dying body, duelist and painted prop in the comic look by default: three cel bands from a lens-fixed key, halftone, a rim, an ink line inside bloom's pass that inks only what is painted, a contact shadow, a mid-value stage in each seat's shown colours; `?look=holo` the hologram; a seat's figures facing the opponent (question 13, answered); **D137–D146**, written as D120–D129; one verification pass; twenty-one follow-ups, half of one closed at merge; *Lane LOOK*, after *Guards* |
+| — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; with Lanes LOOK and MOTION, **rebased onto `main`'s `a08c15f`** (after CI, Polish 1 and Guards), Polish 1's follow-ups 1 and 2 applied (the arena's `lost` word) and the final skeptic's minors fixed or written down; *Lane BODIES*, just above *Deferred* (its *Onto `main`'s `a08c15f`*) |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -5420,10 +5420,16 @@ tools/narrate-selftest.mjs` 87 checks, `npm --prefix web test` **933 + 120**
 (`main`'s 932 + 120, plus the follow-word test), `npm --prefix web run build`.
 `~/forge` and `~/.forge` were fingerprinted before and after: unchanged.
 
-### Polish 1's follow-ups — four, 2026-09-28
+### Polish 1's follow-ups — four, 2026-09-28 (1 and 2 closed at the art-direction lanes' merge onto `a08c15f`)
 
-1. **For the merge pass: the arena's liveness clause misses a `setTimeout`
-   poll.** Spectating's clause in `web/test/liveness.test.ts` (*follow mode
+1. ~~**For the merge pass: the arena's liveness clause misses a `setTimeout`
+   poll.**~~ **Closed at the art-direction lanes' merge** (Lane BODIES applied
+   it on its own branch from this text, and the three lanes' merge onto
+   `a08c15f` kept it): liveness's follow-mode test runs the predicate below
+   over the merged `web/src/arena/`, holds the ALLOWs to `art.ts`'s two
+   one-shots (the idle callback and its Safari stand-in, each tagged `// ALLOW
+   timer: <reason>`), and keeps the four probes and the spliced recursive poll
+   as its negative controls. The request, for the record: spectating's clause in `web/test/liveness.test.ts` (*follow mode
    reaches the arena as a word*) bans `fetch(`, `setInterval(`, `new
    EventSource(`, `new WebSocket(` and `XMLHttpRequest` under `web/src/arena/`,
    but a recursive `setTimeout` — `const tick = () => { void load();
@@ -5463,7 +5469,15 @@ tools/narrate-selftest.mjs` 87 checks, `npm --prefix web test` **933 + 120**
    four) and the spliced file (rejected; the old regex passed it) —
    `docs/evidence/polish-1.md` §8. Its header comment should name
    `setTimeout` beside the others.
-2. **The arena's own `lost` word.** `ArenaFollow` (`arena/Arena.tsx`) is
+2. ~~**The arena's own `lost` word.**~~ **Closed at the art-direction lanes'
+   merge onto `a08c15f`**, as written: `ArenaFollow` is `following | stalled |
+   finished | lost`, `DecisionLayer`'s watching line says *recording lost —
+   re-recorded under the same name; following stopped* with no dot and an
+   `arena__watch-follow--lost` class (`--error`'s colour), `main.tsx` hands the
+   arena `followWord` as it is and `arenaFollowOf` is gone, `spectate.test.ts`
+   holds `ArenaFollow` to `FollowWord`'s four words, `liveness.test.ts` spells
+   the new union, and `arena-hud.test.tsx` renders the lost line (no `●`, the
+   matchup kept). The request, for the record: `ArenaFollow` (`arena/Arena.tsx`) is
    `following | stalled | finished`, and `liveness.test.ts` asserts that line;
    a lost follow reaches the arena as no word (`main.tsx`'s `arenaFollowOf`).
    On the arena's desk: add `lost` to `ArenaFollow` and to `DecisionLayer`'s
@@ -6422,7 +6436,81 @@ Quake and the Bold Biochemist (`ws-*-1x.png`), and the table view at `g1`@355 an
 @316 with both duelists (`table-*-duelists.png`); Fury's strap, old and new, at 3×
 in `var/bodies/merge/probe/fury-strap-old-new.png`.
 
-### Lane BODIES follow-ups — twenty-eight, 2026-09-28 (four closed and three partly by the second fix pass; the third reopened 13 and 6, and closed part of 8 and 15; the merge closed 1, 6 and 13, part of 12 and 23, and added 24–28)
+### Onto `main`'s `a08c15f` (2026-09-28) — the three lanes together
+
+Report 15's commit and the three lanes' twelve (LOOK's five, MOTION's three,
+BODIES' four) replayed by `git rebase a08c15f` in this worktree, onto `main`'s
+CI (`249697e`), Polish 1 (`b9af15d`) and Guards (`a08c15f`). The merge pass edits
+any file the four sides own, and says where.
+
+- **Conflicts, each kept on both sides, `main`'s first.** `web/src/main.tsx`
+  (Polish 1's `arenaFollowOf(followWord)` beside LOOK's `lookQuery`, then
+  follow-up 2 below); CLAUDE.md's docs-table rows (merged word by word — Polish
+  1's and Guards' evidence and PLAN sentences, then the lanes'); DECISIONS.md at
+  every lane commit (each lane decision placed BEFORE Guards' **D180–D183**, which
+  now sit after **D165** with a gap — the numbering policy of 2026-09-28: a lane
+  keeps the numbers it reserved, nothing is renumbered and no count phrase moves);
+  PLAN.md's status table (the CI and Polish 1 rows, then the lanes'). README.md,
+  `styles.css` and the rest merged by themselves. `tools/check-all.sh`, `.gitignore`
+  and `web/test/liveness.test.ts` were not touched by the other side at all: the
+  gate's **48 jobs** are `main`'s (02b and 12e among them), and liveness keeps
+  every lane's clause.
+- **PLAN.md's order.** *Polish 1* and *Guards* moved ahead of *Lane LOOK*, so the
+  three lanes stay together above *Deferred*, in the order they landed; the status
+  rows that said "just above *Deferred*" for Polish 1 and Lane LOOK now say where
+  they are.
+- **Polish 1's follow-up 1 — already done.** Lane BODIES applied it on its own
+  branch; grepping the merged `web/src/arena/` for `setTimeout(`, `setInterval(`
+  and `requestIdleCallback(` finds `art.ts`'s two one-shots and nothing else, both
+  tagged `// ALLOW timer:`.
+- **Polish 1's follow-up 2 — applied** (the arena's desk, which the merge pass may
+  edit): `ArenaFollow` gains `lost`; the watching line says *recording lost —
+  re-recorded under the same name; following stopped*, with no dot and an
+  `arena__watch-follow--lost` class; `main.tsx` hands the arena `followWord` as it
+  is and `arenaFollowOf` is gone; `spectate.test.ts` holds `ArenaFollow` to
+  `FollowWord`'s four words and refuses a mapping between them;
+  `arena-hud.test.tsx` renders the lost line (matchup kept, no `●`);
+  `liveness.test.ts` spells the new union.
+- **The final skeptic's cheap minors.** CLAUDE.md's Lane BODIES headroom was the
+  branch's number (88 calls, 29,397 triangles) — it is the merge's, **90 and
+  29,521**, on the call line; the docs-table rows (CLAUDE.md's report 15,
+  evidence, PLAN and DECISIONS rows; README's report 15 and evidence rows) name
+  all three lanes; `docs/evidence/bodies.md` carries the `g1`@355 bloom-off
+  census beside the @316 bench (87 · 26,539 on the GTX 1080, 88 · 26,541 on
+  SwiftShader, against `e2aee03`'s 81 · 24,490 and 82 · 24,492) and both frames
+  re-measured on this tree; `traits.test.ts`'s three merge details each name
+  their side and their partner in a comment of their own, and the two hairs —
+  details by measurement, not by nature — are follow-up 29; the two visual
+  minors are follow-ups 30 (the villain's armour through his cloak) and 31
+  (Peggy's sidearm, a grey slab from above), each with its file.
+- **Built.** `node tools/build-workshop-catalog.ts`: `catalog.json` unchanged.
+  `node tools/fetch-art.ts`: `art.json` unchanged, 158 entries (Scryfall answered
+  429 several times; each `Retry-After` was honoured). `./bridge/build.sh`: the
+  lint's self-test (31 rules, 60 firing cases), the lint over `bridge/src` and
+  `tools/`, and the five self-tests (`ActGuardSelfTest` 74 checks) green.
+  `npm --prefix web test`: **994 `node --test` + 121 vitest (8 files)**, 0
+  failures — the lanes' 993 + 121 and Polish 1's follow-word test.
+  `npm --prefix web run build`: the 2D entry chunk **90.40 kB** gzip and no
+  `three` (no static import of a chunk, no three symbol); `arena-scene` 369.35,
+  `Workshop` 25.50, `Arena` 15.58, `Story` 15.53, `Post` 17.72 kB.
+- **Bench**, the rebased tree's production build on `vite preview`, two rounds,
+  load 0.9–3.4 (`var/merge-main/bench/`): `g1`@316 bloom off, GTX 1080 **86 ·
+  26,339**, SwiftShader **90 · 29,521**; `g1`@355 bloom off, GTX 1080 87–88 ·
+  26,539–26,541, SwiftShader 88 · 26,541 — the lane merge's counts
+  (`docs/evidence/bodies.md`).
+- **Gate**, `rm -rf bridge/out && GATE_JOBS=4 WSPORT=<n> ./tools/check-all.sh`,
+  twice: **239.0 s**, exit 0, at `WSPORT=8980`, 48 jobs whose seconds sum to
+  926.3, load 2.6 at the start and 6.2 at most (`var/check-all-visual-final-p1.log`);
+  **240.5 s**, exit 0, at `WSPORT=8990`, 933.3 s summed, load 5.4 at the start and
+  7.7 at most (`var/check-all-visual-final-p2.log`). In both: `node --test` **1004 / 996 pass / 0 fail / 8 skipped** plus 121
+  vitest (8 files), 6b `SAME GAME`, 10g's three games played and `undo(late)=ok`,
+  12d's 114 checks, 12e's four decks byte for byte their specs.
+- `~/forge` and `~/.forge`: fingerprinted before the rebase and after the second
+  gate — the jar's sha256 (`3c0a7c38…8e5dd9`), `~/forge`'s two top levels' names,
+  sizes and mtimes, and every file under `~/.forge` with its size, mtime and
+  sha1 — **unchanged**.
+
+### Lane BODIES follow-ups — thirty-one, 2026-09-28 (four closed and three partly by the second fix pass; the third reopened 13 and 6, and closed part of 8 and 15; the merge closed 1, 6 and 13, part of 12 and 23, and added 24–28; the three lanes' merge onto `main`'s `a08c15f` added 29–31, the final skeptic's minors)
 
 1. ~~**A figure that mounts KNEELING blends the stock idle under the kneel —
    `scene/FigureLayer.tsx`, LOOK's file.**~~ **Closed at merge** (**D156**,
@@ -6686,6 +6774,46 @@ in `var/bodies/merge/probe/fury-strap-old-new.png`.
     comments, so a line number from its output is not the file's; the poll
     clause prints the offending line instead. A `codeOf` that kept the newlines
     would let every clause name a real line.
+29. **Two hairs are details by measurement, not by nature** (the final skeptic,
+    `web/test/traits.test.ts`'s `ONE_SIDED`). `shield` is one-sided by nature —
+    Peggy holds it before her in her `ready`, 1 px from behind and 127 from the
+    front, and the red hat carries her from behind (318 / 217). But `hairParted`
+    (86 px from behind, 40 from the front) and `hairBob` (56 / 17) are hair,
+    which is all round a head: they went on the list at the lanes' merge because
+    D143 put their FRONT on the far seat, where a hairstyle is a fringe under the
+    brow, and there the squad's three heads (672) and Wasp's wings (212) carry the
+    card. Each row now names its side and its partner in its own comment. What
+    would take them off the list is a fringe that reads from the front at the full
+    48 — the bob is `web/src/arena/scene/props.ts`'s `case 'hairBob'` shell (a
+    fringe at `front: 50` on Wasp's half-height body, `traits.json`'s `scale`
+    0.55), the parted hair the agent body's own, carved and baked at load
+    (`carveHair` in `web/src/arena/scene/models.ts`, `bakeHair` in
+    `web/src/arena/scene/props.ts`) — judged in the
+    workshop's `1× front` and the raster from both seats; until then the partner
+    check is what holds the card (follow-up 26 is the general form).
+30. **The villain duelist's armour shows through his cloak** (the final skeptic's
+    picture, `var/verify-final/sheets/villain-before-after.png`: grey shards of
+    the body's armour poke through the green coat and cloak down his front and
+    side). The villain wears `coat`, `coatTails` and `cape` at once
+    (`web/src/arena/figures/duelists.json`), and `scene/DuelistLayer.tsx` bakes
+    every panel rigid on its `joint` into the duelist's mesh at `scale` 1.6 —
+    so the coat's body link, cut a finger's width off the hips for the card-sized
+    figures (**D163**; `web/src/arena/figures/props.ts`'s `coatTails` anchors,
+    `COAT_CHEST` and `COAT_BODY`), leaves the armour's widest points outside it on
+    this body. Either stand the panels further off for a duelist (a per-duelist
+    inflation of `COAT_BODY` in the bake) or drop the `coatTails` body link where a
+    `cape` already hangs; judge it at view 1 and view 3 in both looks.
+31. **Peggy's sidearm reads as a grey slab from above** (the final skeptic's
+    picture, `var/verify-final/sheets/zoom-ws-peggy-1x.png`, the workshop's `1×
+    front`). Follow-up 23's pistol at 70% points at the floor in her `ready`, so
+    from the table view and the workshop's high lens its profile — slide, raked
+    grip, guard and hammer (`web/src/arena/scene/props.ts`'s `case 'sidearm'`,
+    drawn `PROP_LOOK.metal`) — is foreshortened into its top face, one flat grey
+    block. The anchor is `web/src/arena/figures/props.ts`'s `sidearm` row (the
+    right hand, pointed down). Turning the pistol to show its side to a lens
+    above (a `PropAnchor.turn` toward the body's axis) or a darker slide than
+    `metal`'s grey would let it read as a pistol; follow-up 23's new `REST_KIT`
+    row is the larger version of the same fix.
 
 ---
 

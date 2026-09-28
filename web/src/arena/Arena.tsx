@@ -179,10 +179,12 @@ export interface ArenaProps {
   glInfo?: boolean;
   /**
    * **Spectating** (amendment M47, D118): the frame log is being followed while
-   * it is written — `following`, gone quiet (`stalled`), or `finished` — or
-   * `null` for anything else. Plain data from `main.tsx`: the arena imports no
-   * transport and never polls (M7 convention 1, `liveness.test.ts`); it only
-   * prints the word on the "watching" line.
+   * it is written — `following`, gone quiet (`stalled`), `finished`, or `lost`
+   * (a 416: the file was re-recorded under the same name and following stopped
+   * for good; polish-1's follow-up 2) — or `null` for anything else. Plain data
+   * from `main.tsx`: the arena imports no transport and never polls (M7
+   * convention 1, `liveness.test.ts`); it only prints the word on the
+   * "watching" line.
    */
   follow?: ArenaFollow | null;
   /**
@@ -196,7 +198,7 @@ export interface ArenaProps {
 }
 
 /** What {@link ArenaProps.follow} can say. Declared here, not imported: the arena knows no transport. */
-export type ArenaFollow = 'following' | 'stalled' | 'finished';
+export type ArenaFollow = 'following' | 'stalled' | 'finished' | 'lost';
 
 /** The speeds the cue strip offers (§11, E4). */
 const SPEEDS = [0.5, 1, 2, 4] as const;

@@ -1053,18 +1053,27 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
   hairWaves: { partner: 'hat', why: 'waves under a hat show at the nape — the hat carries Peggy from the front' },
   sidearm: { partner: 'hat', why: 'a pistol in the hand, pointed down in front — the red hat carries Peggy from behind' },
   // The lanes' merge (Lane BODIES on Lane LOOK): D143 turned the seats round —
-  // the near seat now sees your figures' BACKS, the far seat the opponent's
-  // fronts — and the ink's line takes a small prop's edge. Three BODIES props
-  // became details there, each measured, each with its partner at the full bar:
-  // Peggy's shield is held IN FRONT of her in her `ready` (D156) — 127 px from
-  // the far seat, 1 from behind; a hairstyle from the FRONT is its fringe, not its
-  // crown — the Agents' leader's parted hair (the agent body's own, BODY_HAIR:
-  // it names no card) is 40 px from the far seat, where the squad's three heads
-  // carry the card, and Wasp's bob on her half-height body 17 px, where her wings
-  // do. Both show at the full bar from behind.
-  shield: { partner: 'hat', why: 'a shield held in front in her ready — from behind the red hat carries Peggy (D143, at merge)' },
-  hairParted: { partner: 'squad', why: "the agent body's own hair, a fringe from the front — the squad's three heads carry the Agents (D143, at merge)" },
-  hairBob: { partner: 'wings', why: "a bob from the front is its fringe — on Wasp's half-height body the wings carry her (D143, at merge)" },
+  // the near seat (`you`) now sees your figures' BACKS, the far seat (`opp`) the
+  // opponent's FRONTS — and the ink's line takes a small prop's edge. Three BODIES
+  // props became details there. Each is measured (paint after the ink, the fewest
+  // over stance and rank position, near / far), each names the side it reads on
+  // and the partner that carries the card on the side it does not, and the test
+  // above holds the partner to the full bar on that side:
+  //
+  // - `shield` reads from the FRONT, and is one-sided by nature: Peggy holds it
+  //   before her in her `ready` (D156), so from behind her body covers it —
+  //   1 / 127 px. From BEHIND the red hat carries her (318 / 217).
+  shield: { partner: 'hat', why: 'front: a shield held before her in her ready; back: the red hat carries Peggy (D143, at merge)' },
+  // - `hairParted` reads from BEHIND (its crown, 86 px), and from the FRONT is a
+  //   fringe under the brow (40 px, under 48). It is the agent body's own hair
+  //   (`BODY_HAIR`: it names no card), and from the FRONT the squad's three heads
+  //   carry the Agents (994 / 672). Hair is not one-sided by nature, so this row
+  //   is a measurement, not a law: PLAN.md's Lane BODIES follow-up 29.
+  hairParted: { partner: 'squad', why: "back: the parted crown; front: a fringe — the squad's three heads carry the Agents (D143, at merge; PLAN BODIES 29)" },
+  // - `hairBob` reads from BEHIND (56 px) and from the FRONT is a fringe on
+  //   Wasp's half-height body (17 px); from the FRONT her wings carry her (347 /
+  //   212). The same measurement, not a law: follow-up 29.
+  hairBob: { partner: 'wings', why: "back: the bob; front: a fringe on her half-height body — the wings carry Wasp (D143, at merge; PLAN BODIES 29)" },
 };
 
 /**

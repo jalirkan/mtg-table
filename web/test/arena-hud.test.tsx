@@ -282,6 +282,15 @@ test('arena HUD: a spectated game says what is being watched — both decks, bot
   expect(text(renderToStaticMarkup(<DecisionLayer state={state} onAct={null} follow="finished" />))).toContain(
     'recording finished',
   );
+  // A 416 (polish-1's follow-up 2): the file was re-recorded, following stopped
+  // for good. The line says so, keeps the matchup, and carries no live dot.
+  const lost = renderToStaticMarkup(<DecisionLayer state={state} onAct={null} follow="lost" />);
+  const lostText = text(lost);
+  expect(lost).toContain('arena__watch-follow--lost');
+  expect(lostText).toContain('recording lost');
+  expect(lostText).toContain('vs Doom Legion (Marvel Super Heroes villains) (Reckless)');
+  expect(lostText).not.toContain('●');
+  expect(lostText).not.toContain('following —');
   // An ordinary replay of an AI-vs-AI log (no follow) still says who is playing,
   // by seat name when the recording carries no match block.
   const bare = statesOf('games/g1.jsonl')[5]!;

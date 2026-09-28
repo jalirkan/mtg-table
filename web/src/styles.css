@@ -3146,6 +3146,11 @@ button.zonerow__open:hover {
   color: var(--warn);
 }
 
+/* A 416 (polish-1's follow-up 2): the followed file was re-recorded and following stopped. No dot. */
+.arena__watch-follow--lost {
+  color: var(--error);
+}
+
 /*
  * M7 verification fix — **the life totals.**
  *

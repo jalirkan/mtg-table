@@ -686,11 +686,12 @@ type LoadState =
   | { status: 'ready'; path: string; transport: LogReplayTransport };
 
 /**
- * **Follow mode's word** (spectating, D118), for the story page and — through
- * {@link arenaFollowOf} — the arena. The arena imports no transport (M7
- * convention 1), so what it is told about the stream is this plain value: the
- * log is still being written, has gone quiet, has ended, or was LOST — or
- * `null`, an ordinary replay.
+ * **Follow mode's word** (spectating, D118), for the story page and the arena,
+ * which is handed it as it is (`Arena.tsx`'s `ArenaFollow` has the same four
+ * words since polish-1's follow-up 2, applied at the art-direction lanes' merge).
+ * The arena imports no transport (M7 convention 1), so what it is told about the
+ * stream is this plain value: the log is still being written, has gone quiet,
+ * has ended, or was LOST — or `null`, an ordinary replay.
  *
  * `lost` is a 416 (polish-1, spectating's skeptic): the file was re-recorded
  * under the same name and the follower has stopped for good. It used to fold
@@ -715,17 +716,6 @@ function followWordOf(status: FollowStatus | null): FollowWord | null {
     default:
       return 'following';
   }
-}
-
-/**
- * The arena's three words (`ArenaFollow`, declared in `arena/Arena.tsx`, which
- * this branch does not touch) have none for `lost`, so a lost follow reaches the
- * arena as no word at all: its watching line keeps the matchup and drops the
- * live "● following", and the strip above it (`FollowChip`) says what happened.
- * PLAN.md's polish-1 follow-up gives the arena a word of its own.
- */
-function arenaFollowOf(word: FollowWord | null): Exclude<FollowWord, 'lost'> | null {
-  return word === 'lost' ? null : word;
 }
 
 /** The dev-only handle a measurement reads (`import.meta.env.DEV` only, like `__mtgArena`). */
@@ -1068,7 +1058,7 @@ function ReplayApp({
               dpr={flags.dpr}
               glInfo={flags.glinfo}
               bloom={flags.bloom}
-              follow={arenaFollowOf(followWord)}
+              follow={followWord}
               lookQuery={flags.look}
             />
           </Suspense>

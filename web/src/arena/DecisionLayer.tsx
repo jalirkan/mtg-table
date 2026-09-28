@@ -68,7 +68,7 @@ export interface DecisionLayerProps {
   concedeArmed?: boolean;
   onArmConcede?: ((armed: boolean) => void) | null;
   /** Spectating: the log is followed as it is written (`Arena.tsx`'s `follow` prop, plain data). */
-  follow?: 'following' | 'stalled' | 'finished' | null;
+  follow?: 'following' | 'stalled' | 'finished' | 'lost' | null;
 }
 
 export function DecisionLayer({
@@ -207,8 +207,13 @@ export function DecisionLayer({
  * list, never a path (D105). The viewing seat is first and marked, because the
  * other seat's hand is hidden exactly as it would be at the table; this is that
  * seat's view of the game, not an omniscient one.
+ *
+ * The follow word after the matchup is `Arena.tsx`'s `follow`: the live dot
+ * only while the log is being written (`following`, `stalled`), and none once
+ * it ended or was LOST — a 416, the file re-recorded under the same name, after
+ * which the follower polls no more (polish-1's follow-up 2).
  */
-function WatchLine({ matchup, follow }: { matchup: Matchup; follow: 'following' | 'stalled' | 'finished' | null }): JSX.Element {
+function WatchLine({ matchup, follow }: { matchup: Matchup; follow: 'following' | 'stalled' | 'finished' | 'lost' | null }): JSX.Element {
   return (
     <p className="arena__watch" role="status">
       <span className="arena__watch-label">watching</span>{' '}
@@ -227,7 +232,13 @@ function WatchLine({ matchup, follow }: { matchup: Matchup; follow: 'following' 
       {follow !== null && (
         <span className={`arena__watch-follow arena__watch-follow--${follow}`}>
           {' · '}
-          {follow === 'following' ? '● following' : follow === 'stalled' ? '● following — no new frame yet' : 'recording finished'}
+          {follow === 'following'
+            ? '● following'
+            : follow === 'stalled'
+              ? '● following — no new frame yet'
+              : follow === 'lost'
+                ? 'recording lost — re-recorded under the same name; following stopped'
+                : 'recording finished'}
         </span>
       )}
     </p>

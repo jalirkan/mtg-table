@@ -351,7 +351,7 @@ test('liveness: follow mode reaches the arena as a word — it never polls, and 
   );
   const arena = codeOf(readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8'));
   assert.match(arena, /follow\?: ArenaFollow \| null/, 'Arena.tsx no longer takes follow mode as a plain prop');
-  assert.match(arena, /export type ArenaFollow = 'following' \| 'stalled' \| 'finished'/);
+  assert.match(arena, /export type ArenaFollow = 'following' \| 'stalled' \| 'finished' \| 'lost';/);
   const layer = codeOf(
     readFileSync(fileURLToPath(new URL('../src/arena/DecisionLayer.tsx', import.meta.url)), 'utf8'),
   );
