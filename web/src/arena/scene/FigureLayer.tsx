@@ -56,10 +56,10 @@ import {
   type FigurePose,
 } from '../figures/pose.ts';
 import type { ModelData } from '../figures/types.ts';
-import { HOLO_LOOK, lookValue, wantsHull, type LookSpec } from '../look.ts';
+import { HOLO_LOOK, lookValue, materialLookOf, wantsHull, type LookSpec } from '../look.ts';
 import type { DeathSource, DepartureBinder, DiscField, OffsetSource } from './discs.ts';
 import type { FigureRigMap } from './figureRigs.ts';
-import { applyCostume, applyLook, inkHullMaterial, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
+import { applyCostume, applyLook, inkHullMaterial, makeHoloMaterial, type HoloMaterial } from './figureMaterial.ts';
 import {
   clipFor,
   instantiateFigure,
@@ -219,11 +219,12 @@ export function FigureLayer({ poses, rigs, discs, models, look = HOLO_LOOK }: Fi
   // The props of THIS snapshot, bound against the rigs its figures registered —
   // and against the bodies dying in it (added by the departures' layout effect
   // above, which runs first), so a falling figure keeps what it carried.
+  const propLook = useMemo(() => materialLookOf(look), [look]);
   useLayoutEffect(() => {
     if (library !== null) props.setLibrary(library, models);
-    props.setLook(lookNumber, hull);
+    props.setLook(propLook);
     props.commit(poses, rigs, models, departures.bodies());
-  }, [props, poses, rigs, models, library, mounted, departures, lookNumber, hull]);
+  }, [props, poses, rigs, models, library, mounted, departures, propLook]);
 
   return (
     <>

@@ -898,13 +898,13 @@ test('liveness: a figure\'s costume is written at commit, never in the frame loo
     assert.ok(writesCostume.test(`${body}\napplyCostume(rig.material, pose.costume, false);`), `the scan misses applyCostume in ${name}`);
   }
   const writers = [...files].filter(([, code]) => /\.uCostume\.value\[/.test(code) || /uniforms\.uCostume\.value/.test(code)).map(([path]) => path);
-  assert.deepEqual(writers, ['scene/holoMaterial.ts'], 'something other than holoMaterial.ts writes a costume colour');
+  assert.deepEqual(writers, ['scene/figureMaterial.ts'], 'something other than figureMaterial.ts writes a costume colour');
   // A layout effect applies it, and a departing body applies it when it is built.
   assert.match(layer, /useLayoutEffect\([^]*?applyCostume\(built\.material/, 'FigureLayer no longer writes the costume at commit');
   assert.match(bodyOf(field, 'add'), /applyCostume\(material/, 'a departing body no longer falls in what it wore');
   assert.match(bodyOf(field, 'bind'), /uDrain\.value = /, 'the dying body no longer drains through the uniform');
-  const holo = files.get('scene/holoMaterial.ts') ?? '';
-  assert.ok(holo.length > 1000, 'scene/holoMaterial.ts moved — move this test with it');
+  const holo = files.get('scene/figureMaterial.ts') ?? '';
+  assert.ok(holo.length > 1000, 'scene/figureMaterial.ts moved — move this test with it');
   assert.ok(!/\buTime\b|performance\.now\(|Date\.now\(|requestAnimationFrame\(/.test(holo), 'the hologram reads a clock');
 });
 

@@ -52,6 +52,24 @@ export function lookFromSearch(search: string): LookSpec {
   return { look: 'comic', ink: ink === 'hull' || ink === 'none' ? ink : 'post' };
 }
 
+/**
+ * **The numbers a material takes at commit** (Lane LOOK) — every figure, prop
+ * and duelist material reads these three and nothing else of a look.
+ */
+export interface MaterialLook {
+  /** 0 the hologram … 1 the comic look (`uLook`). */
+  readonly look: number;
+  /** 0 or 1: the halftone screen in the core shadow. */
+  readonly halftone: number;
+  /** 0 the lens-fixed key light, 1 the world-fixed one. */
+  readonly keyWorld: number;
+}
+
+export function materialLookOf(spec: LookSpec): MaterialLook {
+  const comic = spec.look === 'comic';
+  return { look: comic ? 1 : 0, halftone: comic ? 1 : 0, keyWorld: 0 };
+}
+
 /** The number a material carries: 0 the hologram, 1 the comic look. */
 export function lookValue(spec: LookSpec): number {
   return spec.look === 'comic' ? 1 : 0;

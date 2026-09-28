@@ -37,11 +37,14 @@
  *     wings' flutter, the ring's turn, a glow's flicker — move only while frames
  *     are being drawn (like the `presence` bob), and never under
  *     `prefers-reduced-motion`. The clock is the one the frame loop hands in.
- *  3. **Unlit, one program.** Every kind is the same `ShaderMaterial` source — a
- *     view-space fresnel like `holoMaterial.ts`, plus instancing, a per-instance
- *     colour and a per-instance opacity — with its own uniforms, so three
- *     compiles one program for the whole field (primed at mount, see
- *     {@link PropField.setPrimeVisible}).
+ *  3. **One program.** Every kind is the same `ShaderMaterial` source
+ *     (`propMaterial.ts`, Lane LOOK's since report 15 §9.4: the hologram's
+ *     fresnel or the comic look's bands, plus instancing, a per-instance colour
+ *     and a per-instance opacity) with its own uniforms, so three compiles one
+ *     program for the whole field (primed at mount, see
+ *     {@link PropField.setPrimeVisible}). This file picks each kind's preset
+ *     (`LOOKS`) and never writes a uniform: the look reaches the kinds through
+ *     {@link PropField.setLook}, at commit.
  *  4. **Hard rule 8.** A prop is only ever bound for a pose that `figurePose`
  *     gave props, and it gives none to an anonymous figure; a prop takes no
  *     click (`raycast` is cleared on every mesh) and carries no name.
@@ -67,8 +70,9 @@ import {
 import type { ModelData } from '../figures/types.ts';
 import { parsedColour } from './colourCache.ts';
 import type { FigureRigMap } from './figureRigs.ts';
-import { COSTUME_ATTRIBUTE, inkHullMaterial } from './holoMaterial.ts';
-import { COMIC } from '../look.ts';
+import { PROP_LOOK, applyPropLook, makePropMaterial, type PropLook, type PropMaterial } from './propMaterial.ts';
+import { COSTUME_ATTRIBUTE } from './figureMaterial.ts';
+import type { MaterialLook } from '../look.ts';
 import { instantiateFigure, sampleClipInto, type LoadedModel, type ModelLibrary } from './models.ts';
 
 /** The slice of `SceneStage` the field reads — handed in, never imported. */
@@ -115,194 +119,37 @@ const FREEZE_MIX = 0.45;
 const FLARE_CLIPS: ReadonlySet<string> = new Set(['attack', 'summon', 'channel', 'grow']);
 
 // ---------------------------------------------------------------------------
-// The one shader
+// The paint: which preset each kind wears (the shader is `propMaterial.ts`'s)
 // ---------------------------------------------------------------------------
 
-const VERTEX = /* glsl */ `
-  #include <common>
-  #include <color_pars_vertex>
-  attribute float aOpacity;
-
-  varying vec3 vViewNormal;
-  varying vec3 vViewDir;
-  varying float vLocalY;
-  varying float vOpacity;
-
-  void main() {
-    #include <color_vertex>
-    #include <beginnormal_vertex>
-    #include <defaultnormal_vertex>
-    #include <begin_vertex>
-    #include <project_vertex>
-    vViewNormal = normalize( transformedNormal );
-    vViewDir = normalize( -mvPosition.xyz );
-    vLocalY = transformed.y;
-    vOpacity = aOpacity;
-  }
-`;
-
-const FRAGMENT = /* glsl */ `
-  #include <color_pars_fragment>
-  uniform float uCore;
-  uniform float uRim;
-  uniform float uRimBoost;
-  uniform float uRimLift;
-  uniform float uAlpha;
-  uniform float uAlphaRim;
-  uniform float uGlow;
-  uniform float uScan;
-  uniform float uLook;
-  uniform vec3 uKey;
-  uniform vec3 uShadowTone;
-  uniform float uDotPx;
-
-  varying vec3 vViewNormal;
-  varying vec3 vViewDir;
-  varying float vLocalY;
-  varying float vOpacity;
-
-  void main() {
-    float facing = abs( dot( normalize( vViewNormal ), normalize( vViewDir ) ) );
-    float fresnel = pow( 1.0 - facing, uRim );
-    // A function of the prop's own y, never of time (the holo figure's rule).
-    float scan = 1.0 - uScan * step( 0.5, fract( vLocalY * 30.0 ) ) * 0.3;
-    // three 0.186 declares vColor as a vec4 (vertex colour times instance colour).
-    vec3 base = vColor.rgb;
-    vec3 rimColour = mix( base, vec3( 1.0 ), uRimLift );
-    vec3 colour = ( base * uCore + rimColour * fresnel * uRimBoost ) * scan * uGlow;
-    float alpha = clamp( vOpacity * ( uAlpha + fresnel * uAlphaRim ), 0.0, 1.0 );
-    // Spike (report 15 §3): the same three bands as the figures' comic look, so
-    // a coat and the body under it are painted in one hand. A double-sided
-    // sheet's back face turns its normal to the lens first.
-    vec3 n = normalize( vViewNormal );
-    n = gl_FrontFacing ? n : -n;
-    float ndl = dot( n, normalize( uKey ) );
-    float lit = smoothstep( 0.28, 0.34, ndl );
-    float umbra = 1.0 - smoothstep( -0.20, -0.14, ndl );
-    vec3 paint = mix( vec3( 0.022, 0.03, 0.075 ), base, smoothstep( 0.0, 0.045, dot( base, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
-    vec3 comic = mix( paint, paint * mix( uShadowTone, vec3( 1.0 ), 0.55 ), 1.0 - lit );
-    comic = mix( comic, paint * uShadowTone, umbra );
-    vec2 cell = mat2( 0.7071, -0.7071, 0.7071, 0.7071 ) * gl_FragCoord.xy / uDotPx;
-    float dots = 1.0 - smoothstep( 0.26, 0.34, length( fract( cell ) - 0.5 ) );
-    comic *= 1.0 - 0.34 * dots * umbra;
-    float spec = smoothstep( 0.986, 0.993, dot( n, normalize( normalize( uKey ) + normalize( vViewDir ) ) ) );
-    comic = mix( comic, vec3( 0.92, 0.96, 1.0 ), 0.55 * spec * lit );
-    colour = mix( colour, comic, uLook );
-    alpha = mix( alpha, clamp( vOpacity * max( uAlpha, 0.85 ), 0.0, 1.0 ), uLook );
-    gl_FragColor = vec4( colour, alpha );
-    #include <colorspace_fragment>
-  }
-`;
-
-/** A kind's look: every number is a uniform, so every kind is the same program. */
-interface Look {
-  core: number;
-  rim: number;
-  rimBoost: number;
-  rimLift: number;
-  alpha: number;
-  alphaRim: number;
-  glow: number;
-  scan: number;
-  depthWrite: boolean;
-}
-
-const BODY: Look = { core: 0.55, rim: 2.1, rimBoost: 1.7, rimLift: 0, alpha: 0.38, alphaRim: 0.85, glow: 1, scan: 1, depthWrite: true };
-const SOLID: Look = { core: 0.8, rim: 2, rimBoost: 1.1, rimLift: 0.35, alpha: 0.66, alphaRim: 0.45, glow: 1, scan: 0.5, depthWrite: true };
-const DARK: Look = { core: 1, rim: 2.5, rimBoost: 0.5, rimLift: 0.25, alpha: 0.92, alphaRim: 0.08, glow: 1, scan: 0, depthWrite: true };
-const GLASS: Look = { core: 0.4, rim: 1.8, rimBoost: 1.5, rimLift: 0.4, alpha: 0.2, alphaRim: 0.85, glow: 1, scan: 0, depthWrite: false };
-const MEMBRANE: Look = { core: 0.95, rim: 1.6, rimBoost: 1.1, rimLift: 0.3, alpha: 0.46, alphaRim: 0.45, glow: 1, scan: 0, depthWrite: false };
 /**
- * A garment that reads as its own colour: Fury's black coat, the Biochemist's
- * white one. Nearly opaque, and rim-lit only at its SILHOUETTE (a steep fresnel,
- * power 3) — the second verification pass found a soft 0.6 rim lift turning
- * Fury's black coat into a pale grey bell from the table view's steep camera,
- * where most of a flared coat is at a grazing angle; with no rim at all it was a
- * black shape on a black table. Its shape is drawn by that edge and its trim.
+ * **Each kind's material preset** — Lane LOOK's `propMaterial.ts` owns the shader
+ * and the presets (report 15 §9.4); this table is the kit's choice of one per
+ * kind. A new kind picks a preset here and needs no shader change.
  */
-const CLOTH: Look = { core: 1, rim: 3, rimBoost: 0.9, rimLift: 0.45, alpha: 0.93, alphaRim: 0.07, glow: 1, scan: 0.15, depthWrite: true };
-/** A small hard object that has to read at table distance: the pistol. */
-const METAL: Look = { core: 0.9, rim: 1.5, rimBoost: 1.3, rimLift: 0.55, alpha: 0.9, alphaRim: 0.1, glow: 1, scan: 0, depthWrite: true };
-/**
- * A lit emblem — gold, not blown out to white. Normal blend since the
- * verification pass: additive gold over a navy body summed to white.
- */
-const BADGE: Look = { core: 1, rim: 2, rimBoost: 0.35, rimLift: 0.15, alpha: 0.95, alphaRim: 0.05, glow: 1, scan: 0, depthWrite: true };
-/** Cloth that has to read as a colour, not a sheen: the shirt-front and tie, the hat. */
-const FABRIC: Look = { core: 0.95, rim: 2, rimBoost: 0.55, rimLift: 0.35, alpha: 0.94, alphaRim: 0.06, glow: 1, scan: 0, depthWrite: true };
-/** The carrier: the body look, a little more solid, so it reads against the dark table from above. */
-const HULL: Look = { core: 0.72, rim: 2, rimBoost: 1.6, rimLift: 0.2, alpha: 0.55, alphaRim: 0.7, glow: 1, scan: 0.6, depthWrite: true };
-const EMBLEM: Look = { core: 0.95, rim: 2, rimBoost: 0.5, rimLift: 0.2, alpha: 0.82, alphaRim: 0.15, glow: 1, scan: 0, depthWrite: true };
-const GLOW: Look = { core: 1, rim: 2, rimBoost: 0.6, rimLift: 0.3, alpha: 0.9, alphaRim: 0.1, glow: 1.5, scan: 0, depthWrite: false };
-
-const LOOKS: Readonly<Record<SceneKind, Look>> = {
-  wings: MEMBRANE,
-  helmet: GLASS,
-  hood: SOLID,
-  jetpack: SOLID,
-  exhaust: GLOW,
-  laserEye: GLOW,
-  pistol: METAL,
-  coat: CLOTH,
-  eyepatch: DARK,
-  badge: BADGE,
-  gauntlets: GLOW,
-  shield: EMBLEM,
-  rider: BODY,
-  labBench: SOLID,
-  muzzle: GLOW,
-  tie: FABRIC,
-  hat: FABRIC,
-  visor: GLOW,
-  squad: BODY,
-  swarmBee: BODY,
-  carrier: HULL,
+const LOOKS: Readonly<Record<SceneKind, PropLook>> = {
+  wings: PROP_LOOK.membrane,
+  helmet: PROP_LOOK.glass,
+  hood: PROP_LOOK.solid,
+  jetpack: PROP_LOOK.solid,
+  exhaust: PROP_LOOK.glow,
+  laserEye: PROP_LOOK.glow,
+  pistol: PROP_LOOK.metal,
+  coat: PROP_LOOK.cloth,
+  eyepatch: PROP_LOOK.dark,
+  badge: PROP_LOOK.badge,
+  gauntlets: PROP_LOOK.glow,
+  shield: PROP_LOOK.emblem,
+  rider: PROP_LOOK.body,
+  labBench: PROP_LOOK.solid,
+  muzzle: PROP_LOOK.glow,
+  tie: PROP_LOOK.fabric,
+  hat: PROP_LOOK.fabric,
+  visor: PROP_LOOK.glow,
+  squad: PROP_LOOK.body,
+  swarmBee: PROP_LOOK.body,
+  carrier: PROP_LOOK.hull,
 };
-
-export type PropMaterial = THREE.ShaderMaterial & {
-  uniforms: Record<'uCore' | 'uRim' | 'uRimBoost' | 'uRimLift' | 'uAlpha' | 'uAlphaRim' | 'uGlow' | 'uScan' | 'uLook' | 'uDotPx', { value: number }>;
-};
-
-/**
- * Spike (report 15): which kinds take the comic look. Anything that EMITS — an
- * additive kind, or one drawn in the `GLOW` look (a muzzle, a laser eye, a visor,
- * the gauntlets) — stays a light, because a light is not paint.
- */
-function paintedKind(kind: SceneKind): boolean {
-  return PROP_KIT[kind].blend !== 'additive' && LOOKS[kind] !== GLOW && LOOKS[kind] !== GLASS && LOOKS[kind] !== MEMBRANE;
-}
-
-function makePropMaterial(kind: SceneKind): PropMaterial {
-  const look = LOOKS[kind];
-  const additive = PROP_KIT[kind].blend === 'additive';
-  const material = new THREE.ShaderMaterial({
-    vertexShader: VERTEX,
-    fragmentShader: FRAGMENT,
-    uniforms: {
-      uCore: { value: look.core },
-      uRim: { value: look.rim },
-      uRimBoost: { value: look.rimBoost },
-      uRimLift: { value: look.rimLift },
-      uAlpha: { value: look.alpha },
-      uAlphaRim: { value: look.alphaRim },
-      uGlow: { value: look.glow },
-      uScan: { value: look.scan },
-      uLook: { value: 0 },
-      uKey: { value: new THREE.Vector3(COMIC.key[0], COMIC.key[1], COMIC.key[2]) },
-      uShadowTone: { value: new THREE.Color().setRGB(COMIC.shadowTone[0], COMIC.shadowTone[1], COMIC.shadowTone[2]) },
-      uDotPx: { value: COMIC.dotPx },
-    },
-    vertexColors: true,
-    transparent: true,
-    blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
-    depthWrite: look.depthWrite && !additive,
-    // DoubleSide for EVERY kind: `side` is part of the program key, and one
-    // program for the whole field is the point. A wing is a single sheet anyway.
-    side: THREE.DoubleSide,
-    toneMapped: false,
-  });
-  return material as PropMaterial;
-}
 
 // ---------------------------------------------------------------------------
 // Geometry — procedural, merged per kind, with a per-vertex colour
@@ -820,13 +667,6 @@ interface KindMesh {
   material: PropMaterial;
   /** Instances written this frame. */
   count: number;
-  /**
-   * Spike (report 15 §3.4, option A): this kind's inverted-hull ink — the same
-   * geometry and the SAME instance matrices, drawn again in ink. `null` for a
-   * kind that emits (a light is not inked). One more draw call per painted kind.
-   */
-  hull: THREE.InstancedMesh | null;
-  hullOn: boolean;
 }
 
 const MODE_JOINT = 0;
@@ -941,10 +781,8 @@ export class PropField {
     this.motion = this.motionQuery?.matches === true ? 0 : 1;
   };
   private drawnLast = 0;
-  /** Spike (report 15): the look, written at commit by `FigureLayer`. */
-  private look = 0;
-  /** Spike (report 15 §3.4): draw the painted kinds' inverted-hull ink. */
-  private hullOn = false;
+  /** The look, written at commit by `FigureLayer` (`setLook`); a kind built later takes it too. */
+  private look: MaterialLook = { look: 0, halftone: 0, keyWorld: 0 };
 
   constructor() {
     this.group.name = 'props';
@@ -999,7 +837,7 @@ export class PropField {
     const opacity = new THREE.InstancedBufferAttribute(new Float32Array(PROP_CAPACITY), 1);
     opacity.setUsage(THREE.DynamicDrawUsage);
     geometry.setAttribute('aOpacity', opacity);
-    const material = makePropMaterial(kind);
+    const material = makePropMaterial(LOOKS[kind], PROP_KIT[kind].blend === 'additive');
     const mesh = new THREE.InstancedMesh(geometry, material, PROP_CAPACITY);
     mesh.name = `props:${key}`;
     mesh.frustumCulled = false;
@@ -1013,36 +851,22 @@ export class PropField {
     mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(PROP_CAPACITY * 3), 3);
     mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    let hull: THREE.InstancedMesh | null = null;
-    if (paintedKind(kind)) {
-      hull = new THREE.InstancedMesh(geometry, inkHullMaterial(), PROP_CAPACITY);
-      // The kind's own matrices, shared: the frame loop writes them once.
-      hull.instanceMatrix = mesh.instanceMatrix;
-      hull.name = `props:${key}:ink`;
-      hull.frustumCulled = false;
-      hull.count = 0;
-      hull.visible = false;
-      hull.renderOrder = PROP_ORDER;
-      hull.raycast = () => {};
-      this.group.add(hull);
-    }
-    const entry: KindMesh = { kind, mesh, opacity, material, count: 0, hull, hullOn: this.hullOn };
-    material.uniforms.uLook.value = paintedKind(kind) ? this.look : 0;
+    const entry: KindMesh = { kind, mesh, opacity, material, count: 0 };
+    applyPropLook(material, this.look);
     this.kinds.set(key, entry);
     this.list.push(entry);
     this.group.add(mesh);
     return entry;
   }
 
-  /** Spike (report 15): the look, at COMMIT — one uniform per kind, never per frame. */
-  setLook(look: number, hull = false): void {
+  /**
+   * **The look, at COMMIT** (`FigureLayer`'s layout effect — never the frame
+   * loop): every kind's material takes it through `propMaterial.ts`'s
+   * `applyPropLook`, which knows which kinds are paint and which are lights.
+   */
+  setLook(look: MaterialLook): void {
     this.look = look;
-    this.hullOn = hull && look > 0;
-    for (let i = 0; i < this.list.length; i++) {
-      const entry = this.list[i]!;
-      entry.material.uniforms.uLook.value = paintedKind(entry.kind) ? look : 0;
-      entry.hullOn = this.hullOn;
-    }
+    for (let i = 0; i < this.list.length; i++) applyPropLook(this.list[i]!.material, look);
   }
 
   /**
@@ -1385,7 +1209,6 @@ export class PropField {
       entry.material.dispose();
       entry.mesh.dispose();
       this.group.remove(entry.mesh);
-      if (entry.hull !== null) this.group.remove(entry.hull);
     }
     this.list.length = 0;
     this.kinds.clear();
@@ -1416,11 +1239,6 @@ function commitKind(entry: KindMesh): void {
   const mesh = entry.mesh;
   mesh.count = entry.count;
   mesh.visible = entry.count > 0;
-  // Spike (report 15 §3.4): the hull draws exactly the instances the kind does.
-  if (entry.hull !== null) {
-    entry.hull.count = entry.count;
-    entry.hull.visible = entry.hullOn && entry.count > 0;
-  }
   if (entry.count === 0) return;
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
