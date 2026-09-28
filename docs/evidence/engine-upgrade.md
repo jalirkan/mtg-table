@@ -22,7 +22,7 @@ What this work leaves in the tree:
 | `decks/fra-rw-aggro.txt` | The same list as plain text, `Sideboard` header, for people and the card library. |
 | `tools/audit-deck.mjs` + `tools/audit-deck/AuditDeck.java` | Per-card "will this deck actually play on this engine?" — see §5. Read-only: it builds its own Forge home under `var/audit-deck/`. |
 | `docs/research/patches/bridge-forge-2.0.15-snapshot-09.27.patch` | Spike B's bridge port, **not applied** — see spike B §(2) and the preparation pass below. |
-| `docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt` + `tools/javap-seam-diff.sh` | The 95-class seam diff the port was written against, and the read-only script that regenerates it for any two jars. |
+| `docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt` + `tools/javap-seam-diff.sh` | The 95-class seam diff the port was written against (regenerated on the rebase onto `a092d3a`: 99 classes, the four match setup added, the changed lines otherwise identical), and the read-only script that regenerates it for any two jars. |
 | `docs/drafts/decks/fra-gb-leftovers.dck` + `docs/drafts/README.md` | A **draft** FRA AI opponent: the green-black "second deck from the leftovers" the user's own list proposes, plus 18 basics. Every card is scripted in the snapshot. Not under `decks/`: see the preparation pass. |
 
 Both deck files parse with nothing skipped in `tools/card-library/deck.ts` (40 main,
@@ -847,7 +847,8 @@ in decks/ parses with nothing skipped" passed with `fra-rw-aggro.dck` and `.txt`
 present.
 
 Afterwards `git status` showed one modified tracked file,
-`docs/research/08-deck-card-coverage.md` (a new §8 appended — §9 since the rebase onto `main`'s `a092d3a`, where match setup's villains deck had taken §8), and eleven untracked
+`docs/research/08-deck-card-coverage.md` (a new §8 appended — §9 since the rebase
+onto `main`'s `a092d3a`, where match setup's villains deck had taken §8), and eleven untracked
 files, all preparation: the two deck files, `docs/drafts/README.md`,
 `docs/drafts/decks/fra-gb-leftovers.dck`, this file, report 14, the two files
 under `docs/research/patches/`, `tools/audit-deck.mjs`,
@@ -859,3 +860,62 @@ under `docs/research/patches/`, `tools/audit-deck.mjs`,
 `~/.forge/decks/constructed/` (`find … -print0 | sort -z | xargs -0 sha1sum |
 sha1sum`, `5cd33719…`) is the one recorded before this work began; that tree
 holds no files.
+
+## The rebase onto `main`'s `a092d3a` (2026-09-28)
+
+The branch, cut from `754f504`, was rebased onto `a092d3a` — Tier 2 slice 4, the
+workshop and match setup underneath it. `bridge/`, `config.json`,
+`forge-home/custom-cards/`, `fixtures/` and `docs/protocol.md` are still `main`'s,
+byte for byte.
+
+- **Conflicts, all prose**: `DECISIONS.md` (both sides appended; D109–D112 kept
+  their numbers, `main` ending at D108), `README.md` (four hunks: the tree's
+  DECISIONS line, the tools list, and two rows of the documents table) and report 08, where match
+  setup's villains deck had taken §8 — the FRA deck is §9 and every citation of it
+  moved. `CLAUDE.md`, `PLAN.md` and `NOTICE` merged on their own; the counts now
+  read one hundred and twelve.
+- **The workshop's catalog** reads every `decks/*.dck`, so `fra-rw-aggro.dck` made
+  `web/src/workshop/catalog.json` stale; regenerated, all 28 names land in
+  `missing` with `threeD: null` and `workshop.test.ts` passes (the villain deck's
+  state, 24 of 27).
+- **`cards-lib.test.ts`** now reads only `.dck` and `.txt`; `fra-rw-aggro.txt`
+  parses with nothing skipped.
+- **`node tools/fetch-art.ts`** (every `decks/*.dck` since match setup): 12 decks,
+  91 names, 0 misses; `fra-rw-aggro.dck` 28/28 (27 in `fra`, Austere Command in
+  `spg`). Scryfall answered 429 five times and the tool waited out each
+  `Retry-After`. `var/fetch-art-engine-upgrade.log`.
+- **`node tools/check-deck.mjs decks/fra-rw-aggro.dck`** exits 1, as it must on
+  2.0.14: 17 of the main deck's 20 names have no script, `Smoke` names the same 17
+  as dropped silently, and Limited conformance rejects the deck.
+  `var/check-deck-fra.log`. Not in the gate; its usage comment and
+  `decks/README.md` now say so.
+- **`tools/audit-deck.mjs`** on the rebased bridge: `fra-rw-aggro.dck` 19 ok / 31
+  missing / 0 broken, exit 1 (unchanged); the control, now with Doom Legion,
+  `pacho-shield` + `doom-legion` + `morph`, `yield` and `sideboard` probes, 215 ok,
+  exit 0.
+- **The saved port no longer applied**: `git apply --check` failed on
+  `RecordMatch.java:73`, where match setup removed the `GamePlayerUtil` import
+  beside the two imports the patch removes. Re-merged with `git merge-file` (base
+  `754f504`, ours `a092d3a`, theirs `754f504` + the patch) in the session
+  scratchpad; the one conflict was that import block. The changed lines are
+  identical to the old patch (+64 / −84); only context and index lines moved. On
+  a scratch copy of `a092d3a`'s `bridge/src` with it applied: `javac -Xlint:all`
+  against the snapshot jar (sha256 `70f756bc…`), no output; the build's four
+  self-tests on that build, Json 38, Ask 106, GameLog 35 and OverRace 11 checks,
+  0 failures (OverRace in a throwaway Forge home over the snapshot's `res/`);
+  `tools/lint-bridge.sh` OK (21 files); against 2.0.14 the same five errors.
+- **The seam baseline** regenerated with `tools/javap-seam-diff.sh`: 99 classes,
+  up from 95 — match setup's `Bootstrap` and `MtgTable` link `AiProfileUtil`,
+  `AiProps` and `LobbyPlayerAi` (identical on both jars) and
+  `forge.game.player.Player` (changed only in members the bridge does not call).
+  Every other line is as before.
+- **The gate**, from a deleted `bridge/out`, `WSPORT=8695`: **exit 0 in 906 s**
+  (`var/check-all-engine-upgrade.log`), load average 3–8. Step 6 identical to
+  `g1` (377 lines); 9b's advisory the usual three timing frames; 9c 14/14 in
+  373 s; 10g three games, 816, 1,120 and 1,840 frame-log lines, no `OVER WITHOUT
+  A gameOver STATE`; step 13 `node --test` 880 / 872 pass / 0 fail / 8 skipped,
+  vitest 94 / 94. Standalone, `npm --prefix web test` is 870 + 94 and
+  `npm --prefix web run build` succeeds.
+- `~/forge` (21,367 files, listing fingerprint unchanged, jar `3c0a7c38…8e5dd9`)
+  and `~/.forge` (seven files, sha1 of each unchanged) were compared before and
+  after all of it: unchanged.

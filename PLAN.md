@@ -4135,7 +4135,7 @@ Three findings beyond the cards:
 | `decks/fra-rw-aggro.dck`, `decks/fra-rw-aggro.txt` | **the user's pool**: 40 main and 10 sideboard, checked line by line against the user's own list (`/mnt/e/jalir/Projects/Magic/fra-pool-red-white-aggro.md`, read-only). Every card `\|FRA` except Austere Command, `\|SPG` — the set's Special Guests reprint; `\|FRA` falls back silently to another printing. The `.txt` says in its header that the deck does not play on 2.0.14 |
 | `docs/drafts/decks/fra-gb-leftovers.dck`, `docs/drafts/README.md` | **the draft AI opponent** (**D112**): the green-black "leftovers" deck the same notes propose, its 22 named cards plus 18 basics. Outside `decks/` on purpose, until the user accepts it |
 | `tools/audit-deck.mjs`, `tools/audit-deck/AuditDeck.java` | per card of a `.dck`, on any jar: **ok**, **missing** or **broken**. Read-only (a throwaway Forge home under `var/audit-deck/`); needs `bridge/out`; negative-controlled (175 of 175 ok on `pacho-shield` and three probe decks) |
-| `tools/javap-seam-diff.sh` | the 95 Forge classes `bridge/src` links, `javap`-diffed between two jars; reproduces spike B's diff line for line. Read-only |
+| `tools/javap-seam-diff.sh` | the 99 Forge classes `bridge/src` links (95 before match setup), `javap`-diffed between two jars; reproduces spike B's diff line for line. Read-only |
 | `docs/research/patches/bridge-forge-2.0.15-snapshot-09.27.patch` | **the port, not applied**: the daily's identity (version, bytes, sha256) and the seam diff in its header. `git apply --check` passes; one-way |
 | `docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt` | the seam the port answers to — the baseline a release's seam is diffed against |
 | report 14, its evidence, report 08 §9 | the decision, the measurements, the deck card by card |
@@ -4154,6 +4154,19 @@ node tools/audit-deck.mjs decks/pacho-shield.dck decks/morph-probe.dck \
 10g three games each played through (816, 1,118 and 1,830 frame-log lines, no
 `OVER WITHOUT A gameOver STATE`), and step 13's `node --test` 807 / 799 pass /
 0 fail / 8 skipped with vitest 91 / 91.
+
+**Rebased onto `main`'s `a092d3a`** (2026-09-28; slice 4, the workshop and match
+setup underneath, with the workshop's `catalog.json` regenerated for the FRA deck)
+the gate is green again, from a deleted `bridge/out`: **exit 0 in 906 s** at
+`WSPORT=8695` (`var/check-all-engine-upgrade.log`) — step 6 identical to `g1`
+(377 lines), 9c 14/14 in 373 s, 10g's three games 816, 1,120 and 1,840
+frame-log lines with no `OVER WITHOUT A gameOver STATE`, 9b's advisory the usual
+three timing frames, and step 13's `node --test` 880 / 872 pass / 0 fail / 8
+skipped with vitest 94 / 94 (870 + 94 standalone, the same as `main`: this branch
+adds no test). The saved bridge port was refreshed onto `a092d3a`'s bridge (the
+same changed lines; it applies, compiles against the snapshot with no warning,
+passes the build's four self-tests there, and still fails on 2.0.14 with the same
+five errors), and the seam baseline regenerated (99 classes).
 
 ### On the day an official release ships Reality Fracture — the checklist
 
@@ -4201,21 +4214,29 @@ fixed here; each is its own small change on `main`.
 
 1. **The M6 next-game race — a blocker for any engine switch.** Game N's late
    `finishGame` can land after game N+1's `openView` has reset `overEmitted`
-   (`WireGuiGame.java:816`), so game N+1 is born dead (`OVER WITHOUT A gameOver
-   STATE`, a six-line frame log). 2 of 6 three-game sessions on the daily, 0 of 5
-   on 2.0.14. The evidence gives two fixes — defer `nextGameDecision` until this
+   (`WireGuiGame.java:877`; `:816` before match setup), so game N+1 is born dead
+   (`OVER WITHOUT A gameOver STATE`, a six-line frame log). 2 of 6 three-game
+   sessions on the daily, 0 of 5 on 2.0.14 — but `main` has since seen it on
+   2.0.14 under load: CLAUDE.md records slice 4's first gate run after its
+   rebase onto the card library failing at step 10g when the `restartMatch()`
+   game sent `over` 2 ms after its `hello_ok` with no `state` (a four-frame log),
+   the same signature. Match setup's
+   `7364bea` made `over` terminal under load; it did not touch this reset. The
+   evidence gives two fixes — defer `nextGameDecision` until this
    game's `finishGame`, or key `finishGame` to a per-game generation — and
    choosing one is a DECISIONS entry (**question 19**).
 2. **Gate step 6 dies without its message.** `diff … | head -20` under
-   `set -o pipefail` (`tools/check-all.sh:231`, `:140`) exits 141 on a diff longer
-   than 20 lines, and `set -e` ends the gate before "FAILED at step 6" prints.
+   `set -o pipefail` (`tools/check-all.sh:246`, `:155`; `:231` and `:140` before
+   match setup) exits 141 on a diff longer than 20 lines, and `set -e` ends the
+   gate before "FAILED at step 6" prints.
    Step 6 is also load-sensitive on 2.0.14 itself (the forwarder's 500 ms flush
    moves frame boundaries).
 3. **Step 10g does not assert that each game was played.** It printed "OK: three
    games" over a game that died at birth; only `web/test/ws-log.test.ts` caught it,
    at step 13.
 4. **`MtgTable` prints `MTGTABLE OK` and exits 0 on a 0-turn game** (a card crash
-   at game start). That file belongs to the match-setup branch.
+   at game start). Still true at `a092d3a`: match setup's `MtgTable`, now on
+   `main`, checks only that the game reached `over`.
 5. **`check-redaction.mjs` A10 raises a false alarm** when a counter-unless-pay
    prompt against the seat names a counterspell that is already public on the
    stack: `lastZoneOf` is filled from `players[].zones` and never from
@@ -4230,13 +4251,20 @@ fixed here; each is its own small change on `main`.
    none of them. Of the fourteen, only Mabel, Valley Hero and Thalia, the Survivor
    (Soldiers) meet an existing subtype rung, and the colour rungs cover W and U
    only, so the red creatures stand as `creature/*`. Rows are art direction for
-   after the release (card names verbatim from the wire, M7 Tier 2 convention 1)
-   and after `tier2-slice4` lands, since it reworks the bodies. Lands and Medic's
-   Kitesail (Equipment) already fall to existing rungs.
-7. **Card art and the card library.** `tools/fetch-art.ts` has not been run for
-   either FRA deck, and `tools/card-library/` indexes MSH and MSC only, so the dev
-   card browser lists `fra-rw-aggro.dck` with its cards unresolved. A `fra` sync
-   closes the second; the first needs `art.json` for both seats' decks.
+   after the release (card names verbatim from the wire, M7 Tier 2 convention 1),
+   on slice 4's bodies (on `main` since `23e26b3`). Lands and Medic's Kitesail
+   (Equipment) already fall to existing rungs. Since the rebase the workshop lists
+   every card of `decks/fra-rw-aggro.dck` (its catalog reads every `decks/*.dck`),
+   all 28 names with no corpus facts — `catalog.json`'s `missing`, `threeD: null` —
+   the state 24 of Doom Legion's 27 names are in (match setup's follow-up 10).
+7. **Card art and the card library.** *Half closed by the rebase:* since match
+   setup `tools/fetch-art.ts` reads every `decks/*.dck`, and on `a092d3a` it
+   resolved all 28 of `fra-rw-aggro.dck`'s names on Scryfall (27 in `fra`,
+   Austere Command in `spg`; 91 entries across the twelve decks, 0 misses). The
+   draft opponent is outside `decks/`, so its art waits until it is accepted (or
+   `--deck` names it). `tools/card-library/` still indexes MSH and MSC only, so the
+   dev card browser lists `fra-rw-aggro.dck` with its cards unresolved; a `fra`
+   sync closes that.
 8. **Prepare on the board.** Pyre Rhymer, Woodwork Prodigy and Whiplash Wordsmith
    have a castable spell face. 2.0.15's `CardView.hasPreparedSpell()` and a
    face-up card's spell face are not on the wire — hard rule 8 keeps
@@ -4254,21 +4282,28 @@ fixed here; each is its own small change on `main`.
 
 **At merge.**
 
-12. **Two deck audits.** The match-setup branch's `tools/check-deck.mjs` (a
-    static pass, `Smoke`, and a Scryfall diff) and this branch's
-    `tools/audit-deck.mjs` (per-card build checks on any jar) overlap: fold them,
-    or give each one job.
-13. **`decks/README.md` against the card library's test.** The match-setup
-    branch adds one; measured here with the repo's own parser, a markdown file in
-    `decks/` parses as a deck with skipped lines, which fails `cards-lib.test.ts`
-    ("every deck in decks/ parses with nothing skipped") once both are on `main`.
-    Whichever merges second fixes the test or the file — and then this branch's
-    decks belong in that README too.
-14. **Numbers.** Report 08 §8 is claimed by both this branch (FRA) and
-    match-setup (its villains deck); DECISIONS D109–D112 were numbered past
-    D95–D108 on the assumption that the three other branches in flight renumber
-    contiguously (workshop and match-setup both claim D102–D104 today); questions
-    18–22 below may collide the same way.
+12. **Two deck audits.** Match setup's `tools/check-deck.mjs` (a static pass,
+    `Smoke`, and a Scryfall diff) and this branch's `tools/audit-deck.mjs`
+    (per-card build checks on any jar) overlap: fold them, or give each one job.
+    Both are hand tools; neither is in the gate. On `a092d3a` `check-deck.mjs
+    decks/fra-rw-aggro.dck` **fails, by design** (**D109**): 17 of the main deck's
+    20 names (22 of its 40 cards) have no script in 2.0.14, `Smoke`'s audit names
+    the same 17 as dropped silently, the basics' `|FRA` is not in 2.0.14's
+    `Reality Fracture.txt`, and Limited conformance rejects the deck — so
+    `check-deck.mjs decks/*.dck` exits 1 until the release, and its header and
+    `decks/README.md` say so (`var/check-deck-fra.log`).
+13. **`decks/README.md` against the card library's test.** *Closed by the
+    rebase.* Match setup added the README and changed the test to read only `.dck`
+    and `.txt` (`7364bea`), so `fra-rw-aggro.txt` — a deck list under a `#`
+    header — is parsed with nothing skipped and the README is not. This branch's
+    two deck files are now rows in that README's table, with a section of their
+    own.
+14. **Numbers.** *Closed by the rebase onto `a092d3a`.* Match setup kept report
+    08 §8 (its villains deck) and the FRA deck is **§9**; slice 4, the workshop and
+    match setup landed as D95–D108, so **D109–D112 kept their numbers**; `main`'s
+    open questions stop at 17, so 18–22 stand. One collision remains possible: the
+    `hardening` branch also numbers from D109, and whichever lands second
+    renumbers (DECISIONS.md's italic note above D109 says so).
 
 ---
 

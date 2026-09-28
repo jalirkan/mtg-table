@@ -607,6 +607,10 @@ the second is the committed tree (`var/check-all-ms-rebase.log`,
 with the verifier's four findings fixed, it ran from a deleted `bridge/out` at
 `WSPORT=8680`: **897 s**, exit 0, 9c's fourteen games 370 s, at a load
 average of 11–19 (`var/check-all-match-setup-final.log`, evidence §R.4).
+**Engine and sets, rebased onto match setup** (`a092d3a`, 2026-09-28, the
+`mtg-table-t2h` worktree; it added no step) ran it from a deleted `bridge/out` at
+`WSPORT=8695`: **906 s**, exit 0, 9c's fourteen games 373 s, at a load average of
+3–8 (`var/check-all-engine-upgrade.log`).
 `SKIP_TEN=1`
 brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
 **seven** servers on it, one after another.

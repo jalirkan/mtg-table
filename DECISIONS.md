@@ -4931,8 +4931,9 @@ above; the branch was rebased onto `main`'s `a092d3a` (2026-09-27), where those
 fourteen numbers were already taken, so these four kept the numbers they were
 written with. The `hardening` branch also numbers its own decisions from
 **D109**; whichever of the two lands second renumbers its own. They are cited from
-this file, PLAN.md's *Engine and sets*, README.md, CLAUDE.md, NOTICE and report
-14, and nowhere in code.*
+this file, PLAN.md's *Engine and sets*, README.md, CLAUDE.md, NOTICE,
+`decks/README.md` and one usage comment in `tools/check-deck.mjs`, and nowhere
+else in code.*
 
 ## D109 — The engine stays Forge 2.0.14 until an OFFICIAL Forge release ships Reality Fracture: no daily snapshot, no merged port, no card-script overlay
 
@@ -5102,8 +5103,9 @@ user's deck still does not start, and "builds" is not "correct").
 
 ## D112 — The FRA AI opponent is the user's own green-black "leftovers" list, finished with basics only, and a draft until the user accepts it
 
-**2026-09-27** (with **D109**. It reaches the AI's seat through `--deck2` today, or
-through the match-setup branch's `--ai-deck` / `match.aiDeck` once that lands.)
+**2026-09-27** (with **D109**. It reaches the AI's seat through `--ai-deck`
+(`--deck2`) on the bridge or on `scripts/play.sh`, or through `config.json`'s
+`match.aiDeck`, which only `play.sh` reads (match setup, **D106**).)
 
 **Decision.** The deck the AI plays against `decks/fra-rw-aggro.dck` is
 `docs/drafts/decks/fra-gb-leftovers.dck`: the green-black midrange list the user's
@@ -5126,15 +5128,18 @@ red-white deck, each deck on each seat, green-black won 25 and red-white 15, ove
 port all reached `over` with `UNIMPL members = none`, and all 9 frame logs PASS
 `check-redaction.mjs`. It is a playable opponent, somewhat stronger when the Forge
 AI pilots both decks, which says little about a human at the red-white seat. It
-stays out of `decks/` because `web/test/cards-lib.test.ts` parses every entry
-there (a `decks/drafts/` directory throws `EISDIR`, and a `decks/README.md` parses
-as a deck with skipped lines — measured), and because the dev card browser lists
-every `decks/*.dck`, where a draft would look like a reviewed deck.
+stays out of `decks/` because the dev card browser lists every `decks/*.dck`,
+where a draft would look like a reviewed deck — and since match setup and the
+workshop, so do `tools/fetch-art.ts` and the workshop's catalog. (Written on
+`754f504`, this also said `web/test/cards-lib.test.ts` parsed every entry there: a
+`decks/drafts/` directory threw `EISDIR` and a `decks/README.md` parsed as a deck
+with skipped lines, measured. Match setup made the test read only `.dck` and
+`.txt`, so that reason is gone.)
 
 **Rejected.** A blue-black list built from the set's commons and uncommons
 (measured first: 16–4 against the red-white deck, then 29–11 and 24–16 in two
 toned-down versions; dropped when the user's notes turned out to propose an
 opponent). The mirror match the spikes used (a test, not a game). An MSH deck
-(`decks/pacho-shield.dck`, or match-setup's villains) — nothing stops
+(`decks/pacho-shield.dck`, or match setup's `decks/doom-legion.dck`) — nothing stops
 `--deck2 decks/pacho-shield.dck`, but a cross-set opponent is not what the notes
 describe.

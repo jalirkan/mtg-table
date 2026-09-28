@@ -16,6 +16,8 @@ directory and delete one it cannot parse. So these files are only ever read.
 | `pacho-shield.txt` | — | the same list as the user wrote it, without set codes. Not read by anything. |
 | `doom-legion.dck` | Doom Legion (Marvel Super Heroes villains) | **the AI's deck.** U/B villains, 40 cards. What a bare `./scripts/play.sh` seats against you (`config.json`'s `match.aiDeck`). |
 | `*-probe.dck` (nine) | … probe | test decks that force one engine path each. Never meant to be fun. |
+| `fra-rw-aggro.dck` | Reality Fracture red-white legends aggro | **the user's Reality Fracture pool** (FRA), 40 cards + 10 sideboard. **Does not play on Forge 2.0.14** — see below. |
+| `fra-rw-aggro.txt` | — | the same list as the user wrote it, under a `#` header that says so. Not read by the engine. |
 
 ## Using them
 
@@ -229,6 +231,35 @@ All in Forge 2.0.14 and in MSH/MSC; each is a one-line change, and
   play him, so he stays out of an AI deck.
 - **Super Villain Lockup** (MSH #37) is **white** — a hero's card that locks a
   villain up — so it is not in a blue-black villain deck.
+
+---
+
+## `fra-rw-aggro.dck` — waiting for an official Forge release
+
+The user's Reality Fracture (Scryfall `fra`, Forge edition `FRA`) pre-release
+pool: red-white legends aggro, 40 main and 10 sideboard, copied line for line
+from the user's own list. Every line is `|FRA` except Austere Command, `|SPG`
+(the set's Special Guests reprint).
+
+**It does not play on the engine this repo runs, and that is a decision, not a
+bug** (DECISIONS.md **D109**–**D111**). Forge 2.0.14 predates the set: 17 of the
+main deck's 20 names have no script there, and Forge would drop those cards from
+the library without a word. So, on 2.0.14 and by design:
+
+- `node tools/check-deck.mjs decks/fra-rw-aggro.dck` **fails** (and so does any
+  `check-deck.mjs decks/*.dck`);
+- `node tools/audit-deck.mjs decks/fra-rw-aggro.dck` reports **19 ok, 31
+  missing, 0 broken** (copies, main + sideboard) and exits 1;
+- no gate step plays it, and nothing hand-writes or overlays a card script to
+  make it play early (**D111**).
+
+What does work today: `node tools/fetch-art.ts` resolves all 28 of its names on
+Scryfall, the workshop lists its cards (with no figure facts yet), and the card
+browser lists the deck. Its opponent is a draft outside this directory,
+`docs/drafts/decks/fra-gb-leftovers.dck` (**D112**), until the user accepts it.
+The day an official Forge release ships the set is
+[`docs/research/14-engine-upgrade.md`](../docs/research/14-engine-upgrade.md)
+§0's checklist; report 08 §9 is the deck card by card.
 
 ---
 

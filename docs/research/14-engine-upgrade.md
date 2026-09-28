@@ -33,9 +33,10 @@ reverting `config.json` and the patch, because `~/forge` (2.0.14) is never touch
 cards, but it must land before any engine switch):
 
 - [ ] Fix the **M6 next-game race** (§4.1): a late `finishGame` lands after the next
-      game's `openView` has reset `overEmitted` (`WireGuiGame.java:816`). Pick
-      "defer `nextGameDecision` until `finishGame`" or "key `finishGame` to a per-game
-      generation", and write the choice into `DECISIONS.md`.
+      game's `openView` has reset `overEmitted` (`WireGuiGame.java:877` at
+      `a092d3a`; `:816` at `754f504`). Pick "defer `nextGameDecision` until
+      `finishGame`" or "key `finishGame` to a per-game generation", and write the
+      choice into `DECISIONS.md`.
 - [ ] Fix the two gate defects (§4.2, §4.3): step 6's `diff | head -20` exits 141
       under `pipefail` before it prints its failure; step 10g does not assert that
       each game was played.
@@ -82,8 +83,8 @@ cards, but it must land before any engine switch):
        - It **drifted further**: re-port by the same method; the patch header says
          what each hunk is for. It is a guide, not a promise.
        - It does **not** differ from 2.0.14 at all: no patch.
-       Also change `MtgTable`'s `members fired = N of 37` to 28 (cosmetic; that file
-       belongs to the match-setup worktree).
+       Also change `MtgTable`'s `members fired = N of 37` to 28 (cosmetic;
+       `MtgTable.java:386` at `a092d3a`).
 6. [ ] **Point the repo at it:** `tools/config.sh` resolves a relative `forgeJar`
        against the repo root **(new on the day)**; `config.json` gets
        `forgeJar = var/forge-engine/<v>/…jar`, `forgeJarSha256`, `forgeVersion`; and
@@ -106,11 +107,10 @@ cards, but it must land before any engine switch):
        ```
        Read **`player turns`**, not just `MTGTABLE OK` (a 0-turn crash still prints
        OK today, §4.4). The last line is the first time a human casts an Empower
-       spell (No Admittance) through the bridge: try it first. `--deck2` is how the
-       bridge takes the AI's deck today; if the match-setup worktree's
-       `--ai-deck` has landed by then, use that.
-9. [ ] **Record it:** a `DECISIONS.md` entry for the switch (the next free number at
-       merge, at least D95), then the D14 follow-up: retire the A.I.M. Scientists
+       spell (No Admittance) through the bridge: try it first. `--deck2` and match setup's
+       `--ai-deck` are the same flag on the bridge (**D106**).
+9. [ ] **Record it:** a `DECISIONS.md` entry for the switch (the next free number
+       then — D113 at the earliest), then the D14 follow-up: retire the A.I.M. Scientists
        overlay and `ALLOW_CUSTOM_CARDS_IN_DECKS_CONFORMANCE` once the release's own
        script is confirmed (the snapshot's already dropped `K:Trample`).
 
@@ -183,8 +183,9 @@ snapshot wired in. For completeness, the port would also not be ready today:
 
 - **A race in the bridge's M6 lifecycle.** The previous game's late `finishGame`
   can land after the next game's `openView` has reset `overEmitted`
-  (`WireGuiGame.java:816`), so the next game is born dead. It happened in 2 of 6
-  three-game sessions on the snapshot and 0 of 5 on 2.0.14.
+  (`WireGuiGame.java:877` at `a092d3a`; `:816` at `754f504`), so the next game is
+  born dead. It happened in 2 of 6 three-game sessions on the snapshot and 0 of 5
+  on 2.0.14.
 - **Committed fixtures would change.** Strict gate step 6 fails on the snapshot
   because 290 `stats` events list their `cardIds` in a different order, which
   forces a re-record of `g1` (and probably `g2`/`g3`).
@@ -201,16 +202,17 @@ its own small change on `main` whenever the user wants it; **none is made here.*
    candidate fixes: defer `nextGameDecision` until this game's `finishGame`, or make
    a stale `finishGame` a no-op keyed by a per-game generation. Choosing one is a
    `DECISIONS.md` entry.
-2. **`check-all.sh` step 6 dies silently.** At `tools/check-all.sh:231`,
-   `diff … | head -20` runs under `set -o pipefail` (line 140). A long diff exits
-   141 and `set -e` ends the gate before `die` prints "FAILED at step 6". Step 6 is
-   also load-sensitive on 2.0.14 itself, because `GameEventForwarder`'s 500 ms flush
-   moves frame boundaries.
+2. **`check-all.sh` step 6 dies silently.** At `tools/check-all.sh:246`
+   (`:231` at `754f504`), `diff … | head -20` runs under `set -o pipefail` (line
+   155). A long diff exits 141 and `set -e` ends the gate before `die` prints
+   "FAILED at step 6". Step 6 is also load-sensitive on 2.0.14 itself, because
+   `GameEventForwarder`'s 500 ms flush moves frame boundaries.
 3. **Step 10g does not assert that each game was played.** It printed "OK: three
    games" over a game that died at birth. Only `web/test/ws-log.test.ts` caught it,
    at step 13.
-4. **`MtgTable` prints `MTGTABLE OK` and exits 0 on a 0-turn crash.** That file
-   belongs to the match-setup worktree.
+4. **`MtgTable` prints `MTGTABLE OK` and exits 0 on a 0-turn crash.** Still true at
+   `a092d3a`, where match setup's `MtgTable` checks only that the game reached
+   `over`.
 5. **`check-redaction.mjs` A10 warns about an opponent's spell that is already on
    the stack.** Found by the preparation pass: in an automated-seat game against a
    blue-black test deck, the engine's "counter unless you pay {3}" prompt names the
@@ -230,9 +232,9 @@ its own small change on `main` whenever the user wants it; **none is made here.*
 | file | purpose |
 |---|---|
 | `decks/fra-rw-aggro.dck`, `decks/fra-rw-aggro.txt` | the user's pool: 40 main + 10 sideboard, from the user's own list (the `.txt` names the source and says the deck does not play on 2.0.14). Austere Command is `\|SPG` (its FRA-release printing is Special Guests; `\|FRA` silently falls back to MSC) |
-| `docs/drafts/decks/fra-gb-leftovers.dck`, `docs/drafts/README.md` | a **draft** FRA opponent: the green-black "second deck from the leftovers" the user's own list proposes, finalised to 40 with basics only. Outside `decks/` because `cards-lib.test.ts` parses every entry in `decks/` (a `decks/README.md` or a `decks/drafts/` directory would fail step 13) |
+| `docs/drafts/decks/fra-gb-leftovers.dck`, `docs/drafts/README.md` | a **draft** FRA opponent: the green-black "second deck from the leftovers" the user's own list proposes, finalised to 40 with basics only. Outside `decks/` because every tool that lists `decks/` would read it as one of the repo's decks — the card browser, `tools/fetch-art.ts` and the workshop's catalog. (Written on `754f504`, this said `cards-lib.test.ts` parsed every entry in `decks/`; since match setup it reads only `.dck` and `.txt`.) |
 | `tools/audit-deck.mjs`, `tools/audit-deck/AuditDeck.java` | per-card ok / missing / broken against any jar (`FORGE_JAR=…`). Read-only, writes only under `var/audit-deck/`, negative-controlled (175/175 on the MSH and probe decks) |
-| `tools/javap-seam-diff.sh` | spike B's 95-class javap recipe as a read-only script: `<old.jar> <new.jar>` in, the seam diff out. Reproduces spike B's diff line for line |
+| `tools/javap-seam-diff.sh` | spike B's javap recipe as a read-only script: `<old.jar> <new.jar>` in, the seam diff out. Reproduced spike B's 95-class diff line for line; since match setup the bridge links 99 classes, and the saved baseline was regenerated on the rebase onto `a092d3a` |
 | `docs/research/patches/bridge-forge-2.0.15-snapshot-09.27.patch` | the seam port, with the snapshot's build identity (version, sizes, sha256s) and the seam diff in its header. `git apply --check` passes. **One-way**: 5 compile errors on 2.0.14, so it stays a patch until the switch |
 | `docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt` | the seam the patch was written against, to diff the release's against (§0 step 5) |
 | `docs/evidence/engine-upgrade.md`, `docs/research/08-deck-card-coverage.md` §9 | the measurements and reproduce commands; the card-by-card view of the deck |
@@ -345,8 +347,8 @@ deliberate in three places:
   so against the snapshot). So a release that still keeps FRA under `upcoming/`, or
   ships a card that does not build, stops the switch before any code changes.
 - **The seam is compared, not assumed (step 5).** `tools/javap-seam-diff.sh`
-  regenerates spike B's 95-class diff for the release jar, and the saved snapshot
-  diff is the baseline. The patch is applied only when the release's seam moved the
+  regenerates spike B's diff for the release jar (99 classes since match setup),
+  and the saved snapshot diff is the baseline. The patch is applied only when the release's seam moved the
   way the snapshot's did.
 
 ### 5.4 Fixtures, if the engine changed how games play
@@ -416,7 +418,7 @@ same `human-auto-42` events. It differs in one thing, the order of `cardIds` ins
    the day. It is a latent bug on 2.0.14, found here; it does not touch cards.
 3. **The gate fixes** (§4.2 step 6's silent exit 141, §4.3 10g not checking that
    each game was played) and `MtgTable`'s OK on a 0-turn crash: fix now or later,
-   and who owns them (`MtgTable` belongs to the match-setup worktree).
+   and who owns them (`MtgTable` is on `main` since match setup).
 4. **Keep the prepared files** (§5.0's table: the decks, `tools/audit-deck*`,
    `tools/javap-seam-diff.sh`, `docs/research/patches/`, `docs/drafts/`, the evidence
    and this report) in the tree to commit, and whether `audit-deck.mjs` should join

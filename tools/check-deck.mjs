@@ -45,6 +45,10 @@
 //   node tools/check-deck.mjs decks/doom-legion.dck                # static + engine
 //   node tools/check-deck.mjs decks/doom-legion.dck --scryfall     # + Scryfall diff
 //   node tools/check-deck.mjs decks/*.dck --no-engine              # static only, seconds
+//       # ...which exits 1 on Forge 2.0.14, by design: decks/fra-rw-aggro.dck
+//       # (the user's Reality Fracture pool) has 17 names that engine has no
+//       # script for, and waits for an official Forge release (DECISIONS
+//       # D109).  Name the decks you mean, or read its failures as expected.
 //   node tools/check-deck.mjs decks/pacho-shield.dck --no-engine --scryfall --stock
 //       # --stock ignores the D14 overlay: the negative control, which must
 //       # report A.I.M. Scientists' Trample as a MISMATCH

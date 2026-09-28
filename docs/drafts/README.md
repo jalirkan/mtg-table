@@ -13,14 +13,18 @@ Forge 2.0.14. The plan they belong to is
 
 ## Why the deck is here and not in `decks/`
 
-Two things read `decks/` today:
+Everything that lists `decks/` reads a deck there as one of the repo's decks:
 
+- The dev card browser lists every `decks/*.dck`, where a draft would look like a
+  reviewed deck.
+- Since match setup and the workshop, `tools/fetch-art.ts` fetches art for every
+  `decks/*.dck`, and `tools/build-workshop-catalog.ts` puts every card of one into
+  the workshop's list.
 - `web/test/cards-lib.test.ts` ("every deck in decks/ parses with nothing
-  skipped") opens **every entry** in `decks/`. A `decks/README.md` would parse as
-  a plain-text deck list with its prose lines skipped, and a `decks/drafts/`
-  directory throws `EISDIR`. Either one turns `npm --prefix web test`, and so
-  `check-all.sh` step 13, red.
-- The dev card browser lists every `decks/*.dck`.
+  skipped") parses every `.dck` and `.txt` there. When this was written (on
+  `754f504`) it opened **every entry**, so a `decks/drafts/` directory threw
+  `EISDIR`; match setup narrowed it to the two extensions, and `decks/` has a
+  `README.md` of its own now.
 
 So a draft lives here until the user accepts it. On the day, after review:
 

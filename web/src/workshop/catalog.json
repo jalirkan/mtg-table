@@ -306,6 +306,152 @@
       ]
     },
     {
+      "file": "fra-rw-aggro.dck",
+      "name": "Reality Fracture red-white legends aggro",
+      "cards": [
+        {
+          "name": "Samut, Hazoret's Champion",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Gallia, the Merrymaker",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Eardrum Rattler",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Graft Surgeon",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Koth, the Geomancer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Chandra's Emberling",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Pyre Rhymer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Yoshimaru, Beloved Companion",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Mabel, Valley Hero",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Shatterwing Pegasus",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Woodwork Prodigy",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thalia, the Survivor",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Whiplash Wordsmith",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Jiang Yanggu, Alone",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wrath of the Bloodmane",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "No Admittance",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Fulminous Forte",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Ajani's Anguish",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Mountain",
+          "count": 9,
+          "section": "main"
+        },
+        {
+          "name": "Plains",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Surgical Precision",
+          "count": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Your Fate Ends Here",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Hexhaven Battalion",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Way of the Pyromancer",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Medic's Kitesail",
+          "count": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Austere Command",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ghalta the Immovable",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Room of Refuge",
+          "count": 1,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
       "file": "future-sight-probe.dck",
       "name": "Future Sight probe",
       "cards": [
@@ -836,29 +982,55 @@
   "missing": [
     "A.I.M. Bot",
     "Agents of HYDRA",
+    "Ajani's Anguish",
+    "Austere Command",
     "Baron Strucker, HYDRA Overlord",
     "Castle Doom",
+    "Chandra's Emberling",
     "Crossbones, Malicious Mercenary",
     "Dark Deed",
     "Doctor Doom",
     "Doom Blade",
     "Doom Reigns Supreme",
     "Doom's Servo-Guards",
+    "Eardrum Rattler",
     "Frozen in Ice",
+    "Fulminous Forte",
+    "Gallia, the Merrymaker",
+    "Ghalta the Immovable",
     "Giant Growth",
+    "Graft Surgeon",
     "HYDRA Troopers",
+    "Hexhaven Battalion",
     "Hidden Lair",
     "Hour of Defeat",
+    "Jiang Yanggu, Alone",
     "Kang the Conqueror",
     "Kang, Temporal Tyrant",
+    "Koth, the Geomancer",
     "Loki, God of Mischief",
+    "Mabel, Valley Hero",
     "Madame Hydra, Reanimated",
+    "Medic's Kitesail",
+    "No Admittance",
     "Pharaoh Rama-Tut",
+    "Pyre Rhymer",
+    "Room of Refuge",
+    "Samut, Hazoret's Champion",
+    "Shatterwing Pegasus",
+    "Surgical Precision",
     "Swamp",
+    "Thalia, the Survivor",
     "Thriving Moor",
     "Unliving Legionnaire",
     "Villainous Hideout",
-    "Visions of Villainy"
+    "Visions of Villainy",
+    "Way of the Pyromancer",
+    "Whiplash Wordsmith",
+    "Woodwork Prodigy",
+    "Wrath of the Bloodmane",
+    "Yoshimaru, Beloved Companion",
+    "Your Fate Ends Here"
   ],
   "threeD": {
     "A.I.M. Bot": null,
@@ -869,14 +1041,17 @@
     "Agents of HYDRA": null,
     "Agents of S.H.I.E.L.D.": "figure",
     "Ainok Tracker": "figure",
+    "Ajani's Anguish": null,
     "Ant-Man's Air Force": "figure",
     "Ant-Man, Reformed Rogue": "figure",
     "Ashcloud Phoenix": "figure",
+    "Austere Command": null,
     "Baron Strucker, HYDRA Overlord": null,
     "Battering Craghorn": "figure",
     "Bold Biochemist": "figure",
     "Borough Backup": "cues",
     "Castle Doom": null,
+    "Chandra's Emberling": null,
     "Clue Token": null,
     "Crossbones, Malicious Mercenary": null,
     "Dark Deed": null,
@@ -885,42 +1060,59 @@
     "Doom Blade": null,
     "Doom Reigns Supreme": null,
     "Doom's Servo-Guards": null,
+    "Eardrum Rattler": null,
     "Forest": null,
     "Frozen in Ice": null,
+    "Fulminous Forte": null,
     "Future Sight": null,
+    "Gallia, the Merrymaker": null,
     "Garruk's Companion": "figure",
+    "Ghalta the Immovable": null,
     "Giant Growth": null,
     "Giant-Sized Flying Ant": "figure",
+    "Graft Surgeon": null,
     "HYDRA Troopers": null,
     "Helicarrier Strike": "cues",
     "Hero Token": "figure",
+    "Hexhaven Battalion": null,
     "Hidden Lair": null,
     "Hour of Defeat": null,
     "Island": "cues",
+    "Jiang Yanggu, Alone": null,
     "Kang the Conqueror": null,
     "Kang, Temporal Tyrant": null,
+    "Koth, the Geomancer": null,
     "Loki, God of Mischief": null,
+    "Mabel, Valley Hero": null,
     "Madame Hydra, Reanimated": null,
     "Manamorphose": null,
+    "Medic's Kitesail": null,
     "Mountain": null,
     "Nick Fury, Spymaster": "figure",
+    "No Admittance": null,
     "Opt": null,
     "Peggy Carter, Secret Agent": "figure",
     "Pharaoh Rama-Tut": null,
     "Plains": "cues",
     "Pym Particles": "cues",
+    "Pyre Rhymer": null,
     "Quake, Agent of S.H.I.E.L.D.": "figure",
     "Quantum Reduction": "cues",
     "Rampant Growth": null,
     "Robot Token": "figure",
     "Robotics Mastery": "cues",
+    "Room of Refuge": null,
     "S.H.I.E.L.D. Helicarrier": "figure",
     "S.H.I.E.L.D. Spy Kit": "cues",
+    "Samut, Hazoret's Champion": null,
     "Saproling Token": "figure",
+    "Shatterwing Pegasus": null,
     "Soldier Token": "figure",
     "Strategic Intervention": "cues",
     "Super Suit": "cues",
+    "Surgical Precision": null,
     "Swamp": null,
+    "Thalia, the Survivor": null,
     "Thallid": "figure",
     "Thriving Heath": "cues",
     "Thriving Isle": "cues",
@@ -930,6 +1122,12 @@
     "Visions of Villainy": null,
     "Volcano Hellion": "figure",
     "Wasp, Shrinking Savior": "figure",
-    "Web Up": "cues"
+    "Way of the Pyromancer": null,
+    "Web Up": "cues",
+    "Whiplash Wordsmith": null,
+    "Woodwork Prodigy": null,
+    "Wrath of the Bloodmane": null,
+    "Yoshimaru, Beloved Companion": null,
+    "Your Fate Ends Here": null
   }
 }

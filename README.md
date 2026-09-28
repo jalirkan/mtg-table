@@ -347,6 +347,7 @@ game down) — from a throwaway Forge home under `var/audit-deck/`; it needs a b
 | deck | what it is | on Forge 2.0.14 |
 |---|---|---|
 | `decks/pacho-shield.dck` (+ `.txt` as typed) | **the deck in play**: the user's W/U S.H.I.E.L.D. deck, 40 cards, MSH + MSC | plays; D14 corrects one card |
+| `decks/doom-legion.dck` | **the AI's deck** (match setup, D108): *Doom Legion*, 40 blue-black Marvel villains, MSH + MSC — what a bare `./scripts/play.sh` seats against you (*Choosing decks and the AI*, below) | plays |
 | `decks/fra-rw-aggro.dck` (+ `.txt`) | **the user's Reality Fracture pool** from the set's pre-release: red-white legends aggro, 40 main + 10 sideboard, copied from the user's own list | **does not play yet** — 19 ok, 31 missing, 0 broken. Waits for an official Forge release (D109) |
 | `docs/drafts/decks/fra-gb-leftovers.dck` | a **draft** FRA opponent for the AI: the green-black "leftovers" deck the user's own notes propose, finished to 40 with basics only (D112). Deliberately **not** in `decks/` until the user accepts it (`docs/drafts/README.md`) | does not play yet — 20 ok, 20 missing |
 | `decks/*-probe.dck` | nine probe decks: seven in the table below, plus `morph-probe` and `future-sight-probe` (*Repo layout*) | all play; each has a committed recording |
@@ -360,9 +361,13 @@ FORGE_JAR=<release jar> node tools/audit-deck.mjs \
     decks/fra-rw-aggro.dck docs/drafts/decks/fra-gb-leftovers.dck   # expect 90 ok
 # then, once the engine is switched (report 14 §0):
 ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 7 \
-    --deck decks/fra-rw-aggro.dck --deck2 docs/drafts/decks/fra-gb-leftovers.dck
-./scripts/play.sh --deck decks/fra-rw-aggro.dck --deck2 docs/drafts/decks/fra-gb-leftovers.dck
+    --deck decks/fra-rw-aggro.dck --ai-deck docs/drafts/decks/fra-gb-leftovers.dck
+./scripts/play.sh --deck decks/fra-rw-aggro.dck --ai-deck docs/drafts/decks/fra-gb-leftovers.dck
 ```
+
+(`--ai-deck` is match setup's spelling of `--deck2`; either works on both.) Until
+that day `node tools/check-deck.mjs decks/fra-rw-aggro.dck` fails, by design, and
+so does any `check-deck.mjs decks/*.dck` — `decks/README.md` says why.
 
 **The probe decks.** Seven throwaway forty-card decks whose only job is to make
 Forge do something `decks/pacho-shield.dck` never makes it do — usually ask a
@@ -2025,7 +2030,7 @@ mtg-table/
                              home under var/audit-deck/. Read-only; needs bridge/out;
                              not in the gate. audit-deck/AuditDeck.java is its helper
     javap-seam-diff.sh       <old.jar> <new.jar>: the Forge API bridge/src links,
-                             diffed class by class (95 classes). Read-only
+                             diffed class by class (99 classes). Read-only
     card-library/            (D90) the local card index: build.ts (Scryfall's bulk
                              file + the MSH/MSC prints -> var/cards/cards.sqlite,
                              SQLite + FTS5, D91) images.ts (the image cache, D93)
