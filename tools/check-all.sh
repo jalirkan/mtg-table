@@ -110,7 +110,14 @@
 #                                 engine crash, built on purpose in a scratch
 #                                 Forge home, fails MtgTable AND RecordMatch and
 #                                 ends each frame log in an error notice and a
-#                                 null `over` (D115)
+#                                 null `over` (D115).
+#                                 Then 12d: tools/narrate-selftest.mjs, the
+#                                 frame-log narrator's gate -- every fixture and
+#                                 every log this run recorded told as a story
+#                                 with hard rule 8 held by ids and by names, five
+#                                 negative controls, no re-delivered frame told
+#                                 twice, and fixtures/narrate/'s goldens (D123;
+#                                 ~1 s)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -1263,6 +1270,59 @@ fi
 grep -E '^(==|  FAIL|check-engine-crash)' var/check-all-engine-crash.log || true
 [ "$(grep -c '^  ok  ' var/check-all-engine-crash.log)" = "20" ] \
   || die "check-engine-crash.sh passed $(grep -c '^  ok  ' var/check-all-engine-crash.log) assertion(s), not 20 (log: var/check-all-engine-crash.log)"
+
+# 12d. The narrator (tools/narrate.mjs, D123): every committed fixture told as a
+#      story, hard rule 8 held BY IDS (no id concealed in every appearance is
+#      ever named) and BY NAMES (no card name in decks/*.dck that the log never
+#      shows is ever printed), no name remembered across frames, five negative
+#      controls, a client log rebuilt with verbatim re-deliveries (M10) that
+#      must narrate nothing twice, and the two golden files byte for byte.  A
+#      LETTERED sub-step so every "step 13" reference stays correct; about a
+#      second, so it costs the gate nothing.
+#
+#      It also reads every log THIS run recorded -- named here one by one, never
+#      globbed out of var/ (CLAUDE.md: a test whose result depends on what is
+#      lying around in var/ is not a test) -- and holds each to the same rules.
+#      A CLIENT log is paired with the bridge's own log of the same game
+#      (`client=bridge`), and the client's story may never tell a moment more
+#      often than the bridge's does: that is "a resync never narrates a turn
+#      twice" measured on the real socket, where 10d's reconnect re-delivers
+#      the last `state` verbatim.  A step 10 that did not run leaves its files
+#      out rather than failing here; its own step already said so.  6b's two
+#      spectate recordings are in the list too (added on the rebase onto
+#      spectating): an AI-vs-AI log from each chair, one of them with a
+#      `paceMs` header, which the narrator reads like any other session header.
+printf '\n=== 12d. narrate-selftest.mjs -- the narrator over every fixture and every fresh log ===\n'
+NARRATE_LOGS=""
+narrate_add() {   # $1 a log; $2 (optional) the bridge's log of the same game
+  [ -s "$1" ] || return 0
+  if [ -n "${2:-}" ]; then
+    [ -s "$2" ] || return 0
+    NARRATE_LOGS="${NARRATE_LOGS:+$NARRATE_LOGS,}$1=$2"
+  else
+    NARRATE_LOGS="${NARRATE_LOGS:+$NARRATE_LOGS,}$1"
+  fi
+}
+narrate_add "$FRESH"
+narrate_add "$SP_PACED"
+narrate_add "$SP_SEAT1"
+narrate_add "$M2FRAMES"
+narrate_add "$CONLOG"
+narrate_add "$AUTOLOG"
+narrate_add var/games/check-all-sideboard/frames.jsonl
+narrate_add var/games/check-all-sideboard-g2/frames.jsonl
+narrate_add "var/games/$MS_ID/frames.jsonl"
+narrate_add var/check-all-ws-smoke-frames.jsonl var/games/check-all-ws-smoke/frames.jsonl
+narrate_add var/check-all-ws-drop-frames.jsonl var/games/check-all-ws-drop/frames.jsonl
+narrate_add var/ws-auto-13.jsonl var/games/check-all-ws-auto/frames.jsonl
+narrate_add var/ws-auto-refuse-13.jsonl var/games/check-all-ws-refuse/frames.jsonl
+narrate_add var/check-all-ws-m11-frames.jsonl var/games/check-all-ws-m11/frames.jsonl
+narrate_add var/ws-auto-probe-42.jsonl var/games/check-all-ws-probe/frames.jsonl
+narrate_add var/ws-auto-3g.jsonl var/games/check-all-ws-3g/frames.jsonl
+narrate_add var/ws-auto-3g-g2.jsonl var/games/check-all-ws-3g-g2/frames.jsonl
+narrate_add var/ws-auto-3g-g3.jsonl var/games/check-all-ws-3g-g3/frames.jsonl
+node tools/narrate-selftest.mjs ${NARRATE_LOGS:+--logs "$NARRATE_LOGS"} \
+  || die "narrate-selftest.mjs (12d: the narrator broke a hidden-information rule, narrated a re-delivered frame twice, or drifted from fixtures/narrate/)"
 
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   printf '\n(web steps skipped: SKIP_WEB=1)\n'

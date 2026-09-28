@@ -18,6 +18,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice, fixed twice and committed** (`0368a90`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened. **Tier 2 slice 4 (T13, proportioned bodies in painted costumes, T14) built, verified once and documented**, not committed (branch `tier2-slice4`): every humanoid a CC0 *Universal Base Characters* person on the animation library's own rig, painted by a costume palette, still one program; a full duelist per seat — the director and the villain — with gestures as cue params; **D95–D101**; nineteen follow-ups. **Tier 2 is complete (T0–T14)**; likeness — Tier 3, personal-only — is the open question (question 14) |
 | — | Match setup: the AI's own deck and its Forge profile *(a deferred item, brought forward)* | 1 day | **built, reviewed, fixed, documented and committed** on branch `match-setup`, rebased onto `main`'s `23e26b3` (2026-09-27) with a second fix commit, then onto the workshop's `bf0392b` the same day with the verifier's four findings fixed — `decks/doom-legion.dck`, 40 blue-black Marvel villains for the AI; `--ai-deck` / `--ai-profile` on the bridge and `scripts/play.sh`, `config.json`'s `match` block read by `play.sh` alone; `hello_ok.match` (amendment **M44**) naming the AI's deck but never listing it; the board's rails print both decks and the profile; gate rows 11–14 of `ten-games.sh` and step **9e**; **D105–D108**; one review pass, all nine findings closed; ten follow-ups, three of them (2, 8, 9) closed by the rebase and its fix commit; the ask path's push order recorded open as slice 4's follow-up 13(d) |
+| — | The narrator: a frame log read back as a story *(off the plan, for watching how the AI plays)* | 1 day | **built, gated and documented**, committed on branch `narrate` (2026-09-28) — `tools/narrate.mjs` tells any per-seat log turn by turn, `--turn`, `--summary`, `--seat`, `--json`; names only what the log's seat saw, never remembered (**D123**); `tools/narrate-selftest.mjs` is gate sub-step **12d**, with five negative controls, client-log re-deliveries and two golden files; nine follow-ups, the first a `#story` page it does not build; rebased onto spectating's `a5c8e39` (2026-09-28), where it became **D123** and **12d** and reads spectated recordings (`yourProfile`, `paceMs`) |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -4754,6 +4755,129 @@ have failed step 6. 6b: `SAME GAME`, seat 0 paced (151 dwells, 4,023 ms) and sea
 unpaced (1,630 ms), the mutant rejected. `npm --prefix web test` standalone is
 **893 `node --test` + 98 vitest (7 files)** (more villains' 877 + 97, plus this
 branch's 16 + 1); inside the gate **903 / 895 pass / 0 fail / 8 skipped** plus 98.
+
+---
+
+## The narrator — a frame log read back as a story (2026-09-28, D123)
+
+**Status: built, gated and documented** on branch `narrate` (the worktree
+`mtg-table-t2q`, off `main`'s `a092d3a`; rebased on 2026-09-28 onto the
+`spectate` branch's `a5c8e39`, with the engine and sets, the hardening pass, more
+villains and spectating underneath it — *Rebased onto spectating* below). The
+user is learning Magic and wants to *see how they play it* when watching
+AI-vs-AI recordings; `tools/narrate.mjs`
+turns any per-seat frame log — an AI-vs-AI recording, a human-seat game, a
+client's own log — into a turn-by-turn story, and `tools/narrate-selftest.mjs` is
+its gate, run by `check-all.sh` as sub-step **12d** (about a second). Decision
+**D123**; `docs/evidence/narrate.md` is what was measured, with a whole villain
+game told this way; README's *Reading a game back* is how to use it.
+
+```bash
+node tools/narrate.mjs fixtures/games/g1.jsonl               # the whole story
+node tools/narrate.mjs fixtures/games/g1.jsonl --turn 1-3    # a range; --turn 0 is before the game
+node tools/narrate.mjs fixtures/games/g1.jsonl --summary     # per-seat totals, the winner, how
+node tools/narrate.mjs fixtures/games/g1.jsonl --seat        # whose view the log is
+node tools/narrate.mjs fixtures/games/g1.jsonl --json        # the facts, with card ids and names
+node tools/narrate-selftest.mjs [--write-golden]             # the gate; regenerates fixtures/narrate/
+```
+
+What it is:
+
+- **The events say what happened, the snapshots say what each id is.** One
+  heading per turn, one line per step that had anything in it; passes, mana taps
+  and P/T recomputes are left out. Mulligans and who goes first before turn 1;
+  the winner and *how* (life, poison, an empty library, a concede, or M11's
+  concede with no outcome) at the end; the seat's sideboarding when it answered a
+  `sideboard` ask.
+- **Hard rule 8 by construction** (D123): one face reader; every name from the
+  event's own frame or the one before and never remembered; the latest view for
+  everything but a zone move. Held by an oracle written apart from the narrator,
+  over all 19 committed logs and every log the gate records: 67 ids concealed in
+  every appearance, none named; no card name in `decks/*.dck` that a log never
+  shows ever printed; every name backed by its two frames; five negative controls.
+- **Client logs**: verbatim re-deliveries skipped by `seq`, gaps judged against
+  the whole file and told only when the battlefield changed across them; 12d
+  pairs each of step 10's client logs with the bridge's own log of the game and
+  requires the client's story to tell no moment more often.
+- **Golden files**: `fixtures/narrate/g1-turns-1-3.txt` and
+  `fixtures/narrate/g1-summary.txt`, byte for byte.
+
+### The narrator's follow-ups — nine, 2026-09-28
+
+1. **A `#story` page in the web client** — the obvious next step, NOT built here.
+   `narrate()` and `renderStory()` are pure functions of parsed frames; a page
+   would run them over a `ReplayTransport`'s frames (the replay already has
+   them), scroll with the replay cursor and highlight the turn on screen. It
+   would be a new surface to hold to hard rule 8, so it wants its own tests over
+   the corpus the way `render.test.tsx` holds the board — and a decision on
+   whether it lives beside `#cards` and `#workshop` as a page of its own or as a
+   drawer on the board.
+2. **Commit one Doom Legion recording.** The by-names check has content only on a
+   two-deck log (§8.3's own caveat), and the committed corpus has no game against
+   the villain deck — the same gap as match setup's follow-up 10, and one
+   recording would close both. The evidence's villain game is in `var/` and is
+   not reproducible byte for byte (§8.7).
+3. **The engine paths no committed log reaches**: poison, phasing and foretell
+   (only the hand-written synthetic log), a change of control, a fizzle and a
+   countered spell. Each is narrated by code no engine recording has driven.
+4. **The seat's own decisions are not told** beyond mulligans, concedes and
+   sideboarding. An `ask`'s prompt and the chosen options' labels would say *why*
+   a card was chosen ("Human chooses Plains to search for"), but `ask.prompt` is a
+   string `check-redaction.mjs` only warns on (report 06 §10, residual risk 3),
+   so it would need the by-names check extended to prompts first.
+5. **"gets +1/+1 until end of turn" is invisible.** A pump is only a `stats`
+   event and a changed P/T in the next snapshot; the narrator could say *"Quake is
+   now 4/4"* by diffing P/T, at the cost of noise on every static effect.
+6. **`--json` is unversioned.** It is for other tools, and nothing reads it yet;
+   give it a `v` the day a second consumer does.
+7. **Coalescing hides the middle of a flush.** When a creature is damaged, dies
+   and returns face down in one AI-vs-AI flush, the latest-view rule tells its
+   combat as "a face-down card"'s (D123's known cost). A per-event snapshot is not
+   on the wire and is not coming (§3.5); a human-seat recording, flushed at every
+   input, has far fewer such frames.
+8. **A multi-game client log** is narrated game by game (a new `gameId` starts a
+   new story), but the corpus has no single file holding two games — the bridge
+   and `ws-auto-play.mjs --games` both write one file per game (M38) — so that
+   path is exercised by nothing but its own reading of the protocol.
+9. **The client/bridge pair check is one-directional** (the branch's verifier,
+   2026-09-28, a minor). 12d fails a client log that tells a moment — a `(kind,
+   seq, card ids)` triple — MORE often than the bridge's own log of that game
+   (a re-delivery narrated twice), but not one that tells a moment LESS often, so
+   a skip rule that dropped a real frame from a client's story would pass. The
+   converse is not simply the same assertion turned round: a client legitimately
+   misses what the bridge sent before it connected and what fell in a gap, so it
+   would have to exempt the moments inside the gaps the client log itself
+   announces. The verifier's other minor, an `EPIPE` stack trace when
+   `narrate.mjs … | head` closed the pipe, was fixed on the rebase (stdout's
+   `EPIPE` now exits 0).
+
+### Rebased onto spectating — 2026-09-28
+
+Rebased onto the `spectate` branch's `a5c8e39` (the engine and sets, the
+hardening pass, more villains and spectating underneath it). Five files
+conflicted, all prose or the gate script, and each kept both sides, the base's
+first: CLAUDE.md, DECISIONS.md, PLAN.md, README.md and `tools/check-all.sh`.
+What moved:
+
+- **D109 became D123**, in every file that cites it (the engine and sets' D109
+  is untouched), and DECISIONS.md runs D1–D123 with no gap and no duplicate.
+- **Sub-step 12b became 12d**: the hardening pass had already lettered 12b (the
+  workshop catalog) and 12c (the engine crash), so the narrator runs after both.
+- **6b's two spectate recordings are in 12d's list**, and the story's opening
+  line now names the viewing seat's own profile when the handshake carries
+  `yourProfile` (amendment M47) — in a spectated game both seats are AIs. The
+  `paceMs` header needed nothing: the narrator reads the session header's seat,
+  seed and decks, and ignores what it does not use.
+- **The `EPIPE` fix** above (follow-up 9's second half).
+
+The gate from a deleted `bridge/out` at `WSPORT=8735`: **912 s**, exit 0, step 6
+`SAME`, 6b `SAME GAME`, 9c's fourteen games 368 s, 12d **106 checks in 0.8 s**
+over the 19 committed logs and the run's own 18 (6b's two among them, 87 facts
+each), at a load average of 2–4 (`var/check-all-narrate-train.log`).
+`npm --prefix web test` standalone is **893 `node --test` + 98 vitest (7 files)**
+and inside the gate **903 / 895 pass / 0 fail / 8 skipped** plus 98 —
+spectating's counts, because this branch touches nothing under `web/`.
+`docs/evidence/narrate.md` §8.
 
 ---
 

@@ -139,10 +139,10 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-Thirteen numbered steps and nine lettered sub-steps (**6b**, 9b, 9c, **9d**,
-**9e**, 10f, **10g**, **12b** and **12c** — 9d and 10g added by M6, 9e by match
-setup, 12b and 12c by the 2026-09-27 hardening pass, 6b by spectating), stopping
-at the first failure: `check-forge.sh` →
+Thirteen numbered steps and ten lettered sub-steps (**6b**, 9b, 9c, **9d**,
+**9e**, 10f, **10g**, **12b**, **12c** and **12d** — 9d and 10g added by M6, 9e
+by match setup, 12b and 12c by the 2026-09-27 hardening pass, 6b by spectating,
+12d by the narrator), stopping at the first failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
 `bridge/build.sh` (javac plus four self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
@@ -186,7 +186,9 @@ builds an engine crash on purpose (a card script the 2.0.14 jar cannot build, in
 a scratch Forge home under `var/crash-probe/`) and asserts that `MtgTable` and
 `RecordMatch` both fail with the cause and end their frame logs in an error
 `notice` and a null `over` that never names the card (**D115**, about
-8 s) → `npm run build && npm test` in
+8 s) → **12d**, `tools/narrate-selftest.mjs`, the frame-log narrator over every
+fixture and every log the run recorded, with hard rule 8 held by ids and by the
+decks' card names (**D123**, about a second) → `npm run build && npm test` in
 `web/`. **About fifteen to nineteen minutes** from a deleted `bridge/out` since
 match setup added five games (874 s on its first run; 1,141 s on its review fix
 pass and 1,143 s on its documentation pass, each on a machine running other gates
@@ -222,6 +224,8 @@ npm --prefix web run dev:replay                  # opens /?replay=games/g1.jsonl
 # ?replay=synthetic/sample-handwritten.jsonl, ?replay=negative/render-crash.jsonl
 node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
 npm --prefix web test && npm --prefix web run build
+# D123 — read any frame log back as a turn-by-turn story ("Reading a game back" below)
+node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summary, --seat, --json
 
 # M2 — a full game against the AI, in the terminal (--transport null|auto|console)
 ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42
@@ -1826,6 +1830,62 @@ per-seat — it contains exactly what that player was allowed to see — so it i
 to paste into a bug report, and it is the same stream the client consumed. A bug
 is a file, not a story.
 
+### Reading a game back — `tools/narrate.mjs`
+
+A frame log is a file, not a story — so there is a tool that tells the story. It
+turns any per-seat log, an AI-vs-AI recording or a game you just played, into a
+turn-by-turn account for watching how the AI plays:
+
+```bash
+node tools/narrate.mjs fixtures/games/g1.jsonl               # the whole game
+node tools/narrate.mjs fixtures/games/g1.jsonl --turn 14     # one turn (--turn 1-3 a range;
+                                                             # 0 is "before the game")
+node tools/narrate.mjs fixtures/games/g1.jsonl --summary     # per-seat totals, who won, how
+node tools/narrate.mjs fixtures/games/g1.jsonl --seat        # whose view the log is
+node tools/narrate.mjs fixtures/games/g1.jsonl --json        # the facts, for other tools
+node tools/narrate.mjs var/games/<gameId>/frames.jsonl       # the game you just played
+node tools/narrate.mjs var/spectate/<name>.jsonl             # a game you watched (spectate.sh)
+```
+
+```
+Turn 13 · Doom (AI)
+  draw    Draws a card.
+  main 1  Plays Island. Casts Hour of Defeat ({3}{B}, instant) targeting Ant-Man, Reformed Rogue.
+          Human's Ant-Man, Reformed Rogue dies. Surveils 1: keeps it on top.
+  combat  Attacks with Aerial Doombot (4/4) and Agents of HYDRA (1/1). Human does not block. Human
+          takes 5 damage (Aerial Doombot 4, Agents of HYDRA 1); life 9 → 4.
+```
+
+One heading per turn, one line per step in which something happened — draws,
+land plays, spells with their cost and type as the log spells them, abilities
+with their text, attacks and blocks, damage with the life it leaves, deaths,
+counters, tokens, cards turned face up — and nothing for passing priority or
+tapping mana. Before turn 1 it says who mulliganed and who went first; the last
+line says who won and **how** (a life total, poison, an empty library, a
+concede). `--summary` is a table per seat: turns, mulligans, lands, spells,
+abilities, creatures lost, damage dealt, life at the end.
+
+**It tells you only what the log's seat saw.** An opponent's card you never saw
+is *"a card"*, a face-down one *"a face-down card"*, and a name is read from the
+frame the event happened in or the one before it — never remembered — so a card
+that goes back into hiding is anonymous again (D123, protocol invariant 10). Your
+own face-down cards are named, because the log names them for you. A client's
+log (`ws-auto-play.mjs --log`) works too: frames re-delivered on a reconnect are
+skipped, so nothing is told twice. So does a spectated recording
+(`./scripts/spectate.sh`, D118): both seats are AIs there, and the opening line
+names each seat's deck and Forge profile.
+
+It is plain Node — one file, no dependencies, no engine — and
+`node tools/narrate-selftest.mjs` is its gate (about a second; `check-all.sh`
+runs it as step **12d**): every fixture narrated, the hidden-information rules
+held by ids and by the decks' card names with five negative controls, a client log
+with re-deliveries, and two committed golden files, `fixtures/narrate/g1-turns-1-3.txt`
+and `fixtures/narrate/g1-summary.txt`, compared byte for byte. **When you change
+the narration on purpose, regenerate them with `node tools/narrate-selftest.mjs
+--write-golden`** and read the diff before committing. A `#story` page in the
+browser is the obvious next step and is not built (PLAN.md, *The narrator*).
+`docs/evidence/narrate.md` has a whole villain game told this way.
+
 ## Repo layout
 
 Everything listed exists today (M0-M7: arena Tier 1 and Tier 2's first two
@@ -1838,11 +1898,11 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the one hundred and twenty-two load-bearing decisions, dated
+  DECISIONS.md               the one hundred and twenty-three load-bearing decisions, dated
                              (the workshop's are D102–D104, match setup's D105–D108,
                              engine and sets D109–D112, the hardening pass's
                              D113–D115, more-villains' D116–D117, spectating's
-                             D118–D122)
+                             D118–D122, the narrator's D123)
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
@@ -2156,6 +2216,13 @@ mtg-table/
     first-divergence.mjs     match setup: two same-seed games -> the first event that
                              differs, and whether the seat or the AI chose it (how
                              an AI-profile A/B is read; not in the gate)
+    narrate.mjs              (D123) any frame log -> a turn-by-turn story for a
+                             beginner; --turn N|A-B, --summary, --seat, --json.
+                             Names only what the log's seat saw, never remembered
+    narrate-selftest.mjs     its gate, check-all's 12d: every fixture and every log
+                             the gate records, hard rule 8 by ids and by deck names,
+                             five negative controls, a client log's re-deliveries,
+                             and fixtures/narrate/'s goldens (--write-golden)
     fetch-art.ts             every decks/*.dck -> web/public/art.json
     build-workshop-catalog.ts  (D104) decks/*.dck + fixtures/games/*.jsonl ->
                              web/src/workshop/catalog.json, the workshop's card
@@ -2213,6 +2280,9 @@ mtg-table/
     cards/                   (D90) the card library's offline test slice: Scryfall
                              lines REDUCED to the fields the library reads, cut by
                              tools/card-library/make-fixture.ts; no images
+    narrate/                 (D123) the narrator's two golden files: g1's turns 1-3
+                             and g1's --summary, byte for byte. Regenerated only by
+                             node tools/narrate-selftest.mjs --write-golden
 
   forge-home/
     res -> ~/forge/res       symlink, gitignored
@@ -2236,7 +2306,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | One hundred and twenty-two load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent; **D113–D115** are the 2026-09-27 hardening pass's, written as D109–D111 and renumbered when it landed after the engine and sets: gate step 6 compares what load cannot move, an early `newGame` is queued until Forge has finished the game, and an engine crash fails the run; **D116–D117** are more-villains', written as D109–D110 and renumbered on its rebase onto the hardening pass: three more AI decks written from specs, and the deck smoke's spell count as a rate; **D118–D122** are spectating's, written as D109–D113 and renumbered on its rebase onto more villains: a paced recording the page follows, one seat's eyes and no omniscient view, `hello_ok.match` and `yourProfile` from `RecordMatch` only when asked, the pace's dwell before the boundary flush, the ids inside a `stats` event compared as a set, and `var/spectate/` served by the dev server alone), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. D116-D117 are more-villains': three more AI decks written from specs by `tools/build-deck.ts` (Masters of Evil, Hulk Family, Wakanda), and `tools/deck-smoke.sh`'s spell count asserted as a rate, `min(8, AI turns − 3)`. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and twenty-three load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent; **D113–D115** are the 2026-09-27 hardening pass's, written as D109–D111 and renumbered when it landed after the engine and sets: gate step 6 compares what load cannot move, an early `newGame` is queued until Forge has finished the game, and an engine crash fails the run; **D116–D117** are more-villains', written as D109–D110 and renumbered on its rebase onto the hardening pass: three more AI decks written from specs, and the deck smoke's spell count as a rate; **D118–D122** are spectating's, written as D109–D113 and renumbered on its rebase onto more villains: a paced recording the page follows, one seat's eyes and no omniscient view, `hello_ok.match` and `yourProfile` from `RecordMatch` only when asked, the pace's dwell before the boundary flush, the ids inside a `stats` event compared as a set, and `var/spectate/` served by the dev server alone; **D123** is the frame-log narrator, written as D109 and renumbered on its rebase onto spectating: a story told only from what the log's seat saw, every name read from the event's own frame or the one before and never remembered), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. D116-D117 are more-villains': three more AI decks written from specs by `tools/build-deck.ts` (Masters of Evil, Hulk Family, Wakanda), and `tools/deck-smoke.sh`'s spell count asserted as a rate, `min(8, AI turns − 3)`. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -2251,7 +2321,7 @@ mtg-table/
 | [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md) | M7 Tier 2's asset landscape: which packs are really CC0, what is inside the files, the gltf-transform pipeline, and the two drei traps. |
 | [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md) | M7 Tier 2's plan, written against the Tier 1 code: the manifestation stage, the pose-versus-cue rule, the clip lane, the evenings T0–T14. |
 | [`docs/research/14-engine-upgrade.md`](docs/research/14-engine-upgrade.md) | Engine and sets: why mtg-table stays on Forge 2.0.14 until an official release ships Reality Fracture (a card-script overlay on 2.0.14 fails the deck; a port to the daily build was ruled out by the user), the bridge and gate defects the two spikes found, and §0, the checklist for the day. [`docs/evidence/engine-upgrade.md`](docs/evidence/engine-upgrade.md) is what was measured; report 08 §9 is the FRA deck card by card. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. `workshop.md` is the workshop: what it is made of, the tests (every rehearsal of every card through the real queue, the meter against `prop-raster.ts` pixel for pixel), the drawn heights, the build, the screenshots, the fix pass and the rebase onto slice 4. `engine-upgrade.md` is the engine question: the overlay and snapshot spikes, the three deck audits, the saved port's checks and the draft opponent's games. `hardening.md` is the 2026-09-27 small-defect pass: step 6 under load (the loaded re-recordings and why neither the byte diff nor the multiset survives them), the `newGame` race and its forced reproduction, the engine crash, and the four smaller fixes, each with its negative control. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. `workshop.md` is the workshop: what it is made of, the tests (every rehearsal of every card through the real queue, the meter against `prop-raster.ts` pixel for pixel), the drawn heights, the build, the screenshots, the fix pass and the rebase onto slice 4. `engine-upgrade.md` is the engine question: the overlay and snapshot spikes, the three deck audits, the saved port's checks and the draft opponent's games. `hardening.md` is the 2026-09-27 small-defect pass: step 6 under load (the loaded re-recordings and why neither the byte diff nor the multiset survives them), the `newGame` race and its forced reproduction, the engine crash, and the four smaller fixes, each with its negative control. `narrate.md` is the frame-log narrator: what it reads and why the events and not only the snapshots, the golden files, a whole villain game told as a story, the hidden-information checks and their five negative controls, and the client logs. |
 
 ## Licence
 

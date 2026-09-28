@@ -5826,3 +5826,104 @@ every 500 ms while a page follows.
 runs under `vite preview`. HTTP `Range` requests against a static file server:
 sirv would answer them, but it cannot cut at a line boundary, so the page would
 have to reassemble half-lines — and it would serve `var/` from `preview` too.
+
+---
+
+## D123 — The narrator tells a frame log only as its seat saw it: every name from the event's own frame or the one before, never remembered, and the latest view for everything but a zone move
+
+*Branch `narrate` (worktree `mtg-table-t2q`, off `main`'s `a092d3a`). Written as
+**D109**, when other branches cut the same day also numbered from D109 and
+whichever landed second was to renumber its own. On its rebase onto the
+`spectate` branch's `a5c8e39` (2026-09-28) the engine and sets' D109–D112, the
+hardening pass's D113–D115, more villains' D116–D117 and spectating's D118–D122
+had landed first, so this one became **D123**, in every file that cites it: this
+file, CLAUDE.md, PLAN.md, README.md, `docs/evidence/narrate.md` and the gate; and
+the gate's sub-step, lettered 12b on the branch, became **12d**, after the
+hardening pass's 12b (the workshop catalog) and 12c (the engine crash).*
+
+**2026-09-28** (the frame-log narrator; `docs/evidence/narrate.md` is what was
+measured, PLAN.md *The narrator* the status and follow-ups)
+
+**Decision.** `tools/narrate.mjs` turns one per-seat frame log into a
+turn-by-turn story for a beginner, and it is built on five rules:
+
+1. **A tool, not a page, and not a package.** Plain Node, one file, `node:fs` and
+   `node:path` and nothing else; no engine, no network, no `config.json`. Nothing
+   in `web/` imports it. A `#story` page is the next step and is not built.
+2. **The events say what happened; the snapshots say what each id is.** Order,
+   phase and turn come from `state.events` (the `turn` and `phase` events inside a
+   batch place each thing in its step); names, costs, types and P/T are read off
+   card objects. A diff of consecutive battlefields adds only what no event says
+   — turned face up, a change of control — and, across a gap in a client log,
+   what appeared or vanished while the client was away.
+3. **One face reader.** `faceOf()` returns nothing for a five-key stub whatever
+   else is on it, "a face-down card" for a face-down card with no `alt`, and the
+   `alt` name only where the bridge wrote one (the seat's own face-down cards).
+4. **No memory, and the latest view.** A name comes from the event's own frame or
+   the frame before it — never from anything older. A zone move reads the card in
+   its source zone in the frame before and its destination in this one, so a
+   public card that goes into hiding is named from where it was public. **Every
+   other fact takes the latest view**: if this frame holds the card at all, this
+   frame's face is the answer, concealed or not.
+5. **A client log is judged against itself.** A frame whose `seq` this game has
+   already produced is a verbatim re-delivery (amendment M10) and is skipped; a
+   gap is judged against every seq the file holds, and is narrated only when the
+   battlefield visibly changed across it.
+
+**Rationale.**
+
+- **Rule 2 because the snapshots alone miss most of the game.** In an AI-vs-AI
+  recording a spell is cast and resolves inside one flush: g1's S.H.I.E.L.D. Spy
+  Kit is never on any snapshot's stack. The events are ids only (§3.6 rule 1), so
+  they cannot leak a name; the snapshots are the one place a name can come from,
+  which is what makes rules 3 and 4 enforceable.
+- **Rule 4 is protocol invariant 10 applied to a story, and a real case made it
+  a rule.** In `disjoint.jsonl` turn 14, Ashcloud Phoenix blocks face up, dies,
+  and returns face down inside one flush; its trigger's text is `""` in that frame
+  because the bridge refused to join the name to the concealed id (§3.6 rule 1).
+  The first version resolved the trigger's source from the frame before and
+  printed *"Ashcloud Phoenix's ability goes on the stack"* — the join the bridge
+  had refused. The latest-view rule prints *"A face-down card's ability goes on the
+  stack"*, and `web/src/render/LogDrawer.tsx` already resolves ids against the
+  frame on screen for the same reason. A zone move keeps the frame before because
+  a move out of public view is itself public: *"AI-Seat1's Ashcloud Phoenix
+  dies"* was seen by everyone at the table.
+- **Rule 5 because a client log is neither contiguous nor monotonic.** Judged
+  against "the last seq seen", every client log announced a gap for the `input`s
+  sent before it connected, and another for an ask that arrived after later
+  frames with its original seq.
+- **Test it with an oracle written apart from the narrator, and with the decks
+  as ground truth.** Two checks can only be stated from outside the log: that an
+  id concealed in every appearance is never named (by ids), and that no card name
+  in `decks/*.dck` the log never shows is ever printed (by names). Both are
+  negative-controlled by injecting a name into such an id's stub.
+
+**Known cost.**
+
+- Coalescing makes the latest view lossy: when a creature is damaged, dies and
+  returns face down in one flush, the damage it dealt and took is told as "a
+  face-down card"'s, though a player at the table could have followed it.
+- A same-deck recording gives the by-names check nothing to catch (every name
+  the opponent could leak is one the seat holds), exactly as §8.3 says of the
+  redaction checker; `disjoint.jsonl` and the probe-deck recordings are where it
+  has content, and no committed recording plays Doom Legion.
+- Ability text is quoted as Forge wrote it, stripped of ids and reminder text: it
+  is rules text, not an explanation, and the wording chooses only the verb
+  (*triggers* for "When…/Whenever…/At…", *uses* otherwise).
+- It says what happened and never why: the log carries no AI reasoning, and
+  inventing one would be rules logic.
+
+**Rejected.**
+
+- **A name map built across the whole log** — the simplest narrator, and the one
+  that prints a card's name after it has gone back into hiding (invariant 10).
+- **Diffing snapshots alone** — misses every spell cast and resolved inside one
+  flush.
+- **Mining `stack[].text` for names or targets** — the string is gated, and it
+  is quoted (tidied of ids and reminder text) as the ability's words; but a story
+  that took its facts from engine prose would be a second place deciding what may
+  be shown. A spell's targets come from `stack[].targetCardIds`, resolved like any
+  other id.
+- **A web page in this lane** — the narrator's pure functions are what a
+  `#story` page would call; building both at once would have been two surfaces
+  to hold to hard rule 8 before either had been read by a person.
