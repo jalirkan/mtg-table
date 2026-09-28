@@ -220,8 +220,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * {@link #engineAsks} as they were before the press.  While all three are
      * unchanged, Forge may be running the pass on a worker (the mana-lost
      * confirm) that has not reached the bridge yet.  Written and read on the EDT.
+     * {@link ActGuard.PassMark}, so the guard's pure half judges it.
      */
-    private volatile PassPress passPress;
+    private volatile ActGuard.PassMark passPress;
 
     /**
      * D136: a {@code concede} that arrived while the engine was not quiet.  The
@@ -243,18 +244,6 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private final AtomicInteger concedesNow = new AtomicInteger();
     private final AtomicInteger concedesDeferred = new AtomicInteger();
 
-    /** See {@link #passPress}. */
-    private static final class PassPress {
-        final Input input;
-        final long gen;
-        final long asks;
-
-        PassPress(final Input input, final long gen, final long asks) {
-            this.input = input;
-            this.gen = gen;
-            this.asks = asks;
-        }
-    }
     /**
      * Frames that passed a fast-path check ({@link #emit}, {@link #logC2s}, the ask
      * path), then lost the race to {@code over} and were dropped by the re-check under
@@ -3973,23 +3962,42 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         return t == null ? "a game thread" : t.getName();
     }
 
-    /** {@link ActGuard.Facts}, read on the EDT immediately before a write. */
+    /**
+     * {@link ActGuard.Facts}, read on the EDT immediately before a write.  The
+     * assembly -- which feed stands for which condition -- is
+     * {@link ActGuard#facts}, which {@code ActGuardSelfTest} drives with fakes;
+     * this class supplies only the reads ({@link GuardFeeds}).
+     */
     private ActGuard.Facts engineFacts(final IGameController c, final long genAtArrival) {
-        final ActGuard.Facts f = new ActGuard.Facts();
-        f.live = ready && inputSeen && !closed && !overEmitted;
-        f.pendingAsks = pool.pending();
-        final Input in = currentInput(c);
-        f.inputUp = in != null;
-        f.genAtArrival = genAtArrival;
-        f.genNow = inputGen.get();
-        f.manaActivating = in instanceof InputPayMana && ((InputPayMana) in).isActivatingManaAbility();
-        final PassPress p = passPress;
-        f.passPressOutstanding = p != null && in != null && p.input == in
-                && p.gen == inputGen.get() && p.asks == engineAsks.get();
-        f.hopsInFlight = hopsInFlight.get();
-        engineThreads.removeIf(t -> t.getState() == Thread.State.TERMINATED);
-        f.runningEngineThread = ActGuard.runningThread(engineThreads);
-        return f;
+        return ActGuard.facts(new GuardFeeds(c), genAtArrival);
+    }
+
+    /**
+     * D136's live feeds: one read of one field (or one Forge call) per method,
+     * named after what it reads, and nothing that combines two of them -- that
+     * is {@link ActGuard#facts}, where the self-test can see it.
+     */
+    private final class GuardFeeds implements ActGuard.Feeds {
+        private final IGameController c;
+
+        GuardFeeds(final IGameController c) {
+            this.c = c;
+        }
+
+        @Override public boolean ready() { return ready; }
+        @Override public boolean inputSeen() { return inputSeen; }
+        @Override public boolean closed() { return closed; }
+        @Override public boolean overEmitted() { return overEmitted; }
+        @Override public int pendingAsks() { return pool.pending(); }
+        @Override public Object input() { return currentInput(c); }
+        @Override public long inputGen() { return inputGen.get(); }
+        @Override public boolean activatingManaAbility(final Object in) {
+            return in instanceof InputPayMana && ((InputPayMana) in).isActivatingManaAbility();
+        }
+        @Override public ActGuard.PassMark passPress() { return passPress; }
+        @Override public long engineAsks() { return engineAsks.get(); }
+        @Override public int hopsInFlight() { return hopsInFlight.get(); }
+        @Override public Collection<Thread> engineThreads() { return engineThreads; }
     }
 
     /** The input on this seat's stack -- the one {@code Game-0} is parked in -- or null.  A lock-free peek. */
@@ -4018,7 +4026,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         final long asks = engineAsks.get();
         press.run();
         if (before instanceof InputPassPriority && currentInput(c) == before && inputGen.get() == gen) {
-            passPress = new PassPress(before, gen, asks);
+            passPress = new ActGuard.PassMark(before, gen, asks);
         }
     }
 

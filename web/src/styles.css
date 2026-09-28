@@ -271,6 +271,11 @@ kbd {
   color: var(--warn);
 }
 
+/* A 416: the followed file was re-recorded and polling has stopped (polish-1). No dot. */
+.follow--lost {
+  color: var(--error);
+}
+
 button,
 select {
   font: inherit;

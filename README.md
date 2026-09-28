@@ -157,7 +157,8 @@ their report; the `node --test` half of
 narrator after every recorder. The console prints a line as each job starts and
 ends, then a **timing table** (every job's start, end, seconds, status and the
 load average), and `var/check-all/<run>/gate.log` is the whole log in the serial
-order. A failure stops everything this gate started, prints the failed job's log
+order. Only the last 20 runs are kept there (`GATE_KEEP_RUNS`; a run is ~4 MB with
+its jobs' Forge homes), the oldest pruned as the gate starts. A failure stops everything this gate started, prints the failed job's log
 tail and the table, and exits 1; nothing is ever retried. `GATE_JOBS=1` is the
 serial gate: the steps in the old order, each job's log streamed as it runs —
 the old log's lines, except that `die`'s stderr now arrives on stdout and 10g
@@ -1963,8 +1964,9 @@ is `web/src/story/narrate.ts` (D124), which `tools/narrate.mjs` imports as it is
 (Node 24 runs TypeScript by type stripping) and the `#story` page runs too — and
 `node tools/narrate-selftest.mjs` is its gate (about a second; `check-all.sh`
 runs it as step **12d**): every fixture narrated, the hidden-information rules
-held by ids and by the decks' card names with five negative controls, a client log
-with re-deliveries, and two committed golden files, `fixtures/narrate/g1-turns-1-3.txt`
+held by ids and by the decks' card names with six negative controls, a client log
+with re-deliveries (held against the bridge's own log both ways: nothing told
+twice, nothing it holds dropped), and two committed golden files, `fixtures/narrate/g1-turns-1-3.txt`
 and `fixtures/narrate/g1-summary.txt`, compared byte for byte. **When you change
 the narration on purpose, regenerate them with `node tools/narrate-selftest.mjs
 --write-golden`** and read the diff before committing — the page prints the same
@@ -2367,7 +2369,7 @@ mtg-table/
                              (--frame, --keys, --click, --follow-for); not in the gate
     narrate-selftest.mjs     its gate, check-all's 12d: every fixture and every log
                              the gate records, hard rule 8 by ids and by deck names,
-                             five negative controls, a client log's re-deliveries,
+                             six negative controls, a client log's re-deliveries,
                              and fixtures/narrate/'s goldens (--write-golden)
     fetch-art.ts             every decks/*.dck -> web/public/art.json
     build-workshop-catalog.ts  (D104) decks/*.dck + fixtures/games/*.jsonl ->

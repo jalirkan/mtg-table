@@ -122,10 +122,11 @@
 #                                 Then 12d: tools/narrate-selftest.mjs, the
 #                                 frame-log narrator's gate -- every fixture and
 #                                 every log this run recorded told as a story
-#                                 with hard rule 8 held by ids and by names, five
+#                                 with hard rule 8 held by ids and by names, six
 #                                 negative controls, no re-delivered frame told
-#                                 twice, and fixtures/narrate/'s goldens (D123;
-#                                 ~1 s)
+#                                 twice and no frame a client holds left untold
+#                                 (polish-1), and fixtures/narrate/'s goldens
+#                                 (D123; ~1 s)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -250,6 +251,7 @@
 #         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~6 minutes serially); 9e still runs
 #         VILLAIN_DECK=decks/x.dck ./tools/check-all.sh   # 9c rows 11-14 and 9e play this deck
 #         STRICT_G1=1 ./tools/check-all.sh        # step 6 byte for byte (fails under load: D113)
+#         GATE_KEEP_RUNS=50 ./tools/check-all.sh  # keep 50 runs under var/check-all/ (default 20)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -303,6 +305,39 @@ case "$WSPORT" in '' | *[!0-9]*) echo "check-all: WSPORT must be a port number, 
 RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"
 RUN_DIR="var/check-all/$RUN_ID"
 mkdir -p "$RUN_DIR"
+
+# ...and only the last GATE_KEEP_RUNS of them (default 20, this one included)
+# are kept: a run is ~4 MB since every job keeps its Forge home in it (gate
+# speed's follow-up 4, closed by polish-1).  Only directories named like a
+# RUN_ID (YYYYmmdd-HHMMSS-pid, so the name order IS the start order) are ever
+# removed -- anything else under var/check-all/ is left alone -- and never this
+# run's own.  One gate per checkout (gate speed's follow-up 7) is what makes
+# "the oldest" safe to delete.
+GATE_KEEP_RUNS="${GATE_KEEP_RUNS:-20}"
+case "$GATE_KEEP_RUNS" in
+  '' | *[!0-9]* | 0) echo "check-all: GATE_KEEP_RUNS must be a positive integer, got '$GATE_KEEP_RUNS'" >&2; exit 2 ;;
+esac
+prune_runs() {
+  local runs=() i n pruned=0
+  mapfile -t runs < <(find var/check-all -mindepth 1 -maxdepth 1 -type d -regextype posix-extended \
+    -regex '.*/[0-9]{8}-[0-9]{6}-[0-9]+' -printf '%f\n' | LC_ALL=C sort)
+  # The pattern must see THIS run, or a change to RUN_ID's format would stop the
+  # pruning without a word; it fails the gate instead.
+  local r seen=0
+  for r in "${runs[@]}"; do [ "$r" = "$RUN_ID" ] && seen=1; done
+  [ "$seen" = "1" ] || {
+    echo "check-all: this run's id $RUN_ID does not match prune_runs' pattern -- change the two together" >&2
+    exit 2
+  }
+  n=$(( ${#runs[@]} - GATE_KEEP_RUNS ))
+  for (( i = 0; i < n; i++ )); do
+    [ "var/check-all/${runs[$i]}" = "$RUN_DIR" ] && continue
+    rm -rf -- "var/check-all/${runs[$i]}"
+    pruned=$(( pruned + 1 ))
+  done
+  echo "check-all: run $RUN_ID; keeping the last $GATE_KEEP_RUNS runs under var/check-all/ (${#runs[@]} there, $pruned pruned)"
+}
+prune_runs
 
 # `die` names the step the running JOB belongs to; each job's subshell sets STEP
 # (the parent number for a lettered sub-step, exactly as the serial gate did).
@@ -548,8 +583,23 @@ s06b_check() {
     if (JSON.stringify(got(m1)) !== JSON.stringify(want1)) fail(`seat 1 match ${JSON.stringify(m1)}`);
     console.log(`OK: both handshakes name the decks and each seat its own profile; paceMs=${hp.paceMs}`);
   ' "$SP_PACED" "$SP_SEAT1" "$VILLAIN" || die "the spectate recordings do not describe the match that was played"
-  node tools/same-game.mjs "$SP_PACED" "$SP_SEAT1" \
-    || die "a paced seat-0 recording and an unpaced seat-1 recording of seed 5 are not the same game"
+  local sg=var/check-all-same-game.log
+  if ! node tools/same-game.mjs "$SP_PACED" "$SP_SEAT1" > "$sg" 2>&1; then
+    cat "$sg"
+    die "a paced seat-0 recording and an unpaced seat-1 recording of seed 5 are not the same game"
+  fi
+  cat "$sg"
+  # polish-1 (spectating's skeptic): the tool says, per log, what it did NOT
+  # compare -- and, for two logs of one seat, that the projection is the same
+  # one (its header once claimed a same-seat pair had nothing set aside).
+  [ "$(grep -c '^  set aside, never compared -- ' "$sg")" = "2" ] \
+    || die "same-game.mjs did not say, for each log, what it set aside (log: $sg)"
+  node tools/same-game.mjs "$SP_PACED" "$SP_PACED" > var/check-all-same-game-self.log 2>&1 \
+    || { cat var/check-all-same-game-self.log; die "same-game.mjs called a recording a different game from itself"; }
+  grep -q "^  both logs are seat 0's: the values above were set aside although both logs show them" \
+      var/check-all-same-game-self.log \
+    || { cat var/check-all-same-game-self.log; die "same-game.mjs compared two logs of one seat without saying what it set aside"; }
+  echo "OK: same-game.mjs names what it set aside for each log, and says so for a same-seat pair"
   # The negative control: one life total changed in the seat-1 copy.
   node -e '
     const fs = require("node:fs");
@@ -1472,6 +1522,21 @@ queued behind Forge finishing its game and then run (D114; log: var/check-all-ws
     die "10g: the late undo was not refused inside the held undo window (D136; log: var/check-all-ws-3g.log)"
   }
   echo "OK: the late undo, sent into the held window between the payment and the stack, was refused \"Not now\" (D136)"
+  # D136, the client's half (polish-1, the undo race's skeptic).  The server
+  # line above holds the refusal; this holds the CLIENT'S ASSERTION of it.
+  # ws-auto-play sends the late undo in any --comfort run, so without
+  # --require-late-undo the server still refuses it and the line above stays
+  # green -- and the client, which then requires nothing, prints no
+  # `undo(late)` at all.  So each half is held by its own grep: take the flag
+  # off the client and this fails; take MTGTABLE_HOLD_UNDO_WINDOW_MS off the
+  # server and the line above fails (no hold); the controls are in
+  # docs/evidence/polish-1.md.
+  grep -qF 'undo(late)=ok' var/check-all-ws-3g-client.log || {
+    grep -o 'comfort [^·]*' var/check-all-ws-3g-client.log >&2 || true
+    die "10g: the client's summary does not say undo(late)=ok -- it was not run with --require-late-undo, \
+or its late undo drew no \"Not now\" (D136; log: var/check-all-ws-3g-client.log)"
+  }
+  echo "OK: the client's summary says undo(late)=ok -- it required the refusal and saw it"
   # The BEHAVIOURAL half of auto-yield, from the client's own summary line.
   # ws-auto-play already exited 7 if the key repeated and the engine prompted
   # anyway, or (under --require-yield-repeat) if it never repeated at all; this
@@ -1619,7 +1684,7 @@ s12d_narrate() {
   narrate_add var/ws-auto-3g-g2.jsonl var/games/check-all-ws-3g-g2/frames.jsonl
   narrate_add var/ws-auto-3g-g3.jsonl var/games/check-all-ws-3g-g3/frames.jsonl
   node tools/narrate-selftest.mjs ${NARRATE_LOGS:+--logs "$NARRATE_LOGS"} \
-    || die "narrate-selftest.mjs (12d: the narrator broke a hidden-information rule, narrated a re-delivered frame twice, or drifted from fixtures/narrate/)"
+    || die "narrate-selftest.mjs (12d: the narrator broke a hidden-information rule, narrated a re-delivered frame twice, dropped a frame a client holds, or drifted from fixtures/narrate/)"
 }
 
 s13_skipped() {

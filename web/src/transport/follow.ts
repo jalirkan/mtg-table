@@ -56,11 +56,16 @@ export const FOLLOW_STALL_MS = 30_000;
  * - `stalled` — following, and nothing new for {@link FOLLOW_STALL_MS}.
  * - `ended` — an `over` frame arrived; polling has stopped.
  * - `stopped` — {@link LogFollower.stop} was called before the end.
- * - `error` — the last poll failed; `detail` says how. Polling continues,
- *   except after a 416, which means the file SHRANK: it was re-recorded under
- *   the same name, and this page's offsets describe a different game.
+ * - `error` — the last poll failed; `detail` says how. Polling continues.
+ * - `lost` — a 416: the file SHRANK, so it was re-recorded under the same name
+ *   and this page's offsets describe a game that is no longer on disk. Polling
+ *   has STOPPED for good and the transport is an ordinary replay of what it
+ *   read; only a reload follows the new game. Its own word, never `error`'s
+ *   (polish-1, spectating's skeptic): `main.tsx`'s `followWordOf` once folded it
+ *   into "stalled", and the page kept a live "● following" over a follower that
+ *   had stopped.
  */
-export type FollowStatus = 'waiting' | 'following' | 'stalled' | 'ended' | 'stopped' | 'error';
+export type FollowStatus = 'waiting' | 'following' | 'stalled' | 'ended' | 'stopped' | 'error' | 'lost';
 
 /** The slice of `Response` the poller reads — what a test's fake must provide. */
 export interface FollowResponse {
@@ -213,7 +218,7 @@ export class LogFollower {
         changed = this.#set(failed ? 'error' : 'waiting', failed ? 'the log disappeared (404)' : null);
       } else if (response.status === 416) {
         // The file is shorter than what this page has read: re-recorded.
-        this.#set('error', 'the recording restarted under the same name — reload the page to follow the new game');
+        this.#set('lost', 'the recording restarted under the same name — reload the page to follow the new game');
         this.#running = false;
         this.#transport?.endLive();
         this.#onChange?.(this);

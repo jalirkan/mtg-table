@@ -16,10 +16,21 @@
  */
 package mtgtable;
 
+import java.util.Collection;
+
 /**
  * <b>Decision D136</b>: may an act that writes the engine directly from the EDT
  * be applied <em>now</em>?  The pure half -- no Forge type, no engine, no clock
  * -- so {@link ActGuardSelfTest} can hold every row of the table on every build.
+ *
+ * <p>Two pure halves, and the self-test drives both: {@link #whyNotNow}, the
+ * decision table over a {@link Facts}; and {@link #facts}, which assembles that
+ * {@code Facts} from the live feeds -- which read of the bridge's state stands
+ * for which condition.  {@code WireGuiGame.engineFacts} is nothing but
+ * {@code facts(new GuardFeeds(c), genAtArrival)}, its {@link Feeds} one read
+ * apiece (polish-1, the undo race's skeptic: the table alone left the wiring
+ * with no control, so a condition fed a constant, or another condition's feed,
+ * passed every build).
  *
  * <h2>Why there is a guard at all</h2>
  *
@@ -123,6 +134,87 @@ final class ActGuard {
         int hopsInFlight;
         /** The name of a running engine thread, or null when every one is waiting or gone. */
         String runningEngineThread;
+    }
+
+    /**
+     * <b>Where each condition's fact is read from</b> -- the seam
+     * {@link ActGuardSelfTest} drives with fakes.  {@code WireGuiGame}'s
+     * implementation ({@code GuardFeeds}) answers each method with one read of
+     * one of its fields or one Forge call, and nothing else; everything that
+     * combines them is {@link #facts}, below, so a feed wired to the wrong
+     * condition -- or to none -- flips a verdict the self-test holds.  No Forge
+     * type crosses it: the input is an {@code Object}, and the one question that
+     * needs its class is asked back through {@link #activatingManaAbility}.
+     */
+    interface Feeds {
+        /** Condition 1: {@code openView} has emitted {@code hello_ok}. */
+        boolean ready();
+        /** Condition 1: the engine has pushed this game's first {@code input} (M42). */
+        boolean inputSeen();
+        /** Condition 1: the session is closed. */
+        boolean closed();
+        /** Condition 1: {@code over} has gone out. */
+        boolean overEmitted();
+        /** Condition 2: {@code ReplyPool.pending()} -- asks a game thread is parked on. */
+        int pendingAsks();
+        /** Condition 3: the input on the seat's stack (the one {@code Game-0} is parked in), or null. */
+        Object input();
+        /** Condition 4: D22's input generation, now. */
+        long inputGen();
+        /** Condition 5: {@code InputPayMana.isActivatingManaAbility()} for this input; false for any other class. */
+        boolean activatingManaAbility(Object input);
+        /** Condition 6: the last OK/pass this EDT gave, or null. */
+        PassMark passPress();
+        /** Condition 6: asks a game thread has registered so far (the engine answering a press by asking). */
+        long engineAsks();
+        /** Condition 7: our own view-walking hops between submission and end. */
+        int hopsInFlight();
+        /** Condition 8: every game thread that has entered the bridge; {@link #facts} drops the terminated ones from it. */
+        Collection<Thread> engineThreads();
+    }
+
+    /**
+     * D136 condition 6: an OK / pass this EDT gave an {@code InputPassPriority},
+     * with the input generation and the engine's ask count as they were before
+     * the press.  While the same input is up and neither number has moved, Forge
+     * may be running the pass on a worker (the mana-lost confirm) that has not
+     * reached the bridge yet.
+     */
+    static final class PassMark {
+        final Object input;
+        final long gen;
+        final long asks;
+
+        PassMark(final Object input, final long gen, final long asks) {
+            this.input = input;
+            this.gen = gen;
+            this.asks = asks;
+        }
+    }
+
+    /**
+     * The {@link Facts} the feeds describe, read immediately before a write --
+     * condition by condition, in the class comment's order.  The input and the
+     * generation are read ONCE, so conditions 3, 5 and 6 judge the same input
+     * and conditions 4 and 6 the same generation.
+     */
+    static Facts facts(final Feeds s, final long genAtArrival) {
+        final Facts f = new Facts();
+        f.live = s.ready() && s.inputSeen() && !s.closed() && !s.overEmitted();
+        f.pendingAsks = s.pendingAsks();
+        final Object in = s.input();
+        f.inputUp = in != null;
+        f.genAtArrival = genAtArrival;
+        f.genNow = s.inputGen();
+        f.manaActivating = in != null && s.activatingManaAbility(in);
+        final PassMark p = s.passPress();
+        f.passPressOutstanding = p != null && in != null && p.input == in
+                && p.gen == f.genNow && p.asks == s.engineAsks();
+        f.hopsInFlight = s.hopsInFlight();
+        final Collection<Thread> threads = s.engineThreads();
+        threads.removeIf(t -> t.getState() == Thread.State.TERMINATED);
+        f.runningEngineThread = runningThread(threads);
+        return f;
     }
 
     /**

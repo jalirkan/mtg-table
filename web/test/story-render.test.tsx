@@ -291,6 +291,13 @@ test('follow mode: the tail says so, and a log still being recorded is not a fin
   expect(html).toContain('The game is still being recorded.');
   expect(html).not.toContain('Game over');
   expect(renderPage(log, log.frames.length, 'dim', 'finished')).toContain('recording finished — this is a replay now');
+  // A 416 (polish-1): the followed file was re-recorded, following stopped, and
+  // the page says so -- no live word, and not "still being recorded".
+  const lost = renderPage(cut, half, 'hide', 'lost');
+  expect(lost).toContain('data-tail="lost"');
+  expect(unescapeHtml(lost)).toContain('recording lost — the file was re-recorded under the same name');
+  expect(lost).not.toContain('●');
+  expect(lost).not.toContain('The game is still being recorded.');
 });
 
 // ---------------------------------------------------------------------------

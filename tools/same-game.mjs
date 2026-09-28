@@ -36,9 +36,22 @@
 // every zone count, every public card with every field, the stack's sources and
 // targets, combat, every event's kind and ids, the outcome -- must be EQUAL, and
 // the first frame where it is not is printed.  Exit 0 = the same game, 1 = not,
-// 2 = usage.  Two logs of the same seat compare the same way (nothing is set
-// aside that both would not agree on), so this is also the right tool for "did
-// pacing change the game?".
+// 2 = usage.
+//
+// TWO LOGS OF THE SAME SEAT go through the SAME projection -- nothing is
+// switched off because the viewpoints match.  The hand is still reduced to
+// stubs, a revealed library to ids, a face-down card to a stub, and the engine
+// strings are still dropped, although both logs would show every one of them
+// the same way.  So a same-seat comparison is exactly as strict as a cross-seat
+// one and no stricter: what it cannot see is a hand card's face, a face-down
+// card's face or an engine string under the same ids, events and counts.  That
+// is still the right tool for "did pacing change the game?" -- every draw, zone
+// move and count is compared -- but not for "is the seat's own hand byte for
+// byte the same?"; `tools/wire-drift.mjs`, which compares whole boards at every
+// phase boundary with the hand in them, is.  (The header said the opposite
+// until polish-1: "nothing is set aside that both would not agree on".)  The
+// output's `set aside` lines say, per log, how much was not compared, and say
+// so again when both logs are one seat's.
 
 import { readFileSync } from 'node:fs';
 
@@ -49,7 +62,10 @@ if (files.length !== 2) {
   process.exit(2);
 }
 
-const counts = { handCards: 0, libraryCards: 0, faceDown: 0, texts: 0, statsIds: 0 };
+// What the projection set aside, per log (`counts` points at the log being
+// projected).
+const fresh = () => ({ handCards: 0, libraryCards: 0, faceDown: 0, texts: 0, statsIds: 0 });
+let counts = fresh();
 
 function read(path) {
   const lines = readFileSync(path, 'utf8').split('\n').filter((l) => l.trim() !== '');
@@ -200,10 +216,13 @@ const firstDiff = (xs, ys) => {
   return -1;
 };
 // The frame-by-frame pass above projected every frame once already; count the
-// set-aside values over the game pass alone.
-for (const k of Object.keys(counts)) counts[k] = 0;
+// set-aside values over the game pass alone, one log at a time.
+counts = fresh();
 const ga = asGame(a);
+const countsA = counts;
+counts = fresh();
 const gb = asGame(b);
+const countsB = counts;
 const eventDiff = firstDiff(ga.events, gb.events);
 const boundaryDiff = firstDiff(ga.boundaries, gb.boundaries);
 const otherDiff = firstDiff(ga.others, gb.others);
@@ -247,9 +266,15 @@ if (!sameGame && first >= 0) {
   }
 }
 
-console.log(`  set aside as viewer-dependent: ${counts.handCards} hand card(s), ${counts.libraryCards} ` +
-  `revealed library card(s), ${counts.faceDown} face-down face(s), ${counts.texts} engine string(s); ` +
-  `${counts.statsIds} stats event(s) compared as id sets`);
+const setAside = (c) => `${c.handCards} hand card(s) as stubs, ${c.libraryCards} revealed library card(s) as ` +
+  `ids, ${c.faceDown} face-down card(s) as stubs, ${c.texts} engine string(s) dropped`;
+console.log(`  set aside, never compared -- ${files[0]}: ${setAside(countsA)}`);
+console.log(`  set aside, never compared -- ${files[1]}: ${setAside(countsB)}`);
+console.log(`  compared as id sets: ${countsA.statsIds} + ${countsB.statsIds} stats event(s) (D121)`);
+if (typeof a.header.seat === 'number' && a.header.seat === b.header.seat) {
+  console.log(`  both logs are ${seatOf(a.header)}'s: the values above were set aside although both logs show ` +
+    'them the same way -- a same-seat comparison is no stricter than a cross-seat one');
+}
 if (problems.length > 0) {
   for (const p of problems) console.log(`  ! ${p}`);
   console.log('NOT THE SAME GAME');

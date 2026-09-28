@@ -23,6 +23,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Gate speed: `check-all.sh` in parallel *(off the plan, for a faster gate)* | 1 day | **built, measured and documented**, committed on branch `gate-speed` (2026-09-28), rebased onto the story page's `0af97a9` — `GATE_JOBS` jobs at a time from a job table with dependencies, a log per job and a timing table; ~245 s at four, 151 s at eight, against ~900–950 s serially (907 s at merge); `GATE_JOBS=1` is the serial gate; every job its own Forge home (at merge); **D129–D135**; *Gate speed*, just above *Deferred* |
 | — | The undo race: `undo` waits for a parked engine *(a defect, from the story branch's gate run)* | 1 day | **built, gated and documented**, committed on branch `undo-race` (2026-09-28), rebased onto gate speed's `6b35054` — `undo` and `useMana` applied only while the engine is quiet on this seat, else `notice {title:"Not now"}`, and a `concede` from a running engine carried forward to the engine's own check (**D136**, written as D170; amendment **M48**); a deterministic reproduction (`tools/undo-race-repro.sh`, the held window, the guard-off negative control); `ActGuardSelfTest` in the build; 10g's job holds the window and asserts the refusal; M6 follow-up 6, the story page's follow-up 9 and gate speed's follow-up 8 closed; five follow-ups, one of them (4) closed at merge |
 | — | CI: the gate's engine-free half on GitHub Actions *(off the plan)* | ½ day | **built** on branch `ci` (2026-09-28), pull request to `main` — `.github/workflows/checks.yml`: `web` (`npm ci`, build, `npm test`), `bridge` (lint, `check-forge.sh`, `bridge/build.sh` and its five self-tests against the official `forge-2.0.14` release's jar, checked against the pin and cached alone) and `redaction` (the committed corpus, the checker's, the narrator's and the drift check's selftests, the catalog check); `check-all.sh`, which plays games, stays local; the stray `.vite/` cache untracked and ignored; README's *Continuous integration* |
+| — | Polish 1: the skeptics' nine minors *(off the plan)* | ½ day | **built, gated and documented** on branch `polish-1` (2026-09-28), off `main`'s `f6bad35` — `ActGuard`'s wiring under its self-test, 10g holding both halves of the late undo, the narrator's N1 from the decks alone and its pair check both ways, a 416 read as `lost`, `same-game.mjs` saying what it sets aside, a docs correction, a liveness clause written for the merge pass, and `var/check-all/` pruned to 20 runs; no wire change, no step, no decision; *Polish 1*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -4774,8 +4775,9 @@ fourteen games 370 s, at a load average of 3–5 (`var/check-all-spectate-train.
 Step 6 said `SAME` (and byte for byte too, once sorted) — and the same fresh
 recording compared WITHOUT the sort differs from `g1` in the event stream, at event
 #1026, a `stats` event's id order: without the move above, this very run would
-have failed step 6. 6b: `SAME GAME`, seat 0 paced (151 dwells, 4,023 ms) and seat 1
-unpaced (1,630 ms), the mutant rejected. `npm --prefix web test` standalone is
+have failed step 6. 6b: `SAME GAME`, seat 0 paced (151 dwells; 4,023 ms of game
+wall time, 2,464 ms of it asleep in the dwells — not engine time, as this line
+once implied; polish-1) and seat 1 unpaced (1,630 ms), the mutant rejected. `npm --prefix web test` standalone is
 **893 `node --test` + 98 vitest (7 files)** (more villains' 877 + 97, plus this
 branch's 16 + 1); inside the gate **903 / 895 pass / 0 fail / 8 skipped** plus 98.
 
@@ -4825,7 +4827,7 @@ What it is:
 - **Golden files**: `fixtures/narrate/g1-turns-1-3.txt` and
   `fixtures/narrate/g1-summary.txt`, byte for byte.
 
-### The narrator's follow-ups — nine, 2026-09-28
+### The narrator's follow-ups — nine, 2026-09-28 (1 closed by the story page, 1 by polish-1)
 
 1. ~~**A `#story` page in the web client**~~ — **done 2026-09-28** by the story
    page (*The story page*, below; D124–D128): a page of its own beside `#cards`
@@ -4866,7 +4868,14 @@ What it is:
    new story), but the corpus has no single file holding two games — the bridge
    and `ws-auto-play.mjs --games` both write one file per game (M38) — so that
    path is exercised by nothing but its own reading of the protocol.
-9. **The client/bridge pair check is one-directional** (the branch's verifier,
+9. ~~**The client/bridge pair check is one-directional**~~ **Closed by polish-1**
+   (*Polish 1*, below): the check runs both ways. A moment the bridge's log tells
+   more often than the client's fails unless its frame never reached the client
+   — the client file does not hold that seq, and it lies before the client's
+   first snapshot, inside a gap the client's own story counts, or after the last
+   frame it holds — and control N6 (a skip rule that drops a real `state` the
+   client holds) fails it, where the one-sided check found nothing. The original
+   note: **The client/bridge pair check is one-directional** (the branch's verifier,
    2026-09-28, a minor). 12d fails a client log that tells a moment — a `(kind,
    seq, card ids)` triple — MORE often than the bridge's own log of that game
    (a re-delivery narrated twice), but not one that tells a moment LESS often, so
@@ -5095,7 +5104,7 @@ at eight (`8850`, load 6–14) and **906.9 s** serially (`8860`), every one exit
 attempt at the second four-slot run failed at step 8 on an engine race that is
 not the gate's (follow-up 8) and was run again.
 
-### Gate speed follow-ups — eight, 2026-09-28 (1 closed at merge, 1 by the undo race)
+### Gate speed follow-ups — eight, 2026-09-28 (1 closed at merge, 1 by the undo race, 1 by polish-1)
 
 1. ~~**A JVM's exit can leave `var/forge/achievements/constructed.xml` EMPTY,
    serially too.**~~ **Closed at merge, for the gate**: every job — and every
@@ -5126,7 +5135,11 @@ not the gate's (follow-up 8) and was run again.
 3. **The default is conservative.** `GATE_JOBS=8` measured 151 s with eight
    ~1 GB JVMs beside other worktrees' work; four is what the brief asked for.
    Raising the default is the user's call (memory, and the other lanes).
-4. **`var/check-all/<run>/` is never pruned** — about 660 KB a run before the
+4. ~~**`var/check-all/<run>/` is never pruned**~~ **Closed by polish-1**: the
+   gate keeps the last `GATE_KEEP_RUNS` runs (default 20, the running one
+   included), pruning the oldest as it starts; only directories named like a run
+   id are touched (*Polish 1*, below). The original note: **`var/check-all/<run>/`
+   is never pruned** — about 660 KB a run before the
    merge, and 4.1–4.2 MB since each job keeps its Forge home there (~140 KB for
    a home a JVM booted in, ~36 KB for an unused one; evidence §10).
 5. **The serial gate's console merges stderr into stdout** (each job runs under
@@ -5298,6 +5311,172 @@ late-undo assertions passed in every run (`lateUndo=not-now`, `undo window = 1
 hold(s) … 1 refused, 0 applied`). `./tools/undo-race-repro.sh` passed 13 of 13,
 and `npm --prefix web test` gave `main`'s counts (932 + 120 standalone). Evidence
 §10.
+
+---
+
+## Polish 1 — the skeptics' nine minors (2026-09-28)
+
+**Status: built, gated and documented** on branch `polish-1` (the worktree
+`mtg-table-t2u`, off `main`'s `f6bad35`). Nine minors that the skeptics of the
+undo race, the story page, the narrator, spectating and gate speed left behind,
+each fixed with a test or a negative control that fails without the fix, or —
+item 8, whose file belongs to another lane this week — written down here for the
+merge pass to apply. No wire change, no new step and no new decision.
+`docs/evidence/polish-1.md` is what was run.
+
+1. **`ActGuard`'s wiring has a control** (the undo race's skeptic).
+   `ActGuardSelfTest` held only `whyNotNow`'s table; which live read fed each of
+   D136's eight conditions had no check, so a condition fed a constant or another
+   condition's read passed every build. `ActGuard.facts(Feeds, genAtArrival)` now
+   assembles the `Facts` from an `ActGuard.Feeds` — one method per read (the four
+   `live` flags, `ReplyPool.pending()`, the input on the stack, the generation,
+   `isActivatingManaAbility`, the OK/pass mark and the ask count, our hops, the
+   engine threads) — and `WireGuiGame.engineFacts` is `facts(new GuardFeeds(c),
+   gen)`, whose methods are one read apiece. The self-test drives `facts` with a
+   fake: each feed turned busy on its own refuses with its condition's reason,
+   a stale condition-6 mark does not, the input and the generation are read
+   once, a terminated engine thread is pruned and a running one refuses. 39 → 74
+   checks; eleven mis-wirings in a scratch copy of `ActGuard.java`, one at a
+   time, each fail it. Hard rules 1–3 hold: the GUI is installed first and every
+   thread is `HeadlessGuiBase`'s `mtg-table-bg`.
+2. **10g holds both halves of the late undo** (the undo race's skeptic). The
+   gate grepped only the server's `undo window` line; taking `--require-late-undo`
+   off the client left 10g green, because the client sends the late undo in any
+   `--comfort` run and the server still refuses it. 10g now also requires
+   `undo(late)=ok` in the client's summary. Proven both ways: the flag removed
+   fails the new grep; `MTGTABLE_HOLD_UNDO_WINDOW_MS` removed fails the server's
+   (the client still said `undo(late)=ok` there — the late undo was refused
+   naturally — so each half needs its own grep).
+3. **The narrator's N1 finds the leak in `decks/*.dck` on its own** (the story
+   page skeptic's finding, in the narrator's own control). N1 injected a made-up
+   name and handed it to check 3 as an extra forbidden name; it now injects
+   `Borough Backup` (a card of `decks/pacho-shield.dck` that `disjoint.jsonl`
+   never shows) and hands check 3 nothing. With `DECK_NAMES` emptied, the new N1
+   fails and the old one passed; with `faceOf()`'s `hidden` guard taken out, N2
+   fails — checks 2, 3 (from the decks alone) and 4 all fire.
+4. **The pair check runs both ways** (the narrator's follow-up 9, closed above).
+   A client story that tells a moment less often than the bridge's own log fails
+   unless its frame never reached the client (before its first snapshot, in a gap
+   its story counts, or after it left) — or, for a moment told from the seat's own
+   frames (a concede, a sideboard answer), unless the client log records no c2s
+   frame at all (`tools/ws-smoke.mjs --log` writes only what it received; the
+   first gate run found that on 10a, 10b and 10e). New control N6 (a skip rule
+   that drops a real frame the client holds) fails it where the one-sided check
+   found nothing; N5 now also asserts the first half fires; the cut-out client log
+   sets its missed moments aside as a counted gap. 12d prints, per pair, how many
+   moments were set aside and why.
+5. **A 416 is `lost`, not `stalled`** (spectating's skeptic). The follower's
+   status for a re-recorded file is `lost` (it stops polling for good);
+   `main.tsx`'s `followWordOf` maps it to `lost`, the app bar's chip says
+   *recording lost — …* with no live dot, `#story`'s tail says so, and the arena
+   — whose `ArenaFollow` has no such word and is not this branch's to change — is
+   handed none (`arenaFollowOf`), so its watching line drops "● following".
+   `spectate.test.ts` evaluates `followWordOf` and `arenaFollowOf` from
+   `main.tsx`'s own source for every `FollowStatus` (taking the `lost` case out
+   fails it) and holds that a lost follower polls no more; `story-render.test.tsx`
+   renders the tail.
+6. **`tools/same-game.mjs` says what it set aside** (spectating's skeptic). Its
+   header claimed two logs of one seat compare with nothing set aside; the
+   projection is the same for every pair. The header now says so, the output
+   prints what was set aside per log (and, for one seat's pair, that it was set
+   aside anyway), and 6b asserts both lines.
+7. **6b's paced run is 4,023 ms of game WALL time**, 2,464 ms of it the dwells —
+   not engine time; `docs/evidence/spectate.md` and *Spectating* above corrected.
+8. **The liveness clause for a `setTimeout` poll** (gate speed's skeptic): written
+   as follow-up 1 below, not applied — `web/test/liveness.test.ts` belongs to the
+   visual lanes this week.
+9. **`var/check-all/<run>/` is pruned** (gate speed's follow-up 4, closed above):
+   the last `GATE_KEEP_RUNS` (20) runs are kept, the oldest pruned as the gate
+   starts; only directories named like a run id are touched, and the gate exits 2
+   if its own run id stops matching that pattern (so a format change cannot turn
+   the pruning off without a word). Shown on the first gate run below with 42
+   seeded old runs; CLAUDE.md's gate paragraph says so.
+
+```bash
+./bridge/build.sh                               # ActGuardSelfTest: 74 checks (the wiring among them)
+node tools/narrate-selftest.mjs                 # N1-N6; the pair check both ways
+npm --prefix web test                           # spectate.test.ts: the follow word; story-render: the lost tail
+GATE_KEEP_RUNS=50 ./tools/check-all.sh          # keep more runs than 20
+```
+
+**The gate**, each run from a deleted `bridge/out` at `GATE_JOBS=4`, both exit 0:
+**243.0 s** at `WSPORT=8850` (46 jobs, 954.4 s summed, load 1.6–9.5; it printed
+`keeping the last 20 runs under var/check-all/ (46 there, 26 pruned)` over 42
+seeded old runs, and left `not-a-run/` alone) and **264.8 s** at `WSPORT=8860`
+(1,004.5 s summed, load 9.0–18.6 with other lanes' work beside it; `21 there, 1
+pruned`) — `var/check-all-polish-1-p{1,2}.log`. In both: `ActGuardSelfTest: 74
+check(s)`, 10g's new `undo(late)=ok` line, 6b's two set-aside lines and its
+same-seat line, 12d's 114 checks with every client/bridge pair held both ways,
+and `node --test` **943 / 935 pass / 0 fail / 8 skipped** with vitest **120 (8
+files)**. A rehearsal run before them (233.8 s,
+`var/check-all-polish-1-p0-rehearsal.log`) failed at 12d, and that is item 4's
+`own` rule: the first cut of the two-sided check read the receive-only ws-smoke
+logs' missing concede as a dropped fact. Standalone: `./bridge/build.sh` (five
+self-tests), `tools/undo-race-repro.sh` 13 of 13, `node
+tools/narrate-selftest.mjs` 87 checks, `npm --prefix web test` **933 + 120**
+(`main`'s 932 + 120, plus the follow-word test), `npm --prefix web run build`.
+`~/forge` and `~/.forge` were fingerprinted before and after: unchanged.
+
+### Polish 1's follow-ups — four, 2026-09-28
+
+1. **For the merge pass: the arena's liveness clause misses a `setTimeout`
+   poll.** Spectating's clause in `web/test/liveness.test.ts` (*follow mode
+   reaches the arena as a word*) bans `fetch(`, `setInterval(`, `new
+   EventSource(`, `new WebSocket(` and `XMLHttpRequest` under `web/src/arena/`,
+   but a recursive `setTimeout` — `const tick = () => { void load();
+   setTimeout(tick, 500); }` — is a poll that passes it. No arena file calls
+   `setTimeout` today (52 files, 0 lines). Replace the clause's loop with:
+
+   ```ts
+   /** A request, a connection, or a timer that can re-arm itself: how a poll is spelled. */
+   const POLLS = /\bfetch\s*\(|\bset(?:Interval|Timeout)\s*\(|\brequestIdleCallback\s*\(|new\s+(?:EventSource|WebSocket)\s*\(|\bXMLHttpRequest\b/;
+   /** A one-shot timer the arena genuinely needs carries its reason on its own line. */
+   const ALLOW_TIMER = /\/\/ ALLOW timer: \S/;
+   for (const file of arenaFiles()) {
+     codeOf(file.source).split('\n').forEach((line, i) => {
+       if (ALLOW_TIMER.test(line)) return;
+       assert.ok(!POLLS.test(line),
+         `${file.path}:${String(i + 1)} fetches, polls or opens a connection — how frames arrive is transport/'s business (D118)`);
+     });
+   }
+   // The negative control: the shapes the old clause let through must be caught,
+   // and a copy of a real arena file with a recursive poll spliced in must fail.
+   for (const probe of [
+     'const tick = () => { void load(); setTimeout(tick, 500); };',
+     'function poll() { window.setTimeout(poll, 500); }',
+     'globalThis.setTimeout (() => refresh(), 500);',
+     'requestIdleCallback(function again() { requestIdleCallback(again); });',
+   ]) assert.ok(POLLS.test(probe), `the poll clause misses: ${probe}`);
+   const layerSrc = readFileSync(fileURLToPath(new URL('../src/arena/DecisionLayer.tsx', import.meta.url)), 'utf8');
+   const spliced = `${codeOf(layerSrc)}\nconst tick = () => { void load(); setTimeout(tick, 500); };\ntick();\n`;
+   assert.ok(spliced.split('\n').some((l) => !ALLOW_TIMER.test(l) && POLLS.test(l)), 'a spliced recursive poll passed');
+   ```
+
+   Before applying it, grep the three visual lanes' merged `web/src/arena/` for
+   `setTimeout(` and `requestIdleCallback(`: each use is either a one-shot
+   timer (put `// ALLOW timer: <reason>` on its line) or a poll (move it to
+   `transport/`). The predicate was run offline over today's 52 arena files (no
+   line rejected), the four probes (each rejected; the old regex missed all
+   four) and the spliced file (rejected; the old regex passed it) —
+   `docs/evidence/polish-1.md` §8. Its header comment should name
+   `setTimeout` beside the others.
+2. **The arena's own `lost` word.** `ArenaFollow` (`arena/Arena.tsx`) is
+   `following | stalled | finished`, and `liveness.test.ts` asserts that line;
+   a lost follow reaches the arena as no word (`main.tsx`'s `arenaFollowOf`).
+   On the arena's desk: add `lost` to `ArenaFollow` and to `DecisionLayer`'s
+   `WatchLine` (*recording lost*, no dot, a `--lost` class), update the
+   liveness assertion that spells `ArenaFollow`, and pass
+   `followWord` straight through (drop `arenaFollowOf` and its test rows).
+3. **`GuardFeeds` itself is read, not driven.** The self-test holds the
+   assembly; `WireGuiGame.GuardFeeds`' twelve methods are one-line reads of
+   the fields they are named after, and a wrong field there would pass it (a
+   self-test that drove them would need a live `PlayerControllerHuman` and
+   private hooks into `WireGuiGame`). End to end, `tools/undo-race-repro.sh`
+   and 10g see conditions 3 and 8 fire in the held window every run.
+4. **The pair check's "after it left" cannot tell leaving from a log that
+   stopped being written.** A client log truncated at its end sets the missing
+   moments aside as *after it left*, and says how many; nothing in the gate
+   writes such a log, and the count is printed for every pair.
 
 ---
 

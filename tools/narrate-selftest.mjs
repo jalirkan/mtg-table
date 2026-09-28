@@ -13,11 +13,13 @@
  *                                                       # same rules; a PAIR is a
  *                                                       # client's log and the bridge's
  *                                                       # log of the same game, and the
- *                                                       # client's may never narrate a
- *                                                       # moment more often than the
- *                                                       # bridge's (check-all's 12d
- *                                                       # passes every log the gate
- *                                                       # just recorded)
+ *                                                       # client's must tell every
+ *                                                       # moment exactly as often as
+ *                                                       # the bridge's, unless the
+ *                                                       # frame never reached it
+ *                                                       # (check-all's 12d passes
+ *                                                       # every log the gate just
+ *                                                       # recorded)
  *
  * What it asserts, over EVERY fixtures/games/*.jsonl and fixtures/synthetic/*.jsonl:
  *
@@ -40,17 +42,40 @@
  * (tools/check-redaction-selftest.mjs's own rule):
  *
  *   N1  a copy of disjoint.jsonl with one always-hidden card's stub given a
- *       NAME (its `hidden` flag dropped, as a leaky emitter would write it) --
- *       the narrator prints what the log says, and checks 2 and 3 must both
- *       FAIL on it;
+ *       REAL deck card's name that the log never shows (`Borough Backup`, of
+ *       decks/pacho-shield.dck), its `hidden` flag dropped, as a leaky emitter
+ *       would write it -- the narrator prints what the log says, and checks 2
+ *       and 3 must both FAIL on it, check 3 finding the name in decks/*.dck ON
+ *       ITS OWN (nothing is added to its forbidden list: polish-1, the weakness
+ *       the story page's skeptic found in its own control);
  *   N2  the same name injected with `hidden: true` kept -- the narrator must
- *       not print it at all (faceOf() reads nothing off a stub);
+ *       not print it at all (faceOf() reads nothing off a stub), and checks 2-5
+ *       find nothing; with faceOf()'s `hidden` guard taken out, N2 FAILS
+ *       (docs/evidence/polish-1.md);
  *   N3  a fact whose name is moved to a card the adjacent frames do not show
  *       -- check 4's backing half must FAIL;
  *   N4  a non-move fact given the name its card had in the frame before, when
  *       it is concealed in its own -- check 4's invariant-10 half must FAIL;
  *   N5  the client-log dedupe switched off -- the synthetic client log must
- *       then narrate some moment twice.
+ *       then narrate some moment twice, and the pair check below must say so;
+ *   N6  a client log in which one `state` first arrives as an empty-events copy
+ *       with its own seq, so the real frame is skipped as a re-delivery -- the
+ *       client HOLDS that frame and tells none of its moments, and the pair
+ *       check's other half must FAIL on it.
+ *
+ * THE PAIR CHECK, both ways (the narrator's follow-up 9, closed by polish-1).
+ * A moment is a (kind, seq, card ids) triple, whatever words tell it.  A
+ * client's story may tell no moment MORE often than the bridge's own log of the
+ * same game does (a re-delivered frame narrated twice), and no moment LESS often
+ * unless the frame that carries it never reached the client -- the client file
+ * does not hold that seq, and it lies before the client's first snapshot (sent
+ * before it connected), inside a gap the client's own story counts, or after
+ * the last frame it holds (it left).  A moment whose frame the client HOLDS and
+ * does not tell is a fact dropped silently, and fails; so does one missing from
+ * a frame the client lacks but that no counted gap covers.  A moment told from
+ * the seat's OWN frames (its concede, its sideboard answer) is set aside only
+ * for a client log that records no c2s frame at all (tools/ws-smoke.mjs's
+ * receive-only --log); ws-auto-play's logs record their sends and must tell it.
  *
  * And a CLIENT log: fixtures/games/human-comfort-13.jsonl rebuilt as the
  * client saw it (amendment M10: after each `resync`, the cached hello_ok, the
@@ -287,11 +312,17 @@ console.log(`  ${FIXTURES.length} logs narrated: ${factTotal} facts, ${namedTota
 // ---------------------------------------------------------------------------
 // N1 / N2: inject a name into one always-hidden card's stub
 
-const INJECTED = 'Zzyzx, the Injected Leak';
+// A card of the deck in play (decks/pacho-shield.dck) that disjoint.jsonl never
+// shows face up.  The leak a real emitter would make is a real card's name, so
+// check 3 has to find it in decks/*.dck ON ITS OWN: nothing is handed to it as
+// an extra forbidden name (web/test/story-render.test.tsx's control, the same).
+const INJECTED = 'Borough Backup';
 {
   const file = 'fixtures/games/disjoint.jsonl';
   const clean = parsedCache.get(file) ?? loadParsed(file);
   const cleanOracle = audit(clean);
+  ok(DECK_NAMES.has(INJECTED), `N1: ${INJECTED} is not a card in decks/*.dck, so check 3 cannot find it there`);
+  ok(!cleanOracle.visibleNames.has(INJECTED), `N1: ${file} shows ${INJECTED}, so it cannot stand for an unseen card`);
   const story = narrate(clean, { file });
   // An always-hidden id with a narrated fact: the opponent's draw of it.
   const target = story.games[0].facts.find((f) => f.kind === 'draw' && f.cards.some((c) => cleanOracle.alwaysHidden.has(c.id)));
@@ -322,22 +353,24 @@ const INJECTED = 'Zzyzx, the Injected Leak';
     ok(n1.hits === 1, `N1: expected to doctor exactly one stub of #${id} at seq ${target.seq}, doctored ${n1.hits}`);
     const n1Story = narrate(n1.copy, { file: `${file} (doctored)` });
     const n1Texts = renderAll(n1Story);
-    const n1Problems = problemsOf('N1', n1.copy, n1Story, n1Texts, [INJECTED], cleanOracle);
+    const n1Problems = problemsOf('N1', n1.copy, n1Story, n1Texts, [], cleanOracle);
     ok(n1Texts[0].includes(INJECTED), 'N1: the doctored log\'s injected name did not reach the story, so the control proves nothing');
     ok(n1Problems.some((p) => p.includes(`card #${id} is concealed in every frame`)),
       'N1: check 2 (always-hidden ids are never named) did NOT fail on a story that names one');
     ok(n1Problems.some((p) => p.includes(JSON.stringify(INJECTED)) && p.includes('a name the log never shows')),
-      'N1: check 3 (deck names the log never shows) did NOT fail on a story that prints one');
+      'N1: check 3 (deck names the log never shows) did NOT find, in decks/*.dck alone, a name the story prints');
     console.log(`  N1 rejected: #${id} at seq ${target.seq} given the name "${INJECTED}" -> ${n1Problems.length} problem(s) found`);
 
     // N2: with the flag kept, the narrator reads nothing off the stub.
     const n2 = doctor(true);
     const n2Story = narrate(n2.copy, { file: `${file} (doctored, flag kept)` });
     const n2Texts = renderAll(n2Story);
-    ok(!n2Texts.some((t) => t.includes(INJECTED)), 'N2: the narrator printed a name it read off a `hidden: true` stub');
-    ok(problemsOf('N2', n2.copy, n2Story, n2Texts, [INJECTED], cleanOracle).length === 0,
-      'N2: a stub carrying a sixth key changed the narration');
-    console.log('  N2 held: a name on a `hidden: true` stub is never read');
+    const n2Printed = n2Texts.some((t) => t.includes(INJECTED));
+    ok(!n2Printed, 'N2: the narrator printed a name it read off a `hidden: true` stub');
+    const n2Problems = problemsOf('N2', n2.copy, n2Story, n2Texts, [], cleanOracle);
+    ok(n2Problems.length === 0, `N2: a stub carrying a sixth key changed the narration (${n2Problems.length} problem(s))`);
+    for (const p of n2Problems.slice(0, 5)) bad(p);
+    if (!n2Printed && n2Problems.length === 0) console.log('  N2 held: a name on a `hidden: true` stub is never read');
   }
 }
 
@@ -386,6 +419,84 @@ const INJECTED = 'Zzyzx, the Injected Leak';
       `${JSON.stringify(c4.name)} -> ${n4Problems.length} problem(s)`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// The pair check: a client's story against the bridge's own log of that game
+
+/** "kind|seq|ids" -> {n, seq}: one narrated moment, whatever words it was said in. */
+const momentsOf = (story) => {
+  const m = new Map();
+  for (const f of story.games.flatMap((g) => g.facts)) {
+    if (['gap', 'appears', 'leaves'].includes(f.kind)) continue; // a client's own view of its absence
+    const k = `${f.kind}|${f.seq}|${f.cards.map((c) => c.id).join(',')}`;
+    const e = m.get(k) ?? { n: 0, seq: f.seq };
+    e.n += 1;
+    m.set(k, e);
+  }
+  return m;
+};
+
+/** Moments told from the seat's OWN frames (its `act: concede`, its sideboard `answer`), not from a snapshot. */
+const FROM_OWN_FRAMES = new Set(['concede', 'sideboard']);
+
+/**
+ * Both halves of the pair check (see the header).  Returns the problems and the
+ * moments set aside because their frame never reached the client, by where
+ * they fell: `before` its first snapshot, in a counted `gap`, `after` it left
+ * -- or, for a moment told from the seat's own frames, `own`: a client log that
+ * records only what it RECEIVED (tools/ws-smoke.mjs --log writes no header and
+ * no c2s frame) cannot tell its own concede; one that records its sends
+ * (ws-auto-play's) must.
+ */
+function pairProblems(label, clientParsed, clientStory, bridgeStory) {
+  const theirs = momentsOf(bridgeStory);
+  const ours = momentsOf(clientStory);
+  const s2c = clientParsed.frames.filter((f) => f && (f.dir ?? 's2c') === 's2c' && typeof f.seq === 'number' && f.seq !== 0);
+  const held = new Set(s2c.map((f) => f.seq));
+  const states = s2c.filter((f) => f.type === 'state').map((f) => f.seq);
+  const firstState = states.length > 0 ? Math.min(...states) : Infinity;
+  const lastHeld = s2c.length > 0 ? Math.max(...s2c.map((f) => f.seq)) : -Infinity;
+  const gaps = clientStory.games.flatMap((g) => g.gaps);
+  const recordsOwn = clientParsed.frames.some((f) => f && f.dir === 'c2s');
+  const problems = [];
+  const excused = { before: 0, gap: 0, after: 0, own: 0 };
+  for (const [k, { n }] of ours) {
+    const want = theirs.get(k)?.n ?? 0;
+    if (n > want) {
+      problems.push(`${label}: tells the moment ${k} ${n} time(s) and the bridge's own log ${want} -- a ` +
+        're-delivered frame was narrated twice');
+    }
+  }
+  for (const [k, { n, seq }] of theirs) {
+    const have = ours.get(k)?.n ?? 0;
+    if (have >= n) continue;
+    if (seq === null && !recordsOwn && FROM_OWN_FRAMES.has(k.split('|')[0])) {
+      excused.own += n - have;
+      continue;
+    }
+    if (typeof seq === 'number' && !held.has(seq)) {
+      const where = seq < firstState ? 'before' : seq > lastHeld ? 'after'
+        : gaps.some((x) => seq >= x.from && seq <= x.to) ? 'gap' : null;
+      if (where !== null) {
+        excused[where] += n - have;
+        continue;
+      }
+      problems.push(`${label}: tells the moment ${k} ${have} time(s) and the bridge's own log ${n}; frame ${seq} ` +
+        'never reached the client, and no gap its story counts covers it');
+      continue;
+    }
+    problems.push(`${label}: tells the moment ${k} ${have} time(s) and the bridge's own log ${n}, and the client ` +
+      `log HOLDS ${seq === null ? 'what it is told from (its own frames, or the setup snapshots)' : `frame ${seq}`} ` +
+      '-- a fact dropped silently');
+  }
+  return { problems, excused };
+}
+
+const excusedText = ({ before, gap, after, own }) =>
+  before + gap + after + own === 0 ? 'every moment exactly as often'
+    : `every moment exactly as often but ${before + gap + after + own} the client never had ` +
+      `(${before} before it connected, ${gap} in counted gaps, ${after} after it left, ` +
+      `${own} of its own acts in a receive-only log)`;
 
 // ---------------------------------------------------------------------------
 // The client log
@@ -458,12 +569,44 @@ const INJECTED = 'Zzyzx, the Injected Leak';
   const red = spawnSync(process.execPath, ['tools/check-redaction.mjs', clientFile], { encoding: 'utf8' });
   ok(red.status === 0, `client log: tools/check-redaction.mjs rejected the synthesised client log:\n${red.stdout}${red.stderr}`);
 
-  // N5: without the dedupe, the same log narrates something twice.
+  // The pair check, both ways, on the synthesised pair: clean.
+  const pair = pairProblems('client log', clientParsed, clientStory, bridgeStory);
+  for (const p of pair.problems.slice(0, 5)) bad(p);
+  checks += 1;
+
+  // N5: without the dedupe, the same log narrates something twice -- and the
+  // pair check's first half says so.
   const n5 = narrate(parseLog(clientText), { keepRedelivered: true });
   ok(n5.games[0].facts.length > b.facts.length,
     'N5: with the resync dedupe switched off the client log narrated nothing extra, so the dedupe is untested');
+  const n5Pair = pairProblems('N5', clientParsed, n5, bridgeStory);
+  ok(n5Pair.problems.some((p) => p.includes('narrated twice')),
+    'N5: the pair check did NOT fail on a client story that tells a re-delivered moment twice');
   console.log(`  client log: ${c.resyncs} resyncs, ${inserted} frames re-delivered and skipped, ` +
-    `${c.facts.length} facts = the bridge log's; N5 without the dedupe: ${n5.games[0].facts.length} facts`);
+    `${c.facts.length} facts = the bridge log's; N5 without the dedupe: ${n5.games[0].facts.length} facts, ` +
+    `${n5Pair.problems.length} pair problem(s)`);
+
+  // N6: a skip rule that drops a real frame.  One `state` with something to
+  // tell first arrives as a copy with no events and its own seq, so the real one
+  // is skipped as a re-delivery: the client HOLDS the frame and tells none of
+  // its moments.  The first half of the pair check cannot see it (nothing is
+  // told twice); the second half must.
+  const victim = clientParsed.frames.find((f) => f.dir === 's2c' && f.type === 'state' && f.body.turn >= 2 &&
+    f.body.events.some((e) => e.kind === 'land' || e.kind === 'cast'));
+  if (ok(victim !== undefined, 'N6: the client log has no turn-2+ state with a land or a cast to drop')) {
+    const n6Frames = clientParsed.frames.flatMap((f) =>
+      f === victim ? [{ ...f, body: { ...f.body, events: [] } }, f] : [f]);
+    const n6Parsed = { header: clientParsed.header, frames: n6Frames };
+    const n6Story = narrate(n6Parsed, { file: 'N6' });
+    const n6Pair = pairProblems('N6', n6Parsed, n6Story, bridgeStory);
+    ok(!n6Pair.problems.some((p) => p.includes('narrated twice')),
+      'N6: the doctored client log told something twice, so it does not isolate the second half');
+    ok(n6Pair.problems.some((p) => p.includes(`HOLDS frame ${victim.seq}`) && p.includes('dropped silently')),
+      `N6: the pair check did NOT fail on a client story that silently drops frame ${victim.seq}'s moments`);
+    console.log(`  N6 rejected: frame ${victim.seq}'s moments dropped by a skip rule -> ` +
+      `${n6Pair.problems.length} pair problem(s) (the one-sided check alone: ` +
+      `${n6Pair.problems.filter((p) => p.includes('narrated twice')).length})`);
+  }
 
   // A disconnected client never received a run of frames: the frame that
   // played a land, and the two either side of it.  The story must say the
@@ -482,6 +625,12 @@ const INJECTED = 'Zzyzx, the Injected Leak';
     `(${JSON.stringify(gapStory.games[0].gaps)})`);
   ok(c.gaps.every((x) => !x.told), 'client log: the uncut client log narrated a gap where nothing changed');
   for (const p of problemsOf('gapped client log', { header: clientParsed.header, frames: cut }, gapStory, renderAll(gapStory)).slice(0, 5)) bad(p);
+  // The gapped log against the bridge's: what it missed is set aside as a
+  // counted gap, and nothing else is missing.
+  const gapPair = pairProblems('gapped client log', { header: clientParsed.header, frames: cut }, gapStory, bridgeStory);
+  for (const p of gapPair.problems.slice(0, 5)) bad(p);
+  ok(gapPair.excused.gap > 0, `client log: the frames cut out (${lo}–${hi}) set no moment aside as a counted gap`);
+  console.log(`  gapped client log: ${excusedText(gapPair.excused)}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -511,19 +660,6 @@ const INJECTED = 'Zzyzx, the Injected Leak';
   console.log(`  concede: mid-game -> "${mid.games[0].ending?.text}"`);
 }
 
-// ---------------------------------------------------------------------------
-// Logs from the gate (check-all's 12d passes every log it just recorded)
-
-/** "kind|seq|ids": one narrated moment, whatever words it was said in. */
-const momentsOf = (story) => {
-  const m = new Map();
-  for (const f of story.games.flatMap((g) => g.facts)) {
-    if (['gap', 'appears', 'leaves'].includes(f.kind)) continue; // a client's own view of its absence
-    const k = `${f.kind}|${f.seq}|${f.cards.map((c) => c.id).join(',')}`;
-    m.set(k, (m.get(k) ?? 0) + 1);
-  }
-  return m;
-};
 
 for (const { log, bridge } of extraLogs) {
   if (!existsSync(log)) {
@@ -545,13 +681,13 @@ for (const { log, bridge } of extraLogs) {
       } else {
         // A client that reconnects is re-sent the last state verbatim (M10):
         // narrated twice, that moment would appear more often in the client's
-        // story than in the bridge's own log of the same game.
-        const theirs = momentsOf(narrate(loadParsed(bridge), { file: bridge }));
-        const ours = momentsOf(story);
-        const extra = [...ours].filter(([k, n]) => n > (theirs.get(k) ?? 0));
-        ok(extra.length === 0, `${log}: narrates ${extra.length} moment(s) more often than the bridge's own log ` +
-          `${bridge} does (first: ${extra[0]?.[0]}) -- a re-delivered frame was narrated twice`);
-        pair = `, every moment at most as often as ${bridge}`;
+        // story than in the bridge's own log of the same game.  And a skip rule
+        // that dropped a real frame would make one appear LESS often: both halves.
+        const pairs = pairProblems(log, parsed, story, narrate(loadParsed(bridge), { file: bridge }));
+        checks += 1;
+        for (const p of pairs.problems.slice(0, 10)) bad(p);
+        if (pairs.problems.length > 10) bad(`${log}: … and ${pairs.problems.length - 10} more pair problem(s)`);
+        pair = `, ${excusedText(pairs.excused)} as ${bridge}`;
       }
     }
     const kind = story.clientLog ? 'client log' : story.header === null ? 'log with no session header' : 'bridge log';
@@ -600,4 +736,4 @@ if (failures > 0) {
   console.log(`narrate self-test FAILED: ${failures} of ${checks} checks (${secs} s)`);
   process.exit(1);
 }
-console.log(`narrate self-test OK: ${checks} checks, 5 negative controls rejected or held (${secs} s)`);
+console.log(`narrate self-test OK: ${checks} checks, 6 negative controls rejected or held (${secs} s)`);

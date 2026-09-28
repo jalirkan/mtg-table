@@ -17,7 +17,10 @@
 package mtgtable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,6 +42,18 @@ import java.util.function.Consumer;
  *       wins.  Delete a condition from {@link ActGuard#whyNotNow} and its row
  *       fails -- the negative control, recorded in
  *       {@code docs/evidence/undo-race.md}.</li>
+ *   <li><b>The wiring</b> ({@link ActGuard#facts}, polish-1): which live
+ *       feed stands for which condition.  {@code WireGuiGame.engineFacts} is
+ *       {@code ActGuard.facts} over its {@code GuardFeeds}, one read apiece, so
+ *       this drives the same assembly with a fake {@link ActGuard.Feeds}: all
+ *       quiet it applies; each feed turned busy on its own refuses with ITS
+ *       condition's reason (a feed wired to a constant, or to another
+ *       condition, flips a verdict here); the condition-6 mark refuses only for
+ *       the same input, generation and ask count; the input and the generation
+ *       are read once; a terminated engine thread is dropped and a running one
+ *       refuses.  The negative control -- each of the eight conditions' feeds
+ *       mis-wired in a scratch copy of {@code ActGuard.java}, one at a time, and
+ *       this failing every time -- is in {@code docs/evidence/polish-1.md}.</li>
  *   <li><b>The thread-state primitive on real threads</b>
  *       ({@link ActGuard#runningThread}), because the last condition rests on
  *       what {@link Thread#getState} reports for a thread doing work versus one
@@ -71,6 +86,7 @@ public final class ActGuardSelfTest {
         table();
         order();
         states();
+        wiring();
         realThreads();
 
         System.out.println("ActGuardSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
@@ -143,6 +159,139 @@ public final class ActGuardSelfTest {
                     || s == Thread.State.NEW;
             expect("busy(" + s + ") == " + want, ActGuard.busy(s) == want);
         }
+    }
+
+    // ------------------------------------------------------------------
+
+    /**
+     * A {@link ActGuard.Feeds} with every condition quiet: the engine parked on
+     * this seat's input at generation 7, the act arrived at 7, nothing else
+     * running.  Each row turns one feed.  It counts its reads of the input and
+     * the generation, and remembers what it was asked about.
+     */
+    private static final class FakeFeeds implements ActGuard.Feeds {
+        boolean ready = true;
+        boolean inputSeen = true;
+        boolean closed;
+        boolean overEmitted;
+        int pendingAsks;
+        Object input = new Object();
+        long inputGen = 7;
+        boolean activating;
+        ActGuard.PassMark passPress;
+        long engineAsks = 3;
+        int hopsInFlight;
+        final Set<Thread> engineThreads = ConcurrentHashMap.newKeySet();
+        int inputReads;
+        int genReads;
+        Object askedAboutActivating;
+
+        @Override public boolean ready() { return ready; }
+        @Override public boolean inputSeen() { return inputSeen; }
+        @Override public boolean closed() { return closed; }
+        @Override public boolean overEmitted() { return overEmitted; }
+        @Override public int pendingAsks() { return pendingAsks; }
+        @Override public Object input() { inputReads++; return input; }
+        @Override public long inputGen() { genReads++; return inputGen; }
+        @Override public boolean activatingManaAbility(final Object in) {
+            askedAboutActivating = in;
+            return activating;
+        }
+        @Override public ActGuard.PassMark passPress() { return passPress; }
+        @Override public long engineAsks() { return engineAsks; }
+        @Override public int hopsInFlight() { return hopsInFlight; }
+        @Override public Collection<Thread> engineThreads() { return engineThreads; }
+    }
+
+    /** The act arrived under generation 7, the fake's own. */
+    private static final long ARRIVED = 7;
+
+    private static String verdict(final FakeFeeds s) {
+        return ActGuard.whyNotNow(ActGuard.facts(s, ARRIVED));
+    }
+
+    /** One feed turned busy on its own: refused, for that condition's reason. */
+    private static void feedRow(final String what, final Consumer<FakeFeeds> breakIt, final String mustName) {
+        final FakeFeeds s = new FakeFeeds();
+        breakIt.accept(s);
+        final String why = verdict(s);
+        expect("wiring, " + what + ": refused", why != null);
+        expect("wiring, " + what + ": the reason is its condition's (\"" + mustName + "\"), got: " + why,
+               why != null && why.contains(mustName));
+    }
+
+    /** A feed that must NOT refuse on its own (a stale condition-6 mark, a parked thread). */
+    private static void feedApplies(final String what, final Consumer<FakeFeeds> setUp) {
+        final FakeFeeds s = new FakeFeeds();
+        setUp.accept(s);
+        final String why = verdict(s);
+        expect("wiring, " + what + ": applied, got a refusal: " + why, why == null);
+    }
+
+    private static void wiring() throws Exception {
+        final FakeFeeds quiet = new FakeFeeds();
+        final String none = verdict(quiet);
+        expect("wiring, every feed quiet: applied, got a refusal: " + none, none == null);
+        expect("wiring: the input is read once (conditions 3, 5 and 6 judge one input), read "
+               + quiet.inputReads, quiet.inputReads == 1);
+        expect("wiring: the generation is read once (conditions 4 and 6 judge one generation), read "
+               + quiet.genReads, quiet.genReads == 1);
+        expect("wiring: condition 5 asks about the input condition 3 read",
+               quiet.askedAboutActivating == quiet.input);
+
+        // Condition 1, each of its four feeds on its own.
+        feedRow("1 ready() false (no hello_ok yet)", s -> s.ready = false, "not live");
+        feedRow("1 inputSeen() false (M42: no input this game)", s -> s.inputSeen = false, "not live");
+        feedRow("1 closed() true", s -> s.closed = true, "not live");
+        feedRow("1 overEmitted() true", s -> s.overEmitted = true, "not live");
+        // Condition 2: ReplyPool.pending().
+        feedRow("2 pendingAsks() = 2", s -> s.pendingAsks = 2, "ask is outstanding (2)");
+        // Condition 3: the input on the seat's stack.
+        feedRow("3 input() null", s -> s.input = null, "no input is up");
+        // Condition 4: the generation now against the one the act arrived under.
+        feedRow("4 inputGen() moved to 8", s -> s.inputGen = 8, "generation 7 -> 8");
+        // Condition 5: InputPayMana.isActivatingManaAbility().
+        feedRow("5 activatingManaAbility() true", s -> s.activating = true, "activating a mana ability");
+        // Condition 6: the mark, for this input, this generation, this ask count.
+        feedRow("6 passPress() marks this input, gen 7, asks 3",
+                s -> s.passPress = new ActGuard.PassMark(s.input, 7, 3), "OK/pass");
+        feedApplies("6 a mark for another input", s -> s.passPress = new ActGuard.PassMark(new Object(), 7, 3));
+        feedApplies("6 a mark from generation 6 (the input re-rendered since)",
+                    s -> s.passPress = new ActGuard.PassMark(s.input, 6, 3));
+        feedApplies("6 a mark from before the engine asked (engineAsks() moved to 4)", s -> {
+            s.passPress = new ActGuard.PassMark(s.input, 7, 3);
+            s.engineAsks = 4;
+        });
+        // Condition 7: our own hops.
+        feedRow("7 hopsInFlight() = 1", s -> s.hopsInFlight = 1, "hop is walking");
+
+        // Condition 8, on real threads: running refuses, parked applies, dead is dropped.
+        final AtomicBoolean stop = new AtomicBoolean();
+        final Thread spinner = bg(() -> {
+            while (!stop.get()) {
+                Thread.onSpinWait();
+            }
+        });
+        feedRow("8 engineThreads() holds a running thread", s -> s.engineThreads.add(spinner), spinner.getName());
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Thread parked = bg(() -> {
+            try {
+                latch.await();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        expect("wiring: the latch thread parks (WAITING)", reaches(parked, Thread.State.WAITING));
+        feedApplies("8 engineThreads() holds a parked thread", s -> s.engineThreads.add(parked));
+        latch.countDown();
+        expect("wiring: the latch thread ends", reaches(parked, Thread.State.TERMINATED));
+        final FakeFeeds withDead = new FakeFeeds();
+        withDead.engineThreads.add(parked);
+        final String deadWhy = verdict(withDead);
+        expect("wiring, 8 a terminated thread: applied, got a refusal: " + deadWhy, deadWhy == null);
+        expect("wiring, 8 a terminated thread is dropped from engineThreads()", withDead.engineThreads.isEmpty());
+        stop.set(true);
+        expect("wiring: the spinner stops", reaches(spinner, Thread.State.TERMINATED));
     }
 
     // ------------------------------------------------------------------

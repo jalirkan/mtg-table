@@ -73,8 +73,12 @@ import {
   type StoryView,
 } from './page.ts';
 
-/** Follow mode's word, as `main.tsx` tells the arena (`followWordOf`). */
-export type StoryFollow = 'following' | 'stalled' | 'finished';
+/**
+ * Follow mode's word, as `main.tsx`'s `followWordOf` says it. `lost` is a 416:
+ * the followed file was re-recorded under the same name, polling has stopped,
+ * and this page holds the game it had read (polish-1).
+ */
+export type StoryFollow = 'following' | 'stalled' | 'finished' | 'lost';
 
 /** What comes after the cursor: drawn dimmed, or not drawn at all. */
 export type Ahead = 'dim' | 'hide';
@@ -669,6 +673,14 @@ function FollowTail({
     return (
       <p className="story__tail follow" data-tail="finished">
         recording finished — this is a replay now
+      </p>
+    );
+  }
+  if (follow === 'lost') {
+    return (
+      <p className="story__tail follow follow--lost" data-tail="lost">
+        recording lost — the file was re-recorded under the same name, so following stopped; this is the game
+        it had read (reload the page to follow the new one)
       </p>
     );
   }

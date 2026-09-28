@@ -665,12 +665,19 @@ type LoadState =
   | { status: 'ready'; path: string; transport: LogReplayTransport };
 
 /**
- * **Follow mode's word for the arena** (spectating, D118). The arena imports no
- * transport (M7 convention 1), so what it is told about the stream is this plain
- * value: the log is still being written, has gone quiet, or has ended — or
+ * **Follow mode's word** (spectating, D118), for the story page and — through
+ * {@link arenaFollowOf} — the arena. The arena imports no transport (M7
+ * convention 1), so what it is told about the stream is this plain value: the
+ * log is still being written, has gone quiet, has ended, or was LOST — or
  * `null`, an ordinary replay.
+ *
+ * `lost` is a 416 (polish-1, spectating's skeptic): the file was re-recorded
+ * under the same name and the follower has stopped for good. It used to fold
+ * into `stalled`, and the page kept a live "● following" over a poller that had
+ * stopped. `error` still reads `stalled`: a failed poll is retried.
+ * `web/test/spectate.test.ts` evaluates this function from this file's source.
  */
-type FollowWord = 'following' | 'stalled' | 'finished';
+type FollowWord = 'following' | 'stalled' | 'finished' | 'lost';
 
 function followWordOf(status: FollowStatus | null): FollowWord | null {
   switch (status) {
@@ -682,9 +689,22 @@ function followWordOf(status: FollowStatus | null): FollowWord | null {
     case 'ended':
     case 'stopped':
       return 'finished';
+    case 'lost':
+      return 'lost';
     default:
       return 'following';
   }
+}
+
+/**
+ * The arena's three words (`ArenaFollow`, declared in `arena/Arena.tsx`, which
+ * this branch does not touch) have none for `lost`, so a lost follow reaches the
+ * arena as no word at all: its watching line keeps the matchup and drops the
+ * live "● following", and the strip above it (`FollowChip`) says what happened.
+ * PLAN.md's polish-1 follow-up gives the arena a word of its own.
+ */
+function arenaFollowOf(word: FollowWord | null): Exclude<FollowWord, 'lost'> | null {
+  return word === 'lost' ? null : word;
 }
 
 /** The dev-only handle a measurement reads (`import.meta.env.DEV` only, like `__mtgArena`). */
@@ -1027,7 +1047,7 @@ function ReplayApp({
               dpr={flags.dpr}
               glInfo={flags.glinfo}
               bloom={flags.bloom}
-              follow={followWord}
+              follow={arenaFollowOf(followWord)}
             />
           </Suspense>
         ) : (
@@ -1057,6 +1077,14 @@ function FollowChip({ follower, transport }: { follower: LogFollower; transport:
       );
     case 'stopped':
       return <span className="follow follow--ended">follow stopped</span>;
+    case 'lost':
+      // A 416: polling has stopped for good. No live dot here — the dot is a
+      // live word, and nothing is live any more (polish-1).
+      return (
+        <span className="follow follow--lost" title={follower.detail ?? ''}>
+          recording lost — {follower.detail ?? 'the log was re-recorded under the same name'}
+        </span>
+      );
     case 'stalled':
     case 'error':
       return (

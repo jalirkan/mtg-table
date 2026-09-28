@@ -59,7 +59,7 @@ second: `--seat 2` and `--ai-profile Bogus` are refused before anything builds
 
 ## B. How long a game takes to record
 
-| run | seed | pace | engine wall time | whole process | frames |
+| run | seed | pace | game wall time (paced: dwells included) | whole process | frames |
 |---|---|---|---|---|---|
 | `RecordMatch`, pacho vs doom, Default/Default | 7 | none | 3,412 ms · 3,328 ms · 3,160 ms (seat 1) | 6.8 s · 6.0 s · 5.7 s | 287 |
 | `spectate.sh --no-serve --no-follow` | 7 | none | 2,286 ms | **7.95 s** (with check-forge and the redaction check) | 287 |
@@ -322,7 +322,9 @@ once sorted: the move is what kept step 6 green on this tree.
 **The gate**, `rm -rf bridge/out && WSPORT=8730 ./tools/check-all.sh`
 (`var/check-all-spectate-train.log`), no `SKIP_*`: **`check-all OK`, exit 0,
 916 s**, at a load average of 3–5. 6b: seat 0 paced, 151 dwells, 4,023 ms of
-engine time; seat 1 unpaced, 1,630 ms; `SAME GAME` (686 events and 152
+game wall time — the recorder's `game wall time` line, which includes the 2,464 ms
+it slept in those dwells, so about 1.6 s of engine time (corrected by polish-1:
+this line said "4,023 ms of engine time"); seat 1 unpaced, 1,630 ms; `SAME GAME` (686 events and 152
 phase-boundary states equal, 498 `stats` events compared as id sets, every one of
 the 170 frames equal); the mutant rejected. 9c 14 / 14 (the fourteen games
 370 s). 12b: the catalog is what `decks/`, `fixtures/games/` and `cues.json` make;

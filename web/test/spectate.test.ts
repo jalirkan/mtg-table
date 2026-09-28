@@ -262,7 +262,7 @@ test('follow: a growing file — waiting, then frames as they are written, half-
   }
 });
 
-test('follow: a recorder that goes quiet is STALLED (and polled still); a re-recorded file is an error', async () => {
+test('follow: a recorder that goes quiet is STALLED (and polled still); a re-recorded file is LOST (and polled no more)', async () => {
   const dir = tempDir();
   const { server, origin } = await serve(dir);
   const file = join(dir, 'quiet.jsonl');
@@ -278,16 +278,73 @@ test('follow: a recorder that goes quiet is STALLED (and polled still); a re-rec
     appendFileSync(file, `${G1[2]!}\n`);
     await until(() => follower.status === 'following', 4000, 'following again');
 
-    // The file shrinks under the reader: the page's offsets describe another game.
+    // The file shrinks under the reader: the page's offsets describe another
+    // game. That is LOST -- its own status, never `error`'s, whose polls go on
+    // (polish-1: the page used to call it "stalled" and keep a live word).
     writeFileSync(file, `${G1[0]!}\n`);
-    await until(() => follower.status === 'error', 4000, 'the 416');
+    await until(() => follower.status === 'lost', 4000, 'the 416');
     assert.match(follower.detail ?? '', /restarted/);
     assert.equal(follower.transport?.live, false);
+    const lostAt = follower.polls;
+    await new Promise((resolve) => setTimeout(resolve, 100)); // ten poll intervals
+    assert.equal(follower.polls, lostAt, 'a lost follower polled again');
+    assert.equal(follower.status, 'lost', 'a lost follower changed its word');
   } finally {
     follower.stop();
     server.close();
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+/**
+ * **The word the page shows for each status** (polish-1, spectating's skeptic).
+ * `followWordOf` and `arenaFollowOf` live in `main.tsx`, which a test cannot
+ * import (it mounts the app), so they are EVALUATED FROM THAT FILE'S SOURCE:
+ * each body is plain JavaScript under its typed signature. Every status in
+ * `FollowStatus` must have a row here, so a new one cannot slip into the
+ * `default:` branch's live word unnoticed.
+ */
+test('follow word: a 416 reads "lost" on the strip and on #story, and the arena gets no live word for it', () => {
+  const main = readFileSync(join(REPO, 'web/src/main.tsx'), 'utf8');
+  const bodyOf = (name: string): string => {
+    const m = new RegExp(`\\nfunction ${name}\\((?:status|word): [^)]*\\): [^{]*\\{([\\s\\S]*?)\\n\\}\\n`).exec(main);
+    assert.ok(m !== null, `could not find ${name} in main.tsx — move this test with it`);
+    return m[1]!;
+  };
+  const followWordOf = new Function('status', bodyOf('followWordOf')) as (s: FollowStatus | null) => string | null;
+  const arenaFollowOf = new Function('word', bodyOf('arenaFollowOf')) as (w: string | null) => string | null;
+
+  const want: Record<FollowStatus, string> = {
+    waiting: 'following',
+    following: 'following',
+    stalled: 'stalled',
+    error: 'stalled', // a failed poll is retried: gone quiet, not gone
+    ended: 'finished',
+    stopped: 'finished',
+    lost: 'lost',
+  };
+  const followTs = readFileSync(join(REPO, 'web/src/transport/follow.ts'), 'utf8');
+  const union = /export type FollowStatus = ([^;]+);/.exec(followTs)?.[1] ?? '';
+  const statuses = [...union.matchAll(/'([a-z]+)'/g)].map((m) => m[1]!);
+  assert.ok(statuses.length >= 7, `could not read FollowStatus from follow.ts (${union})`);
+  assert.deepEqual([...statuses].sort(), Object.keys(want).sort(), 'FollowStatus changed: give every status its word here');
+  assert.equal(followWordOf(null), null, 'an ordinary replay has no word');
+  for (const status of statuses) {
+    assert.equal(followWordOf(status as FollowStatus), want[status as FollowStatus], `followWordOf('${status}')`);
+  }
+  // The arena's three words have none for `lost`: it gets none at all, and
+  // every other word unchanged.
+  assert.equal(arenaFollowOf('lost'), null);
+  for (const w of ['following', 'stalled', 'finished', null]) assert.equal(arenaFollowOf(w), w);
+  assert.match(main, /follow=\{arenaFollowOf\(followWord\)\}/, 'the arena is handed its follow word through arenaFollowOf');
+
+  // The strip (the app bar's FollowChip): `lost` is its own case, says so, and
+  // carries no "●" -- the dot is the live word.
+  const chip = main.split('function FollowChip(')[1]?.split('\nfunction ')[0] ?? '';
+  const lostCase = chip.split("case 'lost':")[1]?.split('case ')[0] ?? '';
+  assert.ok(lostCase.length > 0, 'FollowChip has no `lost` case');
+  assert.match(lostCase, /recording lost/);
+  assert.doesNotMatch(lostCase, /●/, 'a lost follow still shows the live dot');
 });
 
 // ---------------------------------------------------------------------------
