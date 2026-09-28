@@ -171,7 +171,17 @@ const SICK_DY = -0.015;
  */
 export const FIGURE_STANDOFF = 0.52;
 
-/** A figure's nominal height in world units — about one card long. */
+/**
+ * A figure's nominal height in world units — about one card long.
+ *
+ * **Slice 4 — and now a figure is this tall.** A chibi was 1.07–1.15× wider than
+ * tall, so the width clamp below held every humanoid to 0.63; a proportioned body
+ * is 0.33× (the woman) and 0.37× (the man) in its widest resting stance — the
+ * idle, measured by the build on the skinned mesh — so it stands its full 0.85,
+ * 0.28–0.31 wide in a 0.72 slot. Unchanged here on purpose: a person
+ * one card tall reads at 60–100 px from the table view, and a taller one would
+ * cover the opponent's creature rank from yours.
+ */
 export const FIGURE_HEIGHT = 0.85;
 
 /**
@@ -243,9 +253,11 @@ export const ON_CARD_DISC_ORDER = 70;
  * `departureStand`). A rank closes up in the snapshot a creature leaves it, so the
  * body cannot stay in its slot without its neighbours walking through it. One step
  * toward the centre line puts it in its own combat lane (a front-row figure stands
- * at `z ≈ 1.78`, the lane is at `0.9`): 0.85 is a clamped humanoid's height (0.63)
- * plus a gutter, so a body that falls on its back, as `Death01` does, still lies
- * clear of the figures it stepped out from.
+ * at `z ≈ 1.78`, the lane is at `0.9`): 0.85 is a proportioned body's whole height
+ * (slice 4 — it was the chibi's clamped 0.63 plus a gutter), so a body that falls
+ * on its back, as `Death01` does, lies clear of the figures it stepped out from —
+ * its head toward the centre line, which it does not cross (a figure falls away
+ * from the seat it faces, and your figures face you).
  */
 export const DEPARTURE_STEP = 0.85;
 

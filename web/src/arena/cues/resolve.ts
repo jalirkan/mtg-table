@@ -429,6 +429,12 @@ export function cuesFor(
         fromZone: 'hand',
         fromPlayer: event.controller,
         foe: foeOf(event.controller, state),
+        // **T13 — the caster's duelist raises a hand** (`figures/duelists.ts`). A
+        // fact of the EVENT, so it rides whichever cue the ladder chose for the
+        // card — `cast.rise`, Wasp's beam, Helicarrier Strike's lock — and a row
+        // may silence it with `gesture: "none"` (data wins over facts, as for
+        // `colour`). Whose duelist is `players[0]`, the event's own controller.
+        gesture: 'cast',
         ...beam,
       });
     }
@@ -512,6 +518,9 @@ export function cuesFor(
         combat: event.combat,
         targetKind: event.target.kind,
         targetId: event.target.id,
+        // T13 — the struck player's duelist flinches. Damage to a card is the
+        // card's own shot; its controller's duelist does not flinch for it.
+        ...(event.target.kind === 'player' ? { gesture: 'flinch' } : {}),
       });
 
     case 'life':
@@ -519,6 +528,10 @@ export function cuesFor(
         from: event.from,
         to: event.to,
         delta: event.to - event.from,
+        // T13 — a LOSS flinches too (a life payment, a drain); a gain does not. A
+        // loss that damage already flinched for in the same batch is one flinch,
+        // not two — `queue.ts`'s suppression rule 8.
+        ...(event.to < event.from ? { gesture: 'flinch' } : {}),
       });
 
     case 'poison':
@@ -604,6 +617,10 @@ export function cuesFor(
         // word "Victory" is about. An AI-vs-AI recording has no human seat, and
         // `hello.you` then names whichever seat the log was written for.
         won: event.winner !== null && event.winner === (state.hello?.you ?? -2),
+        // T13 — the winner's duelist raises a fist and every other seat's slumps,
+        // each into the stance `board.gameOver` then holds as a pose. A draw
+        // (`winner: -1`) moves nobody.
+        gesture: 'outcome',
       });
 
     default:

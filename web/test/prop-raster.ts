@@ -37,6 +37,8 @@ import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import { CAMERA, type Pose } from '../src/arena/camera.ts';
 import { REST_CLIP_FOR, REST_PHASE_FOR } from '../src/arena/figures/clips.ts';
 import { figurePose, type FigureLayout, type FigurePose } from '../src/arena/figures/pose.ts';
+import { COSTUME_SLOTS, familyOf } from '../src/arena/figures/props.ts';
+import { COSTUME_ATTRIBUTE } from '../src/arena/scene/holoMaterial.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { layout } from '../src/arena/layout.ts';
 import type { FigureRig, FigureRigMap } from '../src/arena/scene/figureRigs.ts';
@@ -239,17 +241,42 @@ const V = new THREE.Vector3();
 
 /** The figure-space height a body's head starts at: the Kenney head is y 0.511–1.0. */
 export const HEAD_FROM = 0.53;
+/**
+ * Slice 4: the proportioned body's head (heroic ×1.3) starts at its chin — y
+ * 0.79 in the resting idle (0.81 in the bind pose), measured.
+ */
+export const HUMAN_HEAD_FROM = 0.79;
+
+/** The costume slots a head is made of: skin (the face — the neck is skin too) and hair. */
+const HEAD_SLOTS: ReadonlySet<number> = new Set([COSTUME_SLOTS.indexOf('skin'), COSTUME_SLOTS.indexOf('hair')]);
+/**
+ * How far below its standing chin a head may be and still be a head: a kneeling
+ * figure's is ~0.35 lower (measured), and the hands — skin-coloured by default,
+ * but the `gloves` slot — are never counted. Keeps the neck of a standing figure
+ * (skin, just under the chin) out of its head.
+ */
+const HEAD_DROP = 0.4;
+
+/** Where a body of this model's family starts its head, in figure units. */
+export function headFromOf(modelId: string | null): number {
+  return familyOf(modelId, MODELS) === 'human' ? HUMAN_HEAD_FROM : HEAD_FROM;
+}
 
 /** Every visible skinned mesh of a body, in world space, split into its head (figure-space y ≥ {@link HEAD_FROM}) and the rest. */
 export function bodyLayers(rig: FigureRig): Layer[] {
   const body: Layer = { tag: 'body', depthWrite: true, tris: [] };
   const head: Layer = { tag: 'head', depthWrite: true, tris: [] };
   const pose = rig.pose;
+  const from = headFromOf(pose.modelId);
   rig.root.updateMatrixWorld(true);
   rig.root.traverse((child) => {
     const mesh = child as THREE.SkinnedMesh;
     if (mesh.isSkinnedMesh !== true || !mesh.visible) return;
     const position = mesh.geometry.getAttribute('position');
+    // Slice 4: a body that carries costume slots says where its head is — its
+    // skin and hair above the collar — whatever its pose (a kneeling figure's
+    // head is below any fixed height). A body without them splits by height.
+    const slots = mesh.geometry.getAttribute(COSTUME_ATTRIBUTE);
     const world: number[] = [];
     for (let i = 0; i < position.count; i++) {
       V.fromBufferAttribute(position, i);
@@ -261,14 +288,17 @@ export function bodyLayers(rig: FigureRig): Layer[] {
     const count = index === null ? position.count : index.count;
     for (let t = 0; t + 2 < count; t += 3) {
       let y = 0;
+      let onHead = 0;
       const tri: number[] = [];
       for (let k = 0; k < 3; k++) {
         const id = index === null ? t + k : index.getX(t + k);
         tri.push(world[id * 3]!, world[id * 3 + 1]!, world[id * 3 + 2]!);
         y += world[id * 3 + 1]!;
+        if (slots !== undefined && HEAD_SLOTS.has(Math.round(slots.getX(id)))) onHead += 1;
       }
       const local = (y / 3 - pose.position[1]) / pose.height;
-      (local >= HEAD_FROM ? head : body).tris.push(...tri);
+      const isHead = slots !== undefined ? onHead >= 2 && local >= from - HEAD_DROP : local >= from;
+      (isHead ? head : body).tris.push(...tri);
     }
   });
   return [body, head];
@@ -301,7 +331,9 @@ export function propLayers(
     for (let i = 0; i < mesh.count; i++) {
       mesh.getMatrixAt(i, instance);
       instance.premultiply(mesh.matrixWorld);
-      out.push(...geometryLayers(mesh.geometry, instance, `${kind}@${String(i)}`, depthWrite, kind === 'squad'));
+      // A squad follower is its body baked: its head starts where that body's does.
+      const from = kind === 'squad' ? headFromOf(mesh.name.replace(/^props:squad:/, '')) : HEAD_FROM;
+      out.push(...geometryLayers(mesh.geometry, instance, `${kind}@${String(i)}`, depthWrite, kind === 'squad', from));
     }
   }
   field.dispose();
@@ -319,6 +351,7 @@ export function geometryLayers(
   tag: string,
   depthWrite: boolean,
   splitHead = false,
+  headFrom = HEAD_FROM,
 ): Layer[] {
   const position = geometry.getAttribute('position');
   const layer: Layer = { tag, depthWrite, tris: [] };
@@ -332,7 +365,7 @@ export function geometryLayers(
       V.applyMatrix4(matrix);
       tri.push(V.x, V.y, V.z);
     }
-    (splitHead && y / 3 >= HEAD_FROM ? head : layer).tris.push(...tri);
+    (splitHead && y / 3 >= headFrom ? head : layer).tris.push(...tri);
   }
   return head.tris.length > 0 ? [layer, head] : [layer];
 }

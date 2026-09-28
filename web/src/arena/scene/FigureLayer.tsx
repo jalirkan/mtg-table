@@ -58,7 +58,7 @@ import {
 import type { ModelData } from '../figures/types.ts';
 import type { DeathSource, DepartureBinder, DiscField, OffsetSource } from './discs.ts';
 import type { FigureRigMap } from './figureRigs.ts';
-import { makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
+import { applyCostume, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
 import {
   clipFor,
   instantiateFigure,
@@ -247,7 +247,7 @@ const Figure = memo(function Figure({
 
   const built = useMemo(() => {
     const instance = instantiateFigure(model);
-    const material = makeHoloMaterial(pose.tint);
+    const material = makeHoloMaterial(pose.tint, model.unitScale);
     for (const mesh of instance.meshes) mesh.material = material;
 
     const actions = new Map<string, THREE.AnimationAction>();
@@ -320,9 +320,17 @@ const Figure = memo(function Figure({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rigs, built, pose.cardId]);
 
+  /**
+   * **Slice 4 — the costume, written at COMMIT** (never in the frame loop): the
+   * pose's palette, washed if the pose is frozen, into this figure's own material.
+   * A new pose object arrives every snapshot; the key skips the ones whose palette
+   * did not change, so the strings are parsed about once a game.
+   */
+  const costumeKey = useRef<string | null>(null);
   useLayoutEffect(() => {
     const rig = rigs.get(pose.cardId);
     if (rig !== undefined && rig.root === built.instance.object) rig.pose = pose;
+    costumeKey.current = applyCostume(built.material, pose.costume ?? null, pose.frozen, costumeKey.current);
     invalidate();
   }, [rigs, built, pose, invalidate]);
 
@@ -445,7 +453,10 @@ export class DepartureField implements DepartureBinder {
   add(pose: FigurePose, model: LoadedModel, stand: readonly [number, number, number]): void {
     this.dropCard(pose.cardId);
     const instance = instantiateFigure(model);
-    const material = makeHoloMaterial(pose.tint);
+    const material = makeHoloMaterial(pose.tint, model.unitScale);
+    // The body falls in what it wore (slice 4) — its palette, as its last frame had it.
+    applyCostume(material, pose.costume ?? null, false);
+    material.uniforms.uDrainTo.value.copy(DYING_GREY);
     for (const mesh of instance.meshes) mesh.material = material;
     const object = instance.object;
     object.position.set(stand[0], stand[1], stand[2]);
@@ -566,13 +577,17 @@ export class DepartureField implements DepartureBinder {
         if (entry.clip !== null) entry.clip.setEffectiveWeight(entry.clipWeight * held);
         if (entry.rest !== null) entry.rest.setEffectiveWeight((1 - entry.clipWeight) * held);
         uniforms.uOpacity.value = entry.pose.opacity * departureOpacity(t);
-        uniforms.uTint.value.copy(entry.base).lerp(DYING_GREY, departureDrain(t));
+        // The drain reaches every costume slot through the shader (slice 4):
+        // a number here, the grey is the material's own `uDrainTo`.
+        uniforms.uTint.value.copy(entry.base);
+        uniforms.uDrain.value = departureDrain(t);
       } else {
         // Before its death cue: the body as it last stood, taking the blow.
         this.driveTransient(entry, request);
         if (entry.die !== null) entry.die.setEffectiveWeight(0);
         uniforms.uOpacity.value = entry.pose.opacity;
         uniforms.uTint.value.copy(entry.base);
+        uniforms.uDrain.value = 0;
       }
       entry.instance.mixer.update(0);
     }

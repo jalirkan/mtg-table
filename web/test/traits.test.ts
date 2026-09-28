@@ -31,9 +31,10 @@ import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' 
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import traitsJson from '../src/arena/figures/traits.json' with { type: 'json' };
 import { REST_CLIP_FOR, REST_PHASE_FOR } from '../src/arena/figures/clips.ts';
-import { figurePose, fitHeight, shadeHex } from '../src/arena/figures/pose.ts';
+import { COSTUME_DEFAULTS, costumeOf, figurePose, fitHeight, shadeHex, type FigurePose } from '../src/arena/figures/pose.ts';
 import {
   CARRIER_LENGTH,
+  COSTUME_SLOTS,
   PROP_KINDS,
   PROP_KIT,
   SQUAD_MEMBER,
@@ -55,11 +56,13 @@ import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 import { VIEW_BY_ID } from '../src/arena/camera.ts';
 import { PropField } from '../src/arena/scene/props.ts';
+import { COSTUME_ATTRIBUTE } from '../src/arena/scene/holoMaterial.ts';
 import {
   bodyLayers,
   cameraAt,
   figureLayers,
   geometryLayers,
+  headFromOf,
   kindGroups,
   loadLibrary,
   onBattlefield,
@@ -123,7 +126,11 @@ test('traits: the validator drops a bad row, never the file — and it can fail'
       'G': { props: ['wings', 'wings'] }, // listed twice
       'H': { cape: true }, // unknown field
       'I': { silhouette: 'submarine' },
-      'Wasp, Shrinking Savior': { scale: 0.55, props: ['wings'] }, // survives
+      'J': { costume: { cape: '#ffffff' } }, // slice 4: not a costume slot
+      'K': { costume: { top: 'navy' } }, // not a hex colour or "tint"
+      'L': { body: 'giant' }, // not a body style
+      'M': { costume: '#ffffff' }, // not an object of slots
+      'Wasp, Shrinking Savior': { scale: 0.55, props: ['wings'], costume: { top: 'tint', legs: '#16151b' } }, // survives
     },
   });
   const where = bad.errors.map((e) => e.where);
@@ -138,6 +145,10 @@ test('traits: the validator drops a bad row, never the file — and it can fail'
     '$.cards["G"].props[1]',
     '$.cards["H"].cape',
     '$.cards["I"].silhouette',
+    '$.cards["J"].costume.cape',
+    '$.cards["K"].costume.top',
+    '$.cards["L"].body',
+    '$.cards["M"].costume',
   ]) {
     assert.ok(where.includes(expected), `the validator missed ${expected} (saw ${where.join(', ')})`);
   }
@@ -230,7 +241,163 @@ test('traits: a face-down Wasp is the anonymous disc — no wings, no hover, no 
   assert.equal(pose.swarm, 0);
   assert.equal(pose.silhouette, null);
   assert.deepEqual(pose.traitRungs, []);
+  assert.equal(pose.costume, null, 'a face-down Wasp wears her gold and black');
   assert.ok(Math.abs(pose.height - FIGURE_HEIGHT) < 1e-9, 'a face-down creature took a trait scale');
+});
+
+// ---------------------------------------------------------------------------
+// Slice 4 — the costume and the body
+// ---------------------------------------------------------------------------
+
+test('traits: a costume merges slot by slot down the ladder, and costumeOf fills the rest from the top', () => {
+  const data = validateTraits({
+    version: 1,
+    archetypes: { 'subtype:spy': { costume: { top: '#28344a', shirt: '#eef0f3', legs: '#222c3f' } } },
+    cards: { 'Agent X': { costume: { hair: '#e0c16a', top: 'tint' } } },
+  }).data;
+  const card = { id: 1, name: 'Agent X', types: 'Creature - Human Spy' } as unknown as AnyCard;
+  const spec = traitFor(card, data).spec;
+  // The card named its hair and its top; the spy rung's shirt and legs survive.
+  assert.deepEqual(spec.costume, { top: 'tint', shirt: '#eef0f3', legs: '#222c3f', hair: '#e0c16a' });
+  const palette = costumeOf(spec.costume, '#5b52c4');
+  assert.equal(palette.length, COSTUME_SLOTS.length);
+  const at = (slot: (typeof COSTUME_SLOTS)[number]): string => palette[COSTUME_SLOTS.indexOf(slot)]!;
+  assert.equal(at('top'), '#5b52c4', '"tint" is the figure\'s own tint');
+  assert.equal(at('shirt'), '#eef0f3');
+  assert.equal(at('hair'), '#e0c16a');
+  assert.equal(at('skin'), COSTUME_DEFAULTS.skin);
+  assert.equal(at('gloves'), COSTUME_DEFAULTS.skin, 'unnamed gloves are bare hands');
+  assert.equal(at('belt'), shadeHex('#222c3f', 0.6), 'an unnamed belt is the legs, darker');
+  // No costume at all: a bodysuit in the tint, darker at the legs.
+  const bare = costumeOf({}, '#808080');
+  assert.equal(bare[COSTUME_SLOTS.indexOf('top')], '#808080');
+  assert.equal(bare[COSTUME_SLOTS.indexOf('legs')], shadeHex('#808080', 0.55));
+});
+
+test('traits: `body: chibi` stands a card in slices 1–3\'s Kenney body, and nothing is lost', () => {
+  const chibiEverywhere = validateTraits({ version: 1, default: { body: 'chibi' } }).data;
+  const soldier = corpusCards().get('Soldier Token')!;
+  const state = twoSeatState([onBattlefield(soldier, 500, 0)], []);
+  const placed = layout(state);
+  const human = figurePose(placed, null, DATA, { models: MODELS }).get(500)!;
+  const chibi = figurePose(placed, null, DATA, { models: MODELS, traits: chibiEverywhere }).get(500)!;
+  assert.equal(human.modelId, 'agent');
+  assert.equal(chibi.modelId, 'agent-chibi');
+  assert.equal(familyOf(chibi.modelId, MODELS), 'humanoid');
+  // The chibi is 1.15 wide for 1 tall: the strict clamp (D65) sizes it exactly as slice 3 did.
+  assert.ok(Math.abs(chibi.height - fitHeight(FIGURE_HEIGHT, MODELS.models['agent-chibi']!.width / MODELS.models['agent-chibi']!.height)) < 1e-9);
+  assert.ok(chibi.costume !== null, 'a chibi carries costume slots too');
+  // Every fallback is the fallback OF a proportioned body.
+  for (const id of ['agent', 'hero', 'scientist']) {
+    assert.equal(MODELS.models[`${id}-chibi`]?.rig, 'kenney-mini', `${id} has no chibi fallback`);
+    assert.equal(MODELS.models[id]?.rig, 'ubc', `${id} is not a proportioned body`);
+  }
+});
+
+test('traits: every body that carries costume slots carries all of them, in COSTUME_SLOTS order (the build and the shader agree)', async () => {
+  const library = await loadLibrary();
+  const counts: string[] = [];
+  for (const [id, model] of library) {
+    let mesh: THREE.SkinnedMesh | null = null;
+    model.source.traverse((child) => {
+      if (mesh === null && (child as THREE.SkinnedMesh).isSkinnedMesh === true) mesh = child as THREE.SkinnedMesh;
+    });
+    assert.ok(mesh !== null, `${id} has no skinned mesh`);
+    const slots = (mesh as THREE.SkinnedMesh).geometry.getAttribute(COSTUME_ATTRIBUTE);
+    const family = familyOf(id, MODELS);
+    if (family !== 'human' && family !== 'humanoid') {
+      assert.equal(slots, undefined, `${id} carries costume slots it can never wear`);
+      continue;
+    }
+    assert.ok(slots !== undefined, `${id} carries no costume slots`);
+    const seen = new Array<number>(COSTUME_SLOTS.length).fill(0);
+    for (let i = 0; i < slots.count; i++) {
+      const slot = Math.round(slots.getX(i));
+      assert.ok(slot >= 0 && slot < COSTUME_SLOTS.length, `${id}: vertex ${String(i)} is in slot ${String(slot)}`);
+      seen[slot]! += 1;
+    }
+    counts.push(`  ${id.padEnd(16)} ${COSTUME_SLOTS.map((slot, i) => `${slot} ${String(seen[i])}`).join(' · ')}`);
+    // A proportioned body wears every slot; the chibi (its texture is gone and its
+    // head is half of it) has no waistband to find.
+    for (const [i, slot] of COSTUME_SLOTS.entries()) {
+      if (family === 'humanoid' && slot === 'belt') continue;
+      assert.ok(seen[i]! > 0, `${id} has no ${slot}`);
+    }
+  }
+  console.log(`traits: costume slots per body (vertices)\n${counts.join('\n')}`);
+});
+
+test('traits: every deck humanoid wears its own costume — the task list read off the poses', () => {
+  const cards = corpusCards();
+  const poseOf = (name: string): FigurePose => {
+    const card = cards.get(name);
+    assert.ok(card !== undefined, `${name} is not in the corpus`);
+    return posesOf(twoSeatState([onBattlefield(card, 500, 0)], [])).get(500)!;
+  };
+  const slot = (pose: FigurePose, key: (typeof COSTUME_SLOTS)[number]): string => {
+    assert.ok(pose.costume !== null, 'no costume');
+    return pose.costume[COSTUME_SLOTS.indexOf(key)]!;
+  };
+  const hue = (hex: string): { r: number; g: number; b: number; l: number } => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b, l: (r + g + b) / 3 };
+  };
+  const lines: string[] = [];
+  const bodies = new Map<string, string | null>();
+  for (const name of deckNames()) {
+    const card = cards.get(name);
+    if (card === undefined) continue;
+    const pose = posesOf(twoSeatState([onBattlefield(card, 500, 0)], [])).get(500);
+    if (pose === undefined) continue;
+    bodies.set(name, pose.modelId);
+    lines.push(`  ${name.padEnd(30)} ${String(pose.modelId).padEnd(9)} ${pose.costume === null ? '(no costume)' : COSTUME_SLOTS.map((k, i) => `${k} ${pose.costume![i]}`).join(' ')}`);
+  }
+  console.log(`traits: every deck card's body and costume\n${lines.join('\n')}`);
+  // The women stand in the woman's body and the men in the man's.
+  for (const name of ['Peggy Carter, Secret Agent', 'Agent 13, Sharon Carter', 'Quake, Agent of S.H.I.E.L.D.', 'Wasp, Shrinking Savior']) {
+    assert.equal(bodies.get(name), 'hero', `${name} is not in the woman's body`);
+  }
+  for (const name of ['Agent Phil Coulson', 'Nick Fury, Spymaster', 'Ant-Man, Reformed Rogue', 'Agents of S.H.I.E.L.D.']) {
+    assert.equal(bodies.get(name), 'agent', `${name} is not in the man's body`);
+  }
+  // Peggy: a blue jacket over a white shirt (and her red hat is a prop).
+  const peggy = poseOf('Peggy Carter, Secret Agent');
+  assert.ok(hue(slot(peggy, 'top')).b > hue(slot(peggy, 'top')).r + 60, 'Peggy\'s jacket is not blue');
+  assert.ok(hue(slot(peggy, 'shirt')).l > 220, 'Peggy\'s shirt is not white');
+  assert.ok(peggy.props.some((p) => p.kind === 'hat' && hue(p.colour).r > 180 && hue(p.colour).g < 90), 'Peggy\'s hat is not red');
+  // Coulson: a navy suit and a white shirt.
+  const coulson = poseOf('Agent Phil Coulson');
+  assert.ok(hue(slot(coulson, 'top')).l < 70 && hue(slot(coulson, 'top')).b > hue(slot(coulson, 'top')).r, 'Coulson\'s suit is not navy');
+  assert.ok(hue(slot(coulson, 'shirt')).l > 220, 'Coulson\'s shirt is not white');
+  // Fury: black, under a black coat.
+  const fury = poseOf('Nick Fury, Spymaster');
+  assert.ok(hue(slot(fury, 'top')).l < 35 && hue(slot(fury, 'legs')).l < 35, 'Fury is not in black');
+  // Quake: black with teal accents.
+  const quake = poseOf('Quake, Agent of S.H.I.E.L.D.');
+  assert.ok(hue(slot(quake, 'top')).l < 35, 'Quake\'s suit is not black');
+  assert.ok(hue(slot(quake, 'belt')).g > 150 && hue(slot(quake, 'belt')).b > 150 && hue(slot(quake, 'belt')).r < 120, 'Quake has no teal accent');
+  // Agent 13: indigo.
+  const a13 = poseOf('Agent 13, Sharon Carter');
+  assert.ok(hue(slot(a13, 'top')).b > hue(slot(a13, 'top')).g + 60, 'Agent 13 is not in indigo');
+  // The Agents: grey suits, white shirts.
+  const agents = poseOf('Agents of S.H.I.E.L.D.');
+  const grey = hue(slot(agents, 'top'));
+  assert.ok(Math.max(grey.r, grey.g, grey.b) - Math.min(grey.r, grey.g, grey.b) < 30, 'the Agents\' suits are not grey');
+  // The scientists: white coats; A.I.M.: yellow.
+  assert.ok(hue(slot(poseOf('Bold Biochemist'), 'top')).l > 220, 'Bold Biochemist is not in a white coat');
+  const aim = hue(slot(poseOf('A.I.M. Scientists'), 'top'));
+  assert.ok(aim.r > 200 && aim.g > 160 && aim.b < 90, 'A.I.M. are not in yellow');
+  // Wasp: gold and black; Ant-Man: red and silver.
+  const wasp = poseOf('Wasp, Shrinking Savior');
+  assert.ok(hue(slot(wasp, 'top')).r > 200 && hue(slot(wasp, 'top')).b < 90 && hue(slot(wasp, 'legs')).l < 35, 'Wasp is not gold and black');
+  const ant = poseOf('Ant-Man, Reformed Rogue');
+  assert.ok(hue(slot(ant, 'top')).r > 150 && hue(slot(ant, 'top')).g < 80, 'Ant-Man is not in red');
+  assert.ok(hue(slot(ant, 'belt')).l > 180, 'Ant-Man has no silver');
+  // The drone and the bee wear nothing: they carry no slots.
+  assert.equal(poseOf('Aerial Doombot').costume, null);
+  assert.equal(poseOf('Giant-Sized Flying Ant').costume, null);
 });
 
 test('traits: every anonymous pose in the corpus carries no props, no hover, no swarm', () => {
@@ -245,9 +412,11 @@ test('traits: every anonymous pose in the corpus carries no props, no hover, no 
       assert.equal(pose.silhouette, null);
       assert.equal(pose.vehicle, false, `${file}: a card drawn as a back became a silhouette`);
       assert.deepEqual(pose.traitRungs, []);
+      // Slice 4: a costume is a statement about what a card is (hard rule 8).
+      assert.equal(pose.costume, null, `${file}: an anonymous figure wears a costume`);
     }
   }
-  console.log(`traits: ${String(anonymous)} anonymous figure-instances in the corpus, none with an identity`);
+  console.log(`traits: ${String(anonymous)} anonymous figure-instances in the corpus, none with an identity or a costume`);
   assert.ok(anonymous >= 1138, `only ${String(anonymous)} anonymous instances — the morph fixtures are not being read`);
 });
 
@@ -619,6 +788,10 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
   tie: { partner: 'badge', why: 'a shirt-front is on the chest — the badge has a back emblem' },
   laserEye: { partner: 'visor', why: 'an eye is on the face — the visor band is its glow round the head' },
   exhaust: { partner: 'visor', why: 'a flame burns under the thrusters, behind — the visor reads in front' },
+  // Slice 4: on a PROPORTIONED head (12 px tall at the table view, where the
+  // chibi's was half the figure) a patch is a face detail like a tie — it reads
+  // from the front, and Fury's long black coat carries him from behind and above.
+  eyepatch: { partner: 'coat', why: 'a patch is on the face — the long black coat carries Fury from behind' },
 };
 
 /** The deck's own cards, from its `.dck` — never a list typed here. */
@@ -764,10 +937,19 @@ function headStats(heads: ReadonlyArray<{ pixels: number; centre: [number, numbe
   return { fewest, closest };
 }
 
-/** Three heads, each at least this much of it on screen … */
-const SQUAD_HEAD_MIN_PX = 150;
-/** … side by side, no two centres closer than this ACROSS the screen, at 1600 × 1000. */
-const SQUAD_HEADS_APART_PX = 15;
+/**
+ * Three heads, each at least this much of it on screen … Slice 4: a
+ * PROPORTIONED head is about 12 px tall at the table view (the chibi's was half
+ * its figure, and this bar was 150) — measured, a lone agent's head is 139–159 px
+ * and a follower's (×0.78) 80–96 px; the bar is set under the smallest.
+ */
+const SQUAD_HEAD_MIN_PX = 60;
+/**
+ * … side by side, no two centres closer than this ACROSS the screen, at 1600 ×
+ * 1000. Slice 4 raised it from 15: a proportioned head is ~11 px wide, and slice
+ * 3's first formation — the control below — put two of them 17 px apart once.
+ */
+const SQUAD_HEADS_APART_PX = 20;
 
 test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table view — on both seats (second verification pass)', async () => {
   const library = await loadLibrary();
@@ -782,6 +964,7 @@ test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table
   assert.ok(follower !== undefined, 'no baked squad follower');
 
   const lines: string[] = [];
+  const failures: string[] = [];
   let controlFailed = 0;
   for (const seat of SEATS) {
     for (const tapped of [false, true]) {
@@ -796,8 +979,10 @@ test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table
             heads.map((h) => `${String(h.pixels)} px @ ${h.centre?.map((v) => v.toFixed(0)).join(',') ?? '-'}`).join('  ') +
             `  · narrowest sideways gap ${now.closest.toFixed(1)} px`,
         );
-        assert.ok(now.fewest >= SQUAD_HEAD_MIN_PX, `${seat}: a squad head shows only ${String(now.fewest)} px`);
-        assert.ok(now.closest >= SQUAD_HEADS_APART_PX, `${seat}: two squad heads are ${now.closest.toFixed(1)} px apart across the screen (0 = stacked)`);
+        if (now.fewest < SQUAD_HEAD_MIN_PX) failures.push(`${seat}: a squad head shows only ${String(now.fewest)} px`);
+        if (now.closest < SQUAD_HEADS_APART_PX) {
+          failures.push(`${seat}: two squad heads are ${now.closest.toFixed(1)} px apart across the screen (0 = stacked)`);
+        }
 
         // **The control**: slice 3's first squad — followers 0.16 aside and 0.32
         // behind at 0.8, at the height its narrower span clamped it to.
@@ -817,7 +1002,9 @@ test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table
             new THREE.Quaternion(),
             new THREE.Vector3(0.8, 0.8, 0.8),
           );
-          layers.push(...geometryLayers(follower.geometry, root.clone().multiply(member), `squad@${String(i)}`, true, true));
+          layers.push(
+            ...geometryLayers(follower.geometry, root.clone().multiply(member), `squad@${String(i)}`, true, true, headFromOf('agent')),
+          );
         });
         const oldHeads = squadHeads(layers);
         const before = headStats(oldHeads);
@@ -836,5 +1023,6 @@ test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table
       `wedge ±${String(SQUAD_OFFSET_X)}, ${String(SQUAD_OFFSET_Z)} back, members ×${String(SQUAD_MEMBER)})\n${lines.join('\n')}\n` +
       `  slice 3's first squad fails the same test in ${String(controlFailed)} of 8 cases`,
   );
+  assert.deepEqual(failures, []);
   assert.equal(controlFailed, 8, 'the old formation passes somewhere — this test would not have caught it');
 });

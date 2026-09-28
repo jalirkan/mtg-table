@@ -42,10 +42,12 @@ import {
   VIEW_IDS,
   beatsOf,
   clampOrbit,
+  clearOfHand,
   directShot,
   effectiveView,
   framesSeat,
   insideClamps,
+  keepOutTop,
   keepsSeat,
   lerpOrbit,
   lookupFor,
@@ -60,6 +62,7 @@ import {
   viewAvailable,
   viewForBeat,
   viewOrbit,
+  visibleShare,
   type Beat,
   type DirectorWorld,
   type Orbit,
@@ -70,7 +73,24 @@ import {
   type ViewId,
 } from '../src/arena/camera.ts';
 import type { AnchorRef, CameraRequest } from '../src/arena/cues/stage.ts';
-import { TABLE_ANCHOR, anchorsFor, fanCorners, seatRankLines, viewerIdOf } from '../src/arena/layout.ts';
+import duelistsJson from '../src/arena/figures/duelists.json' with { type: 'json' };
+import {
+  duelistBox,
+  duelistFacing,
+  duelistHeight,
+  duelistSamples,
+  duelistStand,
+  validateDuelists,
+} from '../src/arena/figures/duelists.ts';
+import {
+  HUD_TOP_PX,
+  TABLE_ANCHOR,
+  anchorsFor,
+  fanCorners,
+  playerAnchorFor,
+  seatRankLines,
+  viewerIdOf,
+} from '../src/arena/layout.ts';
 import type { GameEvent, GameStateBody } from '../src/protocol.ts';
 import { initialState, reduce } from '../src/reduce.ts';
 import { BASE_FRAME_INTERVAL_MS, parseFrameLog } from '../src/transport/replay.ts';
@@ -965,4 +985,127 @@ test('camera: beatsOf reads public facts only — seats, never names', () => {
   assert.equal(real.strikeSeat(40), null);
   assert.equal(real.seatOfPlayer(0), 'you');
   assert.equal(real.seatOfPlayer(1), 'opp');
+});
+
+// ---------------------------------------------------------------------------
+// T13 — the duelists against the seat-safe views (Tier 2 slice 4)
+// ---------------------------------------------------------------------------
+
+/**
+ * The two canvases the chrome's keep-out band is checked on — a 1280 × 800 and a
+ * 1600 × 1000 window, each less the app's 54 px header (as `figure-pose.test.ts`
+ * checks the carriers) — and the aspects people play at. A square window and a
+ * 4:3 one are printed, and 4:3 is held to the lower bar; 1:1 is not a table the
+ * right-hand side of which fits, and the test says so rather than pretending.
+ */
+const CANVASES = [745, 946] as const;
+const DUELISTS = validateDuelists(duelistsJson).data;
+const heightOf = (seat: 'you' | 'opp'): number => {
+  const id = DUELISTS.seats[seat];
+  return duelistHeight(id === undefined ? null : (DUELISTS.looks[id] ?? null));
+};
+
+test('camera: your duelist is never behind your hand — every seat-safe view, every aspect (T13)', () => {
+  const fan = fanCorners(7, 'you');
+  const height = heightOf('you');
+  const box = duelistBox('you', height);
+  const lines: string[] = [];
+  for (const view of VIEWS.filter((v) => v.seatSafe)) {
+    for (const aspect of LIVE_ASPECTS) {
+      assert.ok(
+        clearOfHand(view.pose, box, fan, CAMERA.fov, aspect),
+        `${view.id} @${aspect.toFixed(2)}: a card of a seven-card hand overlaps your duelist on screen`,
+      );
+    }
+    // Printed: how much of your own duelist each seat view shows at 16:9 (it may
+    // leave the frame — it is decoration and never in the solver's required set).
+    const shown = visibleShare(view.pose, duelistSamples('you', height), keepOutTop(HUD_TOP_PX, 946), CAMERA.fov, ASPECT);
+    lines.push(`  ${view.id.padEnd(9)} your duelist clear of the hand at every aspect; ${(shown * 100).toFixed(0)}% on screen at 16:9`);
+  }
+  // It covers none of your own ranks either: the land and creature lines a seat
+  // taps and targets on stay out of its silhouette in every seat view.
+  const ranks = seatRankLines('you');
+  for (const view of VIEWS.filter((v) => v.seatSafe)) {
+    for (const aspect of LIVE_ASPECTS) {
+      assert.ok(
+        ranks.every((point) => clearOfHand(view.pose, box, [[point, point, point]], CAMERA.fov, aspect)),
+        `${view.id} @${aspect.toFixed(2)}: your duelist covers your own ranks`,
+      );
+    }
+  }
+  // **The negative control: slice 1's bust anchor** (the HUD anchor, set back
+  // 0.55). A body standing there puts its legs over the hand's leftmost card from
+  // the shoulder and low views — which is why the duelist moved.
+  const anchor = playerAnchorFor('you');
+  const old = duelistBox('you', height, [anchor.x, 0, anchor.z + 0.55], duelistFacing('you'));
+  const failures = VIEWS.filter((v) => v.seatSafe).flatMap((view) =>
+    LIVE_ASPECTS.filter((aspect) => !clearOfHand(view.pose, old, fan, CAMERA.fov, aspect)).map(
+      (aspect) => `${view.id}@${aspect.toFixed(2)}`,
+    ),
+  );
+  lines.push(`  slice 1's bust anchor: behind the hand at ${String(failures.length)} of 18 (view, aspect) pairs — ${failures.join(' ')}`);
+  for (const line of lines) console.log(line);
+  assert.ok(failures.length > 0, 'the bust anchor passes clearOfHand — the check has no teeth');
+});
+
+test('camera: the opponent’s duelist is on screen and out from under the chrome — every seat-safe view (T13)', () => {
+  const height = heightOf('opp');
+  const samples = duelistSamples('opp', height);
+  const lines: string[] = [];
+  let worstPlay = 1;
+  let worst43 = 1;
+  for (const view of VIEWS.filter((v) => v.seatSafe)) {
+    const row: string[] = [];
+    for (const canvas of CANVASES) {
+      const band = keepOutTop(HUD_TOP_PX, canvas);
+      for (const aspect of LIVE_ASPECTS) {
+        const share = visibleShare(view.pose, samples, band, CAMERA.fov, aspect);
+        row.push(`${(share * 100).toFixed(0).padStart(3)}`);
+        if (aspect >= 1.6) {
+          worstPlay = Math.min(worstPlay, share);
+          assert.ok(
+            share >= (canvas === 946 ? 0.9 : 0.7),
+            `${view.id} @${aspect.toFixed(2)} on a ${String(canvas)} px canvas: ${(share * 100).toFixed(0)}% of the opponent's duelist is visible`,
+          );
+        } else if (aspect > 1.2) {
+          worst43 = Math.min(worst43, share);
+          assert.ok(share >= 0.7, `${view.id} @4:3 on ${String(canvas)} px: ${(share * 100).toFixed(0)}% visible`);
+        }
+      }
+    }
+    lines.push(`  ${view.id.padEnd(9)} % visible, 745 px | 946 px, at ${LIVE_ASPECTS.map((a) => a.toFixed(2)).join(' ')}: ${row.slice(0, 6).join(' ')} | ${row.slice(6).join(' ')}`);
+  }
+  // The spectator views see it too (asserted where it matters, printed here).
+  for (const view of VIEWS.filter((v) => !v.seatSafe)) {
+    const share = visibleShare(view.pose, samples, keepOutTop(HUD_TOP_PX, 946), CAMERA.fov, ASPECT);
+    lines.push(`  ${view.id.padEnd(9)} (spectator) ${(share * 100).toFixed(0)}% visible at 16:9, 946 px`);
+  }
+  // It covers none of the opponent's own ranks from the table view.
+  const oppRanks = seatRankLines('opp');
+  const box = duelistBox('opp', height);
+  for (const aspect of LIVE_ASPECTS) {
+    assert.ok(
+      oppRanks.every((point) => clearOfHand(REST_POSE, box, [[point, point, point]], CAMERA.fov, aspect)),
+      `table @${aspect.toFixed(2)}: the opponent's duelist covers the opponent's own ranks`,
+    );
+  }
+  // **The negative control: slice 1's bust anchor**, behind the opponent's hand.
+  // From the table view the whole of a body standing there is under the chrome.
+  const anchor = playerAnchorFor('opp');
+  const oldSamples = duelistSamples('opp', height, [anchor.x, 0, anchor.z - 0.55], duelistFacing('opp'));
+  const oldShare = visibleShare(REST_POSE, oldSamples, keepOutTop(HUD_TOP_PX, 946), CAMERA.fov, ASPECT);
+  lines.push(
+    `  worst at 16:10 and wider ${(worstPlay * 100).toFixed(0)}%, at 4:3 ${(worst43 * 100).toFixed(0)}% · ` +
+      `slice 1's bust anchor from the table view: ${(oldShare * 100).toFixed(0)}% visible · stands ${JSON.stringify(duelistStand('you'))} / ${JSON.stringify(duelistStand('opp'))}`,
+  );
+  for (const line of lines) console.log(line);
+  assert.ok(oldShare < 0.2, `the bust anchor is ${(oldShare * 100).toFixed(0)}% visible — the check has no teeth`);
+});
+
+test('camera: the duelists are never in the solver’s required set (report 13 §7)', () => {
+  // `framesSeat` and `keepsSeat` take the seat's hand, battlefield, fan and ranks
+  // and nothing else: a view's safety is the same with or without a duelist.
+  for (const view of VIEWS) assert.equal(view.seatSafe, keepsSeat(view.pose, SEAT_GEOMETRY));
+  const source = readFileSync(fileURLToPath(new URL('../src/arena/camera.ts', import.meta.url)), 'utf8');
+  assert.ok(!/duelist/i.test(source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')), 'camera.ts names a duelist in code');
 });

@@ -265,13 +265,28 @@ test('figures: every creature in every committed recording resolves', () => {
   // **An entry that never fires says so.** Every model the manifest defines
   // should be reached by something in the corpus; if one is not, it is either
   // dead weight or a ladder that does not do what its author thought.
+  //
+  // Slice 4: the one declared exception is a CHIBI FALLBACK body (`<id>-chibi`):
+  // slices 1–3's Kenney bodies, kept in the library for a `traits.json` row that
+  // asks for `"body": "chibi"` — which no row does today. Each must still be the
+  // fallback OF a body the ladder reaches, and `traits.test.ts` proves the flag
+  // stands a card in it.
+  const fallbacks: string[] = [];
   for (const id of MODEL_IDS) {
+    if (id.endsWith('-chibi')) {
+      const body = id.slice(0, -'-chibi'.length);
+      assert.ok(byModel.has(body), `the chibi fallback "${id}" is the fallback of "${body}", which nothing reaches`);
+      fallbacks.push(id);
+      continue;
+    }
     assert.ok(
       byModel.has(id),
       `model "${id}" is defined and never resolved by any creature in the corpus — ` +
         'either the ladder does not reach it or it should not be in the library yet',
     );
   }
+  console.log(`  chibi fallbacks (reached only by a trait's "body": "chibi"): ${fallbacks.sort().join(', ')}`);
+  assert.equal(fallbacks.length, 3, 'the three Kenney bodies are no longer all kept as fallbacks');
 });
 
 test('figures: the face-down instances in the corpus all take the disc', () => {

@@ -3,25 +3,36 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The duelist silhouettes, drawn** (report 13 §7; user decision 8): one
- * billboarded quad per seat at `playerAnchorFor(seat)`, dark, unlit, no rig.
+ * **The duelists' pose layer, bound from the one frame loop** — and slice 1's
+ * silhouette busts, kept as its fallback (report 13 §7; user decision 8; T13).
  *
- * **One `InstancedMesh` for both seats — one draw call, where §7 budgets two.**
- * The silhouette is a canvas texture drawn once for the page (the same technique
- * `discs.ts`, `overlays.ts` and `numberSprite.ts` use, and the same reason: drei's
- * `<Text>` and drei's `useGLTF` both reach a CDN, and a local-only game whose
- * duelists need a network is a game that loses them offline).
+ * `CueRunner` binds this field once a frame, exactly as it always has
+ * (`bustField.bind(busts, camera, effects)`). Since T13 the field first binds the
+ * **duelist figures** installed into it by `scene/DuelistLayer.tsx`
+ * ({@link DuelistBinder}, the way `FigureLayer` installs the departing bodies into
+ * the disc field), and then draws a bust only for a seat that has no figure — no
+ * figure library yet, a library that failed, or a look whose body the library
+ * does not hold. A fresh checkout with no `figures.glb` therefore draws the two
+ * busts, as slice 1 did.
  *
- * It draws **no name and no number**. The player's name and life total are the
- * HUD's, in the DOM layer, where the 2D board already draws them; a bust is a
- * presence, and a texture is not where identity belongs.
+ * **Both stand where the duelists stand** (`figures/duelists.ts`'s
+ * `duelistStand`), which moves the opponent's bust out from under the arena's
+ * chrome as well (Tier 2 follow-up 10: 37–89% of it was covered at the HUD
+ * anchor).
+ *
+ * **One `InstancedMesh` for both busts — one draw call**, drawn only while some
+ * seat has no figure. The silhouette is a canvas texture drawn once for the page
+ * (the same technique `discs.ts`, `overlays.ts` and `numberSprite.ts` use, and the
+ * same reason: drei's `<Text>` and drei's `useGLTF` both reach a CDN, and a
+ * local-only game whose duelists need a network is a game that loses them
+ * offline). It draws **no name and no number** — the HUD's, in the DOM layer.
  */
 
 import * as THREE from 'three';
 
 import type { Effect } from '../cues/stage.ts';
-import { bustReactionInto, type BustReaction, type DuelistBust } from '../figures/duelists.ts';
-import { playerAnchorFor } from '../layout.ts';
+import { bustReactionInto, duelistStand, type BustReaction, type DuelistBust } from '../figures/duelists.ts';
+import type { Seat } from '../layout.ts';
 import { parsedColour } from './colourCache.ts';
 import { UNIT_PLANE } from './geometry.ts';
 import { initTexture } from './useCardTexture.ts';
@@ -32,16 +43,16 @@ export const BUST_CAPACITY = 4;
 /** How tall a bust is, in world units — about one and a half card heights. */
 const BUST_H = 1.55;
 const BUST_W = 1.22;
-/** Set back behind the HUD anchor so the life plate reads in front of it. */
-const BUST_BACK = 0.55;
-const BUST_LIFT = 0.42;
+/** Its centre above the duelist's stand point: the bust stands where the body would. */
+const BUST_LIFT = 0.8;
 /** A silhouette is a presence, not a lamp: it never brightens past this. */
 const BUST_STRENGTH = 0.52;
 /** How far a worn-down seat dims. `vigour` is life against the table's highest. */
 const VIGOUR_FLOOR = 0.45;
 /**
  * §7's flinch: at a full-strength hit the bust recoils this far away from the
- * table and grows this much, and its rim takes this much of the hit's colour.
+ * table's centre and grows this much, and its rim takes this much of the hit's
+ * colour.
  */
 const FLINCH_BACK = 0.18;
 const FLINCH_SCALE = 0.07;
@@ -108,14 +119,36 @@ const SCALE = new THREE.Vector3();
 const COLOUR = new THREE.Color();
 const REACTION: BustReaction = { strength: 0, colour: null };
 
+/**
+ * **The duelist figures, as the bust field sees them** — installed by
+ * `scene/DuelistLayer.tsx` for the layer's lifetime and bound from {@link
+ * BustField.bind}, i.e. from `CueRunner`'s one `useFrame`.
+ */
+export interface DuelistBinder {
+  /** The frame loop's half: pose, gesture, stance, lean, tint; `mixer.update(0)`. */
+  bind(): void;
+  /** Does this seat have a figure drawn this frame — so its bust must not be? */
+  covers(seat: Seat): boolean;
+  /** T7's prime pass: show every body for the compile. */
+  prime(): void;
+  /** How many figures were drawn last frame. */
+  counts(): number;
+}
+
 export class BustField {
   readonly group = new THREE.Group();
   #mesh: THREE.InstancedMesh | null = null;
   #count = 0;
+  #duelists: DuelistBinder | null = null;
 
   constructor() {
     this.group.name = 'arena-busts';
     this.#build();
+  }
+
+  /** T13 — install (or, with `null`, remove) the duelist figures this field binds first. */
+  setDuelists(duelists: DuelistBinder | null): void {
+    this.#duelists = duelists;
   }
 
   #build(): void {
@@ -133,8 +166,8 @@ export class BustField {
     mesh.count = 0;
     mesh.visible = false;
     mesh.renderOrder = 270;
-    // §3.10 rule 2 — never a click target. A bust stands where the life plate is,
-    // and the plate is a DOM widget in `.arena__layer` with its own hit testing.
+    // §3.10 rule 2 — never a click target. A bust stands where a duelist would,
+    // beside the table, and the raycaster must never see it.
     mesh.raycast = () => {};
     mesh.instanceColor = new THREE.InstancedBufferAttribute(
       new Float32Array(BUST_CAPACITY * 3),
@@ -147,14 +180,15 @@ export class BustField {
   }
 
   /**
-   * Write this frame's busts. Called once per frame from `CueRunner`'s single
+   * Write this frame's duelists. Called once per frame from `CueRunner`'s single
    * `useFrame` and from nowhere else.
    *
-   * `camera` is taken because a bust is billboarded — it is the one thing in the
-   * arena that is meant to face the viewer however the table is orbited. Nothing
-   * about it is a function of time: no bob, no breath, no clip. The one motion it
-   * has — §7's flinch — is `effects`, read through `bustReactionInto`, so it is
-   * exactly as long as the `damage.player` / `life.tick` / strike cue behind it.
+   * **The figures first** ({@link DuelistBinder}); then a bust for every seat
+   * that has none. `camera` is taken because a bust is billboarded — the one thing
+   * in the arena meant to face the viewer however the table is orbited. Nothing
+   * about a bust is a function of time: its one motion, §7's flinch, is
+   * `effects`, read through `bustReactionInto`, so it is exactly as long as the
+   * `damage.player` / `life.tick` / strike cue behind it.
    */
   bind(
     busts: readonly DuelistBust[],
@@ -162,22 +196,21 @@ export class BustField {
     effects: ReadonlyMap<string, Effect>,
   ): void {
     if (this.group.children.length === 0) this.#build();
+    const duelists = this.#duelists;
+    if (duelists !== null) duelists.bind();
     const mesh = this.#mesh;
     if (mesh === null) return;
     let i = 0;
-    for (const bust of busts) {
+    for (let b = 0; b < busts.length; b++) {
+      const bust = busts[b]!;
       if (i >= BUST_CAPACITY) break;
-      const anchor = playerAnchorFor(bust.seat);
-      // Behind the HUD anchor, away from the table centre, so the life plate and
-      // the rising damage number read in front of the body they belong to.
-      const away = anchor.z >= 0 ? 1 : -1;
+      if (duelists !== null && duelists.covers(bust.seat)) continue;
+      duelistStandInto(STAND, bust.seat);
+      // Away from the table's centre along z, so a flinch recoils off the table.
+      const away = STAND[2] >= 0 ? 1 : -1;
       const hit = bustReactionInto(REACTION, effects, bust.player);
       const k = hit.strength;
-      POSITION.set(
-        anchor.x,
-        anchor.y + BUST_LIFT,
-        anchor.z + away * (BUST_BACK + FLINCH_BACK * k),
-      );
+      POSITION.set(STAND[0], STAND[1] + BUST_LIFT, STAND[2] + away * FLINCH_BACK * k);
       QUATERNION.copy(camera.quaternion);
       SCALE.set(BUST_W * (1 + FLINCH_SCALE * k), BUST_H * (1 + FLINCH_SCALE * k), 1);
       MATRIX.compose(POSITION, QUATERNION, SCALE);
@@ -208,11 +241,12 @@ export class BustField {
    */
   prime(): void {
     for (const child of this.group.children) child.visible = true;
+    this.#duelists?.prime();
   }
 
   /** What was drawn last frame — the evidence document's numbers. */
-  counts(): { busts: number } {
-    return { busts: this.#count };
+  counts(): { busts: number; duelists: number } {
+    return { busts: this.#count, duelists: this.#duelists === null ? 0 : this.#duelists.counts() };
   }
 
   dispose(): void {
@@ -224,4 +258,23 @@ export class BustField {
     this.#mesh = null;
     this.group.clear();
   }
+}
+
+/** Scratch for a stand point (§9.2 rule 6). */
+const STAND: [number, number, number] = [0, 0, 0];
+
+/**
+ * `duelistStand` into a scratch triple. The two stand points are constants of the
+ * layout, so they are read once per seat at module load and copied per frame.
+ */
+const STANDS: Readonly<Record<Seat, readonly [number, number, number]>> = {
+  you: duelistStand('you'),
+  opp: duelistStand('opp'),
+};
+
+function duelistStandInto(out: [number, number, number], seat: Seat): void {
+  const stand = STANDS[seat];
+  out[0] = stand[0];
+  out[1] = stand[1];
+  out[2] = stand[2];
 }

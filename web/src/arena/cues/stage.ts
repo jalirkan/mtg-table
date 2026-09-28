@@ -490,6 +490,15 @@ export interface Stage {
    */
   setClip(cardId: number, request: ClipRequest): void;
   clearClip(cardId: number): void;
+  /**
+   * **The request a lane holds right now, or `null`** (Tier 2 slice 4, T13) —
+   * optional, and read by exactly one caller: a cue releasing a DUELIST's lane
+   * (`registry.ts`'s `endGesture`) asks whose request is there before it clears,
+   * because two cues gesture on one duelist in one batch as a matter of course
+   * and the one that ends must not blank the one still playing. `SceneStage`
+   * already had it (its frame loop reads it); `NullStage` answers from its map.
+   */
+  clipOf?(cardId: number): ClipRequest | null;
   /** §8 rule 2. `null` releases the lane. */
   requestCamera(request: CameraRequest | null): void;
   /** Drop everything: the scene is then exactly `layout(state)` (§5.1). */
@@ -596,6 +605,10 @@ export class NullStage implements Stage {
   clearClip(cardId: number): void {
     this.clips.delete(cardId);
     this.ops.push({ op: 'clearClip', cardId });
+  }
+
+  clipOf(cardId: number): ClipRequest | null {
+    return this.clips.get(cardId) ?? null;
   }
 
   requestCamera(request: CameraRequest | null): void {

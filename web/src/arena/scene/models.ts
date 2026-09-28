@@ -31,10 +31,11 @@
  *     calls and one geometry (measured in T0: 12 figures → 12 calls, 1 material,
  *     1 program, frame body p50 0.30 ms). A naive `Object3D.clone()` shares the
  *     skeleton and every copy animates identically.
- *  4. **Normalise at load, never in the data file.** The five models are
- *     0.671, 0.723, 0.676, 0.774 and 1.881 units tall in their own units (agent,
- *     hero, scientist, drone, insect — T8's build, measured on the skinned mesh)
- *     and face whichever way their author modelled them. Measuring the bounding
+ *  4. **Normalise at load, never in the data file.** The models are 1.914 and
+ *     1.854 units tall in their own units (slice 4's proportioned man and woman,
+ *     head ×1.3), 0.671–0.723 (the three chibi fallbacks), 0.771 (the drone) and
+ *     1.881 (the bee) — measured on the skinned mesh by the build — and face
+ *     whichever way their author modelled them. Measuring the bounding
  *     box and scaling to one world unit is the only way models from two libraries
  *     stand the same height; no amount of per-card fiddling in `figures.json`
  *     achieves it reliably. `Box3.setFromObject` on the loaded source measures a
@@ -56,6 +57,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 import type { ModelData, ModelEntry } from '../figures/types.ts';
+import { COSTUME_ATTRIBUTE } from './holoMaterial.ts';
 
 /** One archetype's mesh, its clips, and how to stand it on the table. */
 export interface LoadedModel {
@@ -195,6 +197,17 @@ export function indexLibrary(
       clips.set(key, clip);
     }
 
+    // Slice 4: the costume slots arrive as `_region` (GLTFLoader's name for the
+    // file's `_REGION`); the shader reads them as `costumeRegion`. Renamed once
+    // here, on the geometry every clone of this model shares.
+    source.traverse((child) => {
+      const geometry = (child as THREE.Mesh).geometry as THREE.BufferGeometry | undefined;
+      const region = geometry?.getAttribute('_region');
+      if (geometry === undefined || region === undefined) return;
+      geometry.setAttribute(COSTUME_ATTRIBUTE, region);
+      geometry.deleteAttribute('_region');
+    });
+
     BOX.setFromObject(source);
     BOX.getSize(SIZE);
     const height = SIZE.y > 1e-6 ? SIZE.y : 1;
@@ -235,11 +248,52 @@ export interface FigureInstance {
   mixer: THREE.AnimationMixer;
 }
 
-export function instantiateFigure(model: LoadedModel): FigureInstance {
+export interface InstantiateOptions {
+  /**
+   * **Slice 4 — which pose the clone's bones START in**: `rest` (the default) is
+   * the model's `idle` at frame 0, `bind` the pose its skin was bound in.
+   *
+   * It matters because three's mixer blends every bone toward the pose it found
+   * when an action was first played whenever the actions' weights sum below 1 —
+   * and they do, for the ramp of every cue whose clip is also the stance's own
+   * (an attacker's `attack`, a blocker's `block`). A chibi's bind pose is a
+   * stubby A-pose nobody noticed; a proportioned body's is a T-pose, and every
+   * attack ended in a flash of outstretched arms (photographed at `g2`@157).
+   * Starting at rest makes that pose the idle. The skin's bind (its inverse bind
+   * matrices) is untouched. `PropField` asks for `bind`: its anchors are written
+   * in the bind pose.
+   */
+  pose?: 'rest' | 'bind';
+}
+
+/**
+ * Hold `root`'s nodes in one frame of `clip`: each track's own interpolant,
+ * evaluated at `time` — no mixer, so no clock (the arena's mixers are ticked in
+ * exactly two files). Used at mount and at load, never in the frame loop.
+ */
+export function sampleClipInto(root: THREE.Object3D, clip: THREE.AnimationClip, time: number): void {
+  for (const track of clip.tracks) {
+    const parsed = THREE.PropertyBinding.parseTrackName(track.name);
+    const node = root.getObjectByName(parsed.nodeName);
+    if (node === undefined) continue;
+    // `createInterpolant` is installed per track by `setInterpolation` (three's
+    // own KeyframeTrack.js) and is missing from @types/three's declaration.
+    const values = (track as unknown as { createInterpolant(): THREE.Interpolant }).createInterpolant().evaluate(time);
+    if (parsed.propertyName === 'quaternion') node.quaternion.fromArray(values);
+    else if (parsed.propertyName === 'position') node.position.fromArray(values);
+    else if (parsed.propertyName === 'scale') node.scale.fromArray(values);
+  }
+}
+
+export function instantiateFigure(model: LoadedModel, options: InstantiateOptions = {}): FigureInstance {
   const clone = cloneSkeleton(model.source);
   clone.position.set(0, model.offsetY, 0);
   clone.scale.setScalar(model.unitScale);
   clone.rotation.y = model.rotationY;
+  if ((options.pose ?? 'rest') === 'rest') {
+    const idle = model.clips.get('idle');
+    if (idle !== undefined) sampleClipInto(clone, idle, 0);
+  }
 
   const object = new THREE.Group();
   object.add(clone);

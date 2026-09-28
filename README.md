@@ -235,9 +235,10 @@ node tools/arena-bench.mjs --index 316 --gpu gl   # Tier 2's bench frame (g1 @31
 #   --no-bloom / --reduced-motion / --dpr 1, and --settle 4000 for a warm table
 #   ?bloom=0 / ?bloom=1 on any arena URL sets where bloom starts (default: on)
 node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/models/
-#   figures.glb + web/src/arena/figures/models.json from the four CC0 downloads
-#   named in tools/assets-manifest.json, each verified by bytes and sha256 first
-#   (--verify-only checks them and stops; see "Arena mode" below)
+#   figures.glb + web/src/arena/figures/models.json from the FIVE CC0 downloads
+#   named in tools/assets-manifest.json (slice 4 added the Universal Base
+#   Characters), each verified by bytes and sha256 first (--verify-only checks
+#   them and stops; see "Arena mode" below)
 
 # M7 Tier 2, slice 2 — the camera views (keys in the arena, replay or live)
 #   1 table · 2 your shoulder · 3 opponent's shoulder · 4 side-on · 5 low
@@ -597,16 +598,20 @@ board is the generated text frame, which is what a missing image looks like.
 
 ### Arena mode — the same game, in 3D
 
-**M7, Tier 1, and Tier 2's first three slices.** The arena is a **second renderer
+**M7, Tier 1, and all four slices of Tier 2.** The arena is a **second renderer
 for the same frame stream**, not a second app: the socket, the reducer and the
 frame log are untouched and `#arena` is the whole of the difference. Tier 1
 (below) is the table, the cards and the choreography; **Tier 2** (further below)
 stands a figure at every creature, lays the lands out as terrain, gives every
 spell on the stack a form and lets you watch a creature die; **the camera** has
 five views, a spectator mode and a director of its own (*Camera views*, below);
-and since **slice 3** every card in the deck reads as itself — Wasp small and
+since **slice 3** every card in the deck reads as itself — Wasp small and
 winged, Fury in a black coat, the Air Force a swarm, the Helicarrier a carrier
-overhead (*Tier 2, slice 3 — every card reads as itself*, below).
+overhead (*Tier 2, slice 3 — every card reads as itself*, below); and since
+**slice 4** every humanoid card is a proportioned person in a painted costume,
+and each seat has a full duelist figure — a S.H.I.E.L.D. director on your side, a
+villain on the opponent's (*Tier 2, slice 4 — people in costumes, and a duelist
+at each end*, below).
 
 ```bash
 npm --prefix web run dev:arena                # a recorded game as a cinematic
@@ -787,12 +792,12 @@ animated (**D56**):
   toward you and the opponent's away from you, until an attack turns one to face
   what it attacks (**D81**, **D82**; which way they should rest is PLAN.md's
   question 13) —
-  a suited agent for the S.H.I.E.L.D. agents and the Soldier tokens, a hero with
-  two round buns for Wasp, Ant-Man and the Hero tokens, a scientist in glasses and
-  a tie for Bold Biochemist and the A.I.M. Scientists (**D73**), a flying robot for
+  since slice 4 a proportioned **person** for every humanoid card — a man or a
+  woman, painted in the card's costume (**D95**, **D97**; slices 1–3 stood them
+  in three small chibi bodies, which are kept as a fallback) — a flying robot for
   the Doombot and the Robot token, a bee-like insect for the two ants — drawn as a
-  **hologram**: unlit, tinted by the card's colour identity, with a
-  bright rim (**D53**). The card stays exactly where it was and is still the thing
+  **hologram**: unlit, rimmed in the card's colour identity, with a
+  bright edge (**D53**). The card stays exactly where it was and is still the thing
   you read and click; a figure carries no name and cannot take a click. A tapped
   creature kneels rather than lying down with its card, an attacker holds its
   lean for the whole of combat, a summoning-sick one is translucent, and a
@@ -831,18 +836,24 @@ animated (**D56**):
   A tether runs to whatever it targets, and on resolution the form strikes along
   it (**D63**). With a spell on the stack during combat, the battlefield's
   figures freeze and grey out — the spell's own form does not.
-- **The duelists** are two silhouette busts at the seats' HUD anchors, one at
-  each end of the table. They flinch and redden when that player takes damage
-  (**D62**); full avatars are deferred.
+- **The duelists** — since slice 4 a full figure per seat (**D99**), one beside
+  your hand and one at the table's right beside the opponent's creatures, facing
+  each other across the table: they raise a hand when their seat casts, flinch red
+  when it takes damage, and at the end the winner raises an arm and the loser
+  kneels (*Tier 2, slice 4*, below). Slice 1 drew two flat silhouette busts
+  (**D62**); a checkout without `figures.glb` still does, where the duelists
+  stand.
 - **Bloom** — a soft glow on the holographic rims and the effects — is **on by
   default**, because it costs about 0.7 ms a frame on this machine's GeForce GTX
   1080 (**D61**). Untick it in the cue strip, or start with `?bloom=0`. On a
   machine too slow for it the arena turns it off by itself once the resolution
   ladder is at its floor, and says so in the console.
 
-**What it costs**, at the most crowded table in the corpus that has models on it
+**What it cost at slice 1**, at the most crowded table in the corpus that has models on it
 (`g1.jsonl` from transport index 316: eleven figures, seventeen land slabs, two
-busts), measured with `tools/arena-bench.mjs --index 316`:
+busts), measured with `tools/arena-bench.mjs --index 316` (slice 4's counts, with
+the bodies and both duelists, are in its section below; the bench itself was not
+re-run after slice 1):
 
 | | draw calls | p95 frame | verdict |
 |---|---:|---:|---|
@@ -856,21 +867,26 @@ measured an integrated GPU; and with bloom on the renderer only counts the
 composer's final pass, so draw calls are read with it off. The full tables, the
 cold-start numbers and the live game are in the evidence.
 
-**Where the figures come from.** Four free packs, all **CC0** (public domain),
-and nothing else: Kenney's *Mini Characters* 1.0 (the agent, the hero and the
-scientist — three bodies of one kit on one rig), Quaternius's *Robot Enemy
+**Where the figures come from.** Five free packs, all **CC0** (public domain),
+and nothing else: Quaternius's *Universal Base Characters* [Standard] (since
+slice 4 the man and the woman every humanoid card stands in, **D95**), Kenney's
+*Mini Characters* 1.0 (slices 1–3's agent, hero and scientist — three chibi
+bodies of one kit on one rig, kept as the fallback), Quaternius's *Robot Enemy
 Flying* and *Bee Enemy* (both via Poly Pizza), and — for **animation only** —
-Quaternius's *Universal Animation Library* [Standard], whose recoil (`Hit_Chest`)
-and death (`Death01`) are retargeted onto the Kenney rig by the build; every
-other humanoid clip is Kenney's own, because the library's idle, punch, landing
-and crouch face-plant on a head-heavy chibi (**D68**). **No model or clip is from
-Mixamo and none was generated from card art** (**D54**).
+Quaternius's *Universal Animation Library* [Standard]. The Universal Base
+Characters are on the animation library's own rig, so **every** clip the man and
+the woman play is the library's, retargeted by the build; the chibis keep
+Kenney's own clips with the library's recoil (`Hit_Chest`) and death (`Death01`)
+retargeted in, because the library's idle, punch, landing and crouch face-plant
+on a head-heavy chibi (**D68**). **No model or clip is from Mixamo and none was
+generated from card art** (**D54**).
 `tools/assets-manifest.json` is the written provenance of each — page and
 download URL, byte count, sha256, the download date and the licence badge
 **verbatim as it read that day** — and [`NOTICE`](NOTICE) §7 is the attribution.
-`tools/build-figures.mjs` turns the four downloads into **one** file,
-`web/public/models/figures.glb` (143,920 bytes: five models, 9,759 triangles, 39
-clips, no textures, meshopt-compressed), and writes
+`tools/build-figures.mjs` turns the five downloads into **one** file,
+`web/public/models/figures.glb` (**373,236 bytes** since slice 4: the man and the
+woman at 1,400 triangles each, the three chibis, the drone and the bee — 8,573
+triangles, 63 clips, no textures, meshopt-compressed; 143,920 bytes before), and writes
 `web/src/arena/figures/models.json` from what it measured, including the built
 file's own byte count and sha256; that JSON is generated, so do not edit it by
 hand. The arena loads the library from `web/public/models/` and nowhere else — no
@@ -882,16 +898,18 @@ CDN, no Draco decoder from gstatic.
 ```bash
 npm --prefix web install                          # @gltf-transform/cli is a web/ dev dependency
 mkdir -p var/assets/figures
-#   download the four files named in tools/assets-manifest.json ("downloadUrl";
-#   the Universal Animation Library's page is a name-your-own-price itch.io page,
-#   and "_download" says which button) into var/assets/figures/, exactly as
-#   downloaded -- do NOT unzip anything
+#   download the five files named in tools/assets-manifest.json ("downloadUrl";
+#   the Universal Animation Library's and the Universal Base Characters' pages are
+#   name-your-own-price itch.io pages, and "_download" says which button -- the
+#   free [Standard] zip, never the paid [Source] one) into var/assets/figures/,
+#   exactly as downloaded -- do NOT unzip anything
 node tools/build-figures.mjs --verify-only        # bytes + sha256 of every source
 node tools/build-figures.mjs --src var/assets/figures
 #   refuses a source whose bytes or sha256 differ (and prints its URL), reads the
 #   members it needs out of the verified zips, prints every step's size, asserts
-#   one primitive per model, one shared rig for the humanoids, no texture, <= 400 kB
-#   and <= 30,000 triangles, and rewrites web/src/arena/figures/models.json;
+#   one primitive per model, the humanoid rigs (the bodies' joint list against the
+#   animation library's), no texture, <= 400 kB and <= 30,000 triangles, and
+#   rewrites web/src/arena/figures/models.json;
 #   --no-manifest leaves models.json alone; --clip-source experiment builds the
 #   all-retargeted comparison
 ```
@@ -912,8 +930,9 @@ and it is more general than either: in `npm run dev`, `window.__mtgArena` carrie
 the live `queue`, `stage`, `pool`, `rigs`, `director`, `gl`, `scene` and
 `camera` — and, since Tier 2, `figures` (the poses of the frame on screen),
 `figureRigs`, `discs`, `tiles` / `tileField`, `motes` / `forms` /
-`castingField`, `overlays`, `frozen`, `busts` / `bustField` and the current
-`state`. (A production build carries **none** of that; `?glinfo=1` adds one
+`castingField`, `overlays`, `frozen`, `busts` / `bustField`, since slice 4
+`duelists` (each seat's pose: stand point, facing, look, stance) and
+`duelistData` (the validated `duelists.json`), and the current `state`. (A production build carries **none** of that; `?glinfo=1` adds one
 function, `info()`, returning `gl.info`'s six counters, which is what
 `tools/arena-bench.mjs` reads and all it reads.) The cue clock is virtual and
 injected, so a cue can be frozen at any point of its arc:
@@ -930,6 +949,8 @@ window.__mtgArena.figures            // Tier 2: who stands where, which model, w
 window.__mtgArena.tileField.counts() // Tier 2: land slabs drawn, per kind
 window.__mtgArena.discs.counts()     // slice 2: discs, back-row discs, and dying bodies drawn;
                                      // slice 3: prop instances and the prop kinds drawn
+window.__mtgArena.bustField.counts() // slice 4: { busts, duelists } — a seat draws one or the other
+window.__mtgArena.duelists           // slice 4: each seat's stance — ready, won or lost
 ```
 
 `advance()` moves the clock whether or not the queue is paused, which is also the
@@ -946,7 +967,9 @@ generic"* — and it was: every card was one of five bodies in a colour. Slice 3
 answers it without a model per card. **What makes a card read as itself is data**
 — its size, whether it flies, its colour, what it carries or wears, whether it is
 one body or several — and every piece of that data is drawn from a small kit of
-shared props that any card may name:
+shared props that any card may name. *(The table is as slice 3 drew them; since
+slice 4 each humanoid below is a proportioned person in its costume, and the next
+section's table says what each one wears.)*
 
 | card | what you see at the table |
 |---|---|
@@ -1008,6 +1031,8 @@ BODY a card stands in) and `cues/cues.json` (which says how its events play):
    | `swarm` + `formation` | several bodies: `ring` (a turning ring of small members) or `squad` (followers in a wedge) | 0–8, whole |
    | `silhouette` | draw a flying `carrier` over the card instead of a body | `carrier` or `null` |
    | `shrink` | the size Ant-Man's attack cue shrinks him to (the cue reads it; the pose never does) | 0.05–1 |
+   | `costume` | **slice 4**: what the body WEARS — a colour per slot (`skin`, `hair`, `top`, `shirt`, `legs`, `shoes`, `gloves`, `belt`), merged slot by slot down the ladder; slots nobody names are filled from the top (see *Tier 2, slice 4*) | `#rrggbb`, or `tint` for the figure's own tint |
+   | `body` | **slice 4**: `human` (the proportioned body, the default) or `chibi` (slices 1–3's Kenney body, kept as a fallback — no row uses it) | `human`, `chibi` |
 
    Keys starting with `_` are notes; write one saying where the look comes from.
 2. **The kit** is `figures/props.ts`'s closed list: `wings`, `helmet`, `hood`,
@@ -1040,6 +1065,112 @@ and a `buildKindGeometry` case (at most 1,200 triangles, asserted) in
 model used by exactly one card: that is Tier 3 (*per-card models*), which is not
 started, and a model that looks like a Marvel character would stay on your own
 machine and out of this repository (PLAN.md, *Tier 3 — a note, not a plan*).
+
+#### Tier 2, slice 4 — people in costumes, and a duelist at each end
+
+**M7 Tier 2, slice 4** (report 13's **T13**, plus the bodies and the costumes;
+evidence in [`docs/evidence/m7-tier2-slice4.md`](docs/evidence/m7-tier2-slice4.md);
+decisions **D95–D101**). After slice 3 the verdict was *"the game looks generally
+improved. The avatars are still pretty generic."* Two things were generic. The
+creature figures were small chibi toys whose only identity was one colour and
+what they carried. The two duelists at the table's ends were blank silhouettes.
+Slice 4 changed both, and it is still a hologram, still one shader, and still a
+pure function of the frame on screen.
+
+**Every humanoid card is a person in a costume.** There are two proportioned
+bodies, a man and a woman, from Quaternius's CC0 *Universal Base Characters*.
+They are on the same rig as the animation library, so every animation is the
+library's own: an idle, a punch, a landing, a recoil, a fall, a spell, a pistol
+aimed two-handed, a radio call, and a kneel when tapped. The head is drawn a
+little large (×1.3), the heroic-miniature way, so a hat or a helmet has somewhere
+to sit. Each body is painted in eight regions (skin, hair, top, shirt, legs,
+shoes, gloves, belt) from its card's costume:
+
+| card | body | wears | carries |
+|---|---|---|---|
+| Peggy Carter, Secret Agent | woman | a blue jacket over a white shirt, navy below, brown hair | a red hat, a round shield |
+| Agent Phil Coulson | man | a navy suit and a white shirt | a gold badge on his chest and back, a tie |
+| Nick Fury, Spymaster | man | black | a long black coat, an eyepatch |
+| Quake, Agent of S.H.I.E.L.D. | woman | black, with teal gloves and belt | glowing gauntlets |
+| Agent 13, Sharon Carter | woman | indigo, a silver belt, blonde hair | a silver pistol in her hand, a lit muzzle |
+| Agents of S.H.I.E.L.D. | three men | grey suits, the leader's white shirt in front | — a squad of three |
+| Bold Biochemist | man | a white coat over pale green | a long lab coat, a lab bench |
+| A.I.M. Scientists | man | yellow, black gloves and boots | a bucket hood, a lab bench |
+| Wasp, Shrinking Savior | woman, half size, hovering | gold, with a black chest panel and legs | four wings |
+| Ant-Man, Reformed Rogue | man | red, a black chest panel, silver gloves and belt | a glass helmet |
+| Soldier and Hero tokens | man / woman | tactical grey with black gloves / pale gold with blue legs | — |
+
+The hologram still rims every figure in its card's colour, and the drone, the bee
+and the Helicarrier's carrier are unchanged in kind. Skin is one neutral tone for
+every card, on purpose: a costume is identity, and a complexion is not.
+
+**A duelist at each side of the table.** Your seat is a S.H.I.E.L.D. **director**
+in a navy suit and a long coat trimmed in gold, with a gold badge on his chest and
+its emblem on his back. He stands just left of your hand, and you see him
+three-quarters from behind. The opponent's seat is an armoured **villain** in
+iron, with a green cloak and an iron great helm. He stands at the table's right,
+beside the opponent's creatures, three-quarters toward you. A duelist is a
+*seat*, never a player: the name on the HUD plate is the only name. They face
+each other across the table, and:
+
+- raise a hand toward the table when their seat casts a spell;
+- flinch and flush red when their seat takes damage or loses life;
+- at the end of the game, the winner raises an arm and the loser kneels, head
+  bowed and greyed — and they hold it through a skip, a scrub or a reconnect,
+  because it is read from the game's result, not remembered.
+
+**Why not one at each END of the table?** From every view you can play in, the
+far end of the table sits under the arena's own top bar, so a figure there would
+be invisible from the table view. The opponent's duelist therefore stands at the
+right-hand side, where every playable view sees it. If you want it moved, that is
+PLAN.md's slice-4 follow-up 2. From the side-on view (**4**) your own duelist is
+out of frame. The camera never moves to show either one: they are decoration and
+may leave the frame. Without `figures.glb` each seat draws the flat silhouette
+bust slice 1 had, standing where its duelist would.
+
+**Changing a duelist is a data edit.** Edit `web/src/arena/figures/duelists.json`,
+which `figures/duelists.ts`'s `validateDuelists` checks. `duelists.test.ts` fails
+on any error, and at runtime a bad look sends its seat back to the bust.
+
+1. **`seats`** names the look each seat wears (`you`, `opp`).
+2. **A look** under `looks` has `body` (a ladder of library bodies; the first one
+   present wins), `scale` (1.2–2.2 × a creature's height), `tint` and `seatMix`
+   (how much of the seat's own colour goes into the edge), `costume` (the same
+   eight slots as a card), `props` (kit kinds, each worn in a costume slot,
+   optionally stretched by a `scale` within 0.4–1.8), and `trim` / `shade` (the
+   slots a prop's bright and dark parts wear).
+3. **`gestures`** says which of the body's clips play each gesture (`cast`,
+   `flinch`, `win`, `lose`), where a stance rests (`hold`), a lean, and which
+   joints to aim (`aim` is how the winner's arm points straight up).
+
+Then run `npm --prefix web test` and look at `g1.jsonl` 372 → 373 (the end) and
+354 → 355 (a cast) in `npm --prefix web run dev:arena`.
+
+**Dressing a card is a data edit too.** Add `costume` to the card's row in
+`traits.json` (slot → `#rrggbb` or `tint`). It merges slot by slot over the
+card's subtype rung: spy is a dark suit and a white shirt, hero is blue below
+with a gold belt, soldier is tactical grey, and scientist is a white lab coat
+over grey. Any slot nobody names is filled in: the shirt follows the top, the
+legs are the top darkened, the gloves are the skin, the belt is the legs
+darkened, and skin, hair and shoes have neutral defaults. So a card with no
+costume at all wears a bodysuit of its own colour. `traits.test.ts` reads every
+deck card's costume back off the figure and fails if one slips. To stand a card
+in the woman's or the man's body, give it a row in `figures.json` with
+`"model": "hero"` or `"model": "agent"`. A face-down card still wears nothing: it
+is the anonymous disc.
+
+**It costs**, at `g1.jsonl`@355 with bloom off, 79 draw calls, 27,416 triangles
+and 12 shader programs, against the Tier 2 budget of 90 / 30,000 / 14. The two
+duelists are one draw call each and add no shader, an idle table still renders
+nothing, and `figures.glb` is now 373,236 bytes. Every number is headless
+Chromium on this machine's GTX 1080. Nobody has measured a desktop browser or an
+integrated GPU, and nobody has played slice 4 yet.
+
+**Two things you may notice.** In a live game the duelists' flinch mostly does
+not play when *you* take damage: Forge is waiting on you, and the arena snaps
+animations to keep the prompt responsive (PLAN.md question 12). Replays show the
+flinch. And every humanoid has a "superhero" build — broad-shouldered, Coulson
+included — because the free pack has only those proportions.
 
 ### Card library and browser — `#cards`
 
@@ -1186,7 +1317,7 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the ninety-four load-bearing decisions, dated
+  DECISIONS.md               the one hundred and one load-bearing decisions, dated
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
@@ -1300,7 +1431,11 @@ mtg-table/
                              (THE per-card identity table: scale, hover, tint,
                              props, swarm, silhouette) traits.ts (its ladder)
                              props.ts (the closed prop kit, as data: kinds,
-                             anchors per body, swarm layout)
+                             anchors per body, swarm layout); and (slice 4)
+                             duelists.json (WHO stands for each seat: the look,
+                             the costume, the gestures) — duelists.ts is its
+                             validator and the duelists' pure poses and stand
+                             points — and props.ts's COSTUME_SLOTS
       arena/scene/           (M7) the three half. CardPlane.tsx is THE card renderer of
                              the arena, the way CardTile.tsx is the board's;
                              CueRunner.tsx is the ONE useFrame; effects.ts is a fixed
@@ -1318,7 +1453,10 @@ mtg-table/
                              busts.ts (each one InstancedMesh-based) colourCache.ts
                              and Post.tsx (the bloom pass, lazily imported); and
                              (slice 3) props.ts (the prop field: one InstancedMesh
-                             per prop KIND, bound from DiscField.bind)
+                             per prop KIND, bound from DiscField.bind); and (slice 4)
+                             DuelistLayer.tsx (the two duelists: one skinned mesh
+                             each, props baked in, bound from BustField.bind) —
+                             holoMaterial.ts now also paints the costume palette
     test/                    art.test.ts fixtures.test.ts reduce.test.ts synthetic.test.ts
                              human-seat.test.ts (the M2 corpus: ask/answer pairing, the
                              M8 clickability rule), ws.test.ts (the M3 transport:
@@ -1361,6 +1499,8 @@ mtg-table/
                              every deck card's props rasterised from BOTH seats by
                              prop-raster.ts, a software rasteriser over the real
                              figures.glb) and facing.test.ts (one front, both seats);
+                             and (slice 4) duelists.test.ts (the duelists' data, poses,
+                             gestures and lanes over the corpus);
                              and (D90) cards-lib.test.ts (the library, offline: a fake
                              Scryfall on a fake clock) cards-api.test.ts (the dev route
                              on a real loopback socket over an index built from
@@ -1374,10 +1514,11 @@ mtg-table/
                              model.ts api.ts; devApi.ts is the DEV-SERVER-ONLY route
                              (vite.config.ts configureServer) over var/cards/ (D92)
     public/art.json          generated, gitignored
-    public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from four CC0
-                             packs: 143,920 bytes, recorded in models.json and checked
-                             by figures.test.ts. Whether it is committed is open;
-                             without it every creature draws its disc
+    public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from five CC0
+                             packs: 373,236 bytes since slice 4, recorded in
+                             models.json and checked by figures.test.ts. Whether it
+                             is committed is open; without it every creature draws
+                             its disc and each duelist its bust
     t0-spike.html            (Tier 2) T0's go/no-go page; not part of the app
 
   tools/
@@ -1411,12 +1552,16 @@ mtg-table/
                              `vite preview`. Deliberately NOT in check-all.sh. Tier 2
                              added --index/--figures, --bloom/--no-bloom,
                              --reduced-motion, --dpr and --gpu gl (the real GPU)
-    build-figures.mjs        Tier 2: four CC0 downloads, each verified by bytes and
+    build-figures.mjs        Tier 2: five CC0 downloads, each verified by bytes and
                              sha256 -> web/public/models/figures.glb +
                              web/src/arena/figures/models.json (gltf-transform: prune
                              dedup, one plain material, a skin-aware join, the UAL's
-                             hit and die retargeted in three, weld unlit resample
-                             merge meshopt, then the assertions). Run by hand, not in
+                             hit and die retargeted onto the chibis in three; since
+                             slice 4 the proportioned bodies' hair grafted on, a
+                             costume slot per vertex, the head x1.3, every clip
+                             retargeted by world-space delta, meshopt decimation to
+                             the manifest's triangles; then weld unlit resample
+                             merge meshopt and the assertions). Run by hand, not in
                              the gate
     assets-manifest.json     Tier 2: where every model came from -- URL, bytes, sha256,
                              date, and the CC0 licence badge verbatim on the day
@@ -1491,7 +1636,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | Ninety-four load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and one load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -1505,7 +1650,7 @@ mtg-table/
 | [`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md) | M7 Tier 1: the arena's spec — the offset model, the cue table, the camera, the performance budget. |
 | [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md) | M7 Tier 2's asset landscape: which packs are really CC0, what is inside the files, the gltf-transform pipeline, and the two drei traps. |
 | [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md) | M7 Tier 2's plan, written against the Tier 1 code: the manifestation stage, the pose-versus-cue rule, the clip lane, the evenings T0–T14. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. |
 
 ## Licence
 

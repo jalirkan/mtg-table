@@ -99,21 +99,62 @@ export const FORMATIONS = ['ring', 'squad'] as const;
 export type Formation = (typeof FORMATIONS)[number];
 
 /**
- * The body families a prop is fitted to. The three humanoid models share one
- * 7-joint rig (D73), so they share every anchor; the drone and the bee have
- * skeletons of their own.
+ * **Slice 4 — the costume slots**, in the order a body's vertices carry them.
+ *
+ * `tools/build-figures.mjs` writes every humanoid vertex's slot INDEX into the
+ * custom attribute `_REGION` (from the joint that moves it — the head, the
+ * spine, a hand, a thigh, a foot — and two measured bands: a V down the chest
+ * front for the shirt, a band at the waist for the belt; the hair is its own
+ * mesh), and `scene/holoMaterial.ts` looks the slot's colour up in the figure's
+ * own palette. So a card's `traits.json` `costume` paints a person — Peggy's blue
+ * jacket over a white shirt — with no texture, one program and no per-frame work.
+ * **The order is the contract**: the build imports this array, the shader
+ * indexes by it, and `traits.test.ts` holds the two together.
  */
-export type Family = 'humanoid' | 'drone' | 'insect';
+export const COSTUME_SLOTS = ['skin', 'hair', 'top', 'shirt', 'legs', 'shoes', 'gloves', 'belt'] as const;
+export type CostumeSlot = (typeof COSTUME_SLOTS)[number];
+
+/**
+ * **Slice 4 — which body a humanoid card stands in**: the proportioned
+ * `human` bodies (Quaternius's Universal Base Characters — the default), or the
+ * Kenney `chibi` bodies slices 1–3 used, kept in the library as the fallback a
+ * `traits.json` row may ask for with `"body": "chibi"` (nothing was lost).
+ */
+export const BODY_STYLES = ['human', 'chibi'] as const;
+export type BodyStyle = (typeof BODY_STYLES)[number];
+
+/**
+ * The body families a prop is fitted to. **`human`** (slice 4) is the
+ * proportioned body — Quaternius's Universal Base Characters on the animation
+ * library's 65-joint rig, the default for every humanoid card; **`humanoid`** is
+ * the chibi fallback (the three Kenney bodies share one 7-joint rig, D73), kept
+ * for a `traits.json` row that asks for `"body": "chibi"`; the drone and the bee
+ * have skeletons of their own.
+ */
+export type Family = 'human' | 'humanoid' | 'drone' | 'insect';
 
 /** A model id → the family its props are fitted to, or `null` for the disc. */
 export function familyOf(modelId: string | null, models?: ModelData): Family | null {
   if (modelId === null) return null;
   const entry = models?.models[modelId];
+  if (entry?.rig === 'ubc') return 'human';
   if (entry?.rig === 'kenney-mini') return 'humanoid';
-  if (modelId === 'agent' || modelId === 'hero' || modelId === 'scientist') return 'humanoid';
+  if (entry !== undefined) {
+    if (modelId === 'drone') return 'drone';
+    if (modelId === 'insect') return 'insect';
+    return null;
+  }
+  // No manifest (a test that does not load one): the ids say it.
+  if (modelId === 'agent' || modelId === 'hero' || modelId === 'scientist') return 'human';
+  if (modelId.endsWith('-chibi')) return 'humanoid';
   if (modelId === 'drone') return 'drone';
   if (modelId === 'insect') return 'insect';
   return null;
+}
+
+/** Does this family wear a costume — i.e. do its vertices carry costume slots? */
+export function wearsCostume(family: Family | null): boolean {
+  return family === 'human' || family === 'humanoid';
 }
 
 /**
@@ -127,6 +168,14 @@ export interface PropAnchor {
   at: readonly [number, number, number];
   turn?: readonly [number, number, number];
   size: number | readonly [number, number, number];
+  /**
+   * **Slice 4 — the pose the anchor is written in**, when it is not the bind
+   * pose: the body's own clip key and a phase, 0…1. A prop held in a hand is
+   * placed where the hand IS in that pose (Agent 13's pistol in her two-handed
+   * aim) and then follows the hand wherever the clip lane takes it — at rest it
+   * hangs at her side, pointing down. Joint anchors only.
+   */
+  pose?: { readonly clip: string; readonly phase: number };
 }
 
 /** How a kind is drawn. Every kind shares one shader program (`scene/props.ts`). */
@@ -162,27 +211,39 @@ export interface PropKitEntry {
 // y 0.37–0.58.
 const HEAD_CENTRE: readonly [number, number, number] = [0, 0.755, 0];
 
+// Slice 4 — the proportioned bodies (Universal Base Characters, head ×1.3),
+// measured in their BIND (T-)pose by docs/evidence/m7-tier2-slice4.md's scratch
+// measure, both bodies within 0.01 of each other: the head (face and hair) spans
+// y 0.81–1.0, ±0.061 wide, face front z +0.079, back −0.07 (the woman's long hair
+// −0.11); the Head joint at (0, 0.84, −0.01); the chest (spine_03) at y 0.69,
+// front z +0.065, back −0.084; the pelvis at (0, 0.50, −0.02); the shoulders
+// (upperarm) at x ±0.11, y 0.765; the hands, T-posed, at x ±0.37. In the resting
+// idle the arms hang: the hands at (±0.16, 0.51), the head top at 0.98.
+const HUMAN_HEAD: readonly [number, number, number] = [0, 0.905, 0.004];
+
 /**
- * The pistol, in figure space: its grip at her RIGHT HIP, out beside the body,
- * the barrel turned {@link PISTOL_YAW} out from straight ahead, {@link PISTOL_SIZE}
- * long in its own units — and the muzzle's point, derived from the three so the
- * lit tip and the barrel cannot drift apart (`scene/props.ts` builds the barrel's
- * tip at unit z = 1.25, y = 0.25, and `web/test/facing.test.ts` holds the cue's
- * muzzle flash to this point).
+ * The pistol, in figure space: its grip in her RIGHT HAND **in her aim** — the
+ * body's `pistolDraw` (the library's Pistol_Shoot) at `attacking`'s resting phase
+ * — barrel straight ahead, {@link PISTOL_SIZE} long in its own units, and the
+ * muzzle's point derived from the three so the lit tip and the barrel cannot drift
+ * apart (`scene/props.ts` builds the barrel's tip at unit z = 1.25, y = 0.25, and
+ * `web/test/facing.test.ts` holds the cue's muzzle flash to this point).
  *
- * **Out to the side, and angled, since the second verification pass.** Slice 3's
- * fix raised it at the right of the CHEST, barrel forward: from the table view
- * your own Agent 13's pistol pointed at the camera (a foreshortened stick) and
- * the opponent's was under her head and behind her body — a plain indigo agent
- * from that side. At the hip and beside the body the chibi's head (half the
- * figure, and wider than the torso) no longer covers it from above, and at 49°
- * out from straight ahead the barrel shows most of its length from the front, the
- * back and side-on (views 1 and 4); `traits.test.ts` rasterises it from both
- * seats. The tip stays inside the body's own width (the D65 clamp is honest).
+ * **Slice 4: in her hand, not at her hip.** A proportioned body aims with its
+ * arms, and a pistol pinned to the torso floated at her hip while she aimed with
+ * empty hands (photographed at `g2`@157). The anchor is written in the AIM pose
+ * ({@link PropAnchor.pose}) on the `hand_r` joint, so the pistol is in her hands
+ * while she attacks — which is when the cue's muzzle flash, at this point, fires —
+ * and hangs at her side, pointing down, while she rests. Measured on the woman's
+ * body: her right hand at (−0.070, 0.750, 0.191) in the aim, her left at
+ * (−0.063, 0.719, 0.172), her forearm pointing straight ahead. The chibi fallback
+ * carries the same numbers on its torso, so the flash is on its pistol too.
  */
-export const PISTOL_GRIP: readonly [number, number, number] = [-0.29, 0.31, 0.07];
-export const PISTOL_YAW = -0.85;
-export const PISTOL_SIZE = 0.32;
+export const PISTOL_GRIP: readonly [number, number, number] = [-0.068, 0.742, 0.205];
+export const PISTOL_YAW = 0;
+export const PISTOL_SIZE = 0.14;
+/** The pose the pistol and its muzzle are written in (see {@link PISTOL_GRIP}). */
+export const PISTOL_POSE = { clip: 'pistolDraw', phase: 0.45 } as const;
 export const PISTOL_TIP_LOCAL: readonly [number, number, number] = [0, 0.25, 1.25];
 export const PISTOL_MUZZLE: readonly [number, number, number] = [
   PISTOL_GRIP[0] + PISTOL_SIZE * PISTOL_TIP_LOCAL[2] * Math.sin(PISTOL_YAW),
@@ -197,6 +258,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: 'accent',
     glow: null,
     anchors: {
+      human: [{ joint: 'spine_03', at: [0, 0.76, -0.09], turn: [-0.25, 0, 0], size: 0.46 }],
       humanoid: [{ joint: 'torso', at: [0, 0.5, -0.24], turn: [-0.25, 0, 0], size: 0.74 }],
       insect: [{ joint: 'Head', at: [0, 0.6, -0.22], turn: [-0.5, 0, 0], size: 0.62 }],
       drone: [{ joint: 'Head', at: [0, 0.66, -0.28], turn: [-0.4, 0, 0], size: 0.45 }],
@@ -207,14 +269,18 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: 'accent',
     glow: null,
-    anchors: { humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: [0.385, 0.285, 0.3] }] },
+    anchors: {
+      human: [{ joint: 'Head', at: HUMAN_HEAD, size: [0.08, 0.1, 0.09] }],
+      humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: [0.385, 0.285, 0.3] }] },
   },
   // A.I.M.'s beekeeper bucket: a cylinder over the head with a dark visor slot.
   hood: {
     blend: 'normal',
     colour: 'accent',
     glow: null,
-    anchors: { humanoid: [{ joint: 'head', at: [0, 0.77, 0], size: [0.37, 0.28, 0.3] }] },
+    anchors: {
+      human: [{ joint: 'Head', at: [0, 0.915, 0.004], size: [0.082, 0.105, 0.092] }],
+      humanoid: [{ joint: 'head', at: [0, 0.77, 0], size: [0.37, 0.28, 0.3] }] },
   },
   // Twin thrusters on the back.
   jetpack: {
@@ -222,6 +288,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: 'tint',
     glow: null,
     anchors: {
+      human: [{ joint: 'spine_03', at: [0, 0.7, -0.115], size: 0.08 }],
       drone: [{ joint: 'Head', at: [0, 0.6, -0.34], size: 0.2 }],
       humanoid: [{ joint: 'torso', at: [0, 0.4, -0.3], size: 0.15 }],
     },
@@ -232,6 +299,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: '#ffb46a',
     glow: { rest: 0.7, boost: 1.0 },
     anchors: {
+      human: [{ joint: 'spine_03', at: [0, 0.62, -0.115], size: 0.08 }],
       drone: [{ joint: 'Head', at: [0, 0.44, -0.34], size: 0.2 }],
       humanoid: [{ joint: 'torso', at: [0, 0.28, -0.3], size: 0.15 }],
     },
@@ -243,6 +311,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: 'accent',
     glow: { rest: 0.9, boost: 1.4 },
     anchors: {
+      human: [{ joint: 'Head', at: [-0.026, 0.915, 0.077], size: [0.02, 0.02, 0.01] }],
       drone: [{ joint: 'Eye', at: [0, 0.473, 0.25], size: [0.1, 0.1, 0.05] }],
       humanoid: [{ joint: 'head', at: [-0.14, 0.735, 0.26], size: [0.06, 0.06, 0.03] }],
     },
@@ -256,7 +325,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: 'accent',
     glow: null,
-    anchors: { humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE }] },
+    anchors: {
+      human: [{ joint: 'hand_r', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE, pose: PISTOL_POSE }],
+      humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE }] },
   },
   // The pistol's muzzle, lit at rest (a pose: the gun is drawn) and flaring with
   // the clip lane — her attack's pistolDraw is the `attack` request, so the
@@ -265,7 +336,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'additive',
     colour: '#ffcf7a',
     glow: { rest: 1.0, boost: 1.3 },
-    anchors: { humanoid: [{ joint: 'torso', at: PISTOL_MUZZLE, size: 0.06 }] },
+    anchors: {
+      human: [{ joint: 'hand_r', at: PISTOL_MUZZLE, size: 0.04, pose: PISTOL_POSE }],
+      humanoid: [{ joint: 'torso', at: PISTOL_MUZZLE, size: 0.06 }] },
   },
   // A robot's eye as a lit band round its head at eye height (second verification
   // pass): the drone's eye is on its face, so from the opponent's side of the
@@ -277,6 +350,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: 'accent',
     glow: { rest: 0.7, boost: 1.2 },
     anchors: {
+      human: [{ joint: 'Head', at: [0, 0.915, 0.004], size: [0.072, 0.1, 0.085] }],
       drone: [{ joint: 'Head', at: [0, 0.47, 0], size: [0.318, 0.4, 0.318] }],
       humanoid: [{ joint: 'head', at: [0, 0.735, 0], size: [0.35, 0.3, 0.262] }],
     },
@@ -290,7 +364,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: 'accent',
     glow: null,
-    anchors: { humanoid: [{ joint: 'torso', at: [0, 0.52, -0.035], size: 1 }] },
+    anchors: {
+      human: [{ joint: 'spine_03', at: [0, 0.79, -0.005], size: 1 }],
+      humanoid: [{ joint: 'torso', at: [0, 0.52, -0.035], size: [1.75, 0.9, 2.0] }] },
   },
   // Fury's eyepatch, on HIS left (+x) eye, and the strap round his head — the
   // patch big and black with a pale rim, the strap pale, so both read on a dark
@@ -301,7 +377,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     // strap), which a dark kit colour would have multiplied back to black.
     colour: '#ffffff',
     glow: null,
-    anchors: { humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: 1 }] },
+    anchors: {
+      human: [{ joint: 'Head', at: HUMAN_HEAD, size: [0.078, 0.1, 0.088] }],
+      humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: [0.338, 0.245, 0.27] }] },
   },
   // Coulson's badge: a gold shield with a bright rim, on his left breast AND —
   // since the second verification pass — as a larger S.H.I.E.L.D. emblem between
@@ -318,6 +396,10 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: '#e8b43c',
     glow: { rest: 1, boost: 0.55 },
     anchors: {
+      human: [
+        { joint: 'spine_03', at: [0.045, 0.72, 0.075], turn: [-0.35, 0, 0], size: 0.065 },
+        { joint: 'spine_03', at: [0, 0.7, -0.1], turn: [0.45, Math.PI, 0], size: 0.1 },
+      ],
       humanoid: [
         { joint: 'torso', at: [0.13, 0.385, 0.165], turn: [-0.35, 0, 0], size: 0.155 },
         { joint: 'torso', at: [0, 0.34, -0.262], turn: [0.55, Math.PI, 0], size: 0.17 },
@@ -332,7 +414,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: '#ffffff',
     glow: null,
-    anchors: { humanoid: [{ joint: 'torso', at: [-0.02, 0.35, 0.17], turn: [-0.55, 0, 0], size: 0.26 }] },
+    anchors: {
+      human: [{ joint: 'spine_03', at: [-0.005, 0.72, 0.09], turn: [-0.15, 0, 0], size: 0.13 }],
+      humanoid: [{ joint: 'torso', at: [-0.02, 0.35, 0.17], turn: [-0.55, 0, 0], size: 0.26 }] },
   },
   // Quake's gauntlets: one glowing fist per hand.
   gauntlets: {
@@ -340,6 +424,10 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: 'accent',
     glow: { rest: 0.75, boost: 1.2 },
     anchors: {
+      human: [
+        { joint: 'hand_l', at: [0.4, 0.765, -0.02], size: 0.035 },
+        { joint: 'hand_r', at: [-0.4, 0.765, -0.02], size: 0.035 },
+      ],
       humanoid: [
         { joint: 'arm-left', at: [0.53, 0.43, 0.09], size: 0.1 },
         { joint: 'arm-right', at: [-0.53, 0.43, 0.09], size: 0.1 },
@@ -352,7 +440,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: '#ffffff',
     glow: null,
-    anchors: { humanoid: [{ joint: 'arm-left', at: [0.46, 0.4, 0.27], turn: [0, 0.45, 0], size: 0.25 }] },
+    anchors: {
+      human: [{ joint: 'lowerarm_l', at: [0.3, 0.765, 0.05], turn: [0, 0.45, 0], size: 0.11 }],
+      humanoid: [{ joint: 'arm-left', at: [0.46, 0.4, 0.27], turn: [0, 0.45, 0], size: 0.25 }] },
   },
   // A hat with a crown and a brim, on top of the head — the part of a figure the
   // table view's steep camera sees most of. Peggy's is red.
@@ -360,7 +450,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: 'accent',
     glow: null,
-    anchors: { humanoid: [{ joint: 'head', at: [0, 0.975, -0.01], turn: [-0.1, 0, 0.08], size: 0.33 }] },
+    anchors: {
+      human: [{ joint: 'Head', at: [0, 0.95, -0.005], turn: [-0.1, 0, 0.08], size: 0.105 }],
+      humanoid: [{ joint: 'head', at: [0, 0.975, -0.01], turn: [-0.1, 0, 0.08], size: 0.33 }] },
   },
   // A tiny crouching rider on the giant ant's back (the hero body, baked), in a
   // warm colour of its own so it reads against any cool mount.
@@ -368,7 +460,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     blend: 'normal',
     colour: '#ff7a64',
     glow: null,
-    anchors: { insect: [{ joint: 'Head3', at: [0, 0.9, -0.02], size: 0.52 }] },
+    anchors: { insect: [{ joint: 'Head3', at: [0, 0.9, -0.02], size: 0.46 }] },
   },
   // The scientists' lab bench, at the figure's LEFT hand, inside its own rank
   // slot: behind it (toward the centre line) the chibi's head hides it from a
@@ -438,7 +530,7 @@ export const SWARM_BEE_RATIO = 1.4;
  * both seats.
  */
 export const SQUAD_MEMBER = 0.78;
-export const SQUAD_OFFSET_X = 0.46;
+export const SQUAD_OFFSET_X = 0.34;
 export const SQUAD_OFFSET_Z = -0.2;
 
 export interface SwarmMember {

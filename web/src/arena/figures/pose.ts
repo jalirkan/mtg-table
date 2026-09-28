@@ -56,11 +56,14 @@ import {
 import {
   CARRIER_LENGTH,
   CARRIER_THICKNESS,
+  COSTUME_SLOTS,
   PROP_KIT,
   SWARM_BEE_RATIO,
   familyOf,
   fitsFamily,
   swarmSpan,
+  wearsCostume,
+  type CostumeSlot,
   type Family,
   type FigureProp,
   type Formation,
@@ -227,6 +230,15 @@ export interface FigurePose {
   vehicle: boolean;
   /** Which trait rungs contributed — categories (`card`, `subtype:insect`), never a name. */
   traitRungs: readonly string[];
+  /**
+   * **Slice 4 — what the body wears**: one `#rrggbb` per costume slot, in
+   * `COSTUME_SLOTS` order (skin, hair, top, shirt, legs, shoes, gloves, belt) —
+   * {@link costumeOf} of the trait's `costume` and the tint — or `null` for a body
+   * that carries no slots (the drone, the bee, the disc). **Always `null` for an
+   * anonymous figure** (hard rule 8: a costume is a statement about what a card
+   * is). A pose, so a skip, a scrub and a resync all draw it.
+   */
+  costume: readonly string[] | null;
 }
 
 /** The whole stage for one frame, keyed by card id. */
@@ -284,6 +296,46 @@ export function shadeHex(hex: string, k: number): string {
 }
 
 /**
+ * **Slice 4 — the slots nobody named.** Skin and hair are a person's (one
+ * neutral skin tone for every card: a costume is identity data, a complexion is
+ * not, and no card here is drawn from a likeness); shoes are dark; everything
+ * else follows the TOP — which is the tint unless a row says otherwise — so a
+ * card with no costume at all is a figure in a bodysuit of its own colour, a
+ * little darker at the legs, with a belt darker still.
+ */
+export const COSTUME_DEFAULTS: Readonly<{ skin: string; hair: string; shoes: string }> = Object.freeze({
+  skin: '#d6a57f',
+  hair: '#3a2b22',
+  shoes: '#1c1d23',
+});
+
+/**
+ * **A trait's costume → the palette the body is drawn in**, one `#rrggbb` per
+ * slot in `COSTUME_SLOTS` order. `tint` in the data means the figure's own tint.
+ * Pure; the scene parses the strings once, at commit.
+ */
+export function costumeOf(costume: Readonly<Partial<Record<CostumeSlot, string>>>, tint: string): string[] {
+  const pick = (slot: CostumeSlot): string | undefined => {
+    const value = costume[slot];
+    return value === undefined ? undefined : value === 'tint' ? tint : value;
+  };
+  const top = pick('top') ?? tint;
+  const legs = pick('legs') ?? shadeHex(top, 0.55);
+  const skin = pick('skin') ?? COSTUME_DEFAULTS.skin;
+  const resolved: Record<CostumeSlot, string> = {
+    skin,
+    hair: pick('hair') ?? COSTUME_DEFAULTS.hair,
+    top,
+    shirt: pick('shirt') ?? top,
+    legs,
+    shoes: pick('shoes') ?? COSTUME_DEFAULTS.shoes,
+    gloves: pick('gloves') ?? skin,
+    belt: pick('belt') ?? shadeHex(legs, 0.6),
+  };
+  return COSTUME_SLOTS.map((slot) => resolved[slot]);
+}
+
+/**
  * **A pose's props, resolved** — the trait's named kinds that fit this body, in
  * the trait's order, then the derived kinds its swarm and silhouette produce.
  * Pure; the colour is decided here so the scene never parses a trait.
@@ -294,6 +346,8 @@ export function propsOf(
   tint: string,
   accent: string,
   modelId: string | null,
+  /** Slice 4: a squad's followers wear the leader's suit — its costume's top. */
+  squadColour: string = tint,
 ): FigureProp[] {
   const out: FigureProp[] = [];
   const colourOf = (kind: SceneKind): string => {
@@ -313,7 +367,7 @@ export function propsOf(
   if (trait.swarm > 0) {
     if (trait.formation === 'ring') out.push({ kind: 'swarmBee', colour: colourOf('swarmBee') });
     // A squad's followers are the leader's own body, baked: no model, no squad.
-    else if (modelId !== null && family === 'humanoid') out.push({ kind: 'squad', colour: colourOf('squad') });
+    else if (modelId !== null && (family === 'humanoid' || family === 'human')) out.push({ kind: 'squad', colour: squadColour });
   }
   return out;
 }
@@ -540,7 +594,11 @@ export function figurePose(
     const spec = match.spec;
 
     const overBudget = withModel >= MAX_FIGURES;
-    const modelId = anonymous || overBudget || silhouette !== null ? null : spec.model;
+    // Slice 4: a row that asks for the chibi body gets `<model>-chibi` — slices
+    // 1–3's Kenney body, kept in the library — when the manifest has one.
+    const chibi = trait.body === 'chibi' && spec.model !== null ? `${spec.model}-chibi` : null;
+    const body = chibi !== null && options.models?.models[chibi] !== undefined ? chibi : spec.model;
+    const modelId = anonymous || overBudget || silhouette !== null ? null : body;
     if (modelId !== null) withModel += 1;
 
     const interposesId = ghost ? null : (interposes.get(placement.cardId) ?? null);
@@ -603,7 +661,11 @@ export function figurePose(
     const tint = anonymous ? baseTint : shadeHex(baseTint, trait.shade);
     const accent = trait.accent ?? tint;
     const family = familyOf(modelId, options.models);
-    const props = anonymous ? NO_PROPS : propsOf(trait, family, tint, accent, modelId);
+    // Slice 4: what the body wears — never on an anonymous figure (hard rule 8).
+    const costume = !anonymous && wearsCostume(family) ? costumeOf(trait.costume, tint) : null;
+    const props = anonymous
+      ? NO_PROPS
+      : propsOf(trait, family, tint, accent, modelId, costume?.[COSTUME_SLOTS.indexOf('top')] ?? tint);
 
     const stand = ghost ? ghostPointOf(placement, ghostIndex) : flight !== null ? flight.ground : standPointOf(placement);
     // A silhouette flies where `silhouettePlacementOf` says — yours at least at
@@ -666,6 +728,7 @@ export function figurePose(
       silhouette,
       vehicle: candidate,
       traitRungs: traitMatch?.rungs ?? NO_RUNGS,
+      costume,
     });
     if (ghost) ghostIndex += 1;
   }

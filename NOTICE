@@ -272,11 +272,17 @@ rather than scanned, because the printed Magic card back is trademarked artwork.
 ------------------------------------------------------------------
 
     File:     web/public/models/figures.glb — BUILT, not authored here, by
-              tools/build-figures.mjs from the four CC0 sources below.
-              143,920 bytes, sha256
-              c09ac552f7daed93fabb6549b83211beaeb3e895614134575f388d485da981a3
-              (T8, 2026-09-27: five models — agent, hero, scientist, drone,
-              insect). Since T8 the build VERIFIES every source archive's byte
+              tools/build-figures.mjs from the FIVE CC0 sources below.
+              373,236 bytes, sha256
+              fe13b02cd692c0046e04b15afe47ff29c1d70601f8216943041ed0fb4f7aae90
+              (Tier 2 slice 4, 2026-09-27: the proportioned man and woman —
+              `agent`, `hero`, and `scientist` as the man's body again — the
+              three Kenney chibis kept as `agent-chibi`, `hero-chibi` and
+              `scientist-chibi`, the drone and the insect; 8,573 triangles, 63
+              clips). T8's file was 143,920 bytes, sha256
+              c09ac552f7daed93fabb6549b83211beaeb3e895614134575f388d485da981a3,
+              and slice 4 rebuilt it byte for byte from the re-downloaded
+              sources before changing anything. Since T8 the build VERIFIES every source archive's byte
               count and sha256 against tools/assets-manifest.json before it
               builds, reads the members it needs out of the verified archives
               itself, and writes the built file's byte count and sha256 into
@@ -288,8 +294,31 @@ rather than scanned, because the printed Magic card back is trademarked artwork.
               (pack, version, download URL, licence badge text, download date,
               sha256); models.json is the measured manifest the loader reads.
 
-    Source:   Kenney — "Mini Characters" 1.0 (character-male-a, the agent;
-              character-female-b, the hero; character-male-e, the scientist)
+    Source:   Quaternius — "Universal Base Characters" [Standard] (slice 4)
+              https://quaternius.com/packs/universalbasecharacters.html
+              (downloaded from https://quaternius.itch.io/universal-base-characters,
+              "Universal Base Characters[Standard].zip", 128,968,391 bytes,
+              sha256 fdbf1804c90dfc1ea03e992bff7da2dfd1a79318e13270a660180f9308455f40)
+              — the Superhero male body with the "Hair_SimpleParted" hairstyle
+              (the man: `agent`, and `scientist`), and the Superhero female body
+              with "Hair_Long" (the woman: `hero`). The free Standard zip holds
+              only the Superhero proportions of the kit's six bodies.
+    Licence:  CC0 1.0 Universal
+    Badge:    "License CC0" (linking the CC0 deed) in the quaternius.com pack
+              page's info row, and "Free to use in personal, educational and
+              commercial projects. (CC0 License)" in its feature list; "Asset
+              license: Creative Commons Zero v1.0 Universal" on the itch.io page
+              — all read on 2026-09-27, the download day; License_Standard.txt
+              inside the zip says "CC0 1.0 Universal (CC0 1.0) Public Domain
+              Dedication … Models by @Quaternius". MODIFIED by the build, which
+              is permitted: the eyes and eyebrows dropped, the hairstyle joined
+              to the body's skin, the head scaled ×1.3 about its joint, a costume
+              slot written per vertex, and the mesh decimated to 1,400 triangles;
+              no texture of the pack is used.
+
+    Source:   Kenney — "Mini Characters" 1.0 (character-male-a,
+              character-female-b and character-male-e — slices 1–3's agent, hero
+              and scientist, kept since slice 4 as the chibi fallbacks)
               https://kenney.nl/assets/mini-characters
     Licence:  CC0 1.0 Universal (public domain dedication)
               https://creativecommons.org/publicdomain/zero/1.0/
@@ -323,9 +352,14 @@ rather than scanned, because the printed Magic card back is trademarked artwork.
               read on 2026-09-27; the License.txt inside the zip says "CC0 1.0
               Universal (CC0 1.0) Public Domain Dedication". ANIMATION ONLY: two
               of its clips (Hit_Chest, Death01) are retargeted offline by the
-              build onto the Kenney rig and baked into each humanoid as that
-              model's `hit` and `die`; the library's own mannequin mesh is never
-              built into anything.
+              build onto the Kenney rig and baked into each chibi as that
+              model's `hit` and `die`; since slice 4, twelve more (Idle_Loop,
+              Jump_Land, Punch_Cross, Sword_Idle, Spell_Simple_Enter,
+              Crouch_Idle_Loop, Spell_Simple_Shoot, Fixing_Kneeling, Pistol_Shoot,
+              Idle_Talking_Loop, and Hit_Chest and Death01 again) are retargeted
+              onto the Universal Base Characters' identical rig and baked into
+              the man and the woman — every clip those bodies play. The
+              library's own mannequin mesh is never built into anything.
 
 CC0 is a public-domain dedication: redistribution, modification and commercial
 use are all permitted with no attribution requirement. Crediting the authors
@@ -336,12 +370,15 @@ survives the page changing: Quaternius published a new, non-redistributable
 (https://quaternius.com/license.html), and that licence's §7 says the version in
 force when you obtained the asset governs. Both Quaternius models above were
 obtained from Poly Pizza listings carrying an explicit CC0 badge on 2026-09-13,
-and the Universal Animation Library from pages carrying a CC0 badge on
-2026-09-27.
+and the Universal Animation Library and the Universal Base Characters from
+pages carrying a CC0 badge on 2026-09-27.
 
 **Nothing in this library is derived from card art.** The figures are generic
-stylised meshes — three chibi people, a flying robot, a bee — chosen by the creature's TYPE
-LINE and tinted by its colour identity, which is what report 13 §1.4 and
+stylised meshes — a man, a woman and three chibi people, a flying robot, a bee —
+chosen by the creature's TYPE LINE and painted by traits.json's costume table
+(slice 4: a colour per body region, written by hand — a navy suit, a blue jacket
+over a white shirt, gold and black — never sampled from any image) and its
+colour identity, which is what report 13 §1.4 and
 docs/ideas/arena-mode.md specify and why they specify it: a CC0 man in a suit
 standing where "Agent 13, Sharon Carter" is played is not a derivative of Sharon
 Carter's art. Generating a mesh from a Marvel card's image would be, and section
@@ -354,8 +391,9 @@ Both are standing decisions (DECISIONS.md D54), not omissions.
 
 Everything else Tier 2 draws is generated in code and uses no third-party
 asset: the stand discs, the land slabs and their water shader, the aura halos,
-the spell forms, the mana motes, the duelist silhouette busts and the
-holographic figure material (web/src/arena/scene/*.ts).
+the spell forms, the mana motes, the silhouette busts (since slice 4 only the
+fallback for a checkout without figures.glb) and the holographic figure material
+with its costume palette (web/src/arena/scene/*.ts).
 
 Tier 2's third slice (per-card identity, 2026-09-27) added NO asset — nothing
 downloaded, no line in tools/assets-manifest.json except the note closing its
@@ -372,6 +410,19 @@ and add none. Coulson's "badge" — the prop, a shield-shaped plate with a dark
 roundel, and the flash, a shield crest with a star — is generic geometry drawn in
 code, not the S.H.I.E.L.D. emblem, which is Marvel's (section 4); and nothing in
 it, as in the rest of this library, is derived from card art.
+
+Tier 2's fourth slice (2026-09-27) added ONE asset, the Universal Base Characters
+above, and nothing else. The costumes are colours written by hand, per body
+region, in web/src/arena/figures/traits.json and duelists.json; they are never
+sampled from any image. The two duelists (web/src/arena/scene/DuelistLayer.tsx)
+are the library's own CC0 man's body with props from the same code-built kit
+baked onto it, so they carry the same provenance and add none. They are generic
+roles: a "director" in a suit and coat with the generic badge above, and an
+armoured "villain" in iron and green, whose colours echo the deck's Doom-green
+robots the way a card's costume echoes its card. Both are generic geometry and
+hand-picked colours, modelled on no character's art. A duelist is a seat, never
+a player's name. Skin is one neutral tone for every figure, and no figure is a
+likeness of anyone (a likeness would be Tier 3, personal-only; PLAN.md).
 
 The pipeline itself is a DEVELOPMENT tool and ships nothing:
 
@@ -390,8 +441,12 @@ GPL-3.0-compatible in any case.
 
 Since T8 the build also runs three.js — the same three@0.186.0 section 6 already
 lists, MIT — in Node, for two things: SkeletonUtils.retargetClip, which turns the
-two Universal Animation Library clips above into keyframes on the Kenney rig, and
-the width and height measurements written into models.json. No code from three
+two Universal Animation Library clips above into keyframes on the Kenney rig (and,
+since slice 4, the build's own world-space retarget onto the proportioned rig),
+and the width and height measurements written into models.json. Slice 4's
+decimation runs meshoptimizer's simplifier (meshoptimizer 1.2.0, MIT, "Copyright
+(c) 2016-2026 Arseny Kapoulkine" — the copy @gltf-transform/cli already installs; a
+development tool, never shipped). No code from three
 is copied into figures.glb; what the build writes there is keyframe and vertex
 data derived from the CC0 sources. The build adds no npm dependency of its own:
 its zip reader is its own code over Node's built-in zlib.

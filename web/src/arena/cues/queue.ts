@@ -227,6 +227,21 @@ function retimeStep(step: Step): void {
  *     two lifts compose into one twice as high. The survivor is the one that
  *     carries an AIM (`beamTo` / `strikeCard`), because that is the one with
  *     something to show; failing that, the first in engine order.
+ *
+ * And two about the DUELISTS (Tier 2 slice 4, T13), which move no card and so
+ * change no film but the one at the table ends:
+ *
+ *  5b. **A `cast` rule 5 drops hands its gesture to the arrival that replaced
+ *     it.** The AI casts and resolves inside one snapshot as a matter of course
+ *     (it is how it plays), so without this its duelist would never raise a hand
+ *     for a creature: the arrival carries `gesture: "cast"` and the caster as
+ *     `gesturePlayer`, and `registry.ts`'s `playGesture` raises THAT seat's hand.
+ *     A `cast` a data row silenced (`gesture: "none"`) carries nothing.
+ *  8. **One flinch per player per batch.** Damage to a player and the life loss
+ *     it causes arrive together, and two overlapping flinches on one body read as
+ *     two blows — the second starting over the first. The damage keeps its
+ *     flinch; the `life` cue for the same player gives its up (`gesture: "none"`)
+ *     and keeps its number, which is the part that carries the fact.
  */
 function suppress(cues: Cue[]): Cue[] {
   const castCards = new Set<number>();
@@ -242,6 +257,15 @@ function suppress(cues: Cue[]): Cue[] {
     if (cue.kind === 'zone' && cue.params['toZone'] === 'battlefield') {
       for (const id of cue.targets) entering.add(id);
     }
+  }
+
+  // Rule 5b's carriers: an entering card → the seat whose `cast` of it rule 5 drops.
+  const carried = new Map<number, number>();
+  for (const cue of cues) {
+    if (cue.kind !== 'cast' || cue.params['gesture'] !== 'cast') continue;
+    const caster = cue.players[0];
+    if (caster === undefined) continue;
+    for (const id of cue.targets) if (entering.has(id) && !carried.has(id)) carried.set(id, caster);
   }
 
   // Rule 7's winners: `<cue id>|<card>` → the one cast-or-resolved cue that plays.
@@ -294,9 +318,34 @@ function suppress(cues: Cue[]): Cue[] {
       if (seen.has(signature)) continue;
       seen.add(signature);
     }
-    out.push(targets === cue.targets ? cue : { ...cue, targets });
+    let kept = targets === cue.targets ? cue : { ...cue, targets };
+    // Rule 5b: the arrival raises its caster's hand, unless its own row says otherwise.
+    if (cue.kind === 'zone' && kept.params['gesture'] === undefined) {
+      for (const id of kept.targets) {
+        const caster = carried.get(id);
+        if (caster === undefined) continue;
+        kept = { ...kept, params: { ...kept.params, gesture: 'cast', gesturePlayer: caster } };
+        carried.delete(id);
+        break;
+      }
+    }
+    out.push(kept);
   }
-  return out;
+  return oneFlinchPerPlayer(out);
+}
+
+/** Rule 8: a player's `damage` flinch stands for the `life` loss it caused in the same batch. */
+function oneFlinchPerPlayer(cues: Cue[]): Cue[] {
+  const flinched = new Set<number>();
+  for (const cue of cues) {
+    if (cue.kind === 'damage' && cue.params['gesture'] === 'flinch') for (const player of cue.players) flinched.add(player);
+  }
+  if (flinched.size === 0) return cues;
+  return cues.map((cue) =>
+    cue.kind === 'life' && cue.params['gesture'] === 'flinch' && cue.players.some((player) => flinched.has(player))
+      ? { ...cue, params: { ...cue.params, gesture: 'none' } }
+      : cue,
+  );
 }
 
 /** Rule 7: does this cue carry an aim the wire stated — a stack target, now or a frame ago? */
@@ -464,6 +513,25 @@ export class CueQueue {
       if (!item.dies || item.done) continue;
       const targets = item.cue.targets;
       for (let j = 0; j < targets.length; j++) if (targets[j] === cardId) return true;
+    }
+    return false;
+  }
+
+  /**
+   * **T13 — is a cue carrying this `gesture` param still to come, or playing?**
+   * The duelist field asks it for `outcome`: the snapshot that ends the game
+   * already says who won, so the loser's POSE is slumped before the batch's
+   * damage cues have played — and a body that slumped under the killing blow and
+   * then stood up for the outcome cue to slump it again would be the pose
+   * contradicting the film (`figures/duelists.ts`'s `stanceEntry`, the D64 lesson
+   * for a body that does not die). Called once per duelist per frame from the one
+   * `useFrame`, so it is an indexed loop over the schedule and allocates nothing.
+   */
+  gesturePending(gesture: string): boolean {
+    const items = this.#scheduled;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]!;
+      if (!item.done && item.cue.params['gesture'] === gesture) return true;
     }
     return false;
   }

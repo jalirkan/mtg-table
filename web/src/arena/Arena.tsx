@@ -81,13 +81,21 @@ import { DecisionLayer, ViewSwitcher, type ViewSwitcherItem } from './DecisionLa
 import cuesJson from './cues/cues.json';
 import figuresJson from './figures/figures.json';
 import modelsJson from './figures/models.json';
+import duelistsJson from './figures/duelists.json';
 import { cursorOf, intakeFor, type StreamCursor } from './cues/intake.ts';
 import { CueQueue, awaitingHuman, budgetFor, type QueueMode } from './cues/queue.ts';
 import { REGISTRY } from './cues/registry.ts';
 import { EMPTY_CUE_DATA, type CueData } from './cues/types.ts';
 import { mergeCueData, validateCues } from './cues/validate.ts';
 import { combatFreeze, manaMotes, spellForms, type ManaMote, type SpellForm } from './figures/casting.ts';
-import { duelistBusts, type DuelistBust } from './figures/duelists.ts';
+import {
+  duelistBusts,
+  duelistPoses,
+  validateDuelists,
+  type DuelistBust,
+  type DuelistData,
+  type DuelistPose,
+} from './figures/duelists.ts';
 import { figurePose, type FigureLayout } from './figures/pose.ts';
 import { tilePose, type TileLayout } from './figures/tiles.ts';
 import {
@@ -116,6 +124,7 @@ import { BustField } from './scene/busts.ts';
 import { EffectPool } from './scene/effects.ts';
 import { OverlayField } from './scene/overlays.ts';
 import type { FigureRigMap } from './scene/figureRigs.ts';
+import { DuelistLayer } from './scene/DuelistLayer.tsx';
 import { FigureLayer } from './scene/FigureLayer.tsx';
 import { HitProxy } from './scene/HitProxy.tsx';
 import type { RigMap } from './scene/rigs.ts';
@@ -366,6 +375,8 @@ function Scene({
   overlays,
   busts,
   bustField,
+  duelists,
+  duelistData,
   models,
   director,
   waiting,
@@ -399,6 +410,8 @@ function Scene({
   overlays: OverlayField;
   busts: DuelistBust[];
   bustField: BustField;
+  duelists: DuelistPose[];
+  duelistData: DuelistData;
   models: ModelData;
   director: CameraDirector;
   waiting: boolean;
@@ -485,10 +498,21 @@ function Scene({
           the snapshot says is there. Two instanced meshes, their own budget. */}
       <primitive object={overlays.group} />
 
-      {/* **T7's duelists** (report 13 §7, user decision 8): a billboarded
-          silhouette bust at each seat's HUD anchor. One instanced mesh, no rig,
-          and deliberately not in the camera solver's required set. */}
+      {/* **T13's duelists** (report 13 §7; Tier 2 slice 4): a full figure per
+          seat at its side of the table, through the figure library's own loader
+          and holographic material — and T7's silhouette busts as the fallback
+          when the library is missing. `CueRunner` binds both through
+          `bustField.bind`; neither is in the camera solver's required set, and
+          neither is a click target. */}
       <primitive object={bustField.group} />
+      <DuelistLayer
+        poses={duelists}
+        bustField={bustField}
+        models={models}
+        data={duelistData}
+        stage={stage}
+        queue={queue}
+      />
 
       {/* The Tier-1 primitive kit: 26 meshes, parked invisible, bound to live
           effects once a frame. Invisible objects are skipped by the renderer
@@ -612,6 +636,22 @@ function useFigureData(): { figures: FigureData; models: ModelData } {
   }, []);
 }
 
+/**
+ * **T13 — who stands for each seat** (`figures/duelists.json`), validated at
+ * import like the cue and figure files, and for the same reason: a broken look is
+ * dropped and its seat draws the silhouette bust, so an art-direction file can
+ * never stop the renderer. `web/test/duelists.test.ts` fails on any error.
+ */
+function useDuelistData(): DuelistData {
+  return useMemo(() => {
+    const { data, errors } = validateDuelists(duelistsJson);
+    for (const problem of errors) {
+      console.warn(`[arena] duelists.json ${problem.where}: ${problem.message} — entry dropped`);
+    }
+    return data;
+  }, []);
+}
+
 export default function Arena({
   state,
   art,
@@ -669,6 +709,7 @@ export default function Arena({
   const reducedMotion = useReducedMotion();
   const data = useCueData();
   const figureData = useFigureData();
+  const duelistData = useDuelistData();
   // §5.1's one exception: `presence` is a LAYOUT rule, so it goes in here and
   // not into the queue. That is what makes the Helicarrier survive `skip all`.
   const placed = useMemo(() => layout(state, data.presence ?? {}), [state, data]);
@@ -746,6 +787,15 @@ export default function Arena({
   const busts = useMemo(
     () => duelistBusts(state.board, seatOfPlayer),
     [state.board, seatOfPlayer],
+  );
+  /**
+   * **T13's duelists** — the busts' seats with a body, a stand point, a facing
+   * and the stance `board.gameOver` gives them. A pose, like every other: two
+   * seats, no history, no name.
+   */
+  const duelists = useMemo(
+    () => duelistPoses(state.board, seatOfPlayer, duelistData),
+    [state.board, seatOfPlayer, duelistData],
   );
   const hovered = useMemo(
     () => placed.placements.find((p) => p.cardId === hoverId) ?? null,
@@ -946,6 +996,8 @@ export default function Arena({
       frozen,
       busts,
       bustField,
+      // T13: the duelists' poses (no name — a seat, a stand point, a stance).
+      duelists,
       // T6's synthetic-event loop: the corpus has 0 fizzles, so the evidence for
       // `resolved.fizzle` is a hand-built event enqueued against the frame on
       // screen — `queue.enqueueBatch([...], state)` needs the `ClientState` the
@@ -972,6 +1024,7 @@ export default function Arena({
     frozen,
     busts,
     bustField,
+    duelists,
   ]);
 
   /**
@@ -1276,6 +1329,8 @@ export default function Arena({
           overlays={overlays}
           busts={busts}
           bustField={bustField}
+          duelists={duelists}
+          duelistData={duelistData}
           models={figureData.models}
           director={director}
           waiting={waiting}

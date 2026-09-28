@@ -40,7 +40,16 @@ import {
   type ModelLibraryRecord,
   type TileSpec,
 } from './types.ts';
-import { FORMATIONS, IDLE_STYLES, PROP_KINDS, SILHOUETTES, isPropKind, type PropKind } from './props.ts';
+import {
+  BODY_STYLES,
+  COSTUME_SLOTS,
+  FORMATIONS,
+  IDLE_STYLES,
+  PROP_KINDS,
+  SILHOUETTES,
+  isPropKind,
+  type PropKind,
+} from './props.ts';
 import { SUBTYPE_ORDER } from './resolve.ts';
 import type { TraitData, TraitRow } from './traits.ts';
 
@@ -734,7 +743,12 @@ const TRAIT_KEYS = new Set([
   'formation',
   'silhouette',
   'shrink',
+  // Slice 4: what the body wears, and which body.
+  'costume',
+  'body',
 ]);
+/** A costume colour: `#rrggbb`, or the figure's own `tint`. */
+const COSTUME_COLOUR = /^(#[0-9a-fA-F]{6}|tint)$/;
 /** `subtype:insect` — and only a word `resolve.ts`'s `SUBTYPE_ORDER` can produce. */
 const TRAIT_ARCHETYPE_KEY = /^subtype:([a-z]+)$/;
 /** Each numeric trait's legal range: outside it is a typo, not art direction. */
@@ -830,6 +844,38 @@ function checkTraitRow(where: string, raw: unknown, errors: FigureProblem[]): Tr
         kinds.push(kind);
       }
       row['props'] = kinds;
+    }
+  }
+  // -- slice 4: the costume and the body ------------------------------------
+  const body = raw['body'];
+  if (body !== undefined) {
+    if (typeof body !== 'string' || !(BODY_STYLES as readonly string[]).includes(body)) {
+      errors.push({ where: `${where}.body`, message: `must be one of ${BODY_STYLES.join(', ')}` });
+      bad = true;
+    } else row['body'] = body;
+  }
+  const costume = raw['costume'];
+  if (costume !== undefined) {
+    if (!isObject(costume)) {
+      errors.push({ where: `${where}.costume`, message: 'must be an object of costume slots' });
+      bad = true;
+    } else {
+      const slots: Record<string, string> = {};
+      for (const [slot, colour] of Object.entries(costume)) {
+        if (isCommentKey(slot)) continue;
+        if (!(COSTUME_SLOTS as readonly string[]).includes(slot)) {
+          errors.push({ where: `${where}.costume.${slot}`, message: `not a costume slot — one of ${COSTUME_SLOTS.join(', ')}` });
+          bad = true;
+          continue;
+        }
+        if (typeof colour !== 'string' || !COSTUME_COLOUR.test(colour)) {
+          errors.push({ where: `${where}.costume.${slot}`, message: 'must be a #rrggbb colour or "tint"' });
+          bad = true;
+          continue;
+        }
+        slots[slot] = colour;
+      }
+      row['costume'] = slots;
     }
   }
   // A turned figure needs its turned footprint, or the width clamp is a guess.

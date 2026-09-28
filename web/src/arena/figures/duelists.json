@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "_comment": "T13 — the two duelists at the table ends: WHO stands for each seat, and how each seat's gestures are played. Identity is a SEAT, never a player name from the wire (the HUD plate carries the name). Validated by figures/duelists.ts's validateDuelists: unknown keys are errors, `_` keys are comments, a bad look is dropped and its seat falls back to the silhouette bust. Where each duelist stands is layout arithmetic and lives in duelists.ts (duelistStand), held to the camera by camera.test.ts.",
+  "seats": {
+    "_why": "'you' is the viewer's own side (the human in a live game); 'opp' is the other seat (the AI).",
+    "you": "director",
+    "opp": "villain"
+  },
+  "looks": {
+    "director": {
+      "_what": "A S.H.I.E.L.D. director: a long dark coat trimmed in gold over a white shirt, black gloves, a gold badge on the chest and its emblem on the back, and the seat's own colour in the hologram's edge. The viewer sees him three-quarters from behind, facing the other duelist across the table, so the coat and the back emblem are what carry him.",
+      "body": [
+        "agent",
+        "hero",
+        "scientist",
+        "agent-chibi"
+      ],
+      "scale": 1.6,
+      "tint": "#8fb4c8",
+      "seatMix": 0.45,
+      "costume": {
+        "skin": "#c69c7e",
+        "hair": "#2a2522",
+        "top": "#2e3a48",
+        "shirt": "#dfe4ea",
+        "legs": "#262f3a",
+        "shoes": "#14181d",
+        "gloves": "#191d22",
+        "belt": "#e3c46a"
+      },
+      "props": {
+        "coat": "top",
+        "badge": "belt"
+      },
+      "trim": "belt",
+      "shade": "shoes"
+    },
+    "villain": {
+      "_what": "An armoured villain: iron armour under an iron great helm with a dark visor slit, a Doom-green tunic and cloak trimmed in gold, and a green edge on the hologram. The viewer sees him three-quarters from the front, facing the director across the table.",
+      "body": [
+        "agent",
+        "hero",
+        "scientist",
+        "agent-chibi"
+      ],
+      "scale": 1.6,
+      "tint": "#3fcf6a",
+      "seatMix": 0.1,
+      "costume": {
+        "skin": "#a3aeaa",
+        "hair": "#1f6a3a",
+        "top": "#56615d",
+        "shirt": "#2c8f4c",
+        "legs": "#46504c",
+        "shoes": "#2b3230",
+        "gloves": "#56615d",
+        "belt": "#c9a64a"
+      },
+      "props": {
+        "coat": "shirt",
+        "hood": {
+          "slot": "top",
+          "scale": [
+            1.1,
+            0.8,
+            1.08
+          ]
+        }
+      },
+      "trim": "belt",
+      "shade": "shoes"
+    }
+  },
+  "gestures": {
+    "_why": "Each gesture is played through the body's OWN clip keys (models.json's `clips`), first one present wins; a body with none of them still flinches, pulses and holds its stance through the root lean and the tint. `hold` is where a stance (win / lose) rests in its clip once the game has ended; `lean` is the whole body's pitch at full weight, radians: forward (+) or back (−); `aim` turns a joint so the line to its child points along a figure-space direction (+Y up, +Z the figure's front, −X its right hand) — the raised fist, which no clip in the library has, and the bowed head.",
+    "cast": {
+      "clips": [
+        "channel",
+        "grow"
+      ],
+      "lean": -0.05
+    },
+    "flinch": {
+      "clips": [
+        "hit"
+      ],
+      "lean": -0.2
+    },
+    "win": {
+      "clips": [
+        "grow",
+        "channel"
+      ],
+      "hold": 0.85,
+      "lean": -0.08,
+      "aim": [
+        {
+          "joint": "upperarm_r",
+          "child": "lowerarm_r",
+          "aim": [
+            -0.45,
+            0.88,
+            0.12
+          ]
+        },
+        {
+          "joint": "lowerarm_r",
+          "child": "hand_r",
+          "aim": [
+            -0.08,
+            1,
+            0.08
+          ]
+        },
+        {
+          "joint": "upperarm_l",
+          "child": "lowerarm_l",
+          "aim": [
+            0.3,
+            -0.95,
+            0.08
+          ]
+        },
+        {
+          "joint": "lowerarm_l",
+          "child": "hand_l",
+          "aim": [
+            0.15,
+            -0.98,
+            0.12
+          ]
+        }
+      ]
+    },
+    "lose": {
+      "clips": [
+        "crouch",
+        "die"
+      ],
+      "hold": 0.8,
+      "lean": 0.3,
+      "aim": [
+        {
+          "joint": "neck_01",
+          "child": "Head",
+          "aim": [
+            0,
+            0.5,
+            0.86
+          ]
+        }
+      ]
+    }
+  }
+}

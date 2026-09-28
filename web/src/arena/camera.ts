@@ -748,6 +748,127 @@ export function keepsSeat(
   );
 }
 
+// ---------------------------------------------------------------------------
+// T13 — the duelists against the frame: out of the hand, out from under the chrome
+// ---------------------------------------------------------------------------
+
+/**
+ * **The lower edge of a keep-out band, in NDC** — a strip of chrome `keepOutPx`
+ * CSS pixels tall over the top of a canvas `heightPx` tall (`layout.ts`'s
+ * `HUD_TOP_PX`, the arena's own strips and seat plate). A point projected above
+ * it is under the chrome. The chrome is fixed in pixels, so the band is widest in
+ * NDC on the shortest canvas.
+ */
+export function keepOutTop(keepOutPx: number, heightPx: number): number {
+  return 1 - (2 * keepOutPx) / heightPx;
+}
+
+/** The convex hull of 2D points (Andrew's monotone chain), counter-clockwise. */
+function hull2(points: ReadonlyArray<readonly [number, number]>): Array<[number, number]> {
+  const p = points.map((q): [number, number] => [q[0], q[1]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (p.length < 3) return p;
+  const turn = (o: readonly number[], a: readonly number[], b: readonly number[]): number =>
+    (a[0]! - o[0]!) * (b[1]! - o[1]!) - (a[1]! - o[1]!) * (b[0]! - o[0]!);
+  const lower: Array<[number, number]> = [];
+  for (const q of p) {
+    while (lower.length >= 2 && turn(lower[lower.length - 2]!, lower[lower.length - 1]!, q) <= 0) lower.pop();
+    lower.push(q);
+  }
+  const upper: Array<[number, number]> = [];
+  for (let i = p.length - 1; i >= 0; i--) {
+    const q = p[i]!;
+    while (upper.length >= 2 && turn(upper[upper.length - 2]!, upper[upper.length - 1]!, q) <= 0) upper.pop();
+    upper.push(q);
+  }
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+
+/** Do two convex polygons overlap (the separating-axis test)? Touching counts as overlap. */
+function convexOverlap(a: ReadonlyArray<readonly [number, number]>, b: ReadonlyArray<readonly [number, number]>): boolean {
+  for (const poly of [a, b]) {
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i]!;
+      const q = poly[(i + 1) % poly.length]!;
+      const nx = q[1] - p[1];
+      const ny = p[0] - q[0];
+      let aMin = Infinity;
+      let aMax = -Infinity;
+      let bMin = Infinity;
+      let bMax = -Infinity;
+      for (const v of a) {
+        const d = v[0] * nx + v[1] * ny;
+        aMin = Math.min(aMin, d);
+        aMax = Math.max(aMax, d);
+      }
+      for (const v of b) {
+        const d = v[0] * nx + v[1] * ny;
+        bMin = Math.min(bMin, d);
+        bMax = Math.max(bMax, d);
+      }
+      if (aMax < bMin || bMax < aMin) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * **T13 — does a standing body stay clear of the seat's own hand?** `body` is the
+ * body's box as world corners (`figures/duelists.ts`'s `duelistBox`); `fan` every
+ * card of the widest hand as its four corners (`layout.ts`'s `fanCorners`). The
+ * body's projected convex hull may not overlap any projected card — conservative
+ * on purpose (a box is wider than a body at the feet and the head), so a stand
+ * that passes is never hiding a hand card, and a hand card is never hiding it.
+ * A body behind the camera is clear by definition; a card behind it cannot be hit.
+ */
+export function clearOfHand(
+  pose: Pose,
+  body: readonly Point3[],
+  fan: readonly (readonly Point3[])[],
+  fovDeg: number = CAMERA.fov,
+  aspect = 16 / 9,
+): boolean {
+  const points: Array<[number, number]> = [];
+  for (const corner of body) {
+    const ndc = projectToNdc(pose, corner, fovDeg, aspect);
+    if (ndc === null) return true;
+    points.push(ndc);
+  }
+  const shape = hull2(points);
+  for (const card of fan) {
+    const quad: Array<[number, number]> = [];
+    for (const corner of card) {
+      const ndc = projectToNdc(pose, corner, fovDeg, aspect);
+      if (ndc === null) break;
+      quad.push(ndc);
+    }
+    if (quad.length === card.length && convexOverlap(shape, quad)) return false;
+  }
+  return true;
+}
+
+/**
+ * **T13 — how much of a body the player can see**: the share of its sample points
+ * (`figures/duelists.ts`'s `duelistSamples`) that land inside the frame and below
+ * a keep-out band's lower edge (`keepOutTop`). 1 is all of it; 0 is none — off
+ * screen, behind the lens or under the chrome.
+ */
+export function visibleShare(
+  pose: Pose,
+  samples: readonly Point3[],
+  bandTop: number,
+  fovDeg: number = CAMERA.fov,
+  aspect = 16 / 9,
+): number {
+  if (samples.length === 0) return 0;
+  let seen = 0;
+  for (const point of samples) {
+    const ndc = projectToNdc(pose, point, fovDeg, aspect);
+    if (ndc === null) continue;
+    if (Math.abs(ndc[0]) <= 1 && ndc[1] >= -1 && ndc[1] <= bandTop) seen += 1;
+  }
+  return seen / samples.length;
+}
+
 /**
  * Whether this choice may be used right now. A spectator may use every view
  * and the director; a seat only the views that keep its hand.

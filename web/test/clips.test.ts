@@ -416,10 +416,10 @@ test('clips: only a resting stance breathes — user decision 7', () => {
 // T8 — one clip set for every humanoid, and no borrowed hit or death
 // ---------------------------------------------------------------------------
 
-test('clips: every humanoid shares ONE rig and ONE clip set (T8)', () => {
+test('clips: every chibi fallback shares ONE rig and ONE clip set (T8, kept by slice 4)', () => {
   const humanoids = Object.entries(MODELS.models).filter(([, m]) => m.rig === 'kenney-mini');
   const ids = humanoids.map(([id]) => id).sort();
-  assert.deepEqual(ids, ['agent', 'hero', 'scientist'], 'the three humanoid archetypes are three models');
+  assert.deepEqual(ids, ['agent-chibi', 'hero-chibi', 'scientist-chibi'], 'the three Kenney bodies are three fallback models');
   // One clip set: the same keys, each one the same source clip renamed per model.
   const strip = (id: string, name: string): string => name.slice(id.length + 1);
   const [firstId, first] = humanoids[0]!;
@@ -430,6 +430,36 @@ test('clips: every humanoid shares ONE rig and ONE clip set (T8)', () => {
     }
     assert.deepEqual(model.retargeted, first.retargeted, `${id} retargets a different set`);
     assert.equal(model.bones, 7, `${id} is not on the 7-joint Kenney rig`);
+  }
+});
+
+/**
+ * **Slice 4 — the proportioned bodies share the CLIP LIBRARY's rig**, so every
+ * clip is the library's own, retargeted by world-space delta with no chibi in
+ * between: the man's body and the woman's carry the same keys from the same
+ * source clips (each baked onto its own skeleton), the scientist IS the man's
+ * body, and the tapped kneel is the one composed clip.
+ */
+test('clips: the proportioned bodies share ONE rig and the library\'s clips, joint for joint (slice 4)', () => {
+  const humans = Object.entries(MODELS.models).filter(([, m]) => m.rig === 'ubc');
+  assert.deepEqual(humans.map(([id]) => id).sort(), ['agent', 'hero', 'scientist']);
+  const agent = MODELS.models['agent']!;
+  const hero = MODELS.models['hero']!;
+  const scientist = MODELS.models['scientist']!;
+  assert.equal(scientist.node, agent.node, 'the scientist is not the man\'s body');
+  assert.equal(agent.node === hero.node, false);
+  for (const model of [agent, hero]) {
+    assert.equal(model.bones, 65, 'not the 65-joint library rig');
+    assert.deepEqual(Object.keys(model.clips).sort(), Object.keys(agent.clips).sort());
+    // Every clip is the library's — nothing is a pack's own, nothing is Mixamo.
+    for (const [key, name] of Object.entries(model.clips)) {
+      assert.ok(model.retargeted[key]?.startsWith('ual:'), `${key} is not from the clip library`);
+      assert.equal(name.slice(name.indexOf('_') + 1), agent.clips[key]!.slice(agent.clips[key]!.indexOf('_') + 1));
+    }
+  }
+  assert.equal(agent.retargeted['crouch'], 'ual:Fixing_Kneeling+Idle_Loop', 'the tapped kneel is no longer the composed clip');
+  for (const key of ['idle', 'summon', 'attack', 'block', 'hit', 'die', 'crouch']) {
+    assert.ok(agent.clips[key] !== undefined, `the proportioned body has no ${key}`);
   }
 });
 
@@ -460,6 +490,13 @@ test('clips: hit and die are real clips, not borrowings (T8)', () => {
       assert.equal(model.retargeted['hit'], 'ual:Hit_Chest', `${id}'s hit is not the library's`);
       assert.equal(model.retargeted['die'], 'ual:Death01', `${id}'s die is not the library's`);
       assert.deepEqual(shared, ['block=crouch=shrink'], `${id}'s borrowings changed`);
+    }
+    if (model.rig === 'ubc') {
+      // Slice 4: the library has a guard, a kneel and a hunch of its own — the
+      // proportioned bodies borrow nothing.
+      assert.equal(model.retargeted['hit'], 'ual:Hit_Chest', `${id}'s hit is not the library's`);
+      assert.equal(model.retargeted['die'], 'ual:Death01', `${id}'s die is not the library's`);
+      assert.deepEqual(shared, [], `${id} borrows a clip`);
     }
   }
 });

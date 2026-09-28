@@ -4,8 +4,7 @@
   "_licence_rule": "Only CC0 assets are used at all (user decision). The badge text below is what the download page said ON THE DAY, verbatim, because that is the only evidence that survives the page changing — Quaternius relicensed one of its 83 packs sixteen days before slice 1 (report 12 §0.2), and QAL §7 says the version in force when you obtained the asset governs.",
   "_never": "Nothing derived from card art may ever appear here, nothing from Mixamo (D54), and no AI-generated mesh. Marvel art is licensed to Wizards; the Fan Content Policy's line is \"If you don't have the rights to use another person's stuff in your Fan Content—don't\" (https://company.wizards.com/en/legal/fancontentpolicy). NOTICE §2 and the Scryfall images already live under that rule.",
   "_where": "The downloaded archives are NOT committed. They live under var/assets/figures/ (var/ is gitignored) exactly as downloaded — a zip is NOT unzipped by hand any more: the build reads the member it needs out of the verified zip. Re-download with the URLs below; the build refuses a file whose sha256 or byte count differs, and prints the URL.",
-  "_reverified": "2026-09-27: all three slice-1 sources were re-downloaded from the URLs below into a fresh worktree and matched their recorded sha256 and byte count exactly; the three badges were re-read and are unchanged. The Universal Animation Library is new on that date.",
-
+  "_reverified": "2026-09-27 (slice 2): all three slice-1 sources were re-downloaded from the URLs below into a fresh worktree and matched their recorded sha256 and byte count exactly; the three badges were re-read and are unchanged. The Universal Animation Library is new on that date. 2026-09-27 (slice 4): all four were downloaded AGAIN into the tier2-slice4 worktree — the three direct links by curl, the Animation Library through itch.io's free-download flow — and all four matched byte for byte (`node tools/build-figures.mjs --verify-only`); rebuilt with slice 3's manifest, figures.glb came out byte-identical to the committed one (143,920 B, sha256 c09ac552…a981a3), which closes slice 3's follow-up 7. The Universal Base Characters are new on that date.",
   "packs": {
     "kenney-mini-characters": {
       "title": "Mini Characters",
@@ -82,13 +81,113 @@
       "licenceFileText": "License: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication — https://creativecommons.org/publicdomain/zero/1.0/ — Models by @Quaternius",
       "committable": true,
       "_note": "Report 12 §0 finding 4: the CC0 replacement for Mixamo. The badge on quaternius.com's pack page read 'License CC0' on 2026-09-27 and the itch page's 'Asset license' row read 'Creative Commons Zero v1.0 Universal'; License.txt INSIDE the zip says it a third time. One 65-joint Unreal-named humanoid rig (root, pelvis, spine_01…03, neck_01, Head, clavicle/upperarm/lowerarm/hand_{l,r}, thigh/calf/foot/ball_{l,r}, fingers), T-posed, facing +Z; the no-root-motion GLB carries 44 clips. Only animation data is taken from it: the mannequin mesh is never built into anything."
+    },
+    "quaternius-universal-base-characters": {
+      "title": "Universal Base Characters [Standard]",
+      "creator": "Quaternius",
+      "packVersion": "itch.io upload of 2025-12-16 (\"Universal Base Characters[Standard].zip\", 122 MB; the free Standard zip carries ONLY the Superhero male and female bodies of the kit's six — the Regular and Teen proportions are in the paid Source zip — plus eight rigged hairstyles and two eyebrow meshes, as FBX and glTF)",
+      "created": "2025-08 (the pack page's date: \"August 2025\")",
+      "page": "https://quaternius.com/packs/universalbasecharacters.html",
+      "downloadUrl": "https://quaternius.itch.io/universal-base-characters",
+      "_download": "itch.io's 'name your own price' page: 'Download Now' → 'No thanks, just take me to the downloads' → 'Universal Base Characters[Standard].zip' (122 MB, $0). The file is served from a short-lived signed URL, so the page, not the CDN link, is what is recorded. The [Source] zip is paid ($19.99) and is NOT used.",
+      "file": "Universal Base Characters[Standard].zip",
+      "archive": "zip",
+      "bytes": 128968391,
+      "sha256": "fdbf1804c90dfc1ea03e992bff7da2dfd1a79318e13270a660180f9308455f40",
+      "retrieved": "2026-09-27",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenceBadge": "License CC0",
+      "licenceBadgeItch": "Asset license: Creative Commons Zero v1.0 Universal",
+      "licenceFeatureText": "Free to use in personal, educational and commercial projects. (CC0 License)",
+      "licenceFileText": "License: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication — https://creativecommons.org/publicdomain/zero/1.0/ — Models by @Quaternius",
+      "committable": true,
+      "_note": "Read on 2026-09-27, the download day, and recorded verbatim because Quaternius began relicensing on 2026-08-28 (report 12 §0.2; QAL §7 makes the version in force on the download day decisive): the quaternius.com pack page's info row read 'License CC0' (linking https://creativecommons.org/publicdomain/zero/1.0/) and its feature list 'Free to use in personal, educational and commercial projects. (CC0 License)'; the itch.io page's 'Asset license' row read 'Creative Commons Zero v1.0 Universal'; and License_Standard.txt INSIDE the zip says CC0 1.0 a third time. The page describes 'Superhero, Regular, and Teen proportions (male and female)… rigged with a Humanoid rig allowing easy retargeting in any engine… Average 13k tris… Compatible with the Universal Animation Library'. Measured: both bodies are on the SAME 65-joint Unreal-named rig as the Animation Library's mannequin (the build asserts the joint list), T-posed, facing +Z, 1.81 m (male, 12,566 triangles) and 1.76 m (female, 12,812 triangles) tall; the hairstyles 'Rigged to Head Bone' are weighted 100% to Head and carry their body's own Head bind matrix. The textures (skin, eyes, hair) are never read: the library carries no texture."
     }
   },
-
   "rigs": {
+    "ubc": {
+      "kind": "ubc",
+      "_what": "Slice 4 — THE humanoid rig. The Universal Base Characters are on the Universal Animation Library's own 65-joint humanoid rig (same author, same joint names — the build asserts every body on this rig has EXACTLY the library mannequin's joint list), so the library's clips are carried onto them joint for joint by a world-space delta over the major skeleton, with no 7-joint chibi in between — which is what face-planted the head in slice 2 (D68). The fingers are not driven. Every clip below is the library's; nothing here is Mixamo.",
+      "joints": "the clip library's own (asserted by the build against UAL1_Standard.glb's skin)",
+      "retarget": {
+        "pack": "quaternius-universal-animation-library",
+        "member": "Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+        "joints": [
+          "pelvis",
+          "spine_01",
+          "spine_02",
+          "spine_03",
+          "neck_01",
+          "Head",
+          "clavicle_l",
+          "upperarm_l",
+          "lowerarm_l",
+          "hand_l",
+          "clavicle_r",
+          "upperarm_r",
+          "lowerarm_r",
+          "hand_r",
+          "thigh_l",
+          "calf_l",
+          "foot_l",
+          "ball_l",
+          "thigh_r",
+          "calf_r",
+          "foot_r",
+          "ball_r"
+        ],
+        "_joints": "Parents first. Each is driven by its source bone's world-space rotation away from the T-pose, carried onto this body's T-pose (the two rigs' rest orientations differ by up to 23° at the neck, measured, so local rotations are NOT copied). The fingers and `root` hold their bind.",
+        "upper": [
+          "spine_01",
+          "spine_02",
+          "spine_03",
+          "neck_01",
+          "Head",
+          "clavicle_l",
+          "upperarm_l",
+          "lowerarm_l",
+          "hand_l",
+          "clavicle_r",
+          "upperarm_r",
+          "lowerarm_r",
+          "hand_r"
+        ],
+        "_upper": "A clip written `ual:A+B` is COMPOSED: A's legs and hips under B's `upper` joints — the spine, the arms and the head — each retargeted first, then merged track by track, B sampled at A's frame times and looped. A's hips keep their pitch and roll (the legs are posed against them) but lose their TURN about the vertical, because Fixing_Kneeling turns its hips 40-odd degrees to work at the ground: a kneel on those hips turned Coulson's chest and Peggy's shield edge-on to the table camera (measured by traits.test.ts's raster: 1 px of tie, 6 px of shield), and a kneel on the idle's hips instead stood the figure up on one bent leg. The library has no kneel with an upright torso; `Fixing_Kneeling+Idle_Loop` is one.",
+        "hip": {
+          "joint": "pelvis",
+          "_hip": "The pelvis alone translates: by the source's world-space hip delta, scaled by the two hip heights."
+        },
+        "fps": 24
+      },
+      "resampleTolerance": 0.001,
+      "clips": {
+        "idle": "ual:Idle_Loop",
+        "summon": "ual:Jump_Land",
+        "attack": "ual:Punch_Cross",
+        "block": "ual:Sword_Idle",
+        "hit": "ual:Hit_Chest",
+        "die": "ual:Death01",
+        "grow": "ual:Spell_Simple_Enter",
+        "shrink": "ual:Crouch_Idle_Loop",
+        "channel": "ual:Spell_Simple_Shoot",
+        "crouch": "ual:Fixing_Kneeling+Idle_Loop",
+        "pistolDraw": "ual:Pistol_Shoot",
+        "radioCall": "ual:Idle_Talking_Loop"
+      },
+      "_clips": "THE CHOICE, judged from lab renders of every candidate on the man's and the woman's bodies (docs/evidence/m7-tier2-slice4.md): the library's clips land on these bodies with no face-plant — the same rig, retargeted by world-space delta — so every clip is the library's own. `crouch` (a TAPPED creature's resting stance, held at 0.85) is COMPOSED: Fixing_Kneeling's legs under Idle_Loop's upright torso — a figure taking a knee, its chest (Coulson's badge and shirt) still facing the table, where the library's Crouch_Idle_Loop hunches it face-down. `shrink` keeps the hunch (Ant-Man's attack, Quantum Reduction's host), `block` is Sword_Idle's guard with no sword, `summon` is the landing of a jump, and Agent 13's `pistolDraw` is Pistol_Shoot's two-handed aim."
+    },
     "kenney-mini": {
       "_what": "THE humanoid rig. Every humanoid archetype (agent, hero, scientist) is a Kenney Mini character, and all twelve of those share this rig exactly — so every humanoid shares ONE clip set, written once here and baked into each model by the build. The build asserts that every model naming this rig has exactly these joints.",
-      "joints": ["root", "leg-left", "leg-right", "torso", "arm-left", "arm-right", "head"],
+      "joints": [
+        "root",
+        "leg-left",
+        "leg-right",
+        "torso",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
       "retarget": {
         "_what": "Report 13 §9.5's experiment: SkeletonUtils.retargetClip from the Universal Animation Library onto this rig, run offline by the build (three in Node), so the browser never ships the 7.6 MB source rig. A clip written 'ual:<name>' below is one of these; every other clip is the pack's own.",
         "pack": "quaternius-universal-animation-library",
@@ -141,33 +240,59 @@
       }
     }
   },
-
   "models": {
     "agent": {
+      "pack": "quaternius-universal-base-characters",
+      "member": "Universal Base Characters[Standard]/Base Characters/Godot - UE/Superhero_Male_FullBody.gltf",
+      "body": "SuperHero_Male",
+      "hair": "Universal Base Characters[Standard]/Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/Hair_SimpleParted.gltf",
+      "rig": "ubc",
+      "facing": "+z",
+      "headScale": 1.3,
+      "triangles": 1400,
+      "_role": "Slice 4 — the man's body: the Superhero male with the short parted hairstyle, for every male humanoid card (Coulson, Fury, Ant-Man, the Agents and the Soldier token) and, through `scientist` below, the scientists. Its costume (traits.json) is what makes it a suit, a coat or a red-and-silver bodysuit. The eyes and eyebrows are dropped, the head is 1.3× (heroic-miniature proportions, so what a card wears on its head has a head to sit on at 60 px), and meshopt decimates it to the triangle target."
+    },
+    "hero": {
+      "pack": "quaternius-universal-base-characters",
+      "member": "Universal Base Characters[Standard]/Base Characters/Godot - UE/Superhero_Female_FullBody.gltf",
+      "body": "Superhero_Female",
+      "hair": "Universal Base Characters[Standard]/Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/Hair_Long.gltf",
+      "rig": "ubc",
+      "facing": "+z",
+      "headScale": 1.3,
+      "triangles": 1400,
+      "_role": "Slice 4 — the woman's body: the Superhero female with long hair, for every female humanoid card (Peggy, Agent 13, Quake, Wasp) and the Hero token. The id stays `hero` because figures.json's `subtype:hero` rung names it; card rows choose it for the women the spy rung would otherwise put in the man's body."
+    },
+    "scientist": {
+      "sameAs": "agent",
+      "_role": "Slice 4 — the scientist stands in the man's body (one node in the library, no second copy): Bold Biochemist's white lab coat and A.I.M.'s yellow suit and hood are costume and props, and the chibi scientist's glasses were the only thing its old body said."
+    },
+    "agent-chibi": {
       "pack": "kenney-mini-characters",
       "member": "Models/GLB format/character-male-a.glb",
       "rig": "kenney-mini",
       "facing": "+z",
-      "_role": "The spy / agent archetype (creature/subtype:spy, the colour rungs) and the Soldier token in its token tint. Kenney's character-male-a: short hair, plain jacket — the plainest body in the kit, which is right for the most-seen archetype."
+      "_role": "Slices 1–3's body, kept as the CHIBI FALLBACK a traits.json row can ask for with \"body\": \"chibi\" (slice 4 — nothing lost). The spy / agent archetype (creature/subtype:spy, the colour rungs) and the Soldier token in its token tint. Kenney's character-male-a: short hair, plain jacket — the plainest body in the kit, which is right for the most-seen archetype."
     },
-    "hero": {
+    "hero-chibi": {
       "pack": "kenney-mini-characters",
       "member": "Models/GLB format/character-female-b.glb",
       "rig": "kenney-mini",
       "facing": "+z",
-      "_role": "creature/subtype:hero — Wasp, the Hero token, Ant-Man. Kenney's character-female-b, chosen (T8) for the silhouette that reads from EVERY side of the table: two round buns on top of the head, visible from above, from the front (the opponent's figures) and from behind (yours). Twelve bodies were rendered side by side before choosing; see the evidence."
+      "_role": "Slices 1–3's body, kept as the CHIBI FALLBACK a traits.json row can ask for with \"body\": \"chibi\" (slice 4 — nothing lost). creature/subtype:hero — Wasp, the Hero token, Ant-Man. Kenney's character-female-b, chosen (T8) for the silhouette that reads from EVERY side of the table: two round buns on top of the head, visible from above, from the front (the opponent's figures) and from behind (yours). Twelve bodies were rendered side by side before choosing; see the evidence."
     },
-    "scientist": {
+    "scientist-chibi": {
       "pack": "kenney-mini-characters",
       "member": "Models/GLB format/character-male-e.glb",
       "rig": "kenney-mini",
       "facing": "+z",
-      "_role": "creature/subtype:scientist — Bold Biochemist, A.I.M. Scientists. Kenney's character-male-e: round glasses and a shirt-and-tie front with braces on the back — the one body in the kit that reads as a scientist face-on. Its head is the agent's shape, so from BEHIND it is told apart by the braces and by the lab tint; that is the trade, and it is written down."
+      "_role": "Slices 1–3's body, kept as the CHIBI FALLBACK a traits.json row can ask for with \"body\": \"chibi\" (slice 4 — nothing lost). creature/subtype:scientist — Bold Biochemist, A.I.M. Scientists. Kenney's character-male-e: round glasses and a shirt-and-tie front with braces on the back — the one body in the kit that reads as a scientist face-on. Its head is the agent's shape, so from BEHIND it is told apart by the braces and by the lab tint; that is the trade, and it is written down."
     },
     "drone": {
       "pack": "quaternius-robot-enemy-flying",
       "member": null,
       "facing": "+z",
+      "triangles": 1900,
       "_role": "Aerial Doombot, Robot Token — creature/subtype:robot.",
       "clips": {
         "idle": "Idle",
@@ -176,12 +301,14 @@
         "die": "Dead",
         "jet": "Shoot"
       },
-      "_clips_note": "There is no hit-react in this pack, and `hit` is deliberately ABSENT rather than borrowed: §3.6 rung 3 is that a missing clip removes only the part of the animation a model was going to add. The library's humanoid Hit_Chest was not retargeted onto it: an 11-joint flying robot has no legs, spine or neck for a humanoid clip to drive."
+      "_clips_note": "There is no hit-react in this pack, and `hit` is deliberately ABSENT rather than borrowed: §3.6 rung 3 is that a missing clip removes only the part of the animation a model was going to add. The library's humanoid Hit_Chest was not retargeted onto it: an 11-joint flying robot has no legs, spine or neck for a humanoid clip to drive.",
+      "_triangles": "Slice 4: decimated from 4,544 to the target by meshopt's simplifier — g1.jsonl@355 has three drones on the table, and the proportioned humans (and, since slice 4, the two duelists who stand in the same bodies) needed the triangles: the frame has to stay under report 13 §8.2's 30,000."
     },
     "insect": {
       "pack": "quaternius-bee-enemy",
       "member": null,
       "facing": "+z",
+      "triangles": 1700,
       "_role": "Giant-Sized Flying Ant, Ant-Man's Air Force — creature/subtype:insect.",
       "clips": {
         "idle": "Flying",
@@ -189,10 +316,10 @@
         "hit": "HitRecieve",
         "die": "Death"
       },
-      "_clips_note": "`summon` is absent — same rung-3 case as the drone's `hit`."
+      "_clips_note": "`summon` is absent — same rung-3 case as the drone's `hit`.",
+      "_triangles": "Slice 4: decimated from 3,040 to the target, for the same budget."
     }
   },
-
   "_deferred": {
     "carrier": "S.H.I.E.L.D. Helicarrier (T10). CLOSED by Tier 2 slice 3 without an asset: no CC0 vehicle mesh was chosen or downloaded, because a PROCEDURAL carrier silhouette (web/src/arena/scene/props.ts — hull, flight deck, island, four rotor pods, 456 triangles) is drawn for every Vehicle through traits.json's `subtype:vehicle` archetype rung, overhead at layout.ts's SILHOUETTE_ALTITUDE, crewed or not, with no stand disc (DECISIONS.md D77). Nothing here, in figures.glb or in NOTICE changed for it.",
     "clipLibrary2": "Universal Animation Library 2 (CC0, 130+ more clips) is not downloaded: nothing T8 needs is missing from UAL 1 except a shrink, and UAL 2's list (parkour, combos, farming, zombie locomotion) has none either."

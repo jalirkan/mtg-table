@@ -67,7 +67,8 @@ import {
 import type { ModelData } from '../figures/types.ts';
 import { parsedColour } from './colourCache.ts';
 import type { FigureRigMap } from './figureRigs.ts';
-import { instantiateFigure, type LoadedModel, type ModelLibrary } from './models.ts';
+import { COSTUME_ATTRIBUTE } from './holoMaterial.ts';
+import { instantiateFigure, sampleClipInto, type LoadedModel, type ModelLibrary } from './models.ts';
 
 /** The slice of `SceneStage` the field reads — handed in, never imported. */
 export interface PropOffsetSource {
@@ -471,52 +472,54 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
       ]);
     }
     case 'coat': {
-      // A long coat, in figure units from the shoulders (the anchor) to the ankles:
-      // a shell flared at the hem WIDER than the chibi's head (0.46 against its
-      // 0.34), so from the table view's steep camera it shows round the figure on
-      // every side — slice 3's hem was the head's own width and the head hid it.
-      // Wrapped round the front (a 30° opening) with two TRIM strips down its edges,
-      // a stand-up collar with a trimmed rim that shows behind the head from the
-      // opponent's side, and a trimmed hem. The trim's vertex colour is ×30 of the
-      // coat's own: white on any coat that is not black, and a light slate on
-      // Fury's black one — the second verification pass found his coat, in the coat's own
-      // dark, invisible behind your own Fury and indistinct from behind.
-      const gap = (30 / 180) * Math.PI;
+      // **Slice 4: a long coat cut for the PROPORTIONED body**, in its figure
+      // units at size 1, from the shoulders (the anchor) to below the knee: an
+      // open shell a little wider than the shoulders at the top (0.15) and flared
+      // at the hem (0.25), squashed front-to-back to the body's depth; it wraps
+      // round the front to a 40° opening, and its arms-free cut lets the hanging
+      // arms show at its sides. A stand-up collar at the neck (no higher than the
+      // jaw — slice 3's chibi collar, scaled to a person, was a bell over the
+      // head), TRIM strips down the opening, round the collar and the hem. The
+      // trim's vertex colour is ×30 of the coat's own: white on any coat that is not
+      // black, a light slate on Fury's black one (the second verification pass).
+      // The chibi fallback wears the same coat through a wider anchor.
+      const gap = (40 / 180) * Math.PI;
       const edge = gap / 2;
       const TRIM: RGB = [30, 30, 30];
+      const DEPTH: readonly [number, number, number] = [1, 1, 0.72];
       const lapel = (from: number): THREE.BufferGeometry =>
-        part(new THREE.CylinderGeometry(0.268, 0.468, 0.5, 1, 1, true, from, 0.15), TRIM, [0, -0.25, 0]);
+        part(new THREE.CylinderGeometry(0.153, 0.253, 0.56, 1, 1, true, from, 0.12), TRIM, [0, -0.28, 0], [0, 0, 0], DEPTH);
       return mergeParts([
-        part(new THREE.CylinderGeometry(0.262, 0.46, 0.5, 20, 3, true, edge, Math.PI * 2 - gap), WHITE, [0, -0.25, 0]),
+        part(new THREE.CylinderGeometry(0.15, 0.25, 0.56, 22, 3, true, edge, Math.PI * 2 - gap), WHITE, [0, -0.28, 0], [0, 0, 0], DEPTH),
         lapel(edge),
-        lapel(Math.PI * 2 - edge - 0.15),
-        // The collar: stands up round the neck and flares, open at the throat.
-        part(new THREE.CylinderGeometry(0.3, 0.255, 0.15, 18, 1, true, edge * 1.6, Math.PI * 2 - gap * 1.6), [1.3, 1.3, 1.3], [0, 0.07, -0.01]),
-        part(new THREE.CylinderGeometry(0.306, 0.302, 0.028, 18, 1, true, edge * 1.6, Math.PI * 2 - gap * 1.6), TRIM, [0, 0.14, -0.01]),
+        lapel(Math.PI * 2 - edge - 0.12),
+        // The collar: stands up round the neck, open at the throat.
+        part(new THREE.CylinderGeometry(0.085, 0.1, 0.07, 18, 1, true, edge * 1.4, Math.PI * 2 - gap * 1.4), [1.3, 1.3, 1.3], [0, 0.03, -0.005], [0, 0, 0], [1, 1, 0.9]),
+        part(new THREE.CylinderGeometry(0.088, 0.086, 0.012, 18, 1, true, edge * 1.4, Math.PI * 2 - gap * 1.4), TRIM, [0, 0.066, -0.005], [0, 0, 0], [1, 1, 0.9]),
         // The hem's trim.
-        part(new THREE.CylinderGeometry(0.466, 0.466, 0.03, 20, 1, true, edge, Math.PI * 2 - gap), TRIM, [0, -0.485, 0]),
+        part(new THREE.CylinderGeometry(0.252, 0.252, 0.018, 22, 1, true, edge, Math.PI * 2 - gap), TRIM, [0, -0.551, 0], [0, 0, 0], DEPTH),
       ]);
     }
     case 'eyepatch': {
-      // In head-local figure units (the anchor is the head's centre, size 1): the
-      // patch over HIS left eye (+x) and the strap round the head. The kit colour
-      // is white and the colours are the vertices' own — a big BLACK patch with a
-      // thin pale rim, and a black strap — so both read on the slate head Fury
-      // has since the second verification pass. The strap runs DIAGONALLY, low
-      // over the patch and up across his forehead on the other side (a level band
-      // across both eyes read as sunglasses), and it is a box band like the Kenney
-      // head it wraps, so it shows all the way round — from behind too.
-      const band = (): THREE.BufferGeometry => {
-        // A square band (4 sides, corners on the diagonals) scaled to the head —
-        // wider in x than the head's 0.338 by 1 / cos of its 30° tilt, because the
-        // scale is applied BEFORE the turn and a tilted band is narrower.
-        const g = new THREE.CylinderGeometry(Math.SQRT2, Math.SQRT2, 0.075, 4, 1, true, Math.PI / 4);
-        return part(g, [0.03, 0.03, 0.04], [0, 0.0, 0.004], [-0.08, 0, -0.52], [0.405, 1, 0.268]);
-      };
+      // **Slice 4: in UNIT-HEAD space** — the anchor's size is the head's own
+      // half-extents (a person's 0.064 × 0.09 × 0.078, the chibi's 0.338 × 0.245 ×
+      // 0.27), so one geometry fits both. The kit colour is white and the colours
+      // are the vertices' own: a big BLACK patch with a pale rim over HIS left eye
+      // (+x), and a black strap round the head that runs DIAGONALLY — low over the
+      // patch and up across the forehead on the other side (a level band across
+      // both eyes read as sunglasses) — and shows all the way round, from behind too.
+      const strap = part(
+        new THREE.CylinderGeometry(1.08, 1.08, 0.26, 20, 1, true),
+        [0.03, 0.03, 0.04],
+        [0, 0.1, 0],
+        [0, 0, -0.5],
+      );
       return mergeParts([
-        part(new THREE.CircleGeometry(0.14, 18), [0.015, 0.016, 0.02], [0.14, -0.035, 0.27]),
-        part(new THREE.RingGeometry(0.14, 0.156, 20), [0.62, 0.64, 0.7], [0.14, -0.035, 0.269]),
-        band(),
+        // No pale rim any more (slice 4): on a proportioned face a ringed disc
+        // read as a monocle — the patch is a black oval with a slate edge.
+        part(new THREE.CircleGeometry(0.36, 20), [0.015, 0.016, 0.02], [0.4, 0.07, 1.03]),
+        part(new THREE.RingGeometry(0.36, 0.42, 22), [0.09, 0.1, 0.12], [0.4, 0.07, 1.025]),
+        strap,
       ]);
     }
     case 'visor': {
@@ -680,6 +683,14 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
 // ---------------------------------------------------------------------------
 
 /**
+ * **Each costume slot's shade on a baked body** (slice 4), in `COSTUME_SLOTS`
+ * order: skin, hair, top, shirt, legs, shoes, gloves, belt. A baked body is one
+ * instanced kind for every card that bakes it, so it cannot carry a card's
+ * palette — it carries these multipliers of its instance colour instead.
+ */
+const SLOT_SHADE: readonly number[] = [1.35, 0.42, 1, 1.75, 0.72, 0.32, 1.35, 0.5];
+
+/**
  * **A skinned body frozen in one frame of one clip, as a static geometry** in
  * figure space (one unit tall, feet at 0, facing +z) — so a follower or a rider
  * costs an instance of one draw call rather than a rig of its own.
@@ -689,23 +700,7 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
  * mixers are ticked in exactly two files (liveness).
  */
 export function bakePose(model: LoadedModel, clipKey: string, phase: number): THREE.BufferGeometry | null {
-  const instance = instantiateFigure(model);
-  const clip = model.clips.get(clipKey) ?? model.clips.get('idle') ?? null;
-  if (clip !== null) {
-    const at = Math.max(0, Math.min(1, phase)) * clip.duration;
-    for (const track of clip.tracks) {
-      const parsed = THREE.PropertyBinding.parseTrackName(track.name);
-      const node = instance.object.getObjectByName(parsed.nodeName);
-      if (node === undefined) continue;
-      // `createInterpolant` is installed per track by `setInterpolation` (three's
-      // own KeyframeTrack.js) and is missing from @types/three's declaration.
-      const values = (track as unknown as { createInterpolant(): THREE.Interpolant }).createInterpolant().evaluate(at);
-      if (parsed.propertyName === 'quaternion') node.quaternion.fromArray(values);
-      else if (parsed.propertyName === 'position') node.position.fromArray(values);
-      else if (parsed.propertyName === 'scale') node.scale.fromArray(values);
-    }
-  }
-  instance.object.updateMatrixWorld(true);
+  const instance = posedInstance(model, clipKey, phase);
   const parts: THREE.BufferGeometry[] = [];
   const v = new THREE.Vector3();
   instance.object.traverse((child) => {
@@ -723,12 +718,58 @@ export function bakePose(model: LoadedModel, clipKey: string, phase: number): TH
     }
     const baked = new THREE.BufferGeometry();
     baked.setAttribute('position', new THREE.BufferAttribute(position, 3));
+    const region = source.getAttribute(COSTUME_ATTRIBUTE);
+    if (region !== undefined) {
+      // Read, not `clone()`d: the file's attributes are interleaved (meshopt), and
+      // three warns on every clone of one.
+      const slots = new Float32Array(count);
+      for (let i = 0; i < count; i++) slots[i] = region.getX(i);
+      baked.setAttribute(COSTUME_ATTRIBUTE, new THREE.BufferAttribute(slots, 1));
+    }
     if (source.index !== null) baked.setIndex(source.index.clone());
     baked.computeVertexNormals();
-    parts.push(part(baked));
+    const flat = part(baked);
+    // Slice 4: a baked body wears its costume as SHADE — the instance colour is
+    // the costume's top (a squad's suit), and each slot is lighter or darker than
+    // it, so a follower has a white shirt-front, dark shoes and a face.
+    const slots = flat.getAttribute(COSTUME_ATTRIBUTE);
+    if (slots !== undefined) {
+      const colour = flat.getAttribute('color') as THREE.BufferAttribute;
+      for (let i = 0; i < colour.count; i++) {
+        const k = SLOT_SHADE[Math.round(slots.getX(i))] ?? 1;
+        colour.setXYZ(i, k, k, k);
+      }
+      flat.deleteAttribute(COSTUME_ATTRIBUTE);
+    }
+    parts.push(flat);
   });
   instance.mixer.stopAllAction();
   return parts.length === 0 ? null : mergeParts(parts);
+}
+
+/**
+ * A fresh instance of `model` held in one frame of one of its clips (`idle` if
+ * it has no such clip), its world matrices up to date. The clip is SAMPLED by hand
+ * — each track's own interpolant at one time — not played through a mixer: this
+ * runs at load and at commit, and the arena's mixers are ticked in exactly two
+ * files (liveness).
+ */
+function posedInstance(model: LoadedModel, clipKey: string, phase: number): ReturnType<typeof instantiateFigure> {
+  const instance = instantiateFigure(model, { pose: 'bind' });
+  const clip = model.clips.get(clipKey) ?? model.clips.get('idle') ?? null;
+  if (clip !== null) sampleClipInto(instance.object, clip, Math.max(0, Math.min(1, phase)) * clip.duration);
+  instance.object.updateMatrixWorld(true);
+  return instance;
+}
+
+/** Every joint of an instance: its world matrix in figure space, inverted, by base name. */
+function jointInverses(object: THREE.Object3D): JointBinds {
+  const out: JointBinds = new Map();
+  object.traverse((child) => {
+    if ((child as THREE.Bone).isBone !== true) return;
+    out.set(baseName(child.name), child.matrixWorld.clone().invert());
+  });
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -800,9 +841,15 @@ function blankBinding(): Binding {
 /** Per model: joint base name → the joint's bind matrix in figure space, inverted. */
 type JointBinds = Map<string, THREE.Matrix4>;
 
-/** `head_1` → `head`: GLTFLoader suffixes a repeated node name. */
-function baseName(name: string): string {
-  return name.replace(/_\d+$/, '');
+/**
+ * `head_1` → `head`: GLTFLoader suffixes a repeated node name with `_<n>`, n from
+ * 1. **Slice 4: only a suffix with no leading zero** — the proportioned bodies'
+ * own joints end in digits (`spine_03`, `neck_01`), and slice 3's `/_\d+$/` turned
+ * all three spine joints into one `spine`. `spine_03_1` → `spine_03`, and
+ * `spine_03` stays itself.
+ */
+export function baseName(name: string): string {
+  return name.replace(/_[1-9]\d*$/, '');
 }
 
 /** §9.2 rule 6 — the frame loop's scratch, at module scope. */
@@ -829,6 +876,12 @@ export class PropField {
   private readonly roots: THREE.Object3D[] = [];
   private rootCount = 0;
   private readonly binds = new Map<string, JointBinds>();
+  /**
+   * Slice 4: per model and pose (`id|clip|phase`), each joint's matrix in THAT
+   * pose, inverted — for an anchor written in a pose rather than at bind
+   * (`PropAnchor.pose`: the pistol in Agent 13's aim). Built at commit, once.
+   */
+  private readonly posed = new Map<string, JointBinds>();
   private readonly jointsOf = new WeakMap<THREE.Object3D, Map<string, THREE.Object3D>>();
   private library: ModelLibrary | null = null;
   private clock = 0;
@@ -929,24 +982,25 @@ export class PropField {
     this.ensure();
     if (this.library === library) return;
     this.library = library;
+    this.posed.clear();
     for (const [id, model] of library) {
-      const instance = instantiateFigure(model);
+      // The BIND pose: every anchor in figures/props.ts is written in it.
+      const instance = instantiateFigure(model, { pose: 'bind' });
       instance.object.updateMatrixWorld(true);
-      const binds: JointBinds = new Map();
-      instance.object.traverse((child) => {
-        if ((child as THREE.Bone).isBone !== true) return;
-        binds.set(baseName(child.name), child.matrixWorld.clone().invert());
-      });
+      this.binds.set(id, jointInverses(instance.object));
       instance.mixer.stopAllAction();
-      this.binds.set(id, binds);
-      if (familyOf(id, models) === 'humanoid' && !this.kinds.has(`squad:${id}`)) {
+      const family = familyOf(id, models);
+      if ((family === 'humanoid' || family === 'human') && !this.kinds.has(`squad:${id}`)) {
         const follower = bakePose(model, 'idle', 0);
         if (follower !== null) this.addKind(`squad:${id}`, 'squad', follower);
       }
     }
     const hero = library.get('hero');
     if (hero !== undefined && !this.kinds.has('rider')) {
-      const rider = bakePose(hero, 'crouch', 0.5);
+      // Slice 4: the proportioned body HUNCHED (the `shrink` clip, the library's
+      // crouch) — its `crouch` is an upright kneel now, which stood a rider up tall
+      // on the ant's back.
+      const rider = bakePose(hero, 'shrink', 0.5);
       if (rider !== null) this.addKind('rider', 'rider', rider);
     }
   }
@@ -1032,7 +1086,12 @@ export class PropField {
           this.ride(b, body, departed);
         } else {
           const joint = body === null ? null : this.jointOf(body, anchor.joint);
-          const bind = pose.modelId === null ? undefined : this.binds.get(pose.modelId)?.get(anchor.joint);
+          const bind =
+            pose.modelId === null
+              ? undefined
+              : anchor.pose !== undefined
+                ? this.posedInverses(pose.modelId, anchor.pose.clip, anchor.pose.phase)?.get(anchor.joint)
+                : this.binds.get(pose.modelId)?.get(anchor.joint);
           if (joint === null || bind === undefined || body === null) continue;
           this.reset(b, MODE_JOINT, target, pose, prop.colour);
           b.joint = joint;
@@ -1049,6 +1108,20 @@ export class PropField {
       }
     }
     return n;
+  }
+
+  /** A model's joints in one pose of one clip, inverted — built once per pose, at commit. */
+  private posedInverses(modelId: string, clip: string, phase: number): JointBinds | null {
+    const key = `${modelId}|${clip}|${String(phase)}`;
+    const cached = this.posed.get(key);
+    if (cached !== undefined) return cached;
+    const model = this.library?.get(modelId);
+    if (model === undefined) return null;
+    const instance = posedInstance(model, clip, phase);
+    const inverses = jointInverses(instance.object);
+    instance.mixer.stopAllAction();
+    this.posed.set(key, inverses);
+    return inverses;
   }
 
   /** Bind `b` to the body it rides (a departing one's root is refreshed each frame). */
@@ -1244,6 +1317,7 @@ export class PropField {
     this.list.length = 0;
     this.kinds.clear();
     this.library = null;
+    this.posed.clear();
     this.unwatchMotion();
     for (let i = 0; i < this.bound; i++) this.clear(this.bindings[i]!);
     this.bound = 0;

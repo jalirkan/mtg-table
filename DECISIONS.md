@@ -3802,3 +3802,490 @@ hidden-information renderer growing a branch that is not about the board). Rows
 in `web/src/keys.ts` (above). Keeping the mode app mounted and hidden under the
 browser (above). A per-component stylesheet for the browser (M4 convention 1:
 neither test runner can load one).
+
+---
+
+*A note on numbering. **D90–D94 are `main`'s**: the local card library and the
+`#cards` browser, commit `754f504` (2026-09-27), which landed on `main` while
+slice 4's branch (`tier2-slice4`, cut from `0368a90`) was being built; the branch
+was rebased onto it the same day. Slice 4's decisions start at **D95** so the
+merge kept both sets without renumbering either.*
+
+---
+
+## D95 — The humanoid bodies are Quaternius's *Universal Base Characters*: proportioned people on the animation library's own rig, every clip the library's; the chibis stay as fallbacks
+
+**2026-09-27** (M7 Tier 2, slice 4 — the bodies track; written up by the slice's
+documentation pass. **Supersedes D73** — the three Kenney bodies chosen by
+silhouette — and, for the proportioned bodies, **D68**'s "the pack's own clips
+with two retargeted in"; the chibi fallbacks keep D68's set unchanged. Within
+**D53**, **D54**, **D57** and **D67**)
+
+**Decision.** Every humanoid card stands in a proportioned body from
+Quaternius's *Universal Base Characters* [Standard] — CC0, its badge read and
+recorded verbatim on the download day, 2026-09-27 (`tools/assets-manifest.json`'s
+`quaternius-universal-base-characters`, NOTICE §7). The **man** (`Superhero_Male`
+with the `Hair_SimpleParted` hairstyle) is the model `agent`, and `scientist` is
+the same node; the **woman** (`Superhero_Female` with `Hair_Long`) is `hero`.
+Both are on the Universal Animation Library's own 65-joint rig — the same author
+and the same joint names, and the build asserts the joint list against the
+library mannequin's skin — so **every** clip they play is the library's,
+retargeted by the build by **world-space delta** over 22 major joints (parents
+first; the fingers and `root` hold their bind; the pelvis translated by the
+source's hip delta scaled by the hip heights). The two rigs share names but not
+rest orientations (up to 23° apart at the neck, measured), so local rotations are
+not copied. The clip map is the manifest's `rigs.ubc.clips`: `idle` Idle_Loop,
+`summon` Jump_Land, `attack` Punch_Cross, `block` Sword_Idle, `hit` Hit_Chest,
+`die` Death01, `grow` Spell_Simple_Enter, `channel` Spell_Simple_Shoot, `shrink`
+Crouch_Idle_Loop, `pistolDraw` Pistol_Shoot, `radioCall` Idle_Talking_Loop — and
+`crouch`, the tapped kneel, **composed** (`ual:Fixing_Kneeling+Idle_Loop`: the
+kneeling clip's legs and hips, their turn about the vertical removed by
+swing-twist and their pitch kept, under the idle's torso held upright), because
+the library has no kneel with an upright chest.
+
+The build also drops the eyes and eyebrows (a head is about 12 px tall at the
+table view), grafts the hairstyle onto the body's skin (joints remapped by name,
+the bind asserted equal), and scales the head **×1.3** about its joint, weighted
+by each vertex's head weight so the neck blends. `figures.json` picks the body per
+card where the subtype rung would pick the wrong one: Peggy Carter, Agent 13 and
+Quake stand in the woman's body, Ant-Man in the man's. The three Kenney bodies
+stay in the library as `agent-chibi`, `hero-chibi` and `scientist-chibi`
+(**D98**).
+
+**Every clone starts at its idle's first frame** (`scene/models.ts`'s
+`instantiateFigure`, `pose: 'rest'`, the default; the skin's bind is untouched;
+`PropField` asks for `pose: 'bind'`, which its anchors are written in). Three's
+mixer blends every bone toward the pose it found when an action first played
+whenever the weights sum below 1. A proportioned body's bind pose is a T-pose, so
+Agent 13 flashed into it at the end of her attack (`g2` 156 → 157); a chibi's
+stubby A-pose had hidden the same thing for three slices.
+
+**Rationale.** The user's verdict on slice 3 was *"the avatars are still pretty
+generic"*. On a chibi (the head half the figure, 1.07–1.15× as wide as tall)
+identity could only be a tint and what the figure carried. A proportioned body
+has a head, shoulders, a waist and legs, which is what a costume (**D97**) is
+painted on. Report 12 §2 had already listed this pack as the humanoid candidate:
+CC0, glTF, *"rigged with a Humanoid rig allowing easy retargeting"*. D68's
+face-plants were the library's clips on a 7-joint chibi whose head is half its
+height. On the library's own rig, lab renders of all twelve clips at four phases,
+front and side, on both bodies, show natural poses. The ×1.3 head is the heroic-miniature
+convention: a superhero body is 8.6 heads tall, and at 60–100 px its head was a
+7-px dot that no hat, helmet or eyepatch could sit on. The strict width clamp
+(**D65**, unchanged) no longer bites: the woman is 0.33 and the man 0.37 as wide
+as tall at rest, so every humanoid stands its full `FIGURE_HEIGHT` 0.85 where the
+chibi was clamped to 0.63 (7,216 neighbouring pairs, worst overlap 0.000; **D66**
+unchanged).
+
+**Known cost.** The free Standard zip holds **only the Superhero** male and
+female of the kit's six bodies. The Regular and Teen proportions are in the paid
+Source zip ($19.99, not used), so Coulson and the scientists are broad-shouldered.
+The composed kneel is a build-side invention, and two compositions failed before
+this one: on the kneeling clip's own hips the body turned edge-on to the table
+camera (Coulson's tie 1 px, Peggy's shield 6 px, measured by the raster test), and
+on the idle's hips it stood on one bent leg. `CueRunner.driveClips` still returns
+early when a stance's rest action IS the transient, leaving the weights below 1
+for the ramp. Starting every clone at its idle hides the bind pose rather than
+fixing the weights, so a model with no `idle` would still flash its bind. The
+sources were downloaded by the builder on the workflow's instruction — the new
+128,968,391-byte zip, and the four earlier sources again — not on the user's
+approval in chat (PLAN.md's slice-4 follow-ups).
+
+**Rejected.** The paid Regular bodies (the user's call, not a builder's).
+Quaternius's *Man in Suit* and KayKit's adventurers, the brief's named fallbacks
+(not needed once the badge read CC0; *Man in Suit* is one body with seven
+materials and a rig of its own, report 12). Keeping the chibis as the default
+(the verdict). Copying the library's local rotations onto the body (the rest
+orientations differ). Mixamo (**D54**). A body per card (Tier 3, report 13 §12).
+
+---
+
+## D96 — A body is 1,400 triangles, the drone 1,900 and the bee 1,700, simplified WITH the costume slots by the meshoptimizer the CLI already carries
+
+**2026-09-27** (M7 Tier 2, slice 4 — the bodies track. Within report 13 §8.2's
+budget and **D67**)
+
+**Decision.** `tools/build-figures.mjs` decimates each proportioned body from
+about 12,600–12,800 triangles to **1,400** (the manifest's `models.<id>.triangles`)
+with meshoptimizer's `simplifyWithAttributes`, each vertex's costume slot (**D97**)
+riding along as a one-hot attribute so the slot borders survive, and the shirt's
+and belt's vertices **locked**. The drone (4,544 → **1,900**) and the bee (3,040 →
+**1,700**) are simplified too, plainly. The simplifier is **meshoptimizer 1.2.0,
+the copy nested under `@gltf-transform/cli`**, resolved through the CLI's own
+`package.json`, so a body is exactly what `gltf-transform simplify` would make of
+it; meshopt's simplifier is deterministic, and two builds from the verified
+sources are byte-identical (`cmp`). The result is `figures.glb` **373,236 bytes**
+(sha256 `fe13b02c…f7aae90`), 8,573 triangles and 63 clips, inside report 13 §8.2's
+≤ 400 kB, recorded in `models.json` and held to it by `figures.test.ts`.
+
+**Rationale.** Measured, not assumed. The brief suggested 2,500–3,500 triangles a
+body, which assumed twelve humans and nothing else. `g1`@355, the budget frame,
+has seven humans, three drones, an insect, a rider, sixteen props and, since
+**D99**, two full duelist bodies. With the first cut (1,700-triangle bodies, the
+drone at 2,300, the bee at 2,000) that frame read **31,909** triangles, over the
+30,000 line. At these targets it reads **27,416** triangles, 79 draw calls and 12
+programs with bloom off (GTX 1080, headless Chromium). At table distance a
+1,400-triangle body draws the same silhouette. A plain simplify kept 6 of the
+shirt's 58 vertices and the white shirt was a smear, which is why the slots ride
+along and the two small bands are locked.
+
+**Known cost.** The headroom is thin on three lines at once. About 2,600 triangles
+remain at `g1`@355, and under 1,000 in a frame at `MAX_FIGURES` (12) with both
+duelists. The file is 27 kB under 400 kB, and the humans' clips are most of it.
+Eleven draw calls are left. **Byte reproducibility now rides a transitive
+dependency**: the build imports whatever meshoptimizer `@gltf-transform/cli`
+nested, and the CLI still floats on `^4.5.0` in `web/package.json` (Tier 2
+follow-up 17). `figures.test.ts` catches a changed file, but only after the fact.
+
+**Rejected.** The brief's 2,500–3,500 (over budget, above). Leaving the drone and
+the bee alone (their triangles were the cheapest to give back). A plain simplify
+(the shirt). The older meshoptimizer at `web/`'s top level (not what
+`gltf-transform simplify` runs, so a body would differ from the CLI's own output).
+
+---
+
+## D97 — The hologram paints a COSTUME: a slot per vertex, a palette per figure written at commit, the rim still the card's tint, still one program
+
+**2026-09-27** (M7 Tier 2, slice 4 — the bodies track. **Amends D53**'s treatment
+and retires **D73**'s premise that "the hologram keeps only geometry": it now
+keeps geometry and eight colours. Within **D56**, **D67** (no texture) and **D75**
+(identity is data))
+
+**Decision.** Every humanoid vertex carries a **costume slot**, one unsigned byte
+indexing `figures/props.ts`'s `COSTUME_SLOTS` — `skin`, `hair`, `top`, `shirt`,
+`legs`, `shoes`, `gloves`, `belt`, in that order, and **the order is the
+contract**: the build imports the array, the shader indexes by it, and
+`traits.test.ts` holds the two together. The build writes the slot as the glTF
+custom attribute `_REGION`, and `scene/models.ts` renames it once, at load, to
+`costumeRegion`. Slots come from the joint that moves the vertex: the head and
+neck are `skin`; the spine, clavicles and arms are `top`; the hands and fingers
+`gloves`; the pelvis, thighs and calves `legs`; the feet `shoes`; the whole
+hairstyle `hair`. **Two bands** are measured on the bodies' own bind positions:
+
+- **The shirt**: a V down the chest front, from the collar (neck + 2 cm,
+  half-width 0.1 m) to a point 9 cm under the chest joint (`spine_03`),
+  front-facing vertices only.
+- **The belt**: the base body's own waistband, the band 25–85% of the way from
+  the pelvis to `spine_01`.
+
+The chibi fallbacks get slots too; their face is the front of the head below the
+brow.
+
+**The palette is per FIGURE, not per vertex and not per instance**: each figure's
+own `HoloMaterial` carries a `uCostume[8]` uniform array plus `uCostumeOn`. The
+vertex shader looks the vertex's slot up in it. The fragment shader draws the
+body in its palette and rims the silhouette in the card's **tint**, so the
+hologram still glows in the card's colour. A costumed body is also more solid
+(core alpha 0.74 against 0.38) and its scanlines softer (0.12 against 0.35),
+counted in the figure's own height (`uUnitScale`). `applyCostume` writes the
+palette **at commit**, from `FigureLayer`'s layout effect, keyed so the strings
+are parsed once a game. A frozen pose is washed grey there. A dying body's fade is
+a number, `uDrain` toward `uDrainTo`, which its frame loop writes and which
+reaches every slot. A figure with no palette (the drone, the bee, an anonymous
+figure) is drawn exactly as slices 1–3 drew it.
+
+**The data** is `traits.json`'s `costume`: slot → `#rrggbb`, or `tint` for the
+figure's own tint, **merged slot by slot** down the ladder (a card row that names
+only its hair keeps its rung's suit). `figures/pose.ts`'s `costumeOf` fills the
+rest. Skin is `#d6a57f` for everyone, hair and shoes have neutral defaults, the
+shirt follows the top, legs are the top darkened, gloves are the skin, and the
+belt is the legs darkened. So a card with no costume at all wears a bodysuit of
+its own colour. The rungs are spy (a dark suit and white shirt), hero (blue below
+and a gold belt), soldier (tactical grey, black gloves) and scientist (a white lab
+coat over grey), and ten deck cards have rows of their own (README's *Tier 2,
+slice 4*).
+
+**Rationale.** The user named Peggy — *a blue jacket and a red hat* — and slice 3
+could not give her two colours: its shader carried one tint. A texture per card
+would be a model per card by another name, and **D67** keeps the library
+texture-free. Figures are not instanced — each is its own `SkinnedMesh` clone
+with its own material, sharing one geometry and one program — so a per-material
+uniform array is the channel the figure already has. Eight slots cost eight
+uniforms and no texture unit. It is still one program: 12 with bloom off at
+`g1`@355, as in slice 3, measured.
+
+**Known cost.** Skin is one tone for every card, deliberately: a costume is
+identity data and a complexion is not, and nothing here is drawn from a likeness
+(Tier 3). The squad's followers are baked bodies (**D88**) and carry a shade per
+slot, not their card's palette. The coat prop is rigid, so a kneeling
+Biochemist's lab coat is a white box to the floor.
+
+**Rejected.** A texture per card (above; **D67**). Vertex colours baked into the
+library per card (one body per card, Tier 3's seam). A per-card skin tone (a
+likeness by degrees). Writing the palette in the frame loop (a liveness clause
+forbids any `applyCostume` or `uCostume` write in `CueRunner.tsx`,
+`DiscField.bind`, `DepartureField.bind` or `PropField.bind`).
+
+---
+
+## D98 — The chibi is a FLAG, not a default; props are fitted per body FAMILY; the eyepatch joins the one-sided details
+
+**2026-09-27** (M7 Tier 2, slice 4 — the bodies track. Within **D75**, **D81**,
+**D83** and **D84**; amends D83's one-sided list and D84's heads test)
+
+**Decision.** `traits.json` gains **`body`**: `human` (the default — **D95**'s
+proportioned bodies) or `chibi`. A row with `"body": "chibi"` stands its card in
+`<model>-chibi` — slices 1–3's Kenney body — when the library has that model, and
+in its ordinary body when it does not. **No row asks for it today.**
+`figures.test.ts` requires every `-chibi` model to be a declared fallback of a
+body the ladder reaches, and prints the list. `clips.test.ts` holds the three
+chibis to one rig and one clip set (T8's), and holds the proportioned bodies to
+the library's clips joint for joint, **borrowing none** (the chibis still borrow
+`crouch` for `block` and `shrink`; the proportioned bodies have a clip each).
+
+**A prop is fitted per body FAMILY.** `familyOf` reads the manifest's rig:
+`ubc` → **`human`**, `kenney-mini` → **`humanoid`** (the chibi), and the drone and
+the insect are families of their own. Every kind in `PROP_KIT` carries anchors per
+family, written in that family's figure space: one unit tall, feet at y = 0,
+facing +Z (**D81**). A family with no row draws nothing of that kind. The `human`
+anchors are written in the body's BIND pose on its own joints (`Head`, `spine_03`,
+`hand_r`/`hand_l`, `lowerarm_l`, …), against landmarks measured on the
+committed `figures.glb` (`figures/props.ts` prints them), with one exception:
+**`PropAnchor.pose`** writes an anchor in a POSE of a clip. Agent 13's pistol and
+its muzzle are anchored to `hand_r` in her `pistolDraw` aim at phase 0.45, so the
+pistol is in her hands while she attacks and hangs at her side at rest.
+`PISTOL_MUZZLE` moved with it, and the cue's flash lands on it with no cue edit
+(`facing.test.ts` green). The coat is re-cut for a person (0.15 → 0.25 flare over
+0.56, a collar at the jaw). The eyepatch is written in unit-head space, with a
+slate edge instead of a pale ring (on a person's face the ringed disc read as a
+monocle). The squad's wedge is 0.34 aside (0.46 was a chibi's width). The rider
+is the woman, hunched, ×0.46. The kit's `baseName` no longer turns `spine_03`
+into `spine`.
+
+**Two thresholds moved, each with its measurement.** The **eyepatch joins
+D83's one-sided details**, with the coat as its partner: on a head 12 px tall it
+cannot show 48 px from both seats without being a mask, and it measures 56 px
+from the front and 42 from behind. **D84's heads test** is recalibrated for
+proportioned heads: ≥ 60 px each (a lone agent's head measures 126–142, a
+follower's 79–87) and ≥ 20 px apart across the screen, where it was 150 and 15. It
+finds the heads by their costume slots (skin and hair) rather than by height, so a
+KNEELING leader's head is still a head. Slice 3's first formation, the control,
+still fails it 8 of 8.
+
+**Rationale.** Nothing was lost: slices 1–3's bodies are still in the file, one
+data key away, and each is held to a body the ladder reaches, so a fallback
+cannot rot unnoticed. Fitting per family is what let the kit move to a new body
+without touching a single `traits.json` row.
+
+**Known cost.** The chibi's pistol uses the proportioned body's numbers (so the
+flash stays on it) and sits in front of the chibi's face. A family's anchors move
+whenever the build refits a body, and so does the villain's look (**D99**), which
+stretches the kit's hood.
+
+**Rejected.** Deleting the chibis (they cost 2,175 triangles of file and nothing
+on the table). A second anchor table per card (props stay a shared kit, **D75**).
+Lowering the 48 px bar for the eyepatch alone (the one-sided list is the
+mechanism D83 built for exactly this).
+
+---
+
+## D99 — The duelists are FULL figures: a seat, not a player; a director and a villain; props baked into one mesh; the busts are the fallback
+
+**2026-09-27** (M7 Tier 2, slice 4 — **T13**, the duelist track; written up by
+the slice's documentation pass. **Supersedes D62** — "two billboard silhouette
+busts at the HUD anchors; rigged avatars are deferred", which was user decision 8
+— on the workflow's reading of the user's verdict on slice 3, *"the avatars are
+still pretty generic"*, as covering the duelists as well as the creatures. The
+user's words do not say which; the busts remain, and a seat with no valid look
+draws one. Within **D53**, **D56**, **D57** and hard rule 8)
+
+**Decision.** Each seat has **one full figure**, drawn through the same library,
+loader (`scene/models.ts`), holographic material and program as every creature,
+at **1.6 × `FIGURE_HEIGHT` = 1.36** (a creature is 0.85). **Who stands for a seat
+is data**: `figures/duelists.json`, validated by `figures/duelists.ts`'s
+`validateDuelists` like `cues.json` and `traits.json` (unknown keys are errors;
+a bad look drops its seat to the bust). **A seat, never a player**: seat `you`
+is the **director**, seat `opp` the **villain**, and nothing reads
+`PlayerState.name`.
+
+- **The director** is the man's body in a navy suit, a white shirt V and black
+  gloves. He wears the kit's long `coat` in the suit's colour with its trim in
+  gold (lapels, collar, hem), and the kit's `badge`, gold with a dark roundel, on
+  his chest with its emblem on his back. His hologram edge is steel-blue mixed 45%
+  with your seat's teal (`seatMix`).
+- **The villain** is the same body in iron-grey armour with an iron mask (the
+  `skin` slot) and a green tunic. He wears the kit's `coat` as a green cloak
+  trimmed in gold, and the kit's `hood` as an iron great helm, stretched
+  `[1.1, 0.8, 1.08]` (a look may stretch a kit anchor within [0.4, 1.8]), whose
+  visor slit wears the dark `shade` slot. His edge is green.
+
+A look is a body ladder (`agent`, `hero`, `scientist`, `agent-chibi`; the first
+the library holds wins), a scale within [1.2, 2.2], a tint and its `seatMix`, a
+costume in **D97**'s slots, props from the shared kit each worn in a slot, and
+the slots a prop's `trim` and `shade` parts wear. The kit's own vertex tones
+choose which: a part lit ≥ 4× wears `trim` and one ≤ 0.3 wears `shade`.
+
+**Props are BAKED, not instanced.** `scene/DuelistLayer.tsx` builds each body at
+commit: `instantiateFigure`, the costume through `applyCostume`, then each kit
+anchor's unit geometry (`buildKindGeometry`, `anchorsOf`) rigidly skinned to its
+joint and appended to the body's geometry. So a duelist is **one `SkinnedMesh`,
+one draw call and no new program** (1,728 triangles each on the current
+`figures.glb`), and the badge rides the chest through every clip.
+`DuelistField.bind` poses both bodies once a frame: position and facing, the
+breathing idle, the stance entry, a transient gesture (**D101**), aimed bones, a
+lean, the tint, and then `mixer.update(0)`. It is reached **only** through
+`BustField.bind`, which `CueRunner` already called once a frame, and which draws
+a bust only for a seat with no figure. Build and disposal are **one layout
+effect**, so cleanup and setup always pair; a Vite hot update once brought the
+busts back mid-game when disposal sat in a passive effect.
+
+**The stance is a POSE** (**D56**): `duelistPoses` gives each seat `ready`, `won`
+or `lost` from `board.gameOver` **alone**, so a skip, a scrub, a `resync` and a
+new `gameId` need no history. The winner holds `grow` at 0.85 with the right arm
+**aimed** straight up (the library has no raised fist, so `aim` turns a joint
+until the line to its child points along a figure-space direction, after
+`mixer.update(0)` and before the next one rewrites it). The loser holds `crouch`
+at 0.8, head aimed down, slumped 0.3 rad and drained 50% toward grey. Breathing
+reads the cue queue's virtual clock (`queue.now`), which runs only while the
+queue has film, so **an idle table still renders nothing** (**D58**).
+
+**Rationale.** A proportioned body in a costume (**D95**, **D97**) is what made a
+duelist affordable: D62's objection was "the most art-direction-expensive thing
+in the tier", and after slice 4 a duelist is a costume row and two kit props on a
+body the library already carries. Report 13 §7's other objection — "the camera
+cannot afford them" — held, and it is **D100**'s subject. Baking the props keeps
+a duelist one mesh, one draw call and one program, and leaves the prop field what
+**D78** made it: committed only by `FigureLayer`, from the creatures' poses, with
+no second source. Measured, the two cost **2 draw calls** where the busts cost 1, no
+program (program #9 draws 13 objects: 11 figures and 2 duelists) and **3,456
+triangles**. `g1`@355 is 79 / 27,416 / 12, `g1`@316 73 / 24,316 / 12, and with
+`figures.glb` blocked the fallback reads 59 / 3,078 / 10.
+
+**Known cost.** The verifier found both read as costumed figures but only weakly
+as a *director* and a *villain*, each with a visible artifact. From the default
+table view the director is seen from above and behind in the bottom-left corner,
+mostly coat. The coat is rigid on `spine_03`, so its lapel strip shows a seam
+when the win clip twists the torso. The villain's helm is A.I.M.'s bucket
+stretched, and moves whenever the bodies are refitted. The "fist" is an open hand
+(the fingers keep the clip's pose). The triangle headroom is the bodies'
+(**D96**).
+
+**Rejected.** Two busts, kept as the design (the verdict). Instanced duelist
+props (above). A player's name or deck choosing the look (hard rule 8's renderer
+half — the HUD plate carries the name). A duelist in the camera solver's
+required set (**D100**).
+
+---
+
+## D100 — Where the duelists stand: yours beside your hand, the opponent's at the table's right beside its creature rank, because the far end is under the chrome
+
+**2026-09-27** (M7 Tier 2, slice 4 — T13. Closes Tier 2 follow-up 10 — the busts'
+placement — for the duelists, and moves the busts with them. Within report 13
+§7's rule and **D85**'s keep-out band)
+
+**Decision.** Both stand points are pure layout arithmetic in
+`figures/duelists.ts` (`duelistStand`), taken off `layout.ts`'s anchors:
+
+| seat | stand (world) | from | faces |
+|---|---|---|---|
+| you | (−3.95, 0, 4.65) | your HUD anchor (`playerAnchorFor`), **0.4 outboard and 0.4 back** (`YOU_STAND_DX`, `YOU_STAND_DZ`) | the other duelist: three-quarters **away** from your camera |
+| opp | (4.2, 0, −2.2) | the opponent's creature-rank anchor + (`OPP_STAND_X` 4.2, `OPP_STAND_DZ` 0.1): **0.66 past the end of a full nine-card rank**, level with it, clear of the stack column (x 4.8) and the library (z −4.55) | the other duelist: three-quarters **toward** your camera |
+
+They face each other diagonally across the table (`duelistFacing`, `yawToward`
+from `FIGURE_FRONT_Z`, **D81**). The busts, which a seat with no figure still
+draws, stand at the same points. The duelists are **never** in the camera
+solver's required set: no view, clamp or solver rule changed, and `keepsSeat` is
+recomputed unchanged for every view. `camera.ts` gained three pure checks the
+duelists need and nothing else: `keepOutTop` (the chrome band's lower edge in
+NDC), `clearOfHand` (a body's projected hull against every card of a seven-card
+fan, by SAT) and `visibleShare` (a 7 × 11 sample grid over the body inside the
+frame and below the chrome). `camera.test.ts` asserts that yours never overlaps a
+hand card in any seat-safe view at any live aspect and covers none of your ranks.
+It asserts that the opponent's is ≥ 90% visible on a 1600 × 1000 window, ≥ 70% on
+1280 × 800 at 16:10 and wider and at 4:3, and covers none of the opponent's ranks
+from the table view. **Slice 1's two bust anchors are the negative controls**:
+behind the hand at 6 of 18 (view, aspect) pairs, and 0% visible.
+
+**Rationale.** The brief asked for both at the existing bust anchors. Measured,
+the opponent's cannot be there: from every seat-safe view the far end of the
+table lies under the arena's chrome (`HUD_TOP_PX`, 128 CSS px). A 1.36-tall body
+anywhere behind the opponent's hand is **0% visible from the table view** at
+1600 × 1000, because the whole far end projects above NDC 0.73; slice 1's bust
+there was 37–89% covered. A grid over the opponent's half (every seat-safe view ×
+every live aspect × both canvas heights) found the well-seen places only toward
+the table's centre or at its right side. Your own bust's point put a standing
+body's legs over the fan's leftmost card from the low view; 0.4 outboard and 0.4
+back is the nearest point from which no card of the widest fan is ever behind it.
+
+**Known cost.** It is **not** the Yu-Gi-Oh composition — one duelist at each end —
+that `docs/ideas/arena-mode.md` reaches for. Putting the opponent's at the far end
+is a camera, layout or HUD decision (the chrome band, the table view's pose or the
+table's depth), not a duelist one. **View 4 (side-on) does not show yours** (it
+stands 49.6° off that view's axis against a 33° half-width at 16:9). View 3 shows
+it at 31%, partly under the chrome. A square (1:1) window cuts the opponent's off
+in the shoulder and low views (0%; printed, not asserted). `visibleShare` models
+only the top chrome band, **not the player plates**: the verifier found the
+top-right AI plate reaching y ≈ 180 at 1600 × 1000 and covering the villain's helm
+in the shoulder view at 1024 × 768. The damage number still rises from
+`playerAnchorFor`, which is at your duelist's feet but not at the opponent's.
+
+**Rejected.** The bust anchors (measured above). Adding the duelists to the
+solver's required set (report 13 §7: decoration may leave frame, the hand and the
+battlefield may not). Moving the chrome, the table view or the table's depth
+inside a duelist track (a decision with its own blast radius, left to the user).
+
+---
+
+## D101 — A duelist's gestures are a `gesture` PARAM on the existing cues, played on reserved clip-lane ids; one flinch per player per batch
+
+**2026-09-27** (M7 Tier 2, slice 4 — T13. Within **D51**, **D57**, **D79**'s closed
+param table and the pose/cue rule, **D56**; no cue id added)
+
+**Decision.** A duelist answers four things, and each is a **cue that decays to
+identity**, played by the cue that is already playing the event:
+
+| gesture | written on | lane request | the body |
+|---|---|---|---|
+| **cast** | any cue on a `cast` for `players[0]` (`cast.rise`, Wasp's `fx.scaleBeam`, Helicarrier Strike's `fx.strike`, …) | `channel`, alias `cast`, weight `clipEnvelope(t)` | the body's `channel` clip (Spell_Simple_Shoot): a hand raised toward the table, and back |
+| **flinch** | `damage` to a player; `life` with `to < from` | `hit`, alias `flinch` | `hit` (Hit_Chest), a lean back of 0.2 rad, the whole body drained toward red (0.62 × weight, through `uDrain`) |
+| **win** | `outcome.finish`, for the winner | `grow`, alias `win` | the entry into **D99**'s won stance, with a gold lift in the edge |
+| **lose** | `outcome.finish`, for every other seat | `die`, alias `lose` | the entry into the lost stance |
+
+The cue ladder writes the `gesture` **fact** on the four events a duelist answers
+(`cues/resolve.ts`). `cues/validate.ts` knows the param — `cast`, `flinch`,
+`outcome` or `none` — and a data row may override it like `colour`. The shared
+`cue()` builder plays it (`cues/registry.ts`'s `playGesture`) on
+**`duelistLane(player)` = −1,000,000 − player**, an id no card can have (Forge's
+ids are non-negative and every "no card" sentinel in the cue engine is −1). On
+`end()` the builder releases **only its own request**, through `Stage.clipOf`, one
+new OPTIONAL query that `SceneStage` already had. So `replay-cues.test.ts`'s
+"`stage.clips` is empty after every batch" covers the duelists with no line
+added. `cues/queue.ts` gains two suppression rules and one query:
+
+- **Rule 5b.** A `cast` that rule 5 absorbs into its arrival hands its gesture to
+  the arrival (`gesture: "cast"`, `gesturePlayer` = the caster). Otherwise the
+  AI, which casts and resolves inside one snapshot, would never raise a hand.
+- **Rule 8.** One flinch per player per batch: the `damage` keeps it, and the
+  `life` loss it caused gives it up (`gesture: "none"`).
+- **`gesturePending(gesture)`** is an indexed, allocation-free query.
+  `stanceEntry` uses it so the end does not blink. The snapshot that ends the game
+  already says who won, so while the outcome cue is **queued** behind the batch's
+  blows the loser is still standing and flinching (entry 0). While it **runs**,
+  the entry is its `t` over the first 70%. Once it has played or been skipped, the
+  stance is held (1).
+
+A draw moves nobody. Under reduced motion no lane request is written: the stance
+is held until the outcome cue ends, then snapped.
+
+**Rationale.** D79's rule, restated for a body at the table's edge: a beat is a
+param on a cue that already exists, never a new cue id, so the ladder, the
+queue's policy, pause, speed, skip and the live budgets hold for it with nothing
+added. A reserved lane id reuses the whole clip lane — scrubbed by the cue's own
+`t`, arbitrated by `clipBeats`, emptied by `beginFrame` — rather than building a
+second channel. Rules 5b and 8 are the queue's own vocabulary: rule 5 already
+dropped a `cast` whose card lands in the same batch, and without 5b the most
+common AI play would never gesture. The corpus census (`duelists.test.ts`, printed
+every run) is 3,293 batches: opp cast 207 · flinch 22 · lose 2 · win 16; you cast
+178 · flinch 90 · lose 16 · win 2. No duelist lane holds a request after any batch
+drains.
+
+**Known cost.** **The most common live case is not seen live.** When the human
+takes damage, the batch arrives while the engine is waiting on the human, and the
+250 ms awaiting-human budget snaps it, so the flinch plays at `t = 1`, where its
+weight is 0 (Tier 2 follow-up 1, question 12). The verifier's 5 ms sampler over
+the AI's combat-damage batches in two live games (seeds 5 and 11) never saw the
+flinch. The live concession's outcome entry did not visibly play either: the
+stances appeared at once. The gestures are evidenced in replay (stepped,
+photographed) and by the corpus test.
+
+**Rejected.** New cue ids for the gestures (D79: a per-card variant is a param,
+never a new cue id). A clock of the duelists' own (**D58**, **D72**).

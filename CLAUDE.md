@@ -446,7 +446,22 @@ Slice 2 added no step. Slice 3's fix pass ran it from a deleted `bridge/out` in
 the `tier2-slice3` worktree at `WSPORT=8666`: **731 s**, exit 0; its second fix
 pass the same way at `WSPORT=8665`: **729 s**, exit 0; and its documentation pass
 at `WSPORT=8666`, without deleting `bridge/out`: **726 s**, exit 0
-(`var/check-all-t2s3-docs.log`). Slice 3 added no step either.
+(`var/check-all-t2s3-docs.log`). Slice 3 added no step either. **Slice 4 added no step, and its documentation
+pass did not get a green run**: three runs at `WSPORT=8666` without deleting
+`bridge/out` failed at step 6 (63 s and 56 s, exit 141, at a load average of
+42–73) and at step 10b (622 s, exit 1). All three were timing in the bridge,
+not the slice (PLAN.md's slice-4 follow-up 13): one extra `state` frame in the
+byte-strict seed-42 diff, and an `input` emitted after `over` when a concede
+races the mulligan prompt. Logs: `var/check-all-t2s4-docs-run{1,2,3}.log`. **Rebased
+onto the card library** (`754f504`, 2026-09-27, which added no step), the merged
+tree ran it twice at `WSPORT=8665` without deleting `bridge/out`, before the
+rebase commit: the first run failed at step **10g** (750 s, exit 1) — the
+three-game session's third game, the `restartMatch()`, sent `over` 2 ms after
+its `hello_ok` with no `state` (`OVER WITHOUT A gameOver STATE`), and
+`check-redaction.mjs` failed that four-frame log (timing in the bridge again;
+`bridge/` is untouched by both sides; `var/check-all-t2s4-rebase-pre1*.log`);
+the second passed, **849 s**, exit 0, 9c's ten games 311 s, on a desktop at a
+load average of 15–25 (`var/check-all-t2s4-rebase-pre2.log`).
 `SKIP_TEN=1`
 brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
 **seven** servers on it, one after another.
@@ -562,21 +577,27 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **797 `node --test` + 91 vitest (6 files)** standalone
-as of **the card library (D90, 2026-09-27)** — its four suites `cards-lib` (49),
-`cards-api` (15), `cards-ui` (29) and the vitest `cards-render` (12) — and was
+`npm --prefix web test` is **817 `node --test` + 91 vitest (6 files)** standalone
+as of **M7 Tier 2's fourth slice rebased onto the card library** (2026-09-27; the
+two sides add — slice 4's twenty new `node --test` cases, its `duelists` suite
+among them, and D90's 93 plus 12 vitest), and was **797 + 91 (6 files)** as of
+**the card library (D90, 2026-09-27)** — its four suites `cards-lib` (49),
+`cards-api` (15), `cards-ui` (29) and the vitest `cards-render` (12) — **724 + 79
+(5 files)** as of **M7 Tier 2's fourth slice** before the rebase, and
 **704 + 79 (5 files)** as of **M7 Tier 2's third slice** after its second fix pass (698 after its first,
 690 before that, 655 after the second slice, 610 + 79 after the first slice,
-534 + 79 at M7 Tier 1, 456 + 75 at M6), and **714 / 706 pass / 0 fail / 8
-skipped** inside `check-all.sh` (708 / 700 after slice 3's first fix pass, 665 / 657
+534 + 79 at M7 Tier 1, 456 + 75 at M6), and **827 / 819 pass / 0 fail / 8
+skipped** inside `check-all.sh` after the rebase (`var/check-all-t2s4-rebase-pre2.log`) — the first in-gate
+count since slice 3's **714 / 706**, because neither side read one: slice 4's
+documentation pass's gate runs stopped before the web step, and D90's predicted
+807 / 799 was not measured inside the gate (708 / 700 after slice 3's first fix pass, 665 / 657
 after slice 2, 662 / 654 before slice 2's second fix pass, 620 / 612 after
-Tier 2's first slice, 544 / 536 at Tier 1; D90's 93 new `node --test` cases
-should make it 807 / 799, **not yet measured inside the gate**), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
+Tier 2's first slice, 544 / 536 at Tier 1), where `MTGTABLE_WS_LOGS` names the four logs step 10 just
 produced and the ws-log suite skips the candidates it does not name. M7's eight
 suites (`layout`, `colour`, `replay-cues`, `cues-exhaustive`, `camera`,
-`liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's eight (`figures`,
-`figure-pose`, `clips`, `tiles`, `attach`, `stack`, and slice 3's `traits` and
-`facing`) are in the same glob and need
+`liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's nine (`figures`,
+`figure-pose`, `clips`, `tiles`, `attach`, `stack`, slice 3's `traits` and
+`facing`, and slice 4's `duelists`) are in the same glob and need
 no GPU and no DOM — which is what report 09 §2.4's `[NO three]` annotations
 bought, and report 13 §10 bought again for `figures/`.
 `render.test.tsx` renders every frame of every fixture **twice**, once as a
@@ -788,8 +809,8 @@ measurement at all (`requestAnimationFrame` fires 0 times there).
 Six, and the thesis under all of them extends M7's: **the arena is still a
 renderer, and a manifestation is a pose.** Tier 2 put things *on* the table — a
 figure at every creature, auras on the figure, lands as terrain, mana motes, the
-stack as spell forms, two silhouette busts, bloom — and every one of them is a
-pure function of the frame on screen except the transitions. Read
+stack as spell forms, two duelists (silhouette busts until slice 4), bloom — and
+every one of them is a pure function of the frame on screen except the transitions. Read
 [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md)
 in full before touching `web/src/arena/figures/` or the Tier 2 files under
 `scene/`; [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md)
@@ -799,7 +820,10 @@ is the asset landscape and `docs/evidence/m7-tier2.md` is what was measured.
 and **D72** for the cue clock under them, and its camera rules are the next
 section's; slice 3 (T9–T12, `docs/evidence/m7-tier2-slice3.md`) added
 **D75–D81**, its second verification pass **D82–D87** and its documentation pass
-**D88–D89**, and its per-card identity rules are the section after that.
+**D88–D89**, and its per-card identity rules are the section after that; slice 4
+(T13 and the proportioned bodies, `docs/evidence/m7-tier2-slice4.md`) added
+**D95–D101** (**D90–D94** are `main`'s card library, which landed on
+`main` first), and its body, costume and duelist rules are the last Tier 2 section.
 
 1. **If the snapshot says it, it is a POSE; if only the event says it, it is a
    CUE** (**D56**). A creature's figure, its stance (tapped kneels, it does not
@@ -848,14 +872,17 @@ section's; slice 3 (T9–T12, `docs/evidence/m7-tier2-slice3.md`) added
    and clip names, because `"helicarrier"` in an op log is a name by another
    spelling. The other pose layers — `discs.ts`, `tiles.ts`, `casting.ts`,
    `overlays.ts`, `busts.ts` — are each an `InstancedMesh` field, bound **only**
-   from `CueRunner`'s frame loop (a liveness clause).
+   from `CueRunner`'s frame loop (a liveness clause). The duelists are not
+   creatures and not `FigureLayer`'s: `scene/DuelistLayer.tsx` is THEIR one
+   renderer, bound only through `BustField.bind` (slice 4, below).
 3. **The clip lane is scrubbed, never ticked** (**D57**). The cue's `t` becomes
    `action.time = t × duration`, then `mixer.update(0)`; a zero delta is a
    scrub in `three@0.186.0`, so pause, speed, step, skip, the live budgets and
    reduced motion hold for skinned animation with no second clock.
    `liveness.test.ts` asserts **every `mixer.update` under `web/src/arena/` is the
-   literal `0`**, that only `scene/CueRunner.tsx` and `scene/FigureLayer.tsx` call
-   one, and that only the frame loop writes `action.time` — negative-controlled.
+   literal `0`**, that only `scene/CueRunner.tsx`, `scene/FigureLayer.tsx` and
+   (since slice 4) `scene/DuelistLayer.tsx` call one, and that only the frame loop
+   writes `action.time` — negative-controlled.
    **Never use drei's `useAnimations`**: it is a `useFrame` per creature with a
    wall clock. Clips arbitrate through **one** function, `clipBeats`, that both
    `SceneStage` and `NullStage` call (a test double that drifts from the real
@@ -878,7 +905,8 @@ section's; slice 3 (T9–T12, `docs/evidence/m7-tier2-slice3.md`) added
    under `web/src/arena/` may carry a URL scheme unless `URL_ALLOW` names it with a
    reason (today only the Scryfall credit link), and in the arena's JSON only
    provenance keys may. The negative controls live in the test. A missing
-   `figures.glb` is a **supported state**: every creature draws its disc. Three
+   `figures.glb` is a **supported state**: every creature draws its disc and
+   every duelist its bust. Three
    pipeline traps, each measured: **`meshopt` is the last step** (a `prune` after
    it undid the compression); **`prune --keep-attributes true` after `unlit`**
    (the default strips `NORMAL`, and the fresnel shader then draws every figure
@@ -886,15 +914,20 @@ section's; slice 3 (T9–T12, `docs/evidence/m7-tier2-slice3.md`) added
    script's own, because `gltf-transform join` skips skins. Since slice 2 the
    build **verifies every source's bytes and sha256** against the manifest before
    it builds, the library carries **no texture** (**D67**), and `figures.test.ts`
-   fails when the committed `figures.glb` is not the file `models.json` records;
-   the humanoids share one rig and one clip set, the pack's own with the Universal
-   Animation Library's `hit` and `die` retargeted offline (**D68**). **The Tier 3 seam:**
+   fails when the committed `figures.glb` is not the file `models.json` records.
+   **Since slice 4** every humanoid card stands in a proportioned body on the
+   Universal Animation Library's own 65-joint rig, and every clip it plays is the
+   library's, retargeted by the build (**D95**); the three chibi fallbacks keep
+   Kenney's one 7-joint rig and **D68**'s clip set. The build also resolves the
+   meshoptimizer nested under `@gltf-transform/cli` to decimate the bodies
+   (**D96**), so pin that CLI before you trust a rebuild's bytes. **The Tier 3 seam:**
    a per-card entry in `figures.json` may choose a model and alias a clip; it may
    not introduce a model used by exactly one card.
 5. **The scene stays unlit, and an idle table still renders nothing** (**D53**,
    **D58**). No lights, no shadow maps, and the cards are never lit; figures use
-   `scene/holoMaterial.ts` — one program for every figure, a view-space fresnel,
-   `#include <colorspace_fragment>`, and nothing that reads a clock. Figures
+   `scene/holoMaterial.ts` — one program for every figure and both duelists, a
+   view-space fresnel, `#include <colorspace_fragment>`, a costume palette since
+   slice 4 (below), and nothing that reads a clock. Figures
    breathe **only while the queue is awake**. The hot path still allocates
    nothing: colours go through `scene/colourCache.ts`'s `parsedColour`, never a
    per-frame `Color.set('#…')`; anchors are pooled. The budgets are separate on
@@ -1036,17 +1069,20 @@ PLAN.md's *Slice 3* has the status and the fourteen follow-ups, and README's *Ti
    instanced — one draw call per kind on the table, never per figure.** Eighteen
    nameable kinds (the second verification pass added `visor`) and three derived
    ones (`squad`, `swarmBee`, `carrier`), each with a blend, a colour role
-   (`accent` / `tint` / a fixed hex) and anchors per body family (the three Kenney
+   (`accent` / `tint` / a fixed hex) and anchors per body family (since slice 4
+   the table is in the last section below; at slice 3 it was: the three Kenney
    bodies share one 7-joint rig); a kind may have more than one anchor (the
    badge's chest and back). Every kind is open to every row (Bold Biochemist's lab
    coat is Fury's `coat`). **Size is identity, and so is the side it is on**: a
-   figure is 45–75 px tall in the table view at 1600 × 1000, and **the opponent's
+   figure is 45–75 px tall in the table view at 1600 × 1000 (the chibis; slice 4's
+   proportioned bodies stand their full height, 60–100 px), and **the opponent's
    figures show that view their BACKS** (D81) — both verification passes found
    props judged only on the viewer's own figures. `traits.test.ts` now rasterises
    every deck card's props through the table camera on BOTH seats, standing and
    kneeling, with the real `figures.glb` and the real `PropField`
    (`web/test/prop-raster.ts`, **D83**): every identity prop ≥ 48 px on both
-   seats, except a documented ONE-SIDED detail (`tie`, `laserEye`, `exhaust`)
+   seats, except a documented ONE-SIDED detail (`tie`, `laserEye`, `exhaust`, and
+   since slice 4 `eyepatch`, **D98**)
    whose partner carries the card on the other side. Extend that list only with a
    reason; judge a new prop at 1× from views 1 and 4 as well. A new kind needs a
    `LOOKS` entry, a `buildKindGeometry` case (≤ 1,200 triangles, asserted) and an
@@ -1193,6 +1229,131 @@ build needs the network and is **not** in `check-all.sh`; the four suites
 (`cards-lib` 49, `cards-api` 15, `cards-ui` 29, the vitest `cards-render` 12) run
 offline inside `npm --prefix web test` over `fixtures/cards/`.
 
+## The conventions Tier 2's slice 4 added — bodies, costumes and duelists
+
+Five, and the thesis is one sentence: **a person is a costume painted on a shared
+body, and a duelist is a seat's pose.** The user's verdict on slice 3 was *"the
+avatars are still pretty generic"*. Slice 4 answered it with two proportioned CC0
+bodies, a costume palette and a full duelist per seat — no model per card, no
+texture, no second program. **D95–D101** are the decisions (**D90–D94** are
+`main`'s card library, which landed on `main` first),
+`docs/evidence/m7-tier2-slice4.md` is what was measured, PLAN.md's *Slice 4* has
+the status and the follow-ups, and README's *Tier 2, slice 4 — people in
+costumes, and a duelist at each end* is how to dress a card and change a
+duelist.
+
+1. **A costume is a SLOT per vertex and a PALETTE per figure, written at
+   COMMIT** (**D97**). The slot is a per-vertex attribute: the build writes
+   `_REGION`, and `scene/models.ts` renames it once, at load, to
+   `costumeRegion`. The palette is a **per-material uniform array**,
+   `uCostume[8]` plus `uCostumeOn`, on each figure's own `HoloMaterial`. Every
+   figure is a `SkinnedMesh` clone with its own material instance, all built
+   from one source, so all of them share **one program**. The costume is **not**
+   a vertex colour, **not** a texture (**D67**) and **not** an instance
+   attribute — nothing here is instanced — so do not add one.
+   `figures/props.ts`'s `COSTUME_SLOTS` order (`skin`, `hair`, `top`, `shirt`,
+   `legs`, `shoes`, `gloves`, `belt`) **is the contract**: the build imports it,
+   the shader indexes by it, and `traits.test.ts` holds the two together — never
+   reorder it without a rebuild.
+
+   **Only `holoMaterial.ts`'s `applyCostume` writes a costume colour**, and only
+   at commit (`FigureLayer`'s and `DuelistLayer`'s layout effects, keyed so the
+   strings are parsed once a game). A liveness clause forbids any `applyCostume`
+   or `uCostume` write in `CueRunner.tsx`, `DiscField.bind`, `DepartureField.bind`
+   or `PropField.bind`, negative-controlled, and the shader reads no clock. What
+   the frame loop MAY write is a number: `uDrain`, a dying body's fade toward
+   `uDrainTo`, which reaches every slot.
+
+   The data is `traits.json`'s `costume`, merged slot by slot down the ladder;
+   `figures/pose.ts`'s `costumeOf` is the one place a missing slot is filled.
+   Skin is one tone for every card on purpose — a costume is identity data, a
+   complexion is not. **Hard rule 8**: an anonymous figure wears nothing
+   (asserted over 1,179 corpus instances), exactly as it carries no prop.
+2. **A body belongs to a FAMILY, and every prop kind is fitted per family**
+   (**D95**, **D98**). `familyOf` reads a humanoid's family off the manifest's
+   rig (`ubc`, `kenney-mini`), so a new body on either rig needs no code; the
+   drone and the insect are named by id. Each `PROP_KIT` kind carries
+   anchors per family, in that family's figure space — one unit tall, feet at
+   y = 0, facing +Z (**D81**) — and a family with no row draws nothing of that
+   kind. `root` (the whole figure, lunge included) and `stand` (the stand point,
+   ignoring the cue offset) are open to every family.
+
+   | family | models | rig | joints the kit anchors to |
+   |---|---|---|---|
+   | **`human`** — the default | `agent` (the man), `hero` (the woman); `scientist` is `agent`'s node | `ubc`: the animation library's own 65-joint Unreal-named rig | `Head`, `spine_03`, `hand_l`, `hand_r`, `lowerarm_l` |
+   | **`humanoid`** — the chibi fallback | `agent-chibi`, `hero-chibi`, `scientist-chibi` | `kenney-mini`, 7 joints | `head`, `torso`, `arm-left`, `arm-right` |
+   | **`drone`** | `drone` | its own | `Head`, `Eye` |
+   | **`insect`** | `insect` | its own | `Head`, `Head3` |
+
+   The `human` anchors are written in the body's **bind (T-)pose** against the
+   landmarks `figures/props.ts` prints — unless `PropAnchor.pose` names a clip
+   and a phase. That is how Agent 13's pistol sits in her hand in her aim, and
+   how `PISTOL_MUZZLE` stays on it for the cue's flash (`facing.test.ts`). Only
+   `human` and `humanoid` wear a costume (`wearsCostume`). A new kind needs an
+   anchor for `human` at least, and is judged by the raster test from both seats
+   like every other (slice 3 convention 2); a one-sided detail has a named
+   partner.
+3. **The library is rebuilt by measurement, and the chibi is a FLAG** (**D95**,
+   **D96**, **D98**). The per-model triangle targets live in
+   `tools/assets-manifest.json` (a body 1,400, the drone 1,900, the bee 1,700),
+   chosen against `g1`@355, not a guess. A body is simplified WITH its costume
+   slots, and the shirt and belt are locked. The clips are retargeted by
+   **world-space delta** over the 22 joints the manifest names, never by copying
+   local rotations (the rigs' rest orientations differ). A clip written
+   `ual:A+B` is composed: A's legs and hips (their turn removed) under B's upper
+   body — the tapped kneel. Every clone starts at its **idle's first frame**
+   (`instantiateFigure`'s `pose: 'rest'`); `PropField` asks for `pose: 'bind'`
+   because its anchors are written in it. So **a humanoid model must have an
+   `idle`**, or its bind pose shows whenever a clip's weight ramps (PLAN.md's
+   slice-4 follow-up 8). `"body": "chibi"` in `traits.json` stands a card in
+   `<model>-chibi`; `figures.test.ts` requires every `-chibi` model to be the
+   fallback of a body the ladder reaches, so a fallback cannot rot unnoticed.
+   The headroom is thin — 27 kB under 400 kB, ~2,600 triangles at `g1`@355 — so
+   a new body or clip is measured against both before it is committed.
+4. **A duelist is a SEAT's pose, and its gestures are cues** (**D99**,
+   **D101**). `figures/duelists.json` is the data, validated like `cues.json`
+   (unknown keys are errors; a bad look drops its seat to the bust), and
+   `figures/duelists.ts` is pure (no three, React, DOM or clock). **A seat, never
+   a player**: nothing reads `PlayerState.name`, a pose carries a seat, an id,
+   colours and numbers (asserted over every board frame), and a duelist takes no
+   click (`raycast` cleared). **The stance is a pose from `board.gameOver`
+   alone** (`ready`, `won`, `lost`), so skip, scrub, `resync` and a new `gameId`
+   need no history.
+
+   **A gesture is a `gesture` PARAM on an existing cue, never a new cue id**
+   (`cast`, `flinch`, `outcome`, `none`; `cues/validate.ts` knows it). It plays
+   on the clip lane at **`duelistLane(player)` = −1,000,000 − player**, a
+   reserved id no card can have. A cue's `end()` releases only its own request
+   (`Stage.clipOf`, OPTIONAL), so the decay assertion covers the duelists with no
+   line of its own. `queue.ts`'s rules 5b (an absorbed `cast` hands its gesture
+   to the arrival) and 8 (one flinch per player per batch) are the queue's
+   vocabulary, and `gesturePending` is its one indexed query, which `stanceEntry`
+   uses so the end does not blink.
+
+   **`scene/DuelistLayer.tsx` is THE duelist renderer**: one `SkinnedMesh` per
+   seat with its props **baked** into the mesh (never instanced — the prop field
+   stays `FigureLayer`'s, **D78**), built and disposed in **one layout effect**
+   (a split cleanup once brought the busts back mid-game). `DuelistField.bind`
+   is reached **only** through `BustField.bind`, which `CueRunner` calls once a
+   frame; it calls `mixer.update(0)` and aims bones after it. Breathing reads the
+   queue's virtual clock (`queue.now`), so an idle table still renders nothing.
+   Liveness holds all of it and scans the bind bodies for allocation.
+5. **Where a duelist stands is MEASURED against the camera, and the camera never
+   moves for it** (**D100**). `duelistStand` takes `layout.ts`'s anchors
+   (`playerAnchorFor('you')`, `anchorsFor('opp').creatures`) plus four offsets
+   declared in `figures/duelists.ts` — **the one coordinate outside
+   `layout.ts`** (Tier 2 convention 2), pure and held by `camera.test.ts`;
+   moving the offsets into `layout.ts` changes nothing else (PLAN.md's slice-4
+   follow-up 19). The duelists are **never** in the camera solver's required
+   set: no view, clamp or solver rule may change to frame them. `camera.ts`'s
+   three pure checks — `keepOutTop` (the chrome band), `clearOfHand` (a body's
+   hull against every card of a seven-card fan) and `visibleShare` — are
+   asserted at every seat-safe view and live aspect, with slice 1's bust anchors
+   as the negative controls. **Anything placed at the far end of the table is
+   under the chrome** from every seat-safe view; measure a stand point with
+   these three before you move one. `visibleShare` does not yet model the player
+   plates (PLAN.md's slice-4 follow-up 3).
+
 ## Treat forge-src as prose
 
 A Forge **2.0.15-SNAPSHOT** source checkout may be available in the session
@@ -1268,8 +1429,8 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
-| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and so are Tier 2's first slice (T0–T7), its second (T8 and the camera views) and its third (T9–T12, per-card identity): *M7 Tier 2* has the three slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). Off the plan, *The card library and the card browser* (**D90–D94**, 2026-09-27) has that tool's status, commands and twelve follow-ups, and questions 15–17 are its: commit `fixtures/cards/`?, the `scryfallUserAgent` contact, and every MSH + MSC image. |
-| `DECISIONS.md` | The **ninety-four** load-bearing decisions, dated, with rejected alternatives (**D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and **Tier 2 is complete**: its first slice (T0–T7), its second (T8 and the camera views), its third (T9–T12, per-card identity) and its fourth (proportioned bodies in painted costumes, T13's duelists and T14; built, verified once and documented on branch `tier2-slice4`, rebased onto `main`'s `754f504` on 2026-09-27, with nineteen follow-ups and *Tier 2 is complete — what is left*): *M7 Tier 2* has the four slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). Off the plan, *The card library and the card browser* (**D90–D94**, 2026-09-27) has that tool's status, commands and twelve follow-ups, and questions 15–17 are its: commit `fixtures/cards/`?, the `scryfallUserAgent` contact, and every MSH + MSC image. |
+| `DECISIONS.md` | The **one hundred and one** load-bearing decisions, dated, with rejected alternatives (**D95–D101**, 2026-09-27, are M7 Tier 2 slice 4's: **D95** the humanoid bodies are Quaternius's *Universal Base Characters* on the animation library's own rig, every clip the library's, the chibis kept as fallbacks — superseding **D73**, and **D68** for those bodies; **D96** 1,400 triangles a body, the drone 1,900 and the bee 1,700, simplified with the costume slots by the CLI's own meshoptimizer; **D97** the hologram paints a costume — a slot per vertex, a palette per figure written at commit, still one program; **D98** the chibi as a `body` flag, props fitted per body family, the eyepatch one-sided; **D99** the duelists as full figures — a seat, not a player; a director and a villain; props baked — superseding **D62**; **D100** where they stand, the opponent's at the table's right because the far end is under the chrome; **D101** their gestures as a `gesture` param on reserved clip-lane ids, with suppression rules 5b and 8; **D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

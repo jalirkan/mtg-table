@@ -706,9 +706,13 @@ test('liveness: every mixer tick is a ZERO delta, and only two files tick one', 
       );
     }
   }
+  // **T13 adds the third**, and it is the same loop: the duelist field's `bind`
+  // is reached only through `BustField.bind` from `CueRunner`'s one `useFrame`
+  // (the clause below pins that), and its build scrubs the first frame at mount
+  // exactly as `FigureLayer` does. Still a literal 0 everywhere.
   assert.deepEqual(
     owners.sort(),
-    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx'],
+    ['scene/CueRunner.tsx', 'scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx'],
     'a new file ticks an AnimationMixer. There is one frame loop and it is CueRunner.tsx.',
   );
 });
@@ -725,9 +729,11 @@ test('liveness: only the frame loop writes action.time', () => {
   for (const file of arenaFiles()) {
     if (/\.time\s*=/.test(codeOf(file.source))) writers.push(file.path);
   }
+  // T13: the duelist field writes its gestures' `action.time` from the cue's `t`
+  // in its `bind`, which only the frame loop reaches (see the duelist clause).
   assert.deepEqual(
     writers.sort(),
-    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx'],
+    ['scene/CueRunner.tsx', 'scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx'],
     'something other than the frame loop scrubs a clip',
   );
 });
@@ -788,6 +794,53 @@ test('liveness: a departing figure is drawn by its own death cue and nothing els
     'the batch intake is no longer a useLayoutEffect: a dying body could have its first frame before its ' +
       'death is queued, and would never be drawn',
   );
+});
+
+/**
+ * **Slice 4 — a costume is a POSE, written at commit, and the hologram still
+ * has no clock.** A figure's palette (`FigurePose.costume`) changes when the
+ * snapshot does, so it is written into the material by `holoMaterial.ts`'s
+ * `applyCostume` from `FigureLayer`'s layout effects (and a departing body's
+ * `add`) — never from the one `useFrame`: a colour parse per figure per frame is
+ * the allocation §9.2 rule 6 forbids, and a palette the frame loop owns is a
+ * palette that can drift from the pose. Four source facts:
+ *
+ *  - no frame-loop body calls `applyCostume` or writes `uCostume` — `CueRunner.tsx`
+ *    (all of it), `DiscField.bind`, `DepartureField.bind`, `PropField.bind`
+ *    (negative-controlled: the call spliced into each is caught);
+ *  - only `holoMaterial.ts` writes a `uCostume` colour;
+ *  - the dying body's drain is a NUMBER the frame loop writes (`uDrain.value =`),
+ *    so it reaches every costume slot with no colour math in the loop;
+ *  - the shader reads no clock: no `uTime`, no wall clock.
+ */
+test('liveness: a figure\'s costume is written at commit, never in the frame loop, and the hologram has no clock (slice 4)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const field = layer.slice(layer.indexOf('class DepartureField'));
+  const discs = files.get('scene/discs.ts') ?? '';
+  const propsSource = files.get('scene/props.ts') ?? '';
+  const loop: Array<[string, string]> = [
+    ['CueRunner.tsx', files.get('scene/CueRunner.tsx') ?? ''],
+    ['DiscField.bind', bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind')],
+    ['DepartureField.bind', bodyOf(field, 'bind')],
+    ['PropField.bind', bodyOf(propsSource.slice(propsSource.indexOf('export class PropField')), 'bind')],
+  ];
+  for (const [name, body] of loop) assert.ok(body.length > 100, `could not find ${name}`);
+  const writesCostume = /\bapplyCostume\(|\buCostume\b/;
+  for (const [name, body] of loop) {
+    assert.ok(!writesCostume.test(body), `${name} writes a costume in the frame loop`);
+    // The negative control: the call, spliced in, is caught.
+    assert.ok(writesCostume.test(`${body}\napplyCostume(rig.material, pose.costume, false);`), `the scan misses applyCostume in ${name}`);
+  }
+  const writers = [...files].filter(([, code]) => /\.uCostume\.value\[/.test(code) || /uniforms\.uCostume\.value/.test(code)).map(([path]) => path);
+  assert.deepEqual(writers, ['scene/holoMaterial.ts'], 'something other than holoMaterial.ts writes a costume colour');
+  // A layout effect applies it, and a departing body applies it when it is built.
+  assert.match(layer, /useLayoutEffect\([^]*?applyCostume\(built\.material/, 'FigureLayer no longer writes the costume at commit');
+  assert.match(bodyOf(field, 'add'), /applyCostume\(material/, 'a departing body no longer falls in what it wore');
+  assert.match(bodyOf(field, 'bind'), /uDrain\.value = /, 'the dying body no longer drains through the uniform');
+  const holo = files.get('scene/holoMaterial.ts') ?? '';
+  assert.ok(holo.length > 1000, 'scene/holoMaterial.ts moved — move this test with it');
+  assert.ok(!/\buTime\b|performance\.now\(|Date\.now\(|requestAnimationFrame\(/.test(holo), 'the hologram reads a clock');
 });
 
 /**
@@ -1340,4 +1393,92 @@ test('liveness: a `figure` anchor is the effect binding’s — layout.ts never 
     ),
     'scene/effects.ts reads a clock of its own',
   );
+});
+
+/**
+ * **T13 — the duelists are a pose layer on the one frame loop, and they decide
+ * nothing** (Tier 2 slice 4). Four source facts hold their shape — the same four
+ * the departing bodies and the prop field are held to:
+ *
+ *  - the per-frame half (`duelists.bind()`) is called from `BustField.bind` and
+ *    nowhere else — so from `CueRunner`'s single `useFrame`, through a field the
+ *    pose-layer clause already pins there;
+ *  - the field is installed (`setDuelists`) only by `DuelistLayer`, at commit;
+ *  - `DuelistLayer` is renderer-only: no transport, no cue engine (it reads the
+ *    stage and the queue through two small interfaces), no click (`raycast`
+ *    cleared on its mesh), no `useFrame` and no clock of its own — the breathing
+ *    reads the queue's VIRTUAL clock, handed in, which only runs while there is
+ *    film (D58);
+ *  - it loads through `scene/models.ts` and draws with `scene/holoMaterial.ts` —
+ *    no second loader, no second material.
+ */
+test('liveness: the duelists are bound from the bust field, installed by DuelistLayer, and decide nothing (T13)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const callers = (pattern: RegExp): string[] =>
+    [...files].filter(([, code]) => pattern.test(code)).map(([path]) => path).sort();
+  assert.deepEqual(callers(/\bduelists\.bind\(/), ['scene/busts.ts'], 'the duelists are bound outside the bust field');
+  assert.deepEqual(callers(/\.setDuelists\(/), ['scene/DuelistLayer.tsx'], 'something else installs the duelists');
+  const layer = files.get('scene/DuelistLayer.tsx') ?? '';
+  assert.ok(layer.length > 0, 'scene/DuelistLayer.tsx is missing');
+  for (const imported of importsOf(arenaFiles().find((f) => f.path === 'scene/DuelistLayer.tsx')!.source)) {
+    assert.ok(!imported.from.includes('transport/'), `DuelistLayer imports ${imported.from}`);
+    assert.ok(
+      !imported.from.includes('cues/queue') && !imported.from.includes('cues/registry'),
+      'DuelistLayer imports the cue engine — a pose layer reads the stage, it does not drive it',
+    );
+    assert.ok(!/GLTFLoader|useGLTF|drei/.test(imported.from), `DuelistLayer loads models itself (${imported.from})`);
+  }
+  assert.ok(!/\bonAct\b|\bclickCard\b|\bselectable\b/.test(layer), 'DuelistLayer reaches a click');
+  assert.match(layer, /raycast = \(\) => \{\}/, 'the duelist mesh is not cleared of raycast — it would be a click target');
+  assert.ok(!/\buseFrame\b/.test(layer), 'DuelistLayer registers a frame callback of its own');
+  assert.ok(
+    !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(layer),
+    'DuelistLayer reads a clock of its own',
+  );
+  assert.match(layer, /from '\.\/models\.ts'/, 'DuelistLayer no longer loads through scene/models.ts');
+  assert.match(layer, /makeHoloMaterial\(/, 'DuelistLayer no longer draws with the figures’ holographic material');
+  assert.ok(!/new THREE\.(?:Mesh|MeshBasic|MeshStandard|MeshLambert|Shader|RawShader)Material\(/.test(layer), 'DuelistLayer builds a material of its own');
+  // No name reaches it: it reads a pose's seat, stance and numbers — never a
+  // player's or a card's `.name` (a bone's name is the rig's, and it may read those).
+  const readsName = (code: string): boolean => /\b(?:pose|player|players|card|cards|board|state)\b[\w.[\]!?]*\.name\b/.test(code);
+  assert.ok(!readsName(layer), 'DuelistLayer reads a player or card name');
+  assert.ok(readsName('const who = body.pose.name;') && readsName('board.players[0]!.name'), 'the name check has no teeth');
+});
+
+test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const layer = files.get('scene/DuelistLayer.tsx') ?? '';
+  const field = layer.slice(layer.indexOf('export class DuelistField'));
+  const busts = files.get('scene/busts.ts') ?? '';
+  const bustField = busts.slice(busts.indexOf('export class BustField'));
+  const duelists = files.get('figures/duelists.ts') ?? '';
+  const bodies: Array<[string, string]> = [
+    ['DuelistField.bind', bodyOf(field, 'bind')],
+    ['DuelistField.drive', bodyOf(field, 'drive')],
+    ['DuelistField.covers', bodyOf(field, 'covers')],
+    ['DuelistField.aimBones', bodyOf(field, 'aimBones')],
+    ['DuelistField.aimList', bodyOf(field, 'aimList')],
+    ['BustField.bind', bodyOf(bustField, 'bind')],
+    ['busts.ts duelistStandInto', bodyOf(busts, 'duelistStandInto')],
+    ['duelists.ts bustReactionInto', bodyOf(duelists, 'bustReactionInto')],
+    ['duelists.ts visitEffect', bodyOf(duelists, 'visitEffect')],
+    ['duelists.ts stanceEntry', bodyOf(duelists, 'stanceEntry')],
+    ['duelists.ts stanceGesture', bodyOf(duelists, 'stanceGesture')],
+    ['duelists.ts gestureOfAlias', bodyOf(duelists, 'gestureOfAlias')],
+    ['duelists.ts duelistLane', bodyOf(duelists, 'duelistLane')],
+    ['CueQueue.gesturePending', bodyOf(files.get('cues/queue.ts') ?? '', 'gesturePending')],
+  ];
+  for (const [name, body] of bodies) assert.ok(body.length > 10, `could not find the body of ${name}`);
+  // The bodies are the frame loop's: the bust field binds the duelists, which call the rest.
+  assert.ok(bodies[5]![1].includes('duelists.bind('), 'BustField.bind no longer binds the duelists');
+  for (const callee of ['this.drive(', 'this.aimBones(', 'stanceEntry(', 'gestureOfAlias(', 'stanceGesture(', 'gesturePending(', 'mixer.update(0)']) {
+    assert.ok(bodies[0]![1].includes(callee), `DuelistField.bind no longer calls ${callee} — update the body list`);
+  }
+  for (const [name, body] of bodies) {
+    assert.deepEqual(allocationsIn(body), [], `${name} allocates in the frame loop (§9.2 rule 6)`);
+  }
+  // The negative control: the scan still catches a junk line in these bodies.
+  for (const line of ['const v = new THREE.Vector3();', 'for (const p of poses) {}', 'const f = () => 1;']) {
+    assert.ok(allocationsIn(`\n${line}\n${bodies[0]![1]}`).length > 0, `the allocation scan misses \`${line}\``);
+  }
 });

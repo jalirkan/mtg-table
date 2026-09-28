@@ -57,6 +57,26 @@
  *  5. **NaN skin weights are repaired.** The Quaternius bee carries 12 of them; a
  *     NaN weight makes three's skinned bounding box NaN. They are rebound to the
  *     first joint, and the count is printed.
+ *
+ * **Slice 4 added the proportioned bodies** (the user: "the avatars are still
+ * pretty generic") — Quaternius's CC0 Universal Base Characters, on the SAME
+ * 65-joint rig as the Universal Animation Library (see section 4 below):
+ *
+ *  6. a `.gltf` + `.bin` member is read out of the verified zip, both halves;
+ *  7. a hairstyle "rigged to head bone" is GRAFTED onto the body's skin, its
+ *     joints remapped by name and its bind shape asserted to be the body's;
+ *  8. every humanoid vertex gets its COSTUME SLOT (`_REGION`, the index into
+ *     `figures/props.ts`'s `COSTUME_SLOTS`) from the joint that moves it plus two
+ *     measured bands (the shirt's V, the belt) — the chibi fallbacks too;
+ *  9. the head is scaled ×`headScale` about the Head joint (heroic-miniature
+ *     proportions, so what a card wears on its head has a head to sit on);
+ * 10. the library's clips are retargeted by WORLD-SPACE DELTA over the whole major
+ *     skeleton — no 7-joint chibi in between, so no face-plant — and a clip may be
+ *     COMPOSED (`A+B`: A's legs under B's torso; the tapped kneel);
+ * 11. meshopt DECIMATES each body to the manifest's `triangles` over its costume
+ *     slots (the shirt and belt locked), so twelve figures stay in §8.2's budget;
+ *     the drone and the bee are decimated too. The Kenney chibis stay in the
+ *     library as `<id>-chibi`, a traits.json `body: chibi` away.
  * ---------------------------------------------------------------------------
  *
  * The pipeline, per model, in order:
@@ -100,7 +120,18 @@ const WEB = join(REPO, 'web');
 const require = createRequire(join(WEB, 'package.json'));
 const { NodeIO } = require('@gltf-transform/core');
 const { ALL_EXTENSIONS } = require('@gltf-transform/extensions');
-const { joinPrimitives } = require('@gltf-transform/functions');
+const { compactPrimitive, joinPrimitives } = require('@gltf-transform/functions');
+/**
+ * **Slice 4 — the simplifier the CLI itself runs.** `@gltf-transform/cli` pins
+ * its own `meshoptimizer` (~1.2.0, nested under the CLI) while `web/` also has
+ * an older copy at the top level; the build resolves the CLI's, so a decimated
+ * body is exactly what `gltf-transform simplify` would make of it. meshopt's
+ * simplifier is deterministic, which is what keeps two builds byte-identical.
+ */
+const { MeshoptSimplifier } = await import(
+  pathToFileURL(createRequire(join(WEB, 'node_modules/@gltf-transform/cli/package.json')).resolve('meshoptimizer')).href
+);
+await MeshoptSimplifier.ready;
 
 /**
  * **three, in Node, for the two jobs only three can do right**: retargeting
@@ -123,6 +154,14 @@ const SkeletonUtils = await import(pathToFileURL(join(THREE_DIR, 'examples/jsm/u
 const { REST_CLIP_FOR, REST_PHASE_FOR } = await import(
   pathToFileURL(join(WEB, 'src/arena/figures/clips.ts')).href
 );
+/**
+ * **Slice 4 — the costume regions**, read from the one place their order is
+ * defined (`figures/props.ts`'s `COSTUME_SLOTS`): the build writes each vertex's
+ * slot INDEX as the custom attribute `_REGION`, and the holographic shader looks
+ * the slot's colour up in the figure's palette. The two cannot drift apart.
+ */
+const { COSTUME_SLOTS } = await import(pathToFileURL(join(WEB, 'src/arena/figures/props.ts')).href);
+const SLOT = Object.fromEntries(COSTUME_SLOTS.map((slot, i) => [slot, i]));
 
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -259,7 +298,7 @@ function sourceBytes(packId, member) {
 
 console.log('sources');
 for (const [id, spec] of Object.entries(manifest.models)) {
-  if (id.startsWith('_')) continue;
+  if (id.startsWith('_') || spec.sameAs !== undefined) continue;
   verifiedPack(spec.pack);
 }
 for (const [rigId, rig] of Object.entries(manifest.rigs ?? {})) {
@@ -677,27 +716,656 @@ function clipKeyName(clipMap, key) {
 }
 
 // ---------------------------------------------------------------------------
+// 4 — slice 4: the proportioned bodies (Quaternius's Universal Base Characters)
+// ---------------------------------------------------------------------------
+//
+// The user's verdict on slice 3 was "the avatars are still pretty generic": the
+// chibi bodies were toys whose only identity was a tint and what they carried.
+// A proportioned body in a painted costume reads as a PERSON in a costume. The
+// Universal Base Characters are CC0, glTF, on the SAME 65-joint humanoid rig as
+// the Universal Animation Library (same author, same joint names) — so the
+// library's clips land on them joint for joint instead of through a 7-joint
+// chibi, which is what face-planted the head in slice 2 (D68). Six steps are
+// new, each below: the member is a `.gltf` + `.bin` pair; a hairstyle is grafted
+// onto the body's skin; the head is scaled up a little (heroic miniature
+// proportions, so a hat, a helmet or an eyepatch has a head to sit on at 60 px);
+// every vertex is given its costume slot; the clips are retargeted by world-space
+// delta over the whole major skeleton; and the result is decimated with meshopt's
+// simplifier to a triangle target that keeps twelve figures inside the budget.
+
+/** Strip everything a texture needs from a glTF JSON (the library carries none — header, point 3). */
+function stripImages(json) {
+  delete json.images;
+  delete json.textures;
+  delete json.samplers;
+  for (const material of json.materials ?? []) {
+    const pbr = material.pbrMetallicRoughness;
+    if (pbr) {
+      delete pbr.baseColorTexture;
+      delete pbr.metallicRoughnessTexture;
+    }
+    delete material.normalTexture;
+    delete material.occlusionTexture;
+    delete material.emissiveTexture;
+    delete material.extensions;
+  }
+  return json;
+}
+
+/**
+ * A member of a verified archive → a gltf-transform document. A `.gltf` member's
+ * buffers are read OUT OF THE SAME VERIFIED ZIP, relative to it, so no loose file
+ * on disk can stand in for either half (the `.glb` rule, header point 1).
+ */
+async function readMemberDocument(packId, member) {
+  if (!member.endsWith('.gltf')) return io.readBinary(withoutImages(sourceBytes(packId, member)));
+  const json = stripImages(JSON.parse(sourceBytes(packId, member).toString('utf8')));
+  const dir = member.slice(0, member.lastIndexOf('/') + 1);
+  const resources = {};
+  for (const buffer of json.buffers ?? []) {
+    resources[buffer.uri] = new Uint8Array(sourceBytes(packId, dir + decodeURIComponent(buffer.uri)));
+  }
+  return io.readJSON({ json, resources });
+}
+
+/** Every node under the scene, depth first. */
+function allNodes(doc) {
+  const out = [];
+  const walk = (node) => {
+    out.push(node);
+    for (const child of node.listChildren()) walk(child);
+  };
+  for (const scene of doc.getRoot().listScenes()) for (const node of scene.listChildren()) walk(node);
+  return out;
+}
+
+/**
+ * **Keep one skinned mesh** — the body — and drop the rest (the eyes and the
+ * eyebrows: at 60 px a figure's head is 12 px tall, and each is a thousand
+ * triangles the budget would rather spend on the silhouette).
+ */
+function keepBody(doc, bodyName, id) {
+  let body = null;
+  for (const node of allNodes(doc)) {
+    if (node.getMesh() === null) continue;
+    if (node.getName() === bodyName) {
+      body = node;
+      continue;
+    }
+    node.setMesh(null);
+    node.setSkin(null);
+    node.dispose();
+  }
+  if (body === null || body.getSkin() === null) fail(`${id}: no skinned body mesh "${bodyName}"`);
+  return body;
+}
+
+/** A skin's inverse bind matrix for one joint, as a three `Matrix4`. */
+function ibmOf(skin, index) {
+  return new THREE.Matrix4().fromArray(skin.getInverseBindMatrices().getArray(), index * 16);
+}
+
+/**
+ * **Graft a hairstyle onto the body's skin.** The pack ships each hairstyle
+ * "rigged to head bone" on the same 65-joint armature (measured: every hair
+ * vertex is weighted 100% to `Head`, and the male and female hairstyles carry the
+ * male and female bodies' own `Head` bind matrices). Its joints are remapped to
+ * the body skin's order BY NAME, and its bind shape is carried onto the body's
+ * head by `C = IBM_body(Head)⁻¹ · IBM_hair(Head)` — the identity for a hairstyle
+ * made for this body, and asserted to be one common transform for every joint the
+ * hair uses. Returns the new primitive, so its vertices can be given the `hair`
+ * slot.
+ */
+function graftHair(doc, body, hairDoc, id) {
+  const hairNode = allNodes(hairDoc).find((n) => n.getMesh() !== null && n.getSkin() !== null);
+  if (hairNode === undefined) fail(`${id}: the hairstyle has no skinned mesh`);
+  const bodySkin = body.getSkin();
+  const bodyJoints = bodySkin.listJoints().map((j) => j.getName());
+  const hairSkin = hairNode.getSkin();
+  const hairJoints = hairSkin.listJoints().map((j) => j.getName());
+  const remap = hairJoints.map((name) => bodyJoints.indexOf(name));
+  const buffer = doc.getRoot().listBuffers()[0];
+  const grafted = [];
+  for (const prim of hairNode.getMesh().listPrimitives()) {
+    const joints = prim.getAttribute('JOINTS_0');
+    const weights = prim.getAttribute('WEIGHTS_0');
+    const used = new Set();
+    const j = [0, 0, 0, 0];
+    const w = [0, 0, 0, 0];
+    for (let i = 0; i < joints.getCount(); i += 1) {
+      joints.getElement(i, j);
+      weights.getElement(i, w);
+      for (let k = 0; k < 4; k += 1) if (w[k] > 0) used.add(j[k]);
+    }
+    let common = null;
+    for (const index of used) {
+      if (remap[index] < 0) fail(`${id}: the hairstyle is weighted to "${hairJoints[index]}", which the body has no joint for`);
+      const c = ibmOf(bodySkin, remap[index]).invert().multiply(ibmOf(hairSkin, index));
+      if (common === null) common = c;
+      else if (!c.elements.every((e, k) => Math.abs(e - common.elements[k]) < 1e-4)) {
+        fail(`${id}: the hairstyle's bind shape differs from the body's by more than one transform`);
+      }
+    }
+    common ??= new THREE.Matrix4();
+    const normalMatrix = new THREE.Matrix3().getNormalMatrix(common);
+    const positions = prim.getAttribute('POSITION');
+    const normals = prim.getAttribute('NORMAL');
+    const count = positions.getCount();
+    const pos = new Float32Array(count * 3);
+    const nor = new Float32Array(count * 3);
+    // The body's own component type (unsigned bytes in this pack): the join
+    // groups primitives by it, and 65 joints fit a byte.
+    const JointArray = body.getMesh().listPrimitives()[0].getAttribute('JOINTS_0').getArray().constructor;
+    const jnt = new JointArray(count * 4);
+    const wgt = new Float32Array(count * 4);
+    const v = new THREE.Vector3();
+    const e = [0, 0, 0];
+    for (let i = 0; i < count; i += 1) {
+      positions.getElement(i, e);
+      v.set(e[0], e[1], e[2]).applyMatrix4(common).toArray(pos, i * 3);
+      normals.getElement(i, e);
+      v.set(e[0], e[1], e[2]).applyMatrix3(normalMatrix).normalize().toArray(nor, i * 3);
+      joints.getElement(i, j);
+      weights.getElement(i, w);
+      for (let k = 0; k < 4; k += 1) {
+        jnt[i * 4 + k] = w[k] > 0 ? remap[j[k]] : 0;
+        wgt[i * 4 + k] = w[k];
+      }
+    }
+    const indices = prim.getIndices();
+    const out = doc
+      .createPrimitive()
+      .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(pos).setBuffer(buffer))
+      .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(nor).setBuffer(buffer))
+      .setAttribute('JOINTS_0', doc.createAccessor().setType('VEC4').setArray(jnt).setBuffer(buffer))
+      .setAttribute('WEIGHTS_0', doc.createAccessor().setType('VEC4').setArray(wgt).setBuffer(buffer))
+      .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint32Array(indices.getArray())).setBuffer(buffer))
+      .setMaterial(body.getMesh().listPrimitives()[0].getMaterial());
+    body.getMesh().addPrimitive(out);
+    grafted.push(out);
+  }
+  return grafted;
+}
+
+/** Each joint's bind position (the inverse bind matrix's inverse), by name, in the mesh's bind space. */
+function bindPositions(skin) {
+  const out = new Map();
+  skin.listJoints().forEach((joint, i) => {
+    out.set(joint.getName(), new THREE.Vector3().setFromMatrixPosition(ibmOf(skin, i).invert()));
+  });
+  return out;
+}
+
+/**
+ * **Heroic-miniature proportions** (`headScale`, the manifest's): every vertex
+ * moves away from the `Head` joint's bind position by `(s − 1) × w_head`, where
+ * `w_head` is its skin weight on the head — so the hair and the face grow as one
+ * and the neck, weighted partly to the head, blends into it with no seam. A
+ * superhero body is 8.6 heads tall; at 60 px on the table its head is a 7-pixel
+ * dot and nothing a card wears on it can be seen. Tabletop miniatures solve the
+ * same problem the same way (a head and a half, roughly). Normals are unchanged by
+ * a uniform scale. Returns the head's bind position.
+ */
+function scaleHead(body, factor, id) {
+  const skin = body.getSkin();
+  const names = skin.listJoints().map((j) => j.getName());
+  const head = names.indexOf('Head');
+  if (head < 0) fail(`${id}: no Head joint to scale about`);
+  const pivot = new THREE.Vector3().setFromMatrixPosition(ibmOf(skin, head).invert());
+  if (factor === 1) return pivot;
+  const e = [0, 0, 0];
+  const j = [0, 0, 0, 0];
+  const w = [0, 0, 0, 0];
+  for (const prim of body.getMesh().listPrimitives()) {
+    const positions = prim.getAttribute('POSITION').clone();
+    const joints = prim.getAttribute('JOINTS_0');
+    const weights = prim.getAttribute('WEIGHTS_0');
+    for (let i = 0; i < positions.getCount(); i += 1) {
+      joints.getElement(i, j);
+      weights.getElement(i, w);
+      let onHead = 0;
+      for (let k = 0; k < 4; k += 1) if (j[k] === head) onHead += w[k];
+      if (onHead <= 0) continue;
+      positions.getElement(i, e);
+      const k = (factor - 1) * onHead;
+      positions.setElement(i, [e[0] + k * (e[0] - pivot.x), e[1] + k * (e[1] - pivot.y), e[2] + k * (e[2] - pivot.z)]);
+    }
+    prim.setAttribute('POSITION', positions);
+  }
+  return pivot;
+}
+
+/**
+ * **The costume slot of a joint**, per rig — the part of the body that joint
+ * moves. The two measured bands (the shirt's V, the belt) are applied after, by
+ * position, because no joint moves a shirt front.
+ */
+const SLOT_OF_JOINT = {
+  ubc: (name) => {
+    if (name === 'Head' || name === 'neck_01') return 'skin';
+    if (/^(spine_0[123]|clavicle_[lr]|upperarm_[lr]|lowerarm_[lr])$/.test(name)) return 'top';
+    if (/^(hand_[lr]|(thumb|index|middle|ring|pinky)_\d\d(_leaf)?_[lr])$/.test(name)) return 'gloves';
+    if (/^(pelvis|thigh_[lr]|calf_[lr])$/.test(name)) return 'legs';
+    if (/^(foot_[lr]|ball_[lr]|ball_leaf_[lr])$/.test(name)) return 'shoes';
+    return 'top';
+  },
+  'kenney-mini': (name) => {
+    if (name === 'head') return 'skin';
+    if (name === 'torso' || name === 'arm-left' || name === 'arm-right') return 'top';
+    if (name === 'leg-left' || name === 'leg-right') return 'legs';
+    return 'top';
+  },
+};
+
+/**
+ * **Every vertex's costume slot**, as the custom attribute `_REGION` (an unsigned
+ * byte, the slot's index in `COSTUME_SLOTS`). The dominant joint says which part
+ * of the body a vertex is; then, by bind position in this body's own proportions:
+ *
+ *  - the **shirt** is a V down the front of the chest, from the collar to the
+ *    sternum, on front-facing vertices — a white shirt under a jacket, the one
+ *    detail that makes a suit a suit;
+ *  - the **belt** is a band at the waist, where the base body's own waistband is;
+ *  - on the chibi fallback (its head is half the figure and its texture is gone)
+ *    the face is the front of the head below the brow, the rest of the head is
+ *    hair, the ends of the arms are hands, and the soles are shoes.
+ *
+ * `hair` is not decided here: a grafted hairstyle is the `hair` slot whole.
+ */
+function writeRegions(doc, body, rigId, hairPrims, id) {
+  const skin = body.getSkin();
+  const names = skin.listJoints().map((j) => j.getName());
+  const slotOf = SLOT_OF_JOINT[rigId];
+  if (slotOf === undefined) fail(`${id}: no costume slots for rig "${rigId}"`);
+  const bind = bindPositions(skin);
+  const counts = Object.fromEntries(COSTUME_SLOTS.map((s) => [s, 0]));
+  // The body's bind bounds, for the chibi's proportional rules.
+  let minY = Infinity;
+  let maxY = -Infinity;
+  const e = [0, 0, 0];
+  for (const prim of body.getMesh().listPrimitives()) {
+    const p = prim.getAttribute('POSITION');
+    for (let i = 0; i < p.getCount(); i += 1) {
+      p.getElement(i, e);
+      minY = Math.min(minY, e[1]);
+      maxY = Math.max(maxY, e[1]);
+    }
+  }
+  const height = maxY - minY;
+  const buffer = body.getMesh().listPrimitives()[0].getAttribute('POSITION').getBuffer();
+  const j = [0, 0, 0, 0];
+  const w = [0, 0, 0, 0];
+  const n = [0, 0, 0];
+  for (const prim of body.getMesh().listPrimitives()) {
+    const positions = prim.getAttribute('POSITION');
+    const normals = prim.getAttribute('NORMAL');
+    const joints = prim.getAttribute('JOINTS_0');
+    const weights = prim.getAttribute('WEIGHTS_0');
+    const count = positions.getCount();
+    const region = new Uint8Array(count);
+    const isHair = hairPrims.includes(prim);
+    for (let i = 0; i < count; i += 1) {
+      let slot;
+      if (isHair) slot = 'hair';
+      else {
+        joints.getElement(i, j);
+        weights.getElement(i, w);
+        let best = 0;
+        for (let k = 1; k < 4; k += 1) if (w[k] > w[best]) best = k;
+        const joint = names[j[best]];
+        slot = slotOf(joint);
+        positions.getElement(i, e);
+        normals.getElement(i, n);
+        if (rigId === 'ubc') {
+          const neck = bind.get('neck_01');
+          const chest = bind.get('spine_03');
+          const pelvis = bind.get('pelvis');
+          const spine1 = bind.get('spine_01');
+          // The shirt: a V from the collar (half-width 0.1 m) down to a point 9 cm
+          // under the chest joint, front-facing only.
+          const apex = chest.y - 0.09;
+          const top = neck.y + 0.02;
+          if ((slot === 'top' || slot === 'skin') && joint !== 'Head' && n[2] > 0.3 && e[2] > chest.z && e[1] > apex && e[1] < top) {
+            const half = 0.1 * ((e[1] - apex) / (top - apex));
+            if (Math.abs(e[0]) < half) slot = 'shirt';
+          }
+          // The belt: the base body's waistband — a band between the pelvis and
+          // spine_01, measured on the bodies' own bind positions.
+          const beltLo = pelvis.y + 0.25 * (spine1.y - pelvis.y);
+          const beltHi = pelvis.y + 0.85 * (spine1.y - pelvis.y);
+          if ((slot === 'top' || slot === 'legs') && e[1] > beltLo && e[1] < beltHi) slot = 'belt';
+        } else {
+          const y = (e[1] - minY) / height;
+          if (joint === 'head') {
+            // Face: the front of the head, below the brow.
+            slot = n[2] > 0.35 && y < 0.83 ? 'skin' : 'hair';
+          } else if (joint === 'arm-left' || joint === 'arm-right') {
+            if (Math.abs(e[0]) / height > 0.47) slot = 'gloves';
+          } else if (joint === 'torso') {
+            if (y < 0.3) slot = 'belt';
+            else if (n[2] > 0.4 && Math.abs(e[0]) / height < 0.07 * ((y - 0.3) / 0.21) + 0.005) slot = 'shirt';
+          } else if (slot === 'legs' && y < 0.06) slot = 'shoes';
+        }
+      }
+      region[i] = SLOT[slot];
+      counts[slot] += 1;
+    }
+    prim.setAttribute('_REGION', doc.createAccessor().setType('SCALAR').setArray(region).setBuffer(buffer));
+  }
+  return counts;
+}
+
+/**
+ * **The Universal Animation Library's clips on a Universal Base Character**, by
+ * world-space delta over the whole major skeleton (report 13 §9.5's experiment,
+ * the second time and with the rig it was made for).
+ *
+ * Both are T-posed and face +Z with their left at +x, and they share joint NAMES
+ * — but not rest orientations (measured: `neck_01` 17–23°, `spine_03` 12–14°,
+ * `Head` 6–15° apart), so copying local rotations would bend every spine. So, per
+ * frame and per joint, parents first:
+ *
+ *     targetWorld(j, t) = sourceWorld(j, t) · sourceBindWorld(j)⁻¹ · targetBindWorld(j)
+ *     targetLocal(j, t) = targetWorld(parent(j), t)⁻¹ · targetWorld(j, t)
+ *
+ * — the bone's world-space rotation away from its T-pose, carried onto the other
+ * T-pose — and the pelvis alone moves, by the source's world-space hip delta
+ * scaled by the two hip heights. Every other joint keeps its own bind offset, so a
+ * shorter body keeps its own limb lengths. The fingers are not driven (a thousand
+ * tracks nobody sees at 60 px); they hold the body's bind. `root` is never
+ * animated: it is the file's Z-up turn, and root motion is refused (§3.4).
+ */
+let ualSource = null;
+async function humanClips(rigId, rig, targetDoc, names, id) {
+  const spec = rig.retarget;
+  if (ualSource === null) {
+    const gltf = await toThree(await io.readBinary(withoutImages(sourceBytes(spec.pack, spec.member))));
+    const mesh = firstSkinned(gltf.scene);
+    if (mesh === null) fail(`${rigId}: the clip library has no skinned mesh`);
+    gltf.scene.skeleton = mesh.skeleton; // the ROOT carries the skeleton (see retargetedClips)
+    gltf.scene.updateMatrixWorld(true);
+    ualSource = gltf;
+  }
+  const source = ualSource;
+  const target = await toThree(targetDoc);
+  target.scene.updateMatrixWorld(true);
+
+  const joints = spec.joints;
+  const sBones = joints.map((name) => source.scene.getObjectByName(name));
+  const tBones = joints.map((name) => target.scene.getObjectByName(name));
+  joints.forEach((name, i) => {
+    if (!sBones[i]) fail(`${rigId}: the clip library has no bone "${name}"`);
+    if (!tBones[i]) fail(`${id}: no bone "${name}" to retarget onto`);
+  });
+  // Parents first, and every driven joint's parent is driven too — or is an
+  // undriven ancestor (root) whose world rotation is its bind rotation.
+  const parentIndex = tBones.map((bone) => joints.indexOf(bone.parent?.name ?? ''));
+  joints.forEach((name, i) => {
+    if (parentIndex[i] > i) fail(`${rigId}: "${name}" is listed before its parent`);
+  });
+  const sBind = sBones.map((b) => b.getWorldQuaternion(new THREE.Quaternion()));
+  const tBind = tBones.map((b) => b.getWorldQuaternion(new THREE.Quaternion()));
+  const tParentBind = tBones.map((b) => b.parent.getWorldQuaternion(new THREE.Quaternion()));
+  const offset = sBind.map((q, i) => q.clone().invert().multiply(tBind[i]));
+  const hip = joints.indexOf(spec.hip.joint);
+  const sHip0 = new THREE.Vector3().setFromMatrixPosition(sBones[hip].matrixWorld);
+  const tHip0 = new THREE.Vector3().setFromMatrixPosition(tBones[hip].matrixWorld);
+  const hipScale = tHip0.y / sHip0.y;
+  const tHipParentInverse = tBones[hip].parent.matrixWorld.clone().invert();
+
+  const out = new Map();
+  const q = new THREE.Quaternion();
+  const world = joints.map(() => new THREE.Quaternion());
+  const inv = new THREE.Quaternion();
+  const p = new THREE.Vector3();
+  // A COMPOSED clip (`A+B`): A's pelvis and legs under B's torso, arms and head —
+  // each retargeted on its own first (below), then merged track by track.
+  const plain = [...new Set(names.flatMap((name) => name.split('+')))];
+  for (const name of plain) {
+    const clip = source.animations.find((a) => a.name === name);
+    if (clip === undefined) fail(`${rigId}: the clip library has no clip "${name}"`);
+    const frames = Math.max(2, Math.round(clip.duration * spec.fps) + 1);
+    const delta = clip.duration / (frames - 1);
+    const mixer = new THREE.AnimationMixer(source.scene);
+    const action = mixer.clipAction(clip);
+    action.play();
+    const times = new Float32Array(frames);
+    const rotations = joints.map(() => new Float32Array(frames * 4));
+    const hipValues = new Float32Array(frames * 3);
+    for (let f = 0; f < frames; f += 1) {
+      action.time = Math.min(f * delta, clip.duration - 1e-7);
+      mixer.update(0);
+      source.scene.updateMatrixWorld(true);
+      times[f] = f * delta;
+      for (let i = 0; i < joints.length; i += 1) {
+        sBones[i].getWorldQuaternion(q);
+        world[i].copy(q).multiply(offset[i]);
+        const parent = parentIndex[i] >= 0 ? world[parentIndex[i]] : tParentBind[i];
+        inv.copy(parent).invert().multiply(world[i]);
+        // Keep the quaternion's sign continuous frame to frame, so LINEAR
+        // interpolation (and meshopt's filter) never takes the long way round.
+        if (f > 0) {
+          const r = rotations[i];
+          const dot = r[(f - 1) * 4] * inv.x + r[(f - 1) * 4 + 1] * inv.y + r[(f - 1) * 4 + 2] * inv.z + r[(f - 1) * 4 + 3] * inv.w;
+          if (dot < 0) inv.set(-inv.x, -inv.y, -inv.z, -inv.w);
+        }
+        inv.toArray(rotations[i], f * 4);
+      }
+      p.setFromMatrixPosition(sBones[hip].matrixWorld).sub(sHip0).multiplyScalar(hipScale).add(tHip0).applyMatrix4(tHipParentInverse);
+      p.toArray(hipValues, f * 3);
+    }
+    mixer.stopAllAction();
+    mixer.uncacheRoot(source.scene);
+    const tracks = joints.map((joint, i) => ({ joint, path: 'rotation', times, values: rotations[i] }));
+    tracks.push({ joint: spec.hip.joint, path: 'translation', times, values: hipValues });
+    out.set(name, { tracks, duration: clip.duration });
+    console.log(
+      `  retarget  ${id} ← ${name.padEnd(20)} ${clip.duration.toFixed(2)} s · ${String(frames)} frames · ` +
+        `${String(tracks.length)} tracks (world-space delta, hip scale ${hipScale.toFixed(4)})`,
+    );
+  }
+  for (const name of names) {
+    if (!name.includes('+')) continue;
+    const [lowerName, upperName] = name.split('+');
+    const lower = out.get(lowerName);
+    const upper = out.get(upperName);
+    const upperSet = new Set(spec.upper ?? []);
+    if (upperSet.size === 0) fail(`${rigId}: a composed clip "${name}" needs the rig's retarget.upper joint list`);
+    const pelvis = joints.indexOf(spec.hip.joint);
+    const bindInverse = tBind[pelvis].clone().invert();
+    const parentInverse = tParentBind[pelvis].clone().invert();
+    /** B's rotation track for `joint`, sampled at `time` (looped), into `into`. */
+    const sampleB = (joint, time, into) => {
+      const from = upper.tracks.find((t) => t.joint === joint && t.path === 'rotation');
+      const t = upper.duration > 0 ? time % upper.duration : 0;
+      let k = 0;
+      while (k + 1 < from.times.length && from.times[k + 1] <= t) k += 1;
+      const k2 = Math.min(k + 1, from.times.length - 1);
+      const span = from.times[k2] - from.times[k];
+      into.fromArray(from.values, k * 4).slerp(new THREE.Quaternion().fromArray(from.values, k2 * 4), span > 0 ? (t - from.times[k]) / span : 0);
+      return into;
+    };
+    const continuous = (values, f, q) => {
+      if (f > 0 && values[(f - 1) * 4] * q.x + values[(f - 1) * 4 + 1] * q.y + values[(f - 1) * 4 + 2] * q.z + values[(f - 1) * 4 + 3] * q.w < 0) {
+        q.set(-q.x, -q.y, -q.z, -q.w);
+      }
+      q.toArray(values, f * 4);
+    };
+    // A's hips, with their TURN taken out: the part of each frame's world-space
+    // rotation away from the bind that is a twist about the vertical is removed,
+    // and the swing (the pitch and roll the legs are posed against) is kept — so
+    // a kneel faces where the body faces.
+    const hipTrack = lower.tracks.find((t) => t.joint === spec.hip.joint && t.path === 'rotation');
+    const hips = new Float32Array(hipTrack.values.length);
+    {
+      const local = new THREE.Quaternion();
+      const delta = new THREE.Quaternion();
+      const twist = new THREE.Quaternion();
+      for (let f = 0; f < hipTrack.times.length; f += 1) {
+        local.fromArray(hipTrack.values, f * 4);
+        delta.copy(tParentBind[pelvis]).multiply(local).multiply(bindInverse);
+        twist.set(0, delta.y, 0, delta.w);
+        if (twist.lengthSq() < 1e-12) twist.identity();
+        else twist.normalize();
+        delta.multiply(twist.invert());
+        local.copy(parentInverse).multiply(delta).multiply(tBind[pelvis]);
+        continuous(hips, f, local);
+      }
+    }
+    const tracks = lower.tracks.map((track) => {
+      if (track.path !== 'rotation') return track;
+      if (track.joint === spec.hip.joint) return { ...track, values: hips };
+      if (!upperSet.has(track.joint)) return track;
+      const values = new Float32Array(track.values.length);
+      const q = new THREE.Quaternion();
+      const bPelvis = new THREE.Quaternion();
+      const aPelvis = new THREE.Quaternion();
+      // The upper body's ROOT joint (its parent is the hips) keeps B's WORLD
+      // rotation — upright, whatever A's hips pitch — so its local is taken
+      // against A's hips: inv(A'_hips) · B_hips · B_joint. Every joint above it
+      // keeps B's local rotation, and so B's whole torso.
+      const onHips = tBones[joints.indexOf(track.joint)].parent?.name === spec.hip.joint;
+      for (let f = 0; f < track.times.length; f += 1) {
+        sampleB(track.joint, track.times[f], q);
+        if (onHips) {
+          sampleB(spec.hip.joint, track.times[f], bPelvis);
+          aPelvis.fromArray(hips, f * 4).invert();
+          q.premultiply(bPelvis).premultiply(aPelvis);
+        }
+        continuous(values, f, q);
+      }
+      return { ...track, values };
+    });
+    out.set(name, { tracks, duration: lower.duration });
+    console.log(`  compose   ${id} ← ${lowerName}'s legs and hips (turn removed) under ${upperName}'s upright torso (${String(upperSet.size)} joints)`);
+  }
+  return out;
+}
+
+/**
+ * **Decimate** — meshopt's simplifier, to `target` triangles, unconstrained by
+ * error (the triangle count is the budget line). It collapses edges onto EXISTING
+ * vertices, so every surviving vertex keeps its skin weights and its costume slot
+ * exactly; a figure is 60–100 px tall, where a 12,000-triangle base body and a
+ * 1,400-triangle one draw the same silhouette.
+ *
+ * **A body with costume slots is simplified WITH them** (`simplifyWithAttributes`):
+ * each vertex's slot is a one-hot attribute, so collapsing a face vertex into a
+ * hair vertex, or a jacket into a trouser, costs what moving the silhouette would
+ * — the borders between slots survive — and the two SMALL slots (the shirt's V
+ * and the belt) are LOCKED, because at a tenth of the triangles a plain
+ * simplify kept 6 of the shirt's 58 vertices and the white shirt was a smear.
+ * Returns [before, after].
+ */
+function decimate(doc, target, id) {
+  const prims = [];
+  for (const mesh of doc.getRoot().listMeshes()) prims.push(...mesh.listPrimitives());
+  if (prims.length !== 1) fail(`${id}: decimate expects one joined primitive, saw ${String(prims.length)}`);
+  const prim = prims[0];
+  const indices = prim.getIndices();
+  const before = indices.getCount() / 3;
+  if (before <= target) return [before, before];
+  const positionAccessor = prim.getAttribute('POSITION');
+  const position = positionAccessor.getArray() instanceof Float32Array ? positionAccessor.getArray() : Float32Array.from(positionAccessor.getArray());
+  const source = Uint32Array.from(indices.getArray());
+  const targetIndexCount = Math.floor(target) * 3;
+  const region = prim.getAttribute('_REGION');
+  let result;
+  if (region === null) {
+    result = MeshoptSimplifier.simplify(source, position, 3, targetIndexCount, 1, []);
+  } else {
+    const count = region.getCount();
+    const slots = COSTUME_SLOTS.length;
+    const attributes = new Float32Array(count * slots);
+    const lock = new Uint8Array(count);
+    const small = new Set([SLOT.shirt, SLOT.belt]);
+    for (let i = 0; i < count; i += 1) {
+      const slot = region.getScalar(i);
+      attributes[i * slots + slot] = 1;
+      if (small.has(slot)) lock[i] = 1;
+    }
+    result = MeshoptSimplifier.simplifyWithAttributes(
+      source,
+      position,
+      3,
+      attributes,
+      slots,
+      new Array(slots).fill(SLOT_WEIGHT),
+      lock,
+      targetIndexCount,
+      1,
+      [],
+    );
+  }
+  const [dst] = result;
+  prim.setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint32Array(dst)).setBuffer(indices.getBuffer()));
+  if (indices.listParents().length === 1) indices.dispose();
+  compactPrimitive(prim);
+  const after = prim.getIndices().getCount() / 3;
+  if (prim.getAttribute('POSITION').getCount() <= 65534) prim.getIndices().setArray(new Uint16Array(prim.getIndices().getArray()));
+  return [before, after];
+}
+/** How much crossing a costume-slot border costs the simplifier, against moving the silhouette. */
+const SLOT_WEIGHT = 0.6;
+
+// ---------------------------------------------------------------------------
 // Build
 // ---------------------------------------------------------------------------
 
 /** id → the single-model document, after the per-model half of the pipeline. */
 const built = new Map();
+/**
+ * **Slice 4 — model ids that are another model's BODY** (`sameAs` in the
+ * manifest): the scientist stands in the agent's body, so it is one node in the
+ * library and one row per id in `models.json` — never a second copy of the mesh
+ * and its clips. Its costume, not its mesh, is what makes it a scientist.
+ */
+const aliases = new Map();
+/** The clip library's own joint list — what a body on the `ubc` rig must have exactly. */
+let libraryJoints = null;
 
 for (const [id, spec] of Object.entries(manifest.models)) {
   if (id.startsWith('_')) continue;
+  if (spec.sameAs !== undefined) {
+    aliases.set(id, spec);
+    console.log(`\n${id} — the "${spec.sameAs}" body (one node in the library; its costume is its own)`);
+    continue;
+  }
   const pack = manifest.packs[spec.pack];
+  const rig = spec.rig === undefined ? undefined : manifest.rigs[spec.rig];
+  /** A proportioned body on the clip library's own rig (slice 4) rather than a pack's own model. */
+  const human = rig?.kind === 'ubc';
   console.log(`\n${id} — ${pack.title} by ${pack.creator} (${pack.licence})${spec.member ? ` · ${spec.member}` : ''}`);
+  const step = (n, name) => join(WORK, `${id}.${String(n)}.${name}.glb`);
 
-  // -- extract + repair -------------------------------------------------------
-  const srcBytes = sourceBytes(spec.pack, spec.member ?? null);
-  const src = await io.readBinary(withoutImages(srcBytes));
+  // -- extract + repair (+ slice 4: the body, its hair, its slots, its head) ----
+  let src;
+  let slotsWritten = false;
+  if (human) {
+    src = await readMemberDocument(spec.pack, spec.member);
+    const body = keepBody(src, spec.body, id);
+    const hair = [];
+    if (spec.hair !== undefined) {
+      hair.push(...graftHair(src, body, await readMemberDocument(spec.pack, spec.hair), id));
+      const hairTris = hair.reduce((n, prim) => n + prim.getIndices().getCount() / 3, 0);
+      console.log(`  hair      ${spec.hair.slice(spec.hair.lastIndexOf('/') + 1)} → grafted onto the body's skin (${String(hairTris)} triangles)`);
+    }
+    const counts = writeRegions(src, body, spec.rig, hair, id);
+    slotsWritten = true;
+    console.log(`  slots     ${Object.entries(counts).map(([slot, n]) => `${slot} ${String(n)}`).join(' · ')} vertices`);
+    const pivot = scaleHead(body, spec.headScale ?? 1, id);
+    console.log(`  head      ×${String(spec.headScale ?? 1)} about the Head joint at (${pivot.toArray().map((n) => n.toFixed(3)).join(', ')})`);
+  } else {
+    src = await io.readBinary(withoutImages(sourceBytes(spec.pack, spec.member ?? null)));
+  }
   const repaired = repairWeights(src);
   if (repaired > 0) console.log(`  repair    ${String(repaired)} vertices had NaN / zero skin weights → bound to the first joint`);
-  const step = (n, name) => join(WORK, `${id}.${String(n)}.${name}.glb`);
   await io.write(step(0, 'source'), src);
 
   // -- the CLI half, in report 12 §5.7's order ------------------------------
-  cli('prune', step(0, 'source'), step(1, 'prune'), ['--keep-attributes', 'false']);
+  // (A body whose costume slots are already written keeps its attributes here:
+  // `_REGION` is used by no material, and the default would drop it.)
+  cli('prune', step(0, 'source'), step(1, 'prune'), ['--keep-attributes', slotsWritten ? 'true' : 'false']);
   cli('dedup', step(1, 'prune'), step(2, 'dedup'));
 
   // -- material, join, clips --------------------------------------------------
@@ -709,13 +1377,31 @@ for (const [id, spec] of Object.entries(manifest.models)) {
   const roots = scene.listChildren();
   if (roots.length !== 1) fail(`${id}: expected one root node, saw ${String(roots.length)}`);
   const root = roots[0];
+  // Slice 4: the chibi fallback's costume slots, written on its own skin before the join.
+  if (!slotsWritten && rig !== undefined && SLOT_OF_JOINT[spec.rig] !== undefined) {
+    const skinned = allNodes(doc).filter((n) => n.getMesh() !== null && n.getSkin() !== null);
+    const counts = Object.fromEntries(COSTUME_SLOTS.map((slot) => [slot, 0]));
+    for (const node of skinned) {
+      for (const [slot, n] of Object.entries(writeRegions(doc, node, spec.rig, [], id))) counts[slot] += n;
+    }
+    console.log(`  slots     ${Object.entries(counts).map(([slot, n]) => `${slot} ${String(n)}`).join(' · ')} vertices`);
+  }
   const { joined, joints } = joinSkinned(root, id);
   console.log(`  join      ${String(joined)} primitives → 1 (skin-aware; \`gltf-transform join\` skips skins)`);
 
   // **One rig, asserted.** A model on a rig must have exactly the rig's joints,
-  // in its order — that is what makes one clip set valid for all of them.
-  if (spec.rig !== undefined) {
-    const expected = manifest.rigs[spec.rig].joints;
+  // in its order — that is what makes one clip set valid for all of them. A body
+  // on the `ubc` rig must have exactly the CLIP LIBRARY's joints (slice 4): that is
+  // what "the same rig as the animation library" means, measured.
+  if (rig !== undefined) {
+    let expected = rig.joints;
+    if (human) {
+      if (libraryJoints === null) {
+        const library = await readMemberDocument(rig.retarget.pack, rig.retarget.member);
+        libraryJoints = library.getRoot().listSkins()[0].listJoints().map((j) => j.getName());
+      }
+      expected = libraryJoints;
+    }
     const actual = joints.map((j) => j.getName());
     if (actual.join(',') !== expected.join(',')) {
       fail(`${id}: its skin is [${actual.join(', ')}], not the ${spec.rig} rig [${expected.join(', ')}]`);
@@ -747,8 +1433,9 @@ for (const [id, spec] of Object.entries(manifest.models)) {
   }
   // The retargeted ones, baked onto THIS model's joints by name.
   if (ual.length > 0) {
-    const rig = manifest.rigs[spec.rig];
-    const cache = await retargetedClips(spec.rig, rig, [...new Set(ual)]);
+    const cache = human
+      ? await humanClips(spec.rig, rig, doc, [...new Set(ual)], id)
+      : await retargetedClips(spec.rig, rig, [...new Set(ual)]);
     const buffer = doc.getRoot().listBuffers()[0];
     const byName = new Map();
     const walk = (node) => {
@@ -776,8 +1463,21 @@ for (const [id, spec] of Object.entries(manifest.models)) {
   await io.write(staged, doc);
 
   cli('weld', staged, step(5, 'weld'));
-  cli('unlit', step(5, 'weld'), step(6, 'unlit'));
-  cli('resample', step(6, 'unlit'), step(7, 'resample'));
+  // -- slice 4: decimate, to the manifest's triangle target -------------------
+  let welded = step(5, 'weld');
+  if (spec.triangles !== undefined) {
+    const lean = await io.read(welded);
+    const [before, after] = decimate(lean, spec.triangles, id);
+    welded = step(5, 'decimate');
+    await io.write(welded, lean);
+    console.log(`  decimate  ${String(before)} → ${String(after)} triangles (meshopt ${human ? 'simplifyWithAttributes over the costume slots, the shirt and belt locked' : 'simplify'}, target ${String(spec.triangles)})`);
+  }
+  cli('unlit', welded, step(6, 'unlit'));
+  // A rig may relax the resampler's per-value tolerance (slice 4: the retargeted
+  // clips are baked at 30 fps over 23 joints, and 0.001 of a quaternion — well
+  // under a tenth of a degree — halves the keyframes without a visible change).
+  const tolerance = rig?.resampleTolerance;
+  cli('resample', step(6, 'unlit'), step(7, 'resample'), tolerance === undefined ? [] : ['--tolerance', String(tolerance)]);
   // **`--keep-attributes true`, and it is load-bearing.** `prune`'s default is
   // to drop any vertex attribute the *material* does not use, and `unlit` has
   // just declared that this material uses no normals — so the default strips
@@ -785,7 +1485,8 @@ for (const [id, spec] of Object.entries(manifest.models)) {
   // holographic treatment is a **fresnel** shader and fresnel is a dot product
   // with the normal. Measured the hard way: with normals gone,
   // `normalize(vec3(0))` is NaN, every figure rendered as a solid black
-  // silhouette, and the file still validated and still loaded.
+  // silhouette, and the file still validated and still loaded. (The same
+  // default would drop slice 4's `_REGION`: no material reads it either.)
   cli('prune', step(7, 'resample'), step(8, 'prune2'), ['--keep-attributes', 'true']);
 
   // **Measured HERE, before `meshopt`**, whose int16 quantisation would put a
@@ -798,6 +1499,9 @@ for (const [id, spec] of Object.entries(manifest.models)) {
       `ratio ${(m.width / m.height).toFixed(2)}`,
   );
   built.set(id, { spec, pack, file: step(8, 'prune2'), clips: kept, clipMap, ...m });
+}
+for (const [id, spec] of aliases) {
+  if (!built.has(spec.sameAs)) fail(`${id}: sameAs "${spec.sameAs}", which is not a built model`);
 }
 
 // -- merge -------------------------------------------------------------------
@@ -901,6 +1605,12 @@ for (const id of ids) {
       `${String(Object.keys(clipMapOut).length)} clips${Object.keys(retargeted).length > 0 ? ` (${Object.keys(retargeted).join(', ')} retargeted)` : ''}`,
   );
 }
+// Slice 4: an id that is another model's body — its row, pointing at that node.
+for (const [id, spec] of aliases) {
+  const body = models[spec.sameAs];
+  models[id] = { ...body, clips: { ...body.clips } };
+  console.log(`  ${id.padEnd(9)} → the "${spec.sameAs}" node (${String(body.triangles)} tris, no second copy)`);
+}
 
 function round(n, places) {
   const k = 10 ** places;
@@ -939,6 +1649,7 @@ if (WRITE_MANIFEST) {
     _generated: 'WRITTEN BY tools/build-figures.mjs — do not edit by hand. The hand-written half (where each file came from, what its licence badge said) is tools/assets-manifest.json; everything here was measured from the built figures.glb.',
     _fallback: 'A model id named here that has no file on disk is not an error: scene/models.ts falls back to the glow disc (report 13 §9.4), which is also what a fresh checkout with no binaries gets.',
     _measure: '`height` is the bind-pose height three normalises by at load; `width` is the widest RESTING stance (idle, crouch) along the axis that becomes x once `facing` is turned to +Z — both measured on the SKINNED mesh, in three, before meshopt.',
+    _slice4: 'Slice 4: `agent` and `hero` are the proportioned bodies (rig `ubc`, the clip library\'s own 65 joints; every clip retargeted from it, `triangles` after decimation), `scientist` is the `agent` node again, and the `-chibi` ids are slices 1–3\'s Kenney bodies kept as the fallback a traits.json `body: chibi` stands a card in. Every humanoid vertex carries a costume slot (`_REGION` in the file, `costumeRegion` in the arena).',
     library: { path: 'models/figures.glb', bytes, sha256: digest },
     clipLibraries,
     models,

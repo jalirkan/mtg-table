@@ -27,6 +27,7 @@
  * the *reason* for a cue can live, since the file is JSON and has no comments.
  */
 
+import { isGestureParam } from '../figures/duelists.ts';
 import { isClipName } from '../figures/types.ts';
 import { isEffectShape } from './stage.ts';
 import {
@@ -167,7 +168,8 @@ type ParamSpec =
   | { type: 'colour' }
   | { type: 'clip' }
   | { type: 'hostClip' }
-  | { type: 'shape' };
+  | { type: 'shape' }
+  | { type: 'gesture' };
 
 export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
   // -- Tier 1 (report 09 §12.2) and Tier 2 slices 1–2 ------------------------
@@ -233,6 +235,18 @@ export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
   rim: { type: 'colour' },
   /** `attack.aegis`: a second, wider ring in its own colour — her shield's red, white and blue. */
   rim2: { type: 'colour' },
+
+  // -- Tier 2 slice 4 — T13's duelists -----------------------------------------
+  /**
+   * **What the seat's DUELIST does while this cue plays** (`figures/duelists.ts`'s
+   * `GESTURE_PARAMS`): `cast`, `flinch`, `outcome` or `none`. The ladder writes it
+   * as a fact for the four events a duelist answers — a `cast`, damage to a
+   * player, a life LOSS and the `outcome` — and a row may override it like
+   * `colour`: `none` keeps a card's own cue from raising its caster's hand. It
+   * names a gesture, never a player: whose duelist moves is the event's
+   * (`gesturePlayer`, a fact no file can set).
+   */
+  gesture: { type: 'gesture' },
 };
 
 /** A param value against its spec, or the complaint. */
@@ -259,6 +273,8 @@ function checkParam(key: string, value: unknown): string | null {
       return typeof value === 'string' && isClipName(value) ? null : `param ${key} must be a clip name`;
     case 'shape':
       return typeof value === 'string' && isEffectShape(value) ? null : `param ${key} must be an effect shape`;
+    case 'gesture':
+      return isGestureParam(value) ? null : `param ${key} must be cast, flinch, outcome or none`;
     default:
       return `param ${key} has no type`;
   }

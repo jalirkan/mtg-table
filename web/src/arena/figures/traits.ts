@@ -33,7 +33,9 @@
  *
  * **Merging.** Scalar fields are taken from the most specific rung that says
  * them; `props` is REPLACED, not appended, by a more specific rung that names it
- * (so a card can take an archetype's props away with `"props": []`). The subtype
+ * (so a card can take an archetype's props away with `"props": []`); a
+ * `costume` (slice 4) MERGES slot by slot, so a card row can name its hair and
+ * keep its subtype's suit. The subtype
  * rungs are the words `resolve.ts`'s `SUBTYPE_ORDER` recognises, applied from the
  * least specific to the most, so a Robot Villain gets the villain's shade and the
  * robot's eye, and the robot's hover wins where both speak.
@@ -41,7 +43,7 @@
  */
 
 import { isHidden, type AnyCard } from '../../protocol.ts';
-import type { Formation, IdleStyle, PropKind, Silhouette } from './props.ts';
+import type { BodyStyle, CostumeSlot, Formation, IdleStyle, PropKind, Silhouette } from './props.ts';
 import { SUBTYPE_ORDER, figureSubtypesOf } from './resolve.ts';
 import traitsJson from './traits.json' with { type: 'json' };
 import { validateTraits } from './validate.ts';
@@ -86,6 +88,22 @@ export interface TraitRow {
    * The pose never applies it: shrinking is a transition, and transitions are cues.
    */
   shrink?: number;
+  /**
+   * **Slice 4 — what the body WEARS**: one colour per costume slot
+   * (`figures/props.ts`'s `COSTUME_SLOTS` — skin, hair, top, shirt, legs, shoes,
+   * gloves, belt), `#rrggbb` or the word `tint` (the figure's own tint). Merged
+   * KEY BY KEY down the ladder — a card row that says only `hair` keeps its
+   * subtype's suit — and every slot nobody names is filled by
+   * `figures/pose.ts`'s `costumeOf` from the tint. Drawn only on a body whose
+   * vertices carry slots (the `human` and chibi bodies), never on an anonymous one.
+   */
+  costume?: Readonly<Partial<Record<CostumeSlot, string>>>;
+  /**
+   * **Slice 4 — which humanoid body**: `human` (the proportioned Universal Base
+   * Character, the default) or `chibi` (the Kenney body slices 1–3 drew — the
+   * model id `<id>-chibi`, kept in the library so nothing was lost).
+   */
+  body?: BodyStyle;
 }
 
 /** A row with every field decided — what the pose reads. */
@@ -103,6 +121,8 @@ export interface TraitSpec {
   formation: Formation;
   silhouette: Silhouette | null;
   shrink: number | null;
+  costume: Readonly<Partial<Record<CostumeSlot, string>>>;
+  body: BodyStyle;
 }
 
 export const DEFAULT_TRAIT: TraitSpec = Object.freeze({
@@ -119,6 +139,8 @@ export const DEFAULT_TRAIT: TraitSpec = Object.freeze({
   formation: 'ring' as Formation,
   silhouette: null,
   shrink: null,
+  costume: Object.freeze({}),
+  body: 'human' as BodyStyle,
 });
 
 /** `traits.json`, after validation. */
@@ -167,6 +189,9 @@ function apply(into: TraitSpec, row: TraitRow): TraitSpec {
     formation: row.formation ?? into.formation,
     silhouette: row.silhouette === undefined ? into.silhouette : row.silhouette,
     shrink: row.shrink ?? into.shrink,
+    // A costume merges key by key: a card that names only its hair keeps its rung's suit.
+    costume: row.costume === undefined ? into.costume : { ...into.costume, ...row.costume },
+    body: row.body ?? into.body,
   };
 }
 

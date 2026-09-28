@@ -45,7 +45,7 @@ forward into M1 (`docs/protocol.md` §3.6, `DECISIONS.md` D12).
 > the chosen view is where they now leave from and come back to.
 >
 > **STATUS, 2026-09-27 — Tier 2's third slice (T9–T12, per-card identity) is
-> BUILT, verified twice and fixed twice** (not yet committed: branch
+> BUILT, verified twice and fixed twice** (committed as `0368a90`; built on branch
 > `tier2-slice3`). It answers the user's verdict on slice 2 — *"everything still
 > looks very generic"* — without a model per card: **every card in the deck reads
 > as itself through data** (`web/src/arena/figures/traits.json`: size, hover,
@@ -64,11 +64,31 @@ forward into M1 (`docs/protocol.md` §3.6, `DECISIONS.md` D12).
 > **D75–D89**; the follow-ups and the hand-over to T13–T14, and a note on Tier 3,
 > are `PLAN.md`'s *M7 Tier 2*.
 >
+> **STATUS, 2026-09-27 — Tier 2's fourth slice (T13, proportioned bodies in
+> painted costumes, T14) is BUILT, verified once and documented** (not yet
+> committed: branch `tier2-slice4`), **and with it Tier 2 is complete.** It
+> answers the verdict on slice 3 — *"the game looks generally improved. The
+> avatars are still pretty generic"* — both ways. **Every humanoid card is a
+> person in a costume**: a man or a woman from Quaternius's CC0 *Universal Base
+> Characters*, on the animation library's own rig, painted in eight regions from
+> `traits.json`'s `costume` (Peggy a blue jacket over a white shirt under her red
+> hat, Wasp gold and black, Ant-Man red and silver), still a hologram and still
+> one shader. **The two duelists are full figures**: a S.H.I.E.L.D. director on
+> your side and an armoured villain on the opponent's, facing each other, raising
+> a hand on a cast, flinching red on damage, and taking a winner's or a loser's
+> stance at the end. What was measured:
+> [`../evidence/m7-tier2-slice4.md`](../evidence/m7-tier2-slice4.md); decisions
+> **D95–D101**; the follow-ups and *Tier 2 is complete — what is left* are
+> `PLAN.md`'s *M7 Tier 2*.
+>
 > **Three lines below are superseded by those decisions and are kept as
 > written:** Tier 2's rigs are **not** Mixamo (**D54** — CC0 packs, and
 > Quaternius's CC0 *Universal Animation Library* where more clips are needed);
-> the two duelists are **silhouette busts**, with full avatars deferred
-> (**D62**); and Tier 3's "generated from the card art with an image-to-3D tool"
+> the two duelists were **silhouette busts** with full avatars deferred (**D62**),
+> and since slice 4 they are full figures after all — but not one at each END of
+> the table: from every playable view the far end is under the arena's own top
+> bar, so the opponent's stands at the table's right-hand side (**D99**,
+> **D100**); and Tier 3's "generated from the card art with an image-to-3D tool"
 > is **ruled out** — no model is made from card art, locally or hosted (**D54**).
 > **Tier 3 is NOT started**, and stays on `PLAN.md`'s deferred list. If it ever
 > comes, Tier 3 means **likeness** — a Wasp who looks like Wasp — and a likeness
@@ -99,7 +119,7 @@ scratch.
   rises and glows in its mana colour; `tap` = rotate; `attackers` = card lunges
   at the defender with a camera swoop; `damage` = numbers; `zone`
   battlefield→graveyard = dissolve; `life` = HUD pulse. Looks dramatic already.
-- **Tier 2, creature manifestations (months). ← SLICES 1–3 BUILT (T0–T12, the camera views and per-card identity); T13–T14 handed over.** A small library of stylised
+- **Tier 2, creature manifestations (months). ← BUILT, all four slices (T0–T14: the camera views, per-card identity, proportioned bodies in costumes and the duelists).** A small library of stylised
   generic models keyed by creature type and colour with idle / attack / hit /
   die animations (Mixamo-style rigs). The MSH deck has a handful of types —
   Human Spy Hero, Robot Villain, Insect, Scientist — so about eight archetypes

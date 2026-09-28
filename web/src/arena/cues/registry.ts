@@ -32,6 +32,7 @@
  */
 
 import { clipEnvelope, clipForCue, type ClipRequest } from '../figures/clips.ts';
+import { GESTURE_CLIP, duelistLane, type Gesture } from '../figures/duelists.ts';
 import { isClipName, type ClipName } from '../figures/types.ts';
 import { PISTOL_MUZZLE } from '../figures/props.ts';
 import { TAP_ANGLE, figureAnchorOf } from '../layout.ts';
@@ -204,12 +205,94 @@ function clipOn(ctx: CueContext, t: number, stage: Stage, id: number, clip: Clip
   stage.setClip(id, CLIP_SCRATCH_2);
 }
 
+// ---------------------------------------------------------------------------
+// T13 — the duelists' gestures, on the clip lane's reserved ids
+// ---------------------------------------------------------------------------
+
+/** One scratch request for every gesture, for the same reason as {@link CLIP_SCRATCH}. */
+const GESTURE_SCRATCH: ClipRequest = { clip: 'idle', t: 0, weight: 0, alias: null, key: '' };
+
+/**
+ * **A seat's duelist, answering the event this cue is playing** (Tier 2 slice 4,
+ * T13; `figures/duelists.ts`).
+ *
+ * It is here, in the shared builder, for the reason {@link playClip} is: every
+ * cue on a `cast`, a player's damage, a life loss and the `outcome` gestures
+ * whichever id the ladder chose for it — `cast.rise`, Wasp's `fx.scaleBeam`,
+ * Helicarrier Strike's `fx.strike` — because the gesture is a PARAM the ladder
+ * writes as a fact of the event (`resolve.ts`), not a property of the cue. No cue
+ * id was added for it and none can forget it.
+ *
+ * The request is a clip request on {@link duelistLane} — `clip` the gesture's
+ * arbitration rank, `alias` the gesture's own name, `t` the cue's own progress —
+ * and it decays like every other: `weight` is `clipEnvelope(t)`, 0 at `t = 1`.
+ * The two stance gestures arrive at a stance the POSE then holds (`board.gameOver`),
+ * so their identity at `t = 1` is that stance; the duelist field reads `t` for the
+ * entry (`duelists.ts`'s `stanceEntry`). Reduced motion writes nothing, exactly as
+ * `playClip` does: the duelist snaps to the stance its pose says it holds.
+ */
+function playGesture(ctx: CueContext, t: number, stage: Stage): void {
+  if (ctx.reducedMotion) return;
+  const param = ctx.params['gesture'];
+  if (param === 'outcome') {
+    // A draw moves nobody: there is no winner to raise a fist.
+    const winner = num(ctx, 'winner', -1);
+    if (winner < 0) return;
+    for (let i = 0; i < ctx.players.length; i++) {
+      const player = ctx.players[i]!;
+      gestureOn(ctx, t, stage, player, player === winner ? 'win' : 'lose');
+    }
+    return;
+  }
+  if (param !== 'cast' && param !== 'flinch') return;
+  // `gesturePlayer` is set only where the planner carried a gesture to another
+  // cue (`queue.ts` rule 5: an arrival that absorbed its own `cast`); otherwise the
+  // duelist is the one the event is about — the caster, the struck player.
+  const player = num(ctx, 'gesturePlayer', ctx.players[0] ?? -1);
+  if (player < 0) return;
+  gestureOn(ctx, t, stage, player, param);
+}
+
+function gestureOn(ctx: CueContext, t: number, stage: Stage, player: number, gesture: Gesture): void {
+  GESTURE_SCRATCH.clip = GESTURE_CLIP[gesture];
+  GESTURE_SCRATCH.t = clamp01(t);
+  GESTURE_SCRATCH.weight = clipEnvelope(t);
+  GESTURE_SCRATCH.alias = gesture;
+  GESTURE_SCRATCH.key = ctx.key;
+  stage.setClip(duelistLane(player), GESTURE_SCRATCH);
+}
+
+/**
+ * `end()`'s half for the gestures: release every duelist lane this cue could have
+ * written — each player it names and a carried `gesturePlayer` — **but only its
+ * own request.** Two cues gesture on one duelist in one batch as a matter of
+ * course (the killing blow's flinch and the outcome's slump), and a stage clears
+ * a lane whole; the flinch ending in the same pass as the slump's frame would
+ * blank the slump for that frame, which the stance entry reads as "not started"
+ * and draws as a one-frame stand-up. A stage that can say whose request it holds
+ * (`Stage.clipOf`) is asked; one that cannot is cleared outright, which is what
+ * every card lane does.
+ */
+function endGesture(ctx: CueContext, stage: Stage): void {
+  const param = ctx.params['gesture'];
+  if (param !== 'cast' && param !== 'flinch' && param !== 'outcome') return;
+  for (let i = 0; i < ctx.players.length; i++) releaseLane(ctx, stage, duelistLane(ctx.players[i]!));
+  const carried = num(ctx, 'gesturePlayer', -1);
+  if (carried >= 0) releaseLane(ctx, stage, duelistLane(carried));
+}
+
+function releaseLane(ctx: CueContext, stage: Stage, lane: number): void {
+  const held = stage.clipOf === undefined ? null : stage.clipOf(lane);
+  if (held === null || held.key === ctx.key) stage.clearClip(lane);
+}
+
 /**
  * Build a {@link CueImpl} whose `end` is total by construction: it clears every
  * target's offset, **every target's clip** and every declared effect key,
  * whether the cue set them or not. A cue cannot leak an offset or a pose by
  * forgetting one branch — which is exactly what `replay-cues.test.ts`'s decay
- * assertion, now reading `stage.clips` as well, is the proof of.
+ * assertion, now reading `stage.clips` as well, is the proof of. **T13**: and
+ * every duelist lane its gesture could have written (`endGesture`).
  */
 function cue(def: CueDef): CueImpl {
   const effects = def.effects ?? [];
@@ -219,8 +302,10 @@ function cue(def: CueDef): CueImpl {
     apply(ctx, t, stage) {
       def.apply(ctx, t, stage);
       playClip(ctx, t, stage);
+      playGesture(ctx, t, stage);
     },
     end(ctx, stage) {
+      endGesture(ctx, stage);
       for (const id of ctx.targets) {
         stage.clearOffset(id);
         stage.clearClip(id);
