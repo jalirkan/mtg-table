@@ -38,7 +38,7 @@ import type { Offset } from '../cues/stage.ts';
 import type { ClipRequest } from '../figures/clips.ts';
 import type { FigureLayout, FigurePose } from '../figures/pose.ts';
 import { ON_CARD_DISC_ORDER } from '../layout.ts';
-import { COMIC } from '../look.ts';
+import { COMIC, paintsFigure, type MaterialLook } from '../look.ts';
 import { parsedColour } from './colourCache.ts';
 import { UNIT_PLANE } from './geometry.ts';
 import { initTexture } from './useCardTexture.ts';
@@ -138,11 +138,16 @@ function discTexture(): THREE.Texture | null {
 }
 
 // ---------------------------------------------------------------------------
-// Spike (report 15 §3.5) — the contact shadow: a flat, soft-edged dark ellipse
-// on the table under every modelled figure, one instanced draw call for all of
-// them, no texture (the falloff is computed from the quad's UV) and no clock.
-// Its strength rides `instanceColor.r`. Empty — and so not drawn — under the
-// hologram, which never had a shadow to cast.
+// **The contact shadow** (Lane LOOK, **D123**, report 15 §3.5): a flat dark
+// ellipse on the table under every PAINTED figure — the comic look's grounding,
+// where the hologram's additive disc lit the table and every figure floated. One
+// instanced draw call for all of them, no texture (the falloff is computed from
+// the quad's UV), no clock, and a pose layer: written in `DiscField.bind` from
+// the pose and the live offset, so a lunging figure's shadow lunges with it. Its
+// strength rides `instanceColor.r`. Empty — and so not drawn — under the
+// hologram, and never under an anonymous figure or a ghost (D125: a hologram
+// casts no shadow). It is NOT drei's `ContactShadows`, which renders the scene a
+// second time into a target (report 09 §9.2 rule 3).
 // ---------------------------------------------------------------------------
 
 const SHADOW_VERTEX = /* glsl */ `
@@ -189,6 +194,14 @@ const QUATERNION = new THREE.Quaternion();
 const EULER = new THREE.Euler();
 const SCALE = new THREE.Vector3();
 const COLOUR = new THREE.Color();
+/** The shadow's turn and lean, refreshed once a frame from the camera (never allocated there). */
+const KEY = new THREE.Vector3();
+const FLAT_QUAT = new THREE.Quaternion();
+const YAW_QUAT = new THREE.Quaternion();
+const SHADOW_QUAT = new THREE.Quaternion();
+const UP_AXIS = new THREE.Vector3(0, 1, 0);
+const LENS_KEY = new THREE.Vector3(COMIC.key[0], COMIC.key[1], COMIC.key[2]).normalize();
+const WORLD_KEY = new THREE.Vector3(COMIC.keyWorld[0], COMIC.keyWorld[1], COMIC.keyWorld[2]).normalize();
 
 export class DiscField {
   /** The front row's discs — and every disc that is not standing on a card. */
@@ -201,10 +214,16 @@ export class DiscField {
    * on every frame of the corpus that does not wrap a rank.
    */
   readonly onCardMesh: THREE.InstancedMesh;
-  /** Spike (report 15 §3.5): the contact shadows, drawn before the discs. Empty under the hologram. */
+  /** D123: the contact shadows, drawn before the discs. Empty under the hologram. */
   readonly shadowMesh: THREE.InstancedMesh;
-  /** Spike: 0 the hologram (no shadows, full discs), 1 the comic look. Written at commit. */
+  /** 0 the hologram (full discs), 1 the comic look. Written at commit ({@link DiscField.setLook}). */
   private look = 0;
+  /** Whether the look draws contact shadows (`look.ts`'s `wantsShadows`). */
+  private shadows = false;
+  /** 1 when the key light is world-fixed (the workshop's toggle), else it turns with the lens. */
+  private keyWorld = 0;
+  /** The camera the lens-fixed key belongs to — handed in at commit, read once a frame. */
+  private camera: THREE.Camera | null = null;
   /** How many instances the buffers hold. `mesh.count` is how many are drawn. */
   readonly capacity: number;
   /** T8 — the departing figures, installed by `FigureLayer` for its lifetime. */
@@ -242,9 +261,22 @@ export class DiscField {
     this.shadowMesh.name = 'discs:contact-shadows';
   }
 
-  /** Spike (report 15): the look, at commit. The frame loop reads the number. */
-  setLook(look: number): void {
-    this.look = look;
+  /**
+   * **The look, at COMMIT** (`FigureLayer`'s layout effect, never the frame
+   * loop): how far a painted figure's glowing disc steps back, whether shadows
+   * are drawn, and the camera whose lens the key light rides — the frame loop
+   * reads numbers and one camera's quaternion.
+   */
+  setLook(look: MaterialLook, shadows: boolean, camera: THREE.Camera | null): void {
+    this.look = look.look;
+    this.keyWorld = look.keyWorld;
+    this.shadows = shadows && look.look > 0;
+    this.camera = camera;
+  }
+
+  /** §8.3 rule 3's warm-up: the shadow program is compiled at mount (`FigureLayer`), not on first use. */
+  setPrimeVisible(on: boolean): void {
+    this.shadowMesh.visible = on || this.shadowMesh.count > 0;
   }
 
   /**
@@ -262,6 +294,24 @@ export class DiscField {
     let front = 0;
     let onCard = 0;
     let shadows = 0;
+    // D123: where the key light is, put on the table — the shadow falls away from
+    // it, so the bands and the ground agree. Once a frame, from the camera's own
+    // quaternion (a lens-fixed key turns with it); no allocation.
+    let leanX = 0;
+    let leanZ = 0;
+    if (this.shadows) {
+      if (this.keyWorld > 0 || this.camera === null) KEY.copy(WORLD_KEY);
+      else KEY.copy(LENS_KEY).applyQuaternion(this.camera.quaternion);
+      const flat = Math.hypot(KEY.x, KEY.z);
+      if (flat > 1e-3) {
+        leanX = -KEY.x / flat;
+        leanZ = -KEY.z / flat;
+      }
+      EULER.set(FLAT, 0, 0);
+      FLAT_QUAT.setFromEuler(EULER);
+      YAW_QUAT.setFromAxisAngle(UP_AXIS, Math.atan2(-leanZ, leanX));
+      SHADOW_QUAT.multiplyQuaternions(YAW_QUAT, FLAT_QUAT);
+    }
     for (let n = 0; n < list.length; n++) {
       const pose = list[n]!;
       // T10: a vehicle's silhouette flies; it has no footprint on the table.
@@ -295,23 +345,28 @@ export class DiscField {
       // as "not there yet" rather than "a different colour".
       COLOUR.copy(parsedColour(pose.tint));
       const strength = pose.opacity * offset.opacity * (1 - offset.dissolve);
-      // Spike: under the comic look a modelled figure's footprint is its shadow,
-      // so its glowing disc steps back to a faint ring in its colour.
-      const faint = this.look > 0 && pose.modelId !== null ? 1 - 0.7 * this.look : 1;
+      // D123: under the comic look a PAINTED figure's footprint is its shadow, so
+      // its glowing disc steps back to a faint ring in its colour. An anonymous
+      // figure and a ghost keep the hologram's disc (D125).
+      const painted = this.look > 0 && paintsFigure(pose);
+      const faint = painted ? 1 - (1 - COMIC.discUnderComic) * this.look : 1;
       COLOUR.multiplyScalar(Math.max(0, Math.min(1, strength)) * (pose.modelId === null ? 0.85 : 0.55) * faint);
       mesh.setColorAt(i, COLOUR);
       if (pose.onCard) onCard += 1;
       else front += 1;
 
-      // Spike (report 15 §3.5): the contact shadow — on the GROUND under the
-      // figure (its own hover taken out), smaller and fainter the higher it flies.
-      if (this.look > 0 && pose.modelId !== null && shadows < this.capacity) {
-        const lift = Math.max(0, pose.position[1]);
-        const fall = 1 / (1 + 2.5 * lift);
+      // D123: the contact shadow — on the GROUND under the figure (its hover taken
+      // out), smaller and fainter the higher it flies, leaning away from the key.
+      if (this.shadows && painted && shadows < this.capacity) {
+        // Its height above its own ground: a flier's hover and a cue's lift — the
+        // stand point itself sits on its card's plane (y 0.02), not in the air.
+        const lift = Math.max(0, pose.lift + offset.dy);
+        const fall = 1 / (1 + COMIC.shadowFalloff * lift);
         const size = pose.height * COMIC.shadowRadius * 2 * offset.scale * (0.55 + 0.45 * fall);
-        POSITION.set(pose.position[0] + offset.dx, DISC_LIFT * 0.5, pose.position[2] + offset.dz);
-        SCALE.set(size * 1.15, size, 1);
-        MATRIX.compose(POSITION, QUATERNION, SCALE);
+        const lean = size * COMIC.shadowLean * 0.5;
+        POSITION.set(pose.position[0] + offset.dx + leanX * lean, DISC_LIFT * 0.5, pose.position[2] + offset.dz + leanZ * lean);
+        SCALE.set(size * COMIC.shadowSquash, size, 1);
+        MATRIX.compose(POSITION, SHADOW_QUAT, SCALE);
         this.shadowMesh.setMatrixAt(shadows, MATRIX);
         COLOUR.setRGB(COMIC.shadowAlpha * this.look * fall * Math.max(0, Math.min(1, strength)), 0, 0);
         this.shadowMesh.setColorAt(shadows, COLOUR);

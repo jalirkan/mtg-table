@@ -50,13 +50,13 @@ import {
 import { figureFor } from '../src/arena/figures/resolve.ts';
 import { DEFAULT_TRAIT, EMPTY_TRAIT_DATA, TRAITS, traitFor } from '../src/arena/figures/traits.ts';
 import { validateFigures, validateModels, validateTraits } from '../src/arena/figures/validate.ts';
-import { FIGURE_HEIGHT, FIGURE_MAX_WIDTH, layout } from '../src/arena/layout.ts';
+import { FIGURE_FRONT_Z, FIGURE_HEIGHT, FIGURE_MAX_WIDTH, layout, seatFacingY } from '../src/arena/layout.ts';
 import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 import { VIEW_BY_ID } from '../src/arena/camera.ts';
 import { PropField } from '../src/arena/scene/props.ts';
-import { COSTUME_ATTRIBUTE } from '../src/arena/scene/holoMaterial.ts';
+import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import {
   bodyLayers,
   cameraAt,
@@ -778,8 +778,9 @@ const IDENTITY_MIN_PX = 48;
 
 /**
  * **The props that are on ONE side of a body by nature**, each with the partner
- * that reads on the side it cannot. The rest must read from BOTH seats: the
- * opponent's figures show the table view their backs (D81, PLAN question 13).
+ * that reads on the side it cannot. The rest must read from BOTH seats: since
+ * D126 your own figures show the table view their backs and the opponent's their
+ * fronts (before it, the other way round — D81); the raster below runs both.
  * A one-sided prop is a detail: it must show on its own side at half the bar
  * (kneeling included), and its partner must carry the card at the full bar on
  * every seat where it does not.
@@ -792,7 +793,19 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
   // chibi's was half the figure) a patch is a face detail like a tie — it reads
   // from the front, and Fury's long black coat carries him from behind and above.
   eyepatch: { partner: 'coat', why: 'a patch is on the face — the long black coat carries Fury from behind' },
+  // D126's re-check: the thrusters are on the Doombot's BACK. With the opponent's
+  // Doombot facing you now, from the far seat they are 26 px of pack behind its
+  // body; the visor band — its glow round the head — carries it from the front.
+  jetpack: { partner: 'visor', why: 'thrusters are on the back — the visor band reads in front (D126)' },
 };
+
+/**
+ * **The seat whose figures the table view sees from BEHIND** — derived from
+ * `seatFacingY`, never typed: a front is `FIGURE_FRONT_Z · (sin f, cos f)` and
+ * the table view looks from +Z, so a seat whose front points to −Z shows it its
+ * back. Since D126 it is `you`.
+ */
+const BEHIND_SEAT: 'you' | 'opp' = Math.cos(seatFacingY('you')) * FIGURE_FRONT_Z < 0 ? 'you' : 'opp';
 
 /** The deck's own cards, from its `.dck` — never a list typed here. */
 function deckNames(): string[] {
@@ -862,7 +875,7 @@ test('traits: every deck card’s identity props reach the screen from the table
             kinds.set(prop.kind, row);
             checked += 1;
           }
-          if (name === 'Agent Phil Coulson' && seat === 'opp') {
+          if (name === 'Agent Phil Coulson' && seat === BEHIND_SEAT) {
             chestOnlyFromBehind = Math.min(chestOnlyFromBehind, seen.get('badge (chest only)')?.pixels ?? 0);
           }
         }
@@ -895,13 +908,13 @@ test('traits: every deck card’s identity props reach the screen from the table
   console.log(
     `traits: identity props on screen, table view 1600 × 1000, the fewest pixels over standing/kneeling and centre/edge ` +
       `(≥ ${String(IDENTITY_MIN_PX)} on both seats; one-sided: ${Object.keys(ONE_SIDED).join(', ')})\n${lines.join('\n')}\n` +
-      `  Coulson's chest badge alone, from the opponent's seat: ${String(chestOnlyFromBehind)} px`,
+      `  Coulson's chest badge alone, seen from behind (the ${BEHIND_SEAT} seat): ${String(chestOnlyFromBehind)} px`,
   );
   assert.ok(checked > 150, `only ${String(checked)} prop measurements`);
   assert.ok(least.size >= 11, `only ${String(least.size)} deck cards carried props`);
   assert.deepEqual(failures, []);
   // The negative control: slice 3's badge — on the chest only — is not on the
-  // opponent's screen at all. The back emblem is what makes that row pass.
+  // screen at all from behind. The back emblem is what makes that row pass.
   assert.ok(chestOnlyFromBehind < IDENTITY_MIN_PX, `the chest badge alone shows ${String(chestOnlyFromBehind)} px from behind — this test cannot tell`);
 });
 

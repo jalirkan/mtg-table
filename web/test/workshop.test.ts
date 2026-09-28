@@ -401,7 +401,8 @@ test('workshop: under the preview an attacker still ends its turn facing its def
   const placed = layout(r.after, PRESENCE);
   const anchor = { kind: 'player' as const, id: OPP };
   const unturned = new PreviewStage(placed).yawTo(IDS.subject, anchor);
-  assert.ok(Math.abs(unturned) > 1, 'your figure faces you; it turns to face the other seat to attack');
+  // D126: your figure already faces the other seat; the attack turns it a little.
+  assert.ok(Math.abs(unturned) < 0.8, 'your figure does not face the other seat at rest (D126)');
   for (const turn of [0, Math.PI]) {
     const stage = new PreviewStage(placed);
     stage.turn = turn;
@@ -409,12 +410,12 @@ test('workshop: under the preview an attacker still ends its turn facing its def
     const facing = seatFacingY('you') + turn + stage.yawTo(IDS.subject, anchor);
     assert.ok(Math.abs(wrapAngle(facing - (seatFacingY('you') + unturned))) < 1e-9, `turn ${String(turn)}`);
   }
-  // Facing you, the attack turns her about half a turn; facing the other seat
-  // (question 13), it hardly turns her at all — she already faces it.
-  assert.ok(Math.abs(Math.abs(unturned) - Math.PI) < 0.8, `unturned ${String(unturned)}`);
+  // Facing the other seat (the arena since D126) the attack hardly turns her —
+  // she already faces it; previewed facing her own player (the facing before
+  // D126), it turns her about half a turn.
   const previewed = new PreviewStage(placed);
   previewed.turn = Math.PI;
-  assert.ok(Math.abs(previewed.yawTo(IDS.subject, anchor)) < 0.8);
+  assert.ok(Math.abs(Math.abs(previewed.yawTo(IDS.subject, anchor)) - Math.PI) < 0.8, `previewed ${String(previewed.yawTo(IDS.subject, anchor))}`);
   // The arena's own answer (layout.ts's yawToward from the stand point) is the one preserved.
   const stand = standPointOf(placementOf(placed, IDS.subject)!);
   assert.ok(Number.isFinite(yawToward(0, stand[0], stand[2], 0, -6)));

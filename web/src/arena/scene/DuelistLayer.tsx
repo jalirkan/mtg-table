@@ -6,7 +6,7 @@
  * **The duelists, mounted** (Tier 2 slice 4, T13; `figures/duelists.ts` is the
  * pure half): one full figure per seat standing at its side of the table, drawn
  * through the SAME figure library, the SAME loader (`scene/models.ts`) and the
- * SAME holographic material (`scene/holoMaterial.ts`, costume palette included)
+ * SAME figure material (`scene/figureMaterial.ts`, costume palette included)
  * as every creature — never a second loader and never a second program.
  *
  * ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ import { COSTUME_SLOTS, anchorsOf, familyOf, wearsCostume, type PropKind } from 
 import type { ModelData } from '../figures/types.ts';
 import type { Seat } from '../layout.ts';
 import type { BustField, DuelistBinder } from './busts.ts';
-import { COSTUME_ATTRIBUTE, applyCostume, applyLook, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
+import { COSTUME_ATTRIBUTE, applyCostume, applyLook, makeFigureMaterial, type FigureMaterial } from './figureMaterial.ts';
 import {
   instantiateFigure,
   loadFigureModels,
@@ -92,7 +92,10 @@ export interface DuelistLayerProps {
   data: DuelistData;
   stage: DuelistLaneSource;
   queue: DuelistClock;
-  /** Spike (report 15): `uLook` for both bodies, at commit. */
+  /**
+   * **The look** (D120): `uLook` for both bodies, written at COMMIT. A duelist is
+   * a seat, never an anonymous card, so it always takes the table's look.
+   */
   look?: number;
 }
 
@@ -167,11 +170,11 @@ export function DuelistLayer({ poses, bustField, models, data, stage, queue, loo
     field.commit(poses);
     invalidate();
   }, [field, poses, built, invalidate]);
-  // Spike (report 15): the look, at commit.
+  // The look, at commit — and a body built later takes the field's current one.
   useLayoutEffect(() => {
     field.setLook(look);
     invalidate();
-  }, [field, look, built, invalidate]);
+  }, [field, look, invalidate]);
 
   // §8.3 rule 3: the duelists' program is the figures' own, and it is compiled at
   // mount — `compile` skips invisible objects, so the bodies are shown for it.
@@ -231,7 +234,7 @@ interface DuelistBody {
   /** The one mesh drawn: the body with its props baked in. */
   mesh: THREE.SkinnedMesh;
   geometry: THREE.BufferGeometry;
-  material: HoloMaterial;
+  material: FigureMaterial;
   mixer: THREE.AnimationMixer;
   /** The breathing idle, or `null` (the bind pose). */
   rest: THREE.AnimationAction | null;
@@ -272,6 +275,8 @@ export class DuelistField implements DuelistBinder {
   private stage: DuelistLaneSource | null = null;
   private clock: DuelistClock | null = null;
   private drawnCount = 0;
+  /** The look both bodies are drawn in — written at commit, applied to a body when it is built. */
+  private look = 0;
 
   constructor() {
     this.group.name = 'arena-duelists';
@@ -282,8 +287,9 @@ export class DuelistField implements DuelistBinder {
     this.clock = clock;
   }
 
-  /** Spike (report 15): the look on both bodies — commit time, never the frame loop. */
+  /** **The look on both bodies** (D120) — commit time, never the frame loop. */
   setLook(look: number): void {
+    this.look = look;
     for (let i = 0; i < this.slots.length; i++) {
       const body = this.slots[i] ?? null;
       if (body !== null) applyLook(body.material, look);
@@ -317,6 +323,7 @@ export class DuelistField implements DuelistBinder {
       if (current !== null) this.drop(i);
       if (look !== null && model !== null) {
         const body = buildBody(seat, key, look, model, models, data);
+        applyLook(body.material, this.look);
         this.slots[i] = body;
         this.group.add(body.root);
       }
@@ -586,7 +593,7 @@ function buildBody(
   const costume = wearsCostume(family) && regions;
 
   const base = new THREE.Color(look.tint).lerp(new THREE.Color(seat === 'you' ? '#8fd3c4' : '#d68f9a'), look.seatMix);
-  const material = makeHoloMaterial(`#${base.getHexString()}`, model.unitScale);
+  const material = makeFigureMaterial(`#${base.getHexString()}`, model.unitScale);
   if (costume) applyCostume(material, costumeOf(look), false);
   // Seen at twice a creature's size and from further off, a duelist wants a
   // firmer edge than a creature on its card.

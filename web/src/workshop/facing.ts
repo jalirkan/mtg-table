@@ -3,13 +3,13 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **PLAN question 13, previewed without changing the arena.**
+ * **PLAN question 13's other answer, previewed without changing the arena.**
  *
- * Today every figure faces its OWN player (`layout.ts`'s `seatFacingY`: yours at
- * 0, toward your camera; the opponent's at π, away from it), and D81 records that
- * turning them to face the other seat "is this one line, and it moves every prop
- * and every T11 anchor with it". The workshop previews that line without writing
- * it, in the two places the arena reads a figure's facing:
+ * Since **D126** (the user's answer, 2026-09-28) every figure faces the OTHER
+ * seat (`layout.ts`'s `seatFacingY`: yours at π, away from your camera; the
+ * opponent's at 0, toward it). The workshop still previews the facing it
+ * replaced — every figure turned to face its own player, D81's measured state —
+ * in the two places the arena reads a figure's facing:
  *
  *  - **the pose** — {@link turnPoses} adds the turn to every `FigurePose.facingY`,
  *    which is the one field the rig, the prop field, the departing bodies and the
@@ -46,7 +46,7 @@ export function turnPoses(poses: FigureLayout, turn: number): FigureLayout {
 
 /** The arena's stage, with the preview's turn taken out of the attack turn. */
 export class PreviewStage extends SceneStage {
-  /** The preview's turn, radians — `0` (the arena) or `π` (question 13). */
+  /** The preview's turn, radians — `0` (the arena, D126) or `π` (the facing before D126). */
   turn = 0;
 
   override yawTo(cardId: number, anchor: AnchorRef): number {

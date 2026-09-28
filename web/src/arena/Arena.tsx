@@ -115,8 +115,19 @@ import {
   type Layout,
   type Placement,
 } from './layout.ts';
-import { HOLO_LOOK, lookFromSearch, wantsInkPass, type LookSpec } from './look.ts';
-import { BLOOM_DEFAULT, DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, rungFrom, worstOf } from './perf.ts';
+import {
+  COMIC,
+  DEFAULT_LOOK,
+  HOLO_BACKGROUND,
+  combatStageOf,
+  lookFromSearch,
+  stageColoursOf,
+  stageIdentitiesOf,
+  wantsInkPass,
+  wantsStage,
+  type LookSpec,
+} from './look.ts';
+import { BLOOM_DEFAULT, DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, postOnFloor, rungFrom, worstOf } from './perf.ts';
 import { CardPlane } from './scene/CardPlane.tsx';
 import { CueRunner, type Frameloop } from './scene/CueRunner.tsx';
 import { CastingField } from './scene/casting.ts';
@@ -172,6 +183,14 @@ export interface ArenaProps {
    * prints the word on the "watching" line.
    */
   follow?: ArenaFollow | null;
+  /**
+   * **The look** (Lane LOOK, D120): `main.tsx`'s `arenaFlagsFromQuery` keeps
+   * `?look=` and its options as a query string, and it is parsed here once
+   * (`look.ts`'s `lookFromSearch`); absent is {@link DEFAULT_LOOK} — the comic
+   * look, `perf.ts`'s `LOOK_DEFAULT`. Presentation, like the cue speed: nothing
+   * the engine sees.
+   */
+  lookQuery?: string | null;
 }
 
 /** What {@link ArenaProps.follow} can say. Declared here, not imported: the arena knows no transport. */
@@ -200,9 +219,10 @@ function DprGovernor({
   onStep: (direction: -1 | 1) => void;
   /**
    * **T7 — the rung below the floor.** Called when frames are still late at
-   * {@link DPR_FLOOR}: the one optional pass the arena has (bloom, user decision
-   * 6) is what goes next. Returns whether it changed anything, so a governor with
-   * nothing left to drop stays exactly as it was.
+   * {@link DPR_FLOOR}: the one optional composer the arena has — bloom (user
+   * decision 6) and the comic look's ink line riding it (D122) — is what goes
+   * next. Returns whether it changed anything, so a governor with nothing left to
+   * drop stays exactly as it was.
    */
   onFloor?: () => boolean;
 }): null {
@@ -233,8 +253,9 @@ function DprGovernor({
     if (stuck) {
       // "Degrade, don't stutter" (§9.2 rule 9), one rung further: bloom was
       // measured at p95 82 ms under SwiftShader at this very floor (T7), so a
-      // machine that is still late here gets its bloom turned off — and the
-      // window restarts, so the next decision is about the table without it.
+      // machine that is still late here gets its composer — bloom and the ink
+      // line with it (D122) — turned off, and the window restarts, so the next
+      // decision is about the table without it.
       if (direction < 0 && onFloor !== undefined && onFloor()) {
         state.lastStep = now;
         state.samples = [];
@@ -400,7 +421,7 @@ function Scene({
   glInfo,
   primeRef,
   loopRef,
-  look = HOLO_LOOK,
+  look = DEFAULT_LOOK,
 }: {
   state: ClientState;
   placed: Layout;
@@ -436,7 +457,7 @@ function Scene({
   glInfo: boolean;
   primeRef: { current: number };
   loopRef: { current: Frameloop };
-  /** Spike (report 15): the art-direction look, from `?look=comic`. */
+  /** The look (D120) — the background, the stage, the figures and the duelists. */
   look?: LookSpec;
 }): JSX.Element {
   const selectable = useMemo(
@@ -444,6 +465,18 @@ function Scene({
     [state.input],
   );
   const highlighted = useMemo(() => new Set(state.input?.highlighted ?? []), [state.input]);
+
+  // **The stage** (D124): each seat's half in the colour of what it has shown —
+  // a pure function of the snapshot's public zones, repainted only when a seat's
+  // identity changes (the memo is keyed on the two strings) — and the combat
+  // burst, a pose of `state.combat`.
+  const stageOn = wantsStage(look);
+  const shown = stageIdentitiesOf(state.board?.players, viewerIdOf(state));
+  const stageColours = useMemo(
+    () => (stageOn ? stageColoursOf(shown.you, shown.opp) : null),
+    [stageOn, shown.you, shown.opp],
+  );
+  const combat = stageOn && combatStageOf(state.board?.combat);
 
   const clickCard = useCallback(
     (cardId: number) => {
@@ -457,8 +490,8 @@ function Scene({
 
   return (
     <>
-      <color attach="background" args={[look.look === 'comic' ? '#141427' : '#0a0d12']} />
-      <Table look={look.look === 'comic' ? 1 : 0} />
+      <color attach="background" args={[stageOn ? COMIC.background : HOLO_BACKGROUND]} />
+      <Table stage={stageColours} combat={combat} />
       {showGrid && (
         <gridHelper
           args={[Math.max(TABLE_HALF_X, TABLE_HALF_Z) * 2, 24, '#3a4550', '#232a33']}
@@ -681,7 +714,10 @@ export default function Arena({
   glInfo = false,
   bloom = null,
   follow = null,
+  lookQuery = null,
 }: ArenaProps): JSX.Element {
+  /** The look, parsed once from the flags `main.tsx` kept (D120). */
+  const look = useMemo<LookSpec>(() => (lookQuery === null ? DEFAULT_LOOK : lookFromSearch(lookQuery)), [lookQuery]);
   const [hoverId, setHoverId] = useState<number | null>(null);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
   /**
@@ -692,18 +728,12 @@ export default function Arena({
    */
   const [bloomOn, setBloomOn] = useState<boolean>(bloom ?? BLOOM_DEFAULT);
   /**
-   * **The art-direction spike** (`look.ts`, report 15): `?look=comic[&ink=…]`,
-   * read once. Spike only — Lane LOOK moves it into `main.tsx`'s
-   * `arenaFlagsFromQuery` beside `?bloom=`.
+   * **The ink line** (D122) — on under the comic look unless `?ink=none`, and off
+   * with bloom on the governor's rung below the floor (`perf.ts`'s
+   * `postOnFloor`). Both ride one composer, so a slow machine sheds them together.
    */
-  const look = useMemo<LookSpec>(() => {
-    try {
-      return lookFromSearch(window.location.search);
-    } catch {
-      return HOLO_LOOK;
-    }
-  }, []);
-  const inkPass = wantsInkPass(look);
+  const [inkOn, setInkOn] = useState<boolean>(true);
+  const inkPass = inkOn && wantsInkPass(look);
   /** T7's program warm-up counter — see `EffectPool.prime`. Two frames at mount. */
   const primeRef = useRef(2);
   /**
@@ -1339,10 +1369,12 @@ export default function Arena({
               setDpr((current: number) => rungFrom(current, direction));
             }}
             onFloor={() => {
-              if (!bloomOn) return false;
-              setBloomOn(false);
+              const drop = postOnFloor(bloomOn, inkPass);
+              if (drop === null) return false;
+              setBloomOn(drop.bloom);
+              setInkOn(drop.ink);
               console.info(
-                '[arena] frames still late at the lowest render resolution — bloom turned off (tick it in the cue controls to bring it back)',
+                '[arena] frames still late at the lowest render resolution — bloom and the ink line turned off (tick bloom in the cue controls to bring it back)',
               );
               return true;
             }}

@@ -38,7 +38,7 @@ import { CAMERA, type Pose } from '../src/arena/camera.ts';
 import { REST_CLIP_FOR, REST_PHASE_FOR } from '../src/arena/figures/clips.ts';
 import { figurePose, type FigureLayout, type FigurePose } from '../src/arena/figures/pose.ts';
 import { COSTUME_SLOTS, familyOf } from '../src/arena/figures/props.ts';
-import { COSTUME_ATTRIBUTE } from '../src/arena/scene/holoMaterial.ts';
+import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { layout } from '../src/arena/layout.ts';
 import type { FigureRig, FigureRigMap } from '../src/arena/scene/figureRigs.ts';

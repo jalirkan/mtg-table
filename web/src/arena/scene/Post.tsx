@@ -3,10 +3,11 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **Bloom, and nothing else** (report 13 §8; **user decision 6**: bloom via
- * `@react-three/postprocessing` 2.19.1 — the React-18 line — "allowed and default
- * ON if the bench stays within budget on this machine, else default off with a
- * toggle").
+ * **Bloom, and the ink line that rides it** (report 13 §8; **user decision 6**:
+ * bloom via `@react-three/postprocessing` 2.19.1 — the React-18 line — "allowed
+ * and default ON if the bench stays within budget on this machine, else default
+ * off with a toggle"; Lane LOOK's **D122**: the comic look's ink is a depth-edge
+ * EFFECT merged into bloom's own `EffectPass`, not a second pass).
  *
  * ---------------------------------------------------------------------------
  * **Why this is the one post pass the arena gets, and why it is not "rendering the
@@ -35,7 +36,8 @@
  *    be a full-resolution multisampled target on a software rasteriser. The arena
  *    is a scene of large flat quads whose edges are mostly card art; the dpr
  *    governor is the control that matters here, not sample count.
- *  - `enableNormalPass={false}`: nothing here wants normals (no SSAO, no outline).
+ *  - `enableNormalPass={false}`: nothing here wants normals (no SSAO; the ink
+ *    line reads DEPTH, which the scene render writes anyway).
  *    (2.19.1 renamed drei's older `disableNormalPass`; the installed `.d.ts` is the
  *    authority and `npm run build` is what caught the old spelling.)
  *  - `luminanceThreshold` above the table's own brightness, so **bloom is a
@@ -48,7 +50,7 @@
 import { useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { BlendFunction, Effect, EffectAttribute, KernelSize } from 'postprocessing';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 import { COMIC } from '../look.ts';
@@ -74,16 +76,26 @@ const SMOOTHING = 0.22;
 const INTENSITY = 0.9;
 
 // ---------------------------------------------------------------------------
-// **The art-direction spike's ink pass** (report 15 §3.4, option B): one more
+// **The ink line** (Lane LOOK, **D122**, report 15 §3.4's option B): one more
 // EFFECT, not one more pass. `postprocessing` merges every non-convolution effect
-// in a composer into ONE full-screen `EffectPass`, so with bloom on the ink costs
-// a few depth reads per pixel inside the pass bloom already pays for; with bloom
-// off it is the composer plus that one pass. It reads the DEPTH buffer the scene
-// render already wrote — no normal pass, no second render of the scene (report 09
-// §9.2 rule 3 stands) — and inks every pixel where the depth surface BENDS: the
+// in a composer into ONE full-screen `EffectPass`, so with bloom on (D61's
+// default) the ink costs a few depth reads per pixel inside the pass bloom already
+// pays for — **+0 draw calls, +0 triangles** at `g1`@355; with bloom off it is
+// the composer plus that one pass. It reads the DEPTH buffer the scene render
+// already wrote — no normal pass, no second render of the scene (report 09 §9.2
+// rule 3 stands) — and inks every pixel where the depth surface BENDS: the
 // Laplacian of 1/z, which is exactly zero on any plane (1/z is affine in screen
 // space), so the table, the cards and the land slabs get no line and every figure,
 // prop and carrier gets one at its silhouette and its deep creases.
+//
+// **Resolution-independent** (report 15 §9.1 item 3): the sample distance is
+// `COMIC.inkCssPx` CSS pixels, i.e. × the render dpr in the render target's own
+// texels, written when the dpr changes. A finite difference over a fixed CSS
+// distance measures the same bend at every rung of the DPR ladder, so the
+// relative threshold — and the line's weight on screen — hold from 0.6 to 1.5
+// (measured, `docs/evidence/look.md`). The inverted hull the spike also built is
+// deleted (D122): +16 draw calls and +20,000 triangles at `g1`@355, over both of
+// §8.2's lines, and the weaker line besides.
 // ---------------------------------------------------------------------------
 
 const INK_FRAGMENT = /* glsl */ `
@@ -109,17 +121,28 @@ const INK_FRAGMENT = /* glsl */ `
   }
 `;
 
-/** The ink edge effect. Built once per composer; every number is a uniform. */
+/** The sample distance in the render target's texels, for a render dpr — never under one texel. */
+export function inkWidthFor(dpr: number): number {
+  return Math.max(1, COMIC.inkCssPx * dpr);
+}
+
+/** The ink edge effect. Built once per composer; every number is a uniform, and each is `look.ts`'s. */
 export class InkEffect extends Effect {
   constructor() {
     super('InkEffect', INK_FRAGMENT, {
       attributes: EffectAttribute.DEPTH,
       uniforms: new Map<string, THREE.Uniform>([
         ['uInk', new THREE.Uniform(new THREE.Color(COMIC.ink))],
-        ['uWidth', new THREE.Uniform(COMIC.inkPx)],
-        ['uThreshold', new THREE.Uniform(0.012)],
+        ['uWidth', new THREE.Uniform(inkWidthFor(1))],
+        ['uThreshold', new THREE.Uniform(COMIC.inkThreshold)],
       ]),
     });
+  }
+
+  /** The render dpr changed (the governor's ladder): the sample distance follows. Commit time only. */
+  setDpr(dpr: number): void {
+    const width = this.uniforms.get('uWidth');
+    if (width !== undefined) width.value = inkWidthFor(dpr);
   }
 }
 
@@ -131,11 +154,15 @@ export function Post({
   onMount?: () => void;
   /** Bloom, as before (user decision 6). */
   bloom?: boolean;
-  /** Spike (report 15 §3.4): the depth-edge ink pass. */
+  /** The comic look's depth-edge ink line (D122). */
   ink?: boolean;
 }): JSX.Element {
   // Built once; it holds no render target or texture of its own to dispose.
   const inkEffect = useMemo(() => new InkEffect(), []);
+  const dpr = useThree((s) => s.viewport.dpr);
+  useLayoutEffect(() => {
+    inkEffect.setDpr(dpr);
+  }, [inkEffect, dpr]);
   // Under `frameloop='demand'` mounting or unmounting the composer is a change
   // React makes and the frame loop does not see: without a repaint the toggle
   // would take effect on the next cue rather than when it is clicked.

@@ -170,9 +170,10 @@ test('figure-pose: the figure stands off the front edge of its card', () => {
     seatSign('you') * FIGURE_STANDOFF,
     'the figure stands FIGURE_STANDOFF toward the centre of the table',
   );
-  // `0` at the viewer's seat. The models face +z (measured in slice 3), so this
-  // turns the viewer's own figures toward the viewer's camera.
-  assert.equal(pose.facingY, 0, 'the viewer’s own figures are not turned');
+  // `π` at the viewer's seat (D126, PLAN question 13): the models face +z
+  // (measured in slice 3), so this turns the viewer's own figures AWAY from the
+  // viewer's camera — to face the opponent across the table.
+  assert.equal(pose.facingY, Math.PI, 'the viewer’s own figures do not face the other seat');
 });
 
 test('figure-pose: a tapped card’s figure keeps its slot and does NOT turn with it', () => {

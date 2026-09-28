@@ -39,7 +39,7 @@ import type { TraitData } from '../arena/figures/traits.ts';
 import type { FigureData, ModelData } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
 import type { FigureRig, FigureRigMap } from '../arena/scene/figureRigs.ts';
-import { COSTUME_ATTRIBUTE } from '../arena/scene/holoMaterial.ts';
+import { COSTUME_ATTRIBUTE } from '../arena/scene/figureMaterial.ts';
 import { clipFor, instantiateFigure, type ModelLibrary } from '../arena/scene/models.ts';
 import { PropField, type PropOffsetSource } from '../arena/scene/props.ts';
 import type { WorkshopEntry } from './catalog.ts';

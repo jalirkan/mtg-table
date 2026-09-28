@@ -23,7 +23,7 @@
 import type * as THREE from 'three';
 
 import type { FigurePose } from '../figures/pose.ts';
-import type { HoloMaterial } from './holoMaterial.ts';
+import type { FigureMaterial } from './figureMaterial.ts';
 
 export interface FigureRig {
   /** The group that carries the pose. One per figure with a model. */
@@ -66,7 +66,7 @@ export interface FigureRig {
    */
   restTime: number;
   /** This figure's own holographic material. One program, one instance per tint. */
-  material: HoloMaterial;
+  material: FigureMaterial;
   /** The pose of the frame currently on screen. Replaced, never merged (P5). */
   pose: FigurePose;
   /**

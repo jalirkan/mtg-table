@@ -48,7 +48,7 @@
  * ---------------------------------------------------------------------------
  * **The coupling to `web/src/arena/`, all of it, and why** — the list to
  * re-check whenever the arena moves (it was re-checked against Tier 2 slice 4:
- * the proportioned bodies, the costume palette in `holoMaterial`, the props
+ * the proportioned bodies, the costume palette in `figureMaterial`, the props
  * fitted per body family, the duelists). The workshop's code edits nothing under
  * `arena/`; every name below is an existing export, and
  * `web/test/workshop.test.ts` fails if a workshop file imports one that is not
@@ -58,15 +58,15 @@
  *     CueRunner, Frameloop (CueRunner.tsx)   THE frame loop: offsets, clip lane, binds
  *     FigureLayer (FigureLayer.tsx)          bodies, discs, props, departing bodies
  *     CardPlane (CardPlane.tsx)              THE card renderer (M7 convention 2)
- *     Table (Table.tsx)                      the felt
+ *     Table (Table.tsx)                      the felt, or the comic stage and its backdrop (D124)
  *     EffectPool, DiscField, TileField, CastingField, OverlayField, BustField
  *                                            the pose fields CueRunner binds
  *     SceneStage                             subclassed as facing.ts's PreviewStage (yawTo)
- *     Post (Post.tsx, lazy)                  bloom, the arena's one post pass
+ *     Post (Post.tsx, lazy)                  bloom and the ink line, the arena's one composer
  *     instantiateFigure, clipFor, loadFigureModels, ModelLibrary (models.ts)
  *                                            the meter's bodies, the clips' lengths
  *     PropField, PropOffsetSource (props.ts) the meter reads the real prop field back
- *     COSTUME_ATTRIBUTE (holoMaterial.ts)    the meter finds a body's head by its slots
+ *     COSTUME_ATTRIBUTE (figureMaterial.ts)  the meter finds a body's head by its slots
  *     FigureRig, FigureRigMap (figureRigs.ts), RigMap (rigs.ts)
  *   arena/figures/   the pose, the ladders and the validators — pure
  *     figurePose, FigureLayout, FigurePose (pose.ts) · figureFor (resolve.ts)
@@ -92,10 +92,11 @@
  *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
  *     CameraFrame, RequestOutcome (camera.ts)
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
-    lookFromSearch, LookSpec, HOLO_LOOK, COMIC_LOOK, wantsInkPass (look.ts)
-                                           the art-direction spike's look toggle
-                                           (report 15): `?look=comic[&ink=post|hull]`
-                                           or the toolbar's A/B switch
+ *     lookFromSearch, lookSpecOf, LookSpec, COMIC, DEFAULT_LOOK, HOLO_BACKGROUND,
+ *     combatStageOf, stageColoursOf, stageIdentitiesOf, wantsInkPass, wantsStage
+ *     (look.ts)                              the look (D120): the toolbar's A/B over
+ *                                            holo · comic and each comic option, and
+ *                                            the stage exactly as Arena.tsx computes it
  *   the data         figures.json, models.json and cues.json (imported without
  *                    attributes, as Arena.tsx imports them), traits.json (with them,
  *                    as traits.ts does) — the bundler warns on a module imported
@@ -123,7 +124,7 @@ import { figureFor } from '../arena/figures/resolve.ts';
 import { traitFor, type TraitData } from '../arena/figures/traits.ts';
 import type { FigureProblem } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
-import { COMIC_LOOK, HOLO_LOOK, lookFromSearch, type LookSpec } from '../arena/look.ts';
+import { lookFromSearch, lookSpecOf, type LookSpec } from '../arena/look.ts';
 import { BLOOM_DEFAULT } from '../arena/perf.ts';
 import { loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
 import { cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
@@ -259,12 +260,17 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [turn, setTurn] = useState(0);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
   const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
-  /** The art-direction spike's A/B (report 15): the hologram or the comic look. */
+  /**
+   * **The look** (D120) — the toolbar's A/B over holo · comic and every comic
+   * option. It starts where the page's own `?look=` query says (the arena's
+   * default, the comic look, when it says nothing) and is presentation only: it
+   * never reaches `traits.json`, `cues.json` or the arena (D103's rule).
+   */
   const [look, setLook] = useState<LookSpec>(() => {
     try {
       return lookFromSearch(window.location.search);
     } catch {
-      return HOLO_LOOK;
+      return lookFromSearch('');
     }
   });
   const [autoRest, setAutoRest] = useState(true);
@@ -874,17 +880,24 @@ function Toolbar({
         />{' '}
         both seats
       </label>
-      <span className="workshop__seg" title="PLAN question 13 — previewed here, the arena unchanged">
-        <button type="button" className={turn === 0 ? 'on' : ''} aria-pressed={turn === 0} onClick={() => onTurn(0)}>
-          faces its player
+      <span className="workshop__seg" title="D126 (PLAN question 13, decided): a seat's figures face the other seat — the arena. 'faces its player' previews the facing before D126">
+        <button
+          type="button"
+          className={turn === 0 ? 'on' : ''}
+          aria-pressed={turn === 0}
+          title="the arena since D126: your figures show you their backs, the opponent's their fronts"
+          onClick={() => onTurn(0)}
+        >
+          faces the other seat
         </button>
         <button
           type="button"
           className={turn !== 0 ? 'on' : ''}
           aria-pressed={turn !== 0}
+          title="the facing before D126, previewed: every figure turned to face its own player"
           onClick={() => onTurn(HALF_TURN)}
         >
-          faces the other seat
+          faces its player
         </button>
       </span>
       <label title="An opposing creature for attacks, blocks and spells to aim at (single seat)">
@@ -909,33 +922,48 @@ function Toolbar({
         />{' '}
         bloom
       </label>
-      <span className="workshop__seg" title="The art-direction spike (docs/research/15-art-direction.md): the hologram against the comic look">
+      <span className="workshop__seg" title="The look (D120): the comic look (the arena's default) against D53's hologram">
         <button
           type="button"
           className={look.look === 'holo' ? 'on' : ''}
           aria-pressed={look.look === 'holo'}
-          onClick={() => onLook(HOLO_LOOK)}
+          title="D53's hologram — still the anonymous figure's and the ghosted spell's under the comic look (D125)"
+          onClick={() => onLook(lookSpecOf('holo'))}
         >
           holo
         </button>
         <button
           type="button"
-          className={look.look === 'comic' && look.ink === 'post' ? 'on' : ''}
-          aria-pressed={look.look === 'comic' && look.ink === 'post'}
-          title="toon ramp, rim, halftone, contact shadow; ink by a depth-edge post pass"
-          onClick={() => onLook(COMIC_LOOK)}
+          className={look.look === 'comic' ? 'on' : ''}
+          aria-pressed={look.look === 'comic'}
+          title="three cel bands from a lens-fixed key, rim, specular dot, halftone, ink, contact shadow, the stage"
+          onClick={() => onLook(lookSpecOf('comic'))}
         >
           comic
         </button>
-        <button
-          type="button"
-          className={look.look === 'comic' && look.ink === 'hull' ? 'on' : ''}
-          aria-pressed={look.look === 'comic' && look.ink === 'hull'}
-          title="the same, with the ink as an inverted hull per figure"
-          onClick={() => onLook({ look: 'comic', ink: 'hull' })}
-        >
-          hull
-        </button>
+      </span>
+      <span className="workshop__seg" title="The comic look's parts, one at a time (report 15 §9.1's A/B)">
+        {(
+          [
+            ['ink', 'the depth-edge ink line (D122; single view only — it rides the composer)', look.ink === 'post', { ink: look.ink === 'post' ? 'none' : 'post' }],
+            ['halftone', 'the halftone screen in the core shadow', look.halftone, { halftone: !look.halftone }],
+            ['shadow', 'the contact shadow under each figure (D123)', look.shadow, { shadow: !look.shadow }],
+            ['stage', 'the comic stage and backdrop (D124) — off is the hologram\'s felt', look.stage === 'comic', { stage: look.stage === 'comic' ? 'felt' : 'comic' }],
+            ['world key', 'the key light fixed to the world instead of the lens (D121)', look.key === 'world', { key: look.key === 'world' ? 'lens' : 'world' }],
+          ] as const
+        ).map(([label, what, on, next]) => (
+          <button
+            key={label}
+            type="button"
+            className={on && look.look === 'comic' ? 'on' : ''}
+            aria-pressed={on}
+            disabled={look.look !== 'comic'}
+            title={what}
+            onClick={() => onLook({ ...look, ...next })}
+          >
+            {label}
+          </button>
+        ))}
       </span>
     </div>
   );

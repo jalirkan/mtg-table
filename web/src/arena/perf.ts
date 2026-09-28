@@ -46,6 +46,45 @@
  */
 export const BLOOM_DEFAULT = true;
 
+/**
+ * **Which look the arena draws when nobody said** (Lane LOOK, **D120**): the comic
+ * look — ink, three cel bands from one lens-fixed key light, a rim in the card's
+ * colour, a specular dot, halftone in the shadow band, a contact shadow and a
+ * mid-value stage (`arena/look.ts`). The user judged report 15's spike beside
+ * their card art on 2026-09-27 and approved the direction; `?look=holo` restores
+ * **D53**'s hologram, and the workshop's toolbar switches the two live.
+ *
+ * It is here, beside {@link BLOOM_DEFAULT}, for the same two reasons: the default
+ * is a MEASUREMENT as much as a preference — at `g1.jsonl`@355 with bloom off the
+ * comic look draws within §8.2's lines (≤ 90 calls, ≤ 30,000 triangles) and on the
+ * GTX 1080 its p95 at @316 is within 1.5 ms of the hologram's
+ * (`docs/evidence/look.md`) — and reading it must not load a renderer module.
+ */
+export const LOOK_DEFAULT: 'comic' | 'holo' = 'comic';
+
+/**
+ * **Whether the comic look draws its ink line** (**D122**): the depth-edge pass
+ * (`scene/Post.tsx`'s `InkEffect`), which rides bloom's composer — `postprocessing`
+ * merges it into the one `EffectPass` bloom already pays for, so with bloom on it
+ * costs **no** draw call and no triangle. `?ink=none` turns it off. On a machine
+ * still late at the DPR floor the governor's rung below the floor drops it
+ * together with bloom ({@link postOnFloor}): the bands, the rim and the shadow
+ * still read without a line.
+ */
+export const INK_DEFAULT: 'post' | 'none' = 'post';
+
+/**
+ * **The rung below the DPR floor** (§9.2 rule 9, one step further): the arena's
+ * one optional composer — bloom and the ink riding it — is dropped whole, because
+ * the composer's full-screen passes are the fill a CPU rasteriser cannot pay for
+ * (report 15 §3.4: SwiftShader +14 to +24 ms p50 for the composer at dpr 1).
+ * Returns what to switch off, or `null` when nothing optional is on — the
+ * governor then has no rung left and says so once.
+ */
+export function postOnFloor(bloom: boolean, ink: boolean): { bloom: false; ink: false } | null {
+  return bloom || ink ? { bloom: false, ink: false } : null;
+}
+
 export const DPR_FLOOR = 0.6;
 
 /** Never render more pixels than the screen can show. A ceiling is not a target. */

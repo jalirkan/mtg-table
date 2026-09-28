@@ -50,7 +50,17 @@ import { tilePose } from '../arena/figures/tiles.ts';
 import type { TraitData } from '../arena/figures/traits.ts';
 import { tileDataOf, type FigureData, type ModelData } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
-import { HOLO_LOOK, wantsInkPass, type LookSpec } from '../arena/look.ts';
+import {
+  COMIC,
+  DEFAULT_LOOK,
+  HOLO_BACKGROUND,
+  combatStageOf,
+  stageColoursOf,
+  stageIdentitiesOf,
+  wantsInkPass,
+  wantsStage,
+  type LookSpec,
+} from '../arena/look.ts';
 import { BustField } from '../arena/scene/busts.ts';
 import { CardPlane } from '../arena/scene/CardPlane.tsx';
 import { CastingField } from '../arena/scene/casting.ts';
@@ -99,7 +109,7 @@ export interface PedestalProps {
   figures: FigureData;
   models: ModelData;
   traits: TraitData;
-  /** The facing preview's turn: 0, or π for question 13. */
+  /** The facing preview's turn: 0 (the arena, D126), or π for the facing before it. */
   turn: number;
   mode: CameraMode;
   /** Both seats: two viewports, your copy on the left and the opponent's on the right. */
@@ -112,7 +122,7 @@ export interface PedestalProps {
   stage: PreviewStage;
   reducedMotion: boolean;
   bloom: boolean;
-  /** The art-direction spike's look (report 15); the hologram when absent. */
+  /** The look (D120) — the toolbar's A/B; the arena's default when absent. */
   look?: LookSpec;
 }
 
@@ -154,8 +164,8 @@ export function Pedestal(props: PedestalProps): JSX.Element {
   // view's; the split view renders twice by hand and draws without it.
   const single = !(props.split && props.mode !== 'wide');
   const bloomOn = props.bloom && single;
-  // The spike's ink pass rides the same composer, so it is single-view too.
-  const inkOn = wantsInkPass(props.look ?? HOLO_LOOK) && single;
+  // The ink line rides the same composer (D122), so it is single-view too.
+  const inkOn = wantsInkPass(props.look ?? DEFAULT_LOOK) && single;
   const postOn = bloomOn || inkOn;
   return (
     <Canvas
@@ -209,7 +219,7 @@ function PedestalScene({
   loopRef,
   primeRef,
   bloomOn,
-  look = HOLO_LOOK,
+  look = DEFAULT_LOOK,
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
@@ -302,10 +312,20 @@ function PedestalScene({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seat, mode, size.height, camera, invalidate]);
 
+  // The stage exactly as `Arena.tsx` computes it (D124): the seats' shown colours
+  // and the combat burst, from the synthetic board.
+  const stageOn = wantsStage(look);
+  const shown = stageIdentitiesOf(state.board?.players, placed.viewerId);
+  const stageColours = useMemo(
+    () => (stageOn ? stageColoursOf(shown.you, shown.opp) : null),
+    [stageOn, shown.you, shown.opp],
+  );
+  const combat = stageOn && combatStageOf(state.board?.combat);
+
   return (
     <>
-      <color attach="background" args={[look.look === 'comic' ? '#141427' : '#0a0d12']} />
-      <Table look={look.look === 'comic' ? 1 : 0} />
+      <color attach="background" args={[stageOn ? COMIC.background : HOLO_BACKGROUND]} />
+      <Table stage={stageColours} combat={combat} />
       {placed.placements.map((placement) => (
         <CardPlane
           key={placement.key}

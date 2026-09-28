@@ -22,7 +22,7 @@
  *    halftone a function of the fragment's screen position; nothing here reads
  *    time, so nothing here can keep `frameloop='demand'` awake.
  *  - **Two looks, one number.** `uLook` 0 draws the D53 hologram (a view-space
- *    fresnel, unlit), 1 the comic look (report 15 §3): the same three bands, key light,
+ *    fresnel, unlit), 1 the comic look (D120): the same three bands, key light,
  *    halftone and specular dot as the figures, so a coat and the body under it are
  *    painted in one hand. A kind that EMITS — additive, or a `glow`, `glass` or
  *    `membrane` preset (a muzzle, a laser eye, a visor, the gauntlets, the helmet
@@ -32,7 +32,8 @@
 
 import * as THREE from 'three';
 
-import { COMIC, type MaterialLook } from '../look.ts';
+import { COMIC_FRAGMENT_GLSL, COMIC_UNIFORMS, COMIC_VERTEX_GLSL } from './figureMaterial.ts';
+import type { MaterialLook } from '../look.ts';
 
 /** A kind's material numbers: every one is a uniform, so every kind is the same program. */
 export interface PropLook {
@@ -109,6 +110,7 @@ const VERTEX = /* glsl */ `
   varying vec3 vViewDir;
   varying float vLocalY;
   varying float vOpacity;
+  varying vec3 vKey;
 
   void main() {
     #include <color_vertex>
@@ -120,6 +122,7 @@ const VERTEX = /* glsl */ `
     vViewDir = normalize( -mvPosition.xyz );
     vLocalY = transformed.y;
     vOpacity = aOpacity;
+    vKey = comicKeyOf( viewMatrix );
   }
 `;
 
@@ -134,63 +137,59 @@ const FRAGMENT = /* glsl */ `
   uniform float uGlow;
   uniform float uScan;
   uniform float uLook;
-  uniform vec3 uKey;
-  uniform vec3 uShadowTone;
-  uniform float uDotPx;
 
   varying vec3 vViewNormal;
   varying vec3 vViewDir;
   varying float vLocalY;
   varying float vOpacity;
+  varying vec3 vKey;
 
   void main() {
-    float facing = abs( dot( normalize( vViewNormal ), normalize( vViewDir ) ) );
+    vec3 viewDir = normalize( vViewDir );
+    vec3 n = normalize( vViewNormal );
+    float facing = abs( dot( n, viewDir ) );
     float fresnel = pow( 1.0 - facing, uRim );
-    // A function of the prop's own y, never of time (the holo figure's rule).
+    // A function of the prop's own y, never of time (the hologram's rule).
     float scan = 1.0 - uScan * step( 0.5, fract( vLocalY * 30.0 ) ) * 0.3;
     // three 0.186 declares vColor as a vec4 (vertex colour times instance colour).
     vec3 base = vColor.rgb;
     vec3 rimColour = mix( base, vec3( 1.0 ), uRimLift );
     vec3 colour = ( base * uCore + rimColour * fresnel * uRimBoost ) * scan * uGlow;
     float alpha = clamp( vOpacity * ( uAlpha + fresnel * uAlphaRim ), 0.0, 1.0 );
-    // Spike (report 15 §3): the same three bands as the figures' comic look, so
-    // a coat and the body under it are painted in one hand. A double-sided
-    // sheet's back face turns its normal to the lens first.
-    vec3 n = normalize( vViewNormal );
-    n = gl_FrontFacing ? n : -n;
-    float ndl = dot( n, normalize( uKey ) );
-    float lit = smoothstep( 0.28, 0.34, ndl );
-    float umbra = 1.0 - smoothstep( -0.20, -0.14, ndl );
-    vec3 paint = mix( vec3( 0.022, 0.03, 0.075 ), base, smoothstep( 0.0, 0.045, dot( base, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
-    vec3 comic = mix( paint, paint * mix( uShadowTone, vec3( 1.0 ), 0.55 ), 1.0 - lit );
-    comic = mix( comic, paint * uShadowTone, umbra );
-    vec2 cell = mat2( 0.7071, -0.7071, 0.7071, 0.7071 ) * gl_FragCoord.xy / uDotPx;
-    float dots = 1.0 - smoothstep( 0.26, 0.34, length( fract( cell ) - 0.5 ) );
-    comic *= 1.0 - 0.34 * dots * umbra;
-    float spec = smoothstep( 0.986, 0.993, dot( n, normalize( normalize( uKey ) + normalize( vViewDir ) ) ) );
-    comic = mix( comic, vec3( 0.92, 0.96, 1.0 ), 0.55 * spec * lit );
-    colour = mix( colour, comic, uLook );
-    alpha = mix( alpha, clamp( vOpacity * max( uAlpha, 0.85 ), 0.0, 1.0 ), uLook );
+
+    if ( uLook > 0.0 ) {
+      // **The comic look** (D120): the figures' bands, key light, halftone and
+      // specular dot, so a coat and the body under it are painted in one hand. A
+      // double-sided sheet's back face turns its normal to the lens first. No rim:
+      // a prop's colour is its own, and the ink pass draws its edge.
+      n = gl_FrontFacing ? n : -n;
+      float lit;
+      vec3 comic = comicShade( comicPaint( base ), n, viewDir, normalize( vKey ), lit );
+      colour = mix( colour, comic, uLook );
+      alpha = mix( alpha, clamp( vOpacity * max( uAlpha, 0.85 ), 0.0, 1.0 ), uLook );
+    }
     gl_FragColor = vec4( colour, alpha );
     #include <colorspace_fragment>
   }
 `;
 
-/** Every uniform a prop material carries: its preset's numbers and the look. */
+/** Every uniform a prop material carries: its preset's numbers, the look, and the comic block (shared). */
 export type PropMaterial = THREE.ShaderMaterial & {
-  uniforms: Record<'uCore' | 'uRim' | 'uRimBoost' | 'uRimLift' | 'uAlpha' | 'uAlphaRim' | 'uGlow' | 'uScan' | 'uLook' | 'uDotPx', { value: number }>;
+  uniforms: Record<'uCore' | 'uRim' | 'uRimBoost' | 'uRimLift' | 'uAlpha' | 'uAlphaRim' | 'uGlow' | 'uScan' | 'uLook', { value: number }>;
   userData: { painted: boolean };
 };
 
 /**
  * **A kind's material**, built once per kind. `additive` is the kit's blend
  * (`figures/props.ts`'s `PROP_KIT[kind].blend`); an additive kind writes no depth
- * and is never painted.
+ * and is never painted. The comic block's uniforms are the SAME objects every
+ * figure and prop material holds (`figureMaterial.ts`'s `COMIC_UNIFORMS`), so
+ * one write at commit reaches them all.
  */
 export function makePropMaterial(look: PropLook, additive: boolean): PropMaterial {
   const material = new THREE.ShaderMaterial({
-    vertexShader: VERTEX,
-    fragmentShader: FRAGMENT,
+    vertexShader: COMIC_VERTEX_GLSL + VERTEX,
+    fragmentShader: COMIC_FRAGMENT_GLSL + FRAGMENT,
     uniforms: {
       uCore: { value: look.core },
       uRim: { value: look.rim },
@@ -201,9 +200,7 @@ export function makePropMaterial(look: PropLook, additive: boolean): PropMateria
       uGlow: { value: look.glow },
       uScan: { value: look.scan },
       uLook: { value: 0 },
-      uKey: { value: new THREE.Vector3(COMIC.key[0], COMIC.key[1], COMIC.key[2]) },
-      uShadowTone: { value: new THREE.Color().setRGB(COMIC.shadowTone[0], COMIC.shadowTone[1], COMIC.shadowTone[2]) },
-      uDotPx: { value: COMIC.dotPx },
+      ...COMIC_UNIFORMS,
     },
     vertexColors: true,
     transparent: true,

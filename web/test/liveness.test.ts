@@ -864,7 +864,7 @@ test('liveness: a departing figure is drawn by its own death cue and nothing els
 /**
  * **Slice 4 — a costume is a POSE, written at commit, and the hologram still
  * has no clock.** A figure's palette (`FigurePose.costume`) changes when the
- * snapshot does, so it is written into the material by `holoMaterial.ts`'s
+ * snapshot does, so it is written into the material by `figureMaterial.ts`'s
  * `applyCostume` from `FigureLayer`'s layout effects (and a departing body's
  * `add`) — never from the one `useFrame`: a colour parse per figure per frame is
  * the allocation §9.2 rule 6 forbids, and a palette the frame loop owns is a
@@ -873,10 +873,11 @@ test('liveness: a departing figure is drawn by its own death cue and nothing els
  *  - no frame-loop body calls `applyCostume` or writes `uCostume` — `CueRunner.tsx`
  *    (all of it), `DiscField.bind`, `DepartureField.bind`, `PropField.bind`
  *    (negative-controlled: the call spliced into each is caught);
- *  - only `holoMaterial.ts` writes a `uCostume` colour;
+ *  - only `figureMaterial.ts` writes a `uCostume` colour;
  *  - the dying body's drain is a NUMBER the frame loop writes (`uDrain.value =`),
  *    so it reaches every costume slot with no colour math in the loop;
- *  - the shader reads no clock: no `uTime`, no wall clock.
+ *  - the shader reads no clock: no `uTime`, no wall clock — the figure material
+ *    (`holoMaterial.ts` until Lane LOOK) and the prop material alike.
  */
 test('liveness: a figure\'s costume is written at commit, never in the frame loop, and the hologram has no clock (slice 4)', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
@@ -903,9 +904,11 @@ test('liveness: a figure\'s costume is written at commit, never in the frame loo
   assert.match(layer, /useLayoutEffect\([^]*?applyCostume\(built\.material/, 'FigureLayer no longer writes the costume at commit');
   assert.match(bodyOf(field, 'add'), /applyCostume\(material/, 'a departing body no longer falls in what it wore');
   assert.match(bodyOf(field, 'bind'), /uDrain\.value = /, 'the dying body no longer drains through the uniform');
-  const holo = files.get('scene/figureMaterial.ts') ?? '';
-  assert.ok(holo.length > 1000, 'scene/figureMaterial.ts moved — move this test with it');
-  assert.ok(!/\buTime\b|performance\.now\(|Date\.now\(|requestAnimationFrame\(/.test(holo), 'the hologram reads a clock');
+  for (const path of ['scene/figureMaterial.ts', 'scene/propMaterial.ts']) {
+    const material = files.get(path) ?? '';
+    assert.ok(material.length > 1000, `${path} moved — move this test with it`);
+    assert.ok(!/\buTime\b|performance\.now\(|Date\.now\(|requestAnimationFrame\(/.test(material), `${path} reads a clock`);
+  }
 });
 
 /**
@@ -1492,8 +1495,9 @@ test('liveness: a `figure` anchor is the effect binding’s — layout.ts never 
  *    cleared on its mesh), no `useFrame` and no clock of its own — the breathing
  *    reads the queue's VIRTUAL clock, handed in, which only runs while there is
  *    film (D58);
- *  - it loads through `scene/models.ts` and draws with `scene/holoMaterial.ts` —
- *    no second loader, no second material.
+ *  - it loads through `scene/models.ts` and draws with `scene/figureMaterial.ts`
+ *    (the figures' own, `holoMaterial.ts` until Lane LOOK) — no second loader, no
+ *    second material.
  */
 test('liveness: the duelists are bound from the bust field, installed by DuelistLayer, and decide nothing (T13)', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
@@ -1519,7 +1523,7 @@ test('liveness: the duelists are bound from the bust field, installed by Duelist
     'DuelistLayer reads a clock of its own',
   );
   assert.match(layer, /from '\.\/models\.ts'/, 'DuelistLayer no longer loads through scene/models.ts');
-  assert.match(layer, /makeHoloMaterial\(/, 'DuelistLayer no longer draws with the figures’ holographic material');
+  assert.match(layer, /makeFigureMaterial\(/, 'DuelistLayer no longer draws with the figures’ material');
   assert.ok(!/new THREE\.(?:Mesh|MeshBasic|MeshStandard|MeshLambert|Shader|RawShader)Material\(/.test(layer), 'DuelistLayer builds a material of its own');
   // No name reaches it: it reads a pose's seat, stance and numbers — never a
   // player's or a card's `.name` (a bone's name is the rig's, and it may read those).
@@ -1564,4 +1568,131 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
   for (const line of ['const v = new THREE.Vector3();', 'for (const p of poses) {}', 'const f = () => 1;']) {
     assert.ok(allocationsIn(`\n${line}\n${bodies[0]![1]}`).length > 0, `the allocation scan misses \`${line}\``);
   }
+});
+
+/**
+ * **Lane LOOK — the look is a number written at COMMIT, never in the frame loop**
+ * (D120–D128, report 15 §9.1's tests). The comic look reaches the scene as
+ * `uLook` per material plus a few shared uniforms (`figureMaterial.ts`'s
+ * `COMIC_UNIFORMS`), and every one of them changes when a snapshot or the look
+ * changes, never per frame — so the look can never be a thing the renderer
+ * remembers, and an idle table still renders nothing. Seven source facts:
+ *
+ *  - `look.ts` is pure: it imports `colour.ts` and `perf.ts` and nothing else —
+ *    no three, no React, no DOM and no clock;
+ *  - `uLook` is written in exactly two places, `figureMaterial.ts`'s `applyLook`
+ *    and `propMaterial.ts`'s `applyPropLook`, and the comic block's shared
+ *    uniforms only by `applyComicGlobals`;
+ *  - no frame-loop body touches the look: `CueRunner.tsx` (all of it),
+ *    `DiscField.bind`, `DepartureField.bind`, `PropField.bind`,
+ *    `DuelistField.bind` and `BustField.bind` call none of `applyLook`,
+ *    `applyPropLook`, `applyComicGlobals` or a `setLook`, and name no `uLook`
+ *    (negative-controlled: each spliced in is caught). Lane MOTION's summon
+ *    writes `uMaterialize`, a number multiplied into the look — which is why the
+ *    look itself never needs a frame-loop write;
+ *  - the callers are commit-time: `FigureLayer` and `DuelistLayer` call them
+ *    from layout effects and from the fields' `setLook` / `add` / `build`;
+ *  - the look reaches a figure through `look.ts`'s `figureLookOf` (an anonymous
+ *    figure and a ghost stay holograms, D125) and the disc field's shadow through
+ *    `paintsFigure`, the same predicate;
+ *  - the spike's inverted hull is gone (D122): no `inkHull`, no `BackSide` ink
+ *    shell, and the ink is `Post.tsx`'s `InkEffect`, inside the one composer;
+ *  - `holoMaterial.ts` is a re-export and nothing more.
+ */
+test('liveness: the look is written at commit, never in the frame loop, and the ink rides the one composer (Lane LOOK)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const raw = new Map(arenaFiles().map((f) => [f.path, f.source]));
+
+  // look.ts is pure.
+  const look = raw.get('look.ts') ?? '';
+  assert.ok(look.length > 1000, 'look.ts is missing');
+  assert.deepEqual(
+    importsOf(look).map((i) => i.from).sort(),
+    ['./colour.ts', './perf.ts'],
+    'look.ts imports something other than colour.ts and perf.ts',
+  );
+  const lookCode = files.get('look.ts') ?? '';
+  assert.ok(
+    !/\bwindow\b|\bdocument\b|performance\.now\(|Date\.now\(|requestAnimationFrame\(|\bsetTimeout\(/.test(lookCode),
+    'look.ts reaches the DOM or a clock',
+  );
+
+  // uLook and the comic globals have one writer each.
+  const writersOf = (pattern: RegExp): string[] =>
+    [...files].filter(([, code]) => pattern.test(code)).map(([path]) => path).sort();
+  assert.deepEqual(
+    writersOf(/\buLook\.value\s*=[^=]/),
+    ['scene/figureMaterial.ts', 'scene/propMaterial.ts'],
+    'something other than the two materials writes uLook',
+  );
+  assert.deepEqual(
+    writersOf(/COMIC_UNIFORMS\.\w+\.value\s*=[^=]/),
+    ['scene/figureMaterial.ts'],
+    'something other than applyComicGlobals writes a comic uniform',
+  );
+  const figureMaterial = files.get('scene/figureMaterial.ts') ?? '';
+  assert.match(bodyOf(figureMaterial, 'applyLook'), /uLook\.value = look/);
+  assert.match(bodyOf(figureMaterial, 'applyComicGlobals'), /COMIC_UNIFORMS\.uDotPx\.value = /);
+  // MOTION's handle exists, starts at identity, and multiplies the look.
+  assert.match(figureMaterial, /uMaterialize: \{ value: 1 \}/, 'the figure material lost uMaterialize — MOTION’s summon has nowhere to write');
+  assert.match(figureMaterial, /uLook \* uMaterialize/, 'uMaterialize no longer multiplies the look');
+
+  // No frame-loop body touches the look.
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const departureField = layer.slice(layer.indexOf('class DepartureField'));
+  const discs = files.get('scene/discs.ts') ?? '';
+  const props = files.get('scene/props.ts') ?? '';
+  const duelists = files.get('scene/DuelistLayer.tsx') ?? '';
+  const busts = files.get('scene/busts.ts') ?? '';
+  const loop: Array<[string, string]> = [
+    ['CueRunner.tsx', files.get('scene/CueRunner.tsx') ?? ''],
+    ['DiscField.bind', bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind')],
+    ['DepartureField.bind', bodyOf(departureField, 'bind')],
+    ['PropField.bind', bodyOf(props.slice(props.indexOf('export class PropField')), 'bind')],
+    ['DuelistField.bind', bodyOf(duelists.slice(duelists.indexOf('export class DuelistField')), 'bind')],
+    ['BustField.bind', bodyOf(busts.slice(busts.indexOf('export class BustField')), 'bind')],
+  ];
+  const touchesLook = /\bapplyLook\(|\bapplyPropLook\(|\bapplyComicGlobals\(|\.setLook\(|\buLook\b|\bCOMIC_UNIFORMS\b/;
+  for (const [name, body] of loop) {
+    assert.ok(body.length > 100, `could not find ${name}`);
+    assert.ok(!touchesLook.test(body), `${name} writes the look in the frame loop`);
+    for (const junk of [
+      'rig.material.uniforms.uLook.value = 1;',
+      'applyLook(rig.material, 1);',
+      'applyPropLook(entry.material, look);',
+      'applyComicGlobals(look, dpr);',
+      'this.props.setLook(look);',
+    ]) {
+      assert.ok(touchesLook.test(`${body}\n${junk}`), `the scan misses \`${junk}\` in ${name}`);
+    }
+  }
+
+  // The callers are commit-time.
+  assert.deepEqual(
+    writersOf(/\bapplyLook\(/).filter((p) => p !== 'scene/figureMaterial.ts'),
+    ['scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx'],
+    'applyLook is called from outside the two layers',
+  );
+  assert.match(layer, /useLayoutEffect\(\(\) => \{\s*applyLook\(built\.material, look\);/, 'a figure’s look is no longer written by a layout effect');
+  assert.match(bodyOf(departureField, 'setLook'), /applyLook\(/);
+  assert.match(bodyOf(departureField, 'add'), /applyLook\(material, figureLookOf\(pose, this\.look\)\.look\)/, 'a falling body is not built in its figure’s look');
+  assert.match(layer, /useLayoutEffect\(\(\) => \{\s*applyComicGlobals\(tableLook, dpr\);/, 'the comic globals are no longer written by a layout effect');
+  assert.match(layer, /look=\{figureLookOf\(pose, tableLook\)\.look\}/, 'a figure’s look no longer goes through figureLookOf (D125)');
+  assert.match(bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind'), /paintsFigure\(pose\)/, 'the shadow no longer asks paintsFigure (D125)');
+  assert.match(duelists, /useLayoutEffect\(\(\) => \{\s*field\.setLook\(look\);/, 'the duelists’ look is no longer written by a layout effect');
+
+  // The hull is gone and the ink is the composer's.
+  for (const [path, code] of files) {
+    assert.ok(!/\binkHull|\bink-hull\b/.test(code), `${path} still carries the spike's inverted hull (D122)`);
+  }
+  const post = files.get('scene/Post.tsx') ?? '';
+  assert.match(post, /class InkEffect extends Effect/, 'the ink line is no longer an Effect in Post.tsx');
+  assert.match(post, /EffectAttribute\.DEPTH/, 'the ink line no longer reads the depth the scene render wrote');
+  assert.match(post, /enableNormalPass=\{false\}/, 'the composer asks for a normal pass — a second scene render');
+  assert.ok(!/new NormalPass\(|EffectAttribute\.NORMAL/.test(post), 'the ink line asks for normals — a second scene render');
+
+  // holoMaterial.ts is a re-export and nothing more.
+  const shim = files.get('scene/holoMaterial.ts') ?? '';
+  assert.match(shim, /export \* from '\.\/figureMaterial\.ts';/);
+  assert.ok(!/ShaderMaterial|glsl|uniform/.test(shim), 'holoMaterial.ts carries a shader again');
 });

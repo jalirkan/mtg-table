@@ -387,23 +387,25 @@ export const FIGURE_FRONT_Z = 1;
 /**
  * **The turn about y a seat's figures stand at**, before a trait's own `turn`.
  *
- * `0` for `you`: with their fronts at +Z ({@link FIGURE_FRONT_Z}) your figures
- * face YOUR camera, and the opponent's (`π`) face away from it — so the faces,
- * badges, eyes and pistols read on your side and the coats and jetpacks on the
- * other. Measured in slice 3 and deliberately NOT changed (D81): turning every
- * figure to face the other seat is this one line, and it moves every prop and
- * every T11 anchor with it, but it changes what the whole table looks like and is
- * the user's call (PLAN.md, M7 Tier 2 slice 3 follow-ups).
+ * **A seat's own figures FACE THE OPPONENT** (**D126**, the user's answer to
+ * PLAN question 13, 2026-09-28): `π` for `you` — with their fronts at +Z
+ * ({@link FIGURE_FRONT_Z}) turned half round, your figures face the far seat and
+ * show your camera their backs — and `0` for the opponent's, whose figures face
+ * you. Two armies across a table, as the card art stages a confrontation; the
+ * opponent's faces, badges, eyes and pistols read from your seat, yours from
+ * theirs. Slice 3 measured the other answer and left it as D81's "one line"; this
+ * is that line, and every prop, every T11 anchor and every attack turn moved with
+ * it, because they all read this facing and nothing else.
  *
- * Two things no longer depend on the answer (the second verification pass):
+ * Two things never depended on the answer (the second verification pass):
  * an attack turns its attacker to FACE its defender for the length of the lunge
- * (`Stage.yawTo` → the offset's `dRotY`, {@link figureYawTo}), so a muzzle and a
- * laser fire at their target whichever way figures rest; and every
+ * (`Stage.yawTo` → the offset's `dRotY`, {@link figureYawTo}) — now a small turn
+ * toward the defender's side rather than a half turn — and every
  * identity-critical prop reads from behind as well as from the front
- * (`traits.test.ts` rasterises each from both seats).
+ * (`traits.test.ts` rasterises each from both seats; D83).
  */
 export function seatFacingY(seat: Seat): number {
-  return seat === 'you' ? 0 : Math.PI;
+  return seat === 'you' ? Math.PI : 0;
 }
 
 /**

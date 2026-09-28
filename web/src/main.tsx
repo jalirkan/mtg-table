@@ -224,7 +224,19 @@ interface ArenaFlags {
    * by itself when frames are still late at its lowest rung.
    */
   bloom: boolean | null;
+  /**
+   * **The look** (Lane LOOK, D120) — `?look=holo|comic` and its options
+   * (`?ink=none`, `?halftone=0`, `?key=world`, `?stage=felt`, `?shadow=0`), kept
+   * as a query string of exactly those keys. The arena parses it with
+   * `arena/look.ts`'s `lookFromSearch`, whose default is `perf.ts`'s
+   * `LOOK_DEFAULT` (the comic look); this file imports nothing under `arena/`
+   * statically (**D49**), which is why it hands the string on rather than a spec.
+   */
+  look: string;
 }
+
+/** The query keys the look reads — `arena/look.ts`'s `lookFromSearch`. */
+const LOOK_KEYS = ['look', 'ink', 'halftone', 'key', 'stage', 'shadow'] as const;
 
 function arenaFlagsFromQuery(): ArenaFlags {
   const params = new URLSearchParams(window.location.search);
@@ -244,6 +256,14 @@ function arenaFlagsFromQuery(): ArenaFlags {
     // default", and `?bloom=0` has to be able to turn it OFF again if that default
     // is ever flipped on.
     bloom: params.get('bloom') === null ? null : on('bloom'),
+    look: (() => {
+      const kept = new URLSearchParams();
+      for (const key of LOOK_KEYS) {
+        const value = params.get(key);
+        if (value !== null) kept.set(key, value);
+      }
+      return kept.toString();
+    })(),
   };
 }
 
@@ -617,6 +637,7 @@ function LiveApp({ port, view, onSetView }: { port: number; view: View; onSetVie
               dpr={flags.dpr}
               glInfo={flags.glinfo}
               bloom={flags.bloom}
+              lookQuery={flags.look}
             />
           </Suspense>
         ) : (
@@ -1048,6 +1069,7 @@ function ReplayApp({
               glInfo={flags.glinfo}
               bloom={flags.bloom}
               follow={arenaFollowOf(followWord)}
+              lookQuery={flags.look}
             />
           </Suspense>
         ) : (
