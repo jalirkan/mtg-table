@@ -16,8 +16,13 @@
  *    identity, exactly as `replay-cues.test.ts` requires of a recorded batch;
  *  - the clip cue, the facing preview, the framing and the tuning overrides;
  *  - the legibility meter agrees with `traits.test.ts`'s raster to the pixel;
+ *  - slice 4's costume and body flag reach the pedestal's pose through the
+ *    overrides, and the tuning panel has a row for every trait key;
+ *  - the links with the card browser (`links.ts`): *View in 3D* live exactly for
+ *    a body or a card's own cues, and `card=` read from the hash first;
  *  - and the liveness clauses: no transport, no fetch, no timer, one `useFrame`,
- *    `mixer.update(0)`, the lazy chunk, and the arena coupling documented.
+ *    `mixer.update(0)`, the lazy chunk, the arena coupling documented, and the
+ *    card browser reaching the workshop only through `links.ts`.
  */
 
 import assert from 'node:assert/strict';
@@ -77,6 +82,8 @@ import {
 } from '../src/workshop/tuning.ts';
 import traitsJson from '../src/arena/figures/traits.json' with { type: 'json' };
 import { WORKSHOP_KEYMAP, workshopActionFor, workshopRowFor } from '../src/workshop/keys.ts';
+import { catalogNameFor, cardFromLocation, cardsHref, threeDLinkFor, workshopHref } from '../src/workshop/links.ts';
+import { COSTUME_SLOTS } from '../src/arena/figures/props.ts';
 import { hashForView, viewFromLocation } from '../src/useView.ts';
 import { cueDataOf, figureDataOf, modelDataOf } from '../src/workshop/validated.ts';
 
@@ -122,7 +129,7 @@ test('workshop: catalog.json is what decks/*.dck and fixtures/games/ produce (no
     .filter((f) => f.endsWith('.jsonl'))
     .sort()
     .map((f) => [f, stateBodies(gamesDir + f)] as const);
-  const built = buildCatalog(decks, recordings);
+  const built = buildCatalog(decks, recordings, Object.keys((cuesJson as unknown as { cards: Record<string, unknown> }).cards));
   assert.deepEqual(JSON.parse(JSON.stringify(built)), JSON.parse(JSON.stringify(CATALOG)), 'catalog.json is stale — run node tools/build-workshop-catalog.ts');
   // The deck in play comes first, and its printed facts — not a battlefield
   // under Quantum Reduction — are what the pedestal draws.
@@ -434,9 +441,11 @@ test('workshop: the table-distance camera’s arithmetic — view 1’s depth sc
   const depth900 = (framing.centre[0] - at900.position[0]) * f[0] + (framing.centre[1] - at900.position[1]) * f[1] + (framing.centre[2] - at900.position[2]) * f[2];
   assert.ok(Math.abs(depth900 - tableDepthOf(framing.centre)) < 1e-9);
   // `tablePixels` is the NOMINAL height seen square-on — the scale the camera is
-  // set from, never the caption (the next test measures the drawn body).
+  // set from, never the caption (the next test measures the drawn body). Since
+  // Tier 2 slice 4 a proportioned body stands its full height: 95.7 px nominal
+  // for Peggy (70 on slice 3's chibi), drawn 69 px in view 1's slant.
   const px = tablePixels(framing.figureHeight, framing.centre);
-  assert.ok(px > 45 && px < 90, `Peggy's nominal height is ${String(px)} px`);
+  assert.ok(px > 45 && px < 110, `Peggy's nominal height is ${String(px)} px`);
   // The close-up looks along view 1's own direction.
   const close = closePose(framing);
   const d = [close.target[0] - close.position[0], close.target[1] - close.position[1], close.target[2] - close.position[2]];
@@ -584,15 +593,134 @@ test('workshop: "copy as traits.json row" is the committed row with the edit fol
     assert.deepEqual(Object.keys(pasted), Object.keys(committed), `${name}: key order`);
     assert.ok(file.includes(text), `${name}: not the committed text byte for byte`);
   }
-  // An edit changes its field in place; a new field goes before the trailing _note;
-  // a dropped field is gone.
+  // An edit changes its field in place; a new field goes after the row's last data
+  // key, before a trailing comment (slice 4's `_costume`); a dropped field is gone.
   const peggy = 'Peggy Carter, Secret Agent';
   const row = { ...committedRow(peggy), tint: '#3fa9f5', hover: 0.1 };
   delete (row as Record<string, unknown>)['accent'];
   const edited = (JSON.parse(`{${traitsRowText(peggy, row)}}`) as Record<string, Record<string, unknown>>)[peggy]!;
-  assert.deepEqual(Object.keys(edited), ['tint', 'props', 'hover', '_note']);
+  assert.deepEqual(Object.keys(edited), ['tint', 'props', '_note', 'costume', 'hover', '_costume']);
   assert.equal(edited['tint'], '#3fa9f5');
   assert.equal(edited['_note'], cards[peggy]!['_note']);
+  assert.equal(edited['_costume'], cards[peggy]!['_costume']);
+  // Slice 4's costume: one slot edited, the rest of the block as committed, and
+  // the text still in the file's own style (a slot per line at eight spaces).
+  const costume = { ...(committedRow(peggy)['costume'] as Record<string, string>), hair: '#101010' };
+  const text = traitsRowText(peggy, { ...committedRow(peggy), costume });
+  assert.match(text, /\n {6}"costume": \{\n {8}"top": "#2d4f9e",/);
+  assert.match(text, /\n {8}"hair": "#101010"\n {6}\},/);
+  const pasted = (JSON.parse(`{${text}}`) as Record<string, Record<string, unknown>>)[peggy]!;
+  assert.deepEqual(pasted['costume'], costume);
+  assert.deepEqual(Object.keys(pasted), Object.keys(cards[peggy]!));
+});
+
+test('workshop: slice 4’s costume and body reach the pedestal’s pose through the overrides — and the tuning panel writes a row for every trait key the validator knows', () => {
+  const peggy = entry('Peggy Carter, Secret Agent');
+  const poseOf = (traits: ReturnType<typeof traitsWith>['data']) => {
+    const state = pedestalState(peggy);
+    return figurePose(layout(state, PRESENCE), state.board?.combat ?? null, FIGURES, { models: MODELS, traits }).get(IDS.subject)!;
+  };
+  const committed = poseOf(TRAITS);
+  assert.ok(committed.costume !== null && committed.costume.length === COSTUME_SLOTS.length, 'Peggy wears a costume');
+  const hair = COSTUME_SLOTS.indexOf('hair');
+  assert.equal(committed.costume[hair], '#5a3a26');
+  // One slot edited live: the pose — which FigureLayer writes into her material at
+  // commit — carries it, and nothing else in her palette moves.
+  const costume = { ...(committedRow(peggy.name)['costume'] as Record<string, string>), hair: '#101010' };
+  const edited = traitsWith(withTraitRow({ traits: {}, cues: {} }, peggy.name, { ...committedRow(peggy.name), costume }));
+  assert.deepEqual(edited.errors, []);
+  const recoloured = poseOf(edited.data);
+  assert.equal(recoloured.costume![hair], '#101010');
+  COSTUME_SLOTS.forEach((slot, i) => {
+    if (slot !== 'hair') assert.equal(recoloured.costume![i], committed.costume![i], slot);
+  });
+  // `tint` is a word the validator accepts; a colour it does not is refused, whole.
+  const tinted = traitsWith(withTraitRow({ traits: {}, cues: {} }, peggy.name, { ...committedRow(peggy.name), costume: { ...costume, top: 'tint' } }));
+  assert.deepEqual(tinted.errors, []);
+  assert.equal(poseOf(tinted.data).costume![COSTUME_SLOTS.indexOf('top')], poseOf(tinted.data).tint);
+  const bad = traitsWith(withTraitRow({ traits: {}, cues: {} }, peggy.name, { ...committedRow(peggy.name), costume: { ...costume, cape: '#ffffff' } }));
+  assert.equal(bad.errors.length, 1);
+  assert.match(bad.errors[0]!.where, /costume\.cape/);
+  // The chibi flag stands her in `<model>-chibi` (D98), and she still wears her costume.
+  const human = committed.modelId!;
+  const chibi = poseOf(traitsWith(withTraitRow({ traits: {}, cues: {} }, peggy.name, { ...committedRow(peggy.name), body: 'chibi' })).data);
+  assert.equal(chibi.modelId, MODELS.models[`${human}-chibi`] !== undefined ? `${human}-chibi` : human);
+  assert.ok(chibi.costume !== null);
+  // "A new trait key needs a row in TuningPanel" (D103), made mechanical: every key
+  // validate.ts's TRAIT_KEYS accepts is written in the panel's source.
+  const validate = readFileSync(fileURLToPath(new URL('../src/arena/figures/validate.ts', import.meta.url)), 'utf8');
+  const keysBlock = /const TRAIT_KEYS = new Set\(\[([\s\S]*?)\]\)/.exec(validate)?.[1] ?? '';
+  const keys = [...keysBlock.replace(/\/\/.*$/gm, '').matchAll(/'([a-zA-Z]+)'/g)].map((m) => m[1]!);
+  assert.ok(keys.includes('costume') && keys.includes('body'), `TRAIT_KEYS: ${keys.join(', ')}`);
+  const workshop = readFileSync(WORKSHOP + 'Workshop.tsx', 'utf8');
+  const panel = workshop.slice(workshop.indexOf('function TuningPanel('), workshop.indexOf('function CueTuningPanel('));
+  const unwritten = keys.filter((key) => !panel.includes(`'${key}'`));
+  assert.deepEqual(unwritten, [], 'a traits.json key the tuning panel has no field for');
+  // …and the costume's slots are the arena's list, never one typed here.
+  assert.match(panel, /COSTUME_SLOTS\.map\(/);
+});
+
+test('workshop: the duelists are a seat’s, not a card’s — the pedestal draws none', () => {
+  const pedestal = readFileSync(WORKSHOP + 'Pedestal.tsx', 'utf8');
+  assert.ok(!/\bDuelistLayer\b/.test(pedestal), 'the pedestal mounts slice 4’s DuelistLayer');
+  assert.match(pedestal, /busts=\{NO_BUSTS\}/);
+  assert.match(pedestal, /const NO_BUSTS: DuelistBust\[\] = \[\];/);
+});
+
+test('links: #cards’ View in 3D is live for a body or a card’s own cues, grey otherwise — catalog.json’s threeD is roleOf’s answer and cues.json’s names', () => {
+  const cued = new Set(Object.keys((cuesJson as unknown as { cards: Record<string, unknown> }).cards));
+  let live = 0;
+  let grey = 0;
+  for (const e of ENTRIES) {
+    if (e.group !== 'deck' && e.group !== 'token') continue;
+    const bodied = roleOf(e) === 'creature' || roleOf(e) === 'vehicle';
+    const want = bodied && !e.missing ? 'figure' : cued.has(e.name) ? 'cues' : null;
+    assert.equal(CATALOG.threeD[e.name], want, e.name);
+    const link = threeDLinkFor({ name: e.name, faceNames: [], typeLine: e.facts.types });
+    assert.equal(link.name, e.name);
+    if (want === null) {
+      grey += 1;
+      assert.equal(link.href, null, e.name);
+      assert.match(link.title, /nothing of its own to show in 3D/);
+    } else {
+      live += 1;
+      assert.equal(link.href, workshopHref(e.name));
+      // The deep link is the exact name, and the workshop reads it back as the browser would.
+      assert.equal(viewFromLocation(link.href!, ''), 'workshop');
+      assert.equal(cardFromLocation(link.href!, ''), e.name);
+    }
+  }
+  assert.deepEqual(Object.keys(CATALOG.threeD).length, live + grey);
+  console.log(`links: View in 3D live for ${String(live)} of the catalog's ${String(live + grey)} cards, grey for ${String(grey)}`);
+  assert.equal(threeDLinkFor({ name: 'Peggy Carter, Secret Agent', faceNames: [], typeLine: 'Legendary Creature — Human Spy Hero' }).kind, 'figure');
+  assert.equal(threeDLinkFor({ name: 'Helicarrier Strike', faceNames: [], typeLine: 'Instant' }).kind, 'cues');
+  const opt = threeDLinkFor({ name: 'Opt', faceNames: [], typeLine: 'Instant' });
+  assert.deepEqual([opt.name, opt.href], ['Opt', null]);
+  const stranger = threeDLinkFor({ name: 'Lightning Bolt', faceNames: [], typeLine: 'Instant' });
+  assert.deepEqual([stranger.name, stranger.href], [null, null]);
+  assert.match(stranger.title, /^Not in the workshop/);
+  // Scryfall's spellings: a token is `Hero` there and `Hero Token` in the corpus; a
+  // double-faced card is `A // B` there and its front face in a deck.
+  assert.equal(catalogNameFor({ name: 'Hero', faceNames: [], typeLine: 'Token Creature — Hero' }), 'Hero Token');
+  assert.equal(catalogNameFor({ name: 'Hero', faceNames: [], typeLine: 'Creature — Hero' }), null);
+  assert.equal(catalogNameFor({ name: 'Nick Fury, Spymaster // Back', faceNames: ['Nick Fury, Spymaster', 'Back'], typeLine: 'Creature' }), 'Nick Fury, Spymaster');
+});
+
+test('links: the workshop reads card= from the hash’s query first, as #cards reads its own — and #cards?open= is the browser’s deep link', () => {
+  assert.equal(cardFromLocation('#workshop?card=Agent+Phil+Coulson', ''), 'Agent Phil Coulson');
+  assert.equal(cardFromLocation('#workshop?card=Agent%20Phil%20Coulson', '?card=peggy'), 'Agent Phil Coulson', 'the hash wins');
+  assert.equal(cardFromLocation('#workshop', '?card=peggy'), 'peggy', 'the query spelling still works');
+  assert.equal(cardFromLocation('', '?view=workshop&card=coulson'), 'coulson');
+  assert.equal(cardFromLocation('#workshop?card=', ''), null);
+  assert.equal(cardFromLocation('#workshop', ''), null);
+  // A malformed escape is decoded leniently, never thrown: the list finds no such card.
+  assert.doesNotThrow(() => cardFromLocation('#workshop?card=%E0%A4%A', ''));
+  const name = 'Ant-Man’s Air Force & friends: 100%?';
+  assert.equal(cardFromLocation(workshopHref(name), ''), name);
+  const id = '1383e587-df58-4b45-9067-b9399e90b9ed';
+  assert.equal(cardsHref(id), `#cards?open=${id}`);
+  assert.equal(viewFromLocation(cardsHref(id), ''), 'cards');
+  assert.equal(new URLSearchParams(cardsHref(id).slice(cardsHref(id).indexOf('?') + 1)).get('open'), id);
 });
 
 test('workshop: a turned row without its ratio is refused by validateTraits, whole — the copy button is disabled for it', () => {
@@ -686,11 +814,42 @@ test('workshop: a ring swarm’s clips are marked — the rig is posed and never
   assert.match(workshop, /hidden rig: the swarm is procedural/);
 });
 
-test('workshop: each cue line says when the ladder’s rung order hid a more specific selector (a fizzled Helicarrier Strike)', () => {
+test('workshop: each cue line says when the ladder’s rung order hid a more specific selector — and a fizzled spell now reads as a fizzle', () => {
+  // The workshop found it (its first pass): §7.3 resolves the rung before the
+  // selector, so a spell's own bare `resolved` outranked the default
+  // `resolved:fizzled` and a fizzled Helicarrier Strike brought its full beam
+  // down. The reconciliation gave the three spells that had one their own
+  // `resolved:fizzled` (cues.json): the Strike's fizzle is its own row's fizzle.
   const strike = cueRows(entry('Helicarrier Strike'), CUES, FIGURES, MODELS);
   const fizzle = strike.find((r) => r.kind === 'fizzles')!.lines.find((l) => l.event === 'resolved')!;
-  assert.deepEqual([fizzle.selector, fizzle.source, fizzle.cue], ['resolved', 'card', 'fx.strike']);
-  assert.deepEqual(fizzle.outranks, { selector: 'resolved:fizzled', source: 'default', cue: 'resolved.fizzle' });
+  assert.deepEqual([fizzle.selector, fizzle.source, fizzle.cue], ['resolved:fizzled', 'card', 'resolved.fizzle']);
+  assert.equal(fizzle.outranks, null);
+  // Negative control: without the three committed rows it is the defect again —
+  // the card's plain strike, and the line says what it outranked.
+  const bare = JSON.parse(JSON.stringify(cuesJson)) as { cards: Record<string, Record<string, unknown>> };
+  for (const name of ['Helicarrier Strike', 'Pym Particles', 'Depower']) {
+    assert.ok(bare.cards[name]!['resolved:fizzled'] !== undefined, `${name} has its own fizzle row`);
+    delete bare.cards[name]!['resolved:fizzled'];
+  }
+  const regressed = cueRows(entry('Helicarrier Strike'), cueDataOf(bare).data, FIGURES, MODELS)
+    .find((r) => r.kind === 'fizzles')!
+    .lines.find((l) => l.event === 'resolved')!;
+  assert.deepEqual([regressed.selector, regressed.source, regressed.cue], ['resolved', 'card', 'fx.strike']);
+  assert.deepEqual(regressed.outranks, { selector: 'resolved:fizzled', source: 'default', cue: 'resolved.fizzle' });
+  // Every deck spell (the role with a fizzle rehearsal): a fizzled resolution plays
+  // `resolved.fizzle` — its own row's or the default's — and never its plain one.
+  let spells = 0;
+  for (const e of ENTRIES) {
+    if (e.missing || e.group !== 'deck' || roleOf(e) !== 'spell') continue;
+    spells += 1;
+    const line = cueRows(e, CUES, FIGURES, MODELS)
+      .find((r) => r.kind === 'fizzles')
+      ?.lines.find((l) => l.event === 'resolved');
+    assert.ok(line !== undefined, `${e.label}: no fizzle rehearsal`);
+    assert.equal(line.cue, 'resolved.fizzle', `${e.label}: a fizzle plays ${line.cue} (${line.source}'s ${line.selector})`);
+    assert.equal(line.outranks, null, `${e.label}: its fizzle outranks ${JSON.stringify(line.outranks)}`);
+  }
+  assert.ok(spells >= 6, `${String(spells)} deck spells`);
   // Its plain resolution hides nothing: `resolved` is the most specific there is.
   const resolves = strike.find((r) => r.kind === 'resolves')!.lines.find((l) => l.event === 'resolved')!;
   assert.equal(resolves.outranks, null);
@@ -709,6 +868,7 @@ test('workshop: each cue line says when the ladder’s rung order hid a more spe
     }
   }
   console.log(`workshop: rung order over a more specific selector — ${[...census].map(([k, n]) => `${k} ×${String(n)}`).join(', ')}`);
+  assert.equal(census.get('resolved over resolved:fizzled'), undefined, 'a deck card’s plain resolution hides its fizzle again');
 });
 
 test('workshop: every cues.json entry of every deck card is reached by a rehearsal, and every cue is in the registry', () => {
@@ -859,6 +1019,24 @@ test('liveness: the workshop is lazy — only main.tsx reaches it, only through 
     if (!/\.tsx?$/.test(path)) continue;
     assert.ok(!/from '[^']*workshop\//.test(readFileSync(path, 'utf8')), `${path} imports the workshop — it is downstream of the arena, never upstream`);
   }
+});
+
+test('liveness: the card browser reaches the workshop only through links.ts — which imports the catalog and nothing that draws', () => {
+  const links = workshopFiles().find((f) => f.path === 'links.ts')!;
+  assert.deepEqual(
+    importsOf(links.code).map((i) => `${i.typeOnly ? 'type ' : ''}${i.from}`).sort(),
+    ['./catalog.json', 'type ./catalogBuild.ts'],
+    'links.ts is imported by the card browser’s chunk: only the generated catalog, and a type',
+  );
+  const cards = fileURLToPath(new URL('../src/cards/', import.meta.url));
+  const reached = new Set<string>();
+  for (const name of readdirSync(cards)) {
+    if (!/\.tsx?$/.test(name)) continue;
+    for (const imported of importsOf(readFileSync(cards + name, 'utf8'))) {
+      if (imported.from.includes('workshop/')) reached.add(`${name} → ${imported.from}`);
+    }
+  }
+  assert.deepEqual([...reached], ['CardDetail.tsx → ../workshop/links.ts']);
 });
 
 test('liveness: every arena export the workshop uses is named in Workshop.tsx’s coupling header', () => {

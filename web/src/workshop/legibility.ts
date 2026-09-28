@@ -20,9 +20,9 @@
  * **The bar is 48 pixels of AREA**, `traits.test.ts`'s `IDENTITY_MIN_PX` — about a
  * 7 × 7 patch. The meter also prints each prop's visible HEIGHT in pixels, which is
  * the number a person reading a photograph thinks in; at the table view a whole
- * figure is 45–75 px tall, so a height bar of 48 would fail nearly everything and
- * is not the bar. Like the test, it counts pixels, not contrast (slice 3 follow-up
- * 12).
+ * figure is 45–75 px tall (a chibi; slice 4's proportioned bodies 60–100 px), so a
+ * height bar of 48 would fail nearly everything and is not the bar. Like the test,
+ * it counts pixels, not contrast (slice 3 follow-up 12).
  *
  * It is not a frame loop: it runs when the panel asks, on objects it builds and
  * disposes itself, and draws nothing.
@@ -34,10 +34,12 @@ import { CAMERA, VIEW_BY_ID, type Pose } from '../arena/camera.ts';
 import type { Presence } from '../arena/cues/types.ts';
 import { REST_CLIP_FOR, REST_PHASE_FOR } from '../arena/figures/clips.ts';
 import { figurePose, type FigureLayout, type FigurePose } from '../arena/figures/pose.ts';
+import { COSTUME_SLOTS, familyOf } from '../arena/figures/props.ts';
 import type { TraitData } from '../arena/figures/traits.ts';
 import type { FigureData, ModelData } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
 import type { FigureRig, FigureRigMap } from '../arena/scene/figureRigs.ts';
+import { COSTUME_ATTRIBUTE } from '../arena/scene/holoMaterial.ts';
 import { clipFor, instantiateFigure, type ModelLibrary } from '../arena/scene/models.ts';
 import { PropField, type PropOffsetSource } from '../arena/scene/props.ts';
 import type { WorkshopEntry } from './catalog.ts';
@@ -53,6 +55,15 @@ export const LEGIBLE_PX = 48;
 const V = new THREE.Vector3();
 /** The figure-space height the Kenney head starts at (`prop-raster.ts`'s `HEAD_FROM`). */
 const HEAD_FROM = 0.53;
+/**
+ * Tier 2 slice 4: where the proportioned (`human`) body's head starts — its chin
+ * (`prop-raster.ts`'s `HUMAN_HEAD_FROM`).
+ */
+const HUMAN_HEAD_FROM = 0.79;
+/** The costume slots a head is made of (`prop-raster.ts`'s `HEAD_SLOTS`): skin and hair. */
+const HEAD_SLOTS: ReadonlySet<number> = new Set([COSTUME_SLOTS.indexOf('skin'), COSTUME_SLOTS.indexOf('hair')]);
+/** How far below its standing chin a head may still be a head (`prop-raster.ts`'s `HEAD_DROP`). */
+const HEAD_DROP = 0.4;
 
 interface Layer {
   tag: string;
@@ -104,15 +115,25 @@ function restingRig(pose: FigurePose, library: ModelLibrary): FigureRig | null {
   };
 }
 
-/** A rig's skinned meshes in world space, split at the head. */
-function bodyLayers(rig: FigureRig): Layer[] {
+/**
+ * A rig's skinned meshes in world space, split at the head — `prop-raster.ts`'s
+ * `bodyLayers`, rule for rule: a body whose vertices carry costume slots (slice 4's
+ * `human` and the chibis) says where its head is by its skin and hair above
+ * `headFrom − HEAD_DROP`; a body without them (the drone, the insect) splits at
+ * its family's height. Both layers write depth, so the split moves no prop pixel
+ * today — it is kept equal so that a meter row that ever reads the head alone
+ * agrees with the test.
+ */
+function bodyLayers(rig: FigureRig, models: ModelData): Layer[] {
   const body: Layer = { tag: 'body', depthWrite: true, tris: [] };
   const head: Layer = { tag: 'head', depthWrite: true, tris: [] };
   const pose = rig.pose;
+  const from = familyOf(pose.modelId, models) === 'human' ? HUMAN_HEAD_FROM : HEAD_FROM;
   rig.root.traverse((child) => {
     const mesh = child as THREE.SkinnedMesh;
     if (mesh.isSkinnedMesh !== true || !mesh.visible) return;
     const position = mesh.geometry.getAttribute('position');
+    const slots = mesh.geometry.getAttribute(COSTUME_ATTRIBUTE) as THREE.BufferAttribute | undefined;
     const world = new Float32Array(position.count * 3);
     for (let i = 0; i < position.count; i++) {
       V.fromBufferAttribute(position, i);
@@ -126,14 +147,17 @@ function bodyLayers(rig: FigureRig): Layer[] {
     const count = index === null ? position.count : index.count;
     for (let t = 0; t + 2 < count; t += 3) {
       let y = 0;
+      let onHead = 0;
       const tri: number[] = [];
       for (let k = 0; k < 3; k++) {
         const id = index === null ? t + k : index.getX(t + k);
         tri.push(world[id * 3]!, world[id * 3 + 1]!, world[id * 3 + 2]!);
         y += world[id * 3 + 1]!;
+        if (slots !== undefined && HEAD_SLOTS.has(Math.round(slots.getX(id)))) onHead += 1;
       }
       const local = (y / 3 - pose.position[1]) / pose.height;
-      (local >= HEAD_FROM ? head : body).tris.push(...tri);
+      const isHead = slots !== undefined ? onHead >= 2 && local >= from - HEAD_DROP : local >= from;
+      (isHead ? head : body).tris.push(...tri);
     }
   });
   return [body, head];
@@ -333,7 +357,7 @@ export function measure(input: MeterInput): MeterRow[] {
       const rigs: FigureRigMap = new Map();
       if (rig !== null) rigs.set(pose.cardId, rig);
       const layers = [
-        ...(rig === null ? [] : bodyLayers(rig)),
+        ...(rig === null ? [] : bodyLayers(rig, input.models)),
         ...propLayers(new Map([[pose.cardId, pose]]), rigs, input.library, input.models),
       ];
       rig?.mixer.stopAllAction();

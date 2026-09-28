@@ -26,6 +26,12 @@
  *  - **Only face-up, named cards are read.** A redacted stub and a face-down card
  *    carry no identity (hard rule 8), and are never a source of facts about one.
  *
+ * **And one thing the card browser asks** (`threeD`): of each card the list
+ * names, what the workshop can show of it in 3D — a body, or the card's own cues —
+ * which is whether `#cards`' *View in 3D* button is live (`links.ts`). For that
+ * the tool also reads the card names `web/src/arena/cues/cues.json` has an entry
+ * for; the card browser imports none of the arena, so the answer is written here.
+ *
  * Pure: no `node:fs`, no DOM. The tool and the test do the reading.
  */
 
@@ -54,6 +60,19 @@ export interface CardFacts {
   setCode: string | null;
 }
 
+/**
+ * **What the workshop can show of a card in 3D** — and so whether the card
+ * browser's *View in 3D* is live for it (`links.ts`):
+ *
+ *  - `figure` — a creature or a Vehicle: a body (or a carrier) on the pedestal,
+ *    with its clips, its cues, its tuning and its legibility;
+ *  - `cues` — any other card with a per-card `cues.json` entry (an Aura, an
+ *    Equipment, a land, a spell): its own cues, rehearsed;
+ *  - `null` — a card the list names that has neither: the pedestal would show only
+ *    the defaults every card of its kind shares.
+ */
+export type ThreeD = 'figure' | 'cues' | null;
+
 export interface CatalogFile {
   version: 1;
   _generated: string;
@@ -63,10 +82,33 @@ export interface CatalogFile {
   tokens: Array<{ name: string; recordings: number }>;
   /** Deck names the corpus never showed face up — they preview as a generic card. */
   missing: string[];
+  /** Every deck card and token by name → {@link ThreeD}, in name order. */
+  threeD: Record<string, ThreeD>;
 }
 
 export const GENERATED_NOTE =
-  'WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck and fixtures/games/*.jsonl — do not edit by hand; web/test/workshop.test.ts fails when it drifts';
+  'WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts';
+
+/**
+ * A creature or a Vehicle, from its type line — **`catalog.ts`'s `roleOf`, rule
+ * for rule** (`creature` or `vehicle`); written again because this file imports
+ * nothing, and `workshop.test.ts` holds the two to the same answer for every entry.
+ */
+export function isBodiedTypeLine(types: string): boolean {
+  if (/(^|\s)Creature(\s|$|—|-)/.test(types)) return true;
+  const lower = types.toLowerCase();
+  if (/\bland\b/.test(lower) || /\binstant\b|\bsorcery\b/.test(lower)) return false;
+  const dash = lower.search(/[—–-]/);
+  const sub = dash >= 0 ? lower.slice(dash + 1) : '';
+  if (/\baura\b|\bequipment\b/.test(sub)) return false;
+  return /\bvehicle\b/.test(sub);
+}
+
+/** {@link ThreeD} for one card: its facts (or `null`, never seen face up) and whether `cues.json` names it. */
+export function threeDOf(facts: CardFacts | null, hasCueEntry: boolean): ThreeD {
+  if (facts !== null && isBodiedTypeLine(facts.types)) return 'figure';
+  return hasCueEntry ? 'cues' : null;
+}
 
 /**
  * Forge's `.dck`: `[section]` headers, `N Card Name|SET|ART` lines, and a
@@ -142,6 +184,8 @@ export function factsOf(card: unknown): { name: string; zone: string; facts: Car
 export function buildCatalog(
   decks: readonly DeckList[],
   recordings: ReadonlyArray<readonly [string, Iterable<unknown>]>,
+  /** The card names `cues.json`'s `cards` block has an entry for (for {@link ThreeD}). */
+  cueCards: readonly string[] = [],
 ): CatalogFile {
   // name → facts-key → count, and the facts behind each key — twice: off the
   // battlefield (the printing) and on it (the printing plus whatever is on it).
@@ -192,6 +236,8 @@ export function buildCatalog(
 
   const cards: Record<string, CardFacts> = {};
   const missing: string[] = [];
+  const threeD: Record<string, ThreeD> = {};
+  const cued = new Set(cueCards);
   const want = new Set<string>();
   for (const deck of ordered) for (const card of deck.cards) want.add(card.name);
   const tokens = [...tokenIn.keys()].sort();
@@ -200,6 +246,7 @@ export function buildCatalog(
     const facts = modal(name);
     if (facts === null) missing.push(name);
     else cards[name] = facts;
+    threeD[name] = threeDOf(facts, cued.has(name));
   }
 
   return {
@@ -209,5 +256,6 @@ export function buildCatalog(
     cards,
     tokens: tokens.map((name) => ({ name, recordings: tokenIn.get(name)?.size ?? 0 })),
     missing,
+    threeD,
   };
 }

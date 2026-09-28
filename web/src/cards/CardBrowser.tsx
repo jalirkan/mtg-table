@@ -74,6 +74,17 @@ function writeLocation(filters: CardFilters, open: string | null): void {
   window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
 }
 
+/**
+ * Where the back link goes, by the view the page was opened from. The workshop's
+ * remembers its card in this browser, so `#workshop` returns to the card you
+ * left it on.
+ */
+const BACK_LINKS: Readonly<Record<'arena' | 'workshop' | 'board', { href: string; label: string; title: string }>> = {
+  arena: { href: '#arena', label: '▣ arena', title: 'Back to the 3D arena' },
+  workshop: { href: '#workshop', label: '⚒ workshop', title: 'Back to the workshop, on the card you left it on' },
+  board: { href: '#', label: '▤ board', title: 'Back to the board' },
+};
+
 /** Columns the grid is laid out in right now — what ↑/↓ step by. */
 function gridColumns(grid: HTMLElement | null): number {
   if (grid === null || typeof getComputedStyle !== 'function') return 1;
@@ -204,7 +215,10 @@ function Tile({
 
 export interface CardBrowserProps {
   onSetView?: ((view: View) => void) | null;
-  /** The renderer the page was opened from — where the back link goes. `board` by default. */
+  /**
+   * The view the page was opened from — where the back link goes: the arena, the
+   * workshop (its *card text* link, D102), or the board by default.
+   */
   backTo?: View;
   /** The data route; a test passes a fake. */
   api?: CardsApi;
@@ -439,7 +453,8 @@ export function CardBrowser({
   };
 
   const primaryDeck = decks[0]?.file ?? null;
-  const back: View = backTo === 'arena' ? 'arena' : 'board';
+  const back = backTo === 'arena' || backTo === 'workshop' ? backTo : 'board';
+  const backLink = BACK_LINKS[back];
 
   // ---- render (no hooks below this line) ----------------------------------
 
@@ -526,14 +541,14 @@ export function CardBrowser({
         <h1>mtg-table — cards</h1>
         <a
           className="viewtoggle"
-          href={back === 'arena' ? '#arena' : '#'}
+          href={backLink.href}
           onClick={(event) => {
             event.preventDefault();
             onSetView?.(back);
           }}
-          title={back === 'arena' ? 'Back to the 3D arena' : 'Back to the board'}
+          title={backLink.title}
         >
-          {back === 'arena' ? '▣ arena' : '▤ board'}
+          {backLink.label}
         </a>
         {status !== null && status.ready && status.builtAt !== null && (
           <span className="muted">index built {status.builtAt.slice(0, 10)}</span>

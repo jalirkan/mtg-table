@@ -3491,7 +3491,7 @@ npm --prefix web run dev                         # then http://127.0.0.1:5173/#c
 node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdout
 ```
 
-### Card library follow-ups — twelve, 2026-09-27
+### Card library follow-ups — twelve, 2026-09-27 (12 closed by the workshop)
 
 1. **`tools/fetch-art.ts` can read from the library instead of Scryfall.** Today
    it walks `/cards/named` at 2 req/s, up to four rungs per card, to write
@@ -3541,22 +3541,25 @@ node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdo
 11. **No production route** (**D92**): `vite preview` and a built `dist/` show the
     browser's empty state. If the browser is ever wanted outside the dev server,
     that is a new decision, not a follow-up.
-12. **The browser and the models viewer are not linked.** A card's detail panel
-    could open the same card's figure once both have landed; that join is left
-    for after the merge.
+12. ~~**The browser and the models viewer are not linked.**~~ **Closed by the
+    workshop's reconciliation** (2026-09-27, **D102**): the detail panel's *View
+    in 3D* opens `#workshop?card=<exact name>` for a card the workshop can show,
+    greyed with the reason otherwise, and the workshop's *card text* opens
+    `#cards?open=<scryfall id>`.
 
 ---
 
 ## The workshop — the arena's card viewer, off the plan, 2026-09-27 (D102–D104)
 
-**Status: built, reviewed, every workshop finding fixed, documented; not
-committed.** It is in the worktree `/home/justin-a/code/mtg-table-t2e`, branch
-`workshop`, from `0368a90`, and was moved onto `754f504` (the card library) by its
-fix pass. **It must be rebased onto Tier 2 slice 4** (`tier2-slice4`, which
-replaces the humanoid bodies, adds a costume palette to `holoMaterial` and
-rewrites `FigureLayer`, `figureRigs`, `props` and the duelists) before or after
-slice 4 is committed. *The rebase onto slice 4*, below, is the checklist. It is
-the other half of the user's request of 2026-09-27: *"expedite some of these"*
+**Status: built, reviewed, every workshop finding fixed, documented, and
+rebased onto Tier 2 slice 4 and reconciled with it (2026-09-27).** It is in the
+worktree `/home/justin-a/code/mtg-table-t2e`, branch `workshop`, from `0368a90`,
+moved onto `754f504` (the card library) by its fix pass, then rebased onto
+`main`'s `23e26b3` (slice 4) as two commits: the workshop itself, re-applied with
+the docs merged, and **the reconciliation** — the costume row, the links with
+`#cards`, and the two arena fixes the workshop had found (*The rebase onto slice
+4*, below, says how each checklist item went). It is the other half of the
+user's request of 2026-09-27: *"expedite some of these"*
 brought the card library above forward, and *"a card viewer that allows the user
 to see models and how they act"*, to help workshop the identity work as it
 develops, is this. It is **M7 Tier 2's bench**: the identity work of slices 3 and
@@ -3580,15 +3583,25 @@ with 23 screenshots under `var/shots-workshop/` (local, gitignored). README's
 It **supersedes report 09 §10.7's `/#/arena?cue=<id>` dev loop**, which was never
 built.
 
-**What exists.** `web/src/workshop/` (15 files; the pure ones import no three and
-no React), `tools/build-workshop-catalog.ts`, `web/test/workshop.test.ts`, and
-small edits to `main.tsx`, `useView.ts`, `keys.ts` (`W`), `styles.css`
-(appended), `vite.config.ts` (the shared chunk's name), `hooks-order.test.ts` and
-`keys.test.ts`. **Nothing under `web/src/arena/` was edited.**
+**What exists.** `web/src/workshop/` (16 files; the pure ones import no three and
+no React — `links.ts` is the reconciliation's), `tools/build-workshop-catalog.ts`,
+`web/test/workshop.test.ts`, and small edits to `main.tsx`, `useView.ts`,
+`keys.ts` (`W`), `styles.css` (appended), `vite.config.ts` (the shared chunk's
+name), `hooks-order.test.ts` and `keys.test.ts`. The reconciliation added the card
+browser's *View in 3D* (`cards/CardDetail.tsx`, and a ⚒ workshop back link in
+`cards/CardBrowser.tsx`), and made **two arena edits on the arena's desk**, each
+held by an arena-side test: `Arena.tsx`'s state-backed `loopRef` (with a fourth
+`liveness.test.ts` clause) and three `resolved:fizzled` rows in `cues.json`. The
+workshop's own code still edits nothing under `web/src/arena/`.
 
-- **The route.** `#workshop` or `?view=workshop`; add `?card=<name or part of
-  one>` in the query string to open on a card. `W` in the 3D arena opens it, and
-  so does `⚒ workshop` in the top bar. It is a lazy chunk, it opens no socket and
+- **The route.** `#workshop` or `?view=workshop`; `#workshop?card=<name>` opens
+  on a card (a name, or part of one; the query spelling `?card=` works too, and
+  the hash wins), and the page keeps the hash in step with the list. `W` in the
+  3D arena opens it, so does `⚒ workshop` in the top bar, and so does **View in
+  3D** in `#cards`' detail panel — live for a creature or a Vehicle and for any
+  other card with its own `cues.json` entry, greyed with the reason otherwise.
+  The header's **≡ card text** goes the other way, to `#cards?open=<scryfall id>`
+  when `art.json` has the card. It is a lazy chunk, it opens no socket and
   it fetches no log. The mode app is unmounted under it: a live socket survives,
   a replay resumes at its frame, and a chip says when the live game is waiting on
   you. `▣ arena` / `▤ board` / `V` go back.
@@ -3625,7 +3638,9 @@ small edits to `main.tsx`, `useView.ts`, `keys.ts` (`W`), `styles.css`
     synthetic batch through the real `CueQueue`, with the resolved line beside
     it: rung, selector, cue id, ms and clip. It also shows what the rung order
     outranked, and any selector of the card's own entry that nothing reaches.
-  - **Tuning**: the `traits.json` row, live.
+  - **Tuning**: the `traits.json` row, live — since the reconciliation with its
+    `body` flag and slice 4's **costume**, a row per slot with the colour the
+    body is drawn in and where it came from (this card, inherited, filled).
   - **Cue params**: the card's `cues.json` params, live.
   - **Legibility**: each prop's on-screen pixels from the table view on both
     seats, standing and kneeling, against the 48-px bar.
@@ -3633,30 +3648,33 @@ small edits to `main.tsx`, `useView.ts`, `keys.ts` (`W`), `styles.css`
 
 **What the evidence shows.**
 
-- **Tests.** `npm --prefix web test`: **837 `node --test` + 91 vitest (6 files),
-  0 failures** (797 + 91 on `754f504`; the `workshop` suite is 38 and
-  `keys.test.ts` gained 2). Re-run by the documentation pass on the same tree:
-  the same counts, exit 0, 1 min 52 s. `tsc --noEmit` was clean in the fix pass.
+- **Tests.** `npm --prefix web test` after the reconciliation, from `npm ci`:
+  **862 `node --test` + 93 vitest (6 files), 0 failures** (817 + 91 on `main` @
+  `23e26b3`; the `workshop` suite is 43, `keys.test.ts` +2, `cards-render` +2).
+  Before the rebase it was 837 + 91 on `754f504` (the `workshop` suite 38).
 - **Every rehearsal decays.** Every rehearsal of every card, single-seat and both
   seats — **1,376 batches, 2,432 cues** — plays through the real `CueQueue` and
   decays to identity. **Every `cues.json` selector of every deck card is reached**
   by some rehearsal. The rung-order census prints every run:
   - `attackers` over `attackers:alone` ×4;
-  - `resolved` over `resolved:fizzled` ×3;
+  - `resolved` over `resolved:fizzled` ×3 before the reconciliation, **none
+    since** (the three spells' own fizzle rows; the test fails if it comes back);
   - `damage` over `damage:lethal` ×1;
   - `counters` over `counters:-` ×2.
 - **The meter matches the test.** The legibility meter equals
   `web/test/prop-raster.ts` **pixel for pixel over 40 readings** (Peggy, Coulson,
   the Doombot and Fury × both seats × standing and kneeling).
 - **Drawn heights in view 1 at 1600 × 900.** The caption's number is the rest
-  clip's skinned vertices projected through the table camera:
+  clip's skinned vertices projected through the table camera — slice 4's
+  proportioned bodies since the rebase (the chibis' before it):
 
-  | body | drawn | nominal |
-  |---|---|---|
-  | Peggy | 61.3 px | 70 |
-  | the Doombot | 56.1 px | 50 |
-  | the giant ant | 127.4 px | 100 |
-  | Coulson and Fury | 61.3 px | — |
+  | body | drawn (slice 4) | nominal (slice 4) | drawn (slice 3's chibis) |
+  |---|---|---|---|
+  | Peggy | 69.3 px | 95.7 | 61.3 px |
+  | the Doombot | 56.0 px | 49.6 | 56.1 px |
+  | the giant ant | 127.4 px | 99.8 | 127.4 px |
+  | Coulson and Fury | 67.8 px | 95.7 | 61.3 px |
+  | Fury as `body: chibi` | 61 px | — | — |
 
   The test holds the caption within 0.5 px of an independent build, and holds
   the table-distance camera within 6% of view 1 on 540-, 900- and 1200-px canvases.
@@ -3666,34 +3684,43 @@ small edits to `main.tsx`, `useView.ts`, `keys.ts` (`W`), `styles.css`
 - **Navigation.** `W` over the `g1` replay in the arena opened `#workshop`. Under
   `?arena=off#arena`, the board kept the key. The replay at frame 250 → `W` → `V`
   → frame 250.
-- **Build.** The 2D entry chunk is **+0.89 kB gzip** (86.47 → 87.36, none of it
-  `three`). `Workshop-*.js` is **24.07 kB**, on the shared `arena-scene-*.js`
-  (339.87 kB). The stylesheet is +1.36 kB.
+- **Build** (after the reconciliation, against `main` @ `23e26b3`). The 2D entry
+  chunk is **+0.93 kB gzip** (86.47 → 87.40, none of it `three`).
+  `Workshop-*.js` is **23.30 kB** and `links-*.js` (the catalog and the two links,
+  shared with the card browser) 2.69 kB, on the shared `arena-scene-*.js`
+  (347.96 kB). The arena's download is 14.34 + 347.96 = 362.30 kB against slice
+  4's single 359.81 kB chunk. The stylesheet is +1.49 kB.
 - **Gate.** The first pass ran `WSPORT=8671 ./tools/check-all.sh`: `check-all OK`,
-  760 s. That was **before** the rebase and the fix pass.
+  760 s, before the rebase. After the reconciliation, from a deleted
+  `bridge/out`: **`check-all OK`, exit 0, 888 s** at `WSPORT=8680` (9c's ten games 317 s, on a desktop at a load average of 17–23), with `node --test` at **872 / 864 pass / 0 fail / 8 skipped** plus 93 vitest inside it (`var/check-all-workshop-reconcile.log`).
 
-**A defect found on the way, possibly the arena's too.** A batch enqueued while
-the clock was paused froze on the pedestal. The cause: `<Canvas frameloop>` is
-re-applied on every render, including one fiber makes on its own for a resize,
-and the prop was the ref's value at the component's *last* render. The pedestal
-now backs `CueRunner`'s `loopRef` with React state. `Arena.tsx` passes
-`frameloop={loopRef.current}` the same way (**D72**'s rule), so a window resize
-during a batch between two arena renders would likely freeze it until the next
-frame arrives. **Not verified in the arena, and not changed** (follow-up 3).
+**A defect found on the way — the arena's too, and fixed in both.** A batch
+enqueued while the clock was paused froze on the pedestal. The cause:
+`<Canvas frameloop>` is re-applied on every render, including one fiber makes on
+its own for a resize, and the prop was the ref's value at the component's *last*
+render. The pedestal backs `CueRunner`'s `loopRef` with React state. On the
+reconciliation the arena was checked (headless, GTX 1080, `g1`@100) and had it: a
+viewport resize 80 ms into a batch froze it (0 frames in 700 ms, two steps stuck
+at 503 ms), and a resize after a batch drained kept an idle table drawing (756
+frames in 700 ms). `Arena.tsx`'s `loopRef` is now state-backed the same way —
+still `frameloop={loopRef.current}`, so **D72** holds as written — and after it
+the same probe ran through (504 frames; the batch drained) and parked (0 frames
+idle). `liveness.test.ts` holds it (its frameloop clause's fourth part).
 
 **Command**
 
 ```bash
 npm --prefix web run dev                       # then http://127.0.0.1:5173/#workshop
-#   /?view=workshop&card=coulson                opens on a card (a name, or part of one;
-#   /?card=peggy#workshop                       ?card= is read from the QUERY, not the hash)
-#   W in the 3D arena, or ⚒ workshop in the board's or the arena's top bar
+#   /#workshop?card=coulson                     opens on a card (a name, or part of one;
+#   /?view=workshop&card=coulson                the query spelling too — the hash wins)
+#   W in the 3D arena, ⚒ workshop in the board's or the arena's top bar,
+#   or View in 3D in #cards' detail panel
 node tools/build-workshop-catalog.ts           # regenerate web/src/workshop/catalog.json
 node tools/build-workshop-catalog.ts --check   # exit 1 if the decks or the corpus moved
 npm --prefix web test                          # the workshop suite (38) runs inside it
 ```
 
-### The rebase onto slice 4 — the checklist
+### The rebase onto slice 4 — the checklist, and how it went
 
 The workshop reaches the arena only through the exports named in
 `web/src/workshop/Workshop.tsx`'s header, and `workshop.test.ts` fails on any
@@ -3738,33 +3765,56 @@ modifies, and what each means here:
    Peggy, Coulson, the Doombot and the Air Force at table distance on both seats.
    Finally `WSPORT=<free port> ./tools/check-all.sh`.
 
-### Workshop follow-ups — fourteen, 2026-09-27
+**How it went (2026-09-27, `main` @ `23e26b3`).** `git rebase main` conflicted only
+in CLAUDE.md, DECISIONS.md and README.md, where both sides append; both were kept,
+slice 4's first. `main` stopped at D101, so **D102–D104 kept their numbers** (the
+`match-setup` branch's own D102–D105 will need renumbering after this lands).
+Against the tree, item by item:
 
-1. **The rebase onto slice 4** (above). Until it lands, the workshop shows slice
-   3's bodies.
-2. **The costume row in the tuning panel** (checklist item 4). After the rebase,
-   a costume can be seen on the pedestal but not tuned.
-3. **The arena's own `frameloop` prop** (the defect above). Check it in the arena
-   by resizing the window during a cue while the queue is running. If it freezes,
-   the fix is the pedestal's: a state-backed `loopRef` in `Arena.tsx`. That is
-   the arena's desk, not this branch's.
-4. **A fizzled Helicarrier Strike plays its full strike and a `hit` on its
-   target.** §7.3's rung order lets the card's bare `resolved` beat the defaults'
-   more specific `resolved:fizzled`. It is a `cues.json` data question for the
-   cue data's owner. The workshop's *Cues* panel shows it as *"outranks the
-   default's `resolved:fizzled` → `resolved.fizzle`"*.
-5. **`check-all.sh` has not been run since the rebase and the fix pass.** Inside
-   the gate `node --test` should read **847 / 839 pass / 8 skipped** plus 91
-   vitest; that is unmeasured.
-6. **`#workshop?card=…` is not read.** `?card=` works only in the query string
-   (`/?card=peggy#workshop`, `/?view=workshop&card=peggy`), while `#cards` keeps
-   its state in the hash. `useView.ts` already names the view correctly for
-   `#workshop?card=…`, and the page simply does not look there. Reading `card`
-   from the hash's `?` part too is a few lines in `Workshop.tsx`'s
-   `initialSelection`.
-7. **The card browser and the workshop are not linked** (card library follow-up
-   12). A `#cards` detail panel could open the same card at
-   `?card=<name>#workshop` for any card the workshop lists.
+1. `instantiateFigure`, `clipFor`, `ModelLibrary` kept their shapes; the caption
+   re-measured itself (the table above).
+2. `legibility.ts` now finds a body's head as `prop-raster.ts` does — its skin and
+   hair slots, and `HUMAN_HEAD_FROM` for the `human` family. Both head and body
+   write depth, so the split moves no prop pixel, which is why the
+   pixel-for-pixel test had stayed green; it is kept equal on purpose. The meter
+   reads slice 4's props on the `human` family (Peggy's shield 99–150 px of area,
+   her hat 203–445, over both seats and both stances).
+3. `FigureLayer`, `PropField`, `figureRigs` needed nothing: the pedestal passes
+   what `Arena.tsx` passes.
+4. The costume reaches the pedestal through the pose with no workshop code; **the
+   tuning panel's costume row and body flag were added**, and a test now fails
+   when `validate.ts`'s `TRAIT_KEYS` names a key the panel does not write.
+   `traits.json` had been re-written by slice 4 as `JSON.stringify(…, null, 2)`,
+   so the traits copy is printed that way (byte for byte against the file again).
+5. The pedestal still mounts a `BustField` and hands `CueRunner` no busts and no
+   `DuelistLayer`: the duelists are a seat's (**D99**), not on the pedestal
+   (follow-up 14 stays open).
+6. Every pure module's signature held; `framing.ts`'s arithmetic held (its test's
+   bound on Peggy's nominal height moved from 90 to 110 px — slice 4's bodies stand
+   their full height).
+7. Build, tests and the gate: above.
+
+### Workshop follow-ups — fourteen, 2026-09-27; seven closed by the reconciliation, five new
+
+1. ~~**The rebase onto slice 4.**~~ **Closed** (2026-09-27): rebased onto
+   `23e26b3`; the checklist above says how each item went.
+2. ~~**The costume row in the tuning panel.**~~ **Closed**: a row per slot, the
+   `body` flag, and a test holding the panel to the validator's keys.
+3. ~~**The arena's own `frameloop` prop.**~~ **Closed**: it froze in the arena
+   too (measured above) and `Arena.tsx`'s `loopRef` is state-backed, with a
+   liveness clause.
+4. ~~**A fizzled Helicarrier Strike plays its full strike.**~~ **Closed** in the
+   data: Helicarrier Strike, Pym Particles and Depower carry their own
+   `resolved:fizzled` → `resolved.fizzle`; the census reads none, and the test
+   fails if one comes back. (Triggers: follow-up 15.)
+5. ~~**`check-all.sh` has not been run since the rebase.**~~ **Closed**: run from
+   a deleted `bridge/out` after the reconciliation (above).
+6. ~~**`#workshop?card=…` is not read.**~~ **Closed**: `links.ts`'s
+   `cardFromLocation` reads the hash's query first, as `#cards` reads its own, and
+   the page writes `#workshop?card=…` back as the list moves.
+7. ~~**The card browser and the workshop are not linked**~~ (card library
+   follow-up 12). **Closed**: *View in 3D* one way, *card text* the other
+   (**D102**'s reconciliation).
 8. **Camera cues are not previewed** (the pedestal's director takes no move, so
    the Helicarrier's fly-in swoop is never seen here). **Bloom is single-view
    only**, because the composer takes over rendering.
@@ -3789,9 +3839,31 @@ modifies, and what each means here:
     table*. For a real crowd, a recorded frame is still the check (`g1.jsonl`
     @355).
 14. **The duelists are seats, not cards.** After the rebase, slice 4's full
-    duelists (**D99**) are not in the list. A "duelist" entry that stands one
-    on the pedestal with its gestures is a small addition once slice 4's shapes
-    are known.
+    duelists (**D99**) are not in the list, on purpose (checklist item 5). A
+    "duelist" entry that stands one on the pedestal with its gestures would need
+    `DuelistLayer`, `duelistPoses` and a seat on a synthetic board — a page of
+    its own more than a list row.
+15. **A fizzled TRIGGER still plays its card's plain resolution.** The
+    reconciliation fixed the three spells; the per-card `resolved` of a
+    permanent — Quake's shockwave, Wasp's scale beam, Web Up's cocoon, the Air
+    Force's swarm, Coulson's badge, Strategic Intervention's pop — still outranks
+    `resolved:fizzled` if its trigger fizzles, and the workshop rehearses no
+    trigger fizzle (only a spell has a `fizzles` row), so nothing shows it. Adding
+    that rehearsal and the rows is the next step, if a fizzled trigger is ever
+    seen.
+16. **`match-setup` numbers its decisions D102–D105 too.** This branch kept
+    D102–D104 because `main` stopped at D101; whichever lands second renumbers.
+17. **`catalog.json` now reads `cues.json`'s card names** (for `threeD`), so a new
+    per-card cue entry for a deck card makes the workshop's drift test fail until
+    `node tools/build-workshop-catalog.ts` is re-run — on the arena's desk. The
+    test says so; the alternative was the card browser importing the arena.
+18. **The arena re-renders on every loop-mode change** (the state-backed
+    `loopRef`): twice per batch, idle → `always` and back. Not measured as a
+    frame-time cost; `tools/arena-bench.mjs` is the instrument if it is ever
+    suspected.
+19. **A card whose Scryfall name differs from Forge's** by more than a token's
+    ` Token` or a double face's `A // B` would show *View in 3D* grey ("not in the
+    workshop"). None of the decks' cards does today.
 
 ---
 

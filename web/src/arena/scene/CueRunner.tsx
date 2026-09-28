@@ -110,6 +110,13 @@ const FREEZE_MIX = 0.45;
  * 10 for 3 s with five cues still queued; in `g1` it cost the attack swoop). So
  * the prop is whatever this file decided last, read from a ref `Arena.tsx` owns:
  * a re-render re-states the current mode and `configure` changes nothing.
+ *
+ * **The ref's setter is React state** (the workshop's reconciliation,
+ * 2026-09-27): `<Canvas>` also re-renders on its own — a resize — with the props
+ * of its parent's LAST render, so a plain ref was stale between a write here and
+ * the parent's next render (a resize mid-batch froze the cues; one after a drain
+ * kept an idle table drawing). Every write re-renders the owner once, and the
+ * prop is always the mode — `Arena.tsx` and the workshop's pedestal alike.
  */
 export type Frameloop = 'always' | 'demand';
 

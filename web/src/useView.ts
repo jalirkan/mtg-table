@@ -75,7 +75,7 @@ function viewOfQuery(word: string): View {
  */
 export function viewFromLocation(hash: string, search: string): View {
   // `#cards?q=agent` — the card browser's own state follows a `?` in the hash
-  // (and `#workshop?card=…` would too), so only the part before it names the view.
+  // (and the workshop's, `#workshop?card=…`), so only the part before it names the view.
   const cleanedHash = (hash.replace(/^#+/, '').split('?')[0] ?? '').trim().toLowerCase();
   if (cleanedHash !== '') return viewOfHash(cleanedHash);
   let view: string | null = null;

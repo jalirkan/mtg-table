@@ -4296,10 +4296,12 @@ never a new cue id). A clock of the duelists' own (**D58**, **D72**).
 
 **2026-09-27** (the workshop, PLAN.md's *The workshop*; written up by its
 documentation pass. Within **D49**, **D94** and CLAUDE.md's M4 conventions 1, 2
-and 4. **Numbered after Tier 2 slice 4's D95–D101**, which are on the
-`tier2-slice4` branch and not in this tree yet. If another branch lands a D102
-first, renumber D102–D104. They are cited only from this file, PLAN.md, README.md
-and CLAUDE.md, and nowhere in code.)
+and 4. **Numbered after Tier 2 slice 4's D95–D101**, which were on their own
+branch when this was written and are in this tree since the workshop was rebased
+onto `main`'s `23e26b3` the same day. The `match-setup` branch numbers its own
+decisions D102–D105; whichever of the two lands second renumbers its own. They
+are cited only from this file, PLAN.md, README.md and CLAUDE.md, and nowhere in
+code.)
 
 **Decision.** The card viewer the user asked for on 2026-09-27, *"a card viewer
 that allows the user to see models and how they act"*, to help workshop the
@@ -4315,8 +4317,10 @@ arena and `#cards`:
   game waits on the player, the header carries a chip: `useLiveGameWaiting` reads
   a socket that is *already* open and never opens one. The chip shows an `ask` as
   a flag and an `input` by its own prompt, verbatim (M5 convention 4).
-- **Downstream of the arena, never inside it.** Nothing under `arena/` is edited
-  by the workshop and nothing under `arena/` imports it. The pedestal draws with
+- **Downstream of the arena, never inside it.** The workshop's code edits nothing
+  under `arena/`, and nothing under `arena/` imports it. (The two arena defects
+  it found were fixed on the arena's desk, in the reconciliation commit, each
+  held by a test of the arena's own: *Reconciled onto slice 4*, below.) The pedestal draws with
   the arena's own `CardPlane`, `FigureLayer`, pose fields, `EffectPool`,
   `CueRunner` and `SceneStage`. `SceneStage` is subclassed only to take the
   facing preview's turn out of `yawTo` (`workshop/facing.ts`). The page consumes
@@ -4379,9 +4383,10 @@ card's clips, its traits and a legibility number, without a route inside the
 arena.
 
 **Known cost.** Every export in the coupling list is a rebase item. The ones slice
-4 rewrites — `FigureLayer`, `FigureRig` / `FigureRigMap`, `PropField`, `BustField`
-/ `DuelistBust`, `instantiateFigure` / `ModelLibrary` — will need re-checking.
-The tuning panel's field list is written out and will need the costume's row.
+4 rewrote — `FigureLayer`, `FigureRig` / `FigureRigMap`, `PropField`, `BustField`
+/ `DuelistBust`, `instantiateFigure` / `ModelLibrary` — were re-checked on the
+rebase and kept their shapes (below). The tuning panel's field list is written
+out, and needed the costume's row.
 The 2D entry chunk grew **0.89 kB gzip** (86.47 → 87.36 kB: the link, the `W`
 dispatcher, the lazy stub and the keymap row's text; none of it is `three`). The
 workshop is **24.07 kB** on top of the shared `arena-scene` chunk (339.87 kB),
@@ -4391,6 +4396,55 @@ fly-in), and bloom works in single view only (the composer takes over rendering)
 The detour loses the mode app's UI state, as **D94**'s does. Nothing in the
 workshop needs the dev server, but it has been opened only there, not from a
 built `dist/`.
+
+**Reconciled onto Tier 2 slice 4 (2026-09-27).** The branch was rebased onto
+`main`'s `23e26b3` (slice 4: the proportioned bodies, the costume palette, the
+props fitted per body family, the duelists) and reconciled in one commit of its
+own:
+
+- **The coupling list, re-checked.** Every export it named kept its shape (a
+  clean `tsc`), and the list gained the names the costume and the meter need:
+  `BODY_STYLES`, `COSTUME_SLOTS`, `CostumeSlot` and `familyOf` (`props.ts`),
+  `FigurePose` (`pose.ts`) and `COSTUME_ATTRIBUTE` (`holoMaterial.ts`). The
+  costume reaches the pedestal with no workshop code: the pose carries it and
+  `FigureLayer` writes it at commit (**D97**). The legibility meter finds a body's
+  head as `prop-raster.ts` now does, by its skin and hair slots and the family's
+  chin height, and still equals the test pixel for pixel. **The duelists stay off
+  the pedestal** — a seat's, not a card's (**D99**): `CueRunner` is handed no
+  busts and no `DuelistLayer` is mounted, and a test holds both.
+- **The arena's `<Canvas frameloop>` had the pedestal's defect, and has its
+  fix.** Reproduced in the arena before the change, headless on the GTX 1080 at
+  `g1`@100: a viewport resize 80 ms into a batch froze it (0 frames in 700 ms,
+  two steps stuck at 503 ms), and a resize after a batch had drained kept an idle
+  table drawing (756 frames in 700 ms). `Arena.tsx`'s `loopRef` is now backed by
+  state, as the pedestal's is: every mode `CueRunner` writes re-renders `Arena`
+  once, and `<Canvas>` re-applies the current mode on renders of its own. **D72**
+  holds as written — the prop is still the runner's ref, never a literal — and
+  `liveness.test.ts`'s clause gained a fourth part: the ref is not a plain
+  `useRef`, and its setter sets state (negative-controlled both ways).
+- **The fizzle is fixed in the data** (**D104**'s known cost): `cues.json`, below.
+- **`#cards` and `#workshop` link to each other** (the user's request). The card
+  browser's detail panel has *View in 3D* → `#workshop?card=<exact name>`, live
+  only for a card the catalog can show — a creature or a Vehicle, or another card
+  with its own `cues.json` entry — and greyed, with the reason as its tooltip,
+  otherwise. The workshop's header has *card text* → `#cards?open=<scryfall id>`
+  when `art.json` has the id (no request is made to ask the library). The
+  workshop reads `card=` from the hash's query first, as the browser reads its
+  own, and keeps `#workshop?card=…` in step with the list. **`workshop/links.ts`
+  is the one workshop module `cards/` may import, and it imports only the
+  generated `catalog.json`**: the browser's chunk carries the catalog's names and
+  nothing that draws, and `cards/` still reaches no arena (**D94**). So the answer
+  is precomputed — `catalog.json`'s `threeD`, which the catalog tool writes from
+  the card names `cues.json` has an entry for — rather than the browser importing
+  the cue file. Its cost: a new per-card `cues.json` entry for a deck card is a
+  reason to re-run `node tools/build-workshop-catalog.ts`, and the drift test says
+  so.
+- **The build**, against `main` @ `23e26b3`: the 2D entry chunk **87.40 kB** gzip
+  (86.47, **+0.93**); `Workshop-*.js` 23.30 kB; `links-*.js` 2.69 kB, shared by the
+  card browser and the workshop; `CardBrowser-*.js` 9.91 kB (9.67); the arena's
+  download `Arena-*.js` 14.34 + `arena-scene-*.js` 347.96 = 362.30 kB against
+  slice 4's single 359.81 kB chunk (+2.49: the shared chunk's split, and the
+  state-backed `loopRef`).
 
 **Rejected.** Report 09 §10.7's `?cue=` route inside the arena: a mode in the
 renderer, on slice 4's desk, and one cue rather than a card. A `workshop` flag in
@@ -4410,7 +4464,11 @@ Within CLAUDE.md's *The user commits* and Tier 2 slice 3's convention 1)
 **Decision.** The workshop's tuning panel edits two things for the card on the
 pedestal. One is its **`traits.json` row**: every field `validateTraits` accepts
 (`scale`, `hover`, `idle`, `tint`, `accent`, `shade`, `turn` + `turnedRatio`,
-`props`, `swarm` + `formation`, `silhouette`, `shrink`). The other is the
+`props`, `swarm` + `formation`, `silhouette`, `shrink`, and since the
+reconciliation onto Tier 2 slice 4 its `body` flag and its **`costume`**: a row
+per slot of `COSTUME_SLOTS`, each a colour or `tint`, with the swatch drawn in
+the pose's palette and a label saying whether the slot is this card's, inherited
+down the ladder, or filled by `costumeOf`). The other is the
 **`params` of its `cues.json` entry's selectors**.
 
 - **Overrides live in this browser, never in the repo.** They are stored in
@@ -4433,8 +4491,10 @@ pedestal. One is its **`traits.json` row**: every field `validateTraits` accepts
     `_t11`, `_station`, …) kept, and for `cues.json` `presence` and `station`
     kept too;
   - a field added by the override goes after the row's last data key;
-  - the text is in the files' own style: the name at four spaces, one key per
-    line at six, each value inline.
+  - the text is in the files' own style: the name at four spaces and one key
+    per line at six — for `cues.json` each value inline, for `traits.json`
+    (re-written by slice 4 as `JSON.stringify(…, null, 2)`) arrays and the
+    `costume` block opened out one item per line.
 
   So an unedited copy is the committed text byte for byte, and a paste changes
   only the edited lines. **Both buttons are disabled while the validator names
@@ -4466,7 +4526,9 @@ reset.** Right after a paste the two are equal, but a later change to the file i
 hidden while the override stays, so press *reset* once the row is in the file.
 Overrides are per browser profile, shared with no one, and seen by no test. The
 field list is written out in `Workshop.tsx` rather than derived from the
-validator, so a new trait key (slice 4's costume) needs a row there. Only a
+validator, so a new trait key needs a row there — slice 4's `costume` and `body`
+were the first, added on the reconciliation, and `workshop.test.ts` now fails
+when `validate.ts`'s `TRAIT_KEYS` names a key the panel does not write. Only a
 card's own `cards` row and its existing selectors' `params` are tunable. `cue`,
 `ms`, a new selector, the archetype rungs, `figures.json` and the `cues.json`
 archetypes are edited in the files. Cue params are raw JSON per selector, and
@@ -4524,7 +4586,9 @@ a value (`workshop.test.ts`).
   to it exactly as in a game (report 13 §3.4). `REGISTRY` itself is untouched.
 - **Card facts come from the corpus.** `workshop/catalog.json` is generated by
   `node tools/build-workshop-catalog.ts` from `decks/*.dck` and every `state`
-  frame of `fixtures/games/*.jsonl` (`catalogBuild.ts` is the pure half):
+  frame of `fixtures/games/*.jsonl` (`catalogBuild.ts` is the pure half) — and,
+  since the reconciliation, the card names `cues.json` has an entry for, which
+  decide its `threeD` (the card browser's *View in 3D*, **D102**):
   - the modal type line, cost and P/T are taken over **off-battlefield**
     sightings, which is the printing — Peggy's battlefield power is −3 under
     Quantum Reduction, her printing 2/1 — with the battlefield's as the fallback;
@@ -4573,7 +4637,14 @@ a deck or a fixture changes; the test says so, and the tool is re-run. The
 workshop surfaced one data question and left it with the cue data's owner:
 §7.3's rung order lets a card's bare `resolved` beat the defaults' more specific
 `resolved:fizzled`, so a fizzled Helicarrier Strike plays its full strike. That
-fix is a `cues.json` edit, not the workshop's.
+fix is a `cues.json` edit, not the workshop's — **made on the reconciliation**
+(2026-09-27): the three deck spells with a bare `resolved`, Helicarrier Strike,
+Pym Particles and Depower, carry their own `resolved:fizzled` → `resolved.fizzle`,
+and `workshop.test.ts` asserts every deck spell's fizzle plays the fizzle
+(negative-controlled by taking the three rows out). A *trigger* that fizzles is
+not rehearsed, so the per-card `resolved` of a permanent (Quake's shockwave,
+Wasp's beam, Web Up's cocoon) would still outrank one: PLAN.md's workshop
+follow-up 15.
 
 **Rejected.** Scrubbing a recorded fixture to a frame where the card is on the
 battlefield, which is slice 3's *"look at it"* step. It is still how a card is

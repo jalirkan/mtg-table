@@ -7,9 +7,12 @@
  * **The workshop's card list, generated.** Reads every `decks/*.dck` and every
  * `state` frame of every committed recording under `fixtures/games/`, and writes
  * `web/src/workshop/catalog.json`: each deck's cards, the facts a `Card` carries
- * on the wire for each of them (type line, mana cost, P/T, token), and every
- * token the corpus has seen. The logic is `web/src/workshop/catalogBuild.ts`;
- * this file only reads and writes.
+ * on the wire for each of them (type line, mana cost, P/T, token), every token
+ * the corpus has seen, and — reading the card names `web/src/arena/cues/cues.json`
+ * has an entry for — what the workshop can show of each in 3D (`threeD`, the card
+ * browser's *View in 3D*). So a new per-card `cues.json` entry for a deck card is
+ * a reason to run it too. The logic is `web/src/workshop/catalogBuild.ts`; this
+ * file only reads and writes.
  *
  *     node tools/build-workshop-catalog.ts            # rewrite the file
  *     node tools/build-workshop-catalog.ts --check    # exit 1 if it would change
@@ -52,7 +55,13 @@ const recordings = readdirSync('fixtures/games')
   .sort()
   .map((f) => [f, stateBodies(join('fixtures/games', f))] as const);
 
-const text = `${JSON.stringify(buildCatalog(decks(), recordings), null, 2)}\n`;
+/** The card names `cues.json` has a per-card entry for (its `cards` block). */
+function cueCards(): string[] {
+  const cues = JSON.parse(readFileSync('web/src/arena/cues/cues.json', 'utf8')) as { cards?: Record<string, unknown> };
+  return Object.keys(cues.cards ?? {});
+}
+
+const text = `${JSON.stringify(buildCatalog(decks(), recordings, cueCards()), null, 2)}\n`;
 if (process.argv.includes('--check')) {
   let committed = '';
   try {

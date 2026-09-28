@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_generated": "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck and fixtures/games/*.jsonl — do not edit by hand; web/test/workshop.test.ts fails when it drifts",
+  "_generated": "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts",
   "decks": [
     {
       "file": "pacho-shield.dck",
@@ -694,5 +694,53 @@
   ],
   "missing": [
     "Giant Growth"
-  ]
+  ],
+  "threeD": {
+    "A.I.M. Scientists": "figure",
+    "Aerial Doombot": "figure",
+    "Agent 13, Sharon Carter": "figure",
+    "Agent Phil Coulson": "figure",
+    "Agents of S.H.I.E.L.D.": "figure",
+    "Ainok Tracker": "figure",
+    "Ant-Man's Air Force": "figure",
+    "Ant-Man, Reformed Rogue": "figure",
+    "Ashcloud Phoenix": "figure",
+    "Battering Craghorn": "figure",
+    "Bold Biochemist": "figure",
+    "Borough Backup": "cues",
+    "Clue Token": null,
+    "Depower": "cues",
+    "Forest": null,
+    "Future Sight": null,
+    "Garruk's Companion": "figure",
+    "Giant Growth": null,
+    "Giant-Sized Flying Ant": "figure",
+    "Helicarrier Strike": "cues",
+    "Hero Token": "figure",
+    "Island": "cues",
+    "Manamorphose": null,
+    "Mountain": null,
+    "Nick Fury, Spymaster": "figure",
+    "Opt": null,
+    "Peggy Carter, Secret Agent": "figure",
+    "Plains": "cues",
+    "Pym Particles": "cues",
+    "Quake, Agent of S.H.I.E.L.D.": "figure",
+    "Quantum Reduction": "cues",
+    "Rampant Growth": null,
+    "Robot Token": "figure",
+    "Robotics Mastery": "cues",
+    "S.H.I.E.L.D. Helicarrier": "figure",
+    "S.H.I.E.L.D. Spy Kit": "cues",
+    "Saproling Token": "figure",
+    "Soldier Token": "figure",
+    "Strategic Intervention": "cues",
+    "Super Suit": "cues",
+    "Thallid": "figure",
+    "Thriving Heath": "cues",
+    "Thriving Isle": "cues",
+    "Volcano Hellion": "figure",
+    "Wasp, Shrinking Savior": "figure",
+    "Web Up": "cues"
+  }
 }

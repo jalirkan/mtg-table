@@ -1118,10 +1118,19 @@ test('liveness: only CueRunner drives the camera lane', () => {
  *  1. no `frameloop` prop anywhere in the arena is a string literal;
  *  2. `<Canvas>` reads the ref CueRunner writes;
  *  3. CueRunner writes that ref in the same breath as every `setFrameloop`, and
- *     nothing else in the arena calls `setFrameloop` at all.
+ *     nothing else in the arena calls `setFrameloop` at all;
+ *  4. **a write to that ref re-renders `Arena`** (the workshop's reconciliation,
+ *     2026-09-27): `<Canvas>` re-applies the prop on renders of its OWN — a
+ *     resize — with the props of `Arena`'s last render, so a plain `useRef` was
+ *     stale between an enqueue and the next `Arena` render. Measured before the
+ *     fix on the GTX 1080 at `g1`@100: a resize mid-batch froze the cues (0
+ *     frames in 700 ms, two steps queued), and a resize after one kept an idle
+ *     table drawing (756 frames in 700 ms). The ref's setter is a state setter,
+ *     as the workshop's pedestal has it.
  *
  * Negative-controlled when written: restoring `frameloop="demand"`, or dropping
- * the `loopRef.current = mode` line, turns this red.
+ * the `loopRef.current = mode` line, turns this red — and so does putting back
+ * `const loopRef = useRef<Frameloop>('demand')`, or a setter that sets no state.
  */
 test('liveness: the Canvas loop mode is CueRunner’s decision, never a literal a re-render reverts', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
@@ -1136,6 +1145,15 @@ test('liveness: the Canvas loop mode is CueRunner’s decision, never a literal 
   }
   const arena = files.get('Arena.tsx') ?? '';
   assert.match(arena, /<Canvas[\s\S]*?\bframeloop=\{loopRef\.current\}/, '<Canvas> no longer reads loopRef');
+  // 4. The ref CueRunner writes is backed by Arena's state, so a write re-renders
+  //    Arena and <Canvas>'s own re-renders (a resize) re-apply the current mode.
+  assert.doesNotMatch(arena, /\bloopRef\s*=\s*useRef\b/, 'loopRef is a plain useRef again — a <Canvas>-only re-render re-applies a stale mode');
+  const setter = /\bset current\(\s*(\w+)\s*:\s*Frameloop\s*\)\s*\{([^}]*)\}/.exec(arena);
+  assert.ok(setter !== null, 'loopRef has no `set current(next: Frameloop)` — its writes do not re-render Arena');
+  const [, arg, body] = setter;
+  const stateSetter = /const \[\s*,\s*(\w+)\s*\]\s*=\s*useState<Frameloop>/.exec(arena)?.[1];
+  assert.ok(stateSetter !== undefined, 'no useState<Frameloop> behind loopRef');
+  assert.match(body ?? '', new RegExp(`\\b${stateSetter}\\(\\s*${arg ?? ''}\\s*\\)`), `loopRef's setter does not call ${stateSetter}(${arg ?? ''})`);
   const runner = files.get('scene/CueRunner.tsx') ?? '';
   const calls = [...runner.matchAll(/\bsetFrameloop\(([^)]*)\)/g)];
   assert.ok(calls.length >= 1, 'CueRunner no longer sets the loop mode at all');

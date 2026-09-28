@@ -153,6 +153,11 @@ test('route: nothing under cards/ imports the board renderer CardTile, and nothi
       `${file} must not import render/CardTile.tsx (its importer list is closed)`,
     );
     assert.doesNotMatch(source, /from '\.\.\/(render|arena)\//, `${file} must not import from render/ or arena/`);
+    // D102: the workshop's one module the browser may reach is links.ts, which
+    // imports the generated catalog and nothing that draws (workshop.test.ts).
+    for (const path of imports.filter((p) => p.includes('workshop/'))) {
+      assert.equal(path, '../workshop/links.ts', `${file} imports ${path} — the browser reaches the workshop only through links.ts`);
+    }
     assert.doesNotMatch(source, /^import\s+['"][^'"]+\.css['"]/m, `${file} must not import CSS (styles.css holds every rule)`);
   }
   for (const board of ['render/Board.tsx', 'render/CardTile.tsx', 'arena/Arena.tsx']) {

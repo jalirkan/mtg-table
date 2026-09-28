@@ -1194,12 +1194,15 @@ needs no JVM and opens no socket.
 
 ```bash
 npm --prefix web run dev          # then http://127.0.0.1:5173/#workshop  (or /?view=workshop)
-#   /?card=coulson#workshop       open on a card — a name or part of one; ?card= is
-#   /?view=workshop&card=peggy    read from the query string, not from the hash
-#   W in the 3D arena (replay or live) or ⚒ workshop in the top bar opens it;
-#   ▣ arena, ▤ board or V goes back, a replay at the frame you left it on
-node tools/build-workshop-catalog.ts          # regenerate its card list after a deck or a
-node tools/build-workshop-catalog.ts --check  # recording changes (a test fails until you do)
+#   /#workshop?card=coulson       open on a card — a name or part of one (the query
+#   /?view=workshop&card=peggy    spelling works too; the hash wins, and the page
+#                                 keeps #workshop?card=… in step with the list)
+#   W in the 3D arena (replay or live), ⚒ workshop in the top bar, or View in 3D
+#   in #cards' detail panel opens it; ▣ arena, ▤ board or V goes back, a replay at
+#   the frame you left it on; ≡ card text opens the card in #cards
+node tools/build-workshop-catalog.ts          # regenerate its card list after a deck, a
+node tools/build-workshop-catalog.ts --check  # recording or a card's own cues.json entry
+                                              # changes (a test fails until you do)
 ```
 
 Opening it from a live game is safe. The game is kept, because the socket belongs
@@ -1259,7 +1262,8 @@ film ends; **rest** does it now.
   - which `cues.json` rung answered (the card's own entry, an archetype's or the
     default), the cue, its length and the clip it plays;
   - when the card's own, less specific entry outranked a more specific default
-    (a fizzled Helicarrier Strike still strikes);
+    (a fizzled Helicarrier Strike used to strike; since the reconciliation it
+    carries its own fizzle, and so do Pym Particles and Depower);
   - any selector of the card's own entry that no event reaches.
 
   Hover a ▶ for what the workshop invented. What a spell targets, what a blocker
@@ -1267,14 +1271,20 @@ film ends; **rest** does it now.
   the other copy, an Aura's host or a Soldier token.
 - **Tuning.** The card's `traits.json` row as fields: `scale`, `hover`, `idle`,
   `tint`, `accent`, `shade`, `turn` + `turnedRatio`, `swarm` + `formation`,
-  `silhouette`, `shrink` and a checkbox per prop kind. Edits apply at once.
+  `silhouette`, `shrink`, a checkbox per prop kind, the **body** (`human`, or the
+  `chibi` fallback — it says so when the body has none) and the **costume**
+  (Tier 2 slice 4): a row per slot — skin, hair, top, shirt, legs, shoes, gloves,
+  belt — with a colour picker, a *tint* toggle, the value the data gives and
+  where it came from (*this card*, *inherited* down the ladder, or *filled* from
+  the top). The swatch is the colour the body is drawn in. A drone, an insect or a
+  disc wears no costume, and the panel says so. Edits apply at once.
 - **Cue params.** The `params` of each of the card's own `cues.json` selectors,
   as JSON.
 - **Legibility.** For each prop, how many pixels it gets on screen from the
   table view, on your seat and the opponent's, standing and kneeling. It shows
   red under 48, `traits.test.ts`'s bar, and measures what that test measures,
-  pixel for pixel. A one-sided detail (a tie, a laser eye, an exhaust) is red
-  from one side on purpose: its partner carries the card there.
+  pixel for pixel. A one-sided detail (a tie, a laser eye, an exhaust, an
+  eyepatch) is red from one side on purpose: its partner carries the card there.
 - **Keys.**
 
 | key | what it does |
@@ -1307,7 +1317,7 @@ above, with the workshop as the place you look:
    seats.
 2. Press **copy as traits.json row**. The clipboard gets `"<card name>": { … }`
    in the file's own style: the committed row with your edits folded in, its keys
-   in their order and its `_note` kept. The button is disabled while the validator
+   in their order and its `_note` and `_costume` kept. The button is disabled while the validator
    refuses the row. With no clipboard, the text appears in a box under the
    button.
 3. In `web/src/arena/figures/traits.json`, replace the card's row under `cards`
@@ -1344,9 +1354,8 @@ this browser's storage. It shows what the arena draws, rules included:
 - an attacker turns to face what it attacks.
 
 Camera cues (the Helicarrier's fly-in) are not played, because the pedestal's
-camera is yours. Bloom is single-view only. Tier 2 slice 4's costumes are not in
-this tree yet. After the workshop is rebased onto slice 4 they appear on the
-pedestal, and the tuning panel needs a row for them (PLAN.md, *The workshop*).
+camera is yours. Bloom is single-view only. The duelists are not on the pedestal:
+they stand for a seat, not a card (**D99**).
 
 ### Card library and browser — `#cards`
 
@@ -1381,8 +1390,8 @@ npm --prefix web run dev                          # then http://127.0.0.1:5173/#
 #   /#cards?q=agent&set=msh                      the URL is the page's state:
 #   /#cards?q=creature&set=msh,msc&color=W       q, set, color (W U B R G, C, M),
 #   /#cards?deck=decks/pacho-shield.dck          type, deck and open=<scryfallId>
-#   `▦ cards` in the board's top bar opens it; the back link returns to the board
-#   or the arena you came from, a replay at the frame you left it on
+#   `▦ cards` in the board's top bar opens it; the back link returns to the board,
+#   the arena or the workshop you came from, a replay at the frame you left it on
 
 # The same index from a terminal, as JSON on stdout:
 node tools/card-library/query.ts name "Peggy Carter, Secret Agent"
@@ -1394,6 +1403,14 @@ node tools/card-library/query.ts resolve decks/pacho-shield.dck
 as it is actually laid out; `Enter` opens the selected card; `Esc` closes it. The
 browser has its own keymap table (`web/src/cards/keys.ts`), because the board's
 `?` overlay must list every row of the board's.
+
+**View in 3D.** An open card's detail panel has **⚒ View in 3D**, which opens it
+in the workshop (`#workshop?card=<its exact name>`, above) — live for a card the
+workshop can show: a creature or a Vehicle from `decks/` or the recorded games'
+tokens, or another of their cards with its own `cues.json` entry. For anything
+else it is greyed, and its tooltip says why: the workshop lists the card but has
+nothing of its own to show (Opt), or does not list it at all. The workshop's
+**≡ card text** comes back here (**D102**).
 
 **Where the pictures come from.** A tile tries the image cache first, served by
 the dev server from `var/cards/images/`; on a miss the route answers 404 — it

@@ -681,8 +681,32 @@ export default function Arena({
    * `frameloop` prop reads it (slice-2 verification fix; `CueRunner.tsx`'s
    * `Frameloop` says why a literal froze running cues). Read during render on
    * purpose: it is what the loop IS, so a re-render re-states it.
+   *
+   * **And a write re-renders `Arena`** (the workshop's finding, reproduced here
+   * before this fix — docs/evidence/workshop.md). fiber re-applies the prop on
+   * every render of `<Canvas>`, INCLUDING the ones `<Canvas>` makes on its own
+   * when its container is resized, with the props of `Arena`'s LAST render — so a
+   * plain ref read at render was only as fresh as that render. Measured on the
+   * GTX 1080 at `g1`@100: a viewport resize 80 ms into a batch put the loop back
+   * to the `demand` of the render before the enqueue and the cues froze (0 frames
+   * in 700 ms, two steps stuck at 503 ms); a resize after a batch had drained put
+   * back that batch's `always`, and the idle table drew 756 frames in 700 ms. So
+   * the ref is backed by state: every mode `CueRunner` decides re-renders `Arena`
+   * once (a same-mode write is React's no-op), and the prop is always the mode.
    */
-  const loopRef = useRef<Frameloop>('demand');
+  const [, setLoopMode] = useState<Frameloop>('demand');
+  const loopRef = useMemo(() => {
+    let mode: Frameloop = 'demand';
+    return {
+      get current(): Frameloop {
+        return mode;
+      },
+      set current(next: Frameloop) {
+        mode = next;
+        setLoopMode(next);
+      },
+    };
+  }, []);
   /**
    * The composer renders into its own target, which is a second set of program
    * variants: warm them too when it mounts. **Stable**, because `Post` runs its

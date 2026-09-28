@@ -12,10 +12,18 @@
  * Scryfall's image terms want the artist and the copyright "elsewhere in the
  * same interface" whenever art is cropped; the browser never crops, and prints
  * both here anyway (NOTICE §2).
+ *
+ * **View in 3D** opens the card in the workshop (`#workshop?card=<exact name>`,
+ * D102) — live only for a card the workshop's catalog can show: a creature or a
+ * Vehicle, or another card with its own `cues.json` entry. Anything else draws the
+ * button greyed, with the reason as its tooltip. The answer is
+ * `workshop/links.ts`'s, over the workshop's generated catalog: the one workshop
+ * module this directory imports, and it imports no arena and nothing that draws.
  */
 
 import { useEffect, useState } from 'react';
 
+import { threeDLinkFor } from '../workshop/links.ts';
 import { CardView } from './CardView.tsx';
 import { dckLine, dckLineNote, deckUseLabel, deckUsesOf, type DeckIndex } from './decks.ts';
 import type { LibraryCard, LibraryFace } from './model.ts';
@@ -126,6 +134,34 @@ function PrintsRow({
   );
 }
 
+/**
+ * **View in 3D** — the workshop's pedestal for this card, when the workshop has
+ * something of the card's own to show; otherwise a greyed button whose tooltip
+ * says why (`aria-disabled`, not `disabled`, so the tooltip still shows and the
+ * reason is still read out).
+ */
+export function ViewIn3D({ card }: { card: LibraryCard }): JSX.Element {
+  const link = threeDLinkFor({ name: card.name, faceNames: card.faces.map((face) => face.name), typeLine: card.typeLine });
+  if (link.href !== null) {
+    return (
+      <a className="btn btn--small btn--primary cardlib-3d" href={link.href} title={link.title}>
+        ⚒ View in 3D
+      </a>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className="btn btn--small btn--future cardlib-3d cardlib-3d--off"
+      aria-disabled="true"
+      title={link.title}
+      aria-label={`View in 3D — unavailable: ${link.title}`}
+    >
+      ⚒ View in 3D
+    </button>
+  );
+}
+
 export function CardDetail({
   card,
   decks,
@@ -150,11 +186,14 @@ export function CardDetail({
         <button type="button" className="btn btn--small" onClick={onClose} title="Close (Esc)">
           ✕ close
         </button>
-        {card.scryfallUri !== null && (
-          <a className="cardlib-detail__ext" href={card.scryfallUri} target="_blank" rel="noreferrer noopener">
-            on Scryfall ↗
-          </a>
-        )}
+        <span className="cardlib-detail__links">
+          <ViewIn3D card={card} />
+          {card.scryfallUri !== null && (
+            <a className="cardlib-detail__ext" href={card.scryfallUri} target="_blank" rel="noreferrer noopener">
+              on Scryfall ↗
+            </a>
+          )}
+        </span>
       </header>
 
       <div className="cardlib-detail__images">

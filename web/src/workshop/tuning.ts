@@ -20,9 +20,11 @@
  * kept, and — for `cues.json` — `presence` and `station` kept too, because a paste
  * replaces the whole row or entry and those are the entry's hover and its station.
  * Only the edited values change: a trait row's overridden fields, and the `params`
- * of the overridden cue selectors. They are printed in the files' own style (one
- * key per line, each value on one line), so an unedited copy is the committed
- * text byte for byte and a paste is a one-line diff (`workshop.test.ts`).
+ * of the overridden cue selectors. Each is printed in its file's own style —
+ * `cues.json` one key per line with each value on one line, `traits.json` (since
+ * Tier 2 slice 4) exactly as `JSON.stringify(file, null, 2)` writes it, arrays
+ * and the `costume` block opened out — so an unedited copy is the committed text
+ * byte for byte and a paste is a small diff (`workshop.test.ts`).
  *
  * Storage is `localStorage` under {@link STORE_KEY}, every access inside `try`
  * (a private window or blocked site data throws): a per-viewer convenience, like
@@ -194,9 +196,11 @@ export function cueSelectorsOf(name: string, cues: unknown): Record<string, RawR
 }
 
 /**
- * One value on one line, as `cues.json` and `traits.json` write theirs:
+ * One value on one line, as `cues.json` writes its values:
  * `{ "cue": "attack.aegis", "ms": 900, "params": { "colour": "#4f7fe8" } }`,
  * `["shield", "hat"]`. `JSON.stringify` for everything but the spacing.
+ * (`traits.json` wrote its values this way too until Tier 2 slice 4 re-wrote the
+ * file as `JSON.stringify(…, null, 2)`; its rows are {@link prettyEntryText}'s.)
  */
 export function inlineJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(inlineJson).join(', ')}]`;
@@ -208,15 +212,26 @@ export function inlineJson(value: unknown): string {
 }
 
 /**
- * A card's row or entry as the files print it inside their `cards` block: the
- * name at four spaces, one key per line at six, each value inline — ready to
- * replace the committed lines in place.
+ * A card's entry as `cues.json` prints it inside its `cards` block: the name at
+ * four spaces, one key per line at six, each value inline — ready to replace the
+ * committed lines in place.
  */
 function entryText(name: string, entry: Record<string, unknown>): string {
   const lines = Object.entries(entry).map(([key, value]) => `      ${JSON.stringify(key)}: ${inlineJson(value)}`);
   return lines.length === 0
     ? `    ${JSON.stringify(name)}: {}`
     : `    ${JSON.stringify(name)}: {\n${lines.join(',\n')}\n    }`;
+}
+
+/**
+ * A card's row as `traits.json` prints it inside its `cards` block. Since Tier 2
+ * slice 4 the whole file is `JSON.stringify(parsed, null, 2)` plus a newline —
+ * `props` and `costume` opened out one item per line — so the row is exactly that,
+ * indented to the name's four spaces: the committed text byte for byte.
+ */
+function prettyEntryText(name: string, entry: Record<string, unknown>): string {
+  const body = JSON.stringify(entry, null, 2).split('\n').join('\n    ');
+  return `    ${JSON.stringify(name)}: ${body}`;
 }
 
 /** The committed `traits.json` row of a card, exactly as the file has it — comments included — or `null`. */
@@ -257,11 +272,11 @@ export function traitsRowOf(name: string, row: RawRow): Record<string, unknown> 
 /**
  * **"Copy as traits.json row"**: `"<name>": { … }` in the file's own style, ready
  * to replace the committed row. Built by {@link traitsRowOf}: the committed row's
- * order, its `_note` kept — the paste replaces the whole row, and the note is the
- * row's reason.
+ * order, its `_note` and `_costume` kept — the paste replaces the whole row, and
+ * the notes are the row's reasons.
  */
 export function traitsRowText(name: string, row: RawRow): string {
-  return entryText(name, traitsRowOf(name, row));
+  return prettyEntryText(name, traitsRowOf(name, row));
 }
 
 /**

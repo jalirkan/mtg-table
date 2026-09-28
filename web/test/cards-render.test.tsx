@@ -17,7 +17,8 @@
  *     with no image at all is a text frame, never a broken `<img>`.
  *   - The detail panel draws the cost as `mana-font` pips, the rules text with
  *     `{T}` as a pip, the stats, set and collector number, the copyright line,
- *     the deck count and the `.dck` line.
+ *     the deck count and the `.dck` line — and *View in 3D*, the workshop's deep
+ *     link, live or greyed with its reason.
  */
 
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -261,6 +262,36 @@ test('detail: {T} in rules text is the tap pip, and a card in no deck says so', 
   expect(html).toContain('ms ms-tap ms-cost ms-shadow cardlib-pip cardlib-pip--inline');
   expect(html).toContain('in no deck under decks/');
   expect(html).toContain('1 Agent Phil Coulson|MSH');
+});
+
+test('detail: View in 3D opens the workshop on the exact name — live for a body or a card’s own cues, grey with the reason otherwise', () => {
+  // A creature: its figure on the pedestal (D102, workshop/links.ts).
+  const peggy = renderToStaticMarkup(<CardDetail card={PEGGY} decks={buildDeckIndex([])} onClose={() => undefined} />);
+  expect(peggy).toContain('href="#workshop?card=Peggy+Carter%2C+Secret+Agent"');
+  expect(peggy).toContain('⚒ View in 3D');
+  expect(peggy).not.toContain('aria-disabled');
+  // A spell with its own cues.json entry is live too.
+  const strike = card({ id: 'x-strike', name: 'Helicarrier Strike', typeLine: 'Instant' });
+  expect(renderToStaticMarkup(<CardDetail card={strike} decks={buildDeckIndex([])} onClose={() => undefined} />)).toContain(
+    'href="#workshop?card=Helicarrier+Strike"',
+  );
+  // A card the workshop lists with nothing of its own to show, and one it does not
+  // list: the button is there, greyed, and its tooltip says which.
+  const opt = card({ id: 'x-opt', name: 'Opt', typeLine: 'Instant' });
+  const optHtml = renderToStaticMarkup(<CardDetail card={opt} decks={buildDeckIndex([])} onClose={() => undefined} />);
+  expect(optHtml).toContain('aria-disabled="true"');
+  expect(optHtml).not.toContain('#workshop?card=');
+  expect(optHtml).toContain('nothing of its own to show in 3D');
+  const stranger = renderToStaticMarkup(<CardDetail card={NO_ART} decks={buildDeckIndex([])} onClose={() => undefined} />);
+  expect(stranger).toContain('aria-disabled="true"');
+  expect(stranger).toContain('Not in the workshop');
+});
+
+test('the back link returns to the workshop when the workshop’s card text link opened the browser', () => {
+  const html = renderToStaticMarkup(<CardBrowser initialStatus={NO_INDEX} backTo="workshop" />);
+  expect(html).toContain('href="#workshop"');
+  expect(html).toContain('⚒ workshop');
+  expect(html).not.toContain('▤ board');
 });
 
 test('CardView: the image is whole, sized by the card, and keeps its credit', () => {

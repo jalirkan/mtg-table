@@ -125,7 +125,9 @@
       "_t11": "Slice 3 splits the one shot into its two events: `cast` locks a crosshair reticle on the target's FIGURE and holds it (`lock`) — target acquired, for as long as the spell waits — and `resolved` brings the beam down from above on what the previous frame said it targeted (`strikeCard`).",
       "cast": { "cue": "fx.strike", "ms": 900, "params": { "height": 4, "colour": "#f6f0d8", "lock": true } },
       "_resolved": "The second verification pass: the resolution's beam is twice as thick and a star flashes on the body as it lands — at g3@116 the thin beam came down behind the giant ant unseen. (A camera move was tried and taken out: the struck card is usually in the graveyard by then, and the camera frames cards.)",
-      "resolved": { "cue": "fx.strike", "ms": 820, "params": { "height": 4, "colour": "#f6f0d8" } }
+      "resolved": { "cue": "fx.strike", "ms": 820, "params": { "height": 4, "colour": "#f6f0d8" } },
+      "_fizzled": "A fizzle is not a strike (the workshop's reconciliation, 2026-09-27). §7.3 resolves the rung before the selector, so this entry's bare `resolved` outranked the default `resolved:fizzled`, and a Strike whose target had gone still brought the beam down on it. Its own `resolved:fizzled` is the default's fizzle — the form greys and falls through the table — so a fizzle reads as a fizzle.",
+      "resolved:fizzled": { "cue": "resolved.fizzle", "ms": 460 }
     },
 
     "Web Up": {
@@ -161,7 +163,9 @@
       "_note": "The serum: a beam out of the card and the target changes size. Keys off `cast`. `counters` / `stats` carry the real change and keep their own cues, which is what makes the number and the size agree.",
       "_t11": "Slice 3 answers Tier 1's 'partly': `follow` makes the target's change of size the SNAPSHOT's — `strikeGrew`, the sign of the struck card's P/T change across the resolving transition — grown when it got bigger, shrunk when it got smaller, a pulse and no claim when nothing changed (the cast, and the vigilance mode every corpus game chose).",
       "cast": { "cue": "fx.scaleBeam", "ms": 820, "params": { "targetScale": 1.45, "colour": "#9ec7f0", "width": 0.036, "follow": true } },
-      "resolved": { "cue": "fx.scaleBeam", "ms": 700, "params": { "targetScale": 1.45, "colour": "#9ec7f0", "width": 0.036, "follow": true } }
+      "resolved": { "cue": "fx.scaleBeam", "ms": 700, "params": { "targetScale": 1.45, "colour": "#9ec7f0", "width": 0.036, "follow": true } },
+      "_fizzled": "A fizzle is not a dose (the workshop's reconciliation, 2026-09-27): without this row the card's bare `resolved` outranks the default `resolved:fizzled` (§7.3, rung before selector) and a fizzled Pym Particles fires its beam at a target that has gone. The default's fizzle instead.",
+      "resolved:fizzled": { "cue": "resolved.fizzle", "ms": 460 }
     },
 
     "Quantum Reduction": {
@@ -194,7 +198,9 @@
       "_note": "The same traces, flickering out. Keys off `cast`; `off: true` is the whole difference.",
       "_t11": "Slice 3: the lights also go out when it RESOLVES, on what the previous frame said it targeted.",
       "cast": { "cue": "fx.circuit", "ms": 700, "params": { "off": true } },
-      "resolved": { "cue": "fx.circuit", "ms": 620, "params": { "off": true } }
+      "resolved": { "cue": "fx.circuit", "ms": 620, "params": { "off": true } },
+      "_fizzled": "A fizzle turns no lights out (the workshop's reconciliation, 2026-09-27): without this row the card's bare `resolved` outranks the default `resolved:fizzled` (§7.3, rung before selector). The default's fizzle instead.",
+      "resolved:fizzled": { "cue": "resolved.fizzle", "ms": 460 }
     },
 
     "Strategic Intervention": {

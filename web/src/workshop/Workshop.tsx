@@ -39,12 +39,18 @@
  *  - **The tuning panel's copies are the committed text with the edit folded
  *    in** (`tuning.ts`), refused while the arena's validator refuses the row.
  *
+ * And two links with the card browser (`links.ts`): the header's *card text*
+ * goes to `#cards?open=<scryfall id>` when `art.json` has the id, and `#cards`'
+ * *View in 3D* comes here as `#workshop?card=<exact name>` — read by
+ * `initialSelection`, the hash's query first, as the browser reads its own; the
+ * page then keeps `#workshop?card=…` in step with the list.
+ *
  * ---------------------------------------------------------------------------
- * **The coupling to `web/src/arena/`, all of it, and why** — the arena is being
- * reworked on another branch (Tier 2 slice 4: new humanoid bodies, a costume
- * palette in `holoMaterial`, and `FigureLayer` / `figureRigs` / `props` / duelists
- * rewritten), so this is the list to re-check on the rebase. Nothing under
- * `arena/` is edited by the workshop; every name below is an existing export, and
+ * **The coupling to `web/src/arena/`, all of it, and why** — the list to
+ * re-check whenever the arena moves (it was re-checked against Tier 2 slice 4:
+ * the proportioned bodies, the costume palette in `holoMaterial`, the props
+ * fitted per body family, the duelists). The workshop's code edits nothing under
+ * `arena/`; every name below is an existing export, and
  * `web/test/workshop.test.ts` fails if a workshop file imports one that is not
  * named here.
  *
@@ -60,12 +66,17 @@
  *     instantiateFigure, clipFor, loadFigureModels, ModelLibrary (models.ts)
  *                                            the meter's bodies, the clips' lengths
  *     PropField, PropOffsetSource (props.ts) the meter reads the real prop field back
+ *     COSTUME_ATTRIBUTE (holoMaterial.ts)    the meter finds a body's head by its slots
  *     FigureRig, FigureRigMap (figureRigs.ts), RigMap (rigs.ts)
  *   arena/figures/   the pose, the ladders and the validators — pure
  *     figurePose, FigureLayout, FigurePose (pose.ts) · figureFor (resolve.ts)
  *     traitFor, TRAITS, TraitData (traits.ts) · tileFor, tilePose (tiles.ts)
  *     attachFor (attach.ts) · combatFreeze, manaMotes, spellForms (casting.ts)
- *     DuelistBust (duelists.ts) · PROP_KINDS, FORMATIONS, IDLE_STYLES (props.ts)
+ *     DuelistBust (duelists.ts) — the pedestal hands CueRunner none: the
+ *       duelists are a seat's, not a card's, and are not drawn here
+ *     PROP_KINDS, FORMATIONS, IDLE_STYLES, BODY_STYLES, COSTUME_SLOTS,
+ *     CostumeSlot, familyOf (props.ts)       the tuning panel's fields; the meter's head
+ *       height per body family (prop-raster.ts's rule)
  *     clipEnvelope, clipForCue, ClipRequest, REST_CLIP_FOR, REST_PHASE_FOR (clips.ts)
  *     validateFigures, validateModels, validateTraits (validate.ts)
  *     FigureData, ModelData, FigureProblem, ClipName, isClipName, tileDataOf,
@@ -86,10 +97,11 @@
  *                    as traits.ts does) — the bundler warns on a module imported
  *                    two ways
  *
- * **Slice 4's costume palette** is not in this tree yet; when it lands, the tuning
- * panel's row gains its field through `validateTraits` (which is what decides
- * what a row may say) and the pedestal shows it with no change here, because the
- * pedestal draws with the arena's own `FigureLayer`.
+ * **Slice 4's costume palette** reaches the pedestal with no code here: the pose
+ * carries it (`figurePose` with the overridden traits) and the arena's own
+ * `FigureLayer` writes it into each figure's material at commit. The tuning
+ * panel's `costume` rows and its `body` flag are written out, as every field is,
+ * and pass `validateTraits`, which decides what a row may say.
  * ---------------------------------------------------------------------------
  */
 
@@ -101,8 +113,8 @@ import type { ClientState } from '../reduce.ts';
 import type { View } from '../useView.ts';
 import { CueQueue } from '../arena/cues/queue.ts';
 import type { CueData, Problem } from '../arena/cues/types.ts';
-import { figurePose } from '../arena/figures/pose.ts';
-import { PROP_KINDS, FORMATIONS, IDLE_STYLES } from '../arena/figures/props.ts';
+import { figurePose, type FigurePose } from '../arena/figures/pose.ts';
+import { BODY_STYLES, COSTUME_SLOTS, PROP_KINDS, FORMATIONS, IDLE_STYLES, type CostumeSlot } from '../arena/figures/props.ts';
 import { figureFor } from '../arena/figures/resolve.ts';
 import { traitFor, type TraitData } from '../arena/figures/traits.ts';
 import type { FigureProblem } from '../arena/figures/types.ts';
@@ -117,6 +129,7 @@ import { PreviewStage, turnPoses } from './facing.ts';
 import { framingOf, type CameraMode, type Framing } from './framing.ts';
 import { WORKSHOP_KEYMAP, workshopActionFor, type WorkshopKeyAction } from './keys.ts';
 import { LEGIBLE_PX, METER_HEIGHT, METER_WIDTH, drawnHeightPx, measure, type MeterRow } from './legibility.ts';
+import { cardFromLocation, cardsHref, workshopHref } from './links.ts';
 import { Pedestal } from './Pedestal.tsx';
 import {
   DEFAULT_OPTIONS,
@@ -171,19 +184,40 @@ function storage(): Storage | null {
   }
 }
 
+/**
+ * The entry a `card=` word names: an entry's key (`arch:robot`) or its exact
+ * label, case aside, first — which is what the card browser's *View in 3D* and
+ * this page's own URL write — then the first label containing it
+ * (`?card=peggy`). `null` when nothing matches.
+ */
+function entryNamed(entries: readonly WorkshopEntry[], card: string | null): string | null {
+  if (card === null) return null;
+  const wanted = card.trim().toLowerCase();
+  if (wanted === '') return null;
+  const hit =
+    entries.find((e) => e.key.toLowerCase() === wanted || e.label.toLowerCase() === wanted) ??
+    entries.find((e) => e.label.toLowerCase().includes(wanted));
+  return hit?.key ?? null;
+}
+
+/** What this page's URL calls an entry: a card by its name, anything else by its key. */
+function cardWordOf(entry: WorkshopEntry): string {
+  return entry.group === 'deck' || entry.group === 'token' ? entry.name : entry.key;
+}
+
+/** The location's `card=` — the hash's query first (`#workshop?card=…`), as `#cards` reads its own. */
+function locationCard(): string | null {
+  try {
+    return cardFromLocation(window.location.hash, window.location.search);
+  } catch {
+    return null;
+  }
+}
+
 function initialSelection(entries: readonly WorkshopEntry[]): string {
   const has = (key: string | null): key is string => key !== null && entries.some((e) => e.key === key);
-  try {
-    const card = new URLSearchParams(window.location.search).get('card');
-    if (card !== null) {
-      const wanted = card.trim().toLowerCase();
-      const hit = entries.find((e) => e.key.toLowerCase() === wanted || e.label.toLowerCase() === wanted) ??
-        entries.find((e) => e.label.toLowerCase().includes(wanted));
-      if (hit !== undefined) return hit.key;
-    }
-  } catch {
-    // A malformed query is no selection.
-  }
+  const named = entryNamed(entries, locationCard());
+  if (named !== null) return named;
   try {
     const stored = storage()?.getItem(SELECTED_KEY) ?? null;
     if (has(stored)) return stored;
@@ -237,6 +271,32 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
       // Remembered for this page only.
     }
   }, [entry.key]);
+
+  // **The URL says which card is up**, as `#cards` keeps its own state in its
+  // hash: `#workshop?card=<name>` (a card by its name, anything else by its key),
+  // rewritten in place — no history entry and no `hashchange`, so `useView` stays
+  // where it is — so a reload or a copied link opens this card.
+  useEffect(() => {
+    try {
+      const hash = workshopHref(cardWordOf(entry));
+      if (window.location.hash === hash) return;
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+    } catch {
+      // No history to write to: the selection stands without it.
+    }
+  }, [entry]);
+
+  // A hand-edited hash (`#workshop?card=coulson`) selects its card.
+  useEffect(() => {
+    const onHash = (): void => {
+      const named = entryNamed(entries, locationCard());
+      if (named !== null) setSelected(named);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+    };
+  }, [entries]);
 
   useEffect(() => {
     writeOverrides(storage(), overrides);
@@ -507,6 +567,16 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
           </span>
         )}
         <span className="workshop__links">
+          {art0 !== null && art0.scryfallId !== '' && (
+            // The card's printed text is the card browser's: its own deep link,
+            // from the id `art.json` already carries (no request is made here).
+            <a
+              href={cardsHref(art0.scryfallId)}
+              title={`${entry.name} in the card browser (#cards) — its rules text, prints and legalities`}
+            >
+              ≡ card text
+            </a>
+          )}
           <a
             href="#arena"
             onClick={(event) => {
@@ -607,6 +677,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         <CuesPanel rows={rows} unreached={unreachedSelectors(entry, rows, cueData)} onPlay={playKind} />
         <TuningPanel
           entry={entry}
+          pose={restPose}
           traits={traits}
           overrides={overrides}
           onOverrides={setOverrides}
@@ -1134,12 +1205,15 @@ async function copyText(text: string): Promise<boolean> {
 
 function TuningPanel({
   entry,
+  pose,
   traits,
   overrides,
   onOverrides,
   traitErrors,
 }: {
   entry: WorkshopEntry;
+  /** The card's resting pose on the pedestal — the body it stands in and the palette it is drawn in. */
+  pose: FigurePose | null;
   traits: TraitData;
   overrides: Overrides;
   onOverrides: (next: Overrides) => void;
@@ -1244,6 +1318,27 @@ function TuningPanel({
     onOverrides(withTraitRow(overrides, name, next));
   };
   const mine = traitErrors.filter((problem) => problem.where.startsWith(`$.cards[${JSON.stringify(name)}]`));
+  /**
+   * **Slice 4's costume** (D97): this row's `costume` block, slot by slot, merged
+   * down the ladder by `traits.ts` and filled by `pose.ts`'s `costumeOf` — so the
+   * swatch is what the body is DRAWN in (the pose's palette), the code is what the
+   * data says, and the label says where it came from. A slot left out of the row
+   * is inherited; the block goes when its last slot does.
+   */
+  const costumeRow: Partial<Record<CostumeSlot, string>> =
+    typeof row['costume'] === 'object' && row['costume'] !== null && !Array.isArray(row['costume'])
+      ? (row['costume'] as Partial<Record<CostumeSlot, string>>)
+      : {};
+  const setSlot = (slot: CostumeSlot, value: string | undefined): void => {
+    const next: Partial<Record<CostumeSlot, string>> = { ...costumeRow };
+    if (value === undefined) delete next[slot];
+    else next[slot] = value;
+    set('costume', Object.keys(next).length === 0 ? undefined : next);
+  };
+  const palette = pose?.costume ?? null;
+  // `"body": "chibi"` stands the card in `<model>-chibi` only when the library has
+  // one (pose.ts); otherwise the proportioned body stays, and the panel says so.
+  const chibiMissing = s.body === 'chibi' && pose !== null && pose.modelId !== null && !pose.modelId.endsWith('-chibi');
 
   return (
     <details className="workshop__box" open>
@@ -1345,10 +1440,79 @@ function TuningPanel({
             ))}
           </span>
         </div>
+        <label className="workshop__field">
+          <span>body</span>
+          <select value={String(row['body'] ?? s.body)} onChange={(event) => set('body', event.currentTarget.value)}>
+            {BODY_STYLES.map((style) => (
+              <option key={style}>{style}</option>
+            ))}
+          </select>
+          <em className={chibiMissing ? 'workshop__need' : 'muted'}>
+            {row['body'] === undefined ? 'inherited' : 'this card'}
+            {chibiMissing ? ` · no ${String(pose?.modelId)}-chibi in the library: the body stays` : ''}
+          </em>
+          {row['body'] !== undefined && (
+            <button type="button" onClick={() => set('body', undefined)} title="inherit from the rung below">
+              ×
+            </button>
+          )}
+        </label>
         <div className="workshop__field workshop__field--wide">
           <span>costume</span>
-          <em className="muted">slice 4’s palette is not in this tree — it appears here through validateTraits when it lands</em>
+          {palette === null ? (
+            <em className="muted">
+              {pose === null || pose.modelId === null
+                ? 'no body with a model on the pedestal — nothing wears it'
+                : `the ${pose.modelId} body carries no costume slots — only a person wears one (the drone, the insect and the disc never do)`}
+            </em>
+          ) : (
+            <em className="muted">
+              one colour per slot, <code>#rrggbb</code> or <code>tint</code>; a slot this row leaves out is inherited down the
+              ladder, or filled from the top (costumeOf)
+            </em>
+          )}
         </div>
+        {palette !== null && (
+          <div className="workshop__costume" role="group" aria-label="Costume">
+            {COSTUME_SLOTS.map((slot, i) => {
+              const own = costumeRow[slot];
+              const ladder = s.costume[slot];
+              const drawn = palette?.[i] ?? null;
+              const source = own !== undefined ? 'this card' : ladder !== undefined ? 'inherited' : 'filled';
+              const swatch = drawn ?? (own !== undefined && own !== 'tint' ? own : (s.tint ?? '#ffffff'));
+              return (
+                <div key={slot} className={`workshop__slot workshop__slot--${source.replace(' ', '-')}`}>
+                  <label title={`${slot}: ${own ?? ladder ?? `not named — drawn ${drawn ?? 'as the top'}`}`}>
+                    <span>{slot}</span>
+                    <input
+                      type="color"
+                      value={swatch.toLowerCase()}
+                      onChange={(event) => {
+                        setSlot(slot, event.currentTarget.value);
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className={own === 'tint' ? 'on' : ''}
+                    aria-pressed={own === 'tint'}
+                    onClick={() => setSlot(slot, own === 'tint' ? undefined : 'tint')}
+                    title="the figure’s own tint"
+                  >
+                    tint
+                  </button>
+                  <code>{own ?? ladder ?? '—'}</code>
+                  <em className="muted">{source}</em>
+                  {own !== undefined && (
+                    <button type="button" onClick={() => setSlot(slot, undefined)} title="inherit from the rung below">
+                      ×
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       {mine.length > 0 && (
         <ul className="workshop__errors">
@@ -1590,8 +1754,8 @@ function LegibilityPanel({
             Visible pixels (area) · visible height, table view at {METER_WIDTH}×{METER_HEIGHT} — traits.test.ts’s frame
             and its bar: red under {LEGIBLE_PX} px of area. The real bodies and the real prop field, alone on each seat,
             {turn !== 0 ? ' with the facing preview applied,' : ''} measured in {ms.toFixed(0)} ms. It counts pixels, not
-            contrast. The test forgives three one-sided details (tie, laserEye, exhaust) whose partner carries the card
-            on the other side.
+            contrast. The test forgives four one-sided details (tie, laserEye, exhaust, eyepatch) whose partner carries
+            the card on the other side.
           </p>
         </>
       )}

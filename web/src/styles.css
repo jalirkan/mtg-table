@@ -3561,6 +3561,23 @@ button.zonerow__open:hover {
   font-size: 11px;
 }
 
+/* The detail bar's right-hand links: View in 3D (the workshop, D102) and Scryfall. */
+.cardlib-detail__links {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cardlib-3d {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Greyed, not disabled: its tooltip says why the workshop has nothing to show. */
+.cardlib-3d--off {
+  cursor: not-allowed;
+}
+
 .cardlib-detail__images {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -4242,6 +4259,58 @@ button.zonerow__open:hover {
 
 .workshop__props label {
   white-space: nowrap;
+}
+
+/* Slice 4's costume (D97): one row per slot — the swatch is what the body is
+   drawn in, the code what the data says, the label where it came from. */
+.workshop__costume {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.15rem;
+  margin: 0.1rem 0 0.2rem 5.95rem;
+}
+
+.workshop__slot {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.workshop__slot label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.workshop__slot label > span {
+  inline-size: 3.2rem;
+  color: var(--muted);
+}
+
+.workshop__slot input[type='color'] {
+  inline-size: 2.2rem;
+  block-size: 1.2rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: none;
+}
+
+.workshop__slot code {
+  min-inline-size: 4.6rem;
+}
+
+.workshop__slot em {
+  font-size: 10px;
+}
+
+.workshop__slot--this-card code {
+  color: var(--ink);
+}
+
+.workshop__slot--filled code,
+.workshop__slot--inherited code {
+  color: var(--muted);
 }
 
 .workshop__errors {
