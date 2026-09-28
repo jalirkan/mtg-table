@@ -66,6 +66,7 @@ import {
   type FigureMaterial,
 } from './figureMaterial.ts';
 import type { FigureRigMap } from './figureRigs.ts';
+import { compileFor } from './prime.ts';
 import {
   clipFor,
   instantiateFigure,
@@ -92,6 +93,12 @@ export interface FigureLayerProps {
    * loop (`liveness.test.ts`).
    */
   look?: LookSpec;
+  /**
+   * **Whether a composer draws the frames** (bloom or the ink, `Post.tsx`): the
+   * mount-time primes below compile for the target the scene is drawn into
+   * (`prime.ts`), and run again when it changes.
+   */
+  composer?: boolean;
 }
 
 /** The library path this manifest names, or the default. */
@@ -135,7 +142,7 @@ function useFigureLibrary(models: ModelData): ModelLibrary | null {
   return library;
 }
 
-export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK }: FigureLayerProps): JSX.Element {
+export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, composer = false }: FigureLayerProps): JSX.Element {
   const library = useFigureLibrary(models);
   // The look's numbers, rebuilt only when the look itself changes: every write
   // below is keyed on this object, so a new snapshot writes nothing.
@@ -210,10 +217,11 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK }:
     // `compile` skips invisible objects, so show them for it.
     props.setPrimeVisible(true);
     discs.setPrimeVisible(true);
-    gl.compile(scene, camera);
+    // For the target the frames are drawn into — the composer's, or the canvas (`prime.ts`).
+    compileFor(gl, scene, camera, composer);
     props.setPrimeVisible(false);
     discs.setPrimeVisible(false);
-  }, [props, discs, gl, scene, camera]);
+  }, [props, discs, gl, scene, camera, composer]);
   const mounted = useMemo(() => {
     const out: Array<{ pose: FigurePose; model: LoadedModel }> = [];
     if (library === null) return out;
@@ -233,8 +241,8 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK }:
    */
   useEffect(() => {
     if (library === null || mounted.length === 0) return;
-    gl.compile(scene, camera);
-  }, [library, mounted.length, gl, scene, camera]);
+    compileFor(gl, scene, camera, composer);
+  }, [library, mounted.length, gl, scene, camera, composer]);
 
   // The props of THIS snapshot, bound against the rigs its figures registered —
   // and against the bodies dying in it (added by the departures' layout effect

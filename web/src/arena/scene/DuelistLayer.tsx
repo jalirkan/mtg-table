@@ -72,6 +72,7 @@ import {
   type LoadedModel,
   type ModelLibrary,
 } from './models.ts';
+import { compileFor } from './prime.ts';
 import { baseName, buildKindGeometry } from './props.ts';
 
 /** The clip lane, as the duelist field reads it — `SceneStage.clipOf`. */
@@ -97,6 +98,8 @@ export interface DuelistLayerProps {
    * a seat, never an anonymous card, so it always takes the table's look.
    */
   look?: number;
+  /** Whether a composer draws the frames (bloom or the ink): the bodies are primed for that target (`prime.ts`). */
+  composer?: boolean;
 }
 
 /** The library path this manifest names, or the default (as `FigureLayer` reads it). */
@@ -133,7 +136,7 @@ function useDuelistLibrary(models: ModelData): ModelLibrary | null {
   return library;
 }
 
-export function DuelistLayer({ poses, bustField, models, data, stage, queue, look = 0 }: DuelistLayerProps): JSX.Element {
+export function DuelistLayer({ poses, bustField, models, data, stage, queue, look = 0, composer = false }: DuelistLayerProps): JSX.Element {
   const library = useDuelistLibrary(models);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
@@ -177,14 +180,15 @@ export function DuelistLayer({ poses, bustField, models, data, stage, queue, loo
   }, [field, look, invalidate]);
 
   // §8.3 rule 3: the duelists' program is the figures' own, and it is compiled at
-  // mount — `compile` skips invisible objects, so the bodies are shown for it.
+  // mount — `compile` skips invisible objects, so the bodies are shown for it —
+  // for the target the frames are drawn into (`prime.ts`: the composer's, or the canvas).
   useEffect(() => {
     if (built === 0) return;
     field.setPrimeVisible(true);
-    gl.compile(scene, camera);
+    compileFor(gl, scene, camera, composer);
     field.setPrimeVisible(false);
     invalidate();
-  }, [field, built, gl, scene, camera, invalidate]);
+  }, [field, built, gl, scene, camera, composer, invalidate]);
 
   return <primitive object={field.group} />;
 }

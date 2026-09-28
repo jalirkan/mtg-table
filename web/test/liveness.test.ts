@@ -1597,7 +1597,11 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
  *    `paintsFigure`, the same predicate;
  *  - the spike's inverted hull is gone (D122): no `inkHull`, no `BackSide` ink
  *    shell, and the ink is `Post.tsx`'s `InkEffect`, inside the one composer;
- *  - `holoMaterial.ts` is a re-export and nothing more.
+ *  - `holoMaterial.ts` is a re-export and nothing more;
+ *  - `prime.ts`'s `compileFor` is a mount-time call, and the scene layers prime
+ *    through it and never through a bare `gl.compile` (the composer draws the
+ *    scene into a render target, whose program variants a canvas-only prime
+ *    leaves to the first frame an object is drawn on).
  */
 test('liveness: the look is written at commit, never in the frame loop, and the ink rides the one composer (Lane LOOK)', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
@@ -1652,7 +1656,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
     ['DuelistField.bind', bodyOf(duelists.slice(duelists.indexOf('export class DuelistField')), 'bind')],
     ['BustField.bind', bodyOf(busts.slice(busts.indexOf('export class BustField')), 'bind')],
   ];
-  const touchesLook = /\bapplyLook\(|\bapplyPropLook\(|\bapplyComicGlobals\(|\.setLook\(|\buLook\b|\bCOMIC_UNIFORMS\b/;
+  const touchesLook = /\bapplyLook\(|\bapplyPropLook\(|\bapplyComicGlobals\(|\.setLook\(|\buLook\b|\bCOMIC_UNIFORMS\b|\bcompileFor\(/;
   for (const [name, body] of loop) {
     assert.ok(body.length > 100, `could not find ${name}`);
     assert.ok(!touchesLook.test(body), `${name} writes the look in the frame loop`);
@@ -1662,6 +1666,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
       'applyPropLook(entry.material, look);',
       'applyComicGlobals(look, dpr);',
       'this.props.setLook(look);',
+      'compileFor(gl, scene, camera, composer);',
     ]) {
       assert.ok(touchesLook.test(`${body}\n${junk}`), `the scan misses \`${junk}\` in ${name}`);
     }
@@ -1680,6 +1685,23 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   assert.match(layer, /look=\{figureLookOf\(pose, tableLook\)\.look\}/, 'a figure’s look no longer goes through figureLookOf (D125)');
   assert.match(bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind'), /paintsFigure\(pose\)/, 'the shadow no longer asks paintsFigure (D125)');
   assert.match(duelists, /useLayoutEffect\(\(\) => \{\s*field\.setLook\(look\);/, 'the duelists’ look is no longer written by a layout effect');
+
+  // The composer-aware prime (`prime.ts`) is a mount-time call of the three layers
+  // that own objects hidden at mount — never a frame-loop one — and none of them
+  // primes with a bare `gl.compile`, which compiles for the canvas whatever draws
+  // the frames (the variant nothing draws under bloom or the ink).
+  assert.deepEqual(
+    writersOf(/\bcompileFor\(/).filter((p) => p !== 'scene/prime.ts').sort(),
+    ['scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx', 'scene/Table.tsx'],
+    'compileFor is called from somewhere new',
+  );
+  for (const path of ['scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx', 'scene/Table.tsx']) {
+    const code = files.get(path) ?? '';
+    assert.ok(code.length > 100, `could not read ${path}`);
+    assert.ok(!/\bgl\.compile\(/.test(code), `${path} primes with a bare gl.compile — use prime.ts's compileFor`);
+    assert.ok(/\bgl\.compile\(/.test(`${code}\n    gl.compile(scene, camera);`), 'the bare-compile scan misses the line it exists to catch');
+  }
+  assert.ok(!/performance\.now\(|Date\.now\(|requestAnimationFrame\(|useFrame/.test(files.get('scene/prime.ts') ?? ''), 'prime.ts reads a clock');
 
   // The hull is gone and the ink is the composer's.
   for (const [path, code] of files) {

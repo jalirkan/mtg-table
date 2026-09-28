@@ -391,6 +391,11 @@ node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/mod
 #   6 or 0 the auto director · O spectator mode (3, 4 and the director only when
 #   no seat is live; spectator is on by itself in a replay and when a game ends)
 
+# D120 — the COMIC look is the arena's default: ink, three cel bands, halftone, a
+#      contact shadow and a stage ("The comic look" below).  ?look=holo on any arena
+#      or workshop URL restores the hologram; ?ink=none ?halftone=0 ?key=world
+#      ?stage=felt ?shadow=0 turn one part off; the workshop's toolbar switches all.
+
 # D102 — THE WORKSHOP: one card on a pedestal, drawn by the arena's own renderer —
 #      its figure, props, clips and cues, tunable live in this browser.  No JVM,
 #      no socket.  W in the 3D arena opens it too; "The workshop" below.
@@ -945,7 +950,10 @@ overhead (*Tier 2, slice 3 — every card reads as itself*, below); and since
 **slice 4** every humanoid card is a proportioned person in a painted costume,
 and each seat has a full duelist figure — a S.H.I.E.L.D. director on your side, a
 villain on the opponent's (*Tier 2, slice 4 — people in costumes, and a duelist
-at each end*, below).
+at each end*, below). **Since Lane LOOK** (2026-09-28) all of it is drawn in the
+**comic look** — ink, flat cel bands, halftone and a contact shadow on a
+mid-value stage — and a seat's own figures face the opponent (*The comic look*,
+below).
 
 ```bash
 npm --prefix web run dev:arena                # a recorded game as a cinematic
@@ -1778,6 +1786,47 @@ this browser's storage. It shows what the arena draws, rules included:
 Camera cues (the Helicarrier's fly-in) are not played, because the pedestal's
 camera is yours. Bloom is single-view only. The duelists are not on the pedestal:
 they stand for a seat, not a card (**D99**).
+
+#### The comic look — ink, three bands and a stage (Lane LOOK, D120–D128)
+
+The figures were a glow in a colour beside card art drawn in ink, and the user
+chose the art's **style** for them (report 15, `docs/research/15-art-direction.md`;
+**D120**). Every figure, dying body, duelist and painted prop is now:
+
+- the costume palette **painted** — saturated, black lifted to a deep blue — in
+  **three flat bands** from one key light that belongs to the lens, upper left
+  (**D121**), the core shadow cooled and screened with **halftone** dots, a
+  **specular dot** on the lit band, and the card's own colour as a **rim** on the
+  shadow side;
+- **inked**: a line wherever the depth buffer bends — every figure, prop and
+  crease, the carrier, and the cards' edges — drawn inside bloom's own pass, so it
+  costs no draw call with bloom on (**D122**);
+- **grounded** by a dark contact shadow that leans away from the light (**D123**);
+- standing on a **stage** of mid value instead of the dark felt, each half in the
+  colour of the cards that seat has shown, with a night skyline round the table
+  and a burst of action lines at the centre during combat (**D124**).
+
+What is not yet real stays a **hologram** (**D125**): a face-down creature's
+anonymous disc and a creature spell standing on the stack. And **your figures
+face the opponent** now (**D126**, PLAN question 13): from the table view you see
+their backs and the opponent's fronts.
+
+| URL flag | what it does |
+|---|---|
+| `?look=holo` | the hologram, exactly as before (the felt, no ink, no shadow) |
+| `?ink=none` | no ink line (the composer then runs only for bloom) |
+| `?halftone=0` | no halftone dots |
+| `?key=world` | the key light fixed to the table instead of the lens |
+| `?stage=felt` | the dark felt under the comic figures |
+| `?shadow=0` | no contact shadows |
+
+The workshop's toolbar has the same switches — *holo · comic*, and *ink,
+halftone, shadow, stage, world key* — for an A/B on one card; *both seats* shows
+your copy from behind and the opponent's from the front. On a slow machine the
+arena's resolution governor, at its lowest rung, turns bloom **and the ink** off
+together; tick bloom in the cue strip to bring both back. What was measured —
+draw calls, triangles, programs, frame times on the GTX 1080 and SwiftShader —
+is `docs/evidence/look.md`.
 
 ### Card library and browser — `#cards`
 

@@ -2934,6 +2934,7 @@ and 11 (marked below); 2 changed shape (the eyepatch joined the one-sided list).
 1. **Your figures face you** — measured, not changed: PLAN question 13 below.
    Since the second verification pass an ATTACKER turns to face its defender
    (**D82**), so the question now decides only how the table looks at rest.
+   — **Answered 2026-09-28: they face the opponent (D126, Lane LOOK).**
 2. **Three props sit on one side of a body by nature** — Coulson's shirt and tie
    (front), the Doombot's laser eye (front) and its exhaust (back) — so each shows
    from one seat only, and `traits.test.ts` asks them only half the bar (24 px) on
@@ -5313,6 +5314,162 @@ and `npm --prefix web test` gave `main`'s counts (932 + 120 standalone). Evidenc
 §10.
 
 ---
+## Lane LOOK — the comic look, to production (2026-09-28, D120–D128)
+
+**Done on branch `look`**, one of report 15's three art-direction lanes
+(`docs/research/15-art-direction.md` §9.1), after the user judged the spike's
+pictures beside their card art and approved the direction. It also carries the
+user's answer to **question 13**. Decisions **D120–D128** are in the lane's
+reserved range and are renumbered contiguously when the three lanes merge.
+`docs/evidence/look.md` is what was measured; the pictures are in `var/look/png/`
+(gitignored, local).
+
+**What it is.** The arena's figures — every creature, dying body, duelist and
+painted prop — are drawn in the **comic look** by default (**D120**): the costume
+palette painted in three flat bands from one lens-fixed key (**D121**), halftone
+in the core shadow, a specular dot, the card's colour as a shadow-side rim; an
+ink line from a depth-edge effect inside bloom's own pass, the spike's inverted
+hull deleted, and the floor rung shedding ink with bloom (**D122**); a contact
+shadow as a pose layer in the disc field (**D123**); a mid-value stage in each
+seat's shown colours, a backdrop and a combat burst (**D124**). The hologram
+keeps the anonymous figure and the ghosted spell (**D125**). **A seat's own
+figures face the opponent** (**D126**). The figure material gained a paint input
+path — vertex colours and a texture, behind defines (**D127**) — and the look is
+written at commit only, with `uMaterialize` as the frame loop's one look number
+(**D128**).
+
+```bash
+npm --prefix web run dev                           # then:
+#   /?replay=games/g1.jsonl#arena                  the comic look (the default)
+#   /?replay=games/g1.jsonl&look=holo#arena        the hologram, as before
+#   ?ink=none ?halftone=0 ?key=world ?stage=felt ?shadow=0   one part off each
+#   /#workshop?card=Nick%20Fury%2C%20Spymaster     the A/B: holo · comic, and the
+#                                                  ink / halftone / shadow / stage /
+#                                                  world-key toggles; "both seats"
+#                                                  shows the opponent's copy front on
+node tools/arena-bench.mjs --index 316 --gpu gl    # and without --gpu for SwiftShader;
+#                                                  append &look=holo to --url for the A/B
+```
+
+**The budget** (`g1.jsonl`@355, GTX 1080, dpr 1, one whole frame):
+
+| | bloom | draw calls | triangles | programs cached | programs drawn | figure programs |
+|---|---|---:|---:|---:|---:|---:|
+| hologram (`main`'s, and `?look=holo`) | off | 79 | 27,416 | 13 | 8 | 1 |
+| comic, `?ink=none` | off | 81 | 27,540 | 15 | 10 | 1 |
+| **comic (default)** | **off** | **82** | **27,541** | 25 (+ the composer's) | 10 | 1 |
+| hologram | on | 96 | 27,433 | 25 | 8 | 1 |
+| **comic (default)** | **on** | **98** | **27,557** | 28 | 10 | 1 |
+
+Report 13 §8.2's lines (≤ 90 calls, ≤ 30,000 triangles with bloom off) hold, and
+so do report 15 §9.1's: ≤ +2 calls, ≤ +500 triangles, ≤ +2 programs with bloom
+off, and the ink +0 with bloom. One program draws all 13 skinned meshes (11
+figures and both duelists) under either look.
+
+**Frame times** (`g1`@316, production builds, before and after interleaved, raw
+output in `var/look/bench/`). Most of the day the machine was shared: other lanes'
+gates put the load average at 3.5–16.7, and a PyTorch job held the GTX 1080 at
+59–100 %. The two **quiet** series, run after this lane's gate with the GPU idle,
+are the ones to quote:
+
+- **GTX 1080 p95, bloom on (the default): hologram 5.5 ms, comic 5.25** (median
+  of 4 alternating rounds; +0.5 over all 13 runs of each) — inside the brief's
+  +1.5;
+- **GTX 1080 p95, bloom off: 2.0 against 3.65 (+1.65)**, just over the +1.5
+  line. Here the comic look draws the ink's composer and the hologram draws none.
+  The frame counts put the cost on the composer itself: any composer halves this
+  headless path's unthrottled rate. Follow-up 9;
+- **SwiftShader p50 at the 0.6 floor with the ink dropped** (what the floor rung
+  leaves): **15.25 against 17.35 (+2.1)**, the median of 8 runs each — inside the
+  brief's +3. The ink on at the floor costs +9.
+
+**The bench found a defect the spike had** (fixed, **D122**):
+`@react-three/postprocessing`'s `EffectComposer` rebuilt every pass whenever
+`Post` re-rendered — every snapshot and every loop-mode change — and with the
+ink's depth read that relinked a program mid-game: comic p95 35.5–39.1 ms against
+the hologram's 8.5–10.3 on the GTX 1080. `Post` is `memo` and its children are memoised;
+no program links during playback now, and a second, smaller one (the combat
+burst's render-target variant on the first combat) is closed by `prime.ts`'s
+`compileFor`, which primes for the target the frames are drawn into — the
+composer's or the canvas — rather than for both (its first form cached every
+primed program twice).
+
+### Lane LOOK follow-ups — sixteen, 2026-09-28
+
+Four are edits owed in files this lane does not own (1–4); four are questions
+(5–8); the rest are limits of what was measured or built.
+
+1. **MOTION — the summon's hologram-to-ink.** The figure material's
+   `uMaterialize` (identity 1) is waiting. The edit, in `scene/CueRunner.tsx`'s
+   `applyFigures`, beside the `uOpacity` write:
+   `rig.material.uniforms.uMaterialize.value = offset.materialize;` (with
+   `Offset.materialize` in `cues/stage.ts`, identity 1). Never `uLook`: the Lane
+   LOOK liveness clause fails on it, by design.
+2. **MOTION — the death's ink draining back to hologram** (report 15 §2.3). The
+   departing body's frame loop is `DepartureField.bind` in `FigureLayer.tsx`
+   (LOOK's file); the edit is one line beside its `uDrain` write,
+   `uniforms.uMaterialize.value = 1 - departureDrain(t);`, if MOTION wants it.
+3. **MOTION / BODIES — props have one look per KIND**, not per instance: a
+   summoning figure's props are painted while its body is still a hologram. An
+   `aLook` instanced attribute beside `aOpacity` would fix it (`props.ts`'s
+   `addKind` and `bind`, and `propMaterial.ts`'s shader).
+4. **BODIES — retire `holoMaterial.ts`.** `scene/models.ts` line 60 still imports
+   `COSTUME_ATTRIBUTE` from `./holoMaterial.ts`; point it at
+   `./figureMaterial.ts`, delete the shim, and drop the shim's assertion from
+   `liveness.test.ts`'s Lane LOOK clause. A new prop kind (a `hair:*`, the
+   `face`) picks a `PROP_LOOK` preset in `props.ts`'s `LOOKS` — `fabric` for hair.
+5. **Question: `sick` as half hologram?** Report 15 §2.3 proposed `uLook` 0.5 for
+   a summoning-sick creature. Not in this lane's brief, so sickness is still only
+   a translucency (**D56**). It is one line in `look.ts`'s `figureLookOf`.
+6. **Question: ink on the cards?** The depth-edge pass inks everything that
+   writes depth — figures, props, the carrier and the cards' edges, the tilted
+   hand and the piles included (report 15 §11 question 3). Figures only would need
+   the cards to write depth to a layer the pass masks out: one more target,
+   measure first.
+7. **Question: the workshop's default camera.** Since **D126** a single-seat card
+   on the pedestal shows its back (the close camera looks from view 1's
+   direction, which is the arena's truth). *Both seats* shows the front; a
+   *front* camera mode would be one row in `framing.ts`.
+8. **Question: the backdrop per seat.** Report 15 §4.2 imagined a city, a
+   Helicarrier deck or a lab picked per seat; there is one skyline all round.
+9. **Bloom off on the GTX 1080 is +1.65 ms p95, just over report 15's +1.5.**
+   That is the quiet series: the GPU idle, load 3–5, 4 alternating rounds, 2.0
+   against 3.65 ms. All 13 runs of each give +1.7. With bloom off the comic look
+   draws the ink's composer and the hologram draws none, and on this headless
+   ANGLE path any composer halves the unthrottled frame rate. Report 15 measured
+   +0.1–0.2 ms on the same GPU the evening before, against a lower baseline. Bloom
+   on, the default, is within noise (−0.25 quiet, +0.5 over all runs), and the
+   governor's floor rung drops the ink with bloom. A headed browser on the
+   user's desktop, and the user's integrated GPU (report 13 §13 question 3),
+   decide whether the bloom-off line matters. If it does, the ink could stay off
+   with bloom until a machine proves it can pay: one line in `Arena.tsx`.
+10. **The raster counts depth, not contrast.** `traits.test.ts`'s both-seats
+    raster holds every identity prop at ≥ 48 px under either look, because it
+    counts visibility; that the halftone (≤ 34 % darker, core shadow only) never
+    eats a one-sided detail is argued, not measured.
+11. **Shadows the stage does not show.** A figure standing ON its own card (a
+    wrapped rank's back row) has its shadow under the card; a dying body casts
+    none.
+12. **The stage's colours come from what a seat has shown**, so a table starts
+    teal and plum and changes when each seat shows its first coloured card (ten
+    vertex colours at commit). Doom Legion (U/B) against Pacho (W/U) is a blue
+    violet and a slate teal.
+13. **Report 15 §4.2's rest** — fog, ambient motes, a comic panel border — is not
+    built.
+14. **The paint input path has no committed user.** It is checked in the
+    browser (four variants compile and multiply); the first model to use it will
+    be a personal-only Tier 3 one, if any (question 14, **D54**).
+15. **The spike's `?ink=hull` URLs now draw the post line** (the hull is gone);
+    report 15's `after-*-hull*.png` pictures are the only record of it.
+16. **Under SwiftShader the governor reaches its floor later with the comic
+    look.** The composer carries bloom AND the ink, so its frames are slower, each
+    governor window takes longer to fill, and the rung below the floor fired
+    inside the 5 s sample in every governed after-run (programs "29 → 32"),
+    against two of five before-runs. The floor state it settles into is inside
+    the budget (+1.9 ms p50). Dropping the ink one rung earlier than bloom would
+    be a one-line change in `perf.ts`'s `postOnFloor` and `Arena.tsx`'s governor.
+    It was not made, because the brief asks for the ink and bloom to go
+    together. Measure it on the integrated GPU first.
 
 ## Polish 1 — the skeptics' nine minors (2026-09-28)
 
@@ -5652,7 +5809,7 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 10 | **New, Tier 2.** Report 13 §13's first six questions — art direction, models from card art, the GPU, idle breathing, duelists, lights. | **ANSWERED by the user before T0**, as nine decisions, recorded as **D53–D62**: stylised low-poly CC0 figures under a holographic, unlit treatment; figures at their card with the card plane kept; **no** AI-generated models from card art; **no** Mixamo; procedural slab lands; bloom on if the bench allows (it did, on the GTX 1080); breathing only while something else animates; silhouette busts, avatars deferred; mana motes to the controller's casting anchor. **One of the nine has since been superseded**: "silhouette busts, avatars deferred" (**D62**) by slice 4's full duelists (**D99**), on the workflow's reading of the user's verdict on slice 3 — the busts are kept as the fallback, and whether the duelists were wanted is slice 4's follow-up 1. |
 | 11 | **New, Tier 2.** Commit `web/public/models/figures.glb` (**373,236 bytes since slice 4** — 143,920 in slices 2–3, 126,404 in slice 1 — CC0, built by `tools/build-figures.mjs` from five sources), or gitignore it and regenerate it like `web/public/art.json`? | **Undecided — nothing in the code depends on the answer.** A checkout without it draws every creature as its disc, and the duelists as their busts, and says so once in the console, and `figures.test.ts` skips its hash check. If it is committed, `figures.test.ts` holds it to the bytes and sha256 `models.json` records, and `@gltf-transform/cli` should be pinned exactly first (Tier 2 follow-up 17 — since slice 4 it also decides the simplifier's version, **D96**). |
 | 12 | **New, Tier 2.** Should the live combat budget let the clip lane play (Tier 2 follow-up 1)? Today a combat batch in the human's own turn is snapped, so the lunge and the hit are replay-only. | **Unchanged: Tier 1's budgets stand.** The user's play-test of slice 1 (2026-09-27) reported nothing major, so the default holds; slice 2 fixed a second cause (the idle-gap clock, **D72**) and measured the first live (17 of 44 batches still snapped). Raise it again if the next play-test — *"What slice 2 hands to T9–T14"* — says the combat reads wrong live. **Slice 4 added a third casualty**: a duelist's flinch when the human takes damage is snapped the same way, and the verifier never saw one live (slice 4 follow-up 7). |
-| 13 | **New, Tier 2 slice 3.** Should your figures face the OTHER seat? Measured in slice 3 (**D81**): the models' fronts are at +Z and `layout.ts`'s `seatFacingY('you')` is 0, so **your figures face your camera and the opponent's face away** — both sides face outward, away from the combat lanes. For: a badge, an eyepatch, a pistol, a laser eye and a face read on YOUR side. Against: an attacking figure lunges toward the opponent back first — the Doombot's exhaust leads its lunge and its laser leaves its eye on the far side and crosses its own body — and Agent 13's `pistolDraw` aims at you. | **Unchanged: your figures face you.** Turning them is one line (`seatFacingY`), and every prop and every T11 beat follows it through the one definition of a front — but it changes what the whole table looks like, so it is yours to decide after a play-test. Since the second verification pass two of the "against" points are gone whichever way you decide: an attacker turns to face its defender for the length of its attack (**D82**), and every identity prop reads from behind too (**D83**). |
+| 13 | **New, Tier 2 slice 3.** Should your figures face the OTHER seat? Measured in slice 3 (**D81**): both sides faced outward, away from the combat lanes. | **ANSWERED 2026-09-28: yes** (**D126**, Lane LOOK). `seatFacingY` is π for your seat and 0 for the opponent's: you see your figures' backs and the opponent's fronts. Every identity prop still reads from both seats (`traits.test.ts`), the Doombot's jetpack joining the one-sided details with its visor as the front partner; the workshop's *faces its player* previews the old facing. |
 | 14 | **New, Tier 2 slice 3.** Is **likeness** — figures that look like the characters, a model per card — part of the end goal, or is identity-through-props and costumes (slices 3 and 4) where the arena should stop? **Since slice 4 this is the one question Tier 2 leaves open.** | **Undecided; Tier 3 is not started and nothing assumes it.** Slices 3 and 4 are as far as identity goes inside Tier 2 — a proportioned CC0 body in a painted costume carrying shared props. If likeness is wanted, it is **personal-only** (local, gitignored, never committed or published, `committable: false` in the manifest), never generated from card art and never from Mixamo (**D54**), and its source is yours to choose — *Tier 3 — a note, not a plan*, in *M7 Tier 2* above. A play-test of slice 4 is the input: if the cards read as themselves at the table, the answer may be "no"; *What Tier 3 would be, concretely, after slice 4* says how small the seam is if it is "yes". |
 | 15 | **New, card library.** Commit `fixtures/cards/` — a 0.69 MB slice of Scryfall's data (172 `oracle_cards` lines, 84 MSH/MSC print lines, 6 sets, no images), reduced to the fields the library reads — or gitignore it? | **Committed as reduced** (**D90**): it keeps `cards-lib`, `cards-api` and six `cards-ui` tests offline and hermetic, and it is regenerated by `make-fixture.ts`, never hand-edited. The alternative is to gitignore it and let those tests skip when it is absent — a suite whose result depends on what is lying around, which the repo has been bitten by once (`MTGTABLE_WS_LOGS`). |
 | 16 | **New, card library.** What contact goes in `config.json`'s `scryfallUserAgent`? Scryfall asks for an accurate, identifying User-Agent; the committed one reads `github.com/<user>/mtg-table`. | **Only you can supply it.** Until then `build.ts` and `images.ts` warn on every run that talks to Scryfall, and NOTICE §2 says it must be replaced before anyone talks to Scryfall. |

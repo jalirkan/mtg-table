@@ -45,6 +45,7 @@ import * as THREE from 'three';
 import { TABLE_HALF_X, TABLE_HALF_Z } from '../layout.ts';
 import { COMIC, type StageColours } from '../look.ts';
 import { UNIT_PLANE } from './geometry.ts';
+import { compileFor } from './prime.ts';
 
 const FELT = '#10161c';
 const FELT_LINE = '#1d2731';
@@ -319,9 +320,11 @@ export interface TableProps {
   stage?: StageColours | null;
   /** The combat stage (a pose: `look.ts`'s `combatStageOf`). Drawn only on the comic stage. */
   combat?: boolean;
+  /** Whether a composer draws the frames (bloom or the ink): the burst is primed for that target (`prime.ts`). */
+  composer?: boolean;
 }
 
-export function Table({ stage = null, combat = false }: TableProps): JSX.Element {
+export function Table({ stage = null, combat = false, composer = false }: TableProps): JSX.Element {
   const comic = stage !== null;
   const you = stage?.you ?? '';
   const opp = stage?.opp ?? '';
@@ -350,9 +353,10 @@ export function Table({ stage = null, combat = false }: TableProps): JSX.Element
     const mesh = burstRef.current;
     if (mesh === null) return;
     mesh.visible = true;
-    gl.compile(scene, camera);
+    // For the target the frames are drawn into — the composer's, or the canvas.
+    compileFor(gl, scene, camera, composer);
     mesh.visible = combatRef.current;
-  }, [burst, gl, scene, camera]);
+  }, [burst, gl, scene, camera, composer]);
   useLayoutEffect(() => {
     invalidate();
   }, [felt, light, you, opp, combat, invalidate]);

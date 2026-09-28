@@ -422,6 +422,7 @@ function Scene({
   primeRef,
   loopRef,
   look = DEFAULT_LOOK,
+  composer = false,
 }: {
   state: ClientState;
   placed: Layout;
@@ -459,6 +460,11 @@ function Scene({
   loopRef: { current: Frameloop };
   /** The look (D120) — the background, the stage, the figures and the duelists. */
   look?: LookSpec;
+  /**
+   * Whether a composer draws the frames (bloom or the ink): the layers' mount-time
+   * primes compile for that target (`scene/prime.ts`), and again when it changes.
+   */
+  composer?: boolean;
 }): JSX.Element {
   const selectable = useMemo(
     () => new Set(state.input?.selectable.cardIds ?? []),
@@ -491,7 +497,7 @@ function Scene({
   return (
     <>
       <color attach="background" args={[stageOn ? COMIC.background : HOLO_BACKGROUND]} />
-      <Table stage={stageColours} combat={combat} />
+      <Table stage={stageColours} combat={combat} composer={composer} />
       {showGrid && (
         <gridHelper
           args={[Math.max(TABLE_HALF_X, TABLE_HALF_Z) * 2, 24, '#3a4550', '#232a33']}
@@ -533,7 +539,7 @@ function Scene({
           the coplanar group is table → tile → card → disc → figure. */}
       <primitive object={tileField.group} />
 
-      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} />
+      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} composer={composer} />
 
       {/* **T4's casting anchor and T6's stack**: the floating mana of each seat,
           §6.2's five spell forms, and §6.3's tethers to what each one targets.
@@ -561,6 +567,7 @@ function Scene({
         stage={stage}
         queue={queue}
         look={look.look === 'comic' ? 1 : 0}
+        composer={composer}
       />
 
       {/* The Tier-1 primitive kit: 26 meshes, parked invisible, bound to live
@@ -734,6 +741,11 @@ export default function Arena({
    */
   const [inkOn, setInkOn] = useState<boolean>(true);
   const inkPass = inkOn && wantsInkPass(look);
+  /** The cue strip's bloom checkbox: ticking it back on brings the ink the floor rung shed with it. */
+  const onBloom = useCallback((on: boolean) => {
+    setBloomOn(on);
+    if (on) setInkOn(true);
+  }, []);
   /** T7's program warm-up counter — see `EffectPool.prime`. Two frames at mount. */
   const primeRef = useRef(2);
   /**
@@ -1429,6 +1441,7 @@ export default function Arena({
           primeRef={primeRef}
           loopRef={loopRef}
           look={look}
+          composer={bloomOn || inkPass}
         />
         {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three
             things about this line are deliberate. It is **last inside the
@@ -1468,7 +1481,7 @@ export default function Arena({
             had three. The wrapper is layout only and stays `pointer-events:
             none` — each strip opts in on its own. */}
         <div className="arena__strips">
-          <CueControls queue={queue} bloom={bloomOn} onBloom={setBloomOn} />
+          <CueControls queue={queue} bloom={bloomOn} onBloom={onBloom} />
           {/* **T8's view switcher.** Its root class is in liveness.test.ts's table
               and carries `pointer-events: auto` in styles.css — this layer is
               `none`, and a widget that forgets is inert. */}

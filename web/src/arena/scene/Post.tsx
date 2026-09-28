@@ -50,7 +50,7 @@
 import { useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { BlendFunction, Effect, EffectAttribute, KernelSize } from 'postprocessing';
-import { useEffect, useLayoutEffect, useMemo } from 'react';
+import { memo, useEffect, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 import { COMIC } from '../look.ts';
@@ -146,7 +146,20 @@ export class InkEffect extends Effect {
   }
 }
 
-export function Post({
+/**
+ * **The composer, and one rule about it** (Lane LOOK's bench): `EffectComposer`
+ * rebuilds every pass — `new EffectPass(…)` — whenever its `children` change
+ * IDENTITY (`@react-three/postprocessing` 2.19.1, `EffectComposer.js`'s layout
+ * effect), and a pass holding the ink's depth read re-derives its programs and
+ * its depth texture when it is rebuilt. So the children are memoised on the two
+ * switches, and the component itself is `memo`, so the arena's re-renders — every
+ * snapshot, every loop-mode change — never reach it. Measured before the fix
+ * (production build, GTX 1080, `g1`@316, three interleaved runs): p95 35.5–39.1
+ * ms against the hologram's 8.5–10.3, with a program linked mid-run in every one
+ * (33 → 34), and a CPU profile of 5 s of 4× playback spending 274 ms in
+ * `getProgramInfoLog`, which a warm table never calls; `docs/evidence/look.md`.
+ */
+export const Post = memo(function Post({
   onMount,
   bloom = true,
   ink = false,
@@ -176,25 +189,31 @@ export function Post({
       invalidate();
     };
   }, [invalidate, onMount]);
-  // The children array is rebuilt only when a switch changes: the composer
-  // re-derives its passes whenever `children` changes identity.
+  // The children are rebuilt only when a switch changes: the composer re-derives
+  // its passes whenever `children` changes identity (see above).
+  const effects = useMemo(
+    () => (
+      <>
+        {ink ? <primitive object={inkEffect} /> : null}
+        {bloom ? (
+          <Bloom
+            intensity={INTENSITY}
+            luminanceThreshold={THRESHOLD}
+            luminanceSmoothing={SMOOTHING}
+            // MEDIUM rather than LARGE: the kernel is the cost, and a table read from
+            // 9 units away does not need a 9-tap halo.
+            kernelSize={KernelSize.MEDIUM}
+            mipmapBlur
+            blendFunction={BlendFunction.SCREEN}
+          />
+        ) : null}
+      </>
+    ),
+    [ink, bloom, inkEffect],
+  );
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
-      {ink ? <primitive object={inkEffect} /> : <></>}
-      {bloom ? (
-        <Bloom
-          intensity={INTENSITY}
-          luminanceThreshold={THRESHOLD}
-          luminanceSmoothing={SMOOTHING}
-          // MEDIUM rather than LARGE: the kernel is the cost, and a table read from
-          // 9 units away does not need a 9-tap halo.
-          kernelSize={KernelSize.MEDIUM}
-          mipmapBlur
-          blendFunction={BlendFunction.SCREEN}
-        />
-      ) : (
-        <></>
-      )}
+      {effects}
     </EffectComposer>
   );
-}
+});

@@ -223,6 +223,7 @@ function PedestalScene({
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
+  /** The composer is mounted — bloom OR the ink line (D122): the canvas's own renderer steps aside, and the primes compile for its target. */
   bloomOn: boolean;
 }): JSX.Element {
   // -- the poses, exactly as Arena.tsx computes them ---------------------------
@@ -325,7 +326,7 @@ function PedestalScene({
   return (
     <>
       <color attach="background" args={[stageOn ? COMIC.background : HOLO_BACKGROUND]} />
-      <Table stage={stageColours} combat={combat} />
+      <Table stage={stageColours} combat={combat} composer={bloomOn} />
       {placed.placements.map((placement) => (
         <CardPlane
           key={placement.key}
@@ -337,7 +338,7 @@ function PedestalScene({
         />
       ))}
       <primitive object={tileField.group} />
-      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} />
+      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} composer={bloomOn} />
       <primitive object={castingField.group} />
       <primitive object={overlays.group} />
       <primitive object={bustField.group} />
