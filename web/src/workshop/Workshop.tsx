@@ -1,0 +1,1620 @@
+/*
+ * mtg-table — workshop/Workshop.tsx
+ * Copyright (C) 2026 the mtg-table authors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * **The workshop: a card viewer for workshopping the arena's identity work.**
+ * `#workshop` or `?view=workshop`, lazily imported by `main.tsx` exactly as the
+ * arena is (D49 — the 2D entry chunk carries none of it), with no engine and no
+ * transport: every board on the pedestal is a synthetic `ClientState` built by
+ * `synthetic.ts` and folded through the real reducer.
+ *
+ *   left    every card of `decks/*.dck`, the tokens, the generic archetypes and the
+ *           two concealed shapes; a search box; each row's Scryfall thumbnail and
+ *           the rung its identity came from (per-card / subtype / colour / default)
+ *   middle  the pedestal (`Pedestal.tsx`): the card as a game draws it — card plane,
+ *           body, props, disc, tile, overlay — close up, at table distance, or the
+ *           whole table; your seat, or both seats side by side; either facing
+ *   right   actions (every clip the body has, every rehearsal and the cues it
+ *           resolves to, the queue's own controls), tuning (the traits row and the
+ *           card's cue params as live, browser-local overrides), and the
+ *           legibility meter
+ *
+ * It is a renderer and a data editor, never a game: there is no act, no answer,
+ * no socket, and nothing here is written to the repo.
+ *
+ * Four things it shares with the rest of the app, each on purpose:
+ *
+ *  - **`App` unmounts the mode app to show it**, as it does for `#cards` (D94):
+ *    a hidden board's or arena's `window` key listeners would act on a live game
+ *    under the workshop's own keys. A live socket survives on `window`, a replay
+ *    resumes at its frame (`replayCursors`), and `main.tsx` hands in `waiting` —
+ *    the header's chip while the live game is waiting on the player.
+ *  - **Its keys are a table of their own** (`keys.ts` here, each row carrying its
+ *    action), the card browser's pattern: `web/src/keys.ts` is the board's and
+ *    the arena's, and its `?` overlay would advertise `.` and `B`.
+ *  - **The list's thumbnail is its one card image outside a renderer** — exempt
+ *    from `CardTile` as the card browser's `CardView` is (CLAUDE.md, M4
+ *    convention 2): public card data, a concealed entry never looked up.
+ *  - **The tuning panel's copies are the committed text with the edit folded
+ *    in** (`tuning.ts`), refused while the arena's validator refuses the row.
+ *
+ * ---------------------------------------------------------------------------
+ * **The coupling to `web/src/arena/`, all of it, and why** — the arena is being
+ * reworked on another branch (Tier 2 slice 4: new humanoid bodies, a costume
+ * palette in `holoMaterial`, and `FigureLayer` / `figureRigs` / `props` / duelists
+ * rewritten), so this is the list to re-check on the rebase. Nothing under
+ * `arena/` is edited by the workshop; every name below is an existing export, and
+ * `web/test/workshop.test.ts` fails if a workshop file imports one that is not
+ * named here.
+ *
+ *   arena/scene/     the pedestal draws with the arena's own scene (Pedestal.tsx)
+ *     CueRunner, Frameloop (CueRunner.tsx)   THE frame loop: offsets, clip lane, binds
+ *     FigureLayer (FigureLayer.tsx)          bodies, discs, props, departing bodies
+ *     CardPlane (CardPlane.tsx)              THE card renderer (M7 convention 2)
+ *     Table (Table.tsx)                      the felt
+ *     EffectPool, DiscField, TileField, CastingField, OverlayField, BustField
+ *                                            the pose fields CueRunner binds
+ *     SceneStage                             subclassed as facing.ts's PreviewStage (yawTo)
+ *     Post (Post.tsx, lazy)                  bloom, the arena's one post pass
+ *     instantiateFigure, clipFor, loadFigureModels, ModelLibrary (models.ts)
+ *                                            the meter's bodies, the clips' lengths
+ *     PropField, PropOffsetSource (props.ts) the meter reads the real prop field back
+ *     FigureRig, FigureRigMap (figureRigs.ts), RigMap (rigs.ts)
+ *   arena/figures/   the pose, the ladders and the validators — pure
+ *     figurePose, FigureLayout, FigurePose (pose.ts) · figureFor (resolve.ts)
+ *     traitFor, TRAITS, TraitData (traits.ts) · tileFor, tilePose (tiles.ts)
+ *     attachFor (attach.ts) · combatFreeze, manaMotes, spellForms (casting.ts)
+ *     DuelistBust (duelists.ts) · PROP_KINDS, FORMATIONS, IDLE_STYLES (props.ts)
+ *     clipEnvelope, clipForCue, ClipRequest, REST_CLIP_FOR, REST_PHASE_FOR (clips.ts)
+ *     validateFigures, validateModels, validateTraits (validate.ts)
+ *     FigureData, ModelData, FigureProblem, ClipName, isClipName, tileDataOf,
+ *     attachDataOf, EMPTY_FIGURE_DATA, EMPTY_MODEL_DATA (types.ts)
+ *   arena/cues/      the cue engine — pure
+ *     CueQueue (queue.ts) · REGISTRY (registry.ts)
+ *     cuesFor, resolve, selectorsFor, subjectOf (resolve.ts)
+ *     validateCues, mergeCueData, isCommentKey (validate.ts)
+ *     clamp01, CueImpl, CueRegistry, AnchorRef (stage.ts)
+ *     CueData, CueSpec, CueParams, Presence, Problem, EMPTY_CUE_DATA (types.ts)
+ *   arena/           where things are, and how the camera sees them — pure
+ *     layout, placementOf, anchorsFor, CARD_W, Layout (layout.ts)
+ *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
+ *     CameraFrame, RequestOutcome (camera.ts)
+ *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
+ *   the data         figures.json, models.json and cues.json (imported without
+ *                    attributes, as Arena.tsx imports them), traits.json (with them,
+ *                    as traits.ts does) — the bundler warns on a module imported
+ *                    two ways
+ *
+ * **Slice 4's costume palette** is not in this tree yet; when it lands, the tuning
+ * panel's row gains its field through `validateTraits` (which is what decides
+ * what a row may say) and the pedestal shows it with no change here, because the
+ * pedestal draws with the arena's own `FigureLayer`.
+ * ---------------------------------------------------------------------------
+ */
+
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+
+import { imageUrl, lookupArt, type ArtIndex } from '../art.ts';
+import type { GameEvent, GameStateBody } from '../protocol.ts';
+import type { ClientState } from '../reduce.ts';
+import type { View } from '../useView.ts';
+import { CueQueue } from '../arena/cues/queue.ts';
+import type { CueData, Problem } from '../arena/cues/types.ts';
+import { figurePose } from '../arena/figures/pose.ts';
+import { PROP_KINDS, FORMATIONS, IDLE_STYLES } from '../arena/figures/props.ts';
+import { figureFor } from '../arena/figures/resolve.ts';
+import { traitFor, type TraitData } from '../arena/figures/traits.ts';
+import type { FigureProblem } from '../arena/figures/types.ts';
+import { layout } from '../arena/layout.ts';
+import { BLOOM_DEFAULT } from '../arena/perf.ts';
+import { loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
+import { cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
+import { clipCueData, workshopRegistry } from './clipCue.ts';
+import { cueRows, unreachedSelectors, type CueRow } from './cueRows.ts';
+import { CUES_RAW, FIGURE_DATA, MODEL_DATA } from './data.ts';
+import { PreviewStage, turnPoses } from './facing.ts';
+import { framingOf, type CameraMode, type Framing } from './framing.ts';
+import { WORKSHOP_KEYMAP, workshopActionFor, type WorkshopKeyAction } from './keys.ts';
+import { LEGIBLE_PX, METER_HEIGHT, METER_WIDTH, drawnHeightPx, measure, type MeterRow } from './legibility.ts';
+import { Pedestal } from './Pedestal.tsx';
+import {
+  DEFAULT_OPTIONS,
+  HOST_ENTRY,
+  IDS,
+  STANCE_CHOICES,
+  clipBatch,
+  figureIds,
+  pedestalState,
+  rehearse,
+  type PedestalOptions,
+  type Rehearsal,
+  type RehearsalKind,
+  type StanceChoice,
+} from './synthetic.ts';
+import {
+  committedRow,
+  cueEntryText,
+  cueSelectorsOf,
+  cuesWith,
+  readOverrides,
+  traitsRowText,
+  traitsWith,
+  withCueParams,
+  withTraitRow,
+  writeOverrides,
+  type Overrides,
+  type RawRow,
+} from './tuning.ts';
+
+export interface WorkshopProps {
+  art: ArtIndex;
+  /** Back to the board or the arena. `null` leaves the links inert. */
+  onSetView: ((view: View) => void) | null;
+  /**
+   * A line from `main.tsx` while a live game is waiting on the player (an open
+   * `ask`, or the engine's prompt, verbatim) — the mode app is unmounted under the
+   * workshop, so this chip is the only thing on screen that says so. `null` or
+   * absent: no live game, or nothing asked. The workshop never reads a transport.
+   */
+  waiting?: string | null;
+}
+
+/** The last card looked at, remembered in this browser (a convenience, like the arena's view). */
+const SELECTED_KEY = 'mtg-table.workshop.card';
+
+function storage(): Storage | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function initialSelection(entries: readonly WorkshopEntry[]): string {
+  const has = (key: string | null): key is string => key !== null && entries.some((e) => e.key === key);
+  try {
+    const card = new URLSearchParams(window.location.search).get('card');
+    if (card !== null) {
+      const wanted = card.trim().toLowerCase();
+      const hit = entries.find((e) => e.key.toLowerCase() === wanted || e.label.toLowerCase() === wanted) ??
+        entries.find((e) => e.label.toLowerCase().includes(wanted));
+      if (hit !== undefined) return hit.key;
+    }
+  } catch {
+    // A malformed query is no selection.
+  }
+  try {
+    const stored = storage()?.getItem(SELECTED_KEY) ?? null;
+    if (has(stored)) return stored;
+  } catch {
+    // Nothing stored is the first card.
+  }
+  return entries[0]?.key ?? '';
+}
+
+function prefersReducedMotion(): boolean {
+  try {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
+const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
+const HALF_TURN = Math.PI;
+
+interface Shown {
+  state: ClientState;
+  batch: { events: GameEvent[]; previous: GameStateBody | null; data: CueData | null; label: string } | null;
+  /** Bumped for every batch, so the same rehearsal twice is two batches. */
+  n: number;
+}
+
+export default function Workshop({ art, onSetView, waiting = null }: WorkshopProps): JSX.Element {
+  const entries = useMemo(() => workshopEntries(), []);
+  const [selected, setSelected] = useState<string>(() => initialSelection(entries));
+  const [search, setSearch] = useState('');
+  const [options, setOptions] = useState<PedestalOptions>(DEFAULT_OPTIONS);
+  const [mode, setMode] = useState<CameraMode>('close');
+  const [turn, setTurn] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
+  const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
+  const [autoRest, setAutoRest] = useState(true);
+  const [overrides, setOverrides] = useState<Overrides>(() => readOverrides(storage()));
+  const [library, setLibrary] = useState<ModelLibrary | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  const entry = useMemo(
+    () => entries.find((e) => e.key === selected) ?? entries[0]!,
+    [entries, selected],
+  );
+
+  useEffect(() => {
+    try {
+      storage()?.setItem(SELECTED_KEY, entry.key);
+    } catch {
+      // Remembered for this page only.
+    }
+  }, [entry.key]);
+
+  useEffect(() => {
+    writeOverrides(storage(), overrides);
+  }, [overrides]);
+
+  // The body library, once — the same cached parse FigureLayer uses.
+  useEffect(() => {
+    let live = true;
+    loadFigureModels(MODEL_DATA)
+      .then((loaded) => {
+        if (live) setLibrary(loaded);
+      })
+      .catch(() => {
+        if (live) setNote('no figures.glb — every creature is its disc (a supported state)');
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // -- the data, with this browser's overrides, through the arena's validators --
+  const traitResult = useMemo(() => traitsWith(overrides), [overrides]);
+  const cueResult = useMemo(() => cuesWith(overrides, CUES_RAW), [overrides]);
+  const traits = traitResult.data;
+  const cueData = cueResult.data;
+
+  // -- the resting board, and what the camera frames on it ---------------------
+  const rest = useMemo(() => pedestalState(entry, options), [entry, options]);
+  const presence = cueData.presence;
+  const focus = useMemo((): Framing[] => {
+    const placed = layout(rest, presence ?? {});
+    const poses = turnPoses(
+      figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits }),
+      turn,
+    );
+    return figureIds(entry, options).map((id) => framingOf(placed, poses, id));
+  }, [rest, presence, traits, turn, entry, options]);
+  const seat = `${entry.key}|${String(options.both)}|${mode}|${options.stance}`;
+  // The caption's number: each framed body's DRAWN height in view 1 — its resting
+  // rig projected through the table camera (legibility.ts), not the nominal scale.
+  const drawn = useMemo(
+    () => (library === null ? null : focus.map((f) => (f.pose === null ? null : drawnHeightPx(f.pose, library)))),
+    [focus, library],
+  );
+
+  // -- the cue engine: one queue and one stage for the page ---------------------
+  const stage = useMemo(() => new PreviewStage(layout(rest, presence ?? {})), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const queue = useMemo(
+    () =>
+      new CueQueue({
+        stage,
+        registry: workshopRegistry(),
+        data: cueData,
+        mode: 'replay',
+        reducedMotion,
+        onNote: (message) => {
+          console.info(`[workshop] ${message}`);
+        },
+      }),
+    [stage], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  useEffect(() => {
+    queue.data = cueData;
+    queue.setReducedMotion(reducedMotion);
+    stage.turn = turn;
+  }, [queue, stage, cueData, reducedMotion, turn]);
+
+  const [shown, setShown] = useState<Shown>(() => ({ state: rest, batch: null, n: 0 }));
+  const restRef = useRef(rest);
+  restRef.current = rest;
+  const autoRestRef = useRef(autoRest);
+  autoRestRef.current = autoRest;
+  const enqueueing = useRef(false);
+
+  // A new card, stance or seat: everything playing snaps, and the pedestal rests.
+  useEffect(() => {
+    enqueueing.current = true;
+    queue.flushAndSnap();
+    enqueueing.current = false;
+    setShown((s) => ({ state: rest, batch: null, n: s.n }));
+  }, [rest, queue]);
+
+  /**
+   * **The batch goes in before the canvas renders the board it belongs to** — a
+   * layout effect, for `Arena.tsx`'s reason (D64): a creature that dies leaves the
+   * snapshot, and `FigureLayer` decides its body's fate on its first frame by asking
+   * the queue whether a death cue for it is queued.
+   */
+  useLayoutEffect(() => {
+    const batch = shown.batch;
+    if (batch === null) return;
+    enqueueing.current = true;
+    queue.flushAndSnap();
+    const saved = queue.data;
+    if (batch.data !== null) queue.data = batch.data;
+    const steps = queue.enqueueBatch(batch.events, shown.state, undefined, batch.previous);
+    queue.data = saved;
+    enqueueing.current = false;
+    setNote(steps === 0 ? `${batch.label}: no cue — only the snapshot changed` : null);
+    // `n` is the batch's identity; the state and the batch arrive with it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown.n]);
+
+  // When the film runs out, the pedestal goes back to rest (unless asked not to).
+  useEffect(
+    () =>
+      queue.onChange(() => {
+        if (enqueueing.current || !queue.idle || !autoRestRef.current) return;
+        setShown((s) => (s.batch === null ? s : { state: restRef.current, batch: null, n: s.n }));
+      }),
+    [queue],
+  );
+
+  const play = useCallback((rehearsal: Rehearsal, data: CueData | null = null, label?: string) => {
+    setShown((s) => ({
+      state: rehearsal.after,
+      batch: { events: rehearsal.events, previous: rehearsal.before.board, data, label: label ?? rehearsal.label },
+      n: s.n + 1,
+    }));
+  }, []);
+
+  const playKind = useCallback(
+    (kind: RehearsalKind) => {
+      play(rehearse(entry, kind, options));
+    },
+    [entry, options, play],
+  );
+
+  // -- the body: its model, its clips and their lengths ------------------------
+  // An Aura or Equipment has no body of its own: the clips are its host's.
+  const bodyEntry = roleOf(entry) === 'attached' ? HOST_ENTRY : entry;
+  const spec = useMemo(() => figureFor(cardOf(bodyEntry, IDS.subject, 0), FIGURE_DATA).spec, [bodyEntry]);
+  const bodied = roleOf(bodyEntry) === 'creature';
+  const modelId = entry.concealed !== null || !bodied ? null : spec.model;
+  const clipKeys = useMemo(
+    () => (modelId === null ? [] : Object.keys(MODEL_DATA.models[modelId]?.clips ?? {})),
+    [modelId],
+  );
+  const clipMs = useCallback(
+    (key: string): number => {
+      const clip = modelId === null ? undefined : library?.get(modelId)?.clips.get(key);
+      return clip === undefined ? 800 : Math.round(clip.duration * 1000);
+    },
+    [library, modelId],
+  );
+  const playClip = useCallback(
+    (key: string) => {
+      play(clipBatch(entry, options), clipCueData(cueData, bodyEntry.name, key, clipMs(key), spec.clips), `clip ${key}`);
+    },
+    [entry, bodyEntry.name, options, cueData, clipMs, spec.clips, play],
+  );
+
+  // D88: a ring swarm's rig stands at the centre for the clip lane and is NOT
+  // drawn (`FigureLayer`'s `pose.swarm > 0 && pose.formation === 'ring'`) — the
+  // bees are procedural, so a clip played on it moves nothing on screen.
+  const restPose = focus[0]?.pose ?? null;
+  const hiddenRig = restPose !== null && restPose.swarm > 0 && restPose.formation === 'ring';
+
+  const rows = useMemo(
+    () => cueRows(entry, cueData, FIGURE_DATA, MODEL_DATA, options),
+    [entry, cueData, options],
+  );
+
+  // -- the list ----------------------------------------------------------------
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (q === '') return entries;
+    return entries.filter(
+      (e) =>
+        e.label.toLowerCase().includes(q) ||
+        e.facts.types.toLowerCase().includes(q) ||
+        (e.deck ?? '').toLowerCase().includes(q) ||
+        e.group.includes(q),
+    );
+  }, [entries, search]);
+
+  // -- the page's own keys: one table (keys.ts), each row carrying its action ----
+  // A `Record` over every action, so a row with no handler does not compile; the
+  // listener looks the key up in the table and runs the row's action — there is
+  // no branch per key here (M4 convention 4, `workshop.test.ts` scans for one).
+  const keyRef = useRef({ visible, entry, onSetView });
+  keyRef.current = { visible, entry, onSetView };
+  useEffect(() => {
+    const step = (by: number): void => {
+      const { visible: list, entry: current } = keyRef.current;
+      const at = list.findIndex((e) => e.key === current.key);
+      const next = list[Math.max(0, Math.min(list.length - 1, (at < 0 ? 0 : at) + by))];
+      if (next !== undefined) setSelected(next.key);
+    };
+    const speedBy = (by: number): void => {
+      const at = SPEEDS.indexOf(queue.speed as (typeof SPEEDS)[number]);
+      queue.setSpeed(SPEEDS[Math.max(0, Math.min(SPEEDS.length - 1, (at < 0 ? SPEEDS.indexOf(1) : at) + by))] ?? 1);
+    };
+    const actions: Record<WorkshopKeyAction, () => void> = {
+      pause: () => queue.setPaused(!queue.paused),
+      step: () => queue.stepBatch(),
+      nudge: () => queue.advance(50),
+      skip: () => queue.skipAll(),
+      slower: () => speedBy(-1),
+      faster: () => speedBy(1),
+      both: () => setOptions((o) => ({ ...o, both: !o.both })),
+      facing: () => setTurn((t) => (t === 0 ? HALF_TURN : 0)),
+      camera: () => setMode((m) => (m === 'close' ? 'table' : m === 'table' ? 'wide' : 'close')),
+      reducedMotion: () => setReducedMotion((r) => !r),
+      previous: () => step(-1),
+      next: () => step(1),
+      arena: () => keyRef.current.onSetView?.('arena'),
+    };
+    const onKey = (event: KeyboardEvent): void => {
+      const target = event.target as (HTMLElement & { isContentEditable?: boolean }) | null;
+      const action = workshopActionFor({
+        key: event.key,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        altKey: event.altKey,
+        target: target === null ? null : { tagName: target.tagName, isContentEditable: target.isContentEditable },
+      });
+      if (action === null) return;
+      event.preventDefault();
+      actions[action]();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [queue]);
+
+  // -- the dev handle, for the evidence's screenshot driver ---------------------
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const handle = window as unknown as { __mtgWorkshop?: Record<string, unknown> };
+    handle.__mtgWorkshop = {
+      ...(handle.__mtgWorkshop ?? {}),
+      queue,
+      select: (key: string) => {
+        setSelected(key);
+      },
+      setOptions: (next: Partial<PedestalOptions>) => {
+        setOptions((o) => ({ ...o, ...next }));
+      },
+      setMode,
+      setTurn,
+      setBloom,
+      setAutoRest,
+      play: (kind: RehearsalKind) => {
+        playKind(kind);
+      },
+      clip: (key: string) => {
+        playClip(key);
+      },
+    };
+  }, [queue, playKind, playClip]);
+
+  const attached = roleOf(entry) === 'attached';
+  const art0 = entry.concealed === null ? lookupArt(art, entry.name) : null;
+
+  return (
+    <div className="workshop">
+      <header className="workshop__bar">
+        <h1>mtg-table — workshop</h1>
+        <span className="muted">
+          {entry.label} · {entry.facts.types || '—'}
+          {attached ? ' · shown on a Soldier token host' : ''}
+        </span>
+        {waiting !== null && (
+          <span className="workshop__waiting" role="status">
+            {waiting} — the game is kept; go back with ▣ arena or ▤ board
+          </span>
+        )}
+        <span className="workshop__links">
+          <a
+            href="#arena"
+            onClick={(event) => {
+              event.preventDefault();
+              onSetView?.('arena');
+            }}
+          >
+            ▣ arena
+          </a>
+          <a
+            href="#"
+            onClick={(event) => {
+              event.preventDefault();
+              onSetView?.('board');
+            }}
+          >
+            ▤ board
+          </a>
+        </span>
+        <span className="workshop__credit">
+          Card images and data from <a href="https://scryfall.com">Scryfall</a>
+          {art0 !== null && <> · {entry.name} · art by {art0.artist}</>} · © Wizards of the Coast · Unofficial
+          Fan Content
+        </span>
+      </header>
+
+      <CardList
+        entries={visible}
+        all={entries.length}
+        selected={entry.key}
+        search={search}
+        onSearch={setSearch}
+        onSelect={setSelected}
+        art={art}
+        traits={traits}
+      />
+
+      <section className="workshop__stage" aria-label="Pedestal">
+        <Toolbar
+          options={options}
+          onOptions={setOptions}
+          mode={mode}
+          onMode={setMode}
+          turn={turn}
+          onTurn={setTurn}
+          bloom={bloom}
+          onBloom={setBloom}
+        />
+        <div className="workshop__pedestal">
+          <Pedestal
+            state={shown.state}
+            art={art}
+            cueData={cueData}
+            figures={FIGURE_DATA}
+            models={MODEL_DATA}
+            traits={traits}
+            turn={turn}
+            mode={mode}
+            split={options.both}
+            focus={focus}
+            seat={seat}
+            queue={queue}
+            stage={stage}
+            reducedMotion={reducedMotion}
+            bloom={bloom}
+          />
+          <PedestalCaption focus={focus} drawn={drawn} mode={mode} both={options.both} turn={turn} />
+        </div>
+        <QueueBar
+          queue={queue}
+          reducedMotion={reducedMotion}
+          onReducedMotion={setReducedMotion}
+          autoRest={autoRest}
+          onAutoRest={setAutoRest}
+          playing={shown.batch?.label ?? null}
+          onRest={() => {
+            queue.skipAll();
+            setShown((s) => ({ state: rest, batch: null, n: s.n }));
+          }}
+          note={note}
+        />
+      </section>
+
+      <aside className="workshop__panel" aria-label="Actions and tuning">
+        <ClipsPanel
+          entry={entry}
+          modelId={modelId}
+          hiddenRig={hiddenRig}
+          clipKeys={clipKeys}
+          aliases={spec.clips}
+          clipMs={clipMs}
+          onClip={playClip}
+          stance={options.stance}
+          onStance={(stance) => {
+            setOptions((o) => ({ ...o, stance }));
+          }}
+        />
+        <CuesPanel rows={rows} unreached={unreachedSelectors(entry, rows, cueData)} onPlay={playKind} />
+        <TuningPanel
+          entry={entry}
+          traits={traits}
+          overrides={overrides}
+          onOverrides={setOverrides}
+          traitErrors={traitResult.errors}
+        />
+        <CueTuningPanel entry={entry} overrides={overrides} onOverrides={setOverrides} cueErrors={cueResult.errors} />
+        <LegibilityPanel entry={entry} traits={traits} cueData={cueData} library={library} turn={turn} />
+        <KeyLegend />
+      </aside>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The list
+// ---------------------------------------------------------------------------
+
+const GROUP_TITLE: Readonly<Record<WorkshopEntry['group'], string>> = {
+  deck: 'Deck',
+  token: 'Tokens the corpus has seen',
+  archetype: 'Generic archetypes',
+  hidden: 'Concealed (hard rule 8)',
+};
+
+function CardList({
+  entries,
+  all,
+  selected,
+  search,
+  onSearch,
+  onSelect,
+  art,
+  traits,
+}: {
+  entries: readonly WorkshopEntry[];
+  all: number;
+  selected: string;
+  search: string;
+  onSearch: (value: string) => void;
+  onSelect: (key: string) => void;
+  art: ArtIndex;
+  traits: TraitData;
+}): JSX.Element {
+  let lastHeading = '';
+  return (
+    <nav className="workshop__list" aria-label="Cards">
+      <input
+        className="workshop__search"
+        type="search"
+        placeholder={`search ${String(all)} cards — name, type, deck`}
+        value={search}
+        onChange={(event) => {
+          onSearch(event.currentTarget.value);
+        }}
+        aria-label="Search cards"
+      />
+      <ul>
+        {entries.map((entry) => {
+          const heading = entry.group === 'deck' ? (entry.deck ?? 'Deck') : GROUP_TITLE[entry.group];
+          const showHeading = heading !== lastHeading;
+          lastHeading = heading;
+          const rung = rungsOf(entry, FIGURE_DATA, traits);
+          const hit = entry.concealed === null ? lookupArt(art, entry.name) : null;
+          return (
+            <li key={entry.key}>
+              {showHeading && <h3 className="workshop__heading">{heading}</h3>}
+              <button
+                type="button"
+                className={`workshop__row${entry.key === selected ? ' workshop__row--on' : ''}`}
+                onClick={() => {
+                  onSelect(entry.key);
+                }}
+                title={rung.details.join('\n')}
+                aria-pressed={entry.key === selected}
+              >
+                {/*
+                  **The list's thumbnail is the one card image the workshop draws
+                  outside a renderer, and it is not a `CardTile`** — exempt the way
+                  the card browser's `CardView` is (D94, CLAUDE.md M4 convention 2):
+                  the list is public card data, never a game. Every entry is a card
+                  a committed deck names, a token or an archetype, with facts read
+                  only from FACE-UP sightings (`catalogBuild.ts`), and a concealed
+                  entry never looks its art up at all (`entry.concealed === null`
+                  above) — it draws a card back. The pedestal itself draws every
+                  card through the arena's `CardPlane`. `workshop.test.ts` holds
+                  both: one `imageUrl(` in the workshop, and every `lookupArt(`
+                  guarded by `concealed === null`.
+                */}
+                {hit !== null ? (
+                  <img
+                    className="workshop__thumb"
+                    src={imageUrl(hit, 'thumb')}
+                    alt=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    title={`art by ${hit.artist}`}
+                  />
+                ) : (
+                  <span className={`workshop__thumb workshop__thumb--none${entry.concealed !== null ? ' workshop__thumb--back' : ''}`} aria-hidden="true" />
+                )}
+                <span className="workshop__rowtext">
+                  <span className="workshop__name">
+                    {entry.label}
+                    {entry.count !== null && entry.count > 1 && <span className="muted"> ×{entry.count}</span>}
+                    {entry.section === 'sideboard' && <span className="muted"> (sb)</span>}
+                  </span>
+                  <span className="workshop__types muted">{entry.facts.types || entry.note || '—'}</span>
+                </span>
+                <span className={`workshop__rung workshop__rung--${rung.level}`}>{rung.level}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The toolbar over the pedestal
+// ---------------------------------------------------------------------------
+
+function Toolbar({
+  options,
+  onOptions,
+  mode,
+  onMode,
+  turn,
+  onTurn,
+  bloom,
+  onBloom,
+}: {
+  options: PedestalOptions;
+  onOptions: (next: PedestalOptions | ((o: PedestalOptions) => PedestalOptions)) => void;
+  mode: CameraMode;
+  onMode: (mode: CameraMode) => void;
+  turn: number;
+  onTurn: (turn: number) => void;
+  bloom: boolean;
+  onBloom: (on: boolean) => void;
+}): JSX.Element {
+  const modes: ReadonlyArray<{ id: CameraMode; label: string; what: string }> = [
+    { id: 'close', label: '1× close', what: 'the card and its figure filling the view — drag to orbit' },
+    { id: 'table', label: 'table distance', what: 'exactly the size it has in view 1 at 1600×900 (fixed camera)' },
+    { id: 'wide', label: 'whole table', what: 'view 1 itself — drag to orbit' },
+  ];
+  return (
+    <div className="workshop__toolbar" role="group" aria-label="Pedestal view">
+      <span className="workshop__seg">
+        {modes.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            className={m.id === mode ? 'on' : ''}
+            aria-pressed={m.id === mode}
+            title={m.what}
+            onClick={() => {
+              onMode(m.id);
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
+      </span>
+      <label title="Your copy on the left, the opponent's on the right, seen from the same angle">
+        <input
+          type="checkbox"
+          checked={options.both}
+          onChange={(event) => {
+            const both = event.currentTarget.checked;
+            onOptions((o) => ({ ...o, both }));
+          }}
+        />{' '}
+        both seats
+      </label>
+      <span className="workshop__seg" title="PLAN question 13 — previewed here, the arena unchanged">
+        <button type="button" className={turn === 0 ? 'on' : ''} aria-pressed={turn === 0} onClick={() => onTurn(0)}>
+          faces its player
+        </button>
+        <button
+          type="button"
+          className={turn !== 0 ? 'on' : ''}
+          aria-pressed={turn !== 0}
+          onClick={() => onTurn(HALF_TURN)}
+        >
+          faces the other seat
+        </button>
+      </span>
+      <label title="An opposing creature for attacks, blocks and spells to aim at (single seat)">
+        <input
+          type="checkbox"
+          checked={options.dummy}
+          disabled={options.both}
+          onChange={(event) => {
+            const dummy = event.currentTarget.checked;
+            onOptions((o) => ({ ...o, dummy }));
+          }}
+        />{' '}
+        target dummy
+      </label>
+      <label title="The arena's one post pass (single view only)">
+        <input
+          type="checkbox"
+          checked={bloom}
+          onChange={(event) => {
+            onBloom(event.currentTarget.checked);
+          }}
+        />{' '}
+        bloom
+      </label>
+    </div>
+  );
+}
+
+function PedestalCaption({
+  focus,
+  drawn,
+  mode,
+  both,
+  turn,
+}: {
+  focus: readonly Framing[];
+  /** Each framed body's drawn height in view 1 at 1600×900, px; `null` until figures.glb is in. */
+  drawn: ReadonlyArray<number | null> | null;
+  mode: CameraMode;
+  both: boolean;
+  turn: number;
+}): JSX.Element {
+  const size = (i: number): string => {
+    const f = focus[i];
+    if (f === undefined || f.figureHeight <= 0) return '';
+    if (drawn === null) return 'measuring…';
+    const px = drawn[i];
+    // The body as drawn — its rest clip's real vertices through view 1's camera
+    // (a hidden swarm rig, or a disc, has none).
+    return px === null || px === undefined ? '' : `body ${String(Math.round(px))} px tall in view 1`;
+  };
+  return (
+    <div className="workshop__caption" aria-hidden="true">
+      {both && mode !== 'wide' ? (
+        <>
+          <span className="workshop__divider" />
+          <span>your seat{size(0) !== '' ? ` · ${size(0)}` : ''}</span>
+          <span>the opponent’s seat{size(1) !== '' ? ` · ${size(1)}` : ''}</span>
+        </>
+      ) : (
+        <span>
+          {mode === 'table' ? 'table distance (view 1, 1600×900)' : mode === 'wide' ? 'view 1' : '1× close-up'}
+          {size(0) !== '' ? ` · ${size(0)}` : ''}
+          {turn !== 0 ? ' · facing preview: the other seat' : ''}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The queue's own controls
+// ---------------------------------------------------------------------------
+
+function QueueBar({
+  queue,
+  reducedMotion,
+  onReducedMotion,
+  autoRest,
+  onAutoRest,
+  playing,
+  onRest,
+  note,
+}: {
+  queue: CueQueue;
+  reducedMotion: boolean;
+  onReducedMotion: (on: boolean) => void;
+  autoRest: boolean;
+  onAutoRest: (on: boolean) => void;
+  playing: string | null;
+  onRest: () => void;
+  note: string | null;
+}): JSX.Element {
+  const [, bump] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => queue.onChange(bump), [queue]);
+  const pending = queue.pendingSteps;
+  return (
+    <div className="workshop__queue" role="group" aria-label="Cue playback">
+      <button
+        type="button"
+        onClick={() => {
+          queue.setPaused(!queue.paused);
+        }}
+      >
+        {queue.paused ? '▶ play' : '⏸ pause'}
+      </button>
+      <button type="button" disabled={pending === 0} onClick={() => queue.stepBatch()}>
+        step
+      </button>
+      <button
+        type="button"
+        disabled={pending === 0}
+        onClick={() => {
+          // `advance` moves the clock without a change signal; say what it did.
+          queue.advance(50);
+          bump();
+        }}
+        title="advance the cue clock 50 ms"
+      >
+        +50 ms
+      </button>
+      <button type="button" disabled={pending === 0} onClick={() => queue.skipCurrent()}>
+        skip cue
+      </button>
+      <button type="button" disabled={pending === 0} onClick={() => queue.skipAll()}>
+        skip all
+      </button>
+      <label>
+        speed{' '}
+        <select
+          value={String(queue.speed)}
+          onChange={(event) => {
+            queue.setSpeed(Number(event.currentTarget.value));
+          }}
+        >
+          {SPEEDS.map((s) => (
+            <option key={s} value={String(s)}>
+              {s}×
+            </option>
+          ))}
+        </select>
+      </label>
+      <label title="§8 rule 7: cues at 30%, no clip, no shake, no camera">
+        <input type="checkbox" checked={reducedMotion} onChange={(event) => onReducedMotion(event.currentTarget.checked)} />{' '}
+        reduced motion
+      </label>
+      <label title="Put the card back at rest when the film runs out">
+        <input type="checkbox" checked={autoRest} onChange={(event) => onAutoRest(event.currentTarget.checked)} /> back to
+        rest
+      </label>
+      <button type="button" onClick={onRest}>
+        rest
+      </button>
+      <span className="muted workshop__status">
+        {pending > 0
+          ? `${playing ?? 'playing'} · ${String(pending)} step${pending === 1 ? '' : 's'} · ${String(Math.round(queue.totalRemainingMs()))} ms${queue.paused ? ' · paused' : ''}`
+          : (note ?? (queue.paused ? 'paused — idle' : 'idle'))}
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Actions: clips and cues
+// ---------------------------------------------------------------------------
+
+function ClipsPanel({
+  entry,
+  modelId,
+  hiddenRig,
+  clipKeys,
+  aliases,
+  clipMs,
+  onClip,
+  stance,
+  onStance,
+}: {
+  entry: WorkshopEntry;
+  modelId: string | null;
+  /** The body is posed but not drawn (a ring swarm's rig, D88): its clips move nothing visible. */
+  hiddenRig: boolean;
+  clipKeys: readonly string[];
+  aliases: Readonly<Record<string, string>>;
+  clipMs: (key: string) => number;
+  onClip: (key: string) => void;
+  stance: StanceChoice;
+  onStance: (stance: StanceChoice) => void;
+}): JSX.Element {
+  const aliased = new Map<string, string>();
+  for (const [generic, alias] of Object.entries(aliases)) aliased.set(alias, generic);
+  const role = roleOf(entry);
+  const bodied = role === 'creature' || role === 'attached';
+  return (
+    <details className="workshop__box" open>
+      <summary>
+        Clips{' '}
+        <span className="muted">
+          — {modelId === null ? 'no body with a model: nothing to play' : `the ${modelId} body${entry.name !== '' && roleOf(entry) === 'attached' ? ' of its host' : ''}`}
+          {hiddenRig ? ' · hidden rig: the swarm is procedural' : ''}
+        </span>
+      </summary>
+      {hiddenRig && (
+        <p className="workshop__warn">
+          Hidden rig: the swarm is procedural. The {modelId} rig stands at the centre for the clip lane and is not
+          drawn (D88) — the bees are instances of one prop kind — so a clip below plays on a body you cannot see.
+        </p>
+      )}
+      {bodied && (
+        <div className="workshop__stances" role="group" aria-label="Stance">
+          <span className="muted">stance (from the snapshot):</span>
+          {STANCE_CHOICES.map((choice) => (
+            <button
+              key={choice}
+              type="button"
+              className={choice === stance ? 'on' : ''}
+              aria-pressed={choice === stance}
+              onClick={() => onStance(choice)}
+              title={choice === 'tapped' ? 'the crouch: a tapped creature kneels, it does not turn with its card' : undefined}
+            >
+              {choice === 'tapped' ? 'tapped (kneel)' : choice}
+            </button>
+          ))}
+        </div>
+      )}
+      {modelId !== null && (
+        <div className="workshop__clips">
+          {clipKeys.map((key) => {
+            const cardAlias = aliased.get(key);
+            const overridden = aliases[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                className={hiddenRig ? 'workshop__clip--hidden' : undefined}
+                onClick={() => onClip(key)}
+                title={
+                  hiddenRig
+                    ? `${String(clipMs(key))} ms — hidden rig: the swarm is procedural, so nothing visible moves`
+                    : `${String(clipMs(key))} ms — played through the real clip lane, no offset`
+                }
+              >
+                ▶ {key}
+                {cardAlias !== undefined && <span className="muted"> (this card’s {cardAlias})</span>}
+                {overridden !== undefined && <span className="muted"> → {overridden}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {role === 'attached' && <p className="muted">The host (a Soldier token) wears the look; its body’s clips play under it.</p>}
+    </details>
+  );
+}
+
+const SOURCE_TITLE: Readonly<Record<string, string>> = {
+  card: "the card's own cues.json entry",
+  archetype: 'an archetype entry of cues.json',
+  default: 'the §6 default (defaults.ts)',
+  none: 'nothing: animates as nothing',
+};
+
+function CuesPanel({
+  rows,
+  unreached,
+  onPlay,
+}: {
+  rows: readonly CueRow[];
+  unreached: readonly string[];
+  onPlay: (kind: RehearsalKind) => void;
+}): JSX.Element {
+  return (
+    <details className="workshop__box" open>
+      <summary>
+        Cues <span className="muted">— a synthetic batch through the real queue</span>
+      </summary>
+      <table className="workshop__cues">
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.kind}>
+              <td>
+                <button type="button" onClick={() => onPlay(row.kind)} title={row.fiction ?? undefined}>
+                  ▶ {row.label}
+                </button>
+              </td>
+              <td>
+                {row.lines.length === 0 && <span className="muted">no cue</span>}
+                {row.lines.map((line, i) => (
+                  <div key={`${line.cue}:${String(i)}`} className="workshop__cueline">
+                    <code className={line.known ? '' : 'bad'}>{line.cue}</code>{' '}
+                    <span className={`workshop__src workshop__src--${line.source}`} title={SOURCE_TITLE[line.source]}>
+                      {line.source}
+                    </span>{' '}
+                    <span className="muted">
+                      {line.selector} · {line.ms} ms{line.on !== 'subject' ? ` · on ${line.on}` : ''}
+                      {line.clip !== '—' ? ` · clip ${line.clip}` : ''}
+                    </span>
+                    {line.outranks !== null && (
+                      <span
+                        className="workshop__outranks"
+                        title="§7.3 resolves rung first, then selector: this rung's less specific key wins over a more specific one below it. Intended or not is the cue file's call."
+                      >
+                        {' '}
+                        ⚠ outranks the {line.outranks.source}’s <code>{line.outranks.selector}</code> →{' '}
+                        <code>{line.outranks.cue}</code>
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {unreached.length > 0 && (
+        <p className="workshop__warn">
+          cues.json keys no rehearsal reaches: {unreached.map((s) => <code key={s}>{s} </code>)}
+        </p>
+      )}
+      <p className="muted workshop__fine">
+        What a spell or trigger targets is the engine’s to say; here the workshop aims it at the target dummy, the other
+        seat’s copy, or an Aura’s host. A cue that asks for a camera move is dropped: the pedestal’s camera is yours.
+      </p>
+    </details>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tuning
+// ---------------------------------------------------------------------------
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function TuningPanel({
+  entry,
+  traits,
+  overrides,
+  onOverrides,
+  traitErrors,
+}: {
+  entry: WorkshopEntry;
+  traits: TraitData;
+  overrides: Overrides;
+  onOverrides: (next: Overrides) => void;
+  traitErrors: readonly FigureProblem[];
+}): JSX.Element {
+  const [copied, setCopied] = useState<string | null>(null);
+  useEffect(() => {
+    setCopied(null);
+  }, [entry.key]);
+
+  if (entry.concealed !== null) {
+    return (
+      <details className="workshop__box" open>
+        <summary>Tuning</summary>
+        <p className="muted">A concealed card never reaches traits.json — it is anonymous by rule (hard rule 8).</p>
+      </details>
+    );
+  }
+  const role = roleOf(entry);
+  if (role !== 'creature' && role !== 'vehicle') {
+    const where =
+      role === 'attached'
+        ? 'its look on the host is figures.json’s attachments table'
+        : role === 'land'
+          ? 'its tile is figures.json’s lands table'
+          : 'it has no body on the table';
+    return (
+      <details className="workshop__box" open>
+        <summary>Tuning</summary>
+        <p className="muted">traits.json is identity for a body — a creature’s, or a Vehicle’s silhouette; {where}.</p>
+      </details>
+    );
+  }
+  const name = entry.name;
+  const overridden = overrides.traits[name] !== undefined;
+  const row: RawRow = overrides.traits[name] ?? committedRow(name);
+  const resolved = traitFor(cardOf(entry, IDS.subject, 0), traits);
+  const s = resolved.spec;
+  const set = (key: string, value: unknown): void => {
+    const next: RawRow = { ...row };
+    if (value === undefined) delete next[key];
+    else next[key] = value;
+    onOverrides(withTraitRow(overrides, name, next));
+  };
+  const num = (key: string, value: number, min: number, max: number, stepBy: number): JSX.Element => (
+    <label className="workshop__field">
+      <span>{key}</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        step={stepBy}
+        value={String(row[key] ?? value)}
+        onChange={(event) => {
+          const n = Number.parseFloat(event.currentTarget.value);
+          set(key, Number.isFinite(n) ? n : undefined);
+        }}
+      />
+      <em className="muted">{row[key] === undefined ? 'inherited' : 'this card'}</em>
+    </label>
+  );
+  const colour = (key: 'tint' | 'accent', value: string | null): JSX.Element => {
+    const current = typeof row[key] === 'string' ? (row[key] as string) : value;
+    return (
+      <label className="workshop__field">
+        <span>{key}</span>
+        <input
+          type="color"
+          value={current ?? '#ffffff'}
+          onChange={(event) => {
+            set(key, event.currentTarget.value);
+          }}
+        />
+        <code>{current ?? 'inherit'}</code>
+        {row[key] !== undefined && (
+          <button type="button" onClick={() => set(key, undefined)} title="inherit from the rung below">
+            ×
+          </button>
+        )}
+      </label>
+    );
+  };
+  const props = Array.isArray(row['props']) ? (row['props'] as string[]) : [...s.props];
+  // `validateTraits`: a row that turns its figure must say its turned width/height
+  // ratio in the SAME row — a ratio on a rung below does not count — or the whole
+  // row is dropped and the card loses every per-card field it had.
+  const turnsHere = typeof row['turn'] === 'number' && row['turn'] !== 0;
+  const ratioMissing = turnsHere && row['turnedRatio'] === undefined;
+  /**
+   * Setting `turn` carries the ratio with it when one is already known — the
+   * resolved one, from a rung below — because the validator wants it in this row.
+   * With none known the field says it is required rather than inventing a number
+   * (the ratio is a measurement of the model, `traits.test.ts`'s).
+   */
+  const setTurnRow = (value: number | undefined): void => {
+    const next: RawRow = { ...row };
+    if (value === undefined) delete next['turn'];
+    else next['turn'] = value;
+    if (value !== undefined && value !== 0 && next['turnedRatio'] === undefined && s.turnedRatio !== null) {
+      next['turnedRatio'] = s.turnedRatio;
+    }
+    onOverrides(withTraitRow(overrides, name, next));
+  };
+  const mine = traitErrors.filter((problem) => problem.where.startsWith(`$.cards[${JSON.stringify(name)}]`));
+
+  return (
+    <details className="workshop__box" open>
+      <summary>
+        Tuning <span className="muted">— {overridden ? 'OVERRIDDEN in this browser' : 'the committed traits.json'}</span>
+      </summary>
+      <p className="muted workshop__fine">
+        rungs: {resolved.rungs.length === 0 ? 'default' : resolved.rungs.join(' + ')} · edits apply live, stay in this
+        browser (localStorage) and are never written to the repo.
+      </p>
+      <div className="workshop__fields">
+        {num('scale', s.scale, 0.2, 4, 0.05)}
+        {num('hover', s.hover, 0, 2, 0.01)}
+        <label className="workshop__field">
+          <span>idle</span>
+          <select value={String(row['idle'] ?? s.idle)} onChange={(event) => set('idle', event.currentTarget.value)}>
+            {IDLE_STYLES.map((style) => (
+              <option key={style}>{style}</option>
+            ))}
+          </select>
+        </label>
+        {colour('tint', s.tint)}
+        {colour('accent', s.accent)}
+        {num('shade', s.shade, 0.3, 1.5, 0.02)}
+        <label className="workshop__field">
+          <span>turn</span>
+          <input
+            type="number"
+            min={-180}
+            max={180}
+            step={5}
+            value={String(row['turn'] ?? s.turn)}
+            onChange={(event) => {
+              const n = Number.parseFloat(event.currentTarget.value);
+              setTurnRow(Number.isFinite(n) ? n : undefined);
+            }}
+          />
+          <em className="muted">{row['turn'] === undefined ? 'inherited' : 'this card'}</em>
+        </label>
+        <label className="workshop__field">
+          <span>turnedRatio</span>
+          <input
+            type="number"
+            min={0.1}
+            max={4}
+            step={0.01}
+            placeholder="—"
+            value={row['turnedRatio'] !== undefined ? String(row['turnedRatio']) : s.turnedRatio !== null ? String(s.turnedRatio) : ''}
+            onChange={(event) => {
+              const n = Number.parseFloat(event.currentTarget.value);
+              set('turnedRatio', Number.isFinite(n) ? n : undefined);
+            }}
+          />
+          <em className={ratioMissing ? 'workshop__need' : 'muted'}>
+            {row['turnedRatio'] !== undefined
+              ? 'this card'
+              : ratioMissing
+                ? 'required, not set — measure the turned width/height'
+                : s.turnedRatio !== null
+                  ? 'inherited'
+                  : 'not set'}
+          </em>
+        </label>
+        {num('swarm', s.swarm, 0, 8, 1)}
+        <label className="workshop__field">
+          <span>formation</span>
+          <select value={String(row['formation'] ?? s.formation)} onChange={(event) => set('formation', event.currentTarget.value)}>
+            {FORMATIONS.map((f) => (
+              <option key={f}>{f}</option>
+            ))}
+          </select>
+        </label>
+        <label className="workshop__field">
+          <span>silhouette</span>
+          <select
+            value={String(row['silhouette'] === undefined ? (s.silhouette ?? 'none') : (row['silhouette'] ?? 'none'))}
+            onChange={(event) => set('silhouette', event.currentTarget.value === 'none' ? null : event.currentTarget.value)}
+          >
+            <option value="none">none</option>
+            <option value="carrier">carrier</option>
+          </select>
+        </label>
+        {num('shrink', s.shrink ?? 1, 0.05, 1, 0.01)}
+        <div className="workshop__field workshop__field--wide">
+          <span>props</span>
+          <span className="workshop__props">
+            {PROP_KINDS.map((kind) => (
+              <label key={kind}>
+                <input
+                  type="checkbox"
+                  checked={props.includes(kind)}
+                  onChange={(event) => {
+                    const on = event.currentTarget.checked;
+                    set('props', on ? [...props.filter((k) => k !== kind), kind] : props.filter((k) => k !== kind));
+                  }}
+                />
+                {kind}
+              </label>
+            ))}
+          </span>
+        </div>
+        <div className="workshop__field workshop__field--wide">
+          <span>costume</span>
+          <em className="muted">slice 4’s palette is not in this tree — it appears here through validateTraits when it lands</em>
+        </div>
+      </div>
+      {mine.length > 0 && (
+        <ul className="workshop__errors">
+          {mine.map((problem) => (
+            <li key={problem.where + problem.message}>
+              <code>{problem.where}</code> {problem.message} — the row is dropped, as the arena would
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="workshop__buttons">
+        <button
+          type="button"
+          disabled={mine.length > 0}
+          title={
+            mine.length > 0
+              ? 'the validator refuses this row (above) — the arena would drop it, so there is nothing to copy yet'
+              : 'the committed row with your edits folded in, in the file’s own style'
+          }
+          onClick={() => {
+            const text = traitsRowText(name, row);
+            void copyText(text).then((ok) => setCopied(ok ? 'traits row copied' : text));
+          }}
+        >
+          copy as traits.json row
+        </button>
+        <button type="button" disabled={!overridden} onClick={() => onOverrides(withTraitRow(overrides, name, null))}>
+          reset
+        </button>
+      </div>
+
+      {copied !== null && (
+        <textarea className="workshop__copied" readOnly rows={copied.includes('\n') ? 8 : 1} value={copied} />
+      )}
+    </details>
+  );
+}
+
+/**
+ * **A card's own `cues.json` params**, as JSON, applied live through
+ * `validateCues` — the second half of "tuning", for every card with a row in the
+ * cue file (a spell and an enchantment as much as a creature).
+ */
+function CueTuningPanel({
+  entry,
+  overrides,
+  onOverrides,
+  cueErrors,
+}: {
+  entry: WorkshopEntry;
+  overrides: Overrides;
+  onOverrides: (next: Overrides) => void;
+  cueErrors: readonly Problem[];
+}): JSX.Element | null {
+  const [copied, setCopied] = useState<string | null>(null);
+  const [cueDraft, setCueDraft] = useState<Record<string, string>>({});
+  useEffect(() => {
+    setCopied(null);
+    setCueDraft({});
+  }, [entry.key]);
+  const name = entry.name;
+  const cueEntry = name === '' ? {} : cueSelectorsOf(name, CUES_RAW);
+  const mine = cueErrors.filter((problem) => problem.where.startsWith(`$.cards[${JSON.stringify(name)}]`));
+  const cueOverrides = overrides.cues[name] ?? {};
+  if (Object.keys(cueEntry).length === 0) return null;
+  return (
+    <details className="workshop__box" open>
+      <summary>
+        Cue params <span className="muted">— {Object.keys(cueOverrides).length > 0 ? 'OVERRIDDEN in this browser' : 'the committed cues.json'}</span>
+      </summary>
+      <div className="workshop__cueparams">
+        {Object.entries(cueEntry).map(([selector, specRow]) => {
+          const current = cueOverrides[selector] ?? (specRow['params'] as RawRow | undefined) ?? {};
+          const draft = cueDraft[selector] ?? JSON.stringify(current);
+          return (
+            <label key={selector} className="workshop__param">
+              <span>
+                <code>{selector}</code> → <code>{String(specRow['cue'])}</code>
+                {cueOverrides[selector] !== undefined && <em> overridden</em>}
+              </span>
+              <textarea
+                rows={2}
+                value={draft}
+                spellCheck={false}
+                onChange={(event) => {
+                  const text = event.currentTarget.value;
+                  setCueDraft((d) => ({ ...d, [selector]: text }));
+                  try {
+                    const parsed: unknown = JSON.parse(text);
+                    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                      onOverrides(withCueParams(overrides, name, selector, parsed as RawRow));
+                    }
+                  } catch {
+                    // Half-typed JSON: wait for the rest.
+                  }
+                }}
+              />
+              {cueOverrides[selector] !== undefined && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCueDraft((d) => {
+                      const next = { ...d };
+                      delete next[selector];
+                      return next;
+                    });
+                    onOverrides(withCueParams(overrides, name, selector, null));
+                  }}
+                >
+                  reset
+                </button>
+              )}
+            </label>
+          );
+        })}
+        {mine.length > 0 && (
+          <ul className="workshop__errors">
+            {mine.map((problem) => (
+              <li key={problem.where + problem.message}>
+                <code>{problem.where}</code> {problem.message} — the entry is dropped, as the arena would
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="workshop__buttons">
+          <button
+            type="button"
+            disabled={mine.length > 0}
+            title={
+              mine.length > 0
+                ? 'the validator refuses an overridden entry (above) — the arena would drop it, so there is nothing to copy yet'
+                : 'the whole committed entry — notes, presence and station included — with your params folded in'
+            }
+            onClick={() => {
+              const text = cueEntryText(name, cueOverrides, CUES_RAW);
+              void copyText(text).then((ok) => setCopied(ok ? 'cues entry copied' : text));
+            }}
+          >
+            copy as cues.json entry
+          </button>
+        </div>
+      </div>
+      {copied !== null && (
+        <textarea className="workshop__copied" readOnly rows={copied.includes('\n') ? 8 : 1} value={copied} />
+      )}
+    </details>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Legibility
+// ---------------------------------------------------------------------------
+
+function LegibilityPanel({
+  entry,
+  traits,
+  cueData,
+  library,
+  turn,
+}: {
+  entry: WorkshopEntry;
+  traits: TraitData;
+  cueData: CueData;
+  library: ModelLibrary | null;
+  turn: number;
+}): JSX.Element {
+  const [rows, setRows] = useState<MeterRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [ms, setMs] = useState(0);
+  const bodied = roleOf(entry) === 'creature' || roleOf(entry) === 'vehicle';
+  useEffect(() => {
+    if (library === null || !bodied) {
+      setRows(null);
+      return;
+    }
+    try {
+      const started = performance.now();
+      setRows(
+        measure({
+          entry,
+          figures: FIGURE_DATA,
+          models: MODEL_DATA,
+          traits,
+          presence: cueData.presence ?? {},
+          library,
+          turn,
+        }),
+      );
+      setMs(performance.now() - started);
+      setError(null);
+    } catch (thrown) {
+      setError(String(thrown));
+      setRows(null);
+    }
+  }, [entry, traits, cueData, library, turn, bodied]);
+
+  const cell = (seen: { pixels: number; height: number }): JSX.Element => (
+    <td className={seen.pixels < LEGIBLE_PX ? 'bad' : 'good'} title={`${String(seen.pixels)} px visible, ${String(seen.height)} px tall`}>
+      {seen.pixels}
+      <span className="muted"> · {seen.height}h</span>
+    </td>
+  );
+  return (
+    <details className="workshop__box" open>
+      <summary>
+        Legibility <span className="muted">— pixels on screen from the table view</span>
+      </summary>
+      {!bodied && <p className="muted">No body to measure.</p>}
+      {bodied && library === null && <p className="muted">Waiting for figures.glb…</p>}
+      {error !== null && <p className="workshop__warn">{error}</p>}
+      {rows !== null && rows.length === 0 && (
+        <p className="muted">Nothing with a model to measure — the disc (or the anonymous disc) carries no props.</p>
+      )}
+      {rows !== null && rows.length > 0 && (
+        <>
+          <table className="workshop__meter">
+            <thead>
+              <tr>
+                <th scope="col">prop</th>
+                <th scope="col">you</th>
+                <th scope="col">you, kneeling</th>
+                <th scope="col">opp.</th>
+                <th scope="col">opp., kneeling</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.kind} className={row.kind === 'figure' ? 'workshop__meter--body' : ''}>
+                  <th scope="row">{row.kind}</th>
+                  {cell(row.seen.you.standing)}
+                  {cell(row.seen.you.kneeling)}
+                  {cell(row.seen.opp.standing)}
+                  {cell(row.seen.opp.kneeling)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="muted workshop__fine">
+            Visible pixels (area) · visible height, table view at {METER_WIDTH}×{METER_HEIGHT} — traits.test.ts’s frame
+            and its bar: red under {LEGIBLE_PX} px of area. The real bodies and the real prop field, alone on each seat,
+            {turn !== 0 ? ' with the facing preview applied,' : ''} measured in {ms.toFixed(0)} ms. It counts pixels, not
+            contrast. The test forgives three one-sided details (tie, laserEye, exhaust) whose partner carries the card
+            on the other side.
+          </p>
+        </>
+      )}
+    </details>
+  );
+}
+
+function KeyLegend(): JSX.Element {
+  return (
+    <details className="workshop__box">
+      <summary>Keys</summary>
+      <table className="workshop__keys">
+        <tbody>
+          {WORKSHOP_KEYMAP.map((row) => (
+            <tr key={row.action}>
+              <th scope="row">
+                <kbd>{row.chord}</kbd>
+              </th>
+              <td>{row.what}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}

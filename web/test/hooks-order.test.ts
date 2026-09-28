@@ -44,7 +44,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
-const TREES = ['../src/render/', '../src/arena/', '../src/cards/'];
+// The card browser (`web/src/cards/`) and the workshop (`web/src/workshop/`)
+// joined the scan with their own components: the same defect is invisible there
+// for the same reason.
+const TREES = ['../src/render/', '../src/arena/', '../src/cards/', '../src/workshop/'];
 
 /** Every hook this repo calls, plus React's own. `use…` in a comment is blanked. */
 const HOOK =

@@ -72,7 +72,8 @@ export type KeyActionId =
   | 'skipCues'
   | 'cameraView'
   | 'cameraDirector'
-  | 'toggleSpectator';
+  | 'toggleSpectator'
+  | 'openWorkshop';
 
 /**
  * **M7 Tier 2 (T8) — the arena's camera, by key.** The ids are `camera.ts`'s
@@ -327,6 +328,23 @@ export const KEYMAP: readonly KeyBinding[] = [
     ctrl: false,
     what: 'arena camera: spectator mode on / off — a wider orbit, slower camera moves, every view; on by itself in a replay and when your game ends, never while your seat is live',
     forge: 'divergence: unbound in Forge (its CTRL+O is card overlays)',
+    milestone: 'M7',
+  },
+  {
+    // **The workshop** (`web/src/workshop/`, `#workshop`): the card viewer that
+    // puts one card on a pedestal with the arena's own renderer — its body, props,
+    // clips and cues — to workshop the identity work. A picture key like the
+    // camera rows: live in the arena, `inert` on the board with the reason, and
+    // dispatched by `main.tsx`, which owns the view (the arena's own handler is
+    // left untouched). It sits BEFORE `useMana` on purpose: `bindingFor` is a
+    // first-match lookup, and `planKey`'s pre-pass still gives `W` to floating
+    // white mana on the board, so the two meanings never meet.
+    id: 'openWorkshop',
+    chord: 'W',
+    keys: ['w'],
+    ctrl: false,
+    what: 'open the workshop from the arena — one card on a pedestal: its figure, props, clips and cues (spends floating white mana instead on the board, while the pool holds it)',
+    forge: 'divergence: Forge has no 3D figures to workshop',
     milestone: 'M7',
   },
   {
@@ -659,6 +677,21 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
       if (choice === undefined) return null;
       return { binding, plan: { kind: 'camera', choice } };
     }
+
+    case 'openWorkshop':
+      // A picture key: it leaves the game on screen and opens a page that sends
+      // nothing, so it is legal on a replay and behind an open ask — from the
+      // arena. On the board it says where it lives, exactly as the camera rows do.
+      if (ctx.arena !== true) {
+        return {
+          binding,
+          plan: {
+            kind: 'inert',
+            why: 'opens the workshop from the 3D arena — press V first (with floating mana of that colour in the pool, W spends it instead)',
+          },
+        };
+      }
+      return { binding, plan: { kind: 'view', id: 'openWorkshop' } };
 
     case 'toggleSpectator':
       if (ctx.arena !== true) {

@@ -4289,3 +4289,298 @@ photographed) and by the corpus test.
 
 **Rejected.** New cue ids for the gestures (D79: a per-card variant is a param,
 never a new cue id). A clock of the duelists' own (**D58**, **D72**).
+
+---
+
+## D102 — The workshop is a lazy page OUTSIDE `arena/`: it draws with the arena's own scene, reaches it only through a listed set of exports, and unmounts the mode app
+
+**2026-09-27** (the workshop, PLAN.md's *The workshop*; written up by its
+documentation pass. Within **D49**, **D94** and CLAUDE.md's M4 conventions 1, 2
+and 4. **Numbered after Tier 2 slice 4's D95–D101**, which are on the
+`tier2-slice4` branch and not in this tree yet. If another branch lands a D102
+first, renumber D102–D104. They are cited only from this file, PLAN.md, README.md
+and CLAUDE.md, and nowhere in code.)
+
+**Decision.** The card viewer the user asked for on 2026-09-27, *"a card viewer
+that allows the user to see models and how they act"*, to help workshop the
+identity work, is `web/src/workshop/`. It is a fourth view beside the board, the
+arena and `#cards`:
+
+- **A page, not a renderer, and lazy.** `#workshop` (also `#/workshop`, `!workshop`;
+  `?view=workshop` takes the bare word) is chosen in `App` above both modes,
+  exactly as `#cards` is (**D94**). It is reached only through
+  `lazy(() => import('./workshop/Workshop.tsx'))` (**D49**). It **mounts no
+  transport** and **unmounts the mode app**. A live socket already open survives
+  on `window`, and a replay resumes at its frame (`replayCursors`). While a live
+  game waits on the player, the header carries a chip: `useLiveGameWaiting` reads
+  a socket that is *already* open and never opens one. The chip shows an `ask` as
+  a flag and an `input` by its own prompt, verbatim (M5 convention 4).
+- **Downstream of the arena, never inside it.** Nothing under `arena/` is edited
+  by the workshop and nothing under `arena/` imports it. The pedestal draws with
+  the arena's own `CardPlane`, `FigureLayer`, pose fields, `EffectPool`,
+  `CueRunner` and `SceneStage`. `SceneStage` is subclassed only to take the
+  facing preview's turn out of `yawTo` (`workshop/facing.ts`). The page consumes
+  the arena's pure modules (`layout`, `figurePose`, the figure / trait / tile /
+  attach ladders, the validators, `CueQueue`, `REGISTRY`, `cues/resolve.ts`,
+  `camera.ts`). **Every arena export it uses is named in `Workshop.tsx`'s header
+  comment**, with what it is used for, and `workshop.test.ts` fails when a
+  workshop file imports an arena export that list does not name. That list is
+  the rebase checklist.
+- **The arena's rules hold on the pedestal because they are the arena's code.**
+  The workshop has one `useFrame` of its own, `Pedestal.tsx`'s renderer at
+  priority 1, after `CueRunner` has posed the frame. It renders the scene once,
+  or into two halves for "both seats", and allocates nothing. Every
+  `mixer.update` is `0`. The workshop has no `fetch`, socket, timer or URL except
+  the Scryfall credit. There is no `HitProxy`, so the pedestal takes no click
+  and there is no `onAct` to reach. The director is `PedestalDirector`, a
+  `CameraDirector` that takes no move: camera cues are dropped, and the camera
+  belongs to the orbit controls and `workshop/framing.ts`.
+- **Its keys are a table of its own** (`workshop/keys.ts`, each row carrying its
+  action; `Workshop.tsx` maps actions with a `Record`, and a test rejects any
+  `case '<key>'`). **`W` is one row of `web/src/keys.ts`** (`openWorkshop`, placed
+  before `useMana`). It is live in the arena and `inert` on the board with its
+  reason. `main.tsx` dispatches it in the capture phase, and only while the arena
+  is really mounted (never under `?arena=off`).
+- **The list's thumbnail is the workshop's one card image outside `CardPlane`.**
+  It is exempt from `CardTile` for **D94**'s reason: the list is deck cards,
+  tokens and archetypes, all public card data. A concealed entry never looks its
+  art up (`workshop.test.ts` holds it at one `imageUrl(`, every `lookupArt(`
+  guarded by `concealed === null`).
+- The rest is the per-surface rule of **D94**. Its CSS is appended to `styles.css`,
+  its logic is in pure `.ts` for `node --test` (everything except `Workshop.tsx`,
+  `Pedestal.tsx`, `legibility.ts` and `data.ts` imports no three and no React),
+  and its components are in `hooks-order.test.ts`'s scan. The build names the
+  chunk the two lazy pages share `arena-scene-*.js` (`vite.config.ts`'s
+  `chunkFileNames`), because Rollup would otherwise name it after whichever
+  module it picked (`tiles-*.js`).
+
+**Rationale.** The only faithful way to show how the arena draws a card is to
+draw it *with the arena*. A viewer with figure code of its own would show
+something the game does not, and it would drift the first time the arena changed —
+which is today, because Tier 2 slice 4 is rewriting `FigureLayer`, `figureRigs`,
+`props` and the duelists and adding a costume palette to `holoMaterial` on
+another branch. So the workshop lives outside `arena/`, and its coupling is
+narrow, written down and held by a test: the slice-4 rebase becomes a checklist
+rather than a search. It is downstream only, because the arena is a renderer of
+the frame stream (M7 convention 1). A workshop branch inside `Arena.tsx` would be
+a non-game mode in the renderer. It is lazy for **D49**'s reason (it is `three`
+and the arena's scene). It unmounts the mode app for **D94**'s reason: a hidden
+board's `window` keydown listeners stay live, and the workshop's own keys (`Space`,
+`.`, `K`, `V`, the arrows) would press OK, pass priority or switch the renderer
+in a live game. Its keys are its own for the same reason as **D94**'s:
+`keys.test.ts` requires every chord of `web/src/keys.ts` in the board's `?`
+overlay. `W` is dispatched by `main.tsx` because the view belongs to `App` and
+`Arena.tsx` is slice 4's desk. Capture phase means the arena's handler never sees
+a key it has no branch for. Under `?arena=off`, `W` is the board's floating white
+mana (M5), and the WebGL escape hatch must not lead to another WebGL page. It
+**supersedes report 09 §10.7's never-built `/#/arena?cue=<id>` dev loop**. It
+keeps the same loop (one cue on a card against a neutral table) and adds the
+card's clips, its traits and a legibility number, without a route inside the
+arena.
+
+**Known cost.** Every export in the coupling list is a rebase item. The ones slice
+4 rewrites — `FigureLayer`, `FigureRig` / `FigureRigMap`, `PropField`, `BustField`
+/ `DuelistBust`, `instantiateFigure` / `ModelLibrary` — will need re-checking.
+The tuning panel's field list is written out and will need the costume's row.
+The 2D entry chunk grew **0.89 kB gzip** (86.47 → 87.36 kB: the link, the `W`
+dispatcher, the lazy stub and the keymap row's text; none of it is `three`). The
+workshop is **24.07 kB** on top of the shared `arena-scene` chunk (339.87 kB),
+the arena's own download is the same bytes plus about 1 kB of chunk overhead, and
+the one stylesheet grew 1.36 kB. Camera cues are not previewed (the Helicarrier's
+fly-in), and bloom works in single view only (the composer takes over rendering).
+The detour loses the mode app's UI state, as **D94**'s does. Nothing in the
+workshop needs the dev server, but it has been opened only there, not from a
+built `dist/`.
+
+**Rejected.** Report 09 §10.7's `?cue=` route inside the arena: a mode in the
+renderer, on slice 4's desk, and one cue rather than a card. A `workshop` flag in
+`Arena.tsx`, for the same reasons. Scene code of the workshop's own that poses a
+rig directly: a second renderer, with coordinates outside `layout.ts`, the only
+module that may know one. Keeping the mode app mounted and hidden (above). The
+workshop's own keys as rows of `web/src/keys.ts` (above). A `W` branch in
+`Arena.tsx`'s handler (slice 4's desk). A static import (**D49**).
+
+---
+
+## D103 — Tuning is browser-local: overrides live in `localStorage`, pass the arena's own validators, and leave the page only as a copy of the committed text
+
+**2026-09-27** (the workshop, **D102**; written up by its documentation pass.
+Within CLAUDE.md's *The user commits* and Tier 2 slice 3's convention 1)
+
+**Decision.** The workshop's tuning panel edits two things for the card on the
+pedestal. One is its **`traits.json` row**: every field `validateTraits` accepts
+(`scale`, `hover`, `idle`, `tint`, `accent`, `shade`, `turn` + `turnedRatio`,
+`props`, `swarm` + `formation`, `silhouette`, `shrink`). The other is the
+**`params` of its `cues.json` entry's selectors**.
+
+- **Overrides live in this browser, never in the repo.** They are stored in
+  `localStorage` under `mtg-table.workshop.overrides`, with every access inside
+  `try`: a storage that throws keeps them for this page only, and a malformed
+  value is no override. **Only the workshop reads them.** The arena and the board
+  draw the committed files and nothing else. The card last looked at is
+  remembered under `mtg-table.workshop.card`, as a convenience.
+- **Applied the only way the arena would see a change** (`workshop/tuning.ts`).
+  The committed file is copied, the card's row (or the selector's `params`) is
+  replaced, and the copy goes through the arena's own validator:
+  `validateTraits`, or `validateCues` with the registry's ids as `Arena.tsx`'s
+  `useCueData` does (`workshop/validated.ts`). A refused row is dropped and the
+  ladder falls through exactly as it would in the arena. The panel prints the
+  validator's own message.
+- **The page's output is two copy buttons.** "Copy as traits.json row" and "copy
+  as cues.json entry" each print the card's **raw committed** row or entry with
+  only the edited values replaced:
+  - every key stays in its original order, with the comment keys (`_note`,
+    `_t11`, `_station`, …) kept, and for `cues.json` `presence` and `station`
+    kept too;
+  - a field added by the override goes after the row's last data key;
+  - the text is in the files' own style: the name at four spaces, one key per
+    line at six, each value inline.
+
+  So an unedited copy is the committed text byte for byte, and a paste changes
+  only the edited lines. **Both buttons are disabled while the validator names
+  the card.** When the clipboard is unavailable, the text appears in a read-only
+  box to copy by hand.
+- A concealed entry has no tuning (hard rule 8: it is anonymous by rule). An
+  attachment's look and a land's tile are `figures.json`'s tables, not traits,
+  and the panel says so. `turnedRatio` reads **"required, not set"** for a turned
+  row without one, rather than showing an inherited number the validator would
+  not accept.
+
+**Rationale.** The user commits their own work. A page that writes the repo would
+be a browser write path that nothing else here has, and it would skip the check
+a row must pass. `npm --prefix web test` runs `traits.test.ts`'s validation, its
+census and its both-seat raster (**D83**). The paste-then-test loop keeps that
+test in the path. The overrides go through the validator so the pedestal never
+shows a look the arena would drop. They are workshop-only because a renderer
+that draws something other than the frame and the committed data is *a renderer
+that remembers*, the defect Tier 2 convention 1 names: a tint tuned last week
+appearing in a live game is a state nobody committed. The copy is the committed
+text because the first pass built it from the params panel's selector list,
+which leaves out `presence`, `station` and every comment. Pasting the Doombot's
+export dropped its hover, and pasting Web Up's dropped its cocoon
+(`docs/evidence/workshop.md`, the fix pass). A paste replaces the whole row, so
+the row's reason, its `_note`, has to come with it.
+
+**Known cost.** **An override masks the committed row in this browser until it is
+reset.** Right after a paste the two are equal, but a later change to the file is
+hidden while the override stays, so press *reset* once the row is in the file.
+Overrides are per browser profile, shared with no one, and seen by no test. The
+field list is written out in `Workshop.tsx` rather than derived from the
+validator, so a new trait key (slice 4's costume) needs a row there. Only a
+card's own `cards` row and its existing selectors' `params` are tunable. `cue`,
+`ms`, a new selector, the archetype rungs, `figures.json` and the `cues.json`
+archetypes are edited in the files. Cue params are raw JSON per selector, and
+half-typed JSON waits.
+
+**Rejected.** A dev-server route that writes `traits.json` / `cues.json`, a
+writing cousin of **D92**'s: above. A download of the whole patched file: a
+stale tab would carry every other row's old text with it, where the clipboard
+carries one row. Overrides applied raw, without the validator. A key the arena
+reads too, so a tuned look shows in a game: above. The copy built from the
+parsed selectors: the first pass's defect, above.
+
+---
+
+## D104 — The pedestal's boards are SYNTHETIC FRAMES from one pure builder, folded through the real reducer; card facts come from the corpus, and what only the engine could choose is labelled as the workshop's
+
+**2026-09-27** (the workshop, **D102**; written up by its documentation pass.
+Within M7 convention 1, **D50**, **D56**, **D63** and the *Scope* rule)
+
+**Decision.** `web/src/workshop/synthetic.ts` is **the one place the workshop
+makes a `ClientState`**, and the only workshop module that imports the reducer as
+a value (`workshop.test.ts`).
+
+- **The resting board** (`pedestalState`). The builder writes the frame a game
+  would have sent — the card on its seat, and its copy on the other seat in
+  "both seats" mode — and folds it through `reduce`. The card stands in a stance
+  (`ready`, `tapped`, `sick`, `attacking`, `blocking`), with a Soldier-token host,
+  wingman or target dummy where the card needs one. Card ids and stack ids stay
+  in separate spaces, as on the wire.
+- **A rehearsal** (`rehearse`) is an event batch and the two boards it joins.
+  The `before` board is the one a `resolved` aims from (**D63**'s one frame of
+  look-behind) and the `after` board is the one the batch is enqueued against.
+  Both are handed to the real `CueQueue.enqueueBatch`, as the arena's intake
+  does. There are **24 kinds**, from *enters* to *crewed, blocks*, offered per
+  card by what it is on the table (creature, Vehicle, other permanent,
+  attachment, land, spell) and by concealment. The events are the shapes the
+  corpus shows Forge sending:
+  - an attack is one `attackers` event naming the band's defender;
+  - a death in combat is a `damage` event, then a `zone` move to the graveyard;
+  - a trigger is a `cast` whose card is the permanent itself;
+  - a Vehicle is crewed (`Artifact Creature - Vehicle`, Forge's own rewrite)
+    before it attacks or blocks.
+- **What the ladder did, read back** (`cueRows.ts`). Each rehearsal's batch goes
+  through `selectorsFor` / `resolve` / `cuesFor`, and the panel shows:
+  - which rung answered (card, archetype or default), the cue id, its length and
+    the clip it plays;
+  - when the rung order outranked a *more specific* selector on a rung below;
+  - `unreachedSelectors`, any selector of the card's own entry that no rehearsal
+    reaches.
+- **A clip on its own is a cue.** `workshop.clip` is added to a **copy** of
+  `REGISTRY` (`workshopRegistry`), and a synthetic `stats` event is resolved to it
+  by a one-row cue-data override. It writes a `ClipRequest` with the registry's
+  envelope, scratch object and reduced-motion rule, and writes no offset and no
+  effect. The queue's pause, step, skip, speed and reduced motion therefore apply
+  to it exactly as in a game (report 13 §3.4). `REGISTRY` itself is untouched.
+- **Card facts come from the corpus.** `workshop/catalog.json` is generated by
+  `node tools/build-workshop-catalog.ts` from `decks/*.dck` and every `state`
+  frame of `fixtures/games/*.jsonl` (`catalogBuild.ts` is the pure half):
+  - the modal type line, cost and P/T are taken over **off-battlefield**
+    sightings, which is the printing — Peggy's battlefield power is −3 under
+    Quantum Reduction, her printing 2/1 — with the battlefield's as the fallback;
+  - only face-up, named cards are read.
+
+  `workshop.test.ts` rebuilds the file and fails on drift, and `--check` does the
+  same from a terminal. The list is the ten decks' **41** cards, the **5** tokens
+  the corpus saw, **11** generic archetypes and the **two concealed shapes**: a
+  face-down creature (the full branch with an empty face) and the five-key stub.
+  A deck card the corpus never showed face up (`Giant Growth`) is listed and
+  previewed as a generic card of no type.
+- **What only the engine could choose is labelled as the workshop's.** The
+  engine says what a spell or a trigger TARGETS, what a blocker blocks and who
+  crews a Vehicle. On the pedestal the workshop says it: the dummy, the other
+  seat's copy, an Aura's host, a Soldier token. Each rehearsal carries a
+  `fiction` line, and its ▶ button shows that line as a tooltip.
+
+**Rationale.** The arena is a renderer over a frame stream (M7 convention 1). The
+honest way to show "a card as it appears on the table" is to produce the frame.
+`layout`, `figurePose`, `FigureLayer` and `CueRunner` cannot tell it was not
+Forge's, so every arena rule holds on the pedestal with no workshop code saying
+so: the anonymous disc, the stub with no figure, the stances as poses (**D56**),
+the death drawn until its cue ends (**D64**), the attacker facing its defender
+(**D82**). The tests *assert* it rather than assume it. Every rehearsal of every
+card, single-seat and both seats, plays through the real queue and decays to
+identity: 1,376 batches and 2,432 cues in `docs/evidence/workshop.md`. The
+builder is pure so `node --test` drives it and prints the census every run.
+
+The facts come from the corpus because the ladders key off the **wire's**
+spelling (the type line's subtype words), which is Forge's. `art.json` carries no
+facts. The card library (**D90**) is dev-only, needs a network build, spells type
+lines as Scryfall does, and nothing may depend on it. The facts are taken off the
+battlefield because continuous effects make the battlefield's P/T the game's,
+not the card's.
+
+This is not rules logic in the client (*Scope*). Nothing is sent to an engine and
+nothing decides legality. The frames are a display fiction on a page with no
+transport, and their shapes are copied from what Forge sent.
+
+**Known cost.** The rehearsals are only as good as the corpus shapes they copy: a
+transition Forge would send differently would be wrong silently, and the
+engine's choices (aim, blocks, crew) are invented, though labelled. A synthetic board is one card's world, so a crowded rank, a wrapped
+back row or the width clamp under pressure show only in "whole table" with the
+card and its dummy. `catalog.json` is generated and committed, so it drifts when
+a deck or a fixture changes; the test says so, and the tool is re-run. The
+workshop surfaced one data question and left it with the cue data's owner:
+§7.3's rung order lets a card's bare `resolved` beat the defaults' more specific
+`resolved:fizzled`, so a fizzled Helicarrier Strike plays its full strike. That
+fix is a `cues.json` edit, not the workshop's.
+
+**Rejected.** Scrubbing a recorded fixture to a frame where the card is on the
+battlefield, which is slice 3's *"look at it"* step. It is still how a card is
+checked in a real game, but it cannot isolate one card, choose its stance, or
+replay a transition the corpus never recorded for it. A scripted Forge session
+per card: a JVM for a picture, and the bridge's job is games. Posing a rig
+directly, bypassing `layout` and `figurePose`: a second renderer (**D102**).
+Facts from `art.json` or from the card library (above). Modal facts over every
+sighting (Peggy at −3). `workshop.clip` added to `REGISTRY` itself: an arena
+edit, and a cue id in the game's registry that exists only for a dev page.

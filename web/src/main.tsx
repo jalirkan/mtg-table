@@ -23,6 +23,17 @@
  * `ClientState` either way; what M3 adds is an `actions` object, and a replay
  * passes `null` for it because a replay has no server to send an `act` to.
  *
+ * **The workshop is a page, not a third renderer.** `#workshop` (or
+ * `?view=workshop`) mounts `web/src/workshop/Workshop.tsx` — lazily, like the
+ * arena, so the 2D entry chunk carries none of its code — and mounts it INSTEAD
+ * of the replay or live app, exactly as `#cards` mounts the card browser (D94):
+ * it builds its own synthetic boards and needs no transport, so none is opened;
+ * a live socket already open survives on `window`, a replay resumes at its frame,
+ * and the workshop's header says when the live game is waiting on you. `W` in the
+ * arena opens it (a `keys.ts` row, dispatched in `App` below because the view is
+ * `App`'s — and only while the arena is really mounted, never under
+ * `?arena=off`), and the workshop's links go back.
+ *
  * **The keyboard moved into `<Board>` in M4** (report 10 §12.2 rule 1). M3 kept
  * it here because `Board.tsx` had no effects and the render test folds every
  * frame of every fixture through `renderToStaticMarkup`, which runs none — but
@@ -46,6 +57,7 @@ import {
 import { createRoot, type Root } from 'react-dom/client';
 
 import { EMPTY_ART_INDEX, loadArtIndex, preloadArt, type ArtIndex } from './art.ts';
+import { planKey, type KeyContext } from './keys.ts';
 import type {
   ActBody,
   AnswerValue,
@@ -97,6 +109,13 @@ const Arena = lazy(() => import('./arena/Arena.tsx'));
  * it is chosen above both modes in `App` (docs/evidence/card-library.md).
  */
 const CardBrowser = lazy(() => import('./cards/CardBrowser.tsx'));
+
+/**
+ * **The workshop's chunk, fetched only when someone opens it** — the same rule
+ * as the arena's (D49), for the same reason: it is `three` and the arena's scene,
+ * and a session that never opens it never downloads it.
+ */
+const Workshop = lazy(() => import('./workshop/Workshop.tsx'));
 
 // ---------------------------------------------------------------------------
 // Mode
@@ -234,6 +253,23 @@ function ViewToggle({ view, onSet }: { view: View; onSet: (view: View) => void }
         ▦ cards
       </a>
     </>
+  );
+}
+
+/** The workshop, as a link: a URL like the toggle beside it, so Back comes home. */
+function WorkshopLink({ onSet }: { onSet: (view: View) => void }): JSX.Element {
+  return (
+    <a
+      className="viewtoggle"
+      href="#workshop"
+      onClick={(event) => {
+        event.preventDefault();
+        onSet('workshop');
+      }}
+      title="Open the workshop: one card on a pedestal — its figure, props, clips and cues (W in the arena)"
+    >
+      ⚒ workshop
+    </a>
   );
 }
 
@@ -474,6 +510,7 @@ function LiveApp({ port, view, onSetView }: { port: number; view: View; onSetVie
           Escape = Cancel, H = keys
         </span>
         <ViewToggle view={view} onSet={onSetView} />
+        <WorkshopLink onSet={onSetView} />
         {flags.off && view === 'arena' && (
           <span className="muted">?arena=off — the 3D arena is disabled; this is the board</span>
         )}
@@ -711,6 +748,7 @@ function ReplayApp({
         <h1>mtg-table — replay</h1>
         <span className="muted">/fixtures/{load.path}</span>
         <ViewToggle view={view} onSet={onSetView} />
+        <WorkshopLink onSet={onSetView} />
         {flags.off && view === 'arena' && (
           <span className="muted">?arena=off — the 3D arena is disabled; this is the board</span>
         )}
@@ -799,6 +837,109 @@ function ReplayApp({
 }
 
 // ---------------------------------------------------------------------------
+// The workshop — its own page, no transport
+// ---------------------------------------------------------------------------
+
+function WorkshopApp({ onSetView, waiting }: { onSetView: (view: View) => void; waiting: string | null }): JSX.Element {
+  const art = useArt();
+  return (
+    <ErrorBoundary resetKey={0} label="The workshop">
+      <Suspense fallback={<p className="pad muted">loading the workshop…</p>}>
+        <Workshop art={art} onSetView={onSetView} waiting={waiting} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * **"Your game is waiting"** — while the workshop is open over a live seat, the
+ * mode app is unmounted (see `App`), so nothing on screen would say the engine
+ * has asked the player something. This reads the page's socket if one is ALREADY
+ * open (`__mtgTableWs`, the holder `liveTransport` fills) — it never opens one,
+ * so a workshop opened on its own stays a page with no transport — and returns a
+ * line for the workshop's header, or `null`.
+ *
+ * Nothing is decided from an engine string: an open `ask` is the flag it is, and
+ * an `input` is shown by its own prompt, verbatim (M5 convention 4).
+ */
+function useLiveGameWaiting(active: boolean): string | null {
+  const [, bump] = useReducer((n: number) => n + 1, 0);
+  const transport = active ? ((window as unknown as WsHolder).__mtgTableWs ?? null) : null;
+  useEffect(() => {
+    if (transport === null) return undefined;
+    const offState = transport.onState(() => {
+      bump();
+    });
+    return offState;
+  }, [transport]);
+  if (transport === null) return null;
+  const state = transport.state;
+  if (state.board === null || state.gameOver !== null) return null;
+  if (state.ask !== null) return 'your live game is waiting on an answer';
+  if (state.input !== null) {
+    const prompt = state.input.prompt.trim();
+    return prompt === '' ? 'your live game is waiting on you' : `your live game is waiting: “${prompt}”`;
+  }
+  return null;
+}
+
+/**
+ * What `W` is planned against in the arena: a picture key, so none of the
+ * engine's flags matter — only that the renderer on screen is the arena. The
+ * pool is empty for the same reason `Arena.tsx`'s own context says so: the arena
+ * has no mana pips, so no letter is borrowed by the pool there.
+ */
+const ARENA_PICTURE_KEYS: KeyContext = {
+  live: false,
+  askOpen: false,
+  okEnabled: false,
+  cancelEnabled: false,
+  haveSelectable: false,
+  poolColors: [],
+  overlay: 'none',
+  arena: true,
+};
+
+/**
+ * **`W` in the arena opens the workshop** — the `openWorkshop` row of the one
+ * keymap, dispatched here because the view is the App's and `Arena.tsx` (on
+ * another branch's desk) is left untouched. It listens in the CAPTURE phase and
+ * stops the event there, so the arena's own handler never sees a key it has no
+ * branch for; every other key passes through untouched.
+ */
+function useWorkshopKey(view: View, setView: (view: View) => void, arenaOff: boolean): void {
+  useEffect(() => {
+    // Only where the arena is really mounted: `?arena=off#arena` draws the board.
+    if (view !== 'arena' || arenaOff) return;
+    const onKey = (event: KeyboardEvent): void => {
+      const target = event.target as (HTMLElement & { isContentEditable?: boolean }) | null;
+      const resolved = planKey(
+        {
+          key: event.key,
+          code: event.code,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          altKey: event.altKey,
+          shiftKey: event.shiftKey,
+          isComposing: event.isComposing,
+          target: target === null ? null : { tagName: target.tagName, isContentEditable: target.isContentEditable },
+        },
+        ARENA_PICTURE_KEYS,
+      );
+      if (resolved?.plan.kind === 'view' && resolved.plan.id === 'openWorkshop') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setView('workshop');
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+    };
+  }, [view, setView, arenaOff]);
+}
+
+// ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
 
@@ -808,6 +949,13 @@ function App(): JSX.Element {
   // window, not of the transport, so switching between the board and the arena
   // never re-mounts the mode app.
   const [view, setView] = useView();
+  // `W` opens the workshop from the arena — but only when the arena is really
+  // on screen: under `?arena=off` the 2D board is drawn at `#arena`, and there
+  // `W` is the board's own (spend floating white mana, M5), and the WebGL kill
+  // switch must not lead to another WebGL page.
+  const arenaOff = useMemo(() => arenaFlagsFromQuery().off, []);
+  useWorkshopKey(view, setView, arenaOff);
+  const waiting = useLiveGameWaiting(mode.kind === 'ws' && view === 'workshop');
   // The renderer the card browser was opened from: its back link returns there
   // (to the arena when that is where you were), not always to the 2D board.
   const [backTo, setBackTo] = useState<View>(view === 'arena' ? 'arena' : 'board');
@@ -830,6 +978,17 @@ function App(): JSX.Element {
         <CardBrowser onSetView={setView} backTo={backTo} />
       </Suspense>
     );
+  }
+  if (view === 'workshop') {
+    // Not a renderer and not a seat either: the workshop builds its own boards
+    // and opens no transport. **It unmounts the mode app, as `#cards` does
+    // (D94), for the same reason**: a hidden board or arena would keep its
+    // `window` keydown listeners live under the workshop, whose own keys
+    // (Space, `.`, `,`, `K`, `V`, the arrows) would then also press OK, pass
+    // priority or switch the renderer in a live game. The socket is page-scoped
+    // and survives, a replay resumes at its frame (`replayCursors`), and the
+    // header carries a chip while the live game is waiting on you.
+    return <WorkshopApp onSetView={setView} waiting={waiting} />;
   }
   return mode.kind === 'replay' ? (
     <ReplayApp requested={mode.path} view={view} onSetView={setView} />

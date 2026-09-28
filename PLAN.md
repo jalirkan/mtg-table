@@ -3547,6 +3547,254 @@ node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdo
 
 ---
 
+## The workshop — the arena's card viewer, off the plan, 2026-09-27 (D102–D104)
+
+**Status: built, reviewed, every workshop finding fixed, documented; not
+committed.** It is in the worktree `/home/justin-a/code/mtg-table-t2e`, branch
+`workshop`, from `0368a90`, and was moved onto `754f504` (the card library) by its
+fix pass. **It must be rebased onto Tier 2 slice 4** (`tier2-slice4`, which
+replaces the humanoid bodies, adds a costume palette to `holoMaterial` and
+rewrites `FigureLayer`, `figureRigs`, `props` and the duelists) before or after
+slice 4 is committed. *The rebase onto slice 4*, below, is the checklist. It is
+the other half of the user's request of 2026-09-27: *"expedite some of these"*
+brought the card library above forward, and *"a card viewer that allows the user
+to see models and how they act"*, to help workshop the identity work as it
+develops, is this. It is **M7 Tier 2's bench**: the identity work of slices 3 and
+4, looked at one card at a time. It sits here, beside the card library, rather
+than under *M7 Tier 2*, for two reasons. It is a tool rather than an evening, and
+every heading inside *M7 Tier 2* is being edited by slice 4.
+
+[`docs/evidence/workshop.md`](docs/evidence/workshop.md) is what was measured,
+with 23 screenshots under `var/shots-workshop/` (local, gitignored). README's
+*Arena mode → The workshop* is how to use it. There are three decisions:
+
+- **D102**: a lazy page outside `arena/`, drawing with the arena's own scene
+  through a listed set of exports, and unmounting the mode app as `#cards` does.
+- **D103**: tuning overrides in `localStorage`, never the repo, through the
+  arena's own validators, and leaving the page only as a copy of the committed
+  text.
+- **D104**: the pedestal's boards as synthetic frames from one pure builder,
+  folded through the real reducer, with card facts from the corpus. What only the
+  engine could choose (aim, blocks, crew) is labelled as the workshop's.
+
+It **supersedes report 09 §10.7's `/#/arena?cue=<id>` dev loop**, which was never
+built.
+
+**What exists.** `web/src/workshop/` (15 files; the pure ones import no three and
+no React), `tools/build-workshop-catalog.ts`, `web/test/workshop.test.ts`, and
+small edits to `main.tsx`, `useView.ts`, `keys.ts` (`W`), `styles.css`
+(appended), `vite.config.ts` (the shared chunk's name), `hooks-order.test.ts` and
+`keys.test.ts`. **Nothing under `web/src/arena/` was edited.**
+
+- **The route.** `#workshop` or `?view=workshop`; add `?card=<name or part of
+  one>` in the query string to open on a card. `W` in the 3D arena opens it, and
+  so does `⚒ workshop` in the top bar. It is a lazy chunk, it opens no socket and
+  it fetches no log. The mode app is unmounted under it: a live socket survives,
+  a replay resumes at its frame, and a chip says when the live game is waiting on
+  you. `▣ arena` / `▤ board` / `V` go back.
+- **The list** — 59 entries with a search box. Each entry has a chip naming
+  the rung its look came from (per-card, subtype, colour, default or concealed),
+  and a thumbnail: Scryfall's (through `art.ts`) where `art.json` has the card, an
+  empty frame for an archetype, a card back for a concealed entry. The entries:
+  - the ten decks' 41 cards, grouped by the first deck that names them;
+  - the 5 tokens the corpus saw;
+  - 11 generic archetypes (the eight subtypes, `White` / `Blue creature`, `Any
+    other creature`);
+  - a face-down creature and a redacted five-key stub.
+
+  The facts come from `catalog.json`, generated from the decks and the corpus
+  (**D104**).
+- **The pedestal** is the arena's own scene pointed at one card: `CardPlane`,
+  `FigureLayer` (body, props, disc, the departing body), the tile, casting,
+  overlay and effect fields, and `CueRunner`.
+  - **Camera.** Three modes: *1× close* (orbit), *table distance* (the size the
+    body has in view 1 at 1600 × 900) and *whole table* (view 1 itself).
+  - **Seats and facing.** *Both seats* shows your copy and the opponent's side by
+    side, from one angle. *Faces the other seat* previews PLAN question 13 without
+    touching `layout.ts`.
+  - **Stances**: ready, tapped, sick, attacking, blocking.
+  - **Extras**: a target dummy, and bloom (single view).
+  - **The caption** is the body's *drawn* height in view 1.
+  - **The queue bar** is the queue's own controls: play/pause, step, +50 ms,
+    skip cue, skip all, speed, reduced motion, "back to rest".
+- **The panel.**
+  - **Clips**: every clip the body has, alias included (Agent 13's `attack` is
+    `pistolDraw`), each played alone through `workshop.clip`. The Air Force's
+    buttons say *"hidden rig: the swarm is procedural"* (**D88**).
+  - **Cues**: every rehearsal the card's role allows (24 kinds), each a
+    synthetic batch through the real `CueQueue`, with the resolved line beside
+    it: rung, selector, cue id, ms and clip. It also shows what the rung order
+    outranked, and any selector of the card's own entry that nothing reaches.
+  - **Tuning**: the `traits.json` row, live.
+  - **Cue params**: the card's `cues.json` params, live.
+  - **Legibility**: each prop's on-screen pixels from the table view on both
+    seats, standing and kneeling, against the 48-px bar.
+  - **Keys**: the page's keymap.
+
+**What the evidence shows.**
+
+- **Tests.** `npm --prefix web test`: **837 `node --test` + 91 vitest (6 files),
+  0 failures** (797 + 91 on `754f504`; the `workshop` suite is 38 and
+  `keys.test.ts` gained 2). Re-run by the documentation pass on the same tree:
+  the same counts, exit 0, 1 min 52 s. `tsc --noEmit` was clean in the fix pass.
+- **Every rehearsal decays.** Every rehearsal of every card, single-seat and both
+  seats — **1,376 batches, 2,432 cues** — plays through the real `CueQueue` and
+  decays to identity. **Every `cues.json` selector of every deck card is reached**
+  by some rehearsal. The rung-order census prints every run:
+  - `attackers` over `attackers:alone` ×4;
+  - `resolved` over `resolved:fizzled` ×3;
+  - `damage` over `damage:lethal` ×1;
+  - `counters` over `counters:-` ×2.
+- **The meter matches the test.** The legibility meter equals
+  `web/test/prop-raster.ts` **pixel for pixel over 40 readings** (Peggy, Coulson,
+  the Doombot and Fury × both seats × standing and kneeling).
+- **Drawn heights in view 1 at 1600 × 900.** The caption's number is the rest
+  clip's skinned vertices projected through the table camera:
+
+  | body | drawn | nominal |
+  |---|---|---|
+  | Peggy | 61.3 px | 70 |
+  | the Doombot | 56.1 px | 50 |
+  | the giant ant | 127.4 px | 100 |
+  | Coulson and Fury | 61.3 px | — |
+
+  The test holds the caption within 0.5 px of an independent build, and holds
+  the table-distance camera within 6% of view 1 on 540-, 900- and 1200-px canvases.
+- **Idle costs nothing.** 0 `gl.render` calls in 3 s with Peggy on the pedestal,
+  bloom on. The Doombot's `presence` bob keeps the loop at `always`, as it does in
+  the arena.
+- **Navigation.** `W` over the `g1` replay in the arena opened `#workshop`. Under
+  `?arena=off#arena`, the board kept the key. The replay at frame 250 → `W` → `V`
+  → frame 250.
+- **Build.** The 2D entry chunk is **+0.89 kB gzip** (86.47 → 87.36, none of it
+  `three`). `Workshop-*.js` is **24.07 kB**, on the shared `arena-scene-*.js`
+  (339.87 kB). The stylesheet is +1.36 kB.
+- **Gate.** The first pass ran `WSPORT=8671 ./tools/check-all.sh`: `check-all OK`,
+  760 s. That was **before** the rebase and the fix pass.
+
+**A defect found on the way, possibly the arena's too.** A batch enqueued while
+the clock was paused froze on the pedestal. The cause: `<Canvas frameloop>` is
+re-applied on every render, including one fiber makes on its own for a resize,
+and the prop was the ref's value at the component's *last* render. The pedestal
+now backs `CueRunner`'s `loopRef` with React state. `Arena.tsx` passes
+`frameloop={loopRef.current}` the same way (**D72**'s rule), so a window resize
+during a batch between two arena renders would likely freeze it until the next
+frame arrives. **Not verified in the arena, and not changed** (follow-up 3).
+
+**Command**
+
+```bash
+npm --prefix web run dev                       # then http://127.0.0.1:5173/#workshop
+#   /?view=workshop&card=coulson                opens on a card (a name, or part of one;
+#   /?card=peggy#workshop                       ?card= is read from the QUERY, not the hash)
+#   W in the 3D arena, or ⚒ workshop in the board's or the arena's top bar
+node tools/build-workshop-catalog.ts           # regenerate web/src/workshop/catalog.json
+node tools/build-workshop-catalog.ts --check   # exit 1 if the decks or the corpus moved
+npm --prefix web test                          # the workshop suite (38) runs inside it
+```
+
+### The rebase onto slice 4 — the checklist
+
+The workshop reaches the arena only through the exports named in
+`web/src/workshop/Workshop.tsx`'s header, and `workshop.test.ts` fails on any
+arena import that list does not name. So the rebase is: re-apply, then walk the
+list against slice 4's tree. Slice 4 does **not** touch any of the non-arena files
+this branch edits (`main.tsx`, `useView.ts`, `keys.ts`, `styles.css`,
+`vite.config.ts`, `hooks-order.test.ts`, `keys.test.ts`), so those should
+re-apply cleanly. PLAN.md, README.md, CLAUDE.md and DECISIONS.md will conflict
+where both branches append at the same place. Keep both, slice 4's first, and
+renumber **D102–D104** if slice 4 has grown past D101. The arena files slice 4
+modifies, and what each means here:
+
+1. **`scene/models.ts` and the new bodies (D95).** `instantiateFigure`, `clipFor`
+   and `ModelLibrary` are what the legibility meter and the caption build their
+   bodies from. The caption heights above will change, and the caption test
+   re-measures them.
+2. **`web/test/prop-raster.ts`.** Slice 4 makes the head height per body family
+   (`HUMAN_HEAD_FROM = 0.79` beside `HEAD_FROM = 0.53`). `workshop/legibility.ts`
+   copies `HEAD_FROM = 0.53` as a constant and must follow. The test *"the
+   legibility meter counts what traits.test.ts counts, pixel for pixel"* is the
+   tripwire.
+3. **`scene/FigureLayer.tsx`, `scene/figureRigs.ts`, `scene/props.ts`,
+   `figures/props.ts` (D98's props fitted per body family).** `Pedestal.tsx`
+   mounts `FigureLayer` with the props `Arena.tsx` passes. `legibility.ts`
+   commits a `PropField` itself, as `FigureLayer` does, and binds it once at
+   rest. Both follow slice 4's signatures.
+4. **`scene/holoMaterial.ts` (D97, the costume palette written at commit).** The
+   pedestal gets it through `FigureLayer` with no change here. **The tuning
+   panel's field list is written out**, so the costume's trait key needs a row
+   in `Workshop.tsx`'s `TuningPanel`, which already carries a placeholder line
+   saying so.
+5. **`figures/duelists.ts`, `scene/busts.ts` (D99, the duelists as full
+   figures).** The pedestal mounts a `BustField` and imports the `DuelistBust`
+   type. Slice 4 may replace both.
+6. **`figures/traits.ts`, `figures/validate.ts`, `figures/pose.ts`, `layout.ts`,
+   `camera.ts`.** These are pure modules the workshop calls (`traitFor`,
+   `validateTraits`, `figurePose`, `layout`, `placementOf`, `anchorsFor`,
+   `CARD_W`, `CAMERA`, `REST_POSE`, `VIEW_BY_ID`, `CameraDirector`). Re-check
+   each signature. `framing.ts`'s table-distance arithmetic assumes view 1's
+   pose.
+7. Then run `npm --prefix web run build`, `npm --prefix web test` and a look at
+   Peggy, Coulson, the Doombot and the Air Force at table distance on both seats.
+   Finally `WSPORT=<free port> ./tools/check-all.sh`.
+
+### Workshop follow-ups — fourteen, 2026-09-27
+
+1. **The rebase onto slice 4** (above). Until it lands, the workshop shows slice
+   3's bodies.
+2. **The costume row in the tuning panel** (checklist item 4). After the rebase,
+   a costume can be seen on the pedestal but not tuned.
+3. **The arena's own `frameloop` prop** (the defect above). Check it in the arena
+   by resizing the window during a cue while the queue is running. If it freezes,
+   the fix is the pedestal's: a state-backed `loopRef` in `Arena.tsx`. That is
+   the arena's desk, not this branch's.
+4. **A fizzled Helicarrier Strike plays its full strike and a `hit` on its
+   target.** §7.3's rung order lets the card's bare `resolved` beat the defaults'
+   more specific `resolved:fizzled`. It is a `cues.json` data question for the
+   cue data's owner. The workshop's *Cues* panel shows it as *"outranks the
+   default's `resolved:fizzled` → `resolved.fizzle`"*.
+5. **`check-all.sh` has not been run since the rebase and the fix pass.** Inside
+   the gate `node --test` should read **847 / 839 pass / 8 skipped** plus 91
+   vitest; that is unmeasured.
+6. **`#workshop?card=…` is not read.** `?card=` works only in the query string
+   (`/?card=peggy#workshop`, `/?view=workshop&card=peggy`), while `#cards` keeps
+   its state in the hash. `useView.ts` already names the view correctly for
+   `#workshop?card=…`, and the page simply does not look there. Reading `card`
+   from the hash's `?` part too is a few lines in `Workshop.tsx`'s
+   `initialSelection`.
+7. **The card browser and the workshop are not linked** (card library follow-up
+   12). A `#cards` detail panel could open the same card at
+   `?card=<name>#workshop` for any card the workshop lists.
+8. **Camera cues are not previewed** (the pedestal's director takes no move, so
+   the Helicarrier's fly-in swoop is never seen here). **Bloom is single-view
+   only**, because the composer takes over rendering.
+9. **The meter's limits.** It measures at 1600 × **1000** (`traits.test.ts`'s
+   frame), while *table distance* frames at 1600 × **900**; the page says both.
+   It counts pixels, not contrast (slice 3 follow-up 12). It colours a
+   one-sided detail (`tie`, `laserEye`, `exhaust`) red where the test forgives
+   it, and the note explains.
+10. **Never opened from a built `dist/`.** Nothing in the workshop needs the dev
+    server (unlike `#cards`, **D92**), and its chunk is in `npm run build`'s
+    output. A `vite preview` at `#workshop` has not been tried.
+11. **The live-game chip was checked with a stand-in transport object**, not a
+    running bridge. The detour over a real live socket (`./scripts/play.sh`,
+    `W`, answer nothing, `V`) is the first real check, as card library
+    follow-up 10 is for `#cards`.
+12. **An override masks the committed row until it is reset** (**D103**). The
+    panel says *OVERRIDDEN in this browser*, but it does not notice when the
+    committed row has changed underneath the override. A warning when the
+    override's base differs from the file would close it.
+13. **A synthetic board is one card's world** (**D104**). A crowded rank, a
+    wrapped back row or the width clamp under pressure show only in *whole
+    table*. For a real crowd, a recorded frame is still the check (`g1.jsonl`
+    @355).
+14. **The duelists are seats, not cards.** After the rebase, slice 4's full
+    duelists (**D99**) are not in the list. A "duelist" entry that stands one
+    on the pedestal with its gestures is a small addition once slice 4's shapes
+    are known.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

@@ -428,7 +428,10 @@ test('H and ? are the same binding', () => {
  * thing; it can prove the branch exists, which is the defect that shipped.
  */
 test('every KeyActionId is handled in at least one renderer’s dispatcher', () => {
-  const sources = ['../src/render/Board.tsx', '../src/arena/Arena.tsx'].map((rel) => ({
+  // `main.tsx` is the third dispatcher since the workshop: it owns the view, and
+  // `W` (`openWorkshop`) is dispatched there, in the arena, ahead of the arena's
+  // own handler (the arena file is left untouched).
+  const sources = ['../src/render/Board.tsx', '../src/arena/Arena.tsx', '../src/main.tsx'].map((rel) => ({
     name: rel,
     src: readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8'),
   }));
@@ -482,8 +485,8 @@ test('every KeyActionId is handled in at least one renderer’s dispatcher', () 
     // handled in `Arena.tsx` alone and swallowed on the board.
     if (binding.id === 'toggleView' || binding.id === 'skipCues') {
       assert.equal(
-        where.length,
-        sources.length,
+        where.filter((name) => !name.endsWith('main.tsx')).length,
+        2,
         `${binding.id} (${binding.chord}) is an M7 row and must be dispatched by BOTH renderers; ` +
           `only ${where.join(', ') || 'nobody'} handles it`,
       );
@@ -552,6 +555,39 @@ test('on the board the camera keys are bound, and say why they do nothing', () =
     assert.equal(plan?.kind, 'inert', `${key} on the board`);
     assert.match(plan?.kind === 'inert' ? plan.why : '', /press V/, `${key} must point at V`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// The workshop's key: W, from the arena
+// ---------------------------------------------------------------------------
+
+test('W opens the workshop from the arena, says so on the board, and still spends floating white mana', () => {
+  assert.deepEqual(planKey(ev('w'), ARENA)?.plan, { kind: 'view', id: 'openWorkshop' });
+  // A picture key: legal on a replay and behind an ask, like the camera rows.
+  assert.deepEqual(planKey(ev('w'), { ...ARENA, live: false, askOpen: true })?.plan, { kind: 'view', id: 'openWorkshop' });
+  const board = planKey(ev('w'), LIVE);
+  assert.equal(board?.binding.id, 'openWorkshop');
+  assert.equal(board?.plan.kind, 'inert');
+  assert.match(board?.plan.kind === 'inert' ? board.plan.why : '', /press V/);
+  // M5's pre-pass is untouched: white mana floating on the board takes the letter.
+  assert.deepEqual(planKey(ev('w'), { ...LIVE, poolColors: ['W'] })?.plan, { kind: 'useMana', color: 'W' });
+  // Ctrl+W is the browser's; a text field owns its letters.
+  assert.equal(planKey(ev('w', { ctrlKey: true }), ARENA), null);
+  assert.equal(planKey(ev('w', { target: { tagName: 'INPUT' } }), ARENA), null);
+  assert.equal(chordFor('openWorkshop'), 'W');
+});
+
+test('the W dispatcher in main.tsx listens in the capture phase, and only where the arena is really mounted', () => {
+  const main = readFileSync(fileURLToPath(new URL('../src/main.tsx', import.meta.url)), 'utf8');
+  // Ahead of the arena's own window listener, which has no branch for the plan.
+  assert.match(main, /addEventListener\('keydown', onKey, true\)/);
+  assert.match(main, /stopImmediatePropagation\(\)/);
+  assert.match(main, /resolved\.plan\.id === 'openWorkshop'/);
+  // Not at `?arena=off#arena`, where the BOARD is on screen: there W is the
+  // board's (floating white mana, M5), and the capture-phase stop would take it.
+  assert.match(main, /if \(view !== 'arena' \|\| arenaOff\) return;/);
+  assert.match(main, /const arenaOff = useMemo\(\(\) => arenaFlagsFromQuery\(\)\.off, \[\]\);/);
+  assert.match(main, /useWorkshopKey\(view, setView, arenaOff\);/);
 });
 
 test('CAMERA_KEYS spells camera.ts’s views, key for key (keys.ts may not import arena/)', () => {

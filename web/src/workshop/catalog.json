@@ -1,0 +1,698 @@
+{
+  "version": 1,
+  "_generated": "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck and fixtures/games/*.jsonl — do not edit by hand; web/test/workshop.test.ts fails when it drifts",
+  "decks": [
+    {
+      "file": "pacho-shield.dck",
+      "name": "Pacho SHIELD (Marvel Super Heroes)",
+      "cards": [
+        {
+          "name": "Agent Phil Coulson",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Peggy Carter, Secret Agent",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Agent 13, Sharon Carter",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Agents of S.H.I.E.L.D.",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Quake, Agent of S.H.I.E.L.D.",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Nick Fury, Spymaster",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "S.H.I.E.L.D. Helicarrier",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "S.H.I.E.L.D. Spy Kit",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Strategic Intervention",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Web Up",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Helicarrier Strike",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Borough Backup",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wasp, Shrinking Savior",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Ant-Man, Reformed Rogue",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Ant-Man's Air Force",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Giant-Sized Flying Ant",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Bold Biochemist",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "A.I.M. Scientists",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Aerial Doombot",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Super Suit",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Robotics Mastery",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Quantum Reduction",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Depower",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Pym Particles",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Heath",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Isle",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Plains",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Island",
+          "count": 7,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "amount-probe.dck",
+      "name": "Divided amount probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 20,
+          "section": "main"
+        },
+        {
+          "name": "Manamorphose",
+          "count": 20,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "future-sight-probe.dck",
+      "name": "Future Sight probe",
+      "cards": [
+        {
+          "name": "Island",
+          "count": 22,
+          "section": "main"
+        },
+        {
+          "name": "Future Sight",
+          "count": 18,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "morph-probe.dck",
+      "name": "Morph probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Ainok Tracker",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Battering Craghorn",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Ashcloud Phoenix",
+          "count": 6,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "number-probe.dck",
+      "name": "Chosen number probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 24,
+          "section": "main"
+        },
+        {
+          "name": "Volcano Hellion",
+          "count": 16,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "scry-probe.dck",
+      "name": "Scry probe",
+      "cards": [
+        {
+          "name": "Island",
+          "count": 24,
+          "section": "main"
+        },
+        {
+          "name": "Opt",
+          "count": 16,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "search-probe.dck",
+      "name": "Library search probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 20,
+          "section": "main"
+        },
+        {
+          "name": "Rampant Growth",
+          "count": 20,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "sideboard-probe.dck",
+      "name": "Sideboard probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Garruk's Companion",
+          "count": 22,
+          "section": "main"
+        },
+        {
+          "name": "Giant Growth",
+          "count": 15,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "file": "trample-probe.dck",
+      "name": "Trample probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Garruk's Companion",
+          "count": 22,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "yield-probe.dck",
+      "name": "Yield probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Thallid",
+          "count": 22,
+          "section": "main"
+        }
+      ]
+    }
+  ],
+  "cards": {
+    "A.I.M. Scientists": {
+      "types": "Creature - Human Scientist Villain",
+      "manaCost": "{3}{U}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Aerial Doombot": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": "{U}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Agent 13, Sharon Carter": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Agent Phil Coulson": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Agents of S.H.I.E.L.D.": {
+      "types": "Creature - Human Spy Hero",
+      "manaCost": "{2}{W}",
+      "power": "2",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Ainok Tracker": {
+      "types": "Creature - Dog Scout",
+      "manaCost": "{5}{R}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "PLST"
+    },
+    "Ant-Man's Air Force": {
+      "types": "Creature - Insect",
+      "manaCost": "{1}{U}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Ant-Man, Reformed Rogue": {
+      "types": "Legendary Creature - Human Rogue Hero",
+      "manaCost": "{2}{G/U}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Ashcloud Phoenix": {
+      "types": "Creature - Phoenix",
+      "manaCost": "{2}{R}{R}",
+      "power": "4",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MKC"
+    },
+    "Battering Craghorn": {
+      "types": "Creature - Goat Beast",
+      "manaCost": "{2}{R}{R}",
+      "power": "3",
+      "toughness": "1",
+      "token": false,
+      "setCode": "ARC"
+    },
+    "Bold Biochemist": {
+      "types": "Creature - Human Scientist",
+      "manaCost": "{1}{U}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Borough Backup": {
+      "types": "Sorcery",
+      "manaCost": "{4}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Clue Token": {
+      "types": "Artifact - Clue",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": true,
+      "setCode": "MSH"
+    },
+    "Depower": {
+      "types": "Instant",
+      "manaCost": "{2}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Forest": {
+      "types": "Basic Land - Forest",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TRK"
+    },
+    "Future Sight": {
+      "types": "Enchantment",
+      "manaCost": "{2}{U}{U}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MB2"
+    },
+    "Garruk's Companion": {
+      "types": "Creature - Beast",
+      "manaCost": "{G}{G}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "M12"
+    },
+    "Giant-Sized Flying Ant": {
+      "types": "Creature - Insect",
+      "manaCost": "{3}{U}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Helicarrier Strike": {
+      "types": "Instant",
+      "manaCost": "{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Hero Token": {
+      "types": "Creature - Hero",
+      "manaCost": null,
+      "power": "3",
+      "toughness": "2",
+      "token": true,
+      "setCode": "MSH"
+    },
+    "Island": {
+      "types": "Basic Land - Island",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TRK"
+    },
+    "Manamorphose": {
+      "types": "Instant",
+      "manaCost": "{1}{R/G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "SPG"
+    },
+    "Mountain": {
+      "types": "Basic Land - Mountain",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TRK"
+    },
+    "Nick Fury, Spymaster": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{4}{W}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Opt": {
+      "types": "Instant",
+      "manaCost": "{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TDC"
+    },
+    "Peggy Carter, Secret Agent": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Plains": {
+      "types": "Basic Land - Plains",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Pym Particles": {
+      "types": "Sorcery",
+      "manaCost": "{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Quake, Agent of S.H.I.E.L.D.": {
+      "types": "Legendary Creature - Inhuman Spy Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Quantum Reduction": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{1}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Rampant Growth": {
+      "types": "Sorcery",
+      "manaCost": "{1}{G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "FIC"
+    },
+    "Robot Token": {
+      "types": "Artifact Creature - Robot",
+      "manaCost": null,
+      "power": "1",
+      "toughness": "1",
+      "token": true,
+      "setCode": "SPM"
+    },
+    "Robotics Mastery": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{4}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "S.H.I.E.L.D. Helicarrier": {
+      "types": "Artifact - Vehicle",
+      "manaCost": "{4}",
+      "power": "4",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "S.H.I.E.L.D. Spy Kit": {
+      "types": "Artifact - Equipment",
+      "manaCost": "{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Saproling Token": {
+      "types": "Creature - Saproling",
+      "manaCost": null,
+      "power": "1",
+      "toughness": "1",
+      "token": true,
+      "setCode": "MMA"
+    },
+    "Soldier Token": {
+      "types": "Creature - Soldier",
+      "manaCost": null,
+      "power": "1",
+      "toughness": "1",
+      "token": true,
+      "setCode": "MSH"
+    },
+    "Strategic Intervention": {
+      "types": "Enchantment",
+      "manaCost": "{1}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Super Suit": {
+      "types": "Artifact - Equipment",
+      "manaCost": "{1}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Thallid": {
+      "types": "Creature - Fungus",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MMA"
+    },
+    "Thriving Heath": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Thriving Isle": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Volcano Hellion": {
+      "types": "Creature - Hellion",
+      "manaCost": "{2}{R}{R}",
+      "power": "6",
+      "toughness": "5",
+      "token": false,
+      "setCode": "PLC"
+    },
+    "Wasp, Shrinking Savior": {
+      "types": "Legendary Creature - Human Hero",
+      "manaCost": "{2}{U}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Web Up": {
+      "types": "Enchantment",
+      "manaCost": "{2}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    }
+  },
+  "tokens": [
+    {
+      "name": "Clue Token",
+      "recordings": 1
+    },
+    {
+      "name": "Hero Token",
+      "recordings": 3
+    },
+    {
+      "name": "Robot Token",
+      "recordings": 7
+    },
+    {
+      "name": "Saproling Token",
+      "recordings": 1
+    },
+    {
+      "name": "Soldier Token",
+      "recordings": 6
+    }
+  ],
+  "missing": [
+    "Giant Growth"
+  ]
+}

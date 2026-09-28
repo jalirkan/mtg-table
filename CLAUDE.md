@@ -273,6 +273,10 @@ node tools/arena-bench.mjs           # report 09 §9.4's frame times; NOT in che
 node tools/arena-bench.mjs --index 316 --gpu gl   # Tier 2's bench frame, on the real GPU
 node tools/build-figures.mjs --src var/assets/figures   # Tier 2: rebuild figures.glb
                                      # + models.json from the CC0 downloads (by hand)
+npm --prefix web run dev             # then /#workshop — THE WORKSHOP: one card on a
+                                     # pedestal with the arena's own renderer (W in
+                                     # the arena); docs/evidence/workshop.md
+node tools/build-workshop-catalog.ts # decks + fixtures/games -> workshop/catalog.json
 ```
 
 `V` switches renderer mid-game over the same socket without dropping a frame and
@@ -532,7 +536,13 @@ together, and each is a defect that was actually hit.
    without the `data-card-name` backstop; see the M7 conventions below. **The card
    browser (`#cards`) draws library cards with `cards/CardView.tsx`** and never
    imports `CardTile` (**D94**, *Card library* below) — public card data, not a
-   game, so it is not an eleventh importer.
+   game, so it is not an eleventh importer. **The workshop (`#workshop`) draws its
+   card LIST's thumbnails with one `<img>` of its own** (`workshop/Workshop.tsx`),
+   exempt for the same reason: the list is deck cards, tokens and archetypes whose
+   facts come only from face-up sightings, a concealed entry never looks its art
+   up and draws a back, and its pedestal draws every card through the arena's
+   `CardPlane`. `workshop.test.ts` holds it at one `imageUrl(` with every
+   `lookupArt(` guarded by `concealed === null`.
 3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
    set-valued.** Keys are `c:<cardId>` / `p:<playerId>` / `s:<stackId>` because
    **the id spaces collide** — 40 frames in the committed corpus have a
@@ -544,11 +554,17 @@ together, and each is a defect that was actually hit.
    the post-render sweep and never inside render; the sweep bumps a version only
    when a rect actually moved. Use the isomorphic layout-effect shim already in
    that file, or `renderToStaticMarkup` starts printing SSR warnings.
-4. **One keymap table.** `web/src/keys.ts` is the **23** rows (18 at M4; M7 added
-   `V` and `K`, Tier 2's slice 2 the three camera rows) plus two pure
+4. **One keymap table.** `web/src/keys.ts` is the **24** rows (18 at M4; M7 added
+   `V` and `K`, Tier 2's slice 2 the three camera rows, the workshop `W`) plus two pure
    functions (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
    and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
-   Adding a key is a row, never a new branch in a handler. Two rules live in
+   Adding a key is a row, never a new branch in a handler. Its dispatchers are
+   `Board.tsx`, `Arena.tsx` and — for `W` (`openWorkshop`) alone — `main.tsx`,
+   which owns the view and takes the key in the capture phase only while the arena
+   is really mounted (never under `?arena=off`, where `W` is the board's floating
+   white mana). A page with no board has a table of its own: the card browser's
+   `cards/keys.ts` and the workshop's `workshop/keys.ts`, each row carrying its
+   action. Two rules live in
    `planKey` and are tested there: **a focused button keeps `Space` and nothing
    else** (the browser will already activate it; sending `buttonOk` too answers
    the engine twice — and M3's handler dropped the *whole* keyboard for a focused
@@ -580,7 +596,9 @@ was removed rather than enabled.
 `npm --prefix web test` is **817 `node --test` + 91 vitest (6 files)** standalone
 as of **M7 Tier 2's fourth slice rebased onto the card library** (2026-09-27; the
 two sides add — slice 4's twenty new `node --test` cases, its `duelists` suite
-among them, and D90's 93 plus 12 vitest), and was **797 + 91 (6 files)** as of
+among them, and D90's 93 plus 12 vitest), **837 + 91** with **the workshop** on
+the card library alone (its `workshop` suite, 38, and two `keys` cases; not yet
+re-measured on slice 4's tree), and was **797 + 91 (6 files)** as of
 **the card library (D90, 2026-09-27)** — its four suites `cards-lib` (49),
 `cards-api` (15), `cards-ui` (29) and the vitest `cards-render` (12) — **724 + 79
 (5 files)** as of **M7 Tier 2's fourth slice** before the rebase, and
@@ -796,7 +814,12 @@ Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
 `npm run build`'s own output is the check — the 2D entry chunk is 85.62 kB gzip
-at Tier 1 and 85.72 kB after Tier 2's first slice, and none of it is `three`. And
+at Tier 1, 85.72 kB after Tier 2's first slice, 86.47 kB with the card browser
+and 87.36 kB with the workshop, and none of it is `three`. **Since the workshop
+the arena's scene is a chunk two lazy pages share** — `three`, fiber, drei and
+`arena/scene/`, named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames`
+(339.87 kB gzip) — with `Arena-*.js` (8.92 kB) and `Workshop-*.js` (24.07 kB) on
+top; the one stylesheet carries the workshop's rules (+1.36 kB gzip). And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
 `dist`, a `vite preview` server and a headless Chromium. Every performance number
 in `docs/evidence/m7-arena.md` is from **SwiftShader**, a software rasteriser and
@@ -1033,7 +1056,7 @@ camera rules still hold under all of it.
    is stored — and a stored spectator-only view shows the table at a live seat.
 5. **The camera keys are keymap rows, and on the board they are `inert`**
    (**D74**, M4 convention 4). `1`–`5`, `6`/`0` and `O` are three of `keys.ts`'s
-   23 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
+   24 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
    `CAMERA_KEYS` and `keys.test.ts` holds the two maps together. On the board each
    plans an `inert` whose reason names `V` — never a `view`, which `Board.tsx`'s
    silent `default:` would swallow.
@@ -1354,6 +1377,94 @@ duelist.
    these three before you move one. `visibleShare` does not yet model the player
    plates (PLAN.md's slice-4 follow-up 3).
 
+## Workshop — the conventions D102–D104 added
+
+Five, and the thesis is one sentence: **the workshop is the arena pointed at one
+card: it draws with the arena's code and decides nothing the arena would not.**
+`#workshop` (`web/src/workshop/`) is the card viewer the user asked for on
+2026-09-27, to see the figures and how they act. It is a page that builds its own
+boards and has no transport. README's *Arena mode → The workshop* is how to use
+it, `docs/evidence/workshop.md` is what was measured, and PLAN.md's *The
+workshop* has the status, **the rebase-onto-slice-4 checklist** and fourteen
+follow-ups. **D102–D104 are numbered after slice 4's D95–D101**; renumber them if
+another branch lands a D102 first.
+
+1. **Downstream of the arena, and the coupling is a list** (**D102**). Nothing
+   under `arena/` imports `workshop/`, and the workshop edits nothing under
+   `arena/`. **Every arena export it uses is named in `Workshop.tsx`'s header
+   comment**, and `workshop.test.ts` fails on an import the list does not name:
+   add the name there, with what it is for, in the same change. Something the
+   workshop needs from the arena is an arena change, made on the arena's desk,
+   never a workshop-local copy of arena logic. There are three exceptions, each
+   where the arena keeps the logic out of the workshop's reach, and each says so
+   in its header:
+   - `validated.ts` is `Arena.tsx`'s `useFigureData` / `useCueData` as pure
+     functions;
+   - `clipCue.ts` is the registry's `playClip` discipline for one clip;
+   - `legibility.ts` is `test/prop-raster.ts`'s rasteriser for the browser (a
+     page cannot read `node:fs`). A test holds it equal pixel for pixel, so when
+     `prop-raster.ts` changes, `legibility.ts` follows. Slice 4's per-family head
+     height is the first such change.
+2. **Every board is a synthetic FRAME from `synthetic.ts`** (**D104**). It is the
+   only module that makes a `ClientState`, and the only one that imports the
+   reducer as a value. Nothing poses a rig, places a card or chooses a mesh by
+   hand. The pedestal hands the folded state to `layout`, `figurePose`,
+   `FigureLayer`, `CardPlane` and `CueRunner`, so hard rule 8's renderer half —
+   the anonymous disc, the stub with no figure, the back — holds on the pedestal
+   because it is the arena's code. A new rehearsal copies an event shape the
+   corpus shows Forge sending. What only the engine could choose (aim, what a
+   blocker blocks, who crews) carries a `fiction` line that the panel shows.
+   `catalog.json` is **generated**: after a deck or a fixture changes, run
+   `node tools/build-workshop-catalog.ts` (a test fails until you do), and never
+   edit it by hand.
+3. **The frame loop is the arena's** (**D102**). `CueRunner` is THE loop on the
+   pedestal too. The workshop's one `useFrame` is `Pedestal.tsx`'s renderer at
+   priority 1, after `CueRunner`, and it allocates nothing. The page carries no
+   `fetch`, no socket, no timer and no URL except the Scryfall credit; every
+   `mixer.update` is `0`; there is no `useAnimations` and no `useGLTF`. A clip on
+   its own is `workshop.clip` in a **copy** of `REGISTRY`, never an entry in
+   `REGISTRY` itself. There is no `HitProxy` and no `onAct`, so the pedestal takes
+   no click, and `PedestalDirector` drops camera cues. The pedestal's `<Canvas
+   frameloop>` is backed by React state, never `loopRef.current`: a
+   fiber-initiated re-render (a resize) re-applied a stale mode and froze a batch.
+   Whether the arena shares that defect is PLAN.md's workshop follow-up 3.
+4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
+   in `localStorage` under `mtg-table.workshop.overrides`, with every access in
+   `try`. Only the workshop reads them, and they pass the arena's own validators:
+   `validated.ts` is `Arena.tsx`'s order. **Never add a path that writes
+   `traits.json` or `cues.json` from the page, and never let the arena or the
+   board read that key**, because a tuned look in a game is a renderer that
+   remembers. The copy buttons print the **committed** text with the edit folded
+   in: every key in order, comments, `presence` and `station` kept. They are
+   disabled while the validator names the card, and `workshop.test.ts` holds the
+   copies to the committed text byte for byte. A new trait key needs a row in
+   `Workshop.tsx`'s `TuningPanel`, whose field list is written out; slice 4's
+   costume is the first.
+5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
+   - lazy, through `lazy(() => import('./workshop/Workshop.tsx'))` (**D49**); the
+     scene chunk it shares with the arena is `arena-scene-*.js`, named by
+     `vite.config.ts`;
+   - the mode app is unmounted under it;
+   - its keys are its own table, `workshop/keys.ts`, whose rows carry their
+     actions, with no `case '<key>'` in `Workshop.tsx`. `W` is its one row in
+     `web/src/keys.ts`, dispatched by `main.tsx` only while the arena is really
+     mounted;
+   - its CSS is appended to `styles.css`;
+   - its logic is pure `.ts`: only `Workshop.tsx`, `Pedestal.tsx`,
+     `legibility.ts` and `data.ts` may import three or React;
+   - its components are in `hooks-order.test.ts`'s scan.
+
+   The list's thumbnail is its one card image outside `CardPlane` (M4 convention
+   2's exemption), and a concealed entry never looks its art up.
+
+The tests are `web/test/workshop.test.ts`: 38 cases inside `npm --prefix web test`,
+so inside `check-all.sh` too. Its liveness half (`workshopFiles()`) scans every
+`.ts` / `.tsx` **directly under** `web/src/workshop/`, and skips subdirectories.
+Keep the directory flat, or extend the scan in the same change. The screenshot
+driver's handle, `window.__mtgWorkshop` (the queue, `select`, the options, the
+camera mode, fiber's store), exists only under `import.meta.env.DEV`, as
+`__mtgArena` does.
+
 ## Treat forge-src as prose
 
 A Forge **2.0.15-SNAPSHOT** source checkout may be available in the session
@@ -1429,8 +1540,8 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
-| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and **Tier 2 is complete**: its first slice (T0–T7), its second (T8 and the camera views), its third (T9–T12, per-card identity) and its fourth (proportioned bodies in painted costumes, T13's duelists and T14; built, verified once and documented on branch `tier2-slice4`, rebased onto `main`'s `754f504` on 2026-09-27, with nineteen follow-ups and *Tier 2 is complete — what is left*): *M7 Tier 2* has the four slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). Off the plan, *The card library and the card browser* (**D90–D94**, 2026-09-27) has that tool's status, commands and twelve follow-ups, and questions 15–17 are its: commit `fixtures/cards/`?, the `scryfallUserAgent` contact, and every MSH + MSC image. |
-| `DECISIONS.md` | The **one hundred and one** load-bearing decisions, dated, with rejected alternatives (**D95–D101**, 2026-09-27, are M7 Tier 2 slice 4's: **D95** the humanoid bodies are Quaternius's *Universal Base Characters* on the animation library's own rig, every clip the library's, the chibis kept as fallbacks — superseding **D73**, and **D68** for those bodies; **D96** 1,400 triangles a body, the drone 1,900 and the bee 1,700, simplified with the costume slots by the CLI's own meshoptimizer; **D97** the hologram paints a costume — a slot per vertex, a palette per figure written at commit, still one program; **D98** the chibi as a `body` flag, props fitted per body family, the eyepatch one-sided; **D99** the duelists as full figures — a seat, not a player; a director and a villain; props baked — superseding **D62**; **D100** where they stand, the opponent's at the table's right because the far end is under the chrome; **D101** their gestures as a `gesture` param on reserved clip-lane ids, with suppression rules 5b and 8; **D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and **Tier 2 is complete**: its first slice (T0–T7), its second (T8 and the camera views), its third (T9–T12, per-card identity) and its fourth (proportioned bodies in painted costumes, T13's duelists and T14; built, verified once and documented on branch `tier2-slice4`, rebased onto `main`'s `754f504` on 2026-09-27, with nineteen follow-ups and *Tier 2 is complete — what is left*): *M7 Tier 2* has the four slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). Off the plan, *The card library and the card browser* (**D90–D94**, 2026-09-27) has that tool's status, commands and twelve follow-ups, and questions 15–17 are its: commit `fixtures/cards/`?, the `scryfallUserAgent` contact, and every MSH + MSC image. Beside it, *The workshop* (**D102–D104**, 2026-09-27) has the card viewer's status, commands, its rebase onto slice 4 and its follow-ups. |
+| `DECISIONS.md` | The **one hundred and four** load-bearing decisions, dated, with rejected alternatives. **D102–D104**, 2026-09-27, are the workshop, numbered after Tier 2 slice 4's D95–D101: **D102** a lazy page outside `arena/` that reaches the arena through a listed set of exports and unmounts the mode app; **D103** tuning overrides in this browser's `localStorage`, through the arena's validators, leaving only as a copy of the committed text; **D104** synthetic frames from one pure builder, card facts from the corpus, the engine's choices labelled. (**D95–D101**, 2026-09-27, are M7 Tier 2 slice 4's: **D95** the humanoid bodies are Quaternius's *Universal Base Characters* on the animation library's own rig, every clip the library's, the chibis kept as fallbacks — superseding **D73**, and **D68** for those bodies; **D96** 1,400 triangles a body, the drone 1,900 and the bee 1,700, simplified with the costume slots by the CLI's own meshoptimizer; **D97** the hologram paints a costume — a slot per vertex, a palette per figure written at commit, still one program; **D98** the chibi as a `body` flag, props fitted per body family, the eyepatch one-sided; **D99** the duelists as full figures — a seat, not a player; a director and a villain; props baked — superseding **D62**; **D100** where they stand, the opponent's at the table's right because the far end is under the chrome; **D101** their gestures as a `gesture` param on reserved clip-lane ids, with suppression rules 5b and 8; **D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

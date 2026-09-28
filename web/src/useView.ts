@@ -31,16 +31,41 @@
  * so switching to it mid-game leaves the page-scoped socket alone. Its search
  * state rides in the same hash after a `?` — `#cards?q=agent&set=msh` — which is
  * why the hash is matched on the part before the first `?`.
+ *
+ * **The workshop is a fourth view, and not a renderer either**
+ * (`web/src/workshop/`, docs/evidence/workshop.md). `#workshop` / `?view=workshop`
+ * open it; it builds its own synthetic boards and draws them with the arena's
+ * scene, and it never touches the transport. `?view=` takes the bare word only
+ * (`arena`, `cards`, `workshop`) — the hash takes the spellings in the sets below.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 
-export type View = 'board' | 'arena' | 'cards';
+export type View = 'board' | 'arena' | 'cards' | 'workshop';
 
 /** The hash spellings that mean "arena". Anything else is the board. */
 const ARENA_HASHES: ReadonlySet<string> = new Set(['arena', '/arena', '!arena', '#arena']);
 /** The hash spellings that mean "the card browser". */
 const CARDS_HASHES: ReadonlySet<string> = new Set(['cards', '/cards', '!cards', '#cards']);
+/**
+ * **The workshop** — the card viewer (`web/src/workshop/`), a fourth page over the
+ * same app rather than a renderer of the game: it builds its own boards and takes
+ * no frame stream, so `main.tsx` mounts it with no transport at all.
+ */
+const WORKSHOP_HASHES: ReadonlySet<string> = new Set(['workshop', '/workshop', '!workshop', '#workshop']);
+
+/** A hash word (any of the spellings above) as a view; anything else is the board. */
+function viewOfHash(word: string): View {
+  if (ARENA_HASHES.has(word)) return 'arena';
+  if (CARDS_HASHES.has(word)) return 'cards';
+  if (WORKSHOP_HASHES.has(word)) return 'workshop';
+  return 'board';
+}
+
+/** A `?view=` word — the bare name only, as a command writes it. */
+function viewOfQuery(word: string): View {
+  return word === 'arena' || word === 'cards' || word === 'workshop' ? word : 'board';
+}
 
 /**
  * Decide the view from a location's `hash` and `search`, in that order.
@@ -49,27 +74,25 @@ const CARDS_HASHES: ReadonlySet<string> = new Set(['cards', '/cards', '!cards', 
  * because a URL typo must not blank the page.
  */
 export function viewFromLocation(hash: string, search: string): View {
-  // `#cards?q=agent` — the card browser's own state follows a `?` in the hash.
+  // `#cards?q=agent` — the card browser's own state follows a `?` in the hash
+  // (and `#workshop?card=…` would too), so only the part before it names the view.
   const cleanedHash = (hash.replace(/^#+/, '').split('?')[0] ?? '').trim().toLowerCase();
-  if (cleanedHash !== '') {
-    if (ARENA_HASHES.has(cleanedHash)) return 'arena';
-    return CARDS_HASHES.has(cleanedHash) ? 'cards' : 'board';
-  }
+  if (cleanedHash !== '') return viewOfHash(cleanedHash);
   let view: string | null = null;
   try {
     view = new URLSearchParams(search).get('view');
   } catch {
     view = null;
   }
-  const named = view === null ? '' : view.trim().toLowerCase();
-  if (named === 'arena') return 'arena';
-  return named === 'cards' ? 'cards' : 'board';
+  return view === null ? 'board' : viewOfQuery(view.trim().toLowerCase());
 }
 
 /** The hash a view is written as. `board` clears the hash rather than writing `#board`. */
 export function hashForView(view: View): string {
   if (view === 'arena') return '#arena';
-  return view === 'cards' ? '#cards' : '';
+  if (view === 'cards') return '#cards';
+  if (view === 'workshop') return '#workshop';
+  return '';
 }
 
 /**

@@ -244,6 +244,14 @@ node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/mod
 #   1 table · 2 your shoulder · 3 opponent's shoulder · 4 side-on · 5 low
 #   6 or 0 the auto director · O spectator mode (3, 4 and the director only when
 #   no seat is live; spectator is on by itself in a replay and when a game ends)
+
+# D102 — THE WORKSHOP: one card on a pedestal, drawn by the arena's own renderer —
+#      its figure, props, clips and cues, tunable live in this browser.  No JVM,
+#      no socket.  W in the 3D arena opens it too; "The workshop" below.
+npm --prefix web run dev            # then http://127.0.0.1:5173/#workshop
+#   /?card=coulson#workshop           opens on a card (a name or part of one;
+#                                     ?card= goes in the QUERY, not the hash)
+node tools/build-workshop-catalog.ts    # decks + fixtures/games -> its card list
 ```
 
 Everything above runs today. As of **M4** the board those frames feed is a real
@@ -657,7 +665,7 @@ same mechanism: there is no transport to answer with, so `onAct` is `null` and
 every button, card and control is inert. That is one prop, not two code paths.
 
 **Keys.** There is **one keymap** for both renderers (`web/src/keys.ts`), so
-**`?` or `H`** lists all twenty-three rows in the arena as well — the same table
+**`?` or `H`** lists all twenty-four rows in the arena as well — the same table
 the handler reads. The ones that are the arena's own:
 
 | key | what it does |
@@ -667,6 +675,7 @@ the handler reads. The ones that are the arena's own:
 | **1 2 3 4 5** | a camera view: table, your shoulder, the opponent's shoulder, side-on, low. Pressing the view you are on drops your own drag of it |
 | **6** or **0** | the auto director (spectating only) |
 | **O** | spectator mode on / off — on by itself in a replay and when your game ends, never while your seat is live |
+| **W** | open **the workshop** (*The workshop*, below) — one card on a pedestal. `V` there comes back to the arena; a replay resumes at its frame. On the 2D board `W` still spends floating white mana, and otherwise says to press `V` first |
 
 On the 2D board the camera keys do nothing and say so ("the board has no camera;
 press V"). They never answer the engine, so they work behind an open question
@@ -1172,6 +1181,173 @@ animations to keep the prompt responsive (PLAN.md question 12). Replays show the
 flinch. And every humanoid has a "superhero" build — broad-shouldered, Coulson
 included — because the free pack has only those proportions.
 
+#### The workshop — one card on a pedestal (`#workshop`)
+
+A card viewer for the identity work. Pick a card and you see it exactly as the
+arena draws it: its figure, props, disc and card. You can make it act, tune its
+data live, and measure whether it reads from the table. It is **the arena's own
+renderer** pointed at one card on a synthetic board: `CardPlane`, `FigureLayer`,
+the prop kit, `CueRunner` and the cue engine. So what you see is what a game would
+show, and no workshop code decides how anything looks (**D102**, **D104**). It
+needs no JVM and opens no socket.
+[`docs/evidence/workshop.md`](docs/evidence/workshop.md) is what was measured.
+
+```bash
+npm --prefix web run dev          # then http://127.0.0.1:5173/#workshop  (or /?view=workshop)
+#   /?card=coulson#workshop       open on a card — a name or part of one; ?card= is
+#   /?view=workshop&card=peggy    read from the query string, not from the hash
+#   W in the 3D arena (replay or live) or ⚒ workshop in the top bar opens it;
+#   ▣ arena, ▤ board or V goes back, a replay at the frame you left it on
+node tools/build-workshop-catalog.ts          # regenerate its card list after a deck or a
+node tools/build-workshop-catalog.ts --check  # recording changes (a test fails until you do)
+```
+
+Opening it from a live game is safe. The game is kept, because the socket belongs
+to the page, and nothing you do in the workshop reaches the engine. While the
+engine is waiting on you, the workshop's header says so. The board and the arena
+are unmounted while the workshop is open, so their keys cannot press OK behind
+your back. Without `web/public/art.json` (`node tools/fetch-art.ts`) the list has
+no thumbnails and the cards on the pedestal are text frames, as on the board.
+Without `web/public/models/figures.glb` every creature is its disc.
+
+**Left: the card list.** It holds:
+
+- every card of every deck in `decks/` (41 across the ten);
+- the 5 tokens the recorded games have seen;
+- 11 generic archetypes: a robot, an insect, a scientist, a spy, a hero, a
+  soldier, a villain and a vehicle, then a white creature, a blue creature and
+  any other creature;
+- two concealed shapes: a face-down creature and a hidden (redacted) card.
+
+Search by name, type or deck. Each row's chip says where its look comes from:
+**per-card** (its own row in `traits.json` or `figures.json`), **subtype**,
+**colour**, **default** or **concealed**. Hovering the row lists the rungs.
+`Giant Growth` has never been seen face up in a recording, so it is shown as a
+generic card of no type. The card you last looked at is remembered in this
+browser.
+
+**Middle: the pedestal.** The card and its figure on the arena's table, drawn by
+the arena. Above it:
+
+- **1× close** (drag to orbit), **table distance** and **whole table** (view 1
+  itself). *Table distance* makes the figure exactly as big as it is in the table
+  view at 1600 × 900, the size you will actually see it at.
+- **both seats**: your copy on the left and the opponent's on the right, from the
+  same angle. You see the opponent's figure from behind, as you will in a game.
+- **faces its player / faces the other seat**: PLAN.md's question 13, previewed.
+  The arena itself is unchanged.
+- a **target dummy** for attacks, blocks and spells to aim at, and **bloom**
+  (single view only).
+
+The caption gives the body's height **as drawn** in the table view. Below the
+pedestal is the cue engine's own control bar: play/pause, step, +50 ms, skip cue,
+skip all, speed and reduced motion. *Back to rest* puts the card back when the
+film ends; **rest** does it now.
+
+**Right: actions, tuning and a number.**
+
+- **Clips.** Every animation the body has, each played on its own, with no
+  lunge and no flash. A card's alias is used: Agent 13's `attack` is her
+  `pistolDraw`. The **stances** are here too: ready, tapped (it kneels), summoning
+  sick (translucent), attacking and blocking. The Air Force's clips are marked,
+  because its swarm is procedural and the rig they move is never drawn.
+- **Cues.** Everything the card can go through on the table, up to 24 events
+  chosen by what the card is: enters, attacks alone or with another, blocks,
+  takes damage or lethal damage, dies, is exiled or sacrificed, taps, gets or
+  loses a counter, is cast, resolves, fizzles, attaches, is crewed, and so on.
+  ▶ plays one through the real cue engine. Beside each event:
+  - which `cues.json` rung answered (the card's own entry, an archetype's or the
+    default), the cue, its length and the clip it plays;
+  - when the card's own, less specific entry outranked a more specific default
+    (a fizzled Helicarrier Strike still strikes);
+  - any selector of the card's own entry that no event reaches.
+
+  Hover a ▶ for what the workshop invented. What a spell targets, what a blocker
+  blocks and who crews are the engine's to say, so here the answer is the dummy,
+  the other copy, an Aura's host or a Soldier token.
+- **Tuning.** The card's `traits.json` row as fields: `scale`, `hover`, `idle`,
+  `tint`, `accent`, `shade`, `turn` + `turnedRatio`, `swarm` + `formation`,
+  `silhouette`, `shrink` and a checkbox per prop kind. Edits apply at once.
+- **Cue params.** The `params` of each of the card's own `cues.json` selectors,
+  as JSON.
+- **Legibility.** For each prop, how many pixels it gets on screen from the
+  table view, on your seat and the opponent's, standing and kneeling. It shows
+  red under 48, `traits.test.ts`'s bar, and measures what that test measures,
+  pixel for pixel. A one-sided detail (a tie, a laser eye, an exhaust) is red
+  from one side on purpose: its partner carries the card there.
+- **Keys.**
+
+| key | what it does |
+|---|---|
+| **SPACE** | pause / resume the cue clock |
+| **.** | step: play the queued batch to its end |
+| **,** | advance a paused clock by 50 ms |
+| **K** | skip everything playing |
+| **[** / **]** | slower / faster |
+| **B** | both seats on / off |
+| **F** | facing: its own player / the other seat |
+| **T** | camera: close → table distance → whole table |
+| **R** | reduced motion on / off |
+| **↑** / **↓** | previous / next card in the list |
+| **V** | back to the arena |
+
+**Your edits stay in this browser.** Tuning and cue params are overrides kept in
+this browser's `localStorage`. They never touch the repo, and the game never sees
+them: the arena and the board keep drawing the committed files. Each override
+goes through the arena's own validator first. A value the arena would refuse is
+refused here too, with the validator's message, and the card falls back to the
+look it would have in a game (**D103**). *OVERRIDDEN in this browser* at the top
+of a box means an override is live; **reset** drops it.
+
+**From a tuned look to a committed one.** This is *Giving a card its identity*,
+above, with the workshop as the place you look:
+
+1. Tune the card until it reads at **table distance** with **both seats** on.
+   Check **Legibility**: every identity prop should reach 48 or more on both
+   seats.
+2. Press **copy as traits.json row**. The clipboard gets `"<card name>": { … }`
+   in the file's own style: the committed row with your edits folded in, its keys
+   in their order and its `_note` kept. The button is disabled while the validator
+   refuses the row. With no clipboard, the text appears in a box under the
+   button.
+3. In `web/src/arena/figures/traits.json`, replace the card's row under `cards`
+   with it. For a card with no row yet, add it there; the copy already uses the
+   name as the wire spells it. Write a `_note` saying where the look comes from.
+4. Run `npm --prefix web test`. `traits.test.ts` validates the file, prints the
+   census and rasterises every deck card's props from both seats.
+5. Back in the workshop, press **reset**. Until you do, this browser keeps drawing
+   the override over the file. Right after the paste they are the same, but a
+   later change to the row would stay hidden here.
+6. Look at the card in a real game frame: `npm --prefix web run dev:arena`,
+   scrubbed to a frame where the card is on the battlefield, in views **1** and
+   **4**.
+
+Cue params work the same way. **Copy as cues.json entry** gives the card's whole
+`cues.json` entry with only your params changed. Its notes are kept, and so are
+`presence` (its hover) and `station` (a console or a cocoon), because a paste
+replaces the whole entry. Replace the entry under `cards` in
+`web/src/arena/cues/cues.json` and run the tests. `cues-exhaustive.test.ts`
+validates the file, and `replay-cues.test.ts` sweeps the recorded games.
+
+The panel cannot change a card's `cue` or `ms`, add a selector, or edit the
+archetype rungs of either file or `figures.json` (which body a card stands in, an
+attachment's look, a land's tile). Those are edits to the files. A concealed card
+has no tuning at all, because it is anonymous by rule.
+
+**What it is not.** It is not a game: there is no act, no answer, no socket, and
+nothing the engine ever sees. It does not edit the repo: it writes nothing but
+this browser's storage. It shows what the arena draws, rules included:
+
+- a face-down creature is the anonymous disc with no props;
+- a hidden card is a back with no figure;
+- a creature that dies is seen dying;
+- an attacker turns to face what it attacks.
+
+Camera cues (the Helicarrier's fly-in) are not played, because the pedestal's
+camera is yours. Bloom is single-view only. Tier 2 slice 4's costumes are not in
+this tree yet. After the workshop is rebased onto slice 4 they appear on the
+pedestal, and the tuning panel needs a row for them (PLAN.md, *The workshop*).
+
 ### Card library and browser — `#cards`
 
 A local, offline-searchable index of every Magic card, and a page to browse it:
@@ -1378,9 +1554,11 @@ mtg-table/
       main.tsx  styles.css
       keys.ts                (M4) ONE keymap table + two pure functions; the handler
                              and the `?` overlay both read it, so they cannot drift.
-                             M7 added two rows (V, K) rather than a second keyboard
+                             M7 added two rows (V, K) rather than a second keyboard;
+                             D102 one more (W, the workshop, from the arena)
       useView.ts             (M7) #arena / #/arena / ?view=arena, with no router;
-                             (D90) #cards / ?view=cards, the card browser
+                             (D90) #cards / ?view=cards, the card browser;
+                             (D102) #workshop / ?view=workshop, the workshop
       transport/transport.ts interface Transport { onFrame(cb); send(f) }
       transport/replay.ts    LogReplayTransport (fetch a .jsonl; play/step/scrub)
       transport/ws.ts        WebSocketTransport (M3: reconnect + resync)
@@ -1481,7 +1659,8 @@ mtg-table/
                              environment and cannot catch a hook-count change; as of M7
                              it walks all 27 .tsx under render/ and arena/, 65
                              components, not just Board.tsx -- and since D90 cards/
-                             too: 33 files and 86 components in all);
+                             too: 33 files and 86 components; since D102 workshop/
+                             too: 35 files and 100 components in all);
                              and (M7) layout.test.ts (the resting pose over the whole
                              corpus, including hard rule 8's 3D half: every concealed
                              card is placed as a BACK) colour.test.ts
@@ -1506,13 +1685,28 @@ mtg-table/
                              on a real loopback socket over an index built from
                              fixtures/cards/) cards-ui.test.ts (the browser's pure half
                              and its import boundaries) and cards-render.test.tsx
-                             (the page mounted over canned route answers)
+                             (the page mounted over canned route answers);
+                             and (D102) workshop.test.ts (the catalog against the
+                             decks and the corpus, every rehearsal of every card
+                             through the real queue, the overrides through the
+                             validators, the meter against prop-raster.ts, and the
+                             workshop's liveness and coupling list)
     src/cards/               (D90) THE CARD BROWSER, #cards. Lazily imported; public
                              card data, not a game. CardBrowser.tsx CardDetail.tsx
                              CardView.tsx (its own card renderer -- never CardTile,
                              D94) Pips.tsx; pure: search.ts decks.ts keys.ts text.ts
                              model.ts api.ts; devApi.ts is the DEV-SERVER-ONLY route
                              (vite.config.ts configureServer) over var/cards/ (D92)
+    src/workshop/            (D102) THE WORKSHOP, #workshop: one card on a pedestal,
+                             drawn by the arena's own scene. Lazily imported; edits
+                             nothing under arena/ and names every arena export it
+                             uses in Workshop.tsx's header. Workshop.tsx Pedestal.tsx;
+                             legibility.ts (the meter, three); pure: synthetic.ts
+                             (THE builder of its boards, D104) catalog.ts
+                             catalogBuild.ts cueRows.ts clipCue.ts facing.ts
+                             framing.ts tuning.ts (the overrides, D103) validated.ts
+                             data.ts keys.ts; catalog.json is GENERATED by
+                             tools/build-workshop-catalog.ts -- never edit by hand
     public/art.json          generated, gitignored
     public/models/figures.glb  (Tier 2) BUILT by tools/build-figures.mjs from five CC0
                              packs: 373,236 bytes since slice 4, recorded in
@@ -1568,6 +1762,9 @@ mtg-table/
     fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare
                              it to its committed fixture as a multiset, `seq` stripped
     fetch-art.ts             deck -> web/public/art.json
+    build-workshop-catalog.ts  (D104) decks/*.dck + fixtures/games/*.jsonl ->
+                             web/src/workshop/catalog.json, the workshop's card
+                             facts; --check exits 1 if it would change
     card-library/            (D90) the local card index: build.ts (Scryfall's bulk
                              file + the MSH/MSC prints -> var/cards/cards.sqlite,
                              SQLite + FTS5, D91) images.ts (the image cache, D93)
@@ -1636,7 +1833,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | One hundred and one load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and four load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -1650,7 +1847,7 @@ mtg-table/
 | [`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md) | M7 Tier 1: the arena's spec — the offset model, the cue table, the camera, the performance budget. |
 | [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md) | M7 Tier 2's asset landscape: which packs are really CC0, what is inside the files, the gltf-transform pipeline, and the two drei traps. |
 | [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md) | M7 Tier 2's plan, written against the Tier 1 code: the manifestation stage, the pose-versus-cue rule, the clip lane, the evenings T0–T14. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. `workshop.md` is the workshop: what it is made of, the tests (every rehearsal of every card through the real queue, the meter against `prop-raster.ts` pixel for pixel), the drawn heights, the build, the screenshots, the fix pass and the rebase onto slice 4. |
 
 ## Licence
 

@@ -94,5 +94,23 @@ export default defineConfig({
     fs: { allow: [REPO_ROOT] },
   },
   preview: { port: 4173, host: '127.0.0.1' },
-  build: { outDir: 'dist', sourcemap: true },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        // **The arena's scene, named for what it is.** Two lazy pages draw with
+        // it — `#arena` and `#workshop` — so Rollup hoists `three`, fiber, drei
+        // and `web/src/arena/scene/` into one chunk they share, and would name it
+        // after whichever module it happened to pick (`tiles-*.js`). A shared,
+        // non-entry chunk that carries `three` is `arena-scene-*.js`, whatever
+        // module Rollup picks: the evidence and CLAUDE.md quote it by that name.
+        // It stays lazy (D49) — only the two lazy entries import it.
+        chunkFileNames: (chunk) =>
+          !chunk.isEntry && !chunk.isDynamicEntry && chunk.moduleIds.some((id) => id.includes('/node_modules/three/'))
+            ? 'assets/arena-scene-[hash].js'
+            : 'assets/[name]-[hash].js',
+      },
+    },
+  },
 });
