@@ -51,12 +51,16 @@ import forge.game.event.GameEventGameOutcome;
 import forge.game.phase.PhaseType;
 import forge.game.player.DelayedReveal;
 import forge.game.player.IHasIcon;
+import forge.game.player.Player;
 import forge.game.player.PlayerView;
 import forge.game.spellability.SpellAbilityView;
 import forge.game.zone.ZoneType;
 import forge.gamemodes.match.AbstractGuiGame;
 import forge.gamemodes.match.HostedMatch;
 import forge.gamemodes.match.NextGameDecision;
+import forge.gamemodes.match.input.Input;
+import forge.gamemodes.match.input.InputPassPriority;
+import forge.gamemodes.match.input.InputPayMana;
 import forge.gamemodes.match.input.InputQueue;
 import forge.gui.FThreads;
 import forge.gui.control.GameEventForwarder;
@@ -180,9 +184,77 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private final AtomicInteger yieldsSet = new AtomicInteger();
     private final AtomicInteger yieldsTo = new AtomicInteger();
     private final AtomicInteger phaseStopsSet = new AtomicInteger();
-    private final AtomicInteger undosRequested = new AtomicInteger();
+    /** {@code undo} acts APPLIED to the engine -- D136: one refused as "Not now" is not an undo. */
+    private final AtomicInteger undosApplied = new AtomicInteger();
     /** D39: refresh hops that found the engine running and skipped the walk. */
     private final AtomicInteger refreshesSkipped = new AtomicInteger();
+
+    // ---- D136: the acts that write the engine from the EDT ----------------
+    /**
+     * {@code undo} and {@code useMana} acts refused with {@code notice {title:"Not
+     * now"}} because the engine was not quiet (decision <b>D136</b>, protocol
+     * amendment M48): {@code {undo, useMana}}.
+     */
+    private final AtomicInteger undosNotNow = new AtomicInteger();
+    private final AtomicInteger useManaNotNow = new AtomicInteger();
+    /**
+     * Our own view-walking hops ({@link #refreshState}, {@link #asyncAbilityMenu})
+     * between their submission -- on the EDT -- and the end of their runnable.
+     * Counted from submission, not from the worker's start, so a hop the pool has
+     * accepted but not yet scheduled is already in flight (D136 condition 7).
+     */
+    private final AtomicInteger hopsInFlight = new AtomicInteger();
+    /**
+     * Every game thread that has entered the bridge ({@link #flushState},
+     * {@link #ask}): the threads whose {@link Thread#getState} D136's last
+     * condition reads.  {@code Game-0}, Forge's own workers once they emit or
+     * ask, and our hops.  A handful for the life of the process (the cached pool
+     * reuses its threads); a terminated one is dropped when it is next seen.
+     */
+    private final Set<Thread> engineThreads = ConcurrentHashMap.newKeySet();
+    /** Asks a game thread has registered with {@link ReplyPool}: the engine answering a press by ASKING. */
+    private final AtomicLong engineAsks = new AtomicLong();
+    /**
+     * D136 condition 6: the last OK / pass this EDT gave an
+     * {@code InputPassPriority} that is still up, with the input generation and
+     * {@link #engineAsks} as they were before the press.  While all three are
+     * unchanged, Forge may be running the pass on a worker (the mana-lost
+     * confirm) that has not reached the bridge yet.  Written and read on the EDT.
+     */
+    private volatile PassPress passPress;
+
+    /**
+     * D136: a {@code concede} that arrived while the engine was not quiet.  The
+     * seat's outcome is already written (one field); the rest of
+     * {@code PlayerControllerHuman.concede()} -- the player-list walk -- waits
+     * for the engine to end the game itself or to park on this seat.  While it
+     * is set, the seat is asked nothing more: {@link #ask} answers null at once.
+     */
+    private volatile boolean pendingConcede;
+    /** One {@link #retryConcede} on the EDT at a time. */
+    private final java.util.concurrent.atomic.AtomicBoolean concedeRetryPosted =
+            new java.util.concurrent.atomic.AtomicBoolean();
+    /** How many times {@link #retryConcede} has looked since the concede was deferred. */
+    private final AtomicInteger concedeRetries = new AtomicInteger();
+    /** {@link #retryConcede}'s poll: every 25 ms, for up to 30 s, then it gives up and says so. */
+    private static final int CONCEDE_RETRY_MS = 25;
+    private static final int CONCEDE_RETRY_LIMIT = 1200;
+    /** D136: concedes applied at once, and deferred: {@code {now, deferred}}. */
+    private final AtomicInteger concedesNow = new AtomicInteger();
+    private final AtomicInteger concedesDeferred = new AtomicInteger();
+
+    /** See {@link #passPress}. */
+    private static final class PassPress {
+        final Input input;
+        final long gen;
+        final long asks;
+
+        PassPress(final Input input, final long gen, final long asks) {
+            this.input = input;
+            this.gen = gen;
+            this.asks = asks;
+        }
+    }
     /**
      * Frames that passed a fast-path check ({@link #emit}, {@link #logC2s}, the ask
      * path), then lost the race to {@code over} and were dropped by the re-check under
@@ -304,6 +376,47 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * deterministic regression test.
      */
     static final long HOLD_GAME_END_MS = holdGameEndMs();
+    /**
+     * <b>A test hook, and nothing else</b> (decision <b>D136</b>): hold the game
+     * thread this many ms -- spinning, so it reads RUNNABLE, as a thread doing
+     * engine work does -- at the first <em>undo window</em> of a game: a
+     * {@code state} this seat can undo from ({@code undo.can}, depth &gt; 0) has
+     * just gone out and <b>no input is up</b>.  That is the moment the story
+     * branch's gate run crashed in: the mana payment's {@code stop()} has removed
+     * the {@code InputPayMana} and is flushing our forwarder, and the next thing
+     * the engine does is count the latch down and let {@code Game-0} put the spell
+     * on the stack -- {@code MagicStack.add} &rarr; {@code recordUndoableActions}
+     * &rarr; {@code clearUndoStack}.  A client that answers that {@code state}
+     * with {@code act: undo} lands inside the hold every time, which turns a race
+     * the gate hit once into a reproduction that runs the same way every run.
+     * Read once from {@code MTGTABLE_HOLD_UNDO_WINDOW_MS}; unset (the only value
+     * anybody plays with) it is 0 and costs nothing.  Holds once per game, and
+     * stops holding for the session once an undo has arrived during a hold.
+     */
+    static final long HOLD_UNDO_WINDOW_MS = envMs("MTGTABLE_HOLD_UNDO_WINDOW_MS");
+    /**
+     * <b>The negative control, and nothing else</b> (D136): with
+     * {@code MTGTABLE_TEST_UNGUARDED_ACTS=1} the bridge applies {@code undo} and
+     * {@code useMana} whenever they arrive, as it did before D136, so the
+     * reproduction above can be shown to go red with the guard off.  Announced on
+     * stderr when the class loads; nothing in the repo sets it except the
+     * negative-control run in {@code tools/undo-race-repro.sh}.
+     */
+    static final boolean TEST_UNGUARDED_ACTS = unguardedActs();
+    /** The game thread {@link #HOLD_UNDO_WINDOW_MS} is holding right now, or null. */
+    private volatile Thread undoWindowHolder;
+    /** {@link #HOLD_UNDO_WINDOW_MS}: this game's hold has happened. */
+    private volatile boolean undoWindowHeldThisGame;
+    /** {@link #HOLD_UNDO_WINDOW_MS}: an undo has arrived during a hold, so no more holds. */
+    private volatile boolean undoWindowRaced;
+    /** {@link #HOLD_UNDO_WINDOW_MS}: holds, and holds across which the undo stack changed. */
+    private final AtomicInteger undoWindowHolds = new AtomicInteger();
+    private final AtomicInteger undoWindowMutated = new AtomicInteger();
+    /** Acts that arrived while a hold was on, and what became of them: {@code {refused, applied}}. */
+    private final AtomicInteger undoWindowRefused = new AtomicInteger();
+    private final AtomicInteger undoWindowApplied = new AtomicInteger();
+    /** {@link #TEST_UNGUARDED_ACTS}: writes the guard would have refused and did not. */
+    private final AtomicInteger unguardedWrites = new AtomicInteger();
     private volatile boolean closed;
     /**
      * True once {@link #openView} has written the session header and the game
@@ -512,7 +625,40 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     public int[] comfortActs() {
         return new int[] {newGamesRequested.get(), yieldsSet.get(), yieldsTo.get(),
-                          phaseStopsSet.get(), undosRequested.get()};
+                          phaseStopsSet.get(), undosApplied.get()};
+    }
+
+    /**
+     * D136: the acts refused with {@code notice {title:"Not now"}} because the
+     * engine was not quiet on this seat, {@code {undo, useMana}}.  Not an error --
+     * the refusal IS the fix -- but counted, because a guard nobody can see the
+     * cost of is a guard nobody checks.
+     */
+    public int[] actsNotNow() {
+        return new int[] {undosNotNow.get(), useManaNotNow.get()};
+    }
+
+    /** D136: concedes applied whole at once, and deferred until the engine was quiet or ended the game. */
+    public int[] concedes() {
+        return new int[] {concedesNow.get(), concedesDeferred.get()};
+    }
+
+    /** {@link #TEST_UNGUARDED_ACTS}: writes applied that the guard would have refused, or -1 when it is off. */
+    public int unguardedWrites() {
+        return TEST_UNGUARDED_ACTS ? unguardedWrites.get() : -1;
+    }
+
+    /**
+     * {@link #HOLD_UNDO_WINDOW_MS}'s record, or null when the hook is off:
+     * {@code {holds, holds across which the undo stack changed, acts refused
+     * during a hold, acts applied during a hold}}.
+     */
+    public int[] undoWindowHook() {
+        if (HOLD_UNDO_WINDOW_MS <= 0L) {
+            return null;
+        }
+        return new int[] {undoWindowHolds.get(), undoWindowMutated.get(), undoWindowRefused.get(),
+                          undoWindowApplied.get()};
     }
 
     /**
@@ -917,6 +1063,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         forwarder = null;
         engineFinished = false;                // D114: game n has only just begun
         queuedNewGame = null;
+        passPress = null;                      // D136: its input belonged to the finished game
+        pendingConcede = false;                // D136: a concede belongs to the game it was sent in
+        undoWindowHeldThisGame = false;        // D136's test hook holds once per game
         pool.reopen();
         // LAST: `emit` drops every non-`over` frame while this is set, and the
         // handshake below is the first frame of the new game.
@@ -962,6 +1111,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return;
         }
         Snap.assertGameThread("WireGuiGame.flushState");
+        engineThreads.add(Thread.currentThread());   // D136: a game thread that walks is one the guard watches
         final List<GameEvent> all;
         synchronized (deferred) {
             if (deferred.isEmpty()) {
@@ -995,6 +1145,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             }
             playerIndex = pix;
             concealedNow = Snap.concealedIds(gameView, viewer);
+            // D136's reproduction: armed BEFORE the frame goes out, so an act the
+            // client sends the instant it reads this state finds the hold on.
+            final boolean holdUndoWindow = armUndoWindowHoldForTest();
             final boolean pushed = emit("state", body);
             if (pushed) {
                 stateFrames.incrementAndGet();
@@ -1015,6 +1168,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 // After the state that carries `gameOver`, so the terminal frame
                 // is still `over` (protocol sections 7 and 8.4).
                 emitOver();
+            }
+            if (holdUndoWindow) {
+                spinUndoWindowHoldForTest();   // D136's reproduction; never reached unless the env var is set
             }
         } catch (final RuntimeException e) {
             // Guava's EventBus swallows subscriber exceptions into java.util.logging,
@@ -1101,16 +1257,99 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     }
 
     private static long holdGameEndMs() {
-        final String v = System.getenv("MTGTABLE_HOLD_GAME_END_MS");
+        return envMs("MTGTABLE_HOLD_GAME_END_MS");
+    }
+
+    /** A non-negative millisecond count from the environment; unset, empty or garbage is 0. */
+    private static long envMs(final String name) {
+        final String v = System.getenv(name);
         if (v == null || v.isEmpty()) {
             return 0L;
         }
         try {
             return Math.max(0L, Long.parseLong(v.trim()));
         } catch (final NumberFormatException e) {
-            System.err.println("MTGTABLE_HOLD_GAME_END_MS=" + v + " is not a number; ignored");
+            System.err.println(name + "=" + v + " is not a number; ignored");
             return 0L;
         }
+    }
+
+    private static boolean unguardedActs() {
+        final boolean on = "1".equals(System.getenv("MTGTABLE_TEST_UNGUARDED_ACTS"));
+        if (on) {
+            System.err.println("TEST HOOK: MTGTABLE_TEST_UNGUARDED_ACTS=1 -- undo and useMana are applied "
+                    + "WITHOUT D136's guard, as before it.  A negative control; never play with this set.");
+        }
+        return on;
+    }
+
+    /** {@link #HOLD_UNDO_WINDOW_MS}: the undo depth when the hold was armed. */
+    private int undoWindowDepth;
+
+    /**
+     * {@link #HOLD_UNDO_WINDOW_MS}, first half: on a game thread, just before a
+     * {@code state} goes out, and only in a test.  Arms the hold -- the
+     * {@link #undoWindowHolder} mark goes up BEFORE the frame, so an act the
+     * client sends the instant it reads the frame is seen to arrive during the
+     * hold -- when this is the undo window.  Every read here is a game-thread
+     * read of the same kind {@link #undoStateJson} makes for the snapshot.
+     */
+    private boolean armUndoWindowHoldForTest() {
+        if (HOLD_UNDO_WINDOW_MS <= 0L || undoWindowRaced || undoWindowHeldThisGame || overEmitted || closed) {
+            return false;
+        }
+        final PlayerControllerHuman h = humanController();
+        if (h == null) {
+            return false;
+        }
+        final InputQueue q = h.getInputQueue();
+        if (q == null || q.getInput() != null || !h.canUndoLastAction()) {
+            return false;                      // parked (or about to be), or nothing to undo: not the window
+        }
+        final int depth = undoDepth();
+        if (depth <= 0) {
+            return false;
+        }
+        undoWindowHeldThisGame = true;
+        undoWindowHolds.incrementAndGet();
+        undoWindowDepth = depth;
+        undoWindowHolder = Thread.currentThread();
+        System.err.println("TEST HOOK: holding " + Thread.currentThread().getName() + " " + HOLD_UNDO_WINDOW_MS
+                + " ms in the undo window (MTGTABLE_HOLD_UNDO_WINDOW_MS): the state going out offers undo "
+                + "{can:true, depth:" + depth + "} and no input is up -- the engine is between the mana payment "
+                + "and the stack");
+        return true;
+    }
+
+    /** {@link #HOLD_UNDO_WINDOW_MS}, second half: after the frame went out, spin, then say what changed. */
+    private void spinUndoWindowHoldForTest() {
+        final String me = Thread.currentThread().getName();
+        final int before = undoWindowDepth;
+        try {
+            final long end = System.nanoTime() + HOLD_UNDO_WINDOW_MS * 1_000_000L;
+            while (System.nanoTime() < end && !closed) {
+                Thread.onSpinWait();           // RUNNABLE, as a thread inside the engine is
+            }
+        } finally {
+            undoWindowHolder = null;
+        }
+        final int after = undoDepth();
+        if (after != before) {
+            undoWindowMutated.incrementAndGet();
+            System.err.println("TEST HOOK: UNDO STACK MUTATED UNDER A RUNNING ENGINE THREAD: depth " + before
+                    + " -> " + after + " while " + me + " was held inside the engine (the D136 race)");
+        } else {
+            System.err.println("TEST HOOK: undo window released; the undo stack is untouched (depth " + before
+                    + ")");
+        }
+    }
+
+    /** The rules engine's undo stack depth, or 0 with no game.  Game thread (a read the snapshot also makes). */
+    private int undoDepth() {
+        if (hosted == null || hosted.getGame() == null || hosted.getGame().getStack() == null) {
+            return 0;
+        }
+        return hosted.getGame().getStack().getUndoStackSize();
     }
 
     /** {@link #HOLD_GAME_END_MS}: on the game thread, after {@code over}, and only in a test. */
@@ -1258,6 +1497,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private void engineInput(final Consumer<InputState> f) {
         inputSeen = true;
         mutateInput(f);
+        if (pendingConcede && concedeRetryPosted.compareAndSet(false, true)) {
+            // D136: the engine is showing this seat something, so it is parking
+            // (or has parked) here: finish the deferred concede on the EDT.
+            FThreads.invokeInEdtLater(this::retryConcede);
+        }
     }
 
     /** Apply an input change and re-emit the frame.  Says nothing about who asked. */
@@ -2050,8 +2294,16 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     private Object ask(final String kind, final List<Object> opts, final BodyWriter extra) {
         Transport.assertGameThread("ask/" + kind);
+        engineThreads.add(Thread.currentThread());   // D136: e.g. the mana-lost confirm's worker
         if (closed || overEmitted) {
             return null;                       // degrade, never wedge
+        }
+        if (pendingConcede) {
+            // D136: this seat has conceded and the engine has not ended the game
+            // yet.  It is asked nothing more: the section 5.4 default, at once, so
+            // the game thread reaches the state-based check that ends the game.
+            System.err.println("ASK AFTER CONCEDE: " + kind + " -> null (D136)");
+            return null;
         }
         flushState(List.of());
         final String askId = "a" + askSeq.incrementAndGet();
@@ -2088,6 +2340,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 seq = l.s2c("ask", body);
             }
             pool.register(askId, kind);        // register BEFORE push
+            engineAsks.incrementAndGet();      // D136 condition 6: the engine answered a press by asking
             if (pool.pending() > 1) {
                 System.err.println("ASK OVERLAP " + pool.pending() + " pending -- a second game thread");
             }
@@ -2348,9 +2601,17 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // D22: the generation is read HERE, on the EDT, inside the click that is
         // asking -- so it is the generation of the input Forge is parked on.
         final long gen = inputGen.get();
+        hopsInFlight.incrementAndGet();        // D136: in flight from submission, not from the worker's start
         try {
-            ThreadUtil.invokeInGameThread(() -> emitAbilityMenu(hostId, chosen, gen));
+            ThreadUtil.invokeInGameThread(() -> {
+                try {
+                    emitAbilityMenu(hostId, chosen, gen);
+                } finally {
+                    hopsInFlight.decrementAndGet();
+                }
+            });
         } catch (final RuntimeException e) {
+            hopsInFlight.decrementAndGet();
             errors.incrementAndGet();
             System.err.println("ASYNC ABILITY MENU NOT SCHEDULED: " + e);
             notice("warn", "Cannot play that yet", "card " + hostId
@@ -2928,6 +3189,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         Transport.assertNotGameThread("Transport.Inbound.onAct");
         Transport.assertNotEdt("Transport.Inbound.onAct");
         logC2s("act", actBody(action, body));
+        // D136 / D22: the input generation this act ARRIVED under.  An act that
+        // writes the engine directly (undo, useMana) is applied only if the input
+        // is still the one it was sent against when its turn on the EDT comes.
+        final long genAtArrival = inputGen.get();
         // Dispatch on the virtual EDT, exactly as desktop Forge does:
         // InputBase.finished is a plain non-volatile field written by stop() via
         // invokeInEdtNowOrLater and read by selectCard/selectButtonOk, and
@@ -2935,7 +3200,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // clicks against prompt rendering for free.
         FThreads.invokeInEdtNowOrLater(() -> {
             try {
-                applyAct(action, body);
+                applyAct(action, body, genAtArrival);
             } catch (final RuntimeException e) {
                 // Protocol section 2.2: the server tolerates ANY act at any time,
                 // including one that is now meaningless.  Drop it with a notice;
@@ -2947,7 +3212,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         });
     }
 
-    private void applyAct(final String action, final Map<String, Object> body) {
+    private void applyAct(final String action, final Map<String, Object> body, final long genAtArrival) {
         if (!ready || !inputSeen) {
             // Typed ahead of the game: there is no controller and no board yet.
             if ("concede".equals(action)) {
@@ -3005,13 +3270,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             break;
         }
         case "buttonOk":
-            c.selectButtonOk();
+            pressOk(c, c::selectButtonOk);     // D136 condition 6
             break;
         case "buttonCancel":
             c.selectButtonCancel();
             break;
         case "passPriority":
-            c.passPriority();                  // genuinely distinct from buttonOk
+            pressOk(c, c::passPriority);       // genuinely distinct from buttonOk; D136 condition 6
             break;
         case "useMana": {
             final Object col = body.get("color");
@@ -3019,12 +3284,25 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 notice("warn", "useMana", "no colour given");
                 return;
             }
+            // D136: ManaPool.tryPayCostWithColor, from the EDT, checking neither
+            // InputBase.finished nor InputPayMana.locked -- a write, so the engine
+            // must be quiet on this seat.
+            if (notNow("useMana", c, genAtArrival, useManaNotNow)) {
+                return;
+            }
             c.useMana(MagicColor.fromName(String.valueOf(col)));
             break;
         }
         case "undo":
-            undosRequested.incrementAndGet();
+            // D136: MagicStack.undo(), from the EDT, consulting no input at all --
+            // the write that raced Game-0's clearUndoStack.  Applied only while the
+            // engine is parked on this seat and nothing else is running; otherwise
+            // `notice {title:"Not now"}` and the engine is not touched.
+            if (notNow("undo", c, genAtArrival, undosNotNow)) {
+                return;
+            }
             c.undoLastAction();                // self-gated on canUndoLastAction (PCH:2698)
+            undosApplied.incrementAndGet();
             refreshState();
             break;
         case "alphaStrike":
@@ -3038,7 +3316,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             newGame(c, body.get("mode") == null ? "continue" : String.valueOf(body.get("mode")));
             break;
         case "concede":
-            concedeAll();
+            concede(c);                        // D136: at once when quiet, else outcome now and the rest later
             break;
         case "setPhaseStop": {
             final Object phase = body.get("phase");
@@ -3093,6 +3371,93 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private void concedeAll() {
         for (final IGameController c : getOriginalGameControllers()) {
             c.concede();
+        }
+    }
+
+    /**
+     * <b>Decision D136.</b>  {@code PlayerControllerHuman.concede()} is two
+     * things: {@code Player.concede()} -- the outcome, one field
+     * ({@code PlayerStatistics.outcome}) -- and then
+     * {@code GameAction.checkGameOverCondition()} on the calling thread, which
+     * walks the player list and removes the loser.  From the EDT while
+     * {@code Game-0} runs, that walk met {@code Game-0}'s own
+     * ({@code Game.copyLastState}, {@code checkGameOverCondition}) and threw
+     * {@code ConcurrentModificationException} -- an engine crash, measured in
+     * D136's natural-timing sweep.
+     *
+     * <p>So: when the engine is quiet on this seat ({@link ActGuard}, the act's
+     * own generation aside -- a concede is not a decision about a board) the
+     * concede is applied whole, as before.  Otherwise only the outcome is written,
+     * and the game ends where every other game ends: {@code Game-0}'s next
+     * state-based check ({@code checkStateEffects} &rarr;
+     * {@code checkGameOverCondition} &rarr; {@code Player.checkLoseCondition}),
+     * on its own thread.  Any ask it is parked in is answered with its default so
+     * it can get there, and it is asked nothing more; if it parks on this seat
+     * first, {@link #retryConcede} applies the rest.  A concede is never
+     * refused: the player wants out.
+     */
+    private void concede(final IGameController c) {
+        final String why = ActGuard.whyNotNow(engineFacts(c, inputGen.get()));
+        if (why == null || TEST_UNGUARDED_ACTS) {
+            pendingConcede = false;
+            concedesNow.incrementAndGet();
+            concedeAll();
+            return;
+        }
+        concedesDeferred.incrementAndGet();
+        pendingConcede = true;
+        for (final IGameController oc : getOriginalGameControllers()) {
+            if (oc instanceof PlayerControllerHuman) {
+                final Player p = ((PlayerControllerHuman) oc).getPlayer();
+                if (p != null) {
+                    p.concede();               // the outcome field and nothing else
+                }
+            }
+        }
+        final int answered = pool.resolveAll();
+        System.err.println("CONCEDE DEFERRED: the engine is not quiet on this seat -- " + why + "; the outcome "
+                + "is written and Game-0's own state-based check ends the game" + (answered > 0 ? " (" + answered
+                + " parked ask(s) answered with their default)" : "") + " (D136)");
+        concedeRetries.set(0);
+        if (concedeRetryPosted.compareAndSet(false, true)) {
+            FThreads.delayInEDT(CONCEDE_RETRY_MS, this::retryConcede);
+        }
+    }
+
+    /**
+     * EDT.  Finish a deferred {@link #concede} once the engine is quiet on this
+     * seat -- which it is only if {@code Game-0} parked here before its own
+     * state-based check ended the game.  Posted by every engine {@code input}
+     * while a concede is pending, and polled every {@value #CONCEDE_RETRY_MS} ms
+     * through Forge's own delayed-EDT facility ({@code FThreads.delayInEDT}: the
+     * {@code Delayed} scheduler posts back to this EDT), so no thread of ours is
+     * named and none waits: the poll is what finishes a concede whose last input
+     * arrived while {@code Game-0} was still between {@code setInput} and
+     * parking.
+     */
+    private void retryConcede() {
+        concedeRetryPosted.set(false);
+        if (!pendingConcede || overEmitted || closed) {
+            return;
+        }
+        final IGameController c = controller();
+        if (c != null && ActGuard.whyNotNow(engineFacts(c, inputGen.get())) == null) {
+            pendingConcede = false;
+            System.err.println("CONCEDE COMPLETED: the engine parked on this seat before it ended the game (D136)");
+            concedeAll();
+            return;
+        }
+        if (concedeRetries.incrementAndGet() > CONCEDE_RETRY_LIMIT) {
+            if (concedeRetries.get() == CONCEDE_RETRY_LIMIT + 1) {
+                errors.incrementAndGet();
+                System.err.println("CONCEDE STILL PENDING after " + (CONCEDE_RETRY_LIMIT * CONCEDE_RETRY_MS / 1000)
+                        + " s: the engine neither ended the game nor parked on this seat; the next engine input "
+                        + "tries again (D136)");
+            }
+            return;
+        }
+        if (concedeRetryPosted.compareAndSet(false, true)) {
+            FThreads.delayInEDT(CONCEDE_RETRY_MS, this::retryConcede);
         }
     }
 
@@ -3463,9 +3828,17 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // D22/D39: read HERE, on the EDT, inside the act that is asking -- so it
         // is the generation of the input the engine is parked on.
         final long gen = inputGen.get();
+        hopsInFlight.incrementAndGet();        // D136: in flight from submission, not from the worker's start
         try {
-            ThreadUtil.invokeInGameThread(() -> refreshSnapshot(gen));
+            ThreadUtil.invokeInGameThread(() -> {
+                try {
+                    refreshSnapshot(gen);
+                } finally {
+                    hopsInFlight.decrementAndGet();
+                }
+            });
         } catch (final RuntimeException e) {
+            hopsInFlight.decrementAndGet();
             errors.incrementAndGet();
             refreshesSkipped.incrementAndGet();
             System.err.println("REFRESH NOT SCHEDULED: " + e);
@@ -3539,6 +3912,114 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
         final InputQueue q = ((PlayerControllerHuman) c).getInputQueue();
         return q != null && q.getInput() != null;
+    }
+
+    // ==================================================================
+    // 8b. D136 -- the acts that write the engine from the EDT
+    // ==================================================================
+
+    /**
+     * <b>Decision D136.</b>  Should this {@code undo} / {@code useMana} be
+     * refused?  True when it was: the seat has been sent
+     * {@code notice {level:"warn", title:"Not now"}} (protocol amendment M48), the
+     * reason is on stderr, and the engine has not been touched.
+     *
+     * <p>EDT only -- the thread that then applies the act -- so nothing the EDT
+     * itself would do can happen between the check and the write, and every
+     * other waker is one of {@link ActGuard}'s conditions.  The conditions and
+     * the jar paths behind each are {@link ActGuard}'s class comment; the facts
+     * are read here, immediately before the write.  <b>No hop</b>: the write stays
+     * on the EDT, which is where desktop Forge makes it (its Ctrl+Z and its mana
+     * pool click), and what was missing was never the thread but the check that
+     * the engine is actually parked -- see D136 for why a fourth
+     * {@code invokeInGameThread} would not have been one.
+     */
+    private boolean notNow(final String act, final IGameController c, final long genAtArrival,
+                           final AtomicInteger refusedCount) {
+        final boolean held = undoWindowHolder != null;   // the test hook is holding a game thread now
+        if (held) {
+            undoWindowRaced = true;
+        }
+        final String why = ActGuard.whyNotNow(engineFacts(c, genAtArrival));
+        if (why == null || TEST_UNGUARDED_ACTS) {
+            if (why != null) {
+                // The negative control: say what the guard would have said, so a
+                // run with the guard off records WHERE each write landed.
+                unguardedWrites.incrementAndGet();
+                System.err.println("TEST HOOK: " + act + " applied UNGUARDED (MTGTABLE_TEST_UNGUARDED_ACTS=1); "
+                        + "the guard would have refused it -- " + why);
+            }
+            if (held) {
+                undoWindowApplied.incrementAndGet();
+                System.err.println("TEST HOOK: " + act + " APPLIED while " + undoWindowThreadName()
+                        + " is held inside the engine" + (TEST_UNGUARDED_ACTS
+                        ? " (MTGTABLE_TEST_UNGUARDED_ACTS=1: the guard is off)" : " -- THE GUARD MISSED IT"));
+            }
+            return false;
+        }
+        refusedCount.incrementAndGet();
+        if (held) {
+            undoWindowRefused.incrementAndGet();
+        }
+        System.err.println("NOT NOW: " + act + " refused, the engine is not quiet on this seat -- " + why
+                + " (D136, protocol amendment M48)");
+        notice("warn", "Not now", act + ": the engine is busy -- nothing was changed; try again when it "
+                + "is waiting on you");
+        return true;
+    }
+
+    private String undoWindowThreadName() {
+        final Thread t = undoWindowHolder;
+        return t == null ? "a game thread" : t.getName();
+    }
+
+    /** {@link ActGuard.Facts}, read on the EDT immediately before a write. */
+    private ActGuard.Facts engineFacts(final IGameController c, final long genAtArrival) {
+        final ActGuard.Facts f = new ActGuard.Facts();
+        f.live = ready && inputSeen && !closed && !overEmitted;
+        f.pendingAsks = pool.pending();
+        final Input in = currentInput(c);
+        f.inputUp = in != null;
+        f.genAtArrival = genAtArrival;
+        f.genNow = inputGen.get();
+        f.manaActivating = in instanceof InputPayMana && ((InputPayMana) in).isActivatingManaAbility();
+        final PassPress p = passPress;
+        f.passPressOutstanding = p != null && in != null && p.input == in
+                && p.gen == inputGen.get() && p.asks == engineAsks.get();
+        f.hopsInFlight = hopsInFlight.get();
+        engineThreads.removeIf(t -> t.getState() == Thread.State.TERMINATED);
+        f.runningEngineThread = ActGuard.runningThread(engineThreads);
+        return f;
+    }
+
+    /** The input on this seat's stack -- the one {@code Game-0} is parked in -- or null.  A lock-free peek. */
+    private static Input currentInput(final IGameController c) {
+        if (!(c instanceof PlayerControllerHuman)) {
+            return null;
+        }
+        final InputQueue q = ((PlayerControllerHuman) c).getInputQueue();
+        return q == null ? null : q.getInput();
+    }
+
+    /**
+     * Press OK (or pass) and remember when the press may still be with the
+     * engine (D136 condition 6).  {@code InputPassPriority.onOk} either stops the
+     * input, re-renders it ({@code showNormalPrompt}), or -- when mana would be
+     * lost and the mana-lost prompt is on (D43) -- hands the pass to a
+     * {@code Game-n} worker that asks {@code confirm} before it stops anything
+     * ({@code InputPassPriority.passPriority(Runnable)}, javap).  Only the third
+     * leaves the same input up with the generation unmoved, and it always ends
+     * in an ask, which moves {@link #engineAsks}; so the mark is exact for this
+     * input class and costs nothing when no hop was made.
+     */
+    private void pressOk(final IGameController c, final Runnable press) {
+        final Input before = currentInput(c);
+        final long gen = inputGen.get();
+        final long asks = engineAsks.get();
+        press.run();
+        if (before instanceof InputPassPriority && currentInput(c) == before && inputGen.get() == gen) {
+            passPress = new PassPress(before, gen, asks);
+        }
     }
 
     private IGameController controller() {

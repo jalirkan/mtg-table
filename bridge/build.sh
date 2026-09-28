@@ -82,4 +82,18 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
     -cp "$OUT:$FORGE_JAR" mtgtable.OverRaceSelfTest "$REPO_ROOT/var/over-race-selftest" \
     "$REPO_ROOT/forge-home"
 
+# Unit-check D136's guard -- the check in front of the two acts that write the
+# engine from the EDT (`undo`, `useMana`), which used to be applied whenever
+# they arrived and so raced Game-0 inside MagicStack's undo stack (an
+# ArrayIndexOutOfBoundsException in the story branch's gate run).  The decision
+# table, each condition failing on its own, and the thread-state reading the
+# last condition rests on, on real threads.  The race itself is reproduced end
+# to end by tools/undo-race-repro.sh, which needs a game.  Same launch as the
+# test above (it installs the headless GUI first, hard rule 1, and borrows its
+# mtg-table-bg threads); it boots no engine and writes nothing.
+env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
+    -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
+    -Dsentry.uncaught.handler.enabled=false \
+    -cp "$OUT:$FORGE_JAR" mtgtable.ActGuardSelfTest "$REPO_ROOT/forge-home"
+
 echo "build OK"

@@ -25,6 +25,21 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-28 — the undo race: an act the engine cannot take now
+
+Applied by the undo-race lane (branch `undo-race`). One row, and it adds no key
+and no frame type: two `act`s the server used to apply whenever they arrived are
+now sometimes refused with a `notice`, which §2.2 always allowed ("drop it —
+optionally with a `notice`"), and a third, `concede`, is sometimes finished by
+the engine a moment later instead of by the server at once. Evidence:
+`docs/evidence/undo-race.md`; decision **D136**. *(Numbered **M48** on the lane's instruction, after spectating's M47, and
+kept at merge: no amendment landed in between. The decision was written as D170
+and is **D136** since the merge.)*
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M48 | §2.2, §6 | **`undo` and `useMana` are applied only while the engine is waiting on this seat; otherwise they are refused with `notice {level:"warn", title:"Not now"}` and have no effect.** Both acts write engine state directly — `undo` pops the rules engine's undo stack and refunds, `useMana` spends pool mana — and neither goes through Forge's input protocol, so the server applied them from its own thread whenever they arrived. An `undo` sent on the `state` a mana payment flushes (the one state that offers the undo of that payment) arrived while Forge's game thread was putting the spell on the stack and walking the same undo stack, and Forge threw `ArrayIndexOutOfBoundsException` inside its game loop — an engine crash, which M46 turned into an error `notice` and a null `over` (the story branch's gate run, step 10g). The server now checks, immediately before the write, that the engine is parked on an input for this seat and that nothing else is running (D136's eight conditions); when it is not, the act is dropped and the seat is told `Not now`, whose `text` begins with the act's name (`"undo: …"`, `"useMana: …"`). **Nothing is queued**: the act was a decision about the board the player saw. A client may send the act again once the engine is waiting on it — the next `input`, or a moment later, since the engine can offer the undo in a `state` it flushes just before it parks. `state.undo` is unchanged and still says whether an undo would do anything. **And a `concede` that arrives while the engine is running is carried forward, never refused**: Forge's concede walks the player list on the server's thread, which crashed the engine (`ConcurrentModificationException`) when the engine was walking it too, so the server writes only the conceding seat's outcome and the engine ends the game at its own next check — the `state` with `gameOver` and the `over` arrive a moment later, as for any other game end. From that point **the seat is asked nothing more**: an `ask` that was outstanding is answered by the server with its §5.4 default (so a client's own answer to it may come back as `notice {title:"Late answer"}`, §2.3), and any later one is never sent. | D136 |
+
 ### 2026-09-28 — spectating: an AI-vs-AI recording that says what it is
 
 Applied when `./scripts/spectate.sh` learned to record two Forge AIs playing each
@@ -425,12 +440,12 @@ arrives as the next `state` / `input`.
 | `buttonOk` | — | `selectButtonOk()` | M2 |
 | `buttonCancel` | — | `selectButtonCancel()` | M2 |
 | `passPriority` | — | `IGameController.passPriority()` **[jar]** — genuinely distinct from `buttonOk`, and what "pass until something happens" needs (§10.3) | M6 |
-| `concede` | — | `getOriginalGameControllers().forEach(IGameController::concede)` — **never** `AbstractGuiGame.concede()`, which runs a nested confirm dialog off the game thread | M2 |
+| `concede` | — | `getOriginalGameControllers().forEach(IGameController::concede)` — **never** `AbstractGuiGame.concede()`, which runs a nested confirm dialog off the game thread. While the engine is running it is **carried forward**: the seat's outcome now, the game ended by the engine's own check a moment later, the seat asked nothing more (amendment **M48**) | M2 |
 | `newGame` | `mode` = `"continue"` \| `"restart"` | `nextGameDecision(CONTINUE)` / `nextGameDecision(NEW)` → `HostedMatch.continueMatch()` / `restartMatch()`. **Only meaningful after an `over`**; a new `hello_ok` follows and the client drops its card map (§2.1). See below | M6 |
 | `nextGame` | — | the M3 spelling of `newGame {mode:"continue"}`, kept as an alias | M3 |
-| `undo` | — | `undoLastAction()`, gated on `canUndoLastAction` — read `state.undo` (§3.1) for whether it will do anything | M6 |
+| `undo` | — | `undoLastAction()`, gated on `canUndoLastAction` — read `state.undo` (§3.1) for whether it will do anything. **Applied only while the engine is waiting on this seat**, else `notice {title:"Not now"}` and no effect (amendment **M48**, below) | M6 |
 | `alphaStrike` | — | `alphaStrike()` — only meaningful during `InputAttack` | M5 |
-| `useMana` | `color` | `useMana(byte)`, `byte = MagicColor.fromName(...)`. **A `cardId` is a `clickCard`, not a `useMana`.** | M5 |
+| `useMana` | `color` | `useMana(byte)`, `byte = MagicColor.fromName(...)`. **A `cardId` is a `clickCard`, not a `useMana`.** Like `undo`, applied only while the engine is waiting on this seat (**M48**) | M5 |
 | `setPhaseStop` | `phase`, `turn` = `"own"` \| `"opp"`, `stop` | `WireGuiGame`'s own stop map — *not* `FPref`, and *not* `YieldController` — mirrored to the controller with `YieldUpdate.SkipPhase` so Forge's own `tryAutoPassNow()` fires. `turn` is relative to the **viewing seat**; `{playerId, phase, stop}` is still accepted (amendment **M33**) | M6 |
 | `yieldTo` | `kind` = `"endOfTurn"` \| `"marker"` \| `"stack"`; `phase` and an optional `turn` (`"own"`/`"opp"`, default own) for `marker` | `IGameController.sendYieldUpdate` with `SetAutoPassUntilEndOfTurn` / `AbstractGuiGame.handleYieldMarkerToggle` / `StackYield`. **Cancelled by `buttonCancel`**, which is the Cancel button `InputLockUI` labels while a yield runs | M6 |
 | `setYield` | `yieldKey`, `mode` = `"yes"` \| `"no"` \| `"clear"` | `setShouldAutoYield(key, on, isAbilityScope)` plus `setTriggerDecision(key, ACCEPT\|DECLINE\|ASK, …)`; `yieldKey` is the **bridge-minted handle** from `state.stack[]`, never Forge's own key | M6 |
@@ -486,6 +501,28 @@ waiting for this seat, so with no push the board would never show the toggle it
 just asked for. The bridge therefore flushes a fresh `state` after each of those
 four. A client needs no special handling: it is an ordinary snapshot arriving
 slightly sooner than it otherwise would.
+
+**`undo` and `useMana` wait for the engine, and `concede` is carried forward**
+(amendment **M48**, decision **D136**). Every other act reaches Forge through its input protocol, which
+resolves the input at the moment of the call and ignores one that has finished.
+These two do not: `undo` pops the rules engine's undo stack and refunds what it
+held, and `useMana` spends pool mana, both from the server's own thread. So each
+is applied only while the engine is **parked on an input for this seat and
+nothing else is running** — no ask outstanding, the input the act arrived under
+still up, no mana ability being activated, no pass still with the engine — and
+otherwise it is dropped with `notice {level:"warn", title:"Not now"}`, whose
+`text` begins with the act's name. The act had **no effect**; nothing is queued.
+The one moment a client is likely to meet this is the `state` a mana payment
+flushes: it offers the undo of that payment (`undo.can: true`) while the engine
+is already putting the spell on the stack, and an `undo` sent on it is refused —
+it used to crash the engine. A client that wants the undo sends it again if a
+later `state` still offers it; by then the engine is usually waiting on an
+`input`, and if it is not, the answer is `Not now` again and nothing else.
+`concede` writes the engine the same way but is never refused: sent while the
+engine is running, the seat's outcome is recorded at once and the engine ends
+the game at its own next check, so `over` follows as it always did; an
+outstanding `ask` is answered by the server with its default, and the seat is
+asked nothing more.
 
 **`useMana`, exactly** (amendment **M26**). `IGameController.useMana(byte)` is
 
@@ -1722,6 +1759,13 @@ The machinery, all of which must exist before the first `ask` is emitted:
 `level` is `"info"` | `"warn"` | `"error"`. Carries Forge's `message`,
 `showErrorDialog`, `alertUser` and `flashIncorrectAction`. Never blocks — a
 `notice` is a toast, not a question. Anything the user must answer is an `ask`.
+
+Two `warn` titles are the server's own refusals of an `act`, and each means the
+act had **no effect**: `Not yet` — the engine has not asked this seat anything in
+this game (amendment **M42**, §2.1) — and `Not now` — an `undo` or `useMana`
+arrived while the engine was not waiting on this seat (amendment **M48**, §2.2),
+with the act's name at the start of `text`. A client may retry either; neither is
+an error.
 
 **Both strings are gated** (amendment M1). They are the engine's, and one of
 them is routinely a card: `PlayerControllerHuman.notifyOfValue` calls

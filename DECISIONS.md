@@ -6451,3 +6451,218 @@ load average of 9–13. Each failed its run with the cause, as D115 says a crash
 must; neither was retried by the gate; the lane recorded both with their logs
 (evidence §3.3, PLAN.md's gate-speed follow-up 8) and started the failed run
 again as a new one.)
+
+## D136 — `undo` and `useMana` are applied only while the engine is quiet on this seat, otherwise `notice {title:"Not now"}`; a `concede` from a running engine is deferred to the engine's own check; no fourth hop
+
+*Branch `undo-race` (worktree `mtg-table-t2t`, off `main`'s `4408283`, rebased
+onto the gate-speed lane's `6b35054`). Written as **D170** on the lane's
+instruction, while `main` ended at D123 and the story page and the gate-speed
+lane took D124–D135 the same day, and **D136** since the merge, in every file
+that cites it — this file, CLAUDE.md, PLAN.md, README.md, `docs/protocol.md`,
+report 11, `docs/evidence/undo-race.md`, `tools/`, and comments in `bridge/src`.
+Its protocol amendment kept its number, **M48**: nothing landed after spectating's
+M47 in between.*
+
+**2026-09-28** (`docs/evidence/undo-race.md` is what was measured; PLAN.md *The
+undo race* is the status and the follow-ups)
+
+**Decision.**
+
+1. **Two of `applyAct`'s cases write engine state from `mtg-table-EDT` outside
+   Forge's input protocol and are refused when the engine is not quiet** (a
+   third, `concede`, is item 4). `undo` is
+   `PlayerControllerHuman.undoLastAction()` → `MagicStack.undo()`, which pops
+   the undo stack, untaps and refunds, and consults no input at all. `useMana`
+   is `InputPayMana.useManaFromPool` → `ManaPool.tryPayCostWithColor`, which
+   checks neither the input's `finished` flag nor its `locked` one. Each is
+   applied only when `ActGuard.whyNotNow` finds the engine **quiet on this
+   seat**, read on the EDT immediately before the write, in this order:
+   1. the game is live (the engine has asked this seat something; not over);
+   2. no ask is outstanding (`ReplyPool.pending() == 0`);
+   3. an input is up (`InputQueue.getInput() != null`) — **D39**'s positive
+      predicate;
+   4. the input generation is the one the act **arrived** under, read in
+      `onAct` on the transport thread — **D22**'s stamp;
+   5. the input is not an `InputPayMana` that `isActivatingManaAbility()`;
+   6. no OK / pass this EDT gave an `InputPassPriority` is still with the
+      engine (the same input up, the generation and the engine's ask count
+      unmoved since the press);
+   7. none of our own view-walking hops is between its submission and its end;
+   8. no game thread that has entered the bridge is running
+      (`Thread.getState()` RUNNABLE, BLOCKED or NEW).
+2. **A refused act is dropped with `notice {level:"warn", title:"Not now"}`**,
+   the reason on stderr (`NOT NOW: undo refused … — <reason>`), and a count in
+   the run summary (`acts not now = undo N, useMana M`). Nothing is queued. The
+   summary's M6 `undo` count is now the undos **applied**.
+3. **No fourth hop.** The write stays on the EDT, where desktop Forge makes it
+   (its Ctrl+Z and its mana-pool click). Hard rule 3's three hops are unchanged.
+4. **`concede` is the third act that writes the engine from the EDT, and it is
+   never refused.** `PlayerControllerHuman.concede()` is `Player.concede()` —
+   one field, `PlayerStatistics.outcome` — and then
+   `GameAction.checkGameOverCondition()` **on the calling thread**, which walks
+   `Game.getPlayers()` and edits it (`onPlayerLost`). When the engine is quiet
+   (the conditions above, the act's own generation aside — a concede is not a
+   decision about a board) it is applied whole, as before. Otherwise only the
+   outcome is written; the game ends where every game ends, at `Game-0`'s next
+   state-based check (`checkStateEffects` → `checkGameOverCondition` →
+   `Player.checkLoseCondition`), on its own thread; any ask a game thread is
+   parked in is answered with its §5.4 default so it can get there
+   (`ReplyPool.resolveAll`, which leaves the pool open), and the seat is asked
+   nothing more (`ask()` answers null at once). If the engine parks on this seat
+   first, the rest of the concede is applied there — posted by the next engine
+   `input` and polled every 25 ms through Forge's own `FThreads.delayInEDT`, so
+   no thread of ours waits. Stderr says `CONCEDE DEFERRED`, and the summary
+   `concedes = N at once, M deferred`.
+5. **Every other act is left to Forge's input protocol**, and why is recorded
+   per act in `docs/evidence/undo-race.md` §3: `clickCard`, `clickPlayer`,
+   `clickAbility`, `buttonOk`, `buttonCancel`, `passPriority` and `alphaStrike`
+   go through `InputProxy`, which resolves the current input at call time, into
+   `InputBase`, which ignores a finished input, and `InputPayMana` ignores a
+   click while it is activating; `setPhaseStop`, `yieldTo` and `setYield` write
+   the bridge's stop map and Forge's `YieldController` exactly as desktop Forge
+   does from its EDT; `newGame` is M45's; `resync` touches only the bridge.
+6. **Two test hooks, both read once from the environment and off by default.**
+   `MTGTABLE_HOLD_UNDO_WINDOW_MS` holds the game thread, spinning, at the first
+   state of a game that offers an undo while no input is up (the reproduction
+   below). `MTGTABLE_TEST_UNGUARDED_ACTS=1` turns the guard off — `undo`,
+   `useMana` and `concede` applied at once, as before — the negative control,
+   announced on stderr. `tools/undo-race-repro.sh` runs both halves; gate step
+   10g runs the first and asserts the refusal every run.
+
+**Rationale.**
+
+- **The defect.** `MagicStack`'s undo stack is a plain `java.util.Stack`.
+  `Game-0` walks it in `recordUndoableActions` → `clearUndoStack`, a
+  `lastIndexOf` and then a `remove(int)` per entry, every time it adds a
+  non-undoable spell to the stack. The story branch's first gate run
+  (2026-09-28, step 10g) sent `undo` on the `state` a Thallid's `{G}` payment
+  flushed, the EDT popped the stack between `Game-0`'s `lastIndexOf` and its
+  `remove`, and `Vector.remove` threw `ArrayIndexOutOfBoundsException: Array
+  index out of range: 0` inside `PhaseHandler.mainGameLoop` — an engine crash,
+  which **D115** turned into an error `notice`, a null `over` and a failed run.
+  M6's evidence §4.3 had seen the same race throw out of `undoLastAction()` on
+  the EDT, where `applyAct` caught it. The M6 row "the undo race is Forge's own
+  and is caught, not fixed" was half right: the race is between Forge's stack
+  and **our** act, and on `Game-0` nothing of ours catches it.
+- **Where the window is, from the jar.** `InputPayMana.onOk` (the policy's
+  `Auto`) sets `locked` on the EDT and hands the payment to a `Game-n` worker
+  (`GameAction.invoke` → `ThreadUtil.invokeInGameThread`). The worker taps the
+  land, records the mana ability on the undo stack, and calls `stop()`, which
+  runs `onStop`, **removes the input**, flushes our forwarder (an
+  `InputQueue` observer — the `state` that offers the undo, depth 1) and only
+  then counts the latch down, releasing `Game-0` into `MagicStack.add`. So the
+  one `state` in the game that offers this undo is emitted while no input is up
+  and the engine is about to walk the stack: condition 3 is exactly the fix,
+  and `Game-0` resumes into `clearUndoStack` whatever the EDT is doing.
+- **Why D39's two conditions need more for a WRITE.** D39 wrote "parked" for a
+  READ on a second worker, where a stale answer costs a skipped refresh (and
+  counted an outstanding ask as parked). For a write, "an input is up" has to
+  mean "nothing else is touching the engine", and the jar has six ways it does
+  not: an ask's answer wakes its
+  game thread from the transport thread, which the EDT does not serialise with
+  (2); a re-render or a `stop()` can land between the act's arrival and its turn
+  on the EDT — every `stop()` moves the generation first, through `onStop` →
+  `clearActionableCards` → our `clearWeaklySelectable` (4); `InputPayMana`'s
+  activation worker taps lands and records the undo stack with the input still
+  up (5 — M6's §4.3 failure); `InputPassPriority.passPriority(Runnable)` hands a
+  pass to a worker whenever mana would be lost (the mana-lost confirm, D43), and
+  that worker is invisible until it reaches our `showConfirmDialog` (6); our own
+  refresh and ability-menu hops walk the graph (7); and `Game-0` itself pushes
+  the input **before** it flushes our forwarder and parks (`setInput` is
+  `push`, `syncPoint`, `updateObservers`), so for the length of that flush an
+  input is up and `Game-0` is walking (8). Each condition is exact for its path:
+  5 is Forge's own flag, written on the EDT before the hop and cleared on the EDT
+  by `updateMessage` after it; 6 marks only an OK/pass on an
+  `InputPassPriority`, whose `onOk` either stops the input, re-renders it, or
+  hops — and the hop always asks; 7 counts from submission, so a hop the pool has
+  accepted but not yet scheduled is in flight.
+- **Why the thread-state reading is sound as a filter.** `Thread.getState()` is
+  documented for monitoring, and it is used only to refuse. Its dangerous
+  direction — a thread reported waiting while it runs engine code — cannot
+  happen: a thread writes its own wait state as it enters the wait. The reverse
+  lag (woken, not yet scheduled, still reported waiting) needs a waker, and
+  every waker that is not the EDT (busy running the check) is an earlier
+  condition: the transport by 2 (the woken thread removes its own
+  `ReplyPool` entry), a worker's `stop()` by 3 (it removes the input before it
+  counts the latch down), a hop by 7, `InputPayMana`'s worker by 5, the pass
+  worker by 6. `ActGuardSelfTest` holds the reading on real threads.
+- **Why the concede, and why it is deferred rather than refused.** It was not
+  on the list this lane started from; the natural-timing sweep found it (§5 of
+  the evidence). `ws-auto-play --undo-race` concedes the moment the bridge
+  refuses its undo — while the engine is still running towards the stack — and
+  in 2 of 30 guarded runs `Game-0` threw `ConcurrentModificationException`
+  walking the player list (`Game.copyLastState`,
+  `GameAction.checkGameOverCondition`) under the EDT's own
+  `checkGameOverCondition`; a third ended in an `over` with no `gameOver` state.
+  Refusing a concede would leave a player who wants out at the table, so it is
+  split at the one line where it becomes a walk: the outcome is a field Forge's
+  own loop reads, and the walk is left to the loop.
+- **Why no fourth hop — its exclusion argument would have been empty.** A hop
+  lands the runnable on a **second** `Game-n` worker, never on `Game-0`, which
+  is parked in a latch and runs nothing it is handed. That worker would race
+  `Game-0` over the same unlocked `Stack` exactly as the EDT does, and it would
+  pass `ThreadUtil.isGameThread()`, so the write would look legal to hard rule
+  3's assert while being no safer. What was missing was never the thread; it was
+  the check that the engine is actually parked, which desktop Forge leaves to the
+  speed of a human hand and an automated client does not.
+
+**Measured** (`docs/evidence/undo-race.md`). The reproduction runs the same way
+every run: guarded, the undo sent into the held window is refused, the undo
+stack is untouched across the hold, and the concede sent after it is deferred;
+with the guard off, no notice, the undo stack goes 1 → 0 **while the engine
+thread is held inside the engine**, and the concede is applied at once. At
+natural timing, with no hold, thirty seeds each: the unguarded late undo landed
+where the guard would have said "no input is up" in 30 of 30 and crashed
+nothing on this machine (the `ArrayIndexOutOfBoundsException` needs the EDT's
+`remove` to fall between `Game-0`'s `lastIndexOf` and its `remove`; the story
+run met it at gate load); the concede race crashed `Game-0` twice (and ended a
+third game in an `over` with no `gameOver` state) in the thirty guarded runs
+made before the concede was guarded, and in none of the thirty after. Gate step
+10g holds the window, requires the refusal
+(`--require-late-undo`), and proves `undo`'s effect with a second undo that
+floats a land's mana at priority and undoes it while the engine is parked.
+
+**Known cost.**
+
+- **A legitimate undo can be refused once.** After a land is tapped at priority,
+  `Game-0` flushes the `state` that offers the undo *before* it parks (condition
+  8), so an undo sent the instant that state arrives can draw "Not now". Sending
+  it again succeeds; `tools/ws-auto-play.mjs` retries after 150 ms, and a person
+  pressing Undo twice is the whole cost.
+- **One residual path, bounded and open.** `setPhaseStop`, `yieldTo` and
+  `setYield` can press OK through Forge's own `tryAutoPassNow()`, and so can
+  start the mana-lost worker; condition 6 does not mark them, because there it
+  cannot tell a press from no press without refusing legitimate undos until the
+  next re-render. In the microseconds before that worker enters the bridge it
+  reads `Localizer` and `ManaPool.hasBurn()` and nothing else; once it enters,
+  condition 8 sees it. An undo that begins in that gap can overlap the worker's
+  first walk (a read). PLAN.md's follow-up names it.
+- **The clicks are not guarded against our own walks.** An EDT click that makes
+  Forge write input-owned state on the EDT (declaring an attacker, a target) can
+  still overlap a refresh walk D39 started a moment earlier. That is D39's own
+  hazard, not this defect's, and it is recorded as a follow-up rather than
+  widened into here.
+
+**Rejected.**
+
+- **A fourth `invokeInGameThread` hop** — above.
+- **A lock around the EDT's write and every `flushState` walk.** The undo
+  untaps and refunds, which fires game events; Guava delivers them to
+  `GameEventForwarder.receiveGameEvent` — `@Subscribe` without
+  `@AllowConcurrentEvents`, so under the subscriber's monitor — and a game thread
+  holding that monitor while it waits for our lock deadlocks against the EDT
+  holding our lock while it waits for the monitor. D39 rejected a lock for a
+  sibling reason.
+- **Queuing the act until the engine parks.** An undo or a pool pip is a
+  decision about the board the player saw; applying it to a later board is the
+  defect, moved. (A concede is not such a decision, which is why it alone is
+  carried forward.)
+- **Refusing a concede with "Not now" like the other two.** The player wants
+  out, and the board's Concede would then need a retry loop of its own; the
+  outcome field is the part that cannot wait and the one that is safe to write.
+- **Catching the exception and carrying on** (M6's state). On `Game-0` there is
+  nothing of ours to catch it, and D115 is right to call an escaped engine
+  exception a failed run.
+- **Deciding by the prompt** (`Pay Mana Cost`, a button labelled `Auto`) — M5
+  convention 4: never decide what a control does, or when, by matching an
+  engine string.

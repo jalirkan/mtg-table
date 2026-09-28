@@ -11,6 +11,18 @@
  *     node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask [--reconnect-after 5000]
  *     node tools/ws-auto-play.mjs --port 8642 --probe
  *     node tools/ws-auto-play.mjs --port 8642 --games 3 --comfort
+ *     node tools/ws-auto-play.mjs --port 8642 --undo-race
+ *
+ * `--undo-race` is decision D136's reproduction (docs/evidence/undo-race.md). It
+ * sends `act: undo` the instant the FIRST `state` offers one (`undo.can`, depth
+ * > 0) -- which, against a server started with `MTGTABLE_HOLD_UNDO_WINDOW_MS`,
+ * is the state the mana payment's `stop()` flushes after it has removed the
+ * input and before `Game-0` puts the spell on the stack: the window the story
+ * branch's gate run crashed in, held open. A fixed bridge refuses the act with
+ * `notice {title:"Not now"}` (protocol amendment M48) and this exits 0; a bridge
+ * that applies it -- the unfixed one, or `MTGTABLE_TEST_UNGUARDED_ACTS=1` --
+ * sends no such notice and this exits **9**. Either way it then concedes, so a
+ * run takes one short game. `tools/undo-race-repro.sh` runs both halves.
  *
  * `--games N` (M6) plays N games over one socket: after each `over` it sends
  * `act: newGame {mode}` -- `continue` in the middle of a match, `restart` once
@@ -18,6 +30,13 @@
  * game is one `frames.jsonl` (protocol amendment M38). `--comfort` sends M6's
  * five acts once each and FAILS the run (exit 7) if one of them went out and
  * the next `state` did not move: a typed act earns its gate with its effect.
+ * Since D136 (amendment M48) its undo is two: a LATE one, sent on the first
+ * state that offers an undo -- the payment's own flush, the engine running --
+ * which a fixed bridge refuses with `notice {title:"Not now"}`
+ * (`--require-late-undo` asserts it), and the one whose effect is checked,
+ * sent after the seat has floated one land's mana at priority, while the engine
+ * is parked; a "Not now" there is a race with the engine's own re-park and is
+ * re-sent.
  * An act the bridge answers with `notice {title:"Not yet"}` never went out at
  * all — the engine had not asked this seat anything yet (§2.1, amendment
  * **M42**) — so that step is UN-SENT and retried after the next real `input`,
@@ -111,7 +130,8 @@ function usage(message) {
       '                                  [--resync-after 12] [--quiet] [--probe]\n' +
       '                                  [--games 3] [--comfort]\n' +
       '                                  [--new-game-delay-ms 40000]\n' +
-      '                                  [--require-yield-repeat]\n' +
+      '                                  [--require-yield-repeat] [--require-late-undo]\n' +
+      '                                  [--undo-race]\n' +
       '                                  [--refuse-first-ask [--reconnect-after 5000]]\n',
   );
   process.exit(2);
@@ -120,7 +140,7 @@ function usage(message) {
 const args = {
   port: 8642, url: null, timeoutS: 300, log: null, resyncAfter: 12, quiet: false,
   refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false, games: 1, comfort: false,
-  newGameDelayMs: 0, requireYieldRepeat: false,
+  newGameDelayMs: 0, requireYieldRepeat: false, requireLateUndo: false, undoRace: false,
 };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
@@ -165,6 +185,14 @@ for (let i = 2; i < process.argv.length; i++) {
     // repeats on its own -- decks/yield-probe.dck, 22 Thallids, one mandatory
     // upkeep trigger each.
     case '--require-yield-repeat': args.requireYieldRepeat = true; break;
+    // D136, protocol amendment M48. `--comfort` sends a LATE undo -- on the
+    // first `state` that offers one, which is the moment the mana payment's
+    // stop() has left the engine running (held open by the server's
+    // MTGTABLE_HOLD_UNDO_WINDOW_MS in gate step 10g) -- and this flag fails the
+    // run (exit 7) unless the bridge answered it `notice {title:"Not now"}`.
+    case '--require-late-undo': args.requireLateUndo = true; break;
+    // D136's reproduction on its own: see the header.
+    case '--undo-race': args.undoRace = true; break;
     case '--reconnect-after': args.reconnectAfterMs = Number.parseInt(next(), 10); break;
     case '--help': case '-h': usage(null); break;
     default: usage(`unknown argument ${JSON.stringify(a)}`);
@@ -282,6 +310,16 @@ const answered = new Map();
 let me = null;
 let myHand = [];
 let myLands = [];
+/** Untapped lands this seat controls on the battlefield -- what `--comfort`'s undo step taps for mana. */
+let myUntappedLands = [];
+/** The last `state.undo` seen ({can, depth}), or null: what a retried `undo` is re-sent against. */
+let lastUndo = null;
+/**
+ * The last act this client sent that the bridge guards (D136: `undo`, `useMana`),
+ * as the step that sent it -- so a `notice {title:"Not now"}` (amendment M48),
+ * which arrives a millisecond after the act it refuses, is attributed to it.
+ */
+let guardedAct = null;
 let myPriority = false;
 let myTurn = false;
 let myMainPhase = false;
@@ -368,6 +406,7 @@ function act(action, extra = {}, step = null) {
   stats.acts += 1;
   if (action in probeActs) probeActs[action] += 1;
   lastComfortStep = step;
+  if (action === 'undo' || action === 'useMana') guardedAct = step ?? action;
   const prompt = pendingInput === null ? '(no input)' : String(pendingInput.prompt ?? '');
   say(`ACT  ${action}${Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : ''}  <- ${JSON.stringify(prompt)}`);
   send('act', { action, ...extra });
@@ -398,6 +437,9 @@ function nextGame(overBody) {
   me = null;
   myHand = [];
   myLands = [];
+  myUntappedLands = [];
+  lastUndo = null;
+  guardedAct = null;
   myPriority = false;
   myTurn = false;
   myMainPhase = false;
@@ -568,6 +610,18 @@ function onFrame(text) {
       // DROPPED the act. A comfort step whose act was dropped has not been
       // sent — so un-send it and try again after the next real `input`.
       if (args.comfort && String(body.title) === 'Not yet') comfortNotYet();
+      // Amendment M48 (D136): "Not now" is the bridge REFUSING an act that
+      // writes the engine directly (undo, useMana) because the engine was not
+      // parked on this seat. The act had no effect at all.
+      if (String(body.title) === 'Not now') onNotNow();
+      // Step 2b's float click raced its own stale view of which land is
+      // untapped (the state it read predates the payment that tapped it): let
+      // the next state choose again rather than waiting for the next turn.
+      if (args.comfort && String(body.title) === 'Not selectable' && lastComfortStep === 'undoFloat'
+          && !comfort.undoSent) {
+        comfort.undoFloatSent = false;
+        comfortHoldUntil = 0;
+      }
       lastActivity = Date.now();
       break;
     case 'over':
@@ -628,8 +682,83 @@ function onState(body) {
       myHand.push(card.id);
       if (String(card.types ?? '').includes('Land')) myLands.push(card.id);
     }
+    for (const card of player.zones?.battlefield?.cards ?? []) {
+      if (card.hidden === true || typeof card.id !== 'number') continue;
+      if (card.controller !== me || card.tapped === true) continue;
+      if (String(card.types ?? '').includes('Land')) myUntappedLands.push(card.id);
+    }
   }
+  lastUndo = body.undo && typeof body.undo === 'object' ? body.undo : null;
+  if (args.undoRace) undoRaceStep(body);
   if (args.comfort) comfortStep(body);
+}
+
+// ---------------------------------------------------------------------------
+// D136: the guarded acts, and --undo-race
+// ---------------------------------------------------------------------------
+
+/** How long a guarded act waits for its "Not now" before this client says it was applied. */
+const NOT_NOW_WAIT_MS = 2500;
+
+/**
+ * `--undo-race` (D136's reproduction): the undo, the verdict, the concession.
+ *
+ * `undo.can` is the engine's own gate (priority is mine and the undo stack is
+ * mine), so nothing here guesses. The FIRST state that offers an undo is, with
+ * the yield probe's one-mana Thallids and the policy's `Auto` payment, the one
+ * the payment's `stop()` flushes after it has removed the input -- the engine is
+ * running, not parked -- and the server's `MTGTABLE_HOLD_UNDO_WINDOW_MS` holds
+ * it there. The act goes out on that state, at once, not after a settle.
+ */
+const race = { sent: false, depth: 0, sentAt: 0, verdict: null };
+
+function undoRaceStep(body) {
+  if (race.sent || conceded) return;
+  if (body.undo?.can === true && typeof body.undo.depth === 'number' && body.undo.depth > 0) {
+    race.sent = true;
+    race.depth = body.undo.depth;
+    race.sentAt = Date.now();
+    say(`UNDO RACE: the first state that offers an undo (depth ${race.depth}, phase ${String(body.phase)}, `
+      + `stack ${Array.isArray(body.stack) ? body.stack.length : 0}) -- sending it now`);
+    act('undo', {}, 'undoRace');
+  }
+}
+
+function undoRaceVerdict(verdict) {
+  if (race.verdict !== null) return;
+  race.verdict = verdict;
+  say(verdict === 'not-now'
+    ? 'UNDO RACE: refused with "Not now" -- the bridge did not touch the engine (D136)'
+    : `UNDO RACE: NO "Not now" within ${NOT_NOW_WAIT_MS} ms -- the bridge APPLIED the undo while the `
+      + 'engine was running (the race D136 closes)');
+  if (!conceded) {
+    conceded = true;
+    concededAt = Date.now();
+    act('concede');
+  }
+}
+
+/** A `notice {title:"Not now"}` (amendment M48): the guarded act we sent last was refused. */
+function onNotNow() {
+  const step = guardedAct;
+  guardedAct = null;
+  if (step === 'undoRace') {
+    undoRaceVerdict('not-now');
+    return;
+  }
+  if (!args.comfort) return;
+  if (step === 'undoLate') {
+    comfortLateVerdict('not-now');
+  } else if (step === 'undo' && !comfort.undoSeen) {
+    // The effect step raced the engine's own re-park (Game-0 flushes the state
+    // that offers the undo BEFORE it parks, D136 condition 8). Nothing was
+    // undone, so un-send it and try again shortly: the engine is parked and
+    // will not send another frame to retry on.
+    comfort.undoSent = false;
+    comfort.undoNotNow += 1;
+    comfort.undoRetryAt = Date.now() + 150;
+    comfortHoldUntil = Date.now() + 1500;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -655,6 +784,18 @@ function onState(body) {
 const comfort = {
   stopSent: false, stopSeen: false,
   undoSent: false, undoDepth: 0, undoSeen: false,
+  // D136 (amendment M48). The LATE undo: sent on the first state that offers
+  // one, which is the payment's stop() flush -- the engine running -- and
+  // answered, by a fixed bridge, `notice {title:"Not now"}`. Its verdict is
+  // 'not-now' or 'applied' (no notice within NOT_NOW_WAIT_MS).
+  lateUndoSent: false, lateUndoAt: 0, lateUndoVerdict: null,
+  // The EFFECT undo floats mana first -- a click on one of this seat's own
+  // untapped lands while it holds priority with the stack empty, which Forge
+  // answers with the land's mana ability -- so the undo lands while the engine
+  // is parked on the very InputPassPriority that offers it. `undoNotNow` counts
+  // the times the bridge refused it anyway (the state that offers the undo is
+  // flushed by Game-0 just BEFORE it parks) and it was re-sent.
+  undoFloatSent: false, undoFloatTurn: null, undoFloats: 0, undoNotNow: 0, undoRetryAt: 0,
   yieldSent: false, yieldSeen: false, cancelSent: false, cancelSeen: false,
   setYieldSent: false, setYieldKey: null, setYieldSeen: false, setYieldWasAbility: null,
   setYieldWaited: 0,
@@ -823,17 +964,62 @@ function comfortStep(body) {
     }
   }
 
-  // 2. undo -> state.undo.depth falls. `can` is the engine's own gate
-  //    (priority is mine and the undo stack is mine), so this never guesses.
-  if (!comfort.undoSent && comfort.stopSeen && body.undo?.can === true && body.undo.depth > 0) {
-    comfort.undoSent = true;
-    comfort.undoDepth = body.undo.depth;
-    act('undo', {}, 'undo');
-    hold(400);
-  } else if (comfort.undoSent && !comfort.undoSeen && typeof body.undo?.depth === 'number'
-             && body.undo.depth < comfort.undoDepth) {
-    comfort.undoSeen = true;
-    say(`COMFORT undo: depth ${comfort.undoDepth} -> ${body.undo.depth}`);
+  // 2a. THE LATE UNDO (D136, protocol amendment M48). On the FIRST state that
+  //     offers an undo -- with the yield probe's Thallids and the policy's Auto
+  //     payment that is the state the payment's stop() flushes after it has
+  //     removed the input, i.e. while the engine is RUNNING towards
+  //     MagicStack.add -- send `undo` at once. That is the act that crashed
+  //     Game-0 in the story branch's gate run; a fixed bridge refuses it with
+  //     `notice {title:"Not now"}` and touches nothing. The gate's server holds
+  //     that window open (MTGTABLE_HOLD_UNDO_WINDOW_MS) and passes
+  //     --require-late-undo, so the refusal is asserted every run.
+  if (!comfort.lateUndoSent && body.undo?.can === true && typeof body.undo.depth === 'number'
+      && body.undo.depth > 0) {
+    comfort.lateUndoSent = true;
+    comfort.lateUndoAt = Date.now();
+    say(`COMFORT late undo: the first state that offers one (depth ${body.undo.depth}) -- sending it now`);
+    act('undo', {}, 'undoLate');
+  }
+
+  // 2b. undo -> state.undo.depth falls, while the engine is PARKED on this
+  //     seat. `can` is the engine's own gate (priority is mine and the undo
+  //     stack is mine), so this never guesses. The undo stack holds mana
+  //     abilities only (report 11 section 7.1), so the step makes one: it taps
+  //     one of its own untapped lands at priority with the stack empty, and
+  //     undoes that. Before D136 this step sent its undo on whatever state first
+  //     offered one -- the payment window of 2a -- and passed only when the
+  //     race happened to fall the right way.
+  if (comfort.stopSeen && comfort.lateUndoVerdict !== null && !comfort.undoSeen) {
+    if (comfort.undoFloatSent && !comfort.undoSent && body.turn !== comfort.undoFloatTurn) {
+      comfort.undoFloatSent = false;         // the float never offered an undo this turn: try again
+    }
+    const sel = pendingInput?.selectable ?? {};
+    const demandsClick = Array.isArray(sel.cardIds) && sel.cardIds.length > 0
+      && (pendingInput?.buttons?.ok?.enabled !== true || (typeof sel.min === 'number' && sel.min > 0));
+    const poolEmpty = POOL_COLORS.every((c) => myPool[c] === 0);
+    if (!comfort.undoFloatSent) {
+      if (pendingInput !== null && !demandsClick && myPriority && myMainPhase && stackEmpty && poolEmpty
+          && body.undo?.can !== true && myUntappedLands.length > 0 && comfort.undoFloats < 30) {
+        comfort.undoFloatSent = true;
+        comfort.undoFloats += 1;
+        comfort.undoFloatTurn = body.turn;
+        say(`COMFORT undo: floating mana from land ${myUntappedLands[0]} so there is something to undo`);
+        act('clickCard', { cardId: myUntappedLands[0] }, 'undoFloat');
+        hold(1500);
+      }
+    } else if (!comfort.undoSent && body.undo?.can === true && typeof body.undo.depth === 'number'
+               && body.undo.depth > 0) {
+      comfort.undoSent = true;
+      comfort.undoDepth = body.undo.depth;
+      act('undo', {}, 'undo');
+      hold(1500);
+    } else if (comfort.undoSent && typeof body.undo?.depth === 'number'
+               && body.undo.depth < comfort.undoDepth) {
+      comfort.undoSeen = true;
+      comfortHoldUntil = 0;
+      say(`COMFORT undo: depth ${comfort.undoDepth} -> ${body.undo.depth}`
+        + ` (${comfort.undoNotNow} "Not now" retr${comfort.undoNotNow === 1 ? 'y' : 'ies'} first)`);
+    }
   }
 
   // 3. setYield {yieldKey, mode:"yes"} -> stack[].yielded === "yes".
@@ -927,6 +1113,41 @@ function comfortStep(body) {
   }
 }
 
+/** Step 2a's verdict: 'not-now' (the bridge refused it) or 'applied' (no notice came). */
+function comfortLateVerdict(verdict) {
+  if (comfort.lateUndoVerdict !== null) return;
+  comfort.lateUndoVerdict = verdict;
+  say(verdict === 'not-now'
+    ? 'COMFORT late undo: refused with "Not now" -- the engine was running and the bridge left it alone (D136)'
+    : `COMFORT late undo: NO "Not now" within ${NOT_NOW_WAIT_MS} ms -- the bridge applied it`);
+}
+
+/**
+ * The timers D136 needs, from tick(): a guarded act that drew no "Not now" in
+ * NOT_NOW_WAIT_MS was applied; and step 2b's undo, refused because it raced the
+ * engine's own re-park, is re-sent -- the engine is parked and sends nothing
+ * new to re-send it on.
+ */
+function guardedActTimers(now) {
+  if (args.undoRace && race.sent && race.verdict === null && now - race.sentAt > NOT_NOW_WAIT_MS) {
+    undoRaceVerdict('applied');
+  }
+  if (!args.comfort) return;
+  if (comfort.lateUndoSent && comfort.lateUndoVerdict === null && now - comfort.lateUndoAt > NOT_NOW_WAIT_MS) {
+    comfortLateVerdict('applied');
+  }
+  if (comfort.undoRetryAt > 0 && now >= comfort.undoRetryAt) {
+    comfort.undoRetryAt = 0;
+    if (!comfort.undoSent && !comfort.undoSeen && comfort.undoNotNow <= 20
+        && lastUndo?.can === true && typeof lastUndo.depth === 'number' && lastUndo.depth > 0) {
+      comfort.undoSent = true;
+      comfort.undoDepth = lastUndo.depth;
+      act('undo', {}, 'undo');
+      comfortHoldUntil = now + 1500;
+    }
+  }
+}
+
 /**
  * What `--comfort` proved, for the summary and for check-all's assertion.
  *
@@ -947,6 +1168,10 @@ function comfortReport() {
     ['yieldTo', comfort.yieldSent, comfort.yieldSeen, false],
     ['buttonCancel(yield)', comfort.cancelSent, comfort.cancelSeen, false],
     ['passPriority', comfort.passSent, comfort.passSent, true],
+    // D136: only a run that holds the window open (10g) can require this.
+    ...(args.requireLateUndo
+      ? [['undo(late)', comfort.lateUndoSent, comfort.lateUndoVerdict === 'not-now', false]]
+      : []),
   ];
 }
 
@@ -1331,6 +1556,7 @@ function tick() {
     return;
   }
 
+  guardedActTimers(now);                       // D136: --undo-race and --comfort's undo steps
   if (pendingInput === null) return;
   if (now < comfortHoldUntil) return;          // --comfort: see comfortStep()
   const quiet = now - lastActivity;
@@ -1346,6 +1572,31 @@ function tick() {
 }
 
 function finish() {
+  if (args.undoRace && failure === null) {
+    // D136's reproduction: "Not now" is the fixed bridge, no notice is the race.
+    if (race.verdict === 'applied') {
+      failure = {
+        message: `--undo-race: the undo sent on the first state that offered one (depth ${race.depth}) drew no `
+          + '"Not now": the bridge APPLIED it while the engine was running -- the race D136 closes '
+          + '(see the server log for the TEST HOOK lines)',
+        code: 9,
+      };
+    } else if (race.verdict === null) {
+      failure = {
+        message: '--undo-race: no state ever offered an undo, so nothing was tested (a deck and a policy '
+          + 'that cast a spell with Auto are what open the window: decks/yield-probe.dck)',
+        code: 7,
+      };
+    }
+  }
+  if (args.comfort && args.requireLateUndo && failure === null && over
+      && comfort.lateUndoVerdict === 'applied') {
+    failure = {
+      message: '--require-late-undo: the late undo drew no "Not now" -- the bridge APPLIED an undo while the '
+        + 'engine was running (D136, protocol amendment M48)',
+      code: 7,
+    };
+  }
   if (args.comfort && failure === null && over) {
     // A comfort act that went out and moved nothing is the failure this mode
     // exists to catch: the client sent it, the bridge dropped it, and a count
@@ -1403,6 +1654,8 @@ function finish() {
         // and IS a thing a reader should see, because it says this run raced
         // the engine's first push and recovered rather than silently passing.
         + ` retries=${comfort.retries}`
+        + ` lateUndo=${comfort.lateUndoVerdict ?? (comfort.lateUndoSent ? 'pending' : 'not sent')}`
+        + ` undoNotNow=${comfort.undoNotNow}`
         + ` · autoYield key=${comfort.setYieldKey ?? 'none'}`
         + ` isAbility=${String(comfort.setYieldWasAbility)}`
         + ` repeats=${comfort.repeatSeen} promptsWhileOnTop=${comfort.repeatPrompts}`
@@ -1411,6 +1664,8 @@ function finish() {
       : '') +
     (args.probe ? `probe acts ${probeActs.useMana} useMana, ${probeActs.clickAbility} clickAbility · ` : '') +
     (refusedAskId === null ? '' : `refused ${refusedAskId} and reconnected · `) +
+    (args.undoRace ? `undoRace ${race.sent ? `sent at depth ${race.depth}, ${race.verdict ?? 'no verdict'}`
+      : 'never offered an undo'} · ` : '') +
     (matchSeen === null ? 'match none · '
       : `match ${String(matchSeen.aiProfile)} vs "${String(matchSeen.aiDeck?.name)}" · `) +
     `${((Date.now() - started) / 1000).toFixed(1)}s`;

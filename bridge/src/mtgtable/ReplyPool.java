@@ -152,6 +152,25 @@ public final class ReplyPool {
     }
 
     /**
+     * <b>{@code mtg-table-EDT}</b> (decision <b>D136</b>): answer every parked
+     * ask with {@code null} -- its section 5.4 default, always legal -- and leave
+     * the pool OPEN, unlike {@link #cancelAll}.  A deferred {@code concede} does
+     * this so the game thread it wakes can reach the state-based check that ends
+     * the game.  A racing real answer is harmless: the first completion wins.
+     *
+     * @return how many parked asks this answered
+     */
+    public int resolveAll() {
+        int n = 0;
+        for (final CompletableFuture<String> f : pool.values()) {
+            if (f.complete(null)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
      * Disconnect / shutdown.  Unblocks every parked game thread with
      * {@code null}; after this, {@link #register} is a no-op so a game that is
      * still winding down cannot park again.

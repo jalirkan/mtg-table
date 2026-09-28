@@ -735,6 +735,39 @@ experimental in its own preference name.
 The two paths agree because they ask the same question; if they ever disagree,
 the engine's button label wins.
 
+### 7.4 When the act may run — added 2026-09-28 (D136, amendment M48)
+
+This section was written about *what* undo does, and said nothing about *when*
+the bridge may call it; that silence was a defect. `undoLastAction()` →
+`MagicStack.undo()` pops the undo stack, untaps and refunds, and consults no
+input — and the bridge called it from `mtg-table-EDT` whenever the act arrived.
+The undo stack is a plain `java.util.Stack` that `Game-0` walks in
+`recordUndoableActions` → `clearUndoStack` each time it puts a non-undoable
+spell on the stack, and the one `state` that offers the undo of a mana payment
+is flushed by the payment's `stop()` after it has removed the input and just
+before it releases `Game-0` into that walk. An undo sent on it raced `Game-0`:
+`ArrayIndexOutOfBoundsException` in `PhaseHandler.mainGameLoop` in the story
+branch's gate run, and out of `undoLastAction()` itself in M6's evidence §4.3.
+Desktop Forge makes the same call from its EDT (Ctrl+Z) and is safe only because
+a human hand is slower than the window.
+
+So the act is applied only while the engine is **quiet on this seat** — parked
+on an input (the §7.1 undo can only be meaningful there anyway: priority is
+this seat's), no ask outstanding, the input the act arrived under, no mana
+ability being activated on a worker, no pass still with the engine, none of the
+bridge's hops walking, no engine thread running — and is otherwise refused with
+`notice {title:"Not now"}`, touching nothing. `useMana` (§6.1) gets the same
+guard for the same reason: `InputPayMana.useManaFromPool` spends the pool from
+the EDT and checks neither `finished` nor `locked`. D136 has the conditions, the
+jar path behind each, and why no fourth game-thread hop; `docs/evidence/
+undo-race.md` has the reproduction.
+
+| piece | value (M48) |
+|---|---|
+| `act: undo` / `act: useMana` | applied only while the engine is quiet on this seat |
+| otherwise | `notice {level:"warn", title:"Not now", text:"undo: …"}` — no effect, nothing queued |
+| client | may send it again when a later `state` still offers the undo |
+
 ---
 
 ## 8. Concede, and New Game without restarting the JVM
@@ -761,6 +794,19 @@ the reason and adds a second: `:456-459` refuses outright during a mulligan
 must work during a mulligan, so we want `IGameController.concede()` directly.
 
 Confirmation, if we want one, is a browser dialog — not an engine question.
+
+**Added 2026-09-28 (D136, amendment M48): not from a running engine.**
+`checkGameOverCondition()` walks `Game.getPlayers()` and edits it
+(`onPlayerLost`), and run from the EDT while `Game-0` was walking the same list
+(`Game.copyLastState`, its own `checkGameOverCondition`) it threw
+`ConcurrentModificationException` on `Game-0` — twice in thirty seeds of the
+undo-race lane's sweep, whose client concedes the moment its undo is refused.
+So the bridge applies the concede whole only while the engine is quiet on this
+seat; otherwise it writes the outcome alone (`Player.concede()`, one field),
+answers any parked ask with its default, asks the seat nothing more, and lets
+`Game-0`'s own state-based check end the game — or finishes the concede when the
+engine parks here first. The escape hatch still always opens; it opens on the
+engine's thread.
 
 ### 8.2 New game / restart
 

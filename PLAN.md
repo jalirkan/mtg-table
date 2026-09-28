@@ -21,6 +21,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The narrator: a frame log read back as a story *(off the plan, for watching how the AI plays)* | 1 day | **built, gated and documented**, committed on branch `narrate` (2026-09-28) — `tools/narrate.mjs` tells any per-seat log turn by turn, `--turn`, `--summary`, `--seat`, `--json`; names only what the log's seat saw, never remembered (**D123**); `tools/narrate-selftest.mjs` is gate sub-step **12d**, with five negative controls, client-log re-deliveries and two golden files; nine follow-ups, the first a `#story` page it does not build; rebased onto spectating's `a5c8e39` (2026-09-28), where it became **D123** and **12d** and reads spectated recordings (`yourProfile`, `paceMs`) |
 | — | The story page: the narrator in the browser, in step with the replay *(off the plan, the narrator's follow-up 1)* | 1 day | **built, gated and documented**, committed on branch `story` (2026-09-28) — the narrator moved whole into `web/src/story/narrate.ts` and `tools/narrate.mjs` is its shell, output unchanged by a byte (**D124**); `#story`, a lazy page over the replay that imports no transport, the story column grouped by turn with the moment on screen highlighted, the summary card, the frame on screen with its cards, one cursor with the arena and the board (**D125**, **D128**); re-told as a followed log grows, only the played frames while the future is hidden (**D126**); hard rule 8 held by rendering it over the corpus with a control (**D127**); `./scripts/spectate.sh --story`; nine follow-ups, the first the story panel inside the arena, the last an engine race the gate hit (`act: undo`, not this branch's) |
 | — | Gate speed: `check-all.sh` in parallel *(off the plan, for a faster gate)* | 1 day | **built, measured and documented**, committed on branch `gate-speed` (2026-09-28), rebased onto the story page's `0af97a9` — `GATE_JOBS` jobs at a time from a job table with dependencies, a log per job and a timing table; ~245 s at four, 151 s at eight, against ~900–950 s serially (907 s at merge); `GATE_JOBS=1` is the serial gate; every job its own Forge home (at merge); **D129–D135**; *Gate speed*, just above *Deferred* |
+| — | The undo race: `undo` waits for a parked engine *(a defect, from the story branch's gate run)* | 1 day | **built, gated and documented**, committed on branch `undo-race` (2026-09-28), rebased onto gate speed's `6b35054` — `undo` and `useMana` applied only while the engine is quiet on this seat, else `notice {title:"Not now"}`, and a `concede` from a running engine carried forward to the engine's own check (**D136**, written as D170; amendment **M48**); a deterministic reproduction (`tools/undo-race-repro.sh`, the held window, the guard-off negative control); `ActGuardSelfTest` in the build; 10g's job holds the window and asserts the refusal; M6 follow-up 6, the story page's follow-up 9 and gate speed's follow-up 8 closed; five follow-ups, one of them (4) closed at merge |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -1765,10 +1766,18 @@ is deliberately not changing. See *"M6 follow-ups closed by M7"* under §M7 belo
    for the next game exists, so a reader of `var/games/` alone sees only the
    stderr line and the next game's header; a client log has the act
    (`docs/evidence/m6-engine.md` §2.3).
-6. **The undo race is Forge's own and is caught, not fixed.** `undo` can arrive
-   after the engine has already cleared its own stack; the bridge answers with a
-   correction rather than a rejection (§4.3, §4.7). Nothing here can make Forge's
-   undo stack transactional.
+6. ~~**The undo race is Forge's own and is caught, not fixed.**~~ **Closed on
+   2026-09-28 by the undo-race lane (D136, amendment M48)** — and the row was half
+   wrong. The race was between Forge's unlocked undo stack and **our** act,
+   applied from the EDT whenever it arrived; and it was not always caught: the
+   story branch's gate run hit it on `Game-0` (`MagicStack.clearUndoStack`,
+   `ArrayIndexOutOfBoundsException`), where nothing of ours catches anything, and
+   D115 turned it into a failed run. `undo` and `useMana` are now applied only
+   while the engine is quiet on this seat and are otherwise refused with
+   `notice {title:"Not now"}`; `tools/undo-race-repro.sh` reproduces the race
+   every run and gate step 10g asserts the refusal. *The undo race*, below.
+   Forge's undo stack is still not transactional; the bridge no longer writes it
+   while anything else might.
 7. **D40's fix is not in the gate.** Proving "a connected client waits as long as
    it likes" costs ~40 s of wall clock, so `ws-auto-play --new-game-delay-ms`
    defaults to 0 and `tools/check-all.sh` does not pass it: the major is
@@ -4957,7 +4966,7 @@ What it is:
   the live edge is where they were). Spectating's follow-up 8 is closed for the
   page's own views; a reload still starts at the live edge.
 
-### The story page's follow-ups — nine, 2026-09-28
+### The story page's follow-ups — nine, 2026-09-28 (1 closed by the undo race)
 
 1. **A story panel INSIDE the arena** — not built here, because `web/src/arena/`
    is three visual lanes' desk this week. The mount point is
@@ -5003,8 +5012,12 @@ What it is:
    page's re-render per cursor step (a memoised column, one live turn redrawn) was
    not profiled. A 30-turn game in follow mode with the future dimmed is the case
    to time if it ever feels slow.
-9. **Seen in this branch's gate, not caused by it: `act: undo` can crash Forge's
-   game loop.** The first gate run (`var/check-all-story-run1.log`) failed at step
+9. ~~**Seen in this branch's gate, not caused by it: `act: undo` can crash Forge's
+   game loop.**~~ **Closed by the undo race (D136, amendment M48)**: `undo` and
+   `useMana` are applied only while the engine is quiet on this seat and are
+   otherwise refused with `notice {title:"Not now"}`, and gate step 10g now holds
+   exactly this window open and asserts the refusal (*The undo race*, below). The
+   original note: the first gate run (`var/check-all-story-run1.log`) failed at step
    **10g**: the automated client's `undo`, applied while the engine was paying a
    Thallid's cost, raced the game thread, and `MagicStack.clearUndoStack` threw
    `ArrayIndexOutOfBoundsException` inside `PhaseHandler.mainGameLoop` — an engine
@@ -5081,7 +5094,7 @@ at eight (`8850`, load 6–14) and **906.9 s** serially (`8860`), every one exit
 attempt at the second four-slot run failed at step 8 on an engine race that is
 not the gate's (follow-up 8) and was run again.
 
-### Gate speed follow-ups — eight, 2026-09-28 (1 closed at merge)
+### Gate speed follow-ups — eight, 2026-09-28 (1 closed at merge, 1 by the undo race)
 
 1. ~~**A JVM's exit can leave `var/forge/achievements/constructed.xml` EMPTY,
    serially too.**~~ **Closed at merge, for the gate**: every job — and every
@@ -5125,7 +5138,18 @@ not the gate's (follow-up 8) and was run again.
 7. **One gate per worktree, still.** Two gates in one checkout collide on
    `var/` paths (and `$TEN_GAMES_DIR`) exactly as before; two worktrees never
    did, as long as their `WSPORT` ranges (`WSPORT` .. `+6`) do not overlap.
-8. **An engine race at step 8, twice** — the verifier's `GATE_JOBS=1` run (load
+8. ~~**An engine race at step 8, twice.**~~ **Closed by the undo race's deferred
+   concede (D136)**, by its mechanism — the race is load-dependent and was not
+   re-run into here. The stack is `Game-0` iterating `Game.getPlayers()` in
+   `forEachCardInGame`; the concede ran `PlayerControllerHuman.concede()` on the
+   EDT, whose `checkGameOverCondition` → `Game.onPlayerLost` removes the loser
+   from that same `PlayerCollection` (read with `javap -c` on the pinned jar).
+   Since D136 a concede that arrives while no input is up writes only
+   `Player.concede()` — `setOutcome`, one field — and `Game-0` ends the game at
+   its own next check, so nothing of ours mutates the list it walks; the
+   undo-race gate runs print `CONCEDE DEFERRED … no input is up` at step 8 and
+   end in `over` (`docs/evidence/undo-race.md` §8 and §10). The original note:
+   **an engine race at step 8, twice** — the verifier's `GATE_JOBS=1` run (load
    13) and the merge's first attempt at its second `GATE_JOBS=4` run (load 9):
    the scripted console session's `q` conceded while Forge's game thread was
    still inside `GameAction.runPreOpeningHandActions`, and
@@ -5139,6 +5163,140 @@ not the gate's (follow-up 8) and was run again.
    concede still printed `MTGTABLE OK`. The fix belongs to the bridge's concede
    path — apply it only while the engine is parked (D39's predicate), deferring
    one typed ahead of that — and step 8 is its reproduction.
+
+---
+
+## The undo race — `undo` waits for a parked engine (2026-09-28, D136, amendment M48)
+
+**Status: built, gated and documented**, committed on branch `undo-race`
+(worktree `mtg-table-t2t`, off `main`'s `4408283`, rebased onto the gate-speed
+lane's `6b35054` — *Rebased onto gate speed*, below). Decision **D136** was
+written as D170 on the lane's instruction and renumbered at merge, after the
+story page's D124–D128 and gate speed's D129–D135; protocol amendment **M48**
+kept its number. `docs/evidence/undo-race.md` is what was measured.
+
+**The defect.** `WireGuiGame.applyAct` applied `act: undo` on `mtg-table-EDT`
+whenever it arrived. Forge's undo stack is a plain `java.util.Stack` that
+`Game-0` walks every time it puts a non-undoable spell on the stack
+(`MagicStack.add` → `recordUndoableActions` → `clearUndoStack`: a
+`lastIndexOf`, then a `remove(int)`), and the one `state` that offers the undo
+of a mana payment is flushed by the payment's `stop()` after it has removed the
+input and just before it releases `Game-0` into exactly that walk. The story
+branch's first gate run (step 10g) sent the undo on that state and `Game-0`
+threw `ArrayIndexOutOfBoundsException` inside `PhaseHandler.mainGameLoop` — an
+engine crash, a failed run (D115); M6's evidence §4.3 had seen the same race
+throw on the EDT. `useMana` writes the mana pool from the EDT the same way.
+
+**The fix, on the bridge's desk.** `undo` and `useMana` are applied only when
+`ActGuard.whyNotNow` finds the engine quiet on this seat, read on the EDT just
+before the write: live; no ask outstanding; an input up (D39's positive
+predicate); the input generation the act arrived under (D22's stamp); no
+`InputPayMana` activation on a worker; no OK/pass still with the engine; none of
+our hops walking; no engine thread running. Otherwise `notice {level:"warn",
+title:"Not now"}`, the reason on stderr, a count in the summary (`acts not now`),
+and the engine untouched. **`concede` was found to race too** (the
+natural-timing sweep, evidence §5: `Game-0` threw
+`ConcurrentModificationException` walking the player list under the EDT's own
+`checkGameOverCondition`), and it is never refused: from a running engine only
+the seat's outcome is written and `Game-0`'s own state-based check ends the
+game; the seat is asked nothing more, and if the engine parks here first the
+rest of the concede is applied there. **No fourth hop** — D136 says why one
+would have excluded nothing. Every other act goes through Forge's input protocol, or
+writes only what desktop Forge writes from its own EDT; the evidence §3
+classifies all sixteen of `applyAct`'s cases.
+
+```bash
+./tools/undo-race-repro.sh      # both halves, ~15 s: guarded refuses; the guard off writes under a held engine thread
+MTGTABLE_HOLD_UNDO_WINDOW_MS=1500 ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 \
+    --seed 13 --deck decks/yield-probe.dck               # the held window, by hand
+node tools/ws-auto-play.mjs --port 8642 --undo-race     # exit 0 = "Not now", 9 = applied (the race)
+```
+
+- **The reproduction** (deliverable 1): `MTGTABLE_HOLD_UNDO_WINDOW_MS` holds the
+  game thread, spinning, at the first state of a game that offers an undo while
+  no input is up, and `ws-auto-play --undo-race` sends `undo` on that state, so
+  the act lands in the window every run. Guarded: refused, the undo stack
+  untouched across the hold, client exit 0. `MTGTABLE_TEST_UNGUARDED_ACTS=1` (the
+  negative control, the old code path): no notice, the undo stack **1 → 0 while
+  the engine thread is held inside the engine**, client exit 9.
+- **`bridge/build.sh`** runs a fifth self-test, `ActGuardSelfTest`: the decision
+  table (each of the eight conditions refuses on its own, and removing any one
+  from `ActGuard` fails its row — negative-controlled) and the thread-state
+  reading on real threads.
+- **The concede** in the same reproduction: the client concedes the moment it
+  has its verdict, inside the held window, and the guarded run defers it
+  (`concedes = 0 at once, 1 deferred`) where the negative control applies it at
+  once; the natural-timing sweeps (evidence §5) are where it crashed and stopped.
+- **Gate step 10g** holds the window (`MTGTABLE_HOLD_UNDO_WINDOW_MS=1000`),
+  passes `--require-late-undo` (the late undo must draw "Not now") and asserts
+  the server's `undo window` line; `undo`'s EFFECT (M6 convention 4) is proven by
+  a second undo that floats one of the seat's own lands at priority and undoes
+  it while the engine is parked. The M6 line's `undo 1` now counts undos
+  APPLIED.
+
+### The undo race's follow-ups — five, 2026-09-28 (1 closed at merge)
+
+1. **The yield acts can start the mana-lost worker unmarked** (D136's residual).
+   `setPhaseStop`, `yieldTo` and `setYield` can press OK through Forge's own
+   `tryAutoPassNow()`, and D136's condition 6 marks only a direct OK/pass,
+   because there it cannot tell a press from no press without refusing good
+   undos until the next re-render. The gap is the microseconds before that worker
+   enters the bridge (it reads `Localizer` and `ManaPool.hasBurn()`); an undo that
+   begins in it can overlap the worker's first walk. Closing it wants a signal
+   from Forge that `tryAutoPassNow` pressed, which the jar does not give.
+2. **Clicks are not guarded against our own refresh walk.** An EDT click that
+   makes Forge write input-owned state on the EDT (declaring an attacker, a
+   target) can overlap a D39 refresh walk started a moment earlier. It is D39's
+   own hazard, predating this lane; a lock is ruled out (D136's rejected
+   alternatives: Guava's synchronised subscriber), so the fix, if one is wanted,
+   is a refusal like this one or deferring the walk while an act is on the EDT.
+   The same read of the jar found a sibling in D39's predicate itself: it counts
+   an outstanding ask as "parked", but that ask's answer wakes its game thread
+   from the transport thread, not the EDT (D136's condition 2), so a refresh
+   walk can overlap a game thread that has just been answered. D39's walk and
+   `Game-0` between `setInput` and parking (D136's condition 8) is a third.
+3. **The real crash was not reproduced at natural timing here.** The held window
+   reproduces the write under a running engine thread every run; the
+   `ArrayIndexOutOfBoundsException` itself needs the EDT's `remove` to land
+   between `Game-0`'s `lastIndexOf` and its `remove`, nanoseconds apart, and the
+   thirty-seed natural-timing sweep in the evidence (§5) is its own count. The
+   story run hit it at gate load.
+4. ~~**The story branch's follow-up 9 closes with this lane.**~~ **Closed at
+   merge**: the story page landed first, and its follow-up 9 is marked closed by
+   D136 and points here. So is gate speed's follow-up 8, the scripted console
+   concede at step 8 racing `Game-0` into a `ConcurrentModificationException` —
+   the same class as this lane's concede sweep, closed by the deferred concede.
+5. **Slice 4's follow-up 13(d) is not this defect.** It is the ask path's push
+   order against `over` (`Transport.ask` pushes outside the log's monitor), and
+   nothing here touches it; it stays open.
+
+### Rebased onto gate speed — 2026-09-28
+
+Rebased onto `main`'s `6b35054` (the story page and the gate-speed lane
+underneath it). DECISIONS.md and PLAN.md conflicted, both prose, and kept both
+sides, `main`'s first. `tools/check-all.sh` merged cleanly: 10g's three changes
+(the held undo window, `--require-late-undo`, the `undo window` assertion) sit
+in the `s10g_three` job, and the job table and scheduler did not change.
+`bridge/build.sh` still runs five self-tests. What moved:
+
+- **D170 became D136**, in every file that cites it; DECISIONS.md runs D1–D136
+  with no gap and no duplicate, and the counts read one hundred and thirty-six.
+  **M48 kept its number**, after spectating's M47.
+- **The story page's follow-up 9 is closed** (this lane's follow-up 4).
+- **Gate speed's follow-up 8 is closed by the deferred concede**, by mechanism:
+  step 8's `q` arrives with no input up, so the EDT writes only the outcome and
+  never removes the loser from the player list `Game-0` is iterating. All three
+  merge runs took that path at step 8 (`CONCEDE DEFERRED`, then `CONCEDE
+  COMPLETED`, `over` last). The race depends on load and was not forced.
+
+Each gate ran from a deleted `bridge/out`, all exit 0: at `GATE_JOBS=4`
+**238.6 s** (`WSPORT=8800`) and **242.0 s** (`8810`), with 10g's job 121.9 s and
+121.7 s; serially **907.4 s** (`8820`), with 9c's fourteen games 371.2 s, at a
+load average of 2–12 (`var/check-all-undo-race-merge-{p1,p2,s1}.log`). 10g's
+late-undo assertions passed in every run (`lateUndo=not-now`, `undo window = 1
+hold(s) … 1 refused, 0 applied`). `./tools/undo-race-repro.sh` passed 13 of 13,
+and `npm --prefix web test` gave `main`'s counts (932 + 120 standalone). Evidence
+§10.
 
 ---
 

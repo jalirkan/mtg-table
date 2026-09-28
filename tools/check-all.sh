@@ -101,7 +101,10 @@
 #                                 plus (M6 fix) the BEHAVIOUR of auto-yield on
 #                                 decks/yield-probe.dck, whose key ability
 #                                 repeats every upkeep, with
-#                                 --require-yield-repeat.
+#                                 --require-yield-repeat -- and (D136) the held
+#                                 undo window with --require-late-undo: an undo
+#                                 sent between the payment and the stack must
+#                                 draw `notice {title:"Not now"}`.
 #                                 Each asserts exactly one `over`, `over` last,
 #                                 and its log through check-redaction.mjs.
 #  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
@@ -1353,10 +1356,18 @@ s10g_three() {
   # window that, unheld, opened once in two gate runs at a load average of
   # 15-32 and let game 2's late finishGame() end game 3 before it had dealt a
   # card.  Held, it is every run, and the queue that closes it is asserted below.
-  MTGTABLE_HOLD_GAME_END_MS=2000 WS_SEED=13 WS_EXTRA="--games 3 --deck decks/yield-probe.dck" \
+  # MTGTABLE_HOLD_UNDO_WINDOW_MS (D136, protocol amendment M48): the bridge
+  # holds the game thread 1 s at the first state that offers an undo while no
+  # input is up -- the payment's stop(), just before Game-0 puts the spell on the
+  # stack, where an applied undo raced MagicStack.clearUndoStack -- and
+  # --require-late-undo fails the client unless its undo there drew
+  # `notice {title:"Not now"}`.  Its other undo floats mana and undoes it while
+  # the engine is parked, and is the one the M6 line below counts.
+  MTGTABLE_HOLD_GAME_END_MS=2000 MTGTABLE_HOLD_UNDO_WINDOW_MS=1000 WS_SEED=13 \
+    WS_EXTRA="--games 3 --deck decks/yield-probe.dck" \
     ws_start check-all-ws-3g var/check-all-ws-3g.log
   if ! node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 900 --games 3 --comfort --quiet \
-      --require-yield-repeat \
+      --require-yield-repeat --require-late-undo \
       --log var/ws-auto-3g.jsonl > var/check-all-ws-3g-client.log 2>&1; then
     cat var/check-all-ws-3g-client.log >&2
     die "tools/ws-auto-play.mjs --games 3 --comfort did not finish against 127.0.0.1:$WSPORT"
@@ -1452,6 +1463,15 @@ queued behind Forge finishing its game and then run (D114; log: var/check-all-ws
   # (report 11 §4.3), which is the point of it, so there is nothing in the next
   # `state` that is uniquely its doing.
   echo "OK: setPhaseStop, undo, setYield, yieldTo and buttonCancel(yield) each moved the board; passPriority sent (a count, no-op by design)"
+  # D136, the server's half: the held undo window was entered, the late undo
+  # arrived inside it and was refused, and the undo stack was not written under
+  # the held engine thread.
+  grep -qE '^undo window    = [1-9][0-9]* hold\(s\), the undo stack mutated under a held engine thread 0 time\(s\); acts during a hold: [1-9][0-9]* refused, 0 applied' \
+      var/check-all-ws-3g.log || {
+    grep '^undo window\|^NOT NOW\|^TEST HOOK: UNDO' var/check-all-ws-3g.log >&2
+    die "10g: the late undo was not refused inside the held undo window (D136; log: var/check-all-ws-3g.log)"
+  }
+  echo "OK: the late undo, sent into the held window between the payment and the stack, was refused \"Not now\" (D136)"
   # The BEHAVIOURAL half of auto-yield, from the client's own summary line.
   # ws-auto-play already exited 7 if the key repeated and the engine prompted
   # anyway, or (under --require-yield-repeat) if it never repeated at all; this

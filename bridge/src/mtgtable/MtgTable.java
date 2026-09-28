@@ -392,6 +392,26 @@ public final class MtgTable {
         // because a guard nobody can see the cost of is a guard nobody checks.
         System.out.println("refresh skips  = " + gui.refreshesSkipped()
                 + " (M6 refresh hops that found the engine running, not parked -- D39)");
+        // D136.  `undo` and `useMana` write the engine from the EDT, so they are
+        // applied only while the engine is quiet on this seat; the rest are
+        // refused with `notice {title:"Not now"}` and never reach Forge.  The
+        // `undo` count on the M6 line above is the APPLIED ones.
+        final int[] notNow = gui.actsNotNow();
+        System.out.println("acts not now   = undo " + notNow[0] + ", useMana " + notNow[1]
+                + " (refused: the engine was not quiet on this seat -- D136, protocol amendment M48)");
+        final int[] concedes = gui.concedes();
+        System.out.println("concedes       = " + concedes[0] + " at once, " + concedes[1] + " deferred (deferred: the "
+                + "engine was running, so only the outcome was written and its own check ended the game -- D136)");
+        if (gui.unguardedWrites() >= 0) {
+            System.out.println("unguarded     = " + gui.unguardedWrites() + " write(s) the guard would have refused "
+                    + "(MTGTABLE_TEST_UNGUARDED_ACTS=1, the negative control -- D136)");
+        }
+        final int[] hook = gui.undoWindowHook();
+        if (hook != null) {
+            System.out.println("undo window    = " + hook[0] + " hold(s), the undo stack mutated under a held "
+                    + "engine thread " + hook[1] + " time(s); acts during a hold: " + hook[2] + " refused, "
+                    + hook[3] + " applied (MTGTABLE_HOLD_UNDO_WINDOW_MS, a test hook -- D136)");
+        }
         System.out.println("winner         = " + winner + (reason.isEmpty() ? "" : ", reason = " + reason));
         System.out.println("ai profile     = " + aiProfileEvidence(hosted, aiLobby, aiProfile));
         System.out.println("player turns   = " + turns + " (round " + ((turns + 1) / 2) + ")");
