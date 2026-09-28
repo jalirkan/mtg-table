@@ -1373,7 +1373,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
         if (!ThreadUtil.isGameThread()) {
             captureInFlight = true;            // emitOver waits for exactly this
-            ThreadUtil.invokeInGameThread(this::captureOutcome);
+            ThreadUtil.invokeInGameThread(this::captureOutcome);  // ALLOW hop: D39 captureOutcome -- only at game end (hard rule 3)
             return;
         }
         try {
@@ -2592,7 +2592,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         final long gen = inputGen.get();
         hopsInFlight.incrementAndGet();        // D136: in flight from submission, not from the worker's start
         try {
-            ThreadUtil.invokeInGameThread(() -> {
+            ThreadUtil.invokeInGameThread(() -> {  // ALLOW hop: D22 asyncAbilityMenu -- the input-generation stamp (hard rule 3)
                 try {
                     emitAbilityMenu(hostId, chosen, gen);
                 } finally {
@@ -3819,7 +3819,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         final long gen = inputGen.get();
         hopsInFlight.incrementAndGet();        // D136: in flight from submission, not from the worker's start
         try {
-            ThreadUtil.invokeInGameThread(() -> {
+            ThreadUtil.invokeInGameThread(() -> {  // ALLOW hop: D39 refreshState -- the stamp and the parked engine (hard rule 3)
                 try {
                     refreshSnapshot(gen);
                 } finally {

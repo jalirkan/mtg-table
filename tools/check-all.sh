@@ -12,8 +12,14 @@
 # order, printing their log as they run.  The steps:
 #
 #   1. tools/check-forge.sh       the jar is present and carries the 8 classes
-#   2. tools/lint-bridge.sh       the grep bans (hidden info, data loss, 2.0.15-only APIs)
-#   3. bridge/build.sh            javac + the Json self-test (build.sh re-runs 2)
+#   2. tools/lint-bridge.sh       the grep bans (hidden info, data loss, 2.0.15-only APIs,
+#                                 the three game-thread hops) over bridge/src AND
+#                                 tools/**/*.java (D181, D182).  Then 2b:
+#                                 tools/lint-bridge-selftest.sh -- every rule the
+#                                 lint declares FIRES on a snippet planted in a
+#                                 scratch copy, and a rule with no case fails
+#                                 (D180; ~1 s)
+#   3. bridge/build.sh            javac + the five self-tests (build.sh re-runs 2b and 2)
 #   4. mtgtable.Smoke             boots the engine, proves the prefs and the card overlay
 #   5. mtgtable.RecordMatch       a FRESH recording into var/, not a committed fixture
 #   6. the VALUE-LEVEL drift check  tools/wire-drift.mjs: that fresh recording is
@@ -127,6 +133,14 @@
 #                                 twice and no frame a client holds left untold
 #                                 (polish-1), and fixtures/narrate/'s goldens
 #                                 (D123; ~1 s)
+#                                 Then 12e: node tools/build-deck.ts --check --
+#                                 every AI deck under decks/ is byte for byte
+#                                 what its decks/specs/*.json builds, every name
+#                                 re-resolved against the local card index
+#                                 var/cards/cards.sqlite (D116, D183).  It needs
+#                                 that index -- built from Scryfall, so NOT in CI
+#                                 -- and fails without it; SKIP_DECKS=1 skips it
+#                                 and says so
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -202,7 +216,8 @@
 # (every dependency passed) in a fixed priority order whenever fewer than
 # GATE_JOBS are running.  The order constraints are dependencies, not luck:
 #
-#   - check-forge, lint and build (steps 1-3) run first and alone -- every job
+#   - check-forge, lint (with 2b, the lint's self-test, beside it) and build
+#     (steps 1-3) run first and alone -- every job
 #     depends on them;
 #   - step 6 depends on step 5 (it compares RecordMatch's fresh recording);
 #     6b's comparison on both of 6b's recordings; 9c's report on its fourteen
@@ -217,8 +232,8 @@
 #     depends on 10a, 10b, 10c, 10d, 10f and 10g (10e is not in the list);
 #   - step 11's fresh half and 12d's narrator read EVERY fresh recording, so
 #     they depend on every job that records one;
-#   - 12b (the catalog) and 12c (the crash check, its own scratch Forge home)
-#     depend on nothing but the build.
+#   - 12b (the catalog), 12c (the crash check, its own scratch Forge home) and
+#     12e (the AI decks against their specs) depend on nothing but the build.
 #
 # Step 10's servers listen on WSPORT+0 .. WSPORT+6 (10a..10g) when GATE_JOBS >
 # 1, so all seven can be up at once; GATE_JOBS=1 keeps the single WSPORT.
@@ -249,6 +264,7 @@
 #         SKIP_DRIFT=1 ./tools/check-all.sh       # no 9b re-recording (~30 s)
 #         DRIFT_FATAL=1 ./tools/check-all.sh      # 9b's advisory becomes a failure
 #         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~6 minutes serially); 9e still runs
+#         SKIP_DECKS=1 ./tools/check-all.sh       # no 12e (a checkout with no var/cards/cards.sqlite)
 #         VILLAIN_DECK=decks/x.dck ./tools/check-all.sh   # 9c rows 11-14 and 9e play this deck
 #         STRICT_G1=1 ./tools/check-all.sh        # step 6 byte for byte (fails under load: D113)
 #         GATE_KEEP_RUNS=50 ./tools/check-all.sh  # keep 50 runs under var/check-all/ (default 20)
@@ -422,6 +438,17 @@ s01_forge() {
 s02_lint() {
   hdr 2 "lint-bridge.sh -- the grep bans"
   ./tools/lint-bridge.sh || die "lint-bridge.sh"
+}
+
+# 2b. D180: the lint's own negative controls.  Every rule tools/lint-bridge.sh
+#     declares (read from its --list-rules) must fire on a snippet planted in a
+#     scratch copy of bridge/src and tools/**/*.java under var/lint-selftest/ --
+#     that rule and no other -- the real tree must pass, and a rule with no case
+#     fails.  Two rules (GameView.getDeck / .getGame) were dead from the first
+#     commit because nothing asked.  About a second; bridge/build.sh runs it too.
+s02b_lintself() {
+  printf '\n=== 2b. lint-bridge-selftest.sh -- every lint rule fires (D180) ===\n'
+  ./tools/lint-bridge-selftest.sh || die "lint-bridge-selftest.sh (a lint rule did not fire on the code it exists for, or has no case)"
 }
 
 s03_build() {
@@ -1687,6 +1714,28 @@ s12d_narrate() {
     || die "narrate-selftest.mjs (12d: the narrator broke a hidden-information rule, narrated a re-delivered frame twice, dropped a frame a client holds, or drifted from fixtures/narrate/)"
 }
 
+# 12e. D183: every AI deck is its spec's.  tools/build-deck.ts --check
+#      re-resolves every name of every decks/specs/*.json against the local card
+#      index and diffs the .dck it would write against the committed one, byte for
+#      byte.  web/test/deck-specs.test.ts (step 13, and CI) is the hermetic half
+#      -- names, counts and order -- and passes a deck whose unpinned line was
+#      switched from MSH to MSC; this catches it (docs/evidence/guards.md
+#      section 5).  It needs var/cards/cards.sqlite, which only
+#      `node tools/card-library/build.ts` makes (Scryfall's bulk file: network,
+#      ~24 MB, under ten seconds), so it is a LOCAL job, not a CI one, and a
+#      checkout without the index fails here with that command -- or skips the
+#      step under SKIP_DECKS=1, which says so.  About a tenth of a second.
+s12e_decks() {
+  printf '\n=== 12e. build-deck.ts --check -- every AI deck is what its spec builds (D116, D183) ===\n'
+  [ -f var/cards/cards.sqlite ] \
+    || die "var/cards/cards.sqlite is missing: build the local card index with  node tools/card-library/build.ts  (network; tools/card-library/README.md), or pass SKIP_DECKS=1 to skip 12e and say so"
+  node tools/build-deck.ts --check \
+    || die "an AI deck under decks/ is not what its decks/specs/*.json builds (or a spec breaks a deck rule) -- run: node tools/build-deck.ts"
+}
+s12e_skipped() {
+  printf '\n(12e skipped: SKIP_DECKS=1 -- the AI decks were NOT checked against their specs; web/test/deck-specs.test.ts, the hermetic half, still runs in step 13)\n'
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -1754,7 +1803,8 @@ job() { J_ORDER+=("$1"); J_STEP[$1]="$2"; J_MODE[$1]="$3"; J_FN[$1]="$4"; J_DEPS
 PRE="03-build"                       # every pool job waits for the build
 job 01-forge      1  both     s01_forge
 job 02-lint       2  both     s02_lint          "01-forge"
-job 03-build      3  both     s03_build         "02-lint"
+job 02b-lintself  2  both     s02b_lintself     "01-forge"
+job 03-build      3  both     s03_build         "02-lint 02b-lintself"
 job 04-smoke      4  both     s04_smoke         "$PRE"
 job 05-record     5  both     s05_record        "$PRE"
 job 06-drift      6  both     s06_drift         "05-record"
@@ -1796,6 +1846,11 @@ job 12-selftest   12 both     s12_selftest      "$PRE"
 job 12b-catalog   12 both     s12b_catalog      "$PRE"
 job 12c-crash     12 both     s12c_crash        "$PRE"
 job 12d-narrate   12 both     s12d_narrate      "$RECORDERS"
+if [ "${SKIP_DECKS:-0}" = "1" ]; then
+  job 12e-skipped 12 both     s12e_skipped      "$PRE"
+else
+  job 12e-decks   12 both     s12e_decks        "$PRE"
+fi
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
@@ -1814,7 +1869,7 @@ fi
 # vitest (~60 s on one thread) head it because `node --test` waits for step 10
 # and nothing waits for the ten-games rows; Smoke is early because 9c and 9e
 # wait for it.  Anything not named runs after, in table order.
-PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog"
+PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
 PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 08-console 12c-crash 13a-build"

@@ -6666,3 +6666,205 @@ floats a land's mana at priority and undoes it while the engine is parked.
 - **Deciding by the prompt** (`Pay Mana Cost`, a button labelled `Auto`) — M5
   convention 4: never decide what a control does, or when, by matching an
   engine string.
+
+---
+
+## D180 — Every rule of `tools/lint-bridge.sh` is proven to FIRE, on every build, by a self-test that reads the rule list from the lint
+
+*Branch `guards` (worktree `mtg-table-t2w`, off `main`'s `b9af15d`). Numbered in
+the lane's reserved range D180–D189 and kept there: since 2026-09-28 a lane keeps
+the numbers it reserves, and gaps are allowed.*
+
+**2026-09-28** (the structure review's guards finding; `docs/evidence/guards.md`
+is what was run, PLAN.md *Guards* the status and the follow-ups)
+
+**Decision.**
+
+1. **A rule is declared by one of three lines** — `ban <id> <pattern> <why>`,
+   `ban_except <id> <repo-relative path> <pattern> <why>` or `rule <id> <check
+   function>` — and **fails only through `lint_fail`**, which prints `LINT FAIL
+   [<id>]: …`. `tools/lint-bridge.sh --list-rules` prints the ids (31 today) and
+   scans nothing; `--root <dir>` lints another tree.
+2. **`tools/lint-bridge-selftest.sh` holds every rule to firing.** It reads
+   `--list-rules`, checks it against the source's own `ban` / `ban_except` /
+   `rule` lines (so a rule behind a condition is caught), requires the ids to be
+   unique, and requires `LINT FAIL` to be printed and `fail=1` to be set in
+   `lint_fail` alone — so no check can fail the lint without an id. Then, for
+   every case, it copies `bridge/src`, `tools/**/*.java` and `DECISIONS.md` into
+   a scratch tree under `var/lint-selftest/`, plants a minimal Java snippet (a
+   new file, a method injected into `Snap.java` or `WireGuiGame.java`, or an edit
+   to a real line), runs the lint with `--root`, and requires **exit 1 with that
+   rule's id and no other**. Every rule id must have a case and every case must
+   name a rule, so **a rule added without a case fails the build**. Five PASS
+   cases hold the other direction (`HostedMatch.getGame()`, a `Map.Entry`'s
+   `getKey()`, banned names in comments, a correctly named thread,
+   `Bootstrap.createAiPlayer` in `tools/`), and the real tree and a pristine copy
+   must pass. 60 firing cases over 31 rules, 73 checks, about a second — the
+   cases run concurrently, `LINT_SELFTEST_JOBS` at a time.
+3. **It runs in three places**: `bridge/build.sh`, before the lint and javac
+   (`--quiet`: failures and the summary); gate step **2b** (`02b-lintself`,
+   beside 2, which 3 waits for); CI's `bridge` job, before the lint.
+4. **The two dead rules now work from the type, the way 4b does.**
+   `GameView-getDeck` and `GameView-getGame` watch every identifier declared
+   `GameView <name>` in either tree, plus `getGameView()`, `getView()` (Game's is
+   the only `getView()` whose result has either method — javap), a cast to
+   `GameView` (qualified or not) and the method references. No ALLOW: nothing
+   calls either one. `HostedMatch.getGame()` stays legal (its receiver is not a
+   `GameView`; a PASS case holds it).
+
+**Rationale.** A lint rule that cannot fire prints the same `bridge lint OK` as a
+rule nobody has broken. `GameView.getDeck` and `GameView.getGame` searched for
+that literal class-qualified text, which no Java call contains — an instance call
+reads `gameView.getDeck(p)` — so the whole-decklist and live-`Game` accessors
+were unguarded from the first commit (M0 and M1, 2026-09-11) to this lane: `main`'s lint passed a file that called both
+and compiled against the pinned jar (evidence §1). Nothing had ever asked a rule
+to fail. The self-test asks every rule on every build, and it found a third gap
+while being written: its first run caught the new cast pattern missing
+`(forge.game.GameView) o`. Its own controls: the two rules put back to their old
+literal patterns fail all eight GameView cases; a rule added with no case, a
+`LINT FAIL` echoed outside `lint_fail`, and a rule declared behind an `if` each
+fail it (evidence §2).
+
+**Rejected.**
+
+- **A fixture directory of committed probe `.java` files.** They would sit under
+  a tree the lint scans, and every one would need an exemption that could leak
+  into a real file; scratch copies under `var/` are made and removed per run.
+- **Listing the cases' rule ids by hand in the self-test.** A rule added to the
+  lint and forgotten here would go untested — the failure this exists to stop.
+  The list comes from the lint.
+- **Asserting only "the lint failed" per case.** A case that tripped the wrong
+  rule, or several, would pass and prove nothing about its own rule.
+- **Compiling each snippet.** The lint reads text; a javac per case would cost
+  seconds each for no extra power. Evidence §1 compiles the finding's own snippet
+  once, to show the text is real code.
+
+---
+
+## D181 — The three game-thread hops are counted by the lint: exactly `HOP_ALLOW`'s three, each tagged `// ALLOW hop: D<n> <method>`
+
+*Branch `guards`; the lane's reserved range D180–D189.*
+
+**2026-09-28** (hard rule 3; `docs/evidence/guards.md` §3)
+
+**Decision.** `tools/lint-bridge.sh` rule `game-thread-hop` finds every
+non-comment mention of `invokeInGameThread` under `bridge/src` and `tools/` — a
+call with a lambda or a method reference, a method reference to it
+(`ThreadUtil::invokeInGameThread`), a static import, a reflective lookup by name
+— and fails unless:
+
+1. each carries `// ALLOW hop: D<n> <method>` on its own line;
+2. `<method>` is the nearest method declaration above it (a modifier, a name,
+   `(`, no `=` or `;` between), so a tag cannot be copied onto a new hop;
+3. `D<n>` is a heading in `DECISIONS.md`; and
+4. the set of (file, method, decision) is **exactly** `HOP_ALLOW`:
+   `WireGuiGame.captureOutcome` (D39's rationale: only at game end),
+   `asyncAbilityMenu` (D22) and `refreshState` (D39).
+
+A fourth hop, even tagged with a real decision, fails until `HOP_ALLOW`, a
+written argument and hard rule 3 name it; a hop removed or moved fails until it
+comes off the list. Two companions: `game-pool-reflection` bans
+`WorkerThreadFactory`, `gameThreadPool` and `getGameThreadPool` outright, and
+`thread-builder` bans `Thread.ofPlatform()` / `Thread.ofVirtual()`, whose name is
+on a line section 6's thread-name rule does not read.
+
+**Rationale.** Hard rule 3's three hops were a sentence: a fourth `invokeInGameThread`
+compiled, passed every `isGameThread()` assert on its `Game-n` worker, and needed
+only a reviewer who remembered the rule. javap settles what counts:
+`ThreadUtil.invokeInGameThread(Runnable)` is the one public way onto the pool
+whose threads are named `Game` (`newCachedThreadPool(new
+WorkerThreadFactory("Game"))`); `delay` runs on `Delayed-n`, `getComputingPool` and
+`executeWithTimeout` on default names, `getServicePool` / `limit` on a
+work-stealing pool; `WorkerThreadFactory` is package-private and the pool field
+private, so any other route is reflection, which the companion rule bans.
+`FThreads.invokeInEdt*` and `invokeInBackgroundThread` are not hops onto the game
+pool. There is no `GameThreadUtil` in the 2.0.14 jar. Forge's own classes hop
+too (`GameAction`, `InputPassPriority`, `InputConfirmMulligan`, `InputBlock`,
+`QuestTournamentController`, `AchievementCollection` reference the method); that
+is the engine's input protocol, which D136 classifies act by act, and not ours to
+count. Nine self-test cases hold the rule, among them a fourth tagged hop, a
+removed hop, a tag naming the wrong method and a tag citing `D9999`.
+
+**Rejected.** Counting by a number alone (a hop moved from `refreshState` into a
+new method would keep the count and lose the argument). Matching the receiver
+`ThreadUtil.` (misses the static import and the reflective name). Banning the
+call outright with three per-file exemptions (all three live in one file, so a
+per-file ALLOW would admit a fourth there).
+
+---
+
+## D182 — The lint scans `tools/**/*.java` with the bridge's rules, exemptions are repo-relative paths, and the audit helper seats its AIs through `Bootstrap.createAiPlayer`
+
+*Branch `guards`; the lane's reserved range D180–D189.*
+
+**2026-09-28** (`docs/evidence/guards.md` §4)
+
+**Decision.**
+
+1. **`tools/lint-bridge.sh` reads every `*.java` under `bridge/src` and under
+   `tools/`**, with the same rules. Every exemption is a repo-relative path
+   (`bridge/src/mtgtable/Bootstrap.java`, `…/Smoke.java`, `…/Snap.java`,
+   `…/RecordMatch.java`, `…/WireGuiGame.java`), never a bare file name, so a
+   `tools/probe/Bootstrap.java` inherits nothing (three self-test cases hold
+   that). No `tools/` file is on any ALLOW list.
+2. **`tools/audit-deck/AuditDeck.java` seats its two throwaway AIs with
+   `Bootstrap.createAiPlayer(name, avatar, Bootstrap.DEFAULT_AI_PROFILE)`**
+   (D107's seam), never `GamePlayerUtil.createAiPlayer(name, avatar)`.
+3. **`tools/audit-deck.mjs` fingerprints the throwaway home's preferences files
+   before and after the engine runs** (D133's shape) and exits 2 if one changed.
+
+**Rationale.** The lint stopped at `bridge/src`, and `AuditDeck.java` — which
+boots the same engine the same way through `Bootstrap` — called the two-argument
+overload whose empty `profileOverride` reaches `ForgePreferences.save()` (javap:
+offset 83 of the five-argument overload) when the preferences name an AI profile
+that did not load. Measured with the audit's own throwaway home: a planted
+`UI_CURRENT_AI_PROFILE=NoSuchProfile` turned a 36-byte file into 8,045 bytes
+carrying D13's `UI_SELECT_FROM_CARD_DISPLAYS=false` and D14's
+`ALLOW_CUSTOM_CARDS_IN_DECKS_CONFORMANCE=true` as persistent edits; after the fix
+the same file is untouched, and with no file planted no preferences file appears
+in any of step 9e's three directories plus the audit home, before or after. The
+old helper under the new guard exits 2 on the planted file. The audit's verdicts
+did not move (`decks/pacho-shield.dck` 40 ok; `decks/fra-rw-aggro.dck` 19 ok, 31
+missing, 0 broken).
+
+**Rejected.** A separate, lighter lint for `tools/` (two rule sets drift; the
+point is that the same accessors are dangerous wherever they are called). Moving
+`AuditDeck.java` into `bridge/src` (it is not the bridge, emits no protocol and
+compiles against a throwaway home's classes — its header says why it lives
+outside). An ALLOW for the audit's call (the call's only effect worth having is
+the one `Bootstrap.createAiPlayer` already provides).
+
+---
+
+## D183 — `node tools/build-deck.ts --check` is gate step 12e, a local job that needs the card index; it is not in CI
+
+*Branch `guards`; the lane's reserved range D180–D189.*
+
+**2026-09-28** (`docs/evidence/guards.md` §5)
+
+**Decision.** Gate step **12e** (`12e-decks`, after the build, beside 12b and
+12c) runs `node tools/build-deck.ts --check`: every `decks/specs/*.json`
+re-resolved against the local card index and the `.dck` it would write compared
+with the committed one, byte for byte (D116). It needs `var/cards/cards.sqlite`;
+a checkout without it **fails** 12e with the command that builds it (`node
+tools/card-library/build.ts`, which downloads Scryfall's bulk file), and
+`SKIP_DECKS=1` skips the step and says so. CI does not run it; its header says
+why, and the hermetic half, `web/test/deck-specs.test.ts`, is in CI's `web` job.
+
+**Rationale.** The review asked for the check in CI, but the builder reads the
+card index, which only the network build makes: `fixtures/cards/` is a test
+slice holding one to three of each AI deck's 24–27 names, so an index built from it
+cannot resolve the decks, and CI calling Scryfall is what the workflow's header
+rules out. So it is a local job. It earns one: the hermetic test compares names,
+counts and order, and passes a deck whose unpinned `Vibranium Energy
+Daggers|MSH` line was switched to `|MSC`; `--check` fails it (`STALE:
+decks/wakanda.dck differs from what decks/specs/wakanda.json builds`). It takes
+about a tenth of a second. Failing without the index, rather than skipping,
+follows `SKIP_WEB`'s precedent: a step that silently does not run is the defect
+D180 is about.
+
+**Rejected.** Running it in CI against an index built from `fixtures/cards/`
+(it cannot resolve the decks). Fetching the bulk file in CI (a Scryfall download
+on every push, which the card library's rules keep local, D90). Skipping 12e
+without a word when the index is missing (a guard that does not run looks like
+one that passed).

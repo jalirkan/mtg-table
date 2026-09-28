@@ -16,7 +16,9 @@
 #              (Scryfall art, gitignored) is absent -- every reader of it falls
 #              back to the empty index, exactly as in a fresh checkout.  Nothing
 #              here calls Scryfall.
-#   bridge     tools/lint-bridge.sh (a grep, no jar), then the pinned engine --
+#   bridge     tools/lint-bridge-selftest.sh (every lint rule fires on a planted
+#              snippet, D180) and tools/lint-bridge.sh (a grep over bridge/src
+#              and tools/**/*.java; neither needs a jar), then the pinned engine --
 #              the official forge-2.0.14 release asset, its jar checked against
 #              the repo's pin (D110) -- and ./bridge/build.sh: javac plus its five
 #              self-tests.  None of the five boots an engine or reads Forge's
@@ -30,8 +32,11 @@
 #              workshop catalog check (12b) -- plain Node, no npm install.
 #
 # Also local only: tools/arena-bench.mjs (a built dist, a preview server and a
-# headless Chromium), the card library's real build (Scryfall's bulk file) and
-# tools/fetch-art.ts (Scryfall).
+# headless Chromium), the card library's real build (Scryfall's bulk file),
+# tools/fetch-art.ts (Scryfall) and gate step 12e, `node tools/build-deck.ts
+# --check` (D183): it re-resolves every AI deck's spec against the local card
+# index, var/cards/cards.sqlite, which only that real build makes.  Its
+# hermetic half, web/test/deck-specs.test.ts, runs in the web job above.
 
 name: checks
 
@@ -97,6 +102,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      # D180: the lint's own negative controls -- every rule it declares must
+      # fire on a snippet planted in a scratch copy under var/, and a rule with no
+      # case fails.  bridge/build.sh runs it again (--quiet) before javac.
+      - name: tools/lint-bridge-selftest.sh (no engine needed)
+        run: ./tools/lint-bridge-selftest.sh
       - name: tools/lint-bridge.sh (no engine needed)
         run: ./tools/lint-bridge.sh
       # Only the 39 MB jar is cached, never the 302 MB archive and never res/.

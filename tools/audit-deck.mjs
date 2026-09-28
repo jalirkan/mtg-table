@@ -201,11 +201,34 @@ const javaArgs = ['-u', 'DISPLAY', 'java', '-Xmx4096m', '-Djava.awt.headless=tru
   ...opts.decks, '--json', report];
 if (opts.names) javaArgs.push('--names', opts.names);
 if (opts.allCustom) javaArgs.push('--all-custom');
+// The run must SAVE no Forge preferences (hard rule 11; D107, D182).  Every
+// preferences file of the throwaway home is fingerprinted before and after, the
+// way gate step 9e does its three directories (D133): the helper's two AIs once
+// went through GamePlayerUtil's empty-profileOverride branch, which saves the
+// whole in-memory preference set when the preferences name an AI profile that
+// did not load (docs/evidence/guards.md section 4).
+const prefsDir = path.join(user, 'preferences');
+const prefsPrint = () => {
+  let names = [];
+  try { names = fs.readdirSync(prefsDir).sort(); } catch { return ''; }
+  return names.map((f) => {
+    const p = path.join(prefsDir, f);
+    const st = fs.statSync(p, { throwIfNoEntry: false });
+    if (!st?.isFile()) return null;
+    return `${f} ${st.size} ${st.mtimeMs} ${createHash('sha256').update(fs.readFileSync(p)).digest('hex')}`;
+  }).filter(Boolean).join('\n');
+};
+const prefsBefore = prefsPrint();
 const logFd = fs.openSync(engineLog, 'w');
 const t0 = Date.now();
 const run = spawnSync('env', javaArgs, { cwd: REPO, stdio: ['ignore', logFd, logFd],
   env: { ...process.env, FORGE_JAR: forgeJar }, timeout: 600_000 });
 fs.closeSync(logFd);
+if (prefsPrint() !== prefsBefore) {
+  console.error(`audit-deck: the audit SAVED a Forge preferences file under ${path.relative(REPO, prefsDir)} -- `
+    + 'a run must never save prefs (CLAUDE.md hard rule 11; seat an AI only through Bootstrap.createAiPlayer, D107)');
+  process.exit(2);
+}
 if (!fs.existsSync(report)) {
   console.error(`audit-deck: the engine produced no report (exit ${run.status}${run.signal ? `, ${run.signal}` : ''}); see ${path.relative(REPO, engineLog)}`);
   const tail = fs.readFileSync(engineLog, 'utf8').split('\n').slice(-25).join('\n');

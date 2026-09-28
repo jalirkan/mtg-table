@@ -27,6 +27,14 @@ SRC="$REPO_ROOT/bridge/src"
 # CardView.getBackup() handing out the real card behind a morph, an engine
 # string that names a card in a hidden zone.  See tools/lint-bridge.sh for the
 # rules and the reason behind each one.
+#
+# And before the lint, the lint's own negative controls (D180): every rule it
+# declares must FIRE on a snippet planted in a scratch copy of bridge/src and
+# tools/ under var/lint-selftest/, and a rule with no case there fails the
+# build.  Two rules were dead from the first commit because nothing asked.
+# About a second (its cases run concurrently); --quiet prints only failures and
+# the summary.
+"$REPO_ROOT/tools/lint-bridge-selftest.sh" --quiet
 "$REPO_ROOT/tools/lint-bridge.sh"
 
 mkdir -p "$OUT"

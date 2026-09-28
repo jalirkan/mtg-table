@@ -67,7 +67,6 @@ import forge.game.trigger.TriggerType;
 import forge.item.PaperCard;
 import forge.localinstance.properties.ForgeConstants;
 import forge.model.FModel;
-import forge.player.GamePlayerUtil;
 import forge.util.BuildInfo;
 import mtgtable.Bootstrap;
 import mtgtable.Config;
@@ -439,16 +438,26 @@ public final class AuditDeck {
         to.svarsParsed = from.svarsParsed;
     }
 
-    /** Two AI seats with empty decks; {@code createGame()} builds the players and nothing else. */
+    /**
+     * Two AI seats with empty decks; {@code createGame()} builds the players and nothing else.
+     *
+     * <p>Seated through {@link Bootstrap#createAiPlayer}, like every AI in every
+     * mtg-table process (D107), never through {@code GamePlayerUtil}'s two-argument
+     * overload: that one passes an empty {@code profileOverride}, whose branch calls
+     * {@code ForgePreferences.save()} when the preferences name an AI profile that
+     * did not load -- and that wrote every in-memory pref {@link Bootstrap} sets
+     * (D13, D14) into this audit's throwaway home (docs/evidence/guards.md section 4).
+     * {@code tools/lint-bridge.sh} reads this file too since D182.
+     */
     private static Game throwawayGame() {
         final GameRules rules = new GameRules(GameType.Constructed);
         rules.setAppliedVariants(EnumSet.of(GameType.Constructed));
         final List<RegisteredPlayer> players = new ArrayList<>();
         final RegisteredPlayer p1 = new RegisteredPlayer(new Deck("audit-1"));
-        p1.setPlayer(GamePlayerUtil.createAiPlayer("Audit-One", 0));
+        p1.setPlayer(Bootstrap.createAiPlayer("Audit-One", 0, Bootstrap.DEFAULT_AI_PROFILE));
         players.add(p1);
         final RegisteredPlayer p2 = new RegisteredPlayer(new Deck("audit-2"));
-        p2.setPlayer(GamePlayerUtil.createAiPlayer("Audit-Two", 1));
+        p2.setPlayer(Bootstrap.createAiPlayer("Audit-Two", 1, Bootstrap.DEFAULT_AI_PROFILE));
         players.add(p2);
         return new Match(rules, players, "mtg-table-audit").createGame();
     }

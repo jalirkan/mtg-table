@@ -150,7 +150,7 @@ every job boots Forge in `var/check-all/<run>/<job>/` (and every ten-games row i
 `var/ten-games/home-<seed>/`) — its own `userDir`, `cacheDir` and `config.json`,
 built by `tools/config.sh`'s `forge_home_make` — where every JVM used to share
 `var/forge/` and write the same achievements files. The order that matters is
-kept as dependencies: lint and build first; step 6 after the recording it
+kept as dependencies: lint, its self-test and build first; step 6 after the recording it
 compares; the fourteen ten-games rows (`tools/ten-games.sh --run-row N`) before
 their report; the `node --test` half of
 `npm test` after the step-10 logs it replays; the redaction sweep and the
@@ -164,11 +164,14 @@ serial gate: the steps in the old order, each job's log streamed as it runs —
 the old log's lines, except that `die`'s stderr now arrives on stdout and 10g
 adds a "was played" line per game — and the timing table after `check-all OK`.
 
-Thirteen numbered steps and ten lettered sub-steps (**6b**, 9b, 9c, **9d**,
-**9e**, 10f, **10g**, **12b**, **12c** and **12d** — 9d and 10g added by M6, 9e
-by match setup, 12b and 12c by the 2026-09-27 hardening pass, 6b by spectating,
-12d by the narrator), stopping at the first failure: `check-forge.sh` →
-`lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
+Thirteen numbered steps and twelve lettered sub-steps (**2b**, **6b**, 9b, 9c,
+**9d**, **9e**, 10f, **10g**, **12b**, **12c**, **12d** and **12e** — 9d and 10g added
+by M6, 9e by match setup, 12b and 12c by the 2026-09-27 hardening pass, 6b by
+spectating, 12d by the narrator, 2b and 12e by the guards lane), stopping at
+the first failure: `check-forge.sh` → `lint-bridge.sh` (the banned-accessor
+grep over `bridge/src` and `tools/**/*.java`, D182, the three game-thread hops
+among it, D181) → **2b**, `lint-bridge-selftest.sh` (every rule of the lint
+fires on a planted snippet, and a rule with no case fails, D180) →
 `bridge/build.sh` (javac plus five self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
 `fixtures/games/g1.jsonl` (`tools/wire-drift.mjs`: the same non-state frames,
@@ -213,7 +216,10 @@ a scratch Forge home under `var/crash-probe/`) and asserts that `MtgTable` and
 `notice` and a null `over` that never names the card (**D115**, about
 8 s) → **12d**, `tools/narrate-selftest.mjs`, the frame-log narrator over every
 fixture and every log the run recorded, with hard rule 8 held by ids and by the
-decks' card names (**D123**, about a second) → `npm run build && npm test` in
+decks' card names (**D123**, about a second) → **12e**, `node tools/build-deck.ts
+--check`, every AI deck against its spec through the local card index (**D183**;
+it needs `var/cards/cards.sqlite` and fails without it, `SKIP_DECKS=1` skips it)
+→ `npm run build && npm test` in
 `web/` — `npm run build`, `vitest run` and `node --test` as three jobs in
 parallel mode, the last waiting for step 10. **At `GATE_JOBS=4`, about four
 minutes** from a deleted `bridge/out` (242, 258 and 247 s back to back, 151 s at
@@ -410,7 +416,7 @@ side by side on GitHub's `ubuntu-latest`.
 | job | what it runs |
 |---|---|
 | `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
-| `bridge` | `tools/lint-bridge.sh`, then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its five self-tests, on Temurin 21 |
+| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its five self-tests, on Temurin 21 |
 | `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
 
 **The engine in CI.** CI is the one place anything downloads Forge, and it
@@ -2289,8 +2295,12 @@ mtg-table/
                              forge_home_make: a gate job's or a ten-games row's own Forge home
     check-forge.sh           assert jar + every class we depend on; print sha256
     make-forge-home.sh       symlink, profile properties, custom-card overlay
-    lint-bridge.sh           grep lint over bridge/src: the banned accessors (hard rule 8),
-                             and GamePlayerUtil.createAiPlayer outside Bootstrap.java
+    README.md                every script here in one table: what it does, in the gate?,
+                             needs the engine?
+    lint-bridge.sh           grep lint over bridge/src and tools/**/*.java: the banned
+                             accessors (hard rule 8), GamePlayerUtil.createAiPlayer outside
+                             Bootstrap.java, the three game-thread hops (D181, D182)
+    lint-bridge-selftest.sh  every lint rule fires on a planted snippet (D180; step 2b)
     villain-deck.sh          SOURCED by ten-games.sh and check-all.sh: the one name of
                              the villain deck the gate plays (VILLAIN_DECK overrides)
     check-deck.mjs           match setup: is every card of a .dck really in the engine?

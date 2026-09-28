@@ -5480,6 +5480,116 @@ tools/narrate-selftest.mjs` 87 checks, `npm --prefix web test` **933 + 120**
 
 ---
 
+## Guards — the lint proves itself, counts the hops and reads `tools/` (2026-09-28, D180–D183)
+
+**Status: built, gated and documented** on branch `guards` (the worktree
+`mtg-table-t2w`, off `main`'s `b9af15d`). The structure review's second-ranked
+change: the repo's mechanical guards were weaker than their prose. Four
+decisions in the lane's reserved range, **D180–D183**; no wire change, no web
+change. `docs/evidence/guards.md` is what was run.
+
+1. **Two lint rules were dead, and now fire** (D180). `GameView.getDeck` and
+   `GameView.getGame` searched for that literal text, which no call contains —
+   `main`'s lint passed a file calling `gameView.getDeck(p)` and
+   `view.getGame()` that compiles against the pinned jar. They now watch the
+   type, as rule 4b does: every identifier declared `GameView`, `getGameView()`,
+   `getView()`, a cast, `GameView::`. Nothing calls either, so no ALLOW.
+2. **Every lint rule is proven to fire** (D180). A rule is one `ban` /
+   `ban_except` / `rule` line and fails only through `lint_fail` (`LINT FAIL
+   [<id>]`); `tools/lint-bridge.sh --list-rules` names the 31.
+   `tools/lint-bridge-selftest.sh` reads that list and runs 60 cases — a snippet
+   planted in a scratch copy of both trees under `var/lint-selftest/`, the lint
+   required to fail with that rule's id and no other — plus five PASS cases, the
+   real tree, and coverage both ways: **a rule with no case fails it**. About a
+   second. `bridge/build.sh` runs it before the lint (`--quiet`), the gate as
+   step **2b**, CI's `bridge` job before the lint. It caught a gap in this
+   lane's own new cast pattern on its first run; four mutations of the lint
+   (the dead patterns back, a rule with no case, a raw `LINT FAIL`, a rule
+   behind an `if`) each fail it.
+3. **The three game-thread hops are counted** (D181, hard rule 3). Rule
+   `game-thread-hop` requires every `invokeInGameThread` in either tree to carry
+   `// ALLOW hop: D<n> <method>` naming the method it sits in and a decision
+   heading, and the set to be exactly `HOP_ALLOW`'s three (`captureOutcome` D39,
+   `asyncAbilityMenu` D22, `refreshState` D39). A fourth hop fails the build
+   even tagged. javap: `invokeInGameThread` is the only public way onto the
+   `Game`-named pool, so `game-pool-reflection` bans the private routes, and
+   `thread-builder` bans `Thread.ofPlatform()` / `ofVirtual()`, whose names
+   section 6 cannot read.
+4. **The lint reads `tools/**/*.java`, and the audit helper no longer risks the
+   preferences file** (D182). Exemptions are repo-relative paths.
+   `tools/audit-deck/AuditDeck.java` seated its two throwaway AIs with the
+   two-argument `GamePlayerUtil.createAiPlayer`; with a planted
+   `UI_CURRENT_AI_PROFILE=NoSuchProfile` that saved 8,045 bytes of preferences
+   (D13's and D14's in-memory prefs among them) into the audit's home. It now
+   goes through `Bootstrap.createAiPlayer(…, DEFAULT_AI_PROFILE)`, which touches
+   nothing, and `tools/audit-deck.mjs` fingerprints the home's preferences before
+   and after and exits 2 on a change (the old helper under it: exit 2). Verdicts
+   unchanged: `pacho-shield` 40 ok, `fra-rw-aggro` 19 / 31 / 0.
+5. **The AI decks are checked against their specs in the gate** (D183). Step
+   **12e** runs `node tools/build-deck.ts --check`; it needs
+   `var/cards/cards.sqlite`, fails without it (naming the build command), and
+   `SKIP_DECKS=1` skips it and says so. It is **not in CI**: the index comes only
+   from Scryfall's bulk file, and `fixtures/cards/` holds one to three of each AI
+   deck's 24–27 names. CI's header says so; the hermetic half,
+   `deck-specs.test.ts`, stays in CI's `web` job. What 12e adds: a `|MSH` →
+   `|MSC` swap on an unpinned line passes the hermetic test and fails `--check`.
+
+Also: `tools/README.md`, every script under `tools/` in one table (what it does,
+in the gate?, needs the engine?); no script moved.
+
+```bash
+./tools/lint-bridge-selftest.sh             # every lint rule fires (step 2b; build.sh runs it --quiet)
+./tools/lint-bridge.sh --list-rules         # the 31 rule ids
+./tools/lint-bridge.sh --root <dir>         # lint another tree (the self-test's scratch copies)
+node tools/build-deck.ts --check            # step 12e; needs var/cards/cards.sqlite
+SKIP_DECKS=1 ./tools/check-all.sh           # a checkout with no card index: 12e skipped, and says so
+```
+
+**The gate**, each run from a deleted `bridge/out` at `GATE_JOBS=4`, all exit 0,
+48 jobs (46 plus `02b-lintself` and `12e-decks`): **259.9 s** at `WSPORT=8960`
+(1,006.2 s summed, load 4.8–12.4) and **249.1 s** at `WSPORT=8970` (968.1 s,
+load 7.9–11.5), after a 257.0 s rehearsal at 8960, beside another lane's gate —
+`var/check-all-guards-p{1,2}.log`. In each: the self-test's 73 checks twice
+(2b and inside the build), the lint over 24 + 1 files and 31 rules, 12e's four
+decks byte for byte, and `node --test` **943 / 935 pass / 0 fail / 8 skipped**
+with vitest **120 (8 files)** — `main`'s counts. Standalone: `./bridge/build.sh`
+(3.0 s from a deleted `bridge/out`, the self-test included), `npm --prefix web
+test` **933 + 120**, the CI workflow's commands run locally in order (its YAML
+parses), and `tools/audit-deck.mjs` on both decks with no preferences file
+changed. `~/forge` and `~/.forge` were fingerprinted before and after:
+unchanged.
+
+
+### Guards follow-ups — six, 2026-09-28
+
+1. **Every lane worktree needs a card index now, or `SKIP_DECKS=1`.** Only the
+   main checkout has `var/cards/cards.sqlite`; the gate in any other worktree
+   fails at 12e, with the command that builds one (a Scryfall download) or the
+   flag. These runs used a read-only copy of the main checkout's index. Whether
+   a missing index should instead skip 12e by default is the user's call; D183
+   chose failing, after `SKIP_WEB`'s precedent.
+2. **The lint is still a grep.** It cannot see a call split across lines
+   (`gameView\n.getDeck(p)`), a receiver typed by `var` (no bridge file uses
+   `var` today) or a `GameView` reached through an unnamed expression
+   (`views.get(0).getGame()`), and 4b has the same limits. A lint over javac's
+   own syntax trees — `com.sun.source` is in the JRE's `jdk.compiler` module —
+   would type every receiver; it is a bigger job than this lane's.
+3. **The self-test's snippets are text, not compiled code.** Only §1's probe
+   was compiled. One javac pass over the planted files that are meant to be
+   valid Java would prove each case is code the compiler accepts.
+4. **`enclosing_method` needs a modifier.** A hop inside a method declared with
+   none (package-private, no `static`) cannot be tagged — the lint fails closed
+   and says the tag disagrees. Every method in `WireGuiGame` has one today.
+5. **Forge's own hops are not counted.** `InputPassPriority`,
+   `InputConfirmMulligan`, `InputBlock` and `GameAction` call
+   `invokeInGameThread` inside the engine; that is Forge's input protocol, which
+   D136 classifies act by act, and no grep of ours can see it.
+6. **CLAUDE.md's rule 10 still lists the banned accessors by hand.** The docs
+   block should point at `tools/lint-bridge.sh --list-rules` instead of keeping
+   a second copy of the list that can drift from the one that runs.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

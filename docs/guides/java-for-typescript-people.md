@@ -200,7 +200,11 @@ fi
 A grep-based lint. `FModel.getDecks()` reaches code that *renames the user's
 real deck files and deletes the ones it can't parse*. It is banned. (The second
 grep lets the ban be *discussed* in comments — like this paragraph — without
-tripping itself.)
+tripping itself.) Today the lint is `tools/lint-bridge.sh`, over `bridge/src`
+and `tools/`, and `tools/lint-bridge-selftest.sh` runs just before it: it plants
+a snippet for every rule in a scratch copy and fails the build unless each rule
+fires on its own snippet (D180). A rule nobody has seen fail may be a rule that
+cannot — two of them couldn't.
 
 And after the compile:
 
