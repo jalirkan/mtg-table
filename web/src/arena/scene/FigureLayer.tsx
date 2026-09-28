@@ -85,11 +85,11 @@ export interface FigureLayerProps {
   discs: DiscField;
   models: ModelData;
   /**
-   * **The look** (`arena/look.ts`, D120): the comic look (the default) or the
+   * **The look** (`arena/look.ts`, D137): the comic look (the default) or the
    * hologram, and its options. Applied at COMMIT — every figure's material
    * (through `figureLookOf`, so an anonymous figure and a ghost stay holograms,
-   * D125), the departing bodies, the comic block's shared uniforms, the disc
-   * field (the contact shadows, D123) and the prop field — never from the frame
+   * D142), the departing bodies, the comic block's shared uniforms, the disc
+   * field (the contact shadows, D140) and the prop field — never from the frame
    * loop (`liveness.test.ts`).
    */
   look?: LookSpec;
@@ -161,7 +161,7 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, c
    * with the figures that left between the previous frame and this one.
    */
   const departures = useMemo(() => new DepartureField(), []);
-  // **The look, at COMMIT** (D120): the comic block's shared uniforms (the
+  // **The look, at COMMIT** (D137): the comic block's shared uniforms (the
   // halftone, the key's frame, the dot size at this render dpr), the bodies
   // that fall from now on, and the disc field — its contact shadows and how far
   // a modelled figure's glowing disc steps back. Only when the look or the dpr
@@ -213,7 +213,7 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, c
   }, [discs, props]);
   useEffect(() => {
     // §8.3 rule 3: one compile of the prop program — and of the contact shadows'
-    // (D123) — at mount, not on the frame the first prop or shadow appears.
+    // (D140) — at mount, not on the frame the first prop or shadow appears.
     // `compile` skips invisible objects, so show them for it.
     props.setPrimeVisible(true);
     discs.setPrimeVisible(true);
@@ -263,7 +263,7 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, c
       {/* One draw call for every stand disc on the table (§9.4) — and a second,
           after the cards, for the discs of a wrapped rank's back row, which stand
           ON their own card (T8 fix; empty on any frame that does not wrap). */}
-      {/* D123: the contact shadows, one call for all, empty under the hologram. */}
+      {/* D140: the contact shadows, one call for all, empty under the hologram. */}
       <primitive object={discs.shadowMesh} />
       <primitive object={discs.mesh} />
       <primitive object={discs.onCardMesh} />
@@ -302,7 +302,7 @@ const Figure = memo(function Figure({
   pose: FigurePose;
   model: LoadedModel;
   rigs: FigureRigMap;
-  /** `uLook` for this figure (`look.ts`'s `figureLookOf`: 0 for a ghost, D125). */
+  /** `uLook` for this figure (`look.ts`'s `figureLookOf`: 0 for a ghost, D142). */
   look?: number;
 }): JSX.Element {
   const invalidate = useThree((s) => s.invalidate);
@@ -404,7 +404,7 @@ const Figure = memo(function Figure({
     invalidate();
   }, [rigs, built, pose, invalidate]);
 
-  // **The look, at COMMIT** (D120, D125): one uniform on this figure's own
+  // **The look, at COMMIT** (D137, D142): one uniform on this figure's own
   // material — only when the number changes, never in the frame loop.
   useLayoutEffect(() => {
     applyLook(built.material, look);

@@ -3,20 +3,20 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The arena's LOOK** (Lane LOOK, `docs/research/15-art-direction.md`, **D120**):
+ * **The arena's LOOK** (Lane LOOK, `docs/research/15-art-direction.md`, **D137**):
  * which of two treatments every figure is drawn in, and the numbers each one is
  * drawn with.
  *
  *  - **`comic`, the default** (`perf.ts`'s {@link LOOK_DEFAULT}): the card art's
  *    STYLE, not its content — the costume palette painted in three flat bands
- *    from one key light fixed to the lens (**D121**), a rim in the card's own
+ *    from one key light fixed to the lens (**D138**), a rim in the card's own
  *    colour on the silhouette's shadow side, a specular dot, a halftone screen in
  *    the core shadow, an ink line drawn by a depth-edge pass that rides bloom's
- *    composer (**D122**), a contact shadow under every figure (**D123**), and a
- *    mid-value stage with a backdrop (**D124**).
+ *    composer (**D139**), a contact shadow under every figure (**D140**), and a
+ *    mid-value stage with a backdrop (**D141**).
  *  - **`holo`** (`?look=holo`): **D53** and **D97**'s hologram, unchanged — and,
  *    under the comic look, still the treatment of what is NOT YET REAL
- *    (**D125**): the anonymous face-down figure (hard rule 8: it is a disc and
+ *    (**D142**): the anonymous face-down figure (hard rule 8: it is a disc and
  *    gets no traits, no costume and no paint) and the ghosted creature spell on
  *    the stack. The summon's hologram-to-ink is Lane MOTION's, through the figure
  *    material's `uMaterialize` (a number the frame loop may write; `uLook` it may
@@ -38,15 +38,15 @@ import { INK_DEFAULT, LOOK_DEFAULT } from './perf.ts';
 
 export type Look = 'holo' | 'comic';
 /**
- * The ink line (D122, D129): `post` draws it on BLOOM's composer and only there —
+ * The ink line (D139, D146): `post` draws it on BLOOM's composer and only there —
  * with bloom off there is no composer and no line; `always` draws it with a
  * composer of its own when bloom is off (measurement only: that composer costs
- * the GTX 1080 +2.4 ms p95, D129); `none` never.
+ * the GTX 1080 +2.4 ms p95, D146); `none` never.
  */
 export type InkMode = 'post' | 'always' | 'none';
-/** Where the key light belongs: to the lens (the panel's convention, D121) or to the world. */
+/** Where the key light belongs: to the lens (the panel's convention, D138) or to the world. */
 export type KeyFrame = 'lens' | 'world';
-/** The ground: the comic stage (D124) or the Tier-1 felt. */
+/** The ground: the comic stage (D141) or the Tier-1 felt. */
 export type StageMode = 'comic' | 'felt';
 
 /**
@@ -55,13 +55,13 @@ export type StageMode = 'comic' | 'felt';
  */
 export interface LookSpec {
   readonly look: Look;
-  /** The depth-edge ink pass (D122). Only drawn under the comic look, and by default only with bloom (D129). */
+  /** The depth-edge ink pass (D139). Only drawn under the comic look, and by default only with bloom (D146). */
   readonly ink: InkMode;
   /** The halftone screen in the core-shadow band. */
   readonly halftone: boolean;
   readonly key: KeyFrame;
   readonly stage: StageMode;
-  /** The contact shadows (D123). Only drawn under the comic look. */
+  /** The contact shadows (D140). Only drawn under the comic look. */
   readonly shadow: boolean;
 }
 
@@ -158,7 +158,7 @@ export function materialLookOf(spec: LookSpec): MaterialLook {
 export const HOLO_MATERIAL: MaterialLook = Object.freeze({ look: 0, halftone: 0, keyWorld: 0 });
 
 /**
- * **What a figure is drawn in** (D125), from its pose alone — so it is a POSE
+ * **What a figure is drawn in** (D142), from its pose alone — so it is a POSE
  * (D56) and survives skip, scrub, `resync` and a new `gameId`:
  *
  *  - an **anonymous** figure (a face-down creature; `figurePose` gives it no
@@ -189,7 +189,7 @@ export interface PaintedPose {
   readonly anonymous: boolean;
   readonly ghost: boolean;
   readonly modelId: string | null;
-  /** `sick` draws half hologram (D125); every other stance the table's look. */
+  /** `sick` draws half hologram (D142); every other stance the table's look. */
   readonly stance: string;
 }
 
@@ -203,7 +203,7 @@ export function paintsFigure(pose: PaintedPose): boolean {
 }
 
 /**
- * **Does this spec draw the ink pass**, with bloom on or off (D129)? The line
+ * **Does this spec draw the ink pass**, with bloom on or off (D146)? The line
  * rides bloom's composer: with bloom on it is +0 draw calls inside the pass bloom
  * already pays for, and with bloom off it is drawn only under `?ink=always` —
  * a composer of its own for one effect measured +2.4 ms p95 on the GTX 1080
@@ -239,12 +239,12 @@ export function wantsStage(spec: LookSpec): boolean {
  * or, where marked, LINEAR triples multiplied into a linear colour.
  */
 export const COMIC = Object.freeze({
-  // -- the key light (D121) -------------------------------------------------
+  // -- the key light (D138) -------------------------------------------------
   /**
    * The key light in VIEW space (x right, y up, z toward the lens): upper left and
    * a little in front — the comic-panel convention. It belongs to the PANEL, not
    * the world, so both seats' figures read the same (your figures' backs and the
-   * opponent's fronts alike, D126) and no scene light exists to keep in sync.
+   * opponent's fronts alike, D143) and no scene light exists to keep in sync.
    */
   key: [-0.45, 0.72, 0.52] as const,
   /**
@@ -307,7 +307,7 @@ export const COMIC = Object.freeze({
   /** The dot's colour (LINEAR): cool white. */
   specColour: [0.92, 0.96, 1] as const,
 
-  // -- ink (D122) --------------------------------------------------------------
+  // -- ink (D139) --------------------------------------------------------------
   /** Near-black with a little blue, like a printed K plate. */
   ink: '#0e1016',
   /**
@@ -318,7 +318,7 @@ export const COMIC = Object.freeze({
   inkCssPx: 1.6,
   /**
    * …and ON a painted surface — the half of the line that lies on the figure's
-   * own paint, its creases included (D129, the verification pass): one CSS pixel,
+   * own paint, its creases included (D146, the verification pass): one CSS pixel,
    * so the line keeps its weight at the silhouette while a small prop — a badge,
    * a visor, an eyepatch — loses one pixel of paint at its edge, not two
    * (`traits.test.ts` measures what the ink leaves of every identity prop).
@@ -331,7 +331,7 @@ export const COMIC = Object.freeze({
    */
   inkThreshold: 0.012,
 
-  // -- the contact shadow (D123) -------------------------------------------------
+  // -- the contact shadow (D140) -------------------------------------------------
   shadow: '#05060a',
   /** Its darkness at the feet of a standing figure. */
   shadowAlpha: 0.72,
@@ -350,13 +350,13 @@ export const COMIC = Object.freeze({
   /** Under the comic look a modelled figure's glowing stand disc steps back to this. */
   discUnderComic: 0.3,
   /**
-   * **A summoning-sick figure's look** (D125): half hologram, half paint —
+   * **A summoning-sick figure's look** (D142): half hologram, half paint —
    * "not yet able to act" as "not yet fully real" (report 15 §2.3). A multiplier
    * of the table's look, so the hologram table stays all hologram.
    */
   sickLook: 0.5,
 
-  // -- the stage (D124) ------------------------------------------------------------
+  // -- the stage (D141) ------------------------------------------------------------
   /** The clear colour behind everything. */
   background: '#141427',
   /** Your half's default hue, when your public cards say nothing yet. */
@@ -382,7 +382,7 @@ export const COMIC = Object.freeze({
 export const HOLO_BACKGROUND = '#0a0d12';
 
 // ---------------------------------------------------------------------------
-// The stage's seat colours (D124) — from what each player has shown
+// The stage's seat colours (D141) — from what each player has shown
 // ---------------------------------------------------------------------------
 
 /** The slice of a card the stage reads: public fields only. */
@@ -504,7 +504,7 @@ export function stageIdentitiesOf(
   return { you: shownIdentityOf(mine), opp: shownIdentityOf(theirs) };
 }
 
-/** **The combat stage** (D124) is a pose: on while `state.combat` has a band. */
+/** **The combat stage** (D141) is a pose: on while `state.combat` has a band. */
 export function combatStageOf(combat: { readonly bands: readonly unknown[] } | null | undefined): boolean {
   return (combat?.bands.length ?? 0) > 0;
 }

@@ -25,7 +25,7 @@
  * attacker to FACE its defender (`Offset.dRotY`, `Stage.yawTo`) for the length
  * of the lunge — and this file runs the real cues against a `SceneStage` over a
  * two-seat board and asserts the muzzle flash and the laser fire AT the
- * defender, on both seats. Since **D126** (PLAN question 13, answered
+ * defender, on both seats. Since **D143** (PLAN question 13, answered
  * 2026-09-28) both seats' figures rest facing the OTHER seat, so that turn is a
  * small one; the facing they had before — outward, toward their own player — is
  * this file's negative control, and it fires every beat out of the far side.
@@ -125,7 +125,7 @@ test('facing: figure space faces +Z, and the kit agrees — the eye, badge and p
     const z = anchorsOf(kind, family)[0]!.at[2] * FIGURE_FRONT_Z;
     assert.equal(z > 0, front, `${kind} on a ${family} is ${front ? 'not in front' : 'not behind'} (z ${z.toFixed(3)})`);
   }
-  // The two seats face opposite ways — each toward the other (D126): the
+  // The two seats face opposite ways — each toward the other (D143): the
   // opponent's figures face +Z, the viewer's camera, and yours face away from it.
   assert.equal(seatFacingY('you'), Math.PI);
   assert.equal(seatFacingY('opp'), 0);
@@ -284,9 +284,9 @@ test('facing: yawToward is the short way round, and a figure turned by it faces 
   assert.equal(yawToward(1, 2, 2, 2, 2), 0, 'a point on top of the figure asks for no turn');
 });
 
-test('facing: an attack turns its attacker to face the defender, fires the beat AT it, and turns back — both seats (second verification pass, D126)', () => {
-  // Since D126 figures rest facing the OTHER seat, so an attack is a small turn
-  // toward its defender. The facing they had before D126 — outward, toward their
+test('facing: an attack turns its attacker to face the defender, fires the beat AT it, and turns back — both seats (second verification pass, D143)', () => {
+  // Since D143 figures rest facing the OTHER seat, so an attack is a small turn
+  // toward its defender. The facing they had before D143 — outward, toward their
   // own player — is the negative control: with no turn every one of these beats
   // fired out of the far side of the body, which the verifier photographed (g2@157,
   // g1@232 and g1@342). The turn is `Stage.yawTo` × the lunge's envelope.
@@ -323,7 +323,7 @@ test('facing: an attack turns its attacker to face the defender, fires the beat 
 
       assert.ok(
         Math.abs(offset.dRotY) < Math.PI / 2,
-        `${seat}: ${beat.name} turns ${offset.dRotY.toFixed(3)} — a figure resting toward the other seat (D126) needs less than a quarter turn`,
+        `${seat}: ${beat.name} turns ${offset.dRotY.toFixed(3)} — a figure resting toward the other seat (D143) needs less than a quarter turn`,
       );
       assert.ok(Math.abs(offset.dRotY - figureYawTo(placed, 700, { kind: 'player', id: defender })) < 1e-9, 'the turn is not layout.ts’s');
       assert.ok(
@@ -339,10 +339,10 @@ test('facing: an attack turns its attacker to face the defender, fires the beat 
       const cosine = (aim[0] * (target[0] - centre[0]) + aim[2] * (target[2] - centre[2])) / line;
       assert.ok(cosine > Math.cos((10 * Math.PI) / 180), `${seat}: ${beat.name}'s figure is ${(Math.acos(cosine) * 57.3).toFixed(1)}° off its defender`);
       assert.ok(front.every(Number.isFinite));
-      // D126: at rest, with no turn at all, the figure already faces its defender's side.
+      // D143: at rest, with no turn at all, the figure already faces its defender's side.
       const rest = figurePointInto([0, 0, 0], 0, 0, 0, pose.facingY, 1, 0, 0);
       assert.ok(rest[0] * (target[0] - centre[0]) + rest[2] * (target[2] - centre[2]) > 0, `${seat}: ${beat.name}'s figure rests facing away from its defender`);
-      // The control: the facing before D126 (outward, a half turn from this one)
+      // The control: the facing before D143 (outward, a half turn from this one)
       // with no turn — the defect D82 fixed — faces away, and a centre-line beat
       // (the eye, the laser) is on the far side of the body.
       const outward = figurePointInto([0, 0, 0], 0, 0, 0, pose.facingY + Math.PI, 1, 0, 0);
@@ -374,7 +374,7 @@ test('facing: every attack cue that lunges also turns, and the pure stage asks f
     assert.equal(stage.offsets.get(1)?.dRotY, 0, `${id}: a NullStage has no geometry, so no turn`);
   }
   // With geometry, each of the four turns its attacker by the stage's own answer.
-  // D126 put the figures facing the other seat, so the geometric turn toward a
+  // D143 put the figures facing the other seat, so the geometric turn toward a
   // player straight across can be ~0; a stage whose `yawTo` answers a fixed
   // angle tells "the cue applies the turn" apart from "the turn happens to be small".
   class FixedYawStage extends SceneStage {

@@ -531,12 +531,12 @@ export function visibility(
  *    1, the nearest texel of a 1.6-texel offset) and `COMIC.inkInnerCssPx` apart
  *    ON one (±1 px), relative to 1/z, past the smoothstep's midpoint (1.75 ×
  *    `COMIC.inkThreshold`), where a PAINTED surface is among the five samples
- *    (D129) — every depth-writing layer here is a painted body or prop; a pixel
+ *    (D146) — every depth-writing layer here is a painted body or prop; a pixel
  *    no layer covers is the table plane (y = 0) behind; and never a pixel a
  *    LIGHT is drawn on (see `lightsInked` below);
  *  - `dotted` — the ones the halftone darkens: in the core-shadow band (`N·L`
  *    under the umbra band's midpoint, the nearest fragment's FLAT face normal
- *    against the lens-fixed key, D121) and on a dot of the 45° screen
+ *    against the lens-fixed key, D138) and on a dot of the 45° screen
  *    (`COMIC.dotCssPx` cells, the shader's own formula in `gl_FragCoord`).
  *
  * A dot darkens by at most `COMIC.dotDepth`; the ink replaces the colour. So
@@ -638,7 +638,7 @@ export function comicVisibility(
   height = HEIGHT,
   options: { inkPx?: number; inkInnerPx?: number; lightsInked?: boolean } = {},
   // `lightsInked` false is the default and the shader's own rule: a light burns
-  // through the line (`Post.tsx`, D129) — where an additive light has lifted the
+  // through the line (`Post.tsx`, D146) — where an additive light has lifted the
   // frame past paper white the ink steps back. The raster does not model
   // brightness, so it takes every pixel a light is drawn on over the paint as
   // lifted past white; `true` is the pessimistic bound (every light inked).
@@ -658,9 +658,9 @@ export function comicVisibility(
       rasteriseNearest(camera, layer, nearest, width, height);
     }
   }
-  // The ink (D122, D129): offsets ±2 px — `inkCssPx` 1.6 at dpr 1, the nearest texel.
+  // The ink (D139, D146): offsets ±2 px — `inkCssPx` 1.6 at dpr 1, the nearest texel.
   // Offsets in whole pixels: the nearest texel of a fractional offset at dpr 1
-  // (1.6 → ±2 outside a painted surface, 1.0 → ±1 on one, D129).
+  // (1.6 → ±2 outside a painted surface, 1.0 → ±1 on one, D146).
   const outer = Math.floor(0.5 + (options.inkPx ?? COMIC.inkCssPx));
   const innerStep = Math.floor(0.5 + (options.inkInnerPx ?? COMIC.inkInnerCssPx));
   // The pixels a LIGHT (an additive prop, no depth) is drawn on, over everything that writes depth.

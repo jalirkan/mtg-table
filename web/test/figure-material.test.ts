@@ -3,14 +3,14 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The figure material's contract** (Lane LOOK, D120, D127, D128), read off the
+ * **The figure material's contract** (Lane LOOK, D137, D144, D145), read off the
  * material itself rather than off a GPU: `node --test` cannot compile GLSL, so
  * what it holds is the shape the shader depends on —
  *
  *  - a committed body (no vertex colours, no map) builds the ONE program's
  *    material: no `USE_PAINT_MAP` define, `vertexColors` off, the hologram until
  *    the look is written at commit (`uLook` 0), `uMaterialize` at identity;
- *  - **the paint input path** (D127): a map adds the `USE_PAINT_MAP` define and
+ *  - **the paint input path** (D144): a map adds the `USE_PAINT_MAP` define and
  *    rides `uPaintMap`, vertex colours turn on three's `USE_COLOR`, and in the
  *    fragment shader both multiply the palette BEFORE the hologram and the comic
  *    block read it — so a textured model is painted under the same bands, rim and
@@ -19,7 +19,7 @@
  *    prop material (`COMIC_UNIFORMS`), so `applyComicGlobals` reaches all of them
  *    with one write — a copied uniform would silently freeze one material's look;
  *  - no clock anywhere in either shader;
- *  - **the painted mark** (D129): `applyLook` with any comic in it sets blend
+ *  - **the painted mark** (D146): `applyLook` with any comic in it sets blend
  *    STATE that writes alpha 0 (the ink's mask) and blends colour exactly as
  *    `NormalBlending` does; the hologram (`uLook` 0) is plain `NormalBlending`; a
  *    painted prop kind is marked with its look and a light (additive) never is —
@@ -59,7 +59,7 @@ test('figure material: a committed body is the one program — no paint define, 
   material.dispose();
 });
 
-test('figure material: the paint input path — a map and vertex colours multiply the palette BEFORE either look (D127)', () => {
+test('figure material: the paint input path — a map and vertex colours multiply the palette BEFORE either look (D144)', () => {
   const map = new THREE.Texture();
   const mapped = makeFigureMaterial('#ffffff', 1, { map });
   assert.equal(mapped.defines.USE_PAINT_MAP, '', 'a map defines USE_PAINT_MAP');
@@ -95,7 +95,7 @@ test('figure material: the paint input path — a map and vertex colours multipl
   for (const m of [mapped, coloured, both]) m.dispose();
 });
 
-test('figure material: the comic block is ONE set of uniform objects, shared by every figure and prop material (D128)', () => {
+test('figure material: the comic block is ONE set of uniform objects, shared by every figure and prop material (D145)', () => {
   const a = makeFigureMaterial('#aa3333', 1);
   const b = makeFigureMaterial('#33aa33', 2);
   const prop = makePropMaterial(PROP_LOOK.fabric, false);
@@ -137,7 +137,7 @@ test('figure material: no clock in either shader (D58, D72)', () => {
   prop.dispose();
 });
 
-test('figure material: the painted mark — alpha 0 on a painted surface, normal colour blending, no new program (D129)', () => {
+test('figure material: the painted mark — alpha 0 on a painted surface, normal colour blending, no new program (D146)', () => {
   const material = makeFigureMaterial('#3a6ea5', 1);
   assert.equal(material.blending, THREE.NormalBlending, 'a new material (the hologram) is not marked');
   const source = { vertex: material.vertexShader, fragment: material.fragmentShader, defines: JSON.stringify(material.defines ?? {}) };
@@ -153,7 +153,7 @@ test('figure material: the painted mark — alpha 0 on a painted surface, normal
   assert.equal(material.blendDstAlpha, THREE.ZeroFactor);
   assert.equal(material.premultipliedAlpha, false, 'premultipliedAlpha is a define: the mark must not flip it');
   assert.equal(material.transparent, true, 'the transparent pass is where figures sort');
-  // Half comic (a summoning-sick figure, D125) is still a painted body.
+  // Half comic (a summoning-sick figure, D142) is still a painted body.
   applyLook(material, 0.5);
   assert.equal(material.blending, THREE.CustomBlending);
   // Back to the hologram: unmarked, no ink on it.

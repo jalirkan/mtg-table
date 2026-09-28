@@ -225,7 +225,7 @@ interface ArenaFlags {
    */
   bloom: boolean | null;
   /**
-   * **The look** (Lane LOOK, D120) — `?look=holo|comic` and its options
+   * **The look** (Lane LOOK, D137) — `?look=holo|comic` and its options
    * (`?ink=none`, `?halftone=0`, `?key=world`, `?stage=felt`, `?shadow=0`), kept
    * as a query string of exactly those keys. The arena parses it with
    * `arena/look.ts`'s `lookFromSearch`, whose default is `perf.ts`'s

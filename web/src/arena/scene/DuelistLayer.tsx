@@ -94,7 +94,7 @@ export interface DuelistLayerProps {
   stage: DuelistLaneSource;
   queue: DuelistClock;
   /**
-   * **The look** (D120): `uLook` for both bodies, written at COMMIT. A duelist is
+   * **The look** (D137): `uLook` for both bodies, written at COMMIT. A duelist is
    * a seat, never an anonymous card, so it always takes the table's look.
    */
   look?: number;
@@ -291,7 +291,7 @@ export class DuelistField implements DuelistBinder {
     this.clock = clock;
   }
 
-  /** **The look on both bodies** (D120) — commit time, never the frame loop. */
+  /** **The look on both bodies** (D137) — commit time, never the frame loop. */
   setLook(look: number): void {
     this.look = look;
     for (let i = 0; i < this.slots.length; i++) {

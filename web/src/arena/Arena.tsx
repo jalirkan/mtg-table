@@ -184,7 +184,7 @@ export interface ArenaProps {
    */
   follow?: ArenaFollow | null;
   /**
-   * **The look** (Lane LOOK, D120): `main.tsx`'s `arenaFlagsFromQuery` keeps
+   * **The look** (Lane LOOK, D137): `main.tsx`'s `arenaFlagsFromQuery` keeps
    * `?look=` and its options as a query string, and it is parsed here once
    * (`look.ts`'s `lookFromSearch`); absent is {@link DEFAULT_LOOK} — the comic
    * look, `perf.ts`'s `LOOK_DEFAULT`. Presentation, like the cue speed: nothing
@@ -220,7 +220,7 @@ function DprGovernor({
   /**
    * **T7 — the rung below the floor.** Called when frames are still late at
    * {@link DPR_FLOOR}: the one optional composer the arena has — bloom (user
-   * decision 6) and the comic look's ink line riding it (D122) — is what goes
+   * decision 6) and the comic look's ink line riding it (D139) — is what goes
    * next. Returns whether it changed anything, so a governor with nothing left to
    * drop stays exactly as it was.
    */
@@ -254,7 +254,7 @@ function DprGovernor({
       // "Degrade, don't stutter" (§9.2 rule 9), one rung further: bloom was
       // measured at p95 82 ms under SwiftShader at this very floor (T7), so a
       // machine that is still late here gets its composer — bloom and the ink
-      // line with it (D122) — turned off, and the window restarts, so the next
+      // line with it (D139) — turned off, and the window restarts, so the next
       // decision is about the table without it.
       if (direction < 0 && onFloor !== undefined && onFloor()) {
         state.lastStep = now;
@@ -458,7 +458,7 @@ function Scene({
   glInfo: boolean;
   primeRef: { current: number };
   loopRef: { current: Frameloop };
-  /** The look (D120) — the background, the stage, the figures and the duelists. */
+  /** The look (D137) — the background, the stage, the figures and the duelists. */
   look?: LookSpec;
   /**
    * Whether a composer draws the frames (bloom or the ink): the layers' mount-time
@@ -472,7 +472,7 @@ function Scene({
   );
   const highlighted = useMemo(() => new Set(state.input?.highlighted ?? []), [state.input]);
 
-  // **The stage** (D124): each seat's half in the colour of what it has shown —
+  // **The stage** (D141): each seat's half in the colour of what it has shown —
   // a pure function of the snapshot's public zones, repainted only when a seat's
   // identity changes (the memo is keyed on the two strings) — and the combat
   // burst, a pose of `state.combat`.
@@ -723,7 +723,7 @@ export default function Arena({
   follow = null,
   lookQuery = null,
 }: ArenaProps): JSX.Element {
-  /** The look, parsed once from the flags `main.tsx` kept (D120). */
+  /** The look, parsed once from the flags `main.tsx` kept (D137). */
   const look = useMemo<LookSpec>(() => (lookQuery === null ? DEFAULT_LOOK : lookFromSearch(lookQuery)), [lookQuery]);
   const [hoverId, setHoverId] = useState<number | null>(null);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
@@ -735,7 +735,7 @@ export default function Arena({
    */
   const [bloomOn, setBloomOn] = useState<boolean>(bloom ?? BLOOM_DEFAULT);
   /**
-   * **The ink line** (D122, D129) — on under the comic look while bloom is (it
+   * **The ink line** (D139, D146) — on under the comic look while bloom is (it
    * rides bloom's composer: `wantsInkPass`; `?ink=always` draws it without bloom,
    * `?ink=none` never), and off with bloom on the governor's rung below the floor
    * (`perf.ts`'s `postOnFloor`). One composer, so a slow machine sheds both.
@@ -1341,7 +1341,7 @@ export default function Arena({
         // §9.3's first risk is exactly what it is protecting — this scene is
         // FILL-rate bound, not geometry bound.
         dpr={dpr}
-        // `alpha: false` (D129): the scene always paints an opaque background, and
+        // `alpha: false` (D146): the scene always paints an opaque background, and
         // a painted figure writes alpha 0 as the ink's mark (`figureMaterial.ts`'s
         // `markPainted`) — an opaque canvas never lets the page show through it
         // on a frame drawn without the composer.

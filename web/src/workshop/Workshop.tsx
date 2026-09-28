@@ -58,7 +58,7 @@
  *     CueRunner, Frameloop (CueRunner.tsx)   THE frame loop: offsets, clip lane, binds
  *     FigureLayer (FigureLayer.tsx)          bodies, discs, props, departing bodies
  *     CardPlane (CardPlane.tsx)              THE card renderer (M7 convention 2)
- *     Table (Table.tsx)                      the felt, or the comic stage and its backdrop (D124)
+ *     Table (Table.tsx)                      the felt, or the comic stage and its backdrop (D141)
  *     EffectPool, DiscField, TileField, CastingField, OverlayField, BustField
  *                                            the pose fields CueRunner binds
  *     SceneStage                             subclassed as facing.ts's PreviewStage (yawTo)
@@ -94,7 +94,7 @@
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
  *     lookFromSearch, lookSpecOf, LookSpec, COMIC, DEFAULT_LOOK, HOLO_BACKGROUND,
  *     combatStageOf, stageColoursOf, stageIdentitiesOf, wantsInkPass, wantsStage
- *     (look.ts)                              the look (D120): the toolbar's A/B over
+ *     (look.ts)                              the look (D137): the toolbar's A/B over
  *                                            holo · comic and each comic option, and
  *                                            the stage exactly as Arena.tsx computes it
  *   the data         figures.json, models.json and cues.json (imported without
@@ -256,14 +256,14 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [selected, setSelected] = useState<string>(() => initialSelection(entries));
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState<PedestalOptions>(DEFAULT_OPTIONS);
-  // The figure's FRONT by default (D126: from your own seat you see its back —
+  // The figure's FRONT by default (D143: from your own seat you see its back —
   // `1× from your seat` is one click away).
   const [mode, setMode] = useState<CameraMode>('front');
   const [turn, setTurn] = useState(0);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
   const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
   /**
-   * **The look** (D120) — the toolbar's A/B over holo · comic and every comic
+   * **The look** (D137) — the toolbar's A/B over holo · comic and every comic
    * option. It starts where the page's own `?look=` query says (the arena's
    * default, the comic look, when it says nothing) and is presentation only: it
    * never reaches `traits.json`, `cues.json` or the arena (D103's rule).
@@ -857,7 +857,7 @@ function Toolbar({
     {
       id: 'close',
       label: '1× from your seat',
-      what: 'the same close-up from the table view’s direction — what your seat sees (D126: a figure’s back) — drag to orbit',
+      what: 'the same close-up from the table view’s direction — what your seat sees (D143: a figure’s back) — drag to orbit',
     },
     { id: 'table', label: 'table distance', what: 'exactly the size it has in view 1 at 1600×900 (fixed camera)' },
     { id: 'wide', label: 'whole table', what: 'view 1 itself — drag to orbit' },
@@ -891,12 +891,12 @@ function Toolbar({
         />{' '}
         both seats
       </label>
-      <span className="workshop__seg" title="D126 (PLAN question 13, decided): a seat's figures face the other seat — the arena. 'faces its player' previews the facing before D126">
+      <span className="workshop__seg" title="D143 (PLAN question 13, decided): a seat's figures face the other seat — the arena. 'faces its player' previews the facing before D143">
         <button
           type="button"
           className={turn === 0 ? 'on' : ''}
           aria-pressed={turn === 0}
-          title="the arena since D126: your figures show you their backs, the opponent's their fronts"
+          title="the arena since D143: your figures show you their backs, the opponent's their fronts"
           onClick={() => onTurn(0)}
         >
           faces the other seat
@@ -905,7 +905,7 @@ function Toolbar({
           type="button"
           className={turn !== 0 ? 'on' : ''}
           aria-pressed={turn !== 0}
-          title="the facing before D126, previewed: every figure turned to face its own player"
+          title="the facing before D143, previewed: every figure turned to face its own player"
           onClick={() => onTurn(HALF_TURN)}
         >
           faces its player
@@ -933,12 +933,12 @@ function Toolbar({
         />{' '}
         bloom
       </label>
-      <span className="workshop__seg" title="The look (D120): the comic look (the arena's default) against D53's hologram">
+      <span className="workshop__seg" title="The look (D137): the comic look (the arena's default) against D53's hologram">
         <button
           type="button"
           className={look.look === 'holo' ? 'on' : ''}
           aria-pressed={look.look === 'holo'}
-          title="D53's hologram — still the anonymous figure's and the ghosted spell's under the comic look (D125)"
+          title="D53's hologram — still the anonymous figure's and the ghosted spell's under the comic look (D142)"
           onClick={() => onLook(lookSpecOf('holo'))}
         >
           holo
@@ -959,15 +959,15 @@ function Toolbar({
             [
               'ink',
               bloom
-                ? 'the depth-edge ink line on figures (D122, D129; single view only — it rides bloom’s composer)'
-                : 'the ink line rides bloom’s composer (D129): tick bloom to see it',
+                ? 'the depth-edge ink line on figures (D139, D146; single view only — it rides bloom’s composer)'
+                : 'the ink line rides bloom’s composer (D146): tick bloom to see it',
               look.ink !== 'none' && bloom,
               { ink: look.ink !== 'none' ? 'none' : 'post' },
             ],
             ['halftone', 'the halftone screen in the core shadow', look.halftone, { halftone: !look.halftone }],
-            ['shadow', 'the contact shadow under each figure (D123)', look.shadow, { shadow: !look.shadow }],
-            ['stage', 'the comic stage and backdrop (D124) — off is the hologram\'s felt', look.stage === 'comic', { stage: look.stage === 'comic' ? 'felt' : 'comic' }],
-            ['world key', 'the key light fixed to the world instead of the lens (D121)', look.key === 'world', { key: look.key === 'world' ? 'lens' : 'world' }],
+            ['shadow', 'the contact shadow under each figure (D140)', look.shadow, { shadow: !look.shadow }],
+            ['stage', 'the comic stage and backdrop (D141) — off is the hologram\'s felt', look.stage === 'comic', { stage: look.stage === 'comic' ? 'felt' : 'comic' }],
+            ['world key', 'the key light fixed to the world instead of the lens (D138)', look.key === 'world', { key: look.key === 'world' ? 'lens' : 'world' }],
           ] as const
         ).map(([label, what, on, next]) => (
           <button

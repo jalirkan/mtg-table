@@ -387,7 +387,7 @@ export const FIGURE_FRONT_Z = 1;
 /**
  * **The turn about y a seat's figures stand at**, before a trait's own `turn`.
  *
- * **A seat's own figures FACE THE OPPONENT** (**D126**, the user's answer to
+ * **A seat's own figures FACE THE OPPONENT** (**D143**, the user's answer to
  * PLAN question 13, 2026-09-28): `π` for `you` — with their fronts at +Z
  * ({@link FIGURE_FRONT_Z}) turned half round, your figures face the far seat and
  * show your camera their backs — and `0` for the opponent's, whose figures face

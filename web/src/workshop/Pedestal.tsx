@@ -109,7 +109,7 @@ export interface PedestalProps {
   figures: FigureData;
   models: ModelData;
   traits: TraitData;
-  /** The facing preview's turn: 0 (the arena, D126), or π for the facing before it. */
+  /** The facing preview's turn: 0 (the arena, D143), or π for the facing before it. */
   turn: number;
   mode: CameraMode;
   /** Both seats: two viewports, your copy on the left and the opponent's on the right. */
@@ -122,7 +122,7 @@ export interface PedestalProps {
   stage: PreviewStage;
   reducedMotion: boolean;
   bloom: boolean;
-  /** The look (D120) — the toolbar's A/B; the arena's default when absent. */
+  /** The look (D137) — the toolbar's A/B; the arena's default when absent. */
   look?: LookSpec;
 }
 
@@ -164,15 +164,15 @@ export function Pedestal(props: PedestalProps): JSX.Element {
   // view's; the split view renders twice by hand and draws without it.
   const single = !(props.split && props.mode !== 'wide');
   const bloomOn = props.bloom && single;
-  // The ink line rides the same composer (D122), so it is single-view too.
-  // …and only on bloom's composer, as in the arena (D129).
+  // The ink line rides the same composer (D139), so it is single-view too.
+  // …and only on bloom's composer, as in the arena (D146).
   const inkOn = wantsInkPass(props.look ?? DEFAULT_LOOK, bloomOn) && single;
   const postOn = bloomOn || inkOn;
   return (
     <Canvas
       className="workshop__canvas"
       dpr={[1, 1.5]}
-      // Opaque, as the arena's (D129): a painted figure's alpha is the ink's mark.
+      // Opaque, as the arena's (D146): a painted figure's alpha is the ink's mark.
       gl={{ antialias: true, alpha: false, preserveDrawingBuffer: false }}
       flat
       // `CueRunner` decides it, through `loopRef` above — never a literal, and
@@ -225,7 +225,7 @@ function PedestalScene({
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
-  /** The composer is mounted — bloom OR the ink line (D122): the canvas's own renderer steps aside, and the primes compile for its target. */
+  /** The composer is mounted — bloom OR the ink line (D139): the canvas's own renderer steps aside, and the primes compile for its target. */
   bloomOn: boolean;
 }): JSX.Element {
   // -- the poses, exactly as Arena.tsx computes them ---------------------------
@@ -317,7 +317,7 @@ function PedestalScene({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seat, mode, size.height, camera, invalidate]);
 
-  // The stage exactly as `Arena.tsx` computes it (D124): the seats' shown colours
+  // The stage exactly as `Arena.tsx` computes it (D141): the seats' shown colours
   // and the combat burst, from the synthetic board.
   const stageOn = wantsStage(look);
   const shown = stageIdentitiesOf(state.board?.players, placed.viewerId);

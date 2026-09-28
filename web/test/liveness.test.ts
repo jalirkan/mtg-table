@@ -1572,7 +1572,7 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
 
 /**
  * **Lane LOOK — the look is a number written at COMMIT, never in the frame loop**
- * (D120–D129, report 15 §9.1's tests). The comic look reaches the scene as
+ * (D137–D146, report 15 §9.1's tests). The comic look reaches the scene as
  * `uLook` per material plus a few shared uniforms (`figureMaterial.ts`'s
  * `COMIC_UNIFORMS`), and every one of them changes when a snapshot or the look
  * changes, never per frame — so the look can never be a thing the renderer
@@ -1593,16 +1593,16 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
  *  - the callers are commit-time: `FigureLayer` and `DuelistLayer` call them
  *    from layout effects and from the fields' `setLook` / `add` / `build`;
  *  - the look reaches a figure through `look.ts`'s `figureLookOf` (an anonymous
- *    figure and a ghost stay holograms, D125) and the disc field's shadow through
+ *    figure and a ghost stay holograms, D142) and the disc field's shadow through
  *    `paintsFigure`, the same predicate;
- *  - the spike's inverted hull is gone (D122): no `inkHull`, no `BackSide` ink
+ *  - the spike's inverted hull is gone (D139): no `inkHull`, no `BackSide` ink
  *    shell, and the ink is `Post.tsx`'s `InkEffect`, inside the one composer;
  *  - `holoMaterial.ts` is a re-export and nothing more;
  *  - `prime.ts`'s `compileFor` is a mount-time call, and the scene layers prime
  *    through it and never through a bare `gl.compile` (the composer draws the
  *    scene into a render target, whose program variants a canvas-only prime
  *    leaves to the first frame an object is drawn on);
- *  - **the painted mark** (D129, the verification pass): the ink inks only where
+ *  - **the painted mark** (D146, the verification pass): the ink inks only where
  *    a painted surface is among its samples, and a painted surface says so by
  *    writing alpha 0 — blend state set by `figureMaterial.ts`'s `markPainted`,
  *    called only from `applyLook` and `applyPropLook` (commit time), never from a
@@ -1693,8 +1693,8 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   assert.match(bodyOf(departureField, 'setLook'), /applyLook\(/);
   assert.match(bodyOf(departureField, 'add'), /applyLook\(material, figureLookOf\(pose, this\.look\)\.look\)/, 'a falling body is not built in its figure’s look');
   assert.match(layer, /useLayoutEffect\(\(\) => \{\s*applyComicGlobals\(tableLook, dpr\);/, 'the comic globals are no longer written by a layout effect');
-  assert.match(layer, /look=\{figureLookOf\(pose, tableLook\)\.look\}/, 'a figure’s look no longer goes through figureLookOf (D125)');
-  assert.match(bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind'), /paintsFigure\(pose\)/, 'the shadow no longer asks paintsFigure (D125)');
+  assert.match(layer, /look=\{figureLookOf\(pose, tableLook\)\.look\}/, 'a figure’s look no longer goes through figureLookOf (D142)');
+  assert.match(bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind'), /paintsFigure\(pose\)/, 'the shadow no longer asks paintsFigure (D142)');
   assert.match(duelists, /useLayoutEffect\(\(\) => \{\s*field\.setLook\(look\);/, 'the duelists’ look is no longer written by a layout effect');
 
   // The composer-aware prime (`prime.ts`) is a mount-time call of the three layers
@@ -1716,7 +1716,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
 
   // The hull is gone and the ink is the composer's.
   for (const [path, code] of files) {
-    assert.ok(!/\binkHull|\bink-hull\b/.test(code), `${path} still carries the spike's inverted hull (D122)`);
+    assert.ok(!/\binkHull|\bink-hull\b/.test(code), `${path} still carries the spike's inverted hull (D139)`);
   }
   const post = files.get('scene/Post.tsx') ?? '';
   assert.match(post, /class InkEffect extends Effect/, 'the ink line is no longer an Effect in Post.tsx');
@@ -1724,7 +1724,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   assert.match(post, /enableNormalPass=\{false\}/, 'the composer asks for a normal pass — a second scene render');
   assert.ok(!/new NormalPass\(|EffectAttribute\.NORMAL/.test(post), 'the ink line asks for normals — a second scene render');
 
-  // The painted mark (D129): one writer of the blend state, two commit-time callers.
+  // The painted mark (D146): one writer of the blend state, two commit-time callers.
   assert.deepEqual(
     writersOf(/\bmarkPainted\(/),
     ['scene/figureMaterial.ts', 'scene/propMaterial.ts'],
@@ -1752,7 +1752,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   // The canvas is opaque, so the mark never reaches the page.
   const arena = files.get('Arena.tsx') ?? '';
   assert.match(arena, /gl=\{\{ antialias: true, alpha: false \}\}/, 'the arena’s canvas is not opaque — a painted figure’s alpha 0 would show the page');
-  // The combat burst is a swap of the ground's map (D124): no mesh, no prime.
+  // The combat burst is a swap of the ground's map (D141): no mesh, no prime.
   const table = files.get('scene/Table.tsx') ?? '';
   assert.match(table, /map=\{groundMap\}/, 'the combat stage is no longer a swap of the ground’s map');
   assert.ok(!/burstRef|map=\{burst\}/.test(table), 'the combat burst is a mesh of its own again (+1 draw call)');

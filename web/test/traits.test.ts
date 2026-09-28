@@ -777,7 +777,7 @@ test('traits: the prop field FOLLOWS prefers-reduced-motion — it does not read
  *
  * **In the comic look** (Lane LOOK's verification pass): the pixels counted are
  * the ones that still show the prop's PAINT — visible, and not under the ink
- * line (`prop-raster.ts`'s `comicVisibility`: `Post.tsx`'s rule, D122/D129, over
+ * line (`prop-raster.ts`'s `comicVisibility`: `Post.tsx`'s rule, D139/D146, over
  * the raster's depth). The halftone's dots are counted and printed too; a dot
  * darkens a pixel by at most a third and the prop around it by the same, so they
  * are reported, and held apart only by the one-sided rule below.
@@ -805,7 +805,7 @@ const SHORTFALL: Readonly<Record<string, { seat: 'you' | 'opp'; floor: number; w
 /**
  * **The props that are on ONE side of a body by nature**, each with the partner
  * that reads on the side it cannot. The rest must read from BOTH seats: since
- * D126 your own figures show the table view their backs and the opponent's their
+ * D143 your own figures show the table view their backs and the opponent's their
  * fronts (before it, the other way round — D81); the raster below runs both.
  * A one-sided prop is a detail: it must show on its own side at half the bar
  * (kneeling included), and its partner must carry the card at the full bar on
@@ -819,17 +819,17 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
   // chibi's was half the figure) a patch is a face detail like a tie — it reads
   // from the front, and Fury's long black coat carries him from behind and above.
   eyepatch: { partner: 'coat', why: 'a patch is on the face — the long black coat carries Fury from behind' },
-  // D126's re-check: the thrusters are on the Doombot's BACK. With the opponent's
+  // D143's re-check: the thrusters are on the Doombot's BACK. With the opponent's
   // Doombot facing you now, from the far seat they are 26 px of pack behind its
   // body; the visor band — its glow round the head — carries it from the front.
-  jetpack: { partner: 'visor', why: 'thrusters are on the back — the visor band reads in front (D126)' },
+  jetpack: { partner: 'visor', why: 'thrusters are on the back — the visor band reads in front (D143)' },
 };
 
 /**
  * **The seat whose figures the table view sees from BEHIND** — derived from
  * `seatFacingY`, never typed: a front is `FIGURE_FRONT_Z · (sin f, cos f)` and
  * the table view looks from +Z, so a seat whose front points to −Z shows it its
- * back. Since D126 it is `you`.
+ * back. Since D143 it is `you`.
  */
 const BEHIND_SEAT: 'you' | 'opp' = Math.cos(seatFacingY('you')) * FIGURE_FRONT_Z < 0 ? 'you' : 'opp';
 

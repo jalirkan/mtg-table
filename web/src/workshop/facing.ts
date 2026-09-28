@@ -5,7 +5,7 @@
  *
  * **PLAN question 13's other answer, previewed without changing the arena.**
  *
- * Since **D126** (the user's answer, 2026-09-28) every figure faces the OTHER
+ * Since **D143** (the user's answer, 2026-09-28) every figure faces the OTHER
  * seat (`layout.ts`'s `seatFacingY`: yours at π, away from your camera; the
  * opponent's at 0, toward it). The workshop still previews the facing it
  * replaced — every figure turned to face its own player, D81's measured state —
@@ -46,7 +46,7 @@ export function turnPoses(poses: FigureLayout, turn: number): FigureLayout {
 
 /** The arena's stage, with the preview's turn taken out of the attack turn. */
 export class PreviewStage extends SceneStage {
-  /** The preview's turn, radians — `0` (the arena, D126) or `π` (the facing before D126). */
+  /** The preview's turn, radians — `0` (the arena, D143) or `π` (the facing before D143). */
   turn = 0;
 
   override yawTo(cardId: number, anchor: AnchorRef): number {

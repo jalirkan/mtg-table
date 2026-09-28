@@ -22,7 +22,7 @@
  *    halftone a function of the fragment's screen position; nothing here reads
  *    time, so nothing here can keep `frameloop='demand'` awake.
  *  - **Two looks, one number.** `uLook` 0 draws the D53 hologram (a view-space
- *    fresnel, unlit), 1 the comic look (D120): the same three bands, key light,
+ *    fresnel, unlit), 1 the comic look (D137): the same three bands, key light,
  *    halftone and specular dot as the figures, so a coat and the body under it are
  *    painted in one hand. A kind that EMITS — additive, or a `glow`, `glass` or
  *    `membrane` preset (a muzzle, a laser eye, a visor, the gauntlets, the helmet
@@ -158,7 +158,7 @@ const FRAGMENT = /* glsl */ `
     float alpha = clamp( vOpacity * ( uAlpha + fresnel * uAlphaRim ), 0.0, 1.0 );
 
     if ( uLook > 0.0 ) {
-      // **The comic look** (D120): the figures' bands, key light, halftone and
+      // **The comic look** (D137): the figures' bands, key light, halftone and
       // specular dot, so a coat and the body under it are painted in one hand. A
       // double-sided sheet's back face turns its normal to the lens first. No rim:
       // a prop's colour is its own, and the ink pass draws its edge.
@@ -223,7 +223,7 @@ export function makePropMaterial(look: PropLook, additive: boolean): PropMateria
 export function applyPropLook(material: PropMaterial, look: MaterialLook): void {
   const painted = material.userData.painted === true;
   material.uniforms.uLook.value = painted ? look.look : 0;
-  // The ink's mark (D129): a painted kind in the comic look is part of a figure.
+  // The ink's mark (D146): a painted kind in the comic look is part of a figure.
   // A light (additive) is never passed to it and keeps its own blend.
   if (painted) markPainted(material, look.look > 0);
 }

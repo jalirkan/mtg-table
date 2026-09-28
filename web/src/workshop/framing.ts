@@ -11,7 +11,7 @@
  * Four modes:
  *
  *  - **front (1×), the default** — the close-up from the side the figure FACES,
- *    at view 1's elevation: its identifying side. Since D126 a seat's figures face
+ *    at view 1's elevation: its identifying side. Since D143 a seat's figures face
  *    the other seat, so view 1's own direction shows your figure's BACK (the
  *    verification pass's finding: the judging tool opened on every figure from
  *    behind); `figurePose`'s `facingY` and `layout.ts`'s `FIGURE_FRONT_Z` say

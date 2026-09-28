@@ -3,7 +3,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **Lane LOOK's pure half** (`arena/look.ts`, D120–D129): the switch, the
+ * **Lane LOOK's pure half** (`arena/look.ts`, D137–D146): the switch, the
  * numbers each material takes, the hologram's jobs under the comic look, the
  * stage's seat colours, and the floor rung that sheds the ink with bloom.
  *
@@ -73,7 +73,7 @@ function corpusStates(): ClientState[] {
 // The switch
 // ---------------------------------------------------------------------------
 
-test('look: the comic look is the default (D120), and ?look=holo restores the hologram', () => {
+test('look: the comic look is the default (D137), and ?look=holo restores the hologram', () => {
   assert.equal(LOOK_DEFAULT, 'comic');
   assert.equal(INK_DEFAULT, 'post');
   assert.ok(sameLook(DEFAULT_LOOK, COMIC_LOOK));
@@ -86,8 +86,8 @@ test('look: the comic look is the default (D120), and ?look=holo restores the ho
   assert.ok(sameLook(lookFromSearch('', 'holo'), HOLO_LOOK), 'the fallback is the caller’s');
   // One option at a time, over the base.
   assert.equal(lookFromSearch('?ink=none').ink, 'none');
-  assert.equal(lookFromSearch('?ink=hull').ink, 'post', 'the hull is gone (D122): an old URL gets the post line');
-  assert.equal(lookFromSearch('?ink=always').ink, 'always', 'the measurement switch: the ink with a composer of its own (D129)');
+  assert.equal(lookFromSearch('?ink=hull').ink, 'post', 'the hull is gone (D139): an old URL gets the post line');
+  assert.equal(lookFromSearch('?ink=always').ink, 'always', 'the measurement switch: the ink with a composer of its own (D146)');
   assert.equal(lookFromSearch('?halftone=0').halftone, false);
   assert.equal(lookFromSearch('?halftone=off').halftone, false);
   assert.equal(lookFromSearch('?shadow=false').shadow, false);
@@ -109,17 +109,17 @@ test('look: the material numbers — the hologram is all zeros, the comic look c
   assert.equal(wantsStage(holoWithOptions), false);
   assert.equal(wantsShadows(COMIC_LOOK), true);
   assert.equal(wantsStage(COMIC_LOOK), true);
-  // D129: the ink rides BLOOM's composer — with bloom off there is no line,
+  // D146: the ink rides BLOOM's composer — with bloom off there is no line,
   // unless `?ink=always` asks for a composer of its own (measurement only).
   assert.equal(wantsInkPass(COMIC_LOOK, true), true);
-  assert.equal(wantsInkPass(COMIC_LOOK, false), false, 'bloom off still draws the ink — a composer for one effect (+2.4 ms p95, D129)');
+  assert.equal(wantsInkPass(COMIC_LOOK, false), false, 'bloom off still draws the ink — a composer for one effect (+2.4 ms p95, D146)');
   assert.equal(wantsInkPass(lookFromSearch('?ink=always'), false), true);
   assert.equal(wantsInkPass(lookFromSearch('?ink=always'), true), true);
   assert.equal(wantsInkPass(lookFromSearch('?ink=none'), true), false);
   assert.equal(wantsInkPass(lookFromSearch('?ink=none'), false), false);
 });
 
-test('look: the floor rung sheds the ink with bloom — one composer, dropped whole (D122)', () => {
+test('look: the floor rung sheds the ink with bloom — one composer, dropped whole (D139)', () => {
   assert.deepEqual(postOnFloor(true, true), { bloom: false, ink: false });
   assert.deepEqual(postOnFloor(true, false), { bloom: false, ink: false });
   assert.deepEqual(postOnFloor(false, true), { bloom: false, ink: false }, 'bloom already off: the ink goes on its own');
@@ -146,10 +146,10 @@ test('look: the comic numbers are shaped as the shader assumes', () => {
 });
 
 // ---------------------------------------------------------------------------
-// The hologram's jobs (D125) — over the whole corpus
+// The hologram's jobs (D142) — over the whole corpus
 // ---------------------------------------------------------------------------
 
-test('look: an anonymous figure and a ghost are holograms under the comic look, a sick figure is half one, and nothing else is (D125, hard rule 8) — the corpus', () => {
+test('look: an anonymous figure and a ghost are holograms under the comic look, a sick figure is half one, and nothing else is (D142, hard rule 8) — the corpus', () => {
   const comic = materialLookOf(COMIC_LOOK);
   let anonymous = 0;
   let ghosts = 0;
@@ -175,7 +175,7 @@ test('look: an anonymous figure and a ghost are holograms under the comic look, 
       }
       if (pose.modelId !== null) {
         models += 1;
-        // D125 (the verification pass): summoning sickness is HALF hologram — a
+        // D142 (the verification pass): summoning sickness is HALF hologram — a
         // pose of the stance, so the next snapshot that says otherwise paints it whole.
         if (pose.stance === 'sick') {
           sick += 1;
@@ -205,7 +205,7 @@ test('look: an anonymous figure and a ghost are holograms under the comic look, 
 });
 
 // ---------------------------------------------------------------------------
-// The stage (D124)
+// The stage (D141)
 // ---------------------------------------------------------------------------
 
 test('look: a seat shows its colours through PUBLIC, face-up cards only — a stub or a face-down card shows nothing', () => {
@@ -257,7 +257,7 @@ test('look: the combat stage is a pose of state.combat', () => {
   assert.ok(combat > 0, 'no combat frame in the corpus');
 });
 
-test('look: D126 — a seat’s own figures face the opponent', () => {
+test('look: D143 — a seat’s own figures face the opponent', () => {
   assert.equal(seatFacingY('you'), Math.PI);
   assert.equal(seatFacingY('opp'), 0);
 });

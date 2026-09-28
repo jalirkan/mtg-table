@@ -47,7 +47,7 @@
 export const BLOOM_DEFAULT = true;
 
 /**
- * **Which look the arena draws when nobody said** (Lane LOOK, **D120**): the comic
+ * **Which look the arena draws when nobody said** (Lane LOOK, **D137**): the comic
  * look — ink, three cel bands from one lens-fixed key light, a rim in the card's
  * colour, a specular dot, halftone in the shadow band, a contact shadow and a
  * mid-value stage (`arena/look.ts`). The user judged report 15's spike beside
@@ -63,11 +63,11 @@ export const BLOOM_DEFAULT = true;
 export const LOOK_DEFAULT: 'comic' | 'holo' = 'comic';
 
 /**
- * **Whether the comic look draws its ink line** (**D122**, **D129**): the
+ * **Whether the comic look draws its ink line** (**D139**, **D146**): the
  * depth-edge pass (`scene/Post.tsx`'s `InkEffect`), which rides bloom's composer —
  * `postprocessing` merges it into the one `EffectPass` bloom already pays for, so
  * with bloom on it costs **no** draw call and no triangle. **`'post'` means on
- * bloom's composer and nowhere else** (D129): with bloom off the arena mounts no
+ * bloom's composer and nowhere else** (D146): with bloom off the arena mounts no
  * composer and draws no line, because a composer for the ink alone measured
  * **+2.4 ms p95** over the hologram on the GTX 1080 at `g1`@316 (report 15
  * §9.1's line is +1.5; `docs/evidence/look.md`). `?ink=always` draws it anyway,

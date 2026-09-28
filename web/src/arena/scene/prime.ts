@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * **§8.3 rule 3's warm-up, for the target the frames are DRAWN INTO** (Lane LOOK,
- * D122). three compiles a program per material *and per output colour space*:
+ * D139). three compiles a program per material *and per output colour space*:
  * drawn to the canvas a material gets the sRGB variant, drawn into a render
  * target — which is where bloom's and the ink's composer draws the scene — the
  * linear one. `gl.compile` compiles for whichever target is bound, and a React

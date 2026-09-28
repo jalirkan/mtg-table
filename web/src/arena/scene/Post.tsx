@@ -6,7 +6,7 @@
  * **Bloom, and the ink line that rides it** (report 13 §8; **user decision 6**:
  * bloom via `@react-three/postprocessing` 2.19.1 — the React-18 line — "allowed
  * and default ON if the bench stays within budget on this machine, else default
- * off with a toggle"; Lane LOOK's **D122**: the comic look's ink is a depth-edge
+ * off with a toggle"; Lane LOOK's **D139**: the comic look's ink is a depth-edge
  * EFFECT merged into bloom's own `EffectPass`, not a second pass).
  *
  * ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ const SMOOTHING = 0.22;
 const INTENSITY = 0.9;
 
 // ---------------------------------------------------------------------------
-// **The ink line** (Lane LOOK, **D122**, report 15 §3.4's option B; **D129**):
+// **The ink line** (Lane LOOK, **D139**, report 15 §3.4's option B; **D146**):
 // one more EFFECT, not one more pass. `postprocessing` merges every
 // non-convolution effect in a composer into ONE full-screen `EffectPass`, so
 // with bloom on (D61's default) the ink costs a few texture reads per pixel
@@ -86,7 +86,7 @@ const INTENSITY = 0.9;
 // every pixel where the depth surface BENDS: the Laplacian of 1/z, which is
 // exactly zero on any plane (1/z is affine in screen space).
 //
-// **Only where something PAINTED is involved** (D129, the verification pass): a
+// **Only where something PAINTED is involved** (D146, the verification pass): a
 // plane's INTERIOR is zero, but a plane's EDGE is a depth step like any other,
 // and every card that stands off the table — a hovering flier's, the
 // Helicarrier's, the stack's, the hand's, the pedestal's — was drawn in a heavy
@@ -110,7 +110,7 @@ const INTENSITY = 0.9;
 // distance measures the same bend at every rung of the DPR ladder, so the
 // relative threshold — and the line's weight on screen — hold from 0.6 to 1.5
 // (measured, `docs/evidence/look.md`). The inverted hull the spike also built is
-// deleted (D122): +16 draw calls and +20,000 triangles at `g1`@355, over both of
+// deleted (D139): +16 draw calls and +20,000 triangles at `g1`@355, over both of
 // §8.2's lines, and the weaker line besides.
 // ---------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ const INK_FRAGMENT = /* glsl */ `
     return 1.0 / max( 1e-4, -getViewZ( readDepth( uv ) ) );
   }
 
-  // 1 where a PAINTED surface was drawn (it wrote alpha 0, D129), else 0.
+  // 1 where a PAINTED surface was drawn (it wrote alpha 0, D146), else 0.
   float paintedAt( const in vec2 uv ) {
     return 1.0 - step( 0.5, texture2D( inputBuffer, uv ).a );
   }
@@ -132,7 +132,7 @@ const INK_FRAGMENT = /* glsl */ `
   void mainImage( const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor ) {
     // The line's outer half (on the table or a card) samples uWidth away, its
     // inner half (on a figure's own paint, a crease included) uWidthIn: the
-    // silhouette keeps its weight and a small prop keeps its paint (D129).
+    // silhouette keeps its weight and a small prop keeps its paint (D146).
     float self = 1.0 - step( 0.5, inputColor.a );
     vec2 px = texelSize * mix( uWidth, uWidthIn, self );
     vec2 uvL = uv - vec2( px.x, 0.0 );
@@ -154,7 +154,7 @@ const INK_FRAGMENT = /* glsl */ `
     // A LIGHT burns through the line: paint never passes paper white (1, the
     // comic block caps it), so a pixel past it is an additive light over the
     // paint — a visor, a muzzle flash, an exhaust, a cue's flash — and the ink
-    // steps back from it, as a colourist paints a glow over the line art (D129).
+    // steps back from it, as a colourist paints a glow over the line art (D146).
     ink *= 1.0 - smoothstep( 1.0, 1.25, max( inputColor.r, max( inputColor.g, inputColor.b ) ) );
     // Alpha 1 again: the mark is the scene's, and nothing after this sees it.
     outputColor = vec4( mix( inputColor.rgb, uInk, ink ), 1.0 );
@@ -217,7 +217,7 @@ export const Post = memo(function Post({
   onMount?: () => void;
   /** Bloom, as before (user decision 6). */
   bloom?: boolean;
-  /** The comic look's depth-edge ink line (D122). */
+  /** The comic look's depth-edge ink line (D139). */
   ink?: boolean;
 }): JSX.Element {
   // Built once; it holds no render target or texture of its own to dispose.

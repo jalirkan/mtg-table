@@ -5,16 +5,139 @@ palette painted in three flat bands from one lens-fixed key light, a rim in the
 card's colour, a specular dot, halftone in the core shadow, an ink line that rides
 bloom's composer, a contact shadow under every figure and a mid-value stage with a
 backdrop. `?look=holo` restores **D53**'s hologram. A seat's own figures now face
-the opponent. Decisions **D120–D129** (the lane's reserved range,
-renumbered at merge); the brief is `docs/research/15-art-direction.md` §9.1.
+the opponent. Decisions **D137–D146** (written as D120–D129 in the lane's
+reserved range, renumbered at merge onto `f6bad35`); the brief is
+`docs/research/15-art-direction.md` §9.1.
 
-### The verification pass, round 1 — read this first
+### At merge — rebased onto `f6bad35` (read this first)
+
+The first stage of the art-direction merge pass, 2026-09-28, in the lane's own
+worktree (`/home/justin-a/code/mtg-table-t2l`, branch `look`). `git rebase
+f6bad35` replayed five commits — report 15 and its `?look=comic` spike
+(`c81f674`, which had never been on `main`) and the lane's four — over what
+`main` gained since `a092d3a`: the hardening pass, more villains, spectating,
+the narrator, the story page, gate speed and the undo race. Everything below was
+measured on the rebased tree on this machine that afternoon; where a number
+differs from the sections after this one, this one is current.
+
+**Conflicts**, each resolved by keeping both sides:
+
+| file | `main`'s side | the lane's side | resolved |
+|---|---|---|---|
+| `scene/FigureLayer.tsx` (twice) | the hardening pass's two actions per clip: `restActions` on each clip's `restTwin` | the spike's inverted hull, then its deletion | the rig keeps `restActions`; the hull stays deleted |
+| `Arena.tsx`, `main.tsx` | spectating's `follow` prop (the WATCHING word) | the look's `lookQuery` | both props, on both Arena mounts (live and replay) |
+| CLAUDE.md, DECISIONS.md, PLAN.md | the story page's section; D109–D136; the sections from engine and sets to the undo race | the comic look's section, D120–D129, *Lane LOOK* | both, `main`'s first |
+
+`liveness.test.ts` (spectating's no-`fetch`/no-timer clause beside the lane's),
+`prop-raster.ts`, `workshop.test.ts`, `legibility.ts`, `figureRigs.ts` and
+README merged by themselves. Before the renumbering, every code file's diff
+against `f6bad35` was line for line the lane's own diff against `a092d3a`.
+`clip-lane.test.tsx` — the hardening pass's two-action test, which calls
+`CueRunner`'s `driveClips` — passes on the merged tree (2 of 2), and now names
+`FigureMaterial` from `figureMaterial.ts` instead of `HoloMaterial` through the
+shim (PLAN follow-up 4: `scene/models.ts` is the shim's last importer).
+
+**Renumbered.** `main` had taken D120–D136 while the lane was open, so its ten
+became **D137–D146**, in the order they were written:
+
+| on the branch | D120 | D121 | D122 | D123 | D124 | D125 | D126 | D127 | D128 | D129 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **merged** | **D137** | **D138** | **D139** | **D140** | **D141** | **D142** | **D143** | **D144** | **D145** | **D146** |
+
+253 lines in 31 files, each a line the lane's commits wrote (read off `git blame
+f6bad35..HEAD`, so `main`'s own D120–D129 — spectating's, the narrator's, the
+story page's and the gate-speed lane's — were never touched): this file,
+CLAUDE.md, DECISIONS.md, PLAN.md, README.md and comments and test names under
+`web/src/arena/`, `web/src/workshop/` and `web/test/`; no JSON file, script or
+Java source cited one. DECISIONS.md holds D1–D146 once each, and each of the ten
+says both numbers.
+
+**The follow-ups.** None of the lane's twenty-one is both in its own files and
+under half an hour. Follow-up 11's first half — a back-row figure's shadow,
+hidden under its own card — was built (a second instanced shadow pass after the
+cards, on the ground pass's material, and a corpus test over the 29 painted
+figures that stand on their cards, in six frames of `g3` and `human-auto-2026`),
+and taken back out: a shadow drawn over the cards must stay on its own card
+(D140 rejects darkening one), and a back-row stand is not always at its card's
+centre — `layout.ts`'s `placeStands` steps it away from a card that covers the
+centre, towards that neighbour's edge. `g3`@271's Soldier token stands 0.1 off
+its centre, and its shadow reached 0.428 from it against the card's half-width
+of 0.358. Done right, the pose carries how far its stand is from its own card's
+edge (a `layout.ts` helper beside `footprintContains`, one field in
+`figures/pose.ts`) and the pass clamps to it — PLAN follow-up 11 says so.
+
+**Tests.** `npm --prefix web test`: **949 `node --test` + 120 vitest (8 files),
+0 failures** — `main`'s 932 + 120 and the lane's 17 (887 − 870). `tsc --noEmit`
+clean; `./bridge/build.sh` (the lint and all five self-tests) OK.
+
+**Build** (gzip, node's `zlib` at the default level; `main` built from
+`f6bad35`'s tree beside it):
+
+| chunk | `f6bad35` | merged |
+|---|---:|---:|
+| entry `index-*.js` | 90.27 kB | **90.35 kB** — `WebGLRenderer` 0 times: no `three` |
+| `arena-scene-*.js` | 348.07 | 353.91 |
+| `Arena-*.js` | 14.77 | 15.11 |
+| `Post-*.js` (lazy) | 16.58 | 17.71 |
+| `Workshop-*.js` | 23.31 | 24.39 |
+
+**The bench** — `tools/arena-bench.mjs --index 316 --settle 4000`, the production
+build the gate below wrote, served by `vite preview` on 5200; each series three
+rounds, the comic look (the default) and `&look=holo` on the same build
+interleaved with the order alternating; 16:03–16:10, the load average 4.6–14 (other
+lanes' work) and the GTX 1080 otherwise idle. Raw output in
+`var/look/merge/bench/`, the series script beside it.
+
+| series | hologram (`&look=holo`) | comic (default) | line |
+|---|---|---|---|
+| GTX 1080 p95, bloom **on** (the default) | 3.3 · 0.9 · 0.9 — **median 0.9** | 1.7 · 1.1 · 1.3 — **median 1.3** | +0.4, inside report 15's +1.5 |
+| GTX 1080 p95, bloom off | 1.4 · 0.5 · 0.5 — **median 0.5** | 1.0 · 0.5 · 0.5 — **median 0.5** | +0.0: no composer (D146) |
+| SwiftShader p50, dpr 0.6, bloom off (the floor) | 15.9 · 15.1 · 15.2 — **median 15.2** | 17.3 · 15.3 · 15.7 — **median 15.7** | +0.5, inside +3 |
+| SwiftShader, governed (the app's own bloom and ladder), p50 / p95 | 15.0 / 33.2 (programs 26 → 28) | 15.6 / 95.6 (programs 28 → 30) | the rung below the floor fired inside the sample in both — follow-up 16 |
+
+GTX 1080 is `ANGLE (NVIDIA Corporation, NVIDIA GeForce GTX 1080/PCIe/SSE2, OpenGL
+4.5.0)`, SwiftShader `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)
+(0x0000C0DE)), SwiftShader driver)`. Every GTX 1080 run is inside report 09
+§9.4's gate (p95 ≤ 20 ms, max ≤ 50 ms); SwiftShader is over its p95 line in both
+looks (bar one hologram run), as it was before the lane. No run linked a program
+during playback except at the governed runs' rung ("N → N" everywhere else).
+
+**The census**, the same production handle (`?glinfo=1`) on the GTX 1080 with bloom
+off: at `g1`@355 the comic look draws **81 calls and 24,490 triangles** against the
+hologram's 79 / 24,368 — the verification pass's own production reading, to the
+triangle — with 15 programs cached against 14; at @316, 79 / 24,362 against
+77 / 24,240. Bloom on caches 28 programs against 26.
+
+A first series, on a build taken before follow-up 11's attempt was removed (an
+empty pass at these frames), read the same census; it ran while the corpus test
+for that attempt was being written beside it, so its SwiftShader numbers are
+noisier (`var/look/merge/bench-pre/`), and it is not quoted.
+
+**The gate.** `rm -rf bridge/out && GATE_JOBS=4 WSPORT=8900 ./tools/check-all.sh`,
+tee'd to `var/check-all-look-merge.log` (run `20260928-155908-3967644`, every
+job's log under `var/check-all/` by that name): **exit 0 in 260.6 s**, 46 jobs
+whose seconds sum to 1,016.4 s, the load average 4.7 at the start, 12.1 at most
+and 11.5 at the end (other lanes' work beside it). 9c's fourteen rows each passed
+(20.8–34.9 s a row); 6b called its two recordings `SAME GAME`; 10g's three
+games were each played (123, 150 and 224 `state` frames, to turns 13, 16 and
+18); `node --test` ran **959 / 951 pass / 0 fail / 8 skipped** and vitest **120**
+in 8 files. The lane added no step and no job. The bench above measured the dist
+this gate's `13a-build` wrote.
+
+**`~/forge` and `~/.forge`**, fingerprinted before the rebase and after the
+gate (the jar's sha256; `find`'s path, size and mtime over both trees; a content
+sha1 over `~/.forge`; `var/look/merge/forge-{before,after}.txt`): **identical** — the
+jar `3c0a7c38…8e5dd9`, `~/forge`'s listing `f09d4b57…`, `~/.forge`'s listing
+`d2e4803a…` and its content `36dde4f8…`. Nothing in the merge wrote outside the
+worktree.
+
+### The verification pass, round 1
 
 A verifier read the first round (`49b183c`) and found two majors and seven
 minors. This section is what changed and what it measured; the sections after
 it are the first round's record, and where a number below differs from one
-there, this one is current. **D129** and dated amendments to D122, D124, D125,
-D126 and D128 are the decisions. Everything here was measured on 2026-09-28
+there, this one is current. **D146** and dated amendments to D139, D141, D142,
+D143 and D145 are the decisions. Everything here was measured on 2026-09-28
 between 07:10 and 08:20 on a machine shared with other lanes' gates (load 2.6–15).
 
 **What changed.**
@@ -25,7 +148,7 @@ between 07:10 and 08:20 on a machine shared with other lanes' gates (load 2.6–
 | GTX 1080 p95 with bloom off +2.4 ms over the hologram (major) | the ink rides bloom's composer only; bloom off mounts no composer (`?ink=always` forces one) | `look.ts`'s `wantsInkPass(look, bloom)`, `perf.ts` |
 | `sick` → half hologram not built (brief item 8) | `figureLookOf`: `stance` `sick` draws `uLook` × 0.5, a pose | `look.ts` |
 | the combat burst was +1 draw call | painted into a second copy of the ground's light, swapped on the pose, both uploaded at mount | `Table.tsx` |
-| CLAUDE.md contradicted the lane | the two passages point at D120 and D126; the junk-write count is eight now | `CLAUDE.md` |
+| CLAUDE.md contradicted the lane | the two passages point at D137 and D143; the junk-write count is eight now | `CLAUDE.md` |
 | the workshop opened on every figure's back | **`1× front`** is the default camera (`framing.ts`'s `frontPose`) | `framing.ts`, `Workshop.tsx` |
 | the raster never rendered the comic look | `prop-raster.ts`'s `comicVisibility` applies the ink's rule and counts halftone dots; the both-seats test holds each prop's PAINT at ≥ 48 px | `web/test/prop-raster.ts`, `traits.test.ts` |
 | dark costumes read as silhouettes | a dark paint's LIT band is lifted to luminance 0.09, hue kept (`COMIC.darkLift`): black's bands are now `#46527d` / `#212844` / `#181d3c` | `figureMaterial.ts`, `look.ts` |
@@ -213,7 +336,7 @@ npm --prefix web run dev                           # then:
 #   /?replay=games/g1.jsonl#arena                  the comic look (the default)
 #   /?replay=games/g1.jsonl&look=holo#arena        the hologram, as before
 #   ?ink=none ?halftone=0 ?key=world ?stage=felt ?shadow=0     one part off each
-#   ?ink=always                                    the ink without bloom (D129: by
+#   ?ink=always                                    the ink without bloom (D146: by
 #                                                  default the ink rides bloom only)
 #   /#workshop?card=Nick%20Fury%2C%20Spymaster     opens on "1× front" (the figure's
 #                                                  identifying side); "1× from your
@@ -231,22 +354,22 @@ node tools/arena-bench.mjs --url 'http://127.0.0.1:5191/?replay=games/g1.jsonl#a
 
 | file | what |
 |---|---|
-| `web/src/arena/look.ts` | **pure**: the `LookSpec` switch and `lookFromSearch`; `MaterialLook`, the three numbers a material takes at commit; `figureLookOf` / `paintsFigure` (**D125**); `COMIC`, every number the look is drawn with; the stage's seat tones from what each seat has SHOWN; `combatStageOf` |
+| `web/src/arena/look.ts` | **pure**: the `LookSpec` switch and `lookFromSearch`; `MaterialLook`, the three numbers a material takes at commit; `figureLookOf` / `paintsFigure` (**D142**); `COMIC`, every number the look is drawn with; the stage's seat tones from what each seat has SHOWN; `combatStageOf` |
 | `web/src/arena/perf.ts` | `LOOK_DEFAULT` (`'comic'`), `INK_DEFAULT` (`'post'`) and `postOnFloor`, the rung below the DPR floor that sheds bloom and ink together |
-| `scene/figureMaterial.ts` | the one figure program (`holoMaterial.ts` until this lane; a re-export is left for one release): the hologram and the comic look mixed by `uLook`, the comic block's GLSL and its **shared** uniform objects (`COMIC_UNIFORMS`), `applyComicGlobals`, `applyLook`, `uMaterialize` (identity 1, Lane MOTION's), the paint input path (**D127**) |
+| `scene/figureMaterial.ts` | the one figure program (`holoMaterial.ts` until this lane; a re-export is left for one release): the hologram and the comic look mixed by `uLook`, the comic block's GLSL and its **shared** uniform objects (`COMIC_UNIFORMS`), `applyComicGlobals`, `applyLook`, `uMaterialize` (identity 1, Lane MOTION's), the paint input path (**D144**) |
 | `scene/propMaterial.ts` | the prop field's shader, moved out of `scene/props.ts` (the lane's first commit) so that Lane BODIES owns `props.ts`; painted kinds take the same comic block, emitting kinds stay lights |
-| `scene/Post.tsx` | `InkEffect`, the depth-edge ink inside bloom's `EffectPass` (**D122**); `Post` is `memo` and its children are memoised (the composer fix below) |
-| `scene/discs.ts` | the contact shadow: `DiscField.shadowMesh`, one instanced call, bound in `DiscField.bind`, leaning away from the key (**D123**) |
-| `scene/Table.tsx` | the stage: the light painted once, the seats' colours as vertex colours, the backdrop cylinder, the combat burst (**D124**) |
+| `scene/Post.tsx` | `InkEffect`, the depth-edge ink inside bloom's `EffectPass` (**D139**); `Post` is `memo` and its children are memoised (the composer fix below) |
+| `scene/discs.ts` | the contact shadow: `DiscField.shadowMesh`, one instanced call, bound in `DiscField.bind`, leaning away from the key (**D140**) |
+| `scene/Table.tsx` | the stage: the light painted once, the seats' colours as vertex colours, the backdrop cylinder, the combat burst (**D141**) |
 | `scene/prime.ts` | new: `compileFor`, the mount-time prime for the target the frames are drawn into — the composer's render target under bloom or the ink, the canvas otherwise |
 | `scene/FigureLayer.tsx`, `scene/DuelistLayer.tsx` | the look written at commit: `uLook` per figure through `figureLookOf`, the shared uniforms, the dying bodies, the discs, the props, both duelists |
 | `Arena.tsx`, `main.tsx` | the flags (`main.tsx` keeps the look's query keys as a string, **D49**), the background, the stage, the ink state and the floor rung |
-| `layout.ts` | `seatFacingY`: π for your seat, 0 for the opponent's (**D126**) |
+| `layout.ts` | `seatFacingY`: π for your seat, 0 for the opponent's (**D143**) |
 | `workshop/Workshop.tsx`, `workshop/Pedestal.tsx`, `workshop/facing.ts` | the toolbar's *holo · comic* and *ink · halftone · shadow · stage · world key*; the facing toggle's default is the arena's new facing |
 | `web/test/look.test.ts` | new: the switch, the numbers, the hologram's jobs over the corpus, the stage's colours, the floor rung, the facing |
 | `web/test/figure-material.test.ts` | new: one program per paint input, the paint path's order in the shader, the shared uniform objects, no clock |
 | `web/test/liveness.test.ts` | one appended clause (below); the costume clause follows the renamed file |
-| `web/test/facing.test.ts`, `traits.test.ts`, `prop-raster.ts`, `figure-pose.test.ts`, `workshop.test.ts` | follow **D126**; the raster finds the seat seen from behind by `seatFacingY` |
+| `web/test/facing.test.ts`, `traits.test.ts`, `prop-raster.ts`, `figure-pose.test.ts`, `workshop.test.ts` | follow **D143**; the raster finds the seat seen from behind by `seatFacingY` |
 
 The spike's inverted hull is gone: no `inkHull`, no `BackSide` ink shell, no
 `wantsHull`. Its measurement in report 15 §3.4 (+16 draw calls, +20,000 triangles
@@ -419,14 +542,14 @@ composer carries bloom **and** the ink, so its frames are slower, each of the
 governor's windows takes longer to fill, and the rung fires later. The state
 both builds settle into is the pinned floor above. This is PLAN.md's follow-up 16.
 
-### The facing (D126): every identity prop, read from both seats
+### The facing (D143): every identity prop, read from both seats
 
 `traits.test.ts`'s raster uses the real `figures.glb`, the real `PropField` and the
 table camera at 1600 × 1000. Each cell is the fewest pixels over standing and
 kneeling, alone and at a rank's edge. The bar is ≥ 48 px on both seats, or ≥ 24 on
 its own side for a one-sided detail. The **before** is slice 4's table
 (`docs/evidence/m7-tier2-slice4.md`), when your figures faced you. The **after**
-is D126, where your figures show your camera their backs and the opponent's show
+is D143, where your figures show your camera their backs and the opponent's show
 their fronts:
 
 | card | prop | your seat, before → after | opponent's, before → after |
@@ -459,14 +582,14 @@ where you see it from the front. It joins `tie`, `laserEye`, `exhaust` and
 
 The negative control is Coulson's chest badge alone seen from behind, which is now
 your seat: **4 px**. `facing.test.ts`'s own negative control is the outward
-facing D126 replaced. With no turn, it fires every front-anchored beat out of the
+facing D143 replaced. With no turn, it fires every front-anchored beat out of the
 far side of the body.
 
 The raster counts depth coverage, not contrast. So the claim that the halftone
 (at most 34 % darker, and only in the core-shadow band) never eats a one-sided
 detail is argued here, not measured. That is PLAN.md's follow-up 10.
 
-### The stage (D124)
+### The stage (D141)
 
 The ground's tones, as CIE L\* of the sRGB hex (`look.ts`'s `lightnessOf`,
 held by `look.test.ts`):
@@ -488,7 +611,7 @@ colours. A seat that has shown nothing is its default. Only face-up cards in
 public zones count; a redacted stub or a face-down card counts for nothing
 (`look.test.ts`).
 
-### The paint input path (D127)
+### The paint input path (D144)
 
 `figureMaterial.ts`'s `makeFigureMaterial(tint, unitScale, { vertexColors, map })`
 was checked in the dev page on the GTX 1080 (`var/look/tools/paintpath.json`). A
@@ -529,7 +652,7 @@ everything that writes depth, the cards included. That is PLAN.md's question 6.
 - **`npm --prefix web test`: 884 `node --test` + 94 vitest (6 files), 0 failures**,
   standalone. At `c81f674` it was 870 + 94. The +14 are the lane's own:
   `look` (9 cases), `figure-material` (4) and the new liveness clause. `facing`,
-  `traits`, `figure-pose` and `workshop` changed to follow D126 and the rename.
+  `traits`, `figure-pose` and `workshop` changed to follow D143 and the rename.
 - **The gate**, `WSPORT=8710 ./tools/check-all.sh`, from a deleted `bridge/out`,
   tee'd to `var/check-all-look.log`: **exit 0 in 890 s**. 9c's fourteen games
   took 377 s. Inside the gate, `node --test` ran **894 / 886 pass / 0 fail / 8
@@ -558,7 +681,7 @@ Nothing in this lane wrote outside the worktree.
 
 | file | what |
 |---|---|
-| `{before,after}/workshop-{fury,coulson,peggy,quake,doombot}.png` | the workshop's DEFAULT framing, the whole page: before `1× close` (the figure's back, D126), after `1× front` |
+| `{before,after}/workshop-{fury,coulson,peggy,quake,doombot}.png` | the workshop's DEFAULT framing, the whole page: before `1× close` (the figure's back, D143), after `1× front` |
 | `ab-workshop-{fury,coulson,peggy,quake,doombot}-pedestal.png` | the same, the pedestal (520 × 460 at 470, 300), before beside after |
 | `{before,after}/workshop-doombot-seat.png`, `ab-workshop-doombot-seat-pedestal.png` | the Doombot from your seat — the pedestal card's ink frame gone |
 | `{before,after}/workshop-coulson-sick.png`, `ab-workshop-coulson-sick-pedestal.png` | the `sick` stance: fully painted before, half hologram after |

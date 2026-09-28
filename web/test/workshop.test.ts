@@ -410,8 +410,8 @@ test('workshop: under the preview an attacker still ends its turn facing its def
   const placed = layout(r.after, PRESENCE);
   const anchor = { kind: 'player' as const, id: OPP };
   const unturned = new PreviewStage(placed).yawTo(IDS.subject, anchor);
-  // D126: your figure already faces the other seat; the attack turns it a little.
-  assert.ok(Math.abs(unturned) < 0.8, 'your figure does not face the other seat at rest (D126)');
+  // D143: your figure already faces the other seat; the attack turns it a little.
+  assert.ok(Math.abs(unturned) < 0.8, 'your figure does not face the other seat at rest (D143)');
   for (const turn of [0, Math.PI]) {
     const stage = new PreviewStage(placed);
     stage.turn = turn;
@@ -419,9 +419,9 @@ test('workshop: under the preview an attacker still ends its turn facing its def
     const facing = seatFacingY('you') + turn + stage.yawTo(IDS.subject, anchor);
     assert.ok(Math.abs(wrapAngle(facing - (seatFacingY('you') + unturned))) < 1e-9, `turn ${String(turn)}`);
   }
-  // Facing the other seat (the arena since D126) the attack hardly turns her —
+  // Facing the other seat (the arena since D143) the attack hardly turns her —
   // she already faces it; previewed facing her own player (the facing before
-  // D126), it turns her about half a turn.
+  // D143), it turns her about half a turn.
   const previewed = new PreviewStage(placed);
   previewed.turn = Math.PI;
   assert.ok(Math.abs(Math.abs(previewed.yawTo(IDS.subject, anchor)) - Math.PI) < 0.8, `previewed ${String(previewed.yawTo(IDS.subject, anchor))}`);
@@ -461,7 +461,7 @@ test('workshop: the table-distance camera’s arithmetic — view 1’s depth sc
   const d = [close.target[0] - close.position[0], close.target[1] - close.position[1], close.target[2] - close.position[2]];
   const n = Math.hypot(d[0]!, d[1]!, d[2]!);
   assert.ok(Math.abs(d[0]! / n - f[0]) + Math.abs(d[1]! / n - f[1]) + Math.abs(d[2]! / n - f[2]) < 1e-9);
-  // **1× front** (the verification pass; D126): the same distance and elevation,
+  // **1× front** (the verification pass; D143): the same distance and elevation,
   // from the side the figure FACES — so it looks against the figure's front, and
   // for your seat (whose figures face the far seat) that is the opposite of view
   // 1's horizontal direction.
@@ -473,10 +473,10 @@ test('workshop: the table-distance camera’s arithmetic — view 1’s depth sc
   const pose = framing.pose!;
   const facing = [Math.sin(pose.facingY) * FIGURE_FRONT_Z, Math.cos(pose.facingY) * FIGURE_FRONT_Z];
   assert.ok(g[0]! * facing[0]! + g[2]! * facing[1]! < 0, 'the front close-up looks at the figure’s back');
-  assert.ok(g[2]! * d[2]! < 0, 'your seat’s figure seen from the front should be seen from the far side (D126)');
+  assert.ok(g[2]! * d[2]! < 0, 'your seat’s figure seen from the front should be seen from the far side (D143)');
 });
 
-test('workshop: the pedestal opens on the figure’s FRONT, and its canvas is opaque (the verification pass; D126, D129)', () => {
+test('workshop: the pedestal opens on the figure’s FRONT, and its canvas is opaque (the verification pass; D143, D146)', () => {
   const workshop = readFileSync(fileURLToPath(new URL('../src/workshop/Workshop.tsx', import.meta.url)), 'utf8');
   assert.match(workshop, /useState<CameraMode>\('front'\)/, 'the workshop no longer opens on the figure’s front');
   const pedestal = readFileSync(fileURLToPath(new URL('../src/workshop/Pedestal.tsx', import.meta.url)), 'utf8');

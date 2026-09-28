@@ -41,9 +41,9 @@ vi.mock('@react-three/fiber', () => ({ useFrame: () => undefined, useThree: () =
 import { clipEnvelope, REST_CLIP_FOR, REST_PHASE_FOR, type ClipRequest } from '../src/arena/figures/clips.ts';
 import type { FigurePose } from '../src/arena/figures/pose.ts';
 import { driveClips } from '../src/arena/scene/CueRunner.tsx';
+import type { FigureMaterial } from '../src/arena/scene/figureMaterial.ts';
 import type { FigureRig } from '../src/arena/scene/figureRigs.ts';
 import { restTwin } from '../src/arena/scene/models.ts';
-import type { HoloMaterial } from '../src/arena/scene/holoMaterial.ts';
 
 /** The bone's bind height, and the height the clip holds it at from start to end. */
 const BIND_Y = 1;
@@ -67,7 +67,7 @@ function oneBoneRig(clip: THREE.AnimationClip, stance: FigurePose['stance']): { 
     rest: null,
     clip: null,
     restTime: 0,
-    material: null as unknown as HoloMaterial, // never read by the clip lane
+    material: null as unknown as FigureMaterial, // never read by the clip lane
     pose,
     appliedTint: null,
     appliedFrozen: false,

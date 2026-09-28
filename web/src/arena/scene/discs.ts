@@ -138,14 +138,14 @@ function discTexture(): THREE.Texture | null {
 }
 
 // ---------------------------------------------------------------------------
-// **The contact shadow** (Lane LOOK, **D123**, report 15 §3.5): a flat dark
+// **The contact shadow** (Lane LOOK, **D140**, report 15 §3.5): a flat dark
 // ellipse on the table under every PAINTED figure — the comic look's grounding,
 // where the hologram's additive disc lit the table and every figure floated. One
 // instanced draw call for all of them, no texture (the falloff is computed from
 // the quad's UV), no clock, and a pose layer: written in `DiscField.bind` from
 // the pose and the live offset, so a lunging figure's shadow lunges with it. Its
 // strength rides `instanceColor.r`. Empty — and so not drawn — under the
-// hologram, and never under an anonymous figure or a ghost (D125: a hologram
+// hologram, and never under an anonymous figure or a ghost (D142: a hologram
 // casts no shadow). It is NOT drei's `ContactShadows`, which renders the scene a
 // second time into a target (report 09 §9.2 rule 3).
 // ---------------------------------------------------------------------------
@@ -214,7 +214,7 @@ export class DiscField {
    * on every frame of the corpus that does not wrap a rank.
    */
   readonly onCardMesh: THREE.InstancedMesh;
-  /** D123: the contact shadows, drawn before the discs. Empty under the hologram. */
+  /** D140: the contact shadows, drawn before the discs. Empty under the hologram. */
   readonly shadowMesh: THREE.InstancedMesh;
   /** 0 the hologram (full discs), 1 the comic look. Written at commit ({@link DiscField.setLook}). */
   private look = 0;
@@ -294,7 +294,7 @@ export class DiscField {
     let front = 0;
     let onCard = 0;
     let shadows = 0;
-    // D123: where the key light is, put on the table — the shadow falls away from
+    // D140: where the key light is, put on the table — the shadow falls away from
     // it, so the bands and the ground agree. Once a frame, from the camera's own
     // quaternion (a lens-fixed key turns with it); no allocation.
     let leanX = 0;
@@ -345,9 +345,9 @@ export class DiscField {
       // as "not there yet" rather than "a different colour".
       COLOUR.copy(parsedColour(pose.tint));
       const strength = pose.opacity * offset.opacity * (1 - offset.dissolve);
-      // D123: under the comic look a PAINTED figure's footprint is its shadow, so
+      // D140: under the comic look a PAINTED figure's footprint is its shadow, so
       // its glowing disc steps back to a faint ring in its colour. An anonymous
-      // figure and a ghost keep the hologram's disc (D125).
+      // figure and a ghost keep the hologram's disc (D142).
       const painted = this.look > 0 && paintsFigure(pose);
       const faint = painted ? 1 - (1 - COMIC.discUnderComic) * this.look : 1;
       COLOUR.multiplyScalar(Math.max(0, Math.min(1, strength)) * (pose.modelId === null ? 0.85 : 0.55) * faint);
@@ -355,7 +355,7 @@ export class DiscField {
       if (pose.onCard) onCard += 1;
       else front += 1;
 
-      // D123: the contact shadow — on the GROUND under the figure (its hover taken
+      // D140: the contact shadow — on the GROUND under the figure (its hover taken
       // out), smaller and fainter the higher it flies, leaning away from the key.
       if (this.shadows && painted && shadows < this.capacity) {
         // Its height above its own ground: a flier's hover and a cue's lift — the

@@ -5,14 +5,14 @@
  *
  * **The figure material** — every creature on the table, every dying body and
  * both duelists are drawn by this one program. It was `holoMaterial.ts` until
- * Lane LOOK (report 15 §9.1, **D120**); `holoMaterial.ts` re-exports it for one
+ * Lane LOOK (report 15 §9.1, **D137**); `holoMaterial.ts` re-exports it for one
  * release.
  *
  * **Two looks, one program, one number.** `uLook` 0 draws **D53**'s hologram (a
  * view-space fresnel over the **D97** costume palette, scanlines, translucent);
  * `uLook` 1 draws the comic look — the same palette PAINTED: saturated, "black is
  * blue", shaded in three flat bands from one key light fixed to the lens
- * (**D121**), the core shadow cooled and screened with halftone dots, a specular
+ * (**D138**), the core shadow cooled and screened with halftone dots, a specular
  * dot on the lit band, the card's own colour as a rim on the silhouette's shadow
  * side, opaque. `arena/look.ts` holds every number; they arrive as uniforms.
  *
@@ -22,7 +22,7 @@
  *    workshop's toggle, a world direction turned into view space in the vertex
  *    shader) — there is no `DirectionalLight`, no shadow map, and the cards are
  *    never lit (report 13 §8.3 rule 2). "Unlit" in D53's sense is superseded
- *    (D120); "no lights" is not.
+ *    (D137); "no lights" is not.
  *  - **One program.** Every figure gets its **own material instance** (the tint,
  *    the palette and the look are per figure), all built from this source, so
  *    three compiles one program for the library — `gl.info.programs`, measured
@@ -38,7 +38,7 @@
  *    `uMaterialize` (identity 1, multiplied into the look): Lane MOTION's
  *    hologram-to-ink summon (report 15 §5.3), a decaying offset.
  *
- * **The paint input path** (**D127**, report 15 §2.3 and §8.3). The palette is
+ * **The paint input path** (**D144**, report 15 §2.3 and §8.3). The palette is
  * multiplied by a per-vertex colour (`vertexColors`, three's `USE_COLOR`) and by
  * a texture (`paintMap`, the `USE_PAINT_MAP` define) when a model carries one, so
  * a personal texture-baked model draws in COLOUR under the same bands, halftone,
@@ -90,7 +90,7 @@ const rgb = (t: readonly [number, number, number]): THREE.Color => new THREE.Col
  * commit. Each is one of `look.ts`'s `COMIC` numbers.
  */
 export const COMIC_UNIFORMS = {
-  /** The key light, in VIEW space (D121). */
+  /** The key light, in VIEW space (D138). */
   uKey: { value: v3(COMIC.key).normalize() },
   /** The world-fixed key (the workshop's toggle), turned into view space per vertex. */
   uKeyWorld: { value: v3(COMIC.keyWorld).normalize() },
@@ -225,7 +225,7 @@ export interface FigureUniforms {
   uDrain: { value: number };
   uDrainTo: { value: THREE.Color };
   /**
-   * **The look** (D120): 0 the hologram, 1 the comic look. Written at COMMIT
+   * **The look** (D137): 0 the hologram, 1 the comic look. Written at COMMIT
    * ({@link applyLook}) and nowhere else — a pose (`look.ts`'s `figureLookOf`),
    * so it survives skip, scrub and `resync` (D56).
    */
@@ -237,7 +237,7 @@ export interface FigureUniforms {
    * never needs a frame-loop write.
    */
   uMaterialize: { value: number };
-  /** The paint map (`USE_PAINT_MAP` only) — a personal model's baked colour (D127). */
+  /** The paint map (`USE_PAINT_MAP` only) — a personal model's baked colour (D144). */
   uPaintMap: { value: THREE.Texture | null };
 }
 
@@ -317,7 +317,7 @@ const FRAGMENT = /* glsl */ `
     vec3 normal = normalize( vViewNormal );
     vec3 viewDir = normalize( vViewDir );
 
-    // **The paint input path** (D127): the palette, times a model's own colour.
+    // **The paint input path** (D144): the palette, times a model's own colour.
     vec3 painted = mix( uTint, vCostume, uCostumeOn );
     #ifdef USE_COLOR
       painted *= vColor.rgb;
@@ -343,7 +343,7 @@ const FRAGMENT = /* glsl */ `
     vec3 colour = ( body * core + rimColour * fresnel * rim ) * scan;
     float alpha = clamp( uOpacity * ( mix( 0.38, 0.74, uCostumeOn ) + fresnel * mix( 0.85, 0.4, uCostumeOn ) ), 0.0, 1.0 );
 
-    // -- the comic look (D120) ---------------------------------------------------
+    // -- the comic look (D137) ---------------------------------------------------
     float look = clamp( uLook * uMaterialize, 0.0, 1.0 );
     if ( look > 0.0 ) {
       float lit;
@@ -363,7 +363,7 @@ const FRAGMENT = /* glsl */ `
   }
 `;
 
-/** What a model may bring to the paint (D127). Neither is carried by any committed body. */
+/** What a model may bring to the paint (D144). Neither is carried by any committed body. */
 export interface PaintInput {
   /** Multiply the palette by the geometry's `color` attribute. */
   vertexColors?: boolean;
@@ -449,7 +449,7 @@ export function applyCostume(
 }
 
 /**
- * **The painted MARK** (**D129**): a painted surface writes **alpha 0** into the
+ * **The painted MARK** (**D146**): a painted surface writes **alpha 0** into the
  * frame it is drawn into, so `Post.tsx`'s ink knows where a figure is and inks
  * nothing else — a card's edge, a tile's, the table's. The colour blends exactly
  * as three's `NormalBlending` does (`SRC_ALPHA`, `ONE_MINUS_SRC_ALPHA`), so a
@@ -479,7 +479,7 @@ export function markPainted(material: THREE.Material, painted: boolean): void {
 /**
  * **The look, at COMMIT** (`arena/look.ts`'s `figureLookOf` → this): one uniform
  * on the figure's own material, so the program is the same one under both looks,
- * and the painted mark with it (a figure with any comic in it is inked, D129).
+ * and the painted mark with it (a figure with any comic in it is inked, D146).
  * Called from layout effects and commit-time methods only — `liveness.test.ts`
  * holds every `uLook` write to this file and every caller out of the frame loop.
  */

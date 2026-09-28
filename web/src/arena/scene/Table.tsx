@@ -5,7 +5,7 @@
  *
  * The table itself: one quad at `y = 0` on the XZ plane, plus the two thin
  * lines that tell you where the seats are (report 09 §3.1) — and, under the comic
- * look, the STAGE around it (Lane LOOK, **D124**, report 15 §4).
+ * look, the STAGE around it (Lane LOOK, **D141**, report 15 §4).
  *
  * The scene has **no lights at all** (§4.3), and the table and the cards are
  * never shaded (report 13 §8.3 rule 2): the ground is a flat colour with a
@@ -95,7 +95,7 @@ function benDay(
 }
 
 /**
- * **The comic stage's ground** (D124) — painted ONCE per page, in light only:
+ * **The comic stage's ground** (D141) — painted ONCE per page, in light only:
  * a warm stage light at the centre falling off toward the rim, and a Ben-Day dot
  * vignette growing toward the rim. The seats' colours are NOT in it: they are
  * the stage quad's vertex colours ({@link stageColoursInto}), which the texture

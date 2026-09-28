@@ -6666,22 +6666,39 @@ floats a land's mana at priority and undoes it while the engine is parked.
 - **Deciding by the prompt** (`Pay Mana Cost`, a button labelled `Auto`) — M5
   convention 4: never decide what a control does, or when, by matching an
   engine string.
-## D120 — The arena's figures are drawn in the COMIC look by default; D53's hologram is kept behind `?look=holo`, as one number on one program
 
-**2026-09-28** (Lane LOOK, branch `look` — *numbered in the lane's reserved
-range D120–D129; the three art-direction lanes are renumbered contiguously at
-merge*. The user's decision on report 15, given in chat after judging the
+---
+
+*Lane LOOK's ten decisions — the first of report 15's three art-direction lanes
+(`docs/research/15-art-direction.md` §9) to land. Branch `look` (worktree
+`mtg-table-t2l`), cut from the art-direction report's `c81f674` on `main`'s
+`a092d3a`, and rebased onto the undo race's `f6bad35`. Written as **D120–D129**
+in the lane's reserved range D120–D129 while `main` took D113–D136 the same two
+days — spectating's D118–D122, the narrator's D123, the story page's D124–D128,
+the gate-speed lane's D129–D135 and the undo race's D136 among them, so every
+one of the lane's numbers was taken — and renumbered contiguously at merge:
+these ten are **D137–D146**, in the order they were written, in every file that
+cites them — this file, CLAUDE.md, PLAN.md, README.md, `docs/evidence/look.md`,
+and comments and test names under `web/src/arena/`, `web/src/workshop/` and
+`web/test/`. Each keeps its branch note with both numbers. Lanes MOTION and
+BODIES number theirs after D146 when they merge.*
+
+## D137 — The arena's figures are drawn in the COMIC look by default; D53's hologram is kept behind `?look=holo`, as one number on one program
+
+**2026-09-28** (Lane LOOK, branch `look` — *written as D120, the first of the lane's
+reserved range D120–D129, and **D137** since the art-direction lanes were
+renumbered contiguously at merge*. The user's decision on report 15, given in chat after judging the
 spike's pictures beside their card art: "the direction is approved".
 **Supersedes D53's "unlit"** — not its "no lights": see below.)
 
 **Decision.** Every creature, every dying body, both duelists and every painted
 prop kind are drawn in the **comic look** (`docs/research/15-art-direction.md`
 §2–§3): the D97 costume palette PAINTED — saturation ×1.25, "black is blue"
-below 4.5 % luminance — in **three flat bands** from one key light (**D121**),
+below 4.5 % luminance — in **three flat bands** from one key light (**D138**),
 the core shadow cooled (×(0.46, 0.44, 0.66)) and screened with a 45° halftone of
 5 CSS-px cells, a specular dot on the lit band, and the card's own colour as a
 rim on the silhouette's shadow side; opaque. With it come the ink line
-(**D122**), the contact shadow (**D123**) and the stage (**D124**).
+(**D139**), the contact shadow (**D140**) and the stage (**D141**).
 
 - **One program, one number.** The figure material
   (`scene/figureMaterial.ts`, `holoMaterial.ts` until this lane; a re-export is
@@ -6724,9 +6741,10 @@ A second material or program for the comic look (the program count is the
 budget line D53 defended). A 1-D ramp texture (a texture unit, and D67's
 question, for no read the analytic bands lack). Lights in the scene.
 
-## D121 — The comic look's key light belongs to the LENS: one view-space uniform, no scene light
+## D138 — The comic look's key light belongs to the LENS: one view-space uniform, no scene light
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D121 in the lane's reserved range
+D120–D129, and **D138** since the merge.*
 Report 15 §3.1.)
 
 **Decision.** The key light is `COMIC.key = (−0.45, 0.72, 0.52)` in VIEW space —
@@ -6735,23 +6753,24 @@ uniform (`uKey`) against the same view-space normal the hologram's fresnel
 already used. A world-fixed key (`COMIC.keyWorld`, turned into view space per
 vertex) is the workshop's `world key` toggle and `?key=world`, not the default.
 The contact shadow reads the same key, put on the table through the camera's
-quaternion once a frame (**D123**), so the bands and the ground agree about
+quaternion once a frame (**D140**), so the bands and the ground agree about
 where the light is.
 
 **Rationale.** The light belongs to the panel, not the world: both seats' visible
 sides read the same — your figures' backs and the opponent's fronts since
-**D126** — and there is no light uniform to keep in sync with anything. A
+**D143** — and there is no light uniform to keep in sync with anything. A
 world-fixed key is physically consistent as the camera orbits, but it shadows
 whichever seat's visible side faces away from it.
 
 **Rejected.** A world key as the default (above). A `DirectionalLight` (a lit
 scene is how 40 draw calls stop being 40; report 13 §8.3 rule 2).
 
-## D122 — The ink line is a depth-edge EFFECT on bloom's composer; the inverted hull is deleted; the floor rung sheds the ink with bloom
+## D139 — The ink line is a depth-edge EFFECT on bloom's composer; the inverted hull is deleted; the floor rung sheds the ink with bloom
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D122 in the lane's reserved range
+D120–D129, and **D139** since the merge.*
 Report 15 §3.4's recommendation, measured again here. *Amended the same day by
-the lane's verification pass, **D129**: the ink inks only where something
+the lane's verification pass, **D146**: the ink inks only where something
 PAINTED is among its samples, and it is drawn only on bloom's composer — the
 "with bloom off it is the composer plus one full-screen pass" configuration
 below is gone, and so is the "Rejected: inking figures only" line.*)
@@ -6811,9 +6830,10 @@ report 09 §9.2 rule 3). Inking figures only — it would need a mask target; ca
 and the tilted hand get a line today, which report 15 §11 question 3 left to the
 user (PLAN.md, *Lane LOOK* follow-ups).
 
-## D123 — The contact shadow is a POSE layer in the disc field: one instanced call, bound from the frame loop, leaning away from the key
+## D140 — The contact shadow is a POSE layer in the disc field: one instanced call, bound from the frame loop, leaning away from the key
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D123 in the lane's reserved range
+D120–D129, and **D140** since the merge.*
 Report 15 §3.5.)
 
 **Decision.** Under the comic look every PAINTED figure (`look.ts`'s
@@ -6838,11 +6858,12 @@ scrub and `resync` need nothing.
 **Rejected.** drei's `ContactShadows` (a second render of the scene into a
 target). Shadows over the cards (they would darken the name bar the figure
 stands behind). A shadow for a hologram (an anonymous figure or a ghost casts
-none, **D125**).
+none, **D142**).
 
-## D124 — The comic STAGE: a mid-value ground in each seat's SHOWN colours, a backdrop, and a combat burst — paint once, pose the rest
+## D141 — The comic STAGE: a mid-value ground in each seat's SHOWN colours, a backdrop, and a combat burst — paint once, pose the rest
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D124 in the lane's reserved range
+D120–D129, and **D141** since the merge.*
 Report 15 §4.)
 
 **Decision.** Under the comic look the table is a stage (`scene/Table.tsx`):
@@ -6884,9 +6905,10 @@ numbers at commit rather than a repaint and a 4 MB upload (measured 4–20 ms an
 the wire, **D105**). The gold multicolour hex for a two-colour seat (every
 multicolour deck would stand on the same gold).
 
-## D125 — Under the comic look the HOLOGRAM keeps two jobs, and half a third: the anonymous figure, the ghosted spell, and a summoning-sick figure at half; the summon's hologram-to-ink is MOTION's
+## D142 — Under the comic look the HOLOGRAM keeps two jobs, and half a third: the anonymous figure, the ghosted spell, and a summoning-sick figure at half; the summon's hologram-to-ink is MOTION's
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D125 in the lane's reserved range
+D120–D129, and **D142** since the merge.*
 Report 15 §2.3, as far as the lane's brief carries it.)
 
 **Decision.** `look.ts`'s `figureLookOf(pose, table)` — the one place a figure's
@@ -6913,9 +6935,10 @@ and takes the ink. A pose, so the snapshot that says it is no longer sick paints
 it whole, after any skip. The corpus sweep: 1,487 of the 6,781 painted instances
 are sick.
 
-## D126 — A seat's own figures FACE THE OPPONENT
+## D143 — A seat's own figures FACE THE OPPONENT
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D126 in the lane's reserved range
+D120–D129, and **D143** since the merge.*
 **The user's answer to PLAN question 13**, given today. Supersedes **D81**'s
 "your figures face you, and that is the user's call".)
 
@@ -6934,11 +6957,11 @@ its back by nature: 206 px from your seat (behind), **26 px** from the far seat
 partner (97 / 117 px). The eyepatch reads 65 px from behind your figures (its
 strap) and 43 px from the far seat's front, carried there by the coat (781 px).
 Coulson's chest badge alone, seen from behind — the negative control, now your
-seat — is 4 px. `facing.test.ts`'s negative control is the outward facing D126
+seat — is 4 px. `facing.test.ts`'s negative control is the outward facing D143
 replaced: with no turn it fires every beat out of the far side of the body.
 
 **The workshop.** Its facing toggle's default is the arena's new facing (turn 0);
-*faces its player* previews the facing before D126. *Amended by the verification
+*faces its player* previews the facing before D143. *Amended by the verification
 pass (2026-09-28):* the pedestal **opens on `1× front`** — `framing.ts`'s
 `frontPose`, the close-up's distance and view 1's elevation from the side the
 figure faces — because the judging tool opened on every figure from behind
@@ -6948,9 +6971,10 @@ on, beside yours (without the composer, so without the ink).
 
 **Rejected.** Keeping D81's outward facing (the user's decision).
 
-## D127 — The figure material has a PAINT INPUT PATH: vertex colours and a texture map, both behind defines
+## D144 — The figure material has a PAINT INPUT PATH: vertex colours and a texture map, both behind defines
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D127 in the lane's reserved range
+D120–D129, and **D144** since the merge.*
 Report 15 §2.3 and §8.3. **Supersedes D67's "no texture" as far as the figure
 material's input path** — the committed library still carries no texture.)
 
@@ -6970,9 +6994,10 @@ silhouette. Tier 3 is still undecided (PLAN question 14) and still personal-only
 
 **Rejected.** A texture on the committed bodies (D67 stands for the library).
 
-## D128 — The look is written when a SNAPSHOT or the look changes, never per frame — and the frame loop's one look number is `uMaterialize`
+## D145 — The look is written when a SNAPSHOT or the look changes, never per frame — and the frame loop's one look number is `uMaterialize`
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+**2026-09-28** (Lane LOOK, branch `look`; *written as D128 in the lane's reserved range
+D120–D129, and **D145** since the merge.*
 Report 15 §9.1's liveness clause.)
 
 **Decision.** Every look value reaches the GPU at commit: `uLook` per material
@@ -6984,7 +7009,7 @@ clause asserts: `look.ts` is pure (it imports `colour.ts` and `perf.ts` only);
 `uLook` has exactly two writers and the shared uniforms one; `CueRunner.tsx`,
 `DiscField.bind`, `DepartureField.bind`, `PropField.bind`, `DuelistField.bind`
 and `BustField.bind` name none of it (eight junk lines spliced into each are
-caught — six at first, the painted mark's two since D129); the callers are layout effects and commit-time methods; the hull is
+caught — six at first, the painted mark's two since D146); the callers are layout effects and commit-time methods; the hull is
 gone; `holoMaterial.ts` is a re-export; `prime.ts` is called at mount only.
 
 **Rationale.** A look the frame loop owned would be a renderer that remembers,
@@ -6993,10 +7018,11 @@ of. The summon's animated hologram-to-ink is a real need (report 15 §5.3), so t
 material gives MOTION a number of its own to write — `uMaterialize`, identity 1,
 a decaying offset like `uOpacity` — rather than an exception to this rule.
 
-## D129 — The ink marks what is PAINTED and rides bloom only: a figure writes alpha 0, no card edge is inked, and bloom off draws no composer
+## D146 — The ink marks what is PAINTED and rides bloom only: a figure writes alpha 0, no card edge is inked, and bloom off draws no composer
 
-**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
-The lane's verification pass, round 1. Amends **D122**.)
+**2026-09-28** (Lane LOOK, branch `look`; *written as D129 in the lane's reserved range
+D120–D129, and **D146** since the merge.*
+The lane's verification pass, round 1. Amends **D139**.)
 
 **Decision.** Four changes to the ink line, each answering a finding:
 
