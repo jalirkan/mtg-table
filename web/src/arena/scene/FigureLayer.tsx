@@ -56,9 +56,10 @@ import {
   type FigurePose,
 } from '../figures/pose.ts';
 import type { ModelData } from '../figures/types.ts';
+import { HOLO_LOOK, lookValue, wantsHull, type LookSpec } from '../look.ts';
 import type { DeathSource, DepartureBinder, DiscField, OffsetSource } from './discs.ts';
 import type { FigureRigMap } from './figureRigs.ts';
-import { applyCostume, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
+import { applyCostume, applyLook, inkHullMaterial, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
 import {
   clipFor,
   instantiateFigure,
@@ -76,6 +77,13 @@ export interface FigureLayerProps {
   rigs: FigureRigMap;
   discs: DiscField;
   models: ModelData;
+  /**
+   * **The art-direction spike** (`arena/look.ts`, report 15): the hologram (the
+   * default) or the comic look, and how its ink is drawn. Applied at COMMIT to
+   * every figure's material, the departing bodies, the disc field (the contact
+   * shadows) and the prop field — never from the frame loop.
+   */
+  look?: LookSpec;
 }
 
 /** The library path this manifest names, or the default. */
@@ -119,8 +127,10 @@ function useFigureLibrary(models: ModelData): ModelLibrary | null {
   return library;
 }
 
-export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): JSX.Element {
+export function FigureLayer({ poses, rigs, discs, models, look = HOLO_LOOK }: FigureLayerProps): JSX.Element {
   const library = useFigureLibrary(models);
+  const lookNumber = lookValue(look);
+  const hull = wantsHull(look);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
@@ -132,6 +142,12 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
    * with the figures that left between the previous frame and this one.
    */
   const departures = useMemo(() => new DepartureField(), []);
+  // Spike: the look reaches the pose fields at commit — the contact shadows
+  // (`discs`), the dying bodies and (below, once it exists) the prop field.
+  useLayoutEffect(() => {
+    departures.look = lookNumber;
+    discs.setLook(lookNumber);
+  }, [departures, discs, lookNumber]);
   useEffect(() => {
     discs.setDepartures(departures);
     return () => {
@@ -205,14 +221,17 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
   // above, which runs first), so a falling figure keeps what it carried.
   useLayoutEffect(() => {
     if (library !== null) props.setLibrary(library, models);
+    props.setLook(lookNumber, hull);
     props.commit(poses, rigs, models, departures.bodies());
-  }, [props, poses, rigs, models, library, mounted, departures]);
+  }, [props, poses, rigs, models, library, mounted, departures, lookNumber, hull]);
 
   return (
     <>
       {/* One draw call for every stand disc on the table (§9.4) — and a second,
           after the cards, for the discs of a wrapped rank's back row, which stand
           ON their own card (T8 fix; empty on any frame that does not wrap). */}
+      {/* Spike (report 15 §3.5): the contact shadows, one call for all, empty under the hologram. */}
+      <primitive object={discs.shadowMesh} />
       <primitive object={discs.mesh} />
       <primitive object={discs.onCardMesh} />
       {/* T8: the bodies of the creatures that just died, drawn until their deaths end. */}
@@ -220,7 +239,14 @@ export function FigureLayer({ poses, rigs, discs, models }: FigureLayerProps): J
       {/* Slice 3: what every figure carries, and the vehicles overhead — one draw call per kind. */}
       <primitive object={props.group} />
       {mounted.map(({ pose, model }) => (
-        <Figure key={`${String(pose.cardId)}:${model.id}`} pose={pose} model={model} rigs={rigs} />
+        <Figure
+          key={`${String(pose.cardId)}:${model.id}`}
+          pose={pose}
+          model={model}
+          rigs={rigs}
+          look={lookNumber}
+          hull={hull}
+        />
       ))}
     </>
   );
@@ -239,10 +265,16 @@ const Figure = memo(function Figure({
   pose,
   model,
   rigs,
+  look = 0,
+  hull = false,
 }: {
   pose: FigurePose;
   model: LoadedModel;
   rigs: FigureRigMap;
+  /** Spike: `uLook` for this figure's material (report 15 §3.1). */
+  look?: number;
+  /** Spike: draw the inverted-hull ink line (report 15 §3.4, option A). */
+  hull?: boolean;
 }): JSX.Element {
   const invalidate = useThree((s) => s.invalidate);
 
@@ -282,7 +314,27 @@ const Figure = memo(function Figure({
     // returns `this.time` untouched for `deltaTime === 0` (three 0.186).
     instance.mixer.update(0);
 
-    return { instance, material, actions, restActions };
+    // **Spike — the inverted hull** (report 15 §3.4, option A): each skinned mesh
+    // drawn again in ink, back faces only, pushed out along its normals, on the
+    // SAME skeleton (so every clip carries it) and the same shared geometry. A
+    // child of its mesh with an identity transform, so its bind is the mesh's.
+    // Hidden unless the look asks for it; never a click target.
+    const hulls: THREE.Object3D[] = [];
+    for (const mesh of instance.meshes) {
+      const skinned = mesh as THREE.SkinnedMesh;
+      if (skinned.isSkinnedMesh !== true) continue;
+      const shell = new THREE.SkinnedMesh(skinned.geometry, inkHullMaterial());
+      shell.bind(skinned.skeleton, skinned.bindMatrix);
+      shell.bindMode = skinned.bindMode;
+      shell.frustumCulled = false;
+      shell.visible = false;
+      shell.raycast = () => {};
+      shell.name = 'ink-hull';
+      skinned.add(shell);
+      hulls.push(shell);
+    }
+
+    return { instance, material, actions, restActions, hulls };
     // `pose.tint` is read once for the initial value; the live one is written by
     // `CueRunner` into the uniform every frame, so it is not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -343,6 +395,7 @@ const Figure = memo(function Figure({
     invalidate();
   }, [rigs, built, pose, invalidate]);
 
+
   // **Slice 3 — a ring swarm is its members, not its body** (Ant-Man's Air Force):
   // the rig still stands at the centre for the clip lane and the camera, but is
   // not drawn — the prop field draws the five bees round it.
@@ -350,6 +403,13 @@ const Figure = memo(function Figure({
   useLayoutEffect(() => {
     for (const mesh of built.instance.meshes) mesh.visible = !ring;
   }, [built, ring]);
+
+  // Spike (report 15): the look, at commit — one uniform, and the hull's visibility.
+  useLayoutEffect(() => {
+    applyLook(built.material, look);
+    for (const shell of built.hulls) shell.visible = hull && look > 0 && !ring;
+    invalidate();
+  }, [built, look, hull, ring, invalidate]);
 
   useEffect(
     () => () => {
@@ -450,6 +510,8 @@ export class DepartureField implements DepartureBinder {
   private readonly slots: Array<Departure | null> = new Array<Departure | null>(MAX_DEPARTURES).fill(null);
   private seq = 0;
   private shown = 0;
+  /** Spike (report 15): the look a body is built in — written at commit by `FigureLayer`. */
+  look = 0;
 
   constructor() {
     this.group.name = 'departures';
@@ -465,6 +527,7 @@ export class DepartureField implements DepartureBinder {
     const material = makeHoloMaterial(pose.tint, model.unitScale);
     // The body falls in what it wore (slice 4) — its palette, as its last frame had it.
     applyCostume(material, pose.costume ?? null, false);
+    applyLook(material, this.look);
     material.uniforms.uDrainTo.value.copy(DYING_GREY);
     for (const mesh of instance.meshes) mesh.material = material;
     const object = instance.object;

@@ -54,6 +54,7 @@
 import * as THREE from 'three';
 
 import { COSTUME_SLOTS } from '../figures/props.ts';
+import { COMIC } from '../look.ts';
 
 /** How many costume slots a palette carries — the shader's array length. */
 export const COSTUME_SIZE = COSTUME_SLOTS.length;
@@ -101,6 +102,23 @@ export interface HoloUniforms {
    */
   uDrain: { value: number };
   uDrainTo: { value: THREE.Color };
+  /**
+   * **The art-direction spike** (`arena/look.ts`, report 15 §3): 0 draws the
+   * hologram above to the last term, 1 the comic look — a cel ramp from a
+   * lens-fixed key light, a rim in the card's colour, a specular dot and a
+   * halftone screen in the shadow band. A number, written at COMMIT
+   * ({@link applyLook}), so both looks are ONE program and a summon could play the
+   * hologram resolving into ink by writing it from a cue (report 15 §5).
+   */
+  uLook: { value: number };
+  /** The comic key light, in VIEW space (normalised in the shader). */
+  uKey: { value: THREE.Vector3 };
+  /** The shadow band's multiplier (darker and cooler). */
+  uShadowTone: { value: THREE.Color };
+  /** Saturation push on the palette before it is shaded. */
+  uSat: { value: number };
+  /** The halftone cell, in device pixels. */
+  uDotPx: { value: number };
 }
 
 export type HoloMaterial = THREE.ShaderMaterial & { uniforms: HoloUniforms };
@@ -151,6 +169,11 @@ const FRAGMENT = /* glsl */ `
   uniform float uCostumeOn;
   uniform float uDrain;
   uniform vec3 uDrainTo;
+  uniform float uLook;
+  uniform vec3 uKey;
+  uniform vec3 uShadowTone;
+  uniform float uSat;
+  uniform float uDotPx;
 
   varying vec3 vViewNormal;
   varying vec3 vViewDir;
@@ -159,9 +182,10 @@ const FRAGMENT = /* glsl */ `
 
   void main() {
     vec3 normal = normalize( vViewNormal );
+    vec3 viewDir = normalize( vViewDir );
     // abs() so a back face rims like a front one: the figure is translucent
     // and both sides are visible at a grazing angle.
-    float facing = abs( dot( normal, normalize( vViewDir ) ) );
+    float facing = abs( dot( normal, viewDir ) );
     float fresnel = pow( 1.0 - facing, uRim );
 
     // A function of the figure's own height, not of time: free, and it cannot
@@ -183,6 +207,35 @@ const FRAGMENT = /* glsl */ `
     // A costume is more solid than a bare hologram: a colour has to read as the
     // cloth it is, not as a tint over the card below.
     float alpha = clamp( uOpacity * ( mix( 0.38, 0.74, uCostumeOn ) + fresnel * mix( 0.85, 0.4, uCostumeOn ) ), 0.0, 1.0 );
+
+    // **The comic look** (the art-direction spike, report 15 §3). The same
+    // palette, painted rather than projected: saturated, then shaded in three
+    // flat bands from a key light fixed to the lens, the core shadow cooled and
+    // screened with halftone dots, a specular dot on the lit band, and the
+    // card's own colour as a rim on the silhouette's shadow side. No clock: the
+    // dots are a function of the fragment's screen position.
+    vec3 paint = mix( uTint, vCostume, uCostumeOn );
+    float grey = dot( paint, vec3( 0.2126, 0.7152, 0.0722 ) );
+    paint = max( mix( vec3( grey ), paint, uSat ), 0.0 );
+    // "Black is blue": a colourist never paints cloth pure black — the lit side of
+    // Fury's coat is a deep blue-grey, so the bands, the dots and the ink still read.
+    paint = mix( vec3( 0.022, 0.03, 0.075 ), paint, smoothstep( 0.0, 0.045, grey ) );
+    vec3 key = normalize( uKey );
+    float ndl = dot( normal, key );
+    float lit = smoothstep( 0.28, 0.34, ndl );
+    float umbra = 1.0 - smoothstep( -0.20, -0.14, ndl );
+    vec3 comic = mix( paint, paint * mix( uShadowTone, vec3( 1.0 ), 0.55 ), 1.0 - lit );
+    comic = mix( comic, paint * uShadowTone, umbra );
+    vec2 cell = mat2( 0.7071, -0.7071, 0.7071, 0.7071 ) * gl_FragCoord.xy / uDotPx;
+    float dots = 1.0 - smoothstep( 0.26, 0.34, length( fract( cell ) - 0.5 ) );
+    comic *= 1.0 - 0.34 * dots * umbra;
+    float spec = smoothstep( 0.986, 0.993, dot( normal, normalize( key + viewDir ) ) );
+    comic = mix( comic, vec3( 0.92, 0.96, 1.0 ), 0.65 * spec * lit );
+    float edge = smoothstep( 0.55, 0.68, 1.0 - max( dot( normal, viewDir ), 0.0 ) );
+    comic = mix( comic, mix( uTint, vec3( 1.0 ), 0.35 ), edge * 0.6 * ( 1.0 - lit ) );
+    comic = mix( comic, uDrainTo, uDrain );
+    colour = mix( colour, comic, uLook );
+    alpha = mix( alpha, clamp( uOpacity, 0.0, 1.0 ), uLook );
 
     gl_FragColor = vec4( colour, alpha );
 
@@ -211,6 +264,11 @@ export function makeHoloMaterial(tint: string, unitScale = 1): HoloMaterial {
       uUnitScale: { value: unitScale },
       uDrain: { value: 0 },
       uDrainTo: { value: new THREE.Color('#8b939e') },
+      uLook: { value: 0 },
+      uKey: { value: new THREE.Vector3(COMIC.key[0], COMIC.key[1], COMIC.key[2]) },
+      uShadowTone: { value: new THREE.Color().setRGB(COMIC.shadowTone[0], COMIC.shadowTone[1], COMIC.shadowTone[2]) },
+      uSat: { value: COMIC.saturation },
+      uDotPx: { value: COMIC.dotPx },
     },
     transparent: true,
     // **`depthWrite` stays on.** A hologram that writes no depth shows its own
@@ -256,4 +314,86 @@ export function applyCostume(
   }
   uniforms.uCostumeOn.value = 1;
   return key;
+}
+
+/**
+ * **The spike's look, at COMMIT** (`arena/look.ts`): 0 the hologram, 1 the comic
+ * look. One uniform on the figure's own material, so the program is the same one
+ * either way (report 15 §3.1). Never called from the frame loop.
+ */
+export function applyLook(material: HoloMaterial, look: number): void {
+  material.uniforms.uLook.value = look;
+}
+
+// ---------------------------------------------------------------------------
+// The spike's inverted hull (report 15 §3.4, option A)
+// ---------------------------------------------------------------------------
+
+const HULL_VERTEX = /* glsl */ `
+  #include <common>
+  #include <skinning_pars_vertex>
+  uniform float uInkPx;
+  uniform float uPxPerUnit;
+
+  void main() {
+    #include <beginnormal_vertex>
+    #include <skinbase_vertex>
+    #include <skinnormal_vertex>
+    #include <defaultnormal_vertex>
+    #include <begin_vertex>
+    #include <skinning_vertex>
+    // The same source serves the prop field's instanced kinds (defaultnormal
+    // already carries the instance matrix into the normal).
+    #ifdef USE_INSTANCING
+      transformed = ( instanceMatrix * vec4( transformed, 1.0 ) ).xyz;
+    #endif
+    vec4 mvPosition = modelViewMatrix * vec4( transformed, 1.0 );
+    // Pushed out along the skinned VIEW-space normal by a constant number of
+    // screen pixels: the distance term cancels the perspective divide. Three
+    // flips transformedNormal for a BackSide material (FLIP_SIDED) — the
+    // first cut extruded INWARD and the hull hid inside its own body.
+    vec3 outward = normalize( transformedNormal );
+    #ifdef FLIP_SIDED
+      outward = -outward;
+    #endif
+    mvPosition.xyz += outward * uInkPx * uPxPerUnit * max( 0.5, -mvPosition.z );
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+const HULL_FRAGMENT = /* glsl */ `
+  uniform vec3 uInk;
+  void main() {
+    gl_FragColor = vec4( uInk, 1.0 );
+    #include <colorspace_fragment>
+  }
+`;
+
+let hullMaterial: THREE.ShaderMaterial | null = null;
+
+/**
+ * **The ink line as an inverted hull**: the figure's own skinned geometry drawn a
+ * second time, back faces only, pushed out along its normals, in ink. ONE shared
+ * material (the ink colour and width are constants), so one more program for the
+ * whole library — but one more DRAW CALL per figure mesh, which is the cost the
+ * report measures against the post pass. `uPxPerUnit` is 2·tan(fov/2) ÷ the
+ * canvas height, written at commit by whoever mounts it.
+ */
+export function inkHullMaterial(): THREE.ShaderMaterial {
+  if (hullMaterial !== null) return hullMaterial;
+  hullMaterial = new THREE.ShaderMaterial({
+    vertexShader: HULL_VERTEX,
+    fragmentShader: HULL_FRAGMENT,
+    uniforms: {
+      uInk: { value: new THREE.Color(COMIC.ink) },
+      // Half as wide again as the post pass samples: its line lands on BOTH sides
+      // of an edge, the hull's only outside the silhouette.
+      uInkPx: { value: COMIC.inkPx * 1.5 },
+      uPxPerUnit: { value: (2 * Math.tan((40 / 2) * (Math.PI / 180))) / 1000 },
+    },
+    side: THREE.BackSide,
+    depthWrite: true,
+    toneMapped: false,
+  });
+  return hullMaterial;
 }

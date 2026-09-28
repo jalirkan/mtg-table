@@ -63,7 +63,7 @@ import { COSTUME_SLOTS, anchorsOf, familyOf, wearsCostume, type PropKind } from 
 import type { ModelData } from '../figures/types.ts';
 import type { Seat } from '../layout.ts';
 import type { BustField, DuelistBinder } from './busts.ts';
-import { COSTUME_ATTRIBUTE, applyCostume, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
+import { COSTUME_ATTRIBUTE, applyCostume, applyLook, makeHoloMaterial, type HoloMaterial } from './holoMaterial.ts';
 import {
   instantiateFigure,
   loadFigureModels,
@@ -92,6 +92,8 @@ export interface DuelistLayerProps {
   data: DuelistData;
   stage: DuelistLaneSource;
   queue: DuelistClock;
+  /** Spike (report 15): `uLook` for both bodies, at commit. */
+  look?: number;
 }
 
 /** The library path this manifest names, or the default (as `FigureLayer` reads it). */
@@ -128,7 +130,7 @@ function useDuelistLibrary(models: ModelData): ModelLibrary | null {
   return library;
 }
 
-export function DuelistLayer({ poses, bustField, models, data, stage, queue }: DuelistLayerProps): JSX.Element {
+export function DuelistLayer({ poses, bustField, models, data, stage, queue, look = 0 }: DuelistLayerProps): JSX.Element {
   const library = useDuelistLibrary(models);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
@@ -165,6 +167,11 @@ export function DuelistLayer({ poses, bustField, models, data, stage, queue }: D
     field.commit(poses);
     invalidate();
   }, [field, poses, built, invalidate]);
+  // Spike (report 15): the look, at commit.
+  useLayoutEffect(() => {
+    field.setLook(look);
+    invalidate();
+  }, [field, look, built, invalidate]);
 
   // §8.3 rule 3: the duelists' program is the figures' own, and it is compiled at
   // mount — `compile` skips invisible objects, so the bodies are shown for it.
@@ -273,6 +280,14 @@ export class DuelistField implements DuelistBinder {
   setSources(stage: DuelistLaneSource, clock: DuelistClock): void {
     this.stage = stage;
     this.clock = clock;
+  }
+
+  /** Spike (report 15): the look on both bodies — commit time, never the frame loop. */
+  setLook(look: number): void {
+    for (let i = 0; i < this.slots.length; i++) {
+      const body = this.slots[i] ?? null;
+      if (body !== null) applyLook(body.material, look);
+    }
   }
 
   /**

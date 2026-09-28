@@ -50,6 +50,7 @@ import { tilePose } from '../arena/figures/tiles.ts';
 import type { TraitData } from '../arena/figures/traits.ts';
 import { tileDataOf, type FigureData, type ModelData } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
+import { HOLO_LOOK, wantsInkPass, type LookSpec } from '../arena/look.ts';
 import { BustField } from '../arena/scene/busts.ts';
 import { CardPlane } from '../arena/scene/CardPlane.tsx';
 import { CastingField } from '../arena/scene/casting.ts';
@@ -111,6 +112,8 @@ export interface PedestalProps {
   stage: PreviewStage;
   reducedMotion: boolean;
   bloom: boolean;
+  /** The art-direction spike's look (report 15); the hologram when absent. */
+  look?: LookSpec;
 }
 
 export function Pedestal(props: PedestalProps): JSX.Element {
@@ -149,7 +152,11 @@ export function Pedestal(props: PedestalProps): JSX.Element {
   }, []);
   // Bloom takes over the render loop (`EffectComposer`), so it is the single
   // view's; the split view renders twice by hand and draws without it.
-  const bloomOn = props.bloom && !(props.split && props.mode !== 'wide');
+  const single = !(props.split && props.mode !== 'wide');
+  const bloomOn = props.bloom && single;
+  // The spike's ink pass rides the same composer, so it is single-view too.
+  const inkOn = wantsInkPass(props.look ?? HOLO_LOOK) && single;
+  const postOn = bloomOn || inkOn;
   return (
     <Canvas
       className="workshop__canvas"
@@ -160,10 +167,10 @@ export function Pedestal(props: PedestalProps): JSX.Element {
       // never a ref read at render (D72, `CueRunner.tsx`'s `Frameloop`).
       frameloop={frameloop}
     >
-      <PedestalScene {...props} loopRef={loopRef} primeRef={primeRef} bloomOn={bloomOn} />
-      {bloomOn && (
+      <PedestalScene {...props} loopRef={loopRef} primeRef={primeRef} bloomOn={postOn} />
+      {postOn && (
         <Suspense fallback={null}>
-          <Post onMount={primeForComposer} />
+          <Post onMount={primeForComposer} bloom={bloomOn} ink={inkOn} />
         </Suspense>
       )}
     </Canvas>
@@ -202,6 +209,7 @@ function PedestalScene({
   loopRef,
   primeRef,
   bloomOn,
+  look = HOLO_LOOK,
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
@@ -296,8 +304,8 @@ function PedestalScene({
 
   return (
     <>
-      <color attach="background" args={['#0a0d12']} />
-      <Table />
+      <color attach="background" args={[look.look === 'comic' ? '#141427' : '#0a0d12']} />
+      <Table look={look.look === 'comic' ? 1 : 0} />
       {placed.placements.map((placement) => (
         <CardPlane
           key={placement.key}
@@ -309,7 +317,7 @@ function PedestalScene({
         />
       ))}
       <primitive object={tileField.group} />
-      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} />
+      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} />
       <primitive object={castingField.group} />
       <primitive object={overlays.group} />
       <primitive object={bustField.group} />

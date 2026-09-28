@@ -67,7 +67,8 @@ import {
 import type { ModelData } from '../figures/types.ts';
 import { parsedColour } from './colourCache.ts';
 import type { FigureRigMap } from './figureRigs.ts';
-import { COSTUME_ATTRIBUTE } from './holoMaterial.ts';
+import { COSTUME_ATTRIBUTE, inkHullMaterial } from './holoMaterial.ts';
+import { COMIC } from '../look.ts';
 import { instantiateFigure, sampleClipInto, type LoadedModel, type ModelLibrary } from './models.ts';
 
 /** The slice of `SceneStage` the field reads — handed in, never imported. */
@@ -150,6 +151,10 @@ const FRAGMENT = /* glsl */ `
   uniform float uAlphaRim;
   uniform float uGlow;
   uniform float uScan;
+  uniform float uLook;
+  uniform vec3 uKey;
+  uniform vec3 uShadowTone;
+  uniform float uDotPx;
 
   varying vec3 vViewNormal;
   varying vec3 vViewDir;
@@ -166,6 +171,24 @@ const FRAGMENT = /* glsl */ `
     vec3 rimColour = mix( base, vec3( 1.0 ), uRimLift );
     vec3 colour = ( base * uCore + rimColour * fresnel * uRimBoost ) * scan * uGlow;
     float alpha = clamp( vOpacity * ( uAlpha + fresnel * uAlphaRim ), 0.0, 1.0 );
+    // Spike (report 15 §3): the same three bands as the figures' comic look, so
+    // a coat and the body under it are painted in one hand. A double-sided
+    // sheet's back face turns its normal to the lens first.
+    vec3 n = normalize( vViewNormal );
+    n = gl_FrontFacing ? n : -n;
+    float ndl = dot( n, normalize( uKey ) );
+    float lit = smoothstep( 0.28, 0.34, ndl );
+    float umbra = 1.0 - smoothstep( -0.20, -0.14, ndl );
+    vec3 paint = mix( vec3( 0.022, 0.03, 0.075 ), base, smoothstep( 0.0, 0.045, dot( base, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
+    vec3 comic = mix( paint, paint * mix( uShadowTone, vec3( 1.0 ), 0.55 ), 1.0 - lit );
+    comic = mix( comic, paint * uShadowTone, umbra );
+    vec2 cell = mat2( 0.7071, -0.7071, 0.7071, 0.7071 ) * gl_FragCoord.xy / uDotPx;
+    float dots = 1.0 - smoothstep( 0.26, 0.34, length( fract( cell ) - 0.5 ) );
+    comic *= 1.0 - 0.34 * dots * umbra;
+    float spec = smoothstep( 0.986, 0.993, dot( n, normalize( normalize( uKey ) + normalize( vViewDir ) ) ) );
+    comic = mix( comic, vec3( 0.92, 0.96, 1.0 ), 0.55 * spec * lit );
+    colour = mix( colour, comic, uLook );
+    alpha = mix( alpha, clamp( vOpacity * max( uAlpha, 0.85 ), 0.0, 1.0 ), uLook );
     gl_FragColor = vec4( colour, alpha );
     #include <colorspace_fragment>
   }
@@ -237,8 +260,17 @@ const LOOKS: Readonly<Record<SceneKind, Look>> = {
 };
 
 export type PropMaterial = THREE.ShaderMaterial & {
-  uniforms: Record<'uCore' | 'uRim' | 'uRimBoost' | 'uRimLift' | 'uAlpha' | 'uAlphaRim' | 'uGlow' | 'uScan', { value: number }>;
+  uniforms: Record<'uCore' | 'uRim' | 'uRimBoost' | 'uRimLift' | 'uAlpha' | 'uAlphaRim' | 'uGlow' | 'uScan' | 'uLook' | 'uDotPx', { value: number }>;
 };
+
+/**
+ * Spike (report 15): which kinds take the comic look. Anything that EMITS — an
+ * additive kind, or one drawn in the `GLOW` look (a muzzle, a laser eye, a visor,
+ * the gauntlets) — stays a light, because a light is not paint.
+ */
+function paintedKind(kind: SceneKind): boolean {
+  return PROP_KIT[kind].blend !== 'additive' && LOOKS[kind] !== GLOW && LOOKS[kind] !== GLASS && LOOKS[kind] !== MEMBRANE;
+}
 
 function makePropMaterial(kind: SceneKind): PropMaterial {
   const look = LOOKS[kind];
@@ -255,6 +287,10 @@ function makePropMaterial(kind: SceneKind): PropMaterial {
       uAlphaRim: { value: look.alphaRim },
       uGlow: { value: look.glow },
       uScan: { value: look.scan },
+      uLook: { value: 0 },
+      uKey: { value: new THREE.Vector3(COMIC.key[0], COMIC.key[1], COMIC.key[2]) },
+      uShadowTone: { value: new THREE.Color().setRGB(COMIC.shadowTone[0], COMIC.shadowTone[1], COMIC.shadowTone[2]) },
+      uDotPx: { value: COMIC.dotPx },
     },
     vertexColors: true,
     transparent: true,
@@ -784,6 +820,13 @@ interface KindMesh {
   material: PropMaterial;
   /** Instances written this frame. */
   count: number;
+  /**
+   * Spike (report 15 §3.4, option A): this kind's inverted-hull ink — the same
+   * geometry and the SAME instance matrices, drawn again in ink. `null` for a
+   * kind that emits (a light is not inked). One more draw call per painted kind.
+   */
+  hull: THREE.InstancedMesh | null;
+  hullOn: boolean;
 }
 
 const MODE_JOINT = 0;
@@ -898,6 +941,10 @@ export class PropField {
     this.motion = this.motionQuery?.matches === true ? 0 : 1;
   };
   private drawnLast = 0;
+  /** Spike (report 15): the look, written at commit by `FigureLayer`. */
+  private look = 0;
+  /** Spike (report 15 §3.4): draw the painted kinds' inverted-hull ink. */
+  private hullOn = false;
 
   constructor() {
     this.group.name = 'props';
@@ -966,11 +1013,36 @@ export class PropField {
     mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(PROP_CAPACITY * 3), 3);
     mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    const entry: KindMesh = { kind, mesh, opacity, material, count: 0 };
+    let hull: THREE.InstancedMesh | null = null;
+    if (paintedKind(kind)) {
+      hull = new THREE.InstancedMesh(geometry, inkHullMaterial(), PROP_CAPACITY);
+      // The kind's own matrices, shared: the frame loop writes them once.
+      hull.instanceMatrix = mesh.instanceMatrix;
+      hull.name = `props:${key}:ink`;
+      hull.frustumCulled = false;
+      hull.count = 0;
+      hull.visible = false;
+      hull.renderOrder = PROP_ORDER;
+      hull.raycast = () => {};
+      this.group.add(hull);
+    }
+    const entry: KindMesh = { kind, mesh, opacity, material, count: 0, hull, hullOn: this.hullOn };
+    material.uniforms.uLook.value = paintedKind(kind) ? this.look : 0;
     this.kinds.set(key, entry);
     this.list.push(entry);
     this.group.add(mesh);
     return entry;
+  }
+
+  /** Spike (report 15): the look, at COMMIT — one uniform per kind, never per frame. */
+  setLook(look: number, hull = false): void {
+    this.look = look;
+    this.hullOn = hull && look > 0;
+    for (let i = 0; i < this.list.length; i++) {
+      const entry = this.list[i]!;
+      entry.material.uniforms.uLook.value = paintedKind(entry.kind) ? look : 0;
+      entry.hullOn = this.hullOn;
+    }
   }
 
   /**
@@ -1313,6 +1385,7 @@ export class PropField {
       entry.material.dispose();
       entry.mesh.dispose();
       this.group.remove(entry.mesh);
+      if (entry.hull !== null) this.group.remove(entry.hull);
     }
     this.list.length = 0;
     this.kinds.clear();
@@ -1343,6 +1416,11 @@ function commitKind(entry: KindMesh): void {
   const mesh = entry.mesh;
   mesh.count = entry.count;
   mesh.visible = entry.count > 0;
+  // Spike (report 15 §3.4): the hull draws exactly the instances the kind does.
+  if (entry.hull !== null) {
+    entry.hull.count = entry.count;
+    entry.hull.visible = entry.hullOn && entry.count > 0;
+  }
   if (entry.count === 0) return;
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;

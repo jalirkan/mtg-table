@@ -115,6 +115,7 @@ import {
   type Layout,
   type Placement,
 } from './layout.ts';
+import { HOLO_LOOK, lookFromSearch, wantsInkPass, type LookSpec } from './look.ts';
 import { BLOOM_DEFAULT, DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, rungFrom, worstOf } from './perf.ts';
 import { CardPlane } from './scene/CardPlane.tsx';
 import { CueRunner, type Frameloop } from './scene/CueRunner.tsx';
@@ -399,6 +400,7 @@ function Scene({
   glInfo,
   primeRef,
   loopRef,
+  look = HOLO_LOOK,
 }: {
   state: ClientState;
   placed: Layout;
@@ -434,6 +436,8 @@ function Scene({
   glInfo: boolean;
   primeRef: { current: number };
   loopRef: { current: Frameloop };
+  /** Spike (report 15): the art-direction look, from `?look=comic`. */
+  look?: LookSpec;
 }): JSX.Element {
   const selectable = useMemo(
     () => new Set(state.input?.selectable.cardIds ?? []),
@@ -453,8 +457,8 @@ function Scene({
 
   return (
     <>
-      <color attach="background" args={['#0a0d12']} />
-      <Table />
+      <color attach="background" args={[look.look === 'comic' ? '#141427' : '#0a0d12']} />
+      <Table look={look.look === 'comic' ? 1 : 0} />
       {showGrid && (
         <gridHelper
           args={[Math.max(TABLE_HALF_X, TABLE_HALF_Z) * 2, 24, '#3a4550', '#232a33']}
@@ -496,7 +500,7 @@ function Scene({
           the coplanar group is table → tile → card → disc → figure. */}
       <primitive object={tileField.group} />
 
-      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} />
+      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} />
 
       {/* **T4's casting anchor and T6's stack**: the floating mana of each seat,
           §6.2's five spell forms, and §6.3's tethers to what each one targets.
@@ -523,6 +527,7 @@ function Scene({
         data={duelistData}
         stage={stage}
         queue={queue}
+        look={look.look === 'comic' ? 1 : 0}
       />
 
       {/* The Tier-1 primitive kit: 26 meshes, parked invisible, bound to live
@@ -686,6 +691,19 @@ export default function Arena({
    * is presentation state like the cue speed, so it lives here and nowhere else.
    */
   const [bloomOn, setBloomOn] = useState<boolean>(bloom ?? BLOOM_DEFAULT);
+  /**
+   * **The art-direction spike** (`look.ts`, report 15): `?look=comic[&ink=…]`,
+   * read once. Spike only — Lane LOOK moves it into `main.tsx`'s
+   * `arenaFlagsFromQuery` beside `?bloom=`.
+   */
+  const look = useMemo<LookSpec>(() => {
+    try {
+      return lookFromSearch(window.location.search);
+    } catch {
+      return HOLO_LOOK;
+    }
+  }, []);
+  const inkPass = wantsInkPass(look);
   /** T7's program warm-up counter — see `EffectPool.prime`. Two frames at mount. */
   const primeRef = useRef(2);
   /**
@@ -1378,6 +1396,7 @@ export default function Arena({
           glInfo={glInfo}
           primeRef={primeRef}
           loopRef={loopRef}
+          look={look}
         />
         {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three
             things about this line are deliberate. It is **last inside the
@@ -1388,9 +1407,9 @@ export default function Arena({
             **D49** makes for the whole arena chunk, one level in. And whether it
             starts on is a measurement, not a preference (`perf.ts`'s
             BLOOM_DEFAULT; the governor's `onFloor` drops it on a slow machine). */}
-        {bloomOn && (
+        {(bloomOn || inkPass) && (
           <Suspense fallback={null}>
-            <Post onMount={primeForComposer} />
+            <Post onMount={primeForComposer} bloom={bloomOn} ink={inkPass} />
           </Suspense>
         )}
         {showStats && <Stats />}

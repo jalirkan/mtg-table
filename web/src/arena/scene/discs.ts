@@ -38,6 +38,7 @@ import type { Offset } from '../cues/stage.ts';
 import type { ClipRequest } from '../figures/clips.ts';
 import type { FigureLayout, FigurePose } from '../figures/pose.ts';
 import { ON_CARD_DISC_ORDER } from '../layout.ts';
+import { COMIC } from '../look.ts';
 import { parsedColour } from './colourCache.ts';
 import { UNIT_PLANE } from './geometry.ts';
 import { initTexture } from './useCardTexture.ts';
@@ -136,6 +137,51 @@ function discTexture(): THREE.Texture | null {
   return (discTex = texture);
 }
 
+// ---------------------------------------------------------------------------
+// Spike (report 15 §3.5) — the contact shadow: a flat, soft-edged dark ellipse
+// on the table under every modelled figure, one instanced draw call for all of
+// them, no texture (the falloff is computed from the quad's UV) and no clock.
+// Its strength rides `instanceColor.r`. Empty — and so not drawn — under the
+// hologram, which never had a shadow to cast.
+// ---------------------------------------------------------------------------
+
+const SHADOW_VERTEX = /* glsl */ `
+  #include <common>
+  #include <color_pars_vertex>
+  varying vec2 vUv;
+  void main() {
+    #include <color_vertex>
+    vUv = uv;
+    #include <begin_vertex>
+    #include <project_vertex>
+  }
+`;
+
+const SHADOW_FRAGMENT = /* glsl */ `
+  #include <color_pars_fragment>
+  uniform vec3 uShadow;
+  varying vec2 vUv;
+  void main() {
+    float r = length( vUv - 0.5 ) * 2.0;
+    // A comic shadow is a SHAPE, not a gradient: flat to 70%, then a short edge.
+    float a = ( 1.0 - smoothstep( 0.7, 1.0, r ) ) * vColor.r;
+    gl_FragColor = vec4( uShadow, a );
+    #include <colorspace_fragment>
+  }
+`;
+
+function shadowMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: SHADOW_VERTEX,
+    fragmentShader: SHADOW_FRAGMENT,
+    uniforms: { uShadow: { value: new THREE.Color(COMIC.shadow) } },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+  });
+}
+
 /** §9.2 rule 6 — scratch at module scope, never inside the frame loop. */
 const MATRIX = new THREE.Matrix4();
 const POSITION = new THREE.Vector3();
@@ -155,6 +201,10 @@ export class DiscField {
    * on every frame of the corpus that does not wrap a rank.
    */
   readonly onCardMesh: THREE.InstancedMesh;
+  /** Spike (report 15 §3.5): the contact shadows, drawn before the discs. Empty under the hologram. */
+  readonly shadowMesh: THREE.InstancedMesh;
+  /** Spike: 0 the hologram (no shadows, full discs), 1 the comic look. Written at commit. */
+  private look = 0;
   /** How many instances the buffers hold. `mesh.count` is how many are drawn. */
   readonly capacity: number;
   /** T8 — the departing figures, installed by `FigureLayer` for its lifetime. */
@@ -188,6 +238,13 @@ export class DiscField {
     // call on a frame that wraps a rank, and none on any other.
     this.onCardMesh = discMesh(material, capacity, ON_CARD_DISC_ORDER);
     this.onCardMesh.name = 'discs:on-card';
+    this.shadowMesh = discMesh(shadowMaterial(), capacity, 4);
+    this.shadowMesh.name = 'discs:contact-shadows';
+  }
+
+  /** Spike (report 15): the look, at commit. The frame loop reads the number. */
+  setLook(look: number): void {
+    this.look = look;
   }
 
   /**
@@ -204,6 +261,7 @@ export class DiscField {
     const list = this.list;
     let front = 0;
     let onCard = 0;
+    let shadows = 0;
     for (let n = 0; n < list.length; n++) {
       const pose = list[n]!;
       // T10: a vehicle's silhouette flies; it has no footprint on the table.
@@ -237,13 +295,32 @@ export class DiscField {
       // as "not there yet" rather than "a different colour".
       COLOUR.copy(parsedColour(pose.tint));
       const strength = pose.opacity * offset.opacity * (1 - offset.dissolve);
-      COLOUR.multiplyScalar(Math.max(0, Math.min(1, strength)) * (pose.modelId === null ? 0.85 : 0.55));
+      // Spike: under the comic look a modelled figure's footprint is its shadow,
+      // so its glowing disc steps back to a faint ring in its colour.
+      const faint = this.look > 0 && pose.modelId !== null ? 1 - 0.7 * this.look : 1;
+      COLOUR.multiplyScalar(Math.max(0, Math.min(1, strength)) * (pose.modelId === null ? 0.85 : 0.55) * faint);
       mesh.setColorAt(i, COLOUR);
       if (pose.onCard) onCard += 1;
       else front += 1;
+
+      // Spike (report 15 §3.5): the contact shadow — on the GROUND under the
+      // figure (its own hover taken out), smaller and fainter the higher it flies.
+      if (this.look > 0 && pose.modelId !== null && shadows < this.capacity) {
+        const lift = Math.max(0, pose.position[1]);
+        const fall = 1 / (1 + 2.5 * lift);
+        const size = pose.height * COMIC.shadowRadius * 2 * offset.scale * (0.55 + 0.45 * fall);
+        POSITION.set(pose.position[0] + offset.dx, DISC_LIFT * 0.5, pose.position[2] + offset.dz);
+        SCALE.set(size * 1.15, size, 1);
+        MATRIX.compose(POSITION, QUATERNION, SCALE);
+        this.shadowMesh.setMatrixAt(shadows, MATRIX);
+        COLOUR.setRGB(COMIC.shadowAlpha * this.look * fall * Math.max(0, Math.min(1, strength)), 0, 0);
+        this.shadowMesh.setColorAt(shadows, COLOUR);
+        shadows += 1;
+      }
     }
     commitCount(this.mesh, front);
     commitCount(this.onCardMesh, onCard);
+    commitCount(this.shadowMesh, shadows);
     // T8: the bodies of the creatures that just left, drawn until their deaths end.
     this.departures?.bind(offsets, deaths);
     // Slice 3: what every figure carries — AFTER the rigs are posed this frame.
@@ -289,7 +366,9 @@ export class DiscField {
   dispose(): void {
     this.mesh.dispose();
     this.onCardMesh.dispose();
+    this.shadowMesh.dispose();
     (this.mesh.material as THREE.Material).dispose();
+    (this.shadowMesh.material as THREE.Material).dispose();
   }
 }
 

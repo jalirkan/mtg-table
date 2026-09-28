@@ -47,8 +47,11 @@
 
 import { useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
-import { BlendFunction, KernelSize } from 'postprocessing';
-import { useEffect } from 'react';
+import { BlendFunction, Effect, EffectAttribute, KernelSize } from 'postprocessing';
+import { useEffect, useMemo } from 'react';
+import * as THREE from 'three';
+
+import { COMIC } from '../look.ts';
 
 /*
  * The default is `perf.ts`'s {@link BLOOM_DEFAULT}, not a constant here: this whole
@@ -70,7 +73,69 @@ const THRESHOLD = 0.62;
 const SMOOTHING = 0.22;
 const INTENSITY = 0.9;
 
-export function Post({ onMount }: { onMount?: () => void }): JSX.Element {
+// ---------------------------------------------------------------------------
+// **The art-direction spike's ink pass** (report 15 §3.4, option B): one more
+// EFFECT, not one more pass. `postprocessing` merges every non-convolution effect
+// in a composer into ONE full-screen `EffectPass`, so with bloom on the ink costs
+// a few depth reads per pixel inside the pass bloom already pays for; with bloom
+// off it is the composer plus that one pass. It reads the DEPTH buffer the scene
+// render already wrote — no normal pass, no second render of the scene (report 09
+// §9.2 rule 3 stands) — and inks every pixel where the depth surface BENDS: the
+// Laplacian of 1/z, which is exactly zero on any plane (1/z is affine in screen
+// space), so the table, the cards and the land slabs get no line and every figure,
+// prop and carrier gets one at its silhouette and its deep creases.
+// ---------------------------------------------------------------------------
+
+const INK_FRAGMENT = /* glsl */ `
+  uniform vec3 uInk;
+  uniform float uWidth;
+  uniform float uThreshold;
+
+  float invZ( const in vec2 uv ) {
+    return 1.0 / max( 1e-4, -getViewZ( readDepth( uv ) ) );
+  }
+
+  void mainImage( const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor ) {
+    vec2 px = texelSize * uWidth;
+    float c = 1.0 / max( 1e-4, -getViewZ( depth ) );
+    float l = invZ( uv - vec2( px.x, 0.0 ) );
+    float r = invZ( uv + vec2( px.x, 0.0 ) );
+    float d = invZ( uv - vec2( 0.0, px.y ) );
+    float u = invZ( uv + vec2( 0.0, px.y ) );
+    // Relative, so a line is the same weight near the lens and across the table.
+    float bend = abs( l + r + u + d - 4.0 * c ) / c;
+    float ink = smoothstep( uThreshold, uThreshold * 2.5, bend );
+    outputColor = vec4( mix( inputColor.rgb, uInk, ink ), inputColor.a );
+  }
+`;
+
+/** The ink edge effect. Built once per composer; every number is a uniform. */
+export class InkEffect extends Effect {
+  constructor() {
+    super('InkEffect', INK_FRAGMENT, {
+      attributes: EffectAttribute.DEPTH,
+      uniforms: new Map<string, THREE.Uniform>([
+        ['uInk', new THREE.Uniform(new THREE.Color(COMIC.ink))],
+        ['uWidth', new THREE.Uniform(COMIC.inkPx)],
+        ['uThreshold', new THREE.Uniform(0.012)],
+      ]),
+    });
+  }
+}
+
+export function Post({
+  onMount,
+  bloom = true,
+  ink = false,
+}: {
+  onMount?: () => void;
+  /** Bloom, as before (user decision 6). */
+  bloom?: boolean;
+  /** Spike (report 15 §3.4): the depth-edge ink pass. */
+  ink?: boolean;
+}): JSX.Element {
+  // Built once; it holds no render target or texture of its own to dispose.
+  const inkEffect = useMemo(() => new InkEffect(), []);
   // Under `frameloop='demand'` mounting or unmounting the composer is a change
   // React makes and the frame loop does not see: without a repaint the toggle
   // would take effect on the next cue rather than when it is clicked.
@@ -84,18 +149,25 @@ export function Post({ onMount }: { onMount?: () => void }): JSX.Element {
       invalidate();
     };
   }, [invalidate, onMount]);
+  // The children array is rebuilt only when a switch changes: the composer
+  // re-derives its passes whenever `children` changes identity.
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
-      <Bloom
-        intensity={INTENSITY}
-        luminanceThreshold={THRESHOLD}
-        luminanceSmoothing={SMOOTHING}
-        // MEDIUM rather than LARGE: the kernel is the cost, and a table read from
-        // 9 units away does not need a 9-tap halo.
-        kernelSize={KernelSize.MEDIUM}
-        mipmapBlur
-        blendFunction={BlendFunction.SCREEN}
-      />
+      {ink ? <primitive object={inkEffect} /> : <></>}
+      {bloom ? (
+        <Bloom
+          intensity={INTENSITY}
+          luminanceThreshold={THRESHOLD}
+          luminanceSmoothing={SMOOTHING}
+          // MEDIUM rather than LARGE: the kernel is the cost, and a table read from
+          // 9 units away does not need a 9-tap halo.
+          kernelSize={KernelSize.MEDIUM}
+          mipmapBlur
+          blendFunction={BlendFunction.SCREEN}
+        />
+      ) : (
+        <></>
+      )}
     </EffectComposer>
   );
 }

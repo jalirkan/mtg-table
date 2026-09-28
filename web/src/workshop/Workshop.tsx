@@ -92,6 +92,10 @@
  *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
  *     CameraFrame, RequestOutcome (camera.ts)
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
+    lookFromSearch, LookSpec, HOLO_LOOK, COMIC_LOOK, wantsInkPass (look.ts)
+                                           the art-direction spike's look toggle
+                                           (report 15): `?look=comic[&ink=post|hull]`
+                                           or the toolbar's A/B switch
  *   the data         figures.json, models.json and cues.json (imported without
  *                    attributes, as Arena.tsx imports them), traits.json (with them,
  *                    as traits.ts does) — the bundler warns on a module imported
@@ -119,6 +123,7 @@ import { figureFor } from '../arena/figures/resolve.ts';
 import { traitFor, type TraitData } from '../arena/figures/traits.ts';
 import type { FigureProblem } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
+import { COMIC_LOOK, HOLO_LOOK, lookFromSearch, type LookSpec } from '../arena/look.ts';
 import { BLOOM_DEFAULT } from '../arena/perf.ts';
 import { loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
 import { cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
@@ -254,6 +259,14 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [turn, setTurn] = useState(0);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
   const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
+  /** The art-direction spike's A/B (report 15): the hologram or the comic look. */
+  const [look, setLook] = useState<LookSpec>(() => {
+    try {
+      return lookFromSearch(window.location.search);
+    } catch {
+      return HOLO_LOOK;
+    }
+  });
   const [autoRest, setAutoRest] = useState(true);
   const [overrides, setOverrides] = useState<Overrides>(() => readOverrides(storage()));
   const [library, setLibrary] = useState<ModelLibrary | null>(null);
@@ -540,6 +553,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
       setMode,
       setTurn,
       setBloom,
+      setLook,
       setAutoRest,
       play: (kind: RehearsalKind) => {
         playKind(kind);
@@ -624,6 +638,8 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
           onTurn={setTurn}
           bloom={bloom}
           onBloom={setBloom}
+          look={look}
+          onLook={setLook}
         />
         <div className="workshop__pedestal">
           <Pedestal
@@ -642,6 +658,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
             stage={stage}
             reducedMotion={reducedMotion}
             bloom={bloom}
+            look={look}
           />
           <PedestalCaption focus={focus} drawn={drawn} mode={mode} both={options.both} turn={turn} />
         </div>
@@ -809,6 +826,8 @@ function Toolbar({
   onTurn,
   bloom,
   onBloom,
+  look,
+  onLook,
 }: {
   options: PedestalOptions;
   onOptions: (next: PedestalOptions | ((o: PedestalOptions) => PedestalOptions)) => void;
@@ -818,6 +837,8 @@ function Toolbar({
   onTurn: (turn: number) => void;
   bloom: boolean;
   onBloom: (on: boolean) => void;
+  look: LookSpec;
+  onLook: (look: LookSpec) => void;
 }): JSX.Element {
   const modes: ReadonlyArray<{ id: CameraMode; label: string; what: string }> = [
     { id: 'close', label: '1× close', what: 'the card and its figure filling the view — drag to orbit' },
@@ -888,6 +909,34 @@ function Toolbar({
         />{' '}
         bloom
       </label>
+      <span className="workshop__seg" title="The art-direction spike (docs/research/15-art-direction.md): the hologram against the comic look">
+        <button
+          type="button"
+          className={look.look === 'holo' ? 'on' : ''}
+          aria-pressed={look.look === 'holo'}
+          onClick={() => onLook(HOLO_LOOK)}
+        >
+          holo
+        </button>
+        <button
+          type="button"
+          className={look.look === 'comic' && look.ink === 'post' ? 'on' : ''}
+          aria-pressed={look.look === 'comic' && look.ink === 'post'}
+          title="toon ramp, rim, halftone, contact shadow; ink by a depth-edge post pass"
+          onClick={() => onLook(COMIC_LOOK)}
+        >
+          comic
+        </button>
+        <button
+          type="button"
+          className={look.look === 'comic' && look.ink === 'hull' ? 'on' : ''}
+          aria-pressed={look.look === 'comic' && look.ink === 'hull'}
+          title="the same, with the ink as an inverted hull per figure"
+          onClick={() => onLook({ look: 'comic', ink: 'hull' })}
+        >
+          hull
+        </button>
+      </span>
     </div>
   );
 }

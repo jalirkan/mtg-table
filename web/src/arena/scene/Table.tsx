@@ -42,8 +42,63 @@ function feltTexture(): THREE.CanvasTexture | null {
   return texture;
 }
 
-export function Table(): JSX.Element {
-  const felt = useMemo(feltTexture, []);
+// ---------------------------------------------------------------------------
+// Spike (report 15 §4): the comic STAGE. A mid-value ground — the ink line and
+// the cel bands need one: black ink on the Tier-1 felt (L* about 8) disappears —
+// your half cool, the opponent's warm, a stage light at the centre, and a Ben-Day
+// dot vignette toward the rim, all painted ONCE into one canvas. Same quad, same
+// material kind, no light, no clock: an idle table still renders nothing.
+// ---------------------------------------------------------------------------
+
+function comicFeltTexture(): THREE.CanvasTexture | null {
+  if (typeof document === 'undefined') return null;
+  const w = 1024;
+  const h = Math.round((w * TABLE_HALF_Z) / TABLE_HALF_X);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (ctx === null) return null;
+  // The canvas's top row is the far (opponent's) edge once the quad lies flat.
+  const seats = ctx.createLinearGradient(0, 0, 0, h);
+  seats.addColorStop(0, '#5a3550');
+  seats.addColorStop(0.46, '#3d3f63');
+  seats.addColorStop(0.54, '#36486a');
+  seats.addColorStop(1, '#21566a');
+  ctx.fillStyle = seats;
+  ctx.fillRect(0, 0, w, h);
+  const light = ctx.createRadialGradient(w / 2, h / 2, w * 0.04, w / 2, h / 2, w * 0.62);
+  light.addColorStop(0, 'rgba(255,236,200,0.22)');
+  light.addColorStop(0.5, 'rgba(255,236,200,0.06)');
+  light.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = light;
+  ctx.fillRect(0, 0, w, h);
+  // Ben-Day dots, growing toward the rim: the page's own vignette.
+  ctx.fillStyle = 'rgba(12,10,28,0.42)';
+  const step = 10;
+  for (let y = step / 2; y < h; y += step) {
+    for (let x = ((y / step) % 2) * (step / 2) + step / 2; x < w; x += step) {
+      const d = Math.hypot((x - w / 2) / (w / 2), (y - h / 2) / (h / 2));
+      const r = step * 0.46 * Math.min(1, Math.max(0, (d - 0.55) / 0.6));
+      if (r < 0.4) continue;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/** Spike: the stage's ink — the seat lines drawn as a heavy K-plate stroke. */
+const COMIC_LINE = '#0e1016';
+
+export function Table({ look = 0 }: { look?: number }): JSX.Element {
+  const comic = look > 0;
+  const felt = useMemo(() => (comic ? comicFeltTexture() : feltTexture()), [comic]);
   return (
     <group>
       <mesh
@@ -57,23 +112,29 @@ export function Table(): JSX.Element {
       </mesh>
       {/* The centre line, and one lane line per seat. Decoration only: every
           zone's position comes from `layout.ts`, never from these. */}
-      <SeatLine z={0} opacity={0.9} />
-      <SeatLine z={1.6} opacity={0.45} />
-      <SeatLine z={-1.6} opacity={0.45} />
+      <SeatLine z={0} opacity={0.9} comic={comic} />
+      <SeatLine z={1.6} opacity={0.45} comic={comic} />
+      <SeatLine z={-1.6} opacity={0.45} comic={comic} />
     </group>
   );
 }
 
-function SeatLine({ z, opacity }: { z: number; opacity: number }): JSX.Element {
+function SeatLine({ z, opacity, comic }: { z: number; opacity: number; comic: boolean }): JSX.Element {
   return (
     <mesh
       geometry={UNIT_PLANE}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, 0.0005, z]}
-      scale={[TABLE_HALF_X * 2 - 0.6, 0.012, 1]}
+      scale={[TABLE_HALF_X * 2 - 0.6, comic ? 0.03 : 0.012, 1]}
       renderOrder={-9}
     >
-      <meshBasicMaterial color={FELT_LINE} transparent opacity={opacity} toneMapped={false} depthWrite={false} />
+      <meshBasicMaterial
+        color={comic ? COMIC_LINE : FELT_LINE}
+        transparent
+        opacity={comic ? Math.min(1, opacity + 0.2) : opacity}
+        toneMapped={false}
+        depthWrite={false}
+      />
     </mesh>
   );
 }
