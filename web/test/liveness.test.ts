@@ -297,15 +297,58 @@ test('liveness: the seat plates read the match through seatMatchOf and never com
  * clause of this file). So no arena module fetches, polls or opens a socket, and
  * the "watching" line reads the match through `matchupOf` — `seatMatchOf` per
  * seat — and nothing that holds a card.
+ *
+ * **A poll is spelled more ways than `setInterval`** (the polish lane's follow-up
+ * 1, applied at the art-direction lanes' merge): a recursive `setTimeout` — `const
+ * tick = () => { void load(); setTimeout(tick, 500); }` — or an idle callback
+ * that re-arms itself polls just as well, and the first cut of this clause let
+ * both through. So `setTimeout(`, `setInterval(` and `requestIdleCallback(` are
+ * all refused, and a one-shot timer the arena genuinely needs carries its reason
+ * on its own line (`// ALLOW timer: <reason>`) — today the art rung's idle
+ * callback and its Safari stand-in (`art.ts`). The negative controls: the shapes
+ * the old clause let through, and a real arena file with a recursive poll spliced
+ * in, must fail.
  */
 test('liveness: follow mode reaches the arena as a word — it never polls, and the watching line reads matchupOf', () => {
+  /** A request, a connection, or a timer that can re-arm itself: how a poll is spelled. */
+  const POLLS = /\bfetch\s*\(|\bset(?:Interval|Timeout)\s*\(|\brequestIdleCallback\s*\(|new\s+(?:EventSource|WebSocket)\s*\(|\bXMLHttpRequest\b/;
+  /** A one-shot timer the arena genuinely needs carries its reason on its own line. */
+  const ALLOW_TIMER = /\/\/ ALLOW timer: \S/;
+  const allowed: string[] = [];
   for (const file of arenaFiles()) {
-    const code = codeOf(file.source);
-    assert.ok(
-      !/\bfetch\(|\bsetInterval\(|new EventSource\(|new WebSocket\(|XMLHttpRequest/.test(code),
-      `${file.path} fetches, polls or opens a connection — how frames arrive is transport/'s business (D118)`,
-    );
+    // (codeOf drops block comments, so a line is named by its text, not its number.)
+    for (const line of codeOf(file.source).split('\n')) {
+      if (ALLOW_TIMER.test(line)) {
+        // An ALLOW names a timer that is really there, never a line to hide behind.
+        assert.ok(POLLS.test(line), `${file.path}: \`${line.trim()}\` carries an ALLOW timer with no timer on it`);
+        allowed.push(file.path);
+        continue;
+      }
+      assert.ok(
+        !POLLS.test(line),
+        `${file.path}: \`${line.trim()}\` fetches, polls or opens a connection — how frames arrive is transport/'s business (D118)`,
+      );
+    }
   }
+  // The allowed timers are the art rung's two one-shots, and nothing else: a new
+  // ALLOW is a new timer, so it is a change to this list, with its reason.
+  assert.deepEqual(allowed, ['art.ts', 'art.ts'], `the arena's allowed timers moved or grew: ${allowed.join(', ')}`);
+  // The negative controls: the shapes the old clause let through must be caught,
+  // and a copy of a real arena file with a recursive poll spliced in must fail.
+  for (const probe of [
+    'const tick = () => { void load(); setTimeout(tick, 500); };',
+    'function poll() { window.setTimeout(poll, 500); }',
+    'globalThis.setTimeout (() => refresh(), 500);',
+    'requestIdleCallback(function again() { requestIdleCallback(again); });',
+  ]) {
+    assert.ok(POLLS.test(probe), `the poll clause misses: ${probe}`);
+  }
+  const layerSrc = readFileSync(fileURLToPath(new URL('../src/arena/DecisionLayer.tsx', import.meta.url)), 'utf8');
+  const spliced = `${codeOf(layerSrc)}\nconst tick = () => { void load(); setTimeout(tick, 500); };\ntick();\n`;
+  assert.ok(
+    spliced.split('\n').some((l) => !ALLOW_TIMER.test(l) && POLLS.test(l)),
+    'a spliced recursive poll passed',
+  );
   const arena = codeOf(readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8'));
   assert.match(arena, /follow\?: ArenaFollow \| null/, 'Arena.tsx no longer takes follow mode as a plain prop');
   assert.match(arena, /export type ArenaFollow = 'following' \| 'stalled' \| 'finished'/);
@@ -1927,18 +1970,18 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
 
 /**
  * **Lane BODIES grew the arena by three files, and each is on the right side**
- * (D140–D144). `figures/rests.ts` (the resting poses) and `figures/palette.ts`
+ * (D156–D160). `figures/rests.ts` (the resting poses) and `figures/palette.ts`
  * (the k-means) are pure, and the `figures/` scan above covers them — said here so
  * a move is noticed. `arena/art.ts` is the one arena module that reads PIXELS:
  * it imports no three and no renderer, nothing in `scene/` or `cues/` imports it
- * (the frame loop never waits on an image), and its hook is called today from
- * ONE place, the workshop's tuning panel, which asks for its own face-up card's.
- * Lane BODIES' follow-up 13 adds `Arena.tsx` and the workshop's `Pedestal.tsx`
- * (lane LOOK's files, so the lane leaves the edit written out rather than made,
- * D148); the day it lands each may call the hook once and must hand it ONLY the
- * names `paletteNamesOf` returns — and `paletteNamesOf` skips every placement
- * drawn as a back and every redacted stub (hard rule 8) — negative-controlled. No
- * other file may call it. On the pose side, a
+ * (the frame loop never waits on an image), and its hook is called from exactly
+ * three places: `Arena.tsx` and the workshop's `Pedestal.tsx`, which DRAW the
+ * rung (switched on at the lanes' merge, D164 — lane BODIES' follow-up 13, applied
+ * by the merge pass that may edit lane LOOK's files) and each hand it ONLY the
+ * names `paletteNamesOf` returns, and the workshop's tuning panel, which asks for
+ * its own face-up card's. `paletteNamesOf` skips every placement drawn as a back
+ * and every redacted stub (hard rule 8) — negative-controlled. No other file may
+ * call it. On the pose side, a
  * palette map is read in exactly two places, `pose.ts`'s `paletteFor` and
  * `tilePose`'s land lookup, and each carries its own gate — also
  * negative-controlled here, and by `palette.test.ts`'s hostile corpus, which
@@ -1991,17 +2034,21 @@ test('liveness: lane BODIES — the poses and the palette are pure, and the art 
   assert.equal(tileGuarded(tileBody.replace('!placement.back &&', '')), false, 'the tilePose check cannot tell a missing back test');
   // extract() is only ever reached through the hook, which only reads names it is handed.
   assert.equal((codeOf(art).match(/\bextract\(/g) ?? []).length, 2, 'extract() is called from somewhere new');
-  // D148: the hook's callers. Today the tuning panel alone; `Arena.tsx` and
-  // `Pedestal.tsx` (lane LOOK's) may call it once each when follow-up 13 lands,
-  // and then only with the names `paletteNamesOf` returns.
+  // D164: the hook's callers. `Arena.tsx` and `Pedestal.tsx` DRAW the rung (the
+  // lanes' merge switched it on): each calls it exactly once, only with the names
+  // `paletteNamesOf` returns, and hands the result to both pose functions.
   const read = (rel: string): string => codeOf(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8'));
   const fedByGate = (code: string): boolean =>
     /const paletteNames = useMemo\(\(\) => paletteNamesOf\(placed\)/.test(code) && /useArtPalettes\(paletteNames, art\)/.test(code);
+  const drawsRung = (code: string): boolean =>
+    /figurePose\(placed, [^;]*?\bpalettes,?\s*\}\)/.test(code) && /tilePose\(placed, tileDataOf\([^)]*\), palettes\)/.test(code);
   for (const path of ['arena/Arena.tsx', 'workshop/Pedestal.tsx']) {
     const code = read(`../src/${path}`);
-    const calls = (code.match(/\buseArtPalettes\(/g) ?? []).length;
-    assert.ok(calls <= 1, `${path} calls useArtPalettes more than once`);
-    if (calls === 1) assert.ok(fedByGate(code), `${path} hands useArtPalettes names that did not come through paletteNamesOf`);
+    assert.equal((code.match(/\buseArtPalettes\(/g) ?? []).length, 1, `${path} does not call useArtPalettes exactly once — the art rung is not drawn there`);
+    assert.ok(fedByGate(code), `${path} hands useArtPalettes names that did not come through paletteNamesOf`);
+    assert.ok(drawsRung(code), `${path} reads the palettes and does not hand them to figurePose and tilePose`);
+    assert.equal(drawsRung(code.replace(/, palettes\)(?=,\s*\[placed)/, ')')), false, `the draw check cannot tell ${path}'s tilePose without palettes`);
+    assert.equal(drawsRung(code.replace(/\bpalettes,?(\s*\}\))/, '$1')), false, `the draw check cannot tell ${path}'s figurePose without palettes`);
   }
   // The caller check can tell the follow-up's own edit from a bypassed gate.
   const applied = 'const paletteNames = useMemo(() => paletteNamesOf(placed), [placed]);\nconst palettes = useArtPalettes(paletteNames, art);';

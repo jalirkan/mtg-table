@@ -317,7 +317,7 @@ test('figure-pose: every board frame of every committed recording poses', () => 
       if (pose.modelId !== null) {
         modelled += 1;
         withModel += 1;
-        // Lane BODIES (D140): a proportioned body stands in its resting-pose variant,
+        // Lane BODIES (D156): a proportioned body stands in its resting-pose variant,
         // `<body>@<pose>`; the manifest knows it by the body.
         assert.ok(MODEL_IDS.has(baseModelOf(pose.modelId)), `${file}: unknown model ${pose.modelId}`);
         const rest = restOfModel(pose.modelId);

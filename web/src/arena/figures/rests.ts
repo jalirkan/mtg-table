@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * **Signature resting poses, as data** (lane BODIES, report 15 §6.2 and §9.3;
- * **D140**).
+ * **D156**).
  *
  * `[NO three]`, `[NO React]`, `[NO DOM]`, no clock — the same split as the rest
  * of `figures/`: this file says WHICH resting poses exist and HOW each one is
@@ -196,7 +196,7 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     aims: [],
     what: 'a two-handed pistol aim, held',
   },
-  // **Agent 13 (the second fix pass, D149): the pistol at the HIGH READY** — the
+  // **Agent 13 (the second fix pass, D165): the pistol at the HIGH READY** — the
   // spy-poster stance: her right hand up beside her face, the barrel pointing at
   // the sky, her left arm easy at her side. The arms start from the aim's own frame
   // (`pistolDraw` at the phase `PISTOL_POSE` names), so the hand keeps its grip and
@@ -233,7 +233,7 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
   // Coulson: relaxed, hands clasped in front. The fix pass raised them from the
   // crotch to the buckle; the verifier's second round still read them "low at the
   // groin" from above, where a lens looking down puts anything in front of the
-  // belly lower on the screen than it stands. The second fix pass (D149) lifts the
+  // belly lower on the screen than it stands. The second fix pass (D165) lifts the
   // clasp above the belt (the hands at y 0.63, the belt at 0.53) with the elbows
   // out, so the arms make a diamond round the shirt-front that the camera sees
   // from above; at the solar plexus (0.665, tried) he clutched his chest.
@@ -251,7 +251,7 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     what: 'relaxed, hands clasped at the belt',
   },
   // Quake: the library's guard stance, both palms pushed forward. The second fix
-  // pass (D149) lifts her head off the guard's downward look — the neck upright
+  // pass (D165) lifts her head off the guard's downward look — the neck upright
   // and a little forward — so a lens above her finds a face under the fringe.
   braced: {
     from: 'block',
@@ -290,7 +290,7 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     ],
     what: 'bent over the bench, hands at work',
   },
-  // A soldier at ease: hands behind the back. The second fix pass (D149) brings
+  // A soldier at ease: hands behind the back. The second fix pass (D165) brings
   // the elbows DOWN to the waist: the first aims swung the upper arms 25° back,
   // and a lens looking down from in front draws anything behind a figure HIGHER on
   // the screen, so the elbows rose beside the head and the verifier read the

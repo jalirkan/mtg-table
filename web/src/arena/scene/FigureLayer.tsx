@@ -65,7 +65,7 @@ import {
   makeFigureMaterial,
   type FigureMaterial,
 } from './figureMaterial.ts';
-import type { FigureRigMap } from './figureRigs.ts';
+import type { FigureRig, FigureRigMap } from './figureRigs.ts';
 import { compileFor } from './prime.ts';
 import {
   clipFor,
@@ -285,6 +285,68 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, c
 }
 
 /**
+ * **The first frame's pose, and nothing more.** From T3 the clip lane owns every
+ * weight and every `action.time` (`CueRunner.driveClips`); this is here so that
+ * a figure that mounts between two `useFrame` passes is standing in its idle
+ * rather than in its bind pose for one frame. §8.3 rule 1 and user decision 7
+ * still hold — the idle only *advances* while the queue is awake, so
+ * `frameloop='demand'` keeps its measured zero idle frames. It is the REST
+ * lane's idle (its `restTwin`), and the action it returns is the one the clip
+ * lane ADOPTS as `rest` ({@link newFigureRig}) — never a second, unowned action.
+ */
+export function mountRestLane(restActions: ReadonlyMap<string, THREE.AnimationAction>): THREE.AnimationAction | null {
+  const idle = restActions.get('idle');
+  if (idle === undefined) return null;
+  idle.enabled = true;
+  idle.setEffectiveWeight(1);
+  idle.play();
+  idle.time = 0;
+  return idle;
+}
+
+/** What one {@link Figure}'s build hands the rig map. */
+export interface BuiltFigure {
+  instance: Pick<FigureInstance, 'object' | 'mixer'>;
+  material: FigureMaterial;
+  actions: Map<string, THREE.AnimationAction>;
+  restActions: Map<string, THREE.AnimationAction>;
+  /** The action {@link mountRestLane} started, or `null` for a model with no idle. */
+  mounted: THREE.AnimationAction | null;
+}
+
+/**
+ * **The rig a mounted figure registers** — the clip lane's state starts from what
+ * the mount actually left playing.
+ *
+ * `rest` is the action {@link mountRestLane} started, not `null`. The first cut
+ * of the rig said `null` ("nothing is selected yet"), and `driveClips` stops
+ * only the `rest` it knows about — so a figure that MOUNTED tapped, attacking or
+ * blocking played its stance at full weight on top of the mount's idle, also at
+ * full weight, and three normalised the pair to a 50/50 blend for as long as the
+ * figure lived. With Lane BODIES' variants that idle IS the signature pose (a
+ * kneeling Fury with his arms still folded), and Fury's own ability — a card put
+ * onto the battlefield tapped and attacking — takes exactly this path. Adopting
+ * it, the lane's first pass sees a different stance clip, stops the idle and
+ * lands in the stance alone (`test/clip-lane.test.tsx`, negative-controlled).
+ */
+export function newFigureRig(built: BuiltFigure, pose: FigurePose): FigureRig {
+  return {
+    root: built.instance.object,
+    mixer: built.instance.mixer,
+    actions: built.actions,
+    restActions: built.restActions,
+    material: built.material,
+    pose,
+    appliedTint: null,
+    appliedFrozen: false,
+    rest: built.mounted,
+    // The transient: `null` until a cue asks for one.
+    clip: null,
+    restTime: 0,
+  };
+}
+
+/**
  * One figure.
  *
  * The instance is built **once per (card, model)** and outlives every frame: a
@@ -325,25 +387,12 @@ const Figure = memo(function Figure({
       restActions.set(key, rest);
     }
 
-    // **The first frame's pose, and nothing more.** From T3 the clip lane owns
-    // every weight and every `action.time` (`CueRunner.driveClips`); this is here
-    // so that a figure that mounts between two `useFrame` passes is standing in
-    // its idle rather than in its bind pose for one frame. §8.3 rule 1 and user
-    // decision 7 still hold — the idle only *advances* while the queue is awake,
-    // so `frameloop='demand'` keeps its measured zero idle frames. It is the
-    // REST lane's idle, the one the clip lane then adopts as `rest`.
-    const idle = restActions.get('idle');
-    if (idle !== undefined) {
-      idle.enabled = true;
-      idle.setEffectiveWeight(1);
-      idle.play();
-      idle.time = 0;
-    }
+    const mounted = mountRestLane(restActions);
     // A zero delta scrubs without advancing: `AnimationAction._updateTime`
     // returns `this.time` untouched for `deltaTime === 0` (three 0.186).
     instance.mixer.update(0);
 
-    return { instance, material, actions, restActions };
+    return { instance, material, actions, restActions, mounted };
     // `pose.tint` is read once for the initial value; the live one is written by
     // `CueRunner` into the uniform every frame, so it is not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -367,21 +416,7 @@ const Figure = memo(function Figure({
    */
   useLayoutEffect(() => {
     const cardId = pose.cardId;
-    rigs.set(cardId, {
-      root: built.instance.object,
-      mixer: built.instance.mixer,
-      actions: built.actions,
-      restActions: built.restActions,
-      material: built.material,
-      pose,
-      appliedTint: null,
-      appliedFrozen: false,
-      // T3's clip lane adopts these on its first pass: `null` means "nothing is
-      // selected yet", which is how the runner knows to call `play()` once.
-      rest: null,
-      clip: null,
-      restTime: 0,
-    });
+    rigs.set(cardId, newFigureRig(built, pose));
     return () => {
       if (rigs.get(cardId)?.root === built.instance.object) rigs.delete(cardId);
     };

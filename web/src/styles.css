@@ -4381,7 +4381,7 @@ button.zonerow__open:hover {
   white-space: nowrap;
 }
 
-/* Lane BODIES (D144): the card art's palette — one bar per cluster, as wide as
+/* Lane BODIES (D160): the card art's palette — one bar per cluster, as wide as
    its share of the painting, then the accent the art rung offers. */
 .workshop__swatches {
   display: flex;

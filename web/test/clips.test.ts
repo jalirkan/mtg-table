@@ -923,10 +923,10 @@ test('clips: Ant-Man’s shrink is one number — cues.json’s attack and trait
 });
 
 // ---------------------------------------------------------------------------
-// Lane BODIES — the signature resting poses (D140)
+// Lane BODIES — the signature resting poses (D156)
 // ---------------------------------------------------------------------------
 
-test('clips: every resting pose reads clips every proportioned body has, and joints its rig has (D140)', async () => {
+test('clips: every resting pose reads clips every proportioned body has, and joints its rig has (D156)', async () => {
   const { REST_KIT, REST_POSES, restClipsNeeded, restJointsNamed, restModelId } = await import('../src/arena/figures/rests.ts');
   const bodies = Object.entries(MODELS.models).filter(([, entry]) => entry.rig === 'ubc');
   assert.ok(bodies.length >= 2, 'no proportioned bodies in models.json');
@@ -966,7 +966,7 @@ test('clips: every resting pose reads clips every proportioned body has, and joi
   }
 });
 
-test('clips: a resting-pose variant is its body with the hair carved off — nothing else moves (D140, D141)', async () => {
+test('clips: a resting-pose variant is its body with the hair carved off — nothing else moves (D156, D157)', async () => {
   const { restModelId } = await import('../src/arena/figures/rests.ts');
   const { loadLibrary } = await import('./prop-raster.ts');
   const library = await loadLibrary();

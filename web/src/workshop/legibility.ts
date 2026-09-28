@@ -417,7 +417,7 @@ export function drawnHeightPx(pose: FigurePose, library: ModelLibrary): number |
     if (mesh.isSkinnedMesh !== true || !mesh.visible) return;
     const position = mesh.geometry.getAttribute('position');
     // Only the vertices a triangle draws: lane BODIES' bald body keeps its carved
-    // hair's vertices in the buffer and drops them from the index (D141).
+    // hair's vertices in the buffer and drops them from the index (D157).
     const index = mesh.geometry.getIndex();
     const count = index === null ? position.count : index.count;
     for (let k = 0; k < count; k++) {

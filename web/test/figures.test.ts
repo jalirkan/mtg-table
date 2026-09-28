@@ -318,7 +318,7 @@ test('figures: a subtype key the file declares is reachable from a real type lin
   }
 });
 
-test('figures: the library is inside the manifest\'s MEASURED budget, and the build reads that budget (D145)', () => {
+test('figures: the library is inside the manifest\'s MEASURED budget, and the build reads that budget (D161)', () => {
   const manifest = JSON.parse(
     readFileSync(fileURLToPath(new URL('../../tools/assets-manifest.json', import.meta.url)), 'utf8'),
   ) as { budget?: { libraryBytes?: number; triangles?: number; measured?: Record<string, unknown> } };

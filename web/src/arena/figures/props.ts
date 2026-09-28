@@ -64,13 +64,13 @@ export const PROP_KINDS = [
   // The second verification pass: a robot's eye as a lit band round its head, so
   // the Doombot reads as red-eyed from BEHIND as well (its eye is on its face).
   'visor',
-  // Lane BODIES (D143): a long coat's skirt as panels that follow the legs, and a
+  // Lane BODIES (D159): a long coat's skirt as panels that follow the legs, and a
   // cloak's panels down the back — the drape is the clip lane's own pose.
   'coatTails',
   'cape',
   // Lane BODIES: a realistic-sized pistol in the hand (Peggy at the ready) — the
-  // `pistol`'s geometry at 60%, with no lit muzzle: a detail, where Agent 13's
-  // `pistol` is an identity.
+  // `pistol`'s geometry at 70% (60% until the lanes' merge), with no lit muzzle:
+  // a detail, where Agent 13's `pistol` is an identity.
   'sidearm',
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
@@ -85,14 +85,14 @@ export const DERIVED_KINDS = [
   'squad',
   'swarmBee',
   'carrier',
-  // Lane BODIES: a person's face (D142) and hair (D141), from the trait's `face`
+  // Lane BODIES: a person's face (D158) and hair (D157), from the trait's `face`
   // and `hair`, on every proportioned body that is not anonymous. `facePatched`
   // is the face with HIS left eye left out, for a card that wears an eyepatch
   // over it (Fury) — the patch floats in front of the face, and from the table
   // view's height the eye under it showed above it.
   'face',
   'facePatched',
-  // The second fix pass (D149): the same two faces set in GRIT — brows down in a
+  // The second fix pass (D165): the same two faces set in GRIT — brows down in a
   // V, eyes narrowed, teeth set — worn while the snapshot says the figure is
   // kneeling (tapped), attacking or blocking. An expression is a pose.
   'faceGrit',
@@ -107,7 +107,7 @@ export const DERIVED_KINDS = [
 export type DerivedKind = (typeof DERIVED_KINDS)[number];
 
 // ---------------------------------------------------------------------------
-// Lane BODIES — hair (D141) and the face (D142)
+// Lane BODIES — hair (D157) and the face (D158)
 // ---------------------------------------------------------------------------
 
 /**
@@ -175,7 +175,7 @@ export function isFaceStyle(value: string): value is FaceStyle {
 }
 
 /**
- * **A face's expression** (the second fix pass, D149; report 15 §6.2's neutral /
+ * **A face's expression** (the second fix pass, D165; report 15 §6.2's neutral /
  * grit / pain): `neutral` at rest, `grit` while the figure kneels, attacks or
  * blocks — a POSE, read off the stance the snapshot gives (`expressionOf`), so a
  * skip, a scrub and a resync all draw it. Pain on a hit is a CUE (the clip lane's
@@ -202,7 +202,7 @@ export function faceKindOf(style: FaceStyle, expression: Expression): DerivedKin
 }
 
 /**
- * Whether the art rung speaks for a card (lane BODIES, D144): `art` lets its
+ * Whether the art rung speaks for a card (lane BODIES, D160): `art` lets its
  * painting colour what no hand-written row does (the default); `off` keeps the
  * colour identity.
  */
@@ -270,7 +270,7 @@ export type Family = 'human' | 'humanoid' | 'drone' | 'insect';
 /** A model id → the family its props are fitted to, or `null` for the disc. */
 export function familyOf(variantId: string | null, models?: ModelData): Family | null {
   if (variantId === null) return null;
-  // Lane BODIES (D140): a resting-pose variant (`agent@folded`) is its body's.
+  // Lane BODIES (D156): a resting-pose variant (`agent@folded`) is its body's.
   const modelId = baseModelOf(variantId);
   const entry = models?.models[modelId];
   if (entry?.rig === 'ubc') return 'human';
@@ -314,7 +314,7 @@ export interface PropAnchor {
   pose?: { readonly clip: string; readonly phase: number };
   /**
    * **Lane BODIES' fix pass — a panel that FOLLOWS a second joint part-way**
-   * (D143, amended by D146): the prop sits where `joint` puts it, turned `weight`
+   * (D159, amended by D162): the prop sits where `joint` puts it, turned `weight`
    * (0…1) of the way toward where `follow.joint` would put it — each joint's own
    * skinning of the SAME anchor, the rotations slerped and the positions and
    * scales lerped. A rigid panel skinned to two bones, which is what a skirt over
@@ -328,7 +328,7 @@ export interface PropAnchor {
   follow?: { readonly joint: string; readonly weight: number };
   /**
    * **… and a panel that HANGS from the anchor before it** in the kind's list
-   * (D146): its top at that panel's lower edge (`HANG_FROM` × `COAT_PANEL.length`
+   * (D162): its top at that panel's lower edge (`HANG_FROM` × `COAT_PANEL.length`
    * below the parent's top, in the parent's own units), turned `hang` (0…1) of the way from the
    * parent's angle back toward the figure's UPRIGHT — gravity as a pose, not a
    * simulation, and no clock. The skirt's lower link rides the upper one and falls
@@ -339,6 +339,16 @@ export interface PropAnchor {
    * anchors only; a panel kind only (`coatTails`, `cape` — `traits.test.ts`).
    */
   hang?: number;
+  /**
+   * **An anchor for ONE kind of head** (lane BODIES, at merge): `true` is used only
+   * on a BALD head (a person whose hairstyle is `none` — `FigurePose.hair` null),
+   * `false` only on a head with hair; absent, on either. A thing worn round the
+   * skull sits on whatever is outermost there — the eyepatch's strap was sized for
+   * a head with hair, and on Fury, bald as his card draws him (D157), its ring
+   * floated a hair's thickness off his crown. {@link anchorsOf} picks the set;
+   * every other anchor in the kit carries no condition.
+   */
+  bald?: boolean;
 }
 
 /** How a kind is drawn. Every kind shares one shader program (`scene/props.ts`). */
@@ -443,7 +453,7 @@ export const COAT_WAIST: readonly [number, number, number] = [0, 0.525, -0.03];
 export const COAT_CHEST: readonly [number, number, number] = [0, 0.7, -0.024];
 const COAT_BODY: readonly [number, number, number] = [0.9, 0.86, 0.9];
 /**
- * **Where a hanging panel meets the one above it** (D146): this far down the
+ * **Where a hanging panel meets the one above it** (D162): this far down the
  * parent's length, not at its very hem — so the lower link wraps OUTSIDE the
  * parent's last eighth, and when the leg turns the upper link the seam between
  * them is an overlap, never a gap. `scene/props.ts` hangs the child from here.
@@ -451,7 +461,7 @@ const COAT_BODY: readonly [number, number, number] = [0.9, 0.86, 0.9];
 export const HANG_FROM = 0.88;
 /**
  * The two links of a skirt panel, as scales of `COAT_PANEL`: hip→knee, then knee
- * to just below it. **The second fix pass (D147) cut the coat to the body**: the
+ * to just below it. **The second fix pass (D163) cut the coat to the body**: the
  * verifier found Fury's coat "a wide bell that hides his legs" and the Bold
  * Biochemist's "a huge white bell … that swallows the figure" — the panels were
  * 0.16–0.26 from the body's axis round a waist 0.08 wide and 0.13 deep (measured
@@ -461,7 +471,7 @@ export const HANG_FROM = 0.88;
  * hem is just below the knee (y ≈ 0.25), where it was mid-calf (0.16).
  */
 const COAT_UPPER: readonly [number, number, number] = [1.04, 0.91, 1.04];
-// D146's rule, D147's numbers: the lower link's top (0.145) just outside the
+// D162's rule, D163's numbers: the lower link's top (0.145) just outside the
 // upper link's radius where it hangs from it (0.144), and 0.1 long.
 const COAT_LOWER: readonly [number, number, number] = [1.16, 0.45, 1.16];
 /**
@@ -472,7 +482,7 @@ const COAT_LOWER: readonly [number, number, number] = [1.16, 0.45, 1.16];
  */
 export const COAT_KNEE: readonly [number, number, number] = [0, 0.525 - 0.22 * 0.91 * HANG_FROM, -0.03];
 /**
- * **How much of its leg a skirt panel follows** (D146), measured in the workshop
+ * **How much of its leg a skirt panel follows** (D162), measured in the workshop
  * at ready, kneeling and attacking, from the table view and at 1×: the FRONT
  * panels drape over the thigh and follow it about half-way; the SIDE panels a
  * third, so a stride opens the coat without swinging its sides out as flaps; the
@@ -496,14 +506,14 @@ export const COAT_PANEL = { top: 0.125, hem: 0.14, length: 0.22, arc: 80 } as co
 
 /**
  * **The coat's front panels' yaw**, degrees either side of the figure's front
- * (D147): 54°, so with an 80° arc the coat is open 28° down the front — worn open,
- * as a trench coat and a lab coat are. D146's 46° left it 12° open, and a closed
+ * (D163): 54°, so with an 80° arc the coat is open 28° down the front — worn open,
+ * as a trench coat and a lab coat are. D162's 46° left it 12° open, and a closed
  * bell is what the verifier read from above.
  */
 export const COAT_FRONT = 54;
 
 /**
- * **One side of a skirt, as two links** (D146): hip → knee on the pelvis,
+ * **One side of a skirt, as two links** (D162): hip → knee on the pelvis,
  * following `thigh` by `follow`; then knee → calf, hanging from it. Written as a
  * pair because the second anchor HANGS from the one before it in the list.
  */
@@ -613,17 +623,19 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
       human: [{ joint: 'hand_r', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE, pose: PISTOL_POSE }],
       humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE }] },
   },
-  // **Lane BODIES — a sidearm**: the pistol's own geometry at 60% in the right
+  // **Lane BODIES — a sidearm**: the pistol's own geometry at 70% in the right
   // hand, gunmetal whatever the card's accent (Peggy's accent is her red hat),
   // gripped exactly as the pistol is — its anchor is written in the same aim pose
-  // — so it follows the hand into any resting pose (`figures/rests.ts`).
+  // — so it follows the hand into any resting pose (`figures/rests.ts`). 60%
+  // until the lanes' merge: since D143 its side is the far seat's, and under the
+  // ink's line it fell to 22 px there, under a one-sided detail's 24.
   sidearm: {
     blend: 'normal',
     colour: '#8f98a8',
     glow: null,
     anchors: {
-      human: [{ joint: 'hand_r', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE * 0.6, pose: PISTOL_POSE }],
-      humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE * 0.6 }] },
+      human: [{ joint: 'hand_r', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE * 0.7, pose: PISTOL_POSE }],
+      humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE * 0.7 }] },
   },
   // The pistol's muzzle, lit at rest (a pose: the gun is drawn) and flaring with
   // the clip lane — her attack's pistolDraw is the `attack` request, so the
@@ -654,7 +666,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   // Fury's long coat: a shell from the shoulders, wrapped round the front with two
   // lit lapels, and a stand-up collar with a lit rim that reads from behind (the
   // second verification pass: from the table view his coat was behind your own
-  // Fury and out of view). **Lane BODIES (D143): it is the YOKE** — shoulders to
+  // Fury and out of view). **Lane BODIES (D159): it is the YOKE** — shoulders to
   // the chest — and the coat's body and skirt below are `coatTails`, panels on
   // the spine and the legs, because a rigid shell to the knee was a white box to
   // the floor under a kneeling Biochemist (D97's known cost), and a rigid shell
@@ -677,7 +689,16 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: '#ffffff',
     glow: null,
     anchors: {
-      human: [{ joint: 'Head', at: HUMAN_HEAD, size: [0.078, 0.1, 0.088] }],
+      human: [
+        // Over hair: sized to clear a hairstyle, as slice 4's bodies wore their own.
+        { joint: 'Head', at: HUMAN_HEAD, size: [0.078, 0.1, 0.088], bald: false },
+        // On a BALD head (lane BODIES, at merge): the skull's own measured
+        // half-extents about its own centre (HEAD_SHAPE), so the strap's ring —
+        // 1.08 of the unit head — hugs the scalp all the way round and the patch
+        // lies just proud of the eye it covers, where the ring sized for hair stood
+        // off his crown.
+        { joint: 'Head', at: HEAD_SHAPE.centre, size: HEAD_SHAPE.radii, bald: true },
+      ],
       humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: [0.338, 0.245, 0.27] }] },
   },
   // Coulson's badge: a gold shield with a bright rim, on his left breast AND —
@@ -696,7 +717,9 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     glow: { rest: 1, boost: 0.55 },
     anchors: {
       human: [
-        { joint: 'spine_03', at: [0.045, 0.72, 0.075], turn: [-0.35, 0, 0], size: 0.065 },
+        // 0.075 since the lanes' merge (Lane LOOK follow-up 17): at 0.065 the ink's
+        // one-pixel inner line left the chest plate 46 px from the front, under the bar.
+        { joint: 'spine_03', at: [0.045, 0.72, 0.075], turn: [-0.35, 0, 0], size: 0.075 },
         { joint: 'spine_03', at: [0, 0.7, -0.1], turn: [0.45, Math.PI, 0], size: 0.1 },
       ],
       humanoid: [
@@ -770,8 +793,8 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     glow: null,
     anchors: { any: [{ joint: 'stand', at: [0.3, 0, 0.03], size: 1 }] },
   },
-  // **Lane BODIES — the body and skirt of a long coat, which DRAPE** (D143,
-  // D146): panels of one flared arc — a ring of five on the lowest spine joint
+  // **Lane BODIES — the body and skirt of a long coat, which DRAPE** (D159,
+  // D162): panels of one flared arc — a ring of five on the lowest spine joint
   // from the chest to the hip (the coat's body, which hangs with the hips when
   // the chest bends), then the skirt: a two-link chain front and side on each
   // leg and one panel at the back, all hanging from the PELVIS. Each upper link
@@ -779,7 +802,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   // toward the upright, so a kneeling figure's coat drapes over its knee instead
   // of standing to the floor as a box (report 15 §1.3, cause 10), a lunge opens
   // it without flinging flaps, and no panel ever rides the calf edge-on (the
-  // verifier's sliver, D146). No simulation and no clock: the clip lane poses the
+  // verifier's sliver, D162). No simulation and no clock: the clip lane poses the
   // joints and the panels are where the joints put them. The front is left open
   // between the two front panels, as a coat's is. Worn with `coat`, which since
   // this lane is the YOKE: shoulders, collar and lapels.
@@ -798,12 +821,12 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
         { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(180), 0], size: COAT_BODY },
         { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-118), 0], size: COAT_BODY },
         { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-COAT_FRONT), 0], size: COAT_BODY },
-        // The skirt, D146: each link hangs from the PELVIS; the upper one follows
+        // The skirt, D162: each link hangs from the PELVIS; the upper one follows
         // its thigh part-way (SKIRT_FOLLOW), and the lower one hangs from the
         // upper one's hem toward the upright — never from the calf bone.
         ...skirtLink(COAT_FRONT, 'thigh_l', SKIRT_FOLLOW.front),
         ...skirtLink(118, 'thigh_l', SKIRT_FOLLOW.side),
-        // The back: one link, from the waist to the lower links' hem (D147).
+        // The back: one link, from the waist to the lower links' hem (D163).
         { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.08, 1.25, 1.08] },
         ...skirtLink(-118, 'thigh_r', SKIRT_FOLLOW.side),
         ...skirtLink(-COAT_FRONT, 'thigh_r', SKIRT_FOLLOW.front),
@@ -822,7 +845,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
       ],
     },
   },
-  // **Lane BODIES — a cloak** (D143, D146): the same arc panel, down the BACK —
+  // **Lane BODIES — a cloak** (D159, D162): the same arc panel, down the BACK —
   // two from the shoulders on the chest bone, three from the hip on the pelvis,
   // the outer two following their thighs a third of the way, overlapping — so it
   // swings a little with the stride. Unlike the coat's panels it carries a TRIM
@@ -834,10 +857,10 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     glow: null,
     anchors: {
       human: [
-        // The shoulder panels hang INSIDE the hip panels where they overlap (D147:
+        // The shoulder panels hang INSIDE the hip panels where they overlap (D163:
         // a hem radius of 0.134 at y 0.51 against the hip panels' 0.15 top at
         // 0.525), so their trim — the cape's hem trim is on every panel — is hidden
-        // under them and the gold shows only at the cape's own hem (D146). The
+        // under them and the gold shows only at the cape's own hem (D162). The
         // shoulders' pair stands 0.12 off the spine (the back of the shoulders is
         // 0.10 behind it); the hip panels outside every coat's back panel (0.135).
         { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(145), 0], size: [0.96, 1.27, 0.96] },
@@ -870,16 +893,16 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   swarmBee: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
   carrier: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
   // -- lane BODIES: derived from the trait's `face` and `hair` -----------------
-  // **The face** (D142): eyes, brows and a mouth line on the proportioned head's
+  // **The face** (D158): eyes, brows and a mouth line on the proportioned head's
   // front, drawn in their own vertex colours (white eyes, ink features), rigid on
   // `Head`. Built in figure units (`scene/props.ts`), so its anchor is the origin.
   face: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   // The same face with HIS left eye left out, under an eyepatch (`face: patched`).
   facePatched: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
-  // Both in grit (D149): the pose's expression while kneeling, attacking or blocking.
+  // Both in grit (D165): the pose's expression while kneeling, attacking or blocking.
   faceGrit: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   facePatchedGrit: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
-  // **The hairstyles** (D141), each rigid on `Head` in the costume's hair colour.
+  // **The hairstyles** (D157), each rigid on `Head` in the costume's hair colour.
   hairParted: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   hairLong: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   hairCrop: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
@@ -889,13 +912,15 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
 };
 
 /** The anchors a kind has on a family: its own row, else `any`, else none. */
-export function anchorsOf(kind: SceneKind, family: Family | null): readonly PropAnchor[] {
+export function anchorsOf(kind: SceneKind, family: Family | null, bald = false): readonly PropAnchor[] {
   const entry = PROP_KIT[kind];
-  if (family !== null) {
-    const own = entry.anchors[family];
-    if (own !== undefined) return own;
-  }
-  return entry.anchors.any ?? [];
+  const own = family !== null ? entry.anchors[family] : undefined;
+  const list = own ?? entry.anchors.any ?? [];
+  // `bald` picks between the anchors written for one kind of head ({@link
+  // PropAnchor.bald}); a list with no such anchor is returned as it is.
+  return list.some((anchor) => anchor.bald !== undefined)
+    ? list.filter((anchor) => anchor.bald === undefined || anchor.bald === bald)
+    : list;
 }
 
 /**

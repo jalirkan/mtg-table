@@ -6,7 +6,7 @@
  * **Per-card identity, as data** (Tier 2 slice 3; report 13 §11's T9 and T10).
  *
  *     traitFor(card, data, art) →
- *       default  ⊕  the card's ART (lane BODIES, D144)  ⊕  every matching subtype rung
+ *       default  ⊕  the card's ART (lane BODIES, D160)  ⊕  every matching subtype rung
  *       (least specific first)  ⊕  the card's own row
  *
  * `[NO three]`, `[NO React]`, `[NO DOM]`, no clock. `figures.json` says which
@@ -108,21 +108,21 @@ export interface TraitRow {
   body?: BodyStyle;
   /**
    * **Lane BODIES — the pose the card RESTS in** (`figures/rests.ts`'s closed
-   * table, D140): Fury's folded arms, Peggy at the ready. A pose, drawn whenever
+   * table, D156): Fury's folded arms, Peggy at the ready. A pose, drawn whenever
    * the card is untapped and not in combat; `stand` is the body's own idle.
    * Only the proportioned body has one.
    */
   rest?: RestPose;
   /**
-   * **Lane BODIES — the hairstyle** (`figures/props.ts`'s `HAIR_STYLES`, D141):
+   * **Lane BODIES — the hairstyle** (`figures/props.ts`'s `HAIR_STYLES`, D157):
    * a shared kind rigid on the head, in the costume's `hair` colour. Absent means
    * the body's own (`BODY_HAIR`); `none` is bald.
    */
   hair?: HairStyle;
-  /** **Lane BODIES — the face** (D142): `on` for every person, `none` under a hood. */
+  /** **Lane BODIES — the face** (D158): `on` for every person, `none` under a hood. */
   face?: FaceStyle;
   /**
-   * **Lane BODIES — the art rung** (D144): `art` lets the card's own painting
+   * **Lane BODIES — the art rung** (D160): `art` lets the card's own painting
    * colour what no hand-written row does (the default); `off` keeps the colour
    * identity instead. The workshop's switch, and a card's way out.
    */
@@ -242,14 +242,14 @@ export interface ArtRow {
  * **The ladder.** Total, never throws, and a concealed card gets
  * {@link DEFAULT_TRAIT} and nothing else — its name is never read.
  *
- * `art` is the card's art rung (lane BODIES, D144), which the CALLER looks up by
+ * `art` is the card's art rung (lane BODIES, D160), which the CALLER looks up by
  * name — `figurePose` does so only for a card drawn face up (hard rule 8) — and
  * passes in, so this function stays a function of its arguments.
  */
 export function traitFor(card: AnyCard, data: TraitData, art: ArtRow | null = null): TraitMatch {
   if (isHidden(card)) return { spec: DEFAULT_TRAIT, rungs: [] };
   const plain = ladder(card, data, null);
-  // **Lane BODIES — the art rung** (D144): the card's own painting, under every
+  // **Lane BODIES — the art rung** (D160): the card's own painting, under every
   // hand-written rung and over the file's default. A rung above that says
   // `palette: off` takes it away again; so does a card with no art (a token, a miss).
   if (art === null || plain.spec.palette === 'off') return plain;

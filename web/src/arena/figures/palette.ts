@@ -3,7 +3,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **An art-derived palette** (lane BODIES, report 15 §7; **D144**): the colours of
+ * **An art-derived palette** (lane BODIES, report 15 §7; **D160**): the colours of
  * a card's own Scryfall painting, read at load, as the LOWEST rung of the identity
  * ladder — so a card with no hand-written row (a new set's) still gets colours of
  * its own, and a hand-written row always wins.
@@ -23,7 +23,7 @@
  *  - `accent` — the most VIVID colour (share × (0.3 + saturation) × (0.4 +
  *    value), saturation over 0.45): Fury's explosion orange, Coulson's teal. The
  *    colour a colourist picks for a card's effects — a prop's accent, an aura's
- *    colour, a disc. The brightness term is the second fix pass's (D148,
+ *    colour, a disc. The brightness term is the second fix pass's (D164,
  *    PLAN.md's lane BODIES follow-up 7): without it a large muted cluster beat a
  *    bright one of the same saturation, and Fury's accent was `#867448`, the
  *    khaki round his explosion, rather than the explosion.

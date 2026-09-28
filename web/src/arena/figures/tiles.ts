@@ -161,7 +161,7 @@ export function tilePose(
   placed: Layout,
   data: TileData,
   /**
-   * Lane BODIES (D144): the art-derived palettes by card name. A land with no
+   * Lane BODIES (D160): the art-derived palettes by card name. A land with no
    * hand-written tint — the `*` rung's, a new set's non-basic — takes its
    * painting's TERRAIN colour over the bare colour identity. Looked up only for a
    * land drawn face up (hard rule 8).

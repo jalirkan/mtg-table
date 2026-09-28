@@ -1626,12 +1626,12 @@ console.log(
 );
 
 // §8.2's budget, checked where it is cheap to check — and since lane BODIES
-// (D145) read from the manifest's `budget` block, where the measurement that set
+// (D161) read from the manifest's `budget` block, where the measurement that set
 // it is written down, rather than typed here.
 const BUDGET = manifest.budget ?? {};
 const BUDGET_BYTES = Number.isFinite(BUDGET.libraryBytes) ? BUDGET.libraryBytes : 400 * 1024;
 const BUDGET_TRIANGLES = Number.isFinite(BUDGET.triangles) ? BUDGET.triangles : 30000;
-if (bytes > BUDGET_BYTES) fail(`the library is ${String(bytes)} bytes — the manifest's budget is ≤ ${String(BUDGET_BYTES)} (D145)`);
+if (bytes > BUDGET_BYTES) fail(`the library is ${String(bytes)} bytes — the manifest's budget is ≤ ${String(BUDGET_BYTES)} (D161)`);
 if (totalTriangles > BUDGET_TRIANGLES) fail(`${String(totalTriangles)} triangles — §8.2 budgets ≤ ${String(BUDGET_TRIANGLES)}`);
 
 if (WRITE_MANIFEST) {

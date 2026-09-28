@@ -153,7 +153,7 @@ export const MAX_POSE_OVERLAYS = 12;
 /**
  * The manifestation of one attaching card. Total: a card nobody described gets the halo.
  *
- * `art` is the attaching card's own art palette (lane BODIES, D144), which the
+ * `art` is the attaching card's own art palette (lane BODIES, D160), which the
  * caller looks up only for a card drawn face up: its vivid accent colours the
  * aura where no hand-written row gives a tint, over the bare colour identity.
  */

@@ -40,6 +40,7 @@ import type { ArtIndex } from '../art.ts';
 import type { AnyCard } from '../protocol.ts';
 import type { ClientState } from '../reduce.ts';
 import { CAMERA, CameraDirector, REST_POSE, type CameraFrame, type RequestOutcome } from '../arena/camera.ts';
+import { paletteNamesOf, useArtPalettes } from '../arena/art.ts';
 import { colourHex, colourIdOf } from '../arena/colour.ts';
 import type { CueQueue } from '../arena/cues/queue.ts';
 import type { CueData } from '../arena/cues/types.ts';
@@ -231,15 +232,19 @@ function PedestalScene({
   // -- the poses, exactly as Arena.tsx computes them ---------------------------
   const placed = useMemo(() => layout(state, cueData.presence ?? {}), [state, cueData]);
   const frozen = useMemo(() => combatFreeze(state.board), [state.board]);
+  // Lane BODIES (D160, D164): the art rung, exactly as `Arena.tsx` reads it — the
+  // pedestal must draw what the arena draws.
+  const paletteNames = useMemo(() => paletteNamesOf(placed), [placed]);
+  const palettes = useArtPalettes(paletteNames, art);
   const figures = useMemo(
     () =>
       turnPoses(
-        figurePose(placed, state.board?.combat ?? null, figureData, { frozen, models, traits }),
+        figurePose(placed, state.board?.combat ?? null, figureData, { frozen, models, traits, palettes }),
         turn,
       ),
-    [placed, state.board?.combat, figureData, frozen, models, traits, turn],
+    [placed, state.board?.combat, figureData, frozen, models, traits, turn, palettes],
   );
-  const tiles = useMemo(() => tilePose(placed, tileDataOf(figureData)), [placed, figureData]);
+  const tiles = useMemo(() => tilePose(placed, tileDataOf(figureData), palettes), [placed, figureData, palettes]);
   const seatOfPlayer = useCallback(
     (playerId: number): 'you' | 'opp' =>
       placed.viewerId === null || playerId === placed.viewerId ? 'you' : 'opp',

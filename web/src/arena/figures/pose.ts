@@ -243,7 +243,7 @@ export interface FigurePose {
    * **Slice 4 — what the body wears**: one `#rrggbb` per costume slot, in
    * `COSTUME_SLOTS` order (skin, hair, top, shirt, legs, shoes, gloves, belt) —
    * {@link costumeOf} of the trait's `costume` and the tint WITHOUT the art rung
-   * (lane BODIES: a palette never paints a costume, D144) — or `null` for a body
+   * (lane BODIES: a palette never paints a costume, D160) — or `null` for a body
    * that carries no slots (the drone, the bee, the disc). **Always `null` for an
    * anonymous figure** (hard rule 8: a costume is a statement about what a card
    * is). A pose, so a skip, a scrub and a resync all draw it.
@@ -251,16 +251,16 @@ export interface FigurePose {
   costume: readonly string[] | null;
   // -- lane BODIES (`figures/rests.ts`, `figures/props.ts`, `figures/palette.ts`) --
   /**
-   * **The pose this figure rests in** (D140) — `null` for a body with none (the
+   * **The pose this figure rests in** (D156) — `null` for a body with none (the
    * disc, the drone, the bee, a chibi) and ALWAYS for an anonymous figure. When
    * set, {@link FigurePose.modelId} names the variant that rests in it
    * (`agent@folded`, `figures/rests.ts`), which is what the figure layer mounts.
    */
   rest: RestPose | null;
-  /** **Its hairstyle** (D141), drawn as the prop in {@link FigurePose.props}; `null` for none. */
+  /** **Its hairstyle** (D157), drawn as the prop in {@link FigurePose.props}; `null` for none. */
   hair: HairStyle | null;
   /**
-   * **The art rung's accent** (D144): its painting's vivid colour, `null` with no
+   * **The art rung's accent** (D160): its painting's vivid colour, `null` with no
    * palette, with `palette: off`, and ALWAYS for an anonymous figure — whose art is
    * never looked up. Carried for the look and motion lanes (a rim, a burst, a mote).
    */
@@ -297,7 +297,7 @@ export interface FigurePoseOptions {
    */
   traits?: TraitData;
   /**
-   * **Lane BODIES — the art-derived palettes** (D144), keyed by the card's NAME,
+   * **Lane BODIES — the art-derived palettes** (D160), keyed by the card's NAME,
    * as `arena/art.ts` extracted them from the images `art.json` names. Optional:
    * absent means no art rung at all (every test that does not pass one, and a page
    * before the first image has been read). Looked up only for a card drawn face
@@ -402,7 +402,7 @@ export function propsOf(
   hairColour: string = tint,
   /** Lane BODIES: the face this body wears (`none` for none). */
   face: FaceStyle = 'none',
-  /** …and its expression (D149): the stance's, `neutral` at rest. */
+  /** …and its expression (D165): the stance's, `neutral` at rest. */
   expression: Expression = 'neutral',
 ): FigureProp[] {
   const out: FigureProp[] = [];
@@ -426,7 +426,7 @@ export function propsOf(
     // A squad's followers are the leader's own body, baked: no model, no squad.
     else if (modelId !== null && (family === 'humanoid' || family === 'human')) out.push({ kind: 'squad', colour: squadColour });
   }
-  // Lane BODIES: the head — its hair (D141) and its face (D142) — on a body that
+  // Lane BODIES: the head — its hair (D157) and its face (D158) — on a body that
   // has the anchors for them (the proportioned one).
   if (hair !== null && hair !== 'none') {
     const kind = HAIR_KIND[hair];
@@ -649,7 +649,7 @@ export function figurePose(
     // Slice 3 extends the same branch to identity: an anonymous figure gets the
     // default traits — no props, no hover, no swarm — and its name is never read.
     const anonymous = placement.back;
-    // Lane BODIES (D144): the card's own art palette — looked up by name, and only
+    // Lane BODIES (D160): the card's own art palette — looked up by name, and only
     // for a card drawn face up (hard rule 8); `null` for every anonymous figure.
     const art = anonymous ? null : paletteFor(placement, options.palettes);
     const traitMatch = anonymous ? null : traitFor(card, traitData, art === null ? null : artRow(art));
@@ -668,10 +668,10 @@ export function figurePose(
     const body = chibi !== null && options.models?.models[chibi] !== undefined ? chibi : spec.model;
     const baseId = anonymous || overBudget || silhouette !== null ? null : body;
     if (baseId !== null) withModel += 1;
-    // **Lane BODIES (D140): a proportioned body stands in its resting-pose
+    // **Lane BODIES (D156): a proportioned body stands in its resting-pose
     // variant** — `agent@folded`, or `agent@stand` for the body's own idle — which
     // `scene/models.ts` derives at load: the pose as the variant's `idle`, and the
-    // head bald under its hairstyle prop (D141). The manifest still knows it by its
+    // head bald under its hairstyle prop (D157). The manifest still knows it by its
     // base id, which is what every measurement below reads.
     const family = familyOf(baseId, options.models);
     const rest: RestPose | null = baseId !== null && family === 'human' ? (trait.rest ?? 'stand') : null;
@@ -689,7 +689,7 @@ export function figurePose(
     const attachments: AttachmentManifestation[] = [];
     let hostScale = 1;
     for (const attaching of byHost.get(placement.cardId) ?? EMPTY_ATTACHING) {
-      // Lane BODIES (D144): the aura's own painting colours it where no row does.
+      // Lane BODIES (D160): the aura's own painting colours it where no row does.
       const manifestation = manifestationOf(attaching.card, attachData, paletteFor(attaching, options.palettes));
       hostScale *= manifestation.hostScale;
       // §4.4's cap, and it is the OVERLAY budget rather than the cue engine's.
@@ -733,7 +733,7 @@ export function figurePose(
     }
 
     // Slice 3: the tint, the villain's shade, the accent, the props.
-    // Lane BODIES (D144): the art's tint sits UNDER every hand-written tint — a
+    // Lane BODIES (D160): the art's tint sits UNDER every hand-written tint — a
     // traits.json row, then figures.json's — and over the bare colour identity.
     const artUsed = art !== null && trait.palette === 'art' ? art : null;
     const handTint = anonymous ? null : (trait.tint ?? spec.tint ?? null);
@@ -744,13 +744,13 @@ export function figurePose(
     const tint = anonymous ? baseTint : shadeHex(baseTint, trait.shade);
     const accent = trait.accent ?? tint;
     // Slice 4: what the body wears — never on an anonymous figure (hard rule 8).
-    // Lane BODIES (D144, report 15 §7.1): **a palette never paints a costume** —
+    // Lane BODIES (D160, report 15 §7.1): **a palette never paints a costume** —
     // a painting's dominant colour is its background — so the clothes take the
     // tint WITHOUT the art rung: a hand-written tint, else the colour identity.
     // `traits.test.ts` holds it with a row-less person whose art is vivid.
     const clothTint = anonymous ? baseTint : shadeHex(handTint ?? identityTint, trait.shade);
     const costume = !anonymous && wearsCostume(family) ? costumeOf(trait.costume, clothTint) : null;
-    // Lane BODIES: a person's hairstyle (D141) and face (D142) — the body's own
+    // Lane BODIES: a person's hairstyle (D157) and face (D158) — the body's own
     // hair unless a rung names one; never on an anonymous figure.
     const style: HairStyle | null =
       !anonymous && baseId !== null && family === 'human' ? (trait.hair ?? BODY_HAIR[baseId] ?? 'none') : null;
@@ -767,7 +767,7 @@ export function figurePose(
           hair,
           costume?.[COSTUME_SLOTS.indexOf('hair')] ?? tint,
           family === 'human' ? trait.face : 'none',
-          // D149: the face sets its jaw while the figure kneels, attacks or blocks.
+          // D165: the face sets its jaw while the figure kneels, attacks or blocks.
           expressionOf(stance),
         );
 

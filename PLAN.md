@@ -25,6 +25,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | CI: the gate's engine-free half on GitHub Actions *(off the plan)* | ½ day | **built** on branch `ci` (2026-09-28), pull request to `main` — `.github/workflows/checks.yml`: `web` (`npm ci`, build, `npm test`), `bridge` (lint, `check-forge.sh`, `bridge/build.sh` and its five self-tests against the official `forge-2.0.14` release's jar, checked against the pin and cached alone) and `redaction` (the committed corpus, the checker's, the narrator's and the drift check's selftests, the catalog check); `check-all.sh`, which plays games, stays local; the stray `.vite/` cache untracked and ignored; README's *Continuous integration* |
 | — | Polish 1: the skeptics' nine minors *(off the plan)* | ½ day | **built, gated and documented** on branch `polish-1` (2026-09-28), off `main`'s `f6bad35` — `ActGuard`'s wiring under its self-test, 10g holding both halves of the late undo, the narrator's N1 from the decks alone and its pair check both ways, a 416 read as `lost`, `same-game.mjs` saying what it sets aside, a docs correction, a liveness clause written for the merge pass, and `var/check-all/` pruned to 20 runs; no wire change, no step, no decision; *Polish 1*, just above *Deferred* |
 | — | Lane LOOK: the comic look, to production *(report 15 §9.1, the first art-direction lane; the user approved the direction)* | 1 day | **built, verified, documented and committed** on branch `look` (2026-09-28), rebased onto the undo race's `f6bad35` — every figure, dying body, duelist and painted prop in the comic look by default: three cel bands from a lens-fixed key, halftone, a rim, an ink line inside bloom's pass that inks only what is painted, a contact shadow, a mid-value stage in each seat's shown colours; `?look=holo` the hologram; a seat's figures facing the opponent (question 13, answered); **D137–D146**, written as D120–D129; one verification pass; twenty-one follow-ups, half of one closed at merge; *Lane LOOK*, just above *Deferred* |
+| — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; *Lane BODIES*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -5782,7 +5783,7 @@ undo race.
   `SAME GAME`, 10g's three games played (`var/check-all-look-merge.log`).
 - `~/forge` and `~/.forge`: unchanged (the jar `3c0a7c38…8e5dd9`).
 
-### Lane LOOK follow-ups — twenty-one, 2026-09-28 (1 and 2 closed by Lane MOTION's merge)
+### Lane LOOK follow-ups — twenty-one, 2026-09-28 (1 and 2 closed by Lane MOTION's merge, 17 by Lane BODIES')
 
 Four are edits owed in files this lane does not own (1–4, and 17); four were
 questions (5–8), three of them closed by the verification pass; the rest are
@@ -5883,8 +5884,10 @@ limits of what was measured or built.
     against two of five before-runs. The floor state it settles into is inside
     the budget (+1.9 ms p50). Dropping the ink one rung earlier than bloom would
     be a one-line change in `perf.ts`'s `postOnFloor` and `Arena.tsx`'s governor.
-17. **BODIES — Coulson's chest badge, seen from the front.** The raster's one
-    recorded shortfall (`traits.test.ts`'s `SHORTFALL`, floor 44): 52 px on
+17. ~~**BODIES — Coulson's chest badge, seen from the front.**~~ **Closed by Lane
+    BODIES at its merge**: 0.075, 58 px from the front after the ink, and the
+    `SHORTFALL` row gone (the table is empty). The request, for the record: The
+    raster's one recorded shortfall (`traits.test.ts`'s `SHORTFALL`, floor 44): 52 px on
     screen before any ink, 46 after the ink's one-pixel inner line, against the
     bar of 48. The edit, in `figures/props.ts` (BODIES' file):
     `badge.anchors.human[0].size` **0.065 → 0.075** (≈ 69 px by area). Then
@@ -6201,17 +6204,20 @@ speed, the undo race) and over report 15 and LOOK; the spike's own commit
 
 ---
 
-## Lane BODIES — resting poses, hair, faces, coats that drape, and the art's own colours (art direction, 2026-09-28; D140–D149)
+## Lane BODIES — resting poses, hair, faces, coats that drape, and the art's own colours (art direction, 2026-09-28; D156–D165)
 
-**Status: built, measured and committed on branch `bodies`** (worktree
-`mtg-table-t2n`, off `c81f674` — `main`'s `a092d3a` plus report 15 and its
-`?look=comic` spike). This is report 15's **Lane BODIES** (§9.3), one of three
+**Status: built, measured and committed on branch `bodies`, and rebased onto
+Lane MOTION's merged tip `e2aee03` at merge** (*At merge*, below: the third of
+report 15's lanes to land; the two majors the verifier's third round left open
+are fixed there, and the art rung is drawn). The lane itself was built in the
+worktree `mtg-table-t2n`, off `c81f674` — `main`'s `a092d3a` plus report 15 and
+its `?look=comic` spike. This is report 15's **Lane BODIES** (§9.3), one of three
 lanes built in parallel with **LOOK** (materials, ink, stage) and **MOTION**
-(comic VFX). It edits no file the other two own — `Arena.tsx` and
-`workshop/Pedestal.tsx`, LOOK's, are byte-identical to the base again since the
-third fix pass (**D148**) — and what it needs from them is written below as
-follow-ups with the exact edit. Decisions **D140–D149** are
-numbered in the lane's reserved range and are renumbered contiguously at merge;
+(comic VFX). Until the merge it edited no file the other two own — `Arena.tsx` and
+`workshop/Pedestal.tsx`, LOOK's, were byte-identical to the base again after the
+third fix pass (**D164**) — and what it needed from them was written below as
+follow-ups with the exact edit. Decisions **D156–D165** were
+numbered D140–D149 in the lane's reserved range and renumbered contiguously at merge;
 `docs/evidence/bodies.md` is what was measured, with the before and after
 pictures under `var/bodies/`. The lane was cut off once by a usage limit and
 resumed from its uncommitted tree; the resumed pass kept the work, split the
@@ -6222,16 +6228,16 @@ plumbing had been written into `Arena.tsx` and `workshop/Pedestal.tsx`, which
 are lane LOOK's — reverted, and written out as follow-up 13; the palette test
 could not tell a missing gate — it now runs a hostile corpus and fails with any
 gate removed; and the coat's calf-riding skirt drew a sliver, ribbons and a flap
-— it now hangs from the pelvis (**D146**). **A verifier's second round** found
+— it now hangs from the pelvis (**D162**). **A verifier's second round** found
 one blocker (an abandoned, uncommitted attempt at a further pass left the tree
 failing a test — discarded, `var/bodies/fix3/abandoned-d147.diff`), five majors
 and four minors, and read the pictures; the **second fix pass** (evidence §8)
 cut the coat to the body and lined the cloth for the duelists' one-sided bake
-(**D147**), switched the art rung on with the pass-through follow-up 13 wrote
-out, proved not to collide with lane LOOK's branch (**D148**), and set every
+(**D163**), switched the art rung on with the pass-through follow-up 13 wrote
+out, proved not to collide with lane LOOK's branch (**D164**), and set every
 face's jaw in grit while it kneels, attacks or blocks, gave Agent 13 the high
 ready, re-aimed the poses a lens looking down misread, and re-cut the bob as hair
-(**D149**). **A verifier's third round** found one blocker and seven minors and
+(**D165**). **A verifier's third round** found one blocker and seven minors and
 read the pictures again; the **third fix pass** (evidence §9) reverted the
 pass-through from LOOK's two files (the blocker — the verifier's first and third
 rounds called it one, its second asked for the pixel; the lane rule decides, and
@@ -6250,7 +6256,7 @@ npm --prefix web run dev:arena   # g1.jsonl — frame 355 is the budget frame
 
 What landed, in the brief's order of value:
 
-1. **A signature resting pose per card** (**D140**). `figures/rests.ts` is a
+1. **A signature resting pose per card** (**D156**). `figures/rests.ts` is a
    closed table of ten poses — each a frame of a library clip, a few joint aims
    and a breathing clip — derived at load into model variants
    (`agent@folded`). `traits.json`'s `rest`: Fury `folded`, Peggy `ready`,
@@ -6259,33 +6265,33 @@ What landed, in the brief's order of value:
    tapped.
    The second fix pass added **`highReady`** (Agent 13: the pistol up beside her
    face) and re-aimed `atEase`, `clasped` and `braced` for a lens that looks down
-   (**D149**); the third bends `working` from the waist, so the coat leans with
+   (**D165**); the third bends `working` from the waist, so the coat leans with
    the scientist.
-2. **Hair as shared kinds** (**D141**): the bodies' own two hairstyles carved off
+2. **Hair as shared kinds** (**D157**): the bodies' own two hairstyles carved off
    at load and baked as kinds, four procedural shells (`crop`, `bob`, `waves`,
    `bun`), one draw call per style on the table. **The pack was not downloaded**
    (follow-up 2). The bob is re-cut as hair — a swept fringe, open temples, lit
-   locks (**D149**) — cool since the third fix pass, on Quake's near-black.
-3. **A procedural comic face** (**D142**), 88 triangles, on every face-up person,
+   locks (**D165**) — cool since the third fix pass, on Quake's near-black.
+3. **A procedural comic face** (**D158**), 88 triangles, on every face-up person,
    and `facePatched` under Fury's eyepatch — **in grit** (`faceGrit`,
-   `facePatchedGrit`) while the figure kneels, attacks or blocks (**D149**).
-4. **Coats that drape** (**D143**, **D146**): `coat` is now the yoke,
+   `facePatchedGrit`) while the figure kneels, attacks or blocks (**D165**).
+4. **Coats that drape** (**D159**, **D162**): `coat` is now the yoke,
    `coatTails` the coat's body (on the lowest spine joint) and its skirt (a
    two-link chain from the pelvis that follows each thigh part-way and hangs
    toward the upright), `cape` a cloak — Doom's, on the villain duelist. **Cut to
    the body** since the second fix pass — a finger's width off the hips, to just
    below the knee, open down the front — and **lined** for the duelists'
-   one-sided bake (**D147**); its yoke **tapered** to meet the coat's body since
+   one-sided bake (**D163**); its yoke **tapered** to meet the coat's body since
    the third (no step at the chest, no gap at the shoulder blades).
-5. **The art's palette** (**D144**): k-means over each face-up card's own image,
+5. **The art's palette** (**D160**): k-means over each face-up card's own image,
    off the hot path, as the lowest rung — accent, tint, land tile, aura, never a
-   costume (the code's rule since the third fix pass). **Built, tested and not
-   drawn** (**D148**): the pass-through that switches it on is in lane LOOK's
-   `Arena.tsx` and `workshop/Pedestal.tsx`, so it is follow-up 13, written out;
-   the second fix pass applied it and the third reverted it. The tuning panel
-   shows the card's swatches and a preview of the tint and accent the rung would
-   give it.
-6. **`figures.glb`'s budget** re-set to 450 KiB by measurement (**D145**), read
+   costume (the code's rule since the third fix pass). **Built and tested in
+   the lane, drawn since the merge** (**D164**): the pass-through that switches it
+   on is in lane LOOK's `Arena.tsx` and `workshop/Pedestal.tsx`, so it was
+   follow-up 13, written out; the second fix pass applied it, the third reverted
+   it, and the merge applied it for good. The tuning panel shows the card's
+   swatches and the tint and accent the pedestal draws with them.
+6. **`figures.glb`'s budget** re-set to 450 KiB by measurement (**D161**), read
    by the build from the manifest.
 
 What it costs, measured after the third fix pass (evidence §9.7, base and branch
@@ -6310,10 +6316,118 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
 `var/check-all-bodies-fix1-round1.log`, the first cut's 893 s
 `var/check-all-bodies.log`). `~/forge` and `~/.forge` are unchanged.
 
-### Lane BODIES follow-ups — twenty-three, 2026-09-28 (four closed and three partly by the second fix pass; the third reopened 13 and 6, and closed part of 8 and 15)
+### At merge (2026-09-28)
 
-1. **A figure that mounts KNEELING blends the stock idle under the kneel —
-   `scene/FigureLayer.tsx`, LOOK's file.** `FigureLayer` plays the body's `idle`
+Rebased onto Lane MOTION's merged tip `e2aee03` in the same worktree — `main`'s
+`f6bad35`, report 15 and Lane LOOK's four commits and Lane MOTION's three — the
+art-direction merge pass's third stage. The lane's three commits were replayed
+with `git rebase --onto e2aee03 c81f674` (report 15's own commit was already
+there, rebased by LOOK as `3da33ac`). The merge pass may edit any file the earlier
+stages own, and says where it did: `Arena.tsx`, `workshop/Pedestal.tsx` and
+`scene/FigureLayer.tsx` are Lane LOOK's.
+
+- **Conflicts, each kept on both sides.** `scene/props.ts` (LOOK's prop-shader
+  split into `propMaterial.ts` against the lane's new kinds: the split stays, and
+  the kit's `LOOKS` table names a `PROP_LOOK` preset for each new kind — `cloth`
+  for the coat's skirt and the cape, `fabric` for hair and the four faces, `metal`
+  for the sidearm), `traits.test.ts` (LOOK's `comicVisibility` raster and one-sided
+  jetpack beside the lane's details and `GENERIC` faces), `liveness.test.ts` (both
+  lanes' appended clauses), CLAUDE.md, DECISIONS.md, PLAN.md and README.md (both
+  sides' sections). `models.ts`, `Workshop.tsx`, `legibility.ts`, `styles.css` and
+  the other tests merged by themselves.
+- **Renumbered**: D140–D149 → **D156–D165**, in the order they were written, on
+  every line the lane's three commits wrote and on no other — 308 citations in 29
+  files, read line by line from `git blame`, because Lanes LOOK and MOTION use
+  D140–D149 for their own decisions on every line they wrote (a blanket
+  substitution would have renumbered theirs). DECISIONS.md holds D1–D165 once
+  each, and each of the ten says both numbers.
+- **The two majors the verifier's third round could not fix in the lane** (both
+  lived in LOOK's files):
+  - **A figure that mounts tapped kept its resting pose blended into the kneel**
+    (follow-up 1). On the hardening pass's two-action clip model, `FigureLayer`'s
+    `mountRestLane` starts the rest lane's idle (its `restTwin`) and returns it,
+    and `newFigureRig` registers it as the clip lane's `rest` — so the first pass
+    stops it and the stance plays alone, weights 0 and 1. `clip-lane.test.tsx`'s
+    third case mounts a figure tapped, attacking and blocking through those two
+    functions and asserts both weights and the bone; its negative control
+    re-registers `rest: null` and sees the 50/50 blend, and reverting the fix in
+    `newFigureRig` fails it (`crouch: the mount's resting pose is still running
+    under the stance`).
+  - **The art palette was inert** (follow-up 13). `Arena.tsx` and
+    `workshop/Pedestal.tsx` carry the pass-through as written, the workshop's
+    framing poses take the card's own palette (its preview memo went), and
+    liveness wants the hook EXACTLY once in each and the map handed to both pose
+    functions. `palette.test.ts`'s hostile corpus now has a case that only one
+    gate stops for each gate — a named back (`back`), a named stub in a face-up slot
+    (`isHidden`), and a new one, a face-up card with the face-down empty name and no
+    `back` (the empty-name test) — plus its own control (a lookup missing one gate
+    must leak over the same layouts). Removing each of the nine gates in
+    `paletteNamesOf`, `paletteFor`, `tilePose` and `isTileCard` one at a time fails
+    the hostile corpus test every time; the one survivor is `figurePose`'s
+    `anonymous ? null :` in front of `paletteFor`, redundant by construction
+    (`var/bodies/merge/palette-mutations.txt`).
+- **Lane LOOK's follow-up 17 — closed**: Coulson's chest badge 0.065 → 0.075 (58 px
+  from the front after the ink, from 46), and `traits.test.ts`'s `SHORTFALL` is
+  empty (its count assertion now 0).
+- **The eyepatch strap off Fury's bald crown — fixed** (**D157**, amended): a kit
+  anchor for a bald head (`PropAnchor.bald`), the skull's own half-extents, and a
+  strap pushed onto the head's ellipsoid (`onHeadSphere`), 0.3 of the unit head
+  wide, under a patch of 0.42 — 27 px either side after the ink (a one-sided
+  detail's half-bar is 24).
+- **The polish lane's poll clause — applied** (its PLAN follow-up 1, read from the
+  `polish-1` branch, not merged here): liveness's follow-mode test refuses
+  `setTimeout(`, `setInterval(` and `requestIdleCallback(` under `web/src/arena/`
+  unless the line says `// ALLOW timer: <reason>`, holds the ALLOWs to the art
+  rung's two one-shots (and an ALLOW to a real timer), and keeps the lane's four
+  probes and its spliced recursive poll as negative controls. `art.ts`'s idle
+  runner now spells `requestIdleCallback(` out, so the clause can see it. When
+  `polish-1` merges, its follow-up 1 is already done.
+- **The merge's own fallout, measured and fixed.** **D143** turned the seats round
+  and **D146**'s ink takes a small prop's edge, so the lane's raster and face bars
+  were re-measured on Lane LOOK's seats: the face bars restated (**D158**,
+  amended — every face the arena shows is on the far seat now, 2–10 px, and the
+  workshop's `1× front` is where one is seen close, 42–118 px); Peggy's shield, the
+  Agents' parted hair and Wasp's bob become details with partners, and the sidearm
+  is the pistol at 70% (**D165**, amended). `web/public/art.json` was re-fetched
+  for the villain decks `main` added (158 entries); `catalog.json` regenerated
+  unchanged.
+- **Tests.** `npm --prefix web test`: **993 `node --test` + 121 vitest (8
+  files)**, 0 failures — Lane MOTION's merged 973 + 120 and the lane's.
+- **Build.** The 2D entry chunk is **90.36 kB** gzip, as on `e2aee03`, and
+  carries no `three`; `arena-scene` 360.06 → 369.35, `Workshop` 24.65 → 25.50,
+  `Arena` 15.40 → 15.55 (`e2aee03` built beside it).
+- **Bench** (`g1`@316, production builds of `e2aee03` and this tree on one
+  `vite preview` port, three interleaved rounds, load 1.0–6.9;
+  `var/bodies/merge/bench/`): GTX 1080 bloom off p95 **0.6 against 0.6** every
+  round, bloom on **1.4 · 1.4 · 1.3 against 1.3 · 1.8 · 1.2**; SwiftShader bloom
+  off p50 **20.9 · 17.0 · 17.0 against 17.7 · 16.1 · 16.3** (p95 34.3–35.2 against
+  33.4–34.3). Counts, bloom off: the GTX 1080 draws **86 calls and 26,315
+  triangles** against 79 and 24,362 (+7, +1,953 — the lane's +6 to +7 on LOOK's
+  tree), and the SwiftShader sample **89–90 and 29,323–29,521** against 83 and
+  27,544 — **on report 13 §8.2's 90-call line** and 479 triangles under its
+  30,000, as the lane projected: the next kind on the table needs a measurement
+  first.
+- **Gate**, from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=8920`: **exit 0
+  in 253.8 s**, 46 jobs (976.8 s of work), the load 3.5 at the start and 10.3 at
+  most; `node --test` 1003 / 995 pass / 0 fail / 8 skipped plus 121 vitest, 6b
+  `SAME GAME`, 10g's three games played (`var/check-all-bodies-merge.log`). Before
+  it: `./bridge/build.sh`, `npm --prefix web test` and `npm --prefix web run build`,
+  each green on its own.
+- `~/forge` and `~/.forge`: unchanged (the jar `3c0a7c38…8e5dd9`).
+
+Screenshots, before (`e2aee03`) and after (this tree), comic look, headless
+Chromium on the GTX 1080 at 1600 × 1000: `var/bodies/merge/before/` and
+`var/bodies/merge/after/` — the workshop's `1× front` for Fury, Peggy, Coulson,
+Quake and the Bold Biochemist (`ws-*-1x.png`), and the table view at `g1`@355 and
+@316 with both duelists (`table-*-duelists.png`); Fury's strap, old and new, at 3×
+in `var/bodies/merge/probe/fury-strap-old-new.png`.
+
+### Lane BODIES follow-ups — twenty-eight, 2026-09-28 (four closed and three partly by the second fix pass; the third reopened 13 and 6, and closed part of 8 and 15; the merge closed 1, 6 and 13, part of 12 and 23, and added 24–28)
+
+1. ~~**A figure that mounts KNEELING blends the stock idle under the kneel —
+   `scene/FigureLayer.tsx`, LOOK's file.**~~ **Closed at merge** (**D156**,
+   amended): `mountRestLane` and `newFigureRig`, on the two-action clip model,
+   with `clip-lane.test.tsx`'s tapped mount. The request, for the record: `FigureLayer` plays the body's `idle`
    at full weight when it mounts; the clip lane stops only the rest action it
    started itself, so a card first seen tapped kneels at half weight for its
    whole life. With the variants that idle IS the signature pose, so the blend
@@ -6338,13 +6452,13 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
    reader, and have `build-figures.mjs` write each as a static `hair:<style>`
    node (unit head space, costume slot `hair`); then `scene/props.ts` bakes them
    as the existing `hair*` kinds in place of the shells, and `figures.test.ts`
-   asserts every `hair:*` node. Measure against **D145**'s 450 KiB.
+   asserts every `hair:*` node. Measure against **D161**'s 450 KiB.
 3. **The cheaper road to library headroom.** Two thirds of `figures.glb` is its
    JSON chunk, one accessor/sampler/channel per animated joint per clip. Merging
    each body's clips into one long clip with named ranges would roughly halve it;
    the clip lane already scrubs `action.time`, so it is a build change plus a
    range table in `models.json`.
-4. **Expressions** — *grit done by the second fix pass (**D149**); pain open,
+4. **Expressions** — *grit done by the second fix pass (**D165**); pain open,
    and MOTION's.* Report 15 §6.2's neutral / grit / pain. Grit is a POSE: the
    `faceGrit` and `facePatchedGrit` kinds, chosen when `stance` is `crouch`
    (tapped), `attacking` or `blocking`. Pain on `hit` is a cue: it needs the prop
@@ -6354,24 +6468,24 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
    only `PROP_KINDS`, and `face` is derived; `DuelistLayer`'s bake is generic, so
    allowing `face` in a look is a validator change. From three-quarters behind it
    would barely show; the villain wears a helm.
-6. **`FigurePose.art` is carried and not yet drawn** — *null in the arena again
-   since the third fix pass reverted the pass-through (**D148**); non-null the day
-   follow-up 13 lands.* It is the art rung's vivid
+6. **`FigurePose.art` is carried and not yet drawn** — *non-null in the arena
+   since the merge applied follow-up 13 (**D164**, amended); still read by
+   neither look nor motion.* It is the art rung's vivid
    accent for LOOK's rim and MOTION's burst and mote colours (report 15 §7.2);
    neither lane reads it yet.
-7. **The palette's accent pick** — *closed by the second fix pass (**D148**).*
+7. **The palette's accent pick** — *closed by the second fix pass (**D164**).*
    `share × (0.3 + saturation)` favoured a large muted cluster: Fury's accent was
    `#867448`, not his explosion's. The score is now `× (0.4 + value)`, and
    `palette.test.ts` holds report 15 §7.1's own clusters to the explosion.
-8. **The coat close up** — *smaller since **D147** cut it to the body, and the
+8. **The coat close up** — *smaller since **D163** cut it to the body, and the
    yoke's ledge and the scientists' fan closed by the third fix pass (the yoke
    tapered to the body link, `working` bent from the waist, a seam test); still a
    rigid-panel cost.* A pose that bends only at the chest still stands the coat's
    body (on `spine_01`) upright beside the leaning chest — `working` was one, and
    any new pose that leans should bend the lower spine too (CLAUDE.md's lane
    convention 1). Panels are rigid links, so a close view shows small
-   ledges where one overlaps the next (**D143**'s known cost; the calf swing it
-   also named is gone with **D146**). A kneeling Biochemist's front lower link
+   ledges where one overlaps the next (**D159**'s known cost; the calf swing it
+   also named is gone with **D162**). A kneeling Biochemist's front lower link
    hangs in front of his knee, over the card — a coat draped over a knee, but a
    big white flap from above. A procedurally built skinned coat (one mesh, several
    bones' weights) would remove both; it needs a skinned renderer for props, which
@@ -6380,7 +6494,7 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
    before this lane's second pass. The duelists' gestures bend little; a card that
    wears a cape and a bending pose would want the same two-link split.
 10. **The procedural hair reads as a cap close up** (`crop` most) — *the bob
-    re-cut as hair by **D149** (a swept fringe, open temples, lit locks); `crop`,
+    re-cut as hair by **D165** (a swept fringe, open temples, lit locks); `crop`,
     `waves` and `bun` unchanged.* The pack's
     hairstyles (follow-up 2) are the fix; until then the shells are judged at the
     table view, where they pass the identity raster from both seats.
@@ -6388,11 +6502,15 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
     Universal Base Characters bodies. A new body family needs them measured again
     (a test could derive them from the rig's `Head` and the skin slot's extent).
 12. **The palette runs on the main thread** in an idle callback, 3–22 ms a card
-    at ¼ scale — in the workshop today, in the arena too once follow-up 13 lands.
+    at ¼ scale — in the workshop and, since the merge, in the arena.
     A Worker if a board of many new cards ever stutters on its first frames.
-13. **Switch the art rung on — `web/src/arena/Arena.tsx` and
-    `web/src/workshop/Pedestal.tsx`, lane LOOK's files** (report 15 §9.1, §9.4) —
-    **OPEN, and a decision for the user** (**D148**). *The second fix pass applied
+13. ~~**Switch the art rung on — `web/src/arena/Arena.tsx` and
+    `web/src/workshop/Pedestal.tsx`, lane LOOK's files** (report 15 §9.1, §9.4)~~ —
+    **closed at merge, by way (a) below** (**D164**, amended): the merge pass
+    applied the edit as written, named `paletteNamesOf` in `Workshop.tsx`'s
+    coupling header, passed `palettes` to the framing poses (the preview memo
+    went), changed the tuning panel's note and liveness's comment, and tightened
+    liveness to exactly once. The record: *The second fix pass applied
     the edit below as written, the verifier's third round called that a blocker
     (ownership; `git merge-tree` of `bodies` and `look` had reported no conflict in
     either file, evidence §8.4), and the third fix pass reverted it: both files are
@@ -6412,7 +6530,7 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
     +import { paletteNamesOf, useArtPalettes } from './art.ts';
      …
        const frozen = useMemo(() => combatFreeze(state.board), [state.board]);
-    +  // Lane BODIES (D144): the art rung — each face-up card's own painting, read
+    +  // Lane BODIES (D160): the art rung — each face-up card's own painting, read
     +  // once off the hot path; a new map only when a palette arrives.
     +  const paletteNames = useMemo(() => paletteNamesOf(placed), [placed]);
     +  const palettes = useArtPalettes(paletteNames, art);
@@ -6466,7 +6584,7 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
     the coat from the table view (`var/bodies/fix1/coat-v3/`). The cape keeps its
     trim, which its shoulder panels hide.
 15. **Dark procedural hair still reads as a cap from above** — *closed for the
-    bob by **D149**: a band of lit locks (`sheen`, a vertex colour over 1); Quake's
+    bob by **D165**: a band of lit locks (`sheen`, a vertex colour over 1); Quake's
     face now shows 8 px at the table view. The third fix pass made the locks COOL
     (`SHEEN_COOL`) so her hair could go back to the near-black her painting draws
     (`#1c1a22`) and still show them; from the workshop's steep 1× a bob still
@@ -6482,14 +6600,14 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
     card shares (slice 4's rule), so it is not his complexion — a per-card skin
     slot is a costume question for the user, not this lane's to decide.
 17. **The duelists' coats are single-sided — `scene/DuelistLayer.tsx`, LOOK's
-    file** — *closed by the second fix pass (**D147**) without editing it: a cloth
+    file** — *closed by the second fix pass (**D163**) without editing it: a cloth
     kind's geometry carries its LINING unless the caller asks for none, and only
     the prop field (drawn `DoubleSide`) asks.* The prop field draws every kind `DoubleSide`; `DuelistLayer` bakes the
     same panels into the duelist's own `SkinnedMesh`, drawn by `holoMaterial`'s
     `FrontSide`. So from three-quarters behind, the inside of the director's coat
     is culled and its side panels read as separate planks with the table showing
     between them — the verifier's "tails flare to one side as a detached panel",
-    which **D146** does not cure (it only stopped the tails following his legs;
+    which **D162** does not cure (it only stopped the tails following his legs;
     the before and after crops are identical, `var/bodies/fix1/table-v3/
     director.png`). Two ways, both LOOK's: bake each panel kind (`coatTails`,
     `cape`) a second time with its winding reversed and its normals flipped (+24
@@ -6497,7 +6615,7 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
     `side: THREE.DoubleSide` (+1 program).
 18. **The workshop cannot show a face at 1×, and the table cannot read one.** Its
     close framing looks down on the head, so a face — neutral or in grit
-    (**D149**) — is a few pixels under the hair from there; the second fix pass
+    (**D165**) — is a few pixels under the hair from there; the second fix pass
     judged the grit from a lens at head height moved by hand through the dev handle
     (`var/bodies/fix3/lowcam.js`, `var/bodies/fix3/it6/s3.png`). **Measured
     (evidence §9.5)**: from the seat that faces the lens a face is 4–8 px at view 1
@@ -6535,12 +6653,39 @@ grows 8.2 kB gzip. `npm --prefix web test` is **889 `node --test` + 94 vitest**
     file, ignores `follow` and `hang`), so a skirt link that the prop field would
     swing with the thigh stands where the bind pose put it; a skinned coat
     (follow-up 8) or a per-panel bake that honours `follow` would cure both.
-23. **Peggy's sidearm is still small from above.** The third fix pass gave the
+23. **Peggy's sidearm is still small from above** — *partly closed at merge: the
+    pistol at 70%, from 60% (34 px from the far seat's front after the ink, where it
+    had fallen to 22 under D143's seats).* The third fix pass gave the
     pistol kind a pistol's profile (a slide, a dark raked grip, a trigger guard, a
     hammer — 90 triangles), which reads on Agent 13's raised pistol; Peggy's
     sidearm at 60% points down in her `ready`, and from the table view it is 51 px,
     a small two-tone shape. Aiming her `ready` pistol across the body (a new
     `REST_KIT` row, not new aims on `ready`) would show its side.
+24. **A face at play distance is on the far seat only** (the merge's
+    re-measurement, **D158** amended). Since **D143** your figures show you their
+    backs, so every face the arena draws is the opponent's, 2–10 px at views 1
+    and 2; the close look is the workshop's `1× front` (42–118 px). Whether the
+    face earns its draw call at the table is follow-up 18's question, now with
+    that number.
+25. **Fury's strap crosses his good brow.** On the bald anchor the band lies on
+    the skull, so its diagonal crosses the forehead over his right brow (the
+    patch is on his left eye); from the table view's height that leaves his
+    patched face 2 px on the far seat, read with the patch (27). Raising the band
+    on the far side (its `[0, 0.1, 0]` offset and its −0.5 tilt in `scene/props.ts`)
+    would free the brow; judge it in the workshop's `1× front` first.
+26. **The raster's merge details are keyed by KIND** (`traits.test.ts`'s
+    `ONE_SIDED`: `shield`, `hairParted`, `hairBob`, with partners `hat`, `squad`,
+    `wings`). A card that later wears one of those kinds and falls under the bar
+    with no such partner fails the test — intended, but the day it happens the
+    right answer may be a per-card table rather than a new partner.
+27. **Lane LOOK's follow-up 4 is still open** — `scene/models.ts` imports
+    `COSTUME_ATTRIBUTE` through the `holoMaterial.ts` shim, its last importer. The
+    merge did not retire the shim (it is a liveness assertion's removal, LOOK's
+    to judge); the edit is LOOK's follow-up as written.
+28. **A liveness message names a line by its text.** `codeOf` drops block
+    comments, so a line number from its output is not the file's; the poll
+    clause prints the offending line instead. A `codeOf` that kept the newlines
+    would let every clause name a real line.
 
 ---
 
@@ -6622,3 +6767,5 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 26 | **New, the comic motion lane.** Keep **on twos** (every cue stepped to twelve drawings a second) on by default? It is the comic's stepped motion, and some eyes read it as judder, especially on a high-refresh display. | **On by default** (the brief), off under reduced motion; `?twos=0` and a checkbox. |
 | 27 | **New, the comic motion lane.** The five words — POW, BLAM, KRAK, ZZAK, WHOOSH — and which card says which. The list is closed on purpose (D150); a word is a decision. | **The five of report 15 §5.1**, assigned in `cues.json`'s `_motion` notes. |
 | 28 | **New, the comic motion lane at merge.** Every creature arrives summoning-sick, which the comic look draws half hologram, so its summon resolves from hologram to HALF ink. Should the summon swing all the way to ink and then settle to half (the ramp overshooting identity, clamped by the shader), or stay as it is? | **As it is**: the product of the two lanes' decisions (D142, D148), as LOOK's follow-up 5 expected. The overshoot is one line in `playMaterialize` (the motion lane's follow-up 13). |
+| 29 | **New, Lane BODIES.** Download the *Universal Base Characters* pack again (`Universal Base Characters[Standard].zip`, 128,968,391 B, from <https://quaternius.itch.io/universal-base-characters>) so the hair is the pack's own hairstyles instead of four procedural shells? A download is your approval in chat, with the badge read on the day (**D54**, **D95**). | **Not downloaded** (**D157**): two carved styles and four shells; the route is the lane's follow-up 2. |
+| 30 | **New, Lane BODIES at merge.** Keep the **art rung** on — every face-up card with no hand-written colour takes its painting's (the Giant-Sized Flying Ant brown, Wasp's aura salmon) — or put it behind a switch until played? The lane left it to you (**D164**); the merge applied it, as the lane's follow-up 13 said "whoever merges LOOK and BODIES" would. | **On** (**D164**, amended). `palette: off` in a `traits.json` row turns it off for a card; there is no page-wide switch. |

@@ -62,6 +62,7 @@ import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 import { VIEW_BY_ID } from '../src/arena/camera.ts';
+import { framingOf, frontPose } from '../src/workshop/framing.ts';
 import { MAX_BINDINGS, PROP_CAPACITY, PropField, buildKindGeometry } from '../src/arena/scene/props.ts';
 import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import {
@@ -75,6 +76,7 @@ import {
   loadLibrary,
   onBattlefield,
   posesOf,
+  PRESENCE,
   rigOf,
   twoSeatState,
   visibility,
@@ -409,7 +411,7 @@ test('traits: every deck humanoid wears its own costume — the task list read o
   // The drone and the bee wear nothing: they carry no slots.
   assert.equal(poseOf('Aerial Doombot').costume, null);
   assert.equal(poseOf('Giant-Sized Flying Ant').costume, null);
-  // Lane BODIES (D140, D141): the task's list of attitudes and hairstyles, read
+  // Lane BODIES (D156, D157): the task's list of attitudes and hairstyles, read
   // back off the poses — each is really what the figure rests in and wears.
   const want: Array<[string, string, string | null]> = [
     // Bald, as his card draws him (the fix pass: the dark `crop` read as a skullcap).
@@ -430,19 +432,19 @@ test('traits: every deck humanoid wears its own costume — the task list read o
     attitudes.push(`  ${name.padEnd(30)} rests ${String(pose.rest).padEnd(8)} hair ${String(pose.hair).padEnd(7)} → ${String(pose.modelId)}`);
     assert.equal(pose.rest, rest, `${name} does not rest ${rest}`);
     assert.equal(pose.hair, hair, `${name}'s hair is not ${String(hair)}`);
-    // Fury's is the patched face (D142): his left eye is under the eyepatch.
+    // Fury's is the patched face (D158): his left eye is under the eyepatch.
     const faceKind = name === 'Nick Fury, Spymaster' ? 'facePatched' : 'face';
     assert.equal(pose.props.some((p) => p.kind === faceKind), name !== 'A.I.M. Scientists', `${name}: the ${faceKind}`);
   }
   console.log(`traits: every deck person's resting pose and hair\n${attitudes.join('\n')}`);
-  // The coats stop at the hip and hang their skirts on the legs (D143).
+  // The coats stop at the hip and hang their skirts on the legs (D159).
   for (const name of ['Nick Fury, Spymaster', 'Bold Biochemist']) {
     const kinds = poseOf(name).props.map((p) => p.kind);
     assert.ok(kinds.includes('coat') && kinds.includes('coatTails'), `${name}: the coat and its skirt`);
   }
 });
 
-test('traits: the face reads from the views it is FOR — a seat’s own figures, close — and is never on a back (D142)', async () => {
+test('traits: the face reads from the views it is FOR — close in the workshop’s 1× front, present at play distance on the seat that faces the lens — and is never on a back (D158)', async () => {
   const library = await loadLibrary();
   const cards = corpusCards();
   // Face-up people with nothing over the face (a hat's brim, a hood), at full size.
@@ -456,48 +458,69 @@ test('traits: the face reads from the views it is FOR — a seat’s own figures
     for (const seat of SEATS) {
       const pose = soloPose(card, card, seat, false, false)!;
       const layers = figureLayers(pose, library);
-      // Which seat shows the lens its FACE is layout.ts's to say (seatFacingY,
-      // D81 — PLAN.md question 13 may turn it), never this test's.
+      // Which seat shows the lens its FACE is layout.ts's to say (seatFacingY —
+      // since D143 the FAR seat, the opponent's), never this test's.
       const front = facesTheLens(seat);
+      const groups = kindGroups(layers);
+      // The face in whichever style the card wears — Fury's is `facePatched`, and
+      // at play distance his patched face is read WITH its patch: the patch is the
+      // eye it covers (the identity raster holds the eyepatch itself).
+      const face = [...(groups['face'] ?? []), ...(groups['facePatched'] ?? [])];
+      const faces = { face, withPatch: [...face, ...(groups['eyepatch'] ?? [])] };
       for (const view of ['table', 'shoulder', 'side'] as const) {
-        // The face in whichever style the card wears — Fury's is `facePatched`.
-        const groups = kindGroups(layers);
-        const faces = { face: [...(groups['face'] ?? []), ...(groups['facePatched'] ?? [])] };
-        const px = visibility(cameraAt(VIEW_BY_ID[view].pose), layers, faces).get('face')?.pixels ?? 0;
+        const seen = visibility(cameraAt(VIEW_BY_ID[view].pose), layers, faces);
+        const px = seen.get('face')?.pixels ?? 0;
+        const read = seen.get('withPatch')?.pixels ?? 0;
         row.push(`${seat}/${view} ${String(px).padStart(3)}`);
-        if (front && view === 'table' && px < FACE_TABLE_MIN_PX) failures.push(`${name}: ${String(px)} px of face at the table view`);
-        if (front && view === 'shoulder' && px < FACE_SHOULDER_MIN_PX) failures.push(`${name}: ${String(px)} px of face over the shoulder`);
+        if (front && view !== 'side' && read < FACE_FAR_MIN_PX) failures.push(`${name}: ${String(read)} px of face at the ${view} view, on the seat that faces it`);
         if (!front && view !== 'side' && px > 2) failures.push(`${name}: its face shows ${String(px)} px through the back of its head (${view})`);
+      }
+      // The close look: the workshop's `1× front` (framing.ts's `frontPose` — view
+      // 1's distance and elevation, from the side the figure faces; D143).
+      if (seat === 'you') {
+        const alone = twoSeatState([onBattlefield(card, 500, 0)], []);
+        const framing = framingOf(layout(alone, PRESENCE), posesOf(alone), 500);
+        const close = visibility(cameraAt(frontPose(framing)), layers, faces).get('face')?.pixels ?? 0;
+        row.push(`1× front ${String(close).padStart(3)}`);
+        if (close < FACE_CLOSE_MIN_PX) failures.push(`${name}: ${String(close)} px of face in the workshop's 1× front`);
       }
     }
     lines.push(`  ${name.padEnd(30)} ${row.join(' · ')}`);
   }
-  console.log(`traits: the face, in px at 1600 × 1000 (≥ ${String(FACE_TABLE_MIN_PX)} at the table view and ≥ ${String(FACE_SHOULDER_MIN_PX)} over the shoulder, from the seat whose figures face the lens; side-on logged)\n${lines.join('\n')}`);
+  console.log(
+    `traits: the face, in px at 1600 × 1000 (≥ ${String(FACE_CLOSE_MIN_PX)} in the workshop's 1× front; ≥ ${String(FACE_FAR_MIN_PX)} at the table view and over the shoulder ` +
+      `on the seat whose figures face the lens, a patched face with its patch; ≤ 2 through the back of a head; side-on logged)\n${lines.join('\n')}`,
+  );
   assert.deepEqual(failures, []);
 });
 
 /**
- * **What a face reaches** (lane BODIES, D142). A proportioned head is ~12 px tall
- * at the table view (D95), so a face there is a few pixels whatever it is — the
- * bars are set under the measurement (5–7 px at the table view, 9–16 over the
- * shoulder, docs/evidence/bodies.md) so a face that shrank or turned away fails.
- * It is a detail for the close views and the workshop, not an identity.
+ * **What a face reaches** (lane BODIES, D158, restated at the lanes' merge). A
+ * proportioned head is ~12 px tall at the table view (D95), so a face there is a
+ * few pixels whatever it is. Before D143 the seat that faced the lens was the NEAR
+ * one (5–7 px at the table view, 9–16 over the shoulder); since it, every face the
+ * arena shows is on the FAR seat (2–10 px at either view, docs/evidence/bodies.md,
+ * *At merge*), and the close look is the workshop's `1× front` (42–118 px). So a
+ * face is held to being PRESENT at play distance — Fury's patched face read with
+ * its patch — and to READING close, where expressions are judged. The bars are set
+ * under the measurement, so a face that shrank or turned away fails. It is a
+ * detail, not an identity.
  */
-const FACE_TABLE_MIN_PX = 4;
-const FACE_SHOULDER_MIN_PX = 8;
+const FACE_FAR_MIN_PX = 4;
+const FACE_CLOSE_MIN_PX = 32;
 
 /**
  * Whether a seat's figures show the table view their FRONT: figure space faces
  * +Z (`FIGURE_FRONT_Z`), turned by `seatFacingY`, against the lens's side of the
  * table. Read off layout.ts so the face test follows the facing rule wherever it
- * lands (D81; lane LOOK turns your figures toward the opponent).
+ * lands (D81; since D143 your figures face the opponent, so it is the far seat).
  */
 function facesTheLens(seat: 'you' | 'opp'): boolean {
   return Math.cos(seatFacingY(seat)) * FIGURE_FRONT_Z * Math.sign(VIEW_BY_ID.table.pose.position[2]) > 0;
 }
 
 test('traits: every anonymous pose in the corpus carries no props, no hover, no swarm', () => {
-  // The second fix pass (D148; the verifier's round 2): the sweep hands the poses
+  // The second fix pass (D164; the verifier's round 2): the sweep hands the poses
   // a palette map that answers EVERY name — so "no art colour" below is the
   // pose's own gate speaking, not a map that was never passed. `palette.test.ts`'s
   // hostile corpus is the stronger proof (it names the backs); this one also
@@ -538,7 +561,7 @@ test('traits: every anonymous pose in the corpus carries no props, no hover, no 
   assert.ok(coloured >= 1000, `only ${String(coloured)} face-up figures took the art rung — the map was not read`);
 });
 
-test('traits: a palette never paints a costume — a row-less person whose art is vivid wears the colour identity (D144; the verifier’s round 3)', () => {
+test('traits: a palette never paints a costume — a row-less person whose art is vivid wears the colour identity (D160; the verifier’s round 3)', () => {
   // Report 15 §7.1: a painting's dominant colour is its BACKGROUND. The art rung
   // may tint a creature with no hand-written tint anywhere (a disc, the ant) and
   // colour its rim and accent — but never its clothes. The committed data hides
@@ -643,7 +666,7 @@ test('traits: the census — every deck card reads as itself, and every row fire
         const anchors =
           prop.kind === 'swarmBee' || prop.kind === 'squad'
             ? pose.swarm
-            : Math.max(1, anchorsOf(prop.kind, familyOf(pose.modelId, MODELS)).length);
+            : Math.max(1, anchorsOf(prop.kind, familyOf(pose.modelId, MODELS), pose.hair === null).length);
         instances += anchors;
       }
       if (pose.anonymous) continue;
@@ -729,10 +752,10 @@ test('traits: the census — every deck card reads as itself, and every row fire
   // **The budget**: the field draws one call per KIND. Report 13 §8.2's 90 has
   // room for the slice-2 scene (≤ 66 at g1@355) plus this many. Lane BODIES raised
   // it from 12 to 16 — a face and a hairstyle per style on the table, a coat's
-  // skirt and a sidearm (D141–D143): measured 16 at the corpus's worst frame
+  // skirt and a sidearm (D157–D159): measured 16 at the corpus's worst frame
   // (disjoint.jsonl@241), 15 at g1@316 and 14 at @355, where the whole scene
   // draws 85 calls with bloom off on the GTX 1080 (docs/evidence/bodies.md) —
-  // inside the 90. The second fix pass (D149) raised it to 17: a face in grit is
+  // inside the 90. The second fix pass (D165) raised it to 17: a face in grit is
   // a kind of its own while a kneeling, attacking or blocking person is on the
   // table beside a resting one (human-auto-2026.jsonl@776 is the worst frame);
   // docs/evidence/bodies.md §8 has the calls it costs at the budget frames.
@@ -805,10 +828,10 @@ test('traits: with no trait data the poses are slice 2’s — identity is purel
     }).values()) {
       assert.equal(pose.lift, 0);
       // Lane BODIES: a proportioned body's HEAD is props now — the pack's own hair
-      // for that body (carved off it, D141) and the face (D142) — and nothing else.
+      // for that body (carved off it, D157) and the face (D158) — and nothing else.
       const own = pose.modelId === null ? undefined : BODY_HAIR[baseModelOf(pose.modelId)];
       const head = own === undefined || own === 'none' ? [] : [HAIR_KIND[own]];
-      // …its face set in grit while it kneels, attacks or blocks (D149).
+      // …its face set in grit while it kneels, attacks or blocks (D165).
       const face = expressionOf(pose.stance) === 'grit' ? 'faceGrit' : 'face';
       assert.deepEqual(
         pose.props.map((p) => p.kind),
@@ -998,15 +1021,9 @@ const IDENTITY_MIN_PX = 48;
  * Nothing else may be under the bar.
  */
 const SHORTFALL: Readonly<Record<string, { seat: 'you' | 'opp'; floor: number; why: string }>> = {
-  // 52 px of it on screen before any ink (kneeling, centre); the ink's one-pixel
-  // inner line takes 6 of its edge. The chest plate is `figures/props.ts`'s
-  // `badge.anchors.human[0].size` 0.065 — Lane BODIES' file (PLAN.md, Lane LOOK
-  // follow-up: 0.075 is ≈ 69 px). From behind the emblem reads at ≈ 200 px.
-  'Agent Phil Coulson/badge': {
-    seat: 'opp',
-    floor: 44,
-    why: 'the chest plate seen from the front is 52 px before the ink — a BODIES size change',
-  },
+  // Empty since the lanes' merge. Its one row was Coulson's chest badge from the
+  // front — 52 px before the ink, 46 after it, at `badge.anchors.human[0].size`
+  // 0.065 — closed by Lane LOOK's follow-up 17 (0.075, in `figures/props.ts`).
 };
 
 /**
@@ -1035,18 +1052,31 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
   // hand, pointed at the floor in front of her — the red hat carries her from both.
   hairWaves: { partner: 'hat', why: 'waves under a hat show at the nape — the hat carries Peggy from the front' },
   sidearm: { partner: 'hat', why: 'a pistol in the hand, pointed down in front — the red hat carries Peggy from behind' },
+  // The lanes' merge (Lane BODIES on Lane LOOK): D143 turned the seats round —
+  // the near seat now sees your figures' BACKS, the far seat the opponent's
+  // fronts — and the ink's line takes a small prop's edge. Three BODIES props
+  // became details there, each measured, each with its partner at the full bar:
+  // Peggy's shield is held IN FRONT of her in her `ready` (D156) — 127 px from
+  // the far seat, 1 from behind; a hairstyle from the FRONT is its fringe, not its
+  // crown — the Agents' leader's parted hair (the agent body's own, BODY_HAIR:
+  // it names no card) is 40 px from the far seat, where the squad's three heads
+  // carry the card, and Wasp's bob on her half-height body 17 px, where her wings
+  // do. Both show at the full bar from behind.
+  shield: { partner: 'hat', why: 'a shield held in front in her ready — from behind the red hat carries Peggy (D143, at merge)' },
+  hairParted: { partner: 'squad', why: "the agent body's own hair, a fringe from the front — the squad's three heads carry the Agents (D143, at merge)" },
+  hairBob: { partner: 'wings', why: "a bob from the front is its fringe — on Wasp's half-height body the wings carry her (D143, at merge)" },
 };
 
 /**
  * **Lane BODIES — the props that name NO card**, and so are not held to the
- * identity bar at all: the face is on every person (D142). It has its own test
+ * identity bar at all: the face is on every person (D158). It has its own test
  * below, from the views it is FOR.
  */
 const GENERIC: Readonly<Record<string, string>> = {
   face: 'on every person — it identifies no card; `traits: the face reads …` measures it',
   facePatched: 'the face under an eyepatch — the eyepatch is the identity, and is held to the bar',
-  faceGrit: 'the face in grit (D149): an expression of the stance, not of the card',
-  facePatchedGrit: 'the patched face in grit (D149)',
+  faceGrit: 'the face in grit (D165): an expression of the stance, not of the card',
+  facePatchedGrit: 'the patched face in grit (D165)',
 };
 
 /**
@@ -1202,7 +1232,7 @@ test('traits: every deck card’s identity props reach the screen from the table
   // never inked or dotted a pixel would pass this test for the wrong reason).
   assert.ok(inkedTotal > 0 && inkedTotal < pixelsTotal / 2, `the ink took ${String(inkedTotal)} of ${String(pixelsTotal)} px`);
   assert.ok(dottedTotal > 0, 'no identity-prop pixel fell on a halftone dot — the screen is not modelled');
-  assert.equal(Object.keys(SHORTFALL).length, 1, 'a new known shortfall is a decision: say why in its row, and in PLAN.md');
+  assert.equal(Object.keys(SHORTFALL).length, 0, 'a new known shortfall is a decision: say why in its row, and in PLAN.md');
   assert.ok(least.size >= 11, `only ${String(least.size)} deck cards carried props`);
   assert.deepEqual(failures, []);
   // The negative control: slice 3's badge — on the chest only — is not on the
@@ -1334,7 +1364,7 @@ test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table
   assert.equal(controlFailed, 8, 'the old formation passes somewhere — this test would not have caught it');
 });
 
-test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles an instance, the face and a skirt panel far less (D141–D143)', () => {
+test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles an instance, the face and a skirt panel far less (D157–D159)', () => {
   const lines: string[] = [];
   const budget: Array<[Parameters<typeof buildKindGeometry>[0], number, number]> = [
     ['hairCrop', 150, 600],
@@ -1364,7 +1394,7 @@ test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles
   console.log(`traits: lane BODIES' kinds, triangles an instance — ${lines.join(' · ')}`);
 });
 
-test('traits: a cloth kind carries its LINING for a renderer that culls back faces — the duelists’ bake — and the field draws one sheet (D147)', () => {
+test('traits: a cloth kind carries its LINING for a renderer that culls back faces — the duelists’ bake — and the field draws one sheet (D163)', () => {
   for (const kind of ['coatTails', 'cape'] as const) {
     const sheet = buildKindGeometry(kind, { lining: false })!;
     const lined = buildKindGeometry(kind)!;
@@ -1407,7 +1437,7 @@ test('traits: a cloth kind carries its LINING for a renderer that culls back fac
   field.dispose();
 });
 
-test('traits: a face sets its jaw — grit while the figure kneels, attacks or blocks, neutral at rest, over the corpus (D149)', () => {
+test('traits: a face sets its jaw — grit while the figure kneels, attacks or blocks, neutral at rest, over the corpus (D165)', () => {
   assert.equal(expressionOf('ready'), 'neutral');
   assert.equal(expressionOf('sick'), 'neutral');
   for (const stance of ['crouch', 'attacking', 'blocking'] as const) assert.equal(expressionOf(stance), 'grit');
@@ -1431,10 +1461,10 @@ test('traits: a face sets its jaw — grit while the figure kneels, attacks or b
 });
 
 // ---------------------------------------------------------------------------
-// Lane BODIES' fix pass — the drape rule (D146)
+// Lane BODIES' fix pass — the drape rule (D162)
 // ---------------------------------------------------------------------------
 
-/** The first cut's skirt (D143): each link rode its leg bone, the lower one the CALF. The negative control. */
+/** The first cut's skirt (D159): each link rode its leg bone, the lower one the CALF. The negative control. */
 const FIRST_CUT_SKIRT = ((): readonly PropAnchor[] => {
   const rad = (d: number): number => (d * Math.PI) / 180;
   const waist = [0, 0.525, -0.012] as const;
@@ -1531,7 +1561,7 @@ async function drapeOf(card: AnyCard, filler: AnyCard): Promise<Drape> {
 const DRAPE_MAX_LOWER_TILT = 30;
 const DRAPE_MAX_REACH = 0.42;
 
-test('traits: the coat DRAPES — no skirt link lies flat or flies out, at rest in any stance or through a whole lunge (D146; the first cut fails it)', async () => {
+test('traits: the coat DRAPES — no skirt link lies flat or flies out, at rest in any stance or through a whole lunge (D162; the first cut fails it)', async () => {
   const cards = corpusCards();
   const filler = cards.get('Soldier Token')!;
   const kit = PROP_KIT.coatTails.anchors as Record<string, readonly PropAnchor[] | undefined>;
@@ -1563,13 +1593,13 @@ test('traits: the coat DRAPES — no skirt link lies flat or flies out, at rest 
 });
 
 /**
- * **The coat's FIT at rest** (the second fix pass, D147): every body and skirt
+ * **The coat's FIT at rest** (the second fix pass, D163): every body and skirt
  * panel's hem, as the prop field draws it on a figure standing at rest, within
  * `COAT_FIT` of a height of the body's own axis (its pelvis). The verifier's
- * second round read D146's coat as "a wide bell that hides his legs" and "a huge
+ * second round read D162's coat as "a wide bell that hides his legs" and "a huge
  * white bell … that swallows the figure": its lower links' hems stood 0.26 out
- * round hips 0.08 wide. The control is that bell — every panel 1.45× wider, D146's
- * lower hem over D147's — swapped into the kit for the run; it must fail.
+ * round hips 0.08 wide. The control is that bell — every panel 1.45× wider, D162's
+ * lower hem over D163's — swapped into the kit for the run; it must fail.
  */
 const COAT_FIT = 0.2;
 
@@ -1627,7 +1657,7 @@ async function restReachOf(card: AnyCard, filler: AnyCard): Promise<{ reach: num
   return { reach, front };
 }
 
-test('traits: the coat FITS — at rest every panel hangs close round the body, open down the front (D147; the D146 bell fails it)', async () => {
+test('traits: the coat FITS — at rest every panel hangs close round the body, open down the front (D163; the D162 bell fails it)', async () => {
   const cards = corpusCards();
   const filler = cards.get('Soldier Token')!;
   const kit = PROP_KIT.coatTails.anchors as Record<string, readonly PropAnchor[] | undefined>;
@@ -1647,7 +1677,7 @@ test('traits: the coat FITS — at rest every panel hangs close round the body, 
     } finally {
       kit['human'] = committed;
     }
-    lines.push(`  ${name.padEnd(22)} hem ≤ ${fit.reach.toFixed(3)} of a height from the pelvis, open ${fit.front.toFixed(0)}° down the front; the D146 bell ${control.reach.toFixed(3)}`);
+    lines.push(`  ${name.padEnd(22)} hem ≤ ${fit.reach.toFixed(3)} of a height from the pelvis, open ${fit.front.toFixed(0)}° down the front; the D162 bell ${control.reach.toFixed(3)}`);
     assert.ok(fit.reach <= COAT_FIT, `${name}: a hem stands ${fit.reach.toFixed(3)} of a height out at rest`);
     assert.ok(fit.front >= 16, `${name}: the coat is closed down the front (an opening of ${fit.front.toFixed(0)}°)`);
     assert.ok(control.reach > COAT_FIT, `${name}: the bell passes too (${control.reach.toFixed(3)}) — this test cannot see a bell`);
@@ -1659,13 +1689,13 @@ test('traits: the coat FITS — at rest every panel hangs close round the body, 
  * **The yoke meets the coat's body with no LEDGE** (lane BODIES' third fix pass).
  * The verifier's third round read "a stepped ledge at the shoulder" on Doom's
  * cloak and, on the Bold Biochemist bent over his bench, "a separate grey panel
- * fanning out … a white arc beside his head": D147's yoke flared to 0.165 at its
+ * fanning out … a white arc beside his head": D163's yoke flared to 0.165 at its
  * hem over a body link 0.116 wide there, and a lean at the chest alone swung that
  * flare off the body. Measured as the prop field draws them at rest: every point
  * of the yoke's hem (its open front excepted), its horizontal distance from the
  * body link's axis less the body link's own radius at that height — positive is
  * a ledge standing out, negative the body link showing over the yoke. The control
- * is D147's cut, evaluated through the same matrices.
+ * is D163's cut, evaluated through the same matrices.
  */
 const YOKE_LEDGE_MAX = 0.025;
 const YOKE_LEDGE_MIN = -0.012;
@@ -1718,7 +1748,7 @@ async function yokeLedgeOf(card: AnyCard, filler: AnyCard, cuts: readonly YokeCu
   return out;
 }
 
-test('traits: the coat’s yoke meets its body with no ledge — standing, folded and bent over a bench (the third fix pass; D147’s flared yoke fails it)', async () => {
+test('traits: the coat’s yoke meets its body with no ledge — standing, folded and bent over a bench (the third fix pass; D163’s flared yoke fails it)', async () => {
   const { YOKE_CUT } = await import('../src/arena/scene/props.ts');
   const cards = corpusCards();
   const filler = cards.get('Soldier Token')!;
@@ -1728,7 +1758,7 @@ test('traits: the coat’s yoke meets its body with no ledge — standing, folde
     const [cut, control] = await yokeLedgeOf(cards.get(name)!, filler, [YOKE_CUT, D147_YOKE]);
     measured.push([name, cut!, control!]);
     lines.push(
-      `  ${name.padEnd(22)} the yoke's hem ${cut!.min.toFixed(3)}…${cut!.max.toFixed(3)} of a height off the body link, its highest point ${(-cut!.gap).toFixed(3)} below the body link's top; D147's ${control!.min.toFixed(3)}…${control!.max.toFixed(3)}`,
+      `  ${name.padEnd(22)} the yoke's hem ${cut!.min.toFixed(3)}…${cut!.max.toFixed(3)} of a height off the body link, its highest point ${(-cut!.gap).toFixed(3)} below the body link's top; D163's ${control!.min.toFixed(3)}…${control!.max.toFixed(3)}`,
     );
   }
   console.log(`traits: the yoke's seam at rest\n${lines.join('\n')}`);
@@ -1736,11 +1766,11 @@ test('traits: the coat’s yoke meets its body with no ledge — standing, folde
     assert.ok(cut.gap <= 0, `${name}: the yoke's hem rides ${cut.gap.toFixed(3)} of a height ABOVE the coat's body — a gap at the back`);
     assert.ok(cut.max <= YOKE_LEDGE_MAX, `${name}: the yoke's hem stands ${cut.max.toFixed(3)} of a height off the coat's body — a ledge`);
     assert.ok(cut.min >= YOKE_LEDGE_MIN, `${name}: the coat's body shows ${(-cut.min).toFixed(3)} of a height outside the yoke`);
-    assert.ok(control.max > YOKE_LEDGE_MAX, `${name}: D147's flared yoke passes too (${control.max.toFixed(3)}) — this test cannot see a ledge`);
+    assert.ok(control.max > YOKE_LEDGE_MAX, `${name}: D163's flared yoke passes too (${control.max.toFixed(3)}) — this test cannot see a ledge`);
   }
 });
 
-test('traits: the drape rule is well-formed — a hanging panel follows a joint panel of its own kind, and every joint it names is on the rig (D146)', async () => {
+test('traits: the drape rule is well-formed — a hanging panel follows a joint panel of its own kind, and every joint it names is on the rig (D162)', async () => {
   const library = await loadLibrary();
   const joints = new Set<string>();
   library.get('agent')!.source.traverse((node) => {
@@ -1784,14 +1814,14 @@ function instancesPerKind(poses: Iterable<FigurePose>): Map<string, number> {
           ? pose.swarm
           : prop.kind === 'carrier'
             ? 1
-            : anchorsOf(prop.kind, familyOf(pose.modelId, MODELS)).length;
+            : anchorsOf(prop.kind, familyOf(pose.modelId, MODELS), pose.hair === null).length;
       out.set(key, (out.get(key) ?? 0) + n);
     }
   }
   return out;
 }
 
-test('traits: the prop field has room for every panel — a mirror’s four long coats fit one kind’s buffer (D146)', () => {
+test('traits: the prop field has room for every panel — a mirror’s four long coats fit one kind’s buffer (D162)', () => {
   // The corpus's worst frame, per kind and in all.
   let worstKind = { n: 0, where: '' };
   let worstTotal = { n: 0, where: '' };

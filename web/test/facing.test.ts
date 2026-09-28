@@ -132,7 +132,7 @@ test('facing: figure space faces +Z, and the kit agrees — the eye, badge and p
   assert.equal(seatFacingY('opp'), 0);
 });
 
-test('facing: lane BODIES — the face is on the head’s FRONT, and a coat’s skirt opens at the front (D142, D143)', () => {
+test('facing: lane BODIES — the face is on the head’s FRONT, and a coat’s skirt opens at the front (D158, D159)', () => {
   // The face kind is built in figure units round the head (its anchor is the
   // origin): every vertex in front of the head's centre, and the eyes either side.
   const face = buildKindGeometry('face')!;

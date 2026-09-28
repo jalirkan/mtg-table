@@ -3,7 +3,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The art palette, read at runtime** (lane BODIES, report 15 §7.2; **D144**).
+ * **The art palette, read at runtime** (lane BODIES, report 15 §7.2; **D160**).
  *
  * `figures/palette.ts` is the pure half — k-means over pixels. This is the
  * half that has pixels: for every card drawn FACE UP on the table it reads the
@@ -99,12 +99,16 @@ type IdleRunner = (callback: (deadline: IdleDeadlineLike) => void) => void;
  * (2 s), and its reads ran in the decode's callback rather than in idle time.
  * Safari has no `requestIdleCallback`; there a 50 ms timeout stands in, with a
  * full budget.
+ *
+ * Both are ONE-SHOT timers, not a poll (`liveness.test.ts`'s poll clause, which
+ * wants each spelled out on its own line with its reason): {@link pump} arms one
+ * only while decoded images wait, and stops the moment they are read.
  */
 function idleRunner(): IdleRunner {
-  const idle = (globalThis as { requestIdleCallback?: (cb: (deadline: IdleDeadlineLike) => void) => number })
-    .requestIdleCallback;
-  if (typeof idle === 'function') return (cb) => void idle(cb);
-  return (cb) => void setTimeout(() => cb({ timeRemaining: () => IDLE_BUDGET_MS }), 50);
+  if (typeof globalThis.requestIdleCallback === 'function') {
+    return (cb) => void requestIdleCallback(cb); // ALLOW timer: one idle callback per pump, armed only while decoded images wait
+  }
+  return (cb) => void setTimeout(() => cb({ timeRemaining: () => IDLE_BUDGET_MS }), 50); // ALLOW timer: Safari's stand-in for the idle callback, the same one-shot
 }
 
 /** Decoded images waiting for an idle period, first in, first out. */

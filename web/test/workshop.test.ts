@@ -222,7 +222,7 @@ test('workshop: every creature of every deck stands on the pedestal, posed by th
   assert.ok(creatures >= 20, `only ${String(creatures)} creatures posed`);
   // The per-card identity arrives with no workshop code saying so.
   const peggy = posesOf(pedestalState(entry('Peggy Carter, Secret Agent'))).get(IDS.subject)!;
-  // …her head too since lane BODIES: her hairstyle and her face (D141, D142).
+  // …her head too since lane BODIES: her hairstyle and her face (D157, D158).
   assert.deepEqual(peggy.props.map((p) => p.kind).sort(), ['face', 'hairWaves', 'hat', 'shield', 'sidearm']);
   assert.equal(peggy.rest, 'ready');
   assert.equal(peggy.tint, '#f3ede4');

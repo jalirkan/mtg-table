@@ -76,14 +76,14 @@ export interface LoadedModel {
   /** The Y turn that makes its `facing` become +Z. */
   rotationY: number;
   /**
-   * **Lane BODIES (D141) — the body's own hair**, as triangle indices into its
+   * **Lane BODIES (D157) — the body's own hair**, as triangle indices into its
    * source geometry (every vertex of them in the costume's `hair` slot), on a
    * proportioned BASE body; `null` on a variant and on every other model. The
    * prop field bakes the hair kinds from it (`scene/props.ts`'s `bakeHair`).
    */
   hairIndex?: Uint32Array | null;
   /**
-   * **Lane BODIES (D140) — the resting pose of a VARIANT** (`agent@folded`): its
+   * **Lane BODIES (D156) — the resting pose of a VARIANT** (`agent@folded`): its
    * `clips.get('idle')` is that pose and its `source` is the body with the hair
    * carved off. `null` or absent on a base body, which is what the duelists, the
    * squads' followers and the rider are baked from — hair and all.
@@ -247,7 +247,7 @@ export function indexLibrary(
 }
 
 // ---------------------------------------------------------------------------
-// Lane BODIES — the resting-pose variants (D140) and the carved hair (D141)
+// Lane BODIES — the resting-pose variants (D156) and the carved hair (D157)
 // ---------------------------------------------------------------------------
 
 /** `head_1` → `head`, `spine_03_1` → `spine_03` (the prop field's rule, `scene/props.ts`). */
@@ -290,7 +290,7 @@ export function carveHair(geometry: THREE.BufferGeometry): { hair: Uint32Array; 
  * the clip lane's resting stance and a baked prop anchor all read the pose with
  * no code of their own. Each draws the body with its hair CARVED off — one bald
  * geometry per body, sharing every attribute buffer with the base's — because the
- * figure wears its hair as a prop kind (D141).
+ * figure wears its hair as a prop kind (D157).
  */
 export function restVariantsOf(model: LoadedModel): LoadedModel[] {
   const out: LoadedModel[] = [];
@@ -341,7 +341,7 @@ const AIM_PARENT = new THREE.Quaternion();
 const AIM_TWIST = new THREE.Quaternion();
 
 /**
- * **One resting pose as a clip** (D140): the `from` clip's frame at `phase` on
+ * **One resting pose as a clip** (D156): the `from` clip's frame at `phase` on
  * the joints the pose holds, each `aim` turned on top (a world-space swing of the
  * joint so the line to its child points along the aim, parents first), and every
  * other joint looping with the `breathe` clip — so a folded-arms figure still

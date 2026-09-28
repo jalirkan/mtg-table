@@ -8,7 +8,7 @@
   "budget": {
     "libraryBytes": 460800,
     "triangles": 30000,
-    "_what": "Lane BODIES (D145), 2026-09-28: the byte budget of web/public/models/figures.glb, re-set by MEASUREMENT from report 13 §8.2's 400 kB (409,600 B, which the build typed in until this lane). tools/build-figures.mjs fails a build over either number and web/test/figures.test.ts holds the committed file to both. 450 KiB = 460,800 B.",
+    "_what": "Lane BODIES (D161), 2026-09-28: the byte budget of web/public/models/figures.glb, re-set by MEASUREMENT from report 13 §8.2's 400 kB (409,600 B, which the build typed in until this lane). tools/build-figures.mjs fails a build over either number and web/test/figures.test.ts holds the committed file to both. 450 KiB = 460,800 B.",
     "measured": {
       "on": "the committed figures.glb (373,236 B, sha256 fe13b02c…7aae90), read by a scratch GLB parser, 2026-09-28",
       "jsonChunkBytes": 237136,

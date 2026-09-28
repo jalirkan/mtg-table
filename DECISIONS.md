@@ -7455,11 +7455,33 @@ splash reads as paint, not ink); an additive halo (ink is painted, **D147**).
 
 ---
 
-## D140 — A card RESTS in a signature pose: a closed table of poses made from the library's own clips, derived at load into a model variant, drawn as a pose
+*Lane BODIES' ten decisions — the third of report 15's three art-direction lanes
+(`docs/research/15-art-direction.md` §9) to land. Branch `bodies` (worktree
+`mtg-table-t2n`), cut from the art-direction report's `c81f674` on `main`'s
+`a092d3a`, and rebased onto Lane MOTION's merged tip `e2aee03` (`main`'s
+`f6bad35`, report 15, Lane LOOK's four commits and Lane MOTION's three). Written as
+**D140–D149** in the lane's reserved range D140–D149 while `main` took D113–D136
+and Lanes LOOK and MOTION, landing first, renumbered theirs to D137–D146 and
+D147–D155 — so every one of the lane's numbers was taken, seven of them by the
+other two lanes — and renumbered contiguously at merge: these ten are
+**D156–D165**, in the order they were written, on every line the lane's three
+commits wrote (and on no other: the renumbering read each line's commit, because
+D140–D146 are Lane LOOK's and D147–D149 Lane MOTION's on every line those lanes
+wrote) — this file, CLAUDE.md, PLAN.md, README.md, `docs/evidence/bodies.md`,
+`traits.json`'s notes, `tools/assets-manifest.json` and `tools/build-figures.mjs`,
+`web/src/styles.css`, and comments and test names under `web/src/arena/`,
+`web/src/workshop/` and `web/test/`. Each keeps its branch note with both numbers.
+D156, D157, D158, D160, D164 and D165 carry the merge's dated amendments; the
+merge pass, which may edit the earlier lanes' files (report 15 §9.4's boundaries
+no longer apply inside it), made the edits the lane had written out for Lane
+LOOK's files.*
 
-**2026-09-28** (lane BODIES of report 15, §6.2 and §9.3; *branch `bodies`,
-numbered in the lane's reserved range D140–D149 and renumbered contiguously at
-merge*. `docs/evidence/bodies.md` is what was measured.)
+## D156 — A card RESTS in a signature pose: a closed table of poses made from the library's own clips, derived at load into a model variant, drawn as a pose
+
+**2026-09-28** (lane BODIES of report 15, §6.2 and §9.3; *branch `bodies` —
+written as D140, the first of the lane's reserved range D140–D149, and **D156**
+since the art-direction lanes were renumbered contiguously at merge*.
+`docs/evidence/bodies.md` is what was measured.)
 
 **Decision.** A `traits.json` row may name `rest`, one of
 `figures/rests.ts`'s closed table: `stand` (the body's own idle), `folded`,
@@ -7504,9 +7526,25 @@ milliseconds each, once). The Kenney chibis, the drone and the bee have no
 resting poses, and an anonymous figure never has one (hard rule 8, asserted over
 1,179 corpus instances).
 
-## D141 — Hair is a SHARED kind rigid on the head: the bodies are carved bald at load, the pack's two hairstyles become kinds, and four procedural shells stand in until the pack can be downloaded again
+*Amended at the lanes' merge (2026-09-28): the latent defect above is closed.* A
+figure that MOUNTS in a held stance — tapped, attacking or blocking, as Fury's own
+card puts itself onto the battlefield "tapped and attacking" — kept its signature
+rest blended 50/50 into the stance for as long as it lived, because the rig
+registered `rest: null` and the clip lane stops only the `rest` it knows. On the
+hardening pass's two-action clip model (each clip's `restTwin`,
+`FigureRig.restActions`) the fix is to register what the mount really started:
+`FigureLayer`'s `mountRestLane` plays the rest lane's idle and returns it, and
+`newFigureRig` hands it to the clip lane as `rest`, so the first pass stops it
+and the stance plays alone — weights 0 and 1. `clip-lane.test.tsx`'s third case
+mounts a figure tapped, attacking and blocking through those two functions and
+asserts the weights and the bone, and its negative control re-registers the first
+cut's `rest: null` and sees the half-and-half; a figure that mounts at rest keeps
+the idle it mounted with, adopted and not replayed.
 
-**2026-09-28** (lane BODIES; *branch `bodies`, reserved range D140–D149*)
+## D157 — Hair is a SHARED kind rigid on the head: the bodies are carved bald at load, the pack's two hairstyles become kinds, and four procedural shells stand in until the pack can be downloaded again
+
+**2026-09-28** (lane BODIES; *branch `bodies` — written as D141 in the reserved
+range D140–D149, **D157** since the lanes' merge*)
 
 **Decision.** A `traits.json` row may name `hair`: `parted`, `long`, `crop`,
 `bob`, `waves`, `bun` or `none`; with no row the body keeps the style it came
@@ -7544,9 +7582,25 @@ against the manifest, read the badge on the day, list the hairstyles, and let
 hair as a costume slot only (the pack's two meshes are the only shapes a slot
 could colour).
 
-## D142 — A procedural comic FACE, one kit kind on every face-up person, sized for the table view; `patched` leaves the eye under an eyepatch out
+*Amended at the lanes' merge (2026-09-28): a bald head has anchors of its own.* A
+thing worn round the skull sits on whatever is outermost there, and the
+eyepatch's strap was sized to clear a hairstyle, so on Fury — bald, as his card
+draws him — its tilted ring stood a hair's thickness off his crown (the verifier's
+third reading of the pictures). A kit anchor may now say `bald: true` or `false`
+(`figures/props.ts`'s `PropAnchor.bald`), `anchorsOf(kind, family, bald)` picks the
+set, and the prop field asks with the pose's own hair (`hair` null is bald); every
+other anchor carries no condition. The eyepatch's bald anchor is the skull's
+measured half-extents about its own centre (`HEAD_SHAPE`), and its strap is no
+longer a cylinder: each vertex is pushed along its own ray onto the unit head,
+1.035 of it (`onHeadSphere`), so the band lies ON the head's ellipsoid whichever
+head it is on, and a patch and a band 0.3 of the unit head wide (from 0.36 and
+0.26) keep the identity raster's one-sided detail over its half-bar from the
+seat that sees its front (27 px either side after the ink).
 
-**2026-09-28** (lane BODIES; *branch `bodies`, reserved range D140–D149*)
+## D158 — A procedural comic FACE, one kit kind on every face-up person, sized for the table view; `patched` leaves the eye under an eyepatch out
+
+**2026-09-28** (lane BODIES; *branch `bodies` — written as D142 in the reserved
+range D140–D149, **D158** since the lanes' merge*)
 
 **Decision.** Every proportioned figure that is not anonymous wears the derived
 kind `face`: two white eyes with ink pupils, two brows set low at the inner end,
@@ -7570,9 +7624,21 @@ at most 2 px through the back of a head.
 expressions report 15 §6.2 sketched (neutral, grit, pain) — a pose-driven grit
 face is a second kind and a `hit` flip is a cue, both PLAN.md follow-ups.
 
-## D143 — The drape rule: a coat or a cloak is a CHAIN of rigid panels on the rig's spine and leg joints — no simulation, no clock
+*Amended at the lanes' merge (2026-09-28): the bars restated for **D143**.* The
+bars above were measured when the seat that faced the lens was the NEAR one. Lane
+LOOK turned each seat's figures toward the opponent, so every face the arena shows
+is on the FAR seat — 2–10 px at the table view and over the shoulder alike — and
+no arena view sees one close. The test now holds a face to what it is for: ≥ 4 px
+at play distance (the table view and over the shoulder) on the seat whose figures
+face that lens, a patched face read with its patch (the patch is the eye it
+covers); ≥ 32 px in the workshop's `1× front` (Lane LOOK's default framing — view
+1's distance and elevation from the side the figure faces — where expressions are
+judged; 42–118 px measured); and still ≤ 2 px through the back of a head.
 
-**2026-09-28** (lane BODIES; *branch `bodies`, reserved range D140–D149*)
+## D159 — The drape rule: a coat or a cloak is a CHAIN of rigid panels on the rig's spine and leg joints — no simulation, no clock
+
+**2026-09-28** (lane BODIES; *branch `bodies` — written as D143 in the reserved
+range D140–D149, **D159** since the lanes' merge*)
 
 **Decision.** Cloth is built from one procedural panel — an 80° arc of a flared
 cone, 24 triangles (`COAT_PANEL`) — placed by kit anchors on the joints under
@@ -7606,14 +7672,14 @@ coat mesh (no CC0 source, and a build step for one kit kind).
 **Known cost.** Close up, the panels read as layered plates with small ledges
 where one link overlaps the next; at the table view they read as a long coat.
 The idle's wide stance swings the front calf links out diagonally. *(Fix pass:
-the calf-riding chain is superseded by **D146** — the skirt hangs from the
+the calf-riding chain is superseded by **D162** — the skirt hangs from the
 pelvis, following the thigh part-way; the sliver, ribbons and flap it drew are
 the reason.)*
 
-## D144 — An art-derived palette is the LOWEST rung of the identity ladder: read from the card's own image at runtime, face up only, never committed
+## D160 — An art-derived palette is the LOWEST rung of the identity ladder: read from the card's own image at runtime, face up only, never committed
 
-**2026-09-28** (lane BODIES, report 15 §7; *branch `bodies`, reserved range
-D140–D149*)
+**2026-09-28** (lane BODIES, report 15 §7; *branch `bodies` — written as D144 in
+the reserved range D140–D149, **D160** since the lanes' merge*)
 
 **Decision.** `arena/art.ts` reads the Scryfall `normal` image `art.json`
 already names, for every card the arena draws **face up** (the one entry point,
@@ -7651,7 +7717,7 @@ named back — and fails with any one of `paletteFor`'s, `tilePose`'s or
 `paletteNamesOf`'s gates removed; liveness scans the first two as it scanned the
 third.)*
 
-**Not switched on yet** *(fix pass; the second fix pass switched it on in **D148**, and the third fix pass withdrew that switch — so this paragraph stands)*. The first cut passed the palettes in from
+**Not switched on yet** *(fix pass; the second fix pass switched it on in **D164**, the third fix pass withdrew that switch, and the lanes' merge switched it on for good — see the amendment below)*. The first cut passed the palettes in from
 `Arena.tsx` and `workshop/Pedestal.tsx`, which report 15 §9.1 gives to lane LOOK;
 those hunks were reverted, and the edit is PLAN.md's lane BODIES follow-up 13,
 written out for LOOK (or the merge) to apply. Until then every pose function
@@ -7671,10 +7737,25 @@ with the old call restored.)*
 12 §9); a Worker (four cards a second in an idle callback is invisible); letting
 the art paint a costume.
 
-## D145 — `figures.glb`'s byte budget is 450 KiB, re-set by measurement, and the build reads it from the manifest
+*Amended at the lanes' merge (2026-09-28): the rung is drawn.* `Arena.tsx` and
+`workshop/Pedestal.tsx` pass the palettes in (**D164**'s amendment), so every
+face-up card's painting reaches the pose functions, off the hot path, once per
+card name for the page. The hostile corpus is sharper: each of its categories is
+stopped by exactly ONE gate — a named back only by `back`, a named stub in a
+face-up slot only by `isHidden`, and a new category, a face-up card with the
+face-down characteristic's empty name and no `back`, only by the empty-name test —
+and the merge removed each of the nine gates in `paletteNamesOf`, `paletteFor` and
+`tilePose` (with `isTileCard`'s) one at a time: every removal fails the hostile
+corpus test. The one survivor was `figurePose`'s `anonymous ? null :` guard in
+front of `paletteFor`, which is redundant by construction (`paletteFor`'s own back
+test stands behind it). The test also carries its own control: the same detector,
+over the same hostile layouts, with a lookup that keeps every gate but one, must
+see that one category leak.
 
-**2026-09-28** (lane BODIES, report 15 §9.3; *branch `bodies`, reserved range
-D140–D149*)
+## D161 — `figures.glb`'s byte budget is 450 KiB, re-set by measurement, and the build reads it from the manifest
+
+**2026-09-28** (lane BODIES, report 15 §9.3; *branch `bodies` — written as D145
+in the reserved range D140–D149, **D161** since the lanes' merge*)
 
 **Decision.** `tools/assets-manifest.json` carries a `budget` block —
 `libraryBytes` 460,800 (450 KiB) and `triangles` 30,000 — with the measurement
@@ -7697,10 +7778,11 @@ cheaper road to headroom — merging each body's clips into one long clip with
 named ranges, halving the per-channel JSON — is PLAN.md's lane BODIES
 follow-up 3.
 
-## D146 — The drape rule, amended: a skirt link hangs from the PELVIS and follows its thigh part-way, the lower link hangs from the upper one toward the upright, and a kind's buffer holds 64
+## D162 — The drape rule, amended: a skirt link hangs from the PELVIS and follows its thigh part-way, the lower link hangs from the upper one toward the upright, and a kind's buffer holds 64
 
 **2026-09-28** (lane BODIES' fix pass, after the verifier's first round;
-*branch `bodies`, reserved range D140–D149*). Amends **D143**.
+*branch `bodies` — written as D146 in the reserved range D140–D149, **D162**
+since the lanes' merge*). Amends **D159**.
 
 **Decision.** A kit anchor may carry two new fields (`figures/props.ts`'s
 `PropAnchor`), both read by the prop field and both joint anchors only:
@@ -7721,7 +7803,7 @@ duelists' baker (`DuelistLayer`, lane LOOK's file) reads neither field and keeps
 every panel rigid on `joint`, so a duelist's skirt hangs from his pelvis whole.
 `PROP_CAPACITY` goes from 32 to 64.
 
-**Rationale.** The verifier found three artefacts of D143's calf-riding chain on
+**Rationale.** The verifier found three artefacts of D159's calf-riding chain on
 the lane's headline card: kneeling, Fury's lower link followed his flat calf
 edge-on and drew a dashed ink sliver across his card; attacking, the links
 curled into ribbons outside his silhouette; standing, the idle's wide stance swung
@@ -7749,17 +7831,17 @@ is a second rule for one fact, and the lunge and the stance flaps remain); clamp
 each panel's angle (a clamp is a discontinuity a blend does not have); a spring
 (a clock).
 
-## D147 — A coat is cut to the body it is on, and a cloth kind carries its LINING for a renderer that culls back faces
+## D163 — A coat is cut to the body it is on, and a cloth kind carries its LINING for a renderer that culls back faces
 
 **2026-09-28** (lane BODIES' second fix pass, after the verifier's second round;
-*branch `bodies`, reserved range D140–D149*). Amends **D143** and **D146**'s
-numbers, not their rule.
+*branch `bodies` — written as D147 in the reserved range D140–D149, **D163**
+since the lanes' merge*). Amends **D159** and **D162**'s numbers, not their rule.
 
 **Decision.** Three changes to the coat and the cloak, all in the kit's data and
 the kit's geometry (`figures/props.ts`, `scene/props.ts`):
 
 - **The coat fits.** Its axis is the body's own (`COAT_WAIST` z −0.03, where
-  D146's was 2 cm in front of it), the panel is `COAT_PANEL` {top 0.125, hem
+  D162's was 2 cm in front of it), the panel is `COAT_PANEL` {top 0.125, hem
   0.14, length 0.22} where it was {0.158, 0.2, 0.27}, and the links are sized to
   stand a finger's width off the hips and flare only to cover a stance's knees:
   the body link 0.113 → 0.126, the upper skirt link 0.13 → 0.146, the lower link
@@ -7777,7 +7859,7 @@ the kit's geometry (`figures/props.ts`, `scene/props.ts`):
 - **A panel is 6 × 1 segments** (12 triangles) where it was 6 × 2: a cone's side
   is straight from top to hem, so the second ring bought no shape.
 
-The duelists keep D143's draping coat and Doom's cloak (`duelists.json` is
+The duelists keep D159's draping coat and Doom's cloak (`duelists.json` is
 unchanged): the abandoned first attempt at this pass — a one-shell `longCoat`
 kind for both duelists, the cloak taken off the villain — is not taken
 (`var/bodies/fix3/abandoned-d147.diff`).
@@ -7787,9 +7869,9 @@ wide bell that hides his legs", the Bold Biochemist's lab coat "a huge white bel
 … [that] swallows the figure" with "stair-step ledges where the panels overlap",
 and both duelists' coats "detached planks". Measured on the bodies (the waist is
 0.08 wide and 0.13 deep round an axis at z −0.035; the knees of the idle's stance
-0.12 out), D146's lower links stood 0.26 from the axis. `traits.test.ts`'s new fit
+0.12 out), D162's lower links stood 0.26 from the axis. `traits.test.ts`'s new fit
 test puts every body and skirt panel's hem within **0.189** of a height of the
-pelvis at rest (the bar is 0.2; the D146 bell, swapped into the kit for the run,
+pelvis at rest (the bar is 0.2; the D162 bell, swapped into the kit for the run,
 reads 0.262 and fails), with the front open **24°** (the idle turns the hips
 about 15°; the bar is 16°). The drape test still passes with the new numbers:
 lower links ≤ 6° from hanging, and the farthest hem through six clips at eleven
@@ -7799,7 +7881,7 @@ the drape: `DuelistLayer` bakes the panels into its `SkinnedMesh`, drawn
 culled and the villain's cloak was a slab from the front (PLAN.md's lane BODIES
 follow-up 17). A lining in the geometry fixes it without editing LOOK's file, and
 costs the bake what one sheet cost before this pass (a panel's 12 triangles ×
-2 = D146's 24), where giving the duelists' material `DoubleSide` would have been a
+2 = D162's 24), where giving the duelists' material `DoubleSide` would have been a
 second program. `traits.test.ts` holds the lining (twice the triangles, each the
 sheet's inset along its normal, wound the other way, facing in), that no other
 kind grows one, and that the field's coat is one sheet.
@@ -7825,13 +7907,14 @@ pitched and lifted the yoke's back hem above the old top — a gap at the should
 blades. A new `traits.test.ts` case measures the seam through the prop field's
 own matrices at rest: Fury's yoke hem stands 0.001–0.012 of a height off the body
 link and the Biochemist's −0.010–0.016, both under the body link's top (the bar:
-≤ 0.025 out, ≥ −0.012 in, never above the top); D147's flared yoke reads 0.048
-and 0.053 and fails it. The lean itself is **D149**'s amendment.)*
+≤ 0.025 out, ≥ −0.012 in, never above the top); D163's flared yoke reads 0.048
+and 0.053 and fails it. The lean itself is **D165**'s amendment.)*
 
-## D148 — The accent prefers the brighter of two vivid colours; the art rung's switch stays in lane LOOK's two files, written out and not made
+## D164 — The accent prefers the brighter of two vivid colours; the art rung's switch stays in lane LOOK's two files, written out and not made
 
-**2026-09-28** (lane BODIES' second fix pass, **amended by the third**; *branch
-`bodies`, reserved range D140–D149*). Completes **D144**'s palette.
+**2026-09-28** (lane BODIES' second fix pass, **amended by the third, and at the
+lanes' merge**; *branch `bodies` — written as D148 in the reserved range
+D140–D149, **D164** since the lanes' merge*). Completes **D160**'s palette.
 
 **Decision.**
 
@@ -7869,7 +7952,7 @@ colour (the Giant-Sized Flying Ant is brown, its painting's, where the colour
 identity made it blue); an aura with no attachment row takes its painting's
 accent; a land's tile its painting's terrain. Every hand-written row still wins,
 `palette: off` keeps a card's colour identity, and the costume is never the
-art's (**D144**'s third-fix-pass note).
+art's (**D160**'s third-fix-pass note).
 
 **Rejected.** Editing LOOK's files without the user's word (two verifier rounds
 disagreed; the lane rule decides); moving the pass-through into a module the lane
@@ -7879,10 +7962,23 @@ overrides so only the workshop drew it (the workshop must draw what the arena
 draws, **D102**, and the art rung sits below the subtype rungs, which an override
 row would outrank).
 
-## D149 — Faces and poses are judged from ABOVE: a face sets its jaw as a pose, the high ready, and a bob that is hair
+*Amended at the lanes' merge (2026-09-28): follow-up 13 is applied — option (a)
+above, "whoever merges LOOK and BODIES applies it".* The merge pass may edit the
+earlier lanes' files, so `Arena.tsx` and `workshop/Pedestal.tsx` carry the
+pass-through as written — `paletteNamesOf(placed)` into `useArtPalettes`, the map
+into `figurePose` and `tilePose`, in the memos that already make the poses — and
+the rung is drawn in the arena and on the pedestal at once. The workshop's framing
+poses take the card's own palette too, so the tuning panel's preview went: its
+"drawn" tint and accent are the pedestal's. Liveness tightened with it: each of
+the two files calls the hook EXACTLY once (it was "at most"), fed by
+`paletteNamesOf`, and hands the map to both `figurePose` and `tilePose` —
+negative-controlled on each hand-off.
 
-**2026-09-28** (lane BODIES' second fix pass; *branch `bodies`, reserved range
-D140–D149*). Extends **D140**, **D141** and **D142**.
+## D165 — Faces and poses are judged from ABOVE: a face sets its jaw as a pose, the high ready, and a bob that is hair
+
+**2026-09-28** (lane BODIES' second fix pass; *branch `bodies` — written as D149,
+the last of the reserved range D140–D149, and **D165** since the lanes' merge*).
+Extends **D156**, **D157** and **D158**.
 
 **Decision.**
 
@@ -7899,7 +7995,7 @@ D140–D149*). Extends **D140**, **D141** and **D142**.
   arms hang almost straight (only the forearms fold behind the back);
   `clasped` meets above the belt with the elbows out; `braced` lifts its head.
 - **The bob is re-cut as hair**: a fringe that stops high and sweeps to one side
-  (`sweep`), the hairline raised at the temples, half D141's flare, and a band of
+  (`sweep`), the hairline raised at the temples, half D157's flare, and a band of
   lit locks across the crown (`sheen`, a vertex colour over 1, as the coat's trim
   is). Quake's hair is a dark brown the locks show on.
 
@@ -7927,7 +8023,7 @@ pictures:*
   above read as "a separate grey panel fanning out"; a man bent over a bench
   bends at the lower back too. The left forearm reaches less far, so the hand
   rests on the bench rather than past its edge. `traits.test.ts`'s yoke-seam test
-  (**D147**'s note) holds the coat round the new lean.*
+  (**D163**'s note) holds the coat round the new lean.*
 - *The hair's lit locks are COOL (`SHEEN_COOL`, an inker's blue-white on black
   hair) and the bob's `sheen` 1.8, so Quake's bob is the near-black her painting
   draws (`#1c1a22`, from the dark brown the grey locks needed) and still shows
@@ -7936,6 +8032,21 @@ pictures:*
   profile — a slide, a DARK grip raked back, a trigger guard, a hammer — where the
   verifier read "a grey brick": 90 triangles, from 64; the sidearm 51 / 21 px from
   your seat / the opponent's (56 / 20), still one-sided, the pistol 152 / 98.)*
+
+*Amended at the lanes' merge (2026-09-28): the identity raster, on Lane LOOK's
+seats and ink.* **D143** turned the seats round — the near seat sees your figures'
+BACKS, the far seat the opponent's fronts — and **D146**'s ink takes a small
+prop's edge, so three of this lane's props measured under the bar from one seat
+each. Each is now a detail with a partner at the full bar (`traits.test.ts`'s
+`ONE_SIDED`): Peggy's **shield**, held in front of her in her `ready` (1 px from
+behind, 127 from the front; the red hat carries her); the **parted hair** of the
+Agents' leader — the agent body's own (`BODY_HAIR`), naming no card — 40 px from
+the far seat's front, where a hairstyle is its fringe (the squad's three heads
+carry the card); and Wasp's **bob** on her half-height body, 17 px there (her wings
+carry her). The **sidearm** is the pistol at 70%, from 60%: its side is the far
+seat's now, and under the ink it fell to 22 px, under a one-sided detail's 24 (34
+at 70%). Coulson's chest badge went 0.065 → 0.075 at the same merge (Lane LOOK's
+follow-up 17: 46 px after the ink, 58 at 0.075), and `SHORTFALL` is empty.
 
 **Rejected.** An expression as a uniform on one face kind (it is lane LOOK's
 shader, and a per-instance switch in the prop shader would be a second program

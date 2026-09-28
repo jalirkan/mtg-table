@@ -115,7 +115,7 @@ export interface PropBody {
 
 /**
  * How many instances one kind's buffer holds. Slice 3 sized it for two per figure
- * (gauntlets) × 12 figures, with room: 32. **Lane BODIES' fix pass (D146) doubled
+ * (gauntlets) × 12 figures, with room: 32. **Lane BODIES' fix pass (D162) doubled
  * it**: a long coat's body and skirt are fourteen panels of ONE kind, the corpus
  * already puts two coats on the table at once (28), and the mirror the gate plays
  * by default can put four (56) — at 32 the third coat lost its skirt. 64 × 16
@@ -292,7 +292,7 @@ const BLUE: RGB = [0.22, 0.38, 1];
 const OFF_WHITE: RGB = [0.96, 0.96, 0.96];
 
 /**
- * **The kinds that carry a LINING** (lane BODIES' second fix pass, D147): a sheet
+ * **The kinds that carry a LINING** (lane BODIES' second fix pass, D163): a sheet
  * of cloth seen from both sides — a coat's panels and a cloak's. The prop field
  * draws every kind `DoubleSide` (`makePropMaterial`) and asks for none; a renderer
  * that culls back faces — the duelists' bake, drawn in the figures' own
@@ -313,7 +313,7 @@ const LINED_KINDS: ReadonlySet<SceneKind> = new Set<SceneKind>(['coatTails', 'ca
  * (the shoulders measured −0.11…+0.04), round and a little forward of the body
  * link's axis at the hem (the chest rests pitched forward, which tucks the hem's
  * front in) — so the hem wraps the body link's top with no ledge and no gap.
- * `traits.test.ts`'s yoke-seam test holds it, with D147's flared cut as control.
+ * `traits.test.ts`'s yoke-seam test holds it, with D163's flared cut as control.
  */
 export const YOKE_CUT = {
   length: 0.16,
@@ -513,7 +513,7 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       // bell over the head), TRIM strips down the opening, round the collar and the
       // hem. The trim's vertex colour is ×30 of the coat's own: white on any coat
       // that is not black, a light slate on Fury's black one (the second
-      // verification pass). **Lane BODIES (D143): it is the YOKE** — 0.16 below
+      // verification pass). **Lane BODIES (D159): it is the YOKE** — 0.16 below
       // the shoulders, to the chest, flaring to 0.165 — and overlaps the top of
       // `coatTails`, whose body link hangs from the lowest spine joint and whose
       // skirt follows the legs, so a pose that bends the chest bends the coat
@@ -521,7 +521,7 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       // chibi wears the same coat through a wider anchor.
       // Lane BODIES: open wider at the front (64°, from 40°), worn open, so a
       // resting pose's folded arms show through it.
-      // **The third fix pass TAPERS it to the body** (`YOKE_CUT`): D147 flared the
+      // **The third fix pass TAPERS it to the body** (`YOKE_CUT`): D163 flared the
       // yoke to 0.165 at its hem, 5 cm off the chest all round and a ledge over
       // the narrower body link below — the verifier's "stepped ledge at the
       // shoulder" on Doom's cloak, and the Bold Biochemist's lean swinging that
@@ -544,10 +544,10 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
     }
     case 'coatTails':
     case 'cape': {
-      // **Lane BODIES (D143) — one panel of a skirt or a cloak**: an arc of a
+      // **Lane BODIES (D159) — one panel of a skirt or a cloak**: an arc of a
       // flared cone centred on +Z, its top at y = 0 and its hem COAT_PANEL.length
       // below. The kit's anchors turn it round the body and hang each one on the
-      // bone under it (D146: from the pelvis, following or hanging). A cloak's
+      // bone under it (D162: from the pelvis, following or hanging). A cloak's
       // panel carries a trim at its hem — the villain's gold — and a skirt's does
       // not (the fix pass tried: see `coatPanel`).
       return coatPanel(kind === 'cape');
@@ -561,16 +561,23 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       // patch and up across the forehead on the other side (a level band across
       // both eyes read as sunglasses) — and shows all the way round, from behind too.
       const strap = part(
-        new THREE.CylinderGeometry(1.08, 1.08, 0.26, 20, 1, true),
+        new THREE.CylinderGeometry(1.08, 1.08, 0.3, 20, 1, true),
         [0.03, 0.03, 0.04],
         [0, 0.1, 0],
         [0, 0, -0.5],
       );
+      // **Lane BODIES, at merge: the band lies ON the head.** A cylinder has one
+      // radius and a head narrows toward the crown, so the tilted band's high side
+      // stood off the skull (and off Fury's bald crown most of all). Each vertex is
+      // pushed along its own ray onto the unit head's sphere, just outside it — the
+      // anchor's size is the head's half-extents, so this is the head's own
+      // ellipsoid in figure space, whichever head (`PropAnchor.bald`) it is on.
+      onHeadSphere(strap, STRAP_RADIUS);
       return mergeParts([
         // No pale rim any more (slice 4): on a proportioned face a ringed disc
         // read as a monocle — the patch is a black oval with a slate edge.
-        part(new THREE.CircleGeometry(0.36, 20), [0.015, 0.016, 0.02], [0.4, 0.07, 1.03]),
-        part(new THREE.RingGeometry(0.36, 0.42, 22), [0.09, 0.1, 0.12], [0.4, 0.07, 1.025]),
+        part(new THREE.CircleGeometry(0.42, 20), [0.015, 0.016, 0.02], [0.4, 0.07, 1.03]),
+        part(new THREE.RingGeometry(0.42, 0.49, 22), [0.09, 0.1, 0.12], [0.4, 0.07, 1.025]),
         strap,
       ]);
     }
@@ -727,7 +734,7 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
     case 'facePatched':
     case 'faceGrit':
     case 'facePatchedGrit': {
-      // **Lane BODIES (D142) — a comic face**, in figure units on the
+      // **Lane BODIES (D158) — a comic face**, in figure units on the
       // proportioned head's front (HEAD_SHAPE, measured on both bodies): two white
       // eyes with ink pupils, two brows set low at the inner end (a steady look),
       // and a mouth line. Each feature is turned with the face's curve. No texture
@@ -735,7 +742,7 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       // `facePatched` leaves out HIS left eye (+x) and keeps its brow: the eyepatch
       // is over it, and an eye under a patch showed from above it.
       const patched = kind === 'facePatched' || kind === 'facePatchedGrit';
-      // **Grit (D149)**: the brows pulled down into a V over narrowed eyes, and
+      // **Grit (D165)**: the brows pulled down into a V over narrowed eyes, and
       // the mouth a band of set teeth between two ink lines — the comic's
       // gritted jaw — where neutral's is one line. The same triangles' budget.
       const grit = kind === 'faceGrit' || kind === 'facePatchedGrit';
@@ -790,7 +797,7 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       return hairShell({ front: 56, side: 86, back: 108, scale: 1.035, flare: 0, strands: 0.1 });
     case 'hairBob':
       // A bob: the sides and back to the jaw, a side-swept fringe. **The second fix
-      // pass (D149)**: the verifier read Quake's bob "like a helmet … [that] hides
+      // pass (D165)**: the verifier read Quake's bob "like a helmet … [that] hides
       // her face from above" — a fringe to the brows (63°), sides to 122° and a
       // hem flared 14% out made a dome with a visor. The fringe now stops high on
       // the forehead and sweeps (lower over her right brow than her left), the
@@ -832,8 +839,32 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
   }
 }
 
+/** How far outside the unit head the eyepatch's strap lies: a strap's thickness. */
+const STRAP_RADIUS = 1.035;
+
 /**
- * **The face's size for the table view** (D142): the features at comic scale —
+ * Push every vertex of `geometry` along its own ray from the origin to `radius`,
+ * with the ray as its normal: a band drawn round the unit head then lies on the
+ * head's surface (the anchor's size turns the unit sphere into the head's own
+ * ellipsoid). Commit-time geometry, built once per kind.
+ */
+function onHeadSphere(geometry: THREE.BufferGeometry, radius: number): void {
+  const position = geometry.getAttribute('position');
+  const normal = geometry.getAttribute('normal');
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+    const length = Math.hypot(x, y, z) || 1;
+    position.setXYZ(i, (x / length) * radius, (y / length) * radius, (z / length) * radius);
+    normal.setXYZ(i, x / length, y / length, z / length);
+  }
+  position.needsUpdate = true;
+  normal.needsUpdate = true;
+}
+
+/**
+ * **The face's size for the table view** (D158): the features at comic scale —
  * eyes a third of the face wide — and tipped this far (radians) up toward a lens
  * that looks down at every figure. `traits.test.ts` measures what they reach.
  */
@@ -843,9 +874,9 @@ const FACE_PITCH = 0.3;
 /**
  * One skirt or cloak panel at size 1 (`figures/props.ts`'s `COAT_PANEL`): 6 × 1
  * segments, 12 triangles — a long coat's body and skirt is fourteen of them, and
- * both duelists wear one (lined, D147), so at `g1`@316 a panel is paid for about
+ * both duelists wear one (lined, D163), so at `g1`@316 a panel is paid for about
  * thirty times. A cone's side is straight from top to hem, so a second ring of
- * segments down its length (the 6 × 2 of D146) bought no shape — only the shading
+ * segments down its length (the 6 × 2 of D162) bought no shape — only the shading
  * gradient, which one segment interpolates the same.
  */
 function coatPanel(trim: boolean): THREE.BufferGeometry {
@@ -882,7 +913,7 @@ function coatPanel(trim: boolean): THREE.BufferGeometry {
 const SHEEN_COOL: RGB = [0.8, 1, 1.6];
 
 /**
- * **A procedural hairstyle** (lane BODIES, D141): a shell round the measured head
+ * **A procedural hairstyle** (lane BODIES, D157): a shell round the measured head
  * (HEAD_SHAPE), `scale` × its radii, kept above a HAIRLINE that runs from `front`
  * (degrees from the crown, over the forehead) through `side` (over the ears) to
  * `back` (the nape), and pushed out by `flare` toward its lower edge. The normals
@@ -908,14 +939,14 @@ function hairShell(style: {
   /** How much darker every other lock is at the hem (0 = a smooth shell). */
   strands?: number;
   /**
-   * **A comic hair highlight** (D149): every other lock LIGHTER by up to this
+   * **A comic hair highlight** (D165): every other lock LIGHTER by up to this
    * much (× the hair colour) in a band across the crown — the lit streaks an
    * inker leaves white on black hair. A vertex colour over 1 lifts the costume's
    * hair slot there, as the coat's trim does (×30) at a larger scale.
    */
   sheen?: number;
   /**
-   * **A side-swept fringe** (D149), degrees: the front hairline lower over the
+   * **A side-swept fringe** (D165), degrees: the front hairline lower over the
    * figure's right brow (−x) and higher over its left by this much, so a fringe
    * has a part and a direction rather than the straight brim of a helmet.
    */
@@ -1103,7 +1134,7 @@ export function bakePose(model: LoadedModel, clipKey: string, phase: number): TH
 }
 
 /**
- * **Lane BODIES (D141) — a body's own hairstyle as a static kind**, in figure
+ * **Lane BODIES (D157) — a body's own hairstyle as a static kind**, in figure
  * space at the body's BIND pose (so the prop field's `Head` anchor, written at
  * the origin, puts it back exactly where the pack's artist put it): the triangles
  * `scene/models.ts` carved off the body (`LoadedModel.hairIndex`), with smooth
@@ -1214,13 +1245,13 @@ interface Binding {
   /** Rides a DEPARTING body: drawn only while that body is (its `root.visible`). */
   departed: boolean;
   /**
-   * **D146 — the second joint a panel follows part-way** (`PropAnchor.follow`):
+   * **D162 — the second joint a panel follows part-way** (`PropAnchor.follow`):
    * its bind inverse × the anchor, and how far toward it (0 = `joint` alone).
    */
   jointB: THREE.Object3D | null;
   localB: THREE.Matrix4;
   weight: number;
-  /** **D146 — the panel this one HANGS from** (`PropAnchor.hang`), bound just before it. */
+  /** **D162 — the panel this one HANGS from** (`PropAnchor.hang`), bound just before it. */
   parent: Binding | null;
   hang: number;
   /** A hanging panel's anchor in figure space: its upright, turned and sized. */
@@ -1278,7 +1309,7 @@ const QUAT = new THREE.Quaternion();
 const SCL = new THREE.Vector3();
 const COLOUR = new THREE.Color();
 const UP = new THREE.Vector3(0, 1, 0);
-/** D146's scratch: the two skinnings of a followed panel, or a hanging one's parent and upright. */
+/** D162's scratch: the two skinnings of a followed panel, or a hanging one's parent and upright. */
 const BLEND = new THREE.Matrix4();
 const POS_B = new THREE.Vector3();
 const QUAT_B = new THREE.Quaternion();
@@ -1433,7 +1464,7 @@ export class PropField {
         if (follower !== null) this.addKind(`squad:${id}`, 'squad', follower);
       }
     }
-    // Lane BODIES (D141): the two hairstyles the library's bodies came with,
+    // Lane BODIES (D157): the two hairstyles the library's bodies came with,
     // carved off them at load (`scene/models.ts`) and baked here into kinds.
     for (const [style, bodyId] of Object.entries(CARVED_HAIR) as Array<[HairStyle, string]>) {
       if (style === 'none') continue;
@@ -1525,9 +1556,10 @@ export class PropField {
       const target = this.kinds.get(prop.kind) ?? null;
       if (target === null) continue;
       const kit = PROP_KIT[prop.kind];
-      // D146: the joint binding just made for this kind — what a hanging panel hangs from.
+      // D162: the joint binding just made for this kind — what a hanging panel hangs from.
       let previous: Binding | null = null;
-      for (const anchor of anchorsOf(prop.kind, family)) {
+      // A head's own anchors (the eyepatch's strap on a bald head): `hair` null is bald.
+      for (const anchor of anchorsOf(prop.kind, family, pose.hair === null)) {
         if (n >= MAX_BINDINGS) break;
         const b = this.bindings[n]!;
         if (anchor.joint === 'stand' || anchor.joint === 'root') {
@@ -1552,7 +1584,7 @@ export class PropField {
           b.joint = joint;
           anchorMatrix(anchor, M);
           b.local.multiplyMatrices(bind, M);
-          // D146: a panel that follows a second joint part-way — that joint's own
+          // D162: a panel that follows a second joint part-way — that joint's own
           // skinning of the same anchor, blended in the frame loop.
           const follow = anchor.follow;
           if (follow !== undefined && anchor.pose === undefined && base !== null) {
@@ -1688,7 +1720,7 @@ export class PropField {
         opacity = b.rig.material.uniforms.uOpacity.value;
         const parent = b.parent;
         if (parent !== null) {
-          // D146 — HANGS from its parent panel, bound (and so drawn) just before
+          // D162 — HANGS from its parent panel, bound (and so drawn) just before
           // it this frame: its top at the parent's hem, turned `hang` of the way
           // from the parent's angle back to the figure's upright; its own size.
           parent.world.decompose(POS, QUAT, SCL);
@@ -1698,7 +1730,7 @@ export class PropField {
           QUAT.slerp(QUAT_B, b.hang);
           WORLD.compose(POS, QUAT, SCL_B);
         } else if (b.jointB !== null) {
-          // D146 — FOLLOWS a second joint part-way: both skinnings of the one
+          // D162 — FOLLOWS a second joint part-way: both skinnings of the one
           // anchor, the turn slerped and the place and size lerped.
           WORLD.multiplyMatrices(b.joint.matrixWorld, b.local);
           WORLD.decompose(POS, QUAT, SCL);

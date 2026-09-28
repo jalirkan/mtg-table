@@ -26,6 +26,15 @@
  * The test walks a cue's whole envelope, stance to stance, and asserts no frame
  * jumps.
  *
+ * The third test is Lane BODIES' follow-up 1, closed at its merge: a figure that
+ * MOUNTS in a held stance (tapped, attacking, blocking) must land in that stance
+ * alone. `FigureLayer` starts the rest lane's idle at full weight on mount, and
+ * the rig it registered said `rest: null`, so `driveClips` never stopped that
+ * idle — with the resting-pose variants a kneeling Fury kept his folded arms
+ * blended 50/50 into the kneel for his whole life. The test runs the real
+ * `mountRestLane` and `newFigureRig`, and its negative control re-registers the
+ * first cut's `rest: null` and must see the half-and-half.
+ *
  * Vitest only because `driveClips` lives in a `.tsx` file and Node's type
  * stripping does not load one. Nothing is rendered: a one-bone `Object3D`, a
  * real `AnimationMixer`, and the same `mixer.update(0)` the frame loop calls.
@@ -43,6 +52,7 @@ import type { FigurePose } from '../src/arena/figures/pose.ts';
 import { driveClips } from '../src/arena/scene/CueRunner.tsx';
 import type { FigureMaterial } from '../src/arena/scene/figureMaterial.ts';
 import type { FigureRig } from '../src/arena/scene/figureRigs.ts';
+import { mountRestLane, newFigureRig } from '../src/arena/scene/FigureLayer.tsx';
 import { restTwin } from '../src/arena/scene/models.ts';
 
 /** The bone's bind height, and the height the clip holds it at from start to end. */
@@ -148,4 +158,76 @@ test('clip lane: when the stance and the cue play the same clip, the cue leaves 
     for (let i = 1; i < ys.length; i += 1) worst = Math.max(worst, Math.abs(ys[i]! - ys[i - 1]!));
     expect(worst, `${stance}: largest step between frames (${ys.map((y) => y.toFixed(2)).join(' ')})`).toBeLessThan(0.05);
   }
+});
+
+test('clip lane: a figure that MOUNTS tapped, attacking or blocking lands in that stance — its resting pose at weight 0, never blended 50/50 for life (Lane BODIES follow-up 1; negative-controlled)', () => {
+  // Two clips on one bone: the model's `idle` — with Lane BODIES' variants, the
+  // card's SIGNATURE rest (Fury's folded arms) — holds hips.y at REST_Y, and the
+  // stance's own clip at STANCE_Y, the whole clip long.
+  const REST_Y = 0.9;
+  const STANCE_Y = 0.3;
+  const hold = (name: string, y: number): THREE.AnimationClip =>
+    new THREE.AnimationClip(name, 1, [new THREE.VectorKeyframeTrack('hips.position', [0, 1], [0, y, 0, 0, y, 0])]);
+  /** A figure mounted as FigureLayer mounts one; `firstCut` registers `rest: null`, as the rig did before the fix. */
+  const mount = (stance: FigurePose['stance'], firstCut: boolean) => {
+    const root = new THREE.Object3D();
+    const hips = new THREE.Bone();
+    hips.name = 'hips';
+    hips.position.set(0, BIND_Y, 0);
+    root.add(hips);
+    const mixer = new THREE.AnimationMixer(root);
+    const actions = new Map<string, THREE.AnimationAction>();
+    const restActions = new Map<string, THREE.AnimationAction>();
+    for (const clip of [hold('idle', REST_Y), hold(REST_CLIP_FOR[stance], STANCE_Y)]) {
+      if (actions.has(clip.name)) continue;
+      actions.set(clip.name, mixer.clipAction(clip));
+      restActions.set(clip.name, mixer.clipAction(restTwin(clip)));
+    }
+    // FigureLayer's build: the idle on the rest lane, full weight, frame 0…
+    const mounted = mountRestLane(restActions);
+    mixer.update(0);
+    const pose = { stance, clips: {}, frozen: false } as Pick<FigurePose, 'stance' | 'clips' | 'frozen'> as FigurePose;
+    // …and the rig its layout effect registers.
+    const rig = newFigureRig(
+      { instance: { object: root, mixer }, material: null as unknown as FigureMaterial, actions, restActions, mounted },
+      pose,
+    );
+    if (firstCut) rig.rest = null;
+    const idle = restActions.get('idle')!;
+    const held = restActions.get(REST_CLIP_FOR[stance])!;
+    const frames: number[] = [];
+    for (let i = 0; i < 4; i += 1) {
+      driveClips(rig, null, 16, true);
+      mixer.update(0);
+      frames.push(hips.position.y);
+    }
+    return { rig, idle, held, mounted, frames };
+  };
+
+  for (const stance of ['crouch', 'attacking', 'blocking'] as const) {
+    const fixed = mount(stance, false);
+    expect(fixed.mounted, `${stance}: the mount started the rest lane's idle`).toBe(fixed.idle);
+    expect(fixed.rig.rest, `${stance}: the lane holds the stance`).toBe(fixed.held);
+    // The resting pose contributes nothing: stopped, not merely re-weighted.
+    expect(fixed.idle.isRunning(), `${stance}: the mount's resting pose is still running under the stance`).toBe(false);
+    expect(fixed.held.isRunning()).toBe(true);
+    expect(fixed.held.getEffectiveWeight(), `${stance}: the stance's weight`).toBeCloseTo(1, 9);
+    const weights = [fixed.idle, fixed.held].map((a) => (a.isRunning() ? a.getEffectiveWeight() : 0));
+    expect(weights, `${stance}: rest pose / stance weights`).toEqual([0, 1]);
+    for (const y of fixed.frames) expect(y, `${stance}: the bone is in the stance alone (y per frame: ${fixed.frames.join(' ')})`).toBeCloseTo(STANCE_Y, 6);
+
+    // The negative control: the first cut's `rest: null` leaves the idle running at
+    // full weight beside the stance, and this test sees the half-and-half.
+    const firstCut = mount(stance, true);
+    expect(firstCut.idle.isRunning(), `${stance}: the control's idle`).toBe(true);
+    expect(firstCut.idle.getEffectiveWeight()).toBeCloseTo(1, 9);
+    for (const y of firstCut.frames) expect(y, `${stance}: the control is not blended`).toBeCloseTo((REST_Y + STANCE_Y) / 2, 6);
+  }
+
+  // And a figure that mounts at REST keeps the idle it mounted with: adopted, not
+  // stopped and replayed from frame 0.
+  const ready = mount('ready', false);
+  expect(ready.rig.rest).toBe(ready.idle);
+  expect(ready.idle.isRunning()).toBe(true);
+  for (const y of ready.frames) expect(y).toBeCloseTo(REST_Y, 6);
 });

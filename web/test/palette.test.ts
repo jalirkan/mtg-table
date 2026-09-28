@@ -2,7 +2,7 @@
  * mtg-table — web/test/palette.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The art-derived palette** (lane BODIES, report 15 §7; D144), under
+ * **The art-derived palette** (lane BODIES, report 15 §7; D160), under
  * `node --test`: the pure k-means is deterministic and finds what the report
  * measured (the background is the dominant colour, the vivid cluster the
  * accent); the art rung sits UNDER every hand-written rung; and over the whole
@@ -91,7 +91,7 @@ test('palette: the k-means is deterministic, and the art box is where it reads',
   assert.equal(grey.vivid, false);
   assert.equal(artTint(grey), null);
   assert.equal(artTint(a), a.accent);
-  // D148 (follow-up 7): of two clusters equally saturated, a BRIGHT one beats a
+  // D164 (follow-up 7): of two clusters equally saturated, a BRIGHT one beats a
   // larger dim one — Fury's explosion over the khaki round it (report 15 §7.1's
   // #897748 18 % against #daad6d 15 %).
   const fury = paletteFromPixels(bands(20, 100, [[9, 16, 17, 67], [137, 119, 72, 18], [218, 173, 109, 15]]), 20, 100)!;
@@ -218,40 +218,74 @@ test('palette: over the corpus, the poses ask for every face-up card’s palette
  * **A HOSTILE layout** — the corpus never puts a real name on a card drawn as a
  * back (a face-down card arrives with `name: ""`, a redacted stub with none), so
  * the corpus test above proves the wire's shape and not the gates. This builds the
- * shape the gates exist for: every back and every redacted stub is handed a
- * secret name, and every third face-up creature, attachment, land and spell is
- * turned into a back that keeps a secret name. A lookup of any secret is a leak.
+ * shapes the gates exist for, and **each category is stopped by exactly ONE gate**
+ * — so removing any one gate from `paletteNamesOf`, `paletteFor` or `tilePose`
+ * leaks through the category built for it (the merge pass ran the removals one at
+ * a time; `docs/evidence/bodies.md`, *At merge*):
+ *
+ *  - `<kind>Back` — every third face-up creature, attachment, land and spell drawn
+ *    as a BACK that keeps a secret name: not hidden, not nameless, so only the
+ *    `back` test stands between it and a lookup;
+ *  - `stub` — every redacted stub (drawn as a back already) handed a secret name;
+ *  - `stubUnflagged` — a redacted stub in a FACE-UP slot, carrying a name: a layout
+ *    that forgot `back` for a stub, so only `isHidden` stops it;
+ *  - `nameless` — a face-up card with the face-down characteristic's EMPTY name
+ *    (hard rule 8's `name: ""`) and no `back`: a layout that forgot `back` for a
+ *    face-down card, so only the empty-name test stops a lookup of `""`.
+ *
+ * A lookup of any secret, or of `""`, is a leak.
  */
 const SECRET = 'SECRET#';
-function hostile(placed: Layout): { layout: Layout; exercised: Record<string, number> } {
-  const exercised: Record<string, number> = { creatureBack: 0, attachmentBack: 0, landBack: 0, stackBack: 0, stub: 0, stubUnflagged: 0 };
+const CATEGORIES = ['creatureBack', 'attachmentBack', 'landBack', 'stackBack', 'stub', 'stubUnflagged', 'nameless'] as const;
+type Category = (typeof CATEGORIES)[number];
+function hostile(placed: Layout): { layout: Layout; exercised: Record<Category, number> } {
+  const exercised = Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>;
   const placements: Placement[] = placed.placements.map((placement) => {
     const secret = `${SECRET}${String(placement.cardId)}`;
     if (placement.back || isHidden(placement.card)) {
-      if (isHidden(placement.card)) exercised['stub']! += 1;
+      if (isHidden(placement.card)) exercised.stub += 1;
       return { ...placement, card: { ...placement.card, name: secret } as AnyCard };
     }
     const flippable = placement.kind === 'creature' || placement.kind === 'attachment' || placement.kind === 'land' || placement.kind === 'stack';
     if (!flippable || placement.cardId % 3 !== 0) return placement;
-    exercised[`${placement.kind}Back`]! += 1;
+    exercised[`${placement.kind}Back` as Category] += 1;
     return { ...placement, back: true, card: { ...placement.card, name: secret } as AnyCard };
   });
-  // And a redacted stub in a face-up slot, carrying a name — a layout that
-  // forgot `back` for a stub: only `isHidden` stands between it and a lookup.
+  // A redacted stub in a face-up slot, carrying a name — only `isHidden` stops it.
   const lands = placements.findIndex((p) => p.kind === 'land' && !p.back);
   const attachments = placements.findIndex((p) => p.kind === 'attachment' && !p.back);
   for (const at of [lands, attachments]) {
     if (at < 0) continue;
     const p = placements[at]!;
     placements[at] = { ...p, card: { ...p.card, hidden: true, name: `${SECRET}${String(p.cardId)}` } as unknown as AnyCard };
-    exercised['stubUnflagged']! += 1;
+    exercised.stubUnflagged += 1;
+  }
+  // A face-up card of every kind the rung reads, with the face-down name `""` and
+  // no `back` — only the empty-name test stops it.
+  for (const kind of ['creature', 'attachment', 'land', 'stack'] as const) {
+    const at = placements.findIndex((p) => p.kind === kind && !p.back && !isHidden(p.card));
+    if (at < 0) continue;
+    const p = placements[at]!;
+    placements[at] = { ...p, card: { ...p.card, name: '' } as AnyCard };
+    exercised.nameless += 1;
   }
   return { layout: { ...placed, placements, byKey: new Map(placements.map((p) => [p.key, p])) }, exercised };
 }
 
-test('palette: a card drawn as a back, or a redacted stub, is never looked up — even carrying a real name (hard rule 8, negative controls)', () => {
+/** A name nobody may look up: a secret from the hostile layout, or the face-down `""`. */
+const concealed = (name: string): boolean => name === '' || name.startsWith(SECRET);
+
+/** Every palette lookup the arena's rung makes for one layout — the pose functions and the arena's entry point. */
+function lookupsOf(placed: Layout, state: ClientState, answer: ArtPalette): Set<string> {
+  const lookups = new SpyPalettes(answer);
+  figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS, palettes: lookups });
+  tilePose(placed, tileDataOf(DATA), lookups);
+  for (const name of paletteNamesOf(placed)) lookups.get(name);
+  return lookups.asked;
+}
+
+test('palette: THE lookup, on its own — a back, a redacted stub and a nameless card are each refused by their own gate (hard rule 8)', () => {
   const answer = paletteFromPixels(bands(10, 10, [[20, 20, 20, 60], [230, 60, 40, 40]]), 10, 10)!;
-  // THE lookup, on its own: each gate, each alone.
   const spy = new SpyPalettes(answer);
   const faceUp = { name: 'Nick Fury, Spymaster', id: 1, zone: 'battlefield', owner: 0, controller: 0 } as unknown as AnyCard;
   assert.equal(paletteFor({ back: false, card: faceUp }, spy), answer);
@@ -259,35 +293,54 @@ test('palette: a card drawn as a back, or a redacted stub, is never looked up �
   assert.equal(paletteFor({ back: false, card: { ...faceUp, hidden: true } as AnyCard }, spy), null, 'a redacted stub with a name was looked up');
   assert.equal(paletteFor({ back: false, card: { ...faceUp, name: '' } as AnyCard }, spy), null, 'a nameless card was looked up');
   assert.deepEqual([...spy.asked], ['Nick Fury, Spymaster']);
+});
 
-  // Every pose function, over the corpus made hostile.
-  const tiles = tileDataOf(DATA);
-  const total: Record<string, number> = {};
+test('palette: over the corpus made HOSTILE, no pose function and no arena entry point looks up a back, a redacted stub or a nameless card — each gate has a case only it stops (hard rule 8, negative controls)', () => {
+  const answer = paletteFromPixels(bands(10, 10, [[20, 20, 20, 60], [230, 60, 40, 40]]), 10, 10)!;
+  const total = Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>;
   let frames = 0;
   let asked = 0;
+  const hostileLayouts: Layout[] = [];
   for (const { file, state } of fixtureStates()) {
     frames += 1;
     const { layout: placed, exercised } = hostile(layout(state));
-    for (const [k, v] of Object.entries(exercised)) total[k] = (total[k] ?? 0) + v;
-    const lookups = new SpyPalettes(answer);
-    figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS, palettes: lookups });
-    tilePose(placed, tiles, lookups);
-    for (const name of paletteNamesOf(placed)) lookups.get(name);
-    for (const name of lookups.asked) {
+    for (const c of CATEGORIES) total[c] += exercised[c];
+    hostileLayouts.push(placed);
+    for (const name of lookupsOf(placed, state, answer)) {
       asked += 1;
-      assert.ok(!name.startsWith(SECRET), `${file}: a concealed card's name "${name}" was looked up`);
+      assert.ok(!concealed(name), `${file}: a concealed card's name "${name}" was looked up`);
     }
   }
   console.log(
     `palette: hostile corpus — ${String(frames)} frames; ` +
-      Object.entries(total)
-        .map(([k, v]) => `${k} ${String(v)}`)
-        .join(' · ') +
-      `; ${String(asked)} lookups, none of a concealed name`,
+      CATEGORIES.map((c) => `${c} ${String(total[c])}`).join(' · ') +
+      `; ${String(asked)} lookups, none of a concealed or empty name`,
   );
-  // Not vacuous: every path a secret could leak through was actually offered one.
-  for (const key of ['creatureBack', 'attachmentBack', 'landBack', 'stackBack', 'stub', 'stubUnflagged']) {
-    assert.ok((total[key] ?? 0) > 0, `the hostile corpus offered no ${key}`);
-  }
+  // Not vacuous: every path a secret could leak through was actually offered one…
+  for (const c of CATEGORIES) assert.ok(total[c] > 0, `the hostile corpus offered no ${c}`);
   assert.ok(asked > 0, 'nothing was looked up at all — the spy is not wired');
+
+  // …and each category really is stopped by ONE gate. The controls: the same
+  // detector over the same hostile layouts, with a lookup that keeps every gate
+  // but one, must see a leak — so the corpus can see each gate go. (The real
+  // gates' removal, one at a time, is the merge pass's mutation run.)
+  type Gates = { back: boolean; hidden: boolean; empty: boolean };
+  const all: Gates = { back: true, hidden: true, empty: true };
+  const leaksWith = (gates: Gates): number => {
+    let leaks = 0;
+    for (const placed of hostileLayouts) {
+      for (const placement of placed.placements) {
+        if (gates.back && placement.back) continue;
+        if (gates.hidden && isHidden(placement.card)) continue;
+        const name = (placement.card as { name?: string }).name;
+        if (typeof name !== 'string' || (gates.empty && name === '')) continue;
+        if (concealed(name)) leaks += 1;
+      }
+    }
+    return leaks;
+  };
+  assert.equal(leaksWith(all), 0, 'the all-gates control leaks — the detector is wrong');
+  for (const [gate, category] of [['back', '<kind>Back'], ['hidden', 'stubUnflagged'], ['empty', 'nameless']] as const) {
+    assert.ok(leaksWith({ ...all, [gate]: false }) > 0, `with no ${gate} gate the hostile corpus shows no leak — ${category} does not isolate it`);
+  }
 });
