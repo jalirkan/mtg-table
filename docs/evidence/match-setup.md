@@ -744,10 +744,10 @@ evidence; the files are listed so a reader can find the change without a diff.
 | 1 | **major** — README, the `play.sh` header and `decks/README.md` promised *"Reckless attacks into trades, Cautious holds back"*; 11 same-seed pairs found no measurable difference | Reworded all three (and PLAN.md question 8): a profile is a set of ~120 heuristics whose effect is situational, not measurably different against the automated seat, and where it does show. Found the board where `PLAY_AGGRO` decides and measured it as same-seed pairs; new `tools/first-divergence.mjs` reads a pair by its first differing choice and says whose it is | §P: 16 new pairs; against a seat of untapped 2/2s, 10 of 10 part on an AI choice and 6 of those are a trade Reckless takes and Cautious declines. No gate assertion, deliberately (§P.4) |
 | 2 | the `hello_ok.match` audit had no committed negative control | `tools/make-negative-fixtures.mjs` writes `fixtures/negative/redaction/m44-match-present.jsonl` (the control, must PASS) and three probes — `m44-aideck-carries-path`, `m44-aideck-cards-is-a-list`, `m44-yourdeck-path-mismatch`; `tools/check-redaction-selftest.mjs` requires all four **by name**, so a regenerated manifest cannot drop one | selftest OK, 20 controls. Negative-controlled twice in a scratch copy: with the audit disabled the selftest FAILS 3 (the three probes pass); with `m44-aideck-carries-path` removed from the manifest it FAILS 1 (`is missing from … manifest.json`). The regeneration left every existing file byte-identical (`git diff` touches only `manifest.json`) |
 | 3 | 9b's advisory fired on every run: the committed fixtures predate `hello_ok.match` | `tools/fixture-multiset-diff.mjs` gains `AMENDED_KEYS` (one row: `hello_ok.match`, M44): when A — the committed, older side — has no frame of that type carrying the key and B does, the key is dropped from B and a line says so; `--keep-amended` turns it off; the reverse (A has it, B lacks it) is still a difference. `check-all.sh` 9b's comment says why the fixtures were not re-recorded (frame indices into them are cited; a re-record reorders a human-seat log) | on §B.6's own drift recording: s2c `MULTISET IDENTICAL` (1,357 frames) with the note; with `--keep-amended`, the one `hello_ok` difference again; swapped (fresh as A), still reported. **In the re-run gate below 9b still fired** — not on `match` (the note printed and the `hello_ok`s compared equal) but on load: +13 `input {prompt:"Waiting for Forge AI..."}` re-pushes and a few `state`s cut at a different phase, the known wall-clock class, amplified by a load average of 18–30 while two other worktrees ran their own gates. A second seed-42 recording at load 30 showed the same (+14 inputs, 233 = 233 states) |
-| 4 | `config.json` `match.aiDeck` was `null`, so a bare `play.sh` played a mirror while `decks/README.md` called Doom Legion "what match setup seats against you" | `"aiDeck": "decks/doom-legion.dck"`. play.sh's `--mirror` message now names `--mirror` too. README, play.sh and decks/README say a bare `play.sh` plays the villains and a bare `MtgTable` a mirror (**D103**) | `./scripts/play.sh --port 8673 --web-port 5182 --no-open --no-keep-open -- --games 1 --seed 5` printed `AI: Doom Legion (Marvel Super Heroes villains)  [decks/doom-legion.dck]` / `AI profile: Default`, and `tools/ws-auto-play.mjs --port 8673` played the game to `over` (30 s, 1,185 frames in, `match Default vs "Doom Legion (Marvel Super Heroes villains)"`); the client log's `hello_ok.match` is `{yourDeck: Pacho …, aiDeck: {name: "Doom Legion (Marvel Super Heroes villains)", cards: 40}, aiProfile: "Default", games: 1}`, `check-redaction.mjs` exit 0; play.sh exited 0 and both ports closed |
+| 4 | `config.json` `match.aiDeck` was `null`, so a bare `play.sh` played a mirror while `decks/README.md` called Doom Legion "what match setup seats against you" | `"aiDeck": "decks/doom-legion.dck"`. play.sh's `--mirror` message now names `--mirror` too. README, play.sh and decks/README say a bare `play.sh` plays the villains and a bare `MtgTable` a mirror (**D106**) | `./scripts/play.sh --port 8673 --web-port 5182 --no-open --no-keep-open -- --games 1 --seed 5` printed `AI: Doom Legion (Marvel Super Heroes villains)  [decks/doom-legion.dck]` / `AI profile: Default`, and `tools/ws-auto-play.mjs --port 8673` played the game to `over` (30 s, 1,185 frames in, `match Default vs "Doom Legion (Marvel Super Heroes villains)"`); the client log's `hello_ok.match` is `{yourDeck: Pacho …, aiDeck: {name: "Doom Legion (Marvel Super Heroes villains)", cards: 40}, aiProfile: "Default", games: 1}`, `check-redaction.mjs` exit 0; play.sh exited 0 and both ports closed |
 | 5 | Trickster's Stratagem is dead for the Forge AI | Swapped for **Crossbones, Malicious Mercenary**; `check-deck --scryfall` and `fetch-art` re-run; report 08 §8.1 / §8.2 / §8.3b / §8.4 and `decks/README.md` updated | §D.6: PASS, 27/27 art, 38/38 games clean, all 20 nonland cards cast by the AI |
 | 6 | the gate's villain was "the first `decks/*.dck` not on a hard-coded list", the list kept twice | `tools/villain-deck.sh`, **sourced** by `ten-games.sh` and `check-all.sh` 9e: `VILLAIN_DECK`, else `decks/doom-legion.dck` by name, else the morph-probe STAND-IN said out loud. Both `KNOWN` lists are gone | the three cases exercised: default → `decks/doom-legion.dck`; `VILLAIN_DECK=decks/x.dck` → that; a checkout without doom-legion but with a new `aaa-hero.dck` → the STAND-IN, not the hero deck |
-| 7 | stale docs | PLAN.md (question 8, the deferred entry, M6 follow-up 10), **D102** (the AI deck's name is public) and **D103** (only `play.sh` reads `match`) in DECISIONS.md (written as D90 and D91; renumbered by the documentation pass, §R.2), README (the gate summary, the tree, the decision count, the two morph-art sentences), `docs/evidence/m4-board.md` §4 (a dated note). **CLAUDE.md was not edited** — see the fix pass's report | — |
+| 7 | stale docs | PLAN.md (question 8, the deferred entry, M6 follow-up 10), **D105** (the AI deck's name is public) and **D106** (only `play.sh` reads `match`) in DECISIONS.md (written as D90 and D91; renumbered to D102 and D103 by the documentation pass, §R.2, and to their final numbers by the second rebase, §R.4), README (the gate summary, the tree, the decision count, the two morph-art sentences), `docs/evidence/m4-board.md` §4 (a dated note). **CLAUDE.md was not edited** — see the fix pass's report | — |
 | 8 | nothing stopped a new direct `GamePlayerUtil.createAiPlayer(` | `tools/lint-bridge.sh` §1: `GamePlayerUtil.createAiPlayer` allowed only in `Bootstrap.java` (no `(` in the pattern, so a static import is caught too), plus the method reference and a static wildcard import of `GamePlayerUtil` | lint OK on the tree; in a scratch copy each of a direct two-argument call, the static import, the method reference and the wildcard import FAILS the lint; the same call in a comment passes |
 | 9 | a builder-session `tail -f` (PID 62213) was still running | killed | `ps -p 62213`: gone |
 
@@ -776,10 +776,12 @@ closed.
 
 It edited documents and no code: PLAN.md (the *Match setup* section, its status
 row and nine follow-ups, and a shorter deferred-list entry), README (*Choosing decks
-and the AI*), and DECISIONS.md, where it wrote **D104** (the profile is always an
-explicit `profileOverride`, and it is not a difficulty) and **D105** (the villain
-deck's composition, and the four rules a card in it must meet). It also
-**renumbered** the fix pass's D90 and D91 to **D102** and **D103**, because while
+and the AI*), and DECISIONS.md, where it wrote D104 (the profile is always an
+explicit `profileOverride`, and it is not a difficulty) and D105 (the villain
+deck's composition, and the four rules a card in it must meet) — **D107** and
+**D108** since the second rebase (§R.4). It also
+**renumbered** the fix pass's D90 and D91 to D102 and D103 (now **D105** and
+**D106**), because while
 this branch was open `main` committed D90–D94 (the card library) and the Tier 2
 slice-4 branch wrote D95–D101. Every reference was updated: PLAN.md, README,
 `decks/README.md` and §R row 7 above. Nothing in the code cites a decision
@@ -811,7 +813,8 @@ were closed. `~/.forge/preferences/` still held the same three files with their
 **The rebase.** `19a984a` was replayed onto `main`'s `23e26b3` (the card library,
 `754f504`, and Tier 2 slice 4) as `7737f61`, with its own commit message. Three
 files conflicted and every conflict kept both sides: **DECISIONS.md** (main's
-D90–D101 first, then this branch's D102–D105; the italic note above D102 now
+D90–D101 first, then this branch's D102–D105 — **D105–D108** since §R.4; the
+italic note above them then
 says the numbers were chosen to miss D90–D101 and did), **PLAN.md** (the status
 table — main's M7 row, then this branch's row; the deferred list — this branch's
 "a second deck … **Done** as match setup" and main's "card library … **Brought
@@ -827,16 +830,28 @@ block.
   main's card library (DECISIONS.md, PLAN.md, README.md, CLAUDE.md,
   `tools/card-library/`). `grep -c '^## D[0-9]'` over DECISIONS.md is **105**,
   D1 to D105 with no gap and no duplicate, so every count now says **one hundred
-  and five** (README twice, CLAUDE.md's docs table).
+  and five** (README twice, CLAUDE.md's docs table). *Superseded by §R.4*: the
+  workshop reached `main` first with D102–D104, and these four are D105–D108.
 - **CLAUDE.md.** The fix pass's prepared patch
-  (`scratchpad/msfix/claude-md.patch`, written against `0368a90`) does not apply
-  to main's CLAUDE.md as a whole: its first four hunks applied with an offset of
-  three lines (lint rule 10's `GamePlayerUtil.createAiPlayer` ban, `play.sh`'s
-  villain default and `--mirror` line, the six lettered sub-steps with **9e**,
-  ten-games' rows 11–14), and the other three were re-applied by hand — the gate
-  time, the test counts, and the docs-table row, which says **D102–D105** and
-  "one hundred and five" where the patch said D90–D91 and "ninety-one". PLAN.md's
-  follow-ups 8 (CLAUDE.md) and 9 (decision numbers at merge) are closed.
+  (`scratchpad/msfix/claude-md.patch`, seven hunks, written against `0368a90`)
+  does not apply to main's CLAUDE.md as a whole: its first four hunks applied
+  with an offset of three lines (lint rule 10's `GamePlayerUtil.createAiPlayer`
+  ban, `play.sh`'s villain default and `--mirror` line, the six lettered
+  sub-steps with **9e**, ten-games' rows 11–14), and the other three were
+  re-applied by hand — the gate time, the test counts, and the docs-table row,
+  which said **D102–D105** and "one hundred and five" where the patch said
+  D90–D91 and "ninety-one". *Corrected by §R.4*: this bullet said CLAUDE.md was
+  then complete, and it was not. The patch that was meant to land was the
+  documentation pass's later one, `var/claude-md-match-setup.patch` (eight
+  hunks), whose **hunks 2 and 3** carry what the fix pass's copy never had: in
+  the Build-and-run block, the bridge example (`MtgTable --transport console
+  --seed 42 --ai-deck decks/doom-legion.dck --ai-profile Reckless`) and the
+  `fetch-art.ts` / `ten-games.sh` line edits; after the `play.sh` block, the
+  whole *Match setup (amendment M44, …)* paragraph. Only two of hunk 2's added
+  lines (`ten-games.sh --seed 13` and `check-deck.mjs`, reworded) and hunk 3's
+  `play.sh` lines were in the tree; `--ai-deck` appeared in CLAUDE.md **0**
+  times. PLAN.md's follow-ups 8 (CLAUDE.md) and 9 (decision numbers at merge)
+  were marked closed; 8 was closed only in part, and §R.4 finishes it.
 - **One semantic conflict the text merge could not see.** Main's
   `web/test/cards-lib.test.ts` parses every file in `decks/` as a deck, and this
   branch put `decks/README.md` there: `npm test` on the rebased tree failed 1 of
@@ -852,10 +867,12 @@ the ws session is not `over`") had one cause. `WireGuiGame.emit` checked
 `overEmitted` *before* `synchronized (log)`, the monitor that numbers and pushes
 a frame; an `input` that read the flag false could be descheduled there while the
 concede's `emitOver` set the flag, took the monitor and pushed `over`, and then be
-numbered one past it. The flag is now re-checked **under** the monitor; because
-`emitOver` sets it *before* it takes the monitor, a frame that reaches the monitor
-after `over` must see it, and one that reached it first is numbered ahead of
-`over`. `logC2s` had the same shape for an act (it would be written after `over`
+numbered one past it. The flag is now re-checked **under** the monitor, and the
+invariant is: once `overEmitted` is set, only `over` is emitted. (*Corrected by
+§R.4*: this paragraph first said a frame that reached the monitor first "is
+numbered ahead of `over`", but `emitOver` sets the flag and may sleep up to a
+second for the outcome capture before it numbers `over`, so a frame that takes
+the monitor inside that window is dropped too.) `logC2s` had the same shape for an act (it would be written after `over`
 in the file), and so did the ask path (checked at the top, numbered after
 `flushState` and the body): both re-check under the same monitor, and the ask is
 now numbered before its `ReplyPool` registration, so a dropped ask leaves nothing
@@ -885,7 +902,7 @@ installs the headless GUI first (hard rule 1) and runs under hard rule 6's flags
 **Fix (b): a bare `play.sh` plays the villains.** Already true since §R row 4:
 `config.json`'s `match.aiDeck` is `decks/doom-legion.dck`. README, `play.sh`'s
 header and `decks/README.md` say a bare `./scripts/play.sh` plays Doom Legion and
-a bare `MtgTable` a mirror (D103); CLAUDE.md's `play.sh` block now says so too.
+a bare `MtgTable` a mirror (D106); CLAUDE.md's `play.sh` block now says so too.
 
 **Fix (c): the arena's plates print the match.** `SeatPlates` passes
 `seatMatchOf(state.hello, player.id)` — the one reader the board's rail uses — to
@@ -944,3 +961,122 @@ After it: `~/forge` and `~/.forge` were fingerprinted before any of this work
 (22,155 paths, sizes and mtimes; `~/.forge`'s file hashes) and again at the end,
 and neither changed; no process of this worktree's was left, and ports 8670–8674
 and 5182 were closed.
+
+### R.4 The second rebase, onto the workshop (`bf0392b`), and the verifier's four findings (2026-09-27)
+
+**The rebase.** `main` moved to `bf0392b` after §R.3 — the workshop, `ca97a82`
+and `bf0392b`, with its own **D102–D104**. `git rebase bf0392b` replayed both of
+this branch's commits. The first conflicted in CLAUDE.md (the gate-time
+paragraph and the two docs-table rows), DECISIONS.md (both sides append after
+D101) and README.md (the `tools/` tree and the docs table); the second in
+CLAUDE.md's test-count sentence. Every conflict kept both sides, `main`'s text
+first; PLAN.md, `web/src/styles.css` and `web/test/liveness.test.ts` merged by
+themselves. The verifier's four findings on the rebased branch, and what closed
+each:
+
+**1 (blocker): the decision numbers collided.** The workshop reached `main`
+first, so, as its own D102 says, the side that lands second renumbers: D102 →
+**D105**, D103 → **D106**, D104 → **D107**, D105 → **D108**, in DECISIONS.md's
+four headings and the italic note above them (rewritten to say why), and in
+every citation this branch wrote — CLAUDE.md (the new paragraph and the
+docs-table row), README (the `play.sh` header, *Choosing decks and the AI*, the
+tree and the docs table), PLAN.md, `decks/README.md`, this file,
+`web/src/arena/DecisionLayer.tsx` and `web/test/liveness.test.ts`. The
+workshop's own D102–D104 citations (CLAUDE.md's workshop section, README,
+PLAN.md's *The workshop*, `web/src/cards/`, `web/src/workshop/links.ts` and three
+tests) were left alone. Each line was classified by whether `git diff bf0392b`
+shows this branch adding it, renumbered only if so, and every hit of
+`grep -rn 'D10[2-8]'` was then read. `grep -c '^## D[0-9]' DECISIONS.md` is
+**108**, D1 to D108, each exactly once, and every count reads **one hundred and
+eight** (CLAUDE.md's docs table; README's tree line, which `main` had left at
+"one hundred and one", and its docs table). Where §R.2 and §R.3 recount the
+earlier renumbering they keep the numbers of the day and say what they are now.
+One of `main`'s sentences changed with it: CLAUDE.md's workshop section said
+the `match-setup` branch "numbers its own D102–D105, and whichever lands second
+renumbers", and now says it landed second and renumbered; PLAN.md's workshop
+follow-up 16 is struck through as closed. DECISIONS.md's D102 is left verbatim —
+a decision is not edited silently, and what it predicted is what happened.
+
+**2 (major): CLAUDE.md was missing hunks 2 and 3** of
+`var/claude-md-match-setup.patch` (§R.3's bullet, corrected above). Added, with
+the new numbers: in the Build-and-run block, the bridge example
+`./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 --ai-deck
+decks/doom-legion.dck --ai-profile Reckless` and the `fetch-art.ts` ("every
+decks/*.dck") and `ten-games.sh` ("+ match setup's rows 11-14; check-all's 9c")
+line edits; after the `play.sh` block, the paragraph *Match setup (amendment M44,
+D105–D108) chose what the seat plays against* — `--ai-deck` / `--deck2`,
+`--ai-profile` validated before `FModel.initialize`, the two defaults (only
+`play.sh` reads `config.json`'s `match` block; a bare `MtgTable` and the gate
+play a mirror, D106), the `Bootstrap.createAiPlayer` seam (D107), "a profile is
+not a difficulty", `seatMatchOf` as the one reader of `hello_ok.match` (D105)
+and D108's four rules. `--ai-deck` now appears in CLAUDE.md twice (it was 0).
+CLAUDE.md's `OverRaceSelfTest` paragraph also gained the corrected invariant
+and the open ask gap (findings 3 and 4).
+
+**3 (minor): `emit`'s comment stated the wrong invariant, and a dropped
+`gameOver` state counted as sent.** The comment on the re-check said a frame
+that got the monitor first "is numbered ahead of `over`". It is not: `emitOver`
+sets `overEmitted` and may then sleep up to a second (50 × 20 ms) for an
+in-flight outcome capture before it numbers `over`, so a frame that takes the
+monitor inside that window is dropped as well. The comment (and
+`OverRaceSelfTest`'s header, and §R.3's paragraph) now says the real invariant:
+**once `overEmitted` is set, only `over` is emitted**. And `emit` now returns
+whether it numbered and pushed the frame; `flushState` counts a `state` and sets
+`gameOverStateEmitted` only when it did. Before, the game-thread capture could
+build the `gameOver` `state` while the EDT's `emitOver` was waiting for it, have
+it dropped by the re-check, and still mark it sent — silencing `emitOver`'s
+`OVER WITHOUT A gameOver STATE` on exactly the run where it is true.
+`./bridge/build.sh`: lint OK (21 files), and all four self-tests pass —
+`OverRaceSelfTest` 11 checks, 0 failures.
+
+**4 (minor): the ask path's push.** `WireGuiGame.ask` numbers its frame under
+the log's monitor but pushes it later, inside `Transport.ask`, so a concede's
+`over` can be numbered after that ask and still reach the socket first. Not
+restructured (that is the transport's ask); recorded open as **Tier 2 slice 4's
+follow-up 13(d)** in PLAN.md, beside (b) and (c), and in a comment at the
+re-check. **No ask-path case was added to `OverRaceSelfTest`**: `ask` asserts a
+game thread (`Transport.assertGameThread`, a bare `startsWith("Game")`), and
+reaching one from the self-test would take either a fourth
+`ThreadUtil.invokeInGameThread` hop — hard rule 3 wants a written exclusion
+argument in DECISIONS.md for that — or a thread of ours named into the `Game`
+prefix, which the thread-name rule and lint section 6 exist to forbid. The
+follow-up and the self-test's header both say it does not cover the ask path.
+
+**One more semantic conflict: the workshop's catalog.** `main`'s
+`tools/build-workshop-catalog.ts` reads every `decks/*.dck`, and
+`workshop.test.ts` fails when `web/src/workshop/catalog.json` has drifted from
+them, so this branch's `decks/doom-legion.dck` made the committed catalog stale
+(`--check` exit 1). Regenerated: 11 decks, and 25 names *never face up* where
+there was 1 — 24 of Doom Legion's 27, because no committed recording plays it
+(only Aerial Doombot, Thriving Isle and Island have been seen, in other decks'
+games). The workshop is a dev page reading committed deck files; D105 governs
+`hello_ok`, not it. That the pedestal cannot yet show a villain is match setup's
+new follow-up 10.
+
+**The web client**, from `web/` (its `node_modules` already matched the lock
+file; neither side changed `package.json`): `npm --prefix web test` standalone —
+**870 `node --test` (870 pass, 0 skipped) + 94 vitest (6 files)**, where `main`
+had 862 + 93: this branch's 7 `reduce-match` cases, its liveness clause for the
+arena's plates and its `arena-hud` case. `node tools/fetch-art.ts` wrote
+`web/public/art.json` (65 entries, gitignored) and `./tools/make-forge-home.sh`
+was re-run before the gate.
+
+**The gate**, `rm -rf bridge/out && WSPORT=8680 ./tools/check-all.sh`
+(`var/check-all-match-setup-final.log`), with no `SKIP_*`: **`check-all OK`, exit
+0, 897 s**, at a load average of 11 at the start and 19 at the end. 9c's
+fourteen games took 370 s, 14 / 14. Inside the gate `node --test` was **880 /
+872 pass / 0 fail / 8 skipped** (`MTGTABLE_WS_LOGS` naming step 10's four logs)
+and vitest 94 (6 files); the 2D entry chunk is 87.67 kB gzip, and the scene chunk
+`arena-scene-*.js` 347.96 kB. `OverRaceSelfTest` passed its 11 checks with 293
+frames dropped over 300 stress rounds; lint 21 files; 9b's multiset diff was
+identical (1,587 frames); all 13 session summaries printed `late frames = 0`.
+After the run, `WireGuiGame.java` took one more comment-only edit (the note that
+an ask is pushed outside `emit`), and `./bridge/build.sh` — the lint and the four
+self-tests — was run again on the final tree: build OK, `OverRaceSelfTest` 11
+checks, 0 failures.
+
+`~/forge` and `~/.forge` were fingerprinted before this work (`~/forge`'s path
+count, 22,128, and its top level's sizes and mtimes; every `~/.forge` path's size
+and mtime, 27 paths; a checksum of `~/.forge/decks/constructed/`) and again at
+the end: unchanged. No process of this pass was left running, and ports 8680–8684
+were closed.

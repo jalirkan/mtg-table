@@ -32,7 +32,7 @@ node tools/fetch-art.ts                                  # art for EVERY deck he
 `--ai-deck` is `--deck2`'s newer spelling. `scripts/play.sh` takes its default
 from `config.json`'s `match.aiDeck` — shipped as `decks/doom-legion.dck`, and
 `null` (or `--mirror`) means the AI plays a copy of your deck. The bridge itself
-does not read that block (**D103**): `./bridge/run.sh mtgtable.MtgTable` with no
+does not read that block (**D106**): `./bridge/run.sh mtgtable.MtgTable` with no
 `--ai-deck` plays a mirror, which is also what keeps the gate's games fixed.
 
 `--ai-profile` picks one of the four `.ai` files in `forge-home/res/ai/`

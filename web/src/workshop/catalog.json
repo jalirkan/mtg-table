@@ -165,6 +165,147 @@
       ]
     },
     {
+      "file": "doom-legion.dck",
+      "name": "Doom Legion (Marvel Super Heroes villains)",
+      "cards": [
+        {
+          "name": "Aerial Doombot",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Agents of HYDRA",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Loki, God of Mischief",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doom's Servo-Guards",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doom Reigns Supreme",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dark Deed",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doom Blade",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Baron Strucker, HYDRA Overlord",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "HYDRA Troopers",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "A.I.M. Bot",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Visions of Villainy",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Frozen in Ice",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Kang the Conqueror",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Kang, Temporal Tyrant",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Unliving Legionnaire",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Madame Hydra, Reanimated",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hour of Defeat",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Crossbones, Malicious Mercenary",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Pharaoh Rama-Tut",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doctor Doom",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Isle",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Moor",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hidden Lair",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Castle Doom",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Villainous Hideout",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Swamp",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Island",
+          "count": 5,
+          "section": "main"
+        }
+      ]
+    },
+    {
       "file": "future-sight-probe.dck",
       "name": "Future Sight probe",
       "cards": [
@@ -693,36 +834,79 @@
     }
   ],
   "missing": [
-    "Giant Growth"
+    "A.I.M. Bot",
+    "Agents of HYDRA",
+    "Baron Strucker, HYDRA Overlord",
+    "Castle Doom",
+    "Crossbones, Malicious Mercenary",
+    "Dark Deed",
+    "Doctor Doom",
+    "Doom Blade",
+    "Doom Reigns Supreme",
+    "Doom's Servo-Guards",
+    "Frozen in Ice",
+    "Giant Growth",
+    "HYDRA Troopers",
+    "Hidden Lair",
+    "Hour of Defeat",
+    "Kang the Conqueror",
+    "Kang, Temporal Tyrant",
+    "Loki, God of Mischief",
+    "Madame Hydra, Reanimated",
+    "Pharaoh Rama-Tut",
+    "Swamp",
+    "Thriving Moor",
+    "Unliving Legionnaire",
+    "Villainous Hideout",
+    "Visions of Villainy"
   ],
   "threeD": {
+    "A.I.M. Bot": null,
     "A.I.M. Scientists": "figure",
     "Aerial Doombot": "figure",
     "Agent 13, Sharon Carter": "figure",
     "Agent Phil Coulson": "figure",
+    "Agents of HYDRA": null,
     "Agents of S.H.I.E.L.D.": "figure",
     "Ainok Tracker": "figure",
     "Ant-Man's Air Force": "figure",
     "Ant-Man, Reformed Rogue": "figure",
     "Ashcloud Phoenix": "figure",
+    "Baron Strucker, HYDRA Overlord": null,
     "Battering Craghorn": "figure",
     "Bold Biochemist": "figure",
     "Borough Backup": "cues",
+    "Castle Doom": null,
     "Clue Token": null,
+    "Crossbones, Malicious Mercenary": null,
+    "Dark Deed": null,
     "Depower": "cues",
+    "Doctor Doom": null,
+    "Doom Blade": null,
+    "Doom Reigns Supreme": null,
+    "Doom's Servo-Guards": null,
     "Forest": null,
+    "Frozen in Ice": null,
     "Future Sight": null,
     "Garruk's Companion": "figure",
     "Giant Growth": null,
     "Giant-Sized Flying Ant": "figure",
+    "HYDRA Troopers": null,
     "Helicarrier Strike": "cues",
     "Hero Token": "figure",
+    "Hidden Lair": null,
+    "Hour of Defeat": null,
     "Island": "cues",
+    "Kang the Conqueror": null,
+    "Kang, Temporal Tyrant": null,
+    "Loki, God of Mischief": null,
+    "Madame Hydra, Reanimated": null,
     "Manamorphose": null,
     "Mountain": null,
     "Nick Fury, Spymaster": "figure",
     "Opt": null,
     "Peggy Carter, Secret Agent": "figure",
+    "Pharaoh Rama-Tut": null,
     "Plains": "cues",
     "Pym Particles": "cues",
     "Quake, Agent of S.H.I.E.L.D.": "figure",
@@ -736,9 +920,14 @@
     "Soldier Token": "figure",
     "Strategic Intervention": "cues",
     "Super Suit": "cues",
+    "Swamp": null,
     "Thallid": "figure",
     "Thriving Heath": "cues",
     "Thriving Isle": "cues",
+    "Thriving Moor": null,
+    "Unliving Legionnaire": null,
+    "Villainous Hideout": null,
+    "Visions of Villainy": null,
     "Volcano Hellion": "figure",
     "Wasp, Shrinking Savior": "figure",
     "Web Up": "cues"

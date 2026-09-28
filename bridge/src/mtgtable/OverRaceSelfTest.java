@@ -55,10 +55,22 @@ import java.util.concurrent.atomic.AtomicReference;
  * failed step 10a, 10b or 10g on exactly that ("the last frame of the ws
  * session is not `over`").  {@code logC2s} had the same shape for an act.
  *
- * <p>The fix re-checks the flag under the monitor.  {@code emitOver} sets it
- * <em>before</em> taking the monitor, so a frame that reaches the monitor after
- * {@code over} was pushed must see it, and a frame that reached the monitor
- * first is numbered ahead of {@code over}, which is the legal order.
+ * <p>The fix re-checks the flag under the monitor, and the invariant is: once
+ * {@code overEmitted} is set, only {@code over} is emitted.  {@code emitOver}
+ * sets the flag <em>before</em> taking the monitor -- and may sleep up to a
+ * second for the outcome capture in between -- so every frame that takes the
+ * monitor after the flag is set is dropped, whether {@code over} has been
+ * numbered yet or not; only a frame numbered before the flag was set precedes
+ * {@code over}.
+ *
+ * <p><b>Not covered: the ask path's push.</b>  {@code WireGuiGame.ask} numbers
+ * its frame under the same monitor but pushes it later, in
+ * {@code Transport.ask}, so {@code over} can reach the socket ahead of an
+ * already-numbered ask (PLAN.md, Tier 2 slice 4's follow-up 13(d), open).  No
+ * case here drives {@code ask}: it asserts a game thread, and reaching one from
+ * this test would take either a fourth {@code ThreadUtil.invokeInGameThread}
+ * hop (hard rule 3) or a thread of ours named into the {@code Game} prefix
+ * (the thread-name rule).
  *
  * <h2>How it is driven</h2>
  *

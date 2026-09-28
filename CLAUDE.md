@@ -227,13 +227,15 @@ printf "\n\n\n\nq\n" | ./bridge/run.sh mtgtable.MtgTable --transport console \
     --seed 42                               # the scripted smoke; check-all runs it
 npm --prefix web run dev:replay             # opens /?replay=games/g1.jsonl
 npm --prefix web test && npm --prefix web run build   # `test` = node --test THEN vitest
-node tools/fetch-art.ts                     # deck -> web/public/art.json (M4 needs it)
+node tools/fetch-art.ts                     # every decks/*.dck -> web/public/art.json (M4 needs it)
 node tools/card-library/build.ts            # D90: Scryfall bulk + MSH/MSC -> var/cards/cards.sqlite
 node tools/card-library/images.ts --all-decks   # D90: cache every decks/ card's image
 npm --prefix web run dev                    # then /#cards — the card browser (dev server ONLY)
-./tools/ten-games.sh                        # M5's exit criterion; check-all runs it as 9c
+./tools/ten-games.sh                        # M5's exit criterion + match setup's rows 11-14; check-all's 9c
 ./tools/ten-games.sh --games 3              # the first three rows, for a quick look
 ./tools/ten-games.sh --seed 13              # match setup: one row, you vs decks/doom-legion.dck, Reckless
+./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
+    --ai-deck decks/doom-legion.dck --ai-profile Reckless   # match setup: the AI's deck + Forge profile
 node tools/check-deck.mjs decks/doom-legion.dck --scryfall   # match setup: is every card in the engine?
 ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt \
     --seed 7 --game-id human-amount-7 \
@@ -267,6 +269,33 @@ session nobody ever attached to.
 ./scripts/play.sh -- --games 1                      # one game (your --games wins)
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
 ```
+
+**Match setup (amendment M44, D105–D108) chose what the seat plays against.**
+`--ai-deck <path>` (the same flag as `--deck2`; two different values is an
+error) gives the AI a deck of its own, and `--ai-profile
+<Default|Cautious|Reckless|Experimental>` picks one of the `.ai` files in
+`forge-home/res/ai/`, case-insensitively, **validated before
+`FModel.initialize`** — a bogus name exits in about a second with the list. Both
+work on `mtgtable.MtgTable` and on `scripts/play.sh`, which also takes `--deck`
+and `--mirror`. **Two defaults, on purpose (D106):** `config.json`'s `match`
+block (`deck`, `aiDeck` = `decks/doom-legion.dck`, `aiProfile`, `games`) is read
+by `play.sh` **and nothing else**, so a bare `play.sh` plays the Doom Legion while
+a bare `MtgTable` — and every gate step — plays a mirror under `Default`; the
+gate passes every deck and profile it means on its own command lines, and the
+villain deck it plays is named once, in `tools/villain-deck.sh`. **Every AI seat
+in every process goes through `Bootstrap.createAiPlayer(name, avatar, profile)`**,
+never `GamePlayerUtil.createAiPlayer` directly (lint rule, hard rule 10): the
+two-argument overload passes an empty `profileOverride`, and that branch can call
+`ForgePreferences.save()` (D107). **A profile is not a difficulty** — 121
+heuristic values whose effect is situational; against the automated seat Cautious
+and Reckless were not measurably different (`docs/evidence/match-setup.md` §P) —
+so never describe one as harder or easier. `hello_ok.match` names the AI's deck
+by its `Name=` and card count **only**, never a path, hash or list (D105);
+`seatMatchOf()` in `web/src/protocol.ts` is its one reader, and the board's rails
+and the arena's seat plates print it. `decks/README.md` is every deck; D108 is
+why Doom Legion is built the way it is, and its four rules (a Forge script, no
+`AI:RemoveDeck:All`, the AI casts it, the redaction gate passes with no flags)
+are what any card added to an AI deck must meet.
 
 **M7 adds `--arena`, and it is one URL fragment.** The arena is a second
 *renderer* over the same frame stream, so the bridge, the socket, the reducer and
@@ -394,10 +423,17 @@ burned 30 s and returned a truncated file — was invisible in a green run. So w
 *outside* the monitor that numbers a frame, and at a load average of 20–60 an
 `input` (or an act) was numbered one past `over` — step 10a, 10b or 10g failing
 on "the last frame … is not `over`" in three gate runs. The flag is now
-re-checked under that monitor (and the ask path's numbering too); a frame that
-loses the race is dropped, counted as the summary's `late frames` line, and
-named on stderr. With the re-check removed the self-test fails all 11 of its
-checks; with it, twenty back-to-back 10b sessions at a load average of up to 43
+re-checked under that monitor (and the ask path's numbering too), and the
+invariant is **once `overEmitted` is set, only `over` is emitted** — `emitOver`
+sets the flag and may wait up to a second for the outcome before it numbers
+`over`, so a frame that arrives in that window is dropped too; a frame that
+loses the race is counted as the summary's `late frames` line and named on
+stderr, and a dropped `gameOver` `state` does not count as sent, so `OVER
+WITHOUT A gameOver STATE` still fires. **The ask's push is not covered**: an ask
+is numbered under the monitor but pushed later by `Transport.ask`, so `over` can
+still reach the socket ahead of it (PLAN.md, slice 4's follow-up 13(d), open;
+the self-test has no ask case, because `ask` asserts a game thread). With the
+re-check removed the self-test fails all 11 of its checks; with it, twenty back-to-back 10b sessions at a load average of up to 43
 all passed, and one of them caught the race live (`late frames = 1`, the log
 still ending in `over`; `docs/evidence/match-setup.md` §R.3). It loads `WireGuiGame`, so it installs the headless GUI first (hard
 rule 1), runs under hard rule 6's flags and borrows `HeadlessGuiBase`'s own
@@ -519,7 +555,10 @@ fix commit (`OverRaceSelfTest` among it), it ran twice from a deleted
 `bridge/out` at `WSPORT=8670`: **1,106 s** and then **970 s**, exit 0 both times,
 9c's fourteen games 466 s and 408 s, at a load average of 17–29 falling to 4 —
 the second is the committed tree (`var/check-all-ms-rebase.log`,
-`docs/evidence/match-setup.md` §R.3).
+`docs/evidence/match-setup.md` §R.3). **Rebased onto the workshop** (`bf0392b`)
+with the verifier's four findings fixed, it ran from a deleted `bridge/out` at
+`WSPORT=8680`: **897 s**, exit 0, 9c's fourteen games 370 s, at a load
+average of 11–19 (`var/check-all-match-setup-final.log`, evidence §R.4).
 `SKIP_TEN=1`
 brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
 **seven** servers on it, one after another.
@@ -647,8 +686,11 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **862 `node --test` +
-93 vitest (6 files)** standalone with **the workshop rebased onto Tier 2's fourth slice and reconciled**
+`npm --prefix web test` is **870 `node --test` + 94 vitest (6 files)** standalone
+as of **match setup rebased onto the workshop** (`bf0392b`, 2026-09-27: its seven
+`reduce-match` cases, its liveness clause for the arena's plates and one
+`arena-hud` case on top of the workshop's tree), and was **862 + 93 (6 files)**
+with **the workshop rebased onto Tier 2's fourth slice and reconciled**
 (2026-09-27, from `npm ci`: its `workshop` suite, 43, two `keys` cases and two
 `cards-render` cases on top of slice 4's tree; **872 / 864 pass / 0 fail / 8 skipped** plus 93 vitest inside `check-all.sh`, `var/check-all-workshop-reconcile.log`),
 **825 + 92 (6 files)** as of **match setup rebased onto `23e26b3`** (its seven
@@ -663,8 +705,10 @@ the card library alone (its `workshop` suite then 38), **797 + 91 (6 files)** as
 (5 files)** as of **M7 Tier 2's fourth slice** before the rebase, and
 **704 + 79 (5 files)** as of **M7 Tier 2's third slice** after its second fix pass (698 after its first,
 690 before that, 655 after the second slice, 610 + 79 after the first slice,
-534 + 79 at M7 Tier 1, 456 + 75 at M6), and **835 / 827 pass / 0 fail / 8
-skipped** inside `check-all.sh` as of match setup's first rebase and fix commit (`var/check-all-ms-rebase.log`; 721 / 713 on its own
+534 + 79 at M7 Tier 1, 456 + 75 at M6), and **880 / 872 pass / 0 fail / 8
+skipped** plus 94 vitest inside `check-all.sh` as of match setup rebased onto the
+workshop (`var/check-all-match-setup-final.log`), **835 / 827** as of its first
+rebase and fix commit (`var/check-all-ms-rebase.log`; 721 / 713 on its own
 branch), **827 / 819** after
 slice 4's rebase (`var/check-all-t2s4-rebase-pre2.log`) — the first in-gate
 count since slice 3's **714 / 706**, because neither side read one: slice 4's

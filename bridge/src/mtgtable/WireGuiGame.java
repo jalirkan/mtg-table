@@ -496,10 +496,16 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     // Frame emission.  Every frame, both directions, also lands in the log.
     // ==================================================================
 
-    /** Push an s2c frame and append it to {@code var/games/<id>/frames.jsonl}. */
-    private void emit(final String type, final String body) {
+    /**
+     * Push an s2c frame and append it to {@code var/games/<id>/frames.jsonl}.
+     *
+     * @return whether the frame was numbered and handed to the transport; false
+     *         when it was dropped (closed, after {@code over}, or a failure), so
+     *         a caller that records "this frame went out" records only the truth
+     */
+    private boolean emit(final String type, final String body) {
         if (closed) {
-            return;
+            return false;
         }
         if (overEmitted && !"over".equals(type)) {
             // Protocol sections 7 and 8.4: `over` is the TERMINAL frame of a
@@ -510,7 +516,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // wants it: the client has torn the board down and the gate asserts
             // `tail -1` is `over`.  Dropped here rather than raced against
             // close(), so the invariant is structural and not lucky.
-            return;
+            return false;
         }
         try {
             // Line 0 of the log is the session header and it is written in
@@ -544,23 +550,32 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 // monitor and number its `input` one past `over`.  Measured, not
                 // imagined: three gate runs at a load average of 20-60 failed
                 // 10a / 10b / 10g on "the last frame of the ws session is not
-                // `over`", an empty `input` one seq after it.  `emitOver` sets
-                // the flag BEFORE it takes this monitor, so a frame that gets the
-                // monitor after `over` was pushed must see the flag here; a
-                // frame that got it first is numbered ahead of `over`, which is
-                // the legal order.  Either way the invariant is structural.
+                // `over`", an empty `input` one seq after it.
+                //
+                // The invariant is: ONCE `overEmitted` IS SET, ONLY `over` IS
+                // EMITTED.  It is not "a frame that got here first is numbered
+                // ahead of `over`": `emitOver` sets the flag and may then sleep
+                // up to a second waiting for the outcome capture before it
+                // numbers `over`, so a frame that takes this monitor inside that
+                // window -- before `over` has a seq at all -- sees the flag and
+                // is dropped too.  Only a frame numbered before the flag was set
+                // precedes `over`.  So `over` is the last frame `emit` numbers
+                // and the last it pushes, structurally (an ask is pushed outside
+                // this method -- see the note in ask()).
                 if (overEmitted && !"over".equals(type)) {
                     lateFramesDropped.incrementAndGet();
                     System.err.println("EMIT AFTER OVER dropped: " + type + " lost the race to "
                             + "`over` (protocol section 8.4)");
-                    return;
+                    return false;
                 }
                 final int seq = l.s2c(type, body);
                 transport.push(envelope(seq, type, body));
+                return true;
             }
         } catch (final RuntimeException e) {
             errors.incrementAndGet();
             System.err.println("EMIT FAILED " + type + ": " + e);
+            return false;
         }
     }
 
@@ -934,12 +949,19 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             }
             playerIndex = pix;
             concealedNow = Snap.concealedIds(gameView, viewer);
-            emit("state", body);
-            stateFrames.incrementAndGet();
-            if (gameView.isGameOver()) {
+            final boolean pushed = emit("state", body);
+            if (pushed) {
+                stateFrames.incrementAndGet();
+            }
+            if (pushed && gameView.isGameOver()) {
                 // Snap.state writes `gameOver` iff GameView.isGameOver(), so
                 // this is the same predicate the frame was built from, read on
-                // the same thread one line later.
+                // the same thread one line later.  Only when the frame really
+                // went out: `emit` drops a `state` that arrives once
+                // `overEmitted` is set (another thread's emitOver can be waiting
+                // for this very capture), and marking a dropped frame as sent
+                // would silence emitOver's "OVER WITHOUT A gameOver STATE" on
+                // exactly the run where it is true.
                 gameOverStateEmitted = true;
             }
             if (captured) {
@@ -1891,9 +1913,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // method ran before flushState and the body, and a concede's `over`
             // can be numbered in between.  Re-checked under the log's monitor,
             // where `over` is numbered too, so an ask is either ahead of `over`
-            // in the file or not in it at all.  Numbered BEFORE the pool
+            // in the FILE or not in it at all.  Numbered BEFORE the pool
             // registration, which only has to precede the push inside
             // transport.ask, so a dropped ask leaves nothing registered.
+            // NOT on the wire: the push happens in transport.ask, after this
+            // monitor is released, so a concede's `over` can be numbered after
+            // this ask and still reach the socket before it.  Open, and not
+            // covered by OverRaceSelfTest (PLAN.md, Tier 2 slice 4's follow-up
+            // 13(d)); closing it means restructuring the transport's ask.
             final GameLog l = log;
             final int seq;
             synchronized (l) {

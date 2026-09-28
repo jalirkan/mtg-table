@@ -262,7 +262,7 @@ test('liveness: the decision layer knows nothing about the cue engine', () => {
  * HUD through `seatMatchOf(state.hello, …)` — the one reader of
  * `hello_ok.match`, the same call the board's rail makes (M6 convention 1: one
  * reader per optional field) — so the renderer cannot print a key the reader
- * would have refused, such as a path an emitter put on the AI's deck (D102).
+ * would have refused, such as a path an emitter put on the AI's deck (D105).
  * And like a button label, a deck name is rendered and never compared: the
  * arena decides nothing.
  */
@@ -277,7 +277,7 @@ test('liveness: the seat plates read the match through seatMatchOf and never com
   );
   assert.ok(
     !/\bhello\??\.match\b|\.yourDeck\b|\.aiDeck\b/.test(layer),
-    'DecisionLayer reads `hello_ok.match` directly — `seatMatchOf` is its one reader (M44, D102)',
+    'DecisionLayer reads `hello_ok.match` directly — `seatMatchOf` is its one reader (M44, D105)',
   );
   assert.ok(
     !/(deck|aiProfile)\s*(===|!==)\s*['"`]|\b(deck|aiProfile)\.(includes|match|startsWith|endsWith)\(/.test(

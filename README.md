@@ -124,7 +124,8 @@ checker still rejects eighteen one-defect probes and passes their two controls �
 `web/`. **About fifteen to nineteen minutes** from a deleted `bridge/out` since
 match setup added five games (874 s on its first run; 1,141 s on its review fix
 pass and 1,143 s on its documentation pass, each on a machine running other gates
-at the same time; 1,106 s and 970 s rebased onto `23e26b3`), about eleven and a half
+at the same time; 1,106 s and 970 s rebased onto `23e26b3`; 897 s rebased onto the
+workshop's `bf0392b`), about eleven and a half
 before it (682 s and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added
 9d and 10g), of which 9c's fourteen games are most and the seven ws servers much
 of the rest; `SKIP_TEN=1` saves 9c (370 s of the 874). Every JVM step runs
@@ -181,8 +182,8 @@ npm --prefix web test && npm --prefix web run build
 ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
     --ai-deck decks/doom-legion.dck --ai-profile Reckless   # the same flags, on the bridge
 node tools/check-deck.mjs decks/doom-legion.dck --scryfall  # is every card really in the engine?
-#   A profile is not a difficulty (D104).  Only play.sh reads config.json's
-#   "match" block; the bridge and the gate never do (D103).
+#   A profile is not a difficulty (D107).  Only play.sh reads config.json's
+#   "match" block; the bridge and the gate never do (D106).
 
 # M3 — the socket by itself, without a browser
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
@@ -675,7 +676,7 @@ is what it is doing.
 ```
 
 `"aiDeck": null` makes a bare run a mirror. **Only `scripts/play.sh` reads this
-block** (D103). `./bridge/run.sh mtgtable.MtgTable`, `tools/ten-games.sh` and
+block** (D106). `./bridge/run.sh mtgtable.MtgTable`, `tools/ten-games.sh` and
 `tools/check-all.sh` never do: with no `--ai-deck` the bridge plays a mirror
 under `Default`, and the gate passes every deck and profile it means on its own
 command lines. Editing the block to try Reckless therefore never changes what the
@@ -684,7 +685,7 @@ gate plays.
 **What the board shows.** Each seat's rail names its deck, and the AI's rail its
 profile — `Deck: Doom Legion (Marvel Super Heroes villains) · AI profile:
 Reckless` — read from `hello_ok.match`. The AI's deck reaches the browser as its
-**name and card count and nothing else**, never its path or its list (D102): the
+**name and card count and nothing else**, never its path or its list (D105): the
 name is what a player says across a real table, and the list is hidden
 information (hard rule 8). The name is the `.dck` file's own `Name=`, so a deck
 named after a card announces that card. A recording made before match setup has
@@ -714,10 +715,10 @@ one to experiment with, not as a dial. What the gate does check is that the
 profile you name is the one the in-game AI reads (`tools/ten-games.sh` rows
 11–14, one per profile, and `check-all.sh` step 9e), and that no Forge
 preferences file changes: the call the bridge used to seat the AI with could
-save one (D104).
+save one (D107).
 
 **The decks.** [`decks/README.md`](decks/README.md) lists every deck, and says
-what Doom Legion is and how it plays; D105 is why it is built the way it is. Any
+what Doom Legion is and how it plays; D108 is why it is built the way it is. Any
 Forge `.dck` works on either seat. Before you trust a new one:
 
 ```bash
@@ -1639,14 +1640,14 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the one hundred and five load-bearing decisions, dated
-                             (match setup's are D102–D105)
+  DECISIONS.md               the one hundred and eight load-bearing decisions, dated
+                             (the workshop's are D102–D104, match setup's D105–D108)
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
                              aiDeck, aiProfile, games}, wsPort, webPort,
                              scryfallUserAgent }. `match` is read by scripts/play.sh
-                             only (D103)
+                             only (D106)
 
   decks/README.md            what every deck here is, and tools/check-deck.mjs
   decks/pacho-shield.dck     the deck (40 cards, MSH + MSC), plus .txt as typed

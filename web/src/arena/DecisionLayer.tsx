@@ -209,7 +209,7 @@ export function DecisionLayer({
  * **What each seat is playing** (match setup, amendment M44) comes from
  * `seatMatchOf(state.hello, player.id)` — the one reader of `hello_ok.match`,
  * the same call the board's rail makes — and from nothing else: a deck NAME
- * (the AI's list is never on the wire, D102) and, on the AI's seat, Forge's
+ * (the AI's list is never on the wire, D105) and, on the AI's seat, Forge's
  * profile word. It is rendered, never compared; a stream without `match` (every
  * recording made before 2026-09-27) draws no line.
  */
