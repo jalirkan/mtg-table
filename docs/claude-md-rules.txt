@@ -1,0 +1,187 @@
+# docs/claude-md-rules.txt — every rule line of the CLAUDE.md files, one per line.
+# Checked by web/test/claude-md.test.ts; regenerate with
+# CLAUDE_MD_RULES_WRITE=1 node --test web/test/claude-md.test.ts
+# (a rule line starts with **, "N. " or "- **"; link targets dropped, whitespace folded)
+**in full** — it is the spec, not background reading.
+1. **`GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in
+2. **`IGuiBase.isGuiThread()` must be
+3. **The Forge view graph (`GameView` / `PlayerView` / `CardView`, `Tracker`) is
+**`isGameThread()` is not the whole rule.** It is a bare
+**cached pool** named `Game`, so anything hopped onto it runs on a *second*
+4. **Never call `FModel.getDecks()`** or anything reaching
+5. **Do not call `Game.setNoGUIUser()`** — it exists in the 2.0.15 source checkout
+6. **Run the JVM with exactly:**
+7. **Licence is GPL-3.0-or-later for the whole repo.** Copy **no** code from
+8. **Hidden information: exactly one card-serialisation function,** and exactly
+- **A library carries `count` plus only the cards `canBeShownTo` allows** (a
+9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
+10. **The lints are part of the build.** `tools/lint-bridge.sh` runs from
+**and `tools/`** (**D182** — `tools/audit-deck/AuditDeck.java` boots the same
+**`GamePlayerUtil.createAiPlayer` anywhere but
+**M3 added no fourth entry**, and that is worth noticing: `WsTransport` is a
+**M6 added a second budgeted call: lint rule 4b,
+**M36**). The rule derives its receivers from every identifier *declared*
+**Every rule is proven to FIRE, on every build** (**D180**, the guards
+**Threads.** `ThreadUtil.isGameThread()` is a bare
+11. **The bootstrap sets three things before the first game, in every process,
+- **asserted before** `initialize`: `FPref.LOAD_CARD_SCRIPTS_LAZILY` is
+- **set before** `initialize`:
+**D111** keeps it at one: **no hand-written card script, and no copy of a
+- **set immediately after** `initialize`:
+**never `save()`**. Decision **D13**: with the pref on, a scry 1 ships the
+- **Never pass `--release`** — a JRE image has no `ct.sym`. Plain output is Java
+- **The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.** Fat jar
+- **How it was obtained:** it is the user's own install, Forge's `.tar.bz2`
+- **How it is pinned:** `config.json`'s `forgeJar` names it by absolute path
+- **What may replace it (D109, D110):** only an asset of a **tagged official
+- **`~/forge` and `~/.forge` stay untouched, always** — before a switch, after
+- **Reality Fracture (FRA) is not in this engine.** Its edition file lists 43
+**`./scripts/play.sh` is the M3 command and M6's headline one** — check-forge →
+**M6 changed two defaults and PLAN.md §M6's one-line command is why.** A bare
+**Match setup (amendment M44, D105–D108) chose what the seat plays against.**
+**Spectating (amendment M47, D118–D122) watches two AIs play.**
+**A 416 is `lost`** (polish-1): the followed file was re-recorded, the follower
+**`var/spectate/` is served by the dev server alone** (`web/src/spectate/devRoute.ts`,
+**`hello_ok.match` only when asked** (`--match` or a profile flag): a bare
+**M7 adds `--arena`, and it is one URL fragment.** The arena is a second
+**The socket's own two rules.** The ask timeout over ws is **0 — infinite —
+**Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
+**`GET /health` is the session's readiness, not the port's** (amendment M15): 503
+**and anything it sends in that window is dropped with no reply** (amendment M20
+**Playing the console game.** `--transport console` is a real seat: it prints the
+**D35**'s ceilings, so for those two `AskSelfTest` is the only check that runs at
+**The narrator (D123) tells a frame log as a story, and it is hard rule 8's
+**The gate, in one paragraph.** `./tools/check-all.sh` is what you run before
+**Only the last `GATE_KEEP_RUNS` runs are kept** (default **20**, this one
+**D121**, because their order follows HotSpot identity hashes;
+**9c**, **M5's exit criterion** (`tools/ten-games.sh`: ten consecutive
+**`sideboard` ask**, which needs a session that survives `over`
+**seven fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
+**three games back to back over one socket** (`--games 3 --comfort`), which is
+**Adding a step is adding a JOB** (D129): a function that prints its own `===`
+**Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
+**CI runs the gate's engine-free half, and only that**
+**`npm --prefix web test` is hermetic, and it is kept that way by
+**Never pass `--pre-amendment` to `check-redaction.mjs`.** It downgrades a
+**`--client-log` is different and is safe to pass** (amendment M17): it relaxes
+**And never pass `--opponent-library-ok`,** which gets the identical treatment:
+1. **Nothing under `web/src/render/` may import CSS at module level.** There is
+**`node`** environment, and neither can load a stylesheet; a component that
+2. **`CardTile` is THE card renderer.** Every card in every zone — battlefield,
+**ten** files and by nothing else: `ZoneRow`, `HandFan`, `PlayerRail`,
+3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
+**the id spaces collide** — the committed corpus has a `stack[].id` that is
+4. **One keymap table.** `web/src/keys.ts` is the **24** rows (18 at M4; M7 added
+5. **Arrows are decoration and never the only channel** (**D30**). The overlay is
+6. **Keep the testable half pure.** `labels.ts`, `resolve.ts`, `arrows.ts` and
+1. **A question is answered on the board iff EVERY one of its options is already
+**marshals nothing**: the answer is built by `AskModal`'s own
+2. **Nothing new may be an in-flow child of `.table__middle`** (**D36**). Its
+**4 px** of the opponent's zone control hittable. `.stackpanel` and `.bands` are
+3. **No React hook below a component's early return.** `Board` has
+**whole suite stayed green** — `render.test.tsx` mounts each frame fresh with
+4. **Never decide what a control *does* by matching an engine string** (§Scope,
+5. **The probe policy is a flag, and a recording says which one it ran under.**
+6. **A typed act earns its gate in `tools/ten-games.sh`'s sixth `ROWS` field —
+1. **Every M6 field is OPTIONAL on the wire, and there is exactly one reader per
+2. **A `hello_ok` whose `gameId` changed is a RESET, not an update** (**D44**,
+3. **Two narrow relaxations of the hidden-information gate, and both are
+4. **A typed act earns its gate step by its EFFECT** (M5 convention 6, extended).
+5. **The four acts that produce no game event are pushed by `refreshState()`, and
+**and** a positive "the engine is parked" predicate; a skipped refresh is
+6. **No control for a feature Forge does not have.** D31's "hold priority" toggle
+**the arena is a RENDERER.** It is a second renderer over the same frame stream —
+1. **It decides nothing, and that is mechanical.** No file under
+2. **`CardPlane` is THE card renderer of the arena**, exactly as `CardTile` is
+3. **`layout(state)` is authoritative; a cue only ever adds an offset that decays
+4. **Cues are DATA, and the table is exhaustive by type.**
+5. **One `useFrame`, one geometry, and no allocation in the hot path.**
+**And the ref's setter is React state** (the workshop's reconciliation,
+6. **The DOM layer over the canvas is `pointer-events: none`, so every widget in
+**`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
+**D53–D63** are the decisions, the user's nine among them; slice 2 (T8,
+**D75–D81**, its second verification pass **D82–D87** and its documentation pass
+**D88–D89**, and its per-card identity rules are the section after that; slice 4
+**D95–D101** (**D90–D94** are `main`'s card library, which landed on
+1. **If the snapshot says it, it is a POSE; if only the event says it, it is a
+**The defect this prevents is a renderer that remembers.** A death is the one
+**`useLayoutEffect`** (the canvas is a second React root with its own scheduler;
+2. **`figurePose` is THE pose and `FigureLayer` is THE figure renderer** — the
+**The width clamp is strict for every archetype** (**D65**: no floor, no
+3. **The clip lane is scrubbed, never ticked** (**D57**). The cue's `t` becomes
+**Never use drei's `useAnimations`**: it is a `useFrame` per creature with a
+**never a new cue id**. A missing clip removes only what the model would have
+4. **Only CC0 assets, each with a written provenance — no Mixamo, and nothing
+**Since slice 4** every humanoid card stands in a proportioned body on the
+5. **The scene has no lights, and an idle table still renders nothing** (**D53**,
+**D58**; D53's *unlit* is superseded for the figures by **D137**'s comic look,
+**`prime()`** it at mount — three compiles a program the first frame an
+6. **Bloom is the one post pass, and it is lazy** (**D61**). `scene/Post.tsx` is
+**`g1.jsonl` at transport index 316** (`--index 316`, 11 modelled figures) —
+**not** `human-sideboard-7`, whose 21-creature frame is all probe-deck beasts on
+1. **A view is a row of data in `camera.ts`'s `VIEWS`, and `camera.ts` is still
+2. **A view is usable at a live seat iff `keepsSeat`** (**D69**) — inside
+3. **The auto director is `directShot(beats, shot, now)` and `beatsOf(events,
+4. **Rule 5 is about a live SEAT, `change` is the user's only under their hand,
+5. **The camera keys are keymap rows, and on the board they are `inert`**
+**`reset()` and `K` snap the camera home** (a scrub used to abandon it mid-swoop),
+1. **Identity is `figures/traits.json`, validated like `cues.json`** (**D75**).
+2. **A prop is a SHARED KIND from `figures/props.ts`'s closed kit, procedural and
+**Several bodies are still one pose** (**D88**): a `swarm` is instances of ONE
+3. **The prop field rides the one frame loop** (**D78**). `scene/props.ts`'s
+4. **ONE definition of a figure's front** (**D81**). Figure space faces **+Z**
+5. **A beat is drawn on the BODY, and every cue param is closed** (**D79**). The
+6. **Overhead and beside things cover nothing from the table view, and nothing
+**An attachment's card lies UNDER its host** (`ATTACH_DY` −0.002, **D86**), so
+1. **It is a tool, not a package, and the game never reads it** (**D90**,
+**D91**). No `package.json`, no npm dependency: `node:sqlite` with FTS5, `fetch`,
+2. **One door to Scryfall.** `tools/card-library/scryfall.ts`'s `ScryfallClient`
+3. **A build writes a fresh file** (**D91**): `cards.sqlite.building`, then
+4. **The route is dev-only, and it never fetches** (**D92**). `/cards/api/*` and
+5. **The image cache is keyed by Scryfall id + size + face** (**D93**).
+6. **`CardView` is the browser's card renderer, and it is not `CardTile`**
+1. **A costume is a SLOT per vertex and a PALETTE per figure, written at
+**Only `holoMaterial.ts`'s `applyCostume` writes a costume colour**, and only
+2. **A body belongs to a FAMILY, and every prop kind is fitted per family**
+3. **The library is rebuilt by measurement, and the chibi is a FLAG** (**D95**,
+**D96**, **D98**). The per-model triangle targets live in
+**world-space delta** over the 22 joints the manifest names, never by copying
+4. **A duelist is a SEAT's pose, and its gestures are cues** (**D99**,
+**D101**). `figures/duelists.json` is the data, validated like `cues.json`
+**A gesture is a `gesture` PARAM on an existing cue, never a new cue id**
+**`scene/DuelistLayer.tsx` is THE duelist renderer**: one `SkinnedMesh` per
+5. **Where a duelist stands is MEASURED against the camera, and the camera never
+**the opponent's plate never leaves the `HUD_TOP_PX` band** — asserted, not
+**A new line on a plate is a new row**: put it on an existing row, or measure
+1. **Downstream of the arena, and the coupling is a list** (**D102**). Nothing
+2. **Every board is a synthetic FRAME from `synthetic.ts`** (**D104**). It is the
+3. **The frame loop is the arena's** (**D102**). `CueRunner` is THE loop on the
+4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
+5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
+1. **One narrator** (**D124**). `web/src/story/narrate.ts` is the narration —
+**erasable TypeScript with no import at all**, because Node runs it by type
+2. **A page over the replay, not a renderer** (**D125**). Lazy through
+3. **The narration is re-told, never patched** (**D126**). The page narrates the
+**hidden** (`S`; the default while following) it narrates
+4. **Hard rule 8 on the page is a rendering test, with a control** (**D127**).
+5. **One cursor, across the page's views** (**D128**). `replayCursors` puts a
+1. **One program, one number, and `look.ts` holds every number** (**D137**).
+2. **The look is written at commit, never in the frame loop** (**D145**).
+3. **What is not yet real stays a hologram** (**D142**). `look.ts`'s
+4. **The ink is bloom's, it inks only what is PAINTED, and the composer must
+5. **A seat's own figures face the opponent** (**D143**, PLAN question 13,
+**The look's own budget is its evidence's** (`docs/evidence/look.md`, measured
+1. **Comic FX is a switch stamped at enqueue, and off is op-for-op the old film**
+2. **Ink is a shape, and the kit grew by one kind** (**D147**, **D150**). `burst`,
+3. **The summon is an offset; the look is LOOK's** (**D148**). `Offset.materialize`
+4. **On twos is a quantisation of each cue's progress in the queue** (**D149**):
+5. **An impact shake is `camera.ts`'s own, shake-only, priority 0, one per cue**
+1. **A resting pose is a model VARIANT, derived at load** (**D156**).
+2. **A head is props** (**D157**, **D158**). Hair and the face are derived kinds
+3. **Cloth drapes as a chain of rigid panels on joints** (**D159**, amended by
+**D162**) — no simulation, no clock, no rigid shell below the chest. `coat` is
+4. **The art palette is the LOWEST rung, runtime only, face up only** (**D160**).
+**Each gate has a hostile case only it stops** — a named back, a named stub in
+5. **The library's budget is the manifest's** (**D161**): `budget.libraryBytes`
+**That last sentence was true of the source checkout of 2026-09-11, and is no
+**Do not run `git commit`, `git add`, or `git push`.** The user commits their own
