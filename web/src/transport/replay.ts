@@ -15,6 +15,18 @@
  *
  * No DOM: this module is imported by `node --test` as well as by the browser.
  * The only host API it touches is `setTimeout`/`clearTimeout`.
+ *
+ * **Follow mode** (spectating, D118/D120). A transport made with
+ * `{ follow: true }` is a replay whose log is still being written: frames arrive
+ * through {@link LogReplayTransport.append} (from `transport/follow.ts`'s poller,
+ * never from a renderer), the cursor waits at the end instead of pausing there,
+ * and playback runs on the **recorder's** clock: live, each frame plays
+ * {@link FOLLOW_LIVE_DELAY_MS} after the recorder wrote it (so every frame keeps
+ * its recorder gap from the one before, and the lag cannot grow); behind — after
+ * a pause, or slower than 1× — each keeps its gap from the cursor. What the arena
+ * animates is the game at the pace the engine played it. When the log ends
+ * (`endLive()`, called when an `over` arrives), the frames still queued play out
+ * and the transport is an ordinary replay from then on.
  */
 
 import { PROTOCOL_VERSION, type Frame, type SessionHeader } from '../protocol.ts';
@@ -76,33 +88,22 @@ export function parseFrameLog(text: string): ParsedFrameLog {
 
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!.trim();
-    if (line === '') continue;
-
-    let value: unknown;
-    try {
-      value = JSON.parse(line);
-    } catch (err) {
-      warnings.push(`line ${String(i + 1)}: not valid JSON (${(err as Error).message}) — skipped`);
+    const parsed = parseLogLine(lines[i]!, i + 1);
+    if (parsed.kind === 'blank') continue;
+    if (parsed.kind === 'junk') {
+      warnings.push(parsed.warning);
       continue;
     }
-
-    if (isSessionHeader(value)) {
+    if (parsed.kind === 'header') {
       if (header === null) {
-        header = value;
+        header = parsed.header;
         if (i !== 0) warnings.push(`line ${String(i + 1)}: session header is not line 1`);
       } else {
         warnings.push(`line ${String(i + 1)}: a second session header — skipped`);
       }
       continue;
     }
-
-    if (!looksLikeFrame(value)) {
-      warnings.push(`line ${String(i + 1)}: not a frame envelope (§1) — skipped`);
-      continue;
-    }
-
-    frames.push(value);
+    frames.push(parsed.frame);
   }
 
   if (header === null) {
@@ -114,6 +115,53 @@ export function parseFrameLog(text: string): ParsedFrameLog {
   }
 
   return { header, frames, warnings };
+}
+
+/** One line of a frame log, classified — {@link parseFrameLog}'s rule, one line at a time. */
+export type ParsedLine =
+  | { kind: 'blank' }
+  | { kind: 'header'; header: SessionHeader }
+  | { kind: 'frame'; frame: Frame }
+  | { kind: 'junk'; warning: string };
+
+/**
+ * Classify one line of a `.jsonl` frame log (§8). The whole-file parser and the
+ * follow-mode poller (`transport/follow.ts`) both read lines through this, so a
+ * log read in one piece and the same log read as it grows cannot disagree about
+ * what a line is. `lineNo` is 1-based and only used in the warning.
+ */
+export function parseLogLine(raw: string, lineNo: number): ParsedLine {
+  const line = raw.trim();
+  if (line === '') return { kind: 'blank' };
+  let value: unknown;
+  try {
+    value = JSON.parse(line);
+  } catch (err) {
+    return { kind: 'junk', warning: `line ${String(lineNo)}: not valid JSON (${(err as Error).message}) — skipped` };
+  }
+  if (isSessionHeader(value)) return { kind: 'header', header: value };
+  if (!looksLikeFrame(value)) {
+    return { kind: 'junk', warning: `line ${String(lineNo)}: not a frame envelope (§1) — skipped` };
+  }
+  return { kind: 'frame', frame: value };
+}
+
+/**
+ * The URL a `?replay=` path is served at. `spectate/<name>.jsonl` is a recording
+ * `scripts/spectate.sh` wrote into `var/spectate/` and the dev server mounts at
+ * `/spectate/` (never in a build); everything else is under `fixtures/`, mounted
+ * at `/fixtures/`. `fixtures/` has no `spectate/` directory, so the prefix is
+ * unambiguous — and must stay so.
+ */
+export function logUrlFor(path: string): string {
+  const clean = path.replace(/^\/+/, '');
+  if (clean.startsWith('spectate/')) return `/${clean}`;
+  return `/fixtures/${clean}`;
+}
+
+/** Can this `?replay=` path be followed? Only a spectate recording is served with `?from=`. */
+export function canFollow(path: string): boolean {
+  return path.replace(/^\/+/, '').startsWith('spectate/');
 }
 
 // ---------------------------------------------------------------------------
@@ -140,11 +188,66 @@ export interface ReplayError {
 /** Milliseconds per frame at speed 1. Speed is a multiplier over this. */
 export const BASE_FRAME_INTERVAL_MS = 400;
 
+/**
+ * **Follow mode's floor between two frames**, whatever the recorder's gap was.
+ * It is not a pace: it is what keeps each frame in a React commit of its own, so
+ * the arena's intake sees every batch rather than the last of a burst (a burst
+ * of more than `JUMP_FRAMES` in one commit is a flush — `arena/cues/intake.ts`).
+ */
+export const FOLLOW_MIN_GAP_MS = 50;
+/**
+ * **Follow mode's ceiling between two frames.** Only reachable after a pause:
+ * at the live edge a frame is never due later than it arrives. An AI that
+ * thought for twelve seconds is not replayed as twelve seconds of nothing.
+ */
+export const FOLLOW_MAX_GAP_MS = 5000;
+/**
+ * **Follow mode's delay behind the recorder, when it is live.** A frame the
+ * recorder wrote at `t` plays at `t + FOLLOW_LIVE_DELAY_MS` on this machine's
+ * clock (the bridge's `System.currentTimeMillis` and the page's `Date.now` are
+ * the same clock on loopback, which is the only place the dev route exists). The
+ * poller asks every 500 ms, so a frame is in hand at most ~520 ms after it was
+ * written; 600 ms is that plus a margin, and every frame then plays exactly its
+ * recorder gap after the one before it. A frame that arrives later than its slot
+ * plays on arrival, and the next ones are back on the schedule — the lag never
+ * accumulates (`docs/evidence/spectate.md` §F measured the two cuts before this
+ * one: paced from the last frame played, the lag crept 0.3 → 0.6 s over a game;
+ * paced from a fixed anchor, it stuck at the first poll's 0.83 s).
+ */
+export const FOLLOW_LIVE_DELAY_MS = 600;
+/**
+ * **How far behind the live schedule still counts as live.** A page whose first
+ * poll was slow (it was still loading: measured 0.83 s) is a few hundred ms
+ * behind the live slot from its first frame, and would stay there — every later
+ * frame is in hand before its anchored time, so nothing ever catches it up. Up
+ * to this much behind, the next frame snaps to its live slot (one gap shortened,
+ * once). Further behind — a late join, a pause, a slower speed — the cursor stays
+ * on the recorder's pace from where it is, and a faster speed catches it up.
+ */
+export const FOLLOW_SNAP_MS = 1000;
+
 export interface LogReplayOptions {
   /** Playback multiplier; 2 means twice as fast. Defaults to 1. */
   speed?: number;
   /** Start playing immediately. Defaults to false. */
   autoplay?: boolean;
+  /**
+   * **Follow mode** (spectating): the log is still being written. Frames arrive
+   * through {@link LogReplayTransport.append}, the cursor waits at the end for
+   * more instead of pausing, and playback runs on the recorder's clock until
+   * {@link LogReplayTransport.endLive} and the last queued frame.
+   */
+  follow?: boolean;
+  /** The clock follow mode paces against — `Date.now` unless a test injects one. */
+  now?: () => number;
+}
+
+/** Follow mode's measured lag: frame written (its `t`) → frame applied, in ms. */
+export interface FollowLag {
+  n: number;
+  p50: number;
+  p95: number;
+  max: number;
 }
 
 /**
@@ -157,12 +260,13 @@ export interface LogReplayOptions {
  */
 export class LogReplayTransport implements Transport {
   readonly header: SessionHeader | null;
-  readonly frames: readonly Frame[];
   readonly warnings: readonly string[];
 
   /** Frames handed to `send()`. A replay has no server, so they go nowhere. */
   readonly sent: Frame[] = [];
 
+  /** Mutable only through {@link append}; everyone else reads {@link frames}. */
+  #frames: Frame[];
   #index = 0;
   #state: ClientState;
   #speed: number;
@@ -171,14 +275,54 @@ export class LogReplayTransport implements Transport {
   #timer: ReturnType<typeof setTimeout> | null = null;
   #frameHandlers = new Set<FrameHandler>();
   #stateHandlers = new Set<StateHandler>();
+  /** Follow mode: more frames may still come (until {@link endLive}). */
+  #live: boolean;
+  /** Follow mode: playback is on the recorder's clock (until the live tail has played). */
+  #paced: boolean;
+  #now: () => number;
+  /** When the play loop last applied a frame, on {@link #now}'s clock. */
+  #lastAppliedAt = 0;
+  /**
+   * Follow mode **behind the live edge** (a late join, a pause, a slower
+   * speed): a wall-clock moment and the recorder `t` it stands for, so a frame
+   * is due at `wall + (t - anchor.t) / speed` — the recorder's pace, from where
+   * the cursor is. A frame that plays late (the floor between frames, a busy
+   * main thread) does not push the later ones back; they catch up. `null` until
+   * there is a frame to anchor to.
+   */
+  #anchor: { wall: number; t: number } | null = null;
+  /**
+   * Follow mode **on the live schedule**: each frame plays at its own `t` plus
+   * {@link FOLLOW_LIVE_DELAY_MS}. Entered as soon as the anchored schedule would
+   * play a frame no later than that (a live start, or a faster speed catching
+   * up); left on PLAY after a pause and on a speed change, which re-anchor.
+   */
+  #onLiveSchedule = false;
+  /**
+   * Follow mode, and the viewer has not paused, scrubbed or changed the speed:
+   * the page is JOINING the live game. While it is, a cursor more than
+   * {@link FOLLOW_SNAP_MS} behind the live schedule jumps to the edge — see
+   * {@link LogReplayTransport.#joinLive}.
+   */
+  #joining: boolean;
+  /** Follow mode's lag samples (ms, frame `t` → applied), the most recent 512. */
+  #lags: number[] = [];
 
   constructor(log: ParsedFrameLog, options: LogReplayOptions = {}) {
     this.header = log.header;
-    this.frames = log.frames;
+    this.#frames = [...log.frames];
     this.warnings = log.warnings;
     this.#speed = options.speed ?? 1;
+    this.#live = options.follow === true;
+    this.#paced = this.#live;
+    this.#joining = this.#live;
+    this.#now = options.now ?? (() => Date.now());
     this.#state = initialState(log.header);
     if (options.autoplay === true) this.play();
+  }
+
+  get frames(): readonly Frame[] {
+    return this.#frames;
   }
 
   /** Convenience: parse and wrap in one call. */
@@ -249,15 +393,81 @@ export class LogReplayTransport implements Transport {
   get currentFrame(): Frame | null {
     return this.#index > 0 ? (this.frames[this.#index - 1] ?? null) : null;
   }
+  /** Follow mode, and the log is still being written: the end is not the end. */
+  get live(): boolean {
+    return this.#live;
+  }
+  /** Playback is on the recorder's clock (follow mode, until its tail has played). */
+  get paced(): boolean {
+    return this.#paced;
+  }
+
+  /**
+   * Follow mode's lag so far — how long after the recorder WROTE a frame (its
+   * `t`) the play loop applied it. Both clocks are this machine's (the bridge's
+   * `System.currentTimeMillis`, the page's `Date.now`), so the difference is
+   * meaningful on loopback and nowhere else. `null` before the first sample.
+   */
+  followLag(): FollowLag | null {
+    if (this.#lags.length === 0) return null;
+    const sorted = [...this.#lags].sort((a, b) => a - b);
+    const at = (q: number): number => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))]!;
+    return { n: sorted.length, p50: at(0.5), p95: at(0.95), max: sorted[sorted.length - 1]! };
+  }
+
+  /**
+   * **Follow mode: frames the recorder has written since the last call**, in
+   * file order. Appending never moves the cursor by itself; a transport that is
+   * playing and waiting at the end picks the first new frame up on the
+   * recorder's clock. A transport not in follow mode refuses — a finished log
+   * does not grow, and a caller that thinks otherwise has the wrong object.
+   */
+  append(frames: readonly Frame[]): void {
+    if (!this.#live) {
+      throw new Error('LogReplayTransport.append: this transport is not following a live log');
+    }
+    if (frames.length === 0) return;
+    // Waiting at the live edge: the first new frame is scheduled now (on the
+    // live schedule it is due at its own `t` plus the live delay, or at once if
+    // that has passed).
+    const waiting = this.#playing && this.#timer === null && this.#error === null && this.atEnd;
+    this.#frames.push(...frames);
+    if (waiting) this.#schedule();
+    this.#emitState();
+  }
+
+  /**
+   * **Follow mode: the log has ended** (an `over` arrived, or following was
+   * stopped). The frames already appended still play on the recorder's clock;
+   * once the cursor reaches the end the transport is an ordinary replay.
+   */
+  endLive(): void {
+    if (!this.#live) return;
+    this.#live = false;
+    if (this.atEnd) {
+      this.#paced = false;
+      this.pause();
+    }
+    this.#emitState();
+  }
 
   play(): void {
-    if (this.#playing || this.atEnd || this.#error !== null) return;
+    if (this.#playing || (this.atEnd && !this.#live) || this.#error !== null) return;
     this.#playing = true;
+    this.#lastAppliedAt = this.#now();
+    // Resume on the recorder's clock from where the cursor stands: the next
+    // frame is due its own gap from now — which is back on the live schedule at
+    // once when the pause was shorter than the live delay.
+    const previous = this.#frames[this.#index - 1];
+    this.#anchor = previous !== undefined ? { wall: this.#lastAppliedAt, t: previous.t } : null;
+    this.#onLiveSchedule = false;
     this.#schedule();
     this.#emitState();
   }
 
   pause(): void {
+    // A viewer who pauses has chosen where to be: no jump back to the live edge.
+    this.#joining = false;
     if (this.#timer !== null) {
       clearTimeout(this.#timer);
       this.#timer = null;
@@ -275,6 +485,14 @@ export class LogReplayTransport implements Transport {
   setSpeed(speed: number): void {
     if (!(speed > 0)) throw new Error(`LogReplayTransport.setSpeed: speed must be > 0, got ${String(speed)}`);
     this.#speed = speed;
+    this.#joining = false;
+    // Follow mode: rescale from the last frame played, not from an anchor that
+    // was set at the old speed.
+    const previous = this.#frames[this.#index - 1];
+    if (this.#paced) {
+      this.#anchor = previous !== undefined ? { wall: this.#lastAppliedAt, t: previous.t } : null;
+      this.#onLiveSchedule = false;
+    }
     if (this.#playing) {
       if (this.#timer !== null) clearTimeout(this.#timer);
       this.#schedule();
@@ -282,12 +500,17 @@ export class LogReplayTransport implements Transport {
     this.#emitState();
   }
 
-  /** Apply the next frame. Returns false at the end of the log. */
+  /**
+   * Apply the next frame. Returns false at the end of the log — which, while a
+   * followed log is still live, is "nothing yet" rather than the end, and does
+   * not pause.
+   */
   stepForward(): boolean {
-    if (this.atEnd || this.#error !== null) {
+    if (this.#error !== null || (this.atEnd && !this.#live)) {
       this.pause();
       return false;
     }
+    if (this.atEnd) return false;
     const frame = this.frames[this.#index]!;
     // reduce() throws on an unknown type / ask.kind / v mismatch (§1). Catch it
     // here so the page survives to render the banner, and stop dead: every later
@@ -301,9 +524,18 @@ export class LogReplayTransport implements Transport {
     }
     this.#state = next;
     this.#index += 1;
+    this.#lastAppliedAt = this.#now();
+    if (this.#paced) {
+      this.#lags.push(this.#lastAppliedAt - frame.t);
+      if (this.#lags.length > 512) this.#lags.shift();
+    }
     for (const cb of this.#frameHandlers) cb(frame);
+    if (this.atEnd && !this.#live) {
+      // The live tail has played: from here on this is an ordinary replay.
+      this.#paced = false;
+      this.pause();
+    }
     this.#emitState();
-    if (this.atEnd) this.pause();
     return true;
   }
 
@@ -331,6 +563,9 @@ export class LogReplayTransport implements Transport {
     }
     this.#error = null;
     this.#index = target;
+    // A followed log whose live tail was scrubbed through by hand is as played
+    // out as one that reached the end on its own.
+    if (!this.#live && this.atEnd) this.#paced = false;
     this.#emitState();
   }
 
@@ -342,13 +577,96 @@ export class LogReplayTransport implements Transport {
   // -- internals ------------------------------------------------------------
 
   #schedule(): void {
-    const delay = Math.max(1, Math.round(BASE_FRAME_INTERVAL_MS / this.#speed));
+    // At the live edge there is nothing to schedule: `append` picks it up.
+    if (this.atEnd && this.#live) {
+      this.#timer = null;
+      return;
+    }
+    if (this.#paced && this.#joining && !this.#joinLive()) return;
+    const delay = this.#paced ? this.#recorderDelay() : Math.max(1, Math.round(BASE_FRAME_INTERVAL_MS / this.#speed));
     this.#timer = setTimeout(() => {
       this.#timer = null;
       if (!this.#playing) return;
       this.stepForward();
       if (this.#playing) this.#schedule();
     }, delay);
+  }
+
+  /**
+   * **Joining a game already under way.** Following means watching the game as
+   * it happens, so a page that opens (or falls) more than {@link FOLLOW_SNAP_MS}
+   * behind the live schedule does not crawl through the backlog at the
+   * recorder's pace: it folds every stale frame at once — the arena reads a jump
+   * of more than a dozen frames as a scrub and snaps to the board — and plays
+   * the newest one it holds now, on the live schedule. The scrubber still has
+   * the whole game. Only until the viewer first pauses, scrubs or changes the
+   * speed; after that the cursor is theirs (**D120**). Returns false if the fold
+   * failed (the transport is then stopped on a reducer error).
+   */
+  #joinLive(): boolean {
+    const now = this.#now();
+    const stale = (i: number): boolean =>
+      this.#frames[i]!.t + FOLLOW_LIVE_DELAY_MS + FOLLOW_SNAP_MS < now;
+    let k = this.#index;
+    while (k < this.#frames.length - 1 && stale(k)) k += 1;
+    if (k === this.#index) return true;
+    try {
+      this.#state = replayFrames(this.#frames, k, this.header);
+    } catch (err) {
+      this.#fail(err, k - 1, this.#frames[k - 1] ?? null);
+      return false;
+    }
+    this.#index = k;
+    this.#onLiveSchedule = true;
+    this.#emitState();
+    return true;
+  }
+
+  /** When `frame` is due on the recorder's clock, from the anchor. */
+  #dueOf(frame: Frame): number {
+    const anchor = this.#anchor;
+    if (anchor === null || !Number.isFinite(frame.t)) return this.#now();
+    return anchor.wall + (frame.t - anchor.t) / this.#speed;
+  }
+
+  /**
+   * **The recorder's clock.** On the live schedule a frame is due at its own
+   * `t` plus {@link FOLLOW_LIVE_DELAY_MS}. Behind it, a frame is due where the
+   * anchor puts it — its `t` gap from the anchoring frame, over the speed — and
+   * the moment that is no more than {@link FOLLOW_SNAP_MS} after the live slot,
+   * the transport is back on the live schedule. Either way a frame is never due sooner than
+   * {@link FOLLOW_MIN_GAP_MS} after the frame before it (a render of its own),
+   * and behind the live edge never later than {@link FOLLOW_MAX_GAP_MS} after it
+   * (an AI that thought for a minute is not replayed as a minute of nothing; the
+   * anchor moves to the capped frame, so the ones after it keep their gaps).
+   */
+  #recorderDelay(): number {
+    const next = this.#frames[this.#index];
+    if (next === undefined) return 0;
+    const now = this.#now();
+    const liveSlot = next.t + FOLLOW_LIVE_DELAY_MS;
+    // A slot further off than the cap is not "live": this machine's clock and
+    // the recorder's disagree, and the anchored schedule is the safe reading.
+    const liveUsable = Number.isFinite(liveSlot) && liveSlot - now <= FOLLOW_MAX_GAP_MS;
+    let due: number;
+    if (this.#onLiveSchedule && liveUsable) {
+      due = liveSlot;
+    } else {
+      if (this.#anchor === null) this.#anchor = { wall: now, t: next.t };
+      due = this.#dueOf(next);
+      if (liveUsable && this.#speed >= 1 && due <= liveSlot + FOLLOW_SNAP_MS) {
+        this.#onLiveSchedule = true;
+        due = liveSlot;
+      } else {
+        const ceiling = this.#lastAppliedAt + FOLLOW_MAX_GAP_MS;
+        if (due > ceiling) {
+          due = ceiling;
+          this.#anchor = { wall: ceiling, t: next.t };
+        }
+      }
+    }
+    due = Math.max(due, this.#lastAppliedAt + FOLLOW_MIN_GAP_MS);
+    return Math.max(0, Math.round(due - now));
   }
 
   #fail(err: unknown, frameIndex: number, frame: Frame | null): void {

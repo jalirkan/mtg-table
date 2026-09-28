@@ -1085,6 +1085,24 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
+  /*
+   * Section 8.1, amendment M47.  `paceMs` is OPTIONAL and says the recorder ran
+   * with `--pace` -- every `t` in the file is the engine's clock stretched by
+   * the dwells.  Only an AI-vs-AI recording is ever paced (a seat has a player
+   * setting the pace), so it is a failure beside `transport`, and a failure
+   * unless it is a positive integer.
+   */
+  if (header.paceMs !== undefined) {
+    if (!Number.isInteger(header.paceMs) || header.paceMs <= 0) {
+      note(1, `session header "paceMs" must be a positive integer (section 8.1, M47), got ` +
+        `${JSON.stringify(header.paceMs)}`);
+    }
+    if (header.transport !== undefined) {
+      note(1, `session header carries both "paceMs" and "transport" -- only an AI-vs-AI recording ` +
+        `(mtgtable.RecordMatch --pace) is paced (section 8.1, M47)`);
+    }
+  }
+
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
   } else {
@@ -1122,7 +1140,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
     maxTurn: 0,
-    hellos: 0, matchChecked: 0,
+    hellos: 0, matchChecked: 0, yourProfileChecked: 0,
   };
   const seq = { s2c: 0, c2s: 0 };
   let sawState = false;
@@ -1219,7 +1237,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   /*
    * Section 2.1, amendment M44 -- `hello_ok.match`: each seat's deck by NAME,
    * the AI's profile, the match length.  OPTIONAL: every recording made before
-   * 2026-09-27 lacks it and `mtgtable.RecordMatch` never writes it, so absence
+   * 2026-09-27 lacks it and `mtgtable.RecordMatch` writes it only when given a
+   * match setup (M47: `--match`, `--profile`, `--ai-profile`), so absence
    * is counted and never failed.  Present, it is held to EXACT key sets, and
    * `aiDeck` is the one that matters: `{name, cards}` and nothing else.  A
    * `path`, a `sha256` or a list there is the opponent's decklist handed to the
@@ -1239,9 +1258,32 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       return;
     }
     stats.matchChecked++;
-    if (!sameKeys(m, ['yourDeck', 'aiDeck', 'aiProfile', 'games'])) {
+    /*
+     * Amendment M47: `yourProfile` -- the VIEWING seat's own AI profile -- is the
+     * one key a recording may add, and only `mtgtable.RecordMatch` writes it,
+     * because only there is the viewing seat an AI (a spectated game). A profile
+     * is a fact about an AI, so on a stream whose players[] marks the viewer
+     * human it is a failure: that is a seat telling the player what "profile"
+     * they were playing under, i.e. an emitter describing a different match.
+     */
+    const hasYourProfile = Object.prototype.hasOwnProperty.call(m, 'yourProfile');
+    const matchKeys = ['yourDeck', 'aiDeck', 'aiProfile', 'games', ...(hasYourProfile ? ['yourProfile'] : [])];
+    if (!sameKeys(m, matchKeys)) {
       note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly ` +
-        `yourDeck, aiDeck, aiProfile, games`);
+        `yourDeck, aiDeck, aiProfile, games (and, amendment M47, yourProfile when the viewer is an AI)`);
+    }
+    if (hasYourProfile) {
+      stats.yourProfileChecked++;
+      if (!str(m.yourProfile) || !/^[A-Za-z0-9][A-Za-z0-9 _()-]*$/.test(m.yourProfile)) {
+        note(lineNo, `${where}: yourProfile must be a Forge AI profile name (amendment M47), got ` +
+          `${JSON.stringify(m.yourProfile)}`);
+      }
+      const viewer = Array.isArray(body.players) ? body.players.find((p) => plainObject(p) && p.id === body.you) : undefined;
+      if (viewer === undefined || viewer.isAi !== true) {
+        note(lineNo, `${where}: yourProfile is present but players[] does not mark the viewing seat ` +
+          `(id ${JSON.stringify(body.you)}) as an AI -- a profile is a fact about an AI seat, and only an ` +
+          `AI-vs-AI recording (mtgtable.RecordMatch) writes it (amendment M47)`);
+      }
     }
     const count = (v) => Number.isInteger(v) && v >= 0;
     const yd = m.yourDeck;
@@ -2215,13 +2257,14 @@ for (const path of files) {
     + `nullability, section 5.2)  notices=${stats.notices} (both strings swept and scanned, `
     + `section 6)  over frames=${stats.overs}`);
   // M44.  Printed either way, like the M6 line below: which files evidence the
-  // match block, and which predate it (or are AI vs AI, which never carry it).
+  // match block, and which predate it (or are AI vs AI with no match setup).
   if (stats.hellos > 0) {
     console.log(stats.matchChecked > 0
       ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
-        + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header)`
+        + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header`
+        + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''})`
       : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
-        + `before amendment M44, or AI vs AI; section 2.1)`);
+        + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
   }
   // M6.  Which comfort fields this recording carries, and which it does not:
   // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,

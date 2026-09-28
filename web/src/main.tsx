@@ -7,10 +7,16 @@
  *
  *     /?replay=games/g1.jsonl     a `.jsonl` frame log, no JVM        [M1]
  *     /?ws=1   (the default)      ws://127.0.0.1:8642/ws, a live seat [M3]
+ *     /?replay=spectate/x.jsonl&follow=1
+ *                                 an AI-vs-AI game while it is being
+ *                                 recorded (./scripts/spectate.sh)    [M47]
  *
  * `?replay=` is a path under `fixtures/`, which the dev server mounts at
- * `/fixtures/` (see vite.config.ts). `?port=` overrides the WebSocket port,
- * whose default is a build-time constant (`transport/ws.ts`).
+ * `/fixtures/` (see vite.config.ts) — or, with the `spectate/` prefix, a
+ * recording in `var/spectate/`, which ONLY the dev server mounts, at
+ * `/spectate/` (D122). `&follow=1` follows it as it grows (`transport/follow.ts`,
+ * D118/D120). `?port=` overrides the WebSocket port, whose default is a
+ * build-time constant (`transport/ws.ts`).
  *
  * **M7 adds a second renderer, not a second app.** `#arena` (or `?view=arena`)
  * swaps `<Board>` for `<Arena>` over the *same* `ClientState`: the transport,
@@ -70,7 +76,9 @@ import { gameLabel } from './reduce.ts';
 import { Board, type BoardActions } from './render/Board.tsx';
 import { ErrorBoundary } from './render/ErrorBoundary.tsx';
 import { ReplayControls } from './render/ReplayControls.tsx';
-import { LogReplayTransport, parseFrameLog } from './transport/replay.ts';
+// Types only: the poller itself is imported lazily, by a page that follows a log.
+import type { FollowStatus, LogFollower } from './transport/follow.ts';
+import { canFollow, LogReplayTransport, logUrlFor, parseFrameLog } from './transport/replay.ts';
 import { DEFAULT_WS_PORT, WebSocketTransport, type WsStatus } from './transport/ws.ts';
 import { useView, type View } from './useView.ts';
 // M5 (M4 follow-up 1): our own extract of `mana-font`, in place of the
@@ -121,7 +129,7 @@ const Workshop = lazy(() => import('./workshop/Workshop.tsx'));
 // Mode
 // ---------------------------------------------------------------------------
 
-type Mode = { kind: 'replay'; path: string } | { kind: 'ws'; port: number };
+type Mode = { kind: 'replay'; path: string; follow: boolean } | { kind: 'ws'; port: number };
 
 /**
  * `?replay=` wins; anything else is the live socket, `?ws=1` or not.
@@ -136,7 +144,12 @@ function modeFromQuery(): Mode {
   const params = new URLSearchParams(window.location.search);
   const replay = params.get('replay');
   if (replay !== null && replay.trim() !== '') {
-    return { kind: 'replay', path: replay.trim().replace(/^\/+/, '') };
+    const path = replay.trim().replace(/^\/+/, '');
+    const follow = params.get('follow');
+    // Follow mode reads a log that is still being written, which only the
+    // spectate route can serve (`?from=`, complete lines); anything else is a
+    // finished file and plays as an ordinary replay.
+    return { kind: 'replay', path, follow: follow !== null && follow !== '0' && follow !== 'false' && canFollow(path) };
   }
   const port = Number.parseInt(params.get('port') ?? '', 10);
   return { kind: 'ws', port: Number.isFinite(port) && port > 0 ? port : DEFAULT_WS_PORT };
@@ -613,6 +626,34 @@ type LoadState =
   | { status: 'ready'; path: string; transport: LogReplayTransport };
 
 /**
+ * **Follow mode's word for the arena** (spectating, D118). The arena imports no
+ * transport (M7 convention 1), so what it is told about the stream is this plain
+ * value: the log is still being written, has gone quiet, or has ended — or
+ * `null`, an ordinary replay.
+ */
+type FollowWord = 'following' | 'stalled' | 'finished';
+
+function followWordOf(status: FollowStatus | null): FollowWord | null {
+  switch (status) {
+    case null:
+      return null;
+    case 'stalled':
+    case 'error':
+      return 'stalled';
+    case 'ended':
+    case 'stopped':
+      return 'finished';
+    default:
+      return 'following';
+  }
+}
+
+/** The dev-only handle a measurement reads (`import.meta.env.DEV` only, like `__mtgArena`). */
+interface FollowHolder {
+  __mtgFollow?: LogFollower;
+}
+
+/**
  * In-flight and completed log fetches, keyed by path.
  *
  * `<StrictMode>` deliberately mounts, unmounts and re-mounts every component in
@@ -631,10 +672,11 @@ async function fetchLog(path: string): Promise<string> {
   if (cached !== undefined) return cached;
 
   const pending = (async () => {
-    const response = await fetch(`/fixtures/${path}`, {
+    const url = logUrlFor(path);
+    const response = await fetch(url, {
       headers: { Accept: 'application/x-ndjson' },
     });
-    if (!response.ok) throw new Error(`HTTP ${String(response.status)} for /fixtures/${path}`);
+    if (!response.ok) throw new Error(`HTTP ${String(response.status)} for ${url}`);
     return response.text();
   })();
   logCache.set(path, pending);
@@ -651,10 +693,13 @@ const replayCursors = new Map<string, number>();
 
 function ReplayApp({
   requested,
+  follow,
   view,
   onSetView,
 }: {
   requested: string;
+  /** `&follow=1` on a spectate recording: follow the log as it is written. */
+  follow: boolean;
   view: View;
   onSetView: (view: View) => void;
 }): JSX.Element {
@@ -663,8 +708,49 @@ function ReplayApp({
   const [load, setLoad] = useState<LoadState>({ status: 'loading', path: requested });
   // The transport is mutable; this counter is what tells React to re-read it.
   const [, bump] = useReducer((n: number) => n + 1, 0);
+  // Follow mode's poller, while there is one. Mutable too; `bump` re-reads it.
+  const [follower, setFollower] = useState<LogFollower | null>(null);
 
   useEffect(() => {
+    if (!follow) return undefined;
+    // **Follow mode** (D118): poll the growing log from the transport layer and
+    // hand the frames to a follow-mode transport as they are written. Nothing
+    // here — and nothing in the arena — decides when a frame plays; that is the
+    // recorder's clock, inside `LogReplayTransport`.
+    //
+    // The poller is a lazy import, like the arena (D49's rule, applied to a
+    // smaller thing): a page that never follows a log never downloads it.
+    let cancelled = false;
+    let created: LogReplayTransport | null = null;
+    let polling: LogFollower | null = null;
+    void import('./transport/follow.ts').then(({ LogFollower: Follower }) => {
+      if (cancelled) return;
+      polling = new Follower({
+        url: logUrlFor(requested),
+        onTransport: (transport) => {
+          created = transport;
+          transport.onState(() => {
+            bump();
+          });
+          setLoad({ status: 'ready', path: requested, transport });
+        },
+        onChange: () => {
+          bump();
+        },
+      });
+      setFollower(polling);
+      if (import.meta.env.DEV) (window as unknown as FollowHolder).__mtgFollow = polling;
+      polling.start();
+    });
+    return () => {
+      cancelled = true;
+      polling?.stop();
+      created?.close();
+    };
+  }, [requested, follow]);
+
+  useEffect(() => {
+    if (follow) return undefined;
     let cancelled = false;
     let created: LogReplayTransport | null = null;
 
@@ -713,17 +799,31 @@ function ReplayApp({
       cancelled = true;
       created?.close();
     };
-  }, [requested]);
+  }, [requested, follow]);
 
   if (load.status === 'loading') {
-    return <p className="pad muted">loading /fixtures/{load.path}…</p>;
+    if (follow) {
+      return (
+        <div className="pad">
+          <p className="muted">
+            following {logUrlFor(load.path)} — waiting for the recorder to write its first line
+            {follower !== null && follower.status === 'error' && follower.detail !== null ? ` (${follower.detail})` : '…'}
+          </p>
+          <p className="muted">
+            <code>./scripts/spectate.sh</code> starts the recorder and this page together, and booting the engine
+            takes about ten seconds. The recorder&apos;s own output is <code>var/spectate/&lt;name&gt;.log</code>.
+          </p>
+        </div>
+      );
+    }
+    return <p className="pad muted">loading {logUrlFor(load.path)}…</p>;
   }
 
   if (load.status === 'error') {
     return (
       <div className="pad">
         <div className="banner banner--error">
-          <strong>Could not load /fixtures/{load.path}</strong>
+          <strong>Could not load {logUrlFor(load.path)}</strong>
           <div>{load.message}</div>
         </div>
         <p className="muted">
@@ -741,12 +841,14 @@ function ReplayApp({
 
   const transport = load.transport;
   const frame = transport.currentFrame;
+  const followWord = follow ? followWordOf(follower?.status ?? null) : null;
 
   return (
     <div className="app">
       <div className="app__bar">
-        <h1>mtg-table — replay</h1>
-        <span className="muted">/fixtures/{load.path}</span>
+        <h1>mtg-table — {follow ? 'spectate' : 'replay'}</h1>
+        <span className="muted">{logUrlFor(load.path)}</span>
+        {follow && follower !== null && <FollowChip follower={follower} transport={transport} />}
         <ViewToggle view={view} onSet={onSetView} />
         <WorkshopLink onSet={onSetView} />
         {flags.off && view === 'arena' && (
@@ -759,6 +861,7 @@ function ReplayApp({
       <ReplayControls
         index={transport.index}
         total={transport.total}
+        live={transport.live}
         playing={transport.playing}
         speed={transport.speed}
         currentType={frame?.type ?? null}
@@ -826,6 +929,7 @@ function ReplayApp({
               dpr={flags.dpr}
               glInfo={flags.glinfo}
               bloom={flags.bloom}
+              follow={followWord}
             />
           </Suspense>
         ) : (
@@ -834,6 +938,42 @@ function ReplayApp({
       </ErrorBoundary>
     </div>
   );
+}
+
+/**
+ * **Follow mode, said out loud** (spectating): where the recorder is and how far
+ * behind it the page is. The lag is the transport's own measurement — a frame's
+ * `t` (written) to the moment the play loop applied it — so it is the number a
+ * watcher cares about, on one machine's clock.
+ */
+function FollowChip({ follower, transport }: { follower: LogFollower; transport: LogReplayTransport }): JSX.Element {
+  const lag = transport.followLag();
+  const lagText = lag === null ? '' : ` · ${(lag.p50 / 1000).toFixed(1)} s behind`;
+  const behind = transport.total - transport.index;
+  switch (follower.status) {
+    case 'ended':
+      return (
+        <span className="follow follow--ended" title="the recorder wrote its `over` frame; polling has stopped">
+          {transport.live || transport.paced ? `game over — playing the last ${String(behind)} frame(s)` : 'recording finished — this is a replay now'}
+        </span>
+      );
+    case 'stopped':
+      return <span className="follow follow--ended">follow stopped</span>;
+    case 'stalled':
+    case 'error':
+      return (
+        <span className="follow follow--stalled" title={follower.detail ?? ''}>
+          ● following — {follower.detail ?? 'no new frame'}
+        </span>
+      );
+    default:
+      return (
+        <span className="follow follow--live" title={`${String(follower.framesSeen)} frames so far, polled every 0.5 s`}>
+          ● following{lagText}
+          {behind > 0 && !transport.playing ? ` · ${String(behind)} frame(s) queued` : ''}
+        </span>
+      );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -991,7 +1131,7 @@ function App(): JSX.Element {
     return <WorkshopApp onSetView={setView} waiting={waiting} />;
   }
   return mode.kind === 'replay' ? (
-    <ReplayApp requested={mode.path} view={view} onSetView={setView} />
+    <ReplayApp requested={mode.path} follow={mode.follow} view={view} onSetView={setView} />
   ) : (
     <LiveApp port={mode.port} view={view} onSetView={setView} />
   );

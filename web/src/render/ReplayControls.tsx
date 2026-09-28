@@ -15,6 +15,12 @@ export interface ReplayControlsProps {
   /** Frames applied so far: a cursor between frames, 0…total. */
   index: number;
   total: number;
+  /**
+   * Follow mode, and the log is still being written (spectating, D118): the end
+   * of what has arrived is not the end of the game, so PLAY stays live there —
+   * paused at the edge, it resumes on the recorder's clock as frames arrive.
+   */
+  live?: boolean;
   playing: boolean;
   speed: number;
   /** The frame that produced the current state, for the caption. */
@@ -29,6 +35,7 @@ export interface ReplayControlsProps {
 
 export function ReplayControls(props: ReplayControlsProps): JSX.Element {
   const { index, total, playing, speed } = props;
+  const live = props.live === true;
   const atStart = index <= 0;
   const atEnd = index >= total;
 
@@ -38,7 +45,12 @@ export function ReplayControls(props: ReplayControlsProps): JSX.Element {
         <button type="button" onClick={props.onPrev} disabled={atStart} title="Step back one frame">
           ◀ prev
         </button>
-        <button type="button" onClick={props.onToggle} disabled={atEnd && !playing} title="Play / pause">
+        <button
+          type="button"
+          onClick={props.onToggle}
+          disabled={atEnd && !playing && !live}
+          title={live ? 'Play / pause — following: frames play at the recorder’s pace as they arrive' : 'Play / pause'}
+        >
           {playing ? '⏸ pause' : '▶ play'}
         </button>
         <button type="button" onClick={props.onNext} disabled={atEnd} title="Step forward one frame">
@@ -77,6 +89,7 @@ export function ReplayControls(props: ReplayControlsProps): JSX.Element {
 
       <span className="replay__count">
         frame <strong>{index}</strong> / {total}
+        {live && <span className="muted">+ (still recording)</span>}
         {props.currentType !== null && (
           <span className="muted">
             {' '}

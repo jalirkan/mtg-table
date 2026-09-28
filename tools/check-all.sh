@@ -19,7 +19,12 @@
 #                                 flush boundaries aside (D113; STRICT_G1=1 for
 #                                 the old byte-for-byte diff), after
 #                                 tools/wire-drift-selftest.mjs has shown the
-#                                 comparison still rejects twelve drifts
+#                                 comparison still rejects thirteen drifts; the ids
+#                                 inside a `stats` event compared as a set (D121)
+#                                 Then 6b (spectating, M47): ./scripts/spectate.sh
+#                                 records seed 5 PACED from seat 0 and at engine
+#                                 speed from seat 1, and tools/same-game.mjs must
+#                                 call them the same game (~20 s)
 #   7. mtgtable.MtgTable         a FRESH human-seat game (--transport null): the
 #                                 input path, the ask path and exactly one `over`
 #   8. mtgtable.MtgTable         the DOCUMENTED console smoke, scripted: the line
@@ -148,6 +153,14 @@
 # a re-partition cannot move -- tools/wire-drift.mjs's six questions -- and its
 # selftest proves the relaxed comparison still rejects every drift above.
 # STRICT_G1=1 restores the byte-for-byte diff.
+# One canonicalisation joined the per-run values on 2026-09-28 (decision D121,
+# spectating): the ORDER of the ids inside a `stats` event is sorted in both
+# files, by wire-drift.mjs's own normalisation and so in both modes.  That order
+# is a hash-set iteration over identity-hashed objects inside Forge, and a few
+# println lines added to RecordMatch's main thread before FModel.initialize
+# reordered it in 11 of 14 runs, against 15 of 15 byte-identical from the build
+# before them (same ids, same frames, same game) -- docs/evidence/spectate.md
+# section D.  The set is still compared, and the selftest holds both halves.
 #
 # Step 9 is the one that makes step 8 mean anything.  A checker can only prove
 # an emitter did not drift if the checker itself would notice; this one once
@@ -257,6 +270,9 @@ say "value-level drift -- the fresh recording against fixtures/games/g1.jsonl (t
 # renamed, `priority` nulled and a combat key renamed mid-game among its drifts --
 # so a relaxed comparison that stopped rejecting drift fails the gate here and not
 # silently.  STRICT_G1=1 is the old step: byte for byte, flush boundaries and all.
+# Both modes sort the ids inside a `stats` event first (D121, spectating: their
+# order follows HotSpot identity hashes, not the game); the SET is still compared,
+# and the selftest has a reorder both must accept and a dropped id both reject.
 node tools/wire-drift-selftest.mjs > var/check-all-wire-drift-selftest.log 2>&1 || {
   cat var/check-all-wire-drift-selftest.log >&2
   die "tools/wire-drift-selftest.mjs: the step-6 comparison no longer gives the verdicts it must (log: var/check-all-wire-drift-selftest.log)"
@@ -276,6 +292,94 @@ Snap.java changed the wire: re-record fixtures/games/*.jsonl"
 (the DIFFER line above says which of the six questions failed) -- re-record fixtures/games/*.jsonl"
 fi
 cat var/check-all-wire-drift.log
+
+# 6b. SPECTATING (protocol amendment M47, decisions D118-D122): an AI-vs-AI
+#     game recorded the way ./scripts/spectate.sh records one, through the
+#     script itself (--no-serve: no vite, no browser), twice:
+#
+#       - seat 0, PACED (--pace 25, so the dwells run but cost ~4 s), with
+#         each seat's own profile: the header must say `paceMs`, the handshake
+#         must carry `match` with the viewer's own `yourProfile`, the recorder
+#         must report its dwells, and the file must pass check-redaction (the
+#         script refuses a recording that does not);
+#       - the SAME SEED from seat 1, at engine speed.
+#
+#     Then tools/same-game.mjs must call the two the SAME GAME -- which is the
+#     two claims spectating makes in one comparison: pacing does not change the
+#     game, and the other chair sees the same game (every public fact, every
+#     event, every phase-boundary state; the hands set aside) -- and must call a
+#     copy of the second with one life total changed NOT the same game, so the
+#     comparison can fail. ~20 s. Its own names, so it never overwrites a
+#     recording of yours in var/spectate/.
+printf '\n=== 6b. spectating: a paced AI-vs-AI recording, and the same seed from the other chair (M47) ===\n'
+# shellcheck source=tools/villain-deck.sh
+. tools/villain-deck.sh
+echo "  $VILLAIN_NOTE"
+SP_PACED="var/spectate/check-all-spectate-paced.jsonl"
+SP_SEAT1="var/spectate/check-all-spectate-seat1.jsonl"
+rc=0
+jvm ./scripts/spectate.sh --no-serve --no-build --name check-all-spectate-paced \
+    --deck decks/pacho-shield.dck --ai-deck "$VILLAIN" --profile Default --ai-profile Reckless \
+    --seed 5 --pace 25 > var/check-all-spectate-paced.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
+  tail -30 var/check-all-spectate-paced.log >&2
+  capped "$rc" && die "the paced spectate recording did not finish within ${GAME_TIMEOUT}s"
+  die "./scripts/spectate.sh (paced, seat 0) exited $rc (full log: var/check-all-spectate-paced.log)"
+fi
+rc=0
+jvm ./scripts/spectate.sh --no-serve --no-build --no-follow --name check-all-spectate-seat1 \
+    --deck decks/pacho-shield.dck --ai-deck "$VILLAIN" --profile Default --ai-profile Reckless \
+    --seed 5 --seat 1 > var/check-all-spectate-seat1.log 2>&1 || rc=$?
+if [ "$rc" != "0" ]; then
+  tail -30 var/check-all-spectate-seat1.log >&2
+  capped "$rc" && die "the seat-1 spectate recording did not finish within ${GAME_TIMEOUT}s"
+  die "./scripts/spectate.sh (seat 1) exited $rc (full log: var/check-all-spectate-seat1.log)"
+fi
+grep -hE '^(frames|winner|game wall time|paced dwell|PASS)' var/check-all-spectate-paced.log var/check-all-spectate-seat1.log || true
+grep -qE '^paced dwell    = [1-9][0-9]* dwell' var/spectate/check-all-spectate-paced.log \
+  || die "the paced recording reported no dwells (var/spectate/check-all-spectate-paced.log)"
+for f in "$SP_PACED" "$SP_SEAT1"; do
+  [ "$(grep -c '"type":"over"' "$f" || true)" = "1" ] || die "$f does not have exactly one \`over\`"
+  [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || die "the last frame of $f is not \`over\`"
+done
+node -e '
+  const fs = require("node:fs");
+  const [paced, seat1, villain] = process.argv.slice(1);
+  const lines = (f) => fs.readFileSync(f, "utf8").split("\n").filter(Boolean).map(JSON.parse);
+  const nameOf = (p) => (fs.readFileSync(p, "utf8").match(/^Name=(.*)$/m) ?? [])[1]?.trim() ?? p;
+  const [hp, ...fp] = lines(paced);
+  const [h1, ...f1] = lines(seat1);
+  const mp = fp.find((f) => f.type === "hello_ok").body.match;
+  const m1 = f1.find((f) => f.type === "hello_ok").body.match;
+  const fail = (m) => { console.error(m); process.exit(1); };
+  if (hp.paceMs !== 25) fail(`the paced header says paceMs=${JSON.stringify(hp.paceMs)}, expected 25`);
+  if (h1.paceMs !== undefined) fail("the unpaced header carries paceMs");
+  if (hp.seat !== 0 || h1.seat !== 1) fail(`seats ${hp.seat} / ${h1.seat}, expected 0 / 1`);
+  const pacho = nameOf("decks/pacho-shield.dck"), villainName = nameOf(villain);
+  const want0 = { yourDeck: pacho, aiDeck: villainName, aiProfile: "Reckless", yourProfile: "Default" };
+  const want1 = { yourDeck: villainName, aiDeck: pacho, aiProfile: "Default", yourProfile: "Reckless" };
+  const got = (m) => ({ yourDeck: m?.yourDeck?.name, aiDeck: m?.aiDeck?.name, aiProfile: m?.aiProfile, yourProfile: m?.yourProfile });
+  if (JSON.stringify(got(mp)) !== JSON.stringify(want0)) fail(`seat 0 match ${JSON.stringify(mp)}`);
+  if (JSON.stringify(got(m1)) !== JSON.stringify(want1)) fail(`seat 1 match ${JSON.stringify(m1)}`);
+  console.log(`OK: both handshakes name the decks and each seat its own profile; paceMs=${hp.paceMs}`);
+' "$SP_PACED" "$SP_SEAT1" "$VILLAIN" || die "the spectate recordings do not describe the match that was played"
+node tools/same-game.mjs "$SP_PACED" "$SP_SEAT1" \
+  || die "a paced seat-0 recording and an unpaced seat-1 recording of seed 5 are not the same game"
+# The negative control: one life total changed in the seat-1 copy.
+node -e '
+  const fs = require("node:fs");
+  const [src, dst] = process.argv.slice(1);
+  const lines = fs.readFileSync(src, "utf8").split("\n").filter(Boolean);
+  const i = lines.findLastIndex((l) => l.includes("\"type\":\"state\""));
+  const f = JSON.parse(lines[i]);
+  f.body.players[0].life += 1;
+  lines[i] = JSON.stringify(f);
+  fs.writeFileSync(dst, lines.join("\n") + "\n");
+' "$SP_SEAT1" var/check-all-spectate-mutant.jsonl
+if node tools/same-game.mjs "$SP_PACED" var/check-all-spectate-mutant.jsonl --quiet > /dev/null; then
+  die "tools/same-game.mjs called a recording with a changed life total the same game -- the comparison cannot fail"
+fi
+echo "OK: same-game.mjs rejects the one-life-point mutant (its negative control)"
 
 say "MtgTable --transport null -- the M2 seam, end to end, with every ask answered null"
 # The gate's only coverage of WireGuiGame. RecordMatch above has no seat, so it

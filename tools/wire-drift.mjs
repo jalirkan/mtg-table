@@ -11,7 +11,15 @@
 //
 // Both files are first normalised the way step 6 always did: the value of every
 // PER-RUN key -- `t`, `startedAt`, `gameId` -- is replaced with a constant at
-// any depth.  Nothing else is touched.
+// any depth.  And ONE canonicalisation, in both modes (decision D121,
+// spectating): the ORDER of the ids inside a `stats` event
+// (GameEventCardStatsChanged) is sorted.  It is a hash-set iteration inside
+// Forge over objects hashed by IDENTITY, so it follows HotSpot's identity-hash
+// sequence, and that moves with code nobody would call a wire change: a few
+// println lines added to RecordMatch's main thread before FModel.initialize
+// reordered it in 11 of 14 seed-42 runs (ids, frames, events and game otherwise
+// identical -- docs/evidence/spectate.md section D).  The SET of ids is still
+// compared, and so is the order of every other array.  Nothing else is touched.
 //
 // --strict is the old step 6: the two normalised files must be byte-identical,
 // line for line.  That was right on an idle machine and wrong under load
@@ -94,12 +102,19 @@ if (files.length !== 2 || args.some((a) => a.startsWith('--') && a !== '--strict
   process.exit(2);
 }
 
-/** Replace every per-run value, at any depth. Key order is kept: it is wire. */
+/**
+ * Replace every per-run value, at any depth, and sort the ids inside a `stats`
+ * event (D121). Key order is kept: it is wire.
+ */
 function scrub(v) {
   if (Array.isArray(v)) return v.map(scrub);
   if (v !== null && typeof v === 'object') {
     const out = {};
-    for (const [k, val] of Object.entries(v)) out[k] = PER_RUN.has(k) ? '<per-run>' : scrub(val);
+    for (const [k, val] of Object.entries(v)) {
+      out[k] = PER_RUN.has(k) ? '<per-run>'
+        : k === 'cardIds' && v.kind === 'stats' && Array.isArray(val) ? [...val].sort((a, b) => a - b)
+        : scrub(val);
+    }
     return out;
   }
   return v;

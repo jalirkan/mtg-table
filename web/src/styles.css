@@ -252,6 +252,25 @@ kbd {
   color: var(--accent);
 }
 
+/*
+ * Spectating (D118) — follow mode's chip in the app bar: where the recorder is
+ * and how far behind it the page is. A dot, a colour AND a word, so colour alone
+ * never carries it (M4 convention 5's rule, applied to a status).
+ */
+.follow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.follow--live {
+  color: var(--ok);
+}
+
+.follow--stalled {
+  color: var(--warn);
+}
+
 button,
 select {
   font: inherit;
@@ -3078,6 +3097,48 @@ button.zonerow__open:hover {
 .arena__decision .btn--focused {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+/*
+ * Spectating (amendment M47, D118) — **the "watching" line**, in the decision
+ * strip's place when every seat is an AI: an AI-vs-AI stream never asks this
+ * seat anything (§8.4), so the strip says what is being watched — each deck by
+ * NAME with its Forge profile, the seat the recording sees from, and "following"
+ * while the log is still being written. It lives inside `.arena__decision`,
+ * which already opts back into pointer events (for its tooltips), so it is not a
+ * new widget of the layer.
+ */
+.arena__watch {
+  margin: 0;
+  max-inline-size: 100%;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.arena__watch-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.arena__watch-vs {
+  color: var(--muted);
+}
+
+.arena__watch-follow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.arena__watch-follow--following {
+  color: var(--ok);
+}
+
+.arena__watch-follow--stalled {
+  color: var(--warn);
 }
 
 /*

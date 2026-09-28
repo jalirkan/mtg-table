@@ -5564,3 +5564,265 @@ games and is not what "spells" means; the table prints abilities separately);
 lowering the 8 itself (the brief's number stays the cap, and strict mode keeps
 it); a seat that blocks, or an AI-versus-AI run (a different transport, and the
 gate's seat policy is not this lane's to change).
+
+---
+
+*Numbered **D118–D122**. Written as **D109–D113** on branch `spectate` (off
+`main`'s `a092d3a`, 2026-09-28), with its protocol amendment as **M45**, when
+other branches cut the same day also numbered from D109 and M45 and whichever
+landed second was to renumber its own. On its rebase onto the `more-villains`
+branch's `90b97bb` (2026-09-28) the engine and sets' D109–D112, the hardening
+pass's D113–D115 (with amendments M45–M46) and more villains' D116–D117 had
+landed first, so these five became **D118–D122** and the amendment **M47**, in
+every file that cites them: this file, CLAUDE.md, PLAN.md, README.md,
+`docs/protocol.md`, `docs/evidence/spectate.md`, and comments in `RecordMatch`,
+`scripts/spectate.sh`, the gate, `tools/same-game.mjs`, `tools/wire-drift.mjs`
+and the web client (the negative fixtures `m45-*` became `m47-*`). D121 met the
+hardening pass's D113 on the rebase: step 6 had become `tools/wire-drift.mjs`,
+and the sort moved into its normalisation (D121, *Rebased*).*
+
+---
+
+## D118 — Spectating is a PACED recording the page FOLLOWS, not an observer on the socket; and it is one seat's eyes, never an omniscient view
+
+**2026-09-28** (spectating, protocol amendment **M47**; `docs/evidence/spectate.md`)
+
+**Decision.** `./scripts/spectate.sh` watches two Forge AIs play by recording the
+game with `mtgtable.RecordMatch` — both seats AI, each on its own deck and profile —
+into `var/spectate/<deckA>-vs-<deckB>-<seed>[-seat1].jsonl`, and opening the arena's
+replay of that file with `&follow=1`. The recorder runs in the background at a
+watchable pace (**D120**); the page polls the growing file from the TRANSPORT layer
+(`web/src/transport/follow.ts`, `LogFollower`) and appends the new frames to a
+follow-mode `LogReplayTransport`, which plays them on the recorder's clock. An
+`over` frame ends following, and the transport is an ordinary replay from then on
+— scrub, step, speed, cameras. `--no-follow` records the game first (about seven
+seconds) and opens it as a plain replay. The recording is **one seat's view**:
+`--seat 0` (the default) is the user's deck's chair and the other hand is the
+five-key stub it is at the table; `--seat 1` records the same seed from the other
+chair, which is the same game (**D119**, measured). There is no omniscient viewer.
+
+**Rationale.** Everything this needs already existed and is already gated: an
+AI-vs-AI recorder with the game-thread snapshot discipline (hard rule 3), a redaction
+function that runs per viewer (hard rule 8), a reducer that folds a log, an arena
+that renders any `ClientState` and puts itself in spectator mode when no seat is
+live. Following a file adds a poller and an `append` to the replay transport and
+nothing to the bridge's threading, the wire or the arena. The arena decides nothing
+(M7 convention 1): it is handed a `ClientState` and one word (`following`,
+`stalled`, `finished`) as a prop, imports no transport and polls nothing —
+`liveness.test.ts` holds both. One seat's eyes because that is what a log is (§8.3):
+an omniscient log would be a new redaction mode, a second shape of every frame that
+`check-redaction.mjs` would have to learn to allow, for a view no player ever has.
+
+**Known cost.** A spectated game is watched 0.6 s behind the recorder by design
+(**D120**, measured: evidence §F), not live. A page that joins a recording late
+jumps to the live edge and leaves the earlier turns to the scrubber. Nothing on the
+page can pause the ENGINE, only the playback.
+
+**Rejected.** **An observer socket** — a second, read-only client on
+`WsTransport` receiving the seated game's frames live. It would be truly live, but
+`WsTransport` is one client at a time by decision (**D25**), the observer would need
+its own viewer and therefore its own `Snap` pass per frame (a second serialisation
+of every snapshot on the game thread), and `MtgTable` seats a HUMAN — an AI-vs-AI
+session over the socket does not exist. PLAN.md's *Spectating* keeps it as a
+follow-up. **Server-sent events or a websocket from the dev server** tailing the
+file: a push channel for what a 500 ms poll already does on loopback, and a second
+kind of dev-server route to keep dev-only. **An omniscient viewer**: above.
+
+---
+
+## D119 — `RecordMatch` says what match it recorded only when asked; the viewer's own profile is `yourProfile`; each profile belongs to its DECK, not to `--seat`
+
+**2026-09-28** (protocol amendment **M47**)
+
+**Decision.** `RecordMatch` takes `--profile <p>` (seat 0, the `--deck` seat) and
+`--ai-profile <p>` (alias `--profile2`; seat 1, the `--deck2`/`--ai-deck` seat),
+both resolved by `Bootstrap.resolveAiProfile` **before** `FModel.initialize` and
+seated through `Bootstrap.createAiPlayer` (**D107**'s one seam), `Default` when
+absent. With `--match`, or either profile flag, `hello_ok` carries M44's `match`
+block read from the VIEWING seat — `yourDeck` is the `--seat` seat's deck with the
+path the session header already names, `aiDeck` the other's `{name, cards}` and
+nothing else (**D105**), `aiProfile` the other's profile, `games` 1 — plus one key,
+last: **`yourProfile`**, the viewing seat's own profile. `check-redaction.mjs` fails
+`yourProfile` on a stream whose `players[]` marks the viewer human, and holds it to a
+profile name; `fixtures/negative/redaction/m47-*` is the control and three probes.
+The client's one reader, `seatMatchOf()`, gives an AI viewer its `yourProfile`;
+`matchupOf()` composes it per seat for the arena's "watching" line. A deck's public
+name is `Bootstrap.deckName`, shared by both emitters.
+
+**Rationale.** A spectator wants to know which deck is which and how each AI is set
+to play, and both are facts about the match that nothing else on the wire says.
+M44's shape already said them for one AI; the second AI is the viewing seat, and a
+profile is a fact about an AI, so the viewer's gets its own key rather than a
+renamed block (every M44 reader keeps working). **Opt-in** because the gate's step
+6 compares a bare seed-42 recording with `fixtures/games/g1.jsonl` value by value:
+the M41 precedent is an optional key omitted when nobody asked, so a recording made
+without a match setup is what it always was. Profiles follow the deck because the
+viewpoint is a redaction choice and must not change who plays what — that is what
+makes `--seat 1` the same game from the other chair.
+
+**Known cost.** `RecordMatch` names its players `AI-Seat0` and `AI-Seat1` (they
+appear on the plates and in the outcome), which says nothing a watcher cares about;
+renaming them would change every committed fixture's handshake, so the deck names
+on the plates and the watching line carry the identity instead. The outcome cue
+says Victory or Defeat from the VIEWING seat's side.
+
+**Rejected.** A new key per seat (`seats: [{deck, profile}]`): a second shape for
+the same facts, and a second reader. Writing `match` always: step 6 (above).
+`--profile` meaning the viewing seat's profile: then `--seat 1` would swap which
+AI plays which deck, and two recordings of one seed would be two different games.
+
+---
+
+## D120 — `--pace` dwells BEFORE the boundary flush, a quarter of it after a bare phase change; the page plays each frame 600 ms after the recorder wrote it
+
+**2026-09-28** (spectating; `docs/evidence/spectate.md` §B and §F)
+
+**Decision.** `RecordMatch --pace <ms>` (spectate.sh's default in follow mode is
+**600**) sleeps on the game thread inside `BoundaryFlusher.receive`, **before** it
+flushes a phase, turn or outcome boundary, and only when a frame is about to be
+written: the full pace after a frame in which something happened, **a quarter** of
+it after a frame whose events were only phase, turn, priority or recomputed stats.
+An unpaced run executes none of it. The session header says `paceMs` (M47).
+
+In the page, a follow-mode `LogReplayTransport` plays on the recorder's clock in
+one of two ways. **Live** (the normal case): the frame the recorder wrote at `t`
+plays at `t + FOLLOW_LIVE_DELAY_MS` (**600 ms**) on this machine's clock — one poll
+interval and a margin — or on arrival if its slot has passed; every frame then
+keeps its exact recorder gap from the one before, and the lag cannot grow.
+**Behind** (after the viewer pauses, or at a speed below 1×): each frame is due its
+recorder gap, over the speed, from an anchor at the cursor, never more than
+`FOLLOW_MAX_GAP_MS` (5 s) after the frame before; at 1× or faster the cursor returns
+to the live schedule as soon as it is within `FOLLOW_SNAP_MS` (1 s) of it. A page
+that **joins** a game already under way — it loaded late, or was reopened — folds
+every frame more than a second stale at once (the arena reads that as a scrub and
+snaps) and plays from the live edge; it does so only until the viewer first
+pauses, scrubs or changes speed, after which the cursor is theirs. Frames are
+never less than `FOLLOW_MIN_GAP_MS` (50) apart, so each gets a React commit of its
+own. Once the log has ended and its last frame has played, the transport is an
+ordinary replay at 400 ms a frame.
+
+**Rationale.** **Unpaced, an AI-vs-AI game is over in 1.7–3.7 s of wall time**
+(measured at seeds 5, 7 and 11 against the villain deck; M1 measured 1.4–3.5 s
+for the mirror), so there is nothing to follow; the pace is
+what makes "watch the AIs play as it happens" mean anything. The dwell goes
+before the flush because `GameEventForwarder` also flushes on a 500 ms clock whose
+stamp `flush()` sets BEFORE calling `handleGameEvents` (javap, 2.0.14): a sleep after
+the flush would leave that stamp one dwell stale and cut the next batch after one
+event, moving every frame boundary after it. Asleep before the flush, the boundary
+event is already in the batch and the flush re-stamps the clock — measured, a paced
+and an unpaced recording of seed 7 are the same frames as a multiset (the header's
+`paceMs` the only difference). The quarter dwell halves the dead time of a game
+(about two minutes at 600 ms instead of three) without shortening the frames where
+the arena's cues have something to play. The fixed live delay is the third cut,
+and the two before it were measured wrong (evidence §F): pacing each frame by its
+gap after the last one PLAYED let lateness add up — the lag crept from 0.3 to
+0.6 s over one game — and pacing from one fixed anchor froze the lag at whatever
+the first poll's was — 0.83 s, and 2.2 s on a page that loaded slowly. Measured
+with the live delay: p50 600 ms, p95 638 ms over a whole game. The join jump is
+what "follow" means: a page reopened a minute into a game belongs at the live edge,
+and the scrubber still has everything before it.
+
+**Known cost.** A paced game ties up a JVM for about two minutes. Follow mode
+compares the page's clock with the bridge's `t`, which is sound only on one
+machine — the only place the dev route exists; a slot further off than 5 s is
+treated as a disagreeing clock and paced from the anchor instead. The dwells are
+wall-clock sleeps, so a paced recording's `t` gaps are the pace, not the engine's
+thinking time — which is what `paceMs` in the header warns a reader about. At
+600 ms the arena's cue queue can run a few steps (about two seconds) behind the
+frames in a busy turn; its own budget compresses them.
+
+**Rejected.** Pacing in the browser alone (replay the finished file at the
+replay's own 400 ms): that is `--no-follow`, and it is kept, but it is a replay of
+a finished game, not watching one. A uniform dwell: every upkeep and draw step would
+cost as much as a combat. Pacing the log WRITER (drip-feeding a finished game to
+disk): the file would lie about when the engine did things. Catching a late joiner
+up by fast playback: every cue of the backlog at four times speed is noise, and the
+scrubber already offers the backlog at any pace.
+
+---
+
+## D121 — Gate step 6 compares the ids inside a `stats` event as a set
+
+**2026-09-28** (spectating; `docs/evidence/spectate.md` §D)
+
+**Decision.** `tools/check-all.sh` step 6 — the value-level diff of a fresh
+seed-42 `RecordMatch` recording against `fixtures/games/g1.jsonl` — sorts the
+`cardIds` array of every `stats` event in both files before comparing, in addition
+to normalising `t`, `startedAt` and `gameId`. Nothing else is canonicalised, and the
+set of ids is still compared. `tools/same-game.mjs` does the same.
+
+**Rationale.** Adding a few summary `println`s to `RecordMatch`'s main thread,
+before `FModel.initialize`, reordered the ids inside `stats` events in 11 of 14
+seed-42 recordings — the same ids, the same frames, the same events, the same game
+— while the build before them was byte-identical to `g1` in 15 of 15. A bisect put
+it on work done on the main thread before the engine boots (the new lines: three
+runs of three; the profile validation alone: one of three; everything else in the
+branch: none of three). The order is a hash-set iteration inside Forge over objects
+hashed by IDENTITY, so it follows HotSpot's identity-hash sequence, which moves
+with code that is not a wire change. A gate that fails on it fails on the wrong
+thing — and fails flakily, which teaches re-running until green. The ids are a set
+on the wire: protocol §3.6 gives `stats` a `cardIds` list and no meaning to its
+order.
+
+**Known cost.** A change to Snap that REORDERED `stats` ids on purpose would pass
+step 6. No reader depends on that order.
+
+**Rejected.** Keeping the new pre-boot code free of lambdas and string
+concatenation until the order came back: it made the gate hostage to whatever the
+next change prints before boot. Re-recording `g1`: the fixture is evidence of
+what the wire was, and nothing about the wire changed.
+
+**Rebased (2026-09-28, onto more villains' `90b97bb`).** The hardening pass had
+meanwhile replaced step 6's byte diff with `tools/wire-drift.mjs` (**D113**), whose
+second question compares every `state.events[]` entry as JSON, in order — so a
+reordered `stats` event failed it exactly as it failed the byte diff. Both
+decisions stand: the sort is now part of wire-drift's own normalisation, beside
+the per-run values, so it applies to the six questions and to `--strict`
+(`STRICT_G1=1`) alike, and the step's inline normaliser is gone with the rest of
+the byte diff. `tools/wire-drift-selftest.mjs` holds both halves — every `stats`
+event's ids reversed must be accepted by both modes, one id dropped must be
+rejected by both — and with the sort taken out, the reversed copy is `DIFFERENT`.
+Measured on the rebased gate's own run (`var/check-all-spectate-train.log`): its
+fresh seed-42 recording is `SAME` as `g1`, and compared without the sort it
+differs in the event stream at event #1026, a `stats` event's id order — the
+move is what kept step 6 green, not a formality.
+
+---
+
+## D122 — Recordings are served from `var/spectate/` by the dev server alone, in complete lines from a byte offset; `spectate.sh` is the second reader of `config.json`'s `match` block
+
+**2026-09-28** (spectating; **D92**'s pattern, **D106** amended)
+
+**Decision.** `web/vite.config.ts`'s `spectatePlugin` mounts
+`web/src/spectate/devRoute.ts` in `configureServer` and nowhere else — not
+`vite preview`, not the build. `GET /spectate/<name>.jsonl` answers every COMPLETE
+line of `var/spectate/<name>.jsonl`; `?from=<byte>` answers the complete lines
+written since that offset (at most 4 MiB), with `X-Log-Next` (where the next poll
+starts) and `X-Log-Size`; 404 means not written yet, 416 means the file shrank
+under the reader (re-recorded). The name is one path segment of `[A-Za-z0-9._-]`
+ending in `.jsonl`; the route reads one directory and never fetches. The page maps
+`?replay=spectate/<name>` to that route and every other path to `/fixtures/`
+(`logUrlFor`); `fixtures/` has no `spectate/` directory and must not grow one.
+`./scripts/spectate.sh` reads `config.json`'s `match` block (`deck`, `aiDeck`,
+`aiProfile`) for its defaults, as `play.sh` does; the gate passes every deck and
+profile it means on the command line and gives its recordings their own `--name`.
+
+**Rationale.** `var/` is never committed and never built, so a route to it belongs
+only where a developer's own Node process is running — D92's argument for the card
+browser, word for word. Complete lines only, cut at the last `\n`, because the
+recorder is writing the file while the page reads it: a half-written line must not
+be parsed, and a `\n` byte cannot occur inside a UTF-8 sequence, so the cut is
+always a character boundary. **D106** said only `play.sh` reads the `match` block
+because the gate must play the same games whatever the player last chose; the rule
+it protects is "the human's commands read it, the gate does not", and `spectate.sh`
+is a human's command.
+
+**Known cost.** Following needs the dev server; a built page can replay a finished
+recording only if it is copied under `fixtures/` (and a recording in `fixtures/`
+is a committed file, which is its own decision). Polling costs one small request
+every 500 ms while a page follows.
+
+**Rejected.** Serving `var/spectate/` through the fixtures middleware, which also
+runs under `vite preview`. HTTP `Range` requests against a static file server:
+sirv would answer them, but it cannot cut at a line boundary, so the page would
+have to reassemble half-lines — and it would serve `var/` from `preview` too.

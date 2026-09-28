@@ -287,6 +287,40 @@ test('liveness: the seat plates read the match through seatMatchOf and never com
   );
 });
 
+/**
+ * **Spectating does not make the arena a transport** (amendment M47, D118).
+ * Follow mode — a replay of a log that is still being written — polls the dev
+ * route from `transport/follow.ts` and paces frames inside `LogReplayTransport`.
+ * The arena is handed a `ClientState` and, as PLAIN DATA, one word
+ * (`following` / `stalled` / `finished`), declared in `Arena.tsx` rather than
+ * imported, because nothing under `arena/` may import a transport (the first
+ * clause of this file). So no arena module fetches, polls or opens a socket, and
+ * the "watching" line reads the match through `matchupOf` — `seatMatchOf` per
+ * seat — and nothing that holds a card.
+ */
+test('liveness: follow mode reaches the arena as a word — it never polls, and the watching line reads matchupOf', () => {
+  for (const file of arenaFiles()) {
+    const code = codeOf(file.source);
+    assert.ok(
+      !/\bfetch\(|\bsetInterval\(|new EventSource\(|new WebSocket\(|XMLHttpRequest/.test(code),
+      `${file.path} fetches, polls or opens a connection — how frames arrive is transport/'s business (D118)`,
+    );
+  }
+  const arena = codeOf(readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8'));
+  assert.match(arena, /follow\?: ArenaFollow \| null/, 'Arena.tsx no longer takes follow mode as a plain prop');
+  assert.match(arena, /export type ArenaFollow = 'following' \| 'stalled' \| 'finished'/);
+  const layer = codeOf(
+    readFileSync(fileURLToPath(new URL('../src/arena/DecisionLayer.tsx', import.meta.url)), 'utf8'),
+  );
+  assert.match(layer, /matchupOf\(state\.hello\)/, 'the watching line no longer reads matchupOf(state.hello)');
+  const watch = layer.split('function WatchLine')[1]?.split('\nfunction ')[0] ?? '';
+  assert.ok(watch.length > 200, 'could not find WatchLine in DecisionLayer.tsx — move this test with it');
+  assert.ok(
+    !/\.(zones|cards|board|library|hand|stack|stackCards)\b|\bstate\b/.test(watch),
+    'the watching line reads a zone or a card — it prints deck names and profiles from the handshake, nothing else',
+  );
+});
+
 test('liveness: cues/ is pure — no three, no React, no DOM, no clock', () => {
   const files = arenaFiles().filter((f) => f.path.startsWith('cues/'));
   assert.ok(files.length >= 8, `expected the cue engine, saw ${String(files.length)} files`);

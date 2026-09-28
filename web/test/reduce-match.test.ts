@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
 import { initialState, reduce } from '../src/reduce.ts';
-import { seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
+import { matchupOf, seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 function frame(overrides: Record<string, unknown>): Frame {
@@ -115,6 +115,64 @@ test('a resync keeps the match, and a new game reads the new handshake', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Amendment M47 — a spectated recording: both seats are AIs
+// ---------------------------------------------------------------------------
+
+/** What `RecordMatch --match --seat 1` writes: the viewer is seat 1, and an AI. */
+const SPECTATED = {
+  yourDeck: { name: 'Doom Legion (Marvel Super Heroes villains)', path: 'decks/doom-legion.dck', cards: 40 },
+  aiDeck: { name: 'Pacho SHIELD (Marvel Super Heroes)', cards: 40 },
+  aiProfile: 'Default',
+  games: 1,
+  yourProfile: 'Reckless',
+};
+const AI_SEATS = [
+  { id: 0, name: 'AI-Seat0', isAi: true },
+  { id: 1, name: 'AI-Seat1', isAi: true },
+];
+
+test('M47: seatMatchOf gives an AI viewer its own profile, from yourProfile', () => {
+  const body = hello('spec', { you: 1, players: AI_SEATS, match: SPECTATED });
+  const state = reduce(initialState(), frame({ type: 'hello_ok', body }));
+  assert.deepEqual(seatMatchOf(state.hello, 1), {
+    deck: 'Doom Legion (Marvel Super Heroes villains)',
+    aiProfile: 'Reckless',
+  });
+  assert.deepEqual(seatMatchOf(state.hello, 0), { deck: 'Pacho SHIELD (Marvel Super Heroes)', aiProfile: 'Default' });
+  // The same block with the viewer marked human is not something any emitter
+  // writes (check-redaction fails it); the reader still prints no profile for
+  // a human seat.
+  const human = hello('spec', { you: 1, players: [AI_SEATS[0], { id: 1, name: 'You', isAi: false }], match: SPECTATED });
+  assert.equal(seatMatchOf(human as unknown as HelloOkBody, 1)?.aiProfile, null);
+  // And an M44 stream (no yourProfile) keeps its old answer for the viewer.
+  const m44 = hello('m44', { players: AI_SEATS, match: MATCH });
+  assert.equal(seatMatchOf(m44 as unknown as HelloOkBody, 0)?.aiProfile, null);
+});
+
+test('M47: matchupOf — the viewing seat first, both decks and profiles, aiOnly only with no human', () => {
+  const body = hello('spec', { you: 1, players: AI_SEATS, match: SPECTATED }) as unknown as HelloOkBody;
+  const matchup = matchupOf(body);
+  assert.ok(matchup !== null);
+  assert.equal(matchup.aiOnly, true);
+  assert.deepEqual(
+    matchup.seats.map((seat) => [seat.id, seat.you, seat.match?.deck, seat.match?.aiProfile]),
+    [
+      [1, true, 'Doom Legion (Marvel Super Heroes villains)', 'Reckless'],
+      [0, false, 'Pacho SHIELD (Marvel Super Heroes)', 'Default'],
+    ],
+  );
+  // Names and labels only: the whole matchup, serialised, carries no path.
+  assert.equal(JSON.stringify(matchup).includes('.dck'), false);
+  // A human at the table is not a spectated game.
+  assert.equal(matchupOf(hello('g1', { match: MATCH }) as unknown as HelloOkBody)?.aiOnly, false);
+  // No handshake yet, no matchup; no match block, seat names still (g1 is AI vs AI).
+  assert.equal(matchupOf(null), null);
+  const bare = matchupOf(hello('g1', { players: AI_SEATS }) as unknown as HelloOkBody);
+  assert.equal(bare?.aiOnly, true);
+  assert.deepEqual(bare?.seats.map((seat) => seat.match), [null, null]);
+});
+
+// ---------------------------------------------------------------------------
 // The committed corpus
 // ---------------------------------------------------------------------------
 
@@ -145,7 +203,8 @@ test('over the committed ENGINE corpus: no match means null on every seat, a mat
         const seat = seatMatchOf(body, p.id);
         assert.ok(seat !== null, file);
         assert.equal(seat.deck, p.id === body.you ? body.match.yourDeck.name : body.match.aiDeck.name);
-        assert.equal(seat.aiProfile, p.id !== body.you && p.isAi ? body.match.aiProfile : null);
+        const own: string | null = p.id === body.you ? (body.match.yourProfile ?? null) : body.match.aiProfile;
+        assert.equal(seat.aiProfile, p.isAi ? own : null);
       }
     }
   }

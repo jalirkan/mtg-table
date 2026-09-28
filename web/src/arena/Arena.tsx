@@ -163,7 +163,18 @@ export interface ArenaProps {
    * budget). Off by default and nothing else is exposed; see `CueRunner.tsx`.
    */
   glInfo?: boolean;
+  /**
+   * **Spectating** (amendment M47, D118): the frame log is being followed while
+   * it is written — `following`, gone quiet (`stalled`), or `finished` — or
+   * `null` for anything else. Plain data from `main.tsx`: the arena imports no
+   * transport and never polls (M7 convention 1, `liveness.test.ts`); it only
+   * prints the word on the "watching" line.
+   */
+  follow?: ArenaFollow | null;
 }
+
+/** What {@link ArenaProps.follow} can say. Declared here, not imported: the arena knows no transport. */
+export type ArenaFollow = 'following' | 'stalled' | 'finished';
 
 /** The speeds the cue strip offers (§11, E4). */
 const SPEEDS = [0.5, 1, 2, 4] as const;
@@ -664,6 +675,7 @@ export default function Arena({
   dpr: pinnedDpr = null,
   glInfo = false,
   bloom = null,
+  follow = null,
 }: ArenaProps): JSX.Element {
   const [hoverId, setHoverId] = useState<number | null>(null);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
@@ -1397,6 +1409,7 @@ export default function Arena({
           hint={hint}
           concedeArmed={concedeArmed}
           onArmConcede={setConcedeArmed}
+          follow={follow}
         />
         {/* **One row for the cue strip and the camera switcher** (slice-2
             verification fix): the switcher had added a fourth row of chrome to

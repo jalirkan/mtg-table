@@ -245,3 +245,53 @@ test('arena HUD: a plate is four one-line rows whatever the frame says — a lon
   expect(html).not.toMatch(/class="arena__seat-tags">[^<]*<span[^>]*>\s*\(/);
 });
 
+test('arena HUD: a spectated game says what is being watched — both decks, both profiles, "following" (M47)', () => {
+  // A spectated recording is g1's shape (two AI seats) plus the match block
+  // RecordMatch --match writes: M44's keys and the viewer's own profile.
+  const log = parseFrameLog(readFileSync(FIXTURES + 'games/g1.jsonl', 'utf8'));
+  const frames = log.frames.map((f) => {
+    if (f.type !== 'hello_ok') return f;
+    const body = {
+      ...f.body,
+      match: {
+        yourDeck: { name: 'Pacho SHIELD (Marvel Super Heroes)', path: 'decks/pacho-shield.dck', cards: 40 },
+        aiDeck: { name: 'Doom Legion (Marvel Super Heroes villains)', cards: 40 },
+        aiProfile: 'Reckless',
+        games: 1,
+        yourProfile: 'Default',
+      },
+    };
+    return { ...f, body };
+  });
+  let state = initialState(log.header);
+  for (const frame of frames.slice(0, 120)) state = reduce(state, frame);
+
+  const following = renderToStaticMarkup(<DecisionLayer state={state} onAct={null} follow="following" />);
+  const shown = text(following);
+  expect(following).toContain('class="arena__watch"');
+  expect(shown).toContain('watching');
+  expect(shown).toContain('Pacho SHIELD (Marvel Super Heroes) (Default) · seen from here');
+  expect(shown).toContain('vs Doom Legion (Marvel Super Heroes villains) (Reckless)');
+  expect(shown).toContain('● following');
+  expect(following).not.toContain('.dck');
+  // No engine prompt stands in for it: an AI-vs-AI stream never asks this seat,
+  // and nobody at that table can concede.
+  expect(shown).not.toContain('the engine has not asked');
+  expect(following).not.toContain('data-act="concede"');
+
+  expect(text(renderToStaticMarkup(<DecisionLayer state={state} onAct={null} follow="finished" />))).toContain(
+    'recording finished',
+  );
+  // An ordinary replay of an AI-vs-AI log (no follow) still says who is playing,
+  // by seat name when the recording carries no match block.
+  const bare = statesOf('games/g1.jsonl')[5]!;
+  const bareText = text(markup(bare));
+  expect(bareText).toContain('watching AI-Seat0 · seen from here vs AI-Seat1');
+  expect(bareText).not.toContain('following');
+  // A human seat's recording is not a spectated game: the strip is the engine's.
+  for (const s of statesOf('games/human-auto-42.jsonl').slice(0, 40)) {
+    const html = markup(s);
+    expect(html).not.toContain('arena__watch');
+    expect(html).toContain('data-act="concede"');
+  }
+});

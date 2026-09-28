@@ -139,17 +139,21 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-Thirteen numbered steps and eight lettered sub-steps (9b, 9c, **9d**, **9e**, 10f,
-**10g**, **12b** and **12c** — 9d and 10g added by M6, 9e by match setup, 12b and
-12c by the 2026-09-27 hardening pass), stopping at the first
-failure: `check-forge.sh` →
+Thirteen numbered steps and nine lettered sub-steps (**6b**, 9b, 9c, **9d**,
+**9e**, 10f, **10g**, **12b** and **12c** — 9d and 10g added by M6, 9e by match
+setup, 12b and 12c by the 2026-09-27 hardening pass, 6b by spectating), stopping
+at the first failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
 `bridge/build.sh` (javac plus four self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
 `fixtures/games/g1.jsonl` (`tools/wire-drift.mjs`: the same non-state frames,
 event stream, phase walk and final board, every board cut at a turn, phase or
 outcome event, and the stack wherever both caught the same items — where a flush
-cuts the event stream is wall-clock, so byte for byte is `STRICT_G1=1`, **D113**) → **three fresh human-seat games** (`--transport
+cuts the event stream is wall-clock, so byte for byte is `STRICT_G1=1`, **D113**;
+the ids inside a `stats` event compared as a set, **D121**) → **6b**, spectating:
+seed 5 recorded by `./scripts/spectate.sh --no-serve` paced from seat 0 and at
+engine speed from seat 1, which `tools/same-game.mjs` must call the same game
+(amendment **M47**) → **three fresh human-seat games** (`--transport
 null`, the scripted `--transport console` smoke, and `--transport auto --seed
 11`, each asserted to end in exactly one `over` as its last frame, plus the
 advisory **9b** that re-records seed 42 and compares it against
@@ -1033,6 +1037,82 @@ the outcome may), and drops a beat it has held for 1.6 s. It reads player ids an
 public controllers, never a card name, and it never fights you: for 5 s after you
 stop dragging, nothing cuts.
 
+#### Spectate — watch two AIs play your deck (`./scripts/spectate.sh`)
+
+**Spectating** (evidence in [`docs/evidence/spectate.md`](docs/evidence/spectate.md);
+protocol amendment **M47**; decisions **D118–D122**). One command seats two Forge
+AIs — your deck against another, each on a Forge AI profile of its own — and opens
+the arena on the game **while it is being played**, so you can watch how an AI
+plays your cards against someone else's, with every cue animating it:
+
+```bash
+./scripts/spectate.sh                                   # your deck vs config.json's match.aiDeck, random seed
+./scripts/spectate.sh --seed 7                          # a game you can watch again
+./scripts/spectate.sh --ai-deck decks/morph-probe.dck --ai-profile Reckless
+./scripts/spectate.sh --profile Cautious --ai-profile Experimental   # both AIs' profiles
+./scripts/spectate.sh --seed 7 --seat 1                 # the SAME game from the other chair
+./scripts/spectate.sh --no-follow                       # record it first (~7 s), then replay it
+./scripts/spectate.sh --pace 1000                       # slower: 1 s after every frame that does something
+./scripts/spectate.sh --2d --no-open                    # the 2D board; print the URL, no browser
+```
+
+It checks the jar, builds the bridge, starts the recorder in the background and
+opens `http://127.0.0.1:5173/?replay=spectate/<name>.jsonl&follow=1#arena`. The
+page says *waiting for the recorder* for the ten seconds the engine takes to boot,
+then plays each frame 0.6 s after the recorder writes it, keeping the recorder's
+own rhythm (a page that opens late, or is reloaded mid-game, jumps to the live edge;
+the scrubber still has everything before it). The
+decision strip's place says what you are watching —
+`WATCHING Pacho SHIELD (Default) · seen from here vs Doom Legion (Reckless) ·
+● following` — and the seat plates carry each deck and each AI's profile. When the
+game ends the page stops following, says *recording finished*, and the replay bar
+above the canvas works as on any replay: scrub back to a turn, step it, slow it
+down. Ctrl-C in the terminal stops the recorder and the server.
+
+**Why it is paced.** Two AIs finish a whole game in about three seconds of engine
+time, so the recorder is slowed down on purpose: after every frame in which
+something happened it waits `--pace` milliseconds (600 by default), and a quarter
+of that after a frame that only moved the phase strip, so a game takes about two
+minutes. The pace changes nothing about the game — a paced and an unpaced recording
+of one seed are the same frames. In follow mode the replay bar's speed scales the
+recorder's pace; it only matters after you pause, because the page cannot play a
+frame before the engine has written it.
+
+**Whose eyes.** A recording is one seat's view, exactly as that seat sees the game:
+from `--seat 0` (the default) your deck's hand is face up and the other hand is
+card backs, as at a real table. `--seat 1` records from the other chair. **The same
+seed is the same game from either side** (measured with `tools/same-game.mjs`,
+which compares everything both chairs can see): record both and switch between the
+two tabs to see what each AI was holding. Nothing shows both hands at once, on
+purpose (hard rule 8).
+
+**Watching well.** Spectator mode is on by itself (nobody sits at this table).
+**6** (or **0**) hands the camera to the auto director, which cuts to the combat,
+the caster, the target; **1**–**5** are the fixed views; **K** skips the animation
+on screen; **V** is the 2D board and back.
+
+| flag | what | default |
+|---|---|---|
+| `--deck <path>` | seat 0's deck | `config.json` `match.deck` |
+| `--ai-deck <path>` (`--deck2`) | seat 1's deck; `--mirror` plays seat 0's | `config.json` `match.aiDeck` (`decks/doom-legion.dck`) |
+| `--profile <name>` | seat 0's Forge AI profile | `Default` |
+| `--ai-profile <name>` (`--profile2`) | seat 1's Forge AI profile | `config.json` `match.aiProfile` |
+| `--seed <n>` | the shuffle | random, printed |
+| `--seat 0\|1` | whose view | `0` |
+| `--pace <ms>` | the recorder's pace in follow mode | `600` (`0` = engine speed) |
+| `--no-follow` | record first, then replay | follow |
+| `--2d` / `--no-open` / `--no-serve` | the board / no browser / no dev server (print the URL for one you run) | the arena, opened |
+| `--web-port <n>`, `--name <name>`, `--no-build` | vite's port, the file's name, skip the build | `config.json` `webPort` |
+
+The recordings go to `var/spectate/` (gitignored) beside the recorder's own output
+(`<name>.log`), each checked by `tools/check-redaction.mjs` as soon as it is
+finished. They are served **only by the dev server**, at `/spectate/<name>.jsonl`,
+so any of them replays later from `npm --prefix web run dev` with
+`/?replay=spectate/<name>.jsonl#arena`. The profiles are Forge's four `.ai` files
+(`Default`, `Cautious`, `Reckless`, `Experimental`) — sets of heuristics, not a
+difficulty (**D107**). The recorder underneath is `mtgtable.RecordMatch`, which
+also takes `--profile`, `--ai-profile`, `--match` and `--pace` directly.
+
 #### Tier 2 — the creatures, the land and the spells, manifested
 
 **M7 Tier 2, slices 1 and 2** (evenings T0–T8 of
@@ -1758,16 +1838,17 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the one hundred and seventeen load-bearing decisions, dated
+  DECISIONS.md               the one hundred and twenty-two load-bearing decisions, dated
                              (the workshop's are D102–D104, match setup's D105–D108,
                              engine and sets D109–D112, the hardening pass's
-                             D113–D115, more-villains' D116–D117)
+                             D113–D115, more-villains' D116–D117, spectating's
+                             D118–D122)
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
                              aiDeck, aiProfile, games}, wsPort, webPort,
                              scryfallUserAgent }. `match` is read by scripts/play.sh
-                             only (D106)
+                             and scripts/spectate.sh only (D106, D122)
 
   decks/README.md            what every deck here is, and tools/check-deck.mjs
   decks/pacho-shield.dck     the deck (40 cards, MSH + MSC), plus .txt as typed
@@ -2145,6 +2226,8 @@ mtg-table/
                              images/<scryfallId>/<size>[.back].<ext> (D93)
   scripts/play.sh            M3/M6: check-forge -> build -> the ws bridge -> /health ->
                              vite.  Defaults to --games 3 --keep-open (M6)
+  scripts/spectate.sh        spectating (D118–D122): two AIs recorded by RecordMatch,
+                             paced, into var/spectate/, followed live in the arena
 ```
 
 ## The documents
@@ -2153,7 +2236,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | One hundred and seventeen load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent; **D113–D115** are the 2026-09-27 hardening pass's, written as D109–D111 and renumbered when it landed after the engine and sets: gate step 6 compares what load cannot move, an early `newGame` is queued until Forge has finished the game, and an engine crash fails the run; **D116–D117** are more-villains', written as D109–D110 and renumbered on its rebase onto the hardening pass: three more AI decks written from specs, and the deck smoke's spell count as a rate), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. D116-D117 are more-villains': three more AI decks written from specs by `tools/build-deck.ts` (Masters of Evil, Hulk Family, Wakanda), and `tools/deck-smoke.sh`'s spell count asserted as a rate, `min(8, AI turns − 3)`. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and twenty-two load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent; **D113–D115** are the 2026-09-27 hardening pass's, written as D109–D111 and renumbered when it landed after the engine and sets: gate step 6 compares what load cannot move, an early `newGame` is queued until Forge has finished the game, and an engine crash fails the run; **D116–D117** are more-villains', written as D109–D110 and renumbered on its rebase onto the hardening pass: three more AI decks written from specs, and the deck smoke's spell count as a rate; **D118–D122** are spectating's, written as D109–D113 and renumbered on its rebase onto more villains: a paced recording the page follows, one seat's eyes and no omniscient view, `hello_ok.match` and `yourProfile` from `RecordMatch` only when asked, the pace's dwell before the boundary flush, the ids inside a `stats` event compared as a set, and `var/spectate/` served by the dev server alone), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. D116-D117 are more-villains': three more AI decks written from specs by `tools/build-deck.ts` (Masters of Evil, Hulk Family, Wakanda), and `tools/deck-smoke.sh`'s spell count asserted as a rate, `min(8, AI turns − 3)`. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

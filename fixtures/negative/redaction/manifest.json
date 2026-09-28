@@ -118,5 +118,29 @@
     "level": "fail",
     "expect": "but the session header says",
     "why": "amendment M44: hello_ok.match and the session header are written from the same Deck objects; a different yourDeck.path means one of them describes a different match"
+  },
+  {
+    "file": "m47-spectated-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M47: the baseline plus hello_ok.match.yourProfile on an AI viewer and a paced session header, exactly as RecordMatch --match --pace writes them -- the control for the m47 probes"
+  },
+  {
+    "file": "m47-yourprofile-on-a-human-seat.jsonl",
+    "level": "fail",
+    "expect": "does not mark the viewing seat",
+    "why": "amendment M47: yourProfile is a fact about an AI seat; on a viewer players[] marks human it describes a different match"
+  },
+  {
+    "file": "m47-yourprofile-is-a-path.jsonl",
+    "level": "fail",
+    "expect": "yourProfile must be a Forge AI profile name",
+    "why": "amendment M47: yourProfile is the base name of a .ai file, never a path"
+  },
+  {
+    "file": "m47-pace-not-a-number.jsonl",
+    "level": "fail",
+    "expect": "\"paceMs\" must be a positive integer",
+    "why": "amendment M47: the session header's paceMs is a positive integer of milliseconds"
   }
 ]

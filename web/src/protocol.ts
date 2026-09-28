@@ -51,6 +51,13 @@
  *       rule 8). Optional, like every field above: the whole committed corpus
  *       predates it. `seatMatchOf` is its one reader.
  *
+ * 2026-09-28 — **spectating** (`docs/protocol.md` §2.1, §8.1):
+ *   M47 `RecordMatch` writes `hello_ok.match` when given a match setup, plus
+ *       `match.yourProfile` — the VIEWING seat's own profile, present only when
+ *       that seat is an AI — and the session header's optional `paceMs`.
+ *       `seatMatchOf` still reads the block; `matchupOf` composes it for the
+ *       arena's "watching" line.
+ *
  * **Every M6 field is declared optional here**, and that is not defensiveness
  * for its own sake: fifteen committed recordings predate them,
  * `web/test/render.test.tsx` folds every frame of all of them, and a required
@@ -145,8 +152,8 @@ export interface HelloOkBody {
   gameCount?: number | null;
   /**
    * §2.1, amendment **M44** — what this match is. Optional: **every recording
-   * made before 2026-09-27 predates it** and `RecordMatch` (AI vs AI) never
-   * writes it. Read it with {@link seatMatchOf}, never directly: absent is
+   * made before 2026-09-27 predates it**, and `RecordMatch` (AI vs AI) writes
+   * it only when given a match setup (amendment **M47**, a spectated game). Read it with {@link seatMatchOf}, never directly: absent is
    * "this stream does not say", which a component must not draw as an empty
    * deck name.
    */
@@ -171,23 +178,37 @@ export interface MatchSetup {
   aiProfile: string;
   /** `--games N`. Always present, unlike M41's `gameCount`. */
   games: number;
+  /**
+   * §2.1, amendment **M47** — the VIEWING seat's own Forge AI profile. Written
+   * only by `mtgtable.RecordMatch` (AI vs AI, a spectated game), because only
+   * there is the viewing seat an AI; `tools/check-redaction.mjs` fails it on a
+   * stream whose `players[]` marks the viewer human. Optional: every M44 stream
+   * lacks it. Read it through {@link seatMatchOf}.
+   */
+  yourProfile?: string;
 }
 
 /** What one seat's plate says about the match (M44). */
 export interface SeatMatch {
   /** This seat's deck name, or `null` when the wire does not say. */
   deck: string | null;
-  /** The AI profile — on the AI's seat only; `null` on yours and when absent. */
+  /**
+   * The seat's AI profile — on a seat `players[]` marks `isAi` only; `null` on a
+   * human seat and when absent. The other seat's comes from `aiProfile` (M44),
+   * the viewing seat's from `yourProfile` (M47, a spectated recording).
+   */
   aiProfile: string | null;
 }
 
 /**
  * §2.1 (M44) — **the one reader of `hello_ok.match`.** The viewing seat gets
  * `yourDeck`, every other seat `aiDeck`; the profile is printed only for a seat
- * `players[]` marks `isAi`, because a profile is a fact about the AI. Returns
- * `null` for a stream that carries no `match` — every recording made before
- * 2026-09-27 — so a plate draws nothing rather than a blank deck name, and a
- * seat the handshake does not know gets `null` too.
+ * `players[]` marks `isAi`, because a profile is a fact about the AI — the other
+ * seat's is `aiProfile`, and the viewing seat's is `yourProfile` (amendment
+ * **M47**), which only a spectated recording carries because only there is the
+ * viewer an AI. Returns `null` for a stream that carries no `match` — every
+ * recording made before 2026-09-27 — so a plate draws nothing rather than a
+ * blank deck name, and a seat the handshake does not know gets `null` too.
  */
 export function seatMatchOf(hello: HelloOkBody | null | undefined, playerId: number): SeatMatch | null {
   const m = hello?.match;
@@ -199,9 +220,50 @@ export function seatMatchOf(hello: HelloOkBody | null | undefined, playerId: num
   const mine = playerId === hello.you;
   const deck = mine ? m.yourDeck : m.aiDeck;
   const name = typeof deck?.name === 'string' && deck.name.trim() !== '' ? deck.name : null;
-  const profile =
-    !mine && player.isAi && typeof m.aiProfile === 'string' && m.aiProfile !== '' ? m.aiProfile : null;
+  const raw = mine ? m.yourProfile : m.aiProfile;
+  const profile = player.isAi && typeof raw === 'string' && raw !== '' ? raw : null;
   return { deck: name, aiProfile: profile };
+}
+
+/** One seat of {@link Matchup}: who sits there and what they play, from the handshake alone. */
+export interface MatchupSeat {
+  id: number;
+  /** `players[].name` — the engine's lobby name (`AI-Seat0`), never a deck. */
+  name: string;
+  isAi: boolean;
+  /** This seat is the one the stream was redacted for (`hello_ok.you`). */
+  you: boolean;
+  /** {@link seatMatchOf}'s answer for this seat; `null` when the stream does not say. */
+  match: SeatMatch | null;
+}
+
+/** What a spectator is watching (amendment M47): every seat, and whether anyone at the table is human. */
+export interface Matchup {
+  /** The viewing seat first, then the rest in `players[]` order. */
+  seats: MatchupSeat[];
+  /** No seat is human: an AI-vs-AI stream — a recording with nobody at the keyboard. */
+  aiOnly: boolean;
+}
+
+/**
+ * **What is being watched** — every seat of the handshake with its deck and
+ * profile, for the arena's "watching" line (spectating, amendment M47). It is
+ * {@link seatMatchOf} per seat and nothing else, so `hello_ok.match` keeps ONE
+ * reader and the line can print no key the reader would have refused (a path on
+ * the other seat's deck, D105). Returns `null` before the handshake. Names and
+ * labels only — nothing here is ever a card.
+ */
+export function matchupOf(hello: HelloOkBody | null | undefined): Matchup | null {
+  if (hello === null || hello === undefined || !Array.isArray(hello.players)) return null;
+  const ordered = [...hello.players].sort((a, b) => Number(b.id === hello.you) - Number(a.id === hello.you));
+  const seats = ordered.map((p) => ({
+    id: p.id,
+    name: p.name,
+    isAi: p.isAi,
+    you: p.id === hello.you,
+    match: seatMatchOf(hello, p.id),
+  }));
+  return { seats, aiOnly: seats.length > 0 && seats.every((s) => s.isAi) };
 }
 
 // ---------------------------------------------------------------------------
@@ -1775,6 +1837,14 @@ export interface SessionHeader {
    * amendment **M10**; in a bridge log the same shapes would be a dropped frame.
    */
   recordedBy?: 'client';
+  /**
+   * §8.1, amendment **M47**. Present only on a PACED recording
+   * (`mtgtable.RecordMatch --pace <ms>`, `scripts/spectate.sh`): the engine
+   * dwelt this long at every frame boundary (a quarter of it after a frame that
+   * only moved the phase strip), so every `t` in the file is the engine's clock
+   * stretched for a watcher. Absent means engine speed.
+   */
+  paceMs?: number;
   decks: DeckRef[];
 }
 

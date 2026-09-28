@@ -51,6 +51,12 @@ const REQUIRED = [
   ['m44-aideck-carries-path.jsonl', 'fail'],
   ['m44-aideck-cards-is-a-list.jsonl', 'fail'],
   ['m44-yourdeck-path-mismatch.jsonl', 'fail'],
+  // Amendment M47 (spectating): the viewer's own profile, only on an AI viewer,
+  // and the paced header's one key.
+  ['m47-spectated-present.jsonl', 'pass'],
+  ['m47-yourprofile-on-a-human-seat.jsonl', 'fail'],
+  ['m47-yourprofile-is-a-path.jsonl', 'fail'],
+  ['m47-pace-not-a-number.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

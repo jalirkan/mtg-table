@@ -683,17 +683,9 @@ public final class MtgTable {
         return o.end().done();
     }
 
-    /**
-     * A deck's public name: its {@code [metadata] Name=}, or the file's base
-     * name without {@code .dck} when the deck has none.  Never a path.
-     */
+    /** A deck's public name -- {@link Bootstrap#deckName}, shared with RecordMatch (M47). */
     private static String deckName(final Deck d, final File f) {
-        final String n = d.getName();
-        if (n != null && !n.trim().isEmpty()) {
-            return n.trim();
-        }
-        final String b = f.getName();
-        return b.endsWith(".dck") ? b.substring(0, b.length() - ".dck".length()) : b;
+        return Bootstrap.deckName(d, f);
     }
 
     /**

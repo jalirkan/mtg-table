@@ -67,8 +67,8 @@ function slice() {
   return out;
 }
 
-const write = (name, framesOut) => {
-  const text = [header, ...framesOut].map((f) => JSON.stringify(f)).join('\n') + '\n';
+const write = (name, framesOut, headerOut = header) => {
+  const text = [headerOut, ...framesOut].map((f) => JSON.stringify(f)).join('\n') + '\n';
   writeFileSync(`${OUT_DIR}/${name}`, text, 'utf8');
   return text.length;
 };
@@ -459,6 +459,51 @@ probe('m44-yourdeck-path-mismatch.jsonl',
     'a different yourDeck.path means one of them describes a different match',
   'but the session header says',
   (fs) => withMatch(fs, (m) => { m.yourDeck.path = 'decks/other.dck'; }));
+
+/*
+ * Amendment M47 -- a spectated recording (`mtgtable.RecordMatch --match
+ * --pace`, `scripts/spectate.sh`).  `hello_ok.match` gains ONE key, the viewing
+ * seat's own profile, which is only ever true of an AI viewer; and the session
+ * header gains an optional `paceMs`.  The control is both, exactly as the
+ * recorder writes them over an AI-vs-AI slice (g1's two seats are AIs).
+ */
+const pacedHeader = (paceMs) => ({ ...structuredClone(header), paceMs });
+{
+  const fs = slice();
+  withMatch(fs, (m) => { m.yourProfile = 'Default'; });
+  write('m47-spectated-present.jsonl', fs, pacedHeader(600));
+  manifest.push({
+    file: 'm47-spectated-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M47: the baseline plus hello_ok.match.yourProfile on an AI viewer and a paced ' +
+      'session header, exactly as RecordMatch --match --pace writes them -- the control for the m47 probes',
+  });
+  console.log('  PASS  m47-spectated-present.jsonl  (a well-formed spectated recording, no defect)');
+}
+
+probe('m47-yourprofile-on-a-human-seat.jsonl',
+  'amendment M47: yourProfile is a fact about an AI seat; on a viewer players[] marks human it describes a ' +
+    'different match',
+  'does not mark the viewing seat',
+  (fs) => {
+    withMatch(fs, (m) => { m.yourProfile = 'Default'; });
+    const hello = fs.find((f) => f.type === 'hello_ok');
+    const me = hello.body.players.find((p) => p.id === hello.body.you);
+    me.isAi = false;
+  });
+
+probe('m47-yourprofile-is-a-path.jsonl',
+  'amendment M47: yourProfile is the base name of a .ai file, never a path',
+  'yourProfile must be a Forge AI profile name',
+  (fs) => withMatch(fs, (m) => { m.yourProfile = 'forge-home/res/ai/Default.ai'; }));
+
+{
+  const name = 'm47-pace-not-a-number.jsonl';
+  const fs = slice();
+  const bytes = write(name, fs, pacedHeader('fast'));
+  const why = 'amendment M47: the session header\'s paceMs is a positive integer of milliseconds';
+  manifest.push({ file: name, level: 'fail', expect: '"paceMs" must be a positive integer', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
 
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

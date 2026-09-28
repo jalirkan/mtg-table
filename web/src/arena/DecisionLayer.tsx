@@ -38,9 +38,11 @@
 import { EMPTY_ART_INDEX, type ArtIndex } from '../art.ts';
 import {
   buttonFocus,
+  matchupOf,
   seatMatchOf,
   type ActBody,
   type InputButton,
+  type Matchup,
   type PlayerState,
   type SeatMatch,
 } from '../protocol.ts';
@@ -65,6 +67,8 @@ export interface DecisionLayerProps {
   /** CTRL+Q armed the concede: the keyboard and the button share one state. */
   concedeArmed?: boolean;
   onArmConcede?: ((armed: boolean) => void) | null;
+  /** Spectating: the log is followed as it is written (`Arena.tsx`'s `follow` prop, plain data). */
+  follow?: 'following' | 'stalled' | 'finished' | null;
 }
 
 export function DecisionLayer({
@@ -76,18 +80,24 @@ export function DecisionLayer({
   hint = null,
   concedeArmed = false,
   onArmConcede = null,
+  follow = null,
 }: DecisionLayerProps): JSX.Element {
   const live = onAct !== null && state.gameOver === null;
   const input = state.input;
   const focus = buttonFocus(input);
   const notice = state.notices[state.notices.length - 1] ?? null;
+  const matchup = matchupOf(state.hello);
 
   return (
     <>
       <SeatPlates state={state} />
 
       <div className="arena__decision" role="group" aria-label="The engine">
-        {input === null ? (
+        {matchup !== null && matchup.aiOnly ? (
+          // Nobody at the table is human, so the engine never asks this seat
+          // anything (§8.4): the strip says what is being WATCHED instead.
+          <WatchLine matchup={matchup} follow={follow} />
+        ) : input === null ? (
           <p className="muted">the engine has not asked for anything yet</p>
         ) : (
           <>
@@ -123,25 +133,28 @@ export function DecisionLayer({
         {/* **Two clicks, like the board's** (report 10 §7.2): it ends the game
             and there is no undo for it. The armed state is shared with CTRL+Q,
             so arming with the key and confirming with the mouse works, and the
-            second press of either is the one that sends the act. */}
-        <button
-          type="button"
-          className={`btn btn--small btn--concede${concedeArmed && live ? ' btn--armed' : ''}`}
-          disabled={!live || !connected}
-          data-act="concede"
-          title="act: concede — reachable from every state, an open question included (§9 invariant 6)"
-          onClick={() => {
-            if (concedeArmed) {
-              onArmConcede?.(false);
-              onAct?.({ action: 'concede' });
-            } else {
-              onArmConcede?.(true);
-            }
-          }}
-        >
-          {concedeArmed && live ? 'Concede — click again' : 'Concede'}{' '}
-          <span className="btn__key">CTRL+Q</span>
-        </button>
+            second press of either is the one that sends the act. Not drawn for
+            a spectated game: nobody at that table can concede. */}
+        {(matchup === null || !matchup.aiOnly) && (
+          <button
+            type="button"
+            className={`btn btn--small btn--concede${concedeArmed && live ? ' btn--armed' : ''}`}
+            disabled={!live || !connected}
+            data-act="concede"
+            title="act: concede — reachable from every state, an open question included (§9 invariant 6)"
+            onClick={() => {
+              if (concedeArmed) {
+                onArmConcede?.(false);
+                onAct?.({ action: 'concede' });
+              } else {
+                onArmConcede?.(true);
+              }
+            }}
+          >
+            {concedeArmed && live ? 'Concede — click again' : 'Concede'}{' '}
+            <span className="btn__key">CTRL+Q</span>
+          </button>
+        )}
 
         {hint !== null && <span className="arena__hint">{hint}</span>}
         {notice !== null && (
@@ -177,6 +190,47 @@ export function DecisionLayer({
       {/* Every one of M5's twelve ask kinds, unchanged, over the canvas. */}
       <AskModal ask={state.ask} onAnswer={live ? onAnswer : null} art={art} />
     </>
+  );
+}
+
+/**
+ * **What is being watched** (spectating, amendment M47, D118): the two decks
+ * and their Forge profiles, and — while `./scripts/spectate.sh` is still
+ * recording — the word "following".
+ *
+ * Shown in the decision strip's place when every seat is an AI (`matchupOf`'s
+ * `aiOnly`): an AI-vs-AI stream carries no `input` at all (§8.4), so the strip
+ * would otherwise say "the engine has not asked for anything yet" for the whole
+ * game. Every word comes from the handshake through `matchupOf`, which is
+ * `seatMatchOf` per seat — the one reader of `hello_ok.match` — so the line can
+ * print a deck NAME and a profile word and nothing else: never a card, never a
+ * list, never a path (D105). The viewing seat is first and marked, because the
+ * other seat's hand is hidden exactly as it would be at the table; this is that
+ * seat's view of the game, not an omniscient one.
+ */
+function WatchLine({ matchup, follow }: { matchup: Matchup; follow: 'following' | 'stalled' | 'finished' | null }): JSX.Element {
+  return (
+    <p className="arena__watch" role="status">
+      <span className="arena__watch-label">watching</span>{' '}
+      {matchup.seats.map((seat, i) => (
+        <span key={seat.id}>
+          {i > 0 && <span className="arena__watch-vs"> vs </span>}
+          <span className="arena__watch-seat" title={seat.you ? 'the seat this recording sees from — its hand is shown, the other is hidden' : 'the other seat — its hand is hidden, as at the table'}>
+            <strong>{seat.match?.deck ?? seat.name}</strong>
+            {seat.match !== null && seat.match.aiProfile !== null && (
+              <span className="muted"> ({seat.match.aiProfile})</span>
+            )}
+            {seat.you && <span className="muted"> · seen from here</span>}
+          </span>
+        </span>
+      ))}
+      {follow !== null && (
+        <span className={`arena__watch-follow arena__watch-follow--${follow}`}>
+          {' · '}
+          {follow === 'following' ? '● following' : follow === 'stalled' ? '● following — no new frame yet' : 'recording finished'}
+        </span>
+      )}
+    </p>
   );
 }
 

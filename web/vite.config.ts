@@ -11,6 +11,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin, type ViteDevServer } from 'vite';
 
 import { createCardsMiddleware } from './src/cards/devApi.ts';
+import { createSpectateMiddleware } from './src/spectate/devRoute.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..');
@@ -85,8 +86,27 @@ function cardsPlugin(): Plugin {
   };
 }
 
+/**
+ * The spectate recordings (`./scripts/spectate.sh`, decision D122):
+ * `/spectate/<name>.jsonl[?from=<byte>]`, answered from `var/spectate/`.
+ *
+ * **Dev server only** — `configureServer` and nothing else, D92's rule for the
+ * card browser's route: `var/` is never committed and never built, a production
+ * page has no Node behind it, and `vite preview` serves a build. The route reads
+ * complete lines from one directory and never fetches (`src/spectate/devRoute.ts`
+ * says how follow mode reads a file that is still being written).
+ */
+function spectatePlugin(): Plugin {
+  return {
+    name: 'mtg-table-spectate',
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use(createSpectateMiddleware(REPO_ROOT));
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), fixturesPlugin(), cardsPlugin()],
+  plugins: [react(), fixturesPlugin(), cardsPlugin(), spectatePlugin()],
   server: {
     port: 5173,
     strictPort: false,

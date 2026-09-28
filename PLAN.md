@@ -4606,6 +4606,157 @@ What it is:
 
 ---
 
+## Spectating — watch two AIs play your deck (2026-09-28, D118–D122)
+
+**Status: built, tested, documented and committed on branch `spectate`** (a
+worktree cut from `main`'s `a092d3a`), **then rebased onto more villains'
+`90b97bb`** (which sits on the hardening pass's `4d26637`, on `main`'s
+`aead79d`) with both sides' behaviour kept (*The rebase*, at the end of this
+section). The user's ask, verbatim: *"I'd also like
+to watch AIs vs each other with my deck vs different decks so I can see how they
+play it. With the animations, some of it should become more intuitive and just
+generally more visually stimulating."* Protocol amendment **M47**; decisions
+**D118–D122** — written as M45 and D109–D113 on the branch and renumbered on the
+rebase, after the engine and sets' D109–D112, the hardening pass's D113–D115 and
+M45–M46, and more villains' D116–D117, which land first; `docs/evidence/spectate.md`
+is what was measured.
+
+```bash
+./scripts/spectate.sh                                   # your deck vs config.json's match.aiDeck, followed in the arena
+./scripts/spectate.sh --seed 7 --seat 1                 # the same game from the other chair
+./scripts/spectate.sh --ai-deck decks/morph-probe.dck --profile Cautious --ai-profile Reckless
+./scripts/spectate.sh --no-follow                       # record first (~7 s), then replay
+node tools/same-game.mjs a.jsonl b.jsonl                # two recordings of one seed: the same game?
+```
+
+What it is:
+
+- **One command.** `scripts/spectate.sh` — check-forge, build, then
+  `mtgtable.RecordMatch` with both seats AI (each on its own deck and Forge AI
+  profile) in the background, and vite opening
+  `/?replay=spectate/<name>.jsonl&follow=1#arena` at once. Defaults come from
+  `config.json`'s `match` block, which is now read by the two commands a person
+  types and still by nothing the gate runs (**D122**, amending **D106**).
+- **The recorder** gained `--profile` (seat 0) and `--ai-profile`/`--profile2`
+  (seat 1), tied to the DECK and never to `--seat`, validated before the engine
+  boots and seated through `Bootstrap.createAiPlayer` (**D107**'s seam); `--match`
+  (either profile flag implies it) to write M44's `hello_ok.match` plus the
+  viewer's own `yourProfile` (**D119**); `--pace <ms>` to make the engine play at a
+  watchable speed (**D120**); and `--ai-deck` as `--deck2`'s alias, as on
+  `MtgTable`. A bare `RecordMatch` writes exactly what it did.
+- **Follow mode** (**D118**): the page polls `/spectate/<name>.jsonl?from=<byte>`
+  — a dev-server-only route over `var/spectate/` that answers complete lines
+  only (**D122**) — from `web/src/transport/follow.ts`, and appends to a
+  follow-mode `LogReplayTransport`, which plays each frame 600 ms after the
+  recorder wrote it, keeps the recorder's gaps from the cursor after a pause, and
+  jumps a page that joins late to the live edge. An `over` ends following; the
+  replay controls remain.
+- **One seat's eyes**: `--seat 0` sees your hand and the other seat's backs, as at
+  the table; `--seat 1` is the other chair. No omniscient viewer (hard rule 8).
+- **In the arena**: in the decision strip's place, *WATCHING <deck> (<profile>) ·
+  seen from here vs <deck> (<profile>) · ● following* — every word from the
+  handshake, through `matchupOf()` (which is `seatMatchOf()` per seat); the seat
+  plates carry both profiles; no Concede button, because nobody sits at that
+  table. The app bar says how far behind the recorder the page is.
+- **The gate**: step **6b** (~20 s) records seed 5 paced from seat 0 and unpaced
+  from seat 1 through the script itself, checks both handshakes and the header,
+  and requires `tools/same-game.mjs` to call them the same game and a
+  one-life-point mutant not. Step 6's value-level diff now compares the ids
+  inside a `stats` event as a set (**D121**).
+
+**The determinism finding** (evidence §D): one seed is one game — two runs, a
+paced and an unpaced run, and a seat-0 and a seat-1 run all played the same game
+event for event (seeds 5, 7 and 11). Two things are not the game and do move: the
+ORDER of the ids inside a `stats` event, which follows HotSpot's identity hashes
+and was reordered by a few `println`s added before `FModel.initialize` (11 of 14
+seed-42 runs against 15 of 15 from `main`'s build — which is why step 6 compares
+them as a set now); and, rarely, a frame boundary, because Forge's event forwarder
+also flushes on a 500 ms wall clock (once in 41 seed-42 recordings on a loaded
+desktop).
+
+### Spectating follow-ups — ten, 2026-09-28
+
+1. **A live observer socket** — a read-only second client on the seated game's
+   `WsTransport`, truly live, and the way to watch a HUMAN seat's game from
+   another tab. Not built (**D118**): `WsTransport` is one client at a time by
+   decision (**D25**), an observer needs its own viewer and so its own `Snap` pass
+   per frame on the game thread, and `MtgTable` always seats a human — an AI-vs-AI
+   session over the socket does not exist. Follow mode was the deliverable; this is
+   the next step if "live" has to mean zero lag, or a human game is to be watched.
+2. **The outcome cue speaks for the viewing seat.** A spectated game ends in
+   *Victory* or *Defeat* from `--seat`'s side, and the players are `AI-Seat0` /
+   `AI-Seat1` (their names are in every committed fixture's handshake, so renaming
+   them is a wire change). A spectator's ending might name the winning deck.
+3. **`Snap.sweepText` conceals a seat's own spell text when it says "surveils
+   (1)"** — found comparing the two chairs of seed 11: *Hour of Defeat (42) -
+   Destroy Agent Phil Coulson (30). AI-Seat1 surveils (1).* is `""` for the seat
+   that cast it, because `(1)` reads as a card id and card 1 is in the other hand.
+   Over-concealment, not a leak (report 06; the sweep's id heuristic).
+4. **The director is one key away, not the default.** Spectating opens on the
+   table view; **6** hands the camera to the auto director. A `?camera=director`
+   URL flag (an arena change, D71's stored view) would let `spectate.sh` open on it.
+5. **The pace is one number.** 600 ms after a frame that did something, 150 ms
+   after a bare phase change, measured on a handful of games. A busy turn still
+   runs the arena's cue queue a few steps (about two seconds) behind; a dwell
+   scaled by the frame's own events (a combat longer than a land drop) is the next
+   refinement, and the user's taste decides the number.
+6. **Commit a Doom Legion recording.** Match setup's follow-up 10 (the workshop has
+   no facts for the villains) could be closed by one `./scripts/spectate.sh
+   --no-serve --no-follow --seed <n>` recording copied into `fixtures/games/` —
+   from seat 1 it shows every villain face up — but committing a fixture is its own
+   decision, and a recording there is served under `vite preview` too.
+7. **No picker in the page.** Decks, profiles and the seed are chosen on the
+   command line; starting a spectated game from the browser would need a launcher
+   process the dev server does not have (the deferred "picker in the page").
+8. **Reloading a followed page restarts following** at the live edge; `#cards` /
+   `#workshop` and back does the same (the replay cursor map is not applied in
+   follow mode).
+9. **The page's clock and the bridge's are compared** (the live slot is `t` +
+   600 ms). Sound on one machine — the only place the dev route exists — and a
+   slot more than 5 s out is treated as a disagreeing clock; a remote page would
+   need the lag measured from arrival instead.
+10. **Spectate recordings are not in step 11's corpus sweep** — the script checks
+    each one itself (and fails without a server if it does not pass), and the gate
+    checks 6b's two. A `var/spectate/` sweep would re-check the user's own.
+
+**The rebase** (2026-09-28, onto more villains' `90b97bb`, the `mtg-table-t2o`
+worktree). Both sides' behaviour kept; what met:
+
+- **Step 6.** The hardening pass had replaced the byte diff this branch taught
+  to sort `stats` ids with `tools/wire-drift.mjs` (**D113**), whose event-stream
+  question compared those ids in ORDER. D121's canonicalisation moved into
+  wire-drift's own normalisation (both modes), and `tools/wire-drift-selftest.mjs`
+  gained its two halves: every `stats` event's ids reversed is accepted by both
+  modes, one id dropped is rejected by both (20 cases: 2 accepted, 5
+  re-partitions, 13 drifts). Without the sort, the reversed copy is `DIFFERENT`.
+  Step **6b** keeps its letter: the hardening pass lettered 12b and 12c, nothing
+  else.
+- **`RecordMatch`** carries both the hardening pass's crash path (**D115**: an
+  error `notice` and a null `over`, exit 1) and this branch's pacing; a paced
+  game's timeout still grows with `--pace`.
+- **`scripts/spectate.sh` unsets `MTG_TABLE_CONFIG`**, as `scripts/play.sh` and
+  the gate do since the hardening pass: it reads `config.json`'s `match` block,
+  and the bridge must read the same file (`bridge/run.sh` honours the variable
+  for `tools/check-engine-crash.sh` alone).
+- **The arena's plate** is the hardening pass's four one-line rows, and the
+  decision strip's "watching" line is this branch's; `arena-hud.test.tsx` holds
+  both.
+- More villains' three decks are spectatable like any other
+  (`./scripts/spectate.sh --ai-deck decks/wakanda.dck`); the gate's 6b plays
+  `tools/villain-deck.sh`'s deck, as 9e does.
+
+The gate from a deleted `bridge/out` at `WSPORT=8730`: **916 s**, exit 0, 9c's
+fourteen games 370 s, at a load average of 3–5 (`var/check-all-spectate-train.log`).
+Step 6 said `SAME` (and byte for byte too, once sorted) — and the same fresh
+recording compared WITHOUT the sort differs from `g1` in the event stream, at event
+#1026, a `stats` event's id order: without the move above, this very run would
+have failed step 6. 6b: `SAME GAME`, seat 0 paced (151 dwells, 4,023 ms) and seat 1
+unpaced (1,630 ms), the mutant rejected. `npm --prefix web test` standalone is
+**893 `node --test` + 98 vitest (7 files)** (more villains' 877 + 97, plus this
+branch's 16 + 1); inside the gate **903 / 895 pass / 0 fail / 8 skipped** plus 98.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

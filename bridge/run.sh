@@ -19,8 +19,9 @@
 #       which Config.java already documents and which this line used to
 #       override.  tools/check-engine-crash.sh points it at a scratch config
 #       under var/ whose Forge home carries a card the engine cannot build;
-#       nothing else sets it (D115), and check-all.sh and scripts/play.sh unset
-#       it.  Any other config is named on stderr, so a stray export shows.
+#       nothing else sets it (D115), and check-all.sh, scripts/play.sh and
+#       scripts/spectate.sh unset it.  Any other config is named on stderr, so
+#       a stray export shows.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/../tools" && pwd)/config.sh"

@@ -14,6 +14,8 @@
 //
 //   RE-PARTITIONS the default must accept and --strict must reject
 //     (what a busy machine does to a recording: measured, docs/evidence/hardening.md)
+//   a STATS-ID REORDER both must accept (decision D121: the ids inside a `stats`
+//     event are a set; their order follows HotSpot identity hashes)
 //   DRIFT both must reject
 //     (what a changed emitter does: the step's reason to exist)
 //
@@ -93,7 +95,23 @@ const cases = [
     L.splice(i, 0, first);
     return renumber(L);
   }],
+  // ---- D121 (spectating): the ids inside a `stats` event are a SET -----------
+  // Their order is a hash-set iteration over identity-hashed objects inside
+  // Forge; both modes sort them, so a reorder is the same wire.
+  ['the ids inside every `stats` event reversed (D121)', 0, 0, (L) => {
+    let n = 0;
+    for (const i of stateIdx(L)) {
+      for (const e of L[i].body.events) if (e.kind === 'stats' && e.cardIds.length >= 2) { e.cardIds.reverse(); n += 1; }
+    }
+    if (n === 0) throw new Error('no stats event with two or more ids');
+    return L;
+  }],
   // ---- drift: a different wire ----------------------------------------------
+  ['one id dropped from a `stats` event (D121 compares the SET)', 1, 1, (L) => {
+    const f = L[stateIdx(L).find((i) => L[i].body.events.some((e) => e.kind === 'stats' && e.cardIds.length >= 2))];
+    f.body.events.find((e) => e.kind === 'stats' && e.cardIds.length >= 2).cardIds.pop();
+    return L;
+  }],
   ['one event dropped', 1, 1, (L) => {
     L[busiest(L)].body.events.splice(1, 1);
     return L;
@@ -193,5 +211,6 @@ if (bad > 0) {
 }
 const count = (d, st) => cases.filter(([, a, b]) => a === d && b === st).length;
 console.log(`wire-drift-selftest: ${String(cases.length)} cases, every verdict as expected -- `
-  + `${String(count(0, 0))} identical accepted by both, ${String(count(0, 1))} re-partitions accepted by `
+  + `${String(count(0, 0))} accepted by both (the identical copy and D121's reordered stats ids), `
+  + `${String(count(0, 1))} re-partitions accepted by `
   + `default and rejected by --strict, ${String(count(1, 1))} drifts rejected by both`);

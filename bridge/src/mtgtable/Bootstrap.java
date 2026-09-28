@@ -23,6 +23,7 @@ import java.util.List;
 
 import forge.LobbyPlayer;
 import forge.ai.AiProfileUtil;
+import forge.deck.Deck;
 import forge.gui.GuiBase;
 import forge.localinstance.properties.ForgeConstants;
 import forge.localinstance.properties.ForgePreferences;
@@ -207,6 +208,15 @@ public final class Bootstrap {
      * @throws IllegalArgumentException naming every valid profile
      */
     public static String resolveAiProfile(final String forgeHome, final String requested) {
+        return resolveAiProfile(forgeHome, requested, "--ai-profile");
+    }
+
+    /**
+     * {@link #resolveAiProfile(String, String)} for a flag with another name --
+     * {@code RecordMatch}'s {@code --profile}, which seats an AI on the deck of
+     * seat 0 (amendment M47) -- so the refusal names the flag the caller typed.
+     */
+    public static String resolveAiProfile(final String forgeHome, final String requested, final String flag) {
         final String want = requested == null ? DEFAULT_AI_PROFILE : requested.trim();
         final List<String> have = aiProfiles(forgeHome);
         for (final String p : have) {
@@ -214,7 +224,7 @@ public final class Bootstrap {
                 return p;
             }
         }
-        throw new IllegalArgumentException("--ai-profile \"" + requested + "\" is not one of "
+        throw new IllegalArgumentException(flag + " \"" + requested + "\" is not one of "
                 + (have.isEmpty() ? "(no .ai files found)" : String.join(", ", have))
                 + " -- the .ai files in " + new File(forgeHome, "res" + File.separator + "ai"));
     }
@@ -260,6 +270,22 @@ public final class Bootstrap {
                     + AiProfileUtil.getAvailableProfiles() + ")");
         }
         return GamePlayerUtil.createAiPlayer(name, avatar, profile);
+    }
+
+    /**
+     * A deck's public name (amendment M44, D105): its {@code [metadata] Name=},
+     * or the file's base name without {@code .dck} when the deck has none.
+     * Never a path.  The one definition, shared by {@code MtgTable}'s
+     * {@code hello_ok.match} and {@code RecordMatch}'s (M47), so the two
+     * emitters cannot name the same deck two ways.
+     */
+    public static String deckName(final Deck d, final File f) {
+        final String n = d.getName();
+        if (n != null && !n.trim().isEmpty()) {
+            return n.trim();
+        }
+        final String b = f.getName();
+        return b.endsWith(".dck") ? b.substring(0, b.length() - ".dck".length()) : b;
     }
 
     /**

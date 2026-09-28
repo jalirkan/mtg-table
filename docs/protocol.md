@@ -25,6 +25,21 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-28 — spectating: an AI-vs-AI recording that says what it is
+
+Applied when `./scripts/spectate.sh` learned to record two Forge AIs playing each
+other — each on its own deck and profile — and the page learned to follow that
+recording while it is written (decisions **D118**–**D122**). One row. Both
+changes are **optional keys** — one inside a `body`, one in the session header —
+so it is not a `v` bump, and every existing recording, the gate's seed-42
+re-recording among them, is byte-for-byte what it was. Evidence:
+`docs/evidence/spectate.md`. *(Numbered after the hardening pass's M45–M46,
+which landed on `main` first.)*
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M47 | §2.1, §8.1, §8.4, §8.7 | **`mtgtable.RecordMatch` writes M44's `hello_ok.match` when it is given a match setup** — `--match`, or either profile flag, `--profile` (seat 0's, the `--deck` seat) and `--ai-profile`/`--profile2` (seat 1's) — read from the VIEWING seat exactly as `MtgTable` reads it: `yourDeck` is the `--seat` seat's deck, `aiDeck` the other seat's (**`{name, cards}` and nothing else**, M44's hard-rule-8 line), `aiProfile` the other seat's profile, `games` 1. **One key is added, last: `yourProfile`, the viewing seat's own profile** — written only by `RecordMatch`, because only there is the viewing seat an AI; `tools/check-redaction.mjs` fails it on a stream whose `players[]` marks the viewer human, and holds it to a profile name. **Without any of the three flags nothing is written** — the M41 precedent, an optional key omitted when nobody asked, which keeps gate step 6's value-level diff against `fixtures/games/g1.jsonl` meaningful. **The session header gains an optional `paceMs`** (§8.1): the recorder ran with `--pace <ms>` and dwelt that long at each frame boundary (a quarter of it after a frame that only moved the phase strip), so every `t` is the engine's clock stretched for a watcher; absent means engine speed, and it is a failure beside `transport` (only an AI-vs-AI recording is paced). Profiles are tied to the DECK, never to `--seat`, so recording one seed from the other chair records the same game (§8.7, measured). The client reads the block through `seatMatchOf()` still — the viewing seat's profile now comes from `yourProfile` when `players[]` marks it an AI — and composes it per seat in `matchupOf()` for the arena's "watching" line. Negative controls: `fixtures/negative/redaction/m47-*` (a control that passes and three one-defect probes). | spectating |
+
 ### 2026-09-27 — the hardening pass, the end of a game
 
 Applied by the small-defect pass (branch `hardening`). Two rows, and neither
@@ -49,7 +64,7 @@ made before this date. Evidence: `docs/evidence/match-setup.md`.
 
 | # | Section | Change | Source |
 |---|---|---|---|
-| M44 | §2.1, §8.1 | **`hello_ok` gains `match: {yourDeck: {name, path, cards}, aiDeck: {name, cards}, aiProfile, games}`** — what this match *is*, which nothing else on the wire says and no client can derive. **The AI's deck is its NAME and its card COUNT, and nothing else**: never a path, a sha256 or a list, for exactly §8.1's reason for nulling the opponent's `decks` entry — a path plus a hash identifies a decklist exactly, and hard rule 8 says the opponent's library is hidden. The name is the `.dck` file's own `[metadata] Name=` (the file's base name when it has none): the thing a player says across a real table, and public in a real match. A deck *named after a card* announces that card, exactly as saying the name at a table would; nothing else about the list reaches the wire. `yourDeck` adds the viewing seat's own `path`, which §8.1 already puts in the session header. `aiProfile` is the canonical name of one `.ai` file in `forge-home/res/ai/` (`Default`, `Cautious`, `Reckless`, `Experimental` in 2.0.14 — report 11 §9), validated before the engine boots and passed to `GamePlayerUtil.createAiPlayer(String, int, String)` **[jar]** as `profileOverride`, **never empty**: the empty-override branch reads `FPref.UI_CURRENT_AI_PROFILE` and, when that value is not in `AiProfileUtil.getProfilesDisplayList()`, **calls `ForgePreferences.save()`** (bytecode offsets 28–83 of the five-argument overload), which is the persistent edit CLAUDE.md forbids. `games` is `--games N` and, unlike M41's pair, is **always present**: M41 omits `gameCount` for a one-game session because "where in the match are we" says nothing there, whereas "how long is this match" always says something. Emitted by `mtgtable.MtgTable` on every transport; `mtgtable.RecordMatch` (AI vs AI, no seat) does not write it. `tools/check-redaction.mjs` asserts the exact key sets — an `aiDeck` carrying any key but `name` and `cards` **fails** — and cross-checks `yourDeck.path`/`.cards` and `aiDeck.cards` against the session header's `decks` and `games` against M41's `gameCount`. The client's one reader is `seatMatchOf()` in `web/src/protocol.ts`; the board prints a seat's deck name on its rail, and the AI's profile on the AI's. | match setup |
+| M44 | §2.1, §8.1 | **`hello_ok` gains `match: {yourDeck: {name, path, cards}, aiDeck: {name, cards}, aiProfile, games}`** — what this match *is*, which nothing else on the wire says and no client can derive. **The AI's deck is its NAME and its card COUNT, and nothing else**: never a path, a sha256 or a list, for exactly §8.1's reason for nulling the opponent's `decks` entry — a path plus a hash identifies a decklist exactly, and hard rule 8 says the opponent's library is hidden. The name is the `.dck` file's own `[metadata] Name=` (the file's base name when it has none): the thing a player says across a real table, and public in a real match. A deck *named after a card* announces that card, exactly as saying the name at a table would; nothing else about the list reaches the wire. `yourDeck` adds the viewing seat's own `path`, which §8.1 already puts in the session header. `aiProfile` is the canonical name of one `.ai` file in `forge-home/res/ai/` (`Default`, `Cautious`, `Reckless`, `Experimental` in 2.0.14 — report 11 §9), validated before the engine boots and passed to `GamePlayerUtil.createAiPlayer(String, int, String)` **[jar]** as `profileOverride`, **never empty**: the empty-override branch reads `FPref.UI_CURRENT_AI_PROFILE` and, when that value is not in `AiProfileUtil.getProfilesDisplayList()`, **calls `ForgePreferences.save()`** (bytecode offsets 28–83 of the five-argument overload), which is the persistent edit CLAUDE.md forbids. `games` is `--games N` and, unlike M41's pair, is **always present**: M41 omits `gameCount` for a one-game session because "where in the match are we" says nothing there, whereas "how long is this match" always says something. Emitted by `mtgtable.MtgTable` on every transport; `mtgtable.RecordMatch` (AI vs AI, no seat) did not write it until amendment **M47**, and writes it now only when given a match setup. `tools/check-redaction.mjs` asserts the exact key sets — an `aiDeck` carrying any key but `name` and `cards` **fails** — and cross-checks `yourDeck.path`/`.cards` and `aiDeck.cards` against the session header's `decks` and `games` against M41's `gameCount`. The client's one reader is `seatMatchOf()` in `web/src/protocol.ts`; the board prints a seat's deck name on its rail, and the AI's profile on the AI's. | match setup |
 
 ### 2026-09-13 — M7 verification, the counter spelling
 
@@ -368,12 +383,29 @@ name, the AI's profile, and how many games it is played to.
 | `aiDeck` | `{name, cards}` | the **other seat's** deck: name and card count **only** — never `path`, `sha256` or a list (§8.1, hard rule 8). A mirror match names the same deck twice |
 | `aiProfile` | string | the Forge AI profile the other seat plays under — one `.ai` file of `forge-home/res/ai/`; `Default` unless `--ai-profile` said otherwise |
 | `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session |
+| `yourProfile` | string, **optional** | amendment **M47**: the **viewing seat's own** Forge AI profile. Only `mtgtable.RecordMatch` writes it (a spectated game), because only there is the viewing seat an AI; a stream whose `players[]` marks the viewer human must not carry it. Last in the object, so M44's keys keep their positions |
 
 **Optional, and absent from every recording made before 2026-09-27** — the whole
 committed corpus — so a reader must treat a missing `match` as "this stream does
-not say", never as an empty match. `mtgtable.RecordMatch` (AI vs AI) does not
-write it. The name is the deck's public name, and a deck named after a card
-announces that card; the decklist itself is never on the wire.
+not say", never as an empty match. `mtgtable.RecordMatch` (AI vs AI) writes it
+only when given a match setup (`--match`, `--profile`, `--ai-profile`; amendment
+**M47**), from the viewing seat as `MtgTable` does, plus `yourProfile`; with no
+setup flag it writes none, and a bare recording is what it always was. The name
+is the deck's public name, and a deck named after a card announces that card;
+the decklist itself is never on the wire.
+
+A spectated recording's handshake, from seat 1's chair (`--seat 1`):
+
+```json
+"match": {
+  "yourDeck": { "name": "Doom Legion (Marvel Super Heroes villains)",
+                "path": "decks/doom-legion.dck", "cards": 40 },
+  "aiDeck":   { "name": "Pacho SHIELD (Marvel Super Heroes)", "cards": 40 },
+  "aiProfile": "Default",
+  "games": 1,
+  "yourProfile": "Reckless"
+}
+```
 
 ### 2.2 `act` (c→s)
 
@@ -1798,6 +1830,7 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `policy` | **Optional** (amendment **M31**). `"probe"` when the run used `--probe`, `AutoTransport`'s M5 policy — four decisions taken the other way so that `useMana`, `clickAbility`, `showInputDialog` and a library search that actually fetches are reachable. **Absent** means the default policy; no recording made before M31 carries it. |
 | `prefs` | **Optional** (amendment **M31**). The Forge preferences this process set **in memory** beyond the bootstrap's own three, as `FPref` names: today only `["UI_MANA_LOST_PROMPT"]`, from `--mana-lost-prompt`. It is why `fixtures/games/human-amount-7.jsonl` carries two `confirm` asks that **cannot** occur on stock preferences; without it a reader who re-records that fixture on defaults concludes the emitter changed. `tools/check-redaction.mjs` tolerates it and requires it of nothing. |
 | `recordedBy` | `"client"` on a log a **client** wrote (`tools/ws-auto-play.mjs --log`); **absent** means the bridge wrote it. `tools/check-redaction.mjs` reads it and relaxes the `seq` continuity rule, and nothing else: a client legitimately sees a frame re-delivered verbatim and real forward gaps, both amendment **M10** (M17). |
+| `paceMs` | **Optional** (amendment **M47**). Present only on a PACED AI-vs-AI recording — `mtgtable.RecordMatch --pace <ms>`, which `./scripts/spectate.sh` passes in follow mode: the engine dwelt `paceMs` at every phase boundary (a quarter of it after a frame that only moved the phase strip), so the `t` gaps are the watcher's pace, not the engine's. It changes nothing else — a paced and an unpaced recording of one seed are the same frames (§8.7). A positive integer; `tools/check-redaction.mjs` fails it beside `transport`, because a seat's pace is its player's. |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 
 **A frame produced before the header is held, not dropped** (amendment M9). The
@@ -1903,6 +1936,19 @@ true of a conceded game as well as of a played-out one.
 `abilities` is `[]` on every card of every recording, human-seat ones included —
 **M5** is the milestone that fills it (§3.2, amendment M5).
 
+**A spectated recording** (`./scripts/spectate.sh`, amendment **M47**) is an
+AI-vs-AI recording with two additions and no other difference: `hello_ok.match`
+names both decks and both profiles (the viewing seat's as `yourProfile`), and,
+when it was paced, the header says `paceMs`. It is still ONE seat's view — the
+other seat's hand is the five-key stub it would be at the table, and there is no
+omniscient viewer — and `--seat 1` is the other chair. It is written to
+`var/spectate/<deckA>-vs-<deckB>-<seed>[-seat1].jsonl`, never committed, and
+served by the dev server alone at `/spectate/<name>.jsonl`, with `?from=<byte>`
+answering the complete lines written since that offset (`X-Log-Next` says where
+they end) — which is how the page FOLLOWS a recording that is still being
+written (`web/src/transport/follow.ts`). The frames are the frames a reader of
+any other AI-vs-AI log already knows; follow mode is a transport, not a protocol.
+
 ### 8.5 The fixture corpus, and why it is split
 
 `fixtures/games/` holds **engine-produced** recordings and nothing else; they are
@@ -1962,6 +2008,20 @@ cannot fail proves nothing about the emitter it is watching.
 promise byte-identical replay** — thread interleaving is not deterministic. The log
 is the record of what happened; the seed is a hint for reproducing something like
 it.
+
+**Measured for AI-vs-AI recordings** (amendment **M47**, `docs/evidence/spectate.md`
+§D). `RecordMatch` has one game thread and no seat, and **one seed is one game**:
+two runs, a paced and an unpaced run, and a seat-0 and a seat-1 run of the same
+seed and decks all played the same game, event for event
+(`tools/same-game.mjs`, which sets aside only what one chair cannot see). Two
+things still move between runs, and neither is the game: the **order of the ids
+inside a `stats` event**, a hash-set iteration inside Forge over objects hashed by
+identity — stable for one build, reshuffled by unrelated code running before
+`FModel.initialize` (gate step 6 compares it as a set, **D121**); and, rarely, a
+**frame boundary**, because `GameEventForwarder` also flushes on a 500 ms wall
+clock, so a loaded machine can cut one batch in two. The seed is therefore a
+reliable way to see a game again, and from the other side; it is still not a
+promise of identical bytes.
 
 ---
 
