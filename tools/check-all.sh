@@ -13,11 +13,13 @@
 #   5. mtgtable.RecordMatch       a FRESH recording into var/, not a committed fixture
 #   6. the VALUE-LEVEL drift check  tools/wire-drift.mjs: that fresh recording is
 #                                 the same wire as fixtures/games/g1.jsonl -- the
-#                                 same non-state frames, event stream, phase walk
-#                                 and final board, flush boundaries aside (D113;
-#                                 STRICT_G1=1 for the old byte-for-byte diff),
-#                                 after tools/wire-drift-selftest.mjs has shown
-#                                 the comparison still rejects eleven drifts
+#                                 same non-state frames, event stream, phase walk,
+#                                 final board, boards cut at a turn/phase/outcome
+#                                 event, and stack on every id-set both caught,
+#                                 flush boundaries aside (D113; STRICT_G1=1 for
+#                                 the old byte-for-byte diff), after
+#                                 tools/wire-drift-selftest.mjs has shown the
+#                                 comparison still rejects twelve drifts
 #   7. mtgtable.MtgTable         a FRESH human-seat game (--transport null): the
 #                                 input path, the ask path and exactly one `over`
 #   8. mtgtable.MtgTable         the DOCUMENTED console smoke, scripted: the line
@@ -143,7 +145,7 @@
 # exactly that way: at a load average of 42-73 the same game came back with one
 # more `state` frame (PLAN.md slice-4 follow-up 13(b)), because WHERE a flush
 # cuts the event stream is wall-clock.  So since D113 the step compares what
-# a re-partition cannot move -- tools/wire-drift.mjs's four questions -- and its
+# a re-partition cannot move -- tools/wire-drift.mjs's six questions -- and its
 # selftest proves the relaxed comparison still rejects every drift above.
 # STRICT_G1=1 restores the byte-for-byte diff.
 #
@@ -173,6 +175,13 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
+
+# bridge/run.sh honours $MTG_TABLE_CONFIG (D115: step 12c's crash check points
+# its own runs at a scratch config under var/ and exports it itself).  A stray
+# export in the calling shell would silently point every other JVM step -- its
+# forgeHome, so Forge's userDir, and its deck -- at another config, so the gate
+# never inherits one.
+unset MTG_TABLE_CONFIG
 
 # Seconds any single JVM step may take.  Measured 2026-09-11: the slowest game
 # in the gate is ~45 s, so 300 is ~6x headroom and still fails a wedge fast
@@ -236,11 +245,17 @@ say "value-level drift -- the fresh recording against fixtures/games/g1.jsonl (t
 # 42-73 on one extra `state` frame of an otherwise identical game -- and under
 # `set -o pipefail` the `head` gave it exit 141 and no message at all.  Both are
 # fixed here: tools/wire-drift.mjs prints its own verdict and exits 0 or 1, and by
-# default it asks only what a busy machine cannot move (the non-state frames, the
-# event stream, the phase walk, the final board), because WHERE a flush cuts the
-# event stream is wall-clock.  Measured: 9b's multiset comparison fails those
-# loaded runs too, so it was not the answer.  The selftest runs first, so a
-# relaxed comparison that stopped rejecting drift fails the gate here and not
+# default it asks only what a busy machine cannot move, because WHERE a flush cuts
+# the event stream is wall-clock: the non-state frames, the event stream, the
+# phase walk, the final board, every board cut AT a turn/phase/outcome event (the
+# players, every public zone, `priority` and mid-game `combat`, 347 times in g1)
+# and the stack -- `stack` and `stackCards`, order included -- for every set of
+# stack ids both recordings caught (a phase boundary never has a stack, so that
+# question is the stack serialiser's only check; its reach is in the tool's
+# header).  Measured: 9b's multiset comparison fails those loaded runs too, so it
+# was not the answer.  The selftest runs first -- the stack reversed, a stack key
+# renamed, `priority` nulled and a combat key renamed mid-game among its drifts --
+# so a relaxed comparison that stopped rejecting drift fails the gate here and not
 # silently.  STRICT_G1=1 is the old step: byte for byte, flush boundaries and all.
 node tools/wire-drift-selftest.mjs > var/check-all-wire-drift-selftest.log 2>&1 || {
   cat var/check-all-wire-drift-selftest.log >&2
@@ -258,7 +273,7 @@ if the default comparison passes, only the flush boundaries moved, which is load
 Snap.java changed the wire: re-record fixtures/games/*.jsonl"
   fi
   die "Snap.java changed the wire: the fresh seed-42 recording is not the same game as fixtures/games/g1.jsonl \
-(the DIFFER line above says which of the four questions failed) -- re-record fixtures/games/*.jsonl"
+(the DIFFER line above says which of the six questions failed) -- re-record fixtures/games/*.jsonl"
 fi
 cat var/check-all-wire-drift.log
 
@@ -348,9 +363,9 @@ overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
 # 9b. ADVISORY, and deliberately non-fatal: HUMAN-SEAT fixture drift, compared as
 #     a multiset (M3 follow-up 7).
 #
-#     Step 6 diffs a fresh AI-vs-AI recording against fixtures/games/g1.jsonl
-#     byte for byte, and can, because nothing in a RecordMatch run competes for
-#     the log.  The five human-seat fixtures are different: they are recorded
+#     Step 6 compares a fresh AI-vs-AI recording against fixtures/games/g1.jsonl
+#     (byte for byte until D113; now on what a re-partition cannot move), and
+#     nothing in a RecordMatch run competes for the log.  The five human-seat fixtures are different: they are recorded
 #     through a seat, so a `state` written by the game thread and two `input`s
 #     written by the EDT can be assigned their `seq` in either order.  Measured
 #     over three re-recordings of human-auto-42 (docs/evidence/m3-ws.md 13.5): 0,
@@ -1130,7 +1145,7 @@ node tools/build-workshop-catalog.ts --check \
 #      MTG_TABLE_CONFIG; forge-home/ keeps its one overlay file, hard rule 11)
 #      -- and asserts twenty things about both mains: exit 1, promptly, the
 #      cause on stderr, and a frame log ending in an error `notice` and a null
-#      `over` that never names the card (hard rule 8).  About ten seconds, no
+#      `over` that never names the card (hard rule 8).  About 8 s, no
 #      node_modules, so it runs under SKIP_WEB=1 and SKIP_TEN=1 too.  Added on
 #      the rebase onto match setup (PLAN.md's hardening follow-up 2).
 printf '\n=== 12c. check-engine-crash.sh -- an engine crash fails MtgTable and RecordMatch, and ends each log in `over` (D115) ===\n'

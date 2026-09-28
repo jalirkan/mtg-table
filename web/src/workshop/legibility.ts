@@ -105,6 +105,7 @@ function restingRig(pose: FigurePose, library: ModelLibrary): FigureRig | null {
     root,
     mixer: instance.mixer,
     actions: new Map(),
+    restActions: new Map(),
     rest: null,
     clip: null,
     restTime: 0,

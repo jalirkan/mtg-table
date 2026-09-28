@@ -3,8 +3,12 @@
 The small-defect backlog from PLAN.md's follow-up lists, worked in the worktree
 `/home/justin-a/code/mtg-table-t2j` on branch `hardening`, from `main` at
 `bf0392b`. Match setup's `a092d3a` landed on `main` while this was open, and the
-branch was rebased onto it the same night (§8). The pass is numbered after it:
-decisions **D113–D115**, protocol amendments **M45–M46**.
+branch was rebased onto it the same night (§8). Its first verification round
+found step 6 blind to the stack, and five smaller things; all six were fixed,
+and the branch was rebased again onto engine and sets' `aead79d` (§9). The
+decisions are **D113–D115**: they were written as D109–D111 and renumbered on
+that second rebase, because the engine and sets' D109–D112 landed first. The
+protocol amendments are **M45–M46**.
 
 Each item has four parts:
 
@@ -22,12 +26,12 @@ loaded the machine on purpose.
 
 | # | Item | Fixed | Proved by |
 |---|---|---|---|
-| 1 | Gate step 6 exits 141 silently, and its byte diff fails an identical game under load (slice 4 follow-up 13(b)) | yes, **D113** | 3 loaded re-recordings; 11-case selftest in the step |
+| 1 | Gate step 6 exits 141 silently, and its byte diff fails an identical game under load (slice 4 follow-up 13(b)) | yes, **D113** — and after round 1 it compares the stack, `priority` and mid-game combat too (§9.1) | 3 loaded re-recordings; 18-case selftest in the step |
 | 2 | 10g's restarted game ends at once (13(c)) | yes, **D114** / **M45** | a test hook that forces the window; the unfixed bridge fails, the client exits 8 |
 | 3 | `MtgTable` exits 0 when the engine crashes before turn 1 | yes, **D115** / **M46** | `tools/check-engine-crash.sh`: 9 assertions fail on the old bridge, 20 pass on the new |
-| 4 | The T-pose flash is hidden, not fixed (slice 4 follow-up 8) | yes | `web/test/clip-lane.test.tsx` fails without the line |
+| 4 | The T-pose flash is hidden, not fixed (slice 4 follow-up 8) | yes — by two actions per clip since round 1 (§9.2) | `web/test/clip-lane.test.tsx`, two cases, each failing without the fix |
 | 5 | `visibleShare` ignores the player plates (slice 4 follow-up 3) | modelled; no number moved — and on the rebase, the plate held inside the band (§8) | `camera.test.ts`, with a negative control |
-| 6 | `catalog.json` drift is not a gate step (workshop follow-up 17) | yes, step **12b** | a fake `cues.json` row fails it |
+| 6 | `catalog.json` drift is not a gate step (workshop follow-up 17) | yes, step **12b** | a `cues.json` row for a non-creature deck card (Giant Growth) fails it |
 | 7 | `@gltf-transform/cli` on a caret (slice 4 follow-up 9) | pinned | `npm ci` + `npm ls`; the rebuild itself was NOT run |
 
 ---
@@ -111,6 +115,11 @@ It builds eleven one-edit copies of g1:
 All eleven give the expected verdict, in about 3 s. This is **D113**, with its
 known cost (intermediate boards are no longer compared) and the rejected
 alternatives.
+
+**Superseded in part by §9.1.** That known cost was understated. None of the
+four questions ever compared the stack, `priority` or mid-game combat, and the
+first verification round showed four such drifts passing. Two more questions (the
+boundary boards and the stack) and seven more selftest cases answer it.
 
 ---
 
@@ -254,6 +263,11 @@ Without the line the bone sits at y **0.920, 0.520, 0.240, 0.680, 0.960**
 changed. The side effect: the cue's own fade no longer shows when the two lanes
 are one action (PLAN.md hardening follow-up 4).
 
+**Superseded by §9.2.** The side effect was wider than stated. It covered every
+attack and block cue on every model, and it was a jump at both ends of each. The
+line is gone. The stance now holds on an action of its own (`restTwin`), so the
+two lanes are never one action.
+
 ---
 
 ### 5. The seat plates in `visibleShare` (slice 4 follow-up 3)
@@ -292,6 +306,14 @@ byte, needs no `node_modules`, and so runs under `SKIP_WEB=1`. The mutation: a
 `"Giant Growth": {}` row added to `cues.json`'s `cards` block made it exit **1**
 (`catalog.json is stale — run node tools/build-workshop-catalog.ts`), and
 restoring the file made it exit 0.
+
+What that proves is narrower than "any new row": the catalog reads `cues.json`
+only for `threeD`, so only a row that changes a card's `threeD` makes the
+catalog stale — a non-creature card that is in a deck or is a token (a creature
+is already `figure`, and a card in no deck is not in the catalog). The branch's
+verifier added rows for `Ashcloud Phoenix` (a creature) and `Nonesuch Card` (in
+no deck) and `--check` passed, correctly: `catalog.json` does not depend on
+them.
 
 ---
 
@@ -380,9 +402,10 @@ arena's seat plates printing the match.
 `PLAN.md`, `README.md`, `docs/protocol.md` and `tools/check-all.sh`'s usage
 lines. Each was resolved keeping both sides:
 
-- `DECISIONS.md`: match setup's D105–D108, then this pass's D113–D115. `main`
-  stops at D108, so nothing was renumbered, and the count reads one hundred and
-  eleven.
+- `DECISIONS.md`: match setup's D105–D108, then this pass's, at the time
+  D109–D111. `main` stopped at D108, so nothing was renumbered then, and the
+  count read one hundred and eleven. (§9.6 renumbered them D113–D115, and the
+  count now reads one hundred and fifteen.)
 - `docs/protocol.md`: this pass's section (M45, M46) above match setup's (M44),
   because the list is newest first.
 - The prose: both sub-step lists merged (9e and 12b), both web-test counts, and
@@ -539,3 +562,292 @@ the sha1s. The main checkout `/home/justin-a/code/mtg-table` was not written
 engine-upgrade lane landed on `main`, after `a092d3a` — so this branch is one
 rebase behind `main` again.
 
+
+---
+
+### 9. The first verification round, and the rebase onto engine and sets (`aead79d`)
+
+A verifier re-ran every claim above against the branch at `3e4acbd` and returned
+**`passed: false`** on one major finding and five minor ones. All six are fixed
+here, and none was skipped. The verifier's own measurements that this section
+builds on are quoted as theirs.
+
+#### 9.1 Step 6 never compared the stack (the major finding)
+
+**The finding.** The verifier mutated a copy of g1 four ways, and the four
+questions of §1 **accepted every one** (exit 0): the stack reversed top-first in
+every frame; a stack-item key renamed in every frame; `priority` nulled in every
+state but the last; combat's `blockerIds` renamed in every state but the last.
+Step 6's own comment still said it caught "a stack ordered top-first".
+
+**Why.** None of the four questions ever looks at a mid-game board. The final
+board is the only board they compare, and g1's has an empty stack, empty
+`stackCards` and no combat. A phase boundary never has a stack either, because a
+step ends only once the stack is empty. So D113's "the band is narrow"
+understated it: **the whole stack serialisation was outside the check**, and so
+were `priority` and combat everywhere but the last frame.
+
+**The fix: two more questions**, each invariant by construction and then
+measured.
+
+5. **Every boundary board.** A `state` whose last event is a `turn`, `phase` or
+   `outcome` is compared whole (events aside), in order. `Snap.java` writes those
+   three kinds only for `GameEventTurnBegan`, `GameEventTurnPhase` and
+   `GameEventGameOutcome`, and `RecordMatch.BoundaryFlusher` flushes
+   synchronously at each of them. Such a frame is therefore cut at an engine
+   event, never by the clock or the 50-event threshold, and the game alone fixes
+   its board. g1 has **347** of them. This question compares `priority`, the
+   players, every public zone, and combat at the step boundaries: the attackers
+   at the blockers step and the blockers at the damage step. Nine of g1's twelve
+   frames with a blocker are boundary boards.
+6. **The stack, by id-set.** For every set of stack ids that both files caught,
+   `stack` and `stackCards` must be the same JSON, order included. The committed
+   file's id-sets must also include at least one that the fresh file caught. A
+   stack's order is its push order, so one set of items has one order.
+
+**The obvious generalisation was tried first and flakes.** That generalisation
+is "compare the boards at the same point in the event stream": key each frame by
+its cumulative event count and compare the frames that share a key. On the same
+loaded runs, **1 of the 370 shared keys differed in r1**. Key 16 is in the
+mulligan, and one board has player 1's hand at 7 and the other at 6. The wire
+drops the engine events `Snap` does not serialise, so one wire position can be
+several engine positions. A boundary frame has no such ambiguity, because its
+last event is the engine event it was cut at.
+
+**Measured on §1's four re-recordings** (`var/exp/r0–r3.jsonl`), on two more
+recorded with this round's bridge after the gate (`var/exp/r4-fix1`, `r5-fix1`:
+`var/exp/loaded.sh`, the JVM and N busy loops pinned to core 15, as in §1), and
+on the gate's own:
+
+| run | load | boundary boards | stack id-sets both caught (of g1's 17 / the run's) | the three-item stack (turn 14) | id-sets with two serialisations | verdict |
+|---|---|---|---|---|---|---|
+| r0 | none | 347, same | 17 (17 / 17) | caught, same | 0 | SAME |
+| r2 | 2 loops | 347, same | 17 (17 / 17) | caught, same | 0 | SAME |
+| r1 | 4 loops | 347, same | 17 (17 / 18) | caught, same | 0 | SAME |
+| r3 | 8 loops | 347, same | 14 (17 / 18) | caught, same | 0 | SAME |
+| r4, this bridge | 4 loops, 47 s, 386 lines | 347, same | 17 (17 / 17) | caught, same | 0 | SAME (`--strict`: DIFFERENT) |
+| r5, this bridge | 8 loops, 84 s, 395 lines | 347, same | 17 (17 / 19) | caught, same | 0 | SAME (`--strict`: DIFFERENT) |
+| the gate's (§9.7) | idle core | 347, same | 17 (17 / 17) | caught, same | 0 | SAME, byte for byte too |
+
+In all seven files, each stack id-set maps to exactly one serialisation, so "an
+item does not change while it waits" held on this game. The check has a limit,
+and the tool's header and D113 both state it: the stack's **order** is checked
+only on an id-set of two or more items that both files caught. g1 has exactly
+one such id-set, the three-item stack in turn 14's declare-attackers step. Every
+loaded run caught it.
+
+**The selftest** now has **18 cases**:
+
+- 1 identical copy;
+- **5 re-partitions** that the default must accept and `--strict` must reject.
+  Two of them are new, and both move a stack snapshot: one merges a mid-phase
+  frame that caught a one-item stack into the next frame, so the fresh file
+  lacks that id-set; the other adds a frame that caught the three-item stack one
+  item short, so it has an id-set g1 never caught;
+- **12 drifts** that both modes must reject. Five of them are new.
+
+Each new drift was also run against the **pre-fix** tool (`git show
+HEAD:tools/wire-drift.mjs`):
+
+| new drift | pre-fix default | now | caught by |
+|---|---|---|---|
+| the stack reversed (top-first) in every state | exit 0 | exit 1 | 6, the stack |
+| a stack-item key renamed (`sourceCardId` → `sourceId`) in every state | exit 0 | exit 1 | 6, the stack |
+| `priority` nulled in every state but the last | exit 0 | exit 1 | 5, boundary boards |
+| combat's `blockerIds` renamed in every state but the last | exit 0 | exit 1 | 5, boundary boards |
+| the stack never written (every `stack` and `stackCards` empty) | exit 0 | exit 1 | 6's guard (no committed id-set caught) |
+
+`check-all.sh`'s step-6 comment and die message now name six questions. D113's
+title, decision, rationale and *Known cost* were amended with a dated note
+rather than silently. The *Known cost* now says what the first version
+understated, and what the default still gives up. That is a board field that
+differs only between two phase boundaries, is in no event and is not on the
+stack. It also includes the stack-order limit above.
+
+#### 9.2 The weight-1 line changed every attack and block cue (minor)
+
+**The finding.** All 8 models in `models.json` have an `idle`, and every clone
+starts at idle frame 0. So §4's line prevented no T-pose on any shipped model.
+What it changed was every `attack.lunge`, `attack.jet` and `attack.aegis` cue on
+an attacking figure, and every `block.interpose` on a blocking one. That covers
+essentially every deck creature's attack and block. Those cues had been a blend
+with idle frame 0 at `1 − weight`, and the line made them the raw clip at full
+weight.
+
+**Measured on the shipped models.** The measurement used the real
+`figures.glb`, loaded in Node by `test/prop-raster.ts`'s `loadLibrary`. Each
+figure was built by the arena's own `instantiateFigure` and a real mixer. For
+each model and stance, `driveClips` ran the stance alone, then the cue's
+envelope over 51 frames (attack.lunge's 850 ms at 60 fps), then the stance
+again, applying `mixer.update(0)` after each frame. The number is the largest
+joint displacement between two consecutive frames, **as a fraction of the
+body's height**. It is taken at the cue's two ends (in / out), and compared with
+the clip's own median step in the middle of the cue:
+
+| model, stance | `main` (`aead79d`) | §4, weight 1 | a time ramp (tried) | **now, two actions** | the clip's own mid-cue step |
+|---|---|---|---|---|---|
+| agent (also scientist), attacking | 0.64 / 0.66 | 0.46 / 0.45 | 0.010 / 0.021 | **0.048 / 0.032** | 0.015 |
+| hero, attacking | 0.61 / 0.63 | 0.42 / 0.41 | 0.010 / 0.021 | **0.045 / 0.031** | 0.014 |
+| agent, blocking | 0.29 / 0.30 | 0.041 / 0.044 | 0.010 / 0.007 | **0.005 / 0.004** | 0.005 |
+| any chibi, attacking | 0.22 / 0.22 | 0.21 / 0.24 | 0.15 / 0.25 | **0.026 / 0.020** | 0.034 |
+| any chibi, blocking | 0.32 / 0.34 | 0 / 0 | 0 / 0 | **0 / 0** | 0 |
+| drone, attacking (`attack`) | 0.61 / 0.62 | 0.58 / 0.62 | 0.59 / 0.75 | **0.087 / 0.062** | 0.043 |
+| drone as Aerial Doombot (`attack` → `jet`) | 0.28 / 0.28 | 0.27 / 0.28 | — | **0.035 / 0.024** | 0.016 |
+| insect, attacking | 0.021 / 0.022 | 0.018 / 0.014 | 0.005 / 0.001 | **0.002 / 0.001** | 0.001 |
+
+`main`'s blend jumped toward idle frame 0 at both ends. §4's weight 1 removed
+that blend, but it jumped from the stance's held frame to the clip's first frame
+and back. The held frame is 45% into the clip for `attacking` and 60% for
+`blocking`.
+
+**First try: a time ramp.** The first fix kept one action and moved its time
+from the held frame (weight 0) to the cue's own frame (weight 1). It worked on
+the proportioned bodies, but not on the chibis or the drone (the "time ramp"
+column). The drone's attack clip moves 0.35 body-heights per 2% of its length at
+exactly the point where the attacking stance holds it. A ramp in time sweeps
+through that motion.
+
+**The fix: two actions.**
+
+- `models.ts`'s **`restTwin(clip)`** is the same tracks under an
+  `AnimationClip` of its own. A mixer keys its actions by clip, so the twin gets
+  an action of its own. Twins are cached per source clip, so every figure of a
+  model shares one, and no keyframe is copied.
+- `FigureLayer` builds a second action map on the twins,
+  **`FigureRig.restActions`**, at commit.
+- `actionFor(…, 'rest')` reads that map, and `driveClips` holds the stance on it.
+
+The stance and the cue are therefore always two actions, even on the same clip.
+Their weights always sum to 1, and the cue crossfades off the held pose and back
+exactly as it does over a different clip. The `rest === wanted` branch is gone.
+The cost was measured in Node, as the median of 10 runs: 12 `agent` figures
+build in **4.3 ms instead of 3.9 ms**. Nothing is added to the frame loop.
+
+**The test.** `web/test/clip-lane.test.tsx` now has two cases. The first is
+§4's, on a model with no `idle`. The second walks both `attacking` and
+`blocking` from stance to cue to stance, on a clip whose bone height is its
+time. It asserts the held frame at both ends, the cue's own frame at full weight,
+and no step between frames above 0.05.
+
+The negative controls were all run:
+
+- with the two maps collapsed into one shared action, both cases fail: the
+  bone reads y 0.28 … 0.24, not 0.2, and mid-cue reads 1.0, not 0.5;
+- with §4's `CueRunner.tsx` or `main`'s, both cases fail on their identity
+  assertions, because the rest lane is the transient's own action;
+- with those assertions taken out, so that only the pose is judged, §4's fails
+  the second case on a **0.44** jump at the cue's first frame (0.45 → 0.01). `main`'s
+  fails both: the bind pose (y 0.92, 0.52, 0.24, 0.68, 0.96 against 0.2) and a
+  0.49 jump (0.45 → 0.94).
+
+**Not eyeballed in a browser.** The Claude browser pane fires no
+`requestAnimationFrame` (M7's note), and a single screenshot cannot show a jump
+between two frames. The table above is the arena's own code path (`driveClips`,
+`instantiateFigure`, `restTwin` and three's mixer) on the shipped models, and it
+is a number where a look would be an impression.
+
+#### 9.3 `MTG_TABLE_CONFIG` could leak into the gate (minor)
+
+- `check-all.sh` and `scripts/play.sh` now `unset MTG_TABLE_CONFIG` near the
+  top, each with a comment saying why.
+- `check-engine-crash.sh` still exports its own, so 12c is unaffected.
+- `bridge/run.sh` now names any config that is not the repo's on stderr
+  (`bridge/run.sh: config … (from MTG_TABLE_CONFIG), not …/config.json`), so a
+  stray export shows in every log a run writes. The crash check's logs carry
+  that line, which is correct.
+
+#### 9.4 One number for the crash check (minor)
+
+The five quotes (~10 s, ~8 s, about six seconds, ~6 s, about 5 s) are now **~8
+s** everywhere: the script header, CLAUDE.md (the command list and the gate
+paragraph), README (the command list and the gate paragraph), PLAN.md (twice)
+and `check-all.sh`'s 12c comment. The timing note for §8's gate run now quotes
+what that log shows, each main exiting 1 in 2 s. The script now prints its own
+wall time on its last line. Standalone on this machine it took **6.4 s** at a
+load average of about 9, and the verifier measured 8.5 s.
+
+#### 9.5 The catalog claim, narrowed (minor)
+
+§6 and PLAN.md now say "a `cues.json` row for a non-creature deck card (Giant
+Growth)". The catalog reads `cues.json` only for `threeD`, so a row for a
+creature (already `figure`) or for a card in no deck rightly changes nothing.
+The verifier's `Ashcloud Phoenix` and `Nonesuch Card` rows showed exactly that.
+
+#### 9.6 The rebase onto `aead79d`, and the renumbering
+
+`main` moved to `aead79d` (engine and sets) while round 1 was running. Before
+the rebase, `git merge-base --is-ancestor` confirmed the branch was one commit
+on `a092d3a`, and it is now one commit on `aead79d` plus this round's commit.
+`a092d3a` is still an ancestor, so the branch is a fast-forward of both.
+
+**The decision numbers collided.** The engine-upgrade lane numbered its four
+decisions D109–D112 and landed first. `main`'s DECISIONS.md carries an italic
+note above D109 saying "whichever of the two lands second renumbers its own". So
+this branch's **D109–D111 became D113–D115**.
+
+The renumbering was done **before** the rebase, on the branch's own tree, where
+every `D109`–`D111` was this branch's (92 lines in 16 files: the bridge
+comments and strings, `check-all.sh`, the two tools, `ws-auto-play.mjs` and
+every doc). No citation could be ambiguous. After the rebase, `main`'s note and
+PLAN.md's *Engine and sets* line about the collision were updated to say it was
+settled. D113's dated note records the renumbering. `docs/protocol.md`'s M45 and
+M46 were not touched: `main` added no amendment.
+
+**The conflicts** were prose only: CLAUDE.md (the gate's timing notes and the
+docs table), DECISIONS.md (both blocks kept, `main`'s first), PLAN.md (both
+status paragraphs and both sections) and README.md (the tree listing and two
+table rows). The counts now read **one hundred and fifteen**. `main`'s side
+changed no bridge or web source apart from `catalog.json`, which it regenerated
+for `decks/fra-rw-aggro.dck`. `node tools/build-workshop-catalog.ts --check`
+says **current** on the rebased tree.
+
+#### 9.7 Tests, the build and the gate
+
+- `./bridge/build.sh`: 22 files, lint OK, the four self-tests pass (Json 38, Ask
+  106, GameLog 35, OverRace 11 checks).
+- `npm --prefix web test`, standalone: **871 `node --test` (871 pass, 0 fail)**
+  + **97 vitest in 7 files**. That is §8.3's 871 + 96 plus `clip-lane`'s second
+  case. The `wire-drift` changes are tools, not tests.
+- `npm --prefix web run build`: OK. The entry chunk is 87.67 kB gzip and
+  `arena-scene` 348.07.
+- **The gate**, from a deleted `bridge/out`:
+  `rm -rf bridge/out && WSPORT=8685 ./tools/check-all.sh`, into
+  `var/check-all-hardening-fix1.log`. The result was **`check-all OK`, exit 0,
+  940.5 s** (15 m 41 s), at a load average of about 9–16 from other worktrees.
+  - **Step 3.** 22 files, and the four self-tests.
+  - **Step 6.** `wire-drift-selftest: 18 cases, every verdict as expected -- 1
+    identical accepted by both, 5 re-partitions accepted by default and rejected
+    by --strict, 12 drifts rejected by both`. The comparison said `same` to all
+    six questions: 1,651 events, 322 phase steps, 347 boundary boards, and 17
+    stack id-sets. It was byte for byte too, 377 normalised lines.
+  - **9b** (advisory) reported a difference this time, and it was not in the
+    snapshots. The two files had the same 233 `state` frames. The difference was
+    3 more `buttonCancel` acts and 4 more `input` frames in the fresh file: the
+    automated seat met more prompts. That is the seat's input timing under load,
+    the class 9b's own header describes (M3 follow-up 7). `bridge/` changed no
+    code in this round.
+  - **9c.** 14/14 `over`, zero UNIMPL, every log through `check-redaction`, and
+    no preferences file touched, in a total wall of 384 s.
+  - **10g**, held at 2000 ms: `NEW GAME QUEUED` 2 and `NEW GAME RELEASED` 2, with
+    no `OVER WITHOUT A gameOver STATE`. It played `games 3/3`, and auto-yield
+    measured `repeats=4 promptsWhileOnTop=0`.
+  - **12b.** `catalog.json is current`.
+  - **12c.** MtgTable exited 1 in 2 s and RecordMatch in 3 s, 20 of 20
+    assertions, `(6 s)` on the script's own new last line.
+  - **Step 13.** **881 `node --test` tests: 873 pass, 0 fail, 8 skipped**, plus
+    **97 vitest in 7 files**.
+- **Changed after the gate started.**
+  - Comments only: `driveClips`' docstring in `CueRunner.tsx` (before step 13
+    ran, so the gate built and tested it) and `check-all.sh`'s header and 9b
+    comments (after the gate; `bash -n` clean, and every non-comment line of
+    `check-all.sh` was in place before the gate started).
+  - The docs.
+
+#### 9.8 The user's Forge install
+
+`/home/justin-a/forge` (22,128 entries with size and mtime) and
+`/home/justin-a/.forge` (27 entries, and a sha1 of each of its 7 files) were
+fingerprinted before the rebase and again after the gate and the two loaded
+recordings. **Unchanged**: every listing and every sha1 is identical. The main
+checkout `/home/justin-a/code/mtg-table` was not written. It is still at
+`aead79d` and `git status` is clean.

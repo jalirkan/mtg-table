@@ -38,6 +38,8 @@ const renumber = (L) => {
   for (const f of L) if (f.dir === 's2c') f.seq = ++n;
   return L;
 };
+/** The event kinds a recorder frame is cut AT (wire-drift.mjs question 5). */
+const BOUNDARY = new Set(['turn', 'phase', 'outcome']);
 /** The state frame with the most events, which a split can halve. */
 const busiest = (L) => stateIdx(L).reduce((a, i) => (L[i].body.events.length > L[a].body.events.length ? i : a));
 
@@ -66,6 +68,29 @@ const cases = [
     const dup = JSON.parse(JSON.stringify(L[i]));
     dup.body.events = [];
     L.splice(i + 1, 0, dup);
+    return renumber(L);
+  }],
+  ['a mid-phase frame that caught a stack merged into the next', 0, 1, (L) => {
+    // The fresh file then lacks that stack id-set: it is not compared, and the
+    // other sixteen still are.
+    const s = stateIdx(L);
+    const k = s.find((i, n) => n + 1 < s.length && L[i].body.stack.length === 1
+      && !BOUNDARY.has(L[i].body.events.at(-1)?.kind));
+    const next = s[s.indexOf(k) + 1];
+    L[next].body.events.unshift(...L[k].body.events);
+    L.splice(k, 1);
+    return renumber(L);
+  }],
+  ['an extra frame caught the stack one item short', 0, 1, (L) => {
+    // An id-set the committed file never caught: not compared, not a failure.
+    const i = stateIdx(L).find((j) => L[j].body.stack.length >= 2);
+    const f = L[i];
+    const half = Math.floor(f.body.events.length / 2);
+    const first = JSON.parse(JSON.stringify(f));
+    first.body.events = f.body.events.slice(0, half);
+    first.body.stack = f.body.stack.slice(0, -1);
+    f.body.events = f.body.events.slice(half);
+    L.splice(i, 0, first);
     return renumber(L);
   }],
   // ---- drift: a different wire ----------------------------------------------
@@ -104,6 +129,42 @@ const cases = [
     return L;
   }],
   ['no state frames at all', 1, 1, (L) => L.filter((f) => f.type !== 'state')],
+  // The verifier's four (round 1): each passed the first four questions, because
+  // g1's final board has an empty stack and no combat.  Questions 5 and 6 exist
+  // for them.
+  ['the stack reversed (top-first) in every state', 1, 1, (L) => {
+    let n = 0;
+    for (const i of stateIdx(L)) if (L[i].body.stack.length >= 2) { L[i].body.stack.reverse(); n += 1; }
+    if (n === 0) throw new Error('no state with two or more stack items');
+    return L;
+  }],
+  ['a stack-item key renamed in every state', 1, 1, (L) => {
+    for (const i of stateIdx(L)) {
+      L[i].body.stack = L[i].body.stack.map(({ sourceCardId, ...rest }) => ({ ...rest, sourceId: sourceCardId }));
+    }
+    return L;
+  }],
+  ['`priority` nulled in every state but the last', 1, 1, (L) => {
+    const s = stateIdx(L);
+    for (const i of s.slice(0, -1)) L[i].body.priority = null;
+    return L;
+  }],
+  ['combat `blockerIds` renamed in every state but the last', 1, 1, (L) => {
+    let n = 0;
+    for (const i of stateIdx(L).slice(0, -1)) {
+      for (const b of L[i].body.combat?.bands ?? []) {
+        b.blockers = b.blockerIds;
+        delete b.blockerIds;
+        n += 1;
+      }
+    }
+    if (n === 0) throw new Error('no combat band to rename');
+    return L;
+  }],
+  ['the stack never written (every `stack` and `stackCards` empty)', 1, 1, (L) => {
+    for (const i of stateIdx(L)) { L[i].body.stack = []; L[i].body.stackCards = []; }
+    return L;
+  }],
 ];
 
 const run = (flags, file) => {

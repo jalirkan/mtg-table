@@ -79,6 +79,11 @@ set -euo pipefail
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/../tools" && pwd)/config.sh"
 cd "$REPO_ROOT"
 
+# This script reads config.json (the ports, the `match` block) and the bridge
+# must read the same file: bridge/run.sh honours $MTG_TABLE_CONFIG, which only
+# tools/check-engine-crash.sh sets (D115), so an inherited one is dropped here.
+unset MTG_TABLE_CONFIG
+
 WS_PORT="$(cfg_get wsPort || echo 8642)"
 WEB_PORT="$(cfg_get webPort || echo 5173)"
 OPEN=1

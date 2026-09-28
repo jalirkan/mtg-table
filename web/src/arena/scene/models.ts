@@ -333,6 +333,33 @@ export function clipFor(
   return model.clips.get(name) ?? null;
 }
 
+const REST_TWINS = new WeakMap<THREE.AnimationClip, THREE.AnimationClip>();
+
+/**
+ * **The clip lane's REST twin of a model clip**: the same tracks under a clip of
+ * its own, so a mixer gives it an action of its own (`clipAction` keys its
+ * actions by clip). `FigureLayer` builds one rest action per clip from these,
+ * and `CueRunner.driveClips` holds the stance on them, so the stance and a cue
+ * that play the SAME clip — an attack cue on an attacking figure, a block cue on
+ * a blocking one — are two actions at two times whose weights sum to 1, exactly
+ * as a stance and a cue on different clips are. One shared action had one time
+ * and only the cue's ramp weight, and three filled the rest of the weight with
+ * the clone's original pose: the bind pose on a model with no `idle` (slice-4
+ * follow-up 8), and a jump away from the held stance at both ends of every such
+ * cue on every model (the hardening pass's first verification round).
+ *
+ * Built at commit and cached per source clip: every figure of a model shares one
+ * twin, no keyframe is copied, and the frame loop never makes one.
+ */
+export function restTwin(clip: THREE.AnimationClip): THREE.AnimationClip {
+  let twin = REST_TWINS.get(clip);
+  if (twin === undefined) {
+    twin = new THREE.AnimationClip(clip.name, clip.duration, clip.tracks, clip.blendMode);
+    REST_TWINS.set(clip, twin);
+  }
+  return twin;
+}
+
 /**
  * §8.3 rule 3 — **preload the whole archetype set at arena mount and warm the
  * programs**, because the first-draw hitch is already a measured problem (M7

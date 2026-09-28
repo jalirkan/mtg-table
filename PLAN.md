@@ -50,8 +50,10 @@ seat plates in `visibleShare`, the catalog drift check in the gate (12b), and th
 `@gltf-transform/cli` pin. Rebased onto match setup the same day and onto
 engine and sets on 2026-09-28, with the
 engine-crash check in the gate (12c) and the arena's seat plate held to four
-one-line rows inside the top band. *The 2026-09-27 hardening pass*, just above
-*Deferred*, has the table, the rebase and what is left open.
+one-line rows inside the top band. Its first verification round found step 6
+comparing no stack, `priority` or mid-game combat, and every attack and block cue
+jumping at both ends; both are fixed. *The 2026-09-27 hardening pass*, just above
+*Deferred*, has the table, the two rebases, the round and what is left open.
 
 ---
 
@@ -3938,8 +3940,9 @@ Against the tree, item by item:
 17. ~~**`catalog.json` now reads `cues.json`'s card names**~~ — **closed by the
     hardening pass (2026-09-27)**: `check-all.sh` step **12b** runs
     `node tools/build-workshop-catalog.ts --check`, byte for byte and even under
-    `SKIP_WEB=1`; a fake `cues.json` row for Giant Growth made it fail and removing
-    the row made it pass. The original note: (for `threeD`), so a new
+    `SKIP_WEB=1`; a `cues.json` row for a non-creature deck card (Giant Growth)
+    made it fail and removing the row made it pass (a row that changes no card's
+    `threeD` — a creature's, or a card in no deck — rightly does not). The original note: (for `threeD`), so a new
     per-card cue entry for a deck card makes the workshop's drift test fail until
     `node tools/build-workshop-catalog.ts` is re-run — on the arena's desk. The
     test says so; the alternative was the card browser importing the arena.
@@ -4361,29 +4364,33 @@ fixed here; each is its own small change on `main`.
 
 ## The 2026-09-27 hardening pass — the small-defect backlog
 
-**Status: done, rebased onto `main`'s `a092d3a` (match setup)** on branch
-`hardening`. Built on `bf0392b` (the workshop's tree) while match setup was
-open, then rebased with both sides' behaviour kept (*The rebase*, below).
-Seven defects from the follow-up lists above, each fixed at its cause, each with
-a test or gate assertion that fails without the fix, and each negative control
-actually run. `docs/evidence/hardening.md` is what was measured.
-**D113–D115** are its decisions, numbered after match setup's D105–D108.
-Protocol amendments **M45** and **M46**, numbered after M44.
+**Status: done, verified once, fixed, and rebased onto `main`'s `aead79d`
+(engine and sets)** on branch `hardening`. Built on `bf0392b` (the workshop's
+tree) while match setup was open, rebased onto it with both sides' behaviour kept
+(*The rebase*, below), then through its first verification round and a second
+rebase (*Verification round 1*, below). Seven defects from the follow-up lists
+above, each fixed at its cause, each with a test or gate assertion that fails
+without the fix, and each negative control actually run.
+`docs/evidence/hardening.md` is what was measured. **D113–D115** are its
+decisions, numbered after the engine and sets' D109–D112: they were written as
+D109–D111 and renumbered on the second rebase, as DECISIONS.md's note above D109
+asks of whichever lands second. Protocol amendments **M45** and **M46**,
+numbered after M44.
 
 | # | Defect | Fix | Proved by |
 |---|---|---|---|
-| 1 | Gate step 6 exited 141 with no message under load, and failed a byte-strict diff on an identical game (slice 4 follow-up 13(b)) | **D113**. `tools/wire-drift.mjs` compares the non-state frames, the event stream, the phase walk and the final board, prints its own verdict and exits 0 or 1. `STRICT_G1=1` is the old byte diff. 9b's multiset was measured and rejected: it fails the same loaded runs | seed 42 re-recorded with the JVM pinned to one core shared with 2/4/8 busy loops. 383/387/395 lines against 377: strict fails, the multiset fails, all four invariants hold. `tools/wire-drift-selftest.mjs` (in step 6) has 11 cases: 3 re-partitions accepted, 7 drifts rejected |
+| 1 | Gate step 6 exited 141 with no message under load, and failed a byte-strict diff on an identical game (slice 4 follow-up 13(b)) | **D113**. `tools/wire-drift.mjs` compares the non-state frames, the event stream, the phase walk, the final board, **every board cut at a turn, phase or outcome event** and **the stack on every id-set both files caught** (the last two since verification round 1: the first four compared no stack, `priority` or mid-game combat), prints its own verdict and exits 0 or 1. `STRICT_G1=1` is the old byte diff. 9b's multiset was measured and rejected: it fails the same loaded runs | seed 42 re-recorded with the JVM pinned to one core shared with 2/4/8 busy loops. 383/387/395 lines against 377: strict fails, the multiset fails, all six questions hold. `tools/wire-drift-selftest.mjs` (in step 6) has 18 cases: 5 re-partitions accepted, 12 drifts rejected, 5 of them (the stack reversed, a stack key renamed, `priority` nulled, a combat key renamed, no stack) accepted by the first version |
 | 2 | 10g's restarted game ended at once (13(c)) | **D114** / **M45**. The cause was not a wait armed late. It was game n's late `finishGame()`, queued on the EDT by `FControlGameEventHandler` after `GameEventGameFinished`, landing on game n+1 once an instant `newGame` had restarted first. An early `newGame` is now queued and released from game n's own `GameEventGameFinished` | `MTGTABLE_HOLD_GAME_END_MS` holds the window open. With the queue disabled, game 2 ended at once (`OVER WITHOUT A gameOver STATE`) and `ws-auto-play` exited **8**, its new check. Fixed, both acts queue and release and all three games play in full. 10g runs held (2000 ms) and asserts it |
-| 3 | `MtgTable` exited 0 when the engine crashed before turn 1 | **D115** / **M46**. `EngineCrash`, a default uncaught handler that chains, and a game-loop death ends the game (error `notice` + null `over`). The process exits 1 with the cause. `RecordMatch` closes its log the same way | `tools/check-engine-crash.sh` (gate step **12c** since the rebase, ~6 s): a scratch Forge home with a Depower that uses the 2.0.15 ApiType `Empower`. Pre-fix: MtgTable exit 0 after 65 s, RecordMatch's log stopped at `hello_ok` (9 assertions fail). Fixed: exit 1 in 4 s and 3 s, both logs end in `over` |
-| 4 | The T-pose flash hidden, not fixed (slice 4 follow-up 8) | `driveClips`: the action that is both lanes takes weight 1 | `web/test/clip-lane.test.tsx`, a one-bone model with no `idle`. Without the line the bone sits at y 0.92/0.52/0.24/0.68/0.96, not 0.2 |
+| 3 | `MtgTable` exited 0 when the engine crashed before turn 1 | **D115** / **M46**. `EngineCrash`, a default uncaught handler that chains, and a game-loop death ends the game (error `notice` + null `over`). The process exits 1 with the cause. `RecordMatch` closes its log the same way | `tools/check-engine-crash.sh` (gate step **12c** since the rebase, ~8 s): a scratch Forge home with a Depower that uses the 2.0.15 ApiType `Empower`. Pre-fix: MtgTable exit 0 after 65 s, RecordMatch's log stopped at `hello_ok` (9 assertions fail). Fixed: exit 1 in 4 s and 3 s, both logs end in `over` |
+| 4 | The T-pose flash hidden, not fixed (slice 4 follow-up 8) | the stance holds on an action of its own, on the clip's `restTwin` (`FigureRig.restActions`, since verification round 1; first it was weight 1 on the shared action, which jumped at both ends of every attack and block cue) | `web/test/clip-lane.test.tsx`: a one-bone model with no `idle` (y 0.92/0.52/0.24/0.68/0.96 on `main`, not 0.2), and a stance → cue → stance walk with no jump (a 0.44 jump with weight 1). Measured on the shipped models: the largest joint jump at an attack cue's ends on the proportioned bodies, 0.61–0.66 body heights on `main`, 0.41–0.46 with weight 1, 0.03–0.05 now |
 | 5 | `visibleShare` ignored the player plates (slice 4 follow-up 3) | `camera.ts`: `PLAYER_PLATES`, `underRect`, `visibleShareOnCanvas` (pure) | `camera.test.ts` recomputes every duelist share with both plates, and holds the rectangles to `styles.css`. Negative control: the plate alone hides exactly the 24 samples under it. **No view × aspect changed**: the opponent's plate ends at canvas y 126.0, inside `HUD_TOP_PX`. **On the rebase:** the plate is four one-line rows (a long `--ai-name` ellipsised, match setup's deck and profile on the life row), and the band is asserted; match setup's own plate fails the duelist threshold in 4 cells and is the negative control |
-| 6 | `catalog.json` drift reached the gate only through a web test (workshop follow-up 17) | step **12b**: `build-workshop-catalog.ts --check` | mutation: a fake `cues.json` row for Giant Growth fails it, removing the row passes it |
+| 6 | `catalog.json` drift reached the gate only through a web test (workshop follow-up 17) | step **12b**: `build-workshop-catalog.ts --check` | mutation: a `cues.json` row for a non-creature deck card (Giant Growth) fails it, removing the row passes it |
 | 7 | `@gltf-transform/cli` on a caret (slice 4 follow-up 9, Tier 2 follow-up 17) | exact `4.5.0`, and `overrides` for its meshoptimizer 1.2.0 and the three libraries | `npm ci`, then `npm ls`: every version is the one the lockfile recorded. **The rebuild itself was not run** (below) |
 
 **Commands**
 
 ```bash
-./tools/check-engine-crash.sh                                   # item 3's self-check, ~6 s, gate step 12c
+./tools/check-engine-crash.sh                                   # item 3's self-check, ~8 s, gate step 12c
 node tools/wire-drift.mjs [--strict] fixtures/games/g1.jsonl var/check-all-record.jsonl
 node tools/wire-drift-selftest.mjs                              # step 6 runs it
 STRICT_G1=1 ./tools/check-all.sh                                # step 6 byte for byte, as before D113
@@ -4391,7 +4398,7 @@ MTGTABLE_HOLD_GAME_END_MS=2000 ./bridge/run.sh mtgtable.MtgTable --transport ws 
 node tools/build-workshop-catalog.ts --check                    # step 12b
 ```
 
-### 2026-09-27 hardening follow-ups — six; 2, 5 and 6 closed on the rebase
+### 2026-09-27 hardening follow-ups — seven; 2, 5 and 6 closed on the rebase, 4 by verification round 1
 
 1. **`figures.glb` was not rebuilt.** The pin makes the toolchain exact. Whether
    `node tools/build-figures.mjs` still reproduces 373,236 bytes needs the five
@@ -4399,15 +4406,22 @@ node tools/build-workshop-catalog.ts --check                    # step 12b
    downloading ~130 MB is the user's call (slice 4 follow-up 12).
 2. ~~**`tools/check-engine-crash.sh` is not in the gate.**~~ — **closed on the
    rebase (2026-09-27)**, as decided on review: it is step **12c**, after 12b, and
-   the gate requires all twenty of its assertions (about 6 s; it needs no
+   the gate requires all twenty of its assertions (about 8 s; it needs no
    `node_modules`, so it runs under `SKIP_WEB=1` and `SKIP_TEN=1`).
 3. **An exception that kills a `Game-n` thread other than the game loop is
    only printed** (`THREAD DIED (not the game loop)`). If one ever strands a
    game, it still ends by timeout as before.
-4. **Item 4 has a visible side:** when the stance's clip and the cue's clip are
-   the same action, the cue's own fade no longer shows. It holds at full weight
-   and returns to the stance's resting phase when the cue ends. The workshop, on
-   an attack cue, is the place to look.
+4. ~~**Item 4 has a visible side:** when the stance's clip and the cue's clip are
+   the same action, the cue's own fade no longer shows.~~ — **closed by
+   verification round 1 (2026-09-28)**, and it was wider than it said. Every
+   model has an `idle`, so the weight-1 line prevented no T-pose on a shipped
+   model. What it changed was every attack and block cue on every figure: it
+   jumped from the stance's held frame (45% into `attack`, 60% into `block`) to
+   the clip's first frame and back, 0.41–0.46 body heights in one frame on the
+   proportioned bodies' attack (`main`'s blend toward idle frame 0 jumped 0.61–0.66).
+   The fix is two actions: the stance holds on the clip's `restTwin`, a second
+   action map built at commit, so the cue crossfades off the held pose and back
+   (0.03–0.05; evidence §9.2, with the table for every model).
 5. ~~**A long `--ai-name`, or a counters row,** would wrap the opponent's plate
    below the band.~~ — **closed on the rebase (2026-09-27)**, as decided on
    review (ellipsise the name) and for a reason the rebase found: match setup's plate
@@ -4425,6 +4439,15 @@ node tools/build-workshop-catalog.ts --check                    # step 12b
    the markup to four rows (six with match setup's plate).
 6. ~~**The rebase onto `main` (`a092d3a`, match setup).**~~ — **done
    (2026-09-27)**; *The rebase*, below.
+7. **Step 6 checks the stack's ORDER on one id-set.** Question 6 compares
+   `stack` and `stackCards` on every id-set both recordings caught, but order
+   only means something with two or more items. g1 has one such id-set, the
+   three-item stack in turn 14's declare-attackers step. Every loaded
+   re-recording caught it, but a load heavy enough to cut that frame
+   differently would leave order unchecked for that run (the verdict would
+   still be honest: it prints how many id-sets it compared). A second
+   committed seed with more responses on the stack would widen it; that is a
+   new fixture, so it is the user's call.
 
 ### The rebase onto match setup (`a092d3a`, 2026-09-27)
 
@@ -4439,7 +4462,8 @@ this pass's queued `newGame` (released from the game's own
 `notice` is emitted before `emitOver` sets the flag, so it is never one of the
 dropped frames. The conflicts were all prose plus `check-all.sh`'s usage lines
 and `docs/protocol.md`'s amendment list (M45–M46 above M44, newest first). No
-decision was renumbered (`main` stops at D108). `web/src/workshop/catalog.json`
+decision was renumbered then (`main` stopped at D108; the second rebase, below,
+renumbered them D113–D115). `web/src/workshop/catalog.json`
 was already current: match setup regenerated it for `decks/doom-legion.dck`, and
 this branch changes no deck and no `cues.json` row. Three things changed on the
 rebase itself: step **12c**, the plate (follow-up 5 above), and `RecordMatch`'s
@@ -4450,6 +4474,45 @@ s**, at a load average of 5–10 — 9c's fourteen games in 379 s, 10g's two ear
 pass / 0 fail / 8 skipped** `node --test` plus 96 vitest in step 13
 (`var/check-all-hardening-rebased.log`,
 evidence §8).
+
+### Verification round 1, and the rebase onto engine and sets (`aead79d`, 2026-09-28)
+
+The verifier re-ran every claim against `3e4acbd` and returned `passed: false`
+on one major finding and five minors. All six are fixed, and none is left as a
+follow-up. Evidence §9 has the numbers.
+
+- **Major: step 6 compared no stack.** The four questions never looked at a
+  mid-game board, and g1's final board has no stack and no combat. So the stack
+  reversed, a stack key renamed, `priority` nulled and a combat key renamed
+  (all mid-game) each passed. Two questions were added, the boundary boards and
+  the stack by id-set, and each is invariant by construction. Both held on all
+  four loaded re-recordings. The selftest has 18 cases, and the five new drifts
+  pass the old tool and fail the new one. D113 is amended, with a dated note, to
+  say what the first version understated. Follow-up 7 above is the one limit
+  left.
+- **The weight-1 line** was replaced by two actions per clip (follow-up 4
+  above, closed).
+- **`MTG_TABLE_CONFIG`**: `check-all.sh` and `scripts/play.sh` unset it, and
+  `bridge/run.sh` names any other config on stderr.
+- **The crash check's duration** is quoted as ~8 s everywhere, and the script
+  prints its own time.
+- **The catalog claim** now names what it proves: a row for a non-creature deck
+  card.
+- **The rebase onto `aead79d`.** The engine and sets had landed first with
+  D109–D112, so this branch renumbered its own to D113–D115. It did this before
+  rebasing, on its own tree, where every D109–D111 was its own (92 lines in
+  16 files). The conflicts were prose only. `catalog.json` is current.
+
+The gate ran from a deleted `bridge/out` at `WSPORT=8685`: **`check-all OK`,
+exit 0, 940.5 s**, at a load average of about 9–16. Step 6's selftest was 18/18
+and all six questions said `same`, byte for byte too. 9c's fourteen games took
+384 s. In 10g, 2 early `newGame` acts were queued and released. 12c passed 20/20
+in 6 s. Step 13 ran **881 / 873 pass / 0 fail / 8 skipped** `node --test` plus 97
+vitest (`var/check-all-hardening-fix1.log`, evidence §9.7). 9b's advisory
+reported 3 more `buttonCancel` acts and 4 more `input` frames under load, with
+the same 233 `state` frames. After the gate, two seed-42 recordings on a loaded
+core, with this bridge, said SAME to all six questions and DIFFERENT under
+`--strict`. `~/forge` and `~/.forge` are unchanged.
 
 ---
 

@@ -34,8 +34,15 @@ export interface FigureRig {
    * owns a clock of its own. T2 holds a static `idle`; T3 drives `t`.
    */
   mixer: THREE.AnimationMixer;
-  /** Clip key (`idle`, `attack`, an alias) → its action on this figure. */
+  /** Clip key (`idle`, `attack`, an alias) → its action on this figure: the CUE lane's. */
   actions: Map<string, THREE.AnimationAction>;
+  /**
+   * The same keys → the REST lane's actions, each on the clip's `restTwin`
+   * (`models.ts`). Two maps so that `rest` and `clip` are never one action, even
+   * when the stance and the cue name the same clip: their weights then always sum
+   * to 1 and the stance is always a pose of its own to blend from.
+   */
+  restActions: Map<string, THREE.AnimationAction>;
   /**
    * **The clip lane's two live actions** (report 13 §3.3, T3).
    *
@@ -90,21 +97,26 @@ export type FigureRigMap = Map<number, FigureRig>;
  * live data for it — the drone has no `hit` and the insect no `summon` at all,
  * left deliberately absent in `models.json` (T2's report) so that this rung is
  * exercised rather than asserted.
+ *
+ * `lane` picks the map: `'clip'` (the default) is the cue's, `'rest'` the
+ * stance's twins — the same ladder over either.
  */
 export function actionFor(
   rig: FigureRig,
   clip: string,
   alias: string | null,
   cardAliases: Readonly<Record<string, string>>,
+  lane: 'clip' | 'rest' = 'clip',
 ): THREE.AnimationAction | null {
+  const actions = lane === 'rest' ? rig.restActions : rig.actions;
   if (alias !== null) {
-    const byCue = rig.actions.get(alias);
+    const byCue = actions.get(alias);
     if (byCue !== undefined) return byCue;
   }
   const byCard = cardAliases[clip];
   if (byCard !== undefined) {
-    const found = rig.actions.get(byCard);
+    const found = actions.get(byCard);
     if (found !== undefined) return found;
   }
-  return rig.actions.get(clip) ?? null;
+  return actions.get(clip) ?? null;
 }

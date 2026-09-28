@@ -27,7 +27,7 @@
 // because a re-partitioned batch is a DIFFERENT frame, not a reordered one.
 // Even the set of distinct card objects moved (4 and 10 cards at 2 and 8
 // loops): an intermediate board catches a card mid-change or it does not.
-// All four questions below held in every one of those runs.
+// All six questions below held in every one of those runs.
 //
 // The default asks the questions that are invariant under a re-partition, and
 // each one is invariant by construction rather than by luck:
@@ -44,14 +44,37 @@
 //      flushes on every GameEventTurnPhase (RecordMatch.BoundaryFlusher), so
 //      every phase has at least one frame;
 //   4. the FINAL `state` is identical, events aside: it is flushed after
-//      Match.startGame returns, on the game thread, with nothing left to move.
+//      Match.startGame returns, on the game thread, with nothing left to move;
+//   5. every BOUNDARY BOARD is identical, events aside, and in the same order: a
+//      `state` whose last event is a `turn`, `phase` or `outcome`.  Those three
+//      kinds are written only for GameEventTurnBegan, GameEventTurnPhase and
+//      GameEventGameOutcome (Snap.java), and BoundaryFlusher flushes
+//      synchronously AT each of them, so such a frame is cut at an engine event
+//      and never by the clock or the 50-event threshold: its board is fixed by
+//      the game.  This is where `priority`, the players, every public zone and
+//      mid-game `combat` (attackers at the blockers step, blockers at the damage
+//      step) are compared -- 347 boards in g1, at every phase of every turn;
+//   6. the STACK is identical wherever both recordings caught the same items on
+//      it: for every set of stack ids that appears in both files, `stack` and
+//      `stackCards` -- order included -- are the same JSON.  A stack's order is
+//      its push order, so one set of items has one order, and an item does not
+//      change while it waits (measured: one serialisation per id-set in every
+//      recording, docs/evidence/hardening.md §9).  At least one committed
+//      id-set must appear in the fresh file: a fresh recording that caught none
+//      of them, or a serialiser that stopped writing the stack, proves nothing.
+//      A phase boundary never has anything on the stack (a step ends only once
+//      it is empty), so question 5 cannot see the stack; this question is the
+//      stack serialiser's only check.
 //
-// What the default gives up, and says so: the board snapshots BETWEEN phase
-// boundaries.  A Snap.java change to a field that only ever appears in an
-// intermediate board (and in no event and not on the final board) would pass
-// the default and fail --strict.  The final board carries every card in every
-// public zone, and the events carry every id-level fact, so that is a narrow
-// band -- and --strict is still one flag away (check-all: STRICT_G1=1).
+// What the default gives up, and says so: a board field that differs only in a
+// snapshot taken BETWEEN two phase boundaries, is in no event, is not on the
+// stack, and has changed back by the next boundary (a creature tapped and
+// untapped within one step, say).  Under an idle machine every frame is cut in
+// the same place and --strict would pass too.  And the stack's ORDER is checked
+// only on an id-set of two or more items that both files caught -- g1 has one
+// (three items, turn 14's declare-attackers step); on an idle machine it is always caught, and
+// under the heaviest load measured (8 busy loops) it still was.  --strict is one
+// flag away (check-all: STRICT_G1=1).
 //
 // Output: a verdict line per question and the first difference of each, never
 // piped through `head` (step 6 used to be `diff | head`, which exits 141 under
@@ -157,6 +180,50 @@ if (strict) {
   report('event stream (every state.events[] entry, in order)', events(A), events(B), 'events');
   report('phase walk (turn, phase, active player)', walk(A), walk(B), 'steps');
   report('final state (events aside)', finalBoard(A), finalBoard(B), 'frame');
+  // 5. Boards cut AT an engine boundary event.  The `@` suffix names the event,
+  // so a difference prints where in the game it is.
+  const BOUNDARY = new Set(['turn', 'phase', 'outcome']);
+  const boundaryBoards = (L) => {
+    const out = [];
+    for (const f of states(L)) {
+      const ev = Array.isArray(f.body?.events) ? f.body.events : [];
+      const last = ev[ev.length - 1];
+      if (last === undefined || !BOUNDARY.has(last?.kind)) continue;
+      const { events: _events, ...board } = f.body;
+      out.push(`@${JSON.stringify(last)} ${JSON.stringify(board)}`);
+    }
+    return out;
+  };
+  report('boundary boards (every turn, phase and outcome flush)', boundaryBoards(A), boundaryBoards(B), 'boards');
+  // 6. The stack, keyed by the SET of ids on it (sorted), valued by the ordered
+  // `stack` and `stackCards`.  Every serialisation seen for an id-set is kept,
+  // so an id-set that meant two different stacks in one file would show.
+  const stacks = (L) => {
+    const m = new Map();
+    for (const f of states(L)) {
+      const st = Array.isArray(f.body?.stack) ? f.body.stack : [];
+      if (st.length === 0) continue;
+      const key = st.map((x) => Number(x?.id)).sort((x, y) => x - y).join(',');
+      if (!m.has(key)) m.set(key, new Set());
+      m.get(key).add(JSON.stringify({ stack: st, stackCards: f.body.stackCards ?? null }));
+    }
+    return m;
+  };
+  const sA = stacks(A);
+  const sB = stacks(B);
+  const shared = [...sA.keys()].filter((k) => sB.has(k)).sort();
+  const serial = (m, k) => [...m.get(k)].sort().join(' | ');
+  report(
+    `stack (the ${String(shared.length)} id-set(s) both caught, of ${String(sA.size)} and ${String(sB.size)}; order included)`,
+    shared.map((k) => `[${k}] ${serial(sA, k)}`),
+    shared.map((k) => `[${k}] ${serial(sB, k)}`),
+    'id-sets',
+  );
+  if (sA.size > 0 && shared.length === 0) {
+    failed += 1;
+    console.log(`  DIFFER stack: none of the committed file's ${String(sA.size)} stack id-set(s) is in the fresh one, `
+      + 'so the stack was never compared');
+  }
   if (states(A).length === 0 || states(B).length === 0) {
     failed += 1;
     console.log('  DIFFER a recording with no `state` frame proves nothing');

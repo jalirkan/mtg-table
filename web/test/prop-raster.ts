@@ -204,6 +204,7 @@ export function rigOf(pose: FigurePose, library: ModelLibrary, yaw = 0): FigureR
     root,
     mixer: instance.mixer,
     actions: new Map(),
+    restActions: new Map(),
     rest: null,
     clip: null,
     restTime: 0,

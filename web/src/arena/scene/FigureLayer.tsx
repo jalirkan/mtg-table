@@ -64,6 +64,7 @@ import {
   instantiateFigure,
   loadFigureModels,
   peekFigureModels,
+  restTwin,
   type FigureInstance,
   type LoadedModel,
   type ModelLibrary,
@@ -250,11 +251,17 @@ const Figure = memo(function Figure({
     const material = makeHoloMaterial(pose.tint, model.unitScale);
     for (const mesh of instance.meshes) mesh.material = material;
 
+    // Two actions per clip: the cue lane's and the rest lane's (on the clip's
+    // `restTwin`), so a stance and a cue on the same clip are never one action.
     const actions = new Map<string, THREE.AnimationAction>();
+    const restActions = new Map<string, THREE.AnimationAction>();
     for (const [key, clip] of model.clips) {
       const action = instance.mixer.clipAction(clip);
       action.enabled = false;
       actions.set(key, action);
+      const rest = instance.mixer.clipAction(restTwin(clip));
+      rest.enabled = false;
+      restActions.set(key, rest);
     }
 
     // **The first frame's pose, and nothing more.** From T3 the clip lane owns
@@ -262,8 +269,9 @@ const Figure = memo(function Figure({
     // so that a figure that mounts between two `useFrame` passes is standing in
     // its idle rather than in its bind pose for one frame. §8.3 rule 1 and user
     // decision 7 still hold — the idle only *advances* while the queue is awake,
-    // so `frameloop='demand'` keeps its measured zero idle frames.
-    const idle = actions.get('idle');
+    // so `frameloop='demand'` keeps its measured zero idle frames. It is the
+    // REST lane's idle, the one the clip lane then adopts as `rest`.
+    const idle = restActions.get('idle');
     if (idle !== undefined) {
       idle.enabled = true;
       idle.setEffectiveWeight(1);
@@ -274,7 +282,7 @@ const Figure = memo(function Figure({
     // returns `this.time` untouched for `deltaTime === 0` (three 0.186).
     instance.mixer.update(0);
 
-    return { instance, material, actions };
+    return { instance, material, actions, restActions };
     // `pose.tint` is read once for the initial value; the live one is written by
     // `CueRunner` into the uniform every frame, so it is not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -302,6 +310,7 @@ const Figure = memo(function Figure({
       root: built.instance.object,
       mixer: built.instance.mixer,
       actions: built.actions,
+      restActions: built.restActions,
       material: built.material,
       pose,
       appliedTint: null,

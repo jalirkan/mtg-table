@@ -147,8 +147,9 @@ failure: `check-forge.sh` →
 `bridge/build.sh` (javac plus four self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
 `fixtures/games/g1.jsonl` (`tools/wire-drift.mjs`: the same non-state frames,
-event stream, phase walk and final board — where a flush cuts the event stream
-is wall-clock, so byte for byte is `STRICT_G1=1`, **D113**) → **three fresh human-seat games** (`--transport
+event stream, phase walk and final board, every board cut at a turn, phase or
+outcome event, and the stack wherever both caught the same items — where a flush
+cuts the event stream is wall-clock, so byte for byte is `STRICT_G1=1`, **D113**) → **three fresh human-seat games** (`--transport
 null`, the scripted `--transport console` smoke, and `--transport auto --seed
 11`, each asserted to end in exactly one `over` as its last frame, plus the
 advisory **9b** that re-records seed 42 and compares it against
@@ -180,13 +181,13 @@ corpus and `cues.json` make → **12c**, `tools/check-engine-crash.sh`, which
 builds an engine crash on purpose (a card script the 2.0.14 jar cannot build, in
 a scratch Forge home under `var/crash-probe/`) and asserts that `MtgTable` and
 `RecordMatch` both fail with the cause and end their frame logs in an error
-`notice` and a null `over` that never names the card (**D115**, about six
-seconds) → `npm run build && npm test` in
+`notice` and a null `over` that never names the card (**D115**, about
+8 s) → `npm run build && npm test` in
 `web/`. **About fifteen to nineteen minutes** from a deleted `bridge/out` since
 match setup added five games (874 s on its first run; 1,141 s on its review fix
 pass and 1,143 s on its documentation pass, each on a machine running other gates
 at the same time; 1,106 s and 970 s rebased onto `23e26b3`; 897 s rebased onto the
-workshop's `bf0392b`; 938.8 s with the hardening pass rebased onto it), about eleven and a half
+workshop's `bf0392b`; 938.8 s with the hardening pass rebased onto it; 940.5 s after its first verification round, rebased onto engine and sets' `aead79d`), about eleven and a half
 before it (682 s and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added
 9d and 10g), of which 9c's fourteen games are most and the seven ws servers much
 of the rest; `SKIP_TEN=1` saves 9c (370 s of the 874). Every JVM step runs
@@ -287,7 +288,7 @@ npm --prefix web run dev            # then http://127.0.0.1:5173/#cards
 ./tools/ten-games.sh --seed 13     # one row: your deck vs the villain, Reckless
 
 # The 2026-09-27 hardening pass — two self-checks, both in the gate.
-./tools/check-engine-crash.sh      # D115, check-all's 12c, ~6 s: a card the engine
+./tools/check-engine-crash.sh      # D115, check-all's 12c, ~8 s: a card the engine
                                    # cannot build, in a scratch Forge home under
                                    # var/crash-probe/, must fail MtgTable AND
                                    # RecordMatch with the cause and end each frame
@@ -2004,7 +2005,9 @@ mtg-table/
                              assert every one-defect probe is REJECTED
     wire-drift.mjs           step 6 (D113): is a fresh seed-42 recording the same wire
                              as fixtures/games/g1.jsonl -- non-state frames, event
-                             stream, phase walk, final board; --strict is byte for byte
+                             stream, phase walk, final board, the boards cut at a
+                             turn/phase/outcome event, the stack; --strict is byte
+                             for byte
     wire-drift-selftest.mjs  step 6 runs it first: re-partitions accepted, drifts rejected
     check-engine-crash.sh    step 12c (D115): an engine crash in a scratch Forge home
                              under var/crash-probe/ must fail the run and end the log

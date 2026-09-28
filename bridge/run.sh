@@ -19,7 +19,8 @@
 #       which Config.java already documents and which this line used to
 #       override.  tools/check-engine-crash.sh points it at a scratch config
 #       under var/ whose Forge home carries a card the engine cannot build;
-#       nothing else sets it (D115).
+#       nothing else sets it (D115), and check-all.sh and scripts/play.sh unset
+#       it.  Any other config is named on stderr, so a stray export shows.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/../tools" && pwd)/config.sh"
@@ -31,12 +32,17 @@ set -euo pipefail
 # Relative paths in config.json (forgeHome, deck) are repo-relative.
 cd "$REPO_ROOT"
 
+CONFIG="${MTG_TABLE_CONFIG:-$REPO_ROOT/config.json}"
+if [ "$CONFIG" != "$REPO_ROOT/config.json" ]; then
+  echo "bridge/run.sh: config $CONFIG (from MTG_TABLE_CONFIG), not $REPO_ROOT/config.json" >&2
+fi
+
 exec env -u DISPLAY java \
   -Xmx4096m \
   -Djava.awt.headless=true \
   -Dio.netty.tryReflectionSetAccessible=true \
   -Dfile.encoding=UTF-8 \
   -Dsentry.uncaught.handler.enabled=false \
-  -Dmtgtable.config="${MTG_TABLE_CONFIG:-$REPO_ROOT/config.json}" \
+  -Dmtgtable.config="$CONFIG" \
   -cp "$REPO_ROOT/bridge/out:$FORGE_JAR" \
   "$@"

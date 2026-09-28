@@ -770,6 +770,10 @@ function applyFigures(
  *    skipped cue — applied once at `t = 1` and then ended — leaves the figure
  *    standing exactly where `figurePose` says it stands.
  *
+ * The two lanes read two maps (`rig.restActions`, on each clip's `restTwin`, and
+ * `rig.actions`), so they are two actions even when the stance and the cue name
+ * the same clip, and `1 − weight` + `weight` is always the whole weight.
+ *
  * `action.time` is written and `mixer.update(0)` applies the bindings without
  * advancing a clock: `AnimationAction._updateTime` opens with
  * `if (deltaTime === 0) { if (loopCount === -1) return time; … }` (verified in the
@@ -828,7 +832,9 @@ export function driveClips(
 
   // -- the stance ----------------------------------------------------------
   const restClip = REST_CLIP_FOR[pose.stance];
-  const rest = actionFor(rig, restClip, null, aliases) ?? actionFor(rig, 'idle', null, aliases);
+  // The REST lane's own actions (`restTwin`): never the transient's, even when
+  // the stance and the cue name the same clip.
+  const rest = actionFor(rig, restClip, null, aliases, 'rest') ?? actionFor(rig, 'idle', null, aliases, 'rest');
   if (rig.rest !== rest) {
     if (rig.rest !== null && rig.rest !== wanted) {
       rig.rest.stop();
@@ -841,12 +847,14 @@ export function driveClips(
       rest.play();
     }
   }
-  // One action is both lanes, so it carries the whole weight. Left at the
-  // transient's ramp (< 1), three blends the remainder with the clone's original
-  // pose, which on a model with no `idle` is its bind pose (D95, slice-4
-  // follow-up 8; `test/clip-lane.test.tsx`).
-  if (rest !== null && rest === wanted) rest.setEffectiveWeight(1);
-  if (rest === null || rest === wanted) return;
+  // `rest` and `wanted` come from two maps, so they are two actions even on the
+  // same clip, and `1 − weight` + `weight` is always the whole weight. When they
+  // were one action (an attack cue on an attacking figure) it carried only the
+  // ramp, and three filled the remainder with the clone's original pose: the
+  // bind pose on a model with no `idle` (D95, slice-4 follow-up 8), and a jump
+  // off the held stance at both ends of the cue on every model
+  // (`test/clip-lane.test.tsx` holds both).
+  if (rest === null) return;
   const breathes = awake && !frozen && BREATHING_STANCES.has(pose.stance);
   if (breathes) rig.restTime += dt;
   const duration = rest.getClip().duration;

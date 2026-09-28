@@ -3,7 +3,7 @@
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Usage:  ./tools/check-engine-crash.sh          # ~10 s; check-all.sh runs it as 12c
+# Usage:  ./tools/check-engine-crash.sh          # ~8 s; check-all.sh runs it as 12c
 #
 # The defect: a card the engine cannot build throws out of Match.prepareAllZones
 # on Forge's game thread before turn 1, nothing in Forge catches it, and
@@ -129,7 +129,7 @@ grep -q '^RECORD FAILED: ' "$P/record.log" \
   || { echo "  FAIL  RecordMatch prints RECORD FAILED"; fails=$((fails + 1)); }
 
 if [ "$fails" -gt 0 ]; then
-  echo "check-engine-crash: $fails assertion(s) FAILED"
+  echo "check-engine-crash: $fails assertion(s) FAILED (${SECONDS} s)"
   exit 1
 fi
-echo "check-engine-crash OK: an engine crash before turn 1 fails both runs, with the cause, and ends the log in \`over\`"
+echo "check-engine-crash OK: an engine crash before turn 1 fails both runs, with the cause, and ends the log in \`over\` (${SECONDS} s)"

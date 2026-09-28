@@ -5147,7 +5147,7 @@ describe.
 
 ---
 
-## D113 — Gate step 6 compares what a busy machine cannot move: the non-state frames, the event stream, the phase walk and the final board; byte for byte is `STRICT_G1=1`
+## D113 — Gate step 6 compares what a busy machine cannot move: the non-state frames, the event stream, the phase walk, the final board, every board cut at a phase boundary, and the stack; byte for byte is `STRICT_G1=1`
 
 **2026-09-27** (the hardening pass, PLAN.md slice-4 follow-up 13(b);
 `docs/evidence/hardening.md` §1. *Written as D109 on the `hardening`
@@ -5155,12 +5155,15 @@ branch, which was open at `bf0392b` while match setup's D105–D108 landed and w
 rebased onto `main`'s `a092d3a` on 2026-09-27 with nothing renumbered. On its
 rebase onto `main`'s `aead79d` (2026-09-28) the engine and sets' D109–D112 had
 landed first, so, as the note above D109 asks, this branch renumbered its own:
-D109–D111 became D113–D115, in every file that cites them.*)
+D109–D111 became D113–D115, in every file that cites them. **Amended
+2026-09-28** by the branch's first verification round: questions 5 and 6 below
+were added because the first four never compared the stack, `stackCards`,
+`priority` or mid-game combat — see *Known cost*.*)
 
 **Decision.** Step 6 of `tools/check-all.sh` no longer diffs the fresh seed-42
 `RecordMatch` recording against `fixtures/games/g1.jsonl` byte for byte. It
 runs `tools/wire-drift.mjs`, which normalises the per-run values as before (`t`,
-`startedAt`, `gameId`) and then requires four things to be identical:
+`startedAt`, `gameId`) and then requires six things to be identical:
 
 1. every **non-state frame** (session header, `hello_ok`, `over`), in order,
    apart from its `seq`;
@@ -5168,14 +5171,27 @@ runs `tools/wire-drift.mjs`, which normalises the per-run values as before (`t`,
    order;
 3. the **phase walk**: the (turn, phase, active player) sequence the frames pass
    through, consecutive repeats collapsed;
-4. the **final `state`**, events aside.
+4. the **final `state`**, events aside;
+5. every **boundary board**, events aside and in order: a `state` whose last
+   event is a `turn`, `phase` or `outcome`. Snap writes those three kinds only
+   for `GameEventTurnBegan`, `GameEventTurnPhase` and `GameEventGameOutcome`, and
+   `RecordMatch.BoundaryFlusher` flushes synchronously AT each of them, so such a
+   frame is cut at an engine event, never by the clock: 347 boards in g1, where
+   `priority`, every public zone and mid-game combat are compared;
+6. the **stack**, wherever both recordings caught the same items on it: for every
+   set of stack ids that appears in both files, `stack` and `stackCards`, order
+   included, are the same JSON; and at least one committed id-set must appear in
+   the fresh file.
 
 `tools/wire-drift-selftest.mjs` runs first, in the same step, and proves the
-comparison still rejects drift. It builds eleven one-edit copies of g1: an
-identical copy, three re-partitions that the default must accept and `--strict`
-must reject, and seven drifts both must reject (a dropped or changed event,
-lowercased phase names, `power` as a number, a different winner, a changed
-`hello_ok`, no states). `STRICT_G1=1` puts the old byte-for-byte comparison
+comparison still rejects drift. It builds eighteen one-edit copies of g1: an
+identical copy, five re-partitions that the default must accept and `--strict`
+must reject (two of them move a stack snapshot: one the fresh file lacks, one
+the committed file never caught), and twelve drifts both must reject (a dropped
+or changed event, lowercased phase names, `power` as a number, a different
+winner, a changed `hello_ok`, no states; and the verifier's four — the stack
+reversed, a stack-item key renamed, `priority` nulled and combat's `blockerIds`
+renamed in every state but the last — plus a stack never written). `STRICT_G1=1` puts the old byte-for-byte comparison
 back. The step now prints its own verdict and exits 1 on a difference. The
 old `diff | head -20` under `set -o pipefail` exited 141 with no message.
 
@@ -5185,9 +5201,12 @@ events, and when a batch posted off the game thread joins the next game-thread
 flush. So on a busy machine the same game comes back cut differently. This was
 measured, not assumed. Seed 42 was re-recorded with the JVM pinned to one core
 shared with 2, 4 and 8 busy loops. Against g1's 377 lines the runs gave 383, 387
-and 395 lines. In all three the four questions above held: 1,651 events, 322
-phase-walk steps, the same final board and the same three non-state frames. An
-unloaded run was byte-identical.
+and 395 lines. In all three the six questions above held: 1,651 events, 322
+phase-walk steps, the same final board, the same three non-state frames, the
+same 347 boundary boards, and the same stack on every id-set both caught (17, 17
+and 14 of g1's 17, the three-item stack of turn 14's attack among them every
+time). So did two more, recorded after the verification round with its bridge at 4
+and 8 loops (386 and 395 lines). An unloaded run was byte-identical.
 
 The task asked whether step 6 should become 9b's multiset comparison. It should
 not. The multiset fails the same three loaded runs, with 7/13, 13/23 and 26/44
@@ -5195,20 +5214,36 @@ frames only in the fixture / only in the fresh file. A re-partitioned batch is a
 different frame, not a reordered one. Even the set of distinct card objects
 moved (4 and 10 cards at 2 and 8 loops), because an intermediate board catches a
 card mid-change or it does not. So that set is not a question either. Each of
-the four questions is invariant by construction:
+the six questions is invariant by construction:
 
 - the non-state frames are not flushes;
 - a flush moves events between frames but never drops or reorders one;
 - the recorder flushes on every `GameEventTurnPhase`;
-- the final state is flushed after `Match.startGame` returns.
+- the final state is flushed after `Match.startGame` returns;
+- a boundary board is cut at an engine event, so the game fixes it;
+- a stack's order is its push order, so one set of items has one order, and an
+  item does not change while it waits (measured: one serialisation per id-set in
+  all five recordings, g1 and the four re-recordings).
 
-**Known cost.** The board snapshots between phase boundaries are no longer
-compared. A `Snap.java` change to a field that appears only on an intermediate
-board, and in no event and not on the final board, would pass the default and
-fail `STRICT_G1=1`. The final board carries every card in every public zone, and
-the events carry every id-level fact, so the band is narrow. The strict mode is
-one variable away for a change to `Snap.java`, and it is worth running on an idle
-machine when you make one.
+**Known cost.** As first written (four questions) the known cost was stated as
+"the board snapshots between phase boundaries". That understated it, and the
+branch's first verifier measured by how much: **the whole stack serialisation
+was outside the check.** A phase boundary never has anything on the stack (a
+step ends only once it is empty) and g1's final board has an empty stack, so the
+stack reversed top-first, a stack-item key renamed, `priority` nulled in every
+state but the last and combat's `blockerIds` renamed in every state but the last
+were each accepted — while step 6's own comment still said it caught "a stack
+ordered top-first". Questions 5 and 6 answer them, and each is in the selftest.
+
+What the default still gives up: a board field that differs only in a snapshot
+taken BETWEEN two phase boundaries, is in no event, is not on the stack, and has
+changed back by the next boundary (a creature tapped and untapped within one
+step, say). And the stack's ORDER is checked only on an id-set of two or more
+items that both files caught; g1 has one, the three-item stack of turn 14's
+declare-attackers step, and every loaded re-recording caught it, but a load
+heavy enough to miss it would leave order unchecked for that run. The strict
+mode is one variable away for a change to `Snap.java`, and it is worth running on
+an idle machine when you make one.
 
 **Rejected.** Keeping the byte diff and re-running until green. That teaches
 everyone to ignore the gate, which is the argument 9b's header already makes.
@@ -5323,7 +5358,16 @@ gate. **Amended on the rebase onto `a092d3a` (2026-09-27):** it is now gate step
 **12c**, beside the other self-checks, as decided when the pass was reviewed
 (PLAN.md's hardening follow-up 2, closed). The step requires all twenty of its
 assertions, and it needs no `node_modules`, so it runs under `SKIP_WEB=1` and
-`SKIP_TEN=1` too.
+`SKIP_TEN=1` too. **Amended on the rebase onto `aead79d` (2026-09-28):**
+`check-all.sh` and `scripts/play.sh` unset `MTG_TABLE_CONFIG`, and
+`bridge/run.sh` names any config other than the repo's on stderr, so only the
+crash check's own runs can use another one (the first verification round).
+
+The probe's Depower script is not a card script in the sense of the engine and
+sets' **D111**. It never enters `forge-home/custom-cards/`, it is written into a
+scratch home under `var/` and deleted with it, and it is built to fail. It
+reproduces D111's own measurement, that one unbuildable card takes the game down
+before turn 1, and makes that failure a gate assertion.
 
 **Rationale.** Nothing in Forge catches what the game runnable throws, because
 `ThreadUtil.invokeInGameThread` is a plain `ExecutorService.execute`. The failure
