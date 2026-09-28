@@ -17,6 +17,15 @@
 #      what those rows guard is the profile path, and a gate that skipped them
 #      because a deck was missing would be a gate that said nothing.
 #
+# Its sibling is tools/build-deck.ts, which WRITES the AI decks: every
+# decks/*.dck other than the user's two (pacho-shield.dck, and the Reality
+# Fracture pool fra-rw-aggro.dck) and the probes is built from a spec in
+# decks/specs/ (doom-legion.dck included, byte for byte).  Adding a deck there
+# does not make it the gate's villain -- this file names one, on purpose -- and
+# tools/deck-smoke.sh is where the others are played (NOT in the gate).  To run
+# the gate's villain rows against another of them, say so:
+#   VILLAIN_DECK=decks/masters-of-evil.dck ./tools/ten-games.sh --seed 13
+#
 # Nothing here exits: the caller decides what a missing VILLAIN_DECK costs.
 # shellcheck shell=bash
 

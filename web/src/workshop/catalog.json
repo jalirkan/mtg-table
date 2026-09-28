@@ -468,6 +468,273 @@
       ]
     },
     {
+      "file": "hulk-family.dck",
+      "name": "Hulk Family (Marvel Super Heroes gamma)",
+      "cards": [
+        {
+          "name": "Rick Jones, Destined Sidekick",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Birds of Paradise",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Brawn, Amadeus Cho",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hellcat, Undying Vigilante",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Knight of Wundagore",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Gallant Citizen",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "HULK SMASH!",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Gamma Grotesque",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "She-Hulk, Attorney-at-Law",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hercules, Prince of Power",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulkling, Burgeoning Bruiser",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulk, Brutal Brawler",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulk, Strongest There Is",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Abomination, Irradiated Brute",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Abomination, Terrifying Titan",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "She-Hulk, Jade Defender",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wolverine, Fierce Fighter",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulk, Gamma Goliath",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Red Hulk",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Los Diablos Missile Base",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Training Compound",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Rootbound Crag",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Forest",
+          "count": 9,
+          "section": "main"
+        },
+        {
+          "name": "Mountain",
+          "count": 5,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "masters-of-evil.dck",
+      "name": "Masters of Evil (Marvel Super Heroes villains)",
+      "cards": [
+        {
+          "name": "Whiplash, Vengeful Engineer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Lightning Bolt",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Shock",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Songbird, Sonic Screamer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "MACH-1, Swooping Scoundrel",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Yellowjacket, Heartless Marauder",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Boomerang, Blade Flinger",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Fixer, Techno Terror",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "White Widow, Yelena Belova",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Common Crook",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Night's Whisper",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Whirlwind, Killer Cyclone",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Volcanic Villain",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Klaw, Sonic Subjugator",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Titania, Proud Pummeler",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Moonstone, Harsh Mistress",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Tiger Shark, Abyssal Hunter",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Atlas, Sizable Stooge",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Avengers: Under Siege",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Radioactive Man",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "The Masters of Evil",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hell's Kitchen",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dark Fortress",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Villainous Hideout",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dragonskull Summit",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Swamp",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Mountain",
+          "count": 6,
+          "section": "main"
+        }
+      ]
+    },
+    {
       "file": "morph-probe.dck",
       "name": "Morph probe",
       "cards": [
@@ -574,6 +841,132 @@
         {
           "name": "Garruk's Companion",
           "count": 22,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "wakanda.dck",
+      "name": "Wakanda (Marvel Super Heroes Black Panther)",
+      "cards": [
+        {
+          "name": "Swords to Plowshares",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Vibranium Energy Daggers",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Shuri, the Black Panther",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "T'Chaka, Venerable King",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dora Milaje Elite",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Wakandan Shield Guard",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Gallant Citizen",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Wakandan Tusker",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "T'Challa, the Black Panther",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Black Panther, Claws of Bast",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Black Panther, Most Dangerous",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Nakia, Wakandan Operative",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Shuri, Vibranium Technologist",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Black Panther, Vanguard",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Okoye, Dora Milaje Leader",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Okoye, Mighty and Adored",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wakandan Drone Flock",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Warriors of Wakanda",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Storm, Queen of Wakanda",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Birnin Zana Plaza",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Gathering Place",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Sunpetal Grove",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Plains",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Forest",
+          "count": 7,
           "section": "main"
         }
       ]
@@ -981,60 +1374,129 @@
   ],
   "missing": [
     "A.I.M. Bot",
+    "Abomination, Irradiated Brute",
+    "Abomination, Terrifying Titan",
     "Agents of HYDRA",
     "Ajani's Anguish",
+    "Atlas, Sizable Stooge",
     "Austere Command",
+    "Avengers: Under Siege",
     "Baron Strucker, HYDRA Overlord",
+    "Birds of Paradise",
+    "Birnin Zana Plaza",
+    "Black Panther, Claws of Bast",
+    "Black Panther, Most Dangerous",
+    "Black Panther, Vanguard",
+    "Boomerang, Blade Flinger",
+    "Brawn, Amadeus Cho",
     "Castle Doom",
     "Chandra's Emberling",
+    "Common Crook",
     "Crossbones, Malicious Mercenary",
     "Dark Deed",
+    "Dark Fortress",
     "Doctor Doom",
     "Doom Blade",
     "Doom Reigns Supreme",
     "Doom's Servo-Guards",
+    "Dora Milaje Elite",
+    "Dragonskull Summit",
     "Eardrum Rattler",
+    "Fixer, Techno Terror",
     "Frozen in Ice",
     "Fulminous Forte",
+    "Gallant Citizen",
     "Gallia, the Merrymaker",
+    "Gamma Grotesque",
+    "Gathering Place",
     "Ghalta the Immovable",
     "Giant Growth",
     "Graft Surgeon",
+    "HULK SMASH!",
     "HYDRA Troopers",
+    "Hell's Kitchen",
+    "Hellcat, Undying Vigilante",
+    "Hercules, Prince of Power",
     "Hexhaven Battalion",
     "Hidden Lair",
     "Hour of Defeat",
+    "Hulk, Brutal Brawler",
+    "Hulk, Gamma Goliath",
+    "Hulk, Strongest There Is",
+    "Hulkling, Burgeoning Bruiser",
     "Jiang Yanggu, Alone",
     "Kang the Conqueror",
     "Kang, Temporal Tyrant",
+    "Klaw, Sonic Subjugator",
+    "Knight of Wundagore",
     "Koth, the Geomancer",
+    "Lightning Bolt",
     "Loki, God of Mischief",
+    "Los Diablos Missile Base",
+    "MACH-1, Swooping Scoundrel",
     "Mabel, Valley Hero",
     "Madame Hydra, Reanimated",
     "Medic's Kitesail",
+    "Moonstone, Harsh Mistress",
+    "Nakia, Wakandan Operative",
+    "Night's Whisper",
     "No Admittance",
+    "Okoye, Dora Milaje Leader",
+    "Okoye, Mighty and Adored",
     "Pharaoh Rama-Tut",
     "Pyre Rhymer",
+    "Radioactive Man",
+    "Red Hulk",
+    "Rick Jones, Destined Sidekick",
     "Room of Refuge",
+    "Rootbound Crag",
     "Samut, Hazoret's Champion",
     "Shatterwing Pegasus",
+    "She-Hulk, Attorney-at-Law",
+    "She-Hulk, Jade Defender",
+    "Shock",
+    "Shuri, Vibranium Technologist",
+    "Shuri, the Black Panther",
+    "Songbird, Sonic Screamer",
+    "Storm, Queen of Wakanda",
+    "Sunpetal Grove",
     "Surgical Precision",
     "Swamp",
+    "Swords to Plowshares",
+    "T'Chaka, Venerable King",
+    "T'Challa, the Black Panther",
     "Thalia, the Survivor",
+    "The Masters of Evil",
     "Thriving Moor",
+    "Tiger Shark, Abyssal Hunter",
+    "Titania, Proud Pummeler",
+    "Training Compound",
     "Unliving Legionnaire",
+    "Vibranium Energy Daggers",
     "Villainous Hideout",
     "Visions of Villainy",
+    "Volcanic Villain",
+    "Wakandan Drone Flock",
+    "Wakandan Shield Guard",
+    "Wakandan Tusker",
+    "Warriors of Wakanda",
     "Way of the Pyromancer",
     "Whiplash Wordsmith",
+    "Whiplash, Vengeful Engineer",
+    "Whirlwind, Killer Cyclone",
+    "White Widow, Yelena Belova",
+    "Wolverine, Fierce Fighter",
     "Woodwork Prodigy",
     "Wrath of the Bloodmane",
+    "Yellowjacket, Heartless Marauder",
     "Yoshimaru, Beloved Companion",
     "Your Fate Ends Here"
   ],
   "threeD": {
     "A.I.M. Bot": null,
     "A.I.M. Scientists": "figure",
+    "Abomination, Irradiated Brute": null,
+    "Abomination, Terrifying Titan": null,
     "Aerial Doombot": "figure",
     "Agent 13, Sharon Carter": "figure",
     "Agent Phil Coulson": "figure",
@@ -1045,51 +1507,86 @@
     "Ant-Man's Air Force": "figure",
     "Ant-Man, Reformed Rogue": "figure",
     "Ashcloud Phoenix": "figure",
+    "Atlas, Sizable Stooge": null,
     "Austere Command": null,
+    "Avengers: Under Siege": null,
     "Baron Strucker, HYDRA Overlord": null,
     "Battering Craghorn": "figure",
+    "Birds of Paradise": null,
+    "Birnin Zana Plaza": null,
+    "Black Panther, Claws of Bast": null,
+    "Black Panther, Most Dangerous": null,
+    "Black Panther, Vanguard": null,
     "Bold Biochemist": "figure",
+    "Boomerang, Blade Flinger": null,
     "Borough Backup": "cues",
+    "Brawn, Amadeus Cho": null,
     "Castle Doom": null,
     "Chandra's Emberling": null,
     "Clue Token": null,
+    "Common Crook": null,
     "Crossbones, Malicious Mercenary": null,
     "Dark Deed": null,
+    "Dark Fortress": null,
     "Depower": "cues",
     "Doctor Doom": null,
     "Doom Blade": null,
     "Doom Reigns Supreme": null,
     "Doom's Servo-Guards": null,
+    "Dora Milaje Elite": null,
+    "Dragonskull Summit": null,
     "Eardrum Rattler": null,
+    "Fixer, Techno Terror": null,
     "Forest": null,
     "Frozen in Ice": null,
     "Fulminous Forte": null,
     "Future Sight": null,
+    "Gallant Citizen": null,
     "Gallia, the Merrymaker": null,
+    "Gamma Grotesque": null,
     "Garruk's Companion": "figure",
+    "Gathering Place": null,
     "Ghalta the Immovable": null,
     "Giant Growth": null,
     "Giant-Sized Flying Ant": "figure",
     "Graft Surgeon": null,
+    "HULK SMASH!": null,
     "HYDRA Troopers": null,
     "Helicarrier Strike": "cues",
+    "Hell's Kitchen": null,
+    "Hellcat, Undying Vigilante": null,
+    "Hercules, Prince of Power": null,
     "Hero Token": "figure",
     "Hexhaven Battalion": null,
     "Hidden Lair": null,
     "Hour of Defeat": null,
+    "Hulk, Brutal Brawler": null,
+    "Hulk, Gamma Goliath": null,
+    "Hulk, Strongest There Is": null,
+    "Hulkling, Burgeoning Bruiser": null,
     "Island": "cues",
     "Jiang Yanggu, Alone": null,
     "Kang the Conqueror": null,
     "Kang, Temporal Tyrant": null,
+    "Klaw, Sonic Subjugator": null,
+    "Knight of Wundagore": null,
     "Koth, the Geomancer": null,
+    "Lightning Bolt": null,
     "Loki, God of Mischief": null,
+    "Los Diablos Missile Base": null,
+    "MACH-1, Swooping Scoundrel": null,
     "Mabel, Valley Hero": null,
     "Madame Hydra, Reanimated": null,
     "Manamorphose": null,
     "Medic's Kitesail": null,
+    "Moonstone, Harsh Mistress": null,
     "Mountain": null,
+    "Nakia, Wakandan Operative": null,
     "Nick Fury, Spymaster": "figure",
+    "Night's Whisper": null,
     "No Admittance": null,
+    "Okoye, Dora Milaje Leader": null,
+    "Okoye, Mighty and Adored": null,
     "Opt": null,
     "Peggy Carter, Secret Agent": "figure",
     "Pharaoh Rama-Tut": null,
@@ -1098,35 +1595,65 @@
     "Pyre Rhymer": null,
     "Quake, Agent of S.H.I.E.L.D.": "figure",
     "Quantum Reduction": "cues",
+    "Radioactive Man": null,
     "Rampant Growth": null,
+    "Red Hulk": null,
+    "Rick Jones, Destined Sidekick": null,
     "Robot Token": "figure",
     "Robotics Mastery": "cues",
     "Room of Refuge": null,
+    "Rootbound Crag": null,
     "S.H.I.E.L.D. Helicarrier": "figure",
     "S.H.I.E.L.D. Spy Kit": "cues",
     "Samut, Hazoret's Champion": null,
     "Saproling Token": "figure",
     "Shatterwing Pegasus": null,
+    "She-Hulk, Attorney-at-Law": null,
+    "She-Hulk, Jade Defender": null,
+    "Shock": null,
+    "Shuri, Vibranium Technologist": null,
+    "Shuri, the Black Panther": null,
     "Soldier Token": "figure",
+    "Songbird, Sonic Screamer": null,
+    "Storm, Queen of Wakanda": null,
     "Strategic Intervention": "cues",
+    "Sunpetal Grove": null,
     "Super Suit": "cues",
     "Surgical Precision": null,
     "Swamp": null,
+    "Swords to Plowshares": null,
+    "T'Chaka, Venerable King": null,
+    "T'Challa, the Black Panther": null,
     "Thalia, the Survivor": null,
     "Thallid": "figure",
+    "The Masters of Evil": null,
     "Thriving Heath": "cues",
     "Thriving Isle": "cues",
     "Thriving Moor": null,
+    "Tiger Shark, Abyssal Hunter": null,
+    "Titania, Proud Pummeler": null,
+    "Training Compound": null,
     "Unliving Legionnaire": null,
+    "Vibranium Energy Daggers": null,
     "Villainous Hideout": null,
     "Visions of Villainy": null,
+    "Volcanic Villain": null,
     "Volcano Hellion": "figure",
+    "Wakandan Drone Flock": null,
+    "Wakandan Shield Guard": null,
+    "Wakandan Tusker": null,
+    "Warriors of Wakanda": null,
     "Wasp, Shrinking Savior": "figure",
     "Way of the Pyromancer": null,
     "Web Up": "cues",
     "Whiplash Wordsmith": null,
+    "Whiplash, Vengeful Engineer": null,
+    "Whirlwind, Killer Cyclone": null,
+    "White Widow, Yelena Belova": null,
+    "Wolverine, Fierce Fighter": null,
     "Woodwork Prodigy": null,
     "Wrath of the Bloodmane": null,
+    "Yellowjacket, Heartless Marauder": null,
     "Yoshimaru, Beloved Companion": null,
     "Your Fate Ends Here": null
   }

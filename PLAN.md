@@ -4516,6 +4516,96 @@ core, with this bridge, said SAME to all six questions and DIFFERENT under
 
 ---
 
+## More villains — three more AI decks, and the smoke that plays them (2026-09-28, D116–D117)
+
+**Status: built, measured and committed** on branch `more-villains` (a worktree
+off `main`'s `a092d3a`). The user asked, on 2026-09-27, *"I'd also like to watch
+AIs vs each other with my deck vs different decks so I can see how they play
+it."* Decisions **D116** (the decks and the spec builder) and **D117** (the
+smoke's spell count); `docs/evidence/more-villains.md` is what was run;
+`decks/README.md` is what each deck is and how the AI plays it.
+
+```bash
+./scripts/play.sh --ai-deck decks/masters-of-evil.dck   # or hulk-family.dck, wakanda.dck
+node tools/build-deck.ts --check                        # every AI deck is its spec's
+./tools/deck-smoke.sh --jobs 4                          # 20 games, ~2.5 min; NOT in the gate
+```
+
+What it is:
+
+- **Three decks**, 40 cards, 17 lands, MSH + MSC, each a colour pair and an
+  archetype of its own: **Masters of Evil** (black-red villain aggro, 19
+  Villains), **Hulk Family** (red-green gamma stompy, 22 creatures, red a splash)
+  and **Wakanda** (green-white go-wide, 21 creatures). `config.json`'s default AI
+  deck is still Doom Legion, and so is the gate's.
+- **Every AI deck is a spec** (`decks/specs/*.json`, a reason per card), written
+  into its `.dck` by `tools/build-deck.ts` through the local card library — which
+  reproduces Doom Legion byte for byte — with `--check` and `--pool`, and a
+  hermetic test (`web/test/deck-specs.test.ts`) that fails on a hand edit or on
+  an AI deck with no spec.
+- **`tools/check-deck.mjs`** warns on two more things an AI deck must not carry
+  (a library reveal; a flavour-named print), and no longer calls Forge's
+  `K:etbCounter` a keyword the printed card lacks. All three decks pass it with
+  0 warnings, Scryfall pass included.
+- **`tools/deck-smoke.sh`** — five `--transport auto` games per AI deck, each
+  held to `over`, redaction, an attack and a spell count — ran **20 of 20** green
+  on seeds 1–5, and 39 of 40 on seeds 1–10 (Doom Legion's seed 6 is the miss).
+  It is **not** a gate step, on purpose (the gate is already 15–20 minutes).
+- **The gate**, from a deleted `bridge/out` at `WSPORT=8700`: **923 s**, exit 0
+  (`var/check-all-more-villains.log`); no step added.
+- **Rebased onto the hardening pass** (`4d26637`, 2026-09-28), which had landed
+  the engine and sets' D109–D112 and its own D113–D115 first: this lane's
+  D109–D110 became **D116–D117**, its two open questions **23–24**, and
+  `web/test/deck-specs.test.ts` now excludes both of the user's decks
+  (`pacho-shield.dck` and the engine and sets' `fra-rw-aggro.dck`) from "every
+  AI deck has a spec". `art.json` (15 decks, 158 names, 0 misses) and the
+  workshop catalog were regenerated. The gate, from a deleted `bridge/out` at
+  `WSPORT=8725`: **936 s**, exit 0 (`var/check-all-more-villains-train.log`);
+  evidence §11.
+
+### More villains follow-ups — ten, 2026-09-28
+
+1. **The flat 8 spells (D117).** The brief asked for at least 8 AI spells a
+   game; against the automated seat the AI wins in five to eleven of its turns
+   at about one spell a turn, so 5 of 40 games reach 8. The smoke asserts
+   `min(8, AI turns − 3)` and keeps the flat 8 behind `DECK_SMOKE_STRICT=1`.
+   It comes back as the default the day the smoke has a seat that makes the
+   game last — a blocking seat, or an AI-versus-AI transport — which is not this
+   lane's to build. Question 24 below.
+2. **Identity rows for the three decks** (as match setup's follow-up 1): none of
+   the 67 new names has a row in `figures/traits.json`, `figures.json` or
+   `cues/cues.json`; they stand on the subtype and archetype rungs.
+3. **The workshop has no facts for them** (as match setup's follow-up 10): the
+   catalog lists every new name as *never face up*, because no committed
+   recording plays them. One committed game per deck, through
+   `check-redaction.mjs`, then `node tools/build-workshop-catalog.ts`.
+4. **A hand review of the ability lines**, report 08 §1-style, for the 67 new
+   names. `check-deck.mjs --scryfall` diffed cost, type, P/T, keywords and Oracle
+   text mechanically; nothing read the `A:` / `T:` / `S:` lines against Oracle.
+5. **Doom Legion at seed 6**: 4 spells in 8 turns, under the floor, outside the
+   default seeds. Dark Deed and Doctor Doom were cast in none of its ten smoke
+   games — D108's watch on Dark Deed now has twenty more games without a cast.
+6. **The top of the Hulk curve seldom arrives**: Hulk, Gamma Goliath and Red Hulk
+   were cast in a probe and in earlier lists, not in the final list's fifteen
+   games (the AI wins first). Worth watching against a real player.
+7. **Pinning a print.** `build-deck.ts` writes `Name|SET` and lets Forge pick the
+   print; a card whose every print is plain is fine, but it cannot pin a
+   collector number (`Name|SET|[n]`) to dodge a flavour-named one. Fleecemane
+   Lion was cut instead.
+8. **`fixtures/cards/`** does not carry the new decks' cards (`make-fixture.ts`
+   would add them on its next run; nothing reads them from there today, and
+   whether the slice is committed at all is question 15).
+9. **The smoke's advisory** cannot tell a land never drawn from a nonland never
+   cast; it says so on the line. Reading the land list from the spec would fix
+   it.
+10. **Paths the smoke did not show reaching the seat**, each a prompt the new
+    decks can raise for you: Klaw's "reveal cards from your hand" (it was cast in
+    two games; the redaction gate passed, but nothing counted what the seat was
+    asked), and the monarch passing to you when you deal combat damage to the AI while
+    it holds it (Okoye, Mighty and Adored makes it the monarch).
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
@@ -4588,3 +4678,5 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 20 | **New, engine and sets.** The FRA opponent: accept `docs/drafts/decks/fra-gb-leftovers.dck` (your notes' green-black leftovers deck, plus 18 basics), change its mana, or supply another list? | **A draft until you say** (**D112**). Accepting it is `cp` into `decks/`. On the daily build it beat the red-white deck 25–15 with the Forge AI piloting both, which says little about you at the red-white seat. |
 | 21 | **New, engine and sets — for the day.** (a) Move the engine pin into the repo — `tools/forge-engine.json`, `tools/get-forge.sh`, `var/forge-engine/<version>/`, a relative `forgeJar` with its sha256 in `config.json` — instead of an absolute path to a hand install? (b) Re-record `g1` (probably `g2` / `g3`) if the release, like the daily, differs from 2.0.14 only in the order of `stats.cardIds`? | **Neither happens without you, and they are two decisions, not one.** (a) is specified in report 14 §5.2 and not built (**D110**); (b) follows report 14 §5.4 — re-record only after a content diff, stop on any real change, and in a commit of its own. |
 | 22 | **New, engine and sets.** Keep the prepared files to commit (the two FRA deck files, `tools/audit-deck.mjs` and its helper, `tools/javap-seam-diff.sh`, `docs/research/patches/`, `docs/drafts/`, report 14 and its evidence), and should `audit-deck.mjs` join `check-all.sh`? | **Keep them; `audit-deck.mjs` stays a hand tool** — it needs a built `bridge/out`, takes a few seconds, and today it would only re-prove the MSH decks the gate already plays. Showing Prepare on the board (follow-up 8) is a later decision of its own, not the day's. |
+| 23 | **New, more villains.** Which deck should a bare `./scripts/play.sh` seat against you — Doom Legion, one of the three added on 2026-09-28, or a rotation? | **Doom Legion, unchanged** (`config.json`'s `match.aiDeck`; the lane was told not to move it). The others are one `--ai-deck` away. |
+| 24 | **New, more villains.** Should `tools/deck-smoke.sh` demand the flat 8 spells a game (the lane's brief), or the rate it asserts, `min(8, AI turns − 3)` (**D117**)? | **The rate**, because against the automated seat 5 of 40 games reach 8 however the deck is built; `DECK_SMOKE_STRICT=1` is the flat 8 on demand. |

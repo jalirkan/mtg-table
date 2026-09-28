@@ -12,7 +12,17 @@
 //      engine loads, then cardsfolder.zip — and, when the line carries a set
 //      code (`|MSH`), confirm that edition file lists the name.  Flags a card
 //      Forge's own AI hints say it cannot play (`AI:RemoveDeck:All`).  Prints
-//      the curve, the colour pips and the land/creature split.
+//      the curve, the colour pips and the land/creature split.  Two more
+//      warnings, both from decks built for the AI (docs/evidence/more-villains.md):
+//      a script that REVEALS cards while they are still in its owner's library
+//      (`DigUntil`, a `Dig` with `Reveal$ True`, `PeekAndReveal`) -- fine for
+//      the seat's own deck, but with the AI on it tools/check-redaction.mjs
+//      fails the frame that catches the reveal (A3; Kang Prime,
+//      docs/evidence/match-setup.md section D.3) -- and an edition print that
+//      carries a FLAVOUR NAME (`${"flavorName": ...}` in the edition file):
+//      Forge may pick that print, and then the wire names the card by its
+//      flavour name, which the deck's name does not match (Fleecemane Lion
+//      played as "Wakandan War Panther").
 //
 //   2. ENGINE (default; --no-engine skips it).  Runs the bridge's own audit,
 //      `./bridge/run.sh mtgtable.Smoke <deck>`, which boots Forge exactly as
@@ -251,7 +261,7 @@ function findScript(name, useOverlay) {
 // ---------------------------------------------------------------------------
 
 let editionIndex = null;
-/** code → { file, cards: Map<name, collectorNumbers[]> } (a basic has several prints) */
+/** code → { file, cards: Map<name, collectorNumbers[]> (a basic has several prints), flavors: Map<name, {number, flavor}[]> } */
 function editions() {
   if (editionIndex === null) {
     editionIndex = new Map();
@@ -261,6 +271,8 @@ function editions() {
       const code = /^Code=(.+)$/m.exec(text)?.[1]?.trim();
       if (!code) continue;
       const cards = new Map();
+      /** name -> [{number, flavor}] for the prints this edition gives a flavour name */
+      const flavors = new Map();
       let section = '';
       for (const raw of text.split('\n')) {
         const line = raw.trim();
@@ -275,8 +287,14 @@ function editions() {
         const numbers = cards.get(cardName) ?? [];
         if (!numbers.includes(m[1])) numbers.push(m[1]);
         cards.set(cardName, numbers);
+        const flavor = /"flavorName":\s*"([^"]+)"/.exec(line)?.[1];
+        if (flavor !== undefined) {
+          const list = flavors.get(cardName) ?? [];
+          if (!list.some((x) => x.number === m[1])) list.push({ number: m[1], flavor });
+          flavors.set(cardName, list);
+        }
       }
-      editionIndex.set(code.toUpperCase(), { file: f, cards });
+      editionIndex.set(code.toUpperCase(), { file: f, cards, flavors });
     }
   }
   return editionIndex;
@@ -358,8 +376,13 @@ async function scryfallFor(name, setHint) {
   return { card: null, via: tried.join(', '), inTargetSets: false };
 }
 
-/** Forge-internal `K:` names that are not printed keyword abilities. */
-const NOT_PRINTED_KEYWORDS = new Set(['etbreplacement', 'chapter', 'alternateadditionalcost']);
+/**
+ * Forge-internal `K:` names that are not printed keyword abilities.
+ * `etbCounter` is how Forge scripts "enters with N counters" (`K:etbCounter:P1P1:1`
+ * is Hulk, Strongest There Is's "Hulk enters with a +1/+1 counter on him"; 475
+ * scripts in the 2.0.14 cardsfolder use it) -- rules text, not a keyword.
+ */
+const NOT_PRINTED_KEYWORDS = new Set(['etbreplacement', 'etbcounter', 'chapter', 'alternateadditionalcost']);
 /** Evergreen keywords Forge scripts as `K:` lines when the card has them unconditionally. */
 const EVERGREEN = new Set([
   'flying', 'menace', 'deathtouch', 'lifelink', 'vigilance', 'flash', 'trample', 'first strike',
@@ -535,6 +558,14 @@ async function checkDeck(deckPath, opts) {
       row.parsed = s;
       if (found.overlay) row.notes.push(`overlay (D14) over stock ${found.stock?.where ?? '?'}`);
       if (s.multiFace) row.notes.push('multi-face: only the front face is diffed');
+      const reveal = s.lines.find((l) => /\bDigUntil\b|\bPeekAndReveal\b|\$ Dig\b.*\bReveal\$ True/.test(l));
+      if (reveal !== undefined) {
+        warn(
+          `${e.name}: reveals cards while they are still in the library (${reveal.trim().slice(0, 60)}…) — fine for the seat's ` +
+            "own deck; with the AI on it, check-redaction fails the frame (A3, match-setup §D.3)",
+        );
+        row.notes.push('library reveal');
+      }
       for (const ai of s.ai) {
         if (/^RemoveDeck:All/i.test(ai)) {
           warn(`${e.name}: AI:${ai} — Forge's AI is marked as unable to play this card`);
@@ -565,6 +596,13 @@ async function checkDeck(deckPath, opts) {
       } else {
         row.collectors = ed.cards.get(e.name);
         row.notes.unshift(`${e.setHint} #${row.collectors.join('/')}`);
+        for (const { number, flavor } of ed.flavors.get(e.name) ?? []) {
+          warn(
+            `${e.name}: ${e.setHint} #${number} carries the flavour name "${flavor}" — if Forge picks that print, the wire ` +
+              "names the card by it, and art.json and the workshop (keyed by the .dck's name) miss it",
+          );
+          row.notes.push(`flavour name at #${number}`);
+        }
       }
       bySet.set(e.setHint, (bySet.get(e.setHint) ?? 0) + e.count);
     } else {

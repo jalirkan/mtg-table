@@ -1,0 +1,133 @@
+{
+  "$comment": "Written by tools/build-deck.ts into decks/wakanda.dck. decks/README.md says what it is and how the AI plays it; docs/evidence/more-villains.md what was run.",
+  "deck": "decks/wakanda.dck",
+  "name": "Wakanda (Marvel Super Heroes Black Panther)",
+  "colors": "GW",
+  "archetype": "go-wide: a Warrior army of 2-drops and tokens, lifelink and +1/+1 counters",
+  "size": 40,
+  "lands": 17,
+  "minCreatures": 18,
+  "maxCopies": 2,
+  "cards": [
+    {
+      "count": 1,
+      "name": "Swords to Plowshares",
+      "why": "exile a creature for {W}"
+    },
+    {
+      "count": 1,
+      "name": "Vibranium Energy Daggers",
+      "why": "Wakandan steel: +2/+2 equipment for {1}, indestructible"
+    },
+    {
+      "count": 1,
+      "name": "Shuri, the Black Panther",
+      "why": "2/3 lifelink for two"
+    },
+    {
+      "count": 1,
+      "name": "T'Chaka, Venerable King",
+      "why": "the old king: mills three and keeps a land or an artifact"
+    },
+    {
+      "count": 2,
+      "name": "Dora Milaje Elite",
+      "why": "the royal guard: 2/2 first strike"
+    },
+    {
+      "count": 2,
+      "name": "Wakandan Shield Guard",
+      "why": "a 1/1 and a 1/1 Soldier token"
+    },
+    {
+      "count": 2,
+      "name": "Gallant Citizen",
+      "why": "a generic citizen from MSC (its flavour text is J. Jonah Jameson's): a 1/1 that draws a card"
+    },
+    {
+      "count": 2,
+      "name": "Wakandan Tusker",
+      "why": "2/3; gains 1 and scries each time it taps"
+    },
+    {
+      "count": 1,
+      "name": "T'Challa, the Black Panther",
+      "why": "a Vibranium token when he enters and when he attacks"
+    },
+    {
+      "count": 1,
+      "name": "Black Panther, Claws of Bast",
+      "why": "3/3 lifelink; a lone attacker grows"
+    },
+    {
+      "count": 1,
+      "name": "Black Panther, Most Dangerous",
+      "why": "3/3 that hits back at any target when he is hurt"
+    },
+    {
+      "count": 1,
+      "name": "Nakia, Wakandan Operative",
+      "why": "3/3 reach; {2}, tap: two +1/+1 counters"
+    },
+    {
+      "count": 1,
+      "name": "Shuri, Vibranium Technologist",
+      "why": "a flying Robot Hero or a card; castable with {W}"
+    },
+    {
+      "count": 1,
+      "name": "Black Panther, Vanguard",
+      "why": "4/4; each nontoken Hero after him is a Soldier or a team pump"
+    },
+    {
+      "count": 1,
+      "name": "Okoye, Dora Milaje Leader",
+      "why": "brings two Soldiers, and attacking tokens get first strike"
+    },
+    {
+      "count": 1,
+      "name": "Okoye, Mighty and Adored",
+      "why": "makes the AI the monarch (a card every end step); a counter every combat"
+    },
+    {
+      "count": 1,
+      "name": "Wakandan Drone Flock",
+      "why": "3/3 flying robot, scry 2"
+    },
+    {
+      "count": 1,
+      "name": "Warriors of Wakanda",
+      "why": "4/4 trample"
+    },
+    {
+      "count": 1,
+      "name": "Storm, Queen of Wakanda",
+      "why": "4/5 flyer who lends an attacker her power and flight"
+    },
+    {
+      "count": 1,
+      "name": "Birnin Zana Plaza",
+      "why": "the capital: G/W, enters tapped, gain 1"
+    },
+    {
+      "count": 1,
+      "name": "Gathering Place",
+      "why": "G/W while you control a basic"
+    },
+    {
+      "count": 1,
+      "name": "Sunpetal Grove",
+      "why": "G/W, untapped with a Forest or Plains out"
+    },
+    {
+      "count": 7,
+      "name": "Plains",
+      "why": "white"
+    },
+    {
+      "count": 7,
+      "name": "Forest",
+      "why": "green"
+    }
+  ]
+}

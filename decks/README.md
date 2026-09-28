@@ -15,6 +15,10 @@ directory and delete one it cannot parse. So these files are only ever read.
 | `pacho-shield.dck` | Pacho SHIELD (Marvel Super Heroes) | **the user's real deck.** W/U S.H.I.E.L.D., 40 cards. What you play. |
 | `pacho-shield.txt` | — | the same list as the user wrote it, without set codes. Not read by anything. |
 | `doom-legion.dck` | Doom Legion (Marvel Super Heroes villains) | **the AI's deck.** U/B villains, 40 cards. What a bare `./scripts/play.sh` seats against you (`config.json`'s `match.aiDeck`). |
+| `masters-of-evil.dck` | Masters of Evil (Marvel Super Heroes villains) | **an AI deck.** B/R villain aggro, 40 cards. The AI curves out a Villain a turn from its second, swings with everything from its third (2.5 attackers a combat, the widest of the four), and spends Lightning Bolt and Shock on the one blocker you leave. |
+| `hulk-family.dck` | Hulk Family (Marvel Super Heroes gamma) | **an AI deck.** R/G gamma stompy, 40 cards. The AI plays Birds of Paradise first when it has one, attacks from its third turn with Hellcat or a Gamma Grotesque, then lands a 4/4 trampler a turn; it holds HULK SMASH! until you have a creature worth hitting. |
+| `wakanda.dck` | Wakanda (Marvel Super Heroes Black Panther) | **an AI deck.** G/W go-wide, 40 cards. The AI puts down a 2-drop a turn (T'Chaka, a Gallant Citizen, Shuri), widens the army with Okoye's Soldiers and Black Panther, Vanguard's tokens, attacks with all of it from its third turn, and keeps Swords to Plowshares for a real threat. |
+| `specs/*.json` (four) | — | **the AI decks' specs**: each `.dck` above and `doom-legion.dck` is written from one by `tools/build-deck.ts`, never typed by hand (below). |
 | `*-probe.dck` (nine) | … probe | test decks that force one engine path each. Never meant to be fun. |
 | `fra-rw-aggro.dck` | Reality Fracture red-white legends aggro | **the user's Reality Fracture pool** (FRA), 40 cards + 10 sideboard. **Does not play on Forge 2.0.14** — see below. |
 | `fra-rw-aggro.txt` | — | the same list as the user wrote it, under a `#` header that says so. Not read by the engine. |
@@ -25,11 +29,24 @@ directory and delete one it cannot parse. So these files are only ever read.
 ./scripts/play.sh                                        # your deck vs the villains (config.json's match block)
 ./scripts/play.sh --mirror                               # vs a copy of your own deck
 ./scripts/play.sh --ai-profile Cautious                  # one of Forge's four AI profiles
+./scripts/play.sh --ai-deck decks/masters-of-evil.dck   # the Masters of Evil (B/R villain aggro)
+./scripts/play.sh --ai-deck decks/hulk-family.dck       # the Hulk family (R/G gamma stompy)
+./scripts/play.sh --ai-deck decks/wakanda.dck           # Wakanda (G/W go-wide)
 ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
     --deck decks/pacho-shield.dck --ai-deck decks/doom-legion.dck
 node tools/check-deck.mjs decks/doom-legion.dck --scryfall  # is every card really in the engine?
+node tools/build-deck.ts --check                         # is every AI deck still its spec's?
+./tools/deck-smoke.sh                                    # five games per AI deck, the AI piloting it (NOT in the gate)
 node tools/fetch-art.ts                                  # art for EVERY deck here -> web/public/art.json
 ```
+
+The three `--ai-deck` lines are the same match setup as Doom Legion's: you in
+the browser, the AI on the deck you name. The five games per deck that
+`tools/deck-smoke.sh` plays put the automated seat in your chair instead (it
+plays badly on purpose, `AutoTransport`), and their frame logs stay under
+`var/games/smoke-<deck>-<seed>/`; against that seat the AI wins in five to eleven
+of its own turns, eight or fewer in most games
+(`docs/evidence/more-villains.md`).
 
 `--ai-deck` is `--deck2`'s newer spelling. `scripts/play.sh` takes its default
 from `config.json`'s `match.aiDeck` — shipped as `decks/doom-legion.dck`, and
@@ -78,6 +95,54 @@ Three passes, from the repo root:
 `--stock` ignores the overlay; `node tools/check-deck.mjs decks/pacho-shield.dck
 --no-engine --scryfall --stock` is the negative control and must fail on A.I.M.
 Scientists. Exit 0 is a pass, 1 a failure, 2 bad usage.
+
+Two warnings came out of building the AI decks (neither fails a deck, because
+both are fine for the SEAT's deck): a script that **reveals cards while they are
+still in the library** (`DigUntil`, a `Dig` with `Reveal$ True`,
+`PeekAndReveal` — Kang Prime and Wakanda Forever!), which `check-redaction.mjs`
+fails when the AI owns that library (A3, §D.3 of match-setup's evidence); and an
+edition print with a **flavour name** — Forge may pick it, and then the wire
+names the card by it (Fleecemane Lion in MSC is always *Wakandan War Panther*),
+which the deck's own name, `art.json` and the workshop do not match.
+
+### Building an AI deck: `decks/specs/` and `tools/build-deck.ts`
+
+Every AI deck is **written from a spec, never typed**: `decks/specs/<deck>.json`
+is the card list in the order the `.dck` prints it, every line with a one-line
+`why`, plus the deck's `Name=`, its two colours, its size, its land count and a
+minimum creature count. `tools/build-deck.ts` resolves every name against the
+local card library (`var/cards/cards.sqlite`, `tools/card-library/README.md`),
+refuses anything that is not an exact name, not printed in MSH or MSC, not
+payable in the two colours, over two copies (one for a legendary) or off the
+spec's counts, and writes the `.dck` with the set convention Doom Legion was
+hand-written to — `|MSH` when MSH prints the card, else `|MSC`. It reproduces
+`doom-legion.dck` byte for byte from its spec.
+
+```bash
+node tools/build-deck.ts --pool BR --type Villain      # what the pool offers (no network)
+$EDITOR decks/specs/masters-of-evil.json                # change a line, with its why
+node tools/build-deck.ts                                # write every .dck from its spec
+node tools/check-deck.mjs decks/masters-of-evil.dck --scryfall   # the engine and Scryfall
+./tools/deck-smoke.sh decks/masters-of-evil.dck         # does the AI actually play it?
+node tools/fetch-art.ts                                 # its art (Scryfall, a few minutes)
+node tools/build-workshop-catalog.ts                    # the workshop's list reads every deck
+node tools/build-deck.ts --check                        # 0 = every .dck is its spec's
+```
+
+`web/test/deck-specs.test.ts` holds the hermetic half inside `npm --prefix web
+test`: each `.dck` is its spec line for line, every line carries `|MSH` or
+`|MSC`, and every `decks/*.dck` that is not yours or a probe **has** a spec.
+
+### Playing them: `tools/deck-smoke.sh` (not in the gate)
+
+Five `--transport auto` games per AI deck at seeds 1–5, your deck in the seat
+and the AI on the deck, each asserted to reach `over` inside `GAME_TIMEOUT`, to
+pass `check-redaction.mjs`, and to show the AI **attacking** at least once and
+**casting** at least `min(8, its turns − 3)` spells (`DECK_SMOKE_STRICT=1`
+demands the flat 8; **D117** says why the flat 8 is not the default). Then a
+table — AI wins, losses, turns, spells, attacks — and, advisory, the lines the AI
+never cast. About two and a half minutes with `--jobs 4`; the first run is
+`docs/evidence/more-villains.md`.
 
 ---
 
@@ -260,6 +325,132 @@ browser lists the deck. Its opponent is a draft outside this directory,
 The day an official Forge release ships the set is
 [`docs/research/14-engine-upgrade.md`](../docs/research/14-engine-upgrade.md)
 §0's checklist; report 08 §9 is the deck card by card.
+
+---
+
+## `masters-of-evil.dck` — Masters of Evil
+
+**Baron Zemo's team, without Baron Zemo** (Forge's AI cannot play him,
+`AI:RemoveDeck:All`): Titania, Moonstone, Whirlwind, Klaw, Radioactive Man, Tiger
+Shark, Atlas and Yellowjacket (Rita DeMara) have all been Masters of Evil in the
+comics, and Songbird, MACH-1 and Fixer were Masters before they were
+Thunderbolts; Yelena Belova, Boomerang and Whiplash are villains of the same
+street, the Common Crooks and Volcanic Villains the henchmen, and *The Masters of
+Evil* the lord. Black-red **villain aggro**.
+
+- 40 cards, 27 lines; 17 lands (7 Swamp, 6 Mountain, Hell's Kitchen, Dark
+  Fortress, Villainous Hideout, Dragonskull Summit); 23 spells: 19 creatures, every one a Villain
+  (what the team card's +2/+1 and Villainous Hideout's mana want), two burn
+  spells, Night's Whisper and the Saga.
+- Curve `1:3  2:9  3:4  4:5  5:1  6:1`; pips B 19, R 7 (Tiger Shark's and
+  Atlas's hybrid `{U/B}` / `{B/G}` halves are paid with black). 24 MSH, 16 MSC.
+- One of everything but Common Crook and Volcanic Villain (two each).
+
+| mana value | cards | role |
+|---|---|---|
+| 1 | Whiplash · Lightning Bolt · Shock | a 2/2 for one; 3 and 2 damage for {R} |
+| 2 | Songbird · MACH-1 · Yellowjacket · Boomerang · Fixer · Yelena Belova · 2 Common Crook · Night's Whisper | the curve: lifelink, two fliers, a drain on attack, deathtouch, henchmen that leave Treasure; draw two |
+| 3 | Whirlwind · 2 Volcanic Villain · Klaw | three hasty attackers; Klaw takes a card from your hand |
+| 4 | Titania, Proud Pummeler · Moonstone · Tiger Shark · Atlas · Avengers: Under Siege | first strike and melee for the team, a 2/4 flier, connive, a 5/4 reach; the Saga's menace tokens and 2 to you |
+| 5 | Radioactive Man | deathtouch; his combat damage halves your life |
+| 6 | The Masters of Evil | every other Villain gets +2/+1 |
+
+**How the AI plays it** (20 games, `docs/evidence/more-villains.md`): a Villain a
+turn from its second, the first attack by its third turn in 9 of 10 games, and
+the widest attacks of the four decks (2.5 attackers a combat). Lightning Bolt and
+Shock go at the one creature you leave back, not your face. Volcanic Villain
+(haste) and Common Crook are what it casts most; Radioactive Man and the team
+card seldom arrive before the game is over.
+
+**Cut while it was built:** Deadly Dispute (the AI never cast it — not in ten
+real games, and not from eight copies in either of two probe games: the
+Trickster's Stratagem lesson again), and Living Laser (a 5-drop the curve could not afford).
+
+## `hulk-family.dck` — Hulk Family
+
+**Everyone the gamma bomb touched, and the people around them:** Hulk three ways
+(Brutal Brawler, Strongest There Is, Gamma Goliath), Red Hulk, She-Hulk twice,
+Abomination twice, Brawn (Amadeus Cho) and the Gamma Grotesques, with Rick Jones,
+Hercules (Cho's partner after *World War Hulk*), Hulkling, Hellcat (a Defender
+beside Hulk) and Wolverine, whose first appearance was a fight with Hulk.
+Red-green **stompy**: 22 creatures that grow each other with +1/+1 counters.
+
+- 40 cards, 24 lines; 17 lands (9 Forest, 5 Mountain, Los Diablos Missile Base —
+  where Banner tested the gamma bomb — Training Compound, Rootbound Crag); 23 spells,
+  22 creatures and HULK SMASH!.
+- Curve `1:3  2:7  3:5  4:6  5:1  6:1`; pips G 27, R 6 — **every double pip is
+  green**, and red is a splash (see below). 28 MSH, 12 MSC.
+- **Three cards from outside the family, named as such:** two Birds of Paradise
+  (a generic reprint: mana of any colour, so a 4-drop Hulk lands on turn three),
+  two Gallant Citizens (a generic 1/1 that draws a card; its flavour text is
+  J. Jonah Jameson's) and two Knights of Wundagore (the High Evolutionary's
+  cat-knights: a Villain 2-drop that grows whenever the Hulks hand out a
+  counter, and whose combat damage grows Abomination, Irradiated Brute).
+
+| mana value | cards | role |
+|---|---|---|
+| 1 | Rick Jones · 2 Birds of Paradise | the sidekick digs four for a Hero; ramp |
+| 2 | Brawn · Hellcat · 2 Knight of Wundagore · 2 Gallant Citizen · HULK SMASH! | card draw, haste, counters; a bite spell |
+| 3 | 2 Gamma Grotesque · She-Hulk, Attorney-at-Law · Hercules · Hulkling | 3/3s, two with vigilance |
+| 4 | Hulk, Brutal Brawler · Hulk, Strongest There Is · Abomination ×2 · She-Hulk, Jade Defender · Wolverine | four tramplers, a counter engine, a fight on arrival |
+| 5 | Hulk, Gamma Goliath | 6/5 reach trample |
+| 6 | Red Hulk | 6/7 reach trample that shoots back |
+
+**How the AI plays it:** Birds first when it has one (the card it casts most),
+the first attack on its second or third turn with Hellcat or a Gamma Grotesque,
+then a 4-drop trampler a turn. It holds HULK SMASH! until you have a creature
+worth hitting. Its games are the shortest of the four (10–12 player turns), so
+the top end seldom arrives: Hulk, Gamma Goliath and Red Hulk were cast in a
+probe deck of them and in earlier versions of the list, but in none of the
+fifteen games of the final one.
+
+**Cut while it was built:** She-Hulk, Jennifer Walters (the AI sacrifices its own
+lands to her draw ability and stalls on three); Hulk, Bruce Banner (`{R}{R}` —
+with red and green both double-pipped the AI missed whole turns holding a full
+hand, so every double pip but Red Hulk's is green now and red is a splash); Doc
+Samson (not cast in twenty games) and She-Hulk, Wallbreaker (the curve), for the
+two Knights; Origin of the Hulk and Beast (not cast in ten), for the two
+Citizens; Shock, Lightning Strike and Giant Growth (the second list cast neither
+burn spell in five games: a seat that keeps no creature leaves them nothing to
+hit). World War Hulk stays out on purpose: its
+chapter I lets you play creature cards from your **library**, a may-play the
+redaction gate has never been shown.
+
+## `wakanda.dck` — Wakanda
+
+**Black Panther's kingdom:** four Black Panthers (T'Challa, Claws of Bast, Most
+Dangerous, Vanguard) and Shuri twice, T'Chaka, Okoye twice, Nakia, Storm as
+Queen of Wakanda, the Dora Milaje, the Shield Guard, the Tuskers, the Warriors
+and the Drone Flock. Green-white **go-wide**: a 2-drop a turn, tokens, lifelink
+and +1/+1 counters.
+
+- 40 cards, 24 lines; 17 lands (7 Plains, 7 Forest, Birnin Zana Plaza — the
+  capital — Gathering Place, Sunpetal Grove); 23 spells, 21 creatures, Swords to
+  Plowshares and Vibranium Energy Daggers.
+- Curve `1:2  2:10  3:5  4:5  5:1`; pips W 22, G 14. 20 MSH, 20 MSC.
+- Two Gallant Citizens here too: a generic 1/1 that draws a card (its flavour
+  text is J. Jonah Jameson's), for the curve and the card.
+
+| mana value | cards | role |
+|---|---|---|
+| 1 | Swords to Plowshares · Vibranium Energy Daggers | the one removal spell; +2/+2 indestructible equipment |
+| 2 | Shuri, the Black Panther · T'Chaka · 2 Dora Milaje Elite · 2 Wakandan Shield Guard · 2 Gallant Citizen · 2 Wakandan Tusker | lifelink, first strike, a Soldier token, a card, life and scry |
+| 3 | T'Challa · Black Panther, Claws of Bast · Black Panther, Most Dangerous · Nakia · Shuri, Vibranium Technologist | Vibranium, lifelink, a counterpunch, +1/+1 counters, a flier or a card |
+| 4 | Black Panther, Vanguard · Okoye, Dora Milaje Leader · Okoye, Mighty and Adored · Wakandan Drone Flock · Warriors of Wakanda | tokens or a team pump per Hero, two Soldiers, the monarch, a flier, a 4/4 trampler |
+| 5 | Storm, Queen of Wakanda | a 4/5 flier who lends an attacker flight |
+
+**How the AI plays it:** a 2-drop a turn, the first attack on its third turn in
+8 of 10 games, then the whole army (two attackers a combat on average, more once
+Okoye's and Vanguard's tokens arrive). Swords to Plowshares waits
+for a real threat — against the automated seat, which rarely keeps a creature, it
+was never cast.
+
+**Cut while it was built:** Fleecemane Lion (MSC prints it only as *Wakandan War
+Panther*, a flavour name the wire then carries instead of the deck's name —
+`tools/check-deck.mjs` now warns about it), Zuri (not cast in ten games),
+Panther Pounce (not in five: a trick the AI holds), Bast and Wakandan Royal
+Guard (the curve). **Wakanda Forever!** stays out: `PeekAndReveal` shows the top six of the
+AI's library while they are still in it — Kang Prime's problem.
 
 ---
 

@@ -696,7 +696,9 @@ test('links: #cards’ View in 3D is live for a body or a card’s own cues, gre
   assert.equal(threeDLinkFor({ name: 'Helicarrier Strike', faceNames: [], typeLine: 'Instant' }).kind, 'cues');
   const opt = threeDLinkFor({ name: 'Opt', faceNames: [], typeLine: 'Instant' });
   assert.deepEqual([opt.name, opt.href], ['Opt', null]);
-  const stranger = threeDLinkFor({ name: 'Lightning Bolt', faceNames: [], typeLine: 'Instant' });
+  // A card in no deck under decks/. (It was Lightning Bolt until the Masters of
+  // Evil deck, D116, put a Bolt in the catalog.)
+  const stranger = threeDLinkFor({ name: 'Black Lotus', faceNames: [], typeLine: 'Artifact' });
   assert.deepEqual([stranger.name, stranger.href], [null, null]);
   assert.match(stranger.title, /^Not in the workshop/);
   // Scryfall's spellings: a token is `Hero` there and `Hero Token` in the corpus; a
