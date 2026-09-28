@@ -56,6 +56,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
+import { COSTUME_SLOTS } from '../figures/props.ts';
+import { HOLD_JOINTS, REST_KIT, REST_POSES, restModelId, type RestPose, type RestSpec } from '../figures/rests.ts';
 import type { ModelData, ModelEntry } from '../figures/types.ts';
 import { COSTUME_ATTRIBUTE } from './holoMaterial.ts';
 
@@ -73,6 +75,20 @@ export interface LoadedModel {
   offsetY: number;
   /** The Y turn that makes its `facing` become +Z. */
   rotationY: number;
+  /**
+   * **Lane BODIES (D141) — the body's own hair**, as triangle indices into its
+   * source geometry (every vertex of them in the costume's `hair` slot), on a
+   * proportioned BASE body; `null` on a variant and on every other model. The
+   * prop field bakes the hair kinds from it (`scene/props.ts`'s `bakeHair`).
+   */
+  hairIndex?: Uint32Array | null;
+  /**
+   * **Lane BODIES (D140) — the resting pose of a VARIANT** (`agent@folded`): its
+   * `clips.get('idle')` is that pose and its `source` is the body with the hair
+   * carved off. `null` or absent on a base body, which is what the duelists, the
+   * squads' followers and the rider are baked from — hair and all.
+   */
+  rest?: RestPose | null;
 }
 
 export type ModelLibrary = Map<string, LoadedModel>;
@@ -221,7 +237,191 @@ export function indexLibrary(
       rotationY: FACING_TURN[entry.facing] ?? 0,
     });
   }
+  // Lane BODIES: every proportioned body's resting-pose variants, bald under a
+  // hairstyle prop. After the loop, so a variant is built from its finished base.
+  for (const model of [...library.values()]) {
+    if (model.entry.rig !== 'ubc') continue;
+    for (const variant of restVariantsOf(model)) library.set(variant.id, variant);
+  }
   return library;
+}
+
+// ---------------------------------------------------------------------------
+// Lane BODIES — the resting-pose variants (D140) and the carved hair (D141)
+// ---------------------------------------------------------------------------
+
+/** `head_1` → `head`, `spine_03_1` → `spine_03` (the prop field's rule, `scene/props.ts`). */
+export function baseName(name: string): string {
+  return name.replace(/_[1-9]\d*$/, '');
+}
+
+const HAIR_SLOT = COSTUME_SLOTS.indexOf('hair');
+
+/**
+ * **Split a body's hair off** — its triangles whose three vertices all carry the
+ * costume's `hair` slot (the pack's hairstyle is a mesh of its own, weighted 100%
+ * to `Head`; the build joined it into the body and kept its slot). Returns the
+ * hair's triangle indices and the rest, or `null` if the body has no hair slot.
+ */
+export function carveHair(geometry: THREE.BufferGeometry): { hair: Uint32Array; body: Uint32Array } | null {
+  const region = geometry.getAttribute(COSTUME_ATTRIBUTE) ?? geometry.getAttribute('_region');
+  const index = geometry.getIndex();
+  if (region === undefined || index === null) return null;
+  const hair: number[] = [];
+  const body: number[] = [];
+  for (let t = 0; t + 2 < index.count; t += 3) {
+    const a = index.getX(t);
+    const b = index.getX(t + 1);
+    const c = index.getX(t + 2);
+    const isHair =
+      Math.round(region.getX(a)) === HAIR_SLOT && Math.round(region.getX(b)) === HAIR_SLOT && Math.round(region.getX(c)) === HAIR_SLOT;
+    (isHair ? hair : body).push(a, b, c);
+  }
+  if (hair.length === 0) return null;
+  return { hair: Uint32Array.from(hair), body: Uint32Array.from(body) };
+}
+
+/**
+ * A proportioned body's resting-pose variants — one per `figures/rests.ts` pose,
+ * `agent@stand` (the body's own idle) included. Built once per library, at load.
+ *
+ * Each shares the base's manifest entry, normalisation and every clip but one:
+ * its `idle` is the pose (`deriveRestClip`), so the figure layer's first frame,
+ * the clip lane's resting stance and a baked prop anchor all read the pose with
+ * no code of their own. Each draws the body with its hair CARVED off — one bald
+ * geometry per body, sharing every attribute buffer with the base's — because the
+ * figure wears its hair as a prop kind (D141).
+ */
+export function restVariantsOf(model: LoadedModel): LoadedModel[] {
+  const out: LoadedModel[] = [];
+  let bald: THREE.Object3D = model.source;
+  let hairIndex: Uint32Array | null = null;
+  model.source.traverse((child) => {
+    const mesh = child as THREE.SkinnedMesh;
+    if (mesh.isSkinnedMesh !== true || hairIndex !== null) return;
+    const carved = carveHair(mesh.geometry);
+    if (carved === null) return;
+    hairIndex = carved.hair;
+    const geometry = new THREE.BufferGeometry();
+    for (const [name, attribute] of Object.entries(mesh.geometry.attributes)) geometry.setAttribute(name, attribute);
+    geometry.setIndex(new THREE.BufferAttribute(carved.body, 1));
+    geometry.name = `${mesh.geometry.name}:bald`;
+    // The stencil: a clone of the whole source (so its skeleton is its own), with
+    // the one mesh's geometry swapped for the bald one.
+    const stencil = cloneSkeleton(model.source);
+    stencil.traverse((node) => {
+      const m = node as THREE.SkinnedMesh;
+      if (m.isSkinnedMesh === true && m.geometry === mesh.geometry) m.geometry = geometry;
+    });
+    bald = stencil;
+  });
+  model.hairIndex = hairIndex;
+  for (const rest of REST_POSES) {
+    const clip = rest === 'stand' ? (model.clips.get('idle') ?? null) : deriveRestClip(model, REST_KIT[rest], rest);
+    const clips = new Map(model.clips);
+    if (clip !== null) clips.set('idle', clip);
+    out.push({
+      ...model,
+      id: restModelId(model.id, rest),
+      source: bald,
+      clips,
+      hairIndex: null,
+      rest,
+    });
+  }
+  return out;
+}
+
+const AIM_J = new THREE.Vector3();
+const AIM_C = new THREE.Vector3();
+const AIM_WANT = new THREE.Vector3();
+const AIM_Q = new THREE.Quaternion();
+const AIM_WORLD = new THREE.Quaternion();
+const AIM_PARENT = new THREE.Quaternion();
+const AIM_TWIST = new THREE.Quaternion();
+
+/**
+ * **One resting pose as a clip** (D140): the `from` clip's frame at `phase` on
+ * the joints the pose holds, each `aim` turned on top (a world-space swing of the
+ * joint so the line to its child points along the aim, parents first), and every
+ * other joint looping with the `breathe` clip — so a folded-arms figure still
+ * breathes while the queue is awake (D58) and its arms stay folded. Sampled by
+ * hand, at load, on a fresh instance; no mixer (the arena ticks mixers in three
+ * files, liveness). `null` if the body has neither clip.
+ */
+export function deriveRestClip(model: LoadedModel, spec: RestSpec, name: string): THREE.AnimationClip | null {
+  const breathe = model.clips.get(spec.breathe) ?? model.clips.get('idle') ?? null;
+  if (breathe === null) return null;
+  const from = model.clips.get(spec.from) ?? breathe;
+  const instance = instantiateFigure(model, { pose: 'bind' });
+  const root = instance.object;
+  sampleClipInto(root, from, Math.max(0, Math.min(1, spec.phase)) * from.duration);
+  root.updateMatrixWorld(true);
+
+  const bones = new Map<string, THREE.Object3D>();
+  root.traverse((node) => {
+    if ((node as THREE.Bone).isBone === true && !bones.has(baseName(node.name))) bones.set(baseName(node.name), node);
+  });
+  const held = new Set<string>(spec.hold === 'all' ? [...bones.keys()] : HOLD_JOINTS[spec.hold]);
+  for (const aim of spec.aims) {
+    const bone = bones.get(aim.joint);
+    const child = bones.get(aim.child);
+    if (bone === undefined || child === undefined || bone.parent === null) continue;
+    held.add(aim.joint);
+    bone.getWorldPosition(AIM_J);
+    child.getWorldPosition(AIM_C);
+    AIM_C.sub(AIM_J);
+    if (AIM_C.lengthSq() < 1e-12) continue;
+    AIM_C.normalize();
+    AIM_WANT.set(aim.aim[0], aim.aim[1], aim.aim[2]).normalize();
+    AIM_Q.setFromUnitVectors(AIM_C, AIM_WANT);
+    // …then the roll about that line, if the pose names one.
+    if (aim.twist !== undefined && aim.twist !== 0) AIM_Q.premultiply(AIM_TWIST.setFromAxisAngle(AIM_WANT, aim.twist));
+    bone.getWorldQuaternion(AIM_WORLD);
+    bone.parent.getWorldQuaternion(AIM_PARENT);
+    // local' = parentWorld⁻¹ · roll · swing · world
+    bone.quaternion.copy(AIM_PARENT.invert().multiply(AIM_Q.multiply(AIM_WORLD)));
+    bone.updateMatrixWorld(true);
+  }
+
+  const tracks: THREE.KeyframeTrack[] = [];
+  const covered = new Set<string>();
+  const end = breathe.duration > 0 ? breathe.duration : 1;
+  const hold = (node: THREE.Object3D, property: string): THREE.KeyframeTrack | null => {
+    const trackName = `${node.name}.${property}`;
+    if (property === 'quaternion') {
+      const q = node.quaternion;
+      return new THREE.QuaternionKeyframeTrack(trackName, [0, end], [q.x, q.y, q.z, q.w, q.x, q.y, q.z, q.w]);
+    }
+    if (property === 'position') {
+      const p = node.position;
+      return new THREE.VectorKeyframeTrack(trackName, [0, end], [p.x, p.y, p.z, p.x, p.y, p.z]);
+    }
+    return null;
+  };
+  for (const track of breathe.tracks) {
+    const parsed = THREE.PropertyBinding.parseTrackName(track.name);
+    const node = root.getObjectByName(parsed.nodeName);
+    const key = baseName(parsed.nodeName);
+    covered.add(`${key}.${parsed.propertyName}`);
+    if (node !== undefined && held.has(key)) {
+      const constant = hold(node, parsed.propertyName);
+      if (constant !== null) {
+        tracks.push(constant);
+        continue;
+      }
+    }
+    tracks.push(track.clone());
+  }
+  // A held joint the breathing clip never moves still has to hold the pose.
+  for (const key of held) {
+    if (covered.has(`${key}.quaternion`)) continue;
+    const node = bones.get(key);
+    const constant = node === undefined ? null : hold(node, 'quaternion');
+    if (constant !== null) tracks.push(constant);
+  }
+  instance.mixer.stopAllAction();
+  return new THREE.AnimationClip(`rest:${name}`, end, tracks);
 }
 
 /** Does this clip translate the model's own root node? */

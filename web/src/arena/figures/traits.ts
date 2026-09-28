@@ -5,8 +5,9 @@
  *
  * **Per-card identity, as data** (Tier 2 slice 3; report 13 §11's T9 and T10).
  *
- *     traitFor(card, data) →
- *       default  ⊕  every matching subtype rung (least specific first)  ⊕  the card's own row
+ *     traitFor(card, data, art) →
+ *       default  ⊕  the card's ART (lane BODIES, D144)  ⊕  every matching subtype rung
+ *       (least specific first)  ⊕  the card's own row
  *
  * `[NO three]`, `[NO React]`, `[NO DOM]`, no clock. `figures.json` says which
  * BODY a card stands in; `traits.json` says what makes it THAT card: how big it
@@ -43,7 +44,8 @@
  */
 
 import { isHidden, type AnyCard } from '../../protocol.ts';
-import type { BodyStyle, CostumeSlot, Formation, IdleStyle, PropKind, Silhouette } from './props.ts';
+import type { BodyStyle, CostumeSlot, FaceStyle, Formation, HairStyle, IdleStyle, PaletteUse, PropKind, Silhouette } from './props.ts';
+import type { RestPose } from './rests.ts';
 import { SUBTYPE_ORDER, figureSubtypesOf } from './resolve.ts';
 import traitsJson from './traits.json' with { type: 'json' };
 import { validateTraits } from './validate.ts';
@@ -104,7 +106,29 @@ export interface TraitRow {
    * model id `<id>-chibi`, kept in the library so nothing was lost).
    */
   body?: BodyStyle;
+  /**
+   * **Lane BODIES — the pose the card RESTS in** (`figures/rests.ts`'s closed
+   * table, D140): Fury's folded arms, Peggy at the ready. A pose, drawn whenever
+   * the card is untapped and not in combat; `stand` is the body's own idle.
+   * Only the proportioned body has one.
+   */
+  rest?: RestPose;
+  /**
+   * **Lane BODIES — the hairstyle** (`figures/props.ts`'s `HAIR_STYLES`, D141):
+   * a shared kind rigid on the head, in the costume's `hair` colour. Absent means
+   * the body's own (`BODY_HAIR`); `none` is bald.
+   */
+  hair?: HairStyle;
+  /** **Lane BODIES — the face** (D142): `on` for every person, `none` under a hood. */
+  face?: FaceStyle;
+  /**
+   * **Lane BODIES — the art rung** (D144): `art` lets the card's own painting
+   * colour what no hand-written row does (the default); `off` keeps the colour
+   * identity instead. The workshop's switch, and a card's way out.
+   */
+  palette?: PaletteUse;
 }
+
 
 /** A row with every field decided — what the pose reads. */
 export interface TraitSpec {
@@ -123,6 +147,12 @@ export interface TraitSpec {
   shrink: number | null;
   costume: Readonly<Partial<Record<CostumeSlot, string>>>;
   body: BodyStyle;
+  /** `null` ⇒ the body's own idle (`stand`). */
+  rest: RestPose | null;
+  /** `null` ⇒ the body's own hair (`BODY_HAIR`). */
+  hair: HairStyle | null;
+  face: FaceStyle;
+  palette: PaletteUse;
 }
 
 export const DEFAULT_TRAIT: TraitSpec = Object.freeze({
@@ -141,6 +171,10 @@ export const DEFAULT_TRAIT: TraitSpec = Object.freeze({
   shrink: null,
   costume: Object.freeze({}),
   body: 'human' as BodyStyle,
+  rest: null,
+  hair: null,
+  face: 'on' as FaceStyle,
+  palette: 'art' as PaletteUse,
 });
 
 /** `traits.json`, after validation. */
@@ -192,17 +226,44 @@ function apply(into: TraitSpec, row: TraitRow): TraitSpec {
     // A costume merges key by key: a card that names only its hair keeps its rung's suit.
     costume: row.costume === undefined ? into.costume : { ...into.costume, ...row.costume },
     body: row.body ?? into.body,
+    rest: row.rest ?? into.rest,
+    hair: row.hair ?? into.hair,
+    face: row.face ?? into.face,
+    palette: row.palette ?? into.palette,
   };
+}
+
+/** The keys the art rung may speak for — accent only (see `figures/palette.ts`'s `artRow`). */
+export interface ArtRow {
+  accent?: string;
 }
 
 /**
  * **The ladder.** Total, never throws, and a concealed card gets
  * {@link DEFAULT_TRAIT} and nothing else — its name is never read.
+ *
+ * `art` is the card's art rung (lane BODIES, D144), which the CALLER looks up by
+ * name — `figurePose` does so only for a card drawn face up (hard rule 8) — and
+ * passes in, so this function stays a function of its arguments.
  */
-export function traitFor(card: AnyCard, data: TraitData): TraitMatch {
+export function traitFor(card: AnyCard, data: TraitData, art: ArtRow | null = null): TraitMatch {
   if (isHidden(card)) return { spec: DEFAULT_TRAIT, rungs: [] };
+  const plain = ladder(card, data, null);
+  // **Lane BODIES — the art rung** (D144): the card's own painting, under every
+  // hand-written rung and over the file's default. A rung above that says
+  // `palette: off` takes it away again; so does a card with no art (a token, a miss).
+  if (art === null || plain.spec.palette === 'off') return plain;
+  return ladder(card, data, art);
+}
+
+/** The ladder itself, with or without the art rung. */
+function ladder(card: AnyCard, data: TraitData, art: ArtRow | null): TraitMatch {
   let spec = apply(DEFAULT_TRAIT, data.default);
   const rungs: string[] = [];
+  if (art !== null) {
+    spec = apply(spec, art);
+    rungs.push('art');
+  }
   const subtypes = figureSubtypesOf(card);
   // Least specific first, so the most specific subtype is applied last and wins.
   for (let i = subtypes.length - 1; i >= 0; i--) {

@@ -921,3 +921,72 @@ test('clips: Ant-Man’s shrink is one number — cues.json’s attack and trait
   const shrink = traits?.cards?.['Ant-Man, Reformed Rogue']?.shrink;
   if (shrink !== undefined) assert.equal(scale, shrink, 'cues.json and traits.json disagree on Ant-Man’s shrink');
 });
+
+// ---------------------------------------------------------------------------
+// Lane BODIES — the signature resting poses (D140)
+// ---------------------------------------------------------------------------
+
+test('clips: every resting pose reads clips every proportioned body has, and joints its rig has (D140)', async () => {
+  const { REST_KIT, REST_POSES, restClipsNeeded, restJointsNamed, restModelId } = await import('../src/arena/figures/rests.ts');
+  const bodies = Object.entries(MODELS.models).filter(([, entry]) => entry.rig === 'ubc');
+  assert.ok(bodies.length >= 2, 'no proportioned bodies in models.json');
+  for (const [id, entry] of bodies) {
+    for (const clip of restClipsNeeded()) assert.ok(entry.clips[clip] !== undefined, `${id} has no "${clip}" — a resting pose reads it`);
+  }
+  // The joints, on the real rig, and the variants the library derives.
+  const { loadLibrary } = await import('./prop-raster.ts');
+  const library = await loadLibrary();
+  for (const [id] of bodies) {
+    const base = library.get(id)!;
+    const joints = new Set<string>();
+    base.source.traverse((node) => {
+      if ((node as { isBone?: boolean }).isBone === true) joints.add(node.name.replace(/_[1-9]\d*$/, ''));
+    });
+    for (const joint of restJointsNamed()) assert.ok(joints.has(joint), `${id}'s rig has no ${joint}`);
+    for (const rest of REST_POSES) {
+      const variant = library.get(restModelId(id, rest));
+      assert.ok(variant !== undefined, `the library has no ${restModelId(id, rest)}`);
+      assert.equal(variant.rest, rest);
+      const idle = variant.clips.get('idle')!;
+      if (rest === 'stand') {
+        assert.equal(idle, base.clips.get('idle'), 'stand is the body\'s own idle, not a copy');
+        continue;
+      }
+      assert.equal(idle.name, `rest:${rest}`);
+      // Every joint the pose aims is HELD: its track is two equal keys.
+      for (const aim of REST_KIT[rest].aims) {
+        const track = idle.tracks.find((t) => t.name.replace(/_[1-9]\d*(?=\.)/, '') === `${aim.joint}.quaternion`);
+        assert.ok(track !== undefined, `${rest}: no track for ${aim.joint}`);
+        const v = track.values;
+        for (let k = 0; k < 4; k++) assert.equal(v[k], v[4 + k], `${rest}: ${aim.joint} moves — it is held`);
+      }
+      // Every other clip is the body's own, so the clip lane plays the same attack.
+      for (const [key, clip] of base.clips) if (key !== 'idle') assert.equal(variant.clips.get(key), clip, `${rest}: ${key} is not the body's`);
+    }
+  }
+});
+
+test('clips: a resting-pose variant is its body with the hair carved off — nothing else moves (D140, D141)', async () => {
+  const { restModelId } = await import('../src/arena/figures/rests.ts');
+  const { loadLibrary } = await import('./prop-raster.ts');
+  const library = await loadLibrary();
+  for (const id of ['agent', 'hero']) {
+    const base = library.get(id)!;
+    const variant = library.get(restModelId(id, 'stand'))!;
+    assert.ok((base.hairIndex?.length ?? 0) > 0, `${id} has no hair to carve`);
+    assert.equal(variant.unitScale, base.unitScale, 'a variant stands exactly as tall as its body');
+    assert.equal(variant.offsetY, base.offsetY);
+    let before = 0;
+    let after = 0;
+    base.source.traverse((n) => {
+      const g = (n as { geometry?: { index: { count: number } | null } }).geometry;
+      if (g?.index) before += g.index.count / 3;
+    });
+    variant.source.traverse((n) => {
+      const g = (n as { geometry?: { index: { count: number } | null } }).geometry;
+      if (g?.index) after += g.index.count / 3;
+    });
+    assert.equal(before - after, base.hairIndex!.length / 3, `${id}: the bald body lost more than its hair`);
+    console.log(`clips: ${id} — ${String(before)} triangles, its hair ${String(base.hairIndex!.length / 3)}, the bald body ${String(after)}`);
+  }
+});

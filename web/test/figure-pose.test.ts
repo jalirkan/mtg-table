@@ -24,6 +24,7 @@ import cuesJson from '../src/arena/cues/cues.json' with { type: 'json' };
 import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' };
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import { MAX_FIGURES, discRadiusFor, figurePose, fitHeight } from '../src/arena/figures/pose.ts';
+import { baseModelOf, restOfModel } from '../src/arena/figures/rests.ts';
 import { CARRIER_BOUNDS } from '../src/arena/figures/props.ts';
 import { LIVE_ASPECTS, REST_POSE, projectToNdc } from '../src/arena/camera.ts';
 import { STANCES } from '../src/arena/figures/types.ts';
@@ -316,7 +317,11 @@ test('figure-pose: every board frame of every committed recording poses', () => 
       if (pose.modelId !== null) {
         modelled += 1;
         withModel += 1;
-        assert.ok(MODEL_IDS.has(pose.modelId), `${file}: unknown model ${pose.modelId}`);
+        // Lane BODIES (D140): a proportioned body stands in its resting-pose variant,
+        // `<body>@<pose>`; the manifest knows it by the body.
+        assert.ok(MODEL_IDS.has(baseModelOf(pose.modelId)), `${file}: unknown model ${pose.modelId}`);
+        const rest = restOfModel(pose.modelId);
+        assert.equal(rest, pose.rest, `${file}: the variant and the pose's rest disagree`);
         assert.ok(!pose.anonymous, `${file}: card ${String(cardId)} is anonymous AND has a model`);
       }
       stances.set(pose.stance, (stances.get(pose.stance) ?? 0) + 1);

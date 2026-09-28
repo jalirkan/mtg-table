@@ -5,6 +5,34 @@
   "_never": "Nothing derived from card art may ever appear here, nothing from Mixamo (D54), and no AI-generated mesh. Marvel art is licensed to Wizards; the Fan Content Policy's line is \"If you don't have the rights to use another person's stuff in your Fan Content—don't\" (https://company.wizards.com/en/legal/fancontentpolicy). NOTICE §2 and the Scryfall images already live under that rule.",
   "_where": "The downloaded archives are NOT committed. They live under var/assets/figures/ (var/ is gitignored) exactly as downloaded — a zip is NOT unzipped by hand any more: the build reads the member it needs out of the verified zip. Re-download with the URLs below; the build refuses a file whose sha256 or byte count differs, and prints the URL.",
   "_reverified": "2026-09-27 (slice 2): all three slice-1 sources were re-downloaded from the URLs below into a fresh worktree and matched their recorded sha256 and byte count exactly; the three badges were re-read and are unchanged. The Universal Animation Library is new on that date. 2026-09-27 (slice 4): all four were downloaded AGAIN into the tier2-slice4 worktree — the three direct links by curl, the Animation Library through itch.io's free-download flow — and all four matched byte for byte (`node tools/build-figures.mjs --verify-only`); rebuilt with slice 3's manifest, figures.glb came out byte-identical to the committed one (143,920 B, sha256 c09ac552…a981a3), which closes slice 3's follow-up 7. The Universal Base Characters are new on that date.",
+  "budget": {
+    "libraryBytes": 460800,
+    "triangles": 30000,
+    "_what": "Lane BODIES (D145), 2026-09-28: the byte budget of web/public/models/figures.glb, re-set by MEASUREMENT from report 13 §8.2's 400 kB (409,600 B, which the build typed in until this lane). tools/build-figures.mjs fails a build over either number and web/test/figures.test.ts holds the committed file to both. 450 KiB = 460,800 B.",
+    "measured": {
+      "on": "the committed figures.glb (373,236 B, sha256 fe13b02c…7aae90), read by a scratch GLB parser, 2026-09-28",
+      "jsonChunkBytes": 237136,
+      "binChunkBytes": 136072,
+      "jsonByKey": {
+        "accessors": 107438,
+        "animations": 86379,
+        "nodes": 31572,
+        "bufferViews": 8395
+      },
+      "meshBytesPerTriangle": {
+        "agent": 12.8,
+        "hero": 7.7,
+        "chibi": 7.9,
+        "drone": 7.2,
+        "bee": 6.8
+      },
+      "animationBinaryBytes": 58169,
+      "jsonBytesPerProportionedClip": 8420,
+      "channelsPerProportionedClip": 23
+    },
+    "_why": "Two thirds of the file is its JSON chunk, and most of that is one accessor, sampler and channel record per animated joint per clip: a clip on the proportioned rig costs ~8.4 kB of JSON per body (23 channels) and under 1 kB of meshopt binary. So a new clip for both bodies is ~18 kB, and slice 4's 27 kB of headroom held ONE. What this lane's own plan would add with the Universal Base Characters pack (PLAN.md's lane-BODIES follow-ups): the pack's six other hairstyles as static nodes at ≤ 500 triangles (~7.7 B a triangle plus ~0.8 kB of JSON each: ~28 kB), its eye and two eyebrow meshes (~5 kB), and two more library clips for resting poses the table in figures/rests.ts cannot aim from the twelve it has (~36 kB) — ~69 kB, to ~442 kB. 450 KiB keeps ~18 kB over that. The triangle line stays report 13 §8.2's 30,000.",
+    "_cheaper": "Not done here, and the cheaper road to headroom: the JSON's per-channel records could be halved by merging each body's clips into one long clip with named ranges (the clip lane already scrubs `action.time`), which the build would have to own."
+  },
   "packs": {
     "kenney-mini-characters": {
       "title": "Mini Characters",

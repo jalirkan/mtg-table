@@ -35,6 +35,7 @@ import { isHidden, type AnyCard } from '../../protocol.ts';
 import { isLandTypeLine } from '../../render/labels.ts';
 import { colourHex, colourIdOf } from '../colour.ts';
 import { seatSpin, type Layout, type Placement, type Seat } from '../layout.ts';
+import type { ArtPalette } from './palette.ts';
 import type { TileData, TileKind, TileSpec } from './types.ts';
 
 /**
@@ -156,7 +157,17 @@ function isTileCard(placement: Placement): boolean {
  * `presence` and the wrap rows have already happened, and `Placement.back` is
  * already decided.
  */
-export function tilePose(placed: Layout, data: TileData): TileLayout {
+export function tilePose(
+  placed: Layout,
+  data: TileData,
+  /**
+   * Lane BODIES (D144): the art-derived palettes by card name. A land with no
+   * hand-written tint — the `*` rung's, a new set's non-basic — takes its
+   * painting's TERRAIN colour over the bare colour identity. Looked up only for a
+   * land drawn face up (hard rule 8).
+   */
+  palettes?: ReadonlyMap<string, ArtPalette>,
+): TileLayout {
   const out: TileLayout = new Map();
   if (placed.placements.length === 0) return out;
   for (const placement of placed.placements) {
@@ -165,6 +176,11 @@ export function tilePose(placed: Layout, data: TileData): TileLayout {
     if (out.has(placement.cardId)) continue;
     const card = placement.card;
     const match = tileFor(card, data);
+    const name = (card as { name?: string }).name;
+    const art =
+      palettes !== undefined && !placement.back && typeof name === 'string' && name !== ''
+        ? (palettes.get(name) ?? null)
+        : null;
     out.set(placement.cardId, {
       cardId: placement.cardId,
       seat: placement.seat,
@@ -173,6 +189,7 @@ export function tilePose(placed: Layout, data: TileData): TileLayout {
       kind: match.spec.tile,
       tint:
         match.spec.tint ??
+        art?.terrain ??
         colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)),
       rim: match.spec.rim,
       tapped: placement.tapped,

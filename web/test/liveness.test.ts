@@ -1920,3 +1920,77 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
   // Every parked streak is primed like every other slot (T7): prime walks the slots.
   assert.match(bodyOf(pool, 'prime'), /for \(const slot of this\.#slots\)/, 'prime no longer walks every slot');
 });
+
+// ---------------------------------------------------------------------------
+// Lane BODIES — the resting poses, the hair, the face, the coat and the art rung
+// ---------------------------------------------------------------------------
+
+/**
+ * **Lane BODIES grew the arena by three files, and each is on the right side**
+ * (D140–D144). `figures/rests.ts` (the resting poses) and `figures/palette.ts`
+ * (the k-means) are pure, and the `figures/` scan above covers them — said here so
+ * a move is noticed. `arena/art.ts` is the one arena module that reads PIXELS:
+ * it imports no three and no renderer, nothing in `scene/` or `cues/` imports it
+ * (the frame loop never waits on an image), only the workshop's swatch strip
+ * calls it today (`Arena.tsx` will, the day lane LOOK applies lane BODIES'
+ * follow-up 13 — `Arena.tsx` is LOOK's file), and the only names it reads art for
+ * come through `paletteNamesOf`, which skips every placement drawn as a back and
+ * every redacted stub (hard rule 8) — negative-controlled. On the pose side, a
+ * palette map is read in exactly two places, `pose.ts`'s `paletteFor` and
+ * `tilePose`'s land lookup, and each carries its own gate — also
+ * negative-controlled here, and by `palette.test.ts`'s hostile corpus, which
+ * hands every back and every stub a real name. The derived rest clips are SAMPLED at load
+ * (`scene/models.ts`'s `deriveRestClip`), never ticked: the mixer clause above
+ * already holds `mixer.update` to three files, and this one holds the derivation
+ * to `sampleClipInto`.
+ */
+test('liveness: lane BODIES — the poses and the palette are pure, and the art is read off the hot path, face up only', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, f.source]));
+  assert.ok(files.has('figures/rests.ts') && files.has('figures/palette.ts'), 'the pure halves moved out of figures/');
+  const art = files.get('art.ts') ?? '';
+  assert.ok(art !== '', 'arena/art.ts is missing');
+  for (const imported of importsOf(art)) {
+    assert.ok(imported.from !== 'three' && !imported.from.startsWith('three/') && !imported.from.includes('scene/'), `art.ts imports ${imported.from}`);
+  }
+  // Nobody on the frame loop's side imports it.
+  for (const [path, source] of files) {
+    if (!(path.startsWith('scene/') || path.startsWith('cues/') || path.startsWith('figures/'))) continue;
+    for (const imported of importsOf(source)) assert.ok(!/(^|\/)art\.ts$/.test(imported.from) || imported.from.startsWith('../../'), `${path} imports arena/art.ts`);
+  }
+  // It is the only arena module that decodes an image into pixels.
+  for (const [path, source] of files) {
+    if (path === 'art.ts') continue;
+    const code = codeOf(source);
+    assert.ok(!/getImageData\(|new Image\(/.test(code), `${path} reads pixels — the art rung's reads are art.ts's`);
+  }
+  // The one entry point checks both gates, and a copy without them is caught.
+  const gate = /function paletteNamesOf[\s\S]*?\n\}/.exec(codeOf(art))?.[0] ?? '';
+  const guarded = (body: string): boolean => /placement\.back/.test(body) && /isHidden\(placement\.card\)/.test(body);
+  assert.ok(guarded(gate), 'paletteNamesOf no longer skips a back or a redacted stub');
+  assert.equal(guarded(gate.replace('placement.back ||', '')), false, 'the gate check cannot tell a missing back test');
+  // The pose side reads a palette map in two places, and each is gated.
+  const figureCode = [...files].filter(([path]) => path.startsWith('figures/')).map(([path, source]) => [path, codeOf(source)] as const);
+  const reads = figureCode.flatMap(([path, code]) => (code.match(/\bpalettes(?:\?)?\.get\(/g) ?? []).map(() => path));
+  assert.deepEqual(reads.sort(), ['figures/pose.ts', 'figures/tiles.ts'], 'a palette map is read somewhere new');
+  const pose = figureCode.find(([path]) => path === 'figures/pose.ts')?.[1] ?? '';
+  const lookup = /export function paletteFor[\s\S]*?\n\}/.exec(pose)?.[0] ?? '';
+  const lookupGuarded = (body: string): boolean =>
+    /placement\.back/.test(body) && /isHidden\(placement\.card\)/.test(body) && /name === ''/.test(body);
+  assert.ok(lookupGuarded(lookup), 'paletteFor no longer skips a back, a redacted stub or a nameless card');
+  assert.equal(lookupGuarded(lookup.replace('placement.back ||', '')), false, 'the paletteFor check cannot tell a missing back test');
+  assert.equal(lookupGuarded(lookup.replace('|| isHidden(placement.card)', '')), false, 'the paletteFor check cannot tell a missing stub test');
+  // Every other palette read in pose.ts goes through it: the definition and its two calls.
+  assert.equal((pose.match(/\bpaletteFor\(/g) ?? []).length, 3, 'pose.ts reads a palette without paletteFor');
+  const tiles = figureCode.find(([path]) => path === 'figures/tiles.ts')?.[1] ?? '';
+  const tileBody = /export function tilePose[\s\S]*?\n\}/.exec(tiles)?.[0] ?? '';
+  const tileGuarded = (body: string): boolean => /!placement\.back &&[^;]*palettes\.get\(name\)/.test(body) && /name !== ''/.test(body);
+  assert.ok(tileGuarded(tileBody), "tilePose's art lookup no longer skips a land drawn as a back");
+  assert.equal(tileGuarded(tileBody.replace('!placement.back &&', '')), false, 'the tilePose check cannot tell a missing back test');
+  // extract() is only ever reached through the hook, which only reads names it is handed.
+  assert.equal((codeOf(art).match(/\bextract\(/g) ?? []).length, 2, 'extract() is called from somewhere new');
+  // The derivation samples; it never plays a clip through a mixer.
+  const models = codeOf(files.get('scene/models.ts') ?? '');
+  const derive = /export function deriveRestClip[\s\S]*?\n\}/.exec(models)?.[0] ?? '';
+  assert.ok(/sampleClipInto\(/.test(derive), 'deriveRestClip no longer samples its frame');
+  assert.ok(!/\.update\(|clipAction\(|\.play\(/.test(derive), 'deriveRestClip plays a clip');
+});

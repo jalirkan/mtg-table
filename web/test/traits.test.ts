@@ -33,8 +33,11 @@ import traitsJson from '../src/arena/figures/traits.json' with { type: 'json' };
 import { REST_CLIP_FOR, REST_PHASE_FOR } from '../src/arena/figures/clips.ts';
 import { COSTUME_DEFAULTS, costumeOf, figurePose, fitHeight, shadeHex, type FigurePose } from '../src/arena/figures/pose.ts';
 import {
+  BODY_HAIR,
   CARRIER_LENGTH,
+  COAT_PANEL,
   COSTUME_SLOTS,
+  HAIR_KIND,
   PROP_KINDS,
   PROP_KIT,
   SQUAD_MEMBER,
@@ -46,16 +49,19 @@ import {
   fitsFamily,
   swarmMembers,
   swarmSpan,
+  type PropAnchor,
+  type PropKind,
 } from '../src/arena/figures/props.ts';
 import { figureFor } from '../src/arena/figures/resolve.ts';
 import { DEFAULT_TRAIT, EMPTY_TRAIT_DATA, TRAITS, traitFor } from '../src/arena/figures/traits.ts';
+import { baseModelOf } from '../src/arena/figures/rests.ts';
 import { validateFigures, validateModels, validateTraits } from '../src/arena/figures/validate.ts';
 import { FIGURE_FRONT_Z, FIGURE_HEIGHT, FIGURE_MAX_WIDTH, layout, seatFacingY } from '../src/arena/layout.ts';
 import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 import { VIEW_BY_ID } from '../src/arena/camera.ts';
-import { PropField } from '../src/arena/scene/props.ts';
+import { MAX_BINDINGS, PROP_CAPACITY, PropField, buildKindGeometry } from '../src/arena/scene/props.ts';
 import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import {
   bodyLayers,
@@ -282,8 +288,11 @@ test('traits: `body: chibi` stands a card in slices 1–3\'s Kenney body, and no
   const placed = layout(state);
   const human = figurePose(placed, null, DATA, { models: MODELS }).get(500)!;
   const chibi = figurePose(placed, null, DATA, { models: MODELS, traits: chibiEverywhere }).get(500)!;
-  assert.equal(human.modelId, 'agent');
+  // Lane BODIES: the proportioned body stands in its resting-pose variant; the chibi has none.
+  assert.equal(baseModelOf(human.modelId), 'agent');
+  assert.equal(human.modelId, 'agent@atEase', 'the Soldier Token rests at ease (the soldier rung)');
   assert.equal(chibi.modelId, 'agent-chibi');
+  assert.equal(chibi.rest, null, 'a chibi has no resting poses');
   assert.equal(familyOf(chibi.modelId, MODELS), 'humanoid');
   // The chibi is 1.15 wide for 1 tall: the strict clamp (D65) sizes it exactly as slice 3 did.
   assert.ok(Math.abs(chibi.height - fitHeight(FIGURE_HEIGHT, MODELS.models['agent-chibi']!.width / MODELS.models['agent-chibi']!.height)) < 1e-9);
@@ -352,7 +361,7 @@ test('traits: every deck humanoid wears its own costume — the task list read o
     if (card === undefined) continue;
     const pose = posesOf(twoSeatState([onBattlefield(card, 500, 0)], [])).get(500);
     if (pose === undefined) continue;
-    bodies.set(name, pose.modelId);
+    bodies.set(name, baseModelOf(pose.modelId));
     lines.push(`  ${name.padEnd(30)} ${String(pose.modelId).padEnd(9)} ${pose.costume === null ? '(no costume)' : COSTUME_SLOTS.map((k, i) => `${k} ${pose.costume![i]}`).join(' ')}`);
   }
   console.log(`traits: every deck card's body and costume\n${lines.join('\n')}`);
@@ -399,7 +408,92 @@ test('traits: every deck humanoid wears its own costume — the task list read o
   // The drone and the bee wear nothing: they carry no slots.
   assert.equal(poseOf('Aerial Doombot').costume, null);
   assert.equal(poseOf('Giant-Sized Flying Ant').costume, null);
+  // Lane BODIES (D140, D141): the task's list of attitudes and hairstyles, read
+  // back off the poses — each is really what the figure rests in and wears.
+  const want: Array<[string, string, string | null]> = [
+    // Bald, as his card draws him (the fix pass: the dark `crop` read as a skullcap).
+    ['Nick Fury, Spymaster', 'folded', null],
+    ['Peggy Carter, Secret Agent', 'ready', 'waves'],
+    ['Agent Phil Coulson', 'clasped', 'parted'],
+    ['Quake, Agent of S.H.I.E.L.D.', 'braced', 'bob'],
+    ['Agent 13, Sharon Carter', 'aim', 'bun'],
+    ['Bold Biochemist', 'working', 'parted'],
+    ['A.I.M. Scientists', 'working', null],
+    ['Ant-Man, Reformed Rogue', 'akimbo', 'parted'],
+    ['Wasp, Shrinking Savior', 'akimbo', 'bob'],
+    ['Agents of S.H.I.E.L.D.', 'atEase', 'parted'],
+  ];
+  const attitudes: string[] = [];
+  for (const [name, rest, hair] of want) {
+    const pose = poseOf(name);
+    attitudes.push(`  ${name.padEnd(30)} rests ${String(pose.rest).padEnd(8)} hair ${String(pose.hair).padEnd(7)} → ${String(pose.modelId)}`);
+    assert.equal(pose.rest, rest, `${name} does not rest ${rest}`);
+    assert.equal(pose.hair, hair, `${name}'s hair is not ${String(hair)}`);
+    // Fury's is the patched face (D142): his left eye is under the eyepatch.
+    const faceKind = name === 'Nick Fury, Spymaster' ? 'facePatched' : 'face';
+    assert.equal(pose.props.some((p) => p.kind === faceKind), name !== 'A.I.M. Scientists', `${name}: the ${faceKind}`);
+  }
+  console.log(`traits: every deck person's resting pose and hair\n${attitudes.join('\n')}`);
+  // The coats stop at the hip and hang their skirts on the legs (D143).
+  for (const name of ['Nick Fury, Spymaster', 'Bold Biochemist']) {
+    const kinds = poseOf(name).props.map((p) => p.kind);
+    assert.ok(kinds.includes('coat') && kinds.includes('coatTails'), `${name}: the coat and its skirt`);
+  }
 });
+
+test('traits: the face reads from the views it is FOR — a seat’s own figures, close — and is never on a back (D142)', async () => {
+  const library = await loadLibrary();
+  const cards = corpusCards();
+  // Face-up people with nothing over the face (a hat's brim, a hood), at full size.
+  const people = ['Agent Phil Coulson', 'Nick Fury, Spymaster', 'Quake, Agent of S.H.I.E.L.D.', 'Agent 13, Sharon Carter', 'Bold Biochemist'];
+  const lines: string[] = [];
+  const failures: string[] = [];
+  for (const name of people) {
+    const card = cards.get(name);
+    assert.ok(card !== undefined, name);
+    const row: string[] = [];
+    for (const seat of SEATS) {
+      const pose = soloPose(card, card, seat, false, false)!;
+      const layers = figureLayers(pose, library);
+      // Which seat shows the lens its FACE is layout.ts's to say (seatFacingY,
+      // D81 — PLAN.md question 13 may turn it), never this test's.
+      const front = facesTheLens(seat);
+      for (const view of ['table', 'shoulder', 'side'] as const) {
+        // The face in whichever style the card wears — Fury's is `facePatched`.
+        const groups = kindGroups(layers);
+        const faces = { face: [...(groups['face'] ?? []), ...(groups['facePatched'] ?? [])] };
+        const px = visibility(cameraAt(VIEW_BY_ID[view].pose), layers, faces).get('face')?.pixels ?? 0;
+        row.push(`${seat}/${view} ${String(px).padStart(3)}`);
+        if (front && view === 'table' && px < FACE_TABLE_MIN_PX) failures.push(`${name}: ${String(px)} px of face at the table view`);
+        if (front && view === 'shoulder' && px < FACE_SHOULDER_MIN_PX) failures.push(`${name}: ${String(px)} px of face over the shoulder`);
+        if (!front && view !== 'side' && px > 2) failures.push(`${name}: its face shows ${String(px)} px through the back of its head (${view})`);
+      }
+    }
+    lines.push(`  ${name.padEnd(30)} ${row.join(' · ')}`);
+  }
+  console.log(`traits: the face, in px at 1600 × 1000 (≥ ${String(FACE_TABLE_MIN_PX)} at the table view and ≥ ${String(FACE_SHOULDER_MIN_PX)} over the shoulder, from the seat whose figures face the lens; side-on logged)\n${lines.join('\n')}`);
+  assert.deepEqual(failures, []);
+});
+
+/**
+ * **What a face reaches** (lane BODIES, D142). A proportioned head is ~12 px tall
+ * at the table view (D95), so a face there is a few pixels whatever it is — the
+ * bars are set under the measurement (5–7 px at the table view, 9–16 over the
+ * shoulder, docs/evidence/bodies.md) so a face that shrank or turned away fails.
+ * It is a detail for the close views and the workshop, not an identity.
+ */
+const FACE_TABLE_MIN_PX = 4;
+const FACE_SHOULDER_MIN_PX = 8;
+
+/**
+ * Whether a seat's figures show the table view their FRONT: figure space faces
+ * +Z (`FIGURE_FRONT_Z`), turned by `seatFacingY`, against the lens's side of the
+ * table. Read off layout.ts so the face test follows the facing rule wherever it
+ * lands (D81; lane LOOK turns your figures toward the opponent).
+ */
+function facesTheLens(seat: 'you' | 'opp'): boolean {
+  return Math.cos(seatFacingY(seat)) * FIGURE_FRONT_Z * Math.sign(VIEW_BY_ID.table.pose.position[2]) > 0;
+}
 
 test('traits: every anonymous pose in the corpus carries no props, no hover, no swarm', () => {
   let anonymous = 0;
@@ -415,9 +509,13 @@ test('traits: every anonymous pose in the corpus carries no props, no hover, no 
       assert.deepEqual(pose.traitRungs, []);
       // Slice 4: a costume is a statement about what a card is (hard rule 8).
       assert.equal(pose.costume, null, `${file}: an anonymous figure wears a costume`);
+      // Lane BODIES: nor a resting pose, a hairstyle, a face or its art's colour.
+      assert.equal(pose.rest, null, `${file}: an anonymous figure rests in a signature pose`);
+      assert.equal(pose.hair, null, `${file}: an anonymous figure has a hairstyle`);
+      assert.equal(pose.art, null, `${file}: an anonymous figure carries an art colour`);
     }
   }
-  console.log(`traits: ${String(anonymous)} anonymous figure-instances in the corpus, none with an identity or a costume`);
+  console.log(`traits: ${String(anonymous)} anonymous figure-instances in the corpus, none with an identity, a costume, a pose, hair or a face`);
   assert.ok(anonymous >= 1138, `only ${String(anonymous)} anonymous instances — the morph fixtures are not being read`);
 });
 
@@ -449,7 +547,7 @@ test('traits: the census — every deck card reads as itself, and every row fire
     let instances = 0;
     for (const pose of poses.values()) {
       for (const prop of pose.props) {
-        kinds.add(prop.kind === 'squad' ? `squad:${pose.modelId ?? ''}` : prop.kind);
+        kinds.add(prop.kind === 'squad' ? `squad:${baseModelOf(pose.modelId) ?? ''}` : prop.kind);
         // One instance per anchor (the gauntlets' two fists, the badge's chest and
         // back), one per member for a swarm or a squad.
         const anchors =
@@ -539,8 +637,13 @@ test('traits: the census — every deck card reads as itself, and every row fire
   }
 
   // **The budget**: the field draws one call per KIND. Report 13 §8.2's 90 has
-  // room for the slice-2 scene (≤ 66 at g1@355) plus this many.
-  assert.ok(worstKinds.kinds <= 12, `${String(worstKinds.kinds)} prop kinds in one frame (${worstKinds.where})`);
+  // room for the slice-2 scene (≤ 66 at g1@355) plus this many. Lane BODIES raised
+  // it from 12 to 16 — a face and a hairstyle per style on the table, a coat's
+  // skirt and a sidearm (D141–D143): measured 16 at the corpus's worst frame
+  // (disjoint.jsonl@241), 15 at g1@316 and 14 at @355, where the whole scene
+  // draws 85 calls with bloom off on the GTX 1080 (docs/evidence/bodies.md) —
+  // inside the 90.
+  assert.ok(worstKinds.kinds <= 16, `${String(worstKinds.kinds)} prop kinds in one frame (${worstKinds.where})`);
   assert.ok(worstInstances.n <= 96, `${String(worstInstances.n)} prop instances in one frame`);
 });
 
@@ -608,7 +711,16 @@ test('traits: with no trait data the poses are slice 2’s — identity is purel
       traits: EMPTY_TRAIT_DATA,
     }).values()) {
       assert.equal(pose.lift, 0);
-      assert.deepEqual(pose.props, []);
+      // Lane BODIES: a proportioned body's HEAD is props now — the pack's own hair
+      // for that body (carved off it, D141) and the face (D142) — and nothing else.
+      const own = pose.modelId === null ? undefined : BODY_HAIR[baseModelOf(pose.modelId)];
+      const head = own === undefined || own === 'none' ? [] : [HAIR_KIND[own]];
+      assert.deepEqual(
+        pose.props.map((p) => p.kind),
+        pose.rest === null ? [] : [...head, 'face'],
+        'with no traits a figure carries only its own head',
+      );
+      assert.equal(pose.rest === null || pose.rest === 'stand', true, 'with no traits a body rests in its own idle');
       assert.equal(pose.swarm, 0);
       assert.equal(pose.silhouette, null);
       assert.equal(pose.vehicle, false, 'with no traits, no vehicle is posed');
@@ -823,6 +935,21 @@ const ONE_SIDED: Readonly<Record<string, { partner: string; why: string }>> = {
   // Doombot facing you now, from the far seat they are 26 px of pack behind its
   // body; the visor band — its glow round the head — carries it from the front.
   jetpack: { partner: 'visor', why: 'thrusters are on the back — the visor band reads in front (D143)' },
+  // Lane BODIES: Peggy's waves are UNDER her hat — from the front and above the
+  // brim hides them, from behind they are her nape; her sidearm is in her right
+  // hand, pointed at the floor in front of her — the red hat carries her from both.
+  hairWaves: { partner: 'hat', why: 'waves under a hat show at the nape — the hat carries Peggy from the front' },
+  sidearm: { partner: 'hat', why: 'a pistol in the hand, pointed down in front — the red hat carries Peggy from behind' },
+};
+
+/**
+ * **Lane BODIES — the props that name NO card**, and so are not held to the
+ * identity bar at all: the face is on every person (D142). It has its own test
+ * below, from the views it is FOR.
+ */
+const GENERIC: Readonly<Record<string, string>> = {
+  face: 'on every person — it identifies no card; `traits: the face reads …` measures it',
+  facePatched: 'the face under an eyepatch — the eyepatch is the identity, and is held to the bar',
 };
 
 /**
@@ -931,6 +1058,7 @@ test('traits: every deck card’s identity props reach the screen from the table
   const failures: string[] = [];
   for (const [name, kinds] of least) {
     for (const [kind, row] of kinds) {
+      if (GENERIC[kind] !== undefined) continue;
       const raw = bare.get(name)?.get(kind);
       const dot = dots.get(name)?.get(kind);
       lines.push(
@@ -988,7 +1116,9 @@ test('traits: every deck card’s identity props reach the screen from the table
 /** The Agents' heads from the table view: the leader's own and each follower's. */
 function squadHeads(layers: readonly Layer[]): Array<{ pixels: number; centre: [number, number] | null }> {
   const table = cameraAt(VIEW_BY_ID.table.pose);
-  const groups: Record<string, string[]> = { leader: ['head'] };
+  // Lane BODIES: the leader's head is its bald head plus its hair and face props.
+  const leader = ['head', ...layers.filter((l) => /^(hair[A-Z]\w*|face)@/.test(l.tag)).map((l) => l.tag)];
+  const groups: Record<string, string[]> = { leader };
   for (const layer of layers) if (layer.tag.startsWith('squad@') && layer.tag.endsWith(':head')) groups[layer.tag] = [layer.tag];
   const seen = visibility(table, layers, groups);
   return Object.keys(groups).map((key) => seen.get(key)!);
@@ -1105,4 +1235,249 @@ test('traits: the Agents of S.H.I.E.L.D. are three separate heads from the table
   );
   assert.deepEqual(failures, []);
   assert.equal(controlFailed, 8, 'the old formation passes somewhere — this test would not have caught it');
+});
+
+test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles an instance, the face and a skirt panel far less (D141–D143)', () => {
+  const lines: string[] = [];
+  const budget: Array<[Parameters<typeof buildKindGeometry>[0], number, number]> = [
+    ['hairCrop', 150, 600],
+    ['hairBob', 150, 600],
+    ['hairWaves', 150, 600],
+    ['hairBun', 150, 600],
+    ['face', 40, 150],
+    ['facePatched', 30, 120],
+    ['coatTails', 16, 64],
+    ['cape', 16, 64],
+    ['coat', 60, 240],
+    ['sidearm', 20, 80],
+  ];
+  for (const [kind, min, max] of budget) {
+    const geometry = buildKindGeometry(kind);
+    assert.ok(geometry !== null, `${kind} has no procedural geometry`);
+    const triangles = geometry.getAttribute('position').count / 3;
+    lines.push(`${kind} ${String(triangles)}`);
+    assert.ok(triangles >= min && triangles <= max, `${kind}: ${String(triangles)} triangles, outside [${String(min)}, ${String(max)}]`);
+  }
+  // The two carved styles are the pack's own meshes, baked at load: null here.
+  assert.equal(buildKindGeometry('hairParted'), null);
+  assert.equal(buildKindGeometry('hairLong'), null);
+  console.log(`traits: lane BODIES' kinds, triangles an instance — ${lines.join(' · ')}`);
+});
+
+// ---------------------------------------------------------------------------
+// Lane BODIES' fix pass — the drape rule (D146)
+// ---------------------------------------------------------------------------
+
+/** The first cut's skirt (D143): each link rode its leg bone, the lower one the CALF. The negative control. */
+const FIRST_CUT_SKIRT = ((): readonly PropAnchor[] => {
+  const rad = (d: number): number => (d * Math.PI) / 180;
+  const waist = [0, 0.525, -0.012] as const;
+  const knee = [0, 0.302, -0.012] as const;
+  const upper = [1, 0.84, 1] as const;
+  const lower = [1.27, 0.5, 1.27] as const;
+  const body = anchorsOf('coatTails', 'human').slice(0, 5);
+  return [
+    ...body,
+    { joint: 'thigh_l', at: waist, turn: [0, rad(46), 0], size: upper },
+    { joint: 'calf_l', at: knee, turn: [0, rad(46), 0], size: lower },
+    { joint: 'thigh_l', at: waist, turn: [0, rad(118), 0], size: upper },
+    { joint: 'calf_l', at: knee, turn: [0, rad(118), 0], size: lower },
+    { joint: 'pelvis', at: waist, turn: [0, rad(180), 0], size: [1.04, 1.18, 1.04] },
+    { joint: 'thigh_r', at: waist, turn: [0, rad(-118), 0], size: upper },
+    { joint: 'calf_r', at: knee, turn: [0, rad(-118), 0], size: lower },
+    { joint: 'thigh_r', at: waist, turn: [0, rad(-46), 0], size: upper },
+    { joint: 'calf_r', at: knee, turn: [0, rad(-46), 0], size: lower },
+  ];
+})();
+
+/** Which skirt anchors are the LOWER links (the calf's, in the first cut): the same list positions in both. */
+const LOWER_LINKS = new Set([6, 8, 11, 13]);
+
+interface Drape {
+  /** The steepest a lower link leans from hanging straight down, degrees. */
+  lowerTilt: number;
+  /** The farthest any skirt panel's outer hem reaches from the pelvis's vertical, in figure heights. */
+  reach: number;
+  where: string;
+  reachWhere: string;
+}
+
+/** Every skirt panel of one figure through every sampled clip frame: the worst tilt and reach. */
+async function drapeOf(card: AnyCard, filler: AnyCard): Promise<Drape> {
+  const library = await loadLibrary();
+  const pose = soloPose(card, filler, 'you', false, false)!;
+  const model = library.get(pose.modelId!)!;
+  const still: import('../src/arena/scene/props.ts').PropOffsetSource = {
+    offsetOf: () => ({ dx: 0, dy: 0, dz: 0, scale: 1, opacity: 1, dissolve: 0, glow: 0, dRotY: 0 }),
+    clipOf: () => null,
+  };
+  const worst: Drape = { lowerTilt: 0, reach: 0, where: '', reachWhere: '' };
+  const axis = new THREE.Vector3();
+  const hem = new THREE.Vector3();
+  const pelvis = new THREE.Vector3();
+  const matrix = new THREE.Matrix4();
+  const { clipFor } = await import('../src/arena/scene/models.ts');
+  for (const key of ['idle', 'crouch', 'attack', 'block', 'hit', 'summon']) {
+    const clip = clipFor(model, key, pose.clips[key]);
+    if (clip === null) continue;
+    for (let step = 0; step <= 10; step++) {
+      const rig = rigOf(pose, library)!;
+      rig.mixer.stopAllAction();
+      const action = rig.mixer.clipAction(clip);
+      action.play();
+      action.time = (step / 10) * clip.duration;
+      action.setEffectiveWeight(1);
+      rig.mixer.update(0);
+      rig.root.updateMatrixWorld(true);
+      // Reach is measured from the body's own axis — its pelvis — not the stand
+      // point: a lunge carries the whole body forward, and that is not a flap.
+      rig.root.getObjectByProperty('isBone', true)?.parent?.traverse((node) => {
+        if (node.name.replace(/_[1-9]\d*$/, '') === 'pelvis') node.getWorldPosition(pelvis);
+      });
+      const field = new PropField();
+      field.setLibrary(library, MODELS);
+      field.commit(new Map([[pose.cardId, pose]]), new Map([[pose.cardId, rig]]), MODELS);
+      field.bind(still, 0);
+      const mesh = field.group.children.find((c) => c.name === 'props:coatTails') as THREE.InstancedMesh | undefined;
+      assert.ok(mesh !== undefined && mesh.count === 14, `${key}: the coat has ${String(mesh?.count)} panels, not 14`);
+      for (let i = 5; i < mesh.count; i++) {
+        mesh.getMatrixAt(i, matrix);
+        const where = `${key}@${(step / 10).toFixed(1)} panel ${String(i)}`;
+        if (LOWER_LINKS.has(i)) {
+          axis.set(0, -1, 0).transformDirection(matrix);
+          const tilt = (Math.acos(Math.max(-1, Math.min(1, -axis.y))) * 180) / Math.PI;
+          if (tilt > worst.lowerTilt) Object.assign(worst, { lowerTilt: tilt, where });
+        }
+        hem.set(0, -COAT_PANEL.length, COAT_PANEL.hem).applyMatrix4(matrix);
+        const reach = Math.hypot(hem.x - pelvis.x, hem.z - pelvis.z) / pose.height;
+        if (reach > worst.reach) {
+          worst.reach = reach;
+          worst.reachWhere = where;
+        }
+      }
+      field.dispose();
+    }
+  }
+  return worst;
+}
+
+/** How far a lower link may lean, and a hem may reach — set between the kit (measured) and the first cut. */
+const DRAPE_MAX_LOWER_TILT = 30;
+const DRAPE_MAX_REACH = 0.42;
+
+test('traits: the coat DRAPES — no skirt link lies flat or flies out, at rest in any stance or through a whole lunge (D146; the first cut fails it)', async () => {
+  const cards = corpusCards();
+  const filler = cards.get('Soldier Token')!;
+  const kit = PROP_KIT.coatTails.anchors as Record<string, readonly PropAnchor[] | undefined>;
+  const committed = kit['human']!;
+  const lines: string[] = [];
+  for (const name of ['Nick Fury, Spymaster', 'Bold Biochemist']) {
+    const card = cards.get(name);
+    assert.ok(card !== undefined, `${name} is not in the corpus`);
+    const drape = await drapeOf(card, filler);
+    kit['human'] = FIRST_CUT_SKIRT;
+    let control: Drape;
+    try {
+      control = await drapeOf(card, filler);
+    } finally {
+      kit['human'] = committed;
+    }
+    lines.push(
+      `  ${name.padEnd(22)} the kit: lower links ≤ ${drape.lowerTilt.toFixed(0)}° (${drape.where}), hem reach ≤ ${drape.reach.toFixed(2)} (${drape.reachWhere})\n` +
+        `  ${''.padEnd(22)} the first cut: ≤ ${control.lowerTilt.toFixed(0)}° (${control.where}), ≤ ${control.reach.toFixed(2)} (${control.reachWhere})`,
+    );
+    assert.ok(drape.lowerTilt <= DRAPE_MAX_LOWER_TILT, `${name}: a lower link leans ${drape.lowerTilt.toFixed(0)}° (${drape.where})`);
+    assert.ok(drape.reach <= DRAPE_MAX_REACH, `${name}: a hem reaches ${drape.reach.toFixed(2)} of a height out (${drape.reachWhere})`);
+    assert.ok(
+      control.lowerTilt > DRAPE_MAX_LOWER_TILT || control.reach > DRAPE_MAX_REACH,
+      `${name}: the first cut's calf-riding skirt passes too — this test cannot see the sliver`,
+    );
+  }
+  console.log(`traits: the drape (idle, crouch, attack, block, hit, summon, 11 frames each)\n${lines.join('\n')}`);
+});
+
+test('traits: the drape rule is well-formed — a hanging panel follows a joint panel of its own kind, and every joint it names is on the rig (D146)', async () => {
+  const library = await loadLibrary();
+  const joints = new Set<string>();
+  library.get('agent')!.source.traverse((node) => {
+    if ((node as { isBone?: boolean }).isBone === true) joints.add(node.name.replace(/_[1-9]\d*$/, ''));
+  });
+  let follows = 0;
+  let hangs = 0;
+  for (const kind of [...PROP_KINDS] as PropKind[]) {
+    const anchors = anchorsOf(kind, 'human');
+    anchors.forEach((anchor, i) => {
+      if (anchor.joint !== 'root' && anchor.joint !== 'stand') assert.ok(joints.has(anchor.joint), `${kind}[${String(i)}]: no joint ${anchor.joint}`);
+      if (anchor.follow !== undefined) {
+        follows += 1;
+        assert.ok(joints.has(anchor.follow.joint), `${kind}[${String(i)}]: follows ${anchor.follow.joint}, which the rig lacks`);
+        assert.ok(anchor.follow.weight > 0 && anchor.follow.weight < 1, `${kind}[${String(i)}]: a follow weight of ${String(anchor.follow.weight)}`);
+        assert.equal(anchor.pose, undefined, `${kind}[${String(i)}]: follow with a posed anchor`);
+      }
+      if (anchor.hang !== undefined) {
+        hangs += 1;
+        assert.ok(kind === 'coatTails' || kind === 'cape', `${kind} hangs, and only a panel kind may (its hem is COAT_PANEL's)`);
+        assert.ok(i > 0 && anchors[i - 1]!.joint !== 'root' && anchors[i - 1]!.joint !== 'stand', `${kind}[${String(i)}] hangs from nothing`);
+        assert.ok(anchors[i - 1]!.hang === undefined, `${kind}[${String(i)}] hangs from a hanging panel`);
+        assert.ok(anchor.hang > 0 && anchor.hang <= 1);
+        assert.equal(anchor.pose, undefined);
+      }
+    });
+  }
+  assert.equal(follows, 6, 'the coat skirt follows its thighs at four panels, the cape at two');
+  assert.equal(hangs, 4, 'the coat skirt has four hanging links');
+});
+
+/** One figure layout's instances, per kind, exactly as `PropField.bindPose` binds them. */
+function instancesPerKind(poses: Iterable<FigurePose>): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const pose of poses) {
+    if (pose.anonymous) continue;
+    for (const prop of pose.props) {
+      const key = prop.kind === 'squad' ? `squad:${baseModelOf(pose.modelId) ?? ''}` : prop.kind;
+      const n =
+        prop.kind === 'swarmBee' || prop.kind === 'squad'
+          ? pose.swarm
+          : prop.kind === 'carrier'
+            ? 1
+            : anchorsOf(prop.kind, familyOf(pose.modelId, MODELS)).length;
+      out.set(key, (out.get(key) ?? 0) + n);
+    }
+  }
+  return out;
+}
+
+test('traits: the prop field has room for every panel — a mirror’s four long coats fit one kind’s buffer (D146)', () => {
+  // The corpus's worst frame, per kind and in all.
+  let worstKind = { n: 0, where: '' };
+  let worstTotal = { n: 0, where: '' };
+  for (const { file, index, state } of FRAMES) {
+    const counts = instancesPerKind(figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS }).values());
+    let total = 0;
+    for (const [kind, n] of counts) {
+      total += n;
+      if (n > worstKind.n) worstKind = { n, where: `${kind} at ${file}@${String(index)}` };
+    }
+    if (total > worstTotal.n) worstTotal = { n: total, where: `${file}@${String(index)}` };
+  }
+  // The mirror the gate plays by default: both seats' Fury and Bold Biochemist on
+  // the table at once — fourteen coat panels each.
+  const cards = corpusCards();
+  const fury = cards.get('Nick Fury, Spymaster')!;
+  const bio = cards.get('Bold Biochemist')!;
+  const mirror = twoSeatState(
+    [onBattlefield(fury, 901, 0), onBattlefield(bio, 902, 0)],
+    [onBattlefield(fury, 903, 1), onBattlefield(bio, 904, 1)],
+  );
+  const counts = instancesPerKind(posesOf(mirror).values());
+  const coats = counts.get('coatTails') ?? 0;
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  console.log(
+    `traits: prop instances — the corpus's worst kind ${String(worstKind.n)} (${worstKind.where}), worst frame ${String(worstTotal.n)} (${worstTotal.where}); ` +
+      `a mirror's four coats ${String(coats)} panels, ${String(total)} in all (a kind holds ${String(PROP_CAPACITY)}, the field ${String(MAX_BINDINGS)})`,
+  );
+  assert.equal(coats, 56, 'four long coats are not fourteen panels each');
+  assert.ok(worstKind.n <= PROP_CAPACITY, `one kind needs ${String(worstKind.n)} instances (${worstKind.where})`);
+  assert.ok(coats <= PROP_CAPACITY, `a mirror's coats need ${String(coats)} of a kind's ${String(PROP_CAPACITY)} — the last coat loses its skirt`);
+  assert.ok(worstTotal.n <= MAX_BINDINGS && total <= MAX_BINDINGS, 'the field runs out of bindings');
 });

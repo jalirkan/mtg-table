@@ -4381,6 +4381,23 @@ button.zonerow__open:hover {
   white-space: nowrap;
 }
 
+/* Lane BODIES (D144): the card art's palette — one bar per cluster, as wide as
+   its share of the painting, then the accent the art rung offers. */
+.workshop__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  min-inline-size: 0;
+}
+
+.workshop__swatch {
+  display: inline-block;
+  block-size: 0.9rem;
+  border-radius: 2px;
+  outline: 1px solid rgba(255, 255, 255, 0.25);
+}
+
 /* Slice 4's costume (D97): one row per slot — the swatch is what the body is
    drawn in, the code what the data says, the label where it came from. */
 .workshop__costume {

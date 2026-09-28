@@ -56,24 +56,33 @@ import * as THREE from 'three';
 import type { ClipRequest } from '../figures/clips.ts';
 import type { FigureLayout, FigurePose } from '../figures/pose.ts';
 import {
+  CARVED_HAIR,
+  COAT_PANEL,
+  HANG_FROM,
+  HAIR_KIND,
+  HEAD_SHAPE,
   PROP_KIT,
-  PROP_KINDS,
   RING_RADIUS,
+  SCENE_KINDS,
   SWARM_BEE_RATIO,
   anchorsOf,
   familyOf,
   swarmMembers,
+  type HairStyle,
   type PropAnchor,
   type SceneKind,
   type SwarmMember,
 } from '../figures/props.ts';
+import { baseModelOf, restOfModel } from '../figures/rests.ts';
 import type { ModelData } from '../figures/types.ts';
 import { parsedColour } from './colourCache.ts';
 import type { FigureRigMap } from './figureRigs.ts';
 import { PROP_LOOK, applyPropLook, makePropMaterial, type PropLook, type PropMaterial } from './propMaterial.ts';
 import { COSTUME_ATTRIBUTE } from './figureMaterial.ts';
 import type { MaterialLook } from '../look.ts';
-import { instantiateFigure, sampleClipInto, type LoadedModel, type ModelLibrary } from './models.ts';
+import { baseName, instantiateFigure, sampleClipInto, type LoadedModel, type ModelLibrary } from './models.ts';
+
+export { baseName };
 
 /** The slice of `SceneStage` the field reads — handed in, never imported. */
 export interface PropOffsetSource {
@@ -104,8 +113,15 @@ export interface PropBody {
   readonly pose: FigurePose;
 }
 
-/** How many instances one kind's buffer holds. Two per figure (gauntlets) × 12 figures, with room. */
-export const PROP_CAPACITY = 32;
+/**
+ * How many instances one kind's buffer holds. Slice 3 sized it for two per figure
+ * (gauntlets) × 12 figures, with room: 32. **Lane BODIES' fix pass (D146) doubled
+ * it**: a long coat's body and skirt are fourteen panels of ONE kind, the corpus
+ * already puts two coats on the table at once (28), and the mirror the gate plays
+ * by default can put four (56) — at 32 the third coat lost its skirt. 64 × 16
+ * floats a kind is ~4 kB; `traits.test.ts` holds the mirror to it.
+ */
+export const PROP_CAPACITY = 64;
 /** How many bindings the field holds in all — a binding is one instance of one kind. */
 export const MAX_BINDINGS = 192;
 /** The ring's turn, radians a second — slow enough to read as a hover, not a spin. */
@@ -135,6 +151,7 @@ const LOOKS: Readonly<Record<SceneKind, PropLook>> = {
   exhaust: PROP_LOOK.glow,
   laserEye: PROP_LOOK.glow,
   pistol: PROP_LOOK.metal,
+  sidearm: PROP_LOOK.metal,
   coat: PROP_LOOK.cloth,
   eyepatch: PROP_LOOK.dark,
   badge: PROP_LOOK.badge,
@@ -149,6 +166,18 @@ const LOOKS: Readonly<Record<SceneKind, PropLook>> = {
   squad: PROP_LOOK.body,
   swarmBee: PROP_LOOK.body,
   carrier: PROP_LOOK.hull,
+  // Lane BODIES: a coat's skirt and a cloak are cloth like the coat; hair and the
+  // face read as their own colours, like a shirt-front.
+  coatTails: PROP_LOOK.cloth,
+  cape: PROP_LOOK.cloth,
+  face: PROP_LOOK.fabric,
+  facePatched: PROP_LOOK.fabric,
+  hairParted: PROP_LOOK.fabric,
+  hairLong: PROP_LOOK.fabric,
+  hairCrop: PROP_LOOK.fabric,
+  hairBob: PROP_LOOK.fabric,
+  hairWaves: PROP_LOOK.fabric,
+  hairBun: PROP_LOOK.fabric,
 };
 
 // ---------------------------------------------------------------------------
@@ -345,7 +374,8 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
         part(new THREE.SphereGeometry(0.5, 8, 4), [1.8, 1.8, 1.8], [0, 0, 0.6]),
       ]);
     }
-    case 'pistol': {
+    case 'pistol':
+    case 'sidearm': {
       // Grip at the origin, barrel along +z to its tip at (0, 0.25, 1.25) —
       // `figures/props.ts`'s PISTOL_TIP_LOCAL, where the lit muzzle sits.
       return mergeParts([
@@ -355,33 +385,49 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
       ]);
     }
     case 'coat': {
-      // **Slice 4: a long coat cut for the PROPORTIONED body**, in its figure
-      // units at size 1, from the shoulders (the anchor) to below the knee: an
-      // open shell a little wider than the shoulders at the top (0.15) and flared
-      // at the hem (0.25), squashed front-to-back to the body's depth; it wraps
-      // round the front to a 40° opening, and its arms-free cut lets the hanging
-      // arms show at its sides. A stand-up collar at the neck (no higher than the
-      // jaw — slice 3's chibi collar, scaled to a person, was a bell over the
-      // head), TRIM strips down the opening, round the collar and the hem. The
-      // trim's vertex colour is ×30 of the coat's own: white on any coat that is not
-      // black, a light slate on Fury's black one (the second verification pass).
-      // The chibi fallback wears the same coat through a wider anchor.
-      const gap = (40 / 180) * Math.PI;
+      // **Slice 4: a coat cut for the PROPORTIONED body**, in its figure units at
+      // size 1, from the shoulders (the anchor): an open shell a little wider than
+      // the shoulders at the top (0.15), squashed front-to-back toward the body's
+      // depth; it wraps round the front to a 40° opening, and its arms-free cut
+      // lets the hanging arms show at its sides. A stand-up collar at the neck (no
+      // higher than the jaw — slice 3's chibi collar, scaled to a person, was a
+      // bell over the head), TRIM strips down the opening, round the collar and the
+      // hem. The trim's vertex colour is ×30 of the coat's own: white on any coat
+      // that is not black, a light slate on Fury's black one (the second
+      // verification pass). **Lane BODIES (D143): it is the YOKE** — 0.16 below
+      // the shoulders, to the chest, flaring to 0.165 — and overlaps the top of
+      // `coatTails`, whose body link hangs from the lowest spine joint and whose
+      // skirt follows the legs, so a pose that bends the chest bends the coat
+      // there instead of tilting one shell from the shoulders to the hip. The
+      // chibi wears the same coat through a wider anchor.
+      // Lane BODIES: open wider at the front (64°, from 40°), worn open, so a
+      // resting pose's folded arms show through it.
+      const gap = (64 / 180) * Math.PI;
       const edge = gap / 2;
       const TRIM: RGB = [30, 30, 30];
-      const DEPTH: readonly [number, number, number] = [1, 1, 0.72];
+      const DEPTH: readonly [number, number, number] = [1, 1, 0.84];
+      const LENGTH = 0.16;
+      const HEM = 0.165;
       const lapel = (from: number): THREE.BufferGeometry =>
-        part(new THREE.CylinderGeometry(0.153, 0.253, 0.56, 1, 1, true, from, 0.12), TRIM, [0, -0.28, 0], [0, 0, 0], DEPTH);
+        part(new THREE.CylinderGeometry(0.153, HEM + 0.003, LENGTH, 1, 1, true, from, 0.12), TRIM, [0, -LENGTH / 2, 0], [0, 0, 0], DEPTH);
       return mergeParts([
-        part(new THREE.CylinderGeometry(0.15, 0.25, 0.56, 22, 3, true, edge, Math.PI * 2 - gap), WHITE, [0, -0.28, 0], [0, 0, 0], DEPTH),
+        part(new THREE.CylinderGeometry(0.15, HEM, LENGTH, 22, 1, true, edge, Math.PI * 2 - gap), WHITE, [0, -LENGTH / 2, 0], [0, 0, 0], DEPTH),
         lapel(edge),
         lapel(Math.PI * 2 - edge - 0.12),
         // The collar: stands up round the neck, open at the throat.
         part(new THREE.CylinderGeometry(0.085, 0.1, 0.07, 18, 1, true, edge * 1.4, Math.PI * 2 - gap * 1.4), [1.3, 1.3, 1.3], [0, 0.03, -0.005], [0, 0, 0], [1, 1, 0.9]),
         part(new THREE.CylinderGeometry(0.088, 0.086, 0.012, 18, 1, true, edge * 1.4, Math.PI * 2 - gap * 1.4), TRIM, [0, 0.066, -0.005], [0, 0, 0], [1, 1, 0.9]),
-        // The hem's trim.
-        part(new THREE.CylinderGeometry(0.252, 0.252, 0.018, 22, 1, true, edge, Math.PI * 2 - gap), TRIM, [0, -0.551, 0], [0, 0, 0], DEPTH),
       ]);
+    }
+    case 'coatTails':
+    case 'cape': {
+      // **Lane BODIES (D143) — one panel of a skirt or a cloak**: an arc of a
+      // flared cone centred on +Z, its top at y = 0 and its hem COAT_PANEL.length
+      // below. The kit's anchors turn it round the body and hang each one on the
+      // bone under it (D146: from the pelvis, following or hanging). A cloak's
+      // panel carries a trim at its hem — the villain's gold — and a skirt's does
+      // not (the fix pass tried: see `coatPanel`).
+      return coatPanel(kind === 'cape');
     }
     case 'eyepatch': {
       // **Slice 4: in UNIT-HEAD space** — the anchor's size is the head's own
@@ -554,11 +600,239 @@ export function buildKindGeometry(kind: SceneKind): THREE.BufferGeometry | null 
         ...pod(-0.34, -0.24),
       ]);
     }
-    // Baked from the library at load (`bakePose`), not built here.
+    case 'face':
+    case 'facePatched': {
+      // **Lane BODIES (D142) — a comic face**, in figure units on the
+      // proportioned head's front (HEAD_SHAPE, measured on both bodies): two white
+      // eyes with ink pupils, two brows set low at the inner end (a steady look),
+      // and a mouth line. Each feature is turned with the face's curve. No texture
+      // and no shader of its own: the vertices carry the colours, the kit's is white.
+      // `facePatched` leaves out HIS left eye (+x) and keeps its brow: the eyepatch
+      // is over it, and an eye under a patch showed from above it.
+      const patched = kind === 'facePatched';
+      const { eye, brow, mouth } = HEAD_SHAPE;
+      const INK: RGB = [0.03, 0.035, 0.05];
+      const EYE: RGB = [1.2, 1.2, 1.15];
+      // Tipped up toward the lens: the table view looks down at every face.
+      const PITCH = -FACE_PITCH;
+      const parts: THREE.BufferGeometry[] = [];
+      for (const side of [1, -1]) {
+        const x = side * eye.x * FACE_SCALE;
+        const yaw = side * 0.34;
+        if (!(patched && side === 1)) {
+          parts.push(part(new THREE.CircleGeometry(1, 14), EYE, [x, eye.y, eye.z], [PITCH, yaw, 0], [0.0106 * FACE_SCALE, 0.0078 * FACE_SCALE, 1]));
+          parts.push(
+            part(new THREE.CircleGeometry(1, 12), INK, [x - side * 0.0009, eye.y - 0.0006, eye.z + 0.0014], [PITCH, yaw, 0], [0.0052 * FACE_SCALE, 0.006 * FACE_SCALE, 1]),
+          );
+        }
+        parts.push(
+          part(new THREE.BoxGeometry(1, 1, 1), INK, [x + side * 0.001, brow.y + 0.002, brow.z], [PITCH, yaw, side * 0.24], [0.022 * FACE_SCALE, 0.0055 * FACE_SCALE, 0.003]),
+        );
+      }
+      parts.push(part(new THREE.BoxGeometry(1, 1, 1), INK, [0, mouth.y, mouth.z], [PITCH, 0, 0], [0.024 * FACE_SCALE, 0.0042 * FACE_SCALE, 0.003]));
+      return mergeParts(parts);
+    }
+    case 'hairCrop':
+      // Close-cropped: a thin cap over the crown and the back, above the ears.
+      return hairShell({ front: 56, side: 86, back: 108, scale: 1.035, flare: 0, strands: 0.1 });
+    case 'hairBob':
+      // A bob: a fringe to the brows, the sides and back to the jaw, flared out.
+      return hairShell({ front: 63, side: 122, back: 126, scale: 1.1, flare: 0.14, tips: { count: 20, length: 14 }, strands: 0.3 });
+    case 'hairWaves':
+      // Swept-back waves with rolls at the nape — what shows under a hat.
+      return mergeParts([hairShell({ front: 50, side: 104, back: 114, scale: 1.08, flare: 0.04, strands: 0.25 }), hairRolls()]);
+    case 'hairBun':
+      // Pulled back into a bun at the crown's back.
+      return mergeParts([
+        hairShell({ front: 55, side: 92, back: 110, scale: 1.05, flare: 0, strands: 0.22 }),
+        part(
+          new THREE.SphereGeometry(1, 8, 6),
+          [0.9, 0.9, 0.9],
+          [HEAD_SHAPE.centre[0], HEAD_SHAPE.centre[1] + 0.035, HEAD_SHAPE.centre[2] - 0.074],
+          [0, 0, 0],
+          [0.03, 0.028, 0.026],
+        ),
+      ]);
+    // Baked from the library at load (`bakePose`, `bakeHair`), not built here.
     case 'rider':
     case 'squad':
+    case 'hairParted':
+    case 'hairLong':
       return null;
   }
+}
+
+/**
+ * **The face's size for the table view** (D142): the features at comic scale —
+ * eyes a third of the face wide — and tipped this far (radians) up toward a lens
+ * that looks down at every figure. `traits.test.ts` measures what they reach.
+ */
+const FACE_SCALE = 1.15;
+const FACE_PITCH = 0.3;
+
+/**
+ * One skirt or cloak panel at size 1 (`figures/props.ts`'s `COAT_PANEL`): 6 × 2
+ * segments, 24 triangles — a long coat's body and skirt is fourteen of them, and
+ * both duelists wear one, so at `g1`@316 a panel is paid for about thirty times.
+ */
+function coatPanel(trim: boolean): THREE.BufferGeometry {
+  const { top, hem, length, arc } = COAT_PANEL;
+  const a = (arc / 180) * Math.PI;
+  const cloth = part(new THREE.CylinderGeometry(top, hem, length, 6, 2, true, -a / 2, a), WHITE, [0, -length / 2, 0]);
+  // A little darker toward the waist, where the coat's own hem overlaps it.
+  const pos = cloth.getAttribute('position');
+  const col = cloth.getAttribute('color') as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) {
+    const k = 0.82 + 0.18 * Math.min(1, -pos.getY(i) / length);
+    col.setXYZ(i, k, k, k);
+  }
+  // No hem trim on a SKIRT: its panels are links of a chain, and a trim at every
+  // link's hem draws a stripe across the knee. The fix pass tried tucking every
+  // hem but the last under the link below it (`HANG_FROM`) and a smaller body
+  // link: from the table view the upper links' bands still showed as rings round
+  // the coat — blown white on the Biochemist's (var/bodies/fix1/coat-v3/). The ink
+  // line and the costume carry the edge; a hem trim on the chain's LAST links is
+  // PLAN.md's lane BODIES follow-up 14. A CLOAK's trim (×30, the coat's lapel
+  // rule: the duelist's baker reads it as the look's trim slot, gold) is a strip
+  // just outside the hem; its shoulder panels hang inside its hip panels, so only
+  // the cloak's own hem shows one (figures/props.ts's cape anchors).
+  if (!trim) return mergeParts([cloth]);
+  const band = part(
+    new THREE.CylinderGeometry(hem + 0.003, hem + 0.003, 0.03, 6, 1, true, -a / 2, a),
+    [30, 30, 30],
+    [0, -length + 0.015, 0],
+  );
+  return mergeParts([cloth, band]);
+}
+
+/**
+ * **A procedural hairstyle** (lane BODIES, D141): a shell round the measured head
+ * (HEAD_SHAPE), `scale` × its radii, kept above a HAIRLINE that runs from `front`
+ * (degrees from the crown, over the forehead) through `side` (over the ears) to
+ * `back` (the nape), and pushed out by `flare` toward its lower edge. The normals
+ * are the ellipsoid's, so the shading is smooth; the vertices are a little darker
+ * underneath, for volume.
+ */
+function hairShell(style: {
+  front: number;
+  side: number;
+  back: number;
+  scale: number;
+  flare: number;
+  /**
+   * Strand TIPS round the hem — a comic artist's zig-zag of hair ends, so a bob
+   * reads as hair and not as a helmet (the resumed pass's judgement from the
+   * workshop's close framing). `count` tips spaced round the head, `length`
+   * degrees below the hairline at the back and shorter toward the temples, and
+   * none over the forehead: the table view looks DOWN at every face, and a
+   * fringe of tips hid Quake's eyes from it (the face raster in traits.test.ts
+   * fell from 5 px to 3). One triangle a tip.
+   */
+  tips?: { count: number; length: number };
+  /** How much darker every other lock is at the hem (0 = a smooth shell). */
+  strands?: number;
+}): THREE.BufferGeometry {
+  // 24 × 14: ~270–520 triangles a style — report 15 §9.3's 200–600 an instance,
+  // measured by traits.test.ts (a first cut at 40 × 28 was 1,000–1,400 each and
+  // put g1@355 over the 30,000 line).
+  const sphere = new THREE.SphereGeometry(1, 24, 14);
+  const flat = sphere.toNonIndexed();
+  sphere.dispose();
+  const src = flat.getAttribute('position');
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const colours: number[] = [];
+  const [cx, cy, cz] = HEAD_SHAPE.centre;
+  const [rx, ry, rz] = HEAD_SHAPE.radii;
+  const limit = (phi: number): number => {
+    const c = Math.cos(phi);
+    return c >= 0 ? style.side + (style.front - style.side) * c : style.side + (style.back - style.side) * -c;
+  };
+  const degrees = (y: number): number => (Math.acos(Math.max(-1, Math.min(1, y))) * 180) / Math.PI;
+  for (let t = 0; t + 2 < src.count; t += 3) {
+    let mx = 0;
+    let my = 0;
+    let mz = 0;
+    for (let k = 0; k < 3; k++) {
+      mx += src.getX(t + k);
+      my += src.getY(t + k);
+      mz += src.getZ(t + k);
+    }
+    const len = Math.hypot(mx, my, mz) || 1;
+    if (degrees(my / len) > limit(Math.atan2(mx, mz))) continue;
+    for (let k = 0; k < 3; k++) {
+      const x = src.getX(t + k);
+      const y = src.getY(t + k);
+      const z = src.getZ(t + k);
+      const theta = degrees(y);
+      const r = style.scale + style.flare * Math.max(0, theta - 80) / 45;
+      positions.push(cx + rx * x * r, cy + ry * y * r, cz + rz * z * r);
+      const nx = x / rx;
+      const ny = y / ry;
+      const nz = z / rz;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      normals.push(nx / nl, ny / nl, nz / nl);
+      // Strands (the fix pass: a smooth shell read as a helmet in comic): every
+      // other meridian a little darker, deepening toward the hem, so the cel
+      // bands break into combed locks radiating from the crown. The sphere's 24
+      // meridians sit at 15° steps, so cos(12·azimuth) alternates ±1 exactly.
+      const strand = (style.strands ?? 0) * (0.5 + 0.5 * Math.min(1, theta / 90)) * Math.cos(12 * Math.atan2(x, z));
+      const shade = (0.74 + 0.32 * ((y + 1) / 2)) * (1 - Math.max(0, strand));
+      colours.push(shade, shade, shade);
+    }
+  }
+  flat.dispose();
+  if (style.tips !== undefined) {
+    // Each tip hangs from a few degrees ABOVE the hairline (so it overlaps the
+    // shell's stepped lower edge rather than floating under it) to `length`
+    // below it, its base the full spacing wide so the tips meet in a zig-zag.
+    const { count, length } = style.tips;
+    const push = (phiDeg: number, thetaDeg: number, out: number, shade: number): void => {
+      const phi = (phiDeg * Math.PI) / 180;
+      const theta = (thetaDeg * Math.PI) / 180;
+      const x = Math.sin(theta) * Math.sin(phi);
+      const y = Math.cos(theta);
+      const z = Math.sin(theta) * Math.cos(phi);
+      const r = style.scale + style.flare * Math.max(0, thetaDeg - 80) / 45 + out;
+      positions.push(cx + rx * x * r, cy + ry * y * r, cz + rz * z * r);
+      const nx = x / rx;
+      const ny = y / ry;
+      const nz = z / rz;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      normals.push(nx / nl, ny / nl, nz / nl);
+      colours.push(shade, shade, shade);
+    };
+    const step = 360 / count;
+    for (let i = 0; i < count; i++) {
+      const mid = i * step;
+      const a = mid - step / 2;
+      const b = mid + step / 2;
+      const phi = (mid * Math.PI) / 180;
+      // No tip over the forehead: the table view looks DOWN at every face, and
+      // even a short fringe of tips took a pixel of Quake's five (the face
+      // raster in traits.test.ts).
+      if (Math.cos(phi) > 0.8) continue;
+      const hem = limit(phi);
+      const drop = length * (0.3 + 0.7 * (1 - Math.max(0, Math.cos(phi))));
+      push(a, limit((a * Math.PI) / 180) - 6, 0, 0.8);
+      push(b, limit((b * Math.PI) / 180) - 6, 0, 0.8);
+      push(mid, hem + drop, 0.03, 0.7);
+    }
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  out.setAttribute('color', new THREE.Float32BufferAttribute(colours, 3));
+  out.computeBoundingSphere();
+  return out;
+}
+
+/** Waves' rolls: a half-ring round the back of the head at the nape, ear to ear. */
+function hairRolls(): THREE.BufferGeometry {
+  const [cx, cy, cz] = HEAD_SHAPE.centre;
+  const ring = new THREE.TorusGeometry(1, 0.2, 6, 14, Math.PI * 1.15);
+  // Lie it flat, its arc round the BACK (−Z), ends at the ears.
+  return part(ring, [0.86, 0.86, 0.86], [cx, cy - 0.052, cz - 0.006], [-Math.PI / 2, 0, -0.075 * Math.PI], [0.069, 0.074, 0.06]);
 }
 
 // ---------------------------------------------------------------------------
@@ -631,6 +905,48 @@ export function bakePose(model: LoadedModel, clipKey: string, phase: number): TH
 }
 
 /**
+ * **Lane BODIES (D141) — a body's own hairstyle as a static kind**, in figure
+ * space at the body's BIND pose (so the prop field's `Head` anchor, written at
+ * the origin, puts it back exactly where the pack's artist put it): the triangles
+ * `scene/models.ts` carved off the body (`LoadedModel.hairIndex`), with smooth
+ * normals and a white vertex colour — the kit's colour is the costume's hair.
+ */
+export function bakeHair(model: LoadedModel): THREE.BufferGeometry | null {
+  const index = model.hairIndex ?? null;
+  if (index === null || index.length === 0) return null;
+  const instance = instantiateFigure(model, { pose: 'bind' });
+  instance.object.updateMatrixWorld(true);
+  let out: THREE.BufferGeometry | null = null;
+  const v = new THREE.Vector3();
+  instance.object.traverse((child) => {
+    const mesh = child as THREE.SkinnedMesh;
+    if (out !== null || mesh.isSkinnedMesh !== true || mesh.geometry.getAttribute(COSTUME_ATTRIBUTE) === undefined) return;
+    const remap = new Map<number, number>();
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (let i = 0; i < index.length; i++) {
+      const source = index[i]!;
+      let mapped = remap.get(source);
+      if (mapped === undefined) {
+        mapped = remap.size;
+        remap.set(source, mapped);
+        mesh.getVertexPosition(source, v);
+        v.applyMatrix4(mesh.matrixWorld);
+        positions.push(v.x, v.y, v.z);
+      }
+      indices.push(mapped);
+    }
+    const hair = new THREE.BufferGeometry();
+    hair.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    hair.setIndex(indices);
+    hair.computeVertexNormals();
+    out = mergeParts([part(hair, [0.95, 0.95, 0.95])]);
+  });
+  instance.mixer.stopAllAction();
+  return out;
+}
+
+/**
  * A fresh instance of `model` held in one frame of one of its clips (`idle` if
  * it has no such clip), its world matrices up to date. The clip is SAMPLED by hand
  * — each track's own interpolant at one time — not played through a mixer: this
@@ -699,6 +1015,20 @@ interface Binding {
   phase: number;
   /** Rides a DEPARTING body: drawn only while that body is (its `root.visible`). */
   departed: boolean;
+  /**
+   * **D146 — the second joint a panel follows part-way** (`PropAnchor.follow`):
+   * its bind inverse × the anchor, and how far toward it (0 = `joint` alone).
+   */
+  jointB: THREE.Object3D | null;
+  localB: THREE.Matrix4;
+  weight: number;
+  /** **D146 — the panel this one HANGS from** (`PropAnchor.hang`), bound just before it. */
+  parent: Binding | null;
+  hang: number;
+  /** A hanging panel's anchor in figure space: its upright, turned and sized. */
+  upright: THREE.Matrix4;
+  /** This binding's world matrix as drawn this frame — what a panel hanging from it reads. */
+  world: THREE.Matrix4;
 }
 
 function blankBinding(): Binding {
@@ -708,6 +1038,13 @@ function blankBinding(): Binding {
     pose: null,
     rig: null,
     joint: null,
+    jointB: null,
+    localB: new THREE.Matrix4(),
+    weight: 0,
+    parent: null,
+    hang: 0,
+    upright: new THREE.Matrix4(),
+    world: new THREE.Matrix4(),
     local: new THREE.Matrix4(),
     colour: new THREE.Color(),
     member: null,
@@ -724,16 +1061,14 @@ function blankBinding(): Binding {
 /** Per model: joint base name → the joint's bind matrix in figure space, inverted. */
 type JointBinds = Map<string, THREE.Matrix4>;
 
-/**
- * `head_1` → `head`: GLTFLoader suffixes a repeated node name with `_<n>`, n from
- * 1. **Slice 4: only a suffix with no leading zero** — the proportioned bodies'
- * own joints end in digits (`spine_03`, `neck_01`), and slice 3's `/_\d+$/` turned
- * all three spine joints into one `spine`. `spine_03_1` → `spine_03`, and
- * `spine_03` stays itself.
+/*
+ * `baseName` — `head_1` → `head`: GLTFLoader suffixes a repeated node name with
+ * `_<n>`, n from 1. **Slice 4: only a suffix with no leading zero** — the
+ * proportioned bodies' own joints end in digits (`spine_03`, `neck_01`), and slice
+ * 3's `/_\d+$/` turned all three spine joints into one `spine`. `spine_03_1` →
+ * `spine_03`, and `spine_03` stays itself. Lane BODIES moved it to `models.ts`
+ * (the rest-pose derivation reads joints by it at load) and re-exports it here.
  */
-export function baseName(name: string): string {
-  return name.replace(/_[1-9]\d*$/, '');
-}
 
 /** §9.2 rule 6 — the frame loop's scratch, at module scope. */
 const ROOT = new THREE.Matrix4();
@@ -745,6 +1080,11 @@ const QUAT = new THREE.Quaternion();
 const SCL = new THREE.Vector3();
 const COLOUR = new THREE.Color();
 const UP = new THREE.Vector3(0, 1, 0);
+/** D146's scratch: the two skinnings of a followed panel, or a hanging one's parent and upright. */
+const BLEND = new THREE.Matrix4();
+const POS_B = new THREE.Vector3();
+const QUAT_B = new THREE.Quaternion();
+const SCL_B = new THREE.Vector3();
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
@@ -827,7 +1167,7 @@ export class PropField {
   private ensure(): void {
     this.watchMotion();
     if (this.list.length > 0) return;
-    for (const kind of [...PROP_KINDS, 'swarmBee', 'carrier'] as const) {
+    for (const kind of SCENE_KINDS) {
       const geometry = buildKindGeometry(kind);
       if (geometry !== null) this.addKind(kind, kind, geometry);
     }
@@ -880,6 +1220,9 @@ export class PropField {
     this.library = library;
     this.posed.clear();
     for (const [id, model] of library) {
+      // Lane BODIES: a resting-pose variant (`agent@folded`) shares its body's
+      // bind pose and joints; the base answers for it (`baseModelOf`).
+      if (restOfModel(id) !== null) continue;
       // The BIND pose: every anchor in figures/props.ts is written in it.
       const instance = instantiateFigure(model, { pose: 'bind' });
       instance.object.updateMatrixWorld(true);
@@ -890,6 +1233,16 @@ export class PropField {
         const follower = bakePose(model, 'idle', 0);
         if (follower !== null) this.addKind(`squad:${id}`, 'squad', follower);
       }
+    }
+    // Lane BODIES (D141): the two hairstyles the library's bodies came with,
+    // carved off them at load (`scene/models.ts`) and baked here into kinds.
+    for (const [style, bodyId] of Object.entries(CARVED_HAIR) as Array<[HairStyle, string]>) {
+      if (style === 'none') continue;
+      const kind = HAIR_KIND[style];
+      const model = library.get(bodyId);
+      if (model === undefined || this.kinds.has(kind)) continue;
+      const hair = bakeHair(model);
+      if (hair !== null) this.addKind(kind, kind, hair);
     }
     const hero = library.get('hero');
     if (hero !== undefined && !this.kinds.has('rider')) {
@@ -943,7 +1296,7 @@ export class PropField {
         // A ring swarm has no body to die (FigureLayer skips it); a squad's
         // followers fall in with their leader.
         if (departed && prop.kind === 'swarmBee') continue;
-        const key = prop.kind === 'squad' ? `squad:${pose.modelId ?? ''}` : 'swarmBee';
+        const key = prop.kind === 'squad' ? `squad:${baseModelOf(pose.modelId) ?? ''}` : 'swarmBee';
         const target = this.kinds.get(key) ?? null;
         if (target === null) continue;
         const formation = prop.kind === 'squad' ? 'squad' : 'ring';
@@ -973,6 +1326,8 @@ export class PropField {
       const target = this.kinds.get(prop.kind) ?? null;
       if (target === null) continue;
       const kit = PROP_KIT[prop.kind];
+      // D146: the joint binding just made for this kind — what a hanging panel hangs from.
+      let previous: Binding | null = null;
       for (const anchor of anchorsOf(prop.kind, family)) {
         if (n >= MAX_BINDINGS) break;
         const b = this.bindings[n]!;
@@ -980,20 +1335,44 @@ export class PropField {
           this.reset(b, departed ? MODE_BODY : anchor.joint === 'stand' ? MODE_STAND : MODE_ROOT, target, pose, prop.colour);
           anchorMatrix(anchor, b.local);
           this.ride(b, body, departed);
+          previous = null;
         } else {
           const joint = body === null ? null : this.jointOf(body, anchor.joint);
+          const base = baseModelOf(pose.modelId);
           const bind =
-            pose.modelId === null
+            base === null
               ? undefined
               : anchor.pose !== undefined
-                ? this.posedInverses(pose.modelId, anchor.pose.clip, anchor.pose.phase)?.get(anchor.joint)
-                : this.binds.get(pose.modelId)?.get(anchor.joint);
-          if (joint === null || bind === undefined || body === null) continue;
+                ? this.posedInverses(base, anchor.pose.clip, anchor.pose.phase)?.get(anchor.joint)
+                : this.binds.get(base)?.get(anchor.joint);
+          if (joint === null || bind === undefined || body === null) {
+            previous = null;
+            continue;
+          }
           this.reset(b, MODE_JOINT, target, pose, prop.colour);
           b.joint = joint;
           anchorMatrix(anchor, M);
           b.local.multiplyMatrices(bind, M);
+          // D146: a panel that follows a second joint part-way — that joint's own
+          // skinning of the same anchor, blended in the frame loop.
+          const follow = anchor.follow;
+          if (follow !== undefined && anchor.pose === undefined && base !== null) {
+            const jointB = this.jointOf(body, follow.joint);
+            const bindB = this.binds.get(base)?.get(follow.joint);
+            if (jointB !== null && bindB !== undefined) {
+              b.jointB = jointB;
+              b.localB.multiplyMatrices(bindB, M);
+              b.weight = Math.max(0, Math.min(1, follow.weight));
+            }
+          }
+          // …and a panel that hangs from the one bound just before it.
+          if (anchor.hang !== undefined && previous !== null) {
+            b.parent = previous;
+            b.hang = Math.max(0, Math.min(1, anchor.hang));
+            b.upright.copy(M);
+          }
           this.ride(b, body, departed);
+          previous = b;
         }
         b.glowRest = kit.glow?.rest ?? 0;
         b.glowBoost = kit.glow?.boost ?? 0;
@@ -1042,6 +1421,10 @@ export class PropField {
     b.flame = false;
     b.phase = 0;
     b.departed = false;
+    b.jointB = null;
+    b.weight = 0;
+    b.parent = null;
+    b.hang = 0;
     b.colour.copy(parsedColour(colour));
   }
 
@@ -1051,6 +1434,8 @@ export class PropField {
     b.rig = null;
     b.joint = null;
     b.member = null;
+    b.jointB = null;
+    b.parent = null;
   }
 
   private noteRoot(root: THREE.Object3D): void {
@@ -1102,7 +1487,32 @@ export class PropField {
         // The rig's own opacity, already folded by the frame loop (sickness, a
         // ghost, a dissolve) — the prop fades exactly with its body.
         opacity = b.rig.material.uniforms.uOpacity.value;
-        WORLD.multiplyMatrices(b.joint.matrixWorld, b.local);
+        const parent = b.parent;
+        if (parent !== null) {
+          // D146 — HANGS from its parent panel, bound (and so drawn) just before
+          // it this frame: its top at the parent's hem, turned `hang` of the way
+          // from the parent's angle back to the figure's upright; its own size.
+          parent.world.decompose(POS, QUAT, SCL);
+          POS.set(0, -COAT_PANEL.length * HANG_FROM, 0).applyMatrix4(parent.world);
+          BLEND.multiplyMatrices(b.rig.root.matrixWorld, b.upright);
+          BLEND.decompose(POS_B, QUAT_B, SCL_B);
+          QUAT.slerp(QUAT_B, b.hang);
+          WORLD.compose(POS, QUAT, SCL_B);
+        } else if (b.jointB !== null) {
+          // D146 — FOLLOWS a second joint part-way: both skinnings of the one
+          // anchor, the turn slerped and the place and size lerped.
+          WORLD.multiplyMatrices(b.joint.matrixWorld, b.local);
+          WORLD.decompose(POS, QUAT, SCL);
+          BLEND.multiplyMatrices(b.jointB.matrixWorld, b.localB);
+          BLEND.decompose(POS_B, QUAT_B, SCL_B);
+          POS.lerp(POS_B, b.weight);
+          QUAT.slerp(QUAT_B, b.weight);
+          SCL.lerp(SCL_B, b.weight);
+          WORLD.compose(POS, QUAT, SCL);
+        } else {
+          WORLD.multiplyMatrices(b.joint.matrixWorld, b.local);
+        }
+        b.world.copy(WORLD);
       } else if (b.mode === MODE_BODY && b.rig !== null) {
         // A departing body's follower or bench: its root, where it fell.
         opacity = b.rig.material.uniforms.uOpacity.value;

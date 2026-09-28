@@ -77,10 +77,20 @@
  *     PROP_KINDS, FORMATIONS, IDLE_STYLES, BODY_STYLES, COSTUME_SLOTS,
  *     CostumeSlot, familyOf (props.ts)       the tuning panel's fields; the meter's head
  *       height per body family (prop-raster.ts's rule)
+ *     HAIR_STYLES, FACE_STYLES, PALETTE_USES (props.ts) · REST_POSES, REST_KIT (rests.ts)
+ *                                            lane BODIES' tuning rows: rest, hair, face, palette
+ *     ArtPalette, artRow (palette.ts)        the palette row's swatch strip, and whether a
+ *                                            hand-written row would outrank the art rung
  *     clipEnvelope, clipForCue, ClipRequest, REST_CLIP_FOR, REST_PHASE_FOR (clips.ts)
  *     validateFigures, validateModels, validateTraits (validate.ts)
  *     FigureData, ModelData, FigureProblem, ClipName, isClipName, tileDataOf,
  *     attachDataOf, EMPTY_FIGURE_DATA, EMPTY_MODEL_DATA (types.ts)
+ *   arena/art.ts     the art palette, read off the hot path (lane BODIES, D144)
+ *     useArtPalettes                         the tuning panel's swatch strip: this card's
+ *                                            own art palette, face up only. Nothing here
+ *                                            DRAWS the art rung: the pedestal (and the
+ *                                            arena) pass no palettes until lane LOOK wires
+ *                                            them in (PLAN.md's lane BODIES follow-up 13)
  *   arena/cues/      the cue engine — pure
  *     CueQueue (queue.ts) · REGISTRY (registry.ts)
  *     motionFromSearch, DEFAULT_MOTION, MotionFlags (motion.ts)
@@ -124,7 +134,20 @@ import { DEFAULT_MOTION, motionFromSearch, type MotionFlags } from '../arena/cue
 import { CueQueue } from '../arena/cues/queue.ts';
 import type { CueData, Problem } from '../arena/cues/types.ts';
 import { figurePose, type FigurePose } from '../arena/figures/pose.ts';
-import { BODY_STYLES, COSTUME_SLOTS, PROP_KINDS, FORMATIONS, IDLE_STYLES, type CostumeSlot } from '../arena/figures/props.ts';
+import { useArtPalettes } from '../arena/art.ts';
+import { artRow, type ArtPalette } from '../arena/figures/palette.ts';
+import {
+  BODY_STYLES,
+  COSTUME_SLOTS,
+  FACE_STYLES,
+  HAIR_STYLES,
+  PALETTE_USES,
+  PROP_KINDS,
+  FORMATIONS,
+  IDLE_STYLES,
+  type CostumeSlot,
+} from '../arena/figures/props.ts';
+import { REST_KIT, REST_POSES } from '../arena/figures/rests.ts';
 import { figureFor } from '../arena/figures/resolve.ts';
 import { traitFor, type TraitData } from '../arena/figures/traits.ts';
 import type { FigureProblem } from '../arena/figures/types.ts';
@@ -361,6 +384,12 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   // -- the resting board, and what the camera frames on it ---------------------
   const rest = useMemo(() => pedestalState(entry, options), [entry, options]);
   const presence = cueData.presence;
+  // Lane BODIES (D144): the card's own art palette, read once off the hot path by
+  // the arena's `art.ts`, for the tuning panel's swatch strip — never for a
+  // concealed entry. The poses below take none, exactly as the pedestal's do:
+  // the art rung is drawn only once LOOK passes palettes in (follow-up 13).
+  const paletteNames = useMemo(() => (entry.concealed === null && entry.name !== '' ? [entry.name] : []), [entry]);
+  const palettes = useArtPalettes(paletteNames, art);
   const focus = useMemo((): Framing[] => {
     const placed = layout(rest, presence ?? {});
     const poses = turnPoses(
@@ -721,6 +750,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         <TuningPanel
           entry={entry}
           pose={restPose}
+          artPalette={entry.concealed === null ? (palettes.get(entry.name) ?? null) : null}
           traits={traits}
           overrides={overrides}
           onOverrides={setOverrides}
@@ -1348,6 +1378,7 @@ async function copyText(text: string): Promise<boolean> {
 function TuningPanel({
   entry,
   pose,
+  artPalette,
   traits,
   overrides,
   onOverrides,
@@ -1356,6 +1387,8 @@ function TuningPanel({
   entry: WorkshopEntry;
   /** The card's resting pose on the pedestal — the body it stands in and the palette it is drawn in. */
   pose: FigurePose | null;
+  /** Lane BODIES: the card's art palette (`arena/art.ts`), or `null` while unread / with no art. */
+  artPalette: ArtPalette | null;
   traits: TraitData;
   overrides: Overrides;
   onOverrides: (next: Overrides) => void;
@@ -1599,6 +1632,96 @@ function TuningPanel({
             </button>
           )}
         </label>
+        {/* Lane BODIES (D140–D144): the resting pose, the hair, the face, the art rung. */}
+        <label className="workshop__field">
+          <span>rest</span>
+          <select
+            value={String(row['rest'] ?? s.rest ?? 'stand')}
+            onChange={(event) => set('rest', event.currentTarget.value)}
+            title={REST_KIT[(row['rest'] ?? s.rest ?? 'stand') as keyof typeof REST_KIT]?.what ?? ''}
+          >
+            {REST_POSES.map((pose) => (
+              <option key={pose} value={pose}>
+                {pose} — {REST_KIT[pose].what}
+              </option>
+            ))}
+          </select>
+          <em className="muted">
+            {row['rest'] === undefined ? 'inherited' : 'this card'}
+            {pose !== null && pose.modelId !== null && pose.rest === null ? ' · this body has no resting poses' : ''}
+          </em>
+          {row['rest'] !== undefined && (
+            <button type="button" onClick={() => set('rest', undefined)} title="inherit from the rung below">
+              ×
+            </button>
+          )}
+        </label>
+        <label className="workshop__field">
+          <span>hair</span>
+          <select value={String(row['hair'] ?? s.hair ?? 'the body’s own')} onChange={(event) => set('hair', event.currentTarget.value)}>
+            {row['hair'] === undefined && s.hair === null && <option value="the body’s own">the body’s own ({pose?.hair ?? 'none'})</option>}
+            {HAIR_STYLES.map((style) => (
+              <option key={style}>{style}</option>
+            ))}
+          </select>
+          <em className="muted">{row['hair'] === undefined ? 'inherited' : 'this card'}</em>
+          {row['hair'] !== undefined && (
+            <button type="button" onClick={() => set('hair', undefined)} title="inherit from the rung below">
+              ×
+            </button>
+          )}
+        </label>
+        <label className="workshop__field">
+          <span>face</span>
+          <select value={String(row['face'] ?? s.face)} onChange={(event) => set('face', event.currentTarget.value)}>
+            {FACE_STYLES.map((style) => (
+              <option key={style}>{style}</option>
+            ))}
+          </select>
+          <em className="muted">{row['face'] === undefined ? 'inherited' : 'this card'}</em>
+          {row['face'] !== undefined && (
+            <button type="button" onClick={() => set('face', undefined)} title="inherit from the rung below">
+              ×
+            </button>
+          )}
+        </label>
+        <div className="workshop__field workshop__field--wide">
+          <span>palette</span>
+          <select value={String(row['palette'] ?? s.palette)} onChange={(event) => set('palette', event.currentTarget.value)}>
+            {PALETTE_USES.map((use) => (
+              <option key={use}>{use}</option>
+            ))}
+          </select>
+          {artPalette === null ? (
+            <em className="muted">no art palette read yet (a token, an art.json miss, or still loading)</em>
+          ) : (
+            <span className="workshop__swatches" title="the card art's colours, largest first — the art rung (D144)">
+              {artPalette.swatches.map((swatch) => (
+                <i
+                  key={swatch.hex}
+                  className="workshop__swatch"
+                  style={{ background: swatch.hex, width: `${String(Math.max(6, Math.round(swatch.share * 90)))}px` }}
+                  title={`${swatch.hex} · ${String(Math.round(swatch.share * 100))}%`}
+                />
+              ))}
+              <em className="muted">
+                accent <code>{artPalette.accent}</code>
+                {artPalette.vivid ? '' : ' (nothing vivid)'} ·{' '}
+                {s.palette === 'off'
+                  ? 'off for this card'
+                  : traitFor(cardOf(entry, IDS.subject, 0), traits, artRow(artPalette)).spec.accent !== artPalette.accent
+                    ? 'a hand-written accent outranks it'
+                    : 'the lowest rung here'}{' '}
+                — not drawn yet: the arena and the pedestal pass no palettes until lane LOOK wires them in (lane BODIES follow-up 13)
+              </em>
+            </span>
+          )}
+          {row['palette'] !== undefined && (
+            <button type="button" onClick={() => set('palette', undefined)} title="inherit from the rung below">
+              ×
+            </button>
+          )}
+        </div>
         <div className="workshop__field workshop__field--wide">
           <span>costume</span>
           {palette === null ? (

@@ -1625,9 +1625,14 @@ console.log(
     `${String(totalPrimitives)} primitives · ${String(totalTriangles)} triangles · ${String(clipNames.size)} clips`,
 );
 
-// §8.2's budget, checked where it is cheap to check.
-if (bytes > 400 * 1024) fail(`the library is ${String(bytes)} bytes — §8.2 budgets ≤ 400 kB per .glb`);
-if (totalTriangles > 30000) fail(`${String(totalTriangles)} triangles — §8.2 budgets ≤ 30,000`);
+// §8.2's budget, checked where it is cheap to check — and since lane BODIES
+// (D145) read from the manifest's `budget` block, where the measurement that set
+// it is written down, rather than typed here.
+const BUDGET = manifest.budget ?? {};
+const BUDGET_BYTES = Number.isFinite(BUDGET.libraryBytes) ? BUDGET.libraryBytes : 400 * 1024;
+const BUDGET_TRIANGLES = Number.isFinite(BUDGET.triangles) ? BUDGET.triangles : 30000;
+if (bytes > BUDGET_BYTES) fail(`the library is ${String(bytes)} bytes — the manifest's budget is ≤ ${String(BUDGET_BYTES)} (D145)`);
+if (totalTriangles > BUDGET_TRIANGLES) fail(`${String(totalTriangles)} triangles — §8.2 budgets ≤ ${String(BUDGET_TRIANGLES)}`);
 
 if (WRITE_MANIFEST) {
   const clipLibraries = {};

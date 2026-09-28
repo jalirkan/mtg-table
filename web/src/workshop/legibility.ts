@@ -416,7 +416,12 @@ export function drawnHeightPx(pose: FigurePose, library: ModelLibrary): number |
     const mesh = child as THREE.SkinnedMesh;
     if (mesh.isSkinnedMesh !== true || !mesh.visible) return;
     const position = mesh.geometry.getAttribute('position');
-    for (let i = 0; i < position.count; i++) {
+    // Only the vertices a triangle draws: lane BODIES' bald body keeps its carved
+    // hair's vertices in the buffer and drops them from the index (D141).
+    const index = mesh.geometry.getIndex();
+    const count = index === null ? position.count : index.count;
+    for (let k = 0; k < count; k++) {
+      const i = index === null ? k : index.getX(k);
       V.fromBufferAttribute(position, i);
       mesh.applyBoneTransform(i, V);
       V.applyMatrix4(mesh.matrixWorld);

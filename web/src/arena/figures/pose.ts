@@ -53,10 +53,14 @@ import {
   manifestationOf,
   type AttachmentManifestation,
 } from './attach.ts';
+import { artRow, artTint, type ArtPalette } from './palette.ts';
 import {
+  BODY_HAIR,
   CARRIER_LENGTH,
   CARRIER_THICKNESS,
   COSTUME_SLOTS,
+  FACE_KIND,
+  HAIR_KIND,
   PROP_KIT,
   SWARM_BEE_RATIO,
   familyOf,
@@ -64,13 +68,16 @@ import {
   swarmSpan,
   wearsCostume,
   type CostumeSlot,
+  type FaceStyle,
   type Family,
   type FigureProp,
   type Formation,
+  type HairStyle,
   type SceneKind,
   type Silhouette,
 } from './props.ts';
 import { figureFor, type FigureRung } from './resolve.ts';
+import { restModelId, type RestPose } from './rests.ts';
 import { DEFAULT_TRAIT, TRAITS, traitFor, type TraitData, type TraitSpec } from './traits.ts';
 import { attachDataOf, type FigureData, type ModelData, type Stance } from './types.ts';
 
@@ -239,6 +246,22 @@ export interface FigurePose {
    * is). A pose, so a skip, a scrub and a resync all draw it.
    */
   costume: readonly string[] | null;
+  // -- lane BODIES (`figures/rests.ts`, `figures/props.ts`, `figures/palette.ts`) --
+  /**
+   * **The pose this figure rests in** (D140) — `null` for a body with none (the
+   * disc, the drone, the bee, a chibi) and ALWAYS for an anonymous figure. When
+   * set, {@link FigurePose.modelId} names the variant that rests in it
+   * (`agent@folded`, `figures/rests.ts`), which is what the figure layer mounts.
+   */
+  rest: RestPose | null;
+  /** **Its hairstyle** (D141), drawn as the prop in {@link FigurePose.props}; `null` for none. */
+  hair: HairStyle | null;
+  /**
+   * **The art rung's accent** (D144): its painting's vivid colour, `null` with no
+   * palette, with `palette: off`, and ALWAYS for an anonymous figure — whose art is
+   * never looked up. Carried for the look and motion lanes (a rim, a burst, a mote).
+   */
+  art: string | null;
 }
 
 /** The whole stage for one frame, keyed by card id. */
@@ -270,6 +293,29 @@ export interface FigurePoseOptions {
    * {@link EMPTY_TRAIT_DATA} for slice 2's generic poses.
    */
   traits?: TraitData;
+  /**
+   * **Lane BODIES — the art-derived palettes** (D144), keyed by the card's NAME,
+   * as `arena/art.ts` extracted them from the images `art.json` names. Optional:
+   * absent means no art rung at all (every test that does not pass one, and a page
+   * before the first image has been read). Looked up only for a card drawn face
+   * up (hard rule 8, the same gate `CardPlane` asks `art.json` behind).
+   */
+  palettes?: ReadonlyMap<string, ArtPalette>;
+}
+
+/**
+ * **Lane BODIES — a face-up card's art palette, or `null`.** THE lookup: by the
+ * wire's name, and never for a card whose placement is a back (a redacted stub
+ * has no name; a face-down card's is `""`, and asking would still be asking).
+ */
+export function paletteFor(
+  placement: Pick<Placement, 'back' | 'card'>,
+  palettes: ReadonlyMap<string, ArtPalette> | undefined,
+): ArtPalette | null {
+  if (palettes === undefined || placement.back || isHidden(placement.card)) return null;
+  const name = (placement.card as { name?: string }).name;
+  if (typeof name !== 'string' || name === '') return null;
+  return palettes.get(name) ?? null;
 }
 
 /**
@@ -348,12 +394,18 @@ export function propsOf(
   modelId: string | null,
   /** Slice 4: a squad's followers wear the leader's suit — its costume's top. */
   squadColour: string = tint,
+  /** Lane BODIES: the hairstyle (`null` for none) and the costume's hair colour. */
+  hair: HairStyle | null = null,
+  hairColour: string = tint,
+  /** Lane BODIES: the face this body wears (`none` for none). */
+  face: FaceStyle = 'none',
 ): FigureProp[] {
   const out: FigureProp[] = [];
   const colourOf = (kind: SceneKind): string => {
     const colour = PROP_KIT[kind].colour;
     if (colour === 'accent') return accent;
     if (colour === 'tint') return tint;
+    if (colour === 'hair') return hairColour;
     return colour;
   };
   if (trait.silhouette !== null) {
@@ -368,6 +420,16 @@ export function propsOf(
     if (trait.formation === 'ring') out.push({ kind: 'swarmBee', colour: colourOf('swarmBee') });
     // A squad's followers are the leader's own body, baked: no model, no squad.
     else if (modelId !== null && (family === 'humanoid' || family === 'human')) out.push({ kind: 'squad', colour: squadColour });
+  }
+  // Lane BODIES: the head — its hair (D141) and its face (D142) — on a body that
+  // has the anchors for them (the proportioned one).
+  if (hair !== null && hair !== 'none') {
+    const kind = HAIR_KIND[hair];
+    if (fitsFamily(kind, family)) out.push({ kind, colour: colourOf(kind) });
+  }
+  if (face !== 'none') {
+    const kind = FACE_KIND[face];
+    if (fitsFamily(kind, family)) out.push({ kind, colour: colourOf(kind) });
   }
   return out;
 }
@@ -390,7 +452,7 @@ export function fitHeight(nominal: number, ratio: number): number {
 }
 
 const EMPTY_CLIPS: Readonly<Record<string, string>> = Object.freeze({});
-const EMPTY_ATTACHING: readonly AnyCard[] = Object.freeze([]);
+const EMPTY_ATTACHING: readonly Placement[] = Object.freeze([]);
 
 /** §6.2 — a spell is a little smaller and a lot fainter than the thing it becomes. */
 const GHOST_SCALE = 0.82;
@@ -421,15 +483,15 @@ function ghostPointOf(placement: Placement, index: number): [number, number, num
  * read of `attachedToId` and nothing more. Measured: 2,030 of 2,030 attachment
  * instances in the corpus have a creature host and none is unresolved.
  */
-function attachmentsByHost(placed: Layout): Map<number, AnyCard[]> {
-  const out = new Map<number, AnyCard[]>();
+function attachmentsByHost(placed: Layout): Map<number, Placement[]> {
+  const out = new Map<number, Placement[]>();
   for (const placement of placed.placements) {
     if (placement.kind !== 'attachment') continue;
     const hostId = (placement.card as { attachedToId?: number | null }).attachedToId ?? null;
     if (hostId === null) continue;
     const list = out.get(hostId);
-    if (list === undefined) out.set(hostId, [placement.card]);
-    else list.push(placement.card);
+    if (list === undefined) out.set(hostId, [placement]);
+    else list.push(placement);
   }
   return out;
 }
@@ -584,7 +646,10 @@ export function figurePose(
     // Slice 3 extends the same branch to identity: an anonymous figure gets the
     // default traits — no props, no hover, no swarm — and its name is never read.
     const anonymous = placement.back;
-    const traitMatch = anonymous ? null : traitFor(card, traitData);
+    // Lane BODIES (D144): the card's own art palette — looked up by name, and only
+    // for a card drawn face up (hard rule 8); `null` for every anonymous figure.
+    const art = anonymous ? null : paletteFor(placement, options.palettes);
+    const traitMatch = anonymous ? null : traitFor(card, traitData, art === null ? null : artRow(art));
     const trait = traitMatch?.spec ?? DEFAULT_TRAIT;
     // T10: a non-creature permanent is posed ONLY as a silhouette.
     if (candidate && trait.silhouette === null) continue;
@@ -598,8 +663,16 @@ export function figurePose(
     // 1–3's Kenney body, kept in the library — when the manifest has one.
     const chibi = trait.body === 'chibi' && spec.model !== null ? `${spec.model}-chibi` : null;
     const body = chibi !== null && options.models?.models[chibi] !== undefined ? chibi : spec.model;
-    const modelId = anonymous || overBudget || silhouette !== null ? null : body;
-    if (modelId !== null) withModel += 1;
+    const baseId = anonymous || overBudget || silhouette !== null ? null : body;
+    if (baseId !== null) withModel += 1;
+    // **Lane BODIES (D140): a proportioned body stands in its resting-pose
+    // variant** — `agent@folded`, or `agent@stand` for the body's own idle — which
+    // `scene/models.ts` derives at load: the pose as the variant's `idle`, and the
+    // head bald under its hairstyle prop (D141). The manifest still knows it by its
+    // base id, which is what every measurement below reads.
+    const family = familyOf(baseId, options.models);
+    const rest: RestPose | null = baseId !== null && family === 'human' ? (trait.rest ?? 'stand') : null;
+    const modelId = baseId !== null && rest !== null ? restModelId(baseId, rest) : baseId;
 
     const interposesId = ghost ? null : (interposes.get(placement.cardId) ?? null);
     const sick = !anonymous && (card as { sick?: boolean }).sick === true;
@@ -610,7 +683,8 @@ export function figurePose(
     const attachments: AttachmentManifestation[] = [];
     let hostScale = 1;
     for (const attaching of byHost.get(placement.cardId) ?? EMPTY_ATTACHING) {
-      const manifestation = manifestationOf(attaching, attachData);
+      // Lane BODIES (D144): the aura's own painting colours it where no row does.
+      const manifestation = manifestationOf(attaching.card, attachData, paletteFor(attaching, options.palettes));
       hostScale *= manifestation.hostScale;
       // §4.4's cap, and it is the OVERLAY budget rather than the cue engine's.
       // Over it, the aura still shrinks its host — the pose is the fact — and
@@ -627,7 +701,7 @@ export function figurePose(
     // clamp stays strict for both (D65): no exemption, a different width.
     const baseline = FIGURE_HEIGHT * hostScale * (ghost ? GHOST_SCALE : 1);
     const nominal = baseline * spec.scale * trait.scale;
-    const entry = modelId === null ? undefined : options.models?.models[modelId];
+    const entry = baseId === null ? undefined : options.models?.models[baseId];
     const modelRatio = entry === undefined || entry.height <= 0 ? 0 : entry.width / entry.height;
     const bodyRatio = trait.turn !== 0 && trait.turnedRatio !== null && modelRatio > 0 ? trait.turnedRatio : modelRatio;
     const swarm = silhouette === null && !anonymous ? trait.swarm : 0;
@@ -653,19 +727,37 @@ export function figurePose(
     }
 
     // Slice 3: the tint, the villain's shade, the accent, the props.
+    // Lane BODIES (D144): the art's tint sits UNDER every hand-written tint — a
+    // traits.json row, then figures.json's — and over the bare colour identity.
+    const artUsed = art !== null && trait.palette === 'art' ? art : null;
     const baseTint = anonymous
       ? colourHex('C')
       : (trait.tint ??
         spec.tint ??
+        (artUsed === null ? null : artTint(artUsed)) ??
         colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)));
     const tint = anonymous ? baseTint : shadeHex(baseTint, trait.shade);
     const accent = trait.accent ?? tint;
-    const family = familyOf(modelId, options.models);
     // Slice 4: what the body wears — never on an anonymous figure (hard rule 8).
     const costume = !anonymous && wearsCostume(family) ? costumeOf(trait.costume, tint) : null;
+    // Lane BODIES: a person's hairstyle (D141) and face (D142) — the body's own
+    // hair unless a rung names one; never on an anonymous figure.
+    const style: HairStyle | null =
+      !anonymous && baseId !== null && family === 'human' ? (trait.hair ?? BODY_HAIR[baseId] ?? 'none') : null;
+    const hair = style === 'none' ? null : style;
     const props = anonymous
       ? NO_PROPS
-      : propsOf(trait, family, tint, accent, modelId, costume?.[COSTUME_SLOTS.indexOf('top')] ?? tint);
+      : propsOf(
+          trait,
+          family,
+          tint,
+          accent,
+          modelId,
+          costume?.[COSTUME_SLOTS.indexOf('top')] ?? tint,
+          hair,
+          costume?.[COSTUME_SLOTS.indexOf('hair')] ?? tint,
+          family === 'human' ? trait.face : 'none',
+        );
 
     const stand = ghost ? ghostPointOf(placement, ghostIndex) : flight !== null ? flight.ground : standPointOf(placement);
     // A silhouette flies where `silhouettePlacementOf` says — yours at least at
@@ -729,6 +821,9 @@ export function figurePose(
       vehicle: candidate,
       traitRungs: traitMatch?.rungs ?? NO_RUNGS,
       costume,
+      rest: anonymous ? null : rest,
+      hair: anonymous ? null : hair,
+      art: anonymous || artUsed === null ? null : artUsed.accent,
     });
     if (ghost) ghostIndex += 1;
   }

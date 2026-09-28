@@ -317,3 +317,33 @@ test('figures: a subtype key the file declares is reachable from a real type lin
     assert.equal(subtypeKey(subtype), key);
   }
 });
+
+test('figures: the library is inside the manifest\'s MEASURED budget, and the build reads that budget (D145)', () => {
+  const manifest = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../../tools/assets-manifest.json', import.meta.url)), 'utf8'),
+  ) as { budget?: { libraryBytes?: number; triangles?: number; measured?: Record<string, unknown> } };
+  const budget = manifest.budget;
+  assert.ok(budget !== undefined, 'tools/assets-manifest.json has no budget block');
+  // Pinned here, so a change to the budget is a change to this line too — with its measurement.
+  assert.equal(budget.libraryBytes, 460800, 'the byte budget moved: re-measure and say why in the manifest');
+  assert.equal(budget.triangles, 30000);
+  assert.ok(budget.measured !== undefined, 'a budget with no measurement behind it');
+  const library = MODELS.data.library;
+  assert.ok(library !== null);
+  assert.ok(library.bytes <= budget.libraryBytes, `figures.glb is ${String(library.bytes)} B, over the ${String(budget.libraryBytes)} B budget`);
+  let triangles = 0;
+  const counted = new Set<string>();
+  for (const entry of Object.values(MODELS.data.models)) {
+    if (counted.has(entry.node)) continue;
+    counted.add(entry.node);
+    triangles += entry.triangles;
+  }
+  assert.ok(triangles <= budget.triangles, `${String(triangles)} triangles in the library`);
+  // The build no longer types the number: it reads the manifest's.
+  const build = readFileSync(fileURLToPath(new URL('../../tools/build-figures.mjs', import.meta.url)), 'utf8');
+  assert.match(build, /manifest\.budget/);
+  assert.equal(/bytes > 400 \* 1024/.test(build), false, 'build-figures.mjs still types the old 400 kB');
+  console.log(
+    `figures: ${String(library.bytes)} of ${String(budget.libraryBytes)} B (${String(budget.libraryBytes - library.bytes)} B of headroom) · ${String(triangles)} of ${String(budget.triangles)} triangles`,
+  );
+});

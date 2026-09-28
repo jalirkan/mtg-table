@@ -8,7 +8,7 @@
   },
   "looks": {
     "director": {
-      "_what": "A S.H.I.E.L.D. director: a long dark coat trimmed in gold over a white shirt, black gloves, a gold badge on the chest and its emblem on the back, and the seat's own colour in the hologram's edge. The viewer sees him three-quarters from behind, facing the other duelist across the table, so the coat and the back emblem are what carry him.",
+      "_what": "A S.H.I.E.L.D. director: a long dark coat trimmed in gold (lane BODIES: the coat is its yoke, and its body and skirt the `coatTails` panels on his spine and legs) over a white shirt, black gloves, a gold badge on the chest and its emblem on the back, and the seat's own colour in the hologram's edge. The viewer sees him three-quarters from behind, facing the other duelist across the table, so the coat and the back emblem are what carry him.",
       "body": [
         "agent",
         "hero",
@@ -30,13 +30,14 @@
       },
       "props": {
         "coat": "top",
+        "coatTails": "top",
         "badge": "belt"
       },
       "trim": "belt",
       "shade": "shoes"
     },
     "villain": {
-      "_what": "An armoured villain: iron armour under an iron great helm with a dark visor slit, a Doom-green tunic and cloak trimmed in gold, and a green edge on the hologram. The viewer sees him three-quarters from the front, facing the director across the table.",
+      "_what": "An armoured villain: iron armour under an iron great helm with a dark visor slit, a Doom-green tunic and a cloak down his back trimmed in gold (lane BODIES: the cloak is the `cape` kind's panels, riding his back and legs), and a green edge on the hologram. The viewer sees him three-quarters from the front, facing the director across the table.",
       "body": [
         "agent",
         "hero",
@@ -58,6 +59,8 @@
       },
       "props": {
         "coat": "shirt",
+        "coatTails": "shirt",
+        "cape": "shirt",
         "hood": {
           "slot": "top",
           "scale": [

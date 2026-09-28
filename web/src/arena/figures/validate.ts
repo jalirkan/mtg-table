@@ -43,13 +43,17 @@ import {
 import {
   BODY_STYLES,
   COSTUME_SLOTS,
+  FACE_STYLES,
   FORMATIONS,
+  HAIR_STYLES,
   IDLE_STYLES,
+  PALETTE_USES,
   PROP_KINDS,
   SILHOUETTES,
   isPropKind,
   type PropKind,
 } from './props.ts';
+import { REST_POSES } from './rests.ts';
 import { SUBTYPE_ORDER } from './resolve.ts';
 import type { TraitData, TraitRow } from './traits.ts';
 
@@ -746,6 +750,11 @@ const TRAIT_KEYS = new Set([
   // Slice 4: what the body wears, and which body.
   'costume',
   'body',
+  // Lane BODIES: the resting pose, the hair, the face, and the art rung.
+  'rest',
+  'hair',
+  'face',
+  'palette',
 ]);
 /** A costume colour: `#rrggbb`, or the figure's own `tint`. */
 const COSTUME_COLOUR = /^(#[0-9a-fA-F]{6}|tint)$/;
@@ -853,6 +862,21 @@ function checkTraitRow(where: string, raw: unknown, errors: FigureProblem[]): Tr
       errors.push({ where: `${where}.body`, message: `must be one of ${BODY_STYLES.join(', ')}` });
       bad = true;
     } else row['body'] = body;
+  }
+  // -- lane BODIES: the resting pose, the hair, the face, the art rung -------
+  const enumKeys: Array<[string, readonly string[]]> = [
+    ['rest', REST_POSES],
+    ['hair', HAIR_STYLES],
+    ['face', FACE_STYLES],
+    ['palette', PALETTE_USES],
+  ];
+  for (const [key, allowed] of enumKeys) {
+    const value = raw[key];
+    if (value === undefined) continue;
+    if (typeof value !== 'string' || !allowed.includes(value)) {
+      errors.push({ where: `${where}.${key}`, message: `must be one of ${allowed.join(', ')}` });
+      bad = true;
+    } else row[key] = value;
   }
   const costume = raw['costume'];
   if (costume !== undefined) {

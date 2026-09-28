@@ -37,6 +37,7 @@ import { primaryTypeOf } from '../cues/archetype.ts';
 import type { Station, StationKind } from '../cues/types.ts';
 import { colourHex, colourIdOf } from '../colour.ts';
 import { standPointOf, type Layout, type Placement, type Seat } from '../layout.ts';
+import { artTint, type ArtPalette } from './palette.ts';
 import type { AttachData, AttachKind, AttachSpec } from './types.ts';
 
 /**
@@ -149,13 +150,21 @@ export interface AttachmentManifestation {
  */
 export const MAX_POSE_OVERLAYS = 12;
 
-/** The manifestation of one attaching card. Total: a card nobody described gets the halo. */
-export function manifestationOf(card: AnyCard, data: AttachData): AttachmentManifestation {
+/**
+ * The manifestation of one attaching card. Total: a card nobody described gets the halo.
+ *
+ * `art` is the attaching card's own art palette (lane BODIES, D144), which the
+ * caller looks up only for a card drawn face up: its vivid accent colours the
+ * aura where no hand-written row gives a tint, over the bare colour identity.
+ */
+export function manifestationOf(card: AnyCard, data: AttachData, art: ArtPalette | null = null): AttachmentManifestation {
   const match = attachFor(card, data);
   const spec = match.spec;
   const colour = isHidden(card)
     ? colourHex('C')
-    : (spec.tint ?? colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)));
+    : (spec.tint ??
+      (art === null ? null : artTint(art)) ??
+      colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)));
   return {
     cardId: card.id,
     kind: spec.kind,

@@ -33,6 +33,7 @@
  * ---------------------------------------------------------------------------
  */
 
+import { baseModelOf } from './rests.ts';
 import type { ModelData } from './types.ts';
 
 /**
@@ -63,6 +64,14 @@ export const PROP_KINDS = [
   // The second verification pass: a robot's eye as a lit band round its head, so
   // the Doombot reads as red-eyed from BEHIND as well (its eye is on its face).
   'visor',
+  // Lane BODIES (D143): a long coat's skirt as panels that follow the legs, and a
+  // cloak's panels down the back — the drape is the clip lane's own pose.
+  'coatTails',
+  'cape',
+  // Lane BODIES: a realistic-sized pistol in the hand (Peggy at the ready) — the
+  // `pistol`'s geometry at 60%, with no lit muzzle: a detail, where Agent 13's
+  // `pistol` is an identity.
+  'sidearm',
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 
@@ -72,8 +81,101 @@ export type PropKind = (typeof PROP_KINDS)[number];
  * silhouette (`silhouette: "carrier"`). They are drawn by the same field, at one
  * draw call per kind, and are never written in a `props` list.
  */
-export const DERIVED_KINDS = ['squad', 'swarmBee', 'carrier'] as const;
+export const DERIVED_KINDS = [
+  'squad',
+  'swarmBee',
+  'carrier',
+  // Lane BODIES: a person's face (D142) and hair (D141), from the trait's `face`
+  // and `hair`, on every proportioned body that is not anonymous. `facePatched`
+  // is the face with HIS left eye left out, for a card that wears an eyepatch
+  // over it (Fury) — the patch floats in front of the face, and from the table
+  // view's height the eye under it showed above it.
+  'face',
+  'facePatched',
+  'hairParted',
+  'hairLong',
+  'hairCrop',
+  'hairBob',
+  'hairWaves',
+  'hairBun',
+] as const;
 export type DerivedKind = (typeof DERIVED_KINDS)[number];
+
+// ---------------------------------------------------------------------------
+// Lane BODIES — hair (D141) and the face (D142)
+// ---------------------------------------------------------------------------
+
+/**
+ * **The hairstyles** a `traits.json` row may name in `hair`. Each is a SHARED
+ * kind drawn by the prop field — one draw call per style on the table, never one
+ * per figure — rigid on the `Head` joint, in the costume's `hair` colour.
+ *
+ *  - `parted` and `long` are the Universal Base Characters' own two hairstyles
+ *    (Hair_SimpleParted on the man, Hair_Long on the woman — the only two the
+ *    committed `figures.glb` carries). `scene/models.ts` carves them off the
+ *    bodies at load (every vertex of each is weighted 100% to `Head`, so each is
+ *    rigid by construction), and a figure stands in the bald body with its hair
+ *    as a prop.
+ *  - `crop`, `bob`, `waves` and `bun` are procedural shells round the same head,
+ *    built by `scene/props.ts` — until the pack's other hairstyles are in the
+ *    library (PLAN.md's lane BODIES follow-up 2: it needs the user's approval
+ *    in chat to download the pack again).
+ *  - `none` is bald: the body's skin, and no hair kind at all.
+ */
+export const HAIR_STYLES = ['parted', 'long', 'crop', 'bob', 'waves', 'bun', 'none'] as const;
+export type HairStyle = (typeof HAIR_STYLES)[number];
+
+const HAIR_STYLE_SET: ReadonlySet<string> = new Set<string>(HAIR_STYLES);
+
+export function isHairStyle(value: string): value is HairStyle {
+  return HAIR_STYLE_SET.has(value);
+}
+
+/** A style → the scene kind that draws it (`none` draws nothing). */
+export const HAIR_KIND: Readonly<Record<Exclude<HairStyle, 'none'>, DerivedKind>> = {
+  parted: 'hairParted',
+  long: 'hairLong',
+  crop: 'hairCrop',
+  bob: 'hairBob',
+  waves: 'hairWaves',
+  bun: 'hairBun',
+};
+
+/** The two styles carved off the library's bodies, and which body each comes from. */
+export const CARVED_HAIR: Readonly<Partial<Record<HairStyle, string>>> = { parted: 'agent', long: 'hero' };
+
+/**
+ * **A body's own hair**, when no rung names one: the style the Universal Base
+ * Character wore in the pack — the man's parted, the woman's long — so a card
+ * with no `hair` row looks exactly as it did before the carve. Keyed by the BASE
+ * model id (`models.json`'s); a body not named here wears none.
+ */
+export const BODY_HAIR: Readonly<Record<string, HairStyle>> = { agent: 'parted', scientist: 'parted', hero: 'long' };
+
+/**
+ * Whether a figure has a face: `on` for every person unless a row says `none` (a
+ * hood, a helm); `patched` is the face without HIS left eye, under an eyepatch.
+ */
+export const FACE_STYLES = ['on', 'patched', 'none'] as const;
+export type FaceStyle = (typeof FACE_STYLES)[number];
+
+/** A face style → the scene kind that draws it (`none` draws nothing). */
+export const FACE_KIND: Readonly<Record<Exclude<FaceStyle, 'none'>, DerivedKind>> = {
+  on: 'face',
+  patched: 'facePatched',
+};
+
+export function isFaceStyle(value: string): value is FaceStyle {
+  return (FACE_STYLES as readonly string[]).includes(value);
+}
+
+/**
+ * Whether the art rung speaks for a card (lane BODIES, D144): `art` lets its
+ * painting colour what no hand-written row does (the default); `off` keeps the
+ * colour identity.
+ */
+export const PALETTE_USES = ['art', 'off'] as const;
+export type PaletteUse = (typeof PALETTE_USES)[number];
 
 export type SceneKind = PropKind | DerivedKind;
 
@@ -134,8 +236,10 @@ export type BodyStyle = (typeof BODY_STYLES)[number];
 export type Family = 'human' | 'humanoid' | 'drone' | 'insect';
 
 /** A model id → the family its props are fitted to, or `null` for the disc. */
-export function familyOf(modelId: string | null, models?: ModelData): Family | null {
-  if (modelId === null) return null;
+export function familyOf(variantId: string | null, models?: ModelData): Family | null {
+  if (variantId === null) return null;
+  // Lane BODIES (D140): a resting-pose variant (`agent@folded`) is its body's.
+  const modelId = baseModelOf(variantId);
   const entry = models?.models[modelId];
   if (entry?.rig === 'ubc') return 'human';
   if (entry?.rig === 'kenney-mini') return 'humanoid';
@@ -176,6 +280,33 @@ export interface PropAnchor {
    * hangs at her side, pointing down. Joint anchors only.
    */
   pose?: { readonly clip: string; readonly phase: number };
+  /**
+   * **Lane BODIES' fix pass — a panel that FOLLOWS a second joint part-way**
+   * (D143, amended by D146): the prop sits where `joint` puts it, turned `weight`
+   * (0…1) of the way toward where `follow.joint` would put it — each joint's own
+   * skinning of the SAME anchor, the rotations slerped and the positions and
+   * scales lerped. A rigid panel skinned to two bones, which is what a skirt over
+   * a thigh is: the coat's front follows its leg about half-way and its side a
+   * third, so a kneel or a lunge turns a panel by a FRACTION of the leg's angle
+   * and never edge-on to the lens. A renderer that bakes props rigidly (the
+   * duelists, `DuelistLayer`) ignores it and keeps the panel on `joint` alone —
+   * which is why `joint` is the steady bone (the pelvis) and `follow` the moving
+   * one. Joint anchors only, and not with `pose`.
+   */
+  follow?: { readonly joint: string; readonly weight: number };
+  /**
+   * **… and a panel that HANGS from the anchor before it** in the kind's list
+   * (D146): its top at that panel's lower edge (`HANG_FROM` × `COAT_PANEL.length`
+   * below the parent's top, in the parent's own units), turned `hang` (0…1) of the way from the
+   * parent's angle back toward the figure's UPRIGHT — gravity as a pose, not a
+   * simulation, and no clock. The skirt's lower link rides the upper one and falls
+   * from the knee, so a calf that lies flat in a kneel, or kicks back in a lunge,
+   * carries no panel with it (the first cut rode the calf bone, and a kneeling
+   * Fury trailed an edge-on sliver across his card). `joint` and `at` are where a
+   * rigid baker puts it: directly under its parent in the bind pose. Joint
+   * anchors only; a panel kind only (`coatTails`, `cape` — `traits.test.ts`).
+   */
+  hang?: number;
 }
 
 /** How a kind is drawn. Every kind shares one shader program (`scene/props.ts`). */
@@ -183,10 +314,11 @@ export type PropBlend = 'normal' | 'additive';
 
 /**
  * A kind's colour when the row gives no `accent`: `accent` (the row's accent,
- * falling back to the body tint), `tint` (always the body tint) or a fixed hex —
- * an eyepatch is black and a laser is red whatever the card's colour is.
+ * falling back to the body tint), `tint` (always the body tint), `hair` (the
+ * costume's `hair` slot — lane BODIES' hairstyles) or a fixed hex — an eyepatch
+ * is black and a laser is red whatever the card's colour is.
  */
-export type PropColour = 'accent' | 'tint' | `#${string}`;
+export type PropColour = 'accent' | 'tint' | 'hair' | `#${string}`;
 
 export interface PropKitEntry {
   blend: PropBlend;
@@ -250,6 +382,104 @@ export const PISTOL_MUZZLE: readonly [number, number, number] = [
   PISTOL_GRIP[1] + PISTOL_SIZE * PISTOL_TIP_LOCAL[1],
   PISTOL_GRIP[2] + PISTOL_SIZE * PISTOL_TIP_LOCAL[2] * Math.cos(PISTOL_YAW),
 ];
+
+/** Degrees → radians, for the anchors written below. */
+function rad(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
+
+/**
+ * **Lane BODIES — where the coat's skirt and the cloak hang from**, in figure
+ * units on the proportioned body: the waist a little above the hip joints (the
+ * thighs pivot at y 0.51) and on the body's centre line, so every panel's arc is
+ * centred on the body whichever leg bone carries it. The chibi's hips are at 0.26.
+ */
+export const COAT_WAIST: readonly [number, number, number] = [0, 0.525, -0.012];
+/**
+ * **The coat's BODY link** (lane BODIES' second pass): where the panels between
+ * the coat's yoke and its skirt hang from — just inside the yoke's hem, on
+ * `spine_01` (at y 0.565, the lowest spine joint), so a pose that bends the
+ * chest (the scientists' `working` lean, the kneel) swings the yoke with the
+ * chest and leaves the body of the coat hanging with the hips. A rigid shell
+ * from the shoulders to the hip tilted as a whole and stood out behind the back
+ * like a barrel. `COAT_BODY` scales `COAT_PANEL` to reach the skirt's top.
+ */
+export const COAT_CHEST: readonly [number, number, number] = [0, 0.675, -0.012];
+const COAT_BODY: readonly [number, number, number] = [0.86, 0.6, 0.78];
+/**
+ * **Where a hanging panel meets the one above it** (D146): this far down the
+ * parent's length, not at its very hem — so the lower link wraps OUTSIDE the
+ * parent's last eighth, and when the leg turns the upper link the seam between
+ * them is an overlap, never a gap. `scene/props.ts` hangs the child from here.
+ */
+export const HANG_FROM = 0.88;
+/** The two links of a skirt panel, as scales of `COAT_PANEL`: hip→knee, then knee→calf. */
+const COAT_UPPER: readonly [number, number, number] = [1, 0.84, 1];
+// D146: 1.3 wide (its top just outside the upper link's hem) and 0.6 long (the
+// hem where it was, below the higher pivot).
+const COAT_LOWER: readonly [number, number, number] = [1.3, 0.6, 1.3];
+/**
+ * The knee: where a skirt's lower link hangs from — `HANG_FROM` down the upper
+ * link from the waist (the calves pivot at y 0.29). A rigid baker (the duelists)
+ * puts the lower link here; the prop field hangs it from the upper link's own
+ * point there, wherever the thigh has taken it.
+ */
+export const COAT_KNEE: readonly [number, number, number] = [0, 0.525 - 0.27 * 0.84 * HANG_FROM, -0.012];
+/**
+ * **How much of its leg a skirt panel follows** (D146), measured in the workshop
+ * at ready, kneeling and attacking, from the table view and at 1×: the FRONT
+ * panels drape over the thigh and follow it about half-way; the SIDE panels a
+ * third, so a stride opens the coat without swinging its sides out as flaps; the
+ * back hangs from the pelvis alone. The lower link hangs from the upper one's
+ * hem, turned most of the way back to the upright.
+ */
+export const SKIRT_FOLLOW = { front: 0.38, side: 0.22, hang: 0.8 } as const;
+export const CAPE_SHOULDERS: readonly [number, number, number] = [0, 0.79, -0.018];
+const CHIBI_WAIST: readonly [number, number, number] = [0, 0.29, -0.035];
+const CHIBI_CHEST: readonly [number, number, number] = [0, 0.4, -0.035];
+const CHIBI_BODY: readonly [number, number, number] = [1.5, 0.45, 1.5];
+const CHIBI_TAIL: readonly [number, number, number] = [1.5, 0.95, 1.5];
+
+/**
+ * **One panel of a coat's skirt or a cloak**, in its own units at size 1: an arc
+ * of a flared cone centred on +Z, its top edge at y = 0 and its hem `COAT_PANEL.
+ * length` below, from radius `top` to `hem`, `arc` degrees wide. `scene/props.ts`
+ * builds it to these numbers and `traits.test.ts` holds the two together.
+ */
+export const COAT_PANEL = { top: 0.158, hem: 0.2, length: 0.27, arc: 80 } as const;
+
+/**
+ * **One side of a skirt, as two links** (D146): hip → knee on the pelvis,
+ * following `thigh` by `follow`; then knee → calf, hanging from it. Written as a
+ * pair because the second anchor HANGS from the one before it in the list.
+ */
+function skirtLink(degrees: number, thigh: string, follow: number): readonly PropAnchor[] {
+  return [
+    { joint: 'pelvis', follow: { joint: thigh, weight: follow }, at: COAT_WAIST, turn: [0, rad(degrees), 0], size: COAT_UPPER },
+    { joint: 'pelvis', hang: SKIRT_FOLLOW.hang, at: COAT_KNEE, turn: [0, rad(degrees), 0], size: COAT_LOWER },
+  ];
+}
+
+/**
+ * Lane BODIES — a face or a hairstyle is written in FIGURE units round the
+ * proportioned head, so its anchor is the head joint with no offset.
+ */
+const HEAD_ORIGIN: PropAnchor = { joint: 'Head', at: [0, 0, 0], size: 1 };
+
+/**
+ * **The proportioned head, measured** (lane BODIES, on the committed
+ * `figures.glb` in its bind pose — docs/evidence/bodies.md): the skull's centre
+ * and half-extents that the procedural hairstyles are shells round, and the face
+ * landmarks the procedural face is laid on. Both bodies agree within 0.01.
+ */
+export const HEAD_SHAPE = {
+  centre: [0, 0.905, -0.004] as readonly [number, number, number],
+  radii: [0.064, 0.088, 0.071] as readonly [number, number, number],
+  /** Eye centres (x ±), their height, and the face's front there. */
+  eye: { x: 0.0225, y: 0.912, z: 0.061 },
+  brow: { y: 0.927, z: 0.062 },
+  mouth: { y: 0.862, z: 0.056 },
+} as const;
 
 export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   // Wasp's four insect wings on her back; an extra, larger pair on a bee.
@@ -329,6 +559,18 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
       human: [{ joint: 'hand_r', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE, pose: PISTOL_POSE }],
       humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE }] },
   },
+  // **Lane BODIES — a sidearm**: the pistol's own geometry at 60% in the right
+  // hand, gunmetal whatever the card's accent (Peggy's accent is her red hat),
+  // gripped exactly as the pistol is — its anchor is written in the same aim pose
+  // — so it follows the hand into any resting pose (`figures/rests.ts`).
+  sidearm: {
+    blend: 'normal',
+    colour: '#8f98a8',
+    glow: null,
+    anchors: {
+      human: [{ joint: 'hand_r', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE * 0.6, pose: PISTOL_POSE }],
+      humanoid: [{ joint: 'torso', at: PISTOL_GRIP, turn: [0, PISTOL_YAW, 0], size: PISTOL_SIZE * 0.6 }] },
+  },
   // The pistol's muzzle, lit at rest (a pose: the gun is drawn) and flaring with
   // the clip lane — her attack's pistolDraw is the `attack` request, so the
   // emitter hook fires it with the muzzle-flash cue.
@@ -355,11 +597,14 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
       humanoid: [{ joint: 'head', at: [0, 0.735, 0], size: [0.35, 0.3, 0.262] }],
     },
   },
-  // Fury's long coat: a shell from the shoulders to the ankles, flared wider than
-  // the chibi's head at the hem so it shows round the figure from above, wrapped
-  // round the front with two lit lapels, and a stand-up collar with a lit rim that
-  // reads from behind (the second verification pass: from the table view his coat
-  // was behind your own Fury and out of view).
+  // Fury's long coat: a shell from the shoulders, wrapped round the front with two
+  // lit lapels, and a stand-up collar with a lit rim that reads from behind (the
+  // second verification pass: from the table view his coat was behind your own
+  // Fury and out of view). **Lane BODIES (D143): it is the YOKE** — shoulders to
+  // the chest — and the coat's body and skirt below are `coatTails`, panels on
+  // the spine and the legs, because a rigid shell to the knee was a white box to
+  // the floor under a kneeling Biochemist (D97's known cost), and a rigid shell
+  // to the hip swung out behind a Biochemist bent over his bench.
   coat: {
     blend: 'normal',
     colour: 'accent',
@@ -471,10 +716,116 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     glow: null,
     anchors: { any: [{ joint: 'stand', at: [0.3, 0, 0.03], size: 1 }] },
   },
+  // **Lane BODIES — the body and skirt of a long coat, which DRAPE** (D143,
+  // D146): panels of one flared arc — a ring of five on the lowest spine joint
+  // from the chest to the hip (the coat's body, which hangs with the hips when
+  // the chest bends), then the skirt: a two-link chain front and side on each
+  // leg and one panel at the back, all hanging from the PELVIS. Each upper link
+  // follows its thigh part-way and each lower link hangs from the upper one's hem
+  // toward the upright, so a kneeling figure's coat drapes over its knee instead
+  // of standing to the floor as a box (report 15 §1.3, cause 10), a lunge opens
+  // it without flinging flaps, and no panel ever rides the calf edge-on (the
+  // verifier's sliver, D146). No simulation and no clock: the clip lane poses the
+  // joints and the panels are where the joints put them. The front is left open
+  // between the two front panels, as a coat's is. Worn with `coat`, which since
+  // this lane is the YOKE: shoulders, collar and lapels.
+  coatTails: {
+    blend: 'normal',
+    colour: 'accent',
+    glow: null,
+    anchors: {
+      // Each side is a two-link chain — hip to knee on the thigh, knee to calf on
+      // the calf — so a kneeling figure's coat falls from its knee instead of
+      // standing out from its thigh as a shelf; the back hangs whole from the pelvis.
+      human: [
+        // The body link, chest to hip, on the lowest spine joint (COAT_CHEST).
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(46), 0], size: COAT_BODY },
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(118), 0], size: COAT_BODY },
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(180), 0], size: COAT_BODY },
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-118), 0], size: COAT_BODY },
+        { joint: 'spine_01', at: COAT_CHEST, turn: [0, rad(-46), 0], size: COAT_BODY },
+        // The skirt, D146: each link hangs from the PELVIS; the upper one follows
+        // its thigh part-way (SKIRT_FOLLOW), and the lower one hangs from the
+        // upper one's hem toward the upright — never from the calf bone.
+        ...skirtLink(46, 'thigh_l', SKIRT_FOLLOW.front),
+        ...skirtLink(118, 'thigh_l', SKIRT_FOLLOW.side),
+        { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.04, 1.18, 1.04] },
+        ...skirtLink(-118, 'thigh_r', SKIRT_FOLLOW.side),
+        ...skirtLink(-46, 'thigh_r', SKIRT_FOLLOW.front),
+      ],
+      humanoid: [
+        { joint: 'torso', at: CHIBI_CHEST, turn: [0, rad(46), 0], size: CHIBI_BODY },
+        { joint: 'torso', at: CHIBI_CHEST, turn: [0, rad(118), 0], size: CHIBI_BODY },
+        { joint: 'torso', at: CHIBI_CHEST, turn: [0, rad(180), 0], size: CHIBI_BODY },
+        { joint: 'torso', at: CHIBI_CHEST, turn: [0, rad(-118), 0], size: CHIBI_BODY },
+        { joint: 'torso', at: CHIBI_CHEST, turn: [0, rad(-46), 0], size: CHIBI_BODY },
+        { joint: 'leg-left', at: CHIBI_WAIST, turn: [0, rad(46), 0], size: CHIBI_TAIL },
+        { joint: 'leg-left', at: CHIBI_WAIST, turn: [0, rad(118), 0], size: CHIBI_TAIL },
+        { joint: 'root', at: CHIBI_WAIST, turn: [0, rad(180), 0], size: CHIBI_TAIL },
+        { joint: 'leg-right', at: CHIBI_WAIST, turn: [0, rad(-118), 0], size: CHIBI_TAIL },
+        { joint: 'leg-right', at: CHIBI_WAIST, turn: [0, rad(-46), 0], size: CHIBI_TAIL },
+      ],
+    },
+  },
+  // **Lane BODIES — a cloak** (D143, D146): the same arc panel, down the BACK —
+  // two from the shoulders on the chest bone, three from the hip on the pelvis,
+  // the outer two following their thighs a third of the way, overlapping — so it
+  // swings a little with the stride. Unlike the coat's panels it carries a TRIM
+  // at its hem (the villain's gold). Doom's cloak on the villain duelist
+  // (`duelists.json`), and open to any row.
+  cape: {
+    blend: 'normal',
+    colour: 'accent',
+    glow: null,
+    anchors: {
+      human: [
+        // The shoulder panels hang INSIDE the hip panels where they overlap (a
+        // hem radius of 0.2 × 0.76 against the hip panels' 0.161 top, flaring),
+        // so their trim — the cape's hem trim is on every panel — is hidden under
+        // them and the gold shows only at the cape's own hem (D146).
+        { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(145), 0], size: [0.76, 1.12, 0.76] },
+        { joint: 'spine_03', at: CAPE_SHOULDERS, turn: [0, rad(215), 0], size: [0.76, 1.12, 0.76] },
+        {
+          joint: 'pelvis',
+          follow: { joint: 'thigh_l', weight: SKIRT_FOLLOW.side },
+          at: COAT_WAIST,
+          turn: [0, rad(135), 0],
+          size: [1.02, 1.3, 1.02],
+        },
+        { joint: 'pelvis', at: COAT_WAIST, turn: [0, rad(180), 0], size: [1.04, 1.32, 1.04] },
+        {
+          joint: 'pelvis',
+          follow: { joint: 'thigh_r', weight: SKIRT_FOLLOW.side },
+          at: COAT_WAIST,
+          turn: [0, rad(225), 0],
+          size: [1.02, 1.3, 1.02],
+        },
+      ],
+      humanoid: [
+        { joint: 'torso', at: [0, 0.52, -0.035], turn: [0, rad(150), 0], size: [1.6, 0.95, 1.6] },
+        { joint: 'torso', at: [0, 0.52, -0.035], turn: [0, rad(210), 0], size: [1.6, 0.95, 1.6] },
+        { joint: 'root', at: CHIBI_WAIST, turn: [0, rad(180), 0], size: CHIBI_TAIL },
+      ],
+    },
+  },
   // -- derived kinds: placed by the field from `swarm` / `silhouette` ----------
   squad: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
   swarmBee: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
   carrier: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
+  // -- lane BODIES: derived from the trait's `face` and `hair` -----------------
+  // **The face** (D142): eyes, brows and a mouth line on the proportioned head's
+  // front, drawn in their own vertex colours (white eyes, ink features), rigid on
+  // `Head`. Built in figure units (`scene/props.ts`), so its anchor is the origin.
+  face: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  // The same face with HIS left eye left out, under an eyepatch (`face: patched`).
+  facePatched: { blend: 'normal', colour: '#ffffff', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  // **The hairstyles** (D141), each rigid on `Head` in the costume's hair colour.
+  hairParted: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  hairLong: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  hairCrop: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  hairBob: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  hairWaves: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  hairBun: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
 };
 
 /** The anchors a kind has on a family: its own row, else `any`, else none. */

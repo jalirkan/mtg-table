@@ -42,7 +42,8 @@ import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { NullStage, type AnchorRef } from '../src/arena/cues/stage.ts';
 import { SceneStage } from '../src/arena/scene/SceneStage.ts';
 import type { CueParamValue } from '../src/arena/cues/types.ts';
-import { PISTOL_MUZZLE, anchorsOf, type Family, type PropKind } from '../src/arena/figures/props.ts';
+import { COAT_PANEL, HEAD_SHAPE, PISTOL_MUZZLE, anchorsOf, type Family, type PropKind } from '../src/arena/figures/props.ts';
+import { buildKindGeometry } from '../src/arena/scene/props.ts';
 import {
   FIGURE_FRONT_Z,
   anchorPosition,
@@ -129,6 +130,47 @@ test('facing: figure space faces +Z, and the kit agrees — the eye, badge and p
   // opponent's figures face +Z, the viewer's camera, and yours face away from it.
   assert.equal(seatFacingY('you'), Math.PI);
   assert.equal(seatFacingY('opp'), 0);
+});
+
+test('facing: lane BODIES — the face is on the head’s FRONT, and a coat’s skirt opens at the front (D142, D143)', () => {
+  // The face kind is built in figure units round the head (its anchor is the
+  // origin): every vertex in front of the head's centre, and the eyes either side.
+  const face = buildKindGeometry('face')!;
+  const position = face.getAttribute('position');
+  let front = Number.POSITIVE_INFINITY;
+  let left = 0;
+  let right = 0;
+  for (let i = 0; i < position.count; i++) {
+    front = Math.min(front, (position.getZ(i) - HEAD_SHAPE.centre[2]) * FIGURE_FRONT_Z);
+    if (position.getX(i) > 0.012) left += 1;
+    if (position.getX(i) < -0.012) right += 1;
+  }
+  assert.ok(front > 0.04, `a face vertex is ${front.toFixed(3)} in front of the head's centre — not on the face`);
+  assert.ok(left > 0 && right > 0, 'the eyes are not either side of the nose');
+  assert.deepEqual(anchorsOf('face', 'human').map((a) => a.joint), ['Head']);
+  // The patched face leaves out HIS left eye (+x), where the eyepatch is, and
+  // nothing else: fewer vertices on the left of the nose, none fewer on the right.
+  const patched = buildKindGeometry('facePatched')!.getAttribute('position');
+  let patchedLeft = 0;
+  let patchedRight = 0;
+  for (let i = 0; i < patched.count; i++) {
+    if (patched.getX(i) > 0.012) patchedLeft += 1;
+    if (patched.getX(i) < -0.012) patchedRight += 1;
+  }
+  assert.ok(patchedLeft < left, 'the patched face still has its left eye');
+  assert.equal(patchedRight, right, 'the patched face lost something on its right');
+  // …which is the side the eyepatch is on: its patch is offset to +x in its own
+  // unit-head space (the strap round the head is symmetric).
+  const eyepatch = buildKindGeometry('eyepatch')!.getAttribute('position');
+  let sumX = 0;
+  for (let i = 0; i < eyepatch.count; i++) sumX += eyepatch.getX(i);
+  assert.ok(sumX / eyepatch.count > 0, 'the eyepatch is not on the side the patched face leaves open');
+  // The skirt's panels leave the front open (a coat worn open) and cover the back.
+  const turns = anchorsOf('coatTails', 'human').map((a) => (((a.turn?.[1] ?? 0) * 180) / Math.PI + 360) % 360);
+  const half = COAT_PANEL.arc / 2;
+  const covers = (deg: number): boolean => turns.some((t) => Math.abs(((deg - t + 540) % 360) - 180) <= half);
+  assert.equal(covers(0), false, 'the coat is closed at the front');
+  for (const deg of [60, 120, 180, 240, 300]) assert.ok(covers(deg), `the skirt has a hole at ${String(deg)}°`);
 });
 
 test('facing: every T11 beat lands on the side of the prop it is about, for both seats (D81)', () => {

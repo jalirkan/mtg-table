@@ -149,7 +149,8 @@ test('duelists: the validator drops a bad look and says where — the negative c
   bad((f) => (f['looks']['director']['scale'] = 4), '$.looks.director.scale: must be within');
   bad((f) => (f['looks']['director']['body'] = []), '$.looks.director.body: must be a non-empty list');
   bad((f) => (f['looks']['director']['costume']['cape'] = '#000000'), '$.looks.director.costume.cape: not one of COSTUME_SLOTS');
-  bad((f) => (f['looks']['director']['props']['cape'] = 'top'), '$.looks.director.props.cape: not a prop kind');
+  // (Lane BODIES made `cape` a kind — Doom's cloak — so the control names one nobody built.)
+  bad((f) => (f['looks']['director']['props']['cloak'] = 'top'), '$.looks.director.props.cloak: not a prop kind');
   bad((f) => (f['looks']['director']['props']['coat'] = 'cape'), '$.looks.director.props.coat: must name one of COSTUME_SLOTS');
   bad((f) => (f['seats']['you'] = 'nobody'), '$.seats.you: must name a look');
   bad((f) => (f['gestures']['wave'] = { clips: [] }), '$.gestures.wave: unknown field');

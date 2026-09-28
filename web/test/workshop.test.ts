@@ -40,6 +40,7 @@ import { cuesFor } from '../src/arena/cues/resolve.ts';
 import { NullStage } from '../src/arena/cues/stage.ts';
 import { combatFreeze, spellForms } from '../src/arena/figures/casting.ts';
 import { figurePose, type FigureLayout } from '../src/arena/figures/pose.ts';
+import { baseModelOf } from '../src/arena/figures/rests.ts';
 import { tilePose } from '../src/arena/figures/tiles.ts';
 import { TRAITS, traitFor } from '../src/arena/figures/traits.ts';
 import { tileDataOf } from '../src/arena/figures/types.ts';
@@ -221,7 +222,9 @@ test('workshop: every creature of every deck stands on the pedestal, posed by th
   assert.ok(creatures >= 20, `only ${String(creatures)} creatures posed`);
   // The per-card identity arrives with no workshop code saying so.
   const peggy = posesOf(pedestalState(entry('Peggy Carter, Secret Agent'))).get(IDS.subject)!;
-  assert.deepEqual(peggy.props.map((p) => p.kind).sort(), ['hat', 'shield']);
+  // …her head too since lane BODIES: her hairstyle and her face (D141, D142).
+  assert.deepEqual(peggy.props.map((p) => p.kind).sort(), ['face', 'hairWaves', 'hat', 'shield', 'sidearm']);
+  assert.equal(peggy.rest, 'ready');
   assert.equal(peggy.tint, '#f3ede4');
 });
 
@@ -545,7 +548,7 @@ test('workshop: a trait override applies through validateTraits, and a bad one i
   const good = traitsWith(tinted);
   assert.deepEqual(good.errors, []);
   assert.equal(traitFor(card, good.data).spec.tint, '#3fa9f5');
-  assert.deepEqual(traitFor(card, good.data).spec.props, ['shield', 'hat']);
+  assert.deepEqual(traitFor(card, good.data).spec.props, ['shield', 'hat', 'sidearm']);
   const bad = traitsWith(withTraitRow({ traits: {}, cues: {} }, peggy.name, { scale: 99 }));
   assert.equal(bad.errors.length, 1);
   assert.match(bad.errors[0]!.where, /Peggy/);
@@ -629,7 +632,7 @@ test('workshop: "copy as traits.json row" is the committed row with the edit fol
   const row = { ...committedRow(peggy), tint: '#3fa9f5', hover: 0.1 };
   delete (row as Record<string, unknown>)['accent'];
   const edited = (JSON.parse(`{${traitsRowText(peggy, row)}}`) as Record<string, Record<string, unknown>>)[peggy]!;
-  assert.deepEqual(Object.keys(edited), ['tint', 'props', '_note', 'costume', 'hover', '_costume']);
+  assert.deepEqual(Object.keys(edited), ['tint', 'props', 'rest', 'hair', '_note', 'costume', 'hover', '_costume']);
   assert.equal(edited['tint'], '#3fa9f5');
   assert.equal(edited['_note'], cards[peggy]!['_note']);
   assert.equal(edited['_costume'], cards[peggy]!['_costume']);
@@ -672,7 +675,8 @@ test('workshop: slice 4’s costume and body reach the pedestal’s pose through
   assert.equal(bad.errors.length, 1);
   assert.match(bad.errors[0]!.where, /costume\.cape/);
   // The chibi flag stands her in `<model>-chibi` (D98), and she still wears her costume.
-  const human = committed.modelId!;
+  // Lane BODIES: the pose names the resting-pose variant; the chibi is its BODY's.
+  const human = baseModelOf(committed.modelId)!;
   const chibi = poseOf(traitsWith(withTraitRow({ traits: {}, cues: {} }, peggy.name, { ...committedRow(peggy.name), body: 'chibi' })).data);
   assert.equal(chibi.modelId, MODELS.models[`${human}-chibi`] !== undefined ? `${human}-chibi` : human);
   assert.ok(chibi.costume !== null);
