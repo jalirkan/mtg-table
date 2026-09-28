@@ -2308,14 +2308,14 @@ on the branch after the verification pass (870 + 94 before the lane), and is
 the rest). Its gate runs are `var/check-all-look.log`,
 `var/check-all-look-fix1.log` and, merged, `var/check-all-look-merge.log`.
 
-## The comic motion lane — the conventions D130–D136 added
+## The comic motion lane — the conventions D130–D138 added
 
 Five, and the thesis is one sentence: **a comic's motion is still a cue — a pure
 function of its own `t` that decays to identity — and "off" is the film before
 it.** Report 15's Lane MOTION (`docs/research/15-art-direction.md` §5, §9.2) gave
 the cues impact stars, lettering, ink splats, halftone dots, speed lines, the
 hologram-to-ink summon, impact shakes and on twos, on branch `motion`
-(**D130–D136**, the lane's reserved range, renumbered at merge;
+(**D130–D138**, the lane's reserved range, renumbered at merge;
 `docs/evidence/motion.md` is what was measured). README's *The comic motion lane*
 is how to give a card a word.
 
@@ -2324,9 +2324,11 @@ is how to give a card a word.
    cue strip, the workshop's queue bar) as `reducedMotion` does; every lane beat is
    behind it, a cue's comic-only effect keys are declared in `CueDef.comic` (which
    `end()` releases only for a comic cue), and the lane's helpers emit NOTHING with
-   it off. `motion.test.ts` holds the corpus to "no comic op with comic FX off"; a
-   new beat that writes an op outside the switch breaks the A/B the user judges
-   with. **Default on.**
+   it off. `motion.test.ts` holds the corpus to "no comic op with comic FX off"
+   and PINS the digest of that film (comic FX off AND on twos off — on twos steps
+   the timing) to the pre-lane engine's, 310,369 ops; a new beat that writes an op
+   outside the switch breaks the A/B the user judges with, and a deliberate change
+   to a classic cue re-derives the pin with a reason. **Default on.**
 2. **Ink is a shape, and the kit grew by one kind** (**D130**, **D133**). `burst`,
    `splat` and `dots` are textures on the existing slots, blended NORMALLY
    (`isInkShape`; blending is render state, never a program); `streak` is the one
@@ -2336,7 +2338,13 @@ is how to give a card a word.
    `text` effect; `replay-cues.test.ts` nets every word and every text. A new
    shape needs a `drawShape` case and a row in `INK_SHAPES` if it is ink; a new
    word is a decision. Speed lines lie along the motion's own vector (`from → to`)
-   — "body → anchor" flips once a body has passed its anchor.
+   — "body → anchor" flips once a body has passed its anchor. **On the frame loop
+   a texture is a LOOKUP** (`burstTexture` keyed by the word itself, `shapeTexture`
+   by its constant name), and the drawing is each lookup's miss path, which
+   `EffectPool.prime` takes for all eight ink textures at mount; the liveness
+   clause scans both lookups — it once stopped one call short of a
+   `burst:${word}` string built per star per frame. The splat is an ink body with
+   a paper rim (**D138**): the tint reaches only the rim and the gloss.
 3. **The summon is an offset; the look is LOOK's** (**D131**). `Offset.materialize`
    (identity 1, a product) ramps on every arrival (the zone event's own
    `toZone`/`fromZone`), and `CueRunner`'s `applyMaterialize` is its ONE frame-loop
@@ -2358,13 +2366,21 @@ is how to give a card a word.
    `CameraRequest.key` is read for a shake-only request and nothing else. Every
    word, star, splat and shake lands on the body the event NAMES (**D136**,
    `cues.json`'s rule): an attacker's word is its own flourish, never a hit on its
-   defender.
+   defender. **And a star never hides that body** (**D137**): at a `figure`
+   anchor it carries `Effect.aside` (the card's rest slot), and the pool pushes it
+   in SCREEN space beside the body toward the screen's centre, then toward the lens
+   and shrunk by the same ratio (in front of the body, the same footprint) —
+   `besideAttacker` clear of the head, `besideStruck` on the body's edge.
+   `motion.test.ts` projects every figure of `g1`@355/@359 from all five views
+   through the real cue and the real pool (345 stars, 0 over a head; centred, 345
+   of 345 were).
 
-The lane's tests: `motion.test.ts` (11), and additions to `cues-exhaustive`,
+The lane's tests: `motion.test.ts` (12), and additions to `cues-exhaustive`,
 `replay-cues`, `liveness` (one appended test: the lane's bodies allocate nothing,
-the look's one writer, the pool at 49), `camera` and `workshop` — **892 `node
---test` + 94 vitest** on the branch. Its evidence driver and PNGs are local, under
-`var/motion/`.
+the texture lookups included, the ink drawn at mount, the look's one writer, the
+pool at 49), `camera` and `workshop` — **893 `node --test` + 94 vitest** on the
+branch after its verification pass. Its evidence driver and PNGs are local, under
+`var/motion/` (the fix pass's under `var/motion/fix1/`).
 
 ## Treat forge-src as prose
 

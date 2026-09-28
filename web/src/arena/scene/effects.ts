@@ -44,7 +44,7 @@
 
 import * as THREE from 'three';
 
-import { isInkShape, type AnchorRef, type ComicWord, type Effect, type EffectKind, type EffectShape } from '../cues/stage.ts';
+import { COMIC_WORDS, isInkShape, type AnchorRef, type ComicWord, type Effect, type EffectKind, type EffectShape } from '../cues/stage.ts';
 import type { FigureLayout, FigurePose } from '../figures/pose.ts';
 import { FIGURE_HEIGHT, figurePointInto } from '../layout.ts';
 import { parsedColour } from './colourCache.ts';
@@ -396,27 +396,32 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
       drawBurst(ctx, w, h, null);
       return;
     case 'splat': {
-      // **An ink splash** (D130), seen from above: a lobed blob, a few arms flung
-      // out with a droplet at each end, and loose drops. Painted twice — once in
-      // ink a little larger (the OUTLINE, which stays ink whatever the tint, so it
-      // reads on a light stage) and once in white on top (the BODY, which the
-      // material tints to the dying card's colour, so it reads on the dark felt).
-      // The first cut had them the other way round — an ink body with a coloured
-      // rim — and on the hologram's felt it was invisible (`g1`@359, measured).
+      // **An ink splash** (D130, D138), seen from above: a lobed blob, a few arms
+      // flung out with a droplet at each end, and loose drops — INK, with a light
+      // rim and a gloss. The body is drawn in ink, so it stays ink whatever the
+      // tint; the rim and the gloss are white, so the material tints THEM (paper
+      // by default, a card row's `colour` otherwise). On the hologram's dark felt
+      // the rim carries the shape and the body reads as a hole of ink; on a light
+      // stage the body carries it. History: the first cut was an ink body with a
+      // thin tinted rim (invisible on the felt, `g1`@359); the second a white body
+      // tinted grey with an ink rim, which the lane's verification pass read as
+      // MILK — "a cream splash", "a pale smudge" at table distance.
       const rand = lcg(0x5b1a7);
       const lobes: number[] = [];
       for (let i = 0; i < 36; i++) lobes.push(0.82 + 0.3 * rand());
       const arms: Array<[number, number, number]> = [];
       for (let i = 0; i < 7; i++) arms.push([rand() * Math.PI * 2, 0.62 + 0.3 * rand(), 5 + 7 * rand()]);
       const drops: Array<[number, number, number]> = [];
-      for (let i = 0; i < 9; i++) drops.push([rand() * Math.PI * 2, 0.7 + 0.28 * rand(), 3 + 6 * rand()]);
-      const paint = (grow: number, fill: string): void => {
+      for (let i = 0; i < 9; i++) drops.push([rand() * Math.PI * 2, 0.66 + 0.26 * rand(), 3 + 6 * rand()]);
+      // `pad` is an absolute outset in canvas pixels, so the rim is as thick on a
+      // thin arm and a small drop as on the blob — a proportional one vanished there.
+      const paint = (pad: number, fill: string): void => {
         ctx.fillStyle = fill;
         ctx.strokeStyle = fill;
         ctx.beginPath();
         for (let i = 0; i <= lobes.length; i++) {
           const a = ((Math.PI * 2) / lobes.length) * i;
-          const r = 58 * lobes[i % lobes.length]! * grow;
+          const r = 56 * lobes[i % lobes.length]! + pad;
           const x = c + r * Math.cos(a);
           const y = c + r * Math.sin(a);
           if (i === 0) ctx.moveTo(x, y);
@@ -425,30 +430,38 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
         ctx.closePath();
         ctx.fill();
         for (const [a, reach, size] of arms) {
-          ctx.lineWidth = size * 1.3 * grow;
+          ctx.lineWidth = size * 1.3 + 2 * pad;
           ctx.beginPath();
           ctx.moveTo(c + 40 * Math.cos(a), c + 40 * Math.sin(a));
-          ctx.lineTo(c + 120 * reach * Math.cos(a), c + 120 * reach * Math.sin(a));
+          ctx.lineTo(c + 112 * reach * Math.cos(a), c + 112 * reach * Math.sin(a));
           ctx.stroke();
           ctx.beginPath();
-          ctx.arc(c + 120 * reach * Math.cos(a), c + 120 * reach * Math.sin(a), size * grow, 0, Math.PI * 2);
+          ctx.arc(c + 112 * reach * Math.cos(a), c + 112 * reach * Math.sin(a), size + pad, 0, Math.PI * 2);
           ctx.fill();
         }
         for (const [a, reach, size] of drops) {
           ctx.beginPath();
-          ctx.arc(c + 124 * reach * Math.cos(a), c + 124 * reach * Math.sin(a), size * grow, 0, Math.PI * 2);
+          ctx.arc(c + 116 * reach * Math.cos(a), c + 116 * reach * Math.sin(a), size + pad, 0, Math.PI * 2);
           ctx.fill();
         }
       };
-      paint(1.14, INK_FILL);
-      paint(1, 'rgba(255,255,255,1)');
-      // A darker core, so the splash has a value structure and is not a flat decal.
-      ctx.globalAlpha = 0.35;
-      ctx.fillStyle = INK_FILL;
+      paint(9, 'rgba(255,255,255,1)');
+      paint(0, INK_FILL);
+      // The gloss: a crescent of light on the blob and a glint on the bigger drops —
+      // what makes a black shape read as WET ink rather than a hole.
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.beginPath();
-      ctx.arc(c + 6, c + 5, 30, 0, Math.PI * 2);
+      ctx.ellipse(c - 20, c - 22, 20, 8, -0.7, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(c - 38, c - 4, 4, 0, Math.PI * 2);
+      ctx.fill();
+      for (const [a, reach, size] of drops) {
+        if (size < 6) continue;
+        ctx.beginPath();
+        ctx.arc(c + 116 * reach * Math.cos(a) - size * 0.35, c + 116 * reach * Math.sin(a) - size * 0.35, size * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
       return;
     }
     case 'dots': {
@@ -571,24 +584,40 @@ function drawBurst(ctx: CanvasRenderingContext2D, w: number, h: number, word: st
 }
 
 /**
- * **An impact star's texture, lettered or not** — one canvas per word, drawn the
- * first time a cue asks for it and kept for the page (a game letters two or three
- * of the five). 512 px, because a lethal star is most of a card tall in the
- * workshop's close-up and a 256 px word goes soft there. `null` in a DOM-less test.
+ * The comic lane's stars, by WORD (`null` is the plain star). Keyed by the word
+ * itself rather than by a `burst:${word}` string: a lookup is on the frame loop's
+ * path (`#glowMap`, every frame, every live star), and a template string there was
+ * an allocation per star per frame that the loop's scan could not see — it stopped
+ * one call short (the lane's verification pass, negative-controlled since).
+ */
+const burstCache = new Map<ComicWord | null, THREE.Texture | null>();
+
+/**
+ * **An impact star's texture, lettered or not** — one canvas per word, kept for the
+ * page. A LOOKUP, and nothing else, on the frame loop's path: the drawing is
+ * {@link drawBurstTexture}'s, which `EffectPool.prime` reaches for every star at
+ * mount, so a miss mid-cue is only a pool used without its prime (a test).
  */
 export function burstTexture(word: ComicWord | null): THREE.Texture | null {
-  const name = word === null ? 'burst' : `burst:${word}`;
-  const cached = shapeCache.get(name);
-  if (cached !== undefined) return cached;
+  const cached = burstCache.get(word);
+  return cached !== undefined ? cached : drawBurstTexture(word);
+}
+
+/**
+ * Draw and cache one star — 512 px, because a lethal star is most of a card tall
+ * in the workshop's close-up and a 256 px word goes soft there. `null` in a
+ * DOM-less test. Off the frame loop: {@link burstTexture}'s miss path.
+ */
+function drawBurstTexture(word: ComicWord | null): THREE.Texture | null {
   const made = canvas2d(512);
   if (made === null) {
-    shapeCache.set(name, null);
+    burstCache.set(word, null);
     return null;
   }
   drawBurst(made.ctx, 512, 512, word);
   const texture = new THREE.CanvasTexture(made.canvas);
   initTexture(texture, null);
-  shapeCache.set(name, texture);
+  burstCache.set(word, texture);
   return texture;
 }
 
@@ -644,13 +673,19 @@ function streakTexture(): THREE.Texture | null {
 /**
  * The texture for one {@link EffectShape} (or one of `overlays.ts`'s own), drawn
  * once for the page. `null` in a DOM-less test and for a name nothing draws —
- * the caller then keeps its default map, which is the soft glow.
+ * the caller then keeps its default map, which is the soft glow. A LOOKUP on the
+ * frame loop's path (the names are constants, so it builds nothing); the drawing
+ * is {@link drawShapeTexture}'s.
  */
 export function shapeTexture(name: EffectShape | 'console' | 'capsule' | 'cocoon'): THREE.Texture | null {
-  // The star is drawn at its own size, lettered or not — one cache entry for it.
+  // The star is drawn at its own size, lettered or not — its own cache.
   if (name === 'burst') return burstTexture(null);
   const cached = shapeCache.get(name);
-  if (cached !== undefined) return cached;
+  return cached !== undefined ? cached : drawShapeTexture(name);
+}
+
+/** Draw and cache one shape. Off the frame loop: {@link shapeTexture}'s miss path. */
+function drawShapeTexture(name: Exclude<EffectShape, 'burst'> | 'console' | 'capsule' | 'cocoon'): THREE.Texture | null {
   const size: [number, number] = name === 'console' ? [512, 320] : name === 'cocoon' ? [128, 256] : name === 'capsule' ? [160, 256] : [256, 256];
   if (typeof document === 'undefined') {
     shapeCache.set(name, null);
@@ -959,6 +994,8 @@ export class EffectPool {
   ];
   #point = 0;
   readonly #cardRef: { kind: 'card'; id: number } = { kind: 'card', id: 0 };
+  /** The comic lane's ink textures, listed once for {@link prime}. */
+  #ink: ReadonlyArray<THREE.Texture | null> | null = null;
 
   constructor() {
     this.group.name = 'arena-effects';
@@ -1160,13 +1197,18 @@ export class EffectPool {
   /** `fit`'s unit: the anchored figure's drawn height, or 1 at any other anchor. */
   #fitOf(effect: Effect): number {
     if (effect.fit !== true || effect.at.kind !== 'figure') return 1;
-    const scale = this.#offsets?.offsetOf(effect.at.id).scale ?? 1;
-    const pose = this.#figures?.get(effect.at.id);
+    return this.#heightOf(effect.at.id);
+  }
+
+  /** A card's figure's drawn height, its live offset's scale included. */
+  #heightOf(id: number): number {
+    const scale = this.#offsets?.offsetOf(id).scale ?? 1;
+    const pose = this.#figures?.get(id);
     if (pose !== undefined) return pose.height * scale;
     // A body that just died is sized as it stood (the comic lane's splat, D130):
     // a flier's departing body is as wide as it was, and a fixed-size stain hid
     // under it (`g1`@359's Giant-Sized Flying Ant).
-    const gone = this.#departed?.get(effect.at.id);
+    const gone = this.#departed?.get(id);
     return (gone === undefined ? FIGURE_HEIGHT : gone.pose.height) * scale;
   }
 
@@ -1227,11 +1269,25 @@ export class EffectPool {
    */
   prime(): void {
     if (this.#slots.length === 0) this.#build();
+    // **The comic lane's ink is drawn and uploaded HERE, at mount** (the lane's
+    // verification pass): the six stars (plain and the five words), the splat and
+    // the dot screen, each handed to a parked glow slot so this frame's draw at
+    // opacity 0 uploads it. Drawn lazily inside `bind`, the first star of a game
+    // paid a 512 px canvas and its upload mid-cue — two over-50 ms frames on the
+    // GTX 1080 bench coincided with one. Only GLOW slots take them: a glow's map is
+    // re-chosen on every use (`#glowMap`), a mote's is not. The streaks' clones are
+    // already on their own slots and upload with them.
+    const ink = this.#primeInk();
+    let next = 0;
     for (const slot of this.#slots) {
       if (slot.object.visible) continue;
       slot.object.visible = true;
       slot.material.opacity = 0;
       slot.object.position.set(0, 0.01, 0);
+      if (slot.kind === 'glow' && next < ink.length) {
+        const map = ink[next++];
+        if (map !== null && map !== undefined) slot.material.map = map;
+      }
       if (slot.kind === 'text') {
         const mat = slot.material as THREE.MeshBasicMaterial;
         if (mat.map === null) {
@@ -1241,6 +1297,21 @@ export class EffectPool {
         mat.blending = THREE.NormalBlending;
       }
     }
+  }
+
+  /**
+   * Every ink texture the comic lane draws, drawn now (their caches are the page's,
+   * so this is a list of lookups after the first pool). At mount only — never on
+   * the frame loop's path.
+   */
+  #primeInk(): ReadonlyArray<THREE.Texture | null> {
+    if (this.#ink === null) {
+      const ink: Array<THREE.Texture | null> = [burstTexture(null)];
+      for (const word of COMIC_WORDS) ink.push(burstTexture(word));
+      ink.push(shapeTexture('splat'), shapeTexture('dots'));
+      this.#ink = ink;
+    }
+    return this.#ink;
   }
 
   #apply(
@@ -1284,13 +1355,20 @@ export class EffectPool {
         if (effect.spin !== undefined) object.rotateZ(effect.spin);
         const size = effect.radius * this.#fitOf(effect) * (0.8 + 0.4 * strength);
         object.scale.set(size * (effect.aspect ?? 1), size, 1);
-        // **An impact star is drawn IN FRONT of the body it is on** (D130): pulled
-        // toward the lens by half its size, so its lettering is not cut by the
-        // figure it names — it still depth-tests against everything nearer.
         if (effect.shape === 'burst') {
-          this.#dir.copy(camera.position).sub(object.position);
-          const away = this.#dir.length();
-          if (away > 1e-3) object.position.addScaledVector(this.#dir, Math.min(0.45 * size, 0.4 * away) / away);
+          if (effect.aside !== undefined && effect.at.kind === 'figure') {
+            // **A star beside its body** (D137): an attacker's own flourish, and a
+            // hit that must not hide the body it lands on.
+            this.#beside(object, effect, effect.at.id, size, resolve, camera);
+          } else {
+            // **An impact star is drawn IN FRONT of the body it is on** (D130):
+            // pulled toward the lens by half its size, so its lettering is not cut
+            // by the figure it names — it still depth-tests against everything
+            // nearer. Along the view ray, so it does not move on screen.
+            this.#dir.copy(camera.position).sub(object.position);
+            const away = this.#dir.length();
+            if (away > 1e-3) object.position.addScaledVector(this.#dir, Math.min(0.45 * size, 0.4 * away) / away);
+          }
         }
         break;
       }
@@ -1413,6 +1491,59 @@ export class EffectPool {
       }
       default:
         object.visible = false;
+    }
+  }
+
+  /**
+   * **Push a star off the body it is on, in SCREEN space** (D137, the lane's
+   * verification pass: a POW centred on an attacker's head hid Peggy's hat and
+   * shield and Fury's head at the top of their dash, in the workshop and at the
+   * table). The billboard already faces the lens (`camera.quaternion`), so its
+   * right and up are the camera's: the star moves by its own half-width plus
+   * `clear` of the figure's height along the camera's right, toward the screen's
+   * centre as seen from `aside` (a REST point, so the side is fixed for the cue —
+   * a body mid-dash crossing the centre line does not flip it), and up by `lift`
+   * of its size. Then it is pulled toward the lens along its own view ray and
+   * shrunk by the same ratio — the same place and size on the screen, but in front
+   * of the body, whose bulk would otherwise hide the star's inner edge. On the
+   * frame loop's path — the pool's own vectors, nothing allocated.
+   */
+  #beside(
+    object: THREE.Object3D,
+    effect: Effect,
+    id: number,
+    size: number,
+    resolve: (ref: Effect['at']) => [number, number, number] | null,
+    camera: THREE.Camera,
+  ): void {
+    this.#across.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    let side = 1;
+    const rest = effect.aside === undefined ? null : resolve(effect.aside);
+    if (rest !== null) {
+      // Right of the view's centre line is a positive camera-space x; the star goes
+      // the other way, toward the middle of the screen, so it is never cut by an edge.
+      this.#a.set(rest[0], rest[1], rest[2]).sub(camera.position);
+      const reach = this.#a.length();
+      if (reach > 1e-3 && this.#a.dot(this.#across) > ASIDE_TIE * reach) side = -1;
+    }
+    const push = 0.5 * size * (effect.aspect ?? 1) + (effect.clear ?? 0) * this.#heightOf(id);
+    object.position.addScaledVector(this.#across, side * push);
+    const lift = effect.lift ?? 0;
+    if (lift !== 0) {
+      this.#face.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      object.position.addScaledVector(this.#face, lift * size);
+    }
+    // …and IN FRONT of that body, at the same place on the screen: pulled along
+    // its own view ray and shrunk by the same ratio, so its footprint is exactly the
+    // one placed above. At the body's own depth a wide body hid the star's inner
+    // half (the Giant-Sized Flying Ant from the side, `g1`@359 view 4).
+    this.#dir.copy(camera.position).sub(object.position);
+    const away = this.#dir.length();
+    if (away > 1e-3) {
+      const pull = Math.min(0.45 * size, 0.4 * away);
+      object.position.addScaledVector(this.#dir, pull / away);
+      const keep = (away - pull) / away;
+      object.scale.set(object.scale.x * keep, object.scale.y * keep, 1);
     }
   }
 
@@ -1544,3 +1675,10 @@ export class EffectPool {
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
+
+/**
+ * How far right of the view's centre line (as a fraction of its distance) a rest
+ * point must be before a star beside its body goes LEFT (D137). The workshop's
+ * pedestal puts the card on the line, and a threshold keeps rounding from choosing.
+ */
+const ASIDE_TIE = 0.01;

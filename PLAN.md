@@ -5907,12 +5907,13 @@ limits of what was measured or built.
 
 ---
 
-## The comic motion lane — report 15's Lane MOTION, 2026-09-28 (D130–D136)
+## The comic motion lane — report 15's Lane MOTION, 2026-09-28 (D130–D138)
 
 **Status: built, tested, measured, documented and gated** (`check-all.sh` from a
 deleted `bridge/out`, 929 s, exit 0, `var/check-all-motion.log`) on branch `motion` (worktree
 `mtg-table-t2m`, from `c81f674` — `main` at `a092d3a` plus the art-direction report
-and its `?look=comic` spike). Decisions **D130–D136**, in the lane's reserved range
+and its `?look=comic` spike), **then verified once and fixed** (round 1, below;
+the gate again from a deleted `bridge/out`, 872 s, exit 0, `var/check-all-motion-fix1.log`). Decisions **D130–D138**, in the lane's reserved range
 D130–D139, renumbered contiguously at merge; `docs/evidence/motion.md` is what was
 measured; README's *The comic motion lane* is how to use it. Lanes LOOK and BODIES
 ran in parallel and own the files this lane did not touch (report 15 §9.4); every
@@ -5938,7 +5939,67 @@ plays from an existing rehearsal — a workshop test holds it), `catalog.json`
 current (no new card rows). The T-pose one-liner is the hardening branch's and was
 not touched.
 
-### Comic motion lane follow-ups — nine, 2026-09-28
+### Verification round 1 — what the verifier found, and what was done
+
+Two majors and eight minors (`docs/evidence/motion.md` §V1 has the numbers and the
+pictures):
+
+- **An attacker's POW covered the attacker's own head** (major) — Peggy's hat and
+  shield, Fury's head, at 250 and 420 ms of the attack. **Fixed (D137)**: a star at
+  a `figure` anchor is pushed in SCREEN space beside the body (`Effect.aside`),
+  toward the screen's centre from the card's rest slot, and drawn in front of it
+  with the same footprint —
+  clear of the head for an attacker, on the body's edge for a hit (which also
+  answers "Coulson's lethal POW replaced his body"). `motion.test.ts` projects 345
+  stars over `g1`@355/@359 from all five views: 0 over a head; centred, 345 of 345.
+- **An allocation the loop's scan could not see** (major) — `burstTexture` built
+  `burst:${word}` on every call. **Fixed**: the cache is keyed by the word, both
+  lookups (`burstTexture`, `shapeTexture`) split from their drawing and added to the
+  liveness clause, with the junk-line controls and the verifier's own control (an
+  allocation in the hit path now fails).
+- **The comic-off test proved less than its name** (minor). **Fixed**: the test
+  pins the digest of the comic-off, twos-off film (310,369 ops, `3710d0b4…`, the
+  pre-lane engine's) and is named for both switches.
+- **The ink was drawn and uploaded mid-cue** (minor). **Fixed**: `EffectPool.prime`
+  draws all eight ink textures at mount onto parked glow slots; a probe of the live
+  arena shows all eight uploaded before the first cue.
+- **Ownership** (minor): the three out-of-brief edits are named in the merge notes
+  below.
+- **The splat read as milk** (minor). **Fixed (D138)**: an ink body with a paper rim
+  and a gloss.
+- **Aimed words off-frame at the workshop's 1× close-up** (minor) — **skipped**, a
+  workshop framing decision: follow-up 9, extended.
+- **Leftover headless Chromium** (minor). **Done**: the verifier's (pid 2223266)
+  closed over CDP `Browser.close`, the builder's (pid 1541916, whose CDP port had
+  gone) stopped from inside the snap's own confinement (`snap run --shell chromium
+  -c 'kill 1541916'` — a plain `kill` answers EACCES); `var/verify/profile-bench`
+  deleted.
+- **The summon is invisible under the default hologram** (minor) — by construction
+  until the merge with LOOK: follow-up 2, which now ends in a re-shoot.
+
+### Merge notes — the lane's edits outside report 15 §9.2's list
+
+Three files the brief did not name, each deliberate and each small; reconcile them
+on purpose at the merge rather than by whichever side lands second:
+
+- **`web/src/arena/Arena.tsx`** (report 15 §9.1 gives it to LOOK): `motionFromSearch`
+  read once, `comic` / `onTwos` passed into the `CueQueue`, and the cue strip's two
+  checkboxes (*comic FX*, *on twos*). LOOK's merge of the same file keeps both
+  halves — its look switch and these two.
+- **`web/src/arena/camera.ts`'s director** (the brief says "only to call the existing
+  shake"): `CameraRequest.key` and a per-key dedup of SHAKE-ONLY requests
+  (`#lastShakeKey`), because a cue is a pure function of its `t` and re-asks on every
+  frame of its impact window, which on a slow replay outlives the ≤ 300 ms shake.
+  Moving the dedup into the cue would need the cue to know whether it has asked —
+  state a cue does not keep — so it stays with the one object that already keeps
+  the shake's clock. A request without a key behaves as before.
+- **`web/src/arena/scene/figureRigs.ts`**: two optional fields, `lookHeld` /
+  `lookWritten`, used only by `applyMaterialize`'s `uLook` fallback — deleted with it
+  (follow-up 2).
+
+`web/src/workshop/Workshop.tsx` carries the *on twos* switch the brief allows.
+
+### Comic motion lane follow-ups — twelve, 2026-09-28
 
 1. **The death's reverse summon has only its cue half** (LOOK's
    `scene/FigureLayer.tsx`). `zone.dissolve` from the battlefield writes
@@ -5961,7 +6022,10 @@ not touched.
    `MATERIALIZE_FLOOR`, and cut the liveness clause's
    `uniforms\.uLook` / `look\.value = scaled` assertions to the handle's. LOOK's
    own clause ("`CueRunner.tsx` names no `uLook`") fails until this is done, which
-   is the point: it is the only `uLook` in the file.
+   is the point: it is the only `uLook` in the file. **Then re-shoot the summon**
+   under the merged look (the verification pass: under today's default hologram the
+   summon is invisible by construction — `uLook` 0 × anything — and under
+   `?look=comic` only a subtle change mid-entry was seen).
 3. **A summoned figure's props do not ink in with it** (`scene/props.ts`, LOOK then
    BODIES). The prop field's `uLook` is per KIND, written at commit
    (`PropField.setLook`). A per-instance look would be an instance attribute in
@@ -5996,6 +6060,31 @@ not touched.
    head already was in the before. The arena's table view shows whole stars
    (`after-table-g1-356-laser.png`, `after-table-g1-359-lethal.png`). If the close-up should hold a whole dash, it wants a framing that includes
    the combat anchor while a cue runs — the workshop's decision, not this lane's.
+   **Since D137** an attacker's star sits beside its head rather than above it, so
+   it is cut less, but the dash still carries the head toward the top edge. **The
+   same framing hides every AIMED word** (the verification pass): Quake's KRAK and
+   Wasp's ZZAK land beside the target dummy and the Doombot's ZZAK on the player,
+   all off-frame at 1×, so the comic and classic close-ups there are identical;
+   *table distance* shows them (`var/motion/fix1/png/ws-quake-table-*.png`,
+   `ws-wasp-table-*.png`). The fix is `workshop/Workshop.tsx`'s: frame the dummy
+   too (or switch to table distance) for a rehearsal whose `fiction` aims at it.
+10. **A flier's splat is mostly under its own falling body at table distance**
+   (`g1`@359, view 1: the Giant-Sized Flying Ant's ink shows as an edge and a rim
+   beside its body, `var/motion/fix1/png/arena-v1-359-1480-comic.png`). The splat is
+   on the ground under the stand point (`#groundOf`), where the ink would land, and
+   the camera looks down past the hovering body onto it. Judge it again under LOOK's
+   lighter stage before moving it; offsetting it toward the camera would be the
+   renderer deciding where a body fell.
+11. **Every star is still one of five words on one yellow** (the verification pass's
+   "still generic"; follow-ups 5 and 6 are the two halves). A sixth word, or a
+   per-card star colour that the tint does not turn the red lettering brown, is a
+   decision, not a tune: `burstColour` multiplies the whole star, words included.
+12. **The workshop's rehearsals leave the pedestal in their AFTER state when
+   auto-rest is off**, so a screenshot driver that plays *lethal* and then *dies*
+   on one page gets an empty pedestal for the second (both the builder's and the
+   verifier's `ws-coulson-lethal-200` shots were blank for this reason). The
+   evidence driver now loads a fresh page per rehearsal; `__mtgWorkshop` could offer
+   a `rest()` — the workshop's call.
 
 ---
 

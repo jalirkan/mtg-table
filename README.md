@@ -397,7 +397,7 @@ node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/mod
 #      ?stage=felt ?shadow=0 turn one part off; the workshop's toolbar switches all.
 #      The ink rides bloom (D146): bloom off, no line (?ink=always to force it).
 
-# The comic motion lane (D130-D136) — impact stars and their lettering, ink
+# The comic motion lane (D130-D138) — impact stars and their lettering, ink
 #   splats, halftone dots, speed lines, the hologram-to-ink summon, impact shakes,
 #   and every cue "on twos".  Two switches on any arena or workshop URL, and two
 #   checkboxes in the cue strip / the workshop's queue bar:
@@ -1623,17 +1623,23 @@ included — because the free pack has only those proportions.
 #### The comic motion lane — stars, lettering, splats, dots, speed lines, on twos
 
 **Report 15's Lane MOTION** (`docs/research/15-art-direction.md` §5, §9.2;
-decisions **D130–D136**; evidence in [`docs/evidence/motion.md`](docs/evidence/motion.md)).
+decisions **D130–D138**; evidence in [`docs/evidence/motion.md`](docs/evidence/motion.md)).
 The cues speak a comic's motion vocabulary — graphic shapes, not soft light:
 
 - an **impact star** on every struck body, lettered **POW** when the blow is
-  lethal; a star at a block's contact and on a strike's target;
+  lethal; a star at a block's contact and on a strike's target. **A star never
+  hides the body it is on** (**D137**): an attacker's own word sits beside its
+  head, clear of its hat, shield and patch, and a hit lands on the struck body's
+  edge with its face still in view — both toward the middle of the screen, from
+  every camera view;
 - **lettering** from a closed list of five — POW, BLAM, KRAK, ZZAK, WHOOSH — which
   the deck's headline cards use for their own beats (Agent 13's shots are BLAM,
   Quake's takedown KRAK, Wasp's sting and the Doombot's laser ZZAK, the
   Helicarrier's descent and the Air Force's sweep WHOOSH, Fury's, Peggy's and a
   lone Agent's charge POW);
-- an **ink splat** under every creature that dies on the battlefield;
+- an **ink splat** under every creature that dies on the battlefield — black ink
+  with a paper rim and a gloss (**D138**), so it reads as ink on the hologram's
+  dark felt and on a light stage alike;
 - a **halftone** flash behind a struck player's life, and Coulson's badge rings as
   dot bursts;
 - **speed lines** behind every dash;
@@ -1647,7 +1653,9 @@ The cues speak a comic's motion vocabulary — graphic shapes, not soft light:
 
 **Both are switches**, and *off* is honest: with **comic FX** off (`?fx=classic`)
 the cues play exactly the film they played before the lane — measured op for op
-over every committed recording — so the checkbox is an A/B. **On twos** is its own
+over every committed recording, and `motion.test.ts` pins that film's digest (with
+on twos off too: on twos steps the timing, not the vocabulary) — so the checkbox
+is an A/B. **On twos** is its own
 checkbox (`?twos=0`) and is always off under `prefers-reduced-motion`, which also
 drops every speed line, every jolt and the summon's ramp.
 
@@ -1656,7 +1664,7 @@ row takes `burst` (`none`, `star`, `pow`, `blam`, `krak`, `zzak`, `whoosh`),
 `burstColour`, `streaks` (0–2), `streakColour`, `splat` and `dots` (0–2) and
 `inkFrom` (where the summon starts); `cues/validate.ts` refuses anything else. The
 rule the file lives by holds: a word lands on the body the event names — the
-attacker's own flourish at the top of its dash, the target the stack named for a
+attacker's own flourish beside it at the top of its dash, the target the stack named for a
 spell, the defender the attack band named for a laser — never on a card the
 renderer guessed was involved. Try it in the workshop first: every beat plays from
 the pedestal's existing rehearsals, and its queue bar carries the same two

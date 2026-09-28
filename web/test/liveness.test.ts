@@ -1764,7 +1764,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
 });
 
 /**
- * **The comic motion lane** (`docs/research/15-art-direction.md` §9.2; D130–D136
+ * **The comic motion lane** (`docs/research/15-art-direction.md` §9.2; D130–D138
  * on branch `motion`) — its new frame-loop bodies, its one write into a figure's
  * look, its stepping and its pool, held the way the Tier 2 code is:
  *
@@ -1789,6 +1789,14 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
     ['EffectPool.#blend', bodyOf(pool, '#blend')],
     ['EffectPool.#glowMap', bodyOf(pool, '#glowMap')],
     ['EffectPool.#ringMap', bodyOf(pool, '#ringMap')],
+    // The verification pass's gap: the scan stopped at `#glowMap`, and the texture
+    // LOOKUP it calls built `burst:${word}` on every call, hits included. The two
+    // lookups are now bodies of their own; the drawing is their miss path's.
+    ['effects.ts burstTexture (the lookup)', bodyOf(effects, 'burstTexture')],
+    ['effects.ts shapeTexture (the lookup)', bodyOf(effects, 'shapeTexture')],
+    // D137: a star beside its body, and the height it clears.
+    ['EffectPool.#beside', bodyOf(pool, '#beside')],
+    ['EffectPool.#heightOf', bodyOf(pool, '#heightOf')],
     ['CueRunner applyMaterialize', bodyOf(runner, 'applyMaterialize')],
     ['motion.ts onTwos', bodyOf(motion, 'onTwos')],
   ];
@@ -1798,6 +1806,27 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
   assert.match(pool, /this\.#blend\(slot, isInkShape\(effect\.shape\)\)/, 'the glow no longer chooses its blend by shape');
   assert.match(runner, /applyMaterialize\(rig, offset\.materialize\)/, 'applyFigures no longer writes the summon');
   assert.match(files.get('cues/queue.ts') ?? '', /onTwos\(progress, item\.ms, stepMs\)/, 'the queue no longer steps a cue on twos');
+  // The map choosers reach the ink only through the two lookups, and the lookups
+  // reach the drawing only on a miss — so the scan above covers the whole hit path.
+  const glowMap = bodyOf(pool, '#glowMap');
+  assert.match(glowMap, /burstTexture\(effect\.word \?\? null\)/, '#glowMap no longer reaches the star through burstTexture');
+  for (const [name, body] of [['#glowMap', glowMap], ['#ringMap', bodyOf(pool, '#ringMap')]] as const) {
+    assert.ok(!/\bdraw[A-Z]\w*\(|canvas2d\(|createElement\(|CanvasTexture/.test(body), `${name} draws a texture on the frame loop's path`);
+  }
+  assert.match(bodyOf(effects, 'burstTexture'), /burstCache\.get\(word\);\s*return cached !== undefined \? cached : drawBurstTexture\(word\);/, 'burstTexture is no longer a lookup with a miss path');
+  assert.match(bodyOf(effects, 'shapeTexture'), /shapeCache\.get\(name\);\s*return cached !== undefined \? cached : drawShapeTexture\(name\);/, 'shapeTexture is no longer a lookup with a miss path');
+  // …and `prime` draws every ink texture at mount, onto parked GLOW slots only
+  // (a glow's map is re-chosen on every use; a mote's is not).
+  const prime = bodyOf(pool, 'prime');
+  assert.match(prime, /const ink = this\.#primeInk\(\);/, 'prime no longer draws the ink at mount');
+  assert.match(prime, /slot\.kind === 'glow' && next < ink\.length/, 'prime hands the ink to a slot whose map is not re-chosen on use');
+  const primeInk = bodyOf(pool, '#primeInk');
+  for (const drawn of [/burstTexture\(null\)/, /for \(const word of COMIC_WORDS\) ink\.push\(burstTexture\(word\)\)/, /shapeTexture\('splat'\)/, /shapeTexture\('dots'\)/]) {
+    assert.match(primeInk, drawn, `prime no longer draws ${String(drawn)}`);
+  }
+  // A star beside its body is placed by the pool from the camera it is handed
+  // (D137), in its own branch — the plain lens pull is the other one.
+  assert.match(pool, /if \(effect\.aside !== undefined && effect\.at\.kind === 'figure'\) \{\s*(?:\/\/[^\n]*\s*)*this\.#beside\(/, 'the glow no longer places a star beside its body');
   const junk = [
     'const _junk = [t, t];',
     'const o = { a: 1 };',

@@ -4,17 +4,18 @@ Report 15's Lane MOTION ([`docs/research/15-art-direction.md`](../research/15-ar
 §5 and §9.2): a comic's motion vocabulary for the arena's cues, with the cue
 engine's rules unchanged. Built in the worktree `/home/justin-a/code/mtg-table-t2m`,
 branch `motion`, from `c81f674` (`main` at `a092d3a` plus the art-direction
-report and its `?look=comic` spike). Decisions **D130–D136** (the lane's reserved
-range, renumbered contiguously at merge). Everything below was measured on this
+report and its `?look=comic` spike). Decisions **D130–D138** (the lane's reserved
+range, renumbered contiguously at merge; D137 and D138 are its verification pass's,
+§V1 below). Everything below was measured on this
 machine on 2026-09-28; every frame time says what drew it.
 
 ### What it is
 
 | beat | where it fires (comic FX on) | kit |
 |---|---|---|
-| **impact star** | every struck body (unlettered); lethal damage **POW**; a block's contact; a strike's target | `burst` shape on a `glow` slot, normal-blended |
+| **impact star** | every struck body (unlettered); lethal damage **POW**; a block's contact; a strike's target — **beside** the body it is on, never over its head (D137, §V1) | `burst` shape on a `glow` slot, normal-blended |
 | **lettering** | the per-card rows: POW, BLAM, KRAK, ZZAK, WHOOSH — a closed list | the word drawn ON the star (D133): one slot, not two |
-| **ink splat** | a creature that dies from the battlefield (not a discard, not a spell resolving) | `splat` shape on a `ring` slot, flat under the falling body |
+| **ink splat** | a creature that dies from the battlefield (not a discard, not a spell resolving) | `splat` shape on a `ring` slot, flat under the falling body; an ink body with a paper rim (D138) |
 | **halftone** | the flash behind a struck player's life; Coulson's badge ring | `dots` shape on the `plate` / `ring` slot it replaces |
 | **speed lines** | every dash: the lunges, the jet, the aegis, the shrink, Fury's charge, a block, the Helicarrier's descent | the one new kind, `streak` (4 slots; pool 45 → **49**) |
 | **the ink summon** | every arrival (`toZone: battlefield`, from anywhere else) | `Offset.materialize` 0 → 1, written into LOOK's `uMaterialize` (on this branch's spike material, which has none: `uLook = committed look × materialize`) |
@@ -195,6 +196,140 @@ either way.
 00:11 before the lane's first run and again after this gate, **identical — 21,374
 files, every path, size and mtime** (`var/motion/forge-{before,after}.txt`); the
 jar's sha256 is still `3c0a7c38…8e5dd9`.
+
+### §V1 — the verification pass, round 1: what it found and what the fix pass measured
+
+The verifier re-ran everything on `5a4f186` and found two majors and eight minors
+(PLAN.md's *Verification round 1* has the list and what was done with each). The
+fix pass, in this worktree on 2026-09-28, 06:10–07:45:
+
+**1. A star hid the body it was on — fixed (D137).** At 250 and 420 ms of the
+attack the attacker's own POW covered its head: Peggy's hat and shield gone, Fury a
+black coat with a star for a head; Coulson's lethal POW replaced his body in the
+close-up. Now a star at a `figure` anchor carries `Effect.aside` (its card's rest
+slot) and the pool places it in SCREEN space: along the camera's right by half its
+width plus `clear` of the body's height, toward the screen's centre from the rest
+slot, lifted by `lift` of its size, then pulled toward the lens along its own ray
+and shrunk by the same ratio, so it is in front of the body with the footprint it
+was placed at (the first cut, without that pull, hid half the POW inside the
+Giant-Sized Flying Ant from the side). An attacker's flourish is `clear` 0.2 at
+0.72 of its height; a hit is `clear` 0.06, on the struck side; the lethal star
+shrank from 0.82 to 0.72 of the body.
+
+- **Measured, not photographed:** `motion.test.ts` drives the real `attack.lunge`
+  (with a row's `burst`) and `damage.lethal` into a real `SceneStage` and the real
+  `EffectPool`, over every figure of `g1` at transport index 355 and 359, from all
+  five camera views at 1600 × 1000 — **345 stars, 0 over a head** (an attacker's
+  star clear of a disc 9% of the body tall, a hit's clear of the head's centre),
+  every star in front of its body, none off the screen when its body is on it. The
+  same stars with `aside` deleted cover **345 of 345** heads.
+- **The pictures** (headless Chromium on the GTX 1080, `var/motion/shoot.mjs`; the
+  "before" is the verifier's own shot of `5a4f186`, `var/verify/png/`): side-by-side
+  pairs in `var/motion/fix1/pairs/` — `pair-peggy-attackAlone-250.png` and `-420`
+  (hat and shield in view beside the POW), `pair-fury-attackAlone-250.png` and
+  `-420` (his head and headset beside it; his patch is on his face, which turns to
+  his defender during the lunge, **D82**, and is in view at rest,
+  `ws-fury-rest.png`), `pair-arena-v1-359-lethal.png`, `-v3-`, `-v4-` (the ant's
+  POW beside it from the table, the opponent's shoulder and side-on; side-on it was
+  centred on the body), `pair-coulson-lethal-200-classic-vs-comic.png` (his body in
+  view under the hit), and `var/motion/fix1/png/arena-g1-peggy-v1-142-420-comic.png`
+  (the opponent's Peggy attacking TOWARD you at table distance: hat, then POW).
+- **At rest nothing changed**: `pair-arena-v1-355-rest.png` (g1@355, view 1).
+
+**2. An allocation the loop's scan could not see — fixed.** `burstTexture` built
+`burst:${word}` on every call, hits included, and the liveness clause scanned
+`#glowMap` but not the lookup it called. The star cache is now keyed by the word
+itself, `burstTexture` and `shapeTexture` are lookups whose miss paths
+(`drawBurstTexture`, `drawShapeTexture`) do the drawing, and both lookups, `#beside`
+and `#heightOf` are in the lane's allocation scan with the junk-line controls; a
+clause holds `#glowMap` and `#ringMap` to calling no drawing and the lookups to
+their shape. `burstWord` is a table, not `toUpperCase()`.
+
+**3. The comic-off test proved less than its name — fixed.** It now PINS the digest:
+comic FX off AND on twos off, every op of all 19 recordings through the real queue,
+the lane's `materialize: 1` dropped at identity — **310,369 ops, sha256
+`3710d0b439f9d022157a14c4229eaeb129e627d58ae3a3de527e7255bda45f81`**, the value
+the pre-lane engine (`c81f674`) gives (§ *The A/B is honest* above, and the
+verifier's re-run). With comic FX off and on twos ON — the default if you untick
+only comic FX — the vocabulary is the old one and the timing is stepped.
+
+**4. The ink was drawn and uploaded mid-cue — fixed.** `EffectPool.prime` (two
+frames at mount) now draws the six stars (plain + five words, 512²), the splat and
+the dot screen and hands them to parked glow slots, so their draw at opacity 0
+uploads them. Probed in the live arena (`g1`, dev build, GTX 1080) before any cue:
+all eight glow slots hold an uploaded ink texture (`gl.properties` has a
+`__webglTexture` at the texture's version). This supersedes *Frame times*' "first
+drawn lazily" clause above.
+
+**5. The splat read as milk — fixed (D138).** An ink body with a paper rim (a
+constant 9-canvas-pixel outset, so thin arms and small drops keep one) and a gloss;
+the tint reaches only the rim and the gloss. `pair-coulson-dies-300.png` is the
+close-up before and after; at table distance a FLIER's ink is mostly under its own
+falling body (`arena-v1-359-1480-comic.png`; PLAN follow-up 10).
+
+**Skipped, as follow-ups:** the aimed words off-frame at the workshop's 1×
+close-up (follow-up 9: *table distance* shows them,
+`var/motion/fix1/png/ws-quake-table-resolves-480-comic.png`,
+`ws-wasp-table-resolves-480-comic.png`); the summon under the default hologram
+(follow-up 2, at the LOOK merge). The three out-of-brief edits are named in PLAN's
+*Merge notes*. The two leftover headless Chromiums were stopped (the verifier's by
+CDP `Browser.close`; the builder's, whose CDP port had gone, by `snap run --shell
+chromium -c 'kill <pid>'`, since a plain `kill` of a snap process answers EACCES).
+
+**Negative controls**, each a one-line mutation in a scratch copy of `web/`
+(`var/motion/nc/`, driver `nc.sh`), each failing the suite named: an allocation in
+`burstTexture`'s hit path (liveness — the verifier's own control, which PASSED
+before); the old template-string key (liveness); a drawing call in `#glowMap`
+(liveness); an allocation in `shapeTexture`'s hit path (liveness); `prime` drawing
+no ink (liveness); the attacker's star back on the body (`motion`, D137); `#beside`
+not pushing (`motion`); the struck clearance at 0 (`motion`: the head's centre
+under the star); the side chosen toward the edge (`motion`: stars off the screen);
+no pull toward the lens (`motion`: a star not in front of its body); a classic cue's
+`dissolve` 0.92 → 0.93 (`motion`, the pinned digest). Eleven mutations, eleven
+failures, re-run on the final tree (`var/motion/fix1/nc-results.txt`).
+
+**Frame times, the final build** — `tools/arena-bench.mjs --index 316 --settle
+4000`, `vite preview` on 5192, 1920 × 993, dpr 1, 07:18–07:22, a quiet machine (load
+3–7; the GPU no longer shared). Two runs each, **p50 / p95 / max ms**; raw logs
+`var/motion/fix1/bench/` (the pass before the in-front fix, at load 5–10 with the
+GPU shared, is `var/motion/fix1/bench-pre-infront/`):
+
+| rasteriser, bloom | classic (`?fx=classic&twos=0`) | comic (default) |
+|---|---|---|
+| **GTX 1080**, on (app default) | 0.5 / 1.1 / 13.9 · 0.5 / 1.1 / 14.0 | 0.5 / 1.1 / 15.4 · 0.5 / 1.1 / 16.3 |
+| **GTX 1080**, off | 0.4 / 0.6 / 12.1 · 0.4 / 3.4 / 66.6 | 0.4 / 0.6 / 10.6 · 0.4 / 0.6 / 10.7 |
+| **SwiftShader**, on | 15.1 / 33.0 / 35.3 · 17.2 / 34.4 / 47.2 | 17.7 / 34.4 / 53.7 · 15.3 / 32.6 / 34.8 |
+
+Over-50 ms frames: **0** in every GPU run but one classic bloom-off run (1 of
+6,036), 0 and 1 in the SwiftShader comic runs, and **0 coinciding with a new
+texture anywhere** (the verifier's comic GPU run had 2). Programs 16 (bloom off) /
+28 (SwiftShader) / 31 (GPU, bloom on) in both. At the bench's end frame with bloom
+off: **77 draw calls, 24,240 triangles, 85 textures** in both — the eight primed
+ink textures are there in classic too, 6 × 1 MB + 2 × 256 KB of GPU memory whether
+comic FX is on or not. The comic and classic columns are the same within the runs'
+spread on both rasterisers.
+
+**Build** (gzip, the gated tree): the 2D entry chunk **87.67 kB, 281.34 kB raw —
+unchanged**, no `three` and no lane code (`WebGLRenderer`, `PerspectiveCamera`,
+`WHOOSH`, `onTwos`, `burst:`, `besideAttacker`: 0 hits); `arena-scene` 356.06 →
+**356.60** kB.
+
+**Tests**: `npm --prefix web test` **893 `node --test` + 94 vitest (6 files)**, 0
+failures (one new case, `motion`'s D137 projection; `motion`'s comic-off case now
+pins the digest; the lane's liveness clause grew by the two lookups, `#beside`,
+`#heightOf`, the prime and the map choosers).
+
+**The gate**: `rm -rf bridge/out && WSPORT=8715 ./tools/check-all.sh`, the final
+tree: **872 s, exit 0, `check-all OK`** (`var/check-all-motion-fix1.log`,
+06:52–07:06), at a load average of 3–4 when sampled; 9c's fourteen games **367 s**; step 6's
+seed-42 diff identical (377 lines); 9b's multiset identical. In-gate web step: **903
+`node --test` / 895 pass / 0 fail / 8 skipped + 94 vitest**. The fix pass added no
+gate step.
+
+`~/forge` and `~/.forge`: `find forge .forge -printf '%p %s %T@'`, sorted, taken
+before the gate and after the bench, **identical — 22,155 entries, every path, size
+and mtime** (`var/motion/fix1/forge-{before,after}.txt`); the jar's sha256 is still
+`3c0a7c38…8e5dd9`.
 
 ### What is not done
 

@@ -7309,6 +7309,69 @@ wire named: the stack's target, the band's defender, the block's attacker.
 identity; the default dash has lines only); words keyed to a tap or a counter's
 source (not on the wire).
 
+## D137 — A star never hides the body it is on: an attacker's flourish goes beside its head, a hit lands on its body's edge
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139 —
+its verification pass, round 1. Amends **D130** and **D136**'s placement; the words,
+the events and the switch are unchanged.*)
+
+**Decision.** An impact star on a `figure` anchor is drawn BESIDE the body, never
+over it. `Effect.aside` names a rest point (the card's own slot); the effect pool
+pushes the billboard in SCREEN space along the camera's right by half the star's
+width plus `clear` of the figure's height, toward the screen's centre as seen from
+that rest point (a tie goes right), lifts it by `lift` of its own size, and then
+pulls it toward the lens along its own view ray, shrunk by the same ratio — the
+same footprint on the screen, but in front of the body (at the body's own depth a
+wide body, the ant from the side, hid the star's inner half). An attacker's own flourish (`besideAttacker`: at 0.72
+of its height, 0.52 of it wide, `clear` 0.2, `lift` 0.12) sits clear of the head,
+the hat and the shield; a hit (`besideStruck`: `clear` 0.06) overlaps the struck
+side and leaves the face in view — damage, lethal damage (0.82 → 0.72 wide), a
+block's contact, a strike's, a sting's, Quake's fissure, the Air Force's
+arrival. Quake's own stomp, unaimed, is beside her at her knees. The Helicarrier's
+WHOOSH above its own silhouette and the Doombot's word on a PLAYER are not on a
+figure and are unchanged.
+
+**Why.** The verification pass photographed the headline beat of the headline
+cards hiding the identity slices 3 and 4 built: at 250 and 420 ms of the attack,
+Peggy's hat and shield were under her POW, and Fury was a black coat with a star
+for a head; Coulson's lethal POW replaced his body outright in the close-up. A
+comic letters its impacts beside the figures, not over their faces. The side is
+fixed by the REST slot so a body whose dash crosses the screen's centre does not
+flip its star mid-beat, and toward the centre so a body at an edge keeps its star
+on screen. `motion.test.ts` drives the real cues into the real pool over every
+figure of `g1`@355 and @359 from all five views (345 stars) and projects head and
+quad: no attacker's star touches a head disc 9% of the body tall, no struck star
+covers the head's centre, none leaves the screen — and the same stars centred
+cover 345 of 345 heads (the control).
+
+**Rejected.** Shrinking the star below the head (a POW the size of a head does not
+read at table distance, and still covers it); placing it along the dash in WORLD
+space (ahead of your own attacker is BEHIND it from your seat, and in front of the
+opponent's is in front of its face); the plain lens pull (it makes the star bigger
+on the screen, back over the head); a per-view side (the camera moves; the rest
+slot does not).
+
+## D138 — The ink splat is an INK body with a paper rim and a gloss, not a pale body with an ink rim
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139 —
+its verification pass, round 1. Amends **D130**'s splat drawing.*)
+
+**Decision.** `drawShape('splat')` paints the lobed blob, its arms and its drops
+twice: first white, outset by a constant 9 canvas pixels (the RIM — constant, so a
+thin arm and a small drop keep one), then in ink on top (the BODY), then a white
+gloss crescent and a glint on the bigger drops. The material tints the white parts
+only: `PAPER` (`#f3efe2`) by default, a card row's `colour` otherwise. The body is
+ink whatever the tint.
+
+**Why.** The first cut (an ink body with a thin tinted rim) vanished on the
+hologram's felt; the second (a white body tinted grey, an ink rim) was read by the
+verification pass as MILK — "a cream splash under the body", "a pale smudge" at
+table distance. Ink on a dark stage reads by its edge and its shine; on LOOK's
+lighter stage the body carries it.
+
+**Rejected.** A coloured body (a red splash reads as blood; a colour-identity
+splash reads as paint, not ink); an additive halo (ink is painted, **D130**).
+
 ---
 
 ## D180 — Every rule of `tools/lint-bridge.sh` is proven to FIRE, on every build, by a self-test that reads the rule list from the lint

@@ -115,6 +115,8 @@ const RED = '#ff6b5a';
 const GREEN = '#7fd39a';
 const WHITE = '#ffffff';
 const GREY = '#8b939e';
+/** The comic lane's paper: an ink splat's rim and gloss (D138). */
+const PAPER = '#f3efe2';
 const GOLD = '#e3c46a';
 const POISON = '#7fb07f';
 
@@ -476,6 +478,7 @@ function burstAt(
   size: number,
   kind: Burst,
   fit = false,
+  place: Beside | null = null,
 ): void {
   const key = `${ctx.key}:${suffix}`;
   if (kind === 'none' || u <= 0 || u >= 1) {
@@ -495,7 +498,44 @@ function burstAt(
     spin: word === null ? 0.3 : -0.12,
     ...(word === null ? {} : { word }),
     fit,
+    ...(place === null ? {} : place),
   });
+}
+
+/**
+ * **Where a star goes beside a body** (`Effect.aside`, D137): the rest point that
+ * picks the side (the card's own slot), the gap from the body's axis in its
+ * heights, and the lift in the star's own sizes.
+ */
+interface Beside {
+  aside: AnchorRef;
+  clear: number;
+  lift: number;
+}
+
+/**
+ * **An attacker's flourish goes BESIDE its head, clear of it** (D137, the lane's
+ * verification pass). At its first placement — in front of the body at 0.78 of
+ * its height, pulled toward the lens — the POW covered the attacker's own head at
+ * the top of the dash and through the hold: Peggy's hat and shield and Fury's head
+ * and patch were gone on the headline beat of the headline cards, the identity
+ * slices 3 and 4 built. Now its near edge is a fifth of the body's height off the
+ * body's axis, toward the middle of the screen.
+ */
+function besideAttacker(id: number): Beside {
+  return { aside: { kind: 'card', id }, clear: 0.2, lift: 0.12 };
+}
+
+/**
+ * **A hit lands on the body's EDGE** (D137): the star's near edge just off the
+ * body's axis (6% of its height — the head's own half-width), so it overlaps the
+ * struck side and reads as a hit while the face and the far side stay in view. A
+ * lethal POW centred on the body replaced the figure outright in the workshop's
+ * close-up (the verification pass: "closer to comic convention", but the body was
+ * gone for the beat).
+ */
+function besideStruck(id: number): Beside {
+  return { aside: { kind: 'card', id }, clear: 0.06, lift: 0 };
 }
 
 /**
@@ -538,14 +578,14 @@ function speedLines(
 }
 
 /**
- * **An attacker's own flourish** (`params.burst` on an attack cue): a star in
- * front of its body at the top of the dash — a statement about THIS card (it
- * attacks), never a hit the renderer decided landed. Off unless a row asks.
+ * **An attacker's own flourish** (`params.burst` on an attack cue): a star beside
+ * its body at the top of the dash ({@link besideAttacker}) — a statement about THIS
+ * card (it attacks), never a hit the renderer decided landed. Off unless a row asks.
  */
 function attackBurst(ctx: CueContext, t: number, stage: Stage, id: number, fit = true): void {
   if (!comic(ctx)) return;
   const kind = burstOf(ctx, 'none');
-  burstAt(ctx, stage, 'bang', figureAt(id, 0.78, 0.28), (t - 0.2) / 0.45, fit ? 0.62 : 0.5, kind, fit);
+  burstAt(ctx, stage, 'bang', figureAt(id, 0.72), (t - 0.2) / 0.45, fit ? 0.52 : 0.5, kind, fit, besideAttacker(id));
 }
 
 /**
@@ -714,7 +754,9 @@ const ENTRIES: Array<[string, CueImpl]> = [
           stage.setEffect(`${ctx.key}:splat`, {
             kind: 'ring',
             at: figureAt(id, 0),
-            colour: colour(ctx, GREY),
+            // The tint is the RIM's and the gloss's (the body is drawn in ink, D138):
+            // paper by default, a card row's own colour otherwise.
+            colour: colour(ctx, PAPER),
             strength: 0.95 * fade,
             // In the body's own heights (`fit`): a big flier leaves a big stain,
             // and it is not hidden under the body that is falling onto it.
@@ -1042,7 +1084,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
           const foe = flag(ctx, 'strikeFoe');
           const kind = burstOf(ctx, foe ? 'star' : 'none');
           const on: AnchorRef = strikeCard >= 0 ? figureAt(strikeCard, 0.55) : to;
-          burstAt(ctx, stage, 'bang', on, (t - 0.5) / 0.5, 0.55, kind, strikeCard >= 0);
+          burstAt(ctx, stage, 'bang', on, (t - 0.5) / 0.5, 0.55, kind, strikeCard >= 0, strikeCard >= 0 ? besideStruck(strikeCard) : null);
           if (foe) impactShake(ctx, t, stage, 0.5, num(ctx, 'shake', 0.2));
         }
       },
@@ -1301,7 +1343,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
         // on the ATTACKER's body — the one card the block is about besides itself.
         if (attacker >= 0) {
           speedLines(ctx, t, stage, id, { kind: 'card', id: attacker }, 0.4);
-          if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(attacker, 0.55), (t - 0.3) / 0.5, 0.55, burstOf(ctx, 'star'), true);
+          if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(attacker, 0.55), (t - 0.3) / 0.5, 0.55, burstOf(ctx, 'star'), true, besideStruck(attacker));
         }
         if (attacker >= 0 && t > 0.35 && t < 0.8) {
           const u = clamp01((t - 0.35) / 0.45);
@@ -1937,6 +1979,9 @@ const ENTRIES: Array<[string, CueImpl]> = [
             0.9,
             burstOf(ctx, 'none'),
             true,
+            // Beside HER when it is her own stomp (the attacker's rule, low), on the
+            // edge of what it struck otherwise (D137).
+            struck ? besideStruck(aim) : { aside: { kind: 'card', id }, clear: 0.15, lift: 0 },
           );
         }
         stage.setEffect(`${ctx.key}:ring`, {
@@ -2448,7 +2493,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
           // The comic lane: the flash IS the impact star — lettered by the row
           // (BLAM for the Strike) — and the table jolts as the beam lands. Same
           // one slot as the soft flash it replaces.
-          burstAt(ctx, stage, 'flash', figureAt(target, 0.6), u / 0.8, 1.05, burstOf(ctx, 'star'), true);
+          burstAt(ctx, stage, 'flash', figureAt(target, 0.6), u / 0.8, 1.05, burstOf(ctx, 'star'), true, besideStruck(target));
           impactShake(ctx, t, stage, 0.55, num(ctx, 'shake', 0.3));
         } else {
           stage.setEffect(`${ctx.key}:flash`, {
@@ -2579,7 +2624,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
         if (target < 0) return;
         // The comic lane: the row's word (ZZAK for Wasp's sting) where the beam
         // lands — the target the stack named, never a guessed one.
-        if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(target, 0.55), (t - 0.3) / 0.55, 0.75, burstOf(ctx, 'none'), true);
+        if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(target, 0.55), (t - 0.3) / 0.55, 0.75, burstOf(ctx, 'none'), true, besideStruck(target));
         // T11: from the caster's BODY (Wasp hovering on her figure) to the target's
         // — a card with no figure (Pym Particles, a sorcery) beams from its card.
         if (source !== undefined && t > 0.15) {
@@ -3047,7 +3092,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
           });
           // The comic lane: the row's word where the swarm arrives — at the aim the
           // stack stated, or over the far rank it sweeps to (a direction, D89).
-          if (comic(ctx)) burstAt(ctx, stage, 'bang', to, (t - 0.62) / 0.36, 0.75, burstOf(ctx, 'none'), aimed >= 0);
+          if (comic(ctx)) burstAt(ctx, stage, 'bang', to, (t - 0.62) / 0.36, 0.75, burstOf(ctx, 'none'), aimed >= 0, aimed >= 0 ? besideStruck(aimed) : null);
           return;
         }
         stage.clearEffect(`${ctx.key}:core`);
@@ -3239,7 +3284,7 @@ function damageCue(intensity: number): CueImpl {
        */
       if (comic(ctx)) {
         const kind = burstOf(ctx, intensity > 1 ? 'pow' : 'star');
-        burstAt(ctx, stage, 'bang', figureAt(id, 0.58), t / 0.75, intensity > 1 ? 0.82 : 0.55, kind, true);
+        burstAt(ctx, stage, 'bang', figureAt(id, 0.58), t / 0.75, intensity > 1 ? 0.72 : 0.55, kind, true, besideStruck(id));
       }
       if (intensity > 1 && comic(ctx)) {
         // **The comic lane's lethal blow is a jolt, not a push-in** (D134). The

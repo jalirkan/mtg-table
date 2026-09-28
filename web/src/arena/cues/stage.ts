@@ -360,11 +360,24 @@ export function isBurst(value: unknown): value is Burst {
   return typeof value === 'string' && BURST_SET.has(value);
 }
 
+/**
+ * A `burst` param's word — a TABLE, not `toUpperCase()`, because a cue reads it on
+ * every frame of its beat and a table builds no string (the lane's verification
+ * pass). `satisfies` keeps it total over {@link BURSTS} and inside {@link COMIC_WORDS}.
+ */
+const WORD_OF = {
+  none: null,
+  star: null,
+  pow: 'POW',
+  blam: 'BLAM',
+  krak: 'KRAK',
+  zzak: 'ZZAK',
+  whoosh: 'WHOOSH',
+} as const satisfies Record<Burst, ComicWord | null>;
+
 /** A `burst` param → the word lettered on the star, or `null` for an unlettered one. */
 export function burstWord(burst: Burst): ComicWord | null {
-  if (burst === 'none' || burst === 'star') return null;
-  const word = burst.toUpperCase();
-  return isComicWord(word) ? word : null;
+  return WORD_OF[burst];
 }
 
 // ---------------------------------------------------------------------------
@@ -500,6 +513,27 @@ export interface Effect {
    * is not the one refused.
    */
   word?: ComicWord;
+  /**
+   * `glow` with `shape: 'burst'` at a `figure` anchor only: **draw the star BESIDE
+   * the body, not over it** (D137 on branch `motion`, the lane's verification
+   * pass). The star is pushed in SCREEN space — along the camera's right — by its
+   * own half-width plus {@link Effect.clear} of the figure's height, and up by
+   * {@link Effect.lift} of its own size, toward the screen's centre as seen from
+   * THIS anchor: a REST point (the card's own slot), static for the whole cue, so
+   * the side never flips mid-dash; a tie goes right. It is then drawn in front of
+   * the body with that same footprint (pulled toward the lens along its own ray,
+   * shrunk by the same ratio). An attacker's own flourish is drawn this way, because a star centred on
+   * its head hid the hat, the shield and the patch that say which card it is.
+   */
+  aside?: AnchorRef;
+  /**
+   * With {@link Effect.aside}: the gap between the body's axis and the star's
+   * near edge, in the figure's HEIGHTS. Negative overlaps the body's edge — a hit
+   * that lands on a body without hiding it. Absent is 0.
+   */
+  clear?: number;
+  /** With {@link Effect.aside}: how far up the star is lifted, in its own sizes. Absent is 0. */
+  lift?: number;
   /** `streak` only: how far behind {@link Effect.at} the lines trail, world units. */
   length?: number;
 }
