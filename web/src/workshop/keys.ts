@@ -59,7 +59,7 @@ export const WORKSHOP_KEYMAP: readonly WorkshopKeyRow[] = [
   { chord: ']', keys: [']'], action: 'faster', what: 'faster' },
   { chord: 'B', keys: ['b', 'B'], action: 'both', what: 'both seats on / off' },
   { chord: 'F', keys: ['f', 'F'], action: 'facing', what: 'facing: its own player / the other seat' },
-  { chord: 'T', keys: ['t', 'T'], action: 'camera', what: 'camera: close → table distance → whole table' },
+  { chord: 'T', keys: ['t', 'T'], action: 'camera', what: 'camera: front → from your seat → table distance → whole table' },
   { chord: 'R', keys: ['r', 'R'], action: 'reducedMotion', what: 'reduced motion on / off' },
   { chord: '↑', keys: ['ArrowUp'], action: 'previous', what: 'previous card in the list' },
   { chord: '↓', keys: ['ArrowDown'], action: 'next', what: 'next card in the list' },

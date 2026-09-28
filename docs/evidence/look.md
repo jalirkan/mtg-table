@@ -5,8 +5,189 @@ palette painted in three flat bands from one lens-fixed key light, a rim in the
 card's colour, a specular dot, halftone in the core shadow, an ink line that rides
 bloom's composer, a contact shadow under every figure and a mid-value stage with a
 backdrop. `?look=holo` restores **D53**'s hologram. A seat's own figures now face
-the opponent. Decisions **D120–D128** (the lane's reserved range D120–D129,
+the opponent. Decisions **D120–D129** (the lane's reserved range,
 renumbered at merge); the brief is `docs/research/15-art-direction.md` §9.1.
+
+### The verification pass, round 1 — read this first
+
+A verifier read the first round (`49b183c`) and found two majors and seven
+minors. This section is what changed and what it measured; the sections after
+it are the first round's record, and where a number below differs from one
+there, this one is current. **D129** and dated amendments to D122, D124, D125,
+D126 and D128 are the decisions. Everything here was measured on 2026-09-28
+between 07:10 and 08:20 on a machine shared with other lanes' gates (load 2.6–15).
+
+**What changed.**
+
+| finding | the fix | where |
+|---|---|---|
+| the ink framed every card that stands off the table (major) | a painted figure, prop kind or duelist writes **alpha 0** as the ink's mark (blend state, no program); the ink draws only where a painted sample is among its five, writes alpha 1 back, stays first in the composer and is not `CONVOLUTION`; both canvases are opaque | `figureMaterial.ts`'s `markPainted`, `propMaterial.ts`, `Post.tsx`, `Arena.tsx`, `Pedestal.tsx` |
+| GTX 1080 p95 with bloom off +2.4 ms over the hologram (major) | the ink rides bloom's composer only; bloom off mounts no composer (`?ink=always` forces one) | `look.ts`'s `wantsInkPass(look, bloom)`, `perf.ts` |
+| `sick` → half hologram not built (brief item 8) | `figureLookOf`: `stance` `sick` draws `uLook` × 0.5, a pose | `look.ts` |
+| the combat burst was +1 draw call | painted into a second copy of the ground's light, swapped on the pose, both uploaded at mount | `Table.tsx` |
+| CLAUDE.md contradicted the lane | the two passages point at D120 and D126; the junk-write count is eight now | `CLAUDE.md` |
+| the workshop opened on every figure's back | **`1× front`** is the default camera (`framing.ts`'s `frontPose`) | `framing.ts`, `Workshop.tsx` |
+| the raster never rendered the comic look | `prop-raster.ts`'s `comicVisibility` applies the ink's rule and counts halftone dots; the both-seats test holds each prop's PAINT at ≥ 48 px | `web/test/prop-raster.ts`, `traits.test.ts` |
+| dark costumes read as silhouettes | a dark paint's LIT band is lifted to luminance 0.09, hue kept (`COMIC.darkLift`): black's bands are now `#46527d` / `#212844` / `#181d3c` | `figureMaterial.ts`, `look.ts` |
+| the rim's dots were busy near the lens (views 3, 5) | the stage's Ben-Day screen 10 px → 7 px, alpha 0.42 → 0.38 | `Table.tsx` |
+| an orphaned headless Chromium | closed through its own DevTools endpoint (`Browser.close`) — the sandbox refused a signal | — |
+
+The raster also drove two changes to the line itself. At 1.6 CSS px on both
+sides of a silhouette, with lights inked, **eleven** identity-prop rows fell
+under the bar. So the line's inner half — on the figure's own paint — samples
+`COMIC.inkInnerCssPx` (1.0) away while its outer half keeps 1.6, and a pixel an
+additive light has lifted past paper white is not inked (the composer's buffer
+is half-float and paint is capped at 1). A uniformly thinner line (1.2) was
+tried and photographed first: at table distance the silhouettes lost their ink
+(`var/look/fix1/w-table-*.png`).
+
+**No card is inked.** Still screenshots (reduced motion, so a hovering card
+does not bob between the two), production builds, GTX 1080, 1600 × 1000, the
+pixels that differ by more than 40 between the default and `?ink=none` inside
+each card's rectangle:
+
+| card | 49b183c | now |
+|---|---:|---:|
+| hand: Pym Particles | 349 | **0** |
+| hand: Shifting Stash | 406 | **0** |
+| the opponent's lifted Helicarrier card | 354 | **0** |
+| your hovering Aerial Doombot and Wasp cards | 182 | **0** |
+| the workshop's Aerial Doombot pedestal card (`1× from your seat`) | 1,508 | **0** |
+
+Every figure keeps its line inside and outside its silhouette; the frame's total
+ink went 13,467 → 8,303 px at `g1`@355 (`var/look/png/fix1/cardink-{before,after}/*-inkmask.png`,
+red on the dimmed frame). A hologram — the anonymous disc, the ghosted spell —
+takes no line now.
+
+**The census** (`g1`@355, the dev server, GTX 1080, dpr 1, one whole frame with
+`gl.info.autoReset` off; `var/look/fix1/census/`):
+
+| | bloom | draw calls | triangles | programs cached | drawn | figure programs |
+|---|---|---:|---:|---:|---:|---:|
+| hologram | off | 79 | 27,416 | 13 | 8 | 1 |
+| **comic (default)** | **off** | **81** | **27,540** | **14** | 10 | 1 |
+| comic, `?stage=felt` | off | 80 | 27,438 | 13 | 9 | 1 |
+| comic, `?ink=always` | off | 82 | 27,541 | 25 | 10 | 1 |
+| hologram | on | 96 | 27,433 | 25 | 8 | 1 |
+| **comic (default)** | **on** | **98** | **27,557** | 28 | 10 | 1 |
+
++2 calls (the shadows and the backdrop), +124 triangles and +1 program with
+bloom off; +2 and +0 render passes with bloom on. The ink as a `CONVOLUTION`
+effect measured **99** calls with bloom on: R3F's composer gave it a pass of its
+own, which is why it no longer says so. The production bench's own reading at
+355 with bloom off (`calls355/`): hologram 79 / 24,368, now **81 / 24,490**, the
+first round 82 / 24,492 (its burst mesh), `?stage=felt` 80.
+
+**Frame times** — `tools/arena-bench.mjs --index 316 --settle 4000`, production
+builds interleaved per round with the order rotating: `c81f674` (the hologram,
+`var/look/dist-before`), `49b183c` (the first round, `var/look/fix1/dist-prev`)
+and this tree. p95 on the GTX 1080 (ANGLE, `NVIDIA GeForce GTX 1080/PCIe/SSE2,
+OpenGL 4.5.0`), p50 on SwiftShader (`ANGLE (Google, Vulkan 1.3.0 (SwiftShader
+Device (Subzero)))`); raw output in `var/look/fix1/bench/`.
+
+| series | hologram | first round | now |
+|---|---|---|---|
+| GTX p95, bloom **off**, quietest (`exp-alpha/`, load 2.6–6, GPU 7–10 %) | 0.6 · 0.6 · 0.6 | — | **0.6 · 0.6 · 0.6** |
+| GTX p95, bloom off (`gl316-quiet/`, load 4–9) | 0.8 · 1.4 · 2.0 — median 1.4 | 0.7 · 1.3 · 0.9 — 0.9 | 3.1 (load 9.1) · 0.8 · 0.8 — **0.8** |
+| GTX p95, bloom **on** (`gl316-quiet/`) | 1.1 · 1.2 · 2.0 — median 1.2 | 1.3 · 3.1 · 1.2 — 1.3 | 2.2 · 1.3 · 1.6 — **1.6** |
+| SwiftShader p50, dpr 0.6, bloom off (`ss06/`, load 11–15) | 17.0 · 16.4 · 17.0 — median 17.0 | 20.3 · 27.5 · 41.6 — 27.5 | 20.8 · 16.1 · 19.0 — **19.0** |
+| unthrottled frames in 5 s, GTX, bloom off, quietest | 11,120–11,541 | — | 10,642–11,438 |
+
+- **Bloom off is the hologram's cost now** (+0.0 ms p95 in the quietest series):
+  there is no composer to draw. The first round's +1.65 (its own quiet series)
+  and +2.4 (the verifier's) were the ink's composer.
+- **Bloom on: +0.4 ms** p95 (medians), inside report 15 §9.1's +1.5.
+- **SwiftShader at the floor: +2.0 ms** p50, inside +3; the first round's
+  bloom-off ink composer was +10.5 in the same series.
+- The `gl316/` series ran while another process held the GPU at 68–96 % and the
+  load reached 11; its bloom-off runs of this tree read 2.3–3.1. The quietest
+  series, and an A/B of this tree against a copy with `alpha: true` on the canvas
+  (`dist-exp-alpha`: 0.7 · 0.6 · 0.7), show the opaque canvas costs nothing: it
+  was contention.
+
+**The raster under the comic look** (`traits.test.ts`, 1600 × 1000, table view,
+both seats, standing and kneeling, centre and edge; the fewest pixels of each
+prop's PAINT — visible and not under the ink — over the four):
+
+| card | prop | your seat | opponent's | before the ink | on a halftone dot |
+|---|---|---:|---:|---|---|
+| Coulson | badge | 201 | **46** | 223 / 52 | 0 / 0 |
+| | tie (one-sided) | 0 | 27 | 6 / 31 | 0 / 6 |
+| Peggy | shield / hat | 63 / 309 | 120 / 212 | 92, 356 / 137, 253 | |
+| Agent 13 | pistol / muzzle | 131 / 65 | 101 / 110 | 146, 65 / 122, 110 | |
+| Agents of S.H.I.E.L.D. | squad | 994 | 672 | 1,215 / 941 | 61 / 70 |
+| Quake | gauntlets | 87 | 123 | 87 / 123 | 2 / 0 |
+| Fury | coat / eyepatch | 2,285 / 37 | 705 / 26 | 2,467, 65 / 781, 43 | 80, 0 / 115, 5 |
+| Wasp | wings | 344 | 212 | 344 / 212 | 8 / 0 |
+| Ant-Man | helmet | 275 | 204 | 275 / 204 | 12 / 10 |
+| Air Force | swarmBee | 1,960 | 1,145 | 2,436 / 1,510 | 16 / 28 |
+| Giant-Sized Flying Ant | wings / rider | 554 / 193 | 462 / 110 | 554, 279 / 462, 204 | |
+| Bold Biochemist | coat / labBench | 2,312 / 866 | 589 / 744 | 2,422, 983 / 696, 851 | |
+| A.I.M. | hood / labBench | 431 / 1,257 | 296 / 817 | 491, 1,435 / 331, 935 | |
+| Doombot | laserEye / visor / jetpack / exhaust | 0 / 97 / 181 / 44 | 39 / 117 / 8 / 0 | 0, 97, 206, 44 / 39, 117, 26, 0 | |
+
+Over every measurement: 93,399 px visible, **11,601 under the ink** (25,326
+with the first round's line), 4,868 on a halftone dot. Every row keeps its bar
+(≥ 48 on both seats; a one-sided detail ≥ 24 on its own side with its partner at
+the bar) except **Coulson's chest badge from the front, 46 px**, 52 before any
+ink: recorded in the test's `SHORTFALL` table at a floor of 44, owed to Lane
+BODIES as a size (PLAN.md follow-up 17: `badge.anchors.human[0].size` 0.065 →
+0.075). The raster takes every pixel a light is drawn on as lifted past paper
+white (optimistic); with lights inked instead, the visor, the muzzle and the
+exhaust fall under the bar from one seat each (follow-up 19).
+
+**The look, by eye** (`var/look/png/fix1/`, before = `49b183c`, after = this
+tree, both production builds on the GTX 1080):
+
+- the hand, the stack and every hovering card are framed only by their own
+  printed borders (`ab-table-g1-355-hand.png`);
+- the workshop opens on the figure's front — the Doombot's visor and laser eye,
+  Coulson's badge and tie, Quake's face and rings — with the card upside down
+  behind it, as it is from the far seat (`ab-workshop-*-pedestal.png`);
+- Quake, Fury and the soldier tokens keep a blue lit band on the stage
+  (`ab-workshop-quake-pedestal.png`, `ab-table-g1-355-rank.png`);
+- a summoning-sick figure is a translucent half hologram with its line
+  (`ab-workshop-coulson-sick-pedestal.png`; the giant ant on your rank at 355);
+- the rim's dots in view 3 are a finer screen (`ab-table-g1-355-view3-rim.png`).
+
+**Build.** gzip of each chunk, all three builds measured the same way (node's
+`zlib.gzipSync`, default level; vite's own report agrees):
+
+| chunk | `c81f674` | `49b183c` | now |
+|---|---:|---:|---:|
+| entry `index-*.js` | 87.67 kB | 87.75 kB | **87.75 kB** — `WebGLRenderer` 0 times |
+| `arena-scene-*.js` | 351.20 | 353.37 | 353.79 |
+| `Arena-*.js` | 14.58 | 14.78 | 14.78 |
+| `Post-*.js` (lazy) | 17.02 | 17.11 | 17.71 (the ink's GLSL) |
+| `Workshop-*.js` | 23.64 | 24.14 | 24.39 |
+
+The first round quoted 87.52 → 87.60 at gzip level 9; the delta, +0.08 over
+the hologram's build, is the same either way, and this pass adds nothing to it.
+
+**Tests.** `npm --prefix web test`: **887 `node --test` + 94 vitest (6 files),
+0 failures** (884 + 94 at `49b183c`: two `figure-material` cases — the painted
+mark, the dark lift — and one `workshop` case, the front camera and the opaque
+canvas; `look`, `liveness`, `traits` and `workshop` extended). Negative controls
+added this pass: the liveness clause's two new junk writes (`markPainted(…)` and
+a `.blending =` write) caught in every frame-loop body; a `CONVOLUTION` flag on
+the ink fails the clause; the traits test fails if the ink or the halftone
+models nothing, and fails when the badge's shortfall is fixed without removing
+its row.
+
+**The gate**, `WSPORT=8710 ./tools/check-all.sh` from a deleted `bridge/out`,
+tee'd to `var/check-all-look-fix1.log`: **exit 0 in 932 s**, 9c's fourteen games
+371 s, the load average 15.7 at the start (other lanes' gates) and 2.2 at the
+end. Inside it `node --test` ran **897 / 889 pass / 0 fail / 8 skipped** plus
+**94 vitest**. The pass added no step.
+
+**`~/forge` and `~/.forge`**, fingerprinted by the lane's own method before and
+after this pass (`var/look/fp/forge-{start,end}-fix1.txt`: the jar's sha256,
+`find`'s path, size and mtime over both trees, and a content sha1 over
+`~/.forge`): **identical**, and identical to the first round's end fingerprint —
+the jar `3c0a7c38…8e5dd9`, `~/.forge`'s content `d52664fa…`; `find -newer` over
+both trees lists nothing.
+
+### The first round
 
 Built in the worktree `/home/justin-a/code/mtg-table-t2l`, branch `look`, from
 `c81f674` (`main` at `a092d3a` plus report 15 and its `?look=comic` spike), on
@@ -32,8 +213,13 @@ npm --prefix web run dev                           # then:
 #   /?replay=games/g1.jsonl#arena                  the comic look (the default)
 #   /?replay=games/g1.jsonl&look=holo#arena        the hologram, as before
 #   ?ink=none ?halftone=0 ?key=world ?stage=felt ?shadow=0     one part off each
-#   /#workshop?card=Nick%20Fury%2C%20Spymaster     the A/B: holo · comic, and the
-#                                                  ink / halftone / shadow / stage /
+#   ?ink=always                                    the ink without bloom (D129: by
+#                                                  default the ink rides bloom only)
+#   /#workshop?card=Nick%20Fury%2C%20Spymaster     opens on "1× front" (the figure's
+#                                                  identifying side); "1× from your
+#                                                  seat" is the arena's view; the A/B:
+#                                                  holo · comic, and the ink (with
+#                                                  bloom) / halftone / shadow / stage /
 #                                                  world-key toggles; "both seats"
 #                                                  shows the opponent's copy front on
 npm --prefix web run build && (cd web && node_modules/.bin/vite preview --port 5191)
@@ -366,7 +552,25 @@ Nothing in this lane wrote outside the worktree.
 
 ### The pictures
 
-All are headless Chromium on the GTX 1080 at 1600 × 1000, in `var/look/png/`
+**The verification pass's**, in `var/look/png/fix1/` (production builds served by
+`vite preview`, headless Chromium on the GTX 1080 at 1600 × 1000; **before** is
+`49b183c`, the first round, **after** is this tree):
+
+| file | what |
+|---|---|
+| `{before,after}/workshop-{fury,coulson,peggy,quake,doombot}.png` | the workshop's DEFAULT framing, the whole page: before `1× close` (the figure's back, D126), after `1× front` |
+| `ab-workshop-{fury,coulson,peggy,quake,doombot}-pedestal.png` | the same, the pedestal (520 × 460 at 470, 300), before beside after |
+| `{before,after}/workshop-doombot-seat.png`, `ab-workshop-doombot-seat-pedestal.png` | the Doombot from your seat — the pedestal card's ink frame gone |
+| `{before,after}/workshop-coulson-sick.png`, `ab-workshop-coulson-sick-pedestal.png` | the `sick` stance: fully painted before, half hologram after |
+| `{before,after}/table-g1-355.png` | the arena's table view at `g1.jsonl` frame 355 (view 1, spectator, bloom on), the whole page |
+| `ab-table-g1-355-{rank,opp,hand}.png` | your rank, the opponent's, and your hand (2×, the inked card tops gone) |
+| `{before,after}/table-g1-355-view3.png`, `ab-table-g1-355-view3-rim.png` | view 3 and the rim's finer dot screen |
+| `{before,after}/table-g1-355-bloom0.png` | bloom off: before with the ink's composer, after with no composer and no ink |
+| `{before,after}/table-g1-355-holo.png` | `?look=holo` |
+| `cardink-{before,after}/*.png`, `…/*-inkmask.png` | still (reduced-motion) ink / no-ink pairs and the ink's pixels in red — the card counts above |
+| `../fix1/w-table-{rank,opp}.png`, `../fix1/w-coulson.png` | the line at 1.6 against 1.2 CSS px, the thinner one losing the silhouettes |
+
+**The first round's**, all headless Chromium on the GTX 1080 at 1600 × 1000, in `var/look/png/`
 (gitignored, local). **before** is `c81f674`: the hologram, with your figures
 facing you. **after** is this lane's final tree: the comic look, with your
 figures facing the opponent.

@@ -18,7 +18,15 @@
  *  - the comic block's uniforms are the SAME value objects in every figure and
  *    prop material (`COMIC_UNIFORMS`), so `applyComicGlobals` reaches all of them
  *    with one write — a copied uniform would silently freeze one material's look;
- *  - no clock anywhere in either shader.
+ *  - no clock anywhere in either shader;
+ *  - **the painted mark** (D129): `applyLook` with any comic in it sets blend
+ *    STATE that writes alpha 0 (the ink's mask) and blends colour exactly as
+ *    `NormalBlending` does; the hologram (`uLook` 0) is plain `NormalBlending`; a
+ *    painted prop kind is marked with its look and a light (additive) never is —
+ *    and the mark adds no define and no program: the shader source and the
+ *    defines are the same marked or not, and only `blending` and its factors
+ *    move (three keys a program on the source, the defines and the parameters
+ *    it derives, none of which is a blend factor).
  *
  * That all four variants compile and multiply on a real GPU is checked in the
  * browser (`docs/evidence/look.md`, *The paint input path*).
@@ -35,8 +43,9 @@ import {
   applyComicGlobals,
   applyLook,
   makeFigureMaterial,
+  markPainted,
 } from '../src/arena/scene/figureMaterial.ts';
-import { PROP_LOOK, makePropMaterial } from '../src/arena/scene/propMaterial.ts';
+import { PROP_LOOK, applyPropLook, makePropMaterial } from '../src/arena/scene/propMaterial.ts';
 
 test('figure material: a committed body is the one program — no paint define, no vertex colours, the hologram until commit', () => {
   const material = makeFigureMaterial('#3a6ea5', 1);
@@ -126,4 +135,64 @@ test('figure material: no clock in either shader (D58, D72)', () => {
   }
   figure.dispose();
   prop.dispose();
+});
+
+test('figure material: the painted mark — alpha 0 on a painted surface, normal colour blending, no new program (D129)', () => {
+  const material = makeFigureMaterial('#3a6ea5', 1);
+  assert.equal(material.blending, THREE.NormalBlending, 'a new material (the hologram) is not marked');
+  const source = { vertex: material.vertexShader, fragment: material.fragmentShader, defines: JSON.stringify(material.defines ?? {}) };
+  applyLook(material, 1);
+  assert.equal(material.blending, THREE.CustomBlending, 'a painted figure does not mark itself for the ink');
+  // Colour exactly as NormalBlending (non-premultiplied): SRC_ALPHA, ONE_MINUS_SRC_ALPHA.
+  assert.equal(material.blendEquation, THREE.AddEquation);
+  assert.equal(material.blendSrc, THREE.SrcAlphaFactor);
+  assert.equal(material.blendDst, THREE.OneMinusSrcAlphaFactor);
+  // Alpha: replaced by 0 — the mark the ink reads.
+  assert.equal(material.blendEquationAlpha, THREE.AddEquation);
+  assert.equal(material.blendSrcAlpha, THREE.ZeroFactor);
+  assert.equal(material.blendDstAlpha, THREE.ZeroFactor);
+  assert.equal(material.premultipliedAlpha, false, 'premultipliedAlpha is a define: the mark must not flip it');
+  assert.equal(material.transparent, true, 'the transparent pass is where figures sort');
+  // Half comic (a summoning-sick figure, D125) is still a painted body.
+  applyLook(material, 0.5);
+  assert.equal(material.blending, THREE.CustomBlending);
+  // Back to the hologram: unmarked, no ink on it.
+  applyLook(material, 0);
+  assert.equal(material.blending, THREE.NormalBlending);
+  // No program change: the same source and defines, marked or not.
+  applyLook(material, 1);
+  assert.equal(material.vertexShader, source.vertex);
+  assert.equal(material.fragmentShader, source.fragment);
+  assert.equal(JSON.stringify(material.defines ?? {}), source.defines);
+  // markPainted is idempotent.
+  markPainted(material, true);
+  assert.equal(material.blendSrcAlpha, THREE.ZeroFactor);
+  material.dispose();
+
+  // Props: a painted kind is marked with the look; a light never is.
+  const cloth = makePropMaterial(PROP_LOOK.fabric, false);
+  const light = makePropMaterial(PROP_LOOK.fabric, true);
+  assert.equal(cloth.userData.painted, true);
+  assert.equal(light.userData.painted, false);
+  applyPropLook(cloth, materialLookOf(COMIC_LOOK));
+  applyPropLook(light, materialLookOf(COMIC_LOOK));
+  assert.equal(cloth.blending, THREE.CustomBlending, 'a painted prop kind is not marked');
+  assert.equal(cloth.blendSrcAlpha, THREE.ZeroFactor);
+  assert.equal(light.blending, THREE.AdditiveBlending, 'a light lost its additive blend to the mark');
+  applyPropLook(cloth, HOLO_MATERIAL);
+  assert.equal(cloth.blending, THREE.NormalBlending, 'a painted prop kind stays marked under the hologram');
+  cloth.dispose();
+  light.dispose();
+});
+
+test('figure material: black is blue WITH blue highlights — a dark paint’s lit band is lifted, hue kept (the verification pass)', () => {
+  const material = makeFigureMaterial('#101014', 1);
+  const fragment = material.fragmentShader;
+  // The lift sits in the shared comic block, on the LIT band only, before the mid and core bands.
+  assert.match(fragment, /uniform vec3 uDarkLift;/);
+  const lift = fragment.indexOf('vec3 litPaint = mix( paint, max( paint, paint * ( uDarkLift.z / max( lum, 1e-4 ) ) ), dark );');
+  const bands = fragment.indexOf('vec3 c = mix( litPaint, paint * mix( uShadowTone, vec3( 1.0 ), uMidMix ), 1.0 - lit );');
+  assert.ok(lift > 0 && bands > lift, 'the dark lift is not applied to the lit band before the bands are mixed');
+  assert.equal(material.uniforms.uDarkLift, COMIC_UNIFORMS.uDarkLift, 'the lift is a copy, not the shared uniform');
+  material.dispose();
 });

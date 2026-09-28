@@ -1572,7 +1572,7 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
 
 /**
  * **Lane LOOK — the look is a number written at COMMIT, never in the frame loop**
- * (D120–D128, report 15 §9.1's tests). The comic look reaches the scene as
+ * (D120–D129, report 15 §9.1's tests). The comic look reaches the scene as
  * `uLook` per material plus a few shared uniforms (`figureMaterial.ts`'s
  * `COMIC_UNIFORMS`), and every one of them changes when a snapshot or the look
  * changes, never per frame — so the look can never be a thing the renderer
@@ -1601,7 +1601,16 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
  *  - `prime.ts`'s `compileFor` is a mount-time call, and the scene layers prime
  *    through it and never through a bare `gl.compile` (the composer draws the
  *    scene into a render target, whose program variants a canvas-only prime
- *    leaves to the first frame an object is drawn on).
+ *    leaves to the first frame an object is drawn on);
+ *  - **the painted mark** (D129, the verification pass): the ink inks only where
+ *    a painted surface is among its samples, and a painted surface says so by
+ *    writing alpha 0 — blend state set by `figureMaterial.ts`'s `markPainted`,
+ *    called only from `applyLook` and `applyPropLook` (commit time), never from a
+ *    frame-loop body (the same splice test); `InkEffect` reads the scene's
+ *    alpha, writes alpha 1 back, and is FIRST in the composer's list; the
+ *    arena's canvas is opaque (`alpha: false`), so a frame drawn without the
+ *    composer cannot show the mark; and the stage's combat burst is a swap of
+ *    the ground's map, not a mesh (so `Table.tsx` primes nothing).
  */
 test('liveness: the look is written at commit, never in the frame loop, and the ink rides the one composer (Lane LOOK)', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
@@ -1656,7 +1665,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
     ['DuelistField.bind', bodyOf(duelists.slice(duelists.indexOf('export class DuelistField')), 'bind')],
     ['BustField.bind', bodyOf(busts.slice(busts.indexOf('export class BustField')), 'bind')],
   ];
-  const touchesLook = /\bapplyLook\(|\bapplyPropLook\(|\bapplyComicGlobals\(|\.setLook\(|\buLook\b|\bCOMIC_UNIFORMS\b|\bcompileFor\(/;
+  const touchesLook = /\bapplyLook\(|\bapplyPropLook\(|\bapplyComicGlobals\(|\.setLook\(|\buLook\b|\bCOMIC_UNIFORMS\b|\bcompileFor\(|\bmarkPainted\(|\.blending\s*=[^=]|\.blendSrcAlpha\s*=[^=]/;
   for (const [name, body] of loop) {
     assert.ok(body.length > 100, `could not find ${name}`);
     assert.ok(!touchesLook.test(body), `${name} writes the look in the frame loop`);
@@ -1667,6 +1676,8 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
       'applyComicGlobals(look, dpr);',
       'this.props.setLook(look);',
       'compileFor(gl, scene, camera, composer);',
+      'markPainted(rig.material, true);',
+      'entry.material.blending = THREE.CustomBlending;',
     ]) {
       assert.ok(touchesLook.test(`${body}\n${junk}`), `the scan misses \`${junk}\` in ${name}`);
     }
@@ -1692,7 +1703,7 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   // the frames (the variant nothing draws under bloom or the ink).
   assert.deepEqual(
     writersOf(/\bcompileFor\(/).filter((p) => p !== 'scene/prime.ts').sort(),
-    ['scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx', 'scene/Table.tsx'],
+    ['scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx'],
     'compileFor is called from somewhere new',
   );
   for (const path of ['scene/DuelistLayer.tsx', 'scene/FigureLayer.tsx', 'scene/Table.tsx']) {
@@ -1712,6 +1723,39 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   assert.match(post, /EffectAttribute\.DEPTH/, 'the ink line no longer reads the depth the scene render wrote');
   assert.match(post, /enableNormalPass=\{false\}/, 'the composer asks for a normal pass — a second scene render');
   assert.ok(!/new NormalPass\(|EffectAttribute\.NORMAL/.test(post), 'the ink line asks for normals — a second scene render');
+
+  // The painted mark (D129): one writer of the blend state, two commit-time callers.
+  assert.deepEqual(
+    writersOf(/\bmarkPainted\(/),
+    ['scene/figureMaterial.ts', 'scene/propMaterial.ts'],
+    'markPainted is called from somewhere other than the two look writers',
+  );
+  assert.match(bodyOf(figureMaterial, 'applyLook'), /markPainted\(material, look > 0\)/, 'applyLook no longer marks a painted figure');
+  assert.match(bodyOf(figureMaterial, 'markPainted'), /blendSrcAlpha = THREE\.ZeroFactor/, 'the mark no longer writes alpha 0');
+  assert.match(bodyOf(files.get('scene/propMaterial.ts') ?? '', 'applyPropLook'), /markPainted\(material, look\.look > 0\)/);
+  assert.deepEqual(
+    writersOf(/\.blendSrcAlpha\s*=[^=]/),
+    ['scene/figureMaterial.ts'],
+    'something other than markPainted writes a blend factor',
+  );
+  // The ink reads the mark, gives alpha back, and is the composer's FIRST effect.
+  const postRaw = raw.get('scene/Post.tsx') ?? '';
+  assert.match(postRaw, /texture2D\( inputBuffer, uv \)\.a/, 'the ink no longer reads the painted mark');
+  assert.match(postRaw, /step\( 0\.5, inputColor\.a \)/, 'the ink no longer reads the mark at its own pixel');
+  assert.match(postRaw, /outputColor = vec4\( mix\( inputColor\.rgb, uInk, ink \), 1\.0 \);/, 'the ink no longer writes alpha 1 back');
+  // Not CONVOLUTION: R3F's composer gives a convolution effect a pass of its own
+  // (+1 full-screen pass, +1 draw call with bloom on), and the ink rides bloom's.
+  assert.ok(!/EffectAttribute\.CONVOLUTION/.test(post), 'the ink says CONVOLUTION — the composer then splits it out of bloom’s pass');
+  const inkAt = post.indexOf('{ink ? <primitive object={inkEffect} /> : null}');
+  const bloomAt = post.indexOf('{bloom ? (');
+  assert.ok(inkAt > 0 && bloomAt > inkAt, 'the ink is not the composer’s first effect — it must read the scene’s own alpha');
+  // The canvas is opaque, so the mark never reaches the page.
+  const arena = files.get('Arena.tsx') ?? '';
+  assert.match(arena, /gl=\{\{ antialias: true, alpha: false \}\}/, 'the arena’s canvas is not opaque — a painted figure’s alpha 0 would show the page');
+  // The combat burst is a swap of the ground's map (D124): no mesh, no prime.
+  const table = files.get('scene/Table.tsx') ?? '';
+  assert.match(table, /map=\{groundMap\}/, 'the combat stage is no longer a swap of the ground’s map');
+  assert.ok(!/burstRef|map=\{burst\}/.test(table), 'the combat burst is a mesh of its own again (+1 draw call)');
 
   // holoMaterial.ts is a re-export and nothing more.
   const shim = files.get('scene/holoMaterial.ts') ?? '';

@@ -41,6 +41,7 @@ import { COSTUME_SLOTS, familyOf } from '../src/arena/figures/props.ts';
 import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { layout } from '../src/arena/layout.ts';
+import { COMIC } from '../src/arena/look.ts';
 import type { FigureRig, FigureRigMap } from '../src/arena/scene/figureRigs.ts';
 import { clipFor, indexLibrary, instantiateFigure, type ModelLibrary } from '../src/arena/scene/models.ts';
 import { PropField, type PropOffsetSource } from '../src/arena/scene/props.ts';
@@ -511,6 +512,240 @@ export function visibility(
       pixels: seen.size,
       covered: covered.size,
       centre: seen.size === 0 ? null : [cx / seen.size + 0.5, cy / seen.size + 0.5],
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// The comic look over the raster: what the ink and the halftone leave
+// ---------------------------------------------------------------------------
+
+/**
+ * **What the comic look does to a prop's pixels** (Lane LOOK's verification pass:
+ * "the both-seats raster measures coverage only; it never renders the ink or the
+ * halftone"). Per group, of its {@link Visible} pixels:
+ *
+ *  - `inked` — the ones `Post.tsx`'s `InkEffect` paints black: the Laplacian of
+ *    1/z over samples `COMIC.inkCssPx` apart OFF a painted surface (±2 px at dpr
+ *    1, the nearest texel of a 1.6-texel offset) and `COMIC.inkInnerCssPx` apart
+ *    ON one (±1 px), relative to 1/z, past the smoothstep's midpoint (1.75 ×
+ *    `COMIC.inkThreshold`), where a PAINTED surface is among the five samples
+ *    (D129) — every depth-writing layer here is a painted body or prop; a pixel
+ *    no layer covers is the table plane (y = 0) behind; and never a pixel a
+ *    LIGHT is drawn on (see `lightsInked` below);
+ *  - `dotted` — the ones the halftone darkens: in the core-shadow band (`N·L`
+ *    under the umbra band's midpoint, the nearest fragment's FLAT face normal
+ *    against the lens-fixed key, D121) and on a dot of the 45° screen
+ *    (`COMIC.dotCssPx` cells, the shader's own formula in `gl_FragCoord`).
+ *
+ * A dot darkens by at most `COMIC.dotDepth`; the ink replaces the colour. So
+ * `pixels − inked` is what still shows the prop's paint, and
+ * `pixels − inked − dotted` what shows it undarkened.
+ */
+export interface ComicVisible extends Visible {
+  inked: number;
+  dotted: number;
+}
+
+/** The nearest depth-writing fragment at a pixel: its view depth and its view-space face normal. */
+type Nearest = Map<number, [number, number, number, number]>;
+
+const A = new THREE.Vector3();
+const B = new THREE.Vector3();
+const C = new THREE.Vector3();
+
+function rasteriseNearest(camera: THREE.PerspectiveCamera, layer: Layer, into: Nearest, width: number, height: number): void {
+  const t = layer.tris;
+  for (let i = 0; i + 8 < t.length; i += 9) {
+    const a = project(camera, t[i]!, t[i + 1]!, t[i + 2]!, width, height);
+    const b = project(camera, t[i + 3]!, t[i + 4]!, t[i + 5]!, width, height);
+    const c = project(camera, t[i + 6]!, t[i + 7]!, t[i + 8]!, width, height);
+    if (a === null || b === null || c === null) continue;
+    const area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    if (Math.abs(area) < 1e-12) continue;
+    // The face normal in VIEW space, turned toward the lens (the shader's normal faces it).
+    A.set(t[i]!, t[i + 1]!, t[i + 2]!).applyMatrix4(camera.matrixWorldInverse);
+    B.set(t[i + 3]!, t[i + 4]!, t[i + 5]!).applyMatrix4(camera.matrixWorldInverse);
+    C.set(t[i + 6]!, t[i + 7]!, t[i + 8]!).applyMatrix4(camera.matrixWorldInverse);
+    B.sub(A);
+    C.sub(A);
+    B.cross(C).normalize();
+    if (B.dot(A) > 0) B.negate();
+    const nx = B.x;
+    const ny = B.y;
+    const nz = B.z;
+    const x0 = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0])));
+    const x1 = Math.min(width - 1, Math.ceil(Math.max(a[0], b[0], c[0])));
+    const y0 = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1])));
+    const y1 = Math.min(height - 1, Math.ceil(Math.max(a[1], b[1], c[1])));
+    for (let py = y0; py <= y1; py++) {
+      for (let px = x0; px <= x1; px++) {
+        const sx = px + 0.5;
+        const sy = py + 0.5;
+        const w0 = ((b[0] - sx) * (c[1] - sy) - (b[1] - sy) * (c[0] - sx)) / area;
+        const w1 = ((c[0] - sx) * (a[1] - sy) - (c[1] - sy) * (a[0] - sx)) / area;
+        const w2 = 1 - w0 - w1;
+        if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+        const depth = w0 * a[2] + w1 * b[2] + w2 * c[2];
+        const key = py * width + px;
+        const held = into.get(key);
+        if (held === undefined || depth < held[0]) into.set(key, [depth, nx, ny, nz]);
+      }
+    }
+  }
+}
+
+const RAY = new THREE.Vector3();
+
+/** The view depth of the table plane (y = 0) at a pixel centre, or +∞ where the ray misses it. */
+function tableDepthAt(camera: THREE.PerspectiveCamera, px: number, py: number, width: number, height: number): number {
+  RAY.set(((px + 0.5) / width) * 2 - 1, 1 - ((py + 0.5) / height) * 2, 0.5).unproject(camera).sub(camera.position).normalize();
+  if (RAY.y >= -1e-6) return Number.POSITIVE_INFINITY;
+  const distance = -camera.position.y / RAY.y;
+  // View depth: the distance along the camera's own axis.
+  camera.getWorldDirection(A);
+  return distance * RAY.dot(A);
+}
+
+const smooth = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/** Is this pixel on a halftone dot (the shader's screen, at dpr 1)? */
+export function onHalftoneDot(px: number, py: number, height: number): boolean {
+  const fx = px + 0.5;
+  const fy = height - py - 0.5;
+  const cellPx = Math.max(1, COMIC.dotCssPx);
+  const u = (0.7071 * fx + 0.7071 * fy) / cellPx;
+  const v = (-0.7071 * fx + 0.7071 * fy) / cellPx;
+  const du = u - Math.floor(u) - 0.5;
+  const dv = v - Math.floor(v) - 0.5;
+  return 1 - smooth(0.26, 0.34, Math.hypot(du, dv)) > 0.5;
+}
+
+/**
+ * {@link visibility}, then the comic look's two subtractions — see
+ * {@link ComicVisible}. `visibility`'s own numbers are unchanged (the workshop's
+ * `legibility.ts` is held equal to them pixel for pixel).
+ */
+export function comicVisibility(
+  camera: THREE.PerspectiveCamera,
+  layers: readonly Layer[],
+  groups: Readonly<Record<string, readonly string[]>>,
+  width = WIDTH,
+  height = HEIGHT,
+  options: { inkPx?: number; inkInnerPx?: number; lightsInked?: boolean } = {},
+  // `lightsInked` false is the default and the shader's own rule: a light burns
+  // through the line (`Post.tsx`, D129) — where an additive light has lifted the
+  // frame past paper white the ink steps back. The raster does not model
+  // brightness, so it takes every pixel a light is drawn on over the paint as
+  // lifted past white; `true` is the pessimistic bound (every light inked).
+): Map<string, ComicVisible> {
+  const own = new Map<string, Buffer>();
+  const writes = new Set<string>();
+  const nearest: Nearest = new Map();
+  for (const layer of layers) {
+    let buffer = own.get(layer.tag);
+    if (buffer === undefined) {
+      buffer = new Map();
+      own.set(layer.tag, buffer);
+    }
+    rasterise(camera, layer, buffer, width, height);
+    if (layer.depthWrite) {
+      writes.add(layer.tag);
+      rasteriseNearest(camera, layer, nearest, width, height);
+    }
+  }
+  // The ink (D122, D129): offsets ±2 px — `inkCssPx` 1.6 at dpr 1, the nearest texel.
+  // Offsets in whole pixels: the nearest texel of a fractional offset at dpr 1
+  // (1.6 → ±2 outside a painted surface, 1.0 → ±1 on one, D129).
+  const outer = Math.floor(0.5 + (options.inkPx ?? COMIC.inkCssPx));
+  const innerStep = Math.floor(0.5 + (options.inkInnerPx ?? COMIC.inkInnerCssPx));
+  // The pixels a LIGHT (an additive prop, no depth) is drawn on, over everything that writes depth.
+  const lights = new Set<number>();
+  for (const layer of layers) {
+    if (layer.depthWrite) continue;
+    for (const [pixel, depth] of own.get(layer.tag) ?? new Map<number, number>()) {
+      const held = nearest.get(pixel);
+      if (held === undefined || depth <= held[0] + 1e-5) lights.add(pixel);
+    }
+  }
+  const depthAt = (px: number, py: number): number => {
+    const held = nearest.get(py * width + px);
+    return held !== undefined ? held[0] : tableDepthAt(camera, px, py, width, height);
+  };
+  // A light drawn over paint may lift the mark (its alpha adds): counted as
+  // UNpainted, so it takes the wider outer step — the conservative side.
+  const paintedAt = (px: number, py: number): boolean => nearest.has(py * width + px) && !lights.has(py * width + px);
+  const inked = (key: number): boolean => {
+    if (options.lightsInked !== true && lights.has(key)) return false;
+    const px = key % width;
+    const py = Math.floor(key / width);
+    const step = paintedAt(px, py) ? innerStep : outer;
+    if (px < step || py < step || px >= width - step || py >= height - step) return false;
+    const around: Array<[number, number]> = [
+      [px - step, py],
+      [px + step, py],
+      [px, py - step],
+      [px, py + step],
+    ];
+    if (!paintedAt(px, py) && !around.some(([x, y]) => paintedAt(x, y))) return false;
+    const c = 1 / Math.max(1e-4, depthAt(px, py));
+    let sum = 0;
+    for (const [x, y] of around) sum += 1 / Math.max(1e-4, depthAt(x, y));
+    const bend = Math.abs(sum - 4 * c) / c;
+    return smooth(COMIC.inkThreshold, COMIC.inkThreshold * 2.5, bend) >= 0.5;
+  };
+  // The halftone: the core shadow band on a dot.
+  const key = new THREE.Vector3(COMIC.key[0], COMIC.key[1], COMIC.key[2]).normalize();
+  const umbraMid = (COMIC.bands[2] + COMIC.bands[3]) / 2;
+  const dotted = (pixel: number): boolean => {
+    const held = nearest.get(pixel);
+    if (held === undefined) return false;
+    const ndl = held[1] * key.x + held[2] * key.y + held[3] * key.z;
+    return ndl < umbraMid && onHalftoneDot(pixel % width, Math.floor(pixel / width), height);
+  };
+  const out = new Map<string, ComicVisible>();
+  for (const [name, tags] of Object.entries(groups)) {
+    const inside = new Set(tags);
+    const blockers = [...writes].filter((tag) => !inside.has(tag)).map((tag) => own.get(tag)!);
+    const seen = new Set<number>();
+    const covered = new Set<number>();
+    for (const tag of tags) {
+      const mine = own.get(tag);
+      if (mine === undefined) continue;
+      for (const [pixel, depth] of mine) {
+        covered.add(pixel);
+        if (seen.has(pixel)) continue;
+        let hidden = false;
+        for (const blocker of blockers) {
+          const other = blocker.get(pixel);
+          if (other !== undefined && other < depth - 1e-5) {
+            hidden = true;
+            break;
+          }
+        }
+        if (!hidden) seen.add(pixel);
+      }
+    }
+    let cx = 0;
+    let cy = 0;
+    let ink = 0;
+    let dots = 0;
+    for (const pixel of seen) {
+      cx += pixel % width;
+      cy += Math.floor(pixel / width);
+      if (inked(pixel)) ink += 1;
+      else if (dotted(pixel)) dots += 1;
+    }
+    out.set(name, {
+      pixels: seen.size,
+      covered: covered.size,
+      centre: seen.size === 0 ? null : [cx / seen.size + 0.5, cy / seen.size + 0.5],
+      inked: ink,
+      dotted: dots,
     });
   }
   return out;

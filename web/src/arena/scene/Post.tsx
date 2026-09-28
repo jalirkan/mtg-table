@@ -76,17 +76,33 @@ const SMOOTHING = 0.22;
 const INTENSITY = 0.9;
 
 // ---------------------------------------------------------------------------
-// **The ink line** (Lane LOOK, **D122**, report 15 §3.4's option B): one more
-// EFFECT, not one more pass. `postprocessing` merges every non-convolution effect
-// in a composer into ONE full-screen `EffectPass`, so with bloom on (D61's
-// default) the ink costs a few depth reads per pixel inside the pass bloom already
-// pays for — **+0 draw calls, +0 triangles** at `g1`@355; with bloom off it is
-// the composer plus that one pass. It reads the DEPTH buffer the scene render
-// already wrote — no normal pass, no second render of the scene (report 09 §9.2
-// rule 3 stands) — and inks every pixel where the depth surface BENDS: the
-// Laplacian of 1/z, which is exactly zero on any plane (1/z is affine in screen
-// space), so the table, the cards and the land slabs get no line and every figure,
-// prop and carrier gets one at its silhouette and its deep creases.
+// **The ink line** (Lane LOOK, **D122**, report 15 §3.4's option B; **D129**):
+// one more EFFECT, not one more pass. `postprocessing` merges every
+// non-convolution effect in a composer into ONE full-screen `EffectPass`, so
+// with bloom on (D61's default) the ink costs a few texture reads per pixel
+// inside the pass bloom already pays for — **+0 draw calls, +0 triangles** at
+// `g1`@355. It reads the DEPTH buffer the scene render already wrote — no normal
+// pass, no second render of the scene (report 09 §9.2 rule 3 stands) — and inks
+// every pixel where the depth surface BENDS: the Laplacian of 1/z, which is
+// exactly zero on any plane (1/z is affine in screen space).
+//
+// **Only where something PAINTED is involved** (D129, the verification pass): a
+// plane's INTERIOR is zero, but a plane's EDGE is a depth step like any other,
+// and every card that stands off the table — a hovering flier's, the
+// Helicarrier's, the stack's, the hand's, the pedestal's — was drawn in a heavy
+// black frame. So the painted surfaces MARK themselves: a figure, a painted prop
+// kind and a duelist in the comic look write alpha 0 into the frame
+// (`figureMaterial.ts`'s `markPainted`, at commit, a blend state and not a
+// program), and everything else — the stage, the cards, the tiles, the effects —
+// leaves the clear's alpha 1 there. The ink draws only where one of its five
+// samples is marked: every figure keeps its whole line (inside AND outside its
+// silhouette, where it meets a card or the table), and a card's own edge, with
+// no figure at it, gets none. The effect then writes alpha 1 back, so nothing
+// after it (bloom's SCREEN blend) ever sees the mark, and the canvas is opaque
+// (`alpha: false`) so a frame drawn without the composer cannot show it either.
+// It must stay FIRST in the composer's list (it reads the scene's own alpha).
+// And a LIGHT burns through it: where an additive light has lifted the frame past
+// paper white (the buffer is half-float; paint is capped at 1), the ink steps back.
 //
 // **Resolution-independent** (report 15 §9.1 item 3): the sample distance is
 // `COMIC.inkCssPx` CSS pixels, i.e. × the render dpr in the render target's own
@@ -101,39 +117,71 @@ const INTENSITY = 0.9;
 const INK_FRAGMENT = /* glsl */ `
   uniform vec3 uInk;
   uniform float uWidth;
+  uniform float uWidthIn;
   uniform float uThreshold;
 
   float invZ( const in vec2 uv ) {
     return 1.0 / max( 1e-4, -getViewZ( readDepth( uv ) ) );
   }
 
+  // 1 where a PAINTED surface was drawn (it wrote alpha 0, D129), else 0.
+  float paintedAt( const in vec2 uv ) {
+    return 1.0 - step( 0.5, texture2D( inputBuffer, uv ).a );
+  }
+
   void mainImage( const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor ) {
-    vec2 px = texelSize * uWidth;
-    float c = 1.0 / max( 1e-4, -getViewZ( depth ) );
-    float l = invZ( uv - vec2( px.x, 0.0 ) );
-    float r = invZ( uv + vec2( px.x, 0.0 ) );
-    float d = invZ( uv - vec2( 0.0, px.y ) );
-    float u = invZ( uv + vec2( 0.0, px.y ) );
-    // Relative, so a line is the same weight near the lens and across the table.
-    float bend = abs( l + r + u + d - 4.0 * c ) / c;
-    float ink = smoothstep( uThreshold, uThreshold * 2.5, bend );
-    outputColor = vec4( mix( inputColor.rgb, uInk, ink ), inputColor.a );
+    // The line's outer half (on the table or a card) samples uWidth away, its
+    // inner half (on a figure's own paint, a crease included) uWidthIn: the
+    // silhouette keeps its weight and a small prop keeps its paint (D129).
+    float self = 1.0 - step( 0.5, inputColor.a );
+    vec2 px = texelSize * mix( uWidth, uWidthIn, self );
+    vec2 uvL = uv - vec2( px.x, 0.0 );
+    vec2 uvR = uv + vec2( px.x, 0.0 );
+    vec2 uvD = uv - vec2( 0.0, px.y );
+    vec2 uvU = uv + vec2( 0.0, px.y );
+    float painted = max(
+      self,
+      max( max( paintedAt( uvL ), paintedAt( uvR ) ), max( paintedAt( uvD ), paintedAt( uvU ) ) )
+    );
+    float ink = 0.0;
+    // Most of the frame is table and cards: no painted sample, no depth read.
+    if ( painted > 0.5 ) {
+      float c = 1.0 / max( 1e-4, -getViewZ( depth ) );
+      // Relative, so a line is the same weight near the lens and across the table.
+      float bend = abs( invZ( uvL ) + invZ( uvR ) + invZ( uvD ) + invZ( uvU ) - 4.0 * c ) / c;
+      ink = smoothstep( uThreshold, uThreshold * 2.5, bend );
+    }
+    // A LIGHT burns through the line: paint never passes paper white (1, the
+    // comic block caps it), so a pixel past it is an additive light over the
+    // paint — a visor, a muzzle flash, an exhaust, a cue's flash — and the ink
+    // steps back from it, as a colourist paints a glow over the line art (D129).
+    ink *= 1.0 - smoothstep( 1.0, 1.25, max( inputColor.r, max( inputColor.g, inputColor.b ) ) );
+    // Alpha 1 again: the mark is the scene's, and nothing after this sees it.
+    outputColor = vec4( mix( inputColor.rgb, uInk, ink ), 1.0 );
   }
 `;
 
 /** The sample distance in the render target's texels, for a render dpr — never under one texel. */
-export function inkWidthFor(dpr: number): number {
-  return Math.max(1, COMIC.inkCssPx * dpr);
+export function inkWidthFor(dpr: number, cssPx: number = COMIC.inkCssPx): number {
+  return Math.max(1, cssPx * dpr);
 }
 
 /** The ink edge effect. Built once per composer; every number is a uniform, and each is `look.ts`'s. */
 export class InkEffect extends Effect {
   constructor() {
     super('InkEffect', INK_FRAGMENT, {
+      // DEPTH only — deliberately NOT `CONVOLUTION`, although it reads the scene's
+      // alpha (the painted mark) at neighbouring texels: `@react-three/
+      // postprocessing` 2.19.1's `EffectComposer` gives a convolution effect an
+      // `EffectPass` of its own, which measured one more full-screen pass and one
+      // more draw call with bloom on (99 against 98 at `g1`@355). The flag exists
+      // so an effect sees the effects before it; the ink wants the SCENE's own
+      // `inputBuffer` and is first in the list, so merged it reads the same texels.
       attributes: EffectAttribute.DEPTH,
       uniforms: new Map<string, THREE.Uniform>([
         ['uInk', new THREE.Uniform(new THREE.Color(COMIC.ink))],
         ['uWidth', new THREE.Uniform(inkWidthFor(1))],
+        ['uWidthIn', new THREE.Uniform(inkWidthFor(1, COMIC.inkInnerCssPx))],
         ['uThreshold', new THREE.Uniform(COMIC.inkThreshold)],
       ]),
     });
@@ -143,6 +191,8 @@ export class InkEffect extends Effect {
   setDpr(dpr: number): void {
     const width = this.uniforms.get('uWidth');
     if (width !== undefined) width.value = inkWidthFor(dpr);
+    const inner = this.uniforms.get('uWidthIn');
+    if (inner !== undefined) inner.value = inkWidthFor(dpr, COMIC.inkInnerCssPx);
   }
 }
 

@@ -63,15 +63,19 @@ export const BLOOM_DEFAULT = true;
 export const LOOK_DEFAULT: 'comic' | 'holo' = 'comic';
 
 /**
- * **Whether the comic look draws its ink line** (**D122**): the depth-edge pass
- * (`scene/Post.tsx`'s `InkEffect`), which rides bloom's composer — `postprocessing`
- * merges it into the one `EffectPass` bloom already pays for, so with bloom on it
- * costs **no** draw call and no triangle. `?ink=none` turns it off. On a machine
- * still late at the DPR floor the governor's rung below the floor drops it
- * together with bloom ({@link postOnFloor}): the bands, the rim and the shadow
- * still read without a line.
+ * **Whether the comic look draws its ink line** (**D122**, **D129**): the
+ * depth-edge pass (`scene/Post.tsx`'s `InkEffect`), which rides bloom's composer —
+ * `postprocessing` merges it into the one `EffectPass` bloom already pays for, so
+ * with bloom on it costs **no** draw call and no triangle. **`'post'` means on
+ * bloom's composer and nowhere else** (D129): with bloom off the arena mounts no
+ * composer and draws no line, because a composer for the ink alone measured
+ * **+2.4 ms p95** over the hologram on the GTX 1080 at `g1`@316 (report 15
+ * §9.1's line is +1.5; `docs/evidence/look.md`). `?ink=always` draws it anyway,
+ * for measurement; `?ink=none` never. The governor's rung below the floor drops
+ * bloom, and the ink with it ({@link postOnFloor}): the bands, the rim and the
+ * shadow still read without a line.
  */
-export const INK_DEFAULT: 'post' | 'none' = 'post';
+export const INK_DEFAULT: 'post' | 'always' | 'none' = 'post';
 
 /**
  * **The rung below the DPR floor** (§9.2 rule 9, one step further): the arena's

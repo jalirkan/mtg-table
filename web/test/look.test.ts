@@ -3,7 +3,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **Lane LOOK's pure half** (`arena/look.ts`, D120–D128): the switch, the
+ * **Lane LOOK's pure half** (`arena/look.ts`, D120–D129): the switch, the
  * numbers each material takes, the hologram's jobs under the comic look, the
  * stage's seat colours, and the floor rung that sheds the ink with bloom.
  *
@@ -87,6 +87,7 @@ test('look: the comic look is the default (D120), and ?look=holo restores the ho
   // One option at a time, over the base.
   assert.equal(lookFromSearch('?ink=none').ink, 'none');
   assert.equal(lookFromSearch('?ink=hull').ink, 'post', 'the hull is gone (D122): an old URL gets the post line');
+  assert.equal(lookFromSearch('?ink=always').ink, 'always', 'the measurement switch: the ink with a composer of its own (D129)');
   assert.equal(lookFromSearch('?halftone=0').halftone, false);
   assert.equal(lookFromSearch('?halftone=off').halftone, false);
   assert.equal(lookFromSearch('?shadow=false').shadow, false);
@@ -101,14 +102,21 @@ test('look: the material numbers — the hologram is all zeros, the comic look c
   assert.deepEqual(materialLookOf(lookFromSearch('?halftone=0&key=world')), { look: 1, halftone: 0, keyWorld: 1 });
   assert.deepEqual(HOLO_MATERIAL, { look: 0, halftone: 0, keyWorld: 0 });
   // Every comic part is off under the hologram, whatever its option says.
-  const holoWithOptions = lookFromSearch('?look=holo&ink=post&shadow=1&stage=comic');
-  assert.equal(wantsInkPass(holoWithOptions), false);
+  const holoWithOptions = lookFromSearch('?look=holo&ink=always&shadow=1&stage=comic');
+  assert.equal(wantsInkPass(holoWithOptions, true), false);
+  assert.equal(wantsInkPass(holoWithOptions, false), false);
   assert.equal(wantsShadows(holoWithOptions), false);
   assert.equal(wantsStage(holoWithOptions), false);
-  assert.equal(wantsInkPass(COMIC_LOOK), true);
   assert.equal(wantsShadows(COMIC_LOOK), true);
   assert.equal(wantsStage(COMIC_LOOK), true);
-  assert.equal(wantsInkPass(lookFromSearch('?ink=none')), false);
+  // D129: the ink rides BLOOM's composer — with bloom off there is no line,
+  // unless `?ink=always` asks for a composer of its own (measurement only).
+  assert.equal(wantsInkPass(COMIC_LOOK, true), true);
+  assert.equal(wantsInkPass(COMIC_LOOK, false), false, 'bloom off still draws the ink — a composer for one effect (+2.4 ms p95, D129)');
+  assert.equal(wantsInkPass(lookFromSearch('?ink=always'), false), true);
+  assert.equal(wantsInkPass(lookFromSearch('?ink=always'), true), true);
+  assert.equal(wantsInkPass(lookFromSearch('?ink=none'), true), false);
+  assert.equal(wantsInkPass(lookFromSearch('?ink=none'), false), false);
 });
 
 test('look: the floor rung sheds the ink with bloom — one composer, dropped whole (D122)', () => {
@@ -128,18 +136,26 @@ test('look: the comic numbers are shaped as the shader assumes', () => {
   assert.ok(COMIC.dotDepth > 0 && COMIC.dotDepth < 1);
   assert.ok(COMIC.inkThreshold > 0 && COMIC.inkCssPx >= 1);
   assert.ok(Math.hypot(...COMIC.key) > 0.5 && COMIC.key[1] > 0 && COMIC.key[2] > 0, 'the key is not upper and toward the lens');
+  // The dark lift (the verification pass): it starts below every mid paint and
+  // lifts the black-is-blue paint's lit band well above its own value.
+  const [liftLo, liftHi, liftTo] = COMIC.darkLift;
+  const blackLum = 0.2126 * COMIC.black[0] + 0.7152 * COMIC.black[1] + 0.0722 * COMIC.black[2];
+  assert.ok(liftLo < liftHi && liftHi <= 0.12, 'the lift reaches mid paints');
+  assert.ok(liftTo > 2 * blackLum && liftTo < liftHi, `the lift's target ${String(liftTo)} does not lift black (${blackLum.toFixed(3)}) into a band`);
+  assert.ok(COMIC.sickLook > 0 && COMIC.sickLook < 1, 'a summoning-sick figure is not half hologram');
 });
 
 // ---------------------------------------------------------------------------
 // The hologram's jobs (D125) — over the whole corpus
 // ---------------------------------------------------------------------------
 
-test('look: an anonymous figure and a ghost are holograms under the comic look, and nothing else is (D125, hard rule 8) — the corpus', () => {
+test('look: an anonymous figure and a ghost are holograms under the comic look, a sick figure is half one, and nothing else is (D125, hard rule 8) — the corpus', () => {
   const comic = materialLookOf(COMIC_LOOK);
   let anonymous = 0;
   let ghosts = 0;
   let painted = 0;
   let models = 0;
+  let sick = 0;
   for (const state of corpusStates()) {
     const poses = figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS });
     for (const pose of poses.values()) {
@@ -159,8 +175,16 @@ test('look: an anonymous figure and a ghost are holograms under the comic look, 
       }
       if (pose.modelId !== null) {
         models += 1;
-        assert.equal(look.look, 1, 'a face-up modelled figure is not painted');
-        assert.equal(paintsFigure(pose), true);
+        // D125 (the verification pass): summoning sickness is HALF hologram — a
+        // pose of the stance, so the next snapshot that says otherwise paints it whole.
+        if (pose.stance === 'sick') {
+          sick += 1;
+          assert.equal(look.look, COMIC.sickLook, 'a summoning-sick figure is not half hologram');
+        } else {
+          assert.equal(look.look, 1, 'a face-up modelled figure is not painted');
+        }
+        assert.equal(look.halftone, comic.halftone);
+        assert.equal(paintsFigure(pose), true, 'a painted figure (sick or not) casts no contact shadow');
         painted += 1;
       }
       // The hologram table paints nothing at all.
@@ -168,8 +192,11 @@ test('look: an anonymous figure and a ghost are holograms under the comic look, 
     }
   }
   console.log(
-    `look: ${String(painted)} painted figure-instances, ${String(anonymous)} anonymous and ${String(ghosts)} ghosts kept as holograms`,
+    `look: ${String(painted)} painted figure-instances (${String(sick)} of them summoning-sick, half hologram), ` +
+      `${String(anonymous)} anonymous and ${String(ghosts)} ghosts kept as holograms`,
   );
+  // The control: the corpus has sick figures, or this sweep could not tell.
+  assert.ok(sick > 0 && sick < painted, `${String(sick)} sick figures of ${String(painted)}`);
   assert.ok(anonymous >= 1138, `only ${String(anonymous)} anonymous instances — the morph fixtures are not being read`);
   assert.ok(painted > 1000 && models === painted);
   // The negative control: a predicate that paints every modelled figure would

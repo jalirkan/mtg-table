@@ -497,7 +497,7 @@ function Scene({
   return (
     <>
       <color attach="background" args={[stageOn ? COMIC.background : HOLO_BACKGROUND]} />
-      <Table stage={stageColours} combat={combat} composer={composer} />
+      <Table stage={stageColours} combat={combat} />
       {showGrid && (
         <gridHelper
           args={[Math.max(TABLE_HALF_X, TABLE_HALF_Z) * 2, 24, '#3a4550', '#232a33']}
@@ -735,12 +735,13 @@ export default function Arena({
    */
   const [bloomOn, setBloomOn] = useState<boolean>(bloom ?? BLOOM_DEFAULT);
   /**
-   * **The ink line** (D122) — on under the comic look unless `?ink=none`, and off
-   * with bloom on the governor's rung below the floor (`perf.ts`'s
-   * `postOnFloor`). Both ride one composer, so a slow machine sheds them together.
+   * **The ink line** (D122, D129) — on under the comic look while bloom is (it
+   * rides bloom's composer: `wantsInkPass`; `?ink=always` draws it without bloom,
+   * `?ink=none` never), and off with bloom on the governor's rung below the floor
+   * (`perf.ts`'s `postOnFloor`). One composer, so a slow machine sheds both.
    */
   const [inkOn, setInkOn] = useState<boolean>(true);
-  const inkPass = inkOn && wantsInkPass(look);
+  const inkPass = inkOn && wantsInkPass(look, bloomOn);
   /** The cue strip's bloom checkbox: ticking it back on brings the ink the floor rung shed with it. */
   const onBloom = useCallback((on: boolean) => {
     setBloomOn(on);
@@ -1340,7 +1341,11 @@ export default function Arena({
         // §9.3's first risk is exactly what it is protecting — this scene is
         // FILL-rate bound, not geometry bound.
         dpr={dpr}
-        gl={{ antialias: true }}
+        // `alpha: false` (D129): the scene always paints an opaque background, and
+        // a painted figure writes alpha 0 as the ink's mark (`figureMaterial.ts`'s
+        // `markPainted`) — an opaque canvas never lets the page show through it
+        // on a frame drawn without the composer.
+        gl={{ antialias: true, alpha: false }}
         // The scene is unlit (§4.3), so there is nothing for tone mapping to do
         // except shift the card art away from what Scryfall drew.
         flat

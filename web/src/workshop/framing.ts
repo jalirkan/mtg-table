@@ -8,10 +8,17 @@
  * workshop never invents a coordinate either (`layout.ts` stays the only module
  * that knows one).
  *
- * Three modes:
+ * Four modes:
  *
+ *  - **front (1×), the default** — the close-up from the side the figure FACES,
+ *    at view 1's elevation: its identifying side. Since D126 a seat's figures face
+ *    the other seat, so view 1's own direction shows your figure's BACK (the
+ *    verification pass's finding: the judging tool opened on every figure from
+ *    behind); `figurePose`'s `facingY` and `layout.ts`'s `FIGURE_FRONT_Z` say
+ *    which way the front is, the preview turn and a trait's `turn` included;
  *  - **close (1×)** — the card and its figure filling the view, from the table
- *    view's own direction (report 09 §3.5's rest pose), to orbit freely;
+ *    view's own direction (report 09 §3.5's rest pose): what your seat sees, to
+ *    orbit freely;
  *  - **table distance** — the figure at exactly the size it has in view 1 at
  *    **1600 × 900**: the camera keeps view 1's orientation and sits on the axis
  *    through the figure at `depth × canvasHeight / 900`, where `depth` is how far
@@ -37,9 +44,9 @@
 
 import { CAMERA, REST_POSE, type Pose } from '../arena/camera.ts';
 import type { FigureLayout, FigurePose } from '../arena/figures/pose.ts';
-import { CARD_W, anchorsFor, placementOf, type Layout } from '../arena/layout.ts';
+import { CARD_W, FIGURE_FRONT_Z, anchorsFor, placementOf, type Layout } from '../arena/layout.ts';
 
-export type CameraMode = 'close' | 'table' | 'wide';
+export type CameraMode = 'front' | 'close' | 'table' | 'wide';
 
 /** The canvas height view 1's pixel sizes are quoted at. */
 export const TABLE_FRAME_HEIGHT = 900;
@@ -128,6 +135,28 @@ export function closePose(framing: Framing): Pose {
   return { position: [cx - f[0] * distance, cy - f[1] * distance, cz - f[2] * distance], target: [cx, cy, cz] };
 }
 
+/**
+ * **Front (1×)**: the close-up's distance and elevation, from the side the
+ * figure faces — view 1's forward turned about the vertical so that it looks
+ * AGAINST the figure's front. A card with no figure is framed as the close-up.
+ */
+export function frontPose(framing: Framing): Pose {
+  if (framing.pose === null) return closePose(framing);
+  const f = tableForward();
+  const across = Math.hypot(f[0], f[2]);
+  const facing = framing.pose.facingY;
+  // The figure's front in the world (figure space faces FIGURE_FRONT_Z · +Z).
+  const fx = Math.sin(facing) * FIGURE_FRONT_Z;
+  const fz = Math.cos(facing) * FIGURE_FRONT_Z;
+  const forward: Vec3 = [-fx * across, f[1], -fz * across];
+  const distance = (framing.radius / TAN_HALF) * 1.08;
+  const [cx, cy, cz] = framing.centre;
+  return {
+    position: [cx - forward[0] * distance, cy - forward[1] * distance, cz - forward[2] * distance],
+    target: [cx, cy, cz],
+  };
+}
+
 /** How far in front of view 1's camera a point stands, along its axis. */
 export function tableDepthOf(point: readonly [number, number, number]): number {
   const f = tableForward();
@@ -155,5 +184,6 @@ export function tablePixels(height: number, point: readonly [number, number, num
 export function poseFor(mode: CameraMode, framing: Framing, canvasHeight: number): Pose {
   if (mode === 'wide') return REST_POSE;
   if (mode === 'table') return tablePose(framing, canvasHeight);
+  if (mode === 'front') return frontPose(framing);
   return closePose(framing);
 }

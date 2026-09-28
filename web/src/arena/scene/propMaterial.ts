@@ -32,7 +32,7 @@
 
 import * as THREE from 'three';
 
-import { COMIC_FRAGMENT_GLSL, COMIC_UNIFORMS, COMIC_VERTEX_GLSL } from './figureMaterial.ts';
+import { COMIC_FRAGMENT_GLSL, COMIC_UNIFORMS, COMIC_VERTEX_GLSL, markPainted } from './figureMaterial.ts';
 import type { MaterialLook } from '../look.ts';
 
 /** A kind's material numbers: every one is a uniform, so every kind is the same program. */
@@ -221,5 +221,9 @@ export function makePropMaterial(look: PropLook, additive: boolean): PropMateria
  * number, a light keeps 0 — the hologram's own unlit glow under both looks.
  */
 export function applyPropLook(material: PropMaterial, look: MaterialLook): void {
-  material.uniforms.uLook.value = material.userData.painted ? look.look : 0;
+  const painted = material.userData.painted === true;
+  material.uniforms.uLook.value = painted ? look.look : 0;
+  // The ink's mark (D129): a painted kind in the comic look is part of a figure.
+  // A light (additive) is never passed to it and keeps its own blend.
+  if (painted) markPainted(material, look.look > 0);
 }

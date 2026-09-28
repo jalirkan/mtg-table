@@ -88,7 +88,7 @@
  *     clamp01, CueImpl, CueRegistry, AnchorRef (stage.ts)
  *     CueData, CueSpec, CueParams, Presence, Problem, EMPTY_CUE_DATA (types.ts)
  *   arena/           where things are, and how the camera sees them — pure
- *     layout, placementOf, anchorsFor, CARD_W, Layout (layout.ts)
+ *     layout, placementOf, anchorsFor, CARD_W, FIGURE_FRONT_Z, Layout (layout.ts)
  *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
  *     CameraFrame, RequestOutcome (camera.ts)
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
@@ -256,7 +256,9 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [selected, setSelected] = useState<string>(() => initialSelection(entries));
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState<PedestalOptions>(DEFAULT_OPTIONS);
-  const [mode, setMode] = useState<CameraMode>('close');
+  // The figure's FRONT by default (D126: from your own seat you see its back —
+  // `1× from your seat` is one click away).
+  const [mode, setMode] = useState<CameraMode>('front');
   const [turn, setTurn] = useState(0);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
   const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
@@ -518,7 +520,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
       faster: () => speedBy(1),
       both: () => setOptions((o) => ({ ...o, both: !o.both })),
       facing: () => setTurn((t) => (t === 0 ? HALF_TURN : 0)),
-      camera: () => setMode((m) => (m === 'close' ? 'table' : m === 'table' ? 'wide' : 'close')),
+      camera: () => setMode((m) => (m === 'front' ? 'close' : m === 'close' ? 'table' : m === 'table' ? 'wide' : 'front')),
       reducedMotion: () => setReducedMotion((r) => !r),
       previous: () => step(-1),
       next: () => step(1),
@@ -847,7 +849,16 @@ function Toolbar({
   onLook: (look: LookSpec) => void;
 }): JSX.Element {
   const modes: ReadonlyArray<{ id: CameraMode; label: string; what: string }> = [
-    { id: 'close', label: '1× close', what: 'the card and its figure filling the view — drag to orbit' },
+    {
+      id: 'front',
+      label: '1× front',
+      what: 'the card and its figure filling the view, from the side the figure FACES — its identifying side — drag to orbit',
+    },
+    {
+      id: 'close',
+      label: '1× from your seat',
+      what: 'the same close-up from the table view’s direction — what your seat sees (D126: a figure’s back) — drag to orbit',
+    },
     { id: 'table', label: 'table distance', what: 'exactly the size it has in view 1 at 1600×900 (fixed camera)' },
     { id: 'wide', label: 'whole table', what: 'view 1 itself — drag to orbit' },
   ];
@@ -945,7 +956,14 @@ function Toolbar({
       <span className="workshop__seg" title="The comic look's parts, one at a time (report 15 §9.1's A/B)">
         {(
           [
-            ['ink', 'the depth-edge ink line (D122; single view only — it rides the composer)', look.ink === 'post', { ink: look.ink === 'post' ? 'none' : 'post' }],
+            [
+              'ink',
+              bloom
+                ? 'the depth-edge ink line on figures (D122, D129; single view only — it rides bloom’s composer)'
+                : 'the ink line rides bloom’s composer (D129): tick bloom to see it',
+              look.ink !== 'none' && bloom,
+              { ink: look.ink !== 'none' ? 'none' : 'post' },
+            ],
             ['halftone', 'the halftone screen in the core shadow', look.halftone, { halftone: !look.halftone }],
             ['shadow', 'the contact shadow under each figure (D123)', look.shadow, { shadow: !look.shadow }],
             ['stage', 'the comic stage and backdrop (D124) — off is the hologram\'s felt', look.stage === 'comic', { stage: look.stage === 'comic' ? 'felt' : 'comic' }],
@@ -957,7 +975,7 @@ function Toolbar({
             type="button"
             className={on && look.look === 'comic' ? 'on' : ''}
             aria-pressed={on}
-            disabled={look.look !== 'comic'}
+            disabled={look.look !== 'comic' || (label === 'ink' && !bloom)}
             title={what}
             onClick={() => onLook({ ...look, ...next })}
           >
@@ -1002,7 +1020,13 @@ function PedestalCaption({
         </>
       ) : (
         <span>
-          {mode === 'table' ? 'table distance (view 1, 1600×900)' : mode === 'wide' ? 'view 1' : '1× close-up'}
+          {mode === 'table'
+            ? 'table distance (view 1, 1600×900)'
+            : mode === 'wide'
+              ? 'view 1'
+              : mode === 'front'
+                ? '1× close-up, from the front'
+                : '1× close-up, from your seat'}
           {size(0) !== '' ? ` · ${size(0)}` : ''}
           {turn !== 0 ? ' · facing preview: the other seat' : ''}
         </span>

@@ -395,6 +395,7 @@ node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/mod
 #      contact shadow and a stage ("The comic look" below).  ?look=holo on any arena
 #      or workshop URL restores the hologram; ?ink=none ?halftone=0 ?key=world
 #      ?stage=felt ?shadow=0 turn one part off; the workshop's toolbar switches all.
+#      The ink rides bloom (D129): bloom off, no line (?ink=always to force it).
 
 # D102 — THE WORKSHOP: one card on a pedestal, drawn by the arena's own renderer —
 #      its figure, props, clips and cues, tunable live in this browser.  No JVM,
@@ -1787,44 +1788,49 @@ Camera cues (the Helicarrier's fly-in) are not played, because the pedestal's
 camera is yours. Bloom is single-view only. The duelists are not on the pedestal:
 they stand for a seat, not a card (**D99**).
 
-#### The comic look — ink, three bands and a stage (Lane LOOK, D120–D128)
+#### The comic look — ink, three bands and a stage (Lane LOOK, D120–D129)
 
 The figures were a glow in a colour beside card art drawn in ink, and the user
 chose the art's **style** for them (report 15, `docs/research/15-art-direction.md`;
 **D120**). Every figure, dying body, duelist and painted prop is now:
 
-- the costume palette **painted** — saturated, black lifted to a deep blue — in
-  **three flat bands** from one key light that belongs to the lens, upper left
-  (**D121**), the core shadow cooled and screened with **halftone** dots, a
-  **specular dot** on the lit band, and the card's own colour as a **rim** on the
-  shadow side;
-- **inked**: a line wherever the depth buffer bends — every figure, prop and
-  crease, the carrier, and the cards' edges — drawn inside bloom's own pass, so it
-  costs no draw call with bloom on (**D122**);
+- the costume palette **painted** — saturated, black lifted to a deep blue with
+  blue highlights — in **three flat bands** from one key light that belongs to the
+  lens, upper left (**D121**), the core shadow cooled and screened with
+  **halftone** dots, a **specular dot** on the lit band, and the card's own colour
+  as a **rim** on the shadow side;
+- **inked**: a line wherever the depth buffer bends ON a figure — every figure,
+  prop and crease, the carrier — and never on a card, a tile or the table; drawn
+  inside bloom's own pass, so it costs no draw call, and only while bloom is on
+  (**D122**, **D129**). A glow burns through it;
 - **grounded** by a dark contact shadow that leans away from the light (**D123**);
 - standing on a **stage** of mid value instead of the dark felt, each half in the
   colour of the cards that seat has shown, with a night skyline round the table
   and a burst of action lines at the centre during combat (**D124**).
 
 What is not yet real stays a **hologram** (**D125**): a face-down creature's
-anonymous disc and a creature spell standing on the stack. And **your figures
+anonymous disc and a creature spell standing on the stack — and a
+summoning-sick creature is **half** one until it can act. And **your figures
 face the opponent** now (**D126**, PLAN question 13): from the table view you see
 their backs and the opponent's fronts.
 
 | URL flag | what it does |
 |---|---|
 | `?look=holo` | the hologram, exactly as before (the felt, no ink, no shadow) |
-| `?ink=none` | no ink line (the composer then runs only for bloom) |
+| `?ink=none` | no ink line |
+| `?ink=always` | the ink even with bloom off (a composer for it alone — a measurement switch) |
 | `?halftone=0` | no halftone dots |
 | `?key=world` | the key light fixed to the table instead of the lens |
 | `?stage=felt` | the dark felt under the comic figures |
 | `?shadow=0` | no contact shadows |
 
-The workshop's toolbar has the same switches — *holo · comic*, and *ink,
-halftone, shadow, stage, world key* — for an A/B on one card; *both seats* shows
-your copy from behind and the opponent's from the front. On a slow machine the
-arena's resolution governor, at its lowest rung, turns bloom **and the ink** off
-together; tick bloom in the cue strip to bring both back. What was measured —
+The workshop's toolbar has the same switches — *holo · comic*, and *ink (with
+bloom), halftone, shadow, stage, world key* — for an A/B on one card. It opens
+on **1× front**, the figure's identifying side; **1× from your seat** is what the
+arena shows you (a figure's back, since D126), and *both seats* shows your copy
+from behind and the opponent's from the front. Unticking **bloom** (the cue
+strip's checkbox) takes the ink with it; so does the arena's resolution governor
+at its lowest rung, on a slow machine — tick bloom to bring both back. What was measured —
 draw calls, triangles, programs, frame times on the GTX 1080 and SwiftShader —
 is `docs/evidence/look.md`.
 

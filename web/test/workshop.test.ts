@@ -43,7 +43,7 @@ import { figurePose, type FigureLayout } from '../src/arena/figures/pose.ts';
 import { tilePose } from '../src/arena/figures/tiles.ts';
 import { TRAITS, traitFor } from '../src/arena/figures/traits.ts';
 import { tileDataOf } from '../src/arena/figures/types.ts';
-import { layout, seatFacingY, yawToward, standPointOf, placementOf } from '../src/arena/layout.ts';
+import { FIGURE_FRONT_Z, layout, seatFacingY, yawToward, standPointOf, placementOf } from '../src/arena/layout.ts';
 import { isHidden } from '../src/protocol.ts';
 import type { ClientState } from '../src/reduce.ts';
 import { CATALOG, cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from '../src/workshop/catalog.ts';
@@ -51,7 +51,16 @@ import { buildCatalog, parseDck } from '../src/workshop/catalogBuild.ts';
 import { CLIP_CUE, WORKSHOP_CLIP_CUE, clipCueData, requestFor, workshopRegistry } from '../src/workshop/clipCue.ts';
 import { cueRows, unreachedSelectors } from '../src/workshop/cueRows.ts';
 import { PreviewStage, turnPoses, wrapAngle } from '../src/workshop/facing.ts';
-import { TABLE_FRAME_HEIGHT, closePose, framingOf, tableDepthOf, tableForward, tablePixels, tablePose } from '../src/workshop/framing.ts';
+import {
+  TABLE_FRAME_HEIGHT,
+  closePose,
+  framingOf,
+  frontPose,
+  tableDepthOf,
+  tableForward,
+  tablePixels,
+  tablePose,
+} from '../src/workshop/framing.ts';
 import {
   DEFAULT_OPTIONS,
   IDS,
@@ -452,6 +461,26 @@ test('workshop: the table-distance camera’s arithmetic — view 1’s depth sc
   const d = [close.target[0] - close.position[0], close.target[1] - close.position[1], close.target[2] - close.position[2]];
   const n = Math.hypot(d[0]!, d[1]!, d[2]!);
   assert.ok(Math.abs(d[0]! / n - f[0]) + Math.abs(d[1]! / n - f[1]) + Math.abs(d[2]! / n - f[2]) < 1e-9);
+  // **1× front** (the verification pass; D126): the same distance and elevation,
+  // from the side the figure FACES — so it looks against the figure's front, and
+  // for your seat (whose figures face the far seat) that is the opposite of view
+  // 1's horizontal direction.
+  const front = frontPose(framing);
+  const g = [front.target[0] - front.position[0], front.target[1] - front.position[1], front.target[2] - front.position[2]];
+  const m = Math.hypot(g[0]!, g[1]!, g[2]!);
+  assert.ok(Math.abs(m - n) < 1e-9, 'the front close-up is not as far as the close-up');
+  assert.ok(Math.abs(g[1]! / m - f[1]) < 1e-9, 'the front close-up is not at view 1’s elevation');
+  const pose = framing.pose!;
+  const facing = [Math.sin(pose.facingY) * FIGURE_FRONT_Z, Math.cos(pose.facingY) * FIGURE_FRONT_Z];
+  assert.ok(g[0]! * facing[0]! + g[2]! * facing[1]! < 0, 'the front close-up looks at the figure’s back');
+  assert.ok(g[2]! * d[2]! < 0, 'your seat’s figure seen from the front should be seen from the far side (D126)');
+});
+
+test('workshop: the pedestal opens on the figure’s FRONT, and its canvas is opaque (the verification pass; D126, D129)', () => {
+  const workshop = readFileSync(fileURLToPath(new URL('../src/workshop/Workshop.tsx', import.meta.url)), 'utf8');
+  assert.match(workshop, /useState<CameraMode>\('front'\)/, 'the workshop no longer opens on the figure’s front');
+  const pedestal = readFileSync(fileURLToPath(new URL('../src/workshop/Pedestal.tsx', import.meta.url)), 'utf8');
+  assert.match(pedestal, /gl=\{\{ antialias: true, alpha: false, preserveDrawingBuffer: false \}\}/, 'the pedestal’s canvas is not opaque — a painted figure’s alpha is the ink’s mark');
 });
 
 test('workshop: the caption is the body as DRAWN in view 1 — projected skinned vertices — and the table-distance camera draws it that size', async () => {

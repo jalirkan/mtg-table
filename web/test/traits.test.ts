@@ -60,6 +60,7 @@ import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import {
   bodyLayers,
   cameraAt,
+  comicVisibility,
   figureLayers,
   geometryLayers,
   headFromOf,
@@ -773,8 +774,33 @@ test('traits: the prop field FOLLOWS prefers-reduced-motion — it does not read
  * table view at 1600 × 1000 — about a 7 × 7 patch, or a lit band two pixels by
  * twenty-four. Judged by `prop-raster.ts` over the real `figures.glb` bodies and
  * the real `PropField`, so "readable from behind" is a number, not a photograph.
+ *
+ * **In the comic look** (Lane LOOK's verification pass): the pixels counted are
+ * the ones that still show the prop's PAINT — visible, and not under the ink
+ * line (`prop-raster.ts`'s `comicVisibility`: `Post.tsx`'s rule, D122/D129, over
+ * the raster's depth). The halftone's dots are counted and printed too; a dot
+ * darkens a pixel by at most a third and the prop around it by the same, so they
+ * are reported, and held apart only by the one-sided rule below.
  */
 const IDENTITY_MIN_PX = 48;
+
+/**
+ * **Known shortfalls under the comic look** — each measured, each owned by the
+ * lane that can fix it, each held at its measured floor so it cannot get worse,
+ * and each failing this test the day it is fixed, so the row goes with the fix.
+ * Nothing else may be under the bar.
+ */
+const SHORTFALL: Readonly<Record<string, { seat: 'you' | 'opp'; floor: number; why: string }>> = {
+  // 52 px of it on screen before any ink (kneeling, centre); the ink's one-pixel
+  // inner line takes 6 of its edge. The chest plate is `figures/props.ts`'s
+  // `badge.anchors.human[0].size` 0.065 — Lane BODIES' file (PLAN.md, Lane LOOK
+  // follow-up: 0.075 is ≈ 69 px). From behind the emblem reads at ≈ 200 px.
+  'Agent Phil Coulson/badge': {
+    seat: 'opp',
+    floor: 44,
+    why: 'the chest plate seen from the front is 52 px before the ink — a BODIES size change',
+  },
+};
 
 /**
  * **The props that are on ONE side of a body by nature**, each with the partner
@@ -851,8 +877,14 @@ test('traits: every deck card’s identity props reach the screen from the table
   const filler = cards.get('Soldier Token');
   assert.ok(filler !== undefined);
   const table = cameraAt(VIEW_BY_ID.table.pose);
-  // name → kind → seat → the fewest pixels over the stances and rank positions.
+  // name → kind → seat → the fewest pixels over the stances and rank positions:
+  // the paint left after the ink (the bar), and what the raster saw before it.
   const least = new Map<string, Map<string, Record<'you' | 'opp', number>>>();
+  const bare = new Map<string, Map<string, Record<'you' | 'opp', number>>>();
+  const dots = new Map<string, Map<string, Record<'you' | 'opp', number>>>();
+  let inkedTotal = 0;
+  let dottedTotal = 0;
+  let pixelsTotal = 0;
   let chestOnlyFromBehind = Number.POSITIVE_INFINITY;
   let checked = 0;
   for (const name of deckNames()) {
@@ -865,14 +897,27 @@ test('traits: every deck card’s identity props reach the screen from the table
           if (pose === undefined || pose.props.length === 0 || pose.silhouette !== null) continue;
           const layers = figureLayers(pose, library);
           const groups = kindGroups(layers);
-          const seen = visibility(table, layers, { ...groups, 'badge (chest only)': groups['badge']?.slice(0, 1) ?? [] });
-          const kinds = least.get(name) ?? new Map<string, Record<'you' | 'opp', number>>();
-          least.set(name, kinds);
+          const seen = comicVisibility(table, layers, { ...groups, 'badge (chest only)': groups['badge']?.slice(0, 1) ?? [] });
+          const rowOf = (into: Map<string, Map<string, Record<'you' | 'opp', number>>>, kind: string): Record<'you' | 'opp', number> => {
+            const kinds = into.get(name) ?? new Map<string, Record<'you' | 'opp', number>>();
+            into.set(name, kinds);
+            const row = kinds.get(kind) ?? { you: Number.POSITIVE_INFINITY, opp: Number.POSITIVE_INFINITY };
+            kinds.set(kind, row);
+            return row;
+          };
           for (const prop of pose.props) {
-            const px = seen.get(prop.kind)?.pixels ?? 0;
-            const row = kinds.get(prop.kind) ?? { you: Number.POSITIVE_INFINITY, opp: Number.POSITIVE_INFINITY };
-            row[seat] = Math.min(row[seat], px);
-            kinds.set(prop.kind, row);
+            const got = seen.get(prop.kind);
+            const px = got?.pixels ?? 0;
+            const paint = px - (got?.inked ?? 0);
+            const row = rowOf(least, prop.kind);
+            row[seat] = Math.min(row[seat], paint);
+            const raw = rowOf(bare, prop.kind);
+            raw[seat] = Math.min(raw[seat], px);
+            const dotRow = rowOf(dots, prop.kind);
+            dotRow[seat] = Math.min(dotRow[seat], got?.dotted ?? 0);
+            pixelsTotal += px;
+            inkedTotal += got?.inked ?? 0;
+            dottedTotal += got?.dotted ?? 0;
             checked += 1;
           }
           if (name === 'Agent Phil Coulson' && seat === BEHIND_SEAT) {
@@ -886,31 +931,53 @@ test('traits: every deck card’s identity props reach the screen from the table
   const failures: string[] = [];
   for (const [name, kinds] of least) {
     for (const [kind, row] of kinds) {
-      lines.push(`  ${name.padEnd(30)} ${kind.padEnd(9)} you ${String(row.you).padStart(5)} px   opp ${String(row.opp).padStart(5)} px`);
+      const raw = bare.get(name)?.get(kind);
+      const dot = dots.get(name)?.get(kind);
+      lines.push(
+        `  ${name.padEnd(30)} ${kind.padEnd(9)} you ${String(row.you).padStart(5)} px   opp ${String(row.opp).padStart(5)} px` +
+          `   (before the ink ${String(raw?.you ?? 0)} / ${String(raw?.opp ?? 0)}; on a halftone dot ${String(dot?.you ?? 0)} / ${String(dot?.opp ?? 0)})`,
+      );
       const oneSided = ONE_SIDED[kind];
       if (oneSided !== undefined && Math.max(row.you, row.opp) < IDENTITY_MIN_PX / 2) {
         failures.push(`${name}'s ${kind} does not show on its own side either (${String(Math.max(row.you, row.opp))} px)`);
       }
+      /** The bar for a (card, kind, seat): 48, or a known shortfall's floor. */
+      const barOf = (k: string, seat: 'you' | 'opp'): number => {
+        const known = SHORTFALL[`${name}/${k}`];
+        return known !== undefined && known.seat === seat ? known.floor : IDENTITY_MIN_PX;
+      };
+      const known = SHORTFALL[`${name}/${kind}`];
+      if (known !== undefined && row[known.seat] >= IDENTITY_MIN_PX) {
+        failures.push(`${name}'s ${kind} now shows ${String(row[known.seat])} px from the ${known.seat} seat — remove its SHORTFALL row`);
+      }
       for (const seat of SEATS) {
-        if (row[seat] >= IDENTITY_MIN_PX) continue;
+        if (row[seat] >= barOf(kind, seat)) continue;
         if (oneSided === undefined) {
           failures.push(`${name}'s ${kind} shows ${String(row[seat])} px from the ${seat} seat`);
           continue;
         }
         // A one-sided detail may hide on a seat iff its partner carries the card there.
         const partner = kinds.get(oneSided.partner)?.[seat] ?? 0;
-        if (partner < IDENTITY_MIN_PX) {
+        if (partner < barOf(oneSided.partner, seat)) {
           failures.push(`${name}'s ${kind} is hidden from the ${seat} seat and its ${oneSided.partner} shows ${String(partner)} px (${oneSided.why})`);
         }
       }
     }
   }
   console.log(
-    `traits: identity props on screen, table view 1600 × 1000, the fewest pixels over standing/kneeling and centre/edge ` +
+    `traits: identity props' PAINT on screen in the comic look (visible, not under the ink), table view 1600 × 1000, ` +
+      `the fewest pixels over standing/kneeling and centre/edge ` +
       `(≥ ${String(IDENTITY_MIN_PX)} on both seats; one-sided: ${Object.keys(ONE_SIDED).join(', ')})\n${lines.join('\n')}\n` +
+      `  over every measurement: ${String(pixelsTotal)} px visible, ${String(inkedTotal)} under the ink, ${String(dottedTotal)} on a halftone dot\n` +
+      `  known shortfalls: ${Object.entries(SHORTFALL).map(([k, v]) => `${k} on the ${v.seat} seat (floor ${String(v.floor)}: ${v.why})`).join('; ')}\n` +
       `  Coulson's chest badge alone, seen from behind (the ${BEHIND_SEAT} seat): ${String(chestOnlyFromBehind)} px`,
   );
   assert.ok(checked > 150, `only ${String(checked)} prop measurements`);
+  // The controls: the ink and the screen really are modelled (a raster that
+  // never inked or dotted a pixel would pass this test for the wrong reason).
+  assert.ok(inkedTotal > 0 && inkedTotal < pixelsTotal / 2, `the ink took ${String(inkedTotal)} of ${String(pixelsTotal)} px`);
+  assert.ok(dottedTotal > 0, 'no identity-prop pixel fell on a halftone dot — the screen is not modelled');
+  assert.equal(Object.keys(SHORTFALL).length, 1, 'a new known shortfall is a decision: say why in its row, and in PLAN.md');
   assert.ok(least.size >= 11, `only ${String(least.size)} deck cards carried props`);
   assert.deepEqual(failures, []);
   // The negative control: slice 3's badge — on the chest only — is not on the

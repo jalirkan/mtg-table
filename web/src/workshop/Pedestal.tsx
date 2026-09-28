@@ -165,13 +165,15 @@ export function Pedestal(props: PedestalProps): JSX.Element {
   const single = !(props.split && props.mode !== 'wide');
   const bloomOn = props.bloom && single;
   // The ink line rides the same composer (D122), so it is single-view too.
-  const inkOn = wantsInkPass(props.look ?? DEFAULT_LOOK) && single;
+  // …and only on bloom's composer, as in the arena (D129).
+  const inkOn = wantsInkPass(props.look ?? DEFAULT_LOOK, bloomOn) && single;
   const postOn = bloomOn || inkOn;
   return (
     <Canvas
       className="workshop__canvas"
       dpr={[1, 1.5]}
-      gl={{ antialias: true, preserveDrawingBuffer: false }}
+      // Opaque, as the arena's (D129): a painted figure's alpha is the ink's mark.
+      gl={{ antialias: true, alpha: false, preserveDrawingBuffer: false }}
       flat
       // `CueRunner` decides it, through `loopRef` above — never a literal, and
       // never a ref read at render (D72, `CueRunner.tsx`'s `Frameloop`).
@@ -302,6 +304,8 @@ function PedestalScene({
     }
     if (other !== undefined) {
       const b = second.current;
+      // From your seat the opponent's copy is seen from the same angle as yours;
+      // from the front, each copy from its own front (they face opposite ways).
       b.follow = mode === 'close';
       b.offset = [other.centre[0] - first.centre[0], other.centre[1] - first.centre[1], other.centre[2] - first.centre[2]];
       const pb = poseFor(mode, other, size.height);
@@ -326,7 +330,7 @@ function PedestalScene({
   return (
     <>
       <color attach="background" args={[stageOn ? COMIC.background : HOLO_BACKGROUND]} />
-      <Table stage={stageColours} combat={combat} composer={bloomOn} />
+      <Table stage={stageColours} combat={combat} />
       {placed.placements.map((placement) => (
         <CardPlane
           key={placement.key}

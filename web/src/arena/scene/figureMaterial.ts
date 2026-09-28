@@ -105,6 +105,8 @@ export const COMIC_UNIFORMS = {
   uSat: { value: COMIC.saturation as number },
   uBlack: { value: rgb(COMIC.black) },
   uBlackAt: { value: COMIC.blackAt as number },
+  /** Dark paint's lit band, lifted (hue kept): (luminance lo, hi, the lit band's target luminance). */
+  uDarkLift: { value: new THREE.Vector3(COMIC.darkLift[0], COMIC.darkLift[1], COMIC.darkLift[2]) },
   uPaperWhite: { value: COMIC.paperWhite as number },
   /** The halftone cell in DEVICE pixels (CSS px × the render dpr) and its depth (0 = off). */
   uDotPx: { value: COMIC.dotCssPx as number },
@@ -142,6 +144,7 @@ export const COMIC_FRAGMENT_GLSL = /* glsl */ `
   uniform float uSat;
   uniform vec3 uBlack;
   uniform float uBlackAt;
+  uniform vec3 uDarkLift;
   uniform float uPaperWhite;
   uniform float uDotPx;
   uniform float uDotDepth;
@@ -162,7 +165,13 @@ export const COMIC_FRAGMENT_GLSL = /* glsl */ `
     float ndl = dot( n, key );
     lit = smoothstep( uBands.x, uBands.y, ndl );
     float umbra = 1.0 - smoothstep( uBands.z, uBands.w, ndl );
-    vec3 c = mix( paint, paint * mix( uShadowTone, vec3( 1.0 ), uMidMix ), 1.0 - lit );
+    // "Black is blue WITH BLUE HIGHLIGHTS": a dark paint's LIT band is lifted to a
+    // readable value, its hue kept, so a navy suit on a mid stage keeps three bands
+    // (a highlight, the navy, a near-black core) instead of one silhouette.
+    float lum = dot( paint, vec3( 0.2126, 0.7152, 0.0722 ) );
+    float dark = 1.0 - smoothstep( uDarkLift.x, uDarkLift.y, lum );
+    vec3 litPaint = mix( paint, max( paint, paint * ( uDarkLift.z / max( lum, 1e-4 ) ) ), dark );
+    vec3 c = mix( litPaint, paint * mix( uShadowTone, vec3( 1.0 ), uMidMix ), 1.0 - lit );
     c = mix( c, paint * uShadowTone, umbra );
     vec2 cell = mat2( 0.7071, -0.7071, 0.7071, 0.7071 ) * gl_FragCoord.xy / max( 1.0, uDotPx );
     float dots = 1.0 - smoothstep( 0.26, 0.34, length( fract( cell ) - 0.5 ) );
@@ -440,13 +449,43 @@ export function applyCostume(
 }
 
 /**
+ * **The painted MARK** (**D129**): a painted surface writes **alpha 0** into the
+ * frame it is drawn into, so `Post.tsx`'s ink knows where a figure is and inks
+ * nothing else — a card's edge, a tile's, the table's. The colour blends exactly
+ * as three's `NormalBlending` does (`SRC_ALPHA`, `ONE_MINUS_SRC_ALPHA`), so a
+ * translucent hologram still reads as one; only the ALPHA channel is replaced
+ * (`ZERO`, `ZERO`). It is blend STATE, not a define: the program is the same one,
+ * marked or not (`figure-material.test.ts`). The canvas is opaque (`alpha: false`,
+ * `Arena.tsx` and the pedestal), so a frame drawn without the composer shows no
+ * mark; with the composer, the ink writes alpha 1 back. Unmarked is
+ * `NormalBlending` — the base blend of every material this is called on (an
+ * additive prop kind is never painted and never passed here). Commit time only.
+ */
+export function markPainted(material: THREE.Material, painted: boolean): void {
+  if (painted) {
+    if (material.blending === THREE.CustomBlending) return;
+    material.blending = THREE.CustomBlending;
+    material.blendEquation = THREE.AddEquation;
+    material.blendSrc = THREE.SrcAlphaFactor;
+    material.blendDst = THREE.OneMinusSrcAlphaFactor;
+    material.blendEquationAlpha = THREE.AddEquation;
+    material.blendSrcAlpha = THREE.ZeroFactor;
+    material.blendDstAlpha = THREE.ZeroFactor;
+    return;
+  }
+  material.blending = THREE.NormalBlending;
+}
+
+/**
  * **The look, at COMMIT** (`arena/look.ts`'s `figureLookOf` → this): one uniform
- * on the figure's own material, so the program is the same one under both looks.
+ * on the figure's own material, so the program is the same one under both looks,
+ * and the painted mark with it (a figure with any comic in it is inked, D129).
  * Called from layout effects and commit-time methods only — `liveness.test.ts`
  * holds every `uLook` write to this file and every caller out of the frame loop.
  */
 export function applyLook(material: FigureMaterial, look: number): void {
   material.uniforms.uLook.value = look;
+  markPainted(material, look > 0);
 }
 
 // ---------------------------------------------------------------------------

@@ -6750,7 +6750,11 @@ scene is how 40 draw calls stop being 40; report 13 §8.3 rule 2).
 ## D122 — The ink line is a depth-edge EFFECT on bloom's composer; the inverted hull is deleted; the floor rung sheds the ink with bloom
 
 **2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
-Report 15 §3.4's recommendation, measured again here.)
+Report 15 §3.4's recommendation, measured again here. *Amended the same day by
+the lane's verification pass, **D129**: the ink inks only where something
+PAINTED is among its samples, and it is drawn only on bloom's composer — the
+"with bloom off it is the composer plus one full-screen pass" configuration
+below is gone, and so is the "Rejected: inking figures only" line.*)
 
 **Decision.** The comic look's line is `scene/Post.tsx`'s `InkEffect`: a
 `postprocessing` `Effect` with `EffectAttribute.DEPTH` that inks every pixel
@@ -6861,8 +6865,14 @@ Report 15 §4.)
   edge against it and nothing on it.
 - **The combat burst**: radial action lines at the table's centre while
   `state.combat` has a band — a pose (`combatStageOf`), right after a skip, a
-  scrub and a `resync`; +1 draw call only during combat; painted and compiled
-  (for the composer's target when one draws the frames) when the stage mounts.
+  scrub and a `resync`. *Amended by the verification pass (2026-09-28):* it is
+  painted into a SECOND copy of the ground's light and swapped in as the ground's
+  `map` on the pose — **+0 draw calls** (as its own mesh it was +1, three over the
+  hologram during combat against report 15 §9.1's +2, and §4.2 had specified a
+  swapped canvas), the same program (both maps are `USE_MAP`), both textures
+  uploaded when the stage mounts (`gl.initTexture`), so `Table.tsx` primes
+  nothing. The rim's Ben-Day screen went from 10 px to 7 at the same time: the
+  verifier found the dots nearest the lens in views 3 and 5 coarse and busy.
 
 **Rationale.** A mid value is the one change that makes the ink visible (report
 15 §4.1). Colours in vertex colours mean a seat's first coloured card costs ten
@@ -6874,7 +6884,7 @@ numbers at commit rather than a repaint and a 4 MB upload (measured 4–20 ms an
 the wire, **D105**). The gold multicolour hex for a two-colour seat (every
 multicolour deck would stand on the same gold).
 
-## D125 — Under the comic look the HOLOGRAM keeps two jobs: the anonymous figure and the ghosted spell; the summon's hologram-to-ink is MOTION's
+## D125 — Under the comic look the HOLOGRAM keeps two jobs, and half a third: the anonymous figure, the ghosted spell, and a summoning-sick figure at half; the summon's hologram-to-ink is MOTION's
 
 **2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
 Report 15 §2.3, as far as the lane's brief carries it.)
@@ -6892,9 +6902,16 @@ shadow) to:
 Everything else takes the table's look. `look.test.ts` sweeps every figure pose of
 the committed corpus: 6,781 painted, 1,179 anonymous and 87 ghosts, none of the
 last two painted. The **summon** — the hologram resolving into ink as a creature
-arrives — is Lane MOTION's, through `uMaterialize`. **Summoning sickness is
-unchanged** (a translucency, D56): report 15's "`sick` as half hologram" was not
-in this lane's brief and is left as a question (PLAN.md, *Lane LOOK*).
+arrives — is Lane MOTION's, through `uMaterialize`.
+
+*Amended by the verification pass (2026-09-28):* **a summoning-sick figure is
+HALF hologram** — `stance` `sick` (sick and not in combat, `figurePose`'s
+precedence) draws `uLook` × `COMIC.sickLook` (0.5), report 15 §2.3's row and
+§9.1 work item 8, which the first round had left as a question in error (the
+brief assigns it to this lane). It is still a painted body: it casts a shadow
+and takes the ink. A pose, so the snapshot that says it is no longer sick paints
+it whole, after any skip. The corpus sweep: 1,487 of the 6,781 painted instances
+are sick.
 
 ## D126 — A seat's own figures FACE THE OPPONENT
 
@@ -6921,9 +6938,13 @@ seat — is 4 px. `facing.test.ts`'s negative control is the outward facing D126
 replaced: with no turn it fires every beat out of the far side of the body.
 
 **The workshop.** Its facing toggle's default is the arena's new facing (turn 0);
-*faces its player* previews the facing before D126. Its close camera looks from
-view 1's direction, so a single-seat card shows its back by default; *both
-seats* puts the opponent's copy, front on, beside it.
+*faces its player* previews the facing before D126. *Amended by the verification
+pass (2026-09-28):* the pedestal **opens on `1× front`** — `framing.ts`'s
+`frontPose`, the close-up's distance and view 1's elevation from the side the
+figure faces — because the judging tool opened on every figure from behind
+(Fury a navy bell, Coulson's back emblem, Quake a silhouette). `1× from your
+seat` is the old close-up; *both seats* still puts the opponent's copy, front
+on, beside yours (without the composer, so without the ink).
 
 **Rejected.** Keeping D81's outward facing (the user's decision).
 
@@ -6962,8 +6983,8 @@ the disc field's shadow switch and camera (`DiscField.setLook`), the ink's width
 clause asserts: `look.ts` is pure (it imports `colour.ts` and `perf.ts` only);
 `uLook` has exactly two writers and the shared uniforms one; `CueRunner.tsx`,
 `DiscField.bind`, `DepartureField.bind`, `PropField.bind`, `DuelistField.bind`
-and `BustField.bind` name none of it (five junk lines spliced into each are
-caught); the callers are layout effects and commit-time methods; the hull is
+and `BustField.bind` name none of it (eight junk lines spliced into each are
+caught — six at first, the painted mark's two since D129); the callers are layout effects and commit-time methods; the hull is
 gone; `holoMaterial.ts` is a re-export; `prime.ts` is called at mount only.
 
 **Rationale.** A look the frame loop owned would be a renderer that remembers,
@@ -6971,6 +6992,68 @@ and a per-frame uniform write is the cost D58 and D72 keep the idle table free
 of. The summon's animated hologram-to-ink is a real need (report 15 §5.3), so the
 material gives MOTION a number of its own to write — `uMaterialize`, identity 1,
 a decaying offset like `uOpacity` — rather than an exception to this rule.
+
+## D129 — The ink marks what is PAINTED and rides bloom only: a figure writes alpha 0, no card edge is inked, and bloom off draws no composer
+
+**2026-09-28** (Lane LOOK, branch `look`; reserved range, renumbered at merge.
+The lane's verification pass, round 1. Amends **D122**.)
+
+**Decision.** Four changes to the ink line, each answering a finding:
+
+- **The painted mark.** A painted figure, painted prop kind and duelist writes
+  **alpha 0** into the frame it is drawn into — `figureMaterial.ts`'s
+  `markPainted`: `CustomBlending` with the colour factors of `NormalBlending`
+  (`SRC_ALPHA`, `ONE_MINUS_SRC_ALPHA`) and the alpha factors `ZERO`, `ZERO` —
+  set at commit by `applyLook` (any `uLook` > 0) and `applyPropLook` (a painted
+  kind in the comic look). It is blend state, so it adds no define and no
+  program. Everything else — the stage, the cards, the tiles, the backdrop, the
+  effects — leaves the clear's alpha 1. `InkEffect` draws only where one of its
+  five samples is marked, then writes alpha 1 back; it stays **first** in the
+  composer's list (it reads the scene's own alpha) and is **not**
+  `EffectAttribute.CONVOLUTION` (R3F's composer gives a convolution effect a pass
+  of its own: measured 99 against 98 calls at `g1`@355). Both canvases are opaque
+  (`alpha: false`), so a frame drawn without a composer never shows the mark.
+  **No card's edge is inked**: measured on still (reduced-motion) screenshots of
+  both production builds, ink pixels on the two hand cards 349 and 406 → 0, the
+  Helicarrier's lifted card 354 → 0, your hovering Doombot and Wasp cards
+  182 → 0, the workshop's Doombot pedestal card 1,508 → 0; every figure keeps its
+  line inside and outside its silhouette. A hologram (`uLook` 0: the anonymous
+  figure, the ghost) is not marked and takes no line.
+- **Bloom only.** `wantsInkPass(look, bloom)`: the ink is drawn on bloom's
+  composer, +0 draw calls, and with bloom off the arena mounts no composer and
+  draws no line. `?ink=always` still draws it (a composer of its own) for
+  measurement. The first round's bloom-off ink cost the GTX 1080 +2.4 ms p95 over
+  the hologram in the verifier's quiet series (report 15 §9.1's line is +1.5) and
+  SwiftShader +10 ms p50 at the 0.6 floor. With bloom off the comic look now
+  measures 0.6 ms p95 against the hologram's 0.6 (three quiet rounds) and 19.0 ms
+  p50 against 17.0 at the floor (`docs/evidence/look.md`).
+- **One pixel inside.** The line's outer half — on the table or a card —
+  samples `COMIC.inkCssPx` (1.6 CSS px) away; its inner half, on the figure's own
+  paint and its creases, `COMIC.inkInnerCssPx` (1.0). The silhouette keeps its
+  weight (a uniformly thinner line lost the ink at table distance, tried and
+  photographed) while a small prop loses one pixel of paint at its edge, not two.
+- **A light burns through the line.** Where an additive light has lifted the
+  frame past paper white (the composer's buffer is half-float; paint is capped
+  at 1), the ink steps back — a visor, a muzzle flash, an exhaust, a cue's flash
+  — as a colourist paints a glow over the line art.
+
+**What it measures.** `traits.test.ts`'s both-seats raster now counts only the
+identity-prop pixels that still show their PAINT under the ink
+(`prop-raster.ts`'s `comicVisibility`: the ink's rule over the raster's depth,
+and the halftone's dots counted and printed). Of 93,399 visible identity pixels,
+11,601 are under the ink and 4,868 on a halftone dot. Every prop keeps its bar
+but one, recorded in the test's `SHORTFALL` table with its floor: **Coulson's
+chest badge from the front, 46 px** (52 before any ink) — a size Lane BODIES
+owns (`figures/props.ts`'s `badge.anchors.human[0].size`, PLAN.md). Under the
+first round's ink (1.6 px on both sides, lights inked) eleven rows failed.
+
+**Rejected.** A world-height band (the verifier's first suggestion): the hand
+fan, the stack and every hovering flier's card stand well above the table, and
+they are the cards that were inked. Planarity from depth alone: at table
+distance a figure's own curvature over 1.6 px is below the threshold, so a
+figure and a card look alike. A mask target or a second scene render (report 09
+§9.2 rule 3). The ink without bloom by default (the measured cost above). A
+1-px line on both sides (the silhouette vanished at table distance).
 
 ---
 

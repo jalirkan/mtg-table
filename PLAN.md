@@ -5314,13 +5314,15 @@ and `npm --prefix web test` gave `main`'s counts (932 + 120 standalone). Evidenc
 §10.
 
 ---
-## Lane LOOK — the comic look, to production (2026-09-28, D120–D128)
+## Lane LOOK — the comic look, to production (2026-09-28, D120–D129)
 
 **Done on branch `look`**, one of report 15's three art-direction lanes
 (`docs/research/15-art-direction.md` §9.1), after the user judged the spike's
 pictures beside their card art and approved the direction. It also carries the
-user's answer to **question 13**. Decisions **D120–D128** are in the lane's
-reserved range and are renumbered contiguously when the three lanes merge.
+user's answer to **question 13**. Decisions **D120–D129** are in the lane's
+reserved range and are renumbered contiguously when the three lanes merge
+(**D129** and the dated amendments to D122, D124, D125, D126 and D128 are the
+verification pass's, below).
 `docs/evidence/look.md` is what was measured; the pictures are in `var/look/png/`
 (gitignored, local).
 
@@ -5343,34 +5345,54 @@ npm --prefix web run dev                           # then:
 #   /?replay=games/g1.jsonl#arena                  the comic look (the default)
 #   /?replay=games/g1.jsonl&look=holo#arena        the hologram, as before
 #   ?ink=none ?halftone=0 ?key=world ?stage=felt ?shadow=0   one part off each
-#   /#workshop?card=Nick%20Fury%2C%20Spymaster     the A/B: holo · comic, and the
-#                                                  ink / halftone / shadow / stage /
-#                                                  world-key toggles; "both seats"
-#                                                  shows the opponent's copy front on
+#   /#workshop?card=Nick%20Fury%2C%20Spymaster     opens on "1× front"; the A/B:
+#                                                  holo · comic, and the ink (with
+#                                                  bloom) / halftone / shadow / stage /
+#                                                  world-key toggles; "1× from your
+#                                                  seat" is what the arena shows
+#   ?ink=always                                    the ink without bloom (measurement)
 node tools/arena-bench.mjs --index 316 --gpu gl    # and without --gpu for SwiftShader;
 #                                                  append &look=holo to --url for the A/B
 ```
 
-**The budget** (`g1.jsonl`@355, GTX 1080, dpr 1, one whole frame):
+**The budget** (`g1.jsonl`@355, GTX 1080, dpr 1, one whole frame; the
+verification pass's census, `var/look/fix1/census/`):
 
 | | bloom | draw calls | triangles | programs cached | programs drawn | figure programs |
 |---|---|---:|---:|---:|---:|---:|
 | hologram (`main`'s, and `?look=holo`) | off | 79 | 27,416 | 13 | 8 | 1 |
-| comic, `?ink=none` | off | 81 | 27,540 | 15 | 10 | 1 |
-| **comic (default)** | **off** | **82** | **27,541** | 25 (+ the composer's) | 10 | 1 |
+| **comic (default)** — no composer, no ink (D129) | **off** | **81** | **27,540** | 14 | 10 | 1 |
+| comic, `?ink=always` (a composer for the ink) | off | 82 | 27,541 | 25 | 10 | 1 |
 | hologram | on | 96 | 27,433 | 25 | 8 | 1 |
 | **comic (default)** | **on** | **98** | **27,557** | 28 | 10 | 1 |
+
+The combat burst is +0 since the verification pass (painted into the ground's
+texture); the production bench reads 81 against the hologram's 79 at 355 with
+bloom off, where the first round read 82 with its burst mesh.
 
 Report 13 §8.2's lines (≤ 90 calls, ≤ 30,000 triangles with bloom off) hold, and
 so do report 15 §9.1's: ≤ +2 calls, ≤ +500 triangles, ≤ +2 programs with bloom
 off, and the ink +0 with bloom. One program draws all 13 skinned meshes (11
 figures and both duelists) under either look.
 
-**Frame times** (`g1`@316, production builds, before and after interleaved, raw
-output in `var/look/bench/`). Most of the day the machine was shared: other lanes'
+**Frame times after the verification pass** (`g1`@316, three production builds
+interleaved — `c81f674`'s hologram, the first round's `49b183c` and this one; raw
+output in `var/look/fix1/bench/`; the machine shared with other lanes' gates):
+
+- **GTX 1080 p95, bloom off: 0.6 ms against the hologram's 0.6** in the quietest
+  series (three rounds each, load 2.6–6, GPU idle; `exp-alpha/`), 0.8 against 1.4
+  (medians) in a busier one. With bloom off the comic look draws no composer
+  since **D129** — the first round's +1.65–2.4 ms is gone;
+- **GTX 1080 p95, bloom on (the default): 1.6 against 1.2** (medians of three
+  rounds; `gl316-quiet/`) — inside +1.5;
+- **SwiftShader p50 at the 0.6 floor, bloom off: 19.0 against 17.0 (+2.0)**,
+  medians of three rounds at a load of 11–15 — inside +3. The first round's
+  bloom-off ink composer measured 27.5 in the same series.
+
+**The first round's frame times** (before the verification pass; raw output in
+`var/look/bench/`). Most of that day the machine was shared: other lanes'
 gates put the load average at 3.5–16.7, and a PyTorch job held the GTX 1080 at
-59–100 %. The two **quiet** series, run after this lane's gate with the GPU idle,
-are the ones to quote:
+59–100 %. The two **quiet** series, run after the lane's gate with the GPU idle:
 
 - **GTX 1080 p95, bloom on (the default): hologram 5.5 ms, comic 5.25** (median
   of 4 alternating rounds; +0.5 over all 13 runs of each) — inside the brief's
@@ -5394,10 +5416,47 @@ burst's render-target variant on the first combat) is closed by `prime.ts`'s
 composer's or the canvas — rather than for both (its first form cached every
 primed program twice).
 
-### Lane LOOK follow-ups — sixteen, 2026-09-28
+### The verification pass, round 1 (2026-09-28)
 
-Four are edits owed in files this lane does not own (1–4); four are questions
-(5–8); the rest are limits of what was measured or built.
+A verifier read the lane's pictures and numbers and found two majors and seven
+minors. What changed, each in the lane's own files (**D129** and the dated
+amendments):
+
+- **No card is inked** (major). The ink inked every card edge that stands off the
+  table — the hand, the stack, every hovering flier's card, the pedestal's. A
+  painted figure now writes alpha 0 as the ink's mark and the ink draws only
+  where a painted sample is among its five; the canvases are opaque. Still
+  screenshots: 349 / 406 / 354 / 182 / 1,508 ink pixels on the card rectangles →
+  0 (`var/look/png/fix1/cardink-*`).
+- **Bloom off is the hologram's cost** (major): the ink rides bloom's composer
+  only; `?ink=always` draws it without bloom for measurement.
+- **Summoning sickness is half hologram** (report 15 §9.1 item 8, which the
+  first round had deferred): `look.ts`'s `figureLookOf`, a pose, swept over the
+  corpus (1,487 sick of 6,781 painted).
+- **The combat burst is +0 draw calls**, painted into a second copy of the
+  ground's light and swapped on the pose.
+- **The workshop opens on `1× front`**, the figure's identifying side; `1× from
+  your seat` is the arena's view.
+- **The raster measures the comic look**: `prop-raster.ts`'s `comicVisibility`
+  applies the ink's rule and counts the halftone's dots; the both-seats test holds
+  every identity prop's PAINT (visible and not under the ink) at ≥ 48 px, with one
+  recorded shortfall (follow-up 17). That measurement drove two changes to the
+  line itself: its inner half is one pixel (`COMIC.inkInnerCssPx`) and a light
+  burns through it.
+- **Dark costumes keep their bands**: a dark paint's lit band is lifted, hue kept
+  (`COMIC.darkLift`) — black is blue with blue highlights.
+- **The rim's dots are finer** (7-px screen), CLAUDE.md's two stale passages
+  point at D120 and D126, and the orphaned headless Chromium was closed.
+
+`npm --prefix web test`: 887 `node --test` + 94 vitest, 0 failures. The gate from
+a deleted `bridge/out` at `WSPORT=8710`: **exit 0, 932 s**
+(`var/check-all-look-fix1.log`). `~/forge` and `~/.forge` unchanged.
+
+### Lane LOOK follow-ups — twenty-one, 2026-09-28
+
+Four are edits owed in files this lane does not own (1–4, and 17); four were
+questions (5–8), three of them closed by the verification pass; the rest are
+limits of what was measured or built.
 
 1. **MOTION — the summon's hologram-to-ink.** The figure material's
    `uMaterialize` (identity 1) is waiting. The edit, in `scene/CueRunner.tsx`'s
@@ -5418,21 +5477,24 @@ Four are edits owed in files this lane does not own (1–4); four are questions
    `./figureMaterial.ts`, delete the shim, and drop the shim's assertion from
    `liveness.test.ts`'s Lane LOOK clause. A new prop kind (a `hair:*`, the
    `face`) picks a `PROP_LOOK` preset in `props.ts`'s `LOOKS` — `fabric` for hair.
-5. **Question: `sick` as half hologram?** Report 15 §2.3 proposed `uLook` 0.5 for
-   a summoning-sick creature. Not in this lane's brief, so sickness is still only
-   a translucency (**D56**). It is one line in `look.ts`'s `figureLookOf`.
-6. **Question: ink on the cards?** The depth-edge pass inks everything that
-   writes depth — figures, props, the carrier and the cards' edges, the tilted
-   hand and the piles included (report 15 §11 question 3). Figures only would need
-   the cards to write depth to a layer the pass masks out: one more target,
-   measure first.
-7. **Question: the workshop's default camera.** Since **D126** a single-seat card
-   on the pedestal shows its back (the close camera looks from view 1's
-   direction, which is the arena's truth). *Both seats* shows the front; a
-   *front* camera mode would be one row in `framing.ts`.
+5. ~~**Question: `sick` as half hologram?**~~ **Closed by the verification
+   pass**: it is report 15 §9.1's item 8, so it is built (**D125**, amended). Its
+   summoning ramp, when MOTION builds it (follow-up 1), multiplies the 0.5.
+6. ~~**Question: ink on the cards?**~~ **Closed by the verification pass**
+   (**D129**): the verifier read it as a defect, and it was one — no card, tile
+   or table edge is inked now, with no extra target (the painted mark rides the
+   colour buffer's alpha).
+7. ~~**Question: the workshop's default camera.**~~ **Closed by the verification
+   pass**: `1× front` is the default (**D126**, amended). From the far side the
+   card is upside down — the truth of that view; follow-up 20.
 8. **Question: the backdrop per seat.** Report 15 §4.2 imagined a city, a
    Helicarrier deck or a lab picked per seat; there is one skyline all round.
-9. **Bloom off on the GTX 1080 is +1.65 ms p95, just over report 15's +1.5.**
+9. ~~**Bloom off on the GTX 1080 is +1.65 ms p95, just over report 15's +1.5.**~~
+   **Closed by the verification pass (D129):** the ink rides bloom only, so bloom
+   off draws no composer, and the comic look measured 0.6 ms p95 against the
+   hologram's 0.6. What remains is the last sentence: a headed browser on the
+   user's desktop and the integrated GPU are still unmeasured (follow-up 21).
+   The first round's text, for the record:
    That is the quiet series: the GPU idle, load 3–5, 4 alternating rounds, 2.0
    against 3.65 ms. All 13 runs of each give +1.7. With bloom off the comic look
    draws the ink's composer and the hologram draws none, and on this headless
@@ -5443,10 +5505,13 @@ Four are edits owed in files this lane does not own (1–4); four are questions
    user's desktop, and the user's integrated GPU (report 13 §13 question 3),
    decide whether the bloom-off line matters. If it does, the ink could stay off
    with bloom until a machine proves it can pay: one line in `Arena.tsx`.
-10. **The raster counts depth, not contrast.** `traits.test.ts`'s both-seats
-    raster holds every identity prop at ≥ 48 px under either look, because it
-    counts visibility; that the halftone (≤ 34 % darker, core shadow only) never
-    eats a one-sided detail is argued, not measured.
+10. **The raster counts paint, not contrast.** Since the verification pass it
+    subtracts the ink (the shader's rule over the raster's depth) and counts the
+    halftone's dots, printed per prop (4,868 of 93,399 visible identity pixels;
+    the most on a one-sided detail is the tie's 6). It does not model colour: a
+    dot darkens the prop and the body round it by the same factor, so their
+    contrast ratio holds — argued, and the halftone is the only term left to
+    argue.
 11. **Shadows the stage does not show.** A figure standing ON its own card (a
     wrapped rank's back row) has its shadow under the card; a dying body casts
     none.
@@ -5462,12 +5527,36 @@ Four are edits owed in files this lane does not own (1–4); four are questions
 15. **The spike's `?ink=hull` URLs now draw the post line** (the hull is gone);
     report 15's `after-*-hull*.png` pictures are the only record of it.
 16. **Under SwiftShader the governor reaches its floor later with the comic
-    look.** The composer carries bloom AND the ink, so its frames are slower, each
+    look** (with bloom on; since D129 bloom off has no composer to shed). The composer carries bloom AND the ink, so its frames are slower, each
     governor window takes longer to fill, and the rung below the floor fired
     inside the 5 s sample in every governed after-run (programs "29 → 32"),
     against two of five before-runs. The floor state it settles into is inside
     the budget (+1.9 ms p50). Dropping the ink one rung earlier than bloom would
     be a one-line change in `perf.ts`'s `postOnFloor` and `Arena.tsx`'s governor.
+17. **BODIES — Coulson's chest badge, seen from the front.** The raster's one
+    recorded shortfall (`traits.test.ts`'s `SHORTFALL`, floor 44): 52 px on
+    screen before any ink, 46 after the ink's one-pixel inner line, against the
+    bar of 48. The edit, in `figures/props.ts` (BODIES' file):
+    `badge.anchors.human[0].size` **0.065 → 0.075** (≈ 69 px by area). Then
+    remove the `SHORTFALL` row — the test fails until you do. The verifier also
+    read the back emblem (`human[1]`, 0.1, ≈ 200 px) as "an emblem, not a
+    badge": 0.085 keeps it above 140 px.
+18. **Aliasing.** The composer runs `multisampling={0}` (a SwiftShader cost,
+    `Post.tsx`), so with bloom on every edge — the ink's included — is aliased at
+    1×. Measure `multisampling={4}` on the GTX 1080 and under SwiftShader, or an
+    FXAA / SMAA effect merged into the same `EffectPass` (+0 calls), before
+    turning either on; the governor's floor rung would shed it with bloom.
+19. **The raster's lights are optimistic.** It takes every pixel a light is drawn
+    on as lifted past paper white (so un-inked); in the browser a dim light's
+    edge can still take the line. `comicVisibility(…, { lightsInked: true })` is
+    the pessimistic bound: the visor, the muzzle and the exhaust then fall under
+    the bar from one seat each.
+20. **The workshop's front view shows the card upside down** — the truth from
+    the far side. *Faces its player* (the preview turn) shows the front with the
+    card upright, and misstates the arena's facing.
+21. **Headed and integrated-GPU measurements are still owed** (report 13 §13
+    question 3): every number here is headless Chromium, SwiftShader or ANGLE on
+    the GTX 1080.
     It was not made, because the brief asks for the ink and bloom to go
     together. Measure it on the integrated GPU first.
 

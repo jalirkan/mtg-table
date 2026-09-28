@@ -32,20 +32,22 @@
  *    own edge against it and nothing on it.
  *  - **the combat stage**: a radial burst of action lines at the table's centre
  *    while `state.combat` has a band (`look.ts`'s `combatStageOf`, a POSE, D56:
- *    right after a skip, a scrub and a `resync`) — +1 draw call only during
- *    combat. Its canvas is painted and its program compiled when the stage
+ *    right after a skip, a scrub and a `resync`). It is **painted into a second
+ *    copy of the ground's light**, and the ground's `map` is swapped to it on the
+ *    pose — **+0 draw calls** (the verification pass: as its own mesh it was +1,
+ *    report 15 §4.2 specified a swapped canvas), the same program (both maps are
+ *    `USE_MAP`), and both textures are painted and UPLOADED when the stage
  *    MOUNTS (§8.3 rule 3), not on the first combat, which is the worst frame to
  *    pay for either on.
  */
 
 import { useThree } from '@react-three/fiber';
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 import { TABLE_HALF_X, TABLE_HALF_Z } from '../layout.ts';
 import { COMIC, type StageColours } from '../look.ts';
 import { UNIT_PLANE } from './geometry.ts';
-import { compileFor } from './prime.ts';
 
 const FELT = '#10161c';
 const FELT_LINE = '#1d2731';
@@ -104,17 +106,27 @@ function benDay(
  * report 15 §4.1).
  */
 let stageTex: THREE.CanvasTexture | null | undefined;
+let combatTex: THREE.CanvasTexture | null | undefined;
 
-function stageTexture(): THREE.CanvasTexture | null {
-  if (stageTex !== undefined) return stageTex;
-  if (typeof document === 'undefined') return (stageTex = null);
+/** The ground's light, or — `combat` — the same light with the burst painted over its centre. */
+function stageTexture(combat: boolean): THREE.CanvasTexture | null {
+  if (!combat && stageTex !== undefined) return stageTex;
+  if (combat && combatTex !== undefined) return combatTex;
+  const texture = paintStage(combat);
+  if (combat) combatTex = texture;
+  else stageTex = texture;
+  return texture;
+}
+
+function paintStage(combat: boolean): THREE.CanvasTexture | null {
+  if (typeof document === 'undefined') return null;
   const w = 1024;
   const h = Math.round((w * TABLE_HALF_Z) / TABLE_HALF_X);
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
-  if (ctx === null) return (stageTex = null);
+  if (ctx === null) return null;
   // The multiplier the seat colours are drawn through: warm white at the centre
   // (the stage light), darker toward the rim.
   const light = ctx.createRadialGradient(w / 2, h / 2, w * 0.04, w / 2, h / 2, w * 0.62);
@@ -123,17 +135,26 @@ function stageTexture(): THREE.CanvasTexture | null {
   light.addColorStop(1, '#8a8790');
   ctx.fillStyle = light;
   ctx.fillRect(0, 0, w, h);
-  // Ben-Day dots, growing toward the rim: the page's own vignette.
-  const step = 10;
-  benDay(ctx, w, h, step, 'rgba(12,10,28,0.42)', (x, y) => {
+  // Ben-Day dots, growing toward the rim: the page's own vignette. A 7-px screen
+  // (the verification pass: at 10 px the rim nearest the lens in views 3 and 5
+  // read as coarse, busy dots; the table view reads the finer screen as a wash).
+  const step = 7;
+  benDay(ctx, w, h, step, 'rgba(12,10,28,0.38)', (x, y) => {
     const d = Math.hypot((x - w / 2) / (w / 2), (y - h / 2) / (h / 2));
     return step * 0.46 * Math.min(1, Math.max(0, (d - 0.55) / 0.6));
   });
+  // The combat stage: the burst over the centre, a square BURST_SIDE world units
+  // across (the size its own mesh had), in this canvas's pixels.
+  const burst = combat ? burstCanvas() : null;
+  if (burst !== null) {
+    const side = (BURST_SIDE * w) / (2 * TABLE_HALF_X);
+    ctx.drawImage(burst, (w - side) / 2, (h - side) / 2, side, side);
+  }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 1;
   texture.needsUpdate = true;
-  return (stageTex = texture);
+  return texture;
 }
 
 /**
@@ -274,18 +295,22 @@ function backdropTexture(): THREE.CanvasTexture | null {
 // The combat stage — a radial burst at the table's centre, painted once per page
 // ---------------------------------------------------------------------------
 
-let burstTex: THREE.CanvasTexture | null | undefined;
+/** The burst's side, in world units: most of the table's depth, square on its centre. */
+const BURST_SIDE = TABLE_HALF_Z * 1.9;
 
-/** Action lines from the centre, clear in the middle, and a tighter dot ring: a panel's "now". */
-function burstTexture(): THREE.CanvasTexture | null {
-  if (burstTex !== undefined) return burstTex;
-  if (typeof document === 'undefined') return (burstTex = null);
+/**
+ * Action lines from the centre, clear in the middle, and a tighter dot ring: a
+ * panel's "now". A canvas, drawn once into the combat copy of the stage's light
+ * ({@link paintStage}) — not a texture or a mesh of its own.
+ */
+function burstCanvas(): HTMLCanvasElement | null {
+  if (typeof document === 'undefined') return null;
   const size = 1024;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  if (ctx === null) return (burstTex = null);
+  if (ctx === null) return null;
   const c = size / 2;
   let seed = 11;
   const rand = (): number => {
@@ -309,10 +334,7 @@ function burstTexture(): THREE.CanvasTexture | null {
     const d = Math.hypot(x - c, y - c) / c;
     return 12 * 0.42 * Math.min(1, Math.max(0, (d - 0.72) / 0.28));
   });
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return (burstTex = texture);
+  return canvas;
 }
 
 export interface TableProps {
@@ -320,18 +342,17 @@ export interface TableProps {
   stage?: StageColours | null;
   /** The combat stage (a pose: `look.ts`'s `combatStageOf`). Drawn only on the comic stage. */
   combat?: boolean;
-  /** Whether a composer draws the frames (bloom or the ink): the burst is primed for that target (`prime.ts`). */
-  composer?: boolean;
 }
 
-export function Table({ stage = null, combat = false, composer = false }: TableProps): JSX.Element {
+export function Table({ stage = null, combat = false }: TableProps): JSX.Element {
   const comic = stage !== null;
   const you = stage?.you ?? '';
   const opp = stage?.opp ?? '';
   // The felt is this table's own texture; the stage's light is painted once per page.
   const felt = useMemo(() => (comic ? null : feltTexture()), [comic]);
   useEffect(() => () => felt?.dispose(), [felt]);
-  const light = useMemo(() => (comic ? stageTexture() : null), [comic]);
+  const light = useMemo(() => (comic ? stageTexture(false) : null), [comic]);
+  const lightCombat = useMemo(() => (comic ? stageTexture(true) : null), [comic]);
   // The seats' colours, at commit — ten vertex colours, never a repaint.
   const ground = useMemo(() => stageGeometry(), []);
   useEffect(() => () => ground.dispose(), [ground]);
@@ -339,27 +360,20 @@ export function Table({ stage = null, combat = false, composer = false }: TableP
     if (comic) stageColoursInto(ground, { you, opp });
   }, [ground, comic, you, opp]);
   const backdrop = useMemo(() => (comic ? backdropTexture() : null), [comic]);
-  const burst = useMemo(() => (comic ? burstTexture() : null), [comic]);
-  // §8.3 rule 3: the burst's program is compiled when the stage mounts —
-  // `compile` skips invisible objects, so it is shown for the one call.
-  const burstRef = useRef<THREE.Mesh | null>(null);
+  // §8.3 rule 3: both of the ground's lights are UPLOADED when the stage mounts,
+  // so the first combat swaps a texture the GPU already holds. The program is the
+  // ground's own either way (both are `USE_MAP`): nothing to compile.
   const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
-  const combatRef = useRef(combat);
-  combatRef.current = combat;
   useLayoutEffect(() => {
-    const mesh = burstRef.current;
-    if (mesh === null) return;
-    mesh.visible = true;
-    // For the target the frames are drawn into — the composer's, or the canvas.
-    compileFor(gl, scene, camera, composer);
-    mesh.visible = combatRef.current;
-  }, [burst, gl, scene, camera, composer]);
+    if (light !== null) gl.initTexture(light);
+    if (lightCombat !== null) gl.initTexture(lightCombat);
+  }, [gl, light, lightCombat]);
+  // The combat stage is a POSE: the ground shows the burst while `combat` says so.
+  const groundMap = combat && lightCombat !== null ? lightCombat : light;
   useLayoutEffect(() => {
     invalidate();
-  }, [felt, light, you, opp, combat, invalidate]);
+  }, [felt, groundMap, you, opp, invalidate]);
   return (
     <group>
       {comic && (
@@ -380,7 +394,7 @@ export function Table({ stage = null, combat = false, composer = false }: TableP
           position={[0, 0, 0]}
           renderOrder={-10}
         >
-          <meshBasicMaterial map={light} vertexColors toneMapped={false} />
+          <meshBasicMaterial map={groundMap} vertexColors toneMapped={false} />
         </mesh>
       ) : (
         <mesh
@@ -391,20 +405,6 @@ export function Table({ stage = null, combat = false, composer = false }: TableP
           renderOrder={-10}
         >
           <meshBasicMaterial map={felt} color={felt === null ? FELT : '#ffffff'} toneMapped={false} />
-        </mesh>
-      )}
-      {burst !== null && (
-        <mesh
-          ref={burstRef}
-          visible={combat}
-          geometry={UNIT_PLANE}
-          rotation={[-Math.PI / 2, 0, 0]}
-          scale={[TABLE_HALF_Z * 1.9, TABLE_HALF_Z * 1.9, 1]}
-          position={[0, 0.0003, 0]}
-          renderOrder={-9}
-          raycast={() => {}}
-        >
-          <meshBasicMaterial map={burst} transparent depthWrite={false} toneMapped={false} />
         </mesh>
       )}
       {/* The centre line, and one lane line per seat. Decoration only: every

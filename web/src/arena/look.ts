@@ -29,7 +29,7 @@
  * program and an idle table still renders nothing (**D58**, **D72**).
  *
  * URL (read once, by `main.tsx`'s `arenaFlagsFromQuery`, and by the workshop):
- * `?look=holo|comic` · `?ink=none` · `?halftone=0` · `?key=world` ·
+ * `?look=holo|comic` · `?ink=none|always` · `?halftone=0` · `?key=world` ·
  * `?stage=felt` · `?shadow=0`. The workshop's toolbar switches every one.
  */
 
@@ -37,7 +37,13 @@ import { colourIdOf, type ColourId } from './colour.ts';
 import { INK_DEFAULT, LOOK_DEFAULT } from './perf.ts';
 
 export type Look = 'holo' | 'comic';
-export type InkMode = 'post' | 'none';
+/**
+ * The ink line (D122, D129): `post` draws it on BLOOM's composer and only there —
+ * with bloom off there is no composer and no line; `always` draws it with a
+ * composer of its own when bloom is off (measurement only: that composer costs
+ * the GTX 1080 +2.4 ms p95, D129); `none` never.
+ */
+export type InkMode = 'post' | 'always' | 'none';
 /** Where the key light belongs: to the lens (the panel's convention, D121) or to the world. */
 export type KeyFrame = 'lens' | 'world';
 /** The ground: the comic stage (D124) or the Tier-1 felt. */
@@ -49,7 +55,7 @@ export type StageMode = 'comic' | 'felt';
  */
 export interface LookSpec {
   readonly look: Look;
-  /** The depth-edge ink pass (D122). Only drawn under the comic look. */
+  /** The depth-edge ink pass (D122). Only drawn under the comic look, and by default only with bloom (D129). */
   readonly ink: InkMode;
   /** The halftone screen in the core-shadow band. */
   readonly halftone: boolean;
@@ -110,7 +116,7 @@ export function lookFromSearch(search: string, fallback: Look = LOOK_DEFAULT): L
   };
   return Object.freeze({
     look: base.look,
-    ink: ink === 'none' || ink === 'post' ? ink : base.ink,
+    ink: ink === 'none' || ink === 'post' || ink === 'always' ? ink : base.ink,
     halftone: flag('halftone', base.halftone),
     key: key === 'world' || key === 'lens' ? key : base.key,
     stage: stage === 'felt' || stage === 'comic' ? stage : base.stage,
@@ -161,12 +167,21 @@ export const HOLO_MATERIAL: MaterialLook = Object.freeze({ look: 0, halftone: 0,
  *    half: it gets nothing that would paint it as a particular card;
  *  - a **ghost** (T6's creature spell on the stack, report 13 §6.2) is the
  *    hologram — the spell is not a creature until it resolves;
+ *  - a **summoning-sick** figure (`stance` `sick`: sick and not in combat —
+ *    `figurePose`'s precedence) is HALF hologram, `uLook` × {@link COMIC.sickLook}:
+ *    "not yet able to act" as "not yet fully real" (report 15 §2.3, §9.1 item 8);
+ *    it is still a painted body — shadowed and inked — and it is a pose, so the
+ *    next snapshot that says it is not sick paints it whole;
  *  - everything else takes the table's look.
  *
- * `web/test/look.test.ts` sweeps every pose of the committed corpus with it.
+ * Commit time only (it builds a number object for a sick figure); the frame loop
+ * asks {@link paintsFigure}, which allocates nothing. `web/test/look.test.ts`
+ * sweeps every pose of the committed corpus with it.
  */
 export function figureLookOf(pose: PaintedPose, table: MaterialLook): MaterialLook {
-  return paintsFigure(pose) ? table : HOLO_MATERIAL;
+  if (!paintsFigure(pose)) return HOLO_MATERIAL;
+  if (pose.stance === 'sick' && table.look > 0) return { ...table, look: table.look * COMIC.sickLook };
+  return table;
 }
 
 /** The slice of a `FigurePose` the look reads — public, and never a name. */
@@ -174,6 +189,8 @@ export interface PaintedPose {
   readonly anonymous: boolean;
   readonly ghost: boolean;
   readonly modelId: string | null;
+  /** `sick` draws half hologram (D125); every other stance the table's look. */
+  readonly stance: string;
 }
 
 /**
@@ -185,9 +202,17 @@ export function paintsFigure(pose: PaintedPose): boolean {
   return !pose.anonymous && !pose.ghost && pose.modelId !== null;
 }
 
-/** Does this spec draw the ink pass (and so want a composer, bloom or not)? */
-export function wantsInkPass(spec: LookSpec): boolean {
-  return spec.look === 'comic' && spec.ink === 'post';
+/**
+ * **Does this spec draw the ink pass**, with bloom on or off (D129)? The line
+ * rides bloom's composer: with bloom on it is +0 draw calls inside the pass bloom
+ * already pays for, and with bloom off it is drawn only under `?ink=always` —
+ * a composer of its own for one effect measured +2.4 ms p95 on the GTX 1080
+ * over the hologram's (report 15 §9.1's line is +1.5), so bloom off means no
+ * composer and no line, and the bands, the rim and the shadow read without it.
+ */
+export function wantsInkPass(spec: LookSpec, bloom: boolean): boolean {
+  if (spec.look !== 'comic') return false;
+  return spec.ink === 'always' || (spec.ink === 'post' && bloom);
 }
 
 /** Does this spec draw contact shadows? */
@@ -251,6 +276,16 @@ export const COMIC = Object.freeze({
   black: [0.022, 0.03, 0.075] as const,
   blackAt: 0.045,
   /**
+   * **…with blue highlights** (the verification pass: Quake, Fury and the dark
+   * soldiers read as near-black silhouettes on the mid stage, only the ink
+   * separating them). A paint whose LINEAR luminance is under `[0]` has its LIT
+   * band lifted to luminance `[2]`, hue kept, easing out by `[1]` — so a dark
+   * costume keeps three bands (a highlight, itself, a near-black core). The
+   * black-is-blue paint (luminance ≈ 0.029) gets a lit band of sRGB #46527d, a
+   * mid band of #212844 and a core of #181d3c (`look.test.ts` holds the lift).
+   */
+  darkLift: [0.02, 0.1, 0.09] as const,
+  /**
    * The brightest a painted surface may be (LINEAR, per channel): paper, not a
    * lamp. 1 is no cap — what the user judged in report 15's spike.
    */
@@ -275,8 +310,20 @@ export const COMIC = Object.freeze({
   // -- ink (D122) --------------------------------------------------------------
   /** Near-black with a little blue, like a printed K plate. */
   ink: '#0e1016',
-  /** How far apart the ink pass samples depth, in CSS pixels (× the render dpr at commit). */
+  /**
+   * How far apart the ink pass samples depth, in CSS pixels (× the render dpr at
+   * commit), OUTSIDE a painted surface — the half of the line that lies on the
+   * table or the card behind a figure: the bold silhouette.
+   */
   inkCssPx: 1.6,
+  /**
+   * …and ON a painted surface — the half of the line that lies on the figure's
+   * own paint, its creases included (D129, the verification pass): one CSS pixel,
+   * so the line keeps its weight at the silhouette while a small prop — a badge,
+   * a visor, an eyepatch — loses one pixel of paint at its edge, not two
+   * (`traits.test.ts` measures what the ink leaves of every identity prop).
+   */
+  inkInnerCssPx: 1.0,
   /**
    * Ink where the Laplacian of 1/z, relative to 1/z, exceeds this (and full ink
    * at 2.5×). Relative, so a line weighs the same near the lens and across the
@@ -302,6 +349,12 @@ export const COMIC = Object.freeze({
   shadowFalloff: 2.5,
   /** Under the comic look a modelled figure's glowing stand disc steps back to this. */
   discUnderComic: 0.3,
+  /**
+   * **A summoning-sick figure's look** (D125): half hologram, half paint —
+   * "not yet able to act" as "not yet fully real" (report 15 §2.3). A multiplier
+   * of the table's look, so the hologram table stays all hologram.
+   */
+  sickLook: 0.5,
 
   // -- the stage (D124) ------------------------------------------------------------
   /** The clear colour behind everything. */
