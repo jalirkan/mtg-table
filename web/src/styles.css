@@ -3155,6 +3155,18 @@ button.zonerow__open:hover {
   font-size: 10px;
 }
 
+/* Match setup (M44): the seat's deck NAME from `seatMatchOf`, on one line.
+   Ellipsised rather than wrapped — the plate sits beside the opponent's duelist
+   (D100), so it may grow by one line and no more; the tooltip has the rest. */
+.arena__seat-deck {
+  max-inline-size: 13rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .arena__seat-vitals {
   display: flex;
   align-items: baseline;

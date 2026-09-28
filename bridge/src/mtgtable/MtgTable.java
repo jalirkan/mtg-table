@@ -403,6 +403,8 @@ public final class MtgTable {
         System.out.println("events dropped = " + Snap.incompleteEventsDropped() + " (missing a required id)");
         System.out.println("unzoned cards  = " + Snap.unzonedCards());
         System.out.println("emit errors    = " + gui.errors());
+        System.out.println("late frames    = " + gui.lateFramesDropped()
+                + " (passed the fast check, lost the race to `over`, dropped -- section 8.4)");
         if (transport instanceof WsTransport) {
             final WsTransport ws = (WsTransport) transport;
             System.out.println("ws connections = " + ws.connects() + " accepted, "

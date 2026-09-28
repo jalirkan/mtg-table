@@ -17,7 +17,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice, fixed twice and committed** (`0368a90`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened. **Tier 2 slice 4 (T13, proportioned bodies in painted costumes, T14) built, verified once and documented**, not committed (branch `tier2-slice4`): every humanoid a CC0 *Universal Base Characters* person on the animation library's own rig, painted by a costume palette, still one program; a full duelist per seat — the director and the villain — with gestures as cue params; **D95–D101**; nineteen follow-ups. **Tier 2 is complete (T0–T14)**; likeness — Tier 3, personal-only — is the open question (question 14) |
-| — | Match setup: the AI's own deck and its Forge profile *(a deferred item, brought forward)* | 1 day | **built, reviewed, fixed and documented; not committed** (branch `match-setup`) — `decks/doom-legion.dck`, 40 blue-black Marvel villains for the AI; `--ai-deck` / `--ai-profile` on the bridge and `scripts/play.sh`, `config.json`'s `match` block read by `play.sh` alone; `hello_ok.match` (amendment **M44**) naming the AI's deck but never listing it; the board's rails print both decks and the profile; gate rows 11–14 of `ten-games.sh` and step **9e**; **D102–D105**; one review pass, all nine findings closed; nine follow-ups, the first two owed after the arena branches merge |
+| — | Match setup: the AI's own deck and its Forge profile *(a deferred item, brought forward)* | 1 day | **built, reviewed, fixed, documented and committed** on branch `match-setup`, rebased onto `main`'s `23e26b3` (2026-09-27) with a second fix commit — `decks/doom-legion.dck`, 40 blue-black Marvel villains for the AI; `--ai-deck` / `--ai-profile` on the bridge and `scripts/play.sh`, `config.json`'s `match` block read by `play.sh` alone; `hello_ok.match` (amendment **M44**) naming the AI's deck but never listing it; the board's rails print both decks and the profile; gate rows 11–14 of `ten-games.sh` and step **9e**; **D102–D105**; one review pass, all nine findings closed; nine follow-ups, three of them (2, 8, 9) closed by the rebase and its fix commit |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -3319,7 +3319,16 @@ cost.
     (`var/check-all-t2s4-rebase-pre1-ws-3g.log`,
     `var/check-all-t2s4-rebase-pre1-3g-g3-frames.jsonl`); the client counted it
     as game 3 of 3 and exited 0. Worth fixing before the next gate is trusted to
-    be deterministic on a busy machine.
+    be deterministic on a busy machine. **(a) is closed** by match setup's fix
+    commit on the rebased branch (2026-09-27): `WireGuiGame.emit` checked
+    `overEmitted` outside the monitor that numbers a frame, so an `input` that
+    read it false could be numbered one past `over`; the flag is now re-checked
+    under that monitor, and `logC2s` and the ask path's numbering got the same
+    re-check. `bridge/build.sh`'s new `OverRaceSelfTest` parks the racers on the
+    monitor so the losing order happens every run (all 11 checks fail with the
+    re-check removed), and twenty back-to-back 10b sessions at a load average of
+    up to 43 passed, one of them dropping a racing `input` live (match setup's
+    evidence §R.3). (b) and (c) are open.
 14. **`main` moved, and the merge will conflict.** `754f504` (the card library)
     landed on `main` after this branch was cut. Both sides changed NOTICE,
     CLAUDE.md, PLAN.md, README.md and DECISIONS.md. Slice 4's decisions are
@@ -3874,8 +3883,15 @@ Against the tree, item by item:
 
 ## Match setup — the AI's own deck and its Forge profile (2026-09-27)
 
-**Status: built, reviewed, fixed and documented; not committed** (branch
-`match-setup`, a worktree off `0368a90`). This was a deferred item — *"a second
+**Status: built, reviewed, fixed, documented and committed** on branch
+`match-setup` (a worktree first cut off `0368a90`), **rebased onto `main`'s
+`23e26b3`** on 2026-09-27 — the card library and Tier 2 slice 4 — with a second
+commit for three fixes: `over` made terminal under load (`WireGuiGame.emit`,
+`logC2s` and the ask path re-check `overEmitted` under the log's monitor, held by
+the new `OverRaceSelfTest`; slice 4's follow-up 13(a)), the arena's seat plates
+printing the match (follow-up 2 below), and `cards-lib.test.ts` reading only the
+deck files in `decks/` now that `decks/README.md` lives there (evidence §R.3).
+This was a deferred item — *"a second
 deck, a deck picker, and an AI profile / difficulty selector"* — brought forward
 on 2026-09-27, when the user asked for deferred work to be expedited. Protocol
 amendment **M44**; decisions **D102–D105**; `docs/evidence/match-setup.md` is
@@ -3913,7 +3929,9 @@ What it is:
   sets, negative-controlled by four committed `fixtures/negative/redaction/m44-*`
   files.
 - **On the board:** each seat's rail names its deck, and the AI's rail its
-  profile, from `seatMatchOf()`, the one reader (`web/test/reduce-match.test.ts`).
+  profile, from `seatMatchOf()`, the one reader (`web/test/reduce-match.test.ts`);
+  since the rebase's fix commit the arena's seat plates do the same, from the
+  same reader.
 - **`scripts/play.sh`** takes `--deck`, `--ai-deck`, `--ai-profile` and
   `--mirror`, with defaults in `config.json`'s new `match` block — which **only
   `play.sh` reads**, so the gate never plays what a player last chose (**D103**).
@@ -3930,7 +3948,8 @@ What it is:
   not that it changes the play. Five more games cost about two minutes; the gate
   ran green from a deleted `bridge/out` in 874 s, then 1,141 s (the fix pass) and
   1,143 s (the documentation pass, evidence §R.2) — the last two on a desktop
-  running other gates at once.
+  running other gates at once — and, rebased onto `23e26b3` with the second fix
+  commit, in 1,106 s and 970 s (evidence §R.3).
 
 **What a profile is not.** There is still no difficulty setting. Each profile is
 121 heuristic values; against the automated seat Cautious and Reckless were not
@@ -3949,10 +3968,14 @@ declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
    Owed: rows in `web/src/arena/figures/traits.json`, `figures.json` and
    `cues/cues.json`, judged the way slice 3 judged Pacho's deck (from both
    seats, at 1×).
-2. **The arena's HUD does not print the match.** The board's rails do; the
-   arena's plates (`web/src/arena/DecisionLayer.tsx`, the `isAi ? 'AI' :
-   'human'` line) should read `seatMatchOf(state.hello, id)` too. Also after the
-   arena branches merge, for the same reason.
+2. ~~**The arena's HUD does not print the match.**~~ **Closed by the rebase's
+   fix commit** (2026-09-27): each plate in `web/src/arena/DecisionLayer.tsx`
+   reads `seatMatchOf(state.hello, player.id)` — the deck on a line of its own,
+   ellipsised to one line with the whole name in its tooltip, and the profile
+   beside the AI's tag, `AI (Reckless)`. `arena-hud.test.tsx` renders it from the
+   synthetic sample (and no line for a pre-M44 recording), and a new
+   `liveness.test.ts` clause holds the plates to that one reader and to never
+   comparing a deck name or a profile (evidence §R.3).
 3. **A deck and profile picker in the browser** — on the deferred list below.
 4. **Dark Deed** was cast once by the AI in 38 games; it holds the card. If a
    later census shows it never leaving the hand, it is the next swap (**D105**).

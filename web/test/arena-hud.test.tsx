@@ -150,3 +150,25 @@ test('arena HUD: the mana pool is shown, read-only, and is never a control', () 
   expect(html).toContain('class="pool"');
   expect(html).not.toContain('data-act="useMana"');
 });
+
+test('arena HUD: each plate names its deck and the AI plate its profile, from hello_ok.match (M44)', () => {
+  // Match setup. The synthetic sample is the corpus's stream that carries
+  // `hello_ok.match`; the plates read it through `seatMatchOf`, the board rail's
+  // own reader, so the AI's deck arrives as a NAME and your deck's path (which
+  // the handshake does carry, for your seat only) is never printed.
+  const state = statesOf('synthetic/sample-handwritten.jsonl').at(-1);
+  expect(state).toBeDefined();
+  const html = markup(state!);
+  const shown = text(html);
+  expect(shown).toContain('Pacho SHIELD (Marvel Super Heroes)');
+  expect(shown).toContain('Morph probe');
+  expect(shown).toContain('AI (Reckless)');
+  expect(html.match(/class="arena__seat-deck"/g)?.length).toBe(2);
+  expect(html).not.toContain('.dck');
+
+  // A recording made before M44 has no `match`, and a plate then draws no line
+  // at all rather than an empty one.
+  for (const s of statesOf('games/g1.jsonl')) {
+    expect(markup(s)).not.toContain('arena__seat-deck');
+  }
+});

@@ -9,7 +9,10 @@ This file has one section per part of match setup: **§D** the villain deck,
 **§B** the bridge, the wire and the gate, **§P** what the four AI profiles
 actually change, and **§R** the review's findings and what closed each one. §D and
 §B were written by the work itself; §P and §R, and the dated notes inside §D and
-§B that point at them, by the review fix pass (same day, same worktree).
+§B that point at them, by the review fix pass (same day, same worktree). §R.3 is
+the branch's rebase onto `main`'s `23e26b3` (the card library and Tier 2 slice 4)
+and the second fix commit that followed it: `over` made terminal under load, the
+arena's plates printing the match, and the one test the merge broke.
 
 ---
 
@@ -802,3 +805,142 @@ time — so, like §R.1's 1,141 s, the time measures the desktop, not the gate.
 After it: no process of this worktree's was left, and ports 8670–8674 and 5182
 were closed. `~/.forge/preferences/` still held the same three files with their
 2026-09-11 mtimes, and this worktree's `var/forge/preferences/` was still empty.
+
+### R.3 The rebase onto `main`, and the second fix commit (2026-09-27)
+
+**The rebase.** `19a984a` was replayed onto `main`'s `23e26b3` (the card library,
+`754f504`, and Tier 2 slice 4) as `7737f61`, with its own commit message. Three
+files conflicted and every conflict kept both sides: **DECISIONS.md** (main's
+D90–D101 first, then this branch's D102–D105; the italic note above D102 now
+says the numbers were chosen to miss D90–D101 and did), **PLAN.md** (the status
+table — main's M7 row, then this branch's row; the deferred list — this branch's
+"a second deck … **Done** as match setup" and main's "card library … **Brought
+forward**", each superseding the other side's old bullet) and **README.md** (the
+tree's DECISIONS line and the `tools/` block, where main's `card-library/` entry
+and this branch's `first-divergence.mjs` and `fetch-art.ts` lines both stay).
+`config.json` merged by itself: main's `scryfallUserAgent`, this branch's `match`
+block.
+
+- **Decision numbers.** Nothing to renumber: the documentation pass (§R.2) had
+  already moved the fix pass's D90 and D91 to **D102** and **D103**. Every
+  `D90` / `D91` left in the tree was checked against its origin, and every one is
+  main's card library (DECISIONS.md, PLAN.md, README.md, CLAUDE.md,
+  `tools/card-library/`). `grep -c '^## D[0-9]'` over DECISIONS.md is **105**,
+  D1 to D105 with no gap and no duplicate, so every count now says **one hundred
+  and five** (README twice, CLAUDE.md's docs table).
+- **CLAUDE.md.** The fix pass's prepared patch
+  (`scratchpad/msfix/claude-md.patch`, written against `0368a90`) does not apply
+  to main's CLAUDE.md as a whole: its first four hunks applied with an offset of
+  three lines (lint rule 10's `GamePlayerUtil.createAiPlayer` ban, `play.sh`'s
+  villain default and `--mirror` line, the six lettered sub-steps with **9e**,
+  ten-games' rows 11–14), and the other three were re-applied by hand — the gate
+  time, the test counts, and the docs-table row, which says **D102–D105** and
+  "one hundred and five" where the patch said D90–D91 and "ninety-one". PLAN.md's
+  follow-ups 8 (CLAUDE.md) and 9 (decision numbers at merge) are closed.
+- **One semantic conflict the text merge could not see.** Main's
+  `web/test/cards-lib.test.ts` parses every file in `decks/` as a deck, and this
+  branch put `decks/README.md` there: `npm test` on the rebased tree failed 1 of
+  825 (`every deck in decks/ parses with nothing skipped`, `AssertionError:
+  README.md`). Every tool that lists `decks/` already filters to `.dck`
+  (`fetch-art.ts`, `card-library/images.ts`, `make-fixture.ts`, `devApi.ts`), so
+  the test now reads only `.dck` / `.txt` files (and asserts it found at least
+  two). Fixed in the second commit.
+
+**Fix (a): `over` is terminal under load.** Slice 4's follow-up 13(a) and three
+gate runs at a load average of 20–60 (steps 10a, 10b and 10g: "the last frame of
+the ws session is not `over`") had one cause. `WireGuiGame.emit` checked
+`overEmitted` *before* `synchronized (log)`, the monitor that numbers and pushes
+a frame; an `input` that read the flag false could be descheduled there while the
+concede's `emitOver` set the flag, took the monitor and pushed `over`, and then be
+numbered one past it. The flag is now re-checked **under** the monitor; because
+`emitOver` sets it *before* it takes the monitor, a frame that reaches the monitor
+after `over` must see it, and one that reached it first is numbered ahead of
+`over`. `logC2s` had the same shape for an act (it would be written after `over`
+in the file), and so did the ask path (checked at the top, numbered after
+`flushState` and the body): both re-check under the same monitor, and the ask is
+now numbered before its `ReplyPool` registration, so a dropped ask leaves nothing
+registered. A dropped frame is counted (the run summary's new `late frames` line)
+and named on stderr (`EMIT AFTER OVER dropped:` / `C2S AFTER OVER not logged: …
+lost the race` / `ASK AFTER OVER dropped:`).
+
+`mtgtable.OverRaceSelfTest`, run by `bridge/build.sh` as its fourth self-test,
+drives a real `WireGuiGame` over a real `GameLog` with a recording transport — no
+engine. Its deterministic half holds the log's monitor on one thread, starts an
+`input` emit (or an act) and waits, through `ThreadMXBean`, until it is BLOCKED
+on that very monitor, then starts `finishGame()` and waits the same way, then
+lets go: the losing interleaving happens every run. Its stress half races two
+emitters against `finishGame()` for 300 rounds with no help.
+
+| build | checks | stress rounds ending on a non-`over` frame (wire / file) | frames the re-check dropped |
+|---|---|---|---|
+| the fix | 11, **0 failures** (five back-to-back runs, and every `build.sh`) | 0 / 0 | 265–306 per 300 rounds |
+| **negative control**: the three re-checks disabled (`if (false && overEmitted …)`) in a scratch copy | 11, **11 failures**, exit 1 (three runs) | 71–94 / 91–127 | — |
+
+In the control the deterministic half shows the defect exactly as the gate saw
+it: `over` pushed at seq 1 and an `input` at seq 2, in the same millisecond. The
+self-test borrows `HeadlessGuiBase`'s own `mtg-table-bg` threads, so there is no
+ninth thread name and lint section 6 and the class-init assert are untouched; it
+installs the headless GUI first (hard rule 1) and runs under hard rule 6's flags.
+
+**Fix (b): a bare `play.sh` plays the villains.** Already true since §R row 4:
+`config.json`'s `match.aiDeck` is `decks/doom-legion.dck`. README, `play.sh`'s
+header and `decks/README.md` say a bare `./scripts/play.sh` plays Doom Legion and
+a bare `MtgTable` a mirror (D103); CLAUDE.md's `play.sh` block now says so too.
+
+**Fix (c): the arena's plates print the match.** `SeatPlates` passes
+`seatMatchOf(state.hello, player.id)` — the one reader the board's rail uses — to
+each plate, which draws the deck NAME on a line of its own (`.arena__seat-deck`:
+ellipsised to one line at 13rem, the whole name in its `title`, because the plate
+sits beside the opponent's duelist, D100) and the profile beside the AI's tag,
+`AI (Reckless)`. A stream with no `match` draws no line. In a dev server on 5182,
+`?replay=synthetic/sample-handwritten.jsonl#arena` at 1600 × 900, frame 4: the
+opponent's plate read `Opponent / AI (Reckless) / Morph probe`, yours `Pacho /
+human · you · active · priority / Pacho SHIELD (Marvel Super Heroes)` (180 px, no
+ellipsis). Tests: `arena-hud.test.tsx` renders the sample's last frame (both deck
+names, `AI (Reckless)`, two deck lines, no `.dck` anywhere in the markup) and
+every frame of `g1.jsonl` (no deck line) — negative-controlled with the plates
+handed `match={null}`: 1 failure. `liveness.test.ts` gains a clause: the plates
+read `seatMatchOf(state.hello, player.id)`, never `hello.match` / `.yourDeck` /
+`.aiDeck` directly, and never compare a deck name or a profile — negative-
+controlled three ways (a direct `hello?.match?.aiDeck` read, a `match.deck !==
+'Doom Legion'` branch, the call removed): each fails exactly that clause.
+
+**The web client**, from `web/`: `npm ci` (339 packages); `npm run build` — `tsc
+--noEmit` with **zero errors**, the 2D entry chunk **86.74 kB** gzip; `npm test`
+standalone — **825 `node --test` (825 pass) + 92 vitest (6 files)**, where main
+had 817 + 91: this branch's 7 `reduce-match` cases, the new liveness clause and
+the new arena-hud case.
+
+**The gate**, `rm -rf bridge/out && WSPORT=8670 ./tools/check-all.sh`, on a
+desktop running other sessions' headless Chromium (load average 17–29):
+
+| run | tree | result | wall | 9c | node --test in the gate | notes |
+|---|---|---|---|---|---|---|
+| 1 | the fixes, before `OverRaceSelfTest` stopped storing its stderr | **exit 0** | **1,106 s** | 466 s, 14 / 14 | 835 / 827 pass / 0 fail / 8 skipped; vitest 92 | the self-test buffered 614,523 stderr lines in memory under that load; it now classifies them as they are written and its racers stop at `over` (`var/check-all-ms-rebase-run1.log`) |
+| 2 | **the committed tree** | **exit 0** | **970 s** | 408 s, 14 / 14 | 835 / 827 pass / 0 fail / 8 skipped; vitest 92 (6 files) | `OverRaceSelfTest` 11 checks, 0 failures, 274 frames dropped over 300 rounds, 35,751 stderr lines counted and none unexpected; lint 21 files; redaction self-test 20 controls; 2D entry chunk 86.74 kB gzip (`var/check-all-ms-rebase.log`) |
+
+In both runs all 13 session summaries printed `late frames = 0` — the race is rare
+enough that a green gate says nothing about it, which is why the self-test forces
+it. 9b's advisory fired both times on the known wall-clock class, not on `match`:
+run 1, 8 s2c / 2 c2s frame instances (a `Stack: 1 to Resolve` prompt against
+`Stack: Empty`); run 2, 38 / 7 (`Waiting for Forge AI...` re-pushes, `act
+buttonCancel`, a yield prompt cut at a different moment).
+
+**Under load, live.** Twenty back-to-back sessions of check-all's step 10b —
+`MtgTable --transport ws --seed 13 --keep-open` on port 8671 and
+`tools/ws-smoke.mjs --disconnect-mid-ask`, the variant that concedes at the
+mulligan prompt — while four lanes of `--transport auto` games and twelve
+`node -e 'for(;;){}'` burners ran beside them (the script and the load are in the
+session scratchpad; the logs in `var/loadproof/`). The load average climbed from
+11 to 43. **20 of 20 passed**: client and server exit 0, exactly one `over`, `over`
+the last line of the frame log, and `check-redaction.mjs` exit 0 on every log.
+And the race happened: in run 20, at a load average of 38, the server printed
+``EMIT AFTER OVER dropped: input lost the race to `over` `` and its summary `late
+frames = 1`, and the frame log still ends `concede` (c2s 3) → the `gameOver`
+`state` (s2c 7) → `over` (s2c 8). Before the fix that `input` would have been s2c
+9, and step 10b's "the last frame … is not `over`" would have failed.
+
+After it: `~/forge` and `~/.forge` were fingerprinted before any of this work
+(22,155 paths, sizes and mtimes; `~/.forge`'s file hashes) and again at the end,
+and neither changed; no process of this worktree's was left, and ports 8670–8674
+and 5182 were closed.

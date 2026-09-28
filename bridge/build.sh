@@ -67,4 +67,19 @@ java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.AskSelfTest
 # It writes only under var/.
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.GameLogSelfTest "$REPO_ROOT/var/gamelog-selftest"
 
+# Unit-check that `over` stays the TERMINAL frame when another thread is
+# emitting at the same instant (protocol sections 7 and 8.4).  WireGuiGame.emit
+# and logC2s once checked `overEmitted` outside the log's monitor, so a frame
+# that read the flag false could be numbered one past `over` -- seen only under
+# load, as three gate runs failing 10a/10b/10g on "the last frame ... is not
+# over".  The test parks both racers on the monitor so the losing interleaving
+# happens every run, then stresses it without help.  It loads WireGuiGame, so it
+# installs the headless GUI first (hard rule 1) and runs under hard rule 6's
+# flags; it boots no engine, and writes only under var/.
+env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
+    -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
+    -Dsentry.uncaught.handler.enabled=false \
+    -cp "$OUT:$FORGE_JAR" mtgtable.OverRaceSelfTest "$REPO_ROOT/var/over-race-selftest" \
+    "$REPO_ROOT/forge-home"
+
 echo "build OK"

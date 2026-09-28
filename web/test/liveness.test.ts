@@ -256,6 +256,37 @@ test('liveness: the decision layer knows nothing about the cue engine', () => {
   );
 });
 
+/**
+ * **The plates render the match; they do not read it for themselves** (match
+ * setup, amendment M44). A seat's deck and the AI's profile reach the arena's
+ * HUD through `seatMatchOf(state.hello, …)` — the one reader of
+ * `hello_ok.match`, the same call the board's rail makes (M6 convention 1: one
+ * reader per optional field) — so the renderer cannot print a key the reader
+ * would have refused, such as a path an emitter put on the AI's deck (D102).
+ * And like a button label, a deck name is rendered and never compared: the
+ * arena decides nothing.
+ */
+test('liveness: the seat plates read the match through seatMatchOf and never compare it', () => {
+  const layer = codeOf(
+    readFileSync(fileURLToPath(new URL('../src/arena/DecisionLayer.tsx', import.meta.url)), 'utf8'),
+  );
+  assert.match(
+    layer,
+    /seatMatchOf\(state\.hello,\s*player\.id\)/,
+    'the arena plates no longer read `seatMatchOf(state.hello, player.id)` — move this test with them',
+  );
+  assert.ok(
+    !/\bhello\??\.match\b|\.yourDeck\b|\.aiDeck\b/.test(layer),
+    'DecisionLayer reads `hello_ok.match` directly — `seatMatchOf` is its one reader (M44, D102)',
+  );
+  assert.ok(
+    !/(deck|aiProfile)\s*(===|!==)\s*['"`]|\b(deck|aiProfile)\.(includes|match|startsWith|endsWith)\(/.test(
+      layer,
+    ),
+    'DecisionLayer branches on a deck name or a profile — they are rendered, never compared',
+  );
+});
+
 test('liveness: cues/ is pure — no three, no React, no DOM, no clock', () => {
   const files = arenaFiles().filter((f) => f.path.startsWith('cues/'));
   assert.ok(files.length >= 8, `expected the cue engine, saw ${String(files.length)} files`);

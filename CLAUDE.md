@@ -377,15 +377,31 @@ stripping does not transform JSX). `vitest` is a dev dependency, so a checkout
 with no `web/node_modules` fails `check-all.sh` at its web step with a message
 saying exactly that.
 
-`bridge/build.sh` runs **three** self-tests after javac: `mtgtable.JsonSelfTest`,
+`bridge/build.sh` runs **four** self-tests after javac: `mtgtable.JsonSelfTest`,
 `mtgtable.AskSelfTest` (the ask path's answer marshalling — index 0 is the
 defending player, a wrong-length `manipulate_list` answer is the identity order,
-and so on) and `mtgtable.GameLogSelfTest` (the frame log's close path: close in
-under a second, exactly `N+1` lines on disk). Forge has dispatched **three** of
+and so on), `mtgtable.GameLogSelfTest` (the frame log's close path: close in
+under a second, exactly `N+1` lines on disk) and, since match setup's second fix
+commit, `mtgtable.OverRaceSelfTest` (`over` stays the TERMINAL frame while
+another thread is emitting: it parks an `input`, and then an act, on the log's
+monitor behind `over` so the losing interleaving happens every run, then races
+300 rounds with no help). Forge has dispatched **three** of
 the eleven ask kinds across every recording ever made here, so for the other
 eight `AskSelfTest` is the only check that runs at all; and the `GameLog` defect
 it now guards — a `close()` that self-deadlocked against its own appender,
-burned 30 s and returned a truncated file — was invisible in a green run.
+burned 30 s and returned a truncated file — was invisible in a green run. So was
+`OverRaceSelfTest`'s: `WireGuiGame.emit` and `logC2s` checked `overEmitted`
+*outside* the monitor that numbers a frame, and at a load average of 20–60 an
+`input` (or an act) was numbered one past `over` — step 10a, 10b or 10g failing
+on "the last frame … is not `over`" in three gate runs. The flag is now
+re-checked under that monitor (and the ask path's numbering too); a frame that
+loses the race is dropped, counted as the summary's `late frames` line, and
+named on stderr. With the re-check removed the self-test fails all 11 of its
+checks; with it, twenty back-to-back 10b sessions at a load average of up to 43
+all passed, and one of them caught the race live (`late frames = 1`, the log
+still ending in `over`; `docs/evidence/match-setup.md` §R.3). It loads `WireGuiGame`, so it installs the headless GUI first (hard
+rule 1), runs under hard rule 6's flags and borrows `HeadlessGuiBase`'s own
+`mtg-table-bg` threads rather than naming a ninth.
 
 `check-forge.sh` is the gate for everything below it. Run it first when something
 behaves strangely. **`check-all.sh` is what you run before saying you are done**,
@@ -498,7 +514,12 @@ match: on its branch, off `0368a90`, **874 s**, exit 0, from a deleted
 `bridge/out` at `WSPORT=8671` (`var/check-all-match-setup.log`), then **1,141 s**
 and **1,143 s**, exit 0, the same way after its review fix pass and its
 documentation pass (`var/check-all-msfix.log`, `var/check-all-ms-docs.log`) — all
-three on a desktop that was not idle.
+three on a desktop that was not idle. **Rebased onto `23e26b3`** with its second
+fix commit (`OverRaceSelfTest` among it), it ran twice from a deleted
+`bridge/out` at `WSPORT=8670`: **1,106 s** and then **970 s**, exit 0 both times,
+9c's fourteen games 466 s and 408 s, at a load average of 17–29 falling to 4 —
+the second is the committed tree (`var/check-all-ms-rebase.log`,
+`docs/evidence/match-setup.md` §R.3).
 `SKIP_TEN=1`
 brings it back to roughly six. **Pass `WSPORT=<n>` if 8643 is busy** — step 10 starts
 **seven** servers on it, one after another.
@@ -626,10 +647,13 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **862 `node --test` + 93 vitest (6 files)** standalone
-with **the workshop rebased onto Tier 2's fourth slice and reconciled**
+`npm --prefix web test` is **862 `node --test` +
+93 vitest (6 files)** standalone with **the workshop rebased onto Tier 2's fourth slice and reconciled**
 (2026-09-27, from `npm ci`: its `workshop` suite, 43, two `keys` cases and two
-`cards-render` cases on top of slice 4's tree; **872 / 864 pass / 0 fail / 8 skipped** plus 93 vitest inside `check-all.sh`, `var/check-all-workshop-reconcile.log`), and was **817
+`cards-render` cases on top of slice 4's tree; **872 / 864 pass / 0 fail / 8 skipped** plus 93 vitest inside `check-all.sh`, `var/check-all-workshop-reconcile.log`),
+**825 + 92 (6 files)** as of **match setup rebased onto `23e26b3`** (its seven
+`reduce-match` cases, 711 + 79 on its own branch, plus its fix commit's liveness
+clause for the arena's plates and one `arena-hud` case), **817
 + 91 (6 files)** as of **M7 Tier 2's fourth slice rebased onto the card library**
 (the two sides add — slice 4's twenty new `node --test` cases, its `duelists`
 suite among them, and D90's 93 plus 12 vitest), **837 + 91** with the workshop on
@@ -639,8 +663,10 @@ the card library alone (its `workshop` suite then 38), **797 + 91 (6 files)** as
 (5 files)** as of **M7 Tier 2's fourth slice** before the rebase, and
 **704 + 79 (5 files)** as of **M7 Tier 2's third slice** after its second fix pass (698 after its first,
 690 before that, 655 after the second slice, 610 + 79 after the first slice,
-534 + 79 at M7 Tier 1, 456 + 75 at M6), and **827 / 819 pass / 0 fail / 8
-skipped** inside `check-all.sh` after the rebase (`var/check-all-t2s4-rebase-pre2.log`) — the first in-gate
+534 + 79 at M7 Tier 1, 456 + 75 at M6), and **835 / 827 pass / 0 fail / 8
+skipped** inside `check-all.sh` as of match setup's first rebase and fix commit (`var/check-all-ms-rebase.log`; 721 / 713 on its own
+branch), **827 / 819** after
+slice 4's rebase (`var/check-all-t2s4-rebase-pre2.log`) — the first in-gate
 count since slice 3's **714 / 706**, because neither side read one: slice 4's
 documentation pass's gate runs stopped before the web step, and D90's predicted
 807 / 799 was not measured inside the gate (708 / 700 after slice 3's first fix pass, 665 / 657

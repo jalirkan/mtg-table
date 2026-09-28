@@ -94,7 +94,7 @@ Thirteen numbered steps and six lettered sub-steps (9b, 9c, **9d**, **9e**, 10f
 and **10g** — 9d and 10g added by M6, 9e by match setup), stopping at the first
 failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
-`bridge/build.sh` (javac plus three self-tests) → `Smoke` → a `RecordMatch`
+`bridge/build.sh` (javac plus four self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift diff** of that recording against
 `fixtures/games/g1.jsonl` → **three fresh human-seat games** (`--transport
 null`, the scripted `--transport console` smoke, and `--transport auto --seed
@@ -121,10 +121,10 @@ asserted by the **effect** it had on the next `state`) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
 every fresh recording → `check-redaction-selftest.mjs`, which asserts the
 checker still rejects eighteen one-defect probes and passes their two controls → `npm run build && npm test` in
-`web/`. **About fourteen and a half minutes** from a deleted `bridge/out` since
+`web/`. **About fifteen to nineteen minutes** from a deleted `bridge/out` since
 match setup added five games (874 s on its first run; 1,141 s on its review fix
 pass and 1,143 s on its documentation pass, each on a machine running other gates
-at the same time), about eleven and a half
+at the same time; 1,106 s and 970 s rebased onto `23e26b3`), about eleven and a half
 before it (682 s and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added
 9d and 10g), of which 9c's fourteen games are most and the seven ws servers much
 of the rest; `SKIP_TEN=1` saves 9c (370 s of the 874). Every JVM step runs
@@ -688,8 +688,10 @@ Reckless` — read from `hello_ok.match`. The AI's deck reaches the browser as i
 name is what a player says across a real table, and the list is hidden
 information (hard rule 8). The name is the `.dck` file's own `Name=`, so a deck
 named after a card announces that card. A recording made before match setup has
-no `match`, and its rails draw no deck line. The arena's HUD does not print the
-match yet.
+no `match`, and its rails draw no deck line. The arena's seat plates print the
+same two facts from the same reader, `seatMatchOf`: the deck on a line of its
+own (one line, the whole name in its tooltip) and the profile beside the AI's
+`AI` tag — `AI (Reckless)`.
 
 **A profile is not a difficulty.** Forge has no difficulty setting; each profile
 is 121 heuristic values (report 11 §9), and the four differ like this:
@@ -834,7 +836,9 @@ mounted over the canvas. Each seat's **life total, poison, hand / library /
 graveyard / exile counts and floating mana** sit on a plate at its own edge of
 the frame, drawn with the *same components* the 2D rail uses — so the two
 renderers cannot disagree about a number, and pressing **V** mid-game shows the
-same totals on the board.
+same totals on the board. Since match setup the plate also names the seat's
+deck, and the AI's plate its profile, from the rail's own reader of
+`hello_ok.match`.
 
 Two escape hatches, because WebGL can fail for reasons a player cannot see:
 `?arena=off` renders the 2D board even at `#arena` and says why, and `?dpr=0.75`
@@ -1687,7 +1691,7 @@ mtg-table/
   bridge/                    the only Java. Hosts the engine, redacts, serialises, serves /ws.
     build.sh  run.sh
     src/mtgtable/            Bootstrap Config HeadlessGuiBase Json JsonSelfTest Snap
-                             GameLog GameLogSelfTest RecordMatch Smoke
+                             GameLog GameLogSelfTest OverRaceSelfTest RecordMatch Smoke
                              WireGuiGame ReplyPool Transport MtgTable Ask AskSelfTest
                              NullTransport AutoTransport ConsoleTransport
                              WsTransport (M3: netty, ws://127.0.0.1:<port>/ws,

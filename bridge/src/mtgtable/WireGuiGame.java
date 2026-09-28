@@ -182,6 +182,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private final AtomicInteger undosRequested = new AtomicInteger();
     /** D39: refresh hops that found the engine running and skipped the walk. */
     private final AtomicInteger refreshesSkipped = new AtomicInteger();
+    /**
+     * Frames that passed a fast-path check ({@link #emit}, {@link #logC2s}, the ask
+     * path), then lost the race to {@code over} and were dropped by the re-check under
+     * the log's monitor.  Not an error -- the drop IS the fix -- but counted,
+     * because a race nobody can see is a race nobody can prove closed.
+     */
+    private final AtomicInteger lateFramesDropped = new AtomicInteger();
 
     // ---- the ask path ----------------------------------------------------
     /** askId -> the ask-local option array.  The ONE identity map in the ask path. */
@@ -456,6 +463,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         return errors.get();
     }
 
+    /** Frames dropped because they lost the race to {@code over}; see {@link #lateFramesDropped}. */
+    public int lateFramesDropped() {
+        return lateFramesDropped.get();
+    }
+
     /**
      * The M6 acts this seat used, for the run summary: {@code {newGame, setYield,
      * yieldTo, setPhaseStop, undo}}.  A typed act with no count anywhere is an
@@ -524,6 +536,25 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // that protects nothing.
             final GameLog l = log;
             synchronized (l) {
+                // THE CHECK AGAIN, under the monitor that numbers the frame.
+                // The one above is a fast path and nothing more: a thread that
+                // read `overEmitted` false there could be descheduled, the
+                // concede's `emitOver` could set the flag, take this monitor and
+                // push `over`, and the first thread would then resume, take the
+                // monitor and number its `input` one past `over`.  Measured, not
+                // imagined: three gate runs at a load average of 20-60 failed
+                // 10a / 10b / 10g on "the last frame of the ws session is not
+                // `over`", an empty `input` one seq after it.  `emitOver` sets
+                // the flag BEFORE it takes this monitor, so a frame that gets the
+                // monitor after `over` was pushed must see the flag here; a
+                // frame that got it first is numbered ahead of `over`, which is
+                // the legal order.  Either way the invariant is structural.
+                if (overEmitted && !"over".equals(type)) {
+                    lateFramesDropped.incrementAndGet();
+                    System.err.println("EMIT AFTER OVER dropped: " + type + " lost the race to "
+                            + "`over` (protocol section 8.4)");
+                    return;
+                }
                 final int seq = l.s2c(type, body);
                 transport.push(envelope(seq, type, body));
             }
@@ -553,7 +584,22 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return;
         }
         try {
-            log.c2s(type, body);
+            // The same race as `emit`'s, and the same answer: a click read
+            // `overEmitted` false above, `over` went out, and the click would
+            // then be written after it -- the file's terminal frame is no longer
+            // `over`.  Re-checked under the log's own monitor (GameLog.c2s is
+            // synchronized on it too, so this is one reentrant acquisition), and
+            // read the volatile field ONCE for the reason `emit` gives.
+            final GameLog l = log;
+            synchronized (l) {
+                if (overEmitted) {
+                    lateFramesDropped.incrementAndGet();
+                    System.err.println("C2S AFTER OVER not logged: " + type + " lost the race to "
+                            + "`over`");
+                    return;
+                }
+                l.c2s(type, body);
+            }
         } catch (final RuntimeException e) {
             errors.incrementAndGet();
             System.err.println("LOG FAILED " + type + ": " + e);
@@ -1841,11 +1887,28 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             extra.write(o);
             final String body = o.end().done();
 
+            // emit()'s race, on the ask path: the check at the top of this
+            // method ran before flushState and the body, and a concede's `over`
+            // can be numbered in between.  Re-checked under the log's monitor,
+            // where `over` is numbered too, so an ask is either ahead of `over`
+            // in the file or not in it at all.  Numbered BEFORE the pool
+            // registration, which only has to precede the push inside
+            // transport.ask, so a dropped ask leaves nothing registered.
+            final GameLog l = log;
+            final int seq;
+            synchronized (l) {
+                if (overEmitted) {
+                    lateFramesDropped.incrementAndGet();
+                    System.err.println("ASK AFTER OVER dropped: " + kind + " lost the race to `over` "
+                            + "(protocol section 8.4) -> null");
+                    return null;               // the top-of-method answer: degrade, never wedge
+                }
+                seq = l.s2c("ask", body);
+            }
             pool.register(askId, kind);        // register BEFORE push
             if (pool.pending() > 1) {
                 System.err.println("ASK OVERLAP " + pool.pending() + " pending -- a second game thread");
             }
-            final int seq = log.s2c("ask", body);
             final String valueJson = transport.ask(askId, envelope(seq, "ask", body), timeoutMs);
             return decode(valueJson);
         } catch (final RuntimeException e) {

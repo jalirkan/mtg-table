@@ -331,7 +331,11 @@ describe('deck: both formats in decks/ (report 03 §4.9)', () => {
   });
 
   test('every deck in decks/ parses with nothing skipped', () => {
-    for (const file of readdirSync(resolve(ROOT, 'decks'))) {
+    // A deck is a `.dck` or a `.txt` list; decks/README.md (match setup) is not
+    // one, and every tool that lists decks/ filters the same way.
+    const decks = readdirSync(resolve(ROOT, 'decks')).filter((f) => /\.(dck|txt)$/i.test(f));
+    assert.ok(decks.length >= 2, `decks/ holds ${String(decks.length)} deck file(s)`);
+    for (const file of decks) {
       const deck = parseDeck(readFileSync(resolve(ROOT, 'decks', file), 'utf8'), file);
       assert.deepEqual(deck.skipped, [], file);
       assert.ok(totalCards(deck, 'main') >= 40, `${file}: ${String(totalCards(deck, 'main'))} main cards`);

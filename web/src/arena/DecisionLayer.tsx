@@ -36,7 +36,14 @@
  */
 
 import { EMPTY_ART_INDEX, type ArtIndex } from '../art.ts';
-import { buttonFocus, type ActBody, type InputButton, type PlayerState } from '../protocol.ts';
+import {
+  buttonFocus,
+  seatMatchOf,
+  type ActBody,
+  type InputButton,
+  type PlayerState,
+  type SeatMatch,
+} from '../protocol.ts';
 import type { ClientState } from '../reduce.ts';
 import { AskModal, type AnswerFn } from '../render/AskModal.tsx';
 import { GameOverBanner, NewGameRow } from '../render/GameOver.tsx';
@@ -198,6 +205,13 @@ export function DecisionLayer({
  * what this frame says. Nothing here is a control: the plates read `state` and
  * send nothing, and the one reason they take pointer events at all is their
  * `title` tooltips.
+ *
+ * **What each seat is playing** (match setup, amendment M44) comes from
+ * `seatMatchOf(state.hello, player.id)` — the one reader of `hello_ok.match`,
+ * the same call the board's rail makes — and from nothing else: a deck NAME
+ * (the AI's list is never on the wire, D102) and, on the AI's seat, Forge's
+ * profile word. It is rendered, never compared; a stream without `match` (every
+ * recording made before 2026-09-27) draws no line.
  */
 function SeatPlates({ state }: { state: ClientState }): JSX.Element | null {
   const board = state.board;
@@ -218,6 +232,7 @@ function SeatPlates({ state }: { state: ClientState }): JSX.Element | null {
           isYou={you !== null && player.id === you}
           active={board.activePlayer === player.id}
           priority={board.priority === player.id}
+          match={seatMatchOf(state.hello, player.id)}
         />
       ))}
     </div>
@@ -229,11 +244,14 @@ function SeatPlate({
   isYou,
   active,
   priority,
+  match,
 }: {
   player: PlayerState;
   isYou: boolean;
   active: boolean;
   priority: boolean;
+  /** M44 — `seatMatchOf(state.hello, player.id)`; `null` draws nothing. */
+  match: SeatMatch | null;
 }): JSX.Element {
   // §3.1 / §10.2 — poison has its own key and is shown beside life; the map is
   // everything else, printed with Forge's own counter names. Exactly as the
@@ -252,11 +270,23 @@ function SeatPlate({
         <span className="arena__seat-name">{player.name}</span>
         <span className="arena__seat-tags">
           {player.isAi ? 'AI' : 'human'}
+          {match !== null && match.aiProfile !== null && (
+            <span title="Forge AI profile (hello_ok.match)"> ({match.aiProfile})</span>
+          )}
           {isYou && ' · you'}
           {active && ' · active'}
           {priority && ' · priority'}
         </span>
       </span>
+
+      {/* M44 — the deck by NAME, one line, the whole name in the tooltip: the
+          plate is 14rem wide and sits beside the opponent's duelist (D100), so
+          it grows by one line and no more. */}
+      {match !== null && match.deck !== null && (
+        <span className="arena__seat-deck" title={`deck: ${match.deck} (hello_ok.match)`}>
+          {match.deck}
+        </span>
+      )}
 
       <span className="arena__seat-vitals">
         <span className="life" title="life">
