@@ -88,6 +88,22 @@ export interface Offset {
   glowColour: string | null;
   /** 0…1 noise-mask dissolve (the one shader Tier 1 writes, §12.1). */
   dissolve: number;
+  /**
+   * **How far the card's FIGURE has resolved from hologram into ink** — the
+   * comic motion lane's one new field (report 15 §5.3; D131 on branch `motion`).
+   * `1` is identity: the figure wears whatever look its material was given at
+   * commit. A summon ramps it `0 → 1` (the body arrives as a hologram and inks
+   * in); a card ignores it, exactly as a card ignores `dRotY`.
+   *
+   * It **multiplies**, like `scale`, so two cues on one figure compose by product
+   * and an absent key contributes nothing. `CueRunner.applyFigures` writes
+   * `uLook = committed look × materialize` — a NUMBER in the frame loop, the same
+   * kind of write as `uOpacity` — so under the hologram look (`uLook` 0) it is
+   * invisible by construction, and because it is an offset
+   * `replay-cues.test.ts`'s "the offset map is empty after every batch" covers it
+   * with no line of its own.
+   */
+  materialize: number;
 }
 
 export const IDENTITY: Offset = Object.freeze({
@@ -105,6 +121,7 @@ export const IDENTITY: Offset = Object.freeze({
   glow: 0,
   glowColour: null,
   dissolve: 0,
+  materialize: 1,
 });
 
 /** A partial offset merged onto identity. */
@@ -128,6 +145,7 @@ export function resetOffset(target: Offset): void {
   target.glow = IDENTITY.glow;
   target.glowColour = IDENTITY.glowColour;
   target.dissolve = IDENTITY.dissolve;
+  target.materialize = IDENTITY.materialize;
 }
 
 /**
@@ -158,6 +176,7 @@ export function composeInto(a: Offset, b: Partial<Offset>): void {
   if (b.glow !== undefined) a.glow = Math.max(a.glow, b.glow);
   if (b.glowColour !== undefined && b.glowColour !== null) a.glowColour = b.glowColour;
   if (b.dissolve !== undefined) a.dissolve = Math.max(a.dissolve, b.dissolve);
+  if (b.materialize !== undefined) a.materialize *= b.materialize;
 }
 
 /**
@@ -185,6 +204,7 @@ export function composeOffsets(a: Offset, b: Offset): Offset {
     glow: Math.max(a.glow, b.glow),
     glowColour: b.glowColour ?? a.glowColour,
     dissolve: Math.max(a.dissolve, b.dissolve),
+    materialize: a.materialize * b.materialize,
   };
 }
 
@@ -268,14 +288,83 @@ export type AnchorRef =
  * | `circuit` | traces and pads | Robotics Mastery, Depower |
  * | `star` | a four-point glint | muzzle flash, vials, the Spy Kit |
  * | `hex` | a plated honeycomb | Super Suit's armour snapping on |
+ *
+ * **The comic motion lane added three, and they are INK** (report 15 §5.1; D130
+ * on branch `motion`): drawn with an ink outline and a colour-able fill, and
+ * blended NORMALLY rather than additively ({@link isInkShape}) — an additive ink
+ * line adds nothing, and a comic's motion vocabulary is graphic shape, not light.
+ *
+ * | shape | what reads | used by |
+ * |---|---|---|
+ * | `burst` | a jagged twelve-point impact star, optionally LETTERED ({@link Effect.word}) | damage, a strike landing, a block's contact, the per-card beats |
+ * | `splat` | an ink splash with droplets, flat on the table | a creature dying |
+ * | `dots` | a Ben-Day halftone burst | a player struck (the HUD plate), Coulson's badge ring |
  */
-export const EFFECT_SHAPES = ['soft', 'badge', 'shield', 'reticle', 'web', 'circuit', 'star', 'hex'] as const;
+export const EFFECT_SHAPES = [
+  'soft',
+  'badge',
+  'shield',
+  'reticle',
+  'web',
+  'circuit',
+  'star',
+  'hex',
+  'burst',
+  'splat',
+  'dots',
+] as const;
 export type EffectShape = (typeof EFFECT_SHAPES)[number];
 
 const EFFECT_SHAPE_SET: ReadonlySet<string> = new Set<string>(EFFECT_SHAPES);
 
 export function isEffectShape(value: string): value is EffectShape {
   return EFFECT_SHAPE_SET.has(value);
+}
+
+/** The comic lane's ink shapes: drawn with an outline, blended normally, never additively. */
+export const INK_SHAPES: ReadonlySet<EffectShape> = new Set<EffectShape>(['burst', 'splat', 'dots']);
+
+export function isInkShape(shape: EffectShape | undefined): boolean {
+  return shape !== undefined && INK_SHAPES.has(shape);
+}
+
+/**
+ * **The onomatopoeia — a CLOSED list** (report 15 §5.1; D133 on branch `motion`).
+ *
+ * A comic letters its impacts, and the arena is the first surface that draws
+ * per-card text into a texture, so the words are a fixed set and nothing else:
+ * no word is ever composed, and nothing that reaches a burst's lettering can be a
+ * card name. `replay-cues.test.ts`'s redaction net asserts every lettered burst in
+ * the corpus carries one of these, and `cues/validate.ts`'s `burst` param accepts
+ * nothing outside {@link BURSTS}.
+ */
+export const COMIC_WORDS = ['POW', 'BLAM', 'KRAK', 'ZZAK', 'WHOOSH'] as const;
+export type ComicWord = (typeof COMIC_WORDS)[number];
+
+const COMIC_WORD_SET: ReadonlySet<string> = new Set<string>(COMIC_WORDS);
+
+export function isComicWord(value: string): value is ComicWord {
+  return COMIC_WORD_SET.has(value);
+}
+
+/**
+ * The `burst` param's values: `none` (no star), `star` (the star, unlettered), or
+ * one of {@link COMIC_WORDS} in lower case (the star, lettered).
+ */
+export const BURSTS = ['none', 'star', 'pow', 'blam', 'krak', 'zzak', 'whoosh'] as const;
+export type Burst = (typeof BURSTS)[number];
+
+const BURST_SET: ReadonlySet<string> = new Set<string>(BURSTS);
+
+export function isBurst(value: unknown): value is Burst {
+  return typeof value === 'string' && BURST_SET.has(value);
+}
+
+/** A `burst` param → the word lettered on the star, or `null` for an unlettered one. */
+export function burstWord(burst: Burst): ComicWord | null {
+  if (burst === 'none' || burst === 'star') return null;
+  const word = burst.toUpperCase();
+  return isComicWord(word) ? word : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -310,14 +399,34 @@ export function isEffectShape(value: string): value is EffectShape {
  * five motes in one step, which is 10 of 8 — so without a second bucket the
  * feature would have been capped out by its own step on the day it shipped.
  * ---------------------------------------------------------------------------
+ *
+ * **The comic motion lane adds an eighth, and it is the only one** (report 15
+ * §5.1; D130 on branch `motion`): `streak`, a comic's SPEED LINES — a quad that
+ * trails from {@link Effect.at} directly away from {@link Effect.to} (where the
+ * thing is heading), turned about its own axis to face the camera, drawn with a
+ * texture of parallel ink-edged lines that scroll back along it with the cue's
+ * own `t` ({@link Effect.travel}) and never with a clock. It is counted against
+ * {@link MAX_LIVE_EFFECTS} like every full-size blended quad: the eight-object
+ * cap did not move for it.
  */
-export type EffectKind = 'glow' | 'ring' | 'beam' | 'particles' | 'text' | 'plate' | 'mote';
+export type EffectKind = 'glow' | 'ring' | 'beam' | 'particles' | 'text' | 'plate' | 'mote' | 'streak';
 
 export interface Effect {
   kind: EffectKind;
   at: AnchorRef;
-  /** `beam` and `mote`: the far end. `particles`: where a travelling cloud goes (T11). */
+  /**
+   * `beam` and `mote`: the far end. `particles`: where a travelling cloud goes (T11).
+   * `streak`: where the moving thing is HEADING — the lines trail the other way.
+   */
   to?: AnchorRef;
+  /**
+   * `streak` only: where the motion comes FROM. The lines lie along `from → to` —
+   * the motion's own direction, the vector the cue's offset travels — and trail
+   * from {@link Effect.at} (the body) back along it. Without it the direction is
+   * `at → to`, which flips once a body standing in front of its card has passed
+   * the anchor it dashes toward (measured in the workshop: the lines led the dash).
+   */
+  from?: AnchorRef;
   colour: string;
   /** 0…1 — opacity for most kinds, emission for `glow`. */
   strength: number;
@@ -339,6 +448,10 @@ export interface Effect {
   /** `particles` only: 0…1 through the burst. */
   burst?: number;
   /**
+   * `streak` also reads it: the lines' SCROLL phase, 0…1 — the cue's own `t`, so
+   * the lines stream back over the life of the lunge on the queue's virtual clock
+   * (pause it and they hang; on twos they step with the body).
+   *
    * `mote` only: 0…1 from {@link Effect.at} to {@link Effect.to} (report 13
    * §5.4).
    *
@@ -362,7 +475,9 @@ export interface Effect {
   arc?: number;
   /**
    * `glow` and `ring` only: the texture the quad is drawn with ({@link EffectShape}).
-   * Absent is `soft` for a glow and the plain annulus for a ring.
+   * Absent is `soft` for a glow and the plain annulus for a ring. **The comic lane**
+   * (D130): a ring also takes `splat` and `dots` (flat on the table), and a `plate`
+   * takes `dots` (the halftone flash); an ink shape is blended normally.
    */
   shape?: EffectShape;
   /**
@@ -377,6 +492,16 @@ export interface Effect {
    * he does. Ignored at any other anchor.
    */
   fit?: boolean;
+  /**
+   * `glow` with `shape: 'burst'` only: the word lettered across the star, one of
+   * the CLOSED {@link COMIC_WORDS} (D133). Lettering it ON the star rather than as
+   * a second `text` effect keeps a lettered impact to ONE of the eight blended
+   * slots — so when a crowded combat meets the cap, the damage NUMBER (the fact)
+   * is not the one refused.
+   */
+  word?: ComicWord;
+  /** `streak` only: how far behind {@link Effect.at} the lines trail, world units. */
+  length?: number;
 }
 
 /**
@@ -442,6 +567,14 @@ export interface CameraRequest {
    * for one — the game is over and the pull-back is the shot, not the move.
    */
   cut?: boolean;
+  /**
+   * **Which running cue asked** (`CueContext.key`) — read only for a SHAKE-ONLY
+   * request (no anchor to frame; D134 on branch `motion`). A cue re-asks on every
+   * frame of its impact window, and on a slow replay that window outlives the
+   * shake: the director takes one shake per key, so an impact shakes once however
+   * long its window is on screen.
+   */
+  key?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -638,6 +771,8 @@ export class NullStage implements Stage {
       if (op.effect?.text !== undefined) out.push(op.effect.text);
       if (op.effect?.colour !== undefined) out.push(op.effect.colour);
       if (op.effect?.shape !== undefined) out.push(op.effect.shape);
+      // The comic lane's lettering (D133): a word from a closed list, and the net reads it.
+      if (op.effect?.word !== undefined) out.push(op.effect.word);
       if (op.offset?.tint != null) out.push(op.offset.tint);
       if (op.offset?.glowColour != null) out.push(op.offset.glowColour);
       if (op.clip !== undefined) {
@@ -679,6 +814,16 @@ export interface CueContext {
   key: string;
   /** `prefers-reduced-motion: reduce` — no shake, no camera, no particles. */
   reducedMotion: boolean;
+  /**
+   * **The comic motion vocabulary is on** (D135 on branch `motion`): bursts,
+   * lettering, splats, halftone dots, speed lines, the hologram-to-ink summon and
+   * the impact shakes. Stamped at enqueue from the queue's setting (`?fx=`, the
+   * cue strip's *comic FX*), exactly as `reducedMotion` is. **Absent or `false`
+   * is the film as it was before the lane** — every comic branch in `registry.ts`
+   * is behind it, which is what makes the A/B honest and keeps every older test's
+   * context literal meaning what it meant.
+   */
+  comic?: boolean;
 }
 
 /**

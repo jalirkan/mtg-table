@@ -586,6 +586,9 @@ test('composeInto is composeOffsets ∘ offsetFrom, field for field', () => {
     { glow: 0.8, glowColour: '#00ff88' },
     { glowColour: null },
     { dissolve: 0.35 },
+    // The comic motion lane's one new field (D131): it multiplies, like scale.
+    { materialize: 0.4 },
+    { materialize: 0 },
     {
       dx: -2,
       dy: 0.5,
@@ -600,6 +603,7 @@ test('composeInto is composeOffsets ∘ offsetFrom, field for field', () => {
       glow: 0.3,
       glowColour: '#ffffff',
       dissolve: 0.7,
+      materialize: 0.25,
     },
   ];
 
@@ -630,7 +634,7 @@ test('composeInto is composeOffsets ∘ offsetFrom, field for field', () => {
 
   // And `resetOffset` really is identity again, so a pooled object cannot carry
   // last frame's glow into this one.
-  const dirty: Offset = { ...IDENTITY, dx: 9, glow: 1, tint: '#123456', dissolve: 0.5 };
+  const dirty: Offset = { ...IDENTITY, dx: 9, glow: 1, tint: '#123456', dissolve: 0.5, materialize: 0.1 };
   resetOffset(dirty);
   assert.deepEqual(dirty, { ...IDENTITY });
 });
@@ -906,4 +910,177 @@ test('cues: under reduced motion the slice-3 beats move nothing they should not'
     assert.ok(!camera, `${id} moved the camera under reduced motion`);
     assert.equal(stage.clips.size, 0, `${id} posed a figure under reduced motion`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// The comic motion lane (report 15 §5; D130–D136 on branch `motion`)
+// ---------------------------------------------------------------------------
+
+test('validate: the comic lane’s params are named, typed and ranged — and the word list is closed', () => {
+  const cueIds = new Set(REGISTRY.keys());
+  const errorsOf = (params: Record<string, unknown>): string =>
+    validateCues({ version: 1, cards: { X: { cast: { cue: 'fx.glow', ms: 100, params } } }, archetypes: {} }, { cueIds })
+      .errors.map((e) => `${e.where}: ${e.message}`)
+      .join('\n');
+  const bad: Array<[Record<string, unknown>, string]> = [
+    [{ burst: 'bam' }, 'param burst must be one of none, star, pow, blam, krak, zzak, whoosh'],
+    [{ burst: 'POW' }, 'param burst must be one of'],
+    [{ burst: 'Nick Fury' }, 'param burst must be one of'],
+    [{ burst: 1 }, 'param burst must be one of'],
+    [{ streaks: 3 }, 'param streaks must be within [0, 2]'],
+    [{ splat: -1 }, 'param splat must be within [0, 2]'],
+    [{ dots: 'lots' }, 'param dots must be a number'],
+    [{ inkFrom: 2 }, 'param inkFrom must be within [0, 1]'],
+    [{ burstColour: 'gold' }, 'param burstColour must be #rrggbb'],
+    [{ streakColour: '#fff' }, 'param streakColour must be #rrggbb'],
+    [{ word: 'POW' }, 'unknown param "word"'],
+  ];
+  for (const [params, expected] of bad) {
+    const messages = errorsOf(params);
+    assert.ok(messages.includes(expected), `${JSON.stringify(params)} was not refused with "${expected}":\n${messages}`);
+  }
+  for (const burst of ['none', 'star', 'pow', 'blam', 'krak', 'zzak', 'whoosh']) assert.equal(errorsOf({ burst }), '', burst);
+  assert.equal(
+    errorsOf({ burst: 'krak', burstColour: '#ffd84a', streaks: 2, streakColour: '#eef3ff', splat: 1.5, dots: 0, inkFrom: 0.3 }),
+    '',
+  );
+});
+
+/** Every comic param on, plus the event facts that reach the comic beats. */
+const COMIC_PARAMS = {
+  ...SLICE3_PARAMS,
+  burst: 'krak',
+  burstColour: '#ffd84a',
+  streaks: 2,
+  streakColour: '#eef3ff',
+  splat: 2,
+  dots: 2,
+  inkFrom: 0.2,
+  // The facts the lane reads: an arrival, a death, a foe struck, a laser's band.
+  toZone: 'battlefield',
+  fromZone: 'hand',
+  strikeFoe: true,
+  lunge: true,
+} as const;
+
+test('cues: every registered cue still decays to identity with comic FX and every comic param on', () => {
+  for (const fromZone of ['hand', 'battlefield'] as const) {
+    for (const burst of ['star', 'pow', 'none'] as const) {
+      for (const [id, impl] of REGISTRY) {
+        const stage = new NullStage();
+        const ctx = {
+          id,
+          targets: [1, 5],
+          players: [0, 1],
+          params: { ...COMIC_PARAMS, fromZone, burst, lock: false },
+          ms: 500,
+          key: `k-${id}`,
+          reducedMotion: false,
+          comic: true,
+        };
+        for (let t = 0; t <= 1.0001; t += 0.05) impl.apply(ctx, Math.min(1, t), stage);
+        impl.end(ctx, stage);
+        const where = `${id} (from ${fromZone}, burst ${burst})`;
+        assert.equal(stage.offsets.size, 0, `${where}: left ${String(stage.offsets.size)} offsets behind`);
+        assert.equal(stage.effects.size, 0, `${where}: left ${String(stage.effects.size)} effects behind`);
+        assert.equal(stage.clips.size, 0, `${where}: left ${String(stage.clips.size)} clips behind`);
+        // …and its last frame, before `end()`, is identity on every offset it wrote.
+        const last = new NullStage();
+        impl.apply(ctx, 1, last);
+        for (const [card, offset] of last.offsets) {
+          assert.equal(offset.materialize, 1, `${where}: card ${String(card)} is not materialised at t = 1`);
+        }
+      }
+    }
+  }
+});
+
+test('cues: the comic beats land on the body the event names, and are INK', () => {
+  const run = (id: string, t: number, params: Record<string, string | number | boolean>, targets = [1]): NullStage => {
+    const stage = new NullStage();
+    REGISTRY.get(id)!.apply({ id, targets, players: [0, 1], params, ms: 600, key: 'k', reducedMotion: false, comic: true }, t, stage);
+    return stage;
+  };
+  // Lethal damage: a lettered POW on the struck figure, by default.
+  const lethal = run('damage.lethal', 0.2, { amount: 4, sourceId: 2 }).effects.get('k:bang');
+  assert.equal(lethal?.shape, 'burst');
+  assert.equal(lethal?.word, 'POW');
+  assert.deepEqual(lethal?.at, { kind: 'figure', id: 1, at: 0.58, fwd: 0, side: 0 });
+  // A plain hit: the star, unlettered; a row may letter it.
+  const hit = run('damage.hit', 0.2, { amount: 1 }).effects.get('k:bang');
+  assert.equal(hit?.shape, 'burst');
+  assert.equal(hit?.word, undefined);
+  assert.equal(run('damage.hit', 0.2, { amount: 1, burst: 'pow' }).effects.get('k:bang')?.word, 'POW');
+  assert.equal(run('damage.hit', 0.2, { amount: 1, burst: 'none' }).effects.get('k:bang'), undefined);
+  // A death from the battlefield: a splat under the falling body; from anywhere else, none.
+  const died = run('zone.dissolve', 0.4, { fromZone: 'battlefield' }).effects.get('k:splat');
+  assert.equal(died?.shape, 'splat');
+  assert.equal(died?.kind, 'ring');
+  assert.equal(died?.at.kind, 'figure');
+  assert.equal(run('zone.dissolve', 0.4, { fromZone: 'hand' }).effects.get('k:splat'), undefined, 'a discard is not a death');
+  assert.equal(run('zone.dissolve', 0.4, { fromZone: 'stack' }).effects.get('k:splat'), undefined, 'a spell resolving is not a death');
+  // A player struck: the plate is a halftone screen.
+  assert.equal(run('damage.player', 0.3, { amount: 2 }).effects.get('k:plate')?.shape, 'dots');
+  // A dash: speed lines along the dash's own vector, rest → lane, trailing the body.
+  const streak = run('attack.lunge', 0.2, { defenderKind: 'player', defenderId: 1 }).effects.get('k:streak');
+  assert.equal(streak?.kind, 'streak');
+  assert.deepEqual(streak?.from, { kind: 'card', id: 1 });
+  assert.deepEqual(streak?.to, { kind: 'combat', player: 0 });
+  assert.equal(run('attack.lunge', 0.2, { streaks: 0 }).effects.get('k:streak'), undefined, 'streaks: 0 draws none');
+  // The Doombot's laser is lettered where the band says it lands.
+  const zap = run('attack.jet', 0.5, { laser: true, burst: 'zzak', defenderKind: 'player', defenderId: 1 }).effects.get('k:bang');
+  assert.deepEqual(zap?.at, { kind: 'player', id: 1 });
+  assert.equal(zap?.word, 'ZZAK');
+  // An arrival materialises from hologram; a card moving within the battlefield does not.
+  assert.ok(run('zone.enters', 0.2, { toZone: 'battlefield', fromZone: 'hand' }).offsets.get(1)!.materialize < 0.2);
+  assert.equal(run('zone.enters', 0.2, { toZone: 'battlefield', fromZone: 'battlefield' }).offsets.get(1)?.materialize ?? 1, 1);
+  assert.ok(run('zone.enters', 0.2, { toZone: 'battlefield', fromZone: 'hand', inkFrom: 0.6 }).offsets.get(1)!.materialize >= 0.6);
+  // Classic: the same calls draw none of it.
+  const classic = new NullStage();
+  REGISTRY.get('damage.lethal')!.apply({ id: 'damage.lethal', targets: [1], players: [], params: { amount: 4 }, ms: 600, key: 'k', reducedMotion: false }, 0.2, classic);
+  assert.equal(classic.effects.get('k:bang'), undefined);
+});
+
+test('cues: under reduced motion the comic lane shakes nothing, streaks nothing and snaps the summon', () => {
+  for (const [id, impl] of REGISTRY) {
+    const stage = new NullStage();
+    const ctx = { id, targets: [1], players: [0, 1], params: { ...COMIC_PARAMS, lock: false }, ms: 150, key: 'k', reducedMotion: true, comic: true };
+    let camera = false;
+    for (let t = 0; t <= 1.0001; t += 0.1) {
+      impl.apply(ctx, Math.min(1, t), stage);
+      if (stage.camera !== null) camera = true;
+      for (const effect of stage.effects.values()) {
+        assert.notEqual(effect.kind, 'streak', `${id} drew speed lines under reduced motion`);
+        assert.notEqual(effect.kind, 'particles', `${id} drew particles under reduced motion`);
+      }
+      for (const offset of stage.offsets.values()) assert.equal(offset.materialize, 1, `${id} materialised under reduced motion`);
+    }
+    assert.ok(!camera, `${id} moved or shook the camera under reduced motion`);
+  }
+});
+
+test('cues: an impact shake is shake-only, priority 0, keyed to its cue — never a move', () => {
+  let shakes = 0;
+  for (const [id, impl] of REGISTRY) {
+    const requests: Array<Parameters<NullStage['requestCamera']>[0]> = [];
+    class Spy extends NullStage {
+      override requestCamera(request: Parameters<NullStage['requestCamera']>[0]): void {
+        requests.push(request);
+        super.requestCamera(request);
+      }
+    }
+    for (const fromZone of ['battlefield', 'hand'] as const) {
+      const stage = new Spy();
+      const ctx = { id, targets: [1], players: [0, 1], params: { ...COMIC_PARAMS, fromZone, strikeCard: 2, lock: false }, ms: 600, key: `k-${id}`, reducedMotion: false, comic: true };
+      for (let t = 0; t <= 1.0001; t += 0.05) impl.apply(ctx, Math.min(1, t), stage);
+    }
+    for (const request of requests) {
+      if (request === null || request.frame.length > 0) continue;
+      shakes += 1;
+      assert.equal(request.priority, 0, `${id}: a shake that could preempt a move`);
+      assert.equal(request.key, `k-${id}`, `${id}: a shake with no cue key`);
+      assert.ok(request.shake > 0 && request.shake <= 1);
+    }
+  }
+  assert.ok(shakes > 0, 'no cue asked for an impact shake — the scan scanned nothing');
 });

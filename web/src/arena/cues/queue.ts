@@ -27,6 +27,7 @@
 import type { GameEvent, GameStateBody } from '../../protocol.ts';
 import type { ClientState } from '../../reduce.ts';
 import { isDeathCue } from '../figures/clips.ts';
+import { COMIC_FX_DEFAULT, ON_TWOS_DEFAULT, TWOS_MS, onTwos } from './motion.ts';
 import { cuesFor } from './resolve.ts';
 import type { CueContext, CueImpl, CueRegistry, Stage } from './stage.ts';
 import { EMPTY_CUE_DATA, type Cue, type CueData, type Step } from './types.ts';
@@ -413,6 +414,17 @@ export interface CueQueueOptions {
    * {@link REDUCED_MOTION_SCALE} and every shake and camera move is dropped.
    */
   reducedMotion?: boolean;
+  /**
+   * **The comic motion vocabulary** (`motion.ts`; D135 on branch `motion`),
+   * stamped into every cue's context at enqueue. Absent is {@link COMIC_FX_DEFAULT}.
+   */
+  comic?: boolean;
+  /**
+   * **On twos** (`motion.ts`'s `onTwos`; D132): each cue's progress quantised to
+   * twelve drawings a second before its `apply` sees it. Absent is
+   * {@link ON_TWOS_DEFAULT}; reduced motion turns it off whatever this says.
+   */
+  onTwos?: boolean;
   /** Diagnostics. Called at most once per distinct message. */
   onNote?: (message: string) => void;
 }
@@ -433,6 +445,10 @@ export class CueQueue {
   reducedMotion: boolean;
 
   #scheduled: Scheduled[] = [];
+  /** The comic motion vocabulary — stamped into each cue's context at enqueue (D135). */
+  #comic: boolean;
+  /** On twos, as set; {@link twosActive} is what `#drive` obeys (D132). */
+  #onTwos: boolean;
   #virtualNow = 0;
   #lastReal: number | null = null;
   #endOfQueue = 0;
@@ -452,6 +468,8 @@ export class CueQueue {
     this.data = options.data ?? EMPTY_CUE_DATA;
     this.mode = options.mode ?? 'replay';
     this.reducedMotion = options.reducedMotion ?? false;
+    this.#comic = options.comic ?? COMIC_FX_DEFAULT;
+    this.#onTwos = options.onTwos ?? ON_TWOS_DEFAULT;
     this.#onNote = options.onNote ?? null;
   }
 
@@ -551,6 +569,29 @@ export class CueQueue {
   }
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
+  }
+
+  /** The comic motion vocabulary is on (D135). Takes effect from the next batch, as reduced motion does. */
+  get comic(): boolean {
+    return this.#comic;
+  }
+  setComic(comic: boolean): void {
+    this.#comic = comic;
+    this.#changed();
+  }
+
+  /** On twos, as SET — the cue strip's checkbox (D132). */
+  get onTwos(): boolean {
+    return this.#onTwos;
+  }
+  /** On twos as it is PLAYED: the setting, and never under reduced motion. */
+  get twosActive(): boolean {
+    return this.#onTwos && !this.reducedMotion;
+  }
+  /** Takes effect on the next frame: a running cue simply starts (or stops) stepping. */
+  setOnTwos(on: boolean): void {
+    this.#onTwos = on;
+    this.#changed();
   }
 
   /**
@@ -666,6 +707,7 @@ export class CueQueue {
             ms,
             key: `q${String(this.#cueSeq++)}`,
             reducedMotion: this.reducedMotion,
+            comic: this.#comic,
           },
           start,
           ms,
@@ -776,13 +818,21 @@ export class CueQueue {
   #drive(): void {
     if (this.#scheduled.length === 0) return;
     const now = this.#virtualNow;
+    // **On twos** (D132): one drawing is a twelfth of a second of SCREEN time, so in
+    // virtual milliseconds it is that times the playback speed — a 4× replay is
+    // still twelve drawings a second, and a 0.5× one is not twenty-four.
+    const twos = this.twosActive;
+    const stepMs = TWOS_MS * this.#speed;
     let anyDone = false;
     for (const item of this.#scheduled) {
       if (item.done || now < item.start) continue;
       item.started = true;
       const progress = item.ms <= 0 ? 1 : Math.min(1, (now - item.start) / item.ms);
+      // The cue is handed its progress ON TWOS; whether it has ENDED is still read
+      // off the real progress, so stepping can never hold a cue past its length.
+      const shown = twos ? onTwos(progress, item.ms, stepMs) : progress;
       try {
-        item.impl.apply(item.ctx, progress, this.stage);
+        item.impl.apply(item.ctx, shown, this.stage);
       } catch (err) {
         this.note(`cue "${item.cue.id}" threw: ${(err as Error).message}`);
         item.done = true;

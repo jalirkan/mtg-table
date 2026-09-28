@@ -77,7 +77,10 @@ import {
   type Shot,
   type ViewId,
 } from '../src/arena/camera.ts';
-import type { AnchorRef, CameraRequest } from '../src/arena/cues/stage.ts';
+import { CueQueue } from '../src/arena/cues/queue.ts';
+import { REGISTRY } from '../src/arena/cues/registry.ts';
+import { NullStage, type AnchorRef, type CameraRequest } from '../src/arena/cues/stage.ts';
+import { validateCues } from '../src/arena/cues/validate.ts';
 import duelistsJson from '../src/arena/figures/duelists.json' with { type: 'json' };
 import {
   duelistBox,
@@ -1309,4 +1312,121 @@ test('camera: the duelists are never in the solver’s required set (report 13 �
   for (const view of VIEWS) assert.equal(view.seatSafe, keepsSeat(view.pose, SEAT_GEOMETRY));
   const source = readFileSync(fileURLToPath(new URL('../src/arena/camera.ts', import.meta.url)), 'utf8');
   assert.ok(!/duelist/i.test(source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')), 'camera.ts names a duelist in code');
+});
+
+// ---------------------------------------------------------------------------
+// The comic motion lane's impact shakes (report 15 §5.1; D134 on branch `motion`)
+// ---------------------------------------------------------------------------
+
+/** A shake-only request, as the lane's `impactShake` makes one. */
+function impact(key: string, over: Partial<CameraRequest> = {}): CameraRequest {
+  return { frame: [], padding: 0, tilt: 0, shake: 0.3, priority: 0, ms: 260, key, ...over };
+}
+
+test('camera: an impact shake is one per cue, never re-aims, never preempts a move, and is bounded (D134)', () => {
+  const nowhere = world({ resolve: () => null });
+  const director = new CameraDirector();
+  const home = director.home;
+  assert.equal(director.request(impact('q1'), 0, nowhere), 'taken');
+  const frame = director.tick(100);
+  assert.deepEqual(frame.pose, poseFromOrbit(home), 'a shake re-aimed the camera');
+  assert.ok(Math.hypot(...frame.shake) > 0 && Math.hypot(...frame.shake) <= SHAKE.maxAmplitude * Math.SQRT2 + 1e-9);
+  assert.deepEqual(director.home, home, 'a shake moved home');
+  // Over within SHAKE.maxMs, and the camera is handed straight back.
+  assert.equal(director.tick(100 + SHAKE.maxMs).holding, false);
+  assert.equal(director.active, false);
+  // The same cue re-asking on a later frame of its window does not shake again…
+  assert.equal(director.request(impact('q1'), 600, nowhere), 'dropped', 'one impact shook twice');
+  // …and the next cue's impact does.
+  assert.equal(director.request(impact('q2'), 610, nowhere), 'taken');
+
+  // Priority 0: a live move is never preempted — not a swoop, not a view change.
+  const swooping = new CameraDirector();
+  assert.equal(swooping.request(request({ priority: 1 }), 0, world()), 'taken');
+  assert.equal(swooping.request(impact('q3'), 50, nowhere), 'dropped');
+  const viewing = directorOn('table');
+  viewing.applyView({ view: 'side', spectator: true, pressed: true, reducedMotion: false, now: 1000 });
+  assert.equal(viewing.request(impact('q4'), 1100, nowhere), 'dropped', 'a shake cut into a view change');
+});
+
+test('camera: an impact shake obeys the director’s rules — never within 5 s of the user’s drag, never while the engine waits, never under reduced motion', () => {
+  const nowhere = world({ resolve: () => null });
+  const director = new CameraDirector();
+  director.noteUserInput(1000);
+  assert.equal(director.request(impact('q1'), 1001, nowhere), 'dropped');
+  assert.equal(director.request(impact('q1'), 1000 + DWELL.userOverrideMs - 1, nowhere), 'dropped');
+  assert.equal(director.request(impact('q1'), 1000 + DWELL.userOverrideMs, nowhere), 'taken', 'the window closed and the shake still dropped');
+  const spectating = directorOn('director', true);
+  spectating.noteUserInput(2000);
+  assert.equal(spectating.request(impact('q2'), 2000 + SPECTATOR_DWELL.userOverrideMs - 1, nowhere), 'dropped');
+  const waiting = new CameraDirector();
+  assert.equal(waiting.request(impact('q3'), 0, world({ resolve: () => null, awaitingHuman: true })), 'dropped');
+  assert.equal(waiting.request(impact('q3'), 0, world({ resolve: () => null, reducedMotion: true })), 'dropped');
+  // The director's shot is untouched by a shake: no cut, no pending beat consumed.
+  const directed = directorOn('director', true);
+  const shot = directed.shot;
+  assert.equal(directed.request(impact('q5'), 3000, nowhere), 'taken');
+  directed.tick(3100);
+  assert.equal(directed.shot, shot, 'a shake changed the director’s shot');
+  assert.equal(directed.stats.cuts, 0);
+});
+
+test('camera: the auto director over the corpus with the comic lane’s shakes in play — the shot rules hold and no shake cuts', () => {
+  const cues = validateCues(
+    JSON.parse(readFileSync(fileURLToPath(new URL('../src/arena/cues/cues.json', import.meta.url)), 'utf8')) as unknown,
+    { cueIds: new Set(REGISTRY.keys()) },
+  ).data;
+  let shakesTaken = 0;
+  let shakesDropped = 0;
+  let files = 0;
+  for (const file of fixtureFiles()) {
+    files += 1;
+    const director = directorOn('director', true);
+    const asked: CameraRequest[] = [];
+    class Recorder extends NullStage {
+      override requestCamera(request: CameraRequest | null): void {
+        if (request !== null) asked.push(request);
+        super.requestCamera(request);
+      }
+    }
+    const stage = new Recorder();
+    const queue = new CueQueue({ stage, registry: REGISTRY, data: cues, mode: 'replay', comic: true });
+    const log = parseFrameLog(readFileSync(FIXTURES + file, 'utf8'));
+    let state = initialState(log.header);
+    let previous: GameStateBody | null = null;
+    let now = 0;
+    const shots: Shot[] = [director.shot!];
+    for (const frame of log.frames) {
+      state = reduce(state, frame);
+      if (frame.type !== 'state') continue;
+      const found = beatsOf(state.events, lookupFor(state.board, previous, viewerIdOf(state)));
+      director.direct(found, now);
+      queue.enqueueBatch(state.events, state, undefined, previous);
+      previous = state.board;
+      // One replay frame's worth of film (1×, 400 ms), in 25 ms ticks: every request
+      // the cues make is handed to the director at the moment it is made.
+      for (let tick = 0; tick < BASE_FRAME_INTERVAL_MS; tick += 25) {
+        now += 25;
+        queue.tick(now);
+        for (const request of asked.splice(0)) {
+          const homeBefore = director.home;
+          const shotBefore = director.shot;
+          const outcome = director.request(request, now, world({ resolve: () => null }));
+          if (request.frame.length === 0 && request.key !== undefined) {
+            if (outcome === 'taken') shakesTaken += 1;
+            else shakesDropped += 1;
+            assert.deepEqual(director.home, homeBefore, `${file}: a shake moved home`);
+            assert.equal(director.shot, shotBefore, `${file}: a shake changed the shot`);
+          }
+        }
+        director.tick(now);
+        if (director.shot !== null && director.shot !== shots[shots.length - 1] && director.shot.view !== shots[shots.length - 1]!.view) {
+          shots.push(director.shot);
+        }
+      }
+    }
+    assertRules(shots, `${file} (with shakes)`);
+  }
+  console.log(`  director with the comic lane's shakes: ${String(files)} recordings · ${String(shakesTaken)} shakes taken · ${String(shakesDropped)} dropped`);
+  assert.ok(shakesTaken > 0, 'no impact shake was ever taken — the test tested nothing');
 });

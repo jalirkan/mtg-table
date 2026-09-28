@@ -7083,6 +7083,234 @@ figure and a card look alike. A mask target or a second scene render (report 09
 
 ---
 
+## D130 — Comic VFX are three INK shapes on the fixed pool and one `streak` kind; ink is blended normally, per slot; the pool goes 45 → 49
+
+**2026-09-28** (*the comic motion lane, branch `motion`; numbered in the lane's
+reserved range D130–D139 and renumbered contiguously at merge.* Within **D50**,
+**D56**, **D60** and **D79**; the brief is
+[`docs/research/15-art-direction.md`](docs/research/15-art-direction.md) §5 and
+§9.2.)
+
+**Decision.** A comic's motion vocabulary is graphic shape, not soft light, so
+the effect kit gains:
+
+- **three shapes** on the slots that already exist — `burst` (a jagged
+  twelve-point impact star with an ink outline and a halftone band, optionally
+  lettered, **D133**), `splat` (an ink splash with droplets, flat on the table:
+  the dying card's colour as its body, ink as its outline) and `dots` (a Ben-Day
+  dot burst). A `ring` takes `splat` and `dots`, a `plate` takes `dots`, a `glow`
+  takes `burst`. They cost no slot and no draw call a glow would not;
+- **one kind**, `streak` — speed lines: a quad that trails from the body back
+  along the motion's own vector (`from → to`, the vector the cue's offset
+  travels), turned about its length to face the camera, its lines scrolled by
+  the cue's own `t` on the slot's own clone of one canvas. **Four** slots, counted
+  against `MAX_LIVE_EFFECTS`, so the pool is **49** and the eight-slot cap did not
+  move;
+- **ink is painted, light is added**: a slot drawing an ink shape is switched to
+  `NormalBlending` at bind and back to additive for the next soft glow. Blending
+  is render state in three 0.186, not part of the program key, so no program is
+  added (measured: 15 programs in a classic and a comic frame alike).
+
+Where each fires by default, under comic FX (**D135**): a star on every struck
+body (lettered POW on lethal damage), on a block's contact and on a strike's
+target; a splat under every creature that dies from the battlefield (a discard
+or a spell resolving into the graveyard is not a death); a halftone plate behind
+a struck player's life; speed lines on every dash (the lunges, the jet, the
+aegis, the shrink, Fury's charge, a block, the Helicarrier's descent).
+
+**Why.** Report 15 §1.3's cause 9: every effect the arena had was an additive
+radial gradient. The shapes are canvases drawn once per page like T11's; the
+kind is the one thing a shape on a billboard could not draw (lines ALONG a
+motion). The pool was grown by exactly the brief's budget.
+
+**Two renderer fixes the shapes exposed.** A star is drawn in front of the body
+it names (pulled toward the lens by half its size — the figure cut its lettering
+in the first cut), and a ring at a *departing* flier's `figure` anchor is now on
+the ground under it (`#groundOf`, `#fitOf` read the departing body): the first
+splat under `g1`@359's Giant-Sized Flying Ant hung inside its falling body.
+
+**Rejected.** Sprite sheets from a CC0 pack (the canvases are enough, and a pack
+is a download and a provenance row); a second pool for the ink shapes; more
+`streak` slots than the brief budgeted (a fifth attacker's lines degrade, as the
+pool always has); additive speed lines (they wash out on a light stage).
+
+## D131 — The hologram-to-ink summon is `Offset.materialize`; the frame loop writes it into LOOK's `uMaterialize` as a number (on the spike's material, `uLook × materialize`)
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+Report 15 §2.3 and §5.3; within **D50** and **D97**'s "a number the frame loop
+writes".)
+
+**Decision.** `Offset` gains `materialize` (identity **1**, composed by product
+like `scale`). The cue builder ramps it `0 → 1` on every cue an ARRIVAL resolves
+to — read off the zone event's own `toZone: battlefield` with a `fromZone` that is
+not the battlefield — so `zone.enters`, the Helicarrier's fly-in, Fury's agents,
+a scientist's bench and a land's rise all summon; `inkFrom` (0…1) is where the ramp
+starts. `CueRunner.applyFigures` hands it to the figure's material through
+`applyMaterialize`:
+
+- **the handle is `uMaterialize`**, the uniform Lane LOOK's figure material binds
+  for exactly this (branch `look`, `7d91dcd`: `figureMaterial.ts` declares
+  `uMaterialize: { value: 1 }`, shades by `uLook * uMaterialize`, and its liveness
+  clause keeps `uLook` out of `CueRunner.tsx`). When the material carries it, the
+  loop writes the offset's number there and nothing else, and only when it changes;
+- **on this branch's base** — the spike's `holoMaterial.ts` (`c81f674`), which has
+  no such uniform — a fallback shows the summon anyway: the loop **holds** the
+  value the commit wrote (`FigureRig.lookHeld`), writes `uLook = held ×
+  materialize` while the ramp runs and puts the held value back on the frame it is
+  over; a commit that lands mid-summon (the workshop's holo · comic switch) is seen
+  because the uniform no longer holds the loop's last write (the product is floored
+  at 0.001, so it never equals a look a commit writes). A rig no summon touches is
+  never written. **The fallback is deleted at the merge with LOOK** (PLAN, the
+  lane's follow-up 2): it is dead code once every figure material has the handle,
+  and it is the only `uLook` in `CueRunner.tsx`.
+
+`zone.dissolve` from the battlefield ramps it back `1 → 0` (report 15's reverse
+summon) — but the departing BODY is `FigureLayer`'s `DepartureField`, which is
+LOOK's, so the cue half is written and the render half is a follow-up (PLAN).
+
+**Why.** The brief names the offset and the uniform, and LOOK bound the uniform in
+parallel. Under the hologram (`uLook` 0) the product is 0 whatever the ramp says,
+so the summon is invisible there by construction, which is the brief's intent;
+because it is an offset, `replay-cues.test.ts`'s "the offset map is empty after
+every batch" covers it with no line of its own. Under reduced motion no ramp is
+written — the figure simply is what its pose says (report 15 §9.2's "snaps to 1").
+The fallback exists so the summon can be judged in this branch's workshop
+(`?look=comic`) before the lanes merge.
+
+**Rejected.** Adding `uMaterialize` to the spike's `holoMaterial.ts` here: that file
+is LOOK's (report 15 §9.4), and LOOK has already added it to the material that
+replaces it. Writing only `uMaterialize` with no fallback: correct after the merge,
+but the summon would be invisible on this branch, and the workshop is the judging
+tool. Writing `uLook` from a layout effect: a summon is a transition, and a
+transition is the frame loop's.
+
+## D132 — On twos is a quantisation of each cue's own progress: twelve drawings a second of screen time, at least four per cue, off under reduced motion, a switch
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+Report 15 §3.7; within **D57** and **D72**.)
+
+**Decision.** `cues/motion.ts`'s `onTwos(t, ms, stepMs)` floors a cue's linear
+progress to the start of its drawing, `t = 1` exactly at the end, with
+`steps = max(4, round(ms / stepMs))`. The queue hands every cue its progress
+through it (`#drive`), with `stepMs = 1000/12 × speed`, so a 4× replay is still
+twelve drawings a second of screen time; whether a cue has ENDED is still read off
+the real progress, so stepping can never hold a cue past its length. It is **on
+by default**, off whatever the setting says under `prefers-reduced-motion`, and a
+switch: `?twos=0|1`, the arena's cue strip and the workshop's queue bar
+(`CueQueue.setOnTwos`, `twosActive`).
+
+**Why.** The brief puts it in `driveClips` as a quantised `action.time`; stepping
+the cue's progress instead steps everything the cue drives — the offset, the
+clip, the effects, the lines' scroll — in one place, and it is still a pure
+function of `t` that pauses, scrubs, skips and compresses with the cue (no clock,
+D72). The four-drawing floor is measured: a 180 ms tap under the 250 ms live
+budget is 60 ms long and at 83 ms a drawing it would show only its first frame.
+
+**Rejected.** Quantising only the clip lane (offsets would glide while bodies
+step); a 12 fps timer (a second clock); stepping the camera or the idle breathing
+(Spider-Verse keeps its camera on ones, and neither is a cue).
+
+## D133 — The onomatopoeia is a CLOSED list of five words, lettered ON the burst — one effect, never a `text`
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+Report 15 §5.1.)
+
+**Decision.** `COMIC_WORDS` is `POW`, `BLAM`, `KRAK`, `ZZAK`, `WHOOSH`, in
+`cues/stage.ts`, and nothing else. A cue file names one through the `burst`
+param (`none | star | pow | blam | krak | zzak | whoosh`); the word reaches the
+renderer as `Effect.word` on a `glow` with `shape: 'burst'`, and `effects.ts`
+letters it across the star (one canvas per word, drawn the first time a game uses
+it). `replay-cues.test.ts`'s net asserts every lettered burst in the corpus carries
+a list word and every `text` effect is a number or one of the fixed texts the
+arena has always drawn (negative-controlled).
+
+**Why.** The brief puts the word in a second `text` effect. One lettered star is
+ONE of the eight blended slots instead of two, so when a crowded combat meets the
+cap the damage NUMBER — the fact — is not the one refused, and the lettering reads
+as comic lettering (heavy, leaning, ink-outlined) rather than the numbers' font.
+
+**Rejected.** Free text (a word composed from anything is a name by another
+route); words as `EffectShape`s (five more names in a closed list that is about
+shapes).
+
+## D134 — Impact shakes are shake-only requests at priority 0, one per cue; under comic FX a lethal blow jolts instead of pushing in
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+Report 09 §8 rule 7, **D69**–**D71**.)
+
+**Decision.** A strike landing, a Helicarrier Strike's beam, a creature dying from
+the battlefield and (under comic FX) lethal damage ask `camera.ts` for the shake
+it already has: a request with nothing to frame, `shake ≤ 1` of `SHAKE`'s bound, at
+**priority 0**, carrying the cue's key. So it never preempts a move (a swoop, a
+view change, a director's cut), and the director drops it under reduced motion,
+while the engine waits on the human and for five seconds after the user's own
+drag — all rules it already had. `CameraRequest.key` is new, and read only for a
+shake-only request: **one shake per cue** however long its impact window stays on
+screen at a slow replay speed. `damage.lethal`'s old push-in framed the CARD, which
+by the snapshot that says so is in the graveyard — the camera swung to the pile
+while the star landed on the falling body (`g1`@359, measured) — so under comic FX
+it is replaced by the jolt; classic keeps it (**D135**).
+
+**Why.** "Using the shake that already exists", within the director's rules: the
+only line `camera.ts` gained is the per-key dedupe. `camera.test.ts` runs the
+auto director over the corpus with the shakes in play and holds its shot rules.
+
+**Rejected.** A shake channel that rides any live move (a second camera state);
+shaking on every hit (noise; a hit has its star).
+
+## D135 — Comic FX is a switch stamped into each cue at enqueue; off is the film before the lane, op for op; on by default
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*)
+
+**Decision.** `CueContext.comic` is stamped at enqueue from the queue's setting
+(`?fx=classic|comic`, the cue strip's *comic FX*, the workshop's queue bar), as
+`reducedMotion` is, and every beat of the lane — bursts, lettering, splats, dots,
+speed lines, the summon, the impact shakes, the lethal jolt — is behind it. A cue's
+comic-only effect keys are declared apart (`CueDef.comic`), and `end()` releases
+them only for a comic cue, so with comic FX off a cue's op log is exactly the one
+it had before the lane: **measured over all 19 committed recordings, 310,369
+`NullStage` ops, sha256 `3710d0b4…`, identical to `c81f674`'s engine** (a one-off
+check against a `git archive` of the base; `motion.test.ts` holds the corpus to
+"no comic op with comic FX off"). It is **on by default** — the lane's deliverable
+— and reads over the hologram's dark felt as well as over report 15's comic stage.
+
+**Why.** The workshop is the judging tool, and a judgement needs an honest A/B:
+the before is not a memory of the old build but the same build with one switch.
+
+**Rejected.** Tying comic FX to LOOK's `?look=comic` (the two are judged
+separately, and the vocabulary reads over either look); a build-time flag.
+
+## D136 — The per-card upgrades key off an event about THAT card; an attacker's word is its own flourish, never a hit on its defender
+
+**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+`cues.json`'s one rule; **D82**, **D89**.)
+
+**Decision.** `cues.json` gives the deck's headline cards the new vocabulary, each
+row's `_motion` note naming the event: Fury, Peggy and a lone Agents attacker a POW
+in front of their own body at the top of the dash (with speed lines, the squad's
+the densest); Agent 13's two shots lettered BLAM on her muzzle; Quake's resolution
+KRAK where the fissure lands (the previous frame's stack aim, **D89**); Wasp's
+sting ZZAK where her beam lands and her flight on lines; Ant-Man's thin lines and
+a POW when a hit pops him back to size; Coulson's badge rings as dot bursts on the
+card that got the counter; the Air Force's WHOOSH where its sweep arrives; the
+Helicarrier's descent on lines under a WHOOSH; the Doombot's ZZAK where its laser
+lands (the band's defender); Helicarrier Strike's BLAM and jolt as its beam lands.
+Seven params are new in `PARAM_SPECS`, each ranged: `burst`, `burstColour`,
+`streaks`, `streakColour`, `splat`, `dots`, `inkFrom`.
+
+**Why.** The brief suggests the attack's burst "plays on the defender's figure
+because the band names the defender". A star on the defender at the declaration
+reads as a hit, and damage is its own later event with its own star — so the
+attack's word is in front of the ATTACKER, a statement that it attacks. Where a
+beat lands on a second card (a strike, a sting, a laser), it lands on the one the
+wire named: the stack's target, the band's defender, the block's attacker.
+
+**Rejected.** A word on every attack by default (the per-card rows carry the
+identity; the default dash has lines only); words keyed to a tap or a counter's
+source (not on the wire).
+
+---
+
 ## D180 — Every rule of `tools/lint-bridge.sh` is proven to FIRE, on every build, by a self-test that reads the rule list from the lint
 
 *Branch `guards` (worktree `mtg-table-t2w`, off `main`'s `b9af15d`). Numbered in

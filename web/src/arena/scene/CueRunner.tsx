@@ -750,10 +750,71 @@ function applyFigures(
       0,
       Math.min(1, pose.opacity * offset.opacity * (1 - offset.dissolve)),
     );
+    applyMaterialize(rig, offset.materialize);
 
     driveClips(rig, stage.clipOf(pose.cardId), dt, awake);
     rig.mixer.update(0);
   }
+}
+
+/**
+ * The fallback's floor (see {@link applyMaterialize}): a summon's look is scaled to
+ * no less than this, never exactly 0, so the value the loop writes can never equal
+ * a look the commit writes (0 or 1, or a pose's 0.5), and a commit mid-summon is
+ * always seen for what it is. The `uMaterialize` handle needs no floor — the look
+ * it multiplies is never the loop's to hold.
+ */
+const MATERIALIZE_FLOOR = 0.001;
+
+/**
+ * **The hologram-to-ink summon, as a number** (report 15 §5.3; D131 on branch
+ * `motion`): the figure's look is `committed look × Offset.materialize`.
+ *
+ * **The handle is `uMaterialize`** — the uniform Lane LOOK's figure material binds
+ * for exactly this (branch `look`, `7d91dcd`: `figureMaterial.ts` declares
+ * `uMaterialize: { value: 1 }` and shades by `uLook * uMaterialize`, and its
+ * liveness clause keeps `uLook` itself out of this file). When the material
+ * carries it, the loop writes the offset's number there and nothing else: the
+ * look stays the commit's, identity is 1, and a rig no summon touches is written
+ * only when the value changes.
+ *
+ * **Until LOOK merges** the spike's `holoMaterial.ts` (this branch's base,
+ * `c81f674`) has no such uniform, so the summon is shown by the fallback below —
+ * `uLook = committed look × materialize`, holding what the commit wrote
+ * (`rig.lookHeld`), writing the product while the ramp runs and putting the held
+ * value back on the frame it is over; a commit that lands mid-summon (the
+ * workshop's holo · comic switch) is seen because the uniform no longer holds what
+ * the loop last wrote. **Delete the fallback at the merge with LOOK** (PLAN, the
+ * motion lane's follow-up 2): LOOK's material always has the handle, so it is dead
+ * code there, and it is the only `uLook` in this file.
+ *
+ * Under the hologram the product is 0 whatever the ramp says — the summon is
+ * invisible by construction there, which is the brief's intent (the hologram
+ * already IS the not-yet-real treatment). Either way the write is a number in the
+ * frame loop, exactly as `uOpacity` and `uDrain` are (report 15 §9.1's declared
+ * exception). It allocates nothing.
+ */
+function applyMaterialize(rig: FigureRig, materialize: number): void {
+  const handle = rig.material.uniforms.uMaterialize;
+  if (handle !== undefined) {
+    const value = materialize >= 1 ? 1 : Math.max(0, materialize);
+    if (handle.value !== value) handle.value = value;
+    return;
+  }
+  // The spike material's fallback — delete at the merge with LOOK (see above).
+  const look = rig.material.uniforms.uLook;
+  if (look === undefined) return;
+  if (materialize >= 1 && rig.lookHeld === undefined) return;
+  if (rig.lookHeld === undefined || look.value !== rig.lookWritten) rig.lookHeld = look.value;
+  if (materialize >= 1) {
+    look.value = rig.lookHeld;
+    rig.lookHeld = undefined;
+    rig.lookWritten = undefined;
+    return;
+  }
+  const scaled = rig.lookHeld * Math.max(MATERIALIZE_FLOOR, materialize);
+  look.value = scaled;
+  rig.lookWritten = scaled;
 }
 
 /**

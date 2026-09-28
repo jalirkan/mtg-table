@@ -23,7 +23,15 @@
     "§3.6's `counters` event carries the card, the type and the two values and no",
     "source at all, so 'who caused this' is not on the wire and no renderer may",
     "invent it. Where the source material's beat belongs to another card, the",
-    "entry is on the card the ENGINE named and the _note says so."
+    "entry is on the card the ENGINE named and the _note says so.",
+    "",
+    "THE COMIC MOTION LANE (report 15 §5; D130-D136 on branch `motion`) added",
+    "seven params, every one read only while the queue's comic FX is on:",
+    "`burst` (none | star | pow | blam | krak | zzak | whoosh — the impact star and",
+    "its lettering, a CLOSED word list), `burstColour`, `streaks` (speed lines,",
+    "0-2), `streakColour`, `splat` and `dots` (0-2) and `inkFrom` (where the",
+    "hologram-to-ink summon starts). Each card's `_motion` says which event its",
+    "new beat keys off; the rule above holds for every one of them."
   ],
   "version": 1,
 
@@ -60,64 +68,73 @@
     "Ant-Man, Reformed Rogue": {
       "_note": "Scott Lang shrinks to a speck to get past a blocker, and pops back to size when he is hit. Keys off `attackers` (with exactly one attacker) and `damage`.",
       "_t11": "Slice 3: `speck` is the bright point he shrinks to — at 0.18 a hologram is a few pixels, and the speck is what reads — on his FIGURE, darting down the lane with him. The pop on damage throws a ring from his feet (`damageCue`, any `popScale` over 1).",
-      "attackers:alone": { "cue": "attack.shrink", "ms": 760, "params": { "scale": 0.18, "colour": "#9ec7f0", "speck": 1 } },
-      "damage": { "cue": "damage.hit", "ms": 520, "params": { "popScale": 1.4 } }
+      "attackers:alone": { "cue": "attack.shrink", "ms": 760, "params": { "scale": 0.18, "colour": "#9ec7f0", "speck": 1, "streaks": 0.6 } },
+      "_motion": "The comic lane (D136): his dash down the lane trails thin speed lines (he is a speck), and the hit that pops him back to size is lettered POW on HIS body — the damage event names him. Both key off events about him.",
+      "damage": { "cue": "damage.hit", "ms": 520, "params": { "popScale": 1.4, "burst": "pow" } }
     },
 
     "Wasp, Shrinking Savior": {
       "_note": "Janet hovers over the table for as long as she is on it (a `presence`, not a cue — it cannot decay), and her spell's target visibly shrinks. Keys off `cast` and the presence rule.",
       "presence": { "hoverY": 0.24, "bobAmp": 0.026, "bobHz": 0.55 },
       "_t11": "Slice 3: the beam leaves HER figure (hovering) and lands on the target's, which shrinks with a ring closing at its feet. `cast` aims at this frame's stack target; `resolved` aims at the previous frame's (T6's strike look-behind) — in AI play her attack trigger goes on and off inside one snapshot, so neither is on the wire and she only glows: the corpus has 0 aimed Wasp triggers (the evidence shows one with a synthetic event).",
-      "cast": { "cue": "fx.scaleBeam", "ms": 760, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026 } },
-      "resolved": { "cue": "fx.scaleBeam", "ms": 620, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026 } },
+      "_motion": "The comic lane (D136): her sting is lettered ZZAK where the beam lands — on the target the stack named for this very spell, never a guessed one — and her flight to the attack is on speed lines.",
+      "cast": { "cue": "fx.scaleBeam", "ms": 760, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026, "burst": "zzak" } },
+      "resolved": { "cue": "fx.scaleBeam", "ms": 620, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026, "burst": "zzak" } },
       "_eye": "`eye: false`: she flies on the jet's lunge with her wing-wash behind her, and without the Doombot's star eye (the slice-3 verification pass).",
-      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#9ec7f0", "eye": false } }
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#9ec7f0", "eye": false, "streaks": 1.2 } }
     },
 
     "Quake, Agent of S.H.I.E.L.D.": {
       "_note": "Daisy Johnson's seismic powers: a ground shockwave and a bounded camera shake. Slice 3 moved it from her own `tap:on` (Tier 1's substitute — the engine does not say which card caused another card's tap) to the event that IS her trigger: `resolved` (Seismic Takedown resolving). The rings leave HER feet; with `fissure` a crack runs to what the trigger was aimed at, read from the PREVIOUS frame's stack (T6's `strikeCard`, D63) — never from the batch's `tap` events, which would be pairing a cause to an effect the wire did not state. When the trigger went on and off inside one snapshot there is no aim, and the shockwave is hers alone.",
-      "resolved": { "cue": "fx.shockwave", "ms": 760, "params": { "colour": "#7fd4ff", "shake": 0.35, "radius": 2.2, "fissure": true } },
+      "_motion": "The comic lane (D136): her Seismic Takedown resolving is lettered KRAK where the fissure lands — on what the PREVIOUS frame's stack said it targeted — or at her own feet when the wire named nothing. Her shake is the cue's own.",
+      "resolved": { "cue": "fx.shockwave", "ms": 760, "params": { "colour": "#7fd4ff", "shake": 0.35, "radius": 2.2, "fissure": true, "burst": "krak" } },
       "zone:*>battlefield": { "cue": "zone.enters", "ms": 620, "params": { "impact": 1.6, "colour": "#7fd4ff" } }
     },
 
     "Nick Fury, Spymaster": {
       "_note": "He calls it in and agents appear at his shoulder. Keys off `attackers` and `zone`→battlefield. The agents themselves are TOKENS and enter with their own zone event and their own cue — this one never creates, names or counts them.",
       "_t11": "Slice 3: his figure makes the radio call (`clip: radioCall`, the rig's interact-left, figures.json's alias), a broadcast ring leaves his feet and a beam goes from him to each place an agent materialises (`beams`). The beams aim at the `beside` anchors, never at a token — which card made a token is not on the wire.",
-      "attackers": { "cue": "fx.agents", "ms": 900, "params": { "lunge": true, "spread": 1.1, "colour": "#e3c46a", "beams": true, "clip": "radioCall" } },
+      "_motion": "The comic lane (D136): he leads the charge on speed lines with a POW in front of him at the top of the dash — a statement that HE attacks, not a hit the renderer decided landed — and he enters as a hologram that inks in (the builder's summon, every arrival).",
+      "attackers": { "cue": "fx.agents", "ms": 900, "params": { "lunge": true, "spread": 1.1, "colour": "#e3c46a", "beams": true, "clip": "radioCall", "streaks": 1.2, "burst": "pow" } },
       "zone:*>battlefield": { "cue": "fx.agents", "ms": 820, "params": { "spread": 1.1, "colour": "#e3c46a", "beams": true, "clip": "radioCall" } }
     },
 
     "Agent Phil Coulson": {
       "_note": "The badge flash. Keys off `counters` — on the card that GOT the counter, because that is the only card §3.6's counters event names. Coulson's own entry covers his own counters; the creature/W archetype above covers the Heroes he hands them to.",
-      "counters:P1P1+": { "cue": "fx.badge", "ms": 460, "params": { "colour": "#e3c46a" } },
+      "counters:P1P1+": { "cue": "fx.badge", "ms": 460, "params": { "colour": "#e3c46a", "dots": 1.4 } },
+      "_motion": "The comic lane (D136): the ring at the feet of the card that GOT the counter is a Ben-Day dot burst, and so is his own when his trigger resolves — still no beam between them, because the counters event carries no source.",
       "_t11": "Slice 3: `resolved` is his trigger (\"put a +1/+1 counter on each\") going off — he shows his own badge (the `channel` gesture) while the badges flash on every Hero that received a counter, which is the creature/W archetype's `counters:P1P1+` on the RECEIVING card. The two are not joined by a beam: the counters event carries no source.",
-      "resolved": { "cue": "fx.badge", "ms": 520, "params": { "colour": "#e3c46a" } },
+      "resolved": { "cue": "fx.badge", "ms": 520, "params": { "colour": "#e3c46a", "dots": 1.4 } },
       "zone:*>battlefield": { "cue": "zone.enters", "ms": 520, "params": { "colour": "#e3c46a", "impact": 1.2 } }
     },
 
     "Peggy Carter, Secret Agent": {
       "_note": "Indestructible while she attacks alone — a shield aura for exactly as long as the lunge. Keys off `attackers` with exactly one attacker.",
       "_aegis": "The second verification pass: the bubble is her shield's blue and the rings at her feet its red and white (`rim`, `rim2`) — a white-gold bubble merged with the white armour shell Super Suit leaves on her (g1@142).",
-      "attackers:alone": { "cue": "attack.aegis", "ms": 900, "params": { "colour": "#4f7fe8", "rim": "#e8453c", "rim2": "#f4f6fa" } }
+      "_motion": "The comic lane (D136): she charges alone on speed lines with a POW in front of her shield at the top of the dash — the attack is the fact; no hit is claimed.",
+      "attackers:alone": { "cue": "attack.aegis", "ms": 900, "params": { "colour": "#4f7fe8", "rim": "#e8453c", "rim2": "#f4f6fa", "streaks": 1.4, "burst": "pow" } }
     },
 
     "Agents of S.H.I.E.L.D.": {
       "_note": "The squad steps forward together and the lone attacker takes the spotlight. Keys off `attackers`.",
       "_t11": "Slice 3: the squad steps forward together — every body the figure layer draws for the card rides the one lunge offset — and ONLY a lone attacker takes the spotlight (a cone of light from above onto the figure). Tier 1 lit every attack.",
-      "attackers": { "cue": "attack.lunge", "ms": 850, "params": { "colour": "#f6f0d8" } },
-      "attackers:alone": { "cue": "attack.lunge", "ms": 850, "params": { "spotlight": 1, "colour": "#f6f0d8" } }
+      "_motion": "The comic lane (D136): the squad steps forward on the densest speed lines in the deck, and a lone attacker gets its POW under the spotlight.",
+      "attackers": { "cue": "attack.lunge", "ms": 850, "params": { "colour": "#f6f0d8", "streaks": 2 } },
+      "attackers:alone": { "cue": "attack.lunge", "ms": 850, "params": { "spotlight": 1, "colour": "#f6f0d8", "streaks": 2, "burst": "pow" } }
     },
 
     "Agent 13, Sharon Carter": {
       "_note": "The pistol draw is the model's two-handed shooting pose, through figures.json's `attack → pistolDraw` alias (T3). Slice 3 fires it: two muzzle flashes at her hands in the hold (`muzzle`), and the spotlight only when she attacks alone. Keys off `attackers`.",
-      "attackers": { "cue": "attack.lunge", "ms": 620, "params": { "colour": "#ffe9b0", "muzzle": true } },
-      "attackers:alone": { "cue": "attack.lunge", "ms": 620, "params": { "spotlight": 1, "colour": "#ffe9b0", "muzzle": true } }
+      "_motion": "The comic lane (D136): each of her two shots is an impact star lettered BLAM on her pistol's muzzle (the prop's own point, D81), and she closes on speed lines.",
+      "attackers": { "cue": "attack.lunge", "ms": 620, "params": { "colour": "#ffe9b0", "muzzle": true, "burst": "blam" } },
+      "attackers:alone": { "cue": "attack.lunge", "ms": 620, "params": { "spotlight": 1, "colour": "#ffe9b0", "muzzle": true, "burst": "blam" } }
     },
 
     "S.H.I.E.L.D. Helicarrier": {
       "_note": "Flies in overhead and HOVERS FOR THE REST OF THE GAME. The fly-in is a cue (and one of §8's four camera cues); the hover is a `presence` — a layout rule — so pressing `skip all` leaves it in the air instead of dropping it into the rank. Keys off `zone`→battlefield.",
       "presence": { "hoverY": 0.9, "bobAmp": 0.032, "bobHz": 0.25 },
-      "zone:*>battlefield": { "cue": "fx.flyIn", "ms": 1400, "params": { "height": 2.2, "colour": "#9ec7f0", "camera": true } }
+      "_motion": "The comic lane (D136): it comes down on speed lines trailing up from its card, lettered WHOOSH over the landing, and inks in from a hologram as every arrival does.",
+      "zone:*>battlefield": { "cue": "fx.flyIn", "ms": 1400, "params": { "height": 2.2, "colour": "#9ec7f0", "camera": true, "streaks": 1.6, "burst": "whoosh" } }
     },
 
     "Helicarrier Strike": {
@@ -125,7 +142,8 @@
       "_t11": "Slice 3 splits the one shot into its two events: `cast` locks a crosshair reticle on the target's FIGURE and holds it (`lock`) — target acquired, for as long as the spell waits — and `resolved` brings the beam down from above on what the previous frame said it targeted (`strikeCard`).",
       "cast": { "cue": "fx.strike", "ms": 900, "params": { "height": 4, "colour": "#f6f0d8", "lock": true } },
       "_resolved": "The second verification pass: the resolution's beam is twice as thick and a star flashes on the body as it lands — at g3@116 the thin beam came down behind the giant ant unseen. (A camera move was tried and taken out: the struck card is usually in the graveyard by then, and the camera frames cards.)",
-      "resolved": { "cue": "fx.strike", "ms": 820, "params": { "height": 4, "colour": "#f6f0d8" } },
+      "_motion": "The comic lane (D136): the beam lands as an impact star lettered BLAM on the body the previous frame's stack named, and the table jolts (a shake-only request: dropped under reduced motion, while the engine waits on you and for 5 s after your own drag).",
+      "resolved": { "cue": "fx.strike", "ms": 820, "params": { "height": 4, "colour": "#f6f0d8", "burst": "blam", "shake": 0.6 } },
       "_fizzled": "A fizzle is not a strike (the workshop's reconciliation, 2026-09-27). §7.3 resolves the rung before the selector, so this entry's bare `resolved` outranked the default `resolved:fizzled`, and a Strike whose target had gone still brought the beam down on it. Its own `resolved:fizzled` is the default's fizzle — the form greys and falls through the table — so a fizzle reads as a fizzle.",
       "resolved:fizzled": { "cue": "resolved.fizzle", "ms": 460 }
     },
@@ -142,7 +160,8 @@
       "_note": "A hovering drone with a laser eye and jet exhaust on the attack. The drone and the eye are model-bound at Tier 2 (§12.2); the hover is a presence, the exhaust is particles. Keys off `zone`→battlefield (via the presence) and `attackers`.",
       "presence": { "hoverY": 0.2, "bobAmp": 0.018, "bobHz": 0.75 },
       "_t11": "Slice 3: the exhaust streams from behind the drone's FIGURE and the eye burns at the front of it, and the eye fires a laser at whoever the attack band names (`laser`, the `attackers` event's own defender).",
-      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#ff8f6a", "laser": true } }
+      "_motion": "The comic lane (D136): the laser lands lettered ZZAK on the player or planeswalker its attack band names, and the drone closes on speed lines.",
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#ff8f6a", "laser": true, "burst": "zzak" } }
     },
 
     "A.I.M. Scientists": {
@@ -177,8 +196,9 @@
     "Ant-Man's Air Force": {
       "_note": "A swarm of flying ants sweeping the table. Keys off `cast` and `resolved`.",
       "_t11": "Slice 3: the swarm SWEEPS (`sweep`) — one cloud from the card across the table, to what its attack trigger targets when the wire says so, otherwise to the other seat's creature rank. The figure layer's swarm of insects stays on the card; the sweep is the transition.",
-      "cast": { "cue": "fx.swarm", "ms": 820, "params": { "colour": "#9ec7f0", "radius": 1.3, "sweep": true } },
-      "resolved": { "cue": "fx.swarm", "ms": 620, "params": { "colour": "#9ec7f0", "radius": 0.9, "sweep": true } }
+      "_motion": "The comic lane (D136): the swarm arrives lettered WHOOSH — at what its trigger was aimed at when the stack said, otherwise over the far rank it sweeps toward (a direction, not a claim, D89).",
+      "cast": { "cue": "fx.swarm", "ms": 820, "params": { "colour": "#9ec7f0", "radius": 1.3, "sweep": true, "burst": "whoosh" } },
+      "resolved": { "cue": "fx.swarm", "ms": 620, "params": { "colour": "#9ec7f0", "radius": 0.9, "sweep": true, "burst": "whoosh" } }
     },
 
     "Giant-Sized Flying Ant": {

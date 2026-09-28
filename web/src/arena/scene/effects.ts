@@ -23,11 +23,28 @@
  * The whole pool is **invisible by default and therefore free**: three's
  * renderer skips invisible objects outright (`WebGLRenderer.js:1862`), so 26
  * parked meshes cost zero draw calls and zero GPU time.
+ *
+ * ---------------------------------------------------------------------------
+ * **The comic motion lane** (`docs/research/15-art-direction.md` §5; D130 and
+ * D133 on branch `motion`) grew the kit by three SHAPES and one KIND:
+ *
+ *  - `burst`, `splat` and `dots` are textures on the slots that already exist — an
+ *    impact star (optionally lettered with one of the closed onomatopoeia), an ink
+ *    splash, a Ben-Day dot burst — so they cost no draw call a glow would not;
+ *  - they are INK, so a slot drawing one is switched to `NormalBlending` at bind
+ *    and back to additive for the next soft glow. Blending is render state in
+ *    three 0.186, not part of the program key (`WebGLPrograms.js`: `opaque` needs
+ *    `transparent === false`, and every slot is transparent), so no program is
+ *    added — the `text` slots have switched the same way since Tier 1;
+ *  - `streak` is the one new kind: four more quads (the pool goes 45 → 49), each
+ *    with its OWN clone of one speed-line canvas so each can scroll its lines by
+ *    its cue's `t` (a clone shares the canvas's `Source`, so it is one upload).
+ * ---------------------------------------------------------------------------
  */
 
 import * as THREE from 'three';
 
-import type { AnchorRef, Effect, EffectKind, EffectShape } from '../cues/stage.ts';
+import { isInkShape, type AnchorRef, type ComicWord, type Effect, type EffectKind, type EffectShape } from '../cues/stage.ts';
 import type { FigureLayout, FigurePose } from '../figures/pose.ts';
 import { FIGURE_HEIGHT, figurePointInto } from '../layout.ts';
 import { parsedColour } from './colourCache.ts';
@@ -47,8 +64,16 @@ import { initTexture } from './useCardTexture.ts';
  * system (the Air Force's sweep beside its burst). The eight-object CAP did not
  * move — it bounds overdraw, and it is what degrades a crowded batch — but a
  * batch the cap allows should never be refused by the pool beneath it.
+ *
+ * **The comic motion lane grew it once more, by exactly its one new kind** (45 →
+ * 49, report 15 §5.1's budget): four `streak` slots — an alpha strike of five
+ * attackers draws four sets of speed lines and the fifth degrades, as the pool
+ * always has. The new SHAPES take no slot of their own.
  */
-const POOL = { glow: 8, ring: 8, beam: 5, particles: 3, text: 6, plate: 3, mote: 12 } as const;
+export const POOL = { glow: 8, ring: 8, beam: 5, particles: 3, text: 6, plate: 3, mote: 12, streak: 4 } as const;
+
+/** The pool's size — 49 since the comic motion lane (D130). */
+export const POOL_SIZE = Object.values(POOL).reduce((sum, n) => sum + n, 0);
 
 /** Points per burst. One buffer, re-aimed rather than re-allocated (§9.2 rule 6). */
 const PARTICLE_COUNT = 48;
@@ -367,9 +392,253 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
       radialFade(ctx, w, h, 0.6);
       return;
     }
+    case 'burst':
+      drawBurst(ctx, w, h, null);
+      return;
+    case 'splat': {
+      // **An ink splash** (D130), seen from above: a lobed blob, a few arms flung
+      // out with a droplet at each end, and loose drops. Painted twice — once in
+      // ink a little larger (the OUTLINE, which stays ink whatever the tint, so it
+      // reads on a light stage) and once in white on top (the BODY, which the
+      // material tints to the dying card's colour, so it reads on the dark felt).
+      // The first cut had them the other way round — an ink body with a coloured
+      // rim — and on the hologram's felt it was invisible (`g1`@359, measured).
+      const rand = lcg(0x5b1a7);
+      const lobes: number[] = [];
+      for (let i = 0; i < 36; i++) lobes.push(0.82 + 0.3 * rand());
+      const arms: Array<[number, number, number]> = [];
+      for (let i = 0; i < 7; i++) arms.push([rand() * Math.PI * 2, 0.62 + 0.3 * rand(), 5 + 7 * rand()]);
+      const drops: Array<[number, number, number]> = [];
+      for (let i = 0; i < 9; i++) drops.push([rand() * Math.PI * 2, 0.7 + 0.28 * rand(), 3 + 6 * rand()]);
+      const paint = (grow: number, fill: string): void => {
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = fill;
+        ctx.beginPath();
+        for (let i = 0; i <= lobes.length; i++) {
+          const a = ((Math.PI * 2) / lobes.length) * i;
+          const r = 58 * lobes[i % lobes.length]! * grow;
+          const x = c + r * Math.cos(a);
+          const y = c + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        for (const [a, reach, size] of arms) {
+          ctx.lineWidth = size * 1.3 * grow;
+          ctx.beginPath();
+          ctx.moveTo(c + 40 * Math.cos(a), c + 40 * Math.sin(a));
+          ctx.lineTo(c + 120 * reach * Math.cos(a), c + 120 * reach * Math.sin(a));
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(c + 120 * reach * Math.cos(a), c + 120 * reach * Math.sin(a), size * grow, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (const [a, reach, size] of drops) {
+          ctx.beginPath();
+          ctx.arc(c + 124 * reach * Math.cos(a), c + 124 * reach * Math.sin(a), size * grow, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      };
+      paint(1.14, INK_FILL);
+      paint(1, 'rgba(255,255,255,1)');
+      // A darker core, so the splash has a value structure and is not a flat decal.
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = INK_FILL;
+      ctx.beginPath();
+      ctx.arc(c + 6, c + 5, 30, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      return;
+    }
+    case 'dots': {
+      // **A Ben-Day burst** (D130): a 45°-screened dot grid whose dots swell toward
+      // the centre and vanish at the rim — print, not light. White, so the
+      // material's colour is the ink it is printed in.
+      const step = 13;
+      ctx.save();
+      ctx.translate(c, c);
+      ctx.rotate(Math.PI / 4);
+      for (let gy = -12; gy <= 12; gy++) {
+        for (let gx = -12; gx <= 12; gx++) {
+          const x = gx * step;
+          const y = gy * step;
+          const d = Math.hypot(x, y) / 124;
+          if (d >= 1) continue;
+          const r = (step * 0.56) * (1 - Math.pow(d, 1.4));
+          if (r < 0.6) continue;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+      return;
+    }
     default:
       return;
   }
+}
+
+/** The comic lane's ink: near-black with a little blue, a printed K plate (report 15's `#0e1016`). */
+const INK_FILL = 'rgba(14,16,22,1)';
+
+/**
+ * **An impact star** (D130), and — with a word — **its lettering** (D133). A jagged
+ * twelve-point star, filled white (the material tints it: POW yellow by default)
+ * with a heavy ink outline, an inner star and a halftone band between them; the
+ * word is set across it in heavy, forward-leaning capitals — red, outlined in ink
+ * with an ink drop shadow — which the tint leaves red. The word is one of the
+ * closed `COMIC_WORDS`; this function draws whatever it is handed, so the gate is
+ * upstream (`cues/validate.ts`'s `burst` param and `replay-cues.test.ts`'s net).
+ */
+function drawBurst(ctx: CanvasRenderingContext2D, w: number, h: number, word: string | null): void {
+  const c = w / 2;
+  const k = w / 256;
+  const rand = lcg(0xb005 + (word === null ? 0 : word.length * 131 + word.charCodeAt(0)));
+  const points = 12;
+  const radii: number[] = [];
+  for (let i = 0; i < points * 2; i++) radii.push(i % 2 === 0 ? 118 * (0.82 + 0.18 * rand()) : 70 * (0.86 + 0.18 * rand()));
+  const star = (scale: number): void => {
+    ctx.beginPath();
+    for (let i = 0; i < radii.length; i++) {
+      const a = -Math.PI / 2 + (Math.PI / points) * i;
+      const r = radii[i]! * scale * k;
+      const x = c + r * Math.cos(a);
+      const y = c + r * Math.sin(a);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  };
+  ctx.lineJoin = 'miter';
+  ctx.miterLimit = 3;
+  // The fill, and the ink line around it.
+  star(0.94);
+  ctx.fillStyle = 'rgba(255,255,255,1)';
+  ctx.fill();
+  ctx.lineWidth = 11 * k;
+  ctx.strokeStyle = INK_FILL;
+  ctx.stroke();
+  // A halftone band just inside the rim: the printed shading a colourist screens in.
+  ctx.save();
+  star(0.9);
+  ctx.clip();
+  ctx.fillStyle = 'rgba(150,150,150,1)';
+  const step = 9 * k;
+  for (let y = -h; y <= h; y += step) {
+    for (let x = -w; x <= w; x += step) {
+      const px = c + (x - y) * 0.7071;
+      const py = c + (x + y) * 0.7071;
+      const d = Math.hypot(px - c, py - c) / (118 * k);
+      if (d < 0.62 || d > 1.05) continue;
+      ctx.beginPath();
+      ctx.arc(px, py, step * 0.3 * Math.min(1, (d - 0.62) / 0.3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+  // The inner star, as a thin ink line.
+  star(0.58);
+  ctx.lineWidth = 4 * k;
+  ctx.strokeStyle = INK_FILL;
+  ctx.stroke();
+  if (word === null) return;
+  // The lettering: fitted to the star's waist, leaning forward.
+  ctx.save();
+  ctx.translate(c, c + 4 * k);
+  ctx.rotate(-0.12);
+  ctx.transform(1, 0, -0.2, 1, 0, 0);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  let size = 96 * k;
+  for (; size > 20 * k; size -= 4 * k) {
+    ctx.font = `900 ${String(Math.round(size))}px Impact, "Arial Black", "Helvetica Neue", Arial, sans-serif`;
+    if (ctx.measureText(word).width <= 176 * k) break;
+  }
+  ctx.lineJoin = 'round';
+  ctx.fillStyle = INK_FILL;
+  ctx.fillText(word, 5 * k, 6 * k);
+  ctx.lineWidth = 9 * k;
+  ctx.strokeStyle = INK_FILL;
+  ctx.strokeText(word, 0, 0);
+  ctx.fillStyle = 'rgba(232,50,43,1)';
+  ctx.fillText(word, 0, 0);
+  ctx.lineWidth = 2 * k;
+  ctx.strokeStyle = 'rgba(255,236,190,0.9)';
+  ctx.strokeText(word, -1.5 * k, -1.5 * k);
+  ctx.restore();
+}
+
+/**
+ * **An impact star's texture, lettered or not** — one canvas per word, drawn the
+ * first time a cue asks for it and kept for the page (a game letters two or three
+ * of the five). 512 px, because a lethal star is most of a card tall in the
+ * workshop's close-up and a 256 px word goes soft there. `null` in a DOM-less test.
+ */
+export function burstTexture(word: ComicWord | null): THREE.Texture | null {
+  const name = word === null ? 'burst' : `burst:${word}`;
+  const cached = shapeCache.get(name);
+  if (cached !== undefined) return cached;
+  const made = canvas2d(512);
+  if (made === null) {
+    shapeCache.set(name, null);
+    return null;
+  }
+  drawBurst(made.ctx, 512, 512, word);
+  const texture = new THREE.CanvasTexture(made.canvas);
+  initTexture(texture, null);
+  shapeCache.set(name, texture);
+  return texture;
+}
+
+let streakTex: THREE.Texture | null | undefined;
+
+/**
+ * **Speed lines** (the `streak` kind, D130): parallel lines along the canvas's
+ * height, each an ink-edged white stroke that fades in just behind the head (the
+ * canvas's top, which is the quad's +Y — the way the body is going) and out toward
+ * the tail. The top and bottom rows are left empty, so a slot that scrolls its
+ * clone (`offset.y`, the cue's `t`) samples clear texture past either end
+ * (`ClampToEdge`) and the lines slide back without a seam.
+ */
+function streakTexture(): THREE.Texture | null {
+  if (streakTex !== undefined) return streakTex;
+  if (typeof document === 'undefined') return (streakTex = null);
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  if (ctx === null) return (streakTex = null);
+  const rand = lcg(0x57a3);
+  ctx.lineCap = 'round';
+  // Five lines, spaced across the quad and staggered along it: packed any closer
+  // they merged into one glowing slab under bloom (measured at `g1`@356).
+  for (let i = 0; i < 5; i++) {
+    const x = 6 + (52 * (i + 0.25 + 0.5 * rand())) / 5;
+    const top = 14 + 46 * rand();
+    const bottom = Math.min(244, top + 100 + 90 * rand());
+    const width = 1.1 + 1.5 * rand();
+    // Each gradient fades to its OWN colour at zero alpha: a fade to transparent
+    // black would drag the white line through grey.
+    const line = (rgb: string, alpha: number, lw: number): void => {
+      const g = ctx.createLinearGradient(0, top, 0, bottom);
+      g.addColorStop(0, `rgba(${rgb},0)`);
+      g.addColorStop(0.18, `rgba(${rgb},${String(alpha)})`);
+      g.addColorStop(1, `rgba(${rgb},0)`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+    };
+    line('14,16,22', 0.9, width + 2.6);
+    line('255,255,255', 1, width);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  initTexture(texture, null);
+  return (streakTex = texture);
 }
 
 /**
@@ -378,6 +647,8 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
  * the caller then keeps its default map, which is the soft glow.
  */
 export function shapeTexture(name: EffectShape | 'console' | 'capsule' | 'cocoon'): THREE.Texture | null {
+  // The star is drawn at its own size, lettered or not — one cache entry for it.
+  if (name === 'burst') return burstTexture(null);
   const cached = shapeCache.get(name);
   if (cached !== undefined) return cached;
   const size: [number, number] = name === 'console' ? [512, 320] : name === 'cocoon' ? [128, 256] : name === 'capsule' ? [160, 256] : [256, 256];
@@ -649,6 +920,10 @@ export class EffectPool {
   readonly #a = new THREE.Vector3();
   readonly #b = new THREE.Vector3();
   readonly #dir = new THREE.Vector3();
+  /** The comic lane's streak basis — its across axis, its face, and the matrix they make (D130). */
+  readonly #across = new THREE.Vector3();
+  readonly #face = new THREE.Vector3();
+  readonly #basis = new THREE.Matrix4();
   /**
    * One shared set of directions on the unit sphere: a burst re-aims these
    * rather than generating new ones, so a particle system allocates nothing
@@ -712,6 +987,21 @@ export class EffectPool {
     for (let i = 0; i < POOL.plate; i++) this.#addQuad('plate', glow);
 
     for (let i = 0; i < POOL.particles; i++) this.#addPoints(dot);
+
+    // The comic lane's speed lines (D130): each slot its own CLONE of the one
+    // canvas, because each scrolls its lines by its own cue's `t` (`offset.y`).
+    // A clone shares the canvas's `Source`, so the four upload once.
+    const streak = streakTexture();
+    for (let i = 0; i < POOL.streak; i++) {
+      let map: THREE.Texture | null = null;
+      if (streak !== null) {
+        map = streak.clone();
+        map.needsUpdate = true;
+      }
+      this.#addQuad('streak', map);
+      const slot = this.#slots[this.#slots.length - 1]!;
+      slot.material.blending = THREE.NormalBlending;
+    }
   }
 
   #addQuad(kind: EffectKind, map: THREE.Texture | null): void {
@@ -859,7 +1149,12 @@ export class EffectPool {
   #groundOf(ref: AnchorRef, y: number): number {
     if (ref.kind !== 'figure') return y;
     const pose = this.#figures?.get(ref.id);
-    return pose === undefined ? y : pose.position[1] - pose.lift;
+    if (pose !== undefined) return pose.position[1] - pose.lift;
+    // A body that just died (the comic lane's splat, D130): its departing stand
+    // still carries the flier's lift, and a "ground" ring drawn there hung inside
+    // the falling body — measured on the Giant-Sized Flying Ant at `g1`@359.
+    const gone = this.#departed?.get(ref.id);
+    return gone === undefined ? y : gone.stand[1] - gone.pose.lift;
   }
 
   /** `fit`'s unit: the anchored figure's drawn height, or 1 at any other anchor. */
@@ -867,7 +1162,12 @@ export class EffectPool {
     if (effect.fit !== true || effect.at.kind !== 'figure') return 1;
     const scale = this.#offsets?.offsetOf(effect.at.id).scale ?? 1;
     const pose = this.#figures?.get(effect.at.id);
-    return (pose === undefined ? FIGURE_HEIGHT : pose.height) * scale;
+    if (pose !== undefined) return pose.height * scale;
+    // A body that just died is sized as it stood (the comic lane's splat, D130):
+    // a flier's departing body is as wide as it was, and a fixed-size stain hid
+    // under it (`g1`@359's Giant-Sized Flying Ant).
+    const gone = this.#departed?.get(effect.at.id);
+    return (gone === undefined ? FIGURE_HEIGHT : gone.pose.height) * scale;
   }
 
   bind(
@@ -974,15 +1274,29 @@ export class EffectPool {
     switch (effect.kind) {
       case 'glow': {
         // T11: a shape is a texture on the same quad; absent is the soft glow.
-        this.#setMap(slot, effect.shape === undefined || effect.shape === 'soft' ? glowTexture() : shapeTexture(effect.shape), glowTexture());
+        // The comic lane (D130/D133): the impact star is its own texture per word,
+        // and every ink shape is blended normally.
+        this.#setMap(slot, this.#glowMap(effect), glowTexture());
+        this.#blend(slot, isInkShape(effect.shape));
         object.position.set(ax, ay + 0.02, az);
         object.quaternion.copy(camera.quaternion);
+        // A comic star is tilted, not square to the lens: a turn about the view axis.
+        if (effect.spin !== undefined) object.rotateZ(effect.spin);
         const size = effect.radius * this.#fitOf(effect) * (0.8 + 0.4 * strength);
         object.scale.set(size * (effect.aspect ?? 1), size, 1);
+        // **An impact star is drawn IN FRONT of the body it is on** (D130): pulled
+        // toward the lens by half its size, so its lettering is not cut by the
+        // figure it names — it still depth-tests against everything nearer.
+        if (effect.shape === 'burst') {
+          this.#dir.copy(camera.position).sub(object.position);
+          const away = this.#dir.length();
+          if (away > 1e-3) object.position.addScaledVector(this.#dir, Math.min(0.45 * size, 0.4 * away) / away);
+        }
         break;
       }
       case 'ring': {
-        this.#setMap(slot, effect.shape === 'reticle' ? shapeTexture('reticle') : ringTexture(), ringTexture());
+        this.#setMap(slot, this.#ringMap(effect), ringTexture());
+        this.#blend(slot, isInkShape(effect.shape));
         // A ring lies on the table: at a `figure` anchor it is drawn on the GROUND
         // under the body, not in the air under a flier (Wasp, the Doombot).
         object.position.set(ax, this.#groundOf(effect.at, ay) + 0.004, az);
@@ -992,9 +1306,17 @@ export class EffectPool {
         break;
       }
       case 'plate': {
+        // The comic lane's halftone flash (D130): the same plate, screened.
+        const dots = effect.shape === 'dots';
+        this.#setMap(slot, dots ? shapeTexture('dots') : glowTexture(), glowTexture());
+        this.#blend(slot, dots);
         object.position.set(at[0], at[1] - 0.08, at[2]);
         object.quaternion.copy(camera.quaternion);
-        object.scale.set(effect.radius * 2.4, effect.radius * 1.1, 1);
+        object.scale.set(effect.radius * (dots ? 2.2 : 2.4), effect.radius * (dots ? 1.6 : 1.1), 1);
+        break;
+      }
+      case 'streak': {
+        this.#streak(slot, effect, ax, ay, az, resolve, camera);
         break;
       }
       case 'text': {
@@ -1104,6 +1426,97 @@ export class EffectPool {
     if (slot.material.map !== map) slot.material.map = map;
   }
 
+  /** A glow's texture: the soft glow, a T11 shape, or the comic lane's star (lettered or not). */
+  #glowMap(effect: Effect): THREE.Texture | null {
+    const shape = effect.shape;
+    if (shape === undefined || shape === 'soft') return glowTexture();
+    if (shape === 'burst') return burstTexture(effect.word ?? null);
+    return shapeTexture(shape);
+  }
+
+  /** A ring's texture: the annulus, the reticle, or the comic lane's splat and dots. */
+  #ringMap(effect: Effect): THREE.Texture | null {
+    const shape = effect.shape;
+    if (shape === 'reticle' || shape === 'splat' || shape === 'dots') return shapeTexture(shape);
+    return ringTexture();
+  }
+
+  /**
+   * **Ink is painted, light is added** (D130). A slot drawing one of the comic
+   * lane's ink shapes blends normally — an additive ink outline would add nothing —
+   * and a slot drawing anything else goes back to additive. Render state only: the
+   * program is the same (see the file header), so a switch is never a recompile.
+   */
+  #blend(slot: Slot, ink: boolean): void {
+    const want = ink ? THREE.NormalBlending : THREE.AdditiveBlending;
+    if (slot.material.blending !== want) slot.material.blending = want;
+  }
+
+  /**
+   * **Speed lines** (the `streak` kind, D130) — a quad that trails from the head
+   * (`at`, the body) back along the motion (`from → to`, or `at → to`) for `length`
+   * world units, turned about its own length to face the camera, its lines
+   * scrolled back along it by the cue's `t` (`travel`) on the slot's own clone of
+   * the texture. On the frame loop's path, so it allocates nothing: the three
+   * vectors and the matrix are the pool's own, and the two anchors were resolved
+   * into the pool's alternating scratch tuples before this is called.
+   */
+  #streak(
+    slot: Slot,
+    effect: Effect,
+    ax: number,
+    ay: number,
+    az: number,
+    resolve: (ref: Effect['at']) => [number, number, number] | null,
+    camera: THREE.Camera,
+  ): void {
+    const object = slot.object;
+    const to = effect.to === undefined ? null : resolve(effect.to);
+    if (to === null) {
+      object.visible = false;
+      return;
+    }
+    // Read before `from` is resolved: a figure anchor's point is one of two
+    // alternating scratch tuples, and a third resolve reuses the first.
+    const tx = to[0];
+    const ty = to[1];
+    const tz = to[2];
+    const from = effect.from === undefined ? null : resolve(effect.from);
+    if (from === null) this.#dir.set(tx - ax, ty - ay, tz - az);
+    else this.#dir.set(tx - from[0], ty - from[1], tz - from[2]);
+    // **A dash is level.** A body's chest to a lane anchor on the felt slopes down,
+    // and the reverse of that slope points UP past a low camera — the lines stood
+    // on the figure's head (measured in the workshop's close-up). So the travel
+    // axis is flattened unless the motion is mostly vertical (the Helicarrier
+    // coming down onto its slot), where the height IS the motion.
+    if (Math.hypot(this.#dir.x, this.#dir.z) >= 0.5 * Math.abs(this.#dir.y)) this.#dir.y = 0;
+    const reach = this.#dir.length();
+    if (reach < 1e-4) {
+      object.visible = false;
+      return;
+    }
+    this.#dir.multiplyScalar(1 / reach);
+    const length = Math.max(0.05, effect.length ?? 1);
+    // The quad's centre is half its length BEHIND the head: the lines trail.
+    this.#a.set(ax, ay, az).addScaledVector(this.#dir, -0.5 * length);
+    // Its face: toward the camera, with the travel axis taken out of the view ray.
+    this.#face.copy(camera.position).sub(this.#a);
+    this.#face.addScaledVector(this.#dir, -this.#face.dot(this.#dir));
+    if (this.#face.lengthSq() < 1e-8) {
+      object.visible = false;
+      return;
+    }
+    this.#face.normalize();
+    this.#across.crossVectors(this.#dir, this.#face);
+    // Columns x, y, z: across, the way it is going, its face — right-handed.
+    this.#basis.makeBasis(this.#across, this.#dir, this.#face);
+    object.quaternion.setFromRotationMatrix(this.#basis);
+    object.position.copy(this.#a);
+    object.scale.set(Math.max(0.01, effect.radius * 2), length, 1);
+    const map = slot.material.map;
+    if (map !== null && map !== undefined) map.offset.y = 0.4 * Math.max(0, Math.min(1, effect.travel ?? 0));
+  }
+
   /** Park everything. Called on flush, on a scrub and on a new `gameId`. */
   clear(): void {
     for (const slot of this.#slots) {
@@ -1114,6 +1527,9 @@ export class EffectPool {
 
   dispose(): void {
     for (const slot of this.#slots) {
+      // A streak slot owns its clone of the speed-line canvas (the canvas itself
+      // is the page's, like every shape's).
+      if (slot.kind === 'streak') slot.material.map?.dispose();
       slot.material.dispose();
       if (slot.object instanceof THREE.Points) slot.object.geometry.dispose();
     }

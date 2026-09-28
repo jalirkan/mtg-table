@@ -397,6 +397,13 @@ node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/mod
 #      ?stage=felt ?shadow=0 turn one part off; the workshop's toolbar switches all.
 #      The ink rides bloom (D146): bloom off, no line (?ink=always to force it).
 
+# The comic motion lane (D130-D136) — impact stars and their lettering, ink
+#   splats, halftone dots, speed lines, the hologram-to-ink summon, impact shakes,
+#   and every cue "on twos".  Two switches on any arena or workshop URL, and two
+#   checkboxes in the cue strip / the workshop's queue bar:
+#   ?fx=classic   the film exactly as it was before the lane (default: comic)
+#   ?twos=0       smooth motion (default: on twos; always off under reduced motion)
+
 # D102 — THE WORKSHOP: one card on a pedestal, drawn by the arena's own renderer —
 #      its figure, props, clips and cues, tunable live in this browser.  No JVM,
 #      no socket.  W in the 3D arena opens it too; "The workshop" below.
@@ -1030,7 +1037,8 @@ playing and pull the rest forward), **skip all** (the **K** key), and a
 **speed** selector — 0.5×, 1×, 2×, 4×. The animation clock is separate from the
 replay clock, so pausing cues does not pause the frame log. Cues never delay a
 question: while the engine is waiting on you, long cues are compressed and the
-queue says so.
+queue says so. Beside **bloom** are the comic motion lane's two switches, **comic
+FX** and **on twos** (*The comic motion lane*, below).
 
 **Reduced motion.** With `prefers-reduced-motion: reduce` the arena drops every
 camera move and every shake outright (a camera view you pick is a cut), and plays
@@ -1611,6 +1619,48 @@ not play when *you* take damage: Forge is waiting on you, and the arena snaps
 animations to keep the prompt responsive (PLAN.md question 12). Replays show the
 flinch. And every humanoid has a "superhero" build — broad-shouldered, Coulson
 included — because the free pack has only those proportions.
+
+#### The comic motion lane — stars, lettering, splats, dots, speed lines, on twos
+
+**Report 15's Lane MOTION** (`docs/research/15-art-direction.md` §5, §9.2;
+decisions **D130–D136**; evidence in [`docs/evidence/motion.md`](docs/evidence/motion.md)).
+The cues speak a comic's motion vocabulary — graphic shapes, not soft light:
+
+- an **impact star** on every struck body, lettered **POW** when the blow is
+  lethal; a star at a block's contact and on a strike's target;
+- **lettering** from a closed list of five — POW, BLAM, KRAK, ZZAK, WHOOSH — which
+  the deck's headline cards use for their own beats (Agent 13's shots are BLAM,
+  Quake's takedown KRAK, Wasp's sting and the Doombot's laser ZZAK, the
+  Helicarrier's descent and the Air Force's sweep WHOOSH, Fury's, Peggy's and a
+  lone Agent's charge POW);
+- an **ink splat** under every creature that dies on the battlefield;
+- a **halftone** flash behind a struck player's life, and Coulson's badge rings as
+  dot bursts;
+- **speed lines** behind every dash;
+- under the comic look (`?look=comic`), **the hologram inks in**: an arriving
+  creature is a hologram that resolves into ink over its summon;
+- a small **camera jolt** on a strike, a death and a lethal blow — never while the
+  engine waits on you, never within five seconds of your own drag, never under
+  reduced motion, and never a move: the camera stays where you put it;
+- and everything **on twos** — each cue stepped to twelve drawings a second, the
+  comic's stepped motion.
+
+**Both are switches**, and *off* is honest: with **comic FX** off (`?fx=classic`)
+the cues play exactly the film they played before the lane — measured op for op
+over every committed recording — so the checkbox is an A/B. **On twos** is its own
+checkbox (`?twos=0`) and is always off under `prefers-reduced-motion`, which also
+drops every speed line, every jolt and the summon's ramp.
+
+**Giving a card a word is a data edit.** In `web/src/arena/cues/cues.json` a card's
+row takes `burst` (`none`, `star`, `pow`, `blam`, `krak`, `zzak`, `whoosh`),
+`burstColour`, `streaks` (0–2), `streakColour`, `splat` and `dots` (0–2) and
+`inkFrom` (where the summon starts); `cues/validate.ts` refuses anything else. The
+rule the file lives by holds: a word lands on the body the event names — the
+attacker's own flourish at the top of its dash, the target the stack named for a
+spell, the defender the attack band named for a laser — never on a card the
+renderer guessed was involved. Try it in the workshop first: every beat plays from
+the pedestal's existing rehearsals, and its queue bar carries the same two
+checkboxes.
 
 #### The workshop — one card on a pedestal (`#workshop`)
 

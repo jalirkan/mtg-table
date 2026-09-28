@@ -1385,6 +1385,8 @@ export class CameraDirector {
   #move: Move | null = null;
   #lastUserInputAt = Number.NEGATIVE_INFINITY;
   #shakeStartedAt = 0;
+  /** The last shake-only request's cue key — one shake per cue (D134 on branch `motion`). */
+  #lastShakeKey: string | null = null;
   #applied = false;
   /** T8 — the last free orbit of each view, until its key is pressed again. */
   readonly #free = new Map<string, Orbit>();
@@ -1538,6 +1540,15 @@ export class CameraDirector {
         this.stats.dropped += 1;
         return 'dropped';
       }
+      // **One shake per cue** (the comic lane's impacts, D134 on branch `motion`):
+      // a cue re-asks on every frame of its impact window, and on a slow replay
+      // that window outlives the ≤ 300 ms shake — without this the same impact
+      // would shake twice. A request with no key is the old behaviour.
+      if (request.key !== undefined && request.key === this.#lastShakeKey) {
+        this.stats.dropped += 1;
+        return 'dropped';
+      }
+      this.#lastShakeKey = request.key ?? null;
       this.#shakeStartedAt = now;
       this.#armShakeOnly(shakeAmplitude, request);
       this.stats.taken += 1;

@@ -80,6 +80,16 @@ export interface FigureRig {
   appliedTint: string | null;
   /** Whether §6.4's freeze wash was folded into the tint last written. */
   appliedFrozen: boolean;
+  /**
+   * **The comic motion lane's summon** (D131 on branch `motion`) — written only by
+   * `CueRunner`'s frame loop, never at commit, and absent on a rig no summon has
+   * touched. `lookHeld` is the look the COMMIT gave this figure's material
+   * (`uLook`, LOOK's to decide) while a cue's `Offset.materialize` scales it;
+   * `lookWritten` is the value the loop last wrote, which is how a commit that
+   * wrote a new look mid-summon is told apart from the loop's own write.
+   */
+  lookHeld?: number;
+  lookWritten?: number;
 }
 
 export type FigureRigMap = Map<number, FigureRig>;

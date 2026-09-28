@@ -37,15 +37,18 @@ import { isClipName, type ClipName } from '../figures/types.ts';
 import { PISTOL_MUZZLE } from '../figures/props.ts';
 import { TAP_ANGLE, figureAnchorOf } from '../layout.ts';
 import {
+  burstWord,
   clamp01,
   easeInCubic,
   easeInOutCubic,
   easeOutBack,
   easeOutCubic,
+  isBurst,
   outHoldBack,
   pulse,
   isEffectShape,
   type AnchorRef,
+  type Burst,
   type CueContext,
   type CueImpl,
   type CueRegistry,
@@ -134,6 +137,14 @@ interface CueDef {
    * `end()` total by construction, the same way `effects` does.
    */
   alsoClears?: readonly string[];
+  /**
+   * **Effect key suffixes only a COMIC cue sets** (the comic motion lane, D135 on
+   * branch `motion`): `end()` releases them only when `ctx.comic` is on, so with
+   * comic FX off a cue's op log is exactly the one it had before the lane — not a
+   * single extra `clearEffect` of a key nothing set (`motion.test.ts` holds the
+   * corpus to it).
+   */
+  comic?: readonly string[];
   apply(ctx: CueContext, t: number, stage: Stage): void;
 }
 
@@ -296,6 +307,7 @@ function releaseLane(ctx: CueContext, stage: Stage, lane: number): void {
  */
 function cue(def: CueDef): CueImpl {
   const effects = def.effects ?? [];
+  const comicEffects = def.comic ?? [];
   const alsoClears = def.alsoClears ?? [];
   return {
     lane: def.lane ?? 'card',
@@ -303,6 +315,9 @@ function cue(def: CueDef): CueImpl {
       def.apply(ctx, t, stage);
       playClip(ctx, t, stage);
       playGesture(ctx, t, stage);
+      // The comic lane's summon (D131), for every cue an arrival resolves to — AFTER
+      // the cue's own offsets, so a `perTarget` cue that cleared one cannot drop it.
+      playMaterialize(ctx, t, stage);
     },
     end(ctx, stage) {
       endGesture(ctx, stage);
@@ -318,6 +333,7 @@ function cue(def: CueDef): CueImpl {
         }
       }
       for (const suffix of effects) stage.clearEffect(`${ctx.key}:${suffix}`);
+      if (ctx.comic === true) for (const suffix of comicEffects) stage.clearEffect(`${ctx.key}:${suffix}`);
     },
   };
 }
@@ -417,6 +433,158 @@ function defenderOf(ctx: CueContext): AnchorRef {
   return { kind: 'combat', player: ctx.players[0] ?? 0 };
 }
 
+// ---------------------------------------------------------------------------
+// The comic motion lane (report 15 §5; D130–D136 on branch `motion`)
+//
+// Every beat below is behind `comic(ctx)` — the queue's *comic FX* setting,
+// stamped into the context at enqueue — so with it off the film is exactly the
+// one before the lane, which is what makes the cue strip's A/B honest. Each is a
+// pure function of the cue's own `t`, sets only effects whose keys its cue
+// declares (so `end()` stays total), writes offsets that decay to identity, and
+// keys off an event about THIS card (cues.json's one rule): a burst goes on the
+// body the event names, never on one the renderer guessed was involved.
+// ---------------------------------------------------------------------------
+
+/** Is the comic vocabulary on for this cue? Absent is off — the film as it was. */
+function comic(ctx: CueContext): boolean {
+  return ctx.comic === true;
+}
+
+/** An impact star's fill when nothing asks for another: the comic's own POW yellow. */
+const POW_YELLOW = '#ffd84a';
+
+/** The `burst` param, read with a fallback — a value outside {@link BURSTS} is the fallback. */
+function burstOf(ctx: CueContext, fallback: Burst): Burst {
+  const value = ctx.params['burst'];
+  return isBurst(value) ? value : fallback;
+}
+
+/**
+ * **An impact star** (`shape: 'burst'`, D130) — one glow slot, lettered or not
+ * (D133), popping out on an overshoot and fading over `u ∈ (0, 1)`, and gone
+ * outside it. `size` is world units, or the figure's own heights with `fit`.
+ * The star is tilted a fixed amount per word so two stars in one batch do not
+ * stamp the same silhouette; nothing about it is random, so two frames of one
+ * instant agree.
+ */
+function burstAt(
+  ctx: CueContext,
+  stage: Stage,
+  suffix: string,
+  at: AnchorRef,
+  u: number,
+  size: number,
+  kind: Burst,
+  fit = false,
+): void {
+  const key = `${ctx.key}:${suffix}`;
+  if (kind === 'none' || u <= 0 || u >= 1) {
+    stage.clearEffect(key);
+    return;
+  }
+  const pop = Math.max(0, easeOutBack(clamp01(u / 0.3), 2.6));
+  const fade = 1 - easeInCubic(clamp01((u - 0.5) / 0.5));
+  const word = burstWord(kind);
+  stage.setEffect(key, {
+    kind: 'glow',
+    at,
+    colour: str(ctx, 'burstColour', POW_YELLOW),
+    strength: 1.2 * fade,
+    radius: size * (0.5 + 0.5 * pop),
+    shape: 'burst',
+    spin: word === null ? 0.3 : -0.12,
+    ...(word === null ? {} : { word }),
+    fit,
+  });
+}
+
+/**
+ * **Speed lines** (the `streak` kind, D130) behind a lunging body: from its chest
+ * back along the way it came (`from → to`, the dash's own vector — the card's rest
+ * to the anchor it dashes at), over the dash out of its rank — strongest mid-dash,
+ * gone by the hold — scrolling with the cue's own `t`. `streaks` (0…2) is their
+ * density; 0 draws none. Under reduced motion there are none (report 15 §9.2).
+ */
+function speedLines(
+  ctx: CueContext,
+  t: number,
+  stage: Stage,
+  id: number,
+  to: AnchorRef,
+  until = 0.46,
+  from: AnchorRef = { kind: 'card', id },
+): void {
+  if (!comic(ctx)) return;
+  const key = `${ctx.key}:streak`;
+  const density = num(ctx, 'streaks', 1);
+  if (ctx.reducedMotion || density <= 0 || t <= 0 || t >= until) {
+    stage.clearEffect(key);
+    return;
+  }
+  const u = clamp01(t / until);
+  stage.setEffect(key, {
+    kind: 'streak',
+    at: figureAt(id, 0.5),
+    // The motion's own direction — rest to where it dashes, the vector the cue's
+    // offset travels — so the lines trail even once the body is past the anchor.
+    from,
+    to,
+    colour: str(ctx, 'streakColour', '#eef3ff'),
+    strength: Math.min(1, 0.62 + 0.2 * density) * pulse(u),
+    radius: 0.22 + 0.08 * density,
+    length: 0.8 + 0.45 * density,
+    travel: u,
+  });
+}
+
+/**
+ * **An attacker's own flourish** (`params.burst` on an attack cue): a star in
+ * front of its body at the top of the dash — a statement about THIS card (it
+ * attacks), never a hit the renderer decided landed. Off unless a row asks.
+ */
+function attackBurst(ctx: CueContext, t: number, stage: Stage, id: number, fit = true): void {
+  if (!comic(ctx)) return;
+  const kind = burstOf(ctx, 'none');
+  burstAt(ctx, stage, 'bang', figureAt(id, 0.78, 0.28), (t - 0.2) / 0.45, fit ? 0.62 : 0.5, kind, fit);
+}
+
+/**
+ * **A camera shake on an impact** (D134): the shake `camera.ts` already has —
+ * a request with nothing to frame — at priority 0, so it never preempts a move
+ * and is dropped while any is live, under reduced motion, while the engine waits
+ * on the human and for five seconds after the user's own drag (§8 rules 2, 5, 7
+ * and §3.5, all the director's). `key` is this cue's: the director takes one
+ * shake per cue however many frames re-ask inside the window.
+ */
+function impactShake(ctx: CueContext, t: number, stage: Stage, from: number, amount: number): void {
+  if (!comic(ctx) || ctx.reducedMotion || amount <= 0) return;
+  if (t < from || t >= from + 0.3) return;
+  stage.requestCamera({ frame: [], padding: 0, tilt: 0, shake: Math.min(1, amount), priority: 0, ms: 260, key: ctx.key });
+}
+
+/**
+ * **The hologram-to-ink summon** (report 15 §5.3; D131) — `Offset.materialize`,
+ * `0 → 1`, on every cue an ARRIVAL resolves to: `zone.enters`, the Helicarrier's
+ * fly-in, Fury's agents, a scientist's bench, a land's rise. It reads the zone
+ * event's own `toZone`/`fromZone` facts, so it is the arrival's and nothing
+ * else's: a card that moved within the battlefield does not re-materialise.
+ * `inkFrom` (0…1) is where the ramp starts. Reduced motion writes nothing — the
+ * figure simply is what its pose says (report 15 §9.2's "snaps to 1").
+ */
+function playMaterialize(ctx: CueContext, t: number, stage: Stage): void {
+  if (!comic(ctx) || ctx.reducedMotion) return;
+  if (ctx.params['toZone'] !== 'battlefield' || ctx.params['fromZone'] === 'battlefield') return;
+  const from = clamp01(num(ctx, 'inkFrom', 0));
+  if (from >= 1) return;
+  const m = from + (1 - from) * easeInOutCubic(clamp01((t - 0.08) / 0.72));
+  for (const id of ctx.targets) stage.setOffset(id, { materialize: m });
+}
+
+/** A fixed tilt per card for a flat splat, so two deaths do not print the same stain. */
+function splatSpin(id: number): number {
+  return (id * 2.399963) % (Math.PI * 2);
+}
+
 /** The commonest shape: one offset per target, computed from `t` and the index. */
 function perTarget(
   effects: readonly string[],
@@ -428,10 +596,12 @@ function perTarget(
     index: number,
   ) => Parameters<Stage['setOffset']>[1] | null,
   lane: Lane = 'card',
+  comicEffects: readonly string[] = [],
 ): CueImpl {
   return cue({
     lane,
     effects,
+    comic: comicEffects,
     apply(ctx, t, stage) {
       for (let i = 0; i < ctx.targets.length; i++) {
         const id = ctx.targets[i]!;
@@ -524,10 +694,40 @@ const ENTRIES: Array<[string, CueImpl]> = [
    */
   [
     'zone.dissolve',
-    perTarget([], (ctx, t, stage, id) => {
+    perTarget([], (ctx, t, stage, id, index) => {
       const k = 1 - easeInOutCubic(t);
       const d = decay(stage, id, fromAnchor(ctx, 'battlefield'), k);
       const wave = pulse(t);
+      /**
+       * **The comic lane's death** (D130, D134): a creature that leaves the
+       * BATTLEFIELD for the graveyard prints an ink splat on the table where its
+       * body falls (a `figure` anchor resolves to the departing body, T11), and the
+       * table jolts once. A card discarded or a spell resolving into the graveyard
+       * — the same cue, another `fromZone` — does neither: nothing died there.
+       */
+      const died = comic(ctx) && str(ctx, 'fromZone', '') === 'battlefield';
+      if (died && index === 0) {
+        const size = num(ctx, 'splat', 1);
+        const grow = easeOutBack(clamp01((t - 0.06) / 0.24), 1.6);
+        const fade = 1 - easeInCubic(clamp01((t - 0.62) / 0.38));
+        if (size > 0 && t > 0.06) {
+          stage.setEffect(`${ctx.key}:splat`, {
+            kind: 'ring',
+            at: figureAt(id, 0),
+            colour: colour(ctx, GREY),
+            strength: 0.95 * fade,
+            // In the body's own heights (`fit`): a big flier leaves a big stain,
+            // and it is not hidden under the body that is falling onto it.
+            radius: 0.52 * size * Math.max(0, grow),
+            shape: 'splat',
+            spin: splatSpin(id),
+            fit: true,
+          });
+        } else {
+          stage.clearEffect(`${ctx.key}:splat`);
+        }
+        impactShake(ctx, t, stage, 0.06, num(ctx, 'shake', 0.22));
+      }
       return {
         dx: d[0],
         dy: d[1] - 0.25 * wave,
@@ -535,8 +735,13 @@ const ENTRIES: Array<[string, CueImpl]> = [
         dissolve: 0.92 * wave,
         opacity: 1 - 0.5 * wave,
         tint: GREY,
+        // …and its ink drains back to hologram (report 15 §2.3's reverse summon).
+        // The departing BODY is the one that would show it, and it is drawn by
+        // `FigureLayer`'s DepartureField, LOOK's to bind (PLAN, the motion lane's
+        // follow-up); a live rig with this offset is the only one CueRunner writes.
+        ...(died && !ctx.reducedMotion && t < 1 ? { materialize: 1 - easeInCubic(clamp01(t / 0.55)) } : {}),
       };
-    }),
+    }, 'card', ['splat']),
   ],
 
   /** **zone.exile** (600 ms) — scale → 0 about its centre with a white flash. */
@@ -731,6 +936,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'resolved.pop',
     cue({
       effects: ['ring', 'beam', 'bolt', 'burst', 'impact'],
+      comic: ['bang'],
       alsoClears: ['strikeCard'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
@@ -825,6 +1031,19 @@ const ENTRIES: Array<[string, CueImpl]> = [
           if (strikeCard >= 0) {
             clipOn(ctx, u, stage, strikeCard, flag(ctx, 'strikeFoe') ? 'hit' : 'channel');
           }
+        }
+        /**
+         * **The comic lane's strike** (D130, D134): the star lands on what the
+         * PREVIOUS frame's stack said this item targeted (T6's look-behind — the
+         * only aim a resolution has) and the table jolts once. A strike at one's
+         * own card is a boon, not a blow: no star unless a row names one, no shake.
+         */
+        if (comic(ctx)) {
+          const foe = flag(ctx, 'strikeFoe');
+          const kind = burstOf(ctx, foe ? 'star' : 'none');
+          const on: AnchorRef = strikeCard >= 0 ? figureAt(strikeCard, 0.55) : to;
+          burstAt(ctx, stage, 'bang', on, (t - 0.5) / 0.5, 0.55, kind, strikeCard >= 0);
+          if (foe) impactShake(ctx, t, stage, 0.5, num(ctx, 'shake', 0.2));
         }
       },
     }),
@@ -959,6 +1178,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'attack.lunge',
     cue({
       effects: ['spot', 'cone', 'muzzle'],
+      comic: ['streak', 'bang'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -1012,21 +1232,30 @@ const ENTRIES: Array<[string, CueImpl]> = [
          */
         if (flag(ctx, 'muzzle')) {
           const flash = Math.max(blip(t, 0.36, 0.05), blip(t, 0.52, 0.05));
-          if (flash > 0) {
+          // The comic lane letters the shots: each flash is an impact star with the
+          // row's word on it (BLAM for Agent 13), held a beat longer so it reads.
+          const lettered = comic(ctx) ? burstWord(burstOf(ctx, 'none')) : null;
+          const held = lettered === null ? flash : Math.max(blip(t, 0.37, 0.09), blip(t, 0.55, 0.09));
+          if (held > 0) {
             stage.setEffect(`${ctx.key}:muzzle`, {
               kind: 'glow',
               // ON the pistol's lit muzzle — the prop's own point, through the
               // one definition of a figure's front and right (D81).
               at: figureAt(id, MUZZLE_ANCHOR.at, MUZZLE_ANCHOR.fwd, MUZZLE_ANCHOR.side),
-              colour: colour(ctx, '#ffe9b0'),
-              strength: 1.2 * flash,
-              radius: 0.3,
-              shape: 'star',
+              colour: lettered === null ? colour(ctx, '#ffe9b0') : str(ctx, 'burstColour', POW_YELLOW),
+              strength: 1.2 * held,
+              radius: lettered === null ? 0.3 : 0.5,
+              shape: lettered === null ? 'star' : 'burst',
+              ...(lettered === null ? {} : { word: lettered, spin: -0.12 }),
             });
           } else {
             stage.clearEffect(`${ctx.key}:muzzle`);
           }
         }
+        // The comic lane: speed lines off the dash and, if the row asks, a star in
+        // front of the body at the top of it (never a hit — the attack is the fact).
+        speedLines(ctx, t, stage, id, { kind: 'combat', player });
+        if (!flag(ctx, 'muzzle')) attackBurst(ctx, t, stage, id);
         /**
          * **§8's first camera cue: the low swoop down the combat lane.**
          *
@@ -1058,6 +1287,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'block.interpose',
     cue({
       effects: ['impact'],
+      comic: ['bang', 'streak'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -1066,6 +1296,13 @@ const ENTRIES: Array<[string, CueImpl]> = [
         const d =
           attacker >= 0 ? decay(stage, id, { kind: 'card', id: attacker }, k * 0.45) : [0, 0, 0];
         stage.setOffset(id, { dx: d[0], dy: d[1] + 0.05 * k, dz: d[2], scale: 1 + 0.03 * k });
+        // The comic lane: the blocker dashes into the attacker's path (speed lines
+        // toward the attacker the `blockers` event names) and the contact is a star
+        // on the ATTACKER's body — the one card the block is about besides itself.
+        if (attacker >= 0) {
+          speedLines(ctx, t, stage, id, { kind: 'card', id: attacker }, 0.4);
+          if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(attacker, 0.55), (t - 0.3) / 0.5, 0.55, burstOf(ctx, 'star'), true);
+        }
         if (attacker >= 0 && t > 0.35 && t < 0.8) {
           const u = clamp01((t - 0.35) / 0.45);
           stage.setEffect(`${ctx.key}:impact`, {
@@ -1104,12 +1341,18 @@ const ENTRIES: Array<[string, CueImpl]> = [
         const player = ctx.players[0];
         if (player === undefined) return;
         const at: AnchorRef = { kind: 'player', id: player };
+        // **The halftone flash** (D130): under the comic vocabulary the red flash
+        // behind the struck player's life total is a Ben-Day dot screen, opening
+        // out as it fades — the same one slot, only its shape. `dots` (0…2) sizes
+        // it; 0 keeps the soft flash.
+        const dots = comic(ctx) ? num(ctx, 'dots', 1) : 0;
         stage.setEffect(`${ctx.key}:plate`, {
           kind: 'plate',
           at,
           colour: RED,
-          strength: 0.75 * pulse(t),
-          radius: 0.9,
+          strength: dots > 0 ? 0.95 * pulse(clamp01(t * 1.2)) : 0.75 * pulse(t),
+          radius: dots > 0 ? 0.9 * (0.7 + 0.25 * dots + 0.35 * easeOutCubic(t)) : 0.9,
+          ...(dots > 0 ? { shape: 'dots' as const } : {}),
         });
         stage.setEffect(`${ctx.key}:num`, {
           kind: 'text',
@@ -1672,12 +1915,30 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.shockwave',
     cue({
       effects: ['ring', 'ring2', 'crack', 'hit'],
+      comic: ['bang'],
       alsoClears: AIMED,
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
         const at: AnchorRef = figureAt(id, 0);
         const e = easeOutCubic(t);
+        // The comic lane: the row's word (KRAK for Quake) lands where the fissure
+        // does — on what her trigger was aimed at, when the stack said — and on her
+        // own feet when it did not. (Her shake is the cue's own, below.)
+        if (comic(ctx)) {
+          const aim = flag(ctx, 'fissure') ? beamTargetOf(ctx) : -1;
+          const struck = aim >= 0 && aim !== id;
+          burstAt(
+            ctx,
+            stage,
+            'bang',
+            struck ? figureAt(aim, 0.5) : figureAt(id, 0.35),
+            struck ? (t - 0.4) / 0.55 : (t - 0.04) / 0.6,
+            0.9,
+            burstOf(ctx, 'none'),
+            true,
+          );
+        }
         stage.setEffect(`${ctx.key}:ring`, {
           kind: 'ring',
           at,
@@ -1797,9 +2058,18 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'attack.shrink',
     cue({
       effects: ['speck', 'trail'],
+      comic: ['streak', 'bang'],
       apply(ctx, t, stage) {
         const to = num(ctx, 'scale', 0.2);
         const hold = outHoldBack(t, 0.25, 0.72);
+        const lead = ctx.targets[0];
+        if (lead !== undefined) {
+          // The comic lane: his dash down the lane is speed lines, and the star (a
+          // row's word) is in WORLD units — at a fifth of his size a fitted one
+          // would be a speck of its own.
+          speedLines(ctx, t, stage, lead, { kind: 'combat', player: ctx.players[0] ?? 0 });
+          attackBurst(ctx, t, stage, lead, false);
+        }
         for (const id of ctx.targets) {
           const move = lunge(ctx, t, stage, id);
           stage.setOffset(id, {
@@ -1860,10 +2130,13 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'attack.aegis',
     cue({
       effects: ['halo', 'rim', 'rim2'],
+      comic: ['streak', 'bang'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
         const move = lunge(ctx, t, stage, id);
+        speedLines(ctx, t, stage, id, { kind: 'combat', player: ctx.players[0] ?? 0 });
+        attackBurst(ctx, t, stage, id);
         const hold = outHoldBack(t, 0.2, 0.75);
         stage.setOffset(id, {
           dx: move.dx,
@@ -1937,10 +2210,12 @@ const ENTRIES: Array<[string, CueImpl]> = [
     cue({
       lane: 'particle',
       effects: ['exhaust', 'eye', 'laser'],
+      comic: ['streak', 'bang'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
         const move = lunge(ctx, t, stage, id);
+        speedLines(ctx, t, stage, id, { kind: 'combat', player: ctx.players[0] ?? 0 });
         stage.setOffset(id, {
           dx: move.dx,
           dy: move.dy + 0.1 * move.k,
@@ -1992,11 +2267,17 @@ const ENTRIES: Array<[string, CueImpl]> = [
          * `defenderId`, the `attackers` event's own fields), in the hold of the
          * lunge. It aims at what the engine said it attacks and at nothing else.
          */
-        if (!flag(ctx, 'laser')) return;
+        if (!flag(ctx, 'laser')) {
+          attackBurst(ctx, t, stage, id);
+          return;
+        }
         const defender = num(ctx, 'defenderId', -1);
         const kind = str(ctx, 'defenderKind', 'none');
         const to: AnchorRef | null =
           defender < 0 ? null : kind === 'player' ? { kind: 'player', id: defender } : kind === 'card' ? { kind: 'card', id: defender } : null;
+        // The comic lane letters the laser where it lands — on what the attack BAND
+        // names as its defender, the same fact the beam already aims at.
+        if (comic(ctx)) burstAt(ctx, stage, 'bang', to ?? figureAt(id, 0.6), (t - 0.36) / 0.4, 0.62, to === null ? 'none' : burstOf(ctx, 'none'));
         const on = t > 0.34 && t < 0.72 ? 0.6 + 0.4 * Math.abs(Math.sin(t * Math.PI * 14)) : 0;
         if (to === null || on <= 0) {
           stage.clearEffect(`${ctx.key}:laser`);
@@ -2029,10 +2310,16 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.flyIn',
     cue({
       effects: ['dust', 'downwash'],
+      comic: ['streak', 'bang'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
         const drop = 1 - easeOutCubic(t);
+        // The comic lane: it comes down on speed lines — trailing up and back from
+        // the card as it descends onto its own slot — and, if the row letters it,
+        // a WHOOSH over the landing. (The materialise ramp is the builder's.)
+        speedLines(ctx, t, stage, id, { kind: 'card', id }, 0.62, { kind: 'above', id, height: num(ctx, 'height', 2.2) });
+        if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(id, 1.1), (t - 0.3) / 0.55, 0.7, burstOf(ctx, 'none'));
         // **2.2 is a measured ceiling, not a taste.** At the rest pose a card on
         // the OPPONENT's rank leaves the top of the frame above world `y ≈ 2.4`
         // (projected in the browser, 2026-09-13: y 2.0 → ndc 0.93, y 2.4 → 1.00,
@@ -2157,15 +2444,23 @@ const ENTRIES: Array<[string, CueImpl]> = [
           strength: pulse(u),
           radius: 0.1 + 0.08 * (1 - u),
         });
-        stage.setEffect(`${ctx.key}:flash`, {
-          kind: 'glow',
-          at: figureAt(target, 0.6),
-          colour: colour(ctx, '#f6f0d8'),
-          strength: 1.4 * pulse(clamp01(u * 1.6)),
-          radius: 0.62,
-          shape: 'star',
-          fit: true,
-        });
+        if (comic(ctx)) {
+          // The comic lane: the flash IS the impact star — lettered by the row
+          // (BLAM for the Strike) — and the table jolts as the beam lands. Same
+          // one slot as the soft flash it replaces.
+          burstAt(ctx, stage, 'flash', figureAt(target, 0.6), u / 0.8, 1.05, burstOf(ctx, 'star'), true);
+          impactShake(ctx, t, stage, 0.55, num(ctx, 'shake', 0.3));
+        } else {
+          stage.setEffect(`${ctx.key}:flash`, {
+            kind: 'glow',
+            at: figureAt(target, 0.6),
+            colour: colour(ctx, '#f6f0d8'),
+            strength: 1.4 * pulse(clamp01(u * 1.6)),
+            radius: 0.62,
+            shape: 'star',
+            fit: true,
+          });
+        }
         stage.setEffect(`${ctx.key}:impact`, {
           kind: 'ring',
           at,
@@ -2268,6 +2563,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.scaleBeam',
     cue({
       effects: ['beam', 'flare', 'ring'],
+      comic: ['bang'],
       alsoClears: AIMED,
       apply(ctx, t, stage) {
         const source = ctx.targets[0];
@@ -2281,6 +2577,9 @@ const ENTRIES: Array<[string, CueImpl]> = [
         }
         const target = beamTargetOf(ctx);
         if (target < 0) return;
+        // The comic lane: the row's word (ZZAK for Wasp's sting) where the beam
+        // lands — the target the stack named, never a guessed one.
+        if (comic(ctx)) burstAt(ctx, stage, 'bang', figureAt(target, 0.55), (t - 0.3) / 0.55, 0.75, burstOf(ctx, 'none'), true);
         // T11: from the caster's BODY (Wasp hovering on her figure) to the target's
         // — a card with no figure (Pym Particles, a sorcery) beams from its card.
         if (source !== undefined && t > 0.15) {
@@ -2433,12 +2732,16 @@ const ENTRIES: Array<[string, CueImpl]> = [
           radius: 0.3 + 0.14 * Math.max(0, up),
           shape: isEffectShape(shape) ? shape : 'badge',
         });
+        // The comic lane: the ring at the Hero's feet is a Ben-Day dot burst
+        // (`dots`, 0…2 its size; 0 keeps the plain ring) — the same one slot.
+        const dots = comic(ctx) ? num(ctx, 'dots', 1) : 0;
         stage.setEffect(`${ctx.key}:flash`, {
           kind: 'ring',
           at: figureAt(first, 0),
           colour: colour(ctx, GOLD),
-          strength: 1 - easeOutCubic(t),
-          radius: 0.25 + easeOutCubic(t) * 0.65,
+          strength: dots > 0 ? 0.95 * (1 - easeInCubic(t)) : 1 - easeOutCubic(t),
+          radius: dots > 0 ? (0.3 + easeOutCubic(t) * 0.6) * (0.75 + 0.25 * dots) : 0.25 + easeOutCubic(t) * 0.65,
+          ...(dots > 0 ? { shape: 'dots' as const } : {}),
         });
       },
     }),
@@ -2572,6 +2875,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     'fx.agents',
     cue({
       effects: ['left', 'right', 'call', 'beamL', 'beamR', 'wave'],
+      comic: ['streak', 'bang'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id === undefined) return;
@@ -2580,6 +2884,11 @@ const ENTRIES: Array<[string, CueImpl]> = [
         // the ladder gives one cue per event, so a cue that replaced the lunge
         // would be a cue file quietly turning combat off (see `lunge` above).
         const move = flag(ctx, 'lunge') ? lunge(ctx, t, stage, id) : null;
+        if (move !== null) {
+          // The comic lane: his charge on speed lines, and the row's word in front.
+          speedLines(ctx, t, stage, id, { kind: 'combat', player: ctx.players[0] ?? 0 });
+          attackBurst(ctx, t, stage, id);
+        }
         stage.setOffset(id, {
           dx: move?.dx ?? 0,
           dy: (move?.dy ?? 0) + 0.1 * pulse(t),
@@ -2671,6 +2980,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
     cue({
       lane: 'particle',
       effects: ['swarm', 'sweep', 'core'],
+      comic: ['bang'],
       apply(ctx, t, stage) {
         const id = ctx.targets[0];
         if (id !== undefined) {
@@ -2735,6 +3045,9 @@ const ENTRIES: Array<[string, CueImpl]> = [
             travel,
             arc: 0.7,
           });
+          // The comic lane: the row's word where the swarm arrives — at the aim the
+          // stack stated, or over the far rank it sweeps to (a direction, D89).
+          if (comic(ctx)) burstAt(ctx, stage, 'bang', to, (t - 0.62) / 0.36, 0.75, burstOf(ctx, 'none'), aimed >= 0);
           return;
         }
         stage.clearEffect(`${ctx.key}:core`);
@@ -2866,6 +3179,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
 function damageCue(intensity: number): CueImpl {
   return cue({
     effects: ['num', 'rim', 'pop'],
+    comic: ['bang'],
     apply(ctx, t, stage) {
       const id = ctx.targets[0];
       if (id === undefined) return;
@@ -2916,7 +3230,25 @@ function damageCue(intensity: number): CueImpl {
         text: `-${String(Math.abs(num(ctx, 'amount', 0)))}`,
         rise: 0.4 * easeOutCubic(t),
       });
-      if (intensity > 1 && !ctx.reducedMotion) {
+      /**
+       * **The impact star** (D130/D133): on the struck BODY — the card the damage
+       * event names — as the jolt lands. A plain hit is an unlettered star; lethal
+       * damage is lettered POW by default, and a row may name another word or
+       * `none`. Set AFTER the number, so under the eight-slot cap the fact is the
+       * one that is kept.
+       */
+      if (comic(ctx)) {
+        const kind = burstOf(ctx, intensity > 1 ? 'pow' : 'star');
+        burstAt(ctx, stage, 'bang', figureAt(id, 0.58), t / 0.75, intensity > 1 ? 0.82 : 0.55, kind, true);
+      }
+      if (intensity > 1 && comic(ctx)) {
+        // **The comic lane's lethal blow is a jolt, not a push-in** (D134). The
+        // push-in below frames the CARD, and a creature that took lethal damage is
+        // in its graveyard by the snapshot that says so — the camera swung away to
+        // the graveyard pile while the star landed on the falling body (measured,
+        // `g1`@359). The shake-only request keeps the table where it is.
+        impactShake(ctx, t, stage, 0.04, num(ctx, 'shake', 0.35));
+      } else if (intensity > 1 && !ctx.reducedMotion) {
         stage.requestCamera({
           frame: [{ kind: 'card', id }],
           padding: 0.3,

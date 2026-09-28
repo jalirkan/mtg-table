@@ -5905,6 +5905,100 @@ limits of what was measured or built.
     It was not made, because the brief asks for the ink and bloom to go
     together. Measure it on the integrated GPU first.
 
+---
+
+## The comic motion lane — report 15's Lane MOTION, 2026-09-28 (D130–D136)
+
+**Status: built, tested, measured, documented and gated** (`check-all.sh` from a
+deleted `bridge/out`, 929 s, exit 0, `var/check-all-motion.log`) on branch `motion` (worktree
+`mtg-table-t2m`, from `c81f674` — `main` at `a092d3a` plus the art-direction report
+and its `?look=comic` spike). Decisions **D130–D136**, in the lane's reserved range
+D130–D139, renumbered contiguously at merge; `docs/evidence/motion.md` is what was
+measured; README's *The comic motion lane* is how to use it. Lanes LOOK and BODIES
+ran in parallel and own the files this lane did not touch (report 15 §9.4); every
+change this lane needs in theirs is a follow-up below, with its exact edit.
+
+```bash
+npm --prefix web run dev     # then /#workshop?card=Nick%20Fury%2C%20Spymaster, or /?replay=games/g1.jsonl#arena
+#   ?fx=classic   the film exactly as it was before the lane (default: comic)
+#   ?twos=0       smooth motion (default: on twos; off under reduced motion)
+```
+
+What it is: impact stars on struck bodies (lettered POW on lethal damage), a
+closed list of five words lettered on the stars for the headline cards' beats, an
+ink splat under every creature that dies on the battlefield, halftone dots behind
+a struck player's life and on Coulson's badge rings, speed lines (the one new
+effect kind, `streak`; the pool 45 → 49) on every dash, the hologram inking in on
+every arrival (`Offset.materialize`, visible under `?look=comic`), impact shakes
+through `camera.ts`'s own shake, and every cue on twos. Comic FX and on twos are
+both switches (URL, the arena's cue strip, the workshop's queue bar); with comic
+FX off the cue engine's op log over all 19 committed recordings is identical to
+`c81f674`'s (evidence). No new cue id, no new `synthetic.ts` frame (every beat
+plays from an existing rehearsal — a workshop test holds it), `catalog.json`
+current (no new card rows). The T-pose one-liner is the hardening branch's and was
+not touched.
+
+### Comic motion lane follow-ups — nine, 2026-09-28
+
+1. **The death's reverse summon has only its cue half** (LOOK's
+   `scene/FigureLayer.tsx`). `zone.dissolve` from the battlefield writes
+   `materialize` 1 → 0 on the dying card; the departing body is drawn by
+   `DepartureField`, which never reads it. The edit, against branch `look`'s
+   `DepartureField.bind(source: OffsetSource, deaths)` (`7d91dcd`), once per shown
+   entry beside its two `uniforms.uDrain.value = …` lines:
+   `uniforms.uMaterialize.value = Math.max(0.001, source.offsetOf(entry.cardId).materialize);`
+   — a number in the frame loop, the same kind as `uDrain`, into the handle LOOK's
+   liveness clause already reserves for this lane (it names no `uLook`). Without it
+   a body that dies stays inked while its card's cue drains; with it the ink drains
+   to hologram over the first half of the fall, then `uDrain` greys it.
+2. **At the merge with LOOK, delete `applyMaterialize`'s fallback**
+   (`scene/CueRunner.tsx`, this lane's; D131). LOOK's figure material binds
+   `uMaterialize` (identity 1, shaded as `uLook * uMaterialize`), and
+   `applyMaterialize` already writes that handle first whenever the material has
+   it — so after the merge the code after its first `return` is dead. Delete from
+   `// The spike material's fallback` to the end of the function, drop
+   `FigureRig.lookHeld` / `lookWritten` (`scene/figureRigs.ts`) and
+   `MATERIALIZE_FLOOR`, and cut the liveness clause's
+   `uniforms\.uLook` / `look\.value = scaled` assertions to the handle's. LOOK's
+   own clause ("`CueRunner.tsx` names no `uLook`") fails until this is done, which
+   is the point: it is the only `uLook` in the file.
+3. **A summoned figure's props do not ink in with it** (`scene/props.ts`, LOOK then
+   BODIES). The prop field's `uLook` is per KIND, written at commit
+   (`PropField.setLook`). A per-instance look would be an instance attribute in
+   the prop shader; until then a summoning figure's props are inked while its body
+   is still a hologram. Measure before building: one attribute per kind.
+4. **The pedestal shows no camera shake** — by the workshop's convention
+   (`PedestalDirector` drops every camera request: the pedestal's camera is yours).
+   If the user wants to judge the jolt there, `workshop/Pedestal.tsx` could let a
+   shake-only request (`request.frame.length === 0`) through to the base class's
+   `request` and add `frame.shake` to the pedestal camera's position for its ≤ 300
+   ms, restoring it after — a workshop decision, not this lane's.
+5. **The lettering is the system's heaviest font** (`Impact`, `Arial Black`, else a
+   900-weight sans). A comic lettering face (an OFL font such as Bangers, local,
+   with a NOTICE row) would read more like the cards' — a download and a provenance
+   row, so the user's call.
+6. **Every star is POW yellow unless a row says otherwise.** Report 15 §7's
+   art-derived accent (`paletteOf`, LOOK's or a later lane's) is the natural source
+   for `burstColour` — a card's explosion orange, Coulson's teal — computed at
+   commit, never per frame.
+7. **The villain deck has no words** (match setup's follow-up 1). Doom Legion's
+   cards stand on the defaults: stars, splats, dots and lines, no lettering. Rows
+   in `cues.json` when their identity rows are written.
+8. **The integrated GPU is still unmeasured** (report 13 §13 question 3). Every
+   frame time in the evidence is SwiftShader or the GTX 1080 on a loaded machine;
+   the lane's cost was not measurable against either's noise (comic and classic
+   within run-to-run spread), which is a statement about those two rasterisers only.
+9. **The workshop's 1× close-up crops an attacker's star** (`workshop/Pedestal.tsx`'s
+   framing, the workshop's). The close-up frames the card at REST; a lunge carries
+   the body up the frame toward the combat lane, and at the top of the dash its star
+   (in front of the body at 0.78 of its height) is cut by the canvas's top edge —
+   Fury's POW in `var/motion/png/after-fury-attack.png` is half out of frame, as his
+   head already was in the before. The arena's table view shows whole stars
+   (`after-table-g1-356-laser.png`, `after-table-g1-359-lethal.png`). If the close-up should hold a whole dash, it wants a framing that includes
+   the combat anchor while a cue runs — the workshop's decision, not this lane's.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
@@ -5979,3 +6073,6 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 22 | **New, engine and sets.** Keep the prepared files to commit (the two FRA deck files, `tools/audit-deck.mjs` and its helper, `tools/javap-seam-diff.sh`, `docs/research/patches/`, `docs/drafts/`, report 14 and its evidence), and should `audit-deck.mjs` join `check-all.sh`? | **Keep them; `audit-deck.mjs` stays a hand tool** — it needs a built `bridge/out`, takes a few seconds, and today it would only re-prove the MSH decks the gate already plays. Showing Prepare on the board (follow-up 8) is a later decision of its own, not the day's. |
 | 23 | **New, more villains.** Which deck should a bare `./scripts/play.sh` seat against you — Doom Legion, one of the three added on 2026-09-28, or a rotation? | **Doom Legion, unchanged** (`config.json`'s `match.aiDeck`; the lane was told not to move it). The others are one `--ai-deck` away. |
 | 24 | **New, more villains.** Should `tools/deck-smoke.sh` demand the flat 8 spells a game (the lane's brief), or the rate it asserts, `min(8, AI turns − 3)` (**D117**)? | **The rate**, because against the automated seat 5 of 40 games reach 8 however the deck is built; `DECK_SMOKE_STRICT=1` is the flat 8 on demand. |
+| 25 | **New, the comic motion lane.** Keep **comic FX** on by default (impact stars, the five words, splats, dots, speed lines, the ink summon, the jolts), or ship it behind `?fx=comic` until played? | **On by default** (D135) — it reads over the hologram and the comic look alike, and `?fx=classic` / the cue strip's checkbox is the film before it, op for op. |
+| 26 | **New, the comic motion lane.** Keep **on twos** (every cue stepped to twelve drawings a second) on by default? It is the comic's stepped motion, and some eyes read it as judder, especially on a high-refresh display. | **On by default** (the brief), off under reduced motion; `?twos=0` and a checkbox. |
+| 27 | **New, the comic motion lane.** The five words — POW, BLAM, KRAK, ZZAK, WHOOSH — and which card says which. The list is closed on purpose (D133); a word is a decision. | **The five of report 15 §5.1**, assigned in `cues.json`'s `_motion` notes. |

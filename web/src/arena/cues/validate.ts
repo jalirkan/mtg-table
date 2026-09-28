@@ -29,7 +29,7 @@
 
 import { isGestureParam } from '../figures/duelists.ts';
 import { isClipName } from '../figures/types.ts';
-import { isEffectShape } from './stage.ts';
+import { BURSTS, isBurst, isEffectShape } from './stage.ts';
 import {
   STATION_KINDS,
   isKnownEventKind,
@@ -169,7 +169,8 @@ type ParamSpec =
   | { type: 'clip' }
   | { type: 'hostClip' }
   | { type: 'shape' }
-  | { type: 'gesture' };
+  | { type: 'gesture' }
+  | { type: 'burst' };
 
 export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
   // -- Tier 1 (report 09 §12.2) and Tier 2 slices 1–2 ------------------------
@@ -247,6 +248,28 @@ export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
    * (`gesturePlayer`, a fact no file can set).
    */
   gesture: { type: 'gesture' },
+
+  // -- the comic motion lane (report 15 §5; D130–D136 on branch `motion`) -------
+  // Every one is read only while the queue's *comic FX* is on; with it off a row
+  // that sets them plays the film as it was before the lane.
+  /**
+   * **The impact star, and the word lettered on it** (D130, D133): `none`, `star`
+   * (unlettered), or one of the closed onomatopoeia — `pow`, `blam`, `krak`,
+   * `zzak`, `whoosh`. Where it lands is the cue's (the body the event names).
+   */
+  burst: { type: 'burst' },
+  /** The star's fill (its ink outline and lettering are fixed). Absent is POW yellow. */
+  burstColour: { type: 'colour' },
+  /** Speed lines on a dash: their density, 0 (none) to 2. Absent is 1. */
+  streaks: { type: 'number', min: 0, max: 2 },
+  /** The speed lines' colour. Absent is white. */
+  streakColour: { type: 'colour' },
+  /** `zone.dissolve`: the ink splat a creature leaves where it dies, 0 (none) to 2. Absent is 1. */
+  splat: { type: 'number', min: 0, max: 2 },
+  /** `damage.player`, `fx.badge`: the halftone dot burst, 0 (the plain flash) to 2. Absent is 1. */
+  dots: { type: 'number', min: 0, max: 2 },
+  /** An arrival: where the hologram-to-ink summon starts, 0 (all hologram) to 1 (no ramp). Absent is 0. */
+  inkFrom: { type: 'number', min: 0, max: 1 },
 };
 
 /** A param value against its spec, or the complaint. */
@@ -275,6 +298,8 @@ function checkParam(key: string, value: unknown): string | null {
       return typeof value === 'string' && isEffectShape(value) ? null : `param ${key} must be an effect shape`;
     case 'gesture':
       return isGestureParam(value) ? null : `param ${key} must be cast, flinch, outcome or none`;
+    case 'burst':
+      return isBurst(value) ? null : `param ${key} must be one of ${BURSTS.join(', ')}`;
     default:
       return `param ${key} has no type`;
   }

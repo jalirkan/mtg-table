@@ -83,6 +83,7 @@ import figuresJson from './figures/figures.json';
 import modelsJson from './figures/models.json';
 import duelistsJson from './figures/duelists.json';
 import { cursorOf, intakeFor, type StreamCursor } from './cues/intake.ts';
+import { motionFromSearch, DEFAULT_MOTION, type MotionFlags } from './cues/motion.ts';
 import { CueQueue, awaitingHuman, budgetFor, type QueueMode } from './cues/queue.ts';
 import { REGISTRY } from './cues/registry.ts';
 import { EMPTY_CUE_DATA, type CueData } from './cues/types.ts';
@@ -747,6 +748,19 @@ export default function Arena({
     setBloomOn(on);
     if (on) setInkOn(true);
   }, []);
+  /**
+   * **The comic motion lane's two switches** (`cues/motion.ts`; D132, D135 on
+   * branch `motion`): `?fx=classic|comic` and `?twos=0|1`, read once — where they
+   * START. The cue strip's two checkboxes then flip them on the queue itself,
+   * which is presentation state like its speed.
+   */
+  const motion = useMemo<MotionFlags>(() => {
+    try {
+      return motionFromSearch(window.location.search);
+    } catch {
+      return DEFAULT_MOTION;
+    }
+  }, []);
   /** T7's program warm-up counter — see `EffectPool.prime`. Two frames at mount. */
   const primeRef = useRef(2);
   /**
@@ -1016,6 +1030,8 @@ export default function Arena({
         data,
         mode,
         reducedMotion,
+        comic: motion.comic,
+        onTwos: motion.twos,
         onNote: (message) => {
           console.info(`[arena] ${message}`);
         },
@@ -1615,6 +1631,37 @@ function CueControls({
           }}
         />{' '}
         bloom
+      </label>
+      {/* **The comic motion lane's two switches** (D132, D135): the new vocabulary
+          (bursts, lettering, splats, dots, speed lines, the ink summon, impact
+          shakes) against the film as it was, and the stepped motion. Both are the
+          QUEUE's settings — presentation, like its speed — and reach no act. */}
+      <label title="Comic FX: impact stars and their lettering, ink splats, halftone dots, speed lines, the hologram-to-ink summon and impact shakes — off is the film as it was (?fx=classic)">
+        <input
+          type="checkbox"
+          checked={queue.comic}
+          onChange={(event) => {
+            queue.setComic(event.currentTarget.checked);
+          }}
+        />{' '}
+        comic FX
+      </label>
+      <label
+        title={
+          queue.reducedMotion
+            ? 'On twos is off while reduced motion is on (§8 rule 7)'
+            : 'Animate on twos: every cue stepped to twelve drawings a second, the comic’s stepped motion (?twos=0 to start without it)'
+        }
+      >
+        <input
+          type="checkbox"
+          checked={queue.twosActive}
+          disabled={queue.reducedMotion}
+          onChange={(event) => {
+            queue.setOnTwos(event.currentTarget.checked);
+          }}
+        />{' '}
+        on twos
       </label>
       <span className="muted">
         {pending > 0 ? `${String(pending)} step${pending === 1 ? '' : 's'} · ${String(remaining)} ms` : 'idle'}

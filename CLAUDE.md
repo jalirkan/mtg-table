@@ -973,6 +973,9 @@ deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=8900`: **260.6 s**, exit 0, 46
 jobs whose seconds sum to 1,016.4 s, at a load average of 4.7 that other lanes'
 work beside it raised to 12.1
 (`var/check-all-look-merge.log`, `docs/evidence/look.md`'s merge section).
+**The comic motion lane** (branch `motion`, off `c81f674`, 2026-09-28; it added no
+step) ran it from a deleted `bridge/out` at `WSPORT=8715`: **929 s**, exit 0, 9c's
+fourteen games 403 s, at a load average of 6–10 (`var/check-all-motion.log`).
 `SKIP_TEN=1` brings the serial gate back to roughly six minutes. **Pass
 `WSPORT=<n>` if 8643 is busy** — step 10 starts **seven** servers: on `WSPORT`,
 one after another, serially; on `WSPORT` .. `WSPORT+6`, at once, in parallel.
@@ -1588,9 +1591,10 @@ section's; slice 3 (T9–T12, `docs/evidence/m7-tier2-slice3.md`) added
    breathe **only while the queue is awake**. The hot path still allocates
    nothing: colours go through `scene/colourCache.ts`'s `parsedColour`, never a
    per-frame `Color.set('#…')`; anchors are pooled. The budgets are separate on
-   purpose: the effect pool is **fixed at 45** (glow 8, ring 8, beam 5,
-   particles 3, text 6, plate 3, mote 12 — 26 at Tier 1, 38 with the motes, 45
-   since slice 3's T11 beats, **D79**; at most
+   purpose: the effect pool is **fixed at 49** (glow 8, ring 8, beam 5,
+   particles 3, text 6, plate 3, mote 12, streak 4 — 26 at Tier 1, 38 with the
+   motes, 45 since slice 3's T11 beats, **D79**, 49 since the comic motion lane's
+   speed lines, **D130**; at most
    `MAX_LIVE_EFFECTS = 8` blended transients and `MAX_LIVE_MOTES = 12` motes
    live at once), pose overlays have their own
    `MAX_POSE_OVERLAYS = 12`, and at most `MAX_FIGURES = 12` creatures carry a
@@ -2303,6 +2307,64 @@ on the branch after the verification pass (870 + 94 before the lane), and is
 **949 + 120 (8 files)** merged (the count paragraph under *The web client* has
 the rest). Its gate runs are `var/check-all-look.log`,
 `var/check-all-look-fix1.log` and, merged, `var/check-all-look-merge.log`.
+
+## The comic motion lane — the conventions D130–D136 added
+
+Five, and the thesis is one sentence: **a comic's motion is still a cue — a pure
+function of its own `t` that decays to identity — and "off" is the film before
+it.** Report 15's Lane MOTION (`docs/research/15-art-direction.md` §5, §9.2) gave
+the cues impact stars, lettering, ink splats, halftone dots, speed lines, the
+hologram-to-ink summon, impact shakes and on twos, on branch `motion`
+(**D130–D136**, the lane's reserved range, renumbered at merge;
+`docs/evidence/motion.md` is what was measured). README's *The comic motion lane*
+is how to give a card a word.
+
+1. **Comic FX is a switch stamped at enqueue, and off is op-for-op the old film**
+   (**D135**). `CueContext.comic` comes from the queue (`?fx=classic|comic`, the
+   cue strip, the workshop's queue bar) as `reducedMotion` does; every lane beat is
+   behind it, a cue's comic-only effect keys are declared in `CueDef.comic` (which
+   `end()` releases only for a comic cue), and the lane's helpers emit NOTHING with
+   it off. `motion.test.ts` holds the corpus to "no comic op with comic FX off"; a
+   new beat that writes an op outside the switch breaks the A/B the user judges
+   with. **Default on.**
+2. **Ink is a shape, and the kit grew by one kind** (**D130**, **D133**). `burst`,
+   `splat` and `dots` are textures on the existing slots, blended NORMALLY
+   (`isInkShape`; blending is render state, never a program); `streak` is the one
+   new kind, four slots, counted against the eight-slot cap — the pool is **49**.
+   The words are the CLOSED `COMIC_WORDS` (POW, BLAM, KRAK, ZZAK, WHOOSH), reached
+   only through the `burst` param and lettered ON the star (`Effect.word`), never a
+   `text` effect; `replay-cues.test.ts` nets every word and every text. A new
+   shape needs a `drawShape` case and a row in `INK_SHAPES` if it is ink; a new
+   word is a decision. Speed lines lie along the motion's own vector (`from → to`)
+   — "body → anchor" flips once a body has passed its anchor.
+3. **The summon is an offset; the look is LOOK's** (**D131**). `Offset.materialize`
+   (identity 1, a product) ramps on every arrival (the zone event's own
+   `toZone`/`fromZone`), and `CueRunner`'s `applyMaterialize` is its ONE frame-loop
+   writer — a number into LOOK's `uMaterialize` handle (branch `look`'s figure
+   material, `uLook * uMaterialize`), and on this branch's spike material, which has
+   no handle, a fallback that scales `uLook` itself, holding the commit's value and
+   putting it back. The fallback is deleted at the merge with LOOK (PLAN, the lane's
+   follow-up 2); a liveness clause holds the order, negative-controlled. The
+   departing body and the prop field are `FigureLayer`'s and `props.ts`'s: their
+   half is PLAN's follow-up, not a second writer.
+4. **On twos is a quantisation of each cue's progress in the queue** (**D132**):
+   `cues/motion.ts`'s `onTwos`, twelve drawings a second of SCREEN time (× speed),
+   at least four per cue, `t = 1` exact, and the cue still ends on its real
+   progress. Off under reduced motion; the camera and the breathing are not cues and
+   stay on ones. Never a timer.
+5. **An impact shake is `camera.ts`'s own, shake-only, priority 0, one per cue**
+   (**D134**). It never preempts a move and the director drops it under reduced
+   motion, while the engine waits and within five seconds of the user's drag;
+   `CameraRequest.key` is read for a shake-only request and nothing else. Every
+   word, star, splat and shake lands on the body the event NAMES (**D136**,
+   `cues.json`'s rule): an attacker's word is its own flourish, never a hit on its
+   defender.
+
+The lane's tests: `motion.test.ts` (11), and additions to `cues-exhaustive`,
+`replay-cues`, `liveness` (one appended test: the lane's bodies allocate nothing,
+the look's one writer, the pool at 49), `camera` and `workshop` — **892 `node
+--test` + 94 vitest** on the branch. Its evidence driver and PNGs are local, under
+`var/motion/`.
 
 ## Treat forge-src as prose
 

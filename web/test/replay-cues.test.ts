@@ -1034,3 +1034,80 @@ test('queue: rule 7 — a card whose cast and resolved name one cue plays it onc
   // With neither aimed, the first in engine order plays, once.
   assert.deepEqual(webUp(true), ['resolved']);
 });
+
+// ---------------------------------------------------------------------------
+// The comic motion lane (report 15 §9.2; D133 on branch `motion`) — the net over
+// its new strings
+// ---------------------------------------------------------------------------
+
+/**
+ * **Every string a `text` effect draws is a number or a fixed word** — the closed
+ * set the arena has always drawn (damage and life numbers, counter pips, a library
+ * peek's counts, the turn banner, the result banner, Strategic Intervention's
+ * banner) — and **every word lettered on a burst is one of `COMIC_WORDS`**. The
+ * arena is the first surface that paints per-card text into a texture, and the
+ * lettering is the one field the lane added where a name could land.
+ */
+const FIXED_TEXTS: ReadonlyArray<RegExp> = [
+  /^[-+−]?\d+$/, // a damage number, a life total
+  /^☠\d+$/, // a poison total
+  /^(?:\d+× )?[+−](?:1\/[+−]1|[A-Za-z]+)$/, // a counter pip: `+1/+1`, `2× −1/−1`, `+Spore`
+  /^\d+▲ \d+[▼✝]$/, // a scry or a surveil
+  /^Turn \d+(?: — your turn)?$/, // the turn banner
+  /^(?:Victory|Defeat|Draw)$/, // the result
+  /^MISSION CONTROL$/, // Strategic Intervention's freeze-frame
+];
+
+function closedText(text: string): boolean {
+  return FIXED_TEXTS.some((pattern) => pattern.test(text));
+}
+
+test('replay-cues: the comic lane letters only its closed words, and every text is a number or a fixed word', async () => {
+  const { COMIC_WORDS, EFFECT_SHAPES } = await import('../src/arena/cues/stage.ts');
+  const words = new Set<string>(COMIC_WORDS);
+  const shapes = new Set<string>(EFFECT_SHAPES);
+  // The negative controls: a card name, an id join and a composed word are caught.
+  for (const bad of ['Nick Fury, Spymaster', 'Coulson (12)', 'POW Fury', 'pow', '']) {
+    assert.ok(!closedText(bad) || bad === '', `the text net passes ${JSON.stringify(bad)}`);
+    assert.ok(!words.has(bad), `the word list takes ${JSON.stringify(bad)}`);
+  }
+  let texts = 0;
+  let lettered = 0;
+  const seen = new Map<string, number>();
+  for (const file of fixtureFiles()) {
+    const frames = framesOf(file);
+    const names = namesIn(frames);
+    const stage = new NullStage();
+    const queue = new CueQueue({ stage, registry: REGISTRY, data: CUES, mode: 'replay', comic: true });
+    let previous: ClientState['board'] = null;
+    let now = 0;
+    for (const { state, events } of frames) {
+      queue.enqueueBatch(events, state, undefined, previous);
+      previous = state.board;
+      let guard = 0;
+      while (!queue.idle && guard++ < 400) {
+        now += FRAME_MS;
+        queue.tick(now);
+      }
+    }
+    for (const op of stage.ops) {
+      const effect = op.effect;
+      if (effect === undefined) continue;
+      if (effect.shape !== undefined) assert.ok(shapes.has(effect.shape), `${file}: an effect shape ${effect.shape} outside the closed list`);
+      if (effect.word !== undefined) {
+        lettered += 1;
+        assert.ok(words.has(effect.word), `${file}: the burst lettered ${JSON.stringify(effect.word)}`);
+        assert.equal(effect.shape, 'burst', `${file}: a word on something that is not a burst`);
+        assertStringIsClean(effect.word, names, file);
+        seen.set(effect.word, (seen.get(effect.word) ?? 0) + 1);
+      }
+      if (effect.kind === 'text') {
+        texts += 1;
+        const text = effect.text ?? '';
+        assert.ok(closedText(text), `${file}: the text ${JSON.stringify(text)} is not a number or a fixed word`);
+      }
+    }
+  }
+  console.log(`  ${String(texts)} text ops, all closed · ${String(lettered)} lettered bursts: ${[...seen].map(([w, n]) => `${w} ${String(n)}`).join(', ')}`);
+  assert.ok(texts > 1000 && lettered > 0);
+});

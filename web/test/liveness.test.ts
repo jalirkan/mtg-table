@@ -1762,3 +1762,99 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
   assert.match(shim, /export \* from '\.\/figureMaterial\.ts';/);
   assert.ok(!/ShaderMaterial|glsl|uniform/.test(shim), 'holoMaterial.ts carries a shader again');
 });
+
+/**
+ * **The comic motion lane** (`docs/research/15-art-direction.md` §9.2; D130–D136
+ * on branch `motion`) — its new frame-loop bodies, its one write into a figure's
+ * look, its stepping and its pool, held the way the Tier 2 code is:
+ *
+ *  - the effect pool's new bodies — the streak's orientation, the ink blend, the
+ *    two map choosers — and `CueRunner`'s `applyMaterialize` allocate nothing
+ *    (the same scan and the same negative controls as the disc field's);
+ *  - `cues/motion.ts`'s `onTwos` is on the queue's per-cue path and allocates
+ *    nothing, and the module is pure (no three, React, DOM or clock — the `cues/`
+ *    purity clause covers the imports; this adds the DOM);
+ *  - the frame loop's only `uLook` write is `applyMaterialize`, a NUMBER (report
+ *    15 §9.1's declared exception); the commit's write stays `holoMaterial.ts`'s;
+ *  - the pool is 49 and the streak is counted against the eight-slot cap.
+ */
+test('liveness: the comic motion lane allocates nothing in the loop, writes the look only as a number, and stays in its budget', async () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const effects = files.get('scene/effects.ts') ?? '';
+  const pool = effects.slice(effects.indexOf('class EffectPool'));
+  const runner = files.get('scene/CueRunner.tsx') ?? '';
+  const motion = files.get('cues/motion.ts') ?? '';
+  const bodies: Array<[string, string]> = [
+    ['EffectPool.#streak', bodyOf(pool, '#streak')],
+    ['EffectPool.#blend', bodyOf(pool, '#blend')],
+    ['EffectPool.#glowMap', bodyOf(pool, '#glowMap')],
+    ['EffectPool.#ringMap', bodyOf(pool, '#ringMap')],
+    ['CueRunner applyMaterialize', bodyOf(runner, 'applyMaterialize')],
+    ['motion.ts onTwos', bodyOf(motion, 'onTwos')],
+  ];
+  for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
+  // They are the frame loop's: bind reaches the streak and the blend, applyFigures the look.
+  assert.match(pool, /case 'streak': \{\s*this\.#streak\(/, 'the streak branch no longer calls #streak — update the body list');
+  assert.match(pool, /this\.#blend\(slot, isInkShape\(effect\.shape\)\)/, 'the glow no longer chooses its blend by shape');
+  assert.match(runner, /applyMaterialize\(rig, offset\.materialize\)/, 'applyFigures no longer writes the summon');
+  assert.match(files.get('cues/queue.ts') ?? '', /onTwos\(progress, item\.ms, stepMs\)/, 'the queue no longer steps a cue on twos');
+  const junk = [
+    'const _junk = [t, t];',
+    'const o = { a: 1 };',
+    'for (const e of this.entries.values()) {}',
+    'const f = () => 1;',
+    'const s = `${1}`;',
+    'const v = new THREE.Vector3();',
+    'const c = [...xs];',
+    'const p = entry.pose.position.slice();',
+  ];
+  for (const [name, body] of bodies) {
+    for (const line of junk) {
+      assert.ok(allocationsIn(`\n${line}\n${body}`).length > 0, `the allocation scan misses \`${line}\` in ${name}`);
+    }
+    assert.deepEqual(allocationsIn(body), [], `${name} allocates in the frame loop (§9.2 rule 6)`);
+  }
+
+  // `cues/motion.ts` reads the URL it is HANDED; it touches no DOM and no clock.
+  assert.ok(motion.length > 200, 'cues/motion.ts is missing');
+  assert.ok(!/\bwindow\.|\bdocument\.|performance\.now\(|Date\.now\(/.test(motion), 'cues/motion.ts touches the DOM or a clock');
+
+  // The look: at commit it is LOOK's (`holoMaterial.ts`'s `applyLook`, the prop
+  // field's `setLook`); in the FRAME LOOP it is `applyMaterialize`'s and nobody
+  // else's, and it is a number. The loop's bodies are the ones the costume clause
+  // reads, plus CueRunner outside the one function.
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const discs = files.get('scene/discs.ts') ?? '';
+  const propsSource = files.get('scene/props.ts') ?? '';
+  const writesLook = /\buLook\b[\s\S]{0,40}\.value\s*=|\blook\.value\s*=|\bapplyLook\(/;
+  const loop: Array<[string, string]> = [
+    ['CueRunner.tsx outside applyMaterialize', runner.replace(bodyOf(runner, 'applyMaterialize'), '')],
+    ['DiscField.bind', bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind')],
+    ['DepartureField.bind', bodyOf(layer.slice(layer.indexOf('class DepartureField')), 'bind')],
+    ['PropField.bind', bodyOf(propsSource.slice(propsSource.indexOf('export class PropField')), 'bind')],
+  ];
+  for (const [name, body] of loop) {
+    assert.ok(body.length > 100, `could not find ${name}`);
+    assert.ok(!writesLook.test(body), `${name} writes a look in the frame loop`);
+    assert.ok(writesLook.test(`${body}\nmaterial.uniforms.uLook.value = 1;`), `the look scan misses a write in ${name}`);
+  }
+  // The handle is LOOK's `uMaterialize` (branch `look`'s figure material), a number;
+  // the `uLook` product is the spike material's fallback until that merge, and it
+  // comes AFTER the handle so a material that has one never reaches it.
+  const materialize = bodyOf(runner, 'applyMaterialize');
+  assert.match(materialize, /uniforms\.uMaterialize;[\s\S]*handle\.value = value;[\s\S]*return;[\s\S]*uniforms\.uLook/, 'applyMaterialize no longer prefers LOOK’s uMaterialize handle');
+  assert.match(materialize, /look\.value = scaled;/, 'applyMaterialize’s fallback no longer writes the look as a number');
+  // The negative control: a colour or a costume written from the loop is still caught.
+  assert.ok(/\bapplyCostume\(|\buCostume\b/.test(`${bodyOf(runner, 'applyMaterialize')}\nuCostume.value[0].set('#fff');`));
+
+  // The pool: 49, by exactly one new kind of four; the streak counts against the cap.
+  const literal = /export const POOL = \{([^}]*)\}/.exec(effects)?.[1] ?? '';
+  const sizes = Object.fromEntries([...literal.matchAll(/(\w+):\s*(\d+)/g)].map((m) => [m[1]!, Number(m[2])]));
+  assert.deepEqual(sizes, { glow: 8, ring: 8, beam: 5, particles: 3, text: 6, plate: 3, mote: 12, streak: 4 });
+  assert.equal(Object.values(sizes).reduce((a, b) => a + b, 0), 49, 'the pool is not 45 + 4');
+  const stageModule = await import('../src/arena/cues/stage.ts');
+  assert.equal(stageModule.effectBucketOf('streak'), 'effect', 'a streak escaped the eight-slot cap');
+  assert.equal(stageModule.MAX_LIVE_EFFECTS, 8, 'MAX_LIVE_EFFECTS moved — say why, with a measurement');
+  // Every parked streak is primed like every other slot (T7): prime walks the slots.
+  assert.match(bodyOf(pool, 'prime'), /for \(const slot of this\.#slots\)/, 'prime no longer walks every slot');
+});

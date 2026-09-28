@@ -83,6 +83,10 @@
  *     attachDataOf, EMPTY_FIGURE_DATA, EMPTY_MODEL_DATA (types.ts)
  *   arena/cues/      the cue engine — pure
  *     CueQueue (queue.ts) · REGISTRY (registry.ts)
+ *     motionFromSearch, DEFAULT_MOTION, MotionFlags (motion.ts)
+ *                                            the comic motion lane's comic FX and on
+ *                                            twos: `?fx=` / `?twos=` where they start,
+ *                                            the queue bar's two checkboxes after
  *     cuesFor, resolve, selectorsFor, subjectOf (resolve.ts)
  *     validateCues, mergeCueData, isCommentKey (validate.ts)
  *     clamp01, CueImpl, CueRegistry, AnchorRef (stage.ts)
@@ -116,6 +120,7 @@ import { imageUrl, lookupArt, type ArtIndex } from '../art.ts';
 import type { GameEvent, GameStateBody } from '../protocol.ts';
 import type { ClientState } from '../reduce.ts';
 import type { View } from '../useView.ts';
+import { DEFAULT_MOTION, motionFromSearch, type MotionFlags } from '../arena/cues/motion.ts';
 import { CueQueue } from '../arena/cues/queue.ts';
 import type { CueData, Problem } from '../arena/cues/types.ts';
 import { figurePose, type FigurePose } from '../arena/figures/pose.ts';
@@ -242,6 +247,15 @@ function prefersReducedMotion(): boolean {
 }
 
 const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
+
+/** `?fx=` / `?twos=` — where the comic motion lane's two switches start (`cues/motion.ts`). */
+function initialMotion(): MotionFlags {
+  try {
+    return motionFromSearch(window.location.search);
+  } catch {
+    return DEFAULT_MOTION;
+  }
+}
 const HALF_TURN = Math.PI;
 
 interface Shown {
@@ -373,6 +387,10 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         data: cueData,
         mode: 'replay',
         reducedMotion,
+        // The comic motion lane (D132, D135): where comic FX and on twos START —
+        // the queue bar's checkboxes flip them on the queue itself.
+        comic: initialMotion().comic,
+        onTwos: initialMotion().twos,
         onNote: (message) => {
           console.info(`[workshop] ${message}`);
         },
@@ -1110,6 +1128,29 @@ function QueueBar({
       <label title="§8 rule 7: cues at 30%, no clip, no shake, no camera">
         <input type="checkbox" checked={reducedMotion} onChange={(event) => onReducedMotion(event.currentTarget.checked)} />{' '}
         reduced motion
+      </label>
+      {/* The comic motion lane's two switches (D132, D135): the queue's own
+          settings, as in the arena's cue strip. */}
+      <label title="Comic FX: impact stars and their lettering, ink splats, halftone dots, speed lines, the hologram-to-ink summon (seen under the comic look) — off is the film as it was. (A camera shake is dropped here: the pedestal's camera is yours.)">
+        <input
+          type="checkbox"
+          checked={queue.comic}
+          onChange={(event) => {
+            queue.setComic(event.currentTarget.checked);
+          }}
+        />{' '}
+        comic FX
+      </label>
+      <label title={reducedMotion ? 'On twos is off while reduced motion is on (§8 rule 7)' : 'Animate on twos: every cue stepped to twelve drawings a second'}>
+        <input
+          type="checkbox"
+          checked={queue.twosActive}
+          disabled={reducedMotion}
+          onChange={(event) => {
+            queue.setOnTwos(event.currentTarget.checked);
+          }}
+        />{' '}
+        on twos
       </label>
       <label title="Put the card back at rest when the film runs out">
         <input type="checkbox" checked={autoRest} onChange={(event) => onAutoRest(event.currentTarget.checked)} /> back to

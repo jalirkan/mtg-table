@@ -1179,3 +1179,48 @@ test('liveness: the list thumbnail is the workshop’s one card image outside Ca
   assert.match(claude, /The workshop \(`#workshop`\) draws its\s+card LIST's thumbnails/, 'the exemption is not written down in M4 convention 2');
 });
 
+
+/**
+ * **The comic motion lane is rehearsable on the pedestal** (D130–D136 on branch
+ * `motion`): every headline card's new beat — its word, its speed lines, its dots,
+ * its splat, its summon — plays through the pedestal's real queue from one of the
+ * rehearsals `synthetic.ts` already builds, with no workshop code for it. A beat
+ * that needed a frame the workshop cannot build would fail here first.
+ */
+test('workshop: every headline card’s comic beat is rehearsable — the pedestal’s real queue plays its word, lines, dots, splat and summon', () => {
+  const expectations: Array<[string, Parameters<typeof rehearse>[1], (ops: NullStage['ops']) => boolean, string]> = [
+    ['Nick Fury, Spymaster', 'attackAlone', (ops) => ops.some((o) => o.effect?.word === 'POW') && ops.some((o) => o.effect?.kind === 'streak'), 'POW and speed lines'],
+    ['Nick Fury, Spymaster', 'enters', (ops) => ops.some((o) => o.offset !== undefined && o.offset.materialize < 0.5), 'the hologram-to-ink summon'],
+    ['Agent Phil Coulson', 'counterUp', (ops) => ops.some((o) => o.effect?.kind === 'ring' && o.effect.shape === 'dots'), 'the halftone ring'],
+    ['Peggy Carter, Secret Agent', 'attackAlone', (ops) => ops.some((o) => o.effect?.word === 'POW') && ops.some((o) => o.effect?.kind === 'streak'), 'POW and speed lines'],
+    ['Quake, Agent of S.H.I.E.L.D.', 'resolves', (ops) => ops.some((o) => o.effect?.word === 'KRAK'), 'KRAK where the fissure lands'],
+    ['Wasp, Shrinking Savior', 'cast', (ops) => ops.some((o) => o.effect?.word === 'ZZAK'), 'ZZAK where the beam lands'],
+    ['Wasp, Shrinking Savior', 'attackAlone', (ops) => ops.some((o) => o.effect?.kind === 'streak'), 'speed lines'],
+    ['Ant-Man, Reformed Rogue', 'hit', (ops) => ops.some((o) => o.effect?.word === 'POW'), 'POW as he pops back to size'],
+    ['Ant-Man, Reformed Rogue', 'attackAlone', (ops) => ops.some((o) => o.effect?.kind === 'streak'), 'thin speed lines'],
+    ['Agent 13, Sharon Carter', 'attackAlone', (ops) => ops.some((o) => o.effect?.word === 'BLAM'), 'BLAM on her muzzle'],
+    ["Ant-Man's Air Force", 'cast', (ops) => ops.some((o) => o.effect?.word === 'WHOOSH'), 'WHOOSH where the swarm arrives'],
+    ['S.H.I.E.L.D. Helicarrier', 'enters', (ops) => ops.some((o) => o.effect?.word === 'WHOOSH') && ops.some((o) => o.effect?.kind === 'streak'), 'WHOOSH and its descent on speed lines'],
+    ['Agents of S.H.I.E.L.D.', 'attackAlone', (ops) => ops.some((o) => o.effect?.word === 'POW') && ops.some((o) => o.effect?.kind === 'streak'), 'POW under the spotlight'],
+    ['Aerial Doombot', 'attackAlone', (ops) => ops.some((o) => o.effect?.word === 'ZZAK'), 'ZZAK where the laser lands'],
+    ['Helicarrier Strike', 'resolves', (ops) => ops.some((o) => o.effect?.word === 'BLAM'), 'BLAM as the beam lands'],
+    ['Agent Phil Coulson', 'dies', (ops) => ops.some((o) => o.effect?.shape === 'splat'), 'the ink splat'],
+    ['Agent Phil Coulson', 'lethal', (ops) => ops.some((o) => o.effect?.word === 'POW') && ops.some((o) => o.effect?.shape === 'splat'), 'POW, then the splat'],
+    ['Agent Phil Coulson', 'hitsPlayer', (ops) => ops.some((o) => o.effect?.kind === 'plate' && o.effect.shape === 'dots'), 'the halftone flash'],
+    ['Agent Phil Coulson', 'blocks', (ops) => ops.some((o) => o.effect?.shape === 'burst'), 'the contact star'],
+  ];
+  for (const [name, kind, holds, what] of expectations) {
+    const r = rehearse(entry(name), kind, DEFAULT_OPTIONS);
+    const stage = new NullStage();
+    const queue = new CueQueue({ stage, registry: workshopRegistry(), data: CUES, mode: 'replay', comic: true });
+    queue.enqueueBatch(r.events, r.after, undefined, r.before.board);
+    playOut(queue, stage);
+    assert.ok(holds(stage.ops), `${name} · ${kind}: no ${what} on the pedestal`);
+    // …and with comic FX off, the pedestal plays the film as it was.
+    const classic = new NullStage();
+    const off = new CueQueue({ stage: classic, registry: workshopRegistry(), data: CUES, mode: 'replay', comic: false });
+    off.enqueueBatch(r.events, r.after, undefined, r.before.board);
+    playOut(off, classic);
+    assert.ok(!holds(classic.ops), `${name} · ${kind}: ${what} with comic FX off`);
+  }
+});
