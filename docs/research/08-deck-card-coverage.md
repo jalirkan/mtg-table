@@ -431,3 +431,166 @@ grep -rn 'not found in ability' <forge-src>/forge-game/src/main/java/forge/game/
 Scryfall JSON for all 26 non-basics, and the 28 extracted scripts, are in this
 session's scratchpad under `deckcards/sf/` and `deckcards/scripts/`; they are
 cheap to regenerate with the two commands above.
+
+---
+
+## 8. The second deck: `decks/doom-legion.dck` (2026-09-27)
+
+Scope: the 27 distinct cards of **Doom Legion (Marvel Super Heroes villains)**,
+the 40-card blue-black deck match setup seats the AI behind. What the deck is
+and how it plays is `decks/README.md`; what was run is
+`docs/evidence/match-setup.md` §D. Same method as §1 — the script out of
+`cardsfolder.zip`, Scryfall's printing in the set the line names, the two
+diffed — except that the mechanical half is now a tool, `tools/check-deck.mjs
+--scryfall`, which diffs mana cost, type line, P/T, `K:` keywords (a keyword the
+printed card lacks is a mismatch — it catches §2's Trample, negative-controlled
+with `--stock`) and Oracle text. The ability lines (`A:` / `T:` / `S:` / `R:` /
+`SVar`) were then read against Oracle by hand, as in §1, and the two trigger
+limits the deck leans on were confirmed against the **2.0.14 jar** with javap.
+
+**Headline: 27 of 27 cards are faithful. No mismatch, no overlay needed.**
+(The 27 as they stand after the review's swap, §8.3b: Crossbones, Malicious
+Mercenary in, Trickster's Stratagem out — both faithful.) Three
+`Oracle:` lines drift from Scryfall and all three are display text only: the two
+Thriving lands carry §1's older templating, and Hidden Lair's reads *"if your
+control a basic land"* — a typo in Forge's text line; the rules line
+(`IsPresent$ Card.Self+ThisTurnEntered,Land.Basic+YouCtrl`, a comma is "or") is
+right. One card that was in the first draft, **Kang Prime, is faithful but was
+cut** — not for its script but because its library reveal fails
+`tools/check-redaction.mjs` (§8.3); a second, **Trickster's Stratagem**, was
+cut because the Forge AI never casts it (§8.3b).
+
+### 8.1 The table
+
+Every line of the `.dck` carries its set code, and every code was checked
+against the edition file (`Marvel Super Heroes.txt`, `Marvel Super Heroes
+Commander.txt`) and against Scryfall — the collector numbers agree. Paths are
+inside `cardsfolder.zip`.
+
+| # | Card | Set | Forge script | Status | Notes |
+|---|---|---|---|---|---|
+| 1 | Aerial Doombot | MSH #43 | `a/aerial_doombot.txt` | ok | §1 #19 — also in Pacho's deck. Power-up `{5}{U}`: three +1/+1 counters. |
+| 2 | Agents of HYDRA | MSH #85 | `a/agents_of_hydra.txt` | ok | Dies → `b_2_1_villain_menace`. Token script verified: black 2/1 `Creature Villain`, `K:Menace`. |
+| 3 | Loki, God of Mischief | MSH #65 | `l/loki_god_of_mischief.txt` | ok | `Mode$ BecomesTarget \| ValidTarget$ Player,Permanent \| ValidSource$ Ability.YouCtrl \| ActivationLimit$ 1`. "Triggers only once each turn" is `ActivationLimit` — javap: `Trigger.checkActivationLimit` compares `getActivationsThisTurn()`, i.e. per **turn**. |
+| 4 | Doom's Servo-Guards | MSC #535 | `d/dooms_servo_guards.txt` | ok | Artifact Creature Robot Villain 2/2; ETB gain 2, mill 2. |
+| 5 | Doom Reigns Supreme | MSH #96 | `d/doom_reigns_supreme.txt` | ok | Enchantment — **Plan**. Villain ETB → drain 1 + a `PLAN` counter; `Mode$ CounterAdded \| CounterAmount$ EQ5` → sacrifice → reflexive `ImmediateTrigger` → `Dig \| DigNum$ 5 \| ChangeNum$ All \| DestinationZone$ Exile` on the target opponent → `Play \| Amount$ 2 \| WithoutManaCost$ True \| Optional$ True`. Fired once in the evidence (§8.2). The counter reaches the wire as `"Plan"` (amendment M43: an opaque display name). |
+| 6 | Dark Deed | MSH #93 | `d/dark_deed.txt` | ok | Instant, `Pump NumAtt$ -4 NumDef$ -4`. |
+| 7 | Doom Blade | MSC #576 | `d/doom_blade.txt` | ok | A reprint; `ValidTgts$ Creature.nonBlack`. Every creature and token in Pacho's deck is nonblack. |
+| 8 | Baron Strucker, HYDRA Overlord | MSH #88 | `b/baron_strucker_hydra_overlord.txt` | ok | `S:Mode$ ReduceCost \| ValidCard$ Villain \| Type$ Spell \| Activator$ You \| Amount$ 1`; another Villain ETB → optional connive with `ResolvedLimit$ 1` — "do this only once each turn" — javap: `Trigger.checkResolvedLimit` counts `Card.getAbilityResolvedThisTurnActivators`, per **turn**. |
+| 9 | HYDRA Troopers | MSH #101 | `h/hydra_troopers.txt` | ok | `DB$ Branch \| BranchConditionSVar$ X \| …GE2` → tapped menace token, else mill 2. `X` = creature cards in your graveyard. |
+| 10 | A.I.M. Bot | MSC #529 | `a/a_i_m_bot.txt` | ok | Vanilla Artifact Creature Robot Villain 2/3 `K:Flying`. |
+| 11 | Visions of Villainy | MSH #120 | `v/visions_of_villainy.txt` | ok | Self cost reduction `IsPresent$ Villain.YouCtrl \| EffectZone$ All`; draw 2, lose 2. |
+| 12 | Frozen in Ice | MSH #54 | `f/frozen_in_ice.txt` | ok | Aura; ETB tap; `RemoveAllAbilities$ True`; "can't become untapped" is `R:Event$ Untap \| Layer$ CantHappen`. `SVar:AttachAILogic:Curse`, so the AI puts it on the opponent's creature. |
+| 13 | Kang the Conqueror | MSH #62 | `k/kang_the_conqueror.txt` | ok | 4/5 flying. Power-up `{5}{U}{U}{U}` → +1/+1 counter, `AddTurn \| NumTurns$ 1` with an `ExtraTurnDelayedTrigger` that installs `CantBeActivated \| ValidSA$ Activated.PowerUp` for that turn. The cost after entering this turn is `{3}{U}` (`CostAdjustment`, §4). **Not activated in any recorded game** — an extra turn has no recording anywhere in the repo. |
+| 14 | Kang, Temporal Tyrant | MSH #217 | `k/kang_temporal_tyrant.txt` | ok | `{2}{U}{B}`, the deck's gold card. Attacks → connive; `Mode$ Drawn \| Number$ 2` = "your second card each turn" → drain 1. |
+| 15 | Unliving Legionnaire | MSH #119 | `u/unliving_legionnaire.txt` | ok | 3/2 flying. Power-up `{5}{B}{B}` (`{2}{B}` the turn it enters): `ChangeZone Graveyard→Hand \| TargetMin$ 0 \| TargetMax$ 1` ("up to one") + two +1/+1 counters. |
+| 16 | Madame Hydra, Reanimated | MSC #538 | `m/madame_hydra_reanimated.txt` | ok | 2/2 `K:Menace`, `+X/+X` for creature cards in your graveyard; ETB and attack triggers → mill 2 (the attack trigger is `Secondary$ True`, one description for both). |
+| 17 | Hour of Defeat | MSH #99 | `h/hour_of_defeat.txt` | ok | Destroy + `Surveil \| Amount$ 1`. |
+| 18 | Crossbones, Malicious Mercenary | MSH #91 | `c/crossbones_malicious_mercenary.txt` | ok | Legendary Creature — Human Mercenary Villain 3/3 `K:Deathtouch`. `Mode$ ChangesZone \| Destination$ Battlefield \| ValidCard$ Villain.Other+YouCtrl \| ActivationLimit$ 1` — "triggers only once each turn", per **turn** as for Loki (#3) — → `PutCounter P1P1` on himself, then `DealDamage \| Defined$ Player.Opponent \| NumDmg$ 2`: no target, no reveal. Replaced Trickster's Stratagem (§8.3b). |
+| 19 | Pharaoh Rama-Tut | MSC #634 | `p/pharaoh_rama_tut.txt` | ok | 4/4 `K:Ward:2`; `Mode$ SpellCast \| ValidCard$ Card.nonCreature` → connive. Replaced Kang Prime (§8.3). |
+| 20 | Doctor Doom | MSH #95 | `d/doctor_doom.txt` | ok | ETB two `doombot` tokens — token script verified: `Name:Doombot`, colourless `Artifact Creature Robot Villain` 3/3, as printed. Indestructible `IsPresent$ Creature.Artifact+YouCtrl,Plan.YouCtrl` — artifact creature **or** Plan, and Doom Reigns Supreme is a Plan. End step: draw, lose 1. |
+| 21 | Thriving Isle | MSC #581 | `t/thriving_isle.txt` | ok | §1 #26 — the same cosmetic Oracle drift. |
+| 22 | Thriving Moor | MSC #582 | `t/thriving_moor.txt` | ok | Thriving Isle's black twin (`Exclude$ black`); same drift. |
+| 23 | Hidden Lair | MSH #269 | `h/hidden_lair.txt` | ok (text) | `{T}: {C}`; `{T}: {U} or {B}` while it entered this turn or you control a basic. Oracle line typo "if your control" — display only. |
+| 24 | Castle Doom | MSH #263 | `c/castle_doom.txt` | ok | `{T}: {C}`; `{T}: any colour \| RestrictValid$ Spell.Artifact`; `{3}, {T}, Sac<1/Artifact>: doombot token \| SorcerySpeed$ True`. The token ability was never activated in the evidence. |
+| 25 | Villainous Hideout | MSH #276 | `v/villainous_hideout.txt` | ok | `{T}: any colour \| RestrictValid$ Spell.Villain,Activated.Villain`; `{3}, {T}: target Villain you control connives`, sorcery speed. |
+| 26 | Swamp | MSH | `s/swamp.txt` | ok | Basic. |
+| 27 | Island | MSH | `i/island.txt` | ok | Basic. |
+
+No card in the deck carries an `AI:RemoveDeck` hint.
+
+### 8.2 What changes because this is the AI's deck
+
+§4 said of Pacho's deck that **"Villain … is decoration here."** In Doom Legion
+it is the engine: all 17 creatures and both token kinds are Villains, and six
+cards key off the type — Baron Strucker (cost reduction and connive), Doom
+Reigns Supreme (drain and plan counters), Crossbones (a counter and 2 damage to
+you), Visions of Villainy (cost), Villainous Hideout (mana and connive), and the
+Doombot tokens are Villains for all of them.
+`CardTile` and the arena's type line see "Legendary Creature — Human Villain"
+and "Artifact Creature — Robot Villain" throughout. The arena's per-card data
+(`figures/traits.json`, `figures.json`, `cues/cues.json`) has rows for Aerial
+Doombot (it is in Pacho's deck too) and none yet for the other 23 nonbasic
+names; those fall back to the subtype and archetype rungs, which is the
+documented behaviour, until rows are added.
+
+The prompts this deck raises **for the human seat** when the AI plays it — the
+surfaces M5's "nothing dead-ends" criterion cares about — are few, because the
+villains mostly decide for themselves:
+
+- **Ward 2** on Pharaoh Rama-Tut: targeting it raises the ward trigger, which
+  counters the spell unless the seat pays `{2}` (Forge's `UnlessCost` path). Not
+  checked in the evidence — nothing records whether the seat ever targeted it.
+- **Doom Reigns Supreme's payoff** exiles the seat's top five face up and the AI
+  may cast two of them — reached once (`doom2-mirror-15`): the seat's Island,
+  HYDRA Troopers, Swamp, Swamp, Island went to exile and the AI cast the
+  Troopers. The other direction — the **seat's** copy exiling the AI's top five —
+  builds a `DelayedReveal` for the seat (no `Reveal$` on the script) and asks
+  `choose_entities` *"Select a card to play"*, `min 0`, `max 1`, over the cards
+  already in exile; forced with a scratch deck, twice, and the redaction gate
+  passed both times (`docs/evidence/match-setup.md` §D.4).
+- Connive, mill and surveil by the AI are hidden draws and public discards/mills
+  — no prompt, and the gate passed on all 21 games.
+
+### 8.3 Kang Prime: faithful, and cut
+
+Kang Prime (MSC #85, `{3}{U}{B}` 3/5 flying) is scripted correctly —
+`DB$ DigUntil | Valid$ Card.nonLand | FoundDestination$ Exile |
+RevealedDestination$ Exile`, two `TIME` counters, `KW$ Suspend | PumpZone$
+Exile | Duration$ Permanent` for a card without it — and it played. But
+`DigUntilEffect.resolve` calls `GameAction.reveal` on the cards it digs (javap:
+offset 697), and the recordings catch those cards **in the AI's
+`library.cards`, fully drawn**, for one frame before they move to exile. That is
+a genuine reveal — the same cards are face up in exile in the next `state` — but
+`tools/check-redaction.mjs` fails it as A3 (an opponent's full library card), in
+2 of 10 recorded games (five frames; `docs/evidence/match-setup.md` §D.3). The
+gate stays as it is and the deck changed: Pharaoh Rama-Tut took the slot.
+
+Any future card whose script is `DigUntil` (or another reveal of the top of a
+library the viewer does not own) will hit the same assertion. Whether A3 should
+admit a `GameAction.reveal` window is a question for report 06 and
+`check-redaction.mjs`, with those five frames as its test data; it is not
+answered here.
+
+### 8.3b Trickster's Stratagem: faithful, and never cast by the AI
+
+Trickster's Stratagem (MSH #81, `{3}{U}` sorcery) is scripted correctly —
+`ChangeZone … Destination$ Library | LibraryPosition$ 1` (second from the top)
+`| DestinationAlternative$ Library | LibraryPositionAlternative$ -1` (bottom)
+`| AlternativeDecider$ TargetedOwner`, the **owner** choosing as printed, then
+`Connive | TargetMin$ 0 | TargetMax$ 1` — but **the Forge AI does not cast it**.
+Over the first 21 games its only stack entry was the seat's own cast; the match
+setup review then gave the AI **14 copies** and 24 Islands against the seat's
+HYDRA creatures and it never cast one in 61 turns and 37 draws. The script has
+no `AILogic$`; why 2.0.14's `ChangeZone` AI declines a battlefield→library tuck
+was not traced, because the answer would not change the deck. A card the AI never
+plays leaves the AI 39 live cards out of 40, and the one path the card was
+there for — the **seat** as the owner making the top-2/bottom choice — cannot be
+reached from the AI's side at all. **Crossbones, Malicious Mercenary** (MSH #91,
+row 18 above) took the slot: the same 4-drop, a creature the AI casts, and a
+Villain-keyed trigger with no target and no reveal. The census of what the AI
+cast after the swap is `docs/evidence/match-setup.md` §D.6.
+
+### 8.4 Named and left out
+
+| card | why not |
+|---|---|
+| Super Villain Lockup (MSH #37) | **White** (`{1}{W}`) — a hero's card that locks a tapped villain away. Not in a blue-black villain deck. |
+| Baron Helmut Zemo (MSH #87) | `AI:RemoveDeck:All` — Forge's own flag that its AI cannot play the card. |
+| Kang Prime (MSC #85) | §8.3. |
+| Trickster's Stratagem (MSH #81) | §8.3b — the Forge AI never casts it. |
+| Loki, the Deceiver (MSC #86) · Doctor Doom, King of Latveria (MSC #6) | Three colours (`{1}{U}{B}{R}`). |
+| Lady Loki · Loki's Scepter · Loki Laufeyson | Red. |
+
+### 8.5 Reproducing this
+
+```bash
+node tools/check-deck.mjs decks/doom-legion.dck --scryfall      # static + Scryfall + engine
+node tools/check-deck.mjs decks/pacho-shield.dck --no-engine --scryfall --stock   # must FAIL on Trample
+Z=/home/justin-a/forge/res/cardsfolder/cardsfolder.zip
+unzip -p $Z k/kang_prime.txt                                    # the cut card's DigUntil
+unzip -p $Z d/doom_reigns_supreme.txt                           # the Plan
+J=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+java -m jdk.jdeps/com.sun.tools.javap.Main -cp $J -c -p forge.game.ability.effects.DigUntilEffect \
+  | grep 'GameAction.reveal'
+```

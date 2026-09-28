@@ -3,21 +3,36 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * The v1 card "library": one deck file in, one `web/public/art.json` out.
- * Run with bare Node 24 (type stripping), from the repo root, with no deps:
+ * The v1 card "library": every deck file in `decks/` in, one `web/public/art.json`
+ * out. Run with bare Node 24 (type stripping), from the repo root, with no deps:
  *
- *     node tools/fetch-art.ts [--deck decks/pacho-shield.dck] [--out web/public/art.json]
+ *     node tools/fetch-art.ts                         # every decks/*.dck
+ *     node tools/fetch-art.ts --deck decks/doom-legion.dck[,decks/pacho-shield.dck]
+ *     node tools/fetch-art.ts --out web/public/art.json
+ *
+ * **Every deck, because either seat can be any deck.** Match setup lets the user
+ * pick their own deck and the AI's (`--deck` / `--ai-deck`), so an art file
+ * built from one deck draws the other seat as text frames. The names are
+ * de-duplicated across decks (one request per distinct name); `config.json`'s
+ * `deck` is read first so its set hints win a disagreement, then the rest in
+ * file-name order. `--deck` (comma-separated, or repeated) narrows the list.
  *
  * Why this is not a card database (synthesis §7): Forge's view carries `Name` +
  * `SetCode` and an ImageKey like `c:MSH/Agent Phil Coulson.full` — **no collector
- * number** — so per-print Scryfall URLs cannot be built at runtime. For one known
- * 28-card deck that does not matter. The SQLite/FTS5 library in report 03 is
- * explicitly deferred.
+ * number** — so per-print Scryfall URLs cannot be built at runtime. For a few
+ * known 40-card decks that does not matter. The SQLite/FTS5 library in report 03
+ * is explicitly deferred.
+ *
+ * **A deck line's set code is the first rung.** `1 Doom Blade|MSC` asks
+ * Scryfall for `set=msc` before the fixed ladder below, so a card that exists in
+ * both sets (or a reprint that exists in neither default) lands on the printing
+ * the deck names, and costs one request instead of two or three.
  *
  * Non-obvious facts this encodes, all verified in docs/research/03:
- *   - The deck spans two sets: 18 distinct cards are in `msh`, 10 in `msc`
+ *   - The user's deck spans two sets: 18 distinct cards are in `msh`, 10 in `msc`
  *     (Marvel Super Heroes Commander, whose `parent_set_code` is `msh`). The ten
- *     deck lines written WITHOUT a `|MSH` suffix are exactly those ten.
+ *     deck lines written WITHOUT a `|MSH` suffix are exactly those ten. The
+ *     probe decks' cards are in neither and land on the `exact` rung.
  *   - `Peggy Carter, Secret Agent` does not exist in `msh` at all — that query
  *     404s; `msc` #523 is its only printing.
  *   - Name alone is not a key (Agent Phil Coulson is msh #4 *and* #402; MSH has
@@ -31,7 +46,7 @@
  *     is part of every entry.
  */
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -69,7 +84,8 @@ function parseArgs(argv: string[]): Record<string, string> {
     const key = arg.slice(2);
     const next = argv[i + 1];
     if (next !== undefined && !next.startsWith('--')) {
-      out[key] = next;
+      // A repeated flag accumulates, comma-separated: `--deck a.dck --deck b.dck`.
+      out[key] = out[key] !== undefined ? `${out[key]},${next}` : next;
       i++;
     } else {
       out[key] = 'true';
@@ -118,11 +134,49 @@ export function parseDeck(text: string): DeckEntry[] {
   return entries;
 }
 
-/** Distinct names in deck order, with the total count of each. */
-function distinctNames(entries: DeckEntry[]): Map<string, number> {
-  const out = new Map<string, number>();
-  for (const entry of entries) out.set(entry.name, (out.get(entry.name) ?? 0) + entry.count);
+interface NameInfo {
+  count: number;
+  /** The first set code any deck line gave this name, else null. */
+  setHint: string | null;
+}
+
+/**
+ * Distinct names across every deck, in reading order, with the total count of
+ * each. A name's set hint is the FIRST one seen, which is why `config.json`'s
+ * deck is read first.
+ */
+function distinctNames(decks: { path: string; entries: DeckEntry[] }[]): Map<string, NameInfo> {
+  const out = new Map<string, NameInfo>();
+  for (const deck of decks) {
+    for (const entry of deck.entries) {
+      const info = out.get(entry.name) ?? { count: 0, setHint: null };
+      info.count += entry.count;
+      if (info.setHint === null && entry.setHint !== null) info.setHint = entry.setHint;
+      out.set(entry.name, info);
+    }
+  }
   return out;
+}
+
+/**
+ * The deck files to read: `--deck` (comma-separated) if given, else every
+ * `decks/*.dck` with `config.json`'s `deck` first and the rest by file name.
+ */
+async function deckPaths(arg: string | undefined, configDeck: string | undefined): Promise<string[]> {
+  if (arg !== undefined && arg !== 'true') {
+    return arg
+      .split(',')
+      .map((p) => p.trim())
+      .filter((p) => p !== '');
+  }
+  const files = (await readdir(resolve(REPO_ROOT, 'decks')))
+    .filter((f) => f.endsWith('.dck'))
+    .sort()
+    .map((f) => `decks/${f}`);
+  if (configDeck !== undefined && files.includes(configDeck)) {
+    return [configDeck, ...files.filter((f) => f !== configDeck)];
+  }
+  return files;
 }
 
 // ---------------------------------------------------------------------------
@@ -230,13 +284,30 @@ function artistOf(card: ScryfallCard): string {
 // The ladder
 // ---------------------------------------------------------------------------
 
-/** The four rungs, in order. Synthesis §7. */
-const LADDER = [
-  { step: 'set=msh', build: (n: string) => `${SCRYFALL}/cards/named?exact=${encodeURIComponent(n)}&set=msh` },
-  { step: 'set=msc', build: (n: string) => `${SCRYFALL}/cards/named?exact=${encodeURIComponent(n)}&set=msc` },
+interface Rung {
+  step: string;
+  build: (name: string) => string;
+}
+
+const inSet = (set: string): Rung => ({
+  step: `set=${set}`,
+  build: (n: string) => `${SCRYFALL}/cards/named?exact=${encodeURIComponent(n)}&set=${set}`,
+});
+
+/** The four fixed rungs, in order. Synthesis §7. */
+const LADDER: readonly Rung[] = [
+  inSet('msh'),
+  inSet('msc'),
   { step: 'exact', build: (n: string) => `${SCRYFALL}/cards/named?exact=${encodeURIComponent(n)}` },
   { step: 'fuzzy', build: (n: string) => `${SCRYFALL}/cards/named?fuzzy=${encodeURIComponent(n)}` },
-] as const;
+];
+
+/** A deck line's own set code goes first; the fixed ladder follows, without repeating it. */
+function ladderFor(setHint: string | null): Rung[] {
+  if (setHint === null) return [...LADDER];
+  const first = inSet(setHint.toLowerCase());
+  return [first, ...LADDER.filter((rung) => rung.step !== first.step)];
+}
 
 export interface ArtEntry {
   front: string;
@@ -258,9 +329,10 @@ interface Resolution {
   reason: string;
 }
 
-async function resolveName(name: string, userAgent: string): Promise<Resolution> {
+async function resolveName(name: string, setHint: string | null, userAgent: string): Promise<Resolution> {
   const tried: string[] = [];
-  for (const rung of LADDER) {
+  const ladder = ladderFor(setHint);
+  for (const rung of ladder) {
     const { card, status } = await scryfallGet(rung.build(name), userAgent);
     if (card === null) {
       tried.push(`${rung.step}:${String(status)}`);
@@ -284,7 +356,7 @@ async function resolveName(name: string, userAgent: string): Promise<Resolution>
       reason: '',
     };
   }
-  return { entry: null, via: 'none', reason: `all four rungs failed (${tried.join(', ')})` };
+  return { entry: null, via: 'none', reason: `all ${String(ladder.length)} rungs failed (${tried.join(', ')})` };
 }
 
 // ---------------------------------------------------------------------------
@@ -295,7 +367,10 @@ export interface ArtFile {
   generatedAt: string;
   source: string;
   imageSize: string;
+  /** Every deck file read, comma-separated. Kept as a string for older readers. */
   deck: string;
+  /** Every deck file read, in reading order. */
+  decks: string[];
   /** name → entry. This is what `web/src/art.ts` looks names up in. */
   cards: Record<string, ArtEntry>;
   /** Which rung of the ladder each name came from. Informational. */
@@ -308,19 +383,27 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const config = await loadConfig();
 
-  const deckPath = args['deck'] ?? config.deck ?? 'decks/pacho-shield.dck';
+  const paths = await deckPaths(args['deck'], config.deck);
   const outPath = args['out'] ?? 'web/public/art.json';
   const userAgent =
     process.env['SCRYFALL_UA'] ?? config.scryfallUserAgent ?? 'mtg-table/0.1 (local hobby client)';
+  if (paths.length === 0) throw new Error('no deck files: decks/ has no *.dck and --deck named none');
 
-  const deckText = await readFile(resolve(REPO_ROOT, deckPath), 'utf8');
-  const entries = parseDeck(deckText);
-  const names = distinctNames(entries);
-  const totalCards = [...names.values()].reduce((a, b) => a + b, 0);
+  const decks: { path: string; entries: DeckEntry[] }[] = [];
+  for (const path of paths) {
+    const entries = parseDeck(await readFile(resolve(REPO_ROOT, path), 'utf8'));
+    decks.push({ path, entries });
+  }
+  const names = distinctNames(decks);
 
+  process.stdout.write(`${String(decks.length)} deck(s), ${String(names.size)} distinct names:\n`);
+  for (const deck of decks) {
+    const total = deck.entries.reduce((a, e) => a + e.count, 0);
+    const distinct = new Set(deck.entries.map((e) => e.name)).size;
+    process.stdout.write(`  ${deck.path}: ${String(total)} cards, ${String(distinct)} distinct\n`);
+  }
   process.stdout.write(
-    `deck ${deckPath}: ${String(totalCards)} cards, ${String(names.size)} distinct names\n` +
-      `user-agent: ${userAgent}\n` +
+    `user-agent: ${userAgent}\n` +
       `pacing: 1 request / ${String(MIN_REQUEST_INTERVAL_MS)} ms (Scryfall allows 2/s on /cards/*)\n\n`,
   );
 
@@ -329,8 +412,8 @@ async function main(): Promise<void> {
   const misses: ArtMiss[] = [];
   const byStep = new Map<string, string[]>();
 
-  for (const name of names.keys()) {
-    const { entry, via, reason } = await resolveName(name, userAgent);
+  for (const [name, info] of names) {
+    const { entry, via, reason } = await resolveName(name, info.setHint, userAgent);
     if (entry === null) {
       misses.push({ name, reason });
       process.stdout.write(`  MISS  ${name} — ${reason}\n`);
@@ -348,7 +431,8 @@ async function main(): Promise<void> {
     generatedAt: new Date().toISOString(),
     source: 'https://scryfall.com',
     imageSize: IMAGE_SIZE,
-    deck: deckPath,
+    deck: paths.join(', '),
+    decks: paths,
     cards,
     resolvedVia,
     misses,
@@ -359,13 +443,24 @@ async function main(): Promise<void> {
   await writeFile(absoluteOut, `${JSON.stringify(artFile, null, 2)}\n`, 'utf8');
 
   process.stdout.write(`\nsummary\n`);
-  for (const rung of LADDER) {
-    const hits = byStep.get(rung.step) ?? [];
-    process.stdout.write(`  ${rung.step.padEnd(8)} ${String(hits.length).padStart(3)}\n`);
+  for (const [step, hits] of [...byStep.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    process.stdout.write(`  ${step.padEnd(8)} ${String(hits.length).padStart(3)}\n`);
   }
   process.stdout.write(
-    `  misses   ${String(misses.length).padStart(3)}${misses.length > 0 ? ` (${misses.map((m) => m.name).join(', ')})` : ''}\n` +
-      `\nwrote ${outPath} (${String(Object.keys(cards).length)} entries)\n` +
+    `  misses   ${String(misses.length).padStart(3)}${misses.length > 0 ? ` (${misses.map((m) => m.name).join(', ')})` : ''}\n`,
+  );
+  // Per-deck coverage: the question "can the board draw THIS deck?" in one line each.
+  process.stdout.write(`\ncoverage\n`);
+  for (const deck of decks) {
+    const distinct = [...new Set(deck.entries.map((e) => e.name))];
+    const missing = distinct.filter((n) => cards[n] === undefined);
+    process.stdout.write(
+      `  ${deck.path.padEnd(32)} ${String(distinct.length - missing.length).padStart(3)}/${String(distinct.length)}` +
+        `${missing.length > 0 ? `  missing: ${missing.join(', ')}` : ''}\n`,
+    );
+  }
+  process.stdout.write(
+    `\nwrote ${outPath} (${String(Object.keys(cards).length)} entries)\n` +
       `Card images and data are from Scryfall. Artist credit is stored per card and must be\n` +
       `shown wherever the art is displayed (WotC Fan Content Policy / Scryfall attribution).\n`,
   );

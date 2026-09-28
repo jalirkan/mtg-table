@@ -52,6 +52,24 @@ ban_except() {
 ban 'getDecks(' \
   'FModel.getDecks() reaches DeckStorage.adjustFileLocation, which renames a .dck to its Name= metadata, moves it up a directory and DELETES unparseable ones. Use DeckSerializer.fromFile.'
 
+# Match setup (protocol amendment M44).  GamePlayerUtil.createAiPlayer's
+# two-argument overload delegates with profileOverride = "", and the empty-
+# override branch of the five-argument one reads FPref.UI_CURRENT_AI_PROFILE and,
+# when that is not a loaded profile, calls ForgePreferences.save() (javap:
+# offset 83) -- persisting every in-memory pref Bootstrap sets (D13, D14, the
+# mana-lost prompt).  Bootstrap.createAiPlayer is THE seam: it refuses an empty
+# profile and asserts the profile loaded.  So the Forge call is allowed in
+# Bootstrap.java alone.  The pattern has no `(` on purpose: it also catches
+# `import static forge.player.GamePlayerUtil.createAiPlayer;`, after which a
+# bare `createAiPlayer(` would be invisible to a grep; the method reference and
+# the static wildcard import are the other two spellings.
+ban_except 'Bootstrap.java' 'GamePlayerUtil.createAiPlayer' \
+  'seat an AI through Bootstrap.createAiPlayer(name, avatar, profile). GamePlayerUtil.createAiPlayer with an empty profileOverride (the two-argument overload passes "") reaches the branch that calls ForgePreferences.save().'
+ban_except 'Bootstrap.java' 'GamePlayerUtil::createAiPlayer' \
+  'the same call as a method reference -- seat an AI through Bootstrap.createAiPlayer.'
+ban 'GamePlayerUtil.*;' \
+  'a static wildcard import of GamePlayerUtil makes a bare createAiPlayer( call invisible to this lint. Import the class and call Bootstrap.createAiPlayer.'
+
 # --------------------------------------------------------------------------
 # 2. Absent from the 2.0.14 jar (compiles against the 2.0.15 source, not here)
 # --------------------------------------------------------------------------

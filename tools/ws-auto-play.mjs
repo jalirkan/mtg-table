@@ -268,6 +268,8 @@ const stats = { in: 0, out: 0, acts: 0, answers: 0, states: 0, inputs: 0, notice
 /** The two acts `--probe` exists to send; counted so a run SAYS whether it sent them. */
 const probeActs = { useMana: 0, clickAbility: 0 };
 const askKinds = new Set();
+/** §2.1 (M44) — the last `hello_ok.match` seen, for the summary line. */
+let matchSeen = null;
 /** askId → true, so a second answer for one ask is impossible by construction (§2.3). */
 const answered = new Map();
 
@@ -487,6 +489,25 @@ function onFrame(text) {
         `forge=${String(body.forgeVersion)} players=${(body.players ?? []).map((p) => p.name).join(' vs ')}`);
       if (Array.isArray(body.unsupportedCards) && body.unsupportedCards.length > 0) {
         say(`unsupportedCards: ${body.unsupportedCards.join(', ')}`);
+      }
+      // §2.1, amendment M44 -- what this match is. Optional on the wire (every
+      // recording before 2026-09-27 lacks it), so absence is said and not
+      // failed; present, the AI's deck must be a NAME and a COUNT and nothing
+      // else, because this is the browser's code path and a path or a list
+      // here would be the opponent's decklist on the client's screen.
+      if (body.match === undefined || body.match === null) {
+        say('match: (not on this hello_ok -- a bridge older than amendment M44)');
+      } else {
+        const m = body.match;
+        const aiKeys = Object.keys(m.aiDeck ?? {}).sort().join(',');
+        if (aiKeys !== 'cards,name') {
+          fail(`hello_ok.match.aiDeck carries {${aiKeys}} -- the AI's deck is {name, cards} and ` +
+            'nothing else (§2.1, amendment M44; hard rule 8)');
+        }
+        say(`match: you "${String(m.yourDeck?.name)}" (${String(m.yourDeck?.cards)}) vs AI ` +
+          `"${String(m.aiDeck.name)}" (${String(m.aiDeck.cards)}), AI profile ${String(m.aiProfile)}, ` +
+          `${String(m.games)} game(s)`);
+        matchSeen = m;
       }
       lastActivity = Date.now();
       break;
@@ -1370,6 +1391,8 @@ function finish() {
       : '') +
     (args.probe ? `probe acts ${probeActs.useMana} useMana, ${probeActs.clickAbility} clickAbility · ` : '') +
     (refusedAskId === null ? '' : `refused ${refusedAskId} and reconnected · `) +
+    (matchSeen === null ? 'match none · '
+      : `match ${String(matchSeen.aiProfile)} vs "${String(matchSeen.aiDeck?.name)}" · `) +
     `${((Date.now() - started) / 1000).toFixed(1)}s`;
   process.stderr.write(`[ws-auto] ${summary}\n`);
   process.stderr.write(`[ws-auto] ${failure !== null ? `FAILED: ${failure.message}` : over ? 'OVER — exit 0' : 'no over frame'}\n`);

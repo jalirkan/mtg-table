@@ -258,6 +258,20 @@ const helloOk = f(1, 0, 's2c', 'hello_ok', {
     { id: 0, name: 'Pacho', isAi: false },
     { id: 1, name: 'Opponent', isAi: true },
   ],
+  // §2.1, amendment M44 -- what this match is. Written out here because no
+  // committed engine recording carries it (they all predate it), and the
+  // renderer must be total over it. `yourDeck` agrees with the session header
+  // above (path, 40 cards); `aiDeck` is a NAME and a COUNT and nothing else --
+  // tools/check-redaction.mjs fails any other key -- and the name is the
+  // morph deck's, which is what this file's face-down opponent card is.
+  // `games` is `--games 3`, the same number as `gameCount`, which the checker
+  // cross-checks.
+  match: {
+    yourDeck: { name: 'Pacho SHIELD (Marvel Super Heroes)', path: 'decks/pacho-shield.dck', cards: 40 },
+    aiDeck: { name: 'Morph probe', cards: 40 },
+    aiProfile: 'Reckless',
+    games: 3,
+  },
 });
 
 const mainOne = f(2, 2400, 's2c', 'state', {

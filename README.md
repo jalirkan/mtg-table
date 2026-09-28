@@ -90,8 +90,8 @@ All commands are run from the repository root.
 ./tools/check-all.sh
 ```
 
-Thirteen numbered steps and five lettered sub-steps (9b, 9c, **9d**, 10f and
-**10g** — the last of each pair added by M6), stopping at the first
+Thirteen numbered steps and six lettered sub-steps (9b, 9c, **9d**, **9e**, 10f
+and **10g** — 9d and 10g added by M6, 9e by match setup), stopping at the first
 failure: `check-forge.sh` →
 `lint-bridge.sh` (the banned-accessor grep over `bridge/src`) →
 `bridge/build.sh` (javac plus three self-tests) → `Smoke` → a `RecordMatch`
@@ -102,9 +102,12 @@ null`, the scripted `--transport console` smoke, and `--transport auto --seed
 advisory **9b** that re-records seed 42 and compares it against
 `fixtures/games/human-auto-42.jsonl` as an order-insensitive multiset, and
 **9c**, M5's exit criterion — `tools/ten-games.sh`, ten consecutive games across
-six decks, the single most expensive thing in the file, which `SKIP_TEN=1`
-turns off, and **9d**, M6's `sideboard` ask, which needs a session that survives
-game 1) → **seven
+six decks plus match setup's four rows (your deck against `decks/doom-legion.dck`
+under each AI profile), the single most expensive thing in the file, which
+`SKIP_TEN=1` turns off, **9d**, M6's `sideboard` ask, which needs a session that
+survives game 1, and **9e**, one Reckless game against the villain deck with the
+profile read back from the in-game AI, every Forge preferences file
+fingerprinted, and a bogus profile refused before the engine boots) → **seven
 fresh `--transport ws` servers** (the two `ws-smoke` variants, a whole game
 through `tools/ws-auto-play.mjs`, that client again with `--refuse-first-ask`,
 which drops the socket on the first `ask` frame so `ReplyPool.cancelAll()` runs
@@ -117,11 +120,14 @@ three games back to back over one socket, with the five comfort acts each
 asserted by the **effect** it had on the next `state`) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
 every fresh recording → `check-redaction-selftest.mjs`, which asserts the
-checker still rejects fourteen one-defect probes → `npm run build && npm test` in
-`web/`. **About eleven and a half minutes** from a deleted `bridge/out` (682 s
-and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added 9d and 10g), of
-which 9c's ten games are 265–269 s and the seven ws servers most of
-the rest; `SKIP_TEN=1` brings it back to roughly six. Every JVM step runs
+checker still rejects eighteen one-defect probes and passes their two controls → `npm run build && npm test` in
+`web/`. **About fourteen and a half minutes** from a deleted `bridge/out` since
+match setup added five games (874 s on its first run; 1,141 s on its review fix
+pass and 1,143 s on its documentation pass, each on a machine running other gates
+at the same time), about eleven and a half
+before it (682 s and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added
+9d and 10g), of which 9c's fourteen games are most and the seven ws servers much
+of the rest; `SKIP_TEN=1` saves 9c (370 s of the 874). Every JVM step runs
 under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
 the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
 reducer and the committed fixtures still agree.
@@ -167,6 +173,17 @@ npm --prefix web test && npm --prefix web run build
 #   browser; everything after `--` goes to mtgtable.MtgTable untouched.
 #   Ctrl-C stops both halves.
 
+# Match setup — WHAT you play against (amendment M44; "Choosing decks and the AI"
+#   below has the whole story).  A bare ./scripts/play.sh is your deck against
+#   decks/doom-legion.dck under the Default profile.
+./scripts/play.sh --ai-profile Reckless              # one of Forge's four AI profiles
+./scripts/play.sh --mirror --ai-profile Cautious     # the AI plays a copy of your deck
+./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
+    --ai-deck decks/doom-legion.dck --ai-profile Reckless   # the same flags, on the bridge
+node tools/check-deck.mjs decks/doom-legion.dck --scryfall  # is every card really in the engine?
+#   A profile is not a difficulty (D104).  Only play.sh reads config.json's
+#   "match" block; the bridge and the gate never do (D103).
+
 # M3 — the socket by itself, without a browser
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
 #   ws://127.0.0.1:8642/ws   the frames        (one client at a time; a second is
@@ -197,9 +214,15 @@ npm --prefix web run dev            # then http://127.0.0.1:5173/#cards
 
 # M5 — the exit criterion, as a command: ten consecutive games across six decks,
 #      each asserted for `over`, zero UNIMPL, one-kind ask ceiling, the typed
-#      acts a row exists to prove, and check-redaction.mjs.  ~270 s.
+#      acts a row exists to prove, and check-redaction.mjs.  ~270 s.  Match setup
+#      added rows 11-14: your deck against the villain deck (decks/doom-legion.dck,
+#      named once in tools/villain-deck.sh; VILLAIN_DECK=<path> overrides) under
+#      each AI profile, with the profile's values read back from the in-game AI
+#      and every Forge preferences file fingerprinted before and after.  They
+#      prove the profile REACHES the engine, not that it changes the play.
 ./tools/ten-games.sh
 ./tools/ten-games.sh --games 3     # the first three rows, for a quick look
+./tools/ten-games.sh --seed 13     # one row: your deck vs the villain, Reckless
 
 # M5 — the probe runs behind it, one at a time.  --probe is a POLICY flag on the
 #      automated seat (it picks a card in a library search, takes getInteger's
@@ -313,7 +336,9 @@ of the match and `restartMatch()` starts a fresh one, each with its own
 `--seed 42` makes the shuffle reproducible, `--port` / `--web-port` move either
 half, `--no-open` skips the browser, `--no-keep-open` closes the socket the moment
 the match ends, and everything after `--` is handed to `mtgtable.MtgTable`
-untouched — including a `--games` of your own, which wins.
+untouched — including a `--games` of your own, which wins. `--deck`,
+`--ai-deck`, `--mirror` and `--ai-profile` choose what you play against:
+*Choosing decks and the AI*, below.
 
 **The page.** One line of chrome across the top — the seat, the socket's state
 (`open` / `reconnecting` / `refused`) and its URL, the frames in and out, the
@@ -600,9 +625,108 @@ the test suite asserts over every frame of every committed recording. Scrubbing
 backwards is a real fold from the start of the file, not an undo stack, so the
 log drawer's entry count falls as you scrub back.
 
-`?replay=games/morph.jsonl` is the one to open if you have not run
-`tools/fetch-art.ts`: that deck has no art entries at all, so every card on the
-board is the generated text frame, which is what a missing image looks like.
+`?replay=games/morph.jsonl` is the one to open to see the generated text frame,
+which is what a missing image looks like — **if `art.json` has no entries for
+it**. Since match setup, `tools/fetch-art.ts` fetches every `decks/*.dck`,
+`morph-probe.dck` included, so after a full run that deck has art too; `node
+tools/fetch-art.ts --deck decks/pacho-shield.dck` writes an `art.json` without
+it, and a token is always drawn as the text frame.
+
+### Choosing decks and the AI
+
+**Match setup** (2026-09-27, protocol amendment M44) chooses what you play
+against: your deck, the AI's deck, and which of Forge's AI profiles the AI plays
+under. A bare `./scripts/play.sh` seats your `decks/pacho-shield.dck` against
+**`decks/doom-legion.dck`** — *Doom Legion*, 40 blue-black Marvel villains from
+the same two sets as your deck — under the `Default` profile, for three games.
+
+```bash
+./scripts/play.sh                                   # you vs Doom Legion, Default, three games
+./scripts/play.sh --ai-profile Reckless             # the same match under another profile
+./scripts/play.sh --mirror                          # the AI plays a copy of your deck
+./scripts/play.sh --ai-deck decks/morph-probe.dck   # any Forge .dck, on either seat
+./scripts/play.sh --deck decks/doom-legion.dck --ai-deck decks/pacho-shield.dck   # you play the villains
+./scripts/play.sh -- --games 1                      # one game instead of three
+```
+
+| flag | on `scripts/play.sh` | on `mtgtable.MtgTable` | chooses |
+|---|---|---|---|
+| `--deck <path>` | default `config.json`'s `match.deck`, else its top-level `deck` | default `config.json`'s top-level `deck` | your deck |
+| `--ai-deck <path>` (`--deck2` is the same flag) | default `match.aiDeck`, shipped as `decks/doom-legion.dck` | default: **a mirror of your deck** | the AI's deck. On the bridge, `--deck2` and `--ai-deck` naming two different files is an error |
+| `--mirror` | the AI plays a copy of your deck, whatever `match.aiDeck` says | — (leave `--ai-deck` out) | a mirror match |
+| `--ai-profile <name>` | default `match.aiProfile`, else `Default` | default `Default` | one of the `.ai` files in `forge-home/res/ai/`: `Default`, `Cautious`, `Reckless` or `Experimental`, in any case. Any other name is refused before the engine starts, with the list |
+| `--games <n>` | after `--`; default `match.games`, else 3 | default 1 | how many games the match is |
+
+A flag beats `config.json`, and a flag typed after `--` (which goes to
+`mtgtable.MtgTable` untouched) beats both. `play.sh` prints the match it is about
+to start in its `== match` block; the bridge prints `deck (ai)` and
+`ai profile` among its first lines, and says `(a mirror: no --ai-deck)` when that
+is what it is doing.
+
+**`config.json`'s `match` block holds your defaults:**
+
+```json
+"match": {
+  "deck": "decks/pacho-shield.dck",
+  "aiDeck": "decks/doom-legion.dck",
+  "aiProfile": "Default",
+  "games": 3
+}
+```
+
+`"aiDeck": null` makes a bare run a mirror. **Only `scripts/play.sh` reads this
+block** (D103). `./bridge/run.sh mtgtable.MtgTable`, `tools/ten-games.sh` and
+`tools/check-all.sh` never do: with no `--ai-deck` the bridge plays a mirror
+under `Default`, and the gate passes every deck and profile it means on its own
+command lines. Editing the block to try Reckless therefore never changes what the
+gate plays.
+
+**What the board shows.** Each seat's rail names its deck, and the AI's rail its
+profile — `Deck: Doom Legion (Marvel Super Heroes villains) · AI profile:
+Reckless` — read from `hello_ok.match`. The AI's deck reaches the browser as its
+**name and card count and nothing else**, never its path or its list (D102): the
+name is what a player says across a real table, and the list is hidden
+information (hard rule 8). The name is the `.dck` file's own `Name=`, so a deck
+named after a card announces that card. A recording made before match setup has
+no `match`, and its rails draw no deck line. The arena's HUD does not print the
+match yet.
+
+**A profile is not a difficulty.** Forge has no difficulty setting; each profile
+is 121 heuristic values (report 11 §9), and the four differ like this:
+
+| profile | `PLAY_AGGRO` | `CHANCE_TO_ATTACK_INTO_TRADE` | values that differ from `Default` |
+|---|---|---|---|
+| `Default` | false | 0 | — |
+| `Cautious` | false | 0 | 37 |
+| `Reckless` | true | 100 | 52 |
+| `Experimental` | false | 0 | 33 |
+
+What that changes at the table is situational. The automated seat attacks with
+everything, every turn, so it rarely leaves a blocker up, and in same-seed pairs
+against it Cautious and Reckless were **not measurably different**. Against a seat
+that does leave untapped creatures, the first choice at which the two games
+parted was a **trade** in 6 of 10 pairs: Reckless attacked or blocked into it,
+and Cautious held back (`docs/evidence/match-setup.md` §P, where
+`tools/first-divergence.mjs` reads a pair by its first differing choice). Pick
+one to experiment with, not as a dial. What the gate does check is that the
+profile you name is the one the in-game AI reads (`tools/ten-games.sh` rows
+11–14, one per profile, and `check-all.sh` step 9e), and that no Forge
+preferences file changes: the call the bridge used to seat the AI with could
+save one (D104).
+
+**The decks.** [`decks/README.md`](decks/README.md) lists every deck, and says
+what Doom Legion is and how it plays; D105 is why it is built the way it is. Any
+Forge `.dck` works on either seat. Before you trust a new one:
+
+```bash
+node tools/check-deck.mjs decks/<new>.dck --scryfall   # every card in the engine? Limited-legal? as printed?
+node tools/fetch-art.ts                                # art for every deck in decks/ -> web/public/art.json
+```
+
+Until `fetch-art.ts` has run, a new deck's cards draw as generated text frames,
+which is a supported state. In the arena the villains stand on the archetype
+bodies — only Aerial Doombot, which is in your deck too, has an identity row —
+until rows are written for them (PLAN.md, *Match setup*).
 
 ### Arena mode — the same game, in 3D
 
@@ -651,8 +775,9 @@ sessions — and every one of them plays as a cinematic with nothing running but
 npm --prefix web run dev                      # then edit the URL:
 #   /?replay=games/g1.jsonl#arena             an AI-vs-AI duel, as an episode
 #   /?replay=games/g3.jsonl#arena             another seed
-#   /?replay=games/morph.jsonl#arena          the deck with no art — every card
-#                                             is the generated text frame
+#   /?replay=games/morph.jsonl#arena          the probe deck: every card is the
+#                                             generated text frame when art.json
+#                                             has none for it (fetch-art --deck)
 ```
 
 The scrubber above the canvas is the board's own: step forward and back, jump,
@@ -1510,12 +1635,19 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the one hundred and one load-bearing decisions, dated
+  DECISIONS.md               the one hundred and five load-bearing decisions, dated
+                             (match setup's are D102–D105)
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
-  config.json                { forgeJar, forgeHome, deck, wsPort, webPort, scryfallUserAgent }
+  config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
+                             aiDeck, aiProfile, games}, wsPort, webPort,
+                             scryfallUserAgent }. `match` is read by scripts/play.sh
+                             only (D103)
 
+  decks/README.md            what every deck here is, and tools/check-deck.mjs
   decks/pacho-shield.dck     the deck (40 cards, MSH + MSC), plus .txt as typed
+  decks/doom-legion.dck      match setup: the AI's deck, 40 U/B Marvel villains (MSH +
+                             MSC). What a bare ./scripts/play.sh seats against you
   decks/morph-probe.dck      throwaway: 18 Mountain + 22 morph creatures. It exists so
                              one fixture exercises the face-down redaction gate, which
                              pacho-shield.dck cannot (it has no morph card)
@@ -1736,7 +1868,12 @@ mtg-table/
     config.sh                sourced by the other scripts; reads config.json / $FORGE_JAR
     check-forge.sh           assert jar + every class we depend on; print sha256
     make-forge-home.sh       symlink, profile properties, custom-card overlay
-    lint-bridge.sh           grep lint over bridge/src: the banned accessors (hard rule 8)
+    lint-bridge.sh           grep lint over bridge/src: the banned accessors (hard rule 8),
+                             and GamePlayerUtil.createAiPlayer outside Bootstrap.java
+    villain-deck.sh          SOURCED by ten-games.sh and check-all.sh: the one name of
+                             the villain deck the gate plays (VILLAIN_DECK overrides)
+    check-deck.mjs           match setup: is every card of a .dck really in the engine?
+                             static (scripts, editions), engine (Smoke), --scryfall
     check-all.sh             the pre-commit gate; chains everything above
     check-redaction.mjs      assert a recorded log leaks nothing (docs/protocol.md 9)
     check-redaction-selftest.mjs  run the checker over fixtures/negative/redaction/ and
@@ -1757,7 +1894,9 @@ mtg-table/
                              decks, each asserted for `over`, zero UNIMPL (the summary
                              AND a raw grep), emit errors = 0, an ask-kind ceiling, the
                              typed acts the row exists to prove AND their effect, and
-                             check-redaction.mjs.  check-all.sh runs it as step 9c
+                             check-redaction.mjs.  check-all.sh runs it as step 9c.
+                             Match setup added rows 11-14: your deck vs the villain
+                             deck under each of the four AI profiles
     arena-bench.mjs          M7: report 09 §9.4's frame-time measurement -- headless
                              Chromium + SwiftShader against a PRODUCTION build served by
                              `vite preview`. Deliberately NOT in check-all.sh. Tier 2
@@ -1778,7 +1917,12 @@ mtg-table/
                              date, and the CC0 licence badge verbatim on the day
     fixture-multiset-diff.mjs  the advisory 9b drift check: re-record a seed and compare
                              it to its committed fixture as a multiset, `seq` stripped
-    fetch-art.ts             deck -> web/public/art.json
+                             (a key an amendment added, absent from the committed side,
+                             is ignored on the fresh side and said so)
+    first-divergence.mjs     match setup: two same-seed games -> the first event that
+                             differs, and whether the seat or the AI chose it (how
+                             an AI-profile A/B is read; not in the gate)
+    fetch-art.ts             every decks/*.dck -> web/public/art.json
     build-workshop-catalog.ts  (D104) decks/*.dck + fixtures/games/*.jsonl ->
                              web/src/workshop/catalog.json, the workshop's card
                              facts; --check exits 1 if it would change
@@ -1850,7 +1994,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | One hundred and four load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and eight load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

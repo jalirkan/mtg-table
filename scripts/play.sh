@@ -29,10 +29,30 @@
 # `over` lands -- which is the moment the row appears.  M6's verification found
 # exactly that dead end on the milestone's own headline command.
 #
+# MATCH SETUP (protocol amendment M44) picks what you play against:
+#
+#   --deck <path>        your deck               config.json match.deck    (else "deck")
+#   --ai-deck <path>     the AI's deck           config.json match.aiDeck  -- shipped as
+#                        (--deck2 is the same flag)   decks/doom-legion.dck; null = a mirror
+#   --ai-profile <name>  which AI profile        config.json match.aiProfile (else Default)
+#                        -- one of the .ai files in forge-home/res/ai/: Default, Cautious,
+#                        Reckless, Experimental.  Forge has no "difficulty": each file is
+#                        a set of ~120 heuristics (docs/research/11 section 9) whose effect
+#                        is situational, and in same-seed pairs against the automated seat
+#                        Cautious and Reckless were NOT measurably different
+#                        (docs/evidence/match-setup.md section P).  It is not a dial.
+#   --mirror             ignore match.aiDeck: the AI plays a copy of your deck
+#   config.json match.games is how many games a bare run plays (default 3).
+#
+# The flags win over config.json, and a flag typed after `--` wins over both.
+# The board's seat rails then say which deck each seat is on and the AI's
+# profile; the AI's deck reaches the browser as a NAME and a card count only.
+#
 # Usage:
-#   ./scripts/play.sh                       # three games, config.json's deck/ports, random seed
+#   ./scripts/play.sh                       # three games vs Doom Legion (config.json's match block), random seed
 #   ./scripts/play.sh --seed 42             # a reproducible shuffle
-#   ./scripts/play.sh --deck decks/pacho-shield.dck --deck2 decks/morph-probe.dck
+#   ./scripts/play.sh --ai-deck decks/morph-probe.dck --ai-profile Reckless
+#   ./scripts/play.sh --deck decks/pacho-shield.dck --mirror --ai-profile Cautious
 #   ./scripts/play.sh --port 8643           # a second bridge beside a running one
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser
@@ -64,8 +84,23 @@ WEB_PORT="$(cfg_get webPort || echo 5173)"
 OPEN=1
 ARENA=0                          # M7: --arena opens /#arena instead of the board
 KEEP_OPEN=1                      # M6: the default, see the header
-GAMES_DEFAULT=3                  # M6: "three games back to back, one command typed"
 PASSTHROUGH=()
+
+# Match setup (M44): config.json's `match` block, then the flags.  `cfg_get`
+# reads top-level keys only, so the block is read here; a missing block or key
+# is the old behaviour (your `deck`, a mirror, Default, three games).
+cfg_match() {
+  node -e '
+    const c = require(process.argv[1]); const m = c.match ?? {};
+    const v = m[process.argv[2]];
+    if (v === undefined || v === null || v === "") process.exit(2);
+    process.stdout.write(String(v));
+  ' "$CONFIG_JSON" "$1" 2>/dev/null
+}
+DECK="$(cfg_match deck || cfg_get deck || echo decks/pacho-shield.dck)"
+AI_DECK="$(cfg_match aiDeck || true)"   # empty = a mirror of DECK
+AI_PROFILE="$(cfg_match aiProfile || echo Default)"
+GAMES_DEFAULT="$(cfg_match games || echo 3)"   # M6: "three games back to back, one command typed"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -76,7 +111,11 @@ while [ $# -gt 0 ]; do
     --no-arena)  ARENA=0; shift ;;
     --keep-open) KEEP_OPEN=1; shift ;;
     --no-keep-open) KEEP_OPEN=0; shift ;;
-    --help|-h)   sed -n '5,56p' "$0"; exit 0 ;;
+    --deck)      DECK="$2"; shift 2 ;;
+    --ai-deck|--deck2) AI_DECK="$2"; shift 2 ;;
+    --ai-profile) AI_PROFILE="$2"; shift 2 ;;
+    --mirror)    AI_DECK=""; shift ;;
+    --help|-h)   sed -n '5,76p' "$0"; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
   esac
@@ -84,6 +123,63 @@ done
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 die() { printf '\033[31mplay.sh: %s\033[0m\n' "$*" >&2; exit 1; }
+
+# --------------------------------------------------------------------------
+# 0: the match -- checked before anything slow runs
+# --------------------------------------------------------------------------
+
+# A flag the caller typed after `--` goes to MtgTable untouched and wins; this
+# script then adds nothing of its own for that setting (the --games rule below).
+passthrough_has() {
+  local f
+  for f in "$@"; do
+    case " ${PASSTHROUGH[*]+${PASSTHROUGH[*]}} " in
+      *" $f "*|*" $f="*) return 0 ;;
+    esac
+  done
+  return 1
+}
+deck_name() {   # the .dck's own Name=, which is what the board will print
+  local n
+  n="$(sed -n 's/^Name=//p' "$1" | head -1 | tr -d '\r')"
+  [ -n "$n" ] && printf '%s' "$n" || basename "$1" .dck
+}
+MATCH_ARGS=()
+if ! passthrough_has --deck; then
+  [ -f "$DECK" ] || die "your deck $DECK does not exist (--deck, or config.json match.deck)"
+  MATCH_ARGS+=(--deck "$DECK")
+fi
+if ! passthrough_has --deck2 --ai-deck; then
+  if [ -n "$AI_DECK" ]; then
+    [ -f "$AI_DECK" ] || die "the AI's deck $AI_DECK does not exist (--ai-deck, or config.json match.aiDeck; --mirror plays your own)"
+    MATCH_ARGS+=(--ai-deck "$AI_DECK")
+  fi
+fi
+if ! passthrough_has --ai-profile; then
+  # The bridge validates this too (Bootstrap.resolveAiProfile) -- this copy is
+  # only so a typo costs a second instead of a build and an engine boot.
+  PROFILES=()
+  for f in forge-home/res/ai/*.ai; do
+    [ -f "$f" ] && PROFILES+=("$(basename "$f" .ai)")
+  done
+  if [ "${#PROFILES[@]}" -gt 0 ]; then
+    CANON=""
+    for p in "${PROFILES[@]}"; do
+      [ "${p,,}" = "${AI_PROFILE,,}" ] && CANON="$p"
+    done
+    [ -n "$CANON" ] || die "--ai-profile $AI_PROFILE is not one of: ${PROFILES[*]} (the .ai files in forge-home/res/ai/)"
+    AI_PROFILE="$CANON"
+  fi
+  MATCH_ARGS+=(--ai-profile "$AI_PROFILE")
+fi
+say "match"
+if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
+  echo "you:  $(deck_name "$DECK")  [$DECK]"; fi
+if passthrough_has --deck2 --ai-deck; then echo "AI:   (the --ai-deck after --)"
+elif [ -n "$AI_DECK" ]; then echo "AI:   $(deck_name "$AI_DECK")  [$AI_DECK]"
+else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck is null)"; fi
+passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
+  || echo "AI profile: $AI_PROFILE"
 
 # --------------------------------------------------------------------------
 # 1 + 2: the gate and the build
@@ -147,6 +243,7 @@ case " ${PASSTHROUGH[*]+${PASSTHROUGH[*]}} " in
   *) KEEP_ARGS+=(--games "$GAMES_DEFAULT") ;;
 esac
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port "$WS_PORT" \
+    "${MATCH_ARGS[@]+"${MATCH_ARGS[@]}"}" \
     "${KEEP_ARGS[@]+"${KEEP_ARGS[@]}"}" "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}" \
     >>"$SERVER_LOG" 2>&1 &
 SERVER_PID=$!

@@ -72,7 +72,6 @@ import forge.gui.control.GameEventForwarder;
 import forge.item.PaperCard;
 import forge.localinstance.skin.FSkinProp;
 import forge.model.FModel;
-import forge.player.GamePlayerUtil;
 import forge.player.PlayerZoneUpdate;
 import forge.player.PlayerZoneUpdates;
 import forge.trackable.TrackableCollection;
@@ -217,10 +216,10 @@ public final class RecordMatch {
 
         final List<RegisteredPlayer> seats = new ArrayList<>();
         final RegisteredPlayer p0 = new RegisteredPlayer(deck1);
-        p0.setPlayer(GamePlayerUtil.createAiPlayer("AI-Seat0", 0));
+        p0.setPlayer(Bootstrap.createAiPlayer("AI-Seat0", 0, Bootstrap.DEFAULT_AI_PROFILE));
         seats.add(p0);
         final RegisteredPlayer p1 = new RegisteredPlayer(deck2);
-        p1.setPlayer(GamePlayerUtil.createAiPlayer("AI-Seat1", 1));
+        p1.setPlayer(Bootstrap.createAiPlayer("AI-Seat1", 1, Bootstrap.DEFAULT_AI_PROFILE));
         seats.add(p1);
 
         final Match match = new Match(rules, seats, "mtg-table");

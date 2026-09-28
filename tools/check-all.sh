@@ -32,17 +32,30 @@
 #                                 probe decks, each asserted for `over`, for zero
 #                                 UNIMPL (both the summary line and a raw grep of
 #                                 the server log and the frame log) and for
-#                                 check-redaction.mjs.  It is a NUMBERED SUB-STEP
+#                                 check-redaction.mjs -- plus, since match setup,
+#                                 rows 11-14: your deck against the villain deck
+#                                 under each of the four AI profiles, with the
+#                                 profile read back from the in-game AI and every
+#                                 preferences file fingerprinted.  It is a NUMBERED SUB-STEP
 #                                 rather than a step of its own so that every
 #                                 "step 10d" in the docs stays correct, and it is
 #                                 the single most expensive thing in this file:
-#                                 ~4-8 minutes.  SKIP_TEN=1 skips it.
+#                                 ~6-9 minutes.  SKIP_TEN=1 skips it.
 #                                 9d (M6) is the SIDEBOARD ask: two games of one
 #                                 match on decks/sideboard-probe.dck, which is
 #                                 the only way the eleventh ask kind is reachable
 #                                 at all (amendments M27/M38), asserted for the
 #                                 ask, for a legal non-identity answer, and for
 #                                 one frame log per game.
+#                                 9e (match setup, amendment M44) is ONE game of
+#                                 your deck against the villain deck with
+#                                 --ai-profile Reckless: `over`, zero UNIMPL,
+#                                 redaction, `hello_ok.match` naming the right
+#                                 decks and profile, the profile's values read
+#                                 back from the in-game AI, NO preferences file
+#                                 touched, and an unknown profile refused before
+#                                 the engine boots.  It runs even with
+#                                 SKIP_TEN=1, which skips 9c's rows 11-14.
 #  10. mtgtable.MtgTable --transport ws   THE M3 STEP: seven fresh servers on a
 #                                 loopback socket -- the ws-smoke doorstep test
 #                                 (connect -> resync -> concede), the same test's
@@ -131,12 +144,14 @@
 # pass found had already burned a silent 30 s per run without failing anything.
 # A run that hits the cap dies with its own message naming the cap.
 #
-# Usage:  ./tools/check-all.sh            # ~8-12 minutes, mostly the nineteen games
+# Usage:  ./tools/check-all.sh            # ~13-15 minutes, mostly the twenty-four games
+#                                         # (match setup added 9c's rows 11-14 and 9e)
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
 #         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
 #         SKIP_DRIFT=1 ./tools/check-all.sh       # no 9b re-recording (~30 s)
 #         DRIFT_FATAL=1 ./tools/check-all.sh      # 9b's advisory becomes a failure
-#         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~4-8 minutes)
+#         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~6-9 minutes); 9e still runs
+#         VILLAIN_DECK=decks/x.dck ./tools/check-all.sh   # 9c rows 11-14 and 9e play this deck
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -340,6 +355,15 @@ overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
 #
 #     DRIFT_FATAL=1 makes it one for someone who wants that; SKIP_DRIFT=1 skips
 #     the 30 s re-recording entirely.
+#
+#     The committed fixture predates amendment M44, so its `hello_ok` has no
+#     `match` block and every fresh recording's does: the diff tool drops a key
+#     in its AMENDED_KEYS table from the fresh side when the committed side has
+#     none (and says so on a line of its own), so this step goes on reporting
+#     real emitter drift instead of firing on every run.  The fixtures were NOT
+#     re-recorded for M44: frame indices into them are cited across the docs and
+#     tests (`human-auto-42`@717, say), and a re-recorded human-seat log comes
+#     back in a different frame order even when its content is identical.
 DRIFT_FIXTURE="fixtures/games/human-auto-42.jsonl"
 DRIFT_ID="check-all-drift-42"
 DRIFT_LOG="var/games/$DRIFT_ID/frames.jsonl"
@@ -405,7 +429,7 @@ fi
 if [ "${SKIP_TEN:-0}" = "1" ]; then
   printf '\n(9c ten-games.sh skipped: SKIP_TEN=1 -- the M5 exit criterion did NOT run)\n'
 else
-  printf '\n=== 9c. ten-games.sh -- the M5 exit criterion: ten consecutive games, zero UNIMPL ===\n'
+  printf '\n=== 9c. ten-games.sh -- the M5 exit criterion: ten consecutive games, zero UNIMPL (plus rows 11-14, match setup) ===\n'
   ./tools/ten-games.sh || die "tools/ten-games.sh (the M5 exit criterion; logs in var/ten-games/)"
 fi
 
@@ -463,6 +487,124 @@ node -e '
     + `${v.filter((i) => i >= main).length} from the sideboard`);
 ' "$SB_G2" || die "the sideboard answer is not a legal new main deck"
 node tools/check-redaction.mjs "$SB_G1" "$SB_G2" || die "check-redaction.mjs on the sideboard probe"
+
+# 9e. MATCH SETUP (protocol amendment M44): your deck against the villain deck,
+#     with the AI on Forge's `Reckless` profile.
+#
+#     The villain deck is tools/villain-deck.sh's -- decks/doom-legion.dck,
+#     named there once for this step and tools/ten-games.sh alike, VILLAIN_DECK
+#     overriding -- and if that file is missing this step plays
+#     decks/morph-probe.dck and says STAND-IN, because what it guards is the
+#     profile path:
+#
+#       - `Bootstrap.createAiPlayer` passes a NON-EMPTY profileOverride, always.
+#         The empty-override branch of GamePlayerUtil.createAiPlayer can call
+#         ForgePreferences.save() (report 11 section 9), so the user's real
+#         ~/.forge/preferences/ and this checkout's var/forge/preferences/ are
+#         fingerprinted before and after and must not move;
+#       - the AI PLAYED the profile: the summary's `ai profile     =` line reads
+#         PLAY_AGGRO and CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS back from the in-game
+#         AI player through AiProfileUtil.getProperty -- the lookup
+#         AiController.getProperty makes -- and both must equal Reckless.ai's;
+#       - `hello_ok.match` names both decks and the profile, the AI's deck as
+#         {name, cards} only (check-redaction holds the shape, this the content);
+#       - a profile that is not a file is refused in the argument check, before
+#         FModel.initialize, with the list of the ones that are.
+#
+#     Seed 21, not ten-games' 13: a second Reckless game rather than the same one.
+printf '\n=== 9e. match setup: your deck vs the villain deck, --ai-profile Reckless (M44) ===\n'
+# shellcheck source=tools/villain-deck.sh
+. tools/villain-deck.sh
+MS_VILLAIN="$VILLAIN"
+echo "  $VILLAIN_NOTE"
+[ -f "$MS_VILLAIN" ] || die "the villain deck $MS_VILLAIN does not exist"
+ms_prefs() {
+  local d
+  for d in "$HOME/.forge/preferences" var/forge/preferences; do
+    if [ -d "$d" ]; then
+      find "$d" -type f -print0 | sort -z | xargs -0 -r sha256sum
+      find "$d" -type f -print0 | sort -z | xargs -0 -r stat -c '%n %Y %s'
+    else
+      echo "$d: absent"
+    fi
+  done
+}
+MS_ID="check-all-match-reckless"
+MS_LOG="var/games/$MS_ID/frames.jsonl"
+rm -rf "var/games/$MS_ID"
+MS_PREFS_BEFORE="$(ms_prefs)"
+rc=0
+jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 21 --game-id "$MS_ID" \
+    --deck decks/pacho-shield.dck --ai-deck "$MS_VILLAIN" --ai-profile Reckless \
+    > var/check-all-match.log 2>&1 || rc=$?
+if [ "$(ms_prefs)" != "$MS_PREFS_BEFORE" ]; then
+  diff <(echo "$MS_PREFS_BEFORE") <(ms_prefs) >&2 || true
+  die "the Reckless game CHANGED a Forge preferences file -- never save() prefs"
+fi
+if [ "$rc" != "0" ]; then
+  tail -30 var/check-all-match.log >&2
+  capped "$rc" && die "the match-setup game did not finish within ${GAME_TIMEOUT}s"
+  die "the match-setup game exited $rc (full log: var/check-all-match.log)"
+fi
+grep -E '^(deck you|deck ai|ai profile|finished|winner|UNIMPL members|emit errors)' var/check-all-match.log || true
+grep -q '^MTGTABLE OK$' var/check-all-match.log || die "the match-setup game did not print MTGTABLE OK"
+grep -q '^finished       = true' var/check-all-match.log || die "the match-setup game did not reach \`over\`"
+grep -q '^UNIMPL members = none$' var/check-all-match.log || die "the match-setup game hit an UNIMPL member"
+if grep -n 'UNIMPL' var/check-all-match.log | grep -qv '^[0-9]*:UNIMPL members = none$'; then
+  die "UNIMPL line(s) in var/check-all-match.log"
+fi
+! grep -q 'UNIMPL' "$MS_LOG" || die "an UNIMPL notice reached the wire ($MS_LOG)"
+grep -q '^emit errors    = 0$' var/check-all-match.log || die "the match-setup game logged an emit error"
+[ "$(grep -c '"type":"over"' "$MS_LOG" || true)" = "1" ] || die "$MS_LOG does not have exactly one \`over\`"
+[ "$(tail -1 "$MS_LOG" | grep -c '"type":"over"')" = "1" ] || die "the last frame of $MS_LOG is not \`over\`"
+node tools/check-redaction.mjs "$MS_LOG" || die "check-redaction.mjs on the match-setup game"
+MS_LINE="$(grep '^ai profile     = ' var/check-all-match.log || true)"
+MS_WANT_AGGRO="$(sed -n 's/^PLAY_AGGRO=//p' forge-home/res/ai/Reckless.ai | head -1)"
+MS_WANT_CHAIN="$(sed -n 's/^CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=//p' forge-home/res/ai/Reckless.ai | head -1)"
+case "$MS_LINE" in
+  "ai profile     = Reckless "*"in game: PLAY_AGGRO=$MS_WANT_AGGRO CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$MS_WANT_CHAIN,"*) ;;
+  *) die "the in-game AI did not read Reckless.ai's values (want PLAY_AGGRO=$MS_WANT_AGGRO, CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$MS_WANT_CHAIN): $MS_LINE" ;;
+esac
+node -e '
+  const fs = require("node:fs");
+  const [file, deck, villain] = process.argv.slice(1);
+  const nameOf = (p) => (fs.readFileSync(p, "utf8").match(/^Name=(.*)$/m) ?? [])[1]?.trim();
+  // The [main] section of a .dck, summed: "<count> <name>|<SET>" per line.
+  const cardsOf = (p) => {
+    let inMain = false, n = 0;
+    for (const raw of fs.readFileSync(p, "utf8").split("\n")) {
+      const line = raw.trim();
+      if (line.startsWith("[")) { inMain = line.toLowerCase() === "[main]"; continue; }
+      const c = inMain ? line.match(/^(\d+)\s/) : null;
+      if (c) n += Number(c[1]);
+    }
+    return n;
+  };
+  const hello = fs.readFileSync(file, "utf8").split("\n").filter(Boolean).map(JSON.parse)
+    .find((f) => f.type === "hello_ok");
+  const m = hello?.body?.match;
+  const want = {
+    yourDeck: { name: nameOf(deck), path: deck, cards: cardsOf(deck) },
+    aiDeck: { name: nameOf(villain) ?? villain.replace(/^.*\//, "").replace(/\.dck$/, ""), cards: cardsOf(villain) },
+    aiProfile: "Reckless", games: 1,
+  };
+  if (JSON.stringify(m) !== JSON.stringify(want)) {
+    console.error("hello_ok.match is\n  " + JSON.stringify(m) + "\nexpected\n  " + JSON.stringify(want));
+    process.exit(1);
+  }
+  console.log(`OK: hello_ok.match = ${JSON.stringify(m)}`);
+' "$MS_LOG" decks/pacho-shield.dck "$MS_VILLAIN" || die "hello_ok.match does not describe the match that was played"
+echo "OK: no Forge preferences file changed (~/.forge/preferences, var/forge/preferences)"
+# The refusal half: a profile that is not a file never reaches the engine.
+rc=0
+jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 21 --game-id check-all-match-bad \
+    --ai-profile NoSuchProfile > var/check-all-match-bad.log 2>&1 || rc=$?
+[ "$rc" != "0" ] || die "--ai-profile NoSuchProfile was accepted"
+grep -q 'is not one of Cautious, Default, Experimental, Reckless' var/check-all-match-bad.log \
+  || { tail -5 var/check-all-match-bad.log >&2; die "--ai-profile NoSuchProfile failed without naming the four profiles"; }
+! grep -q 'FModel.initialize took' var/check-all-match-bad.log \
+  || die "--ai-profile NoSuchProfile was only refused AFTER the engine booted"
+echo "OK: --ai-profile NoSuchProfile refused before FModel.initialize, naming the four profiles"
 
 say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
 # M3, plus M6's 10g.  Seven servers, because each client run ends its own

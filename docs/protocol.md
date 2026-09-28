@@ -25,6 +25,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-27 — match setup, the AI's deck and profile
+
+Applied when the bridge learned to seat the AI with a deck of its own and a
+chosen Forge AI profile (`MtgTable --ai-deck <path>` / `--ai-profile <name>`,
+`scripts/play.sh`'s flags of the same names, `config.json`'s `match` block). One
+row. It is an **added key inside a `body`**, so it is not a `v` bump, and every
+existing recording stays valid: the key is optional and absent from every log
+made before this date. Evidence: `docs/evidence/match-setup.md`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M44 | §2.1, §8.1 | **`hello_ok` gains `match: {yourDeck: {name, path, cards}, aiDeck: {name, cards}, aiProfile, games}`** — what this match *is*, which nothing else on the wire says and no client can derive. **The AI's deck is its NAME and its card COUNT, and nothing else**: never a path, a sha256 or a list, for exactly §8.1's reason for nulling the opponent's `decks` entry — a path plus a hash identifies a decklist exactly, and hard rule 8 says the opponent's library is hidden. The name is the `.dck` file's own `[metadata] Name=` (the file's base name when it has none): the thing a player says across a real table, and public in a real match. A deck *named after a card* announces that card, exactly as saying the name at a table would; nothing else about the list reaches the wire. `yourDeck` adds the viewing seat's own `path`, which §8.1 already puts in the session header. `aiProfile` is the canonical name of one `.ai` file in `forge-home/res/ai/` (`Default`, `Cautious`, `Reckless`, `Experimental` in 2.0.14 — report 11 §9), validated before the engine boots and passed to `GamePlayerUtil.createAiPlayer(String, int, String)` **[jar]** as `profileOverride`, **never empty**: the empty-override branch reads `FPref.UI_CURRENT_AI_PROFILE` and, when that value is not in `AiProfileUtil.getProfilesDisplayList()`, **calls `ForgePreferences.save()`** (bytecode offsets 28–83 of the five-argument overload), which is the persistent edit CLAUDE.md forbids. `games` is `--games N` and, unlike M41's pair, is **always present**: M41 omits `gameCount` for a one-game session because "where in the match are we" says nothing there, whereas "how long is this match" always says something. Emitted by `mtgtable.MtgTable` on every transport; `mtgtable.RecordMatch` (AI vs AI, no seat) does not write it. `tools/check-redaction.mjs` asserts the exact key sets — an `aiDeck` carrying any key but `name` and `cards` **fails** — and cross-checks `yourDeck.path`/`.cards` and `aiDeck.cards` against the session header's `decks` and `games` against M41's `gameCount`. The client's one reader is `seatMatchOf()` in `web/src/protocol.ts`; the board prints a seat's deck name on its rail, and the AI's profile on the AI's. | match setup |
+
 ### 2026-09-13 — M7 verification, the counter spelling
 
 Applied after an independent verification pass read this file against the bytes
@@ -287,7 +300,14 @@ re-arms the guard, and the next `input` is that game's first.
     "players": [
       { "id": 0, "name": "Pacho",    "isAi": false },
       { "id": 1, "name": "Opponent", "isAi": true  }
-    ]
+    ],
+    "match": {
+      "yourDeck": { "name": "Pacho SHIELD (Marvel Super Heroes)",
+                    "path": "decks/pacho-shield.dck", "cards": 40 },
+      "aiDeck":   { "name": "Morph probe", "cards": 40 },
+      "aiProfile": "Reckless",
+      "games": 3
+    }
   }}
 ```
 
@@ -325,6 +345,22 @@ the **cached** handshake, not the ones it missed (§2.4) — and nothing on the 
 otherwise says how long the match is. A reader that predates M41 sees neither
 key; `web/src/reduce.ts` falls back to its own count and says *Game 2* instead of
 *Game 2 of 3*.
+
+**`match` says what this match is** (amendment **M44**): each seat's deck by
+name, the AI's profile, and how many games it is played to.
+
+| key | type | meaning |
+|---|---|---|
+| `yourDeck` | `{name, path, cards}` | the **viewing seat's** deck: its `.dck` `Name=` (the file's base name when it has none), its repo-relative path (the same string §8.1's header carries for this seat) and its main-deck card count |
+| `aiDeck` | `{name, cards}` | the **other seat's** deck: name and card count **only** — never `path`, `sha256` or a list (§8.1, hard rule 8). A mirror match names the same deck twice |
+| `aiProfile` | string | the Forge AI profile the other seat plays under — one `.ai` file of `forge-home/res/ai/`; `Default` unless `--ai-profile` said otherwise |
+| `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session |
+
+**Optional, and absent from every recording made before 2026-09-27** — the whole
+committed corpus — so a reader must treat a missing `match` as "this stream does
+not say", never as an empty match. `mtgtable.RecordMatch` (AI vs AI) does not
+write it. The name is the deck's public name, and a deck named after a card
+announces that card; the decklist itself is never on the wire.
 
 ### 2.2 `act` (c→s)
 
@@ -1752,7 +1788,10 @@ allowed to see. With two AI seats that is harmless; the moment a human sits down
 in M2/M3 it is the opponent's entire deck, handed to the player in the file the
 client reads. The same reasoning scopes `hello_ok.unsupportedCards` to the
 viewing seat's deck (§2.1), because each of its entries is a literal card name.
-`tools/check-redaction.mjs` asserts both.
+`tools/check-redaction.mjs` asserts both. (Amendment **M44** does name the
+opponent's deck in `hello_ok.match.aiDeck` — by its public *name* and card count,
+never its path, hash or list — and the checker holds that object to exactly those
+two keys.)
 
 ### 8.2 Every later line — a frame plus `dir`
 

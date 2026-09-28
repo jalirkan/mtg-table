@@ -17,6 +17,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice, fixed twice and committed** (`0368a90`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened. **Tier 2 slice 4 (T13, proportioned bodies in painted costumes, T14) built, verified once and documented**, not committed (branch `tier2-slice4`): every humanoid a CC0 *Universal Base Characters* person on the animation library's own rig, painted by a costume palette, still one program; a full duelist per seat — the director and the villain — with gestures as cue params; **D95–D101**; nineteen follow-ups. **Tier 2 is complete (T0–T14)**; likeness — Tier 3, personal-only — is the open question (question 14) |
+| — | Match setup: the AI's own deck and its Forge profile *(a deferred item, brought forward)* | 1 day | **built, reviewed, fixed and documented; not committed** (branch `match-setup`) — `decks/doom-legion.dck`, 40 blue-black Marvel villains for the AI; `--ai-deck` / `--ai-profile` on the bridge and `scripts/play.sh`, `config.json`'s `match` block read by `play.sh` alone; `hello_ok.match` (amendment **M44**) naming the AI's deck but never listing it; the board's rails print both decks and the profile; gate rows 11–14 of `ten-games.sh` and step **9e**; **D102–D105**; one review pass, all nine findings closed; nine follow-ups, the first two owed after the arena branches merge |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -1761,7 +1762,11 @@ is deliberately not changing. See *"M6 follow-ups closed by M7"* under §M7 belo
     picker is report 11 §9 and stays on the deferred list (it is one string
     passed as `profileOverride`, and the no-override branch **saves** a pref);
     `YIELD_*` prefs, yield suggestions and `DeclineScope` are out of scope by
-    report 11 §12 and nothing in the bridge reads or writes them.
+    report 11 §12 and nothing in the bridge reads or writes them. *(The profile
+    half came forward on 2026-09-27 as **match setup** — `--ai-profile`, always
+    a non-empty `profileOverride` through `Bootstrap.createAiPlayer`, lint-held;
+    protocol amendment **M44**, **D102**–**D105**, `docs/evidence/match-setup.md`.
+    The yield half is unchanged.)*
 11. **Phase stops are reseeded for every game** (**D38**), which Forge's desktop
     does not do: a stop set in game 1 must be set again in game 2. The decision
     and its rejected alternative are written down; this line exists so the
@@ -3867,6 +3872,115 @@ Against the tree, item by item:
 
 ---
 
+## Match setup — the AI's own deck and its Forge profile (2026-09-27)
+
+**Status: built, reviewed, fixed and documented; not committed** (branch
+`match-setup`, a worktree off `0368a90`). This was a deferred item — *"a second
+deck, a deck picker, and an AI profile / difficulty selector"* — brought forward
+on 2026-09-27, when the user asked for deferred work to be expedited. Protocol
+amendment **M44**; decisions **D102–D105**; `docs/evidence/match-setup.md` is
+what was measured (§D the deck, §B the bridge and the gate, §P what the profiles
+change, §R the review); `decks/README.md` is the new deck and report 08 §8 its
+card-by-card fidelity. One review pass found one major and eight minors, and all
+nine are closed (evidence §R).
+
+```bash
+./scripts/play.sh                               # your deck vs decks/doom-legion.dck, Default, three games
+./scripts/play.sh --ai-profile Reckless         # or --mirror, --ai-deck <path>, --deck <path>
+./tools/ten-games.sh --seed 13                  # the gate's row: you vs the villains, Reckless
+```
+
+What it is:
+
+- **A second real deck.** `decks/doom-legion.dck`, *Doom Legion (Marvel Super
+  Heroes villains)*: 40 blue-black cards from MSH (33) and MSC (7), 17 creatures
+  and every one a Villain. 27 of 27 cards faithful in Forge 2.0.14, none
+  unsupported, Limited-legal, art for all 27. Two cards were cut in testing —
+  Kang Prime, whose library reveal fails the redaction gate, and Trickster's
+  Stratagem, which the Forge AI never casts — and after the swaps 38 of 38 games
+  were clean and **all 20 nonland cards were cast by the AI** (**D105**).
+- **The bridge seats the AI with its own deck and profile.** `--ai-deck` (an
+  alias of `--deck2`) and `--ai-profile <Default|Cautious|Reckless|Experimental>`,
+  validated against `forge-home/res/ai/*.ai` before `FModel.initialize`. Every AI
+  seat in every process goes through `Bootstrap.createAiPlayer`, always with a
+  non-empty `profileOverride`, because the empty one reaches a branch of
+  `GamePlayerUtil` that **saves the preferences file** (a negative control made
+  it write one). `tools/lint-bridge.sh` allows the Forge call in `Bootstrap.java`
+  alone (**D104**).
+- **On the wire:** `hello_ok.match` — each seat's deck by name, the AI's profile
+  and the match length. The AI's deck is **its name and card count, never its
+  path or list** (**D102**); `tools/check-redaction.mjs` holds the exact key
+  sets, negative-controlled by four committed `fixtures/negative/redaction/m44-*`
+  files.
+- **On the board:** each seat's rail names its deck, and the AI's rail its
+  profile, from `seatMatchOf()`, the one reader (`web/test/reduce-match.test.ts`).
+- **`scripts/play.sh`** takes `--deck`, `--ai-deck`, `--ai-profile` and
+  `--mirror`, with defaults in `config.json`'s new `match` block — which **only
+  `play.sh` reads**, so the gate never plays what a player last chose (**D103**).
+- **Tools:** `tools/check-deck.mjs` (is every card of a `.dck` really in the
+  engine — static, engine and Scryfall passes, negative-controlled);
+  `tools/fetch-art.ts` now fetches art for every `decks/*.dck`;
+  `tools/first-divergence.mjs` reads a same-seed pair of games by its first
+  differing choice; `tools/villain-deck.sh` names the gate's villain deck once.
+- **The gate:** `tools/ten-games.sh` rows **11–14** play your deck against the
+  villains once under each profile, and `check-all.sh` gained **9e** (one
+  Reckless game, and a bogus profile refused before the engine boots). Both read
+  the profile back **from the in-game AI** and fingerprint every Forge
+  preferences file before and after. They prove the profile reaches the engine,
+  not that it changes the play. Five more games cost about two minutes; the gate
+  ran green from a deleted `bridge/out` in 874 s, then 1,141 s (the fix pass) and
+  1,143 s (the documentation pass, evidence §R.2) — the last two on a desktop
+  running other gates at once.
+
+**What a profile is not.** There is still no difficulty setting. Each profile is
+121 heuristic values; against the automated seat Cautious and Reckless were not
+measurably different in same-seed pairs, and against a seat that leaves
+untapped blockers the first difference was a trade Reckless took and Cautious
+declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
+
+### Match setup follow-ups — nine, 2026-09-27
+
+1. **Identity rows for the villain deck, after the arena branches merge.** This
+   branch did not touch `web/src/arena/` while Tier 2's slice 4 and the workshop
+   were being built there. Only Aerial Doombot and Thriving Isle, which are in
+   Pacho's deck too, have rows; the rest — 13 creature names, the Doombot and
+   Villain tokens, the Frozen in Ice aura, five other noncreature spells and
+   four new lands — stand on the subtype and archetype rungs (report 08 §8.2).
+   Owed: rows in `web/src/arena/figures/traits.json`, `figures.json` and
+   `cues/cues.json`, judged the way slice 3 judged Pacho's deck (from both
+   seats, at 1×).
+2. **The arena's HUD does not print the match.** The board's rails do; the
+   arena's plates (`web/src/arena/DecisionLayer.tsx`, the `isAi ? 'AI' :
+   'human'` line) should read `seatMatchOf(state.hello, id)` too. Also after the
+   arena branches merge, for the same reason.
+3. **A deck and profile picker in the browser** — on the deferred list below.
+4. **Dark Deed** was cast once by the AI in 38 games; it holds the card. If a
+   later census shows it never leaving the hand, it is the next swap (**D105**).
+5. **Paths no recording has reached:** Kang the Conqueror's power-up — an
+   **extra turn**, two `turn` events in a row for one player, which nothing in the
+   repo has ever drawn on the phase strip or in the arena — Castle Doom's Doombot
+   ability, and the seat targeting Pharaoh Rama-Tut into its ward 2. A probe deck
+   is the way to reach the extra turn on purpose.
+6. **The redaction gate and `DigUntil`'s reveal.** Kang Prime was cut because
+   A3 cannot tell a real reveal of the opponent's library from a leak. Whether A3
+   should admit `GameAction.reveal`'s window is a question for report 06 and
+   `check-redaction.mjs`, with the five frames of evidence §D.3 as test data.
+   Until then, rule 4 of **D105** keeps every such card out of an AI deck.
+7. **The rest of report 11 §9 is not exposed:** the simulating AI
+   (`AIOption.USE_HYBRID_SIMULATION` / `USE_FULL_SIMULATION`),
+   `FPref.MATCH_AI_TIMEOUT`, and Forge's two "Random" profile entries. Each needs
+   a decision of its own (**D104**).
+8. ~~**CLAUDE.md does not describe match setup yet**~~ — **closed by the
+   rebase onto `main`'s `23e26b3`** (2026-09-27): step 9e, ten-games' rows
+   11–14, the lint rule, the new flags and **D102–D105** are in CLAUDE.md, applied
+   from the fix pass's prepared patch; the test counts and the gate's time
+   followed once they were measured on the rebased tree.
+9. ~~**Decision numbers at merge.**~~ **Closed by the same rebase**: `main`
+   landed D90–D94 and slice 4's D95–D101 first, as predicted, so D102–D105 kept
+   their numbers and DECISIONS.md now runs D1–D105 with no gap.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
@@ -3879,12 +3993,14 @@ above; slice 4 is not yet committed). **Tier 3 means likeness**, and a likeness 
 would be **personal-only** — local, gitignored, never committed or published, and
 never made from card art (**D54**): *Tier 3 — a note, not a plan*, above.
 
-- A second deck, a deck picker, and an AI profile / difficulty selector. (Now
-  specified, if it ever comes forward: there is no "difficulty" in Forge, only
-  four profile files — `res/ai/{Default,Cautious,Reckless,Experimental}.ai` — and
-  a picker sets one string, passed as `profileOverride` to
-  `GamePlayerUtil.createAiPlayer`, because the no-override branch **saves**
-  `FPref.UI_CURRENT_AI_PROFILE`. `docs/research/11-engine-comfort-features.md` §9.)
+- ~~A second deck, a deck picker, and an AI profile selector.~~ **Done
+  2026-09-27 as match setup** — *Match setup*, above: a second real deck for the
+  AI, and the AI's deck and Forge profile chosen by a flag or `config.json`.
+  What stays here is its browser half: **a deck and profile picker in the
+  page**. Today the choice is made before the session starts, and changing it
+  in the browser would mean an act that ends the session and seats a new one,
+  because `createAiPlayer` and both decks are fixed before `startMatch` (report
+  11 §9). There is still no "difficulty" to pick (**D104**).
 - ~~The SQLite (`node:sqlite`) + FTS5 card library, the `oracle_cards` bulk
   stream, a local image cache and an `/api/images` proxy.~~ **Brought forward
   2026-09-27** on the user's request (**D90**): `tools/card-library/` (the index,
@@ -3922,7 +4038,7 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 5 | Card images hot-linked from `cards.scryfall.io`, or proxied through our own origin with a 302 (the way Endstep does)? | **Hot-link in v1.** Unchanged for the board. The card browser (2026-09-27) serves the user's own image cache from the dev server's origin and hot-links on a miss — never a proxy (**D92**). |
 | 6 | Install a JDK? Not needed for this plan, but it would bring `jar`, `jshell`, a debugger and Maven. Unpack Temurin 21 into `tools/jdk/` (no sudo) or `apt install openjdk-21-jdk` (sudo)? | **No JDK. The JRE's `jdk.compiler` / `jdk.jdeps` modules suffice.** |
 | 7 | GitHub: public repo or private? Affects whether NOTICE and the Fan Content disclaimer must be publication-quality on day one. | Undecided — **NOTICE is written to publication quality anyway**, so either answer works. |
-| 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **AI difficulty stays deferred.** |
+| 8 | Is losing to the Forge AI acceptable in v1, or does the AI profile / difficulty picker come forward from the deferred list? | **The picker CAME FORWARD on 2026-09-27**, when the user asked for deferred work to be expedited: match setup (amendment **M44**) picks the AI's deck and its Forge profile (`--ai-deck`, `--ai-profile`, `config.json`'s `match` block). **It is not a difficulty setting** (**D104**) — Forge has none, and in same-seed pairs against the automated seat Cautious and Reckless were not measurably different (`docs/evidence/match-setup.md` §P). Whether losing to the AI is acceptable is unchanged: nothing here makes it weaker. |
 | 9 | **New, M5.** Should Forge's floating-mana warning (`FPref.UI_MANA_LOST_PROMPT`, a `confirm` before you pass priority with mana that would be lost) be on in real games? It is off in stock Forge; `--mana-lost-prompt` turns it on in memory for probe runs, and it is the only way the `confirm` ask kind is reachable at all. | **ANSWERED BY M6: ON.** `config.json` `"manaLostPrompt": true`, set in memory only (never `save()`), overridable with `--mana-lost-prompt` / `--no-mana-lost-prompt` (amendment M40). `confirm` therefore occurs in ordinary games; nothing else moved. Raise it again if the prompt turns out to be a nuisance. |
 | 10 | **New, Tier 2.** Report 13 §13's first six questions — art direction, models from card art, the GPU, idle breathing, duelists, lights. | **ANSWERED by the user before T0**, as nine decisions, recorded as **D53–D62**: stylised low-poly CC0 figures under a holographic, unlit treatment; figures at their card with the card plane kept; **no** AI-generated models from card art; **no** Mixamo; procedural slab lands; bloom on if the bench allows (it did, on the GTX 1080); breathing only while something else animates; silhouette busts, avatars deferred; mana motes to the controller's casting anchor. **One of the nine has since been superseded**: "silhouette busts, avatars deferred" (**D62**) by slice 4's full duelists (**D99**), on the workflow's reading of the user's verdict on slice 3 — the busts are kept as the fallback, and whether the duelists were wanted is slice 4's follow-up 1. |
 | 11 | **New, Tier 2.** Commit `web/public/models/figures.glb` (**373,236 bytes since slice 4** — 143,920 in slices 2–3, 126,404 in slice 1 — CC0, built by `tools/build-figures.mjs` from five sources), or gitignore it and regenerate it like `web/public/art.json`? | **Undecided — nothing in the code depends on the answer.** A checkout without it draws every creature as its disc, and the duelists as their busts, and says so once in the console, and `figures.test.ts` skips its hash check. If it is committed, `figures.test.ts` holds it to the bytes and sha256 `models.json` records, and `@gltf-transform/cli` should be pinned exactly first (Tier 2 follow-up 17 — since slice 4 it also decides the simplifier's version, **D96**). |

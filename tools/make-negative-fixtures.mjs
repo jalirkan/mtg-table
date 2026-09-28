@@ -395,5 +395,70 @@ probe('a7-reveal-flag-on-the-wrong-ask-kind.jsonl',
     });
   });
 
+/*
+ * Amendment M44 -- `hello_ok.match`, the first frame the client reads, names
+ * each seat's deck.  The AI's is `{name, cards}` and NOTHING else: a `path`, a
+ * hash or a list there hands the player the opponent's decklist before a card
+ * is drawn -- protocol section 8.1's reason for nulling the session header's
+ * entry for that seat, arriving by a second channel (hard rule 8).  The audit is
+ * optional-when-absent (the whole committed corpus predates it), so a probe has
+ * to ADD the block before it can break it -- and the first file below is the
+ * block as the bridge writes it, the control that proves the three probes fail
+ * for the reason chosen rather than for carrying a `match` at all.
+ *
+ * The values are the session header's own (the source is g1, whose header has
+ * the viewing seat on decks/pacho-shield.dck and the other seat's path nulled),
+ * so the cross-checks against the header pass in the control.
+ */
+const matchBlock = () => {
+  const mine = header.decks.find((d) => d.player === header.seat);
+  const theirs = header.decks.find((d) => d.player !== header.seat);
+  if (mine === undefined || theirs === undefined || typeof mine.path !== 'string') {
+    throw new Error(`${SOURCE}'s session header has no viewing-seat deck path to build hello_ok.match from`);
+  }
+  return {
+    yourDeck: { name: 'Pacho SHIELD (Marvel Super Heroes)', path: mine.path, cards: mine.cards },
+    aiDeck: { name: 'Doom Legion (Marvel Super Heroes villains)', cards: theirs.cards },
+    aiProfile: 'Reckless',
+    games: 1,
+  };
+};
+const withMatch = (fs, edit) => {
+  const hello = fs.find((f) => f.type === 'hello_ok');
+  const m = matchBlock();
+  edit(m);
+  hello.body.match = m;
+};
+
+{
+  const fs = slice();
+  withMatch(fs, () => {});
+  write('m44-match-present.jsonl', fs);
+  manifest.push({
+    file: 'm44-match-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M44: the baseline plus a hello_ok.match exactly as the bridge writes it -- ' +
+      'the control for the three m44 probes below',
+  });
+  console.log('  PASS  m44-match-present.jsonl  (a well-formed hello_ok.match, no defect)');
+}
+
+probe('m44-aideck-carries-path.jsonl',
+  'amendment M44: the AI\'s deck is its NAME and card COUNT; a path identifies the opponent\'s decklist',
+  'aiDeck carries "path"',
+  (fs) => withMatch(fs, (m) => { m.aiDeck.path = 'decks/doom-legion.dck'; }));
+
+probe('m44-aideck-cards-is-a-list.jsonl',
+  'amendment M44: aiDeck.cards is a COUNT; a list of names there is the opponent\'s decklist on the wire',
+  'aiDeck.cards must be an integer',
+  (fs) => withMatch(fs, (m) => {
+    m.aiDeck.cards = ['Doctor Doom', 'Kang the Conqueror', 'Loki, God of Mischief'];
+  }));
+
+probe('m44-yourdeck-path-mismatch.jsonl',
+  'amendment M44: hello_ok.match and the session header are written from the same Deck objects; ' +
+    'a different yourDeck.path means one of them describes a different match',
+  'but the session header says',
+  (fs) => withMatch(fs, (m) => { m.yourDeck.path = 'decks/other.dck'; }));
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

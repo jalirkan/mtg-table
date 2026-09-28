@@ -1122,6 +1122,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
     maxTurn: 0,
+    hellos: 0, matchChecked: 0,
   };
   const seq = { s2c: 0, c2s: 0 };
   let sawState = false;
@@ -1215,8 +1216,91 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
    * (section 10.7) -- this exists so that the moment M2 starts emitting them,
    * the assertions are already running rather than being written afterwards.
    */
+  /*
+   * Section 2.1, amendment M44 -- `hello_ok.match`: each seat's deck by NAME,
+   * the AI's profile, the match length.  OPTIONAL: every recording made before
+   * 2026-09-27 lacks it and `mtgtable.RecordMatch` never writes it, so absence
+   * is counted and never failed.  Present, it is held to EXACT key sets, and
+   * `aiDeck` is the one that matters: `{name, cards}` and nothing else.  A
+   * `path`, a `sha256` or a list there is the opponent's decklist handed to the
+   * player in the first frame the client reads -- section 8.1's reason for
+   * nulling the session header's entry for that seat, arriving by a second
+   * channel (hard rule 8).  The values are then cross-checked against the
+   * session header, which the bridge writes from the same two Deck objects: a
+   * disagreement means one of the two emitters is describing a different match.
+   */
+  function auditHello(body, lineNo) {
+    stats.hellos++;
+    if (body.match === undefined) return;
+    const m = body.match;
+    const where = 'hello_ok.match (section 2.1, amendment M44)';
+    if (!plainObject(m)) {
+      note(lineNo, `${where} must be an object, got ${JSON.stringify(m)}`);
+      return;
+    }
+    stats.matchChecked++;
+    if (!sameKeys(m, ['yourDeck', 'aiDeck', 'aiProfile', 'games'])) {
+      note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly ` +
+        `yourDeck, aiDeck, aiProfile, games`);
+    }
+    const count = (v) => Number.isInteger(v) && v >= 0;
+    const yd = m.yourDeck;
+    if (!plainObject(yd) || !sameKeys(yd, ['name', 'path', 'cards']) || !str(yd.name) ||
+        yd.name === '' || !str(yd.path) || yd.path === '' || !count(yd.cards)) {
+      note(lineNo, `${where}: yourDeck must be exactly {name: non-empty string, path: string, ` +
+        `cards: integer}, got ${JSON.stringify(yd)}`);
+    }
+    const ad = m.aiDeck;
+    if (!plainObject(ad)) {
+      note(lineNo, `${where}: aiDeck must be an object, got ${JSON.stringify(ad)}`);
+    } else {
+      const extra = Object.keys(ad).filter((k) => k !== 'name' && k !== 'cards');
+      if (extra.length > 0) {
+        note(lineNo, `${where}: aiDeck carries ${extra.map((k) => JSON.stringify(k)).join(', ')} -- ` +
+          `the AI's deck is its NAME and card COUNT only. A path, a hash or a list identifies the ` +
+          `opponent's decklist, which this seat never saw (hard rule 8, section 8.1)`);
+      }
+      if (!str(ad.name) || ad.name === '') note(lineNo, `${where}: aiDeck.name must be a non-empty string`);
+      if (!count(ad.cards)) note(lineNo, `${where}: aiDeck.cards must be an integer, got ${JSON.stringify(ad.cards)}`);
+    }
+    // A profile is the base name of a `.ai` file: a word, never a path.
+    if (!str(m.aiProfile) || !/^[A-Za-z0-9][A-Za-z0-9 _()-]*$/.test(m.aiProfile)) {
+      note(lineNo, `${where}: aiProfile must be a Forge AI profile name, got ${JSON.stringify(m.aiProfile)}`);
+    }
+    if (!Number.isInteger(m.games) || m.games < 1) {
+      note(lineNo, `${where}: games must be an integer >= 1, got ${JSON.stringify(m.games)}`);
+    }
+    // Amendment M41's `gameCount` is `--games` too, when it is present at all.
+    if (body.gameCount !== undefined && body.gameCount !== m.games) {
+      note(lineNo, `${where}: games=${JSON.stringify(m.games)} but gameCount=` +
+        `${JSON.stringify(body.gameCount)} -- both are --games N`);
+    }
+    // The session header, when it has entries (a CLIENT log's is `decks: []`).
+    if (Array.isArray(header.decks) && header.decks.length > 0) {
+      const mine = header.decks.find((d) => plainObject(d) && d.player === header.seat);
+      const theirs = header.decks.find((d) => plainObject(d) && d.player !== header.seat);
+      if (mine !== undefined && plainObject(yd)) {
+        if (mine.path !== yd.path) {
+          note(lineNo, `${where}: yourDeck.path=${JSON.stringify(yd.path)} but the session header ` +
+            `says ${JSON.stringify(mine.path)} for the viewing seat`);
+        }
+        if (typeof mine.cards === 'number' && mine.cards !== yd.cards) {
+          note(lineNo, `${where}: yourDeck.cards=${yd.cards} but the session header says ${mine.cards}`);
+        }
+      }
+      if (theirs !== undefined && plainObject(ad) && typeof theirs.cards === 'number' &&
+          theirs.cards !== ad.cards) {
+        note(lineNo, `${where}: aiDeck.cards=${ad.cards} but the session header says ${theirs.cards}`);
+      }
+    }
+  }
+
   function auditNonStateFrame(f, lineNo) {
     const body = f.body;
+    if (f.type === 'hello_ok') {
+      auditHello(body, lineNo);
+      return;
+    }
     if (f.type === 'ask') {
       stats.asks++;
       // --- A11: the kind is one of the documented eleven -----------------
@@ -2130,6 +2214,15 @@ for (const path of files) {
   console.log(`      shape-checked ask bodies=${stats.askShapeChecks} (exact key set + declared `
     + `nullability, section 5.2)  notices=${stats.notices} (both strings swept and scanned, `
     + `section 6)  over frames=${stats.overs}`);
+  // M44.  Printed either way, like the M6 line below: which files evidence the
+  // match block, and which predate it (or are AI vs AI, which never carry it).
+  if (stats.hellos > 0) {
+    console.log(stats.matchChecked > 0
+      ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
+        + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header)`
+      : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
+        + `before amendment M44, or AI vs AI; section 2.1)`);
+  }
   // M6.  Which comfort fields this recording carries, and which it does not:
   // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,
   // and both are protocol (amendments M32-M36).  Printed either way so the

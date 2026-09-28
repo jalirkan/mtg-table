@@ -28,10 +28,15 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import forge.LobbyPlayer;
+import forge.ai.AiProfileUtil;
+import forge.ai.AiProps;
+import forge.ai.LobbyPlayerAi;
 import forge.deck.Deck;
 import forge.deck.io.DeckSerializer;
 import forge.game.GameRules;
 import forge.game.GameType;
+import forge.game.player.Player;
 import forge.game.player.PlayerView;
 import forge.game.player.RegisteredPlayer;
 import forge.gamemodes.match.HostedMatch;
@@ -54,7 +59,19 @@ import mtgtable.Json.JsonOut;
  *   ./bridge/run.sh mtgtable.MtgTable --transport auto    --seed 42
  *   ./bridge/run.sh mtgtable.MtgTable --transport null    --seed 42
  *   ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --keep-open
+ *   ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
+ *       --ai-deck decks/morph-probe.dck --ai-profile Reckless
  * </pre>
+ *
+ * <p><b>Match setup</b> (protocol amendment M44): {@code --ai-deck} (an alias
+ * of {@code --deck2}) gives the AI a deck of its own -- without it the AI plays
+ * a mirror of yours -- and {@code --ai-profile} picks one of Forge's four AI
+ * profiles, the {@code .ai} files in {@code forge-home/res/ai/} (report 11
+ * section 9: there is no "difficulty" in Forge, only these).  Both land in
+ * {@code hello_ok.match}, the AI's deck as a name and a card count only.
+ * {@code config.json}'s {@code match} block is read by {@code scripts/play.sh},
+ * NOT here: the gate runs this class with no deck flags and must keep playing
+ * the same games whatever a player last chose to play against.
  *
  * <p>Four transports, in the order they were built, because each one proves
  * something the next one depends on:
@@ -142,11 +159,18 @@ public final class MtgTable {
         }
         final File deck1File = resolve(cfg, a.deck != null ? a.deck : cfg.deck().getPath());
         final File deck2File = a.deck2 == null ? deck1File : resolve(cfg, a.deck2);
+        // Match setup (M44).  Validated against the .ai files BEFORE the engine
+        // boots, so a typo costs a second and not FModel.initialize.  Never
+        // empty: see Bootstrap.createAiPlayer for the branch that saves prefs.
+        final String aiProfile = Bootstrap.resolveAiProfile(cfg.forgeHomeDir(), a.aiProfile);
 
         System.out.println("== mtg-table M2 ==");
         System.out.println("transport     = " + a.transport);
         System.out.println("deck (you)    = " + deck1File);
-        System.out.println("deck (ai)     = " + deck2File);
+        System.out.println("deck (ai)     = " + deck2File + (a.deck2 == null ? "  (a mirror: no --ai-deck)" : ""));
+        System.out.println("ai profile    = " + aiProfile
+                + (a.aiProfile == null ? "  (the default; --ai-profile " + String.join("|",
+                        Bootstrap.aiProfiles(cfg.forgeHomeDir())) + ")" : ""));
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
         System.out.println("games/match   = " + a.games);
@@ -209,7 +233,11 @@ public final class MtgTable {
         final RegisteredPlayer me = new RegisteredPlayer(deck1);
         me.setPlayer(GamePlayerUtil.getGuiPlayer());
         final RegisteredPlayer ai = new RegisteredPlayer(deck2);
-        ai.setPlayer(GamePlayerUtil.createAiPlayer(a.aiName, 0));
+        // Match setup (M44): ALWAYS an explicit profile.  The two-argument
+        // overload this line used to call passes an empty override, and that
+        // branch of GamePlayerUtil can save the preferences file.
+        final LobbyPlayer aiLobby = Bootstrap.createAiPlayer(a.aiName, 0, aiProfile);
+        ai.setPlayer(aiLobby);
         final List<RegisteredPlayer> seats = List.of(me, ai);
 
         // 5. Log, transport, gui.
@@ -242,7 +270,7 @@ public final class MtgTable {
                 // openView calls us (WireGuiGame.openView), so it is the 1-based
                 // number of the game whose handshake this is (amendment M41).
                 return helloOkBody(cfg, gui.gameId(), a, viewer, players, unsupported(deck1),
-                        gui.gamesStarted());
+                        gui.gamesStarted(), deck1File, deck1, deck2File, deck2, aiProfile);
             }
         });
 
@@ -347,6 +375,7 @@ public final class MtgTable {
         System.out.println("refresh skips  = " + gui.refreshesSkipped()
                 + " (M6 refresh hops that found the engine running, not parked -- D39)");
         System.out.println("winner         = " + winner + (reason.isEmpty() ? "" : ", reason = " + reason));
+        System.out.println("ai profile     = " + aiProfileEvidence(hosted, aiLobby, aiProfile));
         System.out.println("player turns   = " + turns + " (round " + ((turns + 1) / 2) + ")");
         System.out.println("frames         = " + gui.stateFrames() + " state, " + log.lines()
                 + " log line(s) including the session header");
@@ -561,10 +590,20 @@ public final class MtgTable {
      * before this existed, which restarted at 1 on a page reload and could never
      * say "of 3"; both numbers are known here and neither is derivable there.
      * <b>Both are omitted for a {@code --games 1} session</b> -- see below.
+     *
+     * <p>{@code match} is amendment <b>M44</b>: each seat's deck by NAME, the
+     * AI's profile and the match length.  The AI's deck is {@code {name, cards}}
+     * and nothing else -- a path or a hash identifies a decklist exactly, which
+     * is why {@link #sessionHeader} nulls both for that seat, and hard rule 8
+     * says the opponent's library is hidden.  The name is the {@code .dck}'s own
+     * {@code Name=}, the thing a player says across a real table.
      */
     private static String helloOkBody(final Config cfg, final String gameId, final Args a,
                                       final PlayerView viewer, final List<PlayerView> players,
-                                      final List<String> unsupported, final int gameNumber) {
+                                      final List<String> unsupported, final int gameNumber,
+                                      final File deck1File, final Deck deck1,
+                                      final File deck2File, final Deck deck2,
+                                      final String aiProfile) {
         final JsonOut o = new JsonOut().obj();
         o.n("gameId", gameId);
         o.n("you", viewer.getId());
@@ -591,7 +630,85 @@ public final class MtgTable {
             o.obj().n("id", p.getId()).n("name", p.getName()).n("isAi", p.isAI()).end();
         }
         o.end();
+        // M44.  The viewer is always seat 0 with deck1 (HostedMatch sorts the
+        // human first -- see Args.parse's --seat check), exactly the mapping
+        // sessionHeader() uses for `decks`.  Last, so every key a pre-M44
+        // reader knows keeps its position.
+        o.key("match").obj();
+        o.key("yourDeck").obj()
+                .n("name", deckName(deck1, deck1File))
+                .n("path", rel(cfg, deck1File))
+                .n("cards", deck1.getMain().countAll())
+                .end();
+        // NAME AND COUNT ONLY.  tools/check-redaction.mjs fails any other key.
+        o.key("aiDeck").obj()
+                .n("name", deckName(deck2, deck2File))
+                .n("cards", deck2.getMain().countAll())
+                .end();
+        o.n("aiProfile", aiProfile);
+        o.n("games", a.games);
+        o.end();
         return o.end().done();
+    }
+
+    /**
+     * A deck's public name: its {@code [metadata] Name=}, or the file's base
+     * name without {@code .dck} when the deck has none.  Never a path.
+     */
+    private static String deckName(final Deck d, final File f) {
+        final String n = d.getName();
+        if (n != null && !n.trim().isEmpty()) {
+            return n.trim();
+        }
+        final String b = f.getName();
+        return b.endsWith(".dck") ? b.substring(0, b.length() - ".dck".length()) : b;
+    }
+
+    /**
+     * The summary's proof that the AI played the profile it was given -- read
+     * from the ENGINE, not from our own argument.
+     *
+     * <p>Two reads.  {@code LobbyPlayerAi.getAiProfile()} is what
+     * {@code createAiPlayer} stored.  Then, for the in-game {@link Player} whose
+     * lobby player is ours, {@code AiProfileUtil.getProperty(Player, AiProps)}
+     * -- the exact call {@code AiController.getProperty} makes whenever the AI
+     * consults its profile -- for two keys: {@code PLAY_AGGRO} (Reckless's
+     * headline, {@code true} only there) and
+     * {@code CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS}, which is different in each of
+     * the four 2.0.14 files (90 / 25 / 75 / 100), so {@code tools/ten-games.sh}
+     * can compare it with the profile file itself.  {@code getAIProp} falls
+     * back to a property's built-in default for a profile it has no map for, so
+     * "the name went in" and "the numbers came out" are different claims.
+     *
+     * <p>{@code Player} is the game model, not the view graph (hard rule 3), and
+     * this runs after the last game ended; {@code getLobbyPlayer()} is a field
+     * read.
+     */
+    private static String aiProfileEvidence(final HostedMatch hosted, final LobbyPlayer aiLobby,
+                                            final String asked) {
+        final StringBuilder sb = new StringBuilder(asked);
+        if (aiLobby instanceof LobbyPlayerAi) {
+            sb.append("  (LobbyPlayerAi.getAiProfile()=")
+              .append(((LobbyPlayerAi) aiLobby).getAiProfile()).append(')');
+        }
+        Player inGame = null;
+        if (hosted.getGame() != null) {
+            for (final Player p : hosted.getGame().getPlayers()) {
+                if (p.getLobbyPlayer() == aiLobby) {
+                    inGame = p;
+                }
+            }
+        }
+        if (inGame == null) {
+            return sb.append("  (in game: no AI player found -- nothing to read)").toString();
+        }
+        return sb.append("  (in game: PLAY_AGGRO=")
+                .append(AiProfileUtil.getProperty(inGame, AiProps.PLAY_AGGRO))
+                .append(" CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=")
+                .append(AiProfileUtil.getProperty(inGame, AiProps.CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS))
+                .append(", read through AiProfileUtil.getProperty(Player, AiProps) -- the call "
+                        + "AiController.getProperty makes)")
+                .toString();
     }
 
     // ==================================================================
@@ -603,6 +720,8 @@ public final class MtgTable {
         String transport = "console";
         String deck;
         String deck2;
+        /** {@code --ai-profile}; null means {@link Bootstrap#DEFAULT_AI_PROFILE}. */
+        String aiProfile;
         String aiName = "Forge AI";
         String gameId;
         long seed;
@@ -630,7 +749,20 @@ public final class MtgTable {
                 switch (k) {
                 case "--transport": a.transport = need(argv, ++i, k); break;
                 case "--deck":      a.deck = need(argv, ++i, k); break;
-                case "--deck2":     a.deck2 = need(argv, ++i, k); break;
+                case "--deck2":
+                case "--ai-deck": {
+                    // Match setup (M44): `--ai-deck` is the name a player
+                    // reads; `--deck2` is the one fourteen recordings and
+                    // every gate step already type.  Same flag.
+                    final String v = need(argv, ++i, k);
+                    if (a.deck2 != null && !a.deck2.equals(v)) {
+                        throw new IllegalArgumentException("--deck2 and --ai-deck are the same flag "
+                                + "and were given two different decks: " + a.deck2 + " and " + v);
+                    }
+                    a.deck2 = v;
+                    break;
+                }
+                case "--ai-profile": a.aiProfile = need(argv, ++i, k); break;
                 case "--ai-name":   a.aiName = need(argv, ++i, k); break;
                 case "--game-id":   a.gameId = need(argv, ++i, k); break;
                 case "--seat":      a.seat = Integer.parseInt(need(argv, ++i, k)); break;
@@ -650,7 +782,8 @@ public final class MtgTable {
                 default:
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
-                        + "[--deck2 <path>] [--seed <n>] [--seat 0|1] [--ai-name <name>] "
+                        + "[--deck2|--ai-deck <path>] [--ai-profile Default|Cautious|Reckless|Experimental] "
+                        + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--games <n>] "
                         + "[--probe] [--mana-lost-prompt] [--no-mana-lost-prompt]");
                 }

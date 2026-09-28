@@ -59,18 +59,55 @@
 # does not dead-end *on the paths that deck reaches*, and every ask kind M5 added
 # evidence for is on a path it does not.
 #
+# **Match setup (protocol amendment M44) added four rows, 11-14**: the user's
+# deck against the VILLAIN deck -- `decks/doom-legion.dck`, named in ONE place,
+# `tools/villain-deck.sh`, which tools/check-all.sh's step 9e sources too
+# (`VILLAIN_DECK=<path>` overrides it) -- once under each of Forge's four AI
+# profiles, `Default`, `Cautious`, `Reckless` and `Experimental` (report 11
+# section 9).  If that file is missing the four rows play
+# `decks/morph-probe.dck` as a STAND-IN and say so on every row: the code under
+# test is the profile path, and a gate that skipped four rows would be a gate
+# that said nothing.  What the rows do NOT assert is that the four profiles
+# play differently: they are sets of ~120 heuristics whose effect is
+# situational, and against this seat (which alpha-strikes every turn and so
+# rarely leaves a blocker up) same-seed pairs were not measurably different
+# (docs/evidence/match-setup.md section P).  Those rows carry two more
+# assertions, and every row carries the third:
+#
+#   9. **the profile's EFFECT, read back from the engine.**  The summary's
+#      `ai profile     =` line prints what `AiProfileUtil.getProperty(Player,
+#      AiProps)` -- the exact lookup `AiController.getProperty` makes -- returns
+#      for the in-game AI player, for `PLAY_AGGRO` and for
+#      `CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS` (90 / 25 / 75 / 100 across the four
+#      files, so it tells all four apart).  Both must equal the value in
+#      `forge-home/res/ai/<profile>.ai` itself.  A name alone would not do:
+#      `getAIProp` silently falls back to built-in defaults for a profile it
+#      has no map for;
+#   9b. `hello_ok.match` says `aiProfile: <profile>` and names the AI's deck by
+#      its `Name=` (check-redaction holds its shape; this holds its CONTENT);
+#   10. **no preferences file changed.**  `~/.forge/preferences/` (the user's
+#      real Forge) and `var/forge/preferences/` are fingerprinted before and
+#      after every row.  The empty-`profileOverride` branch of
+#      `GamePlayerUtil.createAiPlayer` calls `ForgePreferences.save()`, and a run
+#      that took it would change one of the two.
+#
 # It also prints an **ADVISORY** line per row comparing the ask kinds the seed
 # produced against the kinds its deck exists to force.  Advisory means advisory:
 # a missing kind is never an exit code, because which kinds fire is a property of
 # the shuffle and not of the code (see seed 8 below).
 #
 # Usage:
-#   ./tools/ten-games.sh                 # ten games, ~4-8 minutes
+#   ./tools/ten-games.sh                 # all fourteen rows, ~6-9 minutes
 #   ./tools/ten-games.sh --games 3       # the first three rows, for a quick look
+#   ./tools/ten-games.sh --seed 13       # one row: your deck vs the villain, Reckless
+#   VILLAIN_DECK=decks/x.dck ./tools/ten-games.sh --seed 13
 #   GAME_TIMEOUT=600 ./tools/ten-games.sh
 #   TEN_GAMES_DIR=var/ten ./tools/ten-games.sh
 #
-# It is sub-step 9c of tools/check-all.sh, where SKIP_TEN=1 turns it off.
+# It is sub-step 9c of tools/check-all.sh, where SKIP_TEN=1 turns it off.  The
+# name stayed "ten-games" when match setup added rows 11-14: rows 1-10 are still
+# M5's exit criterion exactly as written, and every reference to the file
+# stayed correct.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -78,7 +115,8 @@ cd "$REPO_ROOT"
 
 GAME_TIMEOUT="${GAME_TIMEOUT:-300}"
 OUT_DIR="${TEN_GAMES_DIR:-var/ten-games}"
-WANT=10
+WANT=""                          # every row unless --games N says the first N
+ONLY_SEED=""                     # --seed N: that one row
 # Assertion 7.  Generous on purpose: the busiest legitimate row in the rotation
 # raises 15 asks of one kind, and a real loop raises hundreds within seconds.
 # The number is a wedge detector, not a budget.
@@ -87,8 +125,9 @@ ASK_KIND_CAP="${ASK_KIND_CAP:-150}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --games) WANT="$2"; shift 2 ;;
+    --seed) ONLY_SEED="$2"; shift 2 ;;
     -h | --help)
-      sed -n '2,73p' "$0"
+      sed -n '2,110p' "$0"
       exit 0
       ;;
     *) echo "ten-games: unknown argument $1" >&2; exit 2 ;;
@@ -129,7 +168,43 @@ ROWS=(
   "8|decks/trample-probe.dck|decks/morph-probe.dck||assign_damage"
   "9|decks/pacho-shield.dck|-|--probe|"
   "10|decks/scry-probe.dck|decks/morph-probe.dck|--probe|order"
+  # M44 -- match setup: your deck against the villain deck, one row per AI
+  # profile.  `@villain` is resolved below.
+  "11|decks/pacho-shield.dck|@villain|--ai-profile Default|"
+  "12|decks/pacho-shield.dck|@villain|--ai-profile Cautious|"
+  "13|decks/pacho-shield.dck|@villain|--ai-profile Reckless|"
+  "14|decks/pacho-shield.dck|@villain|--ai-profile Experimental|"
 )
+[ -n "$WANT" ] || WANT="${#ROWS[@]}"
+[ -n "$ONLY_SEED" ] && WANT=1
+
+# The villain deck: tools/villain-deck.sh is its one definition (it sets
+# VILLAIN and VILLAIN_NOTE; VILLAIN_DECK overrides it).
+# shellcheck source=tools/villain-deck.sh
+. tools/villain-deck.sh
+[ -f "$VILLAIN" ] || { echo "ten-games FAILED: the villain deck $VILLAIN does not exist" >&2; exit 1; }
+
+# Assertion 10: every preferences file a run could write, fingerprinted.
+prefs_fingerprint() {
+  local d
+  for d in "$HOME/.forge/preferences" var/forge/preferences; do
+    if [ -d "$d" ]; then
+      find "$d" -type f -print0 | sort -z | xargs -0 -r sha256sum
+      find "$d" -type f -print0 | sort -z | xargs -0 -r stat -c '%n %Y %s'
+    else
+      echo "$d: absent"
+    fi
+  done
+}
+# A deck's public name the way the bridge computes it (MtgTable.deckName):
+# its `Name=`, else the file's base name without `.dck`.
+deck_name() {
+  local n
+  n="$(sed -n 's/^Name=//p' "$1" | head -1 | tr -d '\r' | sed 's/^ *//; s/ *$//')"
+  [ -n "$n" ] && printf '%s' "$n" || basename "$1" .dck
+}
+# What a profile file says a key is, e.g. `ai_prop Reckless PLAY_AGGRO` -> true.
+ai_prop() { sed -n "s/^$2=//p" "forge-home/res/ai/$1.ai" | head -1 | tr -d '\r'; }
 
 die() { echo "ten-games FAILED: $1" >&2; exit 1; }
 capped() { case "$1" in 124 | 137) return 0 ;; *) return 1 ;; esac; }
@@ -139,6 +214,7 @@ echo "== ten-games =="
 echo "repo         = $REPO_ROOT"
 echo "game timeout = ${GAME_TIMEOUT}s each"
 echo "logs         = $OUT_DIR/"
+echo "rows 11-14   = $VILLAIN_NOTE"
 echo
 
 played=0
@@ -149,6 +225,10 @@ summary=""
 for row in "${ROWS[@]}"; do
   [ "$played" -ge "$WANT" ] && break
   IFS='|' read -r seed deck deck2 flags want_kinds must_acts <<< "$row"
+  if [ -n "$ONLY_SEED" ] && [ "$seed" != "$ONLY_SEED" ]; then continue; fi
+  [ "$deck2" = "@villain" ] && deck2="$VILLAIN"
+  profile=""
+  case " $flags " in *" --ai-profile "*) profile="$(sed -E 's/.*--ai-profile +([^ ]+).*/\1/' <<< "$flags")" ;; esac
   played=$((played + 1))
   id="ten-$seed"
   log="$OUT_DIR/$id.log"
@@ -160,12 +240,19 @@ for row in "${ROWS[@]}"; do
   # shellcheck disable=SC2206
   [ -n "$flags" ] && args+=($flags)
 
-  printf '=== %2d/%d  seed %-3s %-28s %s\n' "$played" "$WANT" "$seed" "$(basename "$deck")" "$flags"
+  printf '=== %2d/%d  seed %-3s %-28s %s\n' "$played" "$WANT" "$seed" "$(basename "$deck")" \
+      "$flags${profile:+  vs $(basename "$deck2")}"
+  prefs_before="$(prefs_fingerprint)"
   t0=$(date +%s)
   rc=0
   timeout --kill-after=15s "${GAME_TIMEOUT}s" ./bridge/run.sh mtgtable.MtgTable "${args[@]}" \
       > "$log" 2>&1 || rc=$?
   wall=$(( $(date +%s) - t0 ))
+  # Assertion 10, first, because it is true or false whatever else happened.
+  if [ "$(prefs_fingerprint)" != "$prefs_before" ]; then
+    diff <(echo "$prefs_before") <(prefs_fingerprint) >&2 || true
+    die "seed $seed CHANGED a Forge preferences file -- a run must never save prefs (CLAUDE.md; the empty-profileOverride branch of GamePlayerUtil.createAiPlayer is one way) (log: $log)"
+  fi
 
   if [ "$rc" != "0" ]; then
     tail -30 "$log" >&2
@@ -231,6 +318,52 @@ for row in "${ROWS[@]}"; do
       process.exit(1);
     }
   ' "$frames" || die "seed $seed wrote state frames without M6's comfort fields ($frames)"
+
+  # Assertion 6c (M44): every `hello_ok` a SEAT recorded carries `match`, and it
+  # describes THIS row's match.  check-redaction declares the key optional (the
+  # whole committed corpus predates it) and holds its shape; here, where every
+  # file has a seat and was just recorded, its absence is an emitter that stopped
+  # writing it, and its content is checked against the row.
+  node -e '
+    const fs = require("node:fs");
+    const [file, deckName, aiName, profile] = process.argv.slice(1);
+    let hellos = 0;
+    for (const line of fs.readFileSync(file, "utf8").split("\n")) {
+      if (line === "" || !line.includes("\"hello_ok\"")) continue;
+      const f = JSON.parse(line);
+      if (f.type !== "hello_ok") continue;
+      hellos += 1;
+      const m = f.body.match;
+      const bad = (msg) => { console.error(`hello_ok.match: ${msg} -- got ${JSON.stringify(m)}`); process.exit(1); };
+      if (m === undefined || m === null) bad("absent from a seat recording");
+      if (m.yourDeck?.name !== deckName) bad(`yourDeck.name is not ${JSON.stringify(deckName)}`);
+      if (m.aiDeck?.name !== aiName) bad(`aiDeck.name is not ${JSON.stringify(aiName)}`);
+      if (JSON.stringify(Object.keys(m.aiDeck).sort()) !== "[\"cards\",\"name\"]") bad("aiDeck is not exactly {name, cards}");
+      if (m.aiProfile !== profile) bad(`aiProfile is not ${JSON.stringify(profile)}`);
+    }
+    if (hellos === 0) { console.error("no hello_ok at all"); process.exit(1); }
+  ' "$frames" "$(deck_name "$deck")" \
+      "$(deck_name "$([ "$deck2" = "-" ] && echo "$deck" || echo "$deck2")")" \
+      "${profile:-Default}" \
+    || die "seed $seed: hello_ok.match does not describe the match this row played ($frames)"
+
+  # Assertion 9 (M44): the profile the AI actually PLAYED, read from the engine.
+  if [ -n "$profile" ]; then
+    line="$(grep '^ai profile     = ' "$log" || true)"
+    [ -n "$line" ] || die "seed $seed printed no \`ai profile     =\` summary line ($log)"
+    got_aggro="$(sed -nE 's/.*in game: PLAY_AGGRO=([^ ]+) .*/\1/p' <<< "$line")"
+    got_chain="$(sed -nE 's/.*CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=([0-9]+).*/\1/p' <<< "$line")"
+    want_aggro="$(ai_prop "$profile" PLAY_AGGRO)"
+    want_chain="$(ai_prop "$profile" CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS)"
+    case "$line" in "ai profile     = $profile "*) ;; *)
+      die "seed $seed asked for --ai-profile $profile and the summary says: $line" ;; esac
+    [ -n "$want_chain" ] || die "forge-home/res/ai/$profile.ai has no CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS line"
+    if [ "$got_aggro" != "$want_aggro" ] || [ "$got_chain" != "$want_chain" ]; then
+      die "seed $seed: the in-game AI read PLAY_AGGRO=$got_aggro CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$got_chain, but $profile.ai says $want_aggro / $want_chain -- the profile did not reach the AI ($log)"
+    fi
+    printf '    profile: %s -- in game PLAY_AGGRO=%s CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=%s, as %s.ai says; prefs unchanged\n' \
+        "$profile" "$got_aggro" "$got_chain" "$profile"
+  fi
 
   # Assertion 7: no one ask kind may run away inside a single game.
   worst="$(node -e '
@@ -303,7 +436,8 @@ nothing, which is the whole failure this assertion exists to catch ($frames)"
   turns="$(sed -n 's/^player turns   = //p' "$log")"
   kinds_all="$kinds_all $(echo "$kinds" | tr -d '[]' | tr ',' ' ')"
   summary="$summary$(printf '  seed %-3s %-24s %-22s %-9s %s\n' \
-      "$seed" "$(basename "$deck" .dck)" "$turns" "${wall}s" "$kinds")"$'\n'
+      "$seed" "$(basename "$deck" .dck)${profile:+ vs $(basename "$deck2" .dck)/$profile}" \
+      "$turns" "${wall}s" "$kinds")"$'\n'
   printf '    %s  |  %s  |  %s  |  busiest kind %s x%s\n' \
       "$turns" "$kinds" "${wall}s" "$worst_kind" "$worst_n"
   # ADVISORY (never an exit code): did this row produce the kind it is here for?
@@ -348,7 +482,8 @@ fi
 echo "grep UNIMPL over $OUT_DIR/*.log and var/games/ten-*/frames.jsonl: nothing but each run's own \`UNIMPL members = none\` summary line"
 
 echo
-echo "== ten-games: $played/$played games reached \`over\`, zero UNIMPL, every log through check-redaction =="
+[ "$played" -gt 0 ] || die "no row matched (--seed $ONLY_SEED?)"
+echo "== ten-games: $played/$played games reached \`over\`, zero UNIMPL, every log through check-redaction, no preferences file touched =="
 printf '%s' "$summary"
 echo "  ask kinds seen across the run: $(echo "$kinds_all" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')"
 echo "  total wall: $(( $(date +%s) - t_all ))s"

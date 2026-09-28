@@ -60,9 +60,22 @@
 // asks the narrower, stabler question.  The session header counts as s2c: the
 // emitter wrote it.
 //
+// A key an AMENDMENT added to a frame type the committed corpus already has.
+// The committed human fixtures were recorded before amendment M44 gave
+// `hello_ok` its `match` block, so every fresh recording differs from them in
+// exactly that one s2c frame -- and an advisory that fires on every run hides
+// the real emitter drift it exists to show (match-setup review).  So when A (the
+// first file: the committed, OLDER recording) carries NO frame of that type with
+// the key and B carries it, the key is dropped from B's frames of that type
+// before comparing, and a line says so.  Only that direction: a key A has and B
+// lacks is an emitter that STOPPED writing it, and is reported like any other
+// difference.  `--keep-amended` turns the rule off.  The table is
+// `AMENDED_KEYS` below; a row is an amendment, never a convenience.
+//
 // Options:
 //   --only-dir <s2c|c2s>  compare only frames the emitter wrote, or only the
 //                         seat's own (the session header goes with s2c)
+//   --keep-amended   compare AMENDED_KEYS too, even when A predates them
 //   --strip <key>    also replace this key's value everywhere (repeatable)
 //   --sort-keys      compare object keys as a set rather than as a sequence
 //   --limit <n>      how many differing frames to print per side (default 12)
@@ -80,7 +93,18 @@ import { createHash } from 'node:crypto';
 const PER_RUN = ['seq', 't', 'startedAt', 'gameId'];
 
 const args = process.argv.slice(2);
-const opt = { files: [], strip: [...PER_RUN], sortKeys: false, limit: 12, quiet: false, onlyDir: null };
+const opt = {
+  files: [], strip: [...PER_RUN], sortKeys: false, limit: 12, quiet: false, onlyDir: null,
+  keepAmended: false,
+};
+
+/**
+ * Keys an amendment added to an EXISTING frame type (see the header).  `type`
+ * is the frame's `type`, `key` a key of its `body`.
+ */
+const AMENDED_KEYS = [
+  { type: 'hello_ok', key: 'match', amendment: 'M44' },
+];
 for (let i = 0; i < args.length; i++) {
   const k = args[i];
   const need = (name) => {
@@ -91,6 +115,7 @@ for (let i = 0; i < args.length; i++) {
   if (k === '--only-dir') opt.onlyDir = need(k);
   else if (k === '--strip') opt.strip.push(need(k));
   else if (k === '--sort-keys') opt.sortKeys = true;
+  else if (k === '--keep-amended') opt.keepAmended = true;
   else if (k === '--limit') opt.limit = Number.parseInt(need(k), 10);
   else if (k === '--quiet') opt.quiet = true;
   else if (k === '--help' || k === '-h') { usage(); process.exit(0); }
@@ -110,7 +135,7 @@ function usage() {
   process.stdout.write(
     'usage: node tools/fixture-multiset-diff.mjs <a.jsonl> <b.jsonl>\n' +
       '           [--only-dir s2c|c2s] [--strip key]... [--sort-keys]\n' +
-      '           [--limit 12] [--quiet]\n' +
+      '           [--limit 12] [--quiet] [--keep-amended]\n' +
       `       per-run keys always ignored: ${PER_RUN.join(', ')}\n`,
   );
 }
@@ -154,7 +179,7 @@ function label(frame) {
  *            meta: Map<string, {type: string, firstLine: number, text: string}>,
  *            byType: Map<string, number>}}
  */
-function load(path) {
+function load(path, drop = new Map()) {
   let text;
   try {
     text = readFileSync(path, 'utf8');
@@ -186,6 +211,10 @@ function load(path) {
       continue;
     }
     lines++;
+    const dropKey = drop.get(frame.type);
+    if (dropKey !== undefined && frame.body !== null && typeof frame.body === 'object') {
+      delete frame.body[dropKey];
+    }
     const canon = JSON.stringify(scrub(frame));
     counts.set(canon, (counts.get(canon) ?? 0) + 1);
     const type = label(frame);
@@ -199,8 +228,45 @@ function load(path) {
 // Compare
 // ---------------------------------------------------------------------------
 
+/** How many frames of `type` a log has, and how many of those carry `body[key]`. */
+function amendedCount(path, type, key) {
+  let total = 0;
+  let carrying = 0;
+  for (const raw of readFileSync(path, 'utf8').split('\n')) {
+    if (raw.length === 0 || !raw.includes(`"${type}"`)) continue;
+    const frame = JSON.parse(raw);
+    if (frame?.type !== type) continue;
+    total++;
+    if (frame.body !== null && typeof frame.body === 'object' && key in frame.body) carrying++;
+  }
+  return { total, carrying };
+}
+
+const dropB = new Map();
+const amendedNotes = [];
+if (!opt.keepAmended) {
+  for (const { type, key, amendment } of AMENDED_KEYS) {
+    let ca;
+    let cb;
+    try {
+      ca = amendedCount(opt.files[0], type, key);
+      cb = amendedCount(opt.files[1], type, key);
+    } catch {
+      continue; // load() below reports an unreadable or malformed file properly
+    }
+    if (ca.total > 0 && ca.carrying === 0 && cb.carrying > 0) {
+      dropB.set(type, key);
+      amendedNotes.push(
+        `  amendment ${amendment}: ${type}.${key} is absent from all ${String(ca.total)} of A's ` +
+          `${type} frame(s) (A predates it) and present in ${String(cb.carrying)} of B's -- ` +
+          `ignored in B (--keep-amended compares it)`,
+      );
+    }
+  }
+}
+
 const a = load(opt.files[0]);
-const b = load(opt.files[1]);
+const b = load(opt.files[1], dropB);
 
 const out = (s) => process.stdout.write(`${s}\n`);
 const digest = (canon) => createHash('sha1').update(canon).digest('hex').slice(0, 8);
@@ -213,6 +279,7 @@ out(`  A = ${a.path}  ${String(a.lines)} frame(s), ${String(a.counts.size)} dist
 out(`  B = ${b.path}  ${String(b.lines)} frame(s), ${String(b.counts.size)} distinct${only(b)}`);
 out(`  ignoring per-run keys: ${[...STRIP].join(', ')}${opt.sortKeys ? '   (object keys sorted)' : ''}`);
 if (opt.onlyDir !== null) out(`  comparing only dir=${opt.onlyDir} frames`);
+for (const note of amendedNotes) out(note);
 
 // The per-type table is printed whether or not anything differs: it is the
 // cheapest possible answer to "what does this log contain", and when a run does

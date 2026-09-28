@@ -39,6 +39,29 @@ const bad = (msg) => { failures += 1; console.log(`  FAIL  ${msg}`); };
 
 console.log(`check-redaction self-test: ${manifest.length} controls in ${DIR}/`);
 
+// The manifest is generated, so a regeneration from an older copy of
+// tools/make-negative-fixtures.mjs could drop a probe and every remaining one
+// would still pass. These are named here as well, so losing one is a failure
+// rather than a shorter list. Amendment M44's `hello_ok.match` audit is a
+// hidden-information assertion (the AI's deck is {name, cards} and nothing
+// else) and is optional-when-absent, which is exactly the kind of check a later
+// edit could switch off without a single committed recording noticing.
+const REQUIRED = [
+  ['m44-match-present.jsonl', 'pass'],
+  ['m44-aideck-carries-path.jsonl', 'fail'],
+  ['m44-aideck-cards-is-a-list.jsonl', 'fail'],
+  ['m44-yourdeck-path-mismatch.jsonl', 'fail'],
+];
+for (const [file, level] of REQUIRED) {
+  const entry = manifest.find((e) => e.file === file);
+  if (entry === undefined) {
+    bad(`${file} is missing from ${DIR}/manifest.json -- regenerate with ` +
+      'node tools/make-negative-fixtures.mjs');
+  } else if (entry.level !== level) {
+    bad(`${file} is level ${JSON.stringify(entry.level)} in the manifest, expected ${JSON.stringify(level)}`);
+  }
+}
+
 for (const entry of manifest) {
   const { file, level, expect, why } = entry;
   const { code, out } = check(file);

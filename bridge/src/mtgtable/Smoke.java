@@ -41,7 +41,6 @@ import forge.game.Match;
 import forge.game.player.RegisteredPlayer;
 import forge.localinstance.properties.ForgeConstants;
 import forge.model.FModel;
-import forge.player.GamePlayerUtil;
 
 /**
  * M0: prove the engine runs our code.
@@ -205,10 +204,10 @@ public final class Smoke {
 
         final List<RegisteredPlayer> players = new ArrayList<>();
         final RegisteredPlayer p1 = new RegisteredPlayer(deck);
-        p1.setPlayer(GamePlayerUtil.createAiPlayer("AI-One", 0));
+        p1.setPlayer(Bootstrap.createAiPlayer("AI-One", 0, Bootstrap.DEFAULT_AI_PROFILE));
         players.add(p1);
         final RegisteredPlayer p2 = new RegisteredPlayer(deck);
-        p2.setPlayer(GamePlayerUtil.createAiPlayer("AI-Two", 1));
+        p2.setPlayer(Bootstrap.createAiPlayer("AI-Two", 1, Bootstrap.DEFAULT_AI_PROFILE));
         players.add(p2);
 
         // ------------------------------------------------------------------

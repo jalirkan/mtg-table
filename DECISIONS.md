@@ -4655,3 +4655,269 @@ directly, bypassing `layout` and `figurePose`: a second renderer (**D102**).
 Facts from `art.json` or from the card library (above). Modal facts over every
 sighting (Peggy at −3). `workshop.clip` added to `REGISTRY` itself: an arena
 edit, and a cue id in the game's registry that exists only for a dev page.
+
+---
+
+*Match setup's four decisions are numbered **D105–D108**: while its branch
+(`match-setup`, off `0368a90`) was open, `main` committed **D90–D94** (the card
+library), Tier 2 slice 4 wrote **D95–D101** and the workshop wrote **D102–D104**,
+all above. The branch was rebased onto `main`'s `23e26b3` (2026-09-27) with
+these four as D102–D105, and then onto `bf0392b` the same day, where the
+workshop had landed first; as the workshop's own D102 says, the side that lands
+second renumbers, so they moved up three. The branch's fix pass first wrote
+D105 and D106 as D90 and D91.*
+
+## D105 — The AI's deck NAME is public on the wire; its list, its path and its hash never are
+
+**2026-09-27** (match setup, protocol amendment **M44**; a new surface under
+hard rule 8, beside **§8.1**'s nulled header entry)
+
+**Decision.** `hello_ok.match.aiDeck` is exactly `{name, cards}`: the `.dck`
+file's own `[metadata] Name=` (its base name when it has none) and its main-deck
+card count. Never a `path`, a `sha256` or a list. The board prints the name on
+the AI's rail. `tools/check-redaction.mjs` holds the object to those two keys and
+cross-checks the count against the session header, and the hold is
+negative-controlled: `fixtures/negative/redaction/m44-*` is a well-formed block
+(the control, which must pass) and three one-defect probes — `aiDeck.path`,
+`aiDeck.cards` as a list of names, a `yourDeck.path` the header contradicts —
+which `tools/check-redaction-selftest.mjs` requires by name, so a regenerated
+manifest cannot drop one quietly.
+
+**Rationale.** It is what a real table says out loud. A player sitting down
+against a stranger asks "what are you on?", and the answer is a name; a hobbyist
+learning the game against the Doom Legion is better off knowing that is what
+they face, and the rail was the one place the match could say so. The count is
+already public (every seat's `library.count`, hand count and zones are on the
+wire). The list is not, and it stays where §8.1 put it: the session header nulls
+the other seat's `path` and `sha256` because a path plus a hash identifies a
+decklist exactly, and a path alone names a file anyone can open.
+
+**Known cost.** `Name=` is free text from a file, and the bridge does not gate it —
+a string on the wire that never passes through `Snap`. **A deck named after a card announces
+that card**, exactly as saying the name at a table would; the rule is the table's
+rule, and no sanitiser could tell a theme from a list. The bridge does not
+second-guess what a deck file calls itself.
+
+**Rejected.** Leaving the AI's deck off the wire (the rail could not say what
+you are playing against, which is the one thing match setup exists to choose).
+A bridge-minted label ("deck 2"): no information, and the player chose the deck
+by its file anyway. The path, or the path and hash: §8.1.
+
+---
+
+## D106 — Only `scripts/play.sh` reads `config.json`'s `match` block; the bridge and the gate keep their own defaults
+
+**2026-09-27** (match setup, protocol amendment **M44**)
+
+**Decision.** `config.json` gains `match: {deck, aiDeck, aiProfile, games}` —
+shipped as your `decks/pacho-shield.dck` against **`decks/doom-legion.dck`**
+under `Default`, three games — and **`scripts/play.sh` is its only reader**:
+a bare `./scripts/play.sh` plays the Doom Legion, and a flag wins over the block.
+`mtgtable.MtgTable` does not read it (it still reads the top-level `deck` and
+`manaLostPrompt`, as before): with no `--ai-deck` the AI plays a mirror of your
+deck under `Default`. `tools/check-all.sh` and `tools/ten-games.sh` pass every
+deck and profile they mean on the command line, and the villain deck the gate
+plays is named once, in `tools/villain-deck.sh`, not read from the block.
+
+**Rationale.** The gate must play the same games whatever the player last chose.
+`config.json` is committed and is also where a player expresses a preference; if
+the bridge read the block, editing it to try Reckless would move step 6's
+value-level diff, 9b's drift check and every seeded gate row, and a green gate
+would mean "green for this afternoon's config". `play.sh` is the human's
+command, so the human's defaults belong to it.
+
+**Known cost.** Two defaults for one question: `./bridge/run.sh mtgtable.MtgTable`
+with no flags plays a mirror, `./scripts/play.sh` plays the villains. Both say
+which on their first lines (`deck (ai) = … (a mirror: no --ai-deck)`; play.sh's
+`== match` block), and README, the play.sh header and `decks/README.md` say it.
+
+**Rejected.** The bridge reading the block (above). Every gate JVM line pinning
+`--mirror --ai-profile Default` so that the bridge could read it: a flag on
+every JVM line in the gate to neutralise a file the gate should never have read.
+
+---
+
+## D107 — The AI's profile is always an explicit `profileOverride`, named from the `.ai` files, through one seam — and it is not a difficulty
+
+**2026-09-27** (match setup, protocol amendment **M44**; report 11 §9 is the
+spec, `docs/evidence/match-setup.md` §B and §P the measurements)
+
+**Decision.** `--ai-profile <name>`, on `mtgtable.MtgTable` and on
+`scripts/play.sh`, names one of the `.ai` files in `forge-home/res/ai/` —
+`Default`, `Cautious`, `Reckless` and `Experimental` in 2.0.14. It is matched
+case-insensitively and returned in the file's own spelling by
+`Bootstrap.resolveAiProfile`, which runs **before** `FModel.initialize`, so a name
+that is not a file exits in about a second with the list of the ones that are.
+Every AI seat in every process — `MtgTable`, `RecordMatch` and `Smoke` — is
+seated by **`Bootstrap.createAiPlayer(name, avatar, profile)`**, which refuses an
+empty profile, asserts that `AiProfileUtil.getAvailableProfiles()` loaded it, and
+calls the three-argument `GamePlayerUtil.createAiPlayer(String, int, String)`
+**[jar]**. With no flag the profile is `Default`, passed explicitly.
+`tools/lint-bridge.sh` §1 allows `GamePlayerUtil.createAiPlayer` in
+`Bootstrap.java` alone, and bans the method reference and a static wildcard
+import of `GamePlayerUtil`, the two spellings a grep for the call would miss.
+The four files are the whole offer: no "Random" entry, no simulation
+`AIOption`, no `FPref.MATCH_AI_TIMEOUT`. The profile is fixed for a session:
+the bridge creates the AI's `LobbyPlayerAi` once, before the match starts, so a
+New Game keeps it. The gate (`tools/ten-games.sh` rows 11–14, one per profile,
+and `check-all.sh` step 9e) holds that the profile **reaches** the engine —
+`PLAY_AGGRO` and `CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS`, read back from the in-game
+AI player through `AiProfileUtil.getProperty(Player, AiProps)`, must equal the
+`.ai` file's — and that no preferences file moved. Nothing asserts that one
+profile plays differently from another.
+
+**Rationale.**
+
+- **The call it replaced could save the preferences file.** Every entry point
+  used to call `createAiPlayer(name, avatar)`, which delegates with
+  `profileOverride = ""`. In the five-argument overload an empty override takes
+  the branch at bytecode offsets 28–83 (javap, 2.0.14 jar): it reads
+  `FPref.UI_CURRENT_AI_PROFILE`, and when that value is not in
+  `AiProfileUtil.getProfilesDisplayList()` it prints a line, sets `"Default"` and
+  calls **`ForgePreferences.save()`** — which writes every in-memory decision
+  `Bootstrap` makes (**D13**, **D14**, **D43**'s mana-lost prompt) to disk, the
+  persistent edit CLAUDE.md forbids. A non-empty override jumps straight to
+  offset 120. The branch had never fired here only because no preferences file
+  had ever held another value; in a scratch forge home a negative control made
+  it write an 8,045-byte `forge.preferences` with D13 and D14 in it (evidence
+  §B.2). "The file happened to be absent" is not a rule. One seam and a lint are.
+- **The three-argument overload rather than the five** because it is the path
+  the old call took, sleeve index and all (`HeadlessGuiBase.getSleevesCount()` is
+  0, so neither draws from `MyRandom`). A seeded `Default` game is the game it
+  was: gate step 6's value-level diff of a fresh `RecordMatch` against
+  `fixtures/games/g1.jsonl` stayed empty.
+- **The load assertion and the read-back** because
+  `AiProfileUtil.getAIProp` silently returns each property's built-in default
+  for a profile it holds no map for. A file that failed to load would play the
+  game on defaults while every line of output named the profile. "The name went
+  in" and "the numbers came out" are two claims, and the gate checks the second.
+  `CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS` is the key read because it differs in all
+  four files (90 / 25 / 75 / 100).
+- **Validated before the boot** so that a typo costs a second, not an engine
+  start.
+- **Not a difficulty.** Forge has none, and the flag is named for what it is.
+  Each file is 121 heuristic values; Cautious and Reckless differ in 63 of them.
+  Their measured effect is situational. The automated seat attacks with
+  everything every turn, so it rarely leaves a blocker up, and in same-seed
+  pairs against it Cautious and Reckless were not measurably different. Against
+  a seat that leaves untapped 2/2s, all 10 pairs parted on an AI choice, and in 6
+  the first was a trade Reckless took and Cautious declined
+  (`PLAY_AGGRO` / `CHANCE_TO_ATTACK_INTO_TRADE`, `true`/`100` against
+  `false`/`0`; evidence §P). README, `scripts/play.sh`'s header and
+  `decks/README.md` say so.
+
+**Known cost.** A player who wants "harder" has no dial. The profiles are not
+ordered, and the knobs report 11 §9 names as stronger — the simulating AI
+(`AIOption.USE_HYBRID_SIMULATION` / `USE_FULL_SIMULATION`) and
+`FPref.MATCH_AI_TIMEOUT` — are not exposed. Changing the profile means a new
+session.
+
+**Rejected.**
+
+- Keeping the two-argument call: safe by accident (above).
+- Setting `UI_CURRENT_AI_PROFILE` in memory and leaving the override empty. That
+  steers a branch whose other arm saves by mutating a second pref; the override
+  is the parameter Forge provides for exactly this.
+- The five-argument overload: a different call path, and its `AIOption` set is a
+  different knob from this one.
+- Forge's "Random (Every Match)" and "Random (Every Game)". Both draw from
+  `MyRandom`, which would make a seeded run's profile a function of the shuffle,
+  and neither is a file. A picker that wants them resolves one itself (report 11
+  §9 says how).
+- A difficulty scale ("Easy / Normal / Hard") mapped onto the profiles. Forge
+  has none, and nothing measured here orders the profiles, so the label would
+  promise what no measurement supports.
+- A gate assertion that Reckless attacks more than Cautious. It would be flaky by
+  construction — a same-seed pair can split first on the seat's own wall-clock
+  re-push (evidence §P.4, seed 31) — and an attack total was never the measure.
+
+---
+
+## D108 — The AI's own deck is Doom Legion: blue-black villains from the user's two sets, and a card stays only if the AI casts it and the redaction gate passes
+
+**2026-09-27** (match setup; `decks/README.md` is what the deck is, report 08
+§8 its card-by-card fidelity, `docs/evidence/match-setup.md` §D what was run)
+
+**Decision.** The deck the AI plays is `decks/doom-legion.dck`, *Doom Legion
+(Marvel Super Heroes villains)*: 40 cards, 17 lands and 23 spells, blue-black.
+Its 17 creatures are all Villains — Doctor Doom and his Doombots, HYDRA, three
+of Kang's identities, Loki and Crossbones — and it carries four removal spells
+(Doom Blade, Dark Deed, Hour of Defeat, Frozen in Ice). It uses MSH (33 cards)
+and MSC (7) only, every line carries its set code, nothing has more than two
+copies and the seven legendaries are singletons; the curve is `1:2 2:7 3:6 4:6
+5:1 6:1`. **Four rules decide what may be in it**, checked in this order:
+
+1. Forge 2.0.14 has a script for the card, the card is not unsupported, and the
+   deck is Limited-legal (`tools/check-deck.mjs`'s engine pass).
+2. The card has no `AI:RemoveDeck:All`, Forge's own flag that its AI cannot play
+   it.
+3. The Forge AI actually **casts** it, counted over `--transport auto` games.
+4. A game in which the AI plays it passes `tools/check-redaction.mjs` with no
+   flags.
+
+The gate plays the deck: `tools/villain-deck.sh` names it once, for
+`tools/ten-games.sh` rows 11–14 and `check-all.sh` step 9e, so a change to the
+list is a gated change. `scripts/play.sh` seats it against you by default
+(**D106**); the bridge on its own still plays a mirror.
+
+**Rationale.**
+
+- **The same two sets as the user's deck.** The user is learning Magic with
+  Marvel Super Heroes. An opponent from the same sets shows the same mechanics —
+  power-up, connive, Hero and Villain typing, Plans — from the other side of the
+  table, and everything already built for those sets applies unchanged: the art
+  ladder (`msh → msc`), report 08's fidelity method, the arena's archetype rungs.
+- **Blue-black, because that is where MSH's villains are.** Doom and HYDRA are
+  black; Kang, Loki and the Doombots are blue; Kang, Temporal Tyrant is the gold
+  card between them. Super Villain Lockup is white — a hero's card — and the
+  three-colour Dooms and Lokis are out.
+- **Built against Pacho's plan.** Pacho wants to attack alone. Doom Legion goes
+  wide, and its menace tokens each need two blockers, so a lone attacker meets a
+  board. It has four answers for Pacho's key pieces, and Doom Blade always has a
+  target because every creature and token Pacho makes is nonblack. Fliers meet
+  fliers.
+- **Villain is the engine here, not decoration** (report 08 §8.2). Five cards
+  key off the type — Baron Strucker, Doom Reigns Supreme, Crossbones, Visions of
+  Villainy and Villainous Hideout — and both token kinds are Villains for all of
+  them, so the deck exercises the subtype that Pacho's deck carries only as text.
+- **40 cards and 17 lands:** the size, and the Limited conformance, of Pacho's
+  deck, and a land count for a curve that tops out at six.
+- **Rules 3 and 4 were learned by cutting a card each.** **Kang Prime** is
+  scripted correctly, but its `DigUntil` reveals the AI's library cards while they
+  are still in the library, and the gate's A3 cannot tell that reveal from the
+  largest leak there is: 2 of 10 recordings failed. The deck changed and the gate
+  did not — `--opponent-library-ok` is never passed to make a recording green —
+  and Pharaoh Rama-Tut, another Kang, took the slot. **Trickster's Stratagem** is
+  scripted correctly and the AI never casts it: no AI cast in 21 games, and none
+  from 14 copies over 61 turns in a probe. That made the deck 39 live cards, so
+  Crossbones took the slot. After both swaps, **all 20 nonland cards reached the
+  stack from the AI's side** in 38 games.
+
+**Known cost.**
+
+- Dark Deed was cast once in those 38 games; the AI holds it. It is the next
+  swap if a later census shows it never leaving the hand.
+- Two paths no recording has reached: Kang the Conqueror's power-up (an extra
+  turn, which no recording in the repo contains) and Castle Doom's Doombot
+  ability.
+- Rule 4 keeps out every card whose script reveals the top of a library the
+  viewer does not own, until A3 learns `GameAction.reveal`'s window (report 08
+  §8.3; a question for report 06 and `check-redaction.mjs`).
+- The arena has identity rows only for Aerial Doombot, which is in Pacho's deck
+  too. The other villains stand on the subtype and archetype rungs until
+  `figures/traits.json`, `figures.json` and `cues/cues.json` rows are added — a
+  follow-up owed after the arena branches merge (PLAN.md, *Match setup*).
+- It is tuned neither to win nor to lose, and nothing here measures how hard it
+  is: the AI won every game against the automated seat, which is a policy, not a
+  player.
+
+**Rejected.**
+
+- A mirror of your own deck as the default opponent. It stays the bridge's
+  default, for the gate's sake (**D106**), but it teaches nothing about an
+  opponent that is not you.
+- Cards from outside MSH and MSC: the user's two sets are the point (above).
+- Kang Prime, and loosening A3 to keep it. Trickster's Stratagem. Baron Helmut
+  Zemo (`AI:RemoveDeck:All`). Super Villain Lockup (white). Loki, the Deceiver
+  and Doctor Doom, King of Latveria (three colours). Lady Loki, Loki's Scepter
+  and Loki Laufeyson (red). Report 08 §8.4 has the table.

@@ -17,12 +17,18 @@
 package mtgtable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import forge.LobbyPlayer;
+import forge.ai.AiProfileUtil;
 import forge.gui.GuiBase;
 import forge.localinstance.properties.ForgeConstants;
 import forge.localinstance.properties.ForgePreferences;
 import forge.localinstance.properties.ForgePreferences.FPref;
 import forge.model.FModel;
+import forge.player.GamePlayerUtil;
 
 /**
  * The boot sequence every mtg-table process shares, in the one order that works.
@@ -149,6 +155,111 @@ public final class Bootstrap {
                     + " (" + customCardCount() + " file(s))");
         }
         return initMs;
+    }
+
+    // ==================================================================
+    // AI profiles (match setup, protocol amendment M44; report 11 section 9)
+    // ==================================================================
+
+    /** The profile every entry point uses when nobody asked for another. */
+    public static final String DEFAULT_AI_PROFILE = "Default";
+
+    /**
+     * The AI profiles this checkout can play against: the base names of the
+     * {@code .ai} files in {@code <forgeHome>/res/ai/}, sorted.  In 2.0.14 that
+     * is {@code Cautious, Default, Experimental, Reckless}.
+     *
+     * <p>Plain {@code java.io}, no Forge class, so it is safe to call
+     * <b>before</b> {@link #installGui}: an unknown {@code --ai-profile} fails in
+     * the argument check rather than ten seconds into {@code FModel.initialize}.
+     * The directory is the one {@code FModel.initialize} itself loads
+     * ({@code AiProfileUtil.loadAllProfiles(ForgeConstants.AI_PROFILE_DIR)},
+     * {@code AI_PROFILE_DIR = RES_DIR + "ai/"}), through the
+     * {@code forge-home/res} symlink -- read-only.
+     *
+     * @param forgeHome {@link Config#forgeHomeDir()}, ending in a separator
+     */
+    public static List<String> aiProfiles(final String forgeHome) {
+        final File dir = new File(forgeHome, "res" + File.separator + "ai");
+        final String[] files = dir.list((d, n) -> n.endsWith(".ai"));
+        final List<String> out = new ArrayList<>();
+        if (files != null) {
+            for (final String f : files) {
+                out.add(f.substring(0, f.length() - ".ai".length()));
+            }
+        }
+        Collections.sort(out);
+        return out;
+    }
+
+    /**
+     * {@code --ai-profile}'s value, validated and canonicalised: matched
+     * case-insensitively against {@link #aiProfiles} and returned with the
+     * file's own spelling, so {@code reckless} plays {@code Reckless} and the
+     * wire says {@code "Reckless"}.  {@code null} means {@link #DEFAULT_AI_PROFILE}.
+     *
+     * <p><b>No "Random" entry.</b>  Forge's display list also offers
+     * {@code "Random (Every Match)"} and {@code "Random (Every Game)"}; both draw
+     * from {@code MyRandom}, which would make a seeded run's profile a function
+     * of the shuffle, and neither is a file.  A picker that wants them resolves
+     * one itself (report 11 section 9 says how).
+     *
+     * @throws IllegalArgumentException naming every valid profile
+     */
+    public static String resolveAiProfile(final String forgeHome, final String requested) {
+        final String want = requested == null ? DEFAULT_AI_PROFILE : requested.trim();
+        final List<String> have = aiProfiles(forgeHome);
+        for (final String p : have) {
+            if (p.equalsIgnoreCase(want)) {
+                return p;
+            }
+        }
+        throw new IllegalArgumentException("--ai-profile \"" + requested + "\" is not one of "
+                + (have.isEmpty() ? "(no .ai files found)" : String.join(", ", have))
+                + " -- the .ai files in " + new File(forgeHome, "res" + File.separator + "ai"));
+    }
+
+    /**
+     * THE way an mtg-table process seats a Forge AI: always with an explicit,
+     * non-empty {@code profileOverride}.
+     *
+     * <p><b>Why this is not {@code createAiPlayer(name, avatar)}</b> -- which is
+     * what all three entry points called before match setup.  That overload
+     * delegates with {@code profileOverride = ""}, and the five-argument
+     * overload's empty-override branch (bytecode offsets 28-83 in 2.0.14) reads
+     * {@code FPref.UI_CURRENT_AI_PROFILE}; when the value is not in
+     * {@code AiProfileUtil.getProfilesDisplayList()} it prints a line, sets
+     * {@code "Default"} and calls <b>{@code ForgePreferences.save()}</b> -- which
+     * would write every in-memory decision this class makes (D13, D14, the
+     * mana-lost prompt) into {@code var/forge/preferences/forge.preferences} as a
+     * persistent edit.  It never fired, because the pref is {@code "Default"}
+     * unless a preferences file says otherwise; it is closed anyway, because
+     * "the file happened to be absent" is not a rule.
+     *
+     * <p>The three-argument overload is chosen over the five-argument one on
+     * purpose: it is the same call path the old two-argument one took, sleeve
+     * index and all ({@code HeadlessGuiBase.getSleevesCount()} is 0, so no
+     * {@code MyRandom} draw either way), which keeps a seeded {@code Default}
+     * game the game it was.
+     *
+     * <p>Must run after {@link #initializeModel}: it asserts that
+     * {@code AiProfileUtil} actually <b>loaded</b> the profile.  That is not
+     * belt and braces -- {@code AiProfileUtil.getAIProp} silently falls back
+     * to every property's built-in default for a profile name it has no map
+     * for, so a file that exists but failed to load would play the game on
+     * defaults while every line of output named the profile.
+     */
+    public static LobbyPlayer createAiPlayer(final String name, final int avatar, final String profile) {
+        if (profile == null || profile.isEmpty()) {
+            throw new IllegalArgumentException("an AI profile is required: an empty profileOverride "
+                    + "reaches GamePlayerUtil's branch that saves the preferences file");
+        }
+        if (!AiProfileUtil.getAvailableProfiles().contains(profile)) {
+            throw new IllegalStateException("AI profile \"" + profile + "\" has a file but was not "
+                    + "loaded by FModel.initialize (AiProfileUtil.getAvailableProfiles() = "
+                    + AiProfileUtil.getAvailableProfiles() + ")");
+        }
+        return GamePlayerUtil.createAiPlayer(name, avatar, profile);
     }
 
     /**

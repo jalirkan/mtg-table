@@ -140,6 +140,12 @@ fixture renders the fallback path for every card on the board at once — which 
 the evening-2 exit check ("delete `art.json` and reload") without touching a
 generated file this pass does not own.
 
+*(2026-09-27, match setup: true when this was measured, and no longer by
+default. `tools/fetch-art.ts` now fetches every `decks/*.dck`, `morph-probe.dck`
+included, so after a full run this fixture draws real art. To see the fallback
+again, `node tools/fetch-art.ts --deck decks/pacho-shield.dck` writes an
+`art.json` without the probe decks; a token is the text frame either way.)*
+
 Frame 170 / 235, 1600 × 900: every tile is the generated frame — name, mana pips
 from `mana-font`, the type line verbatim (`Creature - Goat Be…`, hyphen and all),
 and the P/T in the corner. The viewer's own **face-down** permanent is a CSS card

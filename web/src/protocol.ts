@@ -45,6 +45,12 @@
  *   M41 `hello_ok.gameNumber` / `.gameCount` — "Game 2 of 3" from the bridge,
  *       because the client's own count restarts at 1 on a page reload.
  *
+ * 2026-09-27 — **match setup** (`docs/protocol.md` §2.1):
+ *   M44 `hello_ok.match` — each seat's deck by NAME, the AI's profile and the
+ *       match length. The AI's deck is `{name, cards}` and nothing else (hard
+ *       rule 8). Optional, like every field above: the whole committed corpus
+ *       predates it. `seatMatchOf` is its one reader.
+ *
  * **Every M6 field is declared optional here**, and that is not defensiveness
  * for its own sake: fifteen committed recordings predate them,
  * `web/test/render.test.tsx` folds every frame of all of them, and a required
@@ -137,6 +143,65 @@ export interface HelloOkBody {
    */
   gameNumber?: number;
   gameCount?: number | null;
+  /**
+   * §2.1, amendment **M44** — what this match is. Optional: **every recording
+   * made before 2026-09-27 predates it** and `RecordMatch` (AI vs AI) never
+   * writes it. Read it with {@link seatMatchOf}, never directly: absent is
+   * "this stream does not say", which a component must not draw as an empty
+   * deck name.
+   */
+  match?: MatchSetup | null;
+}
+
+/** §2.1 (M44) — one deck, as the wire names it: never a path for the AI's. */
+export interface MatchDeck {
+  /** The `.dck` file's `[metadata] Name=`, or its base name when it has none. */
+  name: string;
+  /** The main deck's card count — public for every seat (§8.1). */
+  cards: number;
+}
+
+/** §2.1 (M44) — `hello_ok.match`. */
+export interface MatchSetup {
+  /** The VIEWING seat's deck; `path` is the one §8.1's header already carries. */
+  yourDeck: MatchDeck & { path: string };
+  /** The other seat's deck: `{name, cards}` and NOTHING else (hard rule 8). */
+  aiDeck: MatchDeck;
+  /** A Forge AI profile: `Default` / `Cautious` / `Reckless` / `Experimental` in 2.0.14. */
+  aiProfile: string;
+  /** `--games N`. Always present, unlike M41's `gameCount`. */
+  games: number;
+}
+
+/** What one seat's plate says about the match (M44). */
+export interface SeatMatch {
+  /** This seat's deck name, or `null` when the wire does not say. */
+  deck: string | null;
+  /** The AI profile — on the AI's seat only; `null` on yours and when absent. */
+  aiProfile: string | null;
+}
+
+/**
+ * §2.1 (M44) — **the one reader of `hello_ok.match`.** The viewing seat gets
+ * `yourDeck`, every other seat `aiDeck`; the profile is printed only for a seat
+ * `players[]` marks `isAi`, because a profile is a fact about the AI. Returns
+ * `null` for a stream that carries no `match` — every recording made before
+ * 2026-09-27 — so a plate draws nothing rather than a blank deck name, and a
+ * seat the handshake does not know gets `null` too.
+ */
+export function seatMatchOf(hello: HelloOkBody | null | undefined, playerId: number): SeatMatch | null {
+  const m = hello?.match;
+  if (hello === null || hello === undefined || m === undefined || m === null || typeof m !== 'object') {
+    return null;
+  }
+  const player = hello.players.find((p) => p.id === playerId);
+  if (player === undefined) return null;
+  const mine = playerId === hello.you;
+  const deck = mine ? m.yourDeck : m.aiDeck;
+  const name = typeof deck?.name === 'string' && deck.name.trim() !== '' ? deck.name : null;
+  const profile =
+    !mine && player.isAi && typeof m.aiProfile === 'string' && m.aiProfile !== '' ? m.aiProfile : null;
+  return { deck: name, aiProfile: profile };
 }
 
 // ---------------------------------------------------------------------------

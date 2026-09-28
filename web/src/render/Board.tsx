@@ -62,6 +62,7 @@ import { planKey, type KeyContext, type KeyEventLike } from '../keys.ts';
 import {
   buttonFocus,
   isHidden,
+  seatMatchOf,
   stackYield,
   undoOf,
   type AnswerValue,
@@ -768,6 +769,7 @@ export function Board({
             input={input}
             art={art}
             clicks={clicks}
+            match={seatMatchOf(hello, player.id)}
             onBrowseLibrary={() => {
               openZone({ playerId: player.id, zone: 'library' });
             }}
@@ -785,6 +787,7 @@ export function Board({
             // engine is not parked inside an ask (§2.2, `pool.ts`).
             onSpendMana={spendMana}
             manaProvisional={manaProvisional}
+            match={seatMatchOf(hello, mine.id)}
             onBrowseLibrary={() => {
               openZone({ playerId: mine.id, zone: 'library' });
             }}

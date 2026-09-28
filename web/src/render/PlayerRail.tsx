@@ -24,7 +24,7 @@
  */
 
 import type { ArtIndex } from '../art.ts';
-import type { GameStateBody, InputBody, ManaColor, PlayerState } from '../protocol.ts';
+import type { GameStateBody, InputBody, ManaColor, PlayerState, SeatMatch } from '../protocol.ts';
 import { CardTile, type Clicks } from './CardTile.tsx';
 import { counterLabel } from './labels.ts';
 import { ManaPoolPips } from './Mana.tsx';
@@ -41,6 +41,7 @@ export function PlayerRail({
   onSpendMana = null,
   manaProvisional = false,
   onBrowseLibrary,
+  match = null,
 }: {
   player: PlayerState;
   you: number | null;
@@ -54,6 +55,12 @@ export function PlayerRail({
   manaProvisional?: boolean;
   /** M5 — open the zone browser on this seat's revealed library slice. */
   onBrowseLibrary?: (() => void) | null;
+  /**
+   * Match setup (amendment M44) — this seat's deck name and, on the AI's seat,
+   * its Forge profile, from `seatMatchOf(hello, player.id)` and from nothing
+   * else. `null` (every recording made before M44) draws no line at all.
+   */
+  match?: SeatMatch | null;
 }): JSX.Element {
   const rects = useRects();
   const targeting = useTargeting();
@@ -124,6 +131,25 @@ export function PlayerRail({
           {isYou && ' · you'}
         </span>
       </h2>
+
+      {/* M44 — what this seat is playing, as the handshake names it. Text only:
+          the deck is a NAME (the AI's list is never on the wire) and the
+          profile is Forge's word for how the AI plays, not a difficulty. */}
+      {match !== null && (match.deck !== null || match.aiProfile !== null) && (
+        <div className="rail__tags rail__match">
+          {match.deck !== null && (
+            <span className="rail__deck" title="deck (hello_ok.match)">
+              Deck: {match.deck}
+            </span>
+          )}
+          {match.deck !== null && match.aiProfile !== null && ' · '}
+          {match.aiProfile !== null && (
+            <span className="rail__profile" title="Forge AI profile (forge-home/res/ai/)">
+              AI profile: {match.aiProfile}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="rail__vitals">
         <span className="life" title="life">
