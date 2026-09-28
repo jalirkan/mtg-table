@@ -3,8 +3,13 @@
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Runs, in order, everything that can tell you the two hand-written ends have
-# drifted apart, and stops at the FIRST failure:
+# Runs everything that can tell you the two hand-written ends have drifted
+# apart, and stops at the FIRST failure.  Since D160 it runs them CONCURRENTLY:
+# GATE_JOBS (default min(4, nproc/4)) independent steps at a time, each in a
+# process of its own with its own ports, game ids and var/ paths, in the order
+# and under the dependencies set out under "THE PARALLEL GATE" below.
+# GATE_JOBS=1 is the gate as it always was -- the steps below, one after
+# another, in this order, printing this log.  The steps:
 #
 #   1. tools/check-forge.sh       the jar is present and carries the 8 classes
 #   2. tools/lint-bridge.sh       the grep bans (hidden info, data loss, 2.0.15-only APIs)
@@ -182,13 +187,57 @@
 # pass found had already burned a silent 30 s per run without failing anything.
 # A run that hits the cap dies with its own message naming the cap.
 #
-# Usage:  ./tools/check-all.sh            # ~13-15 minutes, mostly the twenty-four games
-#                                         # (match setup added 9c's rows 11-14 and 9e)
+# THE PARALLEL GATE (D160-D166, the gate-speed lane, 2026-09-28).  Every step
+# above is a JOB: a shell function run in a subshell of its own, whose stdout
+# and stderr go to var/check-all/<run>/<job>.log.  Most steps are one job; a
+# few are split where the halves are independent -- 6b's two recordings and
+# their comparison; 9c's fourteen rows (`tools/ten-games.sh --run-row N`) and
+# their report (`--report`); step 10's seven servers, 10a..10g; step 11's
+# committed fixtures and its fresh recordings; step 13's `npm run build`,
+# `vitest run` and `node --test`.  The scheduler starts the next READY job
+# (every dependency passed) in a fixed priority order whenever fewer than
+# GATE_JOBS are running.  The order constraints are dependencies, not luck:
+#
+#   - check-forge, lint and build (steps 1-3) run first and alone -- every job
+#     depends on them;
+#   - step 6 depends on step 5 (it compares RecordMatch's fresh recording);
+#     6b's comparison on both of 6b's recordings; 9c's report on its fourteen
+#     rows;
+#   - 9c's rows and 9e fingerprint the preferences directories, so they wait
+#     for step 4's Smoke: a first engine boot on a fresh checkout creates an
+#     empty var/forge/preferences/, and D164 aside, nothing should race that;
+#   - `node --test` (13) replays MTGTABLE_WS_LOGS, i.e. step 10's logs, so it
+#     depends on 10a, 10b, 10c, 10d, 10f and 10g (10e is not in the list);
+#   - step 11's fresh half and 12d's narrator read EVERY fresh recording, so
+#     they depend on every job that records one;
+#   - 12b (the catalog) and 12c (the crash check, its own scratch Forge home)
+#     depend on nothing but the build.
+#
+# Step 10's servers listen on WSPORT+0 .. WSPORT+6 (10a..10g) when GATE_JOBS >
+# 1, so all seven can be up at once; GATE_JOBS=1 keeps the single WSPORT.
+#
+# The console shows one line when a job starts and one when it ends, then a
+# TIMING TABLE -- every job's start and end (seconds since the gate started),
+# its seconds and its status -- and the 1-minute load average seen at each of
+# those events.  var/check-all/<run>/gate.log is every job's log concatenated
+# in the serial order, i.e. the log GATE_JOBS=1 prints.  A failure stops new
+# jobs, TERMs every running job's process tree (only processes this gate
+# started), prints the failed job's log tail, the table so far and a
+# `check-all FAILED at step N` line -- always, even for a job that died
+# without a message -- and exits 1.  GATE_JOBS=1 prints today's log byte for
+# byte and then the table.  GATE_TIMEOUT is still per JVM (GAME_TIMEOUT), and
+# nothing is ever retried: a step that fails under concurrent load and never
+# serially is a finding (D166), not a flake to paper over.
+#
+# Usage:  ./tools/check-all.sh            # ~5 minutes at GATE_JOBS=4 (D160); ~15 serially
+#         GATE_JOBS=1 ./tools/check-all.sh        # the serial gate, one step at a time
+#         GATE_JOBS=8 ./tools/check-all.sh        # eight at a time (needs ~16 GB free)
+#         WSPORT=8750 ./tools/check-all.sh        # step 10's ports: 8750..8756 in parallel
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
 #         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
 #         SKIP_DRIFT=1 ./tools/check-all.sh       # no 9b re-recording (~30 s)
 #         DRIFT_FATAL=1 ./tools/check-all.sh      # 9b's advisory becomes a failure
-#         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~6-9 minutes); 9e still runs
+#         SKIP_TEN=1 ./tools/check-all.sh         # no 9c ten-games (~6 minutes serially); 9e still runs
 #         VILLAIN_DECK=decks/x.dck ./tools/check-all.sh   # 9c rows 11-14 and 9e play this deck
 #         STRICT_G1=1 ./tools/check-all.sh        # step 6 byte for byte (fails under load: D113)
 set -euo pipefail
@@ -207,98 +256,182 @@ unset MTG_TABLE_CONFIG
 # in the gate is ~45 s, so 300 is ~6x headroom and still fails a wedge fast
 # enough to be useful.  `bridge/run.sh` ends in `exec java`, so TERM reaches the
 # JVM itself rather than a wrapper shell; --kill-after adds the KILL that
-# follows if it ignores TERM.
+# follows if it ignores TERM.  Per JVM, whatever GATE_JOBS is (D160).
 GAME_TIMEOUT="${GAME_TIMEOUT:-300}"
 jvm() { timeout --kill-after=15s "${GAME_TIMEOUT}s" "$@"; }
 
-step=0
-say() { step=$((step + 1)); printf '\n=== %d. %s ===\n' "$step" "$1"; }
-die() { echo "check-all FAILED at step $step: $1" >&2; exit 1; }
 # 124 is `timeout`'s own "the cap fired"; 137 is the KILL that --kill-after sent
 # when the JVM ignored the TERM.
 capped() { case "$1" in 124 | 137) return 0 ;; *) return 1 ;; esac; }
 
-say "check-forge.sh -- the jar and the eight classes"
-./tools/check-forge.sh || die "check-forge.sh"
+# ---------------------------------------------------------------------------
+# The knobs of the parallel gate (D160).
+# ---------------------------------------------------------------------------
+# GATE_JOBS: how many jobs run at once.  min(4, nproc/4), at least 1: four on
+# this 16-thread box, where every JVM is an -Xmx4096m process and four of them
+# plus the web suites leave the machine usable; GATE_JOBS=1 is the serial gate.
+NPROC="$(nproc 2>/dev/null || echo 4)"
+GATE_JOBS_DEFAULT=$(( NPROC / 4 ))
+[ "$GATE_JOBS_DEFAULT" -ge 1 ] || GATE_JOBS_DEFAULT=1
+[ "$GATE_JOBS_DEFAULT" -le 4 ] || GATE_JOBS_DEFAULT=4
+GATE_JOBS="${GATE_JOBS:-$GATE_JOBS_DEFAULT}"
+case "$GATE_JOBS" in
+  '' | *[!0-9]* | 0) echo "check-all: GATE_JOBS must be a positive integer, got '$GATE_JOBS'" >&2; exit 2 ;;
+esac
 
-say "lint-bridge.sh -- the grep bans"
-./tools/lint-bridge.sh || die "lint-bridge.sh"
+# Port 8643, not config.json's 8642: a developer with `scripts/play.sh` running
+# should be able to run the gate without the two fighting over a port.  With
+# GATE_JOBS > 1, 10a..10g listen on WSPORT+0 .. WSPORT+6 (D162).
+WSPORT="${WSPORT:-8643}"
+case "$WSPORT" in '' | *[!0-9]*) echo "check-all: WSPORT must be a port number, got '$WSPORT'" >&2; exit 2 ;; esac
 
-say "bridge/build.sh -- javac + Json self-test"
-./bridge/build.sh || die "bridge/build.sh"
+# One directory per run: every job's log, the timing table, gate.log (D161).
+RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"
+RUN_DIR="var/check-all/$RUN_ID"
+mkdir -p "$RUN_DIR"
 
-say "Smoke -- boot the engine, prove the prefs (D13) and the card overlay (D14)"
-mkdir -p var
-rc=0
-jvm ./bridge/run.sh mtgtable.Smoke > var/check-all-smoke.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -40 var/check-all-smoke.log >&2
-  capped "$rc" && die "mtgtable.Smoke did not finish within ${GAME_TIMEOUT}s (full log: var/check-all-smoke.log)"
-  die "mtgtable.Smoke (full log: var/check-all-smoke.log)"
+# `die` names the step the running JOB belongs to; each job's subshell sets STEP
+# (the parent number for a lettered sub-step, exactly as the serial gate did).
+STEP=""
+die() { echo "check-all FAILED at step $STEP: $1" >&2; exit 1; }
+hdr() { printf '\n=== %s. %s ===\n' "$1" "$2"; }
+# The last line of a frame log is `over` (section 8.4).  A `$(tail -n 1 ...)`
+# and a pattern, never `tail | grep`: no pipe for pipefail to judge (D163).
+last_is_over() { [[ "$(tail -n 1 "$1")" == *'"type":"over"'* ]]; }
+# Step 10's port for sub-step k (0 = 10a .. 6 = 10g).
+ws_port() { if [ "$GATE_JOBS" -gt 1 ]; then echo $(( WSPORT + $1 )); else echo "$WSPORT"; fi; }
+
+# ---------------------------------------------------------------------------
+# Every path more than one step reads, named once (the serial gate set these as
+# it went; a job cannot see another job's variables).
+# ---------------------------------------------------------------------------
+FRESH="var/check-all-record.jsonl"                          # 5, read by 6, 11, 12d
+SP_PACED="var/spectate/check-all-spectate-paced.jsonl"      # 6b
+SP_SEAT1="var/spectate/check-all-spectate-seat1.jsonl"      # 6b
+M2FRAMES="var/games/check-all-m2/frames.jsonl"              # 7
+CONLOG="var/games/check-all-console/frames.jsonl"           # 8
+AUTOLOG="var/games/check-all-auto/frames.jsonl"             # 9
+MS_ID="check-all-match-reckless"                            # 9e
+MS_LOG="var/games/$MS_ID/frames.jsonl"
+# shellcheck source=tools/villain-deck.sh
+. tools/villain-deck.sh                                     # VILLAIN, VILLAIN_NOTE: 6b, 9e
+HAVE_AUTOPLAY=0
+[ -f tools/ws-auto-play.mjs ] && HAVE_AUTOPLAY=1
+# Step 13 replays exactly these and nothing else (web/test/ws-log.test.ts): the
+# client's own --log plus the bridge's copies from 10a, 10b, 10c, 10d, 10f and
+# 10g, in the order the serial gate used to accumulate them.
+if [ "$HAVE_AUTOPLAY" = "1" ]; then
+  WS_LOGS="var/ws-auto-13.jsonl,var/games/check-all-ws-auto/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-smoke/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-drop/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-refuse/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/ws-auto-probe-42.jsonl,var/games/check-all-ws-probe/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-3g/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-3g-g2/frames.jsonl"
+  WS_LOGS="$WS_LOGS,var/games/check-all-ws-3g-g3/frames.jsonl"
+else
+  WS_LOGS="var/games/check-all-ws-smoke/frames.jsonl,var/games/check-all-ws-drop/frames.jsonl"
 fi
-grep -E '^(pref |A\.I\.M\. Scientists|deck conformance|cards in DB|SMOKE OK)' var/check-all-smoke.log || true
-grep -q '^SMOKE OK$' var/check-all-smoke.log || die "Smoke did not print SMOKE OK"
 
-say "RecordMatch -- a FRESH recording (seed 42) into var/, not a committed fixture"
-FRESH="var/check-all-record.jsonl"
-rm -f "$FRESH"
-rc=0
-jvm ./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 \
-    --out "$FRESH" > var/check-all-record.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -40 var/check-all-record.log >&2
-  capped "$rc" && die "mtgtable.RecordMatch did not finish within ${GAME_TIMEOUT}s (raise GAME_TIMEOUT, or the recorder is wedged)"
-  die "mtgtable.RecordMatch (full log: var/check-all-record.log)"
-fi
-grep -E '^(frames|snapshot errors|events dropped|unzoned cards|UNIMPL members)' var/check-all-record.log || true
-grep -q '^RECORD OK$' var/check-all-record.log || die "RecordMatch did not print RECORD OK"
+# ===========================================================================
+# THE STEPS.  One function per job, in the serial order.  Each runs in a
+# subshell of its own with `set -e` and its STEP set, stdout and stderr to its
+# log; nothing here reads a variable another job set.
+# ===========================================================================
 
-say "value-level drift -- the fresh recording against fixtures/games/g1.jsonl (tools/wire-drift.mjs)"
-# Why a comparison and not just the shape checker (step 8): a checker asserts the
-# key set and the runtime TYPE of every key, so it would happily pass a Snap.java
-# that started emitting phase names lowercased, `power` as a number, one fewer
-# event per flush, or a stack ordered top-first.  Same deck, same seed, same
-# jar -> the same game, once the per-run values are normalised away.
-#
-# D113 (PLAN.md slice-4 follow-up 13(b)).  This was `diff | head -20` over the
-# two normalised files, byte for byte, and it failed twice at a load average of
-# 42-73 on one extra `state` frame of an otherwise identical game -- and under
-# `set -o pipefail` the `head` gave it exit 141 and no message at all.  Both are
-# fixed here: tools/wire-drift.mjs prints its own verdict and exits 0 or 1, and by
-# default it asks only what a busy machine cannot move, because WHERE a flush cuts
-# the event stream is wall-clock: the non-state frames, the event stream, the
-# phase walk, the final board, every board cut AT a turn/phase/outcome event (the
-# players, every public zone, `priority` and mid-game `combat`, 347 times in g1)
-# and the stack -- `stack` and `stackCards`, order included -- for every set of
-# stack ids both recordings caught (a phase boundary never has a stack, so that
-# question is the stack serialiser's only check; its reach is in the tool's
-# header).  Measured: 9b's multiset comparison fails those loaded runs too, so it
-# was not the answer.  The selftest runs first -- the stack reversed, a stack key
-# renamed, `priority` nulled and a combat key renamed mid-game among its drifts --
-# so a relaxed comparison that stopped rejecting drift fails the gate here and not
-# silently.  STRICT_G1=1 is the old step: byte for byte, flush boundaries and all.
-# Both modes sort the ids inside a `stats` event first (D121, spectating: their
-# order follows HotSpot identity hashes, not the game); the SET is still compared,
-# and the selftest has a reorder both must accept and a dropped id both reject.
-node tools/wire-drift-selftest.mjs > var/check-all-wire-drift-selftest.log 2>&1 || {
-  cat var/check-all-wire-drift-selftest.log >&2
-  die "tools/wire-drift-selftest.mjs: the step-6 comparison no longer gives the verdicts it must (log: var/check-all-wire-drift-selftest.log)"
+s01_forge() {
+  hdr 1 "check-forge.sh -- the jar and the eight classes"
+  ./tools/check-forge.sh || die "check-forge.sh"
 }
-tail -1 var/check-all-wire-drift-selftest.log
-WIRE_DRIFT_MODE=""
-[ "${STRICT_G1:-0}" = "1" ] && WIRE_DRIFT_MODE="--strict"
-# shellcheck disable=SC2086
-if ! node tools/wire-drift.mjs $WIRE_DRIFT_MODE fixtures/games/g1.jsonl "$FRESH" > var/check-all-wire-drift.log 2>&1; then
-  cat var/check-all-wire-drift.log >&2
-  if [ -n "$WIRE_DRIFT_MODE" ]; then
-    die "the fresh seed-42 recording is not byte-identical to fixtures/games/g1.jsonl under STRICT_G1=1 -- \
+
+s02_lint() {
+  hdr 2 "lint-bridge.sh -- the grep bans"
+  ./tools/lint-bridge.sh || die "lint-bridge.sh"
+}
+
+s03_build() {
+  hdr 3 "bridge/build.sh -- javac + Json self-test"
+  ./bridge/build.sh || die "bridge/build.sh"
+}
+
+s04_smoke() {
+  hdr 4 "Smoke -- boot the engine, prove the prefs (D13) and the card overlay (D14)"
+  mkdir -p var
+  local rc=0
+  jvm ./bridge/run.sh mtgtable.Smoke > var/check-all-smoke.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -40 var/check-all-smoke.log >&2
+    capped "$rc" && die "mtgtable.Smoke did not finish within ${GAME_TIMEOUT}s (full log: var/check-all-smoke.log)"
+    die "mtgtable.Smoke (full log: var/check-all-smoke.log)"
+  fi
+  grep -E '^(pref |A\.I\.M\. Scientists|deck conformance|cards in DB|SMOKE OK)' var/check-all-smoke.log || true
+  grep -q '^SMOKE OK$' var/check-all-smoke.log || die "Smoke did not print SMOKE OK"
+}
+
+s05_record() {
+  hdr 5 "RecordMatch -- a FRESH recording (seed 42) into var/, not a committed fixture"
+  rm -f "$FRESH"
+  local rc=0
+  jvm ./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 \
+      --out "$FRESH" > var/check-all-record.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -40 var/check-all-record.log >&2
+    capped "$rc" && die "mtgtable.RecordMatch did not finish within ${GAME_TIMEOUT}s (raise GAME_TIMEOUT, or the recorder is wedged)"
+    die "mtgtable.RecordMatch (full log: var/check-all-record.log)"
+  fi
+  grep -E '^(frames|snapshot errors|events dropped|unzoned cards|UNIMPL members)' var/check-all-record.log || true
+  grep -q '^RECORD OK$' var/check-all-record.log || die "RecordMatch did not print RECORD OK"
+}
+
+s06_drift() {
+  hdr 6 "value-level drift -- the fresh recording against fixtures/games/g1.jsonl (tools/wire-drift.mjs)"
+  # Why a comparison and not just the shape checker (step 8): a checker asserts the
+  # key set and the runtime TYPE of every key, so it would happily pass a Snap.java
+  # that started emitting phase names lowercased, `power` as a number, one fewer
+  # event per flush, or a stack ordered top-first.  Same deck, same seed, same
+  # jar -> the same game, once the per-run values are normalised away.
+  #
+  # D113 (PLAN.md slice-4 follow-up 13(b)).  This was `diff | head -20` over the
+  # two normalised files, byte for byte, and it failed twice at a load average of
+  # 42-73 on one extra `state` frame of an otherwise identical game -- and under
+  # `set -o pipefail` the `head` gave it exit 141 and no message at all.  Both are
+  # fixed here: tools/wire-drift.mjs prints its own verdict and exits 0 or 1, and by
+  # default it asks only what a busy machine cannot move, because WHERE a flush cuts
+  # the event stream is wall-clock: the non-state frames, the event stream, the
+  # phase walk, the final board, every board cut AT a turn/phase/outcome event (the
+  # players, every public zone, `priority` and mid-game `combat`, 347 times in g1)
+  # and the stack -- `stack` and `stackCards`, order included -- for every set of
+  # stack ids both recordings caught (a phase boundary never has a stack, so that
+  # question is the stack serialiser's only check; its reach is in the tool's
+  # header).  Measured: 9b's multiset comparison fails those loaded runs too, so it
+  # was not the answer.  The selftest runs first -- the stack reversed, a stack key
+  # renamed, `priority` nulled and a combat key renamed mid-game among its drifts --
+  # so a relaxed comparison that stopped rejecting drift fails the gate here and not
+  # silently.  STRICT_G1=1 is the old step: byte for byte, flush boundaries and all.
+  # Both modes sort the ids inside a `stats` event first (D121, spectating: their
+  # order follows HotSpot identity hashes, not the game); the SET is still compared,
+  # and the selftest has a reorder both must accept and a dropped id both reject.
+  # (D163: no `| head` and no `| tail` anywhere in this file any more.)
+  node tools/wire-drift-selftest.mjs > var/check-all-wire-drift-selftest.log 2>&1 || {
+    cat var/check-all-wire-drift-selftest.log >&2
+    die "tools/wire-drift-selftest.mjs: the step-6 comparison no longer gives the verdicts it must (log: var/check-all-wire-drift-selftest.log)"
+  }
+  tail -1 var/check-all-wire-drift-selftest.log
+  local WIRE_DRIFT_MODE=""
+  [ "${STRICT_G1:-0}" = "1" ] && WIRE_DRIFT_MODE="--strict"
+  # shellcheck disable=SC2086
+  if ! node tools/wire-drift.mjs $WIRE_DRIFT_MODE fixtures/games/g1.jsonl "$FRESH" > var/check-all-wire-drift.log 2>&1; then
+    cat var/check-all-wire-drift.log >&2
+    if [ -n "$WIRE_DRIFT_MODE" ]; then
+      die "the fresh seed-42 recording is not byte-identical to fixtures/games/g1.jsonl under STRICT_G1=1 -- \
 if the default comparison passes, only the flush boundaries moved, which is load (D113); if it fails too, \
 Snap.java changed the wire: re-record fixtures/games/*.jsonl"
-  fi
-  die "Snap.java changed the wire: the fresh seed-42 recording is not the same game as fixtures/games/g1.jsonl \
+    fi
+    die "Snap.java changed the wire: the fresh seed-42 recording is not the same game as fixtures/games/g1.jsonl \
 (the DIFFER line above says which of the six questions failed) -- re-record fixtures/games/*.jsonl"
-fi
-cat var/check-all-wire-drift.log
+  fi
+  cat var/check-all-wire-drift.log
+}
 
 # 6b. SPECTATING (protocol amendment M47, decisions D118-D122): an AI-vs-AI
 #     game recorded the way ./scripts/spectate.sh records one, through the
@@ -317,160 +450,173 @@ cat var/check-all-wire-drift.log
 #     event, every phase-boundary state; the hands set aside) -- and must call a
 #     copy of the second with one life total changed NOT the same game, so the
 #     comparison can fail. ~20 s. Its own names, so it never overwrites a
-#     recording of yours in var/spectate/.
-printf '\n=== 6b. spectating: a paced AI-vs-AI recording, and the same seed from the other chair (M47) ===\n'
-# shellcheck source=tools/villain-deck.sh
-. tools/villain-deck.sh
-echo "  $VILLAIN_NOTE"
-SP_PACED="var/spectate/check-all-spectate-paced.jsonl"
-SP_SEAT1="var/spectate/check-all-spectate-seat1.jsonl"
-rc=0
-jvm ./scripts/spectate.sh --no-serve --no-build --name check-all-spectate-paced \
-    --deck decks/pacho-shield.dck --ai-deck "$VILLAIN" --profile Default --ai-profile Reckless \
-    --seed 5 --pace 25 > var/check-all-spectate-paced.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -30 var/check-all-spectate-paced.log >&2
-  capped "$rc" && die "the paced spectate recording did not finish within ${GAME_TIMEOUT}s"
-  die "./scripts/spectate.sh (paced, seat 0) exited $rc (full log: var/check-all-spectate-paced.log)"
-fi
-rc=0
-jvm ./scripts/spectate.sh --no-serve --no-build --no-follow --name check-all-spectate-seat1 \
-    --deck decks/pacho-shield.dck --ai-deck "$VILLAIN" --profile Default --ai-profile Reckless \
-    --seed 5 --seat 1 > var/check-all-spectate-seat1.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -30 var/check-all-spectate-seat1.log >&2
-  capped "$rc" && die "the seat-1 spectate recording did not finish within ${GAME_TIMEOUT}s"
-  die "./scripts/spectate.sh (seat 1) exited $rc (full log: var/check-all-spectate-seat1.log)"
-fi
-grep -hE '^(frames|winner|game wall time|paced dwell|PASS)' var/check-all-spectate-paced.log var/check-all-spectate-seat1.log || true
-grep -qE '^paced dwell    = [1-9][0-9]* dwell' var/spectate/check-all-spectate-paced.log \
-  || die "the paced recording reported no dwells (var/spectate/check-all-spectate-paced.log)"
-for f in "$SP_PACED" "$SP_SEAT1"; do
-  [ "$(grep -c '"type":"over"' "$f" || true)" = "1" ] || die "$f does not have exactly one \`over\`"
-  [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || die "the last frame of $f is not \`over\`"
-done
-node -e '
-  const fs = require("node:fs");
-  const [paced, seat1, villain] = process.argv.slice(1);
-  const lines = (f) => fs.readFileSync(f, "utf8").split("\n").filter(Boolean).map(JSON.parse);
-  const nameOf = (p) => (fs.readFileSync(p, "utf8").match(/^Name=(.*)$/m) ?? [])[1]?.trim() ?? p;
-  const [hp, ...fp] = lines(paced);
-  const [h1, ...f1] = lines(seat1);
-  const mp = fp.find((f) => f.type === "hello_ok").body.match;
-  const m1 = f1.find((f) => f.type === "hello_ok").body.match;
-  const fail = (m) => { console.error(m); process.exit(1); };
-  if (hp.paceMs !== 25) fail(`the paced header says paceMs=${JSON.stringify(hp.paceMs)}, expected 25`);
-  if (h1.paceMs !== undefined) fail("the unpaced header carries paceMs");
-  if (hp.seat !== 0 || h1.seat !== 1) fail(`seats ${hp.seat} / ${h1.seat}, expected 0 / 1`);
-  const pacho = nameOf("decks/pacho-shield.dck"), villainName = nameOf(villain);
-  const want0 = { yourDeck: pacho, aiDeck: villainName, aiProfile: "Reckless", yourProfile: "Default" };
-  const want1 = { yourDeck: villainName, aiDeck: pacho, aiProfile: "Default", yourProfile: "Reckless" };
-  const got = (m) => ({ yourDeck: m?.yourDeck?.name, aiDeck: m?.aiDeck?.name, aiProfile: m?.aiProfile, yourProfile: m?.yourProfile });
-  if (JSON.stringify(got(mp)) !== JSON.stringify(want0)) fail(`seat 0 match ${JSON.stringify(mp)}`);
-  if (JSON.stringify(got(m1)) !== JSON.stringify(want1)) fail(`seat 1 match ${JSON.stringify(m1)}`);
-  console.log(`OK: both handshakes name the decks and each seat its own profile; paceMs=${hp.paceMs}`);
-' "$SP_PACED" "$SP_SEAT1" "$VILLAIN" || die "the spectate recordings do not describe the match that was played"
-node tools/same-game.mjs "$SP_PACED" "$SP_SEAT1" \
-  || die "a paced seat-0 recording and an unpaced seat-1 recording of seed 5 are not the same game"
-# The negative control: one life total changed in the seat-1 copy.
-node -e '
-  const fs = require("node:fs");
-  const [src, dst] = process.argv.slice(1);
-  const lines = fs.readFileSync(src, "utf8").split("\n").filter(Boolean);
-  const i = lines.findLastIndex((l) => l.includes("\"type\":\"state\""));
-  const f = JSON.parse(lines[i]);
-  f.body.players[0].life += 1;
-  lines[i] = JSON.stringify(f);
-  fs.writeFileSync(dst, lines.join("\n") + "\n");
-' "$SP_SEAT1" var/check-all-spectate-mutant.jsonl
-if node tools/same-game.mjs "$SP_PACED" var/check-all-spectate-mutant.jsonl --quiet > /dev/null; then
-  die "tools/same-game.mjs called a recording with a changed life total the same game -- the comparison cannot fail"
-fi
-echo "OK: same-game.mjs rejects the one-life-point mutant (its negative control)"
+#     recording of yours in var/spectate/.  Three jobs (D160): the two
+#     recordings are independent processes, and the comparison needs both.
+s06b_paced() {
+  printf '\n=== 6b. spectating: a paced AI-vs-AI recording, and the same seed from the other chair (M47) ===\n'
+  echo "  $VILLAIN_NOTE"
+  local rc=0
+  jvm ./scripts/spectate.sh --no-serve --no-build --name check-all-spectate-paced \
+      --deck decks/pacho-shield.dck --ai-deck "$VILLAIN" --profile Default --ai-profile Reckless \
+      --seed 5 --pace 25 > var/check-all-spectate-paced.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -30 var/check-all-spectate-paced.log >&2
+    capped "$rc" && die "the paced spectate recording did not finish within ${GAME_TIMEOUT}s"
+    die "./scripts/spectate.sh (paced, seat 0) exited $rc (full log: var/check-all-spectate-paced.log)"
+  fi
+}
 
-say "MtgTable --transport null -- the M2 seam, end to end, with every ask answered null"
-# The gate's only coverage of WireGuiGame. RecordMatch above has no seat, so it
-# exercises neither the input path, nor the ask path, nor `over`. This does all
-# three in ~30 s: every ask resolves to protocol section 5.4's documented
-# default, which is what proves no member throws and no thread wedges -- and the
-# log it writes is then held to the same redaction standard as a fixture.
-#
-# `over` is asserted explicitly. It used to be emitted only from finishGame(),
-# which Forge does not reliably call after a concede, and the failure mode was a
-# session that never terminates plus a green exit code (protocol section 7).
-M2LOG="var/check-all-m2"
-rm -rf "$M2LOG" var/games/check-all-m2
-rc=0
-jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 42 --game-id check-all-m2 \
-    > var/check-all-m2.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -40 var/check-all-m2.log >&2
-  capped "$rc" && die "the --transport null session did not finish within ${GAME_TIMEOUT}s -- a wedged game thread is exactly what this step exists to catch (full log: var/check-all-m2.log)"
-  die "mtgtable.MtgTable --transport null (full log: var/check-all-m2.log)"
-fi
-grep -E '^(finished|ask kinds|UNIMPL members|emit errors|notices swept)' var/check-all-m2.log || true
-grep -q '^MTGTABLE OK$' var/check-all-m2.log || die "MtgTable did not print MTGTABLE OK"
-M2FRAMES="var/games/check-all-m2/frames.jsonl"
-[ -s "$M2FRAMES" ] || die "MtgTable wrote no frame log at $M2FRAMES"
-overs="$(grep -c '"type":"over"' "$M2FRAMES" || true)"
-[ "$overs" = "1" ] || die "the M2 session wrote $overs \`over\` frames; section 7 and section 8.4 say exactly one"
-[ "$(tail -1 "$M2FRAMES" | grep -c '"type":"over"')" = "1" ] || \
-  die "the M2 session's last frame is not \`over\` -- the terminal frame of a session (section 8.4)"
+s06b_seat1() {
+  local rc=0
+  jvm ./scripts/spectate.sh --no-serve --no-build --no-follow --name check-all-spectate-seat1 \
+      --deck decks/pacho-shield.dck --ai-deck "$VILLAIN" --profile Default --ai-profile Reckless \
+      --seed 5 --seat 1 > var/check-all-spectate-seat1.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -30 var/check-all-spectate-seat1.log >&2
+    capped "$rc" && die "the seat-1 spectate recording did not finish within ${GAME_TIMEOUT}s"
+    die "./scripts/spectate.sh (seat 1) exited $rc (full log: var/check-all-spectate-seat1.log)"
+  fi
+}
 
-say "MtgTable --transport console -- the documented smoke, scripted"
-# CLAUDE.md documents this exact command, and until now nothing ran it: the
-# console transport is the biggest untested file in the bridge, and its quit
-# path can halt() the JVM with a non-zero code of its own (QUIT_NO_OVER_EXIT).
-# Four Enters answer the pre-game prompts (the empty line is "OK when OK is
-# enabled, Cancel otherwise"); `q` concedes and quits. It ends BEFORE a card is
-# dealt, which is why check-redaction.mjs's two "this file proves nothing"
-# assertions are warnings on a session whose every `state` is turn 0 -- the
-# documented command used to produce an artifact this gate rejected.
-CONLOG="var/games/check-all-console/frames.jsonl"
-rm -rf var/games/check-all-console
-rc=0
-printf '\n\n\n\nq\n' | jvm ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
-    --game-id check-all-console > var/check-all-console.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -40 var/check-all-console.log >&2
-  capped "$rc" && die "the console session did not finish within ${GAME_TIMEOUT}s -- the reader thread is parked on a prompt the script did not answer (full log: var/check-all-console.log)"
-  die "mtgtable.MtgTable --transport console exited $rc (2 is the quit path's own \
+s06b_check() {
+  grep -hE '^(frames|winner|game wall time|paced dwell|PASS)' var/check-all-spectate-paced.log var/check-all-spectate-seat1.log || true
+  grep -qE '^paced dwell    = [1-9][0-9]* dwell' var/spectate/check-all-spectate-paced.log \
+    || die "the paced recording reported no dwells (var/spectate/check-all-spectate-paced.log)"
+  local f
+  for f in "$SP_PACED" "$SP_SEAT1"; do
+    [ "$(grep -c '"type":"over"' "$f" || true)" = "1" ] || die "$f does not have exactly one \`over\`"
+    last_is_over "$f" || die "the last frame of $f is not \`over\`"
+  done
+  node -e '
+    const fs = require("node:fs");
+    const [paced, seat1, villain] = process.argv.slice(1);
+    const lines = (f) => fs.readFileSync(f, "utf8").split("\n").filter(Boolean).map(JSON.parse);
+    const nameOf = (p) => (fs.readFileSync(p, "utf8").match(/^Name=(.*)$/m) ?? [])[1]?.trim() ?? p;
+    const [hp, ...fp] = lines(paced);
+    const [h1, ...f1] = lines(seat1);
+    const mp = fp.find((f) => f.type === "hello_ok").body.match;
+    const m1 = f1.find((f) => f.type === "hello_ok").body.match;
+    const fail = (m) => { console.error(m); process.exit(1); };
+    if (hp.paceMs !== 25) fail(`the paced header says paceMs=${JSON.stringify(hp.paceMs)}, expected 25`);
+    if (h1.paceMs !== undefined) fail("the unpaced header carries paceMs");
+    if (hp.seat !== 0 || h1.seat !== 1) fail(`seats ${hp.seat} / ${h1.seat}, expected 0 / 1`);
+    const pacho = nameOf("decks/pacho-shield.dck"), villainName = nameOf(villain);
+    const want0 = { yourDeck: pacho, aiDeck: villainName, aiProfile: "Reckless", yourProfile: "Default" };
+    const want1 = { yourDeck: villainName, aiDeck: pacho, aiProfile: "Default", yourProfile: "Reckless" };
+    const got = (m) => ({ yourDeck: m?.yourDeck?.name, aiDeck: m?.aiDeck?.name, aiProfile: m?.aiProfile, yourProfile: m?.yourProfile });
+    if (JSON.stringify(got(mp)) !== JSON.stringify(want0)) fail(`seat 0 match ${JSON.stringify(mp)}`);
+    if (JSON.stringify(got(m1)) !== JSON.stringify(want1)) fail(`seat 1 match ${JSON.stringify(m1)}`);
+    console.log(`OK: both handshakes name the decks and each seat its own profile; paceMs=${hp.paceMs}`);
+  ' "$SP_PACED" "$SP_SEAT1" "$VILLAIN" || die "the spectate recordings do not describe the match that was played"
+  node tools/same-game.mjs "$SP_PACED" "$SP_SEAT1" \
+    || die "a paced seat-0 recording and an unpaced seat-1 recording of seed 5 are not the same game"
+  # The negative control: one life total changed in the seat-1 copy.
+  node -e '
+    const fs = require("node:fs");
+    const [src, dst] = process.argv.slice(1);
+    const lines = fs.readFileSync(src, "utf8").split("\n").filter(Boolean);
+    const i = lines.findLastIndex((l) => l.includes("\"type\":\"state\""));
+    const f = JSON.parse(lines[i]);
+    f.body.players[0].life += 1;
+    lines[i] = JSON.stringify(f);
+    fs.writeFileSync(dst, lines.join("\n") + "\n");
+  ' "$SP_SEAT1" var/check-all-spectate-mutant.jsonl
+  if node tools/same-game.mjs "$SP_PACED" var/check-all-spectate-mutant.jsonl --quiet > /dev/null; then
+    die "tools/same-game.mjs called a recording with a changed life total the same game -- the comparison cannot fail"
+  fi
+  echo "OK: same-game.mjs rejects the one-life-point mutant (its negative control)"
+}
+
+s07_null() {
+  hdr 7 "MtgTable --transport null -- the M2 seam, end to end, with every ask answered null"
+  # The gate's only coverage of WireGuiGame. RecordMatch above has no seat, so it
+  # exercises neither the input path, nor the ask path, nor `over`. This does all
+  # three in ~30 s: every ask resolves to protocol section 5.4's documented
+  # default, which is what proves no member throws and no thread wedges -- and the
+  # log it writes is then held to the same redaction standard as a fixture.
+  #
+  # `over` is asserted explicitly. It used to be emitted only from finishGame(),
+  # which Forge does not reliably call after a concede, and the failure mode was a
+  # session that never terminates plus a green exit code (protocol section 7).
+  local M2LOG="var/check-all-m2"
+  rm -rf "$M2LOG" var/games/check-all-m2
+  local rc=0
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 42 --game-id check-all-m2 \
+      > var/check-all-m2.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -40 var/check-all-m2.log >&2
+    capped "$rc" && die "the --transport null session did not finish within ${GAME_TIMEOUT}s -- a wedged game thread is exactly what this step exists to catch (full log: var/check-all-m2.log)"
+    die "mtgtable.MtgTable --transport null (full log: var/check-all-m2.log)"
+  fi
+  grep -E '^(finished|ask kinds|UNIMPL members|emit errors|notices swept)' var/check-all-m2.log || true
+  grep -q '^MTGTABLE OK$' var/check-all-m2.log || die "MtgTable did not print MTGTABLE OK"
+  [ -s "$M2FRAMES" ] || die "MtgTable wrote no frame log at $M2FRAMES"
+  local overs
+  overs="$(grep -c '"type":"over"' "$M2FRAMES" || true)"
+  [ "$overs" = "1" ] || die "the M2 session wrote $overs \`over\` frames; section 7 and section 8.4 say exactly one"
+  last_is_over "$M2FRAMES" || \
+    die "the M2 session's last frame is not \`over\` -- the terminal frame of a session (section 8.4)"
+}
+
+s08_console() {
+  hdr 8 "MtgTable --transport console -- the documented smoke, scripted"
+  # CLAUDE.md documents this exact command, and until now nothing ran it: the
+  # console transport is the biggest untested file in the bridge, and its quit
+  # path can halt() the JVM with a non-zero code of its own (QUIT_NO_OVER_EXIT).
+  # Four Enters answer the pre-game prompts (the empty line is "OK when OK is
+  # enabled, Cancel otherwise"); `q` concedes and quits. It ends BEFORE a card is
+  # dealt, which is why check-redaction.mjs's two "this file proves nothing"
+  # assertions are warnings on a session whose every `state` is turn 0 -- the
+  # documented command used to produce an artifact this gate rejected.  The five
+  # lines arrive as a here-string, not `printf | jvm`: no pipe for pipefail to
+  # judge (D163) -- the same bytes, "\n\n\n\nq\n".
+  rm -rf var/games/check-all-console
+  local rc=0
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
+      --game-id check-all-console > var/check-all-console.log 2>&1 <<< $'\n\n\n\nq' || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -40 var/check-all-console.log >&2
+    capped "$rc" && die "the console session did not finish within ${GAME_TIMEOUT}s -- the reader thread is parked on a prompt the script did not answer (full log: var/check-all-console.log)"
+    die "mtgtable.MtgTable --transport console exited $rc (2 is the quit path's own \
 'the game never reported \`over\`' code; full log: var/check-all-console.log)"
-fi
-grep -q '^MTGTABLE OK$' var/check-all-console.log || die "the console session did not print MTGTABLE OK"
-[ -s "$CONLOG" ] || die "the console session wrote no frame log at $CONLOG"
-overs="$(grep -c '"type":"over"' "$CONLOG" || true)"
-[ "$overs" = "1" ] || die "the console session wrote $overs \`over\` frames; section 7 says exactly one"
-[ "$(tail -1 "$CONLOG" | grep -c '"type":"over"')" = "1" ] || \
-  die "the console session's last frame is not \`over\` (section 8.4)"
+  fi
+  grep -q '^MTGTABLE OK$' var/check-all-console.log || die "the console session did not print MTGTABLE OK"
+  [ -s "$CONLOG" ] || die "the console session wrote no frame log at $CONLOG"
+  local overs
+  overs="$(grep -c '"type":"over"' "$CONLOG" || true)"
+  [ "$overs" = "1" ] || die "the console session wrote $overs \`over\` frames; section 7 says exactly one"
+  last_is_over "$CONLOG" || \
+    die "the console session's last frame is not \`over\` (section 8.4)"
+}
 
-say "MtgTable --transport auto --seed 11 -- the policy transport, on a seed no fixture uses"
-# AutoTransport produced five of the committed fixtures and was itself never run
-# by the gate. Seed 11 is deliberately not one of the recorded seeds (42/7/2026/
-# 99), so this is a game nobody has seen: a new UNIMPL member or an emit error
-# here is a real degradation, not a replay of an old one.
-AUTOLOG="var/games/check-all-auto/frames.jsonl"
-rm -rf var/games/check-all-auto
-rc=0
-jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11 --game-id check-all-auto \
-    > var/check-all-auto.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  tail -40 var/check-all-auto.log >&2
-  capped "$rc" && die "the --transport auto session did not finish within ${GAME_TIMEOUT}s (AutoTransport's own STUCK_MS watchdog is 60 s, so reaching this cap means the watchdog thread is wedged too; full log: var/check-all-auto.log)"
-  die "mtgtable.MtgTable --transport auto (full log: var/check-all-auto.log)"
-fi
-grep -E '^(finished|winner|player turns|ask kinds|UNIMPL members|emit errors)' var/check-all-auto.log || true
-grep -q '^MTGTABLE OK$' var/check-all-auto.log || die "the auto session did not print MTGTABLE OK"
-grep -q '^finished       = true' var/check-all-auto.log || die "the auto session did not finish (the game thread is wedged)"
-grep -q '^UNIMPL members = none$' var/check-all-auto.log || \
-  die "the auto session hit an unimplemented IGuiGame member: $(grep '^UNIMPL members' var/check-all-auto.log)"
-grep -q '^emit errors    = 0$' var/check-all-auto.log || \
-  die "the auto session logged an emit error: $(grep '^emit errors' var/check-all-auto.log)"
-overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
-[ "$overs" = "1" ] || die "the auto session wrote $overs \`over\` frames; section 7 says exactly one"
-[ "$(tail -1 "$AUTOLOG" | grep -c '"type":"over"')" = "1" ] || \
-  die "the auto session's last frame is not \`over\` (section 8.4)"
-
+s09_auto() {
+  hdr 9 "MtgTable --transport auto --seed 11 -- the policy transport, on a seed no fixture uses"
+  # AutoTransport produced five of the committed fixtures and was itself never run
+  # by the gate. Seed 11 is deliberately not one of the recorded seeds (42/7/2026/
+  # 99), so this is a game nobody has seen: a new UNIMPL member or an emit error
+  # here is a real degradation, not a replay of an old one.
+  rm -rf var/games/check-all-auto
+  local rc=0
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11 --game-id check-all-auto \
+      > var/check-all-auto.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    tail -40 var/check-all-auto.log >&2
+    capped "$rc" && die "the --transport auto session did not finish within ${GAME_TIMEOUT}s (AutoTransport's own STUCK_MS watchdog is 60 s, so reaching this cap means the watchdog thread is wedged too; full log: var/check-all-auto.log)"
+    die "mtgtable.MtgTable --transport auto (full log: var/check-all-auto.log)"
+  fi
+  grep -E '^(finished|winner|player turns|ask kinds|UNIMPL members|emit errors)' var/check-all-auto.log || true
+  grep -q '^MTGTABLE OK$' var/check-all-auto.log || die "the auto session did not print MTGTABLE OK"
+  grep -q '^finished       = true' var/check-all-auto.log || die "the auto session did not finish (the game thread is wedged)"
+  grep -q '^UNIMPL members = none$' var/check-all-auto.log || \
+    die "the auto session hit an unimplemented IGuiGame member: $(grep '^UNIMPL members' var/check-all-auto.log)"
+  grep -q '^emit errors    = 0$' var/check-all-auto.log || \
+    die "the auto session logged an emit error: $(grep '^emit errors' var/check-all-auto.log)"
+  local overs
+  overs="$(grep -c '"type":"over"' "$AUTOLOG" || true)"
+  [ "$overs" = "1" ] || die "the auto session wrote $overs \`over\` frames; section 7 says exactly one"
+  last_is_over "$AUTOLOG" || \
+    die "the auto session's last frame is not \`over\` (section 8.4)"
+}
 # 9b. ADVISORY, and deliberately non-fatal: HUMAN-SEAT fixture drift, compared as
 #     a multiset (M3 follow-up 7).
 #
@@ -517,43 +663,45 @@ drift_advisory() {   # $1 what happened
   [ "${DRIFT_FATAL:-0}" = "1" ] && die "fixture drift, and DRIFT_FATAL=1"
   return 0
 }
-if [ "${SKIP_DRIFT:-0}" = "1" ]; then
-  echo "(9b fixture-drift advisory skipped: SKIP_DRIFT=1)"
-elif [ ! -f "$DRIFT_FIXTURE" ]; then
-  drift_advisory "$DRIFT_FIXTURE is not there to compare against"
-else
-  rm -rf "var/games/$DRIFT_ID"
-  rc=0
-  jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 42 --game-id "$DRIFT_ID" \
-      > var/check-all-drift.log 2>&1 || rc=$?
-  if [ "$rc" != "0" ] || [ ! -s "$DRIFT_LOG" ]; then
-    tail -20 var/check-all-drift.log >&2
-    drift_advisory "the seed-42 re-recording exited $rc (full log: var/check-all-drift.log). \
+s09b_drift() {
+  if [ "${SKIP_DRIFT:-0}" = "1" ]; then
+    echo "(9b fixture-drift advisory skipped: SKIP_DRIFT=1)"
+  elif [ ! -f "$DRIFT_FIXTURE" ]; then
+    drift_advisory "$DRIFT_FIXTURE is not there to compare against"
+  else
+    rm -rf "var/games/$DRIFT_ID"
+    local rc=0
+    jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 42 --game-id "$DRIFT_ID" \
+        > var/check-all-drift.log 2>&1 || rc=$?
+    if [ "$rc" != "0" ] || [ ! -s "$DRIFT_LOG" ]; then
+      tail -20 var/check-all-drift.log >&2
+      drift_advisory "the seed-42 re-recording exited $rc (full log: var/check-all-drift.log). \
 Step 9 above already proves a fresh --transport auto game finishes, at seed 11, so this is not \
 the gate's only chance to catch that -- but a seed-specific crash is worth a look."
-  elif node tools/fixture-multiset-diff.mjs "$DRIFT_FIXTURE" "$DRIFT_LOG" --limit 6; then
-    echo "OK: $DRIFT_FIXTURE re-records to the same multiset of frames (order ignored)"
-  elif node tools/fixture-multiset-diff.mjs "$DRIFT_FIXTURE" "$DRIFT_LOG" --only-dir s2c --quiet \
-      > /dev/null 2>&1; then
-    # The emitter's half is identical and only the seat's own frames moved.
-    # That is AutoTransport's policy meeting Forge's awaitNextInput(), which
-    # re-pushes the same prompt every 250 ms while it thinks: how many acts land
-    # on one prompt is wall-clock.  Measured over seven re-recordings of
-    # human-auto-42: five identical, two with a single duplicate
-    # `act {"action":"buttonCancel"}` fewer -- and an s2c half identical in all
-    # seven.  Still printed, because "known noise" is a judgement that should be
-    # re-made by a human and not by this script.
-    drift_advisory "$DRIFT_FIXTURE and a fresh seed-42 recording differ, but ONLY in dir=c2s \
+    elif node tools/fixture-multiset-diff.mjs "$DRIFT_FIXTURE" "$DRIFT_LOG" --limit 6; then
+      echo "OK: $DRIFT_FIXTURE re-records to the same multiset of frames (order ignored)"
+    elif node tools/fixture-multiset-diff.mjs "$DRIFT_FIXTURE" "$DRIFT_LOG" --only-dir s2c --quiet \
+        > /dev/null 2>&1; then
+      # The emitter's half is identical and only the seat's own frames moved.
+      # That is AutoTransport's policy meeting Forge's awaitNextInput(), which
+      # re-pushes the same prompt every 250 ms while it thinks: how many acts land
+      # on one prompt is wall-clock.  Measured over seven re-recordings of
+      # human-auto-42: five identical, two with a single duplicate
+      # `act {"action":"buttonCancel"}` fewer -- and an s2c half identical in all
+      # seven.  Still printed, because "known noise" is a judgement that should be
+      # re-made by a human and not by this script.
+      drift_advisory "$DRIFT_FIXTURE and a fresh seed-42 recording differ, but ONLY in dir=c2s \
 frames -- the seat's own acts.  The emitter's half (dir=s2c) is identical, so THE WIRE DID NOT \
 CHANGE: this is AutoTransport reacting to one extra or one missing wall-clock re-push of the same \
 prompt, which is the known instability of a human-seat fixture (docs/evidence/m3-ws.md 13.5)."
-  else
-    drift_advisory "the committed $DRIFT_FIXTURE and a fresh seed-42 recording are NOT the same \
+    else
+      drift_advisory "the committed $DRIFT_FIXTURE and a fresh seed-42 recording are NOT the same \
 multiset of frames, AND the difference reaches dir=s2c -- the emitter's own output.  That is a \
 CONTENT difference in the wire, which is exactly what this check exists to find, and is not the \
 frame-order noise a byte diff would report."
+    fi
   fi
-fi
+}
 
 # 9c. THE M5 EXIT CRITERION (PLAN.md M5: "ten consecutive games with zero UNIMPL
 #     lines and no state where the board is stuck waiting on something the
@@ -565,12 +713,34 @@ fi
 #     A sub-step of 9, not a step of its own: it is ten more `--transport auto`
 #     games, it catches step 9's failure modes, and numbering it 11 would make
 #     every "step 10d" reference in CLAUDE.md and the evidence files wrong.
-if [ "${SKIP_TEN:-0}" = "1" ]; then
+#
+#     Serially (GATE_JOBS=1) it is ONE job, the whole script.  In parallel each
+#     row is a job of the gate's own pool -- `ten-games.sh --run-row N`, every
+#     assertion of the row intact -- so rows interleave with every other game,
+#     and one more job, `ten-games.sh --report`, prints the fourteen blocks in
+#     row order, the UNIMPL sweep and the summary once all of them passed
+#     (D160).  `ten-games.sh --jobs N` is the same thing standalone.
+TEN_HDR='\n=== 9c. ten-games.sh -- the M5 exit criterion: ten consecutive games, zero UNIMPL (plus rows 11-14, match setup) ===\n'
+s09c_skipped() {
   printf '\n(9c ten-games.sh skipped: SKIP_TEN=1 -- the M5 exit criterion did NOT run)\n'
-else
-  printf '\n=== 9c. ten-games.sh -- the M5 exit criterion: ten consecutive games, zero UNIMPL (plus rows 11-14, match setup) ===\n'
+}
+s09c_ten() {
+  # shellcheck disable=SC2059
+  printf "$TEN_HDR"
   ./tools/ten-games.sh || die "tools/ten-games.sh (the M5 exit criterion; logs in var/ten-games/)"
-fi
+}
+s09c_row() {   # $1 the row's seed
+  ./tools/ten-games.sh --run-row "$1" \
+    || die "tools/ten-games.sh --run-row $1 (the M5 exit criterion; logs in var/ten-games/)"
+}
+s09c_report() {
+  # shellcheck disable=SC2059
+  printf "$TEN_HDR"
+  ./tools/ten-games.sh --report || die "tools/ten-games.sh --report (the M5 exit criterion; logs in var/ten-games/)"
+}
+# The seeds of ten-games.sh's ROWS, read from the script itself so a new row is
+# a new job without an edit here.
+TEN_SEEDS="$(sed -nE 's/^  "([0-9]+)\|.*/\1/p' tools/ten-games.sh | tr '\n' ' ')"
 
 # 9d. M6: THE SIDEBOARD ASK, which needs a session that survives `over`.
 #
@@ -584,48 +754,51 @@ fi
 #     (the last main card for the first sideboard card) rather than the identity
 #     that a player clicking straight through would send -- the identity is legal
 #     and is the default policy, and it never exercises the index marshalling.
-printf '\n=== 9d. the sideboard ask: two games of one match, and a legal swap (M6) ===\n'
-rm -rf var/games/check-all-sideboard var/games/check-all-sideboard-g2
-jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --games 2 --seed 7 \
-    --deck decks/sideboard-probe.dck --game-id check-all-sideboard \
-    > var/check-all-sideboard.log 2>&1 \
-  || { tail -30 var/check-all-sideboard.log >&2; die "the two-game sideboard probe did not finish"; }
-grep -q "^MTGTABLE OK$" var/check-all-sideboard.log || die "the sideboard probe did not print MTGTABLE OK"
-grep -q "games          = 2 played of 2" var/check-all-sideboard.log \
-  || { grep '^games ' var/check-all-sideboard.log >&2; die "the sideboard probe did not play two games"; }
-SB_G1="var/games/check-all-sideboard/frames.jsonl"
-SB_G2="var/games/check-all-sideboard-g2/frames.jsonl"
-for f in "$SB_G1" "$SB_G2"; do
-  [ -s "$f" ] || die "the sideboard probe wrote no frame log at $f (one file per game, amendment M38)"
-  overs="$(grep -c '"type":"over"' "$f" || true)"
-  [ "$overs" = "1" ] || die "$f has $overs \`over\` frames; section 7 says exactly one per game"
-  [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || die "the last frame of $f is not \`over\`"
-done
-grep -q '"gameId":"check-all-sideboard"' "$SB_G1" || die "$SB_G1 does not carry its own gameId"
-grep -q '"gameId":"check-all-sideboard-g2"' "$SB_G2" \
-  || die "$SB_G2 does not carry a NEW gameId -- a new game must emit a new hello_ok (amendment M38)"
-grep -q '"type":"ask","body":{"askId":"[^"]*","kind":"sideboard"' "$SB_G2" \
-  || die "no \`sideboard\` ask in game 2 of the match -- the kind M27 said only M6 could reach"
-# The answer is the new main deck as indices into `main ++ side` (section 5.1),
-# and --probe's swap is what makes it different from the identity: the last index
-# is `main`, i.e. the FIRST SIDEBOARD CARD, and the array is still main-sized.
-node -e '
-  const fs = require("node:fs");
-  const lines = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map(JSON.parse);
-  const ask = lines.find((f) => f.type === "ask" && f.body.kind === "sideboard");
-  const ans = lines.find((f) => f.type === "answer" && f.body.askId === ask.body.askId);
-  const main = ask.body.main.length, side = ask.body.side.length, v = ans.body.value;
-  const fail = (m) => { console.error("SIDEBOARD: " + m); process.exit(1); };
-  if (side === 0) fail("the probe deck has no sideboard, so the ask proves nothing");
-  if (!Array.isArray(v)) fail("the answer is not an array of indices (section 5.1)");
-  if (v.length !== main) fail(`the answer is ${v.length} cards, the deck was ${main}`);
-  if (new Set(v).size !== v.length) fail("the answer repeats an index");
-  if (!v.every((i) => Number.isInteger(i) && i >= 0 && i < main + side)) fail("an index is out of range");
-  if (!v.some((i) => i >= main)) fail("the answer is the identity -- --probe must swap a card in");
-  console.log(`OK: sideboard ask ${main} main + ${side} side, answered with ${v.length} indices, `
-    + `${v.filter((i) => i >= main).length} from the sideboard`);
-' "$SB_G2" || die "the sideboard answer is not a legal new main deck"
-node tools/check-redaction.mjs "$SB_G1" "$SB_G2" || die "check-redaction.mjs on the sideboard probe"
+s09d_sideboard() {
+  printf '\n=== 9d. the sideboard ask: two games of one match, and a legal swap (M6) ===\n'
+  rm -rf var/games/check-all-sideboard var/games/check-all-sideboard-g2
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --games 2 --seed 7 \
+      --deck decks/sideboard-probe.dck --game-id check-all-sideboard \
+      > var/check-all-sideboard.log 2>&1 \
+    || { tail -30 var/check-all-sideboard.log >&2; die "the two-game sideboard probe did not finish"; }
+  grep -q "^MTGTABLE OK$" var/check-all-sideboard.log || die "the sideboard probe did not print MTGTABLE OK"
+  grep -q "games          = 2 played of 2" var/check-all-sideboard.log \
+    || { grep '^games ' var/check-all-sideboard.log >&2; die "the sideboard probe did not play two games"; }
+  local SB_G1="var/games/check-all-sideboard/frames.jsonl"
+  local SB_G2="var/games/check-all-sideboard-g2/frames.jsonl"
+  local f overs
+  for f in "$SB_G1" "$SB_G2"; do
+    [ -s "$f" ] || die "the sideboard probe wrote no frame log at $f (one file per game, amendment M38)"
+    overs="$(grep -c '"type":"over"' "$f" || true)"
+    [ "$overs" = "1" ] || die "$f has $overs \`over\` frames; section 7 says exactly one per game"
+    last_is_over "$f" || die "the last frame of $f is not \`over\`"
+  done
+  grep -q '"gameId":"check-all-sideboard"' "$SB_G1" || die "$SB_G1 does not carry its own gameId"
+  grep -q '"gameId":"check-all-sideboard-g2"' "$SB_G2" \
+    || die "$SB_G2 does not carry a NEW gameId -- a new game must emit a new hello_ok (amendment M38)"
+  grep -q '"type":"ask","body":{"askId":"[^"]*","kind":"sideboard"' "$SB_G2" \
+    || die "no \`sideboard\` ask in game 2 of the match -- the kind M27 said only M6 could reach"
+  # The answer is the new main deck as indices into `main ++ side` (section 5.1),
+  # and --probe's swap is what makes it different from the identity: the last index
+  # is `main`, i.e. the FIRST SIDEBOARD CARD, and the array is still main-sized.
+  node -e '
+    const fs = require("node:fs");
+    const lines = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map(JSON.parse);
+    const ask = lines.find((f) => f.type === "ask" && f.body.kind === "sideboard");
+    const ans = lines.find((f) => f.type === "answer" && f.body.askId === ask.body.askId);
+    const main = ask.body.main.length, side = ask.body.side.length, v = ans.body.value;
+    const fail = (m) => { console.error("SIDEBOARD: " + m); process.exit(1); };
+    if (side === 0) fail("the probe deck has no sideboard, so the ask proves nothing");
+    if (!Array.isArray(v)) fail("the answer is not an array of indices (section 5.1)");
+    if (v.length !== main) fail(`the answer is ${v.length} cards, the deck was ${main}`);
+    if (new Set(v).size !== v.length) fail("the answer repeats an index");
+    if (!v.every((i) => Number.isInteger(i) && i >= 0 && i < main + side)) fail("an index is out of range");
+    if (!v.some((i) => i >= main)) fail("the answer is the identity -- --probe must swap a card in");
+    console.log(`OK: sideboard ask ${main} main + ${side} side, answered with ${v.length} indices, `
+      + `${v.filter((i) => i >= main).length} from the sideboard`);
+  ' "$SB_G2" || die "the sideboard answer is not a legal new main deck"
+  node tools/check-redaction.mjs "$SB_G1" "$SB_G2" || die "check-redaction.mjs on the sideboard probe"
+}
 
 # 9e. MATCH SETUP (protocol amendment M44): your deck against the villain deck,
 #     with the AI on Forge's `Reckless` profile.
@@ -651,101 +824,108 @@ node tools/check-redaction.mjs "$SB_G1" "$SB_G2" || die "check-redaction.mjs on 
 #         FModel.initialize, with the list of the ones that are.
 #
 #     Seed 21, not ten-games' 13: a second Reckless game rather than the same one.
-printf '\n=== 9e. match setup: your deck vs the villain deck, --ai-profile Reckless (M44) ===\n'
-# shellcheck source=tools/villain-deck.sh
-. tools/villain-deck.sh
-MS_VILLAIN="$VILLAIN"
-echo "  $VILLAIN_NOTE"
-[ -f "$MS_VILLAIN" ] || die "the villain deck $MS_VILLAIN does not exist"
+# A preferences directory with no file in it fingerprints the same whether it
+# exists or not (D164, as tools/ten-games.sh's): Forge's first boot in a fresh
+# checkout creates an EMPTY var/forge/preferences/, which is no preferences write.
 ms_prefs() {
   local d
   for d in "$HOME/.forge/preferences" var/forge/preferences; do
-    if [ -d "$d" ]; then
+    if [ -d "$d" ] && [ -n "$(find "$d" -type f -print -quit)" ]; then
       find "$d" -type f -print0 | sort -z | xargs -0 -r sha256sum
       find "$d" -type f -print0 | sort -z | xargs -0 -r stat -c '%n %Y %s'
     else
-      echo "$d: absent"
+      echo "$d: no files"
     fi
   done
 }
-MS_ID="check-all-match-reckless"
-MS_LOG="var/games/$MS_ID/frames.jsonl"
-rm -rf "var/games/$MS_ID"
-MS_PREFS_BEFORE="$(ms_prefs)"
-rc=0
-jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 21 --game-id "$MS_ID" \
-    --deck decks/pacho-shield.dck --ai-deck "$MS_VILLAIN" --ai-profile Reckless \
-    > var/check-all-match.log 2>&1 || rc=$?
-if [ "$(ms_prefs)" != "$MS_PREFS_BEFORE" ]; then
-  diff <(echo "$MS_PREFS_BEFORE") <(ms_prefs) >&2 || true
-  die "the Reckless game CHANGED a Forge preferences file -- never save() prefs"
-fi
-if [ "$rc" != "0" ]; then
-  tail -30 var/check-all-match.log >&2
-  capped "$rc" && die "the match-setup game did not finish within ${GAME_TIMEOUT}s"
-  die "the match-setup game exited $rc (full log: var/check-all-match.log)"
-fi
-grep -E '^(deck you|deck ai|ai profile|finished|winner|UNIMPL members|emit errors)' var/check-all-match.log || true
-grep -q '^MTGTABLE OK$' var/check-all-match.log || die "the match-setup game did not print MTGTABLE OK"
-grep -q '^finished       = true' var/check-all-match.log || die "the match-setup game did not reach \`over\`"
-grep -q '^UNIMPL members = none$' var/check-all-match.log || die "the match-setup game hit an UNIMPL member"
-if grep -n 'UNIMPL' var/check-all-match.log | grep -qv '^[0-9]*:UNIMPL members = none$'; then
-  die "UNIMPL line(s) in var/check-all-match.log"
-fi
-! grep -q 'UNIMPL' "$MS_LOG" || die "an UNIMPL notice reached the wire ($MS_LOG)"
-grep -q '^emit errors    = 0$' var/check-all-match.log || die "the match-setup game logged an emit error"
-[ "$(grep -c '"type":"over"' "$MS_LOG" || true)" = "1" ] || die "$MS_LOG does not have exactly one \`over\`"
-[ "$(tail -1 "$MS_LOG" | grep -c '"type":"over"')" = "1" ] || die "the last frame of $MS_LOG is not \`over\`"
-node tools/check-redaction.mjs "$MS_LOG" || die "check-redaction.mjs on the match-setup game"
-MS_LINE="$(grep '^ai profile     = ' var/check-all-match.log || true)"
-MS_WANT_AGGRO="$(sed -n 's/^PLAY_AGGRO=//p' forge-home/res/ai/Reckless.ai | head -1)"
-MS_WANT_CHAIN="$(sed -n 's/^CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=//p' forge-home/res/ai/Reckless.ai | head -1)"
-case "$MS_LINE" in
-  "ai profile     = Reckless "*"in game: PLAY_AGGRO=$MS_WANT_AGGRO CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$MS_WANT_CHAIN,"*) ;;
-  *) die "the in-game AI did not read Reckless.ai's values (want PLAY_AGGRO=$MS_WANT_AGGRO, CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$MS_WANT_CHAIN): $MS_LINE" ;;
-esac
-node -e '
-  const fs = require("node:fs");
-  const [file, deck, villain] = process.argv.slice(1);
-  const nameOf = (p) => (fs.readFileSync(p, "utf8").match(/^Name=(.*)$/m) ?? [])[1]?.trim();
-  // The [main] section of a .dck, summed: "<count> <name>|<SET>" per line.
-  const cardsOf = (p) => {
-    let inMain = false, n = 0;
-    for (const raw of fs.readFileSync(p, "utf8").split("\n")) {
-      const line = raw.trim();
-      if (line.startsWith("[")) { inMain = line.toLowerCase() === "[main]"; continue; }
-      const c = inMain ? line.match(/^(\d+)\s/) : null;
-      if (c) n += Number(c[1]);
+s09e_match() {
+  printf '\n=== 9e. match setup: your deck vs the villain deck, --ai-profile Reckless (M44) ===\n'
+  local MS_VILLAIN="$VILLAIN"
+  echo "  $VILLAIN_NOTE"
+  [ -f "$MS_VILLAIN" ] || die "the villain deck $MS_VILLAIN does not exist"
+  rm -rf "var/games/$MS_ID"
+  local MS_PREFS_BEFORE rc=0
+  MS_PREFS_BEFORE="$(ms_prefs)"
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport auto --seed 21 --game-id "$MS_ID" \
+      --deck decks/pacho-shield.dck --ai-deck "$MS_VILLAIN" --ai-profile Reckless \
+      > var/check-all-match.log 2>&1 || rc=$?
+  if [ "$(ms_prefs)" != "$MS_PREFS_BEFORE" ]; then
+    diff <(echo "$MS_PREFS_BEFORE") <(ms_prefs) >&2 || true
+    die "the Reckless game CHANGED a Forge preferences file -- never save() prefs"
+  fi
+  if [ "$rc" != "0" ]; then
+    tail -30 var/check-all-match.log >&2
+    capped "$rc" && die "the match-setup game did not finish within ${GAME_TIMEOUT}s"
+    die "the match-setup game exited $rc (full log: var/check-all-match.log)"
+  fi
+  grep -E '^(deck you|deck ai|ai profile|finished|winner|UNIMPL members|emit errors)' var/check-all-match.log || true
+  grep -q '^MTGTABLE OK$' var/check-all-match.log || die "the match-setup game did not print MTGTABLE OK"
+  grep -q '^finished       = true' var/check-all-match.log || die "the match-setup game did not reach \`over\`"
+  grep -q '^UNIMPL members = none$' var/check-all-match.log || die "the match-setup game hit an UNIMPL member"
+  # Two counts, not `grep | grep -qv` (D163): see tools/ten-games.sh.
+  if [ "$(grep -c 'UNIMPL' var/check-all-match.log || true)" -gt \
+       "$(grep -c '^UNIMPL members = none$' var/check-all-match.log || true)" ]; then
+    die "UNIMPL line(s) in var/check-all-match.log"
+  fi
+  ! grep -q 'UNIMPL' "$MS_LOG" || die "an UNIMPL notice reached the wire ($MS_LOG)"
+  grep -q '^emit errors    = 0$' var/check-all-match.log || die "the match-setup game logged an emit error"
+  [ "$(grep -c '"type":"over"' "$MS_LOG" || true)" = "1" ] || die "$MS_LOG does not have exactly one \`over\`"
+  last_is_over "$MS_LOG" || die "the last frame of $MS_LOG is not \`over\`"
+  node tools/check-redaction.mjs "$MS_LOG" || die "check-redaction.mjs on the match-setup game"
+  local MS_LINE MS_WANT_AGGRO MS_WANT_CHAIN
+  MS_LINE="$(grep '^ai profile     = ' var/check-all-match.log || true)"
+  # The first match by sed's own `q`, never `| head -1` (D163).
+  MS_WANT_AGGRO="$(sed -n '/^PLAY_AGGRO=/{s///p;q}' forge-home/res/ai/Reckless.ai)"
+  MS_WANT_CHAIN="$(sed -n '/^CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=/{s///p;q}' forge-home/res/ai/Reckless.ai)"
+  case "$MS_LINE" in
+    "ai profile     = Reckless "*"in game: PLAY_AGGRO=$MS_WANT_AGGRO CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$MS_WANT_CHAIN,"*) ;;
+    *) die "the in-game AI did not read Reckless.ai's values (want PLAY_AGGRO=$MS_WANT_AGGRO, CHANCE_TO_CHAIN_TWO_DAMAGE_SPELLS=$MS_WANT_CHAIN): $MS_LINE" ;;
+  esac
+  node -e '
+    const fs = require("node:fs");
+    const [file, deck, villain] = process.argv.slice(1);
+    const nameOf = (p) => (fs.readFileSync(p, "utf8").match(/^Name=(.*)$/m) ?? [])[1]?.trim();
+    // The [main] section of a .dck, summed: "<count> <name>|<SET>" per line.
+    const cardsOf = (p) => {
+      let inMain = false, n = 0;
+      for (const raw of fs.readFileSync(p, "utf8").split("\n")) {
+        const line = raw.trim();
+        if (line.startsWith("[")) { inMain = line.toLowerCase() === "[main]"; continue; }
+        const c = inMain ? line.match(/^(\d+)\s/) : null;
+        if (c) n += Number(c[1]);
+      }
+      return n;
+    };
+    const hello = fs.readFileSync(file, "utf8").split("\n").filter(Boolean).map(JSON.parse)
+      .find((f) => f.type === "hello_ok");
+    const m = hello?.body?.match;
+    const want = {
+      yourDeck: { name: nameOf(deck), path: deck, cards: cardsOf(deck) },
+      aiDeck: { name: nameOf(villain) ?? villain.replace(/^.*\//, "").replace(/\.dck$/, ""), cards: cardsOf(villain) },
+      aiProfile: "Reckless", games: 1,
+    };
+    if (JSON.stringify(m) !== JSON.stringify(want)) {
+      console.error("hello_ok.match is\n  " + JSON.stringify(m) + "\nexpected\n  " + JSON.stringify(want));
+      process.exit(1);
     }
-    return n;
-  };
-  const hello = fs.readFileSync(file, "utf8").split("\n").filter(Boolean).map(JSON.parse)
-    .find((f) => f.type === "hello_ok");
-  const m = hello?.body?.match;
-  const want = {
-    yourDeck: { name: nameOf(deck), path: deck, cards: cardsOf(deck) },
-    aiDeck: { name: nameOf(villain) ?? villain.replace(/^.*\//, "").replace(/\.dck$/, ""), cards: cardsOf(villain) },
-    aiProfile: "Reckless", games: 1,
-  };
-  if (JSON.stringify(m) !== JSON.stringify(want)) {
-    console.error("hello_ok.match is\n  " + JSON.stringify(m) + "\nexpected\n  " + JSON.stringify(want));
-    process.exit(1);
-  }
-  console.log(`OK: hello_ok.match = ${JSON.stringify(m)}`);
-' "$MS_LOG" decks/pacho-shield.dck "$MS_VILLAIN" || die "hello_ok.match does not describe the match that was played"
-echo "OK: no Forge preferences file changed (~/.forge/preferences, var/forge/preferences)"
-# The refusal half: a profile that is not a file never reaches the engine.
-rc=0
-jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 21 --game-id check-all-match-bad \
-    --ai-profile NoSuchProfile > var/check-all-match-bad.log 2>&1 || rc=$?
-[ "$rc" != "0" ] || die "--ai-profile NoSuchProfile was accepted"
-grep -q 'is not one of Cautious, Default, Experimental, Reckless' var/check-all-match-bad.log \
-  || { tail -5 var/check-all-match-bad.log >&2; die "--ai-profile NoSuchProfile failed without naming the four profiles"; }
-! grep -q 'FModel.initialize took' var/check-all-match-bad.log \
-  || die "--ai-profile NoSuchProfile was only refused AFTER the engine booted"
-echo "OK: --ai-profile NoSuchProfile refused before FModel.initialize, naming the four profiles"
+    console.log(`OK: hello_ok.match = ${JSON.stringify(m)}`);
+  ' "$MS_LOG" decks/pacho-shield.dck "$MS_VILLAIN" || die "hello_ok.match does not describe the match that was played"
+  echo "OK: no Forge preferences file changed (~/.forge/preferences, var/forge/preferences)"
+  # The refusal half: a profile that is not a file never reaches the engine.
+  rc=0
+  jvm ./bridge/run.sh mtgtable.MtgTable --transport null --seed 21 --game-id check-all-match-bad \
+      --ai-profile NoSuchProfile > var/check-all-match-bad.log 2>&1 || rc=$?
+  [ "$rc" != "0" ] || die "--ai-profile NoSuchProfile was accepted"
+  grep -q 'is not one of Cautious, Default, Experimental, Reckless' var/check-all-match-bad.log \
+    || { tail -5 var/check-all-match-bad.log >&2; die "--ai-profile NoSuchProfile failed without naming the four profiles"; }
+  ! grep -q 'FModel.initialize took' var/check-all-match-bad.log \
+    || die "--ai-profile NoSuchProfile was only refused AFTER the engine booted"
+  echo "OK: --ai-profile NoSuchProfile refused before FModel.initialize, naming the four profiles"
+}
 
-say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
+# ---------------------------------------------------------------------------
+# Step 10: the socket.
+# ---------------------------------------------------------------------------
 # M3, plus M6's 10g.  Seven servers, because each client run ends its own
 # session: the three ws-smoke variants concede, and the four ws-auto-play runs
 # play to a natural end -- the last of them three games long.  Every one
@@ -753,9 +933,11 @@ say "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a 
 # and the seat log through check-redaction.mjs -- plus the server's own exit
 # code, which is MtgTable's `MTGTABLE OK` path and nothing else.
 #
-# Port 8643, not config.json's 8642: a developer with `scripts/play.sh` running
-# should be able to run the gate without the two fighting over a port.
-WSPORT="${WSPORT:-8643}"
+# Seven JOBS since D160/D162, one per server, each on its own port -- WSPORT+0
+# for 10a up to WSPORT+6 for 10g when GATE_JOBS > 1, all of them WSPORT
+# serially -- and each with its own game ids, server log and client log, so
+# nothing one of them asserts can be satisfied by another's files.  Every job
+# is its own subshell, so WSPORT and WS_PID below are that job's own.
 WS_PID=""
 ws_stop() {
   if [ -n "${WS_PID:-}" ]; then
@@ -766,8 +948,11 @@ ws_stop() {
     WS_PID=""
   fi
 }
-trap ws_stop EXIT
-
+ws_job() {   # $1 the sub-step's index (10a = 0 .. 10g = 6): its port and its EXIT trap
+  WSPORT="$(ws_port "$1")"
+  WS_PID=""
+  trap ws_stop EXIT
+}
 # Readiness is GET /health on the socket's own port (contract (a)), polled with
 # node because node is already a dependency of this gate and curl is not.
 ws_wait_health() {
@@ -832,7 +1017,7 @@ ws_finish() {  # $1 gameId, $2 server log, $3 what, $4 (optional) "no-redaction"
   [ -s "$f" ] || die "the ws session $3 wrote no frame log at $f"
   overs="$(grep -c '"type":"over"' "$f" || true)"
   [ "$overs" = "1" ] || die "the ws session $3 wrote $overs \`over\` frames; section 7 says exactly one"
-  [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || \
+  last_is_over "$f" || \
     die "the last frame of the ws session $3 is not \`over\` (section 8.4)"
   if [ "${4:-}" = "no-redaction" ]; then
     return 0     # the caller runs its own, conditionally -- see 10e
@@ -840,51 +1025,72 @@ ws_finish() {  # $1 gameId, $2 server log, $3 what, $4 (optional) "no-redaction"
   node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on the ws session $f"
 }
 
-# 10a. The M3 doorstep test: connect -> resync -> concede, no exception, an
-#      `over`.  A browser autoconnects and sends `resync` before Forge has asked
-#      this seat for anything, and `onResync` must NOT arm `inputSeen` -- when it
-#      did, the concede that follows removed a player while
-#      Match.prepareAllZones was iterating them and Forge threw inside its own
-#      setup.
-ws_start check-all-ws-smoke var/check-all-ws-smoke.log
-node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --log var/check-all-ws-smoke-frames.jsonl \
-  || die "tools/ws-smoke.mjs (connect -> resync -> concede) failed against 127.0.0.1:$WSPORT"
-ws_finish check-all-ws-smoke var/check-all-ws-smoke.log "the resync smoke"
+s10a_smoke() {
+  hdr 10 "MtgTable --transport ws -- the socket: doorstep, reconnect, a full game, a refused ask"
+  ws_job 0
+  # 10a. The M3 doorstep test: connect -> resync -> concede, no exception, an
+  #      `over`.  A browser autoconnects and sends `resync` before Forge has asked
+  #      this seat for anything, and `onResync` must NOT arm `inputSeen` -- when it
+  #      did, the concede that follows removed a player while
+  #      Match.prepareAllZones was iterating them and Forge threw inside its own
+  #      setup.
+  ws_start check-all-ws-smoke var/check-all-ws-smoke.log
+  node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --log var/check-all-ws-smoke-frames.jsonl \
+    || die "tools/ws-smoke.mjs (connect -> resync -> concede) failed against 127.0.0.1:$WSPORT"
+  ws_finish check-all-ws-smoke var/check-all-ws-smoke.log "the resync smoke"
+}
 
-# 10b. The cancelAll test.  Contract (c): the ask timeout over a socket is 0
-#      (infinite) WHILE A CLIENT IS CONNECTED, and what unparks a game thread is
-#      the disconnect, not a clock.  Drop the socket at a live decision, come
-#      back two seconds later, and the game must still be there.
-ws_start check-all-ws-drop var/check-all-ws-drop.log
-node tools/ws-smoke.mjs --port "$WSPORT" --timeout 180 --disconnect-mid-ask \
-    --log var/check-all-ws-drop-frames.jsonl \
-  || die "tools/ws-smoke.mjs --disconnect-mid-ask failed against 127.0.0.1:$WSPORT"
-ws_finish check-all-ws-drop var/check-all-ws-drop.log "the disconnect/reconnect smoke"
+s10b_drop() {
+  ws_job 1
+  # 10b. The cancelAll test.  Contract (c): the ask timeout over a socket is 0
+  #      (infinite) WHILE A CLIENT IS CONNECTED, and what unparks a game thread is
+  #      the disconnect, not a clock.  Drop the socket at a live decision, come
+  #      back two seconds later, and the game must still be there.
+  ws_start check-all-ws-drop var/check-all-ws-drop.log
+  node tools/ws-smoke.mjs --port "$WSPORT" --timeout 180 --disconnect-mid-ask \
+      --log var/check-all-ws-drop-frames.jsonl \
+    || die "tools/ws-smoke.mjs --disconnect-mid-ask failed against 127.0.0.1:$WSPORT"
+  ws_finish check-all-ws-drop var/check-all-ws-drop.log "the disconnect/reconnect smoke"
+}
 
 # 10c. A whole game, unattended, over the socket.  tools/ws-auto-play.mjs is the
 #      web side's file: if it is not written yet this step SKIPS loudly rather
 #      than failing, because the bridge half of M3 is testable without it and a
 #      red gate that means "the other agent has not landed yet" teaches everyone
 #      to ignore the gate.
-if [ -f tools/ws-auto-play.mjs ]; then
-  ws_start check-all-ws-auto var/check-all-ws-auto.log
-  node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --log var/ws-auto-13.jsonl \
-    || die "tools/ws-auto-play.mjs did not finish a game against 127.0.0.1:$WSPORT"
-  ws_finish check-all-ws-auto var/check-all-ws-auto.log "the full ws game"
-  grep -E "^(winner|player turns|ask kinds|ws connections|ws frames)" var/check-all-ws-auto.log || true
-  grep -q "^UNIMPL members = none$" var/check-all-ws-auto.log || \
-    die "the ws game hit an unimplemented IGuiGame member: $(grep "^UNIMPL members" var/check-all-ws-auto.log)"
-  grep -q "^emit errors    = 0$" var/check-all-ws-auto.log || \
-    die "the ws game logged an emit error: $(grep "^emit errors" var/check-all-ws-auto.log)"
-  # The CLIENT's own copy of that same session, through the same checker. It is
-  # a different shape on purpose (amendment M10: a resync re-delivers frames
-  # verbatim, and the frames emitted while nobody was connected are missing), and
-  # until this line existed nothing in the gate ever ran the combination -- so
-  # `node tools/check-redaction.mjs var/ws-auto-*.jsonl`, a documented command,
-  # exited non-zero on five seq complaints with every content assertion passing.
-  # The mode is auto-detected from the header's recordedBy:"client" (§8.1).
-  node tools/check-redaction.mjs var/ws-auto-13.jsonl \
-    || die "check-redaction.mjs on the CLIENT log var/ws-auto-13.jsonl"
+s10c_auto() {
+  ws_job 2
+  if [ "$HAVE_AUTOPLAY" = "1" ]; then
+    ws_start check-all-ws-auto var/check-all-ws-auto.log
+    node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --log var/ws-auto-13.jsonl \
+      || die "tools/ws-auto-play.mjs did not finish a game against 127.0.0.1:$WSPORT"
+    ws_finish check-all-ws-auto var/check-all-ws-auto.log "the full ws game"
+    grep -E "^(winner|player turns|ask kinds|ws connections|ws frames)" var/check-all-ws-auto.log || true
+    grep -q "^UNIMPL members = none$" var/check-all-ws-auto.log || \
+      die "the ws game hit an unimplemented IGuiGame member: $(grep "^UNIMPL members" var/check-all-ws-auto.log)"
+    grep -q "^emit errors    = 0$" var/check-all-ws-auto.log || \
+      die "the ws game logged an emit error: $(grep "^emit errors" var/check-all-ws-auto.log)"
+    # The CLIENT's own copy of that same session, through the same checker. It is
+    # a different shape on purpose (amendment M10: a resync re-delivers frames
+    # verbatim, and the frames emitted while nobody was connected are missing), and
+    # until this line existed nothing in the gate ever ran the combination -- so
+    # `node tools/check-redaction.mjs var/ws-auto-*.jsonl`, a documented command,
+    # exited non-zero on five seq complaints with every content assertion passing.
+    # The mode is auto-detected from the header's recordedBy:"client" (§8.1).
+    node tools/check-redaction.mjs var/ws-auto-13.jsonl \
+      || die "check-redaction.mjs on the CLIENT log var/ws-auto-13.jsonl"
+  else
+    printf "\n"
+    echo "  *** SKIPPED: tools/ws-auto-play.mjs does not exist yet, so NO FULL GAME"
+    echo "  *** was played over the socket in this run.  The two ws-smoke variants"
+    echo "  *** above still ran.  This step is not green until that file lands."
+    printf "\n"
+  fi
+}
+
+s10d_refuse() {
+  [ "$HAVE_AUTOPLAY" = "1" ] || return 0
+  ws_job 3
   # 10d. THE cancelAll() test, with a real pending ask.  10b settles for "an
   #      `ask` OR an `input` whose OK is enabled", and in every deck here the
   #      input always comes first -- both committed runs print `cancelling 0
@@ -928,20 +1134,7 @@ none with a parked game thread, so ReplyPool.cancelAll() is still uncovered (log
   # cancelAll() with no `answer` line is the documented shape (section 5.4).
   node tools/check-redaction.mjs var/ws-auto-refuse-13.jsonl \
     || die "check-redaction.mjs on the CLIENT log var/ws-auto-refuse-13.jsonl"
-
-  # Step 13 replays exactly these five and nothing else: see WS_LOGS below.
-  WS_LOGS="var/ws-auto-13.jsonl,var/games/check-all-ws-auto/frames.jsonl"
-  WS_LOGS="$WS_LOGS,var/games/check-all-ws-smoke/frames.jsonl"
-  WS_LOGS="$WS_LOGS,var/games/check-all-ws-drop/frames.jsonl"
-  WS_LOGS="$WS_LOGS,var/games/check-all-ws-refuse/frames.jsonl"
-else
-  printf "\n"
-  echo "  *** SKIPPED: tools/ws-auto-play.mjs does not exist yet, so NO FULL GAME"
-  echo "  *** was played over the socket in this run.  The two ws-smoke variants"
-  echo "  *** above still ran.  This step is not green until that file lands."
-  printf "\n"
-  WS_LOGS="var/games/check-all-ws-smoke/frames.jsonl,var/games/check-all-ws-drop/frames.jsonl"
-fi
+}
 
 # 10e. Amendment M11's EXCEPTION path -- a fifth server, and M3 follow-up 5.
 #      `over` is documented to follow the `state` that carries `gameOver` on
@@ -964,60 +1157,63 @@ fi
 #      state/input/ask in front of the concede, and the M11 body); this asserts
 #      the server's half, which is the stderr line and the absence of a
 #      `gameOver` snapshot in the frame log.
-ws_start check-all-ws-m11 var/check-all-ws-m11.log no-health-wait
-node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --concede-before-input \
-    --log var/check-all-ws-m11-frames.jsonl \
-  || die "tools/ws-smoke.mjs --concede-before-input failed against 127.0.0.1:$WSPORT -- if it \
+s10e_m11() {
+  ws_job 4
+  ws_start check-all-ws-m11 var/check-all-ws-m11.log no-health-wait
+  node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --concede-before-input \
+      --log var/check-all-ws-m11-frames.jsonl \
+    || die "tools/ws-smoke.mjs --concede-before-input failed against 127.0.0.1:$WSPORT -- if it \
 says \"the window was missed\" this is a timing failure on a loaded machine and not a bridge \
 failure: the concede has to beat the engine's first prompt (~150 ms) to reach amendment M11's \
 branch at all (server log: var/check-all-ws-m11.log)"
-ws_finish check-all-ws-m11 var/check-all-ws-m11.log "the pre-input concede" no-redaction
-grep -q "^WS LISTENING ws://127.0.0.1:$WSPORT/ws$" var/check-all-ws-m11.log || \
-  die "the ws server did not print its WS LISTENING line (contract (a); log: var/check-all-ws-m11.log)"
-# THE assertion of this step: the bridge's own stderr line for the branch.
-grep -q "^OVER WITHOUT A gameOver STATE" var/check-all-ws-m11.log || \
-  die "the pre-input concede did NOT take amendment M11's exception path: the bridge never printed \
+  ws_finish check-all-ws-m11 var/check-all-ws-m11.log "the pre-input concede" no-redaction
+  grep -q "^WS LISTENING ws://127.0.0.1:$WSPORT/ws$" var/check-all-ws-m11.log || \
+    die "the ws server did not print its WS LISTENING line (contract (a); log: var/check-all-ws-m11.log)"
+  # THE assertion of this step: the bridge's own stderr line for the branch.
+  grep -q "^OVER WITHOUT A gameOver STATE" var/check-all-ws-m11.log || \
+    die "the pre-input concede did NOT take amendment M11's exception path: the bridge never printed \
 \`OVER WITHOUT A gameOver STATE\`, so this run conceded through Forge's own game-over like every \
 other step and M11's branch is still unmeasured (log: var/check-all-ws-m11.log)"
-grep -q "^CONCEDE BEFORE START: ending the session$" var/check-all-ws-m11.log || \
-  die "the concede did not hit applyAct's pre-\`inputSeen\` guard (log: var/check-all-ws-m11.log)"
-# A c2s frame that arrived before the session existed would be dropped in silence
-# (amendment M20), and a client that tripped that would be waiting for an answer
-# that is never coming -- so this step doubles as M20's live assertion: it
-# connects inside the window on purpose and sends nothing until `hello_ok`.
-grep -qE ', 0 read before the session existed' var/check-all-ws-m11.log || \
-  die "the pre-input concede sent a frame BEFORE the session existed (amendment M20 drops those \
+  grep -q "^CONCEDE BEFORE START: ending the session$" var/check-all-ws-m11.log || \
+    die "the concede did not hit applyAct's pre-\`inputSeen\` guard (log: var/check-all-ws-m11.log)"
+  # A c2s frame that arrived before the session existed would be dropped in silence
+  # (amendment M20), and a client that tripped that would be waiting for an answer
+  # that is never coming -- so this step doubles as M20's live assertion: it
+  # connects inside the window on purpose and sends nothing until `hello_ok`.
+  grep -qE ', 0 read before the session existed' var/check-all-ws-m11.log || \
+    die "the pre-input concede sent a frame BEFORE the session existed (amendment M20 drops those \
 in silence): $(grep '^ws frames' var/check-all-ws-m11.log) (log: var/check-all-ws-m11.log)"
-M11LOG="var/games/check-all-ws-m11/frames.jsonl"
-grep -q '"gameOver":{' "$M11LOG" && \
-  die "M11's exception path emitted a \`gameOver\` snapshot after all -- then this is the ordinary \
+  M11LOG="var/games/check-all-ws-m11/frames.jsonl"
+  grep -q '"gameOver":{' "$M11LOG" && \
+    die "M11's exception path emitted a \`gameOver\` snapshot after all -- then this is the ordinary \
 path and the stderr line above is wrong (log: $M11LOG)"
-# check-redaction.mjs is run only if a `state` reached the log at all.  This
-# session's whole wire is header + hello_ok + act + over: with no `state`, the
-# checker's two "this file proves nothing" assertions are FAILURES rather than
-# the warnings it grants a turn-0 pre-game session, and its "no state frames at
-# all" rule fires as well -- correctly, because a file with no state in it proves
-# nothing about redaction.  The stronger statement is made directly instead: not
-# one card was serialised, because the only s2c frames are `hello_ok` and `over`.
-m11states="$(grep -c '"type":"state"' "$M11LOG" || true)"
-if [ "$m11states" = "0" ]; then
-  # Cards only ever reach the wire inside a `state`, an `input` or an `ask`, so
-  # "the only s2c frames are hello_ok and over" is the whole statement.  (Not a
-  # grep for `"cards"`: the session header and hello_ok both carry the deck
-  # LENGTHS, decks[].cards, which is a count and not a card.)
-  m11bad="$(grep '"dir":"s2c"' "$M11LOG" | grep -cvE '"type":"(hello_ok|over)"' || true)"
-  [ "$m11bad" = "0" ] || die "the pre-input concede's log has $m11bad s2c frame(s) that are neither \
+  # check-redaction.mjs is run only if a `state` reached the log at all.  This
+  # session's whole wire is header + hello_ok + act + over: with no `state`, the
+  # checker's two "this file proves nothing" assertions are FAILURES rather than
+  # the warnings it grants a turn-0 pre-game session, and its "no state frames at
+  # all" rule fires as well -- correctly, because a file with no state in it proves
+  # nothing about redaction.  The stronger statement is made directly instead: not
+  # one card was serialised, because the only s2c frames are `hello_ok` and `over`.
+  m11states="$(grep -c '"type":"state"' "$M11LOG" || true)"
+  if [ "$m11states" = "0" ]; then
+    # Cards only ever reach the wire inside a `state`, an `input` or an `ask`, so
+    # "the only s2c frames are hello_ok and over" is the whole statement.  (Not a
+    # grep for `"cards"`: the session header and hello_ok both carry the deck
+    # LENGTHS, decks[].cards, which is a count and not a card.)
+    m11bad="$(grep '"dir":"s2c"' "$M11LOG" | grep -cvE '"type":"(hello_ok|over)"' || true)"
+    [ "$m11bad" = "0" ] || die "the pre-input concede's log has $m11bad s2c frame(s) that are neither \
 \`hello_ok\` nor \`over\`, and no \`state\` to hold to check-redaction.mjs (log: $M11LOG)"
-  echo "OK: the pre-input concede put NO \`state\` on the wire at all -- $(wc -l < "$M11LOG") log lines \
+    echo "OK: the pre-input concede put NO \`state\` on the wire at all -- $(wc -l < "$M11LOG") log lines \
 (header, hello_ok, the act, over) and not one card serialised"
-else
-  # The game thread landed its first snapshot inside the ~1 ms before the session
-  # closed.  It is a turn-0 pre-game state, which is the shape the checker grants
-  # its warnings to, so hold it to the same standard as every other session.
-  node tools/check-redaction.mjs "$M11LOG" || die "check-redaction.mjs on the pre-input concede $M11LOG"
-fi
-# NOT added to WS_LOGS: web/test/ws-log.test.ts replays those as boards, and a
-# four-line session with no `state` in it is not a board.
+  else
+    # The game thread landed its first snapshot inside the ~1 ms before the session
+    # closed.  It is a turn-0 pre-game state, which is the shape the checker grants
+    # its warnings to, so hold it to the same standard as every other session.
+    node tools/check-redaction.mjs "$M11LOG" || die "check-redaction.mjs on the pre-input concede $M11LOG"
+  fi
+  # NOT added to WS_LOGS: web/test/ws-log.test.ts replays those as boards, and a
+  # four-line session with no `state` in it is not a board.
+}
 
 # 10f. M5's two typed acts, OVER THE SOCKET -- a sixth server, at seed 42 on the
 #      user's own deck, driven by tools/ws-auto-play.mjs --probe.
@@ -1042,7 +1238,9 @@ fi
 #      this comment claimed it: until 2026-09-12 the string `useMana` did not
 #      appear in ten-games.sh at all, and nothing outside web/test/pool.test.ts
 #      would have failed if the act had stopped working end to end.
-if [ -f tools/ws-auto-play.mjs ]; then
+s10f_probe() {
+  [ "$HAVE_AUTOPLAY" = "1" ] || return 0
+  ws_job 5
   WS_SEED=42 ws_start check-all-ws-probe var/check-all-ws-probe.log
   if ! node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --probe --quiet \
       --log var/ws-auto-probe-42.jsonl > var/check-all-ws-probe-client.log 2>&1; then
@@ -1063,8 +1261,7 @@ the server and did nothing, which is exactly the failure this step exists to cat
   echo "OK: $CLICKABILITY \`clickAbility\` act(s) over the socket, none of them unresolvable"
   node tools/check-redaction.mjs var/ws-auto-probe-42.jsonl \
     || die "check-redaction.mjs on the CLIENT log var/ws-auto-probe-42.jsonl"
-  WS_LOGS="${WS_LOGS:-},var/ws-auto-probe-42.jsonl,var/games/check-all-ws-probe/frames.jsonl"
-fi
+}
 
 # 10g. M6, and the milestone's own command: THREE GAMES BACK TO BACK over ONE
 #      socket, plus the five comfort acts with the EFFECT each is supposed to
@@ -1105,7 +1302,9 @@ fi
 #      key is on top, after the occurrence the yield was set on -- is always on,
 #      on every deck.  Nothing else about this step changed: three games, three
 #      ids, three logs, five acts by effect.
-if [ -f tools/ws-auto-play.mjs ]; then
+s10g_three() {
+  [ "$HAVE_AUTOPLAY" = "1" ] || return 0
+  ws_job 6
   printf '\n=== 10g. three games over one socket, and M6'"'"'s five acts with their effects ===\n'
   rm -rf var/games/check-all-ws-3g var/games/check-all-ws-3g-g2 var/games/check-all-ws-3g-g3
   # MTGTABLE_HOLD_GAME_END_MS (D114, PLAN.md slice-4 follow-up 13(c)): the
@@ -1139,7 +1338,7 @@ if [ -f tools/ws-auto-play.mjs ]; then
     [ -s "$f" ] || die "game $g wrote no frame log at $f -- one file per game (amendment M38)"
     overs="$(grep -c '"type":"over"' "$f" || true)"
     [ "$overs" = "1" ] || die "$f has $overs \`over\` frames; exactly one per game (section 7)"
-    [ "$(tail -1 "$f" | grep -c '"type":"over"')" = "1" ] || \
+    last_is_over "$f" || \
       die "the last frame of $f is not \`over\` (section 8.4)"
     [ "$(grep -c '"type":"hello_ok"' "$f")" = "1" ] || die "$f does not carry exactly one hello_ok"
     # D114: every one of these games ends by Forge's own game-over, so its
@@ -1148,9 +1347,29 @@ if [ -f tools/ws-auto-play.mjs ]; then
     grep -q '"gameOver":{' "$f" || die "$f has no \`state\` carrying \`gameOver\`: the game was ended from \
 outside Forge's own game-over -- the previous game's late finishGame() (D114, PLAN.md slice-4 follow-up 13(c))"
     grep -q "\"gameId\":\"$g\"" "$f" || die "$f does not carry its own gameId \"$g\""
+    # D165 (PLAN.md's engine-and-sets follow-up 3): the game was PLAYED -- it
+    # has a `state` frame, and one of them is at turn 1 or later.  `over` last
+    # and a `gameOver` state do not say that: a game born dead, or one whose
+    # engine threw at the deal, still ends in both, and "OK: three games" once
+    # printed over a game that died at birth -- only web/test/ws-log.test.ts
+    # caught it, at step 13.
+    node -e '
+      const fs = require("node:fs");
+      const [file, id] = process.argv.slice(1);
+      let states = 0, maxTurn = -1;
+      for (const line of fs.readFileSync(file, "utf8").split("\n")) {
+        if (line === "" || !line.includes("\"type\":\"state\"")) continue;
+        const f = JSON.parse(line);
+        if (f.type !== "state") continue;
+        states += 1;
+        maxTurn = Math.max(maxTurn, Number(f.body?.turn ?? -1));
+      }
+      if (states === 0) { console.error(`${id}: no \`state\` frame at all -- the game was never played`); process.exit(1); }
+      if (maxTurn < 1) { console.error(`${id}: ${states} state frame(s), none past turn ${maxTurn} -- the game was never played`); process.exit(1); }
+      console.log(`OK: ${id} was played: ${states} state frames, up to turn ${maxTurn}`);
+    ' "$f" "$g" || die "$f: game $g was not PLAYED (no state frame at turn 1 or later) -- D165"
     THREE_IDS="$THREE_IDS $g"
     node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
-    WS_LOGS="${WS_LOGS:-},$f"
   done
   [ "$(printf '%s\n' $THREE_IDS | sort -u | wc -l)" = "3" ] || die "the three games do not have three distinct ids"
   # D114, the server's half.  With the 2 s hold, both `newGame` acts must have
@@ -1206,31 +1425,44 @@ come back to the top of the stack at least once more, and must draw no ok-enable
 it is there (decks/yield-probe.dck exists to guarantee the repeat)"
   }
   echo "OK: the yielded ability came back to the top of the stack and the engine never asked again"
-fi
+}
 
-say "check-redaction.mjs -- every committed fixture, then the fresh recording"
-# NO --pre-amendment anywhere in this file, deliberately: the flag downgrades a
-# missing `owner` / `token` / `alt` / `library.cards` to a warning, and this is
-# the gate that has to see exactly that.  fixtures/synthetic/ is checked too --
-# it is hand-written, which is a reason to audit it, not a reason to skip it.
-#
-# And no --opponent-library-ok either, for the same reason: full cards in a seat
-# other than the viewer's `library.cards` is a FAILURE here.  The shape is
-# reachable (Opposition Agent, Bribery, Gonti) and no card in any committed deck
-# reaches it, so the day a recording needs the flag is the day someone should
-# have to type it -- and say in the commit why.
-for f in fixtures/games/*.jsonl fixtures/synthetic/*.jsonl; do
-  node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
-done
-node tools/check-redaction.mjs "$FRESH" || die "check-redaction.mjs on the fresh recording $FRESH"
-# The human-seat logs from the three steps above: asks, answers, notices and c2s
-# lines, none of which an AI-vs-AI recording contains.
-node tools/check-redaction.mjs "$M2FRAMES" || die "check-redaction.mjs on the fresh M2 session $M2FRAMES"
-node tools/check-redaction.mjs "$CONLOG" || die "check-redaction.mjs on the console session $CONLOG"
-node tools/check-redaction.mjs "$AUTOLOG" || die "check-redaction.mjs on the auto session $AUTOLOG"
+# ---------------------------------------------------------------------------
+# Steps 11-13.
+# ---------------------------------------------------------------------------
+s11_fixtures() {
+  hdr 11 "check-redaction.mjs -- every committed fixture, then the fresh recording"
+  # NO --pre-amendment anywhere in this file, deliberately: the flag downgrades a
+  # missing `owner` / `token` / `alt` / `library.cards` to a warning, and this is
+  # the gate that has to see exactly that.  fixtures/synthetic/ is checked too --
+  # it is hand-written, which is a reason to audit it, not a reason to skip it.
+  #
+  # And no --opponent-library-ok either, for the same reason: full cards in a seat
+  # other than the viewer's `library.cards` is a FAILURE here.  The shape is
+  # reachable (Opposition Agent, Bribery, Gonti) and no card in any committed deck
+  # reaches it, so the day a recording needs the flag is the day someone should
+  # have to type it -- and say in the commit why.
+  for f in fixtures/games/*.jsonl fixtures/synthetic/*.jsonl; do
+    node tools/check-redaction.mjs "$f" || die "check-redaction.mjs on $f"
+  done
+}
 
-say "check-redaction-selftest.mjs -- the checker's own negative controls"
-node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+# Step 11's second half: the fresh recordings of steps 5, 7, 8 and 9.  A job of
+# its own because the first half depends on nothing, and this one -- like 12d --
+# waits for EVERY recorder in the run, not only these four (D160).
+s11_fresh() {
+  node tools/check-redaction.mjs "$FRESH" || die "check-redaction.mjs on the fresh recording $FRESH"
+  # The human-seat logs from the three steps above: asks, answers, notices and c2s
+  # lines, none of which an AI-vs-AI recording contains.
+  node tools/check-redaction.mjs "$M2FRAMES" || die "check-redaction.mjs on the fresh M2 session $M2FRAMES"
+  node tools/check-redaction.mjs "$CONLOG" || die "check-redaction.mjs on the console session $CONLOG"
+  node tools/check-redaction.mjs "$AUTOLOG" || die "check-redaction.mjs on the auto session $AUTOLOG"
+}
+
+s12_selftest() {
+  hdr 12 "check-redaction-selftest.mjs -- the checker's own negative controls"
+  node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+}
 
 # 12b. The workshop's catalog is GENERATED (D104) from decks/*.dck, the
 #      committed recordings and the card names web/src/arena/cues/cues.json has
@@ -1241,9 +1473,11 @@ node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (th
 #      that reorders keys.  The builder's own --check is byte for byte, needs no
 #      node_modules (node type stripping and no imports), and names the command
 #      that fixes it (workshop follow-up 17).
-printf '\n=== 12b. build-workshop-catalog.ts --check -- the workshop catalog is what decks/, fixtures/games/ and cues.json make ===\n'
-node tools/build-workshop-catalog.ts --check \
-  || die "web/src/workshop/catalog.json is stale (a deck, a committed recording or a cues.json card entry changed without a rebuild) -- run: node tools/build-workshop-catalog.ts"
+s12b_catalog() {
+  printf '\n=== 12b. build-workshop-catalog.ts --check -- the workshop catalog is what decks/, fixtures/games/ and cues.json make ===\n'
+  node tools/build-workshop-catalog.ts --check \
+    || die "web/src/workshop/catalog.json is stale (a deck, a committed recording or a cues.json card entry changed without a rebuild) -- run: node tools/build-workshop-catalog.ts"
+}
 
 # 12c. D115: an exception out of Forge's game loop FAILS the run.  Before the
 #      hardening pass a card the engine could not build crashed zone
@@ -1259,17 +1493,19 @@ node tools/build-workshop-catalog.ts --check \
 #      `over` that never names the card (hard rule 8).  About 8 s, no
 #      node_modules, so it runs under SKIP_WEB=1 and SKIP_TEN=1 too.  Added on
 #      the rebase onto match setup (PLAN.md's hardening follow-up 2).
-printf '\n=== 12c. check-engine-crash.sh -- an engine crash fails MtgTable and RecordMatch, and ends each log in `over` (D115) ===\n'
-rc=0
-jvm ./tools/check-engine-crash.sh > var/check-all-engine-crash.log 2>&1 || rc=$?
-if [ "$rc" != "0" ]; then
-  cat var/check-all-engine-crash.log >&2
-  capped "$rc" && die "check-engine-crash.sh did not finish within ${GAME_TIMEOUT}s"
-  die "check-engine-crash.sh exited $rc: an engine crash no longer fails the run the way D115 says (log: var/check-all-engine-crash.log)"
-fi
-grep -E '^(==|  FAIL|check-engine-crash)' var/check-all-engine-crash.log || true
-[ "$(grep -c '^  ok  ' var/check-all-engine-crash.log)" = "20" ] \
-  || die "check-engine-crash.sh passed $(grep -c '^  ok  ' var/check-all-engine-crash.log) assertion(s), not 20 (log: var/check-all-engine-crash.log)"
+s12c_crash() {
+  printf '\n=== 12c. check-engine-crash.sh -- an engine crash fails MtgTable and RecordMatch, and ends each log in `over` (D115) ===\n'
+  rc=0
+  jvm ./tools/check-engine-crash.sh > var/check-all-engine-crash.log 2>&1 || rc=$?
+  if [ "$rc" != "0" ]; then
+    cat var/check-all-engine-crash.log >&2
+    capped "$rc" && die "check-engine-crash.sh did not finish within ${GAME_TIMEOUT}s"
+    die "check-engine-crash.sh exited $rc: an engine crash no longer fails the run the way D115 says (log: var/check-all-engine-crash.log)"
+  fi
+  grep -E '^(==|  FAIL|check-engine-crash)' var/check-all-engine-crash.log || true
+  [ "$(grep -c '^  ok  ' var/check-all-engine-crash.log)" = "20" ] \
+    || die "check-engine-crash.sh passed $(grep -c '^  ok  ' var/check-all-engine-crash.log) assertion(s), not 20 (log: var/check-all-engine-crash.log)"
+}
 
 # 12d. The narrator (tools/narrate.mjs, D123): every committed fixture told as a
 #      story, hard rule 8 held BY IDS (no id concealed in every appearance is
@@ -1292,64 +1528,397 @@ grep -E '^(==|  FAIL|check-engine-crash)' var/check-all-engine-crash.log || true
 #      spectate recordings are in the list too (added on the rebase onto
 #      spectating): an AI-vs-AI log from each chair, one of them with a
 #      `paceMs` header, which the narrator reads like any other session header.
-printf '\n=== 12d. narrate-selftest.mjs -- the narrator over every fixture and every fresh log ===\n'
-NARRATE_LOGS=""
-narrate_add() {   # $1 a log; $2 (optional) the bridge's log of the same game
-  [ -s "$1" ] || return 0
-  if [ -n "${2:-}" ]; then
-    [ -s "$2" ] || return 0
-    NARRATE_LOGS="${NARRATE_LOGS:+$NARRATE_LOGS,}$1=$2"
-  else
-    NARRATE_LOGS="${NARRATE_LOGS:+$NARRATE_LOGS,}$1"
-  fi
+s12d_narrate() {
+  printf '\n=== 12d. narrate-selftest.mjs -- the narrator over every fixture and every fresh log ===\n'
+  NARRATE_LOGS=""
+  narrate_add() {   # $1 a log; $2 (optional) the bridge's log of the same game
+    [ -s "$1" ] || return 0
+    if [ -n "${2:-}" ]; then
+      [ -s "$2" ] || return 0
+      NARRATE_LOGS="${NARRATE_LOGS:+$NARRATE_LOGS,}$1=$2"
+    else
+      NARRATE_LOGS="${NARRATE_LOGS:+$NARRATE_LOGS,}$1"
+    fi
+  }
+  narrate_add "$FRESH"
+  narrate_add "$SP_PACED"
+  narrate_add "$SP_SEAT1"
+  narrate_add "$M2FRAMES"
+  narrate_add "$CONLOG"
+  narrate_add "$AUTOLOG"
+  narrate_add var/games/check-all-sideboard/frames.jsonl
+  narrate_add var/games/check-all-sideboard-g2/frames.jsonl
+  narrate_add "var/games/$MS_ID/frames.jsonl"
+  narrate_add var/check-all-ws-smoke-frames.jsonl var/games/check-all-ws-smoke/frames.jsonl
+  narrate_add var/check-all-ws-drop-frames.jsonl var/games/check-all-ws-drop/frames.jsonl
+  narrate_add var/ws-auto-13.jsonl var/games/check-all-ws-auto/frames.jsonl
+  narrate_add var/ws-auto-refuse-13.jsonl var/games/check-all-ws-refuse/frames.jsonl
+  narrate_add var/check-all-ws-m11-frames.jsonl var/games/check-all-ws-m11/frames.jsonl
+  narrate_add var/ws-auto-probe-42.jsonl var/games/check-all-ws-probe/frames.jsonl
+  narrate_add var/ws-auto-3g.jsonl var/games/check-all-ws-3g/frames.jsonl
+  narrate_add var/ws-auto-3g-g2.jsonl var/games/check-all-ws-3g-g2/frames.jsonl
+  narrate_add var/ws-auto-3g-g3.jsonl var/games/check-all-ws-3g-g3/frames.jsonl
+  node tools/narrate-selftest.mjs ${NARRATE_LOGS:+--logs "$NARRATE_LOGS"} \
+    || die "narrate-selftest.mjs (12d: the narrator broke a hidden-information rule, narrated a re-delivered frame twice, or drifted from fixtures/narrate/)"
 }
-narrate_add "$FRESH"
-narrate_add "$SP_PACED"
-narrate_add "$SP_SEAT1"
-narrate_add "$M2FRAMES"
-narrate_add "$CONLOG"
-narrate_add "$AUTOLOG"
-narrate_add var/games/check-all-sideboard/frames.jsonl
-narrate_add var/games/check-all-sideboard-g2/frames.jsonl
-narrate_add "var/games/$MS_ID/frames.jsonl"
-narrate_add var/check-all-ws-smoke-frames.jsonl var/games/check-all-ws-smoke/frames.jsonl
-narrate_add var/check-all-ws-drop-frames.jsonl var/games/check-all-ws-drop/frames.jsonl
-narrate_add var/ws-auto-13.jsonl var/games/check-all-ws-auto/frames.jsonl
-narrate_add var/ws-auto-refuse-13.jsonl var/games/check-all-ws-refuse/frames.jsonl
-narrate_add var/check-all-ws-m11-frames.jsonl var/games/check-all-ws-m11/frames.jsonl
-narrate_add var/ws-auto-probe-42.jsonl var/games/check-all-ws-probe/frames.jsonl
-narrate_add var/ws-auto-3g.jsonl var/games/check-all-ws-3g/frames.jsonl
-narrate_add var/ws-auto-3g-g2.jsonl var/games/check-all-ws-3g-g2/frames.jsonl
-narrate_add var/ws-auto-3g-g3.jsonl var/games/check-all-ws-3g-g3/frames.jsonl
-node tools/narrate-selftest.mjs ${NARRATE_LOGS:+--logs "$NARRATE_LOGS"} \
-  || die "narrate-selftest.mjs (12d: the narrator broke a hidden-information rule, narrated a re-delivered frame twice, or drifted from fixtures/narrate/)"
 
-if [ "${SKIP_WEB:-0}" = "1" ]; then
+s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
-else
-  # `npm test` is `node --test test/*.test.ts` AND `vitest run`, and the arena's
-  # headless suites are already in that glob -- camera.test.ts, cues-exhaustive,
-  # replay-cues (the fixture sweep over all eighteen recordings), layout,
-  # liveness, colour. Nothing extra is needed here, and that is the point of
-  # report 09 section 2.4's [NO three] annotations: the whole cue engine, the
-  # pose math and the layout are importable in bare Node.
-  #
-  # NOT here: tools/arena-bench.mjs (report 09 section 9.4). It needs a built
-  # dist, a preview server and a headless Chromium, which is a different kind of
-  # dependency from everything else this gate has -- run it by hand, see
-  # docs/evidence/m7-arena.md.
-  say "web -- npm run build && npm test (includes the arena's six headless suites)"
+}
+# `npm test` is `node --test test/*.test.ts` AND `vitest run`, and the arena's
+# headless suites are already in that glob -- camera.test.ts, cues-exhaustive,
+# replay-cues (the fixture sweep over all eighteen recordings), layout,
+# liveness, colour. Nothing extra is needed here, and that is the point of
+# report 09 section 2.4's [NO three] annotations: the whole cue engine, the
+# pose math and the layout are importable in bare Node.
+#
+# NOT here: tools/arena-bench.mjs (report 09 section 9.4). It needs a built
+# dist, a preview server and a headless Chromium, which is a different kind of
+# dependency from everything else this gate has -- run it by hand, see
+# docs/evidence/m7-arena.md.
+#
+# MTGTABLE_WS_LOGS is THE corpus web/test/ws-log.test.ts replays, and it names
+# the logs step 10 just produced -- the client's own --log plus the bridge's
+# three copies.  It used to glob var/ instead, which made `npm test` depend on
+# whatever scratch state was lying around: three leftover probe directories
+# were enough to turn a green suite red with nothing in the repo changed
+# (measured: 282 pass / 3 fail with them present, 279 / 0 with them moved
+# aside).  With the variable unset the test falls back to the committed
+# fixtures alone and says on stderr that it proved less.
+#
+# Serially it is one job, as it always was.  In parallel it is three (D162):
+# `npm run build`, `npm run test:render` (vitest, ~55 s of render.test.tsx on
+# one thread, which reads only committed fixtures) and `npm run test:node`
+# (node --test, whose ws-log suite is the only reader of MTGTABLE_WS_LOGS) --
+# the two halves of package.json's own `test` script, the same commands -- so
+# only the ~9 s half waits for step 10.
+s13_web() {
+  hdr 13 "web -- npm run build && npm test (includes the arena's six headless suites)"
   [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
   (cd web && npm run build) || die "npm run build"
-  # MTGTABLE_WS_LOGS is THE corpus web/test/ws-log.test.ts replays, and it names
-  # the logs step 10 just produced -- the client's own --log plus the bridge's
-  # three copies.  It used to glob var/ instead, which made `npm test` depend on
-  # whatever scratch state was lying around: three leftover probe directories
-  # were enough to turn a green suite red with nothing in the repo changed
-  # (measured: 282 pass / 3 fail with them present, 279 / 0 with them moved
-  # aside).  With the variable unset the test falls back to the committed
-  # fixtures alone and says on stderr that it proved less.
   (cd web && MTGTABLE_WS_LOGS="${WS_LOGS:-}" npm test) || die "npm test"
+}
+s13_build() {
+  hdr 13 "web -- npm run build && npm test (includes the arena's six headless suites)"
+  [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
+  (cd web && npm run build) || die "npm run build"
+}
+s13_render() {
+  [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
+  (cd web && npm run test:render) || die "npm test (vitest run)"
+}
+s13_node() {
+  [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
+  (cd web && MTGTABLE_WS_LOGS="${WS_LOGS:-}" npm run test:node) || die "npm test (node --test)"
+}
+
+# ===========================================================================
+# THE JOB TABLE (D160).  job ID STEP MODE FUNCTION DEPS
+#   ID      the job's name: its log is var/check-all/<run>/<ID>.log
+#   STEP    what `die` says ("step 9" for all of 9..9e, as the serial gate did)
+#   MODE    both | serial (GATE_JOBS=1 only) | parallel (GATE_JOBS > 1 only)
+#   DEPS    ids that must have PASSED first (parallel mode; serially the table
+#           order is the only order there is, and it already satisfies them)
+# Registered in the SERIAL order -- the order of this file's header list, and
+# the order gate.log concatenates the logs in.
+# ===========================================================================
+declare -a J_ORDER=()
+declare -A J_STEP=() J_MODE=() J_FN=() J_DEPS=() J_FRAG=()
+job() { J_ORDER+=("$1"); J_STEP[$1]="$2"; J_MODE[$1]="$3"; J_FN[$1]="$4"; J_DEPS[$1]="${5:-}"; }
+
+PRE="03-build"                       # every pool job waits for the build
+job 01-forge      1  both     s01_forge
+job 02-lint       2  both     s02_lint          "01-forge"
+job 03-build      3  both     s03_build         "02-lint"
+job 04-smoke      4  both     s04_smoke         "$PRE"
+job 05-record     5  both     s05_record        "$PRE"
+job 06-drift      6  both     s06_drift         "05-record"
+job 06b-paced     6  both     s06b_paced        "$PRE"
+job 06b-seat1     6  both     s06b_seat1        "$PRE"
+job 06b-check     6  both     s06b_check        "06b-paced 06b-seat1"
+job 07-null       7  both     s07_null          "$PRE"
+job 08-console    8  both     s08_console       "$PRE"
+job 09-auto       9  both     s09_auto          "$PRE"
+job 09b-drift     9  both     s09b_drift        "$PRE"
+TEN_ROWS=""
+if [ "${SKIP_TEN:-0}" = "1" ]; then
+  job 09c-skipped 9  both     s09c_skipped      "$PRE"
+else
+  job 09c-ten     9  serial   s09c_ten
+  for seed in $TEN_SEEDS; do
+    id="$(printf '09c-row%02d' "$seed")"
+    job "$id"     9  parallel "s09c_row $seed"  "04-smoke"
+    J_FRAG[$id]=1                    # its block reaches gate.log through the report
+    TEN_ROWS="$TEN_ROWS $id"
+  done
+  job 09c-report  9  parallel s09c_report       "$TEN_ROWS"
+fi
+job 09d-sideboard 9  both     s09d_sideboard    "$PRE"
+job 09e-match     9  both     s09e_match        "04-smoke"
+job 10a-smoke     10 both     s10a_smoke        "$PRE"
+job 10b-drop      10 both     s10b_drop         "$PRE"
+job 10c-auto      10 both     s10c_auto         "$PRE"
+job 10d-refuse    10 both     s10d_refuse       "$PRE"
+job 10e-m11       10 both     s10e_m11          "$PRE"
+job 10f-probe     10 both     s10f_probe        "$PRE"
+job 10g-three     10 both     s10g_three        "$PRE"
+# Every job that writes a frame log step 11's fresh half or 12d reads.
+RECORDERS="05-record 06b-paced 06b-seat1 07-null 08-console 09-auto 09d-sideboard 09e-match"
+RECORDERS="$RECORDERS 10a-smoke 10b-drop 10c-auto 10d-refuse 10e-m11 10f-probe 10g-three"
+job 11-fixtures   11 both     s11_fixtures      "$PRE"
+job 11-fresh      11 both     s11_fresh         "$RECORDERS"
+job 12-selftest   12 both     s12_selftest      "$PRE"
+job 12b-catalog   12 both     s12b_catalog      "$PRE"
+job 12c-crash     12 both     s12c_crash        "$PRE"
+job 12d-narrate   12 both     s12d_narrate      "$RECORDERS"
+if [ "${SKIP_WEB:-0}" = "1" ]; then
+  job 13-skipped  13 both     s13_skipped       "$PRE"
+else
+  job 13-web      13 serial   s13_web
+  job 13a-build   13 parallel s13_build         "$PRE"
+  job 13b-render  13 parallel s13_render        "$PRE"
+  job 13c-node    13 parallel s13_node          "10a-smoke 10b-drop 10c-auto 10d-refuse 10f-probe 10g-three"
 fi
 
-printf '\ncheck-all OK\n'
+# The parallel launch ORDER: whenever a slot is free, the first READY job in
+# this list starts.  The cheap checks with no JVM come first -- step 6's
+# comparison the moment step 5 lands, the committed fixtures' redaction, the
+# checker's selftest, the catalog -- so a drift or a stale file fails the run in
+# seconds rather than after every game has played.  Then longest-first, with
+# what feeds a dependency first: 10g (three games, ~135 s under load) and
+# vitest (~60 s on one thread) head it because `node --test` waits for step 10
+# and nothing waits for the ten-games rows; Smoke is early because 9c and 9e
+# wait for it.  Anything not named runs after, in table order.
+PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog"
+PAR_FIRST="$PAR_FIRST 10g-three 13b-render 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
+PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 08-console 12c-crash 13a-build"
+
+# ---------------------------------------------------------------------------
+# The runner (D161).
+# ---------------------------------------------------------------------------
+declare -A J_START=() J_END=() J_STATUS=() J_LOAD=()
+T0_US="${EPOCHREALTIME/./}"
+now_ms() { local us="${EPOCHREALTIME/./}"; echo $(( (us - T0_US) / 1000 )); }
+secs() { printf '%d.%d' $(( $1 / 1000 )) $(( ($1 % 1000) / 100 )); }   # ms -> "12.3"
+load1() { local l; read -r l _ < /proc/loadavg 2>/dev/null || l="?"; echo "$l"; }
+LOAD_START="$(load1)"
+LOAD_MAX="$LOAD_START"
+NL=""
+note_load() {   # NL = the 1-minute load average now; LOAD_MAX = the run's highest (no subshell)
+  NL="$(load1)"
+  if [ "$NL" != "?" ] && awk -v a="$NL" -v b="$LOAD_MAX" 'BEGIN { exit !(a > b) }'; then
+    LOAD_MAX="$NL"
+  fi
+}
+
+active() {   # is this job part of this mode's run?
+  case "${J_MODE[$1]}" in
+    both) return 0 ;;
+    serial) [ "$GATE_JOBS" = "1" ] ;;
+    parallel) [ "$GATE_JOBS" -gt 1 ] ;;
+  esac
+}
+
+# The table: every job of this run, in the serial order, with its seconds.
+print_table() {
+  local id st en dur status sum=0 n=0 wall
+  wall="$(now_ms)"
+  printf '\n== check-all timing: GATE_JOBS=%s, WSPORT=%s, run %s ==\n' "$GATE_JOBS" "$WSPORT" "$RUN_ID"
+  printf '%-4s  %-14s %8s %8s %8s  %-7s %s\n' step job start end seconds status "load(1m) at end"
+  for id in "${J_ORDER[@]}"; do
+    active "$id" || continue
+    status="${J_STATUS[$id]:-not run}"
+    if [ -n "${J_START[$id]:-}" ] && [ -n "${J_END[$id]:-}" ]; then
+      st="${J_START[$id]}"; en="${J_END[$id]}"; dur=$(( en - st ))
+      sum=$(( sum + dur )); n=$(( n + 1 ))
+      printf '%-4s  %-14s %8s %8s %8s  %-7s %s\n' "${J_STEP[$id]}" "$id" "$(secs "$st")" "$(secs "$en")" \
+          "$(secs "$dur")" "$status" "${J_LOAD[$id]:-}"
+    elif [ -n "${J_START[$id]:-}" ]; then
+      printf '%-4s  %-14s %8s %8s %8s  %-7s\n' "${J_STEP[$id]}" "$id" "$(secs "${J_START[$id]}")" - - "$status"
+    else
+      printf '%-4s  %-14s %8s %8s %8s  %-7s\n' "${J_STEP[$id]}" "$id" - - - "$status"
+    fi
+  done
+  printf 'wall %s s for %d jobs whose seconds sum to %s s; load average (1 min) %s at the start, %s at most, %s at the end\n' \
+      "$(secs "$wall")" "$n" "$(secs "$sum")" "$LOAD_START" "$LOAD_MAX" "$(load1)"
+  printf 'logs: %s/<job>.log; every log in the serial order: %s/gate.log\n' "$RUN_DIR" "$RUN_DIR"
+}
+write_table() { print_table > "$RUN_DIR/timing.txt"; cat "$RUN_DIR/timing.txt"; }
+
+# gate.log: the jobs' logs in the serial order -- what GATE_JOBS=1 prints.
+assemble() {
+  local id
+  : > "$RUN_DIR/gate.log"
+  for id in "${J_ORDER[@]}"; do
+    active "$id" || continue
+    [ -z "${J_FRAG[$id]:-}" ] || continue
+    [ -f "$RUN_DIR/$id.log" ] && cat "$RUN_DIR/$id.log" >> "$RUN_DIR/gate.log"
+  done
+  return 0
+}
+
+# A job that failed without its own `check-all FAILED` line (a `set -e` exit, a
+# signal) still gets one: the 141 of D113 was a gate that died saying nothing.
+failed_line() {   # $1 id, $2 rc
+  grep -q "^check-all FAILED at step " "$RUN_DIR/$1.log" 2>/dev/null \
+    || echo "check-all FAILED at step ${J_STEP[$1]}: job $1 exited $2 without a message (log: $RUN_DIR/$1.log)" >&2
+}
+
+run_serial() {
+  local id rc
+  for id in "${J_ORDER[@]}"; do
+    active "$id" || continue
+    J_START[$id]="$(now_ms)"
+    set +e
+    ( STEP="${J_STEP[$id]}"; set -e; ${J_FN[$id]} ) 2>&1 | tee "$RUN_DIR/$id.log"
+    rc="${PIPESTATUS[0]}"
+    set -e
+    J_END[$id]="$(now_ms)"
+    note_load; J_LOAD[$id]="$NL"
+    if [ "$rc" != "0" ]; then
+      J_STATUS[$id]="FAILED"
+      failed_line "$id" "$rc"
+      assemble
+      write_table
+      exit 1
+    fi
+    J_STATUS[$id]="ok"
+  done
+}
+
+# Every process a running job started, children before parents.
+descendants() {
+  local c
+  for c in $(ps -o pid= --ppid "$1" 2>/dev/null); do
+    descendants "$c"
+    echo "$c"
+  done
+}
+declare -A RUNNING=()   # pid -> job id
+abort_running() {       # TERM every running job's whole tree: only what this gate started
+  local pid all="" p alive
+  [ "${#RUNNING[@]}" -gt 0 ] || return 0
+  for pid in "${!RUNNING[@]}"; do kill -STOP "$pid" 2>/dev/null || true; done   # no new forks
+  for pid in "${!RUNNING[@]}"; do all="$all $(descendants "$pid" | tr '\n' ' ')"; done
+  # shellcheck disable=SC2086
+  [ -z "${all// /}" ] || kill -TERM $all 2>/dev/null || true
+  for pid in "${!RUNNING[@]}"; do
+    kill -TERM "$pid" 2>/dev/null || true
+    kill -CONT "$pid" 2>/dev/null || true
+  done
+  for _ in $(seq 1 50); do
+    alive=""
+    for p in $all; do kill -0 "$p" 2>/dev/null && alive="$alive $p"; done
+    [ -z "$alive" ] && break
+    sleep 0.1
+  done
+  # shellcheck disable=SC2086
+  [ -z "${alive:-}" ] || kill -KILL $alive 2>/dev/null || true
+  for pid in "${!RUNNING[@]}"; do
+    wait "$pid" 2>/dev/null || true
+    J_END[${RUNNING[$pid]}]="$(now_ms)"
+    J_STATUS[${RUNNING[$pid]}]="killed"
+    unset "RUNNING[$pid]"
+  done
+}
+
+progress() {   # $1 what ("start" | "ok" | "FAILED"), $2 id
+  local t; t="$(secs "$(now_ms)")"
+  if [ "$1" = "start" ]; then
+    printf '  [%7s s] start  %-14s (%d running)\n' "$t" "$2" "${#RUNNING[@]}"
+  else
+    printf '  [%7s s] %-6s %-14s %7s s   load %s\n' "$t" "$1" "$2" \
+        "$(secs $(( J_END[$2] - J_START[$2] )))" "${J_LOAD[$2]}"
+  fi
+}
+
+deps_ok() {
+  local d
+  for d in ${J_DEPS[$1]}; do
+    active "$d" || continue
+    [ "${J_STATUS[$d]:-}" = "ok" ] || return 1
+  done
+  return 0
+}
+
+run_parallel() {
+  local pending=() id seen=" " i pid rc launched
+  for id in $PAR_FIRST "${J_ORDER[@]}"; do
+    [ -n "${J_MODE[$id]:-}" ] || continue
+    active "$id" || continue
+    case "$seen" in *" $id "*) continue ;; esac
+    seen="$seen$id "
+    pending+=("$id")
+  done
+  printf 'check-all: %d jobs, %s at a time, step 10 on ports %s-%s, logs in %s/\n' \
+      "${#pending[@]}" "$GATE_JOBS" "$WSPORT" "$(( WSPORT + 6 ))" "$RUN_DIR"
+  trap 'echo; echo "check-all: interrupted -- stopping every job" >&2; abort_running; assemble; write_table; exit 130' INT TERM
+  while :; do
+    launched=1
+    while [ "$launched" = "1" ] && [ "${#RUNNING[@]}" -lt "$GATE_JOBS" ]; do
+      launched=0
+      for i in "${!pending[@]}"; do
+        id="${pending[$i]}"
+        deps_ok "$id" || continue
+        unset "pending[$i]"
+        J_START[$id]="$(now_ms)"
+        ( STEP="${J_STEP[$id]}"; set -e; ${J_FN[$id]} ) > "$RUN_DIR/$id.log" 2>&1 < /dev/null &
+        RUNNING[$!]="$id"
+        progress start "$id"
+        launched=1
+        break
+      done
+    done
+    if [ "${#RUNNING[@]}" = "0" ]; then
+      [ "${#pending[@]}" = "0" ] && break
+      echo "check-all: internal error -- ${pending[*]} can never start (a dependency is not in this run)" >&2
+      exit 1
+    fi
+    rc=0; pid=""
+    wait -n -p pid || rc=$?
+    if [ -z "$pid" ] && [ "$rc" = "127" ]; then
+      echo "check-all: internal error -- ${#RUNNING[@]} job(s) recorded as running, and no child to wait for" >&2
+      exit 1
+    fi
+    [ -n "$pid" ] && [ -n "${RUNNING[$pid]:-}" ] || continue
+    id="${RUNNING[$pid]}"
+    unset "RUNNING[$pid]"
+    J_END[$id]="$(now_ms)"
+    note_load; J_LOAD[$id]="$NL"
+    if [ "$rc" = "0" ]; then
+      J_STATUS[$id]="ok"
+      progress ok "$id"
+    else
+      J_STATUS[$id]="FAILED"
+      progress FAILED "$id"
+      abort_running
+      {
+        printf '\n---- %s failed (exit %s); the last 60 lines of %s/%s.log:\n' "$id" "$rc" "$RUN_DIR" "$id"
+        tail -n 60 "$RUN_DIR/$id.log"
+        printf -- '---- end of %s\n' "$id"
+      } >&2
+      assemble
+      write_table
+      failed_line "$id" "$rc"
+      echo "check-all: failed at $id -- its log is $RUN_DIR/$id.log, every log in serial order $RUN_DIR/gate.log" >&2
+      exit 1
+    fi
+  done
+  trap - INT TERM
+}
+
+# ---------------------------------------------------------------------------
+# Run.
+# ---------------------------------------------------------------------------
+if [ "$GATE_JOBS" = "1" ]; then
+  run_serial
+  assemble
+  printf '\ncheck-all OK\n'
+  write_table
+else
+  run_parallel
+  assemble
+  write_table
+  printf '\ncheck-all OK\n'
+fi

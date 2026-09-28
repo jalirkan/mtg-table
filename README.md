@@ -136,8 +136,25 @@ All commands are run from the repository root.
 **Before you commit, run the one command that runs everything:**
 
 ```bash
-./tools/check-all.sh
+./tools/check-all.sh                 # GATE_JOBS=min(4, nproc/4) steps at once: ~4-5 minutes
+GATE_JOBS=1 ./tools/check-all.sh     # the serial gate, one step after another: ~15 minutes
+GATE_JOBS=8 WSPORT=8750 ./tools/check-all.sh   # more at once; step 10 on 8750..8756
 ```
+
+**It runs its steps concurrently** (D160–D166). Every step is a job with its
+own log under `var/check-all/<run>/`, and `GATE_JOBS` of them run at once —
+four on a 16-thread machine — each JVM a process of its own with its own game
+ids, `var/` paths and, for step 10's seven servers, its own port
+(`WSPORT`..`WSPORT+6`). The order that matters is kept as dependencies: lint and
+build first; step 6 after the recording it compares; the fourteen ten-games rows
+(`tools/ten-games.sh --run-row N`) before their report; the `node --test` half of
+`npm test` after the step-10 logs it replays; the redaction sweep and the
+narrator after every recorder. The console prints a line as each job starts and
+ends, then a **timing table** (every job's start, end, seconds, status and the
+load average), and `var/check-all/<run>/gate.log` is the whole log in the serial
+order. A failure stops everything this gate started, prints the failed job's log
+tail and the table, and exits 1; nothing is ever retried. `GATE_JOBS=1` is the
+serial gate and prints the old log.
 
 Thirteen numbered steps and ten lettered sub-steps (**6b**, 9b, 9c, **9d**,
 **9e**, 10f, **10g**, **12b**, **12c** and **12d** — 9d and 10g added by M6, 9e
@@ -189,7 +206,10 @@ a scratch Forge home under `var/crash-probe/`) and asserts that `MtgTable` and
 8 s) → **12d**, `tools/narrate-selftest.mjs`, the frame-log narrator over every
 fixture and every log the run recorded, with hard rule 8 held by ids and by the
 decks' card names (**D123**, about a second) → `npm run build && npm test` in
-`web/`. **About fifteen to nineteen minutes** from a deleted `bridge/out` since
+`web/` — `npm run build`, `vitest run` and `node --test` as three jobs in
+parallel mode, the last waiting for step 10. **At `GATE_JOBS=4`, about four and a
+half minutes** from a deleted `bridge/out` (253–254 s three times back to back, 151 s at `GATE_JOBS=8`, 274 s on the final run, each beside other worktrees' work; `docs/evidence/gate-speed.md`).
+Serially, **about fifteen to nineteen minutes** from a deleted `bridge/out` since
 match setup added five games (874 s on its first run; 1,141 s on its review fix
 pass and 1,143 s on its documentation pass, each on a machine running other gates
 at the same time; 1,106 s and 970 s rebased onto `23e26b3`; 897 s rebased onto the
@@ -2230,7 +2250,9 @@ mtg-table/
                              through the card library; --check, --pool <colours>
     deck-smoke.sh            more-villains: 5 --transport auto games per AI deck;
                              over, redaction, the AI casts and attacks. NOT in the gate
-    check-all.sh             the pre-commit gate; chains everything above
+    check-all.sh             the pre-commit gate; runs everything above, GATE_JOBS
+                             jobs at a time (D160), a log per job and a timing table
+                             under var/check-all/<run>/
     check-redaction.mjs      assert a recorded log leaks nothing (docs/protocol.md 9)
     check-redaction-selftest.mjs  run the checker over fixtures/negative/redaction/ and
                              assert every one-defect probe is REJECTED
@@ -2254,7 +2276,9 @@ mtg-table/
                              thread actually parked), reconnects and finishes.
                              --probe (M5) mirrors AutoTransport's probe policy line for
                              line, and is the only client that sends clickAbility
-    ten-games.sh             M5's exit criterion as a command: ten --transport auto
+    ten-games.sh             M5's exit criterion as a command (--jobs N: N rows at a
+                             time; --run-row N / --report: the gate's per-row jobs and
+                             its summary, D160): ten --transport auto
                              games at seeds 1..10 alternating pacho-shield and the probe
                              decks, each asserted for `over`, zero UNIMPL (the summary
                              AND a raw grep), emit errors = 0, an ask-kind ceiling, the

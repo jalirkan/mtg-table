@@ -6137,3 +6137,245 @@ restoring nothing is right; paused, the frame they chose is.
 - **One transport kept alive across views** — the mode app is unmounted on
   purpose (D125), and a transport outliving its page is the socket's exception
   (`liveTransport`), not a pattern to copy.
+
+---
+
+## D160 — The gate runs its steps CONCURRENTLY: GATE_JOBS jobs at a time, from a job table with dependencies; GATE_JOBS=1 is the serial gate
+
+*Branch `gate-speed` (worktree `mtg-table-t2s`, off `main`'s `4408283`),
+numbered in that lane's reserved range D160–D169; renumbered contiguously at
+merge, in every file that cites it.*
+
+**2026-09-28** (the gate-speed lane; `docs/evidence/gate-speed.md` is what was
+measured)
+
+**Decision.** `tools/check-all.sh` is a table of JOBS — shell functions, each
+run in a subshell of its own with `set -e`, its step number for `die`, and its
+stdout and stderr in its own log — and a scheduler that keeps `GATE_JOBS` of
+them running. `GATE_JOBS` defaults to `min(4, nproc/4)`, at least 1 (4 on this
+16-thread box). A job starts when every job it depends on has PASSED, in a fixed
+priority order: the cheap checks with no JVM first (step 6's comparison, the
+committed fixtures' redaction, the checker's selftest, the catalog), then
+longest-first with what feeds a dependency first (10g and vitest, because
+`node --test` waits for step 10; Smoke, because 9c and 9e wait for it).
+
+- **The dependencies are the ordering rules, written down:** everything waits for
+  check-forge → lint → build; step 6 for step 5; 6b's comparison for its two
+  recordings; 9c's report for its fourteen rows; 9c's rows and 9e for Smoke;
+  `node --test` for 10a, 10b, 10c, 10d, 10f and 10g (the logs
+  `MTGTABLE_WS_LOGS` names); step 11's fresh half and 12d for every job that
+  records a frame log. 12b and 12c depend on the build alone.
+- **Split where the halves are independent, never where an assertion would
+  move:** 6b is three jobs (paced, seat 1, the comparison); 9c is fourteen rows
+  (`tools/ten-games.sh --run-row N`) and a report (`--report`); step 10 is seven
+  (10a..10g, **D162**); step 11 is the committed fixtures and the fresh
+  recordings; step 13 is `npm run build`, `vitest run` and `node --test`
+  (**D162**). Every assertion is where it was, in the job that owns its files.
+- **`tools/ten-games.sh --jobs N`** is the same thing standalone, on
+  `tools/deck-smoke.sh`'s pattern: each row a background subshell writing its
+  block to `$TEN_GAMES_DIR/ten-<seed>.out`, a line per finished row, the blocks
+  in row order, then the sweep and the summary; the first failure starts no new
+  row. `--jobs 1` is the old loop byte for byte. Every row keeps its eleven
+  assertions: its own `--game-id`, frame log, server log and redaction file mean
+  nothing a row asserts can be satisfied by another row's files.
+- **`GATE_JOBS=1` is the gate as it was**: the jobs in the serial order, each
+  one's output streamed to the console as well as to its log, so the console
+  carries the old log byte for byte (plus 10g's new lines, **D165**) — then the
+  timing table (**D161**).
+
+**Rationale.** The gate had grown to 900–990 s, and a gate that long is run less
+often than it should be. Every JVM step is a separate process with its own
+`--game-id`, its own `var/` paths and (after **D162**) its own port, so almost
+nothing in it was ordered by anything but the file's line order. Measured on this
+box from a deleted `bridge/out`, with other worktrees' gates running beside it:
+**253.4, 253.5 and 253.6 s** at `GATE_JOBS=4`, three runs back to back, and
+**151.0 s** at `GATE_JOBS=8`, against **921 s** for `main`'s serial script and **933 s** at `GATE_JOBS=1`; the final run took **274.4 s** at a load average of 6–18 (evidence §2, §6). The makespan
+is the pool's: the jobs' seconds sum to ~985 s, so four slots finish in ~250 s,
+and 10g's three games (~134 s) are the longest single job — the whole critical
+path at eight.
+
+**Known cost.** Concurrency adds load the gate makes itself, and can move any
+wall-clock race it has always had — which is why **D166** reports every flake
+instead of retrying (none in six parallel runs; evidence §3). All the
+JVMs share one Forge `userDir` (`var/forge/`), as every serial gate's did one
+after another and `tools/deck-smoke.sh --jobs` has since D117. The one file in it
+that more than one game writes is `achievements/constructed.xml`, which Forge
+saves at a human seat's game end by a truncate and a write; a JVM that exits
+between the two leaves it empty — serially too, measured — and the next reader
+prints a `SAXParseException` its own `load()` catches (`javap`-confirmed). No
+assertion reads it; evidence §3.2 and PLAN.md's gate-speed follow-up 1 have
+the rest.
+
+**Rejected.**
+
+- **A per-job Forge home** (a scratch config through `MTG_TABLE_CONFIG`, as
+  12c's crash check builds one): 24 profile directories per job, the redirect of
+  every userDir path, and the gate's preferences fingerprint (9c rows 11–14 and
+  9e) would then fingerprint a directory no other job shares — weaker, not
+  stronger. The one shared file that games write is not the gate's to fix
+  (above).
+- **A make-style jobserver** shared with `ten-games.sh` through a FIFO: one pool
+  across two scripts, but a lost token deadlocks the gate, and 9c's output would
+  still need assembling. The row jobs in the gate's own pool balance as well.
+- **`ten-games.sh --jobs N` as ONE gate job holding N slots**: the rows' tail
+  would idle slots other games could use.
+- **Retrying a failed job**: see **D166**.
+
+---
+
+## D161 — Every job logs to its own file; the console gets a start and an end line per job and a TIMING TABLE; `gate.log` is the serial log; a failed job always says so
+
+*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
+merge.*
+
+**2026-09-28** (the gate-speed lane)
+
+**Decision.** Each run writes `var/check-all/<YYYYmmdd-HHMMSS>-<pid>/`: one
+`<job>.log` per job (its whole stdout and stderr — what the serial gate printed
+for that step), `timing.txt` and `gate.log`, every job's log concatenated in the
+SERIAL order (9c's rows through the report's copy of their blocks), i.e. the log
+`GATE_JOBS=1` prints. The console shows, in parallel mode, one line when a job
+starts and one when it ends (`ok`/`FAILED`, its seconds, the 1-minute load
+average), then the TABLE: step, job, start and end in seconds since the gate
+began, seconds, status (`ok`, `FAILED`, `killed`, `not run`), the load at its
+end, and a footer with the wall time, the sum of the jobs' seconds and the load
+average at the start, at its highest and at the end. The step's JVM logs
+(`var/check-all-smoke.log` and the rest) keep their names.
+
+**On a failure**, in either mode: no new job starts; every running job is
+stopped (SIGSTOP, then SIGTERM to its whole process tree — found through
+`ps --ppid`, so only processes this gate started — then SIGKILL after 5 s for
+anything left); the failed job's log tail (60 lines) is printed, then the table,
+then — if the job's own `die` did not already print one — `check-all FAILED at
+step N: job <id> exited <rc> without a message`; exit 1. Ctrl-C does the same
+and exits 130.
+
+**Rationale.** Seven JVMs interleaving their output on one console is
+unreadable, and the old console log is what every doc and evidence file quotes,
+so it is kept as a file rather than given up. The table is the measurement the
+lane was asked for, and it makes the next slow step visible to whoever adds it.
+The unconditional FAILED line is D113's lesson generalised: step 6 once died of
+`set -e` with exit 141 and no message; now no job can.
+
+**Rejected.** Prefixing every line with its job (`[10g] ...`) on the console: it
+is still interleaved, and the per-job file is what anyone reading a failure
+opens.
+
+---
+
+## D162 — Step 10's seven servers each get a port (WSPORT+0 .. WSPORT+6); step 13 splits into build, vitest and `node --test`, and only `node --test` waits for step 10
+
+*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
+merge.*
+
+**2026-09-28** (the gate-speed lane)
+
+**Decision.** With `GATE_JOBS > 1`, 10a..10g listen on `WSPORT+0` ..
+`WSPORT+6` (10a on `WSPORT`, 10g on `WSPORT+6`), so all seven servers can be up
+at once; each job sets its own `WSPORT`, `WS_PID` and EXIT trap in its own
+subshell, and `ws_start`/`ws_finish` are unchanged. `GATE_JOBS=1` keeps the one
+`WSPORT` for all seven. `WS_LOGS` — step 13's `MTGTABLE_WS_LOGS` — is now a
+constant built at the top of the file in the order the serial gate accumulated
+it, instead of a variable steps 10c, 10f and 10g appended to. In parallel mode
+step 13 is `npm run build`, `npm run test:render` (`vitest run`) and
+`npm run test:node` (`node --test test/*.test.ts` with `MTGTABLE_WS_LOGS`) —
+the two halves of `web/package.json`'s own `test` script, the same commands; the
+serial gate still runs `npm run build && npm test`.
+
+**Rationale.** `web/test/ws-log.test.ts` is the only reader of
+`MTGTABLE_WS_LOGS`, and it is in the `node --test` half (~7–9 s). The vitest half
+is `render.test.tsx`'s ~55 s on one thread over committed fixtures only; waiting
+for step 10 would have put it on the critical path.
+
+**Rejected.** Waiting for all of step 10 before any of step 13: ~60 s on the
+end of every run for no dependency.
+
+---
+
+## D163 — No `| head`, no `| tail`, and no early-exiting reader in a pipeline the gate judges under `pipefail`
+
+*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
+merge.*
+
+**2026-09-28** (the gate-speed lane; PLAN.md's engine-and-sets follow-up 2)
+
+**Decision.** In `tools/check-all.sh` and `tools/ten-games.sh`: the first match
+of a key in a file is `sed -n '/^KEY=/{s///p;q}'` (sed's own quit, no reader to
+cut it off); a frame log's last line is `last_is_over`, a `$(tail -n 1 file)` and
+a pattern; "an UNIMPL line other than the summary's" is two `grep -c` counts
+compared, not `grep | grep -qv`; a failure path's excerpt is `sed -n '1,5p'`,
+which reads its whole input; the console smoke's five lines arrive as a
+here-string, not `printf | jvm`. `grep -nE '\| *(head|tail)'` over both files
+now matches comments only.
+
+**Rationale.** Under `set -o pipefail` a pipeline's status is its last non-zero
+member's, and a reader that exits early (`head`, `grep -q`) SIGPIPEs a writer
+still writing: 141. D113 removed the one that bit (`diff | head -20`, step 6's
+silent exit). Two more were latent: 9e's and ten-games' `if grep -n UNIMPL log |
+grep -qv '…none$'` would have turned **false** — no failure — on a log whose
+UNIMPL lines outran the pipe buffer, i.e. exactly when there were most of them;
+and ten-games' failure-path `grep | sort -u | head -5` would have ended the
+script with 141 before its own message.
+
+---
+
+## D164 — The preferences fingerprint is of FILES: a directory with none prints the same line whether it exists or not
+
+*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
+merge.*
+
+**2026-09-28** (the gate-speed lane)
+
+**Decision.** `tools/ten-games.sh`'s `prefs_fingerprint` (rows 11–14's
+assertion 10, now every row's) and `tools/check-all.sh`'s `ms_prefs` (9e) print
+`<dir>: no files` for a directory that is missing OR empty, and every file's
+sha256, mtime and size otherwise.
+
+**Rationale.** The first `./tools/ten-games.sh --jobs 4` in this fresh worktree
+failed all four of its first rows: `var/forge/preferences: absent` before, an
+empty `var/forge/preferences/` after — FModel.initialize creates the directory
+on a checkout's first engine boot. No preferences file was written; it would
+have failed row 1 SERIALLY too, on any fresh checkout, and only the gate's own
+steps 4–9 booting the engine first had ever hidden it. The assertion is about a
+`ForgePreferences.save()`, which writes a file; a file still changes the print.
+
+---
+
+## D165 — Step 10g asserts that each of its three games was PLAYED: a `state` frame at turn 1 or later
+
+*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
+merge.*
+
+**2026-09-28** (the gate-speed lane; PLAN.md's engine-and-sets follow-up 3)
+
+**Decision.** For each of 10g's three frame logs the gate counts the `state`
+frames and their highest `turn`, and fails the step unless there is at least one
+and the highest is 1 or more; it prints `OK: <gameId> was played: N state frames,
+up to turn T`.
+
+**Rationale.** 10g asserted one `over`, `over` last, one `hello_ok`, its own
+`gameId`, a `gameOver` state (D114) and redaction — every one of which a game
+that dies at birth, or whose engine throws at the deal (D115's `over`), can
+satisfy. "OK: three games" once printed over a game that died at birth, and only
+`web/test/ws-log.test.ts` caught it, at step 13. Measured: 118/167/258 state
+frames up to turns 13/16/22 on the first parallel run.
+
+---
+
+## D166 — Nothing in the gate is retried: a step that fails under concurrent load and never serially is a finding
+
+*Branch `gate-speed`, numbered in its reserved range D160–D169; renumbered at
+merge.*
+
+**2026-09-28** (the gate-speed lane)
+
+**Decision.** The parallel gate has no retry, no "flaky" list and no longer
+timeout than the serial one (`GAME_TIMEOUT` is still per JVM). A failure is
+reported with its job, its log and the load average, and `GATE_JOBS=1` is the
+reproduction.
+
+**Rationale.** A retried gate is one that teaches re-running until green — D113's
+and D114's races were each "one failure in a few runs under load" before they
+were found and fixed at their causes. Concurrency is load the gate makes itself,
+so it is the cheapest place those races will ever show again. What the lane's own
+runs found is in `docs/evidence/gate-speed.md` §3.
