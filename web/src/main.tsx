@@ -40,7 +40,7 @@
  * `App`'s — and only while the arena is really mounted, never under
  * `?arena=off`), and the workshop's links go back.
  *
- * **The story is a page over the replay, not a renderer** (D151). `#story` (or
+ * **The story is a page over the replay, not a renderer** (D125). `#story` (or
  * `?view=story`) mounts `web/src/story/Story.tsx` — lazily, like the workshop —
  * INSTEAD of the mode app, as `#cards` and `#workshop` do, and for their reason:
  * a hidden board or arena would keep its `window` keydown listeners live under
@@ -137,7 +137,7 @@ const CardBrowser = lazy(() => import('./cards/CardBrowser.tsx'));
 const Workshop = lazy(() => import('./workshop/Workshop.tsx'));
 
 /**
- * **The story page, fetched only when someone opens `#story`** (D151) — the same
+ * **The story page, fetched only when someone opens `#story`** (D125) — the same
  * rule again: it is the narrator and a column of moments, a page most sessions
  * never open, and nothing of it belongs in the 2D entry chunk.
  */
@@ -305,7 +305,7 @@ function WorkshopLink({ onSet }: { onSet: (view: View) => void }): JSX.Element {
 }
 
 /**
- * **The story of this replay** (D151): the same log told turn by turn, at the
+ * **The story of this replay** (D125): the same log told turn by turn, at the
  * frame on screen. A URL like the links beside it; the cursor survives the trip
  * both ways through `replayCursors` / `followCursors` below.
  */
@@ -732,7 +732,7 @@ const replayCursors = new Map<string, number>();
 
 /**
  * **Where each FOLLOWED log was left** (spectating's follow-up 8, closed for the
- * page's own views by D154): the cursor, and whether the viewer had paused.
+ * page's own views by D128): the cursor, and whether the viewer had paused.
  * Back from `#story` (or `#cards`, `#workshop`) a viewer who had PAUSED is put
  * back on that frame, paused, while one who was watching live rejoins the live
  * edge — which is where they were. A reload still starts at the live edge: this
@@ -766,7 +766,7 @@ function useReplayLoad(requested: string, follow: boolean): { load: LoadState; f
     let cancelled = false;
     let created: LogReplayTransport | null = null;
     let polling: LogFollower | null = null;
-    // Coming back from another view at the frame the viewer paused on (D154);
+    // Coming back from another view at the frame the viewer paused on (D128);
     // a viewer who was watching live is not held back: the transport joins the
     // live edge as it does on a fresh page.
     const resume = followCursors.get(requested);
@@ -1075,7 +1075,7 @@ function FollowChip({ follower, transport }: { follower: LogFollower; transport:
 }
 
 // ---------------------------------------------------------------------------
-// The story — a page over the replay (D151)
+// The story — a page over the replay (D125)
 // ---------------------------------------------------------------------------
 
 /**
@@ -1347,7 +1347,7 @@ function App(): JSX.Element {
     return <WorkshopApp onSetView={setView} waiting={waiting} />;
   }
   if (view === 'story') {
-    // A page over the replay (D151), and like the two above it unmounts the mode
+    // A page over the replay (D125), and like the two above it unmounts the mode
     // app: a hidden board or arena would keep its `window` keydown listeners
     // live under the story's own keys (Space, the arrows, `,` `.` `V` `B`). It
     // loads the same log through `useReplayLoad`, from the fetch cache, and the

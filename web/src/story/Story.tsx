@@ -3,7 +3,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **`#story` — the narrator in the browser, in step with the replay** (D151).
+ * **`#story` — the narrator in the browser, in step with the replay** (D125).
  *
  * `tools/narrate.mjs` tells a frame log as a story in a terminal; this page
  * tells the log the replay is playing, beside the replay's own cursor: a
@@ -112,7 +112,7 @@ export default function Story(props: StoryProps): JSX.Element {
   const columnRef = useRef<HTMLElement | null>(null);
 
   // THE narration. Dimmed: the whole log the transport holds, re-told when
-  // more arrives (about 4 ms for g1 — D152). Hidden: only the frames the cursor
+  // more arrives (about 4 ms for g1 — D126). Hidden: only the frames the cursor
   // has played, so nothing ahead of it is on the page at all.
   const upTo = ahead === 'hide' ? Math.min(cursor, total) : total;
   const story = useMemo<NarratedStory>(

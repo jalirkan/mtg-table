@@ -4,7 +4,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **A picture of the `#story` page, and what was on it** (D151's evidence).
+ * **A picture of the `#story` page, and what was on it** (D125's evidence).
  * Headless Chromium over CDP, driven the way `tools/arena-bench.mjs` drives it
  * (no dependency: Node 24's global `WebSocket` and `fetch`), pointed at a dev
  * server you already run:

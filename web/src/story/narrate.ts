@@ -5,14 +5,14 @@
  *
  * **THE NARRATOR**: one per-seat frame log (docs/protocol.md §8) told as a
  * turn-by-turn story, for someone learning Magic by watching how the AI plays
- * it. It has two readers and this is its one implementation (decision D150):
+ * it. It has two readers and this is its one implementation (decision D124):
  *
  *   - `tools/narrate.mjs`, the CLI (D123) — a thin shell over this module that
  *     reads a file and prints `renderStory` / `renderSummary` / `toJson`. Node 24
  *     imports this file by type stripping, so it is written in erasable
  *     TypeScript only: no enums, no namespaces, no parameter properties, and no
  *     import at all.
- *   - the `#story` page (`web/src/story/Story.tsx`, D151), which narrates the
+ *   - the `#story` page (`web/src/story/Story.tsx`, D125), which narrates the
  *     frames the replay transport already holds and draws the same facts as a
  *     column of moments beside the replay cursor.
  *
@@ -76,7 +76,7 @@
  * machine; docs/evidence/story.md), so re-telling a growing log whole is
  * cheaper than keeping a second, incremental rule for "the seqs the file
  * holds" -- and the story of a log still being written is, frame for frame,
- * the story the CLI tells of the same bytes (D152).
+ * the story the CLI tells of the same bytes (D126).
  *
  * Every fact carries `frameIndex` -- the index, in the frames it was handed, of
  * the frame whose processing produced it -- which is how the page puts a moment
@@ -1879,7 +1879,7 @@ export function narrate(parsed: ParsedLog, opts: NarrateOptions = {}): Story {
 // Moments and the outline: the grouping both the CLI's text and the page draw
 
 /**
- * **One moment of the story, for the page** (D151): a fact as the `#story`
+ * **One moment of the story, for the page** (D125): a fact as the `#story`
  * column shows it.  `seat` is the player who did it (`null` for a thing that
  * happens: a death, a trigger), `label` the phase word the CLI prints in its
  * margin, and `frameIndex` where it sits on the replay cursor.

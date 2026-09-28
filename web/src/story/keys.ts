@@ -19,7 +19,7 @@
  * table is the board's and the arena's: `keys.test.ts` asserts every chord in it
  * appears in the board's `?` overlay, and `←` or `S` there would advertise a key
  * the board does not have. `#story` mounts no board and no arena (`App`
- * unmounts the mode app, D151), so the two tables never see the same keystroke.
+ * unmounts the mode app, D125), so the two tables never see the same keystroke.
  *
  * `[NO React]`, no DOM types: `node --test` imports it.
  */

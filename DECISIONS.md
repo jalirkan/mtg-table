@@ -5930,11 +5930,16 @@ turn-by-turn story for a beginner, and it is built on five rules:
 
 ---
 
-## D150 — The narrator is ONE pure TypeScript module, `web/src/story/narrate.ts`; `tools/narrate.mjs` is a shell over it and prints the same bytes
+## D124 — The narrator is ONE pure TypeScript module, `web/src/story/narrate.ts`; `tools/narrate.mjs` is a shell over it and prints the same bytes
 
-*Branch `story` (worktree `mtg-table-t2r`, off `main`'s `4408283`). Numbered in
-the lane's reserved range D150–D159 while other lanes cut the same day number
-their own; renumbered contiguously when it merges.*
+*Branch `story` (worktree `mtg-table-t2r`, off `main`'s `4408283`). Written as
+**D150–D154** in the lane's reserved range D150–D159, while other lanes cut
+the same day numbered their own, and renumbered contiguously at merge onto
+`main`'s `4408283`, after the narrator's D123: these five are **D124–D128**, in
+every file that cites them — this file, CLAUDE.md, PLAN.md, README.md,
+`docs/evidence/story.md`, `docs/evidence/narrate.md`, and comments in
+`scripts/spectate.sh`, `tools/narrate.mjs`, `tools/story-shot.mjs` and the web
+client.*
 
 **2026-09-28** (the `#story` page; `docs/evidence/story.md` is what was measured,
 PLAN.md *The story page* the status and follow-ups)
@@ -5971,9 +5976,10 @@ checks and two goldens pass unchanged.
 
 ---
 
-## D151 — `#story` is a PAGE over the replay, not a renderer and not a drawer: lazy, the mode app unmounted, handed frames and a cursor, importing no transport
+## D125 — `#story` is a PAGE over the replay, not a renderer and not a drawer: lazy, the mode app unmounted, handed frames and a cursor, importing no transport
 
-*Branch `story`, reserved range D150–D159 (see D150).*
+*Branch `story`: written as D151 in the lane's reserved range D150–D159,
+and **D125** since the merge (see D124).*
 
 **2026-09-28**
 
@@ -6022,9 +6028,10 @@ back on the story's.
 
 ---
 
-## D152 — The page re-tells the whole held log whenever it grows; with the future hidden, it tells only the frames the cursor has played
+## D126 — The page re-tells the whole held log whenever it grows; with the future hidden, it tells only the frames the cursor has played
 
-*Branch `story`, reserved range D150–D159 (see D150).*
+*Branch `story`: written as D152 in the lane's reserved range D150–D159,
+and **D126** since the merge (see D124).*
 
 **2026-09-28**
 
@@ -6060,9 +6067,10 @@ prefix's story is the full story's facts before the cut, frame for frame.
 
 ---
 
-## D153 — Hard rule 8 on the page is held by rendering it over the corpus: no name the log does not show, by ids, by backing and by the decks, with a negative control
+## D127 — Hard rule 8 on the page is held by rendering it over the corpus: no name the log does not show, by ids, by backing and by the decks, with a negative control
 
-*Branch `story`, reserved range D150–D159 (see D150).*
+*Branch `story`: written as D153 in the lane's reserved range D150–D159,
+and **D127** since the merge (see D124).*
 
 **2026-09-28**
 
@@ -6078,10 +6086,11 @@ from the narrator: an id concealed in every appearance is never marked with a
 name; every marked (id, name) pair is a name that id carries somewhere in the
 log; no `decks/*.dck` name the log never shows appears anywhere in the markup,
 attributes included; hidden means no moment after the cursor, dimmed means every
-such moment marked. Its negative control injects a name into an always-hidden
-stub of `disjoint.jsonl` with the `hidden` flag dropped — the page prints it and
-both the by-ids and the by-names checks catch it — and with the flag kept — the
-page prints nothing.
+such moment marked. Its negative control injects a real deck card's name that
+the log never shows (*Borough Backup*, from `decks/pacho-shield.dck`) into an
+always-hidden stub of `disjoint.jsonl` with the `hidden` flag dropped — the page
+prints it and both the by-ids and the by-names checks catch it, the second from
+the decks alone — and with the flag kept — the page prints nothing.
 
 **Rationale.** The narrator's own gate holds its text; the page adds markup —
 attributes, an image's `alt`, a summary card, a panel — and "the page only
@@ -6099,9 +6108,10 @@ and written down in CLAUDE.md, which `story.test.ts` checks.
 
 ---
 
-## D154 — A followed log keeps its cursor across the page's own views when the viewer had PAUSED; a viewer watching live rejoins the live edge
+## D128 — A followed log keeps its cursor across the page's own views when the viewer had PAUSED; a viewer watching live rejoins the live edge
 
-*Branch `story`, reserved range D150–D159 (see D150).*
+*Branch `story`: written as D154 in the lane's reserved range D150–D159,
+and **D128** since the merge (see D124).*
 
 **2026-09-28**
 
@@ -6125,5 +6135,5 @@ restoring nothing is right; paused, the frame they chose is.
 - **Restoring every cursor** — a viewer watching live who switched views would
   come back paused behind the game, the opposite of what follow mode is for.
 - **One transport kept alive across views** — the mode app is unmounted on
-  purpose (D151), and a transport outliving its page is the socket's exception
+  purpose (D125), and a transport outliving its page is the socket's exception
   (`liveTransport`), not a pattern to copy.

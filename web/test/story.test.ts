@@ -2,8 +2,8 @@
  * mtg-table — web/test/story.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The story page's pure half, and the narrator's one implementation** (D150,
- * D151, D152). What `node --test` can hold without JSX:
+ * **The story page's pure half, and the narrator's one implementation** (D124,
+ * D125, D126). What `node --test` can hold without JSX:
  *
  *   - `web/src/story/narrate.ts` IS the CLI's narrator: the golden files under
  *     `fixtures/narrate/` come out of it byte for byte, and `tools/narrate.mjs`
@@ -140,7 +140,7 @@ test('the page tells the CLI\'s story: the replay transport\'s parse and the CLI
   }
 });
 
-test('a prefix of a bridge log tells the prefix of its story (the page\'s hidden future, D152)', () => {
+test('a prefix of a bridge log tells the prefix of its story (the page\'s hidden future, D126)', () => {
   let checked = 0;
   for (const file of FIXTURES) {
     const parsed = parseLog(read(file));
@@ -159,7 +159,7 @@ test('a prefix of a bridge log tells the prefix of its story (the page\'s hidden
 });
 
 // A bound, not a benchmark: the page re-tells the whole held log on every append
-// (twice a second at most, D152), and a busy gate machine must not flake this.
+// (twice a second at most, D126), and a busy gate machine must not flake this.
 test('narration is cheap enough to repeat on every append: g1 well under 250 ms a telling', () => {
   const parsed = parseLog(read('fixtures/games/g1.jsonl'));
   narrate(parsed); // warm

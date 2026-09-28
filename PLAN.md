@@ -19,7 +19,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice, fixed twice and committed** (`0368a90`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened. **Tier 2 slice 4 (T13, proportioned bodies in painted costumes, T14) built, verified once and documented**, not committed (branch `tier2-slice4`): every humanoid a CC0 *Universal Base Characters* person on the animation library's own rig, painted by a costume palette, still one program; a full duelist per seat — the director and the villain — with gestures as cue params; **D95–D101**; nineteen follow-ups. **Tier 2 is complete (T0–T14)**; likeness — Tier 3, personal-only — is the open question (question 14) |
 | — | Match setup: the AI's own deck and its Forge profile *(a deferred item, brought forward)* | 1 day | **built, reviewed, fixed, documented and committed** on branch `match-setup`, rebased onto `main`'s `23e26b3` (2026-09-27) with a second fix commit, then onto the workshop's `bf0392b` the same day with the verifier's four findings fixed — `decks/doom-legion.dck`, 40 blue-black Marvel villains for the AI; `--ai-deck` / `--ai-profile` on the bridge and `scripts/play.sh`, `config.json`'s `match` block read by `play.sh` alone; `hello_ok.match` (amendment **M44**) naming the AI's deck but never listing it; the board's rails print both decks and the profile; gate rows 11–14 of `ten-games.sh` and step **9e**; **D105–D108**; one review pass, all nine findings closed; ten follow-ups, three of them (2, 8, 9) closed by the rebase and its fix commit; the ask path's push order recorded open as slice 4's follow-up 13(d) |
 | — | The narrator: a frame log read back as a story *(off the plan, for watching how the AI plays)* | 1 day | **built, gated and documented**, committed on branch `narrate` (2026-09-28) — `tools/narrate.mjs` tells any per-seat log turn by turn, `--turn`, `--summary`, `--seat`, `--json`; names only what the log's seat saw, never remembered (**D123**); `tools/narrate-selftest.mjs` is gate sub-step **12d**, with five negative controls, client-log re-deliveries and two golden files; nine follow-ups, the first a `#story` page it does not build; rebased onto spectating's `a5c8e39` (2026-09-28), where it became **D123** and **12d** and reads spectated recordings (`yourProfile`, `paceMs`) |
-| — | The story page: the narrator in the browser, in step with the replay *(off the plan, the narrator's follow-up 1)* | 1 day | **built, gated and documented**, committed on branch `story` (2026-09-28) — the narrator moved whole into `web/src/story/narrate.ts` and `tools/narrate.mjs` is its shell, output unchanged by a byte (**D150**); `#story`, a lazy page over the replay that imports no transport, the story column grouped by turn with the moment on screen highlighted, the summary card, the frame on screen with its cards, one cursor with the arena and the board (**D151**, **D154**); re-told as a followed log grows, only the played frames while the future is hidden (**D152**); hard rule 8 held by rendering it over the corpus with a control (**D153**); `./scripts/spectate.sh --story`; nine follow-ups, the first the story panel inside the arena, the last an engine race the gate hit (`act: undo`, not this branch's) |
+| — | The story page: the narrator in the browser, in step with the replay *(off the plan, the narrator's follow-up 1)* | 1 day | **built, gated and documented**, committed on branch `story` (2026-09-28) — the narrator moved whole into `web/src/story/narrate.ts` and `tools/narrate.mjs` is its shell, output unchanged by a byte (**D124**); `#story`, a lazy page over the replay that imports no transport, the story column grouped by turn with the moment on screen highlighted, the summary card, the frame on screen with its cards, one cursor with the arena and the board (**D125**, **D128**); re-told as a followed log grows, only the played frames while the future is hidden (**D126**); hard rule 8 held by rendering it over the corpus with a control (**D127**); `./scripts/spectate.sh --story`; nine follow-ups, the first the story panel inside the arena, the last an engine race the gate hit (`act: undo`, not this branch's) |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -4712,7 +4712,7 @@ desktop).
    process the dev server does not have (the deferred "picker in the page").
 8. **Reloading a followed page restarts following** at the live edge; `#cards` /
    `#workshop` and back does the same (the replay cursor map is not applied in
-   follow mode). *Half closed 2026-09-28 by the story page (D154): switching
+   follow mode). *Half closed 2026-09-28 by the story page (D128): switching
    between the page's own views — `#story`, the arena, the board, `#cards`,
    `#workshop` — puts a viewer who had PAUSED back on that frame, and one watching
    live back at the live edge; a reload still restarts at the live edge.*
@@ -4809,7 +4809,7 @@ What it is:
 ### The narrator's follow-ups — nine, 2026-09-28
 
 1. ~~**A `#story` page in the web client**~~ — **done 2026-09-28** by the story
-   page (*The story page*, below; D150–D154): a page of its own beside `#cards`
+   page (*The story page*, below; D124–D128): a page of its own beside `#cards`
    and `#workshop`, not a drawer on the board, and the panel inside the arena is
    its own follow-up 1. What this item said when it was open:
    **A `#story` page in the web client** — the obvious next step, NOT built here.
@@ -4889,7 +4889,7 @@ spectating's counts, because this branch touches nothing under `web/`.
 
 ---
 
-## The story page — the narrator in the browser (2026-09-28, D150–D154)
+## The story page — the narrator in the browser (2026-09-28, D124–D128)
 
 **Status: built, gated and documented** on branch `story` (the worktree
 `mtg-table-t2r`, off `main`'s `4408283`). The user is learning Magic and wants to
@@ -4897,7 +4897,12 @@ spectating's counts, because this branch touches nothing under `web/`.
 game told in words, beside the replay's cursor. It closes the narrator's
 follow-up 1. `docs/evidence/story.md` is what was measured; README's *The story
 page — `#story`* and *Spectate* (`--story`) are how to use it; CLAUDE.md's *The
-story page — the conventions D150–D154 added* are its rules.
+story page — the conventions D124–D128 added* are its rules. Its decisions were
+written as D150–D154 in the lane's reserved range and are **D124–D128** since the
+merge onto `4408283`, in every file that cites them; the verification pass's two
+cheap minors were fixed with the renumbering (evidence §1's line count, and §5's
+negative control, whose by-names half now finds a real deck card's name from the
+decks alone).
 
 ```bash
 npm --prefix web run dev            # then /?replay=games/g1.jsonl#story (☰ story in any replay's bar)
@@ -4909,14 +4914,14 @@ node tools/story-shot.mjs --url 'http://127.0.0.1:5196/?replay=games/g1.jsonl#st
 
 What it is:
 
-- **One narrator (D150).** `tools/narrate.mjs`'s narration moved whole into
+- **One narrator (D124).** `tools/narrate.mjs`'s narration moved whole into
   `web/src/story/narrate.ts` — erasable TypeScript, no import at all, which Node
   24 runs by type stripping — and the CLI keeps the file read and the flags.
   Every fact knows its `frameIndex`; `--json` strips it. Every CLI output over the
   corpus (19 logs × 7 modes), eight error paths and a spectated recording's five
   modes are byte for byte what they were; the selftest (12d) and its goldens pass
   unchanged.
-- **A page over the replay (D151).** Lazy, the mode app unmounted, its own keymap
+- **A page over the replay (D125).** Lazy, the mode app unmounted, its own keymap
   (`story/keys.ts`), CSS in `styles.css`, pure `page.ts`, components in
   `hooks-order`'s scan. `main.tsx`'s `StoryReplay` loads the log through the
   replay app's own `useReplayLoad` and draws the same replay bar; the page is
@@ -4927,16 +4932,17 @@ What it is:
   the moment, the named cards' Scryfall images). Click a moment to go there;
   `←`/`→` moments, `↑`/`↓` turns, `,`/`.` frames, Space plays, `V`/`B` the arena
   and the board at this frame.
-- **Re-told, never patched (D152).** Narration is ~4 ms for g1, so the page
+- **Re-told, never patched (D126).** Narration is ~4 ms for g1, so the page
   re-tells the held log as a followed one grows; with the future hidden (`S`, the
   default while following) it tells only `frames.slice(0, cursor)`, so the
   summary is the game so far.
-- **Hard rule 8 (D153).** `web/test/story-render.test.tsx` renders `<Story/>` over
+- **Hard rule 8 (D127).** `web/test/story-render.test.tsx` renders `<Story/>` over
   every fixture at seven cursors, dimmed and hidden — 266 renderings, 16,225 marked
   names — against an oracle apart from the narrator: by ids, by backing, by the
-  decks' names, hidden-means-hidden; a name injected into an always-hidden stub is
-  caught by two checks, and with the flag kept is never printed.
-- **One cursor (D154).** The story's `▣ arena` and the bar's `☰ story` leave at
+  decks' names, hidden-means-hidden; a real deck card's name the log never shows,
+  injected into an always-hidden stub, is caught by two checks (the by-names one
+  from the decks alone), and with the flag kept is never printed.
+- **One cursor (D128).** The story's `▣ arena` and the bar's `☰ story` leave at
   the frame on screen — for a finished replay through `replayCursors`, for a
   followed one through `followCursors` when the viewer had paused (watching live,
   the live edge is where they were). Spectating's follow-up 8 is closed for the

@@ -3,7 +3,7 @@
  * Copyright (C) 2026 the mtg-table authors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The `#story` page's own logic, pure** (D151): where the replay cursor sits
+ * **The `#story` page's own logic, pure** (D125): where the replay cursor sits
  * in the story, where the next and previous moment and turn are, and how a
  * moment's sentence is cut into text and card names. `Story.tsx` draws what
  * these return and decides nothing else.

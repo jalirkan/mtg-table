@@ -19,7 +19,7 @@
  * reads one file, writes stdout, and needs nothing but Node: no engine, no
  * config.json, no network, no npm package.
  *
- * THIS FILE IS THE SHELL; THE NARRATOR IS web/src/story/narrate.ts (D150).
+ * THIS FILE IS THE SHELL; THE NARRATOR IS web/src/story/narrate.ts (D124).
  * The narration -- what it reads, hard rule 8 by construction (one face
  * reader, no memory, the latest view), client logs and their re-deliveries,
  * and the text it prints -- lives in that one pure TypeScript module, which the

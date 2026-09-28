@@ -5,10 +5,10 @@ own cursor: a column of moments grouped by turn, the moment on screen highlighte
 the `--summary` table as a card at the head, the frame on screen with the cards it
 names — and, while a spectated game is still being recorded, the story growing as
 the recorder writes it. The narrator it runs is the CLI's own, moved into one pure
-TypeScript module both readers share. Decisions **D150–D154** (numbered in the
-`story` branch's reserved range; renumbered at merge); PLAN.md *The story page*
-has the status and follow-ups, CLAUDE.md *The story page — the conventions
-D150–D154 added* the rules.
+TypeScript module both readers share. Decisions **D124–D128** (written as
+D150–D154 in the `story` branch's reserved range; renumbered at merge); PLAN.md
+*The story page* has the status and follow-ups, CLAUDE.md *The story page — the
+conventions D124–D128 added* the rules.
 
 Built on 2026-09-28 in the worktree `/home/justin-a/code/mtg-table-t2r`, branch
 `story`, from `main` at `4408283`. Every number below was measured there, and the
@@ -26,9 +26,9 @@ node --test web/test/story.test.ts                    # the pure half (from web/
 
 ---
 
-## 1. One narrator: the CLI did not move by a byte (D150)
+## 1. One narrator: the CLI did not move by a byte (D124)
 
-`tools/narrate.mjs` (676 lines) became a 143-line shell: the file read, the flags,
+`tools/narrate.mjs` (1,574 lines) became a 143-line shell: the file read, the flags,
 the `EPIPE` rule, and re-exports for `tools/narrate-selftest.mjs`. Everything
 else — `faceOf`, the no-memory and latest-view rules, the client-log dedupe, the
 text, `renderStory`, `renderSummary`, `toJson` — is `web/src/story/narrate.ts`,
@@ -60,11 +60,11 @@ within a game, and — for every fact with a `seq` — the frame at that index i
 pushed each frame and asked once (`narrate()` does both). An incremental API was
 built and checked first — fed frame by frame with `story()` asked every seventh
 frame, it told the same story as the whole-file narration over all 19 logs — and
-then dropped (D152): narration is cheap (next section), and an incremental
+then dropped (D126): narration is cheap (next section), and an incremental
 narrator needs its own rule for the client-log gap check, which judges gaps
 against every seq the FILE holds.
 
-## 2. Cheap enough to re-tell (D152)
+## 2. Cheap enough to re-tell (D126)
 
 `narrate()` over g1's 376 frames: **about 4 ms** in Node 24 on this machine
 (3.6 ms in the first measurement; `story.test.ts` prints it every run and bounds
@@ -80,7 +80,7 @@ facts before the cut, frame for frame: **90 cuts, all equal**. The page's parse
 (`parseFrameLog`, the replay transport's) and the CLI's (`parseLog`) tell the same
 story and the same summary over all 19 logs.
 
-## 3. The page (D151)
+## 3. The page (D125)
 
 `fixtures/games/g1.jsonl` at frame 208 of 376, 1600 × 1000, headless Chromium —
 **`var/story/story-g1.png`**:
@@ -119,7 +119,7 @@ Soldier Token 1); life 8 → -1."*
 | `#arena` at 250 | click `☰ story` | `#story` at **250**, on screen *"Draws Plains."* |
 | `#story` at 316 | key `B` | the 2D board (`data-readonly`), replay bar at **316** |
 
-## 4. Following a spectated game live (D151, D154)
+## 4. Following a spectated game live (D125, D128)
 
 ```bash
 ./scripts/spectate.sh --no-serve --no-build --story --name story-follow-7 --seed 7 --pace 600
@@ -145,7 +145,7 @@ written `over`, the same URL (`var/story/story-follow-finished.png`, `End`): 288
 AI-Seat0's life fell to -1."*, and the tail and chip *"recording finished — this is
 a replay now"*.
 
-## 5. Hard rule 8 on the page (D153)
+## 5. Hard rule 8 on the page (D127)
 
 `web/test/story-render.test.tsx` renders `<Story/>` with `renderToStaticMarkup`
 over all 19 committed logs, at seven cursors each (0, 1, a quarter, half,
@@ -162,11 +162,17 @@ the narrator:
 | hygiene | no `undefined`, no `[object Object]`, no `(123)` engine id |
 
 **The negative control**: a copy of `disjoint.jsonl` whose stub of card #79 — an
-opponent's card concealed in every frame — carries `name: "Zzyzx, the Injected
-Leak"` with its `hidden` flag dropped, rendered at the frame of the opponent's
-draw of it: the page prints *"Draws Zzyzx, the Injected Leak"* and the by-ids and
-the by-names checks **both** reject it; with `hidden: true` kept, the name is
-nowhere on the page.
+opponent's card concealed in every frame — carries `name: "Borough Backup"`, a
+card of `decks/pacho-shield.dck` that the log never shows (the test asserts
+both), with its `hidden` flag dropped, rendered at the frame of the opponent's
+draw of it: the page prints *"Draws Borough Backup"* and the by-ids and the
+by-names checks **both** reject it — the by-names check from `decks/*.dck` alone,
+with nothing added to its forbidden list (the branch's first version handed it
+the injected string, so that half could not miss; the verification pass's minor,
+fixed at merge). With `hidden: true` kept, the name is nowhere on the page, and
+with `faceOf`'s `hidden === true` guard taken out of `narrate.ts` the control
+fails on exactly that half (*"expected … not to contain 'Borough Backup'"*, 1
+failed, 21 passed) — measured at merge and put back.
 
 The card image is M4 convention 2's third exemption (CLAUDE.md, checked by
 `story.test.ts`): one `imageUrl(` and one `lookupArt(` on the page, looked up by

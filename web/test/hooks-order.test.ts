@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
 // The card browser (`web/src/cards/`), the workshop (`web/src/workshop/`) and the
-// story page (`web/src/story/`, D151) joined the scan with their own components:
+// story page (`web/src/story/`, D125) joined the scan with their own components:
 // the same defect is invisible there for the same reason.
 const TREES = ['../src/render/', '../src/arena/', '../src/cards/', '../src/workshop/', '../src/story/'];
 

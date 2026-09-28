@@ -39,7 +39,7 @@
  * (`arena`, `cards`, `workshop`, `story`) — the hash takes the spellings in the
  * sets below.
  *
- * **The story is a fifth view, and a page too** (`web/src/story/`, D151).
+ * **The story is a fifth view, and a page too** (`web/src/story/`, D125).
  * `#story` / `?view=story` tell the replay's log as a story beside the replay's
  * own cursor. Unlike the card browser and the workshop it reads the replay — the
  * same `?replay=` log, the same transport machinery, the same cursor — but it
@@ -61,7 +61,7 @@ const CARDS_HASHES: ReadonlySet<string> = new Set(['cards', '/cards', '!cards', 
  * no frame stream, so `main.tsx` mounts it with no transport at all.
  */
 const WORKSHOP_HASHES: ReadonlySet<string> = new Set(['workshop', '/workshop', '!workshop', '#workshop']);
-/** **The story** (`web/src/story/`, D151): the replay's log told turn by turn, at the replay's cursor. */
+/** **The story** (`web/src/story/`, D125): the replay's log told turn by turn, at the replay's cursor. */
 const STORY_HASHES: ReadonlySet<string> = new Set(['story', '/story', '!story', '#story']);
 
 /** A hash word (any of the spellings above) as a view; anything else is the board. */

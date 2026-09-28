@@ -428,7 +428,7 @@ and 94 vitest in 6 files** inside the gate, where `MTGTABLE_WS_LOGS` names step
   functions over a `ReplayTransport`'s frames and scroll with the replay cursor.
   PLAN.md, *The narrator*, follow-up 1. *(Built since, 2026-09-28, on branch
   `story`: the narration moved into `web/src/story/narrate.ts`, which this tool now
-  imports, and `#story` runs it — `docs/evidence/story.md`, D150–D154.)*
+  imports, and `#story` runs it — `docs/evidence/story.md`, D124–D128.)*
 - It says **what** happened, never **why**: no "the AI attacked because…". The
   log does not carry the AI's reasoning, and inventing it would be rules logic.
 - It narrates the **events the bridge emits**, so what Forge does not emit it

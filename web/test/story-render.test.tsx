@@ -2,7 +2,7 @@
  * mtg-table — web/test/story-render.test.tsx
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **Hard rule 8 on the `#story` page, over every fixture** (D153).
+ * **Hard rule 8 on the `#story` page, over every fixture** (D127).
  *
  * The narrator's own gate (`tools/narrate-selftest.mjs`) holds the TEXT it
  * tells. This file holds the PAGE — everything the page puts in its markup: the
@@ -26,8 +26,10 @@
  *
  * **The negative control**, because a check that cannot fail proves nothing
  * (`check-redaction-selftest.mjs`'s rule): a copy of `disjoint.jsonl` whose
- * always-hidden card #79 carries a name on its stub, with the `hidden` flag
- * dropped (a leaky emitter) — the page prints it, and checks 1 and 3 must both
+ * always-hidden card #79 carries a REAL deck card's name on its stub — one of
+ * `decks/pacho-shield.dck`'s cards the log never shows, so check 3 finds it from
+ * the decks alone, with nothing added to its forbidden list — with the `hidden`
+ * flag dropped (a leaky emitter): the page prints it, and checks 1 and 3 must both
  * catch it; and the same name with `hidden: true` kept — the page must not print
  * it at all.
  */
@@ -199,7 +201,7 @@ function renderPage(log: ParsedFrameLog, cursor: number, ahead: Ahead, follow: S
 }
 
 /** Checks 1, 2, 3 and 5 over one rendering; a list of problems, so the control can assert some are FOUND. */
-function problemsOf(label: string, html: string, oracle: Oracle, extraForbidden: readonly string[] = []): string[] {
+function problemsOf(label: string, html: string, oracle: Oracle): string[] {
   const problems: string[] = [];
   for (const { id, name } of markedCards(html)) {
     if (name === null) continue;
@@ -211,7 +213,7 @@ function problemsOf(label: string, html: string, oracle: Oracle, extraForbidden:
     }
   }
   const plain = unescapeHtml(html);
-  const forbidden = [...DECK_NAMES].filter((n) => !oracle.visibleNames.has(n)).concat(extraForbidden);
+  const forbidden = [...DECK_NAMES].filter((n) => !oracle.visibleNames.has(n));
   for (const n of forbidden) {
     if (nameRe(n).test(plain)) problems.push(`${label}: the page prints ${JSON.stringify(n)}, a name the log never shows`);
   }
@@ -294,12 +296,17 @@ test('follow mode: the tail says so, and a log still being recorded is not a fin
 // ---------------------------------------------------------------------------
 // The negative control
 
-const INJECTED = 'Zzyzx, the Injected Leak';
+// A card of the deck in play (`decks/pacho-shield.dck`) that `disjoint.jsonl`
+// never shows face up: the leak a real emitter would make is a real card's
+// name, and check 3 has to find it in `decks/*.dck` on its own.
+const LEAKED = 'Borough Backup';
 
-test('negative control: a name on an always-hidden stub is caught by ids and by names; with the flag kept it is never printed', () => {
+test('negative control: a real deck name on an always-hidden stub is caught by ids and by names; with the flag kept it is never printed', () => {
   const file = 'fixtures/games/disjoint.jsonl';
   const clean = logOf(file);
   const oracle = audit(clean);
+  expect(DECK_NAMES.has(LEAKED), `${LEAKED} is not a card in decks/*.dck`).toBe(true);
+  expect(oracle.visibleNames.has(LEAKED), `${file} shows ${LEAKED}, so it cannot stand for an unseen card`).toBe(false);
   // The opponent's draw of a card concealed in every frame: the story's line
   // for it is "Draws a card." — the id is on the page's facts, nameless.
   const story = narrate({ header: clean.header, frames: clean.frames });
@@ -316,7 +323,7 @@ test('negative control: a name on an always-hidden stub is caught by ids and by 
         p.zones.hand.cards = p.zones.hand.cards.map((c) => {
           if (c.id !== id) return c;
           hits += 1;
-          const leaked = { ...c, name: INJECTED } as Record<string, unknown>;
+          const leaked = { ...c, name: LEAKED } as Record<string, unknown>;
           if (!keepHidden) delete leaked['hidden'];
           return leaked as unknown as typeof c;
         });
@@ -326,18 +333,19 @@ test('negative control: a name on an always-hidden stub is caught by ids and by 
     return copy;
   };
 
-  // A leaky emitter: the page prints what the log says, and both checks catch it.
+  // A leaky emitter: the page prints what the log says, and both checks catch it
+  // — check 3 from the decks alone, with no extra forbidden name handed to it.
   const leaky = doctor(false);
   const html = renderPage(leaky, draw!.frameIndex + 1, 'dim');
-  expect(html, 'the injected name did not reach the page, so the control proves nothing').toContain(INJECTED);
-  const problems = problemsOf('N1', html, oracle, [INJECTED]);
+  expect(unescapeHtml(html), 'the injected name did not reach the page, so the control proves nothing').toContain(LEAKED);
+  const problems = problemsOf('N1', html, oracle);
   expect(problems.some((p) => p.includes(`card #${String(id)} is concealed in every frame`)), 'check 1 (by ids) missed it').toBe(true);
-  expect(problems.some((p) => p.includes(JSON.stringify(INJECTED)) && p.includes('a name the log never shows')), 'check 3 (by names) missed it').toBe(true);
+  expect(problems.some((p) => p.includes(JSON.stringify(LEAKED)) && p.includes('a name the log never shows')), 'check 3 (by names) missed it').toBe(true);
 
   // The flag kept: the narrator's one face reader reads nothing off a stub, so
   // neither does the page.
   const held = doctor(true);
   const heldHtml = renderPage(held, draw!.frameIndex + 1, 'dim');
-  expect(heldHtml).not.toContain('Zzyzx');
-  expect(problemsOf('N2', heldHtml, oracle, [INJECTED])).toEqual([]);
+  expect(unescapeHtml(heldHtml)).not.toContain(LEAKED);
+  expect(problemsOf('N2', heldHtml, oracle)).toEqual([]);
 });

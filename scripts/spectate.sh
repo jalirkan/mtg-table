@@ -58,7 +58,7 @@
 #   --pace <ms>            the recorder's pace in follow mode (default 600; 0 = engine speed)
 #   --no-follow            record first, then open the replay (engine speed unless --pace)
 #   --2d                   open the 2D board instead of the arena (--arena is the default)
-#   --story                open the STORY instead (#story, D151): the game told turn by
+#   --story                open the STORY instead (#story, D125): the game told turn by
 #                          turn as it is played -- who cast what, who attacked, who
 #                          blocked, what died -- beside the replay bar; its `arena`
 #                          link switches to the 3D table at the same frame, and back
