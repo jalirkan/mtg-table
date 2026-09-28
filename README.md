@@ -400,6 +400,40 @@ strip, a stack panel, targeting and combat arrows, and a keyboard — and as of
 questions are answered on the board, every zone can be opened and read, and the
 declared attackers and blockers are a strip of their own.
 
+### Continuous integration
+
+`.github/workflows/checks.yml` runs on every push to `main` and every pull
+request: **the half of the gate that needs no running engine**, in three jobs
+side by side on GitHub's `ubuntu-latest`.
+
+| job | what it runs |
+|---|---|
+| `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
+| `bridge` | `tools/lint-bridge.sh`, then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its five self-tests, on Temurin 21 |
+| `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
+
+**The engine in CI.** CI is the one place anything downloads Forge, and it
+downloads only what you would: the `forge-installer-2.0.14.tar.bz2` asset
+(301,832,993 bytes) of Forge's **tagged `forge-2.0.14` release** — the
+distribution `~/forge` was unpacked from, never the `daily-snapshots` build
+(D109, D110). The job checks the archive against the sha256 GitHub publishes for
+it, extracts **the jar alone**, fails unless the jar's sha256 is the pin in
+*Getting the engine* above (`3c0a7c38…8e5dd9`, 39,383,858 bytes), and points
+`FORGE_JAR` at it (hard rule 9; `config.json` is not edited). Only that jar is
+kept, in the Actions cache under a key naming the asset and both digests — never
+in git and never as an artifact. `res/` is not extracted and
+`tools/make-forge-home.sh` is not run: none of the five self-tests boots an engine
+or reads `res/`.
+
+**What stays local.** `./tools/check-all.sh` — Smoke, the recordings and the
+drift check against them, the fourteen ten-games rows, 9d and 9e, the seven
+WebSocket servers, the engine-crash probe, and every check over what those
+produce — is still the command you run before committing; CI plays no game and
+starts no server. So are `tools/arena-bench.mjs` (a built `dist`, a preview
+server and a headless Chromium), `tools/fetch-art.ts` and the card library's
+real build (both Scryfall). A green CI run is a subset of a green gate, never a
+substitute for it.
+
 ### Decks
 
 Every deck the engine plays is a Forge `.dck` file, loaded with

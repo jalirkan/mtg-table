@@ -2,6 +2,10 @@
 bridge/out/
 web/node_modules/
 web/dist/
+# Vite's dependency-optimizer cache.  Under web/ it lands inside node_modules/,
+# but a vite started with the REPO ROOT as its root writes it to ./.vite/deps/,
+# and one such cache was committed by mistake in 4f84613.  Never commit it.
+.vite/
 
 # --- generated at setup / runtime -------------------------------------------
 # Forge's redirected profile (24 dirs, prefs, logs) + var/games/<id>/frames.jsonl
