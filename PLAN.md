@@ -29,6 +29,18 @@ or in `bridge/` moved, and the board gained one link (`▦ cards`, beside the ar
 toggle) and nothing else. *The card library and the card browser*, just above
 *Deferred*, has the status, the commands and the follow-ups.
 
+**Off the milestone plan, 2026-09-27: engine and sets** (**D109–D112**) — the
+user's Reality Fracture pre-release pool, and the question of which Forge plays
+it. **The engine stays Forge 2.0.14**, by the user's own rule: *"Let's not break
+anything to force in the latest cards."* The set arrives the day an official
+Forge release ships it; until then the pool is prepared (`decks/fra-rw-aggro.dck`,
+a draft opponent, a per-card deck audit, the saved bridge port as a patch) and
+nothing about how the game runs has changed. **Committed on branch
+`engine-upgrade`**, rebased onto `main`'s `a092d3a` (2026-09-27, after slice 4,
+the workshop and match setup) and gated there; not on `main`. *Engine and sets*,
+just above *Deferred*, has the rule, the measurements, the checklist for the day
+and the follow-ups.
+
 ---
 
 ## M0 — The engine runs our code
@@ -4043,6 +4055,223 @@ declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
 
 ---
 
+## Engine and sets — Forge 2.0.14 stays; Reality Fracture waits for an official release (2026-09-27, D109–D112)
+
+**Status: preparation only; committed on its branch, not on `main`** —
+worktree `/home/justin-a/code/mtg-table-t2h`, branch `engine-upgrade` (cut from
+`754f504`, rebased onto `main`'s `a092d3a` on 2026-09-27: Tier 2 slice 4, the
+workshop and match setup underneath it).
+**Nothing about how the game runs changed**: `bridge/`, `config.json`,
+`tools/check-forge.sh`, `tools/make-forge-home.sh`, `forge-home/custom-cards/`,
+`docs/protocol.md` and `fixtures/` are identical to `main`, and
+`var/forge/custom/cards/` still holds only D14's `a_i_m_scientists.txt`.
+[`docs/research/14-engine-upgrade.md`](docs/research/14-engine-upgrade.md) is the
+decision and the plan for the day;
+[`docs/evidence/engine-upgrade.md`](docs/evidence/engine-upgrade.md) is what was
+measured; report 08 §9 is the deck card by card. Decisions: **D109** (wait for an
+official release), **D110** (the engine pin), **D111** (no hand-written card
+scripts), **D112** (the draft FRA opponent).
+
+The user played a Reality Fracture pre-release (Scryfall `fra`, released
+2026-10-02; Forge edition `FRA`) and wants to play that pool against the AI here,
+and to watch AI-vs-AI games with it. Forge 2.0.14, the engine we run, predates the
+set: its `Reality Fracture.txt` lists 43 of the set's 461 entries.
+
+### The standing rule
+
+In the user's words, stated after this work had begun and overriding it: *"Let's
+not break anything to force in the latest cards. I'm sure things will be available
+through official channels soon enough, so no need to create unnecessary friction
+and work for ourselves."* It is the rule for every new set, not only this one:
+
+1. **Official releases only** (**D109**, **D110**). The engine is an asset of a
+   tagged Card-Forge/forge release. Forge's rolling `daily-snapshots` build may be
+   *measured* — in the session scratchpad or a throwaway home under `var/`,
+   through `FORGE_JAR=` — but it is never named in `config.json`, never the target
+   of a merged bridge change and never the engine of a committed recording.
+2. **No development snapshot, early or otherwise.** A bridge port to a newer
+   Forge waits as a patch file until an official release is adopted.
+3. **No hand-scripted cards** (**D111**), and no overlay of a newer Forge's own
+   scripts. A card the pinned engine lacks is absent until a release ships it;
+   `forge-home/custom-cards/` keeps exactly D14's one file.
+4. **No committed fixture re-recorded as a side effect.** An engine switch and a
+   re-record are separate commits and separate decisions (report 14 §5.4).
+5. **`~/forge` is never touched** — before, during or after a switch. A release
+   is unpacked under `var/forge-engine/<version>/`, and the old engine is the
+   rollback.
+
+### What was measured
+
+Two spikes (an overlay of the daily build's card scripts onto 2.0.14; the bridge
+ported to the daily build), judged in report 14; the three deck audits were re-run
+by the judge and reproduced exactly.
+
+| engine | the user's 50 copies (40 main + 10 sideboard): ok / missing / broken | games |
+|---|---|---|
+| **Forge 2.0.14, as it runs** | **19 / 31 / 0** — the 17 basics, Woodwork Prodigy, Austere Command | not playable: Forge drops a missing card from the library silently |
+| 2.0.14 + the daily's 249 FRA scripts as a user overlay | 47 / 0 / **3** — No Admittance (main), Hexhaven Battalion and Way of the Pyromancer (sideboard) use `ApiType.Empower`, which 2.0.14 does not have | the exact deck: **0 turns** at seeds 7, 8 and 9 (a card that cannot be built crashes zone preparation, sideboard included). Without the three: games finish, with 17 swallowed AI `NullPointerException`s in 10 games on the new haste statics |
+| the daily `2.0.15-SNAPSHOT-09.27` (never adopted) | **50 / 0 / 0**, every card Forge's own script | 29 games, 0 exceptions, every frame log PASSes redaction; Forge has no AI logic for `Empower` |
+
+Three findings beyond the cards:
+
+- **Nothing in the deck is unscripted upstream.** "Three of the deck's cards are
+  missing from the daily" was a lookup by file name: 249 of the set's scripts live
+  under `upcoming/`, and 22 prepared cards' files carry both faces' names. No
+  card needs writing by anyone but Forge.
+- **The seam moved less than feared.** `IGuiGame`'s abstract set went from 37 to
+  28 with no member added, and `IGameController.passPriority()` is gone. The port
+  is two files (`WireGuiGame`, `RecordMatch`), +18 / −59 lines of code, and
+  compiles only against the daily (5 errors on 2.0.14).
+- **The daily changes more than cards.** It exposed a latent race in the bridge's
+  M6 next-game lifecycle (a game born dead in 2 of 6 three-game sessions; 0 of 5
+  on 2.0.14), and it orders `stats.cardIds` differently, which fails gate step 6
+  on any machine and would force a re-record of `g1`. Same games otherwise: the
+  same 1,651 events in `g1`, the same ten-games turn counts.
+
+### What is prepared — read by nothing at runtime
+
+| file | what it is |
+|---|---|
+| `decks/fra-rw-aggro.dck`, `decks/fra-rw-aggro.txt` | **the user's pool**: 40 main and 10 sideboard, checked line by line against the user's own list (`/mnt/e/jalir/Projects/Magic/fra-pool-red-white-aggro.md`, read-only). Every card `\|FRA` except Austere Command, `\|SPG` — the set's Special Guests reprint; `\|FRA` falls back silently to another printing. The `.txt` says in its header that the deck does not play on 2.0.14 |
+| `docs/drafts/decks/fra-gb-leftovers.dck`, `docs/drafts/README.md` | **the draft AI opponent** (**D112**): the green-black "leftovers" deck the same notes propose, its 22 named cards plus 18 basics. Outside `decks/` on purpose, until the user accepts it |
+| `tools/audit-deck.mjs`, `tools/audit-deck/AuditDeck.java` | per card of a `.dck`, on any jar: **ok**, **missing** or **broken**. Read-only (a throwaway Forge home under `var/audit-deck/`); needs `bridge/out`; negative-controlled (175 of 175 ok on `pacho-shield` and three probe decks) |
+| `tools/javap-seam-diff.sh` | the 95 Forge classes `bridge/src` links, `javap`-diffed between two jars; reproduces spike B's diff line for line. Read-only |
+| `docs/research/patches/bridge-forge-2.0.15-snapshot-09.27.patch` | **the port, not applied**: the daily's identity (version, bytes, sha256) and the seam diff in its header. `git apply --check` passes; one-way |
+| `docs/research/patches/javap-2.0.14-vs-2.0.15-snapshot-09.27.txt` | the seam the port answers to — the baseline a release's seam is diffed against |
+| report 14, its evidence, report 08 §9 | the decision, the measurements, the deck card by card |
+
+```bash
+node tools/audit-deck.mjs decks/fra-rw-aggro.dck     # today: 19 ok, 31 missing, 0 broken, exit 1 -- correct
+node tools/audit-deck.mjs decks/pacho-shield.dck decks/morph-probe.dck \
+    decks/yield-probe.dck decks/sideboard-probe.dck    # the control: 175 ok, exit 0
+./tools/javap-seam-diff.sh "$FORGE_JAR" <other.jar>   # read-only; under a second
+```
+
+**The gate with all of it present** is green on the unchanged engine: exit 0 in
+727 s at `WSPORT=8678` (the preparation pass), and exit 0 in **729 s** at
+`WSPORT=8676` (the documentation pass that wrote this section, `bridge/out` kept,
+`var/check-all-engine-docs.log`): step 6 identical to `g1` (377 lines), 9c 10/10,
+10g three games each played through (816, 1,118 and 1,830 frame-log lines, no
+`OVER WITHOUT A gameOver STATE`), and step 13's `node --test` 807 / 799 pass /
+0 fail / 8 skipped with vitest 91 / 91.
+
+### On the day an official release ships Reality Fracture — the checklist
+
+Report 14 §0 is the list, with every command. In short: each step is its own
+reviewable change, the user commits, any failure **stops the switch**, and
+rollback is reverting `config.json` and the patch.
+
+**Before the day, on `main`:** follow-up 1 (the next-game race) must land before
+any engine moves; follow-ups 2 and 3 (the gate) should.
+
+1. **Is it the day?** A new tag on Card-Forge/forge's releases that is not
+   `daily-snapshots`, whose `res/editions/Reality Fracture.txt` lists the full set
+   (461 entries in the daily), and that loads it outside `upcoming/` — a release
+   build skips that directory.
+2. **Get it, pinned.** `tools/forge-engine.json` written by hand from the real
+   release page; `tools/get-forge.sh` verifies bytes and sha256 into
+   `var/forge-engine/<version>/` (both new on the day, **question 21**).
+   `sha1sum` the `~/forge` jar and `~/.forge/decks/constructed/` first.
+3. `FORGE_JAR=<release jar> ./tools/check-forge.sh`.
+4. **Audit before any code changes:** both FRA decks (expect 90 ok) and the MSH +
+   probe decks (expect 175 ok) against the release jar.
+5. **Diff the seam** against the saved one: apply the patch if the release moved
+   the way the daily did; re-port by the same method if it moved further; no
+   patch if it did not move. `MtgTable`'s `of 37` becomes `of 28`.
+6. **Point the repo at it:** a relative `forgeJar` plus `forgeJarSha256` and
+   `forgeVersion` in `config.json`, `tools/config.sh` and `check-forge.sh` taught
+   to resolve and assert them (new on the day); `make-forge-home.sh`;
+   `bridge/build.sh`.
+7. **The gate.** If the release behaves like the daily, step 6 fails on the
+   `stats.cardIds` order and on nothing else; every other step passes. Re-recording
+   `g1` (probably `g2` / `g3`) is a separate decision (**question 21**).
+8. **Play**: the user's deck against the draft opponent (AI vs AI, recorded and
+   checked by `check-redaction.mjs`), then a human seat — cast No Admittance first,
+   the first Empower spell a human will have cast through the bridge. Read
+   `player turns`, not just `MTGTABLE OK` (follow-up 4).
+9. **Record it:** a DECISIONS entry for the switch, and D14's follow-up — retire
+   the A.I.M. Scientists overlay (the daily's own script already dropped
+   `K:Trample`) and with it `ALLOW_CUSTOM_CARDS_IN_DECKS_CONFORMANCE`, once the
+   release's script is confirmed.
+
+### Engine and sets follow-ups — fourteen, 2026-09-27
+
+**Found while measuring, engine-independent, latent on 2.0.14 today.** None is
+fixed here; each is its own small change on `main`.
+
+1. **The M6 next-game race — a blocker for any engine switch.** Game N's late
+   `finishGame` can land after game N+1's `openView` has reset `overEmitted`
+   (`WireGuiGame.java:816`), so game N+1 is born dead (`OVER WITHOUT A gameOver
+   STATE`, a six-line frame log). 2 of 6 three-game sessions on the daily, 0 of 5
+   on 2.0.14. The evidence gives two fixes — defer `nextGameDecision` until this
+   game's `finishGame`, or key `finishGame` to a per-game generation — and
+   choosing one is a DECISIONS entry (**question 19**).
+2. **Gate step 6 dies without its message.** `diff … | head -20` under
+   `set -o pipefail` (`tools/check-all.sh:231`, `:140`) exits 141 on a diff longer
+   than 20 lines, and `set -e` ends the gate before "FAILED at step 6" prints.
+   Step 6 is also load-sensitive on 2.0.14 itself (the forwarder's 500 ms flush
+   moves frame boundaries).
+3. **Step 10g does not assert that each game was played.** It printed "OK: three
+   games" over a game that died at birth; only `web/test/ws-log.test.ts` caught it,
+   at step 13.
+4. **`MtgTable` prints `MTGTABLE OK` and exits 0 on a 0-turn game** (a card crash
+   at game start). That file belongs to the match-setup branch.
+5. **`check-redaction.mjs` A10 raises a false alarm** when a counter-unless-pay
+   prompt against the seat names a counterspell that is already public on the
+   stack: `lastZoneOf` is filled from `players[].zones` and never from
+   `stackCards`. Advisory (the file still PASSes); fix it with a negative control
+   before FRA's counterspells make it routine.
+
+**For the day, or after it.**
+
+6. **Arena identity for the FRA creatures.** The main deck has 14 creature names
+   (16 cards), the sideboard adds Ghalta, and the draft opponent thirteen more;
+   `figures.json`, `traits.json` and `cues.json` are keyed by card name and know
+   none of them. Of the fourteen, only Mabel, Valley Hero and Thalia, the Survivor
+   (Soldiers) meet an existing subtype rung, and the colour rungs cover W and U
+   only, so the red creatures stand as `creature/*`. Rows are art direction for
+   after the release (card names verbatim from the wire, M7 Tier 2 convention 1)
+   and after `tier2-slice4` lands, since it reworks the bodies. Lands and Medic's
+   Kitesail (Equipment) already fall to existing rungs.
+7. **Card art and the card library.** `tools/fetch-art.ts` has not been run for
+   either FRA deck, and `tools/card-library/` indexes MSH and MSC only, so the dev
+   card browser lists `fra-rw-aggro.dck` with its cards unresolved. A `fra` sync
+   closes the second; the first needs `art.json` for both seats' decks.
+8. **Prepare on the board.** Pyre Rhymer, Woodwork Prodigy and Whiplash Wordsmith
+   have a castable spell face. 2.0.15's `CardView.hasPreparedSpell()` and a
+   face-up card's spell face are not on the wire — hard rule 8 keeps
+   `getAlternateState` inside the face-down `alt` block. The game plays; the board
+   cannot say "prepared". A protocol amendment plus a hard-rule-8 review, never a
+   port detail.
+9. **`input.openZones`' `{hand}` hint does not arrive on 2.0.15** (the
+   `tempShowZones` path is gone; the wire shape is unchanged). Deriving it again
+   from `Snap`'s per-id zones would be a new decision.
+10. **D14's retirement** (checklist step 9), once the release's A.I.M. Scientists
+    is confirmed correct.
+11. **Forge's to close, ours to re-check:** Forge has no AI logic for `Empower`
+    (on the daily the AI cast No Admittance once in 11 recorded games and 0 times
+    in 152 others), and Pyre Rhymer's Molten Tide text reads "additonal".
+
+**At merge.**
+
+12. **Two deck audits.** The match-setup branch's `tools/check-deck.mjs` (a
+    static pass, `Smoke`, and a Scryfall diff) and this branch's
+    `tools/audit-deck.mjs` (per-card build checks on any jar) overlap: fold them,
+    or give each one job.
+13. **`decks/README.md` against the card library's test.** The match-setup
+    branch adds one; measured here with the repo's own parser, a markdown file in
+    `decks/` parses as a deck with skipped lines, which fails `cards-lib.test.ts`
+    ("every deck in decks/ parses with nothing skipped") once both are on `main`.
+    Whichever merges second fixes the test or the file — and then this branch's
+    decks belong in that README too.
+14. **Numbers.** Report 08 §8 is claimed by both this branch (FRA) and
+    match-setup (its villains deck); DECISIONS D109–D112 were numbered past
+    D95–D108 on the assumption that the three other branches in flight renumber
+    contiguously (workshop and match-setup both claim D102–D104 today); questions
+    18–22 below may collide the same way.
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these
@@ -4110,3 +4339,8 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 15 | **New, card library.** Commit `fixtures/cards/` — a 0.69 MB slice of Scryfall's data (172 `oracle_cards` lines, 84 MSH/MSC print lines, 6 sets, no images), reduced to the fields the library reads — or gitignore it? | **Committed as reduced** (**D90**): it keeps `cards-lib`, `cards-api` and six `cards-ui` tests offline and hermetic, and it is regenerated by `make-fixture.ts`, never hand-edited. The alternative is to gitignore it and let those tests skip when it is absent — a suite whose result depends on what is lying around, which the repo has been bitten by once (`MTGTABLE_WS_LOGS`). |
 | 16 | **New, card library.** What contact goes in `config.json`'s `scryfallUserAgent`? Scryfall asks for an accurate, identifying User-Agent; the committed one reads `github.com/<user>/mtg-table`. | **Only you can supply it.** Until then `build.ts` and `images.ts` warn on every run that talks to Scryfall, and NOTICE §2 says it must be replaced before anyone talks to Scryfall. |
 | 17 | **New, card library.** Fetch every MSH + MSC print's image (`images.ts --all-prints --yes`: 1,338 images, ~104 MiB into `var/cards/images/`), so browsing the two sets stops hot-linking? | **Not fetched**: only the ten decks' 41 images are cached, and the browser hot-links the rest from `cards.scryfall.io`. Nothing depends on the answer. |
+| 18 | **New, engine and sets.** Play Reality Fracture now — on Forge's daily build, or by overlaying card scripts onto 2.0.14 — or wait for an official Forge release that ships the set? | **ANSWERED by you, 2026-09-27: wait.** *"Let's not break anything to force in the latest cards."* Recorded as **D109–D111**: official releases only, no daily build, no hand-written or overlaid scripts, no fixture re-recorded, and the deck stays as you built it (no edits to dodge the three Empower cards). *Engine and sets* has the checklist for the day. |
+| 19 | **New, engine and sets.** Fix the bridge's M6 next-game race (*Engine and sets* follow-up 1) on `main` now, as its own change, or leave it until the day? It is latent on 2.0.14 (0 of 5 sessions) and killed a game in 2 of 6 on the daily build. | **Not scheduled — but it must land before any engine switch**, with its fix chosen in a DECISIONS entry. The two gate defects (follow-ups 2 and 3) and `MtgTable`'s OK on a 0-turn game (follow-up 4, the match-setup branch's file) are the same question. |
+| 20 | **New, engine and sets.** The FRA opponent: accept `docs/drafts/decks/fra-gb-leftovers.dck` (your notes' green-black leftovers deck, plus 18 basics), change its mana, or supply another list? | **A draft until you say** (**D112**). Accepting it is `cp` into `decks/`. On the daily build it beat the red-white deck 25–15 with the Forge AI piloting both, which says little about you at the red-white seat. |
+| 21 | **New, engine and sets — for the day.** (a) Move the engine pin into the repo — `tools/forge-engine.json`, `tools/get-forge.sh`, `var/forge-engine/<version>/`, a relative `forgeJar` with its sha256 in `config.json` — instead of an absolute path to a hand install? (b) Re-record `g1` (probably `g2` / `g3`) if the release, like the daily, differs from 2.0.14 only in the order of `stats.cardIds`? | **Neither happens without you, and they are two decisions, not one.** (a) is specified in report 14 §5.2 and not built (**D110**); (b) follows report 14 §5.4 — re-record only after a content diff, stop on any real change, and in a commit of its own. |
+| 22 | **New, engine and sets.** Keep the prepared files to commit (the two FRA deck files, `tools/audit-deck.mjs` and its helper, `tools/javap-seam-diff.sh`, `docs/research/patches/`, `docs/drafts/`, report 14 and its evidence), and should `audit-deck.mjs` join `check-all.sh`? | **Keep them; `audit-deck.mjs` stays a hand tool** — it needs a built `bridge/out`, takes a few seconds, and today it would only re-prove the MSH decks the gate already plays. Showing Prepare on the board (follow-up 8) is a later decision of its own, not the day's. |

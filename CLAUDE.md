@@ -8,7 +8,10 @@ mtg-table is a local browser client for Magic: The Gathering. It runs the
 open-source Forge engine (GPLv3, Java) headless as rules engine and AI opponent,
 with a TypeScript/React front-end talking JSON over a loopback WebSocket. The
 architecture is fixed. The user is a hobbyist learning Magic; the deck in play is
-`decks/pacho-shield.dck` (40 cards, Marvel Super Heroes / MSH + MSC).
+`decks/pacho-shield.dck` (40 cards, Marvel Super Heroes / MSH + MSC). The user's
+Reality Fracture pool, `decks/fra-rw-aggro.dck`, is prepared and **does not play
+on the engine we run** — it waits for an official Forge release that ships the set
+(**D109**; see *Environment*). Do not try to make it play early.
 
 ---
 
@@ -52,7 +55,11 @@ code; if you think one is wrong, say so in prose first.
    but is absent from the 2.0.14 jar. **Do not import gson** — absent from the
    jar. JSON parsing: `org.eclipse.jetty.util.ajax.JSON` (bundled; numbers arrive
    as `Long`, arrays as `Object[]`). JSON writing: our own small `StringBuilder`
-   writer in `Json.java`.
+   writer in `Json.java`. **Both bans outlive the version that motivated them:**
+   the `2.0.15-SNAPSHOT-09.27` daily build carries `setNoGUIUser()` and 212 gson
+   classes (report 14's spike B), and the lint still rejects both on any engine,
+   because nothing here needs either and the bridge must keep compiling against the
+   pinned jar, which is 2.0.14 today.
 6. **Run the JVM with exactly:**
    ```bash
    env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
@@ -65,7 +72,8 @@ code; if you think one is wrong, say so in prose first.
 7. **Licence is GPL-3.0-or-later for the whole repo.** Copy **no** code from
    `witchesofthehill/manabrew` (AGPL-3.0-or-later) — lifting any of it relicenses
    this project. Copying from Forge itself is fine (same licence), but confirm it
-   compiles against the 2.0.14 jar first.
+   compiles against the pinned jar first — 2.0.14 today (*Environment*), not the
+   2.0.15 source checkout and not a daily build.
 8. **Hidden information: exactly one card-serialisation function,** and exactly
    one function that puts an engine *string* on the wire. Three gates, in order:
    the caller's own `zoneHint` (never `cv.getZone()`, which is fail-open when
@@ -184,7 +192,10 @@ code; if you think one is wrong, say so in prose first.
       Without it, `StaticData.loadCustomCards()` marks **D14**'s script custom
       and `DeckFormat.java:449` rejects `decks/pacho-shield.dck` outright. It
       relaxes conformance for *every* custom card, which is only acceptable while
-      `forge-home/custom-cards/` holds exactly one file (see **D14**);
+      `forge-home/custom-cards/` holds exactly one file (see **D14**) — and
+      **D111** keeps it at one: **no hand-written card script, and no copy of a
+      newer Forge's scripts, goes there to bring a new set in early**. A card the
+      pinned engine lacks is absent until an official release ships it;
     - **set immediately after** `initialize`:
       `setPref(FPref.UI_SELECT_FROM_CARD_DISPLAYS, "false")` — in memory,
       **never `save()`**. Decision **D13**: with the pref on, a scry 1 ships the
@@ -203,9 +214,41 @@ code; if you think one is wrong, say so in prose first.
 - Node v24.20.0, npm 11. Node 24 runs `.ts` files directly via type stripping, so
   `tools/fetch-art.ts` needs no build step.
 - No sudo.
-- Forge 2.0.14 at `/home/justin-a/forge`; fat jar
-  `forge-gui-desktop-2.0.14-jar-with-dependencies.jar` (39,383,858 bytes);
-  resources `/home/justin-a/forge/res`.
+- **The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.** Fat jar
+  `forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, **39,383,858 bytes, sha256
+  `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`**, manifest
+  `Implementation-Version: 2.0.14-SNAPSHOT-08.08`, `build.txt`
+  `2026-08-08 22:49:26`; resources `/home/justin-a/forge/res`, beside the jar,
+  which is where `tools/make-forge-home.sh` derives them from.
+  - **How it was obtained:** it is the user's own install, Forge's `.tar.bz2`
+    distribution extracted as-is. This repo never downloads, copies or commits an
+    engine (D2; `*.jar` is gitignored).
+  - **How it is pinned:** `config.json`'s `forgeJar` names it by absolute path
+    (`FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
+    prints its sha256 — **it must print the one above** — and every recording's
+    session header carries it as `forgeJarSha256` (all 18 committed
+    `fixtures/games/` recordings name this build). Nothing asserts the hash yet;
+    report 14 §5.2 is the specified, unbuilt mechanism for the day.
+  - **What may replace it (D109, D110):** only an asset of a **tagged official
+    Forge release**, one engine at a time, unpacked under the repo's gitignored
+    `var/forge-engine/<version>/` — never Forge's rolling `daily-snapshots` build,
+    and never over `~/forge`. A daily build may be *measured* through `FORGE_JAR=`
+    in a throwaway location; it is never named in `config.json` and nothing is
+    merged against it. The version string does not tell the two apart — 2.0.14's
+    own reads `-SNAPSHOT-08.08` and `BuildInfo.isDevelopmentVersion()` is true on
+    it — so where the archive came from does, and `tools/audit-deck.mjs` says
+    whether the set actually loads. The switch is report 14 §0's checklist, and
+    it starts only when the user says the release is here.
+  - **`~/forge` and `~/.forge` stay untouched, always** — before a switch, after
+    it, and as its rollback (*Never write outside this repo*).
+  - **Reality Fracture (FRA) is not in this engine.** Its edition file lists 43
+    of the set's 461 entries; the user's deck audits **19 ok, 31 missing, 0
+    broken** (copies, main + sideboard), and Forge would drop the 31 silently.
+    That is expected, not a bug to fix: no overlay, no hand-written script
+    (**D111**), no snapshot port. `docs/research/14-engine-upgrade.md` is the
+    decision and the plan; `docs/research/patches/` holds the saved bridge port to
+    the `2.0.15-SNAPSHOT-09.27` daily build and the seam diff it answers to — a
+    patch that compiles only against that engine and is **never applied early**.
 
 ## Build and run
 
@@ -240,6 +283,11 @@ node tools/check-deck.mjs decks/doom-legion.dck --scryfall   # match setup: is e
 ./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt \
     --seed 7 --game-id human-amount-7 \
     --deck decks/amount-probe.dck --deck2 decks/morph-probe.dck   # M5: a probe run
+node tools/audit-deck.mjs decks/pacho-shield.dck   # per card: ok / missing / broken on the
+                                            # configured engine; read-only, a throwaway home
+                                            # under var/audit-deck/; needs bridge/out. Not in
+                                            # check-all. decks/fra-rw-aggro.dck: 19/31/0, exit 1
+./tools/javap-seam-diff.sh <old.jar> <new.jar>     # the bridge's Forge API, diffed (read-only)
 ```
 
 **`./scripts/play.sh` is the M3 command and M6's headline one** — check-forge →
@@ -1620,6 +1668,21 @@ than its version suggests — `GameEventForwarder`, `DeltaSyncManager` and
 byte-identical across both versions, which is why this seam is a safe place to
 stand.
 
+**That last sentence was true of the source checkout of 2026-09-11, and is no
+longer true of `IGuiGame` in Forge's later daily builds.** Measured with `javap`
+against the `2.0.15-SNAPSHOT-09.27` daily jar (report 14, spike B): `IGuiBase`,
+`HostedMatch`, `GameEventForwarder`, `GameView`, `PlayerView`, `StackItemView` and
+all 26 mapped `GameEvent*` classes are still byte-identical, and `CardView` lost
+only getters `Snap` does not read. But `IGuiGame`'s abstract set fell from 37 to
+28 (`tempShowZones` / `hideZones` / `restoreOldZones` / `updateSingleCard`
+deleted, `openZones` a default with a new signature, nineteen update, mana-pool
+and overlay members turned into defaults; no abstract member added), and
+`IGameController.passPriority()` is gone. The bridge does not compile against that
+jar unchanged; the port is saved as a patch in `docs/research/patches/` and is not
+applied (**D109**). Against any jar other than the pinned one, **run
+`./tools/javap-seam-diff.sh <pinned.jar> <other.jar>` before believing either
+paragraph**.
+
 To regenerate the list of abstract members still to implement:
 
 ```bash
@@ -1631,7 +1694,8 @@ comm -23 <(jp forge.gui.interfaces.IGuiGame) <(jp forge.gamemodes.match.Abstract
 That diff yields **36 and misses one**: `AbstractGuiGame` declares its own
 `protected abstract void updateCurrentPlayer(PlayerView)`, which is not on
 `IGuiGame` at all. **There are 37 members and the class will not compile without
-it** (`docs/research/07-wireguigame-spec.md` §0.1). Check the class directly:
+it** (`docs/research/07-wireguigame-spec.md` §0.1) — on 2.0.14; the same recipe
+gives 27 + 1 = 28 on the 09-27 daily build. Check the class directly:
 
 ```bash
 java -m jdk.jdeps/com.sun.tools.javap.Main -cp "$FORGE_JAR" \
@@ -1649,6 +1713,14 @@ user's real Forge install and their real decks. Forge's profile is redirected in
 `FModel.initialize` creates 24 profile directories. It must create them in `var/`.
 When in doubt, `sha1sum` the `~/.forge/decks/constructed/` tree before and after a
 run.
+
+The same holds for a **newer Forge**: it is never unpacked over `~/forge` or
+upgraded in place. An engine being evaluated lives in the session scratchpad or a
+throwaway home under `var/` (as `tools/audit-deck.mjs` builds under
+`var/audit-deck/`); an adopted official release lives under
+`var/forge-engine/<version>/` (**D110**). Before and after the first run on any
+engine other than `~/forge`'s, `sha1sum` the `~/forge` jar (it must stay
+`3c0a7c38…8e5dd9`) and the `~/.forge/decks/constructed/` tree.
 
 ## The user commits
 
@@ -1672,12 +1744,13 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/research/09-arena-tier1-plan.md` | **M7 Tier 1 — the spec for the arena.** Dependencies and the React 18/19 fork, the scene graph, the texture pipeline, the offset model, the event→cue table, the camera rules, the performance budget and the six evenings E1–E6. Read in full before touching `web/src/arena/`. |
 | `docs/research/12-arena-tier2-assets.md` | **M7 Tier 2 — the asset landscape.** Which packs are really CC0 (and Quaternius's 2026-08-28 relicensing), measured GLB internals, Mixamo's terms, image-to-3D and the card-art question, the gltf-transform pipeline, and the two drei traps (`useAnimations`, `useGLTF`'s gstatic Draco). |
 | `docs/research/13-arena-tier2-plan.md` | **M7 Tier 2 — the spec for the manifestation stage**, written against the Tier 1 code: the five invariants, the corpus measurements, `figurePose`, the pose-versus-cue rule, the clip lane, auras, lands, the stack, duelists, the budget, the asset pipeline, the tests and the evenings T0–T14. Read in full before touching `web/src/arena/figures/`. |
+| `docs/research/14-engine-upgrade.md` | **Engine and sets — why Forge stays 2.0.14 and what happens the day an official release ships Reality Fracture.** The two spikes judged (a card-script overlay on 2.0.14: fails; a port to the `2.0.15-SNAPSHOT-09.27` daily build: excluded by the user), the defects they found in the bridge and the gate, and §0, **the checklist for the day**. Decisions **D109–D112**; `docs/evidence/engine-upgrade.md` is what was measured, report 08 §9 is the FRA deck card by card, `docs/research/patches/` holds the saved bridge port and its seam diff (never applied early), and `docs/drafts/` holds the draft FRA opponent (never loaded). PLAN.md's *Engine and sets* has the status, the day's checklist in short, the follow-ups and questions 18–22. |
 | `docs/research/10-board-ui-spec.md` | **The M4 board.** Component tree, layout tokens, card tiles, arrows, wireframes. |
 | `docs/research/11-engine-comfort-features.md` | **M6.** Phase stops, pass-to, auto-yield, auto-pay, undo, concede, new game — every one an engine feature, rendered. Read it with PLAN.md's *"What M5 hands to M6"*, which says what is already on the wire. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers. |
 | `PLAN.md` | The eight milestones M0..M7 — M7 Tier 1 is done, and **Tier 2 is complete**: its first slice (T0–T7), its second (T8 and the camera views), its third (T9–T12, per-card identity) and its fourth (proportioned bodies in painted costumes, T13's duelists and T14; built, verified once and documented on branch `tier2-slice4`, rebased onto `main`'s `754f504` on 2026-09-27, with nineteen follow-ups and *Tier 2 is complete — what is left*): *M7 Tier 2* has the four slices' status and evidence, slice 1's nineteen follow-ups (six closed by slice 2, one by slice 3), slice 2's ten (two closed by slice 3), slice 3's fourteen, the T13–T14 hand-over and *Tier 3 — a note, not a plan* (likeness models would be personal-only: local, gitignored, never committed) — plus the deferred list and the open questions only the user can settle (two new with slice 3: question 13, should your figures face the other seat?, and question 14, is likeness — Tier 3 — part of the end goal at all?). Off the plan, *The card library and the card browser* (**D90–D94**, 2026-09-27) has that tool's status, commands and twelve follow-ups, and questions 15–17 are its: commit `fixtures/cards/`?, the `scryfallUserAgent` contact, and every MSH + MSC image. Beside it, *The workshop* (**D102–D104**, 2026-09-27) has the card viewer's status, commands, its rebase onto slice 4 and its follow-ups. *Match setup* (**D105–D108**, 2026-09-27, a deferred item brought forward), just above *Deferred*, has the AI's own deck and profile: status, commands and follow-ups. |
-| `DECISIONS.md` | The **one hundred and eight** load-bearing decisions, dated, with rejected alternatives. **D102–D104**, 2026-09-27, are the workshop, numbered after Tier 2 slice 4's D95–D101: **D102** a lazy page outside `arena/` that reaches the arena through a listed set of exports and unmounts the mode app (reconciled onto slice 4 the same day: the costume row, `#cards` linked both ways through `workshop/links.ts`, and the arena's state-backed `loopRef`); **D103** tuning overrides in this browser's `localStorage`, through the arena's validators, leaving only as a copy of the committed text; **D104** synthetic frames from one pure builder, card facts from the corpus, the engine's choices labelled. **D105–D108**, 2026-09-27, are match setup's, numbered after the workshop's: **D105** the AI deck's NAME is public on the wire — `hello_ok.match.aiDeck` is `{name, cards}`, never a path, hash or list, negative-controlled by `fixtures/negative/redaction/m44-*`; **D106** only `scripts/play.sh` reads `config.json`'s `match` block, so the bridge and the gate never play what the player last chose; **D107** the AI's profile is always an explicit `profileOverride`, named from the `.ai` files, through one seam (`Bootstrap.createAiPlayer`), and it is not a difficulty; **D108** the AI's own deck is Doom Legion, and a card stays in it only if the AI casts it and the redaction gate passes. (**D95–D101**, 2026-09-27, are M7 Tier 2 slice 4's: **D95** the humanoid bodies are Quaternius's *Universal Base Characters* on the animation library's own rig, every clip the library's, the chibis kept as fallbacks — superseding **D73**, and **D68** for those bodies; **D96** 1,400 triangles a body, the drone 1,900 and the bee 1,700, simplified with the costume slots by the CLI's own meshoptimizer; **D97** the hologram paints a costume — a slot per vertex, a palette per figure written at commit, still one program; **D98** the chibi as a `body` flag, props fitted per body family, the eyepatch one-sided; **D99** the duelists as full figures — a seat, not a player; a director and a villain; props baked — superseding **D62**; **D100** where they stand, the opponent's at the table's right because the far end is under the chrome; **D101** their gestures as a `gesture` param on reserved clip-lane ids, with suppression rules 5b and 8; **D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
+| `DECISIONS.md` | The **one hundred and twelve** load-bearing decisions, dated, with rejected alternatives. **D102–D104**, 2026-09-27, are the workshop, numbered after Tier 2 slice 4's D95–D101: **D102** a lazy page outside `arena/` that reaches the arena through a listed set of exports and unmounts the mode app (reconciled onto slice 4 the same day: the costume row, `#cards` linked both ways through `workshop/links.ts`, and the arena's state-backed `loopRef`); **D103** tuning overrides in this browser's `localStorage`, through the arena's validators, leaving only as a copy of the committed text; **D104** synthetic frames from one pure builder, card facts from the corpus, the engine's choices labelled. **D105–D108**, 2026-09-27, are match setup's, numbered after the workshop's: **D105** the AI deck's NAME is public on the wire — `hello_ok.match.aiDeck` is `{name, cards}`, never a path, hash or list, negative-controlled by `fixtures/negative/redaction/m44-*`; **D106** only `scripts/play.sh` reads `config.json`'s `match` block, so the bridge and the gate never play what the player last chose; **D107** the AI's profile is always an explicit `profileOverride`, named from the `.ai` files, through one seam (`Bootstrap.createAiPlayer`), and it is not a difficulty; **D108** the AI's own deck is Doom Legion, and a card stays in it only if the AI casts it and the redaction gate passes. **D109–D112**, 2026-09-27, are the engine and sets, numbered on the `engine-upgrade` branch after match setup's (the `hardening` branch also numbers from D109; whichever lands second renumbers): **D109** the engine stays Forge 2.0.14 until an OFFICIAL Forge release ships Reality Fracture — no daily snapshot, no merged port, no card-script overlay; **D110** the engine pin: official releases only, one engine at a time, identified by its bytes and sha256, never installed over `~/forge`; **D111** no hand-written card scripts and no overlay of a newer engine's scripts; **D112** the FRA AI opponent is the user's own green-black "leftovers" list, finished with basics only, a draft until the user accepts it. (**D95–D101**, 2026-09-27, are M7 Tier 2 slice 4's: **D95** the humanoid bodies are Quaternius's *Universal Base Characters* on the animation library's own rig, every clip the library's, the chibis kept as fallbacks — superseding **D73**, and **D68** for those bodies; **D96** 1,400 triangles a body, the drone 1,900 and the bee 1,700, simplified with the costume slots by the CLI's own meshoptimizer; **D97** the hologram paints a costume — a slot per vertex, a palette per figure written at commit, still one program; **D98** the chibi as a `body` flag, props fitted per body family, the eyepatch one-sided; **D99** the duelists as full figures — a seat, not a player; a director and a villain; props baked — superseding **D62**; **D100** where they stand, the opponent's at the table's right because the far end is under the chrome; **D101** their gestures as a `gesture` param on reserved clip-lane ids, with suppression rules 5b and 8; **D90–D94**, 2026-09-27, are the local card library and the `#cards` browser: **D90** README's card-library NON-GOAL lifted in part, the dev-only route, the field-reduced fixture; **D91** `node:sqlite` + FTS5 with no npm dependency and a fresh file per build; **D92** the same-origin route in the Vite dev server, which never fetches; **D93** the image cache keyed by Scryfall id + size + face; **D94** `CardView` apart from `CardTile`, its own keymap, and `#cards` unmounting the mode app; D15–D19 are M2's, D20–D27 M3's, D28–D31 M4's, D32–D36 M5's, **D37–D45 M6's**, **D46–D52 M7's**, **D53–D89 M7 Tier 2's** — slice 3's documentation pass's first: **D88** several bodies are one pose — a swarm is instances of one kind round one rig (the Air Force's hidden insect rig, so a dying Air Force is not seen dying), a squad's followers baked once — **D89** Quake keyed off her trigger's resolution and aimed only by the stack, the tap-pairing heuristic declined; then its second verification pass's: **D82** an attacker faces its defender (`dRotY`, `Stage.yawTo`), **D83** identity read from BOTH seats as a rasterised number (the badge's back emblem, the pistol at the hip, the `visor`, Fury's black coat and patch), **D84** the Agents as a wedge and "three heads side by side", **D85** the opponent's carrier over the centre line and the HUD as a keep-out band, **D86** an attachment under its host so clicks follow the drawing, **D87** four quiet beats made to read; then slice 3's own: **D75** identity as data (`traits.json`) and a shared kit of procedural props, one draw call per kind, **D76** the giant ant flown side-on so D65 stays strict, **D77** a Vehicle as a carrier silhouette overhead, crewed or not, flying high enough to cover no figure from the table view, **D78** the prop field bound through `DiscField.bind`, committed per snapshot, riding the dying bodies too, **D79** T11's beats on the body (the `figure` anchor), the closed param table and suppression rule 7, **D80** T12's looks as poses with the deck's three attachment rows committed and the stations in their own rank slot, **D81** one definition of a figure's front, and your figures facing you as the user's call; then slice 2's: **D73** the hero (`character-female-b`) and scientist (`character-male-e`) bodies, chosen by silhouette because the hologram keeps only geometry, **D74** the camera keys as three keymap rows, `inert` on the board (both written up by slice 2's documentation pass), **D72** the cue clock runs only while there is film and `<Canvas frameloop>` is the runner's ref (the second verification pass; both defects Tier 1's), **D64** a creature that dies is seen dying, its body drawn from the snapshot until its death cue ends, decided by the queue (supersedes D56's clause), **D65** the width clamp strict for every archetype (`FIGURE_MIN_FIT` and the drone's overflow retired), **D66** a wrapped rank's back row stands on its own card and its disc draws after the cards, **D67** a library with no texture and a build that verifies its sources and records its output, **D68** one humanoid clip set with the UAL's `hit` and `die` retargeted in, **D69** five camera views, the two that lose the hand spectator-only, and a seat view that must keep its own ranks uncovered, **D70** the auto director's three numbers with combat and the outcome exempt from the cooldown, **D71** rule 5 only at a live seat, `change` counted only under the user's hand, and the stored view; then slice 1's — **D53** stylised CC0 figures under one unlit holographic material, **D54** CC0-only with a written provenance, no Mixamo, no models from card art, **D55** where a figure stands and the width clamp, **D56** pose versus cue, **D57** the clip lane scrubbed by `action.time` with a zero-delta mixer, **D58** breathing only while something animates, **D59** the land slabs, **D60** the mana motes and the seventh `Effect` kind (which supersedes report 09 §12.1's six and the 26-mesh pool), **D61** bloom on by default with a governor rung below the floor, **D62** the silhouette busts, **D63** the strike's one frame of look-behind; and before them — **D47** the React-18 3D line (fiber 8 / drei 9; the app does NOT move to React 19), **D48** the exact version pins with no caret and the named trip-wire, **D49** the arena as one lazily-imported chunk (the 2D entry chunk pays 1.63 kB gzip and no `three`), **D50** `layout(state)` authoritative with cues as offsets that decay to identity, **D51** one validated cue data file keyed by card name with a three-rung ladder, **D52** the Scryfall `normal` texture plus one shared rounded-corner alpha map; **D46 came out of M7's verification pass** — a counter type on the wire is Forge's *display* name (`+1/+1`), the doc was wrong rather than the bridge, and the key is an opaque string (amendment **M43**) — D40 from its verification pass, D41–D45 written up with the milestone: **D41** the `{own, opp}` phase-stop shape and the turn-keyed act, **D42** the opaque `yieldKey` handle, **D43** the mana-lost prompt on by default (in memory), **D44** one `hello_ok` and one frame log per game, **D45** `Space` follows `input.buttons.focus`; **D21's scope is corrected by D23**, **D29's "overridden rather than forked" clause by D32**, and **D31's read-only phase strip by D37**). D37 the live phase strip (and no "hold priority"), D38 phase stops reseeded per GAME rather than per match, D39 the exclusion argument for M6's `refreshState()` hop, **D40 the post-`over` waits obey the socket's timeout rule (unbounded while a client is connected) and the New Game row goes quiet when the socket does**. D24 the ws ask timeout, D25 one client at a time, D26 the `transport` header key, D27 resync semantics; D28 the three Scryfall image variants and the text frame under them, D29 `mana-font`, D30 arrows and the rect registry, D31 the read-only phase strip; D32 the `mana.css` fork (3,532,778 B of faces nothing fetched), D33 the board-picker rule, D34 the mana pips as the `useMana` control, D35 the two unreachable ask kinds and the probe flag, D36 the band strip as an overlay. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

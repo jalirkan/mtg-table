@@ -4921,3 +4921,220 @@ list is a gated change. `scripts/play.sh` seats it against you by default
   Zemo (`AI:RemoveDeck:All`). Super Villain Lockup (white). Loki, the Deceiver
   and Doctor Doom, King of Latveria (three colours). Lady Loki, Loki's Scepter
   and Loki Laufeyson (red). Report 08 §8.4 has the table.
+
+---
+
+*The engine-upgrade decisions are numbered **D109–D112**, on the `engine-upgrade`
+branch (cut from `754f504`). While it was open, `main` committed Tier 2 slice 4's
+**D95–D101**, the workshop's **D102–D104** and match setup's **D105–D108**, all
+above; the branch was rebased onto `main`'s `a092d3a` (2026-09-27), where those
+fourteen numbers were already taken, so these four kept the numbers they were
+written with. The `hardening` branch also numbers its own decisions from
+**D109**; whichever of the two lands second renumbers its own. They are cited from
+this file, PLAN.md's *Engine and sets*, README.md, CLAUDE.md, NOTICE and report
+14, and nowhere in code.*
+
+## D109 — The engine stays Forge 2.0.14 until an OFFICIAL Forge release ships Reality Fracture: no daily snapshot, no merged port, no card-script overlay
+
+**2026-09-27** (branch `engine-upgrade`. Report 14,
+[`docs/research/14-engine-upgrade.md`](docs/research/14-engine-upgrade.md), is the
+long form and the plan for the day; `docs/evidence/engine-upgrade.md` is what was
+measured. Builds on **D2**, which it does not change.)
+
+**Decision.** mtg-table keeps running Forge 2.0.14 at `~/forge` — the jar
+`config.json` names today — and does nothing to make Reality Fracture (Scryfall
+`fra`, released 2026-10-02; Forge edition code `FRA`) playable before an official
+Forge release ships the set. Concretely: no port of the bridge to Forge's daily
+snapshot is merged or wired into `config.json`; no card script, hand-written or
+Forge's own, goes into `forge-home/custom-cards/` (**D111**); no committed fixture
+is re-recorded; and the user's deck is not edited to dodge what the old engine
+lacks. What the tree gains is **preparation that nothing at runtime reads**: the
+user's pool as `decks/fra-rw-aggro.dck` (and `.txt`), a draft opponent
+(**D112**), `tools/audit-deck.mjs` (per card: ok, missing or broken, on any jar),
+`tools/javap-seam-diff.sh` (the bridge's seam between two jars), and the bridge
+port to the snapshot as a **patch file** with the seam diff it answers to
+(`docs/research/patches/`). The switch, when it comes, is report 14 §0's
+checklist, under **D110**'s pin policy.
+
+**Rationale.** The user's own words, stated after the spikes had begun: *"Let's
+not break anything to force in the latest cards. I'm sure things will be available
+through official channels soon enough, so no need to create unnecessary friction
+and work for ourselves."* The measurements reach the same place on their own:
+
+- **2.0.14 alone** builds 19 of the deck's 50 copies (40 main + 10 sideboard): the
+  17 basics, Woodwork Prodigy and Austere Command. The other 31 do not exist in
+  that engine, and Forge drops a missing card from the library silently
+  (`Match.prepareAllZones`).
+- **2.0.14 plus the snapshot's 249 FRA scripts as a user overlay** was the only
+  candidate that kept the engine, and it fails. All 249 parse, but three of the
+  user's cards — No Admittance (main), Hexhaven Battalion and Way of the Pyromancer
+  (sideboard) — use `ApiType.Empower`, which 2.0.14 does not have.
+  `CardFactory.getCard` throws at zone preparation, the sideboard is built too, and
+  the exact deck played **0 turns** at seeds 7, 8 and 9. With those three removed,
+  2.0.14's AI threw 17 swallowed `NullPointerException`s in 10 games on the set's
+  new haste statics, and a script parameter the old engine does not read is
+  ignored without a word — "builds" is not a rules review.
+- **The daily snapshot `2.0.15-SNAPSHOT-09.27`** builds all 50 and played 29
+  games with 0 exceptions. But it is a daily build; the bridge does not compile
+  against it unchanged (`IGuiGame`'s abstract set went from 37 members to 28, and
+  `IGameController.passPriority()` is gone); on it a latent race in the bridge's
+  M6 next-game lifecycle killed a game at birth in 2 of 6 three-game sessions (0
+  of 5 on 2.0.14); and it orders `stats.cardIds` differently, which fails gate
+  step 6 on any machine and would force a re-record of `g1`.
+
+So the one path that avoids a development build does not play the deck, and the
+path that plays the deck is a development build. Waiting costs only time: the day
+a release ships the set, the switch is a short, rehearsed list rather than a
+project.
+
+**Rejected.** The overlay (above, and **D111**). Porting to the daily snapshot now
+(a development build, a race, a forced re-record). Running two engines side by
+side (two configurations to keep green, and every fixture's engine ambiguous).
+Editing the user's deck to remove the three Empower cards (it is the pool as the
+user built it, and swapping the main-deck card alone was measured not to be
+enough: the sideboard's Empower cards crash the game the same way). Hand-writing
+the 31 missing cards (**D111**).
+
+**Known cost.** The user cannot play the pool in mtg-table until Forge releases
+it. `decks/fra-rw-aggro.dck` sits in `decks/` and does not play (its `.txt` says
+so, and `node tools/audit-deck.mjs decks/fra-rw-aggro.dck` reports 19 ok, 31
+missing and exits 1); it also shows in the dev card browser, unresolved until the
+card library syncs `fra`. The bridge and gate defects the spikes found are latent
+on 2.0.14 and are PLAN's *Engine and sets* follow-ups, not part of this decision —
+except that the next-game race must be fixed **before** any engine switch.
+
+## D110 — The engine pin: official Forge releases only, one engine at a time, identified by its bytes and sha256, never installed over `~/forge`
+
+**2026-09-27** (with **D109**. Extends **D2**. The mechanism for the day —
+`tools/forge-engine.json`, `tools/get-forge.sh`, a relative `forgeJar`, a
+`check-forge.sh` assertion — is report 14 §5.2, **specified and not built**.)
+
+**Decision.**
+
+1. **What may be the engine.** Only an asset of a **tagged Card-Forge/forge
+   release** — never the rolling `daily-snapshots` build, never a source build
+   (D2). A daily build may be *measured* — in the session scratchpad or a
+   throwaway Forge home under `var/`, through `FORGE_JAR=` — but it is never named
+   in `config.json`, never the target of a merged bridge change, and never the
+   engine of a committed recording.
+2. **What pins it today.** `config.json`'s `forgeJar` (an absolute path;
+   `FORGE_JAR` in the environment overrides it) and the identity the file must
+   have: `forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, **39,383,858
+   bytes, sha256 `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`**,
+   manifest `Implementation-Version: 2.0.14-SNAPSHOT-08.08`, `build.txt`
+   `2026-08-08 22:49:26`. `tools/check-forge.sh` prints the sha256 and every
+   recording's session header carries it as `forgeJarSha256` — all 18 committed
+   `fixtures/games/` recordings name this one. Nothing *asserts* it yet; that is
+   part of the day's change.
+3. **One engine at a time.** The previous engine survives only as an untouched
+   install and a `git revert` of `config.json` (and of the bridge port) away — never
+   as a second supported configuration.
+4. **Never over `~/forge`.** A new release is unpacked beside, under the repo's
+   gitignored `var/forge-engine/<version>/` (report 14 §5.2's layout); `~/forge` and
+   `~/.forge` are never written, before or after a switch.
+5. **A version change is a hand-written, reviewed change** that records where the
+   bytes came from — URL, archive and jar bytes and sha256, date, licence, as
+   `tools/assets-manifest.json` does for models — never an auto-update and never a
+   "latest" URL. The switch is its own commit; re-recording a fixture is a separate
+   commit and a separate decision (report 14 §5.4).
+
+**Rationale.** The committed fixtures, the ten-games turn counts and every
+evidence file are measurements of one engine build, and a sha256 is the only
+identity that survives a retag or a renamed file. The version string is not one:
+2.0.14's own manifest reads `-SNAPSHOT-08.08` and its
+`BuildInfo.isDevelopmentVersion()` is true (spike A), so *"is this an official
+release?"* is answered by where the archive came from, and *"does this engine load
+the set?"* by `tools/audit-deck.mjs` — which is also the check for the trap report
+14 §5.1 names: `CardStorageReader.collectCardFiles` skips `upcoming/` outside a
+development build, and 249 of FRA's scripts live there in the snapshot. Keeping
+`~/forge` untouched makes rollback a one-line revert and keeps the user's own Forge
+working whatever this repo does.
+
+**Rejected.** Tracking the daily build (**D109**). Pinning by version string alone
+(above). Installing a release over `~/forge` (it is the user's install, and it is
+the rollback). Committing the jar (D2: GPL redistribution obligations; `*.jar`
+stays gitignored). **Deferred rather than rejected:** writing `get-forge.sh`,
+`forge-engine.json` and the `check-forge.sh` pin assertion now — they would name a
+release that does not exist yet, and moving the pin into the repo is the user's
+call on the day (PLAN, *Only the user can decide*).
+
+## D111 — No hand-written card scripts, and no overlay of a newer engine's scripts: a card the pinned engine lacks is absent until a release ships it
+
+**2026-09-27** (with **D109**. Applies **D14**'s last clause — *"A second overlay
+script is a decision to re-open here, not a file to drop in"* — to new sets, and
+answers it for them.)
+
+**Decision.** Nothing goes into `forge-home/custom-cards/` to make a card exist
+that the pinned engine does not ship: neither a script written by hand in Forge's
+card DSL nor a copy of Forge's own script taken from a newer build.
+`forge-home/custom-cards/` keeps exactly one file, D14's corrected A.I.M.
+Scientists, and with it the only justification hard rule 11 gives for
+`ALLOW_CUSTOM_CARDS_IN_DECKS_CONFORMANCE`. A deck may name cards the engine lacks;
+it then does not play, and `tools/audit-deck.mjs` says so card by card instead of
+Forge dropping them silently. A draft script, if one is ever wanted for review,
+lives under `docs/drafts/` and is never loaded. **None was needed for Reality
+Fracture:** all 285 of the set's names, and all 26 in the user's deck and
+sideboard, have Forge's own scripts in the 09-27 snapshot, so there is nothing to
+draft.
+
+**Rationale.** A hand-written script is a second, unreviewed rules implementation
+of a card Forge will ship its own version of within weeks — the "unnecessary
+work" the user ruled out, and a silent divergence of exactly the kind D14 exists to
+remove. An overlay of Forge's newer scripts is worse than it looks. Measured on
+2.0.14, 36 of the 249 new FRA scripts cannot be built (34 on `Empower`, two on new
+`StaticAbilityMode`s); one unbuildable card takes the game down before turn 1,
+even from the sideboard; and a parameter the old engine does not read is ignored
+without a word, which no build check can see. It would also force a user edition
+file replacing stock FRA with a `CUSTOM_SET`, and relax deck conformance for ~250
+custom cards instead of one. The premise that three of the deck's cards were
+unscripted upstream was a lookup-by-file-name artefact (249 scripts live under
+`upcoming/`, and 22 prepared cards' files carry both faces' names), so there was
+never a gap to fill.
+
+**The door that stays open.** A correction to Forge's own script for a card the
+engine already ships and gets wrong — D14's case — is still possible, as a new
+decision naming the card and carrying the three-way evidence D14 used, never as a
+file dropped in.
+
+**Rejected.** Hand-scripting the 31 missing copies. Overlaying the snapshot's 249
+scripts (**D109**'s overlay spike). Overlaying only the 213 that build (the
+user's deck still does not start, and "builds" is not "correct").
+
+## D112 — The FRA AI opponent is the user's own green-black "leftovers" list, finished with basics only, and a draft until the user accepts it
+
+**2026-09-27** (with **D109**. It reaches the AI's seat through `--deck2` today, or
+through the match-setup branch's `--ai-deck` / `match.aiDeck` once that lands.)
+
+**Decision.** The deck the AI plays against `decks/fra-rw-aggro.dck` is
+`docs/drafts/decks/fra-gb-leftovers.dck`: the green-black midrange list the user's
+own pool notes propose as *"a second deck from the leftovers (for the coworker to
+play)"* — 22 named cards copied exactly (names normalised to Forge's commas) —
+finished to 40 with the mana only: 8 Forest, 8 Swamp and 2 Plains, because the
+notes say Bloombrute *"needs a Plains or two"*. It is a **draft**: it lives under
+`docs/drafts/`, its `Name=` says "draft AI opponent", and it moves into `decks/`
+only when the user accepts it, changes it or replaces it. Like the user's deck it
+does not play on 2.0.14 (20 ok, 20 missing).
+
+**Rationale.** Which cards the AI plays is the user's call, and the user's notes
+had already named a second deck from the same pool — written for a coworker to
+play, which makes it the closest thing to the user's own choice of opponent;
+inventing a list would decide it for them. Measured on the 09-27 snapshot, never
+merged: 40 of 40 build as Forge's own scripts; in 40 AI-vs-AI games against the
+red-white deck, each deck on each seat, green-black won 25 and red-white 15, over
+11–44 player turns, with 0 exceptions and every one of its 16 nonland names cast;
+6 `RecordMatch` and 3 `MtgTable --transport auto` games through the saved bridge
+port all reached `over` with `UNIMPL members = none`, and all 9 frame logs PASS
+`check-redaction.mjs`. It is a playable opponent, somewhat stronger when the Forge
+AI pilots both decks, which says little about a human at the red-white seat. It
+stays out of `decks/` because `web/test/cards-lib.test.ts` parses every entry
+there (a `decks/drafts/` directory throws `EISDIR`, and a `decks/README.md` parses
+as a deck with skipped lines — measured), and because the dev card browser lists
+every `decks/*.dck`, where a draft would look like a reviewed deck.
+
+**Rejected.** A blue-black list built from the set's commons and uncommons
+(measured first: 16–4 against the red-white deck, then 29–11 and 24–16 in two
+toned-down versions; dropped when the user's notes turned out to propose an
+opponent). The mirror match the spikes used (a test, not a game). An MSH deck
+(`decks/pacho-shield.dck`, or match-setup's villains) — nothing stops
+`--deck2 decks/pacho-shield.dck`, but a cross-set opponent is not what the notes
+describe.

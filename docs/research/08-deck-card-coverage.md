@@ -594,3 +594,113 @@ J=/home/justin-a/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
 java -m jdk.jdeps/com.sun.tools.javap.Main -cp $J -c -p forge.game.ability.effects.DigUntilEffect \
   | grep 'GameAction.reveal'
 ```
+
+---
+
+## 9. Reality Fracture (FRA): the user's own second deck, and why it waits
+
+Added 2026-09-27 (branch `engine-upgrade`). The user played a Reality Fracture
+pre-release (Scryfall `fra`, released 2026-10-02) and brought home a red-white
+legends aggro pool: **`decks/fra-rw-aggro.dck`**, 40 main and 10 sideboard,
+transcribed from the user's own list at `/mnt/e/jalir/Projects/Magic/fra-pool-red-white-aggro.md`.
+The decision and the plan are in
+[`14-engine-upgrade.md`](14-engine-upgrade.md); the raw numbers are in
+[`../evidence/engine-upgrade.md`](../evidence/engine-upgrade.md). This section is
+the card-by-card view, in the same spirit as §1: what each engine does with each
+card, and what to look at on the day.
+
+**The engine stays 2.0.14 until an official Forge release ships the set** (the
+user's constraint). Nothing below is loaded today: no FRA script is overlaid, and
+`forge-home/custom-cards/` still holds exactly one file (D14).
+
+### 9.1 The table
+
+"2.0.14" is `node tools/audit-deck.mjs decks/fra-rw-aggro.dck` against the engine
+`config.json` names today. "snapshot" is the same tool with
+`FORGE_JAR=<2.0.15-SNAPSHOT-09.27 jar>`: every card there builds (`ok`), resolves
+to `FRA` (Austere Command to `SPG`) and is Forge's own script, at the path shown
+inside `cardsfolder.zip`. "Oracle" compares that script's `Oracle:` lines with
+Scryfall's text (spike A, `GET /cards/named?exact=…&set=fra`).
+
+| card (copies) | 2.0.14 today | snapshot script | mechanic worth watching | Oracle |
+|---|---|---|---|---|
+| Samut, Hazoret's Champion | missing | `upcoming/samut_hazorets_champion.txt` | a haste-granting static: 2.0.14's AI throws on the new haste statics (below) | match |
+| Gallia, the Merrymaker | missing | `upcoming/gallia_the_merrymaker.txt` | haste to creatures with a +1/+1 counter; tap ability | match |
+| Eardrum Rattler | missing | `upcoming/eardrum_rattler.txt` | "can't be blocked" makes an Effect card in the command zone | match |
+| Graft Surgeon | missing | `upcoming/graft_surgeon.txt` | enters with a counter; dies trigger moves counters | match |
+| Koth, the Geomancer | missing | `upcoming/koth_the_geomancer.txt` | landfall ping, extra {R} for a Mountain | match |
+| Chandra's Emberling | missing | `upcoming/chandras_emberling.txt` | noncreature-cast counter trigger | match |
+| Pyre Rhymer // Molten Tide | missing | `upcoming/pyre_rhymer_molten_tide.txt` | **Prepare**: a second castable spell face | Molten Tide's text says "additonal" (display only; the ability is `DB$ Mana \| Produced$ R`) |
+| Yoshimaru, Beloved Companion | missing | `upcoming/yoshimaru_beloved_companion.txt` | counter replacement (+1 extra) | match |
+| Mabel, Valley Hero (2) | missing | `upcoming/mabel_valley_hero.txt` | enters trigger per creature | match |
+| Shatterwing Pegasus (2) | missing | `upcoming/shatterwing_pegasus.txt` | flying, team pump | match |
+| Woodwork Prodigy // Soul Tether | **ok** (scripted in 2.0.14 since August) | `w/woodwork_prodigy_soul_tether.txt` | **Prepare**, re-prepares every upkeep | match |
+| Thalia, the Survivor | missing | `upcoming/thalia_the_survivor.txt` | lifelink; taxes the opponent's noncreature spells | match |
+| Whiplash Wordsmith // Vicious Verse | missing | `upcoming/whiplash_wordsmith_vicious_verse.txt` | **Prepare**; conditional flying + haste (the static 2.0.14's AI threw on) | match |
+| Jiang Yanggu, Alone | missing | `upcoming/jiang_yanggu_alone.txt` | attacks-alone loot + counters | match |
+| Wrath of the Bloodmane (4) | missing | `upcoming/wrath_of_the_bloodmane.txt` | cost reduction with a legend | match |
+| No Admittance | missing | `upcoming/no_admittance.txt` | **Empower Jace 1**: new `ApiType.Empower`, **no AI logic** in Forge | match |
+| Fulminous Forte | missing | `upcoming/fulminous_forte.txt` | modal (sweep 1 / 5 to one target) | match |
+| Ajani's Anguish | missing | `upcoming/ajanis_anguish.txt` | X spell; team trample | match |
+| Mountain (9), Plains (8) | ok, but `FRA`→`TRK` (2.0.14's FRA lists no basics) | `m/mountain.txt`, `p/plains.txt` | | — |
+| *sideboard* Surgical Precision (2) | missing | `upcoming/surgical_precision.txt` | modal | match |
+| Your Fate Ends Here | missing | `upcoming/your_fate_ends_here.txt` | removal + surveil | match |
+| Hexhaven Battalion | missing | `upcoming/hexhaven_battalion.txt` | **Empower Jace 2** | match |
+| Way of the Pyromancer | missing | `upcoming/way_of_the_pyromancer.txt` | **Empower Jace 2**, legendary enchantment | match |
+| Medic's Kitesail (2) | missing | `upcoming/medics_kitesail.txt` | equipment | match |
+| Austere Command | ok, but `SPG`→`MSC` (2.0.14's SPG does not list it) | `a/austere_command.txt` (a stock reprint; the snapshot's SPG lists it) | four-mode wrath | not compared |
+| Ghalta the Immovable | missing | `upcoming/ghalta_the_immovable.txt` | cost reduction by toughness | differs by a curly apostrophe only |
+| Room of Refuge | missing | `upcoming/room_of_refuge.txt` | choose a colour on entry | match |
+
+**Totals.** 2.0.14 today: 19 ok, **31 missing**, 0 broken (copies). Forge drops a
+missing card from the library **silently** (`Match.prepareAllZones`), so the deck is
+not playable on today's engine and nothing pretends otherwise. Snapshot: **50 of 50
+ok**. None of the 26 names needs a hand-written script; "three cards are missing
+upstream" was a lookup-by-file-name artefact (249 of the set's scripts live under
+`upcoming/`, and prepared cards carry both names in the file name).
+
+### 9.2 Why the snapshot's scripts cannot simply be overlaid onto 2.0.14
+
+D14's overlay mechanism (§2) would load them, and 249 of 249 parse. But three of the
+50 cards use `DB$ Empower`, an `ApiType` 2.0.14 does not have; `CardFactory.getCard`
+throws on them at zone preparation, **before turn 1**, and a card in the sideboard is
+built too. The exact deck produced 0 turns at seeds 7, 8 and 9. Without those three,
+2.0.14's AI threw 17 swallowed `NullPointerException`s in 10 games in
+`ComputerUtil.hasACardGivingHaste` on the new haste statics (Whiplash Wordsmith's
+`AffectedDefined$ Self` has no `Affected$`). And a parameter 2.0.14 never reads is
+ignored without a word, which no build check can see. The judged verdict is
+**wait** (`14-engine-upgrade.md` §3).
+
+### 9.3 What to look at on the day (engine surfaces this deck will exercise)
+
+- **Empower.** Forge has no AI logic for the API ("No AI assigned for API:
+  Empower"). On the snapshot the AI cast No Admittance once in spike B's 11
+  recorded games and **0 times** in the 12 of spike A and the 140 AI-vs-AI games of
+  the preparation pass; it does cast Empower cards whose main job is something else
+  (Way of the Pyromancer and Hexhaven Battalion in spike A's probe, Arcane
+  Amphisbaena in the green-black draft below), and the Jace token appears and is
+  activated. A **human** casting No Admittance through the bridge has never been
+  tried: that is the first thing to do on the day.
+- **Prepare.** Three cards have a castable second face. The snapshot's `CardView`
+  has a prepared flag (`hasPreparedSpell()`, new in 2.0.15) and the wire carries
+  neither the flag nor a face-up card's spell face: hard rule 8 keeps
+  `getAlternateState()` inside the face-down `alt` block. The game plays (the
+  engine offers the copy as an ordinary castable ability), but the board cannot say
+  "prepared". Surfacing it is a protocol amendment plus a hard-rule-8 review.
+- **X, modes, colour choice.** Ajani's Anguish (X), Fulminous Forte and Surgical
+  Precision (modal) and Room of Refuge (choose a colour) go through the engine's X,
+  mode and colour prompts. The AI has played all four on the snapshot; a human
+  has not answered any of them for these cards.
+- **Pyre Rhymer's typo** and **whether the AI casts No Admittance**: re-check on the
+  release; both are Forge's to fix, not ours.
+
+### 9.4 An FRA opponent (draft)
+
+The user's own list proposes "a second deck from the leftovers (for the coworker to
+play)": green-black midrange, 22 named cards. `docs/drafts/decks/fra-gb-leftovers.dck`
+is that list finalised to 40 with 18 basics (8 Forest, 8 Swamp, 2 Plains for
+Bloombrute, which the list says "needs a Plains or two"). It is a **draft for the
+user to review** and lives outside `decks/` on purpose (`docs/drafts/README.md`).
+2.0.14 today: 20 ok (Vigorbloom Vanguard and the basics), 20 missing. Snapshot: 40 of
+40 ok, every card Forge's own script. Two of its cards (Arcane Amphisbaena) Empower
+on entry; the AI casts them and the Jace token appears.

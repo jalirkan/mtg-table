@@ -19,12 +19,19 @@ mtg-table uses Forge as its rules engine and AI opponent.
     Source:   https://github.com/Card-Forge/forge
     Licence:  GNU General Public License v3.0 or later (GPL-3.0-or-later)
     Version:  2.0.14 (installed locally by the user; jar manifest reads
-              "2.0.14-SNAPSHOT-08.08")
+              "2.0.14-SNAPSHOT-08.08"; forge-gui-desktop-2.0.14-jar-with-
+              dependencies.jar, 39,383,858 bytes, sha256
+              3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9).
+              This is the only Forge build mtg-table runs. It moves to a newer
+              Forge only when an official Forge release is available, never to a
+              daily development snapshot (DECISIONS.md D109, D110).
 
 How it is used:
 
   * Forge is used UNMODIFIED. mtg-table contains no Forge source code and applies
-    no patches to Forge.
+    no patches to Forge. (docs/research/patches/ holds a patch to mtg-table's OWN
+    bridge, saved for a future Forge release and not applied; it changes no Forge
+    file.)
   * Forge is a compile-time and runtime dependency only. The bridge in bridge/
     compiles against, and runs on, a Forge jar that is already installed on the
     user's machine (default:

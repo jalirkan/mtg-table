@@ -59,7 +59,7 @@ finishable. Anything on this list is a closed question, not a backlog item.
 
 | What | Version | Where |
 |---|---|---|
-| Forge | 2.0.14 | `~/forge`, with the fat jar `forge-gui-desktop-2.0.14-jar-with-dependencies.jar` and the `res/` tree |
+| Forge | **2.0.14**, and only that build: jar sha256 `3c0a7c38…8e5dd9` (below). A newer Forge only as an official release, on the day's checklist (D109, D110) | `~/forge`, with the fat jar `forge-gui-desktop-2.0.14-jar-with-dependencies.jar` and the `res/` tree beside it |
 | Java | 21 **JRE** is enough | no JDK needed — the JRE ships `jdk.compiler`, so `java -m jdk.compiler/com.sun.tools.javac.Main` compiles and `java -m jdk.jdeps/com.sun.tools.javap.Main` inspects |
 | Node | 24 | Node 24 runs `.ts` files directly via type stripping, so `tools/fetch-art.ts` and `tools/card-library/` need no build step; `tools/card-library/` also uses Node's built-in `node:sqlite` (FTS5), so it needs no npm package either |
 
@@ -73,6 +73,55 @@ every script reads it from there.
 Forge's profile is redirected into `var/` by `forge-home/forge.profile.properties`
 so that running mtg-table cannot touch the decks and preferences in `~/.forge`.
 `forge-home/res` is a symlink to `~/forge/res`.
+
+### Getting the engine
+
+mtg-table does not download, build or ship Forge. It runs on **your own install
+of Forge 2.0.14** — Forge's `.tar.bz2` distribution, extracted as-is (here into
+`~/forge`) — and it is built, gated and recorded against exactly one build of it:
+
+| | |
+|---|---|
+| file | `forge-gui-desktop-2.0.14-jar-with-dependencies.jar`, with Forge's `res/` directory beside it |
+| bytes | 39,383,858 |
+| sha256 | `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9` |
+| manifest | `Implementation-Version: 2.0.14-SNAPSHOT-08.08` (`build.txt`: 2026-08-08 22:49:26) |
+
+1. Point `config.json`'s `forgeJar` at that jar (or export `FORGE_JAR`). `res/`
+   must sit beside it: `tools/make-forge-home.sh` derives `forge-home/res` from the
+   jar's directory.
+2. `./tools/check-forge.sh` — asserts the classes and members the bridge links and
+   prints the jar's sha256. **It must print the one above.** Every frame log's
+   session header records it as `forgeJarSha256`, and all 18 committed recordings
+   under `fixtures/games/` name this build; a different hash is a different engine,
+   whatever its file is called.
+3. `./tools/make-forge-home.sh` (once, and again after changing `forgeJar`), then
+   `./bridge/build.sh` — or `./scripts/play.sh`, which runs `check-forge.sh` and
+   `bridge/build.sh` itself before it starts a game.
+
+**Which Forge, and when it changes** (DECISIONS.md **D109**, **D110**). The engine
+moves only to an **official, tagged Forge release** — never to Forge's rolling
+`daily-snapshots` build, even when a daily already has the cards you want — and
+one engine at a time. A new release is unpacked beside the old one, under the
+repo's gitignored `var/forge-engine/<version>/`, and **never over `~/forge`**,
+which stays untouched as the rollback. The version string is not how you tell a
+release from a daily (2.0.14's own reads `-SNAPSHOT-08.08`); where the archive
+came from is, and `node tools/audit-deck.mjs <deck>` tells you whether that engine
+actually has your cards. Nothing here writes card scripts to bring a set in early
+(**D111**).
+
+**Reality Fracture is the case in point.** Forge 2.0.14 predates the set, so the
+user's pool (`decks/fra-rw-aggro.dck`, under *Decks* below) audits 19 of 50
+copies present and 31 missing — it does not play today, by decision. Forge's daily
+build of 2026-09-27 has every card, and it was measured
+([`docs/evidence/engine-upgrade.md`](docs/evidence/engine-upgrade.md)); nothing
+was switched. The day an official release ships the set, the switch is the
+checklist in [`docs/research/14-engine-upgrade.md`](docs/research/14-engine-upgrade.md)
+§0: fix the bridge's next-game race first, pin the release by sha256, audit the
+decks against it, diff its seam against the saved one
+(`./tools/javap-seam-diff.sh`), apply the saved bridge port
+(`docs/research/patches/`) only if the seam moved the way the daily's did, run
+the gate, then play. Re-recording a committed fixture is a separate decision.
 
 ## Running it
 
@@ -284,6 +333,36 @@ strip, a stack panel, targeting and combat arrows, and a keyboard — and as of
 **M5** nothing on it dead-ends: floating mana is spendable, the board-shaped
 questions are answered on the board, every zone can be opened and read, and the
 declared attackers and blockers are a strip of their own.
+
+### Decks
+
+Every deck the engine plays is a Forge `.dck` file, loaded with
+`DeckSerializer.fromFile` and never written (hard rule 4); a `.txt` beside one is
+the same list as typed, for people and the card library. `node tools/audit-deck.mjs <deck.dck>…` says, card by card,
+whether the configured engine will actually play one — **ok**, **missing** (Forge
+would drop it from the library without a word) or **broken** (it would take the
+game down) — from a throwaway Forge home under `var/audit-deck/`; it needs a built
+`bridge/out` and is not part of the gate.
+
+| deck | what it is | on Forge 2.0.14 |
+|---|---|---|
+| `decks/pacho-shield.dck` (+ `.txt` as typed) | **the deck in play**: the user's W/U S.H.I.E.L.D. deck, 40 cards, MSH + MSC | plays; D14 corrects one card |
+| `decks/fra-rw-aggro.dck` (+ `.txt`) | **the user's Reality Fracture pool** from the set's pre-release: red-white legends aggro, 40 main + 10 sideboard, copied from the user's own list | **does not play yet** — 19 ok, 31 missing, 0 broken. Waits for an official Forge release (D109) |
+| `docs/drafts/decks/fra-gb-leftovers.dck` | a **draft** FRA opponent for the AI: the green-black "leftovers" deck the user's own notes propose, finished to 40 with basics only (D112). Deliberately **not** in `decks/` until the user accepts it (`docs/drafts/README.md`) | does not play yet — 20 ok, 20 missing |
+| `decks/*-probe.dck` | nine probe decks: seven in the table below, plus `morph-probe` and `future-sight-probe` (*Repo layout*) | all play; each has a committed recording |
+
+Both FRA decks build **completely** — 50 of 50 and 40 of 40, every card Forge's
+own script — on Forge's `2.0.15-SNAPSHOT-09.27` daily build, which was measured
+and not adopted. On the day an official release ships the set:
+
+```bash
+FORGE_JAR=<release jar> node tools/audit-deck.mjs \
+    decks/fra-rw-aggro.dck docs/drafts/decks/fra-gb-leftovers.dck   # expect 90 ok
+# then, once the engine is switched (report 14 §0):
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 7 \
+    --deck decks/fra-rw-aggro.dck --deck2 docs/drafts/decks/fra-gb-leftovers.dck
+./scripts/play.sh --deck decks/fra-rw-aggro.dck --deck2 docs/drafts/decks/fra-gb-leftovers.dck
+```
 
 **The probe decks.** Seven throwaway forty-card decks whose only job is to make
 Forge do something `decks/pacho-shield.dck` never makes it do — usually ask a
@@ -1640,8 +1719,9 @@ mtg-table/
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
   PLAN.md                    the eight milestones M0..M7, deferred list, open questions
-  DECISIONS.md               the one hundred and eight load-bearing decisions, dated
-                             (the workshop's are D102–D104, match setup's D105–D108)
+  DECISIONS.md               the one hundred and twelve load-bearing decisions, dated
+                             (the workshop's are D102–D104, match setup's D105–D108,
+                             engine and sets D109–D112)
   CLAUDE.md                  working conventions for Claude sessions in this repo
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
@@ -1679,12 +1759,21 @@ mtg-table/
                              stack every turn, which is the only way to assert that the
                              engine READS the auto-yield store rather than that the
                              bridge wrote it (gate step 10g, --require-yield-repeat)
+  decks/fra-rw-aggro.dck     the user's Reality Fracture (FRA) pool, 40 + 10 sideboard,
+                             plus .txt. Does NOT play on Forge 2.0.14 (19 ok, 31 missing);
+                             it waits for an official Forge release (D109)
 
   docs/
     protocol.md              the living spec of the wire protocol and the frame log
     guides/java-for-typescript-people.md   the Java the bridge actually uses
-    research/*.md            the thirteen reports this plan rests on (12 and 13 are
-                             Tier 2's: the asset landscape, and the plan)
+    research/*.md            the fourteen reports this plan rests on (12 and 13 are
+                             Tier 2's: the asset landscape, and the plan; 14 is the
+                             engine: why Forge stays 2.0.14, and the day's checklist)
+    research/patches/        the bridge port to Forge's 2.0.15-SNAPSHOT-09.27 daily
+                             build and the javap seam diff it answers to. A PATCH, not
+                             applied: it compiles only against that engine (D109)
+    drafts/                  prepared, never loaded: decks/fra-gb-leftovers.dck, the
+                             draft FRA opponent (D112), and a README saying so
     evidence/*.md            what was actually run, with real numbers
     ideas/arena-mode.md      M7: the tiers, the per-card cue table, the constraints
     licences are in NOTICE; Tier 2's asset provenance is tools/assets-manifest.json
@@ -1931,6 +2020,12 @@ mtg-table/
     build-workshop-catalog.ts  (D104) decks/*.dck + fixtures/games/*.jsonl ->
                              web/src/workshop/catalog.json, the workshop's card
                              facts; --check exits 1 if it would change
+    audit-deck.mjs           per card of a .dck: ok / missing / broken on the configured
+                             engine (or FORGE_JAR=, or --overlay), from a throwaway Forge
+                             home under var/audit-deck/. Read-only; needs bridge/out;
+                             not in the gate. audit-deck/AuditDeck.java is its helper
+    javap-seam-diff.sh       <old.jar> <new.jar>: the Forge API bridge/src links,
+                             diffed class by class (95 classes). Read-only
     card-library/            (D90) the local card index: build.ts (Scryfall's bulk
                              file + the MSH/MSC prints -> var/cards/cards.sqlite,
                              SQLite + FTS5, D91) images.ts (the image cache, D93)
@@ -1999,7 +2094,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
-| [`DECISIONS.md`](DECISIONS.md) | One hundred and eight load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. |
+| [`DECISIONS.md`](DECISIONS.md) | One hundred and twelve load-bearing decisions (D64–D89 are Tier 2's later slices; **D90–D94** are the local card library and the `#cards` browser: the card-library NON-GOAL lifted in part, `node:sqlite` + FTS5 with no npm dependency, a dev-only same-origin route that never fetches, the image cache keyed by id + size + face, and `CardView` kept apart from `CardTile`; **D95–D101** are Tier 2's fourth slice; **D102–D104** are the workshop, `#workshop`: a lazy page outside `arena/` that reaches the arena through a listed set of exports, tuning overrides kept in this browser and never in the repo, and synthetic frames from one pure builder; **D105–D108** are match setup's: the AI's own deck and its Forge profile; **D109–D112** are the engine and sets, numbered on the `engine-upgrade` branch: Forge stays 2.0.14 until an official release ships Reality Fracture, the engine pin (official releases only, identified by sha256, never over `~/forge`), no hand-written card scripts, and the draft FRA opponent), dated, each with the alternatives that were rejected. D15-D19 are M2's: ask timeouts, the automated seat, the two inbound threads, isLibgdxPort, phase stops. D20-D27 are M3's: the asynchronous ability menu, /health as the session's readiness, the socket's ask timeout, one client at a time, resync semantics. D28-D31 are M4's: the three Scryfall image variants over a generated text frame, mana-font, the arrows and their rect registry, and the read-only phase strip. D32-D36 are M5's: the mana-font fork, which questions are answered on the board, the mana pips as the `useMana` control, the two unreachable ask kinds as documented ceilings with the probe policy behind a flag, and the combat-band strip as an overlay. D37-D45 are M6's: the phase strip going live (and no "hold priority", because Forge has no such feature), phase stops reseeded per game, when the refresh hop may walk Forge's view graph, the wait for New Game obeying the socket rather than a wall clock, the `{own, opp}` phase-stop shape, the opaque `yieldKey` handle, the floating-mana prompt on by default, one `hello_ok` and one frame log per game, and `Space` following `input.buttons.focus`. D46-D52 are M7 Tier 1's: counter types as display names, the React-18 3D line, exact pins, the lazy arena chunk, `layout(state)` as the authority, the cue data file, the card texture. D53-D63 are Tier 2's: the holographic CC0 figures, the CC0-only asset rule (no Mixamo, no models from card art), where a figure stands, pose versus cue, the clip lane, breathing, the land slabs, the mana motes, bloom, the busts, and the strike's one frame of look-behind. D64-D89 are Tier 2's second and third slices: the death, the width clamp, the camera views and director, per-card identity as data and its prop kit. D95-D101 are Tier 2's fourth slice: the proportioned bodies, their decimation, the costume palette, the chibi fallback and the body families, and the duelists — who they are, where they stand and how they gesture. D105-D108 are match setup's: the AI's deck name public on the wire and its list, path and hash never, `config.json`'s `match` block read by `scripts/play.sh` alone, the AI's profile always an explicit `profileOverride` through one seam (and not a difficulty), and the villain deck Doom Legion. |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
@@ -2013,7 +2108,8 @@ mtg-table/
 | [`docs/research/09-arena-tier1-plan.md`](docs/research/09-arena-tier1-plan.md) | M7 Tier 1: the arena's spec — the offset model, the cue table, the camera, the performance budget. |
 | [`docs/research/12-arena-tier2-assets.md`](docs/research/12-arena-tier2-assets.md) | M7 Tier 2's asset landscape: which packs are really CC0, what is inside the files, the gltf-transform pipeline, and the two drei traps. |
 | [`docs/research/13-arena-tier2-plan.md`](docs/research/13-arena-tier2-plan.md) | M7 Tier 2's plan, written against the Tier 1 code: the manifestation stage, the pose-versus-cue rule, the clip lane, the evenings T0–T14. |
-| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. `workshop.md` is the workshop: what it is made of, the tests (every rehearsal of every card through the real queue, the meter against `prop-raster.ts` pixel for pixel), the drawn heights, the build, the screenshots, the fix pass and the rebase onto slice 4. |
+| [`docs/research/14-engine-upgrade.md`](docs/research/14-engine-upgrade.md) | Engine and sets: why mtg-table stays on Forge 2.0.14 until an official release ships Reality Fracture (a card-script overlay on 2.0.14 fails the deck; a port to the daily build was ruled out by the user), the bridge and gate defects the two spikes found, and §0, the checklist for the day. [`docs/evidence/engine-upgrade.md`](docs/evidence/engine-upgrade.md) is what was measured; report 08 §9 is the FRA deck card by card. |
+| [`docs/evidence/`](docs/evidence) | What was actually run, with real numbers — `m4-board.md` is the board: measured geometry, the live games, the arrows, the keyboard, and the gate run that closed M4. M5 is three files: `m5-probes.md` (the probe decks, which ask kinds the engine can actually reach, and the two unreachability proofs), `m5-board.md` (the board half: the picker rule with its census, the mana pips, the zone browsers, the band strip) and `m5-fixes.md` (two verification passes, thirteen findings, each with its reproduction). M6 is two: `m6-engine.md` (the session that outlives `over`, the five acts with the state each changed, the `sideboard` recording, the gate's new 9d and 10g) and `m6-board.md` (the dots going live, Pass-To, auto-yield, Undo, New Game, `Space` following the engine's focus). M7 is `m7-arena.md` (Tier 1) and `m7-tier2.md` (Tier 2's first slice: the figure census, the clip lane, the terrain, the auras, the stack, the bench on SwiftShader and on the GTX 1080, the live game), then `m7-tier2-slice2.md` (the humanoids, the death, the camera views), `m7-tier2-slice3.md` (per-card identity) and `m7-tier2-slice4.md` (the proportioned bodies, the costumes and the duelists). `card-library.md` is the card library and the `#cards` browser: the real build, the measured request rates, the images, the queries and their latency, the search false negatives the review found and their fix. `workshop.md` is the workshop: what it is made of, the tests (every rehearsal of every card through the real queue, the meter against `prop-raster.ts` pixel for pixel), the drawn heights, the build, the screenshots, the fix pass and the rebase onto slice 4. `engine-upgrade.md` is the engine question: the overlay and snapshot spikes, the three deck audits, the saved port's checks and the draft opponent's games. |
 
 ## Licence
 
