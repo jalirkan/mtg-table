@@ -2,13 +2,13 @@
  * mtg-table — web/test/motion.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The comic motion lane** (`docs/research/15-art-direction.md` §5, §9.2; D130–D138
- * on branch `motion`): on twos as a pure function of a cue's own progress, the two
+ * **The comic motion lane** (`docs/research/15-art-direction.md` §5, §9.2;
+ * D147–D155): on twos as a pure function of a cue's own progress, the two
  * switches, and the A/B the cue strip promises — with *comic FX* off, the film over
  * the whole committed corpus is the film before the lane, op for op.
  *
  * Everything here runs under `node --test` with no browser: `cues/` imports no three,
- * and D137's projection (the last test) builds three's objects and the real
+ * and D154's projection (the last test) builds three's objects and the real
  * `EffectPool`, which need no DOM (every canvas texture is `null` without one).
  */
 
@@ -339,7 +339,7 @@ test('motion: with comic FX on, the corpus plays the new vocabulary — and it a
 });
 
 // ---------------------------------------------------------------------------
-// D137 — a star never hides the body it is on (the lane's verification pass)
+// D154 — a star never hides the body it is on (the lane's verification pass)
 // ---------------------------------------------------------------------------
 
 /**
@@ -356,7 +356,7 @@ test('motion: with comic FX on, the corpus plays the new vocabulary — and it a
  * The same effects with `aside` deleted are the negative control: centred, they
  * cover the head, which is the defect.
  */
-test('motion: a star beside its body never covers its head — every figure, every view (D137)', async () => {
+test('motion: a star beside its body never covers its head — every figure, every view (D154)', async () => {
   const THREE = await import('three');
   const { EffectPool, POOL } = await import('../src/arena/scene/effects.ts');
   const { SceneStage } = await import('../src/arena/scene/SceneStage.ts');
@@ -419,7 +419,7 @@ test('motion: a star beside its body never covers its head — every figure, eve
             assert.ok(star !== undefined && star.shape === 'burst', `${c.cue}: no star at t ${String(c.t)}`);
             assert.ok(star.aside !== undefined, `${c.cue}: its star is not placed beside the body`);
             if (centred) {
-              // The negative control: the same star, centred as it was before D137.
+              // The negative control: the same star, centred as it was before D154.
               stage.effects.set(`${ctx.key}:bang`, { ...star, aside: undefined, clear: undefined, lift: undefined });
             }
             pool.setFigures(poses, stage, 0);
@@ -475,8 +475,205 @@ test('motion: a star beside its body never covers its head — every figure, eve
       }
     }
   }
-  console.log(`  D137: ${String(checked)} stars beside their bodies, ${String(failures.length)} over a head · centred, ${String(coveredWithout)} of ${String(without)} covered it`);
+  console.log(`  D154: ${String(checked)} stars beside their bodies, ${String(failures.length)} over a head · centred, ${String(coveredWithout)} of ${String(without)} covered it`);
   assert.deepEqual(failures.slice(0, 8), [], `${String(failures.length)} stars cover the head they are beside`);
   // The control has teeth: centred on the body, (nearly) every star covered the head.
   assert.ok(coveredWithout >= 0.9 * without, `the centred control covered only ${String(coveredWithout)} of ${String(without)} heads`);
+});
+
+// ---------------------------------------------------------------------------
+// D147, amended at the merge with LOOK — speed lines beside the body, never
+// across its card (the skeptic's "scratches on the card")
+// ---------------------------------------------------------------------------
+
+/**
+ * **A dashing body's speed lines stream past on either side of it, and never across
+ * its own card — from every view, for every figure on the table.** A card moves
+ * with its figure's lunge (it is the same offset), so the lane's first speed lines —
+ * one band trailing straight back from the chest — lay over the card's art at every
+ * step of every dash, and read as scratches on it. The lines are now two bands down
+ * the quad's long edges (`STREAK_CLEAR`), and the pool sizes the lane between them
+ * from the card's four live corners along the quad's own across axis.
+ *
+ * This drives the REAL `attack.lunge` through a real `SceneStage` into the REAL
+ * `EffectPool` (the lunge's offset included) over every figure of `g1.jsonl` at 355
+ * and 359, from all five views, at three instants of the dash, and projects each
+ * band and the card's live rectangle: no band may overlap the card, nor cover the
+ * body's own axis (feet, chest, head). The control is the lane's first geometry —
+ * one full-width quad from the chest back, `radius` wide — which overlaps the card
+ * in most of them, which is the defect.
+ */
+test('motion: speed lines stream beside the body and never across its card — every figure, every view (D147)', async () => {
+  const THREE = await import('three');
+  const { EffectPool, POOL, STREAK_CLEAR } = await import('../src/arena/scene/effects.ts');
+  const { SceneStage } = await import('../src/arena/scene/SceneStage.ts');
+  const { CAMERA, VIEWS } = await import('../src/arena/camera.ts');
+  const { CARD_W, layout, placementOf } = await import('../src/arena/layout.ts');
+  const { figurePose } = await import('../src/arena/figures/pose.ts');
+  const { validateFigures, validateModels } = await import('../src/arena/figures/validate.ts');
+  const read = (rel: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8'));
+  const models = validateModels(read('../src/arena/figures/models.json')).data;
+  const figures = validateFigures(read('../src/arena/figures/figures.json'), { modelIds: new Set(Object.keys(models.models)) }).data;
+
+  const log = parseFrameLog(readFileSync(FIXTURES + 'games/g1.jsonl', 'utf8'));
+  const boards: ClientState[] = [];
+  let state = initialState(log.header);
+  log.frames.forEach((frame, index) => {
+    state = reduce(state, frame);
+    if (index === 355 || index === 359) boards.push(state);
+  });
+  assert.equal(boards.length, 2);
+
+  const W = 1600;
+  const H = 1000;
+  type P2 = [number, number];
+  const v = new THREE.Vector3();
+  const project = (camera: InstanceType<typeof THREE.PerspectiveCamera>, p: InstanceType<typeof THREE.Vector3>): P2 => {
+    v.copy(p).project(camera);
+    return [((v.x + 1) / 2) * W, ((1 - v.y) / 2) * H];
+  };
+  // Two convex polygons overlap iff no edge normal of either separates them (SAT).
+  const separated = (a: P2[], b: P2[]): boolean => {
+    for (const poly of [a, b]) {
+      for (let i = 0; i < poly.length; i++) {
+        const [x0, y0] = poly[i]!;
+        const [x1, y1] = poly[(i + 1) % poly.length]!;
+        const nx = y0 - y1;
+        const ny = x1 - x0;
+        let aMin = Infinity;
+        let aMax = -Infinity;
+        let bMin = Infinity;
+        let bMax = -Infinity;
+        for (const [x, y] of a) {
+          const d = x * nx + y * ny;
+          aMin = Math.min(aMin, d);
+          aMax = Math.max(aMax, d);
+        }
+        for (const [x, y] of b) {
+          const d = x * nx + y * ny;
+          bMin = Math.min(bMin, d);
+          bMax = Math.max(bMax, d);
+        }
+        if (aMax < bMin || bMax < aMin) return true;
+      }
+    }
+    return false;
+  };
+  const inside = (poly: P2[], [x, y]: P2): boolean => {
+    let sign = 0;
+    for (let i = 0; i < poly.length; i++) {
+      const [x0, y0] = poly[i]!;
+      const [x1, y1] = poly[(i + 1) % poly.length]!;
+      const cross = (x1 - x0) * (y - y0) - (y1 - y0) * (x - x0);
+      if (cross === 0) continue;
+      if (sign === 0) sign = Math.sign(cross);
+      else if (Math.sign(cross) !== sign) return false;
+    }
+    return true;
+  };
+
+  const pool = new EffectPool();
+  const streaks = pool.group.children.slice(-POOL.streak) as Array<InstanceType<typeof THREE.Mesh>>;
+  const band = (1 - STREAK_CLEAR) / 2;
+  let checked = 0;
+  let overlapsBefore = 0;
+  const failures: string[] = [];
+  const corner = new THREE.Vector3();
+  const across = new THREE.Vector3();
+  const along = new THREE.Vector3();
+  for (const board of boards) {
+    const placed = layout(board);
+    const poses = figurePose(placed, board.board?.combat ?? null, figures, { models });
+    const stage = new SceneStage(placed);
+    for (const view of VIEWS) {
+      const camera = new THREE.PerspectiveCamera(CAMERA.fov, W / H, CAMERA.near, CAMERA.far);
+      camera.position.set(...view.pose.position);
+      camera.lookAt(...view.pose.target);
+      camera.updateMatrixWorld(true);
+      camera.updateProjectionMatrix();
+      for (const [id, pose] of poses) {
+        const card = placementOf(placed, id);
+        if (card === null) continue;
+        for (const t of [0.08, 0.2, 0.34]) {
+          const impl = REGISTRY.get('attack.lunge')!;
+          const player = pose.seat === 'you' ? 0 : 1;
+          const ctx = { id: 'attack.lunge', targets: [id], players: [player], params: {}, ms: 850, key: `d147:${String(id)}`, reducedMotion: false, comic: true };
+          stage.clearAll();
+          stage.beginFrame(placed);
+          impl.apply(ctx, t, stage);
+          const effect = stage.effects.get(`${ctx.key}:streak`);
+          assert.ok(effect !== undefined && effect.kind === 'streak', `attack.lunge draws no speed lines at t ${String(t)}`);
+          pool.setFigures(poses, stage, 0, null, placed);
+          pool.bind(stage.effects, stage.positionOf, camera);
+          const mesh = streaks.find((m) => m.visible);
+          assert.ok(mesh !== undefined, 'the speed lines took no streak slot');
+          mesh.updateMatrixWorld(true);
+          // The card, where the lunge has carried it (card and figure share the offset).
+          const offset = stage.offsetOf(id);
+          const spin = card.rotation[2];
+          const c = Math.cos(spin);
+          const s = Math.sin(spin);
+          const hw = (CARD_W * card.scale) / 2;
+          const hl = 0.5 * card.scale;
+          const cardPoly: P2[] = [
+            [-1, -1],
+            [1, -1],
+            [1, 1],
+            [-1, 1],
+          ].map(([u, w]) => {
+            corner.set(
+              card.position[0] + offset.dx + u! * hw * c - w! * hl * s,
+              card.position[1] + offset.dy,
+              card.position[2] + offset.dz + u! * hw * s + w! * hl * c,
+            );
+            return project(camera, corner);
+          });
+          // The two bands the lines are drawn in — the quad's outer strips.
+          const bands: P2[][] = [
+            [-0.5, -0.5 + band],
+            [0.5 - band, 0.5],
+          ].map(([x0, x1]) =>
+            [
+              [x0!, -0.5],
+              [x1!, -0.5],
+              [x1!, 0.5],
+              [x0!, 0.5],
+            ].map(([x, y]) => project(camera, corner.set(x!, y!, 0).applyMatrix4(mesh.matrixWorld))),
+          );
+          // The body's own axis, where the lunge has carried it.
+          const height = pose.height * offset.scale;
+          const axis: P2[] = [0.05, 0.5, 0.95].map((f) =>
+            project(camera, corner.set(pose.position[0] + offset.dx, pose.position[1] + offset.dy + f * height, pose.position[2] + offset.dz)),
+          );
+          checked += 1;
+          for (const [i, poly] of bands.entries()) {
+            if (!separated(poly, cardPoly)) failures.push(`${view.id} t${String(t)} card ${String(id)}: band ${String(i)} crosses its card`);
+            for (const point of axis) {
+              if (inside(poly, point)) failures.push(`${view.id} t${String(t)} card ${String(id)}: band ${String(i)} covers the body at ${point.map((n) => n.toFixed(0)).join(',')}`);
+            }
+          }
+          // The control: the lane's first geometry — one quad `radius` either side
+          // of the chest's line, from the chest straight back.
+          across.set(1, 0, 0).applyQuaternion(mesh.quaternion);
+          along.set(0, 1, 0).applyQuaternion(mesh.quaternion);
+          const length = effect.length ?? 1;
+          // `attack.lunge`'s head: the chest, where the lunge has carried the body.
+          const head = new THREE.Vector3(pose.position[0] + offset.dx, pose.position[1] + offset.dy + 0.5 * height, pose.position[2] + offset.dz);
+          const oldPoly: P2[] = [
+            [-1, 0],
+            [1, 0],
+            [1, -1],
+            [-1, -1],
+          ].map(([x, y]) => project(camera, head.clone().addScaledVector(across, x! * effect.radius).addScaledVector(along, y! * length)));
+          if (!separated(oldPoly, cardPoly)) overlapsBefore += 1;
+        }
+      }
+    }
+  }
+  console.log(`  D147 (at merge): ${String(checked)} dashes, ${String(failures.length)} bands over a card or a body · the lane's first lines crossed the card in ${String(overlapsBefore)}`);
+  assert.deepEqual(failures.slice(0, 8), [], `${String(failures.length)} speed-line bands cross their card or their body`);
+  // The control has teeth: the lane's first speed lines lay across the card in
+  // most dashes (272 of 345 when this was written — the rest are dashes seen from
+  // the side, where a line straight back from the chest passes above the card).
+  assert.ok(overlapsBefore >= 0.7 * checked, `the old geometry crossed the card in only ${String(overlapsBefore)} of ${String(checked)} dashes`);
 });

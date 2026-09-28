@@ -1181,8 +1181,8 @@ test('liveness: the list thumbnail is the workshop’s one card image outside Ca
 
 
 /**
- * **The comic motion lane is rehearsable on the pedestal** (D130–D136 on branch
- * `motion`): every headline card's new beat — its word, its speed lines, its dots,
+ * **The comic motion lane is rehearsable on the pedestal** (D147–D153):
+ * every headline card's new beat — its word, its speed lines, its dots,
  * its splat, its summon — plays through the pedestal's real queue from one of the
  * rehearsals `synthetic.ts` already builds, with no workshop code for it. A beat
  * that needed a frame the workshop cannot build would fail here first.

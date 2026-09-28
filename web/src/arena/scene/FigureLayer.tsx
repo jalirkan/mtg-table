@@ -654,6 +654,16 @@ export class DepartureField implements DepartureBinder {
       shown += 1;
       object.visible = true;
       const uniforms = entry.material.uniforms;
+      // **The reverse summon** (report 15 §2.3; D148): the dying card's own
+      // dissolve cue ramps `Offset.materialize` 1 → 0 over the first half of the
+      // fall, and the falling body's ink drains back to hologram with it — the same
+      // number `CueRunner`'s `applyMaterialize` writes on a living figure, into the
+      // same handle (`uLook × uMaterialize`); identity 1 whenever no cue says
+      // otherwise (reduced motion, comic FX off, before the death cue starts). A
+      // number in the frame loop like `uDrain` below, never the look itself (the
+      // Lane LOOK liveness clause), and it allocates nothing.
+      const materialize = source.offsetOf(entry.cardId).materialize;
+      uniforms.uMaterialize.value = materialize >= 1 ? 1 : Math.max(0, materialize);
       if (request !== null && request.clip === 'die') {
         // The death cue is running: the fall, on its own clock.
         const t = request.t;

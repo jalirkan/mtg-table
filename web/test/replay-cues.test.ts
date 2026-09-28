@@ -1036,7 +1036,7 @@ test('queue: rule 7 — a card whose cast and resolved name one cue plays it onc
 });
 
 // ---------------------------------------------------------------------------
-// The comic motion lane (report 15 §9.2; D133 on branch `motion`) — the net over
+// The comic motion lane (report 15 §9.2; D150) — the net over
 // its new strings
 // ---------------------------------------------------------------------------
 

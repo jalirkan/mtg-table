@@ -5782,19 +5782,24 @@ undo race.
   `SAME GAME`, 10g's three games played (`var/check-all-look-merge.log`).
 - `~/forge` and `~/.forge`: unchanged (the jar `3c0a7c38…8e5dd9`).
 
-### Lane LOOK follow-ups — twenty-one, 2026-09-28
+### Lane LOOK follow-ups — twenty-one, 2026-09-28 (1 and 2 closed by Lane MOTION's merge)
 
 Four are edits owed in files this lane does not own (1–4, and 17); four were
 questions (5–8), three of them closed by the verification pass; the rest are
 limits of what was measured or built.
 
-1. **MOTION — the summon's hologram-to-ink.** The figure material's
+1. ~~**MOTION — the summon's hologram-to-ink.**~~ **Closed by Lane MOTION at its
+   merge** (**D148**, amended): `applyMaterialize` writes `uMaterialize` from
+   `applyFigures` and names no `uLook`. The request, for the record: The figure material's
    `uMaterialize` (identity 1) is waiting. The edit, in `scene/CueRunner.tsx`'s
    `applyFigures`, beside the `uOpacity` write:
    `rig.material.uniforms.uMaterialize.value = offset.materialize;` (with
    `Offset.materialize` in `cues/stage.ts`, identity 1). Never `uLook`: the Lane
    LOOK liveness clause fails on it, by design.
-2. **MOTION — the death's ink draining back to hologram** (report 15 §2.3). The
+2. ~~**MOTION — the death's ink draining back to hologram**~~ **Closed by Lane
+   MOTION at its merge**: `DepartureField.bind` writes the dying card's
+   `Offset.materialize` (the dissolve's 1 → 0) into `uMaterialize` beside its
+   `uDrain` write. The request, for the record (report 15 §2.3): The
    departing body's frame loop is `DepartureField.bind` in `FigureLayer.tsx`
    (LOOK's file); the edit is one line beside its `uDrain` write,
    `uniforms.uMaterialize.value = 1 - departureDrain(t);`, if MOTION wants it.
@@ -5907,17 +5912,21 @@ limits of what was measured or built.
 
 ---
 
-## The comic motion lane — report 15's Lane MOTION, 2026-09-28 (D130–D138)
+## The comic motion lane — report 15's Lane MOTION, 2026-09-28 (D147–D155)
 
 **Status: built, tested, measured, documented and gated** (`check-all.sh` from a
 deleted `bridge/out`, 929 s, exit 0, `var/check-all-motion.log`) on branch `motion` (worktree
 `mtg-table-t2m`, from `c81f674` — `main` at `a092d3a` plus the art-direction report
 and its `?look=comic` spike), **then verified once and fixed** (round 1, below;
-the gate again from a deleted `bridge/out`, 872 s, exit 0, `var/check-all-motion-fix1.log`). Decisions **D130–D138**, in the lane's reserved range
-D130–D139, renumbered contiguously at merge; `docs/evidence/motion.md` is what was
-measured; README's *The comic motion lane* is how to use it. Lanes LOOK and BODIES
-ran in parallel and own the files this lane did not touch (report 15 §9.4); every
-change this lane needs in theirs is a follow-up below, with its exact edit.
+the gate again from a deleted `bridge/out`, 872 s, exit 0, `var/check-all-motion-fix1.log`),
+**and merged: rebased onto Lane LOOK's `4c76785`** (`main`'s `f6bad35` plus report
+15 and LOOK's four commits, 2026-09-28; *At merge* below) — the second of report
+15's three lanes to land. Decisions **D147–D155**, written as D130–D138 in the
+lane's reserved range D130–D139 and renumbered contiguously at merge;
+`docs/evidence/motion.md` is what was measured; README's *The comic motion lane* is
+how to use it. Lanes LOOK and BODIES ran in parallel and own the files this lane
+did not touch (report 15 §9.4); every change this lane needed in LOOK's was a
+follow-up below, with its exact edit, and the merge made them (1 and 2).
 
 ```bash
 npm --prefix web run dev     # then /#workshop?card=Nick%20Fury%2C%20Spymaster, or /?replay=games/g1.jsonl#arena
@@ -5945,7 +5954,7 @@ Two majors and eight minors (`docs/evidence/motion.md` §V1 has the numbers and 
 pictures):
 
 - **An attacker's POW covered the attacker's own head** (major) — Peggy's hat and
-  shield, Fury's head, at 250 and 420 ms of the attack. **Fixed (D137)**: a star at
+  shield, Fury's head, at 250 and 420 ms of the attack. **Fixed (D154)**: a star at
   a `figure` anchor is pushed in SCREEN space beside the body (`Effect.aside`),
   toward the screen's centre from the card's rest slot, and drawn in front of it
   with the same footprint —
@@ -5965,7 +5974,7 @@ pictures):
   arena shows all eight uploaded before the first cue.
 - **Ownership** (minor): the three out-of-brief edits are named in the merge notes
   below.
-- **The splat read as milk** (minor). **Fixed (D138)**: an ink body with a paper rim
+- **The splat read as milk** (minor). **Fixed (D155)**: an ink body with a paper rim
   and a gloss.
 - **Aimed words off-frame at the workshop's 1× close-up** (minor) — **skipped**, a
   workshop framing decision: follow-up 9, extended.
@@ -5995,13 +6004,92 @@ on purpose at the merge rather than by whichever side lands second:
   the shake's clock. A request without a key behaves as before.
 - **`web/src/arena/scene/figureRigs.ts`**: two optional fields, `lookHeld` /
   `lookWritten`, used only by `applyMaterialize`'s `uLook` fallback — deleted with it
-  (follow-up 2).
+  (follow-up 2). **Done at merge**: the file is LOOK's again, line for line.
 
 `web/src/workshop/Workshop.tsx` carries the *on twos* switch the brief allows.
 
-### Comic motion lane follow-ups — twelve, 2026-09-28
+### At merge (2026-09-28)
 
-1. **The death's reverse summon has only its cue half** (LOOK's
+Rebased onto Lane LOOK's merged tip `4c76785` in the same worktree — report 15's
+art-direction merge pass, its second stage. The rebase replayed the lane's two
+commits (`5a4f186`, `c492b0b`) over what `main` gained since `a092d3a` (the
+hardening pass, more villains, spectating, the narrator, the story page, gate
+speed, the undo race) and over report 15 and LOOK; the spike's own commit
+(`c81f674`) was not replayed, LOOK having carried it as `3da33ac`.
+
+- **Conflicts, each kept on both sides.** `Arena.tsx` (LOOK's `inkPass` with bloom
+  and the lane's two switches), `liveness.test.ts` (LOOK's clause, then the lane's —
+  each lane's one appended test), and CLAUDE.md, DECISIONS.md, PLAN.md and README
+  (every side's sections). `CueRunner.tsx` (the hardening pass's two actions per
+  clip, `restActions`), `effects.ts`, `camera.ts`, `figureRigs.ts`, `Workshop.tsx`
+  and the tests merged by themselves; before the merge edits below, every code
+  file's diff against `4c76785` was line for line the lane's own diff against
+  `c81f674`.
+- **Renumbered**: D130–D138 → **D147–D155**, in the order they were written, on
+  every line the lane's commits wrote (145 lines in 23 files, read off the diff
+  against `4c76785`, so `main`'s own D130–D136 and LOOK's D137–D146 are untouched);
+  a code comment's "on branch `motion`" went with its old number, and each
+  DECISIONS entry says both. DECISIONS.md holds D1–D155 once each.
+- **LOOK's debts to this lane, paid** (LOOK's follow-ups 1 and 2, this lane's 1 and
+  2): `applyMaterialize` writes `uMaterialize` and nothing else — the spike
+  fallback, `MATERIALIZE_FLOOR` and `FigureRig.lookHeld` / `lookWritten` deleted —
+  and `DepartureField.bind` (LOOK's `FigureLayer.tsx`, edited here — the merge pass
+  lets a later stage edit an earlier one's files, and says so) writes the dying card's `materialize` into the falling
+  body's `uMaterialize`, so its ink drains back to hologram before `uDrain` greys it
+  (**D148**, amended). The per-frame `uMaterialize` write is a NUMBER the loop may
+  write, as `uDrain` is; LOOK's liveness clause now says so where it is documented
+  (edited here too), and the lane's clause holds the two writers and nothing else
+  naming the uniform (negative-controlled). **The summon plays**: hologram → ink
+  over every arrival's cue — to HALF ink, since an arrival is summoning-sick and
+  LOOK draws `sick` half hologram (**D142**), the product LOOK's follow-up 5
+  expected; follow-up 13 is the question that leaves.
+- **The skeptic's cheap minor, taken: speed lines beside the body, never across its
+  card** (**D147**, amended). A card moves with its figure's lunge, so the lines
+  trailing straight back from the chest lay on the card's art at every step of every
+  dash. The lines are two bands down the quad's edges, and the pool sizes and places
+  the lane between them from the body's axis and the card's live corners, each
+  carried along its own view ray onto the quad's plane. `motion.test.ts`'s new case
+  holds it over every figure of `g1`@355/@359 from all five views at three instants:
+  345 dashes, 0 bands on a card or a body (the lane's first geometry: 272 on the
+  card). `effects.ts` and `CueRunner.tsx` are the lane's own files; `setFigures`
+  gained one argument, the frame's layout.
+- **Negative controls**: eleven one-line mutations in a scratch copy
+  (`var/motion/merge/nc/`, `nc-results.txt`) — the reverse summon removed, the
+  `uLook` write put back, a `uMaterialize` write in `DiscField.bind`, the lane not
+  sized from the card, the corners measured along `across` instead of their view
+  rays, the lane centred, the head and feet left out, an allocation in `#widen`, a
+  key string in `#cardOf`, one band across the whole quad: ten failures, each in
+  the suite named. The eleventh (the lines leading from the chest, not ahead of it)
+  passes: it is a picture choice the test does not hold.
+- **Tests**: `npm --prefix web test` **973 `node --test` + 120 vitest (8 files)**, 0
+  failures — LOOK's 949, the lane's 23 and the merge's one. **Build**: the 2D entry
+  chunk **90.36 kB** gzip (LOOK merged: 90.35), with no `three` and no lane code;
+  `arena-scene` 353.91 → 360.06, `Arena` 15.11 → 15.40, `Workshop` 24.39 → 24.65,
+  `Post` 17.71.
+- **Bench** (`g1`@316, the production build, `vite preview`, `--settle 4000`,
+  1920 × 993, bloom the app's default, load 0.8–5.7): **GTX 1080 p95 1.2 / 1.2 / 1.2
+  ms comic against 1.2 / 1.1 / 1.1 classic** (`?fx=classic&twos=0`), p50 0.5, 0 of
+  ~6,450 frames over 50 ms; **SwiftShader p50 15.6 / 15.6 / 15.6 against 15.7 /
+  15.6 / 15.8**, the same 15 slow warm-up frames in every run of both. Bloom off on
+  the GTX 1080: 79 draw calls and 24,362 triangles at the end frame in both.
+  `var/motion/merge/bench/`.
+- **Pictures** (headless Chromium on the GTX 1080, the dev server, the queue paused
+  and stepped; the table view held by `director.noteUserInput` so no swoop takes
+  it): `var/motion/merge/png/` — the evidence's merge section lists them.
+- **Gate**, from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=8910`: **exit 0 in
+  237.6 s**, 46 jobs (934.2 s of work), load 2.4 at the start and 6.0 at most;
+  `node --test` 983 / 975 pass / 0 fail / 8 skipped plus 120 vitest, 6b `SAME
+  GAME`, 10g's three games played (`var/check-all-motion-merge.log`).
+- `~/forge` and `~/.forge`: unchanged (the jar `3c0a7c38…8e5dd9`).
+
+### Comic motion lane follow-ups — fourteen, 2026-09-28; 1 and 2 closed at merge
+
+1. ~~**The death's reverse summon has only its cue half**~~ **Closed at merge**
+   (**D148**, amended): `DepartureField.bind` writes the offset's `materialize` into
+   the falling body's `uMaterialize` (no floor — the handle needs none), and the
+   ink drains back to hologram over the first half of the fall
+   (`var/motion/merge/png/strip-ws-coulson-lethal-dies.png`). The request, for the
+   record: (LOOK's
    `scene/FigureLayer.tsx`). `zone.dissolve` from the battlefield writes
    `materialize` 1 → 0 on the dying card; the departing body is drawn by
    `DepartureField`, which never reads it. The edit, against branch `look`'s
@@ -6012,8 +6100,13 @@ on purpose at the merge rather than by whichever side lands second:
    liveness clause already reserves for this lane (it names no `uLook`). Without it
    a body that dies stays inked while its card's cue drains; with it the ink drains
    to hologram over the first half of the fall, then `uDrain` greys it.
-2. **At the merge with LOOK, delete `applyMaterialize`'s fallback**
-   (`scene/CueRunner.tsx`, this lane's; D131). LOOK's figure material binds
+2. ~~**At the merge with LOOK, delete `applyMaterialize`'s fallback**~~ **Closed at
+   merge**: deleted, with `MATERIALIZE_FLOOR` and the two rig fields; the liveness
+   clause asserts the handle and no `uLook`; the summon re-shot under the merged
+   look (`strip-ws-fury-front-enters.png`, `strip-arena-285-summon.png`). What it
+   shows is follow-up 13. The request, for the record: **At the merge with LOOK,
+   delete `applyMaterialize`'s fallback**
+   (`scene/CueRunner.tsx`, this lane's; D148). LOOK's figure material binds
    `uMaterialize` (identity 1, shaded as `uLook * uMaterialize`), and
    `applyMaterialize` already writes that handle first whenever the material has
    it — so after the merge the code after its first `return` is dead. Delete from
@@ -6060,7 +6153,7 @@ on purpose at the merge rather than by whichever side lands second:
    head already was in the before. The arena's table view shows whole stars
    (`after-table-g1-356-laser.png`, `after-table-g1-359-lethal.png`). If the close-up should hold a whole dash, it wants a framing that includes
    the combat anchor while a cue runs — the workshop's decision, not this lane's.
-   **Since D137** an attacker's star sits beside its head rather than above it, so
+   **Since D154** an attacker's star sits beside its head rather than above it, so
    it is cut less, but the dash still carries the head toward the top edge. **The
    same framing hides every AIMED word** (the verification pass): Quake's KRAK and
    Wasp's ZZAK land beside the target dummy and the Doombot's ZZAK on the player,
@@ -6074,7 +6167,9 @@ on purpose at the merge rather than by whichever side lands second:
    on the ground under the stand point (`#groundOf`), where the ink would land, and
    the camera looks down past the hovering body onto it. Judge it again under LOOK's
    lighter stage before moving it; offsetting it toward the camera would be the
-   renderer deciding where a body fell.
+   renderer deciding where a body fell. *Judged again at merge*, on LOOK's stage
+   (`crop-arena-359-1480-splat.png`): the same — an ink edge at the drained body's
+   feet — so it stays where the ink would land.
 11. **Every star is still one of five words on one yellow** (the verification pass's
    "still generic"; follow-ups 5 and 6 are the two halves). A sixth word, or a
    per-card star colour that the tint does not turn the red lettering brown, is a
@@ -6085,6 +6180,24 @@ on purpose at the merge rather than by whichever side lands second:
    verifier's `ws-coulson-lethal-200` shots were blank for this reason). The
    evidence driver now loads a fresh page per rehearsal; `__mtgWorkshop` could offer
    a `rest()` — the workshop's call.
+13. **A summon swings from hologram to HALF ink, not to ink** (the merge's
+   finding). Every creature arrives summoning-sick, LOOK draws `sick` at
+   `COMIC.sickLook` (0.5, **D142**) and the product is the shader's, so the ramp
+   ends at half; the figure is painted whole by the snapshot that says it can act,
+   with no cue. At table distance the swing is modest
+   (`strip-arena-285-summon.png`, the Doombot; the insect-bodied ant, which wears no
+   costume, barely changes). Report 15 §2.3 imagined 0 → 1 and then the sick pose;
+   that is a ramp overshooting identity — `materialize` up to 2, the shader
+   clamping the product at 1, then settling to 1 — one line in `playMaterialize`,
+   and it would read as "inked, then not yet able to act". A decision for the user,
+   not a merge's (question 28).
+14. **A high flier's speed lines stand wide.** The lane holds the body and its
+   CARD from the camera that is looking, so a body flying well above its card
+   (the Helicarrier's carrier, the Doombot) keeps its bands a card's projected
+   width apart, and from a camera swoop low along the lane the near band can come
+   close to the lens (`var/motion/merge/explore/arena-v1-356-330.png`). The card is
+   still never crossed; whether a flier should clear its card at all, or only its
+   body, is a look question for the next pictures.
 
 ---
 
@@ -6162,6 +6275,7 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 22 | **New, engine and sets.** Keep the prepared files to commit (the two FRA deck files, `tools/audit-deck.mjs` and its helper, `tools/javap-seam-diff.sh`, `docs/research/patches/`, `docs/drafts/`, report 14 and its evidence), and should `audit-deck.mjs` join `check-all.sh`? | **Keep them; `audit-deck.mjs` stays a hand tool** — it needs a built `bridge/out`, takes a few seconds, and today it would only re-prove the MSH decks the gate already plays. Showing Prepare on the board (follow-up 8) is a later decision of its own, not the day's. |
 | 23 | **New, more villains.** Which deck should a bare `./scripts/play.sh` seat against you — Doom Legion, one of the three added on 2026-09-28, or a rotation? | **Doom Legion, unchanged** (`config.json`'s `match.aiDeck`; the lane was told not to move it). The others are one `--ai-deck` away. |
 | 24 | **New, more villains.** Should `tools/deck-smoke.sh` demand the flat 8 spells a game (the lane's brief), or the rate it asserts, `min(8, AI turns − 3)` (**D117**)? | **The rate**, because against the automated seat 5 of 40 games reach 8 however the deck is built; `DECK_SMOKE_STRICT=1` is the flat 8 on demand. |
-| 25 | **New, the comic motion lane.** Keep **comic FX** on by default (impact stars, the five words, splats, dots, speed lines, the ink summon, the jolts), or ship it behind `?fx=comic` until played? | **On by default** (D135) — it reads over the hologram and the comic look alike, and `?fx=classic` / the cue strip's checkbox is the film before it, op for op. |
+| 25 | **New, the comic motion lane.** Keep **comic FX** on by default (impact stars, the five words, splats, dots, speed lines, the ink summon, the jolts), or ship it behind `?fx=comic` until played? | **On by default** (D152) — it reads over the hologram and the comic look alike, and `?fx=classic` / the cue strip's checkbox is the film before it, op for op. |
 | 26 | **New, the comic motion lane.** Keep **on twos** (every cue stepped to twelve drawings a second) on by default? It is the comic's stepped motion, and some eyes read it as judder, especially on a high-refresh display. | **On by default** (the brief), off under reduced motion; `?twos=0` and a checkbox. |
-| 27 | **New, the comic motion lane.** The five words — POW, BLAM, KRAK, ZZAK, WHOOSH — and which card says which. The list is closed on purpose (D133); a word is a decision. | **The five of report 15 §5.1**, assigned in `cues.json`'s `_motion` notes. |
+| 27 | **New, the comic motion lane.** The five words — POW, BLAM, KRAK, ZZAK, WHOOSH — and which card says which. The list is closed on purpose (D150); a word is a decision. | **The five of report 15 §5.1**, assigned in `cues.json`'s `_motion` notes. |
+| 28 | **New, the comic motion lane at merge.** Every creature arrives summoning-sick, which the comic look draws half hologram, so its summon resolves from hologram to HALF ink. Should the summon swing all the way to ink and then settle to half (the ramp overshooting identity, clamped by the shader), or stay as it is? | **As it is**: the product of the two lanes' decisions (D142, D148), as LOOK's follow-up 5 expected. The overshoot is one line in `playMaterialize` (the motion lane's follow-up 13). |

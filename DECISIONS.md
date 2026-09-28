@@ -7083,10 +7083,27 @@ figure and a card look alike. A mask target or a second scene render (report 09
 
 ---
 
-## D130 — Comic VFX are three INK shapes on the fixed pool and one `streak` kind; ink is blended normally, per slot; the pool goes 45 → 49
+*Lane MOTION's nine decisions — the second of report 15's three art-direction
+lanes (`docs/research/15-art-direction.md` §9) to land. Branch `motion` (worktree
+`mtg-table-t2m`), cut from the art-direction report's `c81f674` on `main`'s
+`a092d3a`, and rebased onto Lane LOOK's merged tip `4c76785` (`main`'s `f6bad35`,
+report 15 and LOOK's four commits). Written as **D130–D138** in the lane's
+reserved range D130–D139 while `main` took D113–D136 and Lane LOOK, landing
+first, renumbered its own ten to D137–D146 — so every one of the lane's numbers
+was taken — and renumbered contiguously at merge: these nine are **D147–D155**,
+in the order they were written, on every line the lane's two commits wrote — this
+file, CLAUDE.md, PLAN.md, README.md, `docs/evidence/motion.md`, `cues.json`'s
+notes, and comments and test names under `web/src/arena/`, `web/src/workshop/`
+and `web/test/` (a code comment's "on branch `motion`" went with its old number).
+Each keeps its branch note with both numbers. D147 and D148 carry the merge's
+dated amendments. Lane BODIES numbers its decisions after D155.*
 
-**2026-09-28** (*the comic motion lane, branch `motion`; numbered in the lane's
-reserved range D130–D139 and renumbered contiguously at merge.* Within **D50**,
+## D147 — Comic VFX are three INK shapes on the fixed pool and one `streak` kind; ink is blended normally, per slot; the pool goes 45 → 49
+
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D130, the
+first
+of the lane's reserved range D130–D139, and **D147** since the art-direction lanes
+were renumbered contiguously at merge.* Within **D50**,
 **D56**, **D60** and **D79**; the brief is
 [`docs/research/15-art-direction.md`](docs/research/15-art-direction.md) §5 and
 §9.2.)
@@ -7096,7 +7113,7 @@ the effect kit gains:
 
 - **three shapes** on the slots that already exist — `burst` (a jagged
   twelve-point impact star with an ink outline and a halftone band, optionally
-  lettered, **D133**), `splat` (an ink splash with droplets, flat on the table:
+  lettered, **D150**), `splat` (an ink splash with droplets, flat on the table:
   the dying card's colour as its body, ink as its outline) and `dots` (a Ben-Day
   dot burst). A `ring` takes `splat` and `dots`, a `plate` takes `dots`, a `glow`
   takes `burst`. They cost no slot and no draw call a glow would not;
@@ -7111,7 +7128,7 @@ the effect kit gains:
   is render state in three 0.186, not part of the program key, so no program is
   added (measured: 15 programs in a classic and a comic frame alike).
 
-Where each fires by default, under comic FX (**D135**): a star on every struck
+Where each fires by default, under comic FX (**D152**): a star on every struck
 body (lettered POW on lethal damage), on a block's contact and on a strike's
 target; a splat under every creature that dies from the battlefield (a discard
 or a spell resolving into the graveyard is not a death); a halftone plate behind
@@ -7134,9 +7151,39 @@ is a download and a provenance row); a second pool for the ink shapes; more
 `streak` slots than the brief budgeted (a fifth attacker's lines degrade, as the
 pool always has); additive speed lines (they wash out on a light stage).
 
-## D131 — The hologram-to-ink summon is `Offset.materialize`; the frame loop writes it into LOOK's `uMaterialize` as a number (on the spike's material, `uLook × materialize`)
+*Amended at the merge with LOOK (2026-09-28):* **speed lines stream BESIDE the
+body, never across its card.** A card moves with its figure's lunge — it is the
+same offset — so the one place straight behind a dashing body is always its own
+card, and the lines drawn there read as scratches on the art (the lane's skeptic).
+The canvas now draws the lines in two bands down the quad's long edges
+(`STREAK_CLEAR`, 0.7 of its width, is left empty between them); the quad's front
+is `STREAK_LEAD` (0.35 of the body's height) ahead of the chest, so the lines
+start level with the body and run past its flanks; and the pool sizes and places
+the lane between the bands (`EffectPool.#streakClear`, `#widen`) so that the
+body's axis, feet to head with its half-width either side, and the card's four
+live corners, each carried along its own view ray onto the quad's plane (where the
+lines are drawn), lie inside it with `STREAK_GAP` (0.06) to spare. The lane is the
+narrowest that does, so on a diagonal dash one band runs beside the body and the
+other beyond the card. `EffectPool.setFigures` takes the frame's layout for it
+(`CueRunner` passes `stage.layout`), the card is found by an indexed walk
+(`#cardOf` — `placementOf`'s key string would allocate), and the three bodies are
+in the lane's allocation scan. `motion.test.ts` drives the real `attack.lunge`
+into the real pool over every figure of `g1`@355 and @359 from all five views at
+three instants of the dash (345 dashes): no band overlaps the card's projected
+rectangle or covers the body's axis, and the lane's first geometry crossed the
+card in 272 of them. The pool, the cap, the words and the switch are unchanged.
+*Rejected:* stopping the lines short of the card (the card moves with the lunge,
+so seen from the front they vanished); a width measured along `across` in world
+units (a shoulder view's perspective put a near corner in a band: 38 of 690
+bands); a lane centred on the body (a diagonal dash's card is off to one side, so
+both bands stood a card-length away); two quads a streak (it halves the four
+slots).
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+## D148 — The hologram-to-ink summon is `Offset.materialize`; the frame loop writes it into LOOK's `uMaterialize` as a number (on the spike's material, `uLook × materialize`)
+
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D131 in the
+lane's reserved range D130–D139, and **D148** since the lanes were renumbered at
+merge.*
 Report 15 §2.3 and §5.3; within **D50** and **D97**'s "a number the frame loop
 writes".)
 
@@ -7184,9 +7231,31 @@ but the summon would be invisible on this branch, and the workshop is the judgin
 tool. Writing `uLook` from a layout effect: a summon is a transition, and a
 transition is the frame loop's.
 
-## D132 — On twos is a quantisation of each cue's own progress: twelve drawings a second of screen time, at least four per cue, off under reduced motion, a switch
+*Amended at the merge with LOOK (2026-09-28):* **the fallback is gone, and the
+reverse summon is drawn.** LOOK's figure material binds `uMaterialize` on every
+figure, so `applyMaterialize` writes that handle and nothing else
+(`FigureRig.lookHeld` / `lookWritten` and `MATERIALIZE_FLOOR` are deleted, and
+`CueRunner.tsx` names no `uLook`, which LOOK's liveness clause requires).
+`DepartureField.bind` — the falling body's frame loop, in LOOK's
+`FigureLayer.tsx` — writes the dying card's `Offset.materialize` into the body's
+`uMaterialize` the same way, so `zone.dissolve`'s 1 → 0 drains the ink back to
+hologram over the first half of the fall before `uDrain` greys it (the lane's
+follow-up 1, LOOK's follow-up 2). Both writes are numbers in the frame loop, like
+`uOpacity` and `uDrain` — **D145**'s one look number — and the liveness clause
+holds the two writers and nothing else naming `uMaterialize`. **What a summon
+shows now:** every arrival is summoning-sick, which LOOK draws half hologram
+(**D142**), and the product is the shader's (`uLook × uMaterialize`), so an
+arrival resolves from hologram to HALF ink over its cue, and the snapshot that says
+it is no longer sick paints it whole — as LOOK's follow-up 5 expected. A full
+hologram-to-ink swing for a sick arrival would need the ramp to overshoot identity
+(up to 2, the shader clamping the product at 1) and then settle; that is the
+user's call (PLAN, the lane's follow-up 13), not a merge's.
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+## D149 — On twos is a quantisation of each cue's own progress: twelve drawings a second of screen time, at least four per cue, off under reduced motion, a switch
+
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D132 in the
+lane's reserved range D130–D139, and **D149** since the lanes were renumbered at
+merge.*
 Report 15 §3.7; within **D57** and **D72**.)
 
 **Decision.** `cues/motion.ts`'s `onTwos(t, ms, stepMs)` floors a cue's linear
@@ -7210,9 +7279,11 @@ budget is 60 ms long and at 83 ms a drawing it would show only its first frame.
 step); a 12 fps timer (a second clock); stepping the camera or the idle breathing
 (Spider-Verse keeps its camera on ones, and neither is a cue).
 
-## D133 — The onomatopoeia is a CLOSED list of five words, lettered ON the burst — one effect, never a `text`
+## D150 — The onomatopoeia is a CLOSED list of five words, lettered ON the burst — one effect, never a `text`
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D133 in the
+lane's reserved range D130–D139, and **D150** since the lanes were renumbered at
+merge.*
 Report 15 §5.1.)
 
 **Decision.** `COMIC_WORDS` is `POW`, `BLAM`, `KRAK`, `ZZAK`, `WHOOSH`, in
@@ -7233,9 +7304,11 @@ as comic lettering (heavy, leaning, ink-outlined) rather than the numbers' font.
 route); words as `EffectShape`s (five more names in a closed list that is about
 shapes).
 
-## D134 — Impact shakes are shake-only requests at priority 0, one per cue; under comic FX a lethal blow jolts instead of pushing in
+## D151 — Impact shakes are shake-only requests at priority 0, one per cue; under comic FX a lethal blow jolts instead of pushing in
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D134 in the
+lane's reserved range D130–D139, and **D151** since the lanes were renumbered at
+merge.*
 Report 09 §8 rule 7, **D69**–**D71**.)
 
 **Decision.** A strike landing, a Helicarrier Strike's beam, a creature dying from
@@ -7249,7 +7322,7 @@ shake-only request: **one shake per cue** however long its impact window stays o
 screen at a slow replay speed. `damage.lethal`'s old push-in framed the CARD, which
 by the snapshot that says so is in the graveyard — the camera swung to the pile
 while the star landed on the falling body (`g1`@359, measured) — so under comic FX
-it is replaced by the jolt; classic keeps it (**D135**).
+it is replaced by the jolt; classic keeps it (**D152**).
 
 **Why.** "Using the shake that already exists", within the director's rules: the
 only line `camera.ts` gained is the per-key dedupe. `camera.test.ts` runs the
@@ -7258,9 +7331,11 @@ auto director over the corpus with the shakes in play and holds its shot rules.
 **Rejected.** A shake channel that rides any live move (a second camera state);
 shaking on every hit (noise; a hit has its star).
 
-## D135 — Comic FX is a switch stamped into each cue at enqueue; off is the film before the lane, op for op; on by default
+## D152 — Comic FX is a switch stamped into each cue at enqueue; off is the film before the lane, op for op; on by default
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*)
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D135 in the
+lane's reserved range D130–D139, and **D152** since the lanes were renumbered at
+merge.*)
 
 **Decision.** `CueContext.comic` is stamped at enqueue from the queue's setting
 (`?fx=classic|comic`, the cue strip's *comic FX*, the workshop's queue bar), as
@@ -7280,9 +7355,11 @@ the before is not a memory of the old build but the same build with one switch.
 **Rejected.** Tying comic FX to LOOK's `?look=comic` (the two are judged
 separately, and the vocabulary reads over either look); a build-time flag.
 
-## D136 — The per-card upgrades key off an event about THAT card; an attacker's word is its own flourish, never a hit on its defender
+## D153 — The per-card upgrades key off an event about THAT card; an attacker's word is its own flourish, never a hit on its defender
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139.*
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D136 in the
+lane's reserved range D130–D139, and **D153** since the lanes were renumbered at
+merge.*
 `cues.json`'s one rule; **D82**, **D89**.)
 
 **Decision.** `cues.json` gives the deck's headline cards the new vocabulary, each
@@ -7309,10 +7386,12 @@ wire named: the stack's target, the band's defender, the block's attacker.
 identity; the default dash has lines only); words keyed to a tap or a counter's
 source (not on the wire).
 
-## D137 — A star never hides the body it is on: an attacker's flourish goes beside its head, a hit lands on its body's edge
+## D154 — A star never hides the body it is on: an attacker's flourish goes beside its head, a hit lands on its body's edge
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139 —
-its verification pass, round 1. Amends **D130** and **D136**'s placement; the words,
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D137 in the
+lane's reserved range D130–D139, and **D154** since the lanes were renumbered at
+merge —
+its verification pass, round 1. Amends **D147** and **D153**'s placement; the words,
 the events and the switch are unchanged.*)
 
 **Decision.** An impact star on a `figure` anchor is drawn BESIDE the body, never
@@ -7351,10 +7430,12 @@ opponent's is in front of its face); the plain lens pull (it makes the star bigg
 on the screen, back over the head); a per-view side (the camera moves; the rest
 slot does not).
 
-## D138 — The ink splat is an INK body with a paper rim and a gloss, not a pale body with an ink rim
+## D155 — The ink splat is an INK body with a paper rim and a gloss, not a pale body with an ink rim
 
-**2026-09-28** (*the comic motion lane, branch `motion`, reserved range D130–D139 —
-its verification pass, round 1. Amends **D130**'s splat drawing.*)
+**2026-09-28** (*the comic motion lane, branch `motion` — written as D138 in the
+lane's reserved range D130–D139, and **D155** since the lanes were renumbered at
+merge —
+its verification pass, round 1. Amends **D147**'s splat drawing.*)
 
 **Decision.** `drawShape('splat')` paints the lobed blob, its arms and its drops
 twice: first white, outset by a constant 9 canvas pixels (the RIM — constant, so a
@@ -7370,7 +7451,7 @@ table distance. Ink on a dark stage reads by its edge and its shine; on LOOK's
 lighter stage the body carries it.
 
 **Rejected.** A coloured body (a red splash reads as blood; a colour-identity
-splash reads as paint, not ink); an additive halo (ink is painted, **D130**).
+splash reads as paint, not ink); an additive halo (ink is painted, **D147**).
 
 ---
 

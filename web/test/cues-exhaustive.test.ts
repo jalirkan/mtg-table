@@ -586,7 +586,7 @@ test('composeInto is composeOffsets ∘ offsetFrom, field for field', () => {
     { glow: 0.8, glowColour: '#00ff88' },
     { glowColour: null },
     { dissolve: 0.35 },
-    // The comic motion lane's one new field (D131): it multiplies, like scale.
+    // The comic motion lane's one new field (D148): it multiplies, like scale.
     { materialize: 0.4 },
     { materialize: 0 },
     {
@@ -913,7 +913,7 @@ test('cues: under reduced motion the slice-3 beats move nothing they should not'
 });
 
 // ---------------------------------------------------------------------------
-// The comic motion lane (report 15 §5; D130–D136 on branch `motion`)
+// The comic motion lane (report 15 §5; D147–D153)
 // ---------------------------------------------------------------------------
 
 test('validate: the comic lane’s params are named, typed and ranged — and the word list is closed', () => {

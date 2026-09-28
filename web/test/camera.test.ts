@@ -1315,7 +1315,7 @@ test('camera: the duelists are never in the solver’s required set (report 13 �
 });
 
 // ---------------------------------------------------------------------------
-// The comic motion lane's impact shakes (report 15 §5.1; D134 on branch `motion`)
+// The comic motion lane's impact shakes (report 15 §5.1; D151)
 // ---------------------------------------------------------------------------
 
 /** A shake-only request, as the lane's `impactShake` makes one. */
@@ -1323,7 +1323,7 @@ function impact(key: string, over: Partial<CameraRequest> = {}): CameraRequest {
   return { frame: [], padding: 0, tilt: 0, shake: 0.3, priority: 0, ms: 260, key, ...over };
 }
 
-test('camera: an impact shake is one per cue, never re-aims, never preempts a move, and is bounded (D134)', () => {
+test('camera: an impact shake is one per cue, never re-aims, never preempts a move, and is bounded (D151)', () => {
   const nowhere = world({ resolve: () => null });
   const director = new CameraDirector();
   const home = director.home;

@@ -1589,7 +1589,13 @@ test('liveness: the duelists’ frame-loop bodies allocate nothing (T13)', () =>
  *    `applyPropLook`, `applyComicGlobals` or a `setLook`, and name no `uLook`
  *    (negative-controlled: each spliced in is caught). Lane MOTION's summon
  *    writes `uMaterialize`, a number multiplied into the look — which is why the
- *    look itself never needs a frame-loop write;
+ *    look itself never needs a frame-loop write. **That one number IS written
+ *    per frame, and may be** (D145, D148, at the merge of the two lanes): the
+ *    frame loop writes it as it writes `uOpacity` and `uDrain`, from exactly
+ *    the two bodies that draw a figure — `CueRunner`'s `applyMaterialize` (a
+ *    living figure's summon) and `DepartureField.bind` (a falling body's ink
+ *    draining back) — and `touchesLook` below does not name it on purpose; the
+ *    comic motion lane's clause, after this one, holds those two writers;
  *  - the callers are commit-time: `FigureLayer` and `DuelistLayer` call them
  *    from layout effects and from the fields' `setLook` / `add` / `build`;
  *  - the look reaches a figure through `look.ts`'s `figureLookOf` (an anonymous
@@ -1764,18 +1770,23 @@ test('liveness: the look is written at commit, never in the frame loop, and the 
 });
 
 /**
- * **The comic motion lane** (`docs/research/15-art-direction.md` §9.2; D130–D138
- * on branch `motion`) — its new frame-loop bodies, its one write into a figure's
+ * **The comic motion lane** (`docs/research/15-art-direction.md` §9.2;
+ * D147–D155) — its new frame-loop bodies, its one write into a figure's
  * look, its stepping and its pool, held the way the Tier 2 code is:
  *
- *  - the effect pool's new bodies — the streak's orientation, the ink blend, the
- *    two map choosers — and `CueRunner`'s `applyMaterialize` allocate nothing
- *    (the same scan and the same negative controls as the disc field's);
+ *  - the effect pool's new bodies — the streak's orientation and its reach
+ *    (clear of its own card, from this camera), the ink blend, the two map
+ *    choosers — and `CueRunner`'s `applyMaterialize` allocate nothing (the same
+ *    scan and the same negative controls as the disc field's);
  *  - `cues/motion.ts`'s `onTwos` is on the queue's per-cue path and allocates
  *    nothing, and the module is pure (no three, React, DOM or clock — the `cues/`
  *    purity clause covers the imports; this adds the DOM);
- *  - the frame loop's only `uLook` write is `applyMaterialize`, a NUMBER (report
- *    15 §9.1's declared exception); the commit's write stays `holoMaterial.ts`'s;
+ *  - the frame loop writes no `uLook` at all (the commit's writer is
+ *    `figureMaterial.ts`'s `applyLook`): its one look number is `uMaterialize`,
+ *    a NUMBER (report 15 §9.1's declared exception), written by
+ *    `applyMaterialize` on a living figure and by `DepartureField.bind` on a
+ *    falling one and by nothing else — the spike's `uLook` fallback went at the
+ *    merge with LOOK (D148);
  *  - the pool is 49 and the streak is counted against the eight-slot cap.
  */
 test('liveness: the comic motion lane allocates nothing in the loop, writes the look only as a number, and stays in its budget', async () => {
@@ -1786,6 +1797,9 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
   const motion = files.get('cues/motion.ts') ?? '';
   const bodies: Array<[string, string]> = [
     ['EffectPool.#streak', bodyOf(pool, '#streak')],
+    ['EffectPool.#streakClear', bodyOf(pool, '#streakClear')],
+    ['EffectPool.#cardOf', bodyOf(pool, '#cardOf')],
+    ['EffectPool.#widen', bodyOf(pool, '#widen')],
     ['EffectPool.#blend', bodyOf(pool, '#blend')],
     ['EffectPool.#glowMap', bodyOf(pool, '#glowMap')],
     ['EffectPool.#ringMap', bodyOf(pool, '#ringMap')],
@@ -1794,7 +1808,7 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
     // lookups are now bodies of their own; the drawing is their miss path's.
     ['effects.ts burstTexture (the lookup)', bodyOf(effects, 'burstTexture')],
     ['effects.ts shapeTexture (the lookup)', bodyOf(effects, 'shapeTexture')],
-    // D137: a star beside its body, and the height it clears.
+    // D154: a star beside its body, and the height it clears.
     ['EffectPool.#beside', bodyOf(pool, '#beside')],
     ['EffectPool.#heightOf', bodyOf(pool, '#heightOf')],
     ['CueRunner applyMaterialize', bodyOf(runner, 'applyMaterialize')],
@@ -1803,6 +1817,9 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
   for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
   // They are the frame loop's: bind reaches the streak and the blend, applyFigures the look.
   assert.match(pool, /case 'streak': \{\s*this\.#streak\(/, 'the streak branch no longer calls #streak — update the body list');
+  assert.match(bodyOf(pool, '#streak'), /this\.#streakClear\(effect, camera\)/, '#streak no longer sizes its clear lane — update the body list');
+  assert.match(bodyOf(pool, '#streakClear'), /this\.#cardOf\(id\)/, '#streakClear no longer finds the card — update the body list');
+  assert.match(bodyOf(pool, '#streakClear'), /this\.#widen\(/, '#streakClear no longer widens its lane — update the body list');
   assert.match(pool, /this\.#blend\(slot, isInkShape\(effect\.shape\)\)/, 'the glow no longer chooses its blend by shape');
   assert.match(runner, /applyMaterialize\(rig, offset\.materialize\)/, 'applyFigures no longer writes the summon');
   assert.match(files.get('cues/queue.ts') ?? '', /onTwos\(progress, item\.ms, stepMs\)/, 'the queue no longer steps a cue on twos');
@@ -1825,7 +1842,7 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
     assert.match(primeInk, drawn, `prime no longer draws ${String(drawn)}`);
   }
   // A star beside its body is placed by the pool from the camera it is handed
-  // (D137), in its own branch — the plain lens pull is the other one.
+  // (D154), in its own branch — the plain lens pull is the other one.
   assert.match(pool, /if \(effect\.aside !== undefined && effect\.at\.kind === 'figure'\) \{\s*(?:\/\/[^\n]*\s*)*this\.#beside\(/, 'the glow no longer places a star beside its body');
   const junk = [
     'const _junk = [t, t];',
@@ -1848,16 +1865,16 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
   assert.ok(motion.length > 200, 'cues/motion.ts is missing');
   assert.ok(!/\bwindow\.|\bdocument\.|performance\.now\(|Date\.now\(/.test(motion), 'cues/motion.ts touches the DOM or a clock');
 
-  // The look: at commit it is LOOK's (`holoMaterial.ts`'s `applyLook`, the prop
-  // field's `setLook`); in the FRAME LOOP it is `applyMaterialize`'s and nobody
-  // else's, and it is a number. The loop's bodies are the ones the costume clause
-  // reads, plus CueRunner outside the one function.
+  // The look: at commit it is LOOK's (`figureMaterial.ts`'s `applyLook`, the prop
+  // field's `setLook`); in the FRAME LOOP nobody writes it — the loop writes the
+  // number it is multiplied by. The loop's bodies are the ones the costume clause
+  // reads, and CueRunner whole.
   const layer = files.get('scene/FigureLayer.tsx') ?? '';
   const discs = files.get('scene/discs.ts') ?? '';
   const propsSource = files.get('scene/props.ts') ?? '';
   const writesLook = /\buLook\b[\s\S]{0,40}\.value\s*=|\blook\.value\s*=|\bapplyLook\(/;
   const loop: Array<[string, string]> = [
-    ['CueRunner.tsx outside applyMaterialize', runner.replace(bodyOf(runner, 'applyMaterialize'), '')],
+    ['CueRunner.tsx', runner],
     ['DiscField.bind', bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind')],
     ['DepartureField.bind', bodyOf(layer.slice(layer.indexOf('class DepartureField')), 'bind')],
     ['PropField.bind', bodyOf(propsSource.slice(propsSource.indexOf('export class PropField')), 'bind')],
@@ -1867,12 +1884,28 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
     assert.ok(!writesLook.test(body), `${name} writes a look in the frame loop`);
     assert.ok(writesLook.test(`${body}\nmaterial.uniforms.uLook.value = 1;`), `the look scan misses a write in ${name}`);
   }
-  // The handle is LOOK's `uMaterialize` (branch `look`'s figure material), a number;
-  // the `uLook` product is the spike material's fallback until that merge, and it
-  // comes AFTER the handle so a material that has one never reaches it.
+  // The one look NUMBER the loop writes is LOOK's `uMaterialize` handle (D145),
+  // multiplied into the committed `uLook` by the shader, from exactly two bodies:
+  // a living figure's (`applyMaterialize`, from `applyFigures`) and a falling
+  // body's (`DepartureField.bind`, the reverse summon) — D148, at the merge.
   const materialize = bodyOf(runner, 'applyMaterialize');
-  assert.match(materialize, /uniforms\.uMaterialize;[\s\S]*handle\.value = value;[\s\S]*return;[\s\S]*uniforms\.uLook/, 'applyMaterialize no longer prefers LOOK’s uMaterialize handle');
-  assert.match(materialize, /look\.value = scaled;/, 'applyMaterialize’s fallback no longer writes the look as a number');
+  assert.match(materialize, /uniforms\.uMaterialize;[\s\S]*handle\.value = value;/, 'applyMaterialize no longer writes LOOK’s uMaterialize handle');
+  assert.ok(!/\buLook\b|lookHeld|lookWritten/.test(materialize), 'applyMaterialize scales uLook again — the spike’s fallback went at the merge (D148)');
+  const departureBind = bodyOf(layer.slice(layer.indexOf('class DepartureField')), 'bind');
+  assert.match(
+    departureBind,
+    /const materialize = source\.offsetOf\(entry\.cardId\)\.materialize;\s*uniforms\.uMaterialize\.value = materialize >= 1 \? 1 : Math\.max\(0, materialize\);/,
+    'a falling body no longer drains its ink back to hologram with its dissolve (D148)',
+  );
+  const namesMaterialize = (code: string): boolean => /\buMaterialize\b/.test(code);
+  assert.deepEqual(
+    [...files].filter(([, code]) => namesMaterialize(code)).map(([path]) => path).sort(),
+    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx', 'scene/figureMaterial.ts'],
+    'something new names uMaterialize — the loop’s one look number has two writers and one declaration',
+  );
+  assert.ok(namesMaterialize(runner.replace(materialize, '')) === false, 'CueRunner names uMaterialize outside applyMaterialize');
+  assert.ok(namesMaterialize(layer.replace(departureBind, '')) === false, 'FigureLayer names uMaterialize outside DepartureField.bind');
+  assert.ok(namesMaterialize(`${layer.replace(departureBind, '')}\nrig.material.uniforms.uMaterialize.value = 0;`), 'the uMaterialize scan misses the line it exists to catch');
   // The negative control: a colour or a costume written from the loop is still caught.
   assert.ok(/\bapplyCostume\(|\buCostume\b/.test(`${bodyOf(runner, 'applyMaterialize')}\nuCostume.value[0].set('#fff');`));
 

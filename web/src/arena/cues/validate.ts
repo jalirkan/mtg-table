@@ -249,11 +249,11 @@ export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
    */
   gesture: { type: 'gesture' },
 
-  // -- the comic motion lane (report 15 §5; D130–D136 on branch `motion`) -------
+  // -- the comic motion lane (report 15 §5; D147–D153) -------
   // Every one is read only while the queue's *comic FX* is on; with it off a row
   // that sets them plays the film as it was before the lane.
   /**
-   * **The impact star, and the word lettered on it** (D130, D133): `none`, `star`
+   * **The impact star, and the word lettered on it** (D147, D150): `none`, `star`
    * (unlettered), or one of the closed onomatopoeia — `pow`, `blam`, `krak`,
    * `zzak`, `whoosh`. Where it lands is the cue's (the body the event names).
    */

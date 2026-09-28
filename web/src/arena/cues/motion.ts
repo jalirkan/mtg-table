@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * **The comic motion lane's two switches, and the one function that steps a cue**
- * (`docs/research/15-art-direction.md` §3.7 and §9.2; D132 and D135 on branch
- * `motion`).
+ * (`docs/research/15-art-direction.md` §3.7 and §9.2; D149 and
+ * D152).
  *
  *  - **Comic FX** — the new vocabulary: impact bursts and their lettering, ink
  *    splats, halftone dots, speed lines, the hologram-to-ink summon and the impact

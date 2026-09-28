@@ -115,7 +115,7 @@ const RED = '#ff6b5a';
 const GREEN = '#7fd39a';
 const WHITE = '#ffffff';
 const GREY = '#8b939e';
-/** The comic lane's paper: an ink splat's rim and gloss (D138). */
+/** The comic lane's paper: an ink splat's rim and gloss (D155). */
 const PAPER = '#f3efe2';
 const GOLD = '#e3c46a';
 const POISON = '#7fb07f';
@@ -140,8 +140,8 @@ interface CueDef {
    */
   alsoClears?: readonly string[];
   /**
-   * **Effect key suffixes only a COMIC cue sets** (the comic motion lane, D135 on
-   * branch `motion`): `end()` releases them only when `ctx.comic` is on, so with
+   * **Effect key suffixes only a COMIC cue sets** (the comic motion lane,
+   * D152): `end()` releases them only when `ctx.comic` is on, so with
    * comic FX off a cue's op log is exactly the one it had before the lane — not a
    * single extra `clearEffect` of a key nothing set (`motion.test.ts` holds the
    * corpus to it).
@@ -317,7 +317,7 @@ function cue(def: CueDef): CueImpl {
       def.apply(ctx, t, stage);
       playClip(ctx, t, stage);
       playGesture(ctx, t, stage);
-      // The comic lane's summon (D131), for every cue an arrival resolves to — AFTER
+      // The comic lane's summon (D148), for every cue an arrival resolves to — AFTER
       // the cue's own offsets, so a `perTarget` cue that cleared one cannot drop it.
       playMaterialize(ctx, t, stage);
     },
@@ -436,7 +436,7 @@ function defenderOf(ctx: CueContext): AnchorRef {
 }
 
 // ---------------------------------------------------------------------------
-// The comic motion lane (report 15 §5; D130–D136 on branch `motion`)
+// The comic motion lane (report 15 §5; D147–D153)
 //
 // Every beat below is behind `comic(ctx)` — the queue's *comic FX* setting,
 // stamped into the context at enqueue — so with it off the film is exactly the
@@ -462,8 +462,8 @@ function burstOf(ctx: CueContext, fallback: Burst): Burst {
 }
 
 /**
- * **An impact star** (`shape: 'burst'`, D130) — one glow slot, lettered or not
- * (D133), popping out on an overshoot and fading over `u ∈ (0, 1)`, and gone
+ * **An impact star** (`shape: 'burst'`, D147) — one glow slot, lettered or not
+ * (D150), popping out on an overshoot and fading over `u ∈ (0, 1)`, and gone
  * outside it. `size` is world units, or the figure's own heights with `fit`.
  * The star is tilted a fixed amount per word so two stars in one batch do not
  * stamp the same silhouette; nothing about it is random, so two frames of one
@@ -503,7 +503,7 @@ function burstAt(
 }
 
 /**
- * **Where a star goes beside a body** (`Effect.aside`, D137): the rest point that
+ * **Where a star goes beside a body** (`Effect.aside`, D154): the rest point that
  * picks the side (the card's own slot), the gap from the body's axis in its
  * heights, and the lift in the star's own sizes.
  */
@@ -514,7 +514,7 @@ interface Beside {
 }
 
 /**
- * **An attacker's flourish goes BESIDE its head, clear of it** (D137, the lane's
+ * **An attacker's flourish goes BESIDE its head, clear of it** (D154, the lane's
  * verification pass). At its first placement — in front of the body at 0.78 of
  * its height, pulled toward the lens — the POW covered the attacker's own head at
  * the top of the dash and through the hold: Peggy's hat and shield and Fury's head
@@ -527,7 +527,7 @@ function besideAttacker(id: number): Beside {
 }
 
 /**
- * **A hit lands on the body's EDGE** (D137): the star's near edge just off the
+ * **A hit lands on the body's EDGE** (D154): the star's near edge just off the
  * body's axis (6% of its height — the head's own half-width), so it overlaps the
  * struck side and reads as a hit while the face and the far side stay in view. A
  * lethal POW centred on the body replaced the figure outright in the workshop's
@@ -539,7 +539,7 @@ function besideStruck(id: number): Beside {
 }
 
 /**
- * **Speed lines** (the `streak` kind, D130) behind a lunging body: from its chest
+ * **Speed lines** (the `streak` kind, D147) behind a lunging body: from its chest
  * back along the way it came (`from → to`, the dash's own vector — the card's rest
  * to the anchor it dashes at), over the dash out of its rank — strongest mid-dash,
  * gone by the hold — scrolling with the cue's own `t`. `streaks` (0…2) is their
@@ -589,7 +589,7 @@ function attackBurst(ctx: CueContext, t: number, stage: Stage, id: number, fit =
 }
 
 /**
- * **A camera shake on an impact** (D134): the shake `camera.ts` already has —
+ * **A camera shake on an impact** (D151): the shake `camera.ts` already has —
  * a request with nothing to frame — at priority 0, so it never preempts a move
  * and is dropped while any is live, under reduced motion, while the engine waits
  * on the human and for five seconds after the user's own drag (§8 rules 2, 5, 7
@@ -603,7 +603,7 @@ function impactShake(ctx: CueContext, t: number, stage: Stage, from: number, amo
 }
 
 /**
- * **The hologram-to-ink summon** (report 15 §5.3; D131) — `Offset.materialize`,
+ * **The hologram-to-ink summon** (report 15 §5.3; D148) — `Offset.materialize`,
  * `0 → 1`, on every cue an ARRIVAL resolves to: `zone.enters`, the Helicarrier's
  * fly-in, Fury's agents, a scientist's bench, a land's rise. It reads the zone
  * event's own `toZone`/`fromZone` facts, so it is the arrival's and nothing
@@ -739,7 +739,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
       const d = decay(stage, id, fromAnchor(ctx, 'battlefield'), k);
       const wave = pulse(t);
       /**
-       * **The comic lane's death** (D130, D134): a creature that leaves the
+       * **The comic lane's death** (D147, D151): a creature that leaves the
        * BATTLEFIELD for the graveyard prints an ink splat on the table where its
        * body falls (a `figure` anchor resolves to the departing body, T11), and the
        * table jolts once. A card discarded or a spell resolving into the graveyard
@@ -754,7 +754,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
           stage.setEffect(`${ctx.key}:splat`, {
             kind: 'ring',
             at: figureAt(id, 0),
-            // The tint is the RIM's and the gloss's (the body is drawn in ink, D138):
+            // The tint is the RIM's and the gloss's (the body is drawn in ink, D155):
             // paper by default, a card row's own colour otherwise.
             colour: colour(ctx, PAPER),
             strength: 0.95 * fade,
@@ -777,10 +777,11 @@ const ENTRIES: Array<[string, CueImpl]> = [
         dissolve: 0.92 * wave,
         opacity: 1 - 0.5 * wave,
         tint: GREY,
-        // …and its ink drains back to hologram (report 15 §2.3's reverse summon).
-        // The departing BODY is the one that would show it, and it is drawn by
-        // `FigureLayer`'s DepartureField, LOOK's to bind (PLAN, the motion lane's
-        // follow-up); a live rig with this offset is the only one CueRunner writes.
+        // …and its ink drains back to hologram (report 15 §2.3's reverse summon)
+        // over the first half of the fall. The departing BODY shows it: it is drawn
+        // by `FigureLayer`'s DepartureField, whose frame-loop half writes this
+        // number into the falling body's `uMaterialize` (the motion lane's
+        // follow-up 1, closed at the merge with LOOK); `uDrain` then greys it.
         ...(died && !ctx.reducedMotion && t < 1 ? { materialize: 1 - easeInCubic(clamp01(t / 0.55)) } : {}),
       };
     }, 'card', ['splat']),
@@ -1075,7 +1076,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
           }
         }
         /**
-         * **The comic lane's strike** (D130, D134): the star lands on what the
+         * **The comic lane's strike** (D147, D151): the star lands on what the
          * PREVIOUS frame's stack said this item targeted (T6's look-behind — the
          * only aim a resolution has) and the table jolts once. A strike at one's
          * own card is a boon, not a blow: no star unless a row names one, no shake.
@@ -1383,7 +1384,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
         const player = ctx.players[0];
         if (player === undefined) return;
         const at: AnchorRef = { kind: 'player', id: player };
-        // **The halftone flash** (D130): under the comic vocabulary the red flash
+        // **The halftone flash** (D147): under the comic vocabulary the red flash
         // behind the struck player's life total is a Ben-Day dot screen, opening
         // out as it fades — the same one slot, only its shape. `dots` (0…2) sizes
         // it; 0 keeps the soft flash.
@@ -1980,7 +1981,7 @@ const ENTRIES: Array<[string, CueImpl]> = [
             burstOf(ctx, 'none'),
             true,
             // Beside HER when it is her own stomp (the attacker's rule, low), on the
-            // edge of what it struck otherwise (D137).
+            // edge of what it struck otherwise (D154).
             struck ? besideStruck(aim) : { aside: { kind: 'card', id }, clear: 0.15, lift: 0 },
           );
         }
@@ -3276,7 +3277,7 @@ function damageCue(intensity: number): CueImpl {
         rise: 0.4 * easeOutCubic(t),
       });
       /**
-       * **The impact star** (D130/D133): on the struck BODY — the card the damage
+       * **The impact star** (D147/D150): on the struck BODY — the card the damage
        * event names — as the jolt lands. A plain hit is an unlettered star; lethal
        * damage is lettered POW by default, and a row may name another word or
        * `none`. Set AFTER the number, so under the eight-slot cap the fact is the
@@ -3287,7 +3288,7 @@ function damageCue(intensity: number): CueImpl {
         burstAt(ctx, stage, 'bang', figureAt(id, 0.58), t / 0.75, intensity > 1 ? 0.72 : 0.55, kind, true, besideStruck(id));
       }
       if (intensity > 1 && comic(ctx)) {
-        // **The comic lane's lethal blow is a jolt, not a push-in** (D134). The
+        // **The comic lane's lethal blow is a jolt, not a push-in** (D151). The
         // push-in below frames the CARD, and a creature that took lethal damage is
         // in its graveyard by the snapshot that says so — the camera swung away to
         // the graveyard pile while the star landed on the falling body (measured,

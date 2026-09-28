@@ -90,16 +90,18 @@ export interface Offset {
   dissolve: number;
   /**
    * **How far the card's FIGURE has resolved from hologram into ink** — the
-   * comic motion lane's one new field (report 15 §5.3; D131 on branch `motion`).
+   * comic motion lane's one new field (report 15 §5.3; D148).
    * `1` is identity: the figure wears whatever look its material was given at
    * commit. A summon ramps it `0 → 1` (the body arrives as a hologram and inks
    * in); a card ignores it, exactly as a card ignores `dRotY`.
    *
    * It **multiplies**, like `scale`, so two cues on one figure compose by product
-   * and an absent key contributes nothing. `CueRunner.applyFigures` writes
-   * `uLook = committed look × materialize` — a NUMBER in the frame loop, the same
-   * kind of write as `uOpacity` — so under the hologram look (`uLook` 0) it is
-   * invisible by construction, and because it is an offset
+   * and an absent key contributes nothing. `CueRunner.applyFigures` writes it
+   * into the figure material's `uMaterialize` (and `DepartureField.bind` into a
+   * falling body's), which the shader multiplies into the look the commit wrote
+   * (`uLook × uMaterialize`, D145) — a NUMBER in the frame loop, the same kind of
+   * write as `uOpacity` — so under the hologram look (`uLook` 0) it is invisible
+   * by construction, and because it is an offset
    * `replay-cues.test.ts`'s "the offset map is empty after every batch" covers it
    * with no line of its own.
    */
@@ -289,8 +291,8 @@ export type AnchorRef =
  * | `star` | a four-point glint | muzzle flash, vials, the Spy Kit |
  * | `hex` | a plated honeycomb | Super Suit's armour snapping on |
  *
- * **The comic motion lane added three, and they are INK** (report 15 §5.1; D130
- * on branch `motion`): drawn with an ink outline and a colour-able fill, and
+ * **The comic motion lane added three, and they are INK** (report 15 §5.1;
+ * D147): drawn with an ink outline and a colour-able fill, and
  * blended NORMALLY rather than additively ({@link isInkShape}) — an additive ink
  * line adds nothing, and a comic's motion vocabulary is graphic shape, not light.
  *
@@ -329,7 +331,7 @@ export function isInkShape(shape: EffectShape | undefined): boolean {
 }
 
 /**
- * **The onomatopoeia — a CLOSED list** (report 15 §5.1; D133 on branch `motion`).
+ * **The onomatopoeia — a CLOSED list** (report 15 §5.1; D150).
  *
  * A comic letters its impacts, and the arena is the first surface that draws
  * per-card text into a texture, so the words are a fixed set and nothing else:
@@ -414,7 +416,7 @@ export function burstWord(burst: Burst): ComicWord | null {
  * ---------------------------------------------------------------------------
  *
  * **The comic motion lane adds an eighth, and it is the only one** (report 15
- * §5.1; D130 on branch `motion`): `streak`, a comic's SPEED LINES — a quad that
+ * §5.1; D147): `streak`, a comic's SPEED LINES — a quad that
  * trails from {@link Effect.at} directly away from {@link Effect.to} (where the
  * thing is heading), turned about its own axis to face the camera, drawn with a
  * texture of parallel ink-edged lines that scroll back along it with the cue's
@@ -489,7 +491,7 @@ export interface Effect {
   /**
    * `glow` and `ring` only: the texture the quad is drawn with ({@link EffectShape}).
    * Absent is `soft` for a glow and the plain annulus for a ring. **The comic lane**
-   * (D130): a ring also takes `splat` and `dots` (flat on the table), and a `plate`
+   * (D147): a ring also takes `splat` and `dots` (flat on the table), and a `plate`
    * takes `dots` (the halftone flash); an ink shape is blended normally.
    */
   shape?: EffectShape;
@@ -507,7 +509,7 @@ export interface Effect {
   fit?: boolean;
   /**
    * `glow` with `shape: 'burst'` only: the word lettered across the star, one of
-   * the CLOSED {@link COMIC_WORDS} (D133). Lettering it ON the star rather than as
+   * the CLOSED {@link COMIC_WORDS} (D150). Lettering it ON the star rather than as
    * a second `text` effect keeps a lettered impact to ONE of the eight blended
    * slots — so when a crowded combat meets the cap, the damage NUMBER (the fact)
    * is not the one refused.
@@ -515,7 +517,7 @@ export interface Effect {
   word?: ComicWord;
   /**
    * `glow` with `shape: 'burst'` at a `figure` anchor only: **draw the star BESIDE
-   * the body, not over it** (D137 on branch `motion`, the lane's verification
+   * the body, not over it** (D154, the lane's verification
    * pass). The star is pushed in SCREEN space — along the camera's right — by its
    * own half-width plus {@link Effect.clear} of the figure's height, and up by
    * {@link Effect.lift} of its own size, toward the screen's centre as seen from
@@ -603,7 +605,7 @@ export interface CameraRequest {
   cut?: boolean;
   /**
    * **Which running cue asked** (`CueContext.key`) — read only for a SHAKE-ONLY
-   * request (no anchor to frame; D134 on branch `motion`). A cue re-asks on every
+   * request (no anchor to frame; D151). A cue re-asks on every
    * frame of its impact window, and on a slow replay that window outlives the
    * shake: the director takes one shake per key, so an impact shakes once however
    * long its window is on screen.
@@ -805,7 +807,7 @@ export class NullStage implements Stage {
       if (op.effect?.text !== undefined) out.push(op.effect.text);
       if (op.effect?.colour !== undefined) out.push(op.effect.colour);
       if (op.effect?.shape !== undefined) out.push(op.effect.shape);
-      // The comic lane's lettering (D133): a word from a closed list, and the net reads it.
+      // The comic lane's lettering (D150): a word from a closed list, and the net reads it.
       if (op.effect?.word !== undefined) out.push(op.effect.word);
       if (op.offset?.tint != null) out.push(op.offset.tint);
       if (op.offset?.glowColour != null) out.push(op.offset.glowColour);
@@ -849,7 +851,7 @@ export interface CueContext {
   /** `prefers-reduced-motion: reduce` — no shake, no camera, no particles. */
   reducedMotion: boolean;
   /**
-   * **The comic motion vocabulary is on** (D135 on branch `motion`): bursts,
+   * **The comic motion vocabulary is on** (D152): bursts,
    * lettering, splats, halftone dots, speed lines, the hologram-to-ink summon and
    * the impact shakes. Stamped at enqueue from the queue's setting (`?fx=`, the
    * cue strip's *comic FX*), exactly as `reducedMotion` is. **Absent or `false`

@@ -749,8 +749,8 @@ export default function Arena({
     if (on) setInkOn(true);
   }, []);
   /**
-   * **The comic motion lane's two switches** (`cues/motion.ts`; D132, D135 on
-   * branch `motion`): `?fx=classic|comic` and `?twos=0|1`, read once — where they
+   * **The comic motion lane's two switches** (`cues/motion.ts`; D149,
+   * D152): `?fx=classic|comic` and `?twos=0|1`, read once — where they
    * START. The cue strip's two checkboxes then flip them on the queue itself,
    * which is presentation state like its speed.
    */
@@ -1632,7 +1632,7 @@ function CueControls({
         />{' '}
         bloom
       </label>
-      {/* **The comic motion lane's two switches** (D132, D135): the new vocabulary
+      {/* **The comic motion lane's two switches** (D149, D152): the new vocabulary
           (bursts, lettering, splats, dots, speed lines, the ink summon, impact
           shakes) against the film as it was, and the stepped motion. Both are the
           QUEUE's settings — presentation, like its speed — and reach no act. */}

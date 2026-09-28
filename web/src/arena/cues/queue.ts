@@ -415,12 +415,12 @@ export interface CueQueueOptions {
    */
   reducedMotion?: boolean;
   /**
-   * **The comic motion vocabulary** (`motion.ts`; D135 on branch `motion`),
+   * **The comic motion vocabulary** (`motion.ts`; D152),
    * stamped into every cue's context at enqueue. Absent is {@link COMIC_FX_DEFAULT}.
    */
   comic?: boolean;
   /**
-   * **On twos** (`motion.ts`'s `onTwos`; D132): each cue's progress quantised to
+   * **On twos** (`motion.ts`'s `onTwos`; D149): each cue's progress quantised to
    * twelve drawings a second before its `apply` sees it. Absent is
    * {@link ON_TWOS_DEFAULT}; reduced motion turns it off whatever this says.
    */
@@ -445,9 +445,9 @@ export class CueQueue {
   reducedMotion: boolean;
 
   #scheduled: Scheduled[] = [];
-  /** The comic motion vocabulary — stamped into each cue's context at enqueue (D135). */
+  /** The comic motion vocabulary — stamped into each cue's context at enqueue (D152). */
   #comic: boolean;
-  /** On twos, as set; {@link twosActive} is what `#drive` obeys (D132). */
+  /** On twos, as set; {@link twosActive} is what `#drive` obeys (D149). */
   #onTwos: boolean;
   #virtualNow = 0;
   #lastReal: number | null = null;
@@ -571,7 +571,7 @@ export class CueQueue {
     this.reducedMotion = reduced;
   }
 
-  /** The comic motion vocabulary is on (D135). Takes effect from the next batch, as reduced motion does. */
+  /** The comic motion vocabulary is on (D152). Takes effect from the next batch, as reduced motion does. */
   get comic(): boolean {
     return this.#comic;
   }
@@ -580,7 +580,7 @@ export class CueQueue {
     this.#changed();
   }
 
-  /** On twos, as SET — the cue strip's checkbox (D132). */
+  /** On twos, as SET — the cue strip's checkbox (D149). */
   get onTwos(): boolean {
     return this.#onTwos;
   }
@@ -818,7 +818,7 @@ export class CueQueue {
   #drive(): void {
     if (this.#scheduled.length === 0) return;
     const now = this.#virtualNow;
-    // **On twos** (D132): one drawing is a twelfth of a second of SCREEN time, so in
+    // **On twos** (D149): one drawing is a twelfth of a second of SCREEN time, so in
     // virtual milliseconds it is that times the playback speed — a 4× replay is
     // still twelve drawings a second, and a 0.5× one is not twenty-four.
     const twos = this.twosActive;

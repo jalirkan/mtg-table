@@ -387,7 +387,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         data: cueData,
         mode: 'replay',
         reducedMotion,
-        // The comic motion lane (D132, D135): where comic FX and on twos START —
+        // The comic motion lane (D149, D152): where comic FX and on twos START —
         // the queue bar's checkboxes flip them on the queue itself.
         comic: initialMotion().comic,
         onTwos: initialMotion().twos,
@@ -1129,7 +1129,7 @@ function QueueBar({
         <input type="checkbox" checked={reducedMotion} onChange={(event) => onReducedMotion(event.currentTarget.checked)} />{' '}
         reduced motion
       </label>
-      {/* The comic motion lane's two switches (D132, D135): the queue's own
+      {/* The comic motion lane's two switches (D149, D152): the queue's own
           settings, as in the arena's cue strip. */}
       <label title="Comic FX: impact stars and their lettering, ink splats, halftone dots, speed lines, the hologram-to-ink summon (seen under the comic look) — off is the film as it was. (A camera shake is dropped here: the pedestal's camera is yours.)">
         <input

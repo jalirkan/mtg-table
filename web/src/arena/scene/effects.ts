@@ -25,8 +25,8 @@
  * parked meshes cost zero draw calls and zero GPU time.
  *
  * ---------------------------------------------------------------------------
- * **The comic motion lane** (`docs/research/15-art-direction.md` §5; D130 and
- * D133 on branch `motion`) grew the kit by three SHAPES and one KIND:
+ * **The comic motion lane** (`docs/research/15-art-direction.md` §5; D147 and
+ * D150) grew the kit by three SHAPES and one KIND:
  *
  *  - `burst`, `splat` and `dots` are textures on the slots that already exist — an
  *    impact star (optionally lettered with one of the closed onomatopoeia), an ink
@@ -46,7 +46,7 @@ import * as THREE from 'three';
 
 import { COMIC_WORDS, isInkShape, type AnchorRef, type ComicWord, type Effect, type EffectKind, type EffectShape } from '../cues/stage.ts';
 import type { FigureLayout, FigurePose } from '../figures/pose.ts';
-import { FIGURE_HEIGHT, figurePointInto } from '../layout.ts';
+import { CARD_W, FIGURE_HEIGHT, figurePointInto, type Layout, type Placement } from '../layout.ts';
 import { parsedColour } from './colourCache.ts';
 import type { OffsetSource } from './discs.ts';
 import { UNIT_PLANE } from './geometry.ts';
@@ -72,7 +72,7 @@ import { initTexture } from './useCardTexture.ts';
  */
 export const POOL = { glow: 8, ring: 8, beam: 5, particles: 3, text: 6, plate: 3, mote: 12, streak: 4 } as const;
 
-/** The pool's size — 49 since the comic motion lane (D130). */
+/** The pool's size — 49 since the comic motion lane (D147). */
 export const POOL_SIZE = Object.values(POOL).reduce((sum, n) => sum + n, 0);
 
 /** Points per burst. One buffer, re-aimed rather than re-allocated (§9.2 rule 6). */
@@ -396,7 +396,7 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
       drawBurst(ctx, w, h, null);
       return;
     case 'splat': {
-      // **An ink splash** (D130, D138), seen from above: a lobed blob, a few arms
+      // **An ink splash** (D147, D155), seen from above: a lobed blob, a few arms
       // flung out with a droplet at each end, and loose drops — INK, with a light
       // rim and a gloss. The body is drawn in ink, so it stays ink whatever the
       // tint; the rim and the gloss are white, so the material tints THEM (paper
@@ -465,7 +465,7 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
       return;
     }
     case 'dots': {
-      // **A Ben-Day burst** (D130): a 45°-screened dot grid whose dots swell toward
+      // **A Ben-Day burst** (D147): a 45°-screened dot grid whose dots swell toward
       // the centre and vanish at the rim — print, not light. White, so the
       // material's colour is the ink it is printed in.
       const step = 13;
@@ -497,7 +497,7 @@ function drawShape(name: string, ctx: CanvasRenderingContext2D, w: number, h: nu
 const INK_FILL = 'rgba(14,16,22,1)';
 
 /**
- * **An impact star** (D130), and — with a word — **its lettering** (D133). A jagged
+ * **An impact star** (D147), and — with a word — **its lettering** (D150). A jagged
  * twelve-point star, filled white (the material tints it: POW yellow by default)
  * with a heavy ink outline, an inner star and a halftone band between them; the
  * word is set across it in heavy, forward-leaning capitals — red, outlined in ink
@@ -624,36 +624,62 @@ function drawBurstTexture(word: ComicWord | null): THREE.Texture | null {
 let streakTex: THREE.Texture | null | undefined;
 
 /**
- * **Speed lines** (the `streak` kind, D130): parallel lines along the canvas's
- * height, each an ink-edged white stroke that fades in just behind the head (the
- * canvas's top, which is the quad's +Y — the way the body is going) and out toward
- * the tail. The top and bottom rows are left empty, so a slot that scrolls its
- * clone (`offset.y`, the cue's `t`) samples clear texture past either end
- * (`ClampToEdge`) and the lines slide back without a seam.
+ * **The clear lane down the middle of a streak** — the fraction of its width the
+ * speed lines leave empty (D147, amended at the merge with LOOK). The lines are
+ * two BANDS, one down each long edge of the quad; `#streak` sizes and places the
+ * quad so this lane holds the body and its card as the camera sees them
+ * (`#streakClear`) — so the body dashes down the lane with its lines streaming past
+ * on either side, and never across its card, where they read as scratches on the
+ * art (the skeptic's finding on the lane's first pictures).
+ */
+export const STREAK_CLEAR = 0.7;
+
+/** World units between a streak's clear lane and the card it clears. */
+const STREAK_GAP = 0.06;
+
+/** How far ahead of a body's head its speed lines begin, in the body's heights. */
+const STREAK_LEAD = 0.35;
+
+/** How far back along the quad the lines scroll over a cue (`travel` 0 → 1), in its lengths. */
+const STREAK_SCROLL = 0.25;
+
+/**
+ * **Speed lines** (the `streak` kind, D147): parallel lines along the canvas's
+ * height in two bands, one down each long edge ({@link STREAK_CLEAR} of the width
+ * between them is empty), each an ink-edged white stroke that fades in just behind
+ * the head (the canvas's top, which is the quad's +Y — the way the body is going)
+ * and out toward the tail. The top and bottom rows are left empty, so a slot that
+ * scrolls its clone (`offset.y`, the cue's `t`) samples clear texture past either
+ * end (`ClampToEdge`) and the lines slide back without a seam.
  */
 function streakTexture(): THREE.Texture | null {
   if (streakTex !== undefined) return streakTex;
   if (typeof document === 'undefined') return (streakTex = null);
   const canvas = document.createElement('canvas');
-  canvas.width = 64;
+  const W = 128;
+  canvas.width = W;
   canvas.height = 256;
   const ctx = canvas.getContext('2d');
   if (ctx === null) return (streakTex = null);
   const rand = lcg(0x57a3);
   ctx.lineCap = 'round';
-  // Five lines, spaced across the quad and staggered along it: packed any closer
-  // they merged into one glowing slab under bloom (measured at `g1`@356).
-  for (let i = 0; i < 5; i++) {
-    const x = 6 + (52 * (i + 0.25 + 0.5 * rand())) / 5;
-    const top = 14 + 46 * rand();
-    const bottom = Math.min(244, top + 100 + 90 * rand());
+  // Three lines a band, spaced across it and staggered along it: packed any
+  // closer they merged into one glowing slab under bloom (measured at `g1`@356).
+  const band = ((1 - STREAK_CLEAR) / 2) * W;
+  for (let i = 0; i < 6; i++) {
+    const k = i % 3;
+    const inBand = 3 + ((band - 6) * (k + 0.2 + 0.6 * rand())) / 3;
+    // The left band counts in from the left edge, the right band from the right.
+    const x = i < 3 ? inBand : W - inBand;
+    const top = 6 + 30 * rand();
+    const bottom = Math.min(244, top + 110 + 90 * rand());
     const width = 1.1 + 1.5 * rand();
     // Each gradient fades to its OWN colour at zero alpha: a fade to transparent
     // black would drag the white line through grey.
     const line = (rgb: string, alpha: number, lw: number): void => {
       const g = ctx.createLinearGradient(0, top, 0, bottom);
       g.addColorStop(0, `rgba(${rgb},0)`);
-      g.addColorStop(0.18, `rgba(${rgb},${String(alpha)})`);
+      g.addColorStop(0.12, `rgba(${rgb},${String(alpha)})`);
       g.addColorStop(1, `rgba(${rgb},0)`);
       ctx.strokeStyle = g;
       ctx.lineWidth = lw;
@@ -955,7 +981,16 @@ export class EffectPool {
   readonly #a = new THREE.Vector3();
   readonly #b = new THREE.Vector3();
   readonly #dir = new THREE.Vector3();
-  /** The comic lane's streak basis — its across axis, its face, and the matrix they make (D130). */
+  /**
+   * Where the middle of the last streak's clear lane sits across from its body's
+   * line, in world units along `#across` — {@link #streakClear}'s second answer, a
+   * field so that answering it allocates nothing.
+   */
+  #laneShift = 0;
+  /** The lane's two edges while {@link #streakClear} widens it — fields, so {@link #widen} allocates nothing. */
+  #laneLo = 0;
+  #laneHi = 0;
+  /** The comic lane's streak basis — its across axis, its face, and the matrix they make (D147). */
   readonly #across = new THREE.Vector3();
   readonly #face = new THREE.Vector3();
   readonly #basis = new THREE.Matrix4();
@@ -986,6 +1021,8 @@ export class EffectPool {
   #figures: FigureLayout | null = null;
   #departed: ReadonlyMap<number, DepartedBody> | null = null;
   #offsets: OffsetSource | null = null;
+  /** The frame's layout — where a body's CARD lies, for the speed lines' clear lane (D147). */
+  #placed: Layout | null = null;
   #seconds = 0;
   #external: ((ref: Effect['at']) => [number, number, number] | null) | null = null;
   readonly #points: [[number, number, number], [number, number, number]] = [
@@ -1025,7 +1062,7 @@ export class EffectPool {
 
     for (let i = 0; i < POOL.particles; i++) this.#addPoints(dot);
 
-    // The comic lane's speed lines (D130): each slot its own CLONE of the one
+    // The comic lane's speed lines (D147): each slot its own CLONE of the one
     // canvas, because each scrolls its lines by its own cue's `t` (`offset.y`).
     // A clone shares the canvas's `Source`, so the four upload once.
     const streak = streakTexture();
@@ -1098,11 +1135,34 @@ export class EffectPool {
     offsets: OffsetSource | null,
     seconds: number,
     departed: ReadonlyMap<number, DepartedBody> | null = null,
+    placed: Layout | null = null,
   ): void {
     this.#figures = figures;
     this.#offsets = offsets;
     this.#seconds = seconds;
     this.#departed = departed;
+    this.#placed = placed;
+  }
+
+  /**
+   * The battlefield placement of a card, for the speed lines' clear lane — an
+   * indexed walk over the frame's placements, because `layout.ts`'s `placementOf`
+   * builds a `c:${id}` key and this is on the frame loop's path (it allocates
+   * nothing: `liveness.test.ts` scans it). The battlefield copy (`c:`) wins over a
+   * stack one, as it does there.
+   */
+  #cardOf(id: number): Placement | null {
+    const placed = this.#placed;
+    if (placed === null) return null;
+    const list = placed.placements;
+    let other: Placement | null = null;
+    for (let i = 0; i < list.length; i++) {
+      const placement = list[i]!;
+      if (placement.cardId !== id) continue;
+      if (placement.key.charCodeAt(0) === 99 && placement.key.charCodeAt(1) === 58) return placement;
+      if (other === null) other = placement;
+    }
+    return other;
   }
 
   /**
@@ -1187,7 +1247,7 @@ export class EffectPool {
     if (ref.kind !== 'figure') return y;
     const pose = this.#figures?.get(ref.id);
     if (pose !== undefined) return pose.position[1] - pose.lift;
-    // A body that just died (the comic lane's splat, D130): its departing stand
+    // A body that just died (the comic lane's splat, D147): its departing stand
     // still carries the flier's lift, and a "ground" ring drawn there hung inside
     // the falling body — measured on the Giant-Sized Flying Ant at `g1`@359.
     const gone = this.#departed?.get(ref.id);
@@ -1205,7 +1265,7 @@ export class EffectPool {
     const scale = this.#offsets?.offsetOf(id).scale ?? 1;
     const pose = this.#figures?.get(id);
     if (pose !== undefined) return pose.height * scale;
-    // A body that just died is sized as it stood (the comic lane's splat, D130):
+    // A body that just died is sized as it stood (the comic lane's splat, D147):
     // a flier's departing body is as wide as it was, and a fixed-size stain hid
     // under it (`g1`@359's Giant-Sized Flying Ant).
     const gone = this.#departed?.get(id);
@@ -1345,7 +1405,7 @@ export class EffectPool {
     switch (effect.kind) {
       case 'glow': {
         // T11: a shape is a texture on the same quad; absent is the soft glow.
-        // The comic lane (D130/D133): the impact star is its own texture per word,
+        // The comic lane (D147/D150): the impact star is its own texture per word,
         // and every ink shape is blended normally.
         this.#setMap(slot, this.#glowMap(effect), glowTexture());
         this.#blend(slot, isInkShape(effect.shape));
@@ -1357,11 +1417,11 @@ export class EffectPool {
         object.scale.set(size * (effect.aspect ?? 1), size, 1);
         if (effect.shape === 'burst') {
           if (effect.aside !== undefined && effect.at.kind === 'figure') {
-            // **A star beside its body** (D137): an attacker's own flourish, and a
+            // **A star beside its body** (D154): an attacker's own flourish, and a
             // hit that must not hide the body it lands on.
             this.#beside(object, effect, effect.at.id, size, resolve, camera);
           } else {
-            // **An impact star is drawn IN FRONT of the body it is on** (D130):
+            // **An impact star is drawn IN FRONT of the body it is on** (D147):
             // pulled toward the lens by half its size, so its lettering is not cut
             // by the figure it names — it still depth-tests against everything
             // nearer. Along the view ray, so it does not move on screen.
@@ -1384,7 +1444,7 @@ export class EffectPool {
         break;
       }
       case 'plate': {
-        // The comic lane's halftone flash (D130): the same plate, screened.
+        // The comic lane's halftone flash (D147): the same plate, screened.
         const dots = effect.shape === 'dots';
         this.#setMap(slot, dots ? shapeTexture('dots') : glowTexture(), glowTexture());
         this.#blend(slot, dots);
@@ -1495,7 +1555,7 @@ export class EffectPool {
   }
 
   /**
-   * **Push a star off the body it is on, in SCREEN space** (D137, the lane's
+   * **Push a star off the body it is on, in SCREEN space** (D154, the lane's
    * verification pass: a POW centred on an attacker's head hid Peggy's hat and
    * shield and Fury's head at the top of their dash, in the workshop and at the
    * table). The billboard already faces the lens (`camera.quaternion`), so its
@@ -1573,7 +1633,7 @@ export class EffectPool {
   }
 
   /**
-   * **Ink is painted, light is added** (D130). A slot drawing one of the comic
+   * **Ink is painted, light is added** (D147). A slot drawing one of the comic
    * lane's ink shapes blends normally — an additive ink outline would add nothing —
    * and a slot drawing anything else goes back to additive. Render state only: the
    * program is the same (see the file header), so a switch is never a recompile.
@@ -1584,13 +1644,24 @@ export class EffectPool {
   }
 
   /**
-   * **Speed lines** (the `streak` kind, D130) — a quad that trails from the head
+   * **Speed lines** (the `streak` kind, D147) — a quad that trails from the head
    * (`at`, the body) back along the motion (`from → to`, or `at → to`) for `length`
    * world units, turned about its own length to face the camera, its lines
    * scrolled back along it by the cue's `t` (`travel`) on the slot's own clone of
    * the texture. On the frame loop's path, so it allocates nothing: the three
    * vectors and the matrix are the pool's own, and the two anchors were resolved
    * into the pool's alternating scratch tuples before this is called.
+   *
+   * **Beside the body, never across its card** (D147, amended at the merge with
+   * LOOK). A card moves with its figure's lunge — it is the same offset — so the
+   * one place straight behind a dashing body is always its own card, and lines
+   * drawn there read as scratches on the art. The lines are therefore two bands
+   * down the quad's long edges ({@link STREAK_CLEAR}), and the quad is sized so the
+   * lane between them clears the body's card, measured along the quad's own
+   * across axis — which faces the camera, so this is the card's width AS SEEN from
+   * this camera — from its four live corners, and never narrower than the body or
+   * the cue's `radius`. From the table, over the shoulder or head on, the body
+   * runs down the lane with its card behind it and its lines on either side.
    */
   #streak(
     slot: Slot,
@@ -1628,8 +1699,12 @@ export class EffectPool {
     }
     this.#dir.multiplyScalar(1 / reach);
     const length = Math.max(0.05, effect.length ?? 1);
-    // The quad's centre is half its length BEHIND the head: the lines trail.
-    this.#a.set(ax, ay, az).addScaledVector(this.#dir, -0.5 * length);
+    // The quad's centre is half its length BEHIND its front edge, and the front
+    // edge is a little AHEAD of the head for a body (`STREAK_LEAD` of its height):
+    // the lines start level with the body's front, run past its flanks and trail
+    // on behind — beside the body, rather than starting somewhere behind it.
+    const lead = effect.at.kind === 'figure' ? STREAK_LEAD * this.#heightOf(effect.at.id) : 0;
+    this.#a.set(ax, ay, az).addScaledVector(this.#dir, lead - 0.5 * length);
     // Its face: toward the camera, with the travel axis taken out of the view ray.
     this.#face.copy(camera.position).sub(this.#a);
     this.#face.addScaledVector(this.#dir, -this.#face.dot(this.#dir));
@@ -1642,10 +1717,109 @@ export class EffectPool {
     // Columns x, y, z: across, the way it is going, its face — right-handed.
     this.#basis.makeBasis(this.#across, this.#dir, this.#face);
     object.quaternion.setFromRotationMatrix(this.#basis);
-    object.position.copy(this.#a);
-    object.scale.set(Math.max(0.01, effect.radius * 2), length, 1);
+    // The lane: its half-width, and where its middle sits across from the body's
+    // line ({@link #streakClear} leaves the shift in `#laneShift`).
+    const clear = this.#streakClear(effect, camera);
+    object.position.copy(this.#a).addScaledVector(this.#across, this.#laneShift);
+    object.scale.set((2 * clear) / STREAK_CLEAR, length, 1);
     const map = slot.material.map;
-    if (map !== null && map !== undefined) map.offset.y = 0.4 * Math.max(0, Math.min(1, effect.travel ?? 0));
+    if (map !== null && map !== undefined) map.offset.y = STREAK_SCROLL * Math.max(0, Math.min(1, effect.travel ?? 0));
+  }
+
+  /**
+   * **The clear lane between the speed lines' two bands** — its half-width, the
+   * return value, and where its middle sits across from the body's line, left in
+   * `#laneShift` — along `this.#across`, in the quad's own plane (both set by
+   * {@link #streak} just before, with the quad's centre in `this.#a` and its
+   * normal in `this.#face`).
+   *
+   * The lane holds what the lines must not cross, AS THIS CAMERA SEES IT: every
+   * point below is carried along its own view ray onto the quad's plane — where
+   * the lines are drawn, so it lands on the pixel it covers — and the lane is
+   * widened to hold it with a margin. The body: its axis from feet to head, where
+   * the lunge has carried it, with its own half-width (and at least the cue's
+   * `radius`) either side. And, for a body standing for a card on this frame's
+   * table, the CARD: its four live corners (its placement plus the lunge's offset,
+   * which moves card and figure together), with {@link STREAK_GAP}. A projection
+   * of a flat card is the convex hull of its corners, so it lies between the bands
+   * from any view, perspective included (a plain distance along `across` let a
+   * shoulder view's near corner into a band, and the head of a figure seen from
+   * the shoulder into the other). The lane is as narrow as that allows, so on a
+   * diagonal dash — the card off to one side of the body's line — it is not
+   * centred on the body: one band runs beside the body, the other beyond the
+   * card. A body with no card in the layout (a departing one, a test with none)
+   * keeps the card's half-diagonal either side. Numbers only: it allocates nothing.
+   */
+  #streakClear(effect: Effect, camera: THREE.Camera): number {
+    let half = Math.max(0.05, effect.radius);
+    this.#laneShift = 0;
+    this.#laneLo = -half;
+    this.#laneHi = half;
+    if (effect.at.kind !== 'figure') return half;
+    const id = effect.at.id;
+    const offset = this.#offsets?.offsetOf(id) ?? null;
+    const dx = offset?.dx ?? 0;
+    const dy = offset?.dy ?? 0;
+    const dz = offset?.dz ?? 0;
+    const scale = offset?.scale ?? 1;
+    const eye = camera.position;
+    const face = this.#face;
+    // The quad's plane: through its centre, facing the camera.
+    const plane = (this.#a.x - eye.x) * face.x + (this.#a.y - eye.y) * face.y + (this.#a.z - eye.z) * face.z;
+    const pose = this.#figures?.get(id);
+    if (pose !== undefined) {
+      half = Math.max(half, 0.5 * pose.width * scale);
+      const x = pose.position[0] + dx;
+      const y = pose.position[1] + dy;
+      const z = pose.position[2] + dz;
+      this.#widen(x, y, z, eye, plane, half);
+      this.#widen(x, y + pose.height * scale, z, eye, plane, half);
+    }
+    const card = this.#cardOf(id);
+    if (card === null) {
+      const reach = Math.max(half, 0.5 * Math.hypot(CARD_W, 1) * scale + STREAK_GAP);
+      this.#laneLo = Math.min(this.#laneLo, -reach);
+      this.#laneHi = Math.max(this.#laneHi, reach);
+    } else {
+      const spin = card.rotation[2];
+      const c = Math.cos(spin);
+      const s = Math.sin(spin);
+      // The card's two half-axes on the table (`layout.ts`'s `footprintContains`):
+      // its width along (c, s), its length along (−s, c).
+      const hw = (CARD_W * card.scale) / 2;
+      const hl = 0.5 * card.scale;
+      const x0 = card.position[0] + dx;
+      const y0 = card.position[1] + dy;
+      const z0 = card.position[2] + dz;
+      for (let k = 0; k < 4; k++) {
+        const u = k === 0 || k === 3 ? -1 : 1;
+        const w = k < 2 ? -1 : 1;
+        this.#widen(x0 + u * hw * c - w * hl * s, y0, z0 + u * hw * s + w * hl * c, eye, plane, STREAK_GAP);
+      }
+    }
+    this.#laneShift = 0.5 * (this.#laneLo + this.#laneHi);
+    return 0.5 * (this.#laneHi - this.#laneLo);
+  }
+
+  /**
+   * Widen the lane {@link #streakClear} is building to hold one point, carried
+   * along its view ray onto the quad's plane, `margin` either side of where it
+   * lands. A point at or behind the eye's side of the plane is not seen through
+   * the quad and widens nothing.
+   */
+  #widen(px: number, py: number, pz: number, eye: THREE.Vector3, plane: number, margin: number): void {
+    const face = this.#face;
+    const across = this.#across;
+    const rx = px - eye.x;
+    const ry = py - eye.y;
+    const rz = pz - eye.z;
+    const depth = rx * face.x + ry * face.y + rz * face.z;
+    if (depth >= -1e-6) return;
+    const k = plane / depth;
+    const side =
+      (eye.x + rx * k - this.#a.x) * across.x + (eye.y + ry * k - this.#a.y) * across.y + (eye.z + rz * k - this.#a.z) * across.z;
+    if (side - margin < this.#laneLo) this.#laneLo = side - margin;
+    if (side + margin > this.#laneHi) this.#laneHi = side + margin;
   }
 
   /** Park everything. Called on flush, on a scrub and on a new `gameId`. */
@@ -1678,7 +1852,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 
 /**
  * How far right of the view's centre line (as a fraction of its distance) a rest
- * point must be before a star beside its body goes LEFT (D137). The workshop's
+ * point must be before a star beside its body goes LEFT (D154). The workshop's
  * pedestal puts the card on the line, and a threshold keeps rounding from choosing.
  */
 const ASIDE_TIE = 0.01;
