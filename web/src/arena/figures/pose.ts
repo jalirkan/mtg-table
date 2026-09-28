@@ -242,7 +242,8 @@ export interface FigurePose {
   /**
    * **Slice 4 — what the body wears**: one `#rrggbb` per costume slot, in
    * `COSTUME_SLOTS` order (skin, hair, top, shirt, legs, shoes, gloves, belt) —
-   * {@link costumeOf} of the trait's `costume` and the tint — or `null` for a body
+   * {@link costumeOf} of the trait's `costume` and the tint WITHOUT the art rung
+   * (lane BODIES: a palette never paints a costume, D144) — or `null` for a body
    * that carries no slots (the drone, the bee, the disc). **Always `null` for an
    * anonymous figure** (hard rule 8: a costume is a statement about what a card
    * is). A pose, so a skip, a scrub and a resync all draw it.
@@ -735,16 +736,20 @@ export function figurePose(
     // Lane BODIES (D144): the art's tint sits UNDER every hand-written tint — a
     // traits.json row, then figures.json's — and over the bare colour identity.
     const artUsed = art !== null && trait.palette === 'art' ? art : null;
-    const baseTint = anonymous
+    const handTint = anonymous ? null : (trait.tint ?? spec.tint ?? null);
+    const identityTint = anonymous
       ? colourHex('C')
-      : (trait.tint ??
-        spec.tint ??
-        (artUsed === null ? null : artTint(artUsed)) ??
-        colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null)));
+      : colourHex(colourIdOf((card as { manaCost?: string | null }).manaCost ?? null));
+    const baseTint = anonymous ? identityTint : (handTint ?? (artUsed === null ? null : artTint(artUsed)) ?? identityTint);
     const tint = anonymous ? baseTint : shadeHex(baseTint, trait.shade);
     const accent = trait.accent ?? tint;
     // Slice 4: what the body wears — never on an anonymous figure (hard rule 8).
-    const costume = !anonymous && wearsCostume(family) ? costumeOf(trait.costume, tint) : null;
+    // Lane BODIES (D144, report 15 §7.1): **a palette never paints a costume** —
+    // a painting's dominant colour is its background — so the clothes take the
+    // tint WITHOUT the art rung: a hand-written tint, else the colour identity.
+    // `traits.test.ts` holds it with a row-less person whose art is vivid.
+    const clothTint = anonymous ? baseTint : shadeHex(handTint ?? identityTint, trait.shade);
+    const costume = !anonymous && wearsCostume(family) ? costumeOf(trait.costume, clothTint) : null;
     // Lane BODIES: a person's hairstyle (D141) and face (D142) — the body's own
     // hair unless a rung names one; never on an anonymous figure.
     const style: HairStyle | null =

@@ -268,16 +268,23 @@ export const REST_KIT: Readonly<Record<RestPose, RestSpec>> = {
     what: 'a braced guard, both palms forward',
   },
   // The scientists: leaning over the bench at their left hand, hands at work on it.
+  // **The third fix pass bends him from the WAIST** as well as at the chest: the
+  // lean was all at `spine_03` and the neck, so the coat's body link (on
+  // `spine_01`) stood upright while the chest leaned out of it, and from above
+  // the verifier read that as "a separate grey panel fanning out" with "a white
+  // arc beside his head". A man bent over a bench bends at the lower back too.
   working: {
     from: 'idle',
     phase: 0,
     hold: 'upper',
     breathe: 'idle',
     aims: [
-      { joint: 'spine_03', child: 'neck_01', aim: [0.26, 0.92, 0.28] },
+      { joint: 'spine_01', child: 'spine_02', aim: [0.09, 0.96, 0.25] },
+      { joint: 'spine_02', child: 'spine_03', aim: [0.12, 0.94, 0.3] },
+      { joint: 'spine_03', child: 'neck_01', aim: [0.2, 0.92, 0.33] },
       { joint: 'neck_01', child: 'Head', aim: [0.34, 0.78, 0.52] },
       UP_ARM('l', [0.5, -0.74, 0.45]),
-      FORE_ARM('l', [0.34, -0.52, 0.78]),
+      FORE_ARM('l', [0.46, -0.62, 0.62]),
       UP_ARM('r', [0.05, -0.8, 0.6]),
       FORE_ARM('r', [0.62, -0.42, 0.66]),
     ],

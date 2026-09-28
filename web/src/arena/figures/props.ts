@@ -436,8 +436,12 @@ export const COAT_WAIST: readonly [number, number, number] = [0, 0.525, -0.03];
  * from the shoulders to the hip tilted as a whole and stood out behind the back
  * like a barrel. `COAT_BODY` scales `COAT_PANEL` to reach the skirt's top.
  */
-export const COAT_CHEST: readonly [number, number, number] = [0, 0.675, -0.024];
-const COAT_BODY: readonly [number, number, number] = [0.9, 0.75, 0.9];
+// The third fix pass raised its top from 0.675 to 0.70 (and lengthened it to
+// keep its hem at 0.51): the yoke rests pitched with the chest, so its hem's back
+// stood ABOVE a top at 0.675 — a gap at the shoulder blades — and a figure bent
+// at the chest opened it wider. `traits.test.ts`'s yoke-seam test holds both.
+export const COAT_CHEST: readonly [number, number, number] = [0, 0.7, -0.024];
+const COAT_BODY: readonly [number, number, number] = [0.9, 0.86, 0.9];
 /**
  * **Where a hanging panel meets the one above it** (D146): this far down the
  * parent's length, not at its very hem — so the lower link wraps OUTSIDE the

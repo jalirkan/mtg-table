@@ -538,6 +538,77 @@ test('traits: every anonymous pose in the corpus carries no props, no hover, no 
   assert.ok(coloured >= 1000, `only ${String(coloured)} face-up figures took the art rung — the map was not read`);
 });
 
+test('traits: a palette never paints a costume — a row-less person whose art is vivid wears the colour identity (D144; the verifier’s round 3)', () => {
+  // Report 15 §7.1: a painting's dominant colour is its BACKGROUND. The art rung
+  // may tint a creature with no hand-written tint anywhere (a disc, the ant) and
+  // colour its rim and accent — but never its clothes. The committed data hides
+  // the case (every human archetype in figures.json carries a tint), so this is
+  // the case the data does not reach: a per-card figures.json row that names a
+  // human body and no tint, and no traits row at all.
+  const person = {
+    id: 9,
+    name: 'Row-less Hero',
+    types: 'Creature - Human',
+    manaCost: '{1}{R}',
+    power: '2',
+    toughness: '2',
+    faceDown: false,
+    tapped: false,
+    sick: false,
+    attacking: false,
+    blocking: false,
+    controller: 0,
+    owner: 0,
+    zone: 'battlefield',
+    attachedToId: null,
+    attachmentIds: [],
+    counters: {},
+    abilities: [],
+  } as unknown as AnyCard;
+  const base = FRAMES.find((f) => (f.state.board?.players.length ?? 0) === 2)!.state;
+  const state = {
+    ...base,
+    board: {
+      ...base.board!,
+      stack: [],
+      stackCards: [],
+      combat: null,
+      players: base.board!.players.map((p, i) => ({
+        ...p,
+        zones: { ...p.zones, battlefield: { count: i === 0 ? 1 : 0, cards: i === 0 ? [{ ...person, controller: p.id, owner: p.id }] : [] } },
+      })),
+    },
+  } as ClientState;
+  const data = validateFigures(
+    { ...figuresJson, cards: { ...(figuresJson as { cards: Record<string, unknown> }).cards, 'Row-less Hero': { model: 'agent' } } },
+    { modelIds: MODEL_IDS },
+  ).data;
+  assert.equal(data.cards['Row-less Hero']?.tint ?? null, null, 'the synthetic row must name no tint, or it proves nothing');
+  const painted = '#e0302a';
+  const vivid = { swatches: [], dominant: '#20303a', accent: painted, vivid: true, terrain: '#20303a' };
+  const palettes = new Map([['Row-less Hero', vivid]]);
+  const poseWith = (maps: ReadonlyMap<string, typeof vivid> | undefined): FigurePose =>
+    figurePose(layout(state), null, data, { models: MODELS, traits: EMPTY_TRAIT_DATA, palettes: maps }).get(9)!;
+  const off = poseWith(undefined);
+  const on = poseWith(palettes);
+  assert.ok(on !== undefined && off !== undefined, 'the person is a figure');
+  assert.equal(on.anonymous, false);
+  assert.ok(on.costume !== null, 'a person on the human body wears a costume');
+  // The art rung reached the pose: the TINT is its painting's…
+  assert.equal(on.art, painted, 'the art rung did not reach the pose');
+  assert.equal(on.tint, painted, 'the row-less person should take the art tint (the rim, the accent)');
+  // …and not one slot of the costume is.
+  const identity = off.tint;
+  assert.notEqual(identity, painted);
+  assert.deepEqual(on.costume, off.costume, 'the art rung changed what the body WEARS');
+  for (const slot of COSTUME_SLOTS) {
+    assert.notEqual(on.costume[COSTUME_SLOTS.indexOf(slot)], painted, `the art painted the ${slot}`);
+  }
+  assert.equal(on.costume[COSTUME_SLOTS.indexOf('top')], identity, 'the suit is the colour identity');
+  // The control: had the costume taken the pose's tint, the suit would be the painting.
+  assert.equal(costumeOf({}, on.tint)[COSTUME_SLOTS.indexOf('top')], painted, 'the control no longer tells the two apart');
+});
+
 // ---------------------------------------------------------------------------
 // The census — which card got which traits and props
 // ---------------------------------------------------------------------------
@@ -1277,7 +1348,7 @@ test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles
     ['coatTails', 8, 64],
     ['cape', 8, 64],
     ['coat', 60, 240],
-    ['sidearm', 20, 80],
+    ['sidearm', 20, 100],
   ];
   for (const [kind, min, max] of budget) {
     // What the prop field draws: one sheet (its material is DoubleSide).
@@ -1582,6 +1653,91 @@ test('traits: the coat FITS — at rest every panel hangs close round the body, 
     assert.ok(control.reach > COAT_FIT, `${name}: the bell passes too (${control.reach.toFixed(3)}) — this test cannot see a bell`);
   }
   console.log(`traits: the coat's fit at rest\n${lines.join('\n')}`);
+});
+
+/**
+ * **The yoke meets the coat's body with no LEDGE** (lane BODIES' third fix pass).
+ * The verifier's third round read "a stepped ledge at the shoulder" on Doom's
+ * cloak and, on the Bold Biochemist bent over his bench, "a separate grey panel
+ * fanning out … a white arc beside his head": D147's yoke flared to 0.165 at its
+ * hem over a body link 0.116 wide there, and a lean at the chest alone swung that
+ * flare off the body. Measured as the prop field draws them at rest: every point
+ * of the yoke's hem (its open front excepted), its horizontal distance from the
+ * body link's axis less the body link's own radius at that height — positive is
+ * a ledge standing out, negative the body link showing over the yoke. The control
+ * is D147's cut, evaluated through the same matrices.
+ */
+const YOKE_LEDGE_MAX = 0.025;
+const YOKE_LEDGE_MIN = -0.012;
+type YokeCut = { length: number; top: number; hem: number; depth: readonly [number, number]; z: readonly [number, number]; anchorZ: number };
+const D147_YOKE: YokeCut = { length: 0.16, top: 0.15, hem: 0.165, depth: [0.84, 0.84], z: [-0.005, -0.005], anchorZ: -0.005 };
+
+async function yokeLedgeOf(card: AnyCard, filler: AnyCard, cuts: readonly YokeCut[]): Promise<Array<{ max: number; min: number; gap: number }>> {
+  const library = await loadLibrary();
+  const pose = soloPose(card, filler, 'you', false, false)!;
+  const still: import('../src/arena/scene/props.ts').PropOffsetSource = {
+    offsetOf: () => ({ dx: 0, dy: 0, dz: 0, scale: 1, opacity: 1, dissolve: 0, glow: 0, dRotY: 0 }),
+    clipOf: () => null,
+  };
+  const rig = rigOf(pose, library)!;
+  const field = new PropField();
+  field.setLibrary(library, MODELS);
+  field.commit(new Map([[pose.cardId, pose]]), new Map([[pose.cardId, rig]]), MODELS);
+  field.bind(still, 0);
+  const yoke = field.group.children.find((c) => c.name === 'props:coat') as THREE.InstancedMesh | undefined;
+  const cloth = field.group.children.find((c) => c.name === 'props:coatTails') as THREE.InstancedMesh | undefined;
+  assert.ok(yoke !== undefined && cloth !== undefined, 'the coat or its body is not drawn');
+  const yokeMatrix = new THREE.Matrix4();
+  yoke.getMatrixAt(0, yokeMatrix);
+  const body = new THREE.Matrix4();
+  cloth.getMatrixAt(0, body); // the body link's first panel: every one shares its axis
+  const bodyScale = new THREE.Vector3().setFromMatrixScale(body);
+  const inverse = body.clone().invert();
+  const opening = (64 / 180) * Math.PI;
+  const out: Array<{ max: number; min: number; gap: number }> = [];
+  const point = new THREE.Vector3();
+  for (const cut of cuts) {
+    let max = Number.NEGATIVE_INFINITY;
+    let min = Number.POSITIVE_INFINITY;
+    let above = Number.NEGATIVE_INFINITY;
+    for (let k = 0; k <= 60; k++) {
+      const theta = opening / 2 + ((Math.PI * 2 - opening) * k) / 60;
+      point.set(Math.sin(theta) * cut.hem, -cut.length, Math.cos(theta) * cut.hem * cut.depth[1] + cut.z[1] - cut.anchorZ);
+      point.applyMatrix4(yokeMatrix).applyMatrix4(inverse);
+      const radius = COAT_PANEL.top + (COAT_PANEL.hem - COAT_PANEL.top) * (-point.y / COAT_PANEL.length);
+      const ledge = ((Math.hypot(point.x, point.z) - radius) * bodyScale.x) / pose.height;
+      max = Math.max(max, ledge);
+      min = Math.min(min, ledge);
+      // Above the body link's top edge (y 0 in its own units) the yoke's hem is
+      // not over the coat's body at all: the shirt shows between them.
+      above = Math.max(above, (point.y * bodyScale.y) / pose.height);
+    }
+    out.push({ max, min, gap: above });
+  }
+  field.dispose();
+  return out;
+}
+
+test('traits: the coat’s yoke meets its body with no ledge — standing, folded and bent over a bench (the third fix pass; D147’s flared yoke fails it)', async () => {
+  const { YOKE_CUT } = await import('../src/arena/scene/props.ts');
+  const cards = corpusCards();
+  const filler = cards.get('Soldier Token')!;
+  const lines: string[] = [];
+  const measured: Array<[string, { max: number; min: number; gap: number }, { max: number; min: number; gap: number }]> = [];
+  for (const name of ['Nick Fury, Spymaster', 'Bold Biochemist']) {
+    const [cut, control] = await yokeLedgeOf(cards.get(name)!, filler, [YOKE_CUT, D147_YOKE]);
+    measured.push([name, cut!, control!]);
+    lines.push(
+      `  ${name.padEnd(22)} the yoke's hem ${cut!.min.toFixed(3)}…${cut!.max.toFixed(3)} of a height off the body link, its highest point ${(-cut!.gap).toFixed(3)} below the body link's top; D147's ${control!.min.toFixed(3)}…${control!.max.toFixed(3)}`,
+    );
+  }
+  console.log(`traits: the yoke's seam at rest\n${lines.join('\n')}`);
+  for (const [name, cut, control] of measured) {
+    assert.ok(cut.gap <= 0, `${name}: the yoke's hem rides ${cut.gap.toFixed(3)} of a height ABOVE the coat's body — a gap at the back`);
+    assert.ok(cut.max <= YOKE_LEDGE_MAX, `${name}: the yoke's hem stands ${cut.max.toFixed(3)} of a height off the coat's body — a ledge`);
+    assert.ok(cut.min >= YOKE_LEDGE_MIN, `${name}: the coat's body shows ${(-cut.min).toFixed(3)} of a height outside the yoke`);
+    assert.ok(control.max > YOKE_LEDGE_MAX, `${name}: D147's flared yoke passes too (${control.max.toFixed(3)}) — this test cannot see a ledge`);
+  }
 });
 
 test('traits: the drape rule is well-formed — a hanging panel follows a joint panel of its own kind, and every joint it names is on the rig (D146)', async () => {

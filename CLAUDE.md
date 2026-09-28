@@ -2421,7 +2421,8 @@ convention holds; these are what a change here must also keep.
 
 1. **A resting pose is a model VARIANT, derived at load** (**D140**).
    `figures/rests.ts` is the closed table (`stand`, `folded`, `ready`, `aim`,
-   `akimbo`, `clasped`, `braced`, `working`, `atEase`): a frame of a library clip,
+   `highReady`, `akimbo`, `clasped`, `braced`, `working`, `atEase`): a frame of a
+   library clip,
    joint aims written as figure-space directions, and a breathing clip.
    `scene/models.ts`'s `deriveRestClip` SAMPLES it — never a mixer, never a
    ticked clock (liveness holds both) — into the `idle` of `<body>@<pose>`, the
@@ -2433,7 +2434,9 @@ convention holds; these are what a change here must also keep.
    view and the workshop's 1× look down on a figure, so a barrel pointed at the
    lens shortens to a stub, a hand in front of the belly draws low and an elbow
    behind the back draws high — Agent 13 rests at `highReady`, and `atEase`,
-   `clasped` and `braced` were re-aimed for it.
+   `clasped` and `braced` were re-aimed for it. **A lean bends the spine from the
+   waist**, not the chest alone: the coat's body rides `spine_01`, and `working`
+   leaning only at `spine_03` stood the coat upright beside a leaning chest.
 2. **A head is props** (**D141**, **D142**). Hair and the face are derived kinds
    rigid on `Head`, written in figure units round the measured head
    (`HEAD_SHAPE`), one draw call per kind on the table. The bodies are drawn bald
@@ -2464,7 +2467,11 @@ convention holds; these are what a change here must also keep.
    default mirror can put four on the table (a test holds it). **A coat is cut
    to the body it is on** (**D147**): its axis is the body's, every hem within
    0.2 of a height of the pelvis at rest, open down the front — `traits.test.ts`'s
-   fit test, with the D146 bell as its negative control. **Cloth is LINED**: a
+   fit test, with the D146 bell as its negative control — **and so is the yoke**:
+   `scene/props.ts`'s `YOKE_CUT` tapers it to the body link it overlaps, whose
+   top (`COAT_CHEST`, 0.70) sits above the yoke's pitched hem; the yoke-seam test
+   holds the step under 0.025 of a height, never inside by more than 0.012 and
+   never a gap, with D147's flared yoke as its control. **Cloth is LINED**: a
    `coatTails` or `cape` geometry carries a reversed, inset second sheet unless
    the caller asks `{ lining: false }` — the prop field does (it is `DoubleSide`),
    the duelists' `FrontSide` bake does not, and that is what makes a duelist's
@@ -2480,13 +2487,18 @@ convention holds; these are what a change here must also keep.
    every back and every stub a real name, so removing any one gate fails it). A
    palette never paints a costume, a hand-written row always wins, `palette: off`
    turns it off, and **nothing derived from card art is committed** —
-   `palette.test.ts`'s pixels are synthetic. **It is switched on** (**D148**):
-   `Arena.tsx` and `workshop/Pedestal.tsx` — lane LOOK's files — each carry the
-   pass-through `paletteNamesOf(placed)` → `useArtPalettes` → `figurePose` /
-   `tilePose` and nothing else of this lane; liveness holds every caller of
-   `useArtPalettes` (the two that draw take only `paletteNamesOf`'s names, the
-   tuning panel only its own face-up card's, and no fourth file). The accent is
-   the vivid cluster with the best `share × (0.3 + saturation) × (0.4 + value)`.
+   `palette.test.ts`'s pixels are synthetic. **The costume never takes the art
+   rung**: `figurePose` dresses the body in the tint without it (a hand-written
+   tint, else the colour identity), held by a row-less-person test rather than by
+   the data. **It is not switched on in this lane** (**D148**): the pass-through
+   `paletteNamesOf(placed)` → `useArtPalettes` → `figurePose` / `tilePose` belongs
+   in `Arena.tsx` and `workshop/Pedestal.tsx`, lane LOOK's files, and is PLAN.md's
+   lane BODIES follow-up 13, written out whole — never edit those two files from
+   this lane without the user's word. Liveness holds the hook's callers: the
+   tuning panel (its own face-up card's, for the swatches and the preview), and
+   `Arena.tsx` / `Pedestal.tsx` at most once each, fed only by `paletteNamesOf`;
+   no other file. The accent is the vivid cluster with the best
+   `share × (0.3 + saturation) × (0.4 + value)`.
 5. **The library's budget is the manifest's** (**D145**): `budget.libraryBytes`
    460,800 and `budget.triangles` 30,000 in `tools/assets-manifest.json`, read by
    `tools/build-figures.mjs` (still the only writer of `models.json`) and pinned
@@ -2498,16 +2510,20 @@ proves the gates), liveness's lane BODIES clause (now also every caller of
 `useArtPalettes`), and new cases in `traits.test.ts` (the task list of poses and
 hair, the face raster, kind triangle budgets, the drape test with the first cut
 as its negative control, the drape rule's form, the prop capacity, the coat's fit
-with the D146 bell as its control, the lining, and grit over the corpus),
+with the D146 bell as its control, the yoke's seam with D147's yoke as its
+control, the lining, grit over the corpus, and a palette that never paints a
+costume),
 `clips.test.ts` (every pose's clips and joints, the bald body), `facing.test.ts`
 (the face on the front, the patched eye on the patch's side, the coat open at the
-front) and `figures.test.ts` (the budget). `npm --prefix web test` is **887
+front) and `figures.test.ts` (the budget). `npm --prefix web test` is **889
 `node --test` + 94 vitest** on the branch. The gate ran green on the committed
-tree from a deleted `bridge/out` at `WSPORT=8720` in **877 s** (9c's
-fourteen games 368 s; 897 / 889 pass / 0 fail / 8 skipped + 94 vitest inside it;
-`var/check-all-bodies-fix1.log`). The lane added no gate step. **Headroom is
-thin**: the worst `g1`@316 sample draws 88 calls and 29,371 triangles against the
-90 and 30,000 lines, so measure (`tools/arena-bench.mjs`) before the next kind.
+tree from a deleted `bridge/out` at `WSPORT=8720` in **923 s** (9c's
+fourteen games 381 s; 899 / 891 pass / 0 fail / 8 skipped + 94 vitest inside it;
+`var/check-all-bodies-fix2.log`). The lane added no gate step. **Headroom is
+thin**: the worst `g1`@316 sample draws 88 calls and 29,397 triangles against the
+90 and 30,000 lines, so measure (`tools/arena-bench.mjs`) before the next kind —
+and bench base and branch in interleaved pairs, reporting the spread: on a loaded
+machine one pair is noise.
 
 ## Treat forge-src as prose
 

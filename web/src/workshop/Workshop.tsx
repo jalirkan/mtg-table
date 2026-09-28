@@ -86,12 +86,13 @@
  *     FigureData, ModelData, FigureProblem, ClipName, isClipName, tileDataOf,
  *     attachDataOf, EMPTY_FIGURE_DATA, EMPTY_MODEL_DATA (types.ts)
  *   arena/art.ts     the art palette, read off the hot path (lane BODIES, D144)
- *     useArtPalettes, paletteNamesOf         the art rung as the arena draws it (D148):
- *                                            the pedestal reads every face-up name on its
- *                                            board and passes the palettes to `figurePose`
- *                                            and `tilePose` exactly as `Arena.tsx` does; the
- *                                            tuning panel's swatch strip and the framing's
- *                                            poses read this card's, face up only
+ *     useArtPalettes                         the tuning panel's swatch strip and its preview
+ *                                            (the framed card's tint and accent WITH the
+ *                                            rung, from `figurePose`): this card's own art
+ *                                            palette, face up only. Nothing here DRAWS the
+ *                                            art rung: the pedestal (and the arena) pass no
+ *                                            palettes until lane LOOK wires them in
+ *                                            (PLAN.md's lane BODIES follow-up 13)
  *   arena/cues/      the cue engine — pure
  *     CueQueue (queue.ts) · REGISTRY (registry.ts)
  *     motionFromSearch, DEFAULT_MOTION, MotionFlags (motion.ts)
@@ -385,20 +386,29 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   // -- the resting board, and what the camera frames on it ---------------------
   const rest = useMemo(() => pedestalState(entry, options), [entry, options]);
   const presence = cueData.presence;
-  // Lane BODIES (D144, D148): the card's own art palette, read once off the hot
-  // path by the arena's `art.ts` — never for a concealed entry — for the tuning
-  // panel's swatch strip and for the framing's poses, which take it as the
-  // pedestal's do (the pedestal reads its whole board's, `paletteNamesOf`).
+  // Lane BODIES (D144): the card's own art palette, read once off the hot path by
+  // the arena's `art.ts`, for the tuning panel's swatch strip — never for a
+  // concealed entry. The poses below take none, exactly as the pedestal's do:
+  // the art rung is drawn only once LOOK passes palettes in (follow-up 13).
   const paletteNames = useMemo(() => (entry.concealed === null && entry.name !== '' ? [entry.name] : []), [entry]);
   const palettes = useArtPalettes(paletteNames, art);
   const focus = useMemo((): Framing[] => {
     const placed = layout(rest, presence ?? {});
     const poses = turnPoses(
-      figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits, palettes }),
+      figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits }),
       turn,
     );
     return figureIds(entry, options).map((id) => framingOf(placed, poses, id));
-  }, [rest, presence, traits, turn, entry, options, palettes]);
+  }, [rest, presence, traits, turn, entry, options]);
+  // Lane BODIES (D144): what the art rung WOULD give the framed card — its tint and
+  // accent with the palette — for the tuning panel's preview ONLY. Nothing the
+  // pedestal draws takes it until lane LOOK applies follow-up 13.
+  const artPreview = useMemo((): FigurePose | null => {
+    const id = figureIds(entry, options)[0];
+    if (palettes.size === 0 || id === undefined) return null;
+    const placed = layout(rest, presence ?? {});
+    return figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits, palettes }).get(id) ?? null;
+  }, [rest, presence, traits, entry, options, palettes]);
   const seat = `${entry.key}|${String(options.both)}|${mode}|${options.stance}`;
   // The caption's number: each framed body's DRAWN height in view 1 — its resting
   // rig projected through the table camera (legibility.ts), not the nominal scale.
@@ -752,6 +762,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
           entry={entry}
           pose={restPose}
           artPalette={entry.concealed === null ? (palettes.get(entry.name) ?? null) : null}
+          artPose={entry.concealed === null ? artPreview : null}
           traits={traits}
           overrides={overrides}
           onOverrides={setOverrides}
@@ -1380,6 +1391,7 @@ function TuningPanel({
   entry,
   pose,
   artPalette,
+  artPose,
   traits,
   overrides,
   onOverrides,
@@ -1390,6 +1402,8 @@ function TuningPanel({
   pose: FigurePose | null;
   /** Lane BODIES: the card's art palette (`arena/art.ts`), or `null` while unread / with no art. */
   artPalette: ArtPalette | null;
+  /** Lane BODIES: the framed card's pose WITH the art rung — the palette row's preview, never drawn. */
+  artPose: FigurePose | null;
   traits: TraitData;
   overrides: Overrides;
   onOverrides: (next: Overrides) => void;
@@ -1714,6 +1728,20 @@ function TuningPanel({
                     ? 'a hand-written accent outranks it'
                     : 'the lowest rung here'}
                 {artPalette.vivid ? '' : ' — nothing vivid, so no art tint (the colour identity speaks)'}
+              </em>
+              {artPose !== null && pose !== null && (
+                <em className="muted" title="what the art rung would draw for this card: its tint (a figure with no hand-written tint) and its accent — never a costume">
+                  with the rung: tint{' '}
+                  <i className="workshop__swatch" style={{ background: artPose.tint, width: '12px' }} /> <code>{artPose.tint}</code> accent{' '}
+                  <i className="workshop__swatch" style={{ background: artPose.accent, width: '12px' }} /> <code>{artPose.accent}</code>
+                  {' '}· drawn now: tint{' '}
+                  <i className="workshop__swatch" style={{ background: pose.tint, width: '12px' }} /> <code>{pose.tint}</code> accent{' '}
+                  <i className="workshop__swatch" style={{ background: pose.accent, width: '12px' }} /> <code>{pose.accent}</code>
+                </em>
+              )}
+              <em className="muted">
+                not drawn yet — the rung is built and tested, and the arena and the pedestal pass no palettes until lane LOOK
+                applies lane BODIES follow-up 13 (both are LOOK’s files)
               </em>
             </span>
           )}

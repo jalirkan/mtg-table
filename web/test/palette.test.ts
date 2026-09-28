@@ -160,7 +160,12 @@ class SpyPalettes extends Map<string, ArtPalette> {
   }
 }
 
-test('palette: over the corpus, every face-up card resolves a palette and a card drawn as a back never looks one up (hard rule 8)', () => {
+test('palette: over the corpus, the poses ask for every face-up card’s palette and take the answer, and a card drawn as a back never looks one up (hard rule 8)', () => {
+  // What this proves is the PLUMBING, not that every card has art: the spy map
+  // answers every name it is asked. In the arena a name the art index has no
+  // entry for — the corpus's tokens (Soldier, Robot, Hero, Clue and Saproling
+  // Token; docs/evidence/bodies.md §9) — gets no palette, and its figure keeps its
+  // hand-written or colour-identity tint: a state, not an error.
   const answer = paletteFromPixels(bands(10, 10, [[20, 20, 20, 60], [230, 60, 40, 40]]), 10, 10)!;
   const tiles = tileDataOf(DATA);
   let frames = 0;
@@ -206,7 +211,7 @@ test('palette: over the corpus, every face-up card resolves a palette and a card
   );
   assert.ok(frames > 3000, `only ${String(frames)} frames`);
   assert.ok(backs >= 1138, 'the morph fixtures are not being read');
-  assert.equal(resolved, faceUpFigures, 'a face-up figure did not resolve its palette');
+  assert.equal(resolved, faceUpFigures, 'a face-up figure the map answered for did not take its palette');
 });
 
 /**

@@ -303,6 +303,44 @@ const OFF_WHITE: RGB = [0.96, 0.96, 0.96];
  */
 const LINED_KINDS: ReadonlySet<SceneKind> = new Set<SceneKind>(['coatTails', 'cape']);
 
+/**
+ * **The coat's YOKE, cut to the body** (lane BODIES' third fix pass), in the
+ * kind's own units at size 1 (figure units on the proportioned body, the anchor
+ * at the shoulders, `figures/props.ts`'s `coat` at z −0.005): 0.16 long, 0.15
+ * across at the shoulders and 0.128 at the hem, where it overlaps the body link
+ * (`COAT_CHEST`: its top at 0.70, 0.114 there, round z −0.024). Its DEPTH and
+ * CENTRE vary down its length — 0.72 of its width round z −0.035 at the shoulders
+ * (the shoulders measured −0.11…+0.04), round and a little forward of the body
+ * link's axis at the hem (the chest rests pitched forward, which tucks the hem's
+ * front in) — so the hem wraps the body link's top with no ledge and no gap.
+ * `traits.test.ts`'s yoke-seam test holds it, with D147's flared cut as control.
+ */
+export const YOKE_CUT = {
+  length: 0.16,
+  top: 0.15,
+  hem: 0.128,
+  depth: [0.72, 1],
+  z: [-0.035, -0.018],
+  anchorZ: -0.005,
+} as const;
+
+/** Bend a yoke part to `YOKE_CUT`: depth and centre interpolated from the shoulders (y 0) to the hem. Build time only. */
+function tailorYoke(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const position = geometry.getAttribute('position') as THREE.BufferAttribute;
+  const normal = geometry.getAttribute('normal') as THREE.BufferAttribute;
+  const [depthTop, depthHem] = YOKE_CUT.depth;
+  const [zTop, zHem] = YOKE_CUT.z;
+  for (let i = 0; i < position.count; i++) {
+    const t = Math.min(1, Math.max(0, -position.getY(i) / YOKE_CUT.length));
+    const depth = depthTop + (depthHem - depthTop) * t;
+    position.setZ(i, position.getZ(i) * depth + (zTop + (zHem - zTop) * t) - YOKE_CUT.anchorZ);
+    const nz = normal.getZ(i) / depth;
+    const k = 1 / Math.hypot(normal.getX(i), normal.getY(i), nz);
+    normal.setXYZ(i, normal.getX(i) * k, normal.getY(i) * k, nz * k);
+  }
+  return geometry;
+}
+
 /** How far inside its sheet a lining lies, in the kind's own units: hidden behind it from outside, in front of it from inside. */
 const LINING_INSET = 0.0025;
 
@@ -452,10 +490,17 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
     case 'sidearm': {
       // Grip at the origin, barrel along +z to its tip at (0, 0.25, 1.25) —
       // `figures/props.ts`'s PISTOL_TIP_LOCAL, where the lit muzzle sits.
+      // **The third fix pass gives it a pistol's profile** (the verifier read
+      // Peggy's sidearm as "a grey brick"): a slide a little narrower than it is
+      // tall, a DARK grip raked back under it, a trigger guard between them, and
+      // a hammer — two tones, so the grip reads against the slide at the size a
+      // figure holds it; 90 triangles (it was 64).
       return mergeParts([
-        part(new THREE.BoxGeometry(0.5, 0.5, 1.4), WHITE, [0, 0.25, 0.5]),
-        part(new THREE.BoxGeometry(0.44, 0.95, 0.5), [0.72, 0.72, 0.72], [0, -0.28, -0.02], [-0.25, 0, 0]),
-        part(new THREE.CylinderGeometry(0.16, 0.16, 0.12, 10), [0.35, 0.35, 0.35], [0, 0.25, 1.2], [Math.PI / 2, 0, 0]),
+        part(new THREE.BoxGeometry(0.46, 0.5, 1.4), WHITE, [0, 0.25, 0.5]),
+        part(new THREE.BoxGeometry(0.42, 1, 0.48), [0.32, 0.3, 0.3], [0, -0.3, -0.06], [-0.32, 0, 0]),
+        part(new THREE.TorusGeometry(0.2, 0.05, 3, 5, Math.PI * 1.2), [0.32, 0.3, 0.3], [0, -0.02, 0.3], [0, Math.PI / 2, Math.PI * 0.9]),
+        part(new THREE.BoxGeometry(0.2, 0.18, 0.16), [0.32, 0.3, 0.3], [0, 0.52, -0.18], [0.5, 0, 0]),
+        part(new THREE.CylinderGeometry(0.16, 0.16, 0.12, 6), [0.35, 0.35, 0.35], [0, 0.25, 1.2], [Math.PI / 2, 0, 0]),
       ]);
     }
     case 'coat': {
@@ -476,16 +521,20 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       // chibi wears the same coat through a wider anchor.
       // Lane BODIES: open wider at the front (64°, from 40°), worn open, so a
       // resting pose's folded arms show through it.
+      // **The third fix pass TAPERS it to the body** (`YOKE_CUT`): D147 flared the
+      // yoke to 0.165 at its hem, 5 cm off the chest all round and a ledge over
+      // the narrower body link below — the verifier's "stepped ledge at the
+      // shoulder" on Doom's cloak, and the Bold Biochemist's lean swinging that
+      // flare out as a second cape. Now it narrows from the shoulders to meet the
+      // body link it overlaps, and its depth and centre follow the torso's.
       const gap = (64 / 180) * Math.PI;
       const edge = gap / 2;
       const TRIM: RGB = [30, 30, 30];
-      const DEPTH: readonly [number, number, number] = [1, 1, 0.84];
-      const LENGTH = 0.16;
-      const HEM = 0.165;
+      const { length: LENGTH, top: TOP, hem: HEM } = YOKE_CUT;
       const lapel = (from: number): THREE.BufferGeometry =>
-        part(new THREE.CylinderGeometry(0.153, HEM + 0.003, LENGTH, 1, 1, true, from, 0.12), TRIM, [0, -LENGTH / 2, 0], [0, 0, 0], DEPTH);
+        tailorYoke(part(new THREE.CylinderGeometry(TOP + 0.003, HEM + 0.003, LENGTH, 1, 1, true, from, 0.12), TRIM, [0, -LENGTH / 2, 0]));
       return mergeParts([
-        part(new THREE.CylinderGeometry(0.15, HEM, LENGTH, 22, 1, true, edge, Math.PI * 2 - gap), WHITE, [0, -LENGTH / 2, 0], [0, 0, 0], DEPTH),
+        tailorYoke(part(new THREE.CylinderGeometry(TOP, HEM, LENGTH, 22, 1, true, edge, Math.PI * 2 - gap), WHITE, [0, -LENGTH / 2, 0])),
         lapel(edge),
         lapel(Math.PI * 2 - edge - 0.12),
         // The collar: stands up round the neck, open at the throat.
@@ -757,7 +806,7 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
         sweep: 9,
         tips: { count: 20, length: 14 },
         strands: 0.2,
-        sheen: 1.1,
+        sheen: 1.8,
       });
     case 'hairWaves':
       // Swept-back waves with rolls at the nape — what shows under a hat.
@@ -828,6 +877,9 @@ function coatPanel(trim: boolean): THREE.BufferGeometry {
   );
   return mergeParts([cloth, band]);
 }
+
+/** The hair highlight's hue, per channel (the third fix pass): cooler than the hair it lights. */
+const SHEEN_COOL: RGB = [0.8, 1, 1.6];
 
 /**
  * **A procedural hairstyle** (lane BODIES, D141): a shell round the measured head
@@ -919,9 +971,12 @@ function hairShell(style: {
       const strand = (style.strands ?? 0) * (0.5 + 0.5 * Math.min(1, theta / 90)) * lock;
       // The sheen: the OTHER locks, lit in a band from 25° to 75° off the crown.
       const band = Math.max(0, 1 - Math.abs(theta - 50) / 25);
-      const lit = 1 + (style.sheen ?? 0) * band * Math.max(0, -lock);
-      const shade = (0.74 + 0.32 * ((y + 1) / 2)) * (1 - Math.max(0, strand)) * lit;
-      colours.push(shade, shade, shade);
+      // The third fix pass: the lit locks are COOL — an inker's blue-white on
+      // black hair — so Quake's bob can be the near-black her painting draws and
+      // still show its locks (a grey lift on near-black stayed near-black).
+      const glint = (style.sheen ?? 0) * band * Math.max(0, -lock);
+      const shade = (0.74 + 0.32 * ((y + 1) / 2)) * (1 - Math.max(0, strand));
+      colours.push(shade * (1 + glint * SHEEN_COOL[0]), shade * (1 + glint * SHEEN_COOL[1]), shade * (1 + glint * SHEEN_COOL[2]));
     }
   }
   flat.dispose();

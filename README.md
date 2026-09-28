@@ -1693,9 +1693,9 @@ look (`holo` or `comic`), and all of it is data.
 | Nick Fury, Spymaster | arms folded | bald, as his card draws him | an eyepatch over the eye it hides; a coat to below the knee whose skirt drapes from his hips |
 | Peggy Carter, Secret Agent | at the ready, pistol low, shield arm raised across her front | waves under the hat | a sidearm in her right hand |
 | Agent Phil Coulson | hands clasped above the belt, elbows out | parted | — |
-| Quake, Agent of S.H.I.E.L.D. | braced, both palms forward, head up | a swept bob with lit locks | — |
+| Quake, Agent of S.H.I.E.L.D. | braced, both palms forward, head up | a near-black swept bob with cool lit locks | — |
 | Agent 13, Sharon Carter | the pistol at the high ready, barrel up beside her face | a bun | — |
-| Bold Biochemist, A.I.M. Scientists | bent over the bench | parted / under the hood | the lab coat bends at the chest and hangs open |
+| Bold Biochemist, A.I.M. Scientists | bent over the bench, from the waist | parted / under the hood | the lab coat leans with him and hangs open |
 | Ant-Man, Wasp, the Hero token | hands on hips | parted / a bob / long | — |
 | Agents of S.H.I.E.L.D., the Soldier token | at ease, hands behind the back | parted / close-cropped | — |
 | the duelists | — | — | the director's long coat and the villain's green cloak, lined so they read from both sides |
@@ -1721,29 +1721,36 @@ leg about a third of the way and each side panel about a fifth, and the lower
 half of each falls back toward straight down — so a kneeling or lunging figure's
 coat opens and folds without a panel flying out or lying flat (**D146**). It is
 cut to the body it is on — close round the hips, to just below the knee, open
-down the front — so the legs and the pose show under it (**D147**).
+down the front — so the legs and the pose show under it (**D147**). Its yoke,
+over the shoulders, narrows to meet the coat's body, so there is no step at the
+chest and no gap at the shoulder blades.
 
 **The art's colours.** For every card face up, the page can read the card image
 it already downloaded, once, when the browser is idle, and find its main colours.
 They sit **under** every hand-written row: a card that has a row keeps it, and a
 card that has none — a new set's — gets its painting's vivid colour for its
-accent and body tint, its land tile and its aura. Nothing is saved or sent. The
-table and the workshop both draw it (**D148**): the Giant-Sized Flying Ant, which
-has no colour of its own in `traits.json`, is its painting's brown rather than its
-mana's blue. The workshop's tuning panel shows each card's swatches, and its
-`palette` row switches the rung off for a card to compare (**D144**).
+accent and body tint, its land tile and its aura, but never its clothes (a
+painting's main colour is usually its background). Nothing is saved or sent.
+**It is built, tested and not yet drawn** (**D148**): what turns it on is a
+few lines in two files that belong to the look lane, written out in PLAN.md's lane
+BODIES follow-up 13 for that lane or the merge to apply. With it on, the
+Giant-Sized Flying Ant, which has no colour of its own in `traits.json`, is its
+painting's brown rather than its mana's blue. Until then the workshop's tuning
+panel shows each card's swatches and a preview — the tint and accent the rung
+would give the framed card, beside the ones drawn now — and its `palette` row
+turns the rung off for a card (**D144**). Tokens have no art entry, so they never
+get an art colour.
 
 **What was not done.** The brief's plan for hair used the free Universal Base
 Characters pack's other hairstyles. Downloading it again needs your approval, so
 two of the hairstyles are the pack's own (already in the library) and four are
 drawn procedurally until then (PLAN.md's lane BODIES follow-up 2).
 
-**It costs** six or seven draw calls and about 1,950 triangles on a busy table:
-at `g1.jsonl`@316 with bloom off on the GTX 1080, 84 calls and 26,167 triangles
-with ten figures drawn (77 and 24,240 before), and 88 and 29,371 when a sample
-catches an eleventh — inside the Tier 2 budget of 90 and 30,000, with only the
-look lane's own two calls of room left. The board's own code is unchanged, and an
-idle table still renders nothing.
+**It costs** six or seven draw calls and about 1,950 triangles on a busy table
+(see `docs/evidence/bodies.md` §9 for this pass's own measurement), inside the
+Tier 2 budget of 90 calls and 30,000 triangles with only the look lane's own two
+calls of room left. The board's own code is unchanged, and an idle table still
+renders nothing.
 
 #### The workshop — one card on a pedestal (`#workshop`)
 

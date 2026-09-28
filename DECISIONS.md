@@ -7651,12 +7651,21 @@ named back — and fails with any one of `paletteFor`'s, `tilePose`'s or
 `paletteNamesOf`'s gates removed; liveness scans the first two as it scanned the
 third.)*
 
-**Not switched on yet** *(fix pass; superseded by **D148**, which switches it on)*. The first cut passed the palettes in from
+**Not switched on yet** *(fix pass; the second fix pass switched it on in **D148**, and the third fix pass withdrew that switch — so this paragraph stands)*. The first cut passed the palettes in from
 `Arena.tsx` and `workshop/Pedestal.tsx`, which report 15 §9.1 gives to lane LOOK;
 those hunks were reverted, and the edit is PLAN.md's lane BODIES follow-up 13,
 written out for LOOK (or the merge) to apply. Until then every pose function
 accepts `palettes` and no page passes it: the workshop's tuning panel shows the
 swatches, and nothing is drawn from them.
+
+*(Third fix pass, 2026-09-28: "the palette never paints a costume" was held by
+the data, not the code — the verifier's third round found `costumeOf` filled the
+suit from a tint the art rung could supply, and only every human archetype's
+hand-written tint kept it off. `figurePose` now dresses the body in the tint
+WITHOUT the art rung (a hand-written tint, else the colour identity), and a
+`traits.test.ts` case holds it with a row-less person whose painting is vivid
+red: the pose's tint is the painting's, and no slot of the costume is. It fails
+with the old call restored.)*
 
 **Rejected.** Committing palettes (derived from Marvel art: runtime only, report
 12 §9); a Worker (four cards a second in an idle callback is invisible); letting
@@ -7802,54 +7811,73 @@ material (LOOK's file, and +1 program); a per-card coat length (a second kind or
 a new trait key for one card — the knee-length cut reads as a trench coat and a
 lab coat both).
 
-## D148 — The art rung is switched ON: the arena and the pedestal pass the palettes in, and the accent prefers the brighter of two vivid colours
+*(Third fix pass, 2026-09-28 — **the yoke is cut to the body too.** The
+verifier's third round read "a stepped ledge at the shoulder" on Doom's cloak
+and, on the Bold Biochemist bent over his bench, the coat's back "a separate grey
+panel" with "a white arc beside his head". This decision cut the skirt and the
+body link and left the YOKE flared to 0.165 at its hem, 5 cm off the chest and a
+ledge over the body link's 0.116. Now `scene/props.ts`'s `YOKE_CUT` tapers it
+from 0.15 at the shoulders to 0.128 at the hem, its depth and centre following the
+torso (0.72 of its width round z −0.035 at the shoulders, round at the hem a
+little forward of the body link's axis), and the body link's top rises from 0.675
+to 0.70 (`COAT_CHEST`, lengthened to keep its hem at 0.51), because the chest rests
+pitched and lifted the yoke's back hem above the old top — a gap at the shoulder
+blades. A new `traits.test.ts` case measures the seam through the prop field's
+own matrices at rest: Fury's yoke hem stands 0.001–0.012 of a height off the body
+link and the Biochemist's −0.010–0.016, both under the body link's top (the bar:
+≤ 0.025 out, ≥ −0.012 in, never above the top); D147's flared yoke reads 0.048
+and 0.053 and fails it. The lean itself is **D149**'s amendment.)*
 
-**2026-09-28** (lane BODIES' second fix pass; *branch `bodies`, reserved range
-D140–D149*). Completes **D144**, whose "not switched on yet" this supersedes.
+## D148 — The accent prefers the brighter of two vivid colours; the art rung's switch stays in lane LOOK's two files, written out and not made
 
-**Decision.** `Arena.tsx` and `workshop/Pedestal.tsx` — lane LOOK's files by
-report 15 §9.1 — each gain the pass-through PLAN.md's lane BODIES follow-up 13
-wrote out: `paletteNamesOf(placed)` into `useArtPalettes`, and the map into
-`figurePose` and `tilePose`, in the memos that already make the poses. Nothing
-else in either file changes. The workshop's framing poses take the same map, and
-the tuning panel's `palette: art · off` now switches what the pedestal draws.
-The accent's score gains a brightness term: `share × (0.3 + saturation) ×
-(0.4 + value)`.
+**2026-09-28** (lane BODIES' second fix pass, **amended by the third**; *branch
+`bodies`, reserved range D140–D149*). Completes **D144**'s palette.
 
-**Rationale.** The verifier's second round: "Deliverable 5, the art palette,
-never reaches a pixel", and the workshop's palette select "has no visible
-effect", against the lane's rule that every visual change is visible at
-`#workshop` and switchable. The alternative it offered — say plainly that D144
-is dormant — leaves the deliverable undone, and no lane LOOK session was running
-to agree an edit with. So the edit is the smallest one that can be proved not to
-collide: ten lines added and three changed in `Arena.tsx` (an import, four
-comment lines, two hook calls, the argument and two dependency lists), seven and
-three in `Pedestal.tsx`, none inside a hunk of LOOK's branch (`look` at `de4e01f`), and `git merge-tree` of the two branches
-reports no conflict in either file (docs/evidence/bodies.md §8.4). The two files
-stay LOOK's; this is a pass-through, not a design change in them. Liveness now
-holds every caller of `useArtPalettes` (the two that draw hand it ONLY
-`paletteNamesOf`'s names, negative-controlled; the tuning panel asks for its own
-face-up card's; no fourth file may call it), and `traits.test.ts`'s anonymous
-sweep now hands the poses a map that answers every name, so "no art colour on an
-anonymous figure" is the pose's own gate speaking (1,179 anonymous instances, none
-coloured; 11,449 face-up ones took the rung). The brightness term is follow-up 7:
-Fury's accent was the khaki round his explosion (`#867448`) rather than the
-explosion, because a large muted cluster beat a smaller bright one of the same
-saturation; `palette.test.ts` now holds the pick with report 15 §7.1's own
-clusters.
+**Decision.**
 
-**What it changes on the table** (docs/evidence/bodies.md §8): a creature with
-no hand-written tint anywhere takes its painting's vivid colour (the Giant-Sized
-Flying Ant is brown, its painting's, where the colour identity made it blue); an
-aura with no attachment row takes its painting's accent; a land's tile its
-painting's terrain. Every hand-written row still wins, and `palette: off` keeps a
-card's colour identity.
+- **The accent's score gains a brightness term**: `share × (0.3 + saturation) ×
+  (0.4 + value)`. Fury's accent was the khaki round his explosion (`#867448`)
+  rather than the explosion, because a large muted cluster beat a smaller bright
+  one of the same saturation; `palette.test.ts` holds the pick with report 15
+  §7.1's own clusters.
+- **The art rung is not switched on in this lane.** The pass-through that turns
+  it on — `paletteNamesOf(placed)` into `useArtPalettes`, the map into
+  `figurePose` and `tilePose`, in the memos that already make the poses — belongs
+  in `Arena.tsx` and `workshop/Pedestal.tsx`, which report 15 §9.1 and §9.4 give to
+  lane LOOK. It is PLAN.md's lane BODIES follow-up 13, written out whole, for LOOK
+  or the merge to apply; both files are byte-identical to the base `c81f674`. The
+  workshop's tuning panel shows the card's swatches and a PREVIEW — the framed
+  card's tint and accent with the rung, from `figurePose`, beside the ones drawn
+  now — and says in words that nothing draws it yet. Liveness holds the hook's
+  callers: the tuning panel today; `Arena.tsx` and `Pedestal.tsx` at most once
+  each, and then only fed by `paletteNamesOf` (negative-controlled on the
+  follow-up's own text); no other file.
 
-**Rejected.** Leaving D144 dormant (the deliverable, undone); moving the
-pass-through into a module the lane owns (every pose is made in a memo in those
-two files, and a hook cannot be called from `figurePose`); folding the palette
-into the workshop's trait overrides so only the workshop showed it (the workshop
-must draw what the arena draws, **D102**).
+**History.** The second fix pass applied the pass-through itself, answering the
+verifier's second round ("Deliverable 5, the art palette, never reaches a
+pixel") after its first round had called the same hunks a blocker; `git
+merge-tree` showed no conflict with LOOK's branch in either file. The verifier's
+third round called them a blocker again — ownership, not a merge break — and said
+the two rounds asked opposite things, so the call belongs above the lane. This
+decision takes the lane's own rule (a change needed in another lane's file is a
+follow-up with the exact edit) and leaves the choice — apply follow-up 13 now as
+a recorded cross-lane exception, or at LOOK's merge — to the user.
+
+**What the rung does once applied** (measured with it on, docs/evidence/bodies.md
+§8.4): a creature with no hand-written tint anywhere takes its painting's vivid
+colour (the Giant-Sized Flying Ant is brown, its painting's, where the colour
+identity made it blue); an aura with no attachment row takes its painting's
+accent; a land's tile its painting's terrain. Every hand-written row still wins,
+`palette: off` keeps a card's colour identity, and the costume is never the
+art's (**D144**'s third-fix-pass note).
+
+**Rejected.** Editing LOOK's files without the user's word (two verifier rounds
+disagreed; the lane rule decides); moving the pass-through into a module the lane
+owns (every pose is made in a memo in those two files, and a hook cannot be
+called from `figurePose`); folding the palette into the workshop's trait
+overrides so only the workshop drew it (the workshop must draw what the arena
+draws, **D102**, and the art rung sits below the subtype rungs, which an override
+row would outrank).
 
 ## D149 — Faces and poses are judged from ABOVE: a face sets its jaw as a pose, the high ready, and a bob that is hair
 
@@ -7890,6 +7918,24 @@ at head height the grit is plain (`var/bodies/fix3/it6/s3.png`). `traits.test.ts
 holds it over the corpus: 2,673 face-up faces neutral and 1,452 in grit, each
 where its stance says, none on an anonymous figure. The census of kinds in one
 frame rises from 16 to 17 (a face in grit beside a face at rest).
+
+*(Third fix pass, 2026-09-28, from the verifier's third reading of the
+pictures:*
+- *`working` bends from the WAIST: `spine_01` and `spine_02` take a share of the
+  lean, where it was all at `spine_03` and the neck. The coat's body link rides
+  `spine_01`, so it stood upright while the chest leaned out of it, which from
+  above read as "a separate grey panel fanning out"; a man bent over a bench
+  bends at the lower back too. The left forearm reaches less far, so the hand
+  rests on the bench rather than past its edge. `traits.test.ts`'s yoke-seam test
+  (**D147**'s note) holds the coat round the new lean.*
+- *The hair's lit locks are COOL (`SHEEN_COOL`, an inker's blue-white on black
+  hair) and the bob's `sheen` 1.8, so Quake's bob is the near-black her painting
+  draws (`#1c1a22`, from the dark brown the grey locks needed) and still shows
+  its locks.*
+- *The pistol (and Peggy's sidearm, the same geometry at 60%) gets a pistol's
+  profile — a slide, a DARK grip raked back, a trigger guard, a hammer — where the
+  verifier read "a grey brick": 90 triangles, from 64; the sidearm 51 / 21 px from
+  your seat / the opponent's (56 / 20), still one-sided, the pistol 152 / 98.)*
 
 **Rejected.** An expression as a uniform on one face kind (it is lane LOOK's
 shader, and a per-instance switch in the prop shader would be a second program
