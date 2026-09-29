@@ -1,10 +1,12 @@
-# Evidence — villain identity (D220–D221)
+# Evidence — villain identity (D220–D222)
 
 Branch `villain-identity`, off `main` at `9dfdce4`, in the worktree
 `mtg-table-t2v`, on 2026-09-29. Everything below was run on this machine that
 night; every number names what produced it. The pictures are under
 `var/villains/` (gitignored, local) and listed in §7. No personal model was
-present: this lane is the repository tier.
+present: this lane is the repository tier. **§11 is the fix pass** that followed
+the lane's first verification (D222, and D221 amended): §5, §6 and §7 are as it
+left them, and the numbers the lane first wrote in §6 are corrected there.
 
 The brief: a bare `./scripts/play.sh` seats you against `decks/doom-legion.dck`,
 but no committed recording played it, so the workshop previewed 24 of its 27
@@ -175,7 +177,7 @@ in the same change; the rest are printed only.
 | `stack` | `orb` forms | 0 | 3 (`Land`: Villainous Hideout's ability) | yes — its one type line |
 | `motion` | classic film (comic FX off, on twos off) | 310,369 ops | 305,737 over the 19 + 45,744 for the new one (§4.1) | yes — re-derived |
 | `traits` | cards with an identity in the census | 17 | 29 | printed; rows asserted |
-| `traits` | prop kinds on the table at once | 17 | 17 (the 19) · 22 (the villain file, held to 22) | yes (§6) |
+| `traits` | prop kinds on the table at once | 17 | 17 (the 19) · 22 (the villain file, held to 22) · 17 on its most crowded frames (held to 17, D222) | yes (§6) |
 | `traits` | prop instances at once | 60 | 91 (≤ 96) | yes |
 | `status` | strips · with the wire's keywords | 10,763 · 0 | 13,951 · 1,332 | yes — keywords now allowed, each the card's own |
 | `figure-pose` | stand points · back-row · boxed in | 12,500 · 200 · — | 15,773 · 805 · 4 (§4.3) | yes |
@@ -283,13 +285,15 @@ pieces of the shared kit.
   ears, standing proud of the nose, with dark eye slits, a shadowed brow, a pale
   nose ridge and a grille — **226 triangles**. Anchored like the eyepatch, in
   unit-head space (HEAD_SHAPE on a person, the chibi's head on the fallback).
-  Worn by Doctor Doom (iron), Kang the Conqueror and Kang, Temporal Tyrant (blue)
-  and Crossbones (bone white).
+  Worn by Doctor Doom (iron), Kang the Conqueror and Kang, Temporal Tyrant (blue),
+  Crossbones (bone white) and — since the fix pass — the Unliving Legionnaire
+  (pale lavender).
 - **`cowl`** (a hairstyle, the derived kind `hairCowl`, in the costume's hair
   slot, preset `cloth`): a smooth hood from the brow round the jaw to the nape,
   and a mantle over the neck to the shoulders so no skin shows between it and a
   cloak — **432 triangles**. Worn by Doom (green hood), both Kangs (a purple
-  helm), Crossbones (black balaclava), Agents of HYDRA and the Villain token.
+  helm), Crossbones (balaclava), Agents of HYDRA, the Villain token and — since
+  the fix pass — the HYDRA Troopers and the Unliving Legionnaire.
 
 | card | body · rest | head | props | costume, in short |
 |---|---|---|---|---|
@@ -299,15 +303,15 @@ pieces of the shared kit.
 | A.I.M. Bot | drone, hovering | — | laserEye, visor, wings | A.I.M. yellow, cyan eye |
 | Aerial Doombot | drone | — | (unchanged) | (unchanged) |
 | Agents of HYDRA | man · atEase, a squad of three | cowl | squad | HYDRA green, yellow chest, gloves and belt |
-| HYDRA Troopers | man · highReady | crop | pistol | HYDRA green, yellow gloves and belt |
+| HYDRA Troopers | man · highReady | cowl | pistol | HYDRA green, yellow gloves and belt |
 | Baron Strucker | man · atEase | bald | coat, coatTails | black uniform, green greatcoat, yellow belt |
 | Loki | man · braced | long, black | cape, gauntlets (green) | green and gold |
 | Kang the Conqueror | man · aim, hovering | cowl (purple), no face | mask (blue), gauntlets | green tunic over purple |
 | Kang, Temporal Tyrant | man · folded | cowl, no face | mask (blue), cape (purple) | purple armour over green |
 | Pharaoh Rama-Tut | man · folded | long, gold (the headdress) | cape (royal blue) | gold collar, white linen |
-| Unliving Legionnaire | man · folded, hovering | crop | wings (violet) | black and crimson |
-| Madame Hydra | woman · akimbo | long, GREEN | cape | dark-green catsuit, yellow belt |
-| Crossbones | man · braced | cowl (black), no face | mask (bone white) | black fatigues |
+| Unliving Legionnaire | man · folded, hovering | cowl (wine-black), no face | mask (pale lavender), wings (magenta) | violet and crimson |
+| Madame Hydra | woman · akimbo | long, GREEN | cape (charcoal) | charcoal catsuit, yellow belt |
+| Crossbones | man · braced, scale 1.14 | cowl (charcoal), no face | mask (bone white) | warm charcoal fatigues, bone-white chest |
 | Villain Token | man · atEase | cowl | — | black |
 
 **The villain rung.** `creature/subtype:villain` in `figures.json` stands a
@@ -324,14 +328,14 @@ standing/kneeling and centre/edge, `you` · `opp`):
 | Doctor Doom | mask · cape · coatTails · hairCowl | 0 · 1,364 · 31 · 353 | 66 · 13 · 601 · 259 |
 | Kang the Conqueror | mask · gauntlets · hairCowl | 0 · 81 · 310 | 59 · 116 · 218 |
 | Kang, Temporal Tyrant | mask · cape · hairCowl | 0 · 1,208 · 329 | 61 · 65 · 236 |
-| Crossbones | mask · hairCowl | 0 · 354 | 66 · 235 |
+| Crossbones | mask · hairCowl | 0 · 402 | 74 · 254 |
 | Loki | cape · gauntlets · hairLong | 933 · 87 · 281 | 69 · 116 · 100 |
 | Madame Hydra | cape · hairLong | 1,128 · 275 | 48 · 106 |
 | Pharaoh Rama-Tut | cape · hairLong | 1,208 · 304 | 68 · 117 |
 | Baron Strucker | coat · coatTails | 517 · 732 | 155 · 480 |
-| HYDRA Troopers | pistol · hairCrop | 104 · 143 | 103 · 62 |
+| HYDRA Troopers | pistol · hairCowl | 104 · 302 | 103 · 215 |
 | Agents of HYDRA | squad · hairCowl | 994 · 218 | 672 · 155 |
-| Unliving Legionnaire | wings · hairCrop | 1,025 · 149 | 663 · 66 |
+| Unliving Legionnaire | mask · wings · hairCowl | 0 · 1,025 · 324 | 59 · 643 · 219 |
 | A.I.M. Bot | laserEye · visor · wings | 0 · 151 · 87 | 38 · 112 · 159 |
 | Doombot · Servo-Guards | laserEye · visor | 0 · 144 / 145 | 40 / 39 · 111 / 110 |
 | Villain Token | hairCowl | 302 | 214 |
@@ -341,7 +345,10 @@ the other side (`ONE_SIDED`): the `mask` (a face; the cowl from behind), and
 Doom's `cape` and `coatTails` — his cloak is behind him from the front (13 px) and
 his tunic under the cloak from behind (31 px), so each is carried by the other
 side's (the hood from the front, the cloak from behind). Every other cloak and
-coat reads from both seats. Loki first rested `clasped`, and his lit hands were
+coat reads from both seats — and since the fix pass the test holds that:
+`ONE_SIDED`'s cloak and tunic rows carry `only: ['Doctor Doom']`, where the lane
+first exempted every wearer (Madame Hydra's cloak is exactly 48 px from the far
+seat, on the bar). Loki first rested `clasped`, and his lit hands were
 behind his back from your seat (6 px); he rests `braced` now (87).
 
 **The cues**, each keyed off an event about that card: Doctor Doom's arrival is
@@ -364,33 +371,90 @@ made). Their rows are read off a pose built from the catalog's facts — the
 Villain token's from Forge's token script (report 08 §8.1) — and the census fails
 the day a recording puts one on the table until the name leaves the list.
 
-## 6. The budget
+## 6. The budget (D222 — rewritten by the fix pass)
 
-`tools/arena-bench.mjs`, bloom off, against a `vite preview` of this tree:
+**What the lane first wrote here was wrong**, and the verifier found it: it named
+`@296` and `@304` as the villain file's busiest frames (114–117 calls, the base
+tree 110–112), but `tools/arena-bench.mjs --index N` reads its counters at the
+END of its sample — five seconds of replay at 4×, 100 ms a frame, is fifty frames
+past N — so those were readings of about `@346` and `@354`, and the lane's own
+table picture's frame, `--index 388`, read the recording's LAST frame at 128
+calls, over the bench's hard 120. The fix pass measured every frame instead.
 
-| frame | renderer | draw calls | triangles |
-|---|---|---|---|
-| `g1`@355 | SwiftShader | 89 | 26,621 |
-| `g1`@355 | GTX 1080 | 88 | 26,619 |
-| `g1`@316 | SwiftShader | 91 | 29,613 |
-| `villain-doom-248`@296 | GTX 1080 | 117 | 34,399 |
-| `villain-doom-248`@296 | SwiftShader | 114 | 32,348 |
-| `villain-doom-248`@304 | GTX 1080 | 115 | 33,828 |
-| **base tree** (`9dfdce4`'s web, this fixture added), `villain-doom-248`@296 | GTX 1080 | **110** | **30,505** |
-| **base tree**, `villain-doom-248`@304 | GTX 1080 | **112** | **30,655** |
+**The sweeps** (a scratch driver, `var/villains/sweep.mjs`, against `vite
+preview` of each tree, 1920 × 1080, `?glinfo=1&bloom=0`): *static* scrubs the
+replay slider down from its last index to 0 — every step back is a flush and
+snap, so each reading is that frame's pose with no cue running — and *played*
+runs it from index 0 at 4× and keeps the worst reading per index, transients
+included. The base tree is `9dfdce4`'s web with this recording added (every
+villain a bare body; the verifier's `var/verify/base`, its `web/src` checked
+identical to `git archive 9dfdce4`).
 
-`g1` is unchanged — no villain is on that table — so report 13 §8.2's line holds
-where it was drawn (89/88 at @355; @316's 91 on SwiftShader is the status
-layer's, its follow-up 4). **The villain file's busiest frames are over the line
-before any identity is drawn**: 19–21 creatures on the table, twelve figures and
-the rest discs, both seats' cards, lands and piles — 110 and 112 calls on the base
-tree. Identity adds 3–7 calls there (6 prop kinds at @296: 20 against 14), 12 of
-its 14 kinds already in the kit and 2 new. `traits.test.ts` keeps holding every
-other recording to 17 kinds and holds this one to its measured 22
-(`OVER_THE_LINE`); PLAN.md's villain-identity follow-up 4 is the crowded table's
-budget. The frame times on SwiftShader fail §9.4's p95 at `g1` too (34.0–34.5 ms,
-the desktop running other lanes); on the GTX 1080 p95 is 0.7–0.8 ms at every
-frame above.
+| sweep | renderer | worst calls | worst triangles | frames over 120 calls · over 90 · over 30,000 triangles |
+|---|---|---|---|---|
+| base tree, static | GTX 1080 | 124 (`@392`, `@393`) | 33,149 (`@387`) | 10 · 105 · 90 |
+| base tree, static | SwiftShader | 124 (`@392`, `@393`) | 33,149 (`@387`) | 10 · 105 · 90 |
+| base tree, played 4× | GTX 1080 | 126 (`@396`, `@397`) | 33,151 | 12 · 108 · 89 |
+| the lane as verified (`1803dba`), static | GTX 1080 | 129 (`@392`, `@393`) | 37,288 (`@393`) | 24 · 130 · 97 |
+| **fix pass**, static | GTX 1080 | **128** (`@392`, `@393`) | **37,546** (`@393`) | 16 · 130 · 97 |
+| **fix pass**, static | SwiftShader | **128** (`@392`, `@393`) | **37,546** (`@393`) | 16 · 130 · 97 |
+| **fix pass**, played 4× | GTX 1080 | **130** (`@396`, `@397`) | 37,548 | 27 · 145 · 97 |
+
+**The bench, in interleaved pairs** (`var/villains/bench-pairs.sh`: each tree
+served in turn on port 5214, the serving directory checked before every bench;
+`tools/arena-bench.mjs --no-bloom`, the default 600 ms settle; *reads* is the
+frame the counters come from):
+
+| bench | reads | renderer | base tree | fix pass |
+|---|---|---|---|---|
+| `villain-doom-248` `--index 388` | `@400` | GTX 1080 | 123 / 32,943 (twice) | 127 / 37,522 (twice) |
+| `villain-doom-248` `--index 388` | `@400` | SwiftShader | 123 / 32,943 | 128 / 37,524 |
+| `villain-doom-248` `--index 296` | about `@346` | GTX 1080 | 111 / 30,507 · 109 / 30,503 | 117 / 34,683 · 117 / 34,679 |
+| `g1` `--index 355` | | GTX 1080 | 88 / 26,619 | 88 / 26,619 |
+| `g1` `--index 355` | | SwiftShader | 89 / 26,621 | 89 / 26,621 |
+| `g1` `--index 316` | | SwiftShader | 91 / 29,613 | 91 / 29,613 |
+
+(The verifier's readings of `1803dba`: `--index 388` 128 / 37,264 on the GTX
+1080 and 129 on SwiftShader, the base tree 123 / 32,943 — the same base.)
+
+**What the numbers say.**
+
+- **`g1` is unchanged** — no villain is on that table — so report 13 §8.2's line
+  holds where it was drawn: 88/89 at `@355`, and `@316`'s 91 on SwiftShader is the
+  status layer's (its follow-up 4).
+- **The villain file's table is over the lines before any identity.** Its last
+  turns put **49 cards on the two battlefields** (`@388`–`@392`) — the corpus's
+  most crowded table; `human-sideboard-7`'s is 42 and `g1`'s 35. With every
+  villain a bare body it draws 124 calls and 33,149 triangles at worst: the
+  bench's hard 120 and §8.2's 30,000 are both crossed by the cards, the twelve
+  figures and the discs.
+- **Identity's increment at the worst frame is +4 calls and about +4,600
+  triangles** — exactly its prop kinds: 17 there against the base tree's 13
+  (`var/villains/kinds.mts`, the census's own counting). Nine kinds are the
+  villains' (the cloak, the coat and its skirt, the gauntlets, the wings, the long
+  hair, the mask, the cowl, the HYDRA squad) and five of the base tree's are gone:
+  Peggy Carter's hat, shield, sidearm and waves and the parted hair, because the
+  dressed villains now take the twelve model slots, where the base tree gave four
+  of them to Peggy, a second Doombot and the two Robot tokens. The triangles are
+  mostly the squad's two followers (about 2,800) and the cowls (432 each).
+- **The fix pass took one kind off that table** (129 → 128; 24 → 16 frames over
+  120): the Unliving Legionnaire wears the mask and the cowl the table already
+  draws for Doom instead of a crop of its own. It costs 258 triangles (the cowl is
+  heavier than the crop). Every kind left carries a card there; D222 lists what
+  was weighed and rejected (the mask, the squad, a coarser cowl, `hood`).
+- **Held by a test**: `traits.test.ts`'s `OVER_THE_LINE` holds the file to 22
+  prop kinds at once (at `@296`, where the scene draws 102 calls) and to **17 on
+  its most crowded frames** — the second is the one the calls follow. A control
+  set to 16 fails it: *"17 prop kinds on its most crowded frames, over its
+  measured 16"*. Every other recording is still held to 17 at once.
+- **Frame times**: on the GTX 1080 the p95 is 4.0–6.0 ms at every villain bench
+  above (base 4.0–4.4, fix pass 4.2–6.0); on SwiftShader it fails §9.4's 20 ms on
+  every bench of both trees, `g1` included (20.8–37.1 ms), on a desktop at a load
+  average of 1–6.
+
+PLAN.md's villain-identity follow-up 4 is a budget for a crowded table (props shed
+past a figure count, as `MAX_FIGURES` sheds models) — an arena change, measured
+against every view, which this lane does not make.
 
 ## 7. The workshop, and the pictures
 
@@ -406,26 +470,40 @@ every deck that names a card (`catalog.ts`'s `matchesSearch`), so *doom legion*
 finds all 27 — Aerial Doombot, Thriving Isle and Island are listed under Pacho.
 
 Pictures, headless Chromium on the GTX 1080 against the dev server (a scratch
-driver, `var/villains/shot.mjs`):
+driver, `var/villains/shot.mjs`), **re-taken by the fix pass** after its changes;
+the lane's first set is kept under `var/villains/r0/` for the comparison:
 
 - `var/villains/pedestal-1x-<card>.png` — every Doom Legion creature and the
   Doombot token on the pedestal at the workshop's default **1× front**, comic look,
-  fifteen files, and `var/villains/pedestal-1x-sheet.png`, the fifteen side by side;
+  fifteen files, and `var/villains/pedestal-1x-sheet.png`, the fifteen figures
+  cropped side by side;
 - `var/villains/eval-<card>.png` and `var/villains/eval-sheet.png` — the same in
   the INSPECT view, against each card's art;
-- `var/villains/table-villain-doom-248-at-388.png` — the arena's table view at
-  transport index 388 of the villain file: turn 24, main 1, thirteen villains on
-  the table (twelve figures; the two Doombots and the Robot tokens past
-  `MAX_FIGURES` draw discs).
+- `var/villains/crops/cmp1.png` and `cmp2.png` — before (`r0/`) and after, side by
+  side: the Legionnaire and Crossbones; Strucker (unchanged in the end), Madame
+  Hydra and the Troopers;
+- `var/villains/table-villain-doom-248-at-388.png` and `…-at-392.png` — the
+  arena's table view at transport indices 388 and 392 of the villain file (392 is
+  the sweep's worst frame): turn 24, thirteen villains on the table (twelve
+  figures; a Doombot and the Robot tokens past `MAX_FIGURES` draw discs);
+- `var/villains/oppshoulder-villain-doom-248-at-388.png` — the same frame over
+  the opponent's shoulder (view 3), the villains seen from Pacho's side.
+
+**The seats in those pictures.** The recording is seen from the Doom Legion's
+seat (seat 0), and a duelist is a SEAT's (D99): so the S.H.I.E.L.D. director
+duelist stands behind the villains and the Doom-cloaked villain duelist behind
+Pacho's deck. That is the recording's seat, not a defect of the layer; a duelist
+look keyed to the deck a seat plays is PLAN.md's villain-identity follow-up 12.
 
 ## 8. Tests and the gate
 
 `npm --prefix web test`: `node --test` **1,077 tests, 1,071 pass, 0 fail, 6
 skipped** (1,060 / 1,053 / 7 on `9dfdce4` — the skip that went is the build
 check, which found a `dist`), and vitest **124** (122). `./bridge/build.sh`: build
-OK, its five self-tests green. The gate: §9.
+OK, its five self-tests green. The gate: §9. The fix pass extended cases in place
+and added none: the same **1,077 / 1,071 / 0 / 6** and **124** after it (§11).
 
-## 9. The gate, twice, from a deleted `bridge/out`
+## 9. The gate, from a deleted `bridge/out` — the lane twice, its fix pass twice
 
 `GATE_JOBS=4`, `bridge/out` deleted before each run, the log teed:
 
@@ -433,9 +511,12 @@ OK, its five self-tests green. The gate: §9.
 |---|---|---|---|---|
 | 1 | 9120 | 263.3 s (48 jobs, 1,003.6 s of job time, load 1.3 → 12.2) | **check-all OK**, exit 0 | `var/check-all-villains-p1.log` |
 | 2 | 9130 | 252.0 s (48 jobs, 953.8 s of job time, load 8.7 → 10.5) | **check-all OK**, exit 0 | `var/check-all-villains-p2.log` |
+| fix pass | 9120 | 250.1 s (48 jobs, 961.3 s of job time, load 2.8 → 8.0 at most → 4.3) | **check-all OK**, exit 0 | `var/check-all-villains-fix1-run1.log` (`var/check-all/20260929-034451-765333/`) |
+| fix pass, final tree | 9120 | 251.0 s (48 jobs, 953.2 s of job time, load 0.6 → 8.9) | **check-all OK**, exit 0 | `var/check-all-villains-fix1.log` (`var/check-all/20260929-035135-840825/`) |
 
 Inside the gate `node --test` is 1,092 / 1,084 pass / 0 fail / 8 skipped (the
-ws-log suite reads step 10's logs, `MTGTABLE_WS_LOGS`) and vitest 124. Step 6
+ws-log suite reads step 10's logs, `MTGTABLE_WS_LOGS`) and vitest 124 — the fix
+pass's run the same. Step 6
 compared `fixtures/games/g1.jsonl` (`wire-drift: SAME`) and 9b
 `fixtures/games/human-auto-42.jsonl` — neither the villain file.
 
@@ -447,3 +528,60 @@ both times, the listing's sha1 `d994c439…` both times, and no entry under eith
 newer than the lane's start stamp. The jar's sha256 is still `3c0a7c38…8e5dd9`.
 **Unchanged.** Every JVM of the lane booted in `var/` (the seed search in homes of
 its own, `forge_home_make`).
+
+The fix pass fingerprinted both again before its first command and after its
+gate: 22,155 entries and sha1 `d994c439…` both times, the two listings byte for
+byte identical, no entry newer than its start stamp, the jar's sha256 still
+`3c0a7c38…8e5dd9`. **Unchanged.**
+
+## 11. The fix pass (D222, and D221 amended)
+
+After the lane's first verification, on the same branch and worktree. Each
+finding, and what was done:
+
+- **Major — the busiest frame was misnamed, and it breaks the bench's hard 120.**
+  Measured at every frame instead (§6): the worst is `@392`/`@393`, 129 calls on
+  the lane as verified, 124 on the base tree, 49 battlefield cards. The cause of
+  the misnaming: `arena-bench --index N` reads fifty frames past N. Recorded as
+  **D222**, with the numbers; D220's item 6, PLAN.md's follow-up 4 and the
+  `OVER_THE_LINE` comment corrected to them. One kind taken off that table (the
+  Legionnaire's crop, for the cowl and mask the table already draws): 128 at
+  worst, 16 frames over 120 where there were 24. `OVER_THE_LINE` now also holds
+  the file's most crowded frames to their 17 kinds, negative-controlled.
+- **Minor — five guards loosened.** `ONE_SIDED`'s cloak and tunic rows narrowed to
+  Doom (`only`); the raster still passes with every other wearer's cloak held to
+  both seats (Madame Hydra's at exactly 48 px from the far seat). The attach bound
+  (3%) and the four boxed-in frames stay, now named in follow-up 3 with the table
+  that causes both; `OVER_THE_LINE` is follow-up 4 and D222.
+- **Minor — the Troopers' note named a cowl they did not wear.** They wear it
+  now: HYDRA's hood, as the Agents'; the census's task list and the villain
+  costume list read it back.
+- **Minor — the look** (the verifier's reading of the pictures, acted on):
+  - the Unliving Legionnaire was an ordinary man in navy with a red sash; it is
+    now a corpse-pale lavender face (`mask`, `shade: 1`) under a wine-black hood,
+    violet and crimson, on magenta wings (its card's membranes are pink), every
+    colour above the comic look's black threshold;
+  - Crossbones read navy — the comic look lifts a paint under its black threshold
+    to navy (Lane LOOK) — and slim: he is in warm charcoal fatigues over the
+    threshold, at scale 1.14 (0.969 of a height, the width clamp untouched);
+  - green dominated: Madame Hydra's catsuit and cloak are charcoal, as her card
+    paints them, with her green hair; Strucker went to field grey first and came
+    back, because his card's coat is green (so are Doom's, HYDRA's and Loki's);
+  - Loki's horns, the Legionnaire's wings from eye level, Doom-shaped Doombots,
+    Crossbones' bulk: PLAN.md's villain-identity follow-ups 8–11.
+- **Minor — the duelists stand behind the wrong seats in this replay.** Noted in
+  §7, and follow-up 12.
+- **Minor — the commit's attribution line.** Left as the session's rule sets it;
+  noted in PLAN.md's *Villain identity*.
+- **Found in passing**: PLAN.md's villain-identity follow-ups carried the anchor
+  `fu-villains`, which the *More villains* lane's list already had, so every
+  *Open now* link to them opened the other list. Renamed `fu-villain-identity`,
+  and the twelve rows point at it.
+
+**The controls, re-run**: `npm --prefix web test` 1,077 / 1,071 / 0 / 6 and 124
+vitest; `traits.test.ts` 32 of 32 (the census, the raster from both seats, the
+villain costume list, the crowded-frame guard and its control at 16); the
+catalog `--check` current; the gate from a deleted `bridge/out`, twice (§9:
+250.1 s, then 251.0 s on the final tree after a last `_note` wording edit, both
+`check-all OK`); the budget sweeps and bench pairs (§6); the pictures (§7);
+`~/forge` and `~/.forge` (§10).

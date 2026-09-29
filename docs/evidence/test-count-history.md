@@ -160,4 +160,6 @@ costume-and-rest list and a `workshop` case (the Doom Legion listed second, its
 search) — with the census's task list, the raster and the kinds budget extended
 in place; vitest's two more are `story-render`'s and `render.test.tsx`'s
 per-fixture cases for the twentieth recording. Inside `check-all.sh`:
-**1,092 / 1,084 pass / 0 fail / 8 skipped**, and 124 vitest.
+**1,092 / 1,084 pass / 0 fail / 8 skipped**, and 124 vitest. Its fix pass (D222)
+extended the census, the raster's one-sided rows and the villain costume list in
+place and added no case: the same counts, standalone and inside the gate.

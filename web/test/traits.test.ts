@@ -464,12 +464,12 @@ test('traits: every Doom Legion person wears its own costume and rest — the vi
     ['Doctor Doom', 'scientist', 'akimbo', 'cowl', false],
     ['Loki, God of Mischief', 'agent', 'braced', 'long', true],
     ['Baron Strucker, HYDRA Overlord', 'agent', 'atEase', null, true],
-    ['HYDRA Troopers', 'agent', 'highReady', 'crop', true],
+    ['HYDRA Troopers', 'agent', 'highReady', 'cowl', true],
     ['Agents of HYDRA', 'agent', 'atEase', 'cowl', true],
     ['Kang the Conqueror', 'agent', 'aim', 'cowl', false],
     ['Kang, Temporal Tyrant', 'agent', 'folded', 'cowl', false],
     ['Pharaoh Rama-Tut', 'agent', 'folded', 'long', true],
-    ['Unliving Legionnaire', 'agent', 'folded', 'crop', true],
+    ['Unliving Legionnaire', 'agent', 'folded', 'cowl', false],
     ['Madame Hydra, Reanimated', 'hero', 'akimbo', 'long', true],
     ['Crossbones, Malicious Mercenary', 'agent', 'braced', 'cowl', false],
     ['Villain Token', 'agent', 'atEase', 'cowl', true],
@@ -494,17 +494,32 @@ test('traits: every Doom Legion person wears its own costume and rest — the vi
   const hydra = poseOf('Agents of HYDRA');
   assert.ok(slot(hydra, 'top').g > slot(hydra, 'top').r && slot(hydra, 'shirt').r > 180 && slot(hydra, 'shirt').b < 80, 'the HYDRA agents are not green and yellow');
   assert.ok(slot(poseOf('HYDRA Troopers'), 'gloves').r > 180, 'the troopers have no yellow gloves');
-  // Madame Hydra's green hair; Loki in green and gold; Rama-Tut in gold; Crossbones in black.
+  // Madame Hydra's green hair; Loki in green and gold; Rama-Tut in gold.
   assert.ok(slot(poseOf('Madame Hydra, Reanimated'), 'hair').g > 150, 'Madame Hydra\'s hair is not green');
   const loki = poseOf('Loki, God of Mischief');
   assert.ok(slot(loki, 'top').g > slot(loki, 'top').r + 40 && slot(loki, 'shirt').r > 180, 'Loki is not green and gold');
   assert.ok(slot(poseOf('Pharaoh Rama-Tut'), 'top').r > 180 && slot(poseOf('Pharaoh Rama-Tut'), 'top').b < 100, 'Rama-Tut is not in gold');
-  assert.ok(slot(poseOf('Crossbones, Malicious Mercenary'), 'top').l < 40, 'Crossbones is not in black');
-  // The masks take each wearer's TINT: Doom's iron, Kang's blue, Crossbones' bone white.
-  const mask = (name: string): string => poseOf(name).props.find((p) => p.kind === 'mask')!.colour;
+  // Crossbones in warm charcoal, not black: the comic look lifts a paint under its
+  // black threshold to navy (Lane LOOK), and a navy Crossbones read as S.H.I.E.L.D.
+  // (the villain fix pass). Dark, and no bluer than it is red.
+  const cross = slot(poseOf('Crossbones, Malicious Mercenary'), 'top');
+  assert.ok(cross.l < 90 && cross.r >= cross.b, 'Crossbones is not in dark, warm charcoal');
+  // The fix pass moved rows off the green half the Doom Legion wears, where the
+  // card allows it, so its table is not one colour from Pacho's side: Madame
+  // Hydra's suit is charcoal, as her card paints it (her hair stays green), and the
+  // Legionnaire is violet. Doom, HYDRA, Loki and Strucker wear green on their cards.
+  const greyish = (c: { r: number; g: number; b: number }): boolean => Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) < 20;
   const hex = (h: string) => ({ r: parseInt(h.slice(1, 3), 16), g: parseInt(h.slice(3, 5), 16), b: parseInt(h.slice(5, 7), 16) });
+  assert.ok(greyish(slot(poseOf('Madame Hydra, Reanimated'), 'top')), 'Madame Hydra\'s suit is not charcoal');
+  const vampire = slot(poseOf('Unliving Legionnaire'), 'top');
+  assert.ok(vampire.b > vampire.g + 20 && vampire.r > vampire.g && vampire.l > 45, 'the Legionnaire is not violet above the black threshold');
+  // The masks take each wearer's TINT: Doom's iron, Kang's blue, Crossbones' bone
+  // white, the Legionnaire's corpse-pale lavender.
+  const mask = (name: string): string => poseOf(name).props.find((p) => p.kind === 'mask')!.colour;
   assert.ok(hex(mask('Kang the Conqueror')).b > hex(mask('Kang the Conqueror')).r + 80, 'Kang\'s mask is not blue');
   assert.ok(hex(mask('Crossbones, Malicious Mercenary')).r > 200, 'Crossbones\' skull is not bone white');
+  const ghoul = hex(mask('Unliving Legionnaire'));
+  assert.ok(ghoul.r > 180 && ghoul.b > ghoul.g, 'the Legionnaire\'s face is not a pale lavender');
   // The drones wear nothing: they carry no slots.
   for (const name of ['Doombot', "Doom's Servo-Guards", 'A.I.M. Bot']) assert.equal(poseOf(name).costume, null, `${name} wears a costume`);
 });
@@ -741,18 +756,23 @@ const TOKEN_FACTS: Readonly<Record<string, { types: string; power: string; tough
 };
 
 /**
- * **A recording whose most crowded table is over report 13 §8.2's line before any
- * identity is drawn** (villain identity, D221), held to its OWN measured worst so
- * it cannot grow — while the 17 above keeps holding every other recording.
- * `villain-doom-248`'s last turns put 19–21 creatures on the table, both seats
- * dressed: 22 prop kinds at `@296`, where the whole scene draws 114–117 calls
- * with bloom off (SwiftShader, the GTX 1080) against the base tree's 110 at the
- * same frame with every villain a bare body — the table itself is past 90, and
- * the villains' identity adds its prop kinds on top
- * (docs/evidence/villain-identity.md §6; PLAN.md's villain-identity follow-up).
+ * **A recording whose most crowded table is over the lines before any identity is
+ * drawn** (villain identity, D221; measured again by its fix pass, D222), held to
+ * its OWN measured numbers so it cannot grow — while the 17 above keeps holding
+ * every other recording. `villain-doom-248`'s last turns put 49 cards on the two
+ * battlefields (`@388`–`@392`; the corpus's next most crowded table is
+ * `human-sideboard-7`'s 42, `g1`'s 35). A sweep of every frame with bloom off
+ * (docs/evidence/villain-identity.md §6) finds its worst at transport index
+ * `@392`/`@393`: **128 calls and 37,546 triangles** on the GTX 1080 and on
+ * SwiftShader, against the base tree's **124 and 32,959** there with every villain
+ * a bare body — over the bench's 120 calls and §8.2's 30,000 triangles before any
+ * identity, and each prop kind a villain adds is one more call there. So two
+ * numbers are held: `kinds`, the file's most prop kinds at once (22, at `@296`,
+ * where the scene draws 102 calls), and `crowded`, the most at once on its most
+ * crowded frames (the most battlefield cards) — 17, against the base tree's 13.
  */
-const OVER_THE_LINE: Readonly<Record<string, number>> = {
-  'games/villain-doom-248.jsonl': 22,
+const OVER_THE_LINE: Readonly<Record<string, { kinds: number; crowded: number }>> = {
+  'games/villain-doom-248.jsonl': { kinds: 22, crowded: 17 },
 };
 
 /** A card built from its catalog facts (or {@link TOKEN_FACTS}) — the workshop's way in. */
@@ -813,6 +833,8 @@ test('traits: the census — every deck card reads as itself, and every row fire
   let worstInstances = { n: 0, where: '' };
   /** D221: each recording held to its own measured worst ({@link OVER_THE_LINE}). */
   const worstByFile = new Map<string, number>();
+  /** D222: the most kinds at once on each file's most CROWDED frames (the most battlefield cards). */
+  const crowdByFile = new Map<string, { cards: number; kinds: number; where: number[] }>();
   for (const { file, index, state } of FRAMES) {
     const poses = figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS });
     const kinds = new Set<string>();
@@ -871,6 +893,13 @@ test('traits: the census — every deck card reads as itself, and every row fire
     }
     kindsPerFrame.push(kinds.size);
     worstByFile.set(file, Math.max(worstByFile.get(file) ?? 0, kinds.size));
+    const cards = (state.board?.players ?? []).reduce((n, p) => n + p.zones.battlefield.cards.length, 0);
+    const crowd = crowdByFile.get(file);
+    if (crowd === undefined || cards > crowd.cards) crowdByFile.set(file, { cards, kinds: kinds.size, where: [index] });
+    else if (cards === crowd.cards) {
+      crowd.kinds = Math.max(crowd.kinds, kinds.size);
+      crowd.where.push(index);
+    }
     if (OVER_THE_LINE[file] === undefined && kinds.size > worstKinds.kinds) worstKinds = { kinds: kinds.size, where: `${file}@${String(index)}` };
     if (instances > worstInstances.n) worstInstances = { n: instances, where: `${file}@${String(index)}` };
   }
@@ -925,13 +954,13 @@ test('traits: the census — every deck card reads as itself, and every row fire
     ["Doom's Servo-Guards", (r) => r.props.includes('laserEye') && r.props.includes('visor') && r.hover < 0.1, 'a sentry drone, low'],
     ['A.I.M. Bot', (r) => ['wings', 'laserEye', 'visor'].every((k) => r.props.includes(k)) && r.hover > 0.3, 'a flying drone with wings'],
     ['Agents of HYDRA', (r) => r.swarm === '2 squad' && r.props.includes('squad') && r.props.includes('hairCowl'), 'a hooded squad'],
-    ['HYDRA Troopers', (r) => r.props.includes('pistol') && r.props.includes('hairCrop'), 'a trooper with a pistol'],
+    ['HYDRA Troopers', (r) => r.props.includes('pistol') && r.props.includes('hairCowl') && r.swarm === '-', 'a hooded trooper with a pistol — one man, not a squad'],
     ['Baron Strucker, HYDRA Overlord', (r) => r.props.includes('coat') && r.props.includes('coatTails') && !/hair/.test(r.props), 'bald, in a greatcoat'],
     ['Loki, God of Mischief', (r) => ['cape', 'gauntlets', 'hairLong'].every((k) => r.props.includes(k)), 'cloak, lit hands, long hair'],
     ['Kang the Conqueror', (r) => ['mask', 'gauntlets', 'hairCowl'].every((k) => r.props.includes(k)) && r.hover > 0, 'masked, blasters lit, flying'],
     ['Kang, Temporal Tyrant', (r) => ['mask', 'cape', 'hairCowl'].every((k) => r.props.includes(k)), 'masked and cloaked'],
     ['Pharaoh Rama-Tut', (r) => r.props.includes('cape') && r.props.includes('hairLong'), 'headdress and cloak'],
-    ['Unliving Legionnaire', (r) => r.props.includes('wings') && r.hover > 0.2, 'winged, flying'],
+    ['Unliving Legionnaire', (r) => ['wings', 'mask', 'hairCowl'].every((k) => r.props.includes(k)) && r.hover > 0.2, 'a hooded, pale-faced thing on wings, flying'],
     ['Madame Hydra, Reanimated', (r) => r.props.includes('cape') && r.props.includes('hairLong'), 'long hair and cloak'],
     ['Crossbones, Malicious Mercenary', (r) => r.props.includes('mask') && r.props.includes('hairCowl'), 'a skull mask on a balaclava'],
     ['Villain Token', (r) => r.props.includes('hairCowl'), 'a hooded henchman'],
@@ -959,10 +988,15 @@ test('traits: the census — every deck card reads as itself, and every row fire
   // table beside a resting one (human-auto-2026.jsonl@776 is the worst frame);
   // docs/evidence/bodies.md §8 has the calls it costs at the budget frames.
   assert.ok(worstKinds.kinds <= 17, `${String(worstKinds.kinds)} prop kinds in one frame (${worstKinds.where})`);
-  for (const [file, most] of Object.entries(OVER_THE_LINE)) {
+  for (const [file, held] of Object.entries(OVER_THE_LINE)) {
     const got = worstByFile.get(file) ?? 0;
-    console.log(`  ${file}: at most ${String(got)} prop kinds at once (held to ${String(most)}, D221)`);
-    assert.ok(got > 0 && got <= most, `${file}: ${String(got)} prop kinds in one frame, over its measured ${String(most)}`);
+    const crowd = crowdByFile.get(file) ?? { cards: 0, kinds: 0, where: [] };
+    console.log(
+      `  ${file}: at most ${String(got)} prop kinds at once (held to ${String(held.kinds)}, D221); ` +
+        `${String(crowd.kinds)} on its most crowded frames, ${String(crowd.cards)} battlefield cards at @${String(crowd.where[0])}–@${String(crowd.where[crowd.where.length - 1])} (held to ${String(held.crowded)}, D222)`,
+    );
+    assert.ok(got > 0 && got <= held.kinds, `${file}: ${String(got)} prop kinds in one frame, over its measured ${String(held.kinds)}`);
+    assert.ok(crowd.kinds > 0 && crowd.kinds <= held.crowded, `${file}: ${String(crowd.kinds)} prop kinds on its most crowded frames, over its measured ${String(held.crowded)} — each is a draw call on a table already over the lines (D222)`);
   }
   assert.ok(worstInstances.n <= 96, `${String(worstInstances.n)} prop instances in one frame`);
 });
@@ -1239,7 +1273,13 @@ const SHORTFALL: Readonly<Record<string, { seat: 'you' | 'opp'; floor: number; w
  * (kneeling included), and its partner must carry the card at the full bar on
  * every seat where it does not.
  */
-const ONE_SIDED: Readonly<Record<string, { partner: string | readonly string[]; why: string }>> = {
+/**
+ * `only` narrows a row to the cards that need it (the villain fix pass): a kind
+ * that is one-sided on ONE wearer — Doom's cloak behind his body, his tunic under
+ * his cloak — stays held to both seats on every other wearer, so a new row that
+ * hides its cloak needs a reason of its own.
+ */
+const ONE_SIDED: Readonly<Record<string, { partner: string | readonly string[]; why: string; only?: readonly string[] }>> = {
   tie: { partner: 'badge', why: 'a shirt-front is on the chest — the badge has a back emblem' },
   laserEye: { partner: 'visor', why: 'an eye is on the face — the visor band is its glow round the head' },
   exhaust: { partner: 'visor', why: 'a flame burns under the thrusters, behind — the visor reads in front' },
@@ -1285,9 +1325,10 @@ const ONE_SIDED: Readonly<Record<string, { partner: string | readonly string[]; 
   // …and Doom wears a cloak over a tunic: from the front the cloak is behind him
   // (13 px) and from behind the tunic is under it (31) — so each is a detail of
   // HIS, carried by the other side's: the hood from the front, the cloak from
-  // behind. Every other wearer's cloak and coat read from both seats (D221).
-  cape: { partner: 'hairCowl', why: "a cloak hangs down the back — from the front Doom's hood carries him (D221)" },
-  coatTails: { partner: 'cape', why: "Doom's tunic is under his cloak from behind — the cloak carries him there (D221)" },
+  // behind. Every other wearer's cloak and coat read from both seats (D221), and
+  // `only` holds them to it (the fix pass: the rows first exempted every wearer).
+  cape: { partner: 'hairCowl', why: "a cloak hangs down the back — from the front Doom's hood carries him (D221)", only: ['Doctor Doom'] },
+  coatTails: { partner: 'cape', why: "Doom's tunic is under his cloak from behind — the cloak carries him there (D221)", only: ['Doctor Doom'] },
 };
 
 /**
@@ -1418,7 +1459,8 @@ test('traits: every deck card’s identity props reach the screen from the table
         `  ${name.padEnd(30)} ${kind.padEnd(9)} you ${String(row.you).padStart(5)} px   opp ${String(row.opp).padStart(5)} px` +
           `   (before the ink ${String(raw?.you ?? 0)} / ${String(raw?.opp ?? 0)}; on a halftone dot ${String(dot?.you ?? 0)} / ${String(dot?.opp ?? 0)})`,
       );
-      const oneSided = ONE_SIDED[kind];
+      const exempt = ONE_SIDED[kind];
+      const oneSided = exempt !== undefined && (exempt.only === undefined || exempt.only.includes(name)) ? exempt : undefined;
       if (oneSided !== undefined && Math.max(row.you, row.opp) < IDENTITY_MIN_PX / 2) {
         failures.push(`${name}'s ${kind} does not show on its own side either (${String(Math.max(row.you, row.opp))} px)`);
       }
@@ -1450,7 +1492,7 @@ test('traits: every deck card’s identity props reach the screen from the table
   console.log(
     `traits: identity props' PAINT on screen in the comic look (visible, not under the ink), table view 1600 × 1000, ` +
       `the fewest pixels over standing/kneeling and centre/edge ` +
-      `(≥ ${String(IDENTITY_MIN_PX)} on both seats; one-sided: ${Object.keys(ONE_SIDED).join(', ')})\n${lines.join('\n')}\n` +
+      `(≥ ${String(IDENTITY_MIN_PX)} on both seats; one-sided: ${Object.entries(ONE_SIDED).map(([k, v]) => (v.only === undefined ? k : `${k} (${v.only.join(', ')})`)).join(', ')})\n${lines.join('\n')}\n` +
       `  over every measurement: ${String(pixelsTotal)} px visible, ${String(inkedTotal)} under the ink, ${String(dottedTotal)} on a halftone dot\n` +
       `  known shortfalls: ${Object.entries(SHORTFALL).map(([k, v]) => `${k} on the ${v.seat} seat (floor ${String(v.floor)}: ${v.why})`).join('; ')}\n` +
       `  Coulson's chest badge alone, seen from behind (the ${BEHIND_SEAT} seat): ${String(chestOnlyFromBehind)} px`,

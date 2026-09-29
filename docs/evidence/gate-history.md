@@ -227,3 +227,7 @@ jobs, `node --test` inside them 1,092 / 1,084 pass / 0 fail / 8 skipped and 124
 vitest (`var/check-all-villains-p1.log`, `var/check-all-villains-p2.log`). The
 lane added no step; the corpus's twentieth recording is read by the steps that
 glob `fixtures/games/` (11, 12b, 12d and the web suite).
+
+Its fix pass (D222), the same way at `WSPORT` 9120: **250.1 s** and, on the final
+tree, **251.0 s**, exit 0 both, 48 jobs, the same test counts
+(`var/check-all-villains-fix1-run1.log`, `var/check-all-villains-fix1.log`).

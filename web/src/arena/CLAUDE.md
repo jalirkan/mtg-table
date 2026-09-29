@@ -1049,12 +1049,13 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.
 
-## Villain identity — the conventions D220–D221 added
+## Villain identity — the conventions D220–D222 added
 
 Three, and the thesis is D75's: **a villain reads as itself through data on the
 shared kit.** The Doom Legion — the deck a bare `./scripts/play.sh` seats against
 you — has a committed recording (`fixtures/games/villain-doom-248.jsonl`, D220)
-and an identity for every creature it names (D221).
+and an identity for every creature it names (D221); its crowded last turns are
+over the bench's lines before any identity is drawn (D222).
 `docs/evidence/villain-identity.md` is what was measured, and its §3 has every
 corpus count quoted in this file that moved when the corpus went from 19
 recordings to 20; PLAN.md's *Villain identity* has the status and the follow-ups.
@@ -1070,14 +1071,21 @@ recordings to 20; PLAN.md's *Villain identity* has the status and the follow-ups
    (`hairCowl`, the hair slot, a hood with a mantle to the shoulders) are shared
    kinds. The mask tucks under the cowl's brow, and the raster's `ONE_SIDED`
    names the cowl as its partner, so a masked row wears one. A row that wants its
-   cloth and its face in two colours puts the face on the tint.
+   cloth and its face in two colours puts the face on the tint. The raster's
+   cloak and tunic rows are Doom's alone (`only`): every other wearer's cloak and
+   coat must read from both seats.
 3. **A row the corpus cannot reach is named, never kept in silence.**
    `traits.test.ts`'s `OFF_THE_TABLE` lists the Doom Legion rows no recording
    puts on the table, each with why, reads their identity off a pose built from
    the workshop catalog's facts, and fails the day a recording reaches one. Its
-   `OVER_THE_LINE` holds a recording whose crowded table is over report 13 §8.2's
-   line before any identity to its own measured prop kinds, while every other
-   recording keeps the 17.
+   `OVER_THE_LINE` holds a recording whose crowded table is over the lines before
+   any identity (D222: `villain-doom-248`'s 49 battlefield cards, 124 calls on the
+   base tree at its worst frame) to its own measured prop kinds — at once, and on
+   its most crowded frames — while every other recording keeps the 17. Each kind
+   a villain row adds is a draw call on that table, so a new row reuses a kind the
+   table already draws where the look allows. Find a recording's worst frame by
+   sweeping every frame: `tools/arena-bench.mjs` reads its counters at the end of
+   a five-second sample at 4×, fifty frames past its `--index`.
 
 Three arena fixes came with the recording (D220), each a defect it was the first
 to show: the queue's rule 6 plays a land's two arrival events — its `zone` event

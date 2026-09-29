@@ -367,8 +367,8 @@
         "pistol"
       ],
       "rest": "highReady",
-      "hair": "crop",
-      "_note": "Villain identity (D221). A HYDRA trooper at the high ready — a gunmetal pistol up beside his green cowl (the kit's `pistol`, Agent 13's, in the accent) — in HYDRA green with yellow gloves and belt. His attack opens fire (figures.json's pistolDraw alias, cues.json's muzzle flash).",
+      "hair": "cowl",
+      "_note": "Villain identity (D221). A HYDRA trooper at the high ready — a gunmetal pistol up beside his green cowl (the kit's `pistol`, Agent 13's, in the accent; the `cowl` in the costume's hair slot, HYDRA's hood, with his face in its opening) — in HYDRA green with yellow gloves and belt. His attack opens fire (figures.json's pistolDraw alias, cues.json's muzzle flash). One trooper alone where the Agents are a squad of three.",
       "costume": {
         "hair": "#2f5e36",
         "top": "#2f5e36",
@@ -489,45 +489,48 @@
     "Unliving Legionnaire": {
       "hover": 0.3,
       "idle": "hover",
-      "tint": "#a592d6",
-      "accent": "#6a3a8a",
+      "tint": "#c9bde8",
+      "shade": 1,
+      "accent": "#a8467c",
       "props": [
+        "mask",
         "wings"
       ],
       "rest": "folded",
-      "hair": "crop",
-      "_note": "Villain identity (D221). A vampire of the Legion of the Unliving, as its card paints it — a winged thing of the night: spectral violet, flying on dark violet wings (the kit's `wings`, Wasp's, in its accent), black and crimson under them, arms folded across the chest the way a vampire rests.",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221; the fix pass). A vampire of the Legion of the Unliving, as its card paints it — a thing of the night, not a man: a corpse-pale lavender face (the kit's `mask`, in its tint; `shade: 1` keeps it pale against the villain rung's 78%) under a wine-black hood (the `cowl`, in the costume's hair slot), flying on magenta wings (the kit's `wings`, Wasp's, in its accent — the membranes on its card are pink), violet and crimson under them (above the comic look's black threshold, so it does not read as S.H.I.E.L.D. navy), arms folded across the chest the way a vampire rests. Every kind it wears is one the Doom Legion's table already draws (the fix pass took a hairstyle off the crowded table).",
       "costume": {
-        "hair": "#1a1418",
-        "top": "#2a2430",
-        "shirt": "#6e1f2a",
-        "legs": "#1e1a22",
-        "shoes": "#111013",
-        "gloves": "#2a2430",
-        "belt": "#6e1f2a"
+        "hair": "#3a1a2c",
+        "top": "#4b3a5e",
+        "shirt": "#8a2433",
+        "legs": "#3d3350",
+        "shoes": "#2a2233",
+        "gloves": "#4b3a5e",
+        "belt": "#8a2433"
       }
     },
     "Madame Hydra, Reanimated": {
       "tint": "#3cb45a",
-      "accent": "#1d5c2c",
+      "accent": "#34313a",
       "props": [
         "cape"
       ],
       "rest": "akimbo",
       "hair": "long",
-      "_note": "Villain identity (D221). Madame Hydra: her long GREEN hair — the part of her a comic reader knows first — a dark-green catsuit with HYDRA's yellow belt, a dark-green cloak, hands on her hips. The woman's body (figures.json).",
+      "_note": "Villain identity (D221; the fix pass). Madame Hydra: her long GREEN hair — the part of her a comic reader knows first — a charcoal catsuit with HYDRA's yellow belt and a charcoal cloak, as her card paints her (the fix pass took her suit off the green half the Doom Legion wears; her green is her hair), hands on her hips. The woman's body (figures.json).",
       "costume": {
         "hair": "#3cbf55",
-        "top": "#1d4d2a",
-        "shirt": "#1d4d2a",
-        "legs": "#16391f",
-        "shoes": "#0f1a12",
-        "gloves": "#16391f",
+        "top": "#3c3a40",
+        "shirt": "#3c3a40",
+        "legs": "#35333a",
+        "shoes": "#1f1d22",
+        "gloves": "#35333a",
         "belt": "#d9b52a"
       }
     },
     "Crossbones, Malicious Mercenary": {
-      "scale": 1.08,
+      "scale": 1.14,
       "tint": "#ece6d6",
       "shade": 1,
       "props": [
@@ -536,15 +539,15 @@
       "rest": "braced",
       "hair": "cowl",
       "face": "none",
-      "_note": "Villain identity (D221). Brock Rumlow: the white skull (the kit's faceplate, in his bone-white tint) on a black balaclava (the `cowl` in black), black fatigues, a big man in a brawler's guard.",
+      "_note": "Villain identity (D221; the fix pass). Brock Rumlow: the white skull (the kit's faceplate, in his bone-white tint) on a balaclava (the `cowl`), a bone-white chest, warm charcoal tactical fatigues and brown webbing — charcoal, not black, because the comic look lifts a black paint to navy (Lane LOOK's rule) and a navy Crossbones read as a S.H.I.E.L.D. agent — the biggest man on the villains' side, in a brawler's guard.",
       "costume": {
-        "hair": "#141416",
-        "top": "#1c1c1f",
+        "hair": "#423b35",
+        "top": "#4a423a",
         "shirt": "#d8d2c2",
-        "legs": "#26262a",
-        "shoes": "#111113",
-        "gloves": "#111113",
-        "belt": "#5a4a3a"
+        "legs": "#3f3a34",
+        "shoes": "#2e2a26",
+        "gloves": "#2e2a26",
+        "belt": "#6a4a2a"
       }
     },
     "Villain Token": {

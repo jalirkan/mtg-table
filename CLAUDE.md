@@ -27,7 +27,7 @@ changing, and the others when a change crosses into them.
 |---|---|
 | [`bridge/CLAUDE.md`](bridge/CLAUDE.md) | The Java bridge: `Snap.java`'s three conventions, the socket's rules, the end of a game, `/health`, the console seat's vocabulary, the build's five self-tests, and reading Forge's source as prose. |
 | [`web/CLAUDE.md`](web/CLAUDE.md) | The TypeScript client: the test suites, the board's conventions (M4, M5 and M6 — M6's also bind the bridge's acts, its reset hook and `ActGuard`), the workshop and the story page. |
-| [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), Lanes LOOK, MOTION and BODIES, the status layer (D210–D212), the personal tier's loader (D194–D198), and villain identity (D220–D221). |
+| [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), Lanes LOOK, MOTION and BODIES, the status layer (D210–D212), the personal tier's loader (D194–D198), and villain identity (D220–D222). |
 | [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, the card library with the `#cards` browser, and the personal tier's pipeline (`tools/personal/`, D190–D198). |
 | [`tools/README.md`](tools/README.md) | Every script under `tools/` — what it is for, whether the gate runs it, whether it needs the engine — and *Commands, by task*: every command *Build and run* below does not keep. |
 
@@ -552,7 +552,7 @@ are history from before this rule, and stay.
 | `docs/guides/personal-tier.md` | **The personal tier's manual** (D190–D198): the never-publish rule, the folder, the slug, the manifest, the three commands, `bones.json`, the Sketchfab click-through, and the loader — how a model reaches the arena and the workshop from the dev server; `docs/evidence/personal-tier.md` is Doctor Doom and the seven others run through it. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
-| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are villain identity's D220–D221, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D198 (a lane keeps the numbers it reserved, D200). |
+| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D198 (a lane keeps the numbers it reserved, D200). |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

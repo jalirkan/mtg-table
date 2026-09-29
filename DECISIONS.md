@@ -9327,12 +9327,14 @@ Legion, and no committed recording played it)
      whole centre column — the figure is *boxed in*, and `figure-pose.test.ts`
      tells that apart from standing on a card, prints it and holds it to its four
      frames; the layout fix is a follow-up.
-6. **The crowded table's budget is its own.** At its busiest frames the file draws
-   114–117 calls with bloom off, against the base tree's 110–112 there with every
-   villain a bare body: report 13 §8.2's 90 is crossed by that table before any
-   identity. `g1`'s bench frames are unchanged (89/88 at @355). `traits.test.ts`
-   holds every other recording to 17 prop kinds at once and this one to its
-   measured 22.
+6. **The crowded table's budget is its own** — **D222**. *(Corrected by the
+   lane's fix pass, 2026-09-29: this item first named `@296`/`@304` as the busiest
+   frames, at 114–117 calls against the base tree's 110–112. A sweep of every
+   frame found the worst at `@392`/`@393`, 128–129 calls against the base tree's
+   124 — over `tools/arena-bench.mjs`'s 120 as well as §8.2's 90 — and D222 is
+   that measurement and what was done about it.)* `g1`'s bench frames are
+   unchanged (89/88 at @355). `traits.test.ts` holds every other recording to 17
+   prop kinds at once and this one to its own measured numbers.
 
 **Rationale.** The arena's per-card data is judged against the corpus — a row is
 real when a recording puts its card on the table — and the villains had no
@@ -9408,11 +9410,119 @@ Doom's iron face and green hood cost no new colour key. A villain rung in the bo
 ladder is the general answer (every Masters of Evil card is a Human Villain too);
 the rows are the particular one.
 
-**Rejected.** A `horns` kind for Loki and a pharaoh's headdress for Rama-Tut (each
-one card's; `hairLong` in gold is the headdress). The existing `hood` for Doom (a
-bucket helm over the whole face; the villain duelist wears it, and there it is
-baked, not a prop kind on the table). Doombots as humanoids in Doom's mask (the
-drone is the robot rung's body, and a token that looked like Doom would read as a
-second Doom). Leaving rows out for the three the corpus cannot reach (the brief is
-every creature). Reusing `crop` as Doom's hood (a skullcap: the neck showed under
-the cloak, and it read as hair).
+**Amended by the fix pass (2026-09-29)**, after the verifier's reading of the
+pictures and of the budget:
+
+- **The Unliving Legionnaire wears the `mask` and the `cowl`** — a corpse-pale
+  lavender face under a wine-black hood, on magenta wings, violet and crimson
+  under them — where it had been a man with a crop in navy and a red sash: its
+  card is a monster. Both kinds are ones the villains' table already draws for
+  Doom, so the crowded table lost a kind (the crop) rather than gaining one
+  (**D222**).
+- **HYDRA Troopers wear the `cowl`** their note already described (a crop
+  first), HYDRA's hood like the Agents'; the Troopers are one man, the Agents a
+  squad.
+- **Crossbones is in warm charcoal, at scale 1.14**: the comic look lifts a
+  paint under its black threshold to navy (Lane LOOK, "black is blue"), and a
+  navy Crossbones read as a S.H.I.E.L.D. agent; charcoal is over the threshold.
+  **Madame Hydra's catsuit and cloak are charcoal**, as her card paints them —
+  her hair is her green. The rest of the green (Doom, HYDRA, Loki, Strucker) is
+  on their cards and stays; a first cut put Strucker in field grey, against his
+  card's green coat, and was taken back.
+- **The raster's one-sided cloak and tunic are Doom's alone** (`ONE_SIDED`'s
+  `only`): the first rows exempted every wearer, so a future cowl-and-cloak row
+  could have hidden its cloak with no reason of its own.
+- The mask is now worn by five cards, the cowl by eight.
+
+**Rejected.** A `horns` kind for Loki and a pharaoh's headdress for Rama-Tut
+(each one card's; `hairLong` in gold is the headdress — the verifier asked for
+Loki's horns again, and it is PLAN.md's villain-identity follow-up 8: a new kind
+is a new draw call on the table D222 measures, and one card's until a second
+wears it). The existing `hood` for Doom (a bucket helm over the whole face; the
+villain duelist wears it, and there it is baked, not a prop kind on the table).
+Doombots as humanoids in Doom's mask (the drone is the robot rung's body, and a
+token that looked like Doom would read as a second Doom; the verifier read the
+drones as machines, not Doom-shaped, and it stays PLAN.md's follow-up 10).
+Leaving rows out for the three the corpus cannot reach (the brief is every
+creature). Reusing `crop` as Doom's hood (a skullcap: the neck showed under the
+cloak, and it read as hair).
+
+---
+
+## D222 — The villain recording's crowded table is over the bench's lines before any identity: measured at every frame, recorded with its numbers, and identity held to the fewest kinds its looks allow
+
+*Branch `villain-identity`; the lane's reserved range D220–D224. Written by the
+lane's fix pass.*
+
+**2026-09-29** (the verifier: the lane's evidence named `villain-doom-248`@296
+and @304 as its busiest frames, but the bench at `--index 388` — the frame of the
+lane's own table picture — drew 128 calls and 37,264 triangles on the GTX 1080,
+over `tools/arena-bench.mjs`'s hard 120 and report 13 §8.2's 30,000)
+
+**Decision.**
+
+1. **A recording's budget is measured at every frame, not at a guessed one.**
+   The worst frame is found by a sweep of every transport index with bloom off:
+   *static* (a descending scrub — every step back is a flush and snap, so each
+   reading is that frame's pose with no cue running) and *played* (4× from the
+   start, the worst reading per index, transients included). The bench is then
+   run where the sweep says. **`arena-bench --index N` reads its counters at the
+   END of its sample** — five seconds at 4× is fifty frames past N — so
+   `--index 388` reads this recording's last frame, and `--index 296` reads about
+   `@346`; the lane's `@296`/`@304` numbers were of those later frames, not of
+   the frames they were named for.
+2. **The numbers** (`docs/evidence/villain-identity.md` §6), bloom off, the base
+   tree being `9dfdce4`'s web with this recording added:
+
+   | | worst calls | worst triangles | frames over 120 calls |
+   |---|---|---|---|
+   | base tree, static sweep (GTX 1080 and SwiftShader) | 124 (`@392`, `@393`) | 33,149 (`@387`) | 10 |
+   | the lane as verified (`1803dba`), static (GTX 1080) | 129 (`@392`, `@393`) | 37,288 | 24 |
+   | this fix pass, static (GTX 1080 and SwiftShader) | 128 (`@392`, `@393`) | 37,546 | 16 |
+   | this fix pass, played at 4× (GTX 1080) | 130 (`@396`, `@397`) | 37,548 | 27 |
+   | base tree, played at 4× (GTX 1080) | 126 (`@396`, `@397`) | 33,151 | 12 |
+
+   The bench itself, in interleaved pairs: `--index 388` 123 calls / 32,943
+   triangles on the base tree against 127 / 37,522 (GTX 1080, twice) and 128 /
+   37,524 (SwiftShader). `g1`'s frames are unchanged on both trees: 88 (GTX 1080)
+   and 89 (SwiftShader) at `@355`, 91 on SwiftShader at `@316`.
+3. **The breach is the table's, and it is accepted for this recording.** Its last
+   turns put **49 cards on the two battlefields** (`@388`–`@392`) — the corpus's
+   most crowded table; the next is `human-sideboard-7`'s 42, and `g1`'s is 35.
+   With every villain a bare body it already draws 124 calls and 32,959 triangles
+   at its worst frame: the bench's 120 and §8.2's 30,000 are crossed before any
+   identity, by the cards, the twelve figures and the discs.
+4. **Identity keeps to the fewest kinds its looks allow**, because every prop
+   kind is one call on that table. The fix pass took one off: the Unliving
+   Legionnaire wears the mask and the cowl the table already draws for Doom
+   instead of a crop of its own (−1 call; +258 triangles, the cowl being heavier
+   than the crop). What remains at the worst frame is +4 over the base tree — the
+   cloak, the coat, the coat's skirt, the gauntlets, the wings, the long hair, the
+   mask, the cowl and the HYDRA squad, in place of Peggy Carter's hat, shield,
+   sidearm and waves and the parted hair (the dressed villains now take the
+   twelve model slots, where the base tree gave four of them to Peggy, a second
+   Doombot and the two Robot tokens) — and each of those carries a card on that
+   table.
+5. **Held by a test**: `traits.test.ts`'s `OVER_THE_LINE` holds the file to 22
+   prop kinds at once (`@296`) and to **17 on its most crowded frames** (the most
+   battlefield cards; the base tree has 13 there). The second number is the one
+   the calls follow; negative-controlled, 16 fails it.
+
+**Rationale.** The bench's 120 and §8.2's line were drawn for a table of the
+size the corpus had: 35 battlefield cards at `g1`'s busiest. A recording whose
+table is half as big again crosses both with no identity at all, so the only
+honest measure of identity there is its increment over the base tree, and the
+only honest place for the number is where the sweep finds it. Keeping identity's
+kinds to what the look needs is the brief's rule ("prefer reusing existing
+kinds"), and one kind was reusable with the look improved by it.
+
+**Rejected.** Dropping the mask where the cowl carries the card (Doom's is his
+face, and it is on the table whenever Kang's or Crossbones' is — no call saved);
+dropping the squad (the Agents' identity; one call and about 2,800 triangles); the
+existing `hood` for the cowl (A.I.M.'s bucket helm; not on this table, so a swap
+of one kind for another); a coarser cowl (about 130 triangles an instance, a
+faceted hood at the workshop's 1×, on a table over 30,000 before it); raising the
+bench's 120 or §8.2's line for one recording; a crowded-table budget in the arena
+now — props shed past a figure count, as `MAX_FIGURES` sheds models (PLAN.md's
+villain-identity follow-up 4: an arena change, measured against every view);
+taking the recording out of the corpus (it is the deck a bare `play.sh` plays).

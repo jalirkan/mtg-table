@@ -2060,7 +2060,7 @@ rehearsal shows the icons on any creature — with a sample of keywords, which i
 fiction line says is the workshop's — so their size and placement can be judged
 on the pedestal. What was measured is `docs/evidence/status-layer.md`.
 
-#### Villain identity — the Doom Legion reads as itself (D220–D221)
+#### Villain identity — the Doom Legion reads as itself (D220–D222)
 
 The deck a bare `./scripts/play.sh` seats against you — `decks/doom-legion.dck`,
 Doctor Doom, HYDRA, three Kangs and Loki — has a committed recording of its own
@@ -2073,17 +2073,17 @@ was a glow disc.
 | Doctor Doom | an iron mask under a green hood, a green cloak and tunic over iron armour, a gold belt, hands on his hips; he arrives with a green beam to each place a Doombot appears |
 | Doombot (his token) | a steel drone with a green eye, close to the table; its eye fires at whoever it attacks |
 | Doom's Servo-Guards · A.I.M. Bot · Aerial Doombot | a dark sentry drone with a red eye · a flying yellow drone with wings · (unchanged) Doom green with thrusters |
-| Agents of HYDRA · HYDRA Troopers | a hooded squad of three in HYDRA green and yellow · a green trooper, pistol up beside his head, who opens fire |
+| Agents of HYDRA · HYDRA Troopers | a hooded squad of three in HYDRA green and yellow · one hooded green trooper, pistol up beside his head, who opens fire |
 | Baron Strucker, HYDRA Overlord | bald, in a black uniform under a long HYDRA-green greatcoat, at ease |
 | Loki, God of Mischief | green and gold, a green cloak, long black hair, sorcery lit in both hands |
 | Kang the Conqueror · Kang, Temporal Tyrant | a blue mask under a purple helm: hovering, wrist blasters lit and firing · standing, cloaked in purple, arms folded |
 | Pharaoh Rama-Tut | a gold headdress, a gold collar over white linen, a royal-blue cloak, arms crossed |
-| Unliving Legionnaire | a spectral vampire on violet wings, arms folded |
-| Madame Hydra, Reanimated | her long green hair, a dark-green catsuit and cloak |
-| Crossbones, Malicious Mercenary | a white skull mask on a black balaclava, in a brawler's guard; his trigger rings from his feet |
+| Unliving Legionnaire | a thing of the night: a corpse-pale face under a wine-black hood, violet and crimson, hovering on magenta wings, arms folded |
+| Madame Hydra, Reanimated | her long green hair, a charcoal catsuit and cloak, as her card paints her |
+| Crossbones, Malicious Mercenary | a white skull mask on a balaclava, the biggest man on the villains' side, in warm charcoal fatigues and a brawler's guard; his trigger rings from his feet |
 | Villain Token | a hooded henchman in black |
 
-Two pieces joined the shared kit for it, each worn by four cards or more: the
+Two pieces joined the shared kit for it, each worn by five cards or more: the
 **`mask`**, a faceplate in the figure's tint, and the **`cowl`**, a hairstyle
 that is a hood to the shoulders. Everything else is the kit the S.H.I.E.L.D.
 deck already wears — a villain's cloak is Doom's and Loki's, Strucker's greatcoat
@@ -2097,7 +2097,9 @@ villains' own game in the arena at its last turn, thirteen villains on the table
 itself is `node tools/narrate.mjs fixtures/games/villain-doom-248.jsonl`: Doom's
 Plan pays off the turn he arrives with his Doombots, and the villains win on turn
 24. What was measured — the census that chose the seed, every corpus count that
-moved, and three defects the new recording found and this change fixed — is
+moved, three defects the new recording found and this change fixed, and the
+crowded table's draw calls (its last turns put 49 cards on the table, over the
+bench's lines before any villain is dressed — D222) — is
 `docs/evidence/villain-identity.md`.
 
 ### Card library and browser — `#cards`

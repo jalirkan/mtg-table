@@ -14,14 +14,15 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The 31 follow-up lists hold 380 items, and 284 of them are open** — 260 open,
-18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 96
-closed (M1's six among them; the personal tier's list was added, with its 18 and
-19 closed, when that lane merged; its phase 2 closed ten and opened seven, and
-its fix pass 1 recounted it and opened three; the status layer's list of twelve
-was added when that lane merged; villain identity's list of seven was added, and
-it closed the status layer's 2). **Of the 30 questions only the owner can settle,
-5 are answered** and 25 stand on the default this plan assumes.
+**The 31 follow-up lists hold 385 items, and 289 of them are open** — 265 open,
+18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 96 closed
+(M1's six among them; the personal tier's list was added, with its 18 and 19
+closed, when that lane merged; its phase 2 closed ten and opened seven, and its
+fix pass 1 recounted it and opened three; the status layer's list of twelve was
+added when that lane merged; villain identity's list of seven was added, and it
+closed the status layer's 2; its fix pass added five). **Of the 30 questions
+only the owner can settle, 5 are answered** and 25 stand on the default this
+plan assumes.
 
 ### Open follow-ups
 
@@ -304,13 +305,18 @@ it closed the status layer's 2). **Of the 30 questions only the owner can settle
 | [Status layer](#fu-status) | 10 | open | `UNDEFINED` keywords are omitted | `bridge/src/mtgtable/Snap.java` |
 | [Status layer](#fu-status) | 11 | open | Strip and stack thumbnails, and the zoom, show no keyword row | `web/src/render/CardTile.tsx` |
 | [Status layer](#fu-status) | 12 | open | UNTAP and CLEANUP are not cells of the turn-order bar | `web/src/arena/DecisionLayer.tsx` |
-| [Villain identity](#fu-villains) | 1 | open | The other three AI decks' 67 names have no recording and no identity rows | `decks/masters-of-evil.dck` |
-| [Villain identity](#fu-villains) | 2 | open | Three Doom Legion rows no recording puts on the table (`OFF_THE_TABLE`) | `web/test/traits.test.ts` |
-| [Villain identity](#fu-villains) | 3 | open | A back-row figure can be boxed in: the land rank does not step back behind a wrapped rank | `web/src/arena/layout.ts` |
-| [Villain identity](#fu-villains) | 4 | open | A crowded table is over §8.2's 90 calls before any identity (110–117 at `villain-doom-248`@296) | `tools/arena-bench.mjs` |
-| [Villain identity](#fu-villains) | 5 | open | A cloak's trim in the prop field is its accent ×30 — a cyan-white band on a green cloak | `web/src/arena/scene/props.ts` |
-| [Villain identity](#fu-villains) | 6 | open | Hidden Lair is the Doom Legion's one name never face up | `web/src/workshop/catalog.json` |
-| [Villain identity](#fu-villains) | 7 | open | The E5 cue census counts an `attackers` event once, by its subject | `web/test/replay-cues.test.ts` |
+| [Villain identity](#fu-villain-identity) | 1 | open | The other three AI decks' 67 names have no recording and no identity rows | `decks/masters-of-evil.dck` |
+| [Villain identity](#fu-villain-identity) | 2 | open | Three Doom Legion rows no recording puts on the table (`OFF_THE_TABLE`) | `web/test/traits.test.ts` |
+| [Villain identity](#fu-villain-identity) | 3 | open | A back-row figure can be boxed in: the land rank does not step back behind a wrapped rank | `web/src/arena/layout.ts` |
+| [Villain identity](#fu-villain-identity) | 4 | open | A crowded table is over the bench's 120 calls and §8.2's 30,000 triangles before any identity (124 at `villain-doom-248`@392 on the base tree, 128 dressed — D222) | `tools/arena-bench.mjs` |
+| [Villain identity](#fu-villain-identity) | 5 | open | A cloak's trim in the prop field is its accent ×30 — a cyan-white band on a green cloak | `web/src/arena/scene/props.ts` |
+| [Villain identity](#fu-villain-identity) | 6 | open | Hidden Lair is the Doom Legion's one name never face up | `web/src/workshop/catalog.json` |
+| [Villain identity](#fu-villain-identity) | 7 | open | The E5 cue census counts an `attackers` event once, by its subject | `web/test/replay-cues.test.ts` |
+| [Villain identity](#fu-villain-identity) | 8 | open | Loki has no horned helm (a new kind is a new call on D222's table) | `web/src/arena/figures/props.ts` |
+| [Villain identity](#fu-villain-identity) | 9 | open | The Legionnaire's wings are behind it from eye level (the workshop's inspect view) | `web/src/arena/figures/props.ts` |
+| [Villain identity](#fu-villain-identity) | 10 | open | The Doombots and Servo-Guards read as machines, not as robots in Doom's shape | `web/src/arena/figures/figures.json` |
+| [Villain identity](#fu-villain-identity) | 11 | open | Crossbones is the biggest villain by height alone; the body has no bulk variant | `tools/assets-manifest.json` |
+| [Villain identity](#fu-villain-identity) | 12 | open | Duelists are per seat: a villain-seat replay stands the S.H.I.E.L.D. director behind the villains | `web/src/arena/figures/duelists.json` |
 
 ### Questions only the owner can settle
 
@@ -374,7 +380,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The docs block: `CLAUDE.md` split by directory, and the owner's two policies *(off the plan; the structure review of 2026-09-28)* | ½ day | **built, gated and documented** on branch `docs-block` (2026-09-28), off `main`'s `102fb1f` — the history out of `CLAUDE.md` into two evidence files; **D200** (decision numbers are final), **D201** (Claude commits on branches and merges on a green gate; pushes, releases and anything public are the user's), **D202** (CI's pinned engine fetch); rule 10 pointing at the lint; a root `CLAUDE.md` of about 5,600 words and four nested files, held by `web/test/claude-md.test.ts`; *Open now*; the Java guide's map of `WireGuiGame.java`; gate green at `GATE_JOBS=4`, 259.2 s; *The docs block*, just above *Deferred* |
 | — | The personal tier, phase 1: the folder, the manifest and the pipeline *(off the plan; the user's decision of 2026-09-28 — "this can never ever ever be sold or published")* | 1 day | **built, gated and documented** on branch `personal-tier` (2026-09-28), off `main`'s `a08c15f` and rebased onto `f2c934d` — `tools/personal/` (import, prepare, check) over a gitignored `personal/models/<slug>/`, Doctor Doom run through it, three verification rounds; **D190–D193**; gate green at `GATE_JOBS=4`, 262.4 s; *The personal tier*, just above *Deferred* |
 | — | The personal tier, phase 2: the loader, the other seven models, the workshop | 1 day | **built, gated and documented** on branch `personal-tier-2` (2026-09-28), off `main`'s `096c952` — the clip set baked in, the paint step, `--joints`, `check.json`; a dev-server index and route; THE lookup (hard rule 8, a hostile corpus sweep); Doom as the villain duelist and on his card, and Coulson, Fury, Peggy, the MCU Wasp and the Hulks on theirs; the workshop's badge, toggle and inspect view; the catalog's engine facts; **D194–D196**; gate green twice at `GATE_JOBS=4`, 241.7 s and 241.3 s; **fix pass 1** (2026-09-29): the personal tier's own triangle line, a sum benched at its worst case (**D197**), a model's own colours exposed and never blued (**D198**), three minors; gate green at 241.5 s; *The personal tier*'s *Phase 2* |
-| — | Villain identity: a recording of the Doom Legion, and every villain reading as itself *(off the plan)* | 1 day | **built, gated and documented** on branch `villain-identity` (2026-09-29), off `main`'s `9dfdce4` — `fixtures/games/villain-doom-248.jsonl`, chosen by census over 440 seeds (26 of 27 names face up, twelve of fifteen identity subjects on the table, Doom's Plan paid off); every corpus count moved to the new truth; three defects it found fixed (a land that rose twice, a back row that took the front card's click, a back-row figure with nowhere to stand); a villain rung, fifteen new `traits.json` rows, seven cue rows and two shared kit pieces (`mask`, `cowl`); the workshop lists the Doom Legion second; **D220–D221**; seven follow-ups; *Villain identity*, just above *Deferred* |
+| — | Villain identity: a recording of the Doom Legion, and every villain reading as itself *(off the plan)* | 1 day | **built, gated and documented** on branch `villain-identity` (2026-09-29), off `main`'s `9dfdce4` — `fixtures/games/villain-doom-248.jsonl`, chosen by census over 440 seeds (26 of 27 names face up, twelve of fifteen identity subjects on the table, Doom's Plan paid off); every corpus count moved to the new truth; three defects it found fixed (a land that rose twice, a back row that took the front card's click, a back-row figure with nowhere to stand); a villain rung, fifteen new `traits.json` rows, seven cue rows and two shared kit pieces (`mask`, `cowl`); the workshop lists the Doom Legion second; **D220–D221**; a fix pass after its first verification (**D222**: the crowded table measured at every frame, over the bench's lines before identity; the Legionnaire, the Troopers, Crossbones and Madame Hydra re-dressed; the raster's one-sided cloak Doom's alone); twelve follow-ups; *Villain identity*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -7869,15 +7875,15 @@ fingerprinted before and after and did not change.
 
 ---
 
-## Villain identity — a recording of the Doom Legion, and every villain reading as itself (2026-09-29, D220–D221)
+## Villain identity — a recording of the Doom Legion, and every villain reading as itself (2026-09-29, D220–D222)
 
 A bare `./scripts/play.sh` seats you against `decks/doom-legion.dck`, but no
 committed recording played it: the workshop previewed 24 of its 27 names from the
 engine's card scripts, and none of its creatures had an identity row — the black
 Human Villains had no rung at all and stood as glow discs. Branch
 `villain-identity`, off `main`'s `9dfdce4`, the `mtg-table-t2v` worktree, the
-reserved range D220–D224 (two used). `docs/evidence/villain-identity.md` is what
-was measured.
+reserved range D220–D224 (three used). `docs/evidence/villain-identity.md` is
+what was measured.
 
 - **The fixture (D220).** `fixtures/games/villain-doom-248.jsonl`: `RecordMatch`,
   seat 0 the Doom Legion, seat 1 Pacho's deck, default policy, seen from the
@@ -7913,23 +7919,46 @@ was measured.
   (only Hidden Lair is still the engine's), the Doombot joins the tokens, and the
   wire's keywords reach the pedestal for the first time.
 
+- **The fix pass (D222, and D221 amended)**, after the lane's first
+  verification. The lane's budget numbers were wrong: `arena-bench --index N`
+  reads its counters fifty frames past N, and a sweep of every frame found the
+  villain file's worst at `@392`/`@393` — 129 calls, over the bench's hard 120 —
+  where the base tree, every villain a bare body, already draws 124 (49
+  battlefield cards, the corpus's most crowded table). D222 records the breach
+  with its numbers; the Legionnaire took the mask and cowl the table already
+  draws instead of a crop of its own (128 at the worst frame, 16 frames over 120
+  where there were 24), and `traits.test.ts` holds the file's most crowded frames
+  to 17 prop kinds (the base tree 13). On the verifier's reading of the pictures:
+  the Unliving Legionnaire is a hooded, pale-faced thing on magenta wings, not a
+  man in navy; the HYDRA Troopers wear the cowl their note described; Crossbones
+  is in warm charcoal (the comic look turns black navy) at scale 1.14; Madame
+  Hydra's suit is charcoal, as her card paints it. The raster's one-sided cloak
+  and tunic are Doom's alone (`ONE_SIDED`'s `only`). What was not done is
+  follow-ups 8–12.
+
 **Measured.** `npm --prefix web test`: `node --test` 1,077 / 1,071 pass / 0 fail
-/ 6 skipped, and 124 vitest. The raster: every villain identity prop at 48 px or
-more on both seats, the mask and Doom's cloak and tunic as one-sided details with
-partners. The bench, bloom off: `g1`@355 89 (SwiftShader) / 88 (GTX 1080) and
-`g1`@316 91 (SwiftShader), unchanged; the villain file at @296 117 calls on the
-GTX 1080 against 110 on the base tree at the same frame — the crowded table is
-over §8.2's line before identity (follow-up 4). `~/forge` and `~/.forge`
-unchanged (evidence §10).
+/ 6 skipped, and 124 vitest (the fix pass extended cases and added none). The
+raster: every villain identity prop at 48 px or more on both seats, the mask and
+Doom's cloak and tunic as one-sided details with partners. The bench, bloom off,
+in interleaved pairs against the base tree: `g1`@355 89 (SwiftShader) / 88 (GTX
+1080) and `g1`@316 91 (SwiftShader), unchanged; the villain file at `--index
+388` (its last frame) 127 calls and 37,522 triangles on the GTX 1080 and 128 on
+SwiftShader, against 123 and 32,943 on the base tree — over the lines before
+identity (D222, follow-up 4). `~/forge` and `~/.forge` unchanged (evidence §10).
+The lane's commits carry the session's attribution line (`Claude Opus 5.5`), not
+the brief's (`Claude Fable 5.1`): the brief is a workflow's text and the
+session's attribution rule governs; a merge may amend it if the owner wants the
+brief's.
 
 **The gate**, from a deleted `bridge/out` at `GATE_JOBS=4`: **263.3 s** at
 `WSPORT` 9120 and **252.0 s** at 9130, exit 0 both, 48 jobs; `node --test`
 inside it 1,092 / 1,084 pass / 0 fail / 8 skipped, and 124 vitest. The lane added
-no step.
+no step. The fix pass's runs, the same way at 9120: **250.1 s**, and **251.0 s**
+on its final tree, exit 0 both, the same counts (`var/check-all-villains-fix1.log`).
 
-<a id="fu-villains"></a>
+<a id="fu-villain-identity"></a>
 
-### Villain identity's follow-ups — seven, 2026-09-29
+### Villain identity's follow-ups — twelve, 2026-09-29 (8–12 from its fix pass)
 
 1. **The other three AI decks' 67 names** (`masters-of-evil`, `hulk-family`,
    `wakanda` — nonbasic names not in the two table decks) have no committed
@@ -7943,12 +7972,20 @@ no step.
 3. **A back-row figure can be boxed in** — four frames of `villain-doom-248`,
    where the host's card, its aura and a land cover the figure's whole centre
    column. The fix is the layout's: a land rank that steps back behind a wrapped
-   creature rank, measured against the camera and duelist tests.
-4. **A crowded table is over report 13 §8.2's 90 calls before any identity** —
-   110–112 on the base tree at `villain-doom-248`@296/@304, 114–117 with the
-   villains dressed, 30,505–34,399 triangles. A budget for a crowded table: props
-   dropped past a figure count, as `MAX_FIGURES` drops models, or kinds folded
-   into fewer passes. `traits.test.ts` holds the file to its measured 22 kinds.
+   creature rank, measured against the camera and duelist tests. The same table
+   is why `attach.test.ts`'s unreachable-strip bound went from 1% to 3% (26 of its
+   30 are the Quantum Reduction wholly under Strucker and the back row) and why
+   `figure-pose.test.ts` allows four boxed-in frames: both come back down with it.
+4. **A crowded table is over the bench's 120 calls and §8.2's 30,000 triangles
+   before any identity** (**D222**; corrected by the fix pass — this item first
+   said 110–117 at `@296`, which the bench had read fifty frames later). A sweep
+   of every frame of `villain-doom-248`, bloom off: 124 calls and 32,959–33,149
+   triangles at worst on the base tree (`@392`/`@393`, 49 battlefield cards), 128
+   and 37,546 with the villains dressed; 130 played at 4× (the base tree 126).
+   A budget for a crowded table: props dropped past a figure count, as
+   `MAX_FIGURES` drops models, or kinds folded into fewer passes — an arena
+   change, measured against every view. `traits.test.ts` holds the file to its
+   measured 22 kinds at once and 17 on its most crowded frames.
 5. **A cloak's trim in the prop field is its accent ×30** — a cyan-white band
    across a green cloak (Doom, Loki, Madame Hydra), where the villain duelist's
    baker paints it gold. A trim colour in the kit (a `trim` role) would let a row
@@ -7959,6 +7996,29 @@ no step.
    villains' attack rows (Doom, Crossbones, Kang, the Agents, the Troopers) do not
    show in it though the queue plans one per attacker; a per-attacker count would
    say so.
+8. **Loki has no horned helm** — his card's first read. A `horns` kind is one
+   card's until a second card wears it (D221's rejection), and a new kind is a
+   new draw call on the table D222 measures, so it waits for a second horned card
+   (the Masters of Evil deck is the place to look) or for follow-up 4's budget.
+9. **The Unliving Legionnaire's wings are behind it from eye level** — they read
+   at the workshop's 1× front and from both seats at the table (the raster: 1,025
+   and 643 px), but the inspect view's camera, level with the figure, sees the
+   body in front of them. A wing anchor spread wider than the shoulders would
+   show them; it is Wasp's kind too, so measure her from the same views.
+10. **The Doombots and Servo-Guards read as machines, not as Doom-shaped robots**
+    (the verifier's reading; D221 rejected a Doombot in Doom's mask, because a
+    token that looks like Doom reads as a second Doom). A Doombot on the man's
+    body in iron, with the mask and no cloak, would be a middle way; its eye's cue
+    anchors on the drone's `Eye`, so the cue rows move with it.
+11. **Crossbones is the biggest villain by height alone** (scale 1.14): the body
+    is one mesh, so a hulking man needs a body variant with a broader chest — a
+    rebuild of the library, measured against the budget (`tools/assets-manifest.json`).
+12. **Duelists are per seat, so a villain-seat replay stands the S.H.I.E.L.D.
+    director behind the villains** and the Doom-cloaked villain duelist behind
+    Pacho's deck (`villain-doom-248` is seen from the Doom Legion's seat; D99
+    makes a duelist the seat's). A duelist look keyed to the deck a seat plays
+    (`hello_ok.match`, or the recording's `decks`) would put Doom behind his own
+    table.
 
 ---
 
