@@ -243,6 +243,7 @@
 1. **The arena draws the caption; it never narrates** (**D255**). `main.tsx` runs
 2. **Where it sits is measured, and the choice is per context** (**D256**). The
 1. **§9.4 is graded on a real GPU; SwiftShader at the floor fails it, and that is
+**On a real GPU §9.4 is read at a browser's pacing, `--vsync`** (**D273**, the
 2. **The frame loop parses no colour string, and every body it reaches is in the
 3. **A pose field draws only what it holds and re-sends only what moved.** An
 4. **Nothing drawable hangs under a bone, and the prop field reads only the joints
@@ -430,7 +431,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1,210 `node --test` + 157 vitest (9 files)
+span: 1,212 `node --test` + 157 vitest (9 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -656,6 +657,7 @@ span: Where it sits is measured, and the choice is per context
 span: On by default while watching, off at a live seat
 span: the frame loop pays for what changed this frame, and a SwiftShader number is the software floor's.
 span: §9.4 is graded on a real GPU; SwiftShader at the floor fails it, and that is D270, not a regression.
+span: On a real GPU §9.4 is read at a browser's pacing, `--vsync`
 span: The frame loop parses no colour string, and every body it reaches is in the allocation scan
 span: A pose field draws only what it holds and re-sends only what moved.
 span: Nothing drawable hangs under a bone, and the prop field reads only the joints it refreshed.

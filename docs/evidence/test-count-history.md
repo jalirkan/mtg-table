@@ -302,3 +302,12 @@ and at the refresh rate, the first cut as the control) and one liveness clause
 (the pass's bodies in the allocation scan; no frame-loop body parses a colour
 string). Inside `check-all.sh`: **1,208 / 1,197 pass
 / 0 fail / 11 skipped** plus 157 vitest, twice.
+
+### The GPU pass's fix pass (D273)
+
+**1,195 `node --test` + 157 vitest (9 files)** standalone (1,186 pass, 0 fail, 9
+skipped), from the pass's own **1,193 + 157**: `gpu-pass.test.ts`'s two new cases —
+the prop field's and the status strip's "flagged iff its array changed", each with
+a buffer flagged every frame and a write left unflagged as its controls (the tile
+case gained the same controls, and `perf.test.ts` now calls the governor as the
+arena does; neither is a new case). Inside `check-all.sh`: **1,210 / 1,199 pass / 0 fail / 11 skipped** plus 157 vitest (`var/check-all-gpu-fix.log`).

@@ -7,11 +7,17 @@
  * Each one is a cost the frame loop paid for nothing, and each is held here by
  * behaviour with a negative control, in node and three — no GPU, no DOM:
  *
- *  1. **An empty tile kind is not drawn.** An `InstancedMesh` at count 0 still
- *     costs a draw call; `g1`@316 has no slab land and drew one every frame.
+ *  1. **An empty tile kind is not drawn.** An `InstancedMesh` at count 0 is
+ *     still set up every frame — three binds its program, uploads its uniforms and
+ *     binds its vertex array — and issues no draw (so `gl.info` never counted it);
+ *     `g1`@316 has no slab land and set one up every frame.
  *  2. **A frame that moved nothing uploads nothing** — the tile field, the prop
  *     field and the status strip flag a buffer only when a value changed, and the
- *     arrays they write are bit for bit what three's setters would have left.
+ *     arrays they write are bit for bit what three's setters would have left. Each
+ *     field is driven through frames that change nothing, then one thing, and every
+ *     buffer is held to "flagged iff its array changed" (`uploadViolations`); the
+ *     controls are the two ways it breaks — a buffer flagged every frame (the fields
+ *     as they were) and a write that changes the array without flagging it.
  *  3. **The prop field refreshes only the joints it reads** — the chains from each
  *     rig's root to its props' joints — and every matrix it reads is the one
  *     `updateMatrixWorld(true)` over the whole rig would have given.
@@ -23,16 +29,67 @@
  */
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import * as THREE from 'three';
 
+import type { FigureLayout } from '../src/arena/figures/pose.ts';
+import type { StatusLayout } from '../src/arena/figures/status.ts';
 import type { TileLayout, TilePose } from '../src/arena/figures/tiles.ts';
+import type { FigureRigMap } from '../src/arena/scene/figureRigs.ts';
 import { writeColourAt, writeMatrixAt, writeScalarAt } from '../src/arena/scene/instanceWrite.ts';
 import { hideBoneTrees, instantiateFigure } from '../src/arena/scene/models.ts';
+import { PropField, type PropOffsetSource } from '../src/arena/scene/props.ts';
+import { StatusField } from '../src/arena/scene/status.ts';
 import { TileField } from '../src/arena/scene/tiles.ts';
 import { refreshWorld, worldChainOf } from '../src/arena/scene/worldChain.ts';
-import { loadLibrary } from './prop-raster.ts';
+import type { Frame } from '../src/protocol.ts';
+import { initialState, reduce, type ClientState } from '../src/reduce.ts';
+import { parseFrameLog } from '../src/transport/replay.ts';
+import { MODELS, loadLibrary, posesOf, rigOf } from './prop-raster.ts';
+
+/**
+ * **"Flagged iff its array changed"** — the whole of D271.5 as one check. `before`
+ * and `after` are snapshots of named buffers (`version`, and a copy of the array)
+ * either side of one frame; a buffer whose version moved must have a changed array
+ * (else an upload of bytes the GPU holds), and a changed array must have a moved
+ * version (else the GPU draws a stale value). Returns what broke, empty when none.
+ */
+interface BufferShot {
+  version: number;
+  array: Float32Array;
+}
+type Shot = Map<string, BufferShot>;
+
+function shoot(buffers: ReadonlyMap<string, THREE.BufferAttribute>): Shot {
+  const out: Shot = new Map();
+  for (const [name, attribute] of buffers) out.set(name, { version: attribute.version, array: (attribute.array as Float32Array).slice() });
+  return out;
+}
+
+function changedArray(a: Float32Array, b: Float32Array): boolean {
+  for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return true;
+  return false;
+}
+
+function uploadViolations(before: Shot, after: Shot): string[] {
+  const out: string[] = [];
+  for (const [name, was] of before) {
+    const now = after.get(name)!;
+    const flagged = now.version !== was.version;
+    const changed = changedArray(was.array, now.array);
+    if (flagged && !changed) out.push(`${name}: flagged for upload with its bytes unchanged`);
+    if (changed && !flagged) out.push(`${name}: changed and not flagged — the GPU draws a stale value`);
+  }
+  return out;
+}
+
+/** Which buffers moved version between two snapshots. */
+function flaggedOf(before: Shot, after: Shot): string[] {
+  return [...before].filter(([name, was]) => after.get(name)!.version !== was.version).map(([name]) => name);
+}
 
 /** The one offset every tile reads: identity, until a test moves it. */
 const OFFSET = {
@@ -100,9 +157,16 @@ test('gpu-pass: a frame that moved no tile uploads nothing, and one that moved a
   field.bind(tiles, OFFSETS, 0);
   const versions = (): number[] =>
     meshesOf(field).flatMap((m) => [m.instanceMatrix.version, m.instanceColor?.version ?? -1]);
+  const buffers = new Map<string, THREE.BufferAttribute>();
+  for (const m of meshesOf(field)) {
+    buffers.set(`${m.name || String(m.id)}:matrix`, m.instanceMatrix);
+    buffers.set(`${m.name || String(m.id)}:colour`, m.instanceColor!);
+  }
   const first = versions();
+  const still = shoot(buffers);
   field.bind(tiles, OFFSETS, 0.016);
   assert.deepEqual(versions(), first, 'an unchanged frame flagged a tile buffer for upload');
+  assert.deepEqual(uploadViolations(still, shoot(buffers)), []);
 
   // A cue moves the land: its bucket's matrices are flagged, and only its.
   OFFSET.dy = 0.05;
@@ -115,6 +179,22 @@ test('gpu-pass: a frame that moved no tile uploads nothing, and one that moved a
   const changed = moved.map((v, i) => v !== first[i]);
   // [plateau m, c, water m, c, slab m, c, rim m, c]: every moved matrix, no colour.
   assert.deepEqual(changed, [true, false, false, false, true, false, true, false], 'the flags are not exactly the moved buffers');
+  const afterMove = shoot(buffers);
+  assert.deepEqual(uploadViolations(still, afterMove), [], 'a tile buffer was flagged without changing, or changed without a flag');
+
+  // The negative controls, on one more still frame: the field as it was (every
+  // buffer flagged every frame), and a write that changes the array unflagged.
+  field.bind(tiles, OFFSETS, 0.016);
+  const settled = shoot(buffers);
+  for (const m of meshesOf(field)) {
+    m.instanceMatrix.needsUpdate = true;
+    m.instanceColor!.needsUpdate = true;
+  }
+  assert.ok(uploadViolations(settled, shoot(buffers)).length >= 8, 'the check no longer sees a buffer flagged every frame');
+  const quiet = shoot(buffers);
+  const colours = meshesOf(field)[0]!.instanceColor!.array as Float32Array;
+  colours[0] = (colours[0] ?? 0) + 0.25;
+  assert.deepEqual(uploadViolations(quiet, shoot(buffers)).length, 1, 'the check no longer sees a write that was never flagged');
 
   // The array is what `setMatrixAt` would have written, bit for bit.
   const plateau = meshesOf(field)[0]!;
@@ -126,6 +206,163 @@ test('gpu-pass: a frame that moved no tile uploads nothing, and one that moved a
     Array.from(plateau.instanceMatrix.array.slice(0, 16)),
     Array.from(reference.instanceMatrix.array.slice(0, 16)),
   );
+});
+
+/** `g1.jsonl`'s board around the bench frame with the most props on it — the prop field's real load. */
+function benchBoard(): ClientState {
+  const log = parseFrameLog(readFileSync(fileURLToPath(new URL('../../fixtures/games/g1.jsonl', import.meta.url)), 'utf8'));
+  const frames = log.frames as Frame[];
+  let state = initialState(log.header);
+  let best: { state: ClientState; props: number } | null = null;
+  for (let i = 0; i < Math.min(frames.length, 380); i++) {
+    state = reduce(state, frames[i]!);
+    if (i < 300 || frames[i]!.type !== 'state') continue;
+    let props = 0;
+    for (const pose of posesOf(state).values()) if (pose.modelId !== null) props += pose.props.length;
+    if (best === null || props > best.props) best = { state, props };
+  }
+  assert.ok(best !== null && best.props >= 10, 'g1 has no board with props near the bench frame');
+  return best.state;
+}
+
+test('gpu-pass: a still frame of the prop field uploads nothing; a moved body, a fade and a wash flag exactly what they changed (D271)', async () => {
+  const library = await loadLibrary();
+  const poses: FigureLayout = posesOf(benchBoard());
+  const rigs: FigureRigMap = new Map();
+  for (const pose of poses.values()) {
+    const rig = rigOf(pose, library);
+    if (rig !== null) rigs.set(pose.cardId, rig);
+  }
+  const field = new PropField();
+  field.setLibrary(library, MODELS);
+  field.commit(poses, rigs, MODELS);
+  // Each card's live offset: identity, until a frame below moves one.
+  const identity = { dx: 0, dy: 0, dz: 0, scale: 1, opacity: 1, dissolve: 0, glow: 0, dRotY: 0 };
+  const live = new Map<number, typeof identity>();
+  const offsets: PropOffsetSource = { offsetOf: (id) => live.get(id) ?? identity, clipOf: () => null };
+  const buffers = new Map<string, THREE.BufferAttribute>();
+  for (const child of field.group.children) {
+    const mesh = child as THREE.InstancedMesh;
+    if (mesh.isInstancedMesh !== true) continue;
+    buffers.set(`${mesh.name}:matrix`, mesh.instanceMatrix);
+    buffers.set(`${mesh.name}:colour`, mesh.instanceColor!);
+    buffers.set(`${mesh.name}:opacity`, mesh.geometry.getAttribute('aOpacity') as THREE.BufferAttribute);
+  }
+  const drawnKinds = (): number => field.group.children.filter((c) => c.visible && (c as THREE.InstancedMesh).count > 0).length;
+  // A frame: the same clock, so only what the test changes can move. (The clock
+  // moves a bee's ring, a wing's beat and an emitter's flicker, each of which is a
+  // change the field must upload.)
+  const frame = (): { flagged: string[]; broken: string[] } => {
+    const before = shoot(buffers);
+    field.bind(offsets, 0);
+    const after = shoot(buffers);
+    return { flagged: flaggedOf(before, after), broken: uploadViolations(before, after) };
+  };
+
+  field.bind(offsets, 0);
+  assert.ok(drawnKinds() >= 4, `only ${String(drawnKinds())} prop kinds drawn on the bench board`);
+  const still = frame();
+  assert.deepEqual(still.flagged, [], 'a frame that moved nothing flagged a prop buffer for upload');
+  assert.deepEqual(still.broken, []);
+
+  // One body moves — its offset and its rig, as `CueRunner.applyFigures` writes them.
+  const [cardId, rig] = [...rigs].find(([id]) => (poses.get(id)?.props.length ?? 0) >= 2)!;
+  live.set(cardId, { ...identity, dx: 0.05 });
+  rig.root.position.x += 0.05;
+  rig.root.updateMatrix();
+  const moved = frame();
+  assert.deepEqual(moved.broken, [], 'a moved body left a buffer flagged unchanged or changed unflagged');
+  assert.ok(moved.flagged.length >= 1 && moved.flagged.every((n) => n.endsWith(':matrix')), `a move flagged ${moved.flagged.join(', ') || 'nothing'}`);
+  assert.ok(moved.flagged.length < drawnKinds(), 'one body moved and every drawn kind was flagged');
+  assert.deepEqual(frame().flagged, [], 'the frame after a move, with nothing moving, flagged a buffer');
+
+  // It fades: the opacity buffers of its kinds, and nothing else.
+  live.set(cardId, { ...identity, dx: 0.05, opacity: 0.5 });
+  rig.material.uniforms.uOpacity.value = 0.5;
+  const faded = frame();
+  assert.deepEqual(faded.broken, [], 'a fade left a buffer flagged unchanged or changed unflagged');
+  assert.ok(faded.flagged.length >= 1 && faded.flagged.every((n) => n.endsWith(':opacity')), `a fade flagged ${faded.flagged.join(', ') || 'nothing'}`);
+
+  // The freeze washes its colours: the colour buffers of its kinds, and nothing else.
+  (poses.get(cardId) as { frozen: boolean }).frozen = true;
+  const washed = frame();
+  assert.deepEqual(washed.broken, [], 'a wash left a buffer flagged unchanged or changed unflagged');
+  assert.ok(washed.flagged.length >= 1 && washed.flagged.every((n) => n.endsWith(':colour')), `a wash flagged ${washed.flagged.join(', ') || 'nothing'}`);
+
+  // The negative controls, on a still frame: every drawn kind's three buffers
+  // flagged (`commitKind` as it was), and an opacity written without its flag.
+  const settled = shoot(buffers);
+  field.bind(offsets, 0);
+  for (const child of field.group.children) {
+    const mesh = child as THREE.InstancedMesh;
+    if (!mesh.visible || mesh.isInstancedMesh !== true) continue;
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.instanceColor!.needsUpdate = true;
+    (mesh.geometry.getAttribute('aOpacity') as THREE.BufferAttribute).needsUpdate = true;
+  }
+  assert.ok(uploadViolations(settled, shoot(buffers)).length >= 3 * drawnKinds(), 'the check no longer sees every drawn kind re-sent');
+  const quiet = shoot(buffers);
+  const first = field.group.children.find((c) => c.visible) as THREE.InstancedMesh;
+  ((first.geometry.getAttribute('aOpacity') as THREE.BufferAttribute).array as Float32Array)[0] = 0.25;
+  assert.equal(uploadViolations(quiet, shoot(buffers)).length, 1, 'the check no longer sees an opacity written without its flag');
+  field.dispose();
+});
+
+test('gpu-pass: the status strip flags its anchors only when a strip moved — an offset or a bob (D271)', () => {
+  const quad = { x: 0, y: 0, w: 16, h: 16, cell: 0, colour: '#ffffff', alpha: 1 };
+  const strip = (cardId: number, x: number, bobAmp = 0): StatusLayout extends ReadonlyMap<number, infer P> ? P : never =>
+    ({ cardId, seat: 'you', anchor: [x, 1, 0], bobAmp, bobHz: bobAmp > 0 ? 0.5 : 0, quads: [quad, quad], keywords: [], hp: null, pips: 0, marks: 0 }) as never;
+  const field = new StatusField();
+  const layoutOf: StatusLayout = new Map([
+    [7, strip(7, -1)],
+    [8, strip(8, 1)],
+  ]);
+  field.commit(layoutOf);
+  const anchors = field.mesh.geometry.getAttribute('aAnchor') as THREE.BufferAttribute;
+  const buffers = new Map<string, THREE.BufferAttribute>([['anchors', anchors]]);
+  const identity = { dx: 0, dy: 0, dz: 0, scale: 1, opacity: 1, dissolve: 0, glow: 0, dRotY: 0 };
+  const live = new Map<number, typeof identity>();
+  const offsets = { offsetOf: (id: number) => live.get(id) ?? identity, clipOf: () => null } as never;
+  const frame = (seconds: number): { flagged: string[]; broken: string[] } => {
+    const before = shoot(buffers);
+    field.bind(offsets, seconds);
+    const after = shoot(buffers);
+    return { flagged: flaggedOf(before, after), broken: uploadViolations(before, after) };
+  };
+  // The first frame after the commit writes what the commit wrote: nothing to send.
+  assert.deepEqual(frame(0), { flagged: [], broken: [] }, 'the first still frame re-sent the committed anchors');
+  assert.deepEqual(frame(0.016), { flagged: [], broken: [] }, 'a still frame re-sent the anchors');
+  // A cue moves card 7: the anchors are sent, card 7's two quads moved and card 8's did not.
+  live.set(7, { ...identity, dy: 0.3 });
+  assert.deepEqual(frame(0.033), { flagged: ['anchors'], broken: [] }, 'a moved strip did not send its anchors');
+  const a = anchors.array as Float32Array;
+  assert.deepEqual([a[1], a[4], a[7], a[10]], [Math.fround(1.3), Math.fround(1.3), 1, 1]);
+  assert.deepEqual(frame(0.05), { flagged: [], broken: [] }, 'a held offset re-sent the anchors');
+
+  // A hovering figure's strip bobs with it: every frame is a move.
+  const bobbing = new StatusField();
+  bobbing.commit(new Map([[9, strip(9, 0, 0.02)]]));
+  const bobAnchors = bobbing.mesh.geometry.getAttribute('aAnchor') as THREE.BufferAttribute;
+  const bobBuffers = new Map<string, THREE.BufferAttribute>([['anchors', bobAnchors]]);
+  for (const seconds of [0.1, 0.2, 0.3]) {
+    const before = shoot(bobBuffers);
+    bobbing.bind(offsets, seconds);
+    assert.deepEqual(flaggedOf(before, shoot(bobBuffers)), ['anchors'], `a bobbing strip at ${String(seconds)} s did not send its anchors`);
+    assert.deepEqual(uploadViolations(before, shoot(bobBuffers)), []);
+  }
+
+  // The negative controls: the strip as it was (anchors flagged every frame), and
+  // an anchor written without its flag.
+  const settled = shoot(buffers);
+  field.bind(offsets, 0.066);
+  anchors.needsUpdate = true;
+  assert.equal(uploadViolations(settled, shoot(buffers)).length, 1, 'the check no longer sees anchors re-sent on a still frame');
+  const quiet = shoot(buffers);
+  const anchorArray = anchors.array as Float32Array;
+  anchorArray[0] = (anchorArray[0] ?? 0) + 0.5;
+  assert.equal(uploadViolations(quiet, shoot(buffers)).length, 1, 'the check no longer sees an anchor written without its flag');
+  field.dispose();
+  bobbing.dispose();
 });
 
 test('gpu-pass: the instance writers store what the setters would, and say "changed" only when it did (D271)', () => {

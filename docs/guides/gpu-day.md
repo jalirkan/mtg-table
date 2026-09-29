@@ -365,11 +365,13 @@ budget*).
 
 ### The numbers the new card is compared against
 
-The GPU pass (2026-09-29, `docs/evidence/gpu-pass.md`, D270–D272) benched the
+The GPU pass (2026-09-29, `docs/evidence/gpu-pass.md`, D270–D273) benched the
 whole arena on the GTX 1080 the day this guide was written. Run the same lines on
-the new card, **on an idle machine** — the pass's machine was shared all day, and
-the 1080's frame times swung 2–4× with the load and the driver's clocks (it was
-seen at P5, 734 MHz, under full load) — and put the table in a new evidence file:
+the new card, **on an idle machine, with the driver's clock beside every row**
+(`nvidia-smi --query-gpu=clocks.gr,pstate,utilization.gpu --format=csv -lms 500`
+while the bench runs) — the 1080's p50 and p95 swung 2–4× with where its driver
+held it, and its driver held P5 (746 MHz) through every unthrottled sample of the
+fix pass even on an idle machine — and put the table in a new evidence file:
 
 ```bash
 for spec in "g1.jsonl 316 4" "g1.jsonl 369 1" "villain-masters-of-evil-33.jsonl 388 4" "villain-wakanda-232.jsonl 477 4" "villain-doom-248.jsonl 342 4"; do
@@ -377,13 +379,25 @@ for spec in "g1.jsonl 316 4" "g1.jsonl 369 1" "villain-masters-of-evil-33.jsonl 
   for bloom in --no-bloom --bloom; do
     node tools/arena-bench.mjs --url "http://127.0.0.1:5182/?replay=games/$1#arena" \
       --index $2 --speed $3 --gpu gl $bloom --json "var/gpu-day/bench-${1%.jsonl}-$2$bloom.json"
+    node tools/arena-bench.mjs --url "http://127.0.0.1:5182/?replay=games/$1#arena" \
+      --index $2 --speed $3 --gpu gl $bloom --vsync --json "var/gpu-day/vsync-${1%.jsonl}-$2$bloom.json"
   done
 done
 ```
 
-The GTX 1080's quietest series (production build of `e2c337c`, 09:26–09:40, load
-4–10, render dpr 1 — `gpu-pass.md` §2.1; the pass's own build draws the same calls
-and triangles):
+**Read the max from the `--vsync` run** (D273). Unthrottled, a fast GPU's max is
+the WebGL command buffer draining — the page outruns the GPU and waits every few
+dozen frames — and on the 1080 that wait was 35–53 ms bloom off and 104–155 ms
+bloom on at the bench frame and Wakanda's, in every build: the unthrottled line prints a FAIL
+on it with a note, and it is not a frame a browser shows. At a browser's pacing
+the 1080 read p50 16.7 and p95 16.7–16.8 ms at all five frames, bloom on and off
+(one beat missed in 44 runs of the two builds, `gpu-pass.md` §10.4), so a new card
+must read the same there.
+
+The GTX 1080's quietest unthrottled series (production build of `e2c337c`,
+09:26–09:40, load 4–10, render dpr 1 — `gpu-pass.md` §2.1, a series in which the
+GPU kept up and nothing drained; the pass's own build draws the same calls and
+triangles):
 
 | frame | bloom off: p50 · p95 ms | calls · triangles (bloom off) | bloom on: p50 · p95 ms |
 |---|---|---|---|
@@ -396,7 +410,8 @@ and triangles):
 Every one of these is inside report 09 §9.4 (p95 ≤ 20 ms) by ten times, so a new
 card will not show a difference in the gate — look at p50 and at the frame count
 (`frames` in the JSON: ~9,000 in five seconds at the bench frame with bloom off,
-the loop unthrottled). Calls and triangles are the tree's, not the card's: the new
+the loop unthrottled, with the GPU keeping up; ~3,800 where the driver held it at
+P5 and the buffer drained, `gpu-pass.md` §10). Calls and triangles are the tree's, not the card's: the new
 card must read the same (a different number means a different build, or a sample
 that ended on another frame — the JSON's `endIndex`). SwiftShader's numbers do not
 change with the card (D270: the software floor, p95 33–35 ms at the floor on every

@@ -1325,7 +1325,7 @@ than the one that follow-up drew.
    `keys.ts` row, the arena's through `planKey`'s pre-pass because a live 2D
    board's `N` stays Forge's always-no.
 
-## The GPU pass — the conventions D270–D272 added
+## The GPU pass — the conventions D270–D273 added
 
 Four, and the thesis is one sentence: **the frame loop pays for what changed this
 frame, and a SwiftShader number is the software floor's.** The pass measured the
@@ -1346,6 +1346,14 @@ short form.
    `--cpu-profile` (with `tools/profile-top.mjs`, which names a production
    profile's functions through the build's source maps) are how the pass's
    tables were made. No rung goes below the DPR floor: it is a legibility line.
+   **On a real GPU §9.4 is read at a browser's pacing, `--vsync`** (**D273**, the
+   fix pass): unthrottled, the page outruns the GPU, fills the WebGL command
+   buffer and waits for it to drain every few dozen frames
+   (`CommandBufferHelper::WaitForAvailableEntries` in a Chromium trace) — the
+   GTX 1080's max, 35–53 ms bloom off and 104–155 bloom on at `g1`@316 and
+   Wakanda @477, in every build — and a change that sends fewer commands a frame makes each drain
+   longer and rarer. The unthrottled line reads headroom (p50, p95, the counts);
+   the bench still prints its max FAIL there, with a note.
 2. **The frame loop parses no colour string, and every body it reaches is in the
    allocation scan** (**D271**). `applyOffsets`, its `Map.forEach` walk
    `applyRigOffset`, `TileField.bind`, the instance writers, `refreshWorld` and
@@ -1359,7 +1367,9 @@ short form.
    issues no draw, so `gl.info` never shows the cost — and a buffer is flagged for
    upload only when a value in it changed: `scene/instanceWrite.ts`'s writers store
    the float32 three's setters would and say whether it differs. The tile field,
-   the prop field and the status strip's anchors use them; a new field should.
+   the prop field and the status strip's anchors use them; a new field should,
+   and joins `gpu-pass.test.ts`'s "flagged iff its array changed" with the two
+   controls (a buffer flagged every frame, a write left unflagged).
 4. **Nothing drawable hangs under a bone, and the prop field reads only the joints
    it refreshed.** `instantiateFigure` hides each bone tree (`hideBoneTrees`) so
    the render walk skips 618 of the bench frame's 871 objects; a tree with a

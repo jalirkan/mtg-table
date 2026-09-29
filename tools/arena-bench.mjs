@@ -84,6 +84,18 @@
  *                      (100 µs sampling) and write it as a `.cpuprofile`.
  *                      `tools/profile-top.mjs` names its top self-time functions
  *                      through the build's own source maps.
+ *   --vsync            (the GPU pass's fix pass, D273) Keep Chromium's own pacing:
+ *                      the frame-rate limit and vsync stay on, as in a browser.
+ *                      Every interval is then a multiple of the ~16.7 ms beat, so
+ *                      p95 says whether one frame in twenty missed a beat — the
+ *                      reason the default turns both off (below). It is where a
+ *                      REAL GPU's §9.4 is read: unthrottled, the page draws ~740
+ *                      frames a second, fills the WebGL command buffer every few
+ *                      dozen frames and waits for the GPU process to drain it
+ *                      (`CommandBufferHelper::WaitForAvailableEntries` in a trace)
+ *                      — a 35–53 ms frame bloom off and 104–155 bloom on at
+ *                      `g1`@316 and Wakanda on the GTX 1080, in every build,
+ *                      which no browser's pacing produces. `docs/evidence/gpu-pass.md` §10.
  *
  * It stays **out of `check-all.sh`** (M7 follow-up 10): it wants a built `dist`, a
  * `vite preview` server and a headless Chromium.
@@ -177,6 +189,8 @@ const SPEED = String(arg('speed', '4'));
 const JSON_OUT = arg('json', null);
 /** D270 — where to write a CPU profile of the sample, or null. */
 const CPU_PROFILE = arg('cpu-profile', null);
+/** The GPU pass's fix pass — Chromium's own pacing (vsync and the frame-rate limit on), for the max. */
+const VSYNC = args.includes('--vsync');
 /**
  * How long to let the scrubbed-to frame settle before sampling.
  *
@@ -214,8 +228,10 @@ const chromium = spawn(
     // gate cannot tell a slow renderer from a single hiccup. Measured before
     // adding them: p50 16.70 · p95 33.40 · max 133.30, every value a multiple of
     // one refresh.
-    '--disable-gpu-vsync',
-    '--disable-frame-rate-limit',
+    // `--vsync` keeps both (the GPU pass's fix pass): a browser's own pacing,
+    // for the max on a real GPU, where the unthrottled loop's max is the WebGL
+    // command buffer's drain rather than a frame (the header).
+    ...(VSYNC ? [] : ['--disable-gpu-vsync', '--disable-frame-rate-limit']),
     `--remote-debugging-port=${String(PORT)}`,
     `--window-size=${String(WIDTH)},${String(HEIGHT)}`,
     `--user-data-dir=${PROFILE}`,
@@ -573,7 +589,7 @@ try {
   console.log(
     `  mode       ${REDUCED_MOTION ? 'prefers-reduced-motion: REDUCE' : 'normal motion'} · ` +
       `${args.includes('--bloom') ? 'BLOOM on' : args.includes('--no-bloom') ? 'bloom off' : 'bloom = app default'} · settle ${String(SETTLE_MS)} ms ` +
-      `(${SETTLE_MS >= 2000 ? 'warm' : 'COLD'})`,
+      `(${SETTLE_MS >= 2000 ? 'warm' : 'COLD'}) · pacing ${VSYNC ? 'VSYNC (the browser\'s own; every interval a multiple of the beat)' : 'unthrottled'}`,
   );
   if (sample.layers) {
     console.log(`  layers     ${JSON.stringify(sample.layers)}`);
@@ -624,6 +640,7 @@ try {
         {
           url: URL_,
           gpu: GPU,
+          pacing: VSYNC ? 'vsync' : 'unthrottled',
           renderer: sample.renderer,
           index: INDEX,
           speed: Number(SPEED),
@@ -670,6 +687,12 @@ try {
   if (sample.render && sample.render.triangles > TRI_LINE) failures.push(`${String(sample.render.triangles)} triangles > ${String(TRI_LINE)} (${TRI_WHY}${PERSONAL ? '' : '; a page that draws personal models is benched with --personal'})`);
   if (failures.length > 0) {
     console.error(`\nFAIL: ${failures.join('; ')}`);
+    if (max > MAX_MS && GPU !== 'swiftshader' && !VSYNC) {
+      // D273: on a real GPU the unthrottled loop outruns the GPU, fills the WebGL
+      // command buffer and waits for it to drain every few dozen frames — that
+      // wait is this max, not a frame a browser would show. The line stands.
+      console.error('  (the max, unthrottled on a real GPU, is the WebGL command buffer draining — D273; --vsync reads it at a browser\'s pacing)');
+    }
     code = 1;
   } else {
     console.log(`\nOK: inside §9.4’s gate (p95 ≤ 20 ms, max ≤ 50 ms), §9.1’s draw-call budget and the triangle line (${TRI_WHY})`);

@@ -139,6 +139,16 @@ test('perf: the governor’s constants say what the gate says', () => {
  */
 type Machine = (dpr: number, composer: boolean) => number;
 
+/**
+ * One frame's decision — **the governor as the arena runs it**: with the arena's
+ * own numbers and an early verdict, the call is `Arena.tsx`'s, three arguments and
+ * the defaults (the fix pass: a flipped default passed every test that spelled
+ * `early` out). Any other config or `early: false` is a control, spelled out.
+ */
+function decide(w: ReturnType<typeof governorWindow>, now: number, dpr: number, config: GovernorConfig, early: boolean): ReturnType<typeof governorFrame> {
+  return config === GOVERNOR && early ? governorFrame(w, now, dpr) : governorFrame(w, now, dpr, config, early);
+}
+
 const SWIFTSHADER: Machine = (dpr, composer) => (composer ? (dpr >= 1 ? 135 : dpr >= 0.75 ? 120 : 112) : dpr >= 1 ? 36 : dpr >= 0.75 ? 25 : 20);
 /** The window as it was: no early verdict, no time-counted settle. */
 const AS_WAS: GovernorConfig = { ...GOVERNOR, settleMs: Number.POSITIVE_INFINITY };
@@ -152,7 +162,7 @@ function walk(machine: Machine, config: GovernorConfig, early: boolean, ms = 30_
   let floorAt = -1;
   while (now < ms) {
     now += machine(dpr, composer);
-    const action = governorFrame(w, now, dpr, config, early);
+    const action = decide(w, now, dpr, config, early);
     if (action === 'down' || action === 'up') {
       dpr = rungFrom(dpr, action === 'down' ? -1 : 1, 1);
       steps += 1;
@@ -175,7 +185,7 @@ function firstDown(machine: Machine, config: GovernorConfig, early: boolean, fra
   let now = 1000;
   for (let i = 0; i < frames; i++) {
     now += machine(1, false);
-    if (governorFrame(w, now, 1, config, early) === 'down') return i;
+    if (decide(w, now, 1, config, early) === 'down') return i;
   }
   return -1;
 }
@@ -234,7 +244,7 @@ test('perf: an early verdict is the verdict the full window would give — on bu
       let dpr = 1;
       for (let i = 0; i < 2000; i++) {
         now += machine(dpr, false);
-        const action = governorFrame(w, now, dpr, config, early);
+        const action = decide(w, now, dpr, config, early);
         if (action !== null) out.push(`${String(i)}:${action}`);
         if (action === 'down' || action === 'up') dpr = rungFrom(dpr, action === 'down' ? -1 : 1, 1);
       }

@@ -11430,8 +11430,14 @@ same card — the second surface adds no reveal path.
    tree and of this lane's. It fails §9.4 at every benched frame. It passes only
    below the floor: `g1`@316 at dpr 0.45 read p95 16.9 ms, and the villain tables
    did not pass even there. The same frames on the **GTX 1080** (ANGLE on OpenGL)
-   read p95 0.6–8.7 ms, bloom on or off, at render dpr 1 — inside §9.4 by a factor
-   of two at worst.
+   read p95 0.6–8.7 ms, bloom on or off, at render dpr 1 — inside §9.4's p95 by a
+   factor of two at worst. *(Corrected by the fix pass, D273: that sentence said
+   "inside §9.4", and its max is not. Unthrottled, the GTX 1080's max is the WebGL
+   command buffer draining — 35–53 ms bloom off and 104–155 ms bloom on at the
+   bench frame and Wakanda's, in the base build as in this one, so the default
+   page's max was never inside 50 there; at a browser's pacing, `--vsync`, both
+   builds read p95 16.7–16.8 ms at all five frames, bloom on and off. §9.4 on a
+   real GPU is read at that pacing.)*
 2. **What the floor is made of**, so the next lane stops re-discovering it. The
    frame's WebGL work at the floor — 1152 × 563 drawing buffer, 4× MSAA, synced by
    a one-pixel `readPixels` — is **about 15 ms** (14.1–17.4 over eight runs), and
@@ -11460,7 +11466,7 @@ for weak integrated graphics". Measured, it is a lower bound but not a proxy tha
 quantised by its own present beat, and the tree's every frame has failed there
 since the comic look (look, motion, bodies, the villain lanes and this pass all
 measured it). The number the owner's machine will see is a real GPU's, and the
-GTX 1080's is two to thirty times inside the gate. An integrated GPU (report 13
+GTX 1080's p95 is two to thirty times inside the gate (its max: D273). An integrated GPU (report 13
 §13 question 3; Lane LOOK follow-up 21) is the machine between the two and is
 still unmeasured.
 
@@ -11523,7 +11529,18 @@ frame loop found, each removed without a pixel changing:
    the value as a 32-bit float, bit for bit what three's setters store — used by
    the tile field and the prop field; the status strip flags its anchors only
    when one moved). 70 `bufferSubData` a frame at the bench frame, about 40 of
-   them the bytes the GPU already held, are now 31.
+   them the bytes the GPU already held, are now 31. *(The fix pass: its one
+   measured cost is in a loop no browser runs. Unthrottled on the GTX 1080 the page
+   fills the WebGL command buffer and waits for it to drain; with fewer commands a
+   frame the buffer holds more frames — a drain every ~62 frames against ~56 in
+   the traces — and each drain can be longer, so 14–25 of ~58 long frames a
+   sample cross a third 17 ms beat and read 52–53 ms, where none of the base
+   build's did (35–37); bloom on the max read 121–155 ms against 104–137. At a
+   browser's pacing there is no drain in either build. Kept, and read at that
+   pacing: D273. Each of the three fields is held to "flagged iff its array
+   changed" in `gpu-pass.test.ts`, with a buffer flagged every frame and a write
+   left unflagged as the controls, and each of seven source reverts turns it
+   red.)*
 
 Measured on the pumped frame loop (DEV server, the GTX 1080, 240 frames of a
 batch): `Object3D.updateMatrix` calls a frame 1,417 → 984 at `g1`@316, 2,020 →
@@ -11583,8 +11600,18 @@ millisecond.
    a model of the same machine (`perf.test.ts`) walks it in 3.9 s against 7.2.
    The bench's own default line (bloom on, governed) read p50 111–116 ms at all
    five benched frames on the base tree, still descending when its sample ended,
-   and 15.7–19.7 ms on this lane's, settled. On the GTX 1080 it never steps. At
-   the refresh rate no decision moves.
+   and 15.7–19.7 ms on this lane's, settled — in a quiet window (load 2.5–6).
+   *(The fix pass: under load the ladder does not always finish inside the
+   five-second sample. The verifier's two series at loads of 6–28 read p50
+   16.1–38 ms in 13 of 16 runs of this build at `g1`@316 and Wakanda @477, and
+   104–164 ms in the other three, against 102–121 in every run of the base build;
+   the fix pass's own interleaved series is `docs/evidence/gpu-pass.md` §10.6.)*
+   Unthrottled on the GTX 1080 it never stepped (ten governed benches). *(At a
+   browser's pacing three of 44 `--vsync` runs ended at 0.75 — one of this
+   build's 22 and two of the base's — at the cold scrub, before the sample; the
+   decision is the full window's in both builds (`perf.test.ts`), and at 60 Hz
+   the governor cannot climb back: the GPU pass's follow-up 10.)* At the refresh
+   rate no decision moves.
 4. **The window is pure** — `arena/governor.ts`, a fixed ring written in place (in
    the allocation scan), driven by `Arena.tsx`'s `DprGovernor` — so a test can run
    the ladder against a machine's frame times. It lives apart from `perf.ts`
@@ -11619,3 +11646,78 @@ pass (§7).
   costs at the floor with it on): the order of the rungs is the look's, and user
   decision 6 made bloom the default; the governor keeps the order and walks it
   faster.
+
+---
+
+## D273 — On a real GPU, §9.4 is read at a browser's pacing: unthrottled, the arena outruns the GPU and its longest frame is the WebGL command buffer draining
+
+*Branch `gpu-pass`, the fix pass; the lane's reserved range D270–D274.*
+
+**2026-09-29** (`docs/evidence/gpu-pass.md` §10)
+
+**Decision.**
+
+1. **What the unthrottled max is on the GTX 1080.** `tools/arena-bench.mjs` runs
+   Chromium with `--disable-gpu-vsync --disable-frame-rate-limit`, so the page
+   draws as fast as it can: about 740 frames a second at the bench frame. The GPU
+   cannot execute them that fast — its driver held it at P5 (746 MHz) at 94–98%
+   utilisation through a sampled run, on an idle machine — so the renderer's
+   WebGL command buffer fills, and its main thread waits inside
+   `requestAnimationFrame` in `CommandBufferHelper::WaitForAvailableEntries` (→
+   `CommandBufferProxyImpl::WaitForGetOffset`) until the GPU process has drained
+   it. Chromium traces of `g1`@316 bloom off and Wakanda @477 bloom on show the
+   wait every ~56–62 frames (10–48 ms) and every ~41–45 (median 97–110 ms), in the
+   base build and in this lane's; every frame over 30 ms bloom off holds one, and
+   31–33 of 35 bloom on. Those waits are the max, quantised to the headless
+   display's ~17 ms beat: 35–37 ms bloom off at the bench frame in the base build,
+   52–53 in this one, and 104–155 ms bloom on in both.
+2. **Why a build that does less reads worse there.** The waits add up to about
+   the same — 3.32 and 3.37 s of five bloom on, 2.10 and 1.74 bloom off — but a
+   frame with fewer commands in it (D271.5's forty fewer uploads) lets the buffer
+   hold more frames, so at the bench frame the page waited less often (every ~62
+   frames against ~56) and could wait longer, and a longer wait crosses a third
+   beat.
+   A change that sent more commands would read better. When the driver runs the
+   GPU fast enough to keep up, there is no wait at all — the base matrix's 7–19 ms
+   maxes at 09:26 — which is why the GTX max swung between runs and series.
+3. **At a browser's pacing none of it happens.** With vsync and the frame-rate
+   limit on (`--vsync`, new) the page draws one frame a beat, the trace shows no
+   command-buffer wait in five seconds in either build, and the benches read p50
+   and p95 16.7–16.8 ms at every frame, bloom on and off, in both builds (§10.4).
+4. **So §9.4 on a real GPU is read at a browser's pacing.** `--vsync`'s p95 ≤ 20
+   ms says fewer than one frame in twenty missed a beat, its max ≤ 50 that none
+   missed three. The unthrottled line stays what it is good for — headroom: p50,
+   p95, the `RENDERED` line and the counts — and its max on a real GPU is the
+   drain: the bench still prints that FAIL (the line is not lowered), with a note
+   naming this decision. SwiftShader stays unthrottled (D270): at its floor it
+   cannot keep up at any pacing, and its number is the floor's own.
+5. **D271.5 stays.** It sends forty fewer buffers a frame of bytes the GPU
+   already held, and its only measured cost is a longer drain in a loop no browser
+   runs; with it the GTX 1080's unthrottled p50 and p95 at the bench frame read
+   0.4 and 2.7–2.8 ms against the base build's 0.5 and 3.3–3.4 on an idle
+   machine (§10.5).
+
+**Rationale.** §9.4 is about what a player sees: a frame that misses the
+display. The unthrottled harness was chosen (T7's header) because at 60 Hz every
+interval is 16.7 or 33.4 ms and p95 cannot tell a slow renderer from a hiccup —
+true on SwiftShader, whose frames are 15–20 ms, and still the right reading of a
+real GPU's headroom. But a real GPU's frames are a fraction of a millisecond, and
+there the unthrottled loop measures the command buffer's size against the GPU's
+throughput at whatever clock its driver chose: a property of the harness, which
+grades a change that sends less work as a regression. At a browser's pacing a
+real GPU's frame either makes the beat or does not, and that is the gate's own
+question.
+
+**Rejected.**
+
+- **Dropping D271.5 to bring the unthrottled bloom-off max back under 50 ms.**
+  The base build's default page (bloom on) already failed that max on the same
+  line (104–137 ms), so it was never a pass; buying 17 ms back on one line by
+  re-sending unchanged bytes would be tuning the code to the harness.
+- **`--vsync` as the default for `--gpu gl`.** Every GTX number in the evidence
+  is unthrottled and must still compare, and unthrottled p50/p95 are the only
+  headroom reading a fast GPU gives. Both lines exist; this decision says which
+  one the gate reads.
+- **Flushing or finishing the WebGL context every frame** so the buffer never
+  fills: it changes what the page does to suit the bench, and costs a real
+  browser a synchronisation it does not need.
