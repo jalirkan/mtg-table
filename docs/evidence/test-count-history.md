@@ -267,3 +267,14 @@ the facing, the tapped stance and the fall, the mesh and the program, a choice
 that carries no name) and liveness's standee clause. Inside `check-all.sh`:
 **1,212 / 1,201 pass / 0 fail / 11 skipped** plus 157 vitest,
 twice.
+
+### The portrait standee's fix pass
+
+**1,199 `node --test` + 157 vitest (9 files)** standalone (1,190 pass, 0 fail, 9
+skipped), from the lane's **1,197 + 157**: `standee.test.ts`'s new raster of the
+legibility floor on real frames (13 cases now), and `workshop.test.ts`'s sweep of
+the list's standee badge; the facing, the tapped stance, the program and the
+hard-rule-8 sweep's oracle were rewritten in place, `traits.test.ts`'s figure-layer
+hold grew the standee's case, and liveness's standee clause the floor's place in
+the lookup's order and the rim written at commit. Inside `check-all.sh`: **1,214 / 1,203 pass / 0 fail / 11 skipped** plus 157
+vitest.

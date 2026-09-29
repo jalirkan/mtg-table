@@ -65,6 +65,7 @@ import { VIEW_BY_ID } from '../src/arena/camera.ts';
 import { framingOf, frontPose } from '../src/workshop/framing.ts';
 import { cardOf, workshopEntries } from '../src/workshop/catalog.ts';
 import { MAX_BINDINGS, PROP_CAPACITY, PropField, buildKindGeometry } from '../src/arena/scene/props.ts';
+import { mayStand, standeeSheets } from '../src/arena/standee.ts';
 import { COSTUME_ATTRIBUTE } from '../src/arena/scene/figureMaterial.ts';
 import {
   bodyLayers,
@@ -1382,8 +1383,25 @@ const FIGURE_TRIS_HELD: Readonly<Record<string, number>> = {
 };
 /** Every recording not named above: its worst figure-layer triangles at once (`g1`@342). */
 const FIGURE_TRIS_OTHERS = 24701;
+/**
+ * **The same layer with the portrait standee at its dearest** (D263, as the fix
+ * pass amended it; dev server only, D260): every figure a standee MAY replace —
+ * the lookup's gates, `mayStand`, whatever the relief cache holds and whatever
+ * its legibility floor keeps — counted at the dearer of its body and props or one
+ * standee's 1,920 triangles. The most standees can make of each villain table,
+ * held at its measured worst like the layer above (within 5% below), and every
+ * other recording at the worst among them.
+ */
+const FIGURE_TRIS_STANDEES_HELD: Readonly<Record<string, number>> = {
+  'games/villain-doom-248.jsonl': 31438,
+  'games/villain-masters-of-evil-33.jsonl': 32107,
+  'games/villain-wakanda-232.jsonl': 29556,
+  'games/villain-hulk-family-261.jsonl': 24708,
+};
+/** Every recording not named above, with standees at their dearest (`g1`@342). */
+const FIGURE_TRIS_STANDEES_OTHERS = 25109;
 
-test('traits: the figure layer\'s triangles at once — each villain table held to its measured worst, every other recording to theirs (D233)', async () => {
+test('traits: the figure layer\'s triangles at once — each villain table held to its measured worst, every other recording to theirs (D233); and with the portrait standee at its dearest (D263)', async () => {
   const library = await loadLibrary();
   const field = new PropField();
   field.setLibrary(library, MODELS);
@@ -1394,13 +1412,26 @@ test('traits: the figure layer\'s triangles at once — each villain table held 
     kindTris.set(child.name.replace(/^props:/, ''), n);
   }
   const worst = new Map<string, { tris: number; at: number; bodies: number; props: number }>();
+  const standeeTris = standeeSheets().indices.length / 3;
+  const withStandees = new Map<string, { tris: number; at: number; standees: number }>();
   for (const { file, index, state } of FRAMES) {
-    const poses = figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS });
+    const placed = layout(state);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    // D263 (amended): the figures a standee may replace — the lookup's own gates, each card once.
+    const standable = new Set<number>();
+    for (const p of placed.placements) {
+      const pose = poses.get(p.cardId);
+      if ((p.kind === 'creature' || p.kind === 'stack') && pose !== undefined && !standable.has(p.cardId) && mayStand(p, pose)) standable.add(p.cardId);
+    }
     let bodies = 0;
     let props = 0;
+    let dearest = 0;
+    let standees = 0;
     for (const pose of poses.values()) {
       const base = baseModelOf(pose.modelId);
-      if (base !== null) bodies += MODELS.models[base]?.triangles ?? 0;
+      let own = 0;
+      if (base !== null) own += MODELS.models[base]?.triangles ?? 0;
+      bodies += base !== null ? (MODELS.models[base]?.triangles ?? 0) : 0;
       for (const prop of pose.props) {
         const key = prop.kind === 'squad' ? `squad:${base ?? ''}` : prop.kind;
         const per = kindTris.get(key);
@@ -1408,10 +1439,17 @@ test('traits: the figure layer\'s triangles at once — each villain table held 
         const instances =
           prop.kind === 'swarmBee' || prop.kind === 'squad' ? pose.swarm : Math.max(1, anchorsOf(prop.kind, familyOf(pose.modelId, MODELS), pose.hair === null).length);
         props += per * instances;
+        own += per * instances;
       }
+      if (standable.has(pose.cardId) && standeeTris > own) {
+        dearest += standeeTris;
+        standees += 1;
+      } else dearest += own;
     }
     const was = worst.get(file);
     if (was === undefined || bodies + props > was.tris) worst.set(file, { tris: bodies + props, at: index, bodies, props });
+    const had = withStandees.get(file);
+    if (had === undefined || dearest > had.tris) withStandees.set(file, { tris: dearest, at: index, standees });
   }
   const lines: string[] = [];
   let others = { tris: 0, where: '' };
@@ -1427,6 +1465,22 @@ test('traits: the figure layer\'s triangles at once — each villain table held 
   }
   assert.ok(others.tris <= FIGURE_TRIS_OTHERS, `${others.where}: ${String(others.tris)} figure-layer triangles at once, over the ${String(FIGURE_TRIS_OTHERS)} every other recording keeps (D233)`);
   assert.ok(others.tris >= FIGURE_TRIS_OTHERS * 0.95, `every other recording now peaks at ${String(others.tris)} against a held ${String(FIGURE_TRIS_OTHERS)} — re-measure (D233)`);
+  // The portrait standee at its dearest (D263, amended): the most standees can make of the layer.
+  assert.equal(standeeTris, 1920, 'a standee is 1,920 triangles (D263)');
+  let standeeOthers = { tris: 0, where: '' };
+  const standeeLines: string[] = [];
+  for (const [file, w] of [...withStandees].sort((a, b) => b[1].tris - a[1].tris)) {
+    standeeLines.push(`  ${file.padEnd(46)} ${String(w.tris).padStart(6)} at @${String(w.at)} (${String(w.standees)} standees dearer than their bodies; the layer alone ${String(worst.get(file)?.tris ?? 0)})`);
+    if (FIGURE_TRIS_STANDEES_HELD[file] === undefined && w.tris > standeeOthers.tris) standeeOthers = { tris: w.tris, where: `${file}@${String(w.at)}` };
+  }
+  console.log(`traits: the figure layer with the portrait standee at its dearest, per recording (D263)\n${standeeLines.join('\n')}\n  every other recording: ${String(standeeOthers.tris)} (${standeeOthers.where}), held to ${String(FIGURE_TRIS_STANDEES_OTHERS)}`);
+  for (const [file, held] of Object.entries(FIGURE_TRIS_STANDEES_HELD)) {
+    const got = withStandees.get(file)?.tris ?? 0;
+    assert.ok(got > 0 && got <= held, `${file}: standees at their dearest draw ${String(got)} figure-layer triangles at once, over the held ${String(held)} (D263)`);
+    assert.ok(got >= held * 0.95, `${file}: ${String(got)} against a held ${String(held)} — re-measure and record the cut (D263)`);
+  }
+  assert.ok(standeeOthers.tris <= FIGURE_TRIS_STANDEES_OTHERS, `${standeeOthers.where}: ${String(standeeOthers.tris)} with standees at their dearest, over the held ${String(FIGURE_TRIS_STANDEES_OTHERS)} (D263)`);
+  assert.ok(standeeOthers.tris >= FIGURE_TRIS_STANDEES_OTHERS * 0.95, `every other recording now peaks at ${String(standeeOthers.tris)} with standees against a held ${String(FIGURE_TRIS_STANDEES_OTHERS)} — re-measure (D263)`);
 });
 
 test('traits: every prop a deck card names fits the body that card stands in', () => {

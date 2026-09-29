@@ -2463,14 +2463,17 @@ test('liveness: sound is one module, bound from the one loop, fired by the queue
  *  - THE one place a relief map is looked up is `standeeChoicesOf`, and it asks
  *    in the one safe order — the pose's and the placement's gates (`mayStand`),
  *    then the card's own art lookup (`artEntryFor`, CardPlane's), then the relief
- *    index with the print that answered — a copy with the order swapped fails;
+ *    index with the print that answered, then the legibility floor on its cut
+ *    (`standeeReads`, D261 as the fix pass amended it) — a copy with the order
+ *    swapped, or with no floor, fails;
  *  - one reader of the index (`reliefIndexOf`, called by the loader alone), one
  *    loader of the standees (`useStandees`), and the lookup and the dressing
  *    called by `Arena.tsx` and nowhere else in the arena (the workshop's pedestal
  *    calls them too, outside this scan, as it calls the personal lookup);
  *  - the stance is written at COMMIT (`applyStandeeStance`: `FigureLayer`'s
- *    standee and the falling body's `addStandee`), and the frame loop's one
- *    standee number beyond a figure's is the falling body's `uLean`;
+ *    standee and the falling body's `addStandee`), and so is the ink rim's width
+ *    (`applyStandeeRim`, `FigureLayer`'s look effect, when the dpr changes); the
+ *    frame loop's one standee number beyond a figure's is the falling body's `uLean`;
  *  - the loop's standee bodies allocate nothing (`standeeFallOf` is in the
  *    departing bodies' scan above; the living standee is written by
  *    `applyFigures` and the clip lane finds no action on it).
@@ -2479,7 +2482,8 @@ test('liveness: the portrait standee — pure halves, the route named once behin
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
   // 1 — pure.
   for (const [path, allowed] of [
-    ['standee.ts', ['../art.ts', '../protocol.ts', './figures/pose.ts', './figures/types.ts', './layout.ts', './perf.ts', './relief.ts']],
+    // `./camera.ts` for the legibility floor's table view (D261, amended) — itself pure (the camera clause above).
+    ['standee.ts', ['../art.ts', '../protocol.ts', './camera.ts', './figures/pose.ts', './figures/types.ts', './layout.ts', './perf.ts', './relief.ts']],
     ['relief.ts', []],
   ] as const) {
     const code = files.get(path) ?? '';
@@ -2507,13 +2511,16 @@ test('liveness: the portrait standee — pure halves, the route named once behin
     const gate = body.indexOf('mayStand(');
     const art = body.indexOf('artEntryFor(');
     const map = body.indexOf('relief.byId.get(');
-    return gate > 0 && art > gate && map > art && (body.match(/\.byId\.get\(/g) ?? []).length === 1;
+    // The legibility floor (D261, amended) reads the cut, so it comes last.
+    const floor = body.indexOf('standeeReads(');
+    return gate > 0 && art > gate && map > art && floor > map && (body.match(/\.byId\.get\(/g) ?? []).length === 1;
   };
   assert.ok(ordered(choices), 'standeeChoicesOf no longer gates before it looks the art up, or the art before the relief');
   // The controls: a lookup with no gate, one that asks the art first, one that asks the relief twice.
   assert.equal(ordered(choices.replace('mayStand(placement, pose)', 'true')), false, 'the order check cannot see a lookup with no gate');
   assert.equal(ordered(`\nconst early = artEntryFor(art, placement.card);\n${choices}`), false, 'the order check cannot see the art asked before the gates');
   assert.equal(ordered(`${choices}\nrelief.byId.get(anything);`), false, 'the order check cannot see a second lookup');
+  assert.equal(ordered(choices.replace(/standeeReads\(/g, 'always(')), false, 'the order check cannot see a lookup with no legibility floor');
   const gateBody = bodyOf(pure, 'mayStand');
   for (const gate of ['placement.back', 'isHidden(placement.card)', 'pose.anonymous', 'pose.modelId === null', 'pose.silhouette !== null', 'pose.swarm > 0', 'pose.vehicle', 'pose.personal !== undefined']) {
     assert.ok(gateBody.includes(gate), `mayStand lost its gate on ${gate}`);
@@ -2528,17 +2535,19 @@ test('liveness: the portrait standee — pure halves, the route named once behin
   assert.deepEqual(callers('standeeCutOf'), [], 'the cut is the dev route’s, measured in Node — never on the page');
   // 5 — the stance at commit; the loop's one extra number is the falling body's lean.
   assert.deepEqual(callers('applyStandeeStance'), ['scene/FigureLayer.tsx']);
+  // The ink rim (D261, amended): one shared width, written at commit when the dpr changes — never in the loop.
+  assert.deepEqual(callers('applyStandeeRim'), ['scene/FigureLayer.tsx']);
   const layer = files.get('scene/FigureLayer.tsx') ?? '';
   const field = layer.slice(layer.indexOf('class DepartureField'));
   assert.ok(bodyOf(field, 'addStandee').includes('applyStandeeStance('), 'a falling standee no longer starts from its stance');
   assert.ok(!bodyOf(field, 'bind').includes('applyStandeeStance('), 'the frame loop writes a stance');
   const runner = files.get('scene/CueRunner.tsx') ?? '';
-  const writesStandee = /\buLean\b|\buSink\b|\buWash\b|\buFaceCamera\b|applyStandeeStance/;
+  const writesStandee = /\buLean\b|\buSink\b|\buWash\b|\buFaceCamera\b|\buRim\b|STANDEE_RIM|applyStandeeStance|applyStandeeRim/;
   assert.ok(!writesStandee.test(runner), 'CueRunner writes a standee’s stance — it is written at commit');
   assert.ok(writesStandee.test(`${runner}\nrig.material.uniforms.uLean.value = 1;`), 'the standee-write scan misses the line it exists to catch');
   const bind = bodyOf(field, 'bind');
   assert.match(bind, /entry\.standee\.uniforms\.uLean\.value = /, 'a falling standee no longer falls');
-  assert.ok(!/\buSink\b|\buWash\b|\buFaceCamera\b/.test(bind), 'the frame loop writes a standee number beyond its fall');
+  assert.ok(!/\buSink\b|\buWash\b|\buFaceCamera\b|\buRim\b|applyStandeeRim/.test(bind), 'the frame loop writes a standee number beyond its fall');
   // 6 — the clip lane: a standee's rig has no actions.
   assert.match(bodyOf(layer, 'standeeRig'), /actions: new Map\(\),\s*restActions: new Map\(\),/, 'a standee rig carries actions — the clip lane would play on a painting');
 });

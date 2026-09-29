@@ -597,6 +597,17 @@ standee stands only where a CC0 BODY would — a face-up, named creature — and
 never for a face-down card, a redacted stub, a member of a swarm or a squad, or a
 vehicle's silhouette (hard rule 8, D264).
 
+**And only where it reads** (D261, as its fix pass amended it). A standee whose
+subject, kneeling, would cover less than a 30-pixel square's worth of the screen
+at 1× from the table view — a drone's small body with a flight scene's thin
+subject, a crowd of small figures on the far seat — stands as its CC0 body
+instead: the Aerial Doombot, the Wakandan Drone Flock, Doom's Servo-Guards, the
+A.I.M. Bot, Yellowjacket and Black Panther, Vanguard never stand; over the recordings about four in five
+of your seat's standees and three in five of the opponent's do. The floor is
+judged kneeling, the smallest a standee is drawn, so a card does not change body
+when it taps; it can when its rank moves it across the floor (ten times over
+the recordings).
+
 **The A/B**: `?standee=0` draws the CC0 figures with your models still on;
 `?personal=0` turns the whole tier off (models and standees); a build stands
 none. The dev server's start line says how many maps it cut: *personal relief:
@@ -612,26 +623,32 @@ the subject. It serves the three numbers in the relief index beside the map. The
 page draws the two layers the inspect window draws — the front, cut by the keep
 mask AND by the subject, and the back behind it where a nearer part of the
 subject hides a farther one — on one mesh, turned to the camera about the
-vertical, as a relief along its own front: the painting unlit, as it is.
+vertical, as a relief along its own front: the painting unlit, as it is, with
+an ink line round the cut — the figures' own outer ink weight — so a painting
+standing over a painting (the far seat's standees over their own cards, from the
+table) keeps its edge.
 
 **How tall, and how it holds a stance** (D262). A standee is as wide as its cut
 is (0.69–2.25 of its height over the deck, median 1.37), so the rank slot's width
 clamp stands a figure-shaped cut (Moonstone's) at full height and a crowd scene as
-a low frieze. Tapped, it **kneels** — a quarter of it sunk into the table and its
-top bowed toward you; summoning-sick, it is translucent; attacking and blocking,
+a low frieze. Tapped, it **kneels** — a fifth of it sunk into the table and its
+top bowed a little toward you, so it reads about three quarters of its standing
+height from the table view with its face whole; summoning-sick, it is translucent; attacking and blocking,
 it stands (the lunge, the arrows and the combat bands say it); when it dies it
 **falls back on its base**, fades and greys, for as long as its death cue plays.
 Its status strip stands over its own height.
 
-**The workshop** (`#workshop`): the list badges a card the relief cache can stand
-as a *standee*, and the pedestal wears it behind the same *personal / repo*
-toggle as the models — so one card's standee can be looked at up close (its cut
+**The workshop** (`#workshop`): the list badges a card the pedestal stands as a
+*standee* — the arena's own lookup asked of the card's resting board, so a card
+under the floor has no badge — and the pedestal wears it behind the same
+*personal / repo* toggle as the models — so one card's standee can be looked at up close (its cut
 edge, its depth as the camera moves up and down).
 
 **What it costs** (D263): one draw call a standee, 1,920 triangles — about what
-the CC0 body and its props it replaces cost — its map and back image uploaded
-when it mounts and disposed with the page, its colour the very texture the card
-draws with.
+the CC0 body and its props it replaces cost, a few hundred more on a crowded
+villain table, which the CC0 table's line accepts with its numbers — its map
+and back image uploaded when it mounts and disposed with the page, its colour
+the very texture the card draws with.
 
 **It is derived from card art, so it is personal**, like the cache it reads: a
 picture of a standee stays in `var/` and goes nowhere else.

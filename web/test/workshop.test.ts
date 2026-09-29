@@ -68,7 +68,9 @@ import {
 } from '../src/workshop/framing.ts';
 import { lookupArt, parseArtFile, type ArtIndex } from '../src/art.ts';
 import { RELIEF_DEPTH } from '../src/arena/perf.ts';
-import { inspectPlan, inspectSourceOf, type InspectSource, type ReliefEntry, type ReliefIndex } from '../src/workshop/relief.ts';
+import { inspectPlan, inspectSourceOf, standeeBadgesOf, type InspectSource, type ReliefEntry, type ReliefIndex } from '../src/workshop/relief.ts';
+import { EMPTY_PERSONAL, personalOverlayOf } from '../src/arena/personal.ts';
+import { standeeReads } from '../src/arena/standee.ts';
 import {
   DEFAULT_OPTIONS,
   IDS,
@@ -727,6 +729,82 @@ test('workshop: the inspect view builds ONE backdrop per face-up card with a fig
   const leaks = hostile.filter((e) => inspectPlan(framingFor(e), ungated(e), index, { on: true, base: 'relief/' }) !== null);
   assert.ok(leaks.length >= 1, 'the negative control found no leak — the test would pass with the gate removed');
   assert.ok(asked.some((id) => secretIds.has(id)), 'the ungated control never reached the relief index');
+});
+
+test('workshop: the list’s standee badge is THE lookup’s answer on each creature’s resting board — never a concealed entry, a swarm, a squad or a card a personal model dresses, and only one that reads; a hostile relief against an oracle, with an ungated control (D260, D264)', () => {
+  // Hostile: the concealed shapes handed a real name each, as the inspect test does.
+  const hostile = ENTRIES.filter((e) => e.concealed !== null).map((e, i) => ({ ...e, key: `${e.key}#badge-${String(i)}`, name: `Badge Secret ${String(i)}` }));
+  const all = [...ENTRIES, ...hostile];
+  const { art, idOf } = syntheticArt(hostile.map((e) => e.name));
+  const secretIds = new Set(hostile.map((e) => idOf.get(e.name)!));
+  // A relief with a cut for every print: a figure in a doorway (0.8 × its height wide, two thirds filled).
+  const asked: string[] = [];
+  const CUT = { box: { left: 0.2, right: 0.2 + (0.8 * 0.9 * 301) / 410, top: 0.05, bottom: 0.95 }, near: 0.3, share: 0 };
+  CUT.share = 0.66 * (CUT.box.right - CUT.box.left) * 0.9;
+  const relief: ReliefIndex = {
+    byId: {
+      get(id: string): ReliefEntry {
+        asked.push(id);
+        return { id, file: `${id}.png`, width: 410, height: 301, back: { file: `${id}.back.jpg`, width: 560, height: 451, margin: 75 }, standee: CUT };
+      },
+      size: 1,
+    } as unknown as ReadonlyMap<string, ReliefEntry>,
+    dropped: [],
+  };
+  // A personal model dresses one creature the badge would otherwise carry.
+  const dressedName = ENTRIES.find((e) => e.concealed === null && roleOf(e) === 'creature' && e.name.startsWith('Agent 13'))!.name;
+  const overlay = personalOverlayOf({ version: 1, models: [{ slug: 'x', model: 'personal/models/x/model.glb', cards: [dressedName], seats: [], triangles: 10, calls: 1 }] });
+  const inputs = { art, relief, base: 'personal/relief/', overlay, figures: FIGURES, models: MODELS, traits: TRAITS, presence: PRESENCE };
+  const badges = standeeBadgesOf(all, inputs);
+  // The oracle, written apart from the lookup: a face-up creature whose own figure is a named body a CC0
+  // figure stands in (not the anonymous one, not a swarm or a squad, not a silhouette or a vehicle), not
+  // dressed by the overlay, that reads kneeling at its stand point.
+  const aspect = ((CUT.box.right - CUT.box.left) * 410) / ((CUT.box.bottom - CUT.box.top) * 301);
+  const expected = new Set<string>();
+  const counts = { concealed: 0, swarm: 0, silhouette: 0, dressed: 0, unread: 0 };
+  for (const e of all) {
+    if (roleOf(e) !== 'creature') continue;
+    if (e.concealed !== null) {
+      counts.concealed += 1;
+      continue;
+    }
+    if (e.name === dressedName) {
+      counts.dressed += 1;
+      continue;
+    }
+    const state = pedestalState(e, DEFAULT_OPTIONS);
+    const poses = figurePose(layout(state, PRESENCE), state.board?.combat ?? null, FIGURES, { models: MODELS });
+    const pose = figureIds(e, DEFAULT_OPTIONS).map((id) => poses.get(id)).find((p) => p !== undefined);
+    if (pose === undefined || pose.anonymous || pose.modelId === null || pose.vehicle) continue;
+    if (pose.swarm > 0) {
+      counts.swarm += 1;
+      continue;
+    }
+    if (pose.silhouette !== null) {
+      counts.silhouette += 1;
+      continue;
+    }
+    if (!standeeReads(pose, aspect, 0.66)) {
+      counts.unread += 1;
+      continue;
+    }
+    expected.add(e.name);
+  }
+  assert.deepEqual([...badges].sort(), [...expected].sort(), 'the badge is not exactly what the pedestal would stand');
+  assert.ok(badges.size >= 40, `only ${String(badges.size)} badges — the sweep proves nothing`);
+  // (No creature entry flies as a silhouette on its resting board — the carriers are vehicles — so that gate is standee.test's.)
+  assert.ok(counts.concealed >= 1 && counts.swarm >= 1 && counts.dressed === 1 && counts.unread >= 1, `a gate had no case: ${JSON.stringify(counts)}`);
+  assert.ok(asked.every((id) => !secretIds.has(id)), 'the relief index was asked about a concealed entry’s print');
+  // A build (no route) and an empty index badge nothing.
+  assert.equal(standeeBadgesOf(all, { ...inputs, base: null }).size, 0);
+  assert.equal(standeeBadgesOf(all, { ...inputs, relief: { byId: new Map(), dropped: [] } }).size, 0);
+  assert.ok(standeeBadgesOf(all, { ...inputs, overlay: EMPTY_PERSONAL }).has(dressedName), 'the dressed card has no badge even undressed — the dressed case proves nothing');
+  // The negative control: the list's first badge — its own gates by the catalog's traits, the art by name — badged
+  // the concealed shapes once they carried a name, and asked the relief about their prints.
+  const ungated = all.filter((e) => roleOf(e) === 'creature' && lookupArt(art, e.name) !== null && relief.byId.get(lookupArt(art, e.name)!.scryfallId)?.standee !== null);
+  assert.ok(ungated.some((e) => e.concealed !== null), 'the ungated control badged no concealed entry');
+  assert.ok(asked.some((id) => secretIds.has(id)), 'the ungated control never reached the relief');
+  console.log(`workshop standee badge: ${String(badges.size)} of ${String(all.filter((e) => roleOf(e) === 'creature').length)} creature entries; refused ${JSON.stringify(counts)}`);
 });
 
 test('workshop: the relief never comes nearer the figure than the flat picture — the window stands clear of every figure’s bounds at rest and through every clip; DYING is the exception: a death falls through the window, flat or relief (D226, D228, measured; PLAN’s relief follow-up 2)', async () => {
@@ -1398,6 +1476,15 @@ test('liveness: the relief window (D226, D227) — relief.ts is pure; THE reader
   const files = workshopFiles();
   const readers = files.filter((f) => /\breliefIndexOf\(/.test(f.code));
   assert.deepEqual(readers.map((f) => f.path), [], 'a workshop module reads the relief index itself — the arena’s loader is the one (D260)');
+  // A map is looked up in the workshop ONCE — the inspect view's plan, face up only; the list's standee
+  // badge asks the arena's standeeChoicesOf (relief.ts's standeeBadgesOf), never the index itself (D260).
+  // (Workshop.tsx's `byId.has(inspectSource.scryfallId)` greys the relief checkbox: the inspect source's own id, face up only.)
+  const lookups = files.flatMap((f) => (f.code.match(/\.byId\.get\(/g) ?? []).map(() => f.path));
+  assert.deepEqual(lookups, ['relief.ts'], 'a workshop module looks a relief map up outside inspectPlan');
+  const reliefCode = files.find((f) => f.path === 'relief.ts')!.code;
+  const inspect = reliefCode.slice(reliefCode.indexOf('export function inspectPlan('));
+  assert.ok(/\.byId\.get\(/.test(inspect.slice(0, inspect.indexOf('\n}\n'))), 'the inspect plan’s lookup moved — move this check with it');
+  assert.match(reliefCode.slice(reliefCode.indexOf('export function standeeBadgesOf(')), /standeeChoicesOf\(placed, poses, inputs\.art, inputs\.relief/, 'the badge no longer asks THE lookup');
   const pedestal = files.find((f) => f.path === 'Pedestal.tsx')!.code;
   assert.match(pedestal, /import \{[^}]*\buseDepthTexture\b[^}]*\} from '\.\.\/arena\/scene\/reliefCache\.ts';/, 'the inspect view’s depth map comes through the arena’s loader');
   const loader = readFileSync(fileURLToPath(new URL('../src/arena/scene/reliefCache.ts', import.meta.url)), 'utf8');

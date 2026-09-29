@@ -1110,7 +1110,9 @@ workshop's *personal / repo* toggle the close look. It is turned to the camera
 about the vertical on both seats (**D261**, measured against D143's facing), as
 tall as its cut under the rank slot's width clamp, kneeling as a painting can
 when tapped (**D262**), one draw call (**D263**), and allowed as a second card-art
-surface only through `CardPlane`'s own lookup after the gates (**D264**). NOTICE
+surface only through `CardPlane`'s own lookup after the gates (**D264**) — and,
+since its fix pass, only where it reads from the table (a legibility floor, with
+an ink rim round the cut: **D261** amended). NOTICE
 §2 is unchanged — the standee, like the relief window, is drawn only on the
 owner's machine and never in a build or a picture that leaves it; whether NOTICE
 should say so is left to the owner (PLAN.md, the personal tier's follow-ups).

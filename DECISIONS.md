@@ -10946,6 +10946,68 @@ camera. Recorded as the price and a follow-up (a partial turn).
   change and on the director's every cut — and from a drag's far end a painting
   seen edge on.
 
+**Amended by the fix pass (2026-09-29): the legibility is a FLOOR, measured on
+real frames, and the cut carries an ink RIM.** The verifier found standees that
+did not read as their card at 1× from the table view — both Aerial Doombots at
+`g1`@316 (a drone's 0.43 of a figure, a flight scene filling a third of its box:
+a grey-green sliver on both seats) and, at the Masters of Evil's @209, the
+opponent's sick Doombot and tapped Agent 13 standing over their own cards' faces
+and melting into the painting behind them. The 403 / 345 px above counted subject
+pixels at the nominal height against traits.test's 48-px bar for a PROP, which
+every one of those passes, so they measured nothing about reading.
+
+1. **The floor** (`arena/standee.ts`'s `standeeLegibilityAt` and `standeeReads`,
+   `perf.ts`'s `STANDEE_MIN_PX` = 30): a standee stands only where its subject,
+   KNEELING — the smallest stance a snapshot draws it in, so a card never changes
+   body when it taps — covers at least a 30-px square's worth of pixels at 1× from
+   the table view on the 1600 × 1000 canvas traits.test's raster uses, at its own
+   stand point, posed as `STANDEE_VERTEX` poses it (the box's drawn area × the cut's
+   fill). Under it, its CC0 body stands. `standeeChoicesOf` applies it last, after
+   the relief (it reads the cut's numbers, never a name). Chosen from a contact
+   sheet of every standee seven crowded frames put on the table, rendered at
+   `?dpr=1` (`docs/evidence/standee.md` §9): every one measured 28 or less read as a
+   sliver or a smudge — the Aerial Doombot on both seats (23–24), the Wakandan
+   Drone Flock (20), Doom's Servo-Guards and Baron Strucker (25), the A.I.M. Bot
+   (28) — and every one from 31 up read as its card (the Volcanic Villain at 31, the
+   Masters of Evil's rank at 33–40). Over every board frame of the corpus with this
+   checkout's 158 cuts it keeps 8,887 of 10,740 standee placements on your seat
+   (83%) and 2,952 of 4,678 on the opponent's (63%); seven cards never stand (the
+   three drone cards, the A.I.M. Bot, Yellowjacket, Black Panther, Vanguard, and
+   Wasp, whose personal model dresses her). A card changes body only when its
+   stand point moves it across the floor — 10 times over the corpus, counted with
+   no personal model taking a card (PLAN.md's personal-tier follow-up 42).
+2. **The ink rim** (`STANDEE_FRAGMENT`): where the front is not the subject but a
+   subject texel lies within the figures' own outer ink width — `COMIC.inkCssPx`
+   (1.6 CSS px) × the render dpr, one uniform every standee shares, written at
+   commit (`scene/reliefCache.ts`'s `applyStandeeRim`, `FigureLayer`'s look
+   effect) — the front draws `COMIC.ink`: eight taps of the map, their reach from
+   the pixel's own footprint (`fwidth`), every tap's coordinate computed before any
+   branch so its implicit mip level is the pixel's own (a `textureGrad` form of the
+   same cost SwiftShader about 9 ms more a frame for nine standees, `textureLod`
+   about 3; this one is within the noise of the lane's shader without a rim —
+   evidence §9.2). A figure's silhouette is inked by bloom's pass; a
+   standee writes no painted mark (D226), so its edge is its own, and a painting
+   standing over a painting — the far seat's standees over their own cards, seen
+   from the table — now has one. The same call, no triangle; its cost is in D263's
+   frame times.
+3. **Held by a raster** (`standee.test.ts`): the standee rasterised through the
+   table view at every stand point of `g1`@316 and the Masters of Evil's @209 and
+   @371 on both seats — the drones on both seats are their CC0 bodies (each passed
+   the first measure's 48 px: the control), the opponent's tapped portrait at @209
+   reads, your seat's rank at @371 stands every one — and over an eleventh of the
+   corpus's board frames × five cuts, 4,219 kept standees, the floor within 1.3% of
+   the raster's count and none under it in any stance. The hard-rule-8 sweep's
+   oracle carries the floor too, written apart from the lookup.
+
+**Rejected** (the fix pass). A higher bar on the first measure (subject pixels at
+the nominal height ignore the archetype's own height and the kneel). A floor on
+the stance on screen (a card would change body when it taps). A floor measured on
+the table's centre line rather than the stand point (6 body changes over the
+corpus rather than 10, but it stood down the Volcanic Villain, which reads,
+everywhere). No rim (the far seat's standees melt into the cards behind them).
+Considered and not built: a paper-white border (a sticker's edge reads as a card
+held up, and a white line over the far side's pale cards is no edge).
+
 ---
 
 ## D262 — A standee's height is its cut's, clamped by the rank slot; tapped, it kneels as a painting can — a quarter sunk and bowed toward the lens; sick is translucent; it falls on its back when it dies
@@ -11012,6 +11074,21 @@ down.
 - **A standee that leans toward its attacker or its defender.** Turned to the
   camera it has no side to lean to; the lunge, the arrows and the bands already
   say it.
+
+**Amended by the fix pass (2026-09-29): tapped is a small sink and a small bow —
+a fifth of its height sunk, its top bowed 0.1 rad (6°) toward the lens**
+(`STANDEE_STANCES.crouch` = `{ lean: −0.1, sink: 0.2 }`). The first stance (a
+quarter sunk, 0.3 rad) read from the table view at 0.39–0.59 of its standing
+height and 0.33–0.53 of its area (`standee.test.ts`, six stand points from your
+back row to the opponent's) — the sliver the verifier saw (MACH-1, and Agent 13
+over her own card at the Masters of Evil's @209): the table view looks down 45–58°
+on the ranks, so every radian of bow turns the painting further from it. Now it
+reads 0.68–0.78 of its standing height and 0.65–0.73 of its area on both seats —
+shorter, as the CC0 kneel is, with the face whole — and D261's floor is judged in
+it. The measurement above ("standing ÷ tapped ≥ 1.37") counted the part sunk
+below the table (the test's corners started at the base); the drawn box starts
+at the table's plane (the fragment shader's `vAbove`), and the test now does too.
+A falling standee still falls from its last stance's lean.
 
 ---
 
@@ -11081,6 +11158,65 @@ numbers.
   32 × 24 front puts a vertex every 2–5 px.
 - **Counting standees against `PERSONAL_TABLE_TRIS`** (the rationale above).
 
+**Amended by the fix pass (2026-09-29): the CC0 table's share, stated and
+accepted with its numbers; the part that grows, held by a test; the frame times
+with their p95.** The verifier: "standee triangles count as the CC0 table's" was
+recorded but neither met nor tested — with the personal models' own triangles
+taken out (`&standee=0` minus `&personal=0`), the standees put the Masters of
+Evil's table past the worst D233 accepted, and nothing held them.
+
+1. **The share, after the fix pass's floor** (one render of the exact frame, bloom
+   off, the table view, the dev server; `docs/evidence/standee.md` §9's census —
+   the standees on, minus the models' own delta, against the tier off):
+
+   | frame | standees | the CC0 table with its standees | the CC0 table alone | |
+   |---|---|---|---|---|
+   | `villain-masters-of-evil-33`@371 | 9 | **36,893** | 35,689 (D233's accepted worst) | **+1,204** |
+   | `villain-masters-of-evil-33`@471 | 8 | 35,813 | 34,421 | +1,392 |
+   | `villain-hulk-family-261`@368 | 11 | 29,681 | 27,318 | +2,363 |
+   | `villain-hulk-family-261`@427 | 10 | 28,902 | 26,728 | +2,174 |
+   | `villain-wakanda-232`@527 | 9 | 33,510 | 32,128 | +1,382 |
+   | `villain-wakanda-232`@382 | 7 | 33,392 | 33,592 (D233's accepted worst) | −200 |
+   | `villain-doom-248`@393 | 4 | 36,584 | 37,546 (D222's) | −962 |
+   | `g1`@355 | 1 | 28,355 | 29,609 | −1,254 |
+
+   So the standees raise the Masters of Evil's worst frame 1,204 triangles past what
+   D233 accepted, 6,893 over report 13 §8.2's 30,000; they take the Hulk family's
+   @368 to 29,681, 319 under the line; and they lower the Doom Legion's, Wakanda's
+   worst and `g1`'s. **Accepted, with these numbers**: the standee is the personal
+   tier's (the dev server only — a build stands none), every one of those tables
+   draws 0–12 calls FEWER with it (a standee is one call and wears none of the prop
+   kinds), and the whole scene's most is 48,701 (@371, the models included), under
+   the tier's 66,000. Per standee the frames average −1,254 to +217 triangles
+   against what it replaced (the lane's "−880 to +220" was the first census).
+2. **Held** (`traits.test.ts`, beside D233's `FIGURE_TRIS_HELD`):
+   `FIGURE_TRIS_STANDEES_HELD` is the figure layer with every figure a standee MAY
+   replace (the lookup's own gates, `mayStand`, whatever the relief cache holds and
+   whatever the floor keeps) counted at the dearer of its body and props or 1,920 —
+   the most standees can make of each table, frame by frame over the corpus: the
+   Masters of Evil 32,107 (`@376`, against the layer's 31,449 alone), the Doom
+   Legion 31,438, Wakanda 29,556, the Hulk family 24,708, every other recording
+   25,109 (`g1`@342) — each within 5% below, so a standee that grows, or a body that
+   shrinks under one, moves a held number with its measurement.
+3. **The frame times** (the verifier: the p95, not the p50, is the number that
+   moved): at the Masters of Evil's @371 on SwiftShader the lane measured p95 68.8
+   against `&standee=0`'s 34.3 ms and the verifier 68.2 against 39.4, with one max of
+   774 ms. The fix pass's interleaved pairs (evidence §9.4, a load of 4–8): p50
+   23.5–27.1 against 19.8–21.0 ms, p95 47.5–48.6 against 32.8–47.3 with the sample
+   600 ms after the scrub, but 34.3 against 30.3 with it 3 s after, the maxima of
+   144–251 ms falling to 51 — so the p95 excess is most likely the standees' first
+   mount (two maps a print uploaded and mipmapped at commit), not their per-frame
+   cost, which a microbenchmark of their own render puts at 6.3–7.6 ms for nine on
+   SwiftShader, within the noise of the lane's shader without a rim. The GTX 1080
+   shows no cost (p50 0.4 against 0.7, p95 0.9 against 7.9). Folded into PLAN.md's
+   personal-tier follow-up 39.
+
+The build line above ("byte for byte") was wrong: the 2D entry chunk is the same
+size (300,425 B) and the same code apart from the lazy chunks' hashed names in its
+import map (the verifier's diff of the two builds: 84 bytes). The fix pass's rim
+and floor add 1.9 kB to the scene chunk (`arena-scene-*.js` 1,383,443 B, 397.08 kB
+gzip).
+
 ---
 
 ## D264 — Hard rule 8 for a second card-art surface on the table: a standee only for a face-up, named figure's own print, through CardPlane's lookup, after the gates — and a concealed card never looks its art up
@@ -11129,6 +11265,22 @@ asks the relief about 20,180 concealed prints (the negative control).
 (`standeeChoicesOf`), its order — the gates, then the art, then the relief, with
 three spliced controls — and every gate by name.
 
+
+**Amended by the fix pass (2026-09-29).** The lookup's last step is now D261's
+legibility floor (`standeeReads`), after the relief: it reads the cut's numbers
+and the pose's stand point and height, never a name, so the order the liveness
+clause holds is gates → art → relief → floor (a spliced copy with no floor is its
+fourth control). And **the workshop list's *standee* badge asks the same lookup**
+(`workshop/relief.ts`'s `standeeBadgesOf`: each creature entry's resting board,
+laid out and posed as the pedestal poses it, the models the overlay dresses taken
+first) — the badge had its own gates and its own `byId.get` in `Workshop.tsx`,
+which no sweep covered (the verifier removed its swarm gate and every test stayed
+green). `workshop.test.ts` sweeps the catalog with the concealed shapes handed real
+names and a relief that cuts every print as a figure in a doorway, against an
+oracle: 72 badges of 103 creature entries, no concealed entry, no swarm or squad, not the card a personal
+model dresses, and 10 refused by the floor; the ungated control badges a concealed
+entry and asks the relief about its print. The inspect view's plan is the
+workshop's one relief lookup (a liveness clause).
 **Rationale.** A standee is a statement about what a card is, as a personal model
 is (D190, D195) and as the palette is (D160): the rule and the test are theirs,
 applied to a painting. Going through `artEntryFor` rather than a lookup of its own

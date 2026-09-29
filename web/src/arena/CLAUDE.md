@@ -98,11 +98,12 @@ Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
 `npm run build`'s own output is the check — the 2D entry chunk is 94.68 kB gzip
-on this tree, the same bytes before and after the portrait standee (90.40 before
+on this tree, the same size before and after the portrait standee and the same
+code apart from the lazy chunks' hashed names in its import map (90.40 before
 the status layer put its glyph kit and the tile's row in it), and none of it is
 `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (396.34 kB gzip
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (397.08 kB gzip
 on this tree, 393.36 before the standee) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
@@ -1067,15 +1068,21 @@ is the tier's second renderer path, the portrait standee (D260–D264,
    - **`arena/standee.ts` is pure and decides everything**: `standeeCutOf` is THE
      cut — measured by the dev route in Node from the map's own pixels
      (`web/src/personal/png.ts`), never on the page — and `STANDEE_FRAGMENT` draws
-     exactly its test; `standeeChoicesOf` is THE lookup; `dressStandees` the
+     exactly its test; `standeeChoicesOf` is THE lookup; `standeeReads` THE
+     legibility floor (D261 as its fix pass amended it: a standee whose subject,
+     kneeling, would cover under `STANDEE_MIN_PX` square at 1× from the table view
+     is its CC0 body, measured on its stand point as the vertex shader poses it and
+     held to a raster of real frames by `standee.test.ts`); `dressStandees` the
      dressing (an opaque `s<n>`, the cut's aspect under the width clamp, D65).
    - **THE one place a relief map is looked up is `standeeChoicesOf`, and in
      the one safe order** (D264): `mayStand`'s gates on the placement and the
      pose, then `art.ts`'s `artEntryFor` — `CardPlane`'s own lookup, so a standee
      shows nothing the card's face does not — then the relief index by that
-     print. `standee.test.ts` sweeps every board frame of the corpus made hostile
-     against an oracle, with an ungated control; liveness holds the order, with
-     spliced controls.
+     print, then the floor on its cut. `standee.test.ts` sweeps every board frame
+     of the corpus made hostile against an oracle, with an ungated control;
+     liveness holds the order, with spliced controls. The workshop list's
+     *standee* badge asks the same lookup (`workshop/relief.ts`'s
+     `standeeBadgesOf`, over each creature's resting board), never the index.
    - **The relief index, its route and its loaders are the arena's**
      (`arena/relief.ts`'s `reliefIndexOf` and `ART_BOX`; `scene/reliefCache.ts`'s
      `RELIEF_BASE`, DEV-gated on its own line, the index, the depth maps and
@@ -1092,8 +1099,12 @@ is the tier's second renderer path, the portrait standee (D260–D264,
    - **ONE draw call a standee** (D263): the two sheets are one mesh
      (`standeeSheets`, 1,920 triangles), the card's colour is `CardPlane`'s
      texture, its map and back image are uploaded at mount and disposed with their
-     owner, and it faces the camera about the vertical on both seats (D261,
-     measured against D143's facing).
+     owner, it faces the camera about the vertical on both seats (D261,
+     measured against D143's facing), and its cut carries an ink rim of the
+     figures' own outer ink weight in the same call (`COMIC.inkCssPx` × the dpr,
+     one shared uniform written at commit by `applyStandeeRim`). Its triangles are
+     the CC0 table's; `traits.test.ts` holds the figure layer with every figure a
+     standee may replace at the dearer of the two (D263, amended).
 
 ## Villain identity — the conventions D220–D222 and D230–D233 added
 

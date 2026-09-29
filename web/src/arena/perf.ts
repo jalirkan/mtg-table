@@ -339,7 +339,7 @@ export const RELIEF_CLIFF = 0.12;
 export const RELIEF_MAP_VERSION = 3;
 
 /**
- * **The portrait standee** (D260–D264; `arena/standee.ts`, `scene/standees.ts`,
+ * **The portrait standee** (D260–D264; `arena/standee.ts`, `scene/reliefCache.ts`,
  * `docs/evidence/standee.md`): a face-up creature no personal model dresses,
  * drawn from the relief cache as its painting's near subjects cut out — the
  * personal tier's second renderer path, dev server only.
@@ -358,7 +358,21 @@ export const RELIEF_MAP_VERSION = 3;
  * - `STANDEE_FACES_CAMERA` — the facing (D261, measured from the seat-safe views):
  *   `true` turns every standee's front to the camera about the vertical, the
  *   opponent's included — a painting has no back to show.
+ * - `STANDEE_MIN_PX` — THE legibility floor (D261, as the fix pass amended it):
+ *   a standee stands only where its subject, KNEELING (the smallest stance a
+ *   snapshot draws it in, so a card never changes body when it taps), covers at
+ *   least a `STANDEE_MIN_PX`-px square's worth of pixels at 1× from the table
+ *   view on the {@link STANDEE_LEGIBLE_CANVAS} (traits.test's raster's); under it,
+ *   its CC0 body stands. Chosen from pictures of every standee seven crowded
+ *   frames put on the table, at dpr 1 (`docs/evidence/standee.md` §9): every
+ *   one measured 28 or less read as a sliver or a smudge — the Aerial Doombot's
+ *   diagonal flight at a drone's height on both seats (23–24), the Wakandan Drone
+ *   Flock (20), Doom's Servo-Guards and Baron Strucker (25), the A.I.M. Bot (28)
+ *   — and every one from 31 up read as its card (the Volcanic Villain at 31, the
+ *   Masters of Evil's rank at 33–40).
  */
+export const STANDEE_MIN_PX = 30;
+export const STANDEE_LEGIBLE_CANVAS: readonly [number, number] = Object.freeze([1600, 1000] as [number, number]);
 export const STANDEE_MIN_SHARE = 0.03;
 export const STANDEE_PAD_PX = 3;
 export const STANDEE_GRID: readonly [number, number] = Object.freeze([32, 24] as [number, number]);

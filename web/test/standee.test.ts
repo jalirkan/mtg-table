@@ -27,12 +27,18 @@
  *     its refitted height (D210–D212), the same map when nothing is dressed.
  *  4. **What was measured** (D261, D262): the facing — a standee turned to the
  *     camera shows its painting from every seat-safe view on BOTH seats, where
- *     D143's facing would show your own seat nothing but cardboard; the
- *     legibility — at least 48 px of subject at 1× from the table view on both
- *     seats (traits.test's bar), with the least subject fill and the widest cut
- *     the deck's maps measured; the tapped stance — shorter from the table view
- *     than standing, where leaning back reads taller; and the fall.
- *  5. **The mesh** (D263): two sheets, one draw call, 1,920 triangles.
+ *     D143's facing would show your own seat nothing but cardboard; the tapped
+ *     stance — shorter from the table view than standing but never the sliver the
+ *     first stance was, where leaning back reads taller; and the fall.
+ *  5. **THE legibility floor, rasterised on real frames** (D261, as the fix pass
+ *     amended it): the standee rasterised through the table view at 1600 × 1000
+ *     at every stand point of `g1`@316 and the Masters of Evil's @209 and @371 on
+ *     both seats — the drones the verifier saw as slivers stand as their CC0
+ *     bodies, the rank that read still stands — and over the corpus, the floor's
+ *     number is what the raster draws, and no standee the lookup keeps draws under
+ *     it in any stance.
+ *  6. **The mesh** (D263): two sheets, one draw call, 1,920 triangles; the cut
+ *     and its ink rim, drawn exactly.
  */
 
 import assert from 'node:assert/strict';
@@ -47,11 +53,12 @@ import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' 
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import type { ArtEntry, ArtIndex } from '../src/art.ts';
 import { VIEW_BY_ID, projectToNdc, type Pose } from '../src/arena/camera.ts';
-import { figurePose, type FigureLayout, type FigurePose } from '../src/arena/figures/pose.ts';
+import { figurePose, fitHeight, type FigureLayout, type FigurePose } from '../src/arena/figures/pose.ts';
 import { statusLayout } from '../src/arena/figures/status.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { FIGURE_HEIGHT, FIGURE_MAX_WIDTH, STATUS_LIFT, layout, seatFacingY, type Layout, type Placement } from '../src/arena/layout.ts';
-import { RELIEF_CLIFF, STANDEE_BACK_GRID, STANDEE_FACES_CAMERA, STANDEE_GRID, STANDEE_MIN_SHARE } from '../src/arena/perf.ts';
+import { COMIC } from '../src/arena/look.ts';
+import { RELIEF_CLIFF, STANDEE_BACK_GRID, STANDEE_FACES_CAMERA, STANDEE_GRID, STANDEE_LEGIBLE_CANVAS, STANDEE_MIN_PX, STANDEE_MIN_SHARE } from '../src/arena/perf.ts';
 import { ART_BOX, EMPTY_RELIEF, reliefIndexOf, standeeCutFrom, type ReliefEntry, type ReliefIndex, type StandeeCut } from '../src/arena/relief.ts';
 import {
   STANDEE_FALL,
@@ -63,9 +70,13 @@ import {
   standeeChoicesOf,
   standeeCutOf,
   standeeFallOf,
+  standeeFillOf,
+  standeeLegibilityAt,
+  standeeReads,
   standeeSheets,
   type StandeeChoice,
   type StandeeFit,
+  type StandeeStance,
 } from '../src/arena/standee.ts';
 import { buildReliefIndex, standeeCutOfFile } from '../src/personal/devRoute.ts';
 import { decodePng } from '../src/personal/png.ts';
@@ -420,6 +431,19 @@ function eligible(placement: Placement, pose: FigurePose | undefined, taken: Rea
   return !pose.anonymous && pose.modelId !== null && pose.swarm === 0 && pose.silhouette === null && !pose.vehicle && pose.personal === undefined;
 }
 
+/**
+ * The legibility floor, written apart from `standeeLegibilityAt`: the kneeling
+ * standee's box (cut at the table) projected through the table view by this
+ * test's own `toPx`, its area × the cut's fill, against `STANDEE_MIN_PX`.
+ */
+function readsApart(pose: FigurePose, cut: StandeeCut): boolean {
+  const aspect = ((cut.box.right - cut.box.left) * 410) / ((cut.box.bottom - cut.box.top) * 301);
+  const fill = cut.share / ((cut.box.right - cut.box.left) * (cut.box.bottom - cut.box.top));
+  const height = Math.min(pose.height, FIGURE_MAX_WIDTH / aspect);
+  const got = areaPx(VIEW_BY_ID.table.pose, keptCorners(pose.position, height, aspect, towardTable(pose.position), STANDEE_STANCES.crouch));
+  return got !== null && Math.sqrt(got.area * fill) >= STANDEE_MIN_PX;
+}
+
 /** The lookup with its gates taken out: every placement with a pose, straight to the art and the relief. The negative control. */
 function ungated(placed: Layout, poses: FigureLayout, art: ArtIndex, relief: ReliefIndex): void {
   for (const p of placed.placements) {
@@ -431,7 +455,7 @@ function ungated(placed: Layout, poses: FigureLayout, art: ArtIndex, relief: Rel
   }
 }
 
-test('standee: over every board frame of the corpus made HOSTILE, the art index is never asked about a concealed card nor the relief about its print; a standee iff face up, named, un-dressed, with a relief; the tier off stands none; an ungated lookup leaks (hard rule 8, D264)', () => {
+test('standee: over every board frame of the corpus made HOSTILE, the art index is never asked about a concealed card nor the relief about its print; a standee iff face up, named, un-dressed, with a relief, and it reads; the tier off stands none; an ungated lookup leaks (hard rule 8, D264)', () => {
   let frames = 0;
   let chosen = 0;
   let mismatched = 0;
@@ -468,9 +492,9 @@ test('standee: over every board frame of the corpus made HOSTILE, the art index 
         if (p.kind !== 'creature' && p.kind !== 'stack') continue;
         if (seen.has(p.cardId)) continue;
         seen.add(p.cardId);
-        if (eligible(p, poses.get(p.cardId), taken)) expected.add(p.cardId);
+        if (eligible(p, poses.get(p.cardId), taken) && readsApart(poses.get(p.cardId)!, CUT)) expected.add(p.cardId);
       }
-      assert.deepEqual([...choices.keys()].sort((x, y) => x - y), [...expected].sort((x, y) => x - y), `${file}: the standees are not exactly the face-up, named, un-dressed figures`);
+      assert.deepEqual([...choices.keys()].sort((x, y) => x - y), [...expected].sort((x, y) => x - y), `${file}: the standees are not exactly the face-up, named, un-dressed figures that read`);
       for (const [cardId, choice] of choices) {
         assert.ok(!taken.has(cardId));
         assert.equal(choice.map, `${BASE}${choice.key}.png`);
@@ -514,7 +538,7 @@ test('standee: THE lookup on its own — a stub, a face-down card, a swarm, a si
   for (const { state } of corpusStates()) {
     const p = layout(state);
     const f = figurePose(p, state.board?.combat ?? null, DATA, { models: MODELS });
-    if (p.placements.filter((x) => eligible(x, f.get(x.cardId), new Map())).length >= 3) {
+    if (p.placements.filter((x) => eligible(x, f.get(x.cardId), new Map()) && readsApart(f.get(x.cardId)!, CUT)).length >= 3) {
       placed = p;
       poses = f;
       break;
@@ -607,17 +631,10 @@ test('standee: dressStandees — only a loaded standee dresses; the opaque id, n
 });
 
 // ---------------------------------------------------------------------------
-// 4. What was measured: the facing, the legibility, the tapped stance, the fall
+// 4. What was measured: the facing, the tapped stance, the fall
 // ---------------------------------------------------------------------------
 
-const PX_W = 1600;
-const PX_H = 1000;
-/** The least subject fill of its box over the 158 maps measured (Castle Doom, 0.214 — docs/evidence/standee.md §1), rounded down. */
-const LEAST_FILL = 0.2;
-/** The widest cut measured (2.25 × its height), so the shortest standee the width clamp allows. */
-const WIDEST_CUT = 2.25;
-/** traits.test's bar for an identity detail (IDENTITY_MIN_PX). */
-const LEGIBLE_PX = 48;
+const [PX_W, PX_H] = STANDEE_LEGIBLE_CANVAS;
 
 type V3 = [number, number, number];
 
@@ -627,21 +644,33 @@ function toPx(pose: Pose, point: V3): [number, number] | null {
   return [((ndc[0] + 1) / 2) * PX_W, ((1 - ndc[1]) / 2) * PX_H];
 }
 
-/** A standee's corners (its box, a unit tall × aspect wide) at `height`, its front toward `front` (a unit vector in xz), bowed/sunk by a stance. */
-function corners(stand: V3, height: number, aspect: number, front: V3, lean = 0, sink = 0): V3[] {
+/** The unit front of a standee at `stand` turned to the table view's camera about the vertical (D261). */
+function towardTable(stand: readonly number[]): V3 {
+  const cam = VIEW_BY_ID.table.pose;
+  const x = cam.position[0] - stand[0]!;
+  const z = cam.position[2] - stand[2]!;
+  const len = Math.hypot(x, z);
+  return [x / len, 0, z / len];
+}
+
+/** A point of a standee's box — `u` across (−½…½ of its width), `v` up (0…1 of its height) — bowed and sunk by a stance, as `STANDEE_VERTEX` poses it. */
+function boxPoint(stand: readonly number[], height: number, aspect: number, front: V3, stance: StandeeStance, u: number, v: number): V3 {
   const right: V3 = [front[2], 0, -front[0]];
-  const out: V3[] = [];
-  for (const [x, y] of [
-    [-aspect / 2, 0],
-    [aspect / 2, 0],
-    [aspect / 2, 1],
-    [-aspect / 2, 1],
-  ] as const) {
-    const yy = y * Math.cos(lean) - sink;
-    const zz = -y * Math.sin(lean);
-    out.push([stand[0] + height * (right[0] * x + front[0] * zz), stand[1] + height * yy, stand[2] + height * (right[2] * x + front[2] * zz)]);
-  }
-  return out;
+  const x = u * aspect;
+  const yy = v * Math.cos(stance.lean) - stance.sink;
+  const zz = -v * Math.sin(stance.lean);
+  return [stand[0]! + height * (right[0] * x + front[0] * zz), stand[1]! + height * yy, stand[2]! + height * (right[2] * x + front[2] * zz)];
+}
+
+/** The corners of what a standee DRAWS: its box from the table's plane up (the fragment shader's `vAbove` cut). */
+function keptCorners(stand: readonly number[], height: number, aspect: number, front: V3, stance: StandeeStance = { lean: 0, sink: 0 }): V3[] {
+  const from = Math.min(1, stance.sink / Math.cos(stance.lean));
+  return [
+    boxPoint(stand, height, aspect, front, stance, -0.5, from),
+    boxPoint(stand, height, aspect, front, stance, 0.5, from),
+    boxPoint(stand, height, aspect, front, stance, 0.5, 1),
+    boxPoint(stand, height, aspect, front, stance, -0.5, 1),
+  ];
 }
 
 function areaPx(pose: Pose, quad: readonly V3[]): { area: number; height: number } | null {
@@ -659,15 +688,14 @@ function areaPx(pose: Pose, quad: readonly V3[]): { area: number; height: number
 }
 
 /** Is the painted side toward the camera? */
-function facesCamera(pose: Pose, stand: V3, front: V3): boolean {
-  return (pose.position[0] - stand[0]) * front[0] + (pose.position[2] - stand[2]) * front[2] > 0;
+function facesCamera(pose: Pose, stand: readonly number[], front: V3): boolean {
+  return (pose.position[0] - stand[0]!) * front[0] + (pose.position[2] - stand[2]!) * front[2] > 0;
 }
 
-test('standee: the facing (D261) — turned to the camera, every standee shows its painting from the seat-safe views on BOTH seats, at least 48 px of subject at 1× from the table view; D143’s facing would show your own seat cardboard', () => {
+test('standee: the facing (D261) — turned to the camera, every standee shows its painting from the seat-safe views on BOTH seats; D143’s facing would show your own seat cardboard', () => {
   assert.equal(STANDEE_FACES_CAMERA, true, 'the measured facing');
   const views = (['table', 'shoulder', 'low'] as const).map((id) => VIEW_BY_ID[id]);
   for (const view of views) assert.equal(view.seatSafe, true, `${view.id} is a seat-safe view`);
-  const worst: Record<string, number> = {};
   const seatFront: Record<string, { shown: number; of: number }> = { you: { shown: 0, of: 0 }, opp: { shown: 0, of: 0 } };
   let measured = 0;
   let frames = 0;
@@ -678,16 +706,12 @@ test('standee: the facing (D261) — turned to the camera, every standee shows i
     const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
     for (const pose of poses.values()) {
       if (pose.anonymous || pose.modelId === null || pose.swarm > 0 || pose.silhouette !== null || pose.vehicle || pose.ghost) continue;
-      const height = Math.min(pose.height, FIGURE_MAX_WIDTH / WIDEST_CUT);
       for (const view of views) {
         const cam = view.pose;
         const toCam: V3 = [cam.position[0] - pose.position[0], 0, cam.position[2] - pose.position[2]];
         const len = Math.hypot(toCam[0], toCam[2]);
         const billboard: V3 = [toCam[0] / len, 0, toCam[2] / len];
-        const got = areaPx(cam, corners(pose.position, height, WIDEST_CUT, billboard));
-        if (got === null) continue;
-        const key = `${view.id}:${pose.seat}`;
-        worst[key] = Math.min(worst[key] ?? Infinity, got.area * LEAST_FILL);
+        assert.ok(facesCamera(cam, pose.position, billboard), 'turned to the camera, the painted side is toward it');
         measured += 1;
         // D143: your figures face the opponent (π), the opponent's face you (0).
         const own: V3 = [Math.sin(seatFacingY(pose.seat)), 0, Math.cos(seatFacingY(pose.seat))];
@@ -697,14 +721,10 @@ test('standee: the facing (D261) — turned to the camera, every standee shows i
     }
   }
   console.log(
-    `standee facing (D261): ${String(measured)} standee×view measurements — the least subject in px at 1600 × 1000 (fill ${String(LEAST_FILL)}, cut ${String(WIDEST_CUT)}× wide): ` +
-      Object.entries(worst).map(([k, v]) => `${k} ${v.toFixed(0)}`).join(', ') +
-      ` · D143's facing shows its painting to the camera on ${String(seatFront['you']!.shown)} of ${String(seatFront['you']!.of)} of your seat's and ${String(seatFront['opp']!.shown)} of ${String(seatFront['opp']!.of)} of the opponent's`,
+    `standee facing (D261): ${String(measured)} standee×view measurements from the three seat-safe views — ` +
+      `D143's facing shows its painting to the camera on ${String(seatFront['you']!.shown)} of ${String(seatFront['you']!.of)} of your seat's and ${String(seatFront['opp']!.shown)} of ${String(seatFront['opp']!.of)} of the opponent's`,
   );
   assert.ok(measured > 1000);
-  for (const seat of ['you', 'opp']) {
-    assert.ok((worst[`table:${seat}`] ?? 0) >= LEGIBLE_PX, `the table view: under ${String(LEGIBLE_PX)} px of subject on the ${seat} seat`);
-  }
   assert.equal(seatFront['you']!.shown, 0, 'the control: under D143, your own standees show your seat only their backs');
   assert.ok(seatFront['opp']!.shown > 0);
   // The shader turns the front to the camera about the vertical (the root's own turn is the other answer).
@@ -712,33 +732,41 @@ test('standee: the facing (D261) — turned to the camera, every standee shows i
   assert.match(STANDEE_VERTEX, /mix\( own, toEye, uFaceCamera \)/);
 });
 
-test('standee: the tapped stance (D262) — a sink and a bow read SHORTER from the table view than standing, and a lean back (refused) reads taller; its top stays under the strip; the fall is flat on its back by 0.7 of the death cue', () => {
+test('standee: the tapped stance (D262, amended) — a small sink and bow read SHORTER from the table view than standing but never the sliver the first stance was; a lean back (refused) reads taller; the fall is flat on its back by 0.7 of the death cue', () => {
   const cam = VIEW_BY_ID.table.pose;
   const aspect = 1.37; // the median cut (docs/evidence/standee.md §1)
   const height = Math.min(FIGURE_HEIGHT, FIGURE_MAX_WIDTH / aspect);
-  const shortest: Record<string, number> = {};
+  const FIRST: StandeeStance = { lean: -0.3, sink: 0.25 }; // D262 as the lane first chose it: the verifier's sliver
+  const worst: Record<string, [number, number]> = {};
+  const note = (key: string, v: number): void => {
+    const was = worst[key] ?? [Infinity, -Infinity];
+    worst[key] = [Math.min(was[0], v), Math.max(was[1], v)];
+  };
   for (const stand of [
     [0, 0.02, 1.78],
     [1.6, 0.02, 1.78],
+    [0.4, 0.02, 2.85],
     [-1.6, 0.02, -1.78],
-    [0.8, 0.02, -1.78],
+    [0.8, 0.02, -2.85],
+    [0, 0.02, -3.6],
   ] as V3[]) {
-    const toCam: V3 = [cam.position[0] - stand[0], 0, cam.position[2] - stand[2]];
-    const len = Math.hypot(toCam[0], toCam[2]);
-    const front: V3 = [toCam[0] / len, 0, toCam[2] / len];
-    const standing = areaPx(cam, corners(stand, height, aspect, front))!.height;
-    const tapped = STANDEE_STANCES.crouch;
-    const kneel = areaPx(cam, corners(stand, height, aspect, front, tapped.lean, tapped.sink))!.height;
-    const leanBack = areaPx(cam, corners(stand, height, aspect, front, 0.95, 0))!.height;
-    shortest['kneel'] = Math.min(shortest['kneel'] ?? Infinity, standing / kneel);
-    shortest['lean back'] = Math.min(shortest['lean back'] ?? Infinity, standing / leanBack);
-    assert.ok(kneel <= 0.8 * standing, `the tapped standee reads ${(kneel / standing).toFixed(2)} of its standing height`);
-    assert.ok(leanBack >= standing, 'the refused lean back reads TALLER from a camera that looks down');
+    const front = towardTable(stand);
+    const standing = areaPx(cam, keptCorners(stand, height, aspect, front))!;
+    const kneel = areaPx(cam, keptCorners(stand, height, aspect, front, STANDEE_STANCES.crouch))!;
+    const first = areaPx(cam, keptCorners(stand, height, aspect, front, FIRST))!;
+    const leanBack = areaPx(cam, keptCorners(stand, height, aspect, front, { lean: 0.95, sink: 0 }))!;
+    note('kneel height', kneel.height / standing.height);
+    note('kneel area', kneel.area / standing.area);
+    note('first height', first.height / standing.height);
+    note('first area', first.area / standing.area);
+    assert.ok(kneel.height <= 0.8 * standing.height, `the tapped standee reads ${(kneel.height / standing.height).toFixed(2)} of its standing height: not shorter`);
+    assert.ok(kneel.height >= 0.65 * standing.height && kneel.area >= 0.6 * standing.area, `the tapped standee reads ${(kneel.height / standing.height).toFixed(2)} of its standing height: a sliver`);
+    // The control: the first stance was the sliver the verifier saw (MoE@209, g1@316).
+    assert.ok(first.height < 0.6 * standing.height, 'the first stance no longer reads as the sliver it was');
+    assert.ok(leanBack.height >= standing.height, 'the refused lean back reads TALLER from a camera that looks down');
   }
-  console.log(`standee tapped (D262): standing ÷ tapped ≥ ${shortest['kneel']!.toFixed(2)}; standing ÷ leaning back ≥ ${shortest['lean back']!.toFixed(3)} (under 1: taller)`);
-  // The tapped top never rises: (1 − sink) cos(bow) of the standing height.
-  const t = STANDEE_STANCES.crouch;
-  assert.ok((1 - t.sink) * Math.cos(t.lean) < 0.8 && t.sink > 0 && t.lean < 0);
+  const fmt = (k: string): string => `${worst[k]![0].toFixed(2)}–${worst[k]![1].toFixed(2)}`;
+  console.log(`standee tapped (D262, amended): kneeling reads ${fmt('kneel height')} of its standing height and ${fmt('kneel area')} of its area from the table view; the first stance ${fmt('first height')} and ${fmt('first area')}`);
   for (const stance of ['ready', 'sick', 'attacking', 'blocking'] as const) assert.deepEqual({ ...STANDEE_STANCES[stance] }, { lean: 0, sink: 0 }, stance);
   // The fall.
   assert.equal(standeeFallOf(0), 0);
@@ -754,10 +782,175 @@ test('standee: the tapped stance (D262) — a sink and a bow read SHORTER from t
 });
 
 // ---------------------------------------------------------------------------
-// 5. The mesh and the program
+// 5. THE legibility floor, rasterised on real frames
 // ---------------------------------------------------------------------------
 
-test('standee: ONE mesh, two sheets, 1,920 triangles (D263); the program draws exactly the cut, and nothing reads a clock', () => {
+/**
+ * **A standee, rasterised** through the table view at the floor's canvas: the
+ * pixels whose CENTRE lies inside the drawn subject. The subject is a synthetic
+ * figure — the full height of the cut's box and `fill` of its width, centred, cut
+ * at the table — so its area is the box's × `fill`, as the floor counts it.
+ */
+function rasterSubject(stand: readonly number[], height: number, aspect: number, fill: number, stance: StandeeStance): { size: number; height: number } {
+  const cam = VIEW_BY_ID.table.pose;
+  const front = towardTable(stand);
+  const from = Math.min(1, stance.sink / Math.cos(stance.lean));
+  const half = fill / 2;
+  const quad = [
+    [-half, from],
+    [half, from],
+    [half, 1],
+    [-half, 1],
+  ].map(([u, v]) => toPx(cam, boxPoint(stand, height, aspect, front, stance, u!, v!)));
+  if (quad.some((p) => p === null)) return { size: 0, height: 0 };
+  const q = quad as Array<[number, number]>;
+  const xs = q.map((p) => p[0]);
+  const ys = q.map((p) => p[1]);
+  // A convex quad: a pixel centre is inside iff it is on the same side of all four edges.
+  let sign = 0;
+  for (let i = 0; i < 4; i++) {
+    const [x0, y0] = q[i]!;
+    const [x1, y1] = q[(i + 1) % 4]!;
+    const [x2, y2] = q[(i + 2) % 4]!;
+    sign += Math.sign((x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0));
+  }
+  let pixels = 0;
+  let top = Infinity;
+  let bottom = -Infinity;
+  for (let py = Math.floor(Math.min(...ys)); py <= Math.ceil(Math.max(...ys)); py++) {
+    for (let px = Math.floor(Math.min(...xs)); px <= Math.ceil(Math.max(...xs)); px++) {
+      const cx = px + 0.5;
+      const cy = py + 0.5;
+      let inside = true;
+      for (let i = 0; i < 4 && inside; i++) {
+        const [x0, y0] = q[i]!;
+        const [x1, y1] = q[(i + 1) % 4]!;
+        inside = Math.sign((x1 - x0) * (cy - y0) - (y1 - y0) * (cx - x0)) * Math.sign(sign) >= 0;
+      }
+      if (!inside) continue;
+      pixels += 1;
+      top = Math.min(top, py);
+      bottom = Math.max(bottom, py);
+    }
+  }
+  return { size: Math.sqrt(pixels), height: pixels === 0 ? 0 : bottom - top + 1 };
+}
+
+/** The state after the first `n` frames of a recording — the replay cursor's `@n`. */
+function stateAt(file: string, n: number): ClientState {
+  const log = parseFrameLog(readFileSync(join(REPO, 'fixtures', 'games', file), 'utf8'));
+  let state = initialState();
+  for (const frame of (log.frames as Frame[]).slice(0, n)) state = reduce(state, frame);
+  return state;
+}
+
+/** A relief index whose every print is cut at `aspect` × `fill` (410 × 301, the modern frame's art box). */
+function reliefWith(aspect: number, fill: number): ReliefIndex {
+  const h = 0.9;
+  const w = Math.min(0.98, (aspect * h * 301) / 410);
+  const hh = (w * 410) / (aspect * 301);
+  const cut: StandeeCut = { box: { left: 0.01, right: 0.01 + w, top: 0.05, bottom: 0.05 + hh }, near: 0.3, share: fill * w * hh };
+  const byId = {
+    get: (id: string): ReliefEntry => ({ id, file: `${id}.png`, width: 410, height: 301, back: { file: `${id}.back.jpg`, width: 560, height: 451, margin: 75 }, standee: cut }),
+    has: (): boolean => true,
+    size: 1,
+  } as unknown as ReadonlyMap<string, ReliefEntry>;
+  return { byId, dropped: [] };
+}
+
+test('standee: THE legibility floor, rasterised on real frames (D261, amended) — g1@316 and the Masters of Evil’s @209 and @371 from the table view on both seats: a drone’s flight is its CC0 body, the rank that read still stands; over the corpus the floor is what the raster draws, and nothing it keeps draws under it in any stance', () => {
+  assert.equal(STANDEE_MIN_PX, 30, 'the floor the pictures chose (docs/evidence/standee.md §9)');
+  assert.deepEqual([...STANDEE_LEGIBLE_CANVAS], [1600, 1000], 'traits.test’s raster canvas');
+  const FLIGHT = { aspect: 1.31, fill: 0.35 }; // a flight scene: the deck's drone paintings measure this (evidence §9)
+  const PORTRAIT = { aspect: 0.8, fill: 0.66 }; // a figure in a doorway
+  const MEDIAN = { aspect: 1.37, fill: 0.5 }; // the deck's median cut (evidence §1)
+  const art = spyArt().art;
+  const lines: string[] = [];
+  const at = (file: string, n: number, cut: { aspect: number; fill: number }) => {
+    const state = stateAt(file, n);
+    const placed = layout(state);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    const chosen = standeeChoicesOf(placed, poses, art, reliefWith(cut.aspect, cut.fill), { base: BASE });
+    const rows: Array<{ pose: FigurePose; kept: boolean; kneel: { size: number; height: number }; now: { size: number; height: number } }> = [];
+    for (const p of placed.placements) {
+      if (p.kind !== 'creature') continue;
+      const pose = poses.get(p.cardId);
+      if (!eligible(p, pose, new Map())) continue;
+      const h = fitHeight(pose!.height, cut.aspect);
+      rows.push({
+        pose: pose!,
+        kept: chosen.has(p.cardId),
+        kneel: rasterSubject(pose!.position, h, cut.aspect, cut.fill, STANDEE_STANCES.crouch),
+        now: rasterSubject(pose!.position, h, cut.aspect, cut.fill, STANDEE_STANCES[pose!.stance]),
+      });
+    }
+    lines.push(
+      `  ${file}@${String(n)} (${String(cut.aspect)} × ${String(cut.fill)}): ` +
+        rows.map((r) => `${r.pose.seat} ${String(r.pose.modelId)} ${r.pose.stance} ${r.kneel.size.toFixed(0)}/${r.now.size.toFixed(0)}px ${r.kept ? 'STANDS' : 'cc0'}`).join(', '),
+    );
+    return rows;
+  };
+  // g1@316: the drones on both seats — the verifier's slivers — are their CC0 bodies.
+  const g1 = at('g1.jsonl', 316, FLIGHT);
+  const drones = g1.filter((r) => r.pose.modelId === 'drone');
+  assert.deepEqual([...new Set(drones.map((r) => r.pose.seat))].sort(), ['opp', 'you'], 'g1@316 no longer has a drone on each seat');
+  for (const r of drones) {
+    assert.equal(r.kept, false, `g1@316: the ${r.pose.seat} seat's drone still stands as a standee`);
+    assert.ok(r.kneel.size < STANDEE_MIN_PX, 'the raster agrees: under the floor');
+  }
+  // MoE@209: the opponent's sick drone is its CC0 body; the opponent's tapped figure in a doorway reads, rimmed.
+  const moe209 = at('villain-masters-of-evil-33.jsonl', 209, FLIGHT);
+  const sickDrone = moe209.find((r) => r.pose.modelId === 'drone' && r.pose.seat === 'opp' && r.pose.stance === 'sick');
+  assert.ok(sickDrone !== undefined && !sickDrone.kept, 'MoE@209: the opponent’s sick drone still stands as a standee');
+  const doorway = at('villain-masters-of-evil-33.jsonl', 209, PORTRAIT).find((r) => r.pose.seat === 'opp' && r.pose.stance === 'crouch');
+  assert.ok(doorway !== undefined && doorway.kept && doorway.now.size >= STANDEE_MIN_PX, 'MoE@209: the opponent’s tapped portrait no longer reads');
+  // MoE@371: your seat's rank, with the median cut, still stands — every one.
+  const rank = at('villain-masters-of-evil-33.jsonl', 371, MEDIAN).filter((r) => r.pose.seat === 'you');
+  assert.ok(rank.length >= 5 && rank.every((r) => r.kept), 'MoE@371: your seat’s rank no longer stands');
+  // The control: every drone passed the lane's first measure — at least 48 px of subject (traits.test's bar
+  // for a prop, D261 as first written) — which is why it stood as a sliver; each passes every gate but the floor.
+  assert.ok(drones.every((r) => r.kneel.size * r.kneel.size >= 48), 'the first measure would have stood the drones down too — the control proves nothing');
+  console.log(`standee legibility (D261, amended) — kneeling/now subject px at 1× from the table view, 1600 × 1000:\n${lines.join('\n')}`);
+
+  // Over a sample of the corpus: the floor's number IS the raster's, and nothing kept draws under it.
+  let compared = 0;
+  let kept = 0;
+  let worstDiff = 0;
+  let frames = 0;
+  for (const { state } of corpusStates()) {
+    frames += 1;
+    if (frames % 11 !== 0) continue;
+    const placed = layout(state);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    for (const cut of [FLIGHT, PORTRAIT, MEDIAN, { aspect: 2.25, fill: 0.5 }, { aspect: 0.68, fill: 0.45 }]) {
+      const chosen = standeeChoicesOf(placed, poses, art, reliefWith(cut.aspect, cut.fill), { base: BASE });
+      for (const [cardId] of chosen) {
+        const pose = poses.get(cardId)!;
+        const h = fitHeight(pose.height, cut.aspect);
+        const analytic = standeeLegibilityAt(pose.position, h, cut.aspect, cut.fill);
+        const raster = rasterSubject(pose.position, h, cut.aspect, cut.fill, STANDEE_STANCES.crouch);
+        worstDiff = Math.max(worstDiff, Math.abs(analytic.size - raster.size) / raster.size);
+        compared += 1;
+        assert.ok(Math.abs(analytic.size - raster.size) <= Math.max(1.5, 0.04 * raster.size), `the floor measures ${analytic.size.toFixed(1)} px where the raster draws ${raster.size.toFixed(1)}`);
+        for (const stance of ['ready', 'crouch', 'sick', 'attacking', 'blocking'] as const) {
+          assert.ok(rasterSubject(pose.position, h, cut.aspect, cut.fill, STANDEE_STANCES[stance]).size >= STANDEE_MIN_PX - 1.5, `a kept standee draws under the floor ${stance}`);
+        }
+        assert.ok(standeeReads(pose, cut.aspect, cut.fill));
+        kept += 1;
+      }
+    }
+  }
+  console.log(`standee legibility: ${String(compared)} kept standees over an eleventh of the corpus's frames × five cuts — the floor within ${(worstDiff * 100).toFixed(1)}% of the raster, none under ${String(STANDEE_MIN_PX)} px in any stance`);
+  assert.ok(kept > 1000, 'the sweep kept nothing — it proves nothing');
+  // The fill a lookup reads: the share over the box.
+  assert.ok(Math.abs(standeeFillOf({ box: { left: 0, right: 0.5, top: 0, bottom: 0.5 }, near: 0.3, share: 0.1 }) - 0.4) < 1e-12);
+});
+
+// ---------------------------------------------------------------------------
+// 6. The mesh and the program
+// ---------------------------------------------------------------------------
+
+test('standee: ONE mesh, two sheets, 1,920 triangles (D263); the program draws exactly the cut and its ink rim — the figures’ own outer ink — and nothing reads a clock', () => {
   const sheets = standeeSheets();
   const triangles = sheets.indices.length / 3;
   assert.equal(triangles, 2 * STANDEE_GRID[0] * STANDEE_GRID[1] + 2 * STANDEE_BACK_GRID[0] * STANDEE_BACK_GRID[1]);
@@ -770,7 +963,25 @@ test('standee: ONE mesh, two sheets, 1,920 triangles (D263); the program draws e
   assert.equal(back, (STANDEE_BACK_GRID[0] + 1) * (STANDEE_BACK_GRID[1] + 1));
   assert.equal(sheets.layers[sheets.indices[0]!], 1, 'the back first, so the front is drawn over it in the same call');
   // The fragment is standeeCutOf's test: the keep mask, red over green by the cliff, or at least near.
-  assert.match(STANDEE_FRAGMENT, /if \( d\.b < 0\.5 \|\| \( d\.r - d\.g <= uCut && d\.r < uNear \) \) discard;/);
+  assert.match(STANDEE_FRAGMENT, /bool subject = d\.b >= 0\.5 && \( d\.r - d\.g > uCut \|\| d\.r >= uNear \);/);
+  assert.match(STANDEE_FRAGMENT, /return t\.b >= 0\.5 && \( t\.r - t\.g > uCut \|\| t\.r >= uNear \);/, 'the rim’s taps ask the same test');
+  // The ink rim (D261, amended): eight taps `uRim` pixels out, their coordinates from the pixel's own
+  // footprint, all computed before any branch; the taps read only where the front is not the subject.
+  assert.match(STANDEE_FRAGMENT, /vec2 reach = fwidth\( vMapUv \) \* uRim;/);
+  const taps = STANDEE_FRAGMENT.match(/subjectAt\( (e|w|n|s|ne|sw|se|nw) \)/g) ?? [];
+  assert.equal(new Set(taps).size, 8, 'eight taps round the pixel');
+  assert.match(STANDEE_FRAGMENT, /if \( !rim \) discard;\s*colour = uInk;/);
+  const main = STANDEE_FRAGMENT.slice(STANDEE_FRAGMENT.indexOf('void main()'));
+  const firstBranch = main.indexOf('if (');
+  for (const coord of ['vec2 e =', 'vec2 w =', 'vec2 n =', 'vec2 s =', 'vec2 ne =', 'vec2 sw =', 'vec2 se =', 'vec2 nw =', 'vec4 d = texture2D( uDepth, vMapUv );']) {
+    assert.ok(main.indexOf(coord) > 0 && main.indexOf(coord) < firstBranch, `${coord} is computed after a branch: a sample's mip level would be undefined where the cut divides a quad`);
+  }
+  assert.doesNotMatch(STANDEE_FRAGMENT, /textureGrad|textureLod/, 'the explicit forms cost SwiftShader 3–9 ms a frame for nine standees (evidence §9)');
+  const cache = readFileSync(fileURLToPath(new URL('../src/arena/scene/reliefCache.ts', import.meta.url)), 'utf8');
+  assert.match(cache, /const STANDEE_RIM = \{ value: Math\.max\(1, COMIC\.inkCssPx\) \};/, 'the rim is the figures’ outer ink');
+  assert.match(cache, /STANDEE_RIM\.value = Math\.max\(1, COMIC\.inkCssPx \* dpr\);/, 'the rim follows the render dpr');
+  assert.match(cache, /const STANDEE_INK = \{ value: new THREE\.Color\(COMIC\.ink\) \};/);
+  assert.ok(COMIC.inkCssPx >= 1 && /^#[0-9a-f]{6}$/.test(COMIC.ink));
   assert.match(STANDEE_FRAGMENT, /if \( d\.g < uNear \) discard;/, 'the back only where what it shows is the subject');
   assert.match(STANDEE_FRAGMENT, /#include <colorspace_fragment>/);
   assert.doesNotMatch(`${STANDEE_VERTEX}${STANDEE_FRAGMENT}`, /uTime|uLook|halftone|uKey/, 'unlit, unmarked, and no clock');

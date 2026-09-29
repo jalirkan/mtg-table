@@ -31,6 +31,10 @@
  *    decided before the card's name is read — and then only through the SAME art
  *    lookup `CardPlane` uses (`art.ts`'s `artEntryFor`), whose print's Scryfall id
  *    is the one key the relief index is asked about.
+ *  - {@link standeeLegibilityAt} is THE legibility floor (D261, amended by the
+ *    fix pass): a standee stands only where its subject, kneeling, reads at 1×
+ *    from the table view — measured on the stand point, as the vertex shader
+ *    poses it — and the lookup applies it last, so a sliver is the CC0 body.
  *  - {@link dressStandees} makes a choice a pose once its textures have LOADED:
  *    an opaque id (`s0`, `s1`, …), no props, no costume, no hair, no resting
  *    pose, and the height refitted to the cut's own aspect — the width clamp
@@ -41,10 +45,19 @@
 
 import { artEntryFor, imageUrl, type ArtIndex } from '../art.ts';
 import { isHidden } from '../protocol.ts';
+import { VIEW_BY_ID, projectToNdc } from './camera.ts';
 import { fitHeight, type FigureLayout, type FigurePose } from './figures/pose.ts';
 import type { Stance } from './figures/types.ts';
 import type { Layout, Placement } from './layout.ts';
-import { RELIEF_CLIFF, STANDEE_BACK_GRID, STANDEE_GRID, STANDEE_MIN_SHARE, STANDEE_PAD_PX } from './perf.ts';
+import {
+  RELIEF_CLIFF,
+  STANDEE_BACK_GRID,
+  STANDEE_GRID,
+  STANDEE_LEGIBLE_CANVAS,
+  STANDEE_MIN_PX,
+  STANDEE_MIN_SHARE,
+  STANDEE_PAD_PX,
+} from './perf.ts';
 import type { ReliefEntry, ReliefIndex, StandeeCut } from './relief.ts';
 
 // ---------------------------------------------------------------------------
@@ -140,6 +153,78 @@ export function standeeAspectOf(entry: Pick<ReliefEntry, 'width' | 'height'>, cu
   return h > 0 ? w / h : 0;
 }
 
+/** How much of the cut's own box its subject fills (0–1): `share` is of the whole art box. */
+export function standeeFillOf(cut: StandeeCut): number {
+  const area = (cut.box.right - cut.box.left) * (cut.box.bottom - cut.box.top);
+  return area > 0 ? Math.min(1, cut.share / area) : 0;
+}
+
+// ---------------------------------------------------------------------------
+// THE legibility floor (D261, amended by the fix pass)
+// ---------------------------------------------------------------------------
+
+/** What a standee's subject measures on screen: the side of a square of its drawn area, and its drawn height (px). */
+export interface StandeeLegibility {
+  size: number;
+  height: number;
+}
+
+/**
+ * **How a standee reads from the table** — its subject as drawn at 1× from the
+ * table view (`camera.ts`'s `table`, the {@link STANDEE_LEGIBLE_CANVAS}) at its
+ * own stand point, posed exactly as `STANDEE_VERTEX` poses it: turned to the
+ * camera about the vertical (D261), `height` tall and `aspect` wide per unit of
+ * it, in `stance` (its bow about its base, its sink cut at the table's plane).
+ * `size` is the side of a square of the subject's drawn pixels (the box's drawn
+ * area × `fill`), `height` the box's drawn height. `web/test/standee.test.ts`
+ * rasterises the same standee through the same camera and holds the two equal.
+ */
+export function standeeLegibilityAt(
+  stand: readonly [number, number, number],
+  height: number,
+  aspect: number,
+  fill: number,
+  stance: StandeeStance = STANDEE_STANCES.crouch,
+): StandeeLegibility {
+  const cam = VIEW_BY_ID.table.pose;
+  const [pxW, pxH] = STANDEE_LEGIBLE_CANVAS;
+  let fx = cam.position[0] - stand[0];
+  let fz = cam.position[2] - stand[2];
+  const len = Math.hypot(fx, fz);
+  if (!(len > 0) || !(height > 0) || !(aspect > 0)) return { size: 0, height: 0 };
+  fx /= len;
+  fz /= len;
+  const c = Math.cos(stance.lean);
+  const sn = Math.sin(stance.lean);
+  // The part under the table is cut (the fragment shader's `vAbove`): the box from there up.
+  const from = Math.min(1, Math.max(0, stance.sink / c));
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const [u, v] of [
+    [-0.5, from],
+    [0.5, from],
+    [0.5, 1],
+    [-0.5, 1],
+  ] as const) {
+    const x = u * aspect;
+    const y = v * c - stance.sink;
+    const z = -v * sn;
+    // right = (front.z, 0, -front.x): `STANDEE_VERTEX`'s basis.
+    const ndc = projectToNdc(cam, [stand[0] + height * (fz * x + fx * z), stand[1] + height * y, stand[2] + height * (-fx * x + fz * z)], undefined, pxW / pxH);
+    if (ndc === null) return { size: 0, height: 0 };
+    xs.push(((ndc[0] + 1) / 2) * pxW);
+    ys.push(((1 - ndc[1]) / 2) * pxH);
+  }
+  let twice = 0;
+  for (let i = 0; i < 4; i++) twice += xs[i]! * ys[(i + 1) % 4]! - xs[(i + 1) % 4]! * ys[i]!;
+  return { size: Math.sqrt((Math.abs(twice) / 2) * Math.max(0, fill)), height: Math.max(...ys) - Math.min(...ys) };
+}
+
+/** **Does it read** — the floor, kneeling, at the pose's stand point and its height refitted to the cut (D65 strict). */
+export function standeeReads(pose: Pick<FigurePose, 'position' | 'height'>, aspect: number, fill: number): boolean {
+  return standeeLegibilityAt(pose.position, fitHeight(pose.height, aspect), aspect, fill).size >= STANDEE_MIN_PX;
+}
+
 // ---------------------------------------------------------------------------
 // THE lookup (D264: hard rule 8's renderer half for a second card-art surface)
 // ---------------------------------------------------------------------------
@@ -168,7 +253,7 @@ export interface StandeeChoice {
  * silhouette, not an uncrewed vehicle), not already dressed in a personal model,
  * on a placement drawn face up that is not a redacted stub.
  */
-function mayStand(placement: Placement, pose: FigurePose): boolean {
+export function mayStand(placement: Placement, pose: FigurePose): boolean {
   if (pose.anonymous || pose.modelId === null || pose.silhouette !== null || pose.swarm > 0 || pose.vehicle) return false;
   if (pose.personal !== undefined) return false;
   if (placement.back || isHidden(placement.card)) return false;
@@ -177,7 +262,7 @@ function mayStand(placement: Placement, pose: FigurePose): boolean {
 
 export interface StandeeOptions {
   /**
-   * The dev route's relief prefix (`scene/relief.ts`'s `RELIEF_BASE`): `null` in
+   * The dev route's relief prefix (`scene/reliefCache.ts`'s `RELIEF_BASE`): `null` in
    * a build — and with the tier off (`?personal=0`) or the standee off
    * (`?standee=0`) — and then nothing stands.
    */
@@ -194,7 +279,8 @@ export interface StandeeOptions {
  * print that lookup answered: that ordering IS hard rule 8 here
  * (`standee.test.ts` sweeps the corpus made hostile, with an ungated control).
  * No cap of its own: a standee stands only where a CC0 body would, and those are
- * `MAX_FIGURES` already (D263).
+ * `MAX_FIGURES` already (D263). Last, THE legibility floor ({@link standeeReads}):
+ * a cut that would not read kneeling at its stand point stands as its CC0 body.
  */
 export function standeeChoicesOf(
   placed: Layout,
@@ -218,6 +304,9 @@ export function standeeChoicesOf(
     if (hit === null || hit.scryfallId === '') continue;
     const entry = relief.byId.get(hit.scryfallId);
     if (entry === undefined || entry.standee === null) continue;
+    // THE legibility floor (D261, amended): a standee that would not read from
+    // the table — kneeling, at 1× from the table view — is the CC0 body.
+    if (!standeeReads(pose, standeeAspectOf(entry, entry.standee), standeeFillOf(entry.standee))) continue;
     out.set(placement.cardId, {
       key: hit.scryfallId,
       image: imageUrl(hit, 'normal'),
@@ -287,14 +376,17 @@ export interface StandeeStance {
 }
 
 /**
- * **The stances** (D262, chosen from pictures at the table's distance,
- * `docs/evidence/standee.md` §4): a tapped standee KNEELS as a painting can — a
- * quarter of its height sunk into the table and its top bowed 17° toward the
- * lens — so its silhouette drops as the CC0 body's kneel does and its face still
- * reads. Leaning BACK was measured and refused: the camera looks down, so a
- * standee leaning back faces it squarely and reads TALLER (into its own status
- * strip), not tapped; a deeper bow is a sliver; a sink alone reads as a cut
- * picture. Attacking, blocking and sick stand as they are: the attack is the
+ * **The stances** (D262, chosen from pictures at the table's distance and
+ * amended by its fix pass, `docs/evidence/standee.md` §4 and §9): a tapped
+ * standee KNEELS as a painting can — a fifth of its height sunk into the table
+ * and its top bowed 6° toward the lens — so it reads 0.68–0.78 of its standing
+ * height from the table view, its silhouette dropping as the CC0 body's kneel
+ * does, with its face whole. The first stance (a quarter sunk, 17° of bow) read
+ * 0.39–0.59 of it — a sliver: the table view looks down 45–58°, so a bow turns
+ * the painting away from it. Leaning BACK was measured and refused: the camera
+ * looks down, so a standee leaning back faces it squarely and reads TALLER (into
+ * its own status strip), not tapped. THE legibility floor is judged in this
+ * stance, the smallest a snapshot draws a standee in. Attacking, blocking and sick stand as they are: the attack is the
  * lunge cue's offset and the combat bands, the block the bands and its tether,
  * sick the pose's translucency (D142's, as a figure's).
  */
@@ -303,7 +395,7 @@ export const STANDEE_STANCES: Readonly<Record<Stance, StandeeStance>> = Object.f
   sick: Object.freeze({ lean: 0, sink: 0 }),
   blocking: Object.freeze({ lean: 0, sink: 0 }),
   attacking: Object.freeze({ lean: 0, sink: 0 }),
-  crouch: Object.freeze({ lean: -0.3, sink: 0.25 }),
+  crouch: Object.freeze({ lean: -0.1, sink: 0.2 }),
 });
 
 /** How far a dying standee has fallen back by its death cue's `t`, radians: flat on its back by 0.7. */
@@ -423,24 +515,36 @@ export const STANDEE_VERTEX = /* glsl */ `
 /**
  * **The fragment shader — the cut, texel by texel** (D260), unlit, the painting
  * as it is (sRGB sampled linear, three's `colorspace_fragment`): no band, no
- * halftone, no ink mark (D226's reasons hold at figure size too).
+ * halftone — and, since the fix pass (D261, amended), an INK RIM round the cut.
  *
  *  - the FRONT keeps a texel where the keep mask does (blue, D228) and it is the
  *    subject — an occluder (red over green by more than the cliff) or at least
  *    `uNear` — exactly {@link standeeCutOf}'s test; it draws the card image
  *    through the art box;
+ *  - the FRONT draws INK (`uInk`, the comic look's K plate) where it is not the
+ *    subject but a subject texel lies `uRim` render-target pixels away (eight
+ *    taps, the pixel's own footprint in the map from `fwidth`): a line of the
+ *    figures' own outer ink weight (`COMIC.inkCssPx` × the dpr) round every cut,
+ *    so a painting standing over a painting — the opponent's standees over their
+ *    own cards, seen from the table — still has an edge (the verifier's MoE@209);
  *  - the BACK keeps a texel whose own depth (green) is at least `uNear`: what a
  *    nearer part of the subject hides that is itself the subject (a coat behind a
  *    fist, filled by the tool, D228), and never the background; it draws the back
  *    layer's colour;
  *  - below the table (`vAbove` < 0, a sunk stance) nothing is drawn.
  *
- * Then the numbers the frame loop writes, as a figure's: `uOpacity` (the sick
- * translucency, a cue's fade), `uMaterialize` (the summon: the painting resolves
- * out of its card's colour, D148's number), `uDrain` toward `uDrainTo` (a dying
- * body), and `uWash` (the combat freeze's grey, written at commit). Seen from
- * behind (only when it keeps its root's turn), a standee is its cardboard: the
- * card's colour, flat.
+ * Every coordinate a sample reads — the eight taps included — is computed before
+ * any branch, so a sample's implicit mip level is the pixel's own wherever the
+ * cut divides a quad; the taps are read only where the front is not the subject.
+ * (`textureGrad` would say the same explicitly, and cost SwiftShader about nine
+ * milliseconds more a frame for nine standees, `textureLod` about three; this
+ * form is within the noise of the shader with no rim — `docs/evidence/standee.md`
+ * §9.2.) Then the numbers the frame loop writes, as a
+ * figure's: `uOpacity` (the sick translucency, a cue's fade), `uMaterialize`
+ * (the summon: the painting resolves out of its card's colour, D148's number),
+ * `uDrain` toward `uDrainTo` (a dying body), and `uWash` (the combat freeze's
+ * grey, written at commit). Seen from behind (only when it keeps its root's
+ * turn), a standee is its cardboard: the card's colour, flat.
  */
 export const STANDEE_FRAGMENT = /* glsl */ `
   uniform sampler2D map;
@@ -448,6 +552,8 @@ export const STANDEE_FRAGMENT = /* glsl */ `
   uniform sampler2D uDepth;
   uniform float uNear;
   uniform float uCut;
+  uniform float uRim;
+  uniform vec3 uInk;
   uniform vec3 uTint;
   uniform float uOpacity;
   uniform float uMaterialize;
@@ -460,13 +566,34 @@ export const STANDEE_FRAGMENT = /* glsl */ `
   varying vec2 vBackUv;
   varying float vLayer;
   varying float vAbove;
+  bool subjectAt( const in vec2 uv ) {
+    vec4 t = texture2D( uDepth, uv );
+    return t.b >= 0.5 && ( t.r - t.g > uCut || t.r >= uNear );
+  }
   void main() {
-    if ( vAbove < 0.0 ) discard;
+    vec2 reach = fwidth( vMapUv ) * uRim;
+    vec2 dg = reach * 0.7071;
+    vec2 e = vMapUv + vec2( reach.x, 0.0 );
+    vec2 w = vMapUv - vec2( reach.x, 0.0 );
+    vec2 n = vMapUv + vec2( 0.0, reach.y );
+    vec2 s = vMapUv - vec2( 0.0, reach.y );
+    vec2 ne = vMapUv + dg;
+    vec2 sw = vMapUv - dg;
+    vec2 se = vMapUv + vec2( dg.x, -dg.y );
+    vec2 nw = vMapUv + vec2( -dg.x, dg.y );
     vec4 d = texture2D( uDepth, vMapUv );
+    if ( vAbove < 0.0 ) discard;
     vec3 colour;
     if ( vLayer < 0.5 ) {
-      if ( d.b < 0.5 || ( d.r - d.g <= uCut && d.r < uNear ) ) discard;
-      colour = texture2D( map, vArtUv ).rgb;
+      bool subject = d.b >= 0.5 && ( d.r - d.g > uCut || d.r >= uNear );
+      if ( subject ) {
+        colour = texture2D( map, vArtUv ).rgb;
+      } else {
+        bool rim = subjectAt( e ) || subjectAt( w ) || subjectAt( n ) || subjectAt( s ) ||
+          subjectAt( ne ) || subjectAt( sw ) || subjectAt( se ) || subjectAt( nw );
+        if ( !rim ) discard;
+        colour = uInk;
+      }
     } else {
       if ( d.g < uNear ) discard;
       colour = texture2D( uBack, vBackUv ).rgb;

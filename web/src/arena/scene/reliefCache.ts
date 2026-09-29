@@ -28,6 +28,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 import { ART_BOX, EMPTY_RELIEF, reliefIndexOf, type ReliefIndex } from '../relief.ts';
+import { COMIC } from '../look.ts';
 import { RELIEF_DEPTH, RELIEF_CLIFF, STANDEE_FACES_CAMERA } from '../perf.ts';
 import {
   STANDEE_FRAGMENT,
@@ -346,6 +347,8 @@ export interface StandeeUniforms {
   uBehind: { value: number };
   uNear: { value: number };
   uCut: { value: number };
+  uRim: { value: number };
+  uInk: { value: THREE.Color };
   uLean: { value: number };
   uSink: { value: number };
   uFaceCamera: { value: number };
@@ -359,6 +362,22 @@ export interface StandeeUniforms {
 }
 
 export type StandeeMaterial = THREE.ShaderMaterial & { uniforms: StandeeUniforms };
+
+/**
+ * **The ink rim round every cut** (D261, as the fix pass amended it): its width
+ * in the render target's pixels and its colour, ONE value object each that every
+ * standee material shares — the figures' outer ink (`COMIC.inkCssPx` × the render
+ * dpr, `COMIC.ink`), so a standee's edge weighs what a figure's silhouette does.
+ * Written at COMMIT when the dpr changes ({@link applyStandeeRim}, `FigureLayer`'s
+ * look effect), never in the frame loop.
+ */
+const STANDEE_RIM = { value: Math.max(1, COMIC.inkCssPx) };
+const STANDEE_INK = { value: new THREE.Color(COMIC.ink) };
+
+/** The rim at this render dpr — never under one pixel (as `Post.tsx`'s `inkWidthFor`). At commit only. */
+export function applyStandeeRim(dpr: number): void {
+  STANDEE_RIM.value = Math.max(1, COMIC.inkCssPx * dpr);
+}
 
 /** How far the back sheet stands behind the front, in the standee's heights (a hair: it only shows through a cut). */
 const BACK_BEHIND = 0.004;
@@ -387,6 +406,8 @@ export function makeStandeeMaterial(standee: LoadedStandee, tint: string): Stand
       uBehind: { value: BACK_BEHIND },
       uNear: { value: standee.near },
       uCut: { value: RELIEF_CLIFF },
+      uRim: STANDEE_RIM,
+      uInk: STANDEE_INK,
       uLean: { value: 0 },
       uSink: { value: 0 },
       uFaceCamera: { value: STANDEE_FACES_CAMERA ? 1 : 0 },

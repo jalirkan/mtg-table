@@ -17,14 +17,14 @@ commit.
 **The index below lists 334 items still open across 35 follow-up lists** — 308
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
 its own rows on 2026-09-29 by the portrait standee lane, which added seven (35–41
-of the personal tier's list) to the arena caption lane's count at its rebase onto
+of the personal tier's list; its fix pass closed 38 and added 42) to the arena caption lane's count at its rebase onto
 the sound cues (it closed the story page's 1, added a list of six, and removed the two rows
 more villain identity's fix pass had left beside their replacements; the sound-cues
 lane had counted 314 across 33, which missed more villain identity's list), where
 the four paragraphs it replaced, one per merging lane, had each counted a
 different tree. Each list's
-own entries say what is closed. **Of the 31 questions only the owner can settle,
-5 are answered** and 26 stand on the default this plan assumes. (Two stale
+own entries say what is closed. **Of the 32 questions only the owner can settle,
+5 are answered** and 27 stand on the default this plan assumes. (Two stale
 paragraphs that counted 393 and 394 items across 32 lists, left here by more
 villain identity's rebase, were removed at the same recount.)
 
@@ -298,10 +298,10 @@ villain identity's rebase, were removed at the same recount.)
 | [Personal tier](#fu-personal) | 35 | open | A standee shows no relief on a sideways drag: it turns with the camera | `web/src/arena/standee.ts` |
 | [Personal tier](#fu-personal) | 36 | open | A standee's cut is the painting's nearest things, not always its subject | `web/src/arena/standee.ts` |
 | [Personal tier](#fu-personal) | 37 | open | A landscape painting stands low under the width clamp | `web/src/arena/standee.ts` |
-| [Personal tier](#fu-personal) | 38 | open | A standee has no outline on a busy table | `web/src/arena/scene/reliefCache.ts` |
-| [Personal tier](#fu-personal) | 39 | open | The standee's frame times were benched beside another lane's load | `tools/arena-bench.mjs` |
+| [Personal tier](#fu-personal) | 39 | open | The standee's frame times were benched beside other lanes' load, and its SwiftShader p95 doubles | `tools/arena-bench.mjs` |
 | [Personal tier](#fu-personal) | 40 | open | NOTICE §2 and the personal tier's derived views of card art | `NOTICE` |
 | [Personal tier](#fu-personal) | 41 | open | The likeness evidence's §10 pointer to D260 is owed on branch `likeness` | — |
+| [Personal tier](#fu-personal) | 42 | open | A standee at the legibility floor's edge changes body when its rank moves it (10 times over the corpus) | `web/src/arena/standee.ts` |
 | [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
 | [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
 | [Status layer](#fu-status) | 4 | open | `g1`@316 on SwiftShader is 91 draw calls, one over the line | `tools/arena-bench.mjs` |
@@ -402,6 +402,7 @@ villain identity's rebase, were removed at the same recount.)
 | [29](#owner-questions) | Download the *Universal Base Characters* pack again for its hairstyles? | open — the plan runs on its default |
 | [30](#owner-questions) | Keep the art rung on by default? | open — the plan runs on its default |
 | [31](#owner-questions) | Should a person's skin tone follow its card, or stay slice 4's one tone? | open — the plan runs on its default |
+| [32](#owner-questions) | Keep the portrait standee's ink rim, its legibility floor at 30 px, and its small kneel? | open — the plan runs on its default |
 
 ---
 
@@ -7463,7 +7464,7 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 `~/.forge` unchanged again.
 
 <a id="fu-personal"></a>
-### The personal tier's follow-ups — forty-one, 2026-09-28 (1–7, 9, 11, 18, 19, 21, 25 and 33 closed; 13 and 16 partly; 35–41 the portrait standee's, 2026-09-29)
+### The personal tier's follow-ups — forty-two, 2026-09-28 (1–7, 9, 11, 18, 19, 21, 25, 33 and 38 closed; 13 and 16 partly; 35–42 the portrait standee's, 2026-09-29)
 
 **Phase 2, the loader** — **all seven closed by phase 2** (D194–D196, *Phase 2*
 below): the index and its one reader (1), the dev-only route and the build grep
@@ -7846,9 +7847,10 @@ no follow-up opened. Evidence §19.
 
 ### The portrait standee — the painting on the table (2026-09-29, D260–D264)
 
-**Status: built, measured, gated and documented** on branch `standee` (the
-worktree `mtg-table-t2st`, off `main`'s `e2c337c`); the lane reserved D260–D264
-and used all five. Report 15 §9.4's optional, personal-only item, and the
+**Status: built, measured, gated, documented and fixed once** on branch `standee`
+(the worktree `mtg-table-t2st`, off `main`'s `e2c337c`); the lane reserved
+D260–D264 and used all five, and its fix pass amended D261–D264 in place (*Fix
+pass 1*, below). Report 15 §9.4's optional, personal-only item, and the
 likeness experiment's recommendation (§10): a relief cut from the card's own
 painting reads better at figure size than anything image-to-3D made — and the
 relief cache (D225–D228) already cuts every card's painting at its silhouettes.
@@ -7867,22 +7869,25 @@ manual, `web/src/arena/CLAUDE.md`'s personal tier convention 6 the rules.
   workshop downstream (D102).
 - **How it faces** (D261): turned to the camera about the vertical, both seats —
   under D143's facing your own seat's standees show the camera their painting 0
-  times in 7,341; turned, the least subject at 1× from the table view is 403 px on
-  your seat and 345 on the opponent's (the bar is 48).
+  times in 7,341. (The first legibility count — 403 px of subject on your seat,
+  345 on the opponent's, against a prop's 48 — measured the wrong thing; fix
+  pass 1 replaced it with a floor.)
 - **How tall, and its stances** (D262): its cut's aspect under the width clamp
-  (0.32–0.85 of the nominal, median 0.53); tapped, a quarter sunk and bowed toward
-  the lens (standing ÷ tapped ≥ 1.37 from the table view; leaning back, refused,
-  reads 1.67× taller); sick translucent; the death D64's body, falling back on its
-  base.
+  (0.32–0.85 of the nominal, median 0.53); tapped, a fifth sunk and bowed 6°
+  toward the lens since fix pass 1 (0.68–0.78 of its standing height from the table
+  view; leaning back, refused, reads taller); sick translucent; the death D64's
+  body, falling back on its base.
 - **The budget** (D263): one mesh of two sheets, ONE draw call and 1,920 triangles a
-  standee; over eleven crowded frames every table draws 2–17 calls FEWER with
-  standees, and within about ±250 triangles a standee of the body it replaces;
-  its triangles are the CC0 table's, not the personal line's.
+  standee; over twelve crowded frames every table draws 0–12 calls FEWER with
+  standees; its triangles are the CC0 table's, not the personal line's — which
+  they take 1,204 past D233's accepted worst on the Masters of Evil's @371
+  (36,893), accepted with its numbers and held by `traits.test.ts` (fix pass 1).
 - **Hard rule 8** (D264): the one lookup (`standeeChoicesOf`) reads a name only
   after the gates, through `CardPlane`'s own `artEntryFor`, and asks the relief by
   that print — swept over every board frame of the 23 recordings made hostile,
   with an ungated control.
-- **The workshop**: the list badges a *standee*; the pedestal wears the arena's
+- **The workshop**: the list badges a *standee* — since fix pass 1 the arena
+  lookup's answer on each creature's resting board; the pedestal wears the arena's
   standee path behind the *personal / repo* toggle.
 
 **The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9320`
@@ -7894,7 +7899,45 @@ tests are skipped here, as in every worktree without the likeness venv.
 `~/forge` and `~/.forge`: unchanged (the pinned jar's sha256; nothing under either
 modified since the lane began).
 
-**Follow-ups 35–41** (the personal tier's list, numbered on):
+**Fix pass 1** (2026-09-29, after the verifier, whose one blocker was that some
+standees did not read as their card at 1× from the table view — the Aerial
+Doombots at `g1`@316, a sliver on both seats; the opponent's at the Masters of
+Evil's @209 melting into their own cards — and whose one major was that the
+standees' triangles were said to be the CC0 table's and neither met that table's
+accepted worst nor were held). Everything is in `docs/evidence/standee.md` §9:
+
+- **A legibility floor** (D261, amended): a standee stands only where its subject,
+  kneeling, covers a 30-px square's worth at 1× from the table view on its own
+  stand point — chosen from a contact sheet of every standee seven crowded frames
+  put on the table (`var/standee/fix/floor-contact.png`); the drones, the A.I.M.
+  Bot, Yellowjacket and Black Panther, Vanguard now stand as their CC0 bodies.
+  `standee.test.ts` rasterises it on `g1`@316 and the Masters of Evil's @209 and
+  @371 on both seats, and over the corpus.
+- **An ink rim** round every cut, the figures' own outer ink weight, in the same
+  call (D261, amended; `rim-compare.png`) — follow-up 38, closed.
+- **A smaller kneel** (D262, amended): 0.2 sunk and 6° of bow, 0.68–0.78 of the
+  standing height from the table where the first stance was 0.39–0.59
+  (`tapped-compare.png`).
+- **The triangles** (D263, amended): stated per frame and accepted with their
+  numbers, the most standees can add held by `traits.test.ts`'s
+  `FIGURE_TRIS_STANDEES_HELD`; the frame times' p95 reported with the p50
+  (follow-up 39).
+- **The workshop badge** asks THE lookup (`standeeBadgesOf`, D264 amended), swept
+  in `workshop.test.ts` against an oracle with an ungated control; the stale file
+  names in `perf.ts` and `standee.ts`, the build line's "byte for byte" and the cut
+  edge's "no halo" corrected.
+- Owner question 32 asks whether to keep the rim, the floor and the kneel; new
+  follow-up 42 is the floor's edge.
+
+**Fix pass 1's gate**, from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9320`:
+**273.3 s**, exit 0, 48 jobs (1,026.5 s summed) at a load average of 4.9–15.1,
+`node --test` 1,214 / 1,203 pass / 0 fail / 11 skipped and vitest 157 (9 files)
+(`var/check-all-standee-fix.log`; the relief step's three Python-step tests skipped
+here, as before). `~/forge` and `~/.forge`: unchanged (the jar's sha256, and a
+sha1 of `~/forge`'s path-size-time listing and of `~/.forge`'s files, before and
+after).
+
+**Follow-ups 35–42** (the personal tier's list, numbered on; 42 from fix pass 1):
 
 35. **A sideways drag shows no relief.** A standee turns with the camera about the
     vertical (D261's price), so its depth reads only as the camera looks down on it
@@ -7909,13 +7952,24 @@ modified since the lane began).
     median cut at 0.53 of a figure; a face in it is a few pixels at the table's
     distance. Whether a standee may overhang its rank slot (its cut is mostly air
     at the edges) is a look question for the owner.
-38. **No outline.** The painting is drawn unlit and unmarked (D226's reasons); on a
-    busy table an ink line or a paper border might separate it from what stands
-    behind it — measure with bloom's ink before adding one.
-39. **The frame times are not separable from the machine's load.** The bench ran
-    beside another lane's GPU work (a load average of 6–12 on sixteen threads); the
-    calls and triangles are exact-frame counts, the p50s and p95s are not a
-    comparison. Re-bench in interleaved pairs on a quiet machine.
+38. ~~**No outline.**~~ **Closed by the fix pass** (D261, amended): the cut carries
+    an ink rim of the figures' own outer ink weight, in the same draw call, because
+    the far seat's standees melted into their own cards behind them at the Masters
+    of Evil's @209 (the verifier's picture); a paper border was considered and not
+    built. Owner question 32 asks whether to keep it.
+39. **The frame times are not separable from the machine's load, and SwiftShader's
+    p95 doubles.** The bench ran beside other lanes' work (a load average of 6–26 on
+    sixteen threads); the calls and triangles are exact-frame counts, the p50s and
+    p95s are not a comparison. But one number repeated in three independent runs:
+    at the Masters of Evil's @371 on SwiftShader the p95 with standees on is well
+    over `&standee=0`'s (the lane's 68.8 against 34.3 ms, the verifier's 68.2
+    against 39.4 with a 774 ms max, fix pass 1's 47.5–48.6 against 32.8–47.3), and
+    fix pass 1 found it shrink to 34.3 against 30.3 when the sample starts 3 s
+    after the scrub instead of 0.6 (`docs/evidence/standee.md` §9.4) — most likely
+    the first mount's upload (a standee's two maps `initTexture`d and mipmapped at
+    commit), not the per-fragment cost (6.3–7.6 ms for nine, the lane's shader's
+    own). Re-bench on a quiet machine, and prove it with a bench that times the
+    mount (or spreads the uploads over frames); the GTX 1080 shows neither.
 40. **NOTICE §2 and the tier's derived views.** NOTICE undertakes that card images
     are not cropped or distorted; the relief window and the standee cut and
     displace a painting — on the owner's machine only, never in a build or a
@@ -7924,6 +7978,14 @@ modified since the lane began).
 41. **The likeness evidence's §10 is on branch `likeness`** (worktree `mtg-table-t2k`,
     read-only to this lane): its pointer to D260 is owed there, when that branch
     lands.
+42. **A standee at the floor's edge changes body when its rank moves it.** The
+    legibility floor (D261, amended) is judged kneeling, so a card never changes
+    body when it taps — but it is judged at the card's own stand point, so when a
+    rank reflows or wraps a card near 30 px can cross it: 10 times over the whole
+    corpus with no personal model taking a card (the Volcanic Villain, Peggy
+    Carter, She-Hulk, Bold Biochemist, Baron Strucker). A floor on the table's centre line had 6 but stood down a card that
+    reads everywhere; hysteresis would be a renderer that remembers. Watch it in
+    play before choosing.
 
 ## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
 
@@ -8837,3 +8899,4 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 29 | **New, Lane BODIES.** Download the *Universal Base Characters* pack again (`Universal Base Characters[Standard].zip`, 128,968,391 B, from <https://quaternius.itch.io/universal-base-characters>) so the hair is the pack's own hairstyles instead of four procedural shells? A download is your approval in chat, with the badge read on the day (**D54**, **D95**). | **Not downloaded** (**D157**): two carved styles and four shells; the route is the lane's follow-up 2. |
 | 30 | **New, Lane BODIES at merge.** Keep the **art rung** on — every face-up card with no hand-written colour takes its painting's (the Giant-Sized Flying Ant brown, Wasp's aura salmon) — or put it behind a switch until played? The lane left it to you (**D164**); the merge applied it, as the lane's follow-up 13 said "whoever merges LOOK and BODIES" would. | **On** (**D164**, amended). `palette: off` in a `traits.json` row turns it off for a card; there is no page-wide switch. |
 | 31 | **New, more villain identity (its fix pass).** A person's **skin tone**: keep slice 4's one tone for every person — only a transformed body (a Hulk's green, a lava body) paints its skin (D231) — or let a person's tone follow its card, from the card's art palette (a rung like D160's) or a per-deck default? The verifier called the Wakandans, every one in the pale default against art of a Black cast, the lane's most visible mismatch. No likeness either way: a tone is not a face. | **The one tone** (slice 4, D231, D232). The rule is `COSTUME_DEFAULTS.skin` and `traits.test.ts`'s `TRANSFORMED_SKIN`; either answer is a decision and a change to both. |
+| 32 | **New, the portrait standee (its fix pass).** Three looks the fix pass chose for the standee (D261, D262, amended), each from pictures only you can judge (`var/standee/fix/`, gitignored — card-art-derived, never shown to anyone): an **ink rim** round every cut, the figures' own outer ink weight, so a painting over a painting keeps an edge (`rim-compare.png`); a **legibility floor** — a standee whose subject, kneeling, covers under a 30-px square's worth at 1× from the table view is its CC0 body, so the drones, the A.I.M. Bot, Yellowjacket and the Drone Flock never stand and about one standee in five on your seat and two in five on the opponent's does not (`floor-contact.png`, every standee of seven crowded frames with its size); and a **smaller kneel** — a fifth sunk and 6° of bow, 0.68–0.78 of its standing height from the table, where the first was a sliver at 0.39–0.59 (`tapped-compare.png`). Keep all three, move the floor, or drop the rim? | **All three, at the numbers measured** (`perf.ts`'s `STANDEE_MIN_PX`, `standee.ts`'s `STANDEE_STANCES`, `STANDEE_FRAGMENT`'s rim). A different floor is one number and a re-run of `standee.test.ts`; `?standee=0` is the A/B. |

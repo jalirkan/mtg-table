@@ -80,6 +80,7 @@ import {
 } from './models.ts';
 import { PropField, type PropBody } from './props.ts';
 import {
+  applyStandeeRim,
   applyStandeeStance,
   makeStandeeMaterial,
   makeStandeeMesh,
@@ -228,6 +229,8 @@ export function FigureLayer({
   // changes; the frame loop reads numbers.
   useLayoutEffect(() => {
     applyComicGlobals(tableLook, dpr);
+    // D261 (amended): the standees' ink rim, the figures' outer ink at this dpr.
+    applyStandeeRim(dpr);
     departures.setLook(tableLook);
     discs.setLook(tableLook, shadows, camera);
     invalidate();

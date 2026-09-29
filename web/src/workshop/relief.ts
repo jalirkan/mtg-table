@@ -57,16 +57,65 @@
  */
 
 import { imageUrl, lookupArt, type ArtIndex } from '../art.ts';
+import type { Presence } from '../arena/cues/types.ts';
+import { figurePose } from '../arena/figures/pose.ts';
+import type { FigureData, ModelData } from '../arena/figures/types.ts';
+import type { TraitData } from '../arena/figures/traits.ts';
+import { layout } from '../arena/layout.ts';
 import { RELIEF_DEPTH } from '../arena/perf.ts';
+import { personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
 import { ART_BOX, type ReliefEntry, type ReliefIndex } from '../arena/relief.ts';
-import type { WorkshopEntry } from './catalog.ts';
+import { standeeChoicesOf } from '../arena/standee.ts';
+import { roleOf, type WorkshopEntry } from './catalog.ts';
 import { inspectLayout, type Framing, type InspectLayout, type Panel } from './framing.ts';
+import { DEFAULT_OPTIONS, figureIds, pedestalState } from './synthetic.ts';
 
 // The reader moved to the arena with the standee (D260): `arena/relief.ts` is THE
 // reader of the relief index now — the arena's standee and this inspect view both
 // read through it — and the names below are its own, re-exported so the
 // workshop's callers (and `relief.test.ts`) read it where they always did.
 export { EMPTY_RELIEF, isArtBox, reliefIndexOf, type ReliefEntry, type ReliefIndex } from '../arena/relief.ts';
+
+/** What the list's *standee* badge is decided with — the pedestal's own inputs. */
+export interface StandeeBadgeInputs {
+  art: ArtIndex;
+  relief: ReliefIndex;
+  /** The dev route's relief prefix (`RELIEF_BASE`): `null` in a build, and then no badge. */
+  base: string | null;
+  /** The active personal models: a card one dresses is its model's, never a standee's (D260). */
+  overlay: PersonalOverlay;
+  figures: FigureData;
+  models: ModelData;
+  traits: TraitData;
+  presence?: Readonly<Record<string, Presence>>;
+}
+
+/**
+ * **The list's *standee* badge** (D260; routed through THE lookup by the fix
+ * pass): the names of the entries the pedestal stands as a standee at its
+ * default options — each creature entry's own resting board (`pedestalState`),
+ * laid out and posed as the pedestal poses it, the personal models the same
+ * overlay would dress taken first, then asked of the arena's `standeeChoicesOf`.
+ * So the badge says exactly what the pedestal draws: the gates (face up, a body
+ * a CC0 figure stands in — never a swarm, a squad or a silhouette), the card's
+ * own art lookup, the relief and the legibility floor are all the lookup's, and
+ * the list decides nothing of its own (`workshop.test.ts` sweeps the catalog with
+ * a hostile relief against an oracle).
+ */
+export function standeeBadgesOf(entries: readonly WorkshopEntry[], inputs: StandeeBadgeInputs): Set<string> {
+  const out = new Set<string>();
+  if (inputs.base === null || inputs.relief.byId.size === 0) return out;
+  for (const entry of entries) {
+    if (roleOf(entry) !== 'creature') continue;
+    const state = pedestalState(entry, DEFAULT_OPTIONS);
+    const placed = layout(state, inputs.presence ?? {});
+    const poses = figurePose(placed, state.board?.combat ?? null, inputs.figures, { models: inputs.models, traits: inputs.traits });
+    const taken = personalChoicesOf(placed, poses, inputs.overlay);
+    const chosen = standeeChoicesOf(placed, poses, inputs.art, inputs.relief, { base: inputs.base, taken });
+    if (figureIds(entry, DEFAULT_OPTIONS).some((id) => chosen.has(id))) out.add(entry.name);
+  }
+  return out;
+}
 
 /** The card image the inspect view draws, and the id its depth map is keyed by. */
 export interface InspectSource {

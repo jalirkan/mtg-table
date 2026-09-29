@@ -126,7 +126,7 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **1,197 `node --test` + 157 vitest (9 files)** standalone on
+`npm --prefix web test` is **1,199 `node --test` + 157 vitest (9 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
 logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
@@ -409,7 +409,8 @@ backdrop, built once per card at commit and drawn unlit, with no ink mark and no
 halftone. Five rules hold it: **`relief.ts` is pure, and reads the index
 through the arena's one reader** (`arena/relief.ts`'s `reliefIndexOf`, re-exported
 — the arena's since the portrait standee, D260, which the pedestal wears too,
-behind the *personal / repo* toggle); **`inspectSourceOf` is the inspect view's one way to a card's
+behind the *personal / repo* toggle, and whose list badge is the arena lookup's
+answer on each creature's resting board, `relief.ts`'s `standeeBadgesOf`); **`inspectSourceOf` is the inspect view's one way to a card's
 image and so to its map**, face up only, and `workshop.test.ts` sweeps the
 catalog with a hostile copy and an ungated control; **the route is named once,
 `arena/scene/reliefCache.ts`'s DEV-gated `RELIEF_BASE`** (moved from

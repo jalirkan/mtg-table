@@ -151,7 +151,9 @@
  *     standeeChoicesOf, dressStandees (standee.ts)
  *                                            THE standee lookup and the dressed poses, as
  *                                            Arena.tsx stands them — behind the personal
- *                                            / repo toggle; the list's standee badge
+ *                                            / repo toggle; and the list's standee badge,
+ *                                            through relief.ts's standeeBadgesOf, which asks
+ *                                            the same lookup of each creature's resting board
  *   the data         figures.json, models.json and cues.json (imported without
  *                    attributes, as Arena.tsx imports them), traits.json (with them,
  *                    as traits.ts does) — the bundler warns on a module imported
@@ -212,7 +214,7 @@ import { WORKSHOP_KEYMAP, workshopActionFor, type WorkshopKeyAction } from './ke
 import { LEGIBLE_PX, METER_HEIGHT, METER_WIDTH, drawnHeightPx, measure, type MeterRow } from './legibility.ts';
 import { WORKSHOP_VIEW_INSPECT, cardFromLocation, cardsHref, workshopHref, workshopViewFromLocation } from './links.ts';
 import { Pedestal } from './Pedestal.tsx';
-import { inspectPlan, inspectSourceOf } from './relief.ts';
+import { inspectPlan, inspectSourceOf, standeeBadgesOf } from './relief.ts';
 import {
   DEFAULT_OPTIONS,
   HOST_ENTRY,
@@ -552,23 +554,27 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   }, [restPoses, personalPoses, standeeChoices, standeesLoaded.fits, entry, options]);
   const personalNames = useMemo(() => new Set(overlay.cards.keys()), [overlay]);
   /**
-   * The list's *standee* badge (D260): a face-up creature no personal model
-   * dresses — one body, not a swarm or a squad (the pedestal stands none for
-   * those, as the arena stands none) — whose print the relief cache has cut,
-   * looked up face up only, as the thumbnail is. Empty in a build (no index).
+   * The list's *standee* badge (D260): what the pedestal stands at its default
+   * options, decided by THE lookup — `relief.ts`'s `standeeBadgesOf` asks the
+   * arena's `standeeChoicesOf` of each creature's own resting board, the models
+   * the overlay dresses taken first — so the badge's gates, its art lookup, its
+   * relief and its legibility floor are the lookup's (face up only; empty in a
+   * build: no index).
    */
-  const standeeNames = useMemo(() => {
-    const out = new Set<string>();
-    if (RELIEF_BASE === null) return out;
-    for (const e of entries) {
-      if (personalNames.has(e.name) || roleOf(e) !== 'creature') continue;
-      const trait = e.concealed === null ? traitFor(cardOf(e, 1, 0), traits).spec : null;
-      if (trait === null || trait.swarm > 0 || trait.silhouette !== null) continue;
-      const hit = e.concealed === null ? lookupArt(art, e.name) : null;
-      if (hit !== null && (reliefIndex.byId.get(hit.scryfallId)?.standee ?? null) !== null) out.add(e.name);
-    }
-    return out;
-  }, [entries, personalNames, art, reliefIndex, traits]);
+  const standeeNames = useMemo(
+    () =>
+      standeeBadgesOf(entries, {
+        art,
+        relief: reliefIndex,
+        base: RELIEF_BASE,
+        overlay,
+        figures: FIGURE_DATA,
+        models: MODEL_DATA,
+        traits,
+        presence: presence ?? {},
+      }),
+    [entries, art, reliefIndex, overlay, traits, presence],
+  );
   const standeeCount = useMemo(() => [...reliefIndex.byId.values()].filter((r) => r.standee !== null).length, [reliefIndex]);
   // INSPECT (D196, D226): the pedestal's backdrop and frame draw the image CardPlane
   // draws for this card — the same URL, so the same texture — face up only, through
