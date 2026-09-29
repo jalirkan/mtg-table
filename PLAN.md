@@ -14,9 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 348 items still open across 37 follow-up lists** — 322
+**The index below lists 349 items still open across 37 follow-up lists** — 323
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
-its own rows on 2026-09-29 by the play-distance audit's fix pass 2, at its rebase
+its own rows on 2026-09-29 by the anchor resolver's lane (D275), on `0a93c9d`,
+which closed the GPU pass's 12 and added its 13 and 14 to the same list, over the
+play-distance audit's fix pass 2's count of 348 across 37, made at its rebase
 onto `8ddd286` (the audit closed the arena caption's 3 and added a list of three,
 its fix pass a fourth, its fix pass 2 a fifth) over the GPU pass's count of 344 across 36, made at its rebase onto the portrait
 standee, plus the one row its fix pass 3 added (the GPU pass closed M7 Tier 1's 6 and Lane LOOK's 16 and added a list of
@@ -378,7 +380,8 @@ villain identity's rebase, were removed at the same recount.)
 | [GPU pass](#fu-gpu) | 9 | open | `arena-scene` grew +0.8 kB gzip by the pass's own code | `web/vite.config.ts` |
 | [GPU pass](#fu-gpu) | 10 | open | At a browser's pacing the cold scrub can step a fast GPU to 0.75, and it never climbs back | `web/src/arena/governor.ts` |
 | [GPU pass](#fu-gpu) | 11 | open | At vsync a real GPU's p50/p95 are saturated (16.7–16.8 ms in every build): the regression signal is the unthrottled p50/p95 in pairs, and D271.5 lengthens the unthrottled drain | `tools/arena-bench.mjs` |
-| [GPU pass](#fu-gpu) | 12 | open | `anchorPosition` builds a closure and a tuple a call for every non-figure effect every frame, outside the scans; the cue layer allocates by design | `web/src/arena/layout.ts` |
+| [GPU pass](#fu-gpu) | 13 | open | `CastingField.bind` and `OverlayField.bind` are frame-loop bodies outside every allocation scan (`for…of`; the overlay's a `.values()` iterator too) | `web/test/liveness.test.ts` |
+| [GPU pass](#fu-gpu) | 14 | open | The effect pool's `#cardOf` and the runner's `panOf` walk the placements themselves; `placementOf` is allocation-free now, and `#cardOf` answers the FIRST `c:` placement where it answers the last | `web/src/arena/scene/effects.ts` |
 | [Play-distance audit](#fu-audit) | 1 | open | The audit's drivers are scratch: the pictures are not repeatable from the repo | `var/audit/drv/` |
 | [Play-distance audit](#fu-audit) | 2 | open | No committed recording sees a villain deck from Pacho's chair | `fixtures/games/` |
 | [Play-distance audit](#fu-audit) | 3 | open | The far strips under the chrome are measured by a scratch census, not held (owner question 34 first) | `web/test/status.test.ts` |
@@ -466,6 +469,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
 | — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified three times and fixed three times** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
 | — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c`, rebased onto `8ddd286` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **its fix pass 2** (a second verifier): rebased onto `8ddd286`, the decision bar one line of items so no hint or notice grows the column (136.7 → 112.5 px), the credit drawn whole beside the chip and its Fan Content notice never cut, the chip's key whole at its floor, your duelist from the table view looked at (it stands; owner question 41); **its fix pass 3** (a third verifier): the director's shot a dashed mark on its view's button, not text that wrapped the switcher (the column 146.3 → 112.5 px), every key that can change the chrome pressed in a browser from 1280 to 1920 px, the credit's own 980-px cap dropped, the notice's tooltip tested; **D265–D267**; eight owner questions (34–41); five follow-ups; *The play-distance audit*, just above *Deferred* |
+| — | The anchor resolver: the frame loop's last allocation outside the scans *(off the plan; the GPU pass's follow-up 12)* | ½ day | **built, measured, gated and documented** on branch `anchor-scratch` (2026-09-29), off `main`'s `0a93c9d` — `layout.ts`'s `anchorPositionInto` writes into the stage's one scratch tuple, the opponent's anchors are built once, `placementOf` builds no key string, and the resolver and its helpers are in the allocation scan (**D275**); GC events per 5M resolves through `stage.positionOf` 14–818 → 0 on every kind, the turn banner and the life number bound through the pool 38 → 3 per 2M; every answer the one it was over the whole corpus; the camera director copies the points it frames; the cue layer stays outside by design; two follow-ups; *The anchor resolver*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9069,7 +9073,7 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
 §12.7).
 
 <a id="fu-gpu"></a>
-### The GPU pass's follow-ups — twelve, 2026-09-29 (10 by its fix pass, 11 by its fix pass 2, 12 by its fix pass 3)
+### The GPU pass's follow-ups — fourteen, 2026-09-29 (10 by its fix pass, 11 by its fix pass 2, 12 by its fix pass 3, 13 and 14 by the anchor resolver's lane, which closed 12)
 
 1. **The GTX 1080's frame times are from a shared machine.** Three other lanes'
    benches and gates ran all day (loads 2–18) and the driver's clocks were seen at
@@ -9156,8 +9160,30 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
     (`EXT_disjoint_timer_query_webgl2`), or a `--vsync` run's missed beats over a
     sample long enough to count them — so that a real GPU's regression is a number
     the gate could read. The file: `tools/arena-bench.mjs`.
-12. **An effect's anchor is resolved by a function that allocates, outside every
-    scan** (fix pass 3's verifier). `EffectPool.bind` hands every non-figure
+12. ~~**An effect's anchor is resolved by a function that allocates, outside every
+    scan**~~ **Closed by the anchor resolver's lane (D275, 2026-09-29, branch
+    `anchor-scratch`; `docs/evidence/anchor-scratch.md`).** `SceneStage.positionOf`
+    is `layout.ts`'s `anchorPositionInto` into the stage's one scratch tuple; the
+    closure is `seatOf` hoisted, the opponent's anchors are built once and
+    `placementOf` walks the placements with no key string; the resolver and its
+    seven helpers are in the GPU pass's allocation scan with the junk-line
+    controls, a clause holds their calls to the list, and the stage's callers are
+    a closed list (the camera director, which kept the points it framed, copies
+    them). Measured with a probe of §13's shape (`tools/anchor-gc-probe.ts`, Node
+    v24.20.0, no flags, a fresh process per case, `g1`@316), GC events per 5M
+    calls through `stage.positionOf`, before → after: a card 14 → **0**, a player,
+    `table` or `stack` 43 → **0** (the opponent's player 114 → **0**), an
+    opponent's `zone`, `combat` or `casting` 818 → **0**, `above`/`beside` 57 →
+    **0**, every kind in turn 269 → **0**; a fixed tuple 0 and a kept fresh tuple
+    43 in both trees; `EffectPool.bind` over a turn banner and a life number 38 →
+    **3** per 2M binds (0 for either alone: §13's `#apply` residue). No answer
+    moved: 16,001,784 against the old resolver over every anchor kind of every
+    board frame of the 23 recordings, `Object.is`, 0 differences
+    (`anchors.test.ts`). The bench saw nothing either way (the GTX 1080 p50 0.4 /
+    p95 0.5–0.6 ms unthrottled at `g1`@316 and @318, SwiftShader 16.4–16.7 /
+    33.5–34.4 at the floor, before and after, three interleaved runs each). The
+    cue layer stays outside the scans by design (D275). The entry, for the
+    record: (fix pass 3's verifier). `EffectPool.bind` hands every non-figure
     effect to `stage.positionOf`, and `layout.ts`'s `anchorPosition` builds a
     `seatOfPlayer` closure and a fresh tuple a call — 43 GC events per 5M calls
     for a `player`, `table` or `stack` anchor, 14 for a `card`, 0 for a fixed
@@ -9170,6 +9196,22 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
     written in place, `seatOfPlayer` hoisted, and `anchorPosition` in the scan —
     a change to the one module that knows a coordinate, so a lane of its own,
     measured by the same probe. The file: `web/src/arena/layout.ts`.
+13. **Two frame-loop binds are outside every allocation scan** (found by the
+    anchor resolver's lane, D275). `CastingField.bind` (`scene/casting.ts`) walks
+    its forms, tethers and motes with `for…of`, and `OverlayField.bind`
+    (`scene/overlays.ts`) with `for…of` and a `.values()` iterator — rule 2's
+    "every scene-side body it reaches" is not yet true of them; the scans read
+    the overlay field's helpers and never its bind. (Since D275 the casting field
+    no longer builds nine anchor objects for every opponent's form and mote a
+    frame: `anchorsFor('opp')` is a constant.) With follow-up 6, the list of what
+    the loop reaches and no scan reads. The file: `web/test/liveness.test.ts`.
+14. **Two walks of the placements that `placementOf` could now be.** The effect
+    pool's `#cardOf` (the speed lines' clear lane) and `CueRunner`'s `panOf` (a
+    sound's pan) each walk the frame's placements by index because
+    `placementOf` built a key string a call; since D275 it builds none. `#cardOf`
+    answers the FIRST `c:` placement of a card, `placementOf` the last (`byKey`'s),
+    which no recording tells apart (no frame places a card twice). One lookup is
+    one definition. The file: `web/src/arena/scene/effects.ts`.
 
 ---
 
@@ -9347,6 +9389,75 @@ job: its tests are in the web step. `~/forge` and `~/.forge`: unchanged
    was measured with the director off, and pressing `6` wrapped it — F17. Its
    sweep of every key, `var/audit-fix4/drv/`, is the driver such a check would
    start from.)*
+
+---
+
+## The anchor resolver — the frame loop's last allocation outside the scans (2026-09-29, D275)
+
+**Status: built, measured, gated and documented** on branch `anchor-scratch` (the
+worktree `mtg-table-t2ap`, off `main`'s `0a93c9d`); the lane's reserved range
+D275–D277, one used. The GPU pass's follow-up 12, a lane of its own because it
+changes `layout.ts`, the one module that knows a coordinate.
+`docs/evidence/anchor-scratch.md` is every number; `web/src/arena/CLAUDE.md`'s GPU
+rule 2 holds the new boundary.
+
+```bash
+node tools/anchor-gc-probe.ts                          # this tree: GC events per 5M resolves, per kind
+node tools/anchor-gc-probe.ts --src <archive>/web/src  # the same probe over a git archive of the base
+node --test web/test/anchors.test.ts                   # every answer against the pre-D275 resolver
+```
+
+1. **The resolver allocates nothing** (D275). `anchorPositionInto(out, placed, ref)`
+   writes into a tuple it is handed; `SceneStage.positionOf` hands it the stage's
+   one scratch; the `seatOfPlayer` closure is `seatOf` hoisted; `anchorsFor('opp')`
+   and `playerAnchorFor('opp')` answer constants built once (they built nine
+   objects and one a call); `placementOf` walks the placements with no key string,
+   answering exactly what `byKey` did. `anchorPosition` stays as the allocating
+   form for a caller that keeps its answer. GC events per 5M calls through
+   `stage.positionOf` (a probe of the GPU pass's §13 shape, which reads the base
+   tree's 43, 14 and 0 exactly): 14 → **0** (a card), 43 → **0** (a player,
+   `table`, `stack`), 114 → **0** (the opponent's player), 818 → **0** (an
+   opponent's `zone`, `combat`, `casting`), 57 → **0** (`above`, `beside`), 269 →
+   **0** (every kind in turn); `EffectPool.bind` over a turn banner and a life
+   number 38 → **3** per 2M binds, 0 for either alone.
+2. **The callers were traced first.** The effect pool and the casting field read
+   each answer before resolving another; **the camera director kept every point it
+   framed** — the attack's swoop through one scratch would have framed the combat
+   lane twice and the attacker not at all — and now copies each. The callers are a
+   closed list in `liveness.test.ts`.
+3. **No answer moved.** `anchors.test.ts` keeps the old resolver as a test-local
+   reference: 16,001,784 answers over every anchor kind of every board frame of
+   the 23 recordings from four chairs, `Object.is`, 0 differences; `placementOf`,
+   `anchorDelta` and `figureYawTo` 0; the pool through the scratch against fresh
+   tuples, 4,820 binds, 0; the director's shot, equal (a kept scratch, the control,
+   differs). Eleven source splices each turn a test red.
+4. **The bench saw nothing either way** — interleaved production builds, three
+   runs each, bloom off: the GTX 1080 p50 0.4 · p95 0.5–0.6 ms unthrottled at
+   `g1`@316 and @318 (a live turn banner) in both builds, SwiftShader 16.4–16.7 ·
+   33.5–34.4 at its floor, draw calls and triangles equal. `arena-scene` +0.12 kB
+   gzip (398.52 → 398.64).
+5. **The cue layer stays outside the scans, by design**: a cue rebuilds its effect
+   objects, refs and keys every frame as values (D50); pooling them would make the
+   stage remember. Rule 2 says the scans hold the scene bodies AND the resolver.
+
+Tests: `web/test/anchors.test.ts` (6, new), `liveness.test.ts`'s GPU-pass case
+(the resolver's bodies, their calls, the scratch, the callers, the director's
+copy). `npm --prefix web test` 1,230 `node --test` + 159 vitest standalone.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4` on the committed
+tree: `WSPORT=9380` **260.8 s** and `WSPORT=9390` **260.1 s**, exit 0 both, 48 jobs
+(975.4 s and 965.8 s summed) at a load of 5.4–11.5, `node --test` 1,245 / 1,234
+pass / 0 fail / 11 skipped and vitest 159 (9 files) each time
+(`var/check-all-anchor-1.log`, `-2.log`); a first run, on the tree before a pass of
+comment-only edits, was green too (259.8 s, `var/check-all-anchor-0.log`). The lane
+added no step and no job. `~/forge` and `~/.forge`: unchanged — the jar's sha256
+(`3c0a7c38…8e5dd9`), every `~/.forge` file's sha1 and a listing of every path
+under `~/forge` with its size and mtime, identical before the lane's first command
+(19:00) and after its last gate (19:49).
+
+No follow-up list of its own: the two things the lane found are the GPU pass's
+follow-ups 13 and 14 (two frame-loop binds no scan reads; two walks of the
+placements `placementOf` could now be), in [that list](#fu-gpu).
 
 ---
 

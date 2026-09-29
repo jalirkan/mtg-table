@@ -634,23 +634,36 @@ export function seatSpin(seat: Seat): number {
   return seat === 'opp' ? Math.PI : 0;
 }
 
-/** The anchors of one seat. `opp` is `you` mirrored through z = 0. */
-export function anchorsFor(seat: Seat): SeatAnchors {
-  if (seat === 'you') return YOU_ANCHORS;
+/**
+ * **`opp` is `you` mirrored through z = 0, built once** (D275). `anchorsFor('opp')`
+ * built these nine objects afresh on every call — and {@link anchorPositionInto}
+ * calls it for every opponent's `zone`, `combat` and `casting` anchor on the frame
+ * loop's path (818 GC events per 5M calls against a `table` anchor's 43,
+ * `docs/evidence/anchor-scratch.md`). Shared like `YOU_ANCHORS` always was: read
+ * them, never write them.
+ */
+const OPP_ANCHORS: SeatAnchors = mirrorSeat(YOU_ANCHORS);
+
+function mirrorSeat(you: SeatAnchors): SeatAnchors {
   // **`pitch` is carried across unchanged** — see {@link seatSpin}. Mirroring an
   // anchor mirrors *where* it is, never which way its cards face.
   const mirror = (a: Anchor): Anchor => ({ x: a.x, y: a.y, z: -a.z, pitch: a.pitch });
   return {
-    hand: { ...mirror(YOU_ANCHORS.hand), pitch: FAN_PITCH_OPP },
-    creatures: mirror(YOU_ANCHORS.creatures),
-    lands: mirror(YOU_ANCHORS.lands),
-    combat: mirror(YOU_ANCHORS.combat),
-    graveyard: mirror(YOU_ANCHORS.graveyard),
-    exile: mirror(YOU_ANCHORS.exile),
-    command: mirror(YOU_ANCHORS.command),
-    library: mirror(YOU_ANCHORS.library),
-    casting: mirror(YOU_ANCHORS.casting),
+    hand: { ...mirror(you.hand), pitch: FAN_PITCH_OPP },
+    creatures: mirror(you.creatures),
+    lands: mirror(you.lands),
+    combat: mirror(you.combat),
+    graveyard: mirror(you.graveyard),
+    exile: mirror(you.exile),
+    command: mirror(you.command),
+    library: mirror(you.library),
+    casting: mirror(you.casting),
   };
+}
+
+/** The anchors of one seat. `opp` is `you` mirrored through z = 0. */
+export function anchorsFor(seat: Seat): SeatAnchors {
+  return seat === 'you' ? YOU_ANCHORS : OPP_ANCHORS;
 }
 
 // ---------------------------------------------------------------------------
@@ -1387,10 +1400,16 @@ function placeStands(placements: Placement[]): void {
  */
 const YOU_PLAYER_ANCHOR: Anchor = { x: -3.55, y: 0.25, z: 4.25, pitch: -0.9 };
 
+/**
+ * The opponent's: yours mirrored through z = 0. **Built once, here** (D275) — it
+ * was a fresh object on every call, and {@link anchorPositionInto} reaches this
+ * for every `player` anchor on the frame loop's path. Shared like
+ * `YOU_PLAYER_ANCHOR` always was: read it, never write it.
+ */
+const OPP_PLAYER_ANCHOR: Anchor = { x: YOU_PLAYER_ANCHOR.x, y: YOU_PLAYER_ANCHOR.y, z: -YOU_PLAYER_ANCHOR.z, pitch: -0.9 };
+
 export function playerAnchorFor(seat: Seat): Anchor {
-  return seat === 'you'
-    ? YOU_PLAYER_ANCHOR
-    : { x: YOU_PLAYER_ANCHOR.x, y: YOU_PLAYER_ANCHOR.y, z: -YOU_PLAYER_ANCHOR.z, pitch: -0.9 };
+  return seat === 'you' ? YOU_PLAYER_ANCHOR : OPP_PLAYER_ANCHOR;
 }
 
 /**
@@ -1430,14 +1449,36 @@ function zoneAnchor(anchors: SeatAnchors, zone: string): Anchor | null {
  * battlefield *and* on the stack — and `c:<id>` is the battlefield one. A cue
  * that moves "the card" means the one you can see, and for a spell that is only
  * on the stack the stack copy is the only one there is.
+ *
+ * **An indexed walk, and it allocates nothing** (D275): it is on the frame loop's
+ * path through {@link anchorPositionInto}, and the `byKey` lookup it replaced
+ * built a `c:<id>` key string a call. The answer is `byKey`'s own: `byKey` is
+ * written placement by placement in order, so for a key it holds the LAST
+ * placement with it, and a `c:` key is always `c:<its cardId>` ({@link place}'s
+ * callers) — so the walk from the end for a `c:` placement of this card finds
+ * exactly the one `byKey.get` did, and the forward walk after it is the fallback
+ * it always was. `anchors.test.ts` holds the two equal on every card of every
+ * board frame of the corpus.
  */
 export function placementOf(placed: Layout, cardId: number): Placement | null {
-  const direct = placed.byKey.get(`c:${String(cardId)}`);
-  if (direct !== undefined) return direct;
-  for (const placement of placed.placements) {
+  const list = placed.placements;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const placement = list[i]!;
+    if (placement.cardId === cardId && isCardKey(placement.key)) return placement;
+  }
+  for (let i = 0; i < list.length; i++) {
+    const placement = list[i]!;
     if (placement.cardId === cardId) return placement;
   }
   return null;
+}
+
+/**
+ * A card placement's key (`c:<cardId>`) rather than a stack item's (`s:<id>`),
+ * read without building a string: 99 is `c` and 58 is `:`.
+ */
+function isCardKey(key: string): boolean {
+  return key.charCodeAt(0) === 99 && key.charCodeAt(1) === 58;
 }
 
 /** A card's resting position, or `null` when this frame does not place it. */
@@ -1458,58 +1499,123 @@ export function restPositionOf(placed: Layout, cardId: number): [number, number,
  * here, a zone name from a future protocol). A cue that gets `null` contributes
  * nothing, which is §3.6 rule 1 again: an id that does not resolve is a card
  * the viewer may not see, and that is correct rather than an error.
+ *
+ * **The answer is written into `out`, and nothing is allocated** (D275, GPU-pass
+ * follow-up 12). `SceneStage.positionOf` hands this every non-figure effect's
+ * anchor on every frame — the turn banner's `table`, the life number's `player`,
+ * a mote's `card` and `casting` — so it and every helper it reaches
+ * (`seatOf`, `playerAnchorFor`, `anchorsFor`, `zoneAnchor`, `restPositionOf`,
+ * `placementOf`, `isCardKey`) are in `liveness.test.ts`'s allocation scan. It
+ * returns `out` or `null`, and the next call with the same `out` overwrites it:
+ * **read the answer before resolving again** — the effect pool and the casting
+ * field do, and the camera director copies each point it frames.
+ * A caller that KEEPS an answer calls {@link anchorPosition}, which hands this a
+ * fresh tuple. A card's answer is a copy of its placement's position, never the
+ * placement's own tuple, so no caller can write the layout through it.
  */
-export function anchorPosition(
+export function anchorPositionInto(
+  out: [number, number, number],
   placed: Layout,
   ref: AnchorRef,
 ): [number, number, number] | null {
-  const seatOfPlayer = (playerId: number | null): Seat => {
-    if (playerId === null) return 'you';
-    return seatOf(playerId, placed.viewerId);
-  };
-
+  // Every case sets three numbers and the one write into `out` is at the end —
+  // never through a helper: a computed number handed to a call the compiler did
+  // not inline is boxed (a heap number an argument), and a store into a tuple of
+  // numbers is not. `seatOf(id, viewerId)` is what the closure this built on every
+  // call answered (`null` → `you` is `seatOf`'s own first line), hoisted.
+  let x: number;
+  let y: number;
+  let z: number;
   switch (ref.kind) {
-    case 'card':
-      return restPositionOf(placed, ref.id);
+    case 'card': {
+      const base = restPositionOf(placed, ref.id);
+      if (base === null) return null;
+      x = base[0];
+      y = base[1];
+      z = base[2];
+      break;
+    }
     case 'player': {
-      const a = playerAnchorFor(seatOfPlayer(ref.id));
-      return [a.x, a.y, a.z];
+      const a = playerAnchorFor(seatOf(ref.id, placed.viewerId));
+      x = a.x;
+      y = a.y;
+      z = a.z;
+      break;
     }
     case 'zone': {
       // A `zone` anchor with no player is the card's own side of the table:
       // an Equipment flying "from the battlefield" means from *its* rank.
-      const anchors = anchorsFor(seatOfPlayer(ref.player));
-      const anchor = zoneAnchor(anchors, ref.zone);
-      return anchor === null ? null : [anchor.x, anchor.y, anchor.z];
+      const anchor = zoneAnchor(anchorsFor(seatOf(ref.player, placed.viewerId)), ref.zone);
+      if (anchor === null) return null;
+      x = anchor.x;
+      y = anchor.y;
+      z = anchor.z;
+      break;
     }
     case 'combat': {
-      const anchors = anchorsFor(seatOfPlayer(ref.player));
-      return [anchors.combat.x, anchors.combat.y, anchors.combat.z];
+      const combat = anchorsFor(seatOf(ref.player, placed.viewerId)).combat;
+      x = combat.x;
+      y = combat.y;
+      z = combat.z;
+      break;
     }
     case 'casting': {
-      const anchors = anchorsFor(seatOfPlayer(ref.player));
+      const anchors = anchorsFor(seatOf(ref.player, placed.viewerId));
       // `ground` is the table under the anchor (T6's fizzle): the land rank's own
       // height, so a falling form meets the terrain rather than stopping in air.
-      const y = ref.ground === true ? anchors.lands.y : anchors.casting.y;
-      return [anchors.casting.x, y, anchors.casting.z];
+      x = anchors.casting.x;
+      y = ref.ground === true ? anchors.lands.y : anchors.casting.y;
+      z = anchors.casting.z;
+      break;
     }
     case 'stack':
-      return [STACK_ANCHOR.x, STACK_ANCHOR.y, STACK_ANCHOR.z];
+      x = STACK_ANCHOR.x;
+      y = STACK_ANCHOR.y;
+      z = STACK_ANCHOR.z;
+      break;
     case 'table':
-      return [TABLE_ANCHOR.x, TABLE_ANCHOR.y, TABLE_ANCHOR.z];
+      x = TABLE_ANCHOR.x;
+      y = TABLE_ANCHOR.y;
+      z = TABLE_ANCHOR.z;
+      break;
     case 'above': {
       const base = restPositionOf(placed, ref.id);
-      return base === null ? null : [base[0], base[1] + ref.height, base[2]];
+      if (base === null) return null;
+      x = base[0];
+      y = base[1] + ref.height;
+      z = base[2];
+      break;
     }
     case 'beside': {
       // `dx` is in CARD WIDTHS: a cue says "one card to the left", never "0.72
       // units to the left", so this stays the only file that owns the number.
       const base = restPositionOf(placed, ref.id);
-      return base === null ? null : [base[0] + ref.dx * (CARD_W + 0.08), base[1] + 0.02, base[2]];
+      if (base === null) return null;
+      x = base[0] + ref.dx * (CARD_W + 0.08);
+      y = base[1] + 0.02;
+      z = base[2];
+      break;
     }
     default:
       return null;
   }
+  out[0] = x;
+  out[1] = y;
+  out[2] = z;
+  return out;
+}
+
+/**
+ * {@link anchorPositionInto} into a FRESH tuple, for a caller that keeps its
+ * answer — a test, or the cue layer's `deltaTo` and `yawTo` below. It allocates that tuple on every call by contract, so nothing on the
+ * frame loop's path calls it (`liveness.test.ts`): the frame loop resolves
+ * through `SceneStage.positionOf`, into the stage's one scratch tuple.
+ */
+export function anchorPosition(
+  placed: Layout,
+  ref: AnchorRef,
+): [number, number, number] | null {
+  return anchorPositionInto([0, 0, 0], placed, ref);
 }
 
 /**

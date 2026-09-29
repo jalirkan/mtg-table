@@ -322,6 +322,7 @@ export class CastingField {
             figure.position[2],
           );
         } else {
+          // Read at once: the answer is the stage's one scratch tuple (D275).
           const to = resolve(anchorOf(target));
           if (to === null) continue;
           TO.set(to[0], to[1] + 0.05, to[2]);

@@ -1245,6 +1245,14 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
  * pass added (`instanceWrite.ts`'s writers, `worldChain.ts`'s `refreshWorld`),
  * and every frame-loop body the scans read is held to "a colour arrives parsed":
  * `parsedColour`, a `Color`, or numbers — never a string handed to `set`.
+ *
+ * **D275 added the anchor resolver** (GPU-pass follow-up 12): `stage.positionOf`
+ * is `layout.ts`'s `anchorPositionInto` into the stage's one scratch tuple, and it
+ * and every helper it reaches are in the body list, with a clause that fails a
+ * call in them to a body the list does not name, the stage's scratch anchored,
+ * the callers of `stage.positionOf` a closed list (each was traced for the
+ * scratch) and the allocating `anchorPosition` held to `layout.ts`'s cue-layer
+ * queries. `anchors.test.ts` holds its answers against the resolver it replaced.
  */
 const COLOUR_STRING = /\.set(?:Style)?\(\s*(?:['"`]#|[A-Za-z_$][\w$]*(?:\.[\w$]+)*\.(?:tint|baseColour|glowColour|rim|colour|color|accent|shade)\s*[,)])|\.setStyle\(/;
 
@@ -1262,6 +1270,7 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
   const statusSource = files.get('scene/status.ts') ?? '';
   const effectsSource = files.get('scene/effects.ts') ?? '';
   const effectPool = effectsSource.slice(effectsSource.indexOf('export class EffectPool'));
+  const layoutSource = files.get('layout.ts') ?? '';
   const ours: Array<[string, string]> = [
     ['CueRunner applyOffsets', bodyOf(runner, 'applyOffsets')],
     ['CueRunner applyRigOffset', bodyOf(runner, 'applyRigOffset')],
@@ -1284,6 +1293,20 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
     // …and the one helper the text case reaches every frame: a lookup whose key
     // string is built on the miss path alone (as `burstTexture`'s is).
     ['numberSprite.ts textTexture (the lookup)', bodyOf(files.get('scene/numberSprite.ts') ?? '', 'textTexture')],
+    // GPU-pass follow-up 12 (D275): the anchor resolver `stage.positionOf` hands
+    // every non-figure effect's anchor, every frame — the turn banner's `table`,
+    // the life number's `player` — and every helper it reaches. `anchorPosition`
+    // built a closure and a tuple a call, `placementOf` a key string, and
+    // `anchorsFor('opp')` nine objects; RESOLVER_BODIES below holds the list to
+    // what the resolver calls.
+    ['layout.ts anchorPositionInto', bodyOf(layoutSource, 'anchorPositionInto')],
+    ['layout.ts restPositionOf', bodyOf(layoutSource, 'restPositionOf')],
+    ['layout.ts placementOf', bodyOf(layoutSource, 'placementOf')],
+    ['layout.ts isCardKey', bodyOf(layoutSource, 'isCardKey')],
+    ['layout.ts seatOf', bodyOf(layoutSource, 'seatOf')],
+    ['layout.ts playerAnchorFor', bodyOf(layoutSource, 'playerAnchorFor')],
+    ['layout.ts anchorsFor', bodyOf(layoutSource, 'anchorsFor')],
+    ['layout.ts zoneAnchor', bodyOf(layoutSource, 'zoneAnchor')],
   ];
   for (const [name, body] of ours) assert.ok(body.length > 20, `could not find the body of ${name}`);
   // They are the frame loop's: the loop calls applyOffsets, it walks with applyRigOffset,
@@ -1301,6 +1324,48 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
   assert.match(bodyNamed('EffectPool #apply'), /case 'text'/, 'EffectPool #apply is not the per-effect body — update the body list');
   assert.match(bodyNamed('EffectPool #apply'), /textTexture\(effect\.text \?\? '', effect\.colour\)/, '#apply no longer reaches the text sprite through textTexture — update the body list');
   assert.match(bodyNamed('numberSprite.ts textTexture (the lookup)'), /byText\.get\(text\)\?\.get\(colour\);\s*return hit !== undefined \? hit : drawTextTexture\(text, colour\);/, 'textTexture is no longer a lookup with a miss path');
+
+  // D275 — the resolver is the frame loop's: the stage resolves into its ONE
+  // scratch tuple, and nothing outside `layout.ts` calls the allocating form.
+  const sceneStage = files.get('scene/SceneStage.ts') ?? '';
+  assert.match(sceneStage, /readonly #at: \[number, number, number\] = \[0, 0, 0\];/, 'SceneStage no longer keeps one scratch tuple for positionOf');
+  assert.match(
+    sceneStage,
+    /readonly positionOf = \(anchor: AnchorRef\): \[number, number, number\] \| null =>\s*anchorPositionInto\(this\.#at, this\.layout, anchor\);/,
+    'SceneStage.positionOf no longer resolves into its scratch through anchorPositionInto — update the body list',
+  );
+  // Every caller of the resolver was traced for the scratch (each reads an answer
+  // before it resolves the next); a new one must be too, so the list is closed.
+  const positionOfUses = [...files]
+    .map(([path, code]): [string, number] => [path, (code.match(/\bstage\.positionOf\b/g) ?? []).length])
+    .filter(([, n]) => n > 0);
+  assert.deepEqual(
+    positionOfUses,
+    [['scene/CueRunner.tsx', 3]],
+    'stage.positionOf has a caller the scratch contract was not traced for — read its answer before the next resolve (or copy it), then update this list (D275)',
+  );
+  assert.match(runner, /castingField\.bind\([^)]*stage\.positionOf,/, 'the casting field no longer resolves through the stage');
+  assert.match(runner, /resolve: stage\.positionOf,/, 'the camera director no longer resolves through the stage');
+  // The director KEEPS the points it frames, so it copies each one out of the scratch.
+  assert.match(files.get('camera.ts') ?? '', /const point = world\.resolve\(ref\);\s*if \(point !== null\) points\.push\(\[point\[0\], point\[1\], point\[2\]\]\);/, 'the camera director keeps a resolved point without copying it');
+  const allocating = [...files]
+    .filter(([path, code]) => path !== 'layout.ts' && /\banchorPosition\(/.test(code))
+    .map(([path]) => path);
+  assert.deepEqual(allocating, [], `the allocating anchorPosition is called outside layout.ts: ${allocating.join(', ')}`);
+  // …and inside it only by the cue layer's two queries, which keep what they are handed.
+  const layoutCallers = ['anchorDelta', 'figureYawTo', 'anchorPositionInto', 'placementOf'].filter((fn) => /\banchorPosition\(/.test(bodyOf(layoutSource, fn)));
+  assert.deepEqual(layoutCallers, ['anchorDelta', 'figureYawTo']);
+  // "Every helper it reaches": each call in a resolver body names a scanned body.
+  const RESOLVER_BODIES = ['anchorPositionInto', 'restPositionOf', 'placementOf', 'isCardKey', 'seatOf', 'playerAnchorFor', 'anchorsFor', 'zoneAnchor'];
+  const NOT_CALLS = new Set(['if', 'for', 'while', 'switch', 'return', 'typeof', 'catch', 'function']);
+  const unscannedCalls = (body: string): string[] =>
+    [...body.matchAll(/(?<![\w$.#])([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]!).filter((fn) => !NOT_CALLS.has(fn) && !RESOLVER_BODIES.includes(fn));
+  for (const fn of RESOLVER_BODIES) {
+    const body = bodyNamed(`layout.ts ${fn}`);
+    assert.deepEqual(unscannedCalls(body), [], `layout.ts ${fn} calls a helper the allocation scan does not read — add it to the body list (D275)`);
+  }
+  // The control: a helper the resolver does not reach, spliced in, is caught.
+  assert.deepEqual(unscannedCalls(`${bodyNamed('layout.ts anchorPositionInto')}\nconst stand = frontStand(placement);`), ['frontStand']);
 
   const junk = [
     'const _junk = [t, t];',

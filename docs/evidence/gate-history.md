@@ -325,3 +325,15 @@ Once from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, branch
 9.75 at most → 8.87), exit 0, `node --test` inside it 1,239 / 1,228 pass / 0 fail /
 11 skipped and 159 vitest (9 files) — `var/check-all-audit-fix4.log`, run
 `var/check-all/20260929-182921-2998085/`. No step and no job added.
+
+## The anchor resolver, on `0a93c9d` (D275)
+
+Twice from a deleted `bridge/out` at `GATE_JOBS=4`, branch `anchor-scratch`:
+`WSPORT=9380` **260.8 s** (48 jobs, 975.4 s summed, load average 5.36 → 11.46 at
+most → 9.90), run `var/check-all/20260929-194047-3311947/`, and `WSPORT=9390`
+**260.1 s** (965.8 s summed, load 9.90 → 9.90 → 8.55), run
+`var/check-all/20260929-194508-3385808/`; exit 0 both, `node --test` inside each
+1,245 / 1,234 pass / 0 fail / 11 skipped and 159 vitest (9 files) —
+`var/check-all-anchor-1.log`, `-2.log`. A first run on the tree before a pass of
+comment-only edits: 259.8 s, exit 0 (`var/check-all-anchor-0.log`). No step and no
+job added.

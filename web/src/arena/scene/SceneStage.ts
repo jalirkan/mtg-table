@@ -30,7 +30,7 @@ import {
   type Vec3,
 } from '../cues/stage.ts';
 import { PendingSounds, type SoundId } from '../cues/sound.ts';
-import { anchorDelta, anchorPosition, figureYawTo, type Layout } from '../layout.ts';
+import { anchorDelta, anchorPositionInto, figureYawTo, type Layout } from '../layout.ts';
 
 const EMPTY_LAYOUT_DELTA: Vec3 = [0, 0, 0];
 
@@ -123,15 +123,30 @@ export class SceneStage implements Stage {
   }
 
   /**
+   * The ONE tuple {@link positionOf} writes every answer into (D275): the frame
+   * loop's resolver allocates nothing, and its callers read an answer before
+   * they resolve again.
+   */
+  readonly #at: [number, number, number] = [0, 0, 0];
+
+  /**
    * Resolve an anchor for the effect pool. `null` = this frame cannot place it.
    *
    * **An arrow property, not a method**, so `pool.bind(effects, stage.positionOf,
    * camera)` passes a stable reference instead of building a fresh
    * `(ref) => stage.positionOf(ref)` closure on every one of the frame loop's
    * sixty passes a second (§9.2 rule 6).
+   *
+   * **Its answer is this stage's scratch** (D275, GPU-pass follow-up 12): it is
+   * `layout.ts`'s `anchorPositionInto` into {@link #at}, so it allocates nothing
+   * and the NEXT call overwrites it. Its three callers — the effect pool, the
+   * casting field's tethers and the camera director — each read an answer before
+   * resolving another (the pool copies `at` into locals before a beam's far end,
+   * the director copies each point it frames); a new caller that keeps an answer
+   * copies it, or calls `anchorPosition` for a fresh tuple.
    */
   readonly positionOf = (anchor: AnchorRef): [number, number, number] | null =>
-    anchorPosition(this.layout, anchor);
+    anchorPositionInto(this.#at, this.layout, anchor);
 
   setOffset(cardId: number, offset: Partial<Offset>): void {
     let target = this.offsets.get(cardId);

@@ -1123,7 +1123,9 @@ export class EffectPool {
    *
    * `resolve` is `layout.ts`'s anchor resolver: the pool never computes a
    * position of its own (§8 rule 3), and it is `SceneStage.positionOf` itself
-   * — a bound arrow property — rather than a closure built per frame.
+   * — a bound arrow property — rather than a closure built per frame. Its answer
+   * is the stage's one scratch tuple (D275), so every body here reads an answer
+   * before it resolves the next anchor.
    *
    * **It allocates nothing** (§9.2 rule 6): the "which slots are taken" set is a
    * generation stamp on each slot, and the sorted key list is one array reused
@@ -1425,8 +1427,9 @@ export class EffectPool {
     material.opacity = Math.min(1, strength);
     // Parsed once per string, not once per effect per frame (§9.2 rule 6).
     material.color?.copy(parsedColour(effect.colour));
-    // `at` is the pool's own scratch for a `figure` anchor, and the next resolve
-    // (a beam's far end) takes the OTHER tuple — so it is read before that.
+    // `at` is a scratch tuple — the pool's own for a `figure` anchor (the next
+    // takes the OTHER one), the stage's ONE tuple for any other (D275, the next
+    // overwrites it) — so it is read here, before a beam's far end is resolved.
     const ax = at[0];
     const ay = at[1];
     const az = at[2];
@@ -1710,7 +1713,8 @@ export class EffectPool {
       return;
     }
     // Read before `from` is resolved: a figure anchor's point is one of two
-    // alternating scratch tuples, and a third resolve reuses the first.
+    // alternating scratch tuples, and a third resolve reuses the first; any other
+    // anchor's is the stage's one tuple, which the next resolve overwrites (D275).
     const tx = to[0];
     const ty = to[1];
     const tz = to[2];

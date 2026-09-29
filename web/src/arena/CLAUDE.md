@@ -1371,13 +1371,21 @@ short form.
    rule M7 convention 5 wrote, which two bodies outside the scan broke on every
    card and land for a milestone, and a third (the text effect's white,
    `set('#ffffff')` on every frame a damage number or a turn banner was live)
-   until the pool's pair was scanned. *Scene-side* is the boundary the scans
-   hold: the fields' binds, the pool, the writers, the lookups. What an effect's
-   anchor goes through is outside it — `layout.ts`'s `anchorPosition`, which
-   `stage.positionOf` reaches for every non-figure effect every frame, builds a
-   closure and a tuple a call (GPU-pass follow-up 12, with its numbers), and the
-   cue layer rebuilds its effect objects every frame by design. A new frame-loop
-   body goes in the list in the same change.
+   until the pool's pair was scanned. **The scans hold the scene bodies AND the
+   anchor resolver** (**D275**): `stage.positionOf`, which the pool hands every
+   non-figure effect every frame, is `layout.ts`'s `anchorPositionInto` into the
+   stage's ONE scratch tuple, and it and every helper it reaches are in the body
+   list, with a clause that fails a call in them to a body the list does not name.
+   The next call overwrites an answer, so each caller reads one before it resolves
+   another — the pool and the casting field read at once, the camera director
+   copies each point it frames — and the callers are a closed list: a new one is
+   traced for the scratch and added in the same change. `anchorPosition` is the
+   allocating form, for a caller that keeps its answer, and nothing outside
+   `layout.ts` calls it. The cue layer stays outside: it rebuilds its effect
+   objects, their refs and keys every frame by design (a cue is a pure function of
+   its `t`, D50), and the two queries it asks `layout.ts` (`deltaTo`, `yawTo`)
+   keep the allocating form. A new frame-loop body goes in the list in the same
+   change.
 3. **A pose field draws only what it holds and re-sends only what moved.** An
    instanced kind with no instance is hidden (`visible` false) and primed at mount
    like any parked mesh — three sets up an empty `InstancedMesh` every frame and

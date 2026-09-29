@@ -11603,6 +11603,17 @@ millisecond.
   their transforms through props; turning the matrix off makes each one a place
   to forget an `updateMatrix`.
 
+*(Amended by **D275**, 2026-09-29, GPU-pass follow-up 12. Item 1's fix pass 3 left
+the scan's boundary at the scene's own bodies, and outside it the one call the
+effect pool makes into `layout.ts` for every non-figure effect every frame:
+`anchorPosition`, a closure and a tuple a call — 43 GC events per 5M calls for a
+`table` or `player` anchor, 818 for an opponent's `zone`, `combat` or `casting`.
+The resolver is now `anchorPositionInto`, writing into the stage's one scratch
+tuple, and it and every helper it reaches are in the GPU pass's allocation scan:
+the scans hold the scene bodies AND the resolver, 0 events per 5M on every kind.
+The cue layer, which rebuilds its effect objects every frame by design, stays
+outside.)*
+
 ---
 
 ## D272 — The DPR governor takes a decided verdict on the frame that decides it and counts its settle in time; its window is pure (`governor.ts`); the dormant `<AdaptiveDpr />` goes and the stats panel is lazy
@@ -12136,3 +12147,120 @@ title and the engine's text, but `hud.test.ts` matched `title={` and nothing
 more — the verifier's `title={notice.title}`, which drops "card 9 cannot be
 selected now", stayed green. It now matches the whole expression, and
 `arena-hud.test.tsx` renders a real notice and reads its tooltip.
+
+---
+
+## D275 — The frame loop's anchor resolver allocates nothing: `anchorPositionInto` writes into the stage's one scratch tuple, the opponent's anchors are built once, and the resolver is in the allocation scan; the cue layer stays outside
+
+*Branch `anchor-scratch`; the lane's reserved range D275–D277, one used.*
+
+**2026-09-29** (GPU-pass follow-up 12; `docs/evidence/anchor-scratch.md`)
+
+**Decision.** `EffectPool.bind` hands every non-figure effect's anchor, every
+frame, to `SceneStage.positionOf`, and that reached `layout.ts`'s
+`anchorPosition`, which built a `seatOfPlayer` closure and a fresh tuple on every
+call — the turn banner (a `table` anchor) and the life number (a `player` anchor)
+paid it on every frame they were live. So:
+
+1. **The resolver writes into a tuple it is handed.** `anchorPositionInto(out,
+   placed, ref)` answers `out` or `null`; every case sets three numbers and `out`
+   is written once, at the end (a computed number handed to a call the compiler
+   did not inline is boxed, and a store into a tuple of numbers is not). The
+   closure is gone: `seatOfPlayer(id)` was `seatOf(id, placed.viewerId)` exactly,
+   because `seatOf`'s first line already maps `null` to `you`. A card's answer is
+   a copy of its placement's position, never the placement's own tuple.
+   `anchorPosition(placed, ref)` stays, as the allocating form — it hands
+   `anchorPositionInto` a fresh tuple — for a caller that keeps its answer: the
+   tests, and the cue layer's two queries in `layout.ts` (`anchorDelta` for
+   `deltaTo`, `figureYawTo` for `yawTo`). Nothing outside `layout.ts` calls it.
+2. **`SceneStage.positionOf` resolves into the stage's ONE scratch tuple** (`#at`),
+   so its answer is overwritten by its next call. Every caller was traced first:
+   the effect pool reads each answer before it resolves another (`#apply` copies
+   `at` into locals before a beam's, mote's or cloud's far end; `#streak` copies
+   `to` before `from`; `#beside` and `#figurePoint`'s card fallback read at once);
+   the casting field's tethers read at once; and **the camera director KEPT every
+   point it framed** (`points.push(point)`), so a two-anchor shot through the
+   scratch would have framed its last anchor twice — the attack's swoop, `[card,
+   combat lane]`, the lane twice and the attacker not at all — so it copies each point
+   (`camera.ts`, the one change outside the resolver and the stage; its copy is
+   the tuple the resolver used to allocate, on a cue's camera request, not the
+   frame loop). The test-only callers (`stack`, `facing`, `liveness`) keep the
+   allocating form.
+3. **The opponent's anchors are built once.** `anchorsFor('opp')` built nine
+   anchor objects and a closure on every call, and `playerAnchorFor('opp')` one
+   object; both now answer module constants built by the same mirror at load
+   (`-0` included: the command anchor's z). `anchorsFor('opp')` was the dearest
+   thing the resolver reached — 818 GC events per 5M calls for an opponent's
+   `zone`, `combat` or `casting` anchor, against 43 for a `table` — and it is also
+   what `layout()`, the casting field's forms and motes, and the silhouettes call
+   for every opponent's placement.
+4. **`placementOf` is an indexed walk**, from the end for a `c:` placement of the
+   card, then forward for any: exactly `byKey`'s answer, because `byKey` is
+   written placement by placement (the LAST with a key wins) and a `c:` key is
+   always `c:<its cardId>`. The `c:${id}` key string it built a call is gone.
+5. **The resolver is in the allocation scan.** `anchorPositionInto`,
+   `restPositionOf`, `placementOf`, `isCardKey`, `seatOf`, `playerAnchorFor`,
+   `anchorsFor` and `zoneAnchor` are in the GPU pass's body list in
+   `liveness.test.ts`, with its junk-line controls; a clause fails any call in
+   those bodies to a function the list does not name (the control: a spliced
+   `frontStand(`); `SceneStage.positionOf` is anchored to
+   `anchorPositionInto(this.#at, …)`; the callers of `stage.positionOf` are a
+   closed list (`CueRunner`'s three), so a new one is traced for the scratch
+   before it lands; the director's copy is anchored; and `anchorPosition(` outside
+   `layout.ts` fails.
+
+**Measured** (`tools/anchor-gc-probe.ts`, new: Node v24.20.0, no flags, a fresh
+process per case, `g1.jsonl`@316, 500,000 calls to warm then 5,000,000 counted by
+a `PerformanceObserver`'s `gc` entries; two runs each, identical). Through
+`stage.positionOf`, the frame loop's path, GC events per 5M calls before → after:
+`card` 14 → **0**, `player` (yours) 43 → **0**, `player` (the opponent's) 114 →
+**0**, `zone`/`combat`/`casting` (yours) 43 → **0**, (the opponent's) 818 → **0**,
+`stack` 43 → **0**, `table` 43 → **0**, `above`/`beside` 57 → **0**, `figure` (it
+resolves nothing here) 0 → 0, every kind in turn from the first call 268 → **0**;
+the controls a fixed tuple 0 and a kept fresh tuple 43 in both trees. The base
+tree's 43, 14 and 0 are §13's numbers exactly, read by a script of the same shape
+(§13's was lost with its worktree). `EffectPool.bind` over a turn banner and a life
+number, per 2M binds: 38 → **3** — and 0 for either alone, so the 3 is the
+engine-level residue §13 found in `#apply` with more than one effect live, not
+the anchor. The allocating form reads 43 for every kind after, by contract. The
+card path's walk costs about 9 ns a call more than the Map it replaced (34 against
+25 ns at `g1`@316); a frame resolves a few dozen anchors at most.
+
+Unchanged: every answer. `web/test/anchors.test.ts` keeps the resolver as it stood
+at `0a93c9d` as a test-local reference and compares it, `Object.is` per number,
+with `anchorPosition`, `anchorPositionInto` and `SceneStage.positionOf` over every
+anchor kind of every board frame of the 23 committed recordings from four chairs
+(16,001,784 answers, 0 differences), `placementOf` by identity and `anchorDelta` and
+`figureYawTo` (3,534,795 each, 0), the effect pool bound through the scratch
+against fresh tuples (4,820 binds of random effects of every kind, 0 slot values
+different), and the director's shot through the scratch against fresh tuples
+(equal; a director that kept the scratch frames a different shot, the control).
+Eleven source splices each turn a test red (the evidence's §4).
+
+**Rationale.** The resolver's cost was per live effect per frame and bought
+nothing — a tuple read once and dropped — so it goes, and the module that knows a
+coordinate stays pure (no state: the scratch is the caller's). **The cue layer
+stays outside the scans, by design.** A cue is a pure function of its own `t`
+that writes values (D50, M7 convention 3): each frame it builds its effect
+objects, their anchor refs and their key strings, and asks `deltaTo` and `yawTo`
+for tuples it composes. Its allocation is a few small objects per live cue, gone
+in the next scavenge; pooling it would make an effect an object the stage owns
+across frames and a cue a writer into it — a renderer that remembers, which is
+the defect Tier 2's first convention names. The resolver is the line: what the
+scene reads every frame is scanned, what a cue decides every frame is a value.
+
+**Rejected.**
+
+- **A scratch in `layout.ts`** — state in the pure module, shared by the stage
+  and the cue layer's queries alike, so one could overwrite the other's answer.
+- **Two alternating scratches, as `#figurePoint` has** — right for two answers
+  and silently wrong at a third; the director frames every anchor a request
+  names — two today, and nothing bounds it.
+- **Answering a card with its placement's own tuple** — identical to before, but
+  any caller could then write the layout through its answer; the copy is three
+  stores.
+- **A `byCard` map on `Layout`, built in `layout()`** — the tests' hostile layouts
+  spread `...placed` over new placements and would carry a stale map; and a
+  per-layout `WeakMap` index is module state whose build lands on the first frame
+  after each snapshot.
+- **Pooling the cue layer's effect objects** (above).

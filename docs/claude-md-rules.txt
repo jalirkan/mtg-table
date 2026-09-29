@@ -436,7 +436,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1,224 `node --test` + 159 vitest (9 files)
+span: 1,230 `node --test` + 159 vitest (9 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -665,6 +665,7 @@ span: §9.4 is graded on a real GPU; SwiftShader at the floor fails it, and that
 span: On a real GPU §9.4 is read at a browser's pacing, `--vsync`
 span: At vsync a real GPU's p50 and p95 are the beat itself, so a regression is read unthrottled
 span: The frame loop parses no colour string, and every scene-side body it reaches is in the allocation scan
+span: The scans hold the scene bodies AND the anchor resolver
 span: A pose field draws only what it holds and re-sends only what moved.
 span: Nothing drawable hangs under a bone, and the prop field reads only the joints it refreshed.
 span: the lanes were verified alone, so the whole is held where they meet.

@@ -1264,7 +1264,11 @@ export function lookupFor(
 
 /** Everything the director needs from the world, injected so it stays pure. */
 export interface DirectorWorld {
-  /** Anchor → world point, or `null` when this frame cannot place it (§3.6 rule 1). */
+  /**
+   * Anchor → world point, or `null` when this frame cannot place it (§3.6 rule 1).
+   * The answer may be the resolver's scratch, overwritten by its next call (the
+   * arena's is, D275): the director copies each point before it resolves another.
+   */
   resolve(ref: AnchorRef): [number, number, number] | null;
   /** The viewer's own hand anchor, for rule 6. Ignored while spectating. */
   hand: Point3 | null;
@@ -1529,8 +1533,14 @@ export class CameraDirector {
     const shakeAmplitude = Math.min(Math.max(request.shake, 0), 1) * SHAKE.maxAmplitude;
     const points: Array<[number, number, number]> = [];
     for (const ref of request.frame) {
+      // COPIED, never kept: the arena's resolver writes every answer into one
+      // scratch tuple (`SceneStage.positionOf`, D275), so a kept point would be
+      // overwritten by the next anchor and a two-anchor shot would frame the last
+      // one twice. A camera request is not the frame loop's hot path — a cue's
+      // shot, re-asked on the frames of its window — and the copy is the tuple
+      // the resolver used to allocate.
       const point = world.resolve(ref);
-      if (point !== null) points.push(point);
+      if (point !== null) points.push([point[0], point[1], point[2]]);
     }
 
     // A shake-only request (no frameable anchor) is legal and common: the

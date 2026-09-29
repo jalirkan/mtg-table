@@ -370,3 +370,16 @@ one-row check with the director on and the shot as text its control; the credit
 cut only with the chip at its floor, the 980-px cap its control; the notice's
 tooltip expression) in its existing cases. Inside `check-all.sh`: **1,239 / 1,228
 pass / 0 fail / 11 skipped** plus 159 vitest.
+
+### The anchor resolver (D275, on `0a93c9d`)
+
+**1,230 `node --test` + 159 vitest (9 files)** standalone (1,221 pass, 0 fail, 9
+skipped), from the audit's fix pass 3's **1,224 + 159**: `anchors.test.ts`'s six
+cases — every anchor kind of every board frame against the pre-D275 resolver kept
+as a test-local reference; `placementOf`, `anchorDelta` and `figureYawTo` the
+same, with two hand-built placements the corpus lacks; the opponent's anchors
+built once and the mirror they were; `positionOf`'s one scratch tuple; the effect
+pool through the scratch against fresh tuples; the camera director's copy — and
+the resolver's bodies, its callers and its helper closure as clauses of
+liveness's GPU-pass case; no vitest. Inside `check-all.sh`: **1,245 / 1,234
+pass / 0 fail / 11 skipped** plus 159 vitest.

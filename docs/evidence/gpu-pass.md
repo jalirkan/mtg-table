@@ -1176,6 +1176,11 @@ live; the cue layer rebuilds its effect objects every frame by design
 engine-level residue no source line names — V8 boxing across calls it did not
 inline, 290 GC events per 2M binds with seven kinds live against 899 before this
 pass, 0 for any single kind. Rule 2 says *scene-side* for that reason.
+*(Follow-up 12 closed by **D275**, 2026-09-29, `docs/evidence/anchor-scratch.md`:
+the resolver writes into the stage's one scratch tuple and is in the scan; a
+probe of this section's shape reads the base tree's 43, 14 and 0 exactly, and 0
+for every kind after. Rule 2 now says the scans hold the scene bodies AND the
+resolver; the cue layer stays outside.)*
 
 **Negative controls**, spliced into the worktree's file and restored (the file
 compared equal to its copy after): `set('#ffffff')` put back — liveness fails
