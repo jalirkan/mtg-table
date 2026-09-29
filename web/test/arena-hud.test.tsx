@@ -32,7 +32,8 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 
-import { DecisionLayer } from '../src/arena/DecisionLayer.tsx';
+import { BEAT_RANK, VIEWS, startShot, viewForBeat, type BeatKind, type ViewId } from '../src/arena/camera.ts';
+import { DecisionLayer, ViewSwitcher, type ViewSwitcherItem } from '../src/arena/DecisionLayer.tsx';
 import { isHidden } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
@@ -303,4 +304,77 @@ test('arena HUD: a spectated game says what is being watched — both decks, bot
     expect(html).not.toContain('arena__watch');
     expect(html).toContain('data-act="concede"');
   }
+});
+
+/** Every state of one recording, whatever its frame type (a notice is not a `state`). */
+function everyStateOf(file: string): ClientState[] {
+  const log = parseFrameLog(readFileSync(FIXTURES + file, 'utf8'));
+  let state = initialState(log.header);
+  const out: ClientState[] = [];
+  for (const frame of log.frames) {
+    state = reduce(state, frame);
+    out.push(state);
+  }
+  return out;
+}
+
+/** The value of `attr` on the first element carrying `cls`, as rendered. */
+function attrOf(html: string, cls: string, attr: string): string | null {
+  const tag = new RegExp(`<[a-z]+ [^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*>`).exec(html)?.[0] ?? null;
+  const value = tag === null ? null : (new RegExp(`\\b${attr}="([^"]*)"`).exec(tag)?.[1] ?? null);
+  return value === null ? null : value.replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
+}
+
+test('arena HUD: the notice’s tooltip is its title and the engine’s text — the bar cuts the notice to its title, and the text is what it says', () => {
+  // The play-distance audit's third fix pass: `hud.test.ts` matched `title={` and
+  // nothing more, so a tooltip of the title alone ("Not selectable", with "card 9
+  // cannot be selected now" gone) stayed green. Rendered, over a real notice.
+  const states = everyStateOf('games/human-auto-2026.jsonl');
+  const withText = states.find((s) => s.notices.at(-1)?.text !== '' && s.notices.at(-1) !== undefined);
+  const titleOnly = states.find((s) => s.notices.at(-1)?.text === '');
+  expect(withText).toBeDefined();
+  expect(titleOnly).toBeDefined();
+  const notice = withText!.notices.at(-1)!;
+  const html = markup(withText!);
+  expect(attrOf(html, 'arena__notice', 'title')).toBe(`${notice.title} — ${notice.text}`);
+  expect(text(html)).toContain(notice.title);
+  // A notice with no text is its title, with no dangling dash.
+  expect(attrOf(markup(titleOnly!), 'arena__notice', 'title')).toBe(titleOnly!.notices.at(-1)!.title);
+  console.log(`arena HUD: the notice "${notice.title}" carries "${notice.text}" in its tooltip`);
+});
+
+test('arena HUD: the director’s shot changes no text in the camera switcher — a mark on its view’s button and a name in the director’s tooltip, at every shot the director cuts to', () => {
+  // The play-distance audit's third fix pass: the shot was text in the director's
+  // button (" · Opp. shoulder"), which widened the switcher by up to 106 px when `6`
+  // was pressed and wrapped it under the cue strip — the column 146.3 px, past
+  // HUD_TOP_PX. `hud.test.ts` holds the row's width with the director on; this
+  // holds that nothing the switcher draws as text depends on the shot.
+  const items: ViewSwitcherItem[] = [
+    ...VIEWS.map((view) => ({ id: view.id, key: view.key, label: view.label, what: view.what, available: true })),
+    { id: 'director', key: '6', label: 'Director', what: 'cuts between the five views', available: true },
+  ];
+  const render = (active: string, shot: string | null): string =>
+    renderToStaticMarkup(
+      <ViewSwitcher items={items} active={active} shot={shot} spectator={true} spectatorAllowed={true} onChoose={() => undefined} onToggleSpectator={() => undefined} />,
+    );
+  const shots = new Set<ViewId>([startShot(0).view]);
+  for (const kind of Object.keys(BEAT_RANK) as BeatKind[]) for (const seat of ['you', 'opp', null] as const) shots.add(viewForBeat({ kind, seat }));
+  expect(shots.size).toBeGreaterThanOrEqual(4);
+  const off = text(render('director', null));
+  for (const shot of shots) {
+    const html = render('director', shot);
+    const label = items.find((item) => item.id === shot)!.label;
+    // The same words, whatever the shot: the switcher is as wide at every shot as with none.
+    expect(text(html), `the switcher's text changed at the ${shot} shot`).toBe(off);
+    // The shot is marked on its own view's button, and on no other…
+    const marked = [...html.matchAll(/class="[^"]*\barena__view--shot\b[^"]*"[^>]*data-view="([^"]+)"/g)].map((m) => m[1]);
+    expect(marked).toEqual([shot]);
+    // …and named in the director's tooltip and accessible name.
+    const director = /<button [^>]*data-view="director"[^>]*>/.exec(html)![0];
+    expect(director).toContain(`Now: ${label}`);
+    expect(director).toContain(`now ${label}`);
+  }
+  // No director, no mark.
+  expect(render('table', null)).not.toContain('arena__view--shot');
+  console.log(`arena HUD: the switcher's text is the same at ${String(shots.size)} director shots (${[...shots].join(', ')})`);
 });

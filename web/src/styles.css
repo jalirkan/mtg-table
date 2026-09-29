@@ -2894,7 +2894,8 @@ button.zonerow__open:hover {
  * even 1 against the chip's 1,000 cut the credit by 0.3 px, and an ellipsis cut
  * "…Unofficial Fan Conte…" (`human-sideboard-7`@1195 at 1280 × 800). So the
  * credit does not shrink at all: it takes its whole width up to what the row
- * leaves beside the chip's floor, `--inspect-floor` — the chip's key, "⌕
+ * leaves beside the chip's floor, and no cap of its own stops it sooner (the
+ * third fix pass dropped M7's 980 px), `--inspect-floor` — the chip's key, "⌕
  * inspect · I" and the gap before its reason (or "⌕ inspect  · I" round a
  * name), 14 characters of the mono face (0.6021em each, DejaVu Sans Mono's
  * advance as Chromium drew it here), plus its padding and border. Only a
@@ -2918,7 +2919,10 @@ button.zonerow__open:hover {
   display: flex;
   flex: 0 0 auto;
   min-inline-size: 0;
-  max-inline-size: min(980px, calc(100% - var(--inspect-floor) - 0.4rem));
+  /* No width cap of its own (the audit's third fix pass): M7's 980px, from when
+     the credit stood alone, cut the artist list at 1600 px while the chip still
+     held 350 — the row's 15rem keeps it off the opponent's plate. */
+  max-inline-size: calc(100% - var(--inspect-floor) - 0.4rem);
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
   background: #0b0e13c4;
@@ -3319,8 +3323,17 @@ a.arena__inspect:hover {
   cursor: help;
 }
 
-.arena__view-shot {
-  color: var(--muted);
+/*
+ * **The director's shot is a mark, not a word** (D265, the audit's third fix
+ * pass): the view the director is on draws its border dashed in the accent — the
+ * same 1-px border, so the same width — and the director's own tooltip names it.
+ * As text in the director's button (" · Opp. shoulder") it grew the switcher by
+ * up to 106 px the moment `6` was pressed and wrapped it under the cue strip.
+ */
+.arena__view--shot {
+  border-style: dashed;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .arena__view--spectator {

@@ -39,7 +39,17 @@
  *     its width or two lines that give way, so the longest prompt, the longest
  *     hint and the longest notice at once — and 400-character ones — hold it at
  *     two lines at 1280 and 1600 px; the wrapping bar (`human-ability-42`@1060
- *     with `I` pressed: 70.5 px, the column 136.7) is the control.
+ *     with `I` pressed: 70.5 px, the column 136.7) is the control;
+ *   - (fix pass 3) the director's shot widens nothing: the one-row check runs
+ *     with the director on at every breakpoint, the switcher the width measured
+ *     at each of its shots — and the shot drawn as text in the director's button,
+ *     the longest one the director can cut to (" · Opp. shoulder") modelled from
+ *     `camera.ts`'s own shot list, is the control that wraps (the column 146.3 px
+ *     in Chromium); `arena-hud.test.tsx` renders the switcher at every shot;
+ *   - (fix pass 3) the credit is cut only when the chip is at its floor — no cap
+ *     of its own stops it sooner; M7's 980 px (the artist list cut by 90 px at
+ *     `villain-masters-of-evil-33`@209, 1600 × 1000, the chip at 354) is the
+ *     control; and the notice's tooltip carries the engine's text.
  */
 
 import assert from 'node:assert/strict';
@@ -47,7 +57,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { VIEWS } from '../src/arena/camera.ts';
+import { BEAT_RANK, VIEWS, VIEW_BY_ID, startShot, viewForBeat, type BeatKind, type ViewId } from '../src/arena/camera.ts';
 import {
   CREDIT_ROW,
   CUE_STRIP,
@@ -163,7 +173,8 @@ test('hud: the layer mounts three in-flow rows, and their measured heights sum u
   // its ellipsis the Fan Content Policy's words): the credit does not shrink at
   // all, and stops at the room the row leaves beside the chip's floor.
   assert.equal(rule('.arena__credit')['flex'], '0 0 auto', 'the credit shrinks — any shrink at all is an ellipsis over its last words');
-  assert.equal(rule('.arena__credit')['max-inline-size'], 'min(980px, calc(100% - var(--inspect-floor) - 0.4rem))');
+  // No cap of the credit's own (fix pass 3): M7's 980px cut the artist list while the chip still held 354 px.
+  assert.equal(rule('.arena__credit')['max-inline-size'], 'calc(100% - var(--inspect-floor) - 0.4rem)', 'the credit has a cap of its own — it is cut while the chip can still give way');
   assert.equal(rule('.arena__inspect')['flex'], '0 1 auto');
   assert.equal(rule('.arena__inspect')['min-inline-size'], 'var(--inspect-floor)');
   assert.equal(
@@ -227,7 +238,7 @@ test('hud: the cue strip’s status never writes past its fixed box, in either f
 // 3. One row, from 1280 px
 // ---------------------------------------------------------------------------
 
-test('hud: the cue strip and the switcher keep one row from 1280 px, idle and playing — the strip before the audit was the control', () => {
+test('hud: the cue strip and the switcher keep one row from 1280 px, idle, playing and with the director on — the strip before the audit and the shot as text were the controls', () => {
   const { px: w, gap, narrowBelowPx, labelsBelowPx } = CUE_STRIP;
   // The breakpoints are the stylesheet's.
   const narrow = media(narrowBelowPx - 1);
@@ -246,9 +257,42 @@ test('hud: the cue strip and the switcher keep one row from 1280 px, idle and pl
     [`${String(narrowBelowPx)} px, wide, keys`, need(w.wide, w.switcher), stripsRowPx(narrowBelowPx)],
     [`${String(labelsBelowPx)} px, wide, labels`, need(w.wide, w.switcherLabelled), stripsRowPx(labelsBelowPx)],
   ];
+  // The director on (fix pass 3): the switcher as Chromium drew it at each of the
+  // director's four shots, at every breakpoint — it had been measured with the
+  // director off, and its shot, drawn as text, wrapped the row.
+  rows.push(
+    ['1280 px, narrow, keys, the director on', need(w.narrow, w.switcherDirector), stripsRowPx(1280)],
+    [`${String(narrowBelowPx - 1)} px, narrow, keys, the director on`, need(w.narrow, w.switcherDirector), stripsRowPx(narrowBelowPx - 1)],
+    [`${String(narrowBelowPx)} px, wide, keys, the director on`, need(w.wide, w.switcherDirector), stripsRowPx(narrowBelowPx)],
+    [`${String(labelsBelowPx - 1)} px, wide, keys, the director on`, need(w.wide, w.switcherDirector), stripsRowPx(labelsBelowPx - 1)],
+    [`${String(labelsBelowPx)} px, wide, labels, the director on`, need(w.wide, w.switcherDirectorLabelled), stripsRowPx(labelsBelowPx)],
+    ['1920 px, wide, labels, the director on', need(w.wide, w.switcherDirectorLabelled), stripsRowPx(1920)],
+  );
   for (const [where, strips, row] of rows) {
     console.log(`  ${where}: the strips need ${strips.toFixed(1)} px of a ${row.toFixed(1)}-px row`);
     assert.ok(strips <= row, `${where}: the strips need ${strips.toFixed(1)} px of a ${row.toFixed(1)}-px row — two rows`);
+  }
+  // The director's shot is not text in the switcher: on, it is as wide as off.
+  assert.ok(w.switcherDirector <= w.switcher && w.switcherDirectorLabelled <= w.switcherLabelled, 'the switcher is wider with the director on — its shot is text in the row again (DecisionLayer.tsx’s ViewSwitcher)');
+  // THE CONTROL (fix pass 3): the shot as text in the director's button — every
+  // shot the director can cut to (`camera.ts`'s shot list: every beat from both
+  // seats, and where it starts), the longest with its separator, in the strip's
+  // 11 px mono face. Chromium drew " · Table" at 283.1 px of switcher and
+  // " · Opp. shoulder" at 336.0; it wrapped at 1280, 1400, 1840 and 1920 px.
+  const shots = new Set<ViewId>([startShot(0).view]);
+  for (const kind of Object.keys(BEAT_RANK) as BeatKind[]) for (const seat of ['you', 'opp', null] as const) shots.add(viewForBeat({ kind, seat }));
+  const longest = Math.max(...[...shots].map((id) => [...` · ${VIEW_BY_ID[id].label}`].length));
+  const asText = longest * CREDIT_ROW.monoAdvanceEm * 11;
+  console.log(`  the director's shots: ${[...shots].map((id) => VIEW_BY_ID[id].label).join(', ')}; the longest as text is ${String(longest)} characters, ${asText.toFixed(1)} px — the switcher ${(w.switcher + asText).toFixed(1)} (Chromium drew 336.0)`);
+  assert.ok(Math.abs(w.switcher + asText - 336) < 0.5, `the shot-as-text model (${(w.switcher + asText).toFixed(1)}) is not Chromium's 336.0`);
+  assert.ok(shots.size >= 4, `the director cuts to ${String(shots.size)} views`);
+  for (const [where, strips, row] of [
+    ['1280 px', need(w.narrow, w.switcher + asText), stripsRowPx(1280)],
+    [`${String(narrowBelowPx)} px`, need(w.wide, w.switcher + asText), stripsRowPx(narrowBelowPx)],
+    [`${String(labelsBelowPx)} px, labels`, need(w.wide, w.switcherLabelled + asText), stripsRowPx(labelsBelowPx)],
+    ['1920 px, labels', need(w.wide, w.switcherLabelled + asText), stripsRowPx(1920)],
+  ] as const) {
+    assert.ok(strips > row, `${where}: the shot as text fits the row (${strips.toFixed(1)} of ${row.toFixed(1)}) — the control has no teeth`);
   }
   // THE CONTROL: the strip before the audit (0.35rem gaps, the status growing
   // from "idle" to "12 steps · 4155 ms") — 789.7 px idle, 882.4 playing — with the
@@ -365,10 +409,15 @@ test('hud: the credit is drawn whole while the chip is above its floor, its noti
   assert.ok(Math.abs(sideboard.chip - 366.1) < 0.5, `the model's chip (${sideboard.chip.toFixed(1)}) is not Chromium's 366.1`);
   const quake = creditRowOf(1280, 960, 697);
   assert.ok(Math.abs(quake.credit - 905.3) < 0.5 && Math.abs(quake.chip - 109.1) < 0.5, `the model (${quake.credit.toFixed(1)}, ${quake.chip.toFixed(1)}) is not Chromium's 905.3 beside 109.1`);
-  // Whole wherever it fits beside the chip's floor: every credit width up to its
-  // cap, at every viewport from 1280 to 1920 px.
+  // Whole wherever it fits beside the chip's floor: every credit width up to the
+  // room the row leaves, at every viewport from 1280 to 1920 px — and cut only
+  // when the chip is at its floor, whatever its length (fix pass 3: no cap of its own).
+  const cutAboveFloor = (width: number, credit: number, chip: number, lay: (w: number, c: number, k: number) => { credit: number; chip: number; creditCut: boolean }): boolean => {
+    const laid = lay(width, credit, chip);
+    return laid.creditCut && laid.chip > inspectFloorPx() + 0.05;
+  };
   for (let width = 1280; width <= 1920; width += 32) {
-    const room = Math.min(CREDIT_ROW.creditMaxPx, stripsRowPx(width) - inspectFloorPx() - CREDIT_ROW.gapPx);
+    const room = stripsRowPx(width) - inspectFloorPx() - CREDIT_ROW.gapPx;
     for (let credit = 200; credit <= room; credit += 25) {
       for (const chip of [inspectFloorPx(), 300, 697, 1200]) {
         const laid = creditRowOf(width, credit, chip);
@@ -376,9 +425,39 @@ test('hud: the credit is drawn whole while the chip is above its floor, its noti
         assert.ok(laid.chip >= inspectFloorPx() - 0.01, `${String(width)} px: the chip below its floor`);
       }
     }
+    for (let credit = 200; credit <= 2000; credit += 50) {
+      for (const chip of [inspectFloorPx(), 300, 697, 1200]) {
+        assert.equal(cutAboveFloor(width, credit, chip, creditRowOf), false, `${String(width)} px: a ${String(credit)}-px credit is cut while the ${String(chip)}-px chip is above its floor`);
+      }
+    }
     // A credit longer than its room gives way in its artist list only: the notice and Scryfall's opening words fit whatever it is cut to.
     assert.ok(creditRowOf(width, 2000, 697).credit >= CREDIT_ROW.noticePx + 200, `${String(width)} px: a long credit is cut into its notice`);
   }
+  // The verifier's frame (fix pass 3): `villain-masters-of-evil-33`@209's table
+  // credit, 1070.4 px, beside the inert chip — whole from 1500 px (Chromium: 1070.4
+  // beside 264.1 at 1600 × 1000), and at 1366 × 768 cut only with the chip at its
+  // floor (991.3 beside 109.1).
+  const masters1600 = creditRowOf(1600, 1070.4, 697);
+  assert.equal(masters1600.creditCut, false, `villain-masters-of-evil-33@209, 1600 px: the credit is cut to ${masters1600.credit.toFixed(1)}`);
+  assert.ok(Math.abs(masters1600.chip - 264.1) < 0.5, `the model's chip (${masters1600.chip.toFixed(1)}) is not Chromium's 264.1`);
+  const masters1366 = creditRowOf(1366, 1070.4, 697);
+  assert.ok(Math.abs(masters1366.credit - 991.3) < 0.5 && Math.abs(masters1366.chip - 109.1) < 0.5, `the model (${masters1366.credit.toFixed(1)}, ${masters1366.chip.toFixed(1)}) is not Chromium's 991.3 beside 109.1`);
+  // THE CONTROL: M7's 980-px cap on the credit, which Chromium laid out 980 beside
+  // 354.4 at 1600 px — the artist list cut by 90 px while the chip held 354.
+  const capped = (width: number, credit: number, chip: number): { credit: number; chip: number; creditCut: boolean } => {
+    const row = Math.min(stripsRowPx(width), credit + CREDIT_ROW.gapPx + Math.min(chip, CREDIT_ROW.chipMaxPx));
+    const [c, k] = flexSizes(
+      [
+        { basis: credit, grow: 0, shrink: 0, min: 0, max: Math.min(980, row - inspectFloorPx() - CREDIT_ROW.gapPx) },
+        { basis: chip, grow: 0, shrink: 1, min: inspectFloorPx(), max: CREDIT_ROW.chipMaxPx },
+      ],
+      row - CREDIT_ROW.gapPx,
+    );
+    return { credit: c!, chip: k!, creditCut: c! < credit - 0.05 };
+  };
+  const cappedMasters = capped(1600, 1070.4, 697);
+  assert.ok(Math.abs(cappedMasters.credit - 980) < 0.05 && Math.abs(cappedMasters.chip - 354.4) < 0.5, `the capped model (${cappedMasters.credit.toFixed(1)}, ${cappedMasters.chip.toFixed(1)}) is not Chromium's 980 beside 354.4`);
+  assert.ok(cutAboveFloor(1600, 1070.4, 697, capped), 'the 980-px cap draws the credit whole beside a chip above its floor — the control has no teeth');
   assert.equal(rule('.arena__credit-notice')['flex'], 'none', 'the credit’s notice gives way — the Fan Content Policy’s words are what an ellipsis cuts first');
   assert.equal(rule('.arena__credit-lead')['text-overflow'], 'ellipsis');
   assert.equal(rule('.arena__credit-lead')['min-inline-size'], '0');
@@ -466,7 +545,14 @@ test('hud: the decision bar is one line of items, and a two-line prompt, the lon
   }
   assert.ok(children.includes('span.arena__hint') && children.includes('span.arena__notice') && children.includes('p.prompt'), `the bar's children as parsed: ${children.join(', ')}`);
   assert.match(bar, /<span className="arena__hint" title=\{hint\}>/, 'the hint has no tooltip — its whole text is not reachable when it is cut');
-  assert.match(bar, /className=\{`arena__notice arena__notice--\$\{notice\.level\}`\} title=\{/);
+  // The notice's tooltip is the title AND the engine's text (fix pass 3: this matched `title={` alone,
+  // and `title={notice.title}` — "card 35 cannot be selected now" gone — stayed green). The rendered
+  // title is `arena-hud.test.tsx`'s.
+  assert.match(
+    bar,
+    /className=\{`arena__notice arena__notice--\$\{notice\.level\}`\} title=\{notice\.text === '' \? notice\.title : `\$\{notice\.title\} — \$\{notice\.text\}`\}>/,
+    'the notice’s tooltip is not its title and the engine’s text — a notice cut to its title keeps only its tooltip, and the text is what it says',
+  );
 
   // The model agrees with Chromium where the verifier looked: `human-ability-42`@1060, `I` pressed with nothing under the pointer.
   const recorded = { promptChars: 250, okPx: DECISION_BAR.buttonPx.ok, cancelPx: DECISION_BAR.buttonPx.cancel, concedePx: DECISION_BAR.buttonPx.concede, outlined: true };

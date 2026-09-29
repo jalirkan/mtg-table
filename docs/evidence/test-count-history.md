@@ -359,3 +359,14 @@ credit drawn whole and the chip's key (by the rendered width, `hud.ts`'s
 items (the longest prompt, hint and notice at once, at 1280 and 1600 px) — with
 the column case's credit clauses rewritten in place; no vitest. Inside
 `check-all.sh`: **1,239 / 1,228 pass / 0 fail / 11 skipped** plus 157 vitest.
+
+### The play-distance audit's fix pass 3 (on `8ddd286`)
+
+**1,224 `node --test` + 159 vitest (9 files)** standalone (1,215 pass, 0 fail, 9
+skipped), from fix pass 2's **1,224 + 157**: `arena-hud.test.tsx`'s two new cases —
+the notice's tooltip rendered over a real notice, and the camera switcher rendered
+at every shot the director cuts to — with `hud.test.ts`'s new clauses (the
+one-row check with the director on and the shot as text its control; the credit
+cut only with the chip at its floor, the 980-px cap its control; the notice's
+tooltip expression) in its existing cases. Inside `check-all.sh`: **1,239 / 1,228
+pass / 0 fail / 11 skipped** plus 159 vitest.

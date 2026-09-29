@@ -249,6 +249,7 @@
 4. **Nothing drawable hangs under a bone, and the prop field reads only the joints
 1. **The chrome column is three rows under `HUD_TOP_PX`** (**D265**, **D267**).
 **A new widget goes on an existing row or out of the flow**; a control added
+**The credit never shrinks while the chip can** (D265 point 2, amended
 **The decision bar is one line of items, and the prompt at most two lines**
 2. **The figure budget serves the viewer's seat first** (**D266**).
 span: does not play on the engine we run
@@ -435,7 +436,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1,224 `node --test` + 157 vitest (9 files)
+span: 1,224 `node --test` + 159 vitest (9 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -669,6 +670,7 @@ span: Nothing drawable hangs under a bone, and the prop field reads only the joi
 span: the lanes were verified alone, so the whole is held where they meet.
 span: The chrome column is three rows under `HUD_TOP_PX`
 span: A new widget goes on an existing row or out of the flow
+span: Nothing a key does widens the strips row
 span: The credit never shrinks while the chip can
 span: The decision bar is one line of items, and the prompt at most two lines
 span: An item added to the bar needs a line rule

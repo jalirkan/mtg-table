@@ -1208,7 +1208,9 @@ export default function Arena({
    *
    * `viewPress` counts presses so that pressing the view you are on is a
    * command (drop your orbit of it), and `shotView` is the auto director's
-   * current shot, for the switcher to name.
+   * current shot, for the switcher to mark on that view's own button and name
+   * in the director's tooltip — never as text in the row, which it widened
+   * (D265, the play-distance audit's third fix pass).
    */
   const [cameraChoice, setCameraChoice] = useState<CameraChoice>(readStoredView);
   const [spectatorPref, setSpectatorPref] = useState<boolean | null>(null);
@@ -1793,7 +1795,7 @@ export default function Arena({
           <ViewSwitcher
             items={viewItems}
             active={cameraView}
-            shot={cameraView === 'director' ? VIEW_BY_ID[shotView].label : null}
+            shot={cameraView === 'director' ? shotView : null}
             spectator={spectator}
             spectatorAllowed={spectatorAllowed}
             onChoose={(id) => {

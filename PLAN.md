@@ -465,7 +465,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
 | — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified three times and fixed three times** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
-| — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c`, rebased onto `8ddd286` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **its fix pass 2** (a second verifier): rebased onto `8ddd286`, the decision bar one line of items so no hint or notice grows the column (136.7 → 112.5 px), the credit drawn whole beside the chip and its Fan Content notice never cut, the chip's key whole at its floor, your duelist from the table view looked at (it stands; owner question 41); **D265–D267**; eight owner questions (34–41); five follow-ups; *The play-distance audit*, just above *Deferred* |
+| — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c`, rebased onto `8ddd286` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **its fix pass 2** (a second verifier): rebased onto `8ddd286`, the decision bar one line of items so no hint or notice grows the column (136.7 → 112.5 px), the credit drawn whole beside the chip and its Fan Content notice never cut, the chip's key whole at its floor, your duelist from the table view looked at (it stands; owner question 41); **its fix pass 3** (a third verifier): the director's shot a dashed mark on its view's button, not text that wrapped the switcher (the column 146.3 → 112.5 px), every key that can change the chrome pressed in a browser from 1280 to 1920 px, the credit's own 980-px cap dropped, the notice's tooltip tested; **D265–D267**; eight owner questions (34–41); five follow-ups; *The play-distance audit*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9175,7 +9175,7 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
 
 ## The play-distance audit — the merged block, seen together (2026-09-29, D265–D267)
 
-**Status: audited, fixed, verified twice, fixed twice more, gated and documented** on branch
+**Status: audited, fixed, verified three times, fixed three times more, gated and documented** on branch
 `play-distance-audit` (the worktree `mtg-table-t2a`, off `main`'s `e2c337c`,
 rebased onto `8ddd286` — the portrait standee and the GPU pass — by its fix pass
 2); the lane's reserved range D265–D269, three used. Eight lanes merged onto the arena over 2026-09-28/29, each
@@ -9269,6 +9269,26 @@ personal tier is in them, so they stay local, like the tier).
    controls, each red in a copy of the tree and restored; the 384 shots again on
    the rebased tree, the standees drawn under the tier (`var/audit/sheets-fix3/`);
    one follow-up (5).
+8. **Fix pass 3** (evidence §12; a third verifier). **The director's shot is a
+   mark, not text** (D265 amended): with the auto director on (`6`) the switcher
+   drew its shot in the director's button (" · Table" … " · Opp. shoulder"),
+   grew from 230 to 283–336 px and wrapped under the cue strip at 1280, 1400,
+   1840 and 1920 px — the column **126.1 px, 143.9 with `I`, 146.3** beside a
+   two-line prompt; the switcher had been measured with the director off. Now the
+   shot's own view button is outlined dashed and the director's tooltip names it:
+   the switcher 230.1 px at every shot, and `hud.test.ts`'s one-row check runs with
+   the director on, the shot as text (from `camera.ts`'s shot list) its control.
+   **Every key that can change the chrome, pressed** in a browser at seven widths
+   from 1280 to 1920 and four frames — the director on and cutting, `I`, the
+   status at its widest, the caption and the sound, the clock paused, spectator
+   off, every view — and at a live seat's keys: one strip row every time, the
+   column at most **112.5 px**. **The credit's own 980-px cap is gone** (D265
+   point 2): M7's, it cut the Masters of Evil's artist list by 90 px at 1600 ×
+   1000 beside a 354-px chip; the credit is now cut only with the chip at its
+   floor (the 96 matrix shots it had bound taken again: every credit whole).
+   **The notice's tooltip is tested** (D267 point 4): `title={notice.title}` had
+   stayed green. Eight negative controls, each red in a copy of the tree and
+   restored; no follow-up added (follow-up 5 is this pass's case in point).
 
 **The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9340`
 **269.2 s** and `WSPORT=9350` **277.6 s**, exit 0 both, 48 jobs (994.6 s and
@@ -9281,9 +9301,12 @@ summed) at a load average of 9.0–13.1, `node --test` 1,209 / 1,198 pass / 0 fa
 tree rebased onto `8ddd286`, once from a deleted `bridge/out` at `GATE_JOBS=4`,
 `WSPORT=9340`: **261.6 s**, exit 0, 48 jobs (978.8 s summed) at a load average of
 1.8–7.6, `node --test` 1,239 / 1,228 pass / 0 fail / 11 skipped and vitest 157
-(`var/check-all-audit-fix3.log`). The lane added no step and no job: its tests are
-in the web step. `~/forge` and `~/.forge`: unchanged
-(evidence §9, §10.6, §11.8).
+(`var/check-all-audit-fix3.log`). **Fix pass 3**, once from a deleted `bridge/out`
+at `GATE_JOBS=4`, `WSPORT=9340`: **263.2 s**, exit 0, 48 jobs (978.8 s summed) at a
+load average of 0.5–9.8, `node --test` 1,239 / 1,228 pass / 0 fail / 11 skipped
+and vitest 159 (`var/check-all-audit-fix4.log`). The lane added no step and no
+job: its tests are in the web step. `~/forge` and `~/.forge`: unchanged
+(evidence §9, §10.6, §11.8, §12.6).
 
 <a id="fu-audit"></a>
 ### The play-distance audit's follow-ups — five, 2026-09-29 (4 added by its fix pass, 5 by its fix pass 2)
@@ -9320,7 +9343,10 @@ in the web step. `~/forge` and `~/.forge`: unchanged
    model to three layouts Chromium drew, but no browser re-checks them: a new
    mono face, a wider engine label or a new item in the bar moves a number
    silently. A browser check in the gate — the audit's follow-up 1's driver,
-   committed — would close it.
+   committed — would close it. *(Fix pass 3 is the case in point: the switcher
+   was measured with the director off, and pressing `6` wrapped it — F17. Its
+   sweep of every key, `var/audit-fix4/drv/`, is the driver such a check would
+   start from.)*
 
 ---
 

@@ -276,6 +276,12 @@ export function decisionBarOf(widthPx: number, c: DecisionBarContent): { widths:
  * whose key, "⌕ inspect · I", is a part that never shrinks. A credit longer than
  * its room gives way in its artist list only (`.arena__credit-lead`); its notice
  * (`.arena__credit-notice`, `noticePx` wide as Chromium drew it) never does.
+ *
+ * **No cap of the credit's own** (the third fix pass): M7's `max-inline-size:
+ * 980px`, from when the credit stood alone on its row, stopped it sooner than
+ * the chip's floor — at `villain-masters-of-evil-33`@209, 1600 × 1000, the artist
+ * list was cut by 90 px while the chip still held 354 — so the credit's room is
+ * the row less the chip's floor and nothing else.
  */
 export const CREDIT_ROW = Object.freeze({
   keyChars: 13,
@@ -285,7 +291,6 @@ export const CREDIT_ROW = Object.freeze({
   chipPadPx: 14.4,
   chipBorderPx: 2,
   gapPx: 6.4,
-  creditMaxPx: 980,
   chipMaxPx: 560,
   /** "\u00a0· © Wizards of the Coast · Unofficial Fan Content", the table credit's notice. */
   noticePx: 249.9,
@@ -304,7 +309,7 @@ export function creditRowOf(widthPx: number, creditPx: number, chipPx: number): 
   const floor = inspectFloorPx();
   const [credit, chip] = flexSizes(
     [
-      { basis: creditPx, grow: 0, shrink: 0, min: 0, max: Math.min(r.creditMaxPx, row - floor - r.gapPx) },
+      { basis: creditPx, grow: 0, shrink: 0, min: 0, max: row - floor - r.gapPx },
       // The flex BASE size is the content's, not clamped by the max: the shrink is weighted by it.
       { basis: chipPx, grow: 0, shrink: 1, min: floor, max: r.chipMaxPx },
     ],
@@ -331,14 +336,28 @@ export function creditRowOf(widthPx: number, creditPx: number, chipPx: number): 
  * that list, so a control added to the strip fails until the row is measured
  * again). The rule came on the fix pass — beside the caption checkbox the status
  * read as its label, "caption idle" — and added 5.8 px to each form.
+ *
+ * **Nothing a key does widens the row** (the third fix pass). The switcher was
+ * measured with the director OFF, and the director drew its shot as text in its
+ * button (" · Table", " · Opp. shoulder"): pressing `6` took the switcher from
+ * 230.1 px to 283.1–336.0 and wrapped it under the cue strip at 1280, 1400,
+ * 1840 and — for the longest shot — 1920 px, the column to 126.1 px (143.9 with
+ * `I`, 146.3 beside a two-line prompt). The shot is a mark on its own view's
+ * button now (`DecisionLayer.tsx`'s `ViewSwitcher`, a dashed border in place of
+ * the solid one) and a name in the director's tooltip, so `switcherDirector` —
+ * measured with the director on at each of its four shots — is the switcher's
+ * own width. The widths are the widest the strips draw under every key the
+ * sweep pressed: spectator on (its ✓; off is 13.3 px narrower), the cues
+ * playing (the pause button's "⏸ cues"; "▶ cues" is 3.4 px narrower), every
+ * view, the caption and the sound either way, the status at its widest.
  */
 export const CUE_STRIP = Object.freeze({
   narrowBelowPx: 1400,
   labelsBelowPx: 1840,
   /** The status box, in `ch` of the strip's 11 px mono face. */
   statusCh: Object.freeze({ wide: 21, narrow: 6 }),
-  /** Measured widths, CSS px: the cue strip in each form and the switcher both ways. */
-  px: Object.freeze({ wide: 892.1, narrow: 756.5, switcher: 230.1, switcherLabelled: 672 }),
+  /** Measured widths, CSS px: the cue strip in each form, and the switcher both ways with the director off and on. */
+  px: Object.freeze({ wide: 892.1, narrow: 756.5, switcher: 230.1, switcherLabelled: 672, switcherDirector: 230.1, switcherDirectorLabelled: 672 }),
   /** `.arena__strips`' `column-gap` (0.4rem). */
   gap: 6.4,
   /** What the strips' row keeps back: `.arena__layer`'s inline padding and the opponent's plate's 15rem. */

@@ -11924,6 +11924,65 @@ whole beside the chip at every width from 1280 to 1920 px for every credit that
 fits, the model agreeing with Chromium at three measured layouts, the audit's
 first cut (585.7 and 428.7 px) among them — with the first fix pass's row as the
 control.
+
+**Amended by fix pass 3** (2026-09-29, after a third verifier;
+`docs/evidence/play-distance-audit.md` §12). *Point 1's "112 px at its worst" held
+only with the director off, and point 2 still had an exception.*
+
+- **Point 5, the switcher: the director's shot is a mark, not text.** Pressing
+  `6` (the auto director, in a replay or while spectating) drew the current shot
+  as text in the director's button — " · Table", " · Side-on", " · Shoulder",
+  " · Opp. shoulder" — and grew the switcher from 230.1 px to 283.1–336.0 (672 to
+  725–778 labelled). `CUE_STRIP.px.switcher` had been measured with the director
+  off and the 384 shots with the default camera, so nothing saw it: the switcher
+  wrapped under the cue strip at 1280, 1400, 1840 and — at the longest shot —
+  1920 px, the strips row 67.5 px, the column **126.1 px**, 143.9 with `I` and
+  **146.3** beside a two-line prompt (`human-ability-42`@1060), past
+  `HUD_TOP_PX`, with the credit row over the far rank. The shot is always one of
+  the five views and each has a button, so the director now MARKS it on that
+  view's own button (`arena__view--shot`: the same 1-px border, dashed and in the
+  accent — no width) and NAMES it in its own tooltip and accessible name; no text
+  in the switcher depends on the shot. `CUE_STRIP.px.switcherDirector` (230.1)
+  and `switcherDirectorLabelled` (672) are the switcher measured with the
+  director on at each of its four shots, and `hud.test.ts`'s one-row check runs
+  with them at 1280, 1399, 1400, 1839, 1840 and 1920 px — the shot as text,
+  modelled from `camera.ts`'s own shot list (the longest, 16 characters, 106 px:
+  a 336.1-px switcher against Chromium's 336.0), its control; `arena-hud.test.tsx`
+  renders the switcher at every shot and holds its text to the director-off text.
+- **Point 1: 112 px at its worst is true under every key.** Measured in headless
+  Chromium from 1280 to 1920 px at four frames with the director on and cutting,
+  `I`, the status at its widest, the caption and the sound each way, the cue
+  clock paused, spectator off and every view — 448 measurements and 3,338
+  samples while cues played — and at a live seat's `6`, `3`, `4`, `O`, `N`, `M`,
+  `I` and `CTRL+Q`: one strips row every time, the column at most **112.5 px**.
+  Two keys narrow the row (spectator off drops its ✓, 13.3 px; the paused
+  clock's "▶ cues" is 3.4 px narrower than "⏸ cues") and none widens it, so
+  `CUE_STRIP`'s widths are the widest the row draws.
+- **Point 2: the credit has no cap of its own.** M7 Tier 1's `max-inline-size:
+  980px`, written when the credit stood alone on its row (`min(980px, 92vw)`),
+  survived inside the amended rule and stopped the credit sooner than the chip's
+  floor: at `villain-masters-of-evil-33`@209 its 1,070.4-px table credit was drawn
+  980 at every width from 1366 px — its artist list cut by 90 px beside a chip
+  of 120–560 px (354.4 at 1600 × 1000). The row's own `calc(100% - 15rem)` keeps
+  the credit off the opponent's plate, so the cap is dropped rather than named:
+  the credit's room is the row less the chip's floor, and it is cut only when the
+  chip is at its floor (whole from 1500 px there; 991.3 beside 109.1 at 1366).
+  Where the row was full it covers the same span as before; where the capped
+  row did not fill (from about 1,806 px: 980, the gap and the chip's 560) a long
+  credit covers more of the band than the cap allowed — for this credit up to 90
+  px, from 1,896 px. `hud.test.ts` holds that the credit is cut only with
+  the chip at its floor, over credits of 200–2,000 px and every width from 1280
+  to 1920, with the cap as the control.
+
+*Rejected* (fix pass 3): **a fixed inline size for the shot**, sized to the longest
+(" · Opp. shoulder", 106 px) — the row has 27.8 px in hand at 1280 (993.0 of
+1,020.8), 12.2 at 1400 and 10.3 at 1840, so no width holds it in the row;
+**the shot out of the flow** under its button — the band has 16 px under the
+column, and below it is the far rank the band keeps clear (D267's amendment's
+reason for the hint); **dropping the shot** — the cut is worth seeing, and the mark
+costs nothing; and **naming the credit's cap** in the rule instead — a rule that
+says the credit never gives way while the chip can, with an exception that cut
+the artist list at the width the audit measures, is the defect.
 ---
 
 ## D266 — The figure budget is spent on the viewer's own seat first
@@ -12070,3 +12129,10 @@ keeps clear; **onto the strips row** — it has 28 px to spare at 1280 × 800 (9
 of 1,021 px beside the chip's floor). Inside the bar, beside the control it
 answers, one line of items costs nothing but a cut hint's tail, and the hint is
 where a key reports it did nothing.
+
+*Fix pass 3* (evidence §12.4): point 4's "whole in their tooltips" is held for
+the notice as well as the hint. The fix pass set the notice's tooltip to its
+title and the engine's text, but `hud.test.ts` matched `title={` and nothing
+more — the verifier's `title={notice.title}`, which drops "card 9 cannot be
+selected now", stayed green. It now matches the whole expression, and
+`arena-hud.test.tsx` renders a real notice and reads its tooltip.

@@ -16,7 +16,11 @@ two majors and four minors more; **§11 is fix pass 2**, on the tree rebased ont
 `main`'s `8ddd286` (the portrait standee and the GPU pass), with the near
 duelist the caller asked about (owner question 41). *(At that rebase the lane's
 owner questions were renumbered after `main`'s 32 and 33 — the standee's and the
-GPU pass's — from 32–38 to 34–40, and the defect list's O-rows with them.)*
+GPU pass's — from 32–38 to 34–40, and the defect list's O-rows with them.)* A
+third verifier found one major and two minors; **§12 is fix pass 3** — the
+director's shot out of the switcher's width, the credit's own cap dropped, the
+notice's tooltip tested — and the browser sweep of every key that can change the
+chrome, which no pass had run.
 
 The personal tier is in the pictures (the user's own models dress Doom's card and
 the villain seat, Nick Fury's card and your seat, Coulson, the three Hulks, Peggy
@@ -96,7 +100,10 @@ never committed or published (D190). Paths below are relative to the repository.
 | fix pass 2: the credit at `human-sideboard-7`@1195, 1280 × 800, before and after; the chip at its floor | `var/audit-fix3/crops/credit-sideboard-1195-1280-before-after.png`, `…/chip-floor-quake-1280-before-after.png` |
 | fix pass 2: the near duelist (your Nick Fury model) — table view crops at 3×, both seats, and the verdict | `var/audit-fix3/fury/fury-verdict.png`; `var/audit-fix3/fury/<file>-<frame>-s<seat>-v1{,-crop3x}.png` |
 | **contact sheets on the rebased tree, after fix pass 2** — the 384 shots again, the personal tier's standees drawn with the tier on | `var/audit/sheets-fix3/<recording>-<size>.jpg` (12), the shots in `var/audit/shots-fix3/` |
-| the drivers (scratch) | `var/audit/drv/`, `var/fix/drv/`, `var/audit-fix3/drv/` |
+| **fix pass 3 (§12)**: the director on at 1280, 1400, 1840 and 1920 px (`6` then `I`), before and after; the two-line prompt with the director on; the credit at 1600 × 1000 before and after its cap went | `var/audit-fix4/crops/f17-director-i-masters209-{1280x800,1400x900,1840x1000}-before-after.png`, `…/f17-director-oppshoulder-masters209-1920x1080-before-after.png`, `…/f17-director-i-quake1060-1280x800-before-after.png`, `…/f18-credit-masters209-1600x1000-before-after.png` |
+| fix pass 3: every page of the key sweep (`6`, `6` then `I`), before and after; the live seat with every key pressed | `var/audit-fix4/sweep-{before,after}/`, `var/audit-fix4/live/live-keys-<size>.png`; the measurements `var/audit-fix4/sweep-{before,after}-{a,b,c}.jsonl`, `var/audit-fix4/live.jsonl` |
+| fix pass 3: the 96 matrix shots whose credit changed (1600 × 1000, the Doom Legion, the Masters of Evil, Wakanda, both seats), again | `var/audit-fix4/shots/`, sheets `var/audit-fix4/sheets/<recording>-1600x1000.jpg` (3) |
+| the drivers (scratch) | `var/audit/drv/`, `var/fix/drv/`, `var/audit-fix3/drv/`, `var/audit-fix4/drv/` |
 
 ## §3 The defect list
 
@@ -137,7 +144,10 @@ never committed or published (D190). Paths below are relative to the repository.
 | **F15** | *(fix pass 2)* **The inspect chip's floor cut its own key**: 13ch on a border-box is 69.7 px of content for an 86.1-px "⌕ inspect · I", so at the floor — every replay at 1280 — it read "⌕ inspect…" (`var/audit-fix3/crops/chip-floor-quake-1280-before-after.png`) | D241 (the key is how `I` is discovered) | **fix** (§11.3) |
 | **F16** | *(fix pass 2)* Two stale comments: `styles.css` said the prompt "starts at 46ch and GROWS" (the rule was `flex: 1 1 0`) and credited the clamp to D265 (it is D267), as did `DecisionLayer.tsx`'s | — | **fix** (§11.4) |
 | **O41** | *(fix pass 2, the caller's item)* **Your duelist reads as lying on the table** in the table view with the personal tier on: your Nick Fury model (a Mixamo rig) seen from above, legs out, while Doom stands upright across the table (`villain-masters-of-evil-33`@209 and @371 and `g1`@316, both seats). It stands: its bones and its skinned feet are on the ground, in the shared idle's wide stance, which the CC0 director's long coat hides and Fury's open coat and pale boots show; the near duelist is right under the lens (`var/audit-fix3/fury/fury-verdict.png`, §11.5) | D100 (the camera never moves for a duelist) | **owner** (question 41) — neither the code nor the model is wrong; a rest pose that reads as standing from above is a look |
-| **A12** | *(fix pass 2)* At 1280 × 800 a table credit longer than the room beside the chip's floor loses the end of its artist list — 55 px of "…Elizabeth Peiró +7 more" at `human-ability-42`@1060 (`var/audit-fix3/crops/chip-floor-quake-1280-before-after.png`) | D265 point 2 as amended | **accept** — the whole list is the credit's tooltip; Scryfall's name and the notice are whole |
+| **A12** | *(fix pass 2)* At 1280 × 800 a table credit longer than the room beside the chip's floor loses the end of its artist list — 55 px of "…Elizabeth Peiró +7 more" at `human-ability-42`@1060 (`var/audit-fix3/crops/chip-floor-quake-1280-before-after.png`) | D265 point 2 as amended | **accept** — the whole list is the credit's tooltip; Scryfall's name and the notice are whole. *(Fix pass 3, F18: past 1280 px the credit's own 980-px cap cut it too, beside a chip well above its floor; with the cap gone a credit is cut only where the chip is at its floor — the Masters of Evil's 1,070-px credit below 1500 px.)* |
+| **F17** | *(fix pass 3)* **The director's shot widened the switcher.** With the auto director on (`6`, in a replay or spectating) the director's button drew its shot as text — " · Table" to " · Opp. shoulder" — the switcher 230.1 → 283.1–336.0 px (725–778 labelled), wrapped under the cue strip at 1280, 1400, 1840 and (the longest shot) 1920 px: the column **126.1 px**, 143.9 with `I`, **146.3** beside a two-line prompt, the credit row over the far rank. `CUE_STRIP.px.switcher` was measured with the director off, the one-row check never had the shot, and the 384 shots used the default camera (`var/audit-fix4/crops/f17-*.png`) | D265 point 1 (112 px at its worst) and point 5 | **fix** (§12.1, D265 amended): the shot a dashed mark on its view's button and a name in the director's tooltip |
+| **F18** | *(fix pass 3)* **The credit's own cap cut it while the chip could give way**: M7's `max-inline-size: 980px` drew `villain-masters-of-evil-33`@209's 1,070.4-px credit at 980 from 1366 px up — its artist list cut by 90 px beside a chip of 120–560 px (354 at 1600 × 1000) (`var/audit-fix4/crops/f18-credit-masters209-1600x1000-before-after.png`) | D265 point 2 as amended ("never shrinks while the chip can") | **fix** (§12.3, D265 amended): the cap dropped |
+| **F19** | *(fix pass 3)* **The notice's tooltip had no test**: D267's amendment says the notice is whole in its tooltip, and `hud.test.ts` matched `title={` alone — `title={notice.title}` (the engine's text gone) stayed green | D267 point 4 | **fix** (§12.4) |
 
 Nothing on the list is illegible at 1× beyond what the lanes already measured (the
 strip's 16-px icons against the owner's 14; the chrome's 11-px mono), and nothing
@@ -539,7 +549,8 @@ beside the control they answer.
 | `human-ability-42`@1060, 1280 × 800, after | 905.3 — its room beside the chip's floor; its artist list cut by 55 px, its notice (249.9 px) whole | **109.1, its floor: the key (86.1 px) whole** |
 | the same at 1600 × 1000, after | 959.9, whole | 374.5 |
 
-The credit is `flex: 0 0 auto` up to `min(980px, 100% − --inspect-floor − 0.4rem)`,
+The credit is `flex: 0 0 auto` up to `min(980px, 100% − --inspect-floor − 0.4rem)`
+*(fix pass 3 dropped the 980px — §12.3)*,
 and `ArtCredit` draws two parts: `.arena__credit-lead` (Scryfall's name, the
 artists — the part that gives way, whole in the tooltip) and
 `.arena__credit-notice` (`flex: none`: "· © Wizards of the Coast · Unofficial
@@ -660,3 +671,211 @@ the splice restored and the suite run again (`var/audit-fix3/drv/controls.py`,
   mtime under `/home/justin-a/forge`, and the sha1 of every file of
   `/home/justin-a/.forge`, fingerprinted before the rebase and after the gate:
   **unchanged** (jar `3c0a7c38…8e5dd9`).
+
+## §12 Fix pass 3 — the director's shot, the credit's cap, the notice's tooltip, and every key pressed (D265 amended)
+
+A third verifier re-proved the rebase (nothing lost from any side), the decision
+bar (112.5 px at both sizes with `I` pressed; a 21-key sweep never past it), the
+credit (whole at 1280) and the chip's floor, and left one major and two minors
+(F17–F19 in §3); its third minor, the commits' co-author line, is left as it is,
+as the caller asked. This pass answered each, with a negative control per new
+test clause, and then pressed what no sweep had: every key that can change the
+strips row or the decision bar.
+
+### §12.1 F17 — the director's shot, as a mark
+
+Pressing `6` hands the camera to the auto director (in a replay, or once a live
+game is over), and the switcher drew the director's current shot as text in the
+director's button. Measured on the tree before this pass (`5e48d47`, the working
+tree stashed; `var/audit-fix4/drv/strips.mjs`: the frame, `K`, the pointer off
+every card, the keys, the DOM's rectangles — the three shots the frame had not cut
+to were written into the button, which Chromium lays out as the component would):
+
+| the switcher, px | keys (1280–1839 px) | labelled (from 1840) |
+|---|---|---|
+| the director off | 230.1 | 672.0 |
+| " · Table" | 283.1 | 725.0 |
+| " · Side-on" | 296.3 | 738.3 |
+| " · Shoulder" | 302.9 | 744.9 |
+| " · Opp. shoulder" | 336.0 | 778.0 |
+
+| before, the director on (" · Table") | 1280 | 1366 | 1400 | 1500 | 1600 | 1840 | 1920 |
+|---|---|---|---|---|---|---|---|
+| strips rows | **2** | 1 | **2** | 1 | 1 | **2** | 1 (**2** at " · Opp. shoulder") |
+| the column, watching | 126.1 | 92.3 | 126.1 | 92.3 | 92.3 | 126.1 | 92.3 |
+| … with `I` | **143.9** | 110.1 | 143.9 | 110.1 | 110.1 | 143.9 | 110.1 (143.9) |
+| … a two-line prompt (`human-ability-42`@1060) | **146.3** | 112.5 | 146.3 | 112.5 | 112.5 | 146.3 | 112.5 (146.3) |
+
+(At `villain-masters-of-evil-33` @209 and @371 and `g1`@316, watching; the
+verifier's 126.1, 143.9 and 67.5-px strips row reproduced to the tenth.) The
+switcher had been measured with the director off, the one-row check never had the
+shot, and the 384 shots of §1 took the default camera.
+
+**What changed** (D265 amended). The shot is always one of the five views, and
+each has a button in the switcher, so the director now marks its shot on that
+view's own button — `arena__view--shot`, the same 1-px border dashed and in the
+accent, no width — and names it in its own tooltip ("…. Now: Side-on (4,
+dashed)") and accessible name ("Director (6) — now Side-on"). `Arena.tsx` hands
+the switcher the shot's id; no text in `ViewSwitcher` depends on it. README's *The
+director* says what the dashed button means. Not taken: a fixed inline size sized
+to the longest shot (" · Opp. shoulder", 16 characters of the 11 px mono face, 106
+px), because the row has 27.8 px in hand at 1280 (993.0 of 1,020.8), 12.2 at 1400
+and 10.3 at 1840; the shot positioned out of the flow under its button (the band
+has 16 px under the column, and the far rank below it); the shot dropped.
+
+After (the same driver on this tree): the switcher **230.1 px with the director on
+at every one of its four shots** (672.0 labelled) — `CUE_STRIP.px.switcherDirector`
+and `switcherDirectorLabelled` — and one strips row at every width (§12.2). The
+pictures: `var/audit-fix4/crops/f17-director-i-masters209-<size>-before-after.png`
+at 1280, 1400 and 1840 (143.9 → 110.1 px), `…/f17-director-oppshoulder-masters209-1920x1080-before-after.png`
+(the longest shot at 1920: 143.9 → 110.1) and `…/f17-director-i-quake1060-1280x800-before-after.png`
+(146.3 → 112.5).
+
+`hud.test.ts` holds it: the one-row check runs again with the director on at 1280,
+1399, 1400, 1839, 1840 and 1920 px; the director-on switcher is no wider than the
+director-off one; and the control is the shot as text, modelled from `camera.ts`'s
+own shot list — `viewForBeat` over every beat kind from both seats and none, and
+`startShot`: Table, Side-on, Shoulder, Opp. shoulder — the longest with its
+separator, 16 characters, 106.0 px, a switcher of 336.1 px against Chromium's
+336.0, which fails the row at 1280, 1400, 1840 and 1920. `arena-hud.test.tsx`
+renders `ViewSwitcher` at every one of those shots: its text is the director-off
+text, exactly one button carries the mark (the shot's), and the director's
+tooltip and accessible name carry the shot's name.
+
+### §12.2 Every key that can change the chrome, pressed
+
+The verifier asked what else a key can change in the strips row or the decision
+bar that no sweep had pressed. On this tree, in headless Chromium on the GTX 1080
+(`var/audit-fix4/drv/sweep.sh`, three browsers), at 1280 × 800, 1366 × 768,
+1400 × 900, 1500 × 900, 1600 × 1000, 1840 × 1000 and 1920 × 1080, at
+`villain-masters-of-evil-33` @209 and @371, `g1`@316 and `human-ability-42`@1060
+(Quake's prompt at two lines) — 28 pages, each measured after: `6`; `6` then `I`;
+the status at its widest (`99+ steps · 99999+ ms` and `99.9 s` written into its
+fixed boxes); the next 7–16 frames played one at a time with the director on and
+cutting, the row sampled every 60 ms; `N` (the caption) and `M` (the sound) each
+way and both back; the cue clock paused (the strip's "▶ cues") and the widest
+status again; `O` (spectator off); views 3 and 4 (spectator-only), 5 and 2; `6`
+and `I` again. And the speed select at every speed at 1280 and 1400. And a live
+seat (`./bridge/run.sh mtgtable.MtgTable --transport ws --port 9345 --ai-deck
+decks/doom-legion.dck --seed 42 --keep-open --games 3`, the hand kept, the priority
+prompt of the first main phase) at 1280, 1400, 1840 and 1920: `6`, `3`, `4` and `O`
+(each a hint: spectator only), `N`, `M`, `I`, and `CTRL+Q` armed ("Concede — click
+again").
+
+| | measured | the strips row | the column, at most |
+|---|---|---|---|
+| the replays, every state above | 448 measurements on 28 pages, and 3,338 samples while cues played (63–144 a page; the director cut to all four of its shots) | **one row, every time** | **112.5 px** (the two-line prompt; watching, 110.1 with `I` and 92.3 without) |
+| before, the same pages (`6`, `6` then `I`, each shot) | 168 | two rows at 1280, 1400, 1840 (and 1920 at the longest shot) | 146.3 |
+| the live seat, every key | 36 measurements at four widths | one row | **112.5** (a one-line prompt beside a two-line hint) |
+
+What a key moved, and which way: spectator off drops the ✓ (the switcher 13.3 px
+narrower — 216.8 at a live seat), and the paused clock's "▶ cues" is 3.4 px
+narrower than "⏸ cues". Nothing widens the row: the caption and sound checkboxes
+keep their labels, the speed select is as wide as its widest option at every
+speed, a view is a class, the status is a fixed box and the director's shot a
+mark. So `CUE_STRIP`'s widths are the widest the strips draw under every key, which
+`hud.ts` now says; the arena `CLAUDE.md`'s audit rule 1 says a control whose text a
+key changes is measured in that state too.
+
+### §12.3 F18 — the credit's own cap, dropped (D265 point 2 amended)
+
+D265 point 2, as fix pass 2 amended it, says the credit never shrinks while the
+chip can. It did, from 1366 px up, because of M7 Tier 1's `max-inline-size:
+980px` — written when the credit stood alone on its row (`min(980px, 92vw)`) and
+kept by fix pass 2 inside `min(980px, 100% − --inspect-floor − 0.4rem)`. The row's
+own `calc(100% - 15rem)` keeps the credit off the opponent's plate, so the cap is
+dropped (the verifier offered naming it instead; the rule is then true as
+written). The sweep's first state, credit / chip in px (the credit's text is
+1,070.4 px):
+
+| `villain-masters-of-evil-33`@209 | 1280 | 1366 | 1400 | 1500 | 1600 | 1840 | 1920 |
+|---|---|---|---|---|---|---|---|
+| before | 905.3 / 109.1 | 980 / 120.4 | 980 / 154.4 | 980 / 254.4 | **980 / 354.4** | 980 / 560 | 980 / 560 |
+| after | 905.3 / 109.1 | 991.3 / 109.1 | 1,025.3 / 109.1 | **1,070.4** / 164.1 | **1,070.4** / 264.1 | **1,070.4** / 504.1 | **1,070.4** / 560 |
+
+Before, its artist list was cut by 90 px at every width from 1366 (@371's 1,054.1-px
+credit by 74); after, it is cut only where the chip is at its floor (1366 and
+1400) and whole from 1500. At 1600 the row was full either way (980 + 354.4
+before, 1,070.4 + 264.1 after), so it covers the same span of the far end; where
+the capped row did not fill (from about 1,806 px: 980, the gap and the chip's
+560) a long credit covers more of the band — for this credit up to 90 px, from
+1,896 px. `var/audit-fix4/crops/f18-credit-masters209-1600x1000-before-after.png`.
+
+The cap had bound in **96 of the 384 matrix shots** (every 1600 × 1000 shot of the
+Doom Legion's, the Masters of Evil's and Wakanda's recordings, both seats; their
+table credits 998–1,053 px, each drawn 980 beside a 354-px chip). Those 96 were
+taken again (`var/audit-fix4/drv/shoot.mjs`, three Chromiums; `var/audit-fix4/shots/`,
+sheets in `var/audit-fix4/sheets/`): every credit whole (the Doom Legion's 1,029
+px beside a 305-px chip, the Masters' 1,053 / 282, Wakanda's 998 / 336), one strip
+row, the column at most 92 px. The other 288 are §11.6's, pixel for pixel in the
+chrome: the director off, and no credit the cap had reached.
+
+`hud.ts`'s `CREDIT_ROW` loses `creditMaxPx` and `creditRowOf` its cap.
+`hud.test.ts` holds the stylesheet (no cap), the model at the verifier's frame
+(1,070.4 beside 264.1 at 1600, as Chromium drew it; 991.3 beside 109.1 at 1366),
+and — over credits of 200–2,000 px, four chips and every 32 px from 1280 to 1920 —
+that the credit is cut only with the chip at its floor, with the 980-px cap as
+the control (the model draws it 980 beside 354.4, as Chromium did: the credit
+cut with the chip 245 px above its floor). A12 in §3 is amended.
+
+### §12.4 F19 — the notice's tooltip, tested
+
+D267's amendment says the hint and the notice give way "whole in their tooltips";
+the notice's is its title and the engine's text, but `hud.test.ts` matched
+`title={` and nothing more, so the verifier's `title={notice.title}` — which drops
+the engine's text from the only place it is whole — stayed green. `hud.test.ts`
+now matches the whole expression, and `arena-hud.test.tsx` renders the bar over
+`human-auto-2026`'s real "Not selectable" notice: its tooltip is "Not selectable —
+card 9 cannot be selected now", and a notice with no text ("Your turn") is its
+title, with no dangling dash.
+
+### §12.5 The negative controls
+
+Each spliced into a copy of the tree (`git archive HEAD` with this pass's diff
+applied, `var/audit-fix4/copy/`, its `web/node_modules` a link to the worktree's),
+the suite that holds it run there, the splice restored and the suite run again
+(`var/audit-fix4/drv/controls.py`, `var/audit-fix4/controls.log`); afterwards
+`diff -r` of the copy's `web/src` and `web/test` against the worktree's printed
+nothing.
+
+| control | red | restored |
+|---|---|---|
+| N1 the switcher measured with the shot as text (`switcherDirector` 283.1, 725 labelled) | `hud.test.ts`, the one-row case: "1280 px, narrow, keys, the director on: the strips need 1046.0 px of a 1020.8-px row" | green |
+| N2 the shot drawn as text in the director's button again | `arena-hud.test.tsx`, the switcher case: its text changed at the table shot | green |
+| N3 no mark on the shot's view button | `arena-hud.test.tsx`: `[]` for `['table']` | green |
+| N4 the shot not named in the director's tooltip | `arena-hud.test.tsx`: no "Now: Table" | green |
+| N5 the notice's tooltip its title alone (the verifier's) | `hud.test.ts`, the bar case, **and** `arena-hud.test.tsx`, the notice case | green |
+| N6 the notice's tooltip the title on both branches | both, as N5 | green |
+| N7 the credit's 980px cap back in the stylesheet | `hud.test.ts`, the column case | green |
+| N8 the credit's 980px cap back in the model | `hud.test.ts`, the credit case: "1376 px: a 1000-px credit beside a 109.1-px chip is cut to 980.00" | green |
+
+The one-row case's own control (the shot as text, from `camera.ts`'s shot list)
+and the credit case's (the capped model) are asserted to fail on every run, so
+their teeth are checked in the suite itself.
+
+### §12.6 Tests, build, gate, and the user's Forge
+
+- `npm --prefix web test` standalone: **1,224 `node --test` (1,215 pass, 0 fail,
+  9 skipped) + 159 vitest (9 files)**, from 1,224 + 157: `arena-hud.test.tsx`'s two
+  new cases (the notice's tooltip; the switcher at every shot); `hud.test.ts`'s
+  new clauses sit in its existing cases.
+- `node tools/build-workshop-catalog.ts --check`: current. `./bridge/build.sh`: OK.
+  `npm --prefix web run build`, gzip: the 2D entry `index-*.js` 94.67 kB (94.68
+  before: byte for byte the same code against a build of `5e48d47` once the lazy
+  chunks' hashed names are masked — only those names gzip differently),
+  `Arena-*.js` 18.23 kB (18.15), `arena-scene-*.js` 398.52 kB (unchanged), the
+  stylesheet 19.91 kB (unchanged).
+- **The gate** from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, once:
+  **`check-all OK`**, **263.2 s** wall, 48 jobs whose seconds sum to 978.8 s, the
+  load average 0.51 at the start, 9.75 at most, 8.87 at the end; inside it
+  `node --test` **1,239 (1,228 pass, 0 fail, 11 skipped)** and 159 vitest in 9
+  files; no step and no job added (`var/check-all-audit-fix4.log`, run
+  `var/check-all/20260929-182921-2998085/`). This section's gate and Forge lines,
+  the histories', and `PLAN.md`'s gate line were written after the run; no code,
+  test or `CLAUDE.md` changed after it. The dev server (port 5240) and the live
+  seat's bridge (9345) were stopped by their PIDs before the run.
+- **The user's Forge install**: the `~/forge` jar's sha256, every path, size and
+  mtime under `/home/justin-a/forge`, and the sha1 of every file (and every path,
+  size and mtime) of `/home/justin-a/.forge`, fingerprinted before this pass and
+  after its gate (`var/audit-fix4/forge-{before,after}.txt`): **unchanged**, the
+  two files equal byte for byte (jar `3c0a7c38…8e5dd9`).

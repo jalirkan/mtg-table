@@ -1238,7 +1238,9 @@ from the target's side, a new turn and the outcome from the table. It holds ever
 shot at least 2.4 s, will not go back to a view it left within 4.8 s (combat and
 the outcome may), and drops a beat it has held for 1.6 s. It reads player ids and
 public controllers, never a card name, and it never fights you: for 5 s after you
-stop dragging, nothing cuts.
+stop dragging, nothing cuts. While it directs, the switcher outlines **6** and marks
+the view it is on with a dashed border (the **6** button's tooltip names it), so
+the row keeps its width whatever the shot.
 
 #### Spectate — watch two AIs play your deck (`./scripts/spectate.sh`)
 

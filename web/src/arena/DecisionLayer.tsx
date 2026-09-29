@@ -651,6 +651,17 @@ export interface ViewSwitcherItem {
  * name. Both answer the slice-2 verification pass: as a row of its own the
  * switcher was a fourth row of chrome in the top-left column, over the
  * opponent's bust (Tier 2 follow-up 10, which is otherwise unchanged).
+ *
+ * **The director's shot changes no width** (D265, the audit's third fix pass).
+ * It was drawn as text in the director's button — " · Table", " · Opp.
+ * shoulder" — which grew the switcher from 230 px to 283–336 the moment `6` was
+ * pressed and wrapped it under the cue strip at 1280, 1400 and 1840 px: the
+ * column 126 px, 144 with `I`, past `HUD_TOP_PX`. The shot is always one of the
+ * five views, and each has a button here, so the shot is MARKED on that button
+ * (`arena__view--shot`, a dashed border where the solid one was — the same
+ * pixel) and NAMED in the director's tooltip and accessible name. No text in
+ * this component depends on the shot; `arena-hud.test.tsx` renders the
+ * switcher at every shot and holds its text to the director-off text.
  */
 export function ViewSwitcher({
   items,
@@ -664,31 +675,37 @@ export function ViewSwitcher({
   items: readonly ViewSwitcherItem[];
   /** The view actually on screen — the choice, or the table when it is not allowed here. */
   active: string;
-  /** The auto director's current shot, while the director is on. */
+  /** The auto director's current shot — the id of one of `items` — while the director is on. */
   shot: string | null;
   spectator: boolean;
   spectatorAllowed: boolean;
   onChoose: (id: string) => void;
   onToggleSpectator: () => void;
 }): JSX.Element {
+  // The shot's name, for the director's tooltip; the button it marks draws no text of it.
+  const shotItem = shot === null ? null : (items.find((item) => item.id === shot) ?? null);
   return (
     <div className="arena__views" role="group" aria-label="Camera">
       <span className="arena__views-title">camera</span>
       {items.map((item) => {
         const on = item.id === active;
+        const isShot = shotItem !== null && item.id === shotItem.id && !on;
+        const directing = on && shotItem !== null;
         return (
           <button
             key={item.id}
             type="button"
-            className={`arena__view${on ? ' arena__view--on' : ''}${item.available ? '' : ' arena__view--off'}`}
+            className={`arena__view${on ? ' arena__view--on' : ''}${isShot ? ' arena__view--shot' : ''}${item.available ? '' : ' arena__view--off'}`}
             aria-pressed={on}
             aria-disabled={!item.available}
-            aria-label={`${item.label} (${item.key})`}
+            aria-label={`${item.label} (${item.key})${directing ? ` — now ${shotItem.label}` : ''}${isShot ? ' — the director’s shot' : ''}`}
             data-view={item.id}
             title={
-              item.available
+              (item.available
                 ? `${item.key} — ${item.what}`
-                : `${item.key} — ${item.what}. Spectator only: from here your own hand is not on screen`
+                : `${item.key} — ${item.what}. Spectator only: from here your own hand is not on screen`) +
+              (directing ? `. Now: ${shotItem.label} (${shotItem.key}, dashed)` : '') +
+              (isShot ? '. The director’s shot now' : '')
             }
             onMouseDown={(event) => {
               event.preventDefault();
@@ -699,7 +716,6 @@ export function ViewSwitcher({
           >
             <span className="btn__key">{item.key}</span>
             <span className="arena__view-label"> {item.label}</span>
-            {on && shot !== null && <span className="arena__view-shot"> · {shot}</span>}
           </button>
         );
       })}

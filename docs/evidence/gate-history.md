@@ -317,3 +317,11 @@ summed, load average 1.77 → 7.59 at most → 7.18), exit 0, `node --test` insi
 1,239 / 1,228 pass / 0 fail / 11 skipped and 157 vitest (9 files) —
 `var/check-all-audit-fix3.log`, run `var/check-all/20260929-173647-2746863/`. No
 step and no job added.
+
+## The play-distance audit's fix pass 3, on `8ddd286` (D265 amended)
+
+Once from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, branch
+`play-distance-audit`: **263.2 s** (48 jobs, 978.8 s summed, load average 0.51 →
+9.75 at most → 8.87), exit 0, `node --test` inside it 1,239 / 1,228 pass / 0 fail /
+11 skipped and 159 vitest (9 files) — `var/check-all-audit-fix4.log`, run
+`var/check-all/20260929-182921-2998085/`. No step and no job added.

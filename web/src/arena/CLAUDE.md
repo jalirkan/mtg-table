@@ -97,10 +97,12 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
 Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
-`npm run build`'s own output is the check — the 2D entry chunk is 94.68 kB gzip
-on this tree, the same size before and after the portrait standee and the GPU
-pass and the same code apart from the lazy chunks' hashed names in its import
-map (90.40 before the status layer put its glyph kit and the tile's row in it),
+`npm run build`'s own output is the check — the 2D entry chunk is 94.67 kB gzip
+on this tree (94.68 before the play-distance audit's third fix pass, byte for
+byte the same code: only the lazy chunks' hashed names in its import map
+differ, and gzip packs them a few bytes differently), the same size before and
+after the portrait standee and the GPU pass
+(90.40 before the status layer put its glyph kit and the tile's row in it),
 and none of it is `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
 named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (398.40 kB gzip
@@ -1424,18 +1426,29 @@ grades and the owner questions it raised.
    column in numbers — each row's height and the strip's widths as headless
    Chromium drew them, and the three breakpoints (the strip's narrow form below
    1400 px, the switcher's labels from 1840) — and `hud.test.ts` holds the sum
-   under `HUD_TOP_PX` (112 px at its worst), the layer to its three rows, the
-   stylesheet to the numbers and the strip to the controls that were measured.
+   under `HUD_TOP_PX` (112 px at its worst: a two-line prompt, whatever key was
+   pressed — measured in a browser from 1280 to 1920 px with the director on,
+   `I`, every view, the caption and the sound either way, the cue clock paused and
+   a live seat's keys), the layer to its three rows, the stylesheet to the numbers
+   and the strip to the controls that were measured.
    **A new widget goes on an existing row or out of the flow**; a control added
    to the cue strip or a view added to the switcher fails the test until the row
    is measured again in a browser (the evidence's §4 says how). The cue status is
    a fixed width behind a rule of its own, so a batch never changes the strip's
-   width. **The credit never shrinks while the chip can** (D265 point 2, amended
-   by its fix pass 2): no shrink factor ranks two items — a shrink is weighted by
+   width. **Nothing a key does widens the strips row** (D265, its fix pass 3):
+   the director's shot is a dashed mark on its own view's button and a name in
+   the director's tooltip, never text in the row — as text it wrapped the
+   switcher at 1280, 1400, 1840 and 1920 px and took the column to 146 px — and
+   `CUE_STRIP`'s widths are the widest the row draws under every key, so a
+   control whose text a key changes is measured in that state too.
+   **The credit never shrinks while the chip can** (D265 point 2, amended
+   by its fix passes 2 and 3): no shrink factor ranks two items — a shrink is weighted by
    width, and 1 against 1,000 still cut the Fan Content Policy's words — so the
    credit is `flex: 0 0 auto` up to the room beside the chip's floor
-   (`--inspect-floor`, the chip's key whole), and past that only its artist list
-   gives way (`.arena__credit-lead`), never its notice (`.arena__credit-notice`).
+   (`--inspect-floor`, the chip's key whole) and no cap of its own (M7's 980 px
+   cut the artist list while the chip held 354 px), and past that only its
+   artist list gives way (`.arena__credit-lead`), never its notice
+   (`.arena__credit-notice`).
    **The decision bar is one line of items, and the prompt at most two lines**
    (D267 and its fix pass 2): the prompt grows into the bar's room from a zero
    basis but never below 46ch, and is cut past two lines, whole in the DOM, in its
