@@ -11509,6 +11509,21 @@ frame loop found, each removed without a pixel changing:
    reads every body the Tier 2 allocation scan reads, the standee's own
    frame-loop body — a falling standee's lean, `standeeFallOf` — among them; a
    colour parse spliced there turns it red.)*
+   *(Fix pass 3, 2026-09-29, after a third verifier: the claim was still false in
+   one body no scan read — `EffectPool.#apply`'s text case wrote its white as
+   `set('#ffffff')`, a `setStyle` parse on every frame a damage number, a turn
+   banner or the outcome was live, and `EffectPool.bind`, called from the frame
+   loop, walked `effects.keys()` with a `for…of` and its slots with two more. The
+   white is `setRGB(1, 1, 1)`, `bind` collects its keys with a `Map.forEach` and a
+   collector built once and walks by index, and both bodies are in the allocation
+   scan and the colour clause — where the scan's object-literal pattern now lets a
+   `case 'x': {` block through, which is what had kept an eight-case body out of
+   it. A verifier of that fix then measured two more allocations on the same path
+   the scan had just signed off — `bind`'s `keys.length = 0` and `keys.sort()`,
+   and `textTexture`'s key string built on every call, hits included — so `bind`
+   keeps a count and sorts in place, the text sprite's lookup builds its key on
+   the miss path alone, and `.sort(` and `.length = 0` are scan patterns. Every
+   splice is a negative control.)*
 2. **The prop field refreshes only the joints it reads** (`scene/worldChain.ts`).
    It called `updateMatrixWorld(true)` on every rig a prop rides — about 68 nodes
    a body, recomputed again by the renderer's own pass moments later. It now

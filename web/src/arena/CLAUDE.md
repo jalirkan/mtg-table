@@ -103,7 +103,7 @@ pass and the same code apart from the lazy chunks' hashed names in its import
 map (90.40 before the status layer put its glyph kit and the tile's row in it),
 and none of it is `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (398.21 kB gzip
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (398.40 kB gzip
 on this tree, 397.41 before the GPU pass and 393.36 before the standee) — with
 `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
@@ -1360,13 +1360,22 @@ short form.
    (D273, fix pass 2): the GTX 1080 reads 16.7–16.8 ms there in every build, which
    grades the gate and tells no two builds apart, so a change on a real GPU is
    judged by its unthrottled p50 and p95 in interleaved pairs against the base build.
-2. **The frame loop parses no colour string, and every body it reaches is in the
-   allocation scan** (**D271**). `applyOffsets`, its `Map.forEach` walk
-   `applyRigOffset`, `TileField.bind`, the instance writers, `refreshWorld` and
-   the governor's decision joined the scan's body list, and a clause holds every
-   scanned body to a colour that arrives parsed — the rule M7 convention 5 wrote,
-   which two bodies outside the scan broke on every card and land for a milestone.
-   A new frame-loop body goes in the list in the same change.
+2. **The frame loop parses no colour string, and every scene-side body it reaches
+   is in the allocation scan** (**D271**). `applyOffsets`, its `Map.forEach` walk
+   `applyRigOffset`, `TileField.bind`, the instance writers, `refreshWorld`, the
+   governor's decision and — since the pass's fix pass 3 — the effect pool's
+   `bind` and `#apply` and the text sprite's lookup joined the scan's body list,
+   and a clause holds every scanned body to a colour that arrives parsed — the
+   rule M7 convention 5 wrote, which two bodies outside the scan broke on every
+   card and land for a milestone, and a third (the text effect's white,
+   `set('#ffffff')` on every frame a damage number or a turn banner was live)
+   until the pool's pair was scanned. *Scene-side* is the boundary the scans
+   hold: the fields' binds, the pool, the writers, the lookups. What an effect's
+   anchor goes through is outside it — `layout.ts`'s `anchorPosition`, which
+   `stage.positionOf` reaches for every non-figure effect every frame, builds a
+   closure and a tuple a call (GPU-pass follow-up 12, with its numbers), and the
+   cue layer rebuilds its effect objects every frame by design. A new frame-loop
+   body goes in the list in the same change.
 3. **A pose field draws only what it holds and re-sends only what moved.** An
    instanced kind with no instance is hidden (`visible` false) and primed at mount
    like any parked mesh — three sets up an empty `InstancedMesh` every frame and

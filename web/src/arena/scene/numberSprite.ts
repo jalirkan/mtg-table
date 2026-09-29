@@ -45,7 +45,16 @@ export const SPRITE_ASPECT = WIDTH / HEIGHT;
 /** How many distinct string+colour pairs to keep. A game produces a few dozen. */
 const MAX_CACHE = 64;
 
-const cache = new Map<string, THREE.CanvasTexture>();
+/** Oldest first, for eviction; the texture with the pair that made its key. */
+const cache = new Map<string, { text: string; colour: string; texture: THREE.CanvasTexture }>();
+/**
+ * The hit path's index, text → colour → texture, so a lookup builds no key string
+ * (D271, the GPU pass's fix pass 3: `EffectPool.#apply` asks for the map on every
+ * frame a text effect is live, and the `${text}|${colour}` key was a string a
+ * frame, cache hits included — 269 GC events per 5M calls against 0). The key is
+ * built on the miss path alone, in `drawTextTexture`.
+ */
+const byText = new Map<string, Map<string, THREE.CanvasTexture>>();
 
 /**
  * A texture of `text` in `colour`, cached.
@@ -57,10 +66,14 @@ const cache = new Map<string, THREE.CanvasTexture>();
  * upstream, and it is.
  */
 export function textTexture(text: string, colour: string): THREE.Texture | null {
-  const key = `${text}|${colour}`;
-  const hit = cache.get(key);
-  if (hit !== undefined) return hit;
+  const hit = byText.get(text)?.get(colour);
+  return hit !== undefined ? hit : drawTextTexture(text, colour);
+}
+
+/** The miss path: draws, caches under both indexes, evicts the oldest past `MAX_CACHE`. */
+function drawTextTexture(text: string, colour: string): THREE.Texture | null {
   if (typeof document === 'undefined') return null;
+  const key = `${text}|${colour}`;
 
   const canvas = document.createElement('canvas');
   canvas.width = WIDTH;
@@ -88,12 +101,24 @@ export function textTexture(text: string, colour: string): THREE.Texture | null 
 
   const texture = new THREE.CanvasTexture(canvas);
   initTexture(texture, null);
-  cache.set(key, texture);
+  cache.set(key, { text, colour, texture });
+  let colours = byText.get(text);
+  if (colours === undefined) {
+    colours = new Map();
+    byText.set(text, colours);
+  }
+  colours.set(colour, texture);
   if (cache.size > MAX_CACHE) {
-    const oldest = cache.keys().next();
+    const oldest = cache.entries().next();
     if (!oldest.done) {
-      cache.get(oldest.value)?.dispose();
-      cache.delete(oldest.value);
+      const [oldKey, gone] = oldest.value;
+      gone.texture.dispose();
+      cache.delete(oldKey);
+      const rest = byText.get(gone.text);
+      if (rest !== undefined) {
+        rest.delete(gone.colour);
+        if (rest.size === 0) byText.delete(gone.text);
+      }
     }
   }
   return texture;

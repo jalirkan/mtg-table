@@ -14,10 +14,10 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 343 items still open across 36 follow-up lists** — 317
+**The index below lists 344 items still open across 36 follow-up lists** — 318
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
 its own rows on 2026-09-29 by the GPU pass at its rebase onto the portrait
-standee (the GPU pass closed M7 Tier 1's 6 and Lane LOOK's 16 and added a list of
+standee, plus the one row its fix pass 3 added (the GPU pass closed M7 Tier 1's 6 and Lane LOOK's 16 and added a list of
 nine; its fix pass added a tenth, its fix pass 2 an eleventh) over the portrait standee lane's count of 334 across 35, which added seven
 (35–41 of the personal tier's list; its fix pass closed 38 and added 42) to the arena caption lane's count at its rebase onto
 the sound cues (it closed the story page's 1, added a list of six, and removed the two rows
@@ -377,6 +377,7 @@ villain identity's rebase, were removed at the same recount.)
 | [GPU pass](#fu-gpu) | 9 | open | `arena-scene` grew +0.8 kB gzip by the pass's own code | `web/vite.config.ts` |
 | [GPU pass](#fu-gpu) | 10 | open | At a browser's pacing the cold scrub can step a fast GPU to 0.75, and it never climbs back | `web/src/arena/governor.ts` |
 | [GPU pass](#fu-gpu) | 11 | open | At vsync a real GPU's p50/p95 are saturated (16.7–16.8 ms in every build): the regression signal is the unthrottled p50/p95 in pairs, and D271.5 lengthens the unthrottled drain | `tools/arena-bench.mjs` |
+| [GPU pass](#fu-gpu) | 12 | open | `anchorPosition` builds a closure and a tuple a call for every non-figure effect every frame, outside the scans; the cue layer allocates by design | `web/src/arena/layout.ts` |
 
 ### Questions only the owner can settle
 
@@ -449,7 +450,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Arena personal polish: one call a dressed figure, and inspect from the table *(off the plan; the personal tier's follow-up 33)* | 1 day | **built, measured, gated and documented** on branch `arena-personal-polish` (2026-09-29), off `main`'s `9998ec5` — prepare packs every paint into one atlas (a repeating paint laid out over its UV tiles) and merges a model into ONE skinned primitive under ONE material; `check.mjs`, the dev route (from the file) and the reader each count one call a figure; the villain file's worst frame with the tier on 130 → 128 calls, the tier never over the tier off on any of its 401 frames; `I` and an inspect chip open the workshop's inspect view on the card under the pointer, face up only (a hostile corpus sweep); **D240–D241**; five follow-ups; *Arena personal polish*, just above *Deferred* |
 | — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
-| — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified twice and fixed twice** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
+| — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified three times and fixed three times** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -8884,10 +8885,10 @@ unchanged again (evidence §12).
 
 ## The GPU pass — the whole arena measured, and what it paid for nothing (2026-09-29, D270–D273)
 
-**Status: built, measured, gated, verified twice and fixed twice** on branch
+**Status: built, measured, gated, verified three times and fixed three times** on branch
 `gpu-pass` (the worktree `mtg-table-t2g`, off `main`'s `e2c337c`, rebased onto
 `a46bd96` — the portrait standee — by fix pass 2); the lane's reserved range
-D270–D274, four used (D273 by the fix pass; fix pass 2 amended D271 and D273). Eight lanes had each measured only themselves on the
+D270–D274, four used (D273 by the fix pass; fix pass 2 amended D271 and D273; fix pass 3 amended D271 again). Eight lanes had each measured only themselves on the
 arena's frame loop; this pass benched the whole on SwiftShader and on the GTX
 1080 at the bench frame, `g1`'s busiest combat, the Masters of Evil's and
 Wakanda's crowded tables and the Doom Legion's with the personal tier on and off,
@@ -8971,6 +8972,26 @@ node tools/profile-top.mjs var/b.cpuprofile        # the top self-time functions
    the standee's own tests green on the rebased tree, and the colour clause now
    reads every body the Tier 2 scan reads, the standee's among them.
 
+7. **Fix pass 3: the effect pool** (after a third verifier, which confirmed the
+   rebase lost nothing from either side, the tile colour-flag reverts red and the
+   gate green, and left one major). D271.1's claim was still false in one body no
+   scan read: `EffectPool.#apply`'s text case wrote its white as `set('#ffffff')`
+   — a `setStyle` parse on every frame a damage number, a turn banner or the
+   outcome was live — and `EffectPool.bind`, called from the frame loop, walked
+   `effects.keys()` with a `for…of`. The white is written as numbers, `bind`
+   collects its keys with a once-built collector and walks by index, both bodies
+   are in the allocation scan and the colour clause (the scan's object-literal
+   pattern now lets a `case 'x': {` block through), and both splices are negative
+   controls. A verifier of that fix then measured two more allocations on the same
+   path that the scan had just signed off: `bind`'s `keys.length = 0` and
+   `keys.sort()` (V8 drops the cleared array's storage and builds a temporary for
+   the sort — 729 and 4,017 GC events per 5M calls) and `textTexture`'s
+   `${text}|${colour}` key, built on every call, hits included (269). `bind`
+   keeps a count and sorts in place; the text sprite's lookup is a nested map with
+   the key built on the miss path alone, as `burstTexture`'s is; `.sort(` and
+   `.length = 0` are scan patterns with junk lines; `textTexture` is a scanned body
+   (evidence §13).
+
 Tests: `web/test/gpu-pass.test.ts` (7, each with a negative control; the fix
 pass added the prop field's and the status strip's "flagged iff changed", and
 seven source reverts each turn the file red), `perf.test.ts` (+3; the fix pass
@@ -8981,7 +9002,7 @@ case: the tile case taps and glows a land (the two reverts that drop a colour fl
 red, both green against the fix pass's test, and the seven earlier reverts red again
 on the rebased tree), and the colour clause reads every body the Tier 2 scan reads.
 `npm run build`: `arena-scene` +0.76 kB gzip (the pass's own code), `Arena` −1.03,
-the arena's page 0.27 kB gzip smaller; rebased, 397.41 → 398.21 and 18.87 → 17.86,
+the arena's page 0.27 kB gzip smaller; rebased, 397.41 → 398.40 (398.21 before fix pass 3, 398.23 after its first half) and 18.87 → 17.86,
 0.21 smaller.
 
 **The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9360`
@@ -9005,7 +9026,7 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
 §12.7).
 
 <a id="fu-gpu"></a>
-### The GPU pass's follow-ups — eleven, 2026-09-29 (10 by its fix pass, 11 by its fix pass 2)
+### The GPU pass's follow-ups — twelve, 2026-09-29 (10 by its fix pass, 11 by its fix pass 2, 12 by its fix pass 3)
 
 1. **The GTX 1080's frame times are from a shared machine.** Three other lanes'
    benches and gates ran all day (loads 2–18) and the driver's clocks were seen at
@@ -9050,7 +9071,7 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
    arena's page is smaller overall (the lazy stats panel, `<AdaptiveDpr />` gone).
    The scene chunk has grown with every lane since the workshop (371.93 kB gzip
    then, 394.12 now). *(Fix pass 2, rebased onto the portrait standee: 397.41 on
-   `a46bd96`, 398.21 with the pass — +2.17 kB, +0.80 gzip — and `Arena` 18.87 →
+   `a46bd96`, 398.40 with the pass — +2.58 kB, +0.99 gzip, of it 0.19 fix pass 3's — and `Arena` 18.87 →
    17.86, the two together 0.21 kB gzip smaller. Left disclosed: the pass's two
    new modules, `instanceWrite.ts` and `worldChain.ts`, are called only by
    `tiles.ts` and `props.ts`, which the workshop's pedestal draws with as the arena
@@ -9094,6 +9115,21 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
     the gate could read. The file: `tools/arena-bench.mjs`.
 
 ---
+
+12. **An effect's anchor is resolved by a function that allocates, outside every
+    scan** (fix pass 3's verifier). `EffectPool.bind` hands every non-figure
+    effect to `stage.positionOf`, and `layout.ts`'s `anchorPosition` builds a
+    `seatOfPlayer` closure and a fresh tuple a call — 43 GC events per 5M calls
+    for a `player`, `table` or `stack` anchor, 14 for a `card`, 0 for a fixed
+    tuple (evidence §13) — which the turn banner and the life number pay on every
+    frame they are live; the cue layer rebuilds its effect objects every frame
+    by design (`registry.ts`); and `#apply` keeps an engine-level residue no
+    source line names (290 GC events per 2M binds with seven kinds live, 899
+    before the pass, 0 for any single kind). Rule 2 now says *scene-side* for the
+    boundary the scans hold. Closing it is `#figurePoint`'s shape: scratch tuples
+    written in place, `seatOfPlayer` hoisted, and `anchorPosition` in the scan —
+    a change to the one module that knows a coordinate, so a lane of its own,
+    measured by the same probe. The file: `web/src/arena/layout.ts`.
 
 ## Deferred — out of scope for M0–M7
 

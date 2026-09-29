@@ -903,8 +903,18 @@ itself.
    sample with the standees on as with them off. At the floor with bloom off the
    two builds are the same: p50 18.9–19.1 against 19.0–19.5 at `g1` with the tier
    on, 22.2–23.4 against 22.3–22.4 at Masters, 15.5–17.1 against 15.7–17.2 with it
-   off. The calls and the triangles are the base's on every line: the pass moved
-   no call.
+   off. At the same end index the calls and the triangles are the base's — the
+   pass moved no call. Two GTX 1080 bloom-off rows differ by where the sample
+   ended (follow-up 7): `g1` with the tier off, 87–90 · 26,425–29,611 against
+   87 · 26,425 (two fix runs ended @357–358 where the matching runs ended
+   @359–361), and the Masters with the tier on, 90–91 · 45,001–45,003 against
+   89–90 · 44,999–45,001 (@413–414 against @415). The bloom-on cells' "(1: the
+   composer)" is a label for the composer's one call, not the counter read at the
+   sample's end: with bloom on the counters read the composer's 1 only while that
+   build's governor had not yet dropped the composer (the base's SwiftShader
+   default-page rows with the tier ON read 1 in five of six runs and 82 in one,
+   its tier-off rows 85–86 at `g1` and 97–98 at the Masters; the fix's read
+   81–104, the composer already off).
 2. **What the tier costs, standees included** (tier on against `personal=0`: the
    personal models and the standees together). On SwiftShader at the floor p50
    **+3–4 ms at `g1`** (two standees) **and +5–6 at Masters** (nine), in both builds
@@ -1078,7 +1088,7 @@ until then.
 |---|---:|---:|
 | `index-*.js` (the 2D entry) | 300.43 kB · 94.68 gzip | 300.43 · 94.68 |
 | `Arena-*.js` | 49.44 · 18.87 | **47.18 · 17.86** |
-| `arena-scene-*.js` | 1,384.55 · 397.41 | **1,386.72 · 398.21** |
+| `arena-scene-*.js` | 1,384.55 · 397.41 | **1,387.13 · 398.40** (1,386.72 · 398.21 at `a45e211`, 1,386.80 · 398.23 after fix pass 3's first half, §13) |
 | `Workshop-*.js` | 89.63 · 30.43 | 89.63 · 30.43 |
 | `Post-*.js` | 70.67 · 17.71 | 70.67 · 17.71 |
 | `StatsOverlay-*.js` (loaded only with `?stats=1`) | — | 2.59 · 1.35 |
@@ -1104,3 +1114,77 @@ every worktree without the likeness venv). Before it: `npm --prefix web test`
 --check` current, `./bridge/build.sh` OK. `~/forge` and `~/.forge`: a listing of
 every file under each with its size and mtime identical before this pass's first
 command and after the gate (15:43), the jar still `3c0a7c38…8e5dd9`.
+
+## 13. Fix pass 3 — the effect pool (a third verifier's one major)
+
+The third verifier re-proved the rebase (nothing lost from either side), the tile
+colour-flag reverts (red) and the gate (green), and found D271.1 still false in
+one body no scan read: `EffectPool.#apply`'s `text` case wrote its white as
+`mat.color.set('#ffffff')` — a `Color.setStyle` parse on every frame a damage
+number, a turn banner or the outcome was live — and `EffectPool.bind`, which
+`CueRunner`'s `useFrame` calls every frame, walked `effects.keys()` with a
+`for…of` (an iterator a frame) and its slots with two more.
+
+**The fix.** The white is `setRGB(1, 1, 1)`; `bind` collects its keys with
+`effects.forEach(this.#collect)` — a collector built once, on the pool — and
+walks the keys and the slots by index. Both bodies are in `liveness.test.ts`'s
+GPU-pass scan (`ours`, so the allocation scan and the colour clause both read
+them), with three anchors: the runner still calls `pool.bind(stage.effects, …)`,
+`bind` still collects through `#collect`, and `#apply` still carries the `text`
+case. The scan's object-literal pattern had matched every `case 'glow': {` in the
+eight-case body — a block, not a literal — so a colon now opens a literal unless
+`case` stands earlier on its line with no colon between (a `case 'x': {` block;
+a ternary's `: {` after a case label is still caught, and so is `c ? null : { a:
+1 }` anywhere else); the `const o = { a: 1 };` junk line the test splices into
+every body is still caught (the test asserts it per body). Over every arena file
+the new pattern loses exactly the 57 `case X: {` lines and nothing else.
+
+**A verifier of this fix measured two more allocations on the same path**, which
+the scan had just signed off. In Node 24's V8, 5M calls each: `bind`'s
+`keys.length = 0` drops the array's storage for the next push to rebuild (729 GC
+events with the push), and `keys.sort()` builds a temporary every call (4,017);
+`textTexture`'s `${text}|${colour}` key was a string built on every call, cache
+hits included (269, against 0 for a lookup with no key built) — the same gap
+`burstTexture` had. The `for…of` the first version removed read 0 once optimised,
+so it was the construct the rule names and not the allocator that mattered. So
+`bind` keeps a count (`#keyCount`) and sorts its at most `MAX_LIVE_EFFECTS` keys
+with an insertion sort in place; `textTexture` is a lookup in a nested map,
+text → colour → texture, with the key built in `drawTextTexture` — the miss path —
+alone, and the flat cache keeps insertion order for eviction; `.sort(` and
+`.length = 0` are `ALLOCATIONS` patterns — file-wide, with a junk line the
+GPU-pass scan splices into every body it reads (the other scans' junk lists do
+not carry them; none of the 72 scanned bodies matches either); and `textTexture`
+is a scanned body, anchored to its lookup-then-miss shape. A differential of the old and new `EffectPool` over 3,000
+random frames of every effect kind — 147,000 slot states, 1,295 frames with a
+live text effect — found 0 differences, and `set('#ffffff')` and `setRGB(1, 1, 1)`
+both read r = g = b = 1 in three 0.186 with colour management on or off; the
+verifier's rerun against the previous pool after the second half — 20,000
+frames, 980,000 slot states, 9,525 frames with a live text effect, keys with
+mixed case and non-ASCII — found 0 differences too. The scene chunk: 1,386.72 ·
+398.21 kB (gzip) at `a45e211`, 1,386.80 · 398.23 after the first half,
+**1,387.13 · 398.40** after this one (+0.17 gzip for the nested map and the
+insertion sort, +0.19 for fix pass 3 in all); `Arena` stays 17.86.
+
+**What the probes measure is constructs, and one allocation on the path stays
+outside the scans** (follow-up 12): `bind` hands every non-figure effect to
+`stage.positionOf`, and `layout.ts`'s `anchorPosition` builds a `seatOfPlayer`
+closure and a fresh tuple a call — 43 GC events per 5M calls for a player, table
+or stack anchor, 14 for a card, 0 for a fixed tuple — which the turn banner (a
+`table` anchor) and the life number (a `player` anchor) pay every frame they are
+live; the cue layer rebuilds its effect objects every frame by design
+(`registry.ts`'s literals, spread and key strings); and `#apply` keeps an
+engine-level residue no source line names — V8 boxing across calls it did not
+inline, 290 GC events per 2M binds with seven kinds live against 899 before this
+pass, 0 for any single kind. Rule 2 says *scene-side* for that reason.
+
+**Negative controls**, spliced into the worktree's file and restored (the file
+compared equal to its copy after): `set('#ffffff')` put back — liveness fails
+"EffectPool #apply parses a colour string in the frame loop"; the `for…of` over
+`effects.keys()` put back — liveness fails on `bind` (the collector anchor, and
+the allocation scan behind it); `keys.sort()` or `keys.length = 0` put back — the
+new patterns, in `bind`; the key built on the hit path again — the template-string
+pattern, in `textTexture`. Liveness: 44 pass, 0 fail with the fix.
+
+Not re-benched: a text effect is live for a few hundred milliseconds a turn, so
+the parse it removes is one `setStyle` a frame while a banner or a number plays —
+the same call the census in §0 counted at 57–99 a frame for the cards and lands.

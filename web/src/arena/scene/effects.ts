@@ -1009,6 +1009,12 @@ export class EffectPool {
    * say so. `MAX_LIVE_EFFECTS` bounds it at 8.
    */
   readonly #keys: string[] = [];
+  /** How many of `#keys` are this frame's; the rest are last frame's, never cleared — `length = 0` drops the storage. */
+  #keyCount = 0;
+  /** `bind`'s key collector, built once: `effects.forEach(this.#collect)` allocates nothing a frame (D271). */
+  readonly #collect = (_effect: Effect, key: string): void => {
+    this.#keys[this.#keyCount++] = key;
+  };
 
   // -- T11: the `figure` anchor ---------------------------------------------
   //
@@ -1294,13 +1300,31 @@ export class EffectPool {
     if (this.#slots.length === 0) this.#build();
     const gen = ++this.#gen;
     const keys = this.#keys;
-    keys.length = 0;
-    for (const key of effects.keys()) keys.push(key);
-    keys.sort();
-    for (const key of keys) {
-      const effect = effects.get(key)!;
+    // A count and a collector built once, an insertion sort in place, indexed
+    // loops (D271, fix pass 3): `keys.length = 0` made V8 drop the array's storage
+    // for the next push to rebuild, `keys.sort()` built a temporary every call,
+    // and the `for…of` over `effects.keys()` was an iterator a frame — in the one
+    // frame-loop body no scan read. `bind` and `#apply` are in the allocation
+    // scan and the colour clause now, and `.sort(` and `.length = 0` are in the
+    // scan's patterns.
+    this.#keyCount = 0;
+    effects.forEach(this.#collect);
+    const n = this.#keyCount;
+    for (let i = 1; i < n; i++) {
+      const key = keys[i]!;
+      let j = i - 1;
+      while (j >= 0 && keys[j]! > key) {
+        keys[j + 1] = keys[j]!;
+        j--;
+      }
+      keys[j + 1] = key;
+    }
+    const slots = this.#slots;
+    for (let k = 0; k < n; k++) {
+      const effect = effects.get(keys[k]!)!;
       let slot: Slot | undefined;
-      for (const candidate of this.#slots) {
+      for (let s = 0; s < slots.length; s++) {
+        const candidate = slots[s]!;
         if (candidate.kind === effect.kind && candidate.gen !== gen) {
           slot = candidate;
           break;
@@ -1310,7 +1334,8 @@ export class EffectPool {
       slot.gen = gen;
       this.#apply(slot, effect, this.#anchor, camera);
     }
-    for (const slot of this.#slots) {
+    for (let s = 0; s < slots.length; s++) {
+      const slot = slots[s]!;
       if (slot.gen === gen) continue;
       slot.object.visible = false;
       slot.material.opacity = 0;
@@ -1470,8 +1495,10 @@ export class EffectPool {
           mat.needsUpdate = true;
         }
         // White, not the colour: the glyphs are drawn in the colour already, and
-        // multiplying twice turns a red number brown.
-        mat.color.set('#ffffff');
+        // multiplying twice turns a red number brown. Written as numbers, never a
+        // string: `set('#ffffff')` here was a `setStyle` parse on every frame a
+        // text effect was live (D271, fix pass 3).
+        mat.color.setRGB(1, 1, 1);
         mat.blending = THREE.NormalBlending;
         object.position.set(at[0] + (effect.driftX ?? 0), at[1] + (effect.rise ?? 0) + 0.1, at[2]);
         object.quaternion.copy(camera.quaternion);

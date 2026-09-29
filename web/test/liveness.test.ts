@@ -978,7 +978,7 @@ test('liveness: a figure\'s costume is written at commit, never in the frame loo
 const ALLOCATIONS: ReadonlyArray<[string, RegExp]> = [
   ['`new`', /\bnew\s+[A-Za-z_$]/],
   ['an array literal', /(?:^|[=(,:?&|!]|\breturn)\s*\[/m],
-  ['an object literal', /(?:^|[=(,:?&|]|\breturn)\s*\{/m],
+  ['an object literal', /(?:^|[=(,?&|]|(?<!\bcase\b[^\n:]*):|\breturn)\s*\{/m],
   ['a spread', /\.\.\./],
   ['a closure', /=>|\bfunction\b/],
   ['a template string', /`/],
@@ -986,6 +986,13 @@ const ALLOCATIONS: ReadonlyArray<[string, RegExp]> = [
   ['an iterator (.values/.keys/.entries)', /\.(?:values|keys|entries)\(\s*\)/],
   ['an allocating array or string method', /\.(?:map|filter|slice|concat|flat|flatMap|split|join|clone)\(/],
   ['an allocating builtin', /\bArray\.from\b|\bObject\.(?:keys|values|entries|assign|fromEntries)\b|\bString\(|\bJSON\./],
+  // Fix pass 3 of the GPU pass: two idioms that read as free and are not — `sort()`
+  // builds a temporary array every call, and `length = 0` drops an array's storage
+  // for the next push to rebuild (measured: 4,017 and 729 GC events per 5M calls,
+  // against 0 for a kept count and an insertion sort). A frame-loop scratch keeps a
+  // count instead.
+  ['a sort', /\.sort\(/],
+  ['an array cleared by `length = 0`', /\.length\s*=\s*0\b/],
 ];
 
 /**
@@ -1253,6 +1260,8 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
   const discs = files.get('scene/discs.ts') ?? '';
   const propsSource = files.get('scene/props.ts') ?? '';
   const statusSource = files.get('scene/status.ts') ?? '';
+  const effectsSource = files.get('scene/effects.ts') ?? '';
+  const effectPool = effectsSource.slice(effectsSource.indexOf('export class EffectPool'));
   const ours: Array<[string, string]> = [
     ['CueRunner applyOffsets', bodyOf(runner, 'applyOffsets')],
     ['CueRunner applyRigOffset', bodyOf(runner, 'applyRigOffset')],
@@ -1266,6 +1275,15 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
     // `useFrame` every frame: a fixed ring written in place.
     ['governor.ts governorFrame', bodyOf(files.get('governor.ts') ?? '', 'governorFrame')],
     ['governor.ts restartWindow', bodyOf(files.get('governor.ts') ?? '', 'restartWindow')],
+    // Fix pass 3: the effect pool's frame-loop pair, which no scan read. `bind` is
+    // called from the runner's `useFrame` every frame and `#apply` for every live
+    // effect; the text case parsed `'#ffffff'` on every frame a damage number, a
+    // turn banner or the outcome was live, and `bind` walked `effects.keys()`.
+    ['EffectPool.bind', bodyOf(effectPool, 'bind')],
+    ['EffectPool #apply', bodyOf(effectPool, '#apply')],
+    // …and the one helper the text case reaches every frame: a lookup whose key
+    // string is built on the miss path alone (as `burstTexture`'s is).
+    ['numberSprite.ts textTexture (the lookup)', bodyOf(files.get('scene/numberSprite.ts') ?? '', 'textTexture')],
   ];
   for (const [name, body] of ours) assert.ok(body.length > 20, `could not find the body of ${name}`);
   // They are the frame loop's: the loop calls applyOffsets, it walks with applyRigOffset,
@@ -1277,6 +1295,12 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
   assert.match(arena, /const action = governorFrame\(w, now, dpr\);/, 'the DPR governor no longer decides through perf.ts — update the body list');
   const propBind = bodyOf(propsSource.slice(propsSource.indexOf('export class PropField')), 'bind');
   assert.match(propBind, /writeMatrixAt\(/, 'PropField.bind no longer writes through the instance writers');
+  assert.match(runner, /pool\.bind\(stage\.effects/, 'the frame loop no longer binds the effect pool — update the body list');
+  const bodyNamed = (name: string): string => ours.find(([n]) => n === name)?.[1] ?? '';
+  assert.match(bodyNamed('EffectPool.bind'), /this\.#keyCount = 0;\s*effects\.forEach\(this\.#collect\);/, 'EffectPool.bind no longer collects its keys with the once-built collector behind a count');
+  assert.match(bodyNamed('EffectPool #apply'), /case 'text'/, 'EffectPool #apply is not the per-effect body — update the body list');
+  assert.match(bodyNamed('EffectPool #apply'), /textTexture\(effect\.text \?\? '', effect\.colour\)/, '#apply no longer reaches the text sprite through textTexture — update the body list');
+  assert.match(bodyNamed('numberSprite.ts textTexture (the lookup)'), /byText\.get\(text\)\?\.get\(colour\);\s*return hit !== undefined \? hit : drawTextTexture\(text, colour\);/, 'textTexture is no longer a lookup with a miss path');
 
   const junk = [
     'const _junk = [t, t];',
@@ -1287,6 +1311,8 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
     'const s = `${1}`;',
     'const v = new THREE.Vector3();',
     'xs.map(id);',
+    'list.sort();',
+    'list.length = 0;',
   ];
   for (const [name, body] of ours) {
     for (const line of junk) {
