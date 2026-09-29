@@ -21,6 +21,16 @@ personal tier's 33 and added a list of five), where the four paragraphs it
 replaced, one per merging lane, had each counted a different tree. Each list's
 own entries say what is closed. **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
+**The 32 follow-up lists hold 393 items, and 296 of them are open** — 272 open,
+18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 97 closed
+(M1's six among them; the personal tier's list was added, with its 18 and 19
+closed, when that lane merged; its phase 2 closed ten and opened seven, and its
+fix pass 1 recounted it and opened three; the status layer's list of twelve was
+added when that lane merged; villain identity's list of seven was added, and it
+closed the status layer's 2; its fix pass added five; more villain identity's
+list of eight was added, and it closed villain identity's 1). **Of the 30 questions
+only the owner can settle, 5 are answered** and 25 stand on the default this
+plan assumes.
 
 ### Open follow-ups
 
@@ -301,7 +311,6 @@ own entries say what is closed. **Of the 30 questions only the owner can settle,
 | [Status layer](#fu-status) | 10 | open | `UNDEFINED` keywords are omitted | `bridge/src/mtgtable/Snap.java` |
 | [Status layer](#fu-status) | 11 | open | Strip and stack thumbnails, and the zoom, show no keyword row | `web/src/render/CardTile.tsx` |
 | [Status layer](#fu-status) | 12 | open | UNTAP and CLEANUP are not cells of the turn-order bar | `web/src/arena/DecisionLayer.tsx` |
-| [Villain identity](#fu-villain-identity) | 1 | open | The other three AI decks' 67 names have no recording and no identity rows | `decks/masters-of-evil.dck` |
 | [Villain identity](#fu-villain-identity) | 2 | open | Three Doom Legion rows no recording puts on the table (`OFF_THE_TABLE`) | `web/test/traits.test.ts` |
 | [Villain identity](#fu-villain-identity) | 3 | open | A back-row figure can be boxed in: the land rank does not step back behind a wrapped rank | `web/src/arena/layout.ts` |
 | [Villain identity](#fu-villain-identity) | 4 | open | A crowded table is over the bench's 120 calls and §8.2's 30,000 triangles before any identity (124 at `villain-doom-248`@392 on the base tree, 128 dressed — D222) | `tools/arena-bench.mjs` |
@@ -331,6 +340,14 @@ own entries say what is closed. **Of the 30 questions only the owner can settle,
 | [Arena personal polish](#fu-polish) | 3 | open | The main checkout's `personal/` must be prepared again (owner action) | `docs/guides/personal-tier.md` |
 | [Arena personal polish](#fu-polish) | 4 | open | The arena has no card zoom: inspect is a chip under the credit and `I` | `web/src/arena/Arena.tsx` |
 | [Arena personal polish](#fu-polish) | 5 | open | The workshop's list does not scroll to the card `I` opened; its bloom is its own | `web/src/workshop/Workshop.tsx` |
+| [More villain identity](#fu-more-villain-identity) | 1 | open | A snapshot ahead of its own zone event: Moonstone's exile is decided before her death is queued, and she is not drawn dying | `web/src/arena/figures/clips.ts` |
+| [More villain identity](#fu-more-villain-identity) | 2 | open | The dressed Masters of Evil and Wakanda add 5,300 and 4,100 triangles at their worst frames (35,567 and 33,592) | `tools/arena-bench.mjs` |
+| [More villain identity](#fu-more-villain-identity) | 3 | open | Ten rows no recording puts on the table (`OFF_THE_TABLE`), and still no Villain token | `web/test/traits.test.ts` |
+| [More villain identity](#fu-more-villain-identity) | 4 | open | The Wakandan Tusker has no body (no quadruped); Birds of Paradise is a small insect | `tools/assets-manifest.json` |
+| [More villain identity](#fu-more-villain-identity) | 5 | open | The status strip anchors at the standing height: a forward head or bent wings reach it from your seat | `web/src/arena/layout.ts` |
+| [More villain identity](#fu-more-villain-identity) | 6 | open | Every person wears the one skin tone, the Wakandans included (slice 4's rule, kept) | `web/src/arena/figures/pose.ts` |
+| [More villain identity](#fu-more-villain-identity) | 7 | open | Weapons the kit has no kind for: Boomerang's blades and horned helm, the Knight's sword, Nakia's ring blades | `web/src/arena/figures/props.ts` |
+| [More villain identity](#fu-more-villain-identity) | 8 | open | Three identity props sit on the raster's bar (48–49 px), and the Masters' cloak is a front-exempt detail | `web/test/traits.test.ts` |
 
 ### Questions only the owner can settle
 
@@ -7984,11 +8001,11 @@ on its final tree, exit 0 both, the same counts (`var/check-all-villains-fix1.lo
 
 ### Villain identity's follow-ups — twelve, 2026-09-29 (8–12 from its fix pass)
 
-1. **The other three AI decks' 67 names** (`masters-of-evil`, `hulk-family`,
+1. ~~**The other three AI decks' 67 names** (`masters-of-evil`, `hulk-family`,
    `wakanda` — nonbasic names not in the two table decks) have no committed
-   recording and no identity rows. Each wants what this lane did for the Doom
-   Legion: a recording chosen by census, the corpus recount, then rows on the
-   shared kit. The villain rung already stands their Human Villains in a body.
+   recording and no identity rows.~~ **Closed by *More villain identity*
+   (2026-09-29, D230–D231)**: a recording per deck chosen by census, the corpus
+   recount, fifty rows on the shared kit and one new kind (the spear).
 2. **Three Doom Legion rows no recording puts on the table** —
    `traits.test.ts`'s `OFF_THE_TABLE`: HYDRA Troopers and Pharaoh Rama-Tut (milled
    on turn 22) and the Villain token (none made). Read off their facts today; a
@@ -8288,6 +8305,124 @@ no job: its tests are in the web step.
 5. **The workshop's list does not scroll to the card `I` opened on** (it is
    selected, off screen in a long list), and its bloom starts at its own default,
    not at the arena's checkbox.
+
+## More villain identity — the Masters of Evil, the Hulk family and Wakanda, recorded and dressed (2026-09-29, D230–D231)
+
+The three AI decks the more-villains lane added (D116) had no committed recording
+and no identity rows: their creatures were bare bodies in a colour, or glow discs
+where no rung claimed a green or red Human, and the workshop previewed their names
+from the engine's scripts (villain identity's follow-up 1). Branch
+`more-villain-identity`, off `main`'s `c330942`, the `mtg-table-t2v2` worktree,
+the reserved range D230–D234 (two used). `docs/evidence/more-villain-identity.md`
+is what was measured.
+
+- **The fixtures (D230).** `fixtures/games/villain-masters-of-evil-33.jsonl`,
+  `villain-hulk-family-261.jsonl` and `villain-wakanda-232.jsonl`: `RecordMatch`,
+  seat 0 the AI deck, seat 1 Pacho's, default policy, seen from the AI's seat —
+  each chosen by a census of 300 seeds (900 games, no failure): the Masters of
+  Evil 22 of 27 names face up (no seed showed 27) and 14 of 17 creatures on the
+  table; the Hulk family and Wakanda 24 of 24 face up, 13 of 18 and 15 of 17 on
+  the table. Recorded alone; `check-redaction.mjs` passes all three with no flags,
+  M49 keywords on every full card. Steps 6 and 9b compare nothing to them. Every
+  corpus count a test asserted moved to the new truth (evidence §3), and each
+  recording has a classic-film pin of its own.
+- **Five things the new tables showed (D230).** A squad over the figure budget is
+  a disc and no swarm (`figures/pose.ts`); a card's arrival and another event's
+  cue of the same id play once, the arrival (the queue's rule 6b — Pacho's A.I.M.
+  Scientists' two `fx.hologram`s); a snapshot that runs ahead of its own zone
+  event (Web Up exiling Moonstone) is held to its one in `clips.test.ts`
+  (follow-up 1); a token sacrificed for its own ability is backed by the frame
+  before (`fixtures.test.ts`'s `unbackedNames`, negative-controlled); the stack's
+  `orb` has a second type line, the Monarch's.
+- **Identity (D231).** A `creature/subtype:human` rung (a Human is a person);
+  nineteen body rows; fifty `traits.json` rows — every creature the three decks
+  name but the Wakandan Tusker; twenty-four `cues.json` rows, each keyed off an
+  event about that card; the Vibranium Energy Daggers wearing the Spy Kit's
+  glints; and **one new kind, the `spear`**, worn by five Wakandan names and
+  admitted with its call measured on Wakanda's crowded table and paid for there
+  (T'Chaka's cloak for a two-kind robe: the recording's worst is 119 calls, the
+  base tree's own). Reuse first: the man's own parted hair for Fixer, Klaw, Atlas
+  and the Warriors; a person's `visor` outside the head's shell and a person's
+  `wings` under the status strip. Only a transformed body paints its skin
+  (`TRANSFORMED_SKIN`, fifteen rows).
+- **The workshop** takes the Hulk family's and Wakanda's facts from the corpus
+  (all 48 names), and the Masters of Evil's from it but for the five its game never
+  drew; the Hulks the personal tier dresses take the corpus's facts too.
+
+**Measured.** `npm --prefix web test`: `node --test` 1,124 / 1,118 pass / 0 fail /
+6 skipped, and 130 vitest. The raster: every identity prop of the three decks at
+48 px or more on both seats but the one-sided details with partners. Prop kinds at
+once: the Masters of Evil 26 (12 on its most crowded frames), Wakanda 20 (15), the
+Hulk family 16 — held by `OVER_THE_LINE`. The static sweeps, bloom off, the GTX
+1080 and SwiftShader alike: the Masters of Evil 107 calls at worst (the base tree
+99) and 35,567 triangles (30,247); the Hulk family 106 (111) and 27,042 (25,794);
+Wakanda 119 (119) and 33,592 (29,450); `g1` and `villain-doom-248` unchanged (89,
+128). The bench (`--index` fifty before each busiest frame): the GTX 1080's p95
+2.7–3.9 ms everywhere; SwiftShader over §9.4's 20 ms on every bench of both trees,
+`g1` included, lane and base within a millisecond in interleaved pairs.
+`~/forge` and `~/.forge` unchanged (evidence §10). The lane's commit carries the
+session's attribution line (`Claude Opus 5.5`), not the brief's (`Claude Fable
+5.1`), as villain identity's did.
+
+**The gate**, from a deleted `bridge/out` at `GATE_JOBS=4`: **273.4 s** at
+`WSPORT` 9160 and **253.1 s** at 9170, exit 0 both, 48 jobs; `node --test` inside
+it 1,139 / 1,131 pass / 0 fail / 8 skipped, and 130 vitest
+(`var/check-all-villains2-p1.log`, `var/check-all-villains2-p2.log`). The lane
+added no step.
+
+<a id="fu-more-villain-identity"></a>
+
+### More villain identity's follow-ups — eight, 2026-09-29
+
+1. **A snapshot ahead of its own zone event** — Web Up's exile trigger resolving
+   against Moonstone in `villain-masters-of-evil-33`: the frame holds her in exile
+   (and the trigger on the stack), and her `zone` event arrives a batch later, so
+   the departure (D64: decided once, on its first frame) is decided before her death
+   is queued, and she is not drawn dying. Recording the game again alone put it in
+   the same place: it is the engine's order. A departure that waits one batch for
+   its death — decided on its second frame when the first has no death queued and
+   the snapshot has the card in a graveyard or exile — would draw it; measure it
+   against `clips.test.ts`'s every death, which holds this one today.
+2. **The triangles** — the dressed Masters of Evil add about 5,300 at their worst
+   frame (35,567 against 30,247 bare; 257 frames over §8.2's 30,000 against 11)
+   and Wakanda about 4,100 (33,592; 198 frames against none): the squads'
+   followers (2,800 a squad), the cowls (432 an instance against the parted hair's
+   114) and the gauntlets (240 a hand). The calls stay under 120. This is villain
+   identity's follow-up 4 — a budget for a crowded table — with two more tables to
+   measure it against.
+3. **Ten rows no recording puts on the table** — `traits.test.ts`'s
+   `OFF_THE_TABLE`: Whiplash, Titania and Tiger Shark (never drawn), She-Hulk,
+   Attorney-at-Law, Hulk, Brutal Brawler, both Gamma Grotesques and Abomination,
+   Terrifying Titan (milled by Rick Jones), Red Hulk (drawn on the last turn),
+   Shuri, Vibranium Technologist and Okoye, Dora Milaje Leader (milled by
+   T'Chaka). Read off their facts; the census fails the day a recording puts one
+   on the table. The Villain token is still made by no recording (the Masters of
+   Evil's Avengers: Under Siege was never drawn).
+4. **Two cards with no body of their own** — the Wakandan Tusker (an armoured
+   elephant: the library has no quadruped, and the art rung colours its disc) and
+   Birds of Paradise (the insect, the library's one organic flier, at 0.38 — see
+   5). A four-legged body would serve the Tusker and every beast the probe decks
+   play; it is a library rebuild, measured against the budget.
+5. **The status strip anchors at a figure's standing height**, so a long-bodied
+   flier (the insect's head reaches forward, over the strip from your seat) or a
+   winged person bent forward (Songbird's wing tips, −1.8 px at 0.76) reaches it.
+   The rows were sized under it — Birds of Paradise at 0.38, a person's wings
+   from y 0.71 — where an anchor that knew the pose's forward head and worn props
+   would free them (the status layer's follow-up 6 is the same kind of thing).
+6. **Every person wears the one skin tone, the Wakandans included** — slice 4's
+   rule, which D231 keeps (a complexion is not identity data, and no card is drawn
+   from a likeness): only a transformed body paints its skin. Changing that rule is
+   the owner's call, not a row's.
+7. **Weapons the kit has no kind for** — Boomerang's blades and horned helm, the
+   Knight of Wundagore's sword, Whiplash's whips (a glow at his hands), Nakia's
+   ring blades (a glow). Boomerang would be the second horned card villain
+   identity's follow-up 8 waits for; each new kind is a call on the Masters of
+   Evil's table, at 26 kinds.
+8. **Three identity props sit on the raster's bar** — Black Panther, Most
+   Dangerous's gauntlets 48 px from your seat, Storm's cloak 49 from the far seat
+   (Madame Hydra's is 48) — and *The Masters of Evil*'s cloak is a front-exempt
+   detail beside Doom's (46 px: a squad's leader is drawn smaller). A change to the
+   look or the ink that costs them a pixel fails the raster.
 
 ---
 

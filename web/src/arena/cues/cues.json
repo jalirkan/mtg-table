@@ -313,6 +313,129 @@
       "zone:*>battlefield": { "cue": "fx.terrain", "ms": 600, "params": { "colour": "#9ec7f0", "radius": 1.2 } },
       "tap:on": { "cue": "land.tap", "ms": 260, "params": { "radius": 0.8, "colour": "#9ec7f0" } },
       "tap:off": { "cue": "land.untap", "ms": 220, "params": { "radius": 0.7, "colour": "#9ec7f0" } }
+    },
+
+    "Whirlwind, Killer Cyclone": {
+      "_note": "More villain identity (D231), the Masters of Evil. He attacks on his own cyclone: the jet's lunge with no robot's eye, on the densest speed lines, lettered WHOOSH — a statement that HE attacks. Keys off `attackers`.",
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#8fe09a", "eye": false, "streaks": 2, "burst": "whoosh" } }
+    },
+
+    "Klaw, Sonic Subjugator": {
+      "_note": "More villain identity (D231), the Masters of Evil. He attacks by aiming the sonic emitter that is his arm (figures.json's pistolDraw alias): two flashes at his hands in the hold (`muzzle`), where his `gauntlets` burn magenta. His Sonic Attack — the trigger that makes you discard — RESOLVING throws sound rings from HIS feet; the discarded card is its own zone event, never a beam from him. Keys off `attackers` and `resolved`.",
+      "attackers": { "cue": "attack.lunge", "ms": 700, "params": { "colour": "#ff4a8a", "muzzle": true, "burst": "krak" } },
+      "resolved": { "cue": "fx.shockwave", "ms": 700, "params": { "colour": "#ff4a8a", "radius": 1.8, "shake": 0.2 } }
+    },
+
+    "Radioactive Man": {
+      "_note": "More villain identity (D231), the Masters of Evil. He closes glowing: radioactive green speed lines and a ZZAK in front of him at the top of the dash — the attack is the fact, no hit is claimed. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 820, "params": { "colour": "#b8ff5a", "streaks": 1, "burst": "zzak" } }
+    },
+
+    "Titania, Proud Pummeler": {
+      "_note": "More villain identity (D231), the Masters of Evil. The pummeler charges on speed lines with a POW in front of her fists. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 860, "params": { "colour": "#e8453c", "streaks": 1.4, "burst": "pow" } }
+    },
+
+    "The Masters of Evil": {
+      "_note": "More villain identity (D231), the Masters of Evil. The team assembles: Zemo's `channel` gesture and a broadcast ring in his purple with a KRAK over the arrival — no beams, because the card makes no token (fx.agents' beams are for tokens that appear beside the one who called them). The +2/+1 it gives every other Villain arrives on THOSE cards as their own `stats` events. The squad steps forward together on speed lines. Keys off `zone`→battlefield and `attackers`.",
+      "zone:*>battlefield": { "cue": "fx.agents", "ms": 900, "params": { "spread": 1.2, "colour": "#8a4ac8", "clip": "channel", "burst": "krak" } },
+      "attackers": { "cue": "attack.lunge", "ms": 850, "params": { "colour": "#8a4ac8", "streaks": 2 } }
+    },
+
+    "MACH-1, Swooping Scoundrel": {
+      "_note": "More villain identity (D231), the Masters of Evil. He swoops: the jet's lunge on his thrusters (their `exhaust` flares with it), no robot's eye. Keys off `attackers`.",
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#ff6a4a", "eye": false, "streaks": 1.2 } }
+    },
+
+    "Yellowjacket, Heartless Marauder": {
+      "_note": "More villain identity (D231), the Masters of Evil. She flies to the attack as Wasp does — the jet's lunge on her wing-wash, no robot's eye — and her sting is lettered ZZAK at the top of the dash. Keys off `attackers`.",
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#f2c230", "eye": false, "streaks": 1.2, "burst": "zzak" } }
+    },
+
+    "Hulk, Brutal Brawler": {
+      "_note": "More villain identity (D231), the Hulk family. He attacks every combat and it is lettered POW in front of him, on gamma-green speed lines. The counters his trigger hands out land on the other creatures as their own `counters` events. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 880, "params": { "colour": "#6ad85a", "streaks": 1.6, "burst": "pow" } }
+    },
+
+    "Hulk, Strongest There Is": {
+      "_note": "More villain identity (D231), the Hulk family. A KRAK in front of the strongest one there is, on gamma-green speed lines. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 880, "params": { "colour": "#6ad85a", "streaks": 1.6, "burst": "krak" } }
+    },
+
+    "Hulk, Gamma Goliath": {
+      "_note": "More villain identity (D231), the Hulk family. The goliath charges on the densest speed lines with a POW. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 900, "params": { "colour": "#6ad85a", "streaks": 2, "burst": "pow" } }
+    },
+
+    "Red Hulk": {
+      "_note": "More villain identity (D231), the Hulk family. Red speed lines and a KRAK. His Enrage damage lands on its target through that card's own event; no beam from him is invented. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 880, "params": { "colour": "#ff5a3a", "streaks": 1.6, "burst": "krak" } }
+    },
+
+    "Abomination, Irradiated Brute": {
+      "_note": "More villain identity (D231), the Hulk family. Grey-green speed lines and a KRAK. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 860, "params": { "colour": "#c0c890", "streaks": 1.4, "burst": "krak" } }
+    },
+
+    "Abomination, Terrifying Titan": {
+      "_note": "More villain identity (D231), the Hulk family. As the Irradiated Brute, in his own darker green. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 860, "params": { "colour": "#6aa85a", "streaks": 1.4, "burst": "krak" } }
+    },
+
+    "She-Hulk, Jade Defender": {
+      "_note": "More villain identity (D231), the Hulk family. She charges on green speed lines with a POW. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 860, "params": { "colour": "#6ad85a", "streaks": 1.4, "burst": "pow" } }
+    },
+
+    "Wolverine, Fierce Fighter": {
+      "_note": "More villain identity (D231), the Hulk family. He goes in fast, claws out: the densest speed lines and a KRAK. His arrival fight is its own `fight`/damage events on both cards. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 760, "params": { "colour": "#e4ecf6", "streaks": 1.8, "burst": "krak" } }
+    },
+
+    "Okoye, Dora Milaje Leader": {
+      "_note": "More villain identity (D231), Wakanda. She arrives and two Soldiers arrive with her: the engine names HER in the zone event and the tokens enter with zone events and cues of their own, so — as Nick Fury's agents and Doctor Doom's Doombots are — her beams go from her figure to the `beside` anchors where they materialise, never to a token. The gesture is her own `channel`. Keys off `zone`→battlefield.",
+      "zone:*>battlefield": { "cue": "fx.agents", "ms": 880, "params": { "spread": 1.1, "colour": "#e0b040", "beams": true, "clip": "channel" } }
+    },
+
+    "Dora Milaje Elite": {
+      "_note": "More villain identity (D231), Wakanda. The guard charges with the spear on speed lines and a POW. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 820, "params": { "colour": "#e0b040", "streaks": 1.4, "burst": "pow" } }
+    },
+
+    "Black Panther, Most Dangerous": {
+      "_note": "More villain identity (D231), Wakanda. Whenever he is dealt damage he deals that much to another target: that trigger RESOLVING is the event about him — the kinetic energy leaves HIS feet as violet rings, and with `fissure` a crack runs to what the PREVIOUS frame's stack said it targeted (T6's look-behind, as Quake's), lettered KRAK where it lands, or at his own feet when the wire named nothing. Keys off `resolved`.",
+      "resolved": { "cue": "fx.shockwave", "ms": 760, "params": { "colour": "#8a5aff", "radius": 1.8, "shake": 0.25, "fissure": true, "burst": "krak" } }
+    },
+
+    "Black Panther, Claws of Bast": {
+      "_note": "More villain identity (D231), Wakanda. He springs, claws out: silver speed lines and a KRAK. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 760, "params": { "colour": "#e0e8ff", "streaks": 1.6, "burst": "krak" } }
+    },
+
+    "T'Challa, the Black Panther": {
+      "_note": "More villain identity (D231), Wakanda. The king attacks on silver speed lines. The Vibranium token his attack makes enters with its own zone event. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 800, "params": { "colour": "#c9ccd6", "streaks": 1.4 } }
+    },
+
+    "Storm, Queen of Wakanda": {
+      "_note": "More villain identity (D231), Wakanda. She flies to the attack on the jet's lunge, no robot's eye, and the lightning is lettered ZZAK at the top of the dash. The flier she lends her power to is its own `stats` event. Keys off `attackers`.",
+      "attackers": { "cue": "attack.jet", "ms": 840, "params": { "colour": "#cfe6ff", "eye": false, "streaks": 1.2, "burst": "zzak" } }
+    },
+
+    "Shuri, Vibranium Technologist": {
+      "_note": "More villain identity (D231), Wakanda. She arrives at her work: the hologram's shimmer in her vibranium violet. Keys off `zone`→battlefield.",
+      "zone:*>battlefield": { "cue": "fx.hologram", "ms": 700, "params": { "colour": "#b08aff" } }
+    },
+
+    "Wakandan Drone Flock": {
+      "_note": "More villain identity (D231), Wakanda. A robot with an eye: the Doombot's jet, and its eye fires at whoever its attack band names (`laser`, the `attackers` event's own defender), lettered ZZAK there. Keys off `attackers`.",
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#7fe0ff", "laser": true, "burst": "zzak" } }
+    },
+
+    "Warriors of Wakanda": {
+      "_note": "More villain identity (D231), Wakanda. The war party steps forward together on dense speed lines, as the squads do, and a lone attacker takes the spotlight. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 850, "params": { "colour": "#eef0f2", "streaks": 2 } },
+      "attackers:alone": { "cue": "attack.lunge", "ms": 850, "params": { "spotlight": 1, "colour": "#eef0f2", "streaks": 2, "burst": "pow" } }
     }
   }
 }

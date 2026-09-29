@@ -302,10 +302,11 @@ test('attach: every attachment of every committed recording manifests on its hos
 
   // §4.1's measured numbers, and the corpus is where they came from.
   // (985 frames and 28 events before D220's villain recording joined the corpus;
-  // `villain-doom-248` adds 309 and 6.)
-  assert.equal(framesWithAttachment, 1294, `${String(framesWithAttachment)} frames, not 1,294`);
+  // `villain-doom-248` adds 309 and 6; the three AI decks' recordings of D230 —
+  // the Masters of Evil, the Hulk family and Wakanda against Pacho — 1,081 and 32.)
+  assert.equal(framesWithAttachment, 2375, `${String(framesWithAttachment)} frames, not 2,375`);
   assert.equal(maxInFrame, 4, `max ${String(maxInFrame)} attachments in a frame, not 4`);
-  assert.equal(attachEvents, 34, `${String(attachEvents)} attach events, not 34`);
+  assert.equal(attachEvents, 66, `${String(attachEvents)} attach events, not 66`);
   // **The whole design argument, as an assertion.** If a manifestation were a cue
   // it would be on screen for 28 transitions; as a pose it is on screen 985 times.
   assert.ok(
@@ -514,14 +515,16 @@ test('attach: T12’s four looks are data — a row names the kind and the host 
     }
   }
   console.log(`  looks over the corpus: ${JSON.stringify(Object.fromEntries(seen))} · anonymous hosts with one: ${String(anonymousHosts)}`);
-  // 1,253 shrink + 522 shell + 553 glints + 405 circuit = 2,733 — §4.1's 2,030
-  // (944 + 409 + 362 + 315) and `villain-doom-248`'s 703 (D220): Pacho's side of
-  // the villain game plays all four.
-  assert.equal(seen.get('shrink'), 1253);
-  assert.equal(seen.get('shell'), 522);
-  assert.equal(seen.get('glints'), 553);
+  // 1,610 shrink + 1,555 shell + 1,098 glints + 405 circuit = 4,668 — §4.1's
+  // 2,030 (944 + 409 + 362 + 315), `villain-doom-248`'s 703 (D220), and the three
+  // AI decks' recordings' 1,935 (D230): Pacho's side of every villain game plays
+  // them, and Wakanda's Vibranium Energy Daggers wears the Spy Kit's glints
+  // (D231; the equipment rung's halo before its row, 134 instances).
+  assert.equal(seen.get('shrink'), 1610);
+  assert.equal(seen.get('shell'), 1555);
+  assert.equal(seen.get('glints'), 1098);
   assert.equal(seen.get('circuit'), 405);
-  assert.equal(seen.get('halo') ?? 0, 0, 'with the three rows, nothing in this deck falls back to the halo');
+  assert.equal(seen.get('halo') ?? 0, 0, 'with the four rows, nothing in these decks falls back to the halo');
   for (const kind of ['shell', 'glints', 'circuit', 'cocoon'] as const) assert.ok(isAttachKind(kind));
 });
 

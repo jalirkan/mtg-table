@@ -174,7 +174,9 @@ test('tiles: every land of every committed recording resolves to a tile', () => 
   }
 
   // The measured ceiling from report 13 §2 — and the corpus is where it came from.
-  assert.equal(maxInFrame, 21, `the busiest land frame has ${String(maxInFrame)} lands, not 21`);
+  // (21 until D230's three AI-deck recordings: their long games put 24 lands on
+  // the two sides of one frame.)
+  assert.equal(maxInFrame, 24, `the busiest land frame has ${String(maxInFrame)} lands, not 24`);
   assert.ok(frames > 3000, `expected the whole corpus, saw ${String(frames)} board frames`);
   assert.ok(tiles > 20000, `only ${String(tiles)} tile-instances`);
   // Every one of the corpus's six land names must be in the census, and the two

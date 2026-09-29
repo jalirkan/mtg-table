@@ -64,6 +64,7 @@ import {
   PROP_KIT,
   RING_RADIUS,
   SCENE_KINDS,
+  SPEAR_TOP,
   SWARM_BEE_RATIO,
   anchorsOf,
   familyOf,
@@ -184,6 +185,8 @@ const LOOKS: Readonly<Record<SceneKind, PropLook>> = {
   // hood over it is cloth.
   mask: PROP_LOOK.metal,
   hairCowl: PROP_LOOK.cloth,
+  // More villain identity (D231): the vibranium spear.
+  spear: PROP_LOOK.metal,
 };
 
 // ---------------------------------------------------------------------------
@@ -846,6 +849,8 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
       ]);
     case 'mask':
       return maskGeometry();
+    case 'spear':
+      return spearGeometry();
     // Baked from the library at load (`bakePose`, `bakeHair`), not built here.
     case 'rider':
     case 'squad':
@@ -853,6 +858,27 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
     case 'hairLong':
       return null;
   }
+}
+
+/**
+ * **The spear** (more villain identity, D231), in figure units at size 1, from
+ * its butt at y = 0 to its tip at `SPEAR_TOP`: a slim shaft, a gold binding, a
+ * leaf blade flattened across the figure's front (so its broad side faces the
+ * camera from the front and the back, where the table view sees it), and a short
+ * spike at the foot. The blade is lit a little (×1.35) against the shaft (×0.7)
+ * so the tip reads first from above. About sixty triangles.
+ */
+function spearGeometry(): THREE.BufferGeometry {
+  const blade = 0.17;
+  const shaftTop = SPEAR_TOP - blade;
+  return mergeParts([
+    part(new THREE.CylinderGeometry(0.017, 0.018, shaftTop, 6, 1, true), [0.7, 0.66, 0.62], [0, shaftTop / 2, 0]),
+    part(new THREE.CylinderGeometry(0.026, 0.026, 0.04, 8, 1), [1.2, 0.95, 0.42], [0, shaftTop - 0.01, 0]),
+    // The blade: a four-sided leaf, wide at its shoulder, flattened in z.
+    part(new THREE.ConeGeometry(0.056, blade * 0.78, 4, 1), [1.35, 1.35, 1.4], [0, shaftTop + (blade * 0.78) / 2 + blade * 0.22, 0], [0, Math.PI / 4, 0], [1, 1, 0.42]),
+    part(new THREE.ConeGeometry(0.056, blade * 0.22, 4, 1), [1.2, 1.2, 1.25], [0, shaftTop + (blade * 0.22) / 2, 0], [Math.PI, Math.PI / 4, 0], [1, 1, 0.42]),
+    part(new THREE.ConeGeometry(0.018, 0.05, 4, 1), [0.9, 0.9, 0.95], [0, 0.0, 0], [Math.PI, 0, 0]),
+  ]);
 }
 
 /**

@@ -76,6 +76,10 @@ export const PROP_KINDS = [
   // figure's tint — Doom's iron mask, Kang's blue one, Crossbones' white skull.
   // It stops under the hairline, so a `cowl` over it is the hood behind it.
   'mask',
+  // More villain identity (D231): a vibranium SPEAR planted upright at the
+  // figure's right hand — the Dora Milaje's, Okoye's, a border guard's, a war
+  // party's. The kit's one new kind for the three AI decks, and a shared one.
+  'spear',
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 
@@ -557,14 +561,30 @@ export const HEAD_SHAPE = {
   mouth: { y: 0.862, z: 0.056 },
 } as const;
 
+/**
+ * **Where the spear stands** (D231), in figure units on the proportioned body: at
+ * its right side a finger's width outside the hanging hand (the hands rest at
+ * x ±0.16) and a little forward, so it reads beside the body from the front, the
+ * back and above. `scene/props.ts` builds it from y = 0 to {@link SPEAR_TOP}.
+ */
+export const SPEAR_AT: readonly [number, number, number] = [-0.2, 0, 0.05];
+/** The spear's tip, in figure units: a blade a head over the crown (0.98). */
+export const SPEAR_TOP = 1.24;
+
 export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   // Wasp's four insect wings on her back; an extra, larger pair on a bee.
+  // More villain identity (D231): on a PERSON the pair hangs from the shoulder
+  // blades (y 0.71; 0.76 until Songbird), so the upper tips stay under the status
+  // strip's lowest pixel from your seat, where a figure shows its back — at 0.76
+  // they reached over the head of a full-sized winged figure bent into its guard
+  // or its attack (status.test.ts: −1.8 px). Wasp is half that size and was never
+  // near it.
   wings: {
     blend: 'normal',
     colour: 'accent',
     glow: null,
     anchors: {
-      human: [{ joint: 'spine_03', at: [0, 0.76, -0.09], turn: [-0.25, 0, 0], size: 0.46 }],
+      human: [{ joint: 'spine_03', at: [0, 0.71, -0.09], turn: [-0.25, 0, 0], size: 0.46 }],
       humanoid: [{ joint: 'torso', at: [0, 0.5, -0.24], turn: [-0.25, 0, 0], size: 0.74 }],
       insect: [{ joint: 'Head', at: [0, 0.6, -0.22], turn: [-0.5, 0, 0], size: 0.62 }],
       drone: [{ joint: 'Head', at: [0, 0.66, -0.28], turn: [-0.4, 0, 0], size: 0.45 }],
@@ -670,7 +690,12 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     colour: 'accent',
     glow: { rest: 0.7, boost: 1.2 },
     anchors: {
-      human: [{ joint: 'Head', at: [0, 0.915, 0.004], size: [0.072, 0.1, 0.085] }],
+      // More villain identity (D231): on a PERSON the band stands OUTSIDE the
+      // head's outermost shell — a hairstyle's (a bob at 1.1× the skull, flared)
+      // or a cowl's (1.13×) — as a pair of lit goggles or a helm's lenses would:
+      // sized first inside them, White Widow's goggles showed 16 px from behind her
+      // bob and MACH-1's lenses 2 px under his helm. No person wore a visor before.
+      human: [{ joint: 'Head', at: [0, 0.915, 0.004], size: [0.084, 0.16, 0.094] }],
       drone: [{ joint: 'Head', at: [0, 0.47, 0], size: [0.318, 0.4, 0.318] }],
       humanoid: [{ joint: 'head', at: [0, 0.735, 0], size: [0.35, 0.3, 0.262] }],
     },
@@ -917,6 +942,25 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
     anchors: {
       human: [{ joint: 'Head', at: HEAD_SHAPE.centre, size: HEAD_SHAPE.radii }],
       humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: [0.338, 0.245, 0.27] }],
+    },
+  },
+  // **More villain identity (D231) — a spear**, planted upright at the figure's
+  // RIGHT side (figure space faces +z, so its right is −x, D81), its butt on the
+  // ground and its blade a head over the crown: a shaft, a leaf blade, a gold
+  // binding under it and a spike at the foot. On `root`, so it rides the figure's
+  // lunge and turn and stays planted — upright — while the body kneels beside it;
+  // no rest pose has to hold it (a hand-held anchor would need one written per
+  // rest, as the pistol's aim is). Vibranium silver whatever the card's accent,
+  // so the accent stays free for a cloak (the Shield Guard's blanket). Worn by
+  // Wakanda's Dora Milaje Elite, both Okoyes, the Shield Guard and the Warriors'
+  // leader; open to any row, as every kind is.
+  spear: {
+    blend: 'normal',
+    colour: '#d4dae4',
+    glow: null,
+    anchors: {
+      human: [{ joint: 'root', at: SPEAR_AT, size: 1 }],
+      humanoid: [{ joint: 'root', at: [-0.36, 0, 0.08], size: 1 }],
     },
   },
   // -- derived kinds: placed by the field from `swarm` / `silhouette` ----------

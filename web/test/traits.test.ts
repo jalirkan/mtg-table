@@ -524,6 +524,147 @@ test('traits: every Doom Legion person wears its own costume and rest — the vi
   for (const name of ['Doombot', "Doom's Servo-Guards", 'A.I.M. Bot']) assert.equal(poseOf(name).costume, null, `${name} wears a costume`);
 });
 
+/**
+ * **Whose SKIN a row may set** (more villain identity, D231). A costume is identity
+ * data and a complexion is not (slice 4): every person wears
+ * `COSTUME_DEFAULTS.skin`, the one tone, unless its skin IS its costume — a gamma
+ * body, a lava body, a radioactive glow, a shark's hide, a cat-knight's fur. This
+ * is that list, whole: a row that paints a skin and is not on it fails the test
+ * below, and so does a name on it that stops painting one.
+ */
+const TRANSFORMED_SKIN: Readonly<Record<string, string>> = {
+  'Volcanic Villain': 'an Elemental: a body of lava',
+  'Tiger Shark, Abyssal Hunter': "a mutant shark's grey hide",
+  'Radioactive Man': 'a radioactive glow',
+  'Brawn, Amadeus Cho': 'gamma green',
+  'Knight of Wundagore': "a cat-knight's orange fur",
+  'Gamma Grotesque': 'gamma green',
+  'She-Hulk, Attorney-at-Law': 'gamma green',
+  'She-Hulk, Jade Defender': 'gamma green',
+  'Hulkling, Burgeoning Bruiser': "a Kree-Skrull's green",
+  'Hulk, Brutal Brawler': 'gamma green',
+  'Hulk, Strongest There Is': 'gamma green',
+  'Hulk, Gamma Goliath': 'gamma green',
+  'Red Hulk': 'gamma red',
+  'Abomination, Irradiated Brute': 'gamma grey-olive, scaled',
+  'Abomination, Terrifying Titan': 'gamma green, scaled',
+};
+
+test('traits: every Masters of Evil, Hulk family and Wakanda person wears its own costume and rest — and only a transformed body paints its skin (D231)', () => {
+  const cards = corpusCards();
+  const poseOf = (name: string): FigurePose => {
+    const card = cards.get(name) ?? factCard(name);
+    return posesOf(twoSeatState([], [onBattlefield(card, 500, 1)])).get(500)!;
+  };
+  const rgb = (hex: string): { r: number; g: number; b: number; l: number; spread: number } => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b, l: (r + g + b) / 3, spread: Math.max(r, g, b) - Math.min(r, g, b) };
+  };
+  const slot = (pose: FigurePose, key: (typeof COSTUME_SLOTS)[number]): ReturnType<typeof rgb> => {
+    assert.ok(pose.costume !== null, 'no costume');
+    return rgb(pose.costume[COSTUME_SLOTS.indexOf(key)]!);
+  };
+  // [name, body, rest, hair (null = bald), a face?]
+  const want: Array<[string, string, string, string | null, boolean]> = [
+    ['Whiplash, Vengeful Engineer', 'agent', 'ready', 'cowl', true],
+    ['Songbird, Sonic Screamer', 'hero', 'braced', 'long', true],
+    ['MACH-1, Swooping Scoundrel', 'agent', 'ready', 'cowl', false],
+    ['Yellowjacket, Heartless Marauder', 'hero', 'akimbo', null, true],
+    ['Boomerang, Blade Flinger', 'agent', 'highReady', 'cowl', true],
+    ['Fixer, Techno Terror', 'agent', 'working', 'parted', true],
+    ['White Widow, Yelena Belova', 'hero', 'ready', 'bob', true],
+    ['Common Crook', 'agent', 'atEase', 'cowl', true],
+    ['Whirlwind, Killer Cyclone', 'agent', 'braced', 'cowl', false],
+    ['Volcanic Villain', 'agent', 'braced', 'long', true],
+    ['Klaw, Sonic Subjugator', 'agent', 'braced', 'parted', true],
+    ['Titania, Proud Pummeler', 'hero', 'braced', 'long', true],
+    ['Moonstone, Harsh Mistress', 'hero', 'braced', 'long', true],
+    ['Tiger Shark, Abyssal Hunter', 'agent', 'braced', 'cowl', true],
+    ['Atlas, Sizable Stooge', 'agent', 'akimbo', 'parted', true],
+    ['Radioactive Man', 'scientist', 'braced', null, true],
+    ['The Masters of Evil', 'agent', 'akimbo', 'cowl', false],
+    ['Rick Jones, Destined Sidekick', 'agent', 'atEase', 'crop', true],
+    ['Brawn, Amadeus Cho', 'scientist', 'braced', 'crop', true],
+    ['Hellcat, Undying Vigilante', 'hero', 'ready', 'long', true],
+    ['Knight of Wundagore', 'agent', 'ready', 'long', true],
+    ['Gallant Citizen', 'agent', 'atEase', 'parted', true],
+    ['Gamma Grotesque', 'agent', 'braced', null, true],
+    ['She-Hulk, Attorney-at-Law', 'hero', 'akimbo', 'long', true],
+    ['She-Hulk, Jade Defender', 'hero', 'braced', 'long', true],
+    ['Hercules, Prince of Power', 'agent', 'akimbo', 'crop', true],
+    ['Hulkling, Burgeoning Bruiser', 'agent', 'braced', 'crop', true],
+    ['Hulk, Brutal Brawler', 'agent', 'braced', 'crop', true],
+    ['Hulk, Strongest There Is', 'agent', 'akimbo', 'crop', true],
+    ['Hulk, Gamma Goliath', 'agent', 'ready', 'crop', true],
+    ['Red Hulk', 'agent', 'akimbo', 'crop', true],
+    ['Abomination, Irradiated Brute', 'agent', 'braced', null, true],
+    ['Abomination, Terrifying Titan', 'agent', 'akimbo', null, true],
+    ['Wolverine, Fierce Fighter', 'agent', 'braced', 'cowl', true],
+    ['Shuri, the Black Panther', 'hero', 'ready', 'cowl', false],
+    ["T'Chaka, Venerable King", 'agent', 'clasped', 'crop', true],
+    ['Dora Milaje Elite', 'hero', 'ready', null, true],
+    ['Wakandan Shield Guard', 'agent', 'ready', 'crop', true],
+    ["T'Challa, the Black Panther", 'agent', 'braced', 'cowl', false],
+    ['Black Panther, Claws of Bast', 'agent', 'ready', 'cowl', false],
+    ['Black Panther, Most Dangerous', 'agent', 'akimbo', 'cowl', false],
+    ['Black Panther, Vanguard', 'agent', 'folded', 'cowl', false],
+    ['Nakia, Wakandan Operative', 'hero', 'ready', 'crop', true],
+    ['Shuri, Vibranium Technologist', 'hero', 'working', 'bun', true],
+    ['Okoye, Dora Milaje Leader', 'hero', 'atEase', null, true],
+    ['Okoye, Mighty and Adored', 'hero', 'akimbo', null, true],
+    ['Warriors of Wakanda', 'agent', 'ready', 'parted', true],
+    ['Storm, Queen of Wakanda', 'hero', 'braced', 'long', true],
+  ];
+  const lines: string[] = [];
+  for (const [name, body, rest, hair, face] of want) {
+    const pose = poseOf(name);
+    lines.push(`  ${name.padEnd(34)} ${String(pose.modelId).padEnd(18)} hair ${String(pose.hair).padEnd(6)} ${pose.costume === null ? '' : COSTUME_SLOTS.map((k, i) => `${k} ${pose.costume![i]}`).join(' ')}`);
+    assert.equal(baseModelOf(pose.modelId), body, `${name} is not in the ${body} body`);
+    assert.equal(pose.rest, rest, `${name} does not rest ${rest}`);
+    assert.equal(pose.hair, hair, `${name}'s head is not ${String(hair)}`);
+    assert.equal(pose.props.some((p) => p.kind === 'face' || p.kind === 'faceGrit'), face, `${name}: a face ${face ? 'missing' : 'under a mask'}`);
+    // The skin rule: the one tone unless the body is transformed.
+    const skin = pose.costume![COSTUME_SLOTS.indexOf('skin')]!;
+    if (TRANSFORMED_SKIN[name] === undefined) assert.equal(skin, COSTUME_DEFAULTS.skin, `${name} paints a skin and is not a transformed body`);
+    else assert.notEqual(skin, COSTUME_DEFAULTS.skin, `${name} is listed as transformed (${TRANSFORMED_SKIN[name]!}) and paints no skin`);
+  }
+  console.log(`traits: the Masters of Evil, the Hulk family and Wakanda — body, head and costume (D231)\n${lines.join('\n')}`);
+  // Every row the three decks name that paints a skin is on the list (and no other row in the file does).
+  for (const [name, row] of Object.entries(TRAITS.cards)) {
+    if (row.costume?.skin !== undefined) assert.ok(TRANSFORMED_SKIN[name] !== undefined, `${name} paints a skin and is not on TRANSFORMED_SKIN`);
+  }
+  // The gamma bodies: the Hulks green in purple trousers, Red Hulk red, the Abominations scaled.
+  for (const name of ['Hulk, Brutal Brawler', 'Hulk, Strongest There Is', 'Hulk, Gamma Goliath']) {
+    const hulk = poseOf(name);
+    assert.ok(slot(hulk, 'skin').g > slot(hulk, 'skin').r + 50 && slot(hulk, 'top').g > slot(hulk, 'top').r + 50, `${name} is not gamma green`);
+    assert.ok(slot(hulk, 'legs').b > slot(hulk, 'legs').g + 40, `${name}'s trousers are not purple`);
+  }
+  const red = slot(poseOf('Red Hulk'), 'skin');
+  assert.ok(red.r > red.g + 100, 'Red Hulk is not red');
+  const grey = slot(poseOf('Abomination, Irradiated Brute'), 'skin');
+  assert.ok(grey.spread < 40 && grey.l > 90, 'the Irradiated Brute is not grey-olive');
+  for (const name of ['She-Hulk, Attorney-at-Law', 'She-Hulk, Jade Defender']) assert.ok(slot(poseOf(name), 'skin').g > 150, `${name} is not green`);
+  // The villains' marks: Radioactive Man glows green, the lava body burns, Titania's hair is red.
+  assert.ok(slot(poseOf('Radioactive Man'), 'skin').g > 200, 'Radioactive Man does not glow');
+  const lava = slot(poseOf('Volcanic Villain'), 'skin');
+  assert.ok(lava.r > 180 && lava.b < 60, 'the Volcanic Villain is not molten');
+  assert.ok(slot(poseOf('Titania, Proud Pummeler'), 'hair').r > 180, "Titania's hair is not red");
+  // Wakanda: the panthers in the black suit, the guard in red, Storm and the old king white-haired.
+  for (const name of ["T'Challa, the Black Panther", 'Black Panther, Claws of Bast', 'Black Panther, Most Dangerous', 'Black Panther, Vanguard', 'Shuri, the Black Panther']) {
+    assert.ok(slot(poseOf(name), 'top').l < 60, `${name}'s suit is not black`);
+  }
+  for (const name of ['Dora Milaje Elite', 'Okoye, Dora Milaje Leader', 'Okoye, Mighty and Adored']) {
+    assert.ok(slot(poseOf(name), 'top').r > slot(poseOf(name), 'top').g + 80, `${name} is not in the guard's red`);
+    assert.ok(poseOf(name).props.some((p) => p.kind === 'spear'), `${name} carries no spear`);
+  }
+  assert.ok(slot(poseOf('Storm, Queen of Wakanda'), 'hair').l > 220, "Storm's hair is not white");
+  assert.ok(slot(poseOf("T'Chaka, Venerable King"), 'hair').l > 200, "T'Chaka's hair is not white");
+  // Not people: the flier and the drone wear nothing.
+  for (const name of ['Birds of Paradise', 'Wakandan Drone Flock']) assert.equal(poseOf(name).costume, null, `${name} wears a costume`);
+});
+
 test('traits: the face reads from the views it is FOR — close in the workshop’s 1× front, present at play distance on the seat that faces the lens — and is never on a back (D158)', async () => {
   const library = await loadLibrary();
   const cards = corpusCards();
@@ -742,7 +883,21 @@ interface Row {
 const OFF_THE_TABLE: Readonly<Record<string, string>> = {
   'HYDRA Troopers': 'milled on turn 22 of villain-doom-248, never cast',
   'Pharaoh Rama-Tut': 'milled on turn 22 of villain-doom-248, never cast',
-  'Villain Token': 'villain-doom-248 made none',
+  // Villain token: villain-doom-248 made none, and neither did villain-masters-of-evil-33
+  // (its Avengers: Under Siege was never drawn).
+  'Villain Token': 'villain-doom-248 made none, nor villain-masters-of-evil-33',
+  // More villain identity (D230): the three new recordings' creatures that never
+  // reached the battlefield — still in the library, milled, or held in hand.
+  'Whiplash, Vengeful Engineer': 'never drawn in villain-masters-of-evil-33',
+  'Titania, Proud Pummeler': 'never drawn in villain-masters-of-evil-33',
+  'Tiger Shark, Abyssal Hunter': 'never drawn in villain-masters-of-evil-33',
+  'She-Hulk, Attorney-at-Law': 'milled by Rick Jones on turn 21 of villain-hulk-family-261',
+  'Hulk, Brutal Brawler': 'milled by Rick Jones on turn 21 of villain-hulk-family-261',
+  'Gamma Grotesque': 'both copies milled by Rick Jones on turn 27 of villain-hulk-family-261',
+  'Abomination, Terrifying Titan': 'milled by Rick Jones on turn 27 of villain-hulk-family-261',
+  'Red Hulk': 'drawn on turn 28 of villain-hulk-family-261, the last turn, and never cast',
+  'Shuri, Vibranium Technologist': "milled by T'Chaka's arrival on turn 33 of villain-wakanda-232",
+  'Okoye, Dora Milaje Leader': "milled by T'Chaka's arrival on turn 33 of villain-wakanda-232",
 };
 
 /**
@@ -773,6 +928,18 @@ const TOKEN_FACTS: Readonly<Record<string, { types: string; power: string; tough
  */
 const OVER_THE_LINE: Readonly<Record<string, { kinds: number; crowded: number }>> = {
   'games/villain-doom-248.jsonl': { kinds: 22, crowded: 17 },
+  // More villain identity (D230, D231): the Masters of Evil and Wakanda against
+  // Pacho, each held to its own measured numbers. The Masters' most kinds at once
+  // (26, at @235) is Pacho's side's own 15 or so — Peggy's hat, shield, sidearm and
+  // waves, Agent 13's pistol, muzzle and bun, the A.I.M. bench and hood, the
+  // Doombot's eye, visor, pack and flame, the Air Force's bees — beside a Masters
+  // table that reuses nearly every kind it wears; its most crowded frames (40
+  // cards) draw 12. Wakanda's is 20 at once (@485), and 15 on its most crowded
+  // frames (48 cards) — one of them the spear, the kit's one new kind, and none of
+  // them a robe, which T'Chaka gave up for the cloak the table already draws
+  // (D231). The Hulk family's is 16, inside the 17 every other recording keeps.
+  'games/villain-masters-of-evil-33.jsonl': { kinds: 26, crowded: 12 },
+  'games/villain-wakanda-232.jsonl': { kinds: 20, crowded: 15 },
 };
 
 /** A card built from its catalog facts (or {@link TOKEN_FACTS}) — the workshop's way in. */
@@ -789,13 +956,19 @@ function factCard(name: string): AnyCard {
 }
 
 /**
- * **The Doom Legion's names** (villain identity, D221), from its `.dck` — the
- * deck a bare `./scripts/play.sh` seats against you — and the two tokens its
- * cards make, which no deck line names (Doctor Doom's Doombots; the Villain token
- * Agents of HYDRA and HYDRA Troopers leave).
+ * **The AI decks' names** (villain identity, D221; more villain identity, D231),
+ * from their `.dck` files — the Doom Legion, the deck a bare `./scripts/play.sh`
+ * seats against you, and the three match setup added (the Masters of Evil, the
+ * Hulk family, Wakanda) — and the tokens their cards make, which no deck line
+ * names (Doctor Doom's Doombots; the Villain token Agents of HYDRA, HYDRA
+ * Troopers and Avengers: Under Siege leave).
  */
-function villainNames(): string[] {
-  const text = readFileSync(fileURLToPath(new URL('../../decks/doom-legion.dck', import.meta.url)), 'utf8');
+const AI_DECKS = ['doom-legion.dck', 'masters-of-evil.dck', 'hulk-family.dck', 'wakanda.dck'] as const;
+const AI_TOKENS = ['Doombot', 'Villain Token'] as const;
+
+/** One deck's `[main]` names, in its order. */
+function namesOf(file: string): string[] {
+  const text = readFileSync(fileURLToPath(new URL(`../../decks/${file}`, import.meta.url)), 'utf8');
   const out: string[] = [];
   let main = false;
   for (const line of text.split('\n')) {
@@ -803,7 +976,13 @@ function villainNames(): string[] {
     const m = main ? /^\d+\s+([^|]+?)(?:\|.*)?$/.exec(line.trim()) : null;
     if (m !== null) out.push(m[1]!);
   }
-  return [...out, 'Doombot', 'Villain Token'];
+  return out;
+}
+
+function villainNames(): string[] {
+  const out: string[] = [];
+  for (const file of AI_DECKS) for (const name of namesOf(file)) if (!out.includes(name)) out.push(name);
+  return [...out, ...AI_TOKENS];
 }
 
 /** A census row for a card posed alone from its catalog facts — the workshop's way in. */
@@ -964,6 +1143,59 @@ test('traits: the census — every deck card reads as itself, and every row fire
     ['Madame Hydra, Reanimated', (r) => r.props.includes('cape') && r.props.includes('hairLong'), 'long hair and cloak'],
     ['Crossbones, Malicious Mercenary', (r) => r.props.includes('mask') && r.props.includes('hairCowl'), 'a skull mask on a balaclava'],
     ['Villain Token', (r) => r.props.includes('hairCowl'), 'a hooded henchman'],
+    // More villain identity (D231): the Masters of Evil…
+    ['Whiplash, Vengeful Engineer', (r) => r.props.includes('gauntlets') && r.props.includes('hairCowl'), 'a hooded engineer, his whips lit at both hands'],
+    ['Songbird, Sonic Screamer', (r) => r.props.includes('wings') && r.props.includes('hairLong') && String(r.model).startsWith('hero'), 'a woman on sound wings'],
+    ['MACH-1, Swooping Scoundrel', (r) => ['mask', 'visor', 'jetpack', 'exhaust', 'hairCowl'].every((k) => r.props.includes(k)) && r.hover > 0.2, 'a helmed flier on thrusters, lenses lit'],
+    ['Yellowjacket, Heartless Marauder', (r) => r.props.includes('helmet') && r.props.includes('wings') && r.hover > 0.2 && r.heightMax < 0.6, 'small, helmeted, winged, flying'],
+    ['Boomerang, Blade Flinger', (r) => r.props.includes('hairCowl'), 'cowled'],
+    ['Fixer, Techno Terror', (r) => ['visor', 'labBench', 'hairParted'].every((k) => r.props.includes(k)), 'goggles at a bench of gadgets'],
+    ['White Widow, Yelena Belova', (r) => r.props.includes('visor') && r.props.includes('hairBob'), 'goggles over a blonde bob'],
+    ['Common Crook', (r) => r.props.includes('hairCowl') && r.swarm === '-', 'a hooded crook'],
+    ['Whirlwind, Killer Cyclone', (r) => r.props.includes('mask') && r.props.includes('hairCowl') && r.hover > 0.1, 'masked and helmed, riding his cyclone'],
+    ['Volcanic Villain', (r) => r.props.includes('gauntlets') && r.props.includes('hairLong'), 'burning fists, flames for hair'],
+    ['Klaw, Sonic Subjugator', (r) => r.props.includes('gauntlets') && r.props.includes('hairParted'), 'sound at his hands'],
+    ['Titania, Proud Pummeler', (r) => r.props.includes('hairLong') && r.heightMax > 1, 'long hair and a head over a woman'],
+    ['Moonstone, Harsh Mistress', (r) => r.props.includes('gauntlets') && r.props.includes('hairLong') && r.hover > 0.2, 'flying, the moonstone lit in her hands'],
+    ['Tiger Shark, Abyssal Hunter', (r) => r.props.includes('hairCowl') && r.heightMax > 0.9, 'a big man in a finned hood'],
+    ['Atlas, Sizable Stooge', (r) => r.props.includes('hairParted') && r.heightMax > 1.05, 'a giant'],
+    ['Radioactive Man', (r) => r.props.includes('gauntlets') && !r.props.includes('labBench'), 'glowing hands — no lab bench'],
+    ['The Masters of Evil', (r) => r.swarm === '2 squad' && ['squad', 'mask', 'cape', 'hairCowl'].every((k) => r.props.includes(k)), "a squad led by Zemo's hood, mask and cloak"],
+    // …the Hulk family…
+    ['Rick Jones, Destined Sidekick', (r) => r.props.includes('hairCrop') && r.heightMax < 0.85, 'a young man, a little short of a hero'],
+    ['Birds of Paradise', (r) => String(r.model).startsWith('insect') && r.hover > 0.3 && r.heightMax < 0.4, 'a small flier on the insect body'],
+    ['Brawn, Amadeus Cho', (r) => r.props.includes('hairCrop') && !r.props.includes('labBench'), 'no lab bench'],
+    ['Hellcat, Undying Vigilante', (r) => r.props.includes('hairLong'), 'long hair'],
+    ['Knight of Wundagore', (r) => r.props.includes('hairLong'), "a lion's mane"],
+    ['Gallant Citizen', (r) => r.props.includes('hairParted') && String(r.model).startsWith('agent'), 'a man, parted hair — no glow disc'],
+    ['Gamma Grotesque', (r) => !/hair/.test(r.props) && r.heightMax > 0.95, 'a bald monster bigger than a man'],
+    ['She-Hulk, Attorney-at-Law', (r) => r.props.includes('hairLong') && r.heightMax > 0.9, 'a tall woman'],
+    ['She-Hulk, Jade Defender', (r) => r.props.includes('hairLong') && r.heightMax > 0.95, 'a taller woman'],
+    ['Hercules, Prince of Power', (r) => r.props.includes('hairCrop') && r.heightMax > 0.95 && String(r.model).startsWith('agent'), "big, in the man's body"],
+    ['Hulkling, Burgeoning Bruiser', (r) => r.props.includes('hairCrop') && String(r.model).startsWith('agent'), "the man's body"],
+    ['Hulk, Brutal Brawler', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1, 'the Hulk: the biggest person on the table'],
+    ['Hulk, Strongest There Is', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1, 'the Hulk'],
+    ['Hulk, Gamma Goliath', (r) => r.props.includes('hairCrop') && r.heightMax > 1.15, 'the biggest Hulk'],
+    ['Red Hulk', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1, 'as big as the Hulk'],
+    ['Abomination, Irradiated Brute', (r) => !/hair/.test(r.props) && r.heightMax > 1.05, 'bald and huge'],
+    ['Abomination, Terrifying Titan', (r) => !/hair/.test(r.props) && r.heightMax > 1.05, 'bald and huge'],
+    ['Wolverine, Fierce Fighter', (r) => r.props.includes('gauntlets') && r.props.includes('hairCowl') && r.heightMax < 0.85, 'short, cowled, claws out'],
+    // …and Wakanda.
+    ['Shuri, the Black Panther', (r) => r.props.includes('mask') && r.props.includes('hairCowl') && String(r.model).startsWith('hero'), "the panther's mask on the woman's body"],
+    ["T'Chaka, Venerable King", (r) => ['cape', 'hairCrop'].every((k) => r.props.includes(k)), 'a royal cloak'],
+    ['Dora Milaje Elite', (r) => r.props.includes('spear') && !/hair/.test(r.props) && String(r.model).startsWith('hero'), 'a shaven woman with a spear'],
+    ['Wakandan Shield Guard', (r) => ['cape', 'spear', 'hairCrop'].every((k) => r.props.includes(k)), 'a blanket-shield and a spear'],
+    ["T'Challa, the Black Panther", (r) => r.props.includes('mask') && r.props.includes('hairCowl') && String(r.model).startsWith('agent'), "the panther's mask on the man's body"],
+    ['Black Panther, Claws of Bast', (r) => ['mask', 'gauntlets', 'hairCowl'].every((k) => r.props.includes(k)), 'masked, claws lit'],
+    ['Black Panther, Most Dangerous', (r) => ['mask', 'gauntlets', 'visor', 'hairCowl'].every((k) => r.props.includes(k)), 'masked, charged at the hands and the eyes'],
+    ['Black Panther, Vanguard', (r) => ['mask', 'cape', 'hairCowl'].every((k) => r.props.includes(k)), 'masked and cloaked'],
+    ['Nakia, Wakandan Operative', (r) => r.props.includes('gauntlets') && r.props.includes('hairCrop'), 'ring blades lit'],
+    ['Shuri, Vibranium Technologist', (r) => r.props.includes('gauntlets') && r.props.includes('hairBun'), 'gauntlets lit, hair up'],
+    ['Okoye, Dora Milaje Leader', (r) => r.props.includes('spear') && !/hair/.test(r.props), 'shaven, with a spear'],
+    ['Okoye, Mighty and Adored', (r) => r.props.includes('spear') && !/hair/.test(r.props), 'shaven, with a spear'],
+    ['Wakandan Drone Flock', (r) => ['laserEye', 'visor', 'wings'].every((k) => r.props.includes(k)) && r.hover > 0.3, 'a winged drone'],
+    ['Warriors of Wakanda', (r) => r.swarm === '2 squad' && r.props.includes('squad') && r.props.includes('spear'), 'a war party with a spear'],
+    ['Storm, Queen of Wakanda', (r) => ['gauntlets', 'cape', 'hairLong'].every((k) => r.props.includes(k)) && r.hover > 0.2, 'flying, cloaked, lightning in her hands'],
   ];
   const offTable: string[] = [];
   for (const [name, ok, what] of want) {
@@ -975,7 +1207,7 @@ test('traits: the census — every deck card reads as itself, and every row fire
     assert.ok(row !== undefined, `${name} never reached the census`);
     assert.ok(ok(row), `${name} should read as ${what}: ${JSON.stringify(row)}`);
   }
-  console.log(`traits: the Doom Legion rows no committed recording puts on the table, read off a pose from their facts (D221)\n${offTable.join('\n')}`);
+  console.log(`traits: the AI decks' rows no committed recording puts on the table, read off a pose from their facts (D221, D231)\n${offTable.join('\n')}`);
 
   // **The budget**: the field draws one call per KIND. Report 13 §8.2's 90 has
   // room for the slice-2 scene (≤ 66 at g1@355) plus this many. Lane BODIES raised
@@ -1327,7 +1559,14 @@ const ONE_SIDED: Readonly<Record<string, { partner: string | readonly string[]; 
   // HIS, carried by the other side's: the hood from the front, the cloak from
   // behind. Every other wearer's cloak and coat read from both seats (D221), and
   // `only` holds them to it (the fix pass: the rows first exempted every wearer).
-  cape: { partner: 'hairCowl', why: "a cloak hangs down the back — from the front Doom's hood carries him (D221)", only: ['Doctor Doom'] },
+  // More villain identity (D231): the Masters of Evil's leader wears Zemo's cloak,
+  // and a squad's leader is drawn smaller to fit three bodies in one slot — so from
+  // the front his cloak shows 46 px behind him, and his purple hood carries him.
+  cape: {
+    partner: 'hairCowl',
+    why: "a cloak hangs down the back — from the front Doom's hood carries him, and Zemo's the Masters of Evil (D221, D231)",
+    only: ['Doctor Doom', 'The Masters of Evil'],
+  },
   coatTails: { partner: 'cape', why: "Doom's tunic is under his cloak from behind — the cloak carries him there (D221)", only: ['Doctor Doom'] },
 };
 
@@ -1651,6 +1890,9 @@ test('traits: lane BODIES’ kinds are cheap — a hairstyle 200–600 triangles
     ['cape', 8, 64],
     ['coat', 60, 240],
     ['sidearm', 20, 100],
+    // More villain identity (D231): the spear, the kit's one new kind for the three
+    // AI decks — a shaft, a binding, a leaf blade and a foot spike.
+    ['spear', 30, 120],
   ];
   for (const [kind, min, max] of budget) {
     // What the prop field draws: one sheet (its material is DoubleSide).

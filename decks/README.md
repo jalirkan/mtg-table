@@ -378,6 +378,13 @@ card seldom arrive before the game is over.
 real games, and not from eight copies in either of two probe games: the
 Trickster's Stratagem lesson again), and Living Laser (a 5-drop the curve could not afford).
 
+**Its recording** (2026-09-29, D230–D231): `fixtures/games/villain-masters-of-evil-33.jsonl`,
+the Masters of Evil's seat against Pacho's deck, seed 33 — chosen by a census of
+300 seeds for the most names face up (22 of 27; no seed showed all 27) and the
+most creatures on the table (14 of 17). Every creature reads as itself in the
+arena and the workshop — the team as Zemo's squad, MACH-1's red lenses, Radioactive
+Man's glow (README's *More villain identity*; `docs/evidence/more-villain-identity.md`).
+
 ## `hulk-family.dck` — Hulk Family
 
 **Everyone the gamma bomb touched, and the people around them:** Hulk three ways
@@ -428,6 +435,12 @@ hit). World War Hulk stays out on purpose: its
 chapter I lets you play creature cards from your **library**, a may-play the
 redaction gate has never been shown.
 
+**Its recording** (2026-09-29, D230–D231): `fixtures/games/villain-hulk-family-261.jsonl`,
+the Hulk family's seat against Pacho's deck, seed 261 — all 24 names face up, 13 of
+its 18 creatures on the table (Rick Jones mills five of its own Hulks). The Hulks
+are gamma bodies — green, red, grey-olive, the biggest people on the table
+(README's *More villain identity*).
+
 ## `wakanda.dck` — Wakanda
 
 **Black Panther's kingdom:** four Black Panthers (T'Challa, Claws of Bast, Most
@@ -463,6 +476,12 @@ Panther*, a flavour name the wire then carries instead of the deck's name —
 Panther Pounce (not in five: a trick the AI holds), Bast and Wakandan Royal
 Guard (the curve). **Wakanda Forever!** stays out: `PeekAndReveal` shows the top six of the
 AI's library while they are still in it — Kang Prime's problem.
+
+**Its recording** (2026-09-29, D230–D231): `fixtures/games/villain-wakanda-232.jsonl`,
+Wakanda's seat against Pacho's deck, seed 232 — all 24 names face up, 15 of its 17
+creatures on the table, a 48-card table on its last turns. The Black Panthers wear
+the panther's mask and cowl, and the Dora Milaje carry the spear, the kit's one new
+kind for these decks (README's *More villain identity*).
 
 ---
 

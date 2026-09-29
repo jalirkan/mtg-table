@@ -1014,15 +1014,21 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "TRAMPLE"
+      ]
     },
     "Abomination, Terrifying Titan": {
       "types": "Legendary Creature - Gamma Villain",
-      "manaCost": "{3}{RG}",
+      "manaCost": "{3}{R/G}",
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "TRAMPLE"
+      ]
     },
     "Aerial Doombot": {
       "types": "Artifact Creature - Robot Villain",
@@ -1030,7 +1036,10 @@
       "power": "1",
       "toughness": "1",
       "token": false,
-      "setCode": "MSH"
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Agent 13, Sharon Carter": {
       "types": "Legendary Creature - Human Spy Hero",
@@ -1063,7 +1072,8 @@
       "power": "2",
       "toughness": "4",
       "token": false,
-      "setCode": "MSH"
+      "setCode": "MSH",
+      "keywords": []
     },
     "Ainok Tracker": {
       "types": "Creature - Dog Scout",
@@ -1087,7 +1097,8 @@
       "power": "2",
       "toughness": "3",
       "token": false,
-      "setCode": "MSC"
+      "setCode": "MSC",
+      "keywords": []
     },
     "Ashcloud Phoenix": {
       "types": "Creature - Phoenix",
@@ -1099,11 +1110,14 @@
     },
     "Atlas, Sizable Stooge": {
       "types": "Legendary Creature - Human Villain",
-      "manaCost": "{2}{BG}{BG}",
+      "manaCost": "{2}{B/G}{B/G}",
       "power": "5",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "REACH"
+      ]
     },
     "Austere Command": {
       "types": "Sorcery",
@@ -1144,7 +1158,10 @@
       "power": "0",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Birnin Zana Plaza": {
       "types": "Land",
@@ -1152,7 +1169,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Black Panther, Claws of Bast": {
       "types": "Legendary Creature - Human Warrior Hero",
@@ -1160,7 +1178,10 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "LIFELINK"
+      ]
     },
     "Black Panther, Most Dangerous": {
       "types": "Legendary Creature - Human Warrior Hero",
@@ -1168,7 +1189,8 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Black Panther, Vanguard": {
       "types": "Legendary Creature - Human Warrior Hero",
@@ -1176,7 +1198,8 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Bold Biochemist": {
       "types": "Creature - Human Scientist",
@@ -1192,7 +1215,8 @@
       "power": "1",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Borough Backup": {
       "types": "Sorcery",
@@ -1200,15 +1224,19 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": "MSH"
+      "setCode": "MSH",
+      "keywords": [
+        "TYPECYCLING"
+      ]
     },
     "Brawn, Amadeus Cho": {
       "types": "Legendary Creature - Gamma Scientist Hero",
-      "manaCost": "{1}{GU}",
+      "manaCost": "{1}{G/U}",
       "power": "1",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Castle Doom": {
       "types": "Land",
@@ -1225,7 +1253,8 @@
       "power": null,
       "toughness": null,
       "token": true,
-      "setCode": "MSH"
+      "setCode": "MSH",
+      "keywords": []
     },
     "Common Crook": {
       "types": "Creature - Human Rogue Villain",
@@ -1233,7 +1262,8 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Crossbones, Malicious Mercenary": {
       "types": "Legendary Creature - Human Mercenary Villain",
@@ -1261,7 +1291,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Depower": {
       "types": "Instant",
@@ -1322,7 +1353,10 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "FIRST_STRIKE"
+      ]
     },
     "Dragonskull Summit": {
       "types": "Land",
@@ -1330,7 +1364,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Fixer, Techno Terror": {
       "types": "Legendary Creature - Human Artificer Villain",
@@ -1338,7 +1373,8 @@
       "power": "2",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Forest": {
       "types": "Basic Land - Forest",
@@ -1369,11 +1405,12 @@
     },
     "Gallant Citizen": {
       "types": "Creature - Human Citizen",
-      "manaCost": "{GW}{GW}",
+      "manaCost": "{G/W}{G/W}",
       "power": "1",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Gamma Grotesque": {
       "types": "Creature - Gamma Horror Villain",
@@ -1381,7 +1418,10 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "VIGILANCE"
+      ]
     },
     "Garruk's Companion": {
       "types": "Creature - Beast",
@@ -1397,7 +1437,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Giant Growth": {
       "types": "Instant",
@@ -1413,7 +1454,11 @@
       "power": "3",
       "toughness": "2",
       "token": false,
-      "setCode": "MSH"
+      "setCode": "MSH",
+      "keywords": [
+        "FLASH",
+        "FLYING"
+      ]
     },
     "HULK SMASH!": {
       "types": "Instant",
@@ -1421,7 +1466,10 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "TEAMWORK"
+      ]
     },
     "HYDRA Troopers": {
       "types": "Creature - Human Soldier Villain",
@@ -1446,7 +1494,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Hellcat, Undying Vigilante": {
       "types": "Legendary Creature - Human Hero",
@@ -1454,7 +1503,10 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "HASTE"
+      ]
     },
     "Hercules, Prince of Power": {
       "types": "Legendary Creature - Demigod Warrior Hero",
@@ -1462,7 +1514,8 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Hero Token": {
       "types": "Creature - Hero",
@@ -1470,7 +1523,10 @@
       "power": "3",
       "toughness": "2",
       "token": true,
-      "setCode": "MSH"
+      "setCode": "MSH",
+      "keywords": [
+        "VIGILANCE"
+      ]
     },
     "Hidden Lair": {
       "types": "Land",
@@ -1495,7 +1551,8 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Hulk, Gamma Goliath": {
       "types": "Legendary Creature - Gamma Berserker Hero",
@@ -1503,7 +1560,11 @@
       "power": "6",
       "toughness": "5",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ]
     },
     "Hulk, Strongest There Is": {
       "types": "Legendary Creature - Gamma Berserker Hero",
@@ -1511,7 +1572,10 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "TRAMPLE"
+      ]
     },
     "Hulkling, Burgeoning Bruiser": {
       "types": "Legendary Creature - Kree Skrull Hero",
@@ -1519,7 +1583,10 @@
       "power": "2",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "VIGILANCE"
+      ]
     },
     "Island": {
       "types": "Basic Land - Island",
@@ -1555,7 +1622,8 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Knight of Wundagore": {
       "types": "Creature - Cat Knight Villain",
@@ -1563,7 +1631,10 @@
       "power": "2",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "TRAMPLE"
+      ]
     },
     "Lightning Bolt": {
       "types": "Instant",
@@ -1588,7 +1659,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "MACH-1, Swooping Scoundrel": {
       "types": "Legendary Artifact Creature - Human Villain",
@@ -1596,7 +1668,10 @@
       "power": "1",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Madame Hydra, Reanimated": {
       "types": "Legendary Creature - Human Horror Villain",
@@ -1623,7 +1698,10 @@
       "power": "2",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Mountain": {
       "types": "Basic Land - Mountain",
@@ -1639,7 +1717,10 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "REACH"
+      ]
     },
     "Nick Fury, Spymaster": {
       "types": "Legendary Creature - Human Spy Hero",
@@ -1647,7 +1728,10 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": "MSC"
+      "setCode": "MSC",
+      "keywords": [
+        "FIRST_STRIKE"
+      ]
     },
     "Night's Whisper": {
       "types": "Sorcery",
@@ -1655,7 +1739,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Okoye, Dora Milaje Leader": {
       "types": "Legendary Creature - Human Warrior Hero",
@@ -1663,7 +1748,8 @@
       "power": "3",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Okoye, Mighty and Adored": {
       "types": "Legendary Creature - Human Warrior Hero",
@@ -1671,7 +1757,8 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Opt": {
       "types": "Instant",
@@ -1738,7 +1825,10 @@
       "power": "3",
       "toughness": "5",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "DEATHTOUCH"
+      ]
     },
     "Rampant Growth": {
       "types": "Sorcery",
@@ -1754,7 +1844,11 @@
       "power": "6",
       "toughness": "7",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ]
     },
     "Rick Jones, Destined Sidekick": {
       "types": "Legendary Creature - Human Advisor",
@@ -1762,7 +1856,8 @@
       "power": "0",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Robot Token": {
       "types": "Artifact Creature - Robot",
@@ -1786,7 +1881,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "S.H.I.E.L.D. Helicarrier": {
       "types": "Artifact - Vehicle",
@@ -1814,11 +1910,14 @@
     },
     "She-Hulk, Attorney-at-Law": {
       "types": "Legendary Creature - Gamma Advisor Hero",
-      "manaCost": "{2}{GW}",
+      "manaCost": "{2}{G/W}",
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "VIGILANCE"
+      ]
     },
     "She-Hulk, Jade Defender": {
       "types": "Legendary Creature - Gamma Hero",
@@ -1826,7 +1925,11 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ]
     },
     "Shock": {
       "types": "Instant",
@@ -1834,15 +1937,19 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Shuri, Vibranium Technologist": {
       "types": "Legendary Creature - Human Artificer Hero",
-      "manaCost": "{2}{WU}",
+      "manaCost": "{2}{W/U}",
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "VIGILANCE"
+      ]
     },
     "Shuri, the Black Panther": {
       "types": "Legendary Creature - Human Noble Hero",
@@ -1850,7 +1957,10 @@
       "power": "2",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "LIFELINK"
+      ]
     },
     "Soldier Token": {
       "types": "Creature - Soldier",
@@ -1866,7 +1976,10 @@
       "power": "2",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "LIFELINK"
+      ]
     },
     "Storm, Queen of Wakanda": {
       "types": "Legendary Creature - Mutant Noble Hero",
@@ -1874,7 +1987,10 @@
       "power": "4",
       "toughness": "5",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Strategic Intervention": {
       "types": "Enchantment",
@@ -1890,7 +2006,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Super Suit": {
       "types": "Artifact - Equipment",
@@ -1915,7 +2032,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "T'Chaka, Venerable King": {
       "types": "Legendary Creature - Human Noble Hero",
@@ -1923,7 +2041,8 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "T'Challa, the Black Panther": {
       "types": "Legendary Creature - Human Noble Hero",
@@ -1931,7 +2050,8 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Thallid": {
       "types": "Creature - Fungus",
@@ -1947,7 +2067,8 @@
       "power": "5",
       "toughness": "6",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Thriving Heath": {
       "types": "Land",
@@ -1996,7 +2117,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Unliving Legionnaire": {
       "types": "Creature - Vampire Villain",
@@ -2015,7 +2137,22 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "INDESTRUCTIBLE",
+        "EQUIP"
+      ]
+    },
+    "Vibranium Token": {
+      "types": "Artifact - Vibranium",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": true,
+      "setCode": "MSC",
+      "keywords": [
+        "INDESTRUCTIBLE"
+      ]
     },
     "Villainous Hideout": {
       "types": "Land",
@@ -2041,7 +2178,10 @@
       "power": "3",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "HASTE"
+      ]
     },
     "Volcano Hellion": {
       "types": "Creature - Hellion",
@@ -2057,7 +2197,10 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Wakandan Shield Guard": {
       "types": "Creature - Human Soldier",
@@ -2065,15 +2208,17 @@
       "power": "1",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Wakandan Tusker": {
       "types": "Creature - Elephant",
-      "manaCost": "{1}{GW}",
+      "manaCost": "{1}{G/W}",
       "power": "2",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Warriors of Wakanda": {
       "types": "Creature - Human Warrior",
@@ -2081,7 +2226,10 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "TRAMPLE"
+      ]
     },
     "Wasp, Shrinking Savior": {
       "types": "Legendary Creature - Human Hero",
@@ -2089,7 +2237,10 @@
       "power": "1",
       "toughness": "3",
       "token": false,
-      "setCode": "MSC"
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Web Up": {
       "types": "Enchantment",
@@ -2113,7 +2264,10 @@
       "power": "2",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "HASTE"
+      ]
     },
     "White Widow, Yelena Belova": {
       "types": "Legendary Creature - Human Assassin Villain",
@@ -2121,7 +2275,10 @@
       "power": "1",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "DEATHTOUCH"
+      ]
     },
     "Wolverine, Fierce Fighter": {
       "types": "Legendary Creature - Mutant Berserker Hero",
@@ -2129,7 +2286,10 @@
       "power": "3",
       "toughness": "5",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "HASTE"
+      ]
     },
     "Woodwork Prodigy": {
       "types": "Creature - Cat Druid",
@@ -2145,13 +2305,16 @@
       "power": "1",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
     }
   },
   "tokens": [
     {
       "name": "Clue Token",
-      "recordings": 1
+      "recordings": 2
     },
     {
       "name": "Doombot",
@@ -2159,7 +2322,7 @@
     },
     {
       "name": "Hero Token",
-      "recordings": 4
+      "recordings": 6
     },
     {
       "name": "Robot Token",
@@ -2171,7 +2334,11 @@
     },
     {
       "name": "Soldier Token",
-      "recordings": 7
+      "recordings": 9
+    },
+    {
+      "name": "Vibranium Token",
+      "recordings": 1
     }
   ],
   "missing": [
@@ -2201,77 +2368,15 @@
     "Your Fate Ends Here"
   ],
   "engine": [
-    "Abomination, Irradiated Brute",
-    "Abomination, Terrifying Titan",
-    "Atlas, Sizable Stooge",
     "Austere Command",
     "Avengers: Under Siege",
-    "Birds of Paradise",
-    "Birnin Zana Plaza",
-    "Black Panther, Claws of Bast",
-    "Black Panther, Most Dangerous",
-    "Black Panther, Vanguard",
-    "Boomerang, Blade Flinger",
-    "Brawn, Amadeus Cho",
-    "Common Crook",
-    "Dark Fortress",
-    "Dora Milaje Elite",
-    "Dragonskull Summit",
-    "Fixer, Techno Terror",
-    "Gallant Citizen",
-    "Gamma Grotesque",
-    "Gathering Place",
     "Giant Growth",
-    "HULK SMASH!",
-    "Hell's Kitchen",
-    "Hellcat, Undying Vigilante",
-    "Hercules, Prince of Power",
     "Hidden Lair",
-    "Hulk, Brutal Brawler",
-    "Hulk, Gamma Goliath",
-    "Hulk, Strongest There Is",
-    "Hulkling, Burgeoning Bruiser",
-    "Klaw, Sonic Subjugator",
-    "Knight of Wundagore",
     "Lightning Bolt",
-    "Los Diablos Missile Base",
-    "MACH-1, Swooping Scoundrel",
-    "Moonstone, Harsh Mistress",
-    "Nakia, Wakandan Operative",
-    "Night's Whisper",
-    "Okoye, Dora Milaje Leader",
-    "Okoye, Mighty and Adored",
-    "Radioactive Man",
-    "Red Hulk",
-    "Rick Jones, Destined Sidekick",
-    "Rootbound Crag",
-    "She-Hulk, Attorney-at-Law",
-    "She-Hulk, Jade Defender",
-    "Shock",
-    "Shuri, Vibranium Technologist",
-    "Shuri, the Black Panther",
-    "Songbird, Sonic Screamer",
-    "Storm, Queen of Wakanda",
-    "Sunpetal Grove",
-    "Swords to Plowshares",
-    "T'Chaka, Venerable King",
-    "T'Challa, the Black Panther",
-    "The Masters of Evil",
     "Tiger Shark, Abyssal Hunter",
     "Titania, Proud Pummeler",
-    "Training Compound",
-    "Vibranium Energy Daggers",
-    "Volcanic Villain",
-    "Wakandan Drone Flock",
-    "Wakandan Shield Guard",
-    "Wakandan Tusker",
-    "Warriors of Wakanda",
     "Whiplash, Vengeful Engineer",
-    "Whirlwind, Killer Cyclone",
-    "White Widow, Yelena Belova",
-    "Wolverine, Fierce Fighter",
-    "Woodwork Prodigy",
-    "Yellowjacket, Heartless Marauder"
+    "Woodwork Prodigy"
   ],
   "threeD": {
     "A.I.M. Bot": "figure",
@@ -2417,6 +2522,7 @@
     "Training Compound": null,
     "Unliving Legionnaire": "figure",
     "Vibranium Energy Daggers": null,
+    "Vibranium Token": null,
     "Villainous Hideout": null,
     "Visions of Villainy": null,
     "Volcanic Villain": "figure",

@@ -316,6 +316,11 @@ const PRE_LANE_FILM = { ops: 305737, sha256: '15c943859465f837e076937ac966573d04
  */
 const POST_LANE_FILMS: Readonly<Record<string, { ops: number; sha256: string }>> = {
   'games/villain-doom-248.jsonl': { ops: 45744, sha256: '99f600b04e46f3d34d421bd683f7943c86a1e1f22a5f57a47ad5a74d5f2854c9' },
+  // More villain identity (D230): the three AI decks' recordings, each pinned to
+  // the film this tree plays over it — its own cues.json rows (D231) included.
+  'games/villain-masters-of-evil-33.jsonl': { ops: 48367, sha256: 'cd3081ed6b534ebcfc718d58285e9c15a3aaabdfa51b5d80274c4e05ef95d158' },
+  'games/villain-hulk-family-261.jsonl': { ops: 34571, sha256: 'bfc72626304bdd2ee7d5f494e74e06baf0645781fff43bfd64d6c0ec9429467e' },
+  'games/villain-wakanda-232.jsonl': { ops: 44122, sha256: '6b73640f26aa72200a491d908f56f31f3097876fb1354517b949aa0bc91f36de' },
 };
 
 test('motion: with comic FX off and on twos off, every recording plays the film it played before the lane — op for op, by digest', async () => {

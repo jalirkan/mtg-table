@@ -38,6 +38,11 @@
       "tint": "#8a7aa8",
       "_note": "Villain identity (D221): a Villain the rungs above do not claim is a PERSON — the man's body, in a dusk violet the villain shade (traits.json) darkens. Before this rung a black Human Villain had no colour rung either (figures.json has creature/W and creature/U), so Doom Legion's Crossbones, Baron Strucker, Madame Hydra, the Unliving Legionnaire and every Villain token fell to creature/* and stood as glow discs. SUBTYPE_ORDER puts `villain` after robot, scientist, spy, hero and soldier, so the Doombots stay drones, Doctor Doom and A.I.M. stand in the scientist rung's body and the HYDRA agents and troopers in the spy's and the soldier's; the card rows in traits.json dress each."
     },
+    "creature/subtype:human": {
+      "model": "agent",
+      "tint": "#c9b79c",
+      "_note": "More villain identity (D231): a Human the rungs above do not claim is a PERSON — the man's body — as D221's villain rung made a Villain one. SUBTYPE_ORDER has always listed `human` last and no archetype answered it, so a green or red Human with no other recognised word (the Hulk family's Rick Jones and Gallant Citizen, Wakanda's Warriors) fell to creature/* and stood as a glow disc. It reaches no committed recording before the three AI decks' (every earlier Human is a Spy, Scientist, Hero, Soldier or Villain first); card rows put the women in the woman's body."
+    },
     "_vehicle": "creature/subtype:vehicle is deliberately ABSENT here: a Vehicle is not a BODY. Since slice 3 (T10) it is traits.json's `subtype:vehicle` silhouette — a procedural carrier drawn over its card, crewed or not — and never a model.",
     "creature/W": {
       "model": "agent",
@@ -126,6 +131,85 @@
       "tint": "#e8dcb4",
       "token": true,
       "_note": "T8: the hero body in a paler, token gold, so a 3/2 Hero token and Wasp are the same kind of thing and not the same card. `Hero Token` is the wire's name verbatim (it would otherwise reach creature/subtype:hero)."
+    },
+    "Songbird, Sonic Screamer": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Melissa Gold — the woman's body; the villain rung alone would give her the man's."
+    },
+    "Yellowjacket, Heartless Marauder": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Rita DeMara — the woman's body."
+    },
+    "White Widow, Yelena Belova": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Yelena Belova — the woman's body."
+    },
+    "Titania, Proud Pummeler": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Mary MacPherran — the woman's body, at the scale traits.json gives her."
+    },
+    "Moonstone, Harsh Mistress": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Karla Sofen — the woman's body."
+    },
+    "Klaw, Sonic Subjugator": {
+      "model": "agent",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "More villain identity (D231): he attacks by aiming the sonic emitter that is his right arm — the library's two-handed aim, Kang the Conqueror's alias, with no pistol in his hands: his `gauntlets` burn in the sound's magenta there and attack.lunge's muzzle flash fires from them. The body is the man's, as the villain rung would give him."
+    },
+    "Hulk, Brutal Brawler": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body — the hero rung alone would give Hulk the woman's. His gamma skin, size and purple trousers are traits.json's."
+    },
+    "Hulk, Strongest There Is": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body, as Hulk, Brutal Brawler."
+    },
+    "Hulk, Gamma Goliath": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body, as Hulk, Brutal Brawler."
+    },
+    "Hercules, Prince of Power": {
+      "model": "agent",
+      "_note": "More villain identity (D231): a Demigod Warrior Hero — the man's body; the hero rung alone would give him the woman's."
+    },
+    "Hulkling, Burgeoning Bruiser": {
+      "model": "agent",
+      "_note": "More villain identity (D231): Teddy Altman, a Kree Skrull Hero — the man's body."
+    },
+    "Wolverine, Fierce Fighter": {
+      "model": "agent",
+      "_note": "More villain identity (D231): Logan, a Mutant Berserker Hero — the man's body, short (traits.json)."
+    },
+    "Birds of Paradise": {
+      "model": "insect",
+      "_note": "More villain identity (D231): the library has no bird, and its one organic flier is the insect — a Bird of Paradise stands as a small winged thing in the crowned crane's grey and white its card paints (traits.json), hovering, which is what it is on the table: a 0/1 flier. Before this row it was a glow disc (a Bird is no recognised subtype)."
+    },
+    "T'Chaka, Venerable King": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the old king — the man's body; the hero rung alone would give him the woman's."
+    },
+    "T'Challa, the Black Panther": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body, as every Black Panther below — the hero rung alone would give them the woman's."
+    },
+    "Black Panther, Claws of Bast": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body."
+    },
+    "Black Panther, Most Dangerous": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body."
+    },
+    "Black Panther, Vanguard": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body."
+    },
+    "Dora Milaje Elite": {
+      "model": "hero",
+      "_note": "More villain identity (D231): the king's guard are women — the woman's body; a Human Warrior with no hero word, the human rung alone would give them the man's."
     }
   },
   "default": {
@@ -203,6 +287,12 @@
       "kind": "circuit",
       "strength": 0.9,
       "_note": "T12: bold circuit traces over the body, pulsing. 315 frame-instances."
+    },
+    "Vibranium Energy Daggers": {
+      "kind": "glints",
+      "metal": true,
+      "strength": 0.9,
+      "_note": "More villain identity (D231): Wakanda's Equipment — the S.H.I.E.L.D. Spy Kit's gadget glints (T12's `glints`, metal-cooled) as the daggers' vibranium edges orbiting at the host's hands, where the equipment rung alone gave it the plain metallic halo. A shared overlay kind, so no new draw call on a table where the Spy Kit is."
     },
     "subtype:aura": {
       "kind": "halo",

@@ -10085,3 +10085,164 @@ over the corpus made hostile with an ungated control that would leak.
 - **Importing the workshop's catalog into the arena** to know whether a card is
   listed. D102 keeps the arena free of `workshop/`; the workshop says when a name
   is not listed.
+
+---
+
+## D230 — The three other AI decks each join the corpus with a recording chosen by census, every asserted count moves to the new truth, and five things the new tables showed are fixed or held with their numbers
+
+*Branch `more-villain-identity`; the lane's reserved range D230–D234.*
+
+**2026-09-29** (the brief: the Masters of Evil, the Hulk family and Wakanda — the
+three AI decks the more-villains lane added, D116 — had no committed recording, so
+their 67 names had no facts in the workshop and nothing in the corpus to hold an
+identity row to; villain identity's follow-up 1)
+
+**Decision.**
+
+1. **Three recordings are committed**, one per deck, each by `RecordMatch` (M1's
+   recorder, default policy, no `--probe`, no `--match`) with seat 0 = the AI deck
+   and seat 1 = `decks/pacho-shield.dck`, seen from seat 0, recorded alone on this
+   tree (M49's wire: every full card carries `keywords`):
+   `fixtures/games/villain-masters-of-evil-33.jsonl`,
+   `villain-hulk-family-261.jsonl` and `villain-wakanda-232.jsonl`. Each passes
+   `tools/check-redaction.mjs` with no flags.
+2. **Each seed was chosen by census** over seeds 1–300 of its deck (900 games):
+   the most of the deck's names face up first, then the most of its creatures on
+   the table, then the smaller file and the smaller crowd. The Masters of Evil 22
+   of 27 face up (no seed showed all 27) and 14 of 17 creatures on the table, the
+   most of any seed; the Hulk family and Wakanda all 24 of 24 face up, with 13 of
+   18 and 15 of 17 on the table (`docs/evidence/more-villain-identity.md` §1 has
+   the runners-up and why they lost).
+3. **They are corpus members like any other**: every sweep that globs
+   `fixtures/games/` reads them, every count a test asserted moved to the new truth
+   in the same change (evidence §3), and each carries a classic-film pin of its own
+   in `motion.test.ts`'s `POST_LANE_FILMS` (`PRE_LANE_FILM` and
+   `villain-doom-248`'s pin hold op for op). **Nothing compares a fresh recording
+   to them**: steps 6 and 9b name the seed-42 files.
+4. **What the new tables showed**, each measured on the recording that showed it:
+   - **A squad over the figure budget is a disc, and no swarm** (`figures/pose.ts`):
+     *The Masters of Evil*, the corpus's first squad past `MAX_FIGURES`, drew the
+     disc with a squad's `swarm` and a disc's width.
+   - **A card's arrival and another event's cue of the same id play once — the
+     arrival** (the queue's rule 6b): Pacho's A.I.M. Scientists entered and
+     connived in one snapshot, and two `fx.hologram`s composed into one twice as
+     strong. No old film moved.
+   - **A snapshot that runs ahead of its own zone event is held, not fixed**: Web
+     Up exiling Moonstone — the frame holds her in exile and the trigger on the
+     stack, and her `zone` event comes a batch later, so the departure (D64,
+     decided once) never draws her dying. Recording the game again alone put it
+     in the same place. `clips.test.ts` tells it apart and holds it to the one;
+     the arena change is this lane's follow-up 1.
+   - **A token sacrificed for its own ability is backed by the frame before**
+     (`fixtures.test.ts`'s `unbackedNames`): "Clue Token (86) - …" names a token
+     that ceased to exist paying for it. A token name looks one frame back — the
+     narrator's own look-behind (D123) — and no further, and every other card keeps
+     the same-frame rule; four negative controls hold both halves.
+   - **The stack's `orb` gains a second type line**: `''`, the Monarch's end-step
+     draw (an effect in the command zone, with no type line), beside D220's land.
+5. **The tiles' busiest land frame is 24** (21 before): the recordings' long games.
+
+**Rationale.** D220's reasons, three times: a row is real when a recording puts its
+card on the table, a census rather than the first seed gives the most of a deck per
+file, and a new oracle finds what the old ones could not — five findings here,
+none of them this lane's doing, three of them things a player sees. The held one
+is held because its fix is the arena's departure rule, D64's, and changing when a
+body is decided is a design change measured against every death in the corpus, not
+an identity lane's.
+
+**Rejected.** Seeds with a fuller table at the cost of size or crowd: the Hulk
+family's 269 (14 of 18 on the table, 8.3 MB against 6.0) and 187 (16 of 18, but 22
+of 24 face up); Wakanda's 284 (all 17 on the table, but 12.8 MB, 40 turns and a
+62-card table against 8.6 MB and 48). Two or more recordings per deck (the corpus's
+sweeps pay per file: the three add 21 MB to its 40). Re-recording to move the
+late zone event (it is the engine's order: a quiet machine put it in the same
+place). Widening `clips.test.ts` for every late departure, or the unbacked-name
+check for every card (each is narrowed to what was measured: one departure, and
+tokens, one frame back). Re-deriving `PRE_LANE_FILM` over all twenty-three files.
+
+---
+
+## D231 — Three decks' identity is data on the shared kit: a human rung, fifty rows, one new kind with its measured cost, and reuse first — a skin painted only where the body is transformed
+
+*Branch `more-villain-identity`; the lane's reserved range D230–D234.*
+
+**2026-09-29**
+
+**Decision.**
+
+1. **A Human is a person.** `figures.json` gains `creature/subtype:human` (the
+   man's body): `human` was always the last word of `SUBTYPE_ORDER` and no
+   archetype answered it, so a green or red Human with no other recognised word
+   stood as a glow disc. Nineteen body rows put the women the villain and human
+   rungs would stand in the man's body in the woman's (Songbird, Yellowjacket,
+   White Widow, Titania, Moonstone, the Dora Milaje) and the men the hero rung
+   would stand in the woman's in the man's (the three Hulks, Hercules, Hulkling,
+   Wolverine, T'Chaka, T'Challa, three Black Panthers); Klaw aliases `attack` to
+   `pistolDraw`; Birds of Paradise stands on the insect, the library's one organic
+   flier. Wakanda's Vibranium Energy Daggers wears the S.H.I.E.L.D. Spy Kit's
+   `glints` (an attachment row), where the equipment rung gave it the plain halo.
+2. **Fifty `traits.json` rows** — every creature the three decks name but the
+   Wakandan Tusker (an armoured elephant has no body in the library; the art rung
+   colours its disc) — each a costume, a head, a rest and props from the shared kit,
+   and **twenty-four `cues.json` rows**, each keyed off an event about THAT card
+   (`docs/evidence/more-villain-identity.md` §5 has every one). The Masters of Evil
+   are distinct villains — Zemo's hood, mask and cloak leading the team as a squad,
+   MACH-1's red lenses on a gunmetal helm, Yellowjacket's antennae helmet on Wasp's
+   wings, Radioactive Man's green glow, Titania's size, Klaw's sound at his hands;
+   the Hulk family are gamma bodies — green, red, grey-olive, up to 1.42 with the
+   strict width clamp untouched (D65); Wakanda is the black suit under the
+   panther's mask and cowl, the Dora Milaje's red and the spear.
+3. **Reuse first, and a new kind carries its measurement.** The kit grows by ONE
+   kind, the **`spear`** — planted upright at the right side on `root`, 68
+   triangles, fixed vibranium silver — worn by five Wakandan names. Measured at
+   Wakanda's worst frames it is exactly one draw call (120 → 121) and about 200
+   triangles; with T'Chaka in a long robe (the coat and its skirt, two kinds) it
+   would have put seven frames over the bench's 120, so **T'Chaka wears a cloak**,
+   a kind the Wakandan table already draws for Storm and the Shield Guard, and the
+   recording's worst is 119 — the base tree's own. Three more looks moved to kinds
+   the tables already draw: Fixer's, Klaw's and Atlas's hair and the Warriors' are
+   the man's own parted cut (the Masters of Evil's most kinds at once went 27 →
+   26). `traits.test.ts`'s `OVER_THE_LINE` holds the Masters of Evil to 26 kinds at
+   once and 12 on its most crowded frames, Wakanda to 20 and 15; the Hulk family
+   keeps every other recording's 17.
+4. **Two anchors on a person moved, each measured**: a person's `visor` stands
+   outside the head's outermost shell (no person had worn one, and inside the hair
+   it showed 2–24 px), and a person's `wings` hang from y 0.71 (0.76) so their tips
+   stay under the status strip from your seat (Songbird's reached over it by 1.8
+   px). Wasp and the Legionnaire still read from both seats.
+5. **A skin is a costume only when the body is transformed.** Every person keeps
+   the one skin tone (slice 4: a complexion is not identity data). A row paints
+   `skin` only where the skin IS the costume — gamma green, red and grey-olive, a
+   lava body, a radioactive glow, a mutant shark's hide, a cat-knight's fur, a
+   Kree-Skrull's green — fifteen rows, and `traits.test.ts`'s `TRANSFORMED_SKIN`
+   is that list, whole: a row that paints a skin and is not on it fails.
+6. **The tests read the three decks from their `.dck` files**: the census's task
+   list, the both-seats raster (every identity prop ≥ 48 px; the one-sided
+   details with partners — the Masters' cloak from the front joins Doom's in
+   `ONE_SIDED`'s cloak row, carried by the hood), a costume, rest and skin list,
+   and the cue file's name check (all five table decks and their tokens). Ten rows
+   the corpus cannot reach are `OFF_THE_TABLE`, each with why.
+
+**Rationale.** D75 and D221's rule — identity is data on shared kinds, never a model
+per card — dresses fifty more cards with one new kind, and that kind is worn by
+five names. The spear is the Dora Milaje's first read, and Wakanda's go-wide table
+is the one the budget bites; so the kind is admitted only with the call it costs
+measured where it costs it, and paid for by a reuse on the same table rather than
+by moving the line. The skin rule keeps slice 4's promise — no complexion is drawn
+from a likeness — while letting a Hulk be green, which is his costume.
+
+**Rejected.** A `staff` or `blade` kind for Boomerang's and Knight of Wundagore's
+weapons (one card's each). A `horns` kind for Boomerang's helm (a second horned
+card would make it shared — PLAN.md's villain-identity follow-up 8 — but it is a
+call on the Masters of Evil's table, at 26 kinds, for a helm the cowl already
+carries). Painting the Wakandans' or anyone's complexion (slice 4's rule, restated
+above). The spear hand-held (an anchor per rest pose, as the pistol's aim is; on
+`root` it holds in every rest and every kneel). Dropping the Masters of Evil's squad
+(2,800 triangles at `@371`; the team's first read — the triangles are this lane's
+follow-up 2 with D222's follow-up 4). The drone for Birds of Paradise (a robot's
+body is a statement about what a card is; the insect is organic). Birds of
+Paradise's extra wings (28 px from your seat at the size the status strip allows)
+and the Warriors' crop (44 px from the front), both taken off the raster's bar.
+A thinner spear: the first cut (a shaft 0.012 of a figure) showed 35 px on the
+Warriors' smaller squad leader, and the kind was thickened for every wearer (0.017)
+rather than exempted for one.

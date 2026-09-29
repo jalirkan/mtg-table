@@ -559,6 +559,21 @@ test('clips: every figure that dies over the corpus is carried by its own die re
   let snapped = 0;
   const elsewhere = new Map<string, number>();
   const unseen: string[] = [];
+  /**
+   * **A snapshot that runs ahead of its own zone event** (more villain identity,
+   * D230): the figure leaves the table in one frame and the `zone` event that
+   * moves it — and the death cue it plays — arrives in the NEXT frame's batch, so
+   * the departure is decided (D64: once, on its first frame) before its death is
+   * queued, and the body is not drawn. `villain-masters-of-evil-33` has one, and
+   * recording it again alone at a load average of 2 put it in the same place:
+   * Web Up's exile trigger resolving against Moonstone — the frame's snapshot
+   * already holds her in exile, and holds the trigger on the stack too. Held to
+   * the measured count, each one named, and PLAN.md's more-villain-identity
+   * follow-up 1 is the arena change (a departure that waits a batch for its
+   * death) that would draw it.
+   */
+  const late: string[] = [];
+  const LATE_HELD = ['games/villain-masters-of-evil-33.jsonl: card 16'];
   for (const dir of ['games/', 'synthetic/']) {
     for (const name of readdirSync(FIXTURES + dir).sort()) {
       if (!name.endsWith('.jsonl')) continue;
@@ -569,9 +584,17 @@ test('clips: every figure that dies over the corpus is carried by its own die re
       let previous: ClientState['board'] = null;
       let before: FigureLayout | null = null;
       let now = 0;
+      /** Departures with no die request, waiting to see the next batch (D230). */
+      let waiting: Array<{ cardId: number; line: string }> = [];
       for (const frame of log.frames) {
         state = reduce(state, frame);
         if (frame.type !== 'state') continue;
+        for (const w of waiting) {
+          const moved = state.events.some((e) => e.kind === 'zone' && e.cardId === w.cardId && e.from?.zone === 'battlefield');
+          if (moved) late.push(`${dir}${name}: card ${String(w.cardId)}`);
+          else unseen.push(w.line);
+        }
+        waiting = [];
         const after = figurePose(layout(state), state.board?.combat ?? null, FIGURES, { models: MODELS });
         const leaving = before === null ? [] : departedFigures(before, after);
         before = after;
@@ -597,11 +620,12 @@ test('clips: every figure that dies over the corpus is carried by its own die re
           else {
             elsewhere.set(zone, (elsewhere.get(zone) ?? 0) + 1);
             if (zone === 'graveyard' || zone === 'exile' || zone === 'gone') {
-              unseen.push(`${dir}${name}: card ${String(pose.cardId)} (${pose.modelId}) → ${zone}, no die request`);
+              waiting.push({ cardId: pose.cardId, line: `${dir}${name}: card ${String(pose.cardId)} (${pose.modelId}) → ${zone}, no die request` });
             }
           }
         }
       }
+      for (const w of waiting) unseen.push(w.line);
     }
   }
   console.log(
@@ -615,6 +639,8 @@ test('clips: every figure that dies over the corpus is carried by its own die re
   // mid-cue — every one of them a body the renderer now draws dying.
   assert.ok(died >= 10, `only ${String(died)} deaths played — the departing figure has nothing to draw`);
   assert.deepEqual(unseen, [], 'a figure went to a graveyard or exile and its card got no die request');
+  console.log(`  a snapshot ahead of its zone event (the death queued a batch late, the body not drawn; D230): ${late.join('; ') || '(none)'}`);
+  assert.deepEqual(late, LATE_HELD, 'a departure whose zone event came a batch late — held to the measured one (PLAN more-villain-identity follow-up 1)');
 });
 
 // ---------------------------------------------------------------------------

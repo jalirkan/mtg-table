@@ -209,3 +209,16 @@ primitive and a colour trace), `inspect.test.ts`'s three (the planner, the href,
 the hostile corpus sweep), two in `keys.test.ts` (the `I` row and its
 dispatcher) and one liveness clause (the inspect planner). Inside `check-all.sh`:
 **1,114 / 1,103 pass / 0 fail / 11 skipped** plus 124 vitest, twice.
+
+## More villain identity (`more-villain-identity`, off `c330942`)
+
+`npm --prefix web test` went from **1,077 `node --test` + 124 vitest (8 files)**
+on `c330942` to **1,124 + 130 (8 files)** (1,118 pass, 6 skipped standalone with a
+`dist` present): forty-five are the per-recording cases `fixtures.test.ts` and
+`story.test.ts` generate for the three new recordings, and two are the lane's own
+— the three decks' costume, rest and skin-rule list (`traits.test.ts`) and the
+unbacked-name check's negative controls (`fixtures.test.ts`) — with the census's
+task list, the raster, the kind budgets, the corpus counts and the film pins
+extended in place; vitest's six more are `story-render`'s and `render.test.tsx`'s
+per-fixture cases for the three recordings. Inside `check-all.sh`:
+**1,139 / 1,131 pass / 0 fail / 8 skipped**, and 130 vitest.

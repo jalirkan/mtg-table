@@ -53,11 +53,14 @@ const CUES_JSON = JSON.parse(
 ) as unknown;
 /**
  * The decks `cues.json` is written for: the deck in play and the one a bare
- * `./scripts/play.sh` seats against it (villain identity, D221) — plus the
- * tokens their cards make, by the wire's own name as the corpus shows it (a
- * token has no deck line: Doctor Doom's `Doombot`).
+ * `./scripts/play.sh` seats against it (villain identity, D221), and the three
+ * AI decks match setup added (more villain identity, D231) — plus the tokens
+ * their cards make, by the wire's own name as the corpus shows it (a token has no
+ * deck line: Doctor Doom's `Doombot`).
  */
-const DECKS = ['pacho-shield.dck', 'doom-legion.dck'].map((file) => fileURLToPath(new URL(`../../decks/${file}`, import.meta.url)));
+const DECKS = ['pacho-shield.dck', 'doom-legion.dck', 'masters-of-evil.dck', 'hulk-family.dck', 'wakanda.dck'].map((file) =>
+  fileURLToPath(new URL(`../../decks/${file}`, import.meta.url)),
+);
 const CATALOG_FILE = fileURLToPath(new URL('../src/workshop/catalog.json', import.meta.url));
 
 // ---------------------------------------------------------------------------
@@ -386,7 +389,7 @@ test('cues.json: validates with no errors against the real registry', () => {
 
 test('cues.json: every card name in it is a card in the deck', () => {
   const names = deckCardNames();
-  assert.ok(names.size >= 50, `expected the two table decks' names and their tokens, saw ${String(names.size)}`);
+  assert.ok(names.size >= 110, `expected the five table decks' names and their tokens, saw ${String(names.size)}`);
   const { warnings } = validateCues(CUES_JSON, { cueIds: new Set(REGISTRY.keys()), deckNames: names });
   const typos = warnings.filter((w) => w.message.includes('no card of that name'));
   assert.deepEqual(typos, [], `cues.json names cards the deck does not have:\n${typos.map((t) => t.where).join('\n')}`);

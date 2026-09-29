@@ -4,7 +4,7 @@ These load when you work under `web/src/arena/`, on top of the root `CLAUDE.md`
 and `web/CLAUDE.md` (the board's conventions, whose M4 convention 2 this file's
 `CardPlane` mirrors). They are in the order they were written: M7's Tier 1, Tier
 2 and its three later slices, report 15's three art-direction lanes, the status
-layer, the personal tier's loader, then villain identity. The
+layer, the personal tier's loader, then villain identity and its second lane. The
 workshop (`web/src/workshop/`) draws with this directory's code, and its own
 conventions are `web/CLAUDE.md`'s *Workshop*.
 
@@ -1053,16 +1053,21 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.
 
-## Villain identity — the conventions D220–D222 added
+## Villain identity — the conventions D220–D222 and D230–D231 added
 
-Three, and the thesis is D75's: **a villain reads as itself through data on the
+Six, and the thesis is D75's: **a villain reads as itself through data on the
 shared kit.** The Doom Legion — the deck a bare `./scripts/play.sh` seats against
 you — has a committed recording (`fixtures/games/villain-doom-248.jsonl`, D220)
 and an identity for every creature it names (D221); its crowded last turns are
-over the bench's lines before any identity is drawn (D222).
-`docs/evidence/villain-identity.md` is what was measured, and its §3 has every
-corpus count quoted in this file that moved when the corpus went from 19
-recordings to 20; PLAN.md's *Villain identity* has the status and the follow-ups.
+over the bench's lines before any identity is drawn (D222). The second lane
+(D230–D231) did the same for the three other AI decks — the Masters of Evil, the
+Hulk family and Wakanda, a recording each (`villain-masters-of-evil-33`,
+`villain-hulk-family-261`, `villain-wakanda-232`) and fifty rows — and added
+conventions 4–6. `docs/evidence/villain-identity.md` is what the first lane
+measured, and its §3 has every corpus count quoted in this file that moved when
+the corpus went from 19 recordings to 20; `docs/evidence/more-villain-identity.md`
+§3 has them again for 20 to 23. PLAN.md's *Villain identity* and *More villain
+identity* have the status and the follow-ups.
 
 1. **A Villain is a person, and the rows dress it.** `figures.json`'s
    `creature/subtype:villain` rung (the man's body) comes after robot, scientist,
@@ -1091,7 +1096,32 @@ recordings to 20; PLAN.md's *Villain identity* has the status and the follow-ups
    sweeping every frame: `tools/arena-bench.mjs` reads its counters at the end of
    a five-second sample at 4×, fifty frames past its `--index`.
 
-Three arena fixes came with the recording (D220), each a defect it was the first
+4. **A Human is a person, and a skin is a costume only when the body is
+   transformed** (D231). `figures.json`'s `creature/subtype:human` rung stands a
+   Human no earlier rung claims in the man's body — before it a green or red Human
+   stood as a glow disc. Every person wears the one skin tone; a row paints the
+   costume's `skin` slot only where the skin IS the costume (a gamma body, lava, a
+   radioactive glow, a shark's hide, a cat's fur), and `traits.test.ts`'s
+   `TRANSFORMED_SKIN` is the whole list — a row that paints a skin and is not on it
+   fails. A dark paint is lifted to navy by the comic look, so a hair colour that
+   must not read as a blue cap (the Hulks') sits over `COMIC.blackAt`.
+5. **Reuse first, and a new kind carries its measured cost** (D231). The kit's
+   one new kind for the three decks is the `spear` — planted at the right side on
+   `root`, so it holds in every rest and every kneel — admitted with its call
+   measured at Wakanda's worst frames (+1) and paid for on the same table by a
+   reuse (T'Chaka's cloak for a two-kind robe). A person's `visor` stands outside
+   the head's outermost shell, and a person's `wings` hang low enough to keep their
+   tips under the status strip; a squad over the figure budget is a disc with no
+   swarm. `OVER_THE_LINE` holds each villain recording to its own measured kinds.
+6. **The corpus's late and odd frames are named, not smoothed** (D230). A
+   snapshot that runs ahead of its own zone event (Web Up exiling Moonstone: the
+   death is queued a batch after the departure is decided) is held to its one in
+   `clips.test.ts`; a token sacrificed for its own ability is backed by the frame
+   before and no further (`fixtures.test.ts`'s `unbackedNames`); the Monarch's
+   draw is the stack's second `orb` type line. A card's arrival and another event's
+   cue of the same id play once — the arrival (the queue's rule 6b).
+
+Three arena fixes came with the first recording (D220), each a defect it was the first
 to show: the queue's rule 6 plays a land's two arrival events — its `zone` event
 onto the battlefield and its `land` event — as one arrival (every land with no
 row of its own rose twice); a wrapped rank's back row takes clicks at its card's

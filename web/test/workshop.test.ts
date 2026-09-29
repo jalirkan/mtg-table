@@ -185,12 +185,26 @@ test('workshop: a deck card the corpus never showed takes its facts from the ENG
   assert.equal(factsFromScript('Name:S.H.I.E.L.D. Helicarrier\nManaCost:4\nTypes:Artifact Vehicle\nPT:4/5')?.types, 'Artifact - Vehicle');
   assert.equal(factsFromScript('Name:Front\nTypes:Instant\nALTERNATE\nName:Back\nTypes:Creature Elf\nPT:1/1')?.types, 'Instant', 'the front face only');
   assert.equal(factsFromScript('Name:Nothing\n'), null);
-  // The cards the personal tier dresses that no committed recording ever showed face up.
+  // The cards the personal tier dresses (D196) took their facts from the engine
+  // until D230's Hulk family recording showed all 24 of that deck's names face up:
+  // the corpus wins, and they still stand on the pedestal.
   const committed = CATALOG as unknown as { engine: string[] };
   for (const name of ['Hulk, Gamma Goliath', 'Hulk, Brutal Brawler', 'Hulk, Strongest There Is']) {
-    assert.ok(committed.engine.includes(name), `${name}'s facts are not the engine's`);
+    assert.ok(!committed.engine.includes(name), `${name} is face up in villain-hulk-family-261 — the corpus wins`);
     assert.equal(CATALOG.threeD[name], 'figure', `${name} does not stand on the pedestal`);
   }
+  // The three AI decks' recordings (D230): every name of the Hulk family and of
+  // Wakanda is face up in its game, and of the Masters of Evil's 27 the engine
+  // still speaks for the five its game never drew — three creatures among them,
+  // which traits.test.ts's OFF_THE_TABLE reads the same way.
+  const namesOf = (file: string): string[] => CATALOG.decks.find((d) => d.file === file)!.cards.map((c) => c.name);
+  assert.deepEqual(namesOf('hulk-family.dck').filter((name) => committed.engine.includes(name)), []);
+  assert.deepEqual(namesOf('wakanda.dck').filter((name) => committed.engine.includes(name)), []);
+  assert.deepEqual(
+    namesOf('masters-of-evil.dck').filter((name) => committed.engine.includes(name)),
+    ['Whiplash, Vengeful Engineer', 'Lightning Bolt', 'Titania, Proud Pummeler', 'Tiger Shark, Abyssal Hunter', 'Avengers: Under Siege'],
+  );
+  assert.equal(CATALOG.threeD['Titania, Proud Pummeler'], 'figure', 'an engine-fact creature still stands on the pedestal');
   // D220: the villain recording shows Doctor Doom face up, so his facts are the
   // CORPUS's now — the same facts the engine's script gave (the formatter above).
   assert.ok(!committed.engine.includes('Doctor Doom'), 'Doctor Doom is face up in villain-doom-248 — the corpus wins');

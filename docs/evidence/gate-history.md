@@ -257,3 +257,12 @@ the gate (the gate now says which): `WSPORT=9140` **258.0 s** (48 jobs, 985.0 s
 summed, load average 2.1–16.4), exit 0 — `var/check-all-relief-fix2.log`,
 `var/check-all/20260929-052046-1765885/`. The pass added no step and no job; the
 web step and the closing line print whether the relief's Python tests ran.
+
+## *More villain identity* (D230–D231)
+
+From a deleted `bridge/out` at `GATE_JOBS=4` on branch `more-villain-identity`,
+off `c330942`: **273.4 s** at `WSPORT` 9160 and **253.1 s** at 9170, exit 0 both,
+48 jobs, `node --test` inside them 1,139 / 1,131 pass / 0 fail / 8 skipped and 130
+vitest (`var/check-all-villains2-p1.log`, `var/check-all-villains2-p2.log`). The
+lane added no step; the corpus's three new recordings are read by the steps that
+glob `fixtures/games/` (11, 12b, 12d and the web suite).

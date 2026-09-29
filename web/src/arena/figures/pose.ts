@@ -718,7 +718,14 @@ export function figurePose(
     const entry = baseId === null ? undefined : options.models?.models[baseId];
     const modelRatio = entry === undefined || entry.height <= 0 ? 0 : entry.width / entry.height;
     const bodyRatio = trait.turn !== 0 && trait.turnedRatio !== null && modelRatio > 0 ? trait.turnedRatio : modelRatio;
-    const swarm = silhouette === null && !anonymous ? trait.swarm : 0;
+    // More villain identity (D230): a SQUAD over the figure budget is a disc — its
+    // followers are its leader's body, baked (propsOf draws no `squad` without a
+    // model) — so it is no swarm either, and its width is the disc's, not a
+    // squad's span. The Masters of Evil were the corpus's first squad past
+    // `MAX_FIGURES` (villain-masters-of-evil-33); a ring's bees need no rig and
+    // keep their ring.
+    const squadless = trait.formation === 'squad' && baseId === null;
+    const swarm = silhouette === null && !anonymous && !squadless ? trait.swarm : 0;
     const formation: Formation | null = swarm > 0 ? trait.formation : null;
     let ratio = bodyRatio;
     if (formation === 'ring') ratio = swarmSpan(swarm, 'ring', SWARM_BEE_RATIO, 0);

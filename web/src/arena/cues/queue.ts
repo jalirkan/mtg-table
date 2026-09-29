@@ -222,6 +222,15 @@ function retimeStep(step: Step): void {
  *     events are one selector here** (D220): the `land` event and its `zone`
  *     event onto the battlefield name the same cue for a land with no row of its
  *     own, and it rose twice.
+ *  6b. **A card's arrival and another event's cue of the same id play once:
+ *     the arrival** (more villain identity, D230). A.I.M. Scientists cast,
+ *     resolved, entered and connived inside one snapshot of
+ *     `villain-masters-of-evil-33`: its arrival (`zone`) and its connive
+ *     counter (`counters`) both name `fx.hologram`, under two selectors, so rule
+ *     6 kept both and the two shimmers composed into one twice as strong. The
+ *     arrival is the newer truth (rule 5's reason) and carries rule 5b's gesture,
+ *     so the other gives the card up; the connive's card still flies to the hand
+ *     on its own `zone` event.
  *  7. **One card's `cast` and `resolved` that name the same cue play once**
  *     (Tier 2 slice 3). Slice 3 keyed a card's RESOLUTION to its own cue (Web
  *     Up's wrap, Wasp's beam, Quake's shockwave), and an enchantment whose spell
@@ -283,6 +292,17 @@ function suppress(cues: Cue[]): Cue[] {
     if (incumbent === undefined || (!isAimed(incumbent) && isAimed(cue))) castOrResolved.set(key, cue);
   }
 
+  // Rule 6b's arrivals: a card → the cue ids its arrival plays in this batch.
+  const arrivals = new Map<number, Set<string>>();
+  for (const cue of cues) {
+    if (!isArrival(cue)) continue;
+    for (const id of cue.targets) {
+      const ids = arrivals.get(id) ?? new Set<string>();
+      ids.add(cue.id);
+      arrivals.set(id, ids);
+    }
+  }
+
   const seen = new Set<string>();
   const claimed = new Map<string, Set<number>>();
   const out: Cue[] = [];
@@ -297,6 +317,14 @@ function suppress(cues: Cue[]): Cue[] {
     if (cue.kind === 'cast' && cue.targets.some((id) => entering.has(id))) continue;
     let targets = cue.targets;
     if (cue.kind === 'stats') targets = targets.filter((id) => !ownedByOthers.has(id));
+    // Rule 6b: another event's cue gives up a card whose arrival plays the same cue.
+    if (!isArrival(cue) && arrivals.size > 0) {
+      const kept = targets.filter((id) => arrivals.get(id)?.has(cue.id) !== true);
+      if (kept.length < targets.length) {
+        if (kept.length === 0) continue;
+        targets = kept;
+      }
+    }
 
     /**
      * **Rule 6 — one card, one cue of a kind, per batch.**

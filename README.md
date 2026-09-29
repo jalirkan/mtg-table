@@ -511,7 +511,7 @@ game down) — from a throwaway Forge home under `var/audit-deck/`; it needs a b
 |---|---|---|
 | `decks/pacho-shield.dck` (+ `.txt` as typed) | **the deck in play**: the user's W/U S.H.I.E.L.D. deck, 40 cards, MSH + MSC | plays; D14 corrects one card |
 | `decks/doom-legion.dck` | **the AI's deck** (match setup, D108): *Doom Legion*, 40 blue-black Marvel villains, MSH + MSC — what a bare `./scripts/play.sh` seats against you (*Choosing decks and the AI*, below). Its committed recording is `fixtures/games/villain-doom-248.jsonl` (D220), and every creature it names reads as itself in the arena (*Villain identity*, below) | plays |
-| `decks/masters-of-evil.dck`, `decks/hulk-family.dck`, `decks/wakanda.dck` | **three more AI decks** (more-villains, D116): black-red villain aggro, red-green gamma stompy and green-white go-wide, 40 cards each, MSH + MSC, every one written from `decks/specs/<deck>.json` by `tools/build-deck.ts` (Doom Legion's too). `--ai-deck` seats one; `config.json`'s default is still Doom Legion | play; `tools/deck-smoke.sh` plays each (not in the gate) |
+| `decks/masters-of-evil.dck`, `decks/hulk-family.dck`, `decks/wakanda.dck` | **three more AI decks** (more-villains, D116): black-red villain aggro, red-green gamma stompy and green-white go-wide, 40 cards each, MSH + MSC, every one written from `decks/specs/<deck>.json` by `tools/build-deck.ts` (Doom Legion's too). `--ai-deck` seats one; `config.json`'s default is still Doom Legion. Each has a committed recording — `fixtures/games/villain-masters-of-evil-33.jsonl`, `villain-hulk-family-261.jsonl`, `villain-wakanda-232.jsonl` (D230) — and every creature they name reads as itself in the arena (*More villain identity*, below) | play; `tools/deck-smoke.sh` plays each (not in the gate) |
 | `decks/fra-rw-aggro.dck` (+ `.txt`) | **the user's Reality Fracture pool** from the set's pre-release: red-white legends aggro, 40 main + 10 sideboard, copied from the user's own list | **does not play yet** — 19 ok, 31 missing, 0 broken. Waits for an official Forge release (D109) |
 | `docs/drafts/decks/fra-gb-leftovers.dck` | a **draft** FRA opponent for the AI: the green-black "leftovers" deck the user's own notes propose, finished to 40 with basics only (D112). Deliberately **not** in `decks/` until the user accepts it (`docs/drafts/README.md`) | does not play yet — 20 ok, 20 missing |
 | `decks/*-probe.dck` | nine probe decks: seven in the table below, plus `morph-probe` and `future-sight-probe` (*Repo layout*) | all play; each has a committed recording |
@@ -2102,6 +2102,37 @@ moved, three defects the new recording found and this change fixed, and the
 crowded table's draw calls (its last turns put 49 cards on the table, over the
 bench's lines before any villain is dressed — D222) — is
 `docs/evidence/villain-identity.md`.
+
+#### More villain identity — the Masters of Evil, the Hulk family and Wakanda (D230–D231)
+
+The three other AI decks (`--ai-deck decks/masters-of-evil.dck`,
+`decks/hulk-family.dck`, `decks/wakanda.dck`) each have a committed recording
+now, chosen by census over 300 seeds, and every creature they name reads as
+itself. Before, their creatures were bare bodies in a colour — or glow discs,
+where no rung claimed a green or red Human.
+
+| deck | what you see at the table |
+|---|---|
+| **Masters of Evil** | the team as a squad led by Zemo's purple hood, mask and cloak; MACH-1 flying on thrusters, a gunmetal helm with red lenses; Yellowjacket small and winged under Ant-Man's antennae helmet in yellow; Songbird on pink sound wings; Moonstone flying with the moonstone's light in her hands; Radioactive Man glowing green; Volcanic Villain molten, flames for hair; Titania big, red-haired, in blue; Atlas a maroon giant; Whirlwind masked and helmed on his own cyclone; Klaw's sound at his hands (he aims it to attack); White Widow in white with goggles; Fixer in red goggles at a bench of gadgets; Tiger Shark in orange under a purple finned hood; the crooks in balaclavas |
+| **Hulk family** | three Hulks, green and barefoot in torn purple trousers, the biggest people on the table; Red Hulk red; two Abominations, grey-olive and dark green; She-Hulk green in a purple suit and in her white and purple; Wolverine short, in yellow and blue, claws glinting; Brawn green in purple; Hulkling green and blond; Hercules bare-chested in green trunks; Hellcat in the yellow catsuit; the Knight of Wundagore a lion-maned cat-knight; Rick Jones in a red jacket; Gallant Citizen an astronaut in white; Birds of Paradise a small grey flier |
+| **Wakanda** | four Black Panthers in the black suit under the panther's mask — claws lit, violet with kinetic energy, cloaked as the king at the head of his army; Shuri as the Panther, with gold at her belt, and in her lab with violet gauntlets; the Dora Milaje and both Okoyes shaven, in red and gold, each with a vibranium **spear**; the Shield Guard with his blanket-shield and spear; T'Chaka white-haired in a royal cloak; Nakia in red and gold with her ring blades lit; Storm flying in white, lightning in her hands; the Drone Flock a white drone with wings; the Warriors a squad in indigo |
+
+One new kind joined the shared kit, the **spear** (five Wakandan cards wear it),
+and it was admitted with its draw call measured on Wakanda's crowded table and
+paid for there by a kind the table already draws (T'Chaka's cloak). Everything
+else is the kit the other decks already wear — a mask and cowl are Doom's, the
+wings Wasp's, the helmet Ant-Man's, the gauntlets Quake's. Only a transformed body
+paints its skin (a Hulk's green, a lava body, a radioactive glow); every person
+keeps the one skin tone. A face-down or hidden card gets none of it.
+
+**See it**: `npm --prefix web run dev`, then `#workshop` — type a deck's name in
+its search — or a game in the arena: `/?replay=games/villain-wakanda-232.jsonl#arena`
+(scrub to frame 527, 48 cards on the table),
+`/?replay=games/villain-masters-of-evil-33.jsonl#arena` (frame 371) or
+`/?replay=games/villain-hulk-family-261.jsonl#arena` (frame 427). What was
+measured — the census, every corpus count that moved, five things the new tables
+showed, and the draw calls and triangles each deck's busiest frame costs — is
+`docs/evidence/more-villain-identity.md`.
 
 ### Card library and browser — `#cards`
 
