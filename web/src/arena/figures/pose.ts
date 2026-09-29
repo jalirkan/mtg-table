@@ -273,6 +273,16 @@ export interface FigurePose {
    * (hard rule 8) — and never a slug, a file name or a card name.
    */
   personal?: string;
+  /**
+   * **The portrait standee** (**D260**): the OPAQUE id (`s0`, `s1`, …) of the
+   * standee this figure stands as — its painting's near subjects cut out of the
+   * personal tier's relief cache — or absent. Never set by `figurePose`:
+   * `arena/standee.ts`'s `dressStandees` sets it, after THE lookup's gates and
+   * the card's own art lookup, only on a face-up named figure no personal model
+   * dresses, once its textures have loaded (hard rule 8, D264) — and never a
+   * Scryfall id, a file name or a card name.
+   */
+  standee?: string;
 }
 
 /** The whole stage for one frame, keyed by card id. */

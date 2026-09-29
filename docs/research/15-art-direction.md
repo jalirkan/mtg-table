@@ -875,7 +875,8 @@ personal-only and gitignored, is a **new dated decision** for the user. The
 cheapest one worth having is Route A as a **portrait standee**: a new
 camera-facing renderer path beside `CardPlane`, for face-up cards only, with hard
 rule 8's renderer half argued for it. It is listed in §9.4 as an **optional
-personal-only follow-up, not a lane**.
+personal-only follow-up, not a lane** — *built 2026-09-29 as the personal tier's
+second renderer path, **D260**–**D264** (§9.4's note).*
 
 The comic look of §3 is independent of all of it. It would make a personal model
 look better, and it does not need one.
@@ -1099,6 +1100,20 @@ wants likeness after seeing the comic look:
   Route A, drawn beside the figure or instead of it behind a workshop toggle;
 - hard rule 8's renderer half argued for a second card-art surface;
 - NOTICE §2's "not distorted or stretched" undertaking revisited.
+
+*Built, 2026-09-29 (branch `standee`, **D260**–**D264**;
+`docs/evidence/standee.md`).* The personal tier (**D190**) was the amendment's
+home, and the relief cache (**D225**–**D228**) Route A's maps: a face-up creature
+no personal model dresses stands as its painting's near subjects, cut from the
+cache, where its CC0 body would — dev server only, `?standee=0` the A/B, the
+workshop's *personal / repo* toggle the close look. It is turned to the camera
+about the vertical on both seats (**D261**, measured against D143's facing), as
+tall as its cut under the rank slot's width clamp, kneeling as a painting can
+when tapped (**D262**), one draw call (**D263**), and allowed as a second card-art
+surface only through `CardPlane`'s own lookup after the gates (**D264**). NOTICE
+§2 is unchanged — the standee, like the relief window, is drawn only on the
+owner's machine and never in a build or a picture that leaves it; whether NOTICE
+should say so is left to the owner (PLAN.md, the personal tier's follow-ups).
 
 ---
 

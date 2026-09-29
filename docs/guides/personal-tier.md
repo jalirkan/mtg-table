@@ -8,8 +8,11 @@ relief cache: a depth map of every card's painting, and the workshop's inspect
 view drawing the painting as a window with depth — *The relief cache*, below);
 **D240**–**D241** (a dressed figure is ONE draw call — every paint in one atlas,
 *The atlas*, below — and `I` in the arena opens the inspect view on the card
-under the pointer). PLAN.md, *The personal tier*, *The relief window* and *Arena
-personal polish*, has the status and the follow-ups.*
+under the pointer); **D260**–**D264** (the portrait standee: a face-up creature
+no model dresses stands on the table as its painting's near subjects, cut from
+the relief cache — *The portrait standee*, below). PLAN.md, *The personal tier*,
+*The relief window* and *Arena personal polish*, has the status and the
+follow-ups.*
 
 ## What it is
 
@@ -572,3 +575,63 @@ npm --prefix web run dev                              # then #workshop, a card, 
 - **It writes nothing outside `personal/relief/`**: every path goes through one
   guard, and the Python step's HOME, TMPDIR and CUDA cache are pinned inside
   `personal/relief/.cache/`.
+
+## The portrait standee — the painting on the table (D260–D264)
+
+**D260** is the standee, **D261** its facing, **D262** its height and stances,
+**D263** its budget, **D264** hard rule 8's argument for it;
+`docs/evidence/standee.md` is what was measured (its pictures stay in the
+gitignored `var/standee/`). The likeness experiment's one clear result was that a
+relief cut from the card's own painting reads better at figure size than
+anything image-to-3D made — and the relief cache (above) already cuts every
+card's painting at its silhouettes. So, on the dev server, **a face-up creature
+that no personal model dresses stands on the table as its painting's near
+subjects**, cut out, where its CC0 body would stand. Nothing to download and
+nothing to prepare: every card `relief.mjs` has mapped stands.
+
+**What stands, and in what order.** A personal model wins for the cards it
+names; a standee is the fallback before the CC0 figure; a card with no map, a
+map the tool made before the keep mask (recipe 3, D228), a painting with no near
+subject (a landscape, a flat map) or a standee still loading is the CC0 figure. A
+standee stands only where a CC0 BODY would — a face-up, named creature — and
+never for a face-down card, a redacted stub, a member of a swarm or a squad, or a
+vehicle's silhouette (hard rule 8, D264).
+
+**The A/B**: `?standee=0` draws the CC0 figures with your models still on;
+`?personal=0` turns the whole tier off (models and standees); a build stands
+none. The dev server's start line says how many maps it cut: *personal relief:
+158 depth map(s) for the workshop's inspect view and 158 standee cut(s) for the
+table*.
+
+**What it is.** The dev route measures, once per map, where the standee is cut
+(`arena/standee.ts`'s `standeeCutOf`, from the map's own pixels — decoded in the
+dev server's Node process, `web/src/personal/png.ts`): the texels that stand in
+front of what they hide (the map's red over its green, where its blue keeps
+them), the box round them, and how near a texel of that box must be to belong to
+the subject. It serves the three numbers in the relief index beside the map. The
+page draws the two layers the inspect window draws — the front, cut by the keep
+mask AND by the subject, and the back behind it where a nearer part of the
+subject hides a farther one — on one mesh, turned to the camera about the
+vertical, as a relief along its own front: the painting unlit, as it is.
+
+**How tall, and how it holds a stance** (D262). A standee is as wide as its cut
+is (0.69–2.25 of its height over the deck, median 1.37), so the rank slot's width
+clamp stands a figure-shaped cut (Moonstone's) at full height and a crowd scene as
+a low frieze. Tapped, it **kneels** — a quarter of it sunk into the table and its
+top bowed toward you; summoning-sick, it is translucent; attacking and blocking,
+it stands (the lunge, the arrows and the combat bands say it); when it dies it
+**falls back on its base**, fades and greys, for as long as its death cue plays.
+Its status strip stands over its own height.
+
+**The workshop** (`#workshop`): the list badges a card the relief cache can stand
+as a *standee*, and the pedestal wears it behind the same *personal / repo*
+toggle as the models — so one card's standee can be looked at up close (its cut
+edge, its depth as the camera moves up and down).
+
+**What it costs** (D263): one draw call a standee, 1,920 triangles — about what
+the CC0 body and its props it replaces cost — its map and back image uploaded
+when it mounts and disposed with the page, its colour the very texture the card
+draws with.
+
+**It is derived from card art, so it is personal**, like the cache it reads: a
+picture of a standee stays in `var/` and goes nowhere else.

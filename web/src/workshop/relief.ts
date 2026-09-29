@@ -41,10 +41,11 @@
  * the WINDOW — the flat picture's rectangle, on its plane — so the frame stays
  * still while the painting moves behind it, as a window's does.
  *
- * **One reader of the served index**: {@link reliefIndexOf}. A map is used only
+ * **One reader of the served index**: `reliefIndexOf`, the arena's since the
+ * standee (D260; `arena/relief.ts`, re-exported here). A map is used only
  * when its file is `<id>.png`, it has a size and a back layer (`<id>.back.jpg`,
  * the same margin on every side), and it was cut with THIS art box
- * (`framing.ts`'s `ART_BOX`) — a box moved since, or a map made before the back
+ * (`ART_BOX`, `arena/relief.ts`'s, re-exported by `framing.ts`) — a box moved since, or a map made before the back
  * layer or with an older recipe (the dev route serves those without a back,
  * `perf.ts`'s `RELIEF_MAP_VERSION`), is stale, and the backdrop is flat until
  * the tool runs again, rather than a depth that no longer lines up with its
@@ -57,95 +58,15 @@
 
 import { imageUrl, lookupArt, type ArtIndex } from '../art.ts';
 import { RELIEF_DEPTH } from '../arena/perf.ts';
+import { ART_BOX, type ReliefEntry, type ReliefIndex } from '../arena/relief.ts';
 import type { WorkshopEntry } from './catalog.ts';
-import { ART_BOX, inspectLayout, type Framing, type InspectLayout, type Panel } from './framing.ts';
+import { inspectLayout, type Framing, type InspectLayout, type Panel } from './framing.ts';
 
-/** One depth map the dev route serves: `<route><file>`, the art box's size in pixels, and its back layer. */
-export interface ReliefEntry {
-  id: string;
-  file: string;
-  width: number;
-  height: number;
-  /** The back layer's colour: `<route><file>`, its size — the art box plus `margin` pixels on every side. */
-  back: { file: string; width: number; height: number; margin: number };
-}
-
-/** The served index, read: Scryfall id → map. */
-export interface ReliefIndex {
-  byId: ReadonlyMap<string, ReliefEntry>;
-  /** Maps the reader refused, and why — for the console, never for the wire. */
-  dropped: readonly string[];
-}
-
-export const EMPTY_RELIEF: ReliefIndex = Object.freeze({ byId: new Map<string, ReliefEntry>(), dropped: [] });
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-/** The box a map was cut with is THIS art box, to a millionth. */
-export function isArtBox(box: unknown): boolean {
-  if (!isRecord(box)) return false;
-  return (['left', 'right', 'top', 'bottom'] as const).every((k) => {
-    const v = box[k];
-    return typeof v === 'number' && Math.abs(v - ART_BOX[k]) < 1e-6;
-  });
-}
-
-/**
- * **THE reader of the relief index** the dev route serves
- * (`{version: 1, reliefs: {<id>: {file, width, height, box, back}}}`). Anything
- * it cannot vouch for is dropped: a key that is not a Scryfall id, a file that is
- * not `<id>.png` or a back that is not `<id>.back.jpg` (no path can be smuggled
- * through the index), a size that is not a whole number of pixels, a back whose
- * margin is not the same whole number of pixels on every side, a map cut with
- * another art box, a map made before the back layer.
- */
-export function reliefIndexOf(data: unknown): ReliefIndex {
-  if (!isRecord(data) || data['version'] !== 1 || !isRecord(data['reliefs'])) return EMPTY_RELIEF;
-  const byId = new Map<string, ReliefEntry>();
-  const dropped: string[] = [];
-  for (const [id, raw] of Object.entries(data['reliefs'])) {
-    if (!UUID.test(id) || !isRecord(raw)) {
-      dropped.push(`${id.slice(0, 40)}: not a Scryfall id`);
-      continue;
-    }
-    const { file, width, height, box } = raw;
-    if (file !== `${id}.png`) {
-      dropped.push(`${id}: its file is not ${id}.png`);
-      continue;
-    }
-    if (!Number.isInteger(width) || !Number.isInteger(height) || (width as number) <= 0 || (height as number) <= 0) {
-      dropped.push(`${id}: no size`);
-      continue;
-    }
-    if (!isArtBox(box)) {
-      dropped.push(`${id}: cut with another art box — run tools/personal/relief.mjs again`);
-      continue;
-    }
-    const back = raw['back'];
-    if (!isRecord(back) || back['file'] !== `${id}.back.jpg`) {
-      dropped.push(`${id}: made before the back layer (D227) or its keep mask (D228) — run tools/personal/relief.mjs again`);
-      continue;
-    }
-    const bw = back['width'];
-    const bh = back['height'];
-    const margin = Number.isInteger(bw) ? ((bw as number) - (width as number)) / 2 : NaN;
-    if (!Number.isInteger(bh) || !Number.isInteger(margin) || margin < 0 || (bh as number) - (height as number) !== 2 * margin) {
-      dropped.push(`${id}: its back layer is not the art box with one margin on every side`);
-      continue;
-    }
-    byId.set(id, {
-      id,
-      file,
-      width: width as number,
-      height: height as number,
-      back: { file: `${id}.back.jpg`, width: bw as number, height: bh as number, margin },
-    });
-  }
-  return { byId, dropped };
-}
+// The reader moved to the arena with the standee (D260): `arena/relief.ts` is THE
+// reader of the relief index now — the arena's standee and this inspect view both
+// read through it — and the names below are its own, re-exported so the
+// workshop's callers (and `relief.test.ts`) read it where they always did.
+export { EMPTY_RELIEF, isArtBox, reliefIndexOf, type ReliefEntry, type ReliefIndex } from '../arena/relief.ts';
 
 /** The card image the inspect view draws, and the id its depth map is keyed by. */
 export interface InspectSource {
@@ -179,7 +100,7 @@ export interface InspectPlan {
 /**
  * **The inspect view's plan** — one backdrop for a face-up card with a figure
  * and an image, and nothing for anything else. `base` is the dev route's prefix
- * (`Pedestal.tsx`'s `RELIEF_BASE`, `null` in a build, where every backdrop is
+ * (`arena/scene/reliefCache.ts`'s `RELIEF_BASE`, `null` in a build, where every backdrop is
  * flat); `on` is the toolbar's relief toggle.
  */
 export function inspectPlan(

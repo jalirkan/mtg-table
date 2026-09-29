@@ -35,7 +35,7 @@
  *  2. **The CLI's pure half** (`tools/personal/relief.mjs`): the write guard,
  *     the file names, the card selection, what counts as current (the recipe
  *     and both files), the offline and pinned environment.
- *  3. **THE reader** (`web/src/workshop/relief.ts`'s `reliefIndexOf`), the two
+ *  3. **THE reader** (`reliefIndexOf`, the arena's since the standee — `web/src/arena/relief.ts`, re-exported by `web/src/workshop/relief.ts`), the two
  *     layers' UV boxes, the window and the shaders' contract.
  */
 
@@ -705,7 +705,8 @@ test('relief: reliefIndexOf — THE reader keeps a map only when its file is <id
     },
   });
   assert.deepEqual([...index.byId.keys()], [ID_A]);
-  assert.deepEqual(index.byId.get(ID_A), { id: ID_A, file: `${ID_A}.png`, width: 410, height: 301, back: { file: `${ID_A}.back.jpg`, width: 560, height: 451, margin: 75 } });
+  // No `standee` in the entry: no cut (D260 — the reader keeps the map for the inspect view either way).
+  assert.deepEqual(index.byId.get(ID_A), { id: ID_A, file: `${ID_A}.png`, width: 410, height: 301, back: { file: `${ID_A}.back.jpg`, width: 560, height: 451, margin: 75 }, standee: null });
   assert.equal(index.dropped.length, 8);
   assert.ok(index.dropped.some((d) => /another art box/.test(d)));
   assert.equal(index.dropped.filter((d) => /made before the back layer/.test(d)).length, 2, 'no back, or a back that is not <id>.back.jpg');
@@ -749,7 +750,7 @@ test('relief: the two layers’ boxes and the window — the back grown by its m
   assert.deepEqual(front.scale, [1, 1]);
   assert.deepEqual(front.depth, [0, 0, 1, 1]);
   assert.deepEqual(front.colour, artBoxUv());
-  const entry: ReliefEntry = { id: ID_A, file: `${ID_A}.png`, width: 410, height: 301, back: { file: `${ID_A}.back.jpg`, width: 560, height: 451, margin: 75 } };
+  const entry: ReliefEntry = { id: ID_A, file: `${ID_A}.png`, width: 410, height: 301, back: { file: `${ID_A}.back.jpg`, width: 560, height: 451, margin: 75 }, standee: null };
   const back = backBoxes(entry);
   assert.deepEqual(back.scale, [560 / 410, 451 / 301]);
   assert.deepEqual(back.colour, [0, 0, 1, 1]);

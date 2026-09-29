@@ -66,6 +66,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
 
 import { PERSONAL_CALL_CAP, PERSONAL_TRI_CAP, RELIEF_MAP_VERSION } from '../arena/perf.ts';
+import type { StandeeCut } from '../arena/relief.ts';
+import { standeeCutOf } from '../arena/standee.ts';
+import { decodePng } from './png.ts';
 
 /** Where the personal tier lives, relative to the repo root (`.gitignore`'s `/personal/`). */
 export const PERSONAL_MODELS_DIR = 'personal/models';
@@ -317,9 +320,18 @@ export interface ReliefIndexEntry {
    * its blue is not the front's keep mask) — which the page draws flat.
    */
   back: { file: string; width: number; height: number } | null;
+  /**
+   * **The standee's cut** (D260): measured here, once per map file, from the
+   * map's own pixels (`arena/standee.ts`'s `standeeCutOf`) — the box round the
+   * painting's near subjects, how near a texel must be, and the share it keeps —
+   * or `null`: no back layer of this recipe (the standee draws both layers), a
+   * map this decoder does not read, or a painting with no near subject. Numbers
+   * about a depth map, never a pixel of the painting.
+   */
+  standee: StandeeCut | null;
 }
 
-/** The relief cache's index, as served (`workshop/relief.ts`'s `reliefIndexOf` reads it). */
+/** The relief cache's index, as served (`arena/relief.ts`'s `reliefIndexOf` reads it). */
 export interface ReliefIndex {
   version: 1;
   model: string | null;
@@ -337,7 +349,36 @@ export interface ReliefIndex {
  * and the timings stay on disk — the page needs none of them. No folder, or no
  * index: an empty one.
  */
-export function buildReliefIndex(dir: string): ReliefIndex {
+/**
+ * Each map's standee cut, by its path — measured once and kept while the file
+ * is the same size and age (`relief.mjs --force` rewrites it, and the next index
+ * measures it again). The index is read per request; decoding 158 maps a
+ * request would not be.
+ */
+const cutCache = new Map<string, { mtimeMs: number; size: number; cut: StandeeCut | null }>();
+
+/** **The standee cut of one map file** (D260), cached (see {@link cutCache}); `null` for anything unread. */
+export function standeeCutOfFile(file: string): StandeeCut | null {
+  let stat: { mtimeMs: number; size: number };
+  try {
+    stat = statSync(file);
+  } catch {
+    return null;
+  }
+  const kept = cutCache.get(file);
+  if (kept !== undefined && kept.mtimeMs === stat.mtimeMs && kept.size === stat.size) return kept.cut;
+  let cut: StandeeCut | null = null;
+  try {
+    const png = decodePng(readFileSync(file));
+    cut = png === null ? null : standeeCutOf(png.pixels, png.width, png.height, png.channels);
+  } catch {
+    cut = null;
+  }
+  cutCache.set(file, { mtimeMs: stat.mtimeMs, size: stat.size, cut });
+  return cut;
+}
+
+export function buildReliefIndex(dir: string, options: { cuts?: boolean } = {}): ReliefIndex {
   const out: ReliefIndex = { version: 1, model: null, reliefs: {} };
   let raw: unknown;
   try {
@@ -369,7 +410,9 @@ export function buildReliefIndex(dir: string): ReliefIndex {
       statSync(backFile).size > 0
         ? { file: `${id}.back.jpg`, width: backWidth, height: backHeight }
         : null;
-    out.reliefs[id] = { file: `${id}.png`, width, height, box: { left: left!, right: right!, top: top!, bottom: bottom! }, back };
+    // D260: a standee draws both layers and the keep mask, so only this recipe's map stands one.
+    const standee = back !== null && options.cuts !== false ? standeeCutOfFile(file) : null;
+    out.reliefs[id] = { file: `${id}.png`, width, height, box: { left: left!, right: right!, top: top!, bottom: bottom! }, back, standee };
   }
   return out;
 }
@@ -379,8 +422,9 @@ export function describeRelief(index: ReliefIndex): string {
   const all = Object.values(index.reliefs);
   const layered = all.filter((r) => r.back !== null).length;
   const stale = all.length - layered;
+  const standees = all.filter((r) => r.standee !== null).length;
   return (
-    `personal relief: ${String(all.length)} depth map(s) for the workshop's inspect view (card-art-derived, dev server only — D225)` +
+    `personal relief: ${String(all.length)} depth map(s) for the workshop's inspect view and ${String(standees)} standee cut(s) for the table (card-art-derived, dev server only — D225, D260)` +
     (stale > 0
       ? `; ${String(stale)} made before the back layer or with an older recipe than version ${String(RELIEF_MAP_VERSION)} (D227, D228), drawn flat — run tools/personal/relief.mjs --all`
       : '')
@@ -435,7 +479,7 @@ export function createPersonalMiddleware(
       const id = map?.[1] ?? '';
       const back = map?.[2] === '.back.jpg';
       const file = resolve(reliefDir, `${id}${back ? '.back.jpg' : '.png'}`);
-      const listed = map === null || !SCRYFALL_ID.test(id) ? undefined : buildReliefIndex(reliefDir).reliefs[id];
+      const listed = map === null || !SCRYFALL_ID.test(id) ? undefined : buildReliefIndex(reliefDir, { cuts: false }).reliefs[id];
       if (listed === undefined || !file.startsWith(reliefDir + '/') || (back && listed.back === null)) {
         res.statusCode = 404;
         res.end('not a served relief file (only a depth map the relief index lists, and its back layer, are)');

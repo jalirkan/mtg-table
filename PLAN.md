@@ -14,10 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 327 items still open across 35 follow-up lists** — 301
+**The index below lists 334 items still open across 35 follow-up lists** — 308
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
-its own rows on 2026-09-29 by the arena caption lane at its rebase onto the sound
-cues (it closed the story page's 1, added a list of six, and removed the two rows
+its own rows on 2026-09-29 by the portrait standee lane, which added seven (35–41
+of the personal tier's list) to the arena caption lane's count at its rebase onto
+the sound cues (it closed the story page's 1, added a list of six, and removed the two rows
 more villain identity's fix pass had left beside their replacements; the sound-cues
 lane had counted 314 across 33, which missed more villain identity's list), where
 the four paragraphs it replaced, one per merging lane, had each counted a
@@ -294,6 +295,13 @@ villain identity's rebase, were removed at the same recount.)
 | [Personal tier](#fu-personal) | 31 | open | The inspect view's art box is the modern frame's, measured once | `web/src/workshop/framing.ts` |
 | [Personal tier](#fu-personal) | 32 | open | One exposure target for every model, set on eight | `tools/personal/lib.mjs` |
 | [Personal tier](#fu-personal) | 34 | open | `arena-bench --personal` is a flag the caller must remember | `tools/arena-bench.mjs` |
+| [Personal tier](#fu-personal) | 35 | open | A standee shows no relief on a sideways drag: it turns with the camera | `web/src/arena/standee.ts` |
+| [Personal tier](#fu-personal) | 36 | open | A standee's cut is the painting's nearest things, not always its subject | `web/src/arena/standee.ts` |
+| [Personal tier](#fu-personal) | 37 | open | A landscape painting stands low under the width clamp | `web/src/arena/standee.ts` |
+| [Personal tier](#fu-personal) | 38 | open | A standee has no outline on a busy table | `web/src/arena/scene/reliefCache.ts` |
+| [Personal tier](#fu-personal) | 39 | open | The standee's frame times were benched beside another lane's load | `tools/arena-bench.mjs` |
+| [Personal tier](#fu-personal) | 40 | open | NOTICE §2 and the personal tier's derived views of card art | `NOTICE` |
+| [Personal tier](#fu-personal) | 41 | open | The likeness evidence's §10 pointer to D260 is owed on branch `likeness` | — |
 | [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
 | [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
 | [Status layer](#fu-status) | 4 | open | `g1`@316 on SwiftShader is 91 draw calls, one over the line | `tools/arena-bench.mjs` |
@@ -426,6 +434,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated and documented** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting into the gitignored `personal/relief/` (158 cards, 28.5 s, 14.4 MB); the dev route serves it; the workshop's inspect view draws the art box as a window whose vertices recede along their rays from the camera's seat, clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D226**; eight follow-ups; *The relief window*, just above *Deferred* |
 | — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated, documented and fixed once** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting, in two layers, into the gitignored `personal/relief/` (158 cards, 43.5 s, 30.45 MiB); the dev route serves it; the workshop's inspect view draws the art box as a window — the painting cut at its silhouettes, what it hides filled in behind it, both clipped to a still rectangle — clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D227**; thirteen follow-ups, one closed; *The relief window*, just above *Deferred* |
 | — | Arena personal polish: one call a dressed figure, and inspect from the table *(off the plan; the personal tier's follow-up 33)* | 1 day | **built, measured, gated and documented** on branch `arena-personal-polish` (2026-09-29), off `main`'s `9998ec5` — prepare packs every paint into one atlas (a repeating paint laid out over its UV tiles) and merges a model into ONE skinned primitive under ONE material; `check.mjs`, the dev route (from the file) and the reader each count one call a figure; the villain file's worst frame with the tier on 130 → 128 calls, the tier never over the tier off on any of its 401 frames; `I` and an inspect chip open the workshop's inspect view on the card under the pointer, face up only (a hostile corpus sweep); **D240–D241**; five follow-ups; *Arena personal polish*, just above *Deferred* |
+| — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
@@ -7454,7 +7463,7 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 `~/.forge` unchanged again.
 
 <a id="fu-personal"></a>
-### The personal tier's follow-ups — thirty-four, 2026-09-28 (1–7, 9, 11, 18, 19, 21, 25 and 33 closed; 13 and 16 partly)
+### The personal tier's follow-ups — forty-one, 2026-09-28 (1–7, 9, 11, 18, 19, 21, 25 and 33 closed; 13 and 16 partly; 35–41 the portrait standee's, 2026-09-29)
 
 **Phase 2, the loader** — **all seven closed by phase 2** (D194–D196, *Phase 2*
 below): the index and its one reader (1), the dev-only route and the build grep
@@ -7834,6 +7843,87 @@ no follow-up opened. Evidence §19.
   1,075 / 1,067 pass / 0 fail / 8 skipped and vitest 122 (8 files)
   (`var/check-all-personal2-merge-p1.log`, `-p2.log`). `~/forge` and `~/.forge`:
   unchanged.
+
+### The portrait standee — the painting on the table (2026-09-29, D260–D264)
+
+**Status: built, measured, gated and documented** on branch `standee` (the
+worktree `mtg-table-t2st`, off `main`'s `e2c337c`); the lane reserved D260–D264
+and used all five. Report 15 §9.4's optional, personal-only item, and the
+likeness experiment's recommendation (§10): a relief cut from the card's own
+painting reads better at figure size than anything image-to-3D made — and the
+relief cache (D225–D228) already cuts every card's painting at its silhouettes.
+`docs/evidence/standee.md` is what was measured (its pictures in the gitignored
+`var/standee/`), `docs/guides/personal-tier.md`'s *The portrait standee* the
+manual, `web/src/arena/CLAUDE.md`'s personal tier convention 6 the rules.
+
+- **What stands** (D260): on the dev server, a face-up creature no personal model
+  dresses, whose print the cache has cut, stands as its painting's near subjects
+  where its CC0 body would — a model, then a standee, then the CC0 figure;
+  `?standee=0` (or `?personal=0`) the A/B, a build none. The cut is measured by the
+  dev route from each map (the occluders — red over green where the keep mask keeps
+  — their box, and a depth that counts as near), served in the relief index; 158
+  cuts of 158 maps. The relief index's reader, `ART_BOX`, the route's name and the
+  loaders moved to the arena (`arena/relief.ts`, `scene/reliefCache.ts`), the
+  workshop downstream (D102).
+- **How it faces** (D261): turned to the camera about the vertical, both seats —
+  under D143's facing your own seat's standees show the camera their painting 0
+  times in 7,341; turned, the least subject at 1× from the table view is 403 px on
+  your seat and 345 on the opponent's (the bar is 48).
+- **How tall, and its stances** (D262): its cut's aspect under the width clamp
+  (0.32–0.85 of the nominal, median 0.53); tapped, a quarter sunk and bowed toward
+  the lens (standing ÷ tapped ≥ 1.37 from the table view; leaning back, refused,
+  reads 1.67× taller); sick translucent; the death D64's body, falling back on its
+  base.
+- **The budget** (D263): one mesh of two sheets, ONE draw call and 1,920 triangles a
+  standee; over eleven crowded frames every table draws 2–17 calls FEWER with
+  standees, and within about ±250 triangles a standee of the body it replaces;
+  its triangles are the CC0 table's, not the personal line's.
+- **Hard rule 8** (D264): the one lookup (`standeeChoicesOf`) reads a name only
+  after the gates, through `CardPlane`'s own `artEntryFor`, and asks the relief by
+  that print — swept over every board frame of the 23 recordings made hostile,
+  with an ungated control.
+- **The workshop**: the list badges a *standee*; the pedestal wears the arena's
+  standee path behind the *personal / repo* toggle.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9320`
+**267.2 s** and `WSPORT=9330` **274.6 s**, exit 0 both, 48 jobs (995.8 s and
+1,011.5 s summed) at a load average of 3.8–13.1 beside other lanes' work,
+`node --test` 1,212 / 1,201 pass / 0 fail / 11 skipped and vitest 157 (9 files)
+(`var/check-all-standee-1.log`, `-2.log`). The relief step's three Python-step
+tests are skipped here, as in every worktree without the likeness venv.
+`~/forge` and `~/.forge`: unchanged (the pinned jar's sha256; nothing under either
+modified since the lane began).
+
+**Follow-ups 35–41** (the personal tier's list, numbered on):
+
+35. **A sideways drag shows no relief.** A standee turns with the camera about the
+    vertical (D261's price), so its depth reads only as the camera looks down on it
+    and moves up or down. A partial turn — following the camera by a fraction — is
+    the alternative to measure: parallax on a sideways drag, bought with a painting
+    seen a little obliquely.
+36. **The cut is the painting's nearest things, not always its subject.** In a
+    portrait they are the same; in a scene the foreground stands too (Bold
+    Biochemist's console, Agent 13's door). A per-card box, or a person mask from
+    another model, is the owner's call.
+37. **A landscape painting stands low.** The width clamp (D65, strict) stands a
+    median cut at 0.53 of a figure; a face in it is a few pixels at the table's
+    distance. Whether a standee may overhang its rank slot (its cut is mostly air
+    at the edges) is a look question for the owner.
+38. **No outline.** The painting is drawn unlit and unmarked (D226's reasons); on a
+    busy table an ink line or a paper border might separate it from what stands
+    behind it — measure with bloom's ink before adding one.
+39. **The frame times are not separable from the machine's load.** The bench ran
+    beside another lane's GPU work (a load average of 6–12 on sixteen threads); the
+    calls and triangles are exact-frame counts, the p50s and p95s are not a
+    comparison. Re-bench in interleaved pairs on a quiet machine.
+40. **NOTICE §2 and the tier's derived views.** NOTICE undertakes that card images
+    are not cropped or distorted; the relief window and the standee cut and
+    displace a painting — on the owner's machine only, never in a build or a
+    picture that leaves it. Whether NOTICE should say so is the owner's call (report
+    15 §9.4 asked it be revisited).
+41. **The likeness evidence's §10 is on branch `likeness`** (worktree `mtg-table-t2k`,
+    read-only to this lane): its pointer to D260 is owed there, when that branch
+    lands.
 
 ## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
 

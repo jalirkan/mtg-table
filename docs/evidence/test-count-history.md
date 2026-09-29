@@ -255,3 +255,15 @@ count before more villain identity joined it): the lane's 11 `node --test` cases
 and its 27 vitest — `arena-caption.test.tsx`'s 24 plus one per-fixture case for
 each of the three villain recordings the corpus gained. Inside `check-all.sh`:
 **1,199 / 1,188 pass / 0 fail / 11 skipped** plus 157 vitest, twice.
+
+### The portrait standee, on `e2c337c`
+
+**1,197 `node --test` + 157 vitest (9 files)** standalone (1,188 pass, 0 fail, 9
+skipped), from `e2c337c`'s **1,184 + 157**: the lane's 13 `node --test` cases —
+`standee.test.ts`'s 12 (the cut on synthetic maps, the flat and the speck, the dev
+route's PNG decoder, the reader of a served cut, the dev route measuring once per
+file, the hostile corpus sweep, the lookup on its own, the dressing and the strip,
+the facing, the tapped stance and the fall, the mesh and the program, a choice
+that carries no name) and liveness's standee clause. Inside `check-all.sh`:
+**1,212 / 1,201 pass / 0 fail / 11 skipped** plus 157 vitest,
+twice.

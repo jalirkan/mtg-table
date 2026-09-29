@@ -45,6 +45,7 @@
 import { CAMERA, REST_POSE, type Pose } from '../arena/camera.ts';
 import type { FigureLayout, FigurePose } from '../arena/figures/pose.ts';
 import { CARD_W, FIGURE_FRONT_Z, anchorsFor, placementOf, type Layout } from '../arena/layout.ts';
+import { ART_BOX } from '../arena/relief.ts';
 
 export type CameraMode = 'front' | 'close' | 'table' | 'wide' | 'inspect';
 
@@ -186,14 +187,12 @@ export function tablePixels(height: number, point: readonly [number, number, num
 // ---------------------------------------------------------------------------
 
 /**
- * **The art box of a card image**, as fractions of a Scryfall `normal` image
- * (488 × 680, the modern frame): left, right, top and bottom of the painting.
- * Measured on the frame, not per card; a full-art or showcase frame is a
- * follow-up (PLAN.md, the relief window). `tools/personal/relief.mjs` cuts its
- * depth maps with this same box and records it, so moving it makes every map
- * stale (`relief.ts`'s reader then draws the backdrop flat until the tool runs).
+ * **The art box of a card image** — `arena/relief.ts`'s since the portrait
+ * standee (D260: the arena reads a standee's colour through it and cannot import
+ * this file, D102), re-exported here, where `tools/personal/relief.mjs` and the
+ * inspect view have always found it. Moving it makes every map stale.
  */
-export const ART_BOX = Object.freeze({ left: 0.08, right: 0.92, top: 0.112, bottom: 0.555 });
+export { ART_BOX };
 /** The art box's aspect (width over height) on a 488 × 680 image. */
 export const ART_ASPECT = ((ART_BOX.right - ART_BOX.left) * 488) / ((ART_BOX.bottom - ART_BOX.top) * 680);
 /** A card's aspect (width over height). */

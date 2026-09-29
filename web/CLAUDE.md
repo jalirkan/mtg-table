@@ -126,7 +126,7 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **1,184 `node --test` + 157 vitest (9 files)** standalone on
+`npm --prefix web test` is **1,197 `node --test` + 157 vitest (9 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
 logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
@@ -406,11 +406,14 @@ picture's plane and the figure as clear of it (`INSPECT_WINDOW`, measured densel
 over every figure and every clip; a death falls through it, flat or relief). It
 is not a card — `CardPlane` still draws the card — but the inspect view's
 backdrop, built once per card at commit and drawn unlit, with no ink mark and no
-halftone. Five rules hold it: **`relief.ts` is pure and the one reader of
-the relief index**; **`inspectSourceOf` is the inspect view's one way to a card's
+halftone. Five rules hold it: **`relief.ts` is pure, and reads the index
+through the arena's one reader** (`arena/relief.ts`'s `reliefIndexOf`, re-exported
+— the arena's since the portrait standee, D260, which the pedestal wears too,
+behind the *personal / repo* toggle); **`inspectSourceOf` is the inspect view's one way to a card's
 image and so to its map**, face up only, and `workshop.test.ts` sweeps the
 catalog with a hostile copy and an ungated control; **the route is named once,
-`Pedestal.tsx`'s DEV-gated `RELIEF_BASE`**, so a build has none and draws every
+`arena/scene/reliefCache.ts`'s DEV-gated `RELIEF_BASE`** (moved from
+`Pedestal.tsx` with the standee), so a build has none and draws every
 backdrop flat; **a map is drawn only at `perf.ts`'s `RELIEF_MAP_VERSION`** (the
 dev route serves any other without its back layer, so it is flat until the tool
 runs again, rather than a blue the shader misreads); and **nothing of the relief

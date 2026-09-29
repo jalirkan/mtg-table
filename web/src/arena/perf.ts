@@ -337,3 +337,30 @@ export const RELIEF_CLIFF = 0.12;
  * `RECIPE_VERSION` is the tool's copy; `web/test/relief.test.ts` holds them equal.
  */
 export const RELIEF_MAP_VERSION = 3;
+
+/**
+ * **The portrait standee** (D260–D264; `arena/standee.ts`, `scene/standees.ts`,
+ * `docs/evidence/standee.md`): a face-up creature no personal model dresses,
+ * drawn from the relief cache as its painting's near subjects cut out — the
+ * personal tier's second renderer path, dev server only.
+ *
+ * - `STANDEE_MIN_SHARE` — the least share of the art box a cut must keep to stand
+ *   at all (a landscape, a flat map, a painting whose depth model found no near
+ *   subject stands no standee: the CC0 body stands instead).
+ * - `STANDEE_PAD_PX` — the map pixels the occluders' box is padded by: the
+ *   painted contour the keep mask keeps (D228's `contourPx`, 3).
+ * - `STANDEE_GRID` / `STANDEE_BACK_GRID` — the two sheets of the one mesh (D263):
+ *   the FRONT's segments across and down over the cut's box, and the BACK's. At
+ *   figure size a standee is 40–110 px tall at 1600 × 1000, so the front's 32 × 24
+ *   puts a vertex every 2–5 px of it; the back only fills what a nearer part of the
+ *   subject hides, so it is coarser. `1,536 + 384 = 1,920` triangles a standee,
+ *   in ONE draw call.
+ * - `STANDEE_FACES_CAMERA` — the facing (D261, measured from the seat-safe views):
+ *   `true` turns every standee's front to the camera about the vertical, the
+ *   opponent's included — a painting has no back to show.
+ */
+export const STANDEE_MIN_SHARE = 0.03;
+export const STANDEE_PAD_PX = 3;
+export const STANDEE_GRID: readonly [number, number] = Object.freeze([32, 24] as [number, number]);
+export const STANDEE_BACK_GRID: readonly [number, number] = Object.freeze([16, 12] as [number, number]);
+export const STANDEE_FACES_CAMERA = true;

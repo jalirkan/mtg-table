@@ -187,6 +187,10 @@ test('personal-tier: git ignores personal/ and everything under it', { skip: ins
     'personal/relief/1f98293e-9d94-4185-8546-8beaf281dfa3.png',
     'personal/relief/source/1f98293e-9d94-4185-8546-8beaf281dfa3.jpg',
     'personal/relief/.cache/tmp/x',
+    // The portrait standee (D260): its pictures and the scratch that made them stay in var/,
+    // like every picture of the tier (they show card art cut from the relief cache).
+    'var/standee/g1-316-table-you-on.png',
+    'var/standee/shot.mjs',
   ]) {
     assert.equal(lib.gitIgnores(path), true, `${path} is NOT ignored — a personal model could be committed by \`git add -A\``);
   }
@@ -203,6 +207,12 @@ test('personal-tier: the negative control — the pipeline and its docs are NOT 
     'tools/personal/relief.mjs',
     'tools/personal/relief_depth.py',
     'web/src/workshop/relief.ts',
+    // D260: the standee's code — the arena's, committed; only what it draws from is personal.
+    'web/src/arena/standee.ts',
+    'web/src/arena/relief.ts',
+    'web/src/arena/scene/reliefCache.ts',
+    'web/src/personal/png.ts',
+    'docs/evidence/standee.md',
     'docs/guides/personal-tier.md',
     'web/test/personal-tier.test.ts',
   ]) {
@@ -210,6 +220,12 @@ test('personal-tier: the negative control — the pipeline and its docs are NOT 
   }
   const tracked = execFileSync('git', ['ls-files', '--', 'personal'], { cwd: REPO, encoding: 'utf8' }).trim();
   assert.equal(tracked, '', `git tracks files under personal/: ${tracked}`);
+  // …nor a picture of the tier: no committed image under docs/ or anywhere but the
+  // repository's own assets (the standee's pictures, like the inspect view's, are var/'s).
+  const images = execFileSync('git', ['ls-files', '--', '*.png', '*.jpg', '*.jpeg', '*.webp'], { cwd: REPO, encoding: 'utf8' })
+    .split('\n')
+    .filter((f) => f !== '' && !f.startsWith('web/public/') && !f.startsWith('fixtures/') && !f.startsWith('docs/research/'));
+  assert.deepEqual(images, [], `a picture is committed outside the repository's own assets: ${images.join(', ')}`);
 });
 
 // ---------------------------------------------------------------------------

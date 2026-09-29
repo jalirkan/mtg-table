@@ -49,6 +49,20 @@ const failed = new Set<string>();
  */
 const resolved = new Map<string, THREE.Texture>();
 
+/**
+ * Textures the four rules were applied to WITH a renderer. The portrait standee
+ * (D260) asks for a card's image from outside the canvas, with none — so the
+ * first caller that has one (`CardPlane`) applies them then, once
+ * ({@link withRenderer}), rather than the card keeping a renderer-less upload.
+ */
+const prepared = new WeakSet<THREE.Texture>();
+
+function withRenderer(texture: THREE.Texture, gl: THREE.WebGLRenderer): THREE.Texture {
+  if (prepared.has(texture)) return texture;
+  prepared.add(texture);
+  return initTexture(texture, gl);
+}
+
 function peekTexture(url: string): THREE.Texture | null {
   return resolved.get(url) ?? null;
 }
@@ -68,11 +82,12 @@ export function initTexture(texture: THREE.Texture, gl: THREE.WebGLRenderer | nu
  */
 export function loadCardTexture(url: string, gl: THREE.WebGLRenderer | null): Promise<THREE.Texture> {
   const cached = textureCache.get(url);
-  if (cached !== undefined) return cached;
+  if (cached !== undefined) return gl === null ? cached : cached.then((texture) => withRenderer(texture, gl));
   const pending = new THREE.TextureLoader()
     .loadAsync(url)
     .then((texture) => {
       initTexture(texture, gl);
+      if (gl !== null) prepared.add(texture);
       resolved.set(url, texture);
       return texture;
     })

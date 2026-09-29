@@ -1183,11 +1183,13 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
     // and the viewport they measure pixels against, read as the mesh is drawn.
     ['StatusField.bind', bodyOf(statusField, 'bind')],
     ['StatusField.track', bodyOf(statusField, 'track')],
+    // The portrait standee (D260): a falling standee's lean, from `DepartureField.bind`.
+    ['standee.ts standeeFallOf', bodyOf(files.get('standee.ts') ?? '', 'standeeFallOf')],
   ];
   // The bodies were found, and they are the frame loop's: bind calls the rest.
   for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
   const bind = bodies[2]![1];
-  for (const callee of ['deathPending(', 'stepDeparture(', 'driveTransient(', 'departureWeight(', 'departureOpacity(', 'departureDrain(']) {
+  for (const callee of ['deathPending(', 'stepDeparture(', 'driveTransient(', 'departureWeight(', 'departureOpacity(', 'departureDrain(', 'standeeFallOf(']) {
     assert.ok(bind.includes(callee), `DepartureField.bind no longer calls ${callee} — update the body list`);
   }
   assert.ok(bodies[0]![1].includes('departures?.bind('), 'DiscField.bind no longer binds the departing bodies');
@@ -2081,9 +2083,22 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
   const namesMaterialize = (code: string): boolean => /\buMaterialize\b/.test(code);
   assert.deepEqual(
     [...files].filter(([, code]) => namesMaterialize(code)).map(([path]) => path).sort(),
-    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx', 'scene/figureMaterial.ts'],
-    'something new names uMaterialize — the loop’s one look number has two writers and one declaration',
+    ['scene/CueRunner.tsx', 'scene/FigureLayer.tsx', 'scene/figureMaterial.ts', 'scene/reliefCache.ts', 'standee.ts'],
+    'something new names uMaterialize — the loop’s one look number has two writers and two declarations (the figure’s, and the standee’s, D260)',
   );
+  // The standee's declaration (D260): its uniform in `makeStandeeMaterial` and its
+  // GLSL in `STANDEE_FRAGMENT` — the same two writers reach it through the rig.
+  const standeeScene = files.get('scene/reliefCache.ts') ?? '';
+  assert.ok(namesMaterialize(bodyOf(standeeScene, 'makeStandeeMaterial')), 'the standee material no longer declares uMaterialize');
+  const standeeUniforms = /export interface StandeeUniforms \{[\s\S]*?\n\}/.exec(standeeScene)?.[0] ?? '';
+  assert.ok(namesMaterialize(standeeUniforms), 'the standee’s uniform type no longer names uMaterialize');
+  assert.ok(
+    !namesMaterialize(standeeScene.replace(bodyOf(standeeScene, 'makeStandeeMaterial'), '').replace(standeeUniforms, '')),
+    'scene/reliefCache.ts names uMaterialize outside makeStandeeMaterial and its uniform type',
+  );
+  const standeePure = files.get('standee.ts') ?? '';
+  const fragment = /export const STANDEE_FRAGMENT = [\s\S]*?`;/.exec(standeePure)?.[0] ?? '';
+  assert.ok(namesMaterialize(fragment) && !namesMaterialize(standeePure.replace(fragment, '')), 'standee.ts names uMaterialize outside its fragment shader');
   assert.ok(namesMaterialize(runner.replace(materialize, '')) === false, 'CueRunner names uMaterialize outside applyMaterialize');
   assert.ok(namesMaterialize(layer.replace(departureBind, '')) === false, 'FigureLayer names uMaterialize outside DepartureField.bind');
   assert.ok(namesMaterialize(`${layer.replace(departureBind, '')}\nrig.material.uniforms.uMaterialize.value = 0;`), 'the uMaterialize scan misses the line it exists to catch');
@@ -2432,4 +2447,98 @@ test('liveness: sound is one module, bound from the one loop, fired by the queue
     }
     assert.deepEqual(allocationsIn(body), [], `${name} allocates on the play path`);
   }
+});
+
+/**
+ * **The portrait standee** (D260–D264): the personal tier's second renderer
+ * path — a face-up creature's painting cut from the relief cache, stood on the
+ * table from the Vite dev server alone. Six clauses, each with its control:
+ *
+ *  - the pure halves (`standee.ts`, `relief.ts`) import no three, no React, no
+ *    DOM, no storage, no clock and no request;
+ *  - the relief route is named ONCE, in `scene/reliefCache.ts`, behind
+ *    `import.meta.env.DEV` on its own line (a build carries no address of it —
+ *    `personal.test.ts` greps `dist`), and no string names a load path the
+ *    allow-list does not (the URL clause and `PATH_ALLOW` above hold every file);
+ *  - THE one place a relief map is looked up is `standeeChoicesOf`, and it asks
+ *    in the one safe order — the pose's and the placement's gates (`mayStand`),
+ *    then the card's own art lookup (`artEntryFor`, CardPlane's), then the relief
+ *    index with the print that answered — a copy with the order swapped fails;
+ *  - one reader of the index (`reliefIndexOf`, called by the loader alone), one
+ *    loader of the standees (`useStandees`), and the lookup and the dressing
+ *    called by `Arena.tsx` and nowhere else in the arena (the workshop's pedestal
+ *    calls them too, outside this scan, as it calls the personal lookup);
+ *  - the stance is written at COMMIT (`applyStandeeStance`: `FigureLayer`'s
+ *    standee and the falling body's `addStandee`), and the frame loop's one
+ *    standee number beyond a figure's is the falling body's `uLean`;
+ *  - the loop's standee bodies allocate nothing (`standeeFallOf` is in the
+ *    departing bodies' scan above; the living standee is written by
+ *    `applyFigures` and the clip lane finds no action on it).
+ */
+test('liveness: the portrait standee — pure halves, the route named once behind DEV, one place a relief map is looked up and in the safe order, one reader and one loader, the stance at commit (D260–D264)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  // 1 — pure.
+  for (const [path, allowed] of [
+    ['standee.ts', ['../art.ts', '../protocol.ts', './figures/pose.ts', './figures/types.ts', './layout.ts', './perf.ts', './relief.ts']],
+    ['relief.ts', []],
+  ] as const) {
+    const code = files.get(path) ?? '';
+    assert.ok(code.length > 1000, `arena/${path} is gone — move this clause with it`);
+    for (const imported of importsOf(code)) assert.ok((allowed as readonly string[]).includes(imported.from), `arena/${path} imports ${imported.from}: the standee's decisions are pure`);
+    assert.ok(
+      !/\b(window|document|localStorage|sessionStorage|performance|Date\.now|setTimeout|setInterval|fetch|XMLHttpRequest|THREE|useFrame|useState)\b/.test(code.replace(/\/\* glsl \*\/ `[\s\S]*?`/g, '')),
+      `arena/${path} touches the DOM, a clock, storage, three or the network`,
+    );
+  }
+  // 2 — the route, named once, behind DEV.
+  const naming = [...files].filter(([, code]) => /['"`]personal\/relief/.test(code)).map(([path]) => path);
+  assert.deepEqual(naming, ['scene/reliefCache.ts'], 'the relief route is named outside the one loader');
+  const loader = files.get('scene/reliefCache.ts') ?? '';
+  for (const line of loader.split('\n')) {
+    if (line.includes("'personal/")) assert.match(line, /import\.meta\.env\.DEV \? 'personal\//, `the relief route is named outside import.meta.env.DEV: ${line.trim()}`);
+  }
+  assert.ok(!/useGLTF|drei|\bfetch\(/.test(loader), 'the standee loader fetches or uses drei');
+  // 3 — THE one place a relief map is looked up, and its order, with a spliced control.
+  const lookups = [...files].filter(([, code]) => /\.byId\.get\(/.test(code)).map(([path]) => path);
+  assert.deepEqual(lookups, ['standee.ts'], 'a relief map is looked up outside standeeChoicesOf');
+  const pure = files.get('standee.ts') ?? '';
+  const choices = bodyOf(pure, 'standeeChoicesOf');
+  const ordered = (body: string): boolean => {
+    const gate = body.indexOf('mayStand(');
+    const art = body.indexOf('artEntryFor(');
+    const map = body.indexOf('relief.byId.get(');
+    return gate > 0 && art > gate && map > art && (body.match(/\.byId\.get\(/g) ?? []).length === 1;
+  };
+  assert.ok(ordered(choices), 'standeeChoicesOf no longer gates before it looks the art up, or the art before the relief');
+  // The controls: a lookup with no gate, one that asks the art first, one that asks the relief twice.
+  assert.equal(ordered(choices.replace('mayStand(placement, pose)', 'true')), false, 'the order check cannot see a lookup with no gate');
+  assert.equal(ordered(`\nconst early = artEntryFor(art, placement.card);\n${choices}`), false, 'the order check cannot see the art asked before the gates');
+  assert.equal(ordered(`${choices}\nrelief.byId.get(anything);`), false, 'the order check cannot see a second lookup');
+  const gateBody = bodyOf(pure, 'mayStand');
+  for (const gate of ['placement.back', 'isHidden(placement.card)', 'pose.anonymous', 'pose.modelId === null', 'pose.silhouette !== null', 'pose.swarm > 0', 'pose.vehicle', 'pose.personal !== undefined']) {
+    assert.ok(gateBody.includes(gate), `mayStand lost its gate on ${gate}`);
+  }
+  // 4 — one reader, one loader, one caller.
+  const callers = (name: string): string[] =>
+    [...files].filter(([, code]) => new RegExp(`\\b${name}\\(`).test(code.replace(new RegExp(`function ${name}\\(`, 'g'), ''))).map(([p]) => p);
+  assert.deepEqual(callers('reliefIndexOf'), ['scene/reliefCache.ts']);
+  assert.deepEqual(callers('useStandees'), ['Arena.tsx']);
+  assert.deepEqual(callers('standeeChoicesOf'), ['Arena.tsx']);
+  assert.deepEqual(callers('dressStandees'), ['Arena.tsx']);
+  assert.deepEqual(callers('standeeCutOf'), [], 'the cut is the dev route’s, measured in Node — never on the page');
+  // 5 — the stance at commit; the loop's one extra number is the falling body's lean.
+  assert.deepEqual(callers('applyStandeeStance'), ['scene/FigureLayer.tsx']);
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const field = layer.slice(layer.indexOf('class DepartureField'));
+  assert.ok(bodyOf(field, 'addStandee').includes('applyStandeeStance('), 'a falling standee no longer starts from its stance');
+  assert.ok(!bodyOf(field, 'bind').includes('applyStandeeStance('), 'the frame loop writes a stance');
+  const runner = files.get('scene/CueRunner.tsx') ?? '';
+  const writesStandee = /\buLean\b|\buSink\b|\buWash\b|\buFaceCamera\b|applyStandeeStance/;
+  assert.ok(!writesStandee.test(runner), 'CueRunner writes a standee’s stance — it is written at commit');
+  assert.ok(writesStandee.test(`${runner}\nrig.material.uniforms.uLean.value = 1;`), 'the standee-write scan misses the line it exists to catch');
+  const bind = bodyOf(field, 'bind');
+  assert.match(bind, /entry\.standee\.uniforms\.uLean\.value = /, 'a falling standee no longer falls');
+  assert.ok(!/\buSink\b|\buWash\b|\buFaceCamera\b/.test(bind), 'the frame loop writes a standee number beyond its fall');
+  // 6 — the clip lane: a standee's rig has no actions.
+  assert.match(bodyOf(layer, 'standeeRig'), /actions: new Map\(\),\s*restActions: new Map\(\),/, 'a standee rig carries actions — the clip lane would play on a painting');
 });

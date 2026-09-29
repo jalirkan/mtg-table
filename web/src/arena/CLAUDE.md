@@ -37,7 +37,10 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
    of the committed corpus. A second surface that draws its own quad is how a
    concealed name gets on screen, and a canvas has no `data-card-name` for
    `render.test.tsx` to catch it with. `CardBack.tsx` is deliberately a *texture
-   hook*, not a second renderer.
+   hook*, not a second renderer. The one exemption is the personal tier's
+   portrait standee (D264), which draws a face-up card's painting through
+   `CardPlane`'s own lookup and only after its gates (the personal tier's sixth
+   convention, below).
 3. **`layout(state)` is authoritative; a cue only ever adds an offset that decays
    to identity** (**D50**). `finalTransform = layout(state)[id] ⊕ offsets[id]`.
    `layout.ts` is pure — no three, no React, no time — and is the **only** thing
@@ -94,12 +97,13 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
 Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
-`npm run build`'s own output is the check — the 2D entry chunk is 93.52 kB gzip
-on this tree (90.40 before the status layer put its glyph kit and the tile's row
-in it), and none of it is `three`. **Since the workshop the arena's scene
+`npm run build`'s own output is the check — the 2D entry chunk is 94.68 kB gzip
+on this tree, the same bytes before and after the portrait standee (90.40 before
+the status layer put its glyph kit and the tile's row in it), and none of it is
+`three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (371.93 kB gzip
-on this tree) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (396.34 kB gzip
+on this tree, 393.36 before the standee) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
 `dist`, a `vite preview` server and a headless Chromium. Every performance number
@@ -983,14 +987,16 @@ board's `PhaseStrip` reads and sends the same `setPhaseStop`, so it is a second
 drawing of one control, not a second control; its `.arena__phases` class is in
 liveness's widget table with its `pointer-events: auto` rule.
 
-## The personal tier — the conventions D194–D198 added
+## The personal tier — the conventions D194–D198 and D260–D264 added
 
-Five, and the thesis is the tier's own sentence (**D190**): **a personal model is
+Six, and the thesis is the tier's own sentence (**D190**): **a personal model is
 a statement about what a card is, and it is drawn from the dev server alone.** The
 user's own models (`personal/models/`, gitignored, never published) dress the
 cards and the seats their manifests name, on this machine; `tools/CLAUDE.md`'s
 *The personal tier* is the pipeline that makes them, `docs/guides/personal-tier.md`
-the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
+the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured. The sixth
+is the tier's second renderer path, the portrait standee (D260–D264,
+`docs/evidence/standee.md`).
 
 1. **One reader, one lookup, one dressing — pure** (**D195**). `arena/personal.ts`
    imports no three, no React, no DOM and no clock (`liveness.test.ts`).
@@ -1052,6 +1058,42 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    than the tier off (`docs/evidence/arena-personal-polish.md`). Measure with `tools/arena-bench.mjs --personal` against the DEV server
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.
+6. **The portrait standee is the tier's second renderer path, and a second
+   card-art surface beside `CardPlane`** (**D260**–**D264**). A face-up creature
+   no personal model dresses, whose print the relief cache has cut, stands as its
+   painting's near subjects where its CC0 body would — a model, then a standee,
+   then the CC0 figure; `?standee=0` (or `?personal=0`) is the A/B. Five rules hold
+   it:
+   - **`arena/standee.ts` is pure and decides everything**: `standeeCutOf` is THE
+     cut — measured by the dev route in Node from the map's own pixels
+     (`web/src/personal/png.ts`), never on the page — and `STANDEE_FRAGMENT` draws
+     exactly its test; `standeeChoicesOf` is THE lookup; `dressStandees` the
+     dressing (an opaque `s<n>`, the cut's aspect under the width clamp, D65).
+   - **THE one place a relief map is looked up is `standeeChoicesOf`, and in
+     the one safe order** (D264): `mayStand`'s gates on the placement and the
+     pose, then `art.ts`'s `artEntryFor` — `CardPlane`'s own lookup, so a standee
+     shows nothing the card's face does not — then the relief index by that
+     print. `standee.test.ts` sweeps every board frame of the corpus made hostile
+     against an oracle, with an ungated control; liveness holds the order, with
+     spliced controls.
+   - **The relief index, its route and its loaders are the arena's**
+     (`arena/relief.ts`'s `reliefIndexOf` and `ART_BOX`; `scene/reliefCache.ts`'s
+     `RELIEF_BASE`, DEV-gated on its own line, the index, the depth maps and
+     `useStandees`), so the workshop reads them downstream (D102) and mounts the
+     same standee path on its pedestal. Call the lookup, the loader and the
+     dressing from `Arena.tsx` alone in the arena.
+   - **A standee is a figure's rig with no actions**: the frame loop writes it
+     as a figure (stand point ⊕ offset, height, `uTint`, `uOpacity`,
+     `uMaterialize`), the clip lane finds nothing to play, a `figure` beat lands on
+     its centre, its stance is written at COMMIT (`applyStandeeStance`), and its
+     death is D64's body in the same slot array, falling back on its base — the
+     frame loop's one extra number (`uLean`, `standeeFallOf`, in the allocation
+     scan).
+   - **ONE draw call a standee** (D263): the two sheets are one mesh
+     (`standeeSheets`, 1,920 triangles), the card's colour is `CardPlane`'s
+     texture, its map and back image are uploaded at mount and disposed with their
+     owner, and it faces the camera about the vertical on both seats (D261,
+     measured against D143's facing).
 
 ## Villain identity — the conventions D220–D222 and D230–D233 added
 
@@ -1154,12 +1196,16 @@ when every step back is covered, with `figure-pose.test.ts` telling a figure
 *boxed in* — nowhere clear on its card — from one standing on another card.
 The workshop's relief window (D225–D228; `web/CLAUDE.md`'s *The relief window*)
 is the personal tier's inspect backdrop, and it is not a card: nothing under
-`arena/` draws or reads it, `CardPlane` stays the one card renderer, and only its
-four numbers live here, in `perf.ts` (`RELIEF_DEPTH`, `RELIEF_GRID`, since its two
+`arena/` draws the window, `CardPlane` stays the one card renderer, and its four
+numbers live here, in `perf.ts` (`RELIEF_DEPTH`, `RELIEF_GRID`, since its two
 layers `RELIEF_CLIFF` — `tools/personal/relief.mjs` reads those two too, and
 changing either makes every map stale — and, since its keep mask,
-`RELIEF_MAP_VERSION`, which `relief.mjs`'s `RECIPE_VERSION` must equal). The arena's own card zoom has
-no window yet — PLAN.md's relief-window follow-up names where one would mount.
+`RELIEF_MAP_VERSION`, which `relief.mjs`'s `RECIPE_VERSION` must equal). Since
+the portrait standee (D260) the arena READS the relief cache — its index, its
+route and its maps are `arena/relief.ts`'s and `scene/reliefCache.ts`'s, and the
+standee draws the same two layers on the table (the personal tier's sixth
+convention, above). The arena's own card zoom has no window yet — PLAN.md's
+relief-window follow-up names where one would mount.
 
 **Inspect from the table** (**D241**) is navigation, not a renderer:
 `arena/inspect.ts`'s `inspectTargetOf` is THE planner of what the `I` row

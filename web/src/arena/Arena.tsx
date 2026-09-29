@@ -153,6 +153,8 @@ import { NO_PERSONAL_LOADED, usePersonalModels, usePersonalOverlay, type Persona
 import { isSoundChoice, sharedAudio, soundOn, type ArenaAudio, type SoundChoice } from './scene/audio.ts';
 import { loadAssetBytes } from './scene/models.ts';
 import { dressPoses, personalChoicesOf } from './personal.ts';
+import { dressStandees, standeeChoicesOf } from './standee.ts';
+import { NO_STANDEES, RELIEF_BASE, useReliefIndex, useStandees, type StandeesLoaded } from './scene/reliefCache.ts';
 import { inspectContextOf, inspectTargetOf, type InspectTarget } from './inspect.ts';
 import { FigureLayer } from './scene/FigureLayer.tsx';
 import { HitProxy } from './scene/HitProxy.tsx';
@@ -509,6 +511,7 @@ function Scene({
   look = DEFAULT_LOOK,
   composer = false,
   personal = NO_PERSONAL_LOADED,
+  standees = NO_STANDEES,
   audio = null,
 }: {
   state: ClientState;
@@ -558,6 +561,8 @@ function Scene({
   composer?: boolean;
   /** **The personal tier** (D194, D195): the loaded models, for the figure layer and the seats. */
   personal?: PersonalLoaded;
+  /** **The portrait standee** (D260): the loaded standees, for the figure layer. */
+  standees?: StandeesLoaded;
   /** **D250** — the sound renderer `CueRunner` binds once a frame (muted until the viewer says). */
   audio?: ArenaAudio | null;
 }): JSX.Element {
@@ -644,6 +649,7 @@ function Scene({
         composer={composer}
         status={strips}
         personal={personal.models}
+        standees={standees.standees}
       />
 
       {/* **T4's casting anchor and T6's stack**: the floating mana of each seat,
@@ -1070,7 +1076,32 @@ export default function Arena({
   const personalOverlay = usePersonalOverlay(personalOn);
   const personalChoices = useMemo(() => personalChoicesOf(placed, basePoses, personalOverlay), [placed, basePoses, personalOverlay]);
   const personal = usePersonalModels(personalOverlay, personalChoices);
-  const figures = useMemo(() => dressPoses(basePoses, personalChoices, personal.fits), [basePoses, personalChoices, personal.fits]);
+  const personalPoses = useMemo(() => dressPoses(basePoses, personalChoices, personal.fits), [basePoses, personalChoices, personal.fits]);
+  /**
+   * **The portrait standee** (D260–D264; the personal tier's second renderer
+   * path, dev server only): a face-up creature no personal model has taken, whose
+   * painting the relief cache has cut, stands as its painting's near subjects
+   * where its CC0 body would. THE lookup (`standeeChoicesOf`, hard rule 8's
+   * renderer half for this surface: the pose's and the placement's gates, then
+   * CardPlane's own art lookup, then the relief index) over the personal-dressed
+   * poses; a standee dresses a pose only once its textures have loaded, so a
+   * failure is the CC0 figure. `?standee=0` — or the tier off, `?personal=0` —
+   * draws the CC0 figures for the A/B; a build has no route and stands none.
+   */
+  const standeeOn = useMemo(() => {
+    try {
+      return personalOn && new URLSearchParams(window.location.search).get('standee') !== '0';
+    } catch {
+      return personalOn;
+    }
+  }, [personalOn]);
+  const relief = useReliefIndex(standeeOn);
+  const standeeChoices = useMemo(
+    () => standeeChoicesOf(placed, personalPoses, art, relief, { base: standeeOn ? RELIEF_BASE : null, taken: personalChoices }),
+    [placed, personalPoses, art, relief, standeeOn, personalChoices],
+  );
+  const standees = useStandees(standeeChoices);
+  const figures = useMemo(() => dressStandees(personalPoses, standeeChoices, standees.fits), [personalPoses, standeeChoices, standees.fits]);
   /**
    * **The status layer** (D210): every creature's strip — keyword icons, the bar,
    * pips and marks — a pure function of this frame's layout and poses, handed to
@@ -1720,6 +1751,7 @@ export default function Arena({
           look={look}
           composer={bloomOn || inkPass}
           personal={personal}
+          standees={standees}
           audio={audio}
         />
         {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three

@@ -79,20 +79,20 @@ import { TileField } from '../arena/scene/tiles.ts';
 import { EMPTY_PERSONAL, dressPoses, personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
 import { NO_PERSONAL_LOADED, type PersonalLoaded } from '../arena/scene/personalModels.ts';
 import { useCardTexture } from '../arena/scene/useCardTexture.ts';
+import { NO_STANDEES, useDepthTexture, type StandeesLoaded } from '../arena/scene/reliefCache.ts';
+import { EMPTY_RELIEF, type ReliefIndex } from '../arena/relief.ts';
+import { dressStandees, standeeChoicesOf } from '../arena/standee.ts';
 import { RELIEF_CLIFF, RELIEF_GRID } from '../arena/perf.ts';
 import { turnPoses, type PreviewStage } from './facing.ts';
 import { ART_BOX, poseFor, type CameraMode, type Framing, type Panel } from './framing.ts';
 import {
-  EMPTY_RELIEF,
   RELIEF_FRAGMENT,
   RELIEF_VERTEX,
   backBoxes,
   frontBoxes,
-  reliefIndexOf,
   windowClipOf,
   type InspectPlan,
   type LayerBoxes,
-  type ReliefIndex,
 } from './relief.ts';
 
 /** The one post pass, lazily — the arena's own `Post`, in the arena's own chunk. */
@@ -120,6 +120,15 @@ export class PedestalDirector extends CameraDirector {
 }
 
 const NO_BUSTS: DuelistBust[] = [];
+
+/** The pedestal's standee (D260): where it looks a card up, the dev route's prefix, and what has loaded. */
+export interface PedestalStandee {
+  relief: ReliefIndex;
+  base: string | null;
+  loaded: StandeesLoaded;
+}
+
+const NO_PEDESTAL_STANDEE: PedestalStandee = Object.freeze({ relief: EMPTY_RELIEF, base: null, loaded: NO_STANDEES });
 
 export interface PedestalProps {
   state: ClientState;
@@ -151,6 +160,14 @@ export interface PedestalProps {
    */
   personal?: PersonalOverlay;
   personalLoaded?: PersonalLoaded;
+  /**
+   * **The portrait standee** (D260): the relief index the pedestal looks its
+   * cards up in — the page's, or the empty one when the toolbar says "repo" (the
+   * same toggle as the models) — the dev route's prefix (`null`: none), and what
+   * has loaded (`Workshop.tsx` loads it, for the framing too). The pedestal
+   * chooses and dresses exactly as `Arena.tsx` does, after the personal models.
+   */
+  standee?: PedestalStandee;
   /**
    * **INSPECT** (D196, D226): `relief.ts`'s plan — the card image `CardPlane`
    * draws for this card (the same URL, so the same texture) for the art-box
@@ -265,6 +282,7 @@ function PedestalScene({
   look = DEFAULT_LOOK,
   personal = EMPTY_PERSONAL,
   personalLoaded = NO_PERSONAL_LOADED,
+  standee = NO_PEDESTAL_STANDEE,
   inspect = null,
   audio = null,
 }: PedestalProps & {
@@ -291,9 +309,19 @@ function PedestalScene({
   // The personal tier (D195), exactly as `Arena.tsx` dresses: THE lookup over the
   // face-up named figures, then the dressed poses once a model has loaded.
   const personalChoices = useMemo(() => personalChoicesOf(placed, basePoses, personal), [placed, basePoses, personal]);
-  const figures = useMemo(
+  const personalPoses = useMemo(
     () => dressPoses(basePoses, personalChoices, personalLoaded.fits),
     [basePoses, personalChoices, personalLoaded.fits],
+  );
+  // The portrait standee (D260), exactly as `Arena.tsx` stands it: THE lookup over
+  // the poses the personal models left, then the dressed poses once it has loaded.
+  const standeeChoices = useMemo(
+    () => standeeChoicesOf(placed, personalPoses, art, standee.relief, { base: standee.base, taken: personalChoices }),
+    [placed, personalPoses, art, standee.relief, standee.base, personalChoices],
+  );
+  const figures = useMemo(
+    () => dressStandees(personalPoses, standeeChoices, standee.loaded.fits),
+    [personalPoses, standeeChoices, standee.loaded.fits],
   );
   // The status layer (D210), exactly as `Arena.tsx` lays it out.
   const strips = useMemo(() => statusLayout(placed, figures), [placed, figures]);
@@ -432,6 +460,7 @@ function PedestalScene({
         composer={bloomOn}
         status={strips}
         personal={personalLoaded.models}
+        standees={standee.loaded.standees}
       />
       {mode === 'inspect' && inspect !== null && <InspectStage plan={inspect} />}
       <primitive object={castingField.group} />
@@ -480,110 +509,10 @@ function PedestalScene({
 // — and its frame beside it
 // ---------------------------------------------------------------------------
 
-/**
- * **The relief cache's address — DEV only** (D225): in a build this is `null`,
- * the string is not in the chunk (`personal.test.ts` greps `dist`), no index is
- * asked for and every backdrop is flat. The Vite dev server's personal route
- * (`web/src/personal/devRoute.ts`) serves the gitignored `personal/relief/` —
- * card-art-derived depth maps, never committed — and nothing else serves it.
- */
-export const RELIEF_BASE: string | null = import.meta.env.DEV ? 'personal/relief/' : null;
-
-let reliefPromise: Promise<ReliefIndex> | null = null;
-let reliefResolved: ReliefIndex | null = null;
-
-/** The relief index, once a page (three's `FileLoader`, never a `fetch` and never a poll). */
-function loadReliefIndex(): Promise<ReliefIndex> {
-  if (RELIEF_BASE === null) return Promise.resolve(EMPTY_RELIEF);
-  reliefPromise ??= new Promise<ReliefIndex>((resolve) => {
-    new THREE.FileLoader().setResponseType('json').load(
-      `${RELIEF_BASE}index.json`,
-      (data) => {
-        resolve(reliefIndexOf(data));
-      },
-      undefined,
-      () => {
-        // No route (MTG_TABLE_PERSONAL=off), no cache yet, a 404: every backdrop is flat.
-        resolve(EMPTY_RELIEF);
-      },
-    );
-  }).then((index) => {
-    reliefResolved = index;
-    if (index.dropped.length > 0) console.info(`[workshop] relief: ${index.dropped.join('; ')}`);
-    return index;
-  });
-  return reliefPromise;
-}
-
-/** **The relief index** — empty until it has loaded, and forever in a build. */
-export function useReliefIndex(): ReliefIndex {
-  const [index, setIndex] = useState<ReliefIndex>(() => reliefResolved ?? EMPTY_RELIEF);
-  useEffect(() => {
-    if (RELIEF_BASE === null) return;
-    let live = true;
-    void loadReliefIndex().then((loaded) => {
-      if (live) setIndex(loaded);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
-  return index;
-}
-
-/** URL → the depth map's upload. Module scope: one per page, as `useCardTexture`'s. */
-const depthCache = new Map<string, Promise<THREE.Texture>>();
-
-/**
- * A depth map, as the vertex shader samples it: DATA, not colour
- * (`NoColorSpace`, so the upload converts nothing), linear, no mipmaps (a vertex
- * fetch reads level 0), uploaded at once (`gl.initTexture`).
- */
-function loadDepthTexture(url: string, gl: THREE.WebGLRenderer): Promise<THREE.Texture> {
-  const cached = depthCache.get(url);
-  if (cached !== undefined) return cached;
-  const pending = new THREE.TextureLoader().loadAsync(url).then((texture) => {
-    texture.colorSpace = THREE.NoColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.wrapS = THREE.ClampToEdgeWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.needsUpdate = true;
-    gl.initTexture(texture);
-    return texture;
-  });
-  pending.catch(() => {
-    depthCache.delete(url);
-  });
-  depthCache.set(url, pending);
-  return pending;
-}
-
-function useDepthTexture(url: string | null): THREE.Texture | null {
-  const gl = useThree((s) => s.gl);
-  const invalidate = useThree((s) => s.invalidate);
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  useEffect(() => {
-    setTexture(null);
-    if (url === null) return;
-    let live = true;
-    loadDepthTexture(url, gl)
-      .then((loaded) => {
-        if (!live) return;
-        setTexture(loaded);
-        invalidate();
-      })
-      .catch(() => {
-        // A map that did not arrive: the backdrop is drawn flat, at the window.
-        if (live) setTexture(null);
-      });
-    return () => {
-      live = false;
-    };
-  }, [url, gl, invalidate]);
-  return texture;
-}
+// The relief cache's address (`RELIEF_BASE`, DEV only), its index and the
+// inspect view's depth maps are the arena's since the portrait standee (D260):
+// `arena/scene/reliefCache.ts` names the route once, for the table's standees and
+// this inspect view alike (the arena cannot import the workshop, D102).
 
 /** One plane, UV-mapped to the art box of a card image (texture v runs bottom-up). */
 function artBoxGeometry(): THREE.PlaneGeometry {

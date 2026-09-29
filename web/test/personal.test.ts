@@ -96,12 +96,13 @@ test('personal: the route is the dev server’s alone — configureServer, never
   // The arena names the route behind import.meta.env.DEV, in one module.
   const loader = readFileSync(join(REPO, 'web/src/arena/scene/personalModels.ts'), 'utf8');
   assert.match(loader, /const INDEX_URL: string \| null = import\.meta\.env\.DEV \? 'personal\/index\.json' : null;/);
-  // …and the workshop names the relief cache (D225) the same way, in one module, and nowhere else.
-  const pedestal = readFileSync(join(REPO, 'web/src/workshop/Pedestal.tsx'), 'utf8');
-  assert.match(pedestal, /export const RELIEF_BASE: string \| null = import\.meta\.env\.DEV \? 'personal\/relief\/' : null;/);
+  // …and the relief cache (D225) the same way, in one module, and nowhere else — the arena's
+  // since the portrait standee (D260): its standees and the workshop's inspect view both read it there.
+  const reliefLoader = readFileSync(join(REPO, 'web/src/arena/scene/reliefCache.ts'), 'utf8');
+  assert.match(reliefLoader, /export const RELIEF_BASE: string \| null = import\.meta\.env\.DEV \? 'personal\/relief\/' : null;/);
   const code = (file: string): string => readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   const naming = sources().filter((file) => !file.endsWith('personal/devRoute.ts') && /['"`]personal\/relief/.test(code(file)));
-  assert.deepEqual(naming.map((f) => f.slice(REPO.length)), ['web/src/workshop/Pedestal.tsx'], 'the relief route is named in one browser module, behind the DEV gate');
+  assert.deepEqual(naming.map((f) => f.slice(REPO.length)), ['web/src/arena/scene/reliefCache.ts'], 'the relief route is named in one browser module, behind the DEV gate');
 });
 
 /** Every string a personal build must not carry: the route's prefix, and any slug of this machine's folder. */
@@ -412,8 +413,8 @@ test('personal: the relief cache (D225, D227, D228) — its index read per reque
     );
     assert.deepEqual(
       body.reliefs[RELIEF_A],
-      { file: `${RELIEF_A}.png`, width: 410, height: 301, box: RELIEF_BOX, back: { file: `${RELIEF_A}.back.jpg`, width: 560, height: 451 } },
-      'the card, the source, the recipe and the timings stay on disk',
+      { file: `${RELIEF_A}.png`, width: 410, height: 301, box: RELIEF_BOX, back: { file: `${RELIEF_A}.back.jpg`, width: 560, height: 451 }, standee: null },
+      'the card, the source, the recipe and the timings stay on disk (and a map that is not a PNG stands no standee, D260)',
     );
     assert.equal(body.reliefs['44444444-4444-4444-4444-444444444444']?.['back'], null, 'a back layer that is not <id>.back.jpg is not served');
     assert.equal(
@@ -466,7 +467,7 @@ test('personal: the relief cache (D225, D227, D228) — its index read per reque
     assert.equal((await fetch(`${origin}/fixtures/games/g1.jsonl`)).status, 418, 'not ours: handed to the next middleware');
     assert.match(
       describeRelief(buildReliefIndex(reliefDir)),
-      /^personal relief: 4 depth map\(s\).*; 3 made before the back layer or with an older recipe than version 3 \(D227, D228\), drawn flat/,
+      /^personal relief: 4 depth map\(s\) for the workshop's inspect view and 0 standee cut\(s\).*; 3 made before the back layer or with an older recipe than version 3 \(D227, D228\), drawn flat/,
     );
     // No folder, or no index: an empty one, not an error.
     assert.deepEqual(buildReliefIndex(join(reliefDir, 'nowhere')), { version: 1, model: null, reliefs: {} });
@@ -806,8 +807,10 @@ test('personal: the status strip over DRESSED poses — a dressed figure keeps i
   // useMemo's first run would be in its temporal dead zone otherwise).
   for (const file of ['web/src/arena/Arena.tsx', 'web/src/workshop/Pedestal.tsx']) {
     const src = readFileSync(join(REPO, file), 'utf8');
-    const dress = src.search(/const figures = useMemo\(\s*\(\) => dressPoses\(basePoses,/);
+    // The personal models dress first, the portrait standee (D260) over what they left.
+    const dress = src.search(/const personalPoses = useMemo\(\s*\(\) => dressPoses\(basePoses,/);
+    const stand = src.search(/const figures = useMemo\(\s*\(\) => dressStandees\(personalPoses,/);
     const lay = src.search(/const strips = useMemo\(\(\) => statusLayout\(placed, figures\), \[placed, figures\]\);/);
-    assert.ok(dress >= 0 && lay > dress, `${file}: the strips are not laid out from the dressed poses`);
+    assert.ok(dress >= 0 && stand > dress && lay > stand, `${file}: the strips are not laid out from the dressed poses`);
   }
 });

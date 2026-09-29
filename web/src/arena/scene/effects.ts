@@ -1204,9 +1204,9 @@ export class EffectPool {
           gone.stand[1],
           gone.stand[2],
           gone.pose.facingY,
-          (ref.fwd ?? 0) * h,
+          gone.pose.standee !== undefined ? 0 : (ref.fwd ?? 0) * h,
           ref.at * h,
-          (ref.side ?? 0) * h,
+          gone.pose.standee !== undefined ? 0 : (ref.side ?? 0) * h,
         );
       }
       // No body: the card, where its cue has carried it — how a wrap follows a
@@ -1221,6 +1221,10 @@ export class EffectPool {
     }
     const height = pose.height * scale;
     const bob = pose.bobAmp > 0 ? pose.bobAmp * Math.sin(this.#seconds * 2 * Math.PI * pose.bobHz) : 0;
+    // A standee (D260) has no body to land a beat in front of or beside — a
+    // painting turned to the camera — so a `figure` beat lands on its centre line,
+    // at its height (`at`): `fwd` and `side` are a figure's vocabulary.
+    const flat = pose.standee !== undefined;
     // `fwd` is along the figure's FRONT and `side` toward its right hand — the
     // same front the prop field draws its eye, badge and pistol at (`layout.ts`'s
     // FIGURE_FRONT_Z, D81): one definition, so a beat lands on the prop it is about.
@@ -1232,9 +1236,9 @@ export class EffectPool {
       // The body's facing plus the cue's turn (an attacker facing its defender),
       // exactly the rotation `CueRunner.applyFigures` gives the rig.
       pose.facingY + turn,
-      (ref.fwd ?? 0) * height,
+      flat ? 0 : (ref.fwd ?? 0) * height,
       ref.at * height,
-      (ref.side ?? 0) * height,
+      flat ? 0 : (ref.side ?? 0) * height,
     );
   }
 

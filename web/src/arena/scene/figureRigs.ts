@@ -24,6 +24,7 @@ import type * as THREE from 'three';
 
 import type { FigurePose } from '../figures/pose.ts';
 import type { FigureMaterial } from './figureMaterial.ts';
+import type { StandeeMaterial } from './reliefCache.ts';
 
 export interface FigureRig {
   /** The group that carries the pose. One per figure with a model. */
@@ -65,8 +66,13 @@ export interface FigureRig {
    * moment the last cue ends.
    */
   restTime: number;
-  /** This figure's own holographic material. One program, one instance per tint. */
-  material: FigureMaterial;
+  /**
+   * This figure's own holographic material. One program, one instance per tint.
+   * A STANDEE's (D260) is its own standee material — the frame loop writes the
+   * same numbers into it (`uTint`, `uOpacity`, `uMaterialize`), and its rig has no
+   * actions, so the clip lane plays nothing on it.
+   */
+  material: FigureMaterial | StandeeMaterial;
   /** The pose of the frame currently on screen. Replaced, never merged (P5). */
   pose: FigurePose;
   /**

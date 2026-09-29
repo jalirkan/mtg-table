@@ -660,7 +660,7 @@ function spyRelief(): { index: ReliefIndex; asked: string[] } {
   const byId = {
     get(id: string): ReliefEntry {
       asked.push(id);
-      return { id, file: `${id}.png`, width: 410, height: 301, back: { file: `${id}.back.jpg`, width: 560, height: 451, margin: 75 } };
+      return { id, file: `${id}.png`, width: 410, height: 301, back: { file: `${id}.back.jpg`, width: 560, height: 451, margin: 75 }, standee: null };
     },
     has(id: string): boolean {
       asked.push(id);
@@ -1394,13 +1394,15 @@ test('liveness: one useFrame in the workshop — the renderer, after CueRunner �
   assert.match(pedestal, /<CueRunner\b/, 'the pedestal is driven by the arena’s own frame loop');
 });
 
-test('liveness: the relief window (D226, D227) — relief.ts is pure and THE reader of the relief index, called only by the pedestal’s loader; the two layers are built at commit, never in a frame loop', () => {
+test('liveness: the relief window (D226, D227) — relief.ts is pure; THE reader of the relief index and its one loader are the arena’s since the standee (D260), and no workshop module reads the index itself; the two layers are built at commit, never in a frame loop', () => {
   const files = workshopFiles();
-  const readers = files.filter((f) => /\breliefIndexOf\(/.test(f.code) && f.path !== 'relief.ts');
-  assert.deepEqual(readers.map((f) => f.path), ['Pedestal.tsx'], 'the relief index is read by one loader');
+  const readers = files.filter((f) => /\breliefIndexOf\(/.test(f.code));
+  assert.deepEqual(readers.map((f) => f.path), [], 'a workshop module reads the relief index itself — the arena’s loader is the one (D260)');
   const pedestal = files.find((f) => f.path === 'Pedestal.tsx')!.code;
-  assert.equal((pedestal.match(/reliefIndexOf\(/g) ?? []).length, 1);
-  assert.match(pedestal, /new THREE\.FileLoader\(\)\.setResponseType\('json'\)\.load\(\s*`\$\{RELIEF_BASE\}index\.json`/, 'the index is loaded with three’s FileLoader, from the DEV-gated base');
+  assert.match(pedestal, /import \{[^}]*\buseDepthTexture\b[^}]*\} from '\.\.\/arena\/scene\/reliefCache\.ts';/, 'the inspect view’s depth map comes through the arena’s loader');
+  const loader = readFileSync(fileURLToPath(new URL('../src/arena/scene/reliefCache.ts', import.meta.url)), 'utf8');
+  assert.equal((loader.match(/reliefIndexOf\(/g) ?? []).length, 1);
+  assert.match(loader, /new THREE\.FileLoader\(\)\.setResponseType\('json'\)\.load\(\s*`\$\{RELIEF_BASE\}index\.json`/, 'the index is loaded with three’s FileLoader, from the DEV-gated base');
   // InspectStage: one grid geometry per mount (both layers share it) and the two
   // materials once per card, all at commit (useMemo); no frame hook.
   const stage = pedestal.slice(pedestal.indexOf('function InspectStage('), pedestal.indexOf('const B_POSITION'));

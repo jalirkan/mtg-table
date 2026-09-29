@@ -10805,3 +10805,343 @@ of 153,501 things (0.42%, in 608 of 5,522 frames), and the bottom-centre control
 covers a hand card 11,760 times at 1600 × 944. The view-by-view figures were not
 re-measured. D255's live parity, over the same 23 logs, is 5,520 of 5,522
 snapshots, the two others still the two sideboard answers.
+
+---
+
+## D260 — The portrait standee: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache — the personal tier's second renderer path, dev server only
+
+*Branch `standee` (worktree `mtg-table-t2st`, off `main`'s `e2c337c`); the lane's
+reserved range is D260–D264 (D200).*
+
+**2026-09-29** (`docs/evidence/standee.md` is what was measured, its pictures in
+the gitignored `var/standee/`; `docs/guides/personal-tier.md`'s *The portrait
+standee* the manual; report 15 §8 and §9.4's optional item, the likeness
+experiment's §10)
+
+**Decision.**
+
+1. **What stands.** Under the personal tier (the Vite dev server, D190, D195), a
+   face-up creature whose print the relief cache has cut (D225–D228) and that no
+   personal model dresses is drawn as a STANDEE where its CC0 body would stand:
+   its painting's near subjects, cut out, at the figure's stand point, at figure
+   height. The order is **a personal model, then a standee, then the CC0 figure**
+   — a card a personal model has taken (`personalChoicesOf`'s choice, loaded or
+   loading) never stands, and a standee whose textures have not loaded (or
+   failed) is the CC0 figure. `?standee=0` draws the CC0 figures with the models
+   still on (the A/B), `?personal=0` turns the whole tier off, and a build — no
+   route — stands none. A standee stands only where a CC0 BODY would: a named,
+   modelled pose (`MAX_FIGURES` already caps those), never a disc over that cap,
+   a swarm, a silhouette or an uncrewed Vehicle.
+2. **The cut is measured, once per map, from the map** (`arena/standee.ts`'s
+   `standeeCutOf`, called by the dev route in Node). The relief map's blue is
+   D228's keep mask — the band the red was grown across, cut — not a subject's
+   silhouette, so it cannot be the cut by itself (measured: `docs/evidence/
+   standee.md` §1). A texel is an OCCLUDER where the front keeps it and it stands
+   nearer than the far side it hides (red over green) by more than
+   `RELIEF_CLIFF` — `relief_depth.py`'s own subject test, read back off the two
+   layers it wrote. The occluders' 1st–99th-percentile box, padded by the painted
+   contour (3 px) and never on the frame's line, is the standee's crop; the
+   median of what the occluders hide, plus the cliff, is how NEAR a texel must be;
+   the SUBJECT is a kept texel of the crop that is an occluder or that near.
+   Under `STANDEE_MIN_SHARE` (3% of the art box) there is no standee. The dev
+   route decodes the PNG itself (`web/src/personal/png.ts`, `node:zlib`, no
+   dependency), caches the cut per file by its size and age, and serves it in the
+   relief index beside the map (`standee: {box, near, share}` — numbers about a
+   depth map, never a pixel); a map of an older recipe (no keep mask) stands
+   none. Over the 158 maps: 158 cuts, their aspect 0.69–2.25 (median 1.37), the
+   subject 21–80% of its box (median 51%).
+3. **The page reads it through the one reader, moved to the arena.** The arena
+   cannot import the workshop (D102), so `reliefIndexOf` and `ART_BOX` moved to
+   `arena/relief.ts` (the workshop's `relief.ts` and `framing.ts` re-export them,
+   so `relief.mjs` and every workshop caller find them where they did), and the
+   route's one name (`RELIEF_BASE`, behind `import.meta.env.DEV`), the index
+   loader and the inspect view's depth-map loader moved from `workshop/Pedestal.tsx`
+   to `arena/scene/reliefCache.ts`, beside the standee loader (`useStandees`).
+   The workshop is still downstream: its pedestal mounts the arena's standee path
+   (`standeeChoicesOf`, `useStandees`, `dressStandees`, `FigureLayer`), not a
+   copy.
+4. **The renderer**: `FigureLayer` mounts a `Standee` for a pose `dressStandees`
+   dressed (an opaque `pose.standee`), registered as a rig with no actions — the
+   frame loop writes it as a figure (the stand point ⊕ the cue's offset, its
+   height as the scale, `uTint`, `uOpacity`, `uMaterialize`) and the clip lane
+   finds nothing to play. The painting is drawn unlit, as it is — no band, no
+   halftone, no ink mark (D226's reasons hold at figure size). The departing
+   body is a standee too (D262).
+
+**Rationale.** The likeness experiment's one clear result was that a relief cut
+from the card's own painting reads better at figure size than anything image-to-3D
+made, and the relief cache already holds the two layers and the cut the inspect
+window draws, for every card. Standing that cut on the table needs no new model,
+no new asset and no rig — only a second place the painting is drawn, which is
+why it lives in the personal tier with the cache it reads, and why its hard rule 8
+argument is a decision of its own (D264). Measuring the cut in the dev route,
+from the map, keeps the page free of pixel reads (`arena/art.ts` stays the
+arena's one pixel reader) and needs no change to the tool or its recipe: every
+map already on disk stands, in this checkout and the main one.
+
+**Rejected.**
+
+- **A subject mask written by `relief.mjs`** (a fourth channel, a new recipe).
+  Every map would be stale until the tool runs again in the likeness venv, and
+  the two layers already say where a subject stands in front of something.
+- **The keep mask as the cut.** It is the grown band beside each silhouette; the
+  painting outside it is kept on BOTH sides (§1's pictures).
+- **The occluder test alone.** Past the back layer's reach (D228's 80 px) green
+  eases back to the painting's own depth, so a large subject's interior reads as
+  background: Peggy's torso and the Hulk's chest come out as rings.
+- **A depth threshold alone.** A painting's floor is as near as its subject:
+  Okoye and Moonstone stand on a slab of ground the width of the painting.
+- **The whole art box standing** (a postcard). It is landscape (1.36), so the
+  width clamp stands it at 0.53 of a figure with half of it background.
+- **Reading the map's pixels on the page** (a canvas `getImageData` per card).
+  `arena/art.ts` is the arena's one pixel reader (D160's liveness clause), and a
+  cut measured in Node is measured once for every page.
+- **A standee over `MAX_FIGURES`, in place of a disc.** The budget line for
+  figures is `MAX_FIGURES`, and a standee is a figure's replacement, not an
+  addition.
+
+---
+
+## D261 — A standee turns its painting to the camera about the vertical, on both seats — measured against D143's facing from the seat-safe views
+
+*Branch `standee`; the lane's reserved range D260–D264.*
+
+**2026-09-29** (`docs/evidence/standee.md` §2; the pictures `var/standee/facing/`)
+
+**Decision.** A standee's front is turned toward the camera about the vertical,
+in its vertex shader (`STANDEE_VERTEX`: the root's position, its scale as its
+height, `cameraPosition`, the vertical kept), for every standee on both seats —
+`perf.ts`'s `STANDEE_FACES_CAMERA`. It stays upright; the pose's `facingY` and
+the cue's `dRotY` turn nothing on it (the lunge's translation and scale still
+carry it). A `figure`-anchored beat lands on its centre line at its height
+(`effects.ts`'s `#figurePoint`): `fwd` and `side` are a body's vocabulary, and a
+painting turned to the lens has no front for a muzzle to sit on.
+
+**Measured**, over a fifth of the corpus's board frames (`standee.test.ts`, the
+seat-safe views — table, shoulder, low — at 1600 × 1000): under **D143**'s
+facing (a seat's figures face the opponent) your own seat's standees show the
+camera their painted side **0 times in 7,341** and the opponent's 4,005 of
+4,005 — a painting has no back, so your side of the table would be cardboard.
+Turned to the camera, every standee shows its painting: the least subject at 1×
+from the table view is **403 px on your seat and 345 px on the opponent's**,
+counted with the least subject fill (0.2) and the widest cut (2.25× its height)
+the 158 maps measured — traits.test's bar for an identity detail is 48. (The
+pictures from views 1 to 3 at `g1`@316 put the same answer on screen.)
+
+**What it costs.** The relief is a bas-relief along the standee's own front, so
+a drag round the table turns the standee with the camera and shows no parallax
+sideways; the depth reads as the camera looks down on it (the near subjects
+over what they hide, from above) and on a drag that raises or lowers the
+camera. Recorded as the price and a follow-up (a partial turn).
+
+**Rejected.**
+
+- **D143's facing** (the opponent's standees facing you, yours showing their
+  cardboard): the measurement above.
+- **A billboard that also pitches to the camera.** An upright standee is a thing
+  standing on the table; one that tilts back as the camera rises reads as a card
+  held up, and its base leaves the table.
+- **Turning each standee once toward the view's HOME camera** (so a drag would
+  show the relief). A pose of the camera choice, re-committed on every view
+  change and on the director's every cut — and from a drag's far end a painting
+  seen edge on.
+
+---
+
+## D262 — A standee's height is its cut's, clamped by the rank slot; tapped, it kneels as a painting can — a quarter sunk and bowed toward the lens; sick is translucent; it falls on its back when it dies
+
+*Branch `standee`; the lane's reserved range D260–D264.*
+
+**2026-09-29** (`docs/evidence/standee.md` §3–§4; the pictures `var/standee/stances/`)
+
+**Decision.**
+
+1. **Height.** A standee is its cut's own aspect (the box in the map's pixels)
+   wide per unit of height, and its height is `fitHeight(pose.height, aspect)` —
+   the pose's own height (the archetype's, the card's and its attachments'
+   scale) clamped so its width stays inside the rank slot, **D65 strict**: never
+   grown, never wider than `FIGURE_MAX_WIDTH`. Over the 158 cuts the aspect is
+   0.69–2.25 (median 1.37), so at the nominal 0.85 a standee stands 0.32–0.85
+   (median 0.53). A figure-shaped cut (Moonstone's, 0.69) stands its full height;
+   a crowd scene stands as a low frieze. Cropping narrower than the subject was
+   refused (it cuts the subject at a straight edge). The status strip stands over
+   the refitted height (`statusLayout` reads the dressed pose, D210–D212), as over
+   a personal model's.
+2. **The stances on a body with no rig** (`arena/standee.ts`'s
+   `STANDEE_STANCES`, written at COMMIT by `applyStandeeStance`):
+   - **tapped** — a quarter of its height sunk into the table (cut at the
+     table's plane) and its top bowed 17° (0.3 rad) toward the lens: its
+     silhouette drops as the CC0 body's kneel does and the face still reads.
+     Measured from the table view (`standee.test.ts`): standing ÷ tapped ≥ 1.37
+     at every stand point. **Leaning back was measured and refused**: the
+     camera looks down, so a standee leaning back faces it squarely and reads
+     TALLER — 1.67× — into its own status strip (standing ÷ leaning back 0.60);
+     a deeper bow is a sliver; a sink alone reads as a picture cut in half.
+   - **summoning-sick** — the pose's translucency, as a figure's (`opacity`
+     0.72); the painting is not half hologram (the look is not the standee's).
+   - **attacking** and **blocking** — upright: the attack is the lunge cue's
+     offset and the combat bands and arrows, the block the bands and its tether.
+   - **the combat freeze** — the painting washed toward the freeze's grey (the
+     figures' §6.4 mix), written at commit.
+3. **The summon** — `uMaterialize` (D148's number, written by the same two
+   bodies of the frame loop): the painting resolves out of its card's colour as
+   the arrival ramps 0 → 1.
+4. **The death is D64's body** (`FigureLayer`'s `DepartureField.addStandee`): the
+   previous frame's standee, built at commit, in the same slot array, drawn from
+   the snapshot it dies in until its own death cue has ended — the queue's
+   decision (`stepDeparture`, `deathPending`), never a renderer that remembers —
+   stepped out of the rank that closed up (`departureStand`). Where a body plays
+   `die`, a standee falls back on its base (`standeeFallOf`: flat, 1.45 rad, by
+   0.7 of the cue, from its last stance's lean), fades and drains as a body does;
+   the lean is a number the frame loop writes, like `uDrain`.
+
+**Rationale.** Every stance is the snapshot's (D56) — tapped, sick, attacking,
+blocking, frozen — so each is a pose written when the snapshot changes, and a
+skip, a scrub and a `resync` draw it with no history. A painting cannot kneel,
+so the question was only what reads as a kneel from where the player sits; the
+table view looks down at about 40°, which decides it — anything that turns the
+painting's face up makes it bigger, and anything that lowers its top reads as
+down.
+
+**Rejected.**
+
+- **Turned 90° in its own plane** (a tapped card's gesture): legible as
+  "tapped" to a Magic player, but the subject lies on its side, and its top then
+  stands at its WIDTH (1.37× its height at the median) — through its status strip.
+- **A lean back** (§2's measurement), **a deeper bow**, **a sink alone**.
+- **A standee that leans toward its attacker or its defender.** Turned to the
+  camera it has no side to lean to; the lunge, the arrows and the bands already
+  say it.
+
+---
+
+## D263 — A standee is ONE draw call: two sheets in one mesh, 1,920 triangles; its maps are uploaded at mount and disposed with their owner; its triangles are the CC0 table's, not the personal line's
+
+*Branch `standee`; the lane's reserved range D260–D264.*
+
+**2026-09-29** (`docs/evidence/standee.md` §5)
+
+**Decision.**
+
+1. **One mesh, one draw call a standee.** The FRONT and the BACK layers are two
+   sheets of ONE buffer (`arena/standee.ts`'s `standeeSheets`: 32 × 24 and
+   16 × 12, told apart per vertex by `aLayer`) under one material, the back first
+   in the index so the front is drawn over it in the same call — **1,920
+   triangles**, one program for every standee (`STANDEE_VERTEX`,
+   `STANDEE_FRAGMENT`), a material of its own (its uniforms are the frame loop's
+   numbers). The front's vertices take `max(depth, near)`, so a triangle across a
+   silhouette never stretches back to the background and the vertex cut the
+   window needs (D227's `RELIEF_CLIFF` by grid cell) is not needed: the keep mask
+   and the subject test cut per texel. The geometry is the page's, shared by every
+   standee and every falling body.
+2. **The textures.** The colour is the card image `CardPlane` draws (the same URL,
+   one texture — `loadCardTexture` gives a texture first asked for without a
+   renderer the renderer's settings when a caller with one asks); the map
+   (mipmapped: at figure size the painting is minified 4–10× and the cut must not
+   shimmer) and the back image are the owner's own, loaded through the dev route
+   only, once per print, uploaded when a standee MOUNTS and disposed when the arena
+   or the workshop unmounts — about 1.7 MB of video memory a print.
+3. **A standee's triangles are the CC0 table's**, not the personal tier's line.
+   A standee replaces a CC0 body and its props one for one, only where one stands
+   (`MAX_FIGURES` caps them), and was measured within −880 to +220 triangles of
+   what it replaces; it spends nothing of `PERSONAL_TABLE_TRIS` (D197), which stays
+   the models' sum, and `arena-bench --personal`'s line (§8.2's 30,000 + 36,000)
+   holds the table with both.
+
+**Measured** (`docs/evidence/standee.md` §5; one render of the exact frame, bloom
+off, the table view, counted with `gl.info`): over eleven crowded frames of five
+recordings, **every table draws 2 to 17 FEWER calls with standees** (a standee is
+one call and wears none of the prop kinds) — the Doom Legion's worst frame 128 →
+118, the Masters of Evil's `@235` 84 → 67 — and triangles move by −2,630 to
++2,363 (at most 48,701 on any frame, the Masters of Evil's `@371`, against the
+tier's 66,000). On the GTX 1080 the standee is not measurable in the frame times;
+on SwiftShader, on a machine another lane was loading, nine standees read +5 to
++9 ms at p50 at `MoE`@371 — the same order as the noise, and SwiftShader fails
+§9.4 with the tier off as it did before (PLAN.md's personal-tier follow-up 39).
+The 2D entry chunk is byte for byte what it was; the standee is in the arena's
+lazy scene chunk (+2.98 kB gzip).
+
+**Rationale.** The task asked for one call where the material allows, and it
+does: both layers are one program's output, told apart per vertex rather than by
+a uniform, so they need not be two meshes. Counting a standee against the
+personal line would make a table of standees refuse the user's own models while
+it draws fewer calls than the CC0 table it replaces; the line that already holds
+it is the CC0 table's, whose worst frames D222 and D233 accepted with their
+numbers.
+
+**Rejected.**
+
+- **Two meshes, one a layer** (the inspect window's way, D227): two calls a
+  standee — twelve more on a crowded table — for nothing a vertex attribute
+  cannot say.
+- **A quad with relief mapping in the fragment shader** (a parallax march through
+  the map): two triangles, but a loop per fragment that SwiftShader pays at every
+  pixel, and no depth written where the relief stands proud.
+- **The window's 128 × 96 grid**: 49,152 triangles a standee; at 40–110 px tall a
+  32 × 24 front puts a vertex every 2–5 px.
+- **Counting standees against `PERSONAL_TABLE_TRIS`** (the rationale above).
+
+---
+
+## D264 — Hard rule 8 for a second card-art surface on the table: a standee only for a face-up, named figure's own print, through CardPlane's lookup, after the gates — and a concealed card never looks its art up
+
+*Branch `standee`; the lane's reserved range D260–D264.*
+
+**2026-09-29** (`docs/evidence/standee.md` §6)
+
+**Decision.** A standee draws a card's painting on the table beside `CardPlane`
+(M7 convention 2: THE card renderer of the arena) — a second card-art surface in
+the arena, as the inspect view is the workshop's (D196). It is allowed because a
+standee is decided by ONE pure lookup that reads a card's name only after every
+gate that would conceal it, and then only through the card's own art:
+
+1. **The gates, before any name** (`arena/standee.ts`'s `mayStand`): the
+   placement drawn face up (`Placement.back` false — `layout.ts` sets it for a
+   redacted stub AND for every face-down card) and not a stub (`isHidden`); the
+   pose a NAMED body (not the anonymous figure, not modelless), not a swarm (a
+   member of the Air Force or a squad is never its own standee), not a
+   silhouette or an uncrewed Vehicle (a vehicle's silhouette never gets one), and
+   not dressed by a personal model.
+2. **The art through `CardPlane`'s own lookup** — `art.ts`'s `artEntryFor`, the
+   function behind `CardPlane`'s `placement.back` gate, itself gated on
+   `isHidden` — so a standee's painting is exactly the image `CardPlane` draws on
+   that card's face (the same URL, the same texture) and nothing a face-down
+   card's owner could not already see on the table.
+3. **The relief index, by the print that answered** — its Scryfall id, the one
+   key it is asked about. A concealed card's art is never looked up, so no print
+   id — and no map — is ever asked about for it.
+4. **Nothing carries a name.** A choice carries the print id, the dev route's
+   two addresses and the cut; a dressed pose only an opaque `s<n>`; the cue layer
+   never sees either, and the frame loop reads numbers.
+
+**Held by** `standee.test.ts`'s sweep of **every board frame of the 23 committed
+recordings** (5,522 frames), three ways — as recorded, made HOSTILE (every back
+and stub given a secret name, every third face-up creature turned face down with
+one), and the hostile placements under the plain poses (a named pose on a back or
+a stub, which only the placement gate stops: 9,241 cases) — with a spy art index
+and a spy relief index that answer everything: the art is asked 33,921 times and
+never about a concealed card, the relief never about a concealed card's print,
+and the standees chosen are EXACTLY the face-up, named, un-dressed figures with a
+relief (checked against an oracle written apart from the lookup); with the tier
+off nothing is chosen and nothing is asked; the lookup with its gates taken out
+asks the relief about 20,180 concealed prints (the negative control).
+`liveness.test.ts` holds the one place a relief map is looked up
+(`standeeChoicesOf`), its order — the gates, then the art, then the relief, with
+three spliced controls — and every gate by name.
+
+**Rationale.** A standee is a statement about what a card is, as a personal model
+is (D190, D195) and as the palette is (D160): the rule and the test are theirs,
+applied to a painting. Going through `artEntryFor` rather than a lookup of its own
+is what makes the standee show nothing `CardPlane` does not already show on the
+same card — the second surface adds no reveal path.
+
+**Rejected.**
+
+- **A standee for a face-down card from its owner's view** (the owner may look at
+  it). The table draws the anonymous figure for a face-down card on every seat
+  (D56, D142); a painting would be the one place its face showed.
+- **Looking the relief up by card name.** The index is keyed by print, and a name
+  in the relief route would be a second place a name is looked up.
+- **A standee for the stack's ghost only when it resolves.** A creature spell on
+  the stack is face up and named — the ghost stands as a translucent standee, as
+  a personal model's ghost does.

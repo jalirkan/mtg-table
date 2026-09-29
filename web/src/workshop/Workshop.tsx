@@ -138,6 +138,20 @@
  *                                            texture CardPlane already fetched for the card;
  *                                            and the relief's back layer (D227), a
  *                                            card-sized sRGB image loaded the same way
+ *   the relief cache (D225–D228) and the portrait standee (D260–D264) — dev server only
+ *     ART_BOX, EMPTY_RELIEF, reliefIndexOf, isArtBox, ReliefEntry, ReliefIndex
+ *     (arena/relief.ts)                     THE reader of the relief index, and the art
+ *                                            box a map is cut with — the arena's since the
+ *                                            standee; relief.ts and framing.ts re-export
+ *     RELIEF_BASE, useReliefIndex, useDepthTexture, useStandees, NO_STANDEES,
+ *     StandeesLoaded (scene/reliefCache.ts) the route's one name (DEV only), the index
+ *                                            and the inspect view's depth maps, and the
+ *                                            standees the pedestal wears, loaded as
+ *                                            Arena.tsx loads them
+ *     standeeChoicesOf, dressStandees (standee.ts)
+ *                                            THE standee lookup and the dressed poses, as
+ *                                            Arena.tsx stands them — behind the personal
+ *                                            / repo toggle; the list's standee badge
  *   the data         figures.json, models.json and cues.json (imported without
  *                    attributes, as Arena.tsx imports them), traits.json (with them,
  *                    as traits.ts does) — the bundler warns on a module imported
@@ -164,6 +178,9 @@ import { figurePose, type FigurePose } from '../arena/figures/pose.ts';
 import { useArtPalettes } from '../arena/art.ts';
 import { EMPTY_PERSONAL, dressPoses, personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
 import { usePersonalModels, usePersonalOverlay } from '../arena/scene/personalModels.ts';
+import { RELIEF_BASE, useReliefIndex, useStandees } from '../arena/scene/reliefCache.ts';
+import { EMPTY_RELIEF } from '../arena/relief.ts';
+import { dressStandees, standeeChoicesOf } from '../arena/standee.ts';
 import { artRow, type ArtPalette } from '../arena/figures/palette.ts';
 import {
   BODY_STYLES,
@@ -194,7 +211,7 @@ import { framingOf, type CameraMode, type Framing } from './framing.ts';
 import { WORKSHOP_KEYMAP, workshopActionFor, type WorkshopKeyAction } from './keys.ts';
 import { LEGIBLE_PX, METER_HEIGHT, METER_WIDTH, drawnHeightPx, measure, type MeterRow } from './legibility.ts';
 import { WORKSHOP_VIEW_INSPECT, cardFromLocation, cardsHref, workshopHref, workshopViewFromLocation } from './links.ts';
-import { Pedestal, RELIEF_BASE, useReliefIndex } from './Pedestal.tsx';
+import { Pedestal } from './Pedestal.tsx';
 import { inspectPlan, inspectSourceOf } from './relief.ts';
 import {
   DEFAULT_OPTIONS,
@@ -507,11 +524,52 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
     [restPoses, pedestalOverlay],
   );
   const personalLoaded = usePersonalModels(pedestalOverlay, personalChoices, false);
+  const personalPoses = useMemo(
+    () => dressPoses(restPoses.poses, personalChoices, personalLoaded.fits),
+    [restPoses, personalChoices, personalLoaded.fits],
+  );
+  /**
+   * **The portrait standee on the pedestal** (D260): the arena's own standee path
+   * — `standeeChoicesOf`, `useStandees`, `dressStandees` — behind the SAME toggle as
+   * the models (`personal` stands a card's standee where no model dresses it,
+   * `repo` the CC0 figure), so one card's standee can be inspected up close. The
+   * relief index is the one the inspect view reads.
+   */
+  const standeeRelief = personalOn ? reliefIndex : EMPTY_RELIEF;
+  const standeeBase = personalOn ? RELIEF_BASE : null;
+  const standeeChoices = useMemo(
+    () => standeeChoicesOf(restPoses.placed, personalPoses, art, standeeRelief, { base: standeeBase, taken: personalChoices }),
+    [restPoses, personalPoses, art, standeeRelief, standeeBase, personalChoices],
+  );
+  const standeesLoaded = useStandees(standeeChoices);
+  const pedestalStandee = useMemo(
+    () => ({ relief: standeeRelief, base: standeeBase, loaded: standeesLoaded }),
+    [standeeRelief, standeeBase, standeesLoaded],
+  );
   const focus = useMemo((): Framing[] => {
-    const dressed = dressPoses(restPoses.poses, personalChoices, personalLoaded.fits);
+    const dressed = dressStandees(personalPoses, standeeChoices, standeesLoaded.fits);
     return figureIds(entry, options).map((id) => framingOf(restPoses.placed, dressed, id));
-  }, [restPoses, personalChoices, personalLoaded.fits, entry, options]);
+  }, [restPoses, personalPoses, standeeChoices, standeesLoaded.fits, entry, options]);
   const personalNames = useMemo(() => new Set(overlay.cards.keys()), [overlay]);
+  /**
+   * The list's *standee* badge (D260): a face-up creature no personal model
+   * dresses — one body, not a swarm or a squad (the pedestal stands none for
+   * those, as the arena stands none) — whose print the relief cache has cut,
+   * looked up face up only, as the thumbnail is. Empty in a build (no index).
+   */
+  const standeeNames = useMemo(() => {
+    const out = new Set<string>();
+    if (RELIEF_BASE === null) return out;
+    for (const e of entries) {
+      if (personalNames.has(e.name) || roleOf(e) !== 'creature') continue;
+      const trait = e.concealed === null ? traitFor(cardOf(e, 1, 0), traits).spec : null;
+      if (trait === null || trait.swarm > 0 || trait.silhouette !== null) continue;
+      const hit = e.concealed === null ? lookupArt(art, e.name) : null;
+      if (hit !== null && (reliefIndex.byId.get(hit.scryfallId)?.standee ?? null) !== null) out.add(e.name);
+    }
+    return out;
+  }, [entries, personalNames, art, reliefIndex, traits]);
+  const standeeCount = useMemo(() => [...reliefIndex.byId.values()].filter((r) => r.standee !== null).length, [reliefIndex]);
   // INSPECT (D196, D226): the pedestal's backdrop and frame draw the image CardPlane
   // draws for this card — the same URL, so the same texture — face up only, through
   // relief.ts's one way in; the plan adds the depth map when the relief cache has one.
@@ -804,6 +862,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         art={art}
         traits={traits}
         personalNames={personalNames}
+        standeeNames={standeeNames}
       />
 
       <section className="workshop__stage" aria-label="Pedestal">
@@ -821,6 +880,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
           personal={personalOn}
           onPersonal={setPersonalOn}
           personalCount={overlay.entries.length}
+          standeeCount={RELIEF_BASE === null ? 0 : standeeCount}
           inspectable={inspectSource !== null && focus[0]?.pose !== null && focus[0]?.pose !== undefined}
           relief={reliefOn}
           onRelief={setReliefOn}
@@ -847,6 +907,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
             audio={audio}
             personal={pedestalOverlay}
             personalLoaded={personalLoaded}
+            standee={pedestalStandee}
             inspect={inspect}
           />
           <PedestalCaption
@@ -933,6 +994,7 @@ function CardList({
   art,
   traits,
   personalNames,
+  standeeNames,
 }: {
   entries: readonly WorkshopEntry[];
   all: number;
@@ -944,6 +1006,8 @@ function CardList({
   traits: TraitData;
   /** The cards an active personal model dresses (D196) — the overlay's names; empty in a build. */
   personalNames: ReadonlySet<string>;
+  /** D260: the face-up cards the relief cache can stand as a standee (no personal model dresses them); empty in a build. */
+  standeeNames: ReadonlySet<string>;
 }): JSX.Element {
   let lastHeading = '';
   return (
@@ -1014,6 +1078,11 @@ function CardList({
                         personal
                       </span>
                     )}
+                    {entry.concealed === null && standeeNames.has(entry.name) && (
+                      <span className="workshop__personal" title="the relief cache stands this card's painting as a standee on this machine (D260: card-art-derived, never committed, never published)">
+                        standee
+                      </span>
+                    )}
                     {entry.facts.types || entry.note || '—'}
                   </span>
                 </span>
@@ -1045,6 +1114,7 @@ function Toolbar({
   personal,
   onPersonal,
   personalCount,
+  standeeCount,
   inspectable,
   relief,
   onRelief,
@@ -1064,6 +1134,8 @@ function Toolbar({
   onPersonal: (on: boolean) => void;
   /** Active personal models on this dev server — none in a build. */
   personalCount: number;
+  /** D260: how many standee cuts the relief cache has (0 in a build). */
+  standeeCount: number;
   /** Whether the card has a figure and an image to inspect. */
   inspectable: boolean;
   /** The relief window (D226): the inspect view's painting displaced by its depth map, or flat. */
@@ -1132,15 +1204,15 @@ function Toolbar({
       <span
         className="workshop__seg"
         title={
-          personalCount === 0
-            ? 'no personal model on this dev server (the gitignored personal tier, D190 — never committed)'
-            : `the pedestal in your own models (${String(personalCount)} active on this dev server — D190: never committed, never published) or in the CC0 figures`
+          personalCount === 0 && standeeCount === 0
+            ? 'no personal model and no standee on this dev server (the gitignored personal tier, D190 — never committed)'
+            : `the pedestal in your own models (${String(personalCount)} active) and standees (${String(standeeCount)} cut from the relief cache, D260) on this dev server — D190: never committed, never published — or in the CC0 figures`
         }
       >
-        <button type="button" className={personal ? 'on' : ''} aria-pressed={personal} disabled={personalCount === 0} onClick={() => onPersonal(true)}>
+        <button type="button" className={personal ? 'on' : ''} aria-pressed={personal} disabled={personalCount === 0 && standeeCount === 0} onClick={() => onPersonal(true)}>
           personal
         </button>
-        <button type="button" className={!personal ? 'on' : ''} aria-pressed={!personal} disabled={personalCount === 0} onClick={() => onPersonal(false)}>
+        <button type="button" className={!personal ? 'on' : ''} aria-pressed={!personal} disabled={personalCount === 0 && standeeCount === 0} onClick={() => onPersonal(false)}>
           repo
         </button>
       </span>

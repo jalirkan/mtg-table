@@ -219,6 +219,12 @@
 3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
 4. **Own colours, ONE material a figure** (**D196**, **D240**). A personal map is
 5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
+6. **The portrait standee is the tier's second renderer path, and a second
+- **`arena/standee.ts` is pure and decides everything**: `standeeCutOf` is THE
+- **THE one place a relief map is looked up is `standeeChoicesOf`, and in
+- **The relief index, its route and its loaders are the arena's**
+- **A standee is a figure's rig with no actions**: the frame loop writes it
+- **ONE draw call a standee** (D263): the two sheets are one mesh
 1. **A Villain is a person, and the rows dress it.** `figures.json`'s
 2. **A mask is a face, and a cowl carries it from behind.** `mask` (a prop kind,
 3. **A row the corpus cannot reach is named, never kept in silence.**
@@ -419,7 +425,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1,184 `node --test` + 157 vitest (9 files)
+span: 1,197 `node --test` + 157 vitest (9 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -455,9 +461,9 @@ span: Never add a path that writes `traits.json` or `cues.json` from the page, a
 span: A page of its own, by `#cards`'s rules
 span: `links.ts` is the one workshop module another page imports
 span: The personal tier on the pedestal
-span: `relief.ts` is pure and the one reader of the relief index
+span: `relief.ts` is pure, and reads the index through the arena's one reader
 span: `inspectSourceOf` is the inspect view's one way to a card's image and so to its map
-span: the route is named once, `Pedestal.tsx`'s DEV-gated `RELIEF_BASE`
+span: the route is named once, `arena/scene/reliefCache.ts`'s DEV-gated `RELIEF_BASE`
 span: a map is drawn only at `perf.ts`'s `RELIEF_MAP_VERSION`
 span: nothing of the relief runs in a frame loop
 span: A deck card no recording showed face up takes its facts from the engine's card script
@@ -618,6 +624,12 @@ span: The model-source choice is one function
 span: Own colours, ONE material a figure
 span: "Black is blue" is the CC0 palette's rule, never a model's
 span: The budget is a sum, and it is in `perf.ts`
+span: The portrait standee is the tier's second renderer path, and a second card-art surface beside `CardPlane`
+span: `arena/standee.ts` is pure and decides everything
+span: THE one place a relief map is looked up is `standeeChoicesOf`, and in the one safe order
+span: The relief index, its route and its loaders are the arena's
+span: A standee is a figure's rig with no actions
+span: ONE draw call a standee
 span: a villain reads as itself through data on the shared kit.
 span: A Villain is a person, and the rows dress it.
 span: A mask is a face, and a cowl carries it from behind.
