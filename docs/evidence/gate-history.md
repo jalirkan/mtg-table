@@ -308,3 +308,12 @@ Once from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, branch
 13.13 at most → 10.56), exit 0, `node --test` inside it 1,209 / 1,198 pass / 0
 fail / 11 skipped and 157 vitest (9 files) — `var/check-all-audit-fix.log`. No step
 and no job added.
+
+## The play-distance audit's fix pass 2, on `8ddd286` (D265, D267 amended)
+
+Once from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, branch
+`play-distance-audit` rebased onto `main`'s `8ddd286`: **261.6 s** (48 jobs, 978.8 s
+summed, load average 1.77 → 7.59 at most → 7.18), exit 0, `node --test` inside it
+1,239 / 1,228 pass / 0 fail / 11 skipped and 157 vitest (9 files) —
+`var/check-all-audit-fix3.log`, run `var/check-all/20260929-173647-2746863/`. No
+step and no job added.

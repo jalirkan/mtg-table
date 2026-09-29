@@ -2,8 +2,8 @@
  * mtg-table — web/test/hud.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * **The arena's chrome column, held** (the play-distance audit, D265;
- * `web/src/arena/hud.ts`). Four things `node --test` can hold without a browser,
+ * **The arena's chrome column, held** (the play-distance audit, D265–D267;
+ * `web/src/arena/hud.ts`). What `node --test` can hold without a browser,
  * each checked against the numbers headless Chromium measured
  * (`docs/evidence/play-distance-audit.md`):
  *
@@ -28,9 +28,18 @@
  *     every distinct prompt of the committed corpus through a per-line model,
  *     Quake's 250-character targeting prompt the red case — 167 px of column in
  *     Chromium before the clamp;
- *   - (the fix pass) the credit keeps its room until the inspect chip is down to
- *     its label, the status sits behind a rule of its own, and the turn-order
- *     bar's head holds "R99 their turn" on one line.
+ *   - (the fix pass) the status sits behind a rule of its own, and the turn-order
+ *     bar's head holds "R99 their turn" on one line;
+ *   - (fix pass 2) the credit is DRAWN whole while the chip is above its floor —
+ *     its rendered width through `hud.ts`'s `flexSizes`, the CSS flexible-lengths
+ *     algorithm, held to three layouts Chromium drew — its notice never cut, and
+ *     the chip's key whole at its floor; the first fix pass's shrink ratio (the
+ *     credit 648.3 → 648.0 px, "…Fan Conte…") is the control;
+ *   - (fix pass 2) the decision bar is ONE line of items, each one line that keeps
+ *     its width or two lines that give way, so the longest prompt, the longest
+ *     hint and the longest notice at once — and 400-character ones — hold it at
+ *     two lines at 1280 and 1600 px; the wrapping bar (`human-ability-42`@1060
+ *     with `I` pressed: 70.5 px, the column 136.7) is the control.
  */
 
 import assert from 'node:assert/strict';
@@ -39,7 +48,22 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { VIEWS } from '../src/arena/camera.ts';
-import { CUE_STRIP, HUD_COLUMN_PX, HUD_PROMPT, TURN_BAR, cueStatusOf, hudColumnPx, promptBarPx, stripsRowPx } from '../src/arena/hud.ts';
+import {
+  CREDIT_ROW,
+  CUE_STRIP,
+  DECISION_BAR,
+  HUD_COLUMN_PX,
+  HUD_PROMPT,
+  TURN_BAR,
+  creditRowOf,
+  cueStatusOf,
+  decisionBarOf,
+  flexSizes,
+  hudColumnPx,
+  inspectFloorPx,
+  promptBarPx,
+  stripsRowPx,
+} from '../src/arena/hud.ts';
 import { HUD_TOP_PX } from '../src/arena/layout.ts';
 
 const read = (rel: string): string => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
@@ -133,17 +157,22 @@ test('hud: the layer mounts three in-flow rows, and their measured heights sum u
   // The credit row: the credit and the chip side by side, the chip with no block margin of its own.
   assert.equal(rule('.arena__creditrow')['display'], 'flex');
   assert.equal(rule('.arena__inspect')['margin-block-start'], undefined, 'the inspect chip is back on a row of its own');
-  // The chip gives way before the credit (D265 point 2): a shrink factor is
-  // weighted by the item's width, so 4 against 1 cut the credit to 586 px while
-  // the chip kept 429 of its 560 at 1280 (the fix pass). Now the credit keeps its
-  // whole width until the chip is down to its label (measured: 648 of 648 px
-  // beside a 367-px chip at human-sideboard-7@1195, 928 of 1,029 beside the chip
-  // at its 86-px floor at villain-doom-248 seen from seat 1 @390).
-  const [chipGrow, chipShrink] = (rule('.arena__inspect')['flex'] ?? '').split(/\s+/).map(Number);
-  const [, creditShrink] = (rule('.arena__credit')['flex'] ?? '').split(/\s+/).map(Number);
-  assert.equal(chipGrow, 0);
-  assert.ok(chipShrink! >= 100 * creditShrink!, `the chip's shrink (${String(chipShrink)}) does not dwarf the credit's (${String(creditShrink)}) — both give way at once`);
-  assert.equal(rule('.arena__inspect')['min-inline-size'], '13ch', 'the chip gives way down to its label, "⌕ inspect · I"');
+  // The credit keeps its words; the chip gives way (D265 point 2, amended by the
+  // second fix pass). A shrink factor cannot rank two items — it is weighted by
+  // width, so the credit's 1 against the chip's 1,000 still cut the credit (and
+  // its ellipsis the Fan Content Policy's words): the credit does not shrink at
+  // all, and stops at the room the row leaves beside the chip's floor.
+  assert.equal(rule('.arena__credit')['flex'], '0 0 auto', 'the credit shrinks — any shrink at all is an ellipsis over its last words');
+  assert.equal(rule('.arena__credit')['max-inline-size'], 'min(980px, calc(100% - var(--inspect-floor) - 0.4rem))');
+  assert.equal(rule('.arena__inspect')['flex'], '0 1 auto');
+  assert.equal(rule('.arena__inspect')['min-inline-size'], 'var(--inspect-floor)');
+  assert.equal(
+    rule('.arena__creditrow')['--inspect-floor'],
+    `calc(${String(CREDIT_ROW.floorChars)} * ${String(CREDIT_ROW.monoAdvanceEm)}em + 0.9rem + 2px)`,
+    'the chip’s floor is not CREDIT_ROW’s',
+  );
+  assert.equal(px(rule('.arena__creditrow')['column-gap']), CREDIT_ROW.gapPx);
+  assert.equal(px(rule('.arena__inspect')['padding']?.split(/\s+/)[1]) * 2, CREDIT_ROW.chipPadPx);
   assert.match(block, /<div className="arena__creditrow">\s*<ArtCredit [^>]*\/>\s*<InspectChip [^>]*\/>\s*<\/div>/);
 
   const column = hudColumnPx();
@@ -316,4 +345,186 @@ test('hud: the turn-order bar’s head holds "R99 their turn" on one line — at
   assert.ok(width(TURN_BAR.headFontPx) <= room, `"${TURN_BAR.longestHead}" is ${width(TURN_BAR.headFontPx).toFixed(1)} px, past the head's ${String(room)}`);
   // THE CONTROL: the head at the bar's 10.5 px, which cut every opponent's turn from round 10.
   assert.ok(width(px(bar['font-size'])) > room, 'the head fits at the bar’s own size — the control has no teeth');
+});
+
+// ---------------------------------------------------------------------------
+// 5. The second fix pass: the credit's rendered width, and a bar of one line
+// ---------------------------------------------------------------------------
+
+test('hud: the credit is drawn whole while the chip is above its floor, its notice never cut, and the chip’s key whole at the floor — rendered widths, the shrink ratio its control', () => {
+  // The model is the CSS flexible-lengths algorithm over Chromium's widths; it
+  // agrees with Chromium's own layout where the verifier looked
+  // (`human-sideboard-7`@1195 at 1280 × 800: the credit 648.3 px, the chip 697 —
+  // "⌕ inspect · I" and its reason — laid out 648.3 and 366.1; `human-ability-42`@1060:
+  // a 960-px credit capped at 905.3 beside the chip's 109.1-px floor; and the
+  // audit's own first cut, 1 against the chip's 4, which Chromium laid out 585.7
+  // and 428.7 — the case where the shrink's weighting by width shows).
+  const sideboard = creditRowOf(1280, 648.3, 697);
+  console.log(`  human-sideboard-7@1195, 1280 × 800: the credit ${sideboard.credit.toFixed(1)} of its 648.3 px, the chip ${sideboard.chip.toFixed(1)}`);
+  assert.equal(sideboard.creditCut, false, `the credit is drawn ${sideboard.credit.toFixed(2)} px of its 648.3 — an ellipsis over its last words`);
+  assert.ok(Math.abs(sideboard.chip - 366.1) < 0.5, `the model's chip (${sideboard.chip.toFixed(1)}) is not Chromium's 366.1`);
+  const quake = creditRowOf(1280, 960, 697);
+  assert.ok(Math.abs(quake.credit - 905.3) < 0.5 && Math.abs(quake.chip - 109.1) < 0.5, `the model (${quake.credit.toFixed(1)}, ${quake.chip.toFixed(1)}) is not Chromium's 905.3 beside 109.1`);
+  // Whole wherever it fits beside the chip's floor: every credit width up to its
+  // cap, at every viewport from 1280 to 1920 px.
+  for (let width = 1280; width <= 1920; width += 32) {
+    const room = Math.min(CREDIT_ROW.creditMaxPx, stripsRowPx(width) - inspectFloorPx() - CREDIT_ROW.gapPx);
+    for (let credit = 200; credit <= room; credit += 25) {
+      for (const chip of [inspectFloorPx(), 300, 697, 1200]) {
+        const laid = creditRowOf(width, credit, chip);
+        assert.equal(laid.creditCut, false, `${String(width)} px: a ${String(credit)}-px credit beside a ${String(chip)}-px chip is cut to ${laid.credit.toFixed(2)}`);
+        assert.ok(laid.chip >= inspectFloorPx() - 0.01, `${String(width)} px: the chip below its floor`);
+      }
+    }
+    // A credit longer than its room gives way in its artist list only: the notice and Scryfall's opening words fit whatever it is cut to.
+    assert.ok(creditRowOf(width, 2000, 697).credit >= CREDIT_ROW.noticePx + 200, `${String(width)} px: a long credit is cut into its notice`);
+  }
+  assert.equal(rule('.arena__credit-notice')['flex'], 'none', 'the credit’s notice gives way — the Fan Content Policy’s words are what an ellipsis cuts first');
+  assert.equal(rule('.arena__credit-lead')['text-overflow'], 'ellipsis');
+  assert.equal(rule('.arena__credit-lead')['min-inline-size'], '0');
+  assert.equal(rule('.arena__credit')['text-overflow'], undefined, 'an ellipsis over the whole credit cuts its notice');
+  const credit = arena.slice(arena.indexOf('function ArtCredit('), arena.indexOf('function openInspect('));
+  assert.equal((credit.match(/<span className="arena__credit-lead">/g) ?? []).length, 2, 'both credits — a card’s and the table’s — open with the part that gives way');
+  assert.equal((credit.match(/<span className="arena__credit-notice">\{CREDIT_NOTICE_(CARD|TABLE)\}<\/span>/g) ?? []).length, 2, 'both credits close with their notice');
+  assert.match(credit, /const CREDIT_NOTICE_TABLE = '\\u00a0· © Wizards of the Coast · Unofficial Fan Content';/);
+  // The chip's key is a part that never shrinks, and the floor holds it whole.
+  assert.equal(rule('.arena__inspect-key')['flex'], 'none');
+  assert.equal(rule('.arena__inspect-what')['text-overflow'], 'ellipsis');
+  assert.equal(rule('.arena__inspect')['text-overflow'], undefined, 'an ellipsis over the whole chip eats its key at the floor ("⌕ inspect · …")');
+  const chip = arena.slice(arena.indexOf('function InspectChip('), arena.indexOf('function nameOf('));
+  assert.match(chip, /<span className="arena__inspect-key">⌕ inspect · I<\/span>\s*<span className="arena__inspect-why arena__inspect-what">/);
+  assert.match(chip, /<span className="arena__inspect-key">\{'⌕ inspect\\u00a0'\}<\/span>\s*<strong className="arena__inspect-what">/);
+  const key = CREDIT_ROW.keyChars * CREDIT_ROW.monoAdvanceEm * CREDIT_ROW.fontPx;
+  const content = (floor: number): number => floor - CREDIT_ROW.chipPadPx - CREDIT_ROW.chipBorderPx;
+  assert.ok(content(inspectFloorPx()) >= key + 5.6, `the chip's floor holds ${content(inspectFloorPx()).toFixed(1)} px of content: not its ${key.toFixed(1)}-px key and the reason's 0.35rem`);
+  // THE CONTROLS. The first fix pass's row: the credit 0 1 auto against the chip's
+  // 0 1000 auto — 0.3 px off the credit, which the verifier saw ellipsised (648.3
+  // → 648.0) — and its 13ch floor on a border-box, which held 69.7 px of an
+  // 86.1-px key.
+  const [firstCredit, firstChip] = flexSizes(
+    [
+      { basis: 648.3, grow: 0, shrink: 1, min: 0, max: 980 },
+      { basis: 697, grow: 0, shrink: 4, min: 13 * 6.6226, max: 560 },
+    ],
+    stripsRowPx(1280) - CREDIT_ROW.gapPx,
+  );
+  assert.ok(Math.abs(firstCredit! - 585.7) < 0.5 && Math.abs(firstChip! - 428.7) < 0.5, `the model lays the audit's first cut out ${firstCredit!.toFixed(1)} and ${firstChip!.toFixed(1)}, Chromium 585.7 and 428.7`);
+  const [shrunk] = flexSizes(
+    [
+      { basis: 648.3, grow: 0, shrink: 1, min: 0, max: 980 },
+      { basis: 697, grow: 0, shrink: 1000, min: 13 * 6.6226, max: 560 },
+    ],
+    stripsRowPx(1280) - CREDIT_ROW.gapPx,
+  );
+  assert.ok(shrunk! < 648.3 - 0.05, `the shrink-ratio row draws the credit whole (${shrunk!.toFixed(2)}) — the control has no teeth`);
+  assert.ok(content(13 * 6.6226) < key, 'a 13ch border-box holds the key — the control has no teeth');
+});
+
+/** Every hint the arena can show: `planKey`'s `why`s, `inspect.ts`'s reasons and `Arena.tsx`'s own, templates with their placeholders taken out. */
+function arenaHints(): string[] {
+  const out: string[] = [];
+  const literal = /(['"`])((?:\\.|(?!\1)[^\\])*)\1/y;
+  const grab = (source: string, lead: RegExp): void => {
+    for (const m of source.matchAll(lead)) {
+      literal.lastIndex = m.index + m[0].length;
+      const hit = literal.exec(source);
+      if (hit !== null) out.push(hit[2]!.replace(/\$\{[^}]*\}/g, ''));
+    }
+  };
+  grab(read('../src/keys.ts'), /\bwhy:\s*/g);
+  grab(read('../src/arena/inspect.ts'), /\bwhy:\s*|export const [A-Z_]+ = /g);
+  grab(arena, /\bsetHint\(/g);
+  return out.filter((h) => h.length > 0);
+}
+
+test('hud: the decision bar is one line of items, and a two-line prompt, the longest hint and the longest notice at once hold it at two lines — at 1280 and 1600 px, the wrapping bar its control', () => {
+  // The stylesheet: no wrap; the prompt from its 46ch floor; the buttons their width; the rest two lines at most.
+  assert.equal(rule('.arena__decision')['flex-wrap'], 'nowrap', 'the bar wraps — a hint and a notice beside a two-line prompt took it to 70.5 px, the column to 136.7');
+  assert.equal(rule('.arena__decision .prompt')['min-inline-size'], 'min(46ch, 100%)', 'the prompt has no floor: from its zero basis anything beside it squeezes it to a sliver');
+  assert.equal(rule('.arena__decision > .btn')['flex'], 'none');
+  const giving = rule('.arena__decision > .muted,\n.arena__decision > .arena__hint,\n.arena__decision > .arena__notice');
+  assert.equal(giving['-webkit-line-clamp'], String(DECISION_BAR.lines));
+  assert.equal(giving['display'], '-webkit-box');
+  assert.equal(giving['overflow'], 'hidden');
+  assert.equal(giving['min-inline-size'], '0');
+  assert.equal(px(rule('.arena__decision > .muted')['min-inline-size']?.replace('em', 'rem')) * 12 / 16, DECISION_BAR.outlinedFloorPx, 'the outlined-cards line’s floor is not DECISION_BAR’s');
+  assert.equal(rule('.arena__decision > .arena__notice')['flex-shrink'], '0');
+  assert.equal(px(rule('.arena__decision > .arena__notice')['max-inline-size']?.replace('em', 'rem')) * 11 / 16, DECISION_BAR.noticeMaxPx);
+  const watch = rule('.arena__watch');
+  assert.equal(watch['-webkit-line-clamp'], String(DECISION_BAR.lines));
+  assert.equal(watch['min-inline-size'], 'min(46ch, 100%)');
+  assert.equal(px(rule('.arena__decision')['gap']), DECISION_BAR.gapPx);
+  // The markup: every child of the bar is one of those, and the two messages carry their whole text as a tooltip.
+  const open = decision.indexOf('<div className="arena__decision"');
+  const bar = decision.slice(open, decision.indexOf('\n      </div>', open));
+  const children = [...bar.matchAll(/\n {8}(?: {2,6})?(?:\{[^\n<]*&& \(?\s*)?<([A-Za-z]+)(?:\s[^>]*?className=\{?[`"]([a-z_\- ]+))?/g)].map((m) => `${m[1]!}${m[2] !== undefined ? '.' + m[2].trim().split(/\s+/)[0]! : ''}`);
+  for (const child of children) {
+    assert.ok(
+      ['WatchLine', 'p.muted', 'p.prompt', 'ArenaButton', 'span.muted', 'button.btn', 'span.arena__hint', 'span.arena__notice', 'span.btn__key'].includes(child),
+      `the bar carries ${child} — an item with no line rule of its own can wrap it or grow it (D267): give it one, or put it elsewhere`,
+    );
+  }
+  assert.ok(children.includes('span.arena__hint') && children.includes('span.arena__notice') && children.includes('p.prompt'), `the bar's children as parsed: ${children.join(', ')}`);
+  assert.match(bar, /<span className="arena__hint" title=\{hint\}>/, 'the hint has no tooltip — its whole text is not reachable when it is cut');
+  assert.match(bar, /className=\{`arena__notice arena__notice--\$\{notice\.level\}`\} title=\{/);
+
+  // The model agrees with Chromium where the verifier looked: `human-ability-42`@1060, `I` pressed with nothing under the pointer.
+  const recorded = { promptChars: 250, okPx: DECISION_BAR.buttonPx.ok, cancelPx: DECISION_BAR.buttonPx.cancel, concedePx: DECISION_BAR.buttonPx.concede, outlined: true };
+  const inspectHint = 'no card under the pointer and none clicked — hover or click a face-up card, then press I'.length;
+  for (const [width, drawn] of [[1280, 194.1], [1600, 273.3]] as const) {
+    const laid = decisionBarOf(width, { ...recorded, hintChars: inspectHint, noticeChars: 'Your turn'.length });
+    assert.ok(Math.abs(laid.widths['hint']! - drawn) < 0.5, `${String(width)} px: the model's hint (${laid.widths['hint']!.toFixed(1)}) is not Chromium's ${String(drawn)}`);
+    assert.ok(Math.abs(laid.heightPx - 46.4) < 0.05, `${String(width)} px: the model's bar is ${laid.heightPx.toFixed(1)} px, Chromium's 46.4`);
+  }
+
+  // Everything at once, whatever the lengths: the longest prompt of the corpus,
+  // the longest hint the arena writes and the longest notice the bridge names —
+  // then the same with a 400-character hint and notice (an engine title is any
+  // length), the widest button labels and Concede armed.
+  const prompts = [...corpusPrompts().keys()];
+  const longestPrompt = Math.max(...prompts.map((t) => t.length));
+  const hints = arenaHints();
+  const longestHint = Math.max(...hints.map((h) => h.length));
+  const bridge = read('../../bridge/src/mtgtable/WireGuiGame.java');
+  const titles = [...bridge.matchAll(/\bnotice\("(?:info|warn|error)", "([^"]*)"/g)].map((m) => m[1]!);
+  const longestNotice = Math.max(...titles.map((t) => t.length));
+  assert.ok(hints.length > 20 && titles.length > 10, `${String(hints.length)} hints, ${String(titles.length)} notice titles — the scans found too little`);
+  const rest = hudColumnPx() - HUD_COLUMN_PX.decision;
+  for (const width of [1280, 1600]) {
+    for (const [what, content] of [
+      ['the longest prompt, hint and notice', { ...recorded, promptChars: longestPrompt, hintChars: longestHint, noticeChars: longestNotice }],
+      ['400-character hint and notice, the widest buttons, Concede armed', { promptChars: longestPrompt, okPx: DECISION_BAR.buttonPx.widestOk, cancelPx: DECISION_BAR.buttonPx.widestCancel, concedePx: DECISION_BAR.buttonPx.concedeArmed, outlined: true, hintChars: 400, noticeChars: 400 }],
+    ] as const) {
+      const laid = decisionBarOf(width, content);
+      const column = rest + laid.heightPx;
+      console.log(`  ${String(width)} px, ${what}: the bar ${laid.heightPx.toFixed(1)} px, the column ${column.toFixed(1)}; the prompt ${laid.widths['prompt']!.toFixed(0)} px, the hint ${laid.widths['hint']!.toFixed(0)} (${String(laid.lines['hint'])} lines), the notice ${laid.widths['notice']!.toFixed(0)}`);
+      assert.ok(column <= HUD_TOP_PX, `${String(width)} px, ${what}: the column is ${column.toFixed(1)} px, past HUD_TOP_PX`);
+      assert.ok(laid.widths['prompt']! >= DECISION_BAR.promptFloorPx - 0.01, `${String(width)} px, ${what}: the prompt is squeezed below its floor`);
+      for (const n of Object.values(laid.lines)) assert.ok(n <= DECISION_BAR.lines);
+    }
+    // The recorded buttons beside the longest of everything still leave the hint
+    // two lines of at least 15 characters — its opening words; the rest is its tooltip.
+    const laid = decisionBarOf(width, { ...recorded, promptChars: longestPrompt, hintChars: longestHint, noticeChars: longestNotice });
+    const perLine = (laid.widths['hint']! - DECISION_BAR.messagePadPx) / DECISION_BAR.monoPx;
+    assert.ok(perLine >= 15, `${String(width)} px: the hint keeps ${laid.widths['hint']!.toFixed(0)} px, ${perLine.toFixed(0)} characters a line`);
+  }
+  console.log(`  the longest: a ${String(longestPrompt)}-character prompt, a ${String(longestHint)}-character hint (of ${String(hints.length)}), a ${String(longestNotice)}-character notice title (of ${String(titles.length)} the bridge names)`);
+
+  // THE CONTROLS. The bar before the second fix pass wrapped: the hint and the
+  // notice took a second line under the two-line prompt — 70.5 px of bar and
+  // 136.7 of column in Chromium, at both sizes.
+  const wrapped = promptBarPx(Number.POSITIVE_INFINITY) + DECISION_BAR.gapPx + DECISION_BAR.messageLinePx.one;
+  assert.ok(Math.abs(wrapped - 70.5) < 0.5, `the wrapped bar models at ${wrapped.toFixed(1)} px, Chromium drew 70.5`);
+  assert.ok(rest + wrapped > HUD_TOP_PX, 'the wrapping bar fits the band — the control has no teeth');
+  // And with no floor the prompt is the one that gives way: the longest hint takes it to nothing.
+  const inner = Math.min(DECISION_BAR.maxPx, stripsRowPx(1280)) - DECISION_BAR.padInlinePx;
+  const [floorless] = flexSizes(
+    [
+      { basis: 0, grow: 1, shrink: 1, min: 0, max: Infinity },
+      { basis: longestHint * DECISION_BAR.monoPx + DECISION_BAR.messagePadPx, grow: 0, shrink: 1, min: 0, max: Infinity },
+      { basis: 63.5 + 69 + 97.8 + 185 + 5.6 * 5, grow: 0, shrink: 0, min: 0, max: Infinity },
+    ],
+    inner,
+  );
+  assert.ok(floorless! < DECISION_BAR.promptFloorPx, 'a floorless prompt keeps its 46ch beside the longest hint — the control has no teeth');
 });

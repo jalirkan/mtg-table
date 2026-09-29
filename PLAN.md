@@ -14,11 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 347 items still open across 37 follow-up lists** — 321
+**The index below lists 348 items still open across 37 follow-up lists** — 322
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
-its own rows on 2026-09-29 by the play-distance audit at its rebase onto `8ddd286`
-(the audit closed the arena caption's 3 and added a list of three, its fix pass a
-fourth) over the GPU pass's count of 344 across 36, made at its rebase onto the portrait
+its own rows on 2026-09-29 by the play-distance audit's fix pass 2, at its rebase
+onto `8ddd286` (the audit closed the arena caption's 3 and added a list of three,
+its fix pass a fourth, its fix pass 2 a fifth) over the GPU pass's count of 344 across 36, made at its rebase onto the portrait
 standee, plus the one row its fix pass 3 added (the GPU pass closed M7 Tier 1's 6 and Lane LOOK's 16 and added a list of
 nine; its fix pass added a tenth, its fix pass 2 an eleventh) over the portrait standee lane's count of 334 across 35, which added seven
 (35–41 of the personal tier's list; its fix pass closed 38 and added 42) to the arena caption lane's count at its rebase onto
@@ -27,8 +27,8 @@ more villain identity's fix pass had left beside their replacements; the sound-c
 lane had counted 314 across 33, which missed more villain identity's list), where
 the four paragraphs it replaced, one per merging lane, had each counted a
 different tree. Each list's
-own entries say what is closed. **Of the 40 questions only the owner can settle,
-5 are answered** and 35 stand on the default this plan assumes. (Two stale
+own entries say what is closed. **Of the 41 questions only the owner can settle,
+5 are answered** and 36 stand on the default this plan assumes. (Two stale
 paragraphs that counted 393 and 394 items across 32 lists, left here by more
 villain identity's rebase, were removed at the same recount.)
 
@@ -383,6 +383,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Play-distance audit](#fu-audit) | 2 | open | No committed recording sees a villain deck from Pacho's chair | `fixtures/games/` |
 | [Play-distance audit](#fu-audit) | 3 | open | The far strips under the chrome are measured by a scratch census, not held (owner question 34 first) | `web/test/status.test.ts` |
 | [Play-distance audit](#fu-audit) | 4 | open | The caption's every-view census counts the strip's cap against a card's box, so the low view's "stack under it" is a near miss drawn | `web/test/caption.test.ts` |
+| [Play-distance audit](#fu-audit) | 5 | open | The bar's and the credit row's widths are Chromium's on this machine's fonts; a new face or label moves them and no browser re-checks | `web/src/arena/hud.ts` |
 
 ### Questions only the owner can settle
 
@@ -428,6 +429,7 @@ villain identity's rebase, were removed at the same recount.)
 | [38](#owner-questions) | Should a seat's duelist — your own Fury model — follow the deck the seat plays? | open — the plan runs on its default |
 | [39](#owner-questions) | At 1280 px the three longest targeting prompts are cut before their question: keep the question line, or accept? | open — the plan runs on its default |
 | [40](#owner-questions) | The turn-order bar says the round (R18), the caption the turn (Turn 35): one number, and which? | open — the plan runs on its default |
+| [41](#owner-questions) | Your duelist reads as lying down from the table view (your Nick Fury model in the idle's wide stance): a standing rest for the duelists, or accept? | open — the plan runs on its default |
 
 ---
 
@@ -463,7 +465,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
 | — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified three times and fixed three times** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
-| — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **D265–D267**; seven owner questions (34–40); four follow-ups; *The play-distance audit*, just above *Deferred* |
+| — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c`, rebased onto `8ddd286` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **its fix pass 2** (a second verifier): rebased onto `8ddd286`, the decision bar one line of items so no hint or notice grows the column (136.7 → 112.5 px), the credit drawn whole beside the chip and its Fan Content notice never cut, the chip's key whole at its floor, your duelist from the table view looked at (it stands; owner question 41); **D265–D267**; eight owner questions (34–41); five follow-ups; *The play-distance audit*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9173,9 +9175,10 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
 
 ## The play-distance audit — the merged block, seen together (2026-09-29, D265–D267)
 
-**Status: audited, fixed, verified, fixed again, gated and documented** on branch
-`play-distance-audit` (the worktree `mtg-table-t2a`, off `main`'s `e2c337c`); the
-lane's reserved range D265–D269, three used. Eight lanes merged onto the arena over 2026-09-28/29, each
+**Status: audited, fixed, verified twice, fixed twice more, gated and documented** on branch
+`play-distance-audit` (the worktree `mtg-table-t2a`, off `main`'s `e2c337c`,
+rebased onto `8ddd286` — the portrait standee and the GPU pass — by its fix pass
+2); the lane's reserved range D265–D269, three used. Eight lanes merged onto the arena over 2026-09-28/29, each
 verified alone — the status layer, the caption, the sound cues, villain identity
 and its second lane, the arena polish and the personal tier's models — and nobody
 had looked at the whole. `docs/evidence/play-distance-audit.md` is the defect list
@@ -9241,6 +9244,31 @@ personal tier is in them, so they stay local, like the tier).
    view's stack is a near miss drawn), and questions 39 and 40 and accepts A10 and
    A11 are added with their pictures. Before/after pairs: `var/audit/fix/`; the
    384 shots again: `var/audit/sheets-fix/`.
+7. **Fix pass 2** (evidence §11; a second verifier, and one item from the caller),
+   on the tree **rebased onto `8ddd286`** (the owner questions renumbered after
+   `main`'s 32 and 33, to 34–40; the index recounted). **The decision bar is one
+   line of items** (D267 amended): with `I` pressed and nothing under the pointer,
+   the hint (where D241's `I` says it did nothing) and the *Your turn* notice had
+   wrapped onto a second line under Quake's two-line prompt — the column **136.7
+   px** at both sizes; now the prompt keeps a 46ch floor, the buttons their width,
+   and the hint, the notice, the watching and outlined-cards lines give way in
+   two lines at most, whole in their tooltips: **112.5 px**, and `hud.test.ts`
+   lays the bar out with the CSS flexible-lengths algorithm (`hud.ts`'s
+   `flexSizes`, held to Chromium's layouts) with the longest prompt, hint and
+   notice at once — and 400-character ones — at 1280 and 1600 px. **The credit is
+   drawn whole** (D265 point 2 amended): a shrink factor cannot rank two items, so
+   the credit no longer shrinks while the chip can (648.3 of 648.3 px at
+   `human-sideboard-7`@1195 — the first fix pass drew 648.0 and cut "…Fan Conte…"),
+   and a credit too long for its room gives way in its artist list only, never its
+   Fan Content notice; **the chip's floor is its key, whole** ("⌕ inspect · I";
+   the 13ch border-box had read "⌕ inspect…"). Two stale comments corrected.
+   **Your duelist from the table view** (owner question 41): your Nick Fury model
+   stands — bones and skinned feet on the table — in the duelists' shared idle,
+   one foot forward, seen from above under the lens; neither the code nor the
+   model is wrong, and a standing rest is the owner's call. Twelve negative
+   controls, each red in a copy of the tree and restored; the 384 shots again on
+   the rebased tree, the standees drawn under the tier (`var/audit/sheets-fix3/`);
+   one follow-up (5).
 
 **The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9340`
 **269.2 s** and `WSPORT=9350` **277.6 s**, exit 0 both, 48 jobs (994.6 s and
@@ -9249,12 +9277,16 @@ personal tier is in them, so they stay local, like the tier).
 (`var/check-all-audit-1.log`, `-2.log`). **The fix pass**, once from a deleted
 `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`: **274.8 s**, exit 0, 48 jobs (1,029.1 s
 summed) at a load average of 9.0–13.1, `node --test` 1,209 / 1,198 pass / 0 fail /
-11 skipped and vitest 157 (`var/check-all-audit-fix.log`). The lane added no step
-and no job: its tests are in the web step. `~/forge` and `~/.forge`: unchanged
-(evidence §9, §10.6).
+11 skipped and vitest 157 (`var/check-all-audit-fix.log`). **Fix pass 2**, on the
+tree rebased onto `8ddd286`, once from a deleted `bridge/out` at `GATE_JOBS=4`,
+`WSPORT=9340`: **261.6 s**, exit 0, 48 jobs (978.8 s summed) at a load average of
+1.8–7.6, `node --test` 1,239 / 1,228 pass / 0 fail / 11 skipped and vitest 157
+(`var/check-all-audit-fix3.log`). The lane added no step and no job: its tests are
+in the web step. `~/forge` and `~/.forge`: unchanged
+(evidence §9, §10.6, §11.8).
 
 <a id="fu-audit"></a>
-### The play-distance audit's follow-ups — four, 2026-09-29 (4 added by its fix pass)
+### The play-distance audit's follow-ups — five, 2026-09-29 (4 added by its fix pass, 5 by its fix pass 2)
 
 1. **The audit's drivers are scratch** (`var/audit/drv/`: the shooter, the sheet
    maker, the DOM check, the row measurer, the live seat, the everything-on frame,
@@ -9279,6 +9311,16 @@ and no job: its tests are in the web step. `~/forge` and `~/.forge`: unchanged
    near misses drawn (the fix pass measured `villain-doom-248`@350: the stack's top
    card's drawn edge ends 11–23 px above the caption's top). A census against the caption's own
    height and a card's quad, not its box, would print what the eye sees.
+5. **The decision bar's and the credit row's numbers are Chromium's, on this
+   machine's fonts** (fix pass 2): `hud.ts`'s `DECISION_BAR` (the buttons' widths,
+   the prompt's 46ch as 342 px, the line heights) and `CREDIT_ROW` (the chip's key
+   as 14 characters of DejaVu Sans Mono's 0.6021em, which `--inspect-floor` spells
+   in `em` because the credit's own `ch` is another face's). `hud.test.ts` lays both
+   out with the CSS flexible-lengths algorithm from those numbers and holds the
+   model to three layouts Chromium drew, but no browser re-checks them: a new
+   mono face, a wider engine label or a new item in the bar moves a number
+   silently. A browser check in the gate — the audit's follow-up 1's driver,
+   committed — would close it.
 
 ---
 
@@ -9374,3 +9416,4 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 38 | **New, the play-distance audit.** **A seat's duelist follows the seat, not the deck** (D99; villain identity's follow-up 12): with the personal tier on, your own Nick Fury model stands behind the Doom Legion in every committed villain recording, and Doom behind Pacho's deck; from Pacho's chair each stands behind his own side. Key the duelist to the deck a seat plays (`hello_ok.match`, or the recording's `decks`)? Picture: `var/audit/shots-after/villain-doom-248/1600x1000/s0-p1-f388-v1.png` against `…/s1-p1-f390-v1.png`. | **D99**: the duelist is the seat's (the director is you, the villain the other chair). |
 | 39 | **New, the play-distance audit's fix pass.** **The engine's prompt at two lines** (D267): at 1280 × 800 the three longest targeting prompts — Quake's trigger (twice) and Web Up's, 224–250 characters — are cut before their question ("…Select target creature or land"): whole in the tooltip, whole on hover, and whole at 1600, where the bar's width holds them in two lines. Keep the question line visible by cutting the context instead (a split at the engine's paragraph break, which reads structure into an engine string), or accept? Picture: `var/audit/fix/fix-quake-1280.png` (before: the prompt whole and the column at 167 px over the far rank; after: two lines, 112.5 px). | **Accept**: the cut prompts are three of 350, at one size; the outlined cards are what the prompt asks for, and the whole text is a hover away. |
 | 40 | **New, the play-distance audit's fix pass.** **The same moment numbered twice**: the turn-order bar says the round (`R18 your turn` — D210, and `protocol.md` §3.1 asks the UI to label rounds as rounds), the caption the player turn (`Turn 35`, the narrator's heading, as `#story` prints it). One number on screen, and which — the bar's `R`, or the caption's `Turn`? Picture: `var/audit/shots-fix/villain-wakanda-232/1600x1000/s0-p1-f525-v1.png`. | **As they are**: each widget keeps its lane's convention; the `R` says it is a round. |
+| 41 | **New, the play-distance audit's fix pass 2 (the caller's item).** **Your duelist reads as lying on the table** from the table view with the personal tier on: your Nick Fury model — a Mixamo rig — at the director's stand, seen from above, legs out, while Doom stands upright across the table (`villain-masters-of-evil-33`@209 and @371 and `g1`@316, both seats). It stands: its bones and its skinned feet are on the table (the lowest vertex by each foot −0.005 and 0.016 of a unit), in the duelists' shared idle, whose stance puts one foot half a unit forward — which the CC0 director's long coat hides and Fury's open coat shows — and the near duelist is under the lens, so from above its forward foot reads as a leg laid out. A duelist rest with the feet together (a pose, like the figures' `stand`) would read as standing; or accept? Picture: `var/audit-fix3/fury/fury-verdict.png` (Fury and the CC0 director, table view and low view, their bones drawn). | **Accept**: the pose is the library's idle, the same for every duelist, and D100 keeps the camera where it is; neither the code nor the model is wrong. A standing rest is a `DuelistLayer` change, measured against D100's shares. |

@@ -349,3 +349,13 @@ are clauses of `hud.test.ts`'s first two cases) — and no vitest. Inside
 **1,222 `node --test` + 157 vitest (9 files)** standalone (1,213 pass, 0 fail, 9
 skipped): `8ddd286`'s **1,212 + 157** plus the audit's ten (its seven and its fix
 pass's three). No case changed at the rebase.
+
+### The play-distance audit's fix pass 2 (on `8ddd286`)
+
+**1,224 `node --test` + 157 vitest (9 files)** standalone (1,215 pass, 0 fail, 9
+skipped), from the rebased **1,222 + 157**: `hud.test.ts`'s two new cases — the
+credit drawn whole and the chip's key (by the rendered width, `hud.ts`'s
+`flexSizes` held to three Chromium layouts) and the decision bar as one line of
+items (the longest prompt, hint and notice at once, at 1280 and 1600 px) — with
+the column case's credit clauses rewritten in place; no vitest. Inside
+`check-all.sh`: **1,239 / 1,228 pass / 0 fail / 11 skipped** plus 157 vitest.

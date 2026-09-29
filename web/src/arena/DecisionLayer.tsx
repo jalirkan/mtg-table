@@ -117,9 +117,9 @@ export function DecisionLayer({
           <>
             {/* The engine's own words. `role="status"` and polite, because the
                 prompt changes on nearly every priority pass. At most two lines
-                on screen (D265, the audit's fix pass: the bar is the chrome
-                column's first row, under `HUD_TOP_PX`); the whole of it stays in
-                the DOM, is the tooltip, and opens in place on hover. */}
+                on screen and never narrower than 46ch (D267: the bar is the
+                chrome column's first row, under `HUD_TOP_PX`); the whole of it
+                stays in the DOM, is the tooltip, and opens in place on hover. */}
             <p className="prompt" role="status" title={input.prompt}>
               {input.prompt}
             </p>
@@ -173,9 +173,17 @@ export function DecisionLayer({
           </button>
         )}
 
-        {hint !== null && <span className="arena__hint">{hint}</span>}
+        {/* The key hint and the engine's last notice give way beside the
+            prompt, two lines at most, whole in their tooltips (D267, the
+            audit's second fix pass): on a line of their own they took the bar
+            to two lines under a two-line prompt, and the column past the band. */}
+        {hint !== null && (
+          <span className="arena__hint" title={hint}>
+            {hint}
+          </span>
+        )}
         {notice !== null && (
-          <span className={`arena__notice arena__notice--${notice.level}`} title={notice.text}>
+          <span className={`arena__notice arena__notice--${notice.level}`} title={notice.text === '' ? notice.title : `${notice.title} — ${notice.text}`}>
             {notice.title}
           </span>
         )}

@@ -11887,6 +11887,43 @@ batch started.
 - **Collapsing the step and skip buttons to glyphs**: the same reason, and not
   needed.
 
+
+**Amended by fix pass 2** (2026-09-29, after a second verifier; `docs/evidence/play-distance-audit.md`
+§11). *Point 2 was still not true.* The fix pass wrote the credit `flex: 0 1 auto`
+against the chip's `0 1000 auto` and said the credit kept "648 of 648 px"; a shrink
+is weighted by each item's width, so the credit still took a share — 648.3 → 648.0
+px at `human-sideboard-7`@1195, 1280 × 800 — and its ellipsis cut its last words,
+"…© Wizards of the Coast · Unofficial Fan Conte…", the Fan Content Policy's
+notice (on `e2c337c`, where the chip had a row of its own, the credit was whole).
+No shrink factor ranks two items, so point 2 is now:
+
+- **the credit does not shrink** (`flex: 0 0 auto`) and stops at the room the row
+  leaves beside the chip's floor (`max-inline-size: min(980px, 100% −
+  --inspect-floor − the gap)`); the chip (`flex: 0 1 auto`) gives way down to that
+  floor. So the credit is drawn whole whenever it fits beside the floor — 648.3
+  of 648.3 px there, measured in Chromium as rendered text (no ellipsis), the chip
+  366.1;
+- **a credit longer than that gives way in its artist list only**: `ArtCredit`
+  draws two parts, `.arena__credit-lead` (Scryfall's name and the artists,
+  ellipsised, the whole list in the tooltip) and `.arena__credit-notice` ("·
+  © Wizards of the Coast · Unofficial Fan Content", `flex: none`), so the
+  notice is whole at every width from 1280 px (at `human-ability-42`@1060,
+  1280 × 800, a 960-px credit is drawn 905.3 px, its list cut by 55 px, its
+  notice whole);
+- **the chip's floor is its key, whole**: `--inspect-floor` is 14 characters of
+  the mono face (0.6021em, DejaVu Sans Mono's advance as Chromium drew it) plus
+  the chip's padding and border, 109.1 px — the 13ch floor had been a
+  border-box, 69.7 px of content for an 86.1-px key, and one ellipsis over the
+  whole chip then read "⌕ inspect · …" at the floor in every replay at 1280. The
+  key ("⌕ inspect · I", or "⌕ inspect … · I" round a name) is a part that never
+  shrinks; the name or the reason is cut, whole in the tooltip.
+
+`hud.ts`'s `CREDIT_ROW`, `creditRowOf` and `flexSizes` (the CSS flexible-lengths
+algorithm) and `hud.test.ts` hold it by the rendered width — the credit drawn
+whole beside the chip at every width from 1280 to 1920 px for every credit that
+fits, the model agreeing with Chromium at three measured layouts, the audit's
+first cut (585.7 and 428.7 px) among them — with the first fix pass's row as the
+control.
 ---
 
 ## D266 — The figure budget is spent on the viewer's own seat first
@@ -11985,3 +12022,51 @@ cut "Pay Mana Cost" off every spell cast at a live seat.
 - **Letting the column grow while a long prompt is up**, or moving the credit row
   out of the flow when the bar grows: the first is the defect; for the second CSS
   cannot see the bar's line count, and a second home for the credit is a redesign.
+
+**Amended by fix pass 2** (2026-09-29, after a second verifier;
+`docs/evidence/play-distance-audit.md` §11). *"No engine prompt can grow the column
+past `HUD_TOP_PX`" was true of the prompt alone.* The bar wrapped its items, and the
+prompt's zero basis let anything beside it squeeze it: at `human-ability-42`@1060
+(Quake's targeting prompt), `I` pressed with no card under the pointer put the
+hint — "no card under the pointer and none clicked — …", where D241's key says it
+did nothing — and the "Your turn" notice on a second line under the two-line
+prompt: the bar 70.5 px, the column **136.7 px** at 1280 × 800 and at 1600 × 1000,
+past the band, the credit row over the far rank. So:
+
+4. **The bar is one line of items** (`.arena__decision { flex-wrap: nowrap }`).
+   Each item is either one line that keeps its width — the engine's two buttons
+   and Concede (`flex: none`) — or at most two lines that give way, cut past them
+   and whole in a tooltip: the prompt (point 2), the watching line, the
+   outlined-cards line (down to 11em, where "click one of the 16 outlined cards"
+   is whole in two lines), the hint (to nothing) and the notice (kept whole up to
+   16em: an engine title is short). So the bar is never taller than the prompt's
+   two lines — 46.4 px, the column 112.5 — whatever it carries.
+5. **The prompt never gives way below 46ch** (`min-inline-size: min(46ch,
+   100%)`, 342 px at its 12 px): the width it had before this decision, two lines
+   of about ninety characters.
+6. `hud.ts`'s `DECISION_BAR` and `decisionBarOf` lay the bar out with the CSS
+   flexible-lengths algorithm from the widths Chromium measured, and `hud.test.ts`
+   holds it at 1280 and 1600 px with the corpus's longest prompt (250
+   characters), the longest hint the arena writes (136, of 29 it scans from
+   `keys.ts`, `inspect.ts` and `Arena.tsx`) and the longest notice title the bridge
+   names (20, of 35) at once — and again with a 400-character hint and notice,
+   the widest button labels and Concede armed: the bar 46.4 px, the column 112.4,
+   the prompt at its floor or wider. The model agrees with Chromium at the Quake
+   frame (the hint 194.1 px at 1280, 273.3 at 1600); the wrapping bar (70.5 px)
+   and a floorless prompt are the controls.
+
+Measured in Chromium at the Quake frame with `I` pressed: **136.7 → 112.5 px** at
+both sizes; the hint two lines of 194.1 px at 1280 (273.3 at 1600), the notice
+whole on one line, the outlined-cards line whole in two. The hint is cut in the
+worst the model can build at 1280 — beside a 20-character notice, the
+outlined-cards line and a two-line prompt it keeps 121 px, about sixteen
+characters a line — and whole in its tooltip.
+
+**Rejected** (fix pass 2): **the hint and the notice out of the flow** (the
+verifier's first suggestion) — positioned, they cover something: the band has 16
+px left under the column, not a line, and below the band is the far rank the band
+keeps clear; **onto the strips row** — it has 28 px to spare at 1280 × 800 (993 of
+1,021); **onto the credit row** — full at 1280 whenever the credit is long (905
+of 1,021 px beside the chip's floor). Inside the bar, beside the control it
+answers, one line of items costs nothing but a cut hint's tail, and the hint is
+where a key reports it did nothing.

@@ -1430,12 +1430,24 @@ grades and the owner questions it raised.
    to the cue strip or a view added to the switcher fails the test until the row
    is measured again in a browser (the evidence's §4 says how). The cue status is
    a fixed width behind a rule of its own, so a batch never changes the strip's
-   width; the chip gives way before the credit does (a shrink factor of 1,000
-   against 1, because shrinking is weighted by width). **The engine's prompt is
-   at most two lines** (D267): it grows into the bar's room from a zero basis and
-   is cut past two lines, whole in the DOM, in its tooltip and on hover — so no
-   prompt, however long, grows the column; `hud.test.ts` sweeps every prompt of
-   the corpus through a per-line model.
+   width. **The credit never shrinks while the chip can** (D265 point 2, amended
+   by its fix pass 2): no shrink factor ranks two items — a shrink is weighted by
+   width, and 1 against 1,000 still cut the Fan Content Policy's words — so the
+   credit is `flex: 0 0 auto` up to the room beside the chip's floor
+   (`--inspect-floor`, the chip's key whole), and past that only its artist list
+   gives way (`.arena__credit-lead`), never its notice (`.arena__credit-notice`).
+   **The decision bar is one line of items, and the prompt at most two lines**
+   (D267 and its fix pass 2): the prompt grows into the bar's room from a zero
+   basis but never below 46ch, and is cut past two lines, whole in the DOM, in its
+   tooltip and on hover; the engine's buttons and Concede keep their width; the
+   watching line, the outlined-cards line, the key hint and the notice give way,
+   two lines at most, whole in their tooltips; and the bar does not wrap. So
+   nothing in the bar — no prompt, hint or notice, however long — grows the
+   column: `hud.test.ts` sweeps every prompt of the corpus through a per-line
+   model and lays the bar and the credit row out with `hud.ts`'s `flexSizes` (the
+   CSS flexible-lengths algorithm, held to Chromium's own layouts) from the widths
+   Chromium measured. **An item added to the bar needs a line rule** (`flex: none`
+   and one line, or the two-line clamp) or the test fails.
 2. **The figure budget serves the viewer's seat first** (**D266**).
    `figures/pose.ts`'s `budgetOrderOf` — your seat's placements, the other
    seat's, then the stack — is the one order `MAX_FIGURES` is spent in, and

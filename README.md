@@ -1102,6 +1102,13 @@ them **caption** (the **N** key).
 bar's width before it wraps, so almost every prompt is whole; one that is still
 longer — a targeting trigger that quotes its card's whole ability, at 1,280 px —
 ends in *…*: point at it and it opens in place (it is also its own tooltip).
+Beside it, a key that did nothing says why (press **I** with no card under the
+pointer, and the hint says so), and the engine's last notice (*Your turn*) sits
+at the end; neither ever pushes the bar onto a second line — each is at most two
+lines, cut if it must be and whole in its tooltip. The art credit under the cue
+strip keeps its closing words (*© Wizards of the Coast · Unofficial Fan
+Content*) whole; when the row is short, the list of artists gives way, and the
+**⌕ inspect** chip beside it shrinks to its key first.
 
 **Sound** (D250–D252). The arena is **silent until you turn sound on** — tick
 **sound** in the cue strip or press **M** (either is the click a browser needs

@@ -2887,8 +2887,24 @@ button.zonerow__open:hover {
  * seat plates are measured against. The wrapper is layout only and keeps the
  * layer's `pointer-events: none`; it stops 15rem short of the right edge, as the
  * strips do, for the opponent's plate.
+ *
+ * **The credit keeps its words; the chip gives way** (D265 point 2 as its second
+ * fix pass amended it; `arena/hud.ts`'s `CREDIT_ROW`, held by `hud.test.ts`). A
+ * shrink factor cannot rank two items — it is weighted by each one's width, so
+ * even 1 against the chip's 1,000 cut the credit by 0.3 px, and an ellipsis cut
+ * "…Unofficial Fan Conte…" (`human-sideboard-7`@1195 at 1280 × 800). So the
+ * credit does not shrink at all: it takes its whole width up to what the row
+ * leaves beside the chip's floor, `--inspect-floor` — the chip's key, "⌕
+ * inspect · I" and the gap before its reason (or "⌕ inspect  · I" round a
+ * name), 14 characters of the mono face (0.6021em each, DejaVu Sans Mono's
+ * advance as Chromium drew it here), plus its padding and border. Only a
+ * credit longer than that gives way, and then only its artist list
+ * (`.arena__credit-lead`): Scryfall's name opens it and the notice the art
+ * travels with — © Wizards of the Coast · Unofficial Fan Content, the Fan
+ * Content Policy's words — closes it whole (`.arena__credit-notice`).
  */
 .arena__creditrow {
+  --inspect-floor: calc(14 * 0.6021em + 0.9rem + 2px);
   align-self: flex-start;
   display: flex;
   align-items: center;
@@ -2899,9 +2915,10 @@ button.zonerow__open:hover {
 
 .arena__credit {
   pointer-events: auto;
-  flex: 0 1 auto;
+  display: flex;
+  flex: 0 0 auto;
   min-inline-size: 0;
-  max-inline-size: 980px;
+  max-inline-size: min(980px, calc(100% - var(--inspect-floor) - 0.4rem));
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
   background: #0b0e13c4;
@@ -2909,7 +2926,17 @@ button.zonerow__open:hover {
   font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.arena__credit-lead {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.arena__credit-notice {
+  flex: none;
 }
 
 .arena__credit strong {
@@ -2924,13 +2951,15 @@ button.zonerow__open:hover {
  */
 .arena__inspect {
   pointer-events: auto;
-  /* Beside the credit, on its row (D265): it gives way before the credit does
-     (the credit is the attribution the art travels with), down to its label.
-     A shrink factor is weighted by the item's own width, so it takes a thousand
-     against the credit's one: 4 against 1 still cut the credit to 586 px while
-     the chip kept 429 of its 560 (the audit's fix pass). */
-  flex: 0 1000 auto;
-  min-inline-size: 13ch;
+  /* Beside the credit, on its row (D265): the chip gives way, the credit does
+     not (above), down to its floor — its key, "⌕ inspect · I", whole. A 13ch
+     floor on this border-box had left out the padding and the border, and one
+     ellipsis over the whole chip then ate the key itself, "⌕ inspect · …" (the
+     audit's second fix pass); now the key is a part that never shrinks, and
+     only the name or the reason is cut, whole in the tooltip. */
+  flex: 0 1 auto;
+  display: flex;
+  min-inline-size: var(--inspect-floor);
   max-inline-size: 560px;
   padding: 0.12rem 0.45rem;
   border: 1px solid var(--line);
@@ -2941,6 +2970,17 @@ button.zonerow__open:hover {
   font-size: 11px;
   text-decoration: none;
   white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The chip's key, "⌕ inspect · I", is never cut; its name or reason is. */
+.arena__inspect-key {
+  flex: none;
+}
+
+.arena__inspect-what {
+  flex: 0 1 auto;
+  min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -3301,7 +3341,15 @@ a.arena__inspect:hover {
   align-self: flex-start;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  /* **One line of items, never two** (D267 as the audit's second fix pass
+     amended it): every item below is either one line that keeps its width (the
+     engine's buttons, Concede) or at most two lines that give way (the prompt,
+     the watching line, the outlined-cards line, the hint, the notice), so the
+     bar is never taller than the prompt's two lines, whatever is in it. It
+     wrapped until then, and a key that did nothing — `I` with no card under the
+     pointer — put its hint and the "Your turn" notice on a second line under a
+     two-line prompt: 70.5 px of bar, 136.7 of column (`human-ability-42`@1060). */
+  flex-wrap: nowrap;
   gap: 0.35rem;
   margin-block-end: 0.3rem;
   padding: 0.25rem 0.5rem;
@@ -3318,21 +3366,25 @@ a.arena__inspect:hover {
 }
 
 /*
- * **The engine's prompt is two lines at most** (D265, the audit's fix pass;
- * `arena/hud.ts`'s `HUD_PROMPT`, held by `hud.test.ts`). The bar is the chrome
- * column's first row, and a prompt that wrapped to five lines (Quake's
- * targeting trigger, 250 characters) took the column to 167 px — past
- * `HUD_TOP_PX`, with the credit row over the far rank the prompt asked you to
- * target. It starts at 46ch, as it always did, and GROWS into the room the bar
- * has beside its buttons (the bar is still at most `min(1100px, 100% - 15rem)`),
- * so a spell's "…Pay Mana Cost: {1}{G}" fits two lines from 1280 px; past two
- * lines it is cut with an ellipsis. The text is the engine's, whole and verbatim:
- * it is all in the DOM (the `role="status"` region reads all of it), all of it
- * is the element's tooltip, and hovering the prompt opens it in place.
+ * **The engine's prompt is two lines at most** (D267; `arena/hud.ts`'s
+ * `HUD_PROMPT`, held by `hud.test.ts`). The bar is the chrome column's first
+ * row, and a prompt that wrapped to five lines (Quake's targeting trigger, 250
+ * characters) took the column to 167 px — past `HUD_TOP_PX`, with the credit row
+ * over the far rank the prompt asked you to target. It starts from nothing
+ * (`flex: 1 1 0`) and grows into the room the bar has beside its buttons (the
+ * bar is still at most `min(1100px, 100% - 15rem)`), so a spell's "…Pay Mana
+ * Cost: {1}{G}" fits two lines from 1280 px; past two lines it is cut with an
+ * ellipsis. **It never gives way below 46ch** (the second fix pass: from a zero
+ * basis a long hint beside it squeezed it to a sliver and pushed the rest onto
+ * a second line) — the width the prompt had before D267, two lines of it about
+ * ninety characters. The text is the engine's, whole and verbatim: it is all in
+ * the DOM (the `role="status"` region reads all of it), all of it is the
+ * element's tooltip, and hovering the prompt opens it in place.
  */
 .arena__decision .prompt {
   margin: 0;
   flex: 1 1 0;
+  min-inline-size: min(46ch, 100%);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -3342,6 +3394,41 @@ a.arena__inspect:hover {
 
 .arena__decision .prompt:hover {
   -webkit-line-clamp: unset;
+}
+
+/* The engine's buttons and Concede keep their width: one line each. */
+.arena__decision > .btn {
+  flex: none;
+}
+
+/*
+ * What gives way beside the prompt, each at most two lines and cut past them,
+ * whole in its tooltip (D267, the second fix pass): the outlined-cards line,
+ * the "not asked yet" line, the key hint (`planKey`'s `inert` reason — where
+ * `I` with nothing to inspect says so, D241) and the engine's last notice.
+ */
+.arena__decision > .muted,
+.arena__decision > .arena__hint,
+.arena__decision > .arena__notice {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* "click one of the 16 outlined cards" stays whole in its two lines. */
+.arena__decision > .muted {
+  min-inline-size: 11em;
+}
+
+/* The engine's notice is a title — "Your turn", "Not selectable" — and keeps
+   its width up to 16em; the hint is what gives way. */
+.arena__decision > .arena__notice {
+  flex-shrink: 0;
+  max-inline-size: 16em;
 }
 
 .arena__decision .btn--focused {
@@ -3363,6 +3450,14 @@ a.arena__inspect:hover {
   max-inline-size: 100%;
   color: var(--ink);
   line-height: 1.35;
+  /* Two lines at most, and never below 46ch, as the prompt it stands in for
+     (D267, the second fix pass): a hint beside it cannot wrap the bar. */
+  flex: 0 1 auto;
+  min-inline-size: min(46ch, 100%);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .arena__watch-label {

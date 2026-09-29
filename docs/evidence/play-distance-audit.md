@@ -7,11 +7,16 @@ villain identity and its second lane (D220–D222, D230–D233), the arena polis
 (D240–D241) and the personal tier's models (D190–D198). This is the first look at
 the whole: pictures of every recording that matters from every view that matters,
 a defect list graded **fix** (cheap, mechanical, inside the invariants), **owner**
-(taste — PLAN.md's owner questions 34–40, each with its picture) or **accept**
+(taste — PLAN.md's owner questions 34–41, each with its picture) or **accept**
 (with the reason), and the fixes. A skeptical verifier then re-ran the fixes and
 found what the list had missed; **§10 is the fix pass** that answered it (D267,
 four more fixes, a test for D266's second half, two owner questions and two
-accepts added, owner question 37's pictures replaced).
+accepts added, owner question 37's pictures replaced). A second verifier found
+two majors and four minors more; **§11 is fix pass 2**, on the tree rebased onto
+`main`'s `8ddd286` (the portrait standee and the GPU pass), with the near
+duelist the caller asked about (owner question 41). *(At that rebase the lane's
+owner questions were renumbered after `main`'s 32 and 33 — the standee's and the
+GPU pass's — from 32–38 to 34–40, and the defect list's O-rows with them.)*
 
 The personal tier is in the pictures (the user's own models dress Doom's card and
 the villain seat, Nick Fury's card and your seat, Coulson, the three Hulks, Peggy
@@ -87,7 +92,11 @@ never committed or published (D190). Paths below are relative to the repository.
 | crops the list below cites | `var/audit/crops/` |
 | **the fix pass (§10)**: its before/after pairs, owner question 37's caption on/off pictures, the two new accepts | `var/audit/fix/*.png` (raw shots and their DOM rectangles in `var/audit/fix/raw-{before,after}/`) |
 | **contact sheets, after the fix pass** — the same 384 shots again | `var/audit/sheets-fix/<recording>-<size>.jpg` (12), the shots in `var/audit/shots-fix/` |
-| the drivers (scratch) | `var/audit/drv/` |
+| **fix pass 2 (§11)**: the decision bar at the Quake frame with `I` pressed, before and after, both sizes | `var/audit-fix3/crops/major1-quake-i-{1280,1600}-before-after.png` (the shots: `var/audit-fix3/shots/major1-{before,after}-<size>.png`) |
+| fix pass 2: the credit at `human-sideboard-7`@1195, 1280 × 800, before and after; the chip at its floor | `var/audit-fix3/crops/credit-sideboard-1195-1280-before-after.png`, `…/chip-floor-quake-1280-before-after.png` |
+| fix pass 2: the near duelist (your Nick Fury model) — table view crops at 3×, both seats, and the verdict | `var/audit-fix3/fury/fury-verdict.png`; `var/audit-fix3/fury/<file>-<frame>-s<seat>-v1{,-crop3x}.png` |
+| **contact sheets on the rebased tree, after fix pass 2** — the 384 shots again, the personal tier's standees drawn with the tier on | `var/audit/sheets-fix3/<recording>-<size>.jpg` (12), the shots in `var/audit/shots-fix3/` |
+| the drivers (scratch) | `var/audit/drv/`, `var/fix/drv/`, `var/audit-fix3/drv/` |
 
 ## §3 The defect list
 
@@ -123,6 +132,12 @@ never committed or published (D190). Paths below are relative to the repository.
 | **O40** | *(the fix pass)* **The same moment numbered twice**: the turn-order bar says the round (`R18 your turn`, D210 — `protocol.md` §3.1: `round = ceil(turn / 2)`), the caption the player turn (`Turn 35`, the narrator's) — two lanes' widgets side by side on screen (`shots-fix/villain-wakanda-232/1600x1000/s0-p1-f525-v1.png`) | — | **owner** (question 40) |
 | **A10** | *(the fix pass)* In the side-on view (4) at 1280 × 800 the turn-order bar covers the left seat's rank, a status strip and part of a figure (`fix/a10-sideon-doom-s1-390-1280.png`) | — | **accept** — a spectator view (A3's reason); the bar is the seat's control and stays at the left edge |
 | **A11** | *(the fix pass)* At game over from seat 1 (`g1`@375, 1280 × 800, the table view) the winning duelist's raised arm reaches under the credit row's right end (`fix/a11-gameover-g1-s1-375-1280.png`) | D100 | **accept** — a duelist is decoration, the gesture is the outcome's, and the game is over |
+| **F13** | *(fix pass 2)* **A hint and a notice wrap the decision bar.** The bar wrapped its items and the prompt's zero basis let them squeeze it: at `human-ability-42`@1060 (Quake's targeting prompt, two lines), `I` pressed with no card under the pointer put the hint — *no card under the pointer and none clicked — …*, which is where D241's `I` reports that it did nothing — and the *Your turn* notice on a second line: the bar 70.5 px, the column **136.7 px** at 1280 × 800 and 1600 × 1000, the credit row over the far rank (`var/audit-fix3/crops/major1-quake-i-{1280,1600}-before-after.png`). Nobody had pressed a key before shooting | D267's own claim; D85 | **fix** (§11.2, D267 amended) |
+| **F14** | *(fix pass 2)* **F10 was not fixed**: `flex-shrink` 1 against the chip's 1,000 still took 0.3 px off the credit, and its ellipsis cut the Fan Content Policy's words — "…Unofficial Fan Conte…" at `human-sideboard-7`@1195, 1280 × 800, where `e2c337c` drew it whole (`var/audit-fix3/crops/credit-sideboard-1195-1280-before-after.png`) | D265 point 2; §10.2's "648 of 648" was wrong | **fix** (§11.3, D265 amended) |
+| **F15** | *(fix pass 2)* **The inspect chip's floor cut its own key**: 13ch on a border-box is 69.7 px of content for an 86.1-px "⌕ inspect · I", so at the floor — every replay at 1280 — it read "⌕ inspect…" (`var/audit-fix3/crops/chip-floor-quake-1280-before-after.png`) | D241 (the key is how `I` is discovered) | **fix** (§11.3) |
+| **F16** | *(fix pass 2)* Two stale comments: `styles.css` said the prompt "starts at 46ch and GROWS" (the rule was `flex: 1 1 0`) and credited the clamp to D265 (it is D267), as did `DecisionLayer.tsx`'s | — | **fix** (§11.4) |
+| **O41** | *(fix pass 2, the caller's item)* **Your duelist reads as lying on the table** in the table view with the personal tier on: your Nick Fury model (a Mixamo rig) seen from above, legs out, while Doom stands upright across the table (`villain-masters-of-evil-33`@209 and @371 and `g1`@316, both seats). It stands: its bones and its skinned feet are on the ground, in the shared idle's wide stance, which the CC0 director's long coat hides and Fury's open coat and pale boots show; the near duelist is right under the lens (`var/audit-fix3/fury/fury-verdict.png`, §11.5) | D100 (the camera never moves for a duelist) | **owner** (question 41) — neither the code nor the model is wrong; a rest pose that reads as standing from above is a look |
+| **A12** | *(fix pass 2)* At 1280 × 800 a table credit longer than the room beside the chip's floor loses the end of its artist list — 55 px of "…Elizabeth Peiró +7 more" at `human-ability-42`@1060 (`var/audit-fix3/crops/chip-floor-quake-1280-before-after.png`) | D265 point 2 as amended | **accept** — the whole list is the credit's tooltip; Scryfall's name and the notice are whole |
 
 Nothing on the list is illegible at 1× beyond what the lanes already measured (the
 strip's 16-px icons against the owner's 14; the chrome's 11-px mono), and nothing
@@ -363,7 +378,11 @@ fails it, and so does the rejected 46ch basis.
   366.5 (`fix/fix-sideboard-1280.png`). On a replay's frame with a long credit
   (1,029 px of text) the chip is at its floor, 86.1 px = its 13ch label, and the
   credit takes the rest (928.3). `hud.test.ts` holds the ratio and the floor; `0 4
-  auto` fails it.
+  auto` fails it. *(Corrected by fix pass 2, §11.3: the "648 px" was the rounded
+  box of a 648.3-px credit drawn at 648.0 — a shrink weighted by width still
+  took 0.3 px, and the ellipsis cut "…Unofficial Fan Conte…"; and the 86.1-px
+  floor held "⌕ inspect…", not its label. The ratio could not be fixed by a
+  bigger number.)*
 - **F11, the turn-order head at 10 px**: "R12 their turn" is 14 characters of a
   monospace face, 88.5 px at the bar's 10.5 against 88 px of content; at 10 px it
   is 84.3 (`fix/fix-turnhead.png`, `villain-doom-248` from seat 1 @390).
@@ -431,3 +450,213 @@ session's, as the audit's did.
   mtime under `/home/justin-a/forge`, and the sha1 of every file of
   `/home/justin-a/.forge` were fingerprinted before the fix pass and after its
   gate (`var/fix/forge-{before,after}.txt`): **unchanged** (jar `3c0a7c38…8e5dd9`; the two files compare equal byte for byte).
+
+## §11 Fix pass 2 — rebased onto `8ddd286`, and what a second verifier found (D265 point 2 and D267 amended)
+
+A second verifier confirmed the lane's data untouched, its fifteen negative
+controls red and its strips one row at nine widths, and left two majors and four
+minors (F13–F16 in §3); the caller added one item, the near duelist (O41). This
+pass rebased the lane first, then answered each, with a negative control per new
+test clause, and took the pictures again on the rebased tree.
+
+### §11.1 The rebase onto `main`'s `8ddd286`
+
+`git rebase 8ddd286` put the portrait standee (D260–D264) and the GPU pass
+(D270–D273) under the lane's two commits. Every conflict was in a document, and
+both sides were kept, `main`'s first: the root `CLAUDE.md`'s `DECISIONS.md` row,
+`DECISIONS.md` (the lane's D265–D267 after `main`'s D273), `PLAN.md` (the index,
+its rows and questions, the milestone table, the sections — one stray `---`
+`main` had left inside the GPU pass's follow-up list, between 11 and 12, came out
+when the list was rejoined), `test-count-history.md`, both nested `CLAUDE.md`s
+and the rules manifest. `Arena.tsx` merged with no conflict: the standee's
+`CanvasSizeReport` and `canvas` prop, the GPU pass's `DprGovernor`, its lazy stats
+panel and `<AdaptiveDpr />`'s removal sit beside the lane's credit row and cue
+status. `main` numbers its owner questions 32 (the standee) and 33 (the GPU
+pass), so the lane's became **34–40** (and its defect list's O-rows with them);
+every reference moved. The Open-now index was recounted from its rows: `main`'s
+344 items across 36 lists became 347 across 37, and 33 questions 40 (348 and 41
+with this pass's follow-up 5 and question 41).
+`docs/claude-md-rules.txt` was regenerated, and `claude-md.test.ts` passed with
+every rule once. On the rebased tree `npm --prefix web test` read **1,222 `node
+--test` (1,213 pass, 9 skipped) + 157 vitest**, `standee.test.ts`, `gpu-pass.test.ts`,
+`hud.test.ts` and `personal.test.ts` (its other-chair sweep) among them — once
+`web/dist` was rebuilt: the one built before the rebase carried its sources in its
+maps, which the GPU pass's build grep refuses (the gate's build job rebuilds it).
+`git merge-base --is-ancestor 8ddd286 HEAD` holds.
+
+### §11.2 F13 — the decision bar is one line of items (D267 amended)
+
+Measured in headless Chromium (`var/audit-fix3/drv/ibar.mjs`: the frame scrubbed
+to, `K`, the pointer off every card, `I` pressed), before on the first fix pass's
+stylesheet and bar, after on this tree:
+
+| `human-ability-42`@1060, `I` pressed | 1280 × 800 | 1600 × 1000 |
+|---|---|---|
+| before | bar **70.5**, column **136.7**: the prompt 565 px on two lines, the hint (594 px) and *Your turn* on a second line | bar 70.5, column 136.7 |
+| after | bar **46.4**, column **112.5**: the prompt 342 px (its floor, two lines), the outlined-cards line 132 (two lines, whole), the hint 194.1 (two lines: *no card under the pointer / and none clicked — hover o…*), *Your turn* 70.8 (one line) | bar 46.4, column 112.5: the hint 273.3 |
+
+Watching (`villain-masters-of-evil-33`@209, `I` pressed): the bar 44 px, the column
+110.1, the watching line at its floor (315.7 px, one line) and the hint whole in
+two lines at both sizes.
+
+What changed: `.arena__decision` does not wrap; the prompt keeps its zero basis
+and gains a floor, `min(46ch, 100%)` (342 px); the engine's buttons and Concede
+are `flex: none`; the outlined-cards line (down to 11em), the "not asked yet"
+line, the hint (to nothing) and the notice (kept whole up to 16em) are two lines
+at most, cut past them, whole in their tooltips (the hint gained one); the
+watching line has the prompt's floor and clamp. So the bar is never taller than
+two lines of prompt.
+
+`hud.ts`'s `flexSizes` is the CSS flexible-lengths algorithm, pure, and
+`decisionBarOf` lays the bar out with it from the widths Chromium measured
+(`measure-bar.mjs`: the corpus's widest button labels, *Alpha Strike* 105.8 px
+and *End Turn* 79.9; Concede 97.8, armed 161.8; the line heights; the mono
+advance). It agrees with Chromium at the Quake frame — the hint 194.1 px at 1280
+and 273.3 at 1600 — and `hud.test.ts` holds, at 1280 and 1600 px, the corpus's
+longest prompt (250 characters), the longest hint the arena writes (136, of the 29
+it scans from `keys.ts`, `inspect.ts` and `Arena.tsx`) and the longest notice title
+the bridge names (20, of 35) at once: **the bar 46.4 px, the column 112.4**, the
+prompt at its floor; the hint keeps 121 px at 1280 (about sixteen characters a
+line) and 200 at 1600. With a 400-character hint and notice, the widest labels
+and Concede armed, the height is the same; the hint then has no room at 1280 (51
+px at 1600) and the items' floors are 28 px wider than the bar, so they run past
+its right end into the 15rem kept for the opponent's plate, 78 px short of the
+plate itself — the height does not move. The wrapping bar (70.5 px, the column
+136.7) and a floorless prompt are the controls.
+
+Not taken (D267's amendment): the hint and the notice positioned out of the flow
+(the band has 16 px under the column, not a line, and below it is the far rank
+the band keeps clear), on the strips row (28 px spare at 1280 × 800) or on the
+credit row (full at 1280 whenever the credit is long). In the bar they stand
+beside the control they answer.
+
+### §11.3 F14, F15 — the credit drawn whole, its notice never cut, and the chip's key
+
+| | the credit | the chip |
+|---|---|---|
+| `human-sideboard-7`@1195, 1280 × 800, the first fix pass | 648.0 px drawn for 648.3 of text: "…Unofficial Fan Conte…" | 366.5 |
+| the same, after | **648.3 of 648.3, whole** | 366.1, its reason cut |
+| `human-ability-42`@1060, 1280 × 800, after | 905.3 — its room beside the chip's floor; its artist list cut by 55 px, its notice (249.9 px) whole | **109.1, its floor: the key (86.1 px) whole** |
+| the same at 1600 × 1000, after | 959.9, whole | 374.5 |
+
+The credit is `flex: 0 0 auto` up to `min(980px, 100% − --inspect-floor − 0.4rem)`,
+and `ArtCredit` draws two parts: `.arena__credit-lead` (Scryfall's name, the
+artists — the part that gives way, whole in the tooltip) and
+`.arena__credit-notice` (`flex: none`: "· © Wizards of the Coast · Unofficial
+Fan Content", or "· © Wizards of the Coast" for a card). The chip is `flex: 0 1
+auto` down to `--inspect-floor` — 14 characters of the mono face (0.6021em, what
+Chromium measured for DejaVu Sans Mono here: "⌕ inspect · I" is 86.1 px at 11 px,
+13 × 6.62) plus its padding and border, 109.1 px — and draws its key as a part
+that never shrinks (`.arena__inspect-key`) beside the name or reason that does
+(`.arena__inspect-what`). `hud.test.ts` holds it by the **rendered** width:
+`creditRowOf` (the same `flexSizes`) agrees with Chromium at three layouts — the
+two above and the audit's first cut, 1 against the chip's 4, drawn 585.7 and
+428.7, the case where weighting the shrink by width shows (unweighted, the model
+is 3.6 px off and the test is red) — and the credit is drawn whole beside the chip
+for every credit that fits, at every width from 1280 to 1920 px, with the first
+fix pass's shrink ratio as the control.
+
+### §11.4 F16, and the co-author line
+
+The stylesheet's prompt comment now says what the rule is (a zero basis, a 46ch
+floor) and credits the clamp to D267, and so does `DecisionLayer.tsx`'s. The
+verifier's fourth minor — the commits' co-author line — is left as it is, as the
+caller asked; this pass's commit carries the session's attribution too.
+
+### §11.5 O41 — your duelist from the table view
+
+With the personal tier on, the director seat is your Nick Fury model (its
+manifest's `{"seat":"director"}`), and from the table view it reads as lying on
+the table, legs out, while Doom stands across it. Looked at in the table view on
+both seats at `villain-masters-of-evil-33`@209 and @371 and `g1`@316 (the seat-1
+recordings at the same indices, `mapidx.mjs`), cropped at 3×, and from the low
+view with its bones drawn over it (`bonedots.mjs`), then measured
+(`duelbones.mjs`, `feet.mjs`: the bones' world positions and the skinned mesh's
+own vertices, `SkinnedMesh.getVertexPosition`):
+
+- **It stands.** Its ball joints are 0.001 and 0.021 over the table, its ankles
+  0.082 and 0.102, its pelvis 0.706 and its head's joint 1.221; the lowest skinned
+  vertex near each ball is −0.005 and 0.016, the top of the mesh 1.328 of the
+  duelist's 1.36. Doom reads 0.012 / −0.003 and 1.319; the CC0 director 0.004 /
+  −0.001 and 1.335 (left / right). The same at all six frames.
+- **In the idle's stance.** Every duelist plays its `idle` — for a personal model
+  the build's own retargeted from the UAL's `Idle_Loop` (`check.json`: the
+  retarget reproduces the hero clips within 0.77°) — and that stance puts one foot
+  forward: 0.51 of a unit between Fury's ankles front to back, 0.42 between the
+  CC0 director's. The CC0 director's long coat hides it; Fury's open coat and pale
+  boots show it.
+- **Seen from above.** Your duelist stands at (−3.95, 0, 4.65), near the lens, so
+  its verticals converge toward the bottom of the frame: its head is nearest, its
+  feet project down and out, and the forward foot reads as a leg laid out on the
+  table. The CC0 director is drawn the same way (`fury-verdict.png`, the four
+  panels: Fury and the CC0 director in the table view, then both in the low view
+  with their bones — the same bones, both upright).
+
+So it is **neither a code defect nor a personal-data defect**: the personal
+duelist path's root is the CC0 duelist's (the same stand, facing and scale, an
+identity quaternion on the mesh), the model's bind pose is an upright T-pose
+(`preview/sheet.png`), and its retarget is the build's. Nothing under `personal/`
+was edited. What would change the look is a pose: a duelist rest with the feet
+together (the figures' `stand` in `REST_KIT` is the shape) — owner question 41,
+defaulting to the pose it has.
+
+### §11.6 The pictures again, on the rebased tree
+
+The 384 shots of §1 (`var/audit-fix3/drv/shoot.mjs`, three Chromiums on the GTX
+1080, the dev server on 5240) into `var/audit/shots-fix3/`, sheets in
+`var/audit/sheets-fix3/`: one strip row in all 384; the column at most **95 px**
+in every replay (the watching line); the opponent's plate at most 126 px; the
+caption clear of both plates, the game-over row and the turn-order bar; the
+turn-order bar clear of the column. **The tier-on rows now carry the portrait
+standee** (D260, merged from `main`): a face-up creature no personal model
+dresses stands as its painting where its cut is legible on the canvas the page
+draws — at `villain-masters-of-evil-33`@438 nine standees at 1600 × 1000 and one
+at 1280 × 800 (D261's floor) — so those rows are not comparable creature for
+creature with §10's sheets, which predate the standee.
+
+### §11.7 The negative controls
+
+Each new clause's control was spliced into a copy of the tree (`git archive HEAD`
+with this pass's diff applied, `var/audit-fix3/copy/`), `hud.test.ts` run there,
+the splice restored and the suite run again (`var/audit-fix3/drv/controls.py`,
+`var/audit-fix3/controls.log`); afterwards `diff -r` of the copy's `web/src` and
+`web/test` against the worktree's printed nothing.
+
+| control | red | restored |
+|---|---|---|
+| C1 the bar wraps again | the one-line clause | green |
+| C2 the prompt without its floor | the one-line clause | green |
+| C3 the hint, notice and outlined line unclamped | the one-line clause | green |
+| C4 the hint without its tooltip | the one-line clause | green |
+| C5 the first fix pass's credit, `0 1 auto` | the column clause | green |
+| C6 the chip's 13ch floor | the column clause | green |
+| C7 the credit's notice allowed to give way | the credit clause | green |
+| C8 the notice back inside the credit's one text | the credit clause | green |
+| C9 the chip's key back inside its ellipsis | the credit clause | green |
+| C10 the floor one character short (and `hud.ts` with it) | the credit clause (the model misses Chromium's 109.1) | green |
+| C11 the model's shrink unweighted | the credit clause (the first cut's 585.7 / 428.7) | green |
+| C12 the notice squeezed with the hint | the one-line clause | green |
+
+### §11.8 Tests, build, gate, and the user's Forge
+
+- `npm --prefix web test` standalone: **1,224 `node --test` (1,215 pass, 0 fail,
+  9 skipped) + 157 vitest (9 files)**, from the rebased tree's 1,222 + 157:
+  `hud.test.ts`'s two new cases (the credit and the chip; the bar as one line of
+  items), the column case's credit clauses rewritten in place.
+- `node tools/build-workshop-catalog.ts --check`: current. `./bridge/build.sh`: OK.
+  `npm --prefix web run build`, gzip: the 2D entry `index-*.js` 94.68 kB
+  (unchanged), `Arena-*.js` 18.15 kB (18.05 on the rebased tree before this
+  pass), `arena-scene-*.js` 398.52 kB (unchanged), the stylesheet 19.91 kB
+  (19.75).
+- **The gate** from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, once:
+  **`check-all OK`**, **261.6 s** wall, 48 jobs whose seconds sum to 978.8 s, the
+  load average 1.77 at the start, 7.59 at most, 7.18 at the end; inside it
+  `node --test` **1,239 (1,228 pass, 0 fail, 11 skipped)** and 157 vitest in 9
+  files; no step and no job added (`var/check-all-audit-fix3.log`, run
+  `var/check-all/20260929-173647-2746863/`). This section, the histories',
+  `PLAN.md`'s and `DECISIONS.md`'s gate lines were written after the run; no code,
+  test or `CLAUDE.md` changed after it.
+- **The user's Forge install**: the `~/forge` jar's sha256, every path, size and
+  mtime under `/home/justin-a/forge`, and the sha1 of every file of
+  `/home/justin-a/.forge`, fingerprinted before the rebase and after the gate:
+  **unchanged** (jar `3c0a7c38…8e5dd9`).

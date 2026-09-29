@@ -2047,11 +2047,16 @@ function ArtCredit({
     return [...seen].sort();
   }, [art, placements]);
 
+  // Two parts (D265 point 2, the audit's second fix pass): what the art is and
+  // who painted it, which gives way when the row is short (whole in the
+  // tooltip), and the notice the art travels with, which never does.
   if (entry !== null && name !== null) {
     return (
       <span className="arena__credit" title={`${name} — art by ${entry.artist}`}>
-        <strong>{name}</strong> · {entry.setCode} #{entry.collectorNumber} · art by {entry.artist} ·
-        © Wizards of the Coast
+        <span className="arena__credit-lead">
+          <strong>{name}</strong> · {entry.setCode} #{entry.collectorNumber} · art by {entry.artist}
+        </span>
+        <span className="arena__credit-notice">{CREDIT_NOTICE_CARD}</span>
       </span>
     );
   }
@@ -2060,12 +2065,19 @@ function ArtCredit({
   const rest = artists.length - shown.length;
   return (
     <span className="arena__credit" title={artists.join(', ')}>
-      Card images and data from <a href="https://scryfall.com">Scryfall</a>
-      {shown.length > 0 && <> · art by {shown.join(', ')}</>}
-      {rest > 0 && <> +{rest} more</>} · © Wizards of the Coast · Unofficial Fan Content
+      <span className="arena__credit-lead">
+        Card images and data from <a href="https://scryfall.com">Scryfall</a>
+        {shown.length > 0 && <> · art by {shown.join(', ')}</>}
+        {rest > 0 && <> +{rest} more</>}
+      </span>
+      <span className="arena__credit-notice">{CREDIT_NOTICE_TABLE}</span>
     </span>
   );
 }
+
+/** The credit's closing words, never cut (`.arena__credit-notice`); a no-break space opens each, as the flex item would drop a plain one. */
+const CREDIT_NOTICE_CARD = '\u00a0· © Wizards of the Coast';
+const CREDIT_NOTICE_TABLE = '\u00a0· © Wizards of the Coast · Unofficial Fan Content';
 
 /**
  * **D241 — open the workshop's inspect view**: the hash is the view (`useView`),
@@ -2085,6 +2097,9 @@ function openInspect(href: string): void {
  * table and opts back into pointer events in `styles.css`.
  */
 function InspectChip({ target }: { target: InspectTarget }): JSX.Element {
+  // The label's parts never give way; the name or the reason does (D265 point 2,
+  // the audit's second fix pass: one ellipsis over the whole chip ate its own
+  // key at the chip's floor, "⌕ inspect · …").
   if (target.kind === 'inspect') {
     return (
       <a
@@ -2092,13 +2107,16 @@ function InspectChip({ target }: { target: InspectTarget }): JSX.Element {
         href={target.href}
         title={`Inspect ${target.name} in the workshop — its figure in front of its painting (I); the workshop's ▣ arena link comes back to this frame`}
       >
-        ⌕ inspect <strong>{target.name}</strong> · I
+        <span className="arena__inspect-key">{'⌕ inspect\u00a0'}</span>
+        <strong className="arena__inspect-what">{target.name}</strong>
+        <span className="arena__inspect-key">{'\u00a0· I'}</span>
       </a>
     );
   }
   return (
     <span className="arena__inspect arena__inspect--inert" title={target.why} aria-disabled="true">
-      ⌕ inspect · I <span className="arena__inspect-why">{target.why}</span>
+      <span className="arena__inspect-key">⌕ inspect · I</span>
+      <span className="arena__inspect-why arena__inspect-what">{target.why}</span>
     </span>
   );
 }
