@@ -222,3 +222,15 @@ task list, the raster, the kind budgets, the corpus counts and the film pins
 extended in place; vitest's six more are `story-render`'s and `render.test.tsx`'s
 per-fixture cases for the three recordings. Inside `check-all.sh`:
 **1,139 / 1,131 pass / 0 fail / 8 skipped**, and 130 vitest.
+
+### More villain identity's fix pass (D230, D232, D233)
+
+**1,127 `node --test` + 130 vitest (8 files)** standalone (1,121 pass, 0 fail, 6
+skipped with a `dist` present), from 1,124 + 130: three new cases — the terrain
+cap's own order past 32 (`tiles.test.ts`), every dressed name of the three AI decks
+turned face down (`traits.test.ts`, negative-controlled) and the figure layer's
+triangles held per recording (`traits.test.ts`'s `FIGURE_TRIS_HELD`, D233) — with
+the tile census (lands placed apart from tiles laid), the census's task list (its
+own `card` rung for every row of the three decks; a costume check for each thin
+predicate), the green bodies' pairwise distances and the unbacked-name check's two
+new controls extended in place.

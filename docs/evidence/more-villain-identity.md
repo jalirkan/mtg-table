@@ -1,4 +1,4 @@
-# Evidence — more villain identity (D230–D231)
+# Evidence — more villain identity (D230–D233)
 
 Branch `more-villain-identity`, off `main` at `c330942`, in the worktree
 `mtg-table-t2v2`, on 2026-09-29. Everything below was run on this machine that
@@ -155,15 +155,15 @@ truth in the same change; the rest are printed only.
 | `stack` | frozen (stack in combat) frames | 72 | 87 | yes |
 | `stack` | resolutions | 493 | 723 | yes |
 | `stack` | `orb` forms | 3 (`Land`) | 11 (`Land`, and `''`: the Monarch's end-step draw, an effect with no type line) | yes — its type lines |
-| `tiles` | lands in the busiest frame | 21 | 24 | yes |
+| `tiles` | lands PLACED in the busiest frame (the fix pass: counted apart from the tiles laid) | 21 | **25** (`villain-wakanda-232@525`–`@532`) | yes — and every one laid: the cap went from 24 to 32 (D230, §11) |
 | `motion` | classic film (comic FX off, on twos off) | 305,737 over the 19 + 45,744 for `villain-doom-248` | unchanged, + 48,367 · 34,571 · 44,122 for the three new files | yes — a pin each (`POST_LANE_FILMS`) |
 | `clips` | modelled figures that left · died on their own `die` | 20 · 20 | 41 · 40 (the 41st is §4.3) | yes (§4.3) |
 | `traits` | cards with an identity in the census | 29 | 69 | printed; rows asserted |
-| `traits` | prop kinds at once (every other recording) | 17 | 17 | yes |
+| `traits` | prop kinds at once (every other recording) | 17 | 17 (the Hulk family's own: 16, then **17** after the fix pass, `@323`; 10 on its most crowded frames, from 8) | yes |
 | `traits` | the villain recordings' own holds | doom 22 · 17 | doom 22 · 17; Masters 26 · 12; Wakanda 20 · 15 (§6) | yes |
 | `workshop` | the Hulks the personal tier dresses take the engine's facts | yes | no — the corpus's (all 24 Hulk family names face up) | yes |
 | `status` | strips · with the wire's keywords | 13,951 · 1,332 | 26,851 · 7,977 | printed |
-| `status` | the closest strip to a head | 2.2 px (Ant-Man) | 1.4 px (Birds of Paradise) | yes (≥ 1) |
+| `status` | the closest strip to a head | 2.2 px (Ant-Man) | 1.4 px (Birds of Paradise); 1.7 px (Volcanic Villain, attacking) after the fix pass drew Birds as a flock | yes (≥ 1) |
 | `figure-pose` | stand points · back-row · boxed in | 15,773 · 805 · 4 | 28,808 · 2,538 · 4 | yes (boxed in unchanged) |
 | `figure-pose` | poses · with a model · anonymous · ghosts | 15,909 · 9,266 · 1,179 · 136 | 28,968 · 20,641 · 1,179 · 160 | printed |
 | `layout` | state frames · placements · backs | 4,077 · 99,818 · 17,248 | 5,522 · 153,501 · 21,834 | printed |
@@ -174,10 +174,12 @@ truth in the same change; the rest are printed only.
 | `look` | painted figure-instances (sick) · ghosts | 9,217 (2,095) · 95 | 20,579 (3,411) · 119 | printed |
 | `palette` | face-up figure-instances | 14,730 | 27,789 | printed |
 | `duelists` | stances ready · won · lost | 8,088 · 33 · 33 | 10,960 · 42 · 42 | printed |
-| `tiles` | tile-instances | 33,450 | 50,993 | printed |
+| `tiles` | tile-instances | 33,450 | 50,993; 51,001 after the fix pass lays the eight frames' 25th land | printed |
 | `story-render` | renderings · logs · names marked | 280 · 20 · 18,910 | 322 · 23 · 27,251 | printed |
 | `workshop` | rehearsal batches · cues | 4,086 · 7,533 | 4,100 · 7,554 | printed |
 | `figures` | face-down battlefield instances | 1,138 | 1,138 | yes (unchanged) |
+| `figure-pose`, `look`, `status` | anonymous figure-instances · concealed creatures | 1,179 · 1,179 | 1,179 · 1,179 | printed — **the three new recordings add none**: they carry no face-down and no redacted battlefield card, so every hidden-information sweep over the corpus says nothing about their rows; the fix pass's face-down control (§11) does |
+| `traits` | the figure layer's most triangles at once (the fix pass's new test, D233) | — | Doom 31,318 · Masters 31,449 · Wakanda 28,710 · every other `g1`'s 24,701 | yes — `FIGURE_TRIS_HELD` |
 
 **The corpus lists.** Every sweep that reads the corpus globs `fixtures/games/`,
 so the three files joined every one of them by being there; the lists that name
@@ -214,19 +216,37 @@ the same id play once — the arrival, which carries rule 5b's gesture; the
 connive's card still flies to the hand on its own `zone` event. **Nothing in the
 old corpus moved**: `PRE_LANE_FILM` and `villain-doom-248`'s pin hold op for op.
 
-### 4.3 A snapshot ran ahead of its own zone event (held, not fixed)
+### 4.3 A snapshot ran ahead of its own zone event (held, not fixed — and a race)
 
 `clips: every figure that dies over the corpus is carried by its own die request`
 failed on the Masters of Evil: Web Up's exile trigger resolving against Moonstone.
 The frame at transport index 455 already holds Moonstone in exile — and holds the
 trigger on the stack too — while the `zone` event that moves her arrives in the
 next frame's batch, so the departure is decided (D64: once, on its first frame)
-before her death is queued, and her body is not drawn dying. **Recording the game
-again alone, at a load average of 2, put it in the same place**: it is the
-engine's snapshot and event order, not the forwarder's clock under load. The test
-now tells it apart — a departure whose `zone` event comes one batch late — names
-it and holds it to the one; PLAN.md's more-villain-identity follow-up 1 is the
-arena change (a departure that waits a batch for its death) that would draw it.
+before her death is queued, and her body is not drawn dying. The test tells it
+apart — a departure whose `zone` event comes one batch late — names it and holds
+it to the one; PLAN.md's more-villain-identity follow-up 1 is the arena change (a
+departure that waits a batch for its death) that would draw it.
+
+**It is a flush-timing race, not the engine's order** (corrected by the fix pass;
+the lane first wrote that a quiet re-record "put it in the same place", which was
+one re-record). Six re-records of seed 33, every one `SAME GAME` by
+`tools/same-game.mjs` (the same 2,517 events, the framing different from frame 248
+on):
+
+| re-record | load | Moonstone leaves the snapshot | her `zone` event | |
+|---|---|---|---|---|
+| the committed file | 2–3 | `@455` | `@456` | a frame late |
+| the verifier's `rr-moe` | 4–17 | frame 456 | frame 456 | the SAME frame: drawn dying |
+| the verifier's two others | 4–17 | `@457`, `@460` | `@458`, `@461` | a frame late |
+| the fix pass's three, recorded at once (`var/vf/rr{1,2,3}.jsonl`) | ~5 | `@463`, `@462`, `@462` | `@464`, `@463`, `@463` | a frame late |
+
+(The verifier's frames are as the verifier reported them.) Five
+of six put her snapshot a frame ahead and one did not: the forwarder's clock
+decides which batch her event lands in, the D113 class. So `clips.test.ts`'s count
+of one is an outcome of that race pinned by the committed recording, and a
+re-record can change it — to zero, if the event lands in the snapshot's frame. The
+arena change is the real fix, because it draws her whichever way the race goes.
 
 ### 4.4 A sacrificed token named in its own ability (`fixtures.test.ts`)
 
@@ -316,14 +336,14 @@ says the woman's):
 
 | card | body · rest | head | props | in short |
 |---|---|---|---|---|
-| Whiplash, Vengeful Engineer | man · ready | cowl | gauntlets (electric blue) | dark green armour and hood, his whips crackling in both hands |
+| Whiplash, Vengeful Engineer | man · ready | cowl, teal | gauntlets (electric blue) | a dark suit under a teal hood, his whips crackling in both hands (fix pass: was dark green) |
 | Songbird, Sonic Screamer | woman · braced | long, white | wings (pink) | charcoal and white; the hard-sound wings she flies on |
 | MACH-1, Swooping Scoundrel | man · ready, hovering | cowl | mask, visor (red), jetpack, exhaust | a gunmetal flying suit, red lenses, thrusters — an Artifact Creature — Human Villain, so a man in a suit |
 | Yellowjacket, Heartless Marauder | woman · akimbo, 0.6, hovering | bald under the helmet | helmet, wings (yellow) | small and winged like Wasp; the antennae helmet tells her from Wasp |
-| Boomerang, Blade Flinger | man · highReady | cowl | — | slate blue, steel gloves and belt, a blade raised |
+| Boomerang, Blade Flinger | man · highReady | cowl, dark navy | mask (silver) | steel blue, steel gloves and belt, his helm's silver faceguard, a blade raised (fix pass: was slate in a slate hood, no mask) |
 | Fixer, Techno Terror | man · working | parted | visor (red), labBench (red) | red goggles over a bench of gadgets, grey harness over red |
 | White Widow, Yelena Belova | woman · ready | bob, blonde | visor (ice) | a white suit, silver gloves and belt, goggles |
-| Common Crook | man · atEase | cowl | — | a burglar's balaclava and a rust-red jacket |
+| Common Crook | man · atEase | long, dark | — | bare-headed and long-haired in rust-orange over tan (fix pass: was a balaclava) |
 | Whirlwind, Killer Cyclone | man · braced, hovering | cowl | mask | green armour and finned helm on his own cyclone |
 | Volcanic Villain | man · braced, 1.05 | long, fire | gauntlets (lava) | molten skin, dark rock with glowing seams, burning fists |
 | Klaw, Sonic Subjugator | man · braced | parted | gauntlets (magenta) | a cream shirt, brown trousers, sound at his hands; aims to attack |
@@ -332,24 +352,24 @@ says the woman's):
 | Tiger Shark, Abyssal Hunter | man · braced, 1.12 | cowl, purple | — | an orange suit, purple finned hood, a shark's grey skin |
 | Atlas, Sizable Stooge | man · akimbo, 1.3 | parted | — | a maroon giant with gold bracers |
 | Radioactive Man | man · braced | bald | gauntlets (green) | a glowing green body, the yellow star on his chest — no lab bench |
-| The Masters of Evil | man · akimbo, a squad of three | cowl, purple | mask, cape | Baron Zemo's hood, mask and cloak leading the team (Zemo himself carries `AI:RemoveDeck:All` and is not in the deck) |
+| The Masters of Evil | man · akimbo, a squad of three | cowl, purple | mask, cape | Baron Zemo's purple hood, mask and cloak over a dark tunic, and two figures in shadow behind him — a squad's followers wear the leader's `top` (fix pass: all three were purple). Zemo himself carries `AI:RemoveDeck:All` and is not in the deck |
 
 **The Hulk family** (gamma bodies; the woman's body is the hero rung's):
 
 | card | body · rest | head | props | in short |
 |---|---|---|---|---|
 | Rick Jones, Destined Sidekick | man · atEase, 0.94 | crop, brown | — | a red jacket, yellow sweater, jeans |
-| Birds of Paradise | insect, 0.38, hovering | — | — | the crowned crane's grey, on the insect's own wings |
-| Brawn, Amadeus Cho | man · braced | crop | — | gamma green, purple vest and trousers, white gloves — no lab bench |
+| Birds of Paradise | insect rig, not drawn · a `ring` swarm of 3, hovering | — | (swarmBee) | a flock of three small fliers in crane grey (fix pass: was the insect body at 0.38) |
+| Brawn, Amadeus Cho | man · braced | crop | — | gamma green, a dark purple vest over white, charcoal trousers, white gloves — no lab bench (fix pass: vest and trousers were purple) |
 | Hellcat, Undying Vigilante | woman · ready | long, red | — | the yellow catsuit, brown gloves, boots and belt |
-| Knight of Wundagore | man · ready | long, orange | — | a cat-knight: an orange lion's face and mane over dark blue armour |
+| Knight of Wundagore | man · ready | long, orange | mask (orange) | a cat-knight: a lion's face (the mask) under an orange mane, dark blue armour (fix pass: was an orange face with human eyes) |
 | Gallant Citizen (also Wakanda's) | man · atEase | parted | — | an astronaut in white with red trim, as the card paints him |
-| Gamma Grotesque | man · braced, 1.18 | bald | — | a dark green gamma monster in torn trunks |
+| Gamma Grotesque | man · working (hunched, no bench), 1.18 | bald | — | a teal-green gamma monster in black torn trunks (fix pass: was braced, green in purple-grey) |
 | She-Hulk, Attorney-at-Law | woman · akimbo, 1.12 | long, dark green | — | green, a purple suit over a white blouse |
 | She-Hulk, Jade Defender | woman · braced, 1.18 | long, dark green | — | green, in her fighting white and purple |
 | Hercules, Prince of Power | man · akimbo, 1.16 | crop | — | bare-chested, green trunks, gold belt and bracers |
-| Hulkling, Burgeoning Bruiser | man · braced, 1.08 | crop, blond | — | a green Kree-Skrull in a purple shirt |
-| Hulk, Brutal Brawler · Strongest There Is · Gamma Goliath | man · braced / akimbo / ready, 1.34 / 1.38 / 1.42 | crop, dark olive | — | gamma green, barefoot in torn purple trousers — the biggest people on the table |
+| Hulkling, Burgeoning Bruiser | man · highReady, 1.08 | crop, blond | — | a yellow-green Kree-Skrull in lavender, the olive-gold of his scale down the chest, a fist raised (fix pass: was braced in purple) |
+| Hulk, Brutal Brawler · Strongest There Is · Gamma Goliath | man · braced / akimbo / ready, 1.34 / 1.38 / 1.42 | parted · crop · long, dark olive | — | barefoot, the biggest people on the table, each his own: green in torn purple · a deeper green in maroon-brown · a bright green, maned, in indigo (fix pass: all three were one green in purple, cropped) |
 | Red Hulk | man · akimbo, 1.38 | crop | — | red, in black trousers |
 | Abomination, Irradiated Brute · Terrifying Titan | man · braced / akimbo, 1.3 / 1.34 | bald | — | a grey-olive scaled hide · a darker green one |
 | Wolverine, Fierce Fighter | man · braced, 0.92 | cowl, yellow | gauntlets (steel) | the yellow and blue, claws glinting — and short |
@@ -401,7 +421,11 @@ cloak from the front (46 px: a squad's leader is drawn smaller; `ONE_SIDED`'s
 cloak row now names Doom and the Masters, each carried by the hood in front).
 The tightest that pass: Black Panther, Most Dangerous's gauntlets 48 px from your
 seat, Storm's cloak 49 from the far seat, the spears 157/114 (the Dora Milaje)
-and 93/87 (the Warriors' smaller leader). Two looks were taken off the raster's
+and 93/87 (the Warriors' smaller leader). The fix pass's masks are details carried
+by their partners, as every mask is: Boomerang's faceguard 0 px from your seat and
+57 from the far one, his cowl 302/214; the Knight of Wundagore's lion face 0/40,
+his mane 283/101 — the one raster rule the fix pass changed is `ONE_SIDED`'s
+`mask` partner, the cowl OR the long style (D232). Two looks were taken off the raster's
 bar while the rows were written: Birds of Paradise's extra wings (28 px from your
 seat at 0.38) and the Warriors' crop (44 px from the front; their parted hair is
 the S.H.I.E.L.D. squad's, with the same partner).
@@ -423,7 +447,7 @@ recordings added:
 | recording | most kinds at once · where | on its most crowded frames (cards) | base tree: at once · crowded |
 |---|---|---|---|
 | Masters of Evil | 26 · `@235` (26 cards) | 12 (40, `@438`) | 19 · 3 |
-| Hulk family | 16 · `@323` | 8 (37, `@410`–`@436`) | 14 · 13 |
+| Hulk family | 16 · `@323`; **17** after the fix pass (the Knight's mask; a lance with it made 18, and went) | 8 (37, `@410`–`@436`); **10** after the fix pass | 14 · 13 |
 | Wakanda | 20 · `@485` (46 cards) | 15 (48, `@525`–`@532`) | 15 · 14 |
 | Doom Legion (unchanged) | 22 · `@296` | 17 (49) | 22 · 17 |
 
@@ -453,6 +477,19 @@ The GTX 1080 and SwiftShader read the same counts on every file:
 | Wakanda | **lane** (T'Chaka in the cloak, with the spear) | **119** · `@477`, `@527`–`@533` | **33,592** · `@382` | 0 · 215 · 198 |
 | Doom Legion | base = lane | 128 · `@392` | 37,546 · `@393` | 16 · 130 · 97 |
 | `g1` | base = lane | 89 · `@353` | 29,609 · `@355` | 0 · 0 · 0 |
+| Masters of Evil | **the fix pass** (D232) | 107 · `@471` | **35,689** · `@371` | 0 · 211 · 257 |
+| Hulk family | **the fix pass** | 107 · `@427` | 27,318 · `@368` | 0 · 118 · 0 |
+| Wakanda | **the fix pass** (the 25th land laid, D230) | 119 · `@477`, `@527`–`@533` | 33,592 · `@382` | 0 · 215 · 198 |
+| Doom Legion, `g1` | **the fix pass** | 128, 89 (unchanged) | 37,546, 29,609 (unchanged) | 16 · 130 · 97; 0 · 0 · 0 |
+
+The fix pass's sweeps (`var/vf/sweep-fix1-*.json`, a scratch copy of the same
+driver on CDP port 9172, 2026-09-29 at 07:05–07:12, load 3–9) read the same counts
+on the GTX 1080 and SwiftShader for every file. What its re-dressing moved: the
+Masters of Evil +122 triangles at `@371` (Boomerang's faceguard; the crook's long
+hair for his cowl), the Hulk family +1 call at `@427` and +276 triangles at `@368`
+(the Knight's mask, Birds of Paradise's three fliers for the insect body, the
+Goliath's mane), and Wakanda **+124 triangles and no call** at `@525`–`@533`, the
+25th land's tile the old cap left undrawn.
 
 **The spear's argument, measured**: at Wakanda's worst frames it is exactly one
 call (120 → 121) and about 200 triangles, and with T'Chaka's robe it would have
@@ -464,14 +501,20 @@ the base tree's 13 (the base tree stood the hero rung's women, each in her own
 long hair and face, beside the rungs' men; dressed, most of that table is bald
 or crop-haired gamma bodies).
 
-**The triangles are the increment to watch.** The dressed Masters of Evil add
-about 5,300 at their worst frame (`@371`: props 14,415 against the base tree's
-8,487 — the team's squad followers 2,800, the cowls 432 an instance against the
-parted hair's 114, gauntlets 240 a hand), and over the whole file 257 frames are
-over §8.2's 30,000 where the base tree has 11; Wakanda adds about 4,100 (198
-frames over, none on the base tree). The calls stay under the bench's 120 on
-both. This is PLAN.md's villain-identity follow-up 4, a budget for a crowded
-table, with two more tables to measure it against.
+**The triangle line is NOT met on two of these tables, and that is accepted (D233),
+not watched.** The lane first called the triangles "the increment to watch"; the
+verifier's point was that a line crossed without a decision is a line nobody
+keeps. The dressed Masters of Evil add 5,442 at their worst frame (`@371`: props
+14,415 against the base tree's 8,487 — the S.H.I.E.L.D. Agents' squad and the
+Masters' own, 2,800 a squad, the cowls 432 an instance against the parted hair's
+114, the gauntlets 120 a fist), and over the whole file 257 frames are over §8.2's
+30,000 where the base tree has 11; Wakanda adds 4,142 (198 frames over, none on the
+base tree, whose worst is 29,450 — 98% of the line). The calls stay under the
+bench's 120 on both. D233 accepts each table with those numbers, says why a cut
+does not meet the line short of taking a card's first read (§11 has the measured
+cuts), and holds the part identity owns — the figure layer — in
+`traits.test.ts`'s `FIGURE_TRIS_HELD`; villain identity's follow-up 4, a budget for
+a crowded table, is still the real fix.
 
 **The bench** (`tools/arena-bench.mjs --no-bloom`, the default 600 ms settle;
 `--index N` reads its counters at the end of its five-second sample, so the
@@ -488,6 +531,21 @@ SwiftShader pairs):
 | Hulk family `--index 377` | SwiftShader | 98 / 26,784 · 34.7 ms | 103 / 25,526 · 34.9 ms |
 | Wakanda `--index 477` | GTX 1080 | 117 / 31,976 · 3.9 ms | 118 / 27,591 · 4.7 ms |
 | Wakanda `--index 477` | SwiftShader, three pairs | 122 / 32,008 · 68.5 ms; 119 · 47.4; 118 · 34.9 | 118 / 27,613 · 34.4; 118 · 35.4; 118 · 34.6 |
+
+**The fix pass's benches** (`var/vf/bench-*.log`: the same flags, `--port 9174`,
+07:12–07:14 at a load average of 7–9, one run each — other lanes were running):
+
+| bench | GTX 1080: calls / triangles · p95 | SwiftShader: calls / triangles · p95 |
+|---|---|---|
+| `g1` `--index 355` | 88 / 26,619 · 0.6 ms | 89 / 26,621 · 47.6 ms |
+| Masters of Evil `--index 421` | 103 / 34,395 · 1.2 ms — FAIL on triangles | 103 / 34,417 · 38.0 ms — FAIL |
+| Hulk family `--index 377` | 106 / 26,552 · 1.2 ms | 99 / 26,538 · 35.3 ms — FAIL on time |
+| Wakanda `--index 477` | 118 / 32,102 · 5.6 ms — FAIL on triangles | 120 / 32,004 · 47.1 ms — FAIL |
+
+The verdicts are the lane's: the triangle FAILs are D233's accepted breach, the
+SwiftShader time FAILs are every tree's, `g1`'s included; the calls stay under 120
+(Wakanda's SwiftShader sample read 120 — a played sample includes the cues'
+transients).
 
 A played sample includes the cues' transients, so it can read a call or two over
 the static sweep (Wakanda's 122 on one SwiftShader run). On the GTX 1080 the p95 is
@@ -534,6 +592,23 @@ As with `villain-doom-248`, each recording is seen from the AI deck's seat, so t
 S.H.I.E.L.D. director duelist stands behind the villains (PLAN.md's
 villain-identity follow-up 12).
 
+**The fix pass's pictures** (§11), the same drivers copied to `var/vf/` (CDP ports
+9171–9174), headless Chromium on the GTX 1080, under `var/villains2/fix1/`:
+
+- `var/villains2/fix1/pedestal-1x-sheet-masters-of-evil.png`, `…-hulk-family.png`,
+  `…-wakanda.png` — every creature of each deck at the workshop's 1× front, comic
+  look (the singles under `var/villains2/fix1/pedestal/<deck>/front-<card>.png`);
+- `var/villains2/fix1/eval-sheet-<deck>.png` — the inspect view, each figure over
+  its card's art (`…/pedestal/<deck>/inspect-<card>.png`);
+- `var/villains2/fix1/table-villain-masters-of-evil-33-at-471.png` and `…-at-371.png`,
+  `table-villain-hulk-family-261-at-427.png` and `…-at-368.png`,
+  `table-villain-wakanda-232-at-527.png`, `…-at-477.png` and `…-at-382.png` — the
+  table view at each recording's worst-calls and worst-triangles frames;
+- `var/villains2/fix1/view3-villain-masters-of-evil-33-at-471.png`,
+  `view3-villain-hulk-family-261-at-427.png`, `view3-villain-wakanda-232-at-527.png`
+  — over the opponent's shoulder;
+- `var/villains2/fix1/try1/` — the first look at the thirteen re-dressed cards.
+
 ## 8. Tests and the gate
 
 `npm --prefix web test`: `node --test` **1,124 tests, 1,118 pass, 0 fail, 6
@@ -555,10 +630,12 @@ twenty-four cues are data the scene chunk carries. The gate: §9.
 |---|---|---|---|---|
 | 1 | 9160 | 273.4 s (48 jobs, 1,019.5 s of job time, load 5.6 → 13.8 at most → 7.4) | **check-all OK**, exit 0 | `var/check-all-villains2-p1.log` (`var/check-all/20260929-060224-2112587/`) |
 | 2 | 9170 | 253.1 s (48 jobs, 955.6 s of job time, load 5.3 → 10.1 at most → 9.0) | **check-all OK**, exit 0 | `var/check-all-villains2-p2.log` (`var/check-all/20260929-060716-2217362/`) |
+| **fix pass** | 9160 | **267.9 s** (48 jobs, 1,011.3 s of job time, load 7.9 → 12.8 at most → 8.5) | **check-all OK**, exit 0 | `var/check-all-villains2-fix1.log` (`var/check-all/20260929-071502-2950549/`) |
 
 Inside the gate `node --test` is **1,139 / 1,131 pass / 0 fail / 8 skipped** (the
 ws-log suite reads step 10's logs, `MTGTABLE_WS_LOGS`) and vitest **130**, both
-runs. Step 6 compared `fixtures/games/g1.jsonl` (`wire-drift: SAME`, M49's
+runs; **1,142 / 1,134 / 0 / 8** and 130 in the fix pass's run (its three new
+tests). Step 6 compared `fixtures/games/g1.jsonl` (`wire-drift: SAME`, M49's
 keywords removed from the fresh file as ever) and 9b
 `fixtures/games/human-auto-42.jsonl` — neither of the new files; 9b is advisory
 and printed its usual framing differences. Step 11 passed the corpus's 23
@@ -572,6 +649,109 @@ Fingerprinted before the lane's first JVM and after its second gate — every pa
 size and mtime under both (`find -printf '%p %s %T@'`, sorted), the sha1 of every
 file under `~/.forge` and the jar's sha256: 22,128 entries under `~/forge` and 27
 under `~/.forge`, the two listings and the `~/.forge` sha1s byte for byte identical
-before and after, the jar's sha256 still `3c0a7c38…8e5dd9`. **Unchanged.** Every
+before and after, the jar's sha256 still `3c0a7c38…8e5dd9`. **Unchanged.** The
+fix pass did the same again, before its first JVM (the three re-records of seed 33)
+and after its gate (`var/vf/{forge,dotforge,dotforge-sha1,jar}-{before,after}.txt`):
+22,128 and 27 entries, every listing, sha1 and the jar's sha256 byte for byte
+identical — **unchanged**. Every
 JVM of the lane booted in `var/` — the seed search in homes of its own
 (`forge_home_make`), the committed recordings and the gate in the checkout's.
+
+## 11. The fix pass — what the verifier found, and what changed (D230, D232, D233)
+
+The verifier (round 1, at `690fa18`) found three majors and five minors, and read
+the pictures. Every major is fixed; four minors are fixed and one is the owner's
+(question 31).
+
+**The terrain's cap (major; D230 item 5).** The lane's "24 lands in the busiest
+frame" was `MAX_TILES`, not the table: `tiles.test.ts` counted tiles LAID, which
+can never exceed the cap. Counted apart, `villain-wakanda-232`'s last turns PLACE
+**25** lands on eight frames (`@525`–`@532`), and the cap of 24 (report 13 §2's 21
+with room) left one land of each without its terrain — the frames the lane benched
+and pictured, and README's frame 527. The cap is **32** now (`figures/tiles.ts`'s
+`MAX_TILES`; `scene/tiles.ts`'s `TILE_CAPACITY` is `MAX_TILES` itself). The
+terrain is instanced, so the 25th land costs **no draw call**; it costs 124
+triangles (one slab; `var/vf/tiletris.mts` counts 124 for every tile mesh), and the
+sweep reads exactly that: Wakanda `@525`–`@533` 31,978 / 32,004 → 32,102 / 32,128
+triangles at 118 / 119 calls, unchanged. The test now holds 25 placed at those
+eight frames, every placed land laid (`laid = min(placed, MAX_TILES)` on all 5,522
+board frames), no frame capped, and the cap's own order with a synthetic table of
+40 lands built from `@525` (32 laid, the first 32 in placement order). Tile
+instances over the corpus: 50,993 → 51,001.
+
+**The triangles (major; D233).** Accepted per recording with its numbers (§6), and
+the figure layer held by a new test. `traits.test.ts`'s `FIGURE_TRIS_HELD` counts,
+every frame of every recording, each modelled body's triangles (`models.json`) and
+each prop kind's geometry as `PropField` builds it — procedural, or baked (a squad
+follower is its body, the carved parted hair 114, the long 416) — times its
+instances, and holds the worst:
+
+| recording | figure layer, dressed: worst · where | bare tree (`c330942`'s rows) | the scene's worst (§6) |
+|---|---|---|---|
+| Masters of Evil | **31,449** `@376` (bodies 16,792, props 14,657) | 25,285 `@363` | 35,689 `@371` (its figure layer there 31,331) |
+| Doom Legion | **31,318** `@393` | = (dressed in `c330942`) | 37,546 `@393` |
+| Wakanda | **28,710** `@376` (bodies 18,092, props 10,618) | 24,870 `@359` | 33,592 `@382` (its figure layer there 28,710) |
+| every other: `g1` | **24,701** `@342` | = | 29,609 `@355` |
+| Hulk family | 23,600 `@427` | 22,584 `@429` | 27,318 `@368` |
+
+(`var/vf/figtris.mts`, the test's counting as a scratch, reads the bare tree.) Each
+held number must stay within 5% of the corpus's, so a cut is recorded, not left as
+slack. The measured cuts that were NOT taken (`var/vf/cutsim.mts`: the sweep's
+triangles, frame by frame, minus the named props' figure-layer part): Wakanda
+without the Warriors' squad 30,792 and 64 frames over; with it and every lit fist
+gone 29,992 (8 under); with it and every Panther's hood gone 29,928 (the raster
+forbids a mask without its hood); with a mask, or a cloak and a spear, in place of
+the fists 30,340 and 30,348, 26 frames over. The Masters of Evil without their
+squad 32,889, 68 over.
+
+**Moonstone (major; D230's bullet).** A race, not the engine's order: §4.3.
+
+**The census's thin checks (minor).** Every census row of the three decks must
+read its own `card` rung, and the rows carry their costume, so Hellcat (yellow,
+red hair, the woman's body), the Knight (the lion's mask, orange fur, blue
+armour), Boomerang (mask, cowl, steel gloves) and Brawn (green, white under a
+dark vest, charcoal) are each checked for what is theirs.
+
+**The token field (minor).** `fixtures.test.ts`'s `unbackedNames` reads the wire's
+`token: true` from the frame before, never `name.endsWith(' Token')`; two new
+negative controls (a card named like a token that is not one; a Doombot token).
+The corpus still uses the look-behind once.
+
+**The pictures (minor, and the verifier's reading).** Nine rows re-dressed, each
+on a kind its table already draws (D232; §5's rows say what each was): the Masters
+of Evil's two followers in shadow behind a purple Zemo (a squad's followers wear
+the leader's `top`, and his tunic went dark); Whiplash dark under a teal hood;
+Boomerang's silver faceguard; the Common Crook bare-headed and long-haired; the
+green bodies apart (three Hulks with their own hair, green and trousers; Gamma
+Grotesque teal and hunched; Hulkling lavender, a fist raised; Brawn a dark vest
+over white); Birds of Paradise a flock of three; the Knight's lion face. The green
+bodies' pairwise distance (the most of skin, top and trousers, RGB) is now 49 at
+the closest pair (Gamma Grotesque and Abomination, Terrifying Titan), held at ≥ 40.
+A lance for the Knight was tried and taken off: with his mask it put the Hulk
+family's table at 18 prop kinds at once (`@323`). Kinds, recounted: the Hulk
+family 17 at once and 10 crowded (from 16 and 8); the Masters of Evil 26 / 12 and
+Wakanda 20 / 15 unchanged. The status strip's closest head is 1.7 px (Volcanic
+Villain, attacking), from Birds of Paradise's 1.4.
+
+**The skin tone (minor; the owner's).** Every Wakandan wears the one pale default,
+against art of a Black cast — slice 4's rule, kept by D231. Changing it is a
+decision about the rule, not a row; PLAN.md's owner question 31 asks it.
+
+**Concealment (minor).** The three recordings add no anonymous figure (1,179
+before and after) and no face-down battlefield instance (1,138): every hidden-
+information sweep is vacuous over them, and §3 now says so. A new test turns each
+of the 50 dressed names face down twice (its name kept; Forge's empty face) and
+requires the anonymous disc with nothing on it, and a five-key stub in its place to
+stand nothing; the same card face up must read its own row. With `pose.ts`'s gate
+narrowed to redacted cards (`placement.back && isHidden(placement.card)`), the test
+fails on its first name, Whiplash.
+
+**Tests after the fix pass**: `npm --prefix web test` — `node --test` **1,127
+tests, 1,121 pass, 0 fail, 6 skipped** (1,124 / 1,118 before: the tile control,
+the face-down control and the figure-layer test), vitest **130** (8 files).
+`npm --prefix web run build`: OK — the 2D entry chunk 93.53 kB gzip (unchanged),
+the shared scene chunk 390.67 kB (389.79: the rows' notes grew).
+
+**The fix pass's gate**: from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT`
+9160 — **267.9 s**, check-all OK, exit 0, `node --test` inside it 1,142 / 1,134 /
+0 / 8 and 130 vitest (§9's table). `~/forge` and `~/.forge` unchanged (§10).

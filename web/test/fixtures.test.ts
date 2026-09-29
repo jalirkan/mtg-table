@@ -180,29 +180,39 @@ function allCards(body: GameStateBody): AnyCard[] {
  * before, and that is the look-behind the narrator reads a name by (its own
  * frame or the one before it, D123) and no further. A card that is not a token
  * keeps the same-frame rule, and so does a token last seen two frames back.
- * Negative-controlled below. Pure over state bodies.
+ * **What is a token is the wire's `token` field, never the name**: the frame
+ * before backs a name only when a visible card of that name carried
+ * `token: true` there (the fix pass: the first cut read `name.endsWith(' Token')`,
+ * which a non-token card so named would pass and a token named otherwise — a
+ * Doombot — would fail). Negative-controlled below. Pure over state bodies.
  */
 function unbackedNames(bodies: readonly GameStateBody[], opponentOnly: readonly string[]): { unbacked: string[]; lookBehind: number } {
   const unbacked: string[] = [];
   let lookBehind = 0;
-  let before = new Set<string>();
+  /** The names the frame before showed on a visible TOKEN (the wire's `token: true`). */
+  let tokensBefore = new Set<string>();
   bodies.forEach((body, index) => {
     const visible = new Set<string>();
-    for (const card of allCards(body)) if (!isHidden(card)) visible.add(card.name);
+    const tokens = new Set<string>();
+    for (const card of allCards(body)) {
+      if (isHidden(card)) continue;
+      visible.add(card.name);
+      if (card.token === true) tokens.add(card.name);
+    }
     for (const { where, text: line } of engineTexts(body)) {
       for (const name of opponentOnly) {
         if (!line.includes(name) || visible.has(name)) continue;
-        if (name.endsWith(' Token') && before.has(name)) {
+        if (tokensBefore.has(name)) {
           lookBehind += 1;
           continue;
         }
         unbacked.push(
           `state ${String(index)} ${where} prints ${JSON.stringify(name)} — a name only the opponent's deck holds — ` +
-            `in a frame where no visible card carries it${name.endsWith(' Token') ? ', nor in the frame before' : ''}: ${JSON.stringify(line)}`,
+            `in a frame where no visible card carries it, nor a visible token in the frame before: ${JSON.stringify(line)}`,
         );
       }
     }
-    before = visible;
+    tokensBefore = tokens;
   });
   return { unbacked, lookBehind };
 }
@@ -211,8 +221,8 @@ function unbackedNames(bodies: readonly GameStateBody[], opponentOnly: readonly 
 const tokenLookBehinds: string[] = [];
 
 test('unbacked names: a sacrificed token is backed by the frame before and no further; any other card by its own frame (D230, negative controls)', () => {
-  const card = (id: number, name: string, zone: string): AnyCard =>
-    ({ id, name, zone, owner: 1, controller: 1, faceDown: false, token: name.endsWith(' Token') }) as unknown as AnyCard;
+  const card = (id: number, name: string, zone: string, token = false): AnyCard =>
+    ({ id, name, zone, owner: 1, controller: 1, faceDown: false, token }) as unknown as AnyCard;
   const body = (cards: AnyCard[], texts: string[]): GameStateBody =>
     ({
       stack: texts.map((text, i) => ({ id: 900 + i, sourceCardId: 86, controller: 1, text, targetCardIds: [], targetPlayerIds: [] })),
@@ -230,8 +240,8 @@ test('unbacked names: a sacrificed token is backed by the frame before and no fu
         },
       })),
     }) as unknown as GameStateBody;
-  const names = ['Clue Token', 'Nick Fury, Spymaster'];
-  const clue = card(86, 'Clue Token', 'battlefield');
+  const names = ['Clue Token', 'Nick Fury, Spymaster', 'Doombot'];
+  const clue = card(86, 'Clue Token', 'battlefield', true);
   const fury = card(12, 'Nick Fury, Spymaster', 'battlefield');
   const crack = 'Clue Token (86) - AI-Seat1 draws a card.';
   // The case: the token on the table, then sacrificed for its own ability.
@@ -242,6 +252,14 @@ test('unbacked names: a sacrificed token is backed by the frame before and no fu
   assert.equal(unbackedNames([body([], [crack])], names).unbacked.length, 1);
   assert.equal(unbackedNames([body([clue], []), body([], []), body([], [crack])], names).unbacked.length, 1);
   assert.equal(unbackedNames([body([fury], []), body([], ['Nick Fury, Spymaster (12) - something'])], names).unbacked.length, 1);
+  // The fix pass: the TOKEN FIELD decides, never the name. A card named like a
+  // token that the wire says is not one is not backed by the frame before; a
+  // token whose name says nothing (a Doombot) is.
+  assert.equal(unbackedNames([body([card(86, 'Clue Token', 'battlefield', false)], []), body([], [crack])], names).unbacked.length, 1);
+  assert.deepEqual(
+    unbackedNames([body([card(41, 'Doombot', 'battlefield', true)], []), body([], ['Doombot (41) - something'])], names),
+    { unbacked: [], lookBehind: 1 },
+  );
 });
 
 test('there is at least one committed fixture to replay', () => {

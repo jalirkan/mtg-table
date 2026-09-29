@@ -9,7 +9,8 @@
  * Every land on the table is a shallow, procedurally extruded **rounded
  * rectangle** — not a hex tile — sized to the card footprint plus a margin, with
  * the card lying on top of it. All the tiles of one kind are one instance buffer,
- * so the whole terrain of a 21-land board costs **4 draw calls**: a plateau, the
+ * so the whole terrain of a board costs **4 draw calls** however many lands it
+ * has (21 in report 13 §2's frame, 25 at the corpus's busiest): a plateau, the
  * water, the neutral slab, and one rim mesh for the two-tone (*Thriving*) lands.
  *
  * ---------------------------------------------------------------------------
@@ -37,13 +38,17 @@
 
 import * as THREE from 'three';
 
-import type { TileLayout } from '../figures/tiles.ts';
+import { MAX_TILES, type TileLayout } from '../figures/tiles.ts';
 import { TILE_KINDS, type TileKind } from '../figures/types.ts';
 import { CARD_W } from '../layout.ts';
 import type { OffsetSource } from './discs.ts';
 
-/** Report 13 §2's measured ceiling is 21 lands in one frame; 24 is that with room. */
-export const TILE_CAPACITY = 24;
+/**
+ * The instance buffers hold as many tiles as `tilePose` lays — `MAX_TILES`, 32
+ * since D230 (report 13 §2 measured 21 lands in one frame, the corpus now places
+ * 25). A bigger buffer costs no draw call.
+ */
+export const TILE_CAPACITY = MAX_TILES;
 
 /**
  * §5.1 — the footprint, and it is **the rank pitch rather than the card**.

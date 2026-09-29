@@ -256,6 +256,44 @@ test('traits: a face-down Wasp is the anonymous disc — no wings, no hover, no 
   assert.ok(Math.abs(pose.height - FIGURE_HEIGHT) < 1e-9, 'a face-down creature took a trait scale');
 });
 
+test('traits: every name the three AI decks dress, turned FACE DOWN, is the anonymous disc — and a stub stands nothing (hard rule 8; D232, the fix pass)', () => {
+  // The corpus sweeps are vacuous for these decks: their three recordings carry no
+  // face-down and no redacted battlefield card (figures.test.ts's anonymous count,
+  // 1,179, did not move with them). So each dressed name is turned face down here
+  // — keeping its name, the hostile case, and with Forge's own empty face-down
+  // name — and each must lose everything its row gives it, while the same card
+  // face up is dressed (the control that the row is really there to lose).
+  const cards = corpusCards();
+  let checked = 0;
+  for (const name of D231_NAMES) {
+    const card = cards.get(name) ?? factCard(name);
+    const up = posesOf(twoSeatState([], [onBattlefield(card, 500, 1)])).get(500);
+    assert.ok(up !== undefined && !up.anonymous, `${name} face up stands no dressed figure`);
+    assert.ok(up.traitRungs.includes('card'), `${name} face up does not read its own row — the control is empty`);
+    for (const [how, extra] of [
+      ['keeping its name', { faceDown: true }],
+      ["with Forge's face-down face", { faceDown: true, name: '', types: 'Creature', manaCost: null, power: '2', toughness: '2' }],
+    ] as const) {
+      const pose = posesOf(twoSeatState([], [onBattlefield(card, 500, 1, extra)])).get(500);
+      assert.ok(pose !== undefined, `${name} face down (${how}) is not a figure`);
+      assert.equal(pose.anonymous, true, `${name} face down (${how}) is not anonymous`);
+      assert.equal(pose.modelId, null, `${name} face down (${how}) stands a body`);
+      assert.deepEqual(pose.props, [], `${name} face down (${how}) carries props`);
+      assert.equal(pose.costume, null, `${name} face down (${how}) wears a costume`);
+      assert.equal(pose.hair, null, `${name} face down (${how}) has hair`);
+      assert.deepEqual(pose.traitRungs, [], `${name} face down (${how}) read a trait rung`);
+      assert.equal(pose.swarm, 0, `${name} face down (${how}) is a swarm`);
+      assert.equal(pose.lift, 0, `${name} face down (${how}) hovers`);
+    }
+    const stub = { id: 500, zone: 'battlefield', owner: 1, controller: 1, hidden: true } as unknown as AnyCard;
+    const stubState = twoSeatState([], [stub]);
+    assert.equal(posesOf(stubState).get(500), undefined, `a five-key stub stood a figure where ${name} was`);
+    checked += 1;
+  }
+  assert.ok(checked >= 45, `only ${String(checked)} dressed names checked`);
+  console.log(`traits: ${String(checked)} names the three AI decks dress, each face down twice and as a stub — every one anonymous or absent`);
+});
+
 // ---------------------------------------------------------------------------
 // Slice 4 — the costume and the body
 // ---------------------------------------------------------------------------
@@ -572,10 +610,10 @@ test('traits: every Masters of Evil, Hulk family and Wakanda person wears its ow
     ['Songbird, Sonic Screamer', 'hero', 'braced', 'long', true],
     ['MACH-1, Swooping Scoundrel', 'agent', 'ready', 'cowl', false],
     ['Yellowjacket, Heartless Marauder', 'hero', 'akimbo', null, true],
-    ['Boomerang, Blade Flinger', 'agent', 'highReady', 'cowl', true],
+    ['Boomerang, Blade Flinger', 'agent', 'highReady', 'cowl', false],
     ['Fixer, Techno Terror', 'agent', 'working', 'parted', true],
     ['White Widow, Yelena Belova', 'hero', 'ready', 'bob', true],
-    ['Common Crook', 'agent', 'atEase', 'cowl', true],
+    ['Common Crook', 'agent', 'atEase', 'long', true],
     ['Whirlwind, Killer Cyclone', 'agent', 'braced', 'cowl', false],
     ['Volcanic Villain', 'agent', 'braced', 'long', true],
     ['Klaw, Sonic Subjugator', 'agent', 'braced', 'parted', true],
@@ -588,16 +626,16 @@ test('traits: every Masters of Evil, Hulk family and Wakanda person wears its ow
     ['Rick Jones, Destined Sidekick', 'agent', 'atEase', 'crop', true],
     ['Brawn, Amadeus Cho', 'scientist', 'braced', 'crop', true],
     ['Hellcat, Undying Vigilante', 'hero', 'ready', 'long', true],
-    ['Knight of Wundagore', 'agent', 'ready', 'long', true],
+    ['Knight of Wundagore', 'agent', 'ready', 'long', false],
     ['Gallant Citizen', 'agent', 'atEase', 'parted', true],
-    ['Gamma Grotesque', 'agent', 'braced', null, true],
+    ['Gamma Grotesque', 'agent', 'working', null, true],
     ['She-Hulk, Attorney-at-Law', 'hero', 'akimbo', 'long', true],
     ['She-Hulk, Jade Defender', 'hero', 'braced', 'long', true],
     ['Hercules, Prince of Power', 'agent', 'akimbo', 'crop', true],
-    ['Hulkling, Burgeoning Bruiser', 'agent', 'braced', 'crop', true],
-    ['Hulk, Brutal Brawler', 'agent', 'braced', 'crop', true],
+    ['Hulkling, Burgeoning Bruiser', 'agent', 'highReady', 'crop', true],
+    ['Hulk, Brutal Brawler', 'agent', 'braced', 'parted', true],
     ['Hulk, Strongest There Is', 'agent', 'akimbo', 'crop', true],
-    ['Hulk, Gamma Goliath', 'agent', 'ready', 'crop', true],
+    ['Hulk, Gamma Goliath', 'agent', 'ready', 'long', true],
     ['Red Hulk', 'agent', 'akimbo', 'crop', true],
     ['Abomination, Irradiated Brute', 'agent', 'braced', null, true],
     ['Abomination, Terrifying Titan', 'agent', 'akimbo', null, true],
@@ -635,12 +673,39 @@ test('traits: every Masters of Evil, Hulk family and Wakanda person wears its ow
   for (const [name, row] of Object.entries(TRAITS.cards)) {
     if (row.costume?.skin !== undefined) assert.ok(TRANSFORMED_SKIN[name] !== undefined, `${name} paints a skin and is not on TRANSFORMED_SKIN`);
   }
-  // The gamma bodies: the Hulks green in purple trousers, Red Hulk red, the Abominations scaled.
+  // The gamma bodies: the Hulks green, Red Hulk red, the Abominations scaled.
   for (const name of ['Hulk, Brutal Brawler', 'Hulk, Strongest There Is', 'Hulk, Gamma Goliath']) {
     const hulk = poseOf(name);
     assert.ok(slot(hulk, 'skin').g > slot(hulk, 'skin').r + 50 && slot(hulk, 'top').g > slot(hulk, 'top').r + 50, `${name} is not gamma green`);
-    assert.ok(slot(hulk, 'legs').b > slot(hulk, 'legs').g + 40, `${name}'s trousers are not purple`);
   }
+  assert.ok(slot(poseOf('Hulk, Brutal Brawler'), 'legs').b > slot(poseOf('Hulk, Brutal Brawler'), 'legs').g + 40, "the Brutal Brawler's trousers are not purple");
+  // The fix pass (D232): the verifier read the green bodies — three Hulks, Gamma
+  // Grotesque, Hulkling, Brawn and Abomination, Terrifying Titan — as one slim
+  // green rig in purple or dark trousers, told apart by scale alone. Each pair now
+  // differs by at least 40 (RGB distance) in its skin, its top or its trousers, and
+  // no two share a head and a rest.
+  const GREEN_BODIES = [
+    'Hulk, Brutal Brawler',
+    'Hulk, Strongest There Is',
+    'Hulk, Gamma Goliath',
+    'Gamma Grotesque',
+    'Hulkling, Burgeoning Bruiser',
+    'Brawn, Amadeus Cho',
+    'Abomination, Terrifying Titan',
+  ];
+  const dist = (a: ReturnType<typeof rgb>, b: ReturnType<typeof rgb>): number => Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+  const apart: string[] = [];
+  for (let i = 0; i < GREEN_BODIES.length; i++) {
+    for (let j = i + 1; j < GREEN_BODIES.length; j++) {
+      const a = poseOf(GREEN_BODIES[i]!);
+      const b = poseOf(GREEN_BODIES[j]!);
+      const most = Math.max(...(['skin', 'top', 'legs'] as const).map((k) => dist(slot(a, k), slot(b, k))));
+      apart.push(`${GREEN_BODIES[i]!} / ${GREEN_BODIES[j]!} ${most.toFixed(0)}`);
+      assert.ok(most >= 40, `${GREEN_BODIES[i]!} and ${GREEN_BODIES[j]!} are the same green body (skin, top and trousers within ${most.toFixed(0)})`);
+      assert.ok(a.hair !== b.hair || a.rest !== b.rest, `${GREEN_BODIES[i]!} and ${GREEN_BODIES[j]!} share a head (${String(a.hair)}) and a rest (${String(a.rest)})`);
+    }
+  }
+  console.log(`traits: the green bodies, pairwise — the most any of skin, top and trousers differ (≥ 40)\n  ${apart.join('\n  ')}`);
   const red = slot(poseOf('Red Hulk'), 'skin');
   assert.ok(red.r > red.g + 100, 'Red Hulk is not red');
   const grey = slot(poseOf('Abomination, Irradiated Brute'), 'skin');
@@ -868,8 +933,20 @@ interface Row {
   silhouette: string;
   heightMin: number;
   heightMax: number;
+  /** The costume's slots by name, off the first pose on the table (`{}` for a body that wears none). */
+  costume: Readonly<Record<string, string>>;
   /** First seen as a ghost on the stack, and not yet on the table. */
   ghostFirst?: boolean;
+}
+
+/** A pose's costume as slot → colour (the census reads a row's cloth by name). */
+function costumeByName(pose: FigurePose): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (pose.costume === null) return out;
+  COSTUME_SLOTS.forEach((slot, i) => {
+    out[slot] = pose.costume![i]!;
+  });
+  return out;
 }
 
 /**
@@ -1002,8 +1079,46 @@ function rowFromFacts(name: string): Row {
     silhouette: pose.silhouette ?? '-',
     heightMin: pose.height,
     heightMax: pose.height,
+    costume: costumeByName(pose),
   };
 }
+
+/** A `#rrggbb`'s mean channel, 0–255 (the census's "dark" and "light"). */
+function lum(hex: string | undefined): number {
+  if (hex === undefined) return Number.NaN;
+  return (parseInt(hex.slice(1, 3), 16) + parseInt(hex.slice(3, 5), 16) + parseInt(hex.slice(5, 7), 16)) / 3;
+}
+
+/** A saturated `#rrggbb`'s hue, named in the census's six words (null for a grey). */
+function hueName(hex: string | undefined): string | null {
+  if (hex === undefined) return null;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  if (max === 0 || (max - min) / max < 0.25) return null;
+  const d = max - min;
+  const h = (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+  if (h < 15 || h >= 345) return 'red';
+  if (h < 38) return 'orange';
+  if (h < 70) return 'yellow';
+  if (h < 170) return 'green';
+  if (h < 260) return 'blue';
+  return 'purple';
+}
+const isHue = (hex: string | undefined, name: string): boolean => hueName(hex) === name;
+/** Steel: a light grey — little between its channels. */
+const isSteel = (hex: string | undefined): boolean => hex !== undefined && hueName(hex) === null && lum(hex) > 120;
+
+/**
+ * **The names D231 dressed** — every card of the Masters of Evil, the Hulk family
+ * and Wakanda with a `traits.json` row. The census holds each to its OWN row (the
+ * `card` rung), not only to what its predicate names (the fix pass, D232).
+ */
+const D231_NAMES: ReadonlySet<string> = new Set(
+  ['masters-of-evil.dck', 'hulk-family.dck', 'wakanda.dck'].flatMap((file) => namesOf(file)).filter((name) => TRAITS.cards[name] !== undefined),
+);
 
 test('traits: the census — every deck card reads as itself, and every row fires', () => {
   const rows = new Map<string, Row>();
@@ -1047,6 +1162,7 @@ test('traits: the census — every deck card reads as itself, and every row fire
         silhouette: pose.silhouette ?? '-',
         heightMin: pose.height,
         heightMax: pose.height,
+        costume: costumeByName(pose),
       };
       row.instances += 1;
       if (!pose.ghost) {
@@ -1063,6 +1179,7 @@ test('traits: the census — every deck card reads as itself, and every row fire
           row.silhouette = pose.silhouette ?? '-';
           row.heightMin = pose.height;
           row.heightMax = pose.height;
+          row.costume = costumeByName(pose);
           row.ghostFirst = false;
         }
       } else if (row.instances === 1) {
@@ -1148,10 +1265,10 @@ test('traits: the census — every deck card reads as itself, and every row fire
     ['Songbird, Sonic Screamer', (r) => r.props.includes('wings') && r.props.includes('hairLong') && String(r.model).startsWith('hero'), 'a woman on sound wings'],
     ['MACH-1, Swooping Scoundrel', (r) => ['mask', 'visor', 'jetpack', 'exhaust', 'hairCowl'].every((k) => r.props.includes(k)) && r.hover > 0.2, 'a helmed flier on thrusters, lenses lit'],
     ['Yellowjacket, Heartless Marauder', (r) => r.props.includes('helmet') && r.props.includes('wings') && r.hover > 0.2 && r.heightMax < 0.6, 'small, helmeted, winged, flying'],
-    ['Boomerang, Blade Flinger', (r) => r.props.includes('hairCowl'), 'cowled'],
+    ['Boomerang, Blade Flinger', (r) => ['mask', 'hairCowl'].every((k) => r.props.includes(k)) && !r.props.includes('face') && isSteel(r.costume['gloves']), "a silver faceguard in a dark hood, steel gloves"],
     ['Fixer, Techno Terror', (r) => ['visor', 'labBench', 'hairParted'].every((k) => r.props.includes(k)), 'goggles at a bench of gadgets'],
     ['White Widow, Yelena Belova', (r) => r.props.includes('visor') && r.props.includes('hairBob'), 'goggles over a blonde bob'],
-    ['Common Crook', (r) => r.props.includes('hairCowl') && r.swarm === '-', 'a hooded crook'],
+    ['Common Crook', (r) => r.props.includes('hairLong') && !r.props.includes('hairCowl') && r.swarm === '-' && isHue(r.costume['top'], 'orange'), 'a long-haired crook in a rust-orange shirt'],
     ['Whirlwind, Killer Cyclone', (r) => r.props.includes('mask') && r.props.includes('hairCowl') && r.hover > 0.1, 'masked and helmed, riding his cyclone'],
     ['Volcanic Villain', (r) => r.props.includes('gauntlets') && r.props.includes('hairLong'), 'burning fists, flames for hair'],
     ['Klaw, Sonic Subjugator', (r) => r.props.includes('gauntlets') && r.props.includes('hairParted'), 'sound at his hands'],
@@ -1160,22 +1277,22 @@ test('traits: the census — every deck card reads as itself, and every row fire
     ['Tiger Shark, Abyssal Hunter', (r) => r.props.includes('hairCowl') && r.heightMax > 0.9, 'a big man in a finned hood'],
     ['Atlas, Sizable Stooge', (r) => r.props.includes('hairParted') && r.heightMax > 1.05, 'a giant'],
     ['Radioactive Man', (r) => r.props.includes('gauntlets') && !r.props.includes('labBench'), 'glowing hands — no lab bench'],
-    ['The Masters of Evil', (r) => r.swarm === '2 squad' && ['squad', 'mask', 'cape', 'hairCowl'].every((k) => r.props.includes(k)), "a squad led by Zemo's hood, mask and cloak"],
+    ['The Masters of Evil', (r) => r.swarm === '2 squad' && ['squad', 'mask', 'cape', 'hairCowl'].every((k) => r.props.includes(k)) && lum(r.costume['top']) < 60 && isHue(r.costume['hair'], 'purple'), "a squad led by Zemo's purple hood, mask and cloak, the two behind him in shadow (the followers wear the leader's dark top)"],
     // …the Hulk family…
     ['Rick Jones, Destined Sidekick', (r) => r.props.includes('hairCrop') && r.heightMax < 0.85, 'a young man, a little short of a hero'],
-    ['Birds of Paradise', (r) => String(r.model).startsWith('insect') && r.hover > 0.3 && r.heightMax < 0.4, 'a small flier on the insect body'],
-    ['Brawn, Amadeus Cho', (r) => r.props.includes('hairCrop') && !r.props.includes('labBench'), 'no lab bench'],
-    ['Hellcat, Undying Vigilante', (r) => r.props.includes('hairLong'), 'long hair'],
-    ['Knight of Wundagore', (r) => r.props.includes('hairLong'), "a lion's mane"],
+    ['Birds of Paradise', (r) => String(r.model).startsWith('insect') && r.swarm === '3 ring' && r.props.includes('swarmBee') && r.hover > 0.2, 'a flock of three small fliers, circling'],
+    ['Brawn, Amadeus Cho', (r) => r.props.includes('hairCrop') && !r.props.includes('labBench') && isHue(r.costume['skin'], 'green') && lum(r.costume['shirt']) > 200 && lum(r.costume['legs']) < 60, 'green, a dark vest over white — no lab bench'],
+    ['Hellcat, Undying Vigilante', (r) => r.props.includes('hairLong') && isHue(r.costume['top'], 'yellow') && isHue(r.costume['hair'], 'red') && String(r.model).startsWith('hero'), 'the yellow catsuit, red hair'],
+    ['Knight of Wundagore', (r) => ['mask', 'hairLong'].every((k) => r.props.includes(k)) && !r.props.includes('face') && isHue(r.costume['skin'], 'orange') && isHue(r.costume['top'], 'blue'), "a lion's face under a mane, in dark blue armour"],
     ['Gallant Citizen', (r) => r.props.includes('hairParted') && String(r.model).startsWith('agent'), 'a man, parted hair — no glow disc'],
-    ['Gamma Grotesque', (r) => !/hair/.test(r.props) && r.heightMax > 0.95, 'a bald monster bigger than a man'],
+    ['Gamma Grotesque', (r) => !/hair/.test(r.props) && r.heightMax > 0.95 && String(r.model).endsWith('@working') && lum(r.costume['legs']) < 40, 'a bald monster bigger than a man, hunched, in black trunks'],
     ['She-Hulk, Attorney-at-Law', (r) => r.props.includes('hairLong') && r.heightMax > 0.9, 'a tall woman'],
     ['She-Hulk, Jade Defender', (r) => r.props.includes('hairLong') && r.heightMax > 0.95, 'a taller woman'],
     ['Hercules, Prince of Power', (r) => r.props.includes('hairCrop') && r.heightMax > 0.95 && String(r.model).startsWith('agent'), "big, in the man's body"],
-    ['Hulkling, Burgeoning Bruiser', (r) => r.props.includes('hairCrop') && String(r.model).startsWith('agent'), "the man's body"],
-    ['Hulk, Brutal Brawler', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1, 'the Hulk: the biggest person on the table'],
-    ['Hulk, Strongest There Is', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1, 'the Hulk'],
-    ['Hulk, Gamma Goliath', (r) => r.props.includes('hairCrop') && r.heightMax > 1.15, 'the biggest Hulk'],
+    ['Hulkling, Burgeoning Bruiser', (r) => r.props.includes('hairCrop') && String(r.model) === 'agent@highReady' && isHue(r.costume['top'], 'purple'), "the man's body, a fist raised, in lavender"],
+    ['Hulk, Brutal Brawler', (r) => r.props.includes('hairParted') && r.heightMax > 1.1 && isHue(r.costume['legs'], 'purple'), 'the Hulk in purple: one of the biggest people on the table'],
+    ['Hulk, Strongest There Is', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1 && !isHue(r.costume['legs'], 'purple'), 'the Hulk, cropped, in brown'],
+    ['Hulk, Gamma Goliath', (r) => r.props.includes('hairLong') && r.heightMax > 1.15 && isHue(r.costume['legs'], 'blue'), 'the biggest Hulk, maned, in indigo'],
     ['Red Hulk', (r) => r.props.includes('hairCrop') && r.heightMax > 1.1, 'as big as the Hulk'],
     ['Abomination, Irradiated Brute', (r) => !/hair/.test(r.props) && r.heightMax > 1.05, 'bald and huge'],
     ['Abomination, Terrifying Titan', (r) => !/hair/.test(r.props) && r.heightMax > 1.05, 'bald and huge'],
@@ -1206,6 +1323,11 @@ test('traits: the census — every deck card reads as itself, and every row fire
     }
     assert.ok(row !== undefined, `${name} never reached the census`);
     assert.ok(ok(row), `${name} should read as ${what}: ${JSON.stringify(row)}`);
+    // The fix pass (D232): a row of the three AI decks D231 dressed must read ITS
+    // OWN row — the `card` rung — so no predicate passes on what a rung supplies
+    // alone (the verifier found Hellcat's and the Knight's `hairLong`, Boomerang's
+    // cowl and Brawn's crop would all have held with the row deleted).
+    if (D231_NAMES.has(name)) assert.ok(row.rungs.split('+').includes('card'), `${name} does not read its own traits.json row: rungs ${row.rungs}`);
   }
   console.log(`traits: the AI decks' rows no committed recording puts on the table, read off a pose from their facts (D221, D231)\n${offTable.join('\n')}`);
 
@@ -1231,6 +1353,80 @@ test('traits: the census — every deck card reads as itself, and every row fire
     assert.ok(crowd.kinds > 0 && crowd.kinds <= held.crowded, `${file}: ${String(crowd.kinds)} prop kinds on its most crowded frames, over its measured ${String(held.crowded)} — each is a draw call on a table already over the lines (D222)`);
   }
   assert.ok(worstInstances.n <= 96, `${String(worstInstances.n)} prop instances in one frame`);
+});
+
+/**
+ * **The figure layer's triangles at once** (the fix pass of more villain identity,
+ * D233). Report 13 §8.2's line is 30,000 triangles for the whole scene; identity
+ * adds to it through the bodies it models and the props it hangs on them, and
+ * nothing else — the cards, tiles, discs and strips are the same with no row at
+ * all. So this is the part identity owns, counted the way the renderer draws it:
+ * each modelled figure's body (`models.json`'s triangles), and each prop kind's
+ * geometry as the prop field builds it (the procedural kinds, and the baked
+ * ones — a squad follower is its body, a carved hairstyle its mesh) times its
+ * instances (one per anchor, one per swarm or squad member).
+ *
+ * The whole scene's worst frames (docs/evidence/more-villain-identity.md §6, a
+ * static sweep on the GTX 1080 and SwiftShader) are over the 30,000 on the Doom
+ * Legion's, the Masters of Evil's and Wakanda's tables. D222 accepted the Doom
+ * Legion's (over before identity); D233 accepts the Masters' and Wakanda's with
+ * their numbers — and holds the part identity owns HERE, so it cannot grow: each
+ * villain recording to its own measured worst, every other recording to the
+ * worst among them. A held number is a measurement, so it must stay within 5% of
+ * what the corpus gives (a cut is recorded, not left as slack).
+ */
+const FIGURE_TRIS_HELD: Readonly<Record<string, number>> = {
+  'games/villain-doom-248.jsonl': 31318,
+  'games/villain-masters-of-evil-33.jsonl': 31449,
+  'games/villain-wakanda-232.jsonl': 28710,
+};
+/** Every recording not named above: its worst figure-layer triangles at once (`g1`@342). */
+const FIGURE_TRIS_OTHERS = 24701;
+
+test('traits: the figure layer\'s triangles at once — each villain table held to its measured worst, every other recording to theirs (D233)', async () => {
+  const library = await loadLibrary();
+  const field = new PropField();
+  field.setLibrary(library, MODELS);
+  const kindTris = new Map<string, number>();
+  for (const child of field.group.children) {
+    const geometry = (child as THREE.Mesh).geometry;
+    const n = geometry.index !== null ? geometry.index.count / 3 : geometry.getAttribute('position').count / 3;
+    kindTris.set(child.name.replace(/^props:/, ''), n);
+  }
+  const worst = new Map<string, { tris: number; at: number; bodies: number; props: number }>();
+  for (const { file, index, state } of FRAMES) {
+    const poses = figurePose(layout(state), state.board?.combat ?? null, DATA, { models: MODELS });
+    let bodies = 0;
+    let props = 0;
+    for (const pose of poses.values()) {
+      const base = baseModelOf(pose.modelId);
+      if (base !== null) bodies += MODELS.models[base]?.triangles ?? 0;
+      for (const prop of pose.props) {
+        const key = prop.kind === 'squad' ? `squad:${base ?? ''}` : prop.kind;
+        const per = kindTris.get(key);
+        assert.ok(per !== undefined, `${file}@${String(index)}: the prop field builds no ${key}`);
+        const instances =
+          prop.kind === 'swarmBee' || prop.kind === 'squad' ? pose.swarm : Math.max(1, anchorsOf(prop.kind, familyOf(pose.modelId, MODELS), pose.hair === null).length);
+        props += per * instances;
+      }
+    }
+    const was = worst.get(file);
+    if (was === undefined || bodies + props > was.tris) worst.set(file, { tris: bodies + props, at: index, bodies, props });
+  }
+  const lines: string[] = [];
+  let others = { tris: 0, where: '' };
+  for (const [file, w] of [...worst].sort((a, b) => b[1].tris - a[1].tris)) {
+    lines.push(`  ${file.padEnd(46)} ${String(w.tris).padStart(6)} at @${String(w.at)} (bodies ${String(w.bodies)}, props ${String(w.props)})`);
+    if (FIGURE_TRIS_HELD[file] === undefined && w.tris > others.tris) others = { tris: w.tris, where: `${file}@${String(w.at)}` };
+  }
+  console.log(`traits: the figure layer's most triangles at once, per recording (D233)\n${lines.join('\n')}\n  every other recording: ${String(others.tris)} (${others.where}), held to ${String(FIGURE_TRIS_OTHERS)}`);
+  for (const [file, held] of Object.entries(FIGURE_TRIS_HELD)) {
+    const got = worst.get(file)?.tris ?? 0;
+    assert.ok(got > 0 && got <= held, `${file}: the figure layer draws ${String(got)} triangles at once, over its measured ${String(held)} (D233)`);
+    assert.ok(got >= held * 0.95, `${file}: ${String(got)} triangles against a held ${String(held)} — re-measure and record the cut (D233)`);
+  }
+  assert.ok(others.tris <= FIGURE_TRIS_OTHERS, `${others.where}: ${String(others.tris)} figure-layer triangles at once, over the ${String(FIGURE_TRIS_OTHERS)} every other recording keeps (D233)`);
+  assert.ok(others.tris >= FIGURE_TRIS_OTHERS * 0.95, `every other recording now peaks at ${String(others.tris)} against a held ${String(FIGURE_TRIS_OTHERS)} — re-measure (D233)`);
 });
 
 test('traits: every prop a deck card names fits the body that card stands in', () => {
@@ -1553,7 +1749,12 @@ const ONE_SIDED: Readonly<Record<string, { partner: string | readonly string[]; 
   // Villain identity (D221): a mask is a FACE — Doom's iron plate, Kang's, the
   // skull on Crossbones' balaclava — and from behind the cowl it is worn under
   // (the hood, the helm, the balaclava) carries the card.
-  mask: { partner: 'hairCowl', why: 'a mask is on the face — from behind, the cowl over it carries Doom, Kang and Crossbones (D221)' },
+  // The fix pass (D232): the Knight of Wundagore's lion face is a mask under a
+  // MANE, and from behind the mane carries it as the cowl carries a hooded face.
+  mask: {
+    partner: ['hairCowl', 'hairLong'],
+    why: "a mask is on the face — from behind, the cowl over it carries Doom, Kang and Crossbones (D221), and the Knight of Wundagore's mane its lion face (D232)",
+  },
   // …and Doom wears a cloak over a tunic: from the front the cloak is behind him
   // (13 px) and from behind the tunic is under it (31) — so each is a detail of
   // HIS, carried by the other side's: the hood from the front, the cloak from

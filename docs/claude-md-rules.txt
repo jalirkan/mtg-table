@@ -223,6 +223,8 @@
 4. **A Human is a person, and a skin is a costume only when the body is
 5. **Reuse first, and a new kind carries its measured cost** (D231). The kit's
 6. **The corpus's late and odd frames are named, not smoothed** (D230). A
+7. **A look is judged at the table's distance, and the part identity owns of
+**not met** on the Doom Legion's, the Masters of Evil's and Wakanda's crowded
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -607,3 +609,4 @@ span: A row the corpus cannot reach is named, never kept in silence.
 span: A Human is a person, and a skin is a costume only when the body is transformed
 span: Reuse first, and a new kind carries its measured cost
 span: The corpus's late and odd frames are named, not smoothed
+span: A look is judged at the table's distance, and the part identity owns of the triangles is held

@@ -27,7 +27,7 @@ changing, and the others when a change crosses into them.
 |---|---|
 | [`bridge/CLAUDE.md`](bridge/CLAUDE.md) | The Java bridge: `Snap.java`'s three conventions, the socket's rules, the end of a game, `/health`, the console seat's vocabulary, the build's five self-tests, and reading Forge's source as prose. |
 | [`web/CLAUDE.md`](web/CLAUDE.md) | The TypeScript client: the test suites, the board's conventions (M4, M5 and M6 — M6's also bind the bridge's acts, its reset hook and `ActGuard`), the workshop and the story page. |
-| [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), Lanes LOOK, MOTION and BODIES, the status layer (D210–D212), the personal tier's loader (D194–D198), and villain identity (D220–D222, D230–D231). |
+| [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), Lanes LOOK, MOTION and BODIES, the status layer (D210–D212), the personal tier's loader (D194–D198), and villain identity (D220–D222, D230–D233). |
 | [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, the card library with the `#cards` browser, and the personal tier's pipeline (`tools/personal/`, D190–D198). |
 | [`tools/README.md`](tools/README.md) | Every script under `tools/` — what it is for, whether the gate runs it, whether it needs the engine — and *Commands, by task*: every command *Build and run* below does not keep. |
 
@@ -557,6 +557,7 @@ are history from before this rule, and stay.
 | `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are the relief window's D225–D227, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D198 (a lane keeps the numbers it reserved, D200). |
 | `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are the relief window's D225–D228, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D198 (a lane keeps the numbers it reserved, D200). |
 | `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are more villain identity's D230–D231, villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D198 (a lane keeps the numbers it reserved, D200). |
+| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are more villain identity's D230–D233, villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D198 (a lane keeps the numbers it reserved, D200). |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a

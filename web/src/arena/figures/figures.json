@@ -185,7 +185,7 @@
     },
     "Birds of Paradise": {
       "model": "insect",
-      "_note": "More villain identity (D231): the library has no bird, and its one organic flier is the insect — a Bird of Paradise stands as a small winged thing in the crowned crane's grey and white its card paints (traits.json), hovering, which is what it is on the table: a 0/1 flier. Before this row it was a glow disc (a Bird is no recognised subtype)."
+      "_note": "More villain identity (D231): the library has no bird, and its one organic flier is the insect — a Bird of Paradise's insect rig stands at the centre for the clip lane and, since the fix pass (D232), is not drawn: traits.json's `swarm: 3` draws a flock of three small fliers in the crowned crane's grey round it in one instanced call, as the Air Force's are. Before this row it was a glow disc (a Bird is no recognised subtype)."
     },
     "T'Chaka, Venerable King": {
       "model": "agent",

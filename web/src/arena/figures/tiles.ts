@@ -28,7 +28,8 @@
  * family**; the difference between a crag and a grove is a tint, and a tint is
  * per-instance and free. So the kinds are the two the deck actually wants — a
  * plateau and the water shader — plus the neutral slab everything else lands on,
- * and 21 lands cost 3 draw calls plus 1 for every two-tone rim on the table.
+ * and any number of lands costs 3 draw calls plus 1 for the two-tone rims (the
+ * corpus's busiest table places 25).
  */
 
 import { isHidden, type AnyCard } from '../../protocol.ts';
@@ -135,11 +136,19 @@ export interface TilePose {
 export type TileLayout = Map<number, TilePose>;
 
 /**
- * §8.2's budget, applied to the terrain. The measured ceiling is **21 lands in
- * one frame**; above the cap the surplus are simply not drawn, in placement
- * order, which is deterministic — "degrade, don't stutter".
+ * §8.2's budget, applied to the terrain. Above the cap the surplus are simply not
+ * drawn, in placement order, which is deterministic — "degrade, don't stutter".
+ *
+ * The measured ceiling was **21 lands in one frame** when the cap was set at 24.
+ * More villain identity's recordings raised it: `villain-wakanda-232`'s last turns
+ * place **25** on eight frames (`@525`–`@532`), the corpus's first frames past 24,
+ * where the old cap left one land of each without its terrain. D230 raised the cap
+ * to 32 rather than accept that: the terrain is instanced, so a land past 24 costs
+ * **no draw call** and 124 triangles (one slab; a two-tone land one rim more).
+ * `tiles.test.ts` counts the lands PLACED apart from the tiles LAID, holds the
+ * corpus to no cap drop, and holds the cap's own order with a synthetic table.
  */
-export const MAX_TILES = 24;
+export const MAX_TILES = 32;
 
 /** Is this placement a land the terrain layer draws? */
 function isTileCard(placement: Placement): boolean {

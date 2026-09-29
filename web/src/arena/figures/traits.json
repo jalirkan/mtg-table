@@ -587,7 +587,7 @@
       "_costume": "Slice 4: A.I.M.'s yellow suits, black gloves, boots and belt."
     },
     "Whiplash, Vengeful Engineer": {
-      "tint": "#4a6a58",
+      "tint": "#2f6a64",
       "shade": 1,
       "accent": "#8fe4ff",
       "props": [
@@ -595,14 +595,14 @@
       ],
       "rest": "ready",
       "hair": "cowl",
-      "_note": "More villain identity (D231), the Masters of Evil. The engineer in a dark green armoured suit and hood, his two electric whips crackling blue-white in both hands (the kit's `gauntlets`, Quake's, in his accent) as his card paints them, ready to lash.",
+      "_note": "More villain identity (D231), the Masters of Evil. The engineer as his card paints him: a dark suit under a teal hood, his two electric whips crackling blue-white in both hands (the kit's `gauntlets`, Quake's, in his accent), ready to lash. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: his suit was dark green, and with Whirlwind's armour and Radioactive Man's glow the Masters stood three green figures in a row; the card's figure is a dark silhouette with a teal hood.",
       "costume": {
-        "hair": "#2e4438",
-        "top": "#34483d",
-        "shirt": "#34483d",
-        "legs": "#26352d",
-        "shoes": "#18201b",
-        "gloves": "#566a60",
+        "hair": "#2f6a64",
+        "top": "#2c3238",
+        "shirt": "#2c3238",
+        "legs": "#23282d",
+        "shoes": "#15181b",
+        "gloves": "#3a4148",
         "belt": "#8a7a3a"
       }
     },
@@ -676,20 +676,24 @@
       }
     },
     "Boomerang, Blade Flinger": {
-      "tint": "#5a6f8f",
+      "tint": "#aeb8c6",
       "shade": 1,
       "rest": "highReady",
       "hair": "cowl",
-      "_note": "More villain identity (D231), the Masters of Evil. Fred Myers in slate blue with steel gloves and belt under a slate cowl, a blade raised at the high ready — his card's colours. The horns of his helmet and his boomerangs are not in the kit; the cowl and the raised hand carry him.",
+      "_note": "More villain identity (D231), the Masters of Evil. Fred Myers in steel blue with steel gloves and belt, a blade raised at the high ready — his card's colours — and his helm's silver faceguard (the kit's `mask`, in the tint) under a dark navy cowl. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he stood a slate man in a slate hood, one of three generic hooded men; the art's helm is a silver face in a dark hood. The horns and the boomerangs are still not in the kit (follow-up 7).",
       "costume": {
-        "hair": "#3a4556",
-        "top": "#46566e",
-        "shirt": "#46566e",
-        "legs": "#35415a",
-        "shoes": "#262e3e",
+        "hair": "#2a3448",
+        "top": "#3e4c66",
+        "shirt": "#3e4c66",
+        "legs": "#2e3950",
+        "shoes": "#1e2533",
         "gloves": "#9aa4b2",
         "belt": "#9aa4b2"
-      }
+      },
+      "props": [
+        "mask"
+      ],
+      "face": "none"
     },
     "Fixer, Techno Terror": {
       "tint": "#6a7078",
@@ -736,16 +740,16 @@
       "tint": "#b8502a",
       "shade": 1,
       "rest": "atEase",
-      "hair": "cowl",
-      "_note": "More villain identity (D231), the Masters of Evil. A henchman in a burglar's charcoal balaclava (the `cowl`, with his face in its opening) and a rust-red jacket over black, standing at ease — the Villain token's cut with a jacket of his own, so the crook and the Saga's Villains read as the same kind of thing and not the same card.",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Masters of Evil. The brute his card paints: long dark hair, a rust-orange shirt over a tan undershirt, dark trousers, standing at ease. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he wore a burglar's balaclava (the `cowl`), and beside Boomerang's hood the Masters had three generic hooded men; the art's crook is bare-headed and long-haired, and the long style is a kind the Masters' table already draws.",
       "costume": {
-        "hair": "#302b2c",
-        "top": "#b8502a",
-        "shirt": "#b8502a",
-        "legs": "#2c2a2e",
-        "shoes": "#18171a",
-        "gloves": "#2c2a2e",
-        "belt": "#2c2a2e"
+        "hair": "#2a201c",
+        "top": "#b8602a",
+        "shirt": "#d89a5a",
+        "legs": "#3a3430",
+        "shoes": "#1a1716",
+        "gloves": "#3a3430",
+        "belt": "#1a1716"
       }
     },
     "Whirlwind, Killer Cyclone": {
@@ -911,7 +915,7 @@
       "formation": "squad",
       "tint": "#7a4aa8",
       "shade": 1,
-      "accent": "#4a2a66",
+      "accent": "#5b2f8f",
       "props": [
         "mask",
         "cape"
@@ -919,14 +923,14 @@
       "rest": "akimbo",
       "hair": "cowl",
       "face": "none",
-      "_note": "More villain identity (D231), the Masters of Evil. The team, as a squad (the Agents' wedge, one draw call for the followers): Baron Zemo, whose team it is, in front — his purple hood (the `cowl`) and mask (the `mask`, in the tint) and a dark purple cloak (the `cape`, in the accent), gold at the belt — and two Masters behind him in his colours. Zemo himself carries AI:RemoveDeck:All and is not in the deck (decks/README.md); the card that leads the team is.",
+      "_note": "More villain identity (D231), the Masters of Evil. The team, as a squad (the Agents' wedge, one draw call for the followers): Baron Zemo, whose team it is, in front — his purple hood (the `cowl`), mask (the `mask`, in the tint) and cloak (the `cape`, in the accent), purple at the chest and hands and gold at the belt over a dark tunic — and two Masters behind him as the card paints them, figures in the shadow (a squad's followers wear the leader's `top`). Zemo himself carries AI:RemoveDeck:All and is not in the deck (decks/README.md); the card that leads the team is. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: the followers wore his purple and the three read as a purple gang, not as Zemo leading the villains.",
       "costume": {
-        "hair": "#5b2f7f",
-        "top": "#5b2f7f",
-        "shirt": "#5b2f7f",
-        "legs": "#4a2466",
-        "shoes": "#2a1a33",
-        "gloves": "#4a2466",
+        "hair": "#6a3a9a",
+        "top": "#2c2430",
+        "shirt": "#6a3a9a",
+        "legs": "#241e28",
+        "shoes": "#1a141c",
+        "gloves": "#6a3a9a",
         "belt": "#d8b24a"
       }
     },
@@ -946,30 +950,31 @@
       }
     },
     "Birds of Paradise": {
-      "scale": 0.38,
-      "hover": 0.36,
+      "hover": 0.3,
       "idle": "hover",
-      "tint": "#cfd4d8",
+      "tint": "#8e979f",
       "shade": 1,
       "accent": "#f4f4f0",
       "props": [],
-      "_note": "More villain identity (D231), the Hulk family. Not a person — the library's one organic flier, small (0.38: a 0/1, and the insect's head reaches forward, so a bigger one put the status strip over its own head from your seat — status.test.ts) and hovering, in the crowned crane's grey, as its card paints it, on the insect body's own wings (figures.json). The kit's `wings` were tried and taken off: at this size they showed 28 px from your seat, under the identity bar."
+      "_note": "More villain identity (D231), the Hulk family. Not a person, and more than one: a flock of three small fliers in the crowned crane's grey and white (the tint, banded dark by the kit), circling its stand point as the Air Force's bees do (a `ring` swarm: one instanced call; the insect rig stands at the centre for the clip lane and is not drawn, figures.json). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: it stood the insect body at 0.38, which read as a white blob with a face, not a bird; the card is Birds, a flock over the savannah.",
+      "swarm": 3,
+      "formation": "ring"
     },
     "Brawn, Amadeus Cho": {
       "tint": "#5aa84a",
       "props": [],
       "rest": "braced",
       "hair": "crop",
-      "_note": "More villain identity (D231), the Hulk family. Amadeus Cho as his card paints him: a green gamma body (the costume's `skin`: gamma, not a complexion; D231), black hair, a purple vest and trousers and white gloves, flexing for his own selfie. He is a Gamma Scientist Hero, so the scientist rung would have stood him at a lab bench in a white coat: this row replaces its props (none), its rest and its costume.",
+      "_note": "More villain identity (D231), the Hulk family. Amadeus Cho as his card paints him: a green gamma body (the costume's `skin`: gamma, not a complexion; D231), black hair, a dark purple vest over white, charcoal trousers and white gloves, flexing for his own selfie. He is a Gamma Scientist Hero, so the scientist rung would have stood him at a lab bench in a white coat: this row replaces its props (none), its rest and its costume. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: his vest and trousers were the Hulks' purple.",
       "costume": {
         "skin": "#5aa84a",
         "hair": "#221c18",
-        "top": "#4a3a6a",
-        "shirt": "#4e9e40",
-        "legs": "#5a3a8a",
-        "shoes": "#2a2a30",
+        "top": "#3a2a4a",
+        "shirt": "#e8eaee",
+        "legs": "#2c2c34",
+        "shoes": "#1e1e24",
         "gloves": "#eef0f2",
-        "belt": "#2a2a30"
+        "belt": "#2c2c34"
       }
     },
     "Hellcat, Undying Vigilante": {
@@ -992,7 +997,7 @@
       "shade": 1,
       "rest": "ready",
       "hair": "long",
-      "_note": "More villain identity (D231), the Hulk family. One of the High Evolutionary's cat-knights, as its card paints it: an orange lion's face and mane (the costume's `skin` and the `long` style in the mane's orange — a cat is not a complexion; D231) over dark blue armour with red and steel. The villain rung stands it in the man's body.",
+      "_note": "More villain identity (D231), the Hulk family. One of the High Evolutionary's cat-knights, as its card paints it: an orange lion's face (the kit's `mask`, in the tint: a face that is not a man's) under an orange mane (the `long` style in the mane's orange; the costume's `skin` is the fur — a cat is not a complexion, D231) over dark blue armour with red and steel. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: it stood an orange-skinned man with human eyes under long orange hair — an orange-haired person, not a cat-knight. A lance (the `spear`) was tried with the mask and taken off: the two put the Hulk family's table at 18 prop kinds at once (@323), over the 17 every recording but the villain tables keeps. The card's sword is still not in the kit (follow-up 7).",
       "costume": {
         "skin": "#d8903a",
         "hair": "#c8702a",
@@ -1002,7 +1007,11 @@
         "shoes": "#2a2e3a",
         "gloves": "#8a93a0",
         "belt": "#b8322a"
-      }
+      },
+      "props": [
+        "mask"
+      ],
+      "face": "none"
     },
     "Gallant Citizen": {
       "tint": "#eef0f2",
@@ -1021,18 +1030,18 @@
     },
     "Gamma Grotesque": {
       "scale": 1.18,
-      "tint": "#2f7a3a",
-      "rest": "braced",
+      "tint": "#236b5c",
+      "rest": "working",
       "hair": "none",
-      "_note": "More villain identity (D231), the Hulk family. A gamma monster out of a broken lab tank: dark green hide (the costume's `skin`; D231), bald, in dark torn trunks, hunched and bigger than a man (1.18).",
+      "_note": "More villain identity (D231), the Hulk family. A gamma monster out of a broken lab tank: a dark teal-green hide (the costume's `skin`; D231), bald, in black torn trunks, hunched forward (the `working` rest's lean, with no bench) and bigger than a man (1.18). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: it stood braced in a darker green in purple-grey trunks, one of the Hulks' slim green bodies.",
       "costume": {
-        "skin": "#2f7a3a",
-        "top": "#2f7a3a",
-        "shirt": "#2f7a3a",
-        "legs": "#3a2e4a",
-        "shoes": "#2f7a3a",
-        "gloves": "#2f7a3a",
-        "belt": "#3a2e4a"
+        "skin": "#236b5c",
+        "top": "#236b5c",
+        "shirt": "#236b5c",
+        "legs": "#1c1c20",
+        "shoes": "#236b5c",
+        "gloves": "#236b5c",
+        "belt": "#1c1c20"
       }
     },
     "She-Hulk, Attorney-at-Law": {
@@ -1087,30 +1096,30 @@
     },
     "Hulkling, Burgeoning Bruiser": {
       "scale": 1.08,
-      "tint": "#7ab04a",
-      "rest": "braced",
+      "tint": "#8fb04a",
+      "rest": "highReady",
       "hair": "crop",
-      "_note": "More villain identity (D231), the Hulk family. Teddy Altman: a green Kree-Skrull (the costume's `skin`; D231), blond, in a purple shirt, a little bigger than a man (1.08) and growing.",
+      "_note": "More villain identity (D231), the Hulk family. Teddy Altman as his card paints him: a yellow-green Kree-Skrull (the costume's `skin`; D231), blond, in a lavender shirt with the olive-gold of his scaled armour down the chest and at the belt, a fist raised to punch through the wall (the `highReady` rest), a little bigger than a man (1.08) and growing. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he stood braced in a purple shirt, another slim green body beside the Hulks.",
       "costume": {
-        "skin": "#7ab04a",
-        "hair": "#e0c060",
-        "top": "#6a3a8a",
-        "shirt": "#6a3a8a",
-        "legs": "#3a3a4a",
-        "shoes": "#2a2a30",
-        "gloves": "#7ab04a",
-        "belt": "#2a2a30"
+        "skin": "#8fb04a",
+        "hair": "#e6c860",
+        "top": "#7a4ab0",
+        "shirt": "#9aa040",
+        "legs": "#2a2438",
+        "shoes": "#2a2438",
+        "gloves": "#8fb04a",
+        "belt": "#9aa040"
       }
     },
     "Hulk, Brutal Brawler": {
       "scale": 1.34,
       "tint": "#4fa84a",
       "rest": "braced",
-      "hair": "crop",
-      "_note": "More villain identity (D231), the Hulk family. The Hulk: green (the costume's `skin` and every bare slot — gamma, not a complexion; D231), black-haired, barefoot in torn purple trousers, braced to charge, and the biggest person on the table (1.34, the strict width clamp still holding, D65).",
+      "hair": "parted",
+      "_note": "More villain identity (D231), the Hulk family. The Hulk: green (the costume's `skin` and every bare slot — gamma, not a complexion; D231), black-haired (the man's own parted cut), barefoot in torn purple trousers, braced to charge, and one of the biggest people on the table (1.34, the strict width clamp still holding, D65). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: the three Hulks wore one crop that read as a dark helmet, one purple and one green, told apart by stance and size alone; now each has his own hair, green and trousers.",
       "costume": {
         "skin": "#4fa84a",
-        "hair": "#36422c",
+        "hair": "#2a3222",
         "top": "#4fa84a",
         "shirt": "#4fa84a",
         "legs": "#5b2f8f",
@@ -1121,36 +1130,36 @@
     },
     "Hulk, Strongest There Is": {
       "scale": 1.38,
-      "tint": "#5ab84a",
+      "tint": "#3a8a36",
       "rest": "akimbo",
       "hair": "crop",
-      "_note": "More villain identity (D231), the Hulk family. The Hulk again, bigger (1.38), a lighter green, standing with his hands on his hips — told from the Brutal Brawler by his stance and his size, as the Kangs are told apart.",
+      "_note": "More villain identity (D231), the Hulk family. The Hulk roaring in the fire of his card: a deeper green, close-cropped, in torn maroon-brown trousers, hands on his hips, bigger (1.38). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he wore the Brawler's purple and the same crop; the deeper green and the brown trousers tell the two apart at the table's distance.",
       "costume": {
-        "skin": "#5ab84a",
-        "hair": "#36422c",
-        "top": "#5ab84a",
-        "shirt": "#5ab84a",
-        "legs": "#4a2a7a",
-        "shoes": "#5ab84a",
-        "gloves": "#5ab84a",
-        "belt": "#4a2a7a"
+        "skin": "#3a8a36",
+        "hair": "#2a3222",
+        "top": "#3a8a36",
+        "shirt": "#3a8a36",
+        "legs": "#5a3a3a",
+        "shoes": "#3a8a36",
+        "gloves": "#3a8a36",
+        "belt": "#5a3a3a"
       }
     },
     "Hulk, Gamma Goliath": {
       "scale": 1.42,
-      "tint": "#3f9a3f",
+      "tint": "#66c24e",
       "rest": "ready",
-      "hair": "crop",
-      "_note": "More villain identity (D231), the Hulk family. The biggest Hulk (1.42), a deep green, at the ready — the 6/5 the deck tops out at.",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Hulk family. The biggest Hulk (1.42), the 6/5 the deck tops out at: a bright green, a shaggy black mane (the `long` style), indigo trousers, at the ready. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he wore the Brawler's crop and purple.",
       "costume": {
-        "skin": "#3f9a3f",
-        "hair": "#36422c",
-        "top": "#3f9a3f",
-        "shirt": "#3f9a3f",
-        "legs": "#5b2f8f",
-        "shoes": "#3f9a3f",
-        "gloves": "#3f9a3f",
-        "belt": "#5b2f8f"
+        "skin": "#66c24e",
+        "hair": "#2a3222",
+        "top": "#66c24e",
+        "shirt": "#66c24e",
+        "legs": "#2a3470",
+        "shoes": "#66c24e",
+        "gloves": "#66c24e",
+        "belt": "#2a3470"
       }
     },
     "Red Hulk": {

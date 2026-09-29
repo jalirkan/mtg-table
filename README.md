@@ -2103,7 +2103,7 @@ crowded table's draw calls (its last turns put 49 cards on the table, over the
 bench's lines before any villain is dressed — D222) — is
 `docs/evidence/villain-identity.md`.
 
-#### More villain identity — the Masters of Evil, the Hulk family and Wakanda (D230–D231)
+#### More villain identity — the Masters of Evil, the Hulk family and Wakanda (D230–D233)
 
 The three other AI decks (`--ai-deck decks/masters-of-evil.dck`,
 `decks/hulk-family.dck`, `decks/wakanda.dck`) each have a committed recording
@@ -2113,8 +2113,8 @@ where no rung claimed a green or red Human.
 
 | deck | what you see at the table |
 |---|---|
-| **Masters of Evil** | the team as a squad led by Zemo's purple hood, mask and cloak; MACH-1 flying on thrusters, a gunmetal helm with red lenses; Yellowjacket small and winged under Ant-Man's antennae helmet in yellow; Songbird on pink sound wings; Moonstone flying with the moonstone's light in her hands; Radioactive Man glowing green; Volcanic Villain molten, flames for hair; Titania big, red-haired, in blue; Atlas a maroon giant; Whirlwind masked and helmed on his own cyclone; Klaw's sound at his hands (he aims it to attack); White Widow in white with goggles; Fixer in red goggles at a bench of gadgets; Tiger Shark in orange under a purple finned hood; the crooks in balaclavas |
-| **Hulk family** | three Hulks, green and barefoot in torn purple trousers, the biggest people on the table; Red Hulk red; two Abominations, grey-olive and dark green; She-Hulk green in a purple suit and in her white and purple; Wolverine short, in yellow and blue, claws glinting; Brawn green in purple; Hulkling green and blond; Hercules bare-chested in green trunks; Hellcat in the yellow catsuit; the Knight of Wundagore a lion-maned cat-knight; Rick Jones in a red jacket; Gallant Citizen an astronaut in white; Birds of Paradise a small grey flier |
+| **Masters of Evil** | the team as a squad: Zemo's purple hood, mask and cloak in front, two figures in shadow behind him; MACH-1 flying on thrusters, a gunmetal helm with red lenses; Yellowjacket small and winged under Ant-Man's antennae helmet in yellow; Songbird on pink sound wings; Moonstone flying with the moonstone's light in her hands; Radioactive Man glowing green; Volcanic Villain molten, flames for hair; Titania big, red-haired, in blue; Atlas a maroon giant; Whirlwind masked and helmed on his own cyclone; Klaw's sound at his hands (he aims it to attack); White Widow in white with goggles; Fixer in red goggles at a bench of gadgets; Tiger Shark in orange under a purple finned hood; Whiplash a dark suit under a teal hood, whips lit at both hands; Boomerang's silver faceguard in a dark hood; the Common Crook long-haired in rust-orange |
+| **Hulk family** | three Hulks, barefoot, the biggest people on the table, each his own — green in torn purple, a deeper green in maroon-brown, a bright green with a shaggy mane in indigo; Red Hulk red; two Abominations, grey-olive and dark green; Gamma Grotesque a hunched teal monster in black; She-Hulk green in a purple suit and in her white and purple; Wolverine short, in yellow and blue, claws glinting; Brawn green in a dark vest over white; Hulkling yellow-green and blond in lavender, a fist raised; Hercules bare-chested in green trunks; Hellcat in the yellow catsuit; the Knight of Wundagore a lion's face under his mane; Rick Jones in a red jacket; Gallant Citizen an astronaut in white; Birds of Paradise a flock of three small grey fliers |
 | **Wakanda** | four Black Panthers in the black suit under the panther's mask — claws lit, violet with kinetic energy, cloaked as the king at the head of his army; Shuri as the Panther, with gold at her belt, and in her lab with violet gauntlets; the Dora Milaje and both Okoyes shaven, in red and gold, each with a vibranium **spear**; the Shield Guard with his blanket-shield and spear; T'Chaka white-haired in a royal cloak; Nakia in red and gold with her ring blades lit; Storm flying in white, lightning in her hands; the Drone Flock a white drone with wings; the Warriors a squad in indigo |
 
 One new kind joined the shared kit, the **spear** (five Wakandan cards wear it),
@@ -2123,11 +2123,21 @@ paid for there by a kind the table already draws (T'Chaka's cloak). Everything
 else is the kit the other decks already wear — a mask and cowl are Doom's, the
 wings Wasp's, the helmet Ant-Man's, the gauntlets Quake's. Only a transformed body
 paints its skin (a Hulk's green, a lava body, a radioactive glow); every person
-keeps the one skin tone. A face-down or hidden card gets none of it.
+keeps the one skin tone — whether a person's tone should follow its card is the
+owner's question 31 in PLAN.md. A face-down or hidden card gets none of it. The
+fix pass (D232) re-dressed nine of these after reading them side by side at the
+table's distance, where the Hulks had been one green body told apart by size.
+
+The crowded tables cost triangles: the Masters of Evil's and Wakanda's last
+turns are over report 13 §8.2's 30,000 dressed (the Masters' over it bare, too),
+and that is accepted with its numbers (D233) rather than met —
+`traits.test.ts` holds the part identity adds, so it cannot grow unrecorded.
+Wakanda's table places 25 lands on its last turns, and every one is drawn (the
+terrain's cap is 32 since D230).
 
 **See it**: `npm --prefix web run dev`, then `#workshop` — type a deck's name in
 its search — or a game in the arena: `/?replay=games/villain-wakanda-232.jsonl#arena`
-(scrub to frame 527, 48 cards on the table),
+(scrub to frame 527, 48 cards and 25 lands on the table),
 `/?replay=games/villain-masters-of-evil-33.jsonl#arena` (frame 371) or
 `/?replay=games/villain-hulk-family-261.jsonl#arena` (frame 427). What was
 measured — the census, every corpus count that moved, five things the new tables

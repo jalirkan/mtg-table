@@ -266,3 +266,13 @@ off `c330942`: **273.4 s** at `WSPORT` 9160 and **253.1 s** at 9170, exit 0 both
 vitest (`var/check-all-villains2-p1.log`, `var/check-all-villains2-p2.log`). The
 lane added no step; the corpus's three new recordings are read by the steps that
 glob `fixtures/games/` (11, 12b, 12d and the web suite).
+
+**Its fix pass** (D230 corrected, D232–D233), from a deleted `bridge/out` at
+`GATE_JOBS=4`, `WSPORT` 9160: **267.9 s**, check-all OK, exit 0, 48 jobs whose
+seconds sum to 1,011.3 s, at a load average of 7.9 → 12.8 at most → 8.5; `node
+--test` inside it **1,142 / 1,134 pass / 0 fail / 8 skipped** and 130 vitest
+(`var/check-all-villains2-fix1.log`, `var/check-all/20260929-071502-2950549/`).
+Step 6 compared `fixtures/games/g1.jsonl` (`wire-drift: SAME`) and 9b
+`fixtures/games/human-auto-42.jsonl`; step 11 passed the corpus's 23 recordings
+through `check-redaction.mjs`; 12b found the catalog current. The fix pass added no
+step.

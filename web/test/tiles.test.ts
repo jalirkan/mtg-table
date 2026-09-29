@@ -39,6 +39,7 @@ import { TILE_KINDS, isTileKind, tileDataOf } from '../src/arena/figures/types.t
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { TABLE_HALF_X, TABLE_HALF_Z, anchorsFor, layout } from '../src/arena/layout.ts';
 import { MANA_COLORS, isHidden, type AnyCard, type Frame, type StackItem } from '../src/protocol.ts';
+import { isLandTypeLine } from '../src/render/labels.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
@@ -56,6 +57,35 @@ function fixtureFiles(): string[] {
     }
   }
   return out;
+}
+
+/** Every `state` frame of one recording with its transport index (1-based), folded through the real reducer. */
+function indexedFramesOf(file: string): Array<{ index: number; state: ClientState }> {
+  const out: Array<{ index: number; state: ClientState }> = [];
+  const log = parseFrameLog(readFileSync(file, 'utf8'));
+  let state = initialState(log.header);
+  (log.frames as Frame[]).forEach((frame, i) => {
+    state = reduce(state, frame);
+    if (frame.type === 'state') out.push({ index: i + 1, state });
+  });
+  return out;
+}
+
+/**
+ * **The lands a frame PLACES for the terrain**, counted apart from the tiles it
+ * draws (the fix pass of D230): a face-up land in a land rank, once per card —
+ * the placements `tilePose` would lay if there were no cap. Written here from
+ * the layout, not read back off `tilePose`, so a cap that drops a land shows as
+ * a difference between the two numbers rather than as a lower count.
+ */
+function landsPlacedIn(placed: ReturnType<typeof layout>): number {
+  const ids = new Set<number>();
+  for (const placement of placed.placements) {
+    if (placement.kind !== 'land' || isHidden(placement.card)) continue;
+    if (!isLandTypeLine((placement.card as { types?: string }).types ?? '')) continue;
+    ids.add(placement.cardId);
+  }
+  return ids.size;
 }
 
 /** Every `state` frame of one recording, folded through the real reducer. */
@@ -107,6 +137,25 @@ test('tiles: landSubtypesOf reads the words after the dash', () => {
   assert.deepEqual(landSubtypesOf(card('Land - Forest Island')), ['island', 'forest']);
 });
 
+test('tiles: past the cap the surplus lands are not laid, in placement order — "degrade, don\'t stutter" (D230 control)', () => {
+  // The corpus reaches no cap since D230 raised it, so the cap's own behaviour is
+  // held here: the busiest land frame's layout, its lands copied under fresh ids
+  // until the table places more than MAX_TILES.
+  const file = `${FIXTURES}games/villain-wakanda-232.jsonl`;
+  const frame = indexedFramesOf(file).find((f) => f.index === 525);
+  assert.ok(frame !== undefined, 'villain-wakanda-232@525 is gone');
+  const placed = layout(frame.state, {});
+  const lands = placed.placements.filter((p) => p.kind === 'land' && !isHidden(p.card));
+  assert.equal(landsPlacedIn(placed), 25);
+  const extra = Array.from({ length: MAX_TILES + 8 - lands.length }, (_, i) => ({ ...lands[i % lands.length]!, cardId: 900000 + i }));
+  const crowded = { ...placed, placements: [...placed.placements, ...extra] };
+  assert.equal(landsPlacedIn(crowded), MAX_TILES + 8);
+  const laid = tilePose(crowded, TILES);
+  assert.equal(laid.size, MAX_TILES, `${String(laid.size)} tiles laid past a cap of ${String(MAX_TILES)}`);
+  const order = crowded.placements.filter((p) => p.kind === 'land' && !isHidden(p.card)).map((p) => p.cardId);
+  assert.deepEqual([...laid.keys()], order.slice(0, MAX_TILES), 'the cap did not keep the first lands in placement order');
+});
+
 test('tiles: a concealed land never reaches the per-name rung', () => {
   const redacted = { id: 9, zone: 'battlefield', controller: 0, owner: 0, hidden: true } as unknown as AnyCard;
   const match = tileFor(redacted, TILES);
@@ -125,15 +174,30 @@ test('tiles: every land of every committed recording resolves to a tile', () => 
   let tapped = 0;
   let maxInFrame = 0;
   let twoTone = 0;
+  /** The most lands one frame PLACES, and where (D230's fix pass: counted apart from the tiles drawn). */
+  let maxPlaced = 0;
+  let placedAt: string[] = [];
+  /** Frames where the cap left a placed land undrawn as terrain. */
+  const capped: string[] = [];
 
   for (const file of fixtureFiles()) {
-    for (const state of framesOf(file)) {
+    const short = file.slice(FIXTURES.length);
+    for (const { index, state } of indexedFramesOf(file)) {
       if (state.board === null) continue;
       frames += 1;
       const placed = layout(state, {});
       const laid = tilePose(placed, TILES);
+      const lands = landsPlacedIn(placed);
       maxInFrame = Math.max(maxInFrame, laid.size);
       assert.ok(laid.size <= MAX_TILES, `${file}: ${String(laid.size)} tiles, over the cap`);
+      // The cap is the ONLY thing that leaves a placed land without its tile.
+      assert.equal(laid.size, Math.min(lands, MAX_TILES), `${short}@${String(index)}: ${String(lands)} lands placed, ${String(laid.size)} tiles laid`);
+      if (lands > MAX_TILES) capped.push(`${short}@${String(index)} (${String(lands)} placed, ${String(laid.size)} laid)`);
+      if (lands > maxPlaced) {
+        maxPlaced = lands;
+        placedAt = [];
+      }
+      if (lands === maxPlaced) placedAt.push(`${short}@${String(index)}`);
 
       for (const tile of laid.values()) {
         tiles += 1;
@@ -166,7 +230,8 @@ test('tiles: every land of every committed recording resolves to a tile', () => 
     }
   }
 
-  console.log(`  ${String(frames)} board frames · ${String(tiles)} tile-instances · max ${String(maxInFrame)} in one frame`);
+  console.log(`  ${String(frames)} board frames · ${String(tiles)} tile-instances · max ${String(maxInFrame)} laid in one frame`);
+  console.log(`  most lands PLACED in one frame: ${String(maxPlaced)} (${placedAt.join(', ')}) · cap ${String(MAX_TILES)} · frames where the cap dropped a land: ${String(capped.length)}`);
   console.log(`  ${String(tapped)} tapped (pose, not cue) · ${String(twoTone)} two-tone (a rim instance)`);
   console.log('  land                 tile      rung                 instances');
   for (const [name, row] of [...census.entries()].sort((a, b) => b[1].count - a[1].count)) {
@@ -174,9 +239,22 @@ test('tiles: every land of every committed recording resolves to a tile', () => 
   }
 
   // The measured ceiling from report 13 §2 — and the corpus is where it came from.
-  // (21 until D230's three AI-deck recordings: their long games put 24 lands on
-  // the two sides of one frame.)
-  assert.equal(maxInFrame, 24, `the busiest land frame has ${String(maxInFrame)} lands, not 24`);
+  // 21 until D230's three AI-deck recordings; villain-wakanda-232's last turns
+  // PLACE 25 on eight frames (@525–@532), the first frames in the corpus past the
+  // old cap of 24, which left one land of each without its terrain. D230 raised
+  // the cap to 32 (0 draw calls: the terrain is instanced; 124 triangles a land
+  // past 24), so the corpus reaches no cap and every placed land is laid.
+  // Counted apart: `maxInFrame` is what was LAID and can never exceed the cap,
+  // so on its own it could not see a bigger table.
+  assert.equal(maxPlaced, 25, `the busiest land frame places ${String(maxPlaced)} lands, not 25`);
+  assert.deepEqual(
+    placedAt,
+    [525, 526, 527, 528, 529, 530, 531, 532].map((i) => `games/villain-wakanda-232.jsonl@${String(i)}`),
+    'the busiest land frames moved',
+  );
+  assert.equal(maxInFrame, maxPlaced, 'the busiest land frame did not lay every land it placed');
+  assert.deepEqual(capped, [], `the terrain cap dropped a land: ${capped.join('; ')}`);
+  assert.ok(MAX_TILES > maxPlaced, `the cap (${String(MAX_TILES)}) has no room over the corpus's ${String(maxPlaced)}`);
   assert.ok(frames > 3000, `expected the whole corpus, saw ${String(frames)} board frames`);
   assert.ok(tiles > 20000, `only ${String(tiles)} tile-instances`);
   // Every one of the corpus's six land names must be in the census, and the two

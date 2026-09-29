@@ -10130,9 +10130,16 @@ identity row to; villain identity's follow-up 1)
    - **A snapshot that runs ahead of its own zone event is held, not fixed**: Web
      Up exiling Moonstone — the frame holds her in exile and the trigger on the
      stack, and her `zone` event comes a batch later, so the departure (D64,
-     decided once) never draws her dying. Recording the game again alone put it
-     in the same place. `clips.test.ts` tells it apart and holds it to the one;
-     the arena change is this lane's follow-up 1.
+     decided once) never draws her dying. **It is a flush-timing race (the D113
+     class), not the engine's order** — corrected by the fix pass: of six
+     re-records of the same game (the verifier's three, then three more by the fix
+     pass, all SAME GAME by `tools/same-game.mjs`), five put her snapshot a frame
+     ahead of her zone event and one put the two in the same frame, where she is
+     drawn dying. The first write-up's "recording the game again alone put it in
+     the same place" was one re-record, and true of that one. So
+     `clips.test.ts`'s count of one is ONE outcome of the race, pinned by the
+     committed file, and a re-record can change it; the real fix is this lane's
+     follow-up 1, the arena waiting a batch for a death.
    - **A token sacrificed for its own ability is backed by the frame before**
      (`fixtures.test.ts`'s `unbackedNames`): "Clue Token (86) - …" names a token
      that ceased to exist paying for it. A token name looks one frame back — the
@@ -10140,7 +10147,21 @@ identity row to; villain identity's follow-up 1)
      the same-frame rule; four negative controls hold both halves.
    - **The stack's `orb` gains a second type line**: `''`, the Monarch's end-step
      draw (an effect in the command zone, with no type line), beside D220's land.
-5. **The tiles' busiest land frame is 24** (21 before): the recordings' long games.
+5. **The terrain's cap is raised from 24 to 32** (corrected by the fix pass: the
+   lane first wrote "the tiles' busiest land frame is 24", which was the CAP, not
+   the table). `villain-wakanda-232`'s last turns PLACE **25** lands on eight
+   frames (`@525`–`@532`) — the corpus's first frames past the old cap of 24, set
+   when report 13 §2 measured 21 — and the cap left one land of each without its
+   terrain, on the frames the lane benched and pictured and the one README sends a
+   player to (527). "Degrade, don't stutter" was not accepted for them: the terrain
+   is instanced, so a land past 24 costs **no draw call** and **124 triangles** (a
+   slab; a two-tone land one rim more), and on those eight frames the scene is not
+   at its triangle worst (`@382` is). `MAX_TILES` and the instance buffers
+   (`TILE_CAPACITY`, now `MAX_TILES` itself) are 32. `tiles.test.ts` counts the
+   lands a frame PLACES apart from the tiles it LAYS — its old `maxInFrame` counted
+   what was laid and so could never see past the cap — and holds 25 placed at those
+   eight frames, every placed land laid, no frame capped, and the cap's own order
+   past 32 with a synthetic table built from `@525`.
 
 **Rationale.** D220's reasons, three times: a row is real when a recording puts its
 card on the table, a census rather than the first seed gives the most of a deck per
@@ -10154,9 +10175,12 @@ an identity lane's.
 family's 269 (14 of 18 on the table, 8.3 MB against 6.0) and 187 (16 of 18, but 22
 of 24 face up); Wakanda's 284 (all 17 on the table, but 12.8 MB, 40 turns and a
 62-card table against 8.6 MB and 48). Two or more recordings per deck (the corpus's
-sweeps pay per file: the three add 21 MB to its 40). Re-recording to move the
-late zone event (it is the engine's order: a quiet machine put it in the same
-place). Widening `clips.test.ts` for every late departure, or the unbacked-name
+sweeps pay per file: the three add 21 MB to its 40). Re-recording until the late
+zone event lands in the same frame (it is a race — one in six re-records lost it
+that way — and a fixture chosen for winning a race is still a race; the arena
+change fixes it for every draw). Keeping the terrain cap at 24 with the eight
+frames' one missing land as "degrade, don't stutter" (a hole in the terrain at the
+game's decisive turns, for 124 triangles and no call). Widening `clips.test.ts` for every late departure, or the unbacked-name
 check for every card (each is narrowed to what was measured: one departure, and
 tokens, one frame back). Re-deriving `PRE_LANE_FILM` over all twenty-three files.
 
@@ -10246,3 +10270,185 @@ and the Warriors' crop (44 px from the front), both taken off the raster's bar.
 A thinner spear: the first cut (a shaft 0.012 of a figure) showed 35 px on the
 Warriors' smaller squad leader, and the kind was thickened for every wearer (0.017)
 rather than exempted for one.
+
+**Amended by D232 (the fix pass, 2026-09-29).** Nine rows were re-dressed after the
+verifier's reading of the pictures, the raster's `mask` partner widened to the long
+style, and the census now holds every row of the three decks to its own rung; D232
+has each. Nothing above changed but the rows it names.
+
+---
+
+## D232 — The fix pass re-dresses what did not read at play distance, on kinds the tables already draw; holds every dressed row to its own rung and to its concealment; and leaves the skin tone to the owner
+
+*Branch `more-villain-identity`; the lane's reserved range D230–D234. Written by the
+lane's fix pass.*
+
+**2026-09-29** (the verifier, reading the lane's pedestal, inspect and table
+pictures: the three Hulks, Gamma Grotesque, Hulkling, Brawn and Abomination,
+Terrifying Titan "the same slim rig in green with purple or dark trousers";
+Birds of Paradise "a white blob with a face"; Boomerang and Common Crook "generic
+hooded men"; Whiplash, Whirlwind and Radioactive Man "three green figures"; the
+Knight of Wundagore "an orange-haired person, not a cat-knight"; the Masters of
+Evil's squad "a purple gang more than Zemo leading the villains"; every Wakandan in
+the one pale skin against art of a Black cast)
+
+**Decision.**
+
+1. **Re-dressed, each by data on a kind its table already draws** (every row's
+   `_note` says what it was and why it moved; the card's own art decided each):
+   - **The Masters of Evil**: a squad's followers wear the leader's costume `top`
+     (`pose.ts`'s `squadColour`), so Zemo's tunic went dark — two figures in
+     shadow behind his purple hood, mask and cloak, as the card paints a team in
+     the dark. It was three purple bodies.
+   - **Whiplash** a dark suit under a teal hood (dark green before, beside
+     Whirlwind's green armour and Radioactive Man's glow). **Boomerang** his
+     helm's silver faceguard (the `mask`, in the tint; the Masters' table already
+     draws it) under a dark navy cowl (slate in slate before). **Common Crook**
+     bare-headed with long dark hair, in rust-orange (a balaclava before; the long
+     style is on that table too).
+   - **The green bodies**: the three Hulks, Gamma Grotesque, Hulkling, Brawn and
+     Abomination, Terrifying Titan now differ pairwise by at least 40 (RGB
+     distance) in skin, top or trousers, and no two share a head and a rest: the
+     Brutal Brawler green in purple with the man's own parted cut; Strongest There
+     Is a deeper green in maroon-brown, cropped; Gamma Goliath a bright green, a
+     shaggy mane (`long`), indigo; Gamma Grotesque teal-green, hunched forward
+     (the `working` rest's lean, no bench), in black; Hulkling yellow-green in
+     lavender with the olive-gold of his scale, a fist raised (`highReady`);
+     Brawn a dark vest over white, charcoal trousers. `traits.test.ts` holds the
+     pairwise distances and prints them. The body has no bulk variant, so "bulk"
+     is still scale (villain identity's follow-up 11).
+   - **Birds of Paradise** a flock of three small fliers in crane grey — a `ring`
+     swarm, the Air Force's instanced kind, round the insect rig the clip lane
+     keeps and nothing draws. It was the insect body at 0.38.
+   - **The Knight of Wundagore** a lion's face (the `mask`, in his orange tint)
+     under his mane. A lance (the `spear`) was tried beside it and taken off: the
+     two put the Hulk family's table at **18 prop kinds at once** (`@323`), over
+     the 17 every recording but the villain tables keeps.
+   Not changed: Klaw (the card paints the man in a cream shirt, not the red
+   suit), Whirlwind and Radioactive Man (green by nature, and apart once Whiplash
+   was not), and every Wakandan (item 4).
+2. **One raster rule widened**: `ONE_SIDED`'s `mask` partner is the cowl OR the
+   long style, because the Knight's face is under a mane, which carries him from
+   behind (283 px from your seat, 101 from the far one) as a hood carries Doom.
+3. **Every row of the three decks reads its own rung.** The census's task list
+   asserts, for each name D231 dressed, that its pose read the `card` rung, and the
+   thin predicates each carry a costume check (the census rows now carry the
+   costume): Hellcat's yellow and red, the Knight's orange and blue, Boomerang's
+   steel and mask, Brawn's green, white and charcoal, and the new looks. Before,
+   Hellcat, the Knight, Boomerang and Brawn passed on what a rung supplied, and
+   would have passed with their rows deleted.
+4. **Concealment is controlled, not assumed.** The three recordings add no
+   face-down and no redacted battlefield card (`figures.test.ts`'s 1,138 face-down
+   instances and the 1,179 anonymous ones did not move), so the corpus sweeps say
+   nothing about these rows. A new test turns each of the 50 dressed names face
+   down — keeping its name (the hostile case) and with Forge's own empty face —
+   and requires the anonymous disc with no body, prop, costume, hair, rung, swarm
+   or lift, and a five-key stub in its place to stand nothing; the same card face
+   up must read its row (the control). With `pose.ts`'s gate narrowed to redacted
+   cards only, the test fails on its first name.
+5. **The skin tone is the owner's question, not a row's.** Every Wakandan — every
+   person — keeps slice 4's one tone (D231 item 5). Whether a person's tone should
+   follow its card (an art-palette rung, or a per-deck default) is a change to that
+   rule, and PLAN.md's owner question 31 asks it; the default stands until then.
+6. **The kinds, recounted**: the Hulk family's table **17** at once (`@323`, from
+   16) and **10** on its most crowded frames (from 8) — the 17 every other
+   recording keeps; the Masters of Evil 26 and 12 and Wakanda 20 and 15,
+   unchanged (`OVER_THE_LINE`).
+
+**Rationale.** D231's looks were each read against the card alone, on the pedestal;
+the verifier read them against each other, at the table's distance, and that is
+where the user will see them. Every change is a colour, a head, a rest or a kind
+the same table already draws, so none costs a call. The census checks were
+written to what each look was FOR; a check that a deleted row would pass is not a
+check of the row.
+
+**Rejected.** New kinds for Boomerang's horns and blades or the Knight's sword
+(follow-up 7: one card each, on tables at the kinds line). The spear on the Knight
+(item 1). A second Hulk body with bulk (a library rebuild, villain identity's
+follow-up 11). A bird body (the library has none; follow-up 4). Dropping the
+Masters of Evil's squad for a lone Zemo (the card is the team, and the shadowed
+squad is what its art paints). Painting any person's complexion before the owner
+answers (item 5).
+
+---
+
+## D233 — Identity puts the Masters of Evil's and Wakanda's crowded tables over report 13 §8.2's 30,000 triangles: accepted per recording with its numbers, and the part identity owns held by a test so it cannot grow
+
+*Branch `more-villain-identity`; the lane's reserved range D230–D234. Written by the
+lane's fix pass.*
+
+**2026-09-29** (the verifier: "identity alone pushes the tables over report 13
+§8.2's 30,000-triangle line, and no decision accepts it" — Wakanda 0 frames over
+on the bare tree against 198 dressed; the Masters of Evil 11 against 257; the
+bench's own verdict FAILs on triangles at both busiest frames; D222's reason, "over
+before any identity", does not cover Wakanda)
+
+**Decision.**
+
+1. **The line is not met on those tables, and that is accepted, per recording,
+   with its numbers** — the static sweep of every transport index, bloom off,
+   1920 × 1080, `vite preview` of each tree (`docs/evidence/more-villain-identity.md`
+   §6 and §11; the GTX 1080 and SwiftShader read the same counts):
+
+   | recording | bare tree (`c330942`'s rows): worst triangles · frames over 30,000 | dressed (this fix pass): worst · frames over | worst calls, dressed |
+   |---|---|---|---|
+   | Masters of Evil (`villain-masters-of-evil-33`) | 30,247 `@371` · 11 | **35,689** `@371` · **257** | 107 `@471` |
+   | Wakanda (`villain-wakanda-232`) | 29,450 `@382` · 0 | **33,592** `@382` · **198** | 119 `@477`, `@527`–`@533` |
+   | Hulk family (`villain-hulk-family-261`) | 25,794 · 0 | 27,318 `@368` · 0 | 107 `@427` |
+   | Doom Legion (`villain-doom-248`, D222) | — | 37,546 · 97 (unchanged) | 128 |
+   | `g1` | 29,609 `@355` · 0 | unchanged | 89 |
+
+   No frame of any of them crosses the bench's 120 calls but the Doom Legion's
+   (D222). The dressed Masters of Evil are +5,442 at their worst frame, Wakanda
+   +4,142, and the part of it identity owns is props: the squads' followers (2,800
+   a squad — at `@371` both the S.H.I.E.L.D. Agents' and the Masters'), the cowls
+   (432 an instance, the parted hair 114), the gauntlets (120 a fist), the masks,
+   cloaks and spears.
+2. **Held by a test.** `traits.test.ts`'s `FIGURE_TRIS_HELD` holds the FIGURE
+   LAYER — each modelled body's triangles (`models.json`) and each prop kind's
+   geometry as the prop field builds it (procedural, or baked: a squad follower is
+   its body, a carved hairstyle its mesh) times its instances — at each villain
+   recording's measured worst: the Doom Legion **31,318** (`@393`), the Masters of
+   Evil **31,449** (`@376`), Wakanda **28,710** (`@376`); and every other recording
+   at the worst among them, `g1`'s **24,701** (`@342`). Each within 5% below, so a
+   held number stays a measurement and a cut is recorded rather than left as
+   slack. The figure layer is the part identity changes: the cards, tiles, discs
+   and strips are the same with no row at all (the bare tree's figure layer at the
+   same recordings is 25,285, 24,870 and `g1`'s 24,701).
+3. **Why accepted, not cut.** The Masters of Evil's table is over the line bare
+   (D222's reason). Wakanda's is at 98% of it bare — 29,450 at 46 battlefield cards,
+   a table half as big again as the 35 the line was drawn for — so the room for all
+   of identity there is 550 triangles, one Black Panther's cowl and mask. Measured
+   by subtracting each candidate's figure-layer part from the sweep, frame by frame
+   (`var/vf/cutsim.mts`, scratch): without the Warriors' squad (2,800) the table
+   is still 30,792 at `@382` and 64 frames over; it meets the line only by ALSO
+   taking every lit fist off the table (the gauntlets: 29,992, 8 under — Claws of
+   Bast's claws, Most Dangerous's charge, Nakia's blades, Shuri's gauntlets,
+   Storm's lightning) or every Panther's hood with nothing in its place (29,928 —
+   which the raster forbids, a mask needs its hood). A mask or a cloak and spear
+   in place of the gauntlets leaves 26 frames over. The Masters of Evil without
+   their squad are 32,889 and 68 frames over. Each of those is a card's first
+   read given up for a line the table was drawn smaller than. The cost is measured and small
+   where it is paid: the GTX 1080's p95 at the busiest benches is 0.6–5.6 ms (the
+   fix pass, at a load average of 7–9; the lane's own runs 2.7–3.9), and
+   SwiftShader's lane and base sat within a millisecond in the lane's interleaved
+   pairs (both over §9.4's 20 ms, `g1` included).
+4. **The real fix stays open**: a crowded-table budget in the arena — props shed
+   past a figure count, as `MAX_FIGURES` sheds models — villain identity's
+   follow-up 4, measured against every view. When it lands, the held numbers move
+   with their measurement.
+
+**Rationale.** A line crossed silently is a line no one keeps. The verifier's point
+is that the lane described the budget as watched when it was crossed; the honest
+state is "not met, here is by how much, here is what holds it". The triangle line
+is a whole-scene number the node tests cannot draw, but the part identity adds is
+countable exactly, frame by frame, with the geometry the prop field itself builds,
+so that part is what is held — tight, both ways.
+
+**Rejected.** A coarser cowl (D222's reason: about 130 triangles an instance is a
+faceted hood at the workshop's 1×, and the Doom Legion wears it too). Dropping the
+Masters of Evil's or the Warriors' squad (each is its card's first read; D232 kept
+the Masters' and dressed the two behind Zemo in shadow). A cheaper follower body (a
+library rebuild). Raising §8.2's line, or the bench's, for these tables. Holding
+the whole scene's triangles in a node test (it would re-implement the renderer's
+count; the sweep is the measurement, the figure layer the guard).

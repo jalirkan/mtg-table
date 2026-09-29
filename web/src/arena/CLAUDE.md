@@ -1053,17 +1053,18 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.
 
-## Villain identity — the conventions D220–D222 and D230–D231 added
+## Villain identity — the conventions D220–D222 and D230–D233 added
 
-Six, and the thesis is D75's: **a villain reads as itself through data on the
+Seven, and the thesis is D75's: **a villain reads as itself through data on the
 shared kit.** The Doom Legion — the deck a bare `./scripts/play.sh` seats against
 you — has a committed recording (`fixtures/games/villain-doom-248.jsonl`, D220)
 and an identity for every creature it names (D221); its crowded last turns are
 over the bench's lines before any identity is drawn (D222). The second lane
-(D230–D231) did the same for the three other AI decks — the Masters of Evil, the
+(D230–D233) did the same for the three other AI decks — the Masters of Evil, the
 Hulk family and Wakanda, a recording each (`villain-masters-of-evil-33`,
 `villain-hulk-family-261`, `villain-wakanda-232`) and fifty rows — and added
-conventions 4–6. `docs/evidence/villain-identity.md` is what the first lane
+conventions 4–7 (its fix pass D232–D233: nine rows re-dressed at the table's
+distance, and the triangles). `docs/evidence/villain-identity.md` is what the first lane
 measured, and its §3 has every corpus count quoted in this file that moved when
 the corpus went from 19 recordings to 20; `docs/evidence/more-villain-identity.md`
 §3 has them again for 20 to 23. PLAN.md's *Villain identity* and *More villain
@@ -1116,10 +1117,32 @@ identity* have the status and the follow-ups.
 6. **The corpus's late and odd frames are named, not smoothed** (D230). A
    snapshot that runs ahead of its own zone event (Web Up exiling Moonstone: the
    death is queued a batch after the departure is decided) is held to its one in
-   `clips.test.ts`; a token sacrificed for its own ability is backed by the frame
-   before and no further (`fixtures.test.ts`'s `unbackedNames`); the Monarch's
-   draw is the stack's second `orb` type line. A card's arrival and another event's
-   cue of the same id play once — the arrival (the queue's rule 6b).
+   `clips.test.ts` — and it is a **flush-timing race**, not the engine's order: of
+   six re-records one put the two in the same frame, so a re-record can move the
+   count, and the arena waiting a batch for a death is the fix. A token sacrificed
+   for its own ability is backed by the frame before and no further
+   (`fixtures.test.ts`'s `unbackedNames`, which reads the wire's `token` field,
+   never the name); the Monarch's draw is the stack's second `orb` type line. A
+   card's arrival and another event's cue of the same id play once — the arrival
+   (the queue's rule 6b). The terrain's cap is **32** since D230: the corpus's
+   busiest table PLACES 25 lands (`villain-wakanda-232@525`–`@532`), past the old
+   24, and `tiles.test.ts` counts lands placed apart from tiles laid.
+7. **A look is judged at the table's distance, and the part identity owns of
+   the triangles is held** (D232, D233). A row is read against its neighbours on
+   the same table, not against its card alone: the green bodies of the Hulk
+   family differ pairwise in skin, top or trousers (`traits.test.ts` holds it),
+   and a squad's followers wear the leader's `top`, which is how the Masters of
+   Evil stand two figures in shadow behind Zemo. The census holds every row of the
+   three decks to its own `card` rung, and a face-down control turns every
+   dressed name face down (the three recordings carry no concealed battlefield
+   card, so the corpus sweeps say nothing about them). Report 13 §8.2's 30,000 is
+   **not met** on the Doom Legion's, the Masters of Evil's and Wakanda's crowded
+   tables; D222 and D233 accept each with its numbers, and `traits.test.ts`'s
+   `FIGURE_TRIS_HELD` holds the figure layer — bodies and props, the part identity
+   owns — to each villain recording's measured worst and every other recording to
+   theirs (`g1`@342), within 5%. A row that adds triangles to one of those tables
+   moves a held number, with its measurement. A person's skin is still the one
+   tone; PLAN.md's owner question 31 asks whether it should follow the card.
 
 Three arena fixes came with the first recording (D220), each a defect it was the first
 to show: the queue's rule 6 plays a land's two arrival events — its `zone` event

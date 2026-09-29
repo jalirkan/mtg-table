@@ -564,13 +564,18 @@ test('clips: every figure that dies over the corpus is carried by its own die re
    * D230): the figure leaves the table in one frame and the `zone` event that
    * moves it — and the death cue it plays — arrives in the NEXT frame's batch, so
    * the departure is decided (D64: once, on its first frame) before its death is
-   * queued, and the body is not drawn. `villain-masters-of-evil-33` has one, and
-   * recording it again alone at a load average of 2 put it in the same place:
+   * queued, and the body is not drawn. `villain-masters-of-evil-33` has one:
    * Web Up's exile trigger resolving against Moonstone — the frame's snapshot
-   * already holds her in exile, and holds the trigger on the stack too. Held to
-   * the measured count, each one named, and PLAN.md's more-villain-identity
-   * follow-up 1 is the arena change (a departure that waits a batch for its
-   * death) that would draw it.
+   * already holds her in exile, and holds the trigger on the stack too. **It is
+   * a flush-timing race, not the engine's order** (the fix pass, D230): of six
+   * re-records of the same game, five put the snapshot a frame ahead of her zone
+   * event, and one (the verifier's) put the two in the SAME frame, where she is
+   * drawn dying — the forwarder's clock deciding which batch the event lands in
+   * (the D113 class). So this count is ONE outcome of that race, pinned by the
+   * committed recording, and a re-record can change it. Held to the measured
+   * count, each one named; PLAN.md's more-villain-identity follow-up 1 is the
+   * real fix, the arena change (a departure that waits a batch for its death)
+   * that would draw her whichever way the race goes.
    */
   const late: string[] = [];
   const LATE_HELD = ['games/villain-masters-of-evil-33.jsonl: card 16'];
