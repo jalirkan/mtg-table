@@ -4,6 +4,305 @@ Source of truth: [`docs/research/05-architecture-synthesis.md`](docs/research/05
 §9. That document is the spec; this file is its schedule, kept up to date as
 milestones land.
 
+## Open now — every open follow-up and every owner-only question, indexed
+
+An index, and nothing more: it was generated on 2026-09-28 (the docs block) from
+the follow-up lists and the questions table further down, it moves nothing, and
+**those lists stay the truth** — an item's status is whatever its own entry says.
+An item counts as open unless its entry marks it closed or strikes it through;
+*partly*, *standing*, *accepted* and *not reproduced* are the entries' own words.
+Each lane links to its list. When a list changes, change this index in the same
+commit.
+
+**The 27 follow-up lists hold 325 items, and 242 of them are open** — 220 open,
+16 partly done, 3 not reproduced, 2 standing and 1 accepted — against 83
+closed (M1's six among them). **Of the 30 questions only the owner can settle,
+5 are answered** and 25 stand on the default this plan assumes.
+
+### Open follow-ups
+
+| lane | # | status | the item, in one line | the file it names first |
+|---|---|---|---|---|
+| [M2](#fu-m2) | 3 | open | Gate 0's `"unknown"` arm has never been observed at runtime | — |
+| [M2](#fu-m2) | 4 | open | Amendment M9's pre-header path is self-test-only | — |
+| [M2](#fu-m2) | 7 | standing | `emitOver`'s wait loop was kept, not deleted | — |
+| [M3](#fu-m3) | 1 | open | `NO_CLIENT_ASK_TIMEOUT_MS` (120 s) has never fired | — |
+| [M3](#fu-m3) | 2 | open | D22 shrinks the `ability_menu` race; it does not mathematically eliminate it | — |
+| [M3](#fu-m3) | 3 | open | The asynchronous `ability_menu` is not re-delivered by `resync`, and a stale answer is applied blind | `docs/evidence/m5-board.md` |
+| [M3](#fu-m3) | 6 | open | Amendment M10's `seq: 0` reservation is true by construction, not by an assertion | — |
+| [M3](#fu-m3) | 8 | open | `--refuse-first-ask` lives in `tools/ws-auto-play.mjs`, not `ws-smoke.mjs` | `tools/ws-auto-play.mjs` |
+| [M3](#fu-m3) | 9 | open | Space = OK is proved by a synthetic `KeyboardEvent`, not by a finger | — |
+| [M3](#fu-m3) | 10 | open | Two socket properties are closed by construction rather than by a test | — |
+| [M3](#fu-m3) | 11 | open | Two M2 follow-ups (gate 0's "unknown" arm, M9's pre-header buffer) are still open here | — |
+| [M4](#fu-m4) | 2 | open | Report 10 §2.2's middle-row arithmetic is 23 px out, and the spec is the half that is wrong | — |
+| [M4](#fu-m4) | 3 | not reproduced | `TypeError: set is not iterable`, once, from a layout effect | `web/src/render/rects.ts` |
+| [M4](#fu-m4) | 8 | open | `check-redaction.mjs` cannot read a four-line M11 session | `tools/check-redaction.mjs` |
+| [M5](#fu-m5) | 3 | open | The default auto-answer policy changed for two kinds, in a shared file | `tools/ws-auto-play.mjs` |
+| [M5](#fu-m5) | 4 | open | There is no DOM test environment | `web/test/hooks-order.test.ts` |
+| [M5](#fu-m5) | 5 | open | The combat-band strip is an overlay, and while it is tall it covers the graveyard / exile strips behind it | — |
+| [M5](#fu-m5) | 6 | accepted | 9b's multiset diff differs under load — accepted, left loud, and said where it prints | `tools/fixture-multiset-diff.mjs` |
+| [M5](#fu-m5) | 7 | open | The board picker reaches exactly one kind here | `fixtures/games/` |
+| [M5](#fu-m5) | 8 | open | `assign_amount` is not a picker | — |
+| [M5](#fu-m5) | 9 | open | `clickAbility` still never leaves the browser | `tools/check-all.sh` |
+| [M5](#fu-m5) | 10 | open | `input.weak` is still `[]` on the wire | `docs/evidence/m6-engine.md` |
+| [M5](#fu-m5) | 11 | open | Two M4 follow-ups carry over unchanged (report 10 §2.2, the four-line M11 session) | `tools/check-redaction.mjs` |
+| [M5](#fu-m5) | 12 | open | `docs/evidence/m5-probes.md` §12 overstates its own un-recorded corners | `docs/evidence/m5-probes.md` |
+| [M5](#fu-m5) | 13 | open | The user still has not pressed the space bar | `web/test/keys.test.ts` |
+| [M6](#fu-m6) | 1 | open | `order` with `sideboardMode: true` is still unrecorded | `decks/sideboard-probe.dck` |
+| [M6](#fu-m6) | 2 | open | Only the `endOfTurn` yield has an engine recording | `fixtures/` |
+| [M6](#fu-m6) | 3 | open | `input.weak[]` is still `[]` and `input` still carries no typed `payingMana` | — |
+| [M6](#fu-m6) | 4 | open | `clickAbility` still never leaves the browser | — |
+| [M6](#fu-m6) | 5 | open | `newGame` is absent from the frame log | `docs/evidence/m6-engine.md` |
+| [M6](#fu-m6) | 7 | open | D40's fix is not in the gate | `tools/check-all.sh` |
+| [M6](#fu-m6) | 8 | open | `tools/check-redaction.mjs`'s two M6 relaxations want a second human reader | `tools/check-redaction.mjs` |
+| [M6](#fu-m6) | 9 | open | Three protocol rows are still specified and not emitted | — |
+| [M6](#fu-m6) | 10 | open | No AI profile picker and no yield settings, deliberately | `docs/evidence/match-setup.md` |
+| [M6](#fu-m6) | 11 | open | Phase stops are reseeded for every game | — |
+| [M6](#fu-m6) | 12 | open | `useMana` still has no post-act snapshot push | — |
+| [M6](#fu-m6) | 13 | open | The user still has not pressed the space bar | — |
+| [M6](#fu-m6) | 14 | open | The gate never enters amendment M42's branch | `docs/evidence/m6-engine.md` |
+| [M6](#fu-m6) | 15 | open | `comfortNotYet()`'s retry path in `tools/ws-auto-play.mjs` has no automated test | `tools/ws-auto-play.mjs` |
+| [M6](#fu-m6) | 16 | open | `WsTransport` caches `lastState` and does not clear it on `hello_ok` | — |
+| [M7 Tier 1](#fu-m7) | 1 | open | `max ≤ 50 ms` fails on a cold table, and the cause is measured | — |
+| [M7 Tier 1](#fu-m7) | 2 | open | Every performance number in this milestone is from SwiftShader | — |
+| [M7 Tier 1](#fu-m7) | 3 | open | The dpr governor cannot climb back on a vsync-locked display | — |
+| [M7 Tier 1](#fu-m7) | 4 | open | §10.7's `?cue=<id>` loop route is not built | — |
+| [M7 Tier 1](#fu-m7) | 5 | open | §7.1's `?cues=<url>` override is a documented refusal, not an omission | `web/src/arena/Arena.tsx` |
+| [M7 Tier 1](#fu-m7) | 6 | open | `<AdaptiveDpr />` is mounted and dormant | — |
+| [M7 Tier 1](#fu-m7) | 7 | open | `drawnEntities()` in `web/src/render/picker.ts` was deliberately not extended | `web/src/render/picker.ts` |
+| [M7 Tier 1](#fu-m7) | 8 | open | `COUNTER_LABELS` in `web/src/render/labels.ts` is keyed by the enum-constant spelling | `web/src/render/labels.ts` |
+| [M7 Tier 1](#fu-m7) | 9 | open | There is no canvas equivalent of `render.test.tsx`'s `data-card-name` sweep | `web/test/render.test.tsx` |
+| [M7 Tier 1](#fu-m7) | 10 | open | `tools/arena-bench.mjs` is not in `check-all.sh` | `tools/arena-bench.mjs` |
+| [M7 Tier 1](#fu-m7) | 11 | open | The frozen React-18 3D line prints one deprecation warning at runtime | — |
+| [M7 Tier 1](#fu-m7) | 12 | open | A second JVM started at the same `--seed` truncates the first's frame log | `scripts/play.sh` |
+| [Tier 2, slice 1](#fu-t2s1) | 1 | open | In the human's own combat the transient clips mostly do not play live | — |
+| [Tier 2, slice 1](#fu-t2s1) | 4 | open | Bloom's default rests on one headless measurement | — |
+| [Tier 2, slice 1](#fu-t2s1) | 5 | open | The program budget is exceeded under bloom | — |
+| [Tier 2, slice 1](#fu-t2s1) | 6 | open | With bloom on, `gl.info.render` counts only the composer's last pass | — |
+| [Tier 2, slice 1](#fu-t2s1) | 7 | open | The idle cost of a table with a bobber on it rose | `web/src/arena/figures/traits.json` |
+| [Tier 2, slice 1](#fu-t2s1) | 12 | open | The fizzle is evidenced only by a synthetic event | — |
+| [Tier 2, slice 1](#fu-t2s1) | 13 | open | Engine order puts `attach` before `resolved` | — |
+| [Tier 2, slice 1](#fu-t2s1) | 14 | open | The SwiftShader cold start | — |
+| [Tier 2, slice 1](#fu-t2s1) | 16 | open | The minified chunks carry no licence banners | `web/dist/` |
+| [Tier 2, slice 1](#fu-t2s1) | 19 | open | `web/t0-spike.html` is kept | `web/t0-spike.html` |
+| [Tier 2, slice 2](#fu-t2s2) | 4 | open | The dying body steps out in the frame the rank closes | — |
+| [Tier 2, slice 2](#fu-t2s2) | 5 | open | A death flushed before its first frame has no body | — |
+| [Tier 2, slice 2](#fu-t2s2) | 6 | partly | No live death has been seen, and the retargeted `hit` was not photographed in the arena | — |
+| [Tier 2, slice 2](#fu-t2s2) | 7 | open | The in-browser checks are not repeatable from the repo | `tools/` |
+| [Tier 2, slice 2](#fu-t2s2) | 8 | open | The views' trade, and a flash nobody sees | — |
+| [Tier 2, slice 2](#fu-t2s2) | 9 | open | A spectator's swoop is a close-up | `web/src/arena/cues/cues.json` |
+| [Tier 2, slice 2](#fu-t2s2) | 10 | partly | Nobody has play-tested slice 2 | — |
+| [Tier 2, slice 3](#fu-t2s3) | 2 | open | Three props sit on one side of a body by nature | `web/test/traits.test.ts` |
+| [Tier 2, slice 3](#fu-t2s3) | 3 | open | Most beats are unaimed in the corpus, and Wasp's never is | `web/test/stack.test.ts` |
+| [Tier 2, slice 3](#fu-t2s3) | 4 | open | At the table view the T12 looks are small | — |
+| [Tier 2, slice 3](#fu-t2s3) | 5 | open | The carriers still project onto the far rank from the shoulder views | — |
+| [Tier 2, slice 3](#fu-t2s3) | 6 | open | Cast cues on a TRIGGER still rise out of the hand | — |
+| [Tier 2, slice 3](#fu-t2s3) | 7 | partly | The CDP drivers that took every photograph are scratch scripts | `tools/` |
+| [Tier 2, slice 3](#fu-t2s3) | 8 | partly | Nobody has play-tested slice 3 | — |
+| [Tier 2, slice 3](#fu-t2s3) | 9 | open | Four attachments in one crowded `g3` board have no clickable strip | — |
+| [Tier 2, slice 3](#fu-t2s3) | 10 | open | Nick Fury is still the least legible identity | — |
+| [Tier 2, slice 3](#fu-t2s3) | 11 | partly | The second verification pass's fixes have not been independently verified | `web/test/facing.test.ts` |
+| [Tier 2, slice 3](#fu-t2s3) | 12 | open | The raster test counts pixels, not contrast | — |
+| [Tier 2, slice 3](#fu-t2s3) | 13 | open | No frame-time bench was run on slice 3 | — |
+| [Tier 2, slice 3](#fu-t2s3) | 14 | open | A dying Air Force is not seen dying | — |
+| [Tier 2, slice 4](#fu-t2s4) | 1 | open | Were the duelists wanted? | `web/src/arena/figures/duelists.json` |
+| [Tier 2, slice 4](#fu-t2s4) | 2 | open | The opponent's duelist is not at the far end of the table | `docs/ideas/arena-mode.md` |
+| [Tier 2, slice 4](#fu-t2s4) | 4 | partly | Two views and one window shape lose a duelist | — |
+| [Tier 2, slice 4](#fu-t2s4) | 5 | open | The duelists read weakly as a director and a villain, and each has a visible artifact | — |
+| [Tier 2, slice 4](#fu-t2s4) | 6 | open | Card identity is uneven at 1× from the table view | — |
+| [Tier 2, slice 4](#fu-t2s4) | 7 | open | The duelists' headline gesture is not seen in the most common live case | — |
+| [Tier 2, slice 4](#fu-t2s4) | 10 | open | The budget headroom is thin on three lines at once | `web/public/models/figures.glb` |
+| [Tier 2, slice 4](#fu-t2s4) | 11 | open | Every humanoid is a Superhero body | — |
+| [Tier 2, slice 4](#fu-t2s4) | 12 | open | Five archives were downloaded without the user's approval in chat | — |
+| [Tier 2, slice 4](#fu-t2s4) | 13 | partly — (d) open | The gate is flaky under load — (b) and (c) closed by the hardening pass, (d) the ask's push order still open | `tools/wire-drift.mjs` |
+| [Tier 2, slice 4](#fu-t2s4) | 15 | not reproduced | A camera mis-aim, seen once and unconfirmed | — |
+| [Tier 2, slice 4](#fu-t2s4) | 16 | open | The damage number rises from the HUD anchor | `web/src/arena/layout.ts` |
+| [Tier 2, slice 4](#fu-t2s4) | 17 | open | Small debts, each deliberate or cheap | — |
+| [Tier 2, slice 4](#fu-t2s4) | 18 | open | Every number is headless Chromium on the GTX 1080, no frame-time bench was run, and nobody has played slice 4 | `tools/arena-bench.mjs` |
+| [Tier 2, slice 4](#fu-t2s4) | 19 | open | The duelists' stand offsets live outside `layout.ts` | `web/src/arena/layout.ts` |
+| [Card library](#fu-cards) | 1 | open | `tools/fetch-art.ts` can read from the library instead of Scryfall | `tools/fetch-art.ts` |
+| [Card library](#fu-cards) | 2 | open | Report 03 §4.5's refresh rules (a newer `image_updated_at`, a dated retry) | — |
+| [Card library](#fu-cards) | 3 | open | `config.json`'s `scryfallUserAgent` still carries a placeholder contact | `config.json` |
+| [Card library](#fu-cards) | 4 | open | Whether `fixtures/cards/` is committed at all | `fixtures/cards/` |
+| [Card library](#fu-cards) | 5 | open | Every MSH + MSC print's image is not fetched (question 17) | — |
+| [Card library](#fu-cards) | 6 | open | The name ladder is local only | — |
+| [Card library](#fu-cards) | 7 | open | No `resolve --write`, no `cdn_uuid` warm start, no incremental refresh | — |
+| [Card library](#fu-cards) | 8 | open | The *copy .dck line* button writes `\|SET` only for MSH and MSC | — |
+| [Card library](#fu-cards) | 9 | open | The real build is not in the gate | `tools/check-all.sh` |
+| [Card library](#fu-cards) | 10 | open | The browser loses the mode app's UI state across the detour | — |
+| [Card library](#fu-cards) | 11 | open | No production route | — |
+| [Workshop](#fu-workshop) | 8 | open | Camera cues are not previewed | — |
+| [Workshop](#fu-workshop) | 9 | open | The legibility meter's limits (1600 × 1000 against 1600 × 900; pixels, not contrast) | `web/test/traits.test.ts` |
+| [Workshop](#fu-workshop) | 10 | open | Never opened from a built `dist/` | — |
+| [Workshop](#fu-workshop) | 11 | open | The live-game chip was checked with a stand-in transport object | `scripts/play.sh` |
+| [Workshop](#fu-workshop) | 12 | open | An override masks the committed row until it is reset | — |
+| [Workshop](#fu-workshop) | 13 | open | A synthetic board is one card's world | — |
+| [Workshop](#fu-workshop) | 14 | open | The duelists are seats, not cards | — |
+| [Workshop](#fu-workshop) | 15 | partly | A fizzled TRIGGER still plays its card's plain resolution | — |
+| [Workshop](#fu-workshop) | 18 | open | The arena re-renders on every loop-mode change | `tools/arena-bench.mjs` |
+| [Workshop](#fu-workshop) | 19 | open | A card whose Scryfall name differs from Forge's | — |
+| [Match setup](#fu-match) | 1 | open | Identity rows for the villain deck, after the arena branches merge | `web/src/arena/` |
+| [Match setup](#fu-match) | 3 | open | A deck and profile picker in the browser | — |
+| [Match setup](#fu-match) | 4 | open | Dark Deed was cast once in 38 games — the next swap if it never leaves the hand | — |
+| [Match setup](#fu-match) | 5 | open | Paths no recording has reached | — |
+| [Match setup](#fu-match) | 6 | open | The redaction gate and `DigUntil`'s reveal | `tools/check-redaction.mjs` |
+| [Match setup](#fu-match) | 7 | open | The rest of report 11 §9 is not exposed | — |
+| [Match setup](#fu-match) | 10 | open | The workshop has no facts for the villains | `web/src/workshop/catalog.json` |
+| [Engine and sets](#fu-engine) | 1 | open | The M6 next-game race — a blocker for any engine switch | `bridge/src/mtgtable/WireGuiGame.java` |
+| [Engine and sets](#fu-engine) | 4 | open | `MtgTable` prints `MTGTABLE OK` and exits 0 on a 0-turn game | — |
+| [Engine and sets](#fu-engine) | 5 | open | `check-redaction.mjs` A10 raises a false alarm | `tools/check-redaction.mjs` |
+| [Engine and sets](#fu-engine) | 6 | open | Arena identity for the FRA creatures | `web/src/arena/figures/figures.json` |
+| [Engine and sets](#fu-engine) | 7 | partly | Card art and the card library | `tools/fetch-art.ts` |
+| [Engine and sets](#fu-engine) | 8 | open | Prepare on the board | — |
+| [Engine and sets](#fu-engine) | 9 | open | `input.openZones`' `{hand}` hint does not arrive on 2.0.15 | — |
+| [Engine and sets](#fu-engine) | 10 | open | D14's retirement | — |
+| [Engine and sets](#fu-engine) | 11 | open | Forge's to close, ours to re-check: no AI logic for Empower, a typo in Pyre Rhymer | — |
+| [Engine and sets](#fu-engine) | 12 | open | Two deck audits | `tools/check-deck.mjs` |
+| [Hardening](#fu-hardening) | 1 | open | `figures.glb` was not rebuilt with the pinned toolchain | `web/public/models/figures.glb` |
+| [Hardening](#fu-hardening) | 3 | open | An exception that kills a `Game-n` thread other than the game loop is only printed | — |
+| [Hardening](#fu-hardening) | 7 | open | Step 6 checks the stack's ORDER on one id-set | — |
+| [More villains](#fu-villains) | 1 | open | The flat 8 spells (D117) | — |
+| [More villains](#fu-villains) | 2 | open | Identity rows for the three decks | `web/src/arena/figures/traits.json` |
+| [More villains](#fu-villains) | 3 | open | The workshop has no facts for them | `tools/check-redaction.mjs` |
+| [More villains](#fu-villains) | 4 | open | A hand review of the ability lines | — |
+| [More villains](#fu-villains) | 5 | open | Doom Legion at seed 6 | — |
+| [More villains](#fu-villains) | 6 | open | The top of the Hulk curve seldom arrives | — |
+| [More villains](#fu-villains) | 7 | open | Pinning a print | `tools/build-deck.ts` |
+| [More villains](#fu-villains) | 8 | open | `fixtures/cards/` does not carry the new decks' cards | `fixtures/cards/` |
+| [More villains](#fu-villains) | 9 | open | The smoke's advisory cannot tell a land never drawn from a nonland never cast | — |
+| [More villains](#fu-villains) | 10 | open | Paths the smoke did not show reaching the seat | — |
+| [Spectating](#fu-spectate) | 1 | open | A live observer socket | — |
+| [Spectating](#fu-spectate) | 2 | open | The outcome cue speaks for the viewing seat | — |
+| [Spectating](#fu-spectate) | 3 | open | `Snap.sweepText` conceals a seat's own spell text when it says "surveils (1)" | — |
+| [Spectating](#fu-spectate) | 4 | open | The director is one key away, not the default | `scripts/spectate.sh` |
+| [Spectating](#fu-spectate) | 5 | open | The pace is one number | — |
+| [Spectating](#fu-spectate) | 6 | open | Commit a Doom Legion recording | `fixtures/games/` |
+| [Spectating](#fu-spectate) | 7 | open | No picker in the page | — |
+| [Spectating](#fu-spectate) | 8 | partly | Reloading a followed page restarts following | — |
+| [Spectating](#fu-spectate) | 9 | open | The page's clock and the bridge's are compared | — |
+| [Spectating](#fu-spectate) | 10 | open | Spectate recordings are not in step 11's corpus sweep | `tools/wire-drift.mjs` |
+| [Narrator](#fu-narrator) | 2 | open | Commit one Doom Legion recording | — |
+| [Narrator](#fu-narrator) | 3 | open | The engine paths no committed log reaches | — |
+| [Narrator](#fu-narrator) | 4 | open | The seat's own decisions are not told | `tools/check-redaction.mjs` |
+| [Narrator](#fu-narrator) | 5 | open | "gets +1/+1 until end of turn" is invisible | — |
+| [Narrator](#fu-narrator) | 6 | open | `--json` is unversioned | — |
+| [Narrator](#fu-narrator) | 7 | open | Coalescing hides the middle of a flush | — |
+| [Narrator](#fu-narrator) | 8 | open | A multi-game client log | — |
+| [Story page](#fu-story) | 1 | open | A story panel INSIDE the arena | `web/src/arena/` |
+| [Story page](#fu-story) | 2 | open | A live seat's story | — |
+| [Story page](#fu-story) | 3 | open | Reloading a followed story restarts at the live edge | — |
+| [Story page](#fu-story) | 4 | open | Tokens have no image | `tools/fetch-art.ts` |
+| [Story page](#fu-story) | 5 | open | A quoted name is not marked | — |
+| [Story page](#fu-story) | 6 | open | One line per moment is long for a combat | — |
+| [Story page](#fu-story) | 7 | open | The frame count is the replay's, not the story's | — |
+| [Story page](#fu-story) | 8 | open | Measured in Node, not in the browser | — |
+| [Gate speed](#fu-gate) | 2 | open | 10g is the critical path from about six slots up | `decks/yield-probe.dck` |
+| [Gate speed](#fu-gate) | 3 | open | The default is conservative | — |
+| [Gate speed](#fu-gate) | 5 | open | The serial gate's console merges stderr into stdout | — |
+| [Gate speed](#fu-gate) | 6 | open | `tools/deck-smoke.sh` could be jobs now | `tools/deck-smoke.sh` |
+| [Gate speed](#fu-gate) | 7 | open | One gate per worktree, still | — |
+| [Undo race](#fu-undo) | 1 | open | The yield acts can start the mana-lost worker unmarked | — |
+| [Undo race](#fu-undo) | 2 | standing | Clicks are not guarded against our own refresh walk | — |
+| [Undo race](#fu-undo) | 3 | not reproduced | The real crash was not reproduced at natural timing here | — |
+| [Undo race](#fu-undo) | 5 | open | Slice 4's follow-up 13(d) is not this defect | — |
+| [Polish 1](#fu-polish1) | 3 | open | `GuardFeeds` itself is read, not driven | `tools/undo-race-repro.sh` |
+| [Polish 1](#fu-polish1) | 4 | open | The pair check's "after it left" cannot tell leaving from a log that stopped being written | — |
+| [Guards](#fu-guards) | 1 | open | Every lane worktree needs a card index now, or `SKIP_DECKS=1` | — |
+| [Guards](#fu-guards) | 2 | open | The lint is still a grep | `var` |
+| [Guards](#fu-guards) | 3 | open | The self-test's snippets are text, not compiled code | — |
+| [Guards](#fu-guards) | 4 | open | `enclosing_method` needs a modifier | — |
+| [Guards](#fu-guards) | 5 | open | Forge's own hops are not counted | — |
+| [Lane LOOK](#fu-look) | 3 | open | MOTION / BODIES — props have one look per KIND | `web/src/arena/scene/propMaterial.ts` |
+| [Lane LOOK](#fu-look) | 4 | open | BODIES — retire `holoMaterial.ts` | `web/src/arena/scene/holoMaterial.ts` |
+| [Lane LOOK](#fu-look) | 8 | open | Question: the backdrop per seat | — |
+| [Lane LOOK](#fu-look) | 10 | open | The raster counts paint, not contrast | — |
+| [Lane LOOK](#fu-look) | 11 | partly | Shadows the stage does not show | `web/src/arena/layout.ts` |
+| [Lane LOOK](#fu-look) | 12 | open | The stage's colours come from what a seat has shown | — |
+| [Lane LOOK](#fu-look) | 13 | open | Report 15 §4.2's rest — fog, ambient motes, a comic panel border — is not built | — |
+| [Lane LOOK](#fu-look) | 14 | open | The paint input path has no committed user | — |
+| [Lane LOOK](#fu-look) | 15 | open | The spike's `?ink=hull` URLs now draw the post line | — |
+| [Lane LOOK](#fu-look) | 16 | open | Under SwiftShader the governor reaches its floor later with the comic look | `web/src/arena/perf.ts` |
+| [Lane LOOK](#fu-look) | 18 | open | Aliasing | `web/src/arena/scene/Post.tsx` |
+| [Lane LOOK](#fu-look) | 19 | open | The raster's lights are optimistic | — |
+| [Lane LOOK](#fu-look) | 20 | open | The workshop's front view shows the card upside down | — |
+| [Lane LOOK](#fu-look) | 21 | open | Headed and integrated-GPU measurements are still owed | — |
+| [Lane MOTION](#fu-motion) | 3 | open | A summoned figure's props do not ink in with it | `web/src/arena/scene/props.ts` |
+| [Lane MOTION](#fu-motion) | 4 | open | The pedestal shows no camera shake | `web/src/workshop/Pedestal.tsx` |
+| [Lane MOTION](#fu-motion) | 5 | open | The lettering is the system's heaviest font | — |
+| [Lane MOTION](#fu-motion) | 6 | open | Every star is POW yellow unless a row says otherwise | — |
+| [Lane MOTION](#fu-motion) | 7 | open | The villain deck has no words | `web/src/arena/cues/cues.json` |
+| [Lane MOTION](#fu-motion) | 8 | open | The integrated GPU is still unmeasured | — |
+| [Lane MOTION](#fu-motion) | 9 | open | The workshop's 1× close-up crops an attacker's star | `web/src/workshop/Pedestal.tsx` |
+| [Lane MOTION](#fu-motion) | 10 | open | A flier's splat is mostly under its own falling body at table distance | — |
+| [Lane MOTION](#fu-motion) | 11 | open | Every star is still one of five words on one yellow | — |
+| [Lane MOTION](#fu-motion) | 12 | open | The workshop's rehearsals leave the pedestal in their AFTER state when auto-rest is off | — |
+| [Lane MOTION](#fu-motion) | 13 | open | A summon swings from hologram to HALF ink, not to ink | — |
+| [Lane MOTION](#fu-motion) | 14 | open | A high flier's speed lines stand wide | — |
+| [Lane BODIES](#fu-bodies) | 2 | open | The Universal Base Characters pack — needs the user's approval in chat | `tools/build-figures.mjs` |
+| [Lane BODIES](#fu-bodies) | 3 | open | The cheaper road to library headroom | `web/public/models/figures.glb` |
+| [Lane BODIES](#fu-bodies) | 4 | partly | Expressions | — |
+| [Lane BODIES](#fu-bodies) | 5 | open | A face on the director duelist | `web/src/arena/figures/duelists.ts` |
+| [Lane BODIES](#fu-bodies) | 6 | partly | `FigurePose.art` is carried and not yet drawn | — |
+| [Lane BODIES](#fu-bodies) | 8 | partly | The coat close up | — |
+| [Lane BODIES](#fu-bodies) | 9 | open | The cape's shoulder panels are rigid on `spine_03` | — |
+| [Lane BODIES](#fu-bodies) | 10 | open | The procedural hair reads as a cap close up | — |
+| [Lane BODIES](#fu-bodies) | 11 | open | `HEAD_SHAPE` and the face landmarks are measured constants | — |
+| [Lane BODIES](#fu-bodies) | 12 | open | The palette runs on the main thread | — |
+| [Lane BODIES](#fu-bodies) | 14 | open | A trimmed coat hem | `web/src/arena/figures/duelists.json` |
+| [Lane BODIES](#fu-bodies) | 15 | partly | Dark procedural hair still reads as a cap from above | — |
+| [Lane BODIES](#fu-bodies) | 16 | open | Fury is bald now | — |
+| [Lane BODIES](#fu-bodies) | 18 | open | The workshop cannot show a face at 1×, and the table cannot read one | `web/src/workshop/framing.ts` |
+| [Lane BODIES](#fu-bodies) | 19 | open | Pain on a hit — lane MOTION's | — |
+| [Lane BODIES](#fu-bodies) | 20 | open | Coulson's clasp is a judgement call | — |
+| [Lane BODIES](#fu-bodies) | 21 | open | The bench on an idle machine | — |
+| [Lane BODIES](#fu-bodies) | 22 | open | The director duelist's small flap at view 1 | — |
+| [Lane BODIES](#fu-bodies) | 23 | partly | Peggy's sidearm is still small from above | — |
+| [Lane BODIES](#fu-bodies) | 24 | open | A face at play distance is on the far seat only | — |
+| [Lane BODIES](#fu-bodies) | 25 | open | Fury's strap crosses his good brow | `web/src/arena/scene/props.ts` |
+| [Lane BODIES](#fu-bodies) | 26 | open | The raster's merge details are keyed by KIND | `web/test/traits.test.ts` |
+| [Lane BODIES](#fu-bodies) | 27 | open | Lane LOOK's follow-up 4 is still open | `web/src/arena/scene/models.ts` |
+| [Lane BODIES](#fu-bodies) | 28 | open | A liveness message names a line by its text | — |
+| [Lane BODIES](#fu-bodies) | 29 | open | Two hairs are details by measurement, not by nature | `web/test/traits.test.ts` |
+| [Lane BODIES](#fu-bodies) | 30 | open | The villain duelist's armour shows through his cloak | `web/src/arena/figures/duelists.json` |
+| [Lane BODIES](#fu-bodies) | 31 | open | Peggy's sidearm reads as a grey slab from above | `web/src/arena/scene/props.ts` |
+
+### Questions only the owner can settle
+
+| # | question | status |
+|---|---|---|
+| [1](#owner-questions) | Licence: GPL-3.0-or-later, or AGPL so manabrew could be forked? | open — the plan runs on its default |
+| [2](#owner-questions) | Keep the M1 recorder, or go straight to the browser seat? | open — the plan runs on its default |
+| [3](#owner-questions) | React or vanilla TS for `web/`? | open — the plan runs on its default |
+| [4](#owner-questions) | Ever rewrite `~/.forge`'s `Pacho SHIELD.dck` in place to add `\|MSC`? | open — the plan runs on its default |
+| [5](#owner-questions) | Card images hot-linked from Scryfall, or proxied through our own origin? | open — the plan runs on its default |
+| [6](#owner-questions) | Install a JDK? | open — the plan runs on its default |
+| [7](#owner-questions) | GitHub: a public repo or a private one? | open — the plan runs on its default |
+| [8](#owner-questions) | Is losing to the Forge AI acceptable, or does a profile picker come forward? | answered (came forward) |
+| [9](#owner-questions) | Forge's floating-mana warning on in real games? | answered |
+| [10](#owner-questions) | Report 13 §13's first six questions (art direction, card-art models, the GPU, breathing, duelists, lights) | answered |
+| [11](#owner-questions) | Commit `web/public/models/figures.glb`, or gitignore it and regenerate it? | open — the plan runs on its default |
+| [12](#owner-questions) | Should the live combat budget let the clip lane play? | open — the plan runs on its default |
+| [13](#owner-questions) | Should your figures face the other seat? | answered |
+| [14](#owner-questions) | Is likeness — Tier 3, a model per card — part of the end goal? | open — the plan runs on its default |
+| [15](#owner-questions) | Commit `fixtures/cards/`, or gitignore it? | open — the plan runs on its default |
+| [16](#owner-questions) | What contact goes in `config.json`'s `scryfallUserAgent`? | open — the plan runs on its default |
+| [17](#owner-questions) | Fetch every MSH + MSC print's image (~104 MiB)? | open — the plan runs on its default |
+| [18](#owner-questions) | Play Reality Fracture now, or wait for an official Forge release? | answered |
+| [19](#owner-questions) | Fix the M6 next-game race on `main` now, or before the engine switch? | open — the plan runs on its default |
+| [20](#owner-questions) | Accept the draft green-black FRA opponent? | open — the plan runs on its default |
+| [21](#owner-questions) | For the engine day: the pin inside the repo, and re-recording `g1` if only `stats` order differs? | open — the plan runs on its default |
+| [22](#owner-questions) | Keep the prepared FRA files, and should `audit-deck.mjs` join the gate? | open — the plan runs on its default |
+| [23](#owner-questions) | Which deck should a bare `./scripts/play.sh` seat against you? | open — the plan runs on its default |
+| [24](#owner-questions) | `deck-smoke.sh`: the flat 8 spells a game, or the rate `min(8, AI turns − 3)`? | open — the plan runs on its default |
+| [25](#owner-questions) | Keep comic FX on by default? | open — the plan runs on its default |
+| [26](#owner-questions) | Keep on twos on by default? | open — the plan runs on its default |
+| [27](#owner-questions) | The five comic words, and which card says which | open — the plan runs on its default |
+| [28](#owner-questions) | Should a summon swing all the way to ink before it settles at half? | open — the plan runs on its default |
+| [29](#owner-questions) | Download the *Universal Base Characters* pack again for its hairstyles? | open — the plan runs on its default |
+| [30](#owner-questions) | Keep the art rung on by default? | open — the plan runs on its default |
+
+---
+
 Eight milestones, each with **one runnable command and a deliverable you can look
 at**. Total estimate ~13 evenings, first browser game at evening 7.
 
@@ -361,6 +660,8 @@ thread — with no WebSocket and no DOM. Every unimplemented member logs
 `UNIMPL <name>` and returns a safe default rather than throwing, so a game
 degrades instead of dead-ending and the log says which of the 37 actually fire for
 a W/U deck.
+
+<a id="fu-m2"></a>
 
 ### M2 follow-ups — four closed by M3, one by M5, two open, one standing (2026-09-11)
 
@@ -772,6 +1073,8 @@ before a human seat exists:
 strings, we do not): the checker **warns** on it, and it is accepted residual
 risk, documented in report 06 §10 (residual risk 3).
 
+<a id="fu-m3"></a>
+
 ### M3 follow-ups — eleven, three closed 2026-09-12 (4, 5 and 7), eight open
 
 M3 is **done**, not perfect. Every line below is carried verbatim from the two
@@ -1024,6 +1327,8 @@ how a rule that took two verification passes to get right gets lost:
 `Auto`, `Alpha Strike` and `End Turn` on Forge's own terms); clicks are still
 never gated on `selectable`; and `<Board actions={…}/>` is still the whole of the
 difference between a replay and a seat.
+
+<a id="fu-m4"></a>
 
 ### M4 follow-ups — five closed by M5, one not reproduced, two open (2026-09-12)
 
@@ -1355,6 +1660,8 @@ eleven** evidenced and the two ceilings documented — the count `docs/protocol.
 `over` with no `gameOver` `state` in front of it (**M11** — now measured, M3
 follow-up 5) and a `seq` that can arrive lower than the frame before it after a
 `resync` (**M10**).
+
+<a id="fu-m5"></a>
 
 ### M5 follow-ups — thirteen, 2026-09-12
 
@@ -1731,6 +2038,8 @@ major**, which was M6's own headline flow dead-ending on itself.
    yield is on a triggered ability; `docs/evidence/m6-engine.md` §4's line
    references were redone against it.
 
+<a id="fu-m6"></a>
+
 ### M6 follow-ups — thirteen, 2026-09-12
 
 From the two builders' own "problems" notes, the verification pass and the fix
@@ -2030,6 +2339,8 @@ what it found, belongs on other lists:
   (`docs/evidence/m7-arena.md` §4), which is more than any previous milestone
   managed — but the standing item is a *person* pressing it, and that has still
   not happened.
+
+<a id="fu-m7"></a>
 
 ### M7 follow-ups — twelve, 2026-09-13
 
@@ -2385,6 +2696,8 @@ changes that contradict earlier documents; now **D53–D63** and CLAUDE.md's Tie
 section), and NOTICE did not list the two bloom packages bundled into the `Post`
 chunk (now §6). The other eight are follow-ups 2, 3, 4, 5, 7, 8, 9 and 10 below.
 
+<a id="fu-t2s1"></a>
+
 ### Tier 2 follow-ups — nineteen from slice 1, 2026-09-27; six closed by slice 2, one by slice 3, one by slice 4, one (17) by the hardening pass
 
 From the builders' own "problems" notes and the verification pass. **None of them
@@ -2663,6 +2976,8 @@ node tools/build-figures.mjs --clip-source experiment --no-manifest \
   for a live seat); "Low" is a corner now rather than a crouch, the price of
   keeping the land rank in view.
 
+<a id="fu-t2s2"></a>
+
 ### Slice 2 follow-ups — ten, 2026-09-27; two closed by slice 3, one partly; one closed by slice 4 for the bodies it drew, one partly
 
 From the builders' and fixers' own "problems" notes and both verification passes.
@@ -2923,6 +3238,8 @@ and 10a–10g, `check-redaction` over every fixture and fresh recording, node --
 gzip, Arena 347.70 kB, `Post` 16.54 kB — the second fix pass's numbers exactly,
 as a pass that changed no code should. Standalone, `npm --prefix web test` is
 **704 + 79**, 0 failures.
+
+<a id="fu-t2s3"></a>
 
 ### Slice 3 follow-ups — fourteen, 2026-09-27 (updated by its second verification pass and its documentation pass; one closed by slice 4, three partly)
 
@@ -3260,6 +3577,8 @@ verdict on slice 3), and 10 (Fury — reworked, and still the least legible).
 **Moved**: slice 3 follow-up 2 (the eyepatch joined the one-sided list, **D98**)
 and Tier 2 follow-up 17 (the caret now also decides the simplifier, **D96**).
 
+<a id="fu-t2s4"></a>
+
 ### Slice 4 follow-ups — nineteen, 2026-09-27; 3, 8, 9 and 13(b)/(c) closed by the hardening pass
 
 From both tracks' "problems" notes, the verification pass's eleven findings and
@@ -3590,6 +3909,8 @@ npm --prefix web run dev                         # then http://127.0.0.1:5173/#c
 node tools/card-library/query.ts resolve decks/pacho-shield.dck   # JSON on stdout
 ```
 
+<a id="fu-cards"></a>
+
 ### Card library follow-ups — twelve, 2026-09-27 (12 closed by the workshop)
 
 1. **`tools/fetch-art.ts` can read from the library instead of Scryfall.** Today
@@ -3893,6 +4214,8 @@ Against the tree, item by item:
    their full height).
 7. Build, tests and the gate: above.
 
+<a id="fu-workshop"></a>
+
 ### Workshop follow-ups — fourteen, 2026-09-27; seven closed by the reconciliation, five new; 17 closed by the hardening pass
 
 1. ~~**The rebase onto slice 4.**~~ **Closed** (2026-09-27): rebased onto
@@ -4055,6 +4378,8 @@ What it is:
 measurably different in same-seed pairs, and against a seat that leaves
 untapped blockers the first difference was a trade Reckless took and Cautious
 declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
+
+<a id="fu-match"></a>
 
 ### Match setup follow-ups — ten, 2026-09-27 (the tenth found on the rebase onto `bf0392b`)
 
@@ -4279,6 +4604,8 @@ any engine moves; follow-ups 2 and 3 (the gate) should.
    `K:Trample`) and with it `ALLOW_CUSTOM_CARDS_IN_DECKS_CONFORMANCE`, once the
    release's script is confirmed.
 
+<a id="fu-engine"></a>
+
 ### Engine and sets follow-ups — fourteen, 2026-09-27 (2 and 3 closed by the gate-speed lane, 2026-09-28)
 
 **Found while measuring, engine-independent, latent on 2.0.14 today.** None is
@@ -4423,6 +4750,8 @@ STRICT_G1=1 ./tools/check-all.sh                                # step 6 byte fo
 MTGTABLE_HOLD_GAME_END_MS=2000 ./bridge/run.sh mtgtable.MtgTable --transport ws ...   # 10g's held window
 node tools/build-workshop-catalog.ts --check                    # step 12b
 ```
+
+<a id="fu-hardening"></a>
 
 ### 2026-09-27 hardening follow-ups — seven; 2, 5 and 6 closed on the rebase, 4 by verification round 1
 
@@ -4589,6 +4918,8 @@ What it is:
   `WSPORT=8725`: **936 s**, exit 0 (`var/check-all-more-villains-train.log`);
   evidence §11.
 
+<a id="fu-villains"></a>
+
 ### More villains follow-ups — ten, 2026-09-28
 
 1. **The flat 8 spells (D117).** The brief asked for at least 8 AI spells a
@@ -4699,6 +5030,8 @@ seed-42 runs against 15 of 15 from `main`'s build — which is why step 6 compar
 them as a set now); and, rarely, a frame boundary, because Forge's event forwarder
 also flushes on a 500 ms wall clock (once in 41 seed-42 recordings on a loaded
 desktop).
+
+<a id="fu-spectate"></a>
 
 ### Spectating follow-ups — ten, 2026-09-28
 
@@ -4830,6 +5163,8 @@ What it is:
   requires the client's story to tell no moment more often.
 - **Golden files**: `fixtures/narrate/g1-turns-1-3.txt` and
   `fixtures/narrate/g1-summary.txt`, byte for byte.
+
+<a id="fu-narrator"></a>
 
 ### The narrator's follow-ups — nine, 2026-09-28 (1 closed by the story page, 1 by polish-1)
 
@@ -4980,6 +5315,8 @@ What it is:
   the live edge is where they were). Spectating's follow-up 8 is closed for the
   page's own views; a reload still starts at the live edge.
 
+<a id="fu-story"></a>
+
 ### The story page's follow-ups — nine, 2026-09-28 (1 closed by the undo race)
 
 1. **A story panel INSIDE the arena** — not built here, because `web/src/arena/`
@@ -5107,6 +5444,8 @@ at eight (`8850`, load 6–14) and **906.9 s** serially (`8860`), every one exit
 0, 60 distinct Forge `userDir`s a run and no `SAXParseException` anywhere. A first
 attempt at the second four-slot run failed at step 8 on an engine race that is
 not the gate's (follow-up 8) and was run again.
+
+<a id="fu-gate"></a>
 
 ### Gate speed follow-ups — eight, 2026-09-28 (1 closed at merge, 1 by the undo race, 1 by polish-1)
 
@@ -5251,6 +5590,8 @@ node tools/ws-auto-play.mjs --port 8642 --undo-race     # exit 0 = "Not now", 9 
   a second undo that floats one of the seat's own lands at priority and undoes
   it while the engine is parked. The M6 line's `undo 1` now counts undos
   APPLIED.
+
+<a id="fu-undo"></a>
 
 ### The undo race's follow-ups — five, 2026-09-28 (1 closed at merge)
 
@@ -5421,6 +5762,8 @@ tools/narrate-selftest.mjs` 87 checks, `npm --prefix web test` **933 + 120**
 (`main`'s 932 + 120, plus the follow-word test), `npm --prefix web run build`.
 `~/forge` and `~/.forge` were fingerprinted before and after: unchanged.
 
+<a id="fu-polish1"></a>
+
 ### Polish 1's follow-ups — four, 2026-09-28 (1 and 2 closed at the art-direction lanes' merge onto `a08c15f`)
 
 1. ~~**For the merge pass: the arena's liveness clause misses a `setTimeout`
@@ -5578,6 +5921,8 @@ changed. `~/forge` and `~/.forge` were fingerprinted before and after:
 unchanged.
 
 
+<a id="fu-guards"></a>
+
 ### Guards follow-ups — six, 2026-09-28
 
 1. **Every lane worktree needs a card index now, or `SKIP_DECKS=1`.** Only the
@@ -5602,7 +5947,10 @@ unchanged.
    `InputConfirmMulligan`, `InputBlock` and `GameAction` call
    `invokeInGameThread` inside the engine; that is Forge's input protocol, which
    D136 classifies act by act, and no grep of ours can see it.
-6. **CLAUDE.md's rule 10 still lists the banned accessors by hand.** The docs
+6. ~~**CLAUDE.md's rule 10 still lists the banned accessors by hand.**~~
+   **Closed by the docs block** (2026-09-28, its step 3): rule 10 points at
+   `./tools/lint-bridge.sh --list-rules` and keeps only why each section of the
+   lint exists. The item, for the record: The docs
    block should point at `tools/lint-bridge.sh --list-rules` instead of keeping
    a second copy of the list that can drift from the one that runs.
 
@@ -5797,6 +6145,8 @@ undo race.
   at most; `node --test` 959 / 951 pass / 0 fail / 8 skipped plus 120 vitest, 6b
   `SAME GAME`, 10g's three games played (`var/check-all-look-merge.log`).
 - `~/forge` and `~/.forge`: unchanged (the jar `3c0a7c38…8e5dd9`).
+
+<a id="fu-look"></a>
 
 ### Lane LOOK follow-ups — twenty-one, 2026-09-28 (1 and 2 closed by Lane MOTION's merge, 17 by Lane BODIES')
 
@@ -6099,6 +6449,8 @@ speed, the undo race) and over report 15 and LOOK; the spike's own commit
   `node --test` 983 / 975 pass / 0 fail / 8 skipped plus 120 vitest, 6b `SAME
   GAME`, 10g's three games played (`var/check-all-motion-merge.log`).
 - `~/forge` and `~/.forge`: unchanged (the jar `3c0a7c38…8e5dd9`).
+
+<a id="fu-motion"></a>
 
 ### Comic motion lane follow-ups — fourteen, 2026-09-28; 1 and 2 closed at merge
 
@@ -6511,6 +6863,8 @@ any file the four sides own, and says where.
   sizes and mtimes, and every file under `~/.forge` with its size, mtime and
   sha1 — **unchanged**.
 
+<a id="fu-bodies"></a>
+
 ### Lane BODIES follow-ups — thirty-one, 2026-09-28 (four closed and three partly by the second fix pass; the third reopened 13 and 6, and closed part of 8 and 15; the merge closed 1, 6 and 13, part of 12 and 23, and added 24–28; the three lanes' merge onto `main`'s `a08c15f` added 29–31, the final skeptic's minors)
 
 1. ~~**A figure that mounts KNEELING blends the stock idle under the kneel —
@@ -6860,6 +7214,8 @@ Everything on the README's **NON-GOALS** list is a harder no than this: those ar
 decisions, not deferrals.
 
 ---
+
+<a id="owner-questions"></a>
 
 ## Only the user can decide
 

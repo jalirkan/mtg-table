@@ -609,7 +609,7 @@ are history from before this rule, and stay.
 | `docs/research/15-art-direction.md` | **Art direction**: the comic look, motion and bodies, and §9's three lanes. Read §9 before touching the figure or prop material, `Post.tsx`, the effects, `cues/`, `figures/` or `scene/props.ts`. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
-| `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; the questions only the owner can settle are at the end. |
+| `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
 | `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent are D200–D202. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
