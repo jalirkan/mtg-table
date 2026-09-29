@@ -15,7 +15,8 @@
  *     `object.layers` before calling `object.raycast()`
  *     (`Raycaster.js:240-252`) — so a proxy is fully clickable.
  *
- * The proxy is 10% larger than the card, which makes the fanned hand forgiving.
+ * The proxy is 10% larger than the card, which makes the fanned hand forgiving
+ * (a wrapped rank's back row keeps its card's own depth — `proxySizeOf`).
  *
  * ---------------------------------------------------------------------------
  * **It is `DoubleSide`, and that is load-bearing — not a copy of `CardPlane`'s
@@ -48,11 +49,12 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { useCallback } from 'react';
 import * as THREE from 'three';
 
-import type { Placement } from '../layout.ts';
+import { proxySizeOf, type Placement } from '../layout.ts';
 import { UNIT_PLANE } from './geometry.ts';
 
-/** How much bigger than the card the click target is. */
-const PROXY_SCALE = 1.1;
+// How much bigger than its card the click target is: `layout.ts`'s `proxySizeOf`
+// (`PROXY_SCALE`, 1.1 — a wrapped rank's back row at its own depth, D220), so the
+// tests that raycast a proxy read the same numbers.
 
 export interface HitProxyProps {
   placement: Placement;
@@ -65,6 +67,7 @@ export interface HitProxyProps {
 
 export function HitProxy({ placement, width, onClickCard, onHover }: HitProxyProps): JSX.Element {
   const cardId = placement.cardId;
+  const [proxyWidth, proxyDepth] = proxySizeOf(placement, width);
 
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
@@ -93,7 +96,7 @@ export function HitProxy({ placement, width, onClickCard, onHover }: HitProxyPro
       geometry={UNIT_PLANE}
       position={placement.position}
       rotation={placement.rotation}
-      scale={[width * placement.scale * PROXY_SCALE, placement.scale * PROXY_SCALE, 1]}
+      scale={[proxyWidth, proxyDepth, 1]}
       visible={false}
       userData={{ cardId }}
       onClick={handleClick}

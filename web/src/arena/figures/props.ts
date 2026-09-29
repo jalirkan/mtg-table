@@ -72,6 +72,10 @@ export const PROP_KINDS = [
   // `pistol`'s geometry at 70% (60% until the lanes' merge), with no lit muzzle:
   // a detail, where Agent 13's `pistol` is an identity.
   'sidearm',
+  // Villain identity (D221): a FACEPLATE over the front of the head, in the
+  // figure's tint — Doom's iron mask, Kang's blue one, Crossbones' white skull.
+  // It stops under the hairline, so a `cowl` over it is the hood behind it.
+  'mask',
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 
@@ -103,6 +107,8 @@ export const DERIVED_KINDS = [
   'hairBob',
   'hairWaves',
   'hairBun',
+  // Villain identity (D221): the hood a `cowl` draws.
+  'hairCowl',
 ] as const;
 export type DerivedKind = (typeof DERIVED_KINDS)[number];
 
@@ -125,9 +131,14 @@ export type DerivedKind = (typeof DERIVED_KINDS)[number];
  *    built by `scene/props.ts` — until the pack's other hairstyles are in the
  *    library (PLAN.md's lane BODIES follow-up 2: it needs the user's approval
  *    in chat to download the pack again).
+ *  - `cowl` (villain identity, D221) is not hair but what covers the head in the
+ *    hair slot: a smooth HOOD from the brow, round the jaw and down the nape to
+ *    the shoulders — Doom's green hood, Kang's purple helm, Crossbones' black
+ *    balaclava, a HYDRA agent's cowl. Worn over a `mask` it is what carries the
+ *    card from behind.
  *  - `none` is bald: the body's skin, and no hair kind at all.
  */
-export const HAIR_STYLES = ['parted', 'long', 'crop', 'bob', 'waves', 'bun', 'none'] as const;
+export const HAIR_STYLES = ['parted', 'long', 'crop', 'bob', 'waves', 'bun', 'cowl', 'none'] as const;
 export type HairStyle = (typeof HAIR_STYLES)[number];
 
 const HAIR_STYLE_SET: ReadonlySet<string> = new Set<string>(HAIR_STYLES);
@@ -144,6 +155,7 @@ export const HAIR_KIND: Readonly<Record<Exclude<HairStyle, 'none'>, DerivedKind>
   bob: 'hairBob',
   waves: 'hairWaves',
   bun: 'hairBun',
+  cowl: 'hairCowl',
 };
 
 /** The two styles carved off the library's bodies, and which body each comes from. */
@@ -888,6 +900,25 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
       ],
     },
   },
+  // **Villain identity (D221) — a mask**: a faceplate over the front of the head,
+  // brow to chin and round to the ears, with dark eye slits, a nose ridge and a
+  // grille at the mouth. In the figure's TINT (Doom's iron, Kang's blue,
+  // Crossbones' bone white), so the row's accent stays free for its cloth and its
+  // glow. Written in UNIT-HEAD space like the eyepatch: the anchor's size is the
+  // head's own half-extents (HEAD_SHAPE on a person, the chibi's head on the
+  // fallback), so one geometry fits both. It tucks under the `cowl` hairstyle's
+  // brow, so the cowl over it is the hood — from BEHIND the cowl carries the card
+  // and the mask is a front detail (`traits.test.ts`'s ONE_SIDED). Worn with
+  // `face: none`: the mask is the face.
+  mask: {
+    blend: 'normal',
+    colour: 'tint',
+    glow: null,
+    anchors: {
+      human: [{ joint: 'Head', at: HEAD_SHAPE.centre, size: HEAD_SHAPE.radii }],
+      humanoid: [{ joint: 'head', at: HEAD_CENTRE, size: [0.338, 0.245, 0.27] }],
+    },
+  },
   // -- derived kinds: placed by the field from `swarm` / `silhouette` ----------
   squad: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
   swarmBee: { blend: 'normal', colour: 'tint', glow: null, anchors: {} },
@@ -909,6 +940,7 @@ export const PROP_KIT: Readonly<Record<SceneKind, PropKitEntry>> = {
   hairBob: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   hairWaves: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
   hairBun: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
+  hairCowl: { blend: 'normal', colour: 'hair', glow: null, anchors: { human: [HEAD_ORIGIN] } },
 };
 
 /** The anchors a kind has on a family: its own row, else `any`, else none. */

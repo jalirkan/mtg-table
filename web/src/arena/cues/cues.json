@@ -164,6 +164,47 @@
       "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#ff8f6a", "laser": true, "burst": "zzak" } }
     },
 
+    "Doctor Doom": {
+      "_note": "Villain identity (D221). He arrives and two Doombots arrive with him: the engine names HIM in the zone event, and the two tokens enter with zone events and cues of their own — so, as Nick Fury's agents are, his beams go from his figure to the `beside` anchors where they materialise, never to a token (which card made a token is not on the wire). The gesture is his own `channel`. Keys off `zone`→battlefield and `attackers`.",
+      "_motion": "The comic lane (D153): he comes in with a KRAK over the summoning and marches on speed lines when he attacks — a statement that HE attacks, not a hit.",
+      "zone:*>battlefield": { "cue": "fx.agents", "ms": 900, "params": { "spread": 1.1, "colour": "#3fe070", "beams": true, "clip": "channel", "burst": "krak" } },
+      "attackers": { "cue": "attack.lunge", "ms": 860, "params": { "colour": "#3fe070", "streaks": 1.2, "burst": "krak" } }
+    },
+
+    "Doombot": {
+      "_note": "Villain identity (D221). Doctor Doom's token (the wire's name verbatim, no `Token`): it comes online with a green flash, and its eye fires at whoever its attack band names (`laser`, the `attackers` event's own defender) — the Aerial Doombot's jet on a walking drone. Keys off `zone`→battlefield and `attackers`.",
+      "zone:*>battlefield": { "cue": "zone.enters", "ms": 520, "params": { "colour": "#3fe070", "impact": 1.3 } },
+      "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#3fe070", "laser": true, "burst": "zzak" } }
+    },
+
+    "Crossbones, Malicious Mercenary": {
+      "_note": "Villain identity (D221). Keys off `attackers` and `resolved` — his OWN trigger resolving (another Villain entered: a +1/+1 counter on him and 2 damage to each opponent). The rings leave HIS feet; the damage lands on the player through the player's own event and cue, never a beam from him — the trigger has no target on the wire.",
+      "_motion": "The comic lane (D153): he charges on speed lines with a POW in front of him, and his trigger is a BLAM at his own feet with a jolt.",
+      "attackers": { "cue": "attack.lunge", "ms": 860, "params": { "colour": "#ece6d6", "streaks": 1.4, "burst": "pow" } },
+      "resolved": { "cue": "fx.shockwave", "ms": 700, "params": { "colour": "#ece6d6", "radius": 1.6, "shake": 0.3, "burst": "blam" } }
+    },
+
+    "Kang the Conqueror": {
+      "_note": "Villain identity (D221). He opens fire from the wrist blasters: his attack is the library's two-handed aim (figures.json's pistolDraw alias) and `muzzle` flashes twice at his hands in the hold, where his `gauntlets` burn. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 700, "params": { "colour": "#7fd4ff", "muzzle": true, "streaks": 1, "burst": "blam" } }
+    },
+
+    "Loki, God of Mischief": {
+      "_note": "Villain identity (D221). His trigger — something his ability targeted, so he draws a card — RESOLVING is the event about him: an illusion's shimmer round him and a card flying from him to his controller's hand (`toHand`). Keys off `resolved`.",
+      "resolved": { "cue": "fx.hologram", "ms": 640, "params": { "colour": "#45b060", "toHand": 1 } }
+    },
+
+    "Agents of HYDRA": {
+      "_note": "Villain identity (D221). The squad steps forward together, as the S.H.I.E.L.D. Agents do, in HYDRA yellow, and a lone attacker takes the spotlight. Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 850, "params": { "colour": "#e0b82a", "streaks": 2 } },
+      "attackers:alone": { "cue": "attack.lunge", "ms": 850, "params": { "spotlight": 1, "colour": "#e0b82a", "streaks": 2, "burst": "pow" } }
+    },
+
+    "HYDRA Troopers": {
+      "_note": "Villain identity (D221). The trooper opens fire: the pistolDraw alias (figures.json) and two muzzle flashes at his pistol's muzzle (the prop's own point, D81). Keys off `attackers`.",
+      "attackers": { "cue": "attack.lunge", "ms": 640, "params": { "colour": "#e0b82a", "muzzle": true, "burst": "blam" } }
+    },
+
     "A.I.M. Scientists": {
       "_note": "The lab bench is Tier 2; the glowing vials and the bench LIGHT are Tier 1, and 'cards fly to hand' is already Tier 1 because zone→hand animates every draw the engine reports. Keys off `zone`→battlefield and `counters`.",
       "zone:*>battlefield": { "cue": "fx.hologram", "ms": 760, "params": { "colour": "#7fd4ff" } },

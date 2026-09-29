@@ -218,3 +218,12 @@ under `var/motion/fix1/`, the merge's under `var/motion/merge/`).
 Its gate runs are
 `var/check-all-bodies-fix2.log` (the branch, 923 s serially) and, merged,
 `var/check-all-bodies-merge.log`.
+
+## *Villain identity* (D220–D221)
+
+From a deleted `bridge/out` at `GATE_JOBS=4` on branch `villain-identity`, off
+`9dfdce4`: **263.3 s** at `WSPORT` 9120 and **252.0 s** at 9130, exit 0 both, 48
+jobs, `node --test` inside them 1,092 / 1,084 pass / 0 fail / 8 skipped and 124
+vitest (`var/check-all-villains-p1.log`, `var/check-all-villains-p2.log`). The
+lane added no step; the corpus's twentieth recording is read by the steps that
+glob `fixtures/games/` (11, 12b, 12d and the web suite).

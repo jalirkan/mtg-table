@@ -288,8 +288,10 @@ export function buildCatalog(
   };
 
   const ordered = [...decks].sort((a, b) => {
-    // The deck in play first (CLAUDE.md), then the probe decks by name.
-    const rank = (d: DeckList): number => (d.file === 'pacho-shield.dck' ? 0 : 1);
+    // The deck in play first (CLAUDE.md), then the deck a bare `./scripts/play.sh`
+    // seats against it (config.json's `match.aiDeck`, D106 — villain identity,
+    // D221), then the rest by name.
+    const rank = (d: DeckList): number => (d.file === 'pacho-shield.dck' ? 0 : d.file === 'doom-legion.dck' ? 1 : 2);
     return rank(a) - rank(b) || (a.file < b.file ? -1 : a.file > b.file ? 1 : 0);
   });
 

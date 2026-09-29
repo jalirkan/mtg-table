@@ -192,15 +192,21 @@ test('stack: every stack item of every recording forms, tethers and reads', () =
     );
   }
 
-  assert.equal(stackFrames, 389, `${String(stackFrames)} stack frames, not 389`);
+  // §6.1 measured 389 stack frames and 44 tethers; D220's villain recording adds
+  // 39 and 13.
+  assert.equal(stackFrames, 428, `${String(stackFrames)} stack frames, not 428`);
   assert.equal(maxDepth, 4, `the deepest stack is ${String(maxDepth)}, not 4`);
-  assert.equal(tethers, 44, `${String(tethers)} tethers, not §6.1's 44`);
-  // Four of the five drawn kinds fire in the corpus; `orb` is the declared
-  // fallback and never does, which is exactly what a census is for.
+  assert.equal(tethers, 57, `${String(tethers)} tethers, not 57 (§6.1's 44 and the villain recording's 13)`);
+  // The five drawn kinds fire in the corpus; `orb` is the declared fallback, and
+  // until D220 it never did, which is exactly what a census is for. The villain
+  // recording puts a LAND's ability on the stack — Villainous Hideout's "a
+  // Villain connives" — and a land has no form of its own: the orb, drawn for the
+  // first time, for that one type line and no other.
   for (const kind of ['figure', 'dart', 'sigil', 'ring', 'shard']) {
     assert.ok((kinds.get(kind) ?? 0) > 0, `the ${kind} form never fires in the corpus`);
   }
-  assert.equal(kinds.get('orb') ?? 0, 0, 'an orb fired — a new type line is on the wire, say so');
+  const orbLines = [...bySource.entries()].filter(([, r]) => r.kind === 'orb').map(([t]) => t);
+  assert.deepEqual(orbLines, ['Land'], `an orb fired for ${orbLines.join(', ')} — a new type line is on the wire, say so`);
 });
 
 // ---------------------------------------------------------------------------
@@ -291,7 +297,7 @@ test('stack: the combat freeze is a stack AND a combat phase, and it is rare', (
     `  a stack during combat in ${String(frozenFrames)} of ${String(boardFrames)} board frames (${pct}%) · ` +
       `${String(frozenPoses)} frozen poses · phases ${JSON.stringify(Object.fromEntries(phases))}`,
   );
-  assert.equal(frozenFrames, 66, `${String(frozenFrames)} frozen frames, not §6.1's 66`);
+  assert.equal(frozenFrames, 72, `${String(frozenFrames)} frozen frames, not 72 (§6.1's 66 and the villain recording's 6, D220)`);
   assert.ok(frozenPoses > 0, 'no figure was ever on the table during a frozen frame');
   assert.equal(frozenPoses, thawedPoses, 'the freeze changed how many figures there are');
   // It is a boolean about the frame, and cheap: 1.8% of frames, so anything
@@ -419,7 +425,7 @@ test('stack: a resolving spell strikes what the PREVIOUS frame said it targeted'
     `  ${String(resolved)} resolutions · ${String(aimed)} strikes aimed from the previous frame ` +
       `(${String(atCards)} at a card, ${String(atPlayers)} at a player, ${String(foes)} at a foe)`,
   );
-  assert.equal(resolved, 412, `${String(resolved)} resolutions, not the corpus's 412`);
+  assert.equal(resolved, 493, `${String(resolved)} resolutions, not the corpus's 493 (412 before D220's villain recording)`);
   // 41 targeted items were on the previous frame's stack on 2026-09-26; the
   // assertion is a floor so a re-recorded fixture does not need a new number.
   assert.ok(aimed >= 35, `only ${String(aimed)} strikes aimed — the previous frame is not reaching the planner`);

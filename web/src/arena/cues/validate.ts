@@ -370,7 +370,7 @@ export function validateCues(raw: unknown, options: ValidateOptions = {}): Valid
       if (kindOfKey === 'card' && options.deckNames !== undefined && !options.deckNames.has(key)) {
         warnings.push({
           where: `${where}["${key}"]`,
-          message: 'no card of that name in decks/pacho-shield.dck',
+          message: 'no card of that name in the decks this file is written for',
         });
       }
       if (

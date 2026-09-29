@@ -278,7 +278,8 @@ function opLog(
 
 /**
  * **The pre-lane film, pinned** (the lane's verification pass). The digest of every
- * op the cue engine sent over all 19 committed recordings with comic FX OFF and on
+ * op the cue engine sent over the 19 recordings committed before it (every one but
+ * {@link POST_LANE_FILMS}'s) with comic FX OFF and on
  * twos OFF, each op as `JSON.stringify`, the lane's one new Offset field dropped
  * where it is at identity (`materialize: 1` — an old offset never had it), taken
  * from `c81f674`'s cue engine — the tree before the lane — and matched by this
@@ -289,22 +290,56 @@ function opLog(
  * twos ON (the default when only comic FX is unticked) the TIMING is stepped, the
  * vocabulary is the old one.
  */
-const PRE_LANE_FILM = { ops: 310369, sha256: '3710d0b439f9d022157a14c4229eaeb129e627d58ae3a3de527e7255bda45f81' } as const;
+const PRE_LANE_FILM = { ops: 305737, sha256: '15c943859465f837e076937ac966573d0436f600e918be29c627f50f2798ddfd' } as const;
+/*
+ * **Re-derived for D220** (villain identity): the queue's rule 6 now plays a
+ * land's two arrival events — its `zone` event onto the battlefield and its
+ * `land` event — as ONE arrival. Every land with no per-card row resolves both
+ * to `land/*`'s `land.rise`, so the pre-lane engine (and this one until D220)
+ * raised every probe deck's Forest, Mountain and Swamp twice as high: 138 doubled
+ * rises in 11 of these 19 recordings. The pin above is the pre-lane film with
+ * exactly those doubles gone — measured by playing both queues over every file:
+ * the 8 recordings with no doubled rise are op-for-op the pre-lane film, and the
+ * 11 with one differ (docs/evidence/villain-identity.md §4). The pre-lane pin was
+ * `{ ops: 310369, sha256: '3710d0b4…5f81' }`.
+ */
+
+/**
+ * **Recordings committed AFTER the pre-lane film was pinned**, each with a classic
+ * film pin of its OWN (villain identity, D220). The pre-lane engine never played
+ * these, so there is no pre-lane film to match: each pin is the film THIS tree's
+ * engine plays over that one recording with comic FX off and on twos off — the
+ * classic vocabulary, its own per-card rows included — and PRE_LANE_FILM keeps
+ * holding the recordings it was measured over, op for op. A later change to a
+ * classic cue that moves one of these re-derives it with a reason, exactly as
+ * PRE_LANE_FILM's own note says.
+ */
+const POST_LANE_FILMS: Readonly<Record<string, { ops: number; sha256: string }>> = {
+  'games/villain-doom-248.jsonl': { ops: 45744, sha256: '99f600b04e46f3d34d421bd683f7943c86a1e1f22a5f57a47ad5a74d5f2854c9' },
+};
 
 test('motion: with comic FX off and on twos off, every recording plays the film it played before the lane — op for op, by digest', async () => {
   const { createHash } = await import('node:crypto');
   const all = createHash('sha256');
   let files = 0;
   let classicOps = 0;
+  const later: Record<string, { ops: number; sha256: string }> = {};
   for (const file of fixtureFiles()) {
     const classic = opLog(file, false);
-    files += 1;
-    classicOps += classic.ops.length;
-    for (const line of classic.digestLines) all.update(line);
     assert.equal(classic.comicOps, 0, `${file}: a comic effect was drawn with comic FX off`);
     assert.equal(classic.materialized, 0, `${file}: a figure materialised with comic FX off`);
     assert.equal(classic.shakes, 0, `${file}: an impact shake with comic FX off`);
+    if (POST_LANE_FILMS[file] !== undefined) {
+      const own = createHash('sha256');
+      for (const line of classic.digestLines) own.update(line);
+      later[file] = { ops: classic.ops.length, sha256: own.digest('hex') };
+      continue;
+    }
+    files += 1;
+    classicOps += classic.ops.length;
+    for (const line of classic.digestLines) all.update(line);
   }
+  console.log(`motion: the classic film of the recordings committed after the lane — ${JSON.stringify(later)}`);
   assert.ok(files >= 18 && classicOps > 10000, `${String(files)} files, ${String(classicOps)} ops`);
   const digest = all.digest('hex');
   assert.deepEqual(
@@ -312,6 +347,7 @@ test('motion: with comic FX off and on twos off, every recording plays the film 
     PRE_LANE_FILM,
     'comic FX off + on twos off is no longer the pre-lane film op for op — if a CLASSIC cue changed on purpose, re-derive PRE_LANE_FILM and say why',
   );
+  assert.deepEqual(later, POST_LANE_FILMS, 'a later recording\'s classic film moved (or one is missing) — re-derive its pin and say why');
 });
 
 test('motion: with comic FX on, the corpus plays the new vocabulary — and it all decays', () => {

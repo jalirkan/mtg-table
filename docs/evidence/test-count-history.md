@@ -149,3 +149,15 @@ branch `personal-tier-2` at its fix pass 1 (off `096c952`), and is **1,060 + 122
 standalone — the status layer's M49 cases with no M49 log): the two lanes' cases
 add, plus one merge case in `personal.test.ts` (the status strip over the
 DRESSED poses, with a hostile dressing as its control).
+
+## Villain identity (`villain-identity`, off `9dfdce4`)
+
+`npm --prefix web test` went from **1,060 `node --test` + 122 vitest (8 files)**
+on `9dfdce4` to **1,077 + 124 (8 files)** (1,071 pass, 6 skipped standalone):
+fifteen are the per-recording cases `fixtures.test.ts` and `story.test.ts`
+generate for a twentieth file, and two are the lane's own — the villain
+costume-and-rest list and a `workshop` case (the Doom Legion listed second, its
+search) — with the census's task list, the raster and the kinds budget extended
+in place; vitest's two more are `story-render`'s and `render.test.tsx`'s
+per-fixture cases for the twentieth recording. Inside `check-all.sh`:
+**1,092 / 1,084 pass / 0 fail / 8 skipped**, and 124 vitest.

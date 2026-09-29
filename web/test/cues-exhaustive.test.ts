@@ -51,7 +51,14 @@ const HERE = fileURLToPath(new URL('.', import.meta.url));
 const CUES_JSON = JSON.parse(
   readFileSync(`${HERE}../src/arena/cues/cues.json`, 'utf8'),
 ) as unknown;
-const DECK = fileURLToPath(new URL('../../decks/pacho-shield.dck', import.meta.url));
+/**
+ * The decks `cues.json` is written for: the deck in play and the one a bare
+ * `./scripts/play.sh` seats against it (villain identity, D221) — plus the
+ * tokens their cards make, by the wire's own name as the corpus shows it (a
+ * token has no deck line: Doctor Doom's `Doombot`).
+ */
+const DECKS = ['pacho-shield.dck', 'doom-legion.dck'].map((file) => fileURLToPath(new URL(`../../decks/${file}`, import.meta.url)));
+const CATALOG_FILE = fileURLToPath(new URL('../src/workshop/catalog.json', import.meta.url));
 
 // ---------------------------------------------------------------------------
 // Synthetic frames — the cases the corpus does not happen to contain
@@ -379,7 +386,7 @@ test('cues.json: validates with no errors against the real registry', () => {
 
 test('cues.json: every card name in it is a card in the deck', () => {
   const names = deckCardNames();
-  assert.ok(names.size >= 20, `expected the 40-card deck's names, saw ${String(names.size)}`);
+  assert.ok(names.size >= 50, `expected the two table decks' names and their tokens, saw ${String(names.size)}`);
   const { warnings } = validateCues(CUES_JSON, { cueIds: new Set(REGISTRY.keys()), deckNames: names });
   const typos = warnings.filter((w) => w.message.includes('no card of that name'));
   assert.deepEqual(typos, [], `cues.json names cards the deck does not have:\n${typos.map((t) => t.where).join('\n')}`);
@@ -545,14 +552,18 @@ test('validate: the selector grammar accepts §7.3 and nothing else', () => {
  */
 function deckCardNames(): Set<string> {
   const names = new Set<string>();
-  const text = readFileSync(DECK, 'utf8');
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim();
-    if (trimmed === '' || trimmed.startsWith('[') || trimmed.includes('=')) continue;
-    const match = /^\d+\s+(.+)$/.exec(trimmed);
-    if (match === null) continue;
-    names.add((match[1] ?? '').split('|')[0]!.trim());
+  for (const deck of DECKS) {
+    const text = readFileSync(deck, 'utf8');
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed === '' || trimmed.startsWith('[') || trimmed.includes('=')) continue;
+      const match = /^\d+\s+(.+)$/.exec(trimmed);
+      if (match === null) continue;
+      names.add((match[1] ?? '').split('|')[0]!.trim());
+    }
   }
+  const catalog = JSON.parse(readFileSync(CATALOG_FILE, 'utf8')) as { tokens: Array<{ name: string }> };
+  for (const token of catalog.tokens) names.add(token.name);
   return names;
 }
 

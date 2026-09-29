@@ -47,7 +47,7 @@ import { tileDataOf } from '../src/arena/figures/types.ts';
 import { FIGURE_FRONT_Z, layout, seatFacingY, yawToward, standPointOf, placementOf } from '../src/arena/layout.ts';
 import { isHidden } from '../src/protocol.ts';
 import type { ClientState } from '../src/reduce.ts';
-import { CATALOG, cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from '../src/workshop/catalog.ts';
+import { CATALOG, cardOf, matchesSearch, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from '../src/workshop/catalog.ts';
 import { buildCatalog, factsFromScript, parseDck, type CardFacts } from '../src/workshop/catalogBuild.ts';
 import { CLIP_CUE, WORKSHOP_CLIP_CUE, clipCueData, requestFor, workshopRegistry } from '../src/workshop/clipCue.ts';
 import { cueRows, unreachedSelectors } from '../src/workshop/cueRows.ts';
@@ -181,11 +181,36 @@ test('workshop: a deck card the corpus never showed takes its facts from the ENG
   assert.equal(factsFromScript('Name:Nothing\n'), null);
   // The cards the personal tier dresses that no committed recording ever showed face up.
   const committed = CATALOG as unknown as { engine: string[] };
-  for (const name of ['Doctor Doom', 'Hulk, Gamma Goliath', 'Hulk, Brutal Brawler', 'Hulk, Strongest There Is']) {
+  for (const name of ['Hulk, Gamma Goliath', 'Hulk, Brutal Brawler', 'Hulk, Strongest There Is']) {
     assert.ok(committed.engine.includes(name), `${name}'s facts are not the engine's`);
     assert.equal(CATALOG.threeD[name], 'figure', `${name} does not stand on the pedestal`);
   }
+  // D220: the villain recording shows Doctor Doom face up, so his facts are the
+  // CORPUS's now — the same facts the engine's script gave (the formatter above).
+  assert.ok(!committed.engine.includes('Doctor Doom'), 'Doctor Doom is face up in villain-doom-248 — the corpus wins');
   assert.equal(CATALOG.cards['Doctor Doom']?.types, 'Legendary Creature - Human Scientist Villain');
+  assert.equal(CATALOG.threeD['Doctor Doom'], 'figure');
+  // … and of the Doom Legion's 27 names, only Hidden Lair — a land the game never
+  // drew — is still the engine's.
+  const doom = CATALOG.decks.find((d) => d.file === 'doom-legion.dck')!;
+  assert.deepEqual(doom.cards.map((c) => c.name).filter((name) => committed.engine.includes(name)), ['Hidden Lair']);
+});
+
+test('workshop: the Doom Legion is listed second, and a search for it finds all 27 of its cards — the ones it shares with Pacho included (D221)', () => {
+  // The deck in play first, then the deck a bare ./scripts/play.sh seats against it.
+  assert.deepEqual(CATALOG.decks.slice(0, 2).map((d) => d.file), ['pacho-shield.dck', 'doom-legion.dck']);
+  const doom = CATALOG.decks.find((d) => d.file === 'doom-legion.dck')!;
+  const entries = workshopEntries();
+  const found = entries.filter((e) => e.group === 'deck' && matchesSearch(e, 'doom legion')).map((e) => e.name).sort();
+  assert.deepEqual(found, doom.cards.map((c) => c.name).sort());
+  // Aerial Doombot is listed under Pacho SHIELD (the first deck that names it) and still found.
+  const aerial = entries.find((e) => e.name === 'Aerial Doombot')!;
+  assert.equal(aerial.deck, CATALOG.decks[0]!.name);
+  assert.ok(aerial.decks.includes(doom.name) && matchesSearch(aerial, 'Doom Legion'));
+  assert.ok(matchesSearch(aerial, '') && !matchesSearch(aerial, 'wakanda'));
+  // The token Doctor Doom makes is in the list, with the corpus's facts.
+  assert.equal(CATALOG.cards['Doombot']?.types, 'Artifact Creature - Robot Villain');
+  assert.ok(entries.some((e) => e.group === 'token' && e.name === 'Doombot'));
 });
 
 test('workshop: the engine facts are the engine’s card scripts, read again wherever the engine’s resources are', async (t) => {

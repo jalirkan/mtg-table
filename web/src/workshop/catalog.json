@@ -149,22 +149,6 @@
       ]
     },
     {
-      "file": "amount-probe.dck",
-      "name": "Divided amount probe",
-      "cards": [
-        {
-          "name": "Mountain",
-          "count": 20,
-          "section": "main"
-        },
-        {
-          "name": "Manamorphose",
-          "count": 20,
-          "section": "main"
-        }
-      ]
-    },
-    {
       "file": "doom-legion.dck",
       "name": "Doom Legion (Marvel Super Heroes villains)",
       "cards": [
@@ -301,6 +285,22 @@
         {
           "name": "Island",
           "count": 5,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "amount-probe.dck",
+      "name": "Divided amount probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 20,
+          "section": "main"
+        },
+        {
+          "name": "Manamorphose",
+          "count": 20,
           "section": "main"
         }
       ]
@@ -995,7 +995,10 @@
       "power": "2",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "A.I.M. Scientists": {
       "types": "Creature - Human Scientist Villain",
@@ -1051,7 +1054,8 @@
       "power": "1",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Agents of S.H.I.E.L.D.": {
       "types": "Creature - Human Spy Hero",
@@ -1123,7 +1127,8 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Battering Craghorn": {
       "types": "Creature - Goat Beast",
@@ -1211,7 +1216,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Clue Token": {
       "types": "Artifact - Clue",
@@ -1235,7 +1241,10 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "DEATHTOUCH"
+      ]
     },
     "Dark Deed": {
       "types": "Instant",
@@ -1243,7 +1252,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Dark Fortress": {
       "types": "Land",
@@ -1267,7 +1277,8 @@
       "power": "3",
       "toughness": "3",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Doom Blade": {
       "types": "Instant",
@@ -1275,7 +1286,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Doom Reigns Supreme": {
       "types": "Enchantment - Plan",
@@ -1283,7 +1295,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Doom's Servo-Guards": {
       "types": "Artifact Creature - Robot Villain",
@@ -1291,7 +1304,17 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Doombot": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": null,
+      "power": "3",
+      "toughness": "3",
+      "token": true,
+      "setCode": "MSH",
+      "keywords": []
     },
     "Dora Milaje Elite": {
       "types": "Creature - Human Warrior",
@@ -1331,7 +1354,10 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "ENCHANT"
+      ]
     },
     "Future Sight": {
       "types": "Enchantment",
@@ -1403,7 +1429,8 @@
       "power": "3",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Helicarrier Strike": {
       "types": "Instant",
@@ -1459,7 +1486,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Hulk, Brutal Brawler": {
       "types": "Legendary Creature - Gamma Berserker Hero",
@@ -1507,7 +1535,10 @@
       "power": "4",
       "toughness": "5",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Kang, Temporal Tyrant": {
       "types": "Legendary Creature - Human Villain",
@@ -1515,7 +1546,8 @@
       "power": "3",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Klaw, Sonic Subjugator": {
       "types": "Legendary Creature - Human Rogue Villain",
@@ -1547,7 +1579,8 @@
       "power": "2",
       "toughness": "1",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Los Diablos Missile Base": {
       "types": "Land",
@@ -1571,7 +1604,10 @@
       "power": "2",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "MENACE"
+      ]
     },
     "Manamorphose": {
       "types": "Instant",
@@ -1659,7 +1695,10 @@
       "power": "4",
       "toughness": "4",
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": [
+        "WARD"
+      ]
     },
     "Plains": {
       "types": "Basic Land - Plains",
@@ -1867,7 +1906,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Swords to Plowshares": {
       "types": "Instant",
@@ -1931,7 +1971,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSC",
+      "keywords": []
     },
     "Tiger Shark, Abyssal Hunter": {
       "types": "Legendary Creature - Shark Human Villain",
@@ -1963,7 +2004,10 @@
       "power": "3",
       "toughness": "2",
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
     },
     "Vibranium Energy Daggers": {
       "types": "Artifact - Equipment",
@@ -1979,7 +2023,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Visions of Villainy": {
       "types": "Instant",
@@ -1987,7 +2032,8 @@
       "power": null,
       "toughness": null,
       "token": false,
-      "setCode": null
+      "setCode": "MSH",
+      "keywords": []
     },
     "Volcanic Villain": {
       "types": "Creature - Elemental Villain",
@@ -2108,12 +2154,16 @@
       "recordings": 1
     },
     {
+      "name": "Doombot",
+      "recordings": 1
+    },
+    {
       "name": "Hero Token",
-      "recordings": 3
+      "recordings": 4
     },
     {
       "name": "Robot Token",
-      "recordings": 7
+      "recordings": 8
     },
     {
       "name": "Saproling Token",
@@ -2121,7 +2171,7 @@
     },
     {
       "name": "Soldier Token",
-      "recordings": 6
+      "recordings": 7
     }
   ],
   "missing": [
@@ -2151,14 +2201,11 @@
     "Your Fate Ends Here"
   ],
   "engine": [
-    "A.I.M. Bot",
     "Abomination, Irradiated Brute",
     "Abomination, Terrifying Titan",
-    "Agents of HYDRA",
     "Atlas, Sizable Stooge",
     "Austere Command",
     "Avengers: Under Siege",
-    "Baron Strucker, HYDRA Overlord",
     "Birds of Paradise",
     "Birnin Zana Plaza",
     "Black Panther, Claws of Bast",
@@ -2166,49 +2213,34 @@
     "Black Panther, Vanguard",
     "Boomerang, Blade Flinger",
     "Brawn, Amadeus Cho",
-    "Castle Doom",
     "Common Crook",
-    "Crossbones, Malicious Mercenary",
-    "Dark Deed",
     "Dark Fortress",
-    "Doctor Doom",
-    "Doom Blade",
-    "Doom Reigns Supreme",
-    "Doom's Servo-Guards",
     "Dora Milaje Elite",
     "Dragonskull Summit",
     "Fixer, Techno Terror",
-    "Frozen in Ice",
     "Gallant Citizen",
     "Gamma Grotesque",
     "Gathering Place",
     "Giant Growth",
     "HULK SMASH!",
-    "HYDRA Troopers",
     "Hell's Kitchen",
     "Hellcat, Undying Vigilante",
     "Hercules, Prince of Power",
     "Hidden Lair",
-    "Hour of Defeat",
     "Hulk, Brutal Brawler",
     "Hulk, Gamma Goliath",
     "Hulk, Strongest There Is",
     "Hulkling, Burgeoning Bruiser",
-    "Kang the Conqueror",
-    "Kang, Temporal Tyrant",
     "Klaw, Sonic Subjugator",
     "Knight of Wundagore",
     "Lightning Bolt",
-    "Loki, God of Mischief",
     "Los Diablos Missile Base",
     "MACH-1, Swooping Scoundrel",
-    "Madame Hydra, Reanimated",
     "Moonstone, Harsh Mistress",
     "Nakia, Wakandan Operative",
     "Night's Whisper",
     "Okoye, Dora Milaje Leader",
     "Okoye, Mighty and Adored",
-    "Pharaoh Rama-Tut",
     "Radioactive Man",
     "Red Hulk",
     "Rick Jones, Destined Sidekick",
@@ -2221,19 +2253,14 @@
     "Songbird, Sonic Screamer",
     "Storm, Queen of Wakanda",
     "Sunpetal Grove",
-    "Swamp",
     "Swords to Plowshares",
     "T'Chaka, Venerable King",
     "T'Challa, the Black Panther",
     "The Masters of Evil",
-    "Thriving Moor",
     "Tiger Shark, Abyssal Hunter",
     "Titania, Proud Pummeler",
     "Training Compound",
-    "Unliving Legionnaire",
     "Vibranium Energy Daggers",
-    "Villainous Hideout",
-    "Visions of Villainy",
     "Volcanic Villain",
     "Wakandan Drone Flock",
     "Wakandan Shield Guard",
@@ -2287,6 +2314,7 @@
     "Doom Blade": null,
     "Doom Reigns Supreme": null,
     "Doom's Servo-Guards": "figure",
+    "Doombot": "figure",
     "Dora Milaje Elite": "figure",
     "Dragonskull Summit": null,
     "Eardrum Rattler": null,

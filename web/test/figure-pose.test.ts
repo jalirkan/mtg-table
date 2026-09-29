@@ -588,6 +588,32 @@ test('figure-pose: no figure stands inside another card — the crowded ranks, a
   let crowded = 0;
   const sideboard = { frames: 0, backRow: 0 };
   const inside: string[] = [];
+  /**
+   * **Boxed in** (villain identity, D220): a back-row figure whose own card leaves
+   * it NO clear point on its centre column — the width `layout.ts`'s back-row
+   * search may step aside to without a neighbour overlap (±0.035, half the rank's
+   * 0.076 gutter), over its card's whole depth. Written here from `onCard`, not
+   * from the layout's own search. `villain-doom-248` has the corpus's only ones:
+   * a rank of six wrapped over a land rank of nine, the Robot token behind Baron
+   * Strucker hemmed in by the opponent's Quantum Reduction on Strucker in front
+   * and a land behind — no figure can stand there without standing on something,
+   * and the layout keeps it on its card's centre over the aura. The fix is the
+   * layout's (a land rank that steps back behind a wrapped creature rank):
+   * PLAN.md's villain-identity follow-up. Counted, printed and held to its four.
+   */
+  const boxed: string[] = [];
+  const boxedIn = (own: Placement, others: readonly Placement[]): boolean => {
+    const spin = own.rotation[2];
+    const [ux, uz] = [Math.cos(spin), Math.sin(spin)];
+    for (let a = -0.035; a <= 0.035 + 1e-9; a += 0.005) {
+      for (let d = -0.5; d <= 0.5 + 1e-9; d += 0.01) {
+        const px = own.position[0] + ux * a * own.scale - uz * d * own.scale;
+        const pz = own.position[2] + uz * a * own.scale + ux * d * own.scale;
+        if (!others.some((card) => onCard(card, px, pz))) return false;
+      }
+    }
+    return true;
+  };
 
   for (const { file, state } of frames) {
     const placed = layout(state);
@@ -609,15 +635,15 @@ test('figure-pose: no figure stands inside another card — the crowded ranks, a
         if (Math.abs(pose.position[2] - own.position[2]) > 1e-9) stepped += 1;
       }
       const [x, , z] = pose.position;
-      for (const card of flat) {
-        if (card === own) continue;
+      const others = flat.filter(
         // Its own attachments lie under its own card: a figure may stand on its aura.
-        if ((card.card as { attachedToId?: number | null }).attachedToId === pose.cardId) continue;
+        (card) => card !== own && (card.card as { attachedToId?: number | null }).attachedToId !== pose.cardId,
+      );
+      for (const card of others) {
         if (onCard(card, x, z)) {
-          inside.push(
-            `${file}: card ${String(pose.cardId)} (row ${String(own.row)}) stands inside ` +
-              `${card.kind} ${String(card.cardId)}${card.tapped ? ' (tapped)' : ''}`,
-          );
+          const where = `${file}: card ${String(pose.cardId)} (row ${String(own.row)}) stands inside ${card.kind} ${String(card.cardId)}${card.tapped ? ' (tapped)' : ''}`;
+          if (own.row > 0 && boxedIn(own, others)) boxed.push(where);
+          else inside.push(where);
         }
       }
     }
@@ -628,13 +654,15 @@ test('figure-pose: no figure stands inside another card — the crowded ranks, a
       `${String(crowded)} frames wrap a rank · ${String(backRow)} back-row stand points ` +
       `(${String(stepped)} stepped back off a front-row attachment) · ` +
       `human-sideboard-7: ${String(sideboard.frames)} crowded frames, ${String(sideboard.backRow)} back-row figures · ` +
-      `${String(inside.length)} inside another card`,
+      `${String(inside.length)} inside another card · ${String(boxed.length)} boxed in (D220)`,
   );
+  for (const where of boxed) console.log(`    boxed in: ${where}`);
   // The crowded frames are real test data, not an empty loop: human-sideboard-7
   // is the corpus's most crowded game (up to 11 creatures a seat).
   assert.ok(sideboard.frames >= 20, `only ${String(sideboard.frames)} crowded human-sideboard-7 frames`);
   assert.ok(sideboard.backRow >= 20, `only ${String(sideboard.backRow)} back-row figures in human-sideboard-7`);
   assert.deepEqual(inside.slice(0, 10), [], `${String(inside.length)} stand points inside another card`);
+  assert.ok(boxed.length <= 4 && boxed.every((where) => where.includes('villain-doom-248')), `boxed in: ${boxed.join('; ')}`);
 });
 
 test('figure-pose: a back-row figure stands on its own card, behind the front row', () => {

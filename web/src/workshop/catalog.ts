@@ -41,6 +41,12 @@ export interface WorkshopEntry {
   group: EntryGroup;
   /** The deck (display name) a deck card is listed under; the first deck that names it. */
   deck: string | null;
+  /**
+   * Every deck (display name) that names this card, in list order — so a search
+   * for a deck finds its whole list, the cards it shares with a deck listed above
+   * it included (Doom Legion's Aerial Doombot is listed under Pacho SHIELD; D221).
+   */
+  decks: readonly string[];
   /** How many copies that deck runs, and in which section. */
   count: number | null;
   section: string | null;
@@ -94,6 +100,14 @@ function generic(types: string, manaCost: string, power: string, toughness: stri
 export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[] {
   const out: WorkshopEntry[] = [];
   const seen = new Set<string>();
+  const decksOf = new Map<string, string[]>();
+  for (const deck of catalog.decks) {
+    for (const card of deck.cards) {
+      const names = decksOf.get(card.name) ?? [];
+      if (!names.includes(deck.name)) names.push(deck.name);
+      decksOf.set(card.name, names);
+    }
+  }
   for (const deck of catalog.decks) {
     for (const card of deck.cards) {
       const key = `card:${card.name}`;
@@ -105,6 +119,7 @@ export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[]
         label: card.name,
         group: 'deck',
         deck: deck.name,
+        decks: decksOf.get(card.name) ?? [deck.name],
         count: card.count,
         section: card.section,
         name: card.name,
@@ -125,6 +140,7 @@ export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[]
       label: token.name,
       group: 'token',
       deck: null,
+      decks: [],
       count: null,
       section: null,
       name: token.name,
@@ -140,6 +156,7 @@ export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[]
       label: arch.label,
       group: 'archetype',
       deck: null,
+      decks: [],
       count: null,
       section: null,
       name: `Generic ${arch.label}`,
@@ -154,6 +171,7 @@ export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[]
     label: 'Face-down creature',
     group: 'hidden',
     deck: null,
+    decks: [],
     count: null,
     section: null,
     name: '',
@@ -167,6 +185,7 @@ export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[]
     label: 'Redacted stub',
     group: 'hidden',
     deck: null,
+    decks: [],
     count: null,
     section: null,
     name: '',
@@ -176,6 +195,24 @@ export function workshopEntries(catalog: CatalogFile = CATALOG): WorkshopEntry[]
     note: 'the five-key stub: a card back and NO figure — drawing one would assert it is a creature (report 13 §1.4)',
   });
   return out;
+}
+
+/**
+ * **The list's search** (villain identity, D221): an entry matches a query by its
+ * label, its type line, its group, or ANY deck that names it — so a search for a
+ * deck lists its whole list, the cards it shares with a deck listed above it
+ * included (Doom Legion's Aerial Doombot, Thriving Isle and Island are listed
+ * under Pacho SHIELD). An empty query matches everything.
+ */
+export function matchesSearch(entry: WorkshopEntry, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (q === '') return true;
+  return (
+    entry.label.toLowerCase().includes(q) ||
+    entry.facts.types.toLowerCase().includes(q) ||
+    entry.decks.some((deck) => deck.toLowerCase().includes(q)) ||
+    entry.group.includes(q)
+  );
 }
 
 export interface CardOptions {

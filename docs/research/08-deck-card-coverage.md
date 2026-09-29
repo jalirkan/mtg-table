@@ -512,7 +512,10 @@ and "Artifact Creature — Robot Villain" throughout. The arena's per-card data
 (`figures/traits.json`, `figures.json`, `cues/cues.json`) has rows for Aerial
 Doombot (it is in Pacho's deck too) and none yet for the other 23 nonbasic
 names; those fall back to the subtype and archetype rungs, which is the
-documented behaviour, until rows are added.
+documented behaviour, until rows are added. *(2026-09-29, villain identity: they
+are added — a `creature/subtype:villain` rung and a row for every creature and
+both tokens, **D221** — and the deck has a committed recording,
+`fixtures/games/villain-doom-248.jsonl`, **D220**; `docs/evidence/villain-identity.md`.)*
 
 The prompts this deck raises **for the human seat** when the AI plays it — the
 surfaces M5's "nothing dead-ends" criterion cares about — are few, because the

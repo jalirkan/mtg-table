@@ -239,6 +239,18 @@ Pacho's creatures to stop it. Pacho's five fliers (the Helicarrier, Wasp, the
 Air Force, the Giant-Sized Flying Ant, its own Aerial Doombot) meet four flying
 villains.
 
+### Its recording, and how it looks in the arena (2026-09-29, D220–D221)
+
+`fixtures/games/villain-doom-248.jsonl` is this deck's committed game — the
+Doom Legion's seat against Pacho's deck, seed 248, chosen by a census of 440
+seeds for the most of the deck face up and on the table (26 of the 27 names;
+twelve of its fifteen creatures and tokens on the battlefield; Doom Reigns
+Supreme paying off the turn Doctor Doom arrives with his Doombots). Every
+creature it names, and both tokens, reads as itself in the arena and the
+workshop — Doom's iron mask under a green hood, HYDRA in green and yellow, the
+Kangs' blue masks. `docs/evidence/villain-identity.md` is what was measured, and
+README's *Villain identity* is what each one looks like.
+
 ### What was checked (details: report 08 §8, `docs/evidence/match-setup.md`)
 
 - `node tools/check-deck.mjs decks/doom-legion.dck --scryfall` — PASS: 27 scripts

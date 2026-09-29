@@ -180,6 +180,10 @@ const LOOKS: Readonly<Record<SceneKind, PropLook>> = {
   hairBob: PROP_LOOK.fabric,
   hairWaves: PROP_LOOK.fabric,
   hairBun: PROP_LOOK.fabric,
+  // Villain identity (D221): Doom's iron faceplate, and every mask after it; the
+  // hood over it is cloth.
+  mask: PROP_LOOK.metal,
+  hairCowl: PROP_LOOK.cloth,
 };
 
 // ---------------------------------------------------------------------------
@@ -830,6 +834,18 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
           [0.03, 0.028, 0.026],
         ),
       ]);
+    case 'hairCowl':
+      // Villain identity (D221): a HOOD, not hair — smooth (no strands, no sheen,
+      // no tips), from high on the brow round the cheeks to under the jaw, down
+      // the nape to the shoulders and flaring out there, so the neck never shows
+      // between it and a cloak. Over a `mask` (which tucks under its brow) it is
+      // Doom's hood; alone it is a cowl with the face in its opening.
+      return mergeParts([
+        hairShell({ front: 44, side: 122, back: 168, scale: 1.13, flare: 0.3, strands: 0 }),
+        cowlMantle(),
+      ]);
+    case 'mask':
+      return maskGeometry();
     // Baked from the library at load (`bakePose`, `bakeHair`), not built here.
     case 'rider':
     case 'squad':
@@ -837,6 +853,135 @@ function proceduralKind(kind: SceneKind): THREE.BufferGeometry | null {
     case 'hairLong':
       return null;
   }
+}
+
+/**
+ * **The cowl's MANTLE** (villain identity, D221): the hood's hem carried down
+ * over the neck to the top of the shoulders — an open cone round the neck, in
+ * figure units like the hood above it, open at the front (the jaw and a mask's
+ * chin show there). The head's ellipsoid stops at the chin, so without it the
+ * nape showed as a band of skin between the hood and a cloak (`cape` starts at
+ * the shoulders, `CAPE_SHOULDERS`).
+ */
+function cowlMantle(): THREE.BufferGeometry {
+  const [cx, cy, cz] = HEAD_SHAPE.centre;
+  const [rx, , rz] = HEAD_SHAPE.radii;
+  const top = cy - HEAD_SHAPE.radii[1] * 0.72;
+  const bottom = 0.765;
+  const open = 1.9;
+  const mantle = part(
+    new THREE.CylinderGeometry(1, 1.55, 1, 18, 1, true, open / 2, Math.PI * 2 - open),
+    [0.8, 0.8, 0.8],
+    [cx, (top + bottom) / 2, cz - 0.006],
+    [0, Math.PI, 0],
+    [rx * 1.05, top - bottom, rz * 1.02],
+  );
+  return mantle;
+}
+
+/**
+ * **Villain identity (D221) — the mask's surface**, in UNIT-HEAD space (the
+ * anchor's size is the head's half-extents, `figures/props.ts`'s `mask`): just
+ * outside the skull at its rim, where it meets the `crop` hairstyle's shell (1.035)
+ * from under it, and standing proud of the face at the front, where the nose (the
+ * face's front is 1.17 of the head's depth) would otherwise come through it.
+ */
+function maskRadius(z: number): number {
+  return MASK_RIM + MASK_BULGE * Math.max(0, z) ** 4;
+}
+const MASK_RIM = 1.02;
+const MASK_BULGE = 0.22;
+/**
+ * Where the plate stops, degrees off the crown: the `cowl`'s brow (44°) and a
+ * little under it — front, side and back as `hairShell` reads them — so a cowl
+ * over the mask covers its edge (the plate's rim is 1.02 of the head, the cowl
+ * 1.13) and a bald wearer shows skin above it, as a mask on a bare head would.
+ */
+const MASK_HAIRLINE = { front: 40, side: 80, back: 100, tuck: 0 } as const;
+
+/**
+ * The mask: a faceplate over the front of the head from under the hairline to
+ * under the chin, round to just behind the ears — the unit sphere's triangles in
+ * that band, pushed out to {@link maskRadius} — and its features laid ON it: two
+ * dark eye slits slanting down toward the nose, a shadowed brow, a pale nose
+ * ridge and a dark mouth grille with three bars. The plate is white (× the
+ * figure's tint), a little darker toward its rim so the comic bands have a form
+ * to follow. ~260 triangles.
+ */
+function maskGeometry(): THREE.BufferGeometry {
+  const sphere = new THREE.SphereGeometry(1, 24, 14);
+  const flat = sphere.toNonIndexed();
+  sphere.dispose();
+  const src = flat.getAttribute('position');
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const colours: number[] = [];
+  const { front, side, back, tuck } = MASK_HAIRLINE;
+  const limit = (phi: number): number => {
+    const c = Math.cos(phi);
+    return (c >= 0 ? side + (front - side) * c : side + (back - side) * -c) - tuck;
+  };
+  for (let t = 0; t + 2 < src.count; t += 3) {
+    let mx = 0;
+    let my = 0;
+    let mz = 0;
+    for (let k = 0; k < 3; k++) {
+      mx += src.getX(t + k);
+      my += src.getY(t + k);
+      mz += src.getZ(t + k);
+    }
+    const len = Math.hypot(mx, my, mz) || 1;
+    const phi = Math.atan2(mx, mz);
+    const theta = (Math.acos(Math.max(-1, Math.min(1, my / len))) * 180) / Math.PI;
+    // Front and sides only (to just behind the ears), from the hairline to under the chin.
+    if (Math.cos(phi) < -0.25 || theta < limit(phi) || theta > 150) continue;
+    for (let k = 0; k < 3; k++) {
+      const x = src.getX(t + k);
+      const y = src.getY(t + k);
+      const z = src.getZ(t + k);
+      const r = maskRadius(z);
+      positions.push(x * r, y * r, z * r);
+      normals.push(x, y, z);
+      const shade = 0.84 + 0.2 * Math.max(0, z);
+      colours.push(shade, shade, shade);
+    }
+  }
+  flat.dispose();
+  const plate = new THREE.BufferGeometry();
+  plate.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  plate.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
+  plate.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colours), 3));
+  const INK: RGB = [0.03, 0.035, 0.05];
+  // A feature: a flat patch at z = 1, pushed along its rays onto the plate, `lift` proud of it.
+  const feature = (w: number, h: number, colour: RGB, at: readonly [number, number], tilt: number, lift: number): THREE.BufferGeometry => {
+    const patch = part(new THREE.PlaneGeometry(w, h, 2, 1), colour, [at[0], at[1], 1], [0, 0, tilt]);
+    const position = patch.getAttribute('position');
+    const normal = patch.getAttribute('normal');
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i);
+      const y = position.getY(i);
+      const z = position.getZ(i);
+      const l = Math.hypot(x, y, z) || 1;
+      const r = maskRadius(z / l) + lift;
+      position.setXYZ(i, (x / l) * r, (y / l) * r, (z / l) * r);
+      normal.setXYZ(i, x / l, y / l, z / l);
+    }
+    return patch;
+  };
+  return mergeParts([
+    plate,
+    // The brow's shadow, then the eye slits under it, slanting down toward the nose.
+    feature(0.92, 0.08, [0.6, 0.6, 0.62], [0, 0.27], 0, 0.006),
+    feature(0.34, 0.12, INK, [0.36, 0.09], -0.22, 0.012),
+    feature(0.34, 0.12, INK, [-0.36, 0.09], 0.22, 0.012),
+    // The nose ridge, lighter than the plate.
+    feature(0.1, 0.42, [1.2, 1.2, 1.2], [0, -0.14], 0, 0.008),
+    // The grille: a dark slot, and three bars across it.
+    feature(0.52, 0.16, INK, [0, -0.5], 0, 0.01),
+    feature(0.05, 0.18, [1.1, 1.1, 1.1], [-0.13, -0.5], 0, 0.016),
+    feature(0.05, 0.18, [1.1, 1.1, 1.1], [0, -0.5], 0, 0.016),
+    feature(0.05, 0.18, [1.1, 1.1, 1.1], [0.13, -0.5], 0, 0.016),
+  ]);
 }
 
 /** How far outside the unit head the eyepatch's strap lies: a strap's thickness. */

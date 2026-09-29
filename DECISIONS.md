@@ -9271,3 +9271,148 @@ reprojected every frame, report 09 §2.1). Troika text (an SDF re-tessellation p
 change). A strip that kneels with its figure (it would dip into the figure's own
 back row). Anchoring to the head JOINT each frame (reads every rig in the loop, and
 a disc-only figure has none).
+
+---
+
+## D220 — A recording of the villain deck joins the corpus: `villain-doom-248`, chosen by census, and the three defects it found fixed rather than excused
+
+*Branch `villain-identity`; the lane's reserved range D220–D224.*
+
+**2026-09-29** (the brief: a bare `./scripts/play.sh` seats you against the Doom
+Legion, and no committed recording played it)
+
+**Decision.**
+
+1. **`fixtures/games/villain-doom-248.jsonl` is committed**: `RecordMatch` (M1's
+   recorder, default policy, no `--probe`, no `--match`), seat 0 =
+   `decks/doom-legion.dck`, seat 1 = `decks/pacho-shield.dck`, seen from seat 0,
+   seed 248, recorded on this tree — so it is the corpus's first recording on
+   amendment M49's wire (every full card carries `keywords`). It passes
+   `tools/check-redaction.mjs` with no flags.
+2. **The seed was chosen by census**, over seeds 1–440 (440 games): as many of the
+   deck's 27 names face up as possible, then as many of its fifteen identity
+   subjects (fourteen creatures, the Doombot and Villain tokens) on the table.
+   Seed 248 shows 26 of 27 face up (not Hidden Lair, a land) and puts twelve of
+   the fifteen on the table — Doctor Doom and both his Doombots among them — ends
+   with thirteen villains attacking at once, and plays Doom Reigns Supreme's
+   payoff. No seed put all fifteen on the table; the five seeds with all 27 face
+   up put at most ten there.
+3. **It is a corpus member like any other**: every sweep that globs
+   `fixtures/games/` reads it, and every number a test asserted over the corpus
+   was moved to the new truth in the same change (`docs/evidence/villain-identity.md`
+   §3). **Nothing compares a fresh recording to it**: steps 6 and 9b name
+   `g1.jsonl` and `human-auto-42.jsonl`, both seed 42.
+4. **The pinned classic film is split** (`motion.test.ts`): `PRE_LANE_FILM`
+   holds the nineteen recordings it was measured over, and a recording committed
+   after it carries a pin of its own (`POST_LANE_FILMS`) — the film this tree's
+   engine plays over it with comic FX and on twos off, since no pre-lane engine
+   ever played it.
+5. **Three defects it found are fixed, not excused**:
+   - **A land's two arrival events are one arrival** (the queue's rule 6): the
+     `zone` event onto the battlefield and the `land` event resolved to the same
+     `land.rise` for every land with no per-card row, under two selectors, and it
+     rose twice as high — 138 times in eleven committed recordings (every probe
+     deck's Forest, Mountain and Swamp), unnoticed because the one test that looks
+     is scoped to cast-and-entered batches. `PRE_LANE_FILM` is re-derived for it
+     (310,369 → 305,737 ops): the eight recordings with no doubled rise play the
+     pre-lane film op for op, and the eleven with one differ, measured by playing
+     both queues over every file.
+   - **A wrapped rank's back row takes clicks at its card's own depth**
+     (`layout.ts`'s `proxySizeOf`, read by `HitProxy`): at `PROXY_SCALE` 1.1 its
+     target reached exactly the front card's centre line (`RANK_WRAP_Z` 0.55),
+     and a click on the centre of a host took the card behind it.
+   - **A back-row figure steps aside, a little, when every step back is covered**
+     (±0.035, half the rank's gutter, so neighbours never overlap). Where even
+     that finds no clear point — the host, its aura and a land cover the figure's
+     whole centre column — the figure is *boxed in*, and `figure-pose.test.ts`
+     tells that apart from standing on a card, prints it and holds it to its four
+     frames; the layout fix is a follow-up.
+6. **The crowded table's budget is its own.** At its busiest frames the file draws
+   114–117 calls with bloom off, against the base tree's 110–112 there with every
+   villain a bare body: report 13 §8.2's 90 is crossed by that table before any
+   identity. `g1`'s bench frames are unchanged (89/88 at @355). `traits.test.ts`
+   holds every other recording to 17 prop kinds at once and this one to its
+   measured 22.
+
+**Rationale.** The arena's per-card data is judged against the corpus — a row is
+real when a recording puts its card on the table — and the villains had no
+recording. One recording, chosen by census rather than by the first seed that
+finished, gives the most of the deck per file, and a game the AI actually won
+with its deck's plan. A new oracle finds what the old ones could not see: all
+three defects predate this lane, and two of them could show in any game against
+the Doom Legion (every Swamp it played rose twice; a wide board wraps its rank).
+
+**Rejected.** Two or more villain recordings (the brief asked for one; the
+census found no seed that is all fifteen and the corpus's sweeps pay per file).
+Seed 198, whose 27 of 27 face up costs five of the identity subjects on the table,
+32 turns and 7.7 MB. Re-deriving `PRE_LANE_FILM` over all twenty files at once
+(it would stop saying anything about the pre-lane engine). Widening the tests'
+thresholds instead of fixing the three defects (each is a thing a player sees).
+Moving the land rank behind a wrapped creature rank now (a layout change the
+camera and duelist tests measure; this lane is identity).
+
+---
+
+## D221 — Villain identity is data on the shared kit: a villain rung, fifteen new rows, a MASK and a COWL added to the kit, and rows the corpus cannot reach read from their facts
+
+*Branch `villain-identity`; the lane's reserved range D220–D224.*
+
+**2026-09-29**
+
+**Decision.**
+
+1. **A Villain is a person.** `figures.json` gains `creature/subtype:villain`
+   (the man's body): before it a black Human Villain had no rung at all and
+   stood as a glow disc. `SUBTYPE_ORDER` still gives the Doombots the robot rung,
+   Doctor Doom the scientist's and the HYDRA agents and troopers the spy's and
+   the soldier's; Madame Hydra has a card row for the woman's body, and Kang the
+   Conqueror and the HYDRA Troopers card rows alias `attack` to `pistolDraw`.
+2. **Fifteen new `traits.json` rows** — with Aerial Doombot's, which is
+   unchanged, every creature the Doom Legion names and the Doombot and Villain
+   tokens — each a costume, a head, a rest pose and props from the shared kit
+   (`docs/evidence/villain-identity.md` §5). Doctor Doom is the iron mask under a green hood, a green cloak
+   and tunic over iron armour, hands on his hips; the drones are told apart by
+   colour, eye and height; HYDRA is green and yellow.
+3. **The kit grows by two shared kinds.** `mask` (a prop kind): a faceplate in the
+   figure's TINT, so a row's accent stays free for its cloth and its glow —
+   Doom's iron, the Kangs' blue, Crossbones' bone white. `cowl` (a hairstyle,
+   drawn as `hairCowl` in the costume's hair slot): a smooth hood to the shoulders
+   — Doom, the Kangs, Crossbones, the HYDRA agents, the Villain token. Neither is
+   used by exactly one card. The mask is a front detail; the cowl carries its
+   wearer from behind (`traits.test.ts`'s `ONE_SIDED`), and Doom's cloak and
+   tunic are each other's partners.
+4. **Seven `cues.json` rows**, each keyed off an event about that card: Doom's
+   arrival (`fx.agents`, his beams to the `beside` anchors where the Doombots
+   materialise, never to a token) and his attack; the Doombot's arrival and its
+   eye's laser at the defender its attack band names; the Agents' squad lunge;
+   the Troopers' and Kang the Conqueror's fire; Crossbones' charge and his own
+   trigger's ring; Loki's draw trigger.
+5. **A row the corpus cannot reach is named, and read off its facts.** HYDRA
+   Troopers and Pharaoh Rama-Tut (milled in the villain recording) and the
+   Villain token (never made) are `traits.test.ts`'s `OFF_THE_TABLE`, each with
+   why; their identity is read off a pose built from the workshop catalog's facts
+   (the Villain token's from Forge's token script), and the census fails the day a
+   recording puts one on the table until the name leaves the list.
+6. **The tests read the Doom Legion from its `.dck`**: the census's task list,
+   the both-seats raster (every identity prop ≥ 48 px, one-sided details with a
+   partner) and a villain costume-and-rest list; the cue file's name check reads
+   both table decks and the corpus's tokens.
+7. **The workshop lists the Doom Legion second**, after the deck in play, and its
+   search matches every deck that names a card, so *doom legion* finds all 27.
+
+**Rationale.** D75's rule — identity is data on shared kinds, never a model per
+card — carries the villains as it carried S.H.I.E.L.D.: sixteen cards read as
+themselves with two new kinds, each worn by four cards or more. The mask on the
+tint and the cowl on the hair slot use colour roles the rows already have, so
+Doom's iron face and green hood cost no new colour key. A villain rung in the body
+ladder is the general answer (every Masters of Evil card is a Human Villain too);
+the rows are the particular one.
+
+**Rejected.** A `horns` kind for Loki and a pharaoh's headdress for Rama-Tut (each
+one card's; `hairLong` in gold is the headdress). The existing `hood` for Doom (a
+bucket helm over the whole face; the villain duelist wears it, and there it is
+baked, not a prop kind on the table). Doombots as humanoids in Doom's mask (the
+drone is the robot rung's body, and a token that looked like Doom would read as a
+second Doom). Leaving rows out for the three the corpus cannot reach (the brief is
+every creature). Reusing `crop` as Doom's hood (a skullcap: the neck showed under
+the cloak, and it read as hair).

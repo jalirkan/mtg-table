@@ -218,7 +218,10 @@ function retimeStep(step: Step): void {
  *  6. **An exact duplicate is played once.** Same cue, same selector, same
  *     targets, same batch. Frame 175 again: two `resolved` events for one card,
  *     which composed into a pop **twice** the size of either — `scale` is
- *     multiplied by `composeOffsets`, not taken once.
+ *     multiplied by `composeOffsets`, not taken once. **A land's two arrival
+ *     events are one selector here** (D220): the `land` event and its `zone`
+ *     event onto the battlefield name the same cue for a land with no row of its
+ *     own, and it rose twice.
  *  7. **One card's `cast` and `resolved` that name the same cue play once**
  *     (Tier 2 slice 3). Slice 3 keyed a card's RESOLUTION to its own cue (Web
  *     Up's wrap, Wasp's beam, Quake's shockwave), and an enchantment whose spell
@@ -306,7 +309,14 @@ function suppress(cues: Cue[]): Cue[] {
      * `[65, 70]` and then `[65]`, and comparing whole cues lets card 65 flash
      * twice.
      */
-    const claim = `${cue.id}|${cue.selector}`;
+    // **… and a land's arrival is ONE arrival** (villain identity, D220): Forge
+    // reports a land drop twice — the `zone` event to the battlefield and the
+    // `land` event — and a land with no per-card row resolves BOTH to
+    // `land/*`'s `land.rise`, under two selectors, so it rose twice (composed
+    // into one rise twice as high). No committed recording showed it until the
+    // villain deck's Swamps, Castle Doom and Villainous Hideout (a W/U deck's
+    // Plains and Islands have per-card rows whose arrival is `fx.terrain`).
+    const claim = isArrival(cue) ? `${cue.id}|arrival` : `${cue.id}|${cue.selector}`;
     if (targets.length > 0) {
       const already = claimed.get(claim) ?? new Set<number>();
       targets = targets.filter((id) => !already.has(id));
@@ -333,6 +343,11 @@ function suppress(cues: Cue[]): Cue[] {
     out.push(kept);
   }
   return oneFlinchPerPlayer(out);
+}
+
+/** Rule 6's one arrival: a `land` event, or a `zone` event onto the battlefield. */
+function isArrival(cue: Cue): boolean {
+  return cue.kind === 'land' || (cue.kind === 'zone' && cue.params['toZone'] === 'battlefield');
 }
 
 /** Rule 8: a player's `damage` flinch stands for the `life` loss it caused in the same batch. */

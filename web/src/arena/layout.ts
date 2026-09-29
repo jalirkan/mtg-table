@@ -235,6 +235,20 @@ export const FIGURE_MAX_WIDTH = RANK_PITCH - 0.076;
  */
 const BACK_ROW_STEP = 0.05;
 const BACK_ROW_MAX_STEPS = 6;
+/**
+ * **… and when every step back is covered, it steps a LITTLE aside** (villain
+ * identity, D220). The villain recording (`villain-doom-248`) wraps a rank of six
+ * over a land rank of nine: at `@341` the Robot token behind Baron Strucker had
+ * the opponent's Quantum Reduction on Strucker in front of it (to `anchor +
+ * 0.64`) and a land behind it (from `anchor + 0.60`), so no point on its card's
+ * centre line was clear and it stood on the aura — the first corpus frame to
+ * exhaust the steps. It then tries these offsets across its card, each with every
+ * step back. **Never more than half the rank's gutter** (`RANK_PITCH −
+ * FIGURE_MAX_WIDTH` is 0.076): two widest neighbours stepping toward each other
+ * still do not overlap (`figure-pose.test.ts`; a first cut of ±0.12 put two
+ * Doombots through each other).
+ */
+const BACK_ROW_ASIDE = [0.035, -0.035] as const;
 
 /**
  * **The stand disc of a figure standing ON its card is drawn after the cards**
@@ -1289,6 +1303,26 @@ export function footprintContains(placement: Placement, x: number, z: number): b
   );
 }
 
+/** How much bigger than its card a click target is (`scene/HitProxy.tsx`): the fanned hand's forgiveness. */
+export const PROXY_SCALE = 1.1;
+
+/**
+ * **A card's click target, `[width, depth]` in its own plane** (`HitProxy`'s
+ * mesh scale, and the tests that raycast it). `PROXY_SCALE` larger than the card
+ * both ways — except a wrapped rank's BACK ROW, whose depth is its card's own
+ * (villain identity, D220). A back-row card lies `RANK_WRAP_Z` (0.55) behind the
+ * front row and above it, and a target 1.1 deep reached exactly to the front
+ * card's centre line: in `villain-doom-248` a click on the centre of Baron
+ * Strucker's card (a host, under the opponent's Quantum Reduction) went to the
+ * Robot token behind him, whose DRAWN card starts 0.05 further back. At its own
+ * depth the back row's target ends where its drawing does, so the click order is
+ * the drawing order there too (D86's rule for an attachment and its host).
+ */
+export function proxySizeOf(placement: Placement, width: number): [number, number] {
+  const depth = (placement.row ?? 0) > 0 ? 1 : PROXY_SCALE;
+  return [width * placement.scale * PROXY_SCALE, placement.scale * depth];
+}
+
 /** Is `other` one of `host`'s own attachments? A figure may stand on its own aura. */
 function attachedTo(other: Placement, host: Placement): boolean {
   if (other.kind !== 'attachment') return false;
@@ -1311,17 +1345,22 @@ function placeStands(placements: Placement[]): void {
       continue;
     }
     flat ??= placements.filter((p) => FLAT_KINDS.has(p.kind));
-    const [x, y, z0] = frontStand(placement);
+    const [x0, y, z0] = frontStand(placement);
     const away = seatSign(placement.seat);
-    let stand: [number, number, number] = [x, y, z0];
-    for (let step = 0; step <= BACK_ROW_MAX_STEPS; step += 1) {
-      const z = z0 + away * step * BACK_ROW_STEP;
-      const covered = flat.some(
-        (other) => other !== placement && !attachedTo(other, placement) && footprintContains(other, x, z),
-      );
-      if (!covered) {
-        stand = [x, y, z];
-        break;
+    const clear = (x: number, z: number): boolean =>
+      !flat!.some((other) => other !== placement && !attachedTo(other, placement) && footprintContains(other, x, z));
+    let stand: [number, number, number] = [x0, y, z0];
+    search: for (const aside of [0, ...BACK_ROW_ASIDE]) {
+      // Across the card's own width, in its own frame (a tapped card is turned).
+      const spin = placement.rotation[2];
+      const x = x0 + Math.cos(spin) * aside * placement.scale;
+      const dz = Math.sin(spin) * aside * placement.scale;
+      for (let step = 0; step <= BACK_ROW_MAX_STEPS; step += 1) {
+        const z = z0 + dz + away * step * BACK_ROW_STEP;
+        if (clear(x, z)) {
+          stand = [x, y, z];
+          break search;
+        }
       }
     }
     placement.stand = stand;

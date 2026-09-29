@@ -31,7 +31,8 @@ import {
   subtypeKey,
   subtypesOf,
 } from '../src/arena/figures/resolve.ts';
-import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
+import traitsJson from '../src/arena/figures/traits.json' with { type: 'json' };
+import { validateFigures, validateModels, validateTraits } from '../src/arena/figures/validate.ts';
 import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
@@ -41,6 +42,8 @@ const FIXTURES = fileURLToPath(new URL('../../fixtures/', import.meta.url));
 const MODELS = validateModels(modelsJson);
 const MODEL_IDS = new Set(Object.keys(MODELS.data.models));
 const FIGURES = validateFigures(figuresJson, { modelIds: MODEL_IDS });
+/** traits.json's rows, for the fallback rule's "no row asks for a chibi" (D221). */
+const TRAITS_FOR_FALLBACK = validateTraits(traitsJson).data;
 
 // ---------------------------------------------------------------------------
 // The data files
@@ -287,6 +290,15 @@ test('figures: every creature in every committed recording resolves', () => {
   }
   console.log(`  chibi fallbacks (reached only by a trait's "body": "chibi"): ${fallbacks.sort().join(', ')}`);
   assert.equal(fallbacks.length, 3, 'the three Kenney bodies are no longer all kept as fallbacks');
+  // Villain identity (D221): no villain row asks for a chibi — every fallback is
+  // still reached only through its body — and the villain rung is a PERSON that
+  // the corpus reaches (villain-doom-248's black Human Villains, which before it
+  // fell to creature/* and stood as glow discs).
+  for (const [name, row] of Object.entries(TRAITS_FOR_FALLBACK.cards)) {
+    assert.notEqual(row.body, 'chibi', `${name} stands in a chibi fallback`);
+  }
+  assert.ok(firedRungs.has('subtype:villain'), 'the villain rung never fires — villain-doom-248 is not in the corpus');
+  assert.equal(FIGURES.data.archetypes['creature/subtype:villain']?.model, 'agent');
 });
 
 test('figures: the face-down instances in the corpus all take the disc', () => {

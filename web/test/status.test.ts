@@ -9,8 +9,8 @@
  * What is held here, in order:
  *
  *  1. **The one reader**, `protocol.ts`'s `keywordsOf`: absent is `[]` (every
- *     committed recording predates M49), a stub and a face-down card are `[]`
- *     whatever they carry.
+ *     committed recording but `villain-doom-248` predates M49 — D220), a stub
+ *     and a face-down card are `[]` whatever they carry.
  *  2. **The shared data**, `status.ts`: the glyph kit, the labels, the bar, the
  *     pips, the marks — and `cardStatus` answering `null` for both concealed shapes.
  *  3. **The corpus sweep, as it is and HOSTILE**: every strip `statusLayout`
@@ -218,7 +218,7 @@ function placementOf(placed: Layout, id: number): Layout['placements'][number] |
 }
 
 test('status: over every frame of the corpus, every strip belongs to a face-up battlefield card — and hostile, no keyword reaches a concealed one', () => {
-  const census = { frames: 0, strips: 0, withBar: 0, withPips: 0, withMarks: 0, concealedCreatures: 0 };
+  const census = { frames: 0, strips: 0, withBar: 0, withPips: 0, withMarks: 0, withKeywords: 0, concealedCreatures: 0 };
   eachState(null, (state) => {
     census.frames += 1;
     const placed = layout(state, raster.PRESENCE);
@@ -241,15 +241,22 @@ test('status: over every frame of the corpus, every strip belongs to a face-up b
       if (strip.hp !== null) census.withBar += 1;
       if (strip.pips > 0) census.withPips += 1;
       if (strip.marks > 0) census.withMarks += 1;
-      assert.deepEqual(strip.keywords, [], 'the committed corpus predates M49 — no strip can carry a keyword');
+      // D220: the villain recording is the corpus's first on M49's wire, so a strip
+      // may carry keywords now — every one of them the card's OWN, as the wire
+      // named it (a strip invents none, and a pre-M49 card carries none).
+      const own = keywordsOf(p.card);
+      for (const keyword of strip.keywords) assert.ok(own.includes(keyword), `#${String(strip.cardId)}'s strip carries ${keyword}, which its card does not`);
+      if (strip.keywords.length > 0) census.withKeywords += 1;
     }
   });
   console.log(
     `status corpus: ${String(census.frames)} frames, ${String(census.strips)} strips ` +
-      `(${String(census.withBar)} with a bar, ${String(census.withPips)} with pips, ${String(census.withMarks)} with marks), ` +
+      `(${String(census.withBar)} with a bar, ${String(census.withPips)} with pips, ${String(census.withMarks)} with marks, ` +
+      `${String(census.withKeywords)} with the wire's own keywords), ` +
       `${String(census.concealedCreatures)} concealed creature instances with none`,
   );
   assert.ok(census.strips > 1000 && census.withPips > 0 && census.withMarks > 0 && census.concealedCreatures > 100);
+  assert.ok(census.withKeywords > 0, 'no strip in the corpus carries a keyword — the M49 recording is not in it');
 
   // HOSTILE: every card carries keywords. The gates are what keep them off concealed cards.
   let keyworded = 0;

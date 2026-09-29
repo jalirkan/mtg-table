@@ -33,6 +33,11 @@
       "model": "agent",
       "tint": "#cfd6de"
     },
+    "creature/subtype:villain": {
+      "model": "agent",
+      "tint": "#8a7aa8",
+      "_note": "Villain identity (D221): a Villain the rungs above do not claim is a PERSON — the man's body, in a dusk violet the villain shade (traits.json) darkens. Before this rung a black Human Villain had no colour rung either (figures.json has creature/W and creature/U), so Doom Legion's Crossbones, Baron Strucker, Madame Hydra, the Unliving Legionnaire and every Villain token fell to creature/* and stood as glow discs. SUBTYPE_ORDER puts `villain` after robot, scientist, spy, hero and soldier, so the Doombots stay drones, Doctor Doom and A.I.M. stand in the scientist rung's body and the HYDRA agents and troopers in the spy's and the soldier's; the card rows in traits.json dress each."
+    },
     "_vehicle": "creature/subtype:vehicle is deliberately ABSENT here: a Vehicle is not a BODY. Since slice 3 (T10) it is traits.json's `subtype:vehicle` silhouette — a procedural carrier drawn over its card, crewed or not — and never a model.",
     "creature/W": {
       "model": "agent",
@@ -91,6 +96,24 @@
         "channel": "radioCall"
       },
       "_note": "The radio call is his own gesture; the agents he makes are the existing fx.agents cue and are NOT keyed here."
+    },
+    "Madame Hydra, Reanimated": {
+      "model": "hero",
+      "_note": "Villain identity (D221): the woman's body — Madame Hydra is a Human Horror Villain, and the villain rung alone would stand her in the man's."
+    },
+    "Kang the Conqueror": {
+      "model": "agent",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "Villain identity (D221): he attacks with the wrist blasters — the library's two-handed aim, the alias Agent 13's pistol uses, with no pistol in his hands: his `gauntlets` glow at them and attack.lunge's muzzle flash fires from them. A row that aliases a clip names its body too, or the ladder stops here with none (the man's, as the villain rung would give him)."
+    },
+    "HYDRA Troopers": {
+      "model": "agent",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "Villain identity (D221): the troopers attack by opening fire — the same alias, and their own `pistol` is in their hands for it (traits.json). The body is the man's, as the soldier rung would give them."
     },
     "Soldier Token": {
       "model": "agent",

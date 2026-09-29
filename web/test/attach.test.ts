@@ -301,9 +301,11 @@ test('attach: every attachment of every committed recording manifests on its hos
   }
 
   // §4.1's measured numbers, and the corpus is where they came from.
-  assert.equal(framesWithAttachment, 985, `${String(framesWithAttachment)} frames, not 985`);
+  // (985 frames and 28 events before D220's villain recording joined the corpus;
+  // `villain-doom-248` adds 309 and 6.)
+  assert.equal(framesWithAttachment, 1294, `${String(framesWithAttachment)} frames, not 1,294`);
   assert.equal(maxInFrame, 4, `max ${String(maxInFrame)} attachments in a frame, not 4`);
-  assert.equal(attachEvents, 28, `${String(attachEvents)} attach events, not 28`);
+  assert.equal(attachEvents, 34, `${String(attachEvents)} attach events, not 34`);
   // **The whole design argument, as an assertion.** If a manifestation were a cue
   // it would be on screen for 28 transitions; as a pose it is on screen 985 times.
   assert.ok(
@@ -512,11 +514,13 @@ test('attach: T12’s four looks are data — a row names the kind and the host 
     }
   }
   console.log(`  looks over the corpus: ${JSON.stringify(Object.fromEntries(seen))} · anonymous hosts with one: ${String(anonymousHosts)}`);
-  // 944 shrink + 409 shell + 362 glints + 315 circuit = the 2,030 of §4.1.
-  assert.equal(seen.get('shrink'), 944);
-  assert.equal(seen.get('shell'), 409);
-  assert.equal(seen.get('glints'), 362);
-  assert.equal(seen.get('circuit'), 315);
+  // 1,253 shrink + 522 shell + 553 glints + 405 circuit = 2,733 — §4.1's 2,030
+  // (944 + 409 + 362 + 315) and `villain-doom-248`'s 703 (D220): Pacho's side of
+  // the villain game plays all four.
+  assert.equal(seen.get('shrink'), 1253);
+  assert.equal(seen.get('shell'), 522);
+  assert.equal(seen.get('glints'), 553);
+  assert.equal(seen.get('circuit'), 405);
   assert.equal(seen.get('halo') ?? 0, 0, 'with the three rows, nothing in this deck falls back to the halo');
   for (const kind of ['shell', 'glints', 'circuit', 'cocoon'] as const) assert.ok(isAttachKind(kind));
 });
@@ -757,10 +761,11 @@ test('attach: a station is never drawn for a card drawn as a back, a concealed c
 test('attach: a click on a host’s face hits the host, and its attachment keeps a strip of its own — three seat-safe views (second verification pass)', async () => {
   // Live, seed 11, view 2: the opponent's Quantum Reduction on the viewer's Peggy
   // Carter took every click on her card ("Not selectable: card 45"). The proxy is
-  // `HitProxy`'s, exactly: a unit plane at the placement, `CARD_W × 1.1` by `1.1`,
+  // `HitProxy`'s, exactly: a unit plane at the placement, `proxySizeOf` (`CARD_W × 1.1` by `1.1`,
+  // a wrapped back row `1.0` deep),
   // two-sided, raycast by three's own Raycaster from each seat-safe view.
   const { CAMERA, VIEW_BY_ID } = await import('../src/arena/camera.ts');
-  const { ATTACH_DY, CARD_W } = await import('../src/arena/layout.ts');
+  const { ATTACH_DY, CARD_W, proxySizeOf } = await import('../src/arena/layout.ts');
   const plane = new THREE.PlaneGeometry(1, 1);
   const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
   const cameras = (['table', 'shoulder', 'low'] as const).map((id) => {
@@ -797,7 +802,9 @@ test('attach: a click on a host’s face hits the host, and its attachment keeps
           const mesh = new THREE.Mesh(plane, material);
           mesh.position.set(p.position[0], p.position[1] + (p.kind === 'attachment' ? lift : 0), p.position[2]);
           mesh.rotation.set(p.rotation[0], p.rotation[1], p.rotation[2]);
-          mesh.scale.set(CARD_W * p.scale * 1.1, p.scale * 1.1, 1);
+          // `HitProxy`'s own size (D220: a wrapped rank's back row at its card's depth).
+          const [w, d] = proxySizeOf(p, CARD_W);
+          mesh.scale.set(w, d, 1);
           mesh.userData = { cardId: p.cardId };
           mesh.updateMatrixWorld(true);
           return mesh;
@@ -853,6 +860,11 @@ test('attach: a click on a host’s face hits the host, and its attachment keeps
   assert.ok(hosts > 300, 'the sweep reached almost no attachment');
   assert.deepEqual(misses, [], `${String(hostMisses)} host clicks landed on something else`);
   assert.deepEqual(buried, [], 'an attachment on an uncrowded board has no clickable strip left');
-  assert.ok(unreachable <= attachments / 100, `${String(unreachable)} attachments have no clickable strip`);
+  // At most 3% — every one of them on a crowded board (`buried` above). It was
+  // 1% until D220's villain recording (4 of 765 samples without it): its Quantum
+  // Reduction on Baron Strucker lies under him and a wrapped rank's back row of
+  // six from @312 to the end — 26 of the sweep's 30 unreachable samples (of
+  // 1,026) — and is not drawn either.
+  assert.ok(unreachable <= (attachments * 3) / 100, `${String(unreachable)} attachments have no clickable strip`);
   assert.ok(oldMisses > hosts / 2, 'the old layout passes too — this test could not have caught the defect');
 });

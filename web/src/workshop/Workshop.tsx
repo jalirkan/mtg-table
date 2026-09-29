@@ -171,7 +171,7 @@ import { layout } from '../arena/layout.ts';
 import { lookFromSearch, lookSpecOf, type LookSpec } from '../arena/look.ts';
 import { BLOOM_DEFAULT } from '../arena/perf.ts';
 import { loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
-import { cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
+import { cardOf, matchesSearch, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
 import { clipCueData, workshopRegistry } from './clipCue.ts';
 import { cueRows, unreachedSelectors, type CueRow } from './cueRows.ts';
 import { CUES_RAW, FIGURE_DATA, MODEL_DATA } from './data.ts';
@@ -568,15 +568,8 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
 
   // -- the list ----------------------------------------------------------------
   const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (q === '') return entries;
-    return entries.filter(
-      (e) =>
-        e.label.toLowerCase().includes(q) ||
-        e.facts.types.toLowerCase().includes(q) ||
-        (e.deck ?? '').toLowerCase().includes(q) ||
-        e.group.includes(q),
-    );
+    if (search.trim() === '') return entries;
+    return entries.filter((e) => matchesSearch(e, search));
   }, [entries, search]);
 
   // -- the page's own keys: one table (keys.ts), each row carrying its action ----

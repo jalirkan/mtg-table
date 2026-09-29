@@ -292,6 +292,276 @@
       },
       "_costume": "Slice 4: the scientist rung's white coat, and his own hair."
     },
+    "Doctor Doom": {
+      "scale": 1.08,
+      "tint": "#98a39f",
+      "accent": "#2c8f4c",
+      "shade": 1,
+      "props": [
+        "mask",
+        "cape",
+        "coatTails"
+      ],
+      "rest": "akimbo",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Victor von Doom as the MSH card paints him and the villain duelist dresses him: the iron MASK (the kit's faceplate, in his iron tint) under a Doom-green HOOD (the `cowl`, in the costume's hair slot, from the brow round the jaw to the shoulders — from behind the hood carries him), a green cloak down his back and a green tunic from the chest to the knee (`cape` and `coatTails`, both in the accent), iron armour under it, a gold belt, hands on his hips. He is a Human Scientist Villain, so the scientist rung would have stood him at a lab bench in a white coat: this row replaces its props, its rest and every slot of its costume. `shade: 1` keeps the iron from the villain rung's 78%.",
+      "costume": {
+        "hair": "#1f6a3a",
+        "top": "#56615d",
+        "shirt": "#2c8f4c",
+        "legs": "#46504c",
+        "shoes": "#2b3230",
+        "gloves": "#56615d",
+        "belt": "#c9a64a"
+      },
+      "_costume": "The villain duelist's palette (duelists.json's `villain`): iron armour and gauntlets, the green of the tunic and hood, a gold belt."
+    },
+    "Doombot": {
+      "hover": 0.08,
+      "tint": "#a9b3af",
+      "accent": "#3fe070",
+      "_note": "Villain identity (D221). The token Doctor Doom makes (the wire names it `Doombot`, with no `Token`): the robot rung's drone, eye and visor, in Doom's iron with his green eye, standing close to the table — a 3/3 that walks. The Aerial Doombot is the green one with a red eye and thrusters; these are the steel ones."
+    },
+    "Doom's Servo-Guards": {
+      "hover": 0.04,
+      "tint": "#6f7a76",
+      "accent": "#ff4a36",
+      "_note": "Villain identity (D221). A guard robot: the robot rung's drone in dark gunmetal with a red eye, lowest of the three drones — a sentry, not a flier."
+    },
+    "A.I.M. Bot": {
+      "hover": 0.34,
+      "idle": "hover",
+      "tint": "#f0cc3a",
+      "accent": "#7fe8ff",
+      "shade": 1,
+      "props": [
+        "laserEye",
+        "visor",
+        "wings"
+      ],
+      "_note": "Villain identity (D221). A.I.M.'s flying robot: the drone in A.I.M. yellow (shade 1, as A.I.M. Scientists keep theirs), the robot rung's cyan eye and visor, and a pair of wings — it flies, where the Doombot rows stand."
+    },
+    "Agents of HYDRA": {
+      "swarm": 2,
+      "formation": "squad",
+      "tint": "#5a9a5c",
+      "hair": "cowl",
+      "rest": "atEase",
+      "_note": "Villain identity (D221). HYDRA's endless agents as a squad, as the S.H.I.E.L.D. Agents are one (a leader and two followers in a wedge, one draw call for the followers, the formation clamped into its slot) — told apart by HYDRA's colours: green uniforms with a yellow chest, gloves and belt, and green hooded cowls (the `cowl`, in the costume's hair slot, with the face in its opening).",
+      "costume": {
+        "hair": "#2d5a34",
+        "top": "#2d5a34",
+        "shirt": "#e0b82a",
+        "legs": "#243f29",
+        "shoes": "#141712",
+        "gloves": "#e0b82a",
+        "belt": "#e0b82a"
+      },
+      "_costume": "HYDRA green and yellow; the followers wear the leader's top as their shade."
+    },
+    "HYDRA Troopers": {
+      "tint": "#5f8f55",
+      "accent": "#8f98a8",
+      "props": [
+        "pistol"
+      ],
+      "rest": "highReady",
+      "hair": "crop",
+      "_note": "Villain identity (D221). A HYDRA trooper at the high ready — a gunmetal pistol up beside his green cowl (the kit's `pistol`, Agent 13's, in the accent) — in HYDRA green with yellow gloves and belt. His attack opens fire (figures.json's pistolDraw alias, cues.json's muzzle flash).",
+      "costume": {
+        "hair": "#2f5e36",
+        "top": "#2f5e36",
+        "shirt": "#2f5e36",
+        "legs": "#263f2b",
+        "shoes": "#121411",
+        "gloves": "#d9b52a",
+        "belt": "#d9b52a"
+      }
+    },
+    "Baron Strucker, HYDRA Overlord": {
+      "tint": "#4f7a52",
+      "accent": "#2c5a33",
+      "props": [
+        "coat",
+        "coatTails"
+      ],
+      "rest": "atEase",
+      "hair": "none",
+      "_note": "Villain identity (D221). HYDRA's overlord: bald, in a black uniform with HYDRA's yellow belt under a long HYDRA-green greatcoat (the kit's coat and its skirt, Fury's, in another colour — which is the point of a shared kit), hands clasped behind his back. Fury is black-coated and folds his arms; Strucker is green-coated and stands at ease.",
+      "costume": {
+        "top": "#1b1d1a",
+        "shirt": "#1b1d1a",
+        "legs": "#1b1d1a",
+        "shoes": "#0f100e",
+        "gloves": "#1b1d1a",
+        "belt": "#d9b52a"
+      }
+    },
+    "Loki, God of Mischief": {
+      "tint": "#45b060",
+      "accent": "#2f8f47",
+      "props": [
+        "cape",
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "long",
+      "_note": "Villain identity (D221). The god of mischief in green and gold: a green cloak, sorcery glowing green in both hands pushed out before him (the kit's `gauntlets`, Quake's, in his accent, in her braced guard — at his belt, clasped, they were behind his own back from your seat), his long black hair.",
+      "costume": {
+        "hair": "#16151a",
+        "top": "#2a7a3f",
+        "shirt": "#d8b24a",
+        "legs": "#1d4d2a",
+        "shoes": "#c9a13e",
+        "gloves": "#c9a13e",
+        "belt": "#d8b24a"
+      }
+    },
+    "Kang the Conqueror": {
+      "hover": 0.18,
+      "idle": "hover",
+      "tint": "#5a86e8",
+      "accent": "#7fd4ff",
+      "shade": 1,
+      "props": [
+        "mask",
+        "gauntlets"
+      ],
+      "rest": "aim",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Kang the Conqueror, flying: his blue mask (the kit's faceplate, in his tint) under a purple helm (the `cowl`), a green tunic over purple, and his wrist blasters lit at both hands (`gauntlets`), held out in the library's two-handed aim — the rest pose Agent 13 once rested in, without the pistol.",
+      "costume": {
+        "hair": "#5b2f8f",
+        "top": "#2f7d45",
+        "shirt": "#2f7d45",
+        "legs": "#5b2f8f",
+        "shoes": "#5b2f8f",
+        "gloves": "#5b2f8f",
+        "belt": "#5b2f8f"
+      }
+    },
+    "Kang, Temporal Tyrant": {
+      "scale": 1.04,
+      "tint": "#4a6fd0",
+      "accent": "#6a3fa0",
+      "shade": 1,
+      "props": [
+        "mask",
+        "cape"
+      ],
+      "rest": "folded",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Kang again, as the tyrant: the same blue mask under a darker helm, purple armour over green, a purple cloak, arms folded. The conqueror hovers and aims; the tyrant stands and waits.",
+      "costume": {
+        "hair": "#3a2466",
+        "top": "#5b2f8f",
+        "shirt": "#2f7d45",
+        "legs": "#2a2233",
+        "shoes": "#5b2f8f",
+        "gloves": "#5b2f8f",
+        "belt": "#c9a64a"
+      }
+    },
+    "Pharaoh Rama-Tut": {
+      "scale": 1.04,
+      "tint": "#e0b84a",
+      "accent": "#2f5fbf",
+      "shade": 1,
+      "props": [
+        "cape"
+      ],
+      "rest": "folded",
+      "hair": "long",
+      "_note": "Villain identity (D221). Kang as a pharaoh: a gold headdress to the shoulders (the `long` hairstyle in gold), a gold collar over white linen, a royal-blue cloak and sash, arms crossed on the chest as a pharaoh's are.",
+      "costume": {
+        "hair": "#d8b04a",
+        "top": "#d9b042",
+        "shirt": "#f0e6c8",
+        "legs": "#f0e6c8",
+        "shoes": "#c9a13e",
+        "gloves": "#c9a13e",
+        "belt": "#2f5fbf"
+      }
+    },
+    "Unliving Legionnaire": {
+      "hover": 0.3,
+      "idle": "hover",
+      "tint": "#a592d6",
+      "accent": "#6a3a8a",
+      "props": [
+        "wings"
+      ],
+      "rest": "folded",
+      "hair": "crop",
+      "_note": "Villain identity (D221). A vampire of the Legion of the Unliving, as its card paints it — a winged thing of the night: spectral violet, flying on dark violet wings (the kit's `wings`, Wasp's, in its accent), black and crimson under them, arms folded across the chest the way a vampire rests.",
+      "costume": {
+        "hair": "#1a1418",
+        "top": "#2a2430",
+        "shirt": "#6e1f2a",
+        "legs": "#1e1a22",
+        "shoes": "#111013",
+        "gloves": "#2a2430",
+        "belt": "#6e1f2a"
+      }
+    },
+    "Madame Hydra, Reanimated": {
+      "tint": "#3cb45a",
+      "accent": "#1d5c2c",
+      "props": [
+        "cape"
+      ],
+      "rest": "akimbo",
+      "hair": "long",
+      "_note": "Villain identity (D221). Madame Hydra: her long GREEN hair — the part of her a comic reader knows first — a dark-green catsuit with HYDRA's yellow belt, a dark-green cloak, hands on her hips. The woman's body (figures.json).",
+      "costume": {
+        "hair": "#3cbf55",
+        "top": "#1d4d2a",
+        "shirt": "#1d4d2a",
+        "legs": "#16391f",
+        "shoes": "#0f1a12",
+        "gloves": "#16391f",
+        "belt": "#d9b52a"
+      }
+    },
+    "Crossbones, Malicious Mercenary": {
+      "scale": 1.08,
+      "tint": "#ece6d6",
+      "shade": 1,
+      "props": [
+        "mask"
+      ],
+      "rest": "braced",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Brock Rumlow: the white skull (the kit's faceplate, in his bone-white tint) on a black balaclava (the `cowl` in black), black fatigues, a big man in a brawler's guard.",
+      "costume": {
+        "hair": "#141416",
+        "top": "#1c1c1f",
+        "shirt": "#d8d2c2",
+        "legs": "#26262a",
+        "shoes": "#111113",
+        "gloves": "#111113",
+        "belt": "#5a4a3a"
+      }
+    },
+    "Villain Token": {
+      "tint": "#7a6a8e",
+      "rest": "atEase",
+      "hair": "cowl",
+      "_note": "Villain identity (D221). The 2/1 menace token Agents of HYDRA and HYDRA Troopers leave behind (the wire's name verbatim): a henchman in black, hooded (the `cowl`), standing at ease — the villain rung's body, so a token reads as the same kind of thing as the cards that made it and not as one of them.",
+      "costume": {
+        "hair": "#1e1b22",
+        "top": "#1e1b22",
+        "shirt": "#1e1b22",
+        "legs": "#18161b",
+        "shoes": "#0e0d10",
+        "gloves": "#0e0d10",
+        "belt": "#3a3440"
+      }
+    },
     "A.I.M. Scientists": {
       "tint": "#f2cf4a",
       "accent": "#e9c33c",

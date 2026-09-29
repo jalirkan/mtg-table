@@ -217,6 +217,9 @@
 3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
 4. **Own colours, one figure's materials** (**D196**). A personal map is the
 5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
+1. **A Villain is a person, and the rows dress it.** `figures.json`'s
+2. **A mask is a face, and a cowl carries it from behind.** `mask` (a prop kind,
+3. **A row the corpus cannot reach is named, never kept in silence.**
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -594,3 +597,7 @@ span: The model-source choice is one function
 span: Own colours, one figure's materials
 span: "Black is blue" is the CC0 palette's rule, never a model's
 span: The budget is a sum, and it is in `perf.ts`
+span: a villain reads as itself through data on the shared kit.
+span: A Villain is a person, and the rows dress it.
+span: A mask is a face, and a cowl carries it from behind.
+span: A row the corpus cannot reach is named, never kept in silence.

@@ -137,7 +137,7 @@ It runs on **your own install of Forge 2.0.14** — Forge's `.tar.bz2` distribut
    jar's directory.
 2. `./tools/check-forge.sh` — asserts the classes and members the bridge links and
    prints the jar's sha256. **It must print the one above.** Every frame log's
-   session header records it as `forgeJarSha256`, and all 18 committed recordings
+   session header records it as `forgeJarSha256`, and all 19 committed recordings
    under `fixtures/games/` name this build; a different hash is a different engine,
    whatever its file is called.
 3. `./tools/make-forge-home.sh` (once, and again after changing `forgeJar`), then
@@ -295,6 +295,10 @@ Then, per milestone (see [`PLAN.md`](PLAN.md)):
 # (docs/protocol.md 3.4) is proved by content and not only by an empty array.
 ./bridge/run.sh mtgtable.RecordMatch --deck decks/future-sight-probe.dck \
     --deck2 decks/morph-probe.dck --seed 42 --out fixtures/games/future-sight.jsonl
+# and the villains' own game (D220): the Doom Legion's seat, against Pacho's deck,
+# at the seed a census of 440 chose for the most of the deck face up and on the table
+./bridge/run.sh mtgtable.RecordMatch --deck decks/doom-legion.dck \
+    --deck2 decks/pacho-shield.dck --seed 248 --out fixtures/games/villain-doom-248.jsonl
 npm --prefix web run dev:replay                  # opens /?replay=games/g1.jsonl
 # any other fixture is a query param: ?replay=games/morph.jsonl,
 # ?replay=synthetic/sample-handwritten.jsonl, ?replay=negative/render-crash.jsonl
@@ -506,7 +510,7 @@ game down) — from a throwaway Forge home under `var/audit-deck/`; it needs a b
 | deck | what it is | on Forge 2.0.14 |
 |---|---|---|
 | `decks/pacho-shield.dck` (+ `.txt` as typed) | **the deck in play**: the user's W/U S.H.I.E.L.D. deck, 40 cards, MSH + MSC | plays; D14 corrects one card |
-| `decks/doom-legion.dck` | **the AI's deck** (match setup, D108): *Doom Legion*, 40 blue-black Marvel villains, MSH + MSC — what a bare `./scripts/play.sh` seats against you (*Choosing decks and the AI*, below) | plays |
+| `decks/doom-legion.dck` | **the AI's deck** (match setup, D108): *Doom Legion*, 40 blue-black Marvel villains, MSH + MSC — what a bare `./scripts/play.sh` seats against you (*Choosing decks and the AI*, below). Its committed recording is `fixtures/games/villain-doom-248.jsonl` (D220), and every creature it names reads as itself in the arena (*Villain identity*, below) | plays |
 | `decks/masters-of-evil.dck`, `decks/hulk-family.dck`, `decks/wakanda.dck` | **three more AI decks** (more-villains, D116): black-red villain aggro, red-green gamma stompy and green-white go-wide, 40 cards each, MSH + MSC, every one written from `decks/specs/<deck>.json` by `tools/build-deck.ts` (Doom Legion's too). `--ai-deck` seats one; `config.json`'s default is still Doom Legion | play; `tools/deck-smoke.sh` plays each (not in the gate) |
 | `decks/fra-rw-aggro.dck` (+ `.txt`) | **the user's Reality Fracture pool** from the set's pre-release: red-white legends aggro, 40 main + 10 sideboard, copied from the user's own list | **does not play yet** — 19 ok, 31 missing, 0 broken. Waits for an official Forge release (D109) |
 | `docs/drafts/decks/fra-gb-leftovers.dck` | a **draft** FRA opponent for the AI: the green-black "leftovers" deck the user's own notes propose, finished to 40 with basics only (D112). Deliberately **not** in `decks/` until the user accepts it (`docs/drafts/README.md`) | does not play yet — 20 ok, 20 missing |
@@ -1527,7 +1531,9 @@ BODY a card stands in) and `cues/cues.json` (which says how its events play):
    Keys starting with `_` are notes; write one saying where the look comes from.
 2. **The kit** is `figures/props.ts`'s closed list: `wings`, `helmet`, `hood`,
    `jetpack`, `exhaust`, `laserEye`, `visor`, `pistol`, `muzzle`, `coat`,
-   `eyepatch`, `badge`, `tie`, `gauntlets`, `shield`, `hat`, `rider`, `labBench`.
+   `eyepatch`, `badge`, `tie`, `gauntlets`, `shield`, `hat`, `rider`, `labBench`
+   — and since Lane BODIES `coatTails`, `cape` and `sidearm`, and since villain
+   identity `mask` (D221).
    **`props` replaces, it does not add**: a row that names `props` lists every one
    it wants, including any its subtype rung would have given it. The glowing ones
    (`exhaust`, `laserEye`, `gauntlets`, `badge`, `muzzle`) burn softly at rest and
@@ -1542,8 +1548,9 @@ BODY a card stands in) and `cues/cues.json` (which says how its events play):
 4. **Run `npm --prefix web test`.** `traits.test.ts` fails on any validation error
    (a bad row is also dropped at runtime, so the game never breaks on one), prints
    the census — which card got which rungs and props over every recorded game —
-   and, for a card in `decks/pacho-shield.dck`, rasterises its props through the
-   table camera from **both** seats: each must show at least 48 pixels.
+   and, for a card in `decks/pacho-shield.dck` or `decks/doom-legion.dck` (and the
+   Doom Legion's two tokens), rasterises its props through the table camera from
+   **both** seats: each must show at least 48 pixels.
 5. **Look at it**: `npm --prefix web run dev:arena`, `?replay=games/<file>.jsonl#arena`,
    scrubbed to a frame where the card is on the battlefield, at 1× from views **1**
    and **4**, on your side and the opponent's.
@@ -2046,11 +2053,52 @@ in order, the active one lit in the colour of whoever's turn it is, and your
 stops as two pips per phase (left: your turn, right: the opponent's) — the same
 stops the board's phase strip shows, and a click sends the same act.
 
-Recordings made before M49 (every committed fixture) have no keywords: their
-strips show the bar, pips and marks only. The workshop's **status strip**
+Recordings made before M49 (every committed fixture but `villain-doom-248`, the
+corpus's first M49 recording) have no keywords: their strips show the bar, pips
+and marks only. The workshop's **status strip**
 rehearsal shows the icons on any creature — with a sample of keywords, which its
 fiction line says is the workshop's — so their size and placement can be judged
 on the pedestal. What was measured is `docs/evidence/status-layer.md`.
+
+#### Villain identity — the Doom Legion reads as itself (D220–D221)
+
+The deck a bare `./scripts/play.sh` seats against you — `decks/doom-legion.dck`,
+Doctor Doom, HYDRA, three Kangs and Loki — has a committed recording of its own
+and an identity for every creature it names. Before, a villain was a bare body in
+its colour and a black Human Villain (Crossbones, Baron Strucker, Madame Hydra)
+was a glow disc.
+
+| card | what you see at the table |
+|---|---|
+| Doctor Doom | an iron mask under a green hood, a green cloak and tunic over iron armour, a gold belt, hands on his hips; he arrives with a green beam to each place a Doombot appears |
+| Doombot (his token) | a steel drone with a green eye, close to the table; its eye fires at whoever it attacks |
+| Doom's Servo-Guards · A.I.M. Bot · Aerial Doombot | a dark sentry drone with a red eye · a flying yellow drone with wings · (unchanged) Doom green with thrusters |
+| Agents of HYDRA · HYDRA Troopers | a hooded squad of three in HYDRA green and yellow · a green trooper, pistol up beside his head, who opens fire |
+| Baron Strucker, HYDRA Overlord | bald, in a black uniform under a long HYDRA-green greatcoat, at ease |
+| Loki, God of Mischief | green and gold, a green cloak, long black hair, sorcery lit in both hands |
+| Kang the Conqueror · Kang, Temporal Tyrant | a blue mask under a purple helm: hovering, wrist blasters lit and firing · standing, cloaked in purple, arms folded |
+| Pharaoh Rama-Tut | a gold headdress, a gold collar over white linen, a royal-blue cloak, arms crossed |
+| Unliving Legionnaire | a spectral vampire on violet wings, arms folded |
+| Madame Hydra, Reanimated | her long green hair, a dark-green catsuit and cloak |
+| Crossbones, Malicious Mercenary | a white skull mask on a black balaclava, in a brawler's guard; his trigger rings from his feet |
+| Villain Token | a hooded henchman in black |
+
+Two pieces joined the shared kit for it, each worn by four cards or more: the
+**`mask`**, a faceplate in the figure's tint, and the **`cowl`**, a hairstyle
+that is a hood to the shoulders. Everything else is the kit the S.H.I.E.L.D.
+deck already wears — a villain's cloak is Doom's and Loki's, Strucker's greatcoat
+is Fury's coat in another colour. A face-down or hidden villain gets none of it,
+exactly as before.
+
+**See it**: `npm --prefix web run dev`, then `#workshop` — the list shows the
+Doom Legion second, and typing *doom legion* in its search lists all 27 — or the
+villains' own game in the arena at its last turn, thirteen villains on the table:
+`/?replay=games/villain-doom-248.jsonl#arena`, scrubbed to frame 388. The game
+itself is `node tools/narrate.mjs fixtures/games/villain-doom-248.jsonl`: Doom's
+Plan pays off the turn he arrives with his Doombots, and the villains win on turn
+24. What was measured — the census that chose the seed, every corpus count that
+moved, and three defects the new recording found and this change fixed — is
+`docs/evidence/villain-identity.md`.
 
 ### Card library and browser — `#cards`
 

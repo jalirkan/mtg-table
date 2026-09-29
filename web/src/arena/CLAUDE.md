@@ -4,7 +4,7 @@ These load when you work under `web/src/arena/`, on top of the root `CLAUDE.md`
 and `web/CLAUDE.md` (the board's conventions, whose M4 convention 2 this file's
 `CardPlane` mirrors). They are in the order they were written: M7's Tier 1, Tier
 2 and its three later slices, report 15's three art-direction lanes, the status
-layer, then the personal tier's loader. The
+layer, the personal tier's loader, then villain identity. The
 workshop (`web/src/workshop/`) draws with this directory's code, and its own
 conventions are `web/CLAUDE.md`'s *Workshop*.
 
@@ -1048,3 +1048,42 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    the CC0 table reads 87 and 89 (evidence §19). Measure with `tools/arena-bench.mjs --personal` against the DEV server
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.
+
+## Villain identity — the conventions D220–D221 added
+
+Three, and the thesis is D75's: **a villain reads as itself through data on the
+shared kit.** The Doom Legion — the deck a bare `./scripts/play.sh` seats against
+you — has a committed recording (`fixtures/games/villain-doom-248.jsonl`, D220)
+and an identity for every creature it names (D221).
+`docs/evidence/villain-identity.md` is what was measured, and its §3 has every
+corpus count quoted in this file that moved when the corpus went from 19
+recordings to 20; PLAN.md's *Villain identity* has the status and the follow-ups.
+
+1. **A Villain is a person, and the rows dress it.** `figures.json`'s
+   `creature/subtype:villain` rung (the man's body) comes after robot, scientist,
+   spy, hero and soldier in `SUBTYPE_ORDER`, so it stands every Villain no earlier
+   rung claims — before it a black Human Villain had no rung and stood as a glow
+   disc. The rows in `traits.json` and `cues.json` say who each one is; a new AI
+   deck's villains start from the rung.
+2. **A mask is a face, and a cowl carries it from behind.** `mask` (a prop kind,
+   colour `tint`, in unit-head space like the eyepatch) and the `cowl` hairstyle
+   (`hairCowl`, the hair slot, a hood with a mantle to the shoulders) are shared
+   kinds. The mask tucks under the cowl's brow, and the raster's `ONE_SIDED`
+   names the cowl as its partner, so a masked row wears one. A row that wants its
+   cloth and its face in two colours puts the face on the tint.
+3. **A row the corpus cannot reach is named, never kept in silence.**
+   `traits.test.ts`'s `OFF_THE_TABLE` lists the Doom Legion rows no recording
+   puts on the table, each with why, reads their identity off a pose built from
+   the workshop catalog's facts, and fails the day a recording reaches one. Its
+   `OVER_THE_LINE` holds a recording whose crowded table is over report 13 §8.2's
+   line before any identity to its own measured prop kinds, while every other
+   recording keeps the 17.
+
+Three arena fixes came with the recording (D220), each a defect it was the first
+to show: the queue's rule 6 plays a land's two arrival events — its `zone` event
+onto the battlefield and its `land` event — as one arrival (every land with no
+row of its own rose twice); a wrapped rank's back row takes clicks at its card's
+own depth (`layout.ts`'s `proxySizeOf`, which `HitProxy` reads), so a click on a
+front card's centre is the front card's; and a back-row figure steps ±0.035 aside
+when every step back is covered, with `figure-pose.test.ts` telling a figure
+*boxed in* — nowhere clear on its card — from one standing on another card.
