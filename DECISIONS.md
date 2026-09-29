@@ -8332,8 +8332,10 @@ standing rules that go with it:
    or shared are the user's.
 5. **`~/forge` and `~/.forge` are never written** (D110.4).
 6. **The personal tier is never committed**: Tier 3's likeness models and anything
-   else marked personal-only (`committable: false` in `tools/assets-manifest.json`)
-   stay local and gitignored (D54).
+   else that is personal-only stay local and gitignored, recorded in
+   `tools/assets-manifest.json` as `committable: false` (none is yet). The
+   rule is report 13 §13 question 2's, restated in PLAN.md's *Tier 3 — a note, not
+   a plan*; D54 is the separate rule that every committed asset is CC0.
 
 **Rationale.** *The user commits* had stopped describing the practice: every lane
 since M7's slices committed on its own branch, with the session's co-author line,

@@ -23,9 +23,9 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
    in `cues/` import no renderer, no three, no React and start **no timer**.
    `web/test/liveness.test.ts` is a source scan that asserts every clause of
    that, and it is the file to extend when the arena grows a module. The two
-   board rules hold here unchanged and for the same reasons: **never gate a click
-   on `selectable`** (`HitProxy` has no such prop to gate on) and **render
-   `buttons.*.label` verbatim**.
+   board rules (`web/CLAUDE.md`, after M4's conventions) hold here unchanged and
+   for the same reasons: a click is never gated on `selectable` (`HitProxy` has
+   no such prop to gate on) and `buttons.*.label` is rendered verbatim.
 2. **`CardPlane` is THE card renderer of the arena**, exactly as `CardTile` is
    the board's (M4 convention 2), and for the identical reason: it is the
    renderer's half of hard rule 8. Every card in every zone goes through it —

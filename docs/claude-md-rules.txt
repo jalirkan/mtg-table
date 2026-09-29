@@ -1,7 +1,8 @@
-# docs/claude-md-rules.txt — every rule line of the CLAUDE.md files, one per line.
+# docs/claude-md-rules.txt — every rule line and bold span of the CLAUDE.md files, one per line.
 # Checked by web/test/claude-md.test.ts; regenerate with
 # CLAUDE_MD_RULES_WRITE=1 node --test web/test/claude-md.test.ts
-# (a rule line starts with **, "N. " or "- **"; link targets dropped, whitespace folded)
+# (a rule line starts with **, "N. " or "- **"; a "span: " entry is a bold span of
+# 20+ characters anywhere; link targets dropped, whitespace folded)
 **in full** — it is the spec, not background reading.
 1. **`GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in
 2. **`IGuiBase.isGuiThread()` must be
@@ -197,3 +198,352 @@
 - **Never touch `~/forge` or `~/.forge`** (*Never write outside this repo*,
 - **The personal tier is never committed**: Tier 3's likeness models and anything
 **A decision's number is final** (**D200**). A lane reserves a block of numbers
+span: does not play on the engine we run
+span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
+span: Never touch `forge.GuiDesktop`
+span: `IGuiBase.isGuiThread()` must be `"mtg-table-EDT".equals(Thread.currentThread().getName())`,
+span: The Forge view graph (`GameView` / `PlayerView` / `CardView`, `Tracker`) is walked ONLY on the game thread
+span: `isGameThread()` is not the whole rule.
+span: A fourth hop needs a fourth argument, in `DECISIONS.md`
+span: The lint counts them
+span: Never call `FModel.getDecks()`
+span: Do not call `Game.setNoGUIUser()`
+span: Both bans outlive the version that motivated them:
+span: Run the JVM with exactly:
+span: Licence is GPL-3.0-or-later for the whole repo.
+span: Hidden information: exactly one card-serialisation function,
+span: A library carries `count` plus only the cards `canBeShownTo` allows
+span: Every script must run from `/home/justin-a/code/mtg-table` as its working directory
+span: Never hardcode the jar path in Java.
+span: The lints are part of the build.
+span: `./tools/lint-bridge.sh --list-rules` is the list of what it rejects
+span: 1. what destroys the user's data
+span: 2. what the pinned jar lacks
+span: 3. the hidden-information accessors
+span: 4 and 4b. the two calls allowed exactly once
+span: 5. `CardView` outside the serialiser
+span: 6 and 7. threads and game-thread hops
+span: `CardView` in any scanned file other than `Snap.java`
+span: with a one-line justification
+span: three entries and is meant to stay short
+span: M3 added no fourth entry
+span: M6 added a second budgeted call: lint rule 4b, `StackItemView.getKey()` — allowed exactly once
+span: bridge-minted handle
+span: Every rule is proven to FIRE, on every build
+span: that rule's id and no other
+span: A rule with no case fails it
+span: every one of the eight thread names we create
+span: `tools/lint-bridge.sh` section 6
+span: The bootstrap sets three things before the first game, in every process, and the ordering around `FModel.initialize` is load-bearing.
+span: no hand-written card script, and no copy of a newer Forge's scripts, goes there to bring a new set in early
+span: set immediately after
+span: OpenJDK 21 JRE only — there is no `javac` binary.
+span: Never pass `--release`
+span: Do not install them.
+span: The engine: Forge 2.0.14 at `/home/justin-a/forge`, and only that.
+span: 39,383,858 bytes, sha256 `3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9`
+span: How it was obtained:
+span: The one exception is CI
+span: it must print the one above
+span: What may replace it (D109, D110):
+span: tagged official Forge release
+span: `~/forge` and `~/.forge` stay untouched, always
+span: Reality Fracture (FRA) is not in this engine.
+span: 19 ok, 31 missing, 0 broken
+span: `./scripts/play.sh` is the M3 command and M6's headline one
+span: M6 changed two defaults and PLAN.md §M6's one-line command is why.
+span: as long as the browser is connected
+span: Match setup (amendment M44, D105–D108) chose what the seat plays against.
+span: validated before `FModel.initialize`
+span: Two defaults, on purpose (D106):
+span: Every AI seat in every process goes through `Bootstrap.createAiPlayer(name, avatar, profile)`
+span: A profile is not a difficulty
+span: every AI deck is written from `decks/specs/<deck>.json` by `tools/build-deck.ts`, never typed
+span: Spectating (amendment M47, D118–D122) watches two AIs play.
+span: It is one seat's eyes
+span: The recorder is paced
+span: Follow mode is a transport
+span: `var/spectate/` is served by the dev server alone
+span: `hello_ok.match` only when asked
+span: M7 adds `--arena`, and it is one URL fragment.
+span: Since Tier 2's slice 2
+span: The gate, in one paragraph.
+span: Never write, move or rename anything under `/home/justin-a/forge` or `/home/justin-a/.forge`
+span: Claude commits on branches and merges to `main` when the full gate is green; the user owns pushes beyond that, releases and anything public
+span: A branch per lane, in a worktree of its own
+span: A skeptic before a merge
+span: The full gate on every merge
+span: Never touch `~/forge` or `~/.forge`
+span: The personal tier is never committed
+span: A decision's number is final
+span: no document states a total
+span: The living wire spec.
+span: verified headless boot recipe (§4)
+span: the spec the card library was built to
+span: The card library's manual
+span: Every reveal path in Forge
+span: The arena's spec (M7 Tier 1).
+span: Tier 2's asset landscape.
+span: Tier 2's spec, the manifestation stage.
+span: Why Forge stays 2.0.14
+span: no rules logic in the client
+span: default them to Opus
+span: enums go on the wire via `.name()`, never `toString()`
+span: nullable integers use `JsonOut.nInt`, never `n(String,long)`
+span: every `CardStateView`-derived key is written in both branches of the null-state check
+span: The socket's own two rules.
+span: 0 — infinite — while a client is connected
+span: and as of the M6 verification fix the two post-`over` waits obey the same rule
+span: no deadline while a client is connected
+span: one client at a time
+span: The `input` half is conditional as of amendment M42
+span: Two end-of-game rules from the 2026-09-27 hardening pass.
+span: An `act: newGame` sent the instant `over` arrives is QUEUED
+span: And an exception out of Forge's game loop fails the run
+span: `GET /health` is the session's readiness, not the port's
+span: and anything it sends in that window is dropped with no reply
+span: Playing the console game.
+span: the label is the engine's
+span: once `overEmitted` is set, only `over` is emitted
+span: The ask's push is not covered
+span: slightly ahead of the 2.0.14 jar we compile against
+span: never copy-paste from it
+span: confirm every signature with `javap` against the jar before using it
+span: That last sentence was true of the source checkout of 2026-09-11, and is no longer true of `IGuiGame` in Forge's later daily builds.
+span: run `./tools/javap-seam-diff.sh <pinned.jar> <other.jar>` before believing either paragraph
+span: There are 37 members and the class will not compile without it
+span: `check-all.sh` is what you run before saying you are done
+span: since the gate-speed lane it runs its steps CONCURRENTLY
+span: `GATE_JOBS=1` is the serial gate
+span: `WSPORT+0` .. `WSPORT+6`
+span: Every job boots Forge in a home of its own
+span: Only the last `GATE_KEEP_RUNS` runs are kept
+span: thirteen numbered steps
+span: step 6, the value-level drift check
+span: match setup added rows 11–14
+span: no Forge preferences file touched
+span: seven fresh `--transport ws` servers
+span: three games back to back over one socket
+span: It plays `decks/yield-probe.dck`
+span: Since the 2026-09-27 hardening pass 10g's server runs with `MTGTABLE_HOLD_GAME_END_MS=2000`
+span: Pass `WSPORT=<n>` if 8643 is busy
+span: Adding a step is adding a JOB
+span: Every JVM step runs under `timeout`
+span: CI runs the gate's engine-free half, and only that
+span: It is the one place anything downloads the engine, and the pin still holds there
+span: a self-test that starts needing `res/` fails CI first
+span: A green CI run is a subset of a green gate, never a substitute: `check-all.sh` is still what you run before saying you are done.
+span: Never pass `--pre-amendment` to `check-redaction.mjs`.
+span: `--client-log` is different and is safe to pass
+span: And never pass `--opponent-library-ok`,
+span: nothing in the repo passes it
+span: The narrator (D123) tells a frame log as a story, and it is hard rule 8's third reader.
+span: A name is read from the event's own frame or the one before it and never remembered
+span: A change to the narration is a `--write-golden` and a read diff, never a hand edit of the goldens.
+span: public card data, a tool beside the game, and nothing the game depends on.
+span: It is a tool, not a package, and the game never reads it
+span: reduced to the fields the library reads
+span: One door to Scryfall.
+span: A build writes a fresh file
+span: The route is dev-only, and it never fetches
+span: Every filter goes into the SQL before the scan cap
+span: The image cache is keyed by Scryfall id + size + face
+span: whole card images only
+span: `CardView` is the browser's card renderer, and it is not `CardTile`
+span: `#cards` unmounts the mode app
+span: `npm --prefix web test` is hermetic, and it is kept that way by `MTGTABLE_WS_LOGS`.
+span: Nothing under `web/src/render/` may import CSS at module level.
+span: `CardTile` is THE card renderer.
+span: M7's arena has its own single card renderer, `arena/scene/CardPlane.tsx`
+span: The card browser (`#cards`) draws library cards with `cards/CardView.tsx`
+span: The workshop (`#workshop`) draws its card LIST's thumbnails with one `<img>` of its own
+span: The story page (`#story`) draws a card image of its own
+span: The rect registry (`web/src/render/rects.ts`) is namespaced and set-valued.
+span: the id spaces collide
+span: a focused button keeps `Space` and nothing else
+span: Arrows are decoration and never the only channel
+span: Keep the testable half pure.
+span: never gate a click on `selectable`
+span: render `buttons.*.label` verbatim
+span: the dots are live as of M6
+span: no "hold priority" control
+span: 999 `node --test` + 121 vitest (8 files)
+span: A question is answered on the board iff EVERY one of its options is already drawn there
+span: what `Board.tsx` mounts
+span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
+span: Nothing new may be an in-flow child of `.table__middle`
+span: a tile = its own `--i`, `.bands` = 55, the `.zonerow__label` buttons = 60
+span: No React hook below a component's early return.
+span: whole suite stayed green
+span: Never decide what a control *does* by matching an engine string
+span: The probe policy is a flag, and a recording says which one it ran under.
+span: in memory, never `save()`
+span: Do not re-record a committed fixture with `--probe`
+span: A typed act earns its gate in `tools/ten-games.sh`'s sixth `ROWS` field — with its EFFECT, not just its count.
+span: every comfort feature is an engine feature rendered, never a client state machine.
+span: Every M6 field is OPTIONAL on the wire, and there is exactly one reader per field.
+span: A `hello_ok` whose `gameId` changed is a RESET, not an update
+span: A new cache goes in that method or it is a stale one.
+span: Two narrow relaxations of the hidden-information gate, and both are negative-controlled.
+span: A typed act earns its gate step by its EFFECT
+span: The four acts that produce no game event are pushed by `refreshState()`, and that hop is guarded twice
+span: The acts themselves are the other half
+span: No control for a feature Forge does not have.
+span: removed, not enabled
+span: the workshop is the arena pointed at one card: it draws with the arena's code and decides nothing the arena would not.
+span: the rebase-onto-slice-4 checklist and how it went
+span: D102–D104 are numbered after slice 4's D95–D101
+span: Downstream of the arena, and the coupling is a list
+span: Every arena export it uses is named in `Workshop.tsx`'s header comment
+span: Every board is a synthetic FRAME from `synthetic.ts`
+span: The frame loop is the arena's
+span: The duelists are not on the pedestal
+span: Tuning leaves the browser only by the clipboard
+span: Never add a path that writes `traits.json` or `cues.json` from the page, and never let the arena or the board read that key
+span: A page of its own, by `#cards`'s rules
+span: `links.ts` is the one workshop module another page imports
+span: the story is the narrator's text beside the replay's cursor — one narrator, one cursor, and nothing on the page the log did not show its seat.
+span: erasable TypeScript with no import at all
+span: A change to a sentence is a `--write-golden`, a read diff, and a look at the page
+span: A page over the replay, not a renderer
+span: It imports no transport
+span: Nothing but `main.tsx` imports `story/`
+span: The narration is re-told, never patched
+span: Hard rule 8 on the page is a rendering test, with a control
+span: A new surface on the page is a new row in that sweep.
+span: One cursor, across the page's views
+span: only if the viewer had paused
+span: the arena is a RENDERER.
+span: It decides nothing, and that is mechanical.
+span: `CardPlane` is THE card renderer of the arena
+span: 84,418 placements in 3,679 frames
+span: `layout(state)` is authoritative; a cue only ever adds an offset that decays to identity
+span: Do not animate the scene graph directly
+span: Cues are DATA, and the table is exhaustive by type.
+span: a cue keys off an event that is about THAT card.
+span: One `useFrame`, one geometry, and no allocation in the hot path.
+span: fixed pool of meshes
+span: the cue clock does not run while the queue is idle
+span: `<Canvas frameloop>` is `CueRunner`'s ref, never a literal
+span: And the ref's setter is React state
+span: The DOM layer over the canvas is `pointer-events: none`, so every widget in it must opt back in.
+span: cover every component mounted there
+span: The arena chunk must stay lazy
+span: Since the workshop the arena's scene is a chunk two lazy pages share
+span: `tools/arena-bench.mjs` is not in the gate
+span: the arena is still a renderer, and a manifestation is a pose.
+span: If the snapshot says it, it is a POSE; if only the event says it, it is a CUE
+span: The defect this prevents is a renderer that remembers.
+span: Its fate is the queue's, not the clip lane's
+span: `figurePose` is THE pose and `FigureLayer` is THE figure renderer
+span: `layout.ts` is still the only module that knows a coordinate
+span: The width clamp is strict for every archetype
+span: a wrapped rank's back row stands ON its own card
+span: face-down creature is always the anonymous disc
+span: The clip lane is scrubbed, never ticked
+span: every `mixer.update` under `web/src/arena/` is the literal `0`
+span: Never use drei's `useAnimations`
+span: The stance and the cue are always two actions
+span: Only CC0 assets, each with a written provenance — no Mixamo, and nothing from card art
+span: never drei's `useGLTF`
+span: `meshopt` is the last step
+span: `prune --keep-attributes true` after `unlit`
+span: verifies every source's bytes and sha256
+span: The scene has no lights, and an idle table still renders nothing
+span: only while the queue is awake
+span: The "allocates nothing" claim is a liveness clause now
+span: Bloom is the one post pass, and it is lazy
+span: With bloom on, `gl.info.render` counts one call
+span: Every performance number must say what drew it.
+span: `g1.jsonl` at transport index 316
+span: headless Chromium parks on `frameloop='demand'` exactly as the browser pane does
+span: a camera view is a POSE and the director is a PURE FUNCTION
+span: A view is a row of data in `camera.ts`'s `VIEWS`, and `camera.ts` is still pure.
+span: The chosen view is `CameraDirector.home`
+span: A view is usable at a live seat iff `keepsSeat`
+span: and no point of the seat's own land and creature rank lines covered by a seven-card hand fan
+span: A view that fails is spectator-only — never "allowed with a DOM hand strip"
+span: The auto director is `directShot(beats, shot, now)` and `beatsOf(events, lookup)`, both pure
+span: combat and the outcome are exempt from
+span: Rule 5 is about a live SEAT, `change` is the user's only under their hand, and the choice lives in this browser
+span: every access in `Arena.tsx`, inside `try`
+span: The camera keys are keymap rows, and on the board they are `inert`
+span: `reset()` and `K` snap the camera home
+span: camera cues play in replays of human games
+span: a card reads as ITSELF through data, and every piece of that data is a pose.
+span: Identity is `figures/traits.json`, validated like `cues.json`
+span: A prop is a SHARED KIND from `figures/props.ts`'s closed kit, procedural and instanced — one draw call per kind on the table, never per figure.
+span: Size is identity, and so is the side it is on
+span: the opponent's figures show that view their BACKS
+span: Several bodies are still one pose
+span: The prop field rides the one frame loop
+span: ONE definition of a figure's front
+span: Since D143 a seat's figures face the OPPONENT
+span: An attacker FACES its defender while it attacks
+span: A beat is drawn on the BODY, and every cue param is closed
+span: An aim is the stack's, or nothing
+span: Overhead and beside things cover nothing from the table view, and nothing goes under the HUD
+span: An attachment's card lies UNDER its host
+span: a person is a costume painted on a shared body, and a duelist is a seat's pose.
+span: A costume is a SLOT per vertex and a PALETTE per figure, written at COMMIT
+span: per-material uniform array
+span: Only `holoMaterial.ts`'s `applyCostume` writes a costume colour
+span: A body belongs to a FAMILY, and every prop kind is fitted per family
+span: The library is rebuilt by measurement, and the chibi is a FLAG
+span: a humanoid model must have an `idle`
+span: A duelist is a SEAT's pose, and its gestures are cues
+span: A seat, never a player
+span: The stance is a pose from `board.gameOver` alone
+span: A gesture is a `gesture` PARAM on an existing cue, never a new cue id
+span: `duelistLane(player)` = −1,000,000 − player
+span: `scene/DuelistLayer.tsx` is THE duelist renderer
+span: Where a duelist stands is MEASURED against the camera, and the camera never moves for it
+span: the one coordinate outside `layout.ts`
+span: Anything placed at the far end of the table is under the chrome
+span: The seat plates are keep-outs too
+span: the opponent's plate never leaves the `HUD_TOP_PX` band
+span: a plate is four rows and every row is one line
+span: A new line on a plate is a new row
+span: the look is a number written at commit, and the comic look is the hologram's program painted, not a second renderer.
+span: D137–D146 were written as D120–D129
+span: One program, one number, and `look.ts` holds every number
+span: Black is blue with blue highlights
+span: The look is written at commit, never in the frame loop
+span: A cue that animates the look writes `uMaterialize`
+span: What is not yet real stays a hologram
+span: The ink is bloom's, it inks only what is PAINTED, and the composer must not rebuild
+span: no card, tile or table edge is ever inked
+span: A mount-time prime compiles for the target the frames are drawn into
+span: A seat's own figures face the opponent
+span: The workshop opens on `1× front`
+span: The look's own budget is its evidence's
+span: a comic's motion is still a cue — a pure function of its own `t` that decays to identity — and "off" is the film before it.
+span: D147–D155 were written as D130–D138
+span: Comic FX is a switch stamped at enqueue, and off is op-for-op the old film
+span: Ink is a shape, and the kit grew by one kind
+span: beside the body, never across its card
+span: On the frame loop a texture is a LOOKUP
+span: The summon is an offset; the look is LOOK's
+span: An arrival is summoning-sick, which LOOK draws half hologram (D142), so a summon resolves from hologram to HALF ink
+span: On twos is a quantisation of each cue's progress in the queue
+span: An impact shake is `camera.ts`'s own, shake-only, priority 0, one per cue
+span: And a star never hides that body
+span: a card's attitude, head and cloth are shared data on the shared bodies, and its art lends colour only where no row speaks.
+span: D156–D165 were written as D140–D149
+span: A resting pose is a model VARIANT, derived at load
+span: Judge a pose from above
+span: A lean bends the spine from the waist
+span: A figure that mounts in a held stance lands in it
+span: A thing worn round the skull fits the head it is on
+span: An expression is a pose
+span: Cloth drapes as a chain of rigid panels on joints
+span: A skirt link never rides a leg bone outright
+span: A coat is cut to the body it is on
+span: The art palette is the LOWEST rung, runtime only, face up only
+span: nothing derived from card art is committed
+span: The costume never takes the art rung
+span: It is drawn since the lanes' merge
+span: Each gate has a hostile case only it stops
+span: The library's budget is the manifest's
+span: Headroom is gone at @316
+span: 90 calls and 29,521 triangles

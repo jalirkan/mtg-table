@@ -31,10 +31,12 @@ changing, and the others when a change crosses into them.
 | [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, and the card library with the `#cards` browser. |
 | [`tools/README.md`](tools/README.md) | Every script under `tools/` — what it is for, whether the gate runs it, whether it needs the engine — and *Commands, by task*: every command *Build and run* below does not keep. |
 
-Each rule is written once. `web/test/claude-md.test.ts` fails on a rule that
-appears in two of these files, on one that vanished from them, and on one missing
-from `docs/claude-md-rules.txt`, the manifest it keeps; change a rule on purpose
-by regenerating the manifest, as that test's header says.
+Each rule is written once. `web/test/claude-md.test.ts` fails on a rule — a line
+that opens bold or numbered, or a bold span of 20 or more characters anywhere —
+that appears in two of these files, on one that vanished from them, on one
+missing from `docs/claude-md-rules.txt`, the manifest it keeps, and on a link or
+`#anchor` that does not resolve; change a rule on purpose by regenerating the
+manifest, as that test's header says.
 
 ## The eleven hard rules
 
@@ -281,8 +283,9 @@ code; if you think one is wrong, say so in prose first.
     (`FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
     prints its sha256 — **it must print the one above** — and every recording's
     session header carries it as `forgeJarSha256` (all 18 committed
-    `fixtures/games/` recordings name this build). Nothing asserts the hash yet;
-    report 14 §5.2 is the specified, unbuilt mechanism for the day.
+    `fixtures/games/` recordings name this build). CI's `bridge` job asserts the
+    hash on every run (`sha256sum -c`, **D202**); nothing asserts it locally yet,
+    and report 14 §5.2 is the specified, unbuilt local mechanism.
   - **What may replace it (D109, D110):** only an asset of a **tagged official
     Forge release**, one engine at a time, unpacked under the repo's gitignored
     `var/forge-engine/<version>/` — never Forge's rolling `daily-snapshots` build,
@@ -448,9 +451,11 @@ as **48 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
 desktop), each after the jobs it depends on; `GATE_JOBS=1` is the serial gate,
 the same checks as 32 jobs one after another. From a deleted `bridge/out` it
 takes about **four minutes** at `GATE_JOBS=4` (239.0 s and 240.5 s on
-`102fb1f`; 259.2 s on the docs block's `502ad9d`, whose code is `102fb1f`'s), about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
-about **fifteen** serially (907.4 s on `f6bad35`); each of those commit messages
-carries its runs. Every run leaves a log per job, `gate.log` and a timing table
+`102fb1f`; 259.2 s on the docs block's `502ad9d`, whose code is `102fb1f`'s),
+about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
+about **fifteen** serially (907.4 s on `f6bad35`). `102fb1f`, `6b35054` and
+`f6bad35` carry their runs in their own commit messages; the docs block's run
+is in `1d08248`'s. Every run leaves a log per job, `gate.log` and a timing table
 under `var/check-all/<run>/`, and only the last `GATE_KEEP_RUNS` runs (default
 20) are kept. What each step checks is `tools/CLAUDE.md`; every earlier timing
 is `docs/evidence/gate-history.md`.
@@ -496,9 +501,9 @@ that go with it:
 - **Never touch `~/forge` or `~/.forge`** (*Never write outside this repo*,
   above).
 - **The personal tier is never committed**: Tier 3's likeness models and anything
-  else marked personal-only (`committable: false` in
-  `tools/assets-manifest.json`) stay local and gitignored (**D54**; PLAN.md's
-  *Tier 3 — a note, not a plan*).
+  else that is personal-only stay local and gitignored, recorded in
+  `tools/assets-manifest.json` as `committable: false` (none is yet) —
+  PLAN.md's *Tier 3 — a note, not a plan* and report 13 §13 question 2.
 
 ## Decision numbers
 

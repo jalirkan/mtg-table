@@ -1189,7 +1189,7 @@ For a change that touches the frame format, add:
 ./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 \
     --out fixtures/games/g1.jsonl
 node tools/check-redaction.mjs fixtures/games/g1.jsonl
-cd web && npm run typecheck && npm test
+npm --prefix web run typecheck && npm --prefix web test
 ```
 
 `check-redaction.mjs` reads the recorded log and proves the hidden-information
@@ -1200,8 +1200,12 @@ Two more habits worth adopting:
 - **When you change the wire format, change `docs/protocol.md` first.** Both the
   Java emitter and the TypeScript reducer are written against it; the document
   is the contract, not a description of the code.
-- **Don't commit.** The user commits their own work. Leave the change in the
-  working tree and say what you changed.
+- **Commit on your lane's branch, never straight onto `main`.** A lane works in
+  a worktree on a branch of its own and merges to `main` only when the full gate
+  is green; pushes, releases and anything public are the user's. The rule and
+  its standing rules are the root `CLAUDE.md`'s
+  [*Commits, branches and merges*](../../CLAUDE.md#commits-branches-and-merges)
+  (**D201**).
 
 ### Reading a Java stack trace
 
