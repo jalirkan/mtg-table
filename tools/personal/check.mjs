@@ -39,8 +39,22 @@
  *      every `_l` joint, and the vertices it carries, is on the agent's side
  *      (+x); each foot's vertices are in front of its ankle (a left/right swap
  *      turns the whole figure round, and the feet then point backwards); and
- *      every segment points within 60° of the agent's. Prints the joint-coverage
- *      table (weight, vertices, rotation) and the side, facing and shape lines.
+ *      the branches (pelvis → thigh, spine_03 → clavicle) and the toes point
+ *      within 60° of the agent's. Prints the joint-coverage table (weight,
+ *      vertices, rotation) and the side, facing and shape lines;
+ *  3b. judges the LIMBS against the `agent` body (`judgeLimbs`, D193), because a
+ *      map that swaps two joints of a chain — the forearm and the hand — passes
+ *      step 3 and the bounds: each link of the spine (pelvis … Head), the arms
+ *      (upperarm → lowerarm → hand) and the legs (thigh → calf → foot) points
+ *      within 25° (the limbs) or 45° (the spine and the neck) of the agent's —
+ *      the arm links by construction under `--pose t`, which turns them — each
+ *      limb's second link is within 1/1.6–1.6× the agent's proportion to its
+ *      first, each limb joint's vertices lie AHEAD of it along its link (a fold
+ *      carries them behind), and at attack t = 0.5 both hands, both feet and
+ *      the head move into the agent's half-space.
+ *
+ * The closing OK line lists what was judged and nothing else: the rotation
+ * columns hold by construction and are printed as a sanity check, not claimed.
  *
  * Then, unless `--no-preview`, it renders turntables — front, side, back and a
  * mid-attack frame, plus a sheet of all four, and the kneel and the death from
@@ -53,7 +67,12 @@
  * and is deleted after it, its disk cache is sized to nothing, and every answer
  * is `no-store`. **No network**: background services are off and every host
  * name resolves to nothing (`--host-resolver-rules`), and Chromium's own net
- * log, read back before the profile goes, must name no host but 127.0.0.1.
+ * log, read back before the profile goes, must show no connection, byte, DNS
+ * query or answer beyond 127.0.0.1, and an HTTP cache that keyed no entry for
+ * any other host (D193: the omnibox's AI-mode eligibility request keyed one for
+ * www.google.com until `AimServerRequestOnStartupEnabled` was turned off). The
+ * profile itself is read before it is deleted, and must hold no copy of
+ * `model.glb`.
  *
  * Exit 0 when every assertion holds, 1 otherwise.
  */
@@ -64,7 +83,24 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { extname, join, normalize, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { CORE_JOINTS, insideSlug, judgeBody, netLogReport, OUR_JOINTS, REPO, SEGMENT_LIMIT_DEG, slugDir, THREE, validateManifest, WEB } from './lib.mjs';
+import {
+  CORE_JOINTS,
+  END_MOVE_MIN,
+  FLESH_AGENT_MIN,
+  insideSlug,
+  judgeBody,
+  judgeLimbs,
+  LIMB_LENGTH_BAND,
+  netLogReport,
+  OUR_JOINTS,
+  profileReport,
+  REPO,
+  SEGMENT_LIMIT_DEG,
+  slugDir,
+  THREE,
+  validateManifest,
+  WEB,
+} from './lib.mjs';
 import { worldDeltaRetarget } from './retarget.mjs';
 
 const { GLTFLoader } = await import(pathToFileURL(join(WEB, 'node_modules/three/examples/jsm/loaders/GLTFLoader.js')).href);
@@ -104,6 +140,8 @@ const check = (ok, message) => {
   if (!ok) failures.push(message);
   return ok;
 };
+/** What was judged, for the closing line: each entry says what held (filled in as the steps run). */
+const judgedList = [];
 
 // ---------------------------------------------------------------------------
 // Loading, in Node
@@ -241,6 +279,7 @@ for (const [key] of CLIPS) {
   console.log(`   ${key.padEnd(7)} ${models.models.agent.clips[key].padEnd(40)} worst joint ${worst.toFixed(2)}°`);
 }
 check(worstSelf < 2, `the retarget does not reproduce the build's hero clips (worst ${worstSelf.toFixed(2)}° ≥ 2°)`);
+judgedList.push(`the retarget reproduces the build's own hero clips (worst joint ${worstSelf.toFixed(2)}°)`);
 console.log(`   worst over five clips × five phases × 22 joints: ${worstSelf.toFixed(2)}° (the clips are meshopt-compressed, so not 0)`);
 
 // ---------------------------------------------------------------------------
@@ -350,6 +389,7 @@ console.log(
 );
 check(rest.finite, 'the rest pose has a non-finite vertex');
 check(restError <= 0.001 * height, `at rest the skin moves a vertex ${restError.toFixed(4)} m from where the file puts it (an inverse bind matrix disagrees with its joint)`);
+judgedList.push(`the skeleton is root + our 22 joints and the skin draws every vertex where the file puts it at rest (${(restError * 1000).toFixed(3)} mm)`);
 
 // ---------------------------------------------------------------------------
 // 2 — OUR clips, on it
@@ -422,6 +462,9 @@ for (const r of rows) {
       (r.cloakOff !== null ? `  cloak ${r.cloakOff.toFixed(3)} m off spine_02's carry (moved ${r.cloakMoved.toFixed(2)} m, spine ${r.spineMoved.toFixed(2)} m)` : ''),
   );
 }
+judgedList.push(
+  `our five clips at t = 0, 0.5 and 1 draw finite bones and vertices inside 1.5× the rest's largest side (at most ${Math.max(...rows.map((r) => r.side / restSide)).toFixed(2)}×)${cloakRest !== null ? ', and the rule-skinned parts follow the spine' : ''}`,
+);
 if (cloakRest !== null) {
   const die = rows.filter((r) => r.where.startsWith('die'));
   const most = die.reduce((a, r) => (r.spineMoved > a.spineMoved ? r : a), die[0]);
@@ -541,10 +584,71 @@ console.log(
 );
 const worstSegment = judged.segments.filter((x) => x.deg !== null).reduce((a, x) => (x.deg > a.deg ? x : a), { deg: -1 });
 console.log(
-  `   shape   ${String(judged.segments.filter((x) => x.deg !== null && x.deg <= SEGMENT_LIMIT_DEG).length)}/${String(judged.segments.length)} segments within ${String(SEGMENT_LIMIT_DEG)}° of the agent's; widest ${worstSegment.a} → ${worstSegment.b} ${worstSegment.deg.toFixed(1)}°`,
+  `   shape   ${String(judged.segments.filter((x) => x.deg !== null && x.deg <= SEGMENT_LIMIT_DEG).length)}/${String(judged.segments.length)} branches and toes (pelvis → thigh, spine_03 → clavicle, foot → ball) within ${String(SEGMENT_LIMIT_DEG)}° of the agent's; widest ${worstSegment.a} → ${worstSegment.b} ${worstSegment.deg.toFixed(1)}° (the chains are 3b's)`,
 );
 for (const w of judged.warnings) console.log(`   WARN    ${w}`);
 for (const p of judged.problems) console.log(`   FAIL    ${p}`);
+const sidesOk = sideRows.filter((x) => x.ok).length;
+const feetForward = ['l', 'r'].filter((x) => (judged.facing[x]?.forward ?? 0) > 0.005 * bodyModel.height && (judged.facing[x]?.agent ?? 0) > 0).length;
+judgedList.push(
+  `the rig map, against the agent body: ${String(weighted)}/${String(OUR_JOINTS.length)} joints carry weight, ${String(sidesOk)}/${String(sideRows.length)} sides the agent's, ${String(feetForward)}/2 feet in front of their ankles, ${String(judged.segments.filter((x) => x.deg !== null && x.deg <= SEGMENT_LIMIT_DEG).length)}/${String(judged.segments.length)} branches and toes within ${String(SEGMENT_LIMIT_DEG)}°`,
+);
+
+// ---------------------------------------------------------------------------
+// 3b — the limbs: each link's direction, length and flesh, and the ends at attack t = 0.5 (D193)
+// ---------------------------------------------------------------------------
+
+// A map that swaps two joints of a chain (the forearm and the hand) passes every
+// check above: the rotations by construction, the weight still on 22 joints, the
+// sides right, and the bounds cannot see a fold — the arm gets SHORTER. What it
+// changes is where each link points, how long it is against its neighbour, and
+// which side of its joint its flesh lies on (lib.mjs `judgeLimbs`).
+modelRest();
+agentRest();
+const attackClip = retargeted.get('attack');
+const agentAttackClip = clipNamed(models.models.agent.clips.attack);
+const jointsNow = (bone) => Object.fromEntries(OUR_JOINTS.map((j) => [j, new THREE.Vector3().setFromMatrixPosition(bone(j).matrixWorld).toArray()]));
+let stopAttack = sample(modelRoot, attackClip, 0.5 * agentAttackClip.duration);
+const attackModel = jointsNow(target.bone);
+stopAttack();
+modelRest();
+stopAttack = sample(agentRoot, agentAttackClip, 0.5 * agentAttackClip.duration);
+const attackAgent = jointsNow(agent.bone);
+stopAttack();
+agentRest();
+const fix = manifest?.pose?.fix ?? 't';
+const limbs = judgeLimbs(bodyModel, bodyAgent, { rig: manifest?.rig ?? {}, fix, attack: { body: attackModel, agent: attackAgent } });
+for (const p of limbs.problems) failures.push(p);
+console.log('\n3b. limbs — each link of the spine, the arms and the legs at rest against the agent\'s: where it points (child joint − joint), how long it is');
+console.log('   against the link before it, and where the vertices its joint carries lie along it (0 at the joint, 1 at the child; below 0 the');
+console.log(`   limb is folded back on itself); then where each chain's end moved at attack t = 0.5 (the cosine against the agent's move)`);
+console.log(`   ${'link'.padEnd(24)} ${'dir°'.padStart(6)} ${'limit'.padStart(5)} ${'length×'.padStart(8)} ${'flesh'.padStart(6)} ${'agent'.padStart(6)}`);
+for (const l of limbs.links) {
+  const length = limbs.lengths.find((x) => x.second === `${l.a} → ${l.b}`);
+  const note = l.skipped ? '  (a synthesised joint: not judged)' : l.turned && l.deg !== null ? '  (turned onto the agent\'s by prepare\'s A → T: by construction)' : '';
+  console.log(
+    `   ${`${l.a} → ${l.b}`.padEnd(24)} ${(l.deg === null ? '—' : l.deg.toFixed(1)).padStart(6)} ${String(l.limit).padStart(5)} ${(length ? `${length.times.toFixed(2)}` : '—').padStart(8)} ${(l.flesh === null ? '—' : l.flesh.toFixed(2)).padStart(6)} ${(l.agentFlesh === null ? '—' : l.agentFlesh.toFixed(2)).padStart(6)}${note}`,
+  );
+}
+const dirJudged = limbs.links.filter((l) => l.deg !== null);
+const dirMeasured = dirJudged.filter((l) => !l.turned);
+const fleshJudged = limbs.links.filter((l) => l.flesh !== null && l.agentFlesh !== null && l.agentFlesh >= FLESH_AGENT_MIN);
+const endsJudged = limbs.ends.filter((e) => e.judged);
+console.log(
+  `   direction ${String(dirJudged.filter((l) => l.deg <= l.limit).length)}/${String(dirJudged.length)} links within their limit (${String(dirMeasured.length)} measured, ${String(dirJudged.length - dirMeasured.length)} arm links turned by prepare); ` +
+    `length ${String(limbs.lengths.filter((x) => x.ok).length)}/${String(limbs.lengths.length)} limbs inside ${(1 / LIMB_LENGTH_BAND).toFixed(2)}–${LIMB_LENGTH_BAND.toFixed(1)}× the agent's proportion; ` +
+    `flesh ${String(fleshJudged.filter((l) => l.flesh > 0).length)}/${String(fleshJudged.length)} limb joints carry their vertices ahead of them`,
+);
+console.log(
+  `   ends at attack t = 0.5: ${limbs.ends.map((e) => `${e.joint} ${e.cos === null ? '—' : e.cos.toFixed(2)}${e.judged ? '' : ' (moved under ' + String(END_MOVE_MIN * 100) + '%: not judged)'}`).join(', ')}`,
+);
+for (const w of limbs.warnings) console.log(`   WARN    ${w}`);
+for (const p of limbs.problems) console.log(`   FAIL    ${p}`);
+judgedList.push(
+  `the limbs, against the agent body: ${String(dirJudged.filter((l) => l.deg <= l.limit).length)}/${String(dirJudged.length)} links point within their limit (${String(dirMeasured.length)} measured, the arm links turned by prepare), ` +
+    `${String(limbs.lengths.filter((x) => x.ok).length)}/${String(limbs.lengths.length)} limbs in proportion, ${String(fleshJudged.filter((l) => l.flesh > 0).length)}/${String(fleshJudged.length)} limb joints carry their flesh ahead of them, ` +
+    `and ${String(endsJudged.filter((e) => e.ok).length)}/${String(endsJudged.length)} chain ends move the agent's way at attack t = 0.5`,
+);
 modelRest();
 agentRest();
 
@@ -567,9 +671,9 @@ function finish() {
     console.log(`\nFAIL — ${String(failures.length)} assertion(s):\n  ${failures.join('\n  ')}`);
     process.exit(1);
   }
-  console.log(
-    `\nOK — ${slug} takes our clip set: its skin weight, sides, facing and skeleton match the agent body's; every joint that moves on the agent moves on it, by the same world-space delta; nothing exploded; the rule-skinned parts follow the spine.`,
-  );
+  // Only what was judged (the rotation columns hold by construction and are not a finding).
+  console.log(`\nOK — ${slug}: every assertion above held —\n  ${judgedList.join(';\n  ')}.`);
+  console.log(`  How it looks is the previews' to show (${PREVIEW ? `personal/models/${slug}/preview/` : 'not rendered: --no-preview'}).`);
   process.exit(0);
 }
 
@@ -642,7 +746,10 @@ async function previews() {
       '--no-first-run',
       '--no-default-browser-check',
       '--no-proxy-server',
-      '--disable-features=SpellcheckService,OptimizationHints,Translate,MediaRouter,AutofillServerCommunication,CertificateTransparencyComponentUpdater,NetworkTimeServiceQuerying',
+      // AimServerRequestOnStartupEnabled: the omnibox's AI-mode eligibility
+      // request (www.google.com/async/folae) — without it off, the HTTP cache
+      // keyed a google.com entry even though the resolver answered "not found".
+      '--disable-features=SpellcheckService,OptimizationHints,Translate,MediaRouter,AutofillServerCommunication,CertificateTransparencyComponentUpdater,NetworkTimeServiceQuerying,AimServerRequestOnStartupEnabled',
       '--disable-default-apps',
       '--disable-extensions',
       '--disable-component-extensions-with-background-pages',
@@ -719,7 +826,17 @@ async function previews() {
     } catch (err) {
       failures.push(`preview: Chromium's net log could not be read (${err.message}), so "no network" is not proven`);
     }
+    // What the profile kept, read before it goes: the HTTP cache's entry files,
+    // and any file holding a copy of the model (three 64-byte cuts of its binary chunk).
+    const glb = readFileSync(modelPath);
+    const binAt = 20 + glb.readUInt32LE(12) + 8;
+    const samples = [0.25, 0.5, 0.75].map((f) => glb.subarray(binAt + Math.floor(f * (glb.length - binAt - 64)), binAt + Math.floor(f * (glb.length - binAt - 64)) + 64));
+    const kept = profileReport(profile, { samples, skip: [netLog] });
     rmSync(profile, { recursive: true, force: true });
+    console.log(
+      `   profile (read before it is deleted): ${String(kept.files)} files, ${(kept.bytes / 1e6).toFixed(2)} MB; HTTP cache entry files left ${String(kept.cacheFiles.length)}; files holding a copy of model.glb ${String(kept.copies.length)}${kept.copies.length > 0 ? ` (${kept.copies.join(', ')})` : ''}`,
+    );
+    if (kept.copies.length > 0) failures.push(`preview: the browser's profile kept a copy of model.glb: ${kept.copies.join(', ')}`);
     if (net !== null) {
       const tried = [...net.attempted].map(([h, n]) => `${h} ×${String(n)}`).join(', ');
       console.log(
@@ -730,6 +847,13 @@ async function previews() {
       if (net.sentAway.length > 0) failures.push(`preview: the browser sent bytes beyond the loopback: ${net.sentAway.join(', ')}`);
       if (net.dnsQueries > 0) failures.push(`preview: the browser made ${String(net.dnsQueries)} DNS queries (the resolver rule should answer every name)`);
       if (net.answered.length > 0) failures.push(`preview: a request beyond the loopback was answered: ${net.answered.join(', ')}`);
+      console.log(
+        `   HTTP cache (Chromium's own net log): ${String(net.cacheEntries)} entries keyed, by host: ${[...net.cacheHosts].map(([h, n]) => `${h} ×${String(n)}`).join(', ') || 'none'}`,
+      );
+      if (net.cacheAway.length > 0) failures.push(`preview: the browser's HTTP cache keyed an entry for a host beyond the loopback: ${net.cacheAway.join(', ')}`);
+      judgedList.push(
+        `the preview browser opened no TCP connection, sent no byte and made no DNS query beyond 127.0.0.1, its HTTP cache keyed ${String(net.cacheEntries)} entries, all for 127.0.0.1, and its profile held no copy of model.glb before it was deleted`,
+      );
     }
   }
 }

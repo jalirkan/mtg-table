@@ -48,10 +48,13 @@ in `DECISIONS.md`, and a change that crosses one will not be merged.
   texture enters through `tools/assets-manifest.json` — its URL, bytes, sha256,
   date and the licence badge as it read that day — and nothing comes from Mixamo
   or is generated from card art.
-- **The personal tier is never committed** (**D201**; PLAN.md's *Tier 3 — a
-  note, not a plan*): a likeness model of a Marvel character (Tier 3), or anything
-  else that is personal-only, stays local and gitignored, recorded in the manifest
-  as `committable: false`.
+- **The personal tier is never committed** (**D201**, **D190**; PLAN.md's *Tier 3
+  — a note, not a plan*): a likeness model of a Marvel character (Tier 3), or
+  anything else that is personal-only, stays local and gitignored, under
+  `/personal/`, its provenance in its own folder (`docs/guides/personal-tier.md`).
+  *(Corrected 2026-09-28, when the personal tier merged: this said such a file is
+  recorded in the manifest as `committable: false`, which D190 rejected — the
+  manifest is the committed CC0 library's.)*
 - **No proxy of Scryfall** (**D90**, **D92**): the card library's image route
   exists only in the Vite dev server and never fetches; anything at scale is
   Scryfall's bulk file, through `tools/card-library/scryfall.ts`, the one door.

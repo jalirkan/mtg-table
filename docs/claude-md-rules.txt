@@ -15,6 +15,7 @@
 7. **Licence is GPL-3.0-or-later for the whole repo.** Copy **no** code from
 8. **Hidden information: exactly one card-serialisation function,** and exactly
 - **A library carries `count` plus only the cards `canBeShownTo` allows** (a
+**A personal model is a statement about what a card is, too** (**D190**): it
 9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
 10. **The lints are part of the build.** `tools/lint-bridge.sh` runs from
 **and `tools/`** (**D182** — `tools/audit-deck/AuditDeck.java` boots the same
@@ -50,14 +51,23 @@
 **`var/spectate/` is served by the dev server alone** (`web/src/spectate/devRoute.ts`,
 **`hello_ok.match` only when asked** (`--match` or a profile flag): a bare
 **M7 adds `--arena`, and it is one URL fragment.** The arena is a second
+**The gate, in one paragraph.** `./tools/check-all.sh` is what you run before
+**Claude commits on branches and merges to `main` when the full gate is green;
+- **A branch per lane, in a worktree of its own** (`git worktree add
+- **A skeptic before a merge**: an independent review of the lane's diff and its
+- **The full gate on every merge**: `./tools/check-all.sh`, green, from a deleted
+- **Never push a lane.** Pushing, tags, releases, pull requests and anything
+- **Never touch `~/forge` or `~/.forge`** (*Never write outside this repo*,
+- **The personal tier is never committed**: Tier 3's likeness models and anything
+**D190** and `docs/guides/personal-tier.md`, and `tools/CLAUDE.md`'s *The
+**A decision's number is final** (**D200**). A lane reserves a block of numbers
 **The socket's own two rules.** The ask timeout over ws is **0 — infinite —
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 **`GET /health` is the session's readiness, not the port's** (amendment M15): 503
 **and anything it sends in that window is dropped with no reply** (amendment M20
 **Playing the console game.** `--transport console` is a real seat: it prints the
 **D35**'s ceilings, so for those two `AskSelfTest` is the only check that runs at
-**The narrator (D123) tells a frame log as a story, and it is hard rule 8's
-**The gate, in one paragraph.** `./tools/check-all.sh` is what you run before
+**That last sentence was true of the source checkout of 2026-09-11, and is no
 **Only the last `GATE_KEEP_RUNS` runs are kept** (default **20**, this one
 **D121**, because their order follows HotSpot identity hashes;
 **9c**, **M5's exit criterion** (`tools/ten-games.sh`: ten consecutive
@@ -67,10 +77,23 @@
 **Adding a step is adding a JOB** (D129): a function that prints its own `===`
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
 **CI runs the gate's engine-free half, and only that**
-**`npm --prefix web test` is hermetic, and it is kept that way by
 **Never pass `--pre-amendment` to `check-redaction.mjs`.** It downgrades a
 **`--client-log` is different and is safe to pass** (amendment M17): it relaxes
 **And never pass `--opponent-library-ok`,** which gets the identical treatment:
+**The narrator (D123) tells a frame log as a story, and it is hard rule 8's
+1. **It is a tool, not a package, and the game never reads it** (**D90**,
+**D91**). No `package.json`, no npm dependency: `node:sqlite` with FTS5, `fetch`,
+2. **One door to Scryfall.** `tools/card-library/scryfall.ts`'s `ScryfallClient`
+3. **A build writes a fresh file** (**D91**): `cards.sqlite.building`, then
+4. **The route is dev-only, and it never fetches** (**D92**). `/cards/api/*` and
+5. **The image cache is keyed by Scryfall id + size + face** (**D93**).
+6. **`CardView` is the browser's card renderer, and it is not `CardTile`**
+1. **It is never committed, and the ignore rule is anchored** (**D190**).
+2. **Claude never sources a model.** The user downloads, with their own account,
+3. **A tool writes only inside its slug's folder.** Every path goes through
+4. **A prepared model speaks OUR rig** (**D191**). `prepare.mjs` rebuilds the
+5. **There is one retarget, and it is proven.** `tools/personal/retarget.mjs` is
+**`npm --prefix web test` is hermetic, and it is kept that way by
 1. **Nothing under `web/src/render/` may import CSS at module level.** There is
 **`node`** environment, and neither can load a stylesheet; a component that
 2. **`CardTile` is THE card renderer.** Every card in every zone — battlefield,
@@ -96,6 +119,18 @@
 5. **The four acts that produce no game event are pushed by `refreshState()`, and
 **and** a positive "the engine is parked" predicate; a skipped refresh is
 6. **No control for a feature Forge does not have.** D31's "hold priority" toggle
+1. **Downstream of the arena, and the coupling is a list** (**D102**). Nothing
+2. **Every board is a synthetic FRAME from `synthetic.ts`** (**D104**). It is the
+3. **The frame loop is the arena's** (**D102**). `CueRunner` is THE loop on the
+4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
+5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
+1. **One narrator** (**D124**). `web/src/story/narrate.ts` is the narration —
+**erasable TypeScript with no import at all**, because Node runs it by type
+2. **A page over the replay, not a renderer** (**D125**). Lazy through
+3. **The narration is re-told, never patched** (**D126**). The page narrates the
+**hidden** (`S`; the default while following) it narrates
+4. **Hard rule 8 on the page is a rendering test, with a control** (**D127**).
+5. **One cursor, across the page's views** (**D128**). `replayCursors` puts a
 **the arena is a RENDERER.** It is a second renderer over the same frame stream —
 1. **It decides nothing, and that is mechanical.** No file under
 2. **`CardPlane` is THE card renderer of the arena**, exactly as `CardTile` is
@@ -139,13 +174,6 @@
 5. **A beat is drawn on the BODY, and every cue param is closed** (**D79**). The
 6. **Overhead and beside things cover nothing from the table view, and nothing
 **An attachment's card lies UNDER its host** (`ATTACH_DY` −0.002, **D86**), so
-1. **It is a tool, not a package, and the game never reads it** (**D90**,
-**D91**). No `package.json`, no npm dependency: `node:sqlite` with FTS5, `fetch`,
-2. **One door to Scryfall.** `tools/card-library/scryfall.ts`'s `ScryfallClient`
-3. **A build writes a fresh file** (**D91**): `cards.sqlite.building`, then
-4. **The route is dev-only, and it never fetches** (**D92**). `/cards/api/*` and
-5. **The image cache is keyed by Scryfall id + size + face** (**D93**).
-6. **`CardView` is the browser's card renderer, and it is not `CardTile`**
 1. **A costume is a SLOT per vertex and a PALETTE per figure, written at
 **Only `holoMaterial.ts`'s `applyCostume` writes a costume colour**, and only
 2. **A body belongs to a FAMILY, and every prop kind is fitted per family**
@@ -159,18 +187,6 @@
 5. **Where a duelist stands is MEASURED against the camera, and the camera never
 **the opponent's plate never leaves the `HUD_TOP_PX` band** — asserted, not
 **A new line on a plate is a new row**: put it on an existing row, or measure
-1. **Downstream of the arena, and the coupling is a list** (**D102**). Nothing
-2. **Every board is a synthetic FRAME from `synthetic.ts`** (**D104**). It is the
-3. **The frame loop is the arena's** (**D102**). `CueRunner` is THE loop on the
-4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
-5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
-1. **One narrator** (**D124**). `web/src/story/narrate.ts` is the narration —
-**erasable TypeScript with no import at all**, because Node runs it by type
-2. **A page over the replay, not a renderer** (**D125**). Lazy through
-3. **The narration is re-told, never patched** (**D126**). The page narrates the
-**hidden** (`S`; the default while following) it narrates
-4. **Hard rule 8 on the page is a rendering test, with a control** (**D127**).
-5. **One cursor, across the page's views** (**D128**). `replayCursors` puts a
 1. **One program, one number, and `look.ts` holds every number** (**D137**).
 2. **The look is written at commit, never in the frame loop** (**D145**).
 3. **What is not yet real stays a hologram** (**D142**). `look.ts`'s
@@ -189,15 +205,6 @@
 4. **The art palette is the LOWEST rung, runtime only, face up only** (**D160**).
 **Each gate has a hostile case only it stops** — a named back, a named stub in
 5. **The library's budget is the manifest's** (**D161**): `budget.libraryBytes`
-**That last sentence was true of the source checkout of 2026-09-11, and is no
-**Claude commits on branches and merges to `main` when the full gate is green;
-- **A branch per lane, in a worktree of its own** (`git worktree add
-- **A skeptic before a merge**: an independent review of the lane's diff and its
-- **The full gate on every merge**: `./tools/check-all.sh`, green, from a deleted
-- **Never push a lane.** Pushing, tags, releases, pull requests and anything
-- **Never touch `~/forge` or `~/.forge`** (*Never write outside this repo*,
-- **The personal tier is never committed**: Tier 3's likeness models and anything
-**A decision's number is final** (**D200**). A lane reserves a block of numbers
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -213,6 +220,7 @@ span: Run the JVM with exactly:
 span: Licence is GPL-3.0-or-later for the whole repo.
 span: Hidden information: exactly one card-serialisation function,
 span: A library carries `count` plus only the cards `canBeShownTo` allows
+span: A personal model is a statement about what a card is, too
 span: Every script must run from `/home/justin-a/code/mtg-table` as its working directory
 span: Never hardcode the jar path in Java.
 span: The lints are part of the build.
@@ -286,6 +294,7 @@ span: The arena's spec (M7 Tier 1).
 span: Tier 2's asset landscape.
 span: Tier 2's spec, the manifestation stage.
 span: Why Forge stays 2.0.14
+span: The personal tier's manual
 span: no rules logic in the client
 span: default them to Opus
 span: enums go on the wire via `.name()`, never `toString()`
@@ -351,6 +360,15 @@ span: The image cache is keyed by Scryfall id + size + face
 span: whole card images only
 span: `CardView` is the browser's card renderer, and it is not `CardTile`
 span: `#cards` unmounts the mode app
+span: "this can never ever ever be sold or published."
+span: nothing in the game reads `personal/` yet
+span: It is never committed, and the ignore rule is anchored
+span: Claude never sources a model.
+span: A tool writes only inside its slug's folder.
+span: Since D193 the HTTP cache and the profile are measured too
+span: A prepared model speaks OUR rig
+span: There is one retarget, and it is proven.
+span: Those rotations prove the retarget, never the rig map
 span: `npm --prefix web test` is hermetic, and it is kept that way by `MTGTABLE_WS_LOGS`.
 span: Nothing under `web/src/render/` may import CSS at module level.
 span: `CardTile` is THE card renderer.

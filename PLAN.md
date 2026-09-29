@@ -14,9 +14,10 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The 28 follow-up lists hold 327 items, and 244 of them are open** — 222 open,
-16 partly done, 3 not reproduced, 2 standing and 1 accepted — against 83
-closed (M1's six among them). **Of the 30 questions only the owner can settle,
+**The 29 follow-up lists hold 351 items, and 266 of them are open** — 243 open,
+17 partly done, 3 not reproduced, 2 standing and 1 accepted — against 85
+closed (M1's six among them; the personal tier's list was added, with its 18 and
+19 closed, when that lane merged). **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
@@ -267,6 +268,28 @@ closed (M1's six among them). **Of the 30 questions only the owner can settle,
 | [Lane BODIES](#fu-bodies) | 31 | open | Peggy's sidearm reads as a grey slab from above | `web/src/arena/scene/props.ts` |
 | [Docs block](#fu-docs) | 1 | open | Mirror the Java guide's section table into `WireGuiGame.java`'s header | `bridge/src/mtgtable/WireGuiGame.java` |
 | [Docs block](#fu-docs) | 2 | open | The Java guide's older citations: seven stale quotes, the inline line numbers | `docs/guides/java-for-typescript-people.md` |
+| [Personal tier](#fu-personal) | 1 | open | Phase 2: which card or seat a personal model dresses, read through one module | `personal/models/*/manifest.json` |
+| [Personal tier](#fu-personal) | 2 | open | Phase 2: served by the dev server alone, never `vite preview` or a build | — |
+| [Personal tier](#fu-personal) | 3 | open | Phase 2: a textured material through the figure material's colour input | — |
+| [Personal tier](#fu-personal) | 4 | open | Phase 2: a triangle cap, and personal figures counted against `MAX_FIGURES` | — |
+| [Personal tier](#fu-personal) | 5 | open | Phase 2: hard rule 8 — a personal model only where a named figure stands, with a corpus test | `web/test/figure-pose.test.ts` |
+| [Personal tier](#fu-personal) | 6 | open | Phase 2: the workshop badge for a card wearing a personal model | — |
+| [Personal tier](#fu-personal) | 7 | open | Phase 2: clip binding by name, the pelvis translation by the hip-height ratio | `tools/personal/retarget.mjs` |
+| [Personal tier](#fu-personal) | 8 | open | Factor the build's retarget beside a rebuild of `figures.glb` | `tools/build-figures.mjs` |
+| [Personal tier](#fu-personal) | 9 | open | `tools/arena-bench.mjs`'s SwiftShader flags may no longer start the GPU process | `tools/arena-bench.mjs` |
+| [Personal tier](#fu-personal) | 10 | open | `--pose all`: a posed model keeps its legs and spine posed | — |
+| [Personal tier](#fu-personal) | 11 | open | The runner-ups: Coulson and the Wasp | — |
+| [Personal tier](#fu-personal) | 12 | open | What Blender would still do on Doom | — |
+| [Personal tier](#fu-personal) | 13 | open | Textures: 2.24 MB of Doom's 2.34 MB file | — |
+| [Personal tier](#fu-personal) | 14 | open | A head scale for a life-size head at 60–100 px | — |
+| [Personal tier](#fu-personal) | 15 | open | FBX and `.blend` input need Blender | — |
+| [Personal tier](#fu-personal) | 16 | partly | Chromium's last background attempts (signin, GCM; the AI-mode call stopped) | — |
+| [Personal tier](#fu-personal) | 17 | open | `tools/arena-bench.mjs` and `tools/story-shot.mjs` start Chromium without the isolation | `tools/arena-bench.mjs` |
+| [Personal tier](#fu-personal) | 20 | open | The limb check's limits rest on four correct maps | `tools/personal/lib.mjs` |
+| [Personal tier](#fu-personal) | 21 | open | The user's other downloads fail as prepared automatically (Peggy, both Wasps, Coulson; Doom v2 unmapped) | — |
+| [Personal tier](#fu-personal) | 22 | open | The ends at attack t = 0.5 caught no arm fold | — |
+| [Personal tier](#fu-personal) | 23 | open | The preview profile stays in the slug's folder, not under `var/` | `tools/personal/check.mjs` |
+| [Personal tier](#fu-personal) | 24 | open | Prepare's fold warning looks only at the forearm | — |
 
 ### Questions only the owner can settle
 
@@ -328,6 +351,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Lane LOOK: the comic look, to production *(report 15 §9.1, the first art-direction lane; the user approved the direction)* | 1 day | **built, verified, documented and committed** on branch `look` (2026-09-28), rebased onto the undo race's `f6bad35` — every figure, dying body, duelist and painted prop in the comic look by default: three cel bands from a lens-fixed key, halftone, a rim, an ink line inside bloom's pass that inks only what is painted, a contact shadow, a mid-value stage in each seat's shown colours; `?look=holo` the hologram; a seat's figures facing the opponent (question 13, answered); **D137–D146**, written as D120–D129; one verification pass; twenty-one follow-ups, half of one closed at merge; *Lane LOOK*, after *Guards* |
 | — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; with Lanes LOOK and MOTION, **rebased onto `main`'s `a08c15f`** (after CI, Polish 1 and Guards), Polish 1's follow-ups 1 and 2 applied (the arena's `lost` word) and the final skeptic's minors fixed or written down; *Lane BODIES*, just above *Deferred* (its *Onto `main`'s `a08c15f`*) |
 | — | The docs block: `CLAUDE.md` split by directory, and the owner's two policies *(off the plan; the structure review of 2026-09-28)* | ½ day | **built, gated and documented** on branch `docs-block` (2026-09-28), off `main`'s `102fb1f` — the history out of `CLAUDE.md` into two evidence files; **D200** (decision numbers are final), **D201** (Claude commits on branches and merges on a green gate; pushes, releases and anything public are the user's), **D202** (CI's pinned engine fetch); rule 10 pointing at the lint; a root `CLAUDE.md` of about 5,600 words and four nested files, held by `web/test/claude-md.test.ts`; *Open now*; the Java guide's map of `WireGuiGame.java`; gate green at `GATE_JOBS=4`, 259.2 s; *The docs block*, just above *Deferred* |
+| — | The personal tier, phase 1: the folder, the manifest and the pipeline *(off the plan; the user's decision of 2026-09-28 — "this can never ever ever be sold or published")* | 1 day | **built, gated and documented** on branch `personal-tier` (2026-09-28), off `main`'s `a08c15f` and rebased onto `f2c934d` — `tools/personal/` (import, prepare, check) over a gitignored `personal/models/<slug>/`, Doctor Doom run through it, three verification rounds; **D190–D193**; phase 2 (the loader) not built; gate green at `GATE_JOBS=4`, 262.4 s; *The personal tier*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -3802,7 +3826,9 @@ direction for Tier 2 set aside (**D53**). If it is ever wanted, three things are
   images (NOTICE §2 and §4), it may live on this machine, **gitignored, never
   committed, never published, never redistributed**, and recorded in
   `tools/assets-manifest.json` as `committable: false` (report 13 §13 question
-  2's rule). The public repo stays CC0-and-code, and the arena must still play
+  2's rule; *superseded 2026-09-28 by D190: the personal tier records a model in
+  its own gitignored folder, never in the committed manifest — The personal tier,
+  below*). The public repo stays CC0-and-code, and the arena must still play
   every card without one — the disc, the archetype body and its traits are the
   fallback, exactly as a missing `figures.glb` is today.
 - **D54 still stands**: no model is made from card art by any image-to-3D tool,
@@ -7250,10 +7276,11 @@ jobs whose seconds sum to 939.6 s, at a load average of 0.59 rising to 4.59;
 
 ---
 
-## The personal tier — models of the real characters, local only (2026-09-28, D190–D192)
+## The personal tier — models of the real characters, local only (2026-09-28, D190–D193)
 
 **Status: phase 1 built, run on Doctor Doom, tested and gated** on branch
-`personal-tier` (the worktree `mtg-table-t2x`, off `main`'s `a08c15f`). The
+`personal-tier` (the worktree `mtg-table-t2x`, off `main`'s `a08c15f`, rebased
+onto `main`'s `f2c934d` by fix pass 3). The
 user's decision of 2026-09-28: a strictly personal, never-published, never-sold
 local overlay — in their words, **"this can never ever ever be sold or
 published"** — of rigged models of the actual Marvel characters, downloaded by
@@ -7266,7 +7293,7 @@ gitignored, never committed) holds; its `committable: false` idea is replaced by
 a manifest inside the personal folder (**D190**'s rejected alternatives).
 `docs/guides/personal-tier.md` is the manual, `docs/evidence/personal-tier.md`
 what was run. The lane's reserved decision range is D190–D199; it used two.
-Fix pass 1 added a third, **D192** (below).
+Fix pass 1 added a third, **D192**, and fix pass 3 a fourth, **D193** (below).
 
 1. **The folder and its rule** (D190). `personal/models/<slug>/` holds the
    download untouched, `source/`, `SOURCE.txt`, `inspect.json`, an optional
@@ -7294,7 +7321,12 @@ Fix pass 1 added a third, **D192** (below).
    front of its ankle, segment directions — because the rotations hold by
    construction for any map; and the preview browser keeps its profile inside
    the slug's folder (deleted after), is answered `no-store`, and must show
-   nothing beyond 127.0.0.1 in its own net log.
+   nothing beyond 127.0.0.1 in its own net log. **Since fix pass 3 (D193)** the
+   LIMBS are judged too — each spine, arm and leg link's direction, each limb's
+   proportion and which side of its joint each limb joint's flesh lies on, and
+   the chain ends at attack t = 0.5 — because a map that swapped the forearm and
+   the hand passed everything else; the preview browser's HTTP cache and profile
+   are measured; and the closing line lists what was judged.
 5. **Doctor Doom, through all three**: 17,473 triangles (14,614 to render + 2,859
    in 59 Auto-Rig Pro control meshes) → **5,996** of a 6,000 budget; 339 joints,
    68 weighted → root + 22, the automatic Auto-Rig Pro map 22/22 with no
@@ -7314,7 +7346,12 @@ Fix pass 1 added a third, **D192** (below).
    height rule, `judgeBody` on synthetic bodies (four cases), the net-log reader,
    and **the whole pipeline end to end** — import, prepare, check — on a
    Mixamo-named figure of boxes in an A-pose with an unskinned cape, in a
-   throwaway slug the test deletes, failing the verifier's two wrong maps.
+   throwaway slug the test deletes, failing the verifier's two wrong maps. Fix
+   pass 3 (28 cases) added `judgeLimbs` on stick bodies (three cases, the
+   skeptic's swaps among them), the profile reader, cache keys in the net-log
+   reader, a prepare case on the boxes (the two-bone arms turned A → T with the
+   rest skin agreeing to 1e-4 m, and decimation keeping every survivor's own
+   weights, traced by its UV), and a third wrong map in the end-to-end case.
 
 ```bash
 node tools/personal/import.mjs ~/Downloads/doctor_doom.zip doctor-doom
@@ -7333,7 +7370,8 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 (`var/check-all-personal-tier-fix1.log`, evidence §13); `~/forge` and
 `~/.forge` unchanged again.
 
-### The personal tier's follow-ups — seven for phase 2 and eight more, 2026-09-28
+<a id="fu-personal"></a>
+### The personal tier's follow-ups — twenty-four, 2026-09-28 (18 and 19 closed by fix pass 3, 16 partly)
 
 **Phase 2, the loader** (after the visual merge; nothing here is built):
 
@@ -7425,7 +7463,12 @@ blocking:
     found" before any DNS query, and the net log proves nothing left the
     machine. A switch that stops the attempts themselves would make the log
     quieter; none of the obvious ones (`--incognito`, `--disable-sync`,
-    `--disable-default-apps`, `--disable-extensions`) did.
+    `--disable-default-apps`, `--disable-extensions`) did. *Partly closed by fix pass 3:* the
+    `www.google.com/async/folae` call is the omnibox's AI-mode eligibility
+    request, and `--disable-features=AimServerRequestOnStartupEnabled` stops it
+    (it had keyed an HTTP cache entry for `www.google.com`, D193); signin's
+    `ListAccounts` and GCM's `checkin` remain, refused by the resolver and keying
+    no cache entry.
 17. **`tools/arena-bench.mjs` and `tools/story-shot.mjs`** start the same
     Chromium with none of this isolation. They load no personal data, but the
     lane rule "the tools fetch nothing" is the same; the flag list and the
@@ -7457,7 +7500,11 @@ seven previews came out byte-identical. **Fix pass 2's gate**, from a deleted
 (`var/check-all-personal-tier-fix2.log`); `~/forge` and `~/.forge` unchanged.
 Two follow-ups, both for the merge:
 
-18. **Move this lane's `CLAUDE.md` text into `main`'s nested files.** `main`
+18. ~~**Move this lane's `CLAUDE.md` text into `main`'s nested files.**~~
+    **Closed by fix pass 3**: the paragraph is in the root's hard rule 8, the
+    section is `tools/CLAUDE.md`'s *The personal tier — the conventions D190–D193
+    added* with a pointer in the root's map, and the manifest was regenerated
+    (18 entries added, none removed). The item, for the record: `main`
     split `CLAUDE.md` into a root file and per-area files (`04e69da`:
     `bridge/`, `web/`, `web/src/arena/`, `tools/`), holds every rule line and
     bold span to `docs/claude-md-rules.txt` (`web/test/claude-md.test.ts`), and
@@ -7469,14 +7516,75 @@ Two follow-ups, both for the merge:
     regenerate the manifest (`CLAUDE_MD_RULES_WRITE=1`) and let its diff show
     the new rules. Phase 2's loader rules will belong in
     `web/src/arena/CLAUDE.md`.
-19. **Reconcile `main`'s *Commits, branches and merges* bullet with D190.**
-    That bullet (D201) says a personal-only asset is recorded in
+19. ~~**Reconcile `main`'s *Commits, branches and merges* bullet with D190.**~~
+    **Closed by fix pass 3**: the bullet points at D190 and the guide, with a
+    dated note of what it said. The item, for the record: that bullet (D201) says a personal-only asset is recorded in
     `tools/assets-manifest.json` as `committable: false`. D190 rejected exactly
     that: that manifest is the committed CC0 library's provenance, a personal
     entry in it would publish the fact of the file and blur the line D54 draws,
     and the personal manifest lives in the gitignored slug folder. At the merge,
     the bullet should point at D190 and `docs/guides/personal-tier.md`, as a
     dated note rather than a silent edit.
+
+### Fix pass 3 — the third skeptic round, and the rebase onto `f2c934d`, 2026-09-28 (D193)
+
+**The major**: a `bones.json` that swaps the forearm and the hand, on both sides
+or on one, passed `check.mjs` with exit 0 and `OK — takes our clip set … nothing
+exploded`. The rotation columns hold by construction, the weight still reached
+22 joints, the sides were right, prepare's A → T turned each arm link onto the
+agent's direction whatever it pointed at (177.5° for the swapped forearm), and
+the bounds test cannot see a fold. **D193's limb check** (`judgeLimbs`, step 3b)
+judges each spine, arm and leg link's direction (25°, the spine and neck 45°),
+each limb's proportion (1/1.6–1.6× the agent's), where each limb joint's flesh
+lies along its link (above 0), and the chain ends at attack t = 0.5. The
+skeptic's three controls fail with named reasons — the forearm↔hand swaps on
+the flesh (−0.42) and the proportion (0.52×) on each swapped side, `spine_02`↔
+`spine_03` on its direction (176°) — and Doom's real map passes; so do Hulk's and
+Nick Fury's, from the user's other downloads, which set the limits with the
+`hero` body (evidence §15). The closing line lists what was judged.
+**The minors**: the test gained the limb cases, a prepare case on the boxes (the
+rest skin to 1e-4 m, decimation keeping every survivor's weights) and a third
+wrong map, each held by a mutant; evidence §5 says the rotation equality is by
+construction and points at the limb check; the preview browser's HTTP cache
+was measured, and keyed a `www.google.com` entry with every background flag on
+until `AimServerRequestOnStartupEnabled` was turned off, and its profile is
+read for a copy of the model before it goes — the profile stays in the slug's
+folder rather than moving to `var/` (D192, D193). **The rebase**: onto `main`'s
+`f2c934d`, the `CLAUDE.md` text moved (18 and 19 above), D190–D193 kept their
+numbers (D200). **Fix pass 3's gate**, from a deleted `bridge/out` at
+`GATE_JOBS=4`, `WSPORT=9050`: **262.4 s**, exit 0, 48 jobs (1,001.2 s summed) at
+a load average of 7.5–12.0, `node --test` 1,037 / 1,029 pass / 0 fail / 8
+skipped and vitest 121 (8 files) (`var/check-all-personal-tier-merge.log`);
+`~/forge` and `~/.forge` unchanged.
+
+20. **The limits rest on four correct maps.** `hero` and the user's Doom, Hulk
+    and Nick Fury set 25° / 45° / 1/1.6–1.6× / `s` > 0 (the correct maps reach
+    7.7°, 36.2°, 0.71–1.20× and 0.16). A stylised body — a chibi's short
+    forearm, a monster's long one — may land outside a band with a right map;
+    measure it before widening one, and prefer a per-model note in the manifest
+    to a looser rule for everyone.
+21. **The user's other downloads, as the pipeline prepares them automatically**
+    (calibration only, evidence §15): Peggy Carter and the MCU Wasp (Mixamo,
+    `spine_03` synthesised) fail D192's `spine_03 → clavicle` (92°, 78°) and
+    Peggy a foot facing backwards; the older Wasp (a mesh posed on a T skeleton)
+    fails a foot and both forearms' flesh; Coulson's Character Creator map puts
+    the sides, a leg's links and an arm's two joints wrong and reads its rest
+    back as 85° / −57°; Doom v2 needs a `bones.json`. Each wants a look at its
+    rig before a `bones.json` or a prepare fix — the synthesised `spine_03` and
+    Character Creator's twist and share bones first.
+22. **The ends at attack t = 0.5 are weak.** They caught no arm fold (the clip
+    carries a folded arm's hand the agent's way, cosine 0.98) and fire only on
+    the legs. The limb's END FLESH over the whole clip, not its end joint at one
+    phase, would be the stronger test.
+23. **The preview profile stays in the slug's folder**, not under `var/` as the
+    third round proposed (D193's rejected alternatives: D192 moved it out of
+    `var/` after a copy of the model was found there). If the owner wants it
+    under `var/`, it is one line in `check.mjs` and a sentence in D192/D193 and
+    the conventions.
+24. **Prepare's fold warning looks only at the forearm.** A leg is not re-posed,
+    so its fold shows in the limb check's direction; a WARN in prepare for any
+    link whose re-pose turn exceeds 120° would cover a future `--pose all`
+    (follow-up 10).
 
 ---
 

@@ -54,7 +54,7 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `build-figures.mjs` | Rebuilds `web/public/models/figures.glb` and `models.json` from the CC0 downloads under `var/assets/figures/`, each verified against `tools/assets-manifest.json` first (D54, D67). | no | no |
 | `personal/import.mjs` | **The personal tier** (D190): copies a model the user downloaded into the gitignored `personal/models/<slug>/`, unpacks it into `source/`, drafts `SOURCE.txt`, and writes `inspect.json` — meshes, skins, the rest pose (T or A, from the bind matrices), control meshes, unskinned meshes, game-asset names. `docs/guides/personal-tier.md` is the manual. | no | no |
 | `personal/prepare.mjs` | Makes it a figure our clips drive (D191): strips the rig's control shapes, rebuilds the skeleton on our 22 joints, turns an A-pose to T, skins what had no skin, decimates to `--budget`, keeps base colour and normal ≤ 1024, meshopt last. Writes only `model.glb` and `manifest.json` in the slug's folder. | no | no |
-| `personal/check.mjs` | Proves a prepared model takes our clip set (idle, attack, hit, die, kneel) by the build's world-space-delta retarget, and judges the rig map against the `agent` body — weight on every core joint, sides, the feet's facing, segment directions (D192) — with a joint-coverage table; renders previews through headless Chromium (`--no-preview`), whose profile stays in the slug's folder and is deleted, and whose net log must show nothing beyond 127.0.0.1. | no (`web/test/personal-tier.test.ts` runs the whole pipeline on a figure of boxes, `--no-preview`) | no (a browser) |
+| `personal/check.mjs` | Plays our clip set (idle, attack, hit, die, kneel) on a prepared model by the build's world-space-delta retarget, and judges the rig map against the `agent` body — weight on every core joint, sides, the feet's facing, the branches (D192), and each spine, arm and leg link's direction, proportion and flesh, and the chain ends at attack t = 0.5 (D193) — with a joint-coverage table and a limb table; renders previews through headless Chromium (`--no-preview`), whose profile stays in the slug's folder and is read and deleted, and whose net log must show no connection, byte, DNS query or cache entry beyond 127.0.0.1. Its closing line lists what was judged. | no (`web/test/personal-tier.test.ts` runs the whole pipeline on a figure of boxes, `--no-preview`) | no (a browser) |
 
 Three files here are not scripts: `assets-manifest.json` (every CC0 asset's
 URL, bytes, sha256 and licence badge, read by `build-figures.mjs`; D54),
@@ -65,7 +65,8 @@ the narrator and the card library). The other `card-library/*.ts` files —
 modules the scripts above import: `scryfall.ts` is the one door to Scryfall and
 `store.ts` the image cache's paths (`tools/CLAUDE.md`, *Card library*). So are
 `personal/lib.mjs` (the slug, the manifest schema, the rig map, the inspection,
-the cloak's height rule, `judgeBody` and the net-log reader) and
+the cloak's height rule, `judgeBody`, `judgeLimbs`, the net-log reader and the
+preview profile's reader) and
 `personal/retarget.mjs` (the build's retarget as a function, proven against
 the build's own clips). The two commands a player runs, `scripts/play.sh` and
 `scripts/spectate.sh`, live in `scripts/`; 6b runs `spectate.sh --no-serve`.

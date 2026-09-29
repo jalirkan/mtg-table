@@ -39,7 +39,8 @@
 
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -94,11 +95,37 @@ interface NetReport {
   tcpAway: string[];
   udpAway: string[];
   sentAway: string[];
+  cacheEntries: number;
+  cacheHosts: Map<string, number>;
+  cacheAway: string[];
+}
+interface LimbLink {
+  a: string;
+  b: string;
+  deg: number | null;
+  limit: number;
+  flesh: number | null;
+  agentFlesh: number | null;
+  turned: boolean;
+  skipped: boolean;
+}
+interface LimbJudgement {
+  problems: string[];
+  warnings: string[];
+  links: LimbLink[];
+  lengths: { first: string; second: string; times: number; ok: boolean }[];
+  ends: { joint: string; cos: number | null; judged: boolean; ok: boolean }[];
 }
 interface Lib {
   heightWeights(y: number, heights: Record<string, number>): Record<string, number>;
   judgeBody(body: BodyStats, agent: BodyStats, rig?: unknown): Judgement;
+  judgeLimbs(
+    body: BodyStats,
+    agent: BodyStats,
+    options?: { rig?: unknown; fix?: string; attack?: { body: Record<string, number[]>; agent: Record<string, number[]> } | null },
+  ): LimbJudgement;
   netLogReport(text: string): NetReport;
+  profileReport(dir: string, options?: { samples?: Buffer[]; skip?: string[] }): { files: number; bytes: number; cacheFiles: string[]; copies: string[] };
   inspectDocument(doc: unknown, raw: unknown, ...rest: unknown[]): Inspection;
   slugOf(name: string): string;
   isSlug(value: unknown): boolean;
@@ -705,9 +732,15 @@ function stick(): BodyStats {
     });
   }
   const mass: Record<string, Mass> = {};
+  // Each limb joint's flesh halfway along its link (as a real body's is: 0.27–0.60 on the agent), the feet's in front of the ankle.
+  const next: Record<string, string> = {};
+  for (const s of ['l', 'r']) Object.assign(next, { [`upperarm_${s}`]: `lowerarm_${s}`, [`lowerarm_${s}`]: `hand_${s}`, [`thigh_${s}`]: `calf_${s}`, [`calf_${s}`]: `foot_${s}` });
   for (const [j, p] of Object.entries(joints)) {
     const forward = /^(foot|ball)_/.test(j) ? 0.06 : 0;
-    mass[j] = { at: [p[0] ?? 0, p[1] ?? 0, (p[2] ?? 0) + forward], n: 100, weight: 100 };
+    // A hand's flesh lies beyond the wrist, along the arm.
+    const c = next[j] !== undefined ? joints[next[j]]! : /^hand_/.test(j) ? [(p[0] ?? 0) + 0.1 * Math.sign(p[0] ?? 0), p[1] ?? 0, p[2] ?? 0] : p;
+    const at = [0, 1, 2].map((k) => ((p[k] ?? 0) + (c[k] ?? 0)) / 2);
+    mass[j] = { at: [at[0]!, at[1]!, at[2]! + forward], n: 100, weight: 100 };
   }
   return { joints, mass, totalWeight: 100 * Object.keys(joints).length, height: 1.8 };
 }
@@ -780,11 +813,92 @@ test('personal-tier: judgeBody fails swapped sides, a figure facing backwards, a
   assert.ok(!m.problems.some((p) => /stands on the figure's/.test(p)), 'a full mirror keeps its sides consistent');
   assert.ok(m.problems.some((p) => /right foot points BACKWARDS/.test(p)), JSON.stringify(m.problems));
   assert.ok(m.problems.some((p) => /foot_l → ball_l points/.test(p)));
-  // The thigh and the calf mapped to each other.
-  const legs = stick();
-  [legs.joints['thigh_l'], legs.joints['calf_l']] = [legs.joints['calf_l']!, legs.joints['thigh_l']!];
-  const l = lib.judgeBody(legs, stick(), { placement: placementOk });
-  assert.ok(l.problems.some((p) => /thigh_l → calf_l points 1\d\d° away/.test(p)), JSON.stringify(l.problems));
+  // The spine and the legs' links are judgeLimbs's now (D193), not judged twice.
+  assert.ok(!lib.judgeBody(stick(), stick(), {}).segments.some((x) => x.a === 'thigh_l' && x.b === 'calf_l'));
+});
+
+// ---------------------------------------------------------------------------
+// judgeLimbs: the folds a swapped chain makes (D193, the third skeptic round)
+// ---------------------------------------------------------------------------
+
+/** Two joints of a chain swapped, as prepare leaves them: each takes the other's POSITION and the other's flesh. */
+const swapJoints = (b: BodyStats, x: string, y: string): BodyStats => {
+  const out = structuredClone(b);
+  [out.joints[x], out.joints[y]] = [b.joints[y]!, b.joints[x]!];
+  [out.mass[x], out.mass[y]] = [b.mass[y]!, b.mass[x]!];
+  return out;
+};
+/**
+ * Prepare's A → T on an arm (`--pose t`): turn upperarm → lowerarm, then lowerarm → hand, about their
+ * joints onto the agent's directions, carrying each joint's flesh with it — what the skeptic's
+ * forearm↔hand swap looks like after prepare (the directions match BY CONSTRUCTION).
+ */
+const turnArm = (b: BodyStats, agent: BodyStats, s: string): BodyStats => {
+  const out = structuredClone(b);
+  const chain = [`upperarm_${s}`, `lowerarm_${s}`, `hand_${s}`];
+  for (let k = 0; k < 2; k += 1) {
+    const pivot = new THREE.Vector3(...(out.joints[chain[k]!] as [number, number, number]));
+    const have = new THREE.Vector3(...(out.joints[chain[k + 1]!] as [number, number, number])).sub(pivot).normalize();
+    const want = new THREE.Vector3(...(agent.joints[chain[k + 1]!] as [number, number, number])).sub(new THREE.Vector3(...(agent.joints[chain[k]!] as [number, number, number]))).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(have, want);
+    const turn = (p: number[]): number[] => new THREE.Vector3(...(p as [number, number, number])).sub(pivot).applyQuaternion(q).add(pivot).toArray();
+    for (const j of chain.slice(k)) {
+      if (j !== chain[k]) out.joints[j] = turn(out.joints[j]!);
+      out.mass[j] = { ...out.mass[j]!, at: turn(out.mass[j]!.at) };
+    }
+  }
+  return out;
+};
+
+test("personal-tier: judgeLimbs passes a body shaped like the agent, and one at the agent's pose t", () => {
+  const j = lib.judgeLimbs(stick(), stick(), { fix: 't' });
+  assert.deepEqual(j.problems, []);
+  assert.equal(j.links.length, 5 + 4 * 2, 'the spine is five links, each limb two');
+  assert.equal(j.lengths.length, 4);
+  assert.ok(j.links.filter((l) => l.turned).length === 4, 'the four arm links are marked as turned by prepare');
+  assert.ok(j.links.filter((l) => l.flesh !== null).every((l) => Math.abs((l.flesh ?? 0) - 0.5) < 1e-9));
+  // A synthesised spine joint is not judged, whatever it points at.
+  const bent = stick();
+  bent.joints['spine_02'] = [0.3, 1.22, 0];
+  assert.ok(lib.judgeLimbs(bent, stick()).problems.some((p) => /spine_01 → spine_02 points \d+° away .*over 45°/.test(p)));
+  assert.deepEqual(lib.judgeLimbs(bent, stick(), { rig: { synthesised: ['spine_02'] } }).problems, []);
+});
+
+test("personal-tier: judgeLimbs fails the skeptic's three swaps — the forearm and the hand on both sides, on one side, and spine_02 with spine_03", () => {
+  const agent = stick();
+  // The forearm and the hand swapped, then turned by prepare's A → T: the directions pass by construction; the length and the flesh do not.
+  let both = swapJoints(swapJoints(agent, 'lowerarm_l', 'hand_l'), 'lowerarm_r', 'hand_r');
+  both = turnArm(turnArm(both, agent, 'l'), agent, 'r');
+  const b = lib.judgeLimbs(both, agent, { fix: 't' });
+  assert.ok(b.links.filter((l) => l.turned).every((l) => (l.deg ?? 99) < 1e-6), 'the arm links point the agent\'s way by construction');
+  for (const s of ['l', 'r']) {
+    assert.ok(b.problems.some((p) => new RegExp(`the vertices lowerarm_${s} carries lie BEHIND it`).test(p)), JSON.stringify(b.problems));
+    assert.ok(b.problems.some((p) => new RegExp(`lowerarm_${s} → hand_${s} is .* outside 0\\.63–1\\.6×`).test(p)), JSON.stringify(b.problems));
+  }
+  const one = turnArm(swapJoints(agent, 'lowerarm_l', 'hand_l'), agent, 'l');
+  const o = lib.judgeLimbs(one, agent, { fix: 't' });
+  assert.ok(o.problems.length > 0 && o.problems.every((p) => /lowerarm_l/.test(p)), JSON.stringify(o.problems));
+  const spine = lib.judgeLimbs(swapJoints(agent, 'spine_02', 'spine_03'), agent);
+  assert.ok(spine.problems.some((p) => /spine_02 → spine_03 points 180° away from the agent's \(over 45°\)/.test(p)), JSON.stringify(spine.problems));
+  // The thigh and the calf mapped to each other: pointing up, carrying its flesh behind it, twice as long.
+  const legs = lib.judgeLimbs(swapJoints(agent, 'thigh_l', 'calf_l'), agent);
+  assert.ok(legs.problems.some((p) => /thigh_l → calf_l points 180° away .*over 25°/.test(p)), JSON.stringify(legs.problems));
+  assert.ok(legs.problems.some((p) => /calf_l → foot_l is .* outside/.test(p)));
+  // Two joints of a limb on one bone's position: no length, no direction — a failure, not a skip.
+  const flat = stick();
+  flat.joints['lowerarm_l'] = flat.joints['upperarm_l']!;
+  assert.ok(lib.judgeLimbs(flat, agent).problems.some((p) => /upperarm_l and lowerarm_l stand at one point/.test(p)));
+});
+
+test('personal-tier: judgeLimbs judges the chain ends at attack t = 0.5 by the half-space the agent moved into', () => {
+  const agent = stick();
+  const moved = (dy: number) => Object.fromEntries(Object.entries(agent.joints).map(([j, p]) => [j, j === 'hand_r' ? [p[0]!, p[1]! + dy, p[2]!] : p]));
+  const same = lib.judgeLimbs(agent, agent, { attack: { body: moved(0.3), agent: moved(0.4) } });
+  assert.deepEqual(same.problems, []);
+  assert.equal(same.ends.find((e) => e.joint === 'hand_r')?.judged, true);
+  assert.equal(same.ends.find((e) => e.joint === 'hand_l')?.judged, false, 'an end the agent did not move is not judged');
+  const against = lib.judgeLimbs(agent, agent, { attack: { body: moved(-0.3), agent: moved(0.4) } });
+  assert.ok(against.problems.some((p) => /at attack t = 0\.5 hand_r moved against the agent's \(cosine -1\.00\)/.test(p)), JSON.stringify(against.problems));
 });
 
 // ---------------------------------------------------------------------------
@@ -792,12 +906,22 @@ test('personal-tier: judgeBody fails swapped sides, a figure facing backwards, a
 // ---------------------------------------------------------------------------
 
 test("personal-tier: the net-log reader tells tried from reached", () => {
-  const T = { URL_REQUEST_START_JOB: 1, UDP_CONNECT: 2, UDP_BYTES_SENT: 3, TCP_CONNECT_ATTEMPT: 4, DNS_TRANSACTION: 5, HTTP_TRANSACTION_READ_RESPONSE_HEADERS: 6 };
+  const T = {
+    URL_REQUEST_START_JOB: 1,
+    UDP_CONNECT: 2,
+    UDP_BYTES_SENT: 3,
+    TCP_CONNECT_ATTEMPT: 4,
+    DNS_TRANSACTION: 5,
+    HTTP_TRANSACTION_READ_RESPONSE_HEADERS: 6,
+    SIMPLE_CACHE_ENTRY_SET_KEY: 7,
+    DISK_CACHE_MEM_ENTRY_IMPL: 8,
+  };
   const ev = (type: number, id: number, params: Record<string, unknown> = {}, phase = 0) => ({ type, source: { id, type: 0 }, phase, params });
   const clean = [
     ev(T.URL_REQUEST_START_JOB, 1, { url: 'http://127.0.0.1:9008/model.glb' }),
     ev(T.URL_REQUEST_START_JOB, 2, { url: 'https://accounts.google.com/ListAccounts' }),
     ev(T.UDP_CONNECT, 3, { address: '[2001:4860:4860::8888]:443' }, 1),
+    ev(T.SIMPLE_CACHE_ENTRY_SET_KEY, 7, { key: '1/0/_dk_http://127.0.0.1 http://127.0.0.1 http://127.0.0.1:9008/model.glb' }),
   ];
   const log = (events: unknown[]) => JSON.stringify({ constants: { logEventTypes: T }, events });
   const ok = lib.netLogReport(log(clean));
@@ -805,6 +929,7 @@ test("personal-tier: the net-log reader tells tried from reached", () => {
   assert.deepEqual([...ok.attempted], [['accounts.google.com', 1]]);
   assert.deepEqual(ok.udpAway, ['2001:4860:4860::8888']);
   assert.deepEqual([ok.tcpAway, ok.sentAway, ok.answered, ok.dnsQueries], [[], [], [], 0]);
+  assert.deepEqual([ok.cacheEntries, [...ok.cacheHosts], ok.cacheAway], [1, [['127.0.0.1', 1]], []]);
   // A log the browser's exit cut short still reads.
   const cut = log(clean).replace(/\]\}$/, ',');
   assert.equal(lib.netLogReport(cut).loopback, 1);
@@ -817,12 +942,37 @@ test("personal-tier: the net-log reader tells tried from reached", () => {
       ev(T.DNS_TRANSACTION, 5, { hostname: 'accounts.google.com' }, 1),
       ev(T.HTTP_TRANSACTION_READ_RESPONSE_HEADERS, 2, {}),
       ev(T.TCP_CONNECT_ATTEMPT, 6, { address: '127.0.0.1:9008' }),
+      // The HTTP cache keying a google.com entry for a request the resolver refused (the AI-mode eligibility call, D193).
+      ev(T.DISK_CACHE_MEM_ENTRY_IMPL, 8, { created: true, key: '1/0/_dk_https://google.com https://google.com https://www.google.com/async/folae?async=_fmt:pb' }),
     ]),
   );
+  assert.deepEqual(bad.cacheAway, ['www.google.com']);
   assert.deepEqual(bad.tcpAway, ['142.250.1.1']);
   assert.deepEqual(bad.sentAway, ['2001:4860:4860::8888']);
   assert.equal(bad.dnsQueries, 1);
   assert.deepEqual(bad.answered, ['accounts.google.com']);
+});
+
+test("personal-tier: the profile reader finds the HTTP cache's entry files and any copy of the model", () => {
+  const dir = mkdtempSync(join(tmpdir(), 'personal-profile-'));
+  try {
+    const model = Buffer.from(Array.from({ length: 4096 }, (_, i) => (i * 37 + 11) % 251));
+    const sample = model.subarray(2000, 2064);
+    mkdirSync(join(dir, 'Default/Cache/Cache_Data'), { recursive: true });
+    writeFileSync(join(dir, 'Default/Cache/Cache_Data/0123456789abcdef_0'), Buffer.concat([Buffer.from('1/0/_dk_http://127.0.0.1:9008/model.glb'), model]));
+    writeFileSync(join(dir, 'Default/Cache/Cache_Data/index'), 'not an entry');
+    writeFileSync(join(dir, 'Local State'), '{}');
+    writeFileSync(join(dir, 'netlog.json'), sample);
+    const report = lib.profileReport(dir, { samples: [sample], skip: [join(dir, 'netlog.json')] });
+    assert.equal(report.files, 3, 'the skipped net log is not read');
+    assert.deepEqual(report.cacheFiles, ['Default/Cache/Cache_Data/0123456789abcdef_0']);
+    assert.deepEqual(report.copies, ['Default/Cache/Cache_Data/0123456789abcdef_0']);
+    rmSync(join(dir, 'Default/Cache/Cache_Data/0123456789abcdef_0'));
+    assert.deepEqual(lib.profileReport(dir, { samples: [sample] }).copies, ['netlog.json'], 'unskipped, the net log is read too');
+    assert.deepEqual(lib.profileReport(join(dir, 'missing')).files, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -847,10 +997,19 @@ for (const s of ['Left', 'Right']) {
 /**
  * A figure of boxes on a 23-bone Mixamo skeleton — 1.8 m, facing +z, the arms
  * `armDeg` below the horizontal — one box per bone from its head towards its
- * child (weighted wholly to it), `HandIndex1` a leaf with NO weight (the bone a
- * wrong map will name), and a `Cape` behind the back with no skin at all.
+ * child, `HandIndex1` a leaf with NO weight (the bone a wrong map will name),
+ * and a `Cape` behind the back with no skin at all. Each box is `rings` rings of
+ * four vertices; a limb bone's box (the upper arm, the forearm, the thigh, the
+ * calf) blends from its own bone to its child's along its length, as `blend(t)`
+ * says, and every other box is weighted wholly to its bone. Every vertex carries
+ * its own index in `TEXCOORD_0.u` (`i / (count − 1)`), so a vertex that survives
+ * decimation can be traced to the one it was.
  */
-async function boxFigure(armDeg: number): Promise<Uint8Array> {
+const LIMB_CHILD: Record<string, string> = {};
+for (const s of ['Left', 'Right']) Object.assign(LIMB_CHILD, { [`${s}Arm`]: `${s}ForeArm`, [`${s}ForeArm`]: `${s}Hand`, [`${s}UpLeg`]: `${s}Leg`, [`${s}Leg`]: `${s}Foot` });
+/** A child's share along a limb box, t = 0 at the bone's head to 1 at the child's — not linear, so an interpolated vertex would not match the ring it sits at. */
+const blend = (t: number): number => 0.5 * t * t;
+async function boxFigure(armDeg: number, rings = 1): Promise<Uint8Array> {
   const rad = (armDeg * Math.PI) / 180;
   const P: Record<string, number[]> = { Hips: [0, 1.0, 0], Spine: [0, 1.1, 0], Spine1: [0, 1.22, 0], Spine2: [0, 1.34, 0], Neck: [0, 1.5, 0], Head: [0, 1.6, 0], HeadTop_End: [0, 1.8, 0] };
   for (const [s, x] of [
@@ -894,7 +1053,7 @@ async function boxFigure(armDeg: number): Promise<Uint8Array> {
   const joints: number[] = [];
   const weights: number[] = [];
   const indices: number[] = [];
-  const box = (a: number[], b: number[], half: number, joint: number): void => {
+  const box = (a: number[], b: number[], half: number, joint: number, child: number | null): void => {
     const d = [(b[0] ?? 0) - (a[0] ?? 0), (b[1] ?? 0) - (a[1] ?? 0), (b[2] ?? 0) - (a[2] ?? 0)];
     const len = Math.hypot(d[0]!, d[1]!, d[2]!);
     const u = d.map((x) => x / len);
@@ -903,33 +1062,32 @@ async function boxFigure(armDeg: number): Promise<Uint8Array> {
     const v = cross(u, helper).map((x, _, arr) => x / Math.hypot(arr[0]!, arr[1]!, arr[2]!));
     const w = cross(u, v);
     const base = positions.length / 3;
-    for (const [t, sv, sw] of [
-      [0, -1, -1],
-      [0, 1, -1],
-      [0, 1, 1],
-      [0, -1, 1],
-      [1, -1, -1],
-      [1, 1, -1],
-      [1, 1, 1],
-      [1, -1, 1],
-    ] as const) {
-      for (let k = 0; k < 3; k += 1) positions.push((a[k] ?? 0) + t * (d[k] ?? 0) + half * (sv * v[k]! + sw * w[k]!));
-      const n = [sv * v[0]! + sw * w[0]!, sv * v[1]! + sw * w[1]!, sv * v[2]! + sw * w[2]!];
-      const nl = Math.hypot(n[0]!, n[1]!, n[2]!);
-      normals.push(n[0]! / nl, n[1]! / nl, n[2]! / nl);
-      joints.push(joint, 0, 0, 0);
-      weights.push(1, 0, 0, 0);
+    for (let r = 0; r <= rings; r += 1) {
+      const t = r / rings;
+      for (const [sv, sw] of [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ] as const) {
+        for (let k = 0; k < 3; k += 1) positions.push((a[k] ?? 0) + t * (d[k] ?? 0) + half * (sv * v[k]! + sw * w[k]!));
+        const n = [sv * v[0]! + sw * w[0]!, sv * v[1]! + sw * w[1]!, sv * v[2]! + sw * w[2]!];
+        const nl = Math.hypot(n[0]!, n[1]!, n[2]!);
+        normals.push(n[0]! / nl, n[1]! / nl, n[2]! / nl);
+        const share = child === null ? 0 : blend(t);
+        joints.push(joint, child ?? 0, 0, 0);
+        weights.push(1 - share, share, 0, 0);
+      }
     }
-    for (const [p, q, r, s] of [
-      [0, 1, 5, 4],
-      [1, 2, 6, 5],
-      [2, 3, 7, 6],
-      [3, 0, 4, 7],
-      [0, 3, 2, 1],
-      [4, 5, 6, 7],
-    ] as const) {
-      indices.push(base + p, base + q, base + r, base + p, base + r, base + s);
+    for (let r = 0; r < rings; r += 1) {
+      for (let c = 0; c < 4; c += 1) {
+        const p = base + r * 4 + c;
+        const q = base + r * 4 + ((c + 1) % 4);
+        indices.push(p, q, q + 4, p, q + 4, p + 4);
+      }
     }
+    const end = base + rings * 4;
+    indices.push(base, base + 3, base + 2, base, base + 2, base + 1, end, end + 1, end + 2, end, end + 2, end + 3);
   };
   names.forEach((name, k) => {
     if (/HandIndex1$/.test(name)) return; // the unweighted leaf
@@ -943,14 +1101,18 @@ async function boxFigure(armDeg: number): Promise<Uint8Array> {
     } else if (name === 'Hips') b = P['Spine']!;
     else b = P[child]!;
     if (name === 'Spine2') b = P['Neck']!;
-    box(a, b, name === 'Hips' || /^Spine/.test(name) ? 0.12 : /Head/.test(name) ? 0.09 : 0.04, k);
+    const blendTo = LIMB_CHILD[name] !== undefined ? names.indexOf(LIMB_CHILD[name]) : null;
+    box(a, b, name === 'Hips' || /^Spine/.test(name) ? 0.12 : /Head/.test(name) ? 0.09 : 0.04, k, blendTo);
   });
+  const count = positions.length / 3;
+  const uvs = Array.from({ length: count }, (_, i) => [i / (count - 1), 0.5]).flat();
   const body = doc.createMaterial('Body');
   const prim = doc
     .createPrimitive()
     .setMaterial(body)
     .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(positions)).setBuffer(buffer))
     .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(new Float32Array(normals)).setBuffer(buffer))
+    .setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(new Float32Array(uvs)).setBuffer(buffer))
     .setAttribute('JOINTS_0', doc.createAccessor().setType('VEC4').setArray(new Uint8Array(joints)).setBuffer(buffer))
     .setAttribute('WEIGHTS_0', doc.createAccessor().setType('VEC4').setArray(new Float32Array(weights)).setBuffer(buffer))
     .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array(indices)).setBuffer(buffer));
@@ -987,13 +1149,133 @@ const node = (args: string[]): { status: number | null; out: string } => {
   }
 };
 
+/** A Mixamo bone's joint of ours (the box figure's; the map itself is tested above). */
+const OURS_OF: Record<string, string> = { Hips: 'pelvis', Spine: 'spine_01', Spine1: 'spine_02', Spine2: 'spine_03', Neck: 'neck_01', Head: 'Head', HeadTop_End: 'Head' };
+for (const [s, o] of [
+  ['Left', 'l'],
+  ['Right', 'r'],
+] as const) {
+  Object.assign(OURS_OF, {
+    [`${s}Shoulder`]: `clavicle_${o}`,
+    [`${s}Arm`]: `upperarm_${o}`,
+    [`${s}ForeArm`]: `lowerarm_${o}`,
+    [`${s}Hand`]: `hand_${o}`,
+    [`${s}UpLeg`]: `thigh_${o}`,
+    [`${s}Leg`]: `calf_${o}`,
+    [`${s}Foot`]: `foot_${o}`,
+    [`${s}ToeBase`]: `ball_${o}`,
+  });
+}
+type Doc = Document;
+type Prim = ReturnType<ReturnType<Doc['createMesh']>['listPrimitives']>[number];
+/** The body primitive's vertices: each one's u (its source index), its weights by our joint name, and its skin joints. */
+function bodyVertices(doc: Doc, rename: (name: string) => string): { prim: Prim; uv: number[]; tuples: Map<string, number>[] } {
+  const prim = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives()).find((p) => p.getMaterial()?.getName() === 'Body')!;
+  const skin = doc.getRoot().listSkins()[0]!;
+  const names = skin.listJoints().map((j) => rename(j.getName()));
+  const J = prim.getAttribute('JOINTS_0')!;
+  const W = prim.getAttribute('WEIGHTS_0')!;
+  const T = prim.getAttribute('TEXCOORD_0')!;
+  const uv: number[] = [];
+  const tuples: Map<string, number>[] = [];
+  for (let i = 0; i < J.getCount(); i += 1) {
+    const j = J.getElement(i, [0, 0, 0, 0]);
+    const w = W.getElement(i, [0, 0, 0, 0]);
+    const tuple = new Map<string, number>();
+    j.forEach((k, n) => {
+      if ((w[n] ?? 0) > 0.004) tuple.set(names[k]!, (tuple.get(names[k]!) ?? 0) + (w[n] ?? 0));
+    });
+    tuples.push(tuple);
+    uv.push(T.getElement(i, [0, 0])[0] ?? NaN);
+  }
+  return { prim, uv, tuples };
+}
+
+test('personal-tier: prepare on a figure of boxes — the A-posed two-bone arms turned to T with the rest skin intact, and decimation keeping every weight', { timeout: 120_000 }, async () => {
+  const slug = `${SLUG}-repose`;
+  const dir = lib.slugDir(slug);
+  const createdPersonal = !existsSync(join(REPO, 'personal'));
+  const createdModels = !existsSync(lib.MODELS_DIR);
+  mkdirSync(dir, { recursive: true });
+  try {
+    const source = await boxFigure(45, 4);
+    writeFileSync(join(dir, 'figure.glb'), source);
+    assert.equal(node(['tools/personal/import.mjs', join(dir, 'figure.glb'), slug]).status, 0);
+    const prepared = node(['tools/personal/prepare.mjs', slug, '--card', 'Selftest Figure', '--budget', '600']);
+    assert.equal(prepared.status, 0, prepared.out);
+    const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as {
+      pose: { turnsDeg: Record<string, number> };
+      triangles: { parts: { material: string; before: number; after: number; kept: boolean }[] };
+    };
+    const body = manifest.triangles.parts.find((p) => p.material === 'Body')!;
+    assert.ok(!body.kept && body.after < body.before, `the body was not decimated: ${JSON.stringify(body)}`);
+    for (const side of ['l', 'r']) assert.ok(Math.abs((manifest.pose.turnsDeg[`upperarm_${side}`] ?? 0) - 45) < 0.5, JSON.stringify(manifest.pose));
+
+    // The inverse bind matrices rewritten from the new pose: at rest every joint a vertex is skinned to puts it
+    // in the same place (`root` included, which no vertex follows), to 1e-4 m.
+    const doc = (await lib.readDocument(join(dir, 'model.glb'))) as Doc;
+    const skin = doc.getRoot().listSkins()[0]!;
+    const joints = skin.listJoints();
+    const ibm = skin.getInverseBindMatrices()!;
+    const M = joints.map((j, k) => new THREE.Matrix4().fromArray(j.getWorldMatrix() as number[]).multiply(new THREE.Matrix4().fromArray(ibm.getElement(k, new Array(16).fill(0)))));
+    const got = bodyVertices(doc, (n) => n);
+    const P = got.prim.getAttribute('POSITION')!;
+    const J = got.prim.getAttribute('JOINTS_0')!;
+    const W = got.prim.getAttribute('WEIGHTS_0')!;
+    let worst = 0;
+    const rest: THREE.Vector3[] = [];
+    for (let i = 0; i < P.getCount(); i += 1) {
+      const v = new THREE.Vector3(...(P.getElement(i, [0, 0, 0]) as [number, number, number]));
+      const at = v.clone().applyMatrix4(M[0]!);
+      rest.push(at);
+      const j = J.getElement(i, [0, 0, 0, 0]);
+      const w = W.getElement(i, [0, 0, 0, 0]);
+      j.forEach((k, n) => {
+        if ((w[n] ?? 0) > 0) worst = Math.max(worst, v.clone().applyMatrix4(M[k]!).distanceTo(at));
+      });
+    }
+    assert.ok(worst <= 1e-4, `at rest a vertex's joints disagree by ${worst.toExponential(2)} m`);
+    // …and the rest they agree on is the T: each hand's vertices level with its shoulder (at 45° they were 0.4 m below it).
+    const shoulder = (side: string) => new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().fromArray(joints.find((j) => j.getName() === `upperarm_${side}`)!.getWorldMatrix() as number[]));
+    for (const side of ['l', 'r']) {
+      const hand = rest.filter((_, i) => [...got.tuples[i]!].sort((a, b) => b[1] - a[1])[0]?.[0] === `hand_${side}`);
+      assert.ok(hand.length > 0, `no vertex on hand_${side}`);
+      const y = hand.reduce((a, v) => a + v.y, 0) / hand.length;
+      assert.ok(Math.abs(y - shoulder(side).y) < 0.05, `hand_${side}'s vertices sit ${(y - shoulder(side).y).toFixed(3)} m from its shoulder's height`);
+    }
+
+    // Decimation collapses onto EXISTING vertices, so every survivor carries exactly the weights it had in the
+    // download (traced by its index in u; 8-bit weights after meshopt, so to 0.01). A limb box's weights are a
+    // curve along it, so a vertex made by interpolation would not match the one it claims to be.
+    const src = bodyVertices((await lib.readDocument(source)) as Doc, (n) => OURS_OF[n.replace(/^mixamorig:/, '')] ?? n);
+    const count = src.uv.length;
+    let blended = 0;
+    for (let i = 0; i < got.uv.length; i += 1) {
+      const k = Math.round((got.uv[i] ?? NaN) * (count - 1));
+      const want = src.tuples[k];
+      assert.ok(want !== undefined, `vertex ${String(i)} traces to no source vertex (u ${String(got.uv[i])})`);
+      const keys = new Set([...want.keys(), ...got.tuples[i]!.keys()]);
+      for (const key of keys) {
+        const d = Math.abs((want.get(key) ?? 0) - (got.tuples[i]!.get(key) ?? 0));
+        assert.ok(d < 0.01, `vertex ${String(i)} (source ${String(k)}): ${key} ${String(got.tuples[i]!.get(key) ?? 0)} ≠ ${String(want.get(key) ?? 0)}`);
+      }
+      if (want.size > 1) blended += 1;
+    }
+    assert.ok(got.uv.length < count && blended > 20, `${String(got.uv.length)} of ${String(count)} vertices kept, ${String(blended)} with a blend`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    if (createdModels && readdirSync(lib.MODELS_DIR).length === 0) rmSync(lib.MODELS_DIR, { recursive: true, force: true });
+    if (createdPersonal && readdirSync(join(REPO, 'personal')).length === 0) rmSync(join(REPO, 'personal'), { recursive: true, force: true });
+  }
+});
+
 test('personal-tier: the whole pipeline on a figure of boxes — import, prepare (A → T, the cape by height), check, and the wrong maps it fails', { timeout: 120_000 }, async () => {
   const dir = lib.slugDir(SLUG);
   const createdPersonal = !existsSync(join(REPO, 'personal'));
   const createdModels = !existsSync(lib.MODELS_DIR);
   mkdirSync(dir, { recursive: true });
   try {
-    writeFileSync(join(dir, 'figure.glb'), await boxFigure(45));
+    writeFileSync(join(dir, 'figure.glb'), await boxFigure(45, 4));
     const imported = node(['tools/personal/import.mjs', join(dir, 'figure.glb'), SLUG]);
     assert.equal(imported.status, 0, imported.out);
     assert.match(imported.out, /rig map\s+auto: Mixamo .* 22\/22/);
@@ -1038,16 +1320,24 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
     assert.match(checked.out, /skinned-vs-file 0\.0\d\d mm/);
     assert.match(checked.out, /22\/22 carry weight/);
     assert.match(checked.out, /sides\s+(\d+)\/\1 judged on the agent's side/);
+    // The limb check (D193) on the right map: every link, both limbs' proportions, the flesh and the ends.
+    assert.match(checked.out, /direction (\d+)\/\1 links within their limit/);
+    assert.match(checked.out, /length 4\/4 limbs inside/);
+    assert.match(checked.out, /flesh (\d+)\/\1 limb joints carry their vertices ahead of them/);
     assert.match(checked.out, /^OK — /m);
+    assert.doesNotMatch(checked.out, /takes our clip set/, 'the closing line claims only what was judged');
 
-    // The verifier's two wrong maps, which the first check.mjs passed.
+    // The wrong maps: the verifier's two, which the first check.mjs passed, and the third skeptic's
+    // forearm-for-hand swap, which judgeBody passed — the fold is the limb check's (D193).
+    const bone = (b: string) => (b === 'Arm' ? 'upperarm' : b === 'ForeArm' ? 'lowerarm' : 'hand');
     const wrong: [string, Record<string, unknown>, RegExp][] = [
       ['the hand on a bone with no weight', { hand_l: 'mixamorig:LeftHandIndex1' }, /FAIL\s+hand_l ← mixamorig:LeftHandIndex1 carries no skin weight/],
       [
         'the arms swapped side for side',
-        Object.fromEntries(['Arm', 'ForeArm', 'Hand'].flatMap((b) => [[`${b === 'Arm' ? 'upperarm' : b === 'ForeArm' ? 'lowerarm' : 'hand'}_l`, `mixamorig:Right${b}`], [`${b === 'Arm' ? 'upperarm' : b === 'ForeArm' ? 'lowerarm' : 'hand'}_r`, `mixamorig:Left${b}`]])),
+        Object.fromEntries(['Arm', 'ForeArm', 'Hand'].flatMap((b) => [[`${bone(b)}_l`, `mixamorig:Right${b}`], [`${bone(b)}_r`, `mixamorig:Left${b}`]])),
         /FAIL\s+the (left|right) foot points BACKWARDS/,
       ],
+      ['the left forearm and hand swapped', { lowerarm_l: 'mixamorig:LeftHand', hand_l: 'mixamorig:LeftForeArm' }, /FAIL\s+the vertices lowerarm_l carries lie BEHIND it/],
     ];
     for (const [what, joints, expect] of wrong) {
       writeFileSync(join(dir, 'bones.json'), JSON.stringify({ joints }));
@@ -1056,10 +1346,14 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
       const c = node(['tools/personal/check.mjs', SLUG, '--no-preview']);
       assert.equal(c.status, 1, `${what}: check passed it\n${c.out}`);
       assert.match(c.out, expect, what);
+      if (/forearm and hand/.test(what)) {
+        assert.match(c.out, /FAIL\s+lowerarm_l → hand_l is 0\.\d\d× as long as upperarm_l → lowerarm_l/, `${what}: the proportion`);
+        assert.match(p.out, /WARN\s+lowerarm_l turned 1\d\d(\.\d)?° onto the agent's forearm/, `${what}: prepare's warning`);
+      }
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
-    if (createdModels) rmSync(lib.MODELS_DIR, { recursive: true, force: true });
-    if (createdPersonal) rmSync(join(REPO, 'personal'), { recursive: true, force: true });
+    if (createdModels && readdirSync(lib.MODELS_DIR).length === 0) rmSync(lib.MODELS_DIR, { recursive: true, force: true });
+    if (createdPersonal && readdirSync(join(REPO, 'personal')).length === 0) rmSync(join(REPO, 'personal'), { recursive: true, force: true });
   }
 });

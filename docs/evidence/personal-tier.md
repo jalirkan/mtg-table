@@ -1,11 +1,13 @@
 ## The personal tier, phase 1 — the folder, the manifest, the pipeline, and Doctor Doom through it (2026-09-28)
 
 Worked in the worktree `/home/justin-a/code/mtg-table-t2x` on branch
-`personal-tier`, from `main` at `a08c15f`. Decisions **D190** (the tier and its
-two-tier rule), **D191** (the pipeline's rules) and **D192** (fix pass 1: how
-`check.mjs` judges a rig map, and the preview browser's isolation), in the
-lane's reserved range D190–D199; PLAN.md *The personal tier* has the status and
-phase 2; `docs/guides/personal-tier.md` is the manual.
+`personal-tier`, from `main` at `a08c15f`, and rebased onto `main`'s `f2c934d`
+in fix pass 3 (§15). Decisions **D190** (the tier and its two-tier rule),
+**D191** (the pipeline's rules), **D192** (fix pass 1: how `check.mjs` judges a
+rig map, and the preview browser's isolation) and **D193** (fix pass 3: the
+limbs, and the preview browser's HTTP cache and profile), in the lane's reserved
+range D190–D199; PLAN.md *The personal tier* has the status and phase 2;
+`docs/guides/personal-tier.md` is the manual.
 
 Run on the user's desktop (16 threads, Node 24.20, three 0.186.0,
 @gltf-transform 4.5.0 with its nested meshoptimizer 1.2.0, the snap Chromium)
@@ -162,10 +164,14 @@ frame of the five clips, on Doom and on the agent, and the largest gap between
 their world-space deltas. **The two rotation columns are equal, and Δ is near
 zero, by construction** (the verifier's finding, round 1): prepare builds every
 skeleton in the `agent`'s bind rotations and these are the `agent`'s clips, so
-the equality holds for ANY rig map and proves the retarget, not the map. The
-discriminating checks are the `verts` column, the rest identity, the bounds and
-the cloak above — and, since fix pass 1, the weight, side, facing and shape
-checks of §13:
+the equality holds for ANY rig map and proves the retarget, not the map. It is
+not a measurement of the map, and the table below is not evidence that Doom's
+map is right. The discriminating checks are the `verts` column, the rest
+identity, the bounds and the cloak above; since fix pass 1, the weight, side,
+facing and shape checks of §13; and **since fix pass 3, the limb check of §15
+(D193) — each spine, arm and leg link's direction, each limb's proportion and
+where each limb joint's flesh lies, which a map that swaps two joints of a chain
+cannot pass and every one of these columns can**:
 
 | joint | verts | Doom° | agent° | Δ° |
 |---|---|---|---|---|
@@ -607,3 +613,237 @@ under `~/snap/chromium/common/.cache/`; this run did not. The other entries unde
 - Committed on `personal-tier` (fix pass 1 and this pass together). `git status
   --ignored` shows `personal/` as ignored, and the commit adds no file under it
   and no binary. `git merge-base --is-ancestor a08c15f HEAD` holds.
+
+---
+
+### 15. Fix pass 3 — the limbs (D193), the preview browser's cache, and the rebase onto `f2c934d`
+
+The third skeptic round found one major and three minors. Everything below was
+run from the user's zip (sha256 `92ea148e…42741791` before and after), with
+`~/forge` and `~/.forge` fingerprinted before the first command. Logs, the
+controls and the scratch scripts are under the worktree's gitignored
+`var/personal-tier/fix3/`.
+
+**The major, reproduced.** The skeptic's three `bones.json` files (its logs are
+in `var/verify3/`) were run through the tools as they stood at `36a4dde`:
+
+| the skeptic's map | `check.mjs` at `36a4dde` |
+|---|---|
+| a — the forearm and the hand swapped on both sides | **exit 0**, `OK — … takes our clip set` |
+| c — the same on the left only | **exit 0**, `OK` |
+| b — `spine_02` and `spine_03` swapped | exit 1: shape `spine_02 → spine_03` 176°, and the cloak off the spine |
+
+Why a and c passed: the rotation columns hold by construction (§5); the weight
+still lands on all 22 joints; the sides are right; and **prepare's A → T turns
+each arm link onto the agent's direction whatever it pointed at** — the swapped
+forearm pointed back along the upper arm and was turned 177.5° (the manifest's
+`pose.turnsDeg`), so D192's shape check skipped the arms on purpose. The bounds
+test cannot see a fold: the arm gets shorter.
+
+**Measured before it was written** (`var/personal-tier/fix3/measure.mjs`, on the
+`hero` body against the `agent`, on Doom's right map and on the swaps): each
+link's direction, its length against the link before it, and `s`, where the
+vertices a joint dominates lie along its link (0 at the joint, 1 at the child).
+
+| | the arm links' direction | forearm / upper arm, × the agent's | the swapped joint's `s` |
+|---|---|---|---|
+| hero, Doom | 0.0–0.7° | 1.06–1.07 | 0.35–0.60 |
+| forearm ↔ hand, both sides | **0.0°** (turned) | **0.52** | **−0.42** |
+| forearm ↔ hand, left | **0.0°** (turned) | **0.52** (left) | **−0.42** (left) |
+| `spine_02` ↔ `spine_03` | `spine_02 → spine_03` **176°** | — | — |
+
+The direction of a turned arm link says nothing; its proportion and its flesh
+do — prepare turns the flesh with its joint, so the hand the swapped `lowerarm`
+carries ends up BEHIND the wrist. The same numbers were read on the user's other
+downloads, as calibration only (nothing about them leaves `var/` and their
+folders were deleted afterwards): **Hulk** and **Nick Fury** (Mixamo, 22/22, A 45°
+and 36.5°) pass every check, D193 included; the table below gives their extremes.
+
+**The check** (`lib.mjs`'s `judgeLimbs`, `check.mjs` step 3b; D193): each link of
+the spine `pelvis → … → Head`, each arm `upperarm → lowerarm → hand` and each leg
+`thigh → calf → foot`, at rest —
+
+- **direction** within 25° of the agent's (45° for the spine and the neck), a
+  link with a synthesised end not judged, the arm links marked as turned by
+  prepare under `--pose t` and measured under `--pose none`;
+- **length**: the forearm over the upper arm and the calf over the thigh within
+  1/1.6–1.6× the agent's same proportion (a limb link of no length fails);
+- **flesh**: `s` above 0 wherever the agent's is at least 0.1;
+- **the ends**: at attack t = 0.5, both hands, both feet and the head moved into
+  the agent's half-space (cosine > 0), where the agent's moved ≥ 2% of its height.
+
+`judgeBody`'s shape check keeps only pelvis → thigh, spine_03 → clavicle and
+foot → ball (a fold used to fail twice). Prepare now WARNs on a forearm turned
+more than 120°. The closing line was `OK — <slug> takes our clip set: its skin
+weight, sides, facing and skeleton match the agent body's; every joint that
+moves on the agent moves on it, by the same world-space delta; …` — the middle
+clause holds by construction. It now lists what was judged, with its numbers,
+and says the look is the previews'.
+
+| model | limb links (max °) | spine links (max °) | forearm / upper arm | calf / thigh | limb `s` | ends at attack 0.5 (min cos) | check |
+|---|---|---|---|---|---|---|---|
+| hero (the build's own body) | 2.7 | 7.8 | 1.07 | 1.06 | 0.16–0.60 | 1.00 | (measure.mjs) |
+| **Doom** | 7.7 | 36.2 (`neck_01 → Head`) | 1.06 | 0.94 | 0.35–0.56 | 0.98 | **exit 0** |
+| Hulk | 3.3 | 18.6 | 1.20 | 0.71–0.72 | 0.40–0.70 | 0.92 | exit 0 |
+| Nick Fury | 7.7 | 18.9 | 1.02 | 0.95 | 0.31–0.67 | 0.99 | exit 0 |
+
+The limits sit outside all four: 25° against 7.7°, 45° against 36.2°, 0.63–1.6×
+against 0.71–1.20×, and `s` > 0 against 0.16.
+
+**Doom** (the final run, from a clean folder): import 0.13 s, prepare 0.46 s,
+check with the previews 1.69 s, exit 0. `model.glb` is sha256 `de229ad3…`, and
+all seven previews have fix pass 2's sha256s: the pipeline's output did not move
+by a byte. Step 3b:
+
+| link | dir° | limit | length× | `s` (model / agent) |
+|---|---|---|---|---|
+| pelvis → spine_01 / spine_01 → 02 / 02 → 03 / 03 → neck_01 / neck_01 → Head | 19.1 / 8.6 / 4.0 / 10.2 / 36.2 | 45 | — | — |
+| upperarm_l → lowerarm_l, lowerarm_l → hand_l | 0.0, 0.0 (turned by prepare) | 25 | 1.06 | 0.49 / 0.40, 0.35 / 0.49 |
+| thigh_l → calf_l, calf_l → foot_l | 7.7, 4.7 | 25 | 0.94 | 0.56 / 0.36, 0.41 / 0.60 |
+| (the right side) | the same | 25 | 1.06, 0.94 | 0.40 / 0.40, 0.35 / 0.47; 0.52 / 0.32, 0.42 / 0.55 |
+
+Ends at attack t = 0.5: `hand_l` 0.99, `hand_r` 1.00, `foot_l` 0.99, `foot_r`
+1.00, `Head` 0.98. Shape: 6/6 branches and toes within 60°, widest
+`spine_03 → clavicle_l` 25.6°.
+
+**The controls** (`var/personal-tier/fix3/controls.mjs`: each map in
+`personal/models/control-<name>/`, prepared from Doom's source and deleted
+afterwards; the three mutants are copies of Doom's `model.glb`):
+
+| control | prepare | check | what fails |
+|---|---|---|---|
+| **the skeptic's a — forearm ↔ hand, both sides** | exit 0, WARN folded 177.5° / 177.5° | **exit 1**, 4 | both sides: `the vertices lowerarm_l carries lie BEHIND it … (at -0.42 of the link; the agent's at 0.49)`, `lowerarm_l → hand_l is 0.51× as long as upperarm_l → lowerarm_l … 0.52× the agent's proportion` |
+| **the skeptic's c — forearm ↔ hand, left** | exit 0, WARN folded 177.5° | **exit 1**, 2 | the same two, left only |
+| **the skeptic's b — `spine_02` ↔ `spine_03`** | exit 0 | **exit 1**, 4 | `spine_02 → spine_03 points 176° away from the agent's (over 45°)`, and the cloak off the spine in the attack (3) |
+| upper arm ↔ forearm, left | exit 0, WARN folded 170.4° | exit 1, 1 | `lowerarm_l → hand_l is 2.01× … 2.08× the agent's proportion` |
+| calf ↔ foot, right | exit 0 | exit 1, 5 | 175°, `s` −0.08, 0.48×, the right foot backwards, and `foot_r` moving against the agent's at attack 0.5 (cosine −0.07) |
+| `neck_01` ↔ `Head` | exit 0 | exit 1, 1 | `neck_01 → Head` 144° |
+| thigh ↔ calf, left | exit 0 | exit 1, 5 | 172°, `s` −0.35, 1.85×, `pelvis → thigh_l` 74°, `foot_l` against the agent's at attack 0.5 (cosine −0.75) |
+| earlier passes' maps: hand on a controller; arms swapped l↔r; the same with the clavicles; a full mirror; legs mirrored; `Head` and `foot_l` on controllers | exit 0 | exit 1: 2, 21, 18, 4, 14, 3 | as §13–§14 (the double 60°/45° line on `neck_01 → Head` is one line now) |
+| `neck_01` on a controller (the benign case) | exit 0, WARN | **exit 0** | — |
+| mutants: the cloak on `root`; `lowerarm_l`'s IBM off by 1 m; `calf_l` renamed | — | exit 1: 4, 1, 2 | as §13 |
+
+The ends at attack t = 0.5 caught none of the skeptic's three: a folded arm's
+hand is still carried the agent's way (cosine 0.98). They fire on the legs.
+
+**The minors.**
+
+- **The tests** (`web/test/personal-tier.test.ts`, 23 → 28 cases). Three
+  `judgeLimbs` cases on stick bodies: the agent's own shape passes (and a
+  synthesised spine joint is not judged); the skeptic's three swaps fail — the
+  forearm ↔ hand swap is run through a copy of prepare's A → T, so its arm
+  directions pass by construction, as Doom's did, and it fails on the proportion
+  and the flesh; a thigh ↔ calf swap and a limb link of no length fail; and the
+  ends are judged by half-space. The net-log reader now reads cache keys (a
+  `www.google.com` memory-cache entry is flagged), and a profile reader case
+  finds a planted cache entry and a planted copy of a model, and skips the net
+  log. **A prepare-and-check case on boxes**: the box on two bones alone cannot
+  be prepared (prepare needs the fourteen core joints), so the figure of boxes'
+  two-bone arms are the A-posed arm — 45° below the horizontal, each box now four
+  rings, each limb box blending to its child along a curve, every vertex's index
+  written into its `u`. After `prepare --budget 600` the body is decimated (its
+  792 triangles cut); every vertex's joints agree on where it rests to 1e-4 m
+  (the inverse bind matrices rewritten from the new pose); the hands' vertices
+  sit level with the shoulders (T; at 45° they were 0.4 m below); and **every
+  surviving vertex carries exactly the weights it had in the download**, traced
+  by its `u`, to 0.01 (8-bit weights after meshopt). The end-to-end case now
+  asserts the limb lines on the right map, that the closing line no longer says
+  "takes our clip set", and a third wrong map — the left forearm ↔ hand — failing
+  on its flesh and its proportion, with prepare's warning.
+  **Negative controls**, each a one-line mutation of a tool, run and restored
+  (`var/personal-tier/fix3/test-mutants.sh`): one inverse bind matrix 1 cm off
+  its joint — "at rest a vertex's joints disagree by 1.00e-2 m"; decimation
+  handing each survivor its neighbour's weights — "vertex 9 (source 19): pelvis
+  0 ≠ 1"; the limb check's failures not counted — "the left forearm and hand
+  swapped: check passed it".
+- **§5** now says the rotation equality is by construction and is not a
+  measurement of the map, and points here.
+- **The preview browser.** Its flags already carried everything the round asked
+  for — `--disable-background-networking`, `--disable-component-update`,
+  `--disable-sync`, `--no-first-run`, `Translate` and `OptimizationHints` in
+  `--disable-features` — and a fresh profile each run. What was not measured was
+  the HTTP cache itself. Measured now, from the net log's cache events: with every
+  one of those flags on, **the cache keyed a `www.google.com` entry** for the
+  omnibox's AI-mode eligibility request (`/async/folae`), which the resolver had
+  refused — a synthetic probe with no model in it, run with exactly the round's
+  flag list, showed the same (`var/personal-tier/fix3/cacheprobe/`). Of three
+  candidate features, `AimServerRequestOnStartupEnabled` is the one whose
+  disabling stops it; it is added. Doom's run now reads: **12 cache entries, all
+  for 127.0.0.1**; 12 requests to 127.0.0.1; `accounts.google.com` ×2 tried and
+  refused by the resolver (it keys no cache entry); 0 DNS queries, 0 TCP
+  connections and 0 bytes beyond the loopback. The profile is also read before it
+  is deleted — 142 files, 7.92 MB, **no HTTP cache entry file left and no file
+  holding any of three 64-byte cuts of `model.glb`**. Two live controls, each a
+  one-line edit of `check.mjs`, restored afterwards
+  (`var/personal-tier/fix3/preview-mutants.sh`): with the AI-mode feature left
+  on, exit 1 — "the browser's HTTP cache keyed an entry for a host beyond the
+  loopback: www.google.com" (14 entries, `www.google.com` ×2); with a browser that
+  caches (no `--incognito`, a real disk cache, `max-age` answers), exit 1 — "the
+  browser's profile kept a copy of model.glb:
+  `Default/Cache/Cache_Data/c35c3e8e07ab5b06_0`" (12 entry files left). **The
+  profile stays in the slug's folder**, not under `var/` as the round proposed:
+  D192 moved it out of `var/` because a profile there had kept a copy of the
+  model, and the slug's folder keeps whatever the browser writes beside the model
+  it came from (D193's rejected alternatives).
+
+**What the other downloads showed** (calibration, not this lane's to fix; PLAN.md
+follow-up 21): Peggy Carter (Mixamo, 19/22 — `spine_03` and the balls
+synthesised) and the MCU Wasp (the same) fail D192's `spine_03 → clavicle`
+(92°, 78°) and Peggy a foot facing backwards; both pass D193. The older Wasp (a
+mesh posed on a T skeleton) fails a foot and, under D193, both forearms' flesh
+(−0.82, −0.40): its arms are not where its bones are. Coulson (Character
+Creator) fails the sides everywhere and, under D193, two leg links (127°, 125°),
+an upper arm and forearm at one point, and two ends at attack 0.5 — its rest pose
+read back as 85° / −57°. Doom v2's rig matched no convention (it needs a
+`bones.json`).
+
+**The rebase onto `f2c934d`.** Four files conflicted, in both commits:
+`CLAUDE.md` (resolved to `main`'s, the lane's text moved as below),
+`DECISIONS.md` (D190–D192 placed between D183 and D200, by number),
+`PLAN.md` (this lane's section after the docs block's) and `tools/README.md`
+(`main`'s paragraph, with the personal modules' sentence). Then, in this pass,
+**the move**: the hard-rule-8 paragraph (*A personal model is a statement about
+what a card is, too*) into the root file's hard rule 8; the section *The personal
+tier — the conventions D190–D193 added* into `tools/CLAUDE.md`, with a pointer
+in the root's *Where the rules live* and a row in its docs table; and
+`docs/claude-md-rules.txt` regenerated with `CLAUDE_MD_RULES_WRITE=1` — 18
+entries added, none removed (the file's order follows the files'), and every
+moved rule appears exactly once across the five files. **The *Commits, branches
+and merges* bullet** said personal assets are recorded in
+`tools/assets-manifest.json` as `committable: false`; it now points at D190 and
+the guide, with a dated note saying what it used to say and why D190 rejected
+it. README's NON-GOALS bullet, D201's rule 6 and PLAN.md's *Tier 3 — a note, not
+a plan* said the same, and each carries the same kind of dated note (D193 says
+why D190 governs). PLAN.md's follow-ups 18 and 19 are closed; *Open now* indexes
+this lane's open ones.
+
+**Gates, fix pass 3** (the tree as committed):
+
+- `./bridge/build.sh`: OK, 4.4 s.
+- `npm --prefix web test`: **1,027 / 1,027 pass** under `node --test` (28 of them
+  `personal-tier`) and vitest **121 (8 files)**.
+- `npm --prefix web run build`: OK; `web/dist` holds no `personal/models`,
+  `doctor_doom`, `model.glb` or `preview-profile`.
+- `rm -rf bridge/out && GATE_JOBS=4 WSPORT=9050 ./tools/check-all.sh`, step 10
+  on ports 9050–9056: **`check-all OK`, 262.4 s** (4 m 22.6 s by `time`), 48 jobs
+  summing to 1,001.2 s, at a load average of 7.5–12.0
+  (`var/check-all-personal-tier-merge.log`, run `20260928-220226-2764053`).
+  Inside it, `node --test` ran **1,037 / 1,029 pass / 0 fail / 8 skipped** and
+  vitest **121 (8 files)**. This section, the PLAN.md gate line and the
+  `README.md`, `DECISIONS.md` and PLAN.md notes on `committable: false` were
+  written during and after the gate; no test reads those files.
+- `~/forge` and `~/.forge`, fingerprinted before the first command and after
+  the gate (the jars' sha256, `~/forge`'s top level, and every `~/.forge` file's
+  path, size, time and contents): **unchanged** (`var/personal-tier/fix3/forge-before.txt` =
+  `forge-after.txt`). The user's zip is still sha256 `92ea148e…42741791`.
+- Outside the repo, `find -newer` over `~/snap`, `~/.config`, `~/.cache`,
+  `~/.local`, `~/.pki` and `~/code` from a marker touched before the first
+  command: the snap Chromium launcher's two paths of §14 (`Crash Reports/settings.dat`
+  and the `ibus/bus` link, rewritten at the last preview run's start), and one
+  NVIDIA GL shader-cache file under `~/snap/chromium/common/.cache/nvidia/`
+  rewritten at 21:51:39, when no Chromium of this pass was running (the probes
+  ended at 21:46, the next preview run started at 21:54) and another lane's
+  worktree was active; the rest is the desktop's and the Claude app's own state.
+- Committed on `personal-tier`: `git merge-base --is-ancestor f2c934d HEAD`
+  holds, the tree is clean, and `git status --ignored` shows `personal/` ignored;
+  the commit adds no file under it.

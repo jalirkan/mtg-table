@@ -8526,6 +8526,100 @@ HTTP cache, with spellcheck and Google requests beside it.
 
 ---
 
+## D193 — check.mjs judges the LIMBS: each chain link's direction, each limb's proportion and where each limb joint's flesh lies, and the chain ends at attack t = 0.5; the preview browser's HTTP cache and profile are measured
+
+*Branch `personal-tier`, fix pass 3 (the third skeptic round), rebased onto `main`'s `f2c934d`; the lane's reserved range D190–D199.*
+
+**2026-09-28** (`docs/evidence/personal-tier.md` §15)
+
+**Decision.** Two rules for `tools/personal/check.mjs`, and one amendment to
+D192's shape check:
+
+1. **A prepared body's limbs are judged against the `agent`'s**
+   (`tools/personal/lib.mjs`'s `judgeLimbs`). A `bones.json` that swaps the
+   forearm and the hand — on both sides, or on one — passed D192's check with
+   exit 0: the rotations hold by construction, the weight still lands on 22
+   joints, the sides are right, `--pose t` turns each arm link onto the agent's
+   direction whatever it pointed at (a 177.5° turn for the swapped forearm), and
+   the bounds test cannot see a fold because the arm gets SHORTER. Each LINK of a
+   chain — the spine `pelvis → spine_01 → spine_02 → spine_03 → neck_01 → Head`,
+   each arm `upperarm → lowerarm → hand`, each leg `thigh → calf → foot` — is now
+   judged at rest:
+   - **direction**: child joint − joint within **25°** of the agent's for the
+     limbs and **45°** for the spine and the neck (whose joints each convention
+     spaces and bends its own way: Doom's `neck_01 → Head` is 36.2°). A link with
+     a synthesised end is not judged. The arm links pass by construction under
+     `--pose t` and are measured under `--pose none`; the output says which;
+   - **length**: a limb's second link over its first (the forearm over the upper
+     arm, the calf over the thigh) within **1/1.6–1.6×** the agent's same
+     proportion. A swap makes one link span two bones and the next run back over
+     one: the forearm↔hand swap reads 0.52×. The spine is not judged by length —
+     its spacing is a rig convention (Doom's neck is 2.06× the agent's
+     proportion, Hulk's 0.49×);
+   - **flesh**: where the vertices a limb joint dominates lie along its link,
+     `s` = (their centroid − the joint) · link / |link|², 0 at the joint and 1 at
+     the child; wherever the agent's is at least 0.1 (it is 0.32–0.60) the model's
+     must be above 0. Prepare turns the flesh WITH its joint, so a fold carries it
+     behind the joint whatever the skeleton says: −0.42 for the swapped forearm;
+   - **the ends**: at t = 0.5 of the attack clip both hands, both feet and the
+     head move into the agent's half-space (cosine > 0), wherever the agent's
+     moved at least 2% of its height.
+   `judgeBody`'s shape check (D192) keeps only the links `judgeLimbs` does not
+   judge — pelvis → thigh, spine_03 → clavicle, foot → ball, at 60° — so a fold
+   fails once, at the tighter limit. The closing OK line lists what was judged
+   and nothing else (it had said "takes our clip set … nothing exploded").
+   Prepare also WARNS when a forearm turns more than 120° onto the agent's.
+2. **The preview browser's HTTP cache and profile are measured, not assumed.**
+   Every entry the HTTP cache keyed (the net log's `SIMPLE_CACHE_ENTRY_SET_KEY`,
+   `DISK_CACHE_ENTRY_IMPL` and `DISK_CACHE_MEM_ENTRY_IMPL`) must be for
+   127.0.0.1, and the profile, read before it is deleted, must hold no copy of
+   `model.glb` (three 64-byte cuts of its binary chunk). The omnibox's AI-mode
+   eligibility request (`www.google.com/async/folae`) keyed a `www.google.com`
+   entry even though the resolver refused it, with every background-network flag
+   on; `--disable-features=…,AimServerRequestOnStartupEnabled` stops it (the one
+   of three candidate features that did, measured). The profile stays
+   `personal/models/<slug>/.preview-profile/`, fresh for each run (D192).
+
+Merging this lane onto `main`'s `f2c934d` also settled a conflict between two
+decisions of the same day: **D201**'s rule 6 said a personal-only asset is
+recorded in `tools/assets-manifest.json` as `committable: false`, which **D190**
+(written first, on this branch) had rejected. D190 governs; D201's rule 6, the
+root `CLAUDE.md`'s bullet and README's NON-GOALS bullet each carry a dated note
+saying so.
+
+**Rationale.** The skeptic's maps were the right test of D192's claim that a
+wrong map fails, and two of three passed. A fold changes three things the
+skeleton's rotations cannot hide — a link's direction where prepare does not
+turn it, a limb's proportions, and which side of a joint its flesh is on — and
+each is a number the `agent` body has too. The thresholds were set by
+measurement: on the hero body and on the user's own Doom, Hulk and Nick Fury
+downloads (all three maps correct), the limb links point within 7.7° of the
+agent's, the limb proportions are 0.71–1.20×, and every limb joint's flesh lies
+at 0.16–0.70 of its link; the swaps read 0.48–0.52× (or 1.85–2.08×) and −0.08 to
+−0.42. The ends at attack t = 0.5 caught neither arm swap (the clip carries a
+folded arm's hand the agent's way) and are kept for the legs, where the thigh↔calf
+and calf↔foot swaps move the foot against the agent's (cosines −0.75, −0.07).
+
+**Rejected.**
+
+- **Judging the arm directions from the manifest's turns** (`pose.turnsDeg`, the
+  forearm's 177.5° is a direct measure). A posed model's bent elbow is a correct
+  map with a large turn; the flesh and the proportion judge the arm without
+  reading prepare's own report.
+- **Length ratios along the spine.** The four correct maps measured 0.49–2.06×
+  the agent's spacing (Hulk's neck, Doom's), so a band that passes them is 2.1×
+  wide, and the skeptic's spine_02↔spine_03 swap (2.41×, 0.40×) would clear it
+  by a hair. The spine's fold is its direction — 176° for that swap, 36.2° at
+  most on a correct map.
+- **25° for the spine and the neck.** Doom's correct neck is 36.2°.
+- **The preview profile under `var/`**, as the third round's minor proposed.
+  D192 moved it out of `var/` because a profile there kept a copy of the model;
+  the slug's folder keeps any copy the browser makes beside the model, and the
+  profile read now proves there is none.
+- **Refusing the fold in prepare.** Prepare warns; check decides (D192's rule).
+
+---
+
 ## D200 — A decision's number is final: a lane keeps the block it reserves, gaps are allowed, and no document states a total
 
 *Branch `docs-block`; the lane's reserved range D200–D204.*
@@ -8598,6 +8692,9 @@ standing rules that go with it:
    `tools/assets-manifest.json` as `committable: false` (none is yet). The
    rule is report 13 §13 question 2's, restated in PLAN.md's *Tier 3 — a note, not
    a plan*; D54 is the separate rule that every committed asset is CC0.
+   *(2026-09-28, when the personal tier merged: the `committable: false` record
+   is superseded by D190, which rejected it — a personal model's provenance lives
+   in its own gitignored folder; see D193.)*
 
 **Rationale.** *The user commits* had stopped describing the practice: every lane
 since M7's slices committed on its own branch, with the session's co-author line,

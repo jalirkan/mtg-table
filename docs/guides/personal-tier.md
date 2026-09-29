@@ -1,6 +1,6 @@
 # The personal tier — models of the real characters, on this machine only
 
-*2026-09-28, **D190**, **D191** and **D192**. Phase 1 of 2: the folder, the
+*2026-09-28, **D190**, **D191**, **D192** and **D193**. Phase 1 of 2: the folder, the
 manifest and the pipeline. Phase 2, the loader that draws a personal model in
 the arena and the workshop, is not built — nothing in the game reads
 `personal/` yet (PLAN.md, *The personal tier*).*
@@ -35,7 +35,9 @@ published".** Everything below follows from it:
   `personal/models/<slug>/preview/`, and the headless browser that draws them
   leaves no copy anywhere else: its profile is
   `personal/models/<slug>/.preview-profile/` for the run and is deleted after
-  it, and every answer it is given is `no-store` (**D192**). (The snap
+  it, and every answer it is given is `no-store` (**D192**); before it is
+  deleted the profile is read, and a copy of `model.glb` in it fails the run
+  (**D193**). (The snap
   Chromium's launcher still rewrites its own crash-reporter `settings.dat` and
   an ibus link under `~/snap/chromium/` on every start, as it does for any
   Chromium; neither holds anything of the model.) A screenshot of a personal
@@ -140,26 +142,38 @@ into our T; skins what had no skin; stands the model up facing +Z with its feet 
 textures (downscaling anything over 1024 px); and compresses with meshopt last.
 It prints a before/after table.
 
-**`check.mjs <slug>`** proves the result takes our clips: that its own copy of
-the build's retarget reproduces the build's clips, then that idle, attack, hit,
-die and the kneel carried onto the model move every joint the `agent` body moves,
-by the same world-space delta, with no NaN, no exploded skinning, and the cloak
-following the spine. Those rotations hold **by construction** — prepare builds
-every skeleton in the `agent`'s bind rotations — so they cannot tell a wrong rig
-map from a right one. What can is judged against the `agent` body (**D192**):
-every core joint carries skin weight where the agent's does (a hand mapped to a
-controller with no weight fails), bones placed by position carry at most 2% of
-the weight, every `_l` joint and its vertices sit on the character's left (+x),
-each foot's vertices are in front of its ankle (a map with left and right
-swapped turns the whole figure round, and its feet then point backwards), and
-every segment points within 60° of the agent's (a thigh mapped to a calf points
-up). It prints the joint-coverage table — weight on the model and on the agent,
-vertices, rotation — and the side, facing and shape lines, then renders the
-previews through headless Chromium (`--no-preview` skips them). The browser runs
-with its background services off and every host name answered "not found", and
-its own net log is read back: a connection, a byte sent, a DNS query or an answer
-beyond 127.0.0.1 fails the run. Exit 1 on any failure.
-`docs/evidence/personal-tier.md` is Doom, run through all three.
+**`check.mjs <slug>`** plays our clips on the result and judges its rig map:
+that its own copy of the build's retarget reproduces the build's clips, then
+that idle, attack, hit, die and the kneel carried onto the model move every joint
+the `agent` body moves, by the same world-space delta, with no NaN, no exploded
+skinning, and the cloak following the spine. Those rotations hold **by
+construction** — prepare builds every skeleton in the `agent`'s bind rotations —
+so they cannot tell a wrong rig map from a right one. What can is judged against
+the `agent` body. **Where the weight goes and where the joints stand**
+(**D192**): every core joint carries skin weight where the agent's does (a hand
+mapped to a controller with no weight fails), bones placed by position carry at
+most 2% of the weight, every `_l` joint and its vertices sit on the character's
+left (+x), each foot's vertices are in front of its ankle (a map with left and
+right swapped turns the whole figure round, and its feet then point backwards),
+and the branches (pelvis → thigh, spine → clavicle) and the toes point within
+60° of the agent's. **The limbs** (**D193**): each link of the spine, the arms
+and the legs points within 25° of the agent's (45° for the spine and the neck);
+the forearm keeps the agent's proportion to the upper arm, and the calf to the
+thigh, within 1/1.6–1.6×; the vertices each limb joint carries lie AHEAD of it
+along its link; and at t = 0.5 of the attack the hands, the feet and the head
+move the agent's way. A map that swaps two joints of a chain — the forearm and
+the hand, a thigh and a calf, `spine_02` and `spine_03` — fails here: `--pose t`
+turns the arm links onto the agent's directions whatever they pointed at, but
+it cannot fix their lengths, and it turns the flesh with them, so a folded
+forearm carries its vertices behind its joint. It prints the joint-coverage table
+— weight on the model and on the agent, vertices, rotation — the side, facing
+and shape lines and the limb table, then renders the previews through headless
+Chromium (`--no-preview` skips them). The browser runs with its background
+services off and every host name answered "not found", and its own net log is
+read back: a connection, a byte sent, a DNS query, an answer or an HTTP cache
+entry beyond 127.0.0.1 fails the run, and so does a copy of `model.glb` in its
+profile. Exit 1 on any failure; the closing OK line lists what was judged and
+nothing more. `docs/evidence/personal-tier.md` is Doom, run through all three.
 
 ## The manifest
 

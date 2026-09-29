@@ -1,4 +1,4 @@
-# tools/CLAUDE.md — the gate, the checkers and the card library
+# tools/CLAUDE.md — the gate, the checkers, the card library and the personal tier
 
 These load when you work under `tools/`, on top of the root `CLAUDE.md`, whose
 *The gate, in one paragraph* is the short version of the first section here.
@@ -356,3 +356,92 @@ Forge's), and any rules logic — legalities are Scryfall's data, displayed. The
 build needs the network and is **not** in `check-all.sh`; the four suites
 (`cards-lib`, `cards-api`, `cards-ui` and the vitest `cards-render`) run
 offline inside `npm --prefix web test` over `fixtures/cards/`.
+
+## The personal tier — the conventions D190–D193 added
+
+Five, and the thesis is the user's own sentence: **"this can never ever ever be
+sold or published."** The personal tier is `personal/models/<slug>/` — rigged
+models of the actual characters that the USER downloaded for their own use —
+and it sits beside the CC0 repository tier (**D54**, unchanged) without ever
+entering it. `docs/guides/personal-tier.md` is the manual,
+`docs/evidence/personal-tier.md` is Doctor Doom run through it, and PLAN.md's
+*The personal tier* has the status and phase 2 (the loader). Phase 1 is the
+folder, the manifest and the pipeline, `tools/personal/`; **nothing in the game
+reads `personal/` yet**. Its half of hard rule 8 is in the root `CLAUDE.md`.
+
+1. **It is never committed, and the ignore rule is anchored** (**D190**).
+   `.gitignore` names `/personal/`; an unanchored `personal/` also hides
+   `tools/personal/`, the committed pipeline. `web/test/personal-tier.test.ts`
+   holds both halves with `git check-ignore --no-index` (without it git never
+   calls a tracked file ignored, and the unanchored rule slipped past once the
+   pipeline was committed) and fails if git tracks a file under `personal/`.
+   Nothing under `web/src/` or `web/public/` reads it, a picture of a personal
+   model stays in its folder, and phase 2 serves it from the Vite dev server
+   alone (**D92**'s rule) — never `vite preview`, never a build.
+2. **Claude never sources a model.** The user downloads, with their own account,
+   under a licence they read; the tools read what is on disk, fetch nothing,
+   accept nothing and refuse nothing (game-asset name patterns are flagged, not
+   refused). No model of a real character, and no picture of one, goes anywhere
+   in the repo — the test builds its own fixtures, a box on two bones and a
+   figure of boxes.
+3. **A tool writes only inside its slug's folder.** Every path goes through
+   `tools/personal/lib.mjs`'s `insideSlug`; `prepare.mjs` writes `model.glb` and
+   `manifest.json` and nothing else. So does the browser `check.mjs` starts for
+   the previews (**D192**): its profile is
+   `personal/models/<slug>/.preview-profile/`, made fresh for the run and deleted
+   after it, every answer is `no-store`, and its own net log must show no
+   connection, byte, DNS query or answer beyond 127.0.0.1 — a profile under
+   `var/` once kept a copy of `model.glb` in its cache. **Since D193 the HTTP
+   cache and the profile are measured too**: every entry the cache keyed (the
+   net log's `SET_KEY` and `ENTRY_IMPL` events) must be for 127.0.0.1, and the
+   profile, read before it is deleted, must hold no copy of the model (three
+   64-byte cuts of its binary chunk); `AimServerRequestOnStartupEnabled` is off,
+   because the omnibox's AI-mode eligibility request keyed a `www.google.com`
+   entry even though the resolver refused it. The one write outside the folder
+   is the snap Chromium LAUNCHER's, which no flag reaches and any Chromium start
+   makes (`tools/arena-bench.mjs` too): it rewrites the 40-byte
+   `~/snap/chromium/common/chromium/Crash Reports/settings.dat` and re-links
+   `~/snap/chromium/<revision>/.config/ibus/bus` to `~/.config/ibus/bus`, and
+   neither holds a byte of the model. The slug is the card's name lowercased,
+   accents folded, everything but letters, digits, spaces and hyphens dropped,
+   spaces to hyphens. `manifest.json` (`validateManifest` is its schema) says what
+   the model dresses — a `card` by exact name and/or a duelist `seat` — and how it
+   was made.
+4. **A prepared model speaks OUR rig** (**D191**). `prepare.mjs` rebuilds the
+   skeleton as `root` + the 22 joints `tools/build-figures.mjs` retargets (never
+   the source's own hierarchy — Auto-Rig Pro's deform bones hang from the rig's
+   root), at the source's positions and in the `agent` body's bind rotations,
+   turns an A-pose to our T and bakes it (inverse bind matrices rewritten, so the
+   skin is the identity at rest), skins an unskinned cloak by height
+   (`spine_03` / `spine_02` / `pelvis`), decimates with the meshoptimizer the CLI
+   pins, keeps base colour and normal ≤ 1024 px, and runs meshopt last. The
+   automatic rig map knows Auto-Rig Pro, Mixamo, Unreal, VRM and Character
+   Creator; `bones.json` beside the model overrides it joint by joint.
+5. **There is one retarget, and it is proven.** `tools/personal/retarget.mjs` is
+   the build's `humanClips` world-space delta as a function (the build cannot be
+   imported: it builds on import). `check.mjs` and the test hold the copy to the
+   build: `agent`'s baked clips carried onto `hero` must reproduce `hero`'s own
+   (worst joint 0.77°, the clip compression; a mutant with the bind offset
+   dropped is 8.5° off). Change the build's retarget and this copy together, or
+   factor them (PLAN.md follow-up). **Those rotations prove the retarget, never
+   the rig map**: prepare builds every skeleton in the `agent`'s bind rotations,
+   so they hold for ANY map, and under `--pose t` it turns each arm link onto the
+   agent's direction too. A map is judged against the `agent` body by where the
+   weight goes and where the joints stand (`judgeBody`, **D192**: weight on every
+   core joint, sides, the feet in front of the ankles, the branches and the toes)
+   and by its LIMBS (`judgeLimbs`, **D193**): each link of the spine, the arms and
+   the legs points within 25° (45° for the spine and the neck) of the agent's,
+   each limb keeps the agent's proportion of its two links within 1/1.6–1.6×,
+   each limb joint's vertices lie ahead of it along its link, and at attack
+   t = 0.5 the hands, the feet and the head move the agent's way. A swap of two
+   joints of a chain — the forearm and the hand — passed D192's checks; it fails
+   the proportion (0.52×) and the flesh (−0.42). `check.mjs`'s closing OK line
+   lists what was judged and nothing else, and `personal-tier.test.ts` runs the
+   whole pipeline on a figure of boxes and fails every wrong map that once
+   passed.
+
+```bash
+node tools/personal/import.mjs <download.zip|.gltf|.glb|.vrm> <slug>   # unpack + inspect.json
+node tools/personal/prepare.mjs <slug> --card "<name>" [--seat opp] [--budget 6000]
+node tools/personal/check.mjs <slug>          # our clips on it, the map judged, previews (headless Chromium)
+```

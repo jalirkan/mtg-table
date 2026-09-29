@@ -21,7 +21,12 @@
  *   - INSPECTION: what is in a glTF — meshes, skins, the rest pose (T or A,
  *     measured from the bind matrices), control meshes, unskinned meshes, and
  *     game-asset name patterns (informational only: the tooling never refuses a
- *     file, and it never fetches one either).
+ *     file, and it never fetches one either);
+ *   - the JUDGEMENTS `check.mjs` makes of a prepared body against the `agent`'s:
+ *     `judgeBody` (weight, sides, facing, shape — D192) and `judgeLimbs` (each
+ *     spine, arm and leg link's direction, length and flesh, and the chains'
+ *     ends at attack t = 0.5 — D193), and `netLogReport` (the preview browser's
+ *     own net log) and `profileReport` (what its profile kept).
  *
  * Nothing here writes a file. Nothing here touches the network.
  *
@@ -866,8 +871,9 @@ export function heightWeights(y, heights) {
  *   - **facing**: each foot's vertices in FRONT of its ankle, as the agent's are —
  *     a map with left and right swapped everywhere passes the side test (prepare
  *     turns the whole figure round to match it) and fails this one;
- *   - **shape**: every segment of the skeleton (the arms apart) points within
- *     `SEGMENT_LIMIT_DEG` of the agent's — a thigh mapped to a calf points up.
+ *   - **shape**: the skeleton's branches — pelvis → thigh, spine_03 → clavicle
+ *     — and each foot → ball point within `SEGMENT_LIMIT_DEG` of the agent's (the
+ *     links of the spine, the arms and the legs are `judgeLimbs`'s, D193).
  *
  * `body` and `agent` are `{ joints: { <our joint>: [x, y, z] }, mass: { <our
  * joint>: { at: [x, y, z], n, weight } }, totalWeight, height }`: bind positions,
@@ -876,21 +882,17 @@ export function heightWeights(y, heights) {
  * of ours — the agent's fingers as its hand). `rig` is the manifest's `rig`.
  */
 export const SIDED_STEMS = ['clavicle', 'upperarm', 'lowerarm', 'hand', 'thigh', 'calf', 'foot', 'ball'];
-/** Our skeleton's segments, judged by direction. The arms are judged by side only: `--pose t` turns them onto the agent's by construction. */
-export const SEGMENTS = [
-  ['pelvis', 'spine_01'],
-  ['spine_01', 'spine_02'],
-  ['spine_02', 'spine_03'],
-  ['spine_03', 'neck_01'],
-  ['neck_01', 'Head'],
-  ...['l', 'r'].flatMap((s) => [
-    ['pelvis', `thigh_${s}`],
-    ['spine_03', `clavicle_${s}`],
-    [`thigh_${s}`, `calf_${s}`],
-    [`calf_${s}`, `foot_${s}`],
-    [`foot_${s}`, `ball_${s}`],
-  ]),
-];
+/**
+ * Our skeleton's segments judged here by direction: the branches and the toes.
+ * The links of the spine, the arms and the legs are `judgeLimbs`'s (D193), with
+ * tighter limits and their lengths and flesh; until D193 the spine and leg links
+ * were judged here too, at 60°, and a fold in them failed twice.
+ */
+export const SEGMENTS = ['l', 'r'].flatMap((s) => [
+  ['pelvis', `thigh_${s}`],
+  ['spine_03', `clavicle_${s}`],
+  [`foot_${s}`, `ball_${s}`],
+]);
 /** A joint "carries weight" on the agent at this share of its skin weight … */
 export const AGENT_WEIGHT_MIN = 0.001;
 /** … and "carries none" on the model under this. */
@@ -1011,6 +1013,165 @@ export function judgeBody(body, agent, rig = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Judging a prepared body's LIMBS against the agent's: direction, length, flesh
+// ---------------------------------------------------------------------------
+
+/**
+ * **Why this check exists** (D193, the third skeptic round). A map that swaps
+ * the forearm and the hand passed every check above: the rotations hold by
+ * construction, the weight still lands on 22 joints, the sides are right, and
+ * the bounds test cannot see a fold (the arm gets SHORTER). It fails here.
+ *
+ * Each LINK of a chain — the spine `pelvis → spine_01 → … → neck_01 → Head`,
+ * each arm `upperarm → lowerarm → hand`, each leg `thigh → calf → foot` — is a
+ * bone from a joint to its child, at rest, judged against the agent's same
+ * link:
+ *
+ *   - **direction**: the unit vector child joint − joint points within
+ *     `LIMB_DIRECTION_DEG` (arms and legs) or `SPINE_DIRECTION_DEG` (the spine
+ *     and the neck, whose joints each convention spaces and bends its own way —
+ *     Doom's `neck_01 → Head` is 36°) of the agent's. A link with a synthesised
+ *     end is not judged (it was placed between its neighbours). Under `--pose t`
+ *     prepare turns each arm link onto the agent's direction, so the arm
+ *     directions pass BY CONSTRUCTION there — the next two checks are the arm's
+ *     measurement — and under `--pose none` they are measured;
+ *   - **length**: the second link of each limb against the first — the forearm
+ *     over the upper arm, the calf over the thigh — as a multiple of the agent's
+ *     same proportion, inside `LIMB_LENGTH_BAND` either way. A swap of two
+ *     joints makes one link span two bones and the next run back over one, so
+ *     the proportion halves or doubles (the forearm↔hand swap: 0.52×). The
+ *     spine is not judged by length: its joint spacing is a rig convention
+ *     (Doom's neck is 2.06× the agent's proportion, Hulk's 0.49×);
+ *   - **flesh**: where the vertices a limb joint dominates lie along its link —
+ *     `s` = (their centroid − the joint) · link / |link|², 0 at the joint, 1 at
+ *     the child. The agent's are 0.32–0.60; a folded limb carries its flesh
+ *     BEHIND its joint (s ≤ 0; the forearm↔hand swap: −0.42), which no turn of
+ *     the skeleton can hide, because prepare turns the flesh with the joint.
+ *
+ * And at t = 0.5 of the attack clip (`attack`, when given), each chain's END
+ * joint — both hands, both feet and the head — must have moved into the same
+ * half-space as the agent's did (cosine > 0), wherever the agent's moved at
+ * least `END_MOVE_MIN` of its height.
+ *
+ * `body` and `agent` are `judgeBody`'s (bind positions, and per joint the
+ * centroid of the vertices it dominates); `rig` is the manifest's `rig`, `fix`
+ * the manifest's `pose.fix`, and `attack` is `{ body: { <joint>: [x, y, z] },
+ * agent: { … } }`, the joints' positions at attack t = 0.5.
+ */
+export const LIMB_CHAINS = [
+  ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'Head'],
+  ...['l', 'r'].flatMap((s) => [
+    [`upperarm_${s}`, `lowerarm_${s}`, `hand_${s}`],
+    [`thigh_${s}`, `calf_${s}`, `foot_${s}`],
+  ]),
+];
+/** A limb link may point at most this far from the agent's … */
+export const LIMB_DIRECTION_DEG = 25;
+/** … and a spine or neck link at most this far. */
+export const SPINE_DIRECTION_DEG = 45;
+/** A limb's second link over its first, as a multiple of the agent's: inside [1 / band, band]. */
+export const LIMB_LENGTH_BAND = 1.6;
+/** A limb joint's flesh must lie ahead of it (s above this) wherever the agent's lies at least FLESH_AGENT_MIN along its link. */
+export const FLESH_MIN = 0;
+export const FLESH_AGENT_MIN = 0.1;
+/** The chain ends judged at attack t = 0.5, where the agent's moved at least this share of its height. */
+export const END_JOINTS = ['hand_l', 'hand_r', 'foot_l', 'foot_r', 'Head'];
+export const END_MOVE_MIN = 0.02;
+const ARM_STEMS = ['upperarm', 'lowerarm', 'hand'];
+
+export function judgeLimbs(body, agent, { rig = {}, fix = 't', attack = null } = {}) {
+  const problems = [];
+  const warnings = [];
+  const synthesised = new Set(rig?.synthesised ?? []);
+  const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const links = [];
+  const lengths = [];
+
+  for (const chain of LIMB_CHAINS) {
+    const spine = chain[0] === 'pelvis';
+    const limit = spine ? SPINE_DIRECTION_DEG : LIMB_DIRECTION_DEG;
+    const inChain = [];
+    for (let k = 0; k + 1 < chain.length; k += 1) {
+      const a = chain[k];
+      const b = chain[k + 1];
+      if (!body.joints[a] || !body.joints[b] || !agent.joints[a] || !agent.joints[b]) continue;
+      const d = sub3(body.joints[b], body.joints[a]);
+      const e = sub3(agent.joints[b], agent.joints[a]);
+      const ld = len3(d);
+      const le = len3(e);
+      const skipped = synthesised.has(a) || synthesised.has(b);
+      const turned = fix === 't' && ARM_STEMS.includes(a.replace(/_[lr]$/, ''));
+      const link = { a, b, limit, deg: null, length: ld, agentLength: le, flesh: null, agentFlesh: null, turned, skipped };
+      links.push(link);
+      inChain.push(link);
+      if (skipped) continue;
+      if (ld < 1e-9 || le < 1e-9) {
+        // A limb link of no length is a map that gave two of our joints one bone's
+        // position: the limb cannot bend there. The spine's is a warning, as in judgeBody.
+        const message = `${a} and ${b} stand at one point, so ${a} → ${b} has no direction or length`;
+        if (spine) warnings.push(message);
+        else problems.push(`${message}: the map names one bone for two joints of the limb`);
+        continue;
+      }
+      link.deg = (Math.acos(Math.max(-1, Math.min(1, dot3(d, e) / (ld * le)))) * 180) / Math.PI;
+      if (link.deg > limit) {
+        problems.push(`${a} → ${b} points ${link.deg.toFixed(0)}° away from the agent's (over ${String(limit)}°): the chain is folded or a joint is mapped to the wrong bone`);
+      }
+      if (spine) continue;
+      // Flesh: where the vertices this joint dominates lie along its link.
+      const m = body.mass[a];
+      const n = agent.mass[a];
+      if (m?.at && m.n > 0) link.flesh = dot3(sub3(m.at, body.joints[a]), d) / (ld * ld);
+      if (n?.at && n.n > 0) link.agentFlesh = dot3(sub3(n.at, agent.joints[a]), e) / (le * le);
+      if (link.flesh !== null && link.agentFlesh !== null && link.agentFlesh >= FLESH_AGENT_MIN && !(link.flesh > FLESH_MIN)) {
+        problems.push(
+          `the vertices ${a} carries lie BEHIND it on ${a} → ${b} (at ${link.flesh.toFixed(2)} of the link; the agent's at ${link.agentFlesh.toFixed(2)}): the limb is folded back on itself — two of its joints are swapped`,
+        );
+      }
+    }
+    // Length: a limb's second link against its first, against the agent's same proportion.
+    if (!spine && inChain.length === 2 && inChain.every((l) => !l.skipped && l.length > 1e-9 && l.agentLength > 1e-9)) {
+      const [first, second] = inChain;
+      const mine = second.length / first.length;
+      const theirs = second.agentLength / first.agentLength;
+      const times = mine / theirs;
+      const ok = times >= 1 / LIMB_LENGTH_BAND && times <= LIMB_LENGTH_BAND;
+      lengths.push({ first: `${first.a} → ${first.b}`, second: `${second.a} → ${second.b}`, mine, theirs, times, ok });
+      if (!ok) {
+        problems.push(
+          `${second.a} → ${second.b} is ${mine.toFixed(2)}× as long as ${first.a} → ${first.b}, the agent's ${theirs.toFixed(2)}× — ${times.toFixed(2)}× the agent's proportion, outside ${(1 / LIMB_LENGTH_BAND).toFixed(2)}–${LIMB_LENGTH_BAND.toFixed(1)}×: a link spans two bones, so two joints of the chain are swapped or misplaced`,
+        );
+      }
+    }
+  }
+
+  // The chains' ends, at attack t = 0.5: moved the agent's way.
+  const ends = [];
+  if (attack !== null) {
+    for (const j of END_JOINTS) {
+      const p = body.joints[j];
+      const q = agent.joints[j];
+      const p5 = attack.body?.[j];
+      const q5 = attack.agent?.[j];
+      if (!p || !q || !p5 || !q5) continue;
+      const mine = sub3(p5, p);
+      const theirs = sub3(q5, q);
+      const judged = len3(theirs) >= END_MOVE_MIN * agent.height;
+      const cos = len3(mine) < 1e-9 || len3(theirs) < 1e-9 ? null : dot3(mine, theirs) / (len3(mine) * len3(theirs));
+      const ok = !judged || (cos !== null && cos > 0);
+      ends.push({ joint: j, cos, moved: len3(mine), agentMoved: len3(theirs), judged, ok });
+      if (!ok) {
+        problems.push(
+          `at attack t = 0.5 ${j} moved ${cos === null ? 'not at all' : `against the agent's (cosine ${cos.toFixed(2)})`}: ${len3(mine).toFixed(3)} m, the agent's ${len3(theirs).toFixed(3)} m — the clip carries this end the other way, so its chain is mapped wrong`,
+        );
+      }
+    }
+  }
+
+  return { problems, warnings, links, lengths, ends };
+}
+
+// ---------------------------------------------------------------------------
 // The preview browser's network, from its own net log (check.mjs)
 // ---------------------------------------------------------------------------
 
@@ -1037,7 +1198,7 @@ export function netLogReport(text) {
     json = JSON.parse(`${text.replace(/,\s*$/, '')}]}`);
   }
   const type = Object.fromEntries(Object.entries(json.constants.logEventTypes).map(([k, v]) => [v, k]));
-  const report = { loopback: 0, attempted: new Map(), answered: [], dnsQueries: 0, tcpAway: [], udpAway: [], sentAway: [] };
+  const report = { loopback: 0, attempted: new Map(), answered: [], dnsQueries: 0, tcpAway: [], udpAway: [], sentAway: [], cacheEntries: 0, cacheHosts: new Map() };
   const urlOf = new Map(); // source id → url host
   const peerOf = new Map(); // source id → a non-loopback peer
   for (const event of json.events ?? []) {
@@ -1062,7 +1223,50 @@ export function netLogReport(text) {
       peerOf.set(id, hostOf(params.address));
     }
     if (/BYTES_SENT$/.test(name) && peerOf.has(id)) report.sentAway.push(peerOf.get(id));
+    // The HTTP cache: every entry it keyed (the disk cache's SET_KEY, the memory
+    // cache's ENTRY_IMPL), by the host of the URL its key ends in
+    // (`1/0/_dk_<site> <site> <url>`).
+    if (/^(SIMPLE_CACHE_ENTRY_SET_KEY|DISK_CACHE_ENTRY_IMPL|DISK_CACHE_MEM_ENTRY_IMPL)$/.test(name) && typeof params.key === 'string') {
+      const url = params.key.trim().split(/\s+/).pop() ?? '';
+      let host = '(unparsed)';
+      try {
+        host = new URL(url).hostname.replace(/^\[|\]$/g, '');
+      } catch {
+        /* a key that is not a URL is counted as unparsed, and is not the loopback */
+      }
+      report.cacheEntries += 1;
+      report.cacheHosts.set(host, (report.cacheHosts.get(host) ?? 0) + 1);
+    }
   }
+  report.cacheAway = [...report.cacheHosts.keys()].filter((h) => !LOOPBACK.test(h));
+  return report;
+}
+
+/**
+ * **What the preview browser's profile kept on disk** (D193), read before it is
+ * deleted: its files and bytes, the HTTP cache entries still in
+ * `Default/Cache/Cache_Data/` (a simple-cache entry file per URL), and every
+ * file that holds a copy of the model — any of `samples` (byte strings cut from
+ * `model.glb`'s binary chunk) found in it. `skip` names files not to read (the
+ * net log, which is ours). Reads files; writes nothing.
+ */
+export function profileReport(dir, { samples = [], skip = [] } = {}) {
+  const report = { files: 0, bytes: 0, cacheFiles: [], copies: [] };
+  const walk = (d) => {
+    for (const entry of readdirSync(d, { withFileTypes: true })) {
+      const path = join(d, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile() && !skip.includes(path)) {
+        const bytes = readFileSync(path);
+        report.files += 1;
+        report.bytes += bytes.length;
+        const rel = relative(dir, path);
+        if (/(^|\/)Cache_Data\/[0-9a-f]{16}_\d+$/.test(rel)) report.cacheFiles.push(rel);
+        if (samples.some((sample) => sample.length > 0 && bytes.indexOf(sample) >= 0)) report.copies.push(rel);
+      }
+    }
+  };
+  if (existsSync(dir)) walk(dir);
   return report;
 }
 

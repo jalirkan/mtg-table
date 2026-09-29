@@ -830,6 +830,15 @@ console.log(`  triangles   ${n(before.triangles.total)} → ${n(renderTriangles)
 for (const d of decimation) console.log(`              ${d.part.padEnd(28)} ${n(d.before).padStart(6)} → ${n(d.after).padStart(6)}${d.kept ? '  (kept whole)' : ''}`);
 console.log(`  pose        ${poseBefore.verdict} → ${poseAfter.verdict}: upper arm ${String(poseBefore.l)}° / ${String(poseBefore.r)}° → ${String(poseAfter.l)}° / ${String(poseAfter.r)}° below the horizontal (read back from the file: ${String(afterInspect.restPose?.l)}° / ${String(afterInspect.restPose?.r)}°)`);
 if (POSE === 't') console.log(`              turned ${Object.entries(turns).map(([j, d]) => `${j} ${String(d)}°`).join(', ')}`);
+// A forearm that had to turn most of the way round pointed back along its upper
+// arm: the arm is folded, which is a swapped map far more often than a pose.
+// check.mjs's limb check (D193) judges it; this says so where the map is made.
+const folded = Object.entries(turns).filter(([j, d]) => /^lowerarm_/.test(j) && d > 120);
+if (folded.length > 0) {
+  console.log(
+    `  WARN        ${folded.map(([j, d]) => `${j} turned ${String(d)}°`).join(', ')} onto the agent's forearm: the forearm pointed back along the upper arm, so the arm is FOLDED — a map that swaps the forearm and the hand does this; check.mjs's limb check will fail it`,
+  );
+}
 for (const s of skinnedParts) console.log(`  skinned     ${s.part} (${n(s.vertices)} vertices) by ${s.rule}`);
 console.log(`  units       ${round(sourceHeight, 3)} source units tall → ${String(HEIGHT)} m (×${round(scale, 4)}), facing +z, feet at 0`);
 console.log(`  textures    ${textures.map((t) => `${t.name} ${t.slot} ${t.size?.join('×') ?? '?'}${t.downscaled ? ' (downscaled)' : ''}`).join('; ') || 'none'}`);
