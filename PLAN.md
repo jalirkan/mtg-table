@@ -7250,6 +7250,145 @@ jobs whose seconds sum to 939.6 s, at a load average of 0.59 rising to 4.59;
 
 ---
 
+## The personal tier — models of the real characters, local only (2026-09-28, D190–D191)
+
+**Status: phase 1 built, run on Doctor Doom, tested and gated** on branch
+`personal-tier` (the worktree `mtg-table-t2x`, off `main`'s `a08c15f`). The
+user's decision of 2026-09-28: a strictly personal, never-published, never-sold
+local overlay — in their words, **"this can never ever ever be sold or
+published"** — of rigged models of the actual Marvel characters, downloaded by
+the user under whatever personal-use licence the source grants. The repository
+tier stays CC0-only (**D54**). Phase 1 is the folder, the manifest and the
+pipeline; **phase 2 is the loader** in the arena and the workshop, after the
+visual merge — nothing in the game reads `personal/` yet. This is the concrete
+form of *Tier 3 — a note, not a plan*, above: its first rule (personal-only,
+gitignored, never committed) holds; its `committable: false` idea is replaced by
+a manifest inside the personal folder (**D190**'s rejected alternatives).
+`docs/guides/personal-tier.md` is the manual, `docs/evidence/personal-tier.md`
+what was run. The lane's reserved decision range is D190–D199; it used two.
+
+1. **The folder and its rule** (D190). `personal/models/<slug>/` holds the
+   download untouched, `source/`, `SOURCE.txt`, `inspect.json`, an optional
+   `bones.json`, `model.glb`, `manifest.json` and `preview/`. `.gitignore`
+   ignores `/personal/`, anchored — the first cut, unanchored, also hid
+   `tools/personal/`, and the test's negative control is what caught it.
+2. **`tools/personal/import.mjs`** copies the download in, unpacks it
+   (CRC-checked, held inside the folder), drafts `SOURCE.txt` from the file's own
+   `asset.extras` and `license.txt`, and writes `inspect.json`: meshes, skins, the
+   rest pose from the bind matrices, the automatic rig map, and the control-mesh,
+   unskinned-mesh and game-asset-name flags (informational; it refuses nothing).
+3. **`tools/personal/prepare.mjs`** (D191): control shapes stripped; the skeleton
+   rebuilt as `root` + our 22 joints in the `agent` body's bind rotations;
+   A → T re-posed and baked; unskinned meshes skinned by height (`--cloak-to`,
+   `--bind`, `--drop` for the rest); +Y up, +Z forward, feet at 0, the `agent`'s
+   height; decimated to `--budget` with the CLI's meshoptimizer; base colour and
+   normal ≤ 1024; meshopt last. Writes only `model.glb` and `manifest.json`.
+4. **`tools/personal/check.mjs`**: the retarget copy reproduces the build's `hero`
+   clips from `agent`'s; our five clips on the model move every joint the agent's
+   do, by the same world-space delta; the skin is the identity at rest; no NaN,
+   no explosion; the cloak follows the spine; a coverage table; previews through
+   headless Chromium (ANGLE's SwiftShader).
+5. **Doctor Doom, through all three**: 17,473 triangles (14,614 to render + 2,859
+   in 59 Auto-Rig Pro control meshes) → **5,996** of a 6,000 budget; 339 joints,
+   68 weighted → root + 22, the automatic Auto-Rig Pro map 22/22 with no
+   `bones.json`; the upper arms **60.0° → 0.0°** below the horizontal; the cloak
+   (564 triangles, unskinned) bound by height; 6 textures → 5 (a byte-identical
+   copy dropped), all 1024 px; `model.glb` 2,339,352 bytes; `check.mjs` OK with
+   21 of 22 joints turning (the left ball joint is still on the agent too), every
+   world delta within 0.60° of the agent's. Import 0.16 s, prepare 0.55 s, check
+   with previews 2.9 s.
+6. **`web/test/personal-tier.test.ts`** (16 cases, `node --test`): the ignore rule
+   both ways, the slug, the manifest validator one defect at a time, our joints
+   against the manifest and `figures.glb`, the rig map over synthetic Auto-Rig
+   Pro, Mixamo, Unreal (UE5) and VRoid lists plus a VRM table and a `bones.json`
+   override, the rest-pose verdict and the flags on a box on two bones built in the
+   test, and the retarget against the build's clips.
+
+```bash
+node tools/personal/import.mjs ~/Downloads/doctor_doom.zip doctor-doom
+node tools/personal/prepare.mjs doctor-doom --card "Doctor Doom" --seat opp
+node tools/personal/check.mjs doctor-doom        # --no-preview to skip Chromium
+```
+
+**The gate**, from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9000`:
+**255.3 s**, exit 0, 48 jobs (987.8 s summed) at a load average of 5.3–16.3
+beside another lane's gate, `node --test` 959 / 951 pass / 0 fail / 8 skipped and
+vitest 120 (8 files) (`var/check-all-personal-tier.log`, evidence §12). The lane
+added no step: its test is in the web step. `~/forge` and `~/.forge` were
+fingerprinted before and after: unchanged.
+
+### The personal tier's follow-ups — seven for phase 2 and eight more, 2026-09-28
+
+**Phase 2, the loader** (after the visual merge; nothing here is built):
+
+1. **Which card or seat it dresses.** Read `personal/models/*/manifest.json`
+   (`dresses`: a `card` by exact name, a `seat` `you`/`opp`), in the arena and
+   the workshop, through ONE module, the way `figures.json` is read; absent
+   means the repository figure, with no difference in behaviour.
+2. **Served by the dev server alone** — a `configureServer` route beside
+   `/cards/img/*` (**D92**), never `vite preview`, never a build; a production
+   build must not contain a path to `personal/`, and a test should say so.
+3. **A textured material through `figureMaterial`'s colour input** — the LOOK
+   lane's one program with a colour/texture input (on the visual merge, not on
+   this branch's `main`). A personal model carries base colour and normal
+   textures; the loader draws it in the comic look with its own texture, not the
+   costume palette, and keeps one program.
+4. **A triangle cap.** 6,000 is prepare's default; the loader should refuse (or
+   fall back on) a model over a stated cap, and count personal figures against
+   the twelve-figure budget (`MAX_FIGURES`), measured against `g1`@355 as the
+   Tier 2 bodies were. A duelist is on screen all game at scale 1.6, so its cap
+   may be higher than a card's.
+5. **Hard rule 8.** A personal model only where `figurePose` already places a
+   named figure; never for a face-down or redacted card (the anonymous disc stays);
+   a test over the corpus like `figure-pose.test.ts`'s 1,138 face-down instances.
+6. **The workshop badge.** `#workshop` should say when a card is wearing a
+   personal model (and which slug), so a picture taken there is never mistaken for
+   the repository look — and never committed.
+7. **Clip binding.** A prepared model is in our joints and our bind rotations, so
+   `figures.glb`'s `agent` clips bind by name with the rotations unchanged; only
+   the pelvis translation needs the hip-height ratio (1.0 at the default
+   `--height`). `retarget.mjs` is the general answer if a model is ever prepared
+   otherwise.
+
+**The rest:**
+
+8. **Factor the build's retarget.** `tools/build-figures.mjs`'s `humanClips` and
+   `tools/personal/retarget.mjs` are one formula in two places, held together by
+   the agent → hero proof. Factoring the build to import the module is right, but
+   only beside a rebuild of `figures.glb` from the CC0 downloads, which proves the
+   bytes unchanged.
+9. **`tools/arena-bench.mjs`'s SwiftShader flags.** `check.mjs`'s first preview
+   run used arena-bench's `--use-gl=swiftshader`: this Chromium allows only
+   `egl-angle`, the GPU process exited, and WebGL rendered nothing with the
+   context lost. `--use-angle=swiftshader` works. arena-bench was not re-run here;
+   its default may be broken the same way.
+10. **`--pose all`.** The re-pose turns the arms only. A posed model (the survey's
+    Wasp, a hand on a hip) keeps its legs and spine posed as a permanent offset
+    under every clip. Aligning every bone to the `agent`'s bind direction is the
+    general form.
+11. **The runner-ups.** Coulson (Character Creator; 92,719 triangles, 25
+    materials, 46 textures, a 144.6 MB GLB): the auto map knows `CC_Base_*`; it
+    wants `--drop` for the eye, teeth, tongue, tear-line, occlusion and stubble
+    layers, and a budget chosen by looking. Wasp (a custom rig, Spanish part names,
+    posed, unskinned wings, a base plane and a shadow disc): a hand-written
+    `bones.json` from `inspect.json`, `--bind 'Ala=spine_03'`, `--drop` for the
+    base and the disc, and item 10 or Blender for the pose. Evidence §10.
+12. **What Blender would still do on Doom** (evidence §9): drape the cloak over
+    the legs, weight the shoulder plates wholly to the clavicle so the 60° turn
+    does not shear them, keep the twist bones. A portable Blender is the user's
+    call; nothing here installs one.
+13. **Textures.** Doom's five PNGs are 2.24 MB of a 2.34 MB file. A 512 px or
+    KTX2 / WebP copy for the arena (the workshop could keep 1024) is phase 2's
+    choice, measured on the GPU the user plays on.
+14. **A head scale.** The UBC bodies' heads are enlarged (heroic-miniature
+    proportions, `headScale`); a personal model's is life-size and will read small
+    at 60–100 px. Whether to scale it is a look question for phase 2.
+15. **FBX and `.blend` input.** The pipeline reads glTF, GLB and VRM. An FBX or
+    `.blend` original needs Blender (or Sketchfab's autoconverted glTF, which is
+    what Doom used).
+
+---
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

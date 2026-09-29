@@ -8264,6 +8264,186 @@ one that passed).
 
 ---
 
+## D190 — The personal tier: a gitignored folder of models the user downloaded, dressing a card or a seat when present; never committed, published or sold; the repository tier stays CC0
+
+*Branch `personal-tier` (worktree `mtg-table-t2x`, off `main`'s `a08c15f`). The
+lane's reserved range is D190–D199; the numbers are kept, gaps allowed.*
+
+**2026-09-28** (the user's decision of the day; `docs/guides/personal-tier.md`
+is the manual, `docs/evidence/personal-tier.md` what was run, PLAN.md *The
+personal tier* the status and phase 2)
+
+**Decision.**
+
+1. **Two tiers, and they never mix.** The repository tier is what D54 made it:
+   CC0 assets with a written provenance, GPL-3.0-or-later code, publishable. The
+   **personal tier** is `personal/models/<slug>/` on the user's own machine —
+   rigged models of the actual Marvel characters that the USER downloaded, with
+   their own account, under whatever personal-use licence the source grants
+   (fan-made models; models taken from games are the user's call — the tooling
+   does not care about provenance, and Claude never sources a model, creates an
+   account or accepts a licence).
+2. **The user's rule, in their words: "this can never ever ever be sold or
+   published."** `.gitignore` ignores `/personal/` — ANCHORED, because an
+   unanchored `personal/` also hides `tools/personal/`, the committed pipeline —
+   and `web/test/personal-tier.test.ts` holds both halves with `git check-ignore`
+   (a path under `personal/` is ignored; the pipeline, its guide and its test are
+   not; git tracks nothing under `personal/`). Nothing under `web/src/` or
+   `web/public/` reads it, so no build and no CI run can carry it; phase 2 serves
+   it from the Vite dev server alone (D92's rule); a picture of a personal model
+   stays in its folder.
+3. **The folder**: the download untouched, `source/` (what `import.mjs`
+   unpacked), `SOURCE.txt` (title, URL, author, licence as shown, date),
+   `inspect.json`, an optional `bones.json`, `model.glb` (the prepared figure),
+   `manifest.json` and `preview/`. The slug is the card's name lowercased, accents
+   folded, everything but letters, digits, spaces and hyphens dropped, spaces to
+   hyphens (`nick-fury-spymaster`, `doctor-doom`); a tool writes only inside its
+   own slug's folder (`insideSlug`).
+4. **The manifest (version 1) says what the model dresses** — `{card: "<exact
+   name>"}` and/or `{seat: "you"|"opp"}` (the duelist seats of `duelists.json`) —
+   and how it was made: the source's bytes and sha256, the credit line, the rig
+   map and how every source bone was placed, triangle counts, the pose fix with
+   the arm angle before and after, what was skinned by rule, the textures kept,
+   what was dropped. `validateManifest` in `tools/personal/lib.mjs` is the schema;
+   an unknown key is an error.
+5. **Present, it dresses; absent, the repository figure stands.** A checkout
+   without `personal/` plays exactly as before. **Hard rule 8 binds the tier:** a
+   personal model is chosen by card name only where `figurePose` already places a
+   named figure — never for a face-down or redacted card, which stays the
+   anonymous disc. Phase 1 (this branch) draws nothing; phase 2's loader enforces
+   it.
+
+**Rationale.** The user's verdict on four slices of CC0 bodies was that they
+stay generic beside the card art, and the likeness experiment (personal-only
+image-to-3D) did not beat a relief standee at figure size. Fan-made rigged models
+of the characters exist; they cannot be committed (a depiction of someone else's
+property, whoever made the mesh — PLAN.md *Tier 3 — a note, not a plan* said so
+first), but they can live on this machine, and the arena can wear them. Keeping
+them in a separate, ignored folder with its own manifest keeps the public repo
+exactly as publishable as it was, and makes "not there" the default rather than
+the exception.
+
+**Rejected.**
+
+- **Recording personal models in `tools/assets-manifest.json` as
+  `committable: false`** (the Tier 3 note's first idea). That manifest is the
+  committed CC0 library's provenance; a personal entry in it would publish the
+  fact of the file and blur the line D54 draws. The personal manifest lives in
+  the personal folder.
+- **A committed `personal.example/`.** The user did not want one: the guide
+  documents the layout, and the test builds its own fixture.
+- **Refusing files by provenance.** The tool flags name patterns games leave;
+  what the user keeps privately is the user's decision.
+- **Letting the arena read `personal/` in a production build.** A build is a
+  thing that can be shared; the tier is served, in phase 2, by the dev server only.
+
+---
+
+## D191 — The personal pipeline: rebuild the skeleton on our 22 joints in our bind frames, turn an A-pose to our T and bake it, skin the unskinned by height, decimate with the pinned meshopt, keep base colour and normal ≤ 1024, meshopt last
+
+*Branch `personal-tier`; the lane's reserved range D190–D199.*
+
+**2026-09-28** (`docs/evidence/personal-tier.md`)
+
+**Decision.** `tools/personal/prepare.mjs <slug>` turns `source/` into
+`model.glb` by these rules, and writes nothing else but `manifest.json`:
+
+1. **Strip** every rig control mesh (Auto-Rig Pro `cs_*` under `cs_grp`, Rigify
+   `WGT-*`, `*_shape`, `ctrl`, `MCH-`, `ORG-`, by node, mesh, material or
+   ancestor name) and every node that draws nothing; `--drop <regex>` removes a
+   named render mesh too. The output is `<slug>` → { `<slug>-body` (ONE skinned
+   mesh, a primitive per part — separate mesh nodes were each quantized with a
+   transform of their own and got eight copies of the skin), `root` → our 22
+   joints }: `figures.glb`'s `agent`, in shape.
+2. **Rebuild the skeleton on OUR joints** — the 22 `tools/build-figures.mjs`
+   drives (`rigs.ubc.retarget.joints`), plus `root` — rather than drive the
+   source's own hierarchy: Auto-Rig Pro exports its deform bones hanging from the
+   rig's root (Doom's `arm_stretch.l` is not under its shoulder), so turning a
+   shoulder would move no arm. The map is automatic (Auto-Rig Pro, Mixamo,
+   Unreal, VRM with its own `humanBones`, Character Creator: the convention that
+   names the most of our joints), overridden joint by joint by
+   `personal/models/<slug>/bones.json` or `--map <file>`. Every weighted source
+   bone is merged into one of ours: its map list (the FIRST bone present is the
+   joint — for Auto-Rig Pro the upper limbs' twist bone, the lower limbs' stretch
+   bone, measured), else its nearest listed ancestor (the fingers into the hand),
+   else the nearest of our segments by position; the manifest names every
+   placement. Each joint takes the source bone's POSITION — the pelvis between the
+   two thigh pivots, where our clips' hip is — and OUR bind ROTATION, read from
+   `figures.glb`'s `agent`; so the build's world-space-delta retarget onto a
+   prepared model is the identity on rotations. A spine, neck, clavicle or ball
+   joint the source lacks is put between its neighbours; a missing pelvis, head,
+   arm or leg joint stops the tool and asks for `bones.json`.
+3. **Re-pose A → T** (`--pose t`, the default): each upper arm, then each
+   forearm, is turned about its own joint onto the direction the `agent`'s bone
+   has in its T bind pose; every vertex is baked through its (new) skin weights
+   with the same linear blend the renderer does, and the inverse bind matrices
+   are written from the new pose, so at rest the skin is the identity and the
+   file draws the T-posed mesh. The upper arm's angle below the horizontal is
+   measured from the bind matrices before (`import.mjs`) and after (read back
+   from the written file). `--pose none` keeps the source's rest.
+4. **Skin what has no skin** by a documented rule: above `spine_03`'s bind height
+   all `spine_03`; between `spine_02` and `spine_03`, and between `pelvis` and
+   `spine_02`, a linear blend; below the pelvis all `pelvis`. `--cloak-to <joint>`
+   binds every unskinned mesh wholly to one joint, `--bind <regex>=<joint>` one
+   named part (a pair of wings), and a mesh parented under a source joint is bound
+   rigidly to that joint's segment.
+5. **Normalise**: +Y up (a model whose head is not above its feet is stood up),
+   facing +Z with the character's left at +x (D81), feet at y = 0, the pelvis over
+   the origin, scaled to `--height` (default the `agent` body's own bind height,
+   so the clips' hip translation needs no second scale).
+6. **Decimate** to `--budget` (6,000 by default) with the meshoptimizer nested
+   under `@gltf-transform/cli` (1.2.0, the one `build-figures.mjs` resolves, D96),
+   each part simplified with its normals and UVs as attributes, collapsing onto
+   existing vertices so every survivor keeps its skin weights and UVs exactly;
+   parts under 300 triangles kept whole, the rest sharing what is left in
+   proportion.
+7. **Textures**: base colour and normal kept, byte-identical images deduplicated,
+   anything over 1024 px downscaled with the `sharp` the CLI already carries;
+   every other texture slot dropped and named in the manifest.
+8. **meshopt last** (`gltf-transform meshopt`, nothing after it — Tier 2's trap).
+
+`tools/personal/check.mjs` holds the result: its retarget
+(`tools/personal/retarget.mjs`, the build's `humanClips` formula line for line)
+must reproduce the build's own `hero` clips from `agent`'s (the delta composes);
+then OUR clip set — idle, attack, hit, die and the kneel, from `figures.glb` —
+carried onto the model must move every joint the `agent`'s moves, by the same
+world-space delta, with the skin the identity at rest, no NaN, bounds within 1.5×
+the rest's largest side, and a rule-skinned part following the spine.
+
+**Rationale.** A downloaded rig arrives in someone else's conventions — names,
+hierarchy, rest pose, units, facing, control shapes, a cloak nobody weighted —
+and the arena's clips assume one rig in one pose. Rebuilding onto our joints in
+our frames removes every one of those differences once, at prepare time, so the
+phase-2 loader is a plain `GLTFLoader` of a file that already speaks our rig; and
+the same world-space-delta arithmetic the build uses is the only retarget
+anywhere. Baking the T-pose (rather than teaching the retarget a per-joint rest
+offset) keeps the build's "both binds are T" assumption true for every model.
+The retarget is copied rather than shared because the build is a script whose
+import builds the library from CC0 downloads this checkout does not carry; the
+copy is proven against the build's own output instead, and a mutant (the bind
+offset dropped) fails that proof by 8.5°.
+
+**Rejected.**
+
+- **Driving the source hierarchy with a name map** (what the build does for the
+  UBC bodies). It works for a clean hierarchy and moves nothing on Auto-Rig Pro's
+  flat deform bones.
+- **Fixing the A-pose in the retarget** (a per-joint rest offset). Every reader
+  of a prepared model — check, the loader, the workshop — would need the offset;
+  a baked T needs nothing.
+- **Keeping the source's joints (339 for Doom) and the fingers.** Our clips drive
+  22 joints; the rest is weight the loader would carry for nothing, and
+  controllers left off their bind (Doom's `c_toes_track.l`, 2 units) poison
+  bounds.
+- **gltf-transform's `simplify`/`textureCompress` as black boxes.** The simplifier
+  had to see normals and UVs as attributes and keep small parts whole, and the
+  texture step must not re-encode images it does not resize.
+- **Blender.** It would do the shoulders, the cloak and the twist bones better
+  (evidence §9), and it is the user's to install; the pipeline does without it
+  and says what a session would still improve.
+
+---
+
 ## D200 — A decision's number is final: a lane keeps the block it reserves, gaps are allowed, and no document states a total
 
 *Branch `docs-block`; the lane's reserved range D200–D204.*

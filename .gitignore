@@ -26,3 +26,11 @@ forge-home/forge.profile.properties
 # --- noise ------------------------------------------------------------------
 .DS_Store
 *.log
+
+# --- the personal tier (D190): never committed, never published --------------
+# personal/models/<slug>/ holds models the user downloaded for their own use;
+# docs/guides/personal-tier.md is the whole rule. Nothing under it is ever added,
+# `git add -A` included. ANCHORED with the leading slash: an unanchored
+# `personal/` would also hide tools/personal/, the committed pipeline
+# (web/test/personal-tier.test.ts holds both halves).
+/personal/

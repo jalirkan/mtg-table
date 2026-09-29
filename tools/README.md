@@ -52,6 +52,9 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `arena-bench.mjs` | The arena's frame times in headless Chromium over a production build (report 09 §9.4; `--gpu gl` for the real GPU). | no | no (a browser) |
 | `story-shot.mjs` | A picture of the `#story` page, headless, against a dev server you run. | no | no (a browser) |
 | `build-figures.mjs` | Rebuilds `web/public/models/figures.glb` and `models.json` from the CC0 downloads under `var/assets/figures/`, each verified against `tools/assets-manifest.json` first (D54, D67). | no | no |
+| `personal/import.mjs` | **The personal tier** (D190): copies a model the user downloaded into the gitignored `personal/models/<slug>/`, unpacks it into `source/`, drafts `SOURCE.txt`, and writes `inspect.json` — meshes, skins, the rest pose (T or A, from the bind matrices), control meshes, unskinned meshes, game-asset names. `docs/guides/personal-tier.md` is the manual. | no | no |
+| `personal/prepare.mjs` | Makes it a figure our clips drive (D191): strips the rig's control shapes, rebuilds the skeleton on our 22 joints, turns an A-pose to T, skins what had no skin, decimates to `--budget`, keeps base colour and normal ≤ 1024, meshopt last. Writes only `model.glb` and `manifest.json` in the slug's folder. | no | no |
+| `personal/check.mjs` | Proves a prepared model takes our clip set (idle, attack, hit, die, kneel) by the build's world-space-delta retarget, prints a joint-coverage table, and renders previews through headless Chromium (`--no-preview`). | no (`web/test/personal-tier.test.ts` holds its rules) | no (a browser) |
 
 Three files here are not scripts: `assets-manifest.json` (every CC0 asset's
 URL, bytes, sha256 and licence badge, read by `build-figures.mjs`; D54),
@@ -60,7 +63,10 @@ conventions for working here: the gate step by step, CI, the checker's flags,
 the narrator and the card library). The other `card-library/*.ts` files —
 `config.ts`, `db.ts`, `deck.ts`, `model.ts`, `scryfall.ts` and `store.ts` — are
 modules the scripts above import: `scryfall.ts` is the one door to Scryfall and
-`store.ts` the image cache's paths (`tools/CLAUDE.md`, *Card library*). The two commands a player runs, `scripts/play.sh` and
+`store.ts` the image cache's paths (`tools/CLAUDE.md`, *Card library*). So are
+`personal/lib.mjs` (the slug, the manifest schema, the rig map, the inspection)
+and `personal/retarget.mjs` (the build's retarget as a function, proven against
+the build's own clips). The two commands a player runs, `scripts/play.sh` and
 `scripts/spectate.sh`, live in `scripts/`; 6b runs `spectate.sh --no-serve`.
 
 ## Commands, by task
