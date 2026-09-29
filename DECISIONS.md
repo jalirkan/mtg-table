@@ -10615,3 +10615,193 @@ make a sound one more thing a cue carries and let the existing machinery time it
   own browsers).
 - **Synthesising at runtime in the page.** The same sounds with no files — but a
   pack clip could then never drop in, and the audio module would carry a synth.
+
+---
+
+## D255 — The arena's caption is the narrator's sentence for the frame on screen, run in `main.tsx` and handed to the arena as plain data; at a live seat the page records the game off the socket
+
+*Branch `arena-story-caption`; the lane's reserved range D255–D259.*
+
+**2026-09-29** (`docs/evidence/arena-story-caption.md`)
+
+**Decision.**
+
+1. **One narrator, one place it runs for the arena.** `web/src/story/caption.ts`
+   (pure: `narrate.ts` and `page.ts`, nothing else) narrates a log's frames once
+   — `captionIndexOf`, re-told whole as a followed log grows (D126) — and
+   `captionAt(index, cursor)` picks the caption for a cursor. `main.tsx` loads it
+   through `import()` (never statically: the narrator stays out of the 2D entry
+   chunk, D49's rule) and hands `<Arena>` the result as `caption`, an
+   `ArenaCaption` (`arena/caption.ts`) — plain data beside the follow word. The
+   arena imports no narrator, nothing from `story/` and no transport, and
+   `CaptionStrip` is a pure function of its prop (`liveness.test.ts`, with a
+   spliced import as its negative control). `story.test.ts`'s "nothing but
+   `main.tsx` imports `story/`" stands unrelaxed.
+2. **What a caption is.** The frame on screen is the last server `state` the
+   cursor has applied (none after a newer `hello_ok`: a new game's board is reset,
+   D44). Its moments are every moment of the frames from that snapshot up to the
+   cursor — so a prompt or a toast after it does not hide them, and a seat's own
+   concede or sideboard answer after it is included — in the story page's order
+   (`outlineGame`: a game's setup lines before its turns), at most four (past
+   four, three and `+N more`); above them the one moment before (two, when the
+   frame has one), dimmed. Every line carries its own turn, and the strip prints
+   the story page's turn heading wherever the turn changes, so a line from the
+   turn before is never read under the wrong player's turn (42% of the corpus's
+   captions span two turns). No moment names the frame on screen: `null`, and the
+   strip hides.
+3. **The live seat: the page records the game in progress** (`web/src/liveLog.ts`,
+   `LiveFrameLog`). The WebSocket transport keeps no frame list, so `main.tsx`'s
+   `liveTransport` puts a recorder on the page's socket when it opens it
+   (`onFrame`, every inbound frame, in the order the reducer sees it): one game,
+   whole, restarted at a `hello_ok` whose `gameId` changed, re-deliveries kept
+   (the narrator skips them by `seq`, as it does in a client log — which is what
+   these frames are, M17), pings and `seq`-0 refusals dropped. The caption is
+   `captionAt` at the log's end. It lives as long as the socket, so a trip to
+   `#cards`, `#workshop` or `#story` loses nothing.
+4. **Narrated only while someone reads it.** The arena reports its switch
+   (`onCaptionShown`, D256), and `main.tsx` loads the narrator and narrates only
+   while the arena is mounted with the strip on.
+
+**Rationale.** The user learns the game by watching two AIs play; the narrator
+tells the story on a page of its own, and at the table the moments scrolled past
+unnamed. The arena decides nothing (M7 convention 1), and a narrator inside it
+would be a second place a card's name is decided — so the arena is handed the
+sentence, exactly as it is handed the follow word, and hard rule 8 on the strip is
+the narrator's own (its one face reader) plus a rendering test over every cursor
+of every fixture, replayed and live, against the oracle the story page answers to
+(`arena-caption.test.tsx`, `test/hidden-oracle.ts`, a leaky stub as the control).
+For the live seat, recording the whole game and not the last N frames or a single
+frame is what makes the live caption the story: the narrator's text depends on
+what came before (a trigger quoted once is "triggers again" the second time, the
+kept hands and who goes first are told at turn 1, a cast and its payment can span
+two flushes), and a single frame loses the frame before it, from which a zone
+move's name comes. Measured: over every committed log fed frame by frame through
+`LiveFrameLog` with its own resyncs re-delivered, the live caption equals the
+replay's at 4,075 of 4,077 snapshots — the two others hold a sideboard answer, a
+moment the narrator tells from the seat's own `c2s` frame, which a socket client
+never hears back. The cost is the parsed frames of one game (what a replay's
+transport already holds) and a re-narration per frame while the strip is on
+(about 4 ms at g1's length, D126).
+
+**Rejected.**
+
+- **The panel follow-up 1 drew** — the whole story column in the arena, the
+  panel importing `story/narrate.ts` and `story/page.ts` itself, which would have
+  relaxed "nothing but `main.tsx` imports `story/`" for `arena/`. A caption is
+  the moment on screen, not a column to read; the column is `#story`, one click
+  away at the same frame, and the arena keeps importing no narrator.
+- **Narrating a single frame from the reducer's state and its events** at a live
+  seat. `ClientState` keeps the latest snapshot only, and the narrator names a
+  zone move from the frame before it; the text would drift from the story's.
+- **A ring of the last N frames.** Cheaper, and wrong in the same way at its
+  start: a window re-quotes a trigger the story calls "triggers again" and tells
+  a turn it did not see begin.
+- **Keeping a frame list in `WebSocketTransport`.** The transport's contract is
+  the fold; the recorder is the page's, beside the socket it hears.
+- **Holding the caption up for a moment after its frame** (a caption that
+  lingers). A hold is a timer, and the arena starts none; at 1× a frame is 400 ms
+  in a replay and 600 ms in a paced spectate, and the replay bar pauses. PLAN.md's
+  follow-up asks whether a hold is wanted, and where it would live if it is.
+
+## D256 — The caption strip sits over the table's right edge above your seat plate, measured against the corpus; on while watching, off at a live seat; `N` is its key in the arena, where always-no has no control
+
+*Branch `arena-story-caption`; the lane's reserved range D255–D259.*
+
+**2026-09-29** (`docs/evidence/arena-story-caption.md` §3–§4)
+
+**Decision.**
+
+1. **Where.** `.arena__caption`, mounted in `.arena__layer` right after the art
+   credit (the mount point the story page's follow-up 1 named), is absolutely
+   placed at the canvas's right edge, 0.6rem in like the seat plates, growing
+   upward from 7.4rem above the bottom (7.2 px over your plate's 111.2),
+   `min(28rem, 19.5vw)` wide and at most 13rem tall, clipped from the top (the
+   oldest line goes first). `arena/caption.ts`'s `CAPTION_BOX` and `captionRectOf`
+   are those numbers as a keep-out, and `caption.test.ts` holds them to the
+   stylesheet, as `camera.test.ts` holds the plates. Over every board frame of the
+   committed corpus at the table view, at eight canvases from 1024 × 700 to
+   2560 × 1340, it covers no hand card, no stack item, no graveyard or exile pile
+   and neither duelist, and from 1280 px wide no battlefield card; at 1024 px the
+   right end of a full land rank reaches under it in 0.26% of the things on the
+   table. The width is what that rank leaves: its ninth card, tapped, reaches
+   79.6% of a 1600-px canvas, and the first width tried (`min(22rem, 26vw)`)
+   covered it in 126 frames at 1280, 1440 and 1600 px. The bottom centre, where a
+   subtitle would go, is the test's negative control: the same box there covers a
+   card of your hand 9,392 times over the corpus at 1600 × 944. **That is the table
+   view's answer, and the low view's** (measured the same way, nothing covered);
+   in the **shoulder** view, the other seat-safe one, the right end of your hand
+   fan reaches under the strip in 2,208 of the 4,077 board frames, and in the two
+   spectator-only views it covers battlefield cards (side-on, 2,343 frames) and
+   the opponent's piles (their shoulder, 498). The strip does not move with the
+   view: a view-by-view place is a pose of the view, to be measured as the plates
+   were (PLAN.md's follow-up), and at a live seat — where a covered hand card is
+   one you cannot click — the strip is off by default (2).
+2. **When.** Two contexts, two defaults: **watching** (a replay, a followed
+   spectate recording — the arena has no act to send) the strip is **on**; at a
+   **live seat** it is **off** — the player is playing, not reading, and a strip
+   over the table is a strip over the table. `N` (the arena) and the cue strip's
+   **caption** checkbox flip it; the choice is stored per context under
+   `localStorage` `mtg-table.arena.caption` (`{"watch":…,"seat":…}`), read and
+   written by `Arena.tsx` alone and inside `try`, so turning it on at a seat does
+   not turn it on for every replay, nor off for one. Garbage is the default.
+3. **The key.** `N` is also Forge's `SHORTCUT_AUTOYIELD_ALWAYS_NO`, the `alwaysNo`
+   row. The caption's row (`toggleCaption`) sits after it, so `bindingFor`'s first
+   match stays Forge's, and `planKey` takes `N` for the caption in a pre-pass —
+   the way floating mana takes its letter — in the arena, which draws no
+   auto-yield control (it answered `N` with "a board control — press V"), and on
+   a read-only board, where always-no could only say "read-only" (there it is
+   `inert`: "toggles the 3D arena's caption strip … press V"). A live 2D board's
+   `N` is Forge's, untouched.
+4. **The cue strip's row.** The checkbox widened the cue strip, and at 1600 px
+   the camera switcher then wrapped to a row of its own over the opponent's rank
+   (728 + 672 px against the 1,360 the row has) — the defect slice 2's
+   verification fix removed. The switcher's labels now collapse to their keys
+   below 1800 px (1400 before); the names stay in the tooltips and the accessible
+   names.
+
+**Rationale.** A caption has to be readable without covering what it describes.
+The top of the frame is chrome (`HUD_TOP_PX`) and the opponent's back rank, the
+left edge is the turn-order bar and your piles, the bottom is your hand and your
+duelist, the middle band is combat and the stack — and the right edge between the
+plates is felt, which the story page's follow-up 1 had guessed and this measured.
+The defaults follow the person: the one watching two AIs play is the one learning
+from the words, the one playing reads the board.
+
+**Rejected.**
+
+- **A subtitle at the bottom centre.** Over your hand in every frame (the test's
+  control).
+- **In the layer's flow, under the art credit** (where the DOM order would put
+  it). Over the opponent's back rank: a 560 × 110 px box there covered 5.5% of
+  the cards on the table, in 42% of the frames, over five canvases (a scratch
+  measurement made while choosing, not a test).
+- **One stored choice for both contexts.** One toggle in a replay would change
+  the live seat's default, and the other way round.
+- **Another key.** `N` is what was asked for, it is free in the arena, and a
+  pre-pass keeps Forge's meaning where it means something; any other letter is
+  one more binding for a player to learn.
+- **"CC" for the checkbox's label**, to save the cue strip ~33 px. A learner
+  reads "caption"; collapsing the camera labels a little earlier cost less.
+
+**Amended at the rebase onto `main`'s `2c7ed8e`** (2026-09-29; the sound cues,
+D250–D252, and more villain identity, D230–D233; evidence §12). Point 4's
+breakpoint moved from 1800 px to **1900 px**. The sound lane put its own
+checkbox in the same cue strip, beside the caption's (main's first, as in the
+docs), so the strip is 790 px idle and up to 882 px while cues play, and with
+the switcher's labels (672 px) the row needs 1,560 px. The row is the strips'
+container less its padding and the 15rem kept for the opponent's plate: 1,540 px
+at a 1800-px viewport, so there the labelled switcher wrapped under the cue strip
+in every sample taken while cues played (97 of 97, headless Chromium); from
+1840 px it held. At 1900 px the row has 1,641 px and held in 94 of 94; at
+1600 × 1000, labels collapsed, the two strips take 1,026 px idle and 1,118 at
+most while cues play, of 1,341 — one row. At 1280 × 800 the row has 1,021 px and
+the strips need 1,026 even idle, so there they are two rows, idle as well as
+playing (PLAN.md's follow-up 3, widened; its numbers before were taken against
+1280 − 240 px, not the measured row). Point 1's numbers were measured on the 20
+recordings before the three villain logs joined the corpus; over the 23 since,
+the strip still covers no hand card, stack item, pile or duelist at any of the
+eight canvases and no battlefield card from 1280 px, the 1024-px figure is 644
+of 153,501 things (0.42%, in 608 of 5,522 frames), and the bottom-centre control
+covers a hand card 11,760 times at 1600 × 944. The view-by-view figures were not
+re-measured. D255's live parity, over the same 23 logs, is 5,520 of 5,522
+snapshots, the two others still the two sideboard answers.

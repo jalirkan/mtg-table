@@ -75,7 +75,8 @@ export type KeyActionId =
   | 'toggleSpectator'
   | 'openWorkshop'
   | 'inspectCard'
-  | 'toggleSound';
+  | 'toggleSound'
+  | 'toggleCaption';
 
 /**
  * **M7 Tier 2 (T8) — the arena's camera, by key.** The ids are `camera.ts`'s
@@ -383,6 +384,24 @@ export const KEYMAP: readonly KeyBinding[] = [
     milestone: 'M7',
   },
   {
+    // **The caption** (D255, D256): the story's moment for the frame on screen,
+    // in a strip over the arena's table — on by default while watching, off at a
+    // live seat. A picture key like the camera rows: no act, legal on a replay
+    // and behind an ask. **`N` is also Forge's always-no** (the row above,
+    // SHORTCUT_AUTOYIELD_ALWAYS_NO), and `bindingFor`'s first match stays that
+    // row, so this one is reached only through `planKey`'s pre-pass — in the
+    // arena, which draws no auto-yield control (it answered N with "a board
+    // control — press V"), and on a READ-ONLY board, where always-no could only
+    // ever say "read-only". A live board's N is Forge's, untouched.
+    id: 'toggleCaption',
+    chord: 'N',
+    keys: ['n'],
+    ctrl: false,
+    what: "the arena's caption: the story's moment for the frame on screen, the one or two before it dimmed — on by default in a replay and while spectating, off at a live seat (on a live board N is always-no)",
+    forge: 'divergence: Forge has no narrator; its N is SHORTCUT_AUTOYIELD_ALWAYS_NO, which stays N on a live board',
+    milestone: 'M7',
+  },
+  {
     // **M5 — the one real dead end M4 handed over.** LAST on purpose:
     // `bindingFor` is a first-match lookup, so with an empty pool `C` is still
     // Forge's SHORTCUT_SHOWCOMBAT and `B` is still pass-to-before-my-turn, and
@@ -618,6 +637,21 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
     const manaBinding = KEYMAP.find((b) => b.id === 'useMana');
     if (manaBinding !== undefined) {
       return { binding: manaBinding, plan: { kind: 'useMana', color } };
+    }
+  }
+
+  // **The caption takes `N` where always-no means nothing** (D256): in the arena
+  // (no auto-yield control there) and on a read-only board. A live board keeps
+  // Forge's `N`, which `bindingFor` below resolves first.
+  if (isCaptionKey(event) && (ctx.arena === true || !ctx.live)) {
+    const captionBinding = KEYMAP.find((b) => b.id === 'toggleCaption');
+    if (captionBinding !== undefined) {
+      return ctx.arena === true
+        ? { binding: captionBinding, plan: { kind: 'view', id: 'toggleCaption' } }
+        : {
+            binding: captionBinding,
+            plan: { kind: 'inert', why: "toggles the 3D arena's caption strip — the board has none; press V" },
+          };
     }
   }
 
@@ -910,6 +944,14 @@ export function manaKeyColor(event: KeyEventLike): ManaColor | null {
   if (fromKey !== null) return fromKey;
   const code = event.code ?? '';
   return code.length === 4 && code.startsWith('Key') ? manaColorForKey(code.slice(3)) : null;
+}
+
+/** A bare `N` (no Ctrl, Cmd or Alt; not mid-composition) — the caption's key where always-no means nothing. */
+export function isCaptionKey(event: KeyEventLike): boolean {
+  if (event.isComposing === true || event.altKey === true) return false;
+  if (event.ctrlKey === true || event.metaKey === true) return false;
+  const key = (event.key || '').toLowerCase();
+  return key === 'n' || (key === '' && event.code === 'KeyN');
 }
 
 /** The binding for one action id, for a button that wants to print its chord. */

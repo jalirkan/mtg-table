@@ -1057,7 +1057,7 @@ same mechanism: there is no transport to answer with, so `onAct` is `null` and
 every button, card and control is inert. That is one prop, not two code paths.
 
 **Keys.** There is **one keymap** for both renderers (`web/src/keys.ts`), so
-**`?` or `H`** lists all twenty-six rows in the arena as well — the same table
+**`?` or `H`** lists all twenty-seven rows in the arena as well — the same table
 the handler reads. The ones that are the arena's own:
 
 | key | what it does |
@@ -1070,6 +1070,7 @@ the handler reads. The ones that are the arena's own:
 | **W** | open **the workshop** (*The workshop*, below) — one card on a pedestal. `V` there comes back to the arena; a replay resumes at its frame. On the 2D board `W` still spends floating white mana, and otherwise says to press `V` first |
 | **M** | **sound on / off** — muted until you turn it on; the choice is kept in this browser, and the cue strip's **sound** checkbox is the same switch (*Sound*, below). On the 2D board it says to press `V` |
 | **I** | **inspect the card under the pointer** (else the last one you clicked): the workshop opens on it in its **inspect** view — its figure in its signature pose in front of its card's painting, dressed in your own model where the personal tier has one, in the look the table is in. The **⌕ inspect** chip under the art credit does the same by click. The workshop's **▣ arena** link comes back to the same frame. Face up and with a figure only: a face-down or hidden card is never inspected, and the chip and the key say so without naming it (D241) |
+| **N** | **the caption** on / off — the story's moment for the frame on screen, in a strip over the table's right edge (*The caption*, below). **On by default in a replay and while spectating, off at a live seat**; the choice is kept per context in this browser. In the arena `N` is always the caption's (the arena has no auto-yield control); on a live 2D board it is still Forge's always-no, and on a replay board it says to press `V` (D256) |
 
 On the 2D board the camera keys do nothing and say so ("the board has no camera;
 press V"). They never answer the engine, so they work behind an open question
@@ -1089,7 +1090,8 @@ playing and pull the rest forward), **skip all** (the **K** key), and a
 replay clock, so pausing cues does not pause the frame log. Cues never delay a
 question: while the engine is waiting on you, long cues are compressed and the
 queue says so. Beside **bloom** are the comic motion lane's two switches, **comic
-FX** and **on twos** (*The comic motion lane*, below), and **sound**.
+FX** and **on twos** (*The comic motion lane*, below), then **sound**, and after
+them **caption** (the **N** key).
 
 **Sound** (D250–D252). The arena is **silent until you turn sound on** — tick
 **sound** in the cue strip or press **M** (either is the click a browser needs
@@ -1112,6 +1114,23 @@ A cue row in `cues.json` names a clip with `"sound"` (one of `enter`, `lunge`,
 `hit`, `death`, `resolve`, `victory`, `defeat`, `comms`, `laser`, `rumble`,
 `sting`, or `none`), moves it with `"soundAt"` (0–1 of the cue) and scales it with
 `"soundGain"` (0–1.5).
+
+**The caption** (D255, D256). While you watch — a replay, or two AIs playing
+through `./scripts/spectate.sh` — a strip over the table's right edge, between
+the two seat plates, says what just happened in words: **the story's moments for
+the frame on screen** (`#story`'s sentences, from the one narrator,
+`web/src/story/narrate.ts`), the one or two before them dimmed above, each turn's
+lines under its own marker (*Turn 14 · AI-Seat1 (AI)*, your turns in blue and the
+other seat's in orange). It hides on a frame nothing happened in (a phase moving
+on), and a busy combat shows its first three lines and *+N more*. Card names are
+the narrator's — an unseen card is *"a card"*, a face-down one *"a face-down
+card"* — and a clamped line's whole sentence is its tooltip. At a **live seat** it
+is off by default (you are playing, not reading); **N** or the checkbox turns it
+on, and it tells your game as the frames arrive, the same sentences `#story` and
+`tools/narrate.mjs` would print for them. The story's **☰ story** link and its
+**▣ arena** link keep the same frame both ways, so the strip and the story's
+highlighted moment are one moment. Pictures and the measurements of where it
+sits: [`docs/evidence/arena-story-caption.md`](docs/evidence/arena-story-caption.md).
 
 **Reduced motion.** With `prefers-reduced-motion: reduce` the arena drops every
 camera move and every shake outright (a camera view you pick is a cut), and plays
@@ -2410,7 +2429,8 @@ replay goes there.
 
 The replay bar above it is the replay's own — the arena, the board and the story
 move one cursor, so **▣ arena** comes back at the frame the story was on, and
-**☰ story** at the frame the arena was on. It tells only what the log's seat saw,
+**☰ story** at the frame the arena was on — and the arena's **caption** strip (**N**)
+tells the story's moments for that frame at the table (D255). It tells only what the log's seat saw,
 like the CLI: an unseen card is *"a card"*, a face-down one *"a face-down card"*,
 and `web/test/story-render.test.tsx` renders the page over every fixture to hold
 it to that. With no `?replay=`, `#story` says it needs a recorded game (a live

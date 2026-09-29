@@ -2936,6 +2936,106 @@ a.arena__inspect:hover {
   opacity: 0.8;
 }
 
+/*
+ * **The caption strip** (D255, D256): the story's moment for the frame on screen,
+ * the one or two before it dimmed above, a turn marker in the turn player's
+ * colour. Over the table's right edge, between the two seat plates: it grows
+ * upward from just above yours, and over every board frame of the corpus that
+ * corner is felt at the table view — the stack stands above it, your hand and
+ * ranks to its left (`caption.test.ts` measures it). Every number below is
+ * `arena/caption.ts`'s `CAPTION_BOX`, and `caption.test.ts` holds the two
+ * together: the plate's inset, 7.4rem up (7.2 px over your plate's 111.2), at
+ * most `min(28rem, 19.5vw)` wide — what the right end of a full land rank leaves
+ * — and 13rem tall. A current line is clamped to two lines and an earlier one to
+ * one, and each turn's lines sit under that turn's marker; the busiest caption
+ * that fits (two markers, one earlier line, four current) is 208 px, the cap —
+ * past it the column is cut at the top, the oldest line first — and a clamped
+ * line's whole sentence is its tooltip. In the layer, so it opts back into pointer events
+ * (liveness.test.ts's widget table).
+ */
+.arena__caption {
+  pointer-events: auto;
+  position: absolute;
+  inset-inline-end: 0.6rem;
+  inset-block-end: 7.4rem;
+  z-index: 15;
+  box-sizing: border-box;
+  inline-size: min(28rem, 19.5vw);
+  max-block-size: 13rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-inline-start: 3px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13e0;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.arena__caption--you {
+  border-inline-start-color: var(--you);
+}
+
+.arena__caption--opp {
+  border-inline-start-color: var(--opp);
+}
+
+.arena__caption-turn {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__caption-turn--you {
+  color: var(--you);
+}
+
+.arena__caption-turn--opp {
+  color: var(--opp);
+}
+
+.arena__caption-turn--before {
+  opacity: 0.75;
+}
+
+.arena__caption-line {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.arena__caption-line--before {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+.arena__caption-card {
+  font-weight: 600;
+}
+
+.arena__caption-line--before .arena__caption-card {
+  font-weight: 500;
+}
+
+.arena__caption-more {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 /* Board ⇄ arena. A link, because the hash really is the state. */
 .viewtoggle {
   flex: 0 0 auto;
@@ -3028,8 +3128,15 @@ a.arena__inspect:hover {
  * only: it keeps the layer's `pointer-events: none`, so the canvas still owns
  * every pixel between the two strips. It stops 15rem short of the right edge for
  * the same reason `.arena__decision` does — the opponent's plate is there — and
- * wraps rather than running under it. Below 1400 px each view button collapses
- * to its key; the name stays in the tooltip and in `aria-label`.
+ * wraps rather than running under it. Below 1900 px each view button collapses
+ * to its key; the name stays in the tooltip and in `aria-label`. (It was 1400
+ * until the caption's checkbox joined the cue strip, D256: at 1600 px the two
+ * strips with their labels then measured 728 + 672 px against the 1,360 the row
+ * has, and the switcher wrapped to a row of its own — the defect this row fixed.
+ * It was 1800 until the rebase onto the sound cues put their checkbox beside it:
+ * the cue strip is 790 px idle and up to 882 px while cues play, so with the
+ * labels the row needs 1,560 px, and at 1800 px — 1,540 px of row — the switcher
+ * wrapped whenever cues played. At 1900 px the row has 1,640.)
  */
 .arena__strips {
   align-self: flex-start;
@@ -3040,7 +3147,7 @@ a.arena__inspect:hover {
   max-inline-size: calc(100% - 15rem);
 }
 
-@media (max-width: 1399px) {
+@media (max-width: 1899px) {
   .arena__view-label,
   .arena__views-title {
     display: none;

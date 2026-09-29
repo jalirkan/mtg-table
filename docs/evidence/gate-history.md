@@ -276,3 +276,18 @@ Step 6 compared `fixtures/games/g1.jsonl` (`wire-drift: SAME`) and 9b
 `fixtures/games/human-auto-42.jsonl`; step 11 passed the corpus's 23 recordings
 through `check-redaction.mjs`; 12b found the catalog current. The fix pass added no
 step.
+
+## The arena's caption (D255–D256)
+
+Twice from a deleted `bridge/out` at `GATE_JOBS=4`, branch `arena-story-caption`:
+`WSPORT=9250` **276.1 s** (48 jobs, 1,053.6 s summed, load average 4.5–17.4) and
+`WSPORT=9260` **267.5 s** (1,017.7 s summed, 11.1–14.2), exit 0 both —
+`var/check-all-caption-p1.log` and `-p2.log`. The lane added no step and no job.
+
+### Rebased onto `2c7ed8e` (the sound cues and more villain identity)
+
+Twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9290` **257.4 s** (48
+jobs, 964.4 s summed, load average 1.08 → 9.31 at most → 8.47) and `WSPORT=9300`
+**258.7 s** (970.2 s summed, 7.17 → 9.42 → 6.37), exit 0 both, `node --test`
+inside them 1,199 / 1,188 pass / 0 fail / 11 skipped and 157 vitest (9 files) —
+`var/check-all-caption-merge-p1.log` and `-p2.log`. No step and no job added.

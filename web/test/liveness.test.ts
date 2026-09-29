@@ -161,6 +161,9 @@ test('liveness: every widget the arena layer mounts can be clicked', () => {
     ArtCredit: ['.arena__credit'],
     // D241: the inspect chip — a link to the workshop's inspect view, beside the credit.
     InspectChip: ['.arena__inspect'],
+    // D255: the caption strip — the story's moment for the frame on screen, over
+    // the table's right edge; the whole sentence of a clamped line is its tooltip.
+    CaptionStrip: ['.arena__caption'],
     HotkeysOverlay: ['.overlay'],
   };
 
@@ -1352,6 +1355,65 @@ test('liveness: the Canvas loop mode is CueRunner’s decision, never a literal 
       `setFrameloop(${arg}) is not preceded by loopRef.current = ${arg} — the next Arena re-render would revert it`,
     );
   }
+});
+
+/**
+ * **D255 — the caption is the narrator's sentence, handed to the arena as DATA.**
+ * The arena decides nothing, so it narrates nothing: `main.tsx` runs THE narrator
+ * (`story/narrate.ts`, through `story/caption.ts`, loaded by `import()`) over the
+ * replay's frames or a live seat's recording, and hands `<Arena>` the moment for
+ * the frame on screen as a plain prop, beside the follow word. So no file under
+ * `arena/` imports `story/` or anything named for the narrator — the negative
+ * control splices that import into a real arena file — and the strip itself is a
+ * pure function of its prop: no hook, no timer, no request, no storage, no clock
+ * (the choice to show it is `Arena.tsx`'s state, stored inside `try` by the
+ * clause below). `arena/caption.ts` is data and two pure functions: no three, no
+ * React, no DOM.
+ */
+test('liveness: the arena imports no narrator — the caption strip is handed plain data and starts nothing', () => {
+  const narrator = (from: string): boolean => /(?:^|\/)story\//.test(from) || /narrat/i.test(from);
+  for (const file of arenaFiles()) {
+    for (const imported of importsOf(file.source)) {
+      assert.ok(
+        !narrator(imported.from),
+        `${file.path} imports ${imported.from} — the arena draws the caption it is handed and runs no narrator (D255)`,
+      );
+    }
+  }
+  const arenaSrc = readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8');
+  for (const probe of ["import { narrate } from '../story/narrate.ts';", "import type { Caption } from '../story/caption.ts';", "const m = await import('../story/caption.ts');"]) {
+    assert.ok(importsOf(`${probe}\n${arenaSrc}`).some((i) => narrator(i.from)), `the narrator clause misses: ${probe}`);
+  }
+  const strip = codeOf(readFileSync(fileURLToPath(new URL('../src/arena/CaptionStrip.tsx', import.meta.url)), 'utf8'));
+  for (const banned of [
+    /\buse[A-Z]\w*\(/,
+    /\bset(?:Timeout|Interval)\s*\(/,
+    /\brequest(?:AnimationFrame|IdleCallback)\s*\(/,
+    /\bfetch\s*\(/,
+    /\b(?:local|session)Storage\b/,
+    /\bDate\.now\b|\bperformance\./,
+    /\bonAct\b|\bonAnswer\b/,
+  ]) {
+    assert.doesNotMatch(strip, banned, `CaptionStrip.tsx: ${String(banned)} — the strip is a pure function of its caption`);
+  }
+  assert.deepEqual(
+    importsOf(strip).map((i) => i.from),
+    ['./caption.ts'],
+    'CaptionStrip.tsx imports something besides the caption\'s type',
+  );
+  const data = codeOf(readFileSync(fileURLToPath(new URL('../src/arena/caption.ts', import.meta.url)), 'utf8'));
+  assert.deepEqual(importsOf(data), [{ from: './camera.ts', typeOnly: true }], 'arena/caption.ts imports more than camera.ts\'s CornerRect type');
+  assert.doesNotMatch(data, /\b(?:window|document|localStorage|sessionStorage|performance|Date\.now|setTimeout|setInterval|fetch|React|THREE)\b/);
+  // The prop is plain data, and the strip is mounted with it and nothing else.
+  const arena = codeOf(arenaSrc);
+  assert.match(arena, /caption\?: ArenaCaption \| null;/, 'Arena.tsx no longer takes the caption as a plain prop');
+  assert.match(arena, /\{captionOn && <CaptionStrip caption=\{caption\} \/>\}/);
+  // main.tsx hands it down from both mode apps, and reaches the narrator only through import().
+  const main = codeOf(readFileSync(fileURLToPath(new URL('../src/main.tsx', import.meta.url)), 'utf8'));
+  assert.equal((main.match(/caption=\{caption\}/g) ?? []).length, 2, 'main.tsx should hand the caption to both of its <Arena> mounts');
+  assert.equal((main.match(/onCaptionShown=\{setCaptionShown\}/g) ?? []).length, 2);
+  assert.match(main, /import\('\.\/story\/caption\.ts'\)/);
+  assert.doesNotMatch(main, /^import\s[^;]*?from\s+'\.\/story\//m, 'main.tsx imports story/ statically: the narrator would be in the 2D entry chunk');
 });
 
 /**

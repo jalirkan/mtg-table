@@ -14,27 +14,18 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 314 items still open across 33 follow-up lists** — 290
-open, 18 partly done, 3 not reproduced, 2 standing and 1 accepted — counted from
-its own rows on 2026-09-29 by the sound-cues lane (which added a list of nine;
-the arena personal polish lane before it closed the personal tier's 33 and added
-a list of five), where the four paragraphs it replaced, one per merging lane, had
-each counted a different tree. Each list's
-own entries say what is closed. **Of the 30 questions only the owner can settle,
-5 are answered** and 25 stand on the default this plan assumes.
-**The 32 follow-up lists hold 393 items, and 296 of them are open** — 272 open,
-18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 97 closed
-**The 32 follow-up lists hold 394 items, and 297 of them are open** — 271 open,
-19 partly done, 3 not reproduced, 2 standing and 2 accepted — against 97 closed
-(M1's six among them; the personal tier's list was added, with its 18 and 19
-closed, when that lane merged; its phase 2 closed ten and opened seven, and its
-fix pass 1 recounted it and opened three; the status layer's list of twelve was
-added when that lane merged; villain identity's list of seven was added, and it
-closed the status layer's 2; its fix pass added five; more villain identity's
-list of eight was added, and it closed villain identity's 1; its fix pass added
-one, accepted its 2 and did part of its 4, and asked question 31). **Of the 31
-questions only the owner can settle, 5 are answered** and 26 stand on the default
-this plan assumes.
+**The index below lists 327 items still open across 35 follow-up lists** — 301
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
+its own rows on 2026-09-29 by the arena caption lane at its rebase onto the sound
+cues (it closed the story page's 1, added a list of six, and removed the two rows
+more villain identity's fix pass had left beside their replacements; the sound-cues
+lane had counted 314 across 33, which missed more villain identity's list), where
+the four paragraphs it replaced, one per merging lane, had each counted a
+different tree. Each list's
+own entries say what is closed. **Of the 31 questions only the owner can settle,
+5 are answered** and 26 stand on the default this plan assumes. (Two stale
+paragraphs that counted 393 and 394 items across 32 lists, left here by more
+villain identity's rebase, were removed at the same recount.)
 
 ### Open follow-ups
 
@@ -205,7 +196,6 @@ this plan assumes.
 | [Narrator](#fu-narrator) | 6 | open | `--json` is unversioned | — |
 | [Narrator](#fu-narrator) | 7 | open | Coalescing hides the middle of a flush | — |
 | [Narrator](#fu-narrator) | 8 | open | A multi-game client log | — |
-| [Story page](#fu-story) | 1 | open | A story panel INSIDE the arena | `web/src/arena/` |
 | [Story page](#fu-story) | 2 | open | A live seat's story | — |
 | [Story page](#fu-story) | 3 | open | Reloading a followed story restarts at the live edge | — |
 | [Story page](#fu-story) | 4 | open | Tokens have no image | `tools/fetch-art.ts` |
@@ -344,8 +334,6 @@ this plan assumes.
 | [Arena personal polish](#fu-polish) | 3 | open | The main checkout's `personal/` must be prepared again (owner action) | `docs/guides/personal-tier.md` |
 | [Arena personal polish](#fu-polish) | 4 | open | The arena has no card zoom: inspect is a chip under the credit and `I` | `web/src/arena/Arena.tsx` |
 | [Arena personal polish](#fu-polish) | 5 | open | The workshop's list does not scroll to the card `I` opened; its bloom is its own | `web/src/workshop/Workshop.tsx` |
-| [More villain identity](#fu-more-villain-identity) | 1 | open | A snapshot ahead of its own zone event: Moonstone's exile is decided before her death is queued, and she is not drawn dying | `web/src/arena/figures/clips.ts` |
-| [More villain identity](#fu-more-villain-identity) | 2 | open | The dressed Masters of Evil and Wakanda add 5,300 and 4,100 triangles at their worst frames (35,567 and 33,592) | `tools/arena-bench.mjs` |
 | [More villain identity](#fu-more-villain-identity) | 1 | open | A snapshot ahead of its own zone event — a flush-timing race: Moonstone's exile is decided before her death is queued in 5 of 6 re-records, and she is not drawn dying | `web/src/arena/figures/clips.ts` |
 | [More villain identity](#fu-more-villain-identity) | 2 | accepted | The dressed Masters of Evil and Wakanda are over §8.2's 30,000 triangles at their crowded tables — accepted with their numbers (D233), the figure layer held by a test | `web/test/traits.test.ts` |
 | [More villain identity](#fu-more-villain-identity) | 3 | open | Ten rows no recording puts on the table (`OFF_THE_TABLE`), and still no Villain token | `web/test/traits.test.ts` |
@@ -364,6 +352,12 @@ this plan assumes.
 | [Sound cues](#fu-sound) | 7 | open | A rebuild on another Chromium may write other bytes | `tools/build-sounds.mjs` |
 | [Sound cues](#fu-sound) | 8 | open | The workshop's sound checkbox starts off every visit | `web/src/workshop/Workshop.tsx` |
 | [Sound cues](#fu-sound) | 9 | open | The frame-to-ear latency is unmeasured | `web/src/arena/scene/audio.ts` |
+| [Arena caption](#fu-caption) | 1 | open | A caption is up only as long as its frame | `web/src/main.tsx` |
+| [Arena caption](#fu-caption) | 2 | open | The strip does not move with the camera view: the shoulder view puts your hand under it | `web/src/arena/caption.ts` |
+| [Arena caption](#fu-caption) | 3 | open | At 1280 px the two strips take two rows, idle as well as playing since the sound checkbox | `web/src/styles.css` |
+| [Arena caption](#fu-caption) | 4 | open | A live seat's caption has no moment of its own `c2s` frames | `web/src/liveLog.ts` |
+| [Arena caption](#fu-caption) | 5 | open | Below 1280 px the strip covers the right end of a full land rank | `web/src/arena/caption.ts` |
+| [Arena caption](#fu-caption) | 6 | open | The live seat's cost is measured in Node, not in the browser | `web/src/main.tsx` |
 
 ### Questions only the owner can settle
 
@@ -432,6 +426,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated and documented** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting into the gitignored `personal/relief/` (158 cards, 28.5 s, 14.4 MB); the dev route serves it; the workshop's inspect view draws the art box as a window whose vertices recede along their rays from the camera's seat, clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D226**; eight follow-ups; *The relief window*, just above *Deferred* |
 | — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated, documented and fixed once** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting, in two layers, into the gitignored `personal/relief/` (158 cards, 43.5 s, 30.45 MiB); the dev route serves it; the workshop's inspect view draws the art box as a window — the painting cut at its silhouettes, what it hides filled in behind it, both clipped to a still rectangle — clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D227**; thirteen follow-ups, one closed; *The relief window*, just above *Deferred* |
 | — | Arena personal polish: one call a dressed figure, and inspect from the table *(off the plan; the personal tier's follow-up 33)* | 1 day | **built, measured, gated and documented** on branch `arena-personal-polish` (2026-09-29), off `main`'s `9998ec5` — prepare packs every paint into one atlas (a repeating paint laid out over its UV tiles) and merges a model into ONE skinned primitive under ONE material; `check.mjs`, the dev route (from the file) and the reader each count one call a figure; the villain file's worst frame with the tier on 130 → 128 calls, the tier never over the tier off on any of its 401 frames; `I` and an inspect chip open the workshop's inspect view on the card under the pointer, face up only (a hostile corpus sweep); **D240–D241**; five follow-ups; *Arena personal polish*, just above *Deferred* |
+| — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -5426,9 +5421,16 @@ What it is:
 
 <a id="fu-story"></a>
 
-### The story page's follow-ups — nine, 2026-09-28 (1 closed by the undo race)
+### The story page's follow-ups — nine, 2026-09-28 (2 closed: 9 by the undo race, 1 by the arena's caption)
 
-1. **A story panel INSIDE the arena** — not built here, because `web/src/arena/`
+1. ~~**A story panel INSIDE the arena**~~ — **closed 2026-09-29 by the arena's
+   caption** (*The arena's caption*, below; **D255**, **D256**), by another road
+   than this entry drew: not the story column in a panel that imports
+   `story/narrate.ts` itself, but the moment for the frame on screen in a strip,
+   mounted at the point named here, with THE narrator run in `main.tsx` and the
+   sentence handed down as plain data — so the arena imports no `story/` module
+   and *"nothing but `main.tsx` imports `story/`"* stands. The original note:
+   not built here, because `web/src/arena/`
    is three visual lanes' desk this week. The mount point is
    `web/src/arena/Arena.tsx`, inside `<div className="arena__layer">` (the DOM
    sibling layer over the canvas), after `<ArtCredit … />` and before the
@@ -8554,6 +8556,111 @@ D250–D254, three used. `docs/evidence/sound-cues.md` is what was measured, REA
 9. **The frame-to-ear latency is unmeasured.** A sound is started in the frame whose
    tick crossed its moment; Web Audio's output latency on the owner's device (and a
    frame of `demand` loop wake-up) is not measured, and no cue waits for a sound.
+
+## The arena's caption — the story at the table (2026-09-29, D255–D256)
+
+**Status: built, gated and documented** on branch `arena-story-caption` (the
+worktree `mtg-table-t2c`, off `main`'s `24ba603`), **and rebased onto `main`'s
+`2c7ed8e`** (more villain identity and the sound cues, 2026-09-29: the cue strip
+carries both checkboxes, the keymap is 27 rows, and the caption's sweeps run over
+the corpus's 23 logs); the lane's reserved range D255–D259, two used. The user learns the game by watching two AIs play; `#story`
+tells it in words on a page of its own, and at the table the moments scrolled past
+unnamed. `docs/evidence/arena-story-caption.md` is what was measured; README's
+*The caption* (under *Arena mode*) is how to use it; `web/src/arena/CLAUDE.md`'s
+*The caption* holds its two rules. It closes the story page's follow-up 1.
+
+```bash
+npm --prefix web run dev            # then /?replay=games/g1.jsonl#arena — N, or the cue strip's "caption"
+./scripts/spectate.sh               # a game being played, captioned as it arrives
+./scripts/play.sh --arena           # your own game: the strip is off at a seat until N
+```
+
+1. **One narrator, handed down** (D255). `web/src/story/caption.ts` narrates a
+   log's frames once and picks, per cursor, the frame on screen's moments (the
+   last server `state` applied, up to the cursor), the one or two before them and
+   each line's turn heading; `main.tsx` loads it by `import()` and hands
+   `<Arena>` an `ArenaCaption` — plain data beside the follow word. The arena
+   imports no narrator and no `story/` module (`liveness.test.ts`), and the strip
+   (`arena/CaptionStrip.tsx`) is a pure function of its prop. Over all 23 logs
+   since the rebase (20 before it): 6,449 cursors captioned and 11,308 hidden
+   (6,005 and 10,298 on 20); every caption ends on the moment `#story`
+   highlights at that cursor.
+2. **The live seat** (D255). The WebSocket transport keeps no frame list, so the
+   page records the game in progress off its socket (`liveLog.ts`, attached where
+   the socket is made): one game, whole, re-deliveries kept for the narrator to
+   skip. Fed frame by frame with its resyncs, the corpus captions every snapshot
+   as its replay does at 5,520 of 5,522 (4,075 of 4,077 before the three villain
+   logs) — the two others a sideboard answer, told from a `c2s` frame the socket
+   never sends back.
+3. **Where, when, and `N`** (D256). The right edge between the seat plates, above
+   yours, `min(28rem, 19.5vw)` wide — over every board frame of the corpus at the
+   table view it covers no hand card, stack item, pile or duelist, and from 1280
+   px no battlefield card (the bottom centre, the control, covers your hand). On
+   while watching, off at a live seat, stored per context. `N` in the arena (a
+   pre-pass: a live board's `N` is still Forge's always-no); the camera
+   switcher's labels now collapse below 1900 px so the cue strip and it keep one
+   row at 1600 — 1800 until the rebase put the sound checkbox beside the
+   caption's, when at 1800 px the labelled switcher wrapped whenever cues played
+   (evidence §12).
+4. **Hard rule 8 on the strip**: `arena-caption.test.tsx` renders every cursor of
+   every fixture, replayed and live, against the story page's oracle (moved to
+   `test/hidden-oracle.ts`), with a leaky stub as the negative control.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9250`
+**276.1 s** and `WSPORT=9260` **267.5 s**, exit 0 both, 48 jobs (1,053.6 s and
+1,017.7 s summed) at a load average of 4.5–17.4, `node --test` 1,125 / 1,114 pass /
+0 fail / 11 skipped and vitest 148 (9 files) each time
+(`var/check-all-caption-p1.log`, `-p2.log`). The lane added no step and no job:
+its tests are in the web step.
+`~/forge` and `~/.forge`: unchanged (evidence §11).
+**Rebased onto `2c7ed8e`**, the gate twice more the same way: `WSPORT=9290`
+**257.4 s** and `WSPORT=9300` **258.7 s**, exit 0 both, 48 jobs (964.4 s and
+970.2 s summed) at a load average of 1.1–9.4, `node --test` 1,199 / 1,188 pass /
+0 fail / 11 skipped and vitest 157 (9 files) each time
+(`var/check-all-caption-merge-p1.log`, `-p2.log`); `~/forge` and `~/.forge`
+unchanged again (evidence §12).
+
+<a id="fu-caption"></a>
+### The arena caption's follow-ups — six, 2026-09-29
+
+1. **A caption is up only as long as its frame.** It hides on the next quiet
+   frame, so at 1× a moment reads for a replay frame's 400 ms or a paced
+   spectate's 600 ms; the replay bar pauses, and the dimmed lines carry the last
+   one or two into the next moment. A hold (a caption that lingers) would be a
+   timer — in `main.tsx`, never the arena, which starts none — or the pace's
+   business (`--pace`, Spectating's follow-up 5). Is one wanted?
+2. **The strip does not move with the camera view.** Measured at 1600 × 944 over
+   the corpus: nothing under it in the table and low views; in the **shoulder**
+   view (seat-safe) the right end of your hand fan reaches under it in 2,208 of
+   4,077 frames (the 20 logs before the rebase), and in the spectator views it covers battlefield cards (side-on,
+   2,343 frames) or the opponent's piles (their shoulder, 498). A place per view
+   is a pose of the view, to be measured as the plates were; at a live seat the
+   strip is off by default, and a covered hand card is one it would block.
+3. **At 1280 px the two strips take two rows** — while cues play since this lane,
+   and idle too since the rebase onto the sound cues: the queue's status grows by
+   ~92 px during a batch, and with the sound checkbox beside the caption's the cue
+   strip is 790 px idle and up to 882 while cues play, so the two strips need
+   1,026 px idle against the 1,021 the row has at 1280 × 800 (measured in
+   headless Chromium, evidence §12). The camera switcher sits on a second row —
+   over the opponent's back rank. A fixed-width status, a shorter one, or the
+   checkboxes' labels collapsing below some width as the switcher's do, would
+   hold the row.
+4. **A live seat's caption has no moment of its own `c2s` frames** — the
+   narrator tells a concede and a sideboard answer from the seat's own frames,
+   which the socket does not send back; `LiveFrameLog` hears only inbound frames.
+   Recording the acts `main.tsx` sends would close it (the concede is also the
+   `over` banner's). And a reloaded page starts its recording at what the socket
+   re-delivers on connect — the handshake and the last snapshot — so its caption
+   tells from mid-game, as a client log that joined late does, until the game's
+   next frames arrive.
+5. **Below 1280 px the strip covers the right end of a full land rank** (at
+   1024 × 700, 644 of 153,501 things in 608 frames over the 23 logs since the
+   rebase; 255 of 99,818 in 249 over the 20 before it): no width that still reads
+   clears it there.
+6. **The live seat's cost is measured in Node**: 1.5–3.2 ms a re-narration for
+   the corpus's longest logs and the frames of one game held while the socket
+   lives. A long human game in the browser, with the strip on, is the case to
+   profile (the story page's follow-up 8 asks the same of the page).
 
 ---
 

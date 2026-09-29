@@ -303,6 +303,16 @@ test('route: #story, #/story and ?view=story open the story; the hash is #story'
 test('route: the story is a lazy chunk — main.tsx reaches it only through lazy(), and nothing else reaches it', () => {
   const main = read('web/src/main.tsx');
   assert.match(main, /lazy\(\(\) => import\('\.\/story\/Story\.tsx'\)\)/);
+  // D255: the arena's caption — the narrator's moment for the frame on screen —
+  // is `story/caption.ts`, and main.tsx loads it the same way, through import(),
+  // then hands the arena plain data (the arena imports no story/ module:
+  // liveness.test.ts). Those two are the only ways in.
+  assert.match(main, /import\('\.\/story\/caption\.ts'\)/);
+  assert.deepEqual(
+    [...new Set([...main.matchAll(/import\('(\.\/story\/[^']+)'\)/g)].map((m) => m[1]))].sort(),
+    ['./story/Story.tsx', './story/caption.ts'],
+    'main.tsx reaches story/ some other way',
+  );
   assert.deepEqual(
     importsOf(main).filter((p) => p.startsWith('./story/')),
     [],
@@ -321,7 +331,7 @@ test('route: the story is a lazy chunk — main.tsx reaches it only through lazy
 
 test('liveness: the story page imports no transport, nothing from render/ arena/ cards/ workshop/, and no CSS', () => {
   const files = storyFiles();
-  assert.deepEqual(files, ['Story.tsx', 'keys.ts', 'narrate.ts', 'page.ts'], 'story/ changed: extend this test with it');
+  assert.deepEqual(files, ['Story.tsx', 'caption.ts', 'keys.ts', 'narrate.ts', 'page.ts'], 'story/ changed: extend this test with it');
   for (const file of files) {
     const src = read(`web/src/story/${file}`);
     for (const path of importsOf(src)) {
@@ -354,9 +364,11 @@ test('liveness: narrate.ts imports nothing and reaches no host — no node:, no 
   // Node's type stripping takes erasable syntax only.
   assert.doesNotMatch(src, /^\s*(?:export\s+)?(?:const\s+)?enum\s/m, 'an enum is not erasable');
   assert.doesNotMatch(src, /^\s*(?:export\s+)?namespace\s/m, 'a namespace is not erasable');
-  for (const file of ['page.ts', 'keys.ts']) {
+  for (const file of ['page.ts', 'keys.ts', 'caption.ts']) {
     assert.ok(!importsOf(read(`web/src/story/${file}`)).includes('react'), `${file} imports React`);
   }
+  // The caption (D255) is the narrator's and the page's own two pure modules, and nothing else.
+  assert.deepEqual(importsOf(read('web/src/story/caption.ts')).sort(), ['./narrate.ts', './page.ts']);
 });
 
 test('spectate.sh --story opens #story', () => {

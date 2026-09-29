@@ -234,3 +234,24 @@ the tile census (lands placed apart from tiles laid), the census's task list (it
 own `card` rung for every row of the three decks; a costume check for each thin
 predicate), the green bodies' pairwise distances and the unbacked-name check's two
 new controls extended in place.
+
+## The arena's caption (`arena-story-caption`, D255–D256)
+
+`npm --prefix web test` is **1,110 `node --test` + 148 vitest (9 files)**
+standalone (1,101 pass, 0 fail, 9 skipped): eleven cases on `24ba603`'s tree —
+`caption.test.ts`'s eight (which moments, `#story`'s moment, the strip hidden,
+`LiveFrameLog`, the live parity, the stored choice, the rectangle and its cap, the
+coverage with its control), two in `keys.test.ts` (the `N` row and its
+dispatcher) and one liveness clause (the arena imports no narrator) — and the
+vitest `arena-caption.test.tsx`'s 24. Inside `check-all.sh`: **1,125 / 1,114 pass
+/ 0 fail / 11 skipped** plus 148 vitest, twice.
+
+### The arena's caption, rebased onto `2c7ed8e`
+
+**1,184 `node --test` + 157 vitest (9 files)** standalone (1,175 pass, 0 fail, 9
+skipped), from `2c7ed8e`'s own **1,173 + 130 (8 files)** (measured in a scratch
+copy of that tree; `web/CLAUDE.md` still read 1,123 + 124 there, the sound lane's
+count before more villain identity joined it): the lane's 11 `node --test` cases
+and its 27 vitest — `arena-caption.test.tsx`'s 24 plus one per-fixture case for
+each of the three villain recordings the corpus gained. Inside `check-all.sh`:
+**1,199 / 1,188 pass / 0 fail / 11 skipped** plus 157 vitest, twice.

@@ -77,6 +77,15 @@ import {
   type ViewId,
 } from './camera.ts';
 import { colourHex, colourIdOf } from './colour.ts';
+import {
+  CAPTION_STORE_KEY,
+  captionChoiceOf,
+  captionContextOf,
+  storedCaptionWith,
+  type ArenaCaption,
+  type CaptionContext,
+} from './caption.ts';
+import { CaptionStrip } from './CaptionStrip.tsx';
 import { DecisionLayer, ViewSwitcher, type ViewSwitcherItem } from './DecisionLayer.tsx';
 import cuesJson from './cues/cues.json';
 import figuresJson from './figures/figures.json';
@@ -201,6 +210,22 @@ export interface ArenaProps {
    * the engine sees.
    */
   lookQuery?: string | null;
+  /**
+   * **The caption** (D255): the narrator's moment for the frame on screen, with
+   * the one or two before it and a turn marker — or `null` when no moment names
+   * that frame (the strip hides). Plain data from `main.tsx`, which runs THE
+   * narrator (`story/narrate.ts`) over the replay's frames or, at a live seat,
+   * over the frames it records off the socket; the arena imports no narrator and
+   * no `story/` module (`liveness.test.ts`), so it draws a sentence and decides
+   * nothing.
+   */
+  caption?: ArenaCaption | null;
+  /**
+   * Called with whether the strip is on (`N`, the cue strip's checkbox, the
+   * stored choice — D256), so `main.tsx` narrates only while someone is reading:
+   * off by default at a live seat, where that is nobody.
+   */
+  onCaptionShown?: ((on: boolean) => void) | null;
 }
 
 /** What {@link ArenaProps.follow} can say. Declared here, not imported: the arena knows no transport. */
@@ -405,6 +430,29 @@ function readSoundChoice(): SoundChoice {
 function storeSoundChoice(choice: 'on' | 'off'): void {
   try {
     window.localStorage.setItem(SOUND_STORE_KEY, choice);
+  } catch {
+    // Nothing to do: the choice still holds for this page.
+  }
+}
+
+/**
+ * **D256 — the caption's choice, in this browser**, per context (`caption.ts`'s
+ * `CAPTION_DEFAULT`: on while watching, off at a live seat). A per-viewer
+ * convenience like the camera's view, so `localStorage`, inside `try`, and the
+ * context's default when nothing (or nothing readable) is stored.
+ */
+function readStoredCaption(context: CaptionContext): boolean {
+  try {
+    return captionChoiceOf(window.localStorage.getItem(CAPTION_STORE_KEY), context);
+  } catch {
+    return captionChoiceOf(null, context);
+  }
+}
+
+function storeCaption(context: CaptionContext, on: boolean): void {
+  try {
+    const stored = window.localStorage.getItem(CAPTION_STORE_KEY);
+    window.localStorage.setItem(CAPTION_STORE_KEY, storedCaptionWith(stored, context, on));
   } catch {
     // Nothing to do: the choice still holds for this page.
   }
@@ -781,6 +829,8 @@ export default function Arena({
   bloom = null,
   follow = null,
   lookQuery = null,
+  caption = null,
+  onCaptionShown = null,
 }: ArenaProps): JSX.Element {
   /** The look, parsed once from the flags `main.tsx` kept (D137). */
   const look = useMemo<LookSpec>(() => (lookQuery === null ? DEFAULT_LOOK : lookFromSearch(lookQuery)), [lookQuery]);
@@ -799,6 +849,29 @@ export default function Arena({
     if (cardId !== null) setPointedId(cardId);
   }, []);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
+  /**
+   * **D256 — the caption strip, on or off.** Presentation state like bloom:
+   * `N`, the cue strip's checkbox and the stored choice for this context —
+   * watching (a replay, a followed recording) or a live seat — whose defaults
+   * are on and off. `main.tsx` is told, so it narrates only while it is on.
+   */
+  const captionContext = captionContextOf(onAct !== null);
+  const [captionOn, setCaptionOn] = useState<boolean>(() => readStoredCaption(captionContext));
+  const captionRef = useRef({ on: captionOn, context: captionContext });
+  captionRef.current = { on: captionOn, context: captionContext };
+  useEffect(() => {
+    setCaptionOn(readStoredCaption(captionContext));
+  }, [captionContext]);
+  const setCaption = useCallback((on: boolean) => {
+    setCaptionOn(on);
+    storeCaption(captionRef.current.context, on);
+  }, []);
+  const toggleCaption = useCallback(() => {
+    setCaption(!captionRef.current.on);
+  }, [setCaption]);
+  useEffect(() => {
+    onCaptionShown?.(captionOn);
+  }, [captionOn, onCaptionShown]);
   /**
    * **User decision 6's toggle.** The URL flag (`?bloom=1` / `?bloom=0`) sets where
    * it starts and {@link BLOOM_DEFAULT} — a measurement — is where it starts when the
@@ -1414,6 +1487,9 @@ export default function Arena({
           } else if (plan.id === 'toggleView') {
             if (onSetView === null) setHint('there is no board to switch to');
             else onSetView('board');
+          } else if (plan.id === 'toggleCaption') {
+            // D256: the caption strip — a picture control, sends nothing.
+            toggleCaption();
           } else {
             // `Z`/`S`/`C`/`L` open board panels that have no 3D surface. **Say
             // so.** A key the `?` overlay lists, `planKey` consumed (so
@@ -1455,7 +1531,7 @@ export default function Arena({
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [onAct, onAnswer, onSetView, queue, director, state.ask, chooseView, toggleSpectator, toggleSound]);
+  }, [onAct, onAnswer, onSetView, queue, director, state.ask, chooseView, toggleSpectator, toggleSound, toggleCaption]);
 
   // -- batch intake (§2.3) ---------------------------------------------------
   //
@@ -1684,7 +1760,15 @@ export default function Arena({
             had three. The wrapper is layout only and stays `pointer-events:
             none` — each strip opts in on its own. */}
         <div className="arena__strips">
-          <CueControls queue={queue} bloom={bloomOn} onBloom={onBloom} sound={soundEnabled} onSound={setSound} />
+          <CueControls
+            queue={queue}
+            bloom={bloomOn}
+            onBloom={onBloom}
+            sound={soundEnabled}
+            onSound={setSound}
+            caption={captionOn}
+            onCaption={setCaption}
+          />
           {/* **T8's view switcher.** Its root class is in liveness.test.ts's table
               and carries `pointer-events: auto` in styles.css — this layer is
               `none`, and a widget that forgets is inert. */}
@@ -1701,6 +1785,12 @@ export default function Arena({
           />
         </div>
         <ArtCredit art={art} placements={placed.placements} hovered={hovered} />
+        {/* **D255 — the caption strip**, at the mount point the story page's
+            follow-up 1 named: the narrator's moment for the frame on screen, as
+            plain data from `main.tsx`. It sits over the table's right edge,
+            between the seat plates (`.arena__caption`, D256); its root class is
+            in liveness.test.ts's widget table and opts back into pointer events. */}
+        {captionOn && <CaptionStrip caption={caption} />}
         {/* D241: the inspect chip — the hover surface's button (the arena has no
             card zoom), the same target as `I`, and inert with its reason for a
             face-down or hidden card. */}
@@ -1737,6 +1827,8 @@ function CueControls({
   onBloom,
   sound,
   onSound,
+  caption,
+  onCaption,
 }: {
   queue: CueQueue;
   bloom: boolean;
@@ -1744,6 +1836,9 @@ function CueControls({
   /** D251 — the arena's sound, and its switch (the same one `M` flips). */
   sound: boolean;
   onSound: (on: boolean) => void;
+  /** D256: the caption strip's switch — presentation, like bloom; `N` flips the same one. */
+  caption: boolean;
+  onCaption: (on: boolean) => void;
 }): JSX.Element {
   const [, bump] = useReducer((n: number) => n + 1, 0);
   useEffect(() => queue.onChange(bump), [queue]);
@@ -1866,6 +1961,19 @@ function CueControls({
           }}
         />{' '}
         sound
+      </label>
+      {/* **D256 — the caption**: the story's moment for the frame on screen,
+          over the table's right edge. On by default while watching, off at a
+          live seat; the choice is kept per context in this browser. */}
+      <label title="Caption: the story's moment for the frame on screen, with the one or two before it — on by default in a replay and while spectating, off at a live seat (N)">
+        <input
+          type="checkbox"
+          checked={caption}
+          onChange={(event) => {
+            onCaption(event.currentTarget.checked);
+          }}
+        />{' '}
+        caption
       </label>
       <span className="muted">
         {pending > 0 ? `${String(pending)} step${pending === 1 ? '' : 's'} · ${String(remaining)} ms` : 'idle'}

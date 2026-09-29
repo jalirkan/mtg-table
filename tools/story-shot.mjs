@@ -30,8 +30,9 @@
  * It prints one JSON object: the cursor and total the replay bar says, the
  * moment on screen, how many moments and turns the column holds, how many card
  * names it marked (`data-card-id`), and the follow line if there is one — the
- * numbers `docs/evidence/story.md` quotes. Not in the gate: it wants a dev server
- * and a browser.
+ * numbers `docs/evidence/story.md` quotes — and, pointed at `#arena`, the caption
+ * strip's lines (D255; `docs/evidence/arena-story-caption.md`). Not in the gate:
+ * it wants a dev server and a browser.
  */
 
 import { spawn } from 'node:child_process';
@@ -159,6 +160,8 @@ const READ = `(() => {
     follow: q('.follow')?.textContent ?? null,
     arena: !!q('canvas'),
     board: !!q('[data-readonly]'),
+    // D255: the arena's caption strip — its turn marker and lines, or null when hidden.
+    caption: q('.arena__caption')?.innerText?.split('\\n') ?? null,
   };
 })()`;
 

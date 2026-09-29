@@ -84,9 +84,11 @@ together, and each is a defect that was actually hit.
    the post-render sweep and never inside render; the sweep bumps a version only
    when a rect actually moved. Use the isomorphic layout-effect shim already in
    that file, or `renderToStaticMarkup` starts printing SSR warnings.
-4. **One keymap table.** `web/src/keys.ts` is the **26** rows (18 at M4; M7 added
+4. **One keymap table.** `web/src/keys.ts` is the **27** rows (18 at M4; M7 added
    `V` and `K`, Tier 2's slice 2 the three camera rows, the workshop `W`, the
-   arena's inspect `I`, D241, and its sound `M`, D251) plus two pure
+   arena's inspect `I`, D241, its sound `M`, D251, and its caption `N`, D256 — which
+   shares `N` with Forge's always-no and reaches the arena through `planKey`'s
+   pre-pass) plus two pure
    functions (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
    and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
    Adding a key is a row, never a new branch in a handler. Its dispatchers are
@@ -124,7 +126,7 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **1,123 `node --test` + 124 vitest (8 files)** standalone on
+`npm --prefix web test` is **1,184 `node --test` + 157 vitest (9 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
 logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
@@ -451,7 +453,9 @@ to the arena's desk.
    `fetch`, no socket, no timer, nothing from `render/`, `arena/`, `cards/` or
    `workshop/` — `story.test.ts` scans for each. **Nothing but `main.tsx` imports
    `story/`** (the CLI in `tools/` aside); a story panel in the arena is a
-   decision that relaxes that line, not a quiet import.
+   decision that relaxes that line, not a quiet import. The arena's caption
+   (**D255**) kept the line: `main.tsx` loads `story/caption.ts` through
+   `import()`, as it loads the page, and hands the arena plain data.
 3. **The narration is re-told, never patched** (**D126**). The page narrates the
    frames the transport holds, memoised on their count — about 4 ms for g1 — so a
    followed log is simply re-told as it grows, and the story of a log being

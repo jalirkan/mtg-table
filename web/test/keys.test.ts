@@ -658,6 +658,54 @@ test('the W dispatcher in main.tsx listens in the capture phase, and only where 
   assert.match(main, /useWorkshopKey\(view, setView, arenaOff\);/);
 });
 
+// ---------------------------------------------------------------------------
+// D255/D256 — N: the arena's caption strip
+// ---------------------------------------------------------------------------
+
+test('N toggles the arena’s caption, says so on a read-only board, and stays Forge’s always-no on a live board', () => {
+  const caption = { kind: 'view', id: 'toggleCaption' };
+  assert.deepEqual(planKey(ev('n'), ARENA)?.plan, caption);
+  assert.equal(planKey(ev('n'), ARENA)?.binding.id, 'toggleCaption');
+  // A picture key: legal on a replay and behind an ask, like the camera rows.
+  assert.deepEqual(planKey(ev('n'), { ...ARENA, live: false, askOpen: true })?.plan, caption);
+  // The arena draws no auto-yield control (N there said "a board control — press V"),
+  // so N is the caption's even with an ability on top of the stack.
+  assert.deepEqual(planKey(ev('n'), { ...ARENA, topYieldKey: 'y7', topYielded: null })?.plan, caption);
+  assert.deepEqual(planKey(ev('N', { shiftKey: true }), ARENA)?.plan, caption);
+  // A read-only board: always-no could only say "read-only"; the caption row says where it lives.
+  const replayBoard = planKey(ev('n'), { ...LIVE, live: false, topYieldKey: 'y7' });
+  assert.equal(replayBoard?.binding.id, 'toggleCaption');
+  assert.equal(replayBoard?.plan.kind, 'inert');
+  assert.match(replayBoard?.plan.kind === 'inert' ? replayBoard.plan.why : '', /caption.*press V/);
+  // A live board keeps Forge's N, untouched (M6).
+  assert.deepEqual(planKey(ev('n'), { ...LIVE, topYieldKey: 'y7', topYielded: null })?.plan, {
+    kind: 'setYield',
+    yieldKey: 'y7',
+    mode: 'no',
+  });
+  assert.equal(planKey(ev('n'), LIVE)?.binding.id, 'alwaysNo');
+  // Ctrl+N is the browser's; a text field owns its letters; the physical spelling works.
+  assert.equal(planKey(ev('n', { ctrlKey: true }), ARENA), null);
+  assert.equal(planKey(ev('n', { metaKey: true }), ARENA), null);
+  assert.equal(planKey(ev('n', { altKey: true }), ARENA), null);
+  assert.equal(planKey(ev('n', { target: { tagName: 'INPUT' } }), ARENA), null);
+  assert.deepEqual(planKey(ev('', { code: 'KeyN' }), ARENA)?.plan, caption);
+  assert.equal(chordFor('toggleCaption'), 'N');
+  // Two rows share N, always-no first: `bindingFor` stays Forge's, and the caption
+  // row is reached only through `planKey`'s pre-pass.
+  assert.deepEqual(KEYMAP.filter((b) => b.keys.includes('n')).map((b) => b.id), ['alwaysNo', 'toggleCaption']);
+  assert.equal(bindingFor(ev('n'))?.id, 'alwaysNo');
+});
+
+test('the N dispatcher is the arena’s: it flips the strip and sends no act', () => {
+  const arena = readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8');
+  const at = arena.indexOf("plan.id === 'toggleCaption'");
+  assert.ok(at > 0, 'Arena.tsx has no branch for the caption plan');
+  const branch = arena.slice(at, arena.indexOf('} else', at));
+  assert.match(branch, /toggleCaption\(\)/);
+  assert.doesNotMatch(branch, /onAct|onAnswer/, 'the caption is a picture control: it must send nothing');
+});
+
 test('CAMERA_KEYS spells camera.ts’s views, key for key (keys.ts may not import arena/)', () => {
   // D49: keys.ts is on the 2D path and the arena chunk stays lazy, so the list
   // is written twice — and this is what keeps the two copies one list.

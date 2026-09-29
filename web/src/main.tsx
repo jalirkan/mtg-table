@@ -51,6 +51,17 @@
  * frame the story was on. The story page itself is handed frames and a cursor
  * and imports no transport.
  *
+ * **The arena's caption is the story's sentence, handed down as data** (D255).
+ * The arena imports no narrator (`liveness.test.ts`), so `main.tsx` runs THE
+ * narrator for it: `useArenaCaption` loads `story/caption.ts` through `import()`
+ * (never a static import, so the 2D entry chunk carries no narrator), narrates
+ * the frames the replay transport holds — again as a followed log grows — and
+ * hands the arena the moment for the frame on screen as a plain-data prop. At a
+ * live seat the WebSocket transport keeps no frame list, so the page records the
+ * game in progress off the socket (`liveLog.ts`, put on the socket in
+ * `liveTransport`) and the same function captions its last frame. It narrates
+ * only while the arena says the strip is on (`onCaptionShown`, D256).
+ *
  * **The keyboard moved into `<Board>` in M4** (report 10 §12.2 rule 1). M3 kept
  * it here because `Board.tsx` had no effects and the render test folds every
  * frame of every fixture through `renderToStaticMarkup`, which runs none — but
@@ -83,6 +94,7 @@ import type {
   YieldKind,
   YieldToAct,
 } from './protocol.ts';
+import { LiveFrameLog } from './liveLog.ts';
 import { gameLabel } from './reduce.ts';
 import { Board, type BoardActions } from './render/Board.tsx';
 import { ErrorBoundary } from './render/ErrorBoundary.tsx';
@@ -415,16 +427,102 @@ function FrameErrorBanner({
  */
 interface WsHolder {
   __mtgTableWs?: WebSocketTransport;
+  /** D255: the game in progress, recorded off that socket for the arena's caption. */
+  __mtgTableLiveLog?: LiveFrameLog;
 }
 
-function liveTransport(port: number): WebSocketTransport {
+/**
+ * The page's socket and the log recorded off it (D255). The log is attached
+ * where the socket is made, so it hears every inbound frame the reducer hears
+ * for as long as the socket lives — a trip to `#cards`, `#workshop` or `#story`
+ * unmounts the seat and not the recording.
+ */
+function liveTransport(port: number): { transport: WebSocketTransport; log: LiveFrameLog } {
   const holder = window as unknown as WsHolder;
   const existing = holder.__mtgTableWs;
-  if (existing !== undefined && existing.url.includes(`:${String(port)}/`)) return existing;
+  const kept = holder.__mtgTableLiveLog;
+  if (existing !== undefined && existing.url.includes(`:${String(port)}/`) && kept !== undefined) {
+    return { transport: existing, log: kept };
+  }
   existing?.close();
   const made = new WebSocketTransport({ port });
+  const log = new LiveFrameLog();
+  made.onFrame((frame) => {
+    log.push(frame);
+  });
   holder.__mtgTableWs = made;
-  return made;
+  holder.__mtgTableLiveLog = log;
+  return { transport: made, log };
+}
+
+// ---------------------------------------------------------------------------
+// The arena's caption (D255) — THE narrator, run here, handed down as data
+// ---------------------------------------------------------------------------
+
+/**
+ * `story/caption.ts`, loaded the first time a caption is wanted. A dynamic
+ * import on purpose (D49's rule): the narrator is the story page's and the
+ * caption's, and nothing of it belongs in the 2D entry chunk. The type is read
+ * through `typeof import(…)`, which is erased, so there is no static import of
+ * `story/` here either (`story.test.ts`).
+ */
+type CaptionModule = typeof import('./story/caption.ts');
+type ArenaCaptionData = ReturnType<CaptionModule['captionAt']>;
+
+let captionModule: Promise<CaptionModule> | null = null;
+
+function loadCaptionModule(): Promise<CaptionModule> {
+  if (captionModule === null) {
+    const pending = import('./story/caption.ts');
+    // A failed chunk load is retried the next time a caption is wanted.
+    pending.catch(() => {
+      captionModule = null;
+    });
+    captionModule = pending;
+  }
+  return captionModule;
+}
+
+/**
+ * **The caption for the frame on screen**, or `null` (no moment names it, the
+ * strip is off, or the narrator has not loaded yet). `frames` are the log the
+ * cursor moves over — the replay transport's, or a live seat's recording — and
+ * `version` changes whenever they do (a followed log's length, a live log's
+ * count); the narration is re-told whole each time (D126: ~4 ms at g1's
+ * length), and the caption is picked per cursor from it.
+ */
+function useArenaCaption(
+  wanted: boolean,
+  header: unknown,
+  frames: readonly unknown[] | null,
+  version: number,
+  cursor: number,
+): ArenaCaptionData {
+  const [narrator, setNarrator] = useState<CaptionModule | null>(null);
+  useEffect(() => {
+    if (!wanted || narrator !== null) return undefined;
+    let current = true;
+    loadCaptionModule().then(
+      (loaded) => {
+        if (current) setNarrator(loaded);
+      },
+      () => undefined,
+    );
+    return () => {
+      current = false;
+    };
+  }, [wanted, narrator]);
+  const index = useMemo(
+    () => (wanted && narrator !== null && frames !== null ? narrator.captionIndexOf(header, frames) : null),
+    // `header` is read with `frames`: a live seat's stand-in is rebuilt per call,
+    // and `version` is what says the log changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wanted, narrator, frames, version],
+  );
+  return useMemo(
+    () => (index === null || narrator === null ? null : narrator.captionAt(index, cursor)),
+    [index, narrator, cursor],
+  );
 }
 
 function StatusBar({
@@ -461,7 +559,18 @@ function StatusBar({
 function LiveApp({ port, view, onSetView }: { port: number; view: View; onSetView: (view: View) => void }): JSX.Element {
   const art = useArt();
   const flags = useMemo(arenaFlagsFromQuery, []);
-  const transport = useMemo(() => liveTransport(port), [port]);
+  const { transport, log } = useMemo(() => liveTransport(port), [port]);
+  // D255/D256: the caption at a live seat is the narrator over the game recorded
+  // off this socket, at its last frame — narrated only while the arena shows the
+  // strip, which is OFF by default at a seat (the player is playing, not reading).
+  const [captionShown, setCaptionShown] = useState(false);
+  const caption = useArenaCaption(
+    view === 'arena' && !flags.off && captionShown,
+    log.header,
+    log.frames,
+    log.version,
+    log.frames.length,
+  );
   // The transport is mutable; this counter is what tells React to re-read it.
   const [, bump] = useReducer((n: number) => n + 1, 0);
 
@@ -638,6 +747,8 @@ function LiveApp({ port, view, onSetView }: { port: number; view: View; onSetVie
               glInfo={flags.glinfo}
               bloom={flags.bloom}
               lookQuery={flags.look}
+              caption={caption}
+              onCaptionShown={setCaptionShown}
             />
           </Suspense>
         ) : (
@@ -1002,6 +1113,18 @@ function ReplayApp({
   const art = useArt();
   const flags = useMemo(arenaFlagsFromQuery, []);
   const { load, follower } = useReplayLoad(requested, follow);
+  // D255: the caption is the narrator over the frames this transport holds (they
+  // grow while a log is followed, and their count is the version), at the cursor.
+  // Above the early return below: a hook under it is M5 convention 3's defect.
+  const [captionShown, setCaptionShown] = useState(false);
+  const ready = load.status === 'ready' ? load.transport : null;
+  const caption = useArenaCaption(
+    view === 'arena' && !flags.off && captionShown,
+    ready?.header ?? null,
+    ready?.frames ?? null,
+    ready?.total ?? 0,
+    ready?.index ?? 0,
+  );
 
   if (load.status !== 'ready') return <ReplayNotReady load={load} follow={follow} follower={follower} />;
 
@@ -1060,6 +1183,8 @@ function ReplayApp({
               bloom={flags.bloom}
               follow={followWord}
               lookQuery={flags.look}
+              caption={caption}
+              onCaptionShown={setCaptionShown}
             />
           </Suspense>
         ) : (

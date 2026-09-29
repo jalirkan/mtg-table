@@ -4,9 +4,9 @@ These load when you work under `web/src/arena/`, on top of the root `CLAUDE.md`
 and `web/CLAUDE.md` (the board's conventions, whose M4 convention 2 this file's
 `CardPlane` mirrors). They are in the order they were written: M7's Tier 1, Tier
 2 and its three later slices, report 15's three art-direction lanes, the status
-layer, the personal tier's loader, then villain identity and its second lane. The
-workshop (`web/src/workshop/`) draws with this directory's code, and its own
-conventions are `web/CLAUDE.md`'s *Workshop*.
+layer, the personal tier's loader, villain identity and its second lane, then
+sound and the caption. The workshop (`web/src/workshop/`) draws with this
+directory's code, and its own conventions are `web/CLAUDE.md`'s *Workshop*.
 
 ## The conventions M7 added — the arena
 
@@ -347,7 +347,7 @@ camera rules still hold under all of it.
    is stored — and a stored spectator-only view shows the table at a live seat.
 5. **The camera keys are keymap rows, and on the board they are `inert`**
    (**D74**, M4 convention 4). `1`–`5`, `6`/`0` and `O` are three of `keys.ts`'s
-   26 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
+   27 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
    `CAMERA_KEYS` and `keys.test.ts` holds the two maps together. On the board each
    plans an `inert` whose reason names `V` — never a `view`, which `Board.tsx`'s
    silent `default:` would swallow.
@@ -1222,3 +1222,32 @@ new clip is an id in `SOUND_IDS`, a path in `SOUND_FILES` (liveness allows the s
 one keeps its path and gets a `packs` entry with its provenance. After changing any
 rule line above, regenerate the rules manifest:
 `CLAUDE_MD_RULES_WRITE=1 node --test web/test/claude-md.test.ts`.
+
+## The caption — the conventions D255–D256 added
+
+The narrator's moment for the frame on screen, in a strip over the table
+(`scene/`-free: `CaptionStrip.tsx` and `caption.ts`); `docs/evidence/arena-story-caption.md`
+is what was measured, and it closes the story page's follow-up 1 by another road
+than the one that follow-up drew.
+
+1. **The arena draws the caption; it never narrates** (**D255**). `main.tsx` runs
+   THE narrator — `story/caption.ts` over `story/narrate.ts`, loaded by
+   `import()` — over the replay's frames or, at a live seat, over the game
+   `liveLog.ts` records off the socket, and hands `<Arena>` an `ArenaCaption`
+   (`caption.ts`): plain data, beside the follow word. No file here imports
+   `story/` or anything named for the narrator, and `CaptionStrip` is a pure
+   function of its prop — no hook, timer, request, storage or clock
+   (`liveness.test.ts`, with a spliced import as its control). Hard rule 8 on the
+   strip is `arena-caption.test.tsx`: every cursor of every fixture, replayed and
+   live, against `test/hidden-oracle.ts`, with a leaky stub as its control.
+2. **Where it sits is measured, and the choice is per context** (**D256**). The
+   right edge between the seat plates, growing up from above yours — `caption.ts`'s
+   `CAPTION_BOX` and `captionRectOf`, held to `.arena__caption` like the plates;
+   `caption.test.ts` projects every board frame of the corpus through the table
+   view and requires no hand card, stack item, pile or duelist under it at any
+   canvas and no battlefield card from 1280 px wide (the bottom centre, where a
+   subtitle would go, is its control). Change the box and that test says where it
+   lands. **On by default while watching, off at a live seat**, stored per context
+   under `mtg-table.arena.caption` inside `try` (`Arena.tsx` alone); `N` is its
+   `keys.ts` row, the arena's through `planKey`'s pre-pass because a live 2D
+   board's `N` stays Forge's always-no.
