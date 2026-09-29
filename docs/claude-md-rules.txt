@@ -103,7 +103,7 @@
 **ten** files and by nothing else: `ZoneRow`, `HandFan`, `PlayerRail`,
 3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
 **the id spaces collide** — the committed corpus has a `stack[].id` that is
-4. **One keymap table.** `web/src/keys.ts` is the **25** rows (18 at M4; M7 added
+4. **One keymap table.** `web/src/keys.ts` is the **26** rows (18 at M4; M7 added
 5. **Arrows are decoration and never the only channel** (**D30**). The overlay is
 6. **Keep the testable half pure.** `labels.ts`, `resolve.ts`, `arrows.ts` and
 1. **A question is answered on the board iff EVERY one of its options is already
@@ -228,6 +228,11 @@
 7. **A look is judged at the table's distance, and the part identity owns of
 **not met** on the Doom Legion's, the Masters of Evil's and Wakanda's crowded
 **Inspect from the table** (**D241**) is navigation, not a renderer:
+1. **A sound is three params, and the queue fires it** (**D250**). `sound` (a clip
+2. **Hard rule 8: a concealed card plays only its event's DEFAULT** (**D250**). A
+3. **`scene/audio.ts` is THE audio module, bound from `CueRunner`** (**D250**, D251).
+4. **Muted by default, and nothing before a gesture** (**D251**). `SOUND_DEFAULT` is
+**The clips are data too** (**D252**): eleven Ogg Opus files under
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -412,7 +417,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1,099 `node --test` + 124 vitest (8 files)
+span: 1,123 `node --test` + 124 vitest (8 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -620,3 +625,9 @@ span: Reuse first, and a new kind carries its measured cost
 span: The corpus's late and odd frames are named, not smoothed
 span: A look is judged at the table's distance, and the part identity owns of the triangles is held
 span: Inspect from the table
+span: a sound is a cue param, timed by the queue and played by the one loop, and a concealed card sounds like any card.
+span: A sound is three params, and the queue fires it
+span: Hard rule 8: a concealed card plays only its event's DEFAULT
+span: `scene/audio.ts` is THE audio module, bound from `CueRunner`
+span: Muted by default, and nothing before a gesture
+span: The clips are data too

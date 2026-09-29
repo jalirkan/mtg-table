@@ -35,6 +35,7 @@ import { figureFor } from '../arena/figures/resolve.ts';
 import type { FigureData, ModelData } from '../arena/figures/types.ts';
 import { REGISTRY } from '../arena/cues/registry.ts';
 import { cuesFor, resolve, selectorsFor, subjectOf } from '../arena/cues/resolve.ts';
+import { soundOfParams } from '../arena/cues/sound.ts';
 import type { CueData, CueParams } from '../arena/cues/types.ts';
 import { isCommentKey } from '../arena/cues/validate.ts';
 import { cardOf, type WorkshopEntry } from './catalog.ts';
@@ -52,6 +53,8 @@ export interface CueLine {
   known: boolean;
   /** The clip lane: `attack → pistolDraw`, `hit`, or `—` (no clip for this cue). */
   clip: string;
+  /** D250 — the sound it plays, as the ladder decided it: `comms at 0 ×0.9`, or `—`. */
+  sound: string;
   /** The data params (not the event facts the ladder merges in). */
   params: CueParams;
   /** Which card id it plays on — the subject, its host, or another card entirely. */
@@ -87,6 +90,13 @@ export function clipWords(
   if (byCard !== undefined && has(byCard)) return `${generic} → ${byCard} (card alias)`;
   if (has(generic)) return generic;
   return `${generic} (not in this model — the offset still plays)`;
+}
+
+/** D250 — the sound a planned cue carries (already gated by the ladder), as words. */
+export function soundWords(params: CueParams): string {
+  const sound = soundOfParams(params);
+  if (sound === null) return '—';
+  return `${sound.sound} at ${String(Math.round(sound.at * 100) / 100)} ×${String(Math.round(sound.gain * 100) / 100)}`;
 }
 
 /** The data half of a cue's params: what `cues.json` said, not what the event did. */
@@ -130,6 +140,7 @@ export function cueRows(
           ms: cue.ms,
           known: REGISTRY.has(cue.id),
           clip: clipWords(cue.id, cue.params, spec.clips, model === null ? null : modelClips),
+          sound: soundWords(cue.params),
           params: dataParams(found.spec),
           on:
             target === undefined

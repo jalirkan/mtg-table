@@ -25,6 +25,7 @@
  * it is waiting on the human**. Nothing here has to know that.
  */
 
+import type { SoundSpec } from './sound.ts';
 import type { CueSpec, CueTable, EventKind } from './types.ts';
 
 /**
@@ -113,6 +114,43 @@ export const DEFAULT_SELECTOR_CUES: CueTable = Object.freeze({
   'stats:transform': { cue: 'stats.flip', ms: 400 },
   'counters:-': { cue: 'counters.drop', ms: 380 },
   'attach:off': { cue: 'attach.release', ms: 420 },
+});
+
+/**
+ * **The default SOUNDS (D250)** — the bottom rung of `sound.ts`'s ladder, keyed by
+ * the same selectors as the two tables above, most specific first. Kept small on
+ * purpose: a card entering, an attack, a hit, a death, a spell resolving and the
+ * game's outcome. Everything else — a tap, a draw, a counter, a turn — is silent,
+ * because a table that clicks at every engine step is noise, and the film already
+ * carries those facts.
+ *
+ * This is the ONLY table a concealed card's sound is read from (hard rule 8's
+ * renderer half, `sound.ts`'s `isConcealed`): a face-down creature entering
+ * sounds like every creature entering. A row in `cues.json` may name another clip
+ * (`"sound"`), move it (`"soundAt"`) or scale it (`"soundGain"`) for a card whose
+ * face is up, and `"sound": "none"` silences one.
+ *
+ * `outcome:won` / `outcome:lost` / `outcome:draw` are the viewer's side of the
+ * result (`resolve.ts`'s `selectorsFor`, the same seat the banner's "Victory"
+ * reads); a draw is nobody's victory.
+ */
+export const DEFAULT_SOUNDS: Readonly<Record<string, SoundSpec>> = Object.freeze({
+  // A card arriving: the land drop too (its `land` event and its `zone` event are
+  // one arrival, and the queue plays one sound per card per clip per batch).
+  'zone:*>battlefield': { sound: 'enter', at: 0.05, gain: 0.75 },
+  land: { sound: 'enter', at: 0.05, gain: 0.55 },
+  // A creature leaving the battlefield for the graveyard is a death.
+  'zone:battlefield>graveyard': { sound: 'death', at: 0.08, gain: 0.9 },
+  attackers: { sound: 'lunge', at: 0, gain: 0.8 },
+  damage: { sound: 'hit', at: 0, gain: 0.85 },
+  'damage:lethal': { sound: 'hit', at: 0, gain: 1 },
+  'damage:player': { sound: 'hit', at: 0, gain: 0.65 },
+  resolved: { sound: 'resolve', at: 0, gain: 0.5 },
+  // A fizzle is the absence of what the chime announces.
+  'resolved:fizzled': { sound: 'none' },
+  'outcome:won': { sound: 'victory', at: 0, gain: 0.9 },
+  'outcome:lost': { sound: 'defeat', at: 0, gain: 0.9 },
+  'outcome:draw': { sound: 'defeat', at: 0, gain: 0.7 },
 });
 
 /** Every cue id the two tables above name — `validate.ts`'s cross-check. */

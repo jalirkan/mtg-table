@@ -37,6 +37,7 @@ import { VIEW_BY_ID } from '../src/arena/camera.ts';
 import { CueQueue } from '../src/arena/cues/queue.ts';
 import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { cuesFor } from '../src/arena/cues/resolve.ts';
+import { defaultSoundIds, type SoundId } from '../src/arena/cues/sound.ts';
 import { NullStage } from '../src/arena/cues/stage.ts';
 import { combatFreeze, spellForms } from '../src/arena/figures/casting.ts';
 import { figurePose, type FigureLayout } from '../src/arena/figures/pose.ts';
@@ -1236,6 +1237,38 @@ test('workshop: each cue line says when the ladder’s rung order hid a more spe
   }
   console.log(`workshop: rung order over a more specific selector — ${[...census].map(([k, n]) => `${k} ×${String(n)}`).join(', ')}`);
   assert.equal(census.get('resolved over resolved:fizzled'), undefined, 'a deck card’s plain resolution hides its fizzle again');
+});
+
+test('workshop: each cue line names its sound, the rehearsal panel plays it through the arena’s one audio module, and a concealed shape plays only defaults — named or not (D250)', () => {
+  const strike = cueRows(entry('Helicarrier Strike'), CUES, FIGURES, MODELS);
+  const resolves = strike.find((r) => r.kind === 'resolves')!.lines.find((l) => l.event === 'resolved')!;
+  assert.equal(resolves.sound, 'laser at 0.5 ×1');
+  const fizzle = strike.find((r) => r.kind === 'fizzles')!.lines.find((l) => l.event === 'resolved')!;
+  assert.equal(fizzle.sound, '—', 'a fizzle is silent');
+  const fury = cueRows(entry('Nick Fury, Spymaster'), CUES, FIGURES, MODELS).flatMap((r) => r.lines).filter((l) => l.event === 'attackers' && l.on === 'subject');
+  assert.ok(fury.length > 0 && fury.every((l) => l.sound.startsWith('comms ')), `Fury's attack: ${fury.map((l) => l.sound).join(', ')}`);
+  // Hard rule 8 on the pedestal: the two concealed shapes, as they are and handed
+  // a real name, sound only as their events' defaults.
+  const defaults = defaultSoundIds();
+  let concealedLines = 0;
+  for (const e of ENTRIES.filter((x) => x.concealed !== null)) {
+    for (const shape of [e, { ...e, name: 'Nick Fury, Spymaster' }]) {
+      for (const line of cueRows(shape, CUES, FIGURES, MODELS).flatMap((r) => r.lines)) {
+        concealedLines += 1;
+        if (line.sound === '—') continue;
+        assert.ok(defaults.has(line.sound.split(' ')[0] as SoundId), `${e.key}: ${line.event} sounds ${line.sound}`);
+      }
+    }
+  }
+  assert.ok(concealedLines > 0, 'no concealed rehearsal was read');
+  // The panel's checkbox drives the arena's own module, handed to the pedestal's CueRunner.
+  const workshop = readFileSync(WORKSHOP + 'Workshop.tsx', 'utf8');
+  assert.match(workshop, /sharedAudio\(loadAssetBytes\)/);
+  assert.match(workshop, /className="workshop__sound"/);
+  assert.ok(!workshop.includes('mtg-table.arena.sound'), 'the workshop reads the arena’s kept sound choice — page state only');
+  const pedestal = readFileSync(WORKSHOP + 'Pedestal.tsx', 'utf8');
+  const runner = pedestal.slice(pedestal.indexOf('<CueRunner'), pedestal.indexOf('/>', pedestal.indexOf('<CueRunner')));
+  assert.match(runner, /audio=\{audio\}/, 'the pedestal’s CueRunner is not handed the audio module');
 });
 
 test('workshop: every cues.json entry of every deck card is reached by a rehearsal, and every cue is in the registry', () => {

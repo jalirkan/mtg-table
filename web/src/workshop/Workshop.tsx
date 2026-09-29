@@ -65,6 +65,10 @@
  *     Post (Post.tsx, lazy)                  bloom and the ink line, the arena's one composer
  *     instantiateFigure, clipFor, loadFigureModels, ModelLibrary (models.ts)
  *                                            the meter's bodies, the clips' lengths
+ *     loadAssetBytes (models.ts)             D250: the clips' bytes, handed to the audio module
+ *     sharedAudio, ArenaAudio (audio.ts)     D250: the page's one sound renderer — the
+ *                                            rehearsal panel's sound checkbox turns it on
+ *                                            and CueRunner binds it on the pedestal
  *     PropField, PropOffsetSource (props.ts) the meter reads the real prop field back
  *     COSTUME_ATTRIBUTE (figureMaterial.ts)  the meter finds a body's head by its slots
  *     FigureRig, FigureRigMap (figureRigs.ts), RigMap (rigs.ts)
@@ -104,6 +108,7 @@
  *                                            twos: `?fx=` / `?twos=` where they start,
  *                                            the queue bar's two checkboxes after
  *     cuesFor, resolve, selectorsFor, subjectOf (resolve.ts)
+ *     soundOfParams (sound.ts)               D250: the sound a planned cue carries, as words
  *     validateCues, mergeCueData, isCommentKey (validate.ts)
  *     clamp01, CueImpl, CueRegistry, AnchorRef (stage.ts)
  *     CueData, CueSpec, CueParams, Presence, Problem, EMPTY_CUE_DATA (types.ts)
@@ -178,7 +183,8 @@ import type { FigureProblem } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
 import { lookFromSearch, lookSpecOf, type LookSpec } from '../arena/look.ts';
 import { BLOOM_DEFAULT } from '../arena/perf.ts';
-import { loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
+import { loadAssetBytes, loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
+import { sharedAudio } from '../arena/scene/audio.ts';
 import { cardOf, matchesSearch, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
 import { clipCueData, workshopRegistry } from './clipCue.ts';
 import { cueRows, unreachedSelectors, type CueRow } from './cueRows.ts';
@@ -347,6 +353,26 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [turn, setTurn] = useState(0);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
   const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
+  /**
+   * **D250 — sound on the pedestal**: the arena's own audio module (the page's
+   * one), muted until the rehearsal panel's checkbox is ticked — the tick is the
+   * gesture that lets the page start its audio. Page state, never stored: the
+   * arena's kept choice is the arena's (D251).
+   */
+  const audio = useMemo(() => sharedAudio(loadAssetBytes), []);
+  const [soundOn, setSoundOn] = useState(false);
+  useEffect(() => {
+    audio.setEnabled(soundOn);
+  }, [audio, soundOn]);
+  useEffect(() => () => audio.stopAll(), [audio]);
+  const onSound = useCallback(
+    (on: boolean) => {
+      if (on) audio.unlock();
+      audio.setEnabled(on);
+      setSoundOn(on);
+    },
+    [audio],
+  );
   /**
    * **The look** (D137) — the toolbar's A/B over holo · comic and every comic
    * option. It starts where the page's own `?look=` query says (the arena's
@@ -708,8 +734,11 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
       clip: (key: string) => {
         playClip(key);
       },
+      // D250: the pedestal's sound — `audio.stats` and `audio.describe()`, as on
+      // `__mtgArena` (the same module: the page has one).
+      audio,
     };
-  }, [queue, playKind, playClip]);
+  }, [queue, playKind, playClip, audio]);
 
   const attached = roleOf(entry) === 'attached';
   const art0 = entry.concealed === null ? lookupArt(art, entry.name) : null;
@@ -815,6 +844,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
             reducedMotion={reducedMotion}
             bloom={bloom}
             look={look}
+            audio={audio}
             personal={pedestalOverlay}
             personalLoaded={personalLoaded}
             inspect={inspect}
@@ -858,7 +888,13 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
             setOptions((o) => ({ ...o, stance }));
           }}
         />
-        <CuesPanel rows={rows} unreached={unreachedSelectors(entry, rows, cueData)} onPlay={playKind} />
+        <CuesPanel
+          rows={rows}
+          unreached={unreachedSelectors(entry, rows, cueData)}
+          onPlay={playKind}
+          sound={soundOn}
+          onSound={onSound}
+        />
         <TuningPanel
           entry={entry}
           pose={restPose}
@@ -1505,16 +1541,34 @@ function CuesPanel({
   rows,
   unreached,
   onPlay,
+  sound,
+  onSound,
 }: {
   rows: readonly CueRow[];
   unreached: readonly string[];
   onPlay: (kind: RehearsalKind) => void;
+  /** D250 — the pedestal's sound, through the arena's own audio module. */
+  sound: boolean;
+  onSound: (on: boolean) => void;
 }): JSX.Element {
   return (
     <details className="workshop__box" open>
       <summary>
         Cues <span className="muted">— a synthetic batch through the real queue</span>
       </summary>
+      <label
+        className="workshop__sound"
+        title="Play each cue's sound on the pedestal, through the arena's own audio module — muted until ticked. A face-down or hidden card plays only its event's default sound (hard rule 8)."
+      >
+        <input
+          type="checkbox"
+          checked={sound}
+          onChange={(event) => {
+            onSound(event.currentTarget.checked);
+          }}
+        />{' '}
+        sound
+      </label>
       <table className="workshop__cues">
         <tbody>
           {rows.map((row) => (
@@ -1535,6 +1589,7 @@ function CuesPanel({
                     <span className="muted">
                       {line.selector} · {line.ms} ms{line.on !== 'subject' ? ` · on ${line.on}` : ''}
                       {line.clip !== '—' ? ` · clip ${line.clip}` : ''}
+                      {line.sound !== '—' ? ` · sound ${line.sound}` : ''}
                     </span>
                     {line.outranks !== null && (
                       <span

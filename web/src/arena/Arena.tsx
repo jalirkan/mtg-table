@@ -141,6 +141,8 @@ import { OverlayField } from './scene/overlays.ts';
 import type { FigureRigMap } from './scene/figureRigs.ts';
 import { DuelistLayer } from './scene/DuelistLayer.tsx';
 import { NO_PERSONAL_LOADED, usePersonalModels, usePersonalOverlay, type PersonalLoaded } from './scene/personalModels.ts';
+import { isSoundChoice, sharedAudio, soundOn, type ArenaAudio, type SoundChoice } from './scene/audio.ts';
+import { loadAssetBytes } from './scene/models.ts';
 import { dressPoses, personalChoicesOf } from './personal.ts';
 import { inspectContextOf, inspectTargetOf, type InspectTarget } from './inspect.ts';
 import { FigureLayer } from './scene/FigureLayer.tsx';
@@ -384,6 +386,31 @@ function storeView(choice: CameraChoice): void {
 }
 
 /**
+ * **D251 — whether this browser turned the arena's sound on**, kept exactly as the
+ * camera view is: a per-viewer convenience in `localStorage`, every access inside
+ * `try`, and nothing stored means the default — muted (`scene/audio.ts`'s
+ * `soundOn`, which is also where `prefers-reduced-motion` comes in).
+ */
+const SOUND_STORE_KEY = 'mtg-table.arena.sound';
+
+function readSoundChoice(): SoundChoice {
+  try {
+    const stored = window.localStorage.getItem(SOUND_STORE_KEY);
+    return isSoundChoice(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeSoundChoice(choice: 'on' | 'off'): void {
+  try {
+    window.localStorage.setItem(SOUND_STORE_KEY, choice);
+  } catch {
+    // Nothing to do: the choice still holds for this page.
+  }
+}
+
+/**
  * **The one post pass, lazily** (user decision 6). Nothing under `scene/Post.tsx`
  * is imported unless bloom is actually on, so the composer is not in the arena
  * chunk's critical path — measured: the arena chunk is 329.54 kB gzip with it
@@ -434,6 +461,7 @@ function Scene({
   look = DEFAULT_LOOK,
   composer = false,
   personal = NO_PERSONAL_LOADED,
+  audio = null,
 }: {
   state: ClientState;
   placed: Layout;
@@ -482,6 +510,8 @@ function Scene({
   composer?: boolean;
   /** **The personal tier** (D194, D195): the loaded models, for the figure layer and the seats. */
   personal?: PersonalLoaded;
+  /** **D250** — the sound renderer `CueRunner` binds once a frame (muted until the viewer says). */
+  audio?: ArenaAudio | null;
 }): JSX.Element {
   const selectable = useMemo(
     () => new Set(state.input?.selectable.cardIds ?? []),
@@ -629,6 +659,7 @@ function Scene({
         glInfo={glInfo}
         primeRef={primeRef}
         loopRef={loopRef}
+        audio={audio}
       />
 
       <CameraRig clamps={spectator ? SPECTATOR_CLAMPS : ORBIT_CLAMPS} />
@@ -858,6 +889,53 @@ export default function Arena({
   const [dpr, setDpr] = useState(() => pinnedDpr ?? dprCeiling());
   const mode: QueueMode = onAct === null ? 'replay' : 'live';
   const reducedMotion = useReducedMotion();
+  /**
+   * **D250/D251 — the arena's sound.** One audio module for the page
+   * (`sharedAudio`), muted until the viewer turns it on — the cue strip's
+   * checkbox or `M`, each a user gesture, which is what lets `unlock()` create
+   * the page's `AudioContext` right there. The choice is kept in this browser;
+   * a choice of ON from an earlier visit waits for the first pointer or key press
+   * on the page, because a browser starts no sound before a gesture.
+   */
+  const audio = useMemo(() => sharedAudio(loadAssetBytes), []);
+  const [soundChoice, setSoundChoice] = useState<SoundChoice>(readSoundChoice);
+  const soundEnabled = soundOn(soundChoice, reducedMotion);
+  useEffect(() => {
+    audio.setEnabled(soundEnabled);
+  }, [audio, soundEnabled]);
+  useEffect(() => {
+    if (!soundEnabled || audio.unlocked) return;
+    const unlock = (): void => {
+      audio.unlock();
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [audio, soundEnabled]);
+  // Leaving the arena — `V`, the workshop, another page — leaves nothing ringing.
+  useEffect(() => () => audio.stopAll(), [audio]);
+  /** The checkbox and `M`: always called from inside the gesture, so `unlock()` may start the context. */
+  const setSound = useCallback(
+    (on: boolean): void => {
+      setSoundChoice(on ? 'on' : 'off');
+      storeSoundChoice(on ? 'on' : 'off');
+      if (on) audio.unlock();
+      audio.setEnabled(on);
+    },
+    [audio],
+  );
+  const soundRef = useRef(soundEnabled);
+  soundRef.current = soundEnabled;
+  const toggleSound = useCallback((): void => {
+    const next = !soundRef.current;
+    setSound(next);
+    setHint(next ? 'sound on — M to mute' : 'sound off — M to turn it on');
+  }, [setSound]);
   const data = useCueData();
   const figureData = useFigureData();
   const duelistData = useDuelistData();
@@ -1199,9 +1277,14 @@ export default function Arena({
       // screen — `queue.enqueueBatch([...], state)` needs the `ClientState` the
       // ladder reads its subject from. DEV only, like everything on this handle.
       state,
+      // D250: the sound renderer — `audio.stats` (requested / played / dropped /
+      // silenced / cuts) and `audio.describe()` (the context's state, the voices,
+      // the decoded clips) are how the evidence counted the sounds per batch.
+      audio,
     };
   }, [
     state,
+    audio,
     queue,
     stage,
     pool,
@@ -1347,6 +1430,11 @@ export default function Arena({
         case 'spectator':
           toggleSpectator();
           return;
+        // **D251 — the sound.** Local, sends nothing, legal on a replay; the key
+        // press is the gesture that lets the page start its audio.
+        case 'sound':
+          toggleSound();
+          return;
         // **D241 — inspect from the table.** Navigation to the workshop's
         // inspect view, and nothing else: no act, whatever the seat.
         case 'inspect':
@@ -1367,7 +1455,7 @@ export default function Arena({
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [onAct, onAnswer, onSetView, queue, director, state.ask, chooseView, toggleSpectator]);
+  }, [onAct, onAnswer, onSetView, queue, director, state.ask, chooseView, toggleSpectator, toggleSound]);
 
   // -- batch intake (§2.3) ---------------------------------------------------
   //
@@ -1556,6 +1644,7 @@ export default function Arena({
           look={look}
           composer={bloomOn || inkPass}
           personal={personal}
+          audio={audio}
         />
         {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three
             things about this line are deliberate. It is **last inside the
@@ -1595,7 +1684,7 @@ export default function Arena({
             had three. The wrapper is layout only and stays `pointer-events:
             none` — each strip opts in on its own. */}
         <div className="arena__strips">
-          <CueControls queue={queue} bloom={bloomOn} onBloom={onBloom} />
+          <CueControls queue={queue} bloom={bloomOn} onBloom={onBloom} sound={soundEnabled} onSound={setSound} />
           {/* **T8's view switcher.** Its root class is in liveness.test.ts's table
               and carries `pointer-events: auto` in styles.css — this layer is
               `none`, and a widget that forgets is inert. */}
@@ -1646,10 +1735,15 @@ function CueControls({
   queue,
   bloom,
   onBloom,
+  sound,
+  onSound,
 }: {
   queue: CueQueue;
   bloom: boolean;
   onBloom: (on: boolean) => void;
+  /** D251 — the arena's sound, and its switch (the same one `M` flips). */
+  sound: boolean;
+  onSound: (on: boolean) => void;
 }): JSX.Element {
   const [, bump] = useReducer((n: number) => n + 1, 0);
   useEffect(() => queue.onChange(bump), [queue]);
@@ -1759,6 +1853,19 @@ function CueControls({
           }}
         />{' '}
         on twos
+      </label>
+      {/* **D250/D251 — sound.** Muted until ticked (or `M`); the tick is the
+          gesture that lets the page start its audio, and the choice is kept in
+          this browser. Presentation, like bloom: it reaches no act. */}
+      <label title="Sound: the cues' clips — an arrival, an attack, a hit, a death, a spell resolving, the outcome, and a few S.H.I.E.L.D. cards' own. Muted until you tick it (M does the same); kept in this browser">
+        <input
+          type="checkbox"
+          checked={sound}
+          onChange={(event) => {
+            onSound(event.currentTarget.checked);
+          }}
+        />{' '}
+        sound
       </label>
       <span className="muted">
         {pending > 0 ? `${String(pending)} step${pending === 1 ? '' : 's'} · ${String(remaining)} ms` : 'idle'}

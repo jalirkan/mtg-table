@@ -347,7 +347,7 @@ camera rules still hold under all of it.
    is stored — and a stored spectator-only view shows the table at a live seat.
 5. **The camera keys are keymap rows, and on the board they are `inert`**
    (**D74**, M4 convention 4). `1`–`5`, `6`/`0` and `O` are three of `keys.ts`'s
-   25 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
+   26 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
    `CAMERA_KEYS` and `keys.test.ts` holds the two maps together. On the board each
    plans an `inert` whose reason names `V` — never a `view`, which `Board.tsx`'s
    silent `default:` would swallow.
@@ -1171,3 +1171,54 @@ the placement's gates: a face-down, hidden or redacted card is `inert` with its
 reason and never named (`inspect.test.ts` sweeps the corpus made hostile, with an
 ungated control). The arena answers the plan with a hash and nothing else — no
 act — and the workshop's ▣ arena link comes back to the same frame.
+
+## Sound — the conventions D250–D252 added
+
+Four, and the thesis is one sentence: **a sound is a cue param, timed by the queue
+and played by the one loop, and a concealed card sounds like any card.** README's
+*Sound* is how to use it, `docs/evidence/sound-cues.md` what was measured, PLAN.md's
+*Sound cues* the status and the follow-ups.
+
+1. **A sound is three params, and the queue fires it** (**D250**). `sound` (a clip
+   from `cues/sound.ts`'s closed `SOUND_IDS`, or `none`), `soundAt` and `soundGain`
+   are rows in `validate.ts`'s `PARAM_SPECS`; `defaults.ts`'s `DEFAULT_SOUNDS` is the
+   small default set by selector (`outcome:won` / `lost` / `draw` are the viewer's
+   side of the result), and a row's key falls through to it one key at a time. No
+   cue implementation touches sound: the queue stamps each cue's decided sound at
+   enqueue and calls `Stage.playSound` once, when the cue's REAL progress crosses
+   `soundAt` in `#drive`, so it rides the virtual clock and needs no timer. **A snap
+   is silent** — `flushAndSnap`, `skipCurrent`, `stepBatch`, a cue compressed to no
+   length — and each of them, and a pause, calls `Stage.stopSounds`; `clearAll` does
+   not, because it is also every batch's natural end. `playSound` is not an op in
+   `NullStage.ops`, so the pinned film (`motion.test.ts`) never sees a sound.
+2. **Hard rule 8: a concealed card plays only its event's DEFAULT** (**D250**). A
+   per-card sound is a name by another spelling. `sound.ts`'s `soundFor` reads no row
+   — not its clip, moment or gain — for a stub or any face-down card (`isConcealed`,
+   the flags, never the name), and `resolve.ts` writes the decided sound over the
+   row's. `replay-cues.test.ts` sweeps the corpus made hostile, with an ungated
+   control; `sound.test.ts` and the workshop's test hold the same line on a named stub
+   and on the pedestal's concealed shapes.
+3. **`scene/audio.ts` is THE audio module, bound from `CueRunner`** (**D250**, D251).
+   It imports only the sound vocabulary — no three, no React, no timer, no
+   `fetch` (the clips come through the loader it is handed, `models.ts`'s
+   `loadAssetBytes`), no storage (the choice is `Arena.tsx`'s, in `try`, under
+   `mtg-table.arena.sound`). `SceneStage` collects a frame's sounds in a fixed
+   `PendingSounds`; `CueRunner`'s loop calls `audio.bind(stage.sounds, soundPan)`
+   after the tick. `play` takes a free voice's armed source — no node, no object; a
+   ninth sound is dropped. Liveness holds the shape, the one caller, the queue as the
+   only firer, and the play path's bodies in the allocation scan.
+4. **Muted by default, and nothing before a gesture** (**D251**). `SOUND_DEFAULT` is
+   `false`; `unlock()` builds the context and is called only from a gesture's handler
+   (the strip's checkbox, `M`, the first press after a stored ON); an explicit ON is
+   heard under `prefers-reduced-motion`. `sharedAudio` is the page's one instance, the
+   arena's and the pedestal's.
+
+**The clips are data too** (**D252**): eleven Ogg Opus files under
+`web/public/audio/`, the repository's own (`tools/build-sounds.mjs`), each with its
+bytes and sha256 in `tools/assets-manifest.json`'s `procedural.soundClips` —
+`sound.test.ts` fails on a stale row, a file no id names, or a total over 100 kB. A
+new clip is an id in `SOUND_IDS`, a path in `SOUND_FILES` (liveness allows the shape
+`audio/<id>.ogg` in that file alone), a file and a manifest row. A pack clip replacing
+one keeps its path and gets a `packs` entry with its provenance. After changing any
+rule line above, regenerate the rules manifest:
+`CLAUDE_MD_RULES_WRITE=1 node --test web/test/claude-md.test.ts`.

@@ -622,6 +622,29 @@ test('the I dispatcher is the arena’s: it navigates to the plan’s href and s
   assert.match(arena, /inspectTargetOf\(/);
 });
 
+test('M turns the arena’s sound on and off, is a picture key, and is inert on the board (D251)', () => {
+  assert.deepEqual(planKey(ev('m'), ARENA)?.plan, { kind: 'sound' });
+  // Local and sends nothing: legal on a replay and behind an open ask.
+  assert.deepEqual(planKey(ev('m'), { ...ARENA, live: false, askOpen: true })?.plan, { kind: 'sound' });
+  // On the board: bound, and says where it lives, as the camera rows do.
+  const board = planKey(ev('m'), LIVE);
+  assert.equal(board?.binding.id, 'toggleSound');
+  assert.equal(board?.plan.kind, 'inert');
+  assert.match(board?.plan.kind === 'inert' ? board.plan.why : '', /sound[\s\S]*press V/);
+  // Ctrl+M is the browser's; a text field owns its letters; the strip prints the chord.
+  assert.equal(planKey(ev('m', { ctrlKey: true }), ARENA), null);
+  assert.equal(planKey(ev('m', { target: { tagName: 'INPUT' } }), ARENA), null);
+  assert.equal(chordFor('toggleSound'), 'M');
+  assert.deepEqual(KEYMAP.filter((b) => b.keys.includes('m')).map((b) => b.id), ['toggleSound']);
+  // The arena's dispatcher toggles the sound — the gesture that may start the page's audio — and sends nothing.
+  const arena = readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8');
+  const at = arena.indexOf("case 'sound':");
+  assert.ok(at > 0, 'Arena.tsx has no case for the sound plan');
+  const branch = arena.slice(at, arena.indexOf('return;', at));
+  assert.match(branch, /toggleSound\(\)/);
+  assert.doesNotMatch(branch, /onAct|onAnswer/, 'the sound key must send nothing');
+});
+
 test('the W dispatcher in main.tsx listens in the capture phase, and only where the arena is really mounted', () => {
   const main = readFileSync(fileURLToPath(new URL('../src/main.tsx', import.meta.url)), 'utf8');
   // Ahead of the arena's own window listener, which has no branch for the plan.

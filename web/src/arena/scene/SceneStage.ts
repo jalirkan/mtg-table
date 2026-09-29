@@ -29,6 +29,7 @@ import {
   type Stage,
   type Vec3,
 } from '../cues/stage.ts';
+import { PendingSounds, type SoundId } from '../cues/sound.ts';
 import { anchorDelta, anchorPosition, figureYawTo, type Layout } from '../layout.ts';
 
 const EMPTY_LAYOUT_DELTA: Vec3 = [0, 0, 0];
@@ -67,6 +68,13 @@ export class SceneStage implements Stage {
   cameraTouched = false;
   /** How many effects the §9.3 cap refused, for the dev overlay. */
   refusedEffects = 0;
+  /**
+   * **D250 — this frame's sounds**, a fixed buffer the queue fills during `tick`
+   * and `scene/audio.ts`'s `bind` drains in the same frame (`CueRunner`). NOT
+   * cleared by `beginFrame`: a flush can happen between frames (a key, a scrub)
+   * and its `cut` has to survive to the next bind.
+   */
+  readonly sounds = new PendingSounds();
   /**
    * §9.2 rule 6 — **one `Offset` object per card id, for the life of the page.**
    *
@@ -207,6 +215,14 @@ export class SceneStage implements Stage {
   requestCamera(request: CameraRequest | null): void {
     this.camera = request;
     this.cameraTouched = true;
+  }
+
+  playSound(sound: SoundId, gain: number, cardId: number, playerId: number): void {
+    this.sounds.push(sound, gain, cardId, playerId);
+  }
+
+  stopSounds(): void {
+    this.sounds.cutAll();
   }
 
   clearAll(): void {

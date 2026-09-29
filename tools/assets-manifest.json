@@ -359,6 +359,97 @@
       "committable": true,
       "date": "2026-09-28",
       "_kenney": "Kenney's CC0 game-icon packs were the brief's intended source and were NOT downloaded: a download needs the owner's approval in chat, and this lane ran without one. Nothing from card art, no AI-generated image."
+    },
+    "soundClips": {
+      "what": "The arena's sound cues (D250-D252): eleven short clips, the seven default sounds and four S.H.I.E.L.D. cards' own, one Ogg Opus file each under web/public/audio/, played by web/src/arena/scene/audio.ts when a cue carries a `sound` param.",
+      "source": "procedural: synthesised sample by sample by tools/build-sounds.mjs (sine partials, filtered noise from a seeded generator, envelopes), 48 kHz mono, normalised to -1 dBFS; nothing downloaded, nothing sampled, nothing derived from or referring to card art",
+      "encodedBy": "libopus through headless Chromium's WebCodecs AudioEncoder (Chromium 152.0.7977.64 snap on this machine), VBR ~40 kb/s, 20 ms frames; the Ogg container (RFC 7845 over RFC 3533) is written by tools/build-sounds.mjs itself. Built twice on 2026-09-29: byte-identical.",
+      "format": "audio/ogg; codecs=opus - decoded by Chromium 152 and Firefox 155 on this machine (tools/build-sounds.mjs --firefox; docs/evidence/sound-cues.md)",
+      "licence": "GPL-3.0-or-later (this repository's own work; no third-party asset)",
+      "downloaded": false,
+      "committable": true,
+      "date": "2026-09-29",
+      "totalBytes": 39545,
+      "clips": {
+        "enter": {
+          "file": "web/public/audio/enter.ogg",
+          "bytes": 1942,
+          "sha256": "68d7ee2e8e2144327b6faa54ff6ade92f6cf41c8549a23f29024c903de6412f6",
+          "seconds": 0.34,
+          "what": "a card arriving: a low whomp under a short air swish (the default for zone:*>battlefield and land)"
+        },
+        "lunge": {
+          "file": "web/public/audio/lunge.ogg",
+          "bytes": 1929,
+          "sha256": "ffd8fe97601c8e824eab87d4f039515c9656677b2306408bc2c98731c24012cc",
+          "seconds": 0.32,
+          "what": "an attack: a band-passed noise whoosh (the default for attackers)"
+        },
+        "hit": {
+          "file": "web/public/audio/hit.ogg",
+          "bytes": 1509,
+          "sha256": "d74a7beac1e7ff763d1f163642d271c3286b9f84562898994268b35104e71f65",
+          "seconds": 0.26,
+          "what": "a hit: a pitched thump, a lowpassed burst and a crack (the default for damage)"
+        },
+        "death": {
+          "file": "web/public/audio/death.ogg",
+          "bytes": 3598,
+          "sha256": "a8c5be368ae5b6ce80e076564d96de5100c7c8e327a37b8241230c710e301485",
+          "seconds": 0.62,
+          "what": "a death: a heavy falling thud and a crumble (the default for zone:battlefield>graveyard)"
+        },
+        "resolve": {
+          "file": "web/public/audio/resolve.ogg",
+          "bytes": 4503,
+          "sha256": "244d7886c3d7850cda2a9a60c96f433a3f1c04595cca4bfebdb0be27c5591e5f",
+          "seconds": 0.7,
+          "what": "a spell resolving: a small bell, C6 then G6, inharmonic partials (the default for resolved)"
+        },
+        "victory": {
+          "file": "web/public/audio/victory.ogg",
+          "bytes": 6629,
+          "sha256": "5a9fbe8ce3e1a061bd441a0b32b604775e10c19b44eb11295c883aec16143f49",
+          "seconds": 1.2,
+          "what": "the outcome, won: a rising C-major arpeggio (outcome:won)"
+        },
+        "defeat": {
+          "file": "web/public/audio/defeat.ogg",
+          "bytes": 6628,
+          "sha256": "96f982092dfc1312d40d41a2af2cb46ef4a93c173e2a9b1573bbd16269a295cf",
+          "seconds": 1.2,
+          "what": "the outcome, lost or drawn: a falling minor figure, the last note drooping (outcome:lost, outcome:draw)"
+        },
+        "comms": {
+          "file": "web/public/audio/comms.ogg",
+          "bytes": 2547,
+          "sha256": "ff0eb500fb1d4258979ef23dc761db129c59fce4052bb5df888fb477ef83d776",
+          "seconds": 0.4,
+          "what": "Nick Fury, Spymaster attacking: a radio squelch and two chirps (cues.json)"
+        },
+        "laser": {
+          "file": "web/public/audio/laser.ogg",
+          "bytes": 3053,
+          "sha256": "05fcf51ce43608cb5d7ca869b394b5701e86a9319330ca1ca5b4014ceb9c127f",
+          "seconds": 0.5,
+          "what": "Helicarrier Strike resolving: a falling, buzzing laser sweep (cues.json)"
+        },
+        "rumble": {
+          "file": "web/public/audio/rumble.ogg",
+          "bytes": 5037,
+          "sha256": "99504da42aadf15ebc477f25343620559c1c99aef830f1dc4702390723afd6b4",
+          "seconds": 0.9,
+          "what": "Quake, Agent of S.H.I.E.L.D., her Seismic Takedown resolving: a deep swelling rumble (cues.json)"
+        },
+        "sting": {
+          "file": "web/public/audio/sting.ogg",
+          "bytes": 2170,
+          "sha256": "4b5b87167a0d223479eb14ad7e61ecafa68fda105c577b2cd43102d9a13df9a6",
+          "seconds": 0.34,
+          "what": "Wasp, Shrinking Savior, her trigger (cast, resolved): an electric zap (cues.json)"
+        }
+      },
+      "_kenney": "Kenney's CC0 audio packs were the brief's intended source and were NOT downloaded: a download needs the owner's approval in chat, and this lane ran without one (D252; the status glyphs' precedent above). The candidate, read on 2026-09-29 and not fetched: 'Impact Sounds' by Kenney, https://kenney.nl/assets/impact-sounds, kenney_impact-sounds.zip, 800,850 bytes (its HTTP Content-Length), 130 files, the page's licence line verbatim 'License: Creative Commons CC0'. A pack clip drops in at the same web/public/audio/<id>.ogg path with a packs entry of its own (URL, bytes, sha256, date, badge verbatim) and its row here removed."
     }
   },
   "_deferred": {

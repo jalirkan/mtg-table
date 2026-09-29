@@ -960,9 +960,51 @@ test('validate: the comic lane’s params are named, typed and ranged — and th
   );
 });
 
+test('validate: the sound params are named, typed and ranged — and the clip list is closed (D250)', () => {
+  const cueIds = new Set(REGISTRY.keys());
+  const errorsOf = (params: Record<string, unknown>): string =>
+    validateCues({ version: 1, cards: { X: { cast: { cue: 'fx.glow', ms: 100, params } } }, archetypes: {} }, { cueIds })
+      .errors.map((e) => `${e.where}: ${e.message}`)
+      .join('\n');
+  const bad: Array<[Record<string, unknown>, string]> = [
+    [{ sound: 'boom' }, 'param sound must be one of none, enter, lunge, hit, death, resolve, victory, defeat, comms, laser, rumble, sting'],
+    [{ sound: 'Nick Fury, Spymaster' }, 'param sound must be one of'],
+    [{ sound: 'audio/hit.ogg' }, 'param sound must be one of'],
+    [{ sound: 'HIT' }, 'param sound must be one of'],
+    [{ sound: 1 }, 'param sound must be one of'],
+    [{ sound: true }, 'param sound must be one of'],
+    [{ soundAt: 1.5 }, 'param soundAt must be within [0, 1]'],
+    [{ soundAt: -0.1 }, 'param soundAt must be within [0, 1]'],
+    [{ soundAt: 'late' }, 'param soundAt must be a number'],
+    [{ soundGain: 2 }, 'param soundGain must be within [0, 1.5]'],
+    [{ soundGain: -1 }, 'param soundGain must be within [0, 1.5]'],
+    [{ soundGain: '0.5' }, 'param soundGain must be a number'],
+    // A clip is chosen by id, never by path or URL, and there is no volume or pan knob to invent.
+    [{ soundFile: 'hit.ogg' }, 'unknown param "soundFile"'],
+    [{ pan: 0.5 }, 'unknown param "pan"'],
+  ];
+  for (const [params, expected] of bad) {
+    const messages = errorsOf(params);
+    assert.ok(messages.includes(expected), `${JSON.stringify(params)} was not refused with "${expected}":\n${messages}`);
+  }
+  for (const sound of ['none', 'enter', 'lunge', 'hit', 'death', 'resolve', 'victory', 'defeat', 'comms', 'laser', 'rumble', 'sting']) {
+    assert.equal(errorsOf({ sound }), '', sound);
+  }
+  assert.equal(errorsOf({ sound: 'laser', soundAt: 0, soundGain: 0 }), '');
+  assert.equal(errorsOf({ sound: 'laser', soundAt: 1, soundGain: 1.5 }), '');
+  // The outcome's three qualifiers are selectors now (the default stings key off them).
+  for (const selector of ['outcome:won', 'outcome:lost', 'outcome:draw']) assert.ok(isValidSelector(selector), selector);
+  assert.ok(!isValidSelector('outcome:victory'));
+});
+
 /** Every comic param on, plus the event facts that reach the comic beats. */
 const COMIC_PARAMS = {
   ...SLICE3_PARAMS,
+  // D250: the sound params ride every cue; a cue implementation reads none of them
+  // (the queue does), so every cue must still decay with them all set.
+  sound: 'laser',
+  soundAt: 0.5,
+  soundGain: 1.2,
   burst: 'krak',
   burstColour: '#ffd84a',
   streaks: 2,

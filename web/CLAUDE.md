@@ -84,9 +84,9 @@ together, and each is a defect that was actually hit.
    the post-render sweep and never inside render; the sweep bumps a version only
    when a rect actually moved. Use the isomorphic layout-effect shim already in
    that file, or `renderToStaticMarkup` starts printing SSR warnings.
-4. **One keymap table.** `web/src/keys.ts` is the **25** rows (18 at M4; M7 added
-   `V` and `K`, Tier 2's slice 2 the three camera rows, the workshop `W`, and the
-   arena's inspect `I`, D241) plus two pure
+4. **One keymap table.** `web/src/keys.ts` is the **26** rows (18 at M4; M7 added
+   `V` and `K`, Tier 2's slice 2 the three camera rows, the workshop `W`, the
+   arena's inspect `I`, D241, and its sound `M`, D251) plus two pure
    functions (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
    and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
    Adding a key is a row, never a new branch in a handler. Its dispatchers are
@@ -124,7 +124,7 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **1,099 `node --test` + 124 vitest (8 files)** standalone on
+`npm --prefix web test` is **1,123 `node --test` + 124 vitest (8 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
 logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
@@ -372,7 +372,7 @@ The tests are `web/test/workshop.test.ts`, inside `npm --prefix web test`,
 so inside `check-all.sh` too. Its liveness half (`workshopFiles()`) scans every
 `.ts` / `.tsx` **directly under** `web/src/workshop/`, and skips subdirectories.
 Keep the directory flat, or extend the scan in the same change. The screenshot
-driver's handle, `window.__mtgWorkshop` (the queue, `select`, the options, the
+driver's handle, `window.__mtgWorkshop` (the queue, `select`, the options, the audio module, the
 camera mode, the relief toggle, `orbitBy`, fiber's store), exists only under `import.meta.env.DEV`, as
 `__mtgArena` does.
 

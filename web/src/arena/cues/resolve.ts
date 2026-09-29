@@ -38,20 +38,20 @@ import { findCard } from '../../render/resolve.ts';
 import { colourHex, colourIdOf } from '../colour.ts';
 import { archetypeKey, looserArchetypeKeys } from './archetype.ts';
 import { DEFAULT_CUES, DEFAULT_SELECTOR_CUES } from './defaults.ts';
+import { isConcealed, soundFor } from './sound.ts';
 import {
   counterToken,
   NO_OP,
   NO_PARAMS,
   type Cue,
   type CueData,
-  type CueParams,
   type CueSpec,
   type CueTable,
   type EventKind,
   type Lane,
 } from './types.ts';
 
-/** What the ladder found, and where. `source` is only ever used in messages. */
+/** What the ladder found, and where. `source` is read by messages and by the sound ladder (D250: a row sets a sound, a default rung falls through). */
 export interface Resolution {
   spec: CueSpec;
   selector: string;
@@ -118,11 +118,23 @@ export function selectorsFor(event: GameEvent, state: ClientState): string[] {
     case 'phased':
       out.push(event.phasedOut ? 'phased:out' : 'phased:in');
       break;
+    case 'outcome':
+      // D250 — the result from the viewer's seat: the seat the stream was redacted
+      // for, the same one the banner's "Victory" is about (`won` below). The
+      // default sounds key their stings off it; no cue row does yet.
+      out.push(outcomeSelector(event.winner, state));
+      break;
     default:
       break;
   }
   out.push(`${kind}:*`, kind);
   return out;
+}
+
+/** `outcome:won`, `outcome:lost` or `outcome:draw`, from the viewer's seat. */
+function outcomeSelector(winner: number | null, state: ClientState): string {
+  if (winner === null) return 'outcome:draw';
+  return winner === (state.hello?.you ?? -2) ? 'outcome:won' : 'outcome:lost';
 }
 
 /**
@@ -373,13 +385,38 @@ export function cuesFor(
     const found = resolve(selectors, kind, subject, data);
     if (found.spec.cue === NO_OP) return null;
     const colour = subject === null ? null : glowColourOf(subject);
-    const merged: CueParams = {
+    const merged: Record<string, string | number | boolean> = {
       ...(colour === null ? {} : { colour }),
       ...params,
       // Data wins over facts: a per-card entry that sets `colour` is art
       // direction, and art direction is what a cue file is for.
       ...(found.spec.params ?? NO_PARAMS),
     };
+    /**
+     * **D250 — the DECIDED sound replaces whatever the row said**, so the queue
+     * reads one answer off the params. For a concealed subject (a stub, any
+     * face-down card) `soundFor` reads no row at all — the event's default only,
+     * hard rule 8's renderer half — and the gate is the subject's flags, decided
+     * before anything of the row is read.
+     */
+    delete merged['sound'];
+    delete merged['soundAt'];
+    delete merged['soundGain'];
+    delete merged['soundCard'];
+    const sound = soundFor(
+      selectors,
+      { source: found.source, ...(found.spec.params === undefined ? {} : { params: found.spec.params }) },
+      isConcealed(subject),
+      data,
+    );
+    if (sound !== null) {
+      merged['sound'] = sound.sound;
+      merged['soundAt'] = sound.at;
+      merged['soundGain'] = sound.gain;
+      // What the sound is ABOUT, for its pan: the ladder's subject, an id — never
+      // the cue's first target, which for the outcome is the loser's first permanent.
+      merged['soundCard'] = subject === null ? -1 : subject.id;
+    }
     return {
       id: found.spec.cue,
       targets,

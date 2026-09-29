@@ -66,6 +66,7 @@ import {
 import { BustField } from '../arena/scene/busts.ts';
 import { CardPlane } from '../arena/scene/CardPlane.tsx';
 import { CastingField } from '../arena/scene/casting.ts';
+import type { ArenaAudio } from '../arena/scene/audio.ts';
 import { CueRunner, type Frameloop } from '../arena/scene/CueRunner.tsx';
 import { DiscField } from '../arena/scene/discs.ts';
 import { EffectPool } from '../arena/scene/effects.ts';
@@ -158,6 +159,12 @@ export interface PedestalProps {
    * card with no figure or no art, which draws neither.
    */
   inspect?: InspectPlan | null;
+  /**
+   * **D250 — the arena's sound renderer**, the page's one (`sharedAudio`): the
+   * rehearsal panel's sound checkbox turns it on, and `CueRunner` binds it here as
+   * it does in the arena, so a cue's sound plays on the pedestal. `null` is silent.
+   */
+  audio?: ArenaAudio | null;
 }
 
 export function Pedestal(props: PedestalProps): JSX.Element {
@@ -259,6 +266,7 @@ function PedestalScene({
   personal = EMPTY_PERSONAL,
   personalLoaded = NO_PERSONAL_LOADED,
   inspect = null,
+  audio = null,
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
@@ -453,6 +461,7 @@ function PedestalScene({
         reducedMotion={reducedMotion}
         primeRef={primeRef}
         loopRef={loopRef}
+        audio={audio}
       />
       <PerspectiveCamera makeDefault fov={CAMERA.fov} near={CAMERA.near} far={CAMERA.far} position={REST_POSE.position} />
       <OrbitControls

@@ -2184,10 +2184,24 @@ const PATH_ALLOW: Readonly<Record<string, readonly string[]>> = {
   // The personal tier's index on the dev route (D195) — behind import.meta.env.DEV.
   'scene/personalModels.ts': ['personal/index.json'],
 };
-const LOAD_PATH = /^[a-z0-9_-]+\/[A-Za-z0-9_./-]+\.(glb|json|png|jpg|webp)$/;
+/**
+ * **A path SHAPE, for a file that names a family of assets** (D250): the audio
+ * module names one same-origin clip per id (`scene/audio.ts`'s `SOUND_FILES`), and
+ * listing eleven literals here would be a list to keep in step with a list. So a
+ * file may carry a shape instead — still no scheme, still `web/public/` only — and
+ * every literal of that file matching `LOAD_PATH` must match it.
+ */
+const PATH_SHAPE_ALLOW: Readonly<Record<string, RegExp>> = {
+  // The sound cues' clips (D250): web/public/audio/<id>.ogg, one per `SOUND_IDS` entry.
+  'scene/audio.ts': /^audio\/[a-z]+\.ogg$/,
+};
+const LOAD_PATH = /^[a-z0-9_-]+\/[A-Za-z0-9_./-]+\.(glb|json|png|jpg|webp|ogg|opus|mp3|wav|m4a)$/;
 function loadPathsOf(path: string, code: string): string[] {
   const allowed = PATH_ALLOW[path] ?? [];
-  return stringLiterals(code).filter((literal) => LOAD_PATH.test(literal) && !allowed.includes(literal));
+  const shape = PATH_SHAPE_ALLOW[path] ?? null;
+  return stringLiterals(code).filter(
+    (literal) => LOAD_PATH.test(literal) && !allowed.includes(literal) && (shape === null || !shape.test(literal)),
+  );
 }
 
 test('liveness: the personal tier — the reader is pure, the load paths are an allow-list, the route is DEV-only, one loader, one lookup (D194–D196)', () => {
@@ -2207,7 +2221,16 @@ test('liveness: the personal tier — the reader is pure, the load paths are an 
   assert.deepEqual(loadPathsOf('Arena.tsx', "const u = 'personal/models/doctor-doom/model.glb';"), ['personal/models/doctor-doom/model.glb']);
   assert.deepEqual(loadPathsOf('scene/models.ts', "load('personal/index.json');"), ['personal/index.json']);
   assert.deepEqual(loadPathsOf('scene/personalModels.ts', "const a = 'personal/index.json';"), []);
+  // D250's shape: the audio module's clip paths pass, the same shape anywhere else
+  // does not, and a clip path of another shape in the audio module does not.
+  assert.deepEqual(loadPathsOf('scene/audio.ts', "const a = 'audio/enter.ogg';"), []);
+  assert.deepEqual(loadPathsOf('Arena.tsx', "const a = 'audio/enter.ogg';"), ['audio/enter.ogg']);
+  assert.deepEqual(loadPathsOf('scene/audio.ts', "const a = 'sfx/enter.mp3';"), ['sfx/enter.mp3']);
+  assert.equal(offOriginLiterals('scene/audio.ts', "const a = 'https://kenney.nl/media/pages/assets/impact-sounds/x.ogg';").length, 1);
   for (const [path, code] of files) assert.deepEqual(loadPathsOf(path, code), [], `${path} names a load path PATH_ALLOW does not list`);
+  for (const [path, shape] of Object.entries(PATH_SHAPE_ALLOW)) {
+    assert.ok(stringLiterals(files.get(path) ?? '').some((l) => shape.test(l)), `PATH_SHAPE_ALLOW["${path}"] matches nothing — a stale permission`);
+  }
   for (const [path, paths] of Object.entries(PATH_ALLOW)) {
     for (const p of paths) assert.ok(stringLiterals(files.get(path) ?? '').includes(p), `PATH_ALLOW["${path}"] names ${p}, which is gone`);
   }
@@ -2264,4 +2287,87 @@ test('liveness: the inspect planner is pure, Arena.tsx is its one caller, and in
   assert.doesNotMatch(open, /onAct|onAnswer|clickCard/);
   const chip = arena.slice(arena.indexOf('function InspectChip('), arena.indexOf('function nameOf('));
   assert.doesNotMatch(chip, /onAct|onAnswer|onClick/, 'the chip is a link, not a control');
+});
+
+/**
+ * **Sound is a renderer on the one loop** (D250, D251). Five source facts hold it,
+ * each the rule a visual effect already lives by:
+ *
+ *  - `scene/audio.ts` — THE audio module — imports nothing but the cue engine's
+ *    sound vocabulary: no three, no React, no transport. It starts no timer, reads
+ *    no clock, calls no `fetch` (the bytes come through the loader it is handed,
+ *    `scene/models.ts`'s `loadAssetBytes`, three's own `FileLoader`) and touches no
+ *    storage — the viewer's choice is `Arena.tsx`'s, inside `try` (the clause above);
+ *  - `audio.bind(` is called from `scene/CueRunner.tsx` and nowhere else, so the
+ *    sounds play inside the one `useFrame`, after the tick that asked for them;
+ *  - a cue never makes a sound: `playSound(` is called by the QUEUE alone (it reads
+ *    the cue's `sound` param and fires it when the cue's progress crosses
+ *    `soundAt`), and `stopSounds(` by the queue's snaps (a flush, a skip, a pause);
+ *  - the play path allocates nothing: `play`, `bind`, the voice search and the
+ *    stage's sound buffer pass the allocation scan, with the junk lines spliced in
+ *    as the negative control; the pan is an indexed walk of the placements;
+ *  - `AudioContext` is created only in `unlock()`, which the arena calls from a
+ *    gesture's handler (the checkbox, `M`, the first press after a stored ON).
+ */
+test('liveness: sound is one module, bound from the one loop, fired by the queue, and its play path allocates nothing (D250)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const audio = files.get('scene/audio.ts') ?? '';
+  assert.ok(audio.length > 2000, 'scene/audio.ts is gone — move this clause with it');
+  const cls = audio.slice(audio.indexOf('export class ArenaAudio'));
+  // 1 — its shape.
+  assert.deepEqual(
+    importsOf(audio).map((i) => `${i.typeOnly ? 'type ' : ''}${i.from}`),
+    ['../cues/sound.ts'],
+    'scene/audio.ts imports more than the sound vocabulary',
+  );
+  assert.ok(
+    !/\b(setTimeout|setInterval|requestAnimationFrame|requestIdleCallback|performance\.now|Date\.now|fetch|XMLHttpRequest|localStorage|sessionStorage|THREE|React|useFrame)\b/.test(audio),
+    'scene/audio.ts reads a clock, starts a timer, fetches, stores or draws',
+  );
+  const sound = files.get('cues/sound.ts') ?? '';
+  assert.ok(!/\b(window|document|AudioContext|localStorage|setTimeout|setInterval|performance|Date\.now|fetch)\b/.test(sound), 'cues/sound.ts is not pure');
+  // 2 — bound from the one loop.
+  const callers = (pattern: RegExp): string[] => [...files].filter(([, code]) => pattern.test(code)).map(([path]) => path).sort();
+  assert.deepEqual(callers(/\baudio\.bind\(/), ['scene/CueRunner.tsx'], 'the audio module is bound outside the frame loop');
+  assert.deepEqual(callers(/\baudio\.play\(|\bthis\.play\(/), ['scene/audio.ts'], 'a sound is played outside the audio module’s bind');
+  const runner = files.get('scene/CueRunner.tsx') ?? '';
+  const loop = runner.slice(runner.indexOf('useFrame(() => {'));
+  assert.ok(loop.indexOf('queue.tick(now)') > 0 && loop.indexOf('audio.bind(stage.sounds, soundPan)') > loop.indexOf('queue.tick(now)'), 'the sounds are not bound after the tick, inside the loop');
+  // 3 — fired by the queue, never by a cue.
+  assert.deepEqual(callers(/\.playSound\(/), ['cues/queue.ts'], 'something other than the queue fires a sound');
+  assert.deepEqual(callers(/\.stopSounds\(/), ['cues/queue.ts'], 'something other than the queue cuts the sounds');
+  assert.ok(!/playSound|stopSounds|soundAt|soundGain/.test(files.get('cues/registry.ts') ?? ''), 'a cue implementation reaches for the sound');
+  // 5 — the context is created in unlock() and nowhere else.
+  assert.deepEqual(callers(/\bnew\s+(?:AudioContext|webkitAudioContext|Ctor)\b/), ['scene/audio.ts']);
+  assert.equal((cls.match(/this\.#make\(\)/g) ?? []).length, 1, 'the context is built somewhere other than unlock()');
+  assert.ok(bodyOf(cls, 'unlock').includes('this.#make()'), 'the context is built outside unlock()');
+  assert.deepEqual(callers(/\.unlock\(\)/), ['Arena.tsx'], 'the arena unlocks the audio from somewhere other than its gesture handlers');
+  const arena = files.get('Arena.tsx') ?? '';
+  for (const where of ['const setSound = useCallback(', 'const unlock = (): void => {']) {
+    const at = arena.indexOf(where);
+    assert.ok(at > 0 && arena.slice(at, at + 400).includes('audio.unlock()'), `Arena.tsx's ${where} no longer unlocks inside the gesture`);
+  }
+
+  // 4 — the play path allocates nothing, with the negative controls first.
+  const pending = sound.slice(sound.indexOf('export class PendingSounds'));
+  const bodies: Array<[string, string]> = [
+    ['ArenaAudio.play', bodyOf(cls, 'play')],
+    ['ArenaAudio.bind', bodyOf(cls, 'bind')],
+    ['ArenaAudio.#free', bodyOf(cls, '#free')],
+    ['ArenaAudio.busyVoices', bodyOf(cls, 'busyVoices')],
+    ['PendingSounds.push', bodyOf(pending, 'push')],
+    ['PendingSounds.cutAll', bodyOf(pending, 'cutAll')],
+    ['PendingSounds.drop', bodyOf(pending, 'drop')],
+    ['CueRunner panOf', bodyOf(runner, 'panOf')],
+  ];
+  for (const [name, body] of bodies) assert.ok(body.length > 10, `could not find the body of ${name}`);
+  assert.ok(bodies[1]![1].includes('this.play('), 'bind no longer plays through play()');
+  assert.ok(bodies[0]![1].includes('this.#free()'), 'play no longer finds its voice through #free()');
+  assert.ok(!/createBufferSource|createGain|createStereoPanner/.test(bodies[0]![1]), 'play builds a node — a voice arms its source off the play path');
+  for (const [name, body] of bodies) {
+    for (const line of ['const _junk = [t, t];', 'const o = { a: 1 };', 'const f = () => 1;', 'const s = `${1}`;', 'const v = new Float32Array(4);']) {
+      assert.ok(allocationsIn(`\n${line}\n${body}`).length > 0, `the allocation scan misses \`${line}\` in ${name}`);
+    }
+    assert.deepEqual(allocationsIn(body), [], `${name} allocates on the play path`);
+  }
 });

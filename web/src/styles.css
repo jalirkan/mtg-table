@@ -5164,3 +5164,11 @@ a.arena__inspect:hover {
 .arena__phase--active .arena__stop {
   color: #0b0f13;
 }
+
+/* D250 — the workshop's rehearsal panel: the pedestal's sound switch. */
+.workshop__sound {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 6px;
+}

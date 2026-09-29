@@ -37,6 +37,7 @@
  */
 
 import { clipBeats, type ClipRequest } from '../figures/clips.ts';
+import type { SoundId } from './sound.ts';
 import type { CueParams } from './types.ts';
 
 export type Vec3 = readonly [number, number, number];
@@ -670,8 +671,33 @@ export interface Stage {
   clipOf?(cardId: number): ClipRequest | null;
   /** §8 rule 2. `null` releases the lane. */
   requestCamera(request: CameraRequest | null): void;
+  /**
+   * **D250 — a sound, once, at this moment of the film.** Called by the QUEUE (a
+   * cue never calls it: a cue's `sound` is a param the queue reads at enqueue and
+   * fires when the cue's progress crosses its `soundAt`), with numbers and a clip
+   * id from the closed list — never a card, never a name. `cardId` / `playerId` say
+   * what it is about, for its pan (−1 for none). It is not an op in `NullStage.ops`:
+   * a sound is not film, and the film's pinned digest (`motion.test.ts`) must not
+   * move because a table learned to make a noise.
+   */
+  playSound(sound: SoundId, gain: number, cardId: number, playerId: number): void;
+  /**
+   * **D250 — cut every voice.** A flush, a skip and a pause stop the sounds with the
+   * film: after `skip all`, a scrub, a `resync` or a new `gameId` nothing rings on.
+   * `clearAll` does NOT do this — it is also the natural end of every batch, and a
+   * batch that drains while its last sound is still sounding lets it finish.
+   */
+  stopSounds(): void;
   /** Drop everything: the scene is then exactly `layout(state)` (§5.1). */
   clearAll(): void;
+}
+
+/** One sound a `NullStage` was asked for (D250) — the corpus sweeps count these. */
+export interface RecordedSound {
+  sound: SoundId;
+  gain: number;
+  cardId: number;
+  playerId: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -719,6 +745,13 @@ export class NullStage implements Stage {
   refusedEffects = 0;
   /** Motes refused by {@link MAX_LIVE_MOTES}, counted separately for the same reason. */
   refusedMotes = 0;
+  /**
+   * **D250 — every sound asked for, in order**, apart from `ops` on purpose (a
+   * sound is not film; see {@link Stage.playSound}). `soundCuts` counts the
+   * flushes, skips and pauses that cut the voices.
+   */
+  readonly sounds: RecordedSound[] = [];
+  soundCuts = 0;
 
   deltaTo(): Vec3 {
     return ZERO3;
@@ -785,6 +818,14 @@ export class NullStage implements Stage {
     this.ops.push({ op: 'camera' });
   }
 
+  playSound(sound: SoundId, gain: number, cardId: number, playerId: number): void {
+    this.sounds.push({ sound, gain, cardId, playerId });
+  }
+
+  stopSounds(): void {
+    this.soundCuts += 1;
+  }
+
   clearAll(): void {
     this.offsets.clear();
     this.effects.clear();
@@ -816,6 +857,8 @@ export class NullStage implements Stage {
         if (op.clip.alias !== null) out.push(op.clip.alias);
       }
     }
+    // D250: a clip id is a string the stage was handed, so the net reads it too.
+    for (const sound of this.sounds) out.push(sound.sound);
     return out;
   }
 }

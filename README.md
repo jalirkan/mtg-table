@@ -447,6 +447,12 @@ node tools/build-figures.mjs --src var/assets/figures   # rebuild web/public/mod
 #   ?fx=classic   the film exactly as it was before the lane (default: comic)
 #   ?twos=0       smooth motion (default: on twos; always off under reduced motion)
 
+# D250-D252 — SOUND CUES: an arrival, an attack, a hit, a death, a spell
+#   resolving, the outcome, and four S.H.I.E.L.D. cards' own.  MUTED until you
+#   turn it on: M in the arena, or the cue strip's "sound" checkbox (the workshop's
+#   Cues panel has its own).  Kept in this browser; "Sound" below.
+node tools/build-sounds.mjs --firefox   # rebuild the eleven clips (needs chromium; not in the gate)
+
 # D102 — THE WORKSHOP: one card on a pedestal, drawn by the arena's own renderer —
 #      its figure, props, clips and cues, tunable live in this browser.  No JVM,
 #      no socket.  W in the 3D arena opens it too; "The workshop" below.
@@ -1051,7 +1057,7 @@ same mechanism: there is no transport to answer with, so `onAct` is `null` and
 every button, card and control is inert. That is one prop, not two code paths.
 
 **Keys.** There is **one keymap** for both renderers (`web/src/keys.ts`), so
-**`?` or `H`** lists all twenty-five rows in the arena as well — the same table
+**`?` or `H`** lists all twenty-six rows in the arena as well — the same table
 the handler reads. The ones that are the arena's own:
 
 | key | what it does |
@@ -1062,6 +1068,7 @@ the handler reads. The ones that are the arena's own:
 | **6** or **0** | the auto director (spectating only) |
 | **O** | spectator mode on / off — on by itself in a replay and when your game ends, never while your seat is live |
 | **W** | open **the workshop** (*The workshop*, below) — one card on a pedestal. `V` there comes back to the arena; a replay resumes at its frame. On the 2D board `W` still spends floating white mana, and otherwise says to press `V` first |
+| **M** | **sound on / off** — muted until you turn it on; the choice is kept in this browser, and the cue strip's **sound** checkbox is the same switch (*Sound*, below). On the 2D board it says to press `V` |
 | **I** | **inspect the card under the pointer** (else the last one you clicked): the workshop opens on it in its **inspect** view — its figure in its signature pose in front of its card's painting, dressed in your own model where the personal tier has one, in the look the table is in. The **⌕ inspect** chip under the art credit does the same by click. The workshop's **▣ arena** link comes back to the same frame. Face up and with a figure only: a face-down or hidden card is never inspected, and the chip and the key say so without naming it (D241) |
 
 On the 2D board the camera keys do nothing and say so ("the board has no camera;
@@ -1082,7 +1089,29 @@ playing and pull the rest forward), **skip all** (the **K** key), and a
 replay clock, so pausing cues does not pause the frame log. Cues never delay a
 question: while the engine is waiting on you, long cues are compressed and the
 queue says so. Beside **bloom** are the comic motion lane's two switches, **comic
-FX** and **on twos** (*The comic motion lane*, below).
+FX** and **on twos** (*The comic motion lane*, below), and **sound**.
+
+**Sound** (D250–D252). The arena is **silent until you turn sound on** — tick
+**sound** in the cue strip or press **M** (either is the click a browser needs
+before a page may make a sound); the choice is kept in this browser, and with it
+on a later visit the first click or key press starts the sound again. Each sound
+is part of a cue, so it plays with the film and stops with it: **skip all** (K),
+**skip cue**, a pause, a scrub, a `resync` and a new game cut every sound that is
+ringing, and nothing plays for a cue that was skipped. The default sounds are a
+card arriving, an attack, a hit, a death, a spell resolving and the outcome (a
+win or a loss from your seat); four S.H.I.E.L.D. cards have their own — Nick
+Fury's attack is his radio call, Helicarrier Strike's beam a laser, Quake's
+Seismic Takedown a rumble, Wasp's trigger a sting. **A face-down or hidden card
+makes only its event's default sound**, never its own, because a card's own
+sound would say which card it is. At most eight sounds ring at once; a ninth is
+dropped. Under `prefers-reduced-motion` the arena stays silent unless you turned
+sound on yourself — then you hear it. The eleven clips are this repository's own,
+synthesised by `node tools/build-sounds.mjs` (Ogg Opus, 39.5 kB in all); the
+workshop's **Cues** panel has a **sound** checkbox of its own for the pedestal.
+A cue row in `cues.json` names a clip with `"sound"` (one of `enter`, `lunge`,
+`hit`, `death`, `resolve`, `victory`, `defeat`, `comms`, `laser`, `rumble`,
+`sting`, or `none`), moves it with `"soundAt"` (0–1 of the cue) and scales it with
+`"soundGain"` (0–1.5).
 
 **Reduced motion.** With `prefers-reduced-motion: reduce` the arena drops every
 camera move and every shake outright (a camera view you pick is a cut), and plays

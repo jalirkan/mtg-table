@@ -29,6 +29,7 @@ import type { ClientState } from '../../reduce.ts';
 import { isDeathCue } from '../figures/clips.ts';
 import { COMIC_FX_DEFAULT, ON_TWOS_DEFAULT, TWOS_MS, onTwos } from './motion.ts';
 import { cuesFor } from './resolve.ts';
+import { soundOfParams, type SoundId } from './sound.ts';
 import type { CueContext, CueImpl, CueRegistry, Stage } from './stage.ts';
 import { EMPTY_CUE_DATA, type Cue, type CueData, type Step } from './types.ts';
 
@@ -445,6 +446,19 @@ interface Scheduled {
    * as its stance does.
    */
   dies: boolean;
+  /**
+   * **D250 — the cue's sound**, stamped at enqueue from its params (which
+   * `resolve.ts` has already gated): the clip, where in the cue it starts, its
+   * gain, and what it is about for its pan. `null` is a silent cue; `sounded`
+   * flips once, when `#drive` crosses `soundAt` on real film. A snap — `skip`,
+   * `flushAndSnap`, a cue compressed to nothing — never sets it: a snap is silent.
+   */
+  sound: SoundId | null;
+  soundAt: number;
+  soundGain: number;
+  soundCard: number;
+  soundPlayer: number;
+  sounded: boolean;
 }
 
 export interface CueQueueOptions {
@@ -604,6 +618,8 @@ export class CueQueue {
     this.#changed();
   }
   setPaused(paused: boolean): void {
+    // D250: a paused film is silent — the voices stop with the clock.
+    if (paused && !this.#paused) this.stage.stopSounds();
     this.#paused = paused;
     this.#changed();
   }
@@ -644,6 +660,8 @@ export class CueQueue {
   skipCurrent(): void {
     const first = this.#scheduled.find((item) => !item.done);
     if (first === undefined) return;
+    // D250: a skip cuts the voices with the film, and the snapped cues play none.
+    this.stage.stopSounds();
     this.#snapGroup(first.batch, first.step);
     this.#changed();
   }
@@ -652,6 +670,7 @@ export class CueQueue {
   stepBatch(): void {
     const first = this.#scheduled.find((item) => !item.done);
     if (first === undefined) return;
+    this.stage.stopSounds();
     const batch = first.batch;
     for (const item of [...this.#scheduled]) {
       if (item.batch === batch && !item.done) this.#snapGroup(item.batch, item.step);
@@ -685,6 +704,9 @@ export class CueQueue {
     this.#scheduled = [];
     this.#endOfQueue = this.#virtualNow;
     this.stage.clearAll();
+    // D250: skip all, a scrub, a `resync` and a new `gameId` are this call, and
+    // after it nothing rings on. The snapped cues above played no sound.
+    this.stage.stopSounds();
     this.#changed();
   }
 
@@ -725,6 +747,13 @@ export class CueQueue {
     // the real time since the last drain is the loop being parked, not film.
     if (this.#scheduled.length === 0) this.#lastReal = null;
 
+    /**
+     * D250 — one sound per clip per card (or player) per batch: a land's `land`
+     * and `zone` arrivals — or any two events of one card that name the same
+     * clip — are one noise, not two stacked on each other. Built at enqueue,
+     * never in the frame loop.
+     */
+    const sounded = new Set<string>();
     for (let s = 0; s < steps.length; s++) {
       const step = steps[s]!;
       for (let i = 0; i < step.cues.length; i++) {
@@ -736,6 +765,17 @@ export class CueQueue {
         }
         const ms = durationOf(cue, scale, this.reducedMotion);
         const start = cursor + step.staggerMs * scale * i;
+        let sound = soundOfParams(cue.params);
+        // The ladder's subject (`resolve.ts` writes it beside the sound), never a
+        // guess from the targets: the outcome's targets are the loser's permanents.
+        const subject = cue.params['soundCard'];
+        const soundCard = typeof subject === 'number' ? subject : -1;
+        const soundPlayer = cue.players[0] ?? -1;
+        if (sound !== null) {
+          const key = `${sound.sound}|${soundCard >= 0 ? `c${String(soundCard)}` : `p${String(soundPlayer)}`}`;
+          if (sounded.has(key)) sound = null;
+          else sounded.add(key);
+        }
         this.#scheduled.push({
           cue,
           impl,
@@ -759,6 +799,12 @@ export class CueQueue {
           started: false,
           done: false,
           dies: !this.reducedMotion && isDeathCue(cue.id),
+          sound: sound === null ? null : sound.sound,
+          soundAt: sound === null ? 0 : sound.at,
+          soundGain: sound === null ? 0 : sound.gain,
+          soundCard,
+          soundPlayer,
+          sounded: false,
         });
       }
       cursor += (1 - OVERLAP) * step.ms * scale;
@@ -874,6 +920,12 @@ export class CueQueue {
       // The cue is handed its progress ON TWOS; whether it has ENDED is still read
       // off the real progress, so stepping can never hold a cue past its length.
       const shown = twos ? onTwos(progress, item.ms, stepMs) : progress;
+      // D250 — the sound, once, when REAL film crosses its moment. A cue with no
+      // length is a snap (a batch compressed past §5.2's floor), and a snap is silent.
+      if (item.sound !== null && !item.sounded && item.ms > 0 && progress >= item.soundAt) {
+        item.sounded = true;
+        this.stage.playSound(item.sound, item.soundGain, item.soundCard, item.soundPlayer);
+      }
       try {
         item.impl.apply(item.ctx, shown, this.stage);
       } catch (err) {

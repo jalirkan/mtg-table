@@ -29,6 +29,7 @@
 
 import { isGestureParam } from '../figures/duelists.ts';
 import { isClipName } from '../figures/types.ts';
+import { SOUND_AT_RANGE, SOUND_GAIN_RANGE, SOUND_IDS, SOUND_NONE, isSoundParam } from './sound.ts';
 import { BURSTS, isBurst, isEffectShape } from './stage.ts';
 import {
   STATION_KINDS,
@@ -67,6 +68,7 @@ export const MS_RANGE = { min: 0, max: 4000 } as const;
  * qualifier := <zone> '>' <zone>        hand>battlefield, *>graveyard
  *            | 'alone' | 'lethal' | 'player' | 'card' | 'on' | 'off'
  *            | 'transform' | 'fizzled' | 'out' | 'in'
+ *            | 'won' | 'lost' | 'draw'               the outcome, from the viewer's seat (D250)
  *            | <COUNTER> [ '+' | '-' ] | '+' | '-'
  *            | '*'
  * ```
@@ -82,6 +84,11 @@ const WORD_QUALIFIERS = new Set([
   'fizzled',
   'out',
   'in',
+  // D250: the outcome from the viewer's seat — what the default sounds key their
+  // victory and defeat stings off, and what a row may too.
+  'won',
+  'lost',
+  'draw',
   '*',
 ]);
 
@@ -170,7 +177,8 @@ type ParamSpec =
   | { type: 'hostClip' }
   | { type: 'shape' }
   | { type: 'gesture' }
-  | { type: 'burst' };
+  | { type: 'burst' }
+  | { type: 'sound' };
 
 export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
   // -- Tier 1 (report 09 §12.2) and Tier 2 slices 1–2 ------------------------
@@ -270,6 +278,17 @@ export const PARAM_SPECS: Readonly<Record<string, ParamSpec>> = {
   dots: { type: 'number', min: 0, max: 2 },
   /** An arrival: where the hologram-to-ink summon starts, 0 (all hologram) to 1 (no ramp). Absent is 0. */
   inkFrom: { type: 'number', min: 0, max: 1 },
+
+  // -- sound (D250) ------------------------------------------------------------
+  // Read only for a FACE-UP subject (`sound.ts`'s gate): a concealed card plays
+  // the default for its event, whatever its row says. Each key a row leaves out
+  // falls through to that default, so a row that retints an arrival keeps its sound.
+  /** The clip: one of `sound.ts`'s closed `SOUND_IDS`, or `none` for silence. */
+  sound: { type: 'sound' },
+  /** Where in the cue it starts, as a fraction of the cue (0 = its first frame). */
+  soundAt: { type: 'number', min: SOUND_AT_RANGE[0], max: SOUND_AT_RANGE[1] },
+  /** The voice's gain, before the master gain. */
+  soundGain: { type: 'number', min: SOUND_GAIN_RANGE[0], max: SOUND_GAIN_RANGE[1] },
 };
 
 /** A param value against its spec, or the complaint. */
@@ -300,6 +319,8 @@ function checkParam(key: string, value: unknown): string | null {
       return isGestureParam(value) ? null : `param ${key} must be cast, flinch, outcome or none`;
     case 'burst':
       return isBurst(value) ? null : `param ${key} must be one of ${BURSTS.join(', ')}`;
+    case 'sound':
+      return isSoundParam(value) ? null : `param ${key} must be one of ${[SOUND_NONE, ...SOUND_IDS].join(', ')}`;
     default:
       return `param ${key} has no type`;
   }

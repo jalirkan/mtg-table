@@ -78,8 +78,9 @@
       "presence": { "hoverY": 0.24, "bobAmp": 0.026, "bobHz": 0.55 },
       "_t11": "Slice 3: the beam leaves HER figure (hovering) and lands on the target's, which shrinks with a ring closing at its feet. `cast` aims at this frame's stack target; `resolved` aims at the previous frame's (T6's strike look-behind) — in AI play her attack trigger goes on and off inside one snapshot, so neither is on the wire and she only glows: the corpus has 0 aimed Wasp triggers (the evidence shows one with a synthetic event).",
       "_motion": "The comic lane (D153): her sting is lettered ZZAK where the beam lands — on the target the stack named for this very spell, never a guessed one — and her flight to the attack is on speed lines.",
-      "cast": { "cue": "fx.scaleBeam", "ms": 760, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026, "burst": "zzak" } },
-      "resolved": { "cue": "fx.scaleBeam", "ms": 620, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026, "burst": "zzak" } },
+      "_sound": "D250: her sting is a zap as the beam leaves her — on her own trigger's events (`cast`, `resolved`), which name her card; the queue plays it once when both arrive in one batch. Her attack keeps the default lunge.",
+      "cast": { "cue": "fx.scaleBeam", "ms": 760, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026, "burst": "zzak", "sound": "sting", "soundAt": 0.2, "soundGain": 0.8 } },
+      "resolved": { "cue": "fx.scaleBeam", "ms": 620, "params": { "targetScale": 0.6, "colour": "#9ec7f0", "width": 0.026, "burst": "zzak", "sound": "sting", "soundAt": 0.2, "soundGain": 0.8 } },
       "_eye": "`eye: false`: she flies on the jet's lunge with her wing-wash behind her, and without the Doombot's star eye (the slice-3 verification pass).",
       "attackers": { "cue": "attack.jet", "ms": 820, "params": { "colour": "#9ec7f0", "eye": false, "streaks": 1.2 } }
     },
@@ -87,7 +88,8 @@
     "Quake, Agent of S.H.I.E.L.D.": {
       "_note": "Daisy Johnson's seismic powers: a ground shockwave and a bounded camera shake. Slice 3 moved it from her own `tap:on` (Tier 1's substitute — the engine does not say which card caused another card's tap) to the event that IS her trigger: `resolved` (Seismic Takedown resolving). The rings leave HER feet; with `fissure` a crack runs to what the trigger was aimed at, read from the PREVIOUS frame's stack (T6's `strikeCard`, D63) — never from the batch's `tap` events, which would be pairing a cause to an effect the wire did not state. When the trigger went on and off inside one snapshot there is no aim, and the shockwave is hers alone.",
       "_motion": "The comic lane (D153): her Seismic Takedown resolving is lettered KRAK where the fissure lands — on what the PREVIOUS frame's stack said it targeted — or at her own feet when the wire named nothing. Her shake is the cue's own.",
-      "resolved": { "cue": "fx.shockwave", "ms": 760, "params": { "colour": "#7fd4ff", "shake": 0.35, "radius": 2.2, "fissure": true, "burst": "krak" } },
+      "_sound": "D250: Seismic Takedown resolving is a low rumble from its first frame, under the rings — her own trigger's event.",
+      "resolved": { "cue": "fx.shockwave", "ms": 760, "params": { "colour": "#7fd4ff", "shake": 0.35, "radius": 2.2, "fissure": true, "burst": "krak", "sound": "rumble", "soundAt": 0, "soundGain": 1 } },
       "zone:*>battlefield": { "cue": "zone.enters", "ms": 620, "params": { "impact": 1.6, "colour": "#7fd4ff" } }
     },
 
@@ -95,7 +97,8 @@
       "_note": "He calls it in and agents appear at his shoulder. Keys off `attackers` and `zone`→battlefield. The agents themselves are TOKENS and enter with their own zone event and their own cue — this one never creates, names or counts them.",
       "_t11": "Slice 3: his figure makes the radio call (`clip: radioCall`, the rig's interact-left, figures.json's alias), a broadcast ring leaves his feet and a beam goes from him to each place an agent materialises (`beams`). The beams aim at the `beside` anchors, never at a token — which card made a token is not on the wire.",
       "_motion": "The comic lane (D153): he leads the charge on speed lines with a POW in front of him at the top of the dash — a statement that HE attacks, not a hit the renderer decided landed — and he enters as a hologram that inks in (the builder's summon, every arrival).",
-      "attackers": { "cue": "fx.agents", "ms": 900, "params": { "lunge": true, "spread": 1.1, "colour": "#e3c46a", "beams": true, "clip": "radioCall", "streaks": 1.2, "burst": "pow" } },
+      "_sound": "D250: his attack is the radio call — a comms chirp as he calls it in, on the `attackers` event that names him.",
+      "attackers": { "cue": "fx.agents", "ms": 900, "params": { "lunge": true, "spread": 1.1, "colour": "#e3c46a", "beams": true, "clip": "radioCall", "streaks": 1.2, "burst": "pow", "sound": "comms", "soundAt": 0, "soundGain": 0.9 } },
       "zone:*>battlefield": { "cue": "fx.agents", "ms": 820, "params": { "spread": 1.1, "colour": "#e3c46a", "beams": true, "clip": "radioCall" } }
     },
 
@@ -143,7 +146,8 @@
       "cast": { "cue": "fx.strike", "ms": 900, "params": { "height": 4, "colour": "#f6f0d8", "lock": true } },
       "_resolved": "The second verification pass: the resolution's beam is twice as thick and a star flashes on the body as it lands — at g3@116 the thin beam came down behind the giant ant unseen. (A camera move was tried and taken out: the struck card is usually in the graveyard by then, and the camera frames cards.)",
       "_motion": "The comic lane (D153): the beam lands as an impact star lettered BLAM on the body the previous frame's stack named, and the table jolts (a shake-only request: dropped under reduced motion, while the engine waits on you and for 5 s after your own drag).",
-      "resolved": { "cue": "fx.strike", "ms": 820, "params": { "height": 4, "colour": "#f6f0d8", "burst": "blam", "shake": 0.6 } },
+      "_sound": "D250: the beam comes down as a laser — at half the cue, where `fx.strike` draws it (the reticle closes first) — on the Strike's own `resolved`. A fizzle is silent (its own row, the default's `resolved:fizzled`).",
+      "resolved": { "cue": "fx.strike", "ms": 820, "params": { "height": 4, "colour": "#f6f0d8", "burst": "blam", "shake": 0.6, "sound": "laser", "soundAt": 0.5, "soundGain": 1 } },
       "_fizzled": "A fizzle is not a strike (the workshop's reconciliation, 2026-09-27). §7.3 resolves the rung before the selector, so this entry's bare `resolved` outranked the default `resolved:fizzled`, and a Strike whose target had gone still brought the beam down on it. Its own `resolved:fizzled` is the default's fizzle — the form greys and falls through the table — so a fizzle reads as a fizzle.",
       "resolved:fizzled": { "cue": "resolved.fizzle", "ms": 460 }
     },

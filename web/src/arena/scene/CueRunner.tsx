@@ -63,6 +63,7 @@ import type { ManaMote, SpellForm } from '../figures/casting.ts';
 import type { DuelistBust } from '../figures/duelists.ts';
 import type { TileLayout } from '../figures/tiles.ts';
 import { anchorsFor, type Layout } from '../layout.ts';
+import type { ArenaAudio, SoundPan } from './audio.ts';
 import type { CastingField } from './casting.ts';
 import type { DiscField } from './discs.ts';
 import type { BustField } from './busts.ts';
@@ -187,6 +188,12 @@ export interface CueRunnerProps {
    * variants). See `EffectPool.prime`.
    */
   primeRef: { current: number };
+  /**
+   * **D250 — the sound renderer** (`scene/audio.ts`), or `null` for a silent
+   * scene. Bound once a frame, after the tick that asked for the sounds, from this
+   * loop and nowhere else; muted, it drains the stage's buffer and plays nothing.
+   */
+  audio?: ArenaAudio | null;
 }
 
 export function CueRunner({
@@ -216,10 +223,20 @@ export function CueRunner({
   glInfo = false,
   primeRef,
   loopRef,
+  audio = null,
 }: CueRunnerProps): null {
   const invalidate = useThree((s) => s.invalidate);
   const setFrameloop = useThree((s) => s.setFrameloop);
   const camera = useThree((s) => s.camera);
+  /**
+   * D250 — a sound's pan, from where its card rests on screen. Built once per
+   * camera (a stable function the audio module is handed each frame, never a
+   * closure made in the loop).
+   */
+  const soundPan = useMemo<SoundPan>(
+    () => (cardId, playerId) => panOf(stage, camera, cardId, playerId),
+    [stage, camera],
+  );
   const placedRef = useRef(placed);
   placedRef.current = placed;
   const figuresRef = useRef(figures);
@@ -526,6 +543,10 @@ export function CueRunner({
     // `stage.positionOf` is a bound arrow property, passed rather than wrapped:
     // an arrow here would be a new closure on every frame (§9.2 rule 6).
     pool.bind(stage.effects, stage.positionOf, camera);
+    // ── SOUND (D250): the sounds this frame's tick asked for, and any cut a flush
+    // left since the last frame. The queue decided when; this only plays them.
+    if (audio !== null) audio.bind(stage.sounds, soundPan);
+    else stage.sounds.drop();
     // ── end effect binding — a prop step, if one is added, goes AFTER this
     // line and before the prime block, and owns no effect slot. ──────────────
     if (primeRef.current > 0) {
@@ -541,6 +562,29 @@ export function CueRunner({
   });
 
   return null;
+}
+
+/** D250 — scratch for {@link panOf}, allocated once for the page. */
+const PAN_AT = new THREE.Vector3();
+
+/**
+ * **A sound's pan: where its card rests, across the screen** (D250) — the card's
+ * resting position projected through the camera, its NDC x. A player, the table
+ * or a card this frame cannot place is centred. The audio module clamps it. An
+ * indexed walk of the frame's placements, so it allocates nothing (`layout.ts`'s
+ * `placementOf` builds a key string per call).
+ */
+function panOf(stage: SceneStage, camera: THREE.Camera, cardId: number, _playerId: number): number {
+  if (cardId < 0) return 0;
+  const placements = stage.layout.placements;
+  for (let i = 0; i < placements.length; i++) {
+    const placement = placements[i]!;
+    if (placement.cardId !== cardId) continue;
+    const at = placement.position;
+    PAN_AT.set(at[0], at[1], at[2]).project(camera);
+    return Number.isFinite(PAN_AT.x) ? PAN_AT.x : 0;
+  }
+  return 0;
 }
 
 function nowMs(): number {

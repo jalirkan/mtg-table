@@ -74,7 +74,8 @@ export type KeyActionId =
   | 'cameraDirector'
   | 'toggleSpectator'
   | 'openWorkshop'
-  | 'inspectCard';
+  | 'inspectCard'
+  | 'toggleSound';
 
 /**
  * **M7 Tier 2 (T8) — the arena's camera, by key.** The ids are `camera.ts`'s
@@ -367,6 +368,21 @@ export const KEYMAP: readonly KeyBinding[] = [
     milestone: 'M7',
   },
   {
+    // **D250/D251 — the arena's sound, on and off.** Muted until the viewer turns
+    // it on (a key press is the gesture a browser needs before it will make a
+    // sound), and the choice is kept in this browser. A picture key like the
+    // camera rows: local, sends nothing, legal on a replay and behind an open ask
+    // — and on the board, which makes no sound, it says where it lives. `M` is
+    // bound by nothing else here, and Forge binds no key to its own sounds.
+    id: 'toggleSound',
+    chord: 'M',
+    keys: ['m'],
+    ctrl: false,
+    what: "the 3D arena's sound on or off — muted until you turn it on; kept in this browser (the cue strip's sound checkbox is the same switch)",
+    forge: "divergence: Forge's sounds are a preference (UI_ENABLE_SOUNDS), bound to no key",
+    milestone: 'M7',
+  },
+  {
     // **M5 — the one real dead end M4 handed over.** LAST on purpose:
     // `bindingFor` is a first-match lookup, so with an empty pool `C` is still
     // Forge's SHORTCUT_SHOWCOMBAT and `B` is still pass-to-before-my-turn, and
@@ -546,6 +562,8 @@ export type KeyPlan =
    * `href` (`#workshop?card=<name>&view=inspect`), which sends nothing.
    */
   | { kind: 'inspect'; href: string; name: string }
+  /** **D251** — the arena's sound on / off. Local, sends nothing. */
+  | { kind: 'sound' }
   /** Bound, understood, and deliberately does nothing yet — with the reason. */
   | { kind: 'inert'; why: string };
 
@@ -744,6 +762,17 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
       if ('why' in target) return { binding, plan: { kind: 'inert', why: target.why } };
       return { binding, plan: { kind: 'inspect', href: target.href, name: target.name } };
     }
+
+    case 'toggleSound':
+      // D251 — a picture key: the arena's sound, never an act. The board makes
+      // no sound, and says where the key lives, as the camera rows do.
+      if (ctx.arena !== true) {
+        return {
+          binding,
+          plan: { kind: 'inert', why: "turns the 3D arena's sound on or off — the board makes no sound; press V" },
+        };
+      }
+      return { binding, plan: { kind: 'sound' } };
 
     case 'toggleSpectator':
       if (ctx.arena !== true) {

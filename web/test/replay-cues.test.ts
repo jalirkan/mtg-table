@@ -49,8 +49,10 @@ import {
 import { archetypeKey } from '../src/arena/cues/archetype.ts';
 import { REGISTRY } from '../src/arena/cues/registry.ts';
 import { cuesFor, resolve, selectorsFor, subjectOf } from '../src/arena/cues/resolve.ts';
+import { DEFAULT_CUES } from '../src/arena/cues/defaults.ts';
+import { defaultSoundFor, defaultSoundIds, isConcealed, isSoundId, soundFor, type SoundId } from '../src/arena/cues/sound.ts';
 import { NullStage, type CueRegistry } from '../src/arena/cues/stage.ts';
-import { EMPTY_CUE_DATA, NO_OP, type Cue } from '../src/arena/cues/types.ts';
+import { EMPTY_CUE_DATA, NO_OP, type Cue, type CueData } from '../src/arena/cues/types.ts';
 import { validateCues } from '../src/arena/cues/validate.ts';
 import { layout } from '../src/arena/layout.ts';
 import { isHidden, type AnyCard, type GameEvent } from '../src/protocol.ts';
@@ -1110,4 +1112,177 @@ test('replay-cues: the comic lane letters only its closed words, and every text 
   }
   console.log(`  ${String(texts)} text ops, all closed · ${String(lettered)} lettered bursts: ${[...seen].map(([w, n]) => `${w} ${String(n)}`).join(', ')}`);
   assert.ok(texts > 1000 && lettered > 0);
+});
+
+// ---------------------------------------------------------------------------
+// D250 — sound, over the corpus: what plays, and what a concealed card may play
+// ---------------------------------------------------------------------------
+
+/** A card name no recording shows, given to every concealed card by the hostile corpus. */
+const HOSTILE_NAME = 'Hostile Name';
+
+/**
+ * **The cue data made hostile**: a per-card row for {@link HOSTILE_NAME} and an
+ * archetype row for every key a concealed card can reach (a stub is
+ * `unknown/C`; a face-down permanent is typed but costless) — each naming a
+ * PER-CARD clip for every event kind. With the gate, none of them may sound.
+ */
+function hostileCueData(): CueData {
+  const rows: Record<string, { cue: string; ms: number; params: Record<string, string | number> }> = {};
+  for (const kind of Object.keys(DEFAULT_CUES)) {
+    const spec = DEFAULT_CUES[kind as keyof typeof DEFAULT_CUES];
+    rows[kind] = { cue: spec.cue, ms: spec.ms, params: { sound: 'laser', soundGain: 1.4, soundAt: 0.9 } };
+  }
+  const archetypes: Record<string, typeof rows> = { ...CUES.archetypes } as Record<string, typeof rows>;
+  for (const key of ['unknown/C', 'unknown/*', 'creature/C', '*/C', '*/*']) archetypes[key] = rows;
+  return { ...CUES, cards: { ...CUES.cards, [HOSTILE_NAME]: rows }, archetypes };
+}
+
+/** A frame with every concealed card — stub or face down — handed a real-looking name. */
+function hostileState(state: ClientState): ClientState {
+  const board = state.board;
+  if (board === null) return state;
+  const rename = (card: AnyCard): AnyCard => (isConcealed(card) ? ({ ...card, name: HOSTILE_NAME } as AnyCard) : card);
+  const zone = <Z extends { cards: AnyCard[] }>(z: Z): Z => ({ ...z, cards: z.cards.map(rename) });
+  return {
+    ...state,
+    board: {
+      ...board,
+      stackCards: board.stackCards.map(rename),
+      players: board.players.map((p) => ({
+        ...p,
+        zones: {
+          ...p.zones,
+          hand: zone(p.zones.hand),
+          battlefield: zone(p.zones.battlefield),
+          graveyard: zone(p.zones.graveyard),
+          exile: zone(p.zones.exile),
+          command: zone(p.zones.command),
+          library: zone(p.zones.library),
+        },
+      })),
+    },
+  } as ClientState;
+}
+
+/** The card a cue is ABOUT — the ladder's subject: per attacker or blocker, else the event's first. */
+function subjectOfCue(event: GameEvent, cue: Cue, state: ClientState): AnyCard | null {
+  if (event.kind === 'attackers' || event.kind === 'blockers') {
+    const id = cue.targets[0];
+    return id === undefined || state.board === null ? null : (findCard(state.board, id) ?? null);
+  }
+  return subjectOf(event, state);
+}
+
+test('replay-cues: a concealed card plays only its event’s default sound — every recording, made hostile, with an ungated control (D250, hard rule 8)', () => {
+  const hostile = hostileCueData();
+  const defaults = defaultSoundIds();
+  let concealedCues = 0;
+  let concealedSounding = 0;
+  let violations = 0;
+  let ungatedViolations = 0;
+  let queueSounds = 0;
+  let queueConcealed = 0;
+  for (const file of fixtureFiles()) {
+    const frames = framesOf(file);
+    const stage = new NullStage();
+    const queue = new CueQueue({ stage, registry: REGISTRY, data: hostile, mode: 'replay' });
+    let previous: ClientState['board'] = null;
+    let now = 0;
+    for (const { state: plain, events } of frames) {
+      const state = hostileState(plain);
+      for (const event of events) {
+        if (event.kind === 'phase') continue;
+        const selectors = selectorsFor(event, state);
+        for (const cue of cuesFor(event, state, hostile, previous)) {
+          const subject = subjectOfCue(event, cue, state);
+          if (!isConcealed(subject)) continue;
+          concealedCues += 1;
+          const expected = defaultSoundFor(selectors, hostile)?.sound;
+          const actual = cue.params['sound'];
+          if (actual !== undefined) concealedSounding += 1;
+          if (actual !== expected || (actual !== undefined && !defaults.has(actual as SoundId))) {
+            violations += 1;
+            assert.fail(`${file}: a concealed card's ${cue.kind} cue sounds ${String(actual)}, its default is ${String(expected)}`);
+          }
+          // The ungated control: the same ladder with the gate taken out.
+          const found = resolve(selectors, event.kind, subject, hostile);
+          const ungated = soundFor(
+            selectors,
+            { source: found.source, ...(found.spec.params === undefined ? {} : { params: found.spec.params }) },
+            false,
+            hostile,
+          );
+          if (ungated?.sound !== expected) ungatedViolations += 1;
+        }
+      }
+      // The real queue, through the real stage op: a sound about a concealed card is a default clip.
+      const before = stage.sounds.length;
+      queue.enqueueBatch(events, state, undefined, previous);
+      for (let t = 0; t < MAX_DRAIN_MS && !queue.idle; t += FRAME_MS) {
+        now += FRAME_MS;
+        queue.tick(now);
+      }
+      for (const sound of stage.sounds.slice(before)) {
+        queueSounds += 1;
+        const card = sound.cardId >= 0 && state.board !== null ? (findCard(state.board, sound.cardId) ?? null) : null;
+        if (!isConcealed(card)) continue;
+        queueConcealed += 1;
+        assert.ok(defaults.has(sound.sound), `${file}: the queue played ${sound.sound} for a concealed card`);
+      }
+      previous = state.board;
+    }
+  }
+  console.log(
+    `  hostile corpus: ${String(concealedCues)} cues about a concealed card (${String(concealedSounding)} with a sound), ` +
+      `${String(violations)} per-card sounds; ungated control: ${String(ungatedViolations)}; the queue played ` +
+      `${String(queueSounds)} sounds, ${String(queueConcealed)} of them about a concealed card, every one a default`,
+  );
+  assert.ok(concealedCues > 1000, `expected the corpus' concealed cards, saw ${String(concealedCues)}`);
+  assert.ok(concealedSounding > 50, `expected concealed cards whose events have a default sound, saw ${String(concealedSounding)}`);
+  assert.ok(queueConcealed > 20, 'the queue sweep reached no concealed card');
+  // The control has teeth: without the gate the same corpus plays per-card sounds.
+  assert.ok(ungatedViolations > 100, `the ungated control found only ${String(ungatedViolations)} — the sweep proves nothing`);
+});
+
+test('replay-cues: the sounds the corpus plays, per clip and per batch — each on real film, none on a snap (D250)', () => {
+  const byClip = new Map<string, number>();
+  let batches = 0;
+  let sounding = 0;
+  let worst = 0;
+  for (const file of fixtureFiles()) {
+    const stage = new NullStage();
+    const queue = new CueQueue({ stage, registry: REGISTRY, data: CUES, mode: 'replay' });
+    let previous: ClientState['board'] = null;
+    let now = 0;
+    for (const { state, events } of framesOf(file)) {
+      const before = stage.sounds.length;
+      queue.enqueueBatch(events, state, undefined, previous);
+      previous = state.board;
+      for (let t = 0; t < MAX_DRAIN_MS && !queue.idle; t += FRAME_MS) {
+        now += FRAME_MS;
+        queue.tick(now);
+      }
+      const played = stage.sounds.length - before;
+      if (events.length > 0) batches += 1;
+      if (played > 0) sounding += 1;
+      worst = Math.max(worst, played);
+      for (const sound of stage.sounds.slice(before)) {
+        assert.ok(isSoundId(sound.sound));
+        assert.ok(sound.gain > 0 && sound.gain <= 1.5);
+        byClip.set(sound.sound, (byClip.get(sound.sound) ?? 0) + 1);
+      }
+    }
+    // Skip all at the end of the file: nothing rings on, and nothing new plays.
+    const after = stage.sounds.length;
+    queue.flushAndSnap();
+    assert.equal(stage.sounds.length, after);
+  }
+  const census = [...byClip.entries()].sort((a, b) => b[1] - a[1]).map(([clip, n]) => `${clip} ${String(n)}`).join(' · ');
+  console.log(`  ${String(batches)} batches, ${String(sounding)} with a sound, at most ${String(worst)} in one: ${census}`);
+  for (const clip of ['enter', 'lunge', 'hit', 'death', 'resolve', 'victory', 'defeat']) {
+    assert.ok((byClip.get(clip) ?? 0) > 0, `the corpus never plays the default ${clip}`);
+  }
+  // The S.H.I.E.L.D. rows that the corpus reaches sound as themselves.
+  assert.ok((byClip.get('comms') ?? 0) > 0, 'Nick Fury never calls it in on the corpus');
 });

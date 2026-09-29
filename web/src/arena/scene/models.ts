@@ -126,6 +126,17 @@ function makeLoader(): GLTFLoader {
 }
 
 /**
+ * **A static asset's bytes** (D250) — same-origin, relative, through three's own
+ * `FileLoader`: the arena's one way to a file, as the figure library and the
+ * personal index are read (no arena module calls `fetch`; liveness holds it). The
+ * audio module is handed this rather than importing it, so `scene/audio.ts`
+ * imports no three. The caller's path is a literal its own file's allow-list names.
+ */
+export function loadAssetBytes(path: string): Promise<ArrayBuffer> {
+  return new THREE.FileLoader().setResponseType('arraybuffer').loadAsync(path) as Promise<ArrayBuffer>;
+}
+
+/**
  * Load the merged figure library and index it by model id.
  *
  * Every path is **relative and same-origin** (`models/figures.glb` under

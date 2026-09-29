@@ -14,11 +14,12 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 305 items still open across 32 follow-up lists** — 281
+**The index below lists 314 items still open across 33 follow-up lists** — 290
 open, 18 partly done, 3 not reproduced, 2 standing and 1 accepted — counted from
-its own rows on 2026-09-29 by the arena personal polish lane (which closed the
-personal tier's 33 and added a list of five), where the four paragraphs it
-replaced, one per merging lane, had each counted a different tree. Each list's
+its own rows on 2026-09-29 by the sound-cues lane (which added a list of nine;
+the arena personal polish lane before it closed the personal tier's 33 and added
+a list of five), where the four paragraphs it replaced, one per merging lane, had
+each counted a different tree. Each list's
 own entries say what is closed. **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 **The 32 follow-up lists hold 393 items, and 296 of them are open** — 272 open,
@@ -354,6 +355,15 @@ this plan assumes.
 | [More villain identity](#fu-more-villain-identity) | 7 | open | Weapons the kit has no kind for: Boomerang's blades and horned helm, the Knight's sword, Nakia's ring blades | `web/src/arena/figures/props.ts` |
 | [More villain identity](#fu-more-villain-identity) | 8 | open | Three identity props sit on the raster's bar (48–49 px), and the Masters' cloak is a front-exempt detail | `web/test/traits.test.ts` |
 | [More villain identity](#fu-more-villain-identity) | 9 | open | The green bodies are told apart by colour, head and rest, not build: the body has no bulk variant | `tools/assets-manifest.json` |
+| [Sound cues](#fu-sound) | 1 | open | The clips are our own stand-ins; Kenney's CC0 *Impact Sounds* needs the owner's approval to download | `tools/assets-manifest.json` |
+| [Sound cues](#fu-sound) | 2 | open | Nobody has listened: the mix is by recipe and by number, not by ear | `web/src/arena/cues/defaults.ts` |
+| [Sound cues](#fu-sound) | 3 | open | The default set is small: blocks, counters, draws, taps, life, turns are silent | `web/src/arena/cues/defaults.ts` |
+| [Sound cues](#fu-sound) | 4 | open | No villain row carries a sound (the villain lane owns them) | `web/src/arena/cues/cues.json` |
+| [Sound cues](#fu-sound) | 5 | open | The pan is where the card RESTS; a lunge does not carry its sound | `web/src/arena/scene/CueRunner.tsx` |
+| [Sound cues](#fu-sound) | 6 | open | On or off only — no volume control | `web/src/arena/Arena.tsx` |
+| [Sound cues](#fu-sound) | 7 | open | A rebuild on another Chromium may write other bytes | `tools/build-sounds.mjs` |
+| [Sound cues](#fu-sound) | 8 | open | The workshop's sound checkbox starts off every visit | `web/src/workshop/Workshop.tsx` |
+| [Sound cues](#fu-sound) | 9 | open | The frame-to-ear latency is unmeasured | `web/src/arena/scene/audio.ts` |
 
 ### Questions only the owner can settle
 
@@ -8477,6 +8487,73 @@ found three majors, five minors and read the pictures:
    Hulk by his green, his size (1.34–1.42) and his trousers, and the fix pass took
    those as far as the data goes (D232). A heavier body would serve the Hulks, the
    Abominations, Atlas, Titania and Crossbones at once; it is a library rebuild.
+## Sound cues — the table makes a noise, muted until you ask (2026-09-29, D250–D252)
+
+**Status: built, measured, gated and documented** on branch `sound-cues` (the
+worktree `mtg-table-t2s2`, off `main`'s `24ba603`); the lane's reserved range
+D250–D254, three used. `docs/evidence/sound-cues.md` is what was measured, README's
+*Sound* the manual, `web/src/arena/CLAUDE.md`'s *Sound* the conventions.
+
+1. **Sound is a cue param** (D250): `sound`, `soundAt`, `soundGain` in
+   `validate.ts`'s closed table; a small default set by selector in `defaults.ts`
+   (an arrival, an attack, a hit, a death, a resolve, the outcome — `outcome:won` /
+   `lost` / `draw` from the viewer's seat); `cues.json`'s S.H.I.E.L.D. headline rows
+   sound as themselves (Fury's attack `comms`, Helicarrier Strike's beam `laser`,
+   Quake's Seismic Takedown `rumble`, Wasp's trigger `sting`). The queue fires a
+   cue's sound once, when its real progress crosses `soundAt`; a snap is silent, and
+   a flush, a skip or a pause cuts every voice. A concealed card plays only its
+   event's default (hard rule 8's renderer half), swept over the corpus made
+   hostile with an ungated control.
+2. **One audio module, muted by default** (D251): `scene/audio.ts`, no three, no
+   timer, no fetch; the context built only inside a gesture (the strip's *sound*
+   checkbox, `M`, or the first press after a stored ON); eight voices, each an armed
+   source, a ninth dropped; bound from `CueRunner`'s one loop; the choice in
+   `localStorage` `mtg-table.arena.sound`, an explicit ON heard under reduced motion.
+   The workshop's Cues panel has its own checkbox for the pedestal.
+3. **The clips are our own** (D252): no pack was downloaded without the owner's
+   approval; eleven clips synthesised by `tools/build-sounds.mjs`, Ogg Opus through
+   headless Chromium's WebCodecs, 39,545 bytes, decoded by Chromium 152 and Firefox
+   155, byte-identical on a rebuild, each row in `tools/assets-manifest.json`.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9230`
+**265.0 s** and `WSPORT=9240` **285.9 s**, exit 0 both, 48 jobs (1,014.8 s and
+1,069.2 s summed) at a load average of 2.6–17.4, `node --test` 1,138 / 1,127 pass /
+0 fail / 11 skipped and vitest 124 (8 files) each time
+(`var/check-all-sound-p1.log`, `-p2.log`). The lane added no step and no job.
+`~/forge` and `~/.forge`: unchanged (evidence §8).
+
+<a id="fu-sound"></a>
+### Sound cues' follow-ups — nine, 2026-09-29
+
+1. **The clips are our own stand-ins.** Kenney's CC0 audio packs were the brief's
+   source; the candidate is *Impact Sounds* (`kenney_impact-sounds.zip`, 800,850
+   bytes, https://kenney.nl/assets/impact-sounds, "License: Creative Commons CC0"
+   on the page, read 2026-09-29, not fetched). Downloading it is the owner's
+   approval in chat; a clip then drops in at `web/public/audio/<id>.ogg` with a
+   `packs` entry and its `procedural.soundClips` row removed (D252 point 4).
+2. **Nobody has listened.** A headless browser counts sounds, it does not hear
+   them: the master gain (0.7), each default's gain and the clips' timbres are by
+   recipe and by number. The owner's ear, in a replay with sound on, is the check.
+3. **The default set is small on purpose**: a block, a counter, a draw, a tap, a
+   life change, a turn, a mulligan, a shuffle and an exile are silent. Each is one
+   row in `DEFAULT_SOUNDS` and, if a new clip, one id — a decision on how busy the
+   table should sound.
+4. **No villain row carries a sound.** The more-villain-identity lane owns
+   `cues.json`'s villain rows; Doctor Doom's attack is the default lunge. A villain's
+   own sound is a clip id and a param on its row, no code.
+5. **The pan is where the card RESTS** (`CueRunner`'s `panOf`, the NDC x of its
+   placement): a lunging figure's sound does not travel with its offset, and a
+   sound about a player (damage to a player, the outcome) is centred.
+6. **On or off only.** The strip has one checkbox and `M`; a volume slider would be
+   one more stored number on the master gain.
+7. **A rebuild is Chromium's libopus**: two builds on Chromium 152 here were
+   byte-identical, another build may not be — the manifest rows are what
+   `sound.test.ts` holds, so a rebuild on another machine is a manifest change.
+8. **The workshop's sound checkbox starts off on every visit** (page state, D251
+   point 3); it does not read the arena's kept choice.
+9. **The frame-to-ear latency is unmeasured.** A sound is started in the frame whose
+   tick crossed its moment; Web Audio's output latency on the owner's device (and a
+   frame of `demand` loop wake-up) is not measured, and no cue waits for a sound.
 
 ---
 

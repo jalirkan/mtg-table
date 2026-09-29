@@ -10452,3 +10452,166 @@ the Masters' and dressed the two behind Zemo in shadow). A cheaper follower body
 library rebuild). Raising §8.2's line, or the bench's, for these tables. Holding
 the whole scene's triangles in a node test (it would re-implement the renderer's
 count; the sweep is the measurement, the figure layer the guard).
+## D250 — Sound is a cue PARAM under the visual rules: a closed clip list, a default per event kind, fired by the queue on real film, bound from the one frame loop, and a concealed card plays only its event's default
+
+*Branch `sound-cues` (worktree `mtg-table-t2s2`, off `main`'s `24ba603`). The
+lane's reserved range is D250–D254 (D200); it used three.*
+
+**2026-09-29** (`docs/evidence/sound-cues.md`; `web/src/arena/CLAUDE.md`'s
+*Sound*; PLAN.md's *Sound cues*)
+
+**Decision.**
+
+1. **A sound is three params on a cue, never a cue of its own.** `sound` (one of
+   `cues/sound.ts`'s closed `SOUND_IDS` — `enter`, `lunge`, `hit`, `death`,
+   `resolve`, `victory`, `defeat`, `comms`, `laser`, `rumble`, `sting` — or `none`),
+   `soundAt` (where in the cue it starts, a fraction in [0, 1]) and `soundGain`
+   ([0, 1.5]), three rows in `cues/validate.ts`'s `PARAM_SPECS` like every other
+   param (D79): an unknown clip, a path, a URL or a card name is an error.
+2. **The ladder is per key, and it falls through to a default.** `defaults.ts`'s
+   `DEFAULT_SOUNDS` gives the small default set by selector — a card arriving
+   (`zone:*>battlefield`, `land`), an attack (`attackers`), a hit (`damage`, its
+   `lethal` and `player` qualifiers), a death (`zone:battlefield>graveyard`), a
+   spell resolving (`resolved`, a fizzle silent) and the outcome — and a card's or
+   an archetype's row may name another clip, move it or scale it; each key it
+   leaves out falls through, so a row that retints an arrival keeps its sound.
+   The outcome is keyed off three new qualifiers, `outcome:won`, `outcome:lost`
+   and `outcome:draw`, from the viewer's seat — the seat the banner's "Victory"
+   reads; no cue row resolves differently because of them.
+3. **Hard rule 8's renderer half holds for a sound: a concealed card plays only
+   its event's DEFAULT.** A per-card sound is a card's name by another spelling.
+   `sound.ts`'s `soundFor` reads no row at all — not its clip, its moment or its
+   gain — when the subject is a redacted stub or any face-down card
+   (`isConcealed`, the flags, never the name), and `resolve.ts` writes that decided
+   sound into the cue's params, overwriting whatever the row said.
+   `replay-cues.test.ts` sweeps every recording made hostile (every concealed card
+   handed a name with its own per-card row, every archetype a concealed card can
+   reach given a per-card clip) through the ladder and through the real queue, with
+   an ungated control the same sweep catches.
+4. **The queue fires it, the frame loop plays it.** A cue implementation never
+   touches sound: the queue stamps each cue's decided sound at enqueue and calls
+   `Stage.playSound` once, when the cue's REAL progress crosses `soundAt` inside
+   `#drive` — so it rides the virtual clock (pause, speed, the live budgets, D72's
+   idle rule) with no timer. A snap is silent: `flushAndSnap` (skip all, a scrub, a
+   `resync`, a new `gameId`, §5.2's cap), `skipCurrent`, `stepBatch` and a cue
+   compressed to no length play nothing, and each of them — and a pause — calls
+   `Stage.stopSounds`, so nothing rings on. One clip per card (or player) per batch:
+   a land's two arrival events are one noise. `SceneStage` collects a frame's sounds
+   in a fixed buffer (`PendingSounds`), and `CueRunner`'s one `useFrame` hands them
+   to the audio module (`scene/audio.ts`'s `bind`) after the tick, panned by where
+   the card rests on screen. `playSound` is not an op in `NullStage.ops`, so the
+   film's pinned digest (D152) did not move.
+5. **The S.H.I.E.L.D. headline cues sound as themselves**, each keyed off an event
+   about THAT card: Nick Fury's attack is a radio call (`comms`), Helicarrier
+   Strike resolving a laser at half its cue (where the beam comes down), Quake's
+   Seismic Takedown a rumble, Wasp's trigger a sting. No villain row carries a
+   sound (the more-villain-identity lane owns them).
+
+**Rationale.** Report 15's thesis was that the table should feel like the card
+art; a comic's motion lands with a sound. Everything that makes the arena's film
+safe — cues as data, one clock, one loop, a snap that is identity, a concealed card
+that is anyone — applies to a sound unchanged, so the cheapest safe design is to
+make a sound one more thing a cue carries and let the existing machinery time it.
+
+**Rejected.**
+
+- **A `sound.*` cue kind, or sound effects played by each cue's `apply`.** Every
+  cue would have to learn sound, the skip paths would each need a mute, and the
+  pinned film would move; a param read once by the queue touches no cue.
+- **A timer per sound, or a clip started on the React side.** A second clock:
+  pause, speed and skip would stop at the film's edge and the sound would ring on.
+- **Taking the default only when the cue itself came from the default rung.** Every
+  S.H.I.E.L.D. card has rows, and all of them would have gone silent.
+- **Letting a concealed card's archetype choose its sound.** Its archetype is not
+  a name, but the rule is simpler and stronger: the event's default, full stop.
+
+## D251 — Sound is MUTED by default: the context is built inside a user gesture, the choice is kept in this browser, an explicit ON is heard under reduced motion, and the voices are a fixed pool that drops rather than waits
+
+*Branch `sound-cues`; D250–D254.*
+
+**2026-09-29** (`docs/evidence/sound-cues.md` §3–§4)
+
+**Decision.**
+
+1. **Off until the viewer turns it on**, with the cue strip's *sound* checkbox or
+   `M` (`web/src/keys.ts`'s `toggleSound` — a picture key like the camera rows:
+   local, legal on a replay and behind an ask, `inert` on the board with "press V").
+   `scene/audio.ts`'s `SOUND_DEFAULT` is `false`.
+2. **No `AudioContext` before a gesture.** `ArenaAudio.unlock()` builds the graph —
+   the context, a master gain, eight voices of gain → stereo panner, each holding one
+   armed source — and starts loading the eleven clips, and the arena calls it only
+   from inside a gesture's handler: the checkbox, `M`, or, when the viewer turned
+   sound on in an earlier visit, the first pointer or key press on the page. A
+   viewer who never turns sound on never gets a context.
+3. **The choice is kept in this browser**, `localStorage` `mtg-table.arena.sound`
+   (`on` / `off`), read and written in `Arena.tsx` inside `try` — D71's pattern,
+   and liveness' "every localStorage access in the arena is Arena.tsx's". The
+   workshop's rehearsal checkbox is page state and reads nothing stored.
+4. **`prefers-reduced-motion`: an explicit choice wins.** `soundOn(choice,
+   reducedMotion)`: `on` plays under reduced motion too (sound is not motion, and the
+   viewer asked for it; the film is 30 % as long, the clip is not); with no choice,
+   no default is ever ON under reduced motion. Today the default is off, so the
+   arena is silent until the viewer says otherwise either way.
+5. **One audio module for the page, a fixed pool, no allocation to play.**
+   `sharedAudio` gives the arena and the workshop's pedestal the same instance (one
+   context a page). `play` takes a free voice's ARMED source, sets its buffer, gain
+   and pan and starts it — no node, no object; a voice re-arms when its source's
+   `ended` event arrives or `stopAll` cuts it. With every voice busy a sound is
+   DROPPED and counted, never queued and never stolen. Muting, unmounting, a flush, a
+   skip and a pause cut every voice at once, and a cut voice is free the same frame.
+
+**Rejected.**
+
+- **On by default.** A sound the viewer did not ask for, in a tool opened beside
+  other work; and a browser would refuse it until a gesture anyway.
+- **Silence under reduced motion whatever the viewer chose.** Reduced motion asks
+  for less motion; a viewer who ticked *sound* asked for sound.
+- **Stealing the oldest voice.** A clipped sound mid-word is worse than a dropped
+  one; the busiest batch in the corpus asks for sixteen over its length, and none
+  of the 80 frames the probe stepped dropped one.
+- **An `AudioBufferSourceNode` created per play.** It is what Web Audio expects, and
+  it is a browser object per sound on the frame loop; arming it off the play path
+  costs nothing and keeps the loop's claim true.
+
+## D252 — The clips are the repository's own, synthesised by `tools/build-sounds.mjs` and encoded to Ogg Opus by headless Chromium's WebCodecs, because no pack was downloaded without the owner's approval
+
+*Branch `sound-cues`; D250–D254.*
+
+**2026-09-29** (`docs/evidence/sound-cues.md` §1–§2; `tools/assets-manifest.json`'s
+`procedural.soundClips`)
+
+**Decision.**
+
+1. **No download.** The brief named a Kenney CC0 audio pack as the source. A
+   download needs the owner's approval in chat, and this lane ran without one —
+   the status layer's glyphs made the same call (`assets-manifest.json`'s
+   `statusGlyphs._kenney`). The candidate is recorded, read and not fetched:
+   Kenney's *Impact Sounds*, `kenney_impact-sounds.zip`, 800,850 bytes, the page's
+   licence line "License: Creative Commons CC0".
+2. **Eleven clips drawn by our own code**, sample by sample, from sine partials,
+   filtered noise from a seeded generator and envelopes — no sample, nothing
+   derived from or referring to card art — GPL-3.0-or-later like the repository,
+   recorded as a `procedural` asset with every file's bytes and sha256.
+3. **Ogg Opus, encoded with what the machine has.** There is no ffmpeg, sox,
+   oggenc or opusenc here, and the repository installs none. Headless Chromium's
+   WebCodecs `AudioEncoder` is libopus; the tool serves the PCM to a loopback page
+   (a secure context), takes the packets back and writes the Ogg container itself
+   (RFC 7845 over RFC 3533). 39,545 bytes for all eleven, 48 kHz mono, ~40 kb/s.
+   Chromium 152 and Firefox 155 decode every one (`--firefox`), the same length as
+   its source and lined up with it; two builds are byte-identical.
+4. **The swap is a data change.** A pack's OGG clip at `web/public/audio/<id>.ogg`,
+   with a `packs` entry of its own (URL, bytes, sha256, date, the badge verbatim)
+   and its row removed from `procedural.soundClips` — the loader cannot tell, and
+   `sound.test.ts` holds every file to its manifest row.
+
+**Rejected.**
+
+- **Downloading the pack on the brief's word.** An agent's brief is not the
+  owner's approval.
+- **WAV.** Every browser decodes it, and eleven clips at 16-bit 22 kHz were over
+  the 100 kB budget before a single sound was worth hearing.
+- **MP3.** No encoder on the machine, and Ogg Opus is decoded by both browsers
+  here; a Safari viewer is not in this repository's scope (localhost, the owner's
+  own browsers).
+- **Synthesising at runtime in the page.** The same sounds with no files — but a
+  pack clip could then never drop in, and the audio module would carry a synth.
