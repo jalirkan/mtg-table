@@ -376,6 +376,6 @@ test('liveness: the story\'s one card image — a name a fact carries, face up, 
   for (const banned of ['CardTile', 'CardPlane', 'CardView']) {
     assert.ok(!src.includes(`${banned}.tsx`), `Story.tsx imports ${banned} — the story is not a card renderer`);
   }
-  const claude = read('CLAUDE.md');
-  assert.match(claude, /The story page \(`#story`\) draws a card image/, 'the exemption is not written down in M4 convention 2');
+  const claude = read('web/CLAUDE.md');
+  assert.match(claude, /The story page \(`#story`\) draws a card image/, 'the exemption is not written down in M4 convention 2 (web/CLAUDE.md)');
 });

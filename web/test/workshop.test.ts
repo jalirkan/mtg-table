@@ -1179,8 +1179,8 @@ test('liveness: the list thumbnail is the workshop’s one card image outside Ca
     }
   }
   assert.equal(images, 1, 'one list thumbnail — a second card-image surface is a decision (CLAUDE.md, M4 convention 2)');
-  const claude = readFileSync(fileURLToPath(new URL('../../CLAUDE.md', import.meta.url)), 'utf8');
-  assert.match(claude, /The workshop \(`#workshop`\) draws its\s+card LIST's thumbnails/, 'the exemption is not written down in M4 convention 2');
+  const claude = readFileSync(fileURLToPath(new URL('../CLAUDE.md', import.meta.url)), 'utf8');
+  assert.match(claude, /The workshop \(`#workshop`\) draws its\s+card LIST's thumbnails/, 'the exemption is not written down in M4 convention 2 (web/CLAUDE.md)');
 });
 
 
