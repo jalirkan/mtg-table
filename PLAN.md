@@ -317,7 +317,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | M4 | A board that looks like Magic | 3 evenings | **done** — a review pass and a fix pass; of its eight follow-ups M5 closed five, one was not reproduced, two are open |
 | M5 | Nothing dead-ends | 3 evenings | **done** — probe decks, two verification passes, all findings closed; exit criterion met by `tools/ten-games.sh` (10/10, zero `UNIMPL`); thirteen follow-ups, none blocking M6 |
 | M6 | Comfort | 2 evenings | **done** — New Game without restarting the JVM, phase stops, pass-to, auto-yield, undo, concede, `buttons.focus`; the `sideboard` ask recorded at last; gate grew **9d** and **10g**; two verification passes, all findings closed; **D37–D45**; thirteen follow-ups, none blocking M7 |
-| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice, fixed twice and committed** (`0368a90`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened. **Tier 2 slice 4 (T13, proportioned bodies in painted costumes, T14) built, verified once and documented**, not committed (branch `tier2-slice4`): every humanoid a CC0 *Universal Base Characters* person on the animation library's own rig, painted by a costume palette, still one program; a full duelist per seat — the director and the villain — with gestures as cue params; **D95–D101**; nineteen follow-ups. **Tier 2 is complete (T0–T14)**; likeness — Tier 3, personal-only — is the open question (question 14) |
+| M7 | Arena mode: the game as a cinematic | open-ended (Tier 1: 6 evenings) | **Tier 1 done** — a second renderer over the same frame stream: a 3D table, cards as textured planes, all 25 event kinds cued, a choreographed camera, the seat playable in 3D; two verification passes, all fourteen findings closed; **D47–D52**; twelve follow-ups, none blocking Tier 2. **Tier 2 slice 1 (T0–T7) built, verified and committed** (`4f84613`): figures at every creature, auras as poses, lands as terrain, mana motes, the stack as spell forms with tethers and strikes, silhouette busts, bloom on by default; one verification pass, passed; **D53–D63**; nineteen follow-ups. **Tier 2 slice 2 (T8 and the camera views) built, verified twice, fixed twice and committed** (`5891444`): hero and scientist bodies of their own, the UAL's `hit` and `die` retargeted onto the one humanoid rig, a verified and reproducible `figures.glb`, a death that is seen, five camera views with spectator mode and an auto director; **D64–D74**; six of slice 1's follow-ups closed, ten of its own opened. **Tier 2 slice 3 (T9–T12, per-card identity) built, verified twice, fixed twice and committed** (`0368a90`): every deck card reads as itself through data — `traits.json` and a shared kit of eighteen procedural, instanced props — the Air Force a swarm, the Agents a squad, the giant ant giant, the Helicarrier a carrier overhead, T11's beats drawn on the body, T12's attachment looks; **D75–D89**; one of slice 1's and two of slice 2's follow-ups closed, fourteen of its own opened. **Tier 2 slice 4 (T13, proportioned bodies in painted costumes, T14) built, verified once, documented and committed** (`23e26b3`): every humanoid a CC0 *Universal Base Characters* person on the animation library's own rig, painted by a costume palette, still one program; a full duelist per seat — the director and the villain — with gestures as cue params; **D95–D101**; nineteen follow-ups. **Tier 2 is complete (T0–T14)**; likeness — Tier 3, personal-only — is the open question (question 14) |
 | — | Match setup: the AI's own deck and its Forge profile *(a deferred item, brought forward)* | 1 day | **built, reviewed, fixed, documented and committed** on branch `match-setup`, rebased onto `main`'s `23e26b3` (2026-09-27) with a second fix commit, then onto the workshop's `bf0392b` the same day with the verifier's four findings fixed — `decks/doom-legion.dck`, 40 blue-black Marvel villains for the AI; `--ai-deck` / `--ai-profile` on the bridge and `scripts/play.sh`, `config.json`'s `match` block read by `play.sh` alone; `hello_ok.match` (amendment **M44**) naming the AI's deck but never listing it; the board's rails print both decks and the profile; gate rows 11–14 of `ten-games.sh` and step **9e**; **D105–D108**; one review pass, all nine findings closed; ten follow-ups, three of them (2, 8, 9) closed by the rebase and its fix commit; the ask path's push order recorded open as slice 4's follow-up 13(d) |
 | — | The narrator: a frame log read back as a story *(off the plan, for watching how the AI plays)* | 1 day | **built, gated and documented**, committed on branch `narrate` (2026-09-28) — `tools/narrate.mjs` tells any per-seat log turn by turn, `--turn`, `--summary`, `--seat`, `--json`; names only what the log's seat saw, never remembered (**D123**); `tools/narrate-selftest.mjs` is gate sub-step **12d**, with five negative controls, client-log re-deliveries and two golden files; nine follow-ups, the first a `#story` page it does not build; rebased onto spectating's `a5c8e39` (2026-09-28), where it became **D123** and **12d** and reads spectated recordings (`yourProfile`, `paceMs`) |
 | — | The story page: the narrator in the browser, in step with the replay *(off the plan, the narrator's follow-up 1)* | 1 day | **built, gated and documented**, committed on branch `story` (2026-09-28) — the narrator moved whole into `web/src/story/narrate.ts` and `tools/narrate.mjs` is its shell, output unchanged by a byte (**D124**); `#story`, a lazy page over the replay that imports no transport, the story column grouped by turn with the moment on screen highlighted, the summary card, the frame on screen with its cards, one cursor with the arena and the board (**D125**, **D128**); re-told as a followed log grows, only the played frames while the future is hidden (**D126**); hard rule 8 held by rendering it over the corpus with a control (**D127**); `./scripts/spectate.sh --story`; nine follow-ups, the first the story panel inside the arena, the last an engine race the gate hit (`act: undo`, not this branch's) |
@@ -332,7 +332,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
 dev-server **tools** rather than a milestone: a local SQLite + FTS5 index of every
 card under `tools/card-library/`, an image cache, and a `#cards` browser. Built,
-reviewed twice and fixed, **not committed** (worktree
+reviewed twice and fixed, and committed on `main` as `754f504` (worktree
 `/home/justin-a/code/mtg-table-t2g`, branch `card-library`). Nothing on the wire
 or in `bridge/` moved, and the board gained one link (`▦ cards`, beside the arena
 toggle) and nothing else. *The card library and the card browser*, just above
@@ -346,7 +346,7 @@ Forge release ships it; until then the pool is prepared (`decks/fra-rw-aggro.dck
 a draft opponent, a per-card deck audit, the saved bridge port as a patch) and
 nothing about how the game runs has changed. **Committed on branch
 `engine-upgrade`**, rebased onto `main`'s `a092d3a` (2026-09-27, after slice 4,
-the workshop and match setup) and gated there; not on `main`. *Engine and sets*,
+the workshop and match setup) and gated there, and on `main` since `aead79d`. *Engine and sets*,
 just above *Deferred*, has the rule, the measurements, the checklist for the day
 and the follow-ups.
 
@@ -2495,8 +2495,8 @@ slice 1 was built against.)
 
 **Status: Tier 2 is complete.** Every evening of report 13 §11, T0–T14, is
 delivered across four slices, each verified and documented: slices 1–3 are
-committed on `main` (`4f84613`, `5891444`, `0368a90`), and slice 4 is built,
-verified once and documented but **not committed** (branch `tier2-slice4`).
+committed on `main` (`4f84613`, `5891444`, `0368a90`), and slice 4 — built,
+verified once and documented on branch `tier2-slice4` — since as `23e26b3`.
 What remains is follow-ups, none of which stops a game (each slice's list
 below), a play-test of slice 4, and one question that only the user can settle:
 whether **likeness** — Tier 3, which would be personal-only — is part of the end
@@ -3780,7 +3780,7 @@ behind is **follow-ups, not evenings**: the lists above. A few of them need the
 user rather than a builder: the live combat budget (question 12), which way the
 figures rest (question 13), whether the duelists were wanted and where the
 opponent's stands (slice 4 follow-ups 1 and 2), and whether to buy the Regular
-bodies (11). Slice 4 is **not committed**, and nobody has played it.
+bodies (11). Slice 4 is committed (`23e26b3`), and nobody has played it.
 
 The one question Tier 2 cannot answer is whether there should be a **Tier 3** at
 all — **likeness**, below and question 14.
@@ -4455,7 +4455,7 @@ declined in 6 of 10 pairs (evidence §P). Question 8 below says the same.
 
 ## Engine and sets — Forge 2.0.14 stays; Reality Fracture waits for an official release (2026-09-27, D109–D112)
 
-**Status: preparation only; committed on its branch, not on `main`** —
+**Status: preparation only; committed on its branch, and on `main` since `aead79d`** —
 worktree `/home/justin-a/code/mtg-table-t2h`, branch `engine-upgrade` (cut from
 `754f504`, rebased onto `main`'s `a092d3a` on 2026-09-27: Tier 2 slice 4, the
 workshop and match setup underneath it).
@@ -7232,7 +7232,7 @@ each still needs a decision of its own before it becomes work. The arena's
 **Tier 3** (per-card models) belongs on this list too; **Tier 2** left it on
 2026-09-13 and is now **complete** — four slices, T0–T14, the camera views,
 per-card identity, proportioned bodies in costumes and the duelists (*M7 Tier 2*
-above; slice 4 is not yet committed). **Tier 3 means likeness**, and a likeness model of a Marvel character
+above; all four slices are on `main`). **Tier 3 means likeness**, and a likeness model of a Marvel character
 would be **personal-only** — local, gitignored, never committed or published, and
 never made from card art (**D54**): *Tier 3 — a note, not a plan*, above.
 

@@ -26,6 +26,46 @@ answer away" bugs out of the project, and it is why the wire protocol
 repository — the Java emitter and the TypeScript reducer are both written against
 it.
 
+## How this is built
+
+The code in this repository — the Java bridge, the TypeScript client, the tools
+and the tests — was written with Claude, Anthropic's AI model, working in Claude
+Code under the owner's direction and review. The owner decides what is built and
+settles every open question (PLAN.md's *Only the user can decide*); each piece of
+work is a lane on a branch of its own, read by an independent reviewing session
+before it merges, and nothing reaches `main` without the full gate green
+(**D201**). Pushes, releases and anything public are the owner's. The conventions
+those sessions work to are `CLAUDE.md` and its per-directory companions
+(`bridge/`, `web/`, `web/src/arena/`, `tools/`), which double as a map of the code
+for a human reader.
+
+## What you may not add
+
+Contributions are welcome inside these lines. Each is a decision with its reasons
+in `DECISIONS.md`, and a change that crosses one will not be merged.
+
+- **Only CC0 assets, each with a written provenance** (**D54**): a model, clip or
+  texture enters through `tools/assets-manifest.json` — its URL, bytes, sha256,
+  date and the licence badge as it read that day — and nothing comes from Mixamo
+  or is generated from card art.
+- **The personal tier is never committed** (**D54**, **D201**): a likeness model
+  of a Marvel character (Tier 3), or anything else marked personal-only
+  (`committable: false` in the manifest), stays local and gitignored.
+- **No proxy of Scryfall** (**D90**, **D92**): the card library's image route
+  exists only in the Vite dev server and never fetches; anything at scale is
+  Scryfall's bulk file, through `tools/card-library/scryfall.ts`, the one door.
+- **No card images in the repository**: card art is looked up and cached locally
+  (`web/public/art.json` and `var/cards/` are gitignored), and the committed
+  `fixtures/cards/` slice is data without images (**D90**).
+- **No rules logic in the client**: no mana-payability prediction, no targeting
+  validation, no phase-stop logic — Forge decides and the browser renders
+  (*NON-GOALS*, below).
+- **No engine snapshots** (**D109**–**D111**): only a tagged official Forge
+  release may become the engine, pinned by its sha256 — never the daily build,
+  and never a hand-written or overlaid card script to bring a set in early.
+- **No code from `witchesofthehill/manabrew`** (**D11**): it is
+  AGPL-3.0-or-later, and lifting any of it would relicense this project.
+
 ## NON-GOALS
 
 These are not "later". They are decisions, and they are what keeps this project
@@ -208,7 +248,8 @@ open 2 s so an instant `newGame` is always queued behind Forge finishing the
 game, **D114**) →
 `check-redaction.mjs` over the committed fixtures (games *and* synthetic) *and*
 every fresh recording → `check-redaction-selftest.mjs`, which asserts the
-checker still rejects eighteen one-defect probes and passes their two controls →
+checker still rejects every one-defect probe in `fixtures/negative/redaction/`
+and passes its clean controls →
 **12b**, the workshop's generated `catalog.json` against what the decks, the
 corpus and `cues.json` make → **12c**, `tools/check-engine-crash.sh`, which
 builds an engine crash on purpose (a card script the 2.0.14 jar cannot build, in
@@ -223,18 +264,11 @@ it needs `var/cards/cards.sqlite` and fails without it, `SKIP_DECKS=1` skips it)
 → `npm run build && npm test` in
 `web/` — `npm run build`, `vitest run` and `node --test` as three jobs in
 parallel mode, the last waiting for step 10. **At `GATE_JOBS=4`, about four
-minutes** from a deleted `bridge/out` (242, 258 and 247 s back to back, 151 s at
-`GATE_JOBS=8` and 906.9 s at `GATE_JOBS=1`, measured at merge after the last
-edit to the gate, beside another worktree's work; `docs/evidence/gate-speed.md`
-§10).
-Serially, **about fifteen to nineteen minutes** from a deleted `bridge/out` since
-match setup added five games (874 s on its first run; 1,141 s on its review fix
-pass and 1,143 s on its documentation pass, each on a machine running other gates
-at the same time; 1,106 s and 970 s rebased onto `23e26b3`; 897 s rebased onto the
-workshop's `bf0392b`; 938.8 s with the hardening pass rebased onto it; 940.5 s after its first verification round, rebased onto engine and sets' `aead79d`), about eleven and a half
-before it (682 s and 706 s on two clean M6 runs; it was 8 m 52 s before M6 added
-9d and 10g), of which 9c's fourteen games are most and the seven ws servers much
-of the rest; `SKIP_TEN=1` saves 9c (370 s of the 874). Every JVM step runs
+minutes** from a deleted `bridge/out` (239.0 s and 240.5 s on `102fb1f`), about
+two and a half at `GATE_JOBS=8` (151.2 s on `6b35054`) and about fifteen serially
+(907.4 s on `f6bad35`), of which 9c's fourteen games are about six;
+`SKIP_TEN=1` saves 9c. Every earlier timing is
+[`docs/evidence/gate-history.md`](docs/evidence/gate-history.md). Every JVM step runs
 under a `timeout` (`GAME_TIMEOUT`, default 300 s) so a wedged game thread fails
 the gate instead of hanging it. If it is green, the Java emitter, the TypeScript
 reducer and the committed fixtures still agree.
@@ -1359,7 +1393,8 @@ node tools/build-figures.mjs --src var/assets/figures
 #   refuses a source whose bytes or sha256 differ (and prints its URL), reads the
 #   members it needs out of the verified zips, prints every step's size, asserts
 #   one primitive per model, the humanoid rigs (the bodies' joint list against the
-#   animation library's), no texture, <= 400 kB and <= 30,000 triangles, and
+#   animation library's), no texture, and the manifest's budget (450 KiB and
+#   30,000 triangles, D161), and
 #   rewrites web/src/arena/figures/models.json;
 #   --no-manifest leaves models.json alone; --clip-source experiment builds the
 #   all-retargeted comparison
@@ -1367,11 +1402,11 @@ node tools/build-figures.mjs --src var/assets/figures
 
 Two builds from the same sources are byte-identical, and `web/test/figures.test.ts`
 fails when the `figures.glb` on disk is not the file `models.json` records.
-**Without `figures.glb` at all** — a fresh checkout, if it is not committed — the
+**Without `figures.glb` at all** — a checkout that has lost it; it is committed today — the
 arena still plays everything: each creature draws its disc, the console says `no
 model library … every creature draws its disc` once, and the hash check is
-skipped. Whether the built file is committed is an open decision (PLAN.md, *Only
-the user can decide*).
+skipped. Whether the built file should stay committed is an open decision
+(PLAN.md, *Only the user can decide*, question 11).
 
 **Iterating on a cue.** There is no `?cue=<id>` loop route — report 09 §10.7 asks
 for one and it is not built — and no `?cues=<url>` override either, because §2.1
@@ -2222,20 +2257,22 @@ seat's story is PLAN.md's follow-up).
 
 ## Repo layout
 
-Everything listed exists today (M0-M7: arena Tier 1 and Tier 2's first two
-slices — committed — and its third, per-card identity, which is on branch
-`tier2-slice3` and not yet committed).
+Everything listed exists on `main` today: M0–M7 (the arena's Tier 1 and all four
+of Tier 2's slices) and every lane since, each committed.
 
 ```
 mtg-table/
   LICENSE                    GPL-3.0-or-later, whole repo
   NOTICE                     Forge (GPLv3), Scryfall, WotC Fan Content Policy, Marvel
   README.md                  this file; NON-GOALS above
-  PLAN.md                    the eight milestones M0..M7, deferred list, open questions
+  PLAN.md                    the milestones and every lane since; *Open now* indexes
+                             every open follow-up and the owner-only questions
   DECISIONS.md               every load-bearing decision, dated, with the
                              alternatives rejected; numbers are final and gaps
                              allowed (D200)
-  CLAUDE.md                  working conventions for Claude sessions in this repo
+  CLAUDE.md                  working conventions for Claude sessions in this repo; the
+                             rest are in bridge/, web/, web/src/arena/ and tools/
+                             CLAUDE.md, each loaded under its directory
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
                              aiDeck, aiProfile, games}, wsPort, webPort,
@@ -2660,10 +2697,10 @@ mtg-table/
 | File | What it is |
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
-| [`PLAN.md`](PLAN.md) | Eight milestones M0..M7, the deferred list, and the open questions only the user can settle. |
+| [`PLAN.md`](PLAN.md) | The milestones M0..M7 and every lane since, the deferred list, and the questions only the user can settle; *Open now*, at the top, indexes every open follow-up and question. |
 | [`DECISIONS.md`](DECISIONS.md) | Every load-bearing decision, dated, with the alternatives that were rejected. A decision's number is final and gaps are allowed (**D200**); the most recent are **D200–D202**. |
-| [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the lints. |
-| [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow and the enum/nullability traps the wire format depends on. |
+| [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the gate and the policies (commits, decision numbers); `bridge/`, `web/`, `web/src/arena/` and `tools/` each have a `CLAUDE.md` of their own for the conventions of that code. |
+| [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow, the enum/nullability traps the wire format depends on, and (chapter 9) a map of `WireGuiGame.java` with one ask and one act followed through the threads. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |
 | [`docs/research/03-scryfall-card-library.md`](docs/research/03-scryfall-card-library.md) | Scryfall's API, images and terms, the Forge name mapping, and §4 — the spec the card library was built to (D90–D94). |
 | [`tools/card-library/README.md`](tools/card-library/README.md) | The card library's manual: the build, the image cache, the query CLI, what is on disk under `var/cards/`, Scryfall's terms as code, and what is not done. |
