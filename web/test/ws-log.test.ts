@@ -54,8 +54,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import type { AnswerBody, AskBody, Frame } from '../src/protocol.ts';
+import { isFaceDown, isHidden, keywordsOf, type AnswerBody, type AnyCard, type AskBody, type Frame } from '../src/protocol.ts';
 import { initialState, reduce } from '../src/reduce.ts';
+import { cardStatus } from '../src/status.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
@@ -311,6 +312,62 @@ for (const candidate of chosen) {
     },
   );
 
+  test(`${file}: amendment M49 — every full card carries keywords, constants only, [] face down, and the status layer shows them face up only`, (t) => {
+    /*
+     * The gate's fresh sessions are the only M49 recordings the suite ever sees:
+     * every committed fixture predates the key, and none is re-recorded for it.
+     * So this is where "the bridge writes `keywords` on every full card, as
+     * `Keyword` constants, `[]` on a face-down card, never on a stub" is read on
+     * a real session — and where the client's one reader and the status layer's
+     * decision are run over it. A pre-M49 file (the fallback corpus) skips.
+     */
+    const log = parseFrameLog(readFileSync(candidate.path, 'utf8'));
+    let full = 0;
+    let carrying = 0;
+    let named = 0;
+    let faceDown = 0;
+    let statuses = 0;
+    for (const frame of log.frames) {
+      if (frame.type !== 'state') continue;
+      const cards: AnyCard[] = [];
+      for (const player of frame.body.players) for (const zone of Object.values(player.zones)) cards.push(...zone.cards);
+      cards.push(...frame.body.stackCards);
+      for (const card of cards) {
+        const raw = (card as { keywords?: unknown }).keywords;
+        if (isHidden(card)) {
+          assert.equal(raw, undefined, `${file}: stub #${String(card.id)} carries keywords (a sixth key)`);
+          continue;
+        }
+        full += 1;
+        if (raw === undefined) continue;
+        carrying += 1;
+        assert.ok(Array.isArray(raw) && raw.every((k) => typeof k === 'string' && /^[A-Z][A-Z0-9_]*$/.test(k) && k !== 'UNDEFINED'),
+          `${file}: card #${String(card.id)} keywords ${JSON.stringify(raw)} are not Keyword constants`);
+        if (isFaceDown(card)) {
+          faceDown += 1;
+          assert.deepEqual(raw, [], `${file}: face-down card #${String(card.id)} carries keywords`);
+          assert.deepEqual(keywordsOf(card), []);
+          assert.equal(cardStatus(card), null, `${file}: a face-down card has a status`);
+          continue;
+        }
+        if ((raw as string[]).length > 0) named += 1;
+        assert.deepEqual(keywordsOf(card), raw);
+        if (cardStatus(card) !== null) statuses += 1;
+      }
+    }
+    if (carrying === 0) {
+      t.skip('no card on this wire carries keywords — a recording from before amendment M49 (every committed fixture), or a session with no full card at all');
+      return;
+    }
+    assert.equal(carrying, full, `${file}: ${String(full - carrying)} of ${String(full)} full cards carry no keywords — M49 is all or none per file`);
+    // A deck with no keyword at all (10g's Thallids) is legitimate; that SOME
+    // session writes one is asserted across the logs, below the loop.
+    process.stderr.write(
+      `# ${file}: M49 — ${String(carrying)} full cards carry keywords (${String(named)} non-empty, ` +
+        `${String(faceDown)} face-down all []), ${String(statuses)} with a status strip\n`,
+    );
+  });
+
   test(`${file}: amendment M8 — most clicks name a card outside input.selectable`, (t) => {
     /*
      * The rule the board is written against, re-measured on whatever session
@@ -362,3 +419,41 @@ for (const candidate of chosen) {
     );
   });
 }
+
+/**
+ * **Across the sessions, the emitter writes a keyword** (M49). Per file a deck may
+ * have none — step 10g plays `decks/yield-probe.dck`, 22 Thallids and not one
+ * keyword — so the per-log case above cannot ask for one; but a bridge that wrote
+ * the key and never a constant would pass it everywhere. Step 10c plays the deck
+ * in play, whose fliers and first strikers are keywords. Skips when no given log
+ * carries M49 (the committed fallback).
+ */
+test('amendment M49 — across the sessions, some full card carries a keyword', (t) => {
+  let m49 = 0;
+  let named = 0;
+  for (const candidate of chosen) {
+    const log = parseFrameLog(readFileSync(candidate.path, 'utf8'));
+    let carries = false;
+    for (const frame of log.frames) {
+      if (frame.type !== 'state') continue;
+      for (const player of frame.body.players) {
+        for (const zone of Object.values(player.zones)) {
+          for (const card of zone.cards) {
+            const raw = (card as { keywords?: unknown }).keywords;
+            if (!Array.isArray(raw)) continue;
+            carries = true;
+            if (raw.length > 0) named += 1;
+          }
+        }
+      }
+    }
+    if (carries) m49 += 1;
+  }
+  if (m49 === 0) {
+    t.skip('no given log carries amendment M49 (the committed fallback predates it)');
+    return;
+  }
+  assert.ok(named > 0, `${String(m49)} M49 session(s), and not one full card carries a keyword — the emitter writes the key and never a constant`);
+  process.stderr.write(`# M49 across ${String(m49)} session log(s): ${String(named)} full-card sightings with a keyword\n`);
+});
+

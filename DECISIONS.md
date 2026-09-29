@@ -8751,3 +8751,175 @@ Fetching the daily build or a "latest" URL (D109, D110). Running only the lint i
 CI, without the jar (javac and the self-tests are the half of the build a Java
 change is most likely to break). Extracting `res/` as well (none of the five
 self-tests reads it; the workflow says to extract it the day one does).
+
+---
+
+## D210 — The status layer: a creature's keywords, bar, pips and marks as a POSE on both renderers, its keywords on the wire as `Keyword` constants (amendment M49)
+
+*Branch `status-layer`; the lane's reserved range D210–D219.*
+
+**2026-09-28** (the owner's idea, with a Final Fantasy XIII screenshot: watching
+a game should read like a turn-based RPG)
+
+**Decision.**
+
+1. **Each creature carries a small status strip**: its keyword abilities as icons
+   (the evergreen fourteen — flying, haste, vigilance, first strike, double
+   strike, lifelink, deathtouch, trample, hexproof, indestructible, menace, reach,
+   defender, flash — each with a glyph of its own, and every other keyword as one
+   generic "ability" glyph, named in a tooltip on the board), a bar of what is left
+   of its toughness (D211), a pip per counter and a mark per attachment. The board
+   draws the icons and the bar on `CardTile`; the arena draws the whole strip above
+   the figure (D212). The phase strip becomes a **turn-order bar** in the arena:
+   the eleven phases a turn gives priority in, the active one lit in the turn
+   player's colour, the seat's stops marked.
+2. **Everything on it is a POSE** (report 13 §1.3): a function of one card on one
+   frame, never remembered, so a skip, a scrub, a `resync` and a new `gameId` draw
+   it with no history. There is no transition: the bar shows the snapshot's
+   damage, and a drain that animated would be a cue with memory of the value
+   before (a follow-up, not this lane).
+3. **One table, two renderers.** `web/src/status.ts` — pure, no React, three or
+   DOM — holds the glyph kit, the keyword mapping, the bar, the pips and the marks,
+   and `cardStatus(card)` is the one decision both renderers draw from.
+4. **Amendment M49 puts the keywords on the wire**: `Card.keywords: string[]`,
+   written by `Snap.card`'s full branch from `CardStateView.getKeywords()` of the
+   current state, **every entry a `forge.game.keyword.Keyword` constant's
+   `name()`**, deduplicated, no parameter. `Keyword.UNDEFINED` is omitted: the
+   census of fourteen recordings over every deck found one such keyword, engine
+   script (`ETBReplacement:Other:ChooseColor`) with an empty `title()`, so no
+   display string is ever emitted and hard rule 8's one-string-function rule is not
+   touched. **`[]` on every face-down card**, in both branches of gate 2, like its
+   name (433 face-down instances in the census exposed none; forced, not trusted);
+   never on a stub.
+5. **Hard rule 8, three locks.** The bridge writes `[]` / nothing; the one reader,
+   `protocol.ts`'s `keywordsOf`, answers `[]` for a stub, a face-down card and an
+   absent key alike; and `cardStatus` answers `null` for both concealed shapes, so
+   a concealed card has no strip on either renderer. A hostile copy of the whole
+   corpus with EVERY card handed keywords is the test (`status.test.ts`,
+   `render.test.tsx`), and a layout with the gates removed is its negative control.
+6. **Optional on the wire, all or none per file.** Every committed recording
+   predates M49 and none is re-recorded for it. `tools/check-redaction.mjs` holds a
+   file to "no full card carries the key, or every one does" (M6's all-or-nothing
+   rule is about a block of seat-answered keys and does not apply to one key);
+   `tools/wire-drift.mjs` and `tools/fixture-multiset-diff.mjs` compare a fresh
+   recording against a committed file that predates the key with the key removed
+   from the fresh side, and say so.
+7. **The turn-order bar changes no behaviour.** It reads `state.phase`,
+   `activePlayer` and, through `phaseStopsOf`, `players[].phaseStops` — what the
+   board's strip reads — and a click on a stop sends the same `act: setPhaseStop`,
+   live only at a seat with no question open and before `over`. `UNTAP` and
+   `CLEANUP` are named in its header when the game is in one (the board's strip
+   keeps all thirteen rows).
+
+**Rationale.** The engine knows every keyword a creature has right now, anthems and
+losses included; the client knew none of them, and the only way to show one was to
+read card text, which is a rules computation the client may not make. A closed
+vocabulary of enum constants is the smallest wire change that can carry them and
+the only one a checker can hold mechanically: a card name cannot match
+`^[A-Z][A-Z0-9_]*$`. The strip is the owner's reading of the table and adds no
+decision: every glyph is a constant looked up, every bar two wire numbers.
+
+**Rejected.** The keyword's display string (`Flying`, `Ward {2}`): an engine
+string on the wire, through a second path. Parameters (Ward's cost, Protection's
+quality): not needed for an icon, and a colour or a type in Protection's could one
+day name something. Keywords read off the card's rules text in the client (a rules
+computation). The face-down characteristic's own keywords (Ward from disguise) —
+public in the rules, but a second shape for "face down" that a renderer would have
+to tell apart; withheld like the name. Re-recording the committed fixtures to carry
+the key (the brief forbids it, and the corpus's value as evidence is that it was
+recorded when it was). A strip over the board's tile too: the tile already shows
+counters and attachments; the board takes the icons and the bar only.
+
+---
+
+## D211 — The bar draws `toughness − damage`: a picture of two wire numbers, superseding report 10 §4.5's "never subtracted" for that one drawing
+
+*Branch `status-layer`; the lane's reserved range D210–D219.*
+
+**2026-09-28**
+
+**Decision.** The status layer's bar is `max(0, toughness − damage) / toughness`,
+drawn as a filled fraction with the damaged part beside it, on the board's tile and
+above the arena's figure, for a face-up creature on the battlefield whose toughness
+is a positive integer. Report 10 §4.5 said damage is "**never** subtracted from
+`toughness` — that is a rules computation"; this draws the subtraction, with three
+limits that keep it a drawing:
+
+1. **It asserts nothing.** A bar at 0 is an empty bar, not "dead": an
+   indestructible creature stands there, and the engine says when a creature dies.
+   The fill's colour follows the fraction (green, amber, red) and nothing else.
+2. **The numbers stay verbatim.** The P/T pill and the `−N` damage chip on the tile
+   are unchanged (they step up to sit above the row), and the bar's title prints
+   both numbers: `toughness 4 − damage 1 = 3`.
+3. **No bar without integers.** A `*` or a `null` toughness draws none.
+
+**Rationale.** The owner asked for an HP bar, and toughness minus marked damage is
+what the engine itself hands a player as "lethal" (`Snap.lethal` →
+`assign_damage.targets[].lethal` is `toughness − damage`, read on the game thread),
+so the number is the engine's, not the client's. What report 10 forbade was a
+client that DECIDED from the subtraction — which the bar does not do.
+
+**Rejected.** Animating the drain (a cue that remembers the old value — a follow-up
+through an offset that decays, measured against `motion.test.ts`'s pinned film).
+Bars on non-creatures with printed P/T (an uncrewed Vehicle takes no damage).
+
+---
+
+## D212 — The arena's strip is ONE instanced mesh of pixel quads over a procedural glyph atlas: one draw call for the table, a billboard at a fixed size, above the head by measurement
+
+*Branch `status-layer`; the lane's reserved range D210–D219.*
+
+**2026-09-28**
+
+**Decision.**
+
+1. **One draw call for every strip on the table.** `scene/status.ts`'s
+   `StatusField` is one `InstancedMesh` (384 quads), one `ShaderMaterial`, one
+   texture: keyword icons, bars, pips and marks for both seats. Built, installed
+   and committed by `FigureLayer` (once per snapshot, from `figures/status.ts`'s
+   pure `statusLayout`), bound only from `DiscField.bind`, allocating nothing in
+   the loop — the prop field's pattern (D78), held by the same liveness clauses.
+2. **A billboard in screen pixels.** Each quad is CSS pixels from a world anchor;
+   the vertex shader adds them in clip space against the viewport read as the mesh
+   is drawn (`getCurrentViewport` over the pixel ratio: the canvas, the composer's
+   target, or one half of the workshop's split view). An icon is 16 px from every
+   view — the owner's floor is 14 at the table view, 1600 × 1000 — and four icons
+   fit between two figures of the far rank (~78 px apart). It faces the lens, rides
+   its card's cue offset and hover bob, and **stays upright when its figure
+   kneels**, at the standing height's offset (a kneel only widens the gap).
+3. **Above the head, by measurement.** The anchor is the pose's position up its
+   standing height and `STATUS_LIFT` (0.07, `layout.ts`); the strip's lowest pixel
+   is 8 px above that — at 4 a helmet, the flying ant's head and rider and a swarm's
+   bees grazed it by up to 1.8 px; a carrier's strip goes over its island
+   (`CARRIER_TOP`, 0.25 hull lengths), where on the hull's thickness it sat 12.8 px
+   into the superstructure. `status.test.ts` rasterises every figure pose the corpus
+   sample reaches through the table view's camera and the real `figures.glb`: the
+   closest strip is 2.2 px above a head (Ant-Man's helmet); with no pixel lift it
+   would be 5.8 px into one (the control).
+4. **The glyphs are procedural**: 24 × 24 SVG path data in `web/src/status.ts`,
+   drawn as inline SVG on the board and painted once per page into a 512 × 256
+   canvas for the arena. Kenney's CC0 game-icon packs were the brief's intended
+   source and were **not downloaded**: a download needs the owner's approval in
+   chat and this lane ran without one. No third-party asset is in the layer;
+   `tools/assets-manifest.json`'s `procedural` block records it.
+5. **The measured cost, accepted.** Interleaved base/branch pairs
+   (`tools/arena-bench.mjs`, bloom off, three pairs each, the counts identical
+   within a side): `g1`@355 draws 87 → **88** calls on the GTX 1080 and 88 → **89**
+   on SwiftShader, under the brief's 90; triangles +80 (26,539 → 26,619). At the
+   bench frame `g1`@316 SwiftShader draws 90 → **91** calls — one over report 13
+   §8.2's 90 line — and 29,521 → 29,613 triangles, under 30,000; frame times move
+   within the pair spread (SwiftShader p95 33.5–34.6 ms base, 34.0–34.4 branch;
+   the GTX 1080 0.6–0.7 both). One call is the least any status on the table can
+   cost, and the line is a budget, not §9.1's cap (120); the next layer that wants
+   a call at @316 needs a call given back first.
+
+**Rationale.** A strip per figure, or per kind, would have cost 10–20 calls at the
+bench frame, where the arena had none to spare. A fixed pixel size is how a status
+HUD reads (the reference is an RPG's), and a world-sized icon would be 20 px at the
+near rank and under 14 at the far one.
+
+**Rejected.** drei's `<Html>` or DOM labels over the canvas (a DOM node per creature
+reprojected every frame, report 09 §2.1). Troika text (an SDF re-tessellation per
+change). A strip that kneels with its figure (it would dip into the figure's own
+back row). Anchoring to the head JOINT each frame (reads every rig in the loop, and
+a disc-only figure has none).

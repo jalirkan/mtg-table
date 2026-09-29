@@ -190,6 +190,8 @@ export interface CardOptions {
   attachmentIds?: number[];
   power?: string | null;
   toughness?: string | null;
+  /** M49 — keyword constants to write (the status rehearsal's), over the catalog's own. */
+  keywords?: readonly string[];
 }
 
 /**
@@ -213,6 +215,11 @@ export function cardOf(entry: WorkshopEntry, id: number, controller: number, opt
     power: options.power !== undefined ? options.power : entry.facts.power,
     toughness: options.toughness !== undefined ? options.toughness : entry.facts.toughness,
     loyalty: null,
+    // M49: the catalog's keywords when a recording carried them (none do yet);
+    // `[]` on a face-down card, as the bridge writes it.
+    ...(entry.facts.keywords !== undefined || options.keywords !== undefined
+      ? { keywords: faceDown ? [] : [...(options.keywords ?? entry.facts.keywords ?? [])] }
+      : {}),
     damage: options.damage ?? 0,
     counters: options.counters ?? {},
     tapped: options.tapped ?? false,

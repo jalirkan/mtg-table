@@ -18,6 +18,9 @@ commit.
 17 partly done, 3 not reproduced, 2 standing and 1 accepted — against 85
 closed (M1's six among them; the personal tier's list was added, with its 18 and
 19 closed, when that lane merged). **Of the 30 questions only the owner can settle,
+**The 29 follow-up lists hold 339 items, and 256 of them are open** — 234 open,
+16 partly done, 3 not reproduced, 2 standing and 1 accepted — against 83
+closed (M1's six among them). **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
@@ -290,6 +293,18 @@ closed (M1's six among them; the personal tier's list was added, with its 18 and
 | [Personal tier](#fu-personal) | 22 | open | The ends at attack t = 0.5 caught no arm fold | — |
 | [Personal tier](#fu-personal) | 23 | open | The preview profile stays in the slug's folder, not under `var/` | `tools/personal/check.mjs` |
 | [Personal tier](#fu-personal) | 24 | open | Prepare's fold warning looks only at the forearm | — |
+| [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
+| [Status layer](#fu-status) | 2 | open | No committed recording carries keywords | — |
+| [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
+| [Status layer](#fu-status) | 4 | open | `g1`@316 on SwiftShader is 91 draw calls, one over the line | `tools/arena-bench.mjs` |
+| [Status layer](#fu-status) | 5 | open | The far seat's strips sit ~30 px above the heads | `web/src/arena/figures/status.ts` |
+| [Status layer](#fu-status) | 6 | open | Raised hands and held props can reach the strip | `web/test/status.test.ts` |
+| [Status layer](#fu-status) | 7 | open | The icon size is fixed; no tuning row | `web/src/workshop/Workshop.tsx` |
+| [Status layer](#fu-status) | 8 | open | The arena has no tooltip for an icon | — |
+| [Status layer](#fu-status) | 9 | open | The glyphs are procedural; Kenney's packs were the intended source | `tools/assets-manifest.json` |
+| [Status layer](#fu-status) | 10 | open | `UNDEFINED` keywords are omitted | `bridge/src/mtgtable/Snap.java` |
+| [Status layer](#fu-status) | 11 | open | Strip and stack thumbnails, and the zoom, show no keyword row | `web/src/render/CardTile.tsx` |
+| [Status layer](#fu-status) | 12 | open | UNTAP and CLEANUP are not cells of the turn-order bar | `web/src/arena/DecisionLayer.tsx` |
 
 ### Questions only the owner can settle
 
@@ -7585,6 +7600,98 @@ skipped and vitest 121 (8 files) (`var/check-all-personal-tier-merge.log`);
     so its fold shows in the limb check's direction; a WARN in prepare for any
     link whose re-pose turn exceeds 120° would cover a future `--pose all`
     (follow-up 10).
+## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
+
+The owner's idea, with a Final Fantasy XIII screenshot: watching a game should
+read like a turn-based RPG. Each creature carries a small status strip — its
+keyword abilities as icons, a bar of what is left of its toughness, a pip per
+counter and a mark per attachment — and the phase strip becomes a turn-order bar.
+Branch `status-layer`, off `main`'s `f2c934d`, the `mtg-table-t2z` worktree, the
+reserved range D210–D219 (three used).
+
+- **The wire (amendment M49).** A full card gains `keywords`: Forge's `Keyword`
+  constants by `name()` (`FLYING`, `FIRST_STRIKE`), no parameter, `UNDEFINED`
+  omitted, `[]` on every face-down card, never on a stub — written in `Snap.card`'s
+  full branch, both branches of the null-state check. Optional, with one reader
+  (`keywordsOf`); all or none per file in `tools/check-redaction.mjs`, with four
+  one-defect controls and a passing one under `fixtures/negative/redaction/m49-*`;
+  step 6 and 9b compare a fresh recording against a committed file that predates
+  the key with the key removed. Nothing committed was re-recorded (**D210**).
+- **One table, two renderers.** `web/src/status.ts`: the procedural glyph kit, the
+  keyword map, the bar, the pips, the marks and `cardStatus` — `null` for a stub
+  and any face-down card. The board's `CardTile` draws the icons in a row under
+  the P/T (titles naming each keyword) and the bar along the bottom; the P/T pill
+  and the damage chip are unchanged (**D211**: the bar is a picture of
+  `toughness − damage` and decides nothing).
+- **The arena's strip** (`figures/status.ts` + `scene/status.ts`, **D212**): one
+  instanced mesh for every strip on the table — one draw call — a billboard at a
+  fixed 16 px icon size, anchored above the standing height by measurement,
+  upright when its figure kneels, riding its cue offset; built and committed by
+  `FigureLayer`, bound from `DiscField.bind`, allocation-free, held by liveness.
+- **The turn-order bar** at the arena's left edge: the eleven phases, the active
+  one lit, the seat's stops as pips that send the board's own `setPhaseStop`.
+- **The workshop**: a *status strip* rehearsal (the corpus's damage and counter
+  events, a labelled sample of keywords, since no committed recording has any);
+  the catalog learned an optional `keywords` fact and rebuilt byte-identical.
+
+**Measured** (`docs/evidence/status-layer.md`): the corpus sweep — 3,679 frames,
+10,763 strips, none over any of 1,179 concealed creature instances, and hostile
+(every card handed keywords) still none, where an ungated layout would draw 1,138;
+the head clearance at the table view through the real `figures.glb`, closest
+2.2 px, the no-lift control 5.8 px into a head; the bench, one draw call and
+80–92 triangles: `g1`@355 88 (GTX 1080) / 89 (SwiftShader), `g1`@316 87 / **91**
+— one over report 13 §8.2's line on SwiftShader, accepted by D212; frame times
+unchanged within the pair spread; the 2D entry chunk 93.52 kB gzip, no `three`.
+`npm --prefix web test` standalone 1014 + 122 (8 files).
+
+**The gate**, from a deleted `bridge/out` at `GATE_JOBS=4`: **245.5 s** at `WSPORT`
+9030 and **249.6 s** at 9040, exit 0 both, 48 jobs; `node --test` inside it 1029 /
+1021 pass / 0 fail / 8 skipped, and 122 vitest. A first try failed at `13c-node` on
+this lane's own over-strict ws-log case (10g's Thallids have no keyword); fixed
+before the two green passes (evidence §9). `~/forge` and `~/.forge` were
+fingerprinted before and after and did not change.
+
+<a id="fu-status"></a>
+
+### The status layer's follow-ups — twelve, 2026-09-28
+
+1. **g1 predates M49.** Step 6 compares everything but the keywords' values
+   (`tools/wire-drift.mjs`'s `LATER_KEYS`); the next deliberate re-recording of
+   `fixtures/games/g1.jsonl` brings them under the drift check, and should remove
+   the row.
+2. **No committed recording carries keywords**, so the corpus sweeps prove the
+   gates on a hostile copy and the workshop shows a labelled sample. A committed
+   M49 recording (a deliberate new fixture, with the counts that pin the corpus
+   moved in the same change) would let the catalog show real keywords.
+3. **The bar does not animate its drain** — it is the snapshot's damage. A drain
+   is a cue: an `Offset` field that decays to identity, measured against
+   `motion.test.ts`'s pinned classic film first.
+4. **`g1`@316 on SwiftShader is 91 draw calls**, one over report 13 §8.2's line.
+   The next layer that wants a call there gives one back first (the on-card disc
+   pass folded into the front pass on frames that do not wrap, or the contact
+   shadows drawn with the discs).
+5. **The far seat's strips sit ~30 px above the heads**, over the opponent's
+   land rank from the table view: the heads lean toward the lens and the anchor
+   is over the stand point. Anchoring at the head's rest-pose position (from the
+   rig at commit) would bring them down.
+6. **Raised hands and held props can reach the strip** — Quake's gauntlets
+   attacking (−9 px), Agent 13's muzzle at the ready (−7.6 px). The test holds the
+   head and what is worn on it, not the hands.
+7. **The icon size is fixed** (16 CSS px). A tuning row in the workshop — size,
+   lift — and an arena setting would let the owner judge it on the table.
+8. **The arena has no tooltip for an icon.** A hover over a card could name its
+   keywords in the DOM layer, the art credit's pattern.
+9. **The glyphs are procedural.** Kenney's CC0 game-icon packs were the brief's
+   intended source; downloading them is the owner's call, in chat, with the
+   licence badge recorded on the day.
+10. **`UNDEFINED` keywords are omitted.** The census found one, engine script
+    with an empty title; a deck with an UNDEFINED keyword a player would
+    recognise would need a gated display string — re-run the census (§1 of the
+    evidence) when a deck is added.
+11. **Strip and stack thumbnails, and the zoom, show no keyword row** on the
+    board; the zoom has room for one.
+12. **`UNTAP` and `CLEANUP` are not cells of the turn-order bar**, so a CLEANUP
+    stop (a Forge preference) can be set on the board only.
 
 ---
 

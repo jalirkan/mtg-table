@@ -316,6 +316,24 @@ export const OPP_SILHOUETTE_SCALE = 0.8;
  */
 export const HUD_TOP_PX = 128;
 
+/**
+ * **The status strip's gap above a figure** (the status layer, D210), world
+ * units: the strip's anchor is the pose's position lifted by its STANDING height
+ * plus this. It is the one world coordinate of the strip — everything above the
+ * anchor is laid out in screen pixels by `figures/status.ts` and drawn facing the
+ * lens by `scene/status.ts` — and it is here because a coordinate is. The strip
+ * stays at this fixed offset whatever the figure's stance: a tapped figure
+ * kneels, and its strip does not kneel with it (a kneel only widens the gap).
+ * `status.test.ts` projects every deck creature's head through the table view's
+ * camera at 1600 × 1000, both seats, and holds the strip's lowest pixel above it.
+ */
+export const STATUS_LIFT = 0.07;
+
+/** Where a figure's status strip is anchored: its stand point, up its standing height and {@link STATUS_LIFT}. */
+export function statusAnchorOf(position: readonly [number, number, number], height: number): [number, number, number] {
+  return [position[0], position[1] + height + STATUS_LIFT, position[2]];
+}
+
 /** Where a vehicle's silhouette flies: the ground point under it, how high above that, and its scale. */
 export interface SilhouettePlacement {
   ground: [number, number, number];

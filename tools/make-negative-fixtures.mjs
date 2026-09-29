@@ -505,5 +505,80 @@ probe('m47-yourprofile-is-a-path.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
+/*
+ * Amendment M49 -- the status layer's `keywords` on every full card.  The whole
+ * committed corpus predates it, so, like M44's block, a probe has to ADD the key
+ * before it can break it: `withKeywords` writes it exactly as `Snap.card` does --
+ * after `loyalty`, `[]` on a face-down card and on every card with no keyword,
+ * and two constants on the first full battlefield card (a fiction: g1 has no
+ * keyword on the wire at all) -- on EVERY full card of every frame, so the control
+ * passes the per-file all-or-none rule.  Four one-defect probes follow.
+ */
+const withKeyword = (card, keywords) => {
+  const out = {};
+  for (const [k, v] of Object.entries(card)) {
+    if (k === 'keywords') continue;
+    out[k] = v;
+    if (k === 'loyalty') out.keywords = keywords;
+  }
+  return out;
+};
+const keywordsFor = (card, subject) =>
+  card.faceDown === true ? [] : card.id === subject ? ['FLYING', 'VIGILANCE'] : [];
+const withKeywords = (fs) => {
+  const subject = firstFull(fs).card.id;
+  const rewrite = (list) => {
+    if (!Array.isArray(list)) return;
+    for (let i = 0; i < list.length; i++) {
+      const c = list[i];
+      if (c === null || typeof c !== 'object' || c.hidden === true || c.faceDownHidden === true) continue;
+      list[i] = withKeyword(c, keywordsFor(c, subject));
+    }
+  };
+  for (const f of statesOf(fs)) {
+    for (const p of f.body.players) for (const z of Object.values(p.zones)) rewrite(z.cards);
+    rewrite(f.body.stackCards);
+  }
+  return subject;
+};
+/** The first full battlefield card of the first state, AFTER `withKeywords` replaced the objects. */
+const firstFullNow = (fs) => firstFull(fs);
+
+{
+  const fs = slice();
+  withKeywords(fs);
+  write('m49-keywords-present.jsonl', fs);
+  manifest.push({
+    file: 'm49-keywords-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M49: the baseline with `keywords` on every full card exactly as Snap.card writes it -- ' +
+      'the control for the four m49 probes below',
+  });
+  console.log('  PASS  m49-keywords-present.jsonl  (keywords on every full card, no defect)');
+}
+
+probe('m49-stub-carries-keywords.jsonl',
+  'amendment M49: a redacted stub is five keys -- a keyword on it is a sixth key, and a fact about a hidden card',
+  'leaks extra keys: keywords',
+  (fs) => { withKeywords(fs); firstStub(fs).card.keywords = ['FLYING']; });
+
+probe('m49-keyword-is-a-display-string.jsonl',
+  'amendment M49: a keyword is a Keyword constant\'s name() -- a display string (or a card name) is not one',
+  '.keywords = ["Flying"] does not match the type',
+  (fs) => { withKeywords(fs); firstFullNow(fs).card.keywords = ['Flying']; });
+
+probe('m49-face-down-carries-keywords.jsonl',
+  'amendment M49: a face-down card\'s keywords are [] in both branches of gate 2, like its name',
+  'is face down and carries keywords',
+  (fs) => {
+    withKeywords(fs);
+    const hit = firstFullNow(fs);
+    Object.assign(hit.card, { faceDown: true, name: '', setCode: '???', manaCost: null, alt: null, keywords: ['FLYING'] });
+  });
+
+probe('m49-keywords-half-present.jsonl',
+  'amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it',
+  'keywords are HALF PRESENT',
+  (fs) => { withKeywords(fs); delete firstFullNow(fs).card.keywords; });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

@@ -348,6 +348,19 @@
       "_triangles": "Slice 4: decimated from 3,040 to the target, for the same budget."
     }
   },
+  "procedural": {
+    "_what": "Assets the arena and the board draw that no one downloaded: drawn by this repository's own code, GPL-3.0-or-later like the rest of it, recorded here so every image on the table has a written provenance (D54's rule, extended to what is not a download).",
+    "statusGlyphs": {
+      "what": "The status layer's glyphs (D210-D212): the fourteen evergreen keyword icons, the generic ability glyph, the overflow plus, the Aura / Equipment / attachment marks and the counter pip.",
+      "source": "procedural: 24 x 24 SVG path data written by hand in web/src/status.ts (GLYPHS), filled even-odd",
+      "drawnBy": "the board as inline SVG (render/CardTile.tsx); the arena as one 512 x 256 CanvasTexture painted once per page (arena/scene/status.ts, statusAtlas)",
+      "licence": "GPL-3.0-or-later (this repository's own work; no third-party asset)",
+      "downloaded": false,
+      "committable": true,
+      "date": "2026-09-28",
+      "_kenney": "Kenney's CC0 game-icon packs were the brief's intended source and were NOT downloaded: a download needs the owner's approval in chat, and this lane ran without one. Nothing from card art, no AI-generated image."
+    }
+  },
   "_deferred": {
     "carrier": "S.H.I.E.L.D. Helicarrier (T10). CLOSED by Tier 2 slice 3 without an asset: no CC0 vehicle mesh was chosen or downloaded, because a PROCEDURAL carrier silhouette (web/src/arena/scene/props.ts — hull, flight deck, island, four rotor pods, 456 triangles) is drawn for every Vehicle through traits.json's `subtype:vehicle` archetype rung, overhead at layout.ts's SILHOUETTE_ALTITUDE, crewed or not, with no stand disc (DECISIONS.md D77). Nothing here, in figures.glb or in NOTICE changed for it.",
     "clipLibrary2": "Universal Animation Library 2 (CC0, 130+ more clips) is not downloaded: nothing T8 needs is missing from UAL 1 except a shrink, and UAL 2's list (parkour, combos, farming, zombie locomotion) has none either."

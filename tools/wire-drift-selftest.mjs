@@ -106,6 +106,31 @@ const cases = [
     if (n === 0) throw new Error('no stats event with two or more ids');
     return L;
   }],
+  // ---- amendment M49: a key the committed file predates ----------------------
+  // g1 was recorded before `keywords` existed; a fresh recording carries it on
+  // every full card.  Both modes remove it from the fresh file and compare the
+  // rest -- and only because the committed file has none (see wire-drift.mjs).
+  ['`keywords` on every full card (M49; g1 predates it)', 0, 0, (L) => {
+    let n = 0;
+    const add = (cards) => {
+      for (const c of cards ?? []) if (c && c.hidden !== true) { c.keywords = c.faceDown ? [] : ['FLYING']; n += 1; }
+    };
+    for (const i of stateIdx(L)) {
+      for (const p of L[i].body.players) for (const z of Object.values(p.zones)) add(z.cards);
+      add(L[i].body.stackCards);
+    }
+    if (n === 0) throw new Error('no full card to give keywords to');
+    return L;
+  }],
+  ['`keywords` added AND a zone move changed (the strip hides nothing else)', 1, 1, (L) => {
+    for (const i of stateIdx(L)) {
+      for (const p of L[i].body.players) for (const c of p.zones.battlefield.cards) if (c.hidden !== true) c.keywords = [];
+    }
+    const f = L[stateIdx(L).find((i) => L[i].body.events.some((e) => e.kind === 'zone'))];
+    const e = f.body.events.find((x) => x.kind === 'zone');
+    e.to = { ...e.to, zone: e.to.zone === 'graveyard' ? 'exile' : 'graveyard' };
+    return L;
+  }],
   // ---- drift: a different wire ----------------------------------------------
   ['one id dropped from a `stats` event (D121 compares the SET)', 1, 1, (L) => {
     const f = L[stateIdx(L).find((i) => L[i].body.events.some((e) => e.kind === 'stats' && e.cardIds.length >= 2))];
@@ -211,6 +236,6 @@ if (bad > 0) {
 }
 const count = (d, st) => cases.filter(([, a, b]) => a === d && b === st).length;
 console.log(`wire-drift-selftest: ${String(cases.length)} cases, every verdict as expected -- `
-  + `${String(count(0, 0))} accepted by both (the identical copy and D121's reordered stats ids), `
+  + `${String(count(0, 0))} accepted by both (the identical copy, D121's reordered stats ids and M49's newer keywords), `
   + `${String(count(0, 1))} re-partitions accepted by `
   + `default and rejected by --strict, ${String(count(1, 1))} drifts rejected by both`);

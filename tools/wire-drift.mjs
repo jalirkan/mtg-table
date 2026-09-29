@@ -74,6 +74,15 @@
 //      it is empty), so question 5 cannot see the stack; this question is the
 //      stack serialiser's only check.
 //
+// And one key the committed file may PREDATE, in both modes (amendment M49,
+// the status layer): a full card's `keywords`.  g1.jsonl was recorded before the
+// bridge wrote it, and re-recording a committed fixture is not step 6's to do, so
+// when NO object in the committed file carries `keywords` the key is removed from
+// every object of the fresh file before comparing, and the line says how many.
+// Everything else on those cards is still compared; the keywords' VALUES come
+// under this step the day g1 is re-recorded on purpose.  A committed file that
+// carries the key is compared with it, as every other key is.
+//
 // What the default gives up, and says so: a board field that differs only in a
 // snapshot taken BETWEEN two phase boundaries, is in no event, is not on the
 // stack, and has changed back by the next boundary (a creature tapped and
@@ -142,6 +151,37 @@ function load(path) {
 const [fa, fb] = files;
 const A = load(fa);
 const B = load(fb);
+
+/** Keys a later amendment added, that a committed file may predate (see the header). */
+const LATER_KEYS = [['keywords', 'M49']];
+/** Does any object, at any depth, carry this key? */
+function carries(v, key) {
+  if (Array.isArray(v)) return v.some((x) => carries(x, key));
+  if (v !== null && typeof v === 'object') {
+    if (Object.prototype.hasOwnProperty.call(v, key)) return true;
+    return Object.values(v).some((x) => carries(x, key));
+  }
+  return false;
+}
+/** Remove the key at any depth, counting how many objects lost it. */
+function strip(v, key, count) {
+  if (Array.isArray(v)) {
+    for (const x of v) strip(x, key, count);
+  } else if (v !== null && typeof v === 'object') {
+    if (Object.prototype.hasOwnProperty.call(v, key)) {
+      delete v[key];
+      count.n += 1;
+    }
+    for (const x of Object.values(v)) strip(x, key, count);
+  }
+}
+const newer = [];
+for (const [key, amendment] of LATER_KEYS) {
+  if (A.some((f) => carries(f, key))) continue;
+  const count = { n: 0 };
+  for (const f of B) strip(f, key, count);
+  if (count.n > 0) newer.push(`${key} (${amendment}): removed from ${String(count.n)} object(s) of the fresh file`);
+}
 const clip = (s, n = 300) => (s.length > n ? `${s.slice(0, n)}…` : s);
 
 /** The first index at which two string arrays differ, or -1. */
@@ -167,11 +207,16 @@ function report(name, a, b, what) {
 const lineStrings = (L) => L.map((f) => JSON.stringify(f));
 const strictSame = firstDiff(lineStrings(A), lineStrings(B)) < 0;
 
+const sayNewer = () => {
+  for (const line of newer) console.log(`  newer  ${fa} predates ${line} before comparing (not compared)`);
+};
 if (strict) {
   console.log(`wire-drift --strict: ${fa} vs ${fb}`);
+  sayNewer();
   report('normalised lines (byte for byte)', lineStrings(A), lineStrings(B), 'lines');
 } else {
   console.log(`wire-drift: ${fa} vs ${fb} (flush boundaries aside; --strict for byte for byte)`);
+  sayNewer();
   const states = (L) => L.filter((f) => f.type === 'state');
   // `seq` counts frames, so it moves with every re-partitioned batch: the
   // `over` of a run that flushed ten more `state`s is ten further on.

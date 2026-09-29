@@ -58,6 +58,14 @@ export interface CardFacts {
   toughness: string | null;
   token: boolean;
   setCode: string | null;
+  /**
+   * **Amendment M49** — the card's keyword constants, as a face-up sighting
+   * carried them. Written only when a recording the catalog reads carries the
+   * key: every committed recording predates M49, so no entry has it today, and
+   * the status rehearsal says so (`synthetic.ts`). The day a committed recording
+   * carries it, the catalog picks it up with no change here.
+   */
+  keywords?: string[];
 }
 
 /**
@@ -171,6 +179,10 @@ export function factsOf(card: unknown): { name: string; zone: string; facts: Car
       toughness: str('toughness'),
       token: c['token'] === true,
       setCode: str('setCode'),
+      // M49: only when the sighting carries the key — a pre-M49 recording has none.
+      ...(Array.isArray(c['keywords'])
+        ? { keywords: (c['keywords'] as unknown[]).filter((k): k is string => typeof k === 'string') }
+        : {}),
     },
   };
 }

@@ -25,6 +25,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-09-28 — the status layer: a card's keywords
+
+Applied by the status-layer lane (branch `status-layer`). One row. It is an
+**added key on a full card**, so it is not a `v` bump and every existing
+recording stays valid: the key is optional, and all nineteen committed
+recordings (`fixtures/games/`'s eighteen and `fixtures/synthetic/`'s one)
+predate it and replay unchanged. Evidence: `docs/evidence/status-layer.md`;
+decisions **D210**–**D212**.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M49 | §3.2, §3.3, §9 | **A full card gains `keywords: string[]`** — the card's keyword abilities as the engine has them NOW, read from `CardView.getCurrentState().getKeywords()` **[jar]** (`CardStateView.getKeywords()` returns a `forge.game.keyword.KeywordCollectionView` of `KeywordView`s; javap on the pinned 2.0.14 jar), so a keyword a static grants is there and one an effect removed is not. **Every entry is a `forge.game.keyword.Keyword` constant spelled by `name()`** — `"FLYING"`, `"FIRST_STRIKE"`, `"WARD"`, `"EQUIP"` — with no parameter (Ward's cost, Equip's cost and Protection's quality stay off the wire), deduplicated, in Forge's order. **No display string is ever emitted.** A keyword Forge could not map to a constant is `Keyword.UNDEFINED`, and it is omitted: a census of fourteen recordings over every deck in `decks/` found exactly one such keyword, `ETBReplacement:Other:ChooseColor` — engine script, not a keyword printed on a card — whose `title()` is `""`, so "the display string otherwise" had nothing to say, and whose `original()` is an engine string, which hard rule 8 lets through one function only. A closed vocabulary needs no sweep: `tools/check-redaction.mjs` holds every entry to the constant's shape (`^[A-Z][A-Z0-9_]*$`, never `UNDEFINED`, no repeats), and a card name cannot pass it. **`[]`** for a card with no keywords, in the no-state branch (bridge convention (c): the key is written in both branches), and for **every face-down card, in both branches of gate 2** — exactly as its `name` is `""`: the face-down characteristic exposed no keyword on any of the census's 433 face-down instances, and the empty list is forced rather than trusted, for the reason the name is. **A stub never carries it**: the five keys of §3.3 are exact, and a `keywords` array on a `hidden: true` card fails A1. **Optional on the wire, with one reader**: `keywordsOf(card)` in `web/src/protocol.ts` is where "the key is absent" becomes "this recording predates M49", and it answers `[]` for a stub, a face-down card and an absent key alike, because none of the three draws an icon (the renderers' half of hard rule 8). **M6's all-or-nothing rule does not apply**, and the reason is in that rule itself: it is about a BLOCK of distinct keys (the comfort fields) which a SEAT answers and an AI-vs-AI recording legitimately lacks, so one of them absent beside another present is the only signature a broken emitter leaves. `keywords` is one key, written by both recorders for every viewer on every full card — there is no block to be half present and no recording that may omit it. What the checker holds instead is the single-key form of the same idea: **a file is pre-M49 (no full card carries the key) or M49 (every full card does)**, and a file with some of each is a `Snap.card` branch that forgot it, which fails as *"M49's keywords are HALF PRESENT"*. Negative controls: `fixtures/negative/redaction/m49-*` (a control that passes and four one-defect probes). Gate step 6 compares a fresh recording against `fixtures/games/g1.jsonl`, which predates M49, with `keywords` removed from the fresh file (`tools/wire-drift.mjs`, and 9b's `tools/fixture-multiset-diff.mjs` the same way): the key's VALUES come under step 6 the day g1 is next re-recorded on purpose. | status layer |
+
 ### 2026-09-28 — the undo race: an act the engine cannot take now
 
 Applied by the undo-race lane (branch `undo-race`). One row, and it adds no key
@@ -801,6 +814,7 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   "power": "2",
   "toughness": "2",
   "loyalty": null,
+  "keywords": ["FIRST_STRIKE"],
   "damage": 0,
   "counters": { "+1/+1": 1 },
   "tapped": false,
@@ -842,6 +856,16 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   `CardStateView.getLoyalty()` returns the string `"0"` for everything else,
   which is noise. `power` / `toughness` are `null` unless the card is a creature
   or has a printed P/T.
+- `keywords` (amendment **M49**) is the card's keyword abilities as the engine
+  has them now — `CardStateView.getKeywords()` of the current state — each one a
+  `forge.game.keyword.Keyword` constant spelled by `name()` (`"FLYING"`,
+  `"FIRST_STRIKE"`, `"WARD"`), without its parameter, deduplicated, in Forge's
+  order. A keyword Forge could not name (`Keyword.UNDEFINED`) is omitted, so the
+  vocabulary is closed: never a display string, never rules text. `[]` for a card
+  with none and for **every face-down card** (its keywords are withheld like its
+  name). **Optional**: absent from every recording made before 2026-09-28, and read
+  through `keywordsOf()`, never by testing for the key. The client maps a constant
+  to an icon and a label; it never decides what a keyword does.
 - `sick` is summoning sickness.
 - `token` is `CardView.isToken()` **[jar]**. A token has no `art.json` entry and
   no collector number; the renderer draws its generated frame and says so.
@@ -1015,7 +1039,7 @@ the face:
 
 ```json
 { "id": 213, "name": "", "setCode": "???", "manaCost": null, "types": "Creature",
-  "power": "2", "toughness": "2", "loyalty": null, "damage": 0, "counters": {},
+  "power": "2", "toughness": "2", "loyalty": null, "keywords": [], "damage": 0, "counters": {},
   "tapped": false, "sick": true, "attacking": false, "blocking": true,
   "faceDown": true, "token": false, "alt": null, "attachedToId": null,
   "attachmentIds": [], "controller": 1, "owner": 1, "zone": "battlefield",
@@ -1025,7 +1049,8 @@ the face:
 `name` is `""` and `setCode` is `"???"` because that is Forge's face-down
 characteristic verbatim (`CardUtil.getFaceDownCharacteristic`: no name,
 `CardEdition.UNKNOWN_CODE`, a 2/2 Creature) — **not** a value the bridge blanked
-out. `alt` is `null`, and that is the whole of gate 2's effect: the real card sits
+out. `alt` is `null` and `keywords` is `[]` (amendment M49, forced for every
+face-down card as the name is), and that is the whole of gate 2's effect: the real card sits
 one accessor away on `getAlternateState()` and nothing but the gate puts it on the
 wire. Outside `battlefield`/`stack` the same card carries `types: ""` and null
 `power`/`toughness`, for the reason given in §3.2 — a face-down card in exile has
@@ -2083,7 +2108,8 @@ promise of identical bytes.
    (§3.3, amendment P3 — the eleven-key `faceDownHidden` object is superseded and
    no longer emitted). **Every** card on the wire goes through it — `players[].zones`,
    `stackCards`, `library.cards`, `input.focusCard`, every ask option's `card`,
-   `delayedReveal.cards`. **Libraries carry a count plus only the cards
+   `delayedReveal.cards`. A full card's `keywords` (M49) are `Keyword` constants
+   and nothing else, and a face-down card's are `[]`. **Libraries carry a count plus only the cards
    `canBeShownTo` allows** (§3.4). And exactly **one sweep** for every
    engine *string* that reaches the wire: `Snap.stackText` (`stack[].text` and
    `events[].cast.text`, §3.6 rule 1) and `Snap.sweepText` (`notice.title` and

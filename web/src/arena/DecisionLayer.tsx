@@ -39,8 +39,10 @@ import { EMPTY_ART_INDEX, type ArtIndex } from '../art.ts';
 import {
   buttonFocus,
   matchupOf,
+  phaseStopsOf,
   seatMatchOf,
   type ActBody,
+  type GameStateBody,
   type InputButton,
   type Matchup,
   type PlayerState,
@@ -49,7 +51,7 @@ import {
 import type { ClientState } from '../reduce.ts';
 import { AskModal, type AnswerFn } from '../render/AskModal.tsx';
 import { GameOverBanner, NewGameRow } from '../render/GameOver.tsx';
-import { counterLabel } from '../render/labels.ts';
+import { COMBAT_PHASES, PHASE_STRIP_LABELS, counterLabel } from '../render/labels.ts';
 import { ManaPoolPips } from '../render/Mana.tsx';
 import { ZoneCount } from '../render/PlayerRail.tsx';
 import { viewerIdOf } from './layout.ts';
@@ -88,9 +90,21 @@ export function DecisionLayer({
   const notice = state.notices[state.notices.length - 1] ?? null;
   const matchup = matchupOf(state.hello);
 
+  // The phase stops are the board's control and the same act (M6, D37): live only
+  // at a seat, with no question open and the game not over.
+  const stopsLive = onAct !== null && state.ask === null && state.gameOver === null;
+
   return (
     <>
       <SeatPlates state={state} />
+
+      <TurnOrderBar
+        board={state.board}
+        you={viewerIdOf(state)}
+        onSetPhaseStop={
+          stopsLive ? (phase, turn, stop) => onAct?.({ action: 'setPhaseStop', phase, turn, stop }) : null
+        }
+      />
 
       <div className="arena__decision" role="group" aria-label="The engine">
         {matchup !== null && matchup.aiOnly ? (
@@ -190,6 +204,135 @@ export function DecisionLayer({
       {/* Every one of M5's twelve ask kinds, unchanged, over the canvas. */}
       <AskModal ask={state.ask} onAnswer={live ? onAnswer : null} art={art} />
     </>
+  );
+}
+
+/**
+ * **The eleven phases a turn gives priority in, in order** — the turn-order bar's
+ * cells (the status layer, D210). Forge's `PhaseType` has thirteen; `UNTAP` has
+ * no priority and no stop preference, and `CLEANUP` gives none in the ordinary
+ * turn, so the bar names them in its header when the game is in one instead of
+ * lighting a cell (the board's strip keeps all thirteen rows).
+ */
+export const TURN_ORDER = [
+  'UPKEEP',
+  'DRAW',
+  'MAIN1',
+  'COMBAT_BEGIN',
+  'COMBAT_DECLARE_ATTACKERS',
+  'COMBAT_DECLARE_BLOCKERS',
+  'COMBAT_FIRST_STRIKE_DAMAGE',
+  'COMBAT_DAMAGE',
+  'COMBAT_END',
+  'MAIN2',
+  'END_OF_TURN',
+] as const;
+
+/** A cell's short caption: the board's own label, shortened to fit a 60 px bar. */
+const TURN_ORDER_SHORT: Readonly<Record<string, string>> = {
+  UPKEEP: 'Upkeep',
+  DRAW: 'Draw',
+  MAIN1: 'Main 1',
+  COMBAT_BEGIN: 'Begin',
+  COMBAT_DECLARE_ATTACKERS: 'Attack',
+  COMBAT_DECLARE_BLOCKERS: 'Block',
+  COMBAT_FIRST_STRIKE_DAMAGE: '1st str.',
+  COMBAT_DAMAGE: 'Damage',
+  COMBAT_END: 'End cbt',
+  MAIN2: 'Main 2',
+  END_OF_TURN: 'End',
+};
+
+/**
+ * **The turn-order bar** (the status layer, D210): the owner's RPG reading of
+ * the phase strip — the eleven phases of a turn in order down the arena's left
+ * edge, the active one lit in the colour of whoever's turn it is, and the seat's
+ * stops marked on each: the left pip "stop here on MY turn", the right "on the
+ * opponent's", filled when the engine stops.
+ *
+ * **A control that changes no behaviour.** It reads exactly the fields the
+ * board's `PhaseStrip` reads — `state.phase`, `activePlayer` and, through the
+ * one reader `phaseStopsOf`, `players[].phaseStops` — and a click sends the same
+ * `act: setPhaseStop {phase, turn, stop}` the board's dots send; the next `state`
+ * says what happened. It keeps no stop of its own (D31, D37): a stream with no
+ * stops (a replay of an older recording, or two AIs) draws no pips at all, and
+ * `onSetPhaseStop` is `null` in a replay, while a question is open and after the
+ * game, which leaves the pips drawn and inert.
+ */
+function TurnOrderBar({
+  board,
+  you,
+  onSetPhaseStop,
+}: {
+  board: GameStateBody | null;
+  you: number | null;
+  onSetPhaseStop: ((phase: string, turn: 'own' | 'opp', stop: boolean) => void) | null;
+}): JSX.Element | null {
+  if (board === null) return null;
+  const phase = board.phase;
+  const yours = you !== null && board.activePlayer === you;
+  const seat = board.players.find((p) => you !== null && p.id === you) ?? null;
+  const stops = phaseStopsOf(seat);
+  const inBar = phase !== null && (TURN_ORDER as readonly string[]).includes(phase);
+  return (
+    <nav className="arena__phases" aria-label="Turn order">
+      <p className="arena__phases-head">
+        <span className="arena__phases-round">R{board.round}</span>{' '}
+        <span className={`arena__phases-whose arena__phases-whose--${yours ? 'you' : 'opp'}`}>
+          {board.activePlayer === null ? 'pre-game' : yours ? 'your turn' : 'their turn'}
+        </span>
+        {phase !== null && !inBar && (
+          <span className="arena__phases-off"> · {PHASE_STRIP_LABELS[phase] ?? phase}</span>
+        )}
+      </p>
+      <ol className="arena__phases-list">
+        {TURN_ORDER.map((name) => {
+          const active = phase === name;
+          const cls = [
+            'arena__phase',
+            COMBAT_PHASES.has(name) ? 'arena__phase--combat' : '',
+            active ? `arena__phase--active arena__phase--active-${yours ? 'you' : 'opp'}` : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <li key={name} className={cls} data-phase={name} aria-current={active ? 'step' : undefined}>
+              <span className="arena__phase-name" title={PHASE_STRIP_LABELS[name] ?? name}>
+                {TURN_ORDER_SHORT[name] ?? name}
+              </span>
+              {stops !== null && (
+                <span className="arena__phase-stops">
+                  {(['own', 'opp'] as const).map((turn) => {
+                    const on = (turn === 'own' ? stops.own : stops.opp).includes(name);
+                    const whose = turn === 'own' ? 'your' : 'the opponent’s';
+                    return (
+                      <button
+                        key={turn}
+                        type="button"
+                        className={`arena__stop arena__stop--${turn}${on ? ' arena__stop--on' : ''}`}
+                        disabled={onSetPhaseStop === null}
+                        data-act="setPhaseStop"
+                        data-phase={name}
+                        data-turn={turn}
+                        data-stop={on ? 'on' : 'off'}
+                        aria-pressed={on}
+                        aria-label={`${on ? 'stop' : 'pass through'} at ${name} on ${whose} turn`}
+                        title={`act: setPhaseStop {phase: ${name}, turn: ${turn}, stop: ${String(!on)}} — ${
+                          on ? 'the engine stops here' : 'the engine passes through'
+                        } on ${whose} turn`}
+                        onClick={() => onSetPhaseStop?.(name, turn, !on)}
+                      >
+                        {on ? '●' : '○'}
+                      </button>
+                    );
+                  })}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 

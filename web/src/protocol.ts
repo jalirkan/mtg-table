@@ -471,6 +471,15 @@ export interface Card {
   power: string | null;
   toughness: string | null;
   loyalty: string | null;
+  /**
+   * §3.2 (**amendment M49**, the status layer). The card's keyword abilities as
+   * the engine has them now — each a `forge.game.keyword.Keyword` constant's
+   * `name()` (`"FLYING"`, `"FIRST_STRIKE"`), with no parameter, never a display
+   * string. `[]` on every face-down card. **Optional**: absent from every
+   * recording made before 2026-09-28 — read it with {@link keywordsOf}, never by
+   * testing for the key.
+   */
+  keywords?: string[];
   damage: number;
   counters: Record<string, number>;
   tapped: boolean;
@@ -616,6 +625,31 @@ export function altFace(card: AnyCard): AltFace | null {
   if (isHidden(card)) return null;
   return (card as Card).alt ?? null;
 }
+
+/**
+ * **Amendment M49 — the ONE reader of `Card.keywords`.** The card's keyword
+ * constants, or `[]`:
+ *
+ *  - for a redacted stub and for any face-down card, whatever it carries — a
+ *    concealed card shows no keyword on any surface (hard rule 8's renderer
+ *    half; the bridge already writes `[]` there, and this is the second lock);
+ *  - for a recording made before M49, which has no key at all — an absent list
+ *    draws no icon, exactly like an empty one, so (like {@link undoOf}) there is
+ *    nothing a renderer could usefully draw differently;
+ *  - for anything that is not an array of strings.
+ *
+ * A component must not test for the key itself (M6 convention 1's rule, for a
+ * single field). The client maps a constant to an icon and a label; it never
+ * decides what a keyword does.
+ */
+export function keywordsOf(card: AnyCard | null | undefined): readonly string[] {
+  if (card === null || card === undefined || isHidden(card) || isFaceDown(card)) return NO_KEYWORDS;
+  const keywords = (card as Card).keywords;
+  if (!Array.isArray(keywords)) return NO_KEYWORDS;
+  return keywords.every((k) => typeof k === 'string') ? keywords : keywords.filter((k) => typeof k === 'string');
+}
+
+const NO_KEYWORDS: readonly string[] = Object.freeze([]);
 
 /** §3.1. `"player"` or `"card"` (planeswalkers, battles). */
 export interface EntityRef {

@@ -47,6 +47,7 @@ import type { CueData } from '../arena/cues/types.ts';
 import { combatFreeze, manaMotes, spellForms } from '../arena/figures/casting.ts';
 import type { DuelistBust } from '../arena/figures/duelists.ts';
 import { figurePose } from '../arena/figures/pose.ts';
+import { statusLayout } from '../arena/figures/status.ts';
 import { tilePose } from '../arena/figures/tiles.ts';
 import type { TraitData } from '../arena/figures/traits.ts';
 import { tileDataOf, type FigureData, type ModelData } from '../arena/figures/types.ts';
@@ -244,6 +245,8 @@ function PedestalScene({
       ),
     [placed, state.board?.combat, figureData, frozen, models, traits, turn, palettes],
   );
+  // The status layer (D210), exactly as `Arena.tsx` lays it out.
+  const strips = useMemo(() => statusLayout(placed, figures), [placed, figures]);
   const tiles = useMemo(() => tilePose(placed, tileDataOf(figureData), palettes), [placed, figureData, palettes]);
   const seatOfPlayer = useCallback(
     (playerId: number): 'you' | 'opp' =>
@@ -347,7 +350,15 @@ function PedestalScene({
         />
       ))}
       <primitive object={tileField.group} />
-      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} composer={bloomOn} />
+      <FigureLayer
+        poses={figures}
+        rigs={figureRigs}
+        discs={discs}
+        models={models}
+        look={look}
+        composer={bloomOn}
+        status={strips}
+      />
       <primitive object={castingField.group} />
       <primitive object={overlays.group} />
       <primitive object={bustField.group} />

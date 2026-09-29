@@ -105,6 +105,14 @@ const opt = {
 const AMENDED_KEYS = [
   { type: 'hello_ok', key: 'match', amendment: 'M44' },
 ];
+/**
+ * The same rule for a key an amendment added to a CARD, which sits at any depth
+ * (`players[].zones.*.cards[]`, `stackCards`, an ask option's `card`): when A
+ * carries it nowhere and B does, it is dropped from every object of B.
+ */
+const AMENDED_CARD_KEYS = [
+  { key: 'keywords', amendment: 'M49' },
+];
 for (let i = 0; i < args.length; i++) {
   const k = args[i];
   const need = (name) => {
@@ -179,6 +187,19 @@ function label(frame) {
  *            meta: Map<string, {type: string, firstLine: number, text: string}>,
  *            byType: Map<string, number>}}
  */
+/** Remove `key` from every object at any depth (AMENDED_CARD_KEYS). */
+function dropDeep(v, key) {
+  if (Array.isArray(v)) {
+    for (const x of v) dropDeep(x, key);
+  } else if (v !== null && typeof v === 'object') {
+    delete v[key];
+    for (const x of Object.values(v)) dropDeep(x, key);
+  }
+}
+
+/** Keys dropped at any depth from B (filled below, before B is loaded). */
+const deepDrop = new Set();
+
 function load(path, drop = new Map()) {
   let text;
   try {
@@ -215,6 +236,7 @@ function load(path, drop = new Map()) {
     if (dropKey !== undefined && frame.body !== null && typeof frame.body === 'object') {
       delete frame.body[dropKey];
     }
+    for (const key of deepDrop) dropDeep(frame, key);
     const canon = JSON.stringify(scrub(frame));
     counts.set(canon, (counts.get(canon) ?? 0) + 1);
     const type = label(frame);
@@ -265,7 +287,28 @@ if (!opt.keepAmended) {
   }
 }
 
+if (!opt.keepAmended) {
+  for (const { key, amendment } of AMENDED_CARD_KEYS) {
+    let inA;
+    let inB;
+    try {
+      inA = readFileSync(opt.files[0], 'utf8').includes(`"${key}":`);
+      inB = readFileSync(opt.files[1], 'utf8').includes(`"${key}":`);
+    } catch {
+      continue;
+    }
+    if (!inA && inB) {
+      amendedNotes.push(`  amendment ${amendment}: a card's ${key} is absent from A (A predates it) and ` +
+        `present in B -- dropped from B at any depth (--keep-amended compares it)`);
+    }
+  }
+}
+
 const a = load(opt.files[0]);
+for (const note of amendedNotes) {
+  const m = /amendment (\S+): a card's (\S+) is absent/.exec(note);
+  if (m !== null) deepDrop.add(m[2]);
+}
 const b = load(opt.files[1], dropB);
 
 const out = (s) => process.stdout.write(`${s}\n`);

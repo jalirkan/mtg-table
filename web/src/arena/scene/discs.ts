@@ -109,6 +109,21 @@ export interface PropBinder {
   kindsDrawn(): number;
 }
 
+/**
+ * **The status layer — the strips' per-frame half** (`scene/status.ts`, D210):
+ * every creature's keyword icons, bar, pips and marks, one instanced mesh for the
+ * table. Bound HERE, from inside the one `useFrame`'s call to
+ * {@link DiscField.bind}, after the prop field, exactly as the props are: a
+ * figure's footprint, what it carries and what it says above its head are the
+ * same layer of the table. Typed by shape so this file imports nothing of it.
+ */
+export interface StatusBinder {
+  bind(source: OffsetSource, seconds: number): void;
+  /** Quads drawn last frame — `?glinfo=1`'s census. */
+  drawn(): number;
+  stripsDrawn(): number;
+}
+
 let discTex: THREE.Texture | null | undefined;
 
 /**
@@ -230,6 +245,8 @@ export class DiscField {
   private departures: DepartureBinder | null = null;
   /** Slice 3 — the prop field, installed by `FigureLayer` for its lifetime. */
   private props: PropBinder | null = null;
+  /** The status layer — the strips, installed by `FigureLayer` for its lifetime. */
+  private status: StatusBinder | null = null;
   /**
    * The poses of the layout last bound, as an ARRAY — refilled only when the
    * layout object changes (once per snapshot), so the frame loop walks a fixed
@@ -380,6 +397,8 @@ export class DiscField {
     this.departures?.bind(offsets, deaths);
     // Slice 3: what every figure carries — AFTER the rigs are posed this frame.
     this.props?.bind(offsets, seconds);
+    // The status layer: what every figure says above its head, riding its offset.
+    this.status?.bind(offsets, seconds);
   }
 
   /**
@@ -406,8 +425,21 @@ export class DiscField {
     this.props = binder;
   }
 
+  /** Install (or, with `null`, remove) the status strips. `FigureLayer` calls it; the frame loop never does. */
+  setStatus(binder: StatusBinder | null): void {
+    this.status = binder;
+  }
+
   /** How many discs (and T8's departing bodies) were drawn last frame — `?glinfo=1`'s census. */
-  counts(): { discs: number; onCardDiscs: number; departures: number; props: number; propKinds: number } {
+  counts(): {
+    discs: number;
+    onCardDiscs: number;
+    departures: number;
+    props: number;
+    propKinds: number;
+    statusQuads: number;
+    statusStrips: number;
+  } {
     return {
       discs: this.mesh.count + this.onCardMesh.count,
       onCardDiscs: this.onCardMesh.count,
@@ -415,6 +447,9 @@ export class DiscField {
       // Slice 3: prop instances and the kinds they fill — each kind one draw call.
       props: this.props?.drawn() ?? 0,
       propKinds: this.props?.kindsDrawn() ?? 0,
+      // The status layer: one draw call for every strip on the table.
+      statusQuads: this.status?.drawn() ?? 0,
+      statusStrips: this.status?.stripsDrawn() ?? 0,
     };
   }
 

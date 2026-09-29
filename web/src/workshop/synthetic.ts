@@ -390,7 +390,8 @@ export type RehearsalKind =
   | 'transform'
   | 'crew'
   | 'crewedAttack'
-  | 'crewedBlock';
+  | 'crewedBlock'
+  | 'status';
 
 export const REHEARSAL_LABEL: Readonly<Record<RehearsalKind, string>> = {
   enters: 'enters the battlefield',
@@ -417,13 +418,25 @@ export const REHEARSAL_LABEL: Readonly<Record<RehearsalKind, string>> = {
   crew: 'is crewed',
   crewedAttack: 'crewed, attacks alone',
   crewedBlock: 'crewed, blocks',
+  status: 'status strip: keywords, damage and a counter',
 };
+
+/**
+ * **The status rehearsal's keywords when the catalog has none** (D210) — which
+ * is every card today: no committed recording carries amendment M49's keywords.
+ * Three glyphs the strip draws and one it folds into its generic `ability` icon,
+ * so the owner can judge the icons' size and placement on the pedestal. The
+ * rehearsal's `fiction` line says they are the workshop's.
+ */
+export const STATUS_SAMPLE_KEYWORDS: readonly string[] = ['FLYING', 'FIRST_STRIKE', 'LIFELINK', 'TEAMWORK'];
 
 /** Which rehearsals make sense for a card, by what it is on the table. */
 export function rehearsalsFor(entry: WorkshopEntry): RehearsalKind[] {
   if (entry.concealed === 'redacted') return ['enters', 'tap', 'untap', 'dies'];
   if (entry.concealed === 'faceDown') {
-    return ['enters', 'attackAlone', 'blocks', 'hit', 'lethal', 'hitsPlayer', 'tap', 'untap', 'dies', 'exiled'];
+    // `status` too: the damage and the counter land, and no strip is drawn — a
+    // face-down card shows none (hard rule 8), which is worth seeing.
+    return ['enters', 'attackAlone', 'blocks', 'hit', 'lethal', 'hitsPlayer', 'tap', 'untap', 'dies', 'exiled', 'status'];
   }
   const role: Role = roleOf(entry);
   switch (role) {
@@ -446,6 +459,7 @@ export function rehearsalsFor(entry: WorkshopEntry): RehearsalKind[] {
         'cast',
         'resolves',
         'transform',
+        'status',
       ];
     case 'vehicle':
       // A Vehicle is a creature only while crewed (Forge rewrites its type line to
@@ -755,6 +769,31 @@ export function rehearse(entry: WorkshopEntry, kind: RehearsalKind, options: Ped
         events.push({ kind: 'stats', cardIds: [id], transform: false });
         events.push({ kind: 'resolved', cardId: id, fizzled: false });
         fiction = 'crewed by a Soldier token — the engine says who crews; here the workshop does';
+        break;
+      }
+      case 'status': {
+        // The status layer (D210): the card's keywords on the strip, then a
+        // batch the corpus shows Forge sending — damage marked on it and a +1/+1
+        // counter — so the bar drains and a pip appears in one snapshot. A
+        // face-down card gets no keywords (the bridge writes `[]`) and no strip.
+        const own = entry.facts.keywords;
+        const keywords = entry.concealed !== null ? [] : own !== undefined && own.length > 0 ? own : STATUS_SAMPLE_KEYWORDS;
+        if (entry.concealed === null && (own === undefined || own.length === 0)) {
+          fiction =
+            'keywords: the workshop’s sample (FLYING, FIRST_STRIKE, LIFELINK, TEAMWORK) — no committed recording ' +
+            'carries amendment M49’s keywords yet; the damage and the counter are the corpus’s own event shapes';
+        }
+        const amount = Math.max(1, Math.min(2, toughness - 1));
+        patch(before, body, { keywords: [...keywords] });
+        patch(after, body, {
+          keywords: [...keywords],
+          damage: amount,
+          counters: { '+1/+1': 1 },
+          power: String(power + 1),
+          toughness: String(toughness + 1),
+        });
+        events.push({ kind: 'damage', target: { kind: 'card', id: body }, sourceCardId: sourceFor(copy, base), amount, combat: false, damageType: 'Normal' });
+        events.push({ kind: 'counters', cardId: body, counter: '+1/+1', from: 0, to: 1 });
         break;
       }
       default:

@@ -2016,6 +2016,42 @@ at its lowest rung, on a slow machine — tick bloom to bring both back. What wa
 draw calls, triangles, programs, frame times on the GTX 1080 and SwiftShader —
 is `docs/evidence/look.md`.
 
+#### The status layer — keywords, a bar, pips and a turn-order bar (D210–D212)
+
+Watching a game reads like a turn-based RPG: every creature carries a small
+**status strip** over its head, the way Final Fantasy XIII shows a unit's buffs.
+
+- **Its keywords, as icons** — the evergreen fourteen each have a glyph of their
+  own (flying, haste, vigilance, first strike, double strike, lifelink,
+  deathtouch, trample, hexproof, indestructible, menace, reach, defender, flash);
+  anything else is one "…" icon. The engine sends them (amendment **M49**, a
+  card's `keywords`), so a keyword an anthem grants is there and one an effect
+  took away is not.
+- **A bar of what is left of its toughness** — toughness minus the damage marked
+  on it this turn, green to amber to red, the damaged part in dark red. It is a
+  picture of two numbers and says nothing about death: an indestructible
+  creature can stand at an empty bar (**D211**).
+- **A pip per counter** (green +1/+1, red −1/−1, gold anything else) and **a mark
+  per attachment** (a halo for an Aura, a hammer for an Equipment).
+
+The strip faces you from every camera view at the same size (an icon is 16 px),
+rides its creature through a lunge and stays upright when it kneels. **A
+face-down creature and a card you may not see have none** — not an icon, not a
+bar. The whole table's strips are one draw call (**D212**). On the 2D board the
+same icons sit in a row under each card's P/T, with the keyword's name on hover,
+and the bar along the tile's bottom edge.
+
+The arena's left edge carries the **turn-order bar**: the eleven phases of a turn
+in order, the active one lit in the colour of whoever's turn it is, and your
+stops as two pips per phase (left: your turn, right: the opponent's) — the same
+stops the board's phase strip shows, and a click sends the same act.
+
+Recordings made before M49 (every committed fixture) have no keywords: their
+strips show the bar, pips and marks only. The workshop's **status strip**
+rehearsal shows the icons on any creature — with a sample of keywords, which its
+fiction line says is the workshop's — so their size and placement can be judged
+on the pedestal. What was measured is `docs/evidence/status-layer.md`.
+
 ### Card library and browser — `#cards`
 
 A local, offline-searchable index of every Magic card, and a page to browse it:

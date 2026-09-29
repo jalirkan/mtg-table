@@ -63,6 +63,9 @@ import forge.game.event.GameEventSpellResolved;
 import forge.game.event.GameEventSurveil;
 import forge.game.event.GameEventTurnBegan;
 import forge.game.event.GameEventTurnPhase;
+import forge.game.keyword.Keyword;
+import forge.game.keyword.KeywordCollectionView;
+import forge.game.keyword.KeywordView;
 import forge.game.player.PlayerView;
 import forge.game.spellability.SpellAbilityView;
 import forge.game.spellability.StackItemView;
@@ -998,6 +1001,8 @@ public final class Snap {
             // key set, in the same order, as the one below it.
             o.nNull("setCode").nNull("manaCost").n("types", "")
              .nNull("power").nNull("toughness").nNull("loyalty");
+            // M49: no state, no keywords -- the same key, empty (convention c).
+            o.key("keywords").arr().end();
         } else {
             o.n("setCode", st.getSetCode());
             // Protocol 3.2: null for a card with no mana cost -- never an empty
@@ -1023,6 +1028,8 @@ public final class Snap {
             // wants null there.
             final String loyalty = st.getLoyalty();
             o.n("loyalty", !faceDown && st.isPlaneswalker() && !empty(loyalty) ? loyalty : null);
+            // M49: a face-down card's keywords are withheld like its name (see keywords()).
+            keywords(o, faceDown ? null : st.getKeywords());
         }
 
         o.n("damage", cv.getDamage());
@@ -1933,6 +1940,52 @@ public final class Snap {
                 if (e.getElement() != null) {
                     o.n(e.getElement().getName(), e.getCount());
                 }
+            }
+        }
+        o.end();
+    }
+
+    /**
+     * <b>Amendment M49 -- {@code "keywords": ["FLYING", "FIRST_STRIKE"]}</b>: the
+     * card's keyword abilities as Forge's {@link forge.game.keyword.Keyword}
+     * CONSTANTS, spelled by {@code name()} (convention a), deduplicated, in
+     * Forge's own order.  Read from {@code CardStateView.getKeywords()} of the
+     * CURRENT state only, so a keyword a static grants is here and a keyword
+     * an effect removed is not -- the engine's answer, never the printed text.
+     *
+     * <p><b>Only constants reach the wire, never a display string.</b>  Every
+     * keyword with a {@code Keyword} constant is written by its name and no
+     * parameter (Ward's cost, Equip's cost, Protection's quality stay off:
+     * {@code WARD}, {@code EQUIP}, {@code PROTECTION}).  A keyword Forge could
+     * not map to a constant is {@code Keyword.UNDEFINED}, and it is OMITTED:
+     * the one such keyword a census of 14 recordings over every deck in
+     * {@code decks/} found is {@code ETBReplacement:Other:ChooseColor} -- engine
+     * script, not a keyword printed on a card -- whose {@code title()} is
+     * {@code ""}.  Its {@code original()} would be an engine string on the wire,
+     * which hard rule 8 allows through one function only; a closed vocabulary
+     * needs none, and {@code tools/check-redaction.mjs} holds every entry to the
+     * constant's shape.  (docs/evidence/status-layer.md section 1.)
+     *
+     * <p><b>A face-down card carries {@code []}</b>, in both branches of gate
+     * 2, exactly as its {@code name} is {@code ""}: the caller passes
+     * {@code null}.  The face-down characteristic exposed no keyword on any of
+     * the 433 face-down instances the census recorded, and the empty list is
+     * forced rather than trusted, for the same reason the name is.
+     *
+     * @param kws the current state's keywords, or {@code null} to write {@code []}
+     */
+    private static void keywords(final JsonOut o, final KeywordCollectionView kws) {
+        o.key("keywords").arr();
+        if (kws != null) {
+            final Set<String> names = new java.util.LinkedHashSet<>();
+            for (final KeywordView kv : kws) {
+                final Keyword k = kv == null ? null : kv.keyword();
+                if (k != null && k != Keyword.UNDEFINED) {
+                    names.add(k.name());
+                }
+            }
+            for (final String n : names) {
+                o.v(n);
             }
         }
         o.end();

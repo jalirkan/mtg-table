@@ -99,6 +99,7 @@ import {
   type DuelistPose,
 } from './figures/duelists.ts';
 import { figurePose, type FigureLayout } from './figures/pose.ts';
+import { statusLayout, type StatusLayout } from './figures/status.ts';
 import { tilePose, type TileLayout } from './figures/tiles.ts';
 import {
   EMPTY_FIGURE_DATA,
@@ -404,6 +405,7 @@ function Scene({
   figures,
   figureRigs,
   discs,
+  strips,
   tiles,
   tileField,
   motes,
@@ -441,6 +443,8 @@ function Scene({
   figures: FigureLayout;
   figureRigs: FigureRigMap;
   discs: DiscField;
+  /** The status layer (D210) — `figures/status.ts`'s strips for this snapshot. */
+  strips: StatusLayout;
   tiles: TileLayout;
   tileField: TileField;
   motes: ManaMote[];
@@ -543,7 +547,15 @@ function Scene({
           the coplanar group is table → tile → card → disc → figure. */}
       <primitive object={tileField.group} />
 
-      <FigureLayer poses={figures} rigs={figureRigs} discs={discs} models={models} look={look} composer={composer} />
+      <FigureLayer
+        poses={figures}
+        rigs={figureRigs}
+        discs={discs}
+        models={models}
+        look={look}
+        composer={composer}
+        status={strips}
+      />
 
       {/* **T4's casting anchor and T6's stack**: the floating mana of each seat,
           §6.2's five spell forms, and §6.3's tethers to what each one targets.
@@ -864,6 +876,12 @@ export default function Arena({
       }),
     [placed, state.board?.combat, figureData, frozen, palettes],
   );
+  /**
+   * **The status layer** (D210): every creature's strip — keyword icons, the bar,
+   * pips and marks — a pure function of this frame's layout and poses, handed to
+   * `FigureLayer`, which commits it into one instanced field once per snapshot.
+   */
+  const strips = useMemo(() => statusLayout(placed, figures), [placed, figures]);
   /**
    * T4 — **the terrain, and the casting anchor**, both pure functions of the
    * frame on screen (report 13 §5.1, §5.4). Every one of the three survives
@@ -1450,6 +1468,7 @@ export default function Arena({
           pool={pool}
           rigs={rigs}
           figures={figures}
+          strips={strips}
           figureRigs={figureRigs}
           discs={discs}
           tiles={tiles}

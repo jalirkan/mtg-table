@@ -205,6 +205,10 @@
 4. **The art palette is the LOWEST rung, runtime only, face up only** (**D160**).
 **Each gate has a hostile case only it stops** — a named back, a named stub in
 5. **The library's budget is the manifest's** (**D161**): `budget.libraryBytes`
+1. **One decision, two renderers, a pose.** `web/src/status.ts` (pure: no React,
+2. **Hard rule 8 on the strip.** `figures/status.ts`'s `strippable` gives no
+3. **`scene/status.ts` is ONE mesh, and a pose layer on the one loop** (D212):
+4. **A billboard in pixels, above the head by measurement.** A quad is CSS pixels
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -385,7 +389,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 999 `node --test` + 121 vitest (8 files)
+span: 1014 `node --test` + 122 vitest (8 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -565,3 +569,8 @@ span: Each gate has a hostile case only it stops
 span: The library's budget is the manifest's
 span: Headroom is gone at @316
 span: 90 calls and 29,521 triangles
+span: a creature's status is a pose drawn in one call, and a concealed card has none.
+span: One decision, two renderers, a pose.
+span: Hard rule 8 on the strip.
+span: `scene/status.ts` is ONE mesh, and a pose layer on the one loop
+span: A billboard in pixels, above the head by measurement.

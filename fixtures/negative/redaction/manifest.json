@@ -142,5 +142,35 @@
     "level": "fail",
     "expect": "\"paceMs\" must be a positive integer",
     "why": "amendment M47: the session header's paceMs is a positive integer of milliseconds"
+  },
+  {
+    "file": "m49-keywords-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M49: the baseline with `keywords` on every full card exactly as Snap.card writes it -- the control for the four m49 probes below"
+  },
+  {
+    "file": "m49-stub-carries-keywords.jsonl",
+    "level": "fail",
+    "expect": "leaks extra keys: keywords",
+    "why": "amendment M49: a redacted stub is five keys -- a keyword on it is a sixth key, and a fact about a hidden card"
+  },
+  {
+    "file": "m49-keyword-is-a-display-string.jsonl",
+    "level": "fail",
+    "expect": ".keywords = [\"Flying\"] does not match the type",
+    "why": "amendment M49: a keyword is a Keyword constant's name() -- a display string (or a card name) is not one"
+  },
+  {
+    "file": "m49-face-down-carries-keywords.jsonl",
+    "level": "fail",
+    "expect": "is face down and carries keywords",
+    "why": "amendment M49: a face-down card's keywords are [] in both branches of gate 2, like its name"
+  },
+  {
+    "file": "m49-keywords-half-present.jsonl",
+    "level": "fail",
+    "expect": "keywords are HALF PRESENT",
+    "why": "amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it"
   }
 ]

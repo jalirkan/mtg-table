@@ -81,6 +81,9 @@
  *                                            lane BODIES' tuning rows: rest, hair, face, palette
  *     ArtPalette, artRow (palette.ts)        the palette row's swatch strip, and whether a
  *                                            hand-written row would outrank the art rung
+ *     statusLayout, StatusLayout (status.ts) the status layer (D210): the pedestal lays
+ *                                            out every strip exactly as Arena.tsx does and
+ *                                            hands it to FigureLayer, which commits it
  *     clipEnvelope, clipForCue, ClipRequest, REST_CLIP_FOR, REST_PHASE_FOR (clips.ts)
  *     validateFigures, validateModels, validateTraits (validate.ts)
  *     FigureData, ModelData, FigureProblem, ClipName, isClipName, tileDataOf,

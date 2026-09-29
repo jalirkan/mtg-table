@@ -34,7 +34,10 @@
  *     because the face is what rotates 90° when the card is tapped and a P/T
  *     pill that rotated with it is the single most common way this goes wrong.
  *   - **`damage` is its own chip and is never subtracted from `toughness`** —
- *     that subtraction is a rules computation (report 10 §4.5).
+ *     that subtraction is a rules computation (report 10 §4.5). The status
+ *     row's bar (amendment M49's layer, **D211**) draws `toughness − damage` as a
+ *     picture of those two numbers and decides nothing; the chip and the P/T
+ *     pill stay exactly as they were.
  *   - A face-down card the viewer **may** look at (`alt`, amendment P3, emitted
  *     only under `canFaceDownBeShownTo`) draws the back the table sees plus a
  *     marked "you may look" ribbon. The table sees a 2/2 with no name; only this
@@ -65,10 +68,12 @@ import { artEntryFor, imageUrl, type ArtIndex, type ImgSize } from '../art.ts';
 import {
   altFace,
   isHidden,
+  keywordsOf,
   type AnyCard,
   type Card,
   type InputBody,
 } from '../protocol.ts';
+import { GLYPHS, cardStatus, hpColour, type CardStatus, type GlyphId, type StatusIcon } from '../status.ts';
 import { counterLabel, tileAriaLabel } from './labels.ts';
 import { ManaCost } from './Mana.tsx';
 import { useTargeting } from './picker.ts';
@@ -169,6 +174,9 @@ export function CardTile({
 
   const full: Card | null = isHidden(card) ? null : card;
   const concealed = full === null;
+  // M49: the status row's data — `null` for a concealed card, a strip thumbnail
+  // and a card with no keyword and no bar.
+  const status = STATUS_KINDS.has(kind) ? rowStatusOf(card, attachments) : null;
   // A redacted stub is five keys and `tapped` is not one of them (§3.3); the
   // legacy `faceDownHidden` shape does carry it. Total over both.
   const tapped = full?.tapped ?? ('tapped' in card && card.tapped === true);
@@ -188,6 +196,8 @@ export function CardTile({
     full?.token === true ? 'tile--token' : '',
     full?.attacking === true ? 'tile--attacking' : '',
     full?.blocking === true ? 'tile--blocking' : '',
+    status !== null && status.icons.length > 0 ? 'tile--kw' : '',
+    status !== null && status.hp !== null ? 'tile--hp' : '',
     mine ? 'tile--mine' : 'tile--theirs',
   ]
     .filter(Boolean)
@@ -210,6 +220,8 @@ export function CardTile({
           blocking: full.blocking,
           damage: full.damage,
           counters: full.counters,
+          // M49: the keyword constants, as words — `[]` for a face-down card.
+          keywords: keywordsOf(full),
         });
 
   return (
@@ -279,6 +291,10 @@ export function CardTile({
         }
       >
         <Face card={card} kind={kind} art={art} />
+        {/* M49 — the status row: inside the button, so an icon's `title` shows
+            on hover and a click on it is still a click on the card. Never on a
+            concealed card (`cardStatus` answers null for both shapes). */}
+        {status !== null && <StatusRow status={status} />}
       </button>
 
       <Overlays card={card} note={note} />
@@ -324,6 +340,79 @@ export function CardTile({
 
       {zoom !== 'none' && <Zoom card={card} art={art} where={zoom} />}
     </li>
+  );
+}
+
+/** The tile kinds big enough for the status row (a strip or stack thumbnail is not). */
+const STATUS_KINDS: ReadonlySet<TileKind> = new Set<TileKind>(['bf', 'land', 'hand']);
+
+/** How many keyword icons a tile shows before the rest fold into one `more` icon. */
+export const MAX_TILE_ICONS = 5;
+
+/**
+ * **The status row** (amendment M49, the status layer — D210, D211): the card's
+ * keyword icons in a row under the P/T, and on a battlefield creature a bar of
+ * what is left of its toughness. The same data the arena's strip draws
+ * (`status.ts`'s `cardStatus`), from the same reader (`keywordsOf`).
+ *
+ * Every icon carries a `title` naming its keyword — the generic `ability` icon
+ * names the constant it stands for — and `data-keyword`, which the render test
+ * reads to prove a concealed tile has none. The bar draws `toughness − damage`
+ * as a fraction and says both numbers in its `title`; the P/T pill and the
+ * damage chip stay exactly as they were (D211).
+ */
+function rowStatusOf(card: AnyCard, attachments: AnyCard[]): CardStatus | null {
+  const status = cardStatus(card, (id) => attachments.find((a) => a.id === id));
+  if (status === null || (status.icons.length === 0 && status.hp === null)) return null;
+  return status;
+}
+
+function StatusRow({ status }: { status: CardStatus }): JSX.Element {
+  const { icons, hp } = status;
+  const shown = icons.length > MAX_TILE_ICONS ? icons.slice(0, MAX_TILE_ICONS - 1) : icons;
+  const folded = icons.length > MAX_TILE_ICONS ? icons.slice(MAX_TILE_ICONS - 1) : [];
+  return (
+    <span className="tile__status" data-status="true">
+      {icons.length > 0 && (
+        <span className="tile__keywords">
+          {shown.map((icon) => (
+            <StatusGlyph key={icon.keyword} glyph={icon.glyph} icon={icon} title={icon.label} />
+          ))}
+          {folded.length > 0 && (
+            <StatusGlyph glyph="more" icon={null} title={folded.map((i) => i.label).join(', ')} />
+          )}
+        </span>
+      )}
+      {hp !== null && (
+        <span
+          className="tile__hp"
+          title={`toughness ${String(hp.toughness)} − damage ${String(hp.damage)} = ${String(hp.remaining)}`}
+          data-hp={`${String(hp.remaining)}/${String(hp.toughness)}`}
+        >
+          <span
+            className="tile__hpfill"
+            style={{ inlineSize: `${String(Math.round(hp.fraction * 1000) / 10)}%`, background: hpColour(hp.fraction) }}
+          />
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** One procedural glyph (`status.ts`'s path data), as inline SVG in its keyword's colour. */
+function StatusGlyph({ glyph, icon, title }: { glyph: GlyphId; icon: StatusIcon | null; title: string }): JSX.Element {
+  const g = GLYPHS[glyph];
+  return (
+    <span
+      className={`tile__kw tile__kw--${glyph}`}
+      title={title}
+      data-keyword={icon === null ? undefined : icon.keyword}
+      style={{ color: g.colour }}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d={g.path} fillRule="evenodd" fill="currentColor" />
+      </svg>
+    </span>
   );
 }
 
@@ -483,7 +572,8 @@ function Overlays({ card, note }: { card: AnyCard; note: string | null }): JSX.E
       )}
 
       <span className="tile__bottom">
-        {/* Never subtracted from toughness — that is a rules computation. */}
+        {/* Never subtracted from toughness here — the status row's bar pictures
+            the two numbers (D211) and this chip stays verbatim beside it. */}
         {card.damage > 0 && <span className="tile__dmg">−{card.damage}</span>}
         {card.loyalty !== null ? (
           <span className="tile__loyalty">{card.loyalty}</span>

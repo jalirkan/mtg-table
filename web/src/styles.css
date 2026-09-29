@@ -4894,3 +4894,221 @@ button.zonerow__open:hover {
     scroll-behavior: auto;
   }
 }
+
+/* =========================================================================
+ * The status layer (amendment M49, D210–D212) — the board's half.
+ *
+ * A face-up card's keyword icons in a row under its P/T, and on a battlefield
+ * creature a bar of what is left of its toughness (`status.ts`'s `cardStatus`,
+ * the same data the arena's strip draws). The row is INSIDE the tile's button,
+ * so an icon's `title` shows on hover and a click on it is a click on the card.
+ * The P/T pill and the counters step up to sit above it; nothing they say
+ * changes (D211: the damage chip stays, the bar asserts nothing about death).
+ * ========================================================================= */
+
+.tile__status {
+  position: absolute;
+  inset-inline: 6px 3px;
+  inset-block-end: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1;
+}
+
+.tile__keywords {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1px;
+  align-items: center;
+}
+
+.tile__kw {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: 50%;
+  background: #0b0f13eb;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.tile__kw svg {
+  display: block;
+  inline-size: 10px;
+  block-size: 10px;
+}
+
+.tile--hand .tile__kw {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.tile--hand .tile__kw svg {
+  inline-size: 13px;
+  block-size: 13px;
+}
+
+/* The bar: the fill is what is left; the rest is the damage marked this turn. */
+.tile__hp {
+  display: block;
+  block-size: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #7a2424;
+  box-shadow: 0 0 0 1px #0b0f13e6;
+}
+
+.tile__hpfill {
+  display: block;
+  block-size: 100%;
+}
+
+.tile--hp .tile__bottom,
+.tile--hp .tile__counters {
+  inset-block-end: 9px;
+}
+
+.tile--kw .tile__bottom,
+.tile--kw .tile__counters {
+  inset-block-end: 18px;
+}
+
+.tile--kw.tile--hp .tile__bottom,
+.tile--kw.tile--hp .tile__counters {
+  inset-block-end: 24px;
+}
+
+.tile--hand.tile--kw .tile__bottom,
+.tile--hand.tile--kw .tile__counters {
+  inset-block-end: 22px;
+}
+
+/* =========================================================================
+ * The status layer — the arena's turn-order bar (D210).
+ *
+ * The eleven phases of a turn down the arena's left edge, the active one lit in
+ * the turn player's colour, the seat's stops as two pips per phase (left: your
+ * turn, right: the opponent's). Below the chrome band (HUD_TOP_PX) and clear of
+ * the plates, the hand and the duelists. It is a widget in `.arena__layer`,
+ * which is `pointer-events: none`, so it opts back in — `liveness.test.ts`
+ * requires the rule.
+ * ========================================================================= */
+
+.arena__phases {
+  position: absolute;
+  inset-inline-start: 10px;
+  inset-block-start: 168px;
+  inline-size: 100px;
+  padding: 6px 6px 7px;
+  border-radius: 8px;
+  background: #0b0f13cc;
+  box-shadow: inset 0 0 0 1px #ffffff1f;
+  pointer-events: auto;
+  font-size: 10.5px;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.arena__phases-head {
+  margin: 0 0 5px;
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__phases-round {
+  font-weight: 700;
+}
+
+.arena__phases-whose--you {
+  color: var(--you);
+}
+
+.arena__phases-whose--opp {
+  color: var(--opp);
+}
+
+.arena__phases-off {
+  color: var(--muted);
+}
+
+.arena__phases-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arena__phase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #aeb6c2;
+  background: #ffffff0a;
+}
+
+.arena__phase--combat {
+  margin-inline-start: 6px;
+}
+
+.arena__phase--active {
+  color: #0b0f13;
+  font-weight: 700;
+}
+
+.arena__phase--active-you {
+  background: var(--you);
+  box-shadow: 0 0 10px var(--you);
+}
+
+.arena__phase--active-opp {
+  background: var(--opp);
+  box-shadow: 0 0 10px var(--opp);
+}
+
+.arena__phase-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__phase-stops {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.arena__stop {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.arena__stop:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.arena__stop--on.arena__stop--own {
+  color: var(--you);
+}
+
+.arena__stop--on.arena__stop--opp {
+  color: var(--opp);
+}
+
+.arena__phase--active .arena__stop {
+  color: #0b0f13;
+}

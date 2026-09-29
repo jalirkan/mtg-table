@@ -115,6 +115,22 @@
  * it mutates one fixture in one place per probe and asserts THIS SCRIPT FAILS.
  *
  * ---------------------------------------------------------------------------
+ * AMENDMENT M49 -- A FULL CARD'S `keywords`, AND WHY IT IS NEITHER OF THE ABOVE.
+ *
+ * `keywords` is the status layer's key (docs/protocol.md M49): Forge's keyword
+ * CONSTANTS (`FLYING`, `FIRST_STRIKE`), `[]` on every face-down card, never on a
+ * stub.  Every committed recording predates it, so it cannot be a
+ * `sinceAmendment` key (that would fail all nineteen) -- and it is not one of
+ * M6's `optional` comfort keys either, whose all-or-nothing rule is about a
+ * BLOCK of keys a seat answers.  It is one key, and its own rule is per FILE: no
+ * full card carries it (a pre-M49 recording) or every full card does, and a file
+ * with some of each is a Snap.card branch that forgot it -- "M49's keywords are
+ * HALF PRESENT".  Present, each entry must be a constant's name (never
+ * `UNDEFINED`, never twice), so a display string or a card name fails; a
+ * face-down card with a non-empty list fails; and a stub with the key fails A1's
+ * exact key set like any sixth key.  Controls: fixtures/negative/redaction/m49-*.
+ *
+ * ---------------------------------------------------------------------------
  * AN OPPONENT'S LIBRARY DUMPED AS FULL CARDS IS A FAILURE, NOT A WARNING.
  *
  * A3 used to WARN when a seat other than the viewer carried full cards in
@@ -371,10 +387,31 @@ const optional = (f) => {
   g.optionalKey = true;
   return g;
 };
+/**
+ * Amendment M49: a key whose absence is legitimate for a WHOLE FILE (every
+ * committed recording predates it) and a failure for part of one.  `checkShape`
+ * counts each card that carries it and each that does not into
+ * `missed.perFile`, and the end of the file says which (see `keywords`).
+ */
+const perFile = (f, label) => {
+  const g = (v) => f(v);
+  g.perFileKey = label;
+  return g;
+};
 const arrayOf = (f) => (v) => Array.isArray(v) && v.every(f);
 const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const mapOf = (f) => (v) => plainObject(v) && Object.values(v).every(f);
 const oneOf = (...values) => (v) => values.includes(v);
+
+/**
+ * Amendment M49: one keyword -- a `forge.game.keyword.Keyword` constant's
+ * `name()`, and nothing else.  `UNDEFINED` is the constant the bridge omits, so
+ * it never appears.  A display string (`Flying`), rules text or a card name
+ * cannot match, which is what makes the vocabulary closed.
+ */
+const KEYWORD_CONSTANT = /^[A-Z][A-Z0-9_]*$/;
+const keywordName = (v) => typeof v === 'string' && KEYWORD_CONSTANT.test(v) && v !== 'UNDEFINED';
+const keywordList = (v) => Array.isArray(v) && v.every(keywordName) && new Set(v).size === v.length;
 
 /** `{"kind":"player"|"card","id":n}` -- protocol section 3.1. */
 const entityRef = (v) =>
@@ -478,6 +515,8 @@ const VISIBLE_CARD_SHAPE = {
   power: nullable(str),
   toughness: nullable(str),
   loyalty: nullable(str),
+  // Amendment M49 -- Keyword constants only; per file, all or none (see the header).
+  keywords: perFile(keywordList, 'M49 (keywords)'),
   damage: num,
   counters: mapOf(num),
   tapped: bool,
@@ -757,7 +796,18 @@ function checkShape(value, shape, where, missed = null) {
     if (!(k in shape)) out.push(`${where} has an unexpected key "${k}"`);
   }
   for (const k of expected) {
+    if (shape[k].perFileKey !== undefined && missed !== null && missed.perFile) {
+      // M49: counted per file either way; the end of the file decides.
+      const tally = missed.perFile.get(shape[k].perFileKey) ?? { present: 0, absent: 0, firstAbsent: null };
+      if (k in value) tally.present += 1;
+      else {
+        tally.absent += 1;
+        tally.firstAbsent ??= where;
+      }
+      missed.perFile.set(shape[k].perFileKey, tally);
+    }
     if (!(k in value)) {
+      if (shape[k].perFileKey !== undefined) continue;
       // A key the protocol allows to be absent (M6's comfort fields): counted
       // for the summary, never a complaint.  See `optional`.
       if (shape[k].optionalKey) {
@@ -834,6 +884,12 @@ function checkCard(card, where, onStack = false, missed = null) {
     return out;
   }
   const out = checkShape(card, relax(VISIBLE_CARD_SHAPE), where, missed);
+  // M49: a face-down card's keywords are withheld like its name -- `[]` in both
+  // branches of gate 2, whatever the face-down characteristic carries.
+  if (card.faceDown === true && Array.isArray(card.keywords) && card.keywords.length > 0) {
+    out.push(`${where} is face down and carries keywords ${JSON.stringify(card.keywords)} -- ` +
+      `a face-down card's keywords are [] like its name (docs/protocol.md M49)`);
+  }
   // A2: a card that is not a stub carries a name. Catches a half-redacted third
   // shape -- exactly what faceDownHidden was -- sneaking in unannounced.
   if (!('name' in card)) {
@@ -1204,6 +1260,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
    * is a broken emitter, not an old recording.
    */
   missed.optionalPresent = new Set();
+  /** M49: per-file keys (see `perFile`) -> how many full cards carried it and did not. */
+  missed.perFile = new Map();
 
   /**
    * A6 -- the temporal half.  An id joins this set the moment the viewer was
@@ -2147,6 +2205,23 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       `stopped writing one of them looks exactly like this (protocol section 3, ` +
       `amendments M32-M36 and M39).`);
   }
+  /*
+   * M49's own rule: all or none, per FILE.  Not M6's block rule (that is about
+   * several keys); one key that every recorder writes on every full card, so a
+   * file where some full cards carry it and some do not is a Snap.card branch
+   * that forgot it -- the null-state branch, which no fixture has ever reached.
+   */
+  stats.perFile = {};
+  for (const [label, tally] of missed.perFile) {
+    stats.perFile[label] = tally.present > 0 ? (tally.absent > 0 ? 'half' : 'present') : 'absent';
+    if (tally.present > 0 && tally.absent > 0) {
+      problems.push(
+        `${path}: M49's keywords are HALF PRESENT -- ${String(tally.present)} full card(s) carry ` +
+        `"keywords" and ${String(tally.absent)} do not (first: ${tally.firstAbsent}). A recording ` +
+        `older than M49 has NONE and is fine; an emitter that writes the key in one branch of ` +
+        `Snap.card and not the other looks exactly like this (docs/protocol.md M49).`);
+    }
+  }
   stats.clientLog = isClientLog;
   stats.redelivered = redelivered;
 
@@ -2265,6 +2340,16 @@ for (const path of files) {
         + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''})`
       : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
         + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
+  }
+  // M49.  Whether this file carries the status layer's keywords -- on every
+  // full card, or (a recording older than M49) on none.
+  const kw = stats.perFile?.['M49 (keywords)'];
+  if (kw !== undefined) {
+    console.log(kw === 'present'
+      ? '      M49 keywords present on every full card (Keyword constants only, [] when face down)'
+      : kw === 'absent'
+        ? '      M49 keywords absent from every full card (legitimate -- recorded before amendment M49)'
+        : '      M49 keywords HALF PRESENT (a failure, above)');
   }
   // M6.  Which comfort fields this recording carries, and which it does not:
   // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,

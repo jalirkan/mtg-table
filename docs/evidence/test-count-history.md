@@ -131,3 +131,13 @@ rest).
 vitest** on the branch, **993 + 121 (8 files)** merged onto MOTION and is **994 +
 121** onto `main`'s `a08c15f` (the count paragraph
 under *The web client* has the rest).
+
+## *The status layer — the conventions D210–D212 added*, the lane's tests
+
+`npm --prefix web test` went from **999 `node --test` + 121 vitest (8 files)** on
+`f2c934d` to **1014 + 122 (8 files)** on branch `status-layer`: the new
+`status.test.ts` (8), a liveness clause, the ws-log suite's per-log M49 case (5
+more, which skip on a pre-M49 recording) and its across-the-sessions M49 case (1,
+which skips with no M49 log — the standalone run's 6 skipped), and
+`render.test.tsx`'s hostile keyword case.
+

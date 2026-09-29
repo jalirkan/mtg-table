@@ -148,6 +148,8 @@ test('liveness: every widget the arena layer mounts can be clicked', () => {
     // scrim, and M6's New Game row.
     DecisionLayer: [
       '.arena__decision',
+      // The status layer's turn-order bar (D210): phase stops, clickable.
+      '.arena__phases',
       '.arena__seat',
       '.ask-modal',
       '.ask-modal__scrim',
@@ -1083,6 +1085,71 @@ test('liveness: the prop field is bound from the disc field, fed by FigureLayer,
   assert.ok(files.has('figures/props.ts') && files.has('figures/traits.ts'), 'the prop kit or the trait ladder moved out of figures/');
 });
 
+/**
+ * **The status layer is a pose layer on the one frame loop** (D210), held to the
+ * prop field's four facts and three of its own:
+ *
+ *  - its per-frame half is called from `DiscField.bind` and nowhere else;
+ *  - it is built, installed (`setStatus`) and committed (`strips.commit`) only by
+ *    `FigureLayer`, and the layout it commits is computed only by `Arena.tsx` and
+ *    the workshop's `Pedestal.tsx`, from `statusLayout` — the same two callers
+ *    `figurePose` has;
+ *  - it is renderer-only: no transport, no cue engine, no click (`raycast`
+ *    cleared), no clock, and it reads no card NAME — it draws constants,
+ *    numbers and colours;
+ *  - it is ONE mesh: one `InstancedMesh`, one material, so one draw call for the
+ *    whole table (the budget has no room for more, `docs/evidence/status-layer.md`);
+ *  - its pure half (`figures/status.ts`) is under the `figures/` purity scan, and
+ *    the shared `status.ts` imports no React, no three and no DOM.
+ */
+test('liveness: the status strips are bound from the disc field, fed by FigureLayer, one mesh, and decide nothing (D210)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const callers = (pattern: RegExp): string[] =>
+    [...files].filter(([, code]) => pattern.test(code)).map(([path]) => path).sort();
+  assert.deepEqual(callers(/\bstatus\??\.bind\(/), ['scene/discs.ts'], 'the strips are bound outside the disc field');
+  assert.deepEqual(callers(/\.setStatus\(/), ['scene/FigureLayer.tsx'], 'something else installs the strips');
+  assert.deepEqual(callers(/\bstrips\.commit\(/), ['scene/FigureLayer.tsx'], 'something else commits the strips');
+  assert.deepEqual(callers(/new StatusField\(/), ['scene/FigureLayer.tsx'], 'a second status field was built');
+  assert.deepEqual(callers(/\bstatusLayout\(/).filter((p) => p !== 'figures/status.ts'), ['Arena.tsx'], 'the strips are laid out somewhere else in the arena');
+  const pedestal = codeOf(readFileSync(fileURLToPath(new URL('../src/workshop/Pedestal.tsx', import.meta.url)), 'utf8'));
+  assert.match(pedestal, /statusLayout\(placed, figures\)/, 'the pedestal no longer lays the strips out as the arena does');
+
+  const source = files.get('scene/status.ts') ?? '';
+  assert.ok(source.length > 1000, 'scene/status.ts is gone — move this test with it');
+  for (const imported of importsOf(source)) {
+    assert.ok(!imported.from.includes('transport/'), `scene/status.ts imports ${imported.from}`);
+    assert.ok(
+      !imported.from.includes('cues/queue') && !imported.from.includes('cues/registry'),
+      'scene/status.ts imports the cue engine — a field is written by the frame loop, it does not drive itself',
+    );
+  }
+  assert.ok(!/\bonAct\b|\bclickCard\b|\bselectable\b/.test(source), 'the status field reaches a click');
+  assert.match(source, /raycast = \(\) => \{\}/, 'the status mesh is a raycast target');
+  assert.ok(
+    !/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(/.test(source),
+    'the status field reads a clock of its own — the frame loop hands it one',
+  );
+  assert.ok(!/\.name\b(?!\s*=\s*'status)/.test(source.replace(/this\.mesh\.name = 'status:strips'/, '')), 'the status field reads a name');
+  // ONE mesh: one InstancedMesh, one material — one draw call for the table.
+  assert.equal((source.match(/new THREE\.InstancedMesh\(/g) ?? []).length, 1, 'the strips are more than one mesh');
+  assert.equal((source.match(/new THREE\.ShaderMaterial\(/g) ?? []).length, 1, 'the strips have more than one material');
+  const bindBody = bodyOf(source.slice(source.indexOf('export class StatusField')), 'bind');
+  assert.ok(bindBody.length > 100, 'could not find StatusField.bind');
+  assert.match(bindBody, /\.offsetOf\(/, 'the strips no longer ride their cards\' offsets');
+  assert.ok(!/cardStatus|stripQuads|statusLayout|paint|Path2D/.test(bindBody), 'the status field lays out or paints in the frame loop');
+
+  // The pure halves.
+  assert.ok(files.has('figures/status.ts'), 'figures/status.ts moved out of figures/ — the purity scan no longer covers it');
+  const shared = readFileSync(fileURLToPath(new URL('../src/status.ts', import.meta.url)), 'utf8');
+  for (const imported of importsOf(shared)) {
+    assert.ok(
+      !imported.from.startsWith('react') && imported.from !== 'three' && !imported.from.startsWith('three/'),
+      `status.ts imports ${imported.from} — both renderers read it, and node --test must`,
+    );
+  }
+  assert.ok(!/\bdocument\.|\bwindow\./.test(codeOf(shared)), 'status.ts touches the DOM');
+});
+
 test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc field, the departing bodies, the death query', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
   const layer = files.get('scene/FigureLayer.tsx') ?? '';
@@ -1091,6 +1158,8 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
   const discField = discs.slice(discs.indexOf('class DiscField'));
   const propsSource = files.get('scene/props.ts') ?? '';
   const propField = propsSource.slice(propsSource.indexOf('export class PropField'));
+  const statusSource = files.get('scene/status.ts') ?? '';
+  const statusField = statusSource.slice(statusSource.indexOf('export class StatusField'));
   const bodies: Array<[string, string]> = [
     ['DiscField.bind', bodyOf(discField, 'bind')],
     ['discs.ts commitCount', bodyOf(discs, 'commitCount')],
@@ -1105,6 +1174,10 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
     // Slice 3: the prop field, bound from `DiscField.bind` after the departing bodies.
     ['PropField.bind', bodyOf(propField, 'bind')],
     ['props.ts commitKind', bodyOf(files.get('scene/props.ts') ?? '', 'commitKind')],
+    // The status layer (D210): the strips, bound from `DiscField.bind` after the props,
+    // and the viewport they measure pixels against, read as the mesh is drawn.
+    ['StatusField.bind', bodyOf(statusField, 'bind')],
+    ['StatusField.track', bodyOf(statusField, 'track')],
   ];
   // The bodies were found, and they are the frame loop's: bind calls the rest.
   for (const [name, body] of bodies) assert.ok(body.length > 20, `could not find the body of ${name}`);
@@ -1114,6 +1187,7 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
   }
   assert.ok(bodies[0]![1].includes('departures?.bind('), 'DiscField.bind no longer binds the departing bodies');
   assert.ok(bodies[0]![1].includes('props?.bind('), 'DiscField.bind no longer binds the prop field');
+  assert.ok(bodies[0]![1].includes('status?.bind('), 'DiscField.bind no longer binds the status strips');
   assert.ok(bodies[10]![1].includes('commitKind('), 'PropField.bind no longer commits its kinds — update the body list');
 
   // The negative controls: every junk line, spliced into every body, is caught.

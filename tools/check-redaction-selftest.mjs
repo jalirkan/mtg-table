@@ -57,6 +57,13 @@ const REQUIRED = [
   ['m47-yourprofile-on-a-human-seat.jsonl', 'fail'],
   ['m47-yourprofile-is-a-path.jsonl', 'fail'],
   ['m47-pace-not-a-number.jsonl', 'fail'],
+  // Amendment M49 (the status layer): a full card's keywords -- constants only,
+  // [] when face down, never on a stub, and on every full card or none.
+  ['m49-keywords-present.jsonl', 'pass'],
+  ['m49-stub-carries-keywords.jsonl', 'fail'],
+  ['m49-keyword-is-a-display-string.jsonl', 'fail'],
+  ['m49-face-down-carries-keywords.jsonl', 'fail'],
+  ['m49-keywords-half-present.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

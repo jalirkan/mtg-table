@@ -93,10 +93,11 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
 Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
-`npm run build`'s own output is the check — the 2D entry chunk is 90.40 kB gzip
-on this tree, and none of it is `three`. **Since the workshop the arena's scene
+`npm run build`'s own output is the check — the 2D entry chunk is 93.52 kB gzip
+on this tree (90.40 before the status layer put its glyph kit and the tile's row
+in it), and none of it is `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (369.35 kB gzip
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (371.93 kB gzip
 on this tree) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
@@ -932,3 +933,52 @@ is 87–88 and 26,539–26,541 on both (`docs/evidence/bodies.md`'s *At merge*, 
 its re-measure on `a08c15f`). The lane's own number, 88 and 29,397, was the branch
 before the merge. So measure (`tools/arena-bench.mjs`) before the next kind — and bench base and branch in interleaved pairs, reporting
 the spread: on a loaded machine one pair is noise.
+
+## The status layer — the conventions D210–D212 added
+
+Four, and the thesis is one sentence: **a creature's status is a pose drawn in
+one call, and a concealed card has none.** The owner asked for a Final Fantasy
+XIII reading of the table: keyword icons, a bar of what is left of the toughness,
+a pip per counter and a mark per attachment over each creature, and a turn-order
+bar. Amendment **M49** put the keywords on the wire (`docs/protocol.md`);
+`docs/evidence/status-layer.md` is what was measured, PLAN.md's *The status
+layer* the status and the follow-ups.
+
+1. **One decision, two renderers, a pose.** `web/src/status.ts` (pure: no React,
+   three or DOM) is the glyph kit, the keyword mapping and `cardStatus(card)`, and
+   the board's `CardTile` and the arena's `figures/status.ts` both draw from it.
+   Keywords are read through `protocol.ts`'s `keywordsOf` and nothing else. The
+   strip remembers nothing — the bar is the snapshot's damage (D211: a picture of
+   `toughness − damage`, never a verdict) — so a skip, a scrub and a `resync` draw
+   it with no history. A drain that animates would be a cue, through an offset
+   that decays, measured against `motion.test.ts`'s pinned film first.
+2. **Hard rule 8 on the strip.** `figures/status.ts`'s `strippable` gives no
+   strip to an anonymous figure, a ghost, an uncrewed Vehicle or a back, and
+   `cardStatus` answers `null` for a stub and for EVERY face-down card, whatever
+   it carries. `status.test.ts` sweeps the corpus and a hostile copy of it (every
+   card handed keywords) with an ungated layout as the negative control; a new
+   surface that draws status goes through `cardStatus`, or it is how a fact about
+   a concealed card gets on screen.
+3. **`scene/status.ts` is ONE mesh, and a pose layer on the one loop** (D212):
+   one `InstancedMesh`, one material, one texture — one draw call for every strip
+   on the table, because the budget had none to spare (`g1`@316 went from 90 to
+   91 on SwiftShader, @355 is 88/89). Built, installed and committed by
+   `FigureLayer` from `statusLayout`, bound only from `DiscField.bind`, allocation
+   free (liveness's body list names `StatusField.bind` and `.track`). A new kind
+   of status is a new atlas cell in the same mesh, never a second mesh.
+4. **A billboard in pixels, above the head by measurement.** A quad is CSS pixels
+   from a world anchor (`layout.ts`'s `statusAnchorOf`: the standing height plus
+   `STATUS_LIFT`), against the viewport the renderer is drawing into (read per
+   draw, so the workshop's split view and the composer's target hold). An icon is
+   16 px — the owner's floor is 14 — and the strip's lowest pixel is 8 px above
+   the anchor; it stays upright when its figure kneels. `status.test.ts`
+   rasterises every figure pose of a corpus sample through the table view's
+   camera and the real `figures.glb` and holds the strip above every head and
+   what it wears, with a no-lift control: move the anchor or the lift and it
+   says where it fails.
+
+The turn-order bar is `DecisionLayer.tsx`'s `TurnOrderBar`: it reads what the
+board's `PhaseStrip` reads and sends the same `setPhaseStop`, so it is a second
+drawing of one control, not a second control; its `.arena__phases` class is in
+liveness's widget table with its `pointer-events: auto` rule.
+

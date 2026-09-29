@@ -817,3 +817,64 @@ test('NEGATIVE CONTROL: the harness still notices when the board cannot draw a s
   (board.players[0] as unknown as { zones: unknown }).zones = null;
   expect(() => render({ ...seeded!, board })).toThrow();
 });
+
+/**
+ * **M49 — a keyword icon is drawn on a face-up card, and on nothing else** (the
+ * status layer, D210). Every committed recording predates M49, so this reads
+ * the corpus HOSTILE: at four frames of every fixture, EVERY card — each
+ * five-key stub and each face-down card included — is handed keywords, the frame
+ * is folded through the real reducer and the seat's board rendered, and any tile
+ * that draws a `data-keyword` must be a face-up card of that frame. A keyword is
+ * not a name, so the `data-card-name` backstop above cannot see this; a stub or
+ * a face-down card that drew an icon would be a fact about a concealed card.
+ * The control is the other half: face-up tiles DO draw them, with the keyword's
+ * words as the title — a check that found no icon anywhere would prove nothing.
+ */
+test('M49: keyword icons render on face-up tiles only — stubs and face-down cards show none, even when handed keywords', () => {
+  const HOSTILE = ['FLYING', 'FIRST_STRIKE', 'TEAMWORK'];
+  let faceUpDrawn = 0;
+  let concealedTiles = 0;
+  let frames = 0;
+  for (const path of files) {
+    const log = parseFrameLog(readFileSync(path, 'utf8'));
+    const stateAt = log.frames.map((f, i) => (f.type === 'state' ? i : -1)).filter((i) => i >= 0);
+    if (stateAt.length === 0) continue;
+    const picks = new Set([0.25, 0.5, 0.75, 1].map((q) => stateAt[Math.floor(q * (stateAt.length - 1))]!));
+    let state = initialState(log.header);
+    for (let i = 0; i < log.frames.length; i++) {
+      const frame = log.frames[i]!;
+      if (picks.has(i) && frame.type === 'state') {
+        const hostile = structuredClone(frame) as StateFrame;
+        const concealed = new Set<number>();
+        const give = (cards: AnyCard[]): void => {
+          for (const card of cards) {
+            (card as unknown as { keywords: string[] }).keywords = [...HOSTILE];
+            if (isHidden(card) || (card as Card).faceDown === true) concealed.add(card.id);
+          }
+        };
+        for (const player of hostile.body.players) {
+          for (const zone of Object.values(player.zones)) give(zone.cards);
+        }
+        give(hostile.body.stackCards);
+        const html = renderLive(reduce(state, hostile));
+        frames += 1;
+        for (const m of html.matchAll(/<li class="tile[^"]*"[^>]*data-card-id="(\d+)"[^>]*>([\s\S]*?)<\/li>/g)) {
+          const id = Number(m[1]);
+          const drew = (m[2] ?? '').includes('data-keyword=');
+          if (concealed.has(id)) {
+            concealedTiles += 1;
+            expect(drew, `${shortName(path)}: frame ${String(i)} drew a keyword icon on concealed card #${String(id)}`).toBe(false);
+          } else if (drew) {
+            faceUpDrawn += 1;
+          }
+        }
+        if (faceUpDrawn > 0) expect(html).toContain('title="First strike"');
+      }
+      state = reduce(state, frame);
+    }
+  }
+  console.log(`M49 hostile render: ${String(frames)} frames, ${String(concealedTiles)} concealed tiles drew no icon, ${String(faceUpDrawn)} face-up tiles drew icons`);
+  expect(frames).toBeGreaterThan(40);
+  expect(concealedTiles, 'no concealed tile was ever drawn — the hostile half proved nothing').toBeGreaterThan(0);
+  expect(faceUpDrawn, 'no face-up tile drew an icon — the check cannot tell a gate from a dead row').toBeGreaterThan(0);
+});

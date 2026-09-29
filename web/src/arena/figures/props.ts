@@ -1057,6 +1057,14 @@ export function swarmSpan(
  */
 export const CARRIER_LENGTH = 1.5;
 export const CARRIER_THICKNESS = 0.2;
+/**
+ * **The carrier's highest point, in hull lengths** above its pose position — the
+ * island's mast in `scene/props.ts`'s carrier geometry (0.19 + 0.04 of a unit
+ * hull, rounded up). The status layer anchors a carrier's strip above it (D210):
+ * the pose's `height` is the hull's thickness, and a strip placed on that sat
+ * 12.8 px into the island at `g1`@300 (measured, `status.test.ts`).
+ */
+export const CARRIER_TOP = 0.25;
 
 /**
  * The carrier geometry's bounds, in units of its LENGTH (bow at +x, before the

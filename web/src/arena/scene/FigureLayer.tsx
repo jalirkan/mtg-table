@@ -78,6 +78,8 @@ import {
   type ModelLibrary,
 } from './models.ts';
 import { PropField, type PropBody } from './props.ts';
+import type { StatusLayout } from '../figures/status.ts';
+import { StatusField } from './status.ts';
 
 export interface FigureLayerProps {
   poses: FigureLayout;
@@ -99,6 +101,13 @@ export interface FigureLayerProps {
    * (`prime.ts`), and run again when it changes.
    */
   composer?: boolean;
+  /**
+   * **The status layer** (D210): every creature's strip — keyword icons, bar,
+   * pips, marks — as `figures/status.ts`'s `statusLayout(layout(state), poses)`
+   * computed it for THIS snapshot. Committed below into one instanced field;
+   * absent draws no strip.
+   */
+  status?: StatusLayout;
 }
 
 /** The library path this manifest names, or the default. */
@@ -142,7 +151,17 @@ function useFigureLibrary(models: ModelData): ModelLibrary | null {
   return library;
 }
 
-export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, composer = false }: FigureLayerProps): JSX.Element {
+const NO_STATUS: StatusLayout = new Map();
+
+export function FigureLayer({
+  poses,
+  rigs,
+  discs,
+  models,
+  look = DEFAULT_LOOK,
+  composer = false,
+  status = NO_STATUS,
+}: FigureLayerProps): JSX.Element {
   const library = useFigureLibrary(models);
   // The look's numbers, rebuilt only when the look itself changes: every write
   // below is keyed on this object, so a new snapshot writes nothing.
@@ -211,17 +230,38 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, c
       props.dispose();
     };
   }, [discs, props]);
+  /**
+   * **The status layer** (`scene/status.ts`, D210): every strip on the table in
+   * one instanced mesh. Built once, installed into the disc field for the
+   * layer's lifetime so the one `useFrame` binds it (after the props), and
+   * COMMITTED here, once per snapshot. The viewport it measures pixels against
+   * it reads from the renderer as it is drawn (`StatusField.track`).
+   */
+  const strips = useMemo(() => new StatusField(), []);
+  useEffect(() => {
+    discs.setStatus(strips);
+    return () => {
+      discs.setStatus(null);
+      strips.dispose();
+    };
+  }, [discs, strips]);
+  useLayoutEffect(() => {
+    strips.commit(status);
+    invalidate();
+  }, [strips, status, invalidate]);
   useEffect(() => {
     // §8.3 rule 3: one compile of the prop program — and of the contact shadows'
-    // (D140) — at mount, not on the frame the first prop or shadow appears.
-    // `compile` skips invisible objects, so show them for it.
+    // (D140) and the status strips' — at mount, not on the frame the first prop,
+    // shadow or strip appears. `compile` skips invisible objects, so show them for it.
     props.setPrimeVisible(true);
     discs.setPrimeVisible(true);
+    strips.setPrimeVisible(true);
     // For the target the frames are drawn into — the composer's, or the canvas (`prime.ts`).
     compileFor(gl, scene, camera, composer);
     props.setPrimeVisible(false);
     discs.setPrimeVisible(false);
-  }, [props, discs, gl, scene, camera, composer]);
+    strips.setPrimeVisible(false);
+  }, [props, discs, strips, gl, scene, camera, composer]);
   const mounted = useMemo(() => {
     const out: Array<{ pose: FigurePose; model: LoadedModel }> = [];
     if (library === null) return out;
@@ -271,6 +311,8 @@ export function FigureLayer({ poses, rigs, discs, models, look = DEFAULT_LOOK, c
       <primitive object={departures.group} />
       {/* Slice 3: what every figure carries, and the vehicles overhead — one draw call per kind. */}
       <primitive object={props.group} />
+      {/* The status layer (D210): every creature's strip — one draw call for the table. */}
+      <primitive object={strips.mesh} />
       {mounted.map(({ pose, model }) => (
         <Figure
           key={`${String(pose.cardId)}:${model.id}`}

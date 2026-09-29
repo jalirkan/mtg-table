@@ -205,6 +205,8 @@ export function tileAriaLabel(parts: {
   blocking: boolean;
   damage: number;
   counters: Record<string, number>;
+  /** M49: keyword constants, read through `keywordsOf` — optional, `[]` when absent. */
+  keywords?: readonly string[];
 }): string {
   const bits: string[] = [parts.name];
   if (parts.manaCost !== null) bits.push(parts.manaCost);
@@ -220,5 +222,7 @@ export function tileAriaLabel(parts: {
   for (const [counter, n] of Object.entries(parts.counters)) {
     bits.push(`${String(n)} ${counterLabel(counter).text} ${n === 1 ? 'counter' : 'counters'}`);
   }
+  // M49: a keyword constant as lower-case words (`FIRST_STRIKE` -> `first strike`).
+  for (const keyword of parts.keywords ?? []) bits.push(keyword.toLowerCase().split('_').join(' '));
   return bits.join(', ');
 }
