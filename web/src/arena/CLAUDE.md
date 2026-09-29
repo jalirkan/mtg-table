@@ -983,14 +983,14 @@ board's `PhaseStrip` reads and sends the same `setPhaseStop`, so it is a second
 drawing of one control, not a second control; its `.arena__phases` class is in
 liveness's widget table with its `pointer-events: auto` rule.
 
-## The personal tier — the conventions D194–D196 added
+## The personal tier — the conventions D194–D198 added
 
 Five, and the thesis is the tier's own sentence (**D190**): **a personal model is
 a statement about what a card is, and it is drawn from the dev server alone.** The
 user's own models (`personal/models/`, gitignored, never published) dress the
 cards and the seats their manifests name, on this machine; `tools/CLAUDE.md`'s
 *The personal tier* is the pipeline that makes them, `docs/guides/personal-tier.md`
-the manual, `docs/evidence/personal-tier.md` §16–§17 what was measured.
+the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
 
 1. **One reader, one lookup, one dressing — pure** (**D195**). `arena/personal.ts`
    imports no three, no React, no DOM and no clock (`liveness.test.ts`).
@@ -1018,7 +1018,10 @@ the manual, `docs/evidence/personal-tier.md` §16–§17 what was measured.
 3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
    `modelOf` — a dressed pose's personal model (its variant, else its base), else
    the CC0 library's — serves the living figure and the departing body; the rest of
-   the layer is unchanged. `DuelistLayer` builds a seat's duelist from a model that
+   the layer is unchanged, the status strip included: `statusLayout` reads the
+   DRESSED poses, so a dressed figure's strip stands over its model's refitted
+   height and is gated by `strippable` like any other (the status layer's
+   convention 2). `DuelistLayer` builds a seat's duelist from a model that
    dresses the seat: its own props in it, ours not baked in, the gestures on our
    clip lane, the stance rules unchanged. Neither takes a click (`raycast` cleared).
 4. **Own colours, one figure's materials** (**D196**). A personal map is the
@@ -1026,12 +1029,20 @@ the manual, `docs/evidence/personal-tier.md` §16–§17 what was measured.
    the hologram tints its values; a cutout paint discards under 0.5 alpha. A model
    of two paints is `dressFigureMeshes`'s primary material plus a SIBLING sharing
    its uniform objects — so the frame loop writes one material per figure, as
-   ever — marked with it by `applyLook` and disposed with it.
-5. **The budget is the machine's, and it is in `perf.ts`** (**D195**).
+   ever — marked with it by `applyLook` and disposed with it. **"Black is blue"
+   is the CC0 palette's rule, never a model's** (**D198**): `comicPaintOwn` lifts a
+   dark own texel in value from `COMIC.ownFloor` with its own hue (a neutral stays
+   neutral), and prepare has already exposed a texture too dark to read unlit.
+5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
    `PERSONAL_TRI_CAP` (8,000 triangles) and `PERSONAL_CALL_CAP` (2 paints) refuse
-   a model; `PERSONAL_MAX_FIGURES` (4) dresses at most four creatures, in placement
-   order, beside the two duelists. Three personal models at `g1`@316 cost nothing
-   on the GTX 1080 and about 2.6 ms of p50 on SwiftShader, and cross report 13
-   §8.2's 30,000-triangle line, which had no headroom left; measure
-   (`tools/arena-bench.mjs` against the DEV server, `?personal=0` for the A/B)
-   before raising a cap.
+   a model, in the dev route and in the reader; `PERSONAL_MAX_FIGURES` (4) dresses
+   at most four creatures; and `PERSONAL_TABLE_TRIS` (36,000) is the most personal
+   triangles on the table at once, which `personalChoicesOf` spends — the seats'
+   models first (`seatTriangles`), then the creatures in placement order, one that
+   would cross it keeping its CC0 figure. Report 13 §8.2's 30,000 stays the CC0
+   table's line; the personal tier's is added to it. The worst case (six two-paint
+   models filling the sum at `g1`@316) is 50,225 triangles and 90 calls on the GTX
+   1080 with p95 unchanged, 53,407 and 95 on SwiftShader with the median 4 ms
+   slower. Measure with `tools/arena-bench.mjs --personal` against the DEV server
+   (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
+   moving any of the four.

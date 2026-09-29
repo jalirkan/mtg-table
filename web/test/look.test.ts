@@ -143,6 +143,10 @@ test('look: the comic numbers are shaped as the shader assumes', () => {
   assert.ok(liftLo < liftHi && liftHi <= 0.12, 'the lift reaches mid paints');
   assert.ok(liftTo > 2 * blackLum && liftTo < liftHi, `the lift's target ${String(liftTo)} does not lift black (${blackLum.toFixed(3)}) into a band`);
   assert.ok(COMIC.sickLook > 0 && COMIC.sickLook < 1, 'a summoning-sick figure is not half hologram');
+  // A model's own dark paint (D198): lifted from a floor below blackAt, near the
+  // black-is-blue paint's own value, so the bands and the ink still read on it.
+  assert.ok(COMIC.ownFloor > 0 && COMIC.ownFloor < COMIC.blackAt, 'the own floor must sit under blackAt');
+  assert.ok(COMIC.ownFloor > 0.5 * blackLum && COMIC.ownFloor < 2 * blackLum, `the own floor ${String(COMIC.ownFloor)} is not near the black-is-blue paint's value (${blackLum.toFixed(3)})`);
 });
 
 // ---------------------------------------------------------------------------

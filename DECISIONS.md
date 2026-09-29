@@ -8757,6 +8757,10 @@ that failed, or changed since it passed, without re-running the check.
    30,000 line with the first personal model — the table had no headroom — so the
    cap is the machine's (the tier runs on the user's own dev server, never in a
    build), and a floor rung that sheds personal models is a follow-up.
+   *(Fix pass 1, 2026-09-29: the verifier measured that these caps allowed far
+   more than was benched — up to six models at 8,000, about 66,000 triangles on
+   the table. **D197** replaces "the cap is the machine's" with a numbered line,
+   a SUM the lookup enforces, and benches its worst case.)*
 
 **Rationale.** A personal model is a statement about what a card is (D190), so
 the one decision about it is made in one pure function, gated like the art
@@ -8793,6 +8797,8 @@ never sees a personal id, and a dressed pose carries only the opaque one.
    texture's VALUES with the palette (`?look=holo` draws a tinted hologram of the
    model); `USE_PAINT_CUTOFF` discards a texel under 0.5 alpha (Coulson's hair
    cards). D144's palette × map is unchanged for any other map (`uPaintOwn` 0).
+   *(Fix pass 1, 2026-09-29: "as it is" did not hold — the comic look's "black is
+   blue" still mixed Doom's dark texels toward navy. **D198** is the fix.)*
 2. **A model of two paints is one figure** (`dressFigureMeshes`): the first
    material is the figure's own — the one its rig holds and the frame loop writes
    — and each other paint a SIBLING whose uniforms are the first one's uniform
@@ -8834,6 +8840,131 @@ recording would have shown.
   the backdrop is a crop of its image, drawn from the same texture.
 - **Recording a game with Doom and the Hulks into `fixtures/games/`.** Every
   corpus-pinned number in the suite would move for four cards' facts.
+
+---
+
+## D197 — The personal tier has a triangle line of its own: at most 36,000 personal triangles on the table, a sum the lookup spends, the duelists first — benched at its worst case
+
+*Branch `personal-tier-2`; the lane's reserved range D194–D199.*
+
+**2026-09-29** (fix pass 1; `docs/evidence/personal-tier.md` §18)
+
+**Decision.**
+
+1. **Report 13 §8.2's 30,000 triangles stays the REPOSITORY tier's line** — the
+   CC0 table, the build, what anyone else can run (`tools/assets-manifest.json`'s
+   `budget.triangles`, D161). The personal tier never ships (D190, D195), so it
+   has a line of its own ON TOP of it: `arena/perf.ts`'s
+   **`PERSONAL_TABLE_TRIS` = 36,000**, the most personal triangles on the table at
+   once — both duelists' models and every dressed creature's, summed.
+2. **The line is a SUM, and the lookup spends it.** `personalChoicesOf` starts
+   from `PERSONAL_TABLE_TRIS` less what the seats' models cost (`seatTriangles`:
+   each seat draws its own instance), then walks the creatures in placement order:
+   a creature whose model would cross what is left keeps its CC0 figure, and a
+   smaller model later in the order may still fit. The per-model caps
+   (`PERSONAL_TRI_CAP` 8,000, `PERSONAL_CALL_CAP` 2) and the count
+   (`PERSONAL_MAX_FIGURES` 4) stay. So the worst case is the line itself — two
+   duelists and four creatures at 6,000, or two and two at the 8,000 cap — never
+   the product of the caps (six at 8,000, which the verifier put at ~66,000 on
+   the table).
+3. **The dev route applies the per-model caps too**, so the lines it prints at
+   start are what the arena will draw: an over-cap model is listed as skipped,
+   with why, and shadows no other model's card or seat.
+4. **`tools/arena-bench.mjs` checks triangles** (it printed them and checked
+   only draw calls): a frame over §8.2's 30,000 fails; `--personal` moves the line
+   to 30,000 + `PERSONAL_TABLE_TRIS` for a page that draws personal models.
+5. **The worst case, measured** at `g1`@316, bloom off, from the dev server with
+   a scratch tier (`MTG_TABLE_PERSONAL_DIR`, gitignored and deleted after) of
+   seven copies of Doom's model — 5,996 triangles and two paints each, the worst
+   in triangles and in calls at once — six of them drawn: both seats and four
+   face-up creatures, the fifth creature stopped by the count (35,976 of 36,000;
+   12 painted meshes, counted in the scene): **GTX 1080: 90 calls, 50,225
+   triangles, p50 0.4–0.5 ms, p95 0.6 ms, max 11.0–13.0 ms**, against the CC0
+   table's 86 / 26,315 / 0.6 / 10.5–12.4 in the same session; **SwiftShader (the
+   governor at dpr 0.6): 95 calls, 53,407 triangles, p50 20.5–20.7, p95
+   27.2–27.6, max 50.6–53.4**, against 88 / 29,517 / 16.3–16.8 / 33.9–34.6 /
+   35.7–82.7. The GPU does not notice; the software floor's median is about 4 ms
+   slower, and it fails §9.4 with or without the tier. The worst case also passes
+   §8.2's 90-call line by five on SwiftShader (a two-paint model is one call more
+   than the body it replaces); §9.1's 120 holds.
+
+**Rationale.** The phase-2 caps bounded each model and the count but not their
+product, and the bench had measured three models of 6,000 — so "the table
+affords it" was a claim about a case nobody had drawn. A sum is the one number
+that bounds what reaches the GPU, and spending it in the lookup (the one place a
+card is dressed) keeps "degrade, don't stutter" (report 09 §9.2 rule 9): past
+the line a figure is simply the CC0 one. 36,000 is the user's "the two duelists
+plus a handful of creatures" at the models they have (all six active ones are
+5,993–7,992 triangles).
+
+**Rejected.**
+
+- **Fitting the personal tier under §8.2's 30,000.** The CC0 table at @316 is
+  already 26,315 — no model would ever load.
+- **Lowering the caps until their product fits.** It would refuse the models the
+  user has (Coulson is 7,992) to guard a case that a sum guards exactly.
+- **A floor rung that sheds personal models at runtime.** Still a follow-up: the
+  GPU the tier runs on has headroom, and a sum is a guarantee a rung is not.
+
+---
+
+## D198 — A personal model's paint is EXPOSED by prepare and never blued by the comic look: one gain in linear light for a surface too dark to read unlit, and a dark own texel lifted with its hue kept
+
+*Branch `personal-tier-2`; the lane's reserved range D194–D199.*
+
+**2026-09-29** (fix pass 1; `docs/evidence/personal-tier.md` §18)
+
+**Decision.**
+
+1. **The comic look never blues a model's own paint** (amending D196 §1).
+   `figureMaterial.ts`'s `comicPaintOwn` replaces `comicPaint` where `uPaintOwn`
+   is 1: saturated and capped as the palette is, but a texel darker than
+   `COMIC.blackAt` (0.045, linear luminance) is lifted in value from
+   `COMIC.ownFloor` (0.02 — the black-is-blue paint's own value is 0.029) up to
+   `blackAt`, in order, with ITS OWN HUE; a texel with no measurable hue lifts to a
+   neutral. So Doom's dark-green tunic stays green and his near-black steel reads
+   grey, where "black is blue" had made them navy and lavender. The bands, the
+   halftone, the dark paint's lifted lit band (hue-kept already), the ink and the
+   rim in the card's colour are unchanged; D137's rule for the CC0 palette is
+   unchanged.
+2. **`prepare.mjs` exposes the paint** (a new step before meshopt). The arena draws
+   a personal model UNLIT, so its base colour is what the table shows, and a
+   texture authored for a lit PBR renderer can be far too dark for that: Doom's
+   surface is 85% under linear luminance 0.02 (p50 0.0066, p90 0.0267). prepare
+   measures the painted surface — area-weighted, four samples a triangle, a
+   cutout's discarded texels left out — and with `--exposure auto` (the default)
+   multiplies every paint's texels by ONE gain in linear light when the 90th
+   percentile is under 0.2 (`EXPOSURE_TARGET`), at most ×8 (`EXPOSURE_MAX`); a
+   texel a channel of which would pass 1 is scaled down as a whole, so its hue
+   holds. One gain for the model, so its paints keep their values relative to
+   each other. `--exposure off` keeps the texture as it came; a number is the gain.
+   The manifest records the surface's p10/p50/p90 before and after and the gain
+   (`paint.exposure`), and the dev server prints each model's gain at start — and
+   says "prepare it again" for a model prepared before this step.
+3. On the eight downloads: Doom ×7.49 (p90 0.0267 → 0.2006), Peggy ×1.35, Doom v2
+   ×1.72; the Hulk, Fury, Coulson and both Wasps are kept (p90 0.20–0.80). All
+   eight pass `check.mjs` again on their new `model.glb`.
+
+**Rationale.** D196 said a personal model paints "in its own colours", and the
+verifier showed it did not: the black-is-blue mix and a texture far darker than
+an unlit look can show both pushed Doom toward a blue knight with a green hood.
+Two causes, two fixes, each where it belongs: the exposure is a fact about the
+FILE (measured once, recorded, reproducible, no runtime cost, no new uniform),
+and the hue-kept lift is a rule of the LOOK (a model's black is its own, not the
+palette's navy). Lifting only the darks in the shader could not have fixed Doom —
+with 85% of his surface under 0.02 the whole figure would have been compressed
+into the lift's narrow band and lost its texture.
+
+**Rejected.**
+
+- **`blackAt` scaled down for own paints.** It shrinks the blue, it does not
+  remove it, and Doom's surface is almost all below any usable threshold.
+- **An exposure uniform per model, from the manifest through the index.** Four
+  files of plumbing and a per-paint uniform for a number that never changes at
+  runtime; baking it is the same arithmetic on the same 8-bit texels.
+- **Auto-exposing to a mean or a median.** A black suit (Coulson's p50 is 0) would
+  be pushed up to grey; the 90th percentile asks only whether the model's
+  BRIGHTEST surfaces read, and leaves a dark costume dark.
 
 ---
 

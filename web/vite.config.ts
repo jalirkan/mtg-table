@@ -115,14 +115,24 @@ function spectatePlugin(): Plugin {
  * user's own models are never published, a production page has no Node behind
  * it, and `vite preview` serves a build. `MTG_TABLE_PERSONAL=off` starts a dev
  * server without it (the arena then draws the CC0 figures, as a checkout with no
- * `personal/` folder does).
+ * `personal/` folder does); `MTG_TABLE_PERSONAL_DIR` points it at another folder
+ * inside the repository.
  */
 function personalPlugin(): Plugin {
   return {
     name: 'mtg-table-personal',
     configureServer(server: ViteDevServer) {
       if (process.env['MTG_TABLE_PERSONAL'] === 'off') return;
-      const { handle, index } = createPersonalMiddleware(REPO_ROOT);
+      // `MTG_TABLE_PERSONAL_DIR=<folder>` reads another folder of models instead —
+      // inside the repository only (a scratch tier under the gitignored `var/`,
+      // which is how D197's worst case was benched). Anything else: the tier is off.
+      const other = process.env['MTG_TABLE_PERSONAL_DIR'];
+      const dir = other === undefined || other === '' ? undefined : resolve(REPO_ROOT, other);
+      if (dir !== undefined && !dir.startsWith(`${REPO_ROOT}${sep}`)) {
+        server.config.logger.warn(`personal tier: MTG_TABLE_PERSONAL_DIR (${other}) is outside the repository — the tier is off`);
+        return;
+      }
+      const { handle, index } = createPersonalMiddleware(REPO_ROOT, dir === undefined ? {} : { dir });
       for (const line of describeIndex(index)) server.config.logger.info(line);
       server.middlewares.use(handle);
     },

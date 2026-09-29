@@ -1642,3 +1642,72 @@ export function findSourceModel(dir) {
   found.sort((a, b) => a.depth - b.depth || a.p.localeCompare(b.p));
   return found.length > 0 ? found[0].p : null;
 }
+
+// ---------------------------------------------------------------------------
+// The exposure (fix pass 1, D198): an unlit figure's paint IS its value
+// ---------------------------------------------------------------------------
+
+/** sRGB 8-bit → linear, as a table (the exposure step reads millions of texels). */
+export const SRGB_TO_LINEAR = Array.from({ length: 256 }, (_, i) => {
+  const c = i / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+});
+
+/** Linear → sRGB 8-bit, rounded and clamped. */
+export function linearToSrgb8(x) {
+  const c = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
+  return Math.max(0, Math.min(255, Math.round(255 * c)));
+}
+
+/** A texel's linear luminance (Rec. 709 weights, as the arena's shader reads it). */
+export function texelLuminance(r8, g8, b8) {
+  return 0.2126 * SRGB_TO_LINEAR[r8] + 0.7152 * SRGB_TO_LINEAR[g8] + 0.0722 * SRGB_TO_LINEAR[b8];
+}
+
+/**
+ * **Multiply RGBA texels by one gain in linear light, in place** (D198): each
+ * channel converted to linear, multiplied, and — when any channel would pass 1 —
+ * the texel scaled back down as a whole, so its hue holds and nothing clips to
+ * white. Alpha is untouched. Returns how many texels were scaled back.
+ */
+export function exposeTexels(rgba, gain) {
+  let capped = 0;
+  for (let i = 0; i + 3 < rgba.length; i += 4) {
+    const r = SRGB_TO_LINEAR[rgba[i]] * gain;
+    const g = SRGB_TO_LINEAR[rgba[i + 1]] * gain;
+    const b = SRGB_TO_LINEAR[rgba[i + 2]] * gain;
+    const k = Math.max(1, r, g, b);
+    if (k > 1) capped += 1;
+    rgba[i] = linearToSrgb8(r / k);
+    rgba[i + 1] = linearToSrgb8(g / k);
+    rgba[i + 2] = linearToSrgb8(b / k);
+  }
+  return capped;
+}
+
+/** The value at quantile `q` of `[value, weight]` pairs (sorted in place by value). */
+export function weightedQuantile(samples, q) {
+  if (samples.length === 0) return 0;
+  samples.sort((a, b) => a[0] - b[0]);
+  const total = samples.reduce((acc, s) => acc + s[1], 0);
+  let acc = 0;
+  for (const [value, weight] of samples) {
+    acc += weight;
+    if (acc >= q * total) return value;
+  }
+  return samples[samples.length - 1][0];
+}
+
+/**
+ * **The gain `--exposure` asks for** (D198): `off` 1; a number, that number; `auto`
+ * lifts a surface whose 90th-percentile linear luminance is under `target` up to
+ * it, by at most `max` — and never darkens one.
+ */
+export const EXPOSURE_TARGET = 0.2;
+export const EXPOSURE_MAX = 8;
+export function exposureGain(mode, p90, { target = EXPOSURE_TARGET, max = EXPOSURE_MAX } = {}) {
+  if (mode === 'off') return 1;
+  if (mode !== 'auto') return Number(mode);
+  if (!(p90 > 0) || p90 >= target) return 1;
+  return Math.min(max, target / p90);
+}

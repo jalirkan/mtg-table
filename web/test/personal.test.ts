@@ -40,12 +40,13 @@ import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import { figurePose, type FigureLayout, type FigurePose } from '../src/arena/figures/pose.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { FIGURE_MAX_WIDTH, layout, type Layout, type Placement } from '../src/arena/layout.ts';
-import { PERSONAL_CALL_CAP, PERSONAL_MAX_FIGURES, PERSONAL_TRI_CAP } from '../src/arena/perf.ts';
+import { PERSONAL_CALL_CAP, PERSONAL_MAX_FIGURES, PERSONAL_TABLE_TRIS, PERSONAL_TRI_CAP } from '../src/arena/perf.ts';
 import {
   EMPTY_PERSONAL,
   dressPoses,
   isLocalModelPath,
   personalChoicesOf,
+  seatTriangles,
   personalModelKey,
   personalOverlayOf,
   type PersonalEntry,
@@ -106,7 +107,7 @@ test('personal: a production build carries no personal path — the route, a slu
   assert.deepEqual(leaksIn('models/figures.glb', ['doctor-doom']), []);
   const dist = join(REPO, 'web/dist');
   if (!existsSync(dist)) {
-    t.skip('no web/dist (npm run build first; check-all builds before it tests)');
+    t.skip('no web/dist (npm run build first; in check-all the node job waits for the build job)');
     return;
   }
   const personalDir = join(REPO, 'personal/models');
@@ -149,6 +150,8 @@ interface Fake {
   model?: boolean;
   triangles?: number;
   paints?: number;
+  /** `paint.exposure.gain` (D198); absent: a model prepared before the exposure step. */
+  exposure?: number;
 }
 
 /** A folder of synthetic models: a manifest, a `model.glb` of a few bytes, a `check.json` as asked. */
@@ -171,7 +174,10 @@ function fakeTier(models: readonly Fake[]): string {
         model: 'model.glb',
         credits: `credit for ${m.slug}`,
         triangles: { after: m.triangles ?? 5000 },
-        paint: { primitives: Array.from({ length: m.paints ?? 1 }, (_, i) => ({ material: `paint-${String(i)}` })) },
+        paint: {
+          primitives: Array.from({ length: m.paints ?? 1 }, (_, i) => ({ material: `paint-${String(i)}` })),
+          ...(m.exposure === undefined ? {} : { exposure: { mode: 'auto', gain: m.exposure } }),
+        },
         clips: { keys: ['idle', 'attack'], fps: 24 },
         ...(m.disabled === undefined ? {} : { disabled: m.disabled }),
       }),
@@ -189,9 +195,9 @@ function fakeTier(models: readonly Fake[]): string {
 
 test('personal: the index — active only when version 2, not disabled, and checked on the very file; every skip says why; a card is the first slug’s', () => {
   const dir = fakeTier([
-    { slug: 'doctor-doom', dresses: [{ card: 'Doctor Doom' }, { seat: 'villain' }] },
+    { slug: 'doctor-doom', dresses: [{ card: 'Doctor Doom' }, { seat: 'villain' }], exposure: 7.491 },
     { slug: 'doctor-doom-v2', dresses: [{ card: 'Doctor Doom' }] },
-    { slug: 'hulk', dresses: [{ card: 'Hulk, Gamma Goliath' }, { card: 'Hulk, Brutal Brawler' }], paints: 2 },
+    { slug: 'hulk', dresses: [{ card: 'Hulk, Gamma Goliath' }, { card: 'Hulk, Brutal Brawler' }], paints: 2, exposure: 1 },
     { slug: 'nick-fury', disabled: 'its jacket is akimbo' },
     { slug: 'peggy', disabled: true },
     { slug: 'wasp', check: 'fail' },
@@ -201,6 +207,10 @@ test('personal: the index — active only when version 2, not disabled, and chec
     { slug: 'no-model', model: false },
     { slug: 'director', dresses: [{ seat: 'you' }] },
     { slug: 'Bad Slug' },
+    // Over a per-model cap (D195): skipped HERE, with why, and shadowing nothing —
+    // 'a-big-doom' sorts before 'doctor-doom' and dresses the same card.
+    { slug: 'a-big-doom', dresses: [{ card: 'Doctor Doom' }], triangles: PERSONAL_TRI_CAP + 1 },
+    { slug: 'many-paints', paints: PERSONAL_CALL_CAP + 1 },
   ]);
   try {
     const index = buildPersonalIndex(REPO, { dir, seatLooks: LOOKS });
@@ -220,8 +230,15 @@ test('personal: the index — active only when version 2, not disabled, and chec
     assert.match(why['phase-one'] ?? '', /phase 1/);
     assert.match(why['no-model'] ?? '', /no model\.glb/);
     assert.match(why['Bad Slug'] ?? '', /not a slug/);
+    assert.match(why['a-big-doom'] ?? '', new RegExp(`^${String(PERSONAL_TRI_CAP + 1)} triangles, over PERSONAL_TRI_CAP \\(${String(PERSONAL_TRI_CAP)}\\) — never loaded`));
+    assert.match(why['many-paints'] ?? '', new RegExp(`^${String(PERSONAL_CALL_CAP + 1)} paints, over PERSONAL_CALL_CAP`));
     const lines = describeIndex(index);
-    assert.match(lines[0] ?? '', /3 active model\(s\), 9 skipped/);
+    assert.match(lines[0] ?? '', /3 active model\(s\), 11 skipped/);
+    assert.ok(lines.some((l) => /^ {2}skipped {2}a-big-doom: \d+ triangles, over PERSONAL_TRI_CAP/.test(l)), 'the start lines list an over-cap model as skipped, with why');
+    // D198: the start lines say how each model's paint was exposed, and which was never exposed.
+    assert.ok(lines.some((l) => /^ {2}active {3}doctor-doom: .*, exposed ×7\.491$/.test(l)), lines.join('\n'));
+    assert.ok(lines.some((l) => /^ {2}active {3}hulk: .* 2 paint\(s\)$/.test(l)), 'a gain of 1 says nothing');
+    assert.ok(lines.some((l) => /^ {2}active {3}director: .*never exposed: prepare it again \(D198\)$/.test(l)));
     // No folder at all is an empty index, not an error.
     assert.deepEqual(buildPersonalIndex(REPO, { dir: join(dir, 'nowhere'), seatLooks: LOOKS }).models, []);
   } finally {
@@ -464,6 +481,50 @@ test('personal: THE lookup on its own — the pose’s gates before the name, th
   assert.deepEqual([...personalChoicesOf(placed, poses, spy.overlay, 1).keys()], [1], 'the count cap, in placement order');
   assert.equal(personalChoicesOf(placed, poses, EMPTY_PERSONAL).size, 0);
   assert.ok(PERSONAL_MAX_FIGURES >= 2);
+});
+
+test('personal: THE lookup spends the table’s personal triangle line — the seats first, then creatures in placement order, a smaller model later still fitting (D197)', () => {
+  const card = (id: number, name: string): AnyCard =>
+    ({ id, name, zone: 'battlefield', owner: 0, controller: 0, types: 'Creature - Human', power: '2', toughness: '2' }) as unknown as AnyCard;
+  const place = (id: number, name: string): Placement =>
+    ({ key: `c:${String(id)}`, cardId: id, card: card(id, name), kind: 'creature', back: false, seat: 'you' }) as unknown as Placement;
+  const pose = (id: number): FigurePose =>
+    ({ cardId: id, anonymous: false, modelId: 'agent', silhouette: null, swarm: 0, vehicle: false }) as unknown as FigurePose;
+  const names = ['Big A', 'Big B', 'Big C', 'Small D', 'Big E'];
+  const placed = {
+    placements: names.map((n, i) => place(i + 1, n)),
+    byKey: new Map(),
+    viewerId: 0,
+    bobbing: false,
+  } as unknown as Layout;
+  const poses: FigureLayout = new Map(names.map((_, i) => [i + 1, pose(i + 1)]));
+  const at = (id: string, triangles: number): PersonalEntry => ({ id, url: `personal/models/${id}/model.glb`, triangles, calls: 1, credits: '' });
+  const big = at('p0', PERSONAL_TRI_CAP);
+  const small = at('p1', 1000);
+  const seat = at('p2', PERSONAL_TRI_CAP);
+  const cards = new Map<string, PersonalEntry>([
+    ['Big A', big],
+    ['Big B', big],
+    ['Big C', big],
+    ['Small D', small],
+    ['Big E', big],
+  ]);
+  const both = { ...EMPTY_PERSONAL, entries: [big, small, seat], cards, seats: new Map([['you', seat], ['opp', seat]]) } as PersonalOverlay;
+  assert.equal(seatTriangles(both), 2 * PERSONAL_TRI_CAP, 'each seat draws its own instance');
+  // 36,000 − 16,000 for the seats = 20,000: two 8,000s, then Big C would cross, Small D still fits.
+  const chosen = personalChoicesOf(placed, poses, both);
+  assert.deepEqual([...chosen.keys()], [1, 2, 4], 'the budget in placement order, a smaller model later still fitting');
+  let sum = seatTriangles(both);
+  for (const e of chosen.values()) sum += e.triangles;
+  assert.ok(sum <= PERSONAL_TABLE_TRIS, `${String(sum)} personal triangles on the table, over the line`);
+  // No seats dressed: the count cap is what stops it.
+  const noSeats = { ...both, seats: new Map() } as PersonalOverlay;
+  assert.deepEqual([...personalChoicesOf(placed, poses, noSeats).keys()], [1, 2, 3, 4].slice(0, PERSONAL_MAX_FIGURES));
+  // The worst case the caps allow is the line itself: both seats and the count cap, every model at its cap, never pass it.
+  assert.ok(PERSONAL_TABLE_TRIS >= 2 * PERSONAL_TRI_CAP + PERSONAL_TRI_CAP, 'the line cannot hold the two duelists and one creature at the cap');
+  assert.ok(PERSONAL_TABLE_TRIS < (2 + PERSONAL_MAX_FIGURES) * PERSONAL_TRI_CAP, 'the line is no line: the count and per-model caps already stop short of it');
+  // An explicit budget of 0 dresses nothing.
+  assert.equal(personalChoicesOf(placed, poses, both, PERSONAL_MAX_FIGURES, 0).size, 0);
 });
 
 // ---------------------------------------------------------------------------

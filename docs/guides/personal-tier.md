@@ -136,6 +136,7 @@ and writes only `model.glb` and `manifest.json` (**D191** is the decision):
 | `--drop <regex>` | — | leave out render meshes whose name matches (a base plane, a shadow disc, eye-occlusion layers) |
 | `--height <m>` | the `agent` body's 1.9139 | the figure's height |
 | `--joints bind\|rest` | `bind` | read the joints AND the vertices at the skin's bind pose, or at the file's rest (its nodes as they stand); `inspect.json`'s *bind vs rest* spread says when there is a choice (D194) |
+| `--exposure auto\|off\|<gain>` | `auto` | lift a paint authored too dark for an unlit figure: `auto` multiplies every paint by one gain in linear light when the surface's 90th-percentile luminance is under 0.2 (at most ×8, each texel's hue held); `off` keeps it as it came; a number is the gain (D198) |
 | `--disabled ["<reason>"]`, `--enabled` | the last manifest's | keep the model out of the game's index, with the reason the dev server prints |
 
 In order: it strips the control meshes and every node that draws nothing;
@@ -150,7 +151,11 @@ the simplifier stops at its seams); **bakes our clip set in** — the twelve cli
 pelvis scaled by the two hip heights, as the file's own animations named by key
 (D194); runs **the paint step** — one primitive per base colour, every part whose
 UVs sit in one unit tile in a single atlas, base colour only (the normal maps
-go: the arena draws none); and compresses with meshopt last.
+go: the arena draws none); **exposes the paint** — the arena draws the model
+unlit, so a texture authored for a lit renderer (Doom's: 85% of his surface under
+linear luminance 0.02) is lifted until its surface's 90th percentile reads 0.2,
+one gain for the model, hue held, recorded in the manifest's `paint.exposure`
+(D198); and compresses with meshopt last.
 It prints a before/after table.
 
 **`check.mjs <slug>`** plays our clips on the result and judges its rig map:
@@ -215,7 +220,7 @@ schema; an unknown key is an error, and keys starting with `_` are comments.
 | `units` | `{ sourceHeight, height, scale, facing: "+z", up: "+y" }` |
 | `prepared` | `{ tool, date, budget, bytes, sha256 }` |
 | `clips` | `{ keys, source, fps, baked, dropped }` — the clip set baked into `model.glb` (must include `idle`), and the source's own takes it dropped |
-| `paint` | optional: `{ primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }], atlas, droppedNormalTextures }` — one primitive per base colour; `null` for an untextured model |
+| `paint` | optional: `{ primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }], atlas, droppedNormalTextures, exposure: { mode, target, max, gain, before, after, capped } }` — one primitive per base colour; `exposure` the surface's linear-luminance p10/p50/p90 before and after the gain (D198); `null` for an untextured model |
 | `disabled` | optional: `true`, or the reason as a sentence — the dev server skips the model and prints the reason |
 
 ## The rig map, and `bones.json`
@@ -337,9 +342,15 @@ it, and the CC0 figures draw. A model is **active** when
 - `check.json` says `check.mjs` passed, and names the `model.glb` on disk (a model
   prepared again since its check is skipped until it is checked again).
 
+- it is within the per-model caps below (the start lines list an over-cap
+  model as skipped, so they say what the arena will draw).
+
 Every other model is printed as skipped, with why. Two active models that dress
 one card or seat: the first slug keeps it, the other is "shadowed".
-`MTG_TABLE_PERSONAL=off` starts a dev server with no personal route at all.
+`MTG_TABLE_PERSONAL=off` starts a dev server with no personal route at all;
+`MTG_TABLE_PERSONAL_DIR=<folder>` reads another folder of models inside the
+repository (a scratch tier under `var/`, which is how the worst case below was
+benched).
 
 **What it dresses.** A creature whose FACE-UP name a manifest names wears that
 model — on the battlefield, and as a creature spell on the stack — and so does its
@@ -352,12 +363,33 @@ tall (refitted so its own width stays inside its rank slot), its stance, the
 kneel, the translucency of a summoning-sick creature, every cue. `?personal=0`
 draws the CC0 figures at the same frame (the A/B).
 
-**The cap** (`web/src/arena/perf.ts`): a model over **8,000 triangles** or **2
-paints** is never loaded (prepare with `--budget`; the paint step makes most
-models one paint), and at most **4 creatures** are dressed at once, in placement
-order, plus the two duelists. Measured on this machine (evidence §17): on the
-GTX 1080 three personal models cost nothing measurable; on SwiftShader, the
-software floor, about 2.6 ms at the median.
+**Its colours are its own** (D196, D198). Under the comic look a model paints in
+its texture's colours, inked, banded and rimmed in its card's colour; a dark
+texel keeps its hue and is lifted in value (a black suit reads charcoal, Doom's
+steel grey and his tunic green) — "black is blue" is the CC0 palette's rule, never
+a model's. Under `?look=holo` it is a hologram tinted by its card's colour.
+
+**The budget** (`web/src/arena/perf.ts`, D195 and D197):
+
+- a model over **8,000 triangles** (`PERSONAL_TRI_CAP`) or **2 paints**
+  (`PERSONAL_CALL_CAP`) is never loaded — prepare it again with a smaller
+  `--budget`; the paint step makes most models one paint;
+- at most **4 creatures** (`PERSONAL_MAX_FIGURES`) are dressed at once, in
+  placement order;
+- and at most **36,000 personal triangles** (`PERSONAL_TABLE_TRIS`) are on the
+  table at once — both duelists' models first, then the creatures in placement
+  order. A creature whose model would cross it keeps its CC0 figure; a smaller
+  model later in the order may still fit. That is two duelists and four creatures
+  at 6,000 triangles, or two duelists and two creatures at the 8,000 cap.
+
+Report 13 §8.2's 30,000-triangle line is the CC0 table's — the build's, what
+anyone else can run — and it had no headroom at `g1`@316, so the personal tier has
+its own line on top of it. Its worst case, measured (evidence §18): the budget
+filled by six 6,000-triangle, two-paint models at `g1`@316 is 50,225 triangles and
+90 draw calls on the GTX 1080, p95 unchanged at 0.6 ms; on SwiftShader, the
+software floor, 53,407 and 95, the median 4 ms slower than the CC0 table, which
+already fails §9.4 there. `node tools/arena-bench.mjs --personal` holds a frame
+to §8.2's line plus this one.
 
 **The workshop** (`#workshop`) badges every card an active model dresses, draws
 the pedestal dressed as the arena is (the *personal / repo* toggle is the A/B),

@@ -359,9 +359,9 @@ build needs the network and is **not** in `check-all.sh`; the four suites
 (`cards-lib`, `cards-api`, `cards-ui` and the vitest `cards-render`) run
 offline inside `npm --prefix web test` over `fixtures/cards/`.
 
-## The personal tier — the conventions D190–D196 added
+## The personal tier — the conventions D190–D198 added
 
-Five, and the thesis is the user's own sentence: **"this can never ever ever be
+Seven, and the thesis is the user's own sentence: **"this can never ever ever be
 sold or published."** The personal tier is `personal/models/<slug>/` — rigged
 models of the actual characters that the USER downloaded for their own use —
 and it sits beside the CC0 repository tier (**D54**, unchanged) without ever
@@ -461,9 +461,19 @@ root `CLAUDE.md`.
    and draw-call budget and retargets nothing. **`--joints bind|rest` reads the
    joints and the vertices in ONE pose** — phase 1 read them in two, and a model
    whose rest is not its bind came out with folded arms or a backwards foot.
+7. **Prepare exposes the paint, once, in the file** (**D198**). The arena draws a
+   personal model unlit, so its base colour is what the table shows; a texture
+   made for a lit renderer (Doom's: p90 0.027 in linear luminance) read as
+   shadow. prepare measures the painted surface (area-weighted) and, under
+   `--exposure auto`, multiplies every paint by ONE gain in linear light until
+   its 90th percentile is 0.2 — at most ×8, each texel's hue held (`lib.mjs`'s
+   `exposeTexels`), a surface already bright enough kept — and records both
+   measures and the gain in `paint.exposure`. `--exposure off` keeps the texture;
+   a number is the gain. The dev server prints each model's gain, and says
+   "prepare it again" for a model prepared before this step.
 
 ```bash
 node tools/personal/import.mjs <download.zip|.gltf|.glb|.vrm> <slug>   # unpack + inspect.json
-node tools/personal/prepare.mjs <slug> --card "<name>" [--seat villain] [--budget 6000] [--joints bind|rest] [--disabled "<why>"]
+node tools/personal/prepare.mjs <slug> --card "<name>" [--seat villain] [--budget 6000] [--joints bind|rest] [--exposure auto|off|<gain>] [--disabled "<why>"]
 node tools/personal/check.mjs <slug>          # our clips on it, the map judged, previews (headless Chromium), check.json
 ```

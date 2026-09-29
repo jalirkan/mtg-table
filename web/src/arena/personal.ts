@@ -39,7 +39,7 @@ import { isHidden } from '../protocol.ts';
 import { fitHeight, type FigureLayout, type FigurePose } from './figures/pose.ts';
 import { restModelId } from './figures/rests.ts';
 import type { Layout, Placement, Seat } from './layout.ts';
-import { PERSONAL_CALL_CAP, PERSONAL_MAX_FIGURES, PERSONAL_TRI_CAP } from './perf.ts';
+import { PERSONAL_CALL_CAP, PERSONAL_MAX_FIGURES, PERSONAL_TABLE_TRIS, PERSONAL_TRI_CAP } from './perf.ts';
 
 /** One personal model the arena may load. */
 export interface PersonalEntry {
@@ -163,21 +163,37 @@ function faceUpName(placement: Placement): string | null {
 }
 
 /**
+ * **What the seats' models spend of the table's personal line** (**D197**): each
+ * seat draws its own instance, so a model that dresses both seats counts twice.
+ * The duelists are dressed first — they are always on the table.
+ */
+export function seatTriangles(overlay: PersonalOverlay): number {
+  let sum = 0;
+  for (const entry of overlay.seats.values()) sum += entry.triangles;
+  return sum;
+}
+
+/**
  * **THE lookup** — card id → the personal model it may wear. Placements in
  * layout order (the ranks before the stack, as `figurePose` reads them), each
- * card once; at most `max` creatures (`PERSONAL_MAX_FIGURES`), the rest keeping
- * their CC0 figure. The overlay is asked about a name only after
- * {@link mayDress} has passed — that ordering IS hard rule 8 here.
+ * card once; at most `max` creatures (`PERSONAL_MAX_FIGURES`) and at most
+ * `triangles` personal triangles between them (`PERSONAL_TABLE_TRIS` less what
+ * the seats' models spend, **D197**) — a creature whose model would cross either
+ * keeps its CC0 figure, and a smaller model later in the order may still fit. The
+ * overlay is asked about a name only after {@link mayDress} has passed — that
+ * ordering IS hard rule 8 here.
  */
 export function personalChoicesOf(
   placed: Layout,
   poses: FigureLayout,
   overlay: PersonalOverlay,
   max: number = PERSONAL_MAX_FIGURES,
+  triangles: number = PERSONAL_TABLE_TRIS - seatTriangles(overlay),
 ): ReadonlyMap<number, PersonalEntry> {
   const out = new Map<number, PersonalEntry>();
   if (overlay.cards.size === 0 || max <= 0) return out;
   const seen = new Set<number>();
+  let left = triangles;
   for (const placement of placed.placements) {
     if (out.size >= max) break;
     if (placement.kind !== 'creature' && placement.kind !== 'stack') continue;
@@ -188,7 +204,9 @@ export function personalChoicesOf(
     const name = faceUpName(placement);
     if (name === null) continue;
     const entry = overlay.cards.get(name);
-    if (entry !== undefined) out.set(placement.cardId, entry);
+    if (entry === undefined || entry.triangles > left) continue;
+    left -= entry.triangles;
+    out.set(placement.cardId, entry);
   }
   return out;
 }

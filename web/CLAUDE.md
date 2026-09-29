@@ -126,7 +126,9 @@ was removed rather than enabled.
 `npm --prefix web test` is **1014 `node --test` + 122 vitest (8 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
-logs `MTGTABLE_WS_LOGS` names), so the node count there is higher. M7's eight
+logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
+`personal.test.ts` greps the `web/dist` it writes), so the node count there is
+higher. M7's eight
 suites (`layout`, `colour`, `replay-cues`, `cues-exhaustive`, `camera`,
 `liveness`, `perf`, plus the vitest `arena-hud`) and Tier 2's nine (`figures`,
 `figure-pose`, `clips`, `tiles`, `attach`, `stack`, slice 3's `traits` and

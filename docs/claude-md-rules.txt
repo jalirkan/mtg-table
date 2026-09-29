@@ -94,6 +94,7 @@
 4. **A prepared model speaks OUR rig** (**D191**). `prepare.mjs` rebuilds the
 5. **There is one retarget, and it is proven.** `tools/personal/retarget.mjs` is
 6. **The verdict gates the game** (**D194**, **D195**). `check.mjs` writes
+7. **Prepare exposes the paint, once, in the file** (**D198**). The arena draws a
 **`npm --prefix web test` is hermetic, and it is kept that way by
 1. **Nothing under `web/src/render/` may import CSS at module level.** There is
 **`node`** environment, and neither can load a stylesheet; a component that
@@ -215,7 +216,7 @@
 2. **Dev only, one loader** (**D195**). `scene/personalModels.ts` names
 3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
 4. **Own colours, one figure's materials** (**D196**). A personal map is the
-5. **The budget is the machine's, and it is in `perf.ts`** (**D195**).
+5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -382,6 +383,7 @@ span: Those rotations prove the retarget, never the rig map
 span: The verdict gates the game
 span: Prepare bakes our clip set in
 span: `--joints bind|rest` reads the joints and the vertices in ONE pose
+span: Prepare exposes the paint, once, in the file
 span: `npm --prefix web test` is hermetic, and it is kept that way by `MTGTABLE_WS_LOGS`.
 span: Nothing under `web/src/render/` may import CSS at module level.
 span: `CardTile` is THE card renderer.
@@ -590,4 +592,5 @@ span: One reader, one lookup, one dressing — pure
 span: Dev only, one loader
 span: The model-source choice is one function
 span: Own colours, one figure's materials
-span: The budget is the machine's, and it is in `perf.ts`
+span: "Black is blue" is the CC0 palette's rule, never a model's
+span: The budget is a sum, and it is in `perf.ts`

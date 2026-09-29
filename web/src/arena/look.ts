@@ -276,6 +276,18 @@ export const COMIC = Object.freeze({
   black: [0.022, 0.03, 0.075] as const,
   blackAt: 0.045,
   /**
+   * **…for OUR palette, never for a model's own paint** (the personal tier's fix
+   * pass, **D198**). A personal model's texture is its own colour (D196), and
+   * "black is blue" turned Doom's dark-green tunic and cloak navy and his
+   * dark-grey steel lavender. Under {@link COMIC.blackAt} an OWN texel is instead
+   * lifted in value with its hue kept — a neutral one stays neutral — from this
+   * floor (LINEAR luminance; sRGB ≈ #272727 for black) up to `blackAt`, in
+   * order, so the texture's dark detail survives compressed rather than flattened.
+   * The floor sits near the black-is-blue paint's own luminance (≈ 0.029), so the
+   * bands, the dots and the ink still read on a black suit.
+   */
+  ownFloor: 0.02,
+  /**
    * **…with blue highlights** (the verification pass: Quake, Fury and the dark
    * soldiers read as near-black silhouettes on the mid stage, only the ink
    * separating them). A paint whose LINEAR luminance is under `[0]` has its LIT

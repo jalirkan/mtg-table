@@ -14,11 +14,12 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The 30 follow-up lists hold 370 items, and 275 of them are open** — 251 open,
+**The 30 follow-up lists hold 373 items, and 278 of them are open** — 254 open,
 18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 95
 closed (M1's six among them; the personal tier's list was added, with its 18 and
-19 closed, when that lane merged, and its phase 2 closed ten and opened seven;
-the status layer's list of twelve was added when that lane merged). **Of the 30 questions only the owner can settle,
+19 closed, when that lane merged; its phase 2 closed ten and opened seven, and
+its fix pass 1 recounted it and opened three; the status layer's list of twelve
+was added when that lane merged). **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
@@ -288,6 +289,9 @@ the status layer's list of twelve was added when that lane merged). **Of the 30 
 | [Personal tier](#fu-personal) | 29 | open | The fan Wasp's akimbo jacket and Doom v2 — the owner's call and Blender's | — |
 | [Personal tier](#fu-personal) | 30 | open | A model prepared again needs a dev-server restart | `web/src/personal/devRoute.ts` |
 | [Personal tier](#fu-personal) | 31 | open | The inspect view's art box is the modern frame's, measured once | `web/src/workshop/framing.ts` |
+| [Personal tier](#fu-personal) | 32 | open | One exposure target for every model, set on eight | `tools/personal/lib.mjs` |
+| [Personal tier](#fu-personal) | 33 | open | The worst case passes §8.2's 90-call line on SwiftShader (95) | `tools/personal/prepare.mjs` |
+| [Personal tier](#fu-personal) | 34 | open | `arena-bench --personal` is a flag the caller must remember | `tools/arena-bench.mjs` |
 | [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
 | [Status layer](#fu-status) | 2 | open | No committed recording carries keywords | — |
 | [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
@@ -362,7 +366,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; with Lanes LOOK and MOTION, **rebased onto `main`'s `a08c15f`** (after CI, Polish 1 and Guards), Polish 1's follow-ups 1 and 2 applied (the arena's `lost` word) and the final skeptic's minors fixed or written down; *Lane BODIES*, just above *Deferred* (its *Onto `main`'s `a08c15f`*) |
 | — | The docs block: `CLAUDE.md` split by directory, and the owner's two policies *(off the plan; the structure review of 2026-09-28)* | ½ day | **built, gated and documented** on branch `docs-block` (2026-09-28), off `main`'s `102fb1f` — the history out of `CLAUDE.md` into two evidence files; **D200** (decision numbers are final), **D201** (Claude commits on branches and merges on a green gate; pushes, releases and anything public are the user's), **D202** (CI's pinned engine fetch); rule 10 pointing at the lint; a root `CLAUDE.md` of about 5,600 words and four nested files, held by `web/test/claude-md.test.ts`; *Open now*; the Java guide's map of `WireGuiGame.java`; gate green at `GATE_JOBS=4`, 259.2 s; *The docs block*, just above *Deferred* |
 | — | The personal tier, phase 1: the folder, the manifest and the pipeline *(off the plan; the user's decision of 2026-09-28 — "this can never ever ever be sold or published")* | 1 day | **built, gated and documented** on branch `personal-tier` (2026-09-28), off `main`'s `a08c15f` and rebased onto `f2c934d` — `tools/personal/` (import, prepare, check) over a gitignored `personal/models/<slug>/`, Doctor Doom run through it, three verification rounds; **D190–D193**; gate green at `GATE_JOBS=4`, 262.4 s; *The personal tier*, just above *Deferred* |
-| — | The personal tier, phase 2: the loader, the other seven models, the workshop | 1 day | **built, gated and documented** on branch `personal-tier-2` (2026-09-28), off `main`'s `096c952` — the clip set baked in, the paint step, `--joints`, `check.json`; a dev-server index and route; THE lookup (hard rule 8, a hostile corpus sweep); Doom as the villain duelist and on his card, and Coulson, Fury, Peggy, the MCU Wasp and the Hulks on theirs; the workshop's badge, toggle and inspect view; the catalog's engine facts; **D194–D196**; gate green twice at `GATE_JOBS=4`, 241.7 s and 241.3 s; *The personal tier*'s *Phase 2* |
+| — | The personal tier, phase 2: the loader, the other seven models, the workshop | 1 day | **built, gated and documented** on branch `personal-tier-2` (2026-09-28), off `main`'s `096c952` — the clip set baked in, the paint step, `--joints`, `check.json`; a dev-server index and route; THE lookup (hard rule 8, a hostile corpus sweep); Doom as the villain duelist and on his card, and Coulson, Fury, Peggy, the MCU Wasp and the Hulks on theirs; the workshop's badge, toggle and inspect view; the catalog's engine facts; **D194–D196**; gate green twice at `GATE_JOBS=4`, 241.7 s and 241.3 s; **fix pass 1** (2026-09-29): the personal tier's own triangle line, a sum benched at its worst case (**D197**), a model's own colours exposed and never blued (**D198**), three minors; gate green at 241.5 s; *The personal tier*'s *Phase 2* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -7383,7 +7387,7 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 `~/.forge` unchanged again.
 
 <a id="fu-personal"></a>
-### The personal tier's follow-ups — thirty-one, 2026-09-28 (1–7, 9, 11, 18, 19 and 21 closed; 13 and 16 partly)
+### The personal tier's follow-ups — thirty-four, 2026-09-28 (1–7, 9, 11, 18, 19 and 21 closed; 13 and 16 partly)
 
 **Phase 2, the loader** — **all seven closed by phase 2** (D194–D196, *Phase 2*
 below): the index and its one reader (1), the dev-only route and the build grep
@@ -7616,7 +7620,8 @@ skipped and vitest 121 (8 files) (`var/check-all-personal-tier-merge.log`);
 
 **Status: built, tested, gated and documented** on branch `personal-tier-2`
 (the worktree `mtg-table-t2p2`, off `main`'s `096c952`); the lane's reserved
-range D194–D199, three used. Evidence §16–§17; the guide's *In the game*.
+range D194–D199, five used (D197 and D198 by fix pass 1, below). Evidence
+§16–§18; the guide's *In the game*.
 
 1. **The pipeline** (D194): prepare BAKES our twelve clips into `model.glb` (the
    rotations would bind as they are; the agent's absolute hip track would stand a
@@ -7657,11 +7662,12 @@ downloads). `~/forge` and `~/.forge`: unchanged (evidence §17).
 26. **Per-model tuning.** The MCU Wasp's wide wings make the width clamp draw her
     small (a measure that leaves the wings out, or a per-model width note in the
     manifest); Coulson's shirt shows through his decimated jacket (a per-part
-    budget, or Blender); Doom's head bows under the hood at rest; a head scale for
-    life-size heads (follow-up 14).
+    budget, or Blender); Doom's head bows under the hood at rest, so his mask never
+    shows from the front; the Hulk's face texture smears up close (the verifier,
+    fix pass 1); a head scale for life-size heads (follow-up 14).
 27. **A floor rung that sheds personal models.** On SwiftShader three models cost
-    about 2.6 ms at the median; the DPR governor could drop them to the CC0
-    figures below its floor, as it drops bloom.
+    about 2.6 ms at the median (the worst case D197 allows, about 4 ms); the DPR
+    governor could drop them to the CC0 figures below its floor, as it drops bloom.
 28. **Upload a paint at load.** A personal texture is uploaded at its first draw;
     `gl.initTexture` at load (as `useCardTexture` does for a card) would take a
     first-frame spike off the table (SwiftShader's max reached 66.7 ms once).
@@ -7672,6 +7678,61 @@ downloads). `~/forge` and `~/.forge`: unchanged (evidence §17).
     start. Rebuilding it when a `check.json` changes would make the loop shorter.
 31. **The inspect view's art box** is the modern frame's, measured once
     (`framing.ts`'s `ART_BOX`); a showcase or full-art frame needs its own.
+
+### Phase 2, fix pass 1 — the verifier's round 1, 2026-09-29 (D197, D198)
+
+**Status: fixed, re-pictured, re-benched, gated and documented** on the same
+branch; two more of the lane's reserved numbers used (D197, D198). Evidence §18.
+The verifier found two majors and three minors; all five are fixed, none skipped.
+
+1. **The triangle line** (major, D197). The phase-2 caps bounded each model and
+   the count, not their product — up to six models at 8,000, about 66,000
+   triangles on the table, where the bench had drawn three at 6,000. The personal
+   tier now has a line of its own on top of report 13 §8.2's 30,000:
+   `PERSONAL_TABLE_TRIS` = 36,000 personal triangles, a SUM `personalChoicesOf`
+   spends (the seats first), benched at its worst case — six two-paint models of
+   5,996 dressing both seats and four creatures at `g1`@316: 50,225 triangles and
+   90 calls on the GTX 1080 with p95 unchanged; 53,407 and 95 on SwiftShader, the
+   median about 4 ms slower. `tools/arena-bench.mjs` now fails a frame over
+   §8.2's line, and `--personal` adds the tier's.
+2. **Doom's own colours** (major, D198). Two causes: "black is blue" mixed his
+   dark texels toward navy, and his texture is authored for a lit renderer (85%
+   of his surface under linear luminance 0.02). The comic look now lifts a dark
+   OWN texel with its hue kept (`comicPaintOwn`), and prepare exposes a paint too
+   dark to read unlit (one gain in linear light, Doom ×7.49, Peggy ×1.35; the
+   others kept). Doom reads green hood, tunic and cloak over grey steel with gold
+   clasps; Coulson's suit is charcoal, not navy.
+3. **The build test's race** (minor): `13c-node` now waits for `13a-build`, and
+   `13a-build` moved up the launch order so the wait costs nothing.
+4. **The dev route applies the per-model caps** (minor): an over-cap model is
+   listed as skipped at start, with why, and shadows no other model. The start
+   lines also print each model's exposure gain.
+5. **The workshop's clip panel** (minor) names "your model" while the pedestal is
+   dressed, never the CC0 body it replaced (and never a slug).
+
+**The gate**, from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9070`:
+**241.5 s**, exit 0, 48 jobs (931.4 s summed) at a load average of 0.8–4.1,
+`node --test` 1,054 / 1,046 pass / 0 fail / 8 skipped and vitest 121 (8 files)
+(`var/check-all-personal2-fix1.log`). `~/forge` and `~/.forge`: unchanged
+(evidence §18).
+
+The verifier's reading of the pictures, acted on: the colours (2, above); Doom's
+mask under his bowed hood, the MCU Wasp drawn small by her wings and the Hulk's
+face texture smearing up close are per-model tuning (follow-up 26, which now
+names the Hulk's face too).
+
+32. **One exposure target for every model.** 0.2 at the surface's 90th
+    percentile was set on eight models; a model whose brightest surface is small
+    (a dark costume with one white emblem) would be judged by the emblem.
+    `--exposure <gain>` is the override today; a per-model note in the manifest,
+    or a target read off the card's art, would be the next step.
+33. **The worst case passes §8.2's 90-call line on SwiftShader** (95; 90 on the
+    GTX 1080): a two-paint model is one call more than the body it replaces.
+    Folding a wrapping paint (Doom's tunic) into the atlas — its UVs brought into
+    one tile, the texture repeated into it — would make every model one call.
+34. **`arena-bench --personal` is a flag the caller must remember.** The page
+    could put a count of dressed figures in `info().layers` (a number, never an
+    id), and the bench pick its line from what was drawn.
 
 ## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
 

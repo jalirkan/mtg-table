@@ -56,14 +56,23 @@
  *                      against a fixed rung. Unpinned is the default and the
  *                      governor's chosen rung is printed either way.
  *
+ * **The triangle line** (the personal tier's fix pass, D197). A benched frame
+ * with `?glinfo=1` (bloom off) is also held to report 13 §8.2's triangle line —
+ * `tools/assets-manifest.json`'s `budget.triangles` (D161), 30,000 — which had
+ * been printed and never checked. `--personal` says the page may draw the user's
+ * own models (a DEV server with `personal/`, D195): the line is then that PLUS
+ * `arena/perf.ts`'s `PERSONAL_TABLE_TRIS`, the personal tier's own (D197).
+ *
  * It stays **out of `check-all.sh`** (M7 follow-up 10): it wants a built `dist`, a
  * `vite preview` server and a headless Chromium.
  * ---------------------------------------------------------------------------
  */
 
 import { spawn } from 'node:child_process';
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import { PERSONAL_TABLE_TRIS } from '../web/src/arena/perf.ts';
 
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -116,6 +125,14 @@ const WANT_FIGURES = Number(arg('figures', '0'));
 /** T7 — an exact transport index to bench, or -1 for the search / the 0.55 heuristic. */
 const INDEX = Number(arg('index', '-1'));
 const REDUCED_MOTION = args.includes('--reduced-motion');
+/** Report 13 §8.2's triangle line, where the asset pipeline keeps it (D161): the repository tier's table. */
+const TABLE_TRIS = JSON.parse(readFileSync(new URL('./assets-manifest.json', import.meta.url), 'utf8')).budget.triangles;
+/** `--personal`: the user's own models may be on the table (D195) — their line is added to §8.2's (D197). */
+const PERSONAL = args.includes('--personal');
+const TRI_LINE = TABLE_TRIS + (PERSONAL ? PERSONAL_TABLE_TRIS : 0);
+const TRI_WHY = PERSONAL
+  ? `§8.2's ${String(TABLE_TRIS)} + the personal tier's ${String(PERSONAL_TABLE_TRIS)} (D197)`
+  : `§8.2's ${String(TABLE_TRIS)}`;
 const PORT = Number(arg('port', '9223'));
 /**
  * T7 — the rasteriser. SwiftShader stays the default so an old command line keeps
@@ -491,7 +508,7 @@ try {
   }
   if (sample.render) {
     console.log(
-      `  draw calls ${String(sample.render.calls)} · triangles ${String(sample.render.triangles)} · geometries ${String(sample.memory.geometries)} · textures ${String(sample.memory.textures)}`,
+      `  draw calls ${String(sample.render.calls)} · triangles ${String(sample.render.triangles)} (line ${String(TRI_LINE)}) · geometries ${String(sample.memory.geometries)} · textures ${String(sample.memory.textures)}`,
     );
   } else {
     console.log(
@@ -541,11 +558,12 @@ try {
   if (p95 > P95_MS) failures.push(`p95 ${p95.toFixed(2)} ms > ${String(P95_MS)} ms`);
   if (max > MAX_MS) failures.push(`max ${max.toFixed(2)} ms > ${String(MAX_MS)} ms`);
   if (sample.render && sample.render.calls > 120) failures.push(`${String(sample.render.calls)} draw calls > 120`);
+  if (sample.render && sample.render.triangles > TRI_LINE) failures.push(`${String(sample.render.triangles)} triangles > ${String(TRI_LINE)} (${TRI_WHY}${PERSONAL ? '' : '; a page that draws personal models is benched with --personal'})`);
   if (failures.length > 0) {
     console.error(`\nFAIL: ${failures.join('; ')}`);
     code = 1;
   } else {
-    console.log('\nOK: inside §9.4’s gate (p95 ≤ 20 ms, max ≤ 50 ms) and §9.1’s draw-call budget');
+    console.log(`\nOK: inside §9.4’s gate (p95 ≤ 20 ms, max ≤ 50 ms), §9.1’s draw-call budget and the triangle line (${TRI_WHY})`);
   }
   cdp.close();
 } catch (err) {

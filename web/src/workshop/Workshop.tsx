@@ -786,6 +786,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         <ClipsPanel
           entry={entry}
           modelId={modelId}
+          dressed={restPose?.personal !== undefined}
           hiddenRig={hiddenRig}
           clipKeys={clipKeys}
           aliases={spec.clips}
@@ -1298,6 +1299,7 @@ function QueueBar({
 function ClipsPanel({
   entry,
   modelId,
+  dressed,
   hiddenRig,
   clipKeys,
   aliases,
@@ -1308,6 +1310,11 @@ function ClipsPanel({
 }: {
   entry: WorkshopEntry;
   modelId: string | null;
+  /**
+   * The pedestal stands the card in the user's own model (D195): the clips are the
+   * ones baked into it (D194), so the panel names no CC0 body — and no slug.
+   */
+  dressed: boolean;
   /** The body is posed but not drawn (a ring swarm's rig, D88): its clips move nothing visible. */
   hiddenRig: boolean;
   clipKeys: readonly string[];
@@ -1326,7 +1333,12 @@ function ClipsPanel({
       <summary>
         Clips{' '}
         <span className="muted">
-          — {modelId === null ? 'no body with a model: nothing to play' : `the ${modelId} body${entry.name !== '' && roleOf(entry) === 'attached' ? ' of its host' : ''}`}
+          —{' '}
+          {modelId === null
+            ? 'no body with a model: nothing to play'
+            : dressed
+              ? 'your model (the personal tier: our clips, baked into it)'
+              : `the ${modelId} body${entry.name !== '' && roleOf(entry) === 'attached' ? ' of its host' : ''}`}
           {hiddenRig ? ' · hidden rig: the swarm is procedural' : ''}
         </span>
       </summary>

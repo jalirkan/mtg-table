@@ -143,6 +143,12 @@ interface Lib {
   OUR_PARENT: Record<string, string>;
   CORE_JOINTS: string[];
   MODELS_DIR: string;
+  SRGB_TO_LINEAR: number[];
+  exposeTexels(rgba: Uint8Array, gain: number): number;
+  exposureGain(mode: string, p90: number, options?: { target?: number; max?: number }): number;
+  weightedQuantile(samples: [number, number][], q: number): number;
+  EXPOSURE_TARGET: number;
+  EXPOSURE_MAX: number;
 }
 
 const lib = (await import(new URL('../../tools/personal/lib.mjs', import.meta.url).href)) as Lib;
@@ -1478,6 +1484,91 @@ test('personal-tier: the paint step — tileable parts share an atlas, a wrappin
       assert.equal(checked.status, 0, checked.out);
       assert.match(checked.out, /cloak \(rule-skinned\) parts: Cape in paint-\d/, 'check follows the rule-skinned cape inside its merged primitive');
     }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    if (createdModels && readdirSync(lib.MODELS_DIR).length === 0) rmSync(lib.MODELS_DIR, { recursive: true, force: true });
+    if (createdPersonal && readdirSync(join(REPO, 'personal')).length === 0) rmSync(join(REPO, 'personal'), { recursive: true, force: true });
+  }
+});
+
+/**
+ * **The exposure** (fix pass 1, D198): the arena draws a personal model UNLIT,
+ * so a paint authored for a lit renderer can be too dark to read — Doom's
+ * covers 85% of his surface under linear luminance 0.02, and the comic look drew
+ * it navy. prepare measures the surface and multiplies every paint by one gain in
+ * linear light, each texel's hue held. The helpers first, then the step on a
+ * dark figure of boxes.
+ */
+test('personal-tier: exposeTexels holds each texel’s hue and keeps it under white; exposureGain lifts only a dark surface, at most ×8', () => {
+  const L = lib.SRGB_TO_LINEAR;
+  const texels = new Uint8Array([90, 40, 40, 255, 20, 60, 20, 7, 250, 200, 10, 128, 0, 0, 0, 255, 128, 128, 128, 255]);
+  const before = Array.from(texels);
+  const capped = lib.exposeTexels(texels, 3);
+  assert.equal(capped, 1, 'only the bright yellow would pass white');
+  for (let i = 0; i < texels.length; i += 4) {
+    assert.equal(texels[i + 3], before[i + 3], 'alpha is untouched');
+    const was = [0, 1, 2].map((k) => L[before[i + k]!]!);
+    const now = [0, 1, 2].map((k) => L[texels[i + k]!]!);
+    const top = Math.max(...was);
+    if (top === 0) {
+      assert.deepEqual(now, [0, 0, 0], 'black stays black (the arena lifts it, D198)');
+      continue;
+    }
+    // The hue: every channel's share of the brightest one, before and after (8-bit rounding aside).
+    for (let k = 0; k < 3; k += 1) assert.ok(Math.abs(now[k]! / Math.max(...now) - was[k]! / top) < 0.03, `texel ${String(i / 4)} channel ${String(k)}: the hue moved`);
+  }
+  assert.equal(texels[8], 255, 'the yellow is held AT white, as a whole');
+  assert.ok(L[texels[0]!]! > 2.9 * L[90]! && L[texels[0]!]! < 3.1 * L[90]!, 'a dark texel is multiplied by the gain in LINEAR light');
+  // The gain.
+  assert.equal(lib.exposureGain('off', 0.01), 1);
+  assert.equal(lib.exposureGain('2.5', 0.9), 2.5, 'a number is the gain, whatever the surface');
+  assert.equal(lib.exposureGain('auto', 0.3), 1, 'a surface already bright enough is kept');
+  assert.equal(lib.exposureGain('auto', 0), 1, 'an empty measure changes nothing');
+  assert.ok(Math.abs(lib.exposureGain('auto', lib.EXPOSURE_TARGET / 2) - 2) < 1e-9);
+  assert.equal(lib.exposureGain('auto', lib.EXPOSURE_TARGET / 100), lib.EXPOSURE_MAX, 'at most EXPOSURE_MAX');
+  assert.equal(lib.weightedQuantile([[0.5, 1], [0.1, 1], [0.9, 8]], 0.5), 0.9, 'weighted by area, not by count');
+});
+
+test('personal-tier: the exposure step — a paint too dark to read unlit is lifted to the target, one gain for the model; --exposure off keeps it', { timeout: 120_000 }, async () => {
+  const slug = `${SLUG}-exposure`;
+  const dir = lib.slugDir(slug);
+  const createdPersonal = !existsSync(join(REPO, 'personal'));
+  const createdModels = !existsSync(lib.MODELS_DIR);
+  const { createRequire } = await import('node:module');
+  const sharp = createRequire(join(REPO, 'web/package.json'))('sharp') as (input?: unknown, options?: unknown) => { png(): { toBuffer(): Promise<Buffer> } };
+  // Two DARK tones a swatch (one tone is folded into the factor by prune): a dark red and a dark green.
+  const swatch = (a: number[], b: number[]): Promise<Buffer> => {
+    const raw = Buffer.alloc(8 * 8 * 3);
+    for (let i = 0; i < 64; i += 1) raw.set(i % 2 === 0 ? a : b, i * 3);
+    return sharp(raw, { raw: { width: 8, height: 8, channels: 3 } }).png().toBuffer();
+  };
+  const io = new NodeIO();
+  const doc = await io.readBinary(await boxFigure(45, 2));
+  const byName = new Map(doc.getRoot().listMaterials().map((m) => [m.getName(), m]));
+  byName.get('Body')!.setBaseColorTexture(doc.createTexture('body').setImage(new Uint8Array(await swatch([70, 25, 25], [25, 70, 25]))).setMimeType('image/png'));
+  byName.get('Cape')!.setBaseColorTexture(doc.createTexture('cape').setImage(new Uint8Array(await swatch([25, 25, 70], [45, 45, 45]))).setMimeType('image/png'));
+  mkdirSync(dir, { recursive: true });
+  try {
+    writeFileSync(join(dir, 'figure.glb'), await io.writeBinary(doc));
+    assert.equal(node(['tools/personal/import.mjs', join(dir, 'figure.glb'), slug]).status, 0);
+    type Exposure = { mode: string; gain: number; before: { p90: number }; after: { p90: number } };
+    const run = (extra: string[]): Exposure => {
+      const prepared = node(['tools/personal/prepare.mjs', slug, '--card', 'Selftest Figure', '--budget', '600', ...extra]);
+      assert.equal(prepared.status, 0, prepared.out);
+      const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { paint: { exposure: Exposure } };
+      assert.deepEqual(lib.validateManifest(manifest), []);
+      assert.match(prepared.out, /exposure {4}surface p10\/p50\/p90/);
+      return manifest.paint.exposure;
+    };
+    const auto = run([]);
+    assert.ok(auto.before.p90 < lib.EXPOSURE_TARGET / 2, `the figure is not dark enough to test the lift (p90 ${String(auto.before.p90)})`);
+    assert.ok(auto.gain > 1.5 && auto.gain <= lib.EXPOSURE_MAX, `gain ${String(auto.gain)}`);
+    assert.ok(Math.abs(auto.after.p90 - lib.EXPOSURE_TARGET) < 0.02, `the lifted surface's p90 is ${String(auto.after.p90)}, not the target ${String(lib.EXPOSURE_TARGET)}`);
+    const off = run(['--exposure', 'off']);
+    assert.equal(off.gain, 1);
+    assert.deepEqual(off.after, off.before, '--exposure off keeps the paint as it came');
+    assert.ok(Math.abs(off.before.p90 - auto.before.p90) < 1e-3, 'the same surface measures the same');
+    assert.notEqual(node(['tools/personal/prepare.mjs', slug, '--exposure', 'bright']).status, 0, 'a gain that is not a number is refused');
   } finally {
     rmSync(dir, { recursive: true, force: true });
     if (createdModels && readdirSync(lib.MODELS_DIR).length === 0) rmSync(lib.MODELS_DIR, { recursive: true, force: true });

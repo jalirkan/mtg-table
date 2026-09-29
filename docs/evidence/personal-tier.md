@@ -1032,3 +1032,160 @@ atlas, a wrapping one keeps its texture, every part's vertex range recorded,
   lane began, and every path, size and time under `~/.forge` is the listing taken
   before the first command. Every download's sha256 is the same before and after.
 
+
+### 18. Fix pass 1 — the verifier's round 1 (2026-09-29, D197, D198)
+
+The verifier passed the hard-rule-8 sweep, the route, the build and every
+model's check, and found two majors and three minors. All five are fixed; none
+was skipped. Logs under the worktree's gitignored `var/personal2/fix1/`.
+
+**Major 1 — the triangle budget (D197).** The phase-2 caps bounded each model
+(8,000 triangles, 2 paints) and the count (4 creatures), not their product: six
+models at 8,000 is about 66,000 triangles on the table, where §17 had benched
+three at about 6,000, and `arena-bench` never checked triangles at all. Now:
+
+- `arena/perf.ts`'s **`PERSONAL_TABLE_TRIS` = 36,000**, the most personal
+  triangles on the table at once, is a sum `personalChoicesOf` spends — the
+  seats' models first (`seatTriangles`, each seat its own instance), then the
+  creatures in placement order; one that would cross it keeps its CC0 figure.
+  Report 13 §8.2's 30,000 stays the CC0 table's line; the tier's is added to it.
+- `tools/arena-bench.mjs` fails a frame over §8.2's line (read from
+  `tools/assets-manifest.json`'s `budget.triangles`), and `--personal` moves it to
+  30,000 + `PERSONAL_TABLE_TRIS`.
+- **The worst case, benched.** A scratch tier under `var/personal2/fix1/worst/`
+  (deleted after; `MTG_TABLE_PERSONAL_DIR`, new) held seven copies of Doom's
+  prepared model — 5,996 triangles and two paints each, the worst in triangles
+  and in calls at once — dressing both seats and five face-up cards on the table
+  at `g1`@316 (Aerial Doombot, Wasp, Robot Token, Peggy Carter, Soldier Token).
+  The lookup dressed the two seats and four creatures (35,976 of 36,000; the
+  fifth stopped by the count cap): twelve painted skinned meshes, counted in the
+  scene. `node tools/arena-bench.mjs --url "…/?replay=games/g1.jsonl&personal=1#arena"
+  --index 316 --no-bloom --gpu gl|swiftshader --personal`, interleaved with
+  `personal=0`, two pairs each, load average 1.6–4.5:
+
+| | draw calls | triangles | p50 | p95 | max |
+|---|---|---|---|---|---|
+| GTX 1080, CC0 | 86 | 26,315 | 0.50 | 0.60 | 10.5–12.4 |
+| GTX 1080, the worst case | 90 | 50,225 | 0.40–0.50 | 0.60 | 11.0–13.0 |
+| SwiftShader (dpr 0.6), CC0 | 88 | 29,517 | 16.3–16.8 | 33.9–34.6 | 35.7–82.7 |
+| SwiftShader (dpr 0.6), the worst case | 95 | 53,407 | 20.5–20.7 | 27.2–27.6 | 50.6–53.4 |
+
+  The GPU does not notice. SwiftShader's median is about 4 ms slower (its p95
+  reads lower, the bimodal floor of a software rasteriser); it fails §9.4 with or
+  without the tier, as before. Both worst-case runs pass the bench's new triangle
+  line (66,000) and §9.1's 120 calls; on SwiftShader the worst case passes §8.2's
+  90-call line by five (a two-paint model is one call more than the body it
+  replaces — follow-up 33). Logs: `var/personal2/fix1/bench/`.
+
+**Major 2 — Doom's own colours (D198).** The verifier read Doom's tunic and cloak
+as navy and his armour as lavender-blue. Measured on his prepared paint,
+area-weighted over the surface: **p10 0, p50 0.0066, p90 0.0267** in linear
+luminance — 85% of the surface under 0.02, 99% under the comic look's `blackAt`
+(0.045) — so "black is blue" mixed nearly all of him toward navy, and even with
+it gone the texture is far too dark to read unlit (it was authored for a lit PBR
+renderer). Two fixes:
+
+- **The look** (`figureMaterial.ts`'s `comicPaintOwn`, `COMIC.ownFloor` 0.02): an
+  own texel under `blackAt` is lifted in value with its OWN hue, from the floor up
+  to `blackAt`, in order; a texel with no hue lifts to a neutral. The palette's
+  rule is unchanged.
+- **The file** (`prepare.mjs`'s exposure step, `--exposure auto|off|<gain>`):
+  prepare measures the painted surface and, when its 90th percentile is under
+  0.2, multiplies every paint by one gain in linear light (at most ×8, each
+  texel's hue held; `lib.mjs`'s `exposeTexels`). Recorded in `paint.exposure` and
+  printed by the dev server at start:
+
+| model | surface p10 / p50 / p90 before | gain | p90 after |
+|---|---|---|---|
+| `doctor-doom` | 0 / 0.0066 / 0.0267 | **×7.491** (16,602 texels held under white) | 0.2006 |
+| `peggy-carter-secret-agent` | 0.0133 / 0.0247 / 0.1485 | ×1.347 | 0.1999 |
+| `doctor-doom-v2` (disabled) | 0.0319 / 0.087 / 0.1164 | ×1.718 | 0.1999 |
+| `hulk` | 0.0561 / 0.1992 / 0.2461 | kept | — |
+| `nick-fury-spymaster` | 0.0103 / 0.0137 / 0.2051 | kept | — |
+| `agent-phil-coulson` | 0 / 0 / 0.4969 | kept | — |
+| `wasp-shrinking-savior-mcu` | 0.0071 / 0.0334 / 0.4473 | kept | — |
+| `wasp-shrinking-savior` (disabled) | 0 / 0.0033 / 0.8046 | kept | — |
+
+  All eight were prepared and checked again (`var/personal2/fix1/run-all.sh`,
+  23 s); every `check.mjs` ends in OK on its new `model.glb`, Doom's with the
+  same numbers as before (22/22 weight, 13/13 links, 4/4 limbs, 8/8 flesh, the
+  twelve baked clips 0.72°, pelvis 0.3 mm). A scratch run at ×5.6 read the same
+  as ×7.49 at 1×, so the automatic target stayed.
+
+**What it looks like now** (`var/personal2/pictures/`, all 31 re-taken; the
+phase-2 set moved to `var/personal2/pictures-phase2-before-fix1/` for the
+before/after; side-by-side crops in `var/personal2/fix1/review/`): Doom reads a
+green hood, tunic and cloak over grey steel with gold clasps — on his card, in the
+inspect view against the card's own green-and-silver Doom, kneeling, and as the
+villain duelist at the table view; under `?look=holo` he is the same green-tinted
+hologram as before. The others moved the same way: Coulson's and Fury's suits
+read charcoal instead of navy, Peggy's shoes brown, the Hulks' trousers purple.
+His mask still hides under the bowed hood from the front (follow-up 26).
+
+**The minors.**
+
+- **The build test's race.** `tools/check-all.sh`'s `13c-node` now depends on
+  `13a-build` (`personal.test.ts` greps the `web/dist` that job writes), and
+  `13a-build` moved up the launch order, beside vitest, so the wait costs
+  nothing. The test's skip message says so.
+- **The route's caps.** `buildPersonalIndex` applies `PERSONAL_TRI_CAP` and
+  `PERSONAL_CALL_CAP` before a model can claim a card or a seat. The verifier's
+  own case, Peggy's manifest at 9,001 triangles, now prints
+  `skipped  peggy-over: 9001 triangles, over PERSONAL_TRI_CAP (8000) — never
+  loaded; prepare it again with a smaller --budget`
+  (`var/personal2/fix1/logs/overcap-index.txt`).
+- **The workshop's clip panel** reads *Clips — your model (the personal tier: our
+  clips, baked into it)* while the pedestal is dressed and *the scientist body*
+  with the toggle on *repo*.
+
+**The start lines now** (the real `personal/`):
+
+```
+personal tier: 6 active model(s), 2 skipped (dev server only, D190)
+  active   agent-phil-coulson: Agent Phil Coulson — 7992 triangles, 1 paint(s)
+  active   doctor-doom: Doctor Doom, seat opp — 5996 triangles, 2 paint(s), exposed ×7.491
+  active   hulk: Hulk, Brutal Brawler, Hulk, Strongest There Is, Hulk, Gamma Goliath — 5993 triangles, 1 paint(s)
+  active   nick-fury-spymaster: Nick Fury, Spymaster — 6000 triangles, 1 paint(s)
+  active   peggy-carter-secret-agent: Peggy Carter, Secret Agent — 5995 triangles, 1 paint(s), exposed ×1.347
+  active   wasp-shrinking-savior-mcu: Wasp, Shrinking Savior — 5996 triangles, 1 paint(s)
+  skipped  doctor-doom-v2: disabled: …
+  skipped  wasp-shrinking-savior: disabled: …
+```
+
+**The controls, re-run** (`var/personal2/fix1/logs/controls.txt`), each against
+the file restored byte for byte after: with the table sum taken out of the
+lookup, the new budget case fails; with the placement gate taken out, the corpus
+sweep fails ("the overlay was asked about a concealed name") and the unit case
+with it; with the pose gate taken out, the sweep fails ("an anonymous or
+modelless figure was dressed"); with `comicPaintOwn` mixing toward `uBlack`
+again, or an own paint sent through `comicPaint` (phase 2's shader), the
+figure-material test fails.
+
+**The tests.** `npm --prefix web test`: **1,044 / 1,044** under `node --test`
+(1,040 + a budget case in `personal.test.ts`, the own-paint case in
+`figure-material.test.ts`, and two exposure cases in `personal-tier.test.ts` — the
+helpers, and the step on a dark figure of boxes: gain > 1.5, p90 lifted to the
+target, `--exposure off` identical, a bad gain refused), vitest **121 (8 files)**.
+The index case gained two over-cap models and the exposure lines, and
+`look.test.ts` holds `ownFloor` under `blackAt` and near the black-is-blue value.
+`npm --prefix web run build`: the 2D entry chunk 90.40 kB gzip, no `three`; no
+JS chunk names `personal/`, a route, `MTG_TABLE_PERSONAL` or any slug, and the
+only `.glb` is `models/figures.glb`.
+
+**Gates, fix pass 1** (the tree as committed):
+
+- `./bridge/build.sh`: OK (no bridge change).
+- `npm --prefix web run build`: OK; `npm --prefix web test`: 1,044 / 1,044 and
+  vitest 121 (8 files), above.
+- `rm -rf bridge/out && GATE_JOBS=4 WSPORT=9070 ./tools/check-all.sh`:
+  **`check-all OK`, 241.5 s**, 48 jobs summing to 931.4 s, load average
+  0.8–4.1 (`var/check-all-personal2-fix1.log`, run `20260929-003441-3648774`);
+  inside it `node --test` **1,054 / 1,046 pass / 0 fail / 8 skipped** and vitest
+  **121 (8 files)**. `13a-build` ran 8.3–17.5 s and `13c-node` 231.9–241.5 s: the
+  node job read the finished build, and the wall time did not move (241.7 and
+  241.3 s in phase 2).
+- `~/forge` and `~/.forge`: **unchanged** — the four `~/forge` jars' sha256
+  (the desktop jar's `3c0a7c38…8e5dd9`), the `~/forge` tree's path, size and
+  time listing, and the sha256 of every file under `~/.forge` are the ones taken
+  before the fix pass's first command (`var/personal2/fix1/`); every download's
+  sha256 too.

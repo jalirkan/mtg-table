@@ -28,7 +28,10 @@
  *  - `check.json` beside it says `tools/personal/check.mjs` PASSED — a model that
  *    fails the check is never loaded — and names the very `model.glb` on disk
  *    (its sha256), so a model prepared again since its check is not loaded on an
- *    old pass.
+ *    old pass;
+ *  - it is within `arena/perf.ts`'s per-model caps (`PERSONAL_TRI_CAP`
+ *    triangles, `PERSONAL_CALL_CAP` paints) — the arena's reader applies them
+ *    too, and the start lines must say what the arena will draw.
  *
  * Every other model is listed under `skipped` with why, and the server prints the
  * same lines at start. When two active models dress the same card or seat, the
@@ -45,6 +48,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
+
+import { PERSONAL_CALL_CAP, PERSONAL_TRI_CAP } from '../arena/perf.ts';
 
 /** Where the personal tier lives, relative to the repo root (`.gitignore`'s `/personal/`). */
 export const PERSONAL_MODELS_DIR = 'personal/models';
@@ -69,6 +74,12 @@ export interface PersonalIndexModel {
   bytes: number;
   credits: string;
   clips: string[];
+  /**
+   * The paint's exposure gain (`paint.exposure.gain`, D198), or `null` for a
+   * model prepared before prepare exposed its paint — it still loads, and the
+   * start lines say to prepare it again.
+   */
+  exposure: number | null;
 }
 
 export interface PersonalIndex {
@@ -179,6 +190,23 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
       skip('model.glb changed since it was checked — run tools/personal/check.mjs again');
       continue;
     }
+    // The per-model caps (D195, perf.ts), applied HERE as well as in the arena's
+    // reader, so the lines the server prints at start are what the arena draws —
+    // and an over-cap model shadows no other model's card or seat.
+    const triangles = isRecord(manifest['triangles']) && typeof manifest['triangles']['after'] === 'number' ? manifest['triangles']['after'] : -1;
+    const paint = isRecord(manifest['paint']) && Array.isArray(manifest['paint']['primitives']) ? manifest['paint']['primitives'].length : 1;
+    if (triangles < 0) {
+      skip('its manifest carries no triangle count — run tools/personal/prepare.mjs again');
+      continue;
+    }
+    if (triangles > PERSONAL_TRI_CAP) {
+      skip(`${String(triangles)} triangles, over PERSONAL_TRI_CAP (${String(PERSONAL_TRI_CAP)}) — never loaded; prepare it again with a smaller --budget`);
+      continue;
+    }
+    if (paint > PERSONAL_CALL_CAP) {
+      skip(`${String(paint)} paints, over PERSONAL_CALL_CAP (${String(PERSONAL_CALL_CAP)}) — never loaded`);
+      continue;
+    }
     const dresses = Array.isArray(manifest['dresses']) ? manifest['dresses'].filter(isRecord) : [];
     const cards: string[] = [];
     const seats: string[] = [];
@@ -200,9 +228,9 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
       if (shadowed.length === 0) skip('dresses no card and no seat');
       continue;
     }
-    const triangles = isRecord(manifest['triangles']) && typeof manifest['triangles']['after'] === 'number' ? manifest['triangles']['after'] : -1;
-    const paint = isRecord(manifest['paint']) && Array.isArray(manifest['paint']['primitives']) ? manifest['paint']['primitives'].length : 1;
     const clips = isRecord(manifest['clips']) && Array.isArray(manifest['clips']['keys']) ? manifest['clips']['keys'].filter((k): k is string => typeof k === 'string') : [];
+    // An untextured model (paint null: the pipeline's own test figure) has nothing to expose.
+    const exposed = !isRecord(manifest['paint']) ? 1 : isRecord(manifest['paint']['exposure']) ? manifest['paint']['exposure']['gain'] : null;
     models.push({
       slug,
       model: `personal/models/${slug}/model.glb`,
@@ -213,6 +241,7 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
       bytes: bytes.byteLength,
       credits: typeof manifest['credits'] === 'string' ? manifest['credits'] : '',
       clips,
+      exposure: typeof exposed === 'number' ? exposed : null,
     });
   }
   return { version: 1, builtAt: new Date().toISOString(), models, skipped };
@@ -222,7 +251,8 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
 export function describeIndex(index: PersonalIndex): string[] {
   const out = [`personal tier: ${String(index.models.length)} active model(s), ${String(index.skipped.length)} skipped (dev server only, D190)`];
   for (const m of index.models) {
-    out.push(`  active   ${m.slug}: ${[...m.cards, ...m.seats.map((s) => `seat ${s}`)].join(', ')} — ${String(m.triangles)} triangles, ${String(m.calls)} paint(s)`);
+    const paint = m.exposure === null ? ' — its paint was never exposed: prepare it again (D198)' : m.exposure === 1 ? '' : `, exposed ×${String(m.exposure)}`;
+    out.push(`  active   ${m.slug}: ${[...m.cards, ...m.seats.map((s) => `seat ${s}`)].join(', ')} — ${String(m.triangles)} triangles, ${String(m.calls)} paint(s)${paint}`);
   }
   for (const s of index.skipped) out.push(`  skipped  ${s.slug}: ${s.why}`);
   return out;

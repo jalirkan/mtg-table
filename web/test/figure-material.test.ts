@@ -93,7 +93,9 @@ test('figure material: the paint input path — a map and vertex colours multipl
   const holoPaint = at('holoPaint = mix( painted * paintTexel.rgb, painted * ( 0.35 + 0.9 * paintLuma ), uPaintOwn );');
   const ownPaint = at('painted = mix( painted, vec3( 1.0 ), uPaintOwn ) * paintTexel.rgb;');
   const holo = at('vec3 body = holoPaint;');
-  const comic = at('comicShade( comicPaint( painted )');
+  const comic = at('comicShade( comicBase');
+  // D198: a personal map's own colours go through comicPaintOwn (never blued); anything else through comicPaint.
+  assert.match(fragment, /#ifdef USE_PAINT_MAP\s+\/\/[^\n]*\n\s+vec3 comicBase = mix\( comicPaint\( painted \), comicPaintOwn\( painted \), uPaintOwn \);\s+#else\s+vec3 comicBase = comicPaint\( painted \);\s+#endif/);
   assert.ok(colour < holo && texture < holoPaint && holoPaint < holo, 'the paint input must reach the hologram');
   assert.ok(colour < comic && ownPaint < comic, 'the paint input must sit UNDER the bands, halftone and rim');
   // Each behind its define, so a body that carries neither compiles neither.
@@ -153,6 +155,23 @@ test('figure material: a personal model paints in its own colours, a cutout disc
   });
   primary.dispose();
   assert.ok(disposed, 'disposing the figure disposes its other paints');
+});
+
+test('figure material: a model’s own dark paint keeps its hue — lifted from uOwnFloor, never mixed toward "black is blue" (D198)', () => {
+  const material = makeFigureMaterial('#3a6ea5', 1, { map: new THREE.Texture(), own: true });
+  const fragment = material.fragmentShader;
+  const start = fragment.indexOf('vec3 comicPaintOwn( vec3 paint ) {');
+  assert.ok(start >= 0, 'comicPaintOwn is gone');
+  const body = fragment.slice(start, fragment.indexOf('\n  }\n', start));
+  assert.doesNotMatch(body, /uBlack\b/, 'a model’s own paint is mixed toward the palette’s black-is-blue');
+  assert.match(body, /paint \/ max\( g, 1e-5 \)/, 'the lift must keep the texel’s own hue');
+  assert.match(body, /uOwnFloor/);
+  assert.match(body, /step\( uBlackAt, g \)/, 'a texel at or over blackAt must be left as it is');
+  // The palette's own rule is untouched.
+  const palette = fragment.slice(fragment.indexOf('vec3 comicPaint( vec3 paint ) {'), start);
+  assert.match(palette, /paint = mix\( uBlack, paint, smoothstep\( 0\.0, uBlackAt, grey \) \);/);
+  assert.equal(material.uniforms.uOwnFloor, COMIC_UNIFORMS.uOwnFloor, 'the floor is one of the comic block’s shared uniforms');
+  material.dispose();
 });
 
 test('figure material: the comic block is ONE set of uniform objects, shared by every figure and prop material (D145)', () => {

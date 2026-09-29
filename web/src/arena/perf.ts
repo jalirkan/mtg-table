@@ -245,19 +245,37 @@ export function worstOf(samples: readonly number[]): number {
 
 
 /**
- * **The personal tier's budget** (phase 2, **D195**; `docs/guides/personal-tier.md`).
- * A personal model (`personal/models/<slug>/`, dev server only, D190) replaces a
- * CC0 body of 1,400 triangles and one draw call with one of up to
- * {@link PERSONAL_TRI_CAP} triangles and one call per paint (its own texture, its
- * own program variant). Measured with `tools/arena-bench.mjs --index 316`, Doom
- * as the villain duelist, on the GTX 1080 and on SwiftShader
- * (`docs/evidence/personal-tier.md` §17): the table affords the two duelists and
- * {@link PERSONAL_MAX_FIGURES} dressed creatures at once. A model over either
- * cap is never loaded (the overlay says why); a creature past the count keeps its
- * CC0 figure, in placement order — "degrade, don't stutter" (report 09 §9.2 rule 9).
+ * **The personal tier's budget** (phase 2, **D195**; its triangle line is **D197**,
+ * `docs/guides/personal-tier.md`). A personal model (`personal/models/<slug>/`,
+ * dev server only, D190) replaces a CC0 body of 1,400 triangles and one draw call
+ * — and its props — with one of up to {@link PERSONAL_TRI_CAP} triangles and one
+ * call per paint (its own texture, its own program variant).
+ *
+ * **Report 13 §8.2's 30,000 triangles is the REPOSITORY tier's line** — the CC0
+ * table, the build, what anyone else can run — and it has no headroom at
+ * `g1`@316 (26,315). The personal tier never ships (it exists only on the user's
+ * own dev server), so it has a line of its own, and that line is a SUM, not a
+ * product of caps: at most {@link PERSONAL_TABLE_TRIS} personal triangles on the
+ * table at once, the duelists' models counted first. The worst case is therefore
+ * that number exactly — measured with `tools/arena-bench.mjs --index 316
+ * --personal`, the budget filled by six 6,000-triangle, two-paint models (both
+ * duelists and four creatures), on the GTX 1080 and on SwiftShader
+ * (`docs/evidence/personal-tier.md` §18). A model over either per-model cap is
+ * never loaded (the dev route and the overlay both say why); a creature whose
+ * model would cross the sum, or past {@link PERSONAL_MAX_FIGURES}, keeps its CC0
+ * figure, in placement order — "degrade, don't stutter" (report 09 §9.2 rule 9).
  */
 export const PERSONAL_TRI_CAP = 8000;
 /** The most paints (draw calls a figure) a personal model may bring. */
 export const PERSONAL_CALL_CAP = 2;
 /** The most creatures dressed in personal models at once (the two duelists are not counted). */
 export const PERSONAL_MAX_FIGURES = 4;
+/**
+ * **The personal tier's triangle line** (**D197**): the most personal triangles
+ * on the table at once — both duelists' models and every dressed creature's,
+ * summed. Two duelists and four creatures at 6,000 each; two duelists and two
+ * creatures at the 8,000 cap. The table's own line with it is report 13 §8.2's
+ * 30,000 (`tools/assets-manifest.json`'s `budget.triangles`, D161) plus this —
+ * the line `tools/arena-bench.mjs --personal` holds a frame to.
+ */
+export const PERSONAL_TABLE_TRIS = 36000;

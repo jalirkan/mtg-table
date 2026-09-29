@@ -48,7 +48,8 @@
  * **A personal model paints in its OWN colours** (phase 2, **D196**, amending
  * D144 for the personal tier): `uPaintOwn` 1 makes the comic look paint its
  * texture as it is — the card's colour stays in the rim, never multiplied into a
- * face — and the hologram tint the texture's VALUES with the palette, so the
+ * face, and a dark texel is lifted with its own hue rather than blued
+ * (`comicPaintOwn`, **D198**) — and the hologram tint the texture's VALUES with the palette, so the
  * hologram still reads as the card's colour; `USE_PAINT_CUTOFF` discards a texel
  * whose alpha is under 0.5 (hair cards, lashes). A model of more than one paint
  * is one material per paint, the first the figure's own and the rest SIBLINGS
@@ -115,6 +116,8 @@ export const COMIC_UNIFORMS = {
   uSat: { value: COMIC.saturation as number },
   uBlack: { value: rgb(COMIC.black) },
   uBlackAt: { value: COMIC.blackAt as number },
+  /** A model's OWN dark paint: lifted in value from this floor, its hue kept (D198) — never blued. */
+  uOwnFloor: { value: COMIC.ownFloor as number },
   /** Dark paint's lit band, lifted (hue kept): (luminance lo, hi, the lit band's target luminance). */
   uDarkLift: { value: new THREE.Vector3(COMIC.darkLift[0], COMIC.darkLift[1], COMIC.darkLift[2]) },
   uPaperWhite: { value: COMIC.paperWhite as number },
@@ -154,6 +157,7 @@ export const COMIC_FRAGMENT_GLSL = /* glsl */ `
   uniform float uSat;
   uniform vec3 uBlack;
   uniform float uBlackAt;
+  uniform float uOwnFloor;
   uniform vec3 uDarkLift;
   uniform float uPaperWhite;
   uniform float uDotPx;
@@ -166,6 +170,20 @@ export const COMIC_FRAGMENT_GLSL = /* glsl */ `
     float grey = dot( paint, vec3( 0.2126, 0.7152, 0.0722 ) );
     paint = max( mix( vec3( grey ), paint, uSat ), 0.0 );
     paint = mix( uBlack, paint, smoothstep( 0.0, uBlackAt, grey ) );
+    return min( paint, vec3( uPaperWhite ) );
+  }
+
+  // A model's OWN paint (a personal model, D198): saturated and capped as the
+  // palette is, but "black is blue" is our palette's rule, not the model's. A dark
+  // texel keeps its own hue and is lifted in value from uOwnFloor up to uBlackAt,
+  // in order; a texel with no measurable hue (black, steel) lifts to a neutral.
+  vec3 comicPaintOwn( vec3 paint ) {
+    float grey = dot( paint, vec3( 0.2126, 0.7152, 0.0722 ) );
+    paint = max( mix( vec3( grey ), paint, uSat ), 0.0 );
+    float g = dot( paint, vec3( 0.2126, 0.7152, 0.0722 ) );
+    vec3 hue = mix( vec3( 1.0 ), paint / max( g, 1e-5 ), smoothstep( 0.0, 0.004, g ) );
+    vec3 lifted = paint * ( 1.0 - uOwnFloor / uBlackAt ) + uOwnFloor * hue;
+    paint = mix( lifted, paint, step( uBlackAt, g ) );
     return min( paint, vec3( uPaperWhite ) );
   }
 
@@ -373,7 +391,13 @@ const FRAGMENT = /* glsl */ `
     float look = clamp( uLook * uMaterialize, 0.0, 1.0 );
     if ( look > 0.0 ) {
       float lit;
-      vec3 comic = comicShade( comicPaint( painted ), normal, viewDir, normalize( vKey ), lit );
+      #ifdef USE_PAINT_MAP
+        // D198: a model's own colours are never blued; D144's palette × map still is.
+        vec3 comicBase = mix( comicPaint( painted ), comicPaintOwn( painted ), uPaintOwn );
+      #else
+        vec3 comicBase = comicPaint( painted );
+      #endif
+      vec3 comic = comicShade( comicBase, normal, viewDir, normalize( vKey ), lit );
       // The card's own colour as a rim on the silhouette's SHADOW side: where the
       // hologram's colour identity survives in the comic look.
       float edge = smoothstep( uEdgeBand.x, uEdgeBand.y, 1.0 - max( dot( normal, viewDir ), 0.0 ) );

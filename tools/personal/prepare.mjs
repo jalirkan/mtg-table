@@ -10,6 +10,7 @@
  *   node tools/personal/prepare.mjs <slug> [--budget 6000] [--pose t|none]
  *        [--map auto|<bones.json>] [--cloak-to <our joint>] [--height <m>]
  *        [--drop <regex>]… [--bind <regex>=<our joint>]… [--joints bind|rest]
+ *        [--exposure auto|off|<gain>]
  *        [--card "<card name>"]… [--seat you|opp|director|villain]…
  *        [--disabled ["<reason>"] | --enabled]
  *   node tools/personal/prepare.mjs doctor-doom --card "Doctor Doom" --seat opp
@@ -72,7 +73,18 @@
  *     body whose hip stands 6 cm higher than the agent's would sink into the
  *     table on the agent's own track — so the arena binds these, never
  *     `figures.glb`'s, and needs no retarget of its own.
- *  9. **meshopt LAST** (`gltf-transform meshopt`, the Tier 2 trap: nothing after it).
+ *  9. **Expose the paint** (fix pass 1, D198): the arena draws a personal model
+ *     UNLIT, so its base colour IS what the table shows. A texture authored for a
+ *     lit PBR renderer can be far darker than that — Doom's covers 85% of his
+ *     surface under linear luminance 0.02 — and under the comic look a paint that
+ *     dark is all shadow. The surface is measured (area-weighted, four samples a
+ *     triangle, a cutout's discarded texels left out) and, when its 90th
+ *     percentile is under 0.2, every paint's texels are multiplied by ONE gain in
+ *     linear light (at most ×8; hue kept, no channel pushed past 1), so the
+ *     paints keep their values relative to each other. `--exposure off` keeps the
+ *     texture as it came; a number sets the gain. The manifest records both
+ *     percentiles and the gain (`paint.exposure`).
+ * 10. **meshopt LAST** (`gltf-transform meshopt`, the Tier 2 trap: nothing after it).
  *
  * Two more rules (D194): a material in the spec/gloss workflow (Character
  * Creator's) has its diffuse texture and factor read as base colour first; and a
@@ -106,6 +118,10 @@ import {
   controlReason,
   CORE_JOINTS,
   detectRigMap,
+  EXPOSURE_MAX,
+  EXPOSURE_TARGET,
+  exposeTexels,
+  exposureGain,
   findSourceModel,
   GLTF,
   heightWeights,
@@ -126,6 +142,7 @@ import {
   SEATS,
   SEAT_LOOKS,
   seatOf,
+  texelLuminance,
   skinAtRest,
   slugDir,
   snapshot,
@@ -135,6 +152,7 @@ import {
   vrmHumanBonesOf,
   WEB,
   weightedJoints,
+  weightedQuantile,
 } from './lib.mjs';
 import { worldDeltaRetarget } from './retarget.mjs';
 
@@ -146,7 +164,7 @@ const argv = process.argv.slice(2);
 const slug = argv[0];
 if (!slug || slug.startsWith('--')) {
   console.error(
-    'usage: node tools/personal/prepare.mjs <slug> [--budget 6000] [--pose t|none] [--map auto|<file>] [--cloak-to <joint>] [--height <m>] [--drop <regex>]… [--bind <regex>=<joint>]… [--joints bind|rest] [--card "<name>"]… [--seat you|opp|director|villain]… [--disabled ["<reason>"]|--enabled]',
+    'usage: node tools/personal/prepare.mjs <slug> [--budget 6000] [--pose t|none] [--map auto|<file>] [--cloak-to <joint>] [--height <m>] [--drop <regex>]… [--bind <regex>=<joint>]… [--joints bind|rest] [--exposure auto|off|<gain>] [--card "<name>"]… [--seat you|opp|director|villain]… [--disabled ["<reason>"]|--enabled]',
   );
   process.exit(2);
 }
@@ -161,6 +179,12 @@ const MAP = opt('map', 'auto');
 const CLOAK_TO = opt('cloak-to', null);
 /** `--joints bind|rest`: which pose the joints AND the vertices are read in (see the header). */
 const JOINTS_AT = opt('joints', 'bind');
+/**
+ * `--exposure auto|off|<gain>` (fix pass 1, D198): `auto` lifts a paint authored
+ * too dark for an unlit figure (see the exposure step), `off` keeps it as it came,
+ * a number multiplies it by exactly that, in linear light.
+ */
+const EXPOSURE = opt('exposure', 'auto');
 /** `--drop <regex>`: render meshes to leave out (a base plane, a shadow disc, eye-occlusion layers). */
 const DROP = many('drop').map((r) => new RegExp(r, 'i'));
 /** `--bind <regex>=<our joint>`: an unskinned part bound wholly to one joint (a pair of wings to spine_03). */
@@ -177,6 +201,7 @@ if (!['t', 'none'].includes(POSE)) fail('--pose must be t or none');
 if (CLOAK_TO !== null && !OUR_JOINTS.includes(CLOAK_TO)) fail(`--cloak-to must be one of our joints: ${OUR_JOINTS.join(', ')}`);
 for (const seat of many('seat')) if (seatOf(seat) === null) fail(`--seat must be one of ${[...SEATS, ...Object.values(SEAT_LOOKS)].join(', ')}`);
 if (!['bind', 'rest'].includes(JOINTS_AT)) fail('--joints must be bind or rest');
+if (!['auto', 'off'].includes(EXPOSURE) && !(Number(EXPOSURE) >= 0.25 && Number(EXPOSURE) <= 16)) fail('--exposure must be auto, off, or a gain between 0.25 and 16');
 if (argv.includes('--disabled') && argv.includes('--enabled')) fail('--disabled and --enabled together');
 /** Parts smaller than this are kept whole by the decimator (pins, a buckle, a rope). */
 const KEEP_WHOLE = 300;
@@ -916,6 +941,88 @@ for (const texture of doc.getRoot().listTextures()) {
 // ---------------------------------------------------------------------------
 
 const paint = await paintStep();
+
+// ---------------------------------------------------------------------------
+// The exposure (fix pass 1, D198): an unlit figure's paint IS its value
+// ---------------------------------------------------------------------------
+
+if (paint !== null) paint.exposure = await exposureStep();
+
+/**
+ * **Measure the painted surface and lift it when it is too dark to read unlit**
+ * (D198; `lib.mjs`'s `exposureGain`, `exposeTexels`). Every paint primitive's
+ * triangles, weighted by area, four samples each (the centroid and three toward
+ * the corners) at the texel their UV names, a repeating UV wrapped; a texel a
+ * cutout discards (alpha under half) is not surface. One gain for the model,
+ * applied to every paint's texels in linear light with each texel's hue held.
+ * Returns the manifest's record; the textures are rewritten in place.
+ */
+async function exposureStep() {
+  const decoded = new Map();
+  const imageOf = async (texture) => {
+    if (!decoded.has(texture)) {
+      const { data, info } = await sharp(Buffer.from(texture.getImage())).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      decoded.set(texture, { data, info });
+    }
+    return decoded.get(texture);
+  };
+  const W3 = [
+    [1 / 3, 1 / 3, 1 / 3],
+    [2 / 3, 1 / 6, 1 / 6],
+    [1 / 6, 2 / 3, 1 / 6],
+    [1 / 6, 1 / 6, 2 / 3],
+  ];
+  const measure = async () => {
+    const samples = [];
+    for (const prim of bodyMesh.listPrimitives()) {
+      const texture = prim.getMaterial()?.getBaseColorTexture() ?? null;
+      if (texture === null) continue;
+      const { data, info } = await imageOf(texture);
+      const pos = readAll(prim.getAttribute('POSITION'));
+      const uv = readAll(prim.getAttribute('TEXCOORD_0'));
+      const index = prim.getIndices() !== null ? prim.getIndices().getArray() : Array.from({ length: pos.length / 3 }, (_, i) => i);
+      for (let t = 0; t + 2 < index.length; t += 3) {
+        const [a, b, c] = [index[t], index[t + 1], index[t + 2]];
+        const e1 = [0, 1, 2].map((k) => pos[b * 3 + k] - pos[a * 3 + k]);
+        const e2 = [0, 1, 2].map((k) => pos[c * 3 + k] - pos[a * 3 + k]);
+        const area = 0.5 * Math.hypot(e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]);
+        if (!(area > 0)) continue;
+        for (const w of W3) {
+          let u = w[0] * uv[a * 2] + w[1] * uv[b * 2] + w[2] * uv[c * 2];
+          let v = w[0] * uv[a * 2 + 1] + w[1] * uv[b * 2 + 1] + w[2] * uv[c * 2 + 1];
+          u -= Math.floor(u);
+          v -= Math.floor(v);
+          const x = Math.min(info.width - 1, Math.floor(u * info.width));
+          const y = Math.min(info.height - 1, Math.floor(v * info.height));
+          const o = (y * info.width + x) * 4;
+          if (data[o + 3] < 128) continue;
+          samples.push([texelLuminance(data[o], data[o + 1], data[o + 2]), area]);
+        }
+      }
+    }
+    return { p10: round(weightedQuantile(samples, 0.1), 4), p50: round(weightedQuantile(samples, 0.5), 4), p90: round(weightedQuantile(samples, 0.9), 4) };
+  };
+  const before = await measure();
+  const gain = exposureGain(EXPOSURE, before.p90);
+  const record = { mode: EXPOSURE, target: EXPOSURE_TARGET, max: EXPOSURE_MAX, gain: round(gain, 3), before, after: before, capped: 0 };
+  if (Math.abs(gain - 1) > 1e-3) {
+    for (const [texture, { data, info }] of decoded) {
+      record.capped += exposeTexels(data, gain);
+      const png = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+      texture.setImage(new Uint8Array(png));
+      const name = basename(texture.getURI() || texture.getName() || 'texture');
+      for (const t of textures) if (t.name === name) t.bytes = png.byteLength;
+    }
+    record.after = await measure();
+  }
+  console.log(
+    `  exposure    surface p10/p50/p90 ${String(before.p10)}/${String(before.p50)}/${String(before.p90)} (linear)` +
+      (record.after === before
+        ? ` — kept (${EXPOSURE === 'off' ? '--exposure off' : `p90 at or over ${String(EXPOSURE_TARGET)}`})`
+        : ` ×${String(record.gain)} → ${String(record.after.p10)}/${String(record.after.p50)}/${String(record.after.p90)}${record.capped > 0 ? ` (${String(record.capped)} texels held under white)` : ''}`),
+  );
+  return record;
+}
 
 /**
  * **One draw call per paint.** three draws a primitive per call, and the arena

@@ -1765,7 +1765,8 @@ s13_skipped() {
 # one thread, which reads only committed fixtures) and `npm run test:node`
 # (node --test, whose ws-log suite is the only reader of MTGTABLE_WS_LOGS) --
 # the two halves of package.json's own `test` script, the same commands -- so
-# only the ~9 s half waits for step 10.
+# only the ~9 s half waits for step 10.  It waits for the build as well, because
+# personal.test.ts reads the web/dist that job writes (D195).
 s13_web() {
   hdr 13 "web -- npm run build && npm test (includes the arena's six headless suites)"
   [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
@@ -1857,7 +1858,10 @@ else
   job 13-web      13 serial   s13_web
   job 13a-build   13 parallel s13_build         "$PRE"
   job 13b-render  13 parallel s13_render        "$PRE"
-  job 13c-node    13 parallel s13_node          "10a-smoke 10b-drop 10c-auto 10d-refuse 10f-probe 10g-three"
+  # 13c waits for 13a too: personal.test.ts reads the build it made (web/dist
+  # carries no personal path, D195) -- run beside it, it read a stale or
+  # half-rewritten dist (the personal tier's verifier, 2026-09-29).
+  job 13c-node    13 parallel s13_node          "10a-smoke 10b-drop 10c-auto 10d-refuse 10f-probe 10g-three 13a-build"
 fi
 
 # The parallel launch ORDER: whenever a slot is free, the first READY job in
@@ -1867,12 +1871,13 @@ fi
 # seconds rather than after every game has played.  Then longest-first, with
 # what feeds a dependency first: 10g (three games, ~135 s under load) and
 # vitest (~60 s on one thread) head it because `node --test` waits for step 10
-# and nothing waits for the ten-games rows; Smoke is early because 9c and 9e
+# and nothing waits for the ten-games rows, and the build is right behind them
+# because `node --test` waits for it too; Smoke is early because 9c and 9e
 # wait for it.  Anything not named runs after, in table order.
 PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks"
-PAR_FIRST="$PAR_FIRST 10g-three 13b-render 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
+PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
-PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 08-console 12c-crash 13a-build"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 08-console 12c-crash"
 
 # ---------------------------------------------------------------------------
 # The runner (D130).
