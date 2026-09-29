@@ -26,7 +26,8 @@ enough to count as "not breaking anything". It is not (§3).
 
 Everything this list names already exists in the tree except the four items marked
 **(new on the day)**, whose specification is §5.2. Each step is its own reviewable
-change, the user commits, and any step that fails **stops the switch**; rollback is
+change on the switch's branch, merged only on a green gate (D201, 2026-09-28), and
+any step that fails **stops the switch**; rollback is
 reverting `config.json` and the patch, because `~/forge` (2.0.14) is never touched.
 
 **Before the day, on `main`, whenever the user likes** (it is independent of the

@@ -184,4 +184,11 @@
 **Each gate has a hostile case only it stops** — a named back, a named stub in
 5. **The library's budget is the manifest's** (**D161**): `budget.libraryBytes`
 **That last sentence was true of the source checkout of 2026-09-11, and is no
-**Do not run `git commit`, `git add`, or `git push`.** The user commits their own
+**Claude commits on branches and merges to `main` when the full gate is green;
+- **A branch per lane, in a worktree of its own** (`git worktree add
+- **A skeptic before a merge**: an independent review of the lane's diff and its
+- **The full gate on every merge**: `./tools/check-all.sh`, green, from a deleted
+- **Never push a lane.** Pushing, tags, releases, pull requests and anything
+- **Never touch `~/forge` or `~/.forge`** (*Never write outside this repo*,
+- **The personal tier is never committed**: Tier 3's likeness models and anything
+**A decision's number is final** (**D200**). A lane reserves a block of numbers

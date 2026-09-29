@@ -9,6 +9,12 @@ Reversing one of these is a redesign, not a refactor. If you are about to
 contradict an entry, add a new dated entry superseding it rather than editing the
 old one.
 
+**Numbers are final** (**D200**, 2026-09-28). A decision keeps the number it was
+written with. A lane reserves a block of numbers before it starts and keeps it
+when it merges; gaps between blocks are allowed, and nothing — this file
+included — states how many decisions there are. The *written as … renumbered at
+merge* notes on older entries are history from before the rule, and stay.
+
 ---
 
 ## D1 — Reuse Forge's own GUI seam: subclass `AbstractGuiGame`
@@ -8255,3 +8261,129 @@ D180 is about.
 on every push, which the card library's rules keep local, D90). Skipping 12e
 without a word when the index is missing (a guard that does not run looks like
 one that passed).
+
+---
+
+## D200 — A decision's number is final: a lane keeps the block it reserves, gaps are allowed, and no document states a total
+
+*Branch `docs-block`; the lane's reserved range D200–D204.*
+
+**2026-09-28** (the owner's decision on the structure review of `main`; CLAUDE.md
+*Decision numbers* is the rule in short)
+
+**Decision.**
+
+1. **A decision's number is final the moment it is written.** No merge, rebase or
+   clean-up renumbers one.
+2. **A lane reserves a block of numbers before it starts** — this lane's is
+   D200–D204 — writes its decisions inside it, in order, and keeps them when it
+   merges, whatever landed first. A number it does not use stays unused.
+3. **Gaps between blocks are allowed.** `DECISIONS.md` is in number order, and a
+   number says nothing about how many decisions there are.
+4. **No document states a total.** `CLAUDE.md`, `README.md`, `PLAN.md` and this
+   file point at `DECISIONS.md` and name the most recent block instead of
+   counting.
+5. The notes on older entries that say a decision was *written as* one number and
+   renumbered at a merge stay, as history from before this rule.
+
+**Rationale.** Six merges renumbered a lane's block to close the gap in front of
+it (D150–D154 → D124–D128, D160–D166 → D129–D135, D170 → D136, D120–D129 →
+D137–D146, D130–D138 → D147–D155, D140–D149 → D156–D165). Each was a pass over
+every file the lane had written; Lane BODIES' was 308 citations in 29 files,
+chosen line by line with `git blame`, because Lanes LOOK and MOTION had used the
+same numbers for different decisions on their own lines. A renumbering that misses
+one citation leaves it pointing at someone else's decision, and nothing fails.
+The total was restated, in words, in four files and changed
+with every merge, so every pair of parallel lanes conflicted on it. The guards
+lane already kept its block (D180–D183) with a gap after D165; this makes that the
+rule.
+
+**Rejected.** Renumbering contiguously at merge (the cost and the silent risk
+above). One counter every lane takes numbers from as it writes (lanes in separate
+worktrees cannot share one without the conflicts this removes). Naming decisions
+by lane instead of by number (every citation in the repo is a number, and
+`tools/lint-bridge.sh`'s hop tags need a `D<n>` heading, D181).
+
+---
+
+## D201 — Claude commits on branches and merges to `main` when the full gate is green; the user owns pushes beyond that, releases and anything public
+
+*Branch `docs-block`; the lane's reserved range D200–D204.*
+
+**2026-09-28** (the owner's wording; it replaces CLAUDE.md's *The user commits*,
+which D103 cites as it then stood)
+
+**Decision.** Claude commits on branches and merges to `main` when the full gate
+is green; the user owns pushes beyond that, releases and anything public. The
+standing rules that go with it:
+
+1. **A branch per lane, in a worktree of its own.** The main checkout is touched
+   only to add one.
+2. **A skeptic before a merge** — an independent review of the lane's diff and its
+   evidence, whose findings are fixed or written down as follow-ups before `main`
+   moves.
+3. **The full gate on every merge**: `./tools/check-all.sh`, green, from a deleted
+   `bridge/out`, on the merged tree, with its line in the merge commit's message.
+   A green CI run is a subset of that and never a substitute.
+4. **Never push a lane.** Pushes, tags, releases, pull requests and anything public
+   or shared are the user's.
+5. **`~/forge` and `~/.forge` are never written** (D110.4).
+6. **The personal tier is never committed**: Tier 3's likeness models and anything
+   else marked personal-only (`committable: false` in `tools/assets-manifest.json`)
+   stay local and gitignored (D54).
+
+**Rationale.** *The user commits* had stopped describing the practice: every lane
+since M7's slices committed on its own branch, with the session's co-author line,
+and was merged by a session after a review and a green gate (`git log` from
+`4f84613` on). A rule every lane was told to break is worse than one that says
+what is done. The two things the old rule protected are kept: nothing leaves the
+machine without the owner (the push is theirs), and nothing lands on `main`
+unchecked (the gate is the merge's condition, and a skeptic reads the diff first).
+
+**Rejected.** Keeping *The user commits* (it contradicted every recent lane).
+Letting a lane push its branch as a backup (anything that leaves the machine is
+the owner's call). Merging on a green CI run alone (CI runs the gate's
+engine-free half; nothing there plays a game).
+
+---
+
+## D202 — CI downloads the pinned engine: the one exception to "this repo never downloads an engine"
+
+*Branch `docs-block`; the lane's reserved range D200–D204. Supersedes one clause:
+CLAUDE.md's Environment said "This repo never downloads, copies or commits an
+engine (D2)". D2's decision itself — compile and run against the installed fat
+jar, no source build, no vendoring — and D110's pin are unchanged.*
+
+**2026-09-28** (records what `.github/workflows/checks.yml` has done since CI
+landed in `249697e`)
+
+**Decision.** Exactly one place downloads a Forge engine: CI's `bridge` job. It
+fetches `forge-installer-2.0.14.tar.bz2` (301,832,993 bytes) from Forge's tagged
+`forge-2.0.14` release — an official release, never `daily-snapshots` (D109,
+D110.1) — checks it against the asset's sha256 written in the workflow (the digest
+GitHub publishes for it), extracts the jar alone, fails unless the jar's sha256 is
+the pin (`3c0a7c38…8e5dd9`, D110.2), and hands it to the scripts as `FORGE_JAR`
+(hard rule 9; `config.json` untouched). Only the jar is cached, in the Actions
+cache under a key naming the asset and both digests — never in git, never as a
+build artifact. Everywhere else the rule stands: on a developer's machine the
+engine is the user's own install, nothing in `tools/`, `scripts/`, `bridge/` or
+`web/` downloads, copies or commits one, and `*.jar` stays gitignored. A new
+engine is still D110's hand-written, reviewed change (report 14 §0); CI fetching
+it would be one line of that change, never an update of its own.
+
+**Rationale.** CI runs the build's engine-dependent half — javac against the jar
+and the five self-tests — on a machine with no Forge install, so the jar has to
+come from somewhere. The tagged release asset holds the same bytes the user
+installed (the jar's sha256 is D110's pin), so CI checks exactly the engine the
+repo is gated against, and fetching it by URL and digest with a sha256 assertion
+is D110.5 ("records where the bytes came from") in executable form. The
+Environment's clause predates CI and paraphrased D2, which rejects vendoring the
+jar and building Forge from source, not a verified download; left as it was, it
+said something false about the repo.
+
+**Rejected.** Committing the jar, or attaching it to a release of this repo (D2:
+GPL redistribution obligations and 39 MB in git). A source build in CI (D2).
+Fetching the daily build or a "latest" URL (D109, D110). Running only the lint in
+CI, without the jar (javac and the self-tests are the half of the build a Java
+change is most likely to break). Extracting `res/` as well (none of the five
+self-tests reads it; the workflow says to extract it the day one does).

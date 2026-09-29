@@ -3106,7 +3106,7 @@ appended sections, the test-count paragraph, the docs tables' rows and the
 questions table), and every conflict kept both sides' text. **D90–D94** stay the
 card library's and slice 4's **D95–D101** needed no renumbering; the
 card-library sections are `main`'s verbatim; the counts are the merged ones —
-**one hundred and one** decisions, **817 `node --test` + 91 vitest** standalone
+**817 `node --test` + 91 vitest** standalone
 and **827 / 819 pass / 0 fail / 8 skipped** inside the gate. The merged tree's
 `check-all.sh` at `WSPORT=8665` failed once at step 10g — the three-game
 session's `restartMatch()` game ended 2 ms after its `hello_ok`, with no `state`
@@ -4242,8 +4242,9 @@ five errors), and the seam baseline regenerated (99 classes).
 ### On the day an official release ships Reality Fracture — the checklist
 
 Report 14 §0 is the list, with every command. In short: each step is its own
-reviewable change, the user commits, any failure **stops the switch**, and
-rollback is reverting `config.json` and the patch.
+reviewable change on the switch's branch, merged only on a green gate (**D201**),
+any failure **stops the switch**, and rollback is reverting `config.json` and the
+patch.
 
 **Before the day, on `main`:** follow-up 1 (the next-game race) must land before
 any engine moves; follow-ups 2 and 3 (the gate) should.
@@ -5297,7 +5298,7 @@ in the `s10g_three` job, and the job table and scheduler did not change.
 `bridge/build.sh` still runs five self-tests. What moved:
 
 - **D170 became D136**, in every file that cites it; DECISIONS.md runs D1–D136
-  with no gap and no duplicate, and the counts read one hundred and thirty-six.
+  with no gap and no duplicate.
   **M48 kept its number**, after spectating's M47.
 - **The story page's follow-up 9 is closed** (this lane's follow-up 4).
 - **Gate speed's follow-up 8 is closed by the deferred concede**, by mechanism:

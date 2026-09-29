@@ -250,8 +250,11 @@ code; if you think one is wrong, say so in prose first.
   `2026-08-08 22:49:26`; resources `/home/justin-a/forge/res`, beside the jar,
   which is where `tools/make-forge-home.sh` derives them from.
   - **How it was obtained:** it is the user's own install, Forge's `.tar.bz2`
-    distribution extracted as-is. This repo never downloads, copies or commits an
-    engine (D2; `*.jar` is gitignored).
+    distribution extracted as-is. Locally this repo never downloads, copies or
+    commits an engine (D2; `*.jar` is gitignored). **The one exception is CI**
+    (**D202**): its `bridge` job fetches this same build from Forge's tagged
+    `forge-2.0.14` release, checks it against the pin and caches the jar alone —
+    *CI runs the gate's engine-free half*, under the gate.
   - **How it is pinned:** `config.json`'s `forgeJar` names it by absolute path
     (`FORGE_JAR` in the environment wins, hard rule 9). `./tools/check-forge.sh`
     prints its sha256 — **it must print the one above** — and every recording's
@@ -2402,10 +2405,40 @@ throwaway home under `var/` (as `tools/audit-deck.mjs` builds under
 engine other than `~/forge`'s, `sha1sum` the `~/forge` jar (it must stay
 `3c0a7c38…8e5dd9`) and the `~/.forge/decks/constructed/` tree.
 
-## The user commits
+## Commits, branches and merges
 
-**Do not run `git commit`, `git add`, or `git push`.** The user commits their own
-work. Leave changes in the working tree and say what you changed.
+**Claude commits on branches and merges to `main` when the full gate is green;
+the user owns pushes beyond that, releases and anything public** (**D201**, the
+owner's wording of 2026-09-28, replacing *The user commits*). The standing rules
+that go with it:
+
+- **A branch per lane, in a worktree of its own** (`git worktree add
+  ../mtg-table-<x> -b <lane>`); the main checkout is touched only to add one.
+- **A skeptic before a merge**: an independent review of the lane's diff and its
+  evidence, whose findings are fixed or written down as follow-ups before `main`
+  moves.
+- **The full gate on every merge**: `./tools/check-all.sh`, green, from a deleted
+  `bridge/out`, on the merged tree, its line in the merge commit's message. A
+  green CI run is a subset of that, never a substitute.
+- **Never push a lane.** Pushing, tags, releases, pull requests and anything
+  public or shared are the user's.
+- **Never touch `~/forge` or `~/.forge`** (*Never write outside this repo*,
+  above).
+- **The personal tier is never committed**: Tier 3's likeness models and anything
+  else marked personal-only (`committable: false` in
+  `tools/assets-manifest.json`) stay local and gitignored (**D54**; PLAN.md's
+  *Tier 3 — a note, not a plan*).
+
+## Decision numbers
+
+**A decision's number is final** (**D200**). A lane reserves a block of numbers
+before it starts (this lane's was D200–D204), writes its decisions inside it and
+keeps those numbers when it merges, whatever landed first; an unused number stays
+unused. Gaps between blocks are allowed, so a number says nothing about how many
+decisions there are, and **no document states a total** — point at
+`DECISIONS.md` and name the most recent block instead. The notes on older entries
+that say a decision was *written as* another number and renumbered at a merge
+are history from before this rule, and stay.
 
 ## Where the docs live
 
@@ -2431,7 +2464,7 @@ work. Leave changes in the working tree and say what you changed.
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; the questions only the owner can settle are at the end. |
-| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent are D156–D165 and D180–D183. |
+| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent are D200–D202. |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
