@@ -351,28 +351,38 @@ export const RELIEF_MAP_VERSION = 3;
  *   painted contour the keep mask keeps (D228's `contourPx`, 3).
  * - `STANDEE_GRID` / `STANDEE_BACK_GRID` — the two sheets of the one mesh (D263):
  *   the FRONT's segments across and down over the cut's box, and the BACK's. At
- *   figure size a standee is 40–110 px tall at 1600 × 1000, so the front's 32 × 24
+ *   figure size a standee is 40–110 px tall on a 1600 × 1000 canvas, so the front's 32 × 24
  *   puts a vertex every 2–5 px of it; the back only fills what a nearer part of the
  *   subject hides, so it is coarser. `1,536 + 384 = 1,920` triangles a standee,
  *   in ONE draw call.
  * - `STANDEE_FACES_CAMERA` — the facing (D261, measured from the seat-safe views):
  *   `true` turns every standee's front to the camera about the vertical, the
  *   opponent's included — a painting has no back to show.
- * - `STANDEE_MIN_PX` — THE legibility floor (D261, as the fix pass amended it):
+ * - `STANDEE_MIN_PX` — THE legibility floor (D261, as its fix passes amended it):
  *   a standee stands only where its subject, KNEELING (the smallest stance a
  *   snapshot draws it in, so a card never changes body when it taps), covers at
- *   least a `STANDEE_MIN_PX`-px square's worth of pixels at 1× from the table
- *   view on the {@link STANDEE_LEGIBLE_CANVAS} (traits.test's raster's); under it,
- *   its CC0 body stands. Chosen from pictures of every standee seven crowded
- *   frames put on the table, at dpr 1 (`docs/evidence/standee.md` §9): every
- *   one measured 28 or less read as a sliver or a smudge — the Aerial Doombot's
- *   diagonal flight at a drone's height on both seats (23–24), the Wakandan Drone
- *   Flock (20), Doom's Servo-Guards and Baron Strucker (25), the A.I.M. Bot (28)
- *   — and every one from 31 up read as its card (the Volcanic Villain at 31, the
- *   Masters of Evil's rank at 33–40).
+ *   least a `STANDEE_MIN_PX`-px square's worth of CSS pixels at 1× from the table
+ *   view ON THE CANVAS THE PAGE DRAWS — the arena's own, measured by fiber and
+ *   handed to the lookup at commit (fix pass 2: the table view's vertical field
+ *   is fixed, so a standee's size on screen is proportional to the canvas's
+ *   height, and a floor judged on a fixed canvas stood slivers on a smaller
+ *   one); under it, its CC0 body stands. CSS pixels, not device pixels, so the
+ *   DPR governor's rung never changes a card's body. Chosen from pictures of
+ *   every standee seven crowded frames put on the table, at dpr 1
+ *   (`docs/evidence/standee.md` §9): every one measured 28 or less read as a
+ *   sliver or a smudge — the Aerial Doombot's diagonal flight at a drone's
+ *   height on both seats (23–24), the Wakandan Drone Flock (20), Doom's
+ *   Servo-Guards and Baron Strucker (25), the A.I.M. Bot (28) — and every one
+ *   from 31 up read as its card (the Volcanic Villain at 31, the Masters of
+ *   Evil's rank at 33–40); at 1280 × 800 (§10.2) what the floor drops is the
+ *   same 23–30 px of painting, so the number did not move with the canvas.
+ * - `STANDEE_REFERENCE_CANVAS` — the canvas the floor is judged on where there is
+ *   no table view to measure: the workshop (its pedestal and its list's badge
+ *   ask what an arena drawn 1600 × 1000 would stand) and the rasters that hold
+ *   the floor in the tests (traits.test's canvas). The arena never uses it.
  */
 export const STANDEE_MIN_PX = 30;
-export const STANDEE_LEGIBLE_CANVAS: readonly [number, number] = Object.freeze([1600, 1000] as [number, number]);
+export const STANDEE_REFERENCE_CANVAS: readonly [number, number] = Object.freeze([1600, 1000] as [number, number]);
 export const STANDEE_MIN_SHARE = 0.03;
 export const STANDEE_PAD_PX = 3;
 export const STANDEE_GRID: readonly [number, number] = Object.freeze([32, 24] as [number, number]);

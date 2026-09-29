@@ -2476,7 +2476,13 @@ test('liveness: sound is one module, bound from the one loop, fired by the queue
  *    frame loop's one standee number beyond a figure's is the falling body's `uLean`;
  *  - the loop's standee bodies allocate nothing (`standeeFallOf` is in the
  *    departing bodies' scan above; the living standee is written by
- *    `applyFigures` and the clip lane finds no action on it).
+ *    `applyFigures` and the clip lane finds no action on it);
+ *  - the legibility floor is judged on the arena's OWN canvas (D261, as fix
+ *    pass 2 amended it): `CanvasSizeReport` reads fiber's measured `size` and
+ *    hands it to `Arena` in an effect — a pose input, re-asked at commit, never
+ *    read in the frame loop — and the lookup is handed that state, never the
+ *    reference canvas (the workshop's, outside this scan); a copy that reads the
+ *    size in a `useFrame`, or hands the lookup the fixed canvas, fails.
  */
 test('liveness: the portrait standee — pure halves, the route named once behind DEV, one place a relief map is looked up and in the safe order, one reader and one loader, the stance at commit (D260–D264)', () => {
   const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
@@ -2550,4 +2556,21 @@ test('liveness: the portrait standee — pure halves, the route named once behin
   assert.ok(!/\buSink\b|\buWash\b|\buFaceCamera\b|\buRim\b|applyStandeeRim/.test(bind), 'the frame loop writes a standee number beyond its fall');
   // 6 — the clip lane: a standee's rig has no actions.
   assert.match(bodyOf(layer, 'standeeRig'), /actions: new Map\(\),\s*restActions: new Map\(\),/, 'a standee rig carries actions — the clip lane would play on a painting');
+  // 7 — the floor's canvas is the arena's own, a pose input at commit (D261, fix pass 2).
+  const arena = files.get('Arena.tsx') ?? '';
+  const report = bodyOf(arena, 'CanvasSizeReport');
+  const reportsAtCommit = (body: string): boolean =>
+    /useThree\(\(s\) => s\.size\.width\)/.test(body) &&
+    /useThree\(\(s\) => s\.size\.height\)/.test(body) &&
+    /useEffect\(\(\) => \{\s*onSize\(width, height\);\s*\}, \[width, height, onSize\]\);/.test(body) &&
+    !/\buseFrame\b|getBoundingClientRect|innerWidth|innerHeight|setTimeout|setInterval/.test(body);
+  assert.ok(reportsAtCommit(report), 'CanvasSizeReport no longer hands fiber’s measured size over at commit');
+  assert.equal(reportsAtCommit(`${report}\nuseFrame(() => onSize(1, 1));`), false, 'the canvas check cannot see a size read in the frame loop');
+  assert.equal(reportsAtCommit(report.replace('s.size.height', 's.viewport.height')), false, 'the canvas check cannot see a size that is not the canvas’s CSS pixels');
+  assert.match(arena, /<CanvasSizeReport onSize=\{onCanvasSize\} \/>/, 'the arena no longer measures its canvas');
+  const handsCanvas = (code: string): boolean => /standeeChoicesOf\(placed, personalPoses, art, relief, \{[^}]*\bcanvas: canvasPx,[^}]*\}\)/.test(code) && !/STANDEE_REFERENCE_CANVAS/.test(code);
+  assert.ok(handsCanvas(arena), 'the arena’s lookup is not handed the canvas it draws');
+  assert.equal(handsCanvas(arena.replace('canvas: canvasPx,', 'canvas: STANDEE_REFERENCE_CANVAS,')), false, 'the canvas check cannot see the fixed canvas (the second verifier’s major)');
+  assert.match(arena, /useMemo\(\(\) => standeeAnswer, \[standeeAnswerKey,/, 'a resize that changes no answer re-dresses the figures');
+  assert.ok(!/\bcanvasPx\b/.test(runner), 'the frame loop reads the floor’s canvas');
 });

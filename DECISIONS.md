@@ -10972,8 +10972,8 @@ every one of those passes, so they measured nothing about reading.
    Masters of Evil's rank at 33–40). Over every board frame of the corpus with this
    checkout's 158 cuts it keeps 8,887 of 10,740 standee placements on your seat
    (83%) and 2,952 of 4,678 on the opponent's (63%); seven cards never stand (the
-   three drone cards, the A.I.M. Bot, Yellowjacket, Black Panther, Vanguard, and
-   Wasp, whose personal model dresses her). A card changes body only when its
+   three drone cards, the A.I.M. Bot, Yellowjacket, *Black Panther, Vanguard* — one
+   card — and Wasp, whose personal model dresses her). A card changes body only when its
    stand point moves it across the floor — 10 times over the corpus, counted with
    no personal model taking a card (PLAN.md's personal-tier follow-up 42).
 2. **The ink rim** (`STANDEE_FRAGMENT`): where the front is not the subject but a
@@ -11008,9 +11008,95 @@ everywhere). No rim (the far seat's standees melt into the cards behind them).
 Considered and not built: a paper-white border (a sticker's edge reads as a card
 held up, and a white line over the far side's pale cards is no edge).
 
+**Amended by fix pass 2 (2026-09-29): the floor measures on the canvas the page
+DRAWS, and the rim's reads name their level.** The second verifier: the floor was
+measured on a fixed 1600 × 1000 canvas (`STANDEE_LEGIBLE_CANVAS`), and the table
+view's field of view is vertical and fixed, so a standee's size on screen is
+proportional to the canvas's HEIGHT — at a 1280 × 800 canvas 9,177 of the 11,761
+standee placements the floor keeps over `fixtures/games` (78%) measure under
+30 px, the band the contact sheet judged unreadable, and a replay in a
+1600 × 1000 window (a 1600 × 946 canvas, the replay bar is 54 px) leaves 243
+under it. And the rim's eight taps were read with implicit levels inside a
+branch — the "computed before any branch" of §2 above made their coordinates
+uniform, not their reads, and an implicit level in non-uniform control flow, or
+after a non-uniform `discard`, is undefined in GLSL ES 3.00.
+
+1. **The canvas is a pose input** (`arena/standee.ts`'s
+   `standeeReads(pose, aspect, fill, canvas)` and `StandeeOptions.canvas`, CSS
+   pixels). The arena hands the lookup its own: `Arena.tsx`'s
+   `CanvasSizeReport` reads fiber's measured `size` (the ResizeObserver
+   `<Canvas>` already runs) and hands it over in an effect, so a resize re-runs
+   the lookup at commit and never the frame loop; `null` until the canvas has a
+   size, and then nothing stands and nothing is asked; while the answer is the
+   same the same map goes on (`standeeChoicesKeyOf`), so a drag of the window's
+   edge re-dresses no figure. CSS pixels, not device pixels: the DPR governor's
+   rung never changes a card's body. The workshop has no table view to measure,
+   so its pedestal and its list's badge ask the floor at `perf.ts`'s
+   `STANDEE_REFERENCE_CANVAS` (1600 × 1000, the old constant renamed) — what an
+   arena drawn that size would stand — and the badge's title says so.
+2. **The floor stays 30 px.** It is a number about pixels on screen, chosen from
+   pictures at dpr 1 (above), and nothing at a smaller canvas says otherwise.
+   `standee.test.ts`'s raster now runs on three canvases — 1600 × 1000,
+   1600 × 946 and 1280 × 800 — at `g1`@316 and the Masters of Evil's @209 and
+   @371 on both seats, and a standee stands iff it rasters at 30 px kneeling on
+   the canvas the lookup was handed: the drones are their CC0 bodies on all three
+   (18–24 px); the far seat's tapped portrait at @209 stands on all three (47, 45
+   and 38 px); your rank at @371 with the median cut stands at 1,000 and 946 px
+   (34–36, 32–34) and is its CC0 bodies at 800 (27–28); a lookup handed the fixed
+   canvas stands 11 standees on the smaller canvases that the raster draws under
+   the floor (the control). Over an eleventh of the corpus × five cuts it keeps 4,219, 4,032 and
+   1,872 standees on the three canvases, the floor within 1.3% of the raster on
+   each and none under 30 px in any stance; what a smaller canvas keeps is a
+   subset of what a larger one does. The pictures (`docs/evidence/standee.md`
+   §10): in a 1280 × 800 window's replay (a 1280 × 746 canvas) the nine standees
+   the fixed floor stood at the Masters of Evil's @371 are 23–30 px of painting,
+   the smudges the contact sheet refused; the live floor stands their CC0 bodies.
+3. **What a smaller window keeps** (every board frame of `fixtures/games` with
+   this checkout's 158 cuts, a card counted once a frame as the lookup counts it,
+   no personal model taking a card; fix pass 1's 8,887 and 2,952 counted a card's
+   second placement too):
+
+   | canvas | your seat | the opponent's | all | cards that ever stand |
+   |---|---|---|---|---|
+   | 1600 × 1000 (the reference) | 8,830 of 10,680 (83%) | 2,931 of 4,650 (63%) | 11,761 of 15,330 (77%) | 51 of 58 |
+   | 1600 × 946 (a replay in a 1600 × 1000 window) | 8,587 (80%) | 2,931 (63%) | 11,518 (75%) | 48 |
+   | 1280 × 800 | 2,139 (20%) | 445 (10%) | 2,584 (17%) | 27 |
+   | 1280 × 746 (a replay in a 1280 × 800 window) | 430 (4%) | 441 (9%) | 871 (6%) | 10 |
+
+   **Accepted, and put to the owner** (PLAN.md's question 32): a smaller window
+   draws fewer standees rather than standees nobody can read. Lowering the floor
+   for a small canvas would stand the 25–29 px paintings the contact sheet
+   refused; a floor in device pixels would let the governor's rung change bodies.
+   A card now also changes body when the window is resized across its floor —
+   at commit, never mid-frame (PLAN.md's personal-tier follow-up 42).
+4. **Every read names its level** (`STANDEE_FRAGMENT`, `STANDEE_VERTEX`): the
+   UVs' derivatives are taken at the top of `main`, before the first branch and
+   the first `discard`, and every read below — the depth map's centre and eight
+   taps, the card image and the back image — is a `textureLod` at the level the
+   GL's own isotropic formula gives (`lodOf`, from `uDepthSize`, `uMapSize` and
+   `uBackSize`, the loaded images' own texel counts); the vertex fetch names
+   level 0. Measured (`docs/evidence/standee.md` §10.3, micro.sh's A/B, nine
+   standees at the Masters of Evil's @371 on SwiftShader): this form costs 7.1,
+   8.1 and 7.0 ms against the implicit form's 7.7, 7.5, 6.7 and 6.9 in the same
+   interleaved run (and one outlier of 27.0 under a load of 9.4); `textureGrad` on
+   the card image — the GPU's anisotropic filtering kept — cost 11.1–14.6 against
+   the implicit form's 7.1–10.7 in two more, so it is not the form. On the GTX 1080 the implicit and the final
+   forms are the same picture at the table's distance (a mean difference of 1.1
+   of 255 over your rank). GLSL ES 3.00's own `textureLod`, in both stages:
+   three defines its `texture2DLodEXT` alias for the fragment stage only, and the
+   first cut's vertex fetch spelled that way did not compile — every standee
+   vanished from the first picture, while every node test stayed green.
+
+**Rejected** (fix pass 2). The floor on the reference canvas (the major). The
+floor scaled by the canvas (30 px × height / 1,000): the same slivers at a
+smaller canvas. A floor that follows the window only when it grows (hysteresis:
+a renderer that remembers). The rim's comment reworded to what the shader
+guarantees, leaving the reads implicit: a defined form costs nothing measurable.
+`textureGrad` on the card image (4 ms on SwiftShader for nothing on screen).
+
 ---
 
-## D262 — A standee's height is its cut's, clamped by the rank slot; tapped, it kneels as a painting can — a quarter sunk and bowed toward the lens; sick is translucent; it falls on its back when it dies
+## D262 — A standee's height is its cut's, clamped by the rank slot; tapped, it kneels as a painting can — a quarter sunk and bowed toward the lens (amended: a fifth sunk, 6 degrees); sick is translucent; it falls on its back when it dies
 
 *Branch `standee`; the lane's reserved range D260–D264.*
 
@@ -11217,6 +11303,21 @@ import map (the verifier's diff of the two builds: 84 bytes). The fix pass's rim
 and floor add 1.9 kB to the scene chunk (`arena-scene-*.js` 1,383,443 B, 397.08 kB
 gzip).
 
+**Amended by fix pass 2 (2026-09-29): the build's source maps carry no copy of
+the sources.** The second verifier: `vite.config.ts` has built source maps since
+before the lane, a map's `sourcesContent` is every module's text, and the scene's
+and the workshop's named the personal tier's route (`personal/relief/`,
+`personal/index.json`) in the comments and DEV branches the built code folds
+away — while `personal.test.ts`'s build grep skipped `.map` files by a written
+choice. Now `build.rollupOptions.output.sourcemapExcludeSources` is on and the
+grep reads the maps like the code, failing a map that carries a source's text
+(its control: the same tree built without the option is red). Nothing needed the
+text — no tool opens a `.map`, a production build's stack trace still maps to a
+file and a line, and the source is the repository — and the maps went from
+8.7 MB to 2.3 MB. The scene chunk is 1,384,550 B (397.41 kB gzip, +1,107 B for
+the canvas input and the named levels, D261); the 2D entry chunk is 300,425 B
+(94.68 kB gzip), unchanged.
+
 ---
 
 ## D264 — Hard rule 8 for a second card-art surface on the table: a standee only for a face-up, named figure's own print, through CardPlane's lookup, after the gates — and a concealed card never looks its art up
@@ -11281,6 +11382,17 @@ oracle: 72 badges of 103 creature entries, no concealed entry, no swarm or squad
 model dresses, and 10 refused by the floor; the ungated control badges a concealed
 entry and asks the relief about its print. The inspect view's plan is the
 workshop's one relief lookup (a liveness clause).
+
+**Fix pass 2 (2026-09-29)** changes no step of the order: the floor now reads the
+canvas it is handed as well as the cut's numbers and the pose (a number, never a
+name, D261), and a lookup handed no canvas yet asks nothing at all — the
+hard-rule-8 sweep holds that on every board frame. And the sweep's `mayStand`
+gates are all exercised on the corpus now: every uncrewed Vehicle (819) and
+every silhouette (949) the recordings pose, handed a model id — the gate that
+stopped all of them before — and left one gate alone to stop it, stands none
+(`standee.test.ts`; with the vehicle gate, the silhouette gate or both taken out
+it is red — before it, only the one-board case went red).
+
 **Rationale.** A standee is a statement about what a card is, as a personal model
 is (D190, D195) and as the palette is (D160): the rule and the test are theirs,
 applied to a painting. Going through `artEntryFor` rather than a lookup of its own

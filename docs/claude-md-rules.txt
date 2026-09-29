@@ -221,6 +221,7 @@
 5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
 6. **The portrait standee is the tier's second renderer path, and a second
 - **`arena/standee.ts` is pure and decides everything**: `standeeCutOf` is THE
+- **The canvas is a pose input** (D261, fix pass 2): the table view's field of
 - **THE one place a relief map is looked up is `standeeChoicesOf`, and in
 - **The relief index, its route and its loaders are the arena's**
 - **A standee is a figure's rig with no actions**: the frame loop writes it
@@ -425,7 +426,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1,199 `node --test` + 157 vitest (9 files)
+span: 1,201 `node --test` + 157 vitest (9 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -626,6 +627,7 @@ span: "Black is blue" is the CC0 palette's rule, never a model's
 span: The budget is a sum, and it is in `perf.ts`
 span: The portrait standee is the tier's second renderer path, and a second card-art surface beside `CardPlane`
 span: `arena/standee.ts` is pure and decides everything
+span: The canvas is a pose input
 span: THE one place a relief map is looked up is `standeeChoicesOf`, and in the one safe order
 span: The relief index, its route and its loaders are the arena's
 span: A standee is a figure's rig with no actions

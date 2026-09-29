@@ -67,7 +67,7 @@ import {
   tablePose,
 } from '../src/workshop/framing.ts';
 import { lookupArt, parseArtFile, type ArtIndex } from '../src/art.ts';
-import { RELIEF_DEPTH } from '../src/arena/perf.ts';
+import { RELIEF_DEPTH, STANDEE_REFERENCE_CANVAS } from '../src/arena/perf.ts';
 import { inspectPlan, inspectSourceOf, standeeBadgesOf, type InspectSource, type ReliefEntry, type ReliefIndex } from '../src/workshop/relief.ts';
 import { EMPTY_PERSONAL, personalOverlayOf } from '../src/arena/personal.ts';
 import { standeeReads } from '../src/arena/standee.ts';
@@ -758,7 +758,8 @@ test('workshop: the list’s standee badge is THE lookup’s answer on each crea
   const badges = standeeBadgesOf(all, inputs);
   // The oracle, written apart from the lookup: a face-up creature whose own figure is a named body a CC0
   // figure stands in (not the anonymous one, not a swarm or a squad, not a silhouette or a vehicle), not
-  // dressed by the overlay, that reads kneeling at its stand point.
+  // dressed by the overlay, that reads kneeling at its stand point — on the reference canvas, the workshop's
+  // (it has no table view to measure; D261 as fix pass 2 amended it).
   const aspect = ((CUT.box.right - CUT.box.left) * 410) / ((CUT.box.bottom - CUT.box.top) * 301);
   const expected = new Set<string>();
   const counts = { concealed: 0, swarm: 0, silhouette: 0, dressed: 0, unread: 0 };
@@ -784,7 +785,7 @@ test('workshop: the list’s standee badge is THE lookup’s answer on each crea
       counts.silhouette += 1;
       continue;
     }
-    if (!standeeReads(pose, aspect, 0.66)) {
+    if (!standeeReads(pose, aspect, 0.66, STANDEE_REFERENCE_CANVAS)) {
       counts.unread += 1;
       continue;
     }

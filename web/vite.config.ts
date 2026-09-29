@@ -153,9 +153,17 @@ export default defineConfig({
   preview: { port: 4173, host: '127.0.0.1' },
   build: {
     outDir: 'dist',
+    // The maps map a production build's stack traces back to file and line — and
+    // carry no copy of the sources (`sourcemapExcludeSources`, the standee's fix
+    // pass 2): a map's `sourcesContent` is every module's text, comments and DEV
+    // branches included, so it named the personal tier's route (`personal/relief/`,
+    // `personal/index.json`) that the built code folds away. Nothing reads it — no
+    // tool opens a `.map`, and the source is the repository — and
+    // `personal.test.ts` greps the maps like the code.
     sourcemap: true,
     rollupOptions: {
       output: {
+        sourcemapExcludeSources: true,
         // **The arena's scene, named for what it is.** Two lazy pages draw with
         // it — `#arena` and `#workshop` — so Rollup hoists `three`, fiber, drei
         // and `web/src/arena/scene/` into one chunk they share, and would name it

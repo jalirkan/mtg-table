@@ -30,13 +30,17 @@
  *     D143's facing would show your own seat nothing but cardboard; the tapped
  *     stance — shorter from the table view than standing but never the sliver the
  *     first stance was, where leaning back reads taller; and the fall.
- *  5. **THE legibility floor, rasterised on real frames** (D261, as the fix pass
- *     amended it): the standee rasterised through the table view at 1600 × 1000
- *     at every stand point of `g1`@316 and the Masters of Evil's @209 and @371 on
- *     both seats — the drones the verifier saw as slivers stand as their CC0
- *     bodies, the rank that read still stands — and over the corpus, the floor's
- *     number is what the raster draws, and no standee the lookup keeps draws under
- *     it in any stance.
+ *  5. **THE legibility floor, rasterised on real frames** (D261, as its fix
+ *     passes amended it): the standee rasterised through the table view on THREE
+ *     canvases — 1600 × 1000 (the reference), 1600 × 946 (a replay in a
+ *     1600 × 1000 window) and 1280 × 800 — at every stand point of `g1`@316 and
+ *     the Masters of Evil's @209 and @371 on both seats: the drones the verifier
+ *     saw as slivers stand as their CC0 bodies on every canvas, a standee stands
+ *     iff it rasters at the floor ON THE CANVAS THE LOOKUP WAS HANDED, and a
+ *     floor judged on the fixed reference canvas (the second verifier's major)
+ *     would stand slivers on the smaller ones; over the corpus, on each canvas,
+ *     the floor's number is what the raster draws, and no standee the lookup
+ *     keeps draws under it in any stance.
  *  6. **The mesh** (D263): two sheets, one draw call, 1,920 triangles; the cut
  *     and its ink rim, drawn exactly.
  */
@@ -58,7 +62,7 @@ import { statusLayout } from '../src/arena/figures/status.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
 import { FIGURE_HEIGHT, FIGURE_MAX_WIDTH, STATUS_LIFT, layout, seatFacingY, type Layout, type Placement } from '../src/arena/layout.ts';
 import { COMIC } from '../src/arena/look.ts';
-import { RELIEF_CLIFF, STANDEE_BACK_GRID, STANDEE_FACES_CAMERA, STANDEE_GRID, STANDEE_LEGIBLE_CANVAS, STANDEE_MIN_PX, STANDEE_MIN_SHARE } from '../src/arena/perf.ts';
+import { RELIEF_CLIFF, STANDEE_BACK_GRID, STANDEE_FACES_CAMERA, STANDEE_GRID, STANDEE_MIN_PX, STANDEE_MIN_SHARE, STANDEE_REFERENCE_CANVAS } from '../src/arena/perf.ts';
 import { ART_BOX, EMPTY_RELIEF, reliefIndexOf, standeeCutFrom, type ReliefEntry, type ReliefIndex, type StandeeCut } from '../src/arena/relief.ts';
 import {
   STANDEE_FALL,
@@ -68,12 +72,14 @@ import {
   dressStandees,
   standeeAspectOf,
   standeeChoicesOf,
+  standeeChoicesKeyOf,
   standeeCutOf,
   standeeFallOf,
   standeeFillOf,
   standeeLegibilityAt,
   standeeReads,
   standeeSheets,
+  type StandeeCanvas,
   type StandeeChoice,
   type StandeeFit,
   type StandeeStance,
@@ -88,6 +94,8 @@ const REPO = fileURLToPath(new URL('../../', import.meta.url));
 const MODELS = validateModels(modelsJson).data;
 const DATA = validateFigures(figuresJson, { modelIds: new Set(Object.keys(MODELS.models)) }).data;
 const BASE = 'personal/relief/';
+/** The reference canvas (`perf.ts`): the workshop's, and every raster's here unless a test names another. */
+const REF: StandeeCanvas = STANDEE_REFERENCE_CANVAS;
 
 // ---------------------------------------------------------------------------
 // A PNG encoder of the test's own (every filter the decoder undoes)
@@ -436,11 +444,11 @@ function eligible(placement: Placement, pose: FigurePose | undefined, taken: Rea
  * standee's box (cut at the table) projected through the table view by this
  * test's own `toPx`, its area × the cut's fill, against `STANDEE_MIN_PX`.
  */
-function readsApart(pose: FigurePose, cut: StandeeCut): boolean {
+function readsApart(pose: FigurePose, cut: StandeeCut, canvas: StandeeCanvas = REF): boolean {
   const aspect = ((cut.box.right - cut.box.left) * 410) / ((cut.box.bottom - cut.box.top) * 301);
   const fill = cut.share / ((cut.box.right - cut.box.left) * (cut.box.bottom - cut.box.top));
   const height = Math.min(pose.height, FIGURE_MAX_WIDTH / aspect);
-  const got = areaPx(VIEW_BY_ID.table.pose, keptCorners(pose.position, height, aspect, towardTable(pose.position), STANDEE_STANCES.crouch));
+  const got = areaPx(VIEW_BY_ID.table.pose, keptCorners(pose.position, height, aspect, towardTable(pose.position), STANDEE_STANCES.crouch), canvas);
   return got !== null && Math.sqrt(got.area * fill) >= STANDEE_MIN_PX;
 }
 
@@ -481,7 +489,7 @@ test('standee: over every board frame of the corpus made HOSTILE, the art index 
       const poses = given ?? figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
       const art = spyArt();
       const relief = spyRelief();
-      const choices = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, taken });
+      const choices = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, taken, canvas: REF });
       for (const name of art.asked) assert.ok(name !== '' && !name.startsWith(SECRET), `${file}: the art index was asked about a concealed card`);
       for (const id of relief.asked) assert.ok(!id.includes(SECRET), `${file}: the relief index was asked about a concealed card’s print`);
       asked += art.asked.length;
@@ -508,9 +516,12 @@ test('standee: over every board frame of the corpus made HOSTILE, the art index 
       // The tier off, a build (no route) or `?standee=0`: nothing stands and nothing is asked.
       const off = spyArt();
       const offRelief = spyRelief();
-      assert.equal(standeeChoicesOf(placed, poses, off.art, offRelief.relief, { base: null, taken }).size, 0);
+      assert.equal(standeeChoicesOf(placed, poses, off.art, offRelief.relief, { base: null, taken, canvas: REF }).size, 0);
       assert.equal(off.asked.length + offRelief.asked.length, 0, 'the tier off still looked a card up');
-      assert.equal(standeeChoicesOf(placed, poses, off.art, EMPTY_RELIEF, { base: BASE }).size, 0);
+      assert.equal(standeeChoicesOf(placed, poses, off.art, EMPTY_RELIEF, { base: BASE, canvas: REF }).size, 0);
+      // The arena before its canvas has a size: nothing stands and nothing is asked.
+      assert.equal(standeeChoicesOf(placed, poses, off.art, offRelief.relief, { base: BASE, taken, canvas: null }).size, 0);
+      assert.equal(off.asked.length + offRelief.asked.length, 0, 'a lookup with no canvas still looked a card up');
       // The negative control.
       const control = spyArt();
       const controlRelief = spyRelief();
@@ -547,20 +558,20 @@ test('standee: THE lookup on its own — a stub, a face-down card, a swarm, a si
   assert.ok(placed !== null && poses !== null, 'no corpus frame has three standing figures');
   const art = spyArt();
   const relief = spyRelief();
-  const all = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE });
+  const all = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, canvas: REF });
   assert.ok(all.size >= 3);
   const [first, second] = [...all.keys()] as [number, number];
   const firstPlacement = placed.placements.find((p) => p.cardId === first)!;
   const firstName = (firstPlacement.card as { name: string }).name;
   assert.equal(all.get(first)?.key, `print:${firstName}`, 'the relief is asked about the print CardPlane’s own lookup answered');
   // A personal model wins.
-  assert.ok(!standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, taken: new Map([[second, true]]) }).has(second));
+  assert.ok(!standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, taken: new Map([[second, true]]), canvas: REF }).has(second));
   // A print with no cut stands none.
   const noCut: ReliefIndex = {
     byId: { get: (id: string) => ({ ...relief.relief.byId.get(id)!, standee: null }), size: 1 } as unknown as ReadonlyMap<string, ReliefEntry>,
     dropped: [],
   };
-  assert.equal(standeeChoicesOf(placed, poses, art.art, noCut, { base: BASE }).size, 0);
+  assert.equal(standeeChoicesOf(placed, poses, art.art, noCut, { base: BASE, canvas: REF }).size, 0);
   // Each figure gate, forced on a pose the lookup would otherwise stand.
   for (const [what, patch] of [
     ['anonymous', { anonymous: true }],
@@ -572,7 +583,7 @@ test('standee: THE lookup on its own — a stub, a face-down card, a swarm, a si
   ] as const) {
     const forced = new Map(poses);
     forced.set(first, { ...poses.get(first)!, ...patch } as FigurePose);
-    assert.ok(!standeeChoicesOf(placed, forced, art.art, relief.relief, { base: BASE }).has(first), what);
+    assert.ok(!standeeChoicesOf(placed, forced, art.art, relief.relief, { base: BASE, canvas: REF }).has(first), what);
   }
   // A back and a stub under a named pose: only the placement gate stops them, and the art is never asked.
   for (const make of [
@@ -582,9 +593,62 @@ test('standee: THE lookup on its own — a stub, a face-down card, a swarm, a si
     const placements = placed.placements.map((p) => (p.cardId === first ? make(p) : p));
     const concealed: Layout = { ...placed, placements, byKey: new Map(placements.map((p) => [p.key, p])) };
     const spy = spyArt();
-    assert.ok(!standeeChoicesOf(concealed, poses, spy.art, relief.relief, { base: BASE }).has(first));
+    assert.ok(!standeeChoicesOf(concealed, poses, spy.art, relief.relief, { base: BASE, canvas: REF }).has(first));
     assert.ok(!spy.asked.includes(firstName), 'a concealed card’s art was looked up');
   }
+});
+
+/**
+ * **The vehicle and silhouette gates, over the corpus** (the second verifier's
+ * minor 4). In the recordings every uncrewed Vehicle and every silhouette is
+ * posed with no model (`modelId` null), so the sweep above never reaches
+ * `mayStand`'s `pose.vehicle` or `pose.silhouette` gate: with both removed only
+ * the one-board case went red. This pass hands each such pose a model and a
+ * canvas the floor passes everything on, and lets ONE of the two gates be the
+ * only thing between it and a standee — every Vehicle with its silhouette
+ * cleared (the vehicle gate alone), every silhouette with its vehicle flag
+ * cleared (the silhouette gate alone) — and none may stand.
+ */
+test('standee: over every board frame of the corpus, every uncrewed Vehicle and every silhouette, handed a model and a canvas the floor passes, stands none — each stopped by its own gate alone (mayStand’s vehicle and silhouette gates)', () => {
+  const HUGE: StandeeCanvas = [8000, 5000];
+  const aspect = standeeAspectOf({ width: 410, height: 301 }, CUT);
+  const fill = standeeFillOf(CUT);
+  const held = { vehicle: 0, silhouette: 0 };
+  let frames = 0;
+  for (const { file, state } of corpusStates()) {
+    frames += 1;
+    const placed = layout(state);
+    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+    for (const gate of ['vehicle', 'silhouette'] as const) {
+      const forced = new Map(poses);
+      const targets: number[] = [];
+      for (const [cardId, pose] of poses) {
+        if (gate === 'vehicle' ? !pose.vehicle : pose.silhouette === null) continue;
+        // A model (the gate that stops every one of them in the recordings), and only THIS gate left standing.
+        forced.set(cardId, { ...pose, modelId: pose.modelId ?? 'agent', ...(gate === 'vehicle' ? { silhouette: null } : { vehicle: false }) });
+        targets.push(cardId);
+      }
+      if (targets.length === 0) continue;
+      const art = spyArt();
+      const relief = spyRelief();
+      const chosen = standeeChoicesOf(placed, forced, art.art, relief.relief, { base: BASE, canvas: HUGE });
+      for (const cardId of targets) {
+        const pose = forced.get(cardId)!;
+        const placement = placed.placements.find((p) => p.cardId === cardId && (p.kind === 'creature' || p.kind === 'stack'));
+        if (placement === undefined) continue;
+        // Every OTHER gate passes, so the one under test is all that stops it.
+        const others = !placement.back && !isHidden(placement.card) && !pose.anonymous && pose.modelId !== null && pose.swarm === 0 && pose.personal === undefined;
+        if (!others) continue;
+        assert.ok(standeeReads(pose, aspect, fill, HUGE), `${file}: the floor stops a forced ${gate} — the pass would not prove the gate`);
+        assert.equal(gate === 'vehicle' ? pose.silhouette : pose.vehicle, gate === 'vehicle' ? null : false);
+        assert.ok(!chosen.has(cardId), `${file}: ${gate === 'vehicle' ? 'an uncrewed Vehicle' : 'a silhouette'} stands as a standee`);
+        held[gate] += 1;
+      }
+    }
+  }
+  console.log(`standee: over ${String(frames)} board frames, ${String(held.vehicle)} uncrewed Vehicles held by the vehicle gate alone and ${String(held.silhouette)} silhouettes by the silhouette gate alone, each handed a model`);
+  assert.ok(held.vehicle > 500, `the pass reached ${String(held.vehicle)} vehicles — it proves nothing`);
+  assert.ok(held.silhouette > 500, `the pass reached ${String(held.silhouette)} silhouettes — it proves nothing`);
 });
 
 // ---------------------------------------------------------------------------
@@ -602,7 +666,7 @@ test('standee: dressStandees — only a loaded standee dresses; the opaque id, n
     const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
     const art = spyArt();
     const relief = spyRelief();
-    const choices = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE });
+    const choices = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, canvas: REF });
     assert.equal(dressStandees(poses, choices, new Map()), poses, 'nothing loaded: the same map');
     const fits = new Map<string, StandeeFit>();
     let n = 0;
@@ -634,14 +698,14 @@ test('standee: dressStandees — only a loaded standee dresses; the opaque id, n
 // 4. What was measured: the facing, the tapped stance, the fall
 // ---------------------------------------------------------------------------
 
-const [PX_W, PX_H] = STANDEE_LEGIBLE_CANVAS;
-
 type V3 = [number, number, number];
 
-function toPx(pose: Pose, point: V3): [number, number] | null {
-  const ndc = projectToNdc(pose, point, undefined, PX_W / PX_H);
+/** A point through a camera onto a canvas of `canvas` CSS pixels (the table view's vertical field, fixed: CAMERA.fov). */
+function toPx(pose: Pose, point: V3, canvas: StandeeCanvas = REF): [number, number] | null {
+  const [pxW, pxH] = canvas;
+  const ndc = projectToNdc(pose, point, undefined, pxW / pxH);
   if (ndc === null) return null;
-  return [((ndc[0] + 1) / 2) * PX_W, ((1 - ndc[1]) / 2) * PX_H];
+  return [((ndc[0] + 1) / 2) * pxW, ((1 - ndc[1]) / 2) * pxH];
 }
 
 /** The unit front of a standee at `stand` turned to the table view's camera about the vertical (D261). */
@@ -673,8 +737,8 @@ function keptCorners(stand: readonly number[], height: number, aspect: number, f
   ];
 }
 
-function areaPx(pose: Pose, quad: readonly V3[]): { area: number; height: number } | null {
-  const pts = quad.map((p) => toPx(pose, p));
+function areaPx(pose: Pose, quad: readonly V3[], canvas: StandeeCanvas = REF): { area: number; height: number } | null {
+  const pts = quad.map((p) => toPx(pose, p, canvas));
   if (pts.some((p) => p === null)) return null;
   const q = pts as Array<[number, number]>;
   let area = 0;
@@ -786,12 +850,13 @@ test('standee: the tapped stance (D262, amended) — a small sink and bow read S
 // ---------------------------------------------------------------------------
 
 /**
- * **A standee, rasterised** through the table view at the floor's canvas: the
- * pixels whose CENTRE lies inside the drawn subject. The subject is a synthetic
- * figure — the full height of the cut's box and `fill` of its width, centred, cut
- * at the table — so its area is the box's × `fill`, as the floor counts it.
+ * **A standee, rasterised** through the table view onto a canvas of `canvas` CSS
+ * pixels: the pixels whose CENTRE lies inside the drawn subject. The subject is a
+ * synthetic figure — the full height of the cut's box and `fill` of its width,
+ * centred, cut at the table — so its area is the box's × `fill`, as the floor
+ * counts it.
  */
-function rasterSubject(stand: readonly number[], height: number, aspect: number, fill: number, stance: StandeeStance): { size: number; height: number } {
+function rasterSubject(stand: readonly number[], height: number, aspect: number, fill: number, stance: StandeeStance, canvas: StandeeCanvas = REF): { size: number; height: number } {
   const cam = VIEW_BY_ID.table.pose;
   const front = towardTable(stand);
   const from = Math.min(1, stance.sink / Math.cos(stance.lean));
@@ -801,7 +866,7 @@ function rasterSubject(stand: readonly number[], height: number, aspect: number,
     [half, from],
     [half, 1],
     [-half, 1],
-  ].map(([u, v]) => toPx(cam, boxPoint(stand, height, aspect, front, stance, u!, v!)));
+  ].map(([u, v]) => toPx(cam, boxPoint(stand, height, aspect, front, stance, u!, v!), canvas));
   if (quad.some((p) => p === null)) return { size: 0, height: 0 };
   const q = quad as Array<[number, number]>;
   const xs = q.map((p) => p[0]);
@@ -858,92 +923,197 @@ function reliefWith(aspect: number, fill: number): ReliefIndex {
   return { byId, dropped: [] };
 }
 
-test('standee: THE legibility floor, rasterised on real frames (D261, amended) — g1@316 and the Masters of Evil’s @209 and @371 from the table view on both seats: a drone’s flight is its CC0 body, the rank that read still stands; over the corpus the floor is what the raster draws, and nothing it keeps draws under it in any stance', () => {
-  assert.equal(STANDEE_MIN_PX, 30, 'the floor the pictures chose (docs/evidence/standee.md §9)');
-  assert.deepEqual([...STANDEE_LEGIBLE_CANVAS], [1600, 1000], 'traits.test’s raster canvas');
+/**
+ * **The canvases the floor is held on** (fix pass 2, the second verifier's major):
+ * the reference (the workshop's, and every other raster's), a replay in a
+ * 1600 × 1000 window (the replay bar takes 54 px of it), and a 1280 × 800 window.
+ * The table view's field of view is vertical and fixed, so a standee's size on
+ * screen is proportional to the canvas's HEIGHT.
+ */
+const CANVASES: ReadonlyArray<{ name: string; canvas: StandeeCanvas }> = [
+  { name: '1600 × 1000', canvas: [1600, 1000] },
+  { name: '1600 × 946', canvas: [1600, 946] },
+  { name: '1280 × 800', canvas: [1280, 800] },
+];
+
+test('standee: THE legibility floor, rasterised on real frames on three canvases (D261, amended twice) — g1@316 and the Masters of Evil’s @209 and @371 from the table view on both seats at 1600 × 1000, 1600 × 946 and 1280 × 800: a drone’s flight is its CC0 body on every canvas, a standee stands iff it rasters at the floor on the canvas the lookup was handed, and a floor judged on the fixed reference canvas would stand slivers on a smaller one; over the corpus, on each canvas, the floor is what the raster draws and nothing it keeps draws under it in any stance', () => {
+  assert.equal(STANDEE_MIN_PX, 30, 'the floor the pictures chose (docs/evidence/standee.md §9, §10)');
+  assert.deepEqual([...STANDEE_REFERENCE_CANVAS], [1600, 1000], 'the reference canvas: traits.test’s raster’s, and the workshop’s');
   const FLIGHT = { aspect: 1.31, fill: 0.35 }; // a flight scene: the deck's drone paintings measure this (evidence §9)
   const PORTRAIT = { aspect: 0.8, fill: 0.66 }; // a figure in a doorway
   const MEDIAN = { aspect: 1.37, fill: 0.5 }; // the deck's median cut (evidence §1)
   const art = spyArt().art;
   const lines: string[] = [];
-  const at = (file: string, n: number, cut: { aspect: number; fill: number }) => {
+  interface Row {
+    pose: FigurePose;
+    /** Chosen by the lookup handed THIS canvas. */
+    kept: boolean;
+    /** Chosen by a lookup handed the fixed reference canvas whatever the page draws: the second verifier's major. */
+    fixed: boolean;
+    kneel: { size: number; height: number };
+    now: { size: number; height: number };
+  }
+  let fixedSlivers = 0;
+  const at = (file: string, n: number, cut: { aspect: number; fill: number }, canvas: StandeeCanvas, name: string): Row[] => {
     const state = stateAt(file, n);
     const placed = layout(state);
     const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
-    const chosen = standeeChoicesOf(placed, poses, art, reliefWith(cut.aspect, cut.fill), { base: BASE });
-    const rows: Array<{ pose: FigurePose; kept: boolean; kneel: { size: number; height: number }; now: { size: number; height: number } }> = [];
+    const relief = reliefWith(cut.aspect, cut.fill);
+    const chosen = standeeChoicesOf(placed, poses, art, relief, { base: BASE, canvas });
+    const fixed = standeeChoicesOf(placed, poses, art, relief, { base: BASE, canvas: REF });
+    const rows: Row[] = [];
     for (const p of placed.placements) {
       if (p.kind !== 'creature') continue;
       const pose = poses.get(p.cardId);
       if (!eligible(p, pose, new Map())) continue;
       const h = fitHeight(pose!.height, cut.aspect);
-      rows.push({
+      const row: Row = {
         pose: pose!,
         kept: chosen.has(p.cardId),
-        kneel: rasterSubject(pose!.position, h, cut.aspect, cut.fill, STANDEE_STANCES.crouch),
-        now: rasterSubject(pose!.position, h, cut.aspect, cut.fill, STANDEE_STANCES[pose!.stance]),
-      });
+        fixed: fixed.has(p.cardId),
+        kneel: rasterSubject(pose!.position, h, cut.aspect, cut.fill, STANDEE_STANCES.crouch, canvas),
+        now: rasterSubject(pose!.position, h, cut.aspect, cut.fill, STANDEE_STANCES[pose!.stance], canvas),
+      };
+      // On EVERY canvas: a standee stands iff it rasters at the floor, kneeling, on the canvas the lookup was handed.
+      if (row.kept) assert.ok(row.kneel.size >= STANDEE_MIN_PX - 1.5, `${file}@${String(n)} on ${name}: a standee stands at ${row.kneel.size.toFixed(1)} px`);
+      else assert.ok(row.kneel.size < STANDEE_MIN_PX + 1.5, `${file}@${String(n)} on ${name}: a standee that reads at ${row.kneel.size.toFixed(1)} px is its CC0 body`);
+      // The second verifier's major, kept as the control: the fixed canvas's floor, on this canvas.
+      if (row.fixed && row.kneel.size < STANDEE_MIN_PX - 1.5) fixedSlivers += 1;
+      rows.push(row);
     }
     lines.push(
-      `  ${file}@${String(n)} (${String(cut.aspect)} × ${String(cut.fill)}): ` +
+      `  ${name}  ${file}@${String(n)} (${String(cut.aspect)} × ${String(cut.fill)}): ` +
         rows.map((r) => `${r.pose.seat} ${String(r.pose.modelId)} ${r.pose.stance} ${r.kneel.size.toFixed(0)}/${r.now.size.toFixed(0)}px ${r.kept ? 'STANDS' : 'cc0'}`).join(', '),
     );
     return rows;
   };
-  // g1@316: the drones on both seats — the verifier's slivers — are their CC0 bodies.
-  const g1 = at('g1.jsonl', 316, FLIGHT);
-  const drones = g1.filter((r) => r.pose.modelId === 'drone');
-  assert.deepEqual([...new Set(drones.map((r) => r.pose.seat))].sort(), ['opp', 'you'], 'g1@316 no longer has a drone on each seat');
-  for (const r of drones) {
-    assert.equal(r.kept, false, `g1@316: the ${r.pose.seat} seat's drone still stands as a standee`);
-    assert.ok(r.kneel.size < STANDEE_MIN_PX, 'the raster agrees: under the floor');
+  const byCanvas = new Map<string, { rank: Row[]; doorway: Row | undefined }>();
+  for (const { name, canvas } of CANVASES) {
+    // g1@316: the drones on both seats — the verifier's slivers — are their CC0 bodies on every canvas.
+    const g1 = at('g1.jsonl', 316, FLIGHT, canvas, name);
+    const drones = g1.filter((r) => r.pose.modelId === 'drone');
+    assert.deepEqual([...new Set(drones.map((r) => r.pose.seat))].sort(), ['opp', 'you'], 'g1@316 no longer has a drone on each seat');
+    for (const r of drones) {
+      assert.equal(r.kept, false, `g1@316 on ${name}: the ${r.pose.seat} seat's drone still stands as a standee`);
+      assert.ok(r.kneel.size < STANDEE_MIN_PX, 'the raster agrees: under the floor');
+      // The control: every drone passed the lane's first measure — at least 48 px of subject (traits.test's bar
+      // for a prop, D261 as first written) — which is why it stood as a sliver; each passes every gate but the floor.
+      assert.ok(r.kneel.size * r.kneel.size >= 48, 'the first measure would have stood the drones down too — the control proves nothing');
+    }
+    // MoE@209: the opponent's sick drone is its CC0 body; the opponent's tapped figure in a doorway reads, rimmed.
+    const moe209 = at('villain-masters-of-evil-33.jsonl', 209, FLIGHT, canvas, name);
+    const sickDrone = moe209.find((r) => r.pose.modelId === 'drone' && r.pose.seat === 'opp' && r.pose.stance === 'sick');
+    assert.ok(sickDrone !== undefined && !sickDrone.kept, `MoE@209 on ${name}: the opponent’s sick drone still stands as a standee`);
+    const doorway = at('villain-masters-of-evil-33.jsonl', 209, PORTRAIT, canvas, name).find((r) => r.pose.seat === 'opp' && r.pose.stance === 'crouch');
+    // MoE@371: your seat's rank, with the median cut.
+    const rank = at('villain-masters-of-evil-33.jsonl', 371, MEDIAN, canvas, name).filter((r) => r.pose.seat === 'you');
+    assert.ok(rank.length >= 5, 'MoE@371 no longer has a rank on your seat');
+    byCanvas.set(name, { rank, doorway });
   }
-  // MoE@209: the opponent's sick drone is its CC0 body; the opponent's tapped figure in a doorway reads, rimmed.
-  const moe209 = at('villain-masters-of-evil-33.jsonl', 209, FLIGHT);
-  const sickDrone = moe209.find((r) => r.pose.modelId === 'drone' && r.pose.seat === 'opp' && r.pose.stance === 'sick');
-  assert.ok(sickDrone !== undefined && !sickDrone.kept, 'MoE@209: the opponent’s sick drone still stands as a standee');
-  const doorway = at('villain-masters-of-evil-33.jsonl', 209, PORTRAIT).find((r) => r.pose.seat === 'opp' && r.pose.stance === 'crouch');
-  assert.ok(doorway !== undefined && doorway.kept && doorway.now.size >= STANDEE_MIN_PX, 'MoE@209: the opponent’s tapped portrait no longer reads');
-  // MoE@371: your seat's rank, with the median cut, still stands — every one.
-  const rank = at('villain-masters-of-evil-33.jsonl', 371, MEDIAN).filter((r) => r.pose.seat === 'you');
-  assert.ok(rank.length >= 5 && rank.every((r) => r.kept), 'MoE@371: your seat’s rank no longer stands');
-  // The control: every drone passed the lane's first measure — at least 48 px of subject (traits.test's bar
-  // for a prop, D261 as first written) — which is why it stood as a sliver; each passes every gate but the floor.
-  assert.ok(drones.every((r) => r.kneel.size * r.kneel.size >= 48), 'the first measure would have stood the drones down too — the control proves nothing');
-  console.log(`standee legibility (D261, amended) — kneeling/now subject px at 1× from the table view, 1600 × 1000:\n${lines.join('\n')}`);
-
-  // Over a sample of the corpus: the floor's number IS the raster's, and nothing kept draws under it.
-  let compared = 0;
-  let kept = 0;
-  let worstDiff = 0;
-  let frames = 0;
-  for (const { state } of corpusStates()) {
-    frames += 1;
-    if (frames % 11 !== 0) continue;
-    const placed = layout(state);
-    const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
-    for (const cut of [FLIGHT, PORTRAIT, MEDIAN, { aspect: 2.25, fill: 0.5 }, { aspect: 0.68, fill: 0.45 }]) {
-      const chosen = standeeChoicesOf(placed, poses, art, reliefWith(cut.aspect, cut.fill), { base: BASE });
-      for (const [cardId] of chosen) {
-        const pose = poses.get(cardId)!;
-        const h = fitHeight(pose.height, cut.aspect);
-        const analytic = standeeLegibilityAt(pose.position, h, cut.aspect, cut.fill);
-        const raster = rasterSubject(pose.position, h, cut.aspect, cut.fill, STANDEE_STANCES.crouch);
-        worstDiff = Math.max(worstDiff, Math.abs(analytic.size - raster.size) / raster.size);
-        compared += 1;
-        assert.ok(Math.abs(analytic.size - raster.size) <= Math.max(1.5, 0.04 * raster.size), `the floor measures ${analytic.size.toFixed(1)} px where the raster draws ${raster.size.toFixed(1)}`);
-        for (const stance of ['ready', 'crouch', 'sick', 'attacking', 'blocking'] as const) {
-          assert.ok(rasterSubject(pose.position, h, cut.aspect, cut.fill, STANDEE_STANCES[stance]).size >= STANDEE_MIN_PX - 1.5, `a kept standee draws under the floor ${stance}`);
-        }
-        assert.ok(standeeReads(pose, cut.aspect, cut.fill));
-        kept += 1;
-      }
+  const ref = byCanvas.get('1600 × 1000')!;
+  const replay = byCanvas.get('1600 × 946')!;
+  const small = byCanvas.get('1280 × 800')!;
+  // The opponent's tapped portrait at @209 reads on every canvas (47 px at the reference).
+  for (const { name } of CANVASES) {
+    const { doorway } = byCanvas.get(name)!;
+    assert.ok(doorway !== undefined && doorway.kept && doorway.now.size >= STANDEE_MIN_PX, `MoE@209 on ${name}: the opponent’s tapped portrait no longer reads`);
+  }
+  // MoE@371: your seat's rank stands, every one, on the reference canvas and in a 1600 × 1000 window's replay…
+  assert.ok(ref.rank.every((r) => r.kept), 'MoE@371 at 1600 × 1000: your seat’s rank no longer stands');
+  assert.ok(replay.rank.every((r) => r.kept), 'MoE@371 at 1600 × 946: your seat’s rank no longer stands');
+  // …and in a 1280 × 800 window it is 20% smaller on screen — under the floor, so its CC0 bodies stand.
+  assert.ok(small.rank.every((r) => !r.kept), 'MoE@371 at 1280 × 800: a standee stands under the floor');
+  // On-screen size is proportional to the canvas's HEIGHT (the premise of the fix): the same standee, three canvases.
+  for (const [i, r] of ref.rank.entries()) {
+    for (const [other, h] of [
+      [replay, 946],
+      [small, 800],
+    ] as const) {
+      const expected = (r.kneel.size * h) / 1000;
+      assert.ok(Math.abs(other.rank[i]!.kneel.size - expected) <= Math.max(1, 0.03 * expected), `MoE@371: ${other.rank[i]!.kneel.size.toFixed(1)} px on a ${String(h)}-px canvas, ${expected.toFixed(1)} expected`);
     }
   }
-  console.log(`standee legibility: ${String(compared)} kept standees over an eleventh of the corpus's frames × five cuts — the floor within ${(worstDiff * 100).toFixed(1)}% of the raster, none under ${String(STANDEE_MIN_PX)} px in any stance`);
-  assert.ok(kept > 1000, 'the sweep kept nothing — it proves nothing');
+  // The control — the second verifier's major: a floor judged on the fixed reference canvas stands the same rank on
+  // a 1280 × 800 canvas, where every one of them rasters under the floor.
+  assert.ok(small.rank.every((r) => r.fixed), 'the control: the fixed canvas would have stood MoE@371’s rank at 1280 × 800');
+  assert.ok(fixedSlivers >= small.rank.length, `the control found ${String(fixedSlivers)} slivers a fixed-canvas floor stands — it proves nothing`);
+  console.log(
+    `standee legibility (D261, amended twice) — kneeling/now subject px at 1× from the table view; a fixed 1600 × 1000 floor would stand ${String(fixedSlivers)} of these under ${String(STANDEE_MIN_PX)} px:\n${lines.join('\n')}`,
+  );
+
+  // Over a sample of the corpus, on each canvas: the floor's number IS the raster's, nothing kept draws under it,
+  // and a smaller canvas keeps a subset of what a larger one keeps.
+  const summary: string[] = [];
+  const keptOn = new Map<string, Set<string>>();
+  let compared = 0;
+  let worstDiff = 0;
+  for (const { name, canvas } of CANVASES) {
+    let kept = 0;
+    let frames = 0;
+    const keys = new Set<string>();
+    for (const { file, state } of corpusStates()) {
+      frames += 1;
+      if (frames % 11 !== 0) continue;
+      const placed = layout(state);
+      const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+      for (const [c, cut] of [FLIGHT, PORTRAIT, MEDIAN, { aspect: 2.25, fill: 0.5 }, { aspect: 0.68, fill: 0.45 }].entries()) {
+        const chosen = standeeChoicesOf(placed, poses, art, reliefWith(cut.aspect, cut.fill), { base: BASE, canvas });
+        for (const [cardId] of chosen) {
+          const pose = poses.get(cardId)!;
+          const h = fitHeight(pose.height, cut.aspect);
+          const analytic = standeeLegibilityAt(pose.position, h, cut.aspect, cut.fill, canvas);
+          const raster = rasterSubject(pose.position, h, cut.aspect, cut.fill, STANDEE_STANCES.crouch, canvas);
+          worstDiff = Math.max(worstDiff, Math.abs(analytic.size - raster.size) / raster.size);
+          compared += 1;
+          assert.ok(Math.abs(analytic.size - raster.size) <= Math.max(1.5, 0.04 * raster.size), `${name}: the floor measures ${analytic.size.toFixed(1)} px where the raster draws ${raster.size.toFixed(1)}`);
+          for (const stance of ['ready', 'crouch', 'sick', 'attacking', 'blocking'] as const) {
+            assert.ok(rasterSubject(pose.position, h, cut.aspect, cut.fill, STANDEE_STANCES[stance], canvas).size >= STANDEE_MIN_PX - 1.5, `${name}: a kept standee draws under the floor ${stance}`);
+          }
+          assert.ok(standeeReads(pose, cut.aspect, cut.fill, canvas));
+          keys.add(`${file}#${String(frames)}#${String(c)}#${String(cardId)}`);
+          kept += 1;
+        }
+      }
+    }
+    keptOn.set(name, keys);
+    summary.push(`${name} ${String(kept)}`);
+    assert.ok(kept > 500, `${name}: the sweep kept nothing — it proves nothing`);
+  }
+  const [big, mid, least] = CANVASES.map(({ name }) => keptOn.get(name)!);
+  for (const key of mid!) assert.ok(big!.has(key), 'a standee a 946-px canvas keeps is not kept on a 1,000-px one');
+  for (const key of least!) assert.ok(mid!.has(key), 'a standee an 800-px canvas keeps is not kept on a 946-px one');
+  assert.ok(least!.size < mid!.size && mid!.size < big!.size, 'a smaller canvas keeps as many standees as a larger one — the canvas is not an input');
+  console.log(
+    `standee legibility: ${String(compared)} kept standees over an eleventh of the corpus's frames × five cuts × three canvases (${summary.join(', ')}) — the floor within ${(worstDiff * 100).toFixed(1)}% of the raster, none under ${String(STANDEE_MIN_PX)} px in any stance on its canvas`,
+  );
   // The fill a lookup reads: the share over the box.
   assert.ok(Math.abs(standeeFillOf({ box: { left: 0, right: 0.5, top: 0, bottom: 0.5 }, near: 0.3, share: 0.1 }) - 0.4) < 1e-12);
+});
+
+test('standee: the canvas is a pose input — the same board asked on another canvas answers by the floor on THAT canvas; the answer’s key (what Arena.tsx keeps a map by across a resize) is its cards and their prints, equal while the answer is, and carries no name', () => {
+  const state = stateAt('villain-masters-of-evil-33.jsonl', 371);
+  const placed = layout(state);
+  const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
+  const art = spyArt().art;
+  const relief = reliefWith(1.37, 0.5);
+  const ask = (canvas: StandeeCanvas | null): ReadonlyMap<number, StandeeChoice> => standeeChoicesOf(placed, poses, art, relief, { base: BASE, canvas });
+  const big = ask([1600, 1000]);
+  const nudged = ask([1612, 1003]);
+  const small = ask([1280, 800]);
+  assert.ok(big.size >= 5, 'MoE@371 stands its rank at 1600 × 1000');
+  assert.notEqual(big, nudged, 'a fresh map per ask — the arena keeps its own by the key');
+  assert.equal(standeeChoicesKeyOf(nudged), standeeChoicesKeyOf(big), 'a resize that changes no answer changes no key');
+  assert.ok(small.size < big.size, 'a smaller canvas stands fewer');
+  assert.notEqual(standeeChoicesKeyOf(small), standeeChoicesKeyOf(big), 'an answer that changed kept its key');
+  assert.equal(ask(null).size, 0, 'no canvas yet: nothing stands');
+  assert.equal(standeeChoicesKeyOf(ask(null)), '');
+  // The key is the cards and the prints they stand as — never a name.
+  const key = standeeChoicesKeyOf(big);
+  for (const [cardId, choice] of big) assert.ok(key.includes(`${String(cardId)}:${choice.key};`));
+  for (const p of placed.placements) {
+    const name = (p.card as { name?: unknown }).name;
+    if (typeof name === 'string' && name !== '') assert.ok(!key.replace(/print:[^;]*;/g, '').includes(name), 'the key carries a name outside a print id');
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -965,22 +1135,58 @@ test('standee: ONE mesh, two sheets, 1,920 triangles (D263); the program draws e
   // The fragment is standeeCutOf's test: the keep mask, red over green by the cliff, or at least near.
   assert.match(STANDEE_FRAGMENT, /bool subject = d\.b >= 0\.5 && \( d\.r - d\.g > uCut \|\| d\.r >= uNear \);/);
   assert.match(STANDEE_FRAGMENT, /return t\.b >= 0\.5 && \( t\.r - t\.g > uCut \|\| t\.r >= uNear \);/, 'the rim’s taps ask the same test');
-  // The ink rim (D261, amended): eight taps `uRim` pixels out, their coordinates from the pixel's own
-  // footprint, all computed before any branch; the taps read only where the front is not the subject.
+  // The ink rim (D261, amended): eight taps `uRim` pixels out, their reach from the pixel's own footprint.
   assert.match(STANDEE_FRAGMENT, /vec2 reach = fwidth\( vMapUv \) \* uRim;/);
-  const taps = STANDEE_FRAGMENT.match(/subjectAt\( (e|w|n|s|ne|sw|se|nw) \)/g) ?? [];
-  assert.equal(new Set(taps).size, 8, 'eight taps round the pixel');
+  const taps = STANDEE_FRAGMENT.match(/subjectAt\( (e|w|n|s|ne|sw|se|nw), depthLod \)/g) ?? [];
+  assert.equal(new Set(taps).size, 8, 'eight taps round the pixel, each at the level decided at the top');
   assert.match(STANDEE_FRAGMENT, /if \( !rim \) discard;\s*colour = uInk;/);
-  const main = STANDEE_FRAGMENT.slice(STANDEE_FRAGMENT.indexOf('void main()'));
-  const firstBranch = main.indexOf('if (');
-  for (const coord of ['vec2 e =', 'vec2 w =', 'vec2 n =', 'vec2 s =', 'vec2 ne =', 'vec2 sw =', 'vec2 se =', 'vec2 nw =', 'vec4 d = texture2D( uDepth, vMapUv );']) {
-    assert.ok(main.indexOf(coord) > 0 && main.indexOf(coord) < firstBranch, `${coord} is computed after a branch: a sample's mip level would be undefined where the cut divides a quad`);
-  }
-  assert.doesNotMatch(STANDEE_FRAGMENT, /textureGrad|textureLod/, 'the explicit forms cost SwiftShader 3–9 ms a frame for nine standees (evidence §9)');
+  // Every sample's level is decided before the first branch and the first discard (fix pass 2, the second
+  // verifier's minor): derivatives — and so an implicit level — are undefined in non-uniform control flow and
+  // after a non-uniform discard (GLSL ES 3.00 §6.4, §8.8), and every read but the centre's is inside one.
+  const levelsDecidedFirst = (fragment: string): boolean => {
+    const main = fragment.slice(fragment.indexOf('void main()'));
+    const firstBranch = Math.min(main.indexOf('if ('), main.indexOf('discard'));
+    const top = main.slice(0, firstBranch);
+    const below = main.slice(firstBranch);
+    const helpers = fragment.slice(0, fragment.indexOf('void main()'));
+    return (
+      firstBranch > 0 &&
+      !/\btexture2D\(/.test(fragment) && // no read with an implicit level, anywhere
+      !/\b(dFdx|dFdy|fwidth)\(/.test(below) && // every derivative at the top
+      !/\b(dFdx|dFdy|fwidth)\(/.test(helpers) &&
+      /vec4 t = textureLod\( uDepth, uv, lod \);/.test(helpers) &&
+      /vec4 d = textureLod\( uDepth, vMapUv, depthLod \);/.test(top) &&
+      /float depthLod = lodOf\( dFdx\( vMapUv \), dFdy\( vMapUv \), uDepthSize \);/.test(top) &&
+      /float artLod = lodOf\( dFdx\( vArtUv \), dFdy\( vArtUv \), uMapSize \);/.test(top) &&
+      /float backLod = lodOf\( dFdx\( vBackUv \), dFdy\( vBackUv \), uBackSize \);/.test(top) &&
+      /colour = textureLod\( map, vArtUv, artLod \)\.rgb;/.test(below) &&
+      /colour = textureLod\( uBack, vBackUv, backLod \)\.rgb;/.test(below) &&
+      ['vec2 e =', 'vec2 w =', 'vec2 n =', 'vec2 s =', 'vec2 ne =', 'vec2 sw =', 'vec2 se =', 'vec2 nw ='].every((coord) => top.includes(coord))
+    );
+  };
+  assert.ok(levelsDecidedFirst(STANDEE_FRAGMENT), 'a standee sample reads an implicit level, or takes a derivative, after the first branch or discard');
+  // The controls: the first rim's taps, the lane's painting read, and a derivative taken inside the branch.
+  assert.equal(levelsDecidedFirst(STANDEE_FRAGMENT.replace('vec4 t = textureLod( uDepth, uv, lod );', 'vec4 t = texture2D( uDepth, uv );')), false, 'the check cannot see a tap read at an implicit level');
+  assert.equal(levelsDecidedFirst(STANDEE_FRAGMENT.replace('textureLod( map, vArtUv, artLod )', 'texture2D( map, vArtUv )')), false, 'the check cannot see the painting read at an implicit level');
+  assert.equal(levelsDecidedFirst(STANDEE_FRAGMENT.replace('colour = uInk;', 'colour = uInk * fwidth( vMapUv ).x;')), false, 'the check cannot see a derivative inside a branch');
+  // The GL's own isotropic level (ρ = the longer of the two screen-axis footprints, in texels), clamped to the base level, and log2 never of 0.
+  assert.match(STANDEE_FRAGMENT, /return max\( 0\.5 \* log2\( max\( max\( dot\( x, x \), dot\( y, y \) \), 1e-8 \) \), 0\.0 \);/);
+  // The vertex fetch names level 0: a vertex shader has no derivatives, and the map is mipmapped for the fragment's reads.
+  assert.match(STANDEE_VERTEX, /vec4 d = textureLod\( uDepth, mapUv, 0\.0 \);/);
+  assert.doesNotMatch(STANDEE_VERTEX, /\btexture2D\(/, 'a vertex fetch at an implicit level');
+  // GLSL ES 3.00's own names, in both stages: three defines the `…EXT` aliases for the fragment stage only, and a
+  // vertex fetch spelled `texture2DLodEXT` does not compile (every standee vanished, fix pass 2's first picture).
+  assert.doesNotMatch(`${STANDEE_VERTEX}${STANDEE_FRAGMENT}`, /texture2DLodEXT|texture2DGradEXT/, 'a fetch spelled by three’s fragment-only alias');
+  // `textureGrad` keeps a GPU's anisotropic filtering and cost SwiftShader about 4 ms more for nine standees; at the
+  // table's distance the GTX 1080 draws the same picture either way (docs/evidence/standee.md §10).
+  assert.doesNotMatch(STANDEE_FRAGMENT, /\btextureGrad\(/, 'a read by explicit gradients (SwiftShader’s dear path)');
   const cache = readFileSync(fileURLToPath(new URL('../src/arena/scene/reliefCache.ts', import.meta.url)), 'utf8');
   assert.match(cache, /const STANDEE_RIM = \{ value: Math\.max\(1, COMIC\.inkCssPx\) \};/, 'the rim is the figures’ outer ink');
   assert.match(cache, /STANDEE_RIM\.value = Math\.max\(1, COMIC\.inkCssPx \* dpr\);/, 'the rim follows the render dpr');
   assert.match(cache, /const STANDEE_INK = \{ value: new THREE\.Color\(COMIC\.ink\) \};/);
+  // The texel counts each read's level is named from are the map's and the back image's own.
+  assert.match(cache, /depthSize: \[entry\.width, entry\.height\],\s*mapSize: texelsOf\(map\),\s*backSize: \[b\.width, b\.height\],/);
+  assert.match(cache, /uDepthSize: \{ value: new THREE\.Vector2\(\.\.\.standee\.depthSize\) \},\s*uMapSize: \{ value: new THREE\.Vector2\(\.\.\.standee\.mapSize\) \},\s*uBackSize: \{ value: new THREE\.Vector2\(\.\.\.standee\.backSize\) \},/);
   assert.ok(COMIC.inkCssPx >= 1 && /^#[0-9a-f]{6}$/.test(COMIC.ink));
   assert.match(STANDEE_FRAGMENT, /if \( d\.g < uNear \) discard;/, 'the back only where what it shows is the subject');
   assert.match(STANDEE_FRAGMENT, /#include <colorspace_fragment>/);
@@ -998,7 +1204,7 @@ test('standee: the choice carries no name — a choice is a print id, the dev ro
   for (const { state } of corpusStates()) {
     const placed = layout(state);
     const poses = figurePose(placed, state.board?.combat ?? null, DATA, { models: MODELS });
-    const choices: ReadonlyMap<number, StandeeChoice> = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE });
+    const choices: ReadonlyMap<number, StandeeChoice> = standeeChoicesOf(placed, poses, art.art, relief.relief, { base: BASE, canvas: REF });
     for (const choice of choices.values()) {
       assert.deepEqual(Object.keys(choice).sort(), ['back', 'cut', 'entry', 'image', 'key', 'map']);
       checked += 1;

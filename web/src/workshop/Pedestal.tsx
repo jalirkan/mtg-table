@@ -82,7 +82,7 @@ import { useCardTexture } from '../arena/scene/useCardTexture.ts';
 import { NO_STANDEES, useDepthTexture, type StandeesLoaded } from '../arena/scene/reliefCache.ts';
 import { EMPTY_RELIEF, type ReliefIndex } from '../arena/relief.ts';
 import { dressStandees, standeeChoicesOf } from '../arena/standee.ts';
-import { RELIEF_CLIFF, RELIEF_GRID } from '../arena/perf.ts';
+import { RELIEF_CLIFF, RELIEF_GRID, STANDEE_REFERENCE_CANVAS } from '../arena/perf.ts';
 import { turnPoses, type PreviewStage } from './facing.ts';
 import { ART_BOX, poseFor, type CameraMode, type Framing, type Panel } from './framing.ts';
 import {
@@ -315,8 +315,15 @@ function PedestalScene({
   );
   // The portrait standee (D260), exactly as `Arena.tsx` stands it: THE lookup over
   // the poses the personal models left, then the dressed poses once it has loaded.
+  // The legibility floor on the reference canvas (D261, fix pass 2): the pedestal
+  // is not the table view, so it asks what an arena drawn 1600 × 1000 would stand.
   const standeeChoices = useMemo(
-    () => standeeChoicesOf(placed, personalPoses, art, standee.relief, { base: standee.base, taken: personalChoices }),
+    () =>
+      standeeChoicesOf(placed, personalPoses, art, standee.relief, {
+        base: standee.base,
+        taken: personalChoices,
+        canvas: STANDEE_REFERENCE_CANVAS,
+      }),
     [placed, personalPoses, art, standee.relief, standee.base, personalChoices],
   );
   const figures = useMemo(

@@ -39,7 +39,7 @@
  */
 
 import { AdaptiveDpr, OrbitControls, PerspectiveCamera, Stats } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   Suspense,
   lazy,
@@ -153,7 +153,7 @@ import { NO_PERSONAL_LOADED, usePersonalModels, usePersonalOverlay, type Persona
 import { isSoundChoice, sharedAudio, soundOn, type ArenaAudio, type SoundChoice } from './scene/audio.ts';
 import { loadAssetBytes } from './scene/models.ts';
 import { dressPoses, personalChoicesOf } from './personal.ts';
-import { dressStandees, standeeChoicesOf } from './standee.ts';
+import { dressStandees, standeeChoicesKeyOf, standeeChoicesOf, type StandeeCanvas } from './standee.ts';
 import { NO_STANDEES, RELIEF_BASE, useReliefIndex, useStandees, type StandeesLoaded } from './scene/reliefCache.ts';
 import { inspectContextOf, inspectTargetOf, type InspectTarget } from './inspect.ts';
 import { FigureLayer } from './scene/FigureLayer.tsx';
@@ -235,6 +235,22 @@ export type ArenaFollow = 'following' | 'stalled' | 'finished' | 'lost';
 
 /** The speeds the cue strip offers (§11, E4). */
 const SPEEDS = [0.5, 1, 2, 4] as const;
+
+/**
+ * **The canvas's size, for the standee's legibility floor** (D261, as fix pass 2
+ * amended it): fiber's own measurement of the canvas — `size`, CSS pixels, from the
+ * ResizeObserver `<Canvas>` already runs — handed to `Arena` in an effect when it
+ * changes. The floor is a POSE input: a resize re-runs the lookup at commit, and
+ * nothing reads a size for it in the frame loop.
+ */
+function CanvasSizeReport({ onSize }: { onSize: (width: number, height: number) => void }): null {
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+  useEffect(() => {
+    onSize(width, height);
+  }, [width, height, onSize]);
+  return null;
+}
 
 /**
  * The governor itself: one `useFrame`, one ring buffer, and no allocation in it.
@@ -1087,6 +1103,9 @@ export default function Arena({
    * poses; a standee dresses a pose only once its textures have loaded, so a
    * failure is the CC0 figure. `?standee=0` — or the tier off, `?personal=0` —
    * draws the CC0 figures for the A/B; a build has no route and stands none.
+   * The legibility floor is judged on THIS canvas (D261, fix pass 2), whose size
+   * `CanvasSizeReport` hands over at commit: `null` until it has one, and then
+   * nothing stands.
    */
   const standeeOn = useMemo(() => {
     try {
@@ -1096,10 +1115,26 @@ export default function Arena({
     }
   }, [personalOn]);
   const relief = useReliefIndex(standeeOn);
-  const standeeChoices = useMemo(
-    () => standeeChoicesOf(placed, personalPoses, art, relief, { base: standeeOn ? RELIEF_BASE : null, taken: personalChoices }),
-    [placed, personalPoses, art, relief, standeeOn, personalChoices],
+  const [canvasPx, setCanvasPx] = useState<StandeeCanvas | null>(null);
+  const onCanvasSize = useCallback((width: number, height: number): void => {
+    if (!(width > 0 && height > 0)) return;
+    setCanvasPx((was) => (was !== null && was[0] === width && was[1] === height ? was : [width, height]));
+  }, []);
+  const standeeAnswer = useMemo(
+    () =>
+      standeeChoicesOf(placed, personalPoses, art, relief, {
+        base: standeeOn ? RELIEF_BASE : null,
+        taken: personalChoices,
+        canvas: canvasPx,
+      }),
+    [placed, personalPoses, art, relief, standeeOn, personalChoices, canvasPx],
   );
+  // A resize asks the floor again at commit; while its answer is the same, the
+  // SAME map goes on (this memo is keyed by what the answer IS, not by the
+  // canvas), so a drag of the window's edge re-dresses no figure on every step.
+  const standeeAnswerKey = standeeChoicesKeyOf(standeeAnswer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const standeeChoices = useMemo(() => standeeAnswer, [standeeAnswerKey, placed, personalPoses, art, relief, standeeOn, personalChoices]);
   const standees = useStandees(standeeChoices);
   const figures = useMemo(() => dressStandees(personalPoses, standeeChoices, standees.fits), [personalPoses, standeeChoices, standees.fits]);
   /**
@@ -1711,6 +1746,8 @@ export default function Arena({
             make it undo a governor decision on every mouse-up. Turn one on and
             the other off. */}
         <AdaptiveDpr />
+        {/* The standee's legibility floor measures on this canvas (D261, fix pass 2). */}
+        <CanvasSizeReport onSize={onCanvasSize} />
         <Scene
           state={state}
           placed={placed}

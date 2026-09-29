@@ -301,7 +301,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Personal tier](#fu-personal) | 39 | open | The standee's frame times were benched beside other lanes' load, and its SwiftShader p95 doubles | `tools/arena-bench.mjs` |
 | [Personal tier](#fu-personal) | 40 | open | NOTICE §2 and the personal tier's derived views of card art | `NOTICE` |
 | [Personal tier](#fu-personal) | 41 | open | The likeness evidence's §10 pointer to D260 is owed on branch `likeness` | — |
-| [Personal tier](#fu-personal) | 42 | open | A standee at the legibility floor's edge changes body when its rank moves it (10 times over the corpus) | `web/src/arena/standee.ts` |
+| [Personal tier](#fu-personal) | 42 | open | A standee at the legibility floor's edge changes body when its rank moves it or the window is resized; the workshop judges it at 1600 × 1000 | `web/src/arena/standee.ts` |
 | [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
 | [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
 | [Status layer](#fu-status) | 4 | open | `g1`@316 on SwiftShader is 91 draw calls, one over the line | `tools/arena-bench.mjs` |
@@ -402,7 +402,7 @@ villain identity's rebase, were removed at the same recount.)
 | [29](#owner-questions) | Download the *Universal Base Characters* pack again for its hairstyles? | open — the plan runs on its default |
 | [30](#owner-questions) | Keep the art rung on by default? | open — the plan runs on its default |
 | [31](#owner-questions) | Should a person's skin tone follow its card, or stay slice 4's one tone? | open — the plan runs on its default |
-| [32](#owner-questions) | Keep the portrait standee's ink rim, its legibility floor at 30 px, and its small kneel? | open — the plan runs on its default |
+| [32](#owner-questions) | Keep the portrait standee's ink rim, its legibility floor at 30 px on the canvas you draw (a 1280 × 800 window stands about one standee in six), and its small kneel? | open — the plan runs on its default |
 
 ---
 
@@ -7847,10 +7847,10 @@ no follow-up opened. Evidence §19.
 
 ### The portrait standee — the painting on the table (2026-09-29, D260–D264)
 
-**Status: built, measured, gated, documented and fixed once** on branch `standee`
+**Status: built, measured, gated, documented and fixed twice** on branch `standee`
 (the worktree `mtg-table-t2st`, off `main`'s `e2c337c`); the lane reserved
-D260–D264 and used all five, and its fix pass amended D261–D264 in place (*Fix
-pass 1*, below). Report 15 §9.4's optional, personal-only item, and the
+D260–D264 and used all five, and its fix passes amended D261–D264 in place (*Fix
+pass 1* and *Fix pass 2*, below). Report 15 §9.4's optional, personal-only item, and the
 likeness experiment's recommendation (§10): a relief cut from the card's own
 painting reads better at figure size than anything image-to-3D made — and the
 relief cache (D225–D228) already cuts every card's painting at its silhouettes.
@@ -7937,6 +7937,36 @@ here, as before). `~/forge` and `~/.forge`: unchanged (the jar's sha256, and a
 sha1 of `~/forge`'s path-size-time listing and of `~/.forge`'s files, before and
 after).
 
+**Fix pass 2** (2026-09-29, after the second verifier, who passed the sweeps, liveness,
+the gate and the pictures, and left one major and five minors; `docs/evidence/standee.md`
+§10):
+
+- **The floor measures on the canvas the page draws** (D261, amended again — the
+  major). It was judged on a fixed 1600 × 1000 canvas, and a standee's size on screen
+  is proportional to the canvas's height: at 1280 × 800, 9,177 of the 11,761
+  placements it kept rasterised under 30 px. The canvas is now a pose input of the
+  lookup — the arena's own, measured by fiber and handed over at commit (a resize
+  re-runs the lookup, never the frame loop), the reference canvas in the workshop,
+  which has no table view — and `standee.test.ts`'s raster holds it on three
+  canvases. The floor stays 30 px; a 1280 × 800 canvas stands 17% of the placements
+  the reference does, a replay in that window 6% (owner question 32).
+- **Every read in the standee's program names its level** (D261): the derivatives
+  taken before the first branch and discard, every read a `textureLod`, at the cost
+  of the implicit form on SwiftShader; and the vertex fetch in GLSL ES 3.00's own
+  name, because three's `texture2DLodEXT` alias exists in the fragment stage only
+  (the first picture of the pass had no standees at all, with every test green).
+- **The minors**: D262's heading; evidence §9.1's seven cards one per line; a corpus
+  pass that reaches `mayStand`'s vehicle and silhouette gates (819 and 949 poses,
+  each left one gate); the build's source maps without the sources' text
+  (`sourcemapExcludeSources`), grepped by `personal.test.ts` like the code.
+
+**Fix pass 2's gate**, from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9320`,
+once: **268.6 s**, exit 0, 48 jobs (989.9 s summed) at a load average of 2.4–11.9,
+`node --test` 1,216 / 1,205 pass / 0 fail / 11 skipped and vitest 157 (9 files)
+(`var/check-all-standee-fix3.log`; the relief step's three Python-step tests skipped
+here, as before). `~/forge` and `~/.forge`: unchanged (the jar's sha256, and a sha1
+of `~/forge`'s path-size-time listing and of `~/.forge`'s files, before and after).
+
 **Follow-ups 35–42** (the personal tier's list, numbered on; 42 from fix pass 1):
 
 35. **A sideways drag shows no relief.** A standee turns with the camera about the
@@ -7985,7 +8015,11 @@ after).
     corpus with no personal model taking a card (the Volcanic Villain, Peggy
     Carter, She-Hulk, Bold Biochemist, Baron Strucker). A floor on the table's centre line had 6 but stood down a card that
     reads everywhere; hysteresis would be a renderer that remembers. Watch it in
-    play before choosing.
+    play before choosing. **Since fix pass 2** the floor is judged on the canvas the
+    page draws, so a card also changes body when the window is resized across its
+    floor (at commit, never mid-frame), and the workshop — which has no table view —
+    judges it on the 1600 × 1000 reference canvas, so its *standee* badge can name a
+    card a smaller arena draws as its CC0 body (the badge's title says so).
 
 ## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
 
@@ -8899,4 +8933,4 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 29 | **New, Lane BODIES.** Download the *Universal Base Characters* pack again (`Universal Base Characters[Standard].zip`, 128,968,391 B, from <https://quaternius.itch.io/universal-base-characters>) so the hair is the pack's own hairstyles instead of four procedural shells? A download is your approval in chat, with the badge read on the day (**D54**, **D95**). | **Not downloaded** (**D157**): two carved styles and four shells; the route is the lane's follow-up 2. |
 | 30 | **New, Lane BODIES at merge.** Keep the **art rung** on — every face-up card with no hand-written colour takes its painting's (the Giant-Sized Flying Ant brown, Wasp's aura salmon) — or put it behind a switch until played? The lane left it to you (**D164**); the merge applied it, as the lane's follow-up 13 said "whoever merges LOOK and BODIES" would. | **On** (**D164**, amended). `palette: off` in a `traits.json` row turns it off for a card; there is no page-wide switch. |
 | 31 | **New, more villain identity (its fix pass).** A person's **skin tone**: keep slice 4's one tone for every person — only a transformed body (a Hulk's green, a lava body) paints its skin (D231) — or let a person's tone follow its card, from the card's art palette (a rung like D160's) or a per-deck default? The verifier called the Wakandans, every one in the pale default against art of a Black cast, the lane's most visible mismatch. No likeness either way: a tone is not a face. | **The one tone** (slice 4, D231, D232). The rule is `COSTUME_DEFAULTS.skin` and `traits.test.ts`'s `TRANSFORMED_SKIN`; either answer is a decision and a change to both. |
-| 32 | **New, the portrait standee (its fix pass).** Three looks the fix pass chose for the standee (D261, D262, amended), each from pictures only you can judge (`var/standee/fix/`, gitignored — card-art-derived, never shown to anyone): an **ink rim** round every cut, the figures' own outer ink weight, so a painting over a painting keeps an edge (`rim-compare.png`); a **legibility floor** — a standee whose subject, kneeling, covers under a 30-px square's worth at 1× from the table view is its CC0 body, so the drones, the A.I.M. Bot, Yellowjacket and the Drone Flock never stand and about one standee in five on your seat and two in five on the opponent's does not (`floor-contact.png`, every standee of seven crowded frames with its size); and a **smaller kneel** — a fifth sunk and 6° of bow, 0.68–0.78 of its standing height from the table, where the first was a sliver at 0.39–0.59 (`tapped-compare.png`). Keep all three, move the floor, or drop the rim? | **All three, at the numbers measured** (`perf.ts`'s `STANDEE_MIN_PX`, `standee.ts`'s `STANDEE_STANCES`, `STANDEE_FRAGMENT`'s rim). A different floor is one number and a re-run of `standee.test.ts`; `?standee=0` is the A/B. |
+| 32 | **New, the portrait standee (its fix passes).** Three looks the fix passes chose for the standee (D261, D262, amended), each from pictures only you can judge (`var/standee/fix/` and `var/standee/fix3/`, gitignored — card-art-derived, never shown to anyone): an **ink rim** round every cut, the figures' own outer ink weight, so a painting over a painting keeps an edge (`rim-compare.png`); a **legibility floor** — a standee whose subject, kneeling, covers under a 30-px square's worth at 1× from the table view is its CC0 body, so the drones, the A.I.M. Bot, Yellowjacket and the Drone Flock never stand (`floor-contact.png`, every standee of seven crowded frames with its size) — judged since fix pass 2 on the canvas your window draws, so **the window's size decides how many stand**: over the recordings a 1600 × 1000 canvas stands 77% of the standee placements (83% of yours, 63% of the opponent's), 1600 × 946 (a replay in a 1600 × 1000 window) 75%, 1280 × 800 17% (20% and 10%; 27 of the 51 cards somewhere, Agent 13, Storm, Moonstone and MACH-1 nearly always), and a replay in a 1280 × 800 window 6% (10 cards) — what it drops are paintings of 23–30 px (`moe-371-floor-compare-1280x800-2x.png`: the Masters of Evil's nine at @371, the fixed floor's over the live floor's CC0 bodies); and a **smaller kneel** — a fifth sunk and 6° of bow, 0.68–0.78 of its standing height from the table, where the first was a sliver at 0.39–0.59 (`tapped-compare.png`). Keep all three, lower the floor for a small window (more standees, smaller than the contact sheet read), or drop the rim? | **All three, at the numbers measured, the floor on the canvas drawn** (`perf.ts`'s `STANDEE_MIN_PX`, `standee.ts`'s `STANDEE_STANCES`, `STANDEE_FRAGMENT`'s rim): a small window draws fewer standees rather than ones nobody can read. A different floor is one number and a re-run of `standee.test.ts`; `?standee=0` is the A/B. |

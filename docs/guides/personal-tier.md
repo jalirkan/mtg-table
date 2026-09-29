@@ -597,16 +597,23 @@ standee stands only where a CC0 BODY would — a face-up, named creature — and
 never for a face-down card, a redacted stub, a member of a swarm or a squad, or a
 vehicle's silhouette (hard rule 8, D264).
 
-**And only where it reads** (D261, as its fix pass amended it). A standee whose
+**And only where it reads** (D261, as its fix passes amended it). A standee whose
 subject, kneeling, would cover less than a 30-pixel square's worth of the screen
 at 1× from the table view — a drone's small body with a flight scene's thin
 subject, a crowd of small figures on the far seat — stands as its CC0 body
-instead: the Aerial Doombot, the Wakandan Drone Flock, Doom's Servo-Guards, the
-A.I.M. Bot, Yellowjacket and Black Panther, Vanguard never stand; over the recordings about four in five
-of your seat's standees and three in five of the opponent's do. The floor is
+instead. It is measured on the arena's own canvas, so **the size of your window
+decides how many stand**: the table view's field of view is fixed top to
+bottom, and on a canvas 800 pixels tall everything is a fifth smaller than on
+one 1,000 tall. Over the recordings, a 1600 × 1000 canvas stands about four in
+five of your seat's standees and three in five of the opponent's, and *Aerial
+Doombot*, *Wakandan Drone Flock*, *Doom's Servo-Guards*, *A.I.M. Bot*,
+*Yellowjacket* and *Black Panther, Vanguard* never stand; a 1280 × 800 canvas
+stands about one in five of yours and one in ten of theirs, and a replay in a
+1280 × 800 window (its bar takes 54 pixels) about one in eighteen — the rest are
+their CC0 bodies, because at that size a painting is a smudge. The floor is
 judged kneeling, the smallest a standee is drawn, so a card does not change body
 when it taps; it can when its rank moves it across the floor (ten times over
-the recordings).
+the recordings) or when you resize the window across it.
 
 **The A/B**: `?standee=0` draws the CC0 figures with your models still on;
 `?personal=0` turns the whole tier off (models and standees); a build stands
@@ -640,7 +647,9 @@ Its status strip stands over its own height.
 
 **The workshop** (`#workshop`): the list badges a card the pedestal stands as a
 *standee* — the arena's own lookup asked of the card's resting board, so a card
-under the floor has no badge — and the pedestal wears it behind the same
+under the floor has no badge; the workshop has no table view to measure, so it
+asks the floor what an arena drawn 1600 × 1000 would stand, and a smaller arena
+stands fewer — and the pedestal wears it behind the same
 *personal / repo* toggle as the models — so one card's standee can be looked at up close (its cut
 edge, its depth as the camera moves up and down).
 

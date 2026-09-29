@@ -136,6 +136,7 @@ test('personal: a production build carries no personal path — the route, a slu
   };
   walk(dist);
   let scanned = 0;
+  let maps = 0;
   for (const file of files) {
     const rel = file.slice(dist.length + 1);
     assert.ok(!rel.startsWith('personal'), `${rel}: a personal file in the build`);
@@ -143,11 +144,18 @@ test('personal: a production build carries no personal path — the route, a slu
     if (!/\.(js|css|html|json|map|txt)$/.test(rel)) continue;
     scanned += 1;
     const text = readFileSync(file, 'utf8');
-    // The source maps carry the sources' comments, which document the route; the code is what runs.
-    if (rel.endsWith('.map')) continue;
+    // The source maps are grepped like the code (the standee's fix pass 2): they carry no copy of the sources —
+    // `vite.config.ts`'s `sourcemapExcludeSources`, whose `sourcesContent` named the route in its comments and
+    // DEV branches — so a path in one is a path in the build.
+    if (rel.endsWith('.map')) {
+      maps += 1;
+      const content = (JSON.parse(text) as { sourcesContent?: unknown }).sourcesContent;
+      assert.ok(content === undefined || (Array.isArray(content) && content.every((c) => c === null)), `${rel} carries its sources' text`);
+    }
     assert.deepEqual(leaksIn(text, slugs), [], `${rel} carries a personal path`);
   }
   assert.ok(scanned > 3, `expected the built chunks, scanned ${String(scanned)}`);
+  assert.ok(maps > 3, `expected the built chunks' source maps, scanned ${String(maps)}`);
 });
 
 // ---------------------------------------------------------------------------

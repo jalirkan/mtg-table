@@ -62,7 +62,7 @@ import { figurePose } from '../arena/figures/pose.ts';
 import type { FigureData, ModelData } from '../arena/figures/types.ts';
 import type { TraitData } from '../arena/figures/traits.ts';
 import { layout } from '../arena/layout.ts';
-import { RELIEF_DEPTH } from '../arena/perf.ts';
+import { RELIEF_DEPTH, STANDEE_REFERENCE_CANVAS } from '../arena/perf.ts';
 import { personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
 import { ART_BOX, type ReliefEntry, type ReliefIndex } from '../arena/relief.ts';
 import { standeeChoicesOf } from '../arena/standee.ts';
@@ -100,7 +100,10 @@ export interface StandeeBadgeInputs {
  * a CC0 figure stands in — never a swarm, a squad or a silhouette), the card's
  * own art lookup, the relief and the legibility floor are all the lookup's, and
  * the list decides nothing of its own (`workshop.test.ts` sweeps the catalog with
- * a hostile relief against an oracle).
+ * a hostile relief against an oracle). The floor is judged on `perf.ts`'s
+ * `STANDEE_REFERENCE_CANVAS`, as the pedestal judges it: the workshop has no
+ * table view to measure, so the badge says what an arena drawn 1600 × 1000 would
+ * stand (D261, fix pass 2) — a smaller arena stands fewer.
  */
 export function standeeBadgesOf(entries: readonly WorkshopEntry[], inputs: StandeeBadgeInputs): Set<string> {
   const out = new Set<string>();
@@ -111,7 +114,7 @@ export function standeeBadgesOf(entries: readonly WorkshopEntry[], inputs: Stand
     const placed = layout(state, inputs.presence ?? {});
     const poses = figurePose(placed, state.board?.combat ?? null, inputs.figures, { models: inputs.models, traits: inputs.traits });
     const taken = personalChoicesOf(placed, poses, inputs.overlay);
-    const chosen = standeeChoicesOf(placed, poses, inputs.art, inputs.relief, { base: inputs.base, taken });
+    const chosen = standeeChoicesOf(placed, poses, inputs.art, inputs.relief, { base: inputs.base, taken, canvas: STANDEE_REFERENCE_CANVAS });
     if (figureIds(entry, DEFAULT_OPTIONS).some((id) => chosen.has(id))) out.add(entry.name);
   }
   return out;

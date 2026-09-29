@@ -173,6 +173,10 @@ export interface LoadedStandee {
   box: [number, number, number, number];
   /** `[u0, v0, du, dv]`: the map's UV → the back image's (inside its margin). */
   backBox: [number, number, number, number];
+  /** The depth map's, the card image's and the back image's pixels across and down: the fragment shader names each read's level from them (fix pass 2). */
+  depthSize: [number, number];
+  mapSize: [number, number];
+  backSize: [number, number];
   near: number;
 }
 
@@ -197,6 +201,14 @@ function standeeDepth(texture: THREE.Texture): THREE.Texture {
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.needsUpdate = true;
   return texture;
+}
+
+/** A loaded image's pixels across and down (the card image's, for the level its read names); 0 × 0 reads the base level. */
+function texelsOf(texture: THREE.Texture): [number, number] {
+  const image = texture.image as { width?: unknown; height?: unknown } | null;
+  const w = typeof image?.width === 'number' ? image.width : 0;
+  const h = typeof image?.height === 'number' ? image.height : 0;
+  return [w, h];
 }
 
 function standeeBack(texture: THREE.Texture): THREE.Texture {
@@ -257,6 +269,9 @@ export function useStandees(choices: ReadonlyMap<number, StandeeChoice>): Stande
               back,
               box: [cut.box.left, 1 - cut.box.bottom, cut.box.right - cut.box.left, cut.box.bottom - cut.box.top],
               backBox: [b.margin / b.width, b.margin / b.height, entry.width / b.width, entry.height / b.height],
+              depthSize: [entry.width, entry.height],
+              mapSize: texelsOf(map),
+              backSize: [b.width, b.height],
               near: cut.near,
             };
           },
@@ -342,6 +357,9 @@ export interface StandeeUniforms {
   uBox: { value: THREE.Vector4 };
   uArtBox: { value: THREE.Vector4 };
   uBackBox: { value: THREE.Vector4 };
+  uDepthSize: { value: THREE.Vector2 };
+  uMapSize: { value: THREE.Vector2 };
+  uBackSize: { value: THREE.Vector2 };
   uAspect: { value: number };
   uRelief: { value: number };
   uBehind: { value: number };
@@ -401,6 +419,9 @@ export function makeStandeeMaterial(standee: LoadedStandee, tint: string): Stand
       uBox: { value: new THREE.Vector4(...standee.box) },
       uArtBox: { value: new THREE.Vector4(ART_BOX.left, 1 - ART_BOX.bottom, ART_BOX.right - ART_BOX.left, ART_BOX.bottom - ART_BOX.top) },
       uBackBox: { value: new THREE.Vector4(...standee.backBox) },
+      uDepthSize: { value: new THREE.Vector2(...standee.depthSize) },
+      uMapSize: { value: new THREE.Vector2(...standee.mapSize) },
+      uBackSize: { value: new THREE.Vector2(...standee.backSize) },
       uAspect: { value: standee.aspect },
       uRelief: { value: RELIEF_DEPTH },
       uBehind: { value: BACK_BEHIND },

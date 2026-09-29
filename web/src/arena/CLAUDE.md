@@ -103,7 +103,7 @@ code apart from the lazy chunks' hashed names in its import map (90.40 before
 the status layer put its glyph kit and the tile's row in it), and none of it is
 `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (397.08 kB gzip
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (397.41 kB gzip
 on this tree, 393.36 before the standee) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
@@ -1063,17 +1063,29 @@ is the tier's second renderer path, the portrait standee (D260–D264,
    card-art surface beside `CardPlane`** (**D260**–**D264**). A face-up creature
    no personal model dresses, whose print the relief cache has cut, stands as its
    painting's near subjects where its CC0 body would — a model, then a standee,
-   then the CC0 figure; `?standee=0` (or `?personal=0`) is the A/B. Five rules hold
+   then the CC0 figure; `?standee=0` (or `?personal=0`) is the A/B. Six rules hold
    it:
    - **`arena/standee.ts` is pure and decides everything**: `standeeCutOf` is THE
      cut — measured by the dev route in Node from the map's own pixels
      (`web/src/personal/png.ts`), never on the page — and `STANDEE_FRAGMENT` draws
      exactly its test; `standeeChoicesOf` is THE lookup; `standeeReads` THE
-     legibility floor (D261 as its fix pass amended it: a standee whose subject,
+     legibility floor (D261 as its fix passes amended it: a standee whose subject,
      kneeling, would cover under `STANDEE_MIN_PX` square at 1× from the table view
-     is its CC0 body, measured on its stand point as the vertex shader poses it and
-     held to a raster of real frames by `standee.test.ts`); `dressStandees` the
-     dressing (an opaque `s<n>`, the cut's aspect under the width clamp, D65).
+     ON THE CANVAS THE PAGE DRAWS is its CC0 body, measured on its stand point as
+     the vertex shader poses it and held to a raster of real frames on three
+     canvases by `standee.test.ts`); `dressStandees` the dressing (an opaque
+     `s<n>`, the cut's aspect under the width clamp, D65).
+   - **The canvas is a pose input** (D261, fix pass 2): the table view's field of
+     view is vertical and fixed, so a standee's size on screen is proportional to
+     the canvas's height, and the lookup is handed the canvas it is judged on —
+     in the arena its OWN (`Arena.tsx`'s `CanvasSizeReport`: fiber's measured
+     `size`, CSS pixels, handed over in an effect; `null` until it has one, and
+     then nothing stands), so a resize re-runs the lookup at commit and never the
+     frame loop, and while the answer is the same the same map goes on
+     (`standeeChoicesKeyOf`); in the workshop, which has no table view,
+     `perf.ts`'s `STANDEE_REFERENCE_CANVAS` (1600 × 1000). Never a fixed canvas in
+     the arena: at a 1280 × 800 window 78% of what a 1600 × 1000 floor stood
+     rasters under it (`docs/evidence/standee.md` §10). Liveness holds it.
    - **THE one place a relief map is looked up is `standeeChoicesOf`, and in
      the one safe order** (D264): `mayStand`'s gates on the placement and the
      pose, then `art.ts`'s `artEntryFor` — `CardPlane`'s own lookup, so a standee
@@ -1102,7 +1114,11 @@ is the tier's second renderer path, the portrait standee (D260–D264,
      owner, it faces the camera about the vertical on both seats (D261,
      measured against D143's facing), and its cut carries an ink rim of the
      figures' own outer ink weight in the same call (`COMIC.inkCssPx` × the dpr,
-     one shared uniform written at commit by `applyStandeeRim`). Its triangles are
+     one shared uniform written at commit by `applyStandeeRim`). Every read in its
+     program names its level (`textureLod`, the levels taken at the top of `main`,
+     before the first branch and the first `discard`): an implicit level inside
+     either is undefined in GLSL ES 3.00, and three's `texture2DLodEXT` alias
+     exists in the fragment stage only (fix pass 2). Its triangles are
      the CC0 table's; `traits.test.ts` holds the figure layer with every figure a
      standee may replace at the dearer of the two (D263, amended).
 

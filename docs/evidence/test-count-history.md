@@ -278,3 +278,14 @@ hard-rule-8 sweep's oracle were rewritten in place, `traits.test.ts`'s figure-la
 hold grew the standee's case, and liveness's standee clause the floor's place in
 the lookup's order and the rim written at commit. Inside `check-all.sh`: **1,214 / 1,203 pass / 0 fail / 11 skipped** plus 157
 vitest.
+
+### The portrait standee's fix pass 2
+
+**1,201 `node --test` + 157 vitest (9 files)** standalone (1,192 pass, 0 fail, 9
+skipped), from fix pass 1's **1,199 + 157**: `standee.test.ts`'s two new cases (15
+now) — the corpus pass that reaches `mayStand`'s vehicle and silhouette gates, and
+the canvas as a pose input — with the legibility raster rewritten in place for three
+canvases, the program's case for the reads that name their level, and the hostile
+sweep's lookup with no canvas; liveness's standee clause grew the arena's canvas,
+and `personal.test.ts`'s build grep the source maps. Inside `check-all.sh`:
+**1,216 / 1,205 pass / 0 fail / 11 skipped** plus 157 vitest.

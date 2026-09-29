@@ -117,6 +117,10 @@
  *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
  *     CameraFrame, RequestOutcome (camera.ts)
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
+ *     STANDEE_REFERENCE_CANVAS (perf.ts)   the canvas the standee's legibility floor
+ *                                            is judged on here (D261, fix pass 2): the
+ *                                            workshop has no table view to measure, so
+ *                                            it stands what a 1600 × 1000 arena would
  *     RELIEF_DEPTH, RELIEF_GRID, RELIEF_CLIFF (perf.ts)
  *                                            the relief window's three numbers (D226,
  *                                            D227): how far the painting's depth reaches
@@ -201,7 +205,7 @@ import { traitFor, type TraitData } from '../arena/figures/traits.ts';
 import type { FigureProblem } from '../arena/figures/types.ts';
 import { layout } from '../arena/layout.ts';
 import { lookFromSearch, lookSpecOf, type LookSpec } from '../arena/look.ts';
-import { BLOOM_DEFAULT } from '../arena/perf.ts';
+import { BLOOM_DEFAULT, STANDEE_REFERENCE_CANVAS } from '../arena/perf.ts';
 import { loadAssetBytes, loadFigureModels, type ModelLibrary } from '../arena/scene/models.ts';
 import { sharedAudio } from '../arena/scene/audio.ts';
 import { cardOf, matchesSearch, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from './catalog.ts';
@@ -535,12 +539,19 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
    * — `standeeChoicesOf`, `useStandees`, `dressStandees` — behind the SAME toggle as
    * the models (`personal` stands a card's standee where no model dresses it,
    * `repo` the CC0 figure), so one card's standee can be inspected up close. The
-   * relief index is the one the inspect view reads.
+   * relief index is the one the inspect view reads. The legibility floor is
+   * judged on the reference canvas (D261, fix pass 2): the workshop has no table
+   * view to measure, so it stands what an arena drawn 1600 × 1000 would.
    */
   const standeeRelief = personalOn ? reliefIndex : EMPTY_RELIEF;
   const standeeBase = personalOn ? RELIEF_BASE : null;
   const standeeChoices = useMemo(
-    () => standeeChoicesOf(restPoses.placed, personalPoses, art, standeeRelief, { base: standeeBase, taken: personalChoices }),
+    () =>
+      standeeChoicesOf(restPoses.placed, personalPoses, art, standeeRelief, {
+        base: standeeBase,
+        taken: personalChoices,
+        canvas: STANDEE_REFERENCE_CANVAS,
+      }),
     [restPoses, personalPoses, art, standeeRelief, standeeBase, personalChoices],
   );
   const standeesLoaded = useStandees(standeeChoices);
@@ -1085,7 +1096,7 @@ function CardList({
                       </span>
                     )}
                     {entry.concealed === null && standeeNames.has(entry.name) && (
-                      <span className="workshop__personal" title="the relief cache stands this card's painting as a standee on this machine (D260: card-art-derived, never committed, never published)">
+                      <span className="workshop__personal" title="the relief cache stands this card's painting as a standee on this machine — in an arena drawn 1600 × 1000; a smaller one stands fewer (D260, D261: card-art-derived, never committed, never published)">
                         standee
                       </span>
                     )}

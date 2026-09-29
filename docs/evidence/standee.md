@@ -4,7 +4,10 @@ Branch `standee`, off `main` at `e2c337c`, in the worktree `mtg-table-t2st`, on
 2026-09-29. Everything below was run on this machine that day, and every number
 names what produced it. **§9 is the fix pass**, after the verifier: where it
 supersedes a number above (the legibility of §2, the tapped stance of §4, the
-budget of §5, the pictures of §7), that section says so. **Nothing here holds card art or a personal model**: the
+budget of §5, the pictures of §7), that section says so. **§10 is fix pass 2**,
+after the second verifier: the legibility floor measured on the canvas the page
+draws rather than a fixed one (§9.1's corpus numbers are the 1600 × 1000
+reference canvas's), and the rim's reads made defined. **Nothing here holds card art or a personal model**: the
 relief cache and the models are in the gitignored `personal/`, every picture and
 every scratch script is under the gitignored `var/standee/`, and none is shown to
 anyone (D190, D225). The dev server ran on port 5230; the pictures were taken by
@@ -349,12 +352,20 @@ seats cropped at 1× and shown 3× with its kneeling, current and standing sizes
 | 35–48 | the Masters of Evil's rank, Wolverine, Storm, Moonstone, Agent 13 … | yes |
 
 So **`STANDEE_MIN_PX` = 30**. Over every board frame of the corpus with this
-checkout's 158 cuts (no personal model taking a card; `var/standee-fix/corpus2.ts`)
+checkout's 158 cuts (no personal model taking a card; `var/standee-fix/corpus2.ts`;
+on the 1600 × 1000 canvas — §10.1 has what the canvas the page draws keeps)
 it keeps **8,887 of 10,740** standee placements on your seat (83%) and **2,952 of
-4,678** on the opponent's (63%); seven cards never stand — the Aerial Doombot, the
-Wakandan Drone Flock, Doom's Servo-Guards, the A.I.M. Bot, Yellowjacket, Black
-Panther, Vanguard, and Wasp (whose personal model dresses her). **A card changes
-body only when its stand point moves it across the floor**: 10 times over the
+4,678** on the opponent's (63%); seven cards never stand:
+
+- *Aerial Doombot*
+- *Wakandan Drone Flock*
+- *Doom's Servo-Guards*
+- *A.I.M. Bot*
+- *Yellowjacket*
+- *Black Panther, Vanguard* (one card)
+- *Wasp* (whose personal model dresses her)
+
+**A card changes body only when its stand point moves it across the floor**: 10 times over the
 corpus (`flips.ts`: the Volcanic Villain 3, Peggy Carter 3, She-Hulk 2, Bold
 Biochemist 1, Baron Strucker 1). Measured on the table's centre line instead it
 was 6, but that stood the Volcanic Villain down everywhere; PLAN.md's follow-up 42.
@@ -563,3 +574,238 @@ tools/build-workshop-catalog.ts --check` current; `npm --prefix web test` and
 `3c0a7c38…8e5dd9` before and after, and a sha1 of `~/forge`'s path, size and
 modification-time listing and of every file under `~/.forge`, taken before the
 fix pass began and after its gate, is identical.
+
+---
+
+## 10. Fix pass 2 — after the second verifier (2026-09-29)
+
+The second verifier passed the lane's hard-rule-8 sweeps, liveness, the gate
+(286.5 s, 48 jobs, exit 0) and the pictures, and left one major and five minors.
+The major: the legibility floor was measured on a fixed 1600 × 1000 canvas, not
+the canvas the page draws. The minors: the rim's taps read at implicit levels
+inside a branch; D262's heading; §9.1's list of seven that read as eight; the
+corpus sweep did not reach `mayStand`'s vehicle and silhouette gates; the build's
+source maps carried the personal route as source text. Each is below; D261's
+second amendment, and D263's and D264's notes, carry them. The dev server ran on
+port 5230, the pictures and the benches through headless Chromium over CDP
+(`var/verify3/shot.mjs`, fix pass 1's driver with its own profile), SwiftShader
+unless a line says the GTX 1080; the scripts are under the gitignored
+`var/verify3/`.
+
+### 10.1 The floor on the canvas the page draws (the major; D261 amended)
+
+**The defect, reproduced.** The table view's field of view is vertical and fixed
+(`camera.ts`'s `CAMERA.fov`, 40°), so a standee's size on screen is proportional
+to the canvas's height, and the floor judged it on 1,000 px whatever the page
+drew. Over every board frame of `fixtures/games` with this checkout's 158 cuts,
+a card counted once a frame (as the lookup counts it), no personal model taking
+one (`var/verify3/canvas-census.ts`, `canvas-census.txt`): of the 11,761 standee
+placements the fixed floor keeps, **9,177 measure under 30 px on a 1280 × 800
+canvas** (78%) and **243 on a 1600 × 946 one** — the verifier's two numbers,
+exactly. (Fix pass 1's 8,887 and 2,952 in §9.1 counted a card's second placement
+too; once a frame it is 8,830 and 2,931.)
+
+**The fix.** The canvas is an input of the floor: `standeeReads(pose, aspect,
+fill, canvas)`, `standeeLegibilityAt(…, canvas, stance)` and a required
+`StandeeOptions.canvas` (CSS pixels). The arena hands the lookup its own canvas —
+`Arena.tsx`'s `CanvasSizeReport`, inside `<Canvas>`, reads fiber's measured
+`size` (the ResizeObserver `<Canvas>` already runs) and hands it to `Arena` in an
+effect — so a resize re-runs the lookup at commit, never the frame loop; `null`
+until the canvas has a size, and then nothing stands and nothing is asked; and
+while the answer is the same the same map goes on (the memo is keyed by
+`standeeChoicesKeyOf`, the cards and their prints), so a drag of the window's
+edge re-dresses no figure. In a replay at 1600 × 1000 the page reports a
+1600 × 946 canvas and at 1280 × 800 a 1280 × 746 one (the replay bar is 54 px),
+measured through the dev handle. The workshop has no table view to measure: its
+pedestal and its list's badge ask the floor at `perf.ts`'s
+`STANDEE_REFERENCE_CANVAS` (the old `STANDEE_LEGIBLE_CANVAS`, renamed), and the
+badge's title says a smaller arena stands fewer.
+
+**What each canvas keeps** (the same census):
+
+| canvas | your seat | the opponent's | all | cards that ever stand |
+|---|---|---|---|---|
+| 1600 × 1000 (the reference) | 8,830 of 10,680 (83%) | 2,931 of 4,650 (63%) | 11,761 of 15,330 (77%) | 51 of 58 |
+| 1600 × 946 (a replay in a 1600 × 1000 window) | 8,587 (80%) | 2,931 (63%) | 11,518 (75%) | 48 |
+| 1280 × 800 | 2,139 (20%) | 445 (10%) | 2,584 (17%) | 27 |
+| 1280 × 746 (a replay in a 1280 × 800 window) | 430 (4%) | 441 (9%) | 871 (6%) | 10 |
+
+- **1600 × 946** loses the Volcanic Villain everywhere (106 placements), *Nakia,
+  Wakandan Operative* (60), *Klaw, Sonic Subjugator* (43) and 34 of *She-Hulk,
+  Jade Defender*'s 73.
+- **1280 × 800** stands 27 cards somewhere. Those that keep most of what the
+  reference stands: *Agent 13, Sharon Carter* 531 of 531, *Storm, Queen of
+  Wakanda* 284 of 284, *Moonstone, Harsh Mistress* 253 of 254, *MACH-1,
+  Swooping Scoundrel* 215 of 215, *Radioactive Man* 103 of 103, *Hercules,
+  Prince of Power* 90 of 90, *Whirlwind, Killer Cyclone* 47 of 47, *Baron
+  Strucker, HYDRA Overlord* 6 of 6, *Wakandan Shield Guard* 371 of 434, *Quake,
+  Agent of S.H.I.E.L.D.* 228 of 344; about half: *Boomerang, Blade Flinger* 191 of
+  424, *She-Hulk, Jade Defender* 39 of 73, *Kang, Temporal Tyrant* 25 of 50; a
+  quarter or less: *Ant-Man, Reformed Rogue* 81 of 289, *Knight of Wundagore* 78 of
+  361, *Dora Milaje Elite* 29 of 558; and eleven once or twice. The other 24
+  cards the reference stands never stand at 1280 × 800 (among them Loki, the
+  Hulk's Gamma Goliath, Okoye, T'Challa, Nick Fury, Songbird, Brawn, Abomination).
+- **1280 × 746** stands 10: *Agent 13, Sharon Carter* 528 of 531 and *Storm,
+  Queen of Wakanda* 283 of 284 almost always, *She-Hulk, Jade Defender* 39 of 73,
+  and seven others a handful of times.
+
+**The raster** (`standee.test.ts`, *THE legibility floor, rasterised on real
+frames on three canvases*): the standee rasterised through the table view on
+1600 × 1000, 1600 × 946 and 1280 × 800 at every stand point of `g1`@316 and the
+Masters of Evil's @209 and @371, both seats, with the lookup handed that canvas.
+A standee stands iff it rasters at the floor kneeling, on every canvas:
+
+| | 1600 × 1000 | 1600 × 946 | 1280 × 800 |
+|---|---|---|---|
+| `g1`@316 and MoE@209, the drones (a flight cut, 1.31 × 0.35) | 22–24 px, CC0 | 21–23, CC0 | 18–19, CC0 |
+| MoE@209, the far seat's tapped portrait (0.8 × 0.66) | 47, stands | 45, stands | 38, stands |
+| MoE@371, your rank (the median cut, 1.37 × 0.5) | 34–36, all 7 stand | 32–34, all 7 stand | 27–28, all 7 CC0 |
+
+The same standee's size on the three canvases is its reference size × height ÷
+1,000, within 3% (the premise, asserted). The control: a lookup handed the fixed
+reference canvas stands 11 standees on those frames that the raster draws under
+the floor on the canvas the page would draw. Over an eleventh of the corpus's
+board frames × five cuts the floor keeps **4,219, 4,032 and 1,872** standees on
+the three canvases, within **1.3%** of the raster on each and none under 30 px in
+any stance; what a smaller canvas keeps is a subset of what a larger one keeps.
+Inside `npm --prefix web test` the case takes 14.1 s (fix pass 1's, on one canvas, 8.5 s).
+
+**The floor stays 30 px.** It is a number of pixels on screen, chosen from a
+contact sheet at dpr 1 (§9.1), and a smaller canvas does not change what a pixel
+is: the raster keeps what reads at 30 px on each canvas and nothing it keeps is
+under it, and the pictures (§10.2) show the paintings a smaller window gives up
+at 23–30 px — the smudges the sheet refused. A floor scaled with the canvas would
+stand exactly those. So a small window draws fewer standees; owner question 32
+puts the trade to the owner. A card now changes body when the window is resized
+across its floor too (at commit; PLAN.md's follow-up 42).
+
+### 10.2 The pictures (`var/standee/fix3/`, gitignored)
+
+The table view, standees on, `?dpr=1`, SwiftShader, bloom on, at a 1600 × 1000
+and a 1280 × 800 window, on this tree (`-live`) and on fix pass 1's `02bfb7a`
+(`-fixed`, a git-archive copy served from the same port; `var/verify3/pics.sh`,
+which also reads the canvas, the standees and any program that failed to link):
+
+- `g1-316-table-{1600x1000,1280x800}-{live,fixed}.png`: nothing stands at
+  `g1`@316 on either floor (the drones are their CC0 bodies, Wasp and Peggy wear
+  their models), so the pictures are the same scene at two sizes.
+- `moe-371-table-{1600x1000,1280x800}-{live,fixed}.png` and
+  `moe-371-floor-compare-{1600x1000,1280x800}-2x.png` (your rank and the far
+  rank, fixed over live, 2×): at 1600 × 1000 the live floor stands **8** and the
+  fixed one 9 — the Volcanic Villain is 29.5 px on the 946-px canvas and its CC0
+  body stands; at 1280 × 800 the fixed floor stands **9** paintings of 23–30 px
+  and the live one **none**. The real cuts' kneeling sizes at @371
+  (`var/verify3/frame-sizes.ts`), 1,000 / 946 / 800 / 746 px of canvas: Songbird
+  34.3 / 32.5 / 27.5 / 25.6, Boomerang 38.2 / 36.1 / 30.5 / 28.5, Moonstone 39.0 /
+  36.9 / 31.2 / 29.1, Atlas 36.0 / 34.0 / 28.8 / 26.8, Common Crook 35.4 / 33.5 /
+  28.3 / 26.4, Radioactive Man 39.8 / 37.6 / 31.8 / 29.7, the Volcanic Villain
+  31.2 / 29.5 / 24.9 / 23.3; the far seat's A.I.M. Scientists and Bold Biochemist
+  34.3 and 34.0 at 1,000, 25.6 and 25.4 at 746.
+- **The first picture of this pass had no standees at all**, with every node
+  test green: the vertex fetch was spelled `texture2DLodEXT`, which three defines
+  for the fragment stage only, so the standee program failed to link and every
+  standee drew nothing (§10.3). The driver now reports any program that failed
+  (`broken: []` on every picture since), and `standee.test.ts` rejects the alias.
+
+### 10.3 Every read names its level (minor 1; D261 amended)
+
+The rim's eight taps had their coordinates computed before any branch, but were
+READ inside one (`if ( subject ) … else { taps }`) after a `discard` — and so were
+the painting (only on the subject) and the back image (only where the back was
+not discarded). An implicit level comes from derivatives, which GLSL ES 3.00
+leaves undefined in non-uniform control flow and after a non-uniform `discard`
+(§6.4, §8.8): it drew correctly on SwiftShader and the GTX 1080, which is what
+undefined allows. Now `main` takes the UVs' derivatives first, before the first
+branch and discard, and every read is a `textureLod` at the GL's own isotropic
+level (`lodOf`: the longer screen-axis footprint in texels, from `uDepthSize`,
+`uMapSize` and `uBackSize` — the loaded images' own sizes); the vertex fetch
+names level 0.
+
+**What it costs** (`var/verify3/micro.sh`, fix pass 1's measure: the standees'
+own `gl.render` cost, visible against hidden, at the Masters of Evil's @371, nine
+standees, SwiftShader, 1920 × 1080 at dpr 0.6, bloom off; interleaved variants,
+the load average 3–12 on sixteen threads, other lanes at work):
+
+| the fragment shader | nine standees cost (ms), by run |
+|---|---|
+| implicit levels, the reads in branches (fix pass 1's) | 7.3, 7.2, 10.7 · 7.6, 8.8, 7.1 · 7.7, 7.5, 6.7, 6.9 |
+| `textureGrad` on the card image, `textureLod` elsewhere | 11.2, 13.2, 14.6 · 11.1, 11.7, 11.2 |
+| `textureLod` everywhere, the card's size a constant | 7.0, 6.4, 6.2 |
+| **`textureLod` everywhere (kept)** | **7.1, 8.1, 27.0 (load 9.4), 7.0** |
+
+So the defined form costs what the implicit one did; `textureGrad` — which keeps
+a GPU's anisotropic filtering on the painting — costs SwiftShader about 4 ms more
+for nine standees and is refused. The pictures of the same frame at 1600 × 1000,
+bloom off, implicit against kept (`shader-implicit-vs-final-{gl,swiftshader}-you-2x.png`,
+and every variant's `shader-*-moe-371-nobloom.png`), as the mean difference of
+the brighter channel over your rank and over the far rank: GTX 1080 1.11 and 1.29
+of 255 (the same shader taken twice: 0.03 and 0.91); SwiftShader 1.62 and 1.05
+(twice: 1.25 and 0.98). The same picture.
+
+### 10.4 The other minors
+
+- **D262's heading** now says *(amended: a fifth sunk, 6 degrees)*.
+- **§9.1's seven cards** are one per line, *Black Panther, Vanguard* marked as
+  one card; D261's first amendment and the guide mark it too.
+- **`mayStand`'s vehicle and silhouette gates** are exercised on the corpus: in
+  the recordings every uncrewed Vehicle (819 poses, every one also a silhouette)
+  and every silhouette (949) is posed with no model, so the `modelId` gate stopped
+  all of them first and the sweep never reached the two gates. A new pass hands
+  each a model, and a canvas the floor passes everything on (8000 × 5000), and
+  leaves one gate alone to stop it — every Vehicle with its silhouette cleared,
+  every silhouette with its vehicle flag cleared, every other gate asserted to
+  pass — and none stands.
+- **The source maps** carry no copy of the sources (`vite.config.ts`'s
+  `sourcemapExcludeSources`); `personal.test.ts` greps them like the code and
+  fails a map with a source's text. The scene's and the workshop's maps had named
+  `personal/relief/` and `personal/index.json` (six and two sources); now no map
+  names `personal/`, and the maps went from 8.7 MB to 2.3 MB (2,314,977 B). Nothing
+  read the text — no tool opens a `.map`, and a stack trace still maps to a file
+  and a line. The build: `index-*.js` 300,425 B (94.68 kB gzip), unchanged;
+  `arena-scene-*.js` 1,384,550 B (397.41 kB gzip), 1,107 B over fix pass 1's for
+  the canvas input and the named levels; `Workshop-*.js` 89,625 B.
+
+### 10.5 The controls
+
+Each new test clause, its defect spliced back into a git-archive copy of this
+tree (`var/verify3/copy`; `var/verify3/controls.py`, `controls.log`), the tests
+that hold it run, then restored from a second copy; `diff -r` of the two after
+all of them differs only by the three symlinks the copy needs (`web/node_modules`,
+`personal`, `web/public/art.json`):
+
+| the defect spliced back | red |
+|---|---|
+| the floor judged on 1600 × 1000 whatever the canvas | 3 `standee.test.ts` cases (the three-canvas raster, the vehicle pass, the canvas input) |
+| the arena hands the lookup the reference canvas | liveness's standee clause |
+| the canvas size read in a `useFrame` | liveness |
+| the resize memo keyed by the canvas, not the answer | liveness |
+| a lookup with no canvas yet still stands | 2 (the hostile sweep, the canvas input) |
+| the rim's taps at an implicit level again | the program's case |
+| the painting read at an implicit level in the branch | the program's case |
+| the vertex fetch spelled `texture2DLodEXT` | the program's case |
+| a derivative taken after the first discard | the program's case |
+| `mayStand` without its vehicle gate | the vehicle pass |
+| `mayStand` without its silhouette gate | the vehicle pass |
+| `mayStand` without either (the verifier's case) | the vehicle pass and the one-board case |
+| the build without `sourcemapExcludeSources` | `personal.test.ts`'s build grep (the same tree built with it: green) |
+
+### 10.6 The checks and the gate
+
+Before the gate: `node tools/build-workshop-catalog.ts --check` current;
+`./bridge/build.sh` OK; `npm --prefix web test` **1,201 / 1,192 pass / 0 fail / 9
+skipped** under `node --test` and vitest **157** (9 files); `npm --prefix web run
+build` OK (§10.4's chunks); `CLAUDE_MD_RULES_WRITE=1` regenerated the rules
+manifest for the arena's new convention bullet and `web/CLAUDE.md`'s count.
+
+`./tools/check-all.sh` from a deleted `bridge/out`, `GATE_JOBS=4`, `WSPORT=9320`,
+once: **exit 0, 268.6 s** wall, 48 jobs whose seconds sum to 989.9 s, a load
+average of 2.4 at the start and 11.9 at most (other lanes' work), `node --test`
+**1,216 / 1,205 pass / 0 fail / 11 skipped** and vitest **157** (9 files)
+(`var/check-all-standee-fix3.log`; the run's logs
+`var/check-all/20260929-141020-2005367/`). The relief step's three Python-step
+tests are skipped in this worktree, as in every run of the lane.
+
+`~/forge` and `~/.forge` are unchanged: the jar's sha256 is the pinned
+`3c0a7c38…8e5dd9` before and after, and a sha1 of `~/forge`'s path-size-time
+listing and of `~/.forge`'s files and listing, taken before this pass began and
+after its gate, is identical (`var/verify3/forge-{before,after}.txt`).
