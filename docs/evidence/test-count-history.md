@@ -311,3 +311,14 @@ the prop field's and the status strip's "flagged iff its array changed", each wi
 a buffer flagged every frame and a write left unflagged as its controls (the tile
 case gained the same controls, and `perf.test.ts` now calls the governor as the
 arena does; neither is a new case). Inside `check-all.sh`: **1,210 / 1,199 pass / 0 fail / 11 skipped** plus 157 vitest (`var/check-all-gpu-fix.log`).
+
+### The GPU pass rebased onto the portrait standee (`a46bd96`), and its fix pass 2
+
+**1,212 `node --test` + 157 vitest (9 files)** standalone (1,203 pass, 0 fail, 9
+skipped): the standee's fix pass 2's **1,201 + 157** plus the pass's eleven
+(`gpu-pass.test.ts`'s seven, `perf.test.ts`'s three, liveness's one). Fix pass 2
+added no case: the tile case gained its tapped, glowing and resting frames (and
+its name says so), and liveness's GPU-pass clause reads every body the Tier 2
+scan reads, the standee's `standeeFallOf` among them. Inside `check-all.sh`:
+**1,227 / 1,216 pass / 0 fail / 11 skipped** plus 157 vitest
+(`var/check-all-gpu-fix3.log`).

@@ -387,8 +387,9 @@ done
 
 **Read the max from the `--vsync` run** (D273). Unthrottled, a fast GPU's max is
 the WebGL command buffer draining — the page outruns the GPU and waits every few
-dozen frames — and on the 1080 that wait was 35–53 ms bloom off and 104–155 ms
-bloom on at the bench frame and Wakanda's, in every build: the unthrottled line prints a FAIL
+dozen frames — and on the 1080 that wait was 35–53 ms bloom off (69–124 with the
+personal tier's standees on) and over 100 ms bloom on (up to 293 on the Masters of
+Evil's standee table) at the bench frame and the villain tables, in every build: the unthrottled line prints a FAIL
 on it with a note, and it is not a frame a browser shows. At a browser's pacing
 the 1080 read p50 16.7 and p95 16.7–16.8 ms at all five frames, bloom on and off
 (one beat missed in 44 runs of the two builds, `gpu-pass.md` §10.4), so a new card

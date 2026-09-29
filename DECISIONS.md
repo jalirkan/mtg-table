@@ -11433,7 +11433,8 @@ same card — the second surface adds no reveal path.
    read p95 0.6–8.7 ms, bloom on or off, at render dpr 1 — inside §9.4's p95 by a
    factor of two at worst. *(Corrected by the fix pass, D273: that sentence said
    "inside §9.4", and its max is not. Unthrottled, the GTX 1080's max is the WebGL
-   command buffer draining — 35–53 ms bloom off and 104–155 ms bloom on at the
+   command buffer draining — 35–53 ms bloom off and over 100 ms bloom on (104–164
+   in the series since, and up to 293 on the portrait standee's tree; fix pass 2) at the
    bench frame and Wakanda's, in the base build as in this one, so the default
    page's max was never inside 50 there; at a browser's pacing, `--vsync`, both
    builds read p95 16.7–16.8 ms at all five frames, bloom on and off. §9.4 on a
@@ -11504,6 +11505,10 @@ frame loop found, each removed without a pixel changing:
    colour arrives parsed", with spliced controls, and puts both bodies (and
    `applyRigOffset`, the `Map.forEach` walk that replaced a `for…of` iterator, and
    `TileField`'s own walk off a per-snapshot array) in the allocation scan.
+   *(Fix pass 2, at the rebase onto the portrait standee: the colour clause now
+   reads every body the Tier 2 allocation scan reads, the standee's own
+   frame-loop body — a falling standee's lean, `standeeFallOf` — among them; a
+   colour parse spliced there turns it red.)*
 2. **The prop field refreshes only the joints it reads** (`scene/worldChain.ts`).
    It called `updateMatrixWorld(true)` on every rig a prop rides — about 68 nodes
    a body, recomputed again by the renderer's own pass moments later. It now
@@ -11540,7 +11545,17 @@ frame loop found, each removed without a pixel changing:
    pacing: D273. Each of the three fields is held to "flagged iff its array
    changed" in `gpu-pass.test.ts`, with a buffer flagged every frame and a write
    left unflagged as the controls, and each of seven source reverts turns it
-   red.)*
+   red.)* *(Fix pass 2, after the second verifier: the COLOUR half of this item
+   had no test in the tile field. `TileField.bind` could write a land's colour and
+   drop `writeColourAt`'s answer — the colour never flagged, the GPU drawing the
+   old one — with every test still green, because the tile case only moved a land,
+   and a tile's colour changes only when its land taps (the pose dims it) or a cue
+   glows it. The case now taps a land (its plateau's and its rim's colour buffers
+   flagged, and nothing else), glows every land (the plateau's and the slab's), and
+   ends the glow and the tap, each frame held to "flagged iff its array changed"
+   and followed by a still frame that flags nothing; the two source reverts — the
+   bucket's colour flag dropped, the rim's dropped — each turn it red, where both
+   left the fix pass's test green (`docs/evidence/gpu-pass.md` §12).)*
 
 Measured on the pumped frame loop (DEV server, the GTX 1080, 240 frames of a
 batch): `Object3D.updateMatrix` calls a frame 1,417 → 984 at `g1`@316, 2,020 →
@@ -11670,7 +11685,7 @@ pass (§7).
    base build and in this lane's; every frame over 30 ms bloom off holds one, and
    31–33 of 35 bloom on. Those waits are the max, quantised to the headless
    display's ~17 ms beat: 35–37 ms bloom off at the bench frame in the base build,
-   52–53 in this one, and 104–155 ms bloom on in both.
+   52–53 in this one, and 104–155 ms bloom on in both *(over 100 ms: item 7)*.
 2. **Why a build that does less reads worse there.** The waits add up to about
    the same — 3.32 and 3.37 s of five bloom on, 2.10 and 1.74 bloom off — but a
    frame with fewer commands in it (D271.5's forty fewer uploads) lets the buffer
@@ -11721,3 +11736,35 @@ question.
 - **Flushing or finishing the WebGL context every frame** so the buffer never
   fills: it changes what the page does to suit the bench, and costs a real
   browser a synchronisation it does not need.
+
+**Amended by fix pass 2** (2026-09-29, after a second verifier's re-measure;
+`docs/evidence/gpu-pass.md` §11–§12, PLAN.md's GPU-pass follow-up 11):
+
+6. **At a browser's pacing a real GPU's line is saturated, so a regression is read
+   unthrottled.** Item 4 stands — §9.4 on a real GPU is graded at `--vsync` — but
+   the GTX 1080 reads p50 and p95 16.7–16.8 ms there in every build at every frame
+   (§10.4): the statistic is the display's beat, it grades the gate, and it cannot
+   tell two builds apart until one misses a beat. **The regression signal on a
+   real GPU is the unthrottled p50 and p95, read in interleaved pairs against the
+   base build** (§10.5, §11); the unthrottled max stays the drain's. A line that is
+   neither — a GPU timer over the frame, or a paced run long enough to count its
+   missed beats — is owed (follow-up 11).
+7. **What D271.5 costs there, with the numbers.** It lengthens the unthrottled
+   drain: at `g1`@316 the second verifier read the max 35–39 → 52–53 ms bloom off
+   and 121–122 → 140–164 bloom on, base against this build (§10.5's own:
+   35.8–36.7 → 52.5–52.8 and 121.5–136.9 → 138.5–155.3); on the rebased tree, over the
+   portrait standee (§11), the same shape: 36.0–39.5 → 52.5–52.7 ms bloom off at
+   `g1`@316 with the personal tier off, and 71.9–72.9 → 71.4–123.5 with it on (the
+   standees lengthen the drain in both builds). Item 1's
+   "104–155 ms bloom on" is exceeded by the verifier's 163.5 and by the standee's
+   tree (121–293 ms at `g1`@316 and the Masters of Evil @371, §11): bloom on, the
+   drain is **over 100 ms**, in both builds.
+8. **On the portrait standee** (the rebase onto `a46bd96`, D260–D264), interleaved
+   on the DEV server against `a46bd96` itself, three runs a line, the tier (and so
+   the standees) on and off (§11): this build's unthrottled p50 is equal or lower
+   on all eight GTX lines and its p95 lower or overlapping; at `--vsync` every run
+   of both builds reads p50 16.7, p95 16.7–16.8 and max 16.8 ms, standees on and
+   off — §9.4 passes there, and the line tells the builds apart no more than item
+   6 says — though at the Masters of Evil's @371 the governor had stepped the GTX
+   1080 to 0.75 at the cold scrub in 14 of the 16 paced runs, both builds alike
+   (follow-up 10). D271.5 stays.

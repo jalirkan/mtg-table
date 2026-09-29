@@ -93,7 +93,7 @@
  *                      frames a second, fills the WebGL command buffer every few
  *                      dozen frames and waits for the GPU process to drain it
  *                      (`CommandBufferHelper::WaitForAvailableEntries` in a trace)
- *                      — a 35–53 ms frame bloom off and 104–155 bloom on at
+ *                      — a 35–53 ms frame bloom off and over 100 ms bloom on at
  *                      `g1`@316 and Wakanda on the GTX 1080, in every build,
  *                      which no browser's pacing produces. `docs/evidence/gpu-pass.md` §10.
  *

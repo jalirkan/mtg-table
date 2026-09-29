@@ -8,13 +8,16 @@ only itself. This pass measured the whole, removed what the frame loop paid for
 nothing, and graded the two open performance items. Branch `gpu-pass` off `main`'s
 `e2c337c`, worktree `mtg-table-t2g`; decisions **D270–D272**, and **D273** from
 its fix pass (§10: what a skeptic's re-measure found, and what was done about it;
-the lane reserved D270–D274).
+the lane reserved D270–D274). **Fix pass 2** rebased the branch onto `main`'s
+`a46bd96` — the portrait standee (D260–D264), which landed after the branch forked
+and adds frame-loop work this pass never measured — and re-benched it there (§11:
+the standee on top of the pass), then answered the second verifier (§12).
 
 ## 0. The fixes, one line each (before → after, same bench line)
 
 | fix | the number that moved (what drew it) | before → after | held by |
 |---|---|---|---|
-| **1. No colour string parsed in the frame loop** (D271.1) | `Color.setStyle` calls a frame, pumped batch, DEV server, GTX 1080 | 57 (`g1`@316) · 66 (@370) · 76 (Masters @476) · 99 (Wakanda @527, Doom @393) → **0** | `liveness.test.ts` (the colour clause, five spliced controls; the bodies in the allocation scan) |
+| **1. No colour string parsed in the frame loop** (D271.1) | `Color.setStyle` calls a frame, pumped batch, DEV server, GTX 1080 | 57 (`g1`@316) · 66 (@370) · 76 (Masters @476) · 99 (Wakanda @527, Doom @393) → **0**, and **0.1** at Wakanda @527 in the second verifier's census: `applyFigures`' one allowed write — a figure's `uTint` set from its string when its pose's tint changes, once per change, never per frame (fix pass 2) | `liveness.test.ts` (the colour clause, five spliced controls; the bodies in the allocation scan) |
 | **2. The prop field refreshes only the joints it reads** (D271.2) | `Object3D.updateMatrix` calls a frame, same | 1,417 → **984** (@316) · 2,020 → **1,337** (Masters) · 1,955 → **1,327** (Wakanda) · 1,532 → **1,096** (Doom) | `gpu-pass.test.ts` (every body's chain against `updateMatrixWorld(true)`; a missing link as the control) |
 | **3. Bone trees hidden from the render walk** (D271.3) | what `projectObject` walks at `g1`@316: 871 objects, 618 of them bones | the 618 bones **leave the walk** (their tree roots are hidden); its self time over a pumped Doom death batch 10.0 → **4.3** ms / 200 frames | `gpu-pass.test.ts` (no bone walked, no mesh lost, on all 38 bodies; a mesh under a bone keeps its tree) |
 | **4. An empty tile kind is not set up** (D271.4) | render-list items at zero instances, `g1`@370, 450 pumped frames | 450 → **0** (no draw call either way: three skips zero-instance draws) | `gpu-pass.test.ts` (a bucket is visible iff it holds a tile; prime shows all; the old field as the control) |
@@ -736,6 +739,11 @@ The verifier's two series at loads of 6–28 read this build at 16.1–38 ms in 
 of 16 runs and 104–164 in three, where the ladder had not finished inside the five
 seconds: the gain is the ladder finishing sooner, and a loaded machine can still
 take longer than the sample. D272 now says so, with the load beside each range.
+*(Fix pass 2, from the second verifier's series: a loaded SwiftShader run of the
+default page can also fail to sample at all — one at `g1` drew 26 frames in the
+five seconds, under the 30 `tools/arena-bench.mjs` requires, and printed no
+numbers; another read p50 51.9 ms. A SwiftShader row is the ladder's progress at
+that load as much as the build's, which is why every one carries its load.)*
 
 ### 10.7 What the tests now hold, and the source reverts that turn them red
 
@@ -793,3 +801,306 @@ current. `npm run build`: every chunk the draft's, byte for byte (the same hashe
 `~/forge` and `~/.forge`: a listing of every path under each with its size, mtime
 and mode identical at 12:50 and after the gate (13:50), the `~/.forge` files'
 contents hashed the same both times, the jar still `3c0a7c38…8e5dd9`.
+
+## 11. The standee on top of the pass — the rebased tree re-benched (fix pass 2)
+
+`main` moved from `e2c337c` to `a46bd96` while this branch was being verified: the
+portrait standee (D260–D264) — a face-up creature's painting, cut from the relief
+cache, standing where its CC0 body would, on the DEV server with the personal tier
+on — which adds frame-loop work this pass never measured (`FigureLayer.tsx`'s
+standee slots and falling standee, `standee.ts`, `scene/reliefCache.ts`, `perf.ts`'s
+numbers). The branch was rebased onto it (§12.1) and benched there against `main`
+itself.
+
+### 11.1 What drew these numbers
+
+- **Builds.** *base*: a `git archive` of `a46bd96` under `var/gpu-fix3/base/`, with
+  the two gitignored inputs its dev server reads beside it — `web/public/art.json`
+  (copied) and `personal/` (hard links: the same six models, and the relief cache's
+  158 maps) — and the worktree's `node_modules` (hard links, with a `.vite` cache
+  of its own). *fix*: this worktree, rebased: `a46bd96` plus the pass's app code,
+  byte for byte what `c0c857f` carried. **A first series was discarded**: its base
+  copy had no `art.json`, so the base drew no card art and stood no standee — its
+  counters gave it away (39 props in 14 kinds and 16 programs at Masters @371, where
+  the fix drew 14 props in 8 kinds and 17 programs); it is
+  `var/gpu-fix3/ab/main-noart-INVALID/`.
+- **Server.** The Vite DEV server on 127.0.0.1:5250, one build at a time — the
+  personal tier, and so the standees, exist only there (D195, D260) — restarted for
+  each build in each round, with one throwaway bench after each start (a dev server
+  transforms every module on its first page load, and the standees' maps load
+  behind it).
+- **The bench.** HEAD's `tools/arena-bench.mjs` for both builds, unthrottled (its
+  default), `--index` as named, 4×, the five-second sample after a COLD 600 ms
+  settle, the governor choosing the dpr (no `--dpr`), CDP on 9371. *Bloom on* is the
+  default page and *off* is `--no-bloom`; *tier on* is the page as the dev server
+  opens it, benched with `--personal` (its triangle line 30,000 + 36,000), and
+  *`personal=0`* is the tier off — no model and no standee (`?standee=0` alone was
+  not benched; the standee lane's §5 and §9 have that A/B).
+- **Interleaving.** Three rounds, the build order alternating (base, fix · fix,
+  base · base, fix), the same sixteen lines in the same order in each build's
+  block; 15:01–15:25, load 1.45–7.32 (the other lanes were quiet; the highest loads
+  are this series' own SwiftShader runs). Driver: `var/gpu-fix3/ab-dev.mjs`; rows
+  and JSON: `var/gpu-fix3/ab/main/`.
+- **Rasterisers**: `ANGLE (NVIDIA Corporation, NVIDIA GeForce GTX 1080/PCIe/SSE2,
+  OpenGL 4.5.0)` and `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)
+  (0x0000C0DE)), SwiftShader driver)`; headless Chromium 152 (snap), viewport 1920
+  × 993, device dpr 1. **The GTX 1080's clock** (follow-up 1: a series prints it),
+  from `nvidia-smi` once a second through the series: every second a GTX sample
+  kept the GPU over half busy (257) read P5 — 746 MHz, 1,177 for a moment — at
+  55–100%.
+- **What stands.** At `g1`@316 the tier dresses two figures with personal models
+  and stands two standees (the standee lane's census, its evidence §5), three by
+  @355; at the Masters of Evil's @371 it stands nine. The counters are read at the
+  sample's end, about fifty frames on (*counters at*).
+
+### 11.2 The table
+
+| frame | rasteriser | bloom | tier | build | runs | frames | p50 ms | p95 ms | max ms | long: 2 · 3 · 4+ beats | calls · triangles (bloom off) | programs | render dpr | counters at | load |
+|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|
+| `g1`@316 | GTX 1080 | on (default) | on | base `a46bd96` | 3 | 1,504–1,533 | 0.5 | 5.8–6.1 | 173.8–190.5 | 1 · 1 · 81 | (1: the composer) | 29→30 | 1 | @344–345 | 1.89–5.63 |
+| `g1`@316 | GTX 1080 | on (default) | on | fix (rebased) | 3 | 1,520–1,567 | 0.4–0.5 | 5.8–6.2 | 191.5–192.5 | 1 · 2 · 77 | (1: the composer) | 29→30 | 1 | @343 | 2.50–6.02 |
+| `g1`@316 | GTX 1080 | on (default) | `personal=0` | base `a46bd96` | 3 | 1,515–1,553 | 0.6 | 6.1–6.3 | 121.3–146.2 | 4 · 4 · 87 | (1: the composer) | 28→28 | 1 | @347 | 1.77–5.55 |
+| `g1`@316 | GTX 1080 | on (default) | `personal=0` | fix (rebased) | 3 | 1,527–1,574 | 0.5 | 5.9–6.2 | 138.6–138.9 | 3 · 1 · 81 | (1: the composer) | 28→28 | 1 | @343–344 | 2.68–5.33 |
+| `g1`@316 | GTX 1080 | off | on | base `a46bd96` | 3 | 3,849–3,875 | 0.4 | 3.2–3.6 | 71.9–72.9 | 153 · 13 · 3 | 82–83 · 44,635–44,637 | 16→17 | 1 | @357–358 | 1.67–4.84 |
+| `g1`@316 | GTX 1080 | off | on | fix (rebased) | 3 | 3,876–3,976 | 0.4 | 2.6–3.4 | 71.4–123.5 | 31 · 126 · 3 | 82–83 · 44,635–44,637 | 16→17 | 1 | @356–357 | 3.06–4.59 |
+| `g1`@316 | GTX 1080 | off | `personal=0` | base `a46bd96` | 3 | 3,842–3,869 | 0.5 | 3.4–3.6 | 36.0–39.5 | 174 · 0 · 0 | 87 · 26,425 | 15→15 | 1 | @360–361 | 1.45–4.43 |
+| `g1`@316 | GTX 1080 | off | `personal=0` | fix (rebased) | 3 | 3,861–3,884 | 0.4 | 3.0–3.5 | 52.5–52.7 | 116 · 50 · 0 | 87–90 · 26,425–29,611 | 15→15 | 1 | @357–359 | 2.80–4.39 |
+| `g1`@316 | SwiftShader | on (default) | on | base `a46bd96` | 3 | 45–47 | 103.1–106.4 | 136.0–145.2 | 205.8–247.9 | 0 · 0 · 138 | (1: the composer) | 35→34, 29→29 | 0.6 | @335–338 | 1.46–3.99 |
+| `g1`@316 | SwiftShader | on (default) | on | fix (rebased) | 3 | 138–151 | 19.2–19.3 | 107.6–114.8 | 215.9–222.4 | 98 · 2 · 67 | (1: the composer) | 29→34 | 0.6 | @344–346 | 2.68–3.71 |
+| `g1`@316 | SwiftShader | on (default) | `personal=0` | base `a46bd96` | 3 | 48 | 98.7–100.1 | 130.7–134.6 | 215.8–221.9 | 1 · 0 · 143 | (1: the composer) | 28→31 | 0.6 | @337 | 3.53–3.75 |
+| `g1`@316 | SwiftShader | on (default) | `personal=0` | fix (rebased) | 3 | 188–191 | 15.7 | 100.9–102.2 | 212.1–222.6 | 63 · 2 · 62 | (1: the composer) | 28→31 | 0.6 | @347–348 | 2.40–3.30 |
+| `g1`@316 | SwiftShader | off | on | base `a46bd96` | 3 | 242–248 | 19.0–19.5 | 26.5–31.2 | 74.7–80.0 | 228 · 7 · 3 | 83 · 44,437–44,561 | 16→17 | 0.6 | @353–354 | 3.52–4.97 |
+| `g1`@316 | SwiftShader | off | on | fix (rebased) | 3 | 253 | 18.9–19.1 | 24.2–34.1 | 73.9–80.7 | 194 · 0 · 3 | 83 · 44,437–44,561 | 16→17 | 0.6 | @354 | 3.27–5.01 |
+| `g1`@316 | SwiftShader | off | `personal=0` | base `a46bd96` | 3 | 302–303 | 15.7 | 33.1–33.3 | 34.1–36.3 | 122 · 0 · 0 | 91 · 29,613 | 15→15 | 0.6 | @355–356 | 2.96–5.49 |
+| `g1`@316 | SwiftShader | off | `personal=0` | fix (rebased) | 3 | 294–308 | 15.5–15.7 | 33.1–33.5 | 36.8–57.1 | 109 · 4 · 0 | 91 · 29,613 | 15→15 | 0.6 | @355–356 | 2.99–5.32 |
+| Masters @371 | GTX 1080 | on (default) | on | base `a46bd96` | 3 | 1,636–1,698 | 0.5 | 6.0–6.6 | 258.5–275.4 | 10 · 2 · 75 | (1: the composer) | 30→30 | 1, 0.75 | @401–405 | 2.66–5.45 |
+| Masters @371 | GTX 1080 | on (default) | on | fix (rebased) | 3 | 1,609–1,746 | 0.4 | 5.8–6.4 | 275.3–292.5 | 5 · 4 · 69 | (1: the composer) | 30→30 | 1, 0.75 | @402–404 | 4.30–5.64 |
+| Masters @371 | GTX 1080 | on (default) | `personal=0` | base `a46bd96` | 3 | 1,598–1,690 | 0.7 | 7.5–9.1 | 87.5–104.0 | 3 · 3 · 90 | (1: the composer) | 28→28 | 0.75, 0.6 | @409–410 | 2.44–4.93 |
+| Masters @371 | GTX 1080 | on (default) | `personal=0` | fix (rebased) | 3 | 1,537–1,651 | 0.6 | 6.9–8.6 | 257.4–275.8 | 12 · 5 · 73 | (1: the composer) | 28→28 | 0.75, 1 | @404–406 | 3.85–4.92 |
+| Masters @371 | GTX 1080 | off | on | base `a46bd96` | 3 | 4,469–4,583 | 0.4 | 3.1–3.3 | 69.3–70.0 | 59 · 14 · 3 | 89–90 · 44,999–45,001 | 17→17 | 1 | @415 | 2.84–4.14 |
+| Masters @371 | GTX 1080 | off | on | fix (rebased) | 3 | 4,596–4,661 | 0.3 | 2.7–2.9 | 69.1–86.9 | 38 · 59 · 3 | 90–91 · 45,001–45,003 | 17→17 | 1 | @413–414 | 3.65–4.32 |
+| Masters @371 | GTX 1080 | off | `personal=0` | base `a46bd96` | 3 | 3,405–3,923 | 0.6 | 3.2–4.6 | 39.8–70.0 | 51 · 0 · 2 | 99–100 · 31,245–31,247 | 15→15 | 1 | @417–419 | 2.79–3.59 |
+| Masters @371 | GTX 1080 | off | `personal=0` | fix (rebased) | 3 | 3,427–4,965 | 0.5 | 2.5–4.7 | 35.9–69.7 | 71 · 0 · 2 | 99–100 · 31,245–31,247 | 15→15 | 0.75, 1 | @414–417 | 2.99–3.68 |
+| Masters @371 | SwiftShader | on (default) | on | base `a46bd96` | 3 | 43–46 | 109.1–112.4 | 145.8–189.5 | 208.5–243.0 | 0 · 0 · 129 | (1: the composer) | 30→30 | 0.6 | @392–394 | 2.74–3.00 |
+| Masters @371 | SwiftShader | on (default) | on | fix (rebased) | 3 | 111–134 | 22.1–23.2 | 120.0–123.2 | 240.8–272.7 | 228 · 0 · 72 | (1: the composer) | 30→35 | 0.6 | @398–400 | 2.69–3.35 |
+| Masters @371 | SwiftShader | on (default) | `personal=0` | base `a46bd96` | 3 | 47–50 | 104.3–107.1 | 130.4–158.7 | 137.1–196.1 | 0 · 0 · 140 | (1: the composer) | 28→28, 28→34 | 0.6 | @392–394 | 2.67–4.48 |
+| Masters @371 | SwiftShader | on (default) | `personal=0` | fix (rebased) | 3 | 139–165 | 17.2–20.2 | 106.0–119.9 | 209.4–258.1 | 140 · 0 · 61 | (1: the composer) | 28→31 | 0.6 | @399–401 | 2.81–3.93 |
+| Masters @371 | SwiftShader | off | on | base `a46bd96` | 3 | 201–210 | 22.3–22.4 | 32.3–36.5 | 103.0–199.2 | 543 · 17 · 6 | 89 · 45,009 | 17→17 | 0.6 | @406–407 | 2.34–6.13 |
+| Masters @371 | SwiftShader | off | on | fix (rebased) | 3 | 192–213 | 22.2–23.4 | 31.8–46.9 | 70.4–137.5 | 548 · 14 · 7 | 89 · 45,009 | 17→17, 16→17 | 0.6 | @406–408 | 2.33–5.58 |
+| Masters @371 | SwiftShader | off | `personal=0` | base `a46bd96` | 3 | 266–273 | 17.0–17.2 | 34.4–34.6 | 64.6–101.2 | 238 · 1 · 6 | 99–101 · 31,245–31,259 | 15→15 | 0.6 | @410–411 | 3.35–7.29 |
+| Masters @371 | SwiftShader | off | `personal=0` | fix (rebased) | 3 | 266–283 | 16.9–17.1 | 34.5–34.7 | 47.9–117.3 | 215 · 3 · 4 | 99–101 · 31,245–31,259 | 15→15 | 0.6 | @410–412 | 3.33–7.32 |
+
+### 11.3 What it says
+
+1. **The pass's gains hold on top of the standee.** On the GTX 1080 unthrottled —
+   the line a real GPU's regression is read on (D273, amended; §12.4) — this
+   build's p50 is equal or lower on all eight lines (0.3–0.6 ms against 0.4–0.7)
+   and its p95 lower or overlapping on all eight (bloom off with the tier on:
+   2.6–3.4 against 3.2–3.6 at `g1`, 2.7–2.9 against 3.1–3.3 at Masters). On
+   SwiftShader the default page (bloom on, governed) reads p50 **15.7–23.2 ms**
+   against the base's **98.7–112.4**, 111–191 frames in the sample against 43–50:
+   the governor (D272) reaches the floor rung and drops the composer inside the
+   sample with the standees on as with them off. At the floor with bloom off the
+   two builds are the same: p50 18.9–19.1 against 19.0–19.5 at `g1` with the tier
+   on, 22.2–23.4 against 22.3–22.4 at Masters, 15.5–17.1 against 15.7–17.2 with it
+   off. The calls and the triangles are the base's on every line: the pass moved
+   no call.
+2. **What the tier costs, standees included** (tier on against `personal=0`: the
+   personal models and the standees together). On SwiftShader at the floor p50
+   **+3–4 ms at `g1`** (two standees) **and +5–6 at Masters** (nine), in both builds
+   alike — the standee lane read nine standees at +3 to +6 there (its §9) — and
+   p95 within the floor's own swing (24.2–46.9 against 33.1–34.7: missed beats,
+   D270). On the GTX 1080 at p50 and p95, nothing. The calls fall (`g1` 82–83
+   against 87–91, Masters 89–91 against 99–101) and the triangles rise by the
+   tier's (44,437–45,009 against 26,425–31,259, inside 30,000 + 36,000).
+3. **The drain: the standees make it longer in both builds, and D271.5 longer
+   still.** Bloom off at `g1`, the base's max is 36.0–39.5 ms with the tier off and
+   **71.9–72.9 with it on**; this build's 52.5–52.7 and 71.4–123.5 — §10.5's shape
+   again (with fewer commands a frame the drain comes rarer and longer: 126
+   three-beat frames against 13 with the tier on, 50 against none with it off), and
+   a frame that holds a drain now spans up to seven beats. Bloom on, both builds
+   drain for 121–293 ms, longest at Masters with its nine standees (258.5–275.4 in
+   the base, 275.3–292.5 in this build) — except the base's three Masters runs with
+   the tier off, each of which its governor had stepped to 0.75 or 0.6 (87.5–104.0).
+   None of it is a frame a browser shows (§10.4, and §11.4 below at a
+   browser's pacing), and the bloom-on range this document and D273 wrote
+   (104–155 ms) is now **over 100 ms**.
+4. **The governor at the cold scrub, unthrottled.** Four of the 24 GTX runs of each
+   build ended below render dpr 1 — every one at the Masters of Evil's @371, where
+   the scrub's card textures (and, with the tier on, the standees' maps) upload
+   before the sample: this build's four at 0.75, the base's three at 0.75 and one
+   at 0.6; none at `g1`. That is follow-up 10's step,
+   now on the standee's crowded table without `--vsync`, in both builds alike.
+
+### 11.4 At a browser's pacing
+
+The same sixteen GTX lines at `--vsync` (Chromium's own pacing, D273), two rounds,
+the build order alternating, 15:25–15:33, load 0.69–4.32 (`var/gpu-fix3/ab/vsync/`).
+At a browser's pacing the GPU is far from busy and its driver roamed (P5 at 746 MHz
+in 234 of the 488 seconds `nvidia-smi` logged, P0 at 1,632 in 128, P2 and P8 the
+rest).
+
+| frame | rasteriser | bloom | tier | build | runs | frames | p50 ms | p95 ms | max ms | long: 2 · 3 · 4+ beats | calls · triangles (bloom off) | programs | render dpr | counters at | load |
+|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|
+| `g1`@316 | GTX 1080 | on (default) | on | base `a46bd96` | 2 | 300 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | (1: the composer) | 29→29 | 1 | @365 | 0.98–4.32 |
+| `g1`@316 | GTX 1080 | on (default) | on | fix (rebased) | 2 | 300–301 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | (1: the composer) | 29→29 | 1 | @365 | 1.30–1.40 |
+| `g1`@316 | GTX 1080 | on (default) | `personal=0` | base `a46bd96` | 2 | 300–301 | 16.7 | 16.7 | 16.8 | 0 · 0 · 0 | (1: the composer) | 29→29, 28→28 | 1 | @365 | 0.99–3.65 |
+| `g1`@316 | GTX 1080 | on (default) | `personal=0` | fix (rebased) | 2 | 300 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | (1: the composer) | 28→28, 29→29 | 1 | @365 | 1.08–1.16 |
+| `g1`@316 | GTX 1080 | off | on | base `a46bd96` | 2 | 300 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | 81 · 42,699 | 16→16 | 1 | @365 | 0.77–2.99 |
+| `g1`@316 | GTX 1080 | off | on | fix (rebased) | 2 | 300 | 16.7 | 16.7 | 16.8 | 0 · 0 · 0 | 81 · 42,699 | 16→16 | 1 | @365 | 0.92–0.99 |
+| `g1`@316 | GTX 1080 | off | `personal=0` | base `a46bd96` | 2 | 300 | 16.7 | 16.8 | 16.8 | 0 · 0 · 0 | 87 · 26,395 | 15→15 | 1 | @365 | 1.15–2.33 |
+| `g1`@316 | GTX 1080 | off | `personal=0` | fix (rebased) | 2 | 300 | 16.7 | 16.7 | 16.8 | 0 · 0 · 0 | 87 · 26,395 | 15→15 | 1 | @365 | 0.78–2.34 |
+| Masters @371 | GTX 1080 | on (default) | on | base `a46bd96` | 2 | 300–302 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | (1: the composer) | 30→30 | 0.75 | @420 | 0.97–1.97 |
+| Masters @371 | GTX 1080 | on (default) | on | fix (rebased) | 2 | 300 | 16.7 | 16.7 | 16.8 | 0 · 0 · 0 | (1: the composer) | 30→30 | 0.75 | @420 | 1.12–2.02 |
+| Masters @371 | GTX 1080 | on (default) | `personal=0` | base `a46bd96` | 2 | 300–301 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | (1: the composer) | 28→28, 29→29 | 0.75 | @420 | 0.92–1.68 |
+| Masters @371 | GTX 1080 | on (default) | `personal=0` | fix (rebased) | 2 | 300–301 | 16.7 | 16.8 | 16.8 | 0 · 0 · 0 | (1: the composer) | 29→29, 28→28 | 0.75 | @420 | 1.02–1.71 |
+| Masters @371 | GTX 1080 | off | on | base `a46bd96` | 2 | 301 | 16.7 | 16.7 | 16.8 | 0 · 0 · 0 | 90 · 45,001 | 17→17 | 0.75 | @420 | 0.80–1.62 |
+| Masters @371 | GTX 1080 | off | on | fix (rebased) | 2 | 300 | 16.7 | 16.7 | 16.8 | 0 · 0 · 0 | 90 · 45,001 | 17→17 | 1 | @420 | 0.87–1.47 |
+| Masters @371 | GTX 1080 | off | `personal=0` | base `a46bd96` | 2 | 300 | 16.7 | 16.8 | 16.8 | 0 · 0 · 0 | 100 · 31,247 | 15→15 | 0.75 | @420 | 0.69–1.45 |
+| Masters @371 | GTX 1080 | off | `personal=0` | fix (rebased) | 2 | 300–301 | 16.7 | 16.7–16.8 | 16.8 | 0 · 0 · 0 | 100 · 31,247 | 15→15 | 0.75 | @420 | 1.01–1.29 |
+
+Every run of both builds, standees on and off, drew one frame a beat: p50 16.7 ms,
+p95 16.7–16.8, max 16.8, no long frame — §9.4 passes on the GTX 1080 at the
+standee's tree, and this is the saturated line of §12.4: it cannot tell the two
+builds apart. The governor, though: **at the Masters of Evil's @371 every base run
+and six of this build's eight ended at render dpr 0.75** (none at `g1`) — the
+cold scrub's uploads before the sample, which at 60 Hz it never climbs back from
+(follow-up 10). These runs are the DEV server's, where §10.4's production builds
+stepped three runs of 44; the step is the full window's verdict in both builds, and
+on the standee's crowded table it is the common case, tier on or off.
+
+## 12. Fix pass 2 — the second verifier's findings, and what was done
+
+A second verifier re-measured the fix pass and confirmed that the gains and the
+costs reproduce, that the 25 negative controls it ran were red, and that the gate
+was green. It left one major finding and five minor ones; each is below, with the
+rebase first because everything after it was measured on the rebased tree.
+
+### 12.1 The rebase onto `a46bd96` (minor 2)
+
+`git rebase a46bd96` replayed the pass's two commits onto `main`'s portrait
+standee. Eight files conflicted replaying the first — `CLAUDE.md`, `DECISIONS.md`,
+`PLAN.md`, `docs/claude-md-rules.txt`, `docs/evidence/test-count-history.md`,
+`web/CLAUDE.md`, `web/src/arena/CLAUDE.md` and `web/src/arena/Arena.tsx` — and
+four of them again replaying the second (`CLAUDE.md`, `PLAN.md`, the manifest and
+`web/CLAUDE.md`); `perf.ts` and `liveness.test.ts` merged on their own. Both sides were kept everywhere, `main`'s first in the documents: D260–D264
+before D270–D273, the standee's test counts before the pass's, both lanes' rows in
+PLAN's tables. In `Arena.tsx` both lanes' changes stand — the standee's `useThree`
+import, `CanvasSizeReport` and its mount beside the pass's governor call, lazy
+stats panel and removed `<AdaptiveDpr />`. `main` had taken owner question 32 for
+the standee, so the pass's (a machine with no GPU acceleration) is **question
+33**, and its references in PLAN.md follow. The index recounted from its rows:
+343 items across 36 lists (317 open, 19 partly done, 3 not reproduced, 2
+standing, 2 accepted), 33 questions, 5 answered. The rules manifest was
+regenerated after the last rule line changed (`CLAUDE_MD_RULES_WRITE=1`) and
+`claude-md.test.ts` passes with every rule once. `git merge-base --is-ancestor
+a46bd96 HEAD` is true.
+
+### 12.2 The major: the tile field's colour half (D271.5)
+
+The finding: if `TileField.bind` wrote a land's colour and dropped
+`writeColourAt`'s answer — the colour changed, never flagged, the GPU drawing the
+old one — every test still passed, because the tile case only moved a land, and a
+tile's colour changes only when its land taps (the pose dims it) or a cue glows
+it. The case (`gpu-pass.test.ts`, now named for it) now takes the land back to
+rest (its matrices, no colour), taps land 1 (its plateau's and its rim's colour
+buffers, nothing else), glows every land through the one offset (the plateau's
+and the slab's colours — the rim takes no glow), ends the glow and the tap, and
+holds each of those frames to "flagged iff its array changed" and to a still
+frame after it that flags nothing.
+
+The reverts, each spliced into a `git archive` copy of the working tree under
+`var/gpu-fix3/copy/` (its `web/node_modules` a link to the worktree's), run, and
+restored, the copy then `diff -r`'d identical against the worktree's `web/src` and
+`web/test` (`var/gpu-fix/nc/run.py`, `NC_ROOT` set to the copy):
+
+| revert | the fix pass's test | this test |
+|---|---|---|
+| the bucket's colour flag dropped (`writeColourAt(…)` with its answer ignored) | GREEN (51 of 51) | **RED** — the tile case |
+| the rim's colour flag dropped | GREEN (51 of 51) | **RED** — the tile case |
+| a colour string parsed in `standeeFallOf` (§12.3) | — | **RED** — liveness's GPU-pass clause |
+| the seven reverts of §10.7, run again on the rebased copy | red | **RED**, each on the test that names it |
+
+The copy ran green before the first splice (51 of 51 in `gpu-pass` and
+`liveness`); `var/gpu-fix3/nc-new.out`, `nc-oldtest.out` and `nc-old7.out`.
+
+### 12.3 The standee's tests, and the allocation scan's body lists (minor 5)
+
+The rebase touched `perf.ts` (both lanes; merged on its own) and not
+`FigureLayer.tsx`, so the allocation scans were read against both lanes' bind
+bodies: the Tier 2 scan names the standee's `standeeFallOf` beside the departing
+bodies and the disc, prop and status fields; the GPU pass's names `applyOffsets`,
+`applyRigOffset`, `TileField.bind` and its bucket lookup, the three instance
+writers, `refreshWorld` and the governor's two. Every one is found, and every one
+allocates nothing. The GPU pass's colour clause read four of the Tier 2 scan's fifteen
+bodies (and `applyFigures`); it now reads all fifteen, `standeeFallOf` among them, so its claim —
+every body a scan reads takes its colour parsed — is literal, and a parse spliced
+into `standeeFallOf` turns it red (§12.2). The standee lane's own tests pass on
+the rebased tree: `standee.test.ts` (its raster of the legibility floor on three
+canvases and its hostile sweep among its 15), liveness's standee clause, and
+`personal.test.ts`'s grep of `web/dist` and its source maps (after a fresh build:
+the first run of the rebased tree failed it on the stale `dist` the pre-rebase
+build had left, whose maps carried their sources' text).
+
+### 12.4 The saturated line, and the drain D271.5 lengthens (minor 1)
+
+At a browser's pacing the GTX 1080 reads p50 and p95 16.7–16.8 ms in every build
+at every frame (§10.4): the statistic D273 grades is the display's beat, so it
+grades the gate and cannot tell two builds apart. **The regression signal on a
+real GPU is the unthrottled p50 and p95, in interleaved pairs** — which is how §10.5
+and §11 read it. And D271.5 lengthens the unthrottled drain: at `g1`@316 the
+second verifier read the max 35–39 → 52–53 ms bloom off and 121–122 → 140–164 bloom
+on, and on the rebased tree over the portrait standee 36.0–39.5 → 52.5–52.7 ms with
+the tier off and 71.9–72.9 → 71.4–123.5 with its standees on (§11.3). PLAN.md's
+GPU-pass follow-up 11 (an Open-now row) says what is
+owed — a real-GPU line that is neither saturated nor the drain — and D273's
+amendment and the arena `CLAUDE.md`'s GPU-pass rule 1 say how a regression is read
+until then.
+
+### 12.5 The evidence's own corrections (minor 3)
+
+- §0's first row: `Color.setStyle` went to **0** a frame at four frames and to
+  **0.1** at Wakanda @527 in the verifier's census — `applyFigures`' one allowed
+  write, a figure's tint set from its string when its pose's tint changes.
+- §10.6: a loaded SwiftShader run of the default page can fail to sample (26
+  frames in five seconds, under the bench's 30) or read p50 51.9 ms.
+- The bloom-on max: "104–155 ms" in D270's note, D273, the arena `CLAUDE.md`, the
+  bench's header and `gpu-day.md` was exceeded by the verifier's 163.5 ms, and on
+  the standee's tree by 293 (§11.3); each now says **over 100 ms**.
+
+### 12.6 The scene chunk (minor 4)
+
+`npm --prefix web run build` on the rebased tree, against the same build of the
+`git archive` of `a46bd96` (with its `art.json`), `var/gpu-fix3/build.log` and
+`build-base.log`:
+
+| chunk | `a46bd96` | rebased |
+|---|---:|---:|
+| `index-*.js` (the 2D entry) | 300.43 kB · 94.68 gzip | 300.43 · 94.68 |
+| `Arena-*.js` | 49.44 · 18.87 | **47.18 · 17.86** |
+| `arena-scene-*.js` | 1,384.55 · 397.41 | **1,386.72 · 398.21** |
+| `Workshop-*.js` | 89.63 · 30.43 | 89.63 · 30.43 |
+| `Post-*.js` | 70.67 · 17.71 | 70.67 · 17.71 |
+| `StatsOverlay-*.js` (loaded only with `?stats=1`) | — | 2.59 · 1.35 |
+
+The scene chunk grows by the pass's code, +2.17 kB and +0.80 gzip (+0.76 on
+`e2c337c`); `Arena` shrinks by 1.01 gzip; the two together are 0.21 kB gzip
+smaller. The verifier asked whether `instanceWrite.ts` and `worldChain.ts` could
+move behind the Arena chunk. They have no callers but `tiles.ts` and `props.ts`,
+and the workshop's pedestal draws with both (`TileField`, and `FigureLayer`'s prop
+field), so they belong to the chunk the two pages share, as their callers do.
+Left disclosed (follow-up 9).
+
+### 12.7 The gate, and `~/forge`
+
+From a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9360`, on the rebased tree:
+**256.7 s**, exit 0, 48 jobs (961.5 s summed) at a load average of 1.22 at the
+start and 6.76 at most, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and
+vitest 157 (9 files) (`var/check-all-gpu-fix3.log`, run
+`20260929-153806-2321626`; the relief step's three Python-step tests skipped, as in
+every worktree without the likeness venv). Before it: `npm --prefix web test`
+1,212 `node --test` (1,203 pass, 0 fail, 9 skipped) + 157 vitest standalone,
+`npm --prefix web run build` (§12.6), `node tools/build-workshop-catalog.ts
+--check` current, `./bridge/build.sh` OK. `~/forge` and `~/.forge`: a listing of
+every file under each with its size and mtime identical before this pass's first
+command and after the gate (15:43), the jar still `3c0a7c38…8e5dd9`.

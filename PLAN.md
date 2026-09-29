@@ -14,11 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 342 items still open across 36 follow-up lists** — 316
+**The index below lists 343 items still open across 36 follow-up lists** — 317
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
 its own rows on 2026-09-29 by the GPU pass at its rebase onto the portrait
 standee (the GPU pass closed M7 Tier 1's 6 and Lane LOOK's 16 and added a list of
-nine; its fix pass added a tenth) over the portrait standee lane's count of 334 across 35, which added seven
+nine; its fix pass added a tenth, its fix pass 2 an eleventh) over the portrait standee lane's count of 334 across 35, which added seven
 (35–41 of the personal tier's list; its fix pass closed 38 and added 42) to the arena caption lane's count at its rebase onto
 the sound cues (it closed the story page's 1, added a list of six, and removed the two rows
 more villain identity's fix pass had left beside their replacements; the sound-cues
@@ -374,8 +374,9 @@ villain identity's rebase, were removed at the same recount.)
 | [GPU pass](#fu-gpu) | 6 | open | `applyFigures` and the `useFrame` body are outside the allocation scan | `web/test/liveness.test.ts` |
 | [GPU pass](#fu-gpu) | 7 | open | The bench's counters depend on where its sample ends | `tools/arena-bench.mjs` |
 | [GPU pass](#fu-gpu) | 8 | open | The frame body's timing is coarsened to 0.1 ms | `tools/arena-bench.mjs` |
-| [GPU pass](#fu-gpu) | 9 | open | `arena-scene` grew +0.76 kB gzip by the pass's own code | `web/vite.config.ts` |
+| [GPU pass](#fu-gpu) | 9 | open | `arena-scene` grew +0.8 kB gzip by the pass's own code | `web/vite.config.ts` |
 | [GPU pass](#fu-gpu) | 10 | open | At a browser's pacing the cold scrub can step a fast GPU to 0.75, and it never climbs back | `web/src/arena/governor.ts` |
+| [GPU pass](#fu-gpu) | 11 | open | At vsync a real GPU's p50/p95 are saturated (16.7–16.8 ms in every build): the regression signal is the unthrottled p50/p95 in pairs, and D271.5 lengthens the unthrottled drain | `tools/arena-bench.mjs` |
 
 ### Questions only the owner can settle
 
@@ -448,7 +449,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Arena personal polish: one call a dressed figure, and inspect from the table *(off the plan; the personal tier's follow-up 33)* | 1 day | **built, measured, gated and documented** on branch `arena-personal-polish` (2026-09-29), off `main`'s `9998ec5` — prepare packs every paint into one atlas (a repeating paint laid out over its UV tiles) and merges a model into ONE skinned primitive under ONE material; `check.mjs`, the dev route (from the file) and the reader each count one call a figure; the villain file's worst frame with the tier on 130 → 128 calls, the tier never over the tier off on any of its 401 frames; `I` and an inspect chip open the workshop's inspect view on the card under the pointer, face up only (a hostile corpus sweep); **D240–D241**; five follow-ups; *Arena personal polish*, just above *Deferred* |
 | — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
-| — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified and fixed once** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c` — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; ten follow-ups; *The GPU pass*, just above *Deferred* |
+| — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified twice and fixed twice** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -8883,9 +8884,10 @@ unchanged again (evidence §12).
 
 ## The GPU pass — the whole arena measured, and what it paid for nothing (2026-09-29, D270–D273)
 
-**Status: built, measured, gated, verified and fixed** on branch `gpu-pass` (the
-worktree `mtg-table-t2g`, off `main`'s `e2c337c`); the lane's reserved range
-D270–D274, four used (D273 by the fix pass). Eight lanes had each measured only themselves on the
+**Status: built, measured, gated, verified twice and fixed twice** on branch
+`gpu-pass` (the worktree `mtg-table-t2g`, off `main`'s `e2c337c`, rebased onto
+`a46bd96` — the portrait standee — by fix pass 2); the lane's reserved range
+D270–D274, four used (D273 by the fix pass; fix pass 2 amended D271 and D273). Eight lanes had each measured only themselves on the
 arena's frame loop; this pass benched the whole on SwiftShader and on the GTX
 1080 at the bench frame, `g1`'s busiest combat, the Masters of Evil's and
 Wakanda's crowded tables and the Doom Legion's with the personal tier on and off,
@@ -8942,15 +8944,45 @@ node tools/profile-top.mjs var/b.cpuprofile        # the top self-time functions
    in the prop field and the status strip too (the draft's tests held the tiles
    alone); the governor's tests call it as the arena does; the draft's frame-body
    figure is withdrawn and the SwiftShader default line restated with its load.
+6. **Fix pass 2: the standee on top of the pass** (after a second verifier, which
+   confirmed the gains and the costs, found its 25 negative controls red and the
+   gate green, and left one major and five minors; evidence §11–§12). The branch
+   is rebased onto `main`'s `a46bd96` — the portrait standee (D260–D264), which
+   adds frame-loop work the pass never measured — with both lanes kept everywhere
+   and the pass's owner question renumbered 33; and re-benched there against a
+   `git archive` of `a46bd96` on the DEV server, interleaved, three runs a line,
+   `g1`@316 and the Masters of Evil @371, both rasterisers, bloom on and off, the
+   tier (and so the standees) on and `?personal=0`: the pass's gains hold on top of
+   the standee (the GTX 1080's unthrottled p50 equal or lower on all eight lines, its
+   p95 lower or overlapping; SwiftShader's default page p50 15.7–23.2 ms against
+   the base's 98.7–112.4; the floor's p50 unchanged), the standees lengthen the
+   unthrottled drain in both builds (bloom off with them on, the base's max 72 ms,
+   this build's 71–124), and at `--vsync` every run of both reads 16.7–16.8 ms —
+   while at the Masters of Evil's @371 the governor stepped the GTX 1080 to 0.75 at
+   the cold scrub in 14 of 16 paced runs (follow-up 10). The major: the
+   tile case never tapped or glowed a land, the only things that change a tile's
+   colour, so a dropped colour flag passed every test; it does both now, and the
+   two reverts that drop a colour flag are red where the fix pass's test was green.
+   The minors: the `--vsync` line is saturated on a real GPU (16.7–16.8 ms in every
+   build), so a regression there is read on the unthrottled p50/p95 in pairs, and
+   D271.5's longer unthrottled drain is recorded with its numbers (follow-up 11,
+   D273 amended); the evidence's `setStyle` row, its loaded SwiftShader runs and
+   the bloom-on max range corrected; the scene chunk left disclosed (follow-up 9);
+   the standee's own tests green on the rebased tree, and the colour clause now
+   reads every body the Tier 2 scan reads, the standee's among them.
 
 Tests: `web/test/gpu-pass.test.ts` (7, each with a negative control; the fix
 pass added the prop field's and the status strip's "flagged iff changed", and
 seven source reverts each turn the file red), `perf.test.ts` (+3; the fix pass
 drives the governor through its defaults, so a flipped `early` default fails two),
 `liveness.test.ts` (+1: the pass's bodies in the allocation scan, and no
-frame-loop body parses a colour string, with spliced controls).
+frame-loop body parses a colour string, with spliced controls). Fix pass 2 added no
+case: the tile case taps and glows a land (the two reverts that drop a colour flag
+red, both green against the fix pass's test, and the seven earlier reverts red again
+on the rebased tree), and the colour clause reads every body the Tier 2 scan reads.
 `npm run build`: `arena-scene` +0.76 kB gzip (the pass's own code), `Arena` −1.03,
-the arena's page 0.27 kB gzip smaller.
+the arena's page 0.27 kB gzip smaller; rebased, 397.41 → 398.21 and 18.87 → 17.86,
+0.21 smaller.
 
 **The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9360`
 **283.1 s** and `WSPORT=9370` **275.3 s**, exit 0 both, 48 jobs (1,066.6 s and
@@ -8966,10 +8998,14 @@ load of 7.1–11.1, `node --test` 1,210 / 1,199 pass / 0 fail / 11 skipped and v
 157 (`var/check-all-gpu-fix.log`); its first run failed at `13c-node` on the rules
 manifest (a test-count span changed after the manifest was regenerated) and was run
 again after regenerating it. `~/forge` and `~/.forge` unchanged again (evidence
-§10.9).
+§10.9). **Fix pass 2's gate**, on the rebased tree from a deleted `bridge/out` at
+`GATE_JOBS=4`, `WSPORT=9360`: **256.7 s**, exit 0, 48 jobs (961.5 s summed) at a
+load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vitest
+157 (`var/check-all-gpu-fix3.log`). `~/forge` and `~/.forge` unchanged (evidence
+§12.7).
 
 <a id="fu-gpu"></a>
-### The GPU pass's follow-ups — ten, 2026-09-29 (10 by its fix pass)
+### The GPU pass's follow-ups — eleven, 2026-09-29 (10 by its fix pass, 11 by its fix pass 2)
 
 1. **The GTX 1080's frame times are from a shared machine.** Three other lanes'
    benches and gates ran all day (loads 2–18) and the driver's clocks were seen at
@@ -9013,7 +9049,13 @@ again after regenerating it. `~/forge` and `~/.forge` unchanged again (evidence
 9. **`arena-scene` grew by the pass's own code** (+2.18 kB, +0.76 gzip); the
    arena's page is smaller overall (the lazy stats panel, `<AdaptiveDpr />` gone).
    The scene chunk has grown with every lane since the workshop (371.93 kB gzip
-   then, 394.12 now).
+   then, 394.12 now). *(Fix pass 2, rebased onto the portrait standee: 397.41 on
+   `a46bd96`, 398.21 with the pass — +2.17 kB, +0.80 gzip — and `Arena` 18.87 →
+   17.86, the two together 0.21 kB gzip smaller. Left disclosed: the pass's two
+   new modules, `instanceWrite.ts` and `worldChain.ts`, are called only by
+   `tiles.ts` and `props.ts`, which the workshop's pedestal draws with as the arena
+   does, so they belong to the chunk the two pages share and cannot move behind
+   `Arena-*.js`.)*
 10. **At a browser's pacing the governor stepped the GTX 1080 down, for good.**
     Three of 44 `--vsync` runs ended at render dpr 0.75 — one of this build's 22
     and two of the base's (the verdict is the full window's in both,
@@ -9025,7 +9067,31 @@ again after regenerating it. `~/forge` and `~/.forge` unchanged again (evidence
     a look cost on the owner's own machine, and one the unthrottled bench never
     shows. Trace the step's frame first (`govtrace.mjs`'s method, under
     `--vsync`); a settle that counts a scrub's first frames as a step's is the
-    candidate. The file: `web/src/arena/governor.ts`.
+    candidate. The file: `web/src/arena/governor.ts`. **Fix pass 2 found it common
+    on the portrait standee's crowded table** (evidence §11.3–§11.4, the DEV
+    server): at the Masters of Evil's @371 the governor stepped the GTX 1080 to
+    0.75 in every base run and six of this build's eight at `--vsync`, tier on or
+    off, and in four of 24 unthrottled runs of each build (the base's once to 0.6);
+    at `g1`@316, in none.
+11. **On a real GPU the graded line is saturated, and D271.5 lengthens the
+    drain the other line shows** (the second verifier; fix pass 2, D273 amended).
+    At a browser's pacing the GTX 1080 reads p50 and p95 16.7–16.8 ms in every
+    build benched — both builds at all five frames, bloom on and off (evidence
+    §10.4) — so the statistic D273 grades cannot tell two builds apart: a build
+    twice as slow on the GPU reads the same until it misses a beat. **The
+    regression signal on a real GPU is the unthrottled p50 and p95, in interleaved
+    pairs against the base build** (the arena `CLAUDE.md`'s GPU-pass rule 1). And
+    D271.5 lengthens the unthrottled command-buffer drain: at `g1`@316 the max read
+    35–39 ms bloom off in the base build and 52–53 in this one, and 121–122 → 140–164
+    bloom on (the second verifier's series; §10.5's own, 35.8–36.7 → 52.5–52.8 and
+    121.5–136.9 → 138.5–155.3), and on the rebased tree, over the portrait
+    standee, 36.0–39.5 → 52.5–52.7 with the personal tier off and 71.9–72.9 →
+    71.4–123.5 with its standees on (§11).
+    Nothing a browser shows. What is owed is a real-GPU line that is neither
+    saturated nor the drain — a GPU timer query over the frame
+    (`EXT_disjoint_timer_query_webgl2`), or a `--vsync` run's missed beats over a
+    sample long enough to count them — so that a real GPU's regression is a number
+    the gate could read. The file: `tools/arena-bench.mjs`.
 
 ---
 

@@ -658,6 +658,7 @@ span: On by default while watching, off at a live seat
 span: the frame loop pays for what changed this frame, and a SwiftShader number is the software floor's.
 span: §9.4 is graded on a real GPU; SwiftShader at the floor fails it, and that is D270, not a regression.
 span: On a real GPU §9.4 is read at a browser's pacing, `--vsync`
+span: At vsync a real GPU's p50 and p95 are the beat itself, so a regression is read unthrottled
 span: The frame loop parses no colour string, and every body it reaches is in the allocation scan
 span: A pose field draws only what it holds and re-sends only what moved.
 span: Nothing drawable hangs under a bone, and the prop field reads only the joints it refreshed.

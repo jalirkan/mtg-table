@@ -148,7 +148,7 @@ test('gpu-pass: an empty tile kind is not drawn, and prime shows every kind once
   assert.equal(meshesOf(field).filter((m) => m.visible).length, 4);
 });
 
-test('gpu-pass: a frame that moved no tile uploads nothing, and one that moved a tile uploads it (D271)', () => {
+test('gpu-pass: a frame that moved no tile uploads nothing; a moved, a tapped and a glowing land flag exactly what they changed (D271)', () => {
   const field = new TileField();
   const tiles: TileLayout = new Map([
     [1, tile(1, 'plateau', -1, '#c0a060')],
@@ -181,6 +181,52 @@ test('gpu-pass: a frame that moved no tile uploads nothing, and one that moved a
   assert.deepEqual(changed, [true, false, false, false, true, false, true, false], 'the flags are not exactly the moved buffers');
   const afterMove = shoot(buffers);
   assert.deepEqual(uploadViolations(still, afterMove), [], 'a tile buffer was flagged without changing, or changed without a flag');
+
+  // **The colour half** (the second verifier's major): a tile's colour changes
+  // only when its land taps (the pose dims it) or a cue glows it, and each must
+  // flag exactly the colour buffers it changed — a colour written and never
+  // flagged is drawn stale by the GPU, and a matrix re-sent with it is waste.
+  // Each frame below is judged against the frame before it, then held still.
+  const colourFrame = (label: string, expected: boolean[]): void => {
+    const before = shoot(buffers);
+    const was = versions();
+    field.bind(tiles, OFFSETS, 0.016);
+    const flags = versions().map((v, i) => v !== was[i]);
+    assert.deepEqual(flags, expected, `${label}: the flags are not exactly the colour buffers it changed`);
+    assert.deepEqual(uploadViolations(before, shoot(buffers)), [], `${label}: a tile buffer was flagged without changing, or changed without a flag`);
+    const held = shoot(buffers);
+    const heldVersions = versions();
+    field.bind(tiles, OFFSETS, 0.016);
+    assert.deepEqual(versions(), heldVersions, `${label}: the still frame after it flagged a tile buffer`);
+    assert.deepEqual(uploadViolations(held, shoot(buffers)), [], `${label}: the still frame after it changed a buffer`);
+  };
+  // The cue ends and the land comes back to rest: the same matrices again, no colour.
+  const beforeRest = shoot(buffers);
+  const moving = versions();
+  field.bind(tiles, OFFSETS, 0.016);
+  assert.deepEqual(versions().map((v, i) => v !== moving[i]), [true, false, false, false, true, false, true, false], 'the land coming back to rest flagged other than its matrices');
+  assert.deepEqual(uploadViolations(beforeRest, shoot(buffers)), []);
+  const plateauTile = tiles.get(1)! as { tapped: boolean };
+  // Tapped: land 1 dims — its plateau colour and its rim's colour — and nothing else.
+  plateauTile.tapped = true;
+  try {
+    // [plateau m, c, water m, c, slab m, c, rim m, c]
+    colourFrame('a tapped land', [false, true, false, false, false, false, false, true]);
+    // A cue glows every land (the one offset every tile reads): the plateau's and
+    // the slab's colours; the rim takes no glow, and no matrix moved.
+    OFFSET.glow = 0.6;
+    OFFSET.glowColour = '#ffd27a';
+    try {
+      colourFrame('a glowing land', [false, true, false, false, false, true, false, false]);
+    } finally {
+      OFFSET.glow = 0;
+      OFFSET.glowColour = null;
+    }
+    colourFrame('the glow ending', [false, true, false, false, false, true, false, false]);
+  } finally {
+    plateauTile.tapped = false;
+  }
+  colourFrame('an untapped land', [false, true, false, false, false, false, false, true]);
 
   // The negative controls, on one more still frame: the field as it was (every
   // buffer flagged every frame), and a write that changes the array unflagged.

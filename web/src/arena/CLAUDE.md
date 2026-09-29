@@ -98,13 +98,14 @@ Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
 `npm run build`'s own output is the check — the 2D entry chunk is 94.68 kB gzip
-on this tree, the same size before and after the portrait standee and the same
-code apart from the lazy chunks' hashed names in its import map (90.40 before
-the status layer put its glyph kit and the tile's row in it), and none of it is
-`three`. **Since the workshop the arena's scene
+on this tree, the same size before and after the portrait standee and the GPU
+pass and the same code apart from the lazy chunks' hashed names in its import
+map (90.40 before the status layer put its glyph kit and the tile's row in it),
+and none of it is `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (397.41 kB gzip
-before the GPU pass, 393.36 before the standee) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (398.21 kB gzip
+on this tree, 397.41 before the GPU pass and 393.36 before the standee) — with
+`Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
 `dist`, a `vite preview` server and a headless Chromium. Every performance number
@@ -1350,10 +1351,15 @@ short form.
    fix pass): unthrottled, the page outruns the GPU, fills the WebGL command
    buffer and waits for it to drain every few dozen frames
    (`CommandBufferHelper::WaitForAvailableEntries` in a Chromium trace) — the
-   GTX 1080's max, 35–53 ms bloom off and 104–155 bloom on at `g1`@316 and
-   Wakanda @477, in every build — and a change that sends fewer commands a frame makes each drain
+   GTX 1080's max, 35–53 ms bloom off (69–124 with the personal tier's standees
+   on) and over 100 ms bloom on at `g1`@316, Wakanda @477 and the Masters of
+   Evil @371, in every build — and a change that sends fewer commands a frame makes each drain
    longer and rarer. The unthrottled line reads headroom (p50, p95, the counts);
-   the bench still prints its max FAIL there, with a note.
+   the bench still prints its max FAIL there, with a note. **At vsync a real GPU's
+   p50 and p95 are the beat itself, so a regression is read unthrottled**
+   (D273, fix pass 2): the GTX 1080 reads 16.7–16.8 ms there in every build, which
+   grades the gate and tells no two builds apart, so a change on a real GPU is
+   judged by its unthrottled p50 and p95 in interleaved pairs against the base build.
 2. **The frame loop parses no colour string, and every body it reaches is in the
    allocation scan** (**D271**). `applyOffsets`, its `Map.forEach` walk
    `applyRigOffset`, `TileField.bind`, the instance writers, `refreshWorld` and
@@ -1369,7 +1375,10 @@ short form.
    the float32 three's setters would and say whether it differs. The tile field,
    the prop field and the status strip's anchors use them; a new field should,
    and joins `gpu-pass.test.ts`'s "flagged iff its array changed" with the two
-   controls (a buffer flagged every frame, a write left unflagged).
+   controls (a buffer flagged every frame, a write left unflagged), driven through
+   a frame that changes each kind of value it writes — the tile case only moved a
+   land until fix pass 2, and a tile's colour changes only when its land taps or
+   a cue glows it, so a dropped colour flag passed every test.
 4. **Nothing drawable hangs under a bone, and the prop field reads only the joints
    it refreshed.** `instantiateFigure` hides each bone tree (`hideBoneTrees`) so
    the render walk skips 618 of the bench frame's 871 objects; a tree with a

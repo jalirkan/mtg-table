@@ -1303,6 +1303,20 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
     ['PropField.bind', propBind],
     ['StatusField.bind', bodyOf(statusSource.slice(statusSource.indexOf('export class StatusField')), 'bind')],
     ['CueRunner applyFigures', bodyOf(runner, 'applyFigures')],
+    // Since the rebase onto the portrait standee (D260): the rest of what the Tier 2
+    // scan above reads, the standee's own frame-loop body — a falling standee's
+    // lean — among them, so "every body a scan reads" is every one.
+    ['discs.ts commitCount', bodyOf(discs, 'commitCount')],
+    ['DepartureField.driveTransient', bodyOf(departure, 'driveTransient')],
+    ['DepartureField.actionOf', bodyOf(departure, 'actionOf')],
+    ['CueQueue.deathPending', bodyOf(files.get('cues/queue.ts') ?? '', 'deathPending')],
+    ['clips.ts stepDeparture', bodyOf(files.get('figures/clips.ts') ?? '', 'stepDeparture')],
+    ['clips.ts departureWeight', bodyOf(files.get('figures/clips.ts') ?? '', 'departureWeight')],
+    ['clips.ts departureOpacity', bodyOf(files.get('figures/clips.ts') ?? '', 'departureOpacity')],
+    ['clips.ts departureDrain', bodyOf(files.get('figures/clips.ts') ?? '', 'departureDrain')],
+    ['props.ts commitKind', bodyOf(propsSource, 'commitKind')],
+    ['StatusField.track', bodyOf(statusSource.slice(statusSource.indexOf('export class StatusField')), 'track')],
+    ['standee.ts standeeFallOf', bodyOf(files.get('standee.ts') ?? '', 'standeeFallOf')],
   ];
   const parses = [
     'SCRATCH.set(rig.baseColour);',
