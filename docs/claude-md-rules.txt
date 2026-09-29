@@ -17,7 +17,12 @@
 9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
 10. **The lints are part of the build.** `tools/lint-bridge.sh` runs from
 **and `tools/`** (**D182** — `tools/audit-deck/AuditDeck.java` boots the same
-**`GamePlayerUtil.createAiPlayer` anywhere but
+- **1. what destroys the user's data** — `FModel.getDecks()` renames and
+- **2. what the pinned jar lacks** (hard rule 5);
+- **3. the hidden-information accessors** — each returns the real card
+- **4 and 4b. the two calls allowed exactly once** (`getAlternateState`, in
+- **5. `CardView` outside the serialiser** (below);
+- **6 and 7. threads and game-thread hops** (below, and hard rule 3).
 **M3 added no fourth entry**, and that is worth noticing: `WsTransport` is a
 **M6 added a second budgeted call: lint rule 4b,
 **M36**). The rule derives its receivers from every identifier *declared*

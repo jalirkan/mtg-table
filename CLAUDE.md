@@ -115,27 +115,33 @@ code; if you think one is wrong, say so in prose first.
     `bridge/build.sh` and fails it. It greps every `*.java` under `bridge/src`
     **and `tools/`** (**D182** — `tools/audit-deck/AuditDeck.java` boots the same
     engine, and called the banned two-argument `createAiPlayer` while nothing
-    looked there) for, and rejects:
-    `getDecks(`, `setNoGUIUser`, `com.google.gson`, `getAlternateState` (outside
-    the one `alt` block in `Snap.java`), `getBackup`, `getLeftSplitState`,
-    `getRightSplitState`, `getOracleName`, `getCloner`, `getMergedCards`,
-    `mayView`, `mayFlip`, `mayLookAtAllCards`, `canBeShownToAny`, `getGameLog`
-    (allowed only in `Smoke.java`, which emits no protocol — see the ALLOW note
-    at that rule's call site in `tools/lint-bridge.sh`),
-    `getDeck(` and `getGame(` on a **`GameView`** — any identifier declared
-    `GameView`, `getGameView()`, `getView()`, a cast, `GameView::` (**D180**:
-    until 2026-09-28 these two matched the literal text `GameView.getDeck`,
-    which no call contains, and were dead), `targetDescription(`,
-    `stackDescription(`, `outcomeStrings(`, `matchSummary(`,
-    `Thread.ofPlatform(` / `Thread.ofVirtual(` and ThreadUtil's `Game` pool by
-    name (**D181**), a fourth game-thread hop (hard rule 3), and
-    **`GamePlayerUtil.createAiPlayer` anywhere but
-    `bridge/src/mtgtable/Bootstrap.java`** (match
-    setup: the two-argument overload passes an empty `profileOverride`, whose
-    branch calls `ForgePreferences.save()`; the method reference and a static
-    wildcard import of `GamePlayerUtil` are banned for the same reason). Every
-    exemption is a repo-relative PATH, never a file name. It also rejects the
-    identifier **`CardView` in any scanned file other than
+    looked there). **`./tools/lint-bridge.sh --list-rules` is the list of what it
+    rejects**, one id per rule, and each rule's reason is written beside its
+    declaring line in the lint itself; this file does not copy the list, because
+    a copy drifts. The rules come in the lint's own sections, each with a failure
+    behind it:
+    - **1. what destroys the user's data** — `FModel.getDecks()` renames and
+      deletes `.dck` files (hard rule 4), and the two-argument
+      `GamePlayerUtil.createAiPlayer` passes an empty `profileOverride`, whose
+      branch calls `ForgePreferences.save()` (match setup, **D107**): every AI
+      seat goes through `Bootstrap.createAiPlayer`, the only file allowed the
+      Forge call, and the method reference and a static wildcard import of
+      `GamePlayerUtil` are banned for the same reason;
+    - **2. what the pinned jar lacks** (hard rule 5);
+    - **3. the hidden-information accessors** — each returns the real card
+      behind a face-down one, splices a hidden card's name into a string, or is a
+      fail-open predicate, and none consults a gate (hard rule 8; report 06). Two
+      of them, `getDeck(` and `getGame(` on a `GameView`, matched text no call
+      contains until 2026-09-28 and were dead (**D180**); they now find their
+      receivers by type. `getGameLog` is allowed in `Smoke.java` alone, which
+      emits no protocol;
+    - **4 and 4b. the two calls allowed exactly once** (`getAlternateState`, in
+      hard rule 8; `StackItemView.getKey()`, below);
+    - **5. `CardView` outside the serialiser** (below);
+    - **6 and 7. threads and game-thread hops** (below, and hard rule 3).
+
+    Every exemption is a repo-relative PATH, never a file name. The lint
+    rejects the identifier **`CardView` in any scanned file other than
     `Snap.java`** — that is how "one serialisation function" becomes mechanical.
     A file that legitimately needs it goes in the lint's ALLOW list (section 5 of
     `tools/lint-bridge.sh`, the `allow_cardview` case) **with a one-line
@@ -173,10 +179,11 @@ code; if you think one is wrong, say so in prose first.
     **Every rule is proven to FIRE, on every build** (**D180**, the guards
     lane). A rule is one `ban <id> …`, `ban_except <id> <path> …` or `rule <id>
     <check>` line, and fails only through `lint_fail`, which prints `LINT FAIL
-    [<id>]`; `--list-rules` names them (31). `tools/lint-bridge-selftest.sh` reads
+    [<id>]`; `--list-rules` names them. `tools/lint-bridge-selftest.sh` reads
     that list, plants a snippet per case in a scratch copy of both trees under
     `var/lint-selftest/`, and requires the lint to fail with **that rule's id and
-    no other** — 60 cases, six PASS controls, about a second. **A rule with no
+    no other** — at least one case per rule, and PASS controls that must stay
+    quiet, in about a second. **A rule with no
     case fails it**, so a new rule is a line in the lint AND a case in the
     self-test, in the same change. `bridge/build.sh` runs it before the lint
     (`--quiet`), the gate runs it as step **2b**, and CI's `bridge` job runs it.
