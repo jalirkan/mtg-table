@@ -172,3 +172,14 @@ standalone (1,065 pass, 7 skipped with `web/dist` built): twelve new cases on
 case in `personal.test.ts`, and three in `workshop.test.ts` (one backdrop per
 face-up card, the figures' reach, the liveness clause). Inside `check-all.sh`:
 **1,087 / 1,078 pass / 0 fail / 9 skipped** plus 122 vitest, both runs.
+
+## The relief window's fix pass (`relief-window`, D227)
+
+`npm --prefix web test` is **1,075 `node --test` + 122 vitest (8 files)**
+standalone (1,066 pass, 9 skipped): three new cases in `relief.test.ts` — the two
+layers through the Python step and `layers()` on a synthetic depth (both skip
+unless `MTG_TABLE_LIKENESS` names a venv; run with one, all eleven of the file's
+cases passed, the step's two in ~12 s together), and the layers' boxes and the
+window. `workshop.test.ts`'s figure-reach case gained its dense pass (+2 s).
+Inside `check-all.sh`: **1,090 / 1,079 pass / 0 fail / 11 skipped** plus 122
+vitest.

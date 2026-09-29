@@ -422,33 +422,44 @@ downloads, each with what it needed.
 
 ## The relief cache — the painting behind the figure, with depth
 
-**D225** is the cache, **D226** the window it is drawn as;
-`docs/evidence/relief-window.md` is what was measured. The workshop's **inspect**
-view (`#workshop`, the *inspect* camera) stands the figure in front of its card's
-art box. With the relief cache that art box is a **window**: from where the view
-opens it is the card's painting exactly, pixel for pixel, and as you orbit (drag)
-the painting shows its depth — the near figure in it comes forward, the sky goes
-back — while the figure stands in front of it, as clear of it as it was of the
-flat picture. The toolbar's **relief** checkbox is the A/B; without a depth map
-(or in a build) the painting is the flat picture it always was.
+**D225** is the cache, **D226** the window it is drawn as, **D227** its two
+layers; `docs/evidence/relief-window.md` is what was measured. The workshop's
+**inspect** view (`#workshop`, the *inspect* camera) stands the figure in front of
+its card's art box. With the relief cache that art box is a **window**: from where
+the view opens it is the card's painting (to a few seams' worth of pixels), and as
+you orbit (drag) the painting shows its depth behind a frame that stays still — the
+near figure in it comes forward and keeps its edge, the sky goes back, and what
+the near figure hid shows behind it, soft, as the background out of focus — while
+the figure stands in front of it, as clear of it as it was of the flat picture.
+The toolbar's **relief** checkbox is the A/B; without a depth map (or in a build)
+the painting is the flat picture it always was.
 
-**What it is.** `personal/relief/` holds one depth map per card —
-`<scryfall id>.png`, the art box's crop (410 × 301 px for a `normal` image),
-8-bit greyscale, **near = 255** — and `index.json` (Scryfall id → file, size,
-model, device, date, the art box it was cut with, where the image came from). A
-map is Depth Anything V2 Small's relative depth of the painting, each map
-normalised to its own range (its 1st percentile 0, its 99th 255) and blurred
-1.5 px; a painting with no contrast at all gives a flat map (255, the window)
-rather than the floor the model would invent. `source/` keeps the card images
-the tool had to fetch, so nothing is fetched twice; `.cache/` is where the Python
-step's libraries may write (nothing has).
+**What it is.** `personal/relief/` holds, per card, two files and an index:
+
+- `<scryfall id>.png` — the art box's crop (410 × 301 px for a `normal` image),
+  8-bit RGB, **near = 255** in every channel: **blue** the painting's own depth
+  (Depth Anything V2 Small's relative depth, normalised to its own range — the 1st
+  percentile 0, the 99th 255 — and blurred 0.75 px); **red** the FRONT layer's,
+  the near side of every silhouette grown 10 px past it, so the browser's cut
+  there falls on the background's pixels; **green** the BACK layer's, the far
+  side of the nearest silhouette under everything nearer.
+- `<scryfall id>.back.jpg` — the back layer's colour: the crop with what the
+  near subjects hide filled in (soft, from the pixels just across their
+  silhouettes), continued a quarter of its height past every edge.
+- `index.json` — Scryfall id → the files and their sizes, the recipe, model,
+  device, date, the art box it was cut with, where the image came from.
+
+A painting with no contrast at all gives a flat map (255 in every layer, the
+window) rather than the floor the model would invent. `source/` keeps the card
+images the tool had to fetch, so nothing is fetched twice; `.cache/` is where the
+Python step's libraries may write (nothing has).
 
 **It is derived from card art, so it is personal.** Like `art.json` it is a cache
 of what Scryfall serves, and like the models it is **never committed, never
 published and never shown to anyone**: `.gitignore`'s `/personal/` covers it,
 `web/test/personal-tier.test.ts` holds that, the dev server alone serves it
-(`/personal/relief/index.json` and a map the index lists — never `source/`, never
-`.cache/`), and a build carries no address of it. A picture of the inspect view
+(`/personal/relief/index.json`, and a map and its back image the index lists —
+never `source/`, never `.cache/`), and a build carries no address of it. A picture of the inspect view
 stays in `var/`.
 
 **The command** (from the repository root):
@@ -458,6 +469,7 @@ node tools/personal/relief.mjs --all                  # every card in web/public
 node tools/personal/relief.mjs --card "Doctor Doom"   # one card (repeatable); --force computes it again
 node tools/personal/relief.mjs --all --dry-run        # what it would fetch and compute, doing neither
 npm --prefix web run dev                              # then #workshop, a card, inspect — the dev server prints how many maps it has
+                                                      # (and how many were made before the back layer: run --all for those)
 ```
 
 - **The image** is the card's `normal` image — the one `art.json` names and the
@@ -470,13 +482,16 @@ npm --prefix web run dev                              # then #workshop, a card, 
   model's weights already in its Hugging Face cache — the likeness experiment's
   `var/likeness/` is one (`--likeness <dir>` or `MTG_TABLE_LIKENESS` names
   another: `<dir>/venv/bin/python`, `<dir>/cache/hf`). The hub is offline
-  (`HF_HUB_OFFLINE=1`): the tool never downloads a model. It uses the GPU when
-  torch sees one — about 35 ms a card on the GTX 1080, the whole deck list (158
-  cards) in under half a minute with the fetches — and the CPU otherwise
-  (`--device cpu`, about 0.13 s a card).
-- **Idempotent**: a card whose map is on disk, indexed with this model and cut
-  with this art box, is skipped. Moving `framing.ts`'s `ART_BOX` makes every map
-  stale: the inspect view draws them flat until the tool runs again.
+  (`HF_HUB_OFFLINE=1`): the tool never downloads a model. The model uses the GPU
+  when torch sees one — about 30 ms a card on the GTX 1080 — and the CPU
+  otherwise (`--device cpu`, about 0.11–0.14 s); the back layer is numpy, about
+  0.13 s a card either way. The whole deck list (158 cards) took 43.5 s.
+- **Idempotent**: a card whose two files are on disk, indexed with this model, cut
+  with this art box and made with this recipe (`relief.mjs`'s `recipeOf`), is
+  skipped. Moving `framing.ts`'s `ART_BOX`, or changing the recipe — or
+  `perf.ts`'s `RELIEF_GRID` or `RELIEF_CLIFF`, which the back layer is built to
+  meet — makes every map stale: the inspect view draws them flat until the tool
+  runs again (`--all`).
 - **It writes nothing outside `personal/relief/`**: every path goes through one
   guard, and the Python step's HOME, TMPDIR and CUDA cache are pinned inside
   `personal/relief/.cache/`.

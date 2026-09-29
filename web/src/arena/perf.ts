@@ -299,3 +299,16 @@ export const PERSONAL_TABLE_TRIS = 36000;
  */
 export const RELIEF_DEPTH = 0.3;
 export const RELIEF_GRID: readonly [number, number] = Object.freeze([128, 96] as [number, number]);
+/**
+ * **Where the painting is CUT** (D227): a grid vertex whose depth and its four
+ * neighbours one cell away differ by more than this — a fraction of the map's
+ * range, ~0.12 × `RELIEF_DEPTH` of the backdrop's height across ~3.2 px of
+ * the map — stands at a silhouette, and the FRONT layer is not drawn there, so
+ * an orbit shows the BACK layer (what the subject hides, filled in) instead of
+ * the subject's edge stretched across the gap. A floor or a sky ramps far under
+ * it (a whole-height ramp is ~0.02 a cell); a subject's silhouette jumps far
+ * over it (0.4–0.9). `tools/personal/relief.mjs` predicts the same cells when it
+ * builds the back layer (it reads this number and `RELIEF_GRID`, and a change to
+ * either makes every map stale).
+ */
+export const RELIEF_CLIFF = 0.12;

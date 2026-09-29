@@ -237,3 +237,14 @@ Twice from a deleted `bridge/out` at `GATE_JOBS=4`, branch `relief-window` off
 `9dfdce4`: `WSPORT=9140` **244.6 s** (48 jobs, 944.1 s summed, load average
 2.4–6.1) and `WSPORT=9150` **244.5 s** (940.9 s summed, 5.5–8.8), exit 0 both —
 `var/check-all-relief-p1.log`, `-p2.log`. The lane added no step and no job.
+
+## The relief window's fix pass (D227)
+
+Once from a deleted `bridge/out` at `GATE_JOBS=4`, branch `relief-window`:
+`WSPORT=9150` **262.3 s** (48 jobs, 1,003.0 s summed, load average 5.1–13.4),
+exit 0 — `var/check-all-relief-fix1.log`. A first run at `WSPORT=9140` failed at
+10a in 0.0 s (`var/check-all-relief-fix1-collided.log`): another worktree's gate
+was running at the same moment with its step-10 servers on 9135–9141, so 10a's
+`GET /health` on 9140 was answered by the other gate's server and its own log had
+no `WS LISTENING` line — a port collision between two gates, not this branch.
+The fix pass added no step and no job.

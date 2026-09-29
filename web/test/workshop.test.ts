@@ -640,7 +640,7 @@ function spyRelief(): { index: ReliefIndex; asked: string[] } {
   const byId = {
     get(id: string): ReliefEntry {
       asked.push(id);
-      return { id, file: `${id}.png`, width: 410, height: 301 };
+      return { id, file: `${id}.png`, width: 410, height: 301, back: { file: `${id}.back.jpg`, width: 560, height: 451, margin: 75 } };
     },
     has(id: string): boolean {
       asked.push(id);
@@ -682,10 +682,12 @@ test('workshop: the inspect view builds ONE backdrop per face-up card with a fig
     }
     faceUpWithFigure += 1;
     assert.ok(plan !== null, `${e.key}: no inspect plan`);
-    // ONE backdrop: one painting, at the window, with its depth map (the spy has one for every id).
+    // ONE backdrop: one painting, at the window, with its depth map and its back
+    // layer (D227) — the spy has both for every id.
     planes += 1;
     assert.equal(plan.image, source.url);
     assert.equal(plan.depth?.url, `relief/${source.scryfallId}.png`);
+    assert.equal(plan.depth?.backUrl, `relief/${source.scryfallId}.back.jpg`);
     if (plan.depth !== null) relief += 1;
     // Off, or in a build (no route): the same one backdrop, flat.
     assert.equal(inspectPlan(framing, source, index, { on: false, base: 'relief/' })?.depth, null);
@@ -715,10 +717,52 @@ test('workshop: the relief never comes nearer the figure than the flat picture �
   const V = new THREE.Vector3();
   const CLIPS = ['attack', 'hit', 'block', 'summon', 'crouch', 'channel', 'grow', 'shrink', 'pistolDraw', 'radioCall', 'jet'] as const;
   const clipReach = new Map<string, { reach: number; at: string; die: number }>();
+  /** What a DENSE pass needs to measure one body again: its model, its pose and the entry that stood it. */
+  const denseInput = new Map<string, { model: NonNullable<ReturnType<typeof library.get>>; pose: NonNullable<ReturnType<typeof framingFor>['pose']>; h: number; key: string }>();
   let worstRest = { reach: 0, at: '' };
   let worstClip = { reach: 0, at: '' };
   let worstDie = 0;
   let measured = 0;
+  /**
+   * How far behind its stand point, in the inspect view's figure heights, `clip`
+   * takes the body at each of `times` (seconds), reading every `stride`-th vertex.
+   */
+  const clipReachAt = (
+    model: NonNullable<ReturnType<typeof library.get>>,
+    pose: NonNullable<ReturnType<typeof framingFor>['pose']>,
+    h: number,
+    clip: NonNullable<ReturnType<typeof clipFor>>,
+    times: readonly number[],
+    stride: number,
+  ): { reach: number; t: number } => {
+    const fx = Math.sin(pose.facingY) * FIGURE_FRONT_Z;
+    const fz = Math.cos(pose.facingY) * FIGURE_FRONT_Z;
+    const figure = instantiateFigure(model);
+    figure.object.position.set(pose.position[0], pose.position[1], pose.position[2]);
+    figure.object.rotation.set(0, pose.facingY, 0);
+    figure.object.scale.setScalar(pose.height);
+    const action = figure.mixer.clipAction(clip);
+    action.play();
+    action.setEffectiveWeight(1);
+    let best = { reach: -Infinity, t: 0 };
+    for (const t of times) {
+      action.time = t;
+      figure.mixer.update(0);
+      figure.object.updateMatrixWorld(true);
+      for (const mesh of figure.meshes) {
+        const skinned = mesh as InstanceType<typeof THREE.SkinnedMesh>;
+        const position = skinned.geometry.getAttribute('position');
+        for (let i = 0; i < position.count; i += stride) {
+          V.fromBufferAttribute(position, i);
+          skinned.applyBoneTransform(i, V);
+          V.applyMatrix4(skinned.matrixWorld);
+          const b = -((V.x - pose.position[0]) * fx + (V.z - pose.position[2]) * fz) / h;
+          if (b > best.reach) best = { reach: b, t };
+        }
+      }
+    }
+    return best;
+  };
   for (const e of ENTRIES) {
     if (e.concealed !== null) continue;
     const framing = framingFor(e);
@@ -750,35 +794,17 @@ test('workshop: the relief never comes nearer the figure than the flat picture �
       const model = library.get(pose.modelId);
       assert.ok(model !== undefined);
       let reach = { reach: -Infinity, at: '', die: -Infinity };
+      // The coarse pass: eleven phases a clip, every second vertex.
+      const phases = Array.from({ length: 11 }, (_, k) => k / 10);
       for (const name of [...CLIPS, 'die' as const]) {
         const clip = clipFor(model, name, pose.clips[name]);
         if (clip === null) continue;
-        const figure = instantiateFigure(model);
-        figure.object.position.set(pose.position[0], pose.position[1], pose.position[2]);
-        figure.object.rotation.set(0, pose.facingY, 0);
-        figure.object.scale.setScalar(pose.height);
-        const action = figure.mixer.clipAction(clip);
-        action.play();
-        action.setEffectiveWeight(1);
-        for (let k = 0; k <= 10; k++) {
-          action.time = (k / 10) * clip.duration;
-          figure.mixer.update(0);
-          figure.object.updateMatrixWorld(true);
-          for (const mesh of figure.meshes) {
-            const skinned = mesh as InstanceType<typeof THREE.SkinnedMesh>;
-            const position = skinned.geometry.getAttribute('position');
-            for (let i = 0; i < position.count; i += 2) {
-              V.fromBufferAttribute(position, i);
-              skinned.applyBoneTransform(i, V);
-              V.applyMatrix4(skinned.matrixWorld);
-              const b = behind(V.x, V.z);
-              if (name === 'die') reach.die = Math.max(reach.die, b);
-              else if (b > reach.reach) reach = { ...reach, reach: b, at: `${name}@${(k / 10).toFixed(1)}` };
-            }
-          }
-        }
+        const got = clipReachAt(model, pose, h, clip, phases.map((p) => p * clip.duration), 2);
+        if (name === 'die') reach.die = Math.max(reach.die, got.reach);
+        else if (got.reach > reach.reach) reach = { ...reach, reach: got.reach, at: `${name}@${(got.t / clip.duration).toFixed(1)}` };
       }
       clipReach.set(key, reach);
+      denseInput.set(key, { model, pose, h, key: e.key });
     }
     const reach = pose.modelId === null ? undefined : clipReach.get(key);
     if (reach !== undefined) {
@@ -791,8 +817,34 @@ test('workshop: the relief never comes nearer the figure than the flat picture �
   assert.ok(measured >= 60, `only ${String(measured)} figures measured`);
   // The flat backdrop's old 0.7 let a clip through; 0.8 is the measured number, not a guess.
   assert.ok(worstClip.reach > 0.7, `the worst clip reaches ${worstClip.reach.toFixed(3)} — if it no longer passes 0.7, INSPECT_WINDOW can come forward`);
+  // The DENSE pass (the verifier's round 1: eleven phases and every second vertex
+  // could step over a peak): every distinct body (model and clip set), every clip
+  // but die, at 61 phases AND at every keyframe the clip has, every vertex. The
+  // window must clear the densest number by DENSE_MARGIN.
+  const DENSE_MARGIN = 0.02;
+  let dense = { reach: 0, at: '', bodies: 0, samples: 0 };
+  for (const input of denseInput.values()) {
+    dense.bodies += 1;
+    for (const name of CLIPS) {
+      const clip = clipFor(input.model, name, input.pose.clips[name]);
+      if (clip === null) continue;
+      const keys = new Set<number>(Array.from({ length: 61 }, (_, k) => (k / 60) * clip.duration));
+      for (const track of clip.tracks) for (const t of track.times) keys.add(Math.min(clip.duration, Math.max(0, t)));
+      const times = [...keys].sort((a, b) => a - b);
+      dense.samples += times.length;
+      const got = clipReachAt(input.model, input.pose, input.h, clip, times, 1);
+      if (got.reach > dense.reach) dense = { ...dense, reach: got.reach, at: `${input.key} ${name}@${(got.t / clip.duration).toFixed(3)}` };
+    }
+  }
+  assert.ok(dense.bodies >= 1, 'the dense pass measured nothing');
+  assert.ok(dense.reach >= worstClip.reach - 1e-9, 'the dense pass found less than the coarse one');
+  assert.ok(
+    dense.reach < INSPECT_WINDOW - DENSE_MARGIN,
+    `densely sampled, ${dense.at} reaches ${dense.reach.toFixed(3)} h — within ${String(DENSE_MARGIN)} of the window (${String(INSPECT_WINDOW)} h)`,
+  );
   console.log(
     `relief window (${String(measured)} figures): worst at rest ${worstRest.reach.toFixed(3)} h (${worstRest.at}), worst clip ${worstClip.reach.toFixed(3)} h (${worstClip.at}); ` +
+      `dense (${String(dense.bodies)} bodies, ${String(dense.samples)} clip phases, every vertex) ${dense.reach.toFixed(3)} h (${dense.at}); ` +
       `die reaches ${worstDie.toFixed(3)} h — through the window (the flat one too); the window ${String(INSPECT_WINDOW)} h, the relief ${String(RELIEF_DEPTH)} × the backdrop behind it`,
   );
 });
@@ -1290,21 +1342,29 @@ test('liveness: one useFrame in the workshop — the renderer, after CueRunner �
   assert.match(pedestal, /<CueRunner\b/, 'the pedestal is driven by the arena’s own frame loop');
 });
 
-test('liveness: the relief window (D226) — relief.ts is pure and THE reader of the relief index, called only by the pedestal’s loader; the plane is built at commit, never in a frame loop', () => {
+test('liveness: the relief window (D226, D227) — relief.ts is pure and THE reader of the relief index, called only by the pedestal’s loader; the two layers are built at commit, never in a frame loop', () => {
   const files = workshopFiles();
   const readers = files.filter((f) => /\breliefIndexOf\(/.test(f.code) && f.path !== 'relief.ts');
   assert.deepEqual(readers.map((f) => f.path), ['Pedestal.tsx'], 'the relief index is read by one loader');
   const pedestal = files.find((f) => f.path === 'Pedestal.tsx')!.code;
   assert.equal((pedestal.match(/reliefIndexOf\(/g) ?? []).length, 1);
   assert.match(pedestal, /new THREE\.FileLoader\(\)\.setResponseType\('json'\)\.load\(\s*`\$\{RELIEF_BASE\}index\.json`/, 'the index is loaded with three’s FileLoader, from the DEV-gated base');
-  // InspectStage: one grid geometry per mount and one material per card, both at commit (useMemo); no frame hook.
+  // InspectStage: one grid geometry per mount (both layers share it) and the two
+  // materials once per card, all at commit (useMemo); no frame hook.
   const stage = pedestal.slice(pedestal.indexOf('function InspectStage('), pedestal.indexOf('const B_POSITION'));
   assert.ok(stage.length > 500, 'InspectStage moved — move this check with it');
+  assert.equal((stage.match(/new THREE\.PlaneGeometry\(/g) ?? []).length, 1, 'one grid');
   assert.match(stage, /useMemo\(\(\) => new THREE\.PlaneGeometry\(1, 1, RELIEF_GRID\[0\], RELIEF_GRID\[1\]\), \[\]\)/);
-  assert.match(stage, /const reliefMaterial = useMemo\(\(\) => \{/);
-  assert.ok(!/useFrame|requestAnimationFrame/.test(stage), 'the inspect view runs nothing per frame');
-  // One backdrop: the relief mesh OR the flat plane, never both.
-  assert.match(stage, /\{reliefMaterial !== null \? \(\s*<mesh\s+key="relief"[\s\S]*?\) : \(\s*plane\(backdrop, 'art', artGeometry, false\)\s*\)\}/);
+  assert.match(stage, /const layers = useMemo\(\(\) => \{/);
+  assert.equal((stage.match(/new THREE\.ShaderMaterial\(/g) ?? []).length, 1, 'one material maker, called for the two layers inside the memo');
+  assert.ok(!/useFrame|requestAnimationFrame|\.uniforms\.\w+\.value\s*=/.test(stage), 'the inspect view runs nothing per frame and writes no uniform after commit');
+  // The back layer's colour comes only from the plan — which exists only for a face-up card (inspectSourceOf).
+  assert.match(stage, /const backTexture = useCardTexture\(plan\.depth\?\.backUrl \?\? null\);/);
+  // One backdrop: the relief's two layers OR the flat plane, never both.
+  assert.match(
+    stage,
+    /\{layers !== null \? \(\s*<>\s*<mesh\s+key="relief"[\s\S]*?<mesh\s+key="relief-back"[\s\S]*?<\/>\s*\) : \(\s*plane\(backdrop, 'art', artGeometry, false\)\s*\)\}/,
+  );
   // relief.ts carries no three and no React (the pure-modules clause below holds it too) and no DEV gate of its own.
   const relief = files.find((f) => f.path === 'relief.ts')!;
   assert.ok(!/import\.meta\.env/.test(relief.code), 'relief.ts must run under node --test: the route is named in Pedestal.tsx');

@@ -382,18 +382,21 @@ duelists on it). **Inspect** is a camera mode (`framing.ts`'s `inspectLayout`, p
 the figure in its signature pose, the card's art box enlarged behind it, the frame
 and text with the art window cut out floating beside it.
 
-**The relief window** (**D225**, **D226**; `docs/guides/personal-tier.md`'s *The
+**The relief window** (**D225**–**D227**; `docs/guides/personal-tier.md`'s *The
 relief cache*). Where the personal tier's relief cache (`personal/relief/`,
 `tools/personal/relief.mjs` — depth maps derived from card art, so never
-committed) has the card's map, the art box is a window: one subdivided plane
-(`perf.ts`'s `RELIEF_GRID`) whose vertices recede along their rays from the
-inspect camera's seat by the map (`workshop/relief.ts`'s `RELIEF_VERTEX`, at most
-`RELIEF_DEPTH` of the backdrop's height), so from the seat it is the painting
-exactly and orbiting shows its depth, its nearest point on the flat picture's
-plane and the figure as clear of it (`INSPECT_WINDOW`, measured over every
-figure). It is not a card — `CardPlane` still draws the card — but the inspect
-view's backdrop, built once per card at commit and drawn unlit, with no ink mark
-and no halftone. Four rules hold it: **`relief.ts` is pure and the one reader of
+committed) has the card's map, the art box is a window: two layers on one
+subdivided grid (`perf.ts`'s `RELIEF_GRID`) whose vertices recede along their
+rays from the inspect camera's seat by the map (`workshop/relief.ts`'s
+`RELIEF_VERTEX`, at most `RELIEF_DEPTH` of the backdrop's height) — the FRONT,
+the painting cut at every silhouette (`RELIEF_CLIFF`, by grid cell and pixel by
+pixel), and the BACK behind it, what the silhouettes hide filled in — both
+clipped to the window's rectangle (`RELIEF_FRAGMENT`), so from the seat it is the
+painting and orbiting shows its depth behind a still frame, its nearest point on
+the flat picture's plane and the figure as clear of it (`INSPECT_WINDOW`,
+measured densely over every figure). It is not a card — `CardPlane` still draws
+the card — but the inspect view's backdrop, built once per card at commit and
+drawn unlit, with no ink mark and no halftone. Four rules hold it: **`relief.ts` is pure and the one reader of
 the relief index**; **`inspectSourceOf` is the inspect view's one way to a card's
 image and so to its map**, face up only, and `workshop.test.ts` sweeps the
 catalog with a hostile copy and an ungated control; **the route is named once,

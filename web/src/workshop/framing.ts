@@ -229,7 +229,11 @@ export interface InspectLayout {
  * figure the catalog stands (`workshop.test.ts`), the farthest any body or prop
  * reaches behind its stand point is 0.60 of its height at rest (the Air Force's
  * swarm) and 0.75 in a clip (a drone's attack wind-up) — so 0.8 clears both, where
- * the flat backdrop's 0.7 let the drone's wind-up through. Only `die` reaches
+ * the flat backdrop's 0.7 let the drone's wind-up through. The clip number is
+ * dense, not sampled: every distinct body, every clip but `die`, at 61 phases and
+ * every keyframe, every vertex (9,824 clip phases) gives 0.752, and the test holds
+ * the window 0.02 clear of it (the fix pass: eleven phases and every second vertex
+ * could have stepped over a peak). Only `die` reaches
  * past it (a body falls ~0.89 of its height backward, a drone ~1.46): a death
  * rehearsed on the inspect view falls into the painting, as it fell through the
  * flat one (PLAN.md, the relief window's follow-up).

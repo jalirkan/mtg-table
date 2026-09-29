@@ -16,6 +16,7 @@
  *     GET /personal/models/<slug>/manifest.json   …and its manifest
  *     GET /personal/relief/index.json             the relief cache's index (D225)
  *     GET /personal/relief/<scryfall id>.png      a depth map that index lists
+ *     GET /personal/relief/<scryfall id>.back.jpg its back layer's colour, when the index lists one (D227)
  *
  * Everything else under `/personal/` is a 404 — the download, `source/`, the
  * previews, `check.json`, a disabled or failing model's files, the relief
@@ -27,9 +28,9 @@
  * card art, so personal, gitignored and never published, like the models. Its
  * index is read from disk on every request (a map the tool adds while the dev
  * server runs is served at the next page load), sanitised to what the workshop's
- * inspect view needs — per map its file, size and the art box it was cut with —
- * and a map is served only when that index lists it, by a Scryfall id, as
- * `<id>.png`.
+ * inspect view needs — per map its file, size and the art box it was cut with,
+ * and its back layer's file and size (D227) — and a file is served only when
+ * that index lists it, by a Scryfall id, as `<id>.png` or `<id>.back.jpg`.
  *
  * **The index is built once, when the dev server starts**, from every
  * `personal/models/<slug>/manifest.json`. A model is ACTIVE when:
@@ -271,6 +272,8 @@ export interface ReliefIndexEntry {
   width: number;
   height: number;
   box: { left: number; right: number; top: number; bottom: number };
+  /** The back layer's colour (D227): `<id>.back.jpg` and its size, or `null` for a map made before it. */
+  back: { file: string; width: number; height: number } | null;
 }
 
 /** The relief cache's index, as served (`workshop/relief.ts`'s `reliefIndexOf` reads it). */
@@ -283,9 +286,11 @@ export interface ReliefIndex {
 /**
  * **The relief index** from `<dir>/index.json` (written by
  * `tools/personal/relief.mjs`), read NOW: every entry whose key is a Scryfall id,
- * whose file is exactly `<id>.png` and on disk, with a size and an art box. The
- * card's name, the image's source and the timings stay on disk — the page needs
- * none of them. No folder, or no index: an empty one.
+ * whose file is exactly `<id>.png` and on disk, with a size and an art box — and
+ * its back layer when the entry names exactly `<id>.back.jpg`, on disk, with a
+ * size (`null` otherwise: a map made before the back layer, which the page draws
+ * flat). The card's name, the image's source, the recipe and the timings stay on
+ * disk — the page needs none of them. No folder, or no index: an empty one.
  */
 export function buildReliefIndex(dir: string): ReliefIndex {
   const out: ReliefIndex = { version: 1, model: null, reliefs: {} };
@@ -306,14 +311,26 @@ export function buildReliefIndex(dir: string): ReliefIndex {
     const file = join(dir, `${id}.png`);
     if (!existsSync(file) || statSync(file).size === 0) continue;
     const [left, right, top, bottom] = edges as number[];
-    out.reliefs[id] = { file: `${id}.png`, width, height, box: { left: left!, right: right!, top: top!, bottom: bottom! } };
+    const { backWidth, backHeight } = entry;
+    const backFile = join(dir, `${id}.back.jpg`);
+    const back =
+      entry['back'] === `${id}.back.jpg` && typeof backWidth === 'number' && typeof backHeight === 'number' && existsSync(backFile) && statSync(backFile).size > 0
+        ? { file: `${id}.back.jpg`, width: backWidth, height: backHeight }
+        : null;
+    out.reliefs[id] = { file: `${id}.png`, width, height, box: { left: left!, right: right!, top: top!, bottom: bottom! }, back };
   }
   return out;
 }
 
 /** The start line for the relief cache: how many maps, and that they are personal. */
 export function describeRelief(index: ReliefIndex): string {
-  return `personal relief: ${String(Object.keys(index.reliefs).length)} depth map(s) for the workshop's inspect view (card-art-derived, dev server only — D225)`;
+  const all = Object.values(index.reliefs);
+  const layered = all.filter((r) => r.back !== null).length;
+  const stale = all.length - layered;
+  return (
+    `personal relief: ${String(all.length)} depth map(s) for the workshop's inspect view (card-art-derived, dev server only — D225)` +
+    (stale > 0 ? `; ${String(stale)} made before the back layer (D227), drawn flat — run tools/personal/relief.mjs --all` : '')
+  );
 }
 
 /** The lines the dev server prints at start: what is active, and what was skipped and why. */
@@ -351,7 +368,8 @@ export function createPersonalMiddleware(
       res.end(body);
       return;
     }
-    // The relief cache (D225): its index, read now, and a map it lists — nothing else.
+    // The relief cache (D225): its index, read now, and a map it lists (or that
+    // map's back layer, D227) — nothing else.
     if (rest === 'relief/index.json') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -359,21 +377,18 @@ export function createPersonalMiddleware(
       return;
     }
     if (rest.startsWith('relief/')) {
-      const map = /^relief\/([^/]+)\.png$/.exec(rest);
+      const map = /^relief\/([^/.]+)(\.png|\.back\.jpg)$/.exec(rest);
       const id = map?.[1] ?? '';
-      const file = resolve(reliefDir, `${id}.png`);
-      if (
-        map === null ||
-        !SCRYFALL_ID.test(id) ||
-        !file.startsWith(reliefDir + '/') ||
-        buildReliefIndex(reliefDir).reliefs[id] === undefined
-      ) {
+      const back = map?.[2] === '.back.jpg';
+      const file = resolve(reliefDir, `${id}${back ? '.back.jpg' : '.png'}`);
+      const listed = map === null || !SCRYFALL_ID.test(id) ? undefined : buildReliefIndex(reliefDir).reliefs[id];
+      if (listed === undefined || !file.startsWith(reliefDir + '/') || (back && listed.back === null)) {
         res.statusCode = 404;
-        res.end('not a served relief file (only a depth map the relief index lists is)');
+        res.end('not a served relief file (only a depth map the relief index lists, and its back layer, are)');
         return;
       }
       res.statusCode = 200;
-      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Type', back ? 'image/jpeg' : 'image/png');
       res.end(readFileSync(file));
       return;
     }

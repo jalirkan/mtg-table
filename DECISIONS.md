@@ -9533,7 +9533,8 @@ lane's reserved range D225–D228.*
 
 **2026-09-29** (the owner's idea: "inspect a card and the art box becomes a
 window"; `docs/evidence/relief-window.md` is what was run, `docs/guides/personal-tier.md`'s
-*The relief cache* the manual)
+*The relief cache* the manual). *Point 2's map encoding is superseded by D227
+(the same day's fix pass).*
 
 **Decision.**
 
@@ -9607,7 +9608,9 @@ from card art is committed — mechanical.
 
 *Branch `relief-window`; the lane's reserved range D225–D228.*
 
-**2026-09-29** (`docs/evidence/relief-window.md`; the pictures are in `var/relief/`)
+**2026-09-29** (`docs/evidence/relief-window.md`; the pictures are in `var/relief/`).
+*Points 1 (one plane) and 3 (the rubber sheet as the price) are superseded by
+D227 (the same day's fix pass).*
 
 **Decision.**
 
@@ -9680,3 +9683,113 @@ went through it.
   would never show its depth, since every vertex would stay on its own pixel.
 - **The same window on the arena's card zoom.** A follow-up, with its mount
   point in PLAN.md; the inspect view is this lane's deliverable.
+
+---
+
+## D227 — The relief window in two layers: the painting CUT at its silhouettes, what it hides filled in behind it, and both clipped to a window that stays still
+
+*Branch `relief-window`; the lane's reserved range D225–D228. The fix pass after
+the verifier's round 1, the same day as D225 and D226.*
+
+**2026-09-29** (`docs/evidence/relief-window.md` §9–§12; the pictures are in
+`var/relief/fix1/`)
+
+**Supersedes in part** D226 point 1 (ONE displaced plane: now two, on one grid),
+D226 point 3 (the rubber sheet at a silhouette as "the price": now cut) and D225
+point 2's map encoding (8-bit greyscale, blurred 1.5 px: now 8-bit RGB with a
+back image beside it, blurred 0.75 px). D225 and D226 otherwise stand.
+
+**Decision.**
+
+1. **Two layers on one grid** (`Pedestal.tsx`'s `InspectStage`, the one
+   `PlaneGeometry(1, 1, 128, 96)` drawn twice, both materials built once per card
+   at commit). The FRONT is the painting at its depth, as D226 drew it; the BACK
+   stands behind it, larger by a margin, coloured by `personal/relief/<id>.back.jpg`,
+   a hair further along the seat's rays (0.01 of the relief) with a polygon offset,
+   so wherever the two coincide the front wins. Both use `relief.ts`'s
+   `RELIEF_VERTEX` / `RELIEF_FRAGMENT`; `uLayer` picks the channel.
+2. **The front is cut at a silhouette, twice.** A vertex whose depth and its four
+   neighbours one grid cell away differ by more than `perf.ts`'s `RELIEF_CLIFF`
+   (0.12 of the map's range) is not drawn — the triangles that stretched Fury's
+   face and Peggy's pistol across the gap an orbit opens. And, pixel by pixel,
+   wherever the map's red (the front's depth) stands over its blue (the
+   painting's own) by more than the same number — the band the front was grown by
+   (point 3). The back is never cut: it is what a cut shows.
+3. **The map** (`<id>.png`, 8-bit RGB the crop's size, near = 255): **blue** the
+   painting's own depth, blurred 0.75 px; **red** the front's — the near side of
+   every silhouette grown 10 px past it (a grey dilation), only within 10 px of a
+   STEEP jump (more than `RELIEF_CLIFF` within 2 px), so the cut cells hold the
+   background's pixels and the subject keeps its edge, while a floor rising toward
+   the viewer is left alone; **green** the back's — under every texel, the depth
+   on the far side of its NEAREST cut (jump flooding over the cut cells), softened,
+   never nearer than blue. Measured on the five picture cards: the subject's share
+   of the cut cells is 32–37% ungrown, 11–21% at 6 px, 2–12% at 8–12 px, where it
+   stops falling.
+4. **The back image** (`<id>.back.jpg`, JPEG q95, no chroma subsampling): the
+   crop, with every texel nearer than the far side of its nearest cut by more than
+   `RELIEF_CLIFF` filled by push-pull from the painting's pixels just across the
+   cuts (soft: what the subject hid reads as the background out of focus), except
+   where the front is cut — the cells and the band keep the painting's own pixels,
+   so from the seat the two layers are one picture (measured: 0.40–0.69% of the
+   painting's pixels differ from the flat picture by more than 24 levels, seams
+   along the cuts and the window's one-pixel outline) — and continued 0.25 of the
+   crop's height past every edge by the same fill.
+5. **The window clips both layers.** A fragment whose ray from the camera
+   (three's `cameraPosition`) crosses the window's plane outside its rectangle is
+   discarded: the rectangle stays on its plane at every orbit and the painting
+   moves behind it; past an edge one sees the back layer's margin, as past a
+   window's frame. (The verifier's "curled poster": the edge followed the depth
+   and bowed.)
+6. **A recipe, recorded per map.** `relief.mjs`'s `recipeOf` (version 2: dilation,
+   blur, cliff, grid, margin) is written into every index entry; a map made with
+   another — or before the back layer, or against another `RELIEF_GRID` /
+   `RELIEF_CLIFF`, which the back is built to meet — is stale, the page's reader
+   drops it and draws the painting flat, and the dev server's start line says how
+   many. `--all` recomputes it.
+7. **The cost.** +49,150 triangles and +1 draw call against the flat quad
+   (D226's one layer: +24,574 and +0), measured with bloom off; the two layers
+   are the inspect view's alone. 158 cards in 43.5 s on the GTX 1080 (the model
+   ~30 ms a card, the back layer ~0.13 s of numpy); `personal/relief/` 30.45 MiB.
+8. **`INSPECT_WINDOW` stays 0.8**, now measured densely: every distinct body,
+   every clip but `die`, at 61 phases and every keyframe, every vertex (9,824
+   clip phases) reaches 0.752 h at most, and `workshop.test.ts` holds the window
+   0.02 clear of it.
+
+**Rationale.** A displaced sheet has to span a silhouette with something; the
+only thing that spans it without a smear is nothing, and a hole needs something
+behind it. That is the layered depth image of 3D-photo work at its smallest —
+two layers, a soft fill, no model beyond the depth one — and every piece of it is
+measured against the flat picture from the seat, which is what the window must
+never lose. Growing the near side before cutting it is what puts the cut on the
+background's pixels; limiting the growth to steep jumps is what keeps a floor a
+floor.
+
+**Rejected.**
+
+- **Growing the near side alone** (the verifier's second option): the face and
+  pistol stay crisp, and the gap then streaks the background's pixels across it
+  (`var/relief/fix1/fury-m25-before-vs-d6.png`, `fury-m40-before-vs-d6.png`).
+- **Lowering `RELIEF_DEPTH` to 0.15–0.2** (the verifier's fallback): it shortens
+  the smear by lowering the depth, which is the thing asked for.
+- **A back depth of the farthest within a fixed radius** (64 px): it left the
+  back layer's colour a beige average of every far pixel in the painting and put
+  a tower beside a sky "behind" something (`viz-fury.png` against `viz3-*.png`).
+- **Filling from every unhidden pixel**: the subject's own inner pixels (a body
+  behind a fist) are unhidden, and the fill printed a dark shadow of the subject
+  behind it (`L3` against `L4`, `fury-*`).
+- **The per-vertex cut alone**: a jagged silhouette with a 10 px band of
+  background riding on the subject (`fury-head-L3.png`, L2 against L3).
+- **Growing wherever the map rises over 10 px**: a steep floor was grown and cut,
+  and the back layer drew the gravel at the far side's depth — at yaw 0 Peggy's
+  painting differed from the flat picture in 1.5% of its pixels, a grey smear on
+  the ground (`peggy-only-diff-before-steep.png`); limited to steep jumps, 0.53%
+  (`peggy-only-diff-after.png`).
+- **The rim fade** (the verifier's suggestion for the edge: the depth faded to the
+  window over the outer 3–5%): not built. It keeps the border on the plane, but
+  the deep interior still folds past the rim at 40° and the ramp itself shows as
+  a stretched reveal; the clip and the margin are a window's own behaviour.
+- **OpenCV's inpainting** (it is in the likeness venv): not tried — a dependency
+  the tool does not otherwise need, and push-pull's softness is what an
+  out-of-focus background should look like.
+- **A PNG back image**: exact, and about four times the bytes; JPEG q95 at 4:4:4
+  costs seams of a few levels, which point 4 measured.

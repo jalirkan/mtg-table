@@ -112,10 +112,12 @@
  *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
  *     CameraFrame, RequestOutcome (camera.ts)
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
- *     RELIEF_DEPTH, RELIEF_GRID (perf.ts)    the relief window's two numbers (D226): how
- *                                            far the painting's depth reaches behind the
- *                                            window, and the plane's grid (relief.ts,
- *                                            Pedestal.tsx's InspectStage)
+ *     RELIEF_DEPTH, RELIEF_GRID, RELIEF_CLIFF (perf.ts)
+ *                                            the relief window's three numbers (D226,
+ *                                            D227): how far the painting's depth reaches
+ *                                            behind the window, the planes' grid, and the
+ *                                            jump at which the front layer is cut
+ *                                            (relief.ts, Pedestal.tsx's InspectStage)
  *     lookFromSearch, lookSpecOf, LookSpec, COMIC, DEFAULT_LOOK, HOLO_BACKGROUND,
  *     combatStageOf, stageColoursOf, stageIdentitiesOf, wantsInkPass, wantsStage
  *     (look.ts)                              the look (D137): the toolbar's A/B over
@@ -128,7 +130,9 @@
  *                                            THE lookup and the dressed poses, as Arena.tsx
  *                                            dresses; the list's badge reads the overlay
  *     useCardTexture (useCardTexture.ts)     the inspect view's backdrop and frame: the
- *                                            texture CardPlane already fetched for the card
+ *                                            texture CardPlane already fetched for the card;
+ *                                            and the relief's back layer (D227), a
+ *                                            card-sized sRGB image loaded the same way
  *   the data         figures.json, models.json and cues.json (imported without
  *                    attributes, as Arena.tsx imports them), traits.json (with them,
  *                    as traits.ts does) — the bundler warns on a module imported
@@ -344,9 +348,9 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const overlay = usePersonalOverlay(true);
   const pedestalOverlay: PersonalOverlay = personalOn ? overlay : EMPTY_PERSONAL;
   /**
-   * **The relief window's A/B** (D226): the inspect view's painting displaced by
-   * its depth map (`relief`, the default wherever the personal tier has one), or
-   * the flat picture D196 drew. The index is the dev route's, read once a page —
+   * **The relief window's A/B** (D226, D227): the inspect view's painting in two
+   * layers behind a still window (`relief`, the default wherever the personal tier
+   * has a map), or the flat picture D196 drew. The index is the dev route's, read once a page —
    * empty in a build, where every backdrop is flat.
    */
   const [reliefOn, setReliefOn] = useState(true);
@@ -1039,10 +1043,10 @@ function Toolbar({
       <label
         title={
           !reliefAvailable
-            ? 'no depth map for this card on this dev server — the relief tool (relief.mjs) makes them: the personal tier’s relief cache, D225, card-art-derived and never committed'
+            ? 'no depth map for this card on this dev server, or one made before the back layer — the relief tool (relief.mjs) makes them: the personal tier’s relief cache, D225, card-art-derived and never committed'
             : mode !== 'inspect'
-              ? 'the inspect view’s painting with depth (D226) — switch to inspect'
-              : 'the painting displaced by its depth map, parallax as you orbit (D226) — off: the flat picture'
+              ? 'the inspect view’s painting with depth (D226, D227) — switch to inspect'
+              : 'the painting in two layers behind a still window, parallax as you orbit (D226, D227) — off: the flat picture'
         }
       >
         <input
@@ -1191,7 +1195,11 @@ function PedestalCaption({
   mode: CameraMode;
   both: boolean;
   turn: number;
-  /** INSPECT: whether the painting is drawn with its depth (D226); `null` outside inspect. */
+  /**
+   * INSPECT: whether the painting is drawn with its depth (D226); `null` outside
+   * inspect, and in inspect when there is nothing to inspect (a concealed entry,
+   * or no figure).
+   */
   relief: boolean | null;
 }): JSX.Element {
   const size = (i: number): string => {
@@ -1220,9 +1228,11 @@ function PedestalCaption({
               : mode === 'front'
                 ? '1× close-up, from the front'
                 : mode === 'inspect'
-                  ? relief === true
-                    ? 'inspect: the card’s art behind the figure, with depth — orbit for the parallax — its frame beside it'
-                    : 'inspect: the card’s art behind the figure (flat), its frame beside it'
+                  ? relief === null
+                    ? 'inspect: no art to inspect (concealed or no figure)'
+                    : relief
+                      ? 'inspect: the card’s art behind the figure, with depth — orbit for the parallax — its frame beside it'
+                      : 'inspect: the card’s art behind the figure (flat), its frame beside it'
                   : '1× close-up, from your seat'}
           {size(0) !== '' ? ` · ${size(0)}` : ''}
           {turn !== 0 ? ' · facing preview: the other seat' : ''}

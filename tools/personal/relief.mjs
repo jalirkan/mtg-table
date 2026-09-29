@@ -11,7 +11,8 @@
  *   node tools/personal/relief.mjs --all                  every card in art.json (and every personal model's card)
  *   node tools/personal/relief.mjs --card "Doctor Doom"   one card (repeatable)
  *        [--force]                 compute again what is already there
- *        [--device auto|cuda|cpu]  the GPU when torch sees one (~35 ms a card on the GTX 1080), else the CPU (~0.4–1 s)
+ *        [--device auto|cuda|cpu]  the model on the GPU when torch sees one (~30 ms a card on the GTX 1080), else on
+ *                                  the CPU (~0.11–0.14 s); the back layer is numpy, ~0.13 s a card either way
  *        [--likeness <dir>]        the Python venv and its caches (default var/likeness, or $MTG_TABLE_LIKENESS)
  *        [--dry-run]               say what would be done; fetch nothing, run nothing, write nothing
  *
@@ -33,18 +34,29 @@
  *     once from art.json's CDN URL through the card library's `ScryfallClient`
  *     (config.json's `scryfallUserAgent`, logged) at no more than 10 requests a
  *     second, and kept in `personal/relief/source/`;
- *  2. **the depth** — `relief_depth.py`, run with the likeness venv's python
- *     (torch, transformers < 5, Depth Anything V2 Small already in its Hugging
- *     Face cache; `HF_HUB_OFFLINE=1`, so nothing is downloaded), on the image's
- *     ART BOX (`web/src/workshop/framing.ts`'s `ART_BOX`, the crop the inspect
- *     view shows): `personal/relief/<id>.png`, 8-bit greyscale, near = 255;
- *  3. **the index** — `personal/relief/index.json`: Scryfall id → file, size,
- *     model, device, date, the art box it was cut with, where the image came
- *     from and how long it took.
+ *  2. **the depth, in two layers** — `relief_depth.py`, run with the likeness
+ *     venv's python (torch, transformers < 5, Depth Anything V2 Small already in
+ *     its Hugging Face cache; `HF_HUB_OFFLINE=1`, so nothing is downloaded), on
+ *     the image's ART BOX (`web/src/workshop/framing.ts`'s `ART_BOX`, the crop
+ *     the inspect view shows): `personal/relief/<id>.png`, 8-bit RGB, near =
+ *     255 — red the FRONT layer (the painting's depth, the near side of every
+ *     silhouette grown {@link DILATE_PX} px past it so the cut falls in the
+ *     background), green the BACK layer (the far side of the nearest
+ *     silhouette, under everything nearer), blue the painting's own depth; and
+ *     `personal/relief/<id>.back.jpg`, the back layer's colour — the painting
+ *     with what its near subjects hide filled in from the background (soft), and
+ *     continued {@link MARGIN} of its height past every edge, for the view past
+ *     the window's frame (D227);
+ *  3. **the index** — `personal/relief/index.json`: Scryfall id → files, sizes,
+ *     the recipe, model, device, date, the art box it was cut with, where the
+ *     image came from and how long it took.
  *
- * **Idempotent**: a card whose map is on disk and indexed with this model and
- * this art box is skipped; `--force` computes it again (from the kept image —
- * nothing is fetched twice).
+ * **Idempotent**: a card whose two files are on disk and indexed with this
+ * model, this art box and this {@link RECIPE} is skipped; `--force` computes it
+ * again (from the kept image — nothing is fetched twice). A recipe changed —
+ * here, or `perf.ts`'s `RELIEF_GRID` / `RELIEF_CLIFF`, which the back layer is
+ * cut to — makes every map stale, and the workshop draws the painting flat
+ * until the tool runs again.
  *
  * **It writes nothing outside `personal/relief/`** — every path goes through
  * {@link insideRelief} — and the Python step's caches are pinned too: the
@@ -70,11 +82,34 @@ export const CACHE_DIR = join(RELIEF_DIR, '.cache');
 export const INDEX_FILE = join(RELIEF_DIR, 'index.json');
 /** The one model the step runs — `relief_depth.py`'s `MODEL_ID`, recorded per map. */
 export const MODEL_ID = 'depth-anything/Depth-Anything-V2-Small-hf';
-/** What a map is, in one line, for the index. */
-export const ENCODING = '8-bit greyscale PNG the size of the art box crop, near = 255: each map its own 1st-99th percentile of relative inverse depth, blurred 1.5 px; a flat image is 255 everywhere';
-/** The blur and the flat gate (`relief_depth.py` reads both from the request). */
-export const BLUR_PX = 1.5;
+/**
+ * The blur and the flat gate (`relief_depth.py` reads both from the request).
+ * The blur is 0.75 px since the back layer (D227): it was 1.5 px to keep an
+ * unblurred cliff from aliasing into saw teeth on the vertex grid, and a cliff is
+ * now CUT, so a softer map only widened the cut and the band the front carries.
+ */
+export const BLUR_PX = 0.75;
 export const FLAT_BELOW = 2.0;
+/**
+ * **The front layer's near side of a silhouette grows this many pixels** past it
+ * before the blur (a grey dilation, taken only where it raises the map by more
+ * than `RELIEF_CLIFF` — a smooth slope is left as it is), so the cells the
+ * browser cuts at a silhouette (`RELIEF_CLIFF`, one grid cell either side) hold
+ * the background's pixels and never the subject's; the grown band itself the
+ * browser cuts pixel by pixel (red against blue). Measured over the five
+ * picture cards (docs/evidence/relief-window.md §9): the subject's share of the
+ * cut cells is 32–37% ungrown, 11–21% at 6 px and 2–12% at 8–12 px, where it
+ * stops falling (what is left is the subjects' own inner slopes).
+ */
+export const DILATE_PX = 10;
+/** **The back layer's margin**: the painting continued this fraction of the crop's height past every edge. */
+export const MARGIN = 0.25;
+/** What a map is, in one line, for the index. */
+export const ENCODING =
+  `<id>.png: 8-bit RGB the size of the art box crop, near = 255, each map its own 1st-99th percentile of relative inverse depth blurred ${String(BLUR_PX)} px - ` +
+  `red the front layer (the near side of every silhouette grown ${String(DILATE_PX)} px), green the back layer (the far side of the nearest silhouette under everything nearer), ` +
+  `blue the painting's own; <id>.back.jpg: the back layer's colour, the crop with what its near subjects hide filled in and ${String(MARGIN)} of its height continued past every edge; ` +
+  'a flat image is 255 in every layer';
 /**
  * The fetch pacing: at most 10 requests in any second, one at a time — the gap
  * between two STARTS, on the client's own log, with the card library's 2 ms margin
@@ -82,6 +117,20 @@ export const FLAT_BELOW = 2.0;
  * run measured 11 starts in one second (a timer firing a millisecond early).
  */
 export const FETCH_GAP_MS = 102;
+
+/**
+ * **The recipe** a map is made with — recorded per map, and a map made with any
+ * other is stale. `grid` and `cliff` are `perf.ts`'s `RELIEF_GRID` and
+ * `RELIEF_CLIFF` (the cut the back layer is built to meet); `main()` reads them.
+ */
+export function recipeOf(grid, cliff) {
+  return { version: 2, dilatePx: DILATE_PX, blurPx: BLUR_PX, cliff, grid: [grid[0], grid[1]], margin: MARGIN };
+}
+
+/** Two recipes the same (their JSON, key order included — both are made by {@link recipeOf}). */
+export function sameRecipe(a, b) {
+  return a !== undefined && a !== null && JSON.stringify(a) === JSON.stringify(b);
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -106,6 +155,12 @@ export function insideRelief(path, root = RELIEF_DIR) {
 export function reliefFileOf(id, root = RELIEF_DIR) {
   if (!isScryfallId(id)) throw new Error(`not a Scryfall id: ${JSON.stringify(id)}`);
   return insideRelief(`${id}.png`, root);
+}
+
+/** `personal/relief/<id>.back.jpg` — the back layer's colour — refusing anything that is not a Scryfall id. */
+export function reliefBackFileOf(id, root = RELIEF_DIR) {
+  if (!isScryfallId(id)) throw new Error(`not a Scryfall id: ${JSON.stringify(id)}`);
+  return insideRelief(`${id}.back.jpg`, root);
 }
 
 /** Two art boxes equal to a millionth — a box moved in `framing.ts` makes every map stale. */
@@ -141,12 +196,12 @@ export function selectCards(art, personalCards, { all, names }) {
   return { cards: out, missing };
 }
 
-/** Is this card's map current: on disk, indexed, this model, this art box? */
-export function isCurrent(index, id, box, root = RELIEF_DIR) {
+/** Is this card's map current: both files on disk, indexed, this model, this art box, this recipe? */
+export function isCurrent(index, id, box, recipe, root = RELIEF_DIR) {
   const entry = index?.reliefs?.[id];
-  if (entry === undefined || entry.model !== MODEL_ID || !sameBox(entry.box, box)) return false;
-  const file = reliefFileOf(id, root);
-  return existsSync(file) && statSync(file).size > 0;
+  if (entry === undefined || entry.model !== MODEL_ID || !sameBox(entry.box, box) || !sameRecipe(entry.recipe, recipe)) return false;
+  if (entry.back !== `${id}.back.jpg`) return false;
+  return [reliefFileOf(id, root), reliefBackFileOf(id, root)].every((file) => existsSync(file) && statSync(file).size > 0);
 }
 
 /** The cards every personal model's manifest dresses (read only; the manifests are the user's). */
@@ -273,8 +328,13 @@ export function pythonEnv(likeness, cacheDir = CACHE_DIR) {
   };
 }
 
-/** Run the Python step over `jobs`; resolve with every JSON line it printed. */
-export function runDepth({ python, jobs, device, env, outDir, blurPx = BLUR_PX, flatBelow = FLAT_BELOW, onLine = () => {} }) {
+/**
+ * Run the Python step over `jobs`; resolve with every JSON line it printed.
+ * `recipe` (from {@link recipeOf}) asks for the back layer too — every job then
+ * names its `backOut`; without one the step writes the front map alone (a
+ * greyscale PNG), which only the tests ask for.
+ */
+export function runDepth({ python, jobs, device, env, outDir, blurPx = BLUR_PX, flatBelow = FLAT_BELOW, recipe = null, onLine = () => {} }) {
   return new Promise((done, fail) => {
     for (const dir of [env.HOME, env.CUDA_CACHE_PATH, env.TMPDIR, env.MPLCONFIGDIR, env.TRITON_CACHE_DIR, env.XDG_CONFIG_HOME, env.XDG_DATA_HOME]) {
       if (dir !== undefined) mkdirSync(dir, { recursive: true });
@@ -305,7 +365,8 @@ export function runDepth({ python, jobs, device, env, outDir, blurPx = BLUR_PX, 
     });
     child.on('error', fail);
     child.on('close', (code) => done({ code, lines, stderr }));
-    child.stdin.end(JSON.stringify({ jobs, blurPx, flatBelow }));
+    const back = recipe === null ? null : { cliff: recipe.cliff, cells: recipe.grid, margin: recipe.margin };
+    child.stdin.end(JSON.stringify({ jobs, blurPx: recipe === null ? blurPx : recipe.blurPx, flatBelow, ...(recipe === null ? {} : { dilatePx: recipe.dilatePx, back }) }));
   });
 }
 
@@ -327,7 +388,9 @@ async function main() {
   }
   const t0 = Date.now();
   const { ART_BOX } = await import(pathToFileURL(join(REPO, 'web/src/workshop/framing.ts')).href);
+  const { RELIEF_GRID, RELIEF_CLIFF } = await import(pathToFileURL(join(REPO, 'web/src/arena/perf.ts')).href);
   const box = { left: ART_BOX.left, right: ART_BOX.right, top: ART_BOX.top, bottom: ART_BOX.bottom };
+  const recipe = recipeOf(RELIEF_GRID, RELIEF_CLIFF);
   let art;
   try {
     art = JSON.parse(readFileSync(join(REPO, 'web/public/art.json'), 'utf8'));
@@ -339,7 +402,7 @@ async function main() {
   const { cards, missing } = selectCards(art, personalCards, { all: args.all, names: args.names });
   for (const name of missing) console.log(`  missing  ${name}: not in web/public/art.json — run \`node tools/fetch-art.ts\` for it`);
   const index = readIndex();
-  const todo = cards.filter((c) => args.force || !isCurrent(index, c.id, box));
+  const todo = cards.filter((c) => args.force || !isCurrent(index, c.id, box, recipe));
   console.log(`relief: ${String(cards.length)} card(s), ${String(cards.length - todo.length)} current, ${String(todo.length)} to compute (personal tier, D225 — never committed)`);
   if (todo.length === 0) process.exit(missing.length > 0 && !args.all ? 1 : 0);
 
@@ -389,7 +452,7 @@ async function main() {
   }
   const jobs = todo
     .filter((c) => sources.has(c.id))
-    .map((c) => ({ id: c.id, src: sources.get(c.id).path, out: reliefFileOf(c.id), box }));
+    .map((c) => ({ id: c.id, src: sources.get(c.id).path, out: reliefFileOf(c.id), backOut: reliefBackFileOf(c.id), box }));
   if (args.dryRun) {
     for (const job of jobs) console.log(`  would compute  ${todo.find((c) => c.id === job.id)?.name}: ${relative(REPO, job.src)} → ${relative(REPO, job.out)}`);
     process.exit(0);
@@ -418,6 +481,7 @@ async function main() {
     device: args.device,
     env,
     outDir: RELIEF_DIR,
+    recipe,
     onLine: (line) => {
       if (line.type === 'ready') {
         ready = line;
@@ -431,6 +495,11 @@ async function main() {
           width: line.width,
           height: line.height,
           bytes: line.bytes,
+          back: `${line.id}.back.jpg`,
+          backWidth: line.backWidth,
+          backHeight: line.backHeight,
+          backBytes: line.backBytes,
+          recipe,
           model: MODEL_ID,
           device: ready?.device ?? null,
           date: new Date().toISOString(),
@@ -438,10 +507,13 @@ async function main() {
           crop: line.crop,
           flat: line.flat,
           ms: line.ms,
+          backMs: line.backMs,
+          hidden: line.hidden,
+          cut: line.cut,
           source: source.from,
           sourceSha256: createHash('sha256').update(bytes).digest('hex'),
         };
-        console.log(`  relief   ${nameOf.get(line.id)}: ${String(line.width)}×${String(line.height)}, ${String(line.ms)} ms${line.flat ? ', FLAT (no contrast in the art box)' : ''}`);
+        console.log(`  relief   ${nameOf.get(line.id)}: ${String(line.width)}×${String(line.height)}, ${String(line.ms)} ms + back ${String(line.backMs)} ms (cut ${String(Math.round(line.cut * 100))}%, filled ${String(Math.round(line.hidden * 100))}%)${line.flat ? ', FLAT (no contrast in the art box)' : ''}`);
       } else if (line.type === 'error') {
         failed += 1;
         console.log(`  failed   ${nameOf.get(line.id) ?? line.id}: ${line.message}`);
@@ -458,6 +530,7 @@ async function main() {
   index.model = MODEL_ID;
   index.encoding = ENCODING;
   index.box = box;
+  index.recipe = recipe;
   writeAtomic(INDEX_FILE, `${JSON.stringify(index, null, 2)}\n`);
   if (ready === null) {
     const tail = stderr.trim().split('\n').slice(-4).join('\n');

@@ -78,16 +78,19 @@ import { TileField } from '../arena/scene/tiles.ts';
 import { EMPTY_PERSONAL, dressPoses, personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
 import { NO_PERSONAL_LOADED, type PersonalLoaded } from '../arena/scene/personalModels.ts';
 import { useCardTexture } from '../arena/scene/useCardTexture.ts';
-import { RELIEF_GRID } from '../arena/perf.ts';
+import { RELIEF_CLIFF, RELIEF_GRID } from '../arena/perf.ts';
 import { turnPoses, type PreviewStage } from './facing.ts';
 import { ART_BOX, poseFor, type CameraMode, type Framing, type Panel } from './framing.ts';
 import {
   EMPTY_RELIEF,
   RELIEF_FRAGMENT,
   RELIEF_VERTEX,
-  artBoxUv,
+  backBoxes,
+  frontBoxes,
   reliefIndexOf,
+  windowClipOf,
   type InspectPlan,
+  type LayerBoxes,
   type ReliefIndex,
 } from './relief.ts';
 
@@ -613,56 +616,97 @@ function frameAlphaMap(): THREE.Texture {
 }
 
 /**
+ * The back layer's step behind the front, as a fraction of the relief: where the
+ * two coincide (the background, away from any silhouette) the front is nearer
+ * and wins the depth test (with a polygon offset besides). Along the seat's rays,
+ * so from the seat it moves nothing.
+ */
+const BACK_BEHIND = 0.01;
+
+/**
  * **The inspect view's planes**, from `relief.ts`'s plan and the card image
  * `CardPlane` already fetched (`useCardTexture`, the same URL — one texture):
  *
  *  - **the painting** — the ART BOX enlarged behind the figure. With a depth map
- *    (and the toolbar's relief on) it is ONE subdivided plane (`RELIEF_GRID`,
- *    built once per mount) at the window, whose vertex shader sends every vertex
- *    back along its ray from the inspect camera's seat by how far its texel is
- *    (`relief.ts`'s `RELIEF_VERTEX`): from the seat it is the card's painting
- *    pixel for pixel, and orbiting shows its depth. Its material is built once
- *    per card, at commit, when both textures have arrived. Without one — no map,
- *    the toggle off, a build, a map that did not load — it is the flat plane at
- *    the window, as D196 drew it.
+ *    (and the toolbar's relief on) it is TWO subdivided planes on one grid
+ *    (`RELIEF_GRID`, built once per mount) at the window (D227): the FRONT, the
+ *    painting at its depth and cut at every silhouette, and the BACK behind it,
+ *    grown by its margin, coloured by the back layer's image — what the
+ *    subjects hide, filled in. Their vertex shader sends every vertex back along
+ *    its ray from the inspect camera's seat by how far its texel is
+ *    (`relief.ts`'s `RELIEF_VERTEX`); their fragment shader cuts the front at a
+ *    silhouette and both at the window's rectangle (`RELIEF_FRAGMENT`). From
+ *    the seat it is the card's painting (but for a seam a pixel wide along each
+ *    cut — the back image is a JPEG), and orbiting shows its depth behind a
+ *    still frame. The materials are built once per card, at
+ *    commit, when the three textures have arrived. Without them — no map, the
+ *    toggle off, a build, a map that did not load — it is the flat plane at the
+ *    window, as D196 drew it.
  *  - **the frame** — the card's frame and text with the art box cut out, floating
  *    at the figure's right.
  *
  * Both take no click and neither is a card: `CardPlane` draws the card, and
  * this is its painting pulled out behind the figure (D196, D225). Nothing here
  * runs per frame — the orbit moves the camera, the planes stand still, and the
- * parallax is the geometry's.
+ * parallax is the geometry's (three sets `cameraPosition` for the window's cut
+ * at every render; nothing of ours runs).
  */
 function InspectStage({ plan }: { plan: InspectPlan }): JSX.Element | null {
   const texture = useCardTexture(plan.image);
   const depth = useDepthTexture(plan.depth?.url ?? null);
+  // The back layer's colour: a card-sized sRGB image, loaded and cached as a card image is.
+  const backTexture = useCardTexture(plan.depth?.backUrl ?? null);
   const layout = plan.layout;
+  const backdrop = layout.backdrop;
+  const entry = plan.depth?.entry ?? null;
   const artGeometry = useMemo(() => artBoxGeometry(), []);
   const alphaMap = useMemo(() => frameAlphaMap(), []);
-  // The relief's grid: one geometry for every card this mount shows (its UVs are
-  // 0–1 over the art box, which is the depth map's frame too).
+  // The relief's grid: one geometry for both layers of every card this mount
+  // shows (its UVs are 0–1 over the plane; each layer's boxes map them).
   const reliefGeometry = useMemo(() => new THREE.PlaneGeometry(1, 1, RELIEF_GRID[0], RELIEF_GRID[1]), []);
   const relief = plan.depth !== null ? layout.relief : 0;
   const [eyeX, eyeY, eyeZ] = layout.camera.position;
-  // The material, once per card at commit: the painting, its depth, how far it
-  // reaches, and the seat whose rays it recedes along.
-  const reliefMaterial = useMemo(() => {
-    if (texture === null || depth === null || relief <= 0) return null;
-    const [u0, v0, du, dv] = artBoxUv();
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        map: { value: texture },
-        uDepth: { value: depth },
-        uRelief: { value: relief },
-        uEye: { value: new THREE.Vector3(eyeX, eyeY, eyeZ) },
-        uArtBox: { value: new THREE.Vector4(u0, v0, du, dv) },
-      },
-      vertexShader: RELIEF_VERTEX,
-      fragmentShader: RELIEF_FRAGMENT,
-      side: THREE.DoubleSide,
-    });
-  }, [texture, depth, relief, eyeX, eyeY, eyeZ]);
-  useEffect(() => () => reliefMaterial?.dispose(), [reliefMaterial]);
+  // The two materials, once per card at commit: the painting (or its back
+  // layer), the depth, how far it reaches, the seat whose rays it recedes along,
+  // the silhouette cut and the window.
+  const layers = useMemo(() => {
+    if (texture === null || depth === null || backTexture === null || entry === null || relief <= 0) return null;
+    const clip = windowClipOf(backdrop);
+    const make = (map: THREE.Texture, boxes: LayerBoxes, back: boolean): THREE.ShaderMaterial =>
+      new THREE.ShaderMaterial({
+        uniforms: {
+          map: { value: map },
+          uDepth: { value: depth },
+          uRelief: { value: relief },
+          uLayer: { value: back ? 1 : 0 },
+          uBehind: { value: back ? BACK_BEHIND * relief : 0 },
+          uEye: { value: new THREE.Vector3(eyeX, eyeY, eyeZ) },
+          uArtBox: { value: new THREE.Vector4(...boxes.colour) },
+          uDepthBox: { value: new THREE.Vector4(...boxes.depth) },
+          uCell: { value: new THREE.Vector2(1 / RELIEF_GRID[0], 1 / RELIEF_GRID[1]) },
+          // The back layer is never cut at a silhouette: it is what the cut shows.
+          uCut: { value: back ? 2 : RELIEF_CLIFF },
+          uWindow: { value: new THREE.Vector3(...clip.centre) },
+          uFront: { value: new THREE.Vector3(...clip.front) },
+          uRight: { value: new THREE.Vector3(...clip.right) },
+          uUp: { value: new THREE.Vector3(...clip.up) },
+          uHalf: { value: new THREE.Vector2(...clip.half) },
+        },
+        vertexShader: RELIEF_VERTEX,
+        fragmentShader: RELIEF_FRAGMENT,
+        side: THREE.DoubleSide,
+        ...(back ? { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } : {}),
+      });
+    const backBox = backBoxes(entry);
+    return { front: make(texture, frontBoxes(), false), back: make(backTexture, backBox, true), backScale: backBox.scale };
+  }, [texture, depth, backTexture, entry, relief, eyeX, eyeY, eyeZ, backdrop]);
+  useEffect(
+    () => () => {
+      layers?.front.dispose();
+      layers?.back.dispose();
+    },
+    [layers],
+  );
   useEffect(
     () => () => {
       artGeometry.dispose();
@@ -685,22 +729,34 @@ function InspectStage({ plan }: { plan: InspectPlan }): JSX.Element | null {
       <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} {...(frame ? { alphaMap, alphaTest: 0.5 } : {})} />
     </mesh>
   );
-  const backdrop = layout.backdrop;
   return (
     <group name="inspect">
-      {reliefMaterial !== null ? (
-        <mesh
-          key="relief"
-          name="inspect:relief"
-          position={backdrop.position}
-          rotation={[0, backdrop.rotationY, 0]}
-          scale={[backdrop.width, backdrop.height, 1]}
-          geometry={reliefGeometry}
-          material={reliefMaterial}
-          // The receding vertices leave the plane's own bounds (up to `relief` behind it).
-          frustumCulled={false}
-          raycast={() => {}}
-        />
+      {layers !== null ? (
+        <>
+          <mesh
+            key="relief"
+            name="inspect:relief"
+            position={backdrop.position}
+            rotation={[0, backdrop.rotationY, 0]}
+            scale={[backdrop.width, backdrop.height, 1]}
+            geometry={reliefGeometry}
+            material={layers.front}
+            // The receding vertices leave the plane's own bounds (up to `relief` behind it).
+            frustumCulled={false}
+            raycast={() => {}}
+          />
+          <mesh
+            key="relief-back"
+            name="inspect:relief-back"
+            position={backdrop.position}
+            rotation={[0, backdrop.rotationY, 0]}
+            scale={[backdrop.width * layers.backScale[0], backdrop.height * layers.backScale[1], 1]}
+            geometry={reliefGeometry}
+            material={layers.back}
+            frustumCulled={false}
+            raycast={() => {}}
+          />
+        </>
       ) : (
         // Flat: the picture at the window, where the relief's nearest point stands.
         plane(backdrop, 'art', artGeometry, false)

@@ -128,7 +128,7 @@
 4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
 5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
 **The personal tier on the pedestal** (**D196**; the arena's conventions are
-**The relief window** (**D225**, **D226**; `docs/guides/personal-tier.md`'s *The
+**The relief window** (**D225**–**D227**; `docs/guides/personal-tier.md`'s *The
 1. **One narrator** (**D124**). `web/src/story/narrate.ts` is the narration —
 **erasable TypeScript with no import at all**, because Node runs it by type
 2. **A page over the replay, not a renderer** (**D125**). Lazy through

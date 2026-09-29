@@ -326,9 +326,12 @@ function fakeRelief(): string {
       version: 1,
       model: 'depth-anything/Depth-Anything-V2-Small-hf',
       reliefs: {
-        [RELIEF_A]: entry(RELIEF_A),
-        // listed, but its file is missing
+        // D227: a map with its back layer…
+        [RELIEF_A]: entry(RELIEF_A, { back: `${RELIEF_A}.back.jpg`, backWidth: 560, backHeight: 451, backBytes: 30000, recipe: { version: 2 } }),
+        // …listed, but its file is missing (and it names no back layer: a map made before D227)
         [RELIEF_B]: entry(RELIEF_B),
+        // …a back layer that is not <id>.back.jpg: the map is served, its "back" is not
+        '44444444-4444-4444-4444-444444444444': entry('44444444-4444-4444-4444-444444444444', { back: '../models/doctor-doom/model.glb', backWidth: 560, backHeight: 451 }),
         'not-an-id': entry('not-an-id'),
         '11111111-1111-1111-1111-111111111111': entry('11111111-1111-1111-1111-111111111111', { file: '../models/doctor-doom/model.glb' }),
         '22222222-2222-2222-2222-222222222222': entry('22222222-2222-2222-2222-222222222222', { box: null }),
@@ -336,6 +339,10 @@ function fakeRelief(): string {
     }),
   );
   writeFileSync(join(dir, `${RELIEF_A}.png`), 'depth-map-a');
+  writeFileSync(join(dir, `${RELIEF_A}.back.jpg`), 'back-layer-a');
+  writeFileSync(join(dir, '44444444-4444-4444-4444-444444444444.png'), 'depth-map-4');
+  // On disk beside a map that names no back layer: never served.
+  writeFileSync(join(dir, `${RELIEF_B}.back.jpg`), 'back-layer-b, unlisted');
   writeFileSync(join(dir, '22222222-2222-2222-2222-222222222222.png'), 'boxless');
   // On disk and never served: an unlisted map, the kept card image, the Python caches.
   writeFileSync(join(dir, '33333333-3333-3333-3333-333333333333.png'), 'unlisted');
@@ -346,7 +353,7 @@ function fakeRelief(): string {
   return dir;
 }
 
-test('personal: the relief cache (D225) — its index read per request and cut down to what the page needs, a map it lists served, nothing else; no-store', async () => {
+test('personal: the relief cache (D225, D227) — its index read per request and cut down to what the page needs, a map it lists and its back layer served, nothing else; no-store', async () => {
   const models = fakeTier([]);
   const reliefDir = fakeRelief();
   const { handle } = createPersonalMiddleware(REPO, { dir: models, reliefDir, seatLooks: LOOKS });
@@ -365,8 +372,18 @@ test('personal: the relief cache (D225) — its index read per request and cut d
     assert.equal(index.headers.get('cache-control'), 'no-store');
     const body = (await index.json()) as { version: number; model: string; reliefs: Record<string, Record<string, unknown>> };
     assert.equal(body.version, 1);
-    assert.deepEqual(Object.keys(body.reliefs), [RELIEF_A], 'only a Scryfall id, as <id>.png, on disk, with a size and a box');
-    assert.deepEqual(body.reliefs[RELIEF_A], { file: `${RELIEF_A}.png`, width: 410, height: 301, box: RELIEF_BOX }, 'the card, the source and the timings stay on disk');
+    assert.deepEqual(Object.keys(body.reliefs), [RELIEF_A, '44444444-4444-4444-4444-444444444444'], 'only a Scryfall id, as <id>.png, on disk, with a size and a box');
+    assert.deepEqual(
+      body.reliefs[RELIEF_A],
+      { file: `${RELIEF_A}.png`, width: 410, height: 301, box: RELIEF_BOX, back: { file: `${RELIEF_A}.back.jpg`, width: 560, height: 451 } },
+      'the card, the source, the recipe and the timings stay on disk',
+    );
+    assert.equal(body.reliefs['44444444-4444-4444-4444-444444444444']?.['back'], null, 'a back layer that is not <id>.back.jpg is not served');
+    const back = await fetch(`${origin}/personal/relief/${RELIEF_A}.back.jpg`);
+    assert.equal(back.status, 200);
+    assert.equal(back.headers.get('content-type'), 'image/jpeg');
+    assert.equal(back.headers.get('cache-control'), 'no-store');
+    assert.equal(Buffer.from(await back.arrayBuffer()).toString(), 'back-layer-a');
     const map = await fetch(`${origin}/personal/relief/${RELIEF_A}.png`);
     assert.equal(map.status, 200);
     assert.equal(map.headers.get('content-type'), 'image/png');
@@ -383,6 +400,13 @@ test('personal: the relief cache (D225) — its index read per request and cut d
       `/personal/relief/..%2f${RELIEF_A}.png`,
       '/personal/relief/index.json.bak',
       '/personal/relief/',
+      // D227: a back layer only when the index lists it, and only as <id>.back.jpg
+      `/personal/relief/${RELIEF_B}.back.jpg`,
+      '/personal/relief/44444444-4444-4444-4444-444444444444.back.jpg',
+      `/personal/relief/${RELIEF_A}.back.png`,
+      `/personal/relief/${RELIEF_A}.jpg`,
+      `/personal/relief/${RELIEF_A}.back.jpg.part`,
+      `/personal/relief/source/${RELIEF_A}.back.jpg`,
     ]) {
       const res = await fetch(`${origin}${path}`);
       assert.equal(res.status, 404, path);
@@ -391,11 +415,12 @@ test('personal: the relief cache (D225) — its index read per request and cut d
     // Read per request: a map relief.mjs adds while the server runs is served on the next ask.
     writeFileSync(join(reliefDir, `${RELIEF_B}.png`), 'depth-map-b');
     const again = (await (await fetch(`${origin}/personal/relief/index.json`)).json()) as { reliefs: Record<string, unknown> };
-    assert.deepEqual(Object.keys(again.reliefs).sort(), [RELIEF_A, RELIEF_B].sort());
+    assert.deepEqual(Object.keys(again.reliefs).sort(), [RELIEF_A, RELIEF_B, '44444444-4444-4444-4444-444444444444'].sort());
     assert.equal((await fetch(`${origin}/personal/relief/${RELIEF_B}.png`)).status, 200);
+    assert.equal((await fetch(`${origin}/personal/relief/${RELIEF_B}.back.jpg`)).status, 404, 'a map made before the back layer has none to serve');
     assert.equal((await fetch(`${origin}/personal/index.json`)).status, 200, 'the models’ index is still the models’');
     assert.equal((await fetch(`${origin}/fixtures/games/g1.jsonl`)).status, 418, 'not ours: handed to the next middleware');
-    assert.match(describeRelief(buildReliefIndex(reliefDir)), /^personal relief: 2 depth map\(s\)/);
+    assert.match(describeRelief(buildReliefIndex(reliefDir)), /^personal relief: 3 depth map\(s\).*; 2 made before the back layer \(D227\), drawn flat/);
     // No folder, or no index: an empty one, not an error.
     assert.deepEqual(buildReliefIndex(join(reliefDir, 'nowhere')), { version: 1, model: null, reliefs: {} });
   } finally {

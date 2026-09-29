@@ -480,8 +480,10 @@ node tools/personal/relief.mjs --all          # the relief cache (D225): every c
 ```
 
 **The relief cache is the tier's second folder** (**D225**): `personal/relief/`,
-a depth map of every card's painting for the workshop's inspect view (D226),
-written by `relief.mjs` alone through its own write guard (`insideRelief`), its
+a depth map of every card's painting and its back layer's image for the
+workshop's inspect view (D226, D227), made to a recipe recorded per map (a
+changed recipe makes a map stale), written by `relief.mjs` alone through its own
+write guard (`insideRelief`), its
 images from the card library's cache or fetched through its `ScryfallClient` at
 no more than 10 a second, its depth from a Python venv the tool never installs
 into and never lets download (`HF_HUB_OFFLINE`). Card-art-derived, so it is the
