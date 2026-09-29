@@ -141,3 +141,11 @@ more, which skip on a pre-M49 recording) and its across-the-sessions M49 case (1
 which skips with no M49 log — the standalone run's 6 skipped), and
 `render.test.tsx`'s hostile keyword case.
 
+## The personal tier's phase 2, onto the status layer (`2bd8514`)
+
+`npm --prefix web test` was **1,044 `node --test` + 121 vitest (8 files)** on
+branch `personal-tier-2` at its fix pass 1 (off `096c952`), and is **1,060 + 122
+(8 files)** rebased onto the status layer's `2bd8514` (1,054 pass, 6 skipped
+standalone — the status layer's M49 cases with no M49 log): the two lanes' cases
+add, plus one merge case in `personal.test.ts` (the status strip over the
+DRESSED poses, with a hostile dressing as its control).

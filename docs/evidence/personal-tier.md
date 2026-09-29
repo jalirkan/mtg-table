@@ -1189,3 +1189,118 @@ only `.glb` is `models/figures.glb`.
   time listing, and the sha256 of every file under `~/.forge` are the ones taken
   before the fix pass's first command (`var/personal2/fix1/`); every download's
   sha256 too.
+
+### 19. Onto the status layer — the rebase onto `2bd8514` (2026-09-29)
+
+`main` gained the status layer (D210–D212, amendment M49) after this branch left
+`096c952`: a strip over every creature — keyword icons, a bar, pips and marks —
+laid out by `figures/status.ts`, drawn by `scene/status.ts` as one instanced mesh
+committed by `FigureLayer` and bound from `DiscField.bind`, and a turn-order bar.
+Both branch commits were rebased onto `2bd8514` (`15fdf79` → `739bb76`, `85ec6b4`
+→ `76478a9`); logs under the worktree's gitignored `var/personal2/merge/`.
+
+**The conflicts, and how each kept both behaviours.** Phase 2's commit met seven,
+its fix pass two.
+
+- `web/src/arena/Arena.tsx`: `FigureLayer` takes the status layer's `status` AND
+  the tier's `personal`; the personal block (overlay, THE lookup, the loaded
+  models, the dressed poses) comes first, and the strips are laid out after it
+  from the DRESSED poses — `statusLayout(placed, figures)`, `figures` being
+  `dressPoses(basePoses, …)`.
+- `web/src/arena/scene/FigureLayer.tsx`: both props, `modelOf` (the one
+  model-source choice) and the `StatusField` (built, primed, committed, handed to
+  `DiscField.setStatus`) side by side; nothing else moved.
+- `web/src/workshop/Pedestal.tsx`: the dressed poses as `Arena.tsx` dresses, the
+  strips from them, `FigureLayer` with both props, and the inspect view's
+  `InspectStage` kept; the status rehearsal and the personal toggle are both live.
+- `web/src/arena/CLAUDE.md`: both sections — the status layer's, then the
+  personal tier's (retitled D194–D198 by the fix pass); convention 3 says the strip
+  rides the dressed pose, convention 5 carries this section's bench.
+- `CLAUDE.md`, `PLAN.md`, `docs/claude-md-rules.txt`: both lanes' rows and
+  entries. `main`'s merge had left `CLAUDE.md` two `DECISIONS.md` rows and
+  `PLAN.md` two *Open now* header paragraphs (the second stale); each is one now,
+  and the header is recounted from the index — 30 lists, 373 items, 278 open (254
+  open, 18 partly, 3 not reproduced, 2 standing, 1 accepted), 95 closed. Phase 2
+  and its fix pass stay inside *The personal tier*, before *The status layer*. The
+  manifest was regenerated (`CLAUDE_MD_RULES_WRITE=1`), and `claude-md.test.ts`
+  passes with every rule once.
+
+**The one join, and its test.** A dressed figure's height is refitted to its
+model (D65 strict), so the strip reads the dressed pose and stands over the
+model's own head; `strippable` gates on the pose and the placement, never on the
+model worn. `personal.test.ts` gained a case: over the corpus (3,679 frames, plain
+and hostile), **9,985** dressed figures carry a strip, every one at
+`position + dressed height + STATUS_LIFT` and all 9,985 over a refitted height;
+**1,808** backs and stubs dressed ON PURPOSE (the lookup's gates skipped) draw no
+strip; and a source check holds both callers to lay the strips out from the
+dressed poses, declared first. With `strippable`'s placement gate taken out, the
+case fails (*a strip over a concealed card #30*, `games/disjoint.jsonl`); the file
+was restored byte for byte.
+
+**The sweeps on the merged tree.** Hard rule 8 for the tier, three pairings,
+hostile included: 3,679 frames, 13,941 face-up names looked up and 13,941 figures
+dressed, 6,225 anonymous figures and 3,164 named poses on a back or a stub never
+asked about, and the ungated control asking about 13,119 concealed names. The
+status layer's: 10,763 strips, none over any of 1,179 concealed creature
+instances; hostile (every card handed keywords), 10,763 keyworded strips all face
+up, where an ungated layout would draw 1,138.
+
+**The builds.** `node tools/build-workshop-catalog.ts`: byte-identical (the
+status layer's optional `keywords` fact and phase 2's engine facts meet without a
+difference). `./bridge/build.sh`: OK, the five self-tests. `npm --prefix web run
+build`: OK — the 2D entry chunk **93.53 kB** gzip with no `three` (the status
+layer measured 93.52), `arena-scene` 374.13 kB; no chunk names `personal/`, a
+route or any slug (`personal.test.ts`'s `dist` case; a plain grep finds
+`hulk` only in the committed deck name `hulk-family.dck`). `npm --prefix web test`:
+**1,060 `node --test`** (1,054 pass, 6 skipped) and **vitest 122 (8 files)**.
+
+**The bench** — `g1`@316, `--no-bloom --personal`, against the DEV server on port
+5211, `personal=0` and `personal=1` interleaved, two pairs a rasteriser (a third on
+SwiftShader for the worst case), load average 0.5–4.0. The real tier is the six
+active models; at `g1`@316 THE lookup dresses the villain seat (Doom) and two
+creatures, 17,987 personal triangles. The worst case is D197's, rebuilt the same
+way: seven copies of Doom's model (5,996 triangles, two paints) in a scratch tier
+under `var/personal2/merge/worst/` (`MTG_TABLE_PERSONAL_DIR`, deleted after),
+dressing both seats and four creatures.
+
+| | draw calls | triangles | p50 | p95 | max |
+|---|---|---|---|---|---|
+| GTX 1080, CC0 | 87 | 26,395 | 0.50 | 0.60 | 10.8–14.9 |
+| GTX 1080, the real tier | 82 | 38,631 | 0.40 | 0.60 | 10.8–18.1 |
+| GTX 1080, the worst case | 91 | 50,305 | 0.40 | 0.60 | 10.5–11.1 |
+| SwiftShader (dpr 0.6), CC0 | 89–90 | 29,609–29,611 | 16.4–16.7 | 34.1–34.3 | 34.9–65.7 |
+| SwiftShader (dpr 0.6), the real tier | 86 | 41,623–41,747 | 19.2–19.4 | 33.7–34.6 | 48.9–58.1 |
+| SwiftShader (dpr 0.6), the worst case | 95 | 53,297–53,421 | 21.1–22.2 | 27.3–30.3 | 50.9–124.6 |
+
+Against the lines: every run is under the bench's triangle line (66,000 with
+`--personal`) and §9.1's 120 calls. The strip is the one call it was at its merge:
+the CC0 table reads 87 on the GTX 1080 and 89–90 on SwiftShader (86 and 88 in §18;
+D212 recorded 91 on SwiftShader, inside the bench's sample drift), and the worst
+case 91 on the GTX 1080 (90 in §18). On SwiftShader the worst case reads **95**,
+D197's own number: the strip's call is there (11 strips in the census), and the
+sampled frame drew one prop kind fewer than §18's (14 against 15) — the bench
+samples the table five seconds into a 4× replay, so its board drifts by the
+rasteriser's pace. So the merged tree's worst case is D197's 95 on SwiftShader —
+five over report 13 §8.2's 90-call line, follow-up 33's — and 91 on the GTX 1080,
+one over it; the real tier is under the line on both (82 and 86), because a
+dressed figure wears none of our props. SwiftShader fails §9.4 with or without
+the tier, as before; the 118–125 ms maxima are the cold table's first three
+frames (settle 600 ms). The GPU does not notice either layer.
+
+**The pictures** (`var/personal2/merge/`, gitignored, never committed): the table
+view at `g1`@355, comic, Doom as the villain duelist at the table's right and a
+strip over every figure (`arena-g1-355-comic-personal-strips.png`); the workshop's
+Doom on the pedestal at `1× front` with his strip at rest (a full bar,
+`workshop-doctor-doom-personal-strip.png`) and after the *status strip* rehearsal
+with back-to-rest off — the sample's four keyword icons, the bar drained by the
+damage and a +1/+1 pip (`workshop-doctor-doom-status-strip.png`).
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`:
+`WSPORT=9100` **242.2 s** (48 jobs, 936.9 s summed, load average 2.2–6.3,
+`var/check-all-personal2-merge-p1.log`) and `WSPORT=9110` **242.5 s** (936.1 s
+summed, 5.8–7.7, `-p2.log`), `check-all OK` both; inside each `node --test`
+**1,075 / 1,067 pass / 0 fail / 8 skipped** and vitest **122 (8 files)**.
+`~/forge` and `~/.forge`: **unchanged** — the desktop jar's sha256
+(`3c0a7c38…8e5dd9`), the `~/forge` tree's path, size and time listing, the
+`~/.forge` listing and the sha1 of every file under it, taken before the rebase's
+first command and after the second gate.

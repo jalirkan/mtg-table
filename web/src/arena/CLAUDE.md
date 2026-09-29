@@ -1043,6 +1043,8 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    table's line; the personal tier's is added to it. The worst case (six two-paint
    models filling the sum at `g1`@316) is 50,225 triangles and 90 calls on the GTX
    1080 with p95 unchanged, 53,407 and 95 on SwiftShader with the median 4 ms
-   slower. Measure with `tools/arena-bench.mjs --personal` against the DEV server
+   slower — and on the status layer, whose strip is one call more, 91 calls and
+   50,305 triangles on the GTX 1080, 95 and 53,297–53,421 on SwiftShader, where
+   the CC0 table reads 87 and 89 (evidence §19). Measure with `tools/arena-bench.mjs --personal` against the DEV server
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.

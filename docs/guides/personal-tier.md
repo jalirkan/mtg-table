@@ -360,7 +360,9 @@ opponent's; `director` or `you`, yours) has its duelist built from the model, wi
 the duelist gestures on our clips. The model brings its own look: none of our
 props, no costume. Everything else is the arena's — where the figure stands, how
 tall (refitted so its own width stays inside its rank slot), its stance, the
-kneel, the translucency of a summoning-sick creature, every cue. `?personal=0`
+kneel, the translucency of a summoning-sick creature, every cue, and the status
+strip over its head (keywords, the bar, pips and marks — D210–D212), which stands
+over the model's own refitted height. `?personal=0`
 draws the CC0 figures at the same frame (the A/B).
 
 **Its colours are its own** (D196, D198). Under the comic look a model paints in

@@ -7727,12 +7727,39 @@ names the Hulk's face too).
     `--exposure <gain>` is the override today; a per-model note in the manifest,
     or a target read off the card's art, would be the next step.
 33. **The worst case passes §8.2's 90-call line on SwiftShader** (95; 90 on the
-    GTX 1080): a two-paint model is one call more than the body it replaces.
+    GTX 1080, and 91 there on the status layer, whose strip is one call more —
+    evidence §19): a two-paint model is one call more than the body it replaces.
     Folding a wrapping paint (Doom's tunic) into the atlas — its UVs brought into
     one tile, the texture repeated into it — would make every model one call.
 34. **`arena-bench --personal` is a flag the caller must remember.** The page
     could put a count of dressed figures in `info().layers` (a number, never an
     id), and the bench pick its line from what was drawn.
+
+### Phase 2 onto the status layer — the rebase onto `2bd8514` (2026-09-29)
+
+**Status: rebased, tested, benched, gated and documented** on `personal-tier-2`,
+now on `main`'s `2bd8514` (the status layer, D210–D212); no decision number used,
+no follow-up opened. Evidence §19.
+
+- **The conflicts** (`Arena.tsx`, `FigureLayer.tsx`, `Pedestal.tsx`, the arena's
+  `CLAUDE.md`, the root `CLAUDE.md`, this file and the rules manifest) each keep
+  both behaviours: `FigureLayer` commits the status strip into its one field,
+  bound from `DiscField.bind`, AND chooses a personal model per pose; `Arena.tsx`
+  and the pedestal keep the strips, the personal index, the status rehearsal, the
+  personal toggle and the inspect view.
+- **The join**: the strips are laid out from the DRESSED poses, so a dressed
+  figure's strip stands over its model's refitted height, and `strippable` never
+  asks which model is worn — a new `personal.test.ts` case, with a hostile
+  dressing as its control.
+- **The bench** at `g1`@316, bloom off: the real tier 82 calls on the GTX 1080 and
+  86 on SwiftShader (a dressed figure wears none of our props); D197's worst case
+  91 and 95 (50,305 and 53,297–53,421 triangles), the strip's call on top of §18's
+  90 on the GTX 1080 and absorbed by one prop kind fewer in SwiftShader's sample.
+- **The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9100`
+  **242.2 s** and `WSPORT=9110` **242.5 s**, exit 0 both, 48 jobs, `node --test`
+  1,075 / 1,067 pass / 0 fail / 8 skipped and vitest 122 (8 files)
+  (`var/check-all-personal2-merge-p1.log`, `-p2.log`). `~/forge` and `~/.forge`:
+  unchanged.
 
 ## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
 

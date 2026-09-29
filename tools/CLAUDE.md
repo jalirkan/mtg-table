@@ -368,7 +368,7 @@ and it sits beside the CC0 repository tier (**D54**, unchanged) without ever
 entering it. `docs/guides/personal-tier.md` is the manual,
 `docs/evidence/personal-tier.md` is the eight downloads run through it, and
 PLAN.md's *The personal tier* has the status and the follow-ups. Phase 1 is the
-folder, the manifest and the pipeline, `tools/personal/`; phase 2 (D194–D196) is
+folder, the manifest and the pipeline, `tools/personal/`; phase 2 (D194–D198) is
 the loader — the dev route `web/src/personal/devRoute.ts`, the arena's
 `arena/personal.ts` and `scene/personalModels.ts`, whose conventions are
 `web/src/arena/CLAUDE.md`'s *The personal tier*. Its half of hard rule 8 is in the

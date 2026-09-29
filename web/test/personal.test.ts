@@ -24,6 +24,11 @@
  *     gates taken out, run over the same frames, is: the negative control.
  *  5. **The dressed pose** (`dressPoses`): the opaque id, no props, no costume,
  *     the width clamp strict, and the same map back when nothing is dressed.
+ *  6. **The status layer over dressed poses** (D210–D212, met at the rebase onto
+ *     the status layer): the arena lays the strips out from the DRESSED poses, so
+ *     a dressed figure keeps its strip over its own refitted height — and a pose
+ *     dressed on a back or a stub (the lookup's gates skipped on purpose) still
+ *     gets none, because the strip's own gates never ask which model is worn.
  */
 
 import assert from 'node:assert/strict';
@@ -39,7 +44,8 @@ import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' 
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
 import { figurePose, type FigureLayout, type FigurePose } from '../src/arena/figures/pose.ts';
 import { validateFigures, validateModels } from '../src/arena/figures/validate.ts';
-import { FIGURE_MAX_WIDTH, layout, type Layout, type Placement } from '../src/arena/layout.ts';
+import { FIGURE_MAX_WIDTH, STATUS_LIFT, layout, type Layout, type Placement } from '../src/arena/layout.ts';
+import { statusLayout } from '../src/arena/figures/status.ts';
 import { PERSONAL_CALL_CAP, PERSONAL_MAX_FIGURES, PERSONAL_TABLE_TRIS, PERSONAL_TRI_CAP } from '../src/arena/perf.ts';
 import {
   EMPTY_PERSONAL,
@@ -53,7 +59,7 @@ import {
   type PersonalOverlay,
 } from '../src/arena/personal.ts';
 import { buildPersonalIndex, createPersonalMiddleware, describeIndex } from '../src/personal/devRoute.ts';
-import { isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
+import { isFaceDown, isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
@@ -554,4 +560,69 @@ test('personal: dressPoses — only a loaded model dresses; the opaque id, no pr
   assert.equal(personalModelKey(d), d.rest === null ? 'p3' : `p3@${d.rest}`);
   assert.equal(personalModelKey(person), null);
   for (const [id, other] of dressed) if (id !== person.cardId) assert.equal(other, poses.get(id), 'an undressed pose is the same object');
+});
+
+// ---------------------------------------------------------------------------
+// 6. The status layer over dressed poses
+// ---------------------------------------------------------------------------
+
+test('personal: the status strip over DRESSED poses — a dressed figure keeps its strip over its refitted height, and a back or a stub dressed on purpose still gets none (D195, D212, hard rule 8)', () => {
+  // A wide model, so the refit shrinks most figures and the anchor's height is the dressed one.
+  const fits = new Map([['p0', { ratio: 3.2 }]]);
+  const anyone: PersonalEntry = { id: 'p0', url: 'personal/models/x/model.glb', triangles: 10, calls: 1, credits: '' };
+  let frames = 0;
+  let dressedStrips = 0;
+  let refitted = 0;
+  let offered = 0;
+  for (const { file, state } of corpusStates()) {
+    frames += 1;
+    const plain = layout(state);
+    const poses = figurePose(plain, state.board?.combat ?? null, DATA, { models: MODELS });
+    for (const placed of [plain, hostile(plain)]) {
+      const battlefield = new Map(placed.placements.filter((p) => p.kind !== 'stack').map((p) => [p.cardId, p]));
+      // As the arena asks it: THE lookup (every name answered), then the dressing, then the strips.
+      const choices = personalChoicesOf(placed, poses, spyOverlay().overlay, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
+      const dressed = dressPoses(poses, choices, fits);
+      const strips = statusLayout(placed, dressed);
+      for (const strip of strips.values()) {
+        const p = battlefield.get(strip.cardId);
+        assert.ok(p !== undefined && !p.back && !isHidden(p.card) && !isFaceDown(p.card), `${file}: a strip over a concealed card #${String(strip.cardId)}`);
+      }
+      for (const cardId of choices.keys()) {
+        const strip = strips.get(cardId);
+        if (strip === undefined) continue;
+        const d = dressed.get(cardId)!;
+        assert.equal(d.personal, 'p0');
+        assert.ok(Math.abs(strip.anchor[1] - (d.position[1] + d.height + STATUS_LIFT)) < 1e-9, `${file}: a dressed figure's strip is not over its own height`);
+        dressedStrips += 1;
+        if (d.height < poses.get(cardId)!.height - 1e-9) refitted += 1;
+      }
+      // HOSTILE dressing: every modelled pose dressed, the lookup's gates skipped. The strip's gates hold alone.
+      const everyone = new Map([...poses.values()].filter((pose) => pose.modelId !== null).map((pose) => [pose.cardId, anyone]));
+      const overDressed = dressPoses(poses, everyone, fits);
+      const hostileStrips = statusLayout(placed, overDressed);
+      for (const [cardId, pose] of overDressed) {
+        const p = battlefield.get(cardId);
+        if (p === undefined || pose.personal === undefined) continue;
+        if (!(p.back || isHidden(p.card) || isFaceDown(p.card))) continue;
+        offered += 1;
+        assert.ok(!hostileStrips.has(cardId), `${file}: a back or a stub dressed on purpose drew a strip (#${String(cardId)})`);
+      }
+    }
+  }
+  console.log(
+    `personal × status: ${String(frames)} corpus frames (plain and hostile) — ${String(dressedStrips)} dressed figures carry a strip, ` +
+      `${String(refitted)} of them over a refitted height; ${String(offered)} backs and stubs dressed on purpose, none with a strip`,
+  );
+  assert.ok(frames > 1000, `expected the committed corpus, saw ${String(frames)} frames`);
+  assert.ok(dressedStrips > 1000 && refitted > 100, 'no dressed figure drew a strip over a refitted height — the sweep proves nothing');
+  assert.ok(offered > 100, 'the hostile dressing offered the strip no concealed card — the control proves nothing');
+  // And the two callers hand the strips the DRESSED poses, declared before them (a const read in a
+  // useMemo's first run would be in its temporal dead zone otherwise).
+  for (const file of ['web/src/arena/Arena.tsx', 'web/src/workshop/Pedestal.tsx']) {
+    const src = readFileSync(join(REPO, file), 'utf8');
+    const dress = src.search(/const figures = useMemo\(\s*\(\) => dressPoses\(basePoses,/);
+    const lay = src.search(/const strips = useMemo\(\(\) => statusLayout\(placed, figures\), \[placed, figures\]\);/);
+    assert.ok(dress >= 0 && lay > dress, `${file}: the strips are not laid out from the dressed poses`);
+  }
 });

@@ -123,7 +123,7 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **1014 `node --test` + 122 vitest (8 files)** standalone on
+`npm --prefix web test` is **1060 `node --test` + 122 vitest (8 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
 logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
