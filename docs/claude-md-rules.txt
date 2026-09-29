@@ -93,6 +93,7 @@
 3. **A tool writes only inside its slug's folder.** Every path goes through
 4. **A prepared model speaks OUR rig** (**D191**). `prepare.mjs` rebuilds the
 5. **There is one retarget, and it is proven.** `tools/personal/retarget.mjs` is
+6. **The verdict gates the game** (**D194**, **D195**). `check.mjs` writes
 **`npm --prefix web test` is hermetic, and it is kept that way by
 1. **Nothing under `web/src/render/` may import CSS at module level.** There is
 **`node`** environment, and neither can load a stylesheet; a component that
@@ -124,6 +125,7 @@
 3. **The frame loop is the arena's** (**D102**). `CueRunner` is THE loop on the
 4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
 5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
+**The personal tier on the pedestal** (**D196**; the arena's conventions are
 1. **One narrator** (**D124**). `web/src/story/narrate.ts` is the narration —
 **erasable TypeScript with no import at all**, because Node runs it by type
 2. **A page over the replay, not a renderer** (**D125**). Lazy through
@@ -209,6 +211,11 @@
 2. **Hard rule 8 on the strip.** `figures/status.ts`'s `strippable` gives no
 3. **`scene/status.ts` is ONE mesh, and a pose layer on the one loop** (D212):
 4. **A billboard in pixels, above the head by measurement.** A quad is CSS pixels
+1. **One reader, one lookup, one dressing — pure** (**D195**). `arena/personal.ts`
+2. **Dev only, one loader** (**D195**). `scene/personalModels.ts` names
+3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
+4. **Own colours, one figure's materials** (**D196**). A personal map is the
+5. **The budget is the machine's, and it is in `perf.ts`** (**D195**).
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -365,7 +372,6 @@ span: whole card images only
 span: `CardView` is the browser's card renderer, and it is not `CardTile`
 span: `#cards` unmounts the mode app
 span: "this can never ever ever be sold or published."
-span: nothing in the game reads `personal/` yet
 span: It is never committed, and the ignore rule is anchored
 span: Claude never sources a model.
 span: A tool writes only inside its slug's folder.
@@ -373,6 +379,9 @@ span: Since D193 the HTTP cache and the profile are measured too
 span: A prepared model speaks OUR rig
 span: There is one retarget, and it is proven.
 span: Those rotations prove the retarget, never the rig map
+span: The verdict gates the game
+span: Prepare bakes our clip set in
+span: `--joints bind|rest` reads the joints and the vertices in ONE pose
 span: `npm --prefix web test` is hermetic, and it is kept that way by `MTGTABLE_WS_LOGS`.
 span: Nothing under `web/src/render/` may import CSS at module level.
 span: `CardTile` is THE card renderer.
@@ -424,6 +433,8 @@ span: Tuning leaves the browser only by the clipboard
 span: Never add a path that writes `traits.json` or `cues.json` from the page, and never let the arena or the board read that key
 span: A page of its own, by `#cards`'s rules
 span: `links.ts` is the one workshop module another page imports
+span: The personal tier on the pedestal
+span: A deck card no recording showed face up takes its facts from the engine's card script
 span: the story is the narrator's text beside the replay's cursor — one narrator, one cursor, and nothing on the page the log did not show its seat.
 span: erasable TypeScript with no import at all
 span: A change to a sentence is a `--write-golden`, a read diff, and a look at the page
@@ -574,3 +585,9 @@ span: One decision, two renderers, a pose.
 span: Hard rule 8 on the strip.
 span: `scene/status.ts` is ONE mesh, and a pose layer on the one loop
 span: A billboard in pixels, above the head by measurement.
+span: a personal model is a statement about what a card is, and it is drawn from the dev server alone.
+span: One reader, one lookup, one dressing — pure
+span: Dev only, one loader
+span: The model-source choice is one function
+span: Own colours, one figure's materials
+span: The budget is the machine's, and it is in `perf.ts`

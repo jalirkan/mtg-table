@@ -4157,6 +4157,19 @@ button.zonerow__open:hover {
   border-color: var(--warn);
 }
 
+/* The personal tier (D196): a card an active personal model dresses on this machine. */
+.workshop__personal {
+  font-size: 9px;
+  padding: 0 0.3rem;
+  margin-right: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--highlight);
+  background: var(--highlight);
+  color: var(--bg);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* The stage ----------------------------------------------------------------- */
 
 .workshop__stage {

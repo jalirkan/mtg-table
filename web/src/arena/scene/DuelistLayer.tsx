@@ -63,7 +63,7 @@ import { COSTUME_SLOTS, anchorsOf, familyOf, wearsCostume, type PropKind } from 
 import type { ModelData } from '../figures/types.ts';
 import type { Seat } from '../layout.ts';
 import type { BustField, DuelistBinder } from './busts.ts';
-import { COSTUME_ATTRIBUTE, applyCostume, applyLook, makeFigureMaterial, type FigureMaterial } from './figureMaterial.ts';
+import { COSTUME_ATTRIBUTE, applyCostume, applyLook, dressFigureMeshes, makeFigureMaterial, type FigureMaterial } from './figureMaterial.ts';
 import {
   instantiateFigure,
   loadFigureModels,
@@ -100,7 +100,18 @@ export interface DuelistLayerProps {
   look?: number;
   /** Whether a composer draws the frames (bloom or the ink): the bodies are primed for that target (`prime.ts`). */
   composer?: boolean;
+  /**
+   * **The personal tier** (phase 2, **D195**): a seat's personal model, loaded
+   * (`scene/personalModels.ts`), from a manifest that dresses the seat (`opp` —
+   * the villain's look — or `you`). That seat's duelist is built from it: its
+   * own props are in the model and ours are not added, its colours are its own
+   * (a tinted hologram under `?look=holo`), and the gestures play on OUR clip
+   * lane from the clips baked into it. The stance rules are unchanged.
+   */
+  personal?: ReadonlyMap<Seat, LoadedModel>;
 }
+
+const NO_PERSONAL_SEATS: ReadonlyMap<Seat, LoadedModel> = new Map();
 
 /** The library path this manifest names, or the default (as `FigureLayer` reads it). */
 function libraryPathOf(models: ModelData): string {
@@ -136,7 +147,7 @@ function useDuelistLibrary(models: ModelData): ModelLibrary | null {
   return library;
 }
 
-export function DuelistLayer({ poses, bustField, models, data, stage, queue, look = 0, composer = false }: DuelistLayerProps): JSX.Element {
+export function DuelistLayer({ poses, bustField, models, data, stage, queue, look = 0, composer = false, personal = NO_PERSONAL_SEATS }: DuelistLayerProps): JSX.Element {
   const library = useDuelistLibrary(models);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
@@ -162,13 +173,13 @@ export function DuelistLayer({ poses, bustField, models, data, stage, queue, loo
   // — disposed the bodies after rebuilding them: the busts came back mid-game.)
   const [built, setBuilt] = useState(0);
   useLayoutEffect(() => {
-    if (library === null) return;
-    field.build(library, models, data);
+    if (library === null && personal.size === 0) return;
+    field.build(library, models, data, personal);
     setBuilt((n) => n + 1);
     return () => {
       field.dispose();
     };
-  }, [field, library, models, data]);
+  }, [field, library, models, data, personal]);
   useLayoutEffect(() => {
     field.commit(poses);
     invalidate();
@@ -235,9 +246,10 @@ interface DuelistBody {
   /** Carries the gesture's whole-body lean, pivoting at the feet. */
   lean: THREE.Group;
   instance: FigureInstance;
-  /** The one mesh drawn: the body with its props baked in. */
+  /** The one mesh drawn: the body with its props baked in (a personal body: its first mesh). */
   mesh: THREE.SkinnedMesh;
-  geometry: THREE.BufferGeometry;
+  /** The merged geometry this body owns, or `null` for a personal body, whose geometry is its model's. */
+  geometry: THREE.BufferGeometry | null;
   material: FigureMaterial;
   mixer: THREE.AnimationMixer;
   /** The breathing idle, or `null` (the bind pose). */
@@ -305,14 +317,16 @@ export class DuelistField implements DuelistBinder {
    * library has. Returns whether anything was (re)built. A seat whose look names
    * no model the library holds gets no body — `BustField` draws its bust.
    */
-  build(library: ModelLibrary, models: ModelData, data: DuelistData): boolean {
+  build(library: ModelLibrary | null, models: ModelData, data: DuelistData, personal: ReadonlyMap<Seat, LoadedModel> = NO_PERSONAL_SEATS): boolean {
     let changed = false;
     for (let i = 0; i < SEATS.length; i++) {
       const seat = SEATS[i]!;
       const lookId = data.seats[seat] ?? null;
       const look = lookId === null ? null : (data.looks[lookId] ?? null);
-      let model: LoadedModel | null = null;
-      if (look !== null) {
+      // The personal tier (D195): a seat a personal manifest dresses stands in that model.
+      const own = look === null ? null : (personal.get(seat) ?? null);
+      let model: LoadedModel | null = own;
+      if (look !== null && model === null && library !== null) {
         for (const id of look.body) {
           const candidate = library.get(id);
           if (candidate !== undefined) {
@@ -321,12 +335,12 @@ export class DuelistField implements DuelistBinder {
           }
         }
       }
-      const key = look === null || model === null ? '' : `${lookId ?? ''}:${model.id}`;
+      const key = look === null || model === null ? '' : `${lookId ?? ''}:${own !== null ? 'personal:' : ''}${model.id}`;
       const current = this.slots[i] ?? null;
       if (current !== null && current.key === key) continue;
       if (current !== null) this.drop(i);
       if (look !== null && model !== null) {
-        const body = buildBody(seat, key, look, model, models, data);
+        const body = buildBody(seat, key, look, model, models, data, own !== null);
         applyLook(body.material, this.look);
         this.slots[i] = body;
         this.group.add(body.root);
@@ -554,8 +568,9 @@ export class DuelistField implements DuelistBinder {
     this.group.remove(body.root);
     body.mixer.stopAllAction();
     // The merged geometry and the material are this body's own; the source
-    // geometry is shared with every creature and is not touched.
-    body.geometry.dispose();
+    // geometry is shared with every creature and is not touched (a personal
+    // body's geometry is its model's, shared the same way).
+    body.geometry?.dispose();
     body.material.dispose();
   }
 }
@@ -584,8 +599,10 @@ function buildBody(
   model: LoadedModel,
   models: ModelData,
   data: DuelistData,
+  own = false,
 ): DuelistBody {
   const instance = instantiateFigure(model);
+  if (own) return personalBody(seat, key, look, model, data, instance);
   const family = familyOf(model.id, models);
   // A costume needs a body whose vertices carry their slots (`costumeRegion`); a
   // body without them (an older library, the drone, the bee) is drawn in its tint.
@@ -628,6 +645,42 @@ function buildBody(
   parent.remove(target);
   for (let i = 1; i < skinned.length; i++) skinned[i]!.material = material;
 
+  return assembleBody(seat, key, model, data, instance, mesh, geometry, material, base);
+}
+
+/**
+ * **A seat's personal body** (D195): the model as it is — its own props are in
+ * it and ours are not baked in, its costume is its texture (one material per
+ * paint, D196) — tinted at the edge with the seat's colour like any duelist, and
+ * never a click target.
+ */
+function personalBody(seat: Seat, key: string, look: DuelistLook, model: LoadedModel, data: DuelistData, instance: FigureInstance): DuelistBody {
+  const base = new THREE.Color(look.tint).lerp(new THREE.Color(seat === 'you' ? '#8fd3c4' : '#d68f9a'), look.seatMix);
+  const skinned: THREE.SkinnedMesh[] = [];
+  instance.object.traverse((child) => {
+    if ((child as THREE.SkinnedMesh).isSkinnedMesh === true) skinned.push(child as THREE.SkinnedMesh);
+  });
+  const material = dressFigureMeshes(skinned, `#${base.getHexString()}`, model.unitScale);
+  material.uniforms.uRim.value = 2.4;
+  for (const mesh of skinned) {
+    mesh.frustumCulled = false;
+    mesh.raycast = () => {};
+  }
+  return assembleBody(seat, key, model, data, instance, skinned[0]!, null, material, base);
+}
+
+/** The body's groups, its clips and its aims — the part a CC0 and a personal body share. */
+function assembleBody(
+  seat: Seat,
+  key: string,
+  model: LoadedModel,
+  data: DuelistData,
+  instance: FigureInstance,
+  mesh: THREE.SkinnedMesh,
+  geometry: THREE.BufferGeometry | null,
+  material: FigureMaterial,
+  base: THREE.Color,
+): DuelistBody {
   const lean = new THREE.Group();
   lean.add(instance.object);
   const root = new THREE.Group();

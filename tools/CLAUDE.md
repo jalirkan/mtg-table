@@ -359,17 +359,20 @@ build needs the network and is **not** in `check-all.sh`; the four suites
 (`cards-lib`, `cards-api`, `cards-ui` and the vitest `cards-render`) run
 offline inside `npm --prefix web test` over `fixtures/cards/`.
 
-## The personal tier — the conventions D190–D193 added
+## The personal tier — the conventions D190–D196 added
 
 Five, and the thesis is the user's own sentence: **"this can never ever ever be
 sold or published."** The personal tier is `personal/models/<slug>/` — rigged
 models of the actual characters that the USER downloaded for their own use —
 and it sits beside the CC0 repository tier (**D54**, unchanged) without ever
 entering it. `docs/guides/personal-tier.md` is the manual,
-`docs/evidence/personal-tier.md` is Doctor Doom run through it, and PLAN.md's
-*The personal tier* has the status and phase 2 (the loader). Phase 1 is the
-folder, the manifest and the pipeline, `tools/personal/`; **nothing in the game
-reads `personal/` yet**. Its half of hard rule 8 is in the root `CLAUDE.md`.
+`docs/evidence/personal-tier.md` is the eight downloads run through it, and
+PLAN.md's *The personal tier* has the status and the follow-ups. Phase 1 is the
+folder, the manifest and the pipeline, `tools/personal/`; phase 2 (D194–D196) is
+the loader — the dev route `web/src/personal/devRoute.ts`, the arena's
+`arena/personal.ts` and `scene/personalModels.ts`, whose conventions are
+`web/src/arena/CLAUDE.md`'s *The personal tier*. Its half of hard rule 8 is in the
+root `CLAUDE.md`.
 
 1. **It is never committed, and the ignore rule is anchored** (**D190**).
    `.gitignore` names `/personal/`; an unanchored `personal/` also hides
@@ -377,9 +380,11 @@ reads `personal/` yet**. Its half of hard rule 8 is in the root `CLAUDE.md`.
    holds both halves with `git check-ignore --no-index` (without it git never
    calls a tracked file ignored, and the unanchored rule slipped past once the
    pipeline was committed) and fails if git tracks a file under `personal/`.
-   Nothing under `web/src/` or `web/public/` reads it, a picture of a personal
-   model stays in its folder, and phase 2 serves it from the Vite dev server
-   alone (**D92**'s rule) — never `vite preview`, never a build.
+   A picture of a personal model stays in its folder (or the gitignored `var/`),
+   and only the Vite dev server serves it (**D92**'s rule): `devRoute.ts`, mounted
+   in `configureServer` alone, never `vite preview` or a build — the arena names
+   the route only behind `import.meta.env.DEV`, and `web/test/personal.test.ts`
+   greps a build for the route and every slug.
 2. **Claude never sources a model.** The user downloads, with their own account,
    under a licence they read; the tools read what is on disk, fetch nothing,
    accept nothing and refuse nothing (game-asset name patterns are flagged, not
@@ -416,7 +421,8 @@ reads `personal/` yet**. Its half of hard rule 8 is in the root `CLAUDE.md`.
    turns an A-pose to our T and bakes it (inverse bind matrices rewritten, so the
    skin is the identity at rest), skins an unskinned cloak by height
    (`spine_03` / `spine_02` / `pelvis`), decimates with the meshoptimizer the CLI
-   pins, keeps base colour and normal ≤ 1024 px, and runs meshopt last. The
+   pins, keeps base colour ≤ 1024 px (normal maps kept until the paint step
+   drops them, an atlas ≤ 2048 px — **D194**), and runs meshopt last. The
    automatic rig map knows Auto-Rig Pro, Mixamo, Unreal, VRM and Character
    Creator; `bones.json` beside the model overrides it joint by joint.
 5. **There is one retarget, and it is proven.** `tools/personal/retarget.mjs` is
@@ -442,8 +448,22 @@ reads `personal/` yet**. Its half of hard rule 8 is in the root `CLAUDE.md`.
    whole pipeline on a figure of boxes and fails every wrong map that once
    passed.
 
+6. **The verdict gates the game** (**D194**, **D195**). `check.mjs` writes
+   `check.json` — pass or fail, what was judged, the sha256 of the `model.glb`
+   it judged — and the dev route loads a model only when its manifest is version
+   2, it is not `disabled` (true or a reason), and `check.json` passed THAT file.
+   A model that fails the check, or was prepared again since, is never loaded; the
+   dev server prints every skip with its reason. **Prepare bakes our clip set in**
+   (the `agent`'s twelve clips through `retarget.mjs`, the hip scaled — the
+   rotations would bind as they are, the absolute hip would not) and runs **the
+   paint step** (one primitive per base colour, the tileable ones in one atlas,
+   base colour only), so the arena loads a file that already speaks its rig, clips
+   and draw-call budget and retargets nothing. **`--joints bind|rest` reads the
+   joints and the vertices in ONE pose** — phase 1 read them in two, and a model
+   whose rest is not its bind came out with folded arms or a backwards foot.
+
 ```bash
 node tools/personal/import.mjs <download.zip|.gltf|.glb|.vrm> <slug>   # unpack + inspect.json
-node tools/personal/prepare.mjs <slug> --card "<name>" [--seat opp] [--budget 6000]
-node tools/personal/check.mjs <slug>          # our clips on it, the map judged, previews (headless Chromium)
+node tools/personal/prepare.mjs <slug> --card "<name>" [--seat villain] [--budget 6000] [--joints bind|rest] [--disabled "<why>"]
+node tools/personal/check.mjs <slug>          # our clips on it, the map judged, previews (headless Chromium), check.json
 ```

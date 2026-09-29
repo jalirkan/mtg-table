@@ -63,8 +63,11 @@ together, and each is a defect that was actually hit.
    exempt for the same reason: the list is deck cards, tokens and archetypes whose
    facts come only from face-up sightings, a concealed entry never looks its art
    up and draws a back, and its pedestal draws every card through the arena's
-   `CardPlane`. `workshop.test.ts` holds it at one `imageUrl(` with every
-   `lookupArt(` guarded by `concealed === null`. **The story page (`#story`) draws a card image
+   `CardPlane` — but for its **inspect** view (**D196**), which draws the same
+   `normal` image `CardPlane` draws for the card, face up only, as the art-box
+   backdrop and the frame panel. `workshop.test.ts` holds it at two `imageUrl(`
+   (the thumbnail and the inspect URL) with every `lookupArt(` guarded by
+   `concealed === null`. **The story page (`#story`) draws a card image
    of its own** (`story/Story.tsx`'s `CardImage`, **D127**), exempt for the same
    reason again: it is the Scryfall image of a face-up card a narrated fact NAMES
    — looked up by that name, never by an id — beside the moment on screen, and a
@@ -347,8 +350,9 @@ second, and renumbered them **D105–D108**. The workshop and `#cards` link to e
      `legibility.ts` and `data.ts` may import three or React;
    - its components are in `hooks-order.test.ts`'s scan.
 
-   The list's thumbnail is its one card image outside `CardPlane` (M4 convention
-   2's exemption), and a concealed entry never looks its art up.
+   The list's thumbnail and the inspect view are its card images outside
+   `CardPlane` (M4 convention 2's exemption), and a concealed entry never looks
+   its art up.
 
    Its URL is `#workshop?card=<name>` — read by `links.ts`'s `cardFromLocation`,
    the hash's query first as `#cards` reads its own, and written back as the list
@@ -365,6 +369,19 @@ Keep the directory flat, or extend the scan in the same change. The screenshot
 driver's handle, `window.__mtgWorkshop` (the queue, `select`, the options, the
 camera mode, fiber's store), exists only under `import.meta.env.DEV`, as
 `__mtgArena` does.
+
+**The personal tier on the pedestal** (**D196**; the arena's conventions are
+`web/src/arena/CLAUDE.md`'s *The personal tier*). The workshop reads the same
+overlay the arena does (`usePersonalOverlay`, dev server only), badges every card
+an active personal model dresses — face up only — and dresses the pedestal
+exactly as `Arena.tsx` dresses (`personalChoicesOf`, `dressPoses`); the *personal /
+repo* toggle is the A/B, and the pedestal loads no seat's model (there are no
+duelists on it). **Inspect** is a camera mode (`framing.ts`'s `inspectLayout`, pure):
+the figure in its signature pose, the card's art box enlarged behind it, the frame
+and text with the art window cut out floating beside it — flat until the
+depth-relief follow-up. **A deck card no recording showed face up takes its facts
+from the engine's card script** (`catalog.json`'s `engine` list, `tools/forge-scripts.ts`):
+facts are still what Forge puts on the wire, never typed by hand.
 
 ## The story page — the conventions D124–D128 added
 

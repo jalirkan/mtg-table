@@ -12,9 +12,13 @@
  *    the look is written at commit (`uLook` 0), `uMaterialize` at identity;
  *  - **the paint input path** (D144): a map adds the `USE_PAINT_MAP` define and
  *    rides `uPaintMap`, vertex colours turn on three's `USE_COLOR`, and in the
- *    fragment shader both multiply the palette BEFORE the hologram and the comic
+ *    fragment shader both reach the paint BEFORE the hologram and the comic
  *    block read it — so a textured model is painted under the same bands, rim and
- *    halftone, not tinted after them;
+ *    halftone, not tinted after them. **D196**: a personal model's map is its OWN
+ *    colour (`uPaintOwn` 1): the comic look paints the texture as it is and the
+ *    hologram tints its values with the palette; a cutout map discards under 0.5;
+ *    a model of several paints is SIBLING materials that share the first one's
+ *    uniform objects, marked and disposed with it;
  *  - the comic block's uniforms are the SAME value objects in every figure and
  *    prop material (`COMIC_UNIFORMS`), so `applyComicGlobals` reaches all of them
  *    with one write — a copied uniform would silently freeze one material's look;
@@ -42,8 +46,10 @@ import {
   COMIC_UNIFORMS,
   applyComicGlobals,
   applyLook,
+  dressFigureMeshes,
   makeFigureMaterial,
   markPainted,
+  siblingsOf,
 } from '../src/arena/scene/figureMaterial.ts';
 import { PROP_LOOK, applyPropLook, makePropMaterial } from '../src/arena/scene/propMaterial.ts';
 
@@ -75,7 +81,7 @@ test('figure material: the paint input path — a map and vertex colours multipl
   assert.equal(both.vertexColors, true);
 
   // The order in the fragment shader: the palette, times the model's colour, times
-  // its map — and only then the hologram and the comic block read `painted`.
+  // its map — and only then the hologram and the comic block read the paint.
   const fragment = mapped.fragmentShader;
   const at = (needle: string): number => {
     const i = fragment.indexOf(needle);
@@ -83,16 +89,70 @@ test('figure material: the paint input path — a map and vertex colours multipl
     return i;
   };
   const colour = at('painted *= vColor.rgb;');
-  const texture = at('painted *= texture2D( uPaintMap, vPaintUv ).rgb;');
-  const holo = at('vec3 body = painted;');
+  const texture = at('vec4 paintTexel = texture2D( uPaintMap, vPaintUv );');
+  const holoPaint = at('holoPaint = mix( painted * paintTexel.rgb, painted * ( 0.35 + 0.9 * paintLuma ), uPaintOwn );');
+  const ownPaint = at('painted = mix( painted, vec3( 1.0 ), uPaintOwn ) * paintTexel.rgb;');
+  const holo = at('vec3 body = holoPaint;');
   const comic = at('comicShade( comicPaint( painted )');
-  assert.ok(colour < holo && texture < holo, 'the paint input must reach the hologram');
-  assert.ok(colour < comic && texture < comic, 'the paint input must sit UNDER the bands, halftone and rim');
+  assert.ok(colour < holo && texture < holoPaint && holoPaint < holo, 'the paint input must reach the hologram');
+  assert.ok(colour < comic && ownPaint < comic, 'the paint input must sit UNDER the bands, halftone and rim');
   // Each behind its define, so a body that carries neither compiles neither.
   assert.match(fragment, /#ifdef USE_COLOR\s+painted \*= vColor\.rgb;\s+#endif/);
-  assert.match(fragment, /#ifdef USE_PAINT_MAP\s+painted \*= texture2D\( uPaintMap, vPaintUv \)\.rgb;\s+#endif/);
+  assert.match(fragment, /#ifdef USE_PAINT_MAP\s+vec4 paintTexel = texture2D\( uPaintMap, vPaintUv \);[\s\S]*?#endif\n/);
+  assert.match(fragment, /#ifdef USE_PAINT_CUTOFF\s+if \( paintTexel\.a < 0\.5 \) discard;\s+#endif/);
   assert.match(mapped.vertexShader, /#ifdef USE_PAINT_MAP\s+vPaintUv = uv;\s+#endif/);
+  // D144's own semantics hold for a map that is not a personal model's: uPaintOwn 0.
+  assert.equal(mapped.uniforms.uPaintOwn.value, 0);
   for (const m of [mapped, coloured, both]) m.dispose();
+});
+
+test('figure material: a personal model paints in its own colours, a cutout discards, and its paints share one figure (D196)', () => {
+  const own = makeFigureMaterial('#3a6ea5', 1, { map: new THREE.Texture(), own: true, cutout: true });
+  assert.equal(own.uniforms.uPaintOwn.value, 1, 'a personal map is its own colour');
+  assert.equal(own.defines.USE_PAINT_CUTOFF, '', 'a cutout map discards');
+  own.dispose();
+  // dressFigureMeshes: a committed body (no map) → ONE material on every mesh, as before.
+  const plain = [new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial()), new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial())];
+  const one = dressFigureMeshes(plain, '#ffffff', 1);
+  assert.equal(plain[0]!.material, one);
+  assert.equal(plain[1]!.material, one);
+  assert.deepEqual(one.defines ?? {}, {}, 'a committed body stays the one program');
+  assert.equal(siblingsOf(one).length, 0);
+  one.dispose();
+  // A personal model of two paints: the first material is the figure's, the second a sibling sharing its uniform OBJECTS.
+  const a = new THREE.Texture();
+  const b = new THREE.Texture();
+  const cut = new THREE.MeshStandardMaterial({ map: b });
+  cut.alphaTest = 0.5;
+  const meshes = [
+    new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ map: a })),
+    new THREE.Mesh(new THREE.BufferGeometry(), cut),
+    new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ map: a })),
+  ];
+  const primary = dressFigureMeshes(meshes, '#a33a3a', 1);
+  const [sibling] = siblingsOf(primary);
+  assert.ok(sibling !== undefined, 'the second paint is a sibling');
+  assert.equal(meshes[0]!.material, primary);
+  assert.equal(meshes[2]!.material, primary, 'the same map is the same material');
+  assert.equal(meshes[1]!.material, sibling);
+  assert.equal(primary.uniforms.uPaintMap.value, a);
+  assert.equal(sibling.uniforms.uPaintMap.value, b, 'each paint keeps its own map');
+  assert.equal(sibling.defines.USE_PAINT_CUTOFF, '', 'the cutout is the paint\'s own');
+  for (const name of ['uTint', 'uOpacity', 'uLook', 'uMaterialize', 'uDrain', 'uDrainTo', 'uCostumeOn', 'uPaintOwn'] as const) {
+    assert.equal(sibling.uniforms[name], primary.uniforms[name], `${name} is a copy in the sibling: the frame loop's write would miss it`);
+  }
+  primary.uniforms.uOpacity.value = 0.4;
+  assert.equal(sibling.uniforms.uOpacity.value, 0.4);
+  applyLook(primary, 1);
+  assert.equal(sibling.blending, THREE.CustomBlending, 'the sibling is marked painted with its figure (D146)');
+  applyLook(primary, 0);
+  assert.equal(sibling.blending, THREE.NormalBlending);
+  let disposed = false;
+  sibling.addEventListener('dispose', () => {
+    disposed = true;
+  });
+  primary.dispose();
+  assert.ok(disposed, 'disposing the figure disposes its other paints');
 });
 
 test('figure material: the comic block is ONE set of uniform objects, shared by every figure and prop material (D145)', () => {

@@ -39,6 +39,7 @@
 
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -133,6 +134,7 @@ interface Lib {
   insideSlug(slug: string, path: string): string;
   gitIgnores(path: string): boolean;
   validateManifest(m: unknown): string[];
+  seatOf(value: unknown): string | null;
   detectRigMap(names: string[], options?: { vrmHumanBones?: Record<string, string> | null; file?: unknown }): RigMap;
   armAngles(positions: Record<string, number[]>): { l: number | null; r: number | null; verdict: string };
   readDocument(bytes: Uint8Array | string): Promise<unknown>;
@@ -222,7 +224,7 @@ function validManifest(): Record<string, unknown> {
   const joints = Object.fromEntries(lib.OUR_JOINTS.map((j) => [j, { primary: `${j}.src`, followers: [], by: 'name' }]));
   return {
     _what: 'a test manifest',
-    version: 1,
+    version: 2,
     slug: 'doctor-doom',
     dresses: [{ card: 'Doctor Doom' }, { seat: 'opp' }],
     model: 'model.glb',
@@ -237,11 +239,20 @@ function validManifest(): Record<string, unknown> {
     dropped: { controlMeshes: 59 },
     units: { height: 1.9139, facing: '+z' },
     prepared: { tool: 'tools/personal/prepare.mjs', date: '2026-09-28T00:00:00.000Z', budget: 6000 },
+    clips: { keys: ['idle', 'attack', 'hit', 'die', 'crouch'], source: "figures.glb's agent clips", fps: 24 },
   };
 }
 
 test('personal-tier: a well-formed manifest validates', () => {
   assert.deepEqual(lib.validateManifest(validManifest()), []);
+  // Phase 2 (D194, D195): a seat by its duelist look's name, a reason for `disabled`, the paint record.
+  const m = validManifest();
+  m['dresses'] = [{ card: 'Doctor Doom' }, { seat: 'villain' }, { seat: 'director' }];
+  m['disabled'] = 'its jacket is modelled akimbo';
+  m['paint'] = { primitives: [{ material: 'paint-0', atlas: true, cutout: false, texture: 'atlas.png', triangles: 10, parts: [] }], atlas: { size: 1024 } };
+  m['textures'] = [{ name: 'atlas.png', slot: 'atlas', size: [2048, 2048], bytes: 1, downscaled: false }];
+  assert.deepEqual(lib.validateManifest(m), []);
+  assert.deepEqual([lib.seatOf('villain'), lib.seatOf('director'), lib.seatOf('opp'), lib.seatOf('nobody')], ['opp', 'you', 'opp', null]);
 });
 
 test('personal-tier: the manifest validator names each defect', () => {
@@ -251,7 +262,7 @@ test('personal-tier: the manifest validator names each defect', () => {
     ['a bad slug', (m) => (m['slug'] = 'Doctor Doom'), /slug/],
     ['no dresses', (m) => (m['dresses'] = []), /at least one/],
     ['card and seat in one entry', (m) => (m['dresses'] = [{ card: 'X', seat: 'opp' }]), /exactly one/],
-    ['a seat that is not one', (m) => (m['dresses'] = [{ seat: 'villain' }]), /seat must be one of/],
+    ['a seat that is not one', (m) => (m['dresses'] = [{ seat: 'henchman' }]), /seat must be one of/],
     ['a model path that climbs out', (m) => (m['model'] = '../model.glb'), /relative \.glb/],
     ['a model that is not a .glb', (m) => (m['model'] = 'model.fbx'), /relative \.glb/],
     ['a source with no sha256', (m) => (m['source'] = { file: 'x.zip', bytes: 1 }), /source/],
@@ -263,7 +274,11 @@ test('personal-tier: the manifest validator names each defect', () => {
     ['a 2048 px texture', (m) => (m['textures'] = [{ name: 'x', slot: 'baseColor', size: [2048, 2048] }]), /1024/],
     ['a texture in another slot', (m) => (m['textures'] = [{ name: 'x', slot: 'emissive', size: [16, 16] }]), /baseColor or normal/],
     ['a model not facing +z', (m) => (m['units'] = { height: 1.9, facing: '-z' }), /facing/],
-    ['version 2', (m) => (m['version'] = 2), /version/],
+    ['version 1 (phase 1: no baked clips)', (m) => (m['version'] = 1), /phase 1.*run prepare\.mjs again/],
+    ['no baked clips', (m) => delete m['clips'], /missing "clips"/],
+    ['baked clips with no idle', (m) => (m['clips'] = { keys: ['attack'], fps: 24 }), /idle/],
+    ['disabled, but empty', (m) => (m['disabled'] = ''), /disabled must be/],
+    ['a 4096 px atlas', (m) => (m['textures'] = [{ name: 'atlas.png', slot: 'atlas', size: [4096, 4096] }]), /2048/],
   ];
   for (const [what, spoil, expect] of defects) {
     const m = validManifest();
@@ -1326,6 +1341,20 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
     assert.match(checked.out, /flesh (\d+)\/\1 limb joints carry their vertices ahead of them/);
     assert.match(checked.out, /^OK — /m);
     assert.doesNotMatch(checked.out, /takes our clip set/, 'the closing line claims only what was judged');
+    // Phase 2 (D194): OUR clip set is BAKED into model.glb — every key the agent carries, each an animation of
+    // the file named by its key, and check.mjs step 2c holds each against the retarget it just ran.
+    const baked = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { clips: { keys: string[]; fps: number } };
+    const agentKeys = Object.keys((JSON.parse(readFileSync(join(REPO, 'web/src/arena/figures/models.json'), 'utf8')) as { models: { agent: { clips: Record<string, string> } } }).models.agent.clips);
+    assert.deepEqual([...baked.clips.keys].sort(), [...agentKeys].sort());
+    assert.equal(baked.clips.fps, 24);
+    const bakedDoc = (await lib.readDocument(join(dir, 'model.glb'))) as Document;
+    assert.deepEqual(bakedDoc.getRoot().listAnimations().map((a) => a.getName()).sort(), [...agentKeys].sort());
+    assert.match(checked.out, /2c\. the clips baked into model\.glb/);
+    assert.match(checked.out, /the 12 clips baked into model\.glb are the retarget's \(worst joint \d\.\d\d°, pelvis \d+\.\d mm/);
+    // …and the verdict is written beside the model, naming the bytes it judged (the dev route loads nothing else).
+    const verdict = JSON.parse(readFileSync(join(dir, 'check.json'), 'utf8')) as { ok: boolean; model: { sha256: string } };
+    assert.equal(verdict.ok, true);
+    assert.equal(verdict.model.sha256, createHash('sha256').update(readFileSync(join(dir, 'model.glb'))).digest('hex'));
 
     // The wrong maps: the verifier's two, which the first check.mjs passed, and the third skeptic's
     // forearm-for-hand swap, which judgeBody passed — the fold is the limb check's (D193).
@@ -1346,10 +1375,108 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
       const c = node(['tools/personal/check.mjs', SLUG, '--no-preview']);
       assert.equal(c.status, 1, `${what}: check passed it\n${c.out}`);
       assert.match(c.out, expect, what);
+      assert.equal((JSON.parse(readFileSync(join(dir, 'check.json'), 'utf8')) as { ok: boolean }).ok, false, `${what}: check.json does not say it failed`);
       if (/forearm and hand/.test(what)) {
         assert.match(c.out, /FAIL\s+lowerarm_l → hand_l is 0\.\d\d× as long as upperarm_l → lowerarm_l/, `${what}: the proportion`);
         assert.match(p.out, /WARN\s+lowerarm_l turned 1\d\d(\.\d)?° onto the agent's forearm/, `${what}: prepare's warning`);
       }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    if (createdModels && readdirSync(lib.MODELS_DIR).length === 0) rmSync(lib.MODELS_DIR, { recursive: true, force: true });
+    if (createdPersonal && readdirSync(join(REPO, 'personal')).length === 0) rmSync(join(REPO, 'personal'), { recursive: true, force: true });
+  }
+});
+
+/**
+ * **The paint step** (D194): one primitive per base colour, the tileable ones in
+ * one atlas — so a model of many textured parts costs a draw call or two a
+ * figure, not one per part. The figure of boxes, textured: its body and its cape
+ * each get an 8 × 8 PNG of their own. With both inside one UV tile they share an
+ * atlas (one primitive); with the body's UVs wrapping (u up to 1.5, a repeating
+ * texture), the body keeps its own texture and the cape its own (two). Every
+ * part's vertex range is recorded, and a `--disabled` reason reaches the manifest.
+ */
+test('personal-tier: the paint step — tileable parts share an atlas, a wrapping one keeps its texture, every part’s range recorded; --disabled with a reason', { timeout: 120_000 }, async () => {
+  const slug = `${SLUG}-paint`;
+  const dir = lib.slugDir(slug);
+  const createdPersonal = !existsSync(join(REPO, 'personal'));
+  const createdModels = !existsSync(lib.MODELS_DIR);
+  const { createRequire } = await import('node:module');
+  const sharp = createRequire(join(REPO, 'web/package.json'))('sharp') as (input?: unknown, options?: unknown) => { png(): { toBuffer(): Promise<Buffer> } };
+  // A two-tone swatch: a single-colour texture is folded into the material's factor by gltf-transform's prune.
+  const swatch = (r: number, g: number, b: number): Promise<Buffer> => {
+    const raw = Buffer.alloc(8 * 8 * 3);
+    for (let i = 0; i < 64; i += 1) raw.set(i % 2 === 0 ? [r, g, b] : [255 - r, 255 - g, 255 - b], i * 3);
+    return sharp(raw, { raw: { width: 8, height: 8, channels: 3 } }).png().toBuffer();
+  };
+  const textured = async (wrap: boolean): Promise<Uint8Array> => {
+    const io = new NodeIO();
+    const doc = await io.readBinary(await boxFigure(45, 2));
+    const root = doc.getRoot();
+    const byName = new Map(root.listMaterials().map((m) => [m.getName(), m]));
+    const body = byName.get('Body')!;
+    const cape = byName.get('Cape')!;
+    body.setBaseColorTexture(doc.createTexture('body').setImage(new Uint8Array(await swatch(200, 40, 40))).setMimeType('image/png'));
+    cape.setBaseColorTexture(doc.createTexture('cape').setImage(new Uint8Array(await swatch(40, 40, 200))).setMimeType('image/png'));
+    if (wrap) {
+      const prim = root.listMeshes().flatMap((m) => m.listPrimitives()).find((p) => p.getMaterial() === body)!;
+      const uv = prim.getAttribute('TEXCOORD_0')!;
+      const e = [0, 0];
+      for (let i = 0; i < uv.getCount(); i += 1) {
+        uv.getElement(i, e);
+        uv.setElement(i, [(e[0] ?? 0) * 1.5, e[1] ?? 0]);
+      }
+    }
+    return io.writeBinary(doc);
+  };
+  mkdirSync(dir, { recursive: true });
+  try {
+    for (const wrap of [false, true]) {
+      writeFileSync(join(dir, 'figure.glb'), await textured(wrap));
+      assert.equal(node(['tools/personal/import.mjs', join(dir, 'figure.glb'), slug]).status, 0);
+      const args = ['tools/personal/prepare.mjs', slug, '--card', 'Selftest Figure', '--budget', '600'];
+      if (wrap) args.push('--disabled', 'a test model, disabled with its reason');
+      const prepared = node(args);
+      assert.equal(prepared.status, 0, prepared.out);
+      const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as {
+        paint: { primitives: { material: string; atlas: boolean; triangles: number; parts: { part: string; first: number; count: number }[] }[] } | null;
+        textures: { slot: string; size: number[] }[];
+        disabled?: unknown;
+      };
+      assert.deepEqual(lib.validateManifest(manifest), []);
+      const primitives = manifest.paint!.primitives;
+      if (!wrap) {
+        assert.equal(primitives.length, 1, 'two tileable parts: one atlas, one primitive');
+        assert.equal(primitives[0]!.atlas, true);
+        assert.deepEqual(manifest.textures.map((t) => [t.slot, t.size]), [['atlas', [1024, 1024]]]);
+        assert.equal(manifest.disabled, undefined);
+      } else {
+        assert.equal(primitives.length, 2, 'the body wraps: it keeps its own texture beside the cape’s');
+        assert.ok(primitives.every((p) => !p.atlas));
+        assert.equal(manifest.disabled, 'a test model, disabled with its reason');
+        assert.match(prepared.out, /DISABLED\s+a test model, disabled with its reason/);
+      }
+      // Every part's vertices are recorded, back to back, and the file draws exactly them.
+      const doc = (await lib.readDocument(join(dir, 'model.glb'))) as Document;
+      const prims = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives());
+      assert.equal(prims.length, primitives.length);
+      for (const record of primitives) {
+        const prim = prims.find((p) => p.getMaterial()?.getName() === record.material)!;
+        assert.ok(prim !== undefined, `${record.material} is not in the file`);
+        let next = 0;
+        for (const part of record.parts) {
+          assert.equal(part.first, next, `${record.material}: ${part.part} does not start where the one before it ended`);
+          next += part.count;
+        }
+        assert.equal(next, prim.getAttribute('POSITION')!.getCount(), `${record.material}: the ranges do not cover the primitive`);
+        assert.equal(prim.getMaterial()?.getBaseColorTexture() !== null, true, `${record.material} has no base colour`);
+        assert.equal(prim.getAttribute('TANGENT'), null, 'no tangent: the arena draws no normal map');
+      }
+      assert.deepEqual(new Set(primitives.flatMap((p) => p.parts.map((x) => x.part))).size, 2, 'the body and the cape');
+      const checked = node(['tools/personal/check.mjs', slug, '--no-preview']);
+      assert.equal(checked.status, 0, checked.out);
+      assert.match(checked.out, /cloak \(rule-skinned\) parts: Cape in paint-\d/, 'check follows the rule-skinned cape inside its merged primitive');
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });

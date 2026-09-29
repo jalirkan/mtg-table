@@ -8620,6 +8620,223 @@ and calf↔foot swaps move the foot against the agent's (cosines −0.75, −0.0
 
 ---
 
+## D194 — The personal pipeline, phase 2: our clip set BAKED into the model, one primitive per paint (an atlas where the UVs allow), the joints and the vertices read in one pose, and the verdict written beside the model
+
+*Branch `personal-tier-2` (worktree `mtg-table-t2p2`, off `main`'s `096c952`). The
+lane's reserved range is D194–D199; the numbers are final (D200).*
+
+**2026-09-28** (`docs/evidence/personal-tier.md` §16–§17; the manual is
+`docs/guides/personal-tier.md`)
+
+**Decision.** Five changes to `tools/personal/`, each measured on the user's
+eight downloads:
+
+1. **`prepare.mjs` bakes OUR clip set into `model.glb`** — every clip
+   `models.json` gives the `agent` (the twelve: idle, summon, attack, block, hit,
+   die, grow, shrink, channel, the kneel, pistolDraw, radioCall), carried onto
+   the rebuilt skeleton with `retarget.mjs` at 24 fps and written as the file's
+   own animations, named by key; the source's own takes are dropped (named in the
+   manifest). The check the lane was asked to make first: a prepared skeleton
+   has OUR names in the `agent`'s bind rotations (local rotations equal to
+   0.03° on Doom), so `figures.glb`'s rotation tracks WOULD bind directly — but
+   its pelvis track is absolute, the agent's hip (local 0.91 m, 8 cm forward)
+   and not Doom's (1.01 m), so a figure bound to the agent's clips stands 10 cm
+   into the table. Baking with the retarget's hip scaling fixes that once, and
+   the arena needs no retarget path of its own. `check.mjs` step 2c holds the
+   baked clips to the retarget it runs (worst joint 0.72°, pelvis 0.3 mm on
+   Doom — meshopt's quantisation).
+2. **One primitive per PAINT** (the "paint step", only when the model carries a
+   base-colour texture). Parts are grouped by base-colour texture, factor and
+   cutout; every group whose UVs sit inside one unit tile goes into ONE atlas
+   (512 px tiles, an 8 px gutter of copied edge, a 1024–2048 px sheet, each factor
+   multiplied in, an untextured part a swatch of its factor); a group whose UVs
+   wrap keeps its own texture; each paint's parts are merged into one primitive
+   `paint-<n>` with base colour only, their vertex ranges recorded
+   (`manifest.paint`, which `check.mjs` follows a rule-skinned cloak through).
+   A tile is one unit square give or take 1% (Coulson's suit reaches v 1.0005).
+   Coulson's eighteen parts are ONE draw call (a twelve-tile atlas), Doom's eight
+   two (his tunic's UVs wrap to 1.87 on a repeating texture), the others one.
+   The normal maps and tangents go: the arena draws base colour only (D196). This
+   amends D191's rule 7 ("base colour and normal kept").
+3. **`--joints bind|rest`**: the joints AND the vertices are read in ONE pose —
+   at the skin's bind (the default; every joint's `K` the reference one) or at the
+   file's rest (its nodes as they stand). Phase 1 read the vertices at rest and
+   the joints at bind, which is the same file when rest IS bind (Doom, spread
+   3.1 × 10⁻⁵) and a mismatch when it is not: Peggy's backwards foot and the fan
+   Wasp's folded forearms (evidence §15's calibration) were that, and pass with
+   `--joints bind`; Coulson's Character Creator export reads right only at
+   `--joints rest` (its bind matrices read back 88.8° / −75.6°).
+4. **Two fallbacks the downloads needed**: a spec/gloss material (Character
+   Creator) has its diffuse read as base colour; and a part the simplifier stops
+   short on (a game export whose every triangle carries its own normals — Hulk's
+   41,060 vertices for 12,292 positions) is WELDED on position and UV, its
+   normals averaged, and simplified again.
+5. **The verdict is written down.** `check.mjs` writes `check.json` beside the
+   model — pass or fail, the failures, what was judged and the sha256 of the
+   `model.glb` it judged — and the manifest is VERSION 2 (it names the baked
+   clips). A manifest may carry `disabled` (true, or the reason as a sentence),
+   and a seat may be named by its duelist look (`villain`, `director` — D99).
+
+**Rationale.** Phase 2's loader should be a plain load of a file that already
+speaks the arena's rig, clips and draw-call budget (D191's argument, carried to
+the clips and the materials); every change is in the tool that runs once per
+model, never in the game. The verdict file lets the dev route refuse a model
+that failed, or changed since it passed, without re-running the check.
+
+**Rejected.**
+
+- **Binding `figures.glb`'s agent clips to a personal model directly.** The
+  rotations match by construction; the hip does not (1 above).
+- **A runtime retarget in the arena** (a second retarget path, per figure, per
+  load). The build and `retarget.mjs` are the only retargets (D191).
+- **An atlas for every paint.** A wrapping UV (a tiling tunic) cannot live in
+  a tile; clamping it would stretch the texture.
+- **Merging parts at runtime** (by map, at load). The draw-call cost would be the
+  same, and the Node-side check would not see what the arena draws.
+- **Keeping the normal maps.** Nothing reads them: the comic look shades from
+  the vertex normals and a uniform key (D138).
+
+---
+
+## D195 — The loader: a dev-server index of the models that PASSED, THE lookup by face-up name where `figurePose` already places a named figure, a dressed pose, and a seat's duelist in its model — under a measured cap
+
+*Branch `personal-tier-2`; the lane's reserved range D194–D199.*
+
+**2026-09-28** (`docs/evidence/personal-tier.md` §17)
+
+**Decision.**
+
+1. **The route is the dev server's alone** (D92's rule, D190): `web/src/personal/
+   devRoute.ts`, mounted in `vite.config.ts`'s `configureServer` and nowhere
+   else, builds an INDEX once at start from every `personal/models/*/manifest.json`
+   and serves it (`/personal/index.json`) and each ACTIVE model's `model.glb` and
+   `manifest.json` — nothing else in the folder, every answer `no-store`. A model
+   is active when its manifest is version 2, it is not `disabled`, and
+   `check.json` says `check.mjs` passed the very `model.glb` on disk (its sha256);
+   every other model is skipped with its reason, printed at start. When two active
+   models dress one card or seat, the first slug keeps it and the other is
+   "shadowed". `MTG_TABLE_PERSONAL=off` starts a dev server without it. The arena
+   names the route only behind `import.meta.env.DEV`, so a build carries no
+   address of it (`personal.test.ts` greps `dist`).
+2. **One reader, one lookup, one dressing** (`web/src/arena/personal.ts`, pure).
+   `personalOverlayOf` reads the index — opaque ids (`p0`, `p1`: never a slug),
+   a same-origin relative `.glb` path or nothing, the caps. `personalChoicesOf` is
+   THE lookup and hard rule 8's renderer half for this tier: a figure may wear a
+   personal model only if `figurePose` placed a NAMED figure (a model, not the
+   anonymous figure, not a swarm, not a silhouette) on a placement drawn face up
+   that is not a redacted stub — all decided before the name is read — and then
+   by its exact face-up name. Over the whole corpus made HOSTILE (every back and
+   stub given a name, and the hostile placements under the plain poses), the
+   overlay is asked about no concealed name; the same lookup with its gates
+   removed is asked about 13,119, and removing either gate by hand fails the
+   sweep (the negative controls).
+   `dressPoses` makes a choice a pose once its model has LOADED: the opaque id, no
+   props, no costume, no hair (the model brings its own; ours are not added), and
+   the height refitted to the model's own widest resting width, so the width
+   clamp stays strict (D65). Everything else is ours: the stand point, the
+   stance, the kneel, the sick translucency, the departure, every offset.
+3. **The scene**: `scene/personalModels.ts` loads the index and the wanted
+   models through `scene/models.ts`'s `loadPersonalModel` — three's `GLTFLoader`
+   and `MeshoptDecoder`, never drei — building the base and its resting-pose
+   variants from the baked clips; `FigureLayer`'s one change is the model-source
+   choice (`modelOf`: a dressed pose's personal model, else the CC0 library's), for
+   the living figure and the departing body alike. `DuelistLayer` builds a seat's
+   duelist from a model that dresses the seat (`opp` — the villain's look — or
+   `you`): its own props in it, ours not baked in, the gestures on our clip lane
+   from the baked clips, the stance rules unchanged. A load that fails, a 404 or
+   a withheld model is the CC0 figure. `?personal=0` draws the CC0 figures (the
+   A/B), and the workshop has a personal/repo toggle.
+4. **The budget** (`arena/perf.ts`): a model over `PERSONAL_TRI_CAP` = 8,000
+   triangles or `PERSONAL_CALL_CAP` = 2 paints is never loaded; at most
+   `PERSONAL_MAX_FIGURES` = 4 creatures are dressed at once, in placement order,
+   plus the two duelists. Measured at `g1`@316 with Doom as the villain and Peggy
+   and the MCU Wasp dressed (+12,236 triangles, −5 draw calls: a dressed figure
+   sheds its props): the GTX 1080's p95 is unchanged (0.6 ms bloom off, 1.5 ms on);
+   SwiftShader's p50 rises about 2.6 ms (16.2–16.6 → 19.0) and its p95 by about 1 ms, the
+   CC0 table already outside §9.4 there. The triangles pass report 13 §8.2's
+   30,000 line with the first personal model — the table had no headroom — so the
+   cap is the machine's (the tier runs on the user's own dev server, never in a
+   build), and a floor rung that sheds personal models is a follow-up.
+
+**Rationale.** A personal model is a statement about what a card is (D190), so
+the one decision about it is made in one pure function, gated like the art
+palette (D160), before any name is read, and tested over the corpus with a
+hostile overlay. Keeping the choice out of `figurePose` and the cue layer means
+no id, slug or file name can reach an op log, a label or the wire: the cue layer
+never sees a personal id, and a dressed pose carries only the opaque one.
+
+**Rejected.**
+
+- **Choosing the model in `figurePose`.** The pose would carry a model choice for
+  a file that may never load; dressing only a LOADED model keeps a failure the
+  CC0 figure with its props.
+- **Keying the lookup by the card's id, or letting a face-down card's owner see
+  it.** The wire's name, face up, is the only public fact that says who a card is.
+- **Adding our props to a personal model.** The model is the character; a coat
+  or a hair prop anchored at the agent's joints would float off it.
+- **A `fetch` in the arena.** The index is loaded like a model (three's
+  `FileLoader`), once a page, behind the DEV gate — never a poll.
+
+---
+
+## D196 — A personal model paints in its OWN colours (the hologram tints its values), its paints are one figure's materials; the workshop wears it, badges it, toggles it and INSPECTS it against its card's art; the catalog takes a never-seen card's facts from the engine's script
+
+*Branch `personal-tier-2`; the lane's reserved range D194–D199.*
+
+**2026-09-28** (`docs/evidence/personal-tier.md` §17)
+
+**Decision.**
+
+1. **Own colours** (amending D144 for the personal tier): `uPaintOwn` 1 makes
+   the comic look paint a personal model's texture as it is — the card's colour
+   stays in the rim, never multiplied into a face — and the hologram tint the
+   texture's VALUES with the palette (`?look=holo` draws a tinted hologram of the
+   model); `USE_PAINT_CUTOFF` discards a texel under 0.5 alpha (Coulson's hair
+   cards). D144's palette × map is unchanged for any other map (`uPaintOwn` 0).
+2. **A model of two paints is one figure** (`dressFigureMeshes`): the first
+   material is the figure's own — the one its rig holds and the frame loop writes
+   — and each other paint a SIBLING whose uniforms are the first one's uniform
+   OBJECTS but for its map, so every per-frame write reaches all of them;
+   `applyLook` marks the siblings (D146) and disposing the first disposes them. A
+   committed body (no map) still gets one material on every mesh.
+3. **The workshop**: a *personal* badge in the list on a card an active model
+   dresses (face up only), the pedestal dressed exactly as the arena dresses, a
+   *personal / repo* toggle, and an **INSPECT** view — the card's art box enlarged
+   as a backdrop behind the figure and its frame and text, the art box cut out, as
+   a panel floating beside it, the camera framing all three (`framing.ts`'s
+   `inspectLayout`). Flat: the depth relief of the painting is the follow-up. The
+   inspect view is the workshop's SECOND card-image surface outside `CardPlane`
+   (web/CLAUDE.md M4 convention 2): the same `normal` image `CardPlane` draws for
+   the card (one texture), looked up face up only.
+4. **Engine facts** (amending D104's corpus-only rule): a deck card the committed
+   corpus never showed face up takes its facts from the ENGINE's own card script
+   (`Types:`, `ManaCost:`, `PT:` in `res/cardsfolder/cardsfolder.zip`, formatted as
+   the wire formats them) and is named in the catalog's `engine` list. Doctor
+   Doom and the Hulks had never been face up in a recording, so the pedestal could
+   not stand them; 94 deck cards gained facts, 24 (Reality Fracture cards the
+   pinned engine lacks, D109) stay missing. The drift test uses the committed
+   engine facts (hermetic, CI has no engine) and re-reads the scripts wherever
+   the engine's resources are.
+
+**Rationale.** A personal model's texture IS the character. D144's palette ×
+map would multiply the card's colour identity into every texel — Doom is
+{4}{B}{B}, so his green hood and steel would go to near-black — where the comic
+look already carries the card's colour in its rim. Sharing uniform objects is how the comic block already reaches every figure
+(D145), so the frame loop still writes one material per figure. The engine is
+where the wire's facts come from; a script read offline is the same fact a
+recording would have shown.
+
+**Rejected.**
+
+- **One material per paint, each written by the frame loop.** A second write per
+  figure per frame, and a rig that holds a list.
+- **The inspect art as a second `CardPlane`.** `CardPlane` is a card on the table;
+  the backdrop is a crop of its image, drawn from the same texture.
+- **Recording a game with Doom and the Hulks into `fixtures/games/`.** Every
+  corpus-pinned number in the suite would move for four cards' facts.
+
+---
+
 ## D200 — A decision's number is final: a lane keeps the block it reserves, gaps are allowed, and no document states a total
 
 *Branch `docs-block`; the lane's reserved range D200–D204.*

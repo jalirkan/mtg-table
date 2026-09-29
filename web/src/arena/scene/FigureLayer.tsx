@@ -58,11 +58,12 @@ import {
 import type { ModelData } from '../figures/types.ts';
 import { DEFAULT_LOOK, HOLO_MATERIAL, figureLookOf, materialLookOf, wantsShadows, type LookSpec, type MaterialLook } from '../look.ts';
 import type { DeathSource, DepartureBinder, DiscField, OffsetSource } from './discs.ts';
+import { personalModelKey } from '../personal.ts';
 import {
   applyComicGlobals,
   applyCostume,
   applyLook,
-  makeFigureMaterial,
+  dressFigureMeshes,
   type FigureMaterial,
 } from './figureMaterial.ts';
 import type { FigureRig, FigureRigMap } from './figureRigs.ts';
@@ -108,6 +109,27 @@ export interface FigureLayerProps {
    * absent draws no strip.
    */
   status?: StatusLayout;
+  /**
+   * **The personal tier** (phase 2, D195): the loaded personal models and their
+   * resting-pose variants, by opaque id (`scene/personalModels.ts`). A pose that
+   * `arena/personal.ts` dressed (`pose.personal`) mounts its model from here;
+   * every other pose, and a dressed one whose model is missing, the CC0 library's.
+   */
+  personal?: ReadonlyMap<string, LoadedModel>;
+}
+
+/**
+ * **The model a pose mounts** — the one place the figure layer chooses a source:
+ * a dressed pose's personal model (its resting variant, else its base), else the
+ * CC0 library's `modelId`.
+ */
+function modelOf(pose: FigurePose, library: ModelLibrary | null, personal: ReadonlyMap<string, LoadedModel> | undefined): LoadedModel | undefined {
+  const key = personalModelKey(pose);
+  if (key !== null && personal !== undefined) {
+    const own = personal.get(key) ?? (pose.personal === undefined ? undefined : personal.get(pose.personal));
+    if (own !== undefined) return own;
+  }
+  return pose.modelId === null || library === null ? undefined : library.get(pose.modelId);
 }
 
 /** The library path this manifest names, or the default. */
@@ -161,6 +183,7 @@ export function FigureLayer({
   look = DEFAULT_LOOK,
   composer = false,
   status = NO_STATUS,
+  personal,
 }: FigureLayerProps): JSX.Element {
   const library = useFigureLibrary(models);
   // The look's numbers, rebuilt only when the look itself changes: every write
@@ -203,16 +226,16 @@ export function FigureLayer({
     const before = previousPoses.current;
     previousPoses.current = poses;
     departures.commit(poses);
-    if (library === null || before === null || before === poses) return;
+    if ((library === null && personal === undefined) || before === null || before === poses) return;
     for (const pose of departedFigures(before, poses)) {
       // Slice 3: a ring swarm's body is never drawn, so it has no body to die.
       if (pose.swarm > 0 && pose.formation === 'ring') continue;
-      const model = pose.modelId === null ? undefined : library.get(pose.modelId);
+      const model = modelOf(pose, library, personal);
       // Where it is drawn is decided here, at commit, from the frame it left and
       // the frame it left for: out of the rank that has just closed up.
       if (model !== undefined) departures.add(pose, model, departureStand(pose, poses));
     }
-  }, [poses, library, departures]);
+  }, [poses, library, departures, personal]);
 
   /**
    * **Slice 3 — the prop field** (`scene/props.ts`): every figure's props, the
@@ -264,15 +287,15 @@ export function FigureLayer({
   }, [props, discs, strips, gl, scene, camera, composer]);
   const mounted = useMemo(() => {
     const out: Array<{ pose: FigurePose; model: LoadedModel }> = [];
-    if (library === null) return out;
+    if (library === null && personal === undefined) return out;
     for (const pose of poses.values()) {
       if (pose.modelId === null) continue;
-      const model = library.get(pose.modelId);
+      const model = modelOf(pose, library, personal);
       if (model === undefined) continue;
       out.push({ pose, model });
     }
     return out;
-  }, [poses, library]);
+  }, [poses, library, personal]);
 
   /**
    * §8.3 rule 3 — **warm the programs.** The first-draw hitch is already
@@ -413,8 +436,8 @@ const Figure = memo(function Figure({
 
   const built = useMemo(() => {
     const instance = instantiateFigure(model);
-    const material = makeFigureMaterial(pose.tint, model.unitScale);
-    for (const mesh of instance.meshes) mesh.material = material;
+    // One material, or one per paint for a personal model (D196), on every mesh.
+    const material = dressFigureMeshes(instance.meshes, pose.tint, model.unitScale);
 
     // Two actions per clip: the cue lane's and the rest lane's (on the clip's
     // `restTwin`), so a stance and a cue on the same clip are never one action.
@@ -622,12 +645,11 @@ export class DepartureField implements DepartureBinder {
   add(pose: FigurePose, model: LoadedModel, stand: readonly [number, number, number]): void {
     this.dropCard(pose.cardId);
     const instance = instantiateFigure(model);
-    const material = makeFigureMaterial(pose.tint, model.unitScale);
+    const material = dressFigureMeshes(instance.meshes, pose.tint, model.unitScale);
     // The body falls in what it wore (slice 4) — its palette, as its last frame had it.
     applyCostume(material, pose.costume ?? null, false);
     applyLook(material, figureLookOf(pose, this.look).look);
     material.uniforms.uDrainTo.value.copy(DYING_GREY);
-    for (const mesh of instance.meshes) mesh.material = material;
     const object = instance.object;
     object.position.set(stand[0], stand[1], stand[2]);
     object.rotation.set(0, pose.facingY, 0);

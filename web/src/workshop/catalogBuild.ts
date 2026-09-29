@@ -26,6 +26,15 @@
  *  - **Only face-up, named cards are read.** A redacted stub and a face-down card
  *    carry no identity (hard rule 8), and are never a source of facts about one.
  *
+ * **A deck card the corpus never showed face up takes its facts from the ENGINE**
+ * (the personal tier's workshop, **D196**): Forge's own card script — the
+ * `Types:`, `ManaCost:` and `PT:` lines of `res/cardsfolder/<letter>/<name>.txt`,
+ * which is where the wire's facts come from — formatted as the wire formats them
+ * (`Legendary Creature - Human Scientist Villain`, `{4}{B}{B}`), and named in
+ * `engine` so the list and the test know which facts are the script's. Doctor
+ * Doom and the Hulks had never been face up in a committed recording, so the
+ * pedestal could not stand them. A card the engine lacks too stays `missing`.
+ *
  * **And one thing the card browser asks** (`threeD`): of each card the list
  * names, what the workshop can show of it in 3D — a body, or the card's own cues —
  * which is whether `#cards`' *View in 3D* button is live (`links.ts`). For that
@@ -88,14 +97,50 @@ export interface CatalogFile {
   cards: Record<string, CardFacts>;
   /** Every token the corpus has seen, with how many recordings it appears in. */
   tokens: Array<{ name: string; recordings: number }>;
-  /** Deck names the corpus never showed face up — they preview as a generic card. */
+  /** Deck names neither the corpus nor the engine's scripts give facts for — they preview as a generic card. */
   missing: string[];
+  /** Deck names whose facts are the engine's card script's, not the corpus's (D196), in name order. */
+  engine: string[];
   /** Every deck card and token by name → {@link ThreeD}, in name order. */
   threeD: Record<string, ThreeD>;
 }
 
 export const GENERATED_NOTE =
-  'WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts';
+  "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl, the engine's card scripts (for a deck card the corpus never showed face up) and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts";
+
+/** The words a Forge `Types:` line leads with before its subtypes. */
+const SUPERTYPES_AND_TYPES = new Set([
+  'Basic', 'Legendary', 'Snow', 'World', 'Ongoing', 'Elite', 'Host',
+  'Artifact', 'Battle', 'Conspiracy', 'Creature', 'Dungeon', 'Enchantment', 'Instant', 'Kindred',
+  'Land', 'Phenomenon', 'Plane', 'Planeswalker', 'Scheme', 'Sorcery', 'Tribal', 'Vanguard',
+]);
+
+/**
+ * **A Forge card script's front face, as the wire's facts** (D196): its type line
+ * the way `Snap.java` writes one (the supertypes and types, then ` - ` and the
+ * subtypes), its mana cost in braces (`no cost` is `null`), its P/T. Pure; the
+ * tool reads the script out of Forge's `cardsfolder.zip`.
+ */
+export function factsFromScript(text: string, setCode: string | null = null): CardFacts | null {
+  const field = new Map<string, string>();
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line === 'ALTERNATE') break; // the front face only
+    const colon = line.indexOf(':');
+    if (colon <= 0) continue;
+    const key = line.slice(0, colon);
+    if (!field.has(key)) field.set(key, line.slice(colon + 1).trim());
+  }
+  const typeWords = (field.get('Types') ?? '').split(/\s+/).filter((w) => w !== '');
+  if (typeWords.length === 0) return null;
+  let lead = 0;
+  while (lead < typeWords.length && SUPERTYPES_AND_TYPES.has(typeWords[lead]!)) lead += 1;
+  const types = lead === typeWords.length || lead === 0 ? typeWords.join(' ') : `${typeWords.slice(0, lead).join(' ')} - ${typeWords.slice(lead).join(' ')}`;
+  const cost = field.get('ManaCost') ?? 'no cost';
+  const manaCost = cost === '' || cost === 'no cost' ? null : cost.split(/\s+/).map((c) => `{${c}}`).join('');
+  const pt = /^([^/]+)\/(.+)$/.exec(field.get('PT') ?? '');
+  return { types, manaCost, power: pt?.[1] ?? null, toughness: pt?.[2] ?? null, token: false, setCode };
+}
 
 /**
  * A creature or a Vehicle, from its type line — **`catalog.ts`'s `roleOf`, rule
@@ -198,6 +243,8 @@ export function buildCatalog(
   recordings: ReadonlyArray<readonly [string, Iterable<unknown>]>,
   /** The card names `cues.json`'s `cards` block has an entry for (for {@link ThreeD}). */
   cueCards: readonly string[] = [],
+  /** A deck card's facts from the engine's card script, for one the corpus never showed face up (D196). */
+  engineFacts: (name: string) => CardFacts | null = () => null,
 ): CatalogFile {
   // name → facts-key → count, and the facts behind each key — twice: off the
   // battlefield (the printing) and on it (the printing plus whatever is on it).
@@ -248,14 +295,20 @@ export function buildCatalog(
 
   const cards: Record<string, CardFacts> = {};
   const missing: string[] = [];
+  const engine: string[] = [];
   const threeD: Record<string, ThreeD> = {};
   const cued = new Set(cueCards);
   const want = new Set<string>();
   for (const deck of ordered) for (const card of deck.cards) want.add(card.name);
   const tokens = [...tokenIn.keys()].sort();
+  const tokenNames = new Set(tokens);
   for (const token of tokens) want.add(token);
   for (const name of [...want].sort()) {
-    const facts = modal(name);
+    let facts = modal(name);
+    if (facts === null && !tokenNames.has(name)) {
+      facts = engineFacts(name);
+      if (facts !== null) engine.push(name);
+    }
     if (facts === null) missing.push(name);
     else cards[name] = facts;
     threeD[name] = threeDOf(facts, cued.has(name));
@@ -268,6 +321,7 @@ export function buildCatalog(
     cards,
     tokens: tokens.map((name) => ({ name, recordings: tokenIn.get(name)?.size ?? 0 })),
     missing,
+    engine,
     threeD,
   };
 }

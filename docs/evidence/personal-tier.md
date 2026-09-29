@@ -847,3 +847,188 @@ this lane's open ones.
 - Committed on `personal-tier`: `git merge-base --is-ancestor f2c934d HEAD`
   holds, the tree is clean, and `git status --ignored` shows `personal/` ignored;
   the commit adds no file under it.
+
+---
+
+## The personal tier, phase 2 — the loader, the other seven models, the workshop (2026-09-28)
+
+Worked in the worktree `/home/justin-a/code/mtg-table-t2p2` on branch
+`personal-tier-2`, from `main` at `096c952`. Decisions **D194** (the pipeline's
+phase 2: the baked clip set, the paint step, `--joints`, the verdict file),
+**D195** (the loader: the dev-server index, THE lookup, the dressed pose, the
+seat's duelist, the budget) and **D196** (own colours and sibling materials; the
+workshop's badge, toggle and inspect view; the catalog's engine facts), in the
+lane's reserved range D194–D199. **Nothing below is a picture of a model**, and
+nothing under `personal/` is committed: the pictures are under the worktree's
+gitignored `var/personal2/pictures/`, the logs under `var/personal2/logs/`.
+
+### 16. The eight downloads through the pipeline
+
+Every model was imported from the user's download already in its folder
+(sha256 of every download the same before and after:
+`var/personal2/downloads-before.sha256`), then prepared and checked with the
+commands in `var/personal2/run-all.sh` (22 s for all eight, previews included).
+
+**The first question D194 answers: does `figures.glb`'s clip set bind a prepared
+model directly?** The rotations would: prepare builds every skeleton in the
+`agent`'s bind rotations, and Doom's local rotations equal the agent's to
+0.03°. The pelvis would not: the agent's clips carry an ABSOLUTE hip track
+(the agent's rest pelvis sits at local 0.949 m, and its idle holds it at
+0.908 m, 8 cm forward) while Doom's rest pelvis is at 1.008 m — a figure bound
+to the agent's clips would stand 10 cm into the table. So prepare now BAKES the
+twelve clips into `model.glb` through `retarget.mjs` (which scales the hip by the
+two hip heights), and the arena binds a personal model's own animations: no
+runtime retarget. `check.mjs` step 2c holds every baked clip to the retarget it
+runs — worst joint 0.72°, pelvis 0.3–0.7 mm, on all eight.
+
+| slug | rig | what it needed | triangles (after) | paints | check |
+|---|---|---|---|---|---|
+| `doctor-doom` | Auto-Rig Pro, auto 22/22 | nothing new (re-prepared: clips baked, paint step) | 17,473 → **5,996** | 2 (the tunic's UVs wrap to 1.87) | **pass** — 22/22 weight, 24/24 sides, 13/13 links, 4/4 limbs, 8/8 flesh, 5/5 ends; cloak follows the spine |
+| `hulk` | Mixamo, auto 22/22 | the WELD: 41,060 vertices for 12,292 positions (every triangle its own normals) stopped meshopt at 28,469; welded on position + UV, 5,993 | 29,189 → **5,993** | 1 | **pass** — 22/22, 24/24, 13/13, 4/4, 8/8, 5/5 |
+| `nick-fury-spymaster` | Mixamo, auto 22/22 | nothing | 15,465 → **6,000** | 1 | **pass** — 20/22 weight (two joints the agent weights carry none here: warnings), 21/21 sides, 13/13, 4/4, 8/8, 5/5 |
+| `peggy-carter-secret-agent` | a Contest-of-Champions rig (Mixamo-like, 19/22) | `bones.json` (Spine1 is `spine_03`, `Toes` the balls), `--joints bind` (the rest pose is 1.72 units off the bind: phase 1 read the vertices at rest and the joints at bind — the "backwards foot"), `--drop group_0` (an unskinned 510-triangle shield plane) | 18,419 → **5,995** | 1 (a 3-tile atlas) | **pass** — 21/22, 24/24, 12/12, 4/4, 8/8, 5/5 |
+| `wasp-shrinking-savior-mcu` | the same rig | `bones.json` (the same fix: `spine_03 → clavicle` was 78°) | 13,798 → **5,996** | 1 (a 2-tile atlas) | **pass** — 21/22, 24/24, 12/12, 4/4, 8/8, 5/5 — **active** for *Wasp, Shrinking Savior* |
+| `agent-phil-coulson` | Character Creator, auto 22/22 | `--joints rest` (at the bind every side read swapped and the arms and legs folded — its bind matrices read back 88.8° / −75.6°; at rest it is a 30° A), spec/gloss read as base colour, `--drop` for the tongue, teeth, tear-lines, eye occlusion, corneas, lashes and the body and leg skin under the clothes, `--budget 8000` | 92,719 → **7,992** | 1 (a 12-tile 2048 px atlas, cutout for the hair) | **pass** — 22/22, 24/24, 13/13, 4/4, 8/8, 5/5 |
+| `wasp-shrinking-savior` | Mixamo, auto 22/22 | `--joints bind` (rest spread 363 units: at the bind its forearms' flesh is ahead of the joints again), `--drop` the base plane and the shadow disc | 12,273 → **5,992** | 1 (a 5-tile atlas) | **pass** — **disabled**: its jacket (`Ropa001`, 7,172 triangles) is an UNSKINNED mesh modelled in the hands-on-hips pose; skinned by height it stays akimbo while the arms move. Blender work. |
+| `doctor-doom-v2` | 3ds Max Biped (`Bip001 …`), no convention | `bones.json` (the Biped joints, the forearm's twist to the forearm, the sixteen cape bones to `spine_03`) | 115,886 → **5,991** (a 79,579-triangle unskinned part decimated to a fraction) | 1 (a 7-tile atlas) | **pass** — **disabled**: it reads worse than `doctor-doom` (the cape rides the chest rigidly; the unskinned part is skinned by height) and `doctor-doom` dresses the card and the seat |
+
+So phase 1's calibration failures (§15) were three different things: Peggy's
+and the MCU Wasp's `spine_03 → clavicle` was a two-spine rig mapped onto three
+(a `bones.json`); Peggy's backwards foot and the fan Wasp's folded forearms were
+the vertices and the joints read in two different poses (`--joints`); Coulson's
+swapped sides were its bind matrices (`--joints rest`). All eight now pass
+`check.mjs`. Each folder has a `check.json` naming the `model.glb` it judged.
+
+**The paint step** (D194) made every model one draw call but Doom (two). The
+atlases: 512 px tiles with an 8 px copied-edge gutter; the tolerance for "one
+unit tile" is 1% (Coulson's suit reaches v 1.0005 and first went to a primitive
+of its own). Every normal map and tangent is dropped: the arena draws none.
+Doom's `model.glb` went from 2,339,352 to 1,355,636 bytes (the normal maps out,
+the twelve clips in).
+
+### 17. The loader, the arena and the workshop
+
+**The route** (`web/src/personal/devRoute.ts`, D195). At the dev server's start
+it printed:
+
+```
+personal tier: 6 active model(s), 2 skipped (dev server only, D190)
+  active   agent-phil-coulson: Agent Phil Coulson — 7992 triangles, 1 paint(s)
+  active   doctor-doom: Doctor Doom, seat opp — 5996 triangles, 2 paint(s)
+  active   hulk: Hulk, Brutal Brawler, Hulk, Strongest There Is, Hulk, Gamma Goliath — 5993 triangles, 1 paint(s)
+  active   nick-fury-spymaster: Nick Fury, Spymaster — 6000 triangles, 1 paint(s)
+  active   peggy-carter-secret-agent: Peggy Carter, Secret Agent — 5995 triangles, 1 paint(s)
+  active   wasp-shrinking-savior-mcu: Wasp, Shrinking Savior — 5996 triangles, 1 paint(s)
+  skipped  doctor-doom-v2: disabled: passes check.mjs, but … it reads worse than doctor-doom …
+  skipped  wasp-shrinking-savior: disabled: its jacket (Ropa001, 7,172 triangles) is an unskinned mesh …
+```
+
+Doom's manifest names the seat by its look (`--seat villain`), read as `opp`.
+
+**In the arena** (`?replay=games/g1.jsonl#arena`, dev server, the GTX 1080):
+at transport index 355 the page fetched the index and three models — Doom (the
+villain seat), Peggy and the MCU Wasp (face-up cards on the table) — and two
+figure rigs carried the paint define with opaque ids (`p4`, `p5`); every other
+rig was the CC0 body. The villain duelist stands in Doom's own colours under the
+comic look — green hood, gold clasps, steel lifted to blue by the look's "black
+is blue" — and as a green-tinted hologram of the model's values under
+`?look=holo`. `?personal=0` draws the CC0 villain and figures at the same frame.
+
+**The corpus sweep** (`personal.test.ts`, hard rule 8): over 3,679 frames, each
+three ways — as recorded; HOSTILE (every back and stub given a real name, every
+third face-up creature or stack card turned face down with one, and one creature
+a frame given the face-down empty name) with its own poses; and the hostile
+placements under the PLAIN poses, which puts a named, modelled pose on a back or
+a stub — THE lookup asked the overlay about 13,941 face-up names and never about
+a concealed one; 6,225 anonymous figures and 3,164 named poses on a back or a
+stub were never asked about; the same loop with the gates taken out asked about
+13,119 concealed names (the negative control). Each gate was removed from
+`personal.ts` by hand, one at a time, and restored: without the placement gate
+the sweep fails on the third pairing ("the overlay was asked about a concealed
+name"), without the pose gate on the second ("an anonymous or modelless figure
+was dressed"), and the unit case fails both times.
+
+**The workshop** (`#workshop`): a *personal* badge on the eight cards the six
+active models dress, the pedestal dressed as the arena dresses, a *personal / repo*
+toggle, and the INSPECT view — Doom in front of his card's art box, the frame
+and text floating beside it, the art window cut out. The catalog could not stand
+Doom or a Hulk on the pedestal at all: no committed recording ever showed them
+face up, so they were `missing`. With D196's engine facts 94 deck cards gained
+their facts from Forge's own scripts (`Legendary Creature - Human Scientist
+Villain`, `{4}{B}{B}`, 3/3 for Doom); 24 stay missing (Reality Fracture cards
+the pinned engine lacks, D109). Doom's clips play on the pedestal: the held
+stances (ready, the kneel, attacking, blocking) and `hit` and `die` caught
+mid-clip with the queue paused.
+
+**The pictures** (`var/personal2/pictures/`, gitignored — never committed):
+
+- `arena-g1-355-{comic,holo}-{personal,repo}.png` — Doom as the villain duelist at
+  the table view, and the CC0 villain, under both looks;
+- `workshop-<card>-{personal,repo}.png` for Doctor Doom, Nick Fury, Agent Phil
+  Coulson, Peggy Carter, Wasp, Hulk, Gamma Goliath and Hulk, Brutal Brawler — each
+  on its card at 1× from the front, and the CC0 figure it replaces;
+- `workshop-<card>-inspect.png` for the same seven, and
+  `workshop-doctor-doom-inspect-holo.png`;
+- `workshop-doctor-doom-stance-{tapped,attacking,blocking}.png` and
+  `workshop-doctor-doom-clip-{hit,die}.png`.
+
+**The budget** (D195, `tools/arena-bench.mjs --index 316` against the DEV server,
+since the route is dev-only; three interleaved pairs each, `?personal=0` against
+the overlay on — Doom the villain, Peggy and the MCU Wasp dressed):
+
+| | draw calls | triangles | p50 | p95 | max |
+|---|---|---|---|---|---|
+| GTX 1080, bloom off, CC0 | 86 | 26,315 | 0.50 | 0.60 | 10.9–16.5 |
+| GTX 1080, bloom off, personal | 81 | 38,551 | 0.40 | 0.60 | 10.7–11.0 |
+| GTX 1080, bloom on, CC0 / personal | — | — | 0.50 / 0.50 | 1.70 / 1.50 | 13.9 / 17.5 |
+| SwiftShader (dpr 0.6), CC0 | 88–90 | 29,517–29,521 | 16.2–16.6 | 33.9–34.5 | 35.8–57.1 |
+| SwiftShader (dpr 0.6), personal | 85 | 41,537–41,661 | 19.0 | 34.8–35.1 | 49.8–66.7 |
+
+Three personal models add 12,236 triangles and TAKE five draw calls (a dressed
+figure sheds its props). On the GPU nothing moves. On SwiftShader the p50 rises
+about 2.6 ms and the p95 about 1 ms — the CC0 table already fails §9.4's p95
+there on this build and load (load average 5–8). Report 13 §8.2's 30,000-triangle
+line has no headroom at @316, so the first personal model crosses it: the caps
+(`PERSONAL_TRI_CAP` 8,000, `PERSONAL_CALL_CAP` 2, `PERSONAL_MAX_FIGURES` 4 plus
+the two duelists) are this machine's, where the tier runs. arena-bench's own
+SwiftShader flags start the GPU process again on this Chromium (§7's note).
+The bench's browser profile held no copy of any personal model (three 64-byte
+cuts of each `model.glb`, searched in its 621 files).
+
+**The build carries none of it.** `npm --prefix web run build`: the 2D entry
+chunk is 90.40 kB gzip and names no three; no built chunk contains `personal/`
+or any slug of this machine's folder (`personal.test.ts` asserts it over
+`web/dist`). The one source map that names the route is the arena scene's: a map
+carries its sources' text, and `scene/personalModels.ts`'s DEV branch and
+comments are in it — the code that runs has the branch folded away. No map
+names a slug.
+
+**The tests.** `npm --prefix web test`: **1,040 / 1,040 pass** under
+`node --test` (1,027 on `main` + 13: `personal.test.ts`'s eight, a
+`figure-material` case, two `workshop` cases, a `personal-tier` case and a
+liveness clause) and vitest **121 (8 files)**. `personal-tier.test.ts`'s
+end-to-end case now also asserts the twelve baked clips, step 2c's line, and
+`check.json` (passed on the right map, failed on each wrong one); its new case
+runs the paint step on a textured figure of boxes — two tileable parts share an
+atlas, a wrapping one keeps its texture, every part's vertex range recorded,
+`--disabled` with its reason.
+
+**Gates, phase 2** (the tree as committed):
+
+- `./bridge/build.sh`: OK (no bridge change).
+- `npm --prefix web run build`: OK; `npm --prefix web test`: 1,040 / 1,040 and
+  vitest 121 (8 files), above.
+- `rm -rf bridge/out && GATE_JOBS=4 WSPORT=9070 ./tools/check-all.sh`:
+  **`check-all OK`, 241.7 s**, 48 jobs summing to 935.7 s, load average
+  0.4–7.5 (`var/check-all-personal2-p1.log`, run `20260928-233820-3347527`);
+  inside it `node --test` **1,050 / 1,042 pass / 0 fail / 8 skipped** and vitest
+  **121 (8 files)**. Again at `WSPORT=9080`: **`check-all OK`, 241.3 s**, 48 jobs
+  summing to 934.1 s, load average 5.9–9.4 (`var/check-all-personal2-p2.log`,
+  run `20260928-234231-3420654`), the same counts. The lane added no step and no
+  job.
+- `~/forge` and `~/.forge`: **unchanged**. The four `~/forge` jars' sha1 are the
+  ones read before the lane's first command (the desktop jar's sha256
+  `3c0a7c38…8e5dd9`), no file under either tree is newer than 22:00, before the
+  lane began, and every path, size and time under `~/.forge` is the listing taken
+  before the first command. Every download's sha256 is the same before and after.
+

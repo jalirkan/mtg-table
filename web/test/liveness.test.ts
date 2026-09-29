@@ -2151,3 +2151,82 @@ test('liveness: lane BODIES — the poses and the palette are pure, and the art 
   assert.ok(/sampleClipInto\(/.test(derive), 'deriveRestClip no longer samples its frame');
   assert.ok(!/\.update\(|clipAction\(|\.play\(/.test(derive), 'deriveRestClip plays a clip');
 });
+
+/**
+ * **The personal tier, phase 2** (D194–D196; the tier is D190): the user's own
+ * models, loaded from the Vite dev server alone. Four clauses, each with its
+ * negative control:
+ *
+ *  - `arena/personal.ts` — THE reader of the index and THE lookup — is pure: no
+ *    three, no React, no DOM, no storage, no clock, no request;
+ *  - **the arena's same-origin load paths are an allow-list** (the URL clause
+ *    above refuses every scheme; this is its half for a path with none): a
+ *    literal shaped like a file to load — `<dir>/<file>.glb|json|png|jpg|webp` —
+ *    is in `PATH_ALLOW` with its reason, and the personal route's
+ *    `personal/index.json` sits behind `import.meta.env.DEV` on its own line, so a
+ *    production build carries no address of it (`personal.test.ts` greps `dist`);
+ *  - the index is read by `personalOverlayOf` in `scene/personalModels.ts` and
+ *    nowhere else, a personal model is loaded by `loadPersonalModel` —
+ *    `scene/models.ts`'s own GLTFLoader and MeshoptDecoder — called from
+ *    `scene/personalModels.ts` alone, and nothing names drei's loader;
+ *  - the lookup (`personalChoicesOf`) and the dressing (`dressPoses`) are called
+ *    in `Arena.tsx` and nowhere else in the arena (the workshop's pedestal calls
+ *    them too, outside this scan), so every figure the arena dresses went through
+ *    THE lookup's gates.
+ */
+const PATH_ALLOW: Readonly<Record<string, readonly string[]>> = {
+  // The CC0 library's default path (models.json names it too).
+  'scene/models.ts': ['models/figures.glb'],
+  'scene/FigureLayer.tsx': ['models/figures.glb'],
+  'scene/DuelistLayer.tsx': ['models/figures.glb'],
+  // The personal tier's index on the dev route (D195) — behind import.meta.env.DEV.
+  'scene/personalModels.ts': ['personal/index.json'],
+};
+const LOAD_PATH = /^[a-z0-9_-]+\/[A-Za-z0-9_./-]+\.(glb|json|png|jpg|webp)$/;
+function loadPathsOf(path: string, code: string): string[] {
+  const allowed = PATH_ALLOW[path] ?? [];
+  return stringLiterals(code).filter((literal) => LOAD_PATH.test(literal) && !allowed.includes(literal));
+}
+
+test('liveness: the personal tier — the reader is pure, the load paths are an allow-list, the route is DEV-only, one loader, one lookup (D194–D196)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  // 1 — personal.ts is pure.
+  const pure = files.get('personal.ts') ?? '';
+  assert.ok(pure.length > 1000, 'arena/personal.ts is gone — move this clause with it');
+  for (const imported of importsOf(pure)) {
+    assert.ok(
+      ['../protocol.ts', './figures/pose.ts', './figures/rests.ts', './layout.ts', './perf.ts'].includes(imported.from),
+      `arena/personal.ts imports ${imported.from}: the reader and the lookup are pure`,
+    );
+  }
+  assert.ok(!/\b(window|document|localStorage|sessionStorage|performance|Date\.now|setTimeout|setInterval|fetch|XMLHttpRequest|THREE)\b/.test(pure), 'arena/personal.ts touches the DOM, a clock, storage, three or the network');
+
+  // 2 — the load paths, with the negative controls first.
+  assert.deepEqual(loadPathsOf('Arena.tsx', "const u = 'personal/models/doctor-doom/model.glb';"), ['personal/models/doctor-doom/model.glb']);
+  assert.deepEqual(loadPathsOf('scene/models.ts', "load('personal/index.json');"), ['personal/index.json']);
+  assert.deepEqual(loadPathsOf('scene/personalModels.ts', "const a = 'personal/index.json';"), []);
+  for (const [path, code] of files) assert.deepEqual(loadPathsOf(path, code), [], `${path} names a load path PATH_ALLOW does not list`);
+  for (const [path, paths] of Object.entries(PATH_ALLOW)) {
+    for (const p of paths) assert.ok(stringLiterals(files.get(path) ?? '').includes(p), `PATH_ALLOW["${path}"] names ${p}, which is gone`);
+  }
+  const loader = files.get('scene/personalModels.ts') ?? '';
+  for (const line of loader.split('\n')) {
+    if (line.includes("'personal/")) assert.match(line, /import\.meta\.env\.DEV \? 'personal\//, `the personal route is named outside import.meta.env.DEV: ${line.trim()}`);
+  }
+
+  // 3 — one reader, one loader, never drei's.
+  const callers = (name: string): string[] =>
+    [...files].filter(([, code]) => new RegExp(`\\b${name}\\(`).test(code.replace(new RegExp(`function ${name}\\(`, 'g'), ''))).map(([p]) => p);
+  assert.deepEqual(callers('personalOverlayOf'), ['scene/personalModels.ts']);
+  assert.deepEqual(callers('loadPersonalModel'), ['scene/personalModels.ts']);
+  assert.match(files.get('scene/models.ts') ?? '', /export function loadPersonalModel\([\s\S]*?makeLoader\(\)\.load\(/, 'loadPersonalModel no longer goes through models.ts\'s own loader');
+  assert.ok(!/useGLTF|drei/.test(importsOf(loader).map((i) => i.from).join(' ')));
+
+  // 4 — the lookup and the dressing: Arena.tsx's alone in the arena.
+  assert.deepEqual(callers('personalChoicesOf'), ['Arena.tsx']);
+  assert.deepEqual(callers('dressPoses'), ['Arena.tsx']);
+  // …and the figure layer's one choice: a dressed pose's personal model, else the CC0 library's.
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  assert.match(layer, /function modelOf\(pose: FigurePose/, 'FigureLayer lost its one model-source choice');
+  assert.equal((layer.match(/library\.get\(pose\.modelId\)/g) ?? []).length, 1, 'FigureLayer chooses a model somewhere other than modelOf');
+});

@@ -14,13 +14,11 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The 29 follow-up lists hold 351 items, and 266 of them are open** — 243 open,
-17 partly done, 3 not reproduced, 2 standing and 1 accepted — against 85
+**The 30 follow-up lists hold 370 items, and 275 of them are open** — 251 open,
+18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 95
 closed (M1's six among them; the personal tier's list was added, with its 18 and
-19 closed, when that lane merged). **Of the 30 questions only the owner can settle,
-**The 29 follow-up lists hold 339 items, and 256 of them are open** — 234 open,
-16 partly done, 3 not reproduced, 2 standing and 1 accepted — against 83
-closed (M1's six among them). **Of the 30 questions only the owner can settle,
+19 closed, when that lane merged, and its phase 2 closed ten and opened seven;
+the status layer's list of twelve was added when that lane merged). **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
@@ -271,28 +269,25 @@ closed (M1's six among them). **Of the 30 questions only the owner can settle,
 | [Lane BODIES](#fu-bodies) | 31 | open | Peggy's sidearm reads as a grey slab from above | `web/src/arena/scene/props.ts` |
 | [Docs block](#fu-docs) | 1 | open | Mirror the Java guide's section table into `WireGuiGame.java`'s header | `bridge/src/mtgtable/WireGuiGame.java` |
 | [Docs block](#fu-docs) | 2 | open | The Java guide's older citations: seven stale quotes, the inline line numbers | `docs/guides/java-for-typescript-people.md` |
-| [Personal tier](#fu-personal) | 1 | open | Phase 2: which card or seat a personal model dresses, read through one module | `personal/models/*/manifest.json` |
-| [Personal tier](#fu-personal) | 2 | open | Phase 2: served by the dev server alone, never `vite preview` or a build | — |
-| [Personal tier](#fu-personal) | 3 | open | Phase 2: a textured material through the figure material's colour input | — |
-| [Personal tier](#fu-personal) | 4 | open | Phase 2: a triangle cap, and personal figures counted against `MAX_FIGURES` | — |
-| [Personal tier](#fu-personal) | 5 | open | Phase 2: hard rule 8 — a personal model only where a named figure stands, with a corpus test | `web/test/figure-pose.test.ts` |
-| [Personal tier](#fu-personal) | 6 | open | Phase 2: the workshop badge for a card wearing a personal model | — |
-| [Personal tier](#fu-personal) | 7 | open | Phase 2: clip binding by name, the pelvis translation by the hip-height ratio | `tools/personal/retarget.mjs` |
 | [Personal tier](#fu-personal) | 8 | open | Factor the build's retarget beside a rebuild of `figures.glb` | `tools/build-figures.mjs` |
-| [Personal tier](#fu-personal) | 9 | open | `tools/arena-bench.mjs`'s SwiftShader flags may no longer start the GPU process | `tools/arena-bench.mjs` |
 | [Personal tier](#fu-personal) | 10 | open | `--pose all`: a posed model keeps its legs and spine posed | — |
-| [Personal tier](#fu-personal) | 11 | open | The runner-ups: Coulson and the Wasp | — |
 | [Personal tier](#fu-personal) | 12 | open | What Blender would still do on Doom | — |
-| [Personal tier](#fu-personal) | 13 | open | Textures: 2.24 MB of Doom's 2.34 MB file | — |
+| [Personal tier](#fu-personal) | 13 | partly | Textures: the normal maps are gone (Doom 1.36 MB); a smaller copy for the table is still open | — |
 | [Personal tier](#fu-personal) | 14 | open | A head scale for a life-size head at 60–100 px | — |
 | [Personal tier](#fu-personal) | 15 | open | FBX and `.blend` input need Blender | — |
 | [Personal tier](#fu-personal) | 16 | partly | Chromium's last background attempts (signin, GCM; the AI-mode call stopped) | — |
 | [Personal tier](#fu-personal) | 17 | open | `tools/arena-bench.mjs` and `tools/story-shot.mjs` start Chromium without the isolation | `tools/arena-bench.mjs` |
 | [Personal tier](#fu-personal) | 20 | open | The limb check's limits rest on four correct maps | `tools/personal/lib.mjs` |
-| [Personal tier](#fu-personal) | 21 | open | The user's other downloads fail as prepared automatically (Peggy, both Wasps, Coulson; Doom v2 unmapped) | — |
 | [Personal tier](#fu-personal) | 22 | open | The ends at attack t = 0.5 caught no arm fold | — |
 | [Personal tier](#fu-personal) | 23 | open | The preview profile stays in the slug's folder, not under `var/` | `tools/personal/check.mjs` |
 | [Personal tier](#fu-personal) | 24 | open | Prepare's fold warning looks only at the forearm | — |
+| [Personal tier](#fu-personal) | 25 | open | The inspect view's depth relief: the painting as a window, not a picture | `web/src/workshop/Pedestal.tsx` |
+| [Personal tier](#fu-personal) | 26 | open | Per-model tuning: the MCU Wasp's wings shrink her, Coulson's shirt shows through his jacket | — |
+| [Personal tier](#fu-personal) | 27 | open | A floor rung that sheds personal models on a slow machine | `web/src/arena/perf.ts` |
+| [Personal tier](#fu-personal) | 28 | open | Upload a personal model's paint at load, not at its first draw | `web/src/arena/scene/personalModels.ts` |
+| [Personal tier](#fu-personal) | 29 | open | The fan Wasp's akimbo jacket and Doom v2 — the owner's call and Blender's | — |
+| [Personal tier](#fu-personal) | 30 | open | A model prepared again needs a dev-server restart | `web/src/personal/devRoute.ts` |
+| [Personal tier](#fu-personal) | 31 | open | The inspect view's art box is the modern frame's, measured once | `web/src/workshop/framing.ts` |
 | [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
 | [Status layer](#fu-status) | 2 | open | No committed recording carries keywords | — |
 | [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
@@ -366,7 +361,8 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Lane LOOK: the comic look, to production *(report 15 §9.1, the first art-direction lane; the user approved the direction)* | 1 day | **built, verified, documented and committed** on branch `look` (2026-09-28), rebased onto the undo race's `f6bad35` — every figure, dying body, duelist and painted prop in the comic look by default: three cel bands from a lens-fixed key, halftone, a rim, an ink line inside bloom's pass that inks only what is painted, a contact shadow, a mid-value stage in each seat's shown colours; `?look=holo` the hologram; a seat's figures facing the opponent (question 13, answered); **D137–D146**, written as D120–D129; one verification pass; twenty-one follow-ups, half of one closed at merge; *Lane LOOK*, after *Guards* |
 | — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; with Lanes LOOK and MOTION, **rebased onto `main`'s `a08c15f`** (after CI, Polish 1 and Guards), Polish 1's follow-ups 1 and 2 applied (the arena's `lost` word) and the final skeptic's minors fixed or written down; *Lane BODIES*, just above *Deferred* (its *Onto `main`'s `a08c15f`*) |
 | — | The docs block: `CLAUDE.md` split by directory, and the owner's two policies *(off the plan; the structure review of 2026-09-28)* | ½ day | **built, gated and documented** on branch `docs-block` (2026-09-28), off `main`'s `102fb1f` — the history out of `CLAUDE.md` into two evidence files; **D200** (decision numbers are final), **D201** (Claude commits on branches and merges on a green gate; pushes, releases and anything public are the user's), **D202** (CI's pinned engine fetch); rule 10 pointing at the lint; a root `CLAUDE.md` of about 5,600 words and four nested files, held by `web/test/claude-md.test.ts`; *Open now*; the Java guide's map of `WireGuiGame.java`; gate green at `GATE_JOBS=4`, 259.2 s; *The docs block*, just above *Deferred* |
-| — | The personal tier, phase 1: the folder, the manifest and the pipeline *(off the plan; the user's decision of 2026-09-28 — "this can never ever ever be sold or published")* | 1 day | **built, gated and documented** on branch `personal-tier` (2026-09-28), off `main`'s `a08c15f` and rebased onto `f2c934d` — `tools/personal/` (import, prepare, check) over a gitignored `personal/models/<slug>/`, Doctor Doom run through it, three verification rounds; **D190–D193**; phase 2 (the loader) not built; gate green at `GATE_JOBS=4`, 262.4 s; *The personal tier*, just above *Deferred* |
+| — | The personal tier, phase 1: the folder, the manifest and the pipeline *(off the plan; the user's decision of 2026-09-28 — "this can never ever ever be sold or published")* | 1 day | **built, gated and documented** on branch `personal-tier` (2026-09-28), off `main`'s `a08c15f` and rebased onto `f2c934d` — `tools/personal/` (import, prepare, check) over a gitignored `personal/models/<slug>/`, Doctor Doom run through it, three verification rounds; **D190–D193**; gate green at `GATE_JOBS=4`, 262.4 s; *The personal tier*, just above *Deferred* |
+| — | The personal tier, phase 2: the loader, the other seven models, the workshop | 1 day | **built, gated and documented** on branch `personal-tier-2` (2026-09-28), off `main`'s `096c952` — the clip set baked in, the paint step, `--joints`, `check.json`; a dev-server index and route; THE lookup (hard rule 8, a hostile corpus sweep); Doom as the villain duelist and on his card, and Coulson, Fury, Peggy, the MCU Wasp and the Hulks on theirs; the workshop's badge, toggle and inspect view; the catalog's engine facts; **D194–D196**; gate green twice at `GATE_JOBS=4`, 241.7 s and 241.3 s; *The personal tier*'s *Phase 2* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -7291,9 +7287,10 @@ jobs whose seconds sum to 939.6 s, at a load average of 0.59 rising to 4.59;
 
 ---
 
-## The personal tier — models of the real characters, local only (2026-09-28, D190–D193)
+## The personal tier — models of the real characters, local only (2026-09-28, D190–D196)
 
-**Status: phase 1 built, run on Doctor Doom, tested and gated** on branch
+**Status: phase 2 built** (the loader, D194–D196: *Phase 2*, below) **on phase 1,
+built, run on Doctor Doom, tested and gated** on branch
 `personal-tier` (the worktree `mtg-table-t2x`, off `main`'s `a08c15f`, rebased
 onto `main`'s `f2c934d` by fix pass 3). The
 user's decision of 2026-09-28: a strictly personal, never-published, never-sold
@@ -7386,9 +7383,13 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 `~/.forge` unchanged again.
 
 <a id="fu-personal"></a>
-### The personal tier's follow-ups — twenty-four, 2026-09-28 (18 and 19 closed by fix pass 3, 16 partly)
+### The personal tier's follow-ups — thirty-one, 2026-09-28 (1–7, 9, 11, 18, 19 and 21 closed; 13 and 16 partly)
 
-**Phase 2, the loader** (after the visual merge; nothing here is built):
+**Phase 2, the loader** — **all seven closed by phase 2** (D194–D196, *Phase 2*
+below): the index and its one reader (1), the dev-only route and the build grep
+(2), the textured material through the paint input (3), the caps (4), the lookup
+and its corpus sweep (5), the workshop badge (6), and the clips — BAKED, because
+the hip track does not bind as it is (7). The items as they were written:
 
 1. **Which card or seat it dresses.** Read `personal/models/*/manifest.json`
    (`dresses`: a `card` by exact name, a `seat` `you`/`opp`), in the arena and
@@ -7426,7 +7427,9 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
    the agent → hero proof. Factoring the build to import the module is right, but
    only beside a rebuild of `figures.glb` from the CC0 downloads, which proves the
    bytes unchanged.
-9. **`tools/arena-bench.mjs`'s SwiftShader flags.** `check.mjs`'s first preview
+9. ~~**`tools/arena-bench.mjs`'s SwiftShader flags.**~~ **Closed by phase 2**:
+   arena-bench's own `--gpu swiftshader` renders on ANGLE's SwiftShader on this
+   Chromium again (evidence §17's bench). The item: `check.mjs`'s first preview
    run used arena-bench's `--use-gl=swiftshader`: this Chromium allows only
    `egl-angle`, the GPU process exited, and WebGL rendered nothing with the
    context lost. `--use-angle=swiftshader` works. arena-bench was not re-run here;
@@ -7435,7 +7438,10 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
     Wasp, a hand on a hip) keeps its legs and spine posed as a permanent offset
     under every clip. Aligning every bone to the `agent`'s bind direction is the
     general form.
-11. **The runner-ups.** Coulson (Character Creator; 92,719 triangles, 25
+11. ~~**The runner-ups.**~~ **Closed by phase 2** (evidence §16): Coulson needed
+    `--joints rest`, spec/gloss read as base colour, `--drop` and an 8,000
+    budget; the fan Wasp `--joints bind` and `--drop` (and stays disabled, 29).
+    The item: Coulson (Character Creator; 92,719 triangles, 25
     materials, 46 textures, a 144.6 MB GLB): the auto map knows `CC_Base_*`; it
     wants `--drop` for the eye, teeth, tongue, tear-line, occlusion and stubble
     layers, and a budget chosen by looking. Wasp (a custom rig, Spanish part names,
@@ -7446,7 +7452,9 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
     the legs, weight the shoulder plates wholly to the clavicle so the 60° turn
     does not shear them, keep the twist bones. A portable Blender is the user's
     call; nothing here installs one.
-13. **Textures.** Doom's five PNGs are 2.24 MB of a 2.34 MB file. A 512 px or
+13. **Textures.** *Partly closed by phase 2*: the paint step drops the normal
+    maps (the arena draws none), and Doom's file is 1,355,636 bytes. The item:
+    Doom's five PNGs are 2.24 MB of a 2.34 MB file. A 512 px or
     KTX2 / WebP copy for the arena (the workshop could keep 1024) is phase 2's
     choice, measured on the GPU the user plays on.
 14. **A head scale.** The UBC bodies' heads are enlarged (heroic-miniature
@@ -7578,7 +7586,10 @@ skipped and vitest 121 (8 files) (`var/check-all-personal-tier-merge.log`);
     forearm, a monster's long one — may land outside a band with a right map;
     measure it before widening one, and prefer a per-model note in the manifest
     to a looser rule for everyone.
-21. **The user's other downloads, as the pipeline prepares them automatically**
+21. ~~**The user's other downloads, as the pipeline prepares them automatically**~~
+    **Closed by phase 2** (evidence §16): all eight pass `check.mjs` — two
+    `bones.json` for the two-spine rigs, `--joints` for the three whose rest is
+    not their bind, a `bones.json` for the Biped. The item
     (calibration only, evidence §15): Peggy Carter and the MCU Wasp (Mixamo,
     `spine_03` synthesised) fail D192's `spine_03 → clavicle` (92°, 78°) and
     Peggy a foot facing backwards; the older Wasp (a mesh posed on a T skeleton)
@@ -7600,6 +7611,68 @@ skipped and vitest 121 (8 files) (`var/check-all-personal-tier-merge.log`);
     so its fold shows in the limb check's direction; a WARN in prepare for any
     link whose re-pose turn exceeds 120° would cover a future `--pose all`
     (follow-up 10).
+
+### Phase 2 — the loader, the other seven models, the workshop (2026-09-28, D194–D196)
+
+**Status: built, tested, gated and documented** on branch `personal-tier-2`
+(the worktree `mtg-table-t2p2`, off `main`'s `096c952`); the lane's reserved
+range D194–D199, three used. Evidence §16–§17; the guide's *In the game*.
+
+1. **The pipeline** (D194): prepare BAKES our twelve clips into `model.glb` (the
+   rotations would bind as they are; the agent's absolute hip track would stand a
+   personal model 10 cm into the table), runs the paint step (one primitive per
+   base colour, the tileable ones in one atlas — every model one draw call but
+   Doom's two), reads the joints and the vertices in ONE pose (`--joints`), welds a
+   part the simplifier stops on, reads spec/gloss as base colour; `check.mjs`
+   holds the baked clips to the retarget (0.72°, ≤ 0.7 mm) and writes
+   `check.json`; the manifest is version 2, with `disabled` and the seats by
+   look.
+2. **The eight downloads**: all pass `check.mjs`; six active (Doom — the card and
+   the villain seat —, the three Hulk cards, Fury, Peggy, the MCU Wasp, Coulson),
+   two disabled with their reasons (the fan Wasp's akimbo jacket, Doom v2 beside
+   Doom).
+3. **The loader** (D195): the dev route's index of the models that passed;
+   `arena/personal.ts`'s reader, THE lookup (a corpus sweep three ways, hostile
+   included, and each gate's removal failing it) and the dressed pose;
+   `scene/personalModels.ts` behind `import.meta.env.DEV`; `FigureLayer`'s one
+   model-source choice; the seat's duelist; `?personal=0`; the caps in `perf.ts`.
+4. **The look** (D196): a personal model in its own colours under the comic
+   look, a tinted hologram under `?look=holo`, its paints one figure's materials.
+5. **The workshop** (D196): the badge, the personal/repo toggle, the inspect view,
+   and the catalog's engine facts (Doom and the Hulks had never been face up in a
+   recording; 94 deck cards gained facts from Forge's scripts).
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9070`
+**241.7 s** and `WSPORT=9080` **241.3 s**, exit 0 both, 48 jobs (935.7 s and
+934.1 s summed) at a load average of 0.4–9.4, `node --test` 1,050 / 1,042 pass /
+0 fail / 8 skipped and vitest 121 (8 files) each time
+(`var/check-all-personal2-p1.log`, `-p2.log`). The lane added no step and no job:
+its tests are in the web step, its pipeline is by hand (it needs the user's
+downloads). `~/forge` and `~/.forge`: unchanged (evidence §17).
+
+25. **The inspect view's depth relief.** Today the art box is a flat picture
+    behind the figure. The follow-up the owner named: the painting as a WINDOW —
+    the frame panel in front, the art behind it with depth (a relief or a few
+    layers), the figure between.
+26. **Per-model tuning.** The MCU Wasp's wide wings make the width clamp draw her
+    small (a measure that leaves the wings out, or a per-model width note in the
+    manifest); Coulson's shirt shows through his decimated jacket (a per-part
+    budget, or Blender); Doom's head bows under the hood at rest; a head scale for
+    life-size heads (follow-up 14).
+27. **A floor rung that sheds personal models.** On SwiftShader three models cost
+    about 2.6 ms at the median; the DPR governor could drop them to the CC0
+    figures below its floor, as it drops bloom.
+28. **Upload a paint at load.** A personal texture is uploaded at its first draw;
+    `gl.initTexture` at load (as `useCardTexture` does for a card) would take a
+    first-frame spike off the table (SwiftShader's max reached 66.7 ms once).
+29. **The fan Wasp and Doom v2.** Both pass `check.mjs` and are disabled: the fan
+    Wasp's jacket is an unskinned mesh modelled akimbo (Blender); Doom v2 reads
+    worse than Doom. Which Doom dresses the card is the owner's call.
+30. **A model prepared again needs a dev-server restart**: the index is built at
+    start. Rebuilding it when a `check.json` changes would make the loop shorter.
+31. **The inspect view's art box** is the modern frame's, measured once
+    (`framing.ts`'s `ART_BOX`); a showcase or full-art frame needs its own.
+
 ## The status layer — keywords, a bar, pips and a turn-order bar (2026-09-28, D210–D212, amendment M49)
 
 The owner's idea, with a Final Fantasy XIII screenshot: watching a game should

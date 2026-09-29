@@ -46,7 +46,7 @@ import { CAMERA, REST_POSE, type Pose } from '../arena/camera.ts';
 import type { FigureLayout, FigurePose } from '../arena/figures/pose.ts';
 import { CARD_W, FIGURE_FRONT_Z, anchorsFor, placementOf, type Layout } from '../arena/layout.ts';
 
-export type CameraMode = 'front' | 'close' | 'table' | 'wide';
+export type CameraMode = 'front' | 'close' | 'table' | 'wide' | 'inspect';
 
 /** The canvas height view 1's pixel sizes are quoted at. */
 export const TABLE_FRAME_HEIGHT = 900;
@@ -181,8 +181,88 @@ export function tablePixels(height: number, point: readonly [number, number, num
   return (height * TABLE_FRAME_HEIGHT) / (2 * tableDepthOf(point) * TAN_HALF);
 }
 
+// ---------------------------------------------------------------------------
+// INSPECT (the personal tier, D196): the card's art behind the figure
+// ---------------------------------------------------------------------------
+
+/**
+ * **The art box of a card image**, as fractions of a Scryfall `normal` image
+ * (488 × 680, the modern frame): left, right, top and bottom of the painting.
+ * Measured on the frame, not per card; a full-art or showcase frame is a
+ * follow-up (PLAN.md, the depth-relief window).
+ */
+export const ART_BOX = Object.freeze({ left: 0.08, right: 0.92, top: 0.112, bottom: 0.555 });
+/** The art box's aspect (width over height) on a 488 × 680 image. */
+export const ART_ASPECT = ((ART_BOX.right - ART_BOX.left) * 488) / ((ART_BOX.bottom - ART_BOX.top) * 680);
+/** A card's aspect (width over height). */
+export const CARD_ASPECT = 488 / 680;
+
+/** A vertical plane: its centre, the Y turn that makes it face `front`, and its size. */
+export interface Panel {
+  position: Vec3;
+  rotationY: number;
+  width: number;
+  height: number;
+}
+
+/** What the inspect view stands where: the camera, the art behind the figure, and the frame beside it. */
+export interface InspectLayout {
+  camera: Pose;
+  backdrop: Panel;
+  frame: Panel;
+}
+
+/**
+ * **INSPECT**: the figure in its signature pose, the card's ART BOX enlarged as a
+ * backdrop standing behind it, the card's frame and text as a panel floating at
+ * its right, and a camera in front of the figure framing all three. Every
+ * coordinate is from the framing — the pose's stand point, height and facing —
+ * so the layout is `layout.ts`'s and the arena's, with the two planes added. A
+ * card with no figure is framed as the close-up. No depth relief yet: the art is
+ * flat (PLAN.md's follow-up — the window).
+ */
+export function inspectLayout(framing: Framing): InspectLayout | null {
+  const pose = framing.pose;
+  if (pose === null) return null;
+  const h = Math.max(0.3, pose.height);
+  const fx = Math.sin(pose.facingY) * FIGURE_FRONT_Z;
+  const fz = Math.cos(pose.facingY) * FIGURE_FRONT_Z;
+  const turn = Math.atan2(fx, fz);
+  // The camera's right, looking back at the figure's front.
+  const rx = fz;
+  const rz = -fx;
+  const [px, py, pz] = pose.position;
+  const backHeight = 1.45 * h;
+  const backWidth = backHeight * ART_ASPECT;
+  const backdrop: Panel = {
+    position: [px - fx * 0.7 * h, py + backHeight / 2 - 0.02 * h, pz - fz * 0.7 * h],
+    rotationY: turn,
+    width: backWidth,
+    height: backHeight,
+  };
+  const frameHeight = 0.95 * h;
+  const frame: Panel = {
+    position: [px + rx * (0.5 * backWidth + 0.1 * h) + fx * 0.3 * h, py + 0.6 * h, pz + rz * (0.5 * backWidth + 0.1 * h) + fz * 0.3 * h],
+    rotationY: turn - 0.45,
+    width: frameHeight * CARD_ASPECT,
+    height: frameHeight,
+  };
+  // Frame the backdrop and the panel from a camera at the figure's chest height,
+  // a little above, looking back along its front — so the face under a hood reads.
+  const centre: Vec3 = [px + rx * 0.2 * backWidth, py + 0.66 * h, pz + rz * 0.2 * backWidth];
+  const radius = Math.hypot(0.5 * backWidth + 0.55 * frameHeight * CARD_ASPECT, 0.5 * backHeight);
+  const distance = (radius / TAN_HALF) * 0.92;
+  const lift = 0.06;
+  const camera: Pose = {
+    position: [centre[0] + fx * distance, centre[1] + lift * distance, centre[2] + fz * distance],
+    target: centre,
+  };
+  return { camera, backdrop, frame };
+}
+
 export function poseFor(mode: CameraMode, framing: Framing, canvasHeight: number): Pose {
   if (mode === 'wide') return REST_POSE;
+  if (mode === 'inspect') return inspectLayout(framing)?.camera ?? frontPose(framing);
   if (mode === 'table') return tablePose(framing, canvasHeight);
   if (mode === 'front') return frontPose(framing);
   return closePose(framing);

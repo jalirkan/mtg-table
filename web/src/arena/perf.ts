@@ -243,3 +243,21 @@ export function worstOf(samples: readonly number[]): number {
   return worst;
 }
 
+
+/**
+ * **The personal tier's budget** (phase 2, **D195**; `docs/guides/personal-tier.md`).
+ * A personal model (`personal/models/<slug>/`, dev server only, D190) replaces a
+ * CC0 body of 1,400 triangles and one draw call with one of up to
+ * {@link PERSONAL_TRI_CAP} triangles and one call per paint (its own texture, its
+ * own program variant). Measured with `tools/arena-bench.mjs --index 316`, Doom
+ * as the villain duelist, on the GTX 1080 and on SwiftShader
+ * (`docs/evidence/personal-tier.md` §17): the table affords the two duelists and
+ * {@link PERSONAL_MAX_FIGURES} dressed creatures at once. A model over either
+ * cap is never loaded (the overlay says why); a creature past the count keeps its
+ * CC0 figure, in placement order — "degrade, don't stutter" (report 09 §9.2 rule 9).
+ */
+export const PERSONAL_TRI_CAP = 8000;
+/** The most paints (draw calls a figure) a personal model may bring. */
+export const PERSONAL_CALL_CAP = 2;
+/** The most creatures dressed in personal models at once (the two duelists are not counted). */
+export const PERSONAL_MAX_FIGURES = 4;

@@ -45,6 +45,16 @@
  * rim and ink — not as a tinted silhouette. Both are defines: today's bodies carry
  * neither, so they stay one program; a model that does compiles its own variant.
  *
+ * **A personal model paints in its OWN colours** (phase 2, **D196**, amending
+ * D144 for the personal tier): `uPaintOwn` 1 makes the comic look paint its
+ * texture as it is — the card's colour stays in the rim, never multiplied into a
+ * face — and the hologram tint the texture's VALUES with the palette, so the
+ * hologram still reads as the card's colour; `USE_PAINT_CUTOFF` discards a texel
+ * whose alpha is under 0.5 (hair cards, lashes). A model of more than one paint
+ * is one material per paint, the first the figure's own and the rest SIBLINGS
+ * that share its per-figure uniform objects ({@link dressFigureMeshes}), so every
+ * write the frame loop makes to the one it holds reaches all of them.
+ *
  * ---------------------------------------------------------------------------
  * `#include <colorspace_fragment>`: three's built-in shaders end with it; a
  * custom `ShaderMaterial` gets no such thing for free. `THREE.Color.set` converts
@@ -239,6 +249,12 @@ export interface FigureUniforms {
   uMaterialize: { value: number };
   /** The paint map (`USE_PAINT_MAP` only) — a personal model's baked colour (D144). */
   uPaintMap: { value: THREE.Texture | null };
+  /**
+   * **1: the map is the model's OWN colour** (a personal model, D196) — the comic
+   * look paints it as it is and the hologram tints its values; 0: D144's
+   * palette × map, both looks.
+   */
+  uPaintOwn: { value: number };
 }
 
 export type FigureMaterial = THREE.ShaderMaterial & { uniforms: FigureUniforms & typeof COMIC_UNIFORMS };
@@ -304,6 +320,7 @@ const FRAGMENT = /* glsl */ `
   uniform float uEdgeLift;
   #ifdef USE_PAINT_MAP
     uniform sampler2D uPaintMap;
+    uniform float uPaintOwn;
     varying vec2 vPaintUv;
   #endif
 
@@ -322,8 +339,17 @@ const FRAGMENT = /* glsl */ `
     #ifdef USE_COLOR
       painted *= vColor.rgb;
     #endif
+    vec3 holoPaint = painted;
     #ifdef USE_PAINT_MAP
-      painted *= texture2D( uPaintMap, vPaintUv ).rgb;
+      vec4 paintTexel = texture2D( uPaintMap, vPaintUv );
+      #ifdef USE_PAINT_CUTOFF
+        if ( paintTexel.a < 0.5 ) discard;
+      #endif
+      // D196: a personal model's own colours (uPaintOwn 1) — the comic look paints
+      // its texture as it is, the hologram tints its values with the palette.
+      float paintLuma = dot( paintTexel.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+      holoPaint = mix( painted * paintTexel.rgb, painted * ( 0.35 + 0.9 * paintLuma ), uPaintOwn );
+      painted = mix( painted, vec3( 1.0 ), uPaintOwn ) * paintTexel.rgb;
     #endif
 
     // -- the hologram (D53, D97) ------------------------------------------------
@@ -334,7 +360,7 @@ const FRAGMENT = /* glsl */ `
     // A function of the figure's own height, not of time.
     float lines = fract( vLocalY * 23.0 );
     float scan = 1.0 - uScan * mix( 0.35, 0.12, uCostumeOn ) * step( 0.5, lines );
-    vec3 body = painted;
+    vec3 body = holoPaint;
     vec3 rimColour = mix( body, uTint, 0.55 * uCostumeOn );
     body = mix( body, uDrainTo, uDrain );
     rimColour = mix( rimColour, uDrainTo, uDrain );
@@ -369,6 +395,10 @@ export interface PaintInput {
   vertexColors?: boolean;
   /** Multiply the palette by this texture, sampled at the geometry's `uv`. */
   map?: THREE.Texture | null;
+  /** **D196**: the map is the model's own colour (a personal model): `uPaintOwn` 1. */
+  own?: boolean;
+  /** **D196**: discard a texel whose alpha is under 0.5 (`USE_PAINT_CUTOFF`: hair cards, lashes). */
+  cutout?: boolean;
 }
 
 /**
@@ -384,7 +414,7 @@ export function makeFigureMaterial(tint: string, unitScale = 1, paint: PaintInpu
   const material = new THREE.ShaderMaterial({
     vertexShader: COMIC_VERTEX_GLSL + VERTEX,
     fragmentShader: COMIC_FRAGMENT_GLSL + FRAGMENT,
-    defines: map === null ? {} : { USE_PAINT_MAP: '' },
+    defines: map === null ? {} : paint.cutout === true ? { USE_PAINT_MAP: '', USE_PAINT_CUTOFF: '' } : { USE_PAINT_MAP: '' },
     uniforms: {
       uTint: { value: new THREE.Color(tint) },
       uOpacity: { value: 1 },
@@ -399,6 +429,7 @@ export function makeFigureMaterial(tint: string, unitScale = 1, paint: PaintInpu
       uLook: { value: 0 },
       uMaterialize: { value: 1 },
       uPaintMap: { value: map },
+      uPaintOwn: { value: paint.own === true ? 1 : 0 },
       ...COMIC_UNIFORMS,
     },
     vertexColors: paint.vertexColors === true,
@@ -486,6 +517,76 @@ export function markPainted(material: THREE.Material, painted: boolean): void {
 export function applyLook(material: FigureMaterial, look: number): void {
   material.uniforms.uLook.value = look;
   markPainted(material, look > 0);
+  // A painted model's other paints share the uniform (D196); the mark is blend state, each its own.
+  const siblings = SIBLINGS.get(material);
+  if (siblings !== undefined) for (const sibling of siblings) markPainted(sibling, look > 0);
+}
+
+// ---------------------------------------------------------------------------
+// A model of more than one paint (the personal tier, D196)
+// ---------------------------------------------------------------------------
+
+/** A figure's primary material → the materials of its other paints. */
+const SIBLINGS = new WeakMap<FigureMaterial, FigureMaterial[]>();
+
+/**
+ * **What a mesh of a loaded model paints with**: its source material's map — a
+ * personal model's base colour (prepare's paint step, D194) — or `null` for a
+ * committed body, which carries none (D67). Read before the mesh's material is
+ * replaced, from the source material every clone shares.
+ */
+export function paintOfMesh(mesh: THREE.Mesh): PaintInput | null {
+  const source = mesh.material;
+  if (Array.isArray(source)) return null;
+  const map = (source as { map?: THREE.Texture | null }).map ?? null;
+  if (map === null) return null;
+  return { map, own: true, cutout: source.alphaTest > 0 };
+}
+
+/**
+ * **One figure's materials, onto its meshes** — built at commit, never in the
+ * frame loop. A committed body (no map anywhere) gets ONE material on every mesh,
+ * exactly as before; a personal model gets one per paint: the first is the
+ * figure's own (the one its rig holds and the frame loop writes), and each other
+ * paint a SIBLING whose uniforms are the first one's uniform OBJECTS but for its
+ * own map — so `uOpacity`, `uTint`, `uLook`, `uMaterialize` and `uDrain`, written
+ * to the first, reach every paint; {@link applyLook} marks the siblings too, and
+ * disposing the first disposes them.
+ */
+export function dressFigureMeshes(meshes: readonly THREE.Mesh[], tint: string, unitScale: number): FigureMaterial {
+  const paints = meshes.map(paintOfMesh);
+  const first = paints.find((p) => p !== null) ?? null;
+  const primary = makeFigureMaterial(tint, unitScale, first ?? {});
+  const siblings: FigureMaterial[] = [];
+  const byMap = new Map<THREE.Texture, FigureMaterial>();
+  if (first?.map) byMap.set(first.map, primary);
+  meshes.forEach((mesh, i) => {
+    const paint = paints[i] ?? null;
+    if (paint === null || paint.map === null || paint.map === undefined) {
+      mesh.material = primary;
+      return;
+    }
+    let material = byMap.get(paint.map);
+    if (material === undefined) {
+      material = makeFigureMaterial(tint, unitScale, paint);
+      material.uniforms = { ...primary.uniforms, uPaintMap: { value: paint.map } };
+      byMap.set(paint.map, material);
+      siblings.push(material);
+    }
+    mesh.material = material;
+  });
+  if (siblings.length > 0) {
+    SIBLINGS.set(primary, siblings);
+    primary.addEventListener('dispose', () => {
+      for (const sibling of siblings) sibling.dispose();
+    });
+  }
+  return primary;
+}
+
+/** The materials of a figure's other paints (D196) — for a mount-time prime or a test. */
+export function siblingsOf(material: FigureMaterial): readonly FigureMaterial[] {
+  return SIBLINGS.get(material) ?? [];
 }
 
 // ---------------------------------------------------------------------------

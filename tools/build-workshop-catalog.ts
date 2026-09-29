@@ -14,6 +14,13 @@
  * a reason to run it too. The logic is `web/src/workshop/catalogBuild.ts`; this
  * file only reads and writes.
  *
+ * **A deck card the corpus never showed face up takes its facts from the
+ * engine's own card script** (D196), read out of `forge-home/res/cardsfolder/
+ * cardsfolder.zip` (`tools/forge-scripts.ts`) and named in the catalog's
+ * `engine` list. Without the engine's resources (a clone that has not run
+ * `tools/make-forge-home.sh`) the tool refuses to write, rather than write a
+ * catalog that has lost those facts; `--check` compares what it can.
+ *
  *     node tools/build-workshop-catalog.ts            # rewrite the file
  *     node tools/build-workshop-catalog.ts --check    # exit 1 if it would change
  *
@@ -26,7 +33,8 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { buildCatalog, parseDck, type DeckList } from '../web/src/workshop/catalogBuild.ts';
+import { buildCatalog, factsFromScript, parseDck, type DeckList } from '../web/src/workshop/catalogBuild.ts';
+import { openForgeScripts } from './forge-scripts.ts';
 
 const OUT = 'web/src/workshop/catalog.json';
 
@@ -61,7 +69,30 @@ function cueCards(): string[] {
   return Object.keys(cues.cards ?? {});
 }
 
-const text = `${JSON.stringify(buildCatalog(decks(), recordings, cueCards()), null, 2)}\n`;
+const scripts = openForgeScripts();
+if (scripts === null && !process.argv.includes('--check')) {
+  console.error('build-workshop-catalog: no forge-home/res/cardsfolder/cardsfolder.zip — run ./tools/make-forge-home.sh first (the engine facts come from it)');
+  process.exit(1);
+}
+// With no engine resources (CI's web job), `--check` takes the engine's facts
+// from the committed file for the names it says came from the engine — the
+// corpus half is still checked byte for byte, and the engine half wherever the
+// engine is (here, and web/test/workshop.test.ts).
+let committed: { engine?: string[]; cards?: Record<string, ReturnType<typeof factsFromScript>> } = {};
+if (scripts === null) {
+  try {
+    committed = JSON.parse(readFileSync(OUT, 'utf8')) as typeof committed;
+  } catch {
+    committed = {};
+  }
+  console.log('build-workshop-catalog: no engine resources here — the engine facts are the committed file\'s (checked where the engine is)');
+}
+const engineFacts = (name: string) => {
+  if (scripts === null) return (committed.engine ?? []).includes(name) ? (committed.cards?.[name] ?? null) : null;
+  const script = scripts.scriptOf(name);
+  return script === null ? null : factsFromScript(script);
+};
+const text = `${JSON.stringify(buildCatalog(decks(), recordings, cueCards(), engineFacts), null, 2)}\n`;
 if (process.argv.includes('--check')) {
   let committed = '';
   try {

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_generated": "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts",
+  "_generated": "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl, the engine's card scripts (for a deck card the corpus never showed face up) and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts",
   "decks": [
     {
       "file": "pacho-shield.dck",
@@ -989,6 +989,14 @@
     }
   ],
   "cards": {
+    "A.I.M. Bot": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": "{2}{U}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
     "A.I.M. Scientists": {
       "types": "Creature - Human Scientist Villain",
       "manaCost": "{3}{U}",
@@ -996,6 +1004,22 @@
       "toughness": "3",
       "token": false,
       "setCode": "MSH"
+    },
+    "Abomination, Irradiated Brute": {
+      "types": "Legendary Creature - Gamma Villain",
+      "manaCost": "{2}{G}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
+    },
+    "Abomination, Terrifying Titan": {
+      "types": "Legendary Creature - Gamma Villain",
+      "manaCost": "{3}{RG}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
     },
     "Aerial Doombot": {
       "types": "Artifact Creature - Robot Villain",
@@ -1020,6 +1044,14 @@
       "toughness": "2",
       "token": false,
       "setCode": "MSH"
+    },
+    "Agents of HYDRA": {
+      "types": "Creature - Human Spy Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
     },
     "Agents of S.H.I.E.L.D.": {
       "types": "Creature - Human Spy Hero",
@@ -1061,6 +1093,38 @@
       "token": false,
       "setCode": "MKC"
     },
+    "Atlas, Sizable Stooge": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{BG}{BG}",
+      "power": "5",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
+    },
+    "Austere Command": {
+      "types": "Sorcery",
+      "manaCost": "{4}{W}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Avengers: Under Siege": {
+      "types": "Enchantment - Saga",
+      "manaCost": "{2}{B}{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Baron Strucker, HYDRA Overlord": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "Battering Craghorn": {
       "types": "Creature - Goat Beast",
       "manaCost": "{2}{R}{R}",
@@ -1068,6 +1132,46 @@
       "toughness": "1",
       "token": false,
       "setCode": "ARC"
+    },
+    "Birds of Paradise": {
+      "types": "Creature - Bird",
+      "manaCost": "{G}",
+      "power": "0",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Birnin Zana Plaza": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Black Panther, Claws of Bast": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Black Panther, Most Dangerous": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Black Panther, Vanguard": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{G}{W}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
     },
     "Bold Biochemist": {
       "types": "Creature - Human Scientist",
@@ -1077,6 +1181,14 @@
       "token": false,
       "setCode": "MSH"
     },
+    "Boomerang, Blade Flinger": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
     "Borough Backup": {
       "types": "Sorcery",
       "manaCost": "{4}{W}",
@@ -1084,6 +1196,22 @@
       "toughness": null,
       "token": false,
       "setCode": "MSH"
+    },
+    "Brawn, Amadeus Cho": {
+      "types": "Legendary Creature - Gamma Scientist Hero",
+      "manaCost": "{1}{GU}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Castle Doom": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
     },
     "Clue Token": {
       "types": "Artifact - Clue",
@@ -1093,6 +1221,38 @@
       "token": true,
       "setCode": "MSH"
     },
+    "Common Crook": {
+      "types": "Creature - Human Rogue Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Crossbones, Malicious Mercenary": {
+      "types": "Legendary Creature - Human Mercenary Villain",
+      "manaCost": "{3}{B}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Dark Deed": {
+      "types": "Instant",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Dark Fortress": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Depower": {
       "types": "Instant",
       "manaCost": "{2}{U}",
@@ -1100,6 +1260,62 @@
       "toughness": null,
       "token": false,
       "setCode": "MSH"
+    },
+    "Doctor Doom": {
+      "types": "Legendary Creature - Human Scientist Villain",
+      "manaCost": "{4}{B}{B}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Doom Blade": {
+      "types": "Instant",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Doom Reigns Supreme": {
+      "types": "Enchantment - Plan",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Doom's Servo-Guards": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Dora Milaje Elite": {
+      "types": "Creature - Human Warrior",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Dragonskull Summit": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Fixer, Techno Terror": {
+      "types": "Legendary Creature - Human Artificer Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
     },
     "Forest": {
       "types": "Basic Land - Forest",
@@ -1109,6 +1325,14 @@
       "token": false,
       "setCode": "TRK"
     },
+    "Frozen in Ice": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{2}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Future Sight": {
       "types": "Enchantment",
       "manaCost": "{2}{U}{U}{U}",
@@ -1116,6 +1340,22 @@
       "toughness": null,
       "token": false,
       "setCode": "MB2"
+    },
+    "Gallant Citizen": {
+      "types": "Creature - Human Citizen",
+      "manaCost": "{GW}{GW}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Gamma Grotesque": {
+      "types": "Creature - Gamma Horror Villain",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
     },
     "Garruk's Companion": {
       "types": "Creature - Beast",
@@ -1125,6 +1365,22 @@
       "token": false,
       "setCode": "M12"
     },
+    "Gathering Place": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Giant Growth": {
+      "types": "Instant",
+      "manaCost": "{G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Giant-Sized Flying Ant": {
       "types": "Creature - Insect",
       "manaCost": "{3}{U}",
@@ -1132,6 +1388,22 @@
       "toughness": "2",
       "token": false,
       "setCode": "MSH"
+    },
+    "HULK SMASH!": {
+      "types": "Instant",
+      "manaCost": "{1}{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "HYDRA Troopers": {
+      "types": "Creature - Human Soldier Villain",
+      "manaCost": "{2}{B}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
     },
     "Helicarrier Strike": {
       "types": "Instant",
@@ -1141,6 +1413,30 @@
       "token": false,
       "setCode": "MSH"
     },
+    "Hell's Kitchen": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Hellcat, Undying Vigilante": {
+      "types": "Legendary Creature - Human Hero",
+      "manaCost": "{G}{G}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Hercules, Prince of Power": {
+      "types": "Legendary Creature - Demigod Warrior Hero",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
     "Hero Token": {
       "types": "Creature - Hero",
       "manaCost": null,
@@ -1148,6 +1444,54 @@
       "toughness": "2",
       "token": true,
       "setCode": "MSH"
+    },
+    "Hidden Lair": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Hour of Defeat": {
+      "types": "Instant",
+      "manaCost": "{3}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Hulk, Brutal Brawler": {
+      "types": "Legendary Creature - Gamma Berserker Hero",
+      "manaCost": "{2}{G}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
+    },
+    "Hulk, Gamma Goliath": {
+      "types": "Legendary Creature - Gamma Berserker Hero",
+      "manaCost": "{3}{R}{G}",
+      "power": "6",
+      "toughness": "5",
+      "token": false,
+      "setCode": null
+    },
+    "Hulk, Strongest There Is": {
+      "types": "Legendary Creature - Gamma Berserker Hero",
+      "manaCost": "{2}{G}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Hulkling, Burgeoning Bruiser": {
+      "types": "Legendary Creature - Kree Skrull Hero",
+      "manaCost": "{2}{G}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
     },
     "Island": {
       "types": "Basic Land - Island",
@@ -1157,6 +1501,78 @@
       "token": false,
       "setCode": "TRK"
     },
+    "Kang the Conqueror": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{U}{U}",
+      "power": "4",
+      "toughness": "5",
+      "token": false,
+      "setCode": null
+    },
+    "Kang, Temporal Tyrant": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{U}{B}",
+      "power": "3",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
+    },
+    "Klaw, Sonic Subjugator": {
+      "types": "Legendary Creature - Human Rogue Villain",
+      "manaCost": "{2}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Knight of Wundagore": {
+      "types": "Creature - Cat Knight Villain",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Lightning Bolt": {
+      "types": "Instant",
+      "manaCost": "{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Loki, God of Mischief": {
+      "types": "Legendary Creature - God Sorcerer Villain",
+      "manaCost": "{1}{U}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Los Diablos Missile Base": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "MACH-1, Swooping Scoundrel": {
+      "types": "Legendary Artifact Creature - Human Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Madame Hydra, Reanimated": {
+      "types": "Legendary Creature - Human Horror Villain",
+      "manaCost": "{3}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "Manamorphose": {
       "types": "Instant",
       "manaCost": "{1}{R/G}",
@@ -1164,6 +1580,14 @@
       "toughness": null,
       "token": false,
       "setCode": "SPG"
+    },
+    "Moonstone, Harsh Mistress": {
+      "types": "Legendary Creature - Human Doctor Villain",
+      "manaCost": "{3}{B}",
+      "power": "2",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
     },
     "Mountain": {
       "types": "Basic Land - Mountain",
@@ -1173,6 +1597,14 @@
       "token": false,
       "setCode": "TRK"
     },
+    "Nakia, Wakandan Operative": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
     "Nick Fury, Spymaster": {
       "types": "Legendary Creature - Human Spy Hero",
       "manaCost": "{4}{W}",
@@ -1180,6 +1612,30 @@
       "toughness": "4",
       "token": false,
       "setCode": "MSC"
+    },
+    "Night's Whisper": {
+      "types": "Sorcery",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Okoye, Dora Milaje Leader": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{3}{W}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Okoye, Mighty and Adored": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{G}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
     },
     "Opt": {
       "types": "Instant",
@@ -1196,6 +1652,14 @@
       "toughness": "1",
       "token": false,
       "setCode": "MSC"
+    },
+    "Pharaoh Rama-Tut": {
+      "types": "Legendary Creature - Human Noble Villain",
+      "manaCost": "{4}{U}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
     },
     "Plains": {
       "types": "Basic Land - Plains",
@@ -1229,6 +1693,14 @@
       "token": false,
       "setCode": "MSC"
     },
+    "Radioactive Man": {
+      "types": "Legendary Creature - Human Scientist Villain",
+      "manaCost": "{4}{B}",
+      "power": "3",
+      "toughness": "5",
+      "token": false,
+      "setCode": null
+    },
     "Rampant Growth": {
       "types": "Sorcery",
       "manaCost": "{1}{G}",
@@ -1236,6 +1708,22 @@
       "toughness": null,
       "token": false,
       "setCode": "FIC"
+    },
+    "Red Hulk": {
+      "types": "Legendary Creature - Gamma Berserker Villain",
+      "manaCost": "{4}{R}{R}",
+      "power": "6",
+      "toughness": "7",
+      "token": false,
+      "setCode": null
+    },
+    "Rick Jones, Destined Sidekick": {
+      "types": "Legendary Creature - Human Advisor",
+      "manaCost": "{G}",
+      "power": "0",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
     },
     "Robot Token": {
       "types": "Artifact Creature - Robot",
@@ -1252,6 +1740,14 @@
       "toughness": null,
       "token": false,
       "setCode": "MSC"
+    },
+    "Rootbound Crag": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
     },
     "S.H.I.E.L.D. Helicarrier": {
       "types": "Artifact - Vehicle",
@@ -1277,6 +1773,46 @@
       "token": true,
       "setCode": "MMA"
     },
+    "She-Hulk, Attorney-at-Law": {
+      "types": "Legendary Creature - Gamma Advisor Hero",
+      "manaCost": "{2}{GW}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "She-Hulk, Jade Defender": {
+      "types": "Legendary Creature - Gamma Hero",
+      "manaCost": "{3}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
+    },
+    "Shock": {
+      "types": "Instant",
+      "manaCost": "{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Shuri, Vibranium Technologist": {
+      "types": "Legendary Creature - Human Artificer Hero",
+      "manaCost": "{2}{WU}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Shuri, the Black Panther": {
+      "types": "Legendary Creature - Human Noble Hero",
+      "manaCost": "{G}{W}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
     "Soldier Token": {
       "types": "Creature - Soldier",
       "manaCost": null,
@@ -1284,6 +1820,22 @@
       "toughness": "1",
       "token": true,
       "setCode": "MSH"
+    },
+    "Songbird, Sonic Screamer": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Storm, Queen of Wakanda": {
+      "types": "Legendary Creature - Mutant Noble Hero",
+      "manaCost": "{3}{G}{W}",
+      "power": "4",
+      "toughness": "5",
+      "token": false,
+      "setCode": null
     },
     "Strategic Intervention": {
       "types": "Enchantment",
@@ -1293,6 +1845,14 @@
       "token": false,
       "setCode": "MSC"
     },
+    "Sunpetal Grove": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Super Suit": {
       "types": "Artifact - Equipment",
       "manaCost": "{1}{U}",
@@ -1301,6 +1861,38 @@
       "token": false,
       "setCode": "MSH"
     },
+    "Swamp": {
+      "types": "Basic Land - Swamp",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Swords to Plowshares": {
+      "types": "Instant",
+      "manaCost": "{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "T'Chaka, Venerable King": {
+      "types": "Legendary Creature - Human Noble Hero",
+      "manaCost": "{G}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "T'Challa, the Black Panther": {
+      "types": "Legendary Creature - Human Noble Hero",
+      "manaCost": "{1}{G}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "Thallid": {
       "types": "Creature - Fungus",
       "manaCost": "{G}",
@@ -1308,6 +1900,14 @@
       "toughness": "1",
       "token": false,
       "setCode": "MMA"
+    },
+    "The Masters of Evil": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{5}{B}",
+      "power": "5",
+      "toughness": "6",
+      "token": false,
+      "setCode": null
     },
     "Thriving Heath": {
       "types": "Land",
@@ -1325,6 +1925,78 @@
       "token": false,
       "setCode": "MSC"
     },
+    "Thriving Moor": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Tiger Shark, Abyssal Hunter": {
+      "types": "Legendary Creature - Shark Human Villain",
+      "manaCost": "{2}{UB}{UB}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Titania, Proud Pummeler": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{3}{R}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Training Compound": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Unliving Legionnaire": {
+      "types": "Creature - Vampire Villain",
+      "manaCost": "{3}{B}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Vibranium Energy Daggers": {
+      "types": "Artifact - Equipment",
+      "manaCost": "{1}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Villainous Hideout": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Visions of Villainy": {
+      "types": "Instant",
+      "manaCost": "{2}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Volcanic Villain": {
+      "types": "Creature - Elemental Villain",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "Volcano Hellion": {
       "types": "Creature - Hellion",
       "manaCost": "{2}{R}{R}",
@@ -1332,6 +2004,38 @@
       "toughness": "5",
       "token": false,
       "setCode": "PLC"
+    },
+    "Wakandan Drone Flock": {
+      "types": "Artifact Creature - Robot",
+      "manaCost": "{3}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Wakandan Shield Guard": {
+      "types": "Creature - Human Soldier",
+      "manaCost": "{1}{W}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
+    },
+    "Wakandan Tusker": {
+      "types": "Creature - Elephant",
+      "manaCost": "{1}{GW}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Warriors of Wakanda": {
+      "types": "Creature - Human Warrior",
+      "manaCost": "{3}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": null
     },
     "Wasp, Shrinking Savior": {
       "types": "Legendary Creature - Human Hero",
@@ -1348,6 +2052,54 @@
       "toughness": null,
       "token": false,
       "setCode": "MSH"
+    },
+    "Whiplash, Vengeful Engineer": {
+      "types": "Legendary Creature - Human Artificer Villain",
+      "manaCost": "{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Whirlwind, Killer Cyclone": {
+      "types": "Legendary Creature - Mutant Villain",
+      "manaCost": "{2}{R}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "White Widow, Yelena Belova": {
+      "types": "Legendary Creature - Human Assassin Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Wolverine, Fierce Fighter": {
+      "types": "Legendary Creature - Mutant Berserker Hero",
+      "manaCost": "{2}{R}{G}",
+      "power": "3",
+      "toughness": "5",
+      "token": false,
+      "setCode": null
+    },
+    "Woodwork Prodigy": {
+      "types": "Creature - Cat Druid",
+      "manaCost": "{2}{RG}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Yellowjacket, Heartless Marauder": {
+      "types": "Legendary Creature - Human Rogue Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
     }
   },
   "tokens": [
@@ -1373,11 +2125,36 @@
     }
   ],
   "missing": [
+    "Ajani's Anguish",
+    "Chandra's Emberling",
+    "Eardrum Rattler",
+    "Fulminous Forte",
+    "Gallia, the Merrymaker",
+    "Ghalta the Immovable",
+    "Graft Surgeon",
+    "Hexhaven Battalion",
+    "Jiang Yanggu, Alone",
+    "Koth, the Geomancer",
+    "Mabel, Valley Hero",
+    "Medic's Kitesail",
+    "No Admittance",
+    "Pyre Rhymer",
+    "Room of Refuge",
+    "Samut, Hazoret's Champion",
+    "Shatterwing Pegasus",
+    "Surgical Precision",
+    "Thalia, the Survivor",
+    "Way of the Pyromancer",
+    "Whiplash Wordsmith",
+    "Wrath of the Bloodmane",
+    "Yoshimaru, Beloved Companion",
+    "Your Fate Ends Here"
+  ],
+  "engine": [
     "A.I.M. Bot",
     "Abomination, Irradiated Brute",
     "Abomination, Terrifying Titan",
     "Agents of HYDRA",
-    "Ajani's Anguish",
     "Atlas, Sizable Stooge",
     "Austere Command",
     "Avengers: Under Siege",
@@ -1390,7 +2167,6 @@
     "Boomerang, Blade Flinger",
     "Brawn, Amadeus Cho",
     "Castle Doom",
-    "Chandra's Emberling",
     "Common Crook",
     "Crossbones, Malicious Mercenary",
     "Dark Deed",
@@ -1401,57 +2177,42 @@
     "Doom's Servo-Guards",
     "Dora Milaje Elite",
     "Dragonskull Summit",
-    "Eardrum Rattler",
     "Fixer, Techno Terror",
     "Frozen in Ice",
-    "Fulminous Forte",
     "Gallant Citizen",
-    "Gallia, the Merrymaker",
     "Gamma Grotesque",
     "Gathering Place",
-    "Ghalta the Immovable",
     "Giant Growth",
-    "Graft Surgeon",
     "HULK SMASH!",
     "HYDRA Troopers",
     "Hell's Kitchen",
     "Hellcat, Undying Vigilante",
     "Hercules, Prince of Power",
-    "Hexhaven Battalion",
     "Hidden Lair",
     "Hour of Defeat",
     "Hulk, Brutal Brawler",
     "Hulk, Gamma Goliath",
     "Hulk, Strongest There Is",
     "Hulkling, Burgeoning Bruiser",
-    "Jiang Yanggu, Alone",
     "Kang the Conqueror",
     "Kang, Temporal Tyrant",
     "Klaw, Sonic Subjugator",
     "Knight of Wundagore",
-    "Koth, the Geomancer",
     "Lightning Bolt",
     "Loki, God of Mischief",
     "Los Diablos Missile Base",
     "MACH-1, Swooping Scoundrel",
-    "Mabel, Valley Hero",
     "Madame Hydra, Reanimated",
-    "Medic's Kitesail",
     "Moonstone, Harsh Mistress",
     "Nakia, Wakandan Operative",
     "Night's Whisper",
-    "No Admittance",
     "Okoye, Dora Milaje Leader",
     "Okoye, Mighty and Adored",
     "Pharaoh Rama-Tut",
-    "Pyre Rhymer",
     "Radioactive Man",
     "Red Hulk",
     "Rick Jones, Destined Sidekick",
-    "Room of Refuge",
     "Rootbound Crag",
-    "Samut, Hazoret's Champion",
-    "Shatterwing Pegasus",
     "She-Hulk, Attorney-at-Law",
     "She-Hulk, Jade Defender",
     "Shock",
@@ -1460,12 +2221,10 @@
     "Songbird, Sonic Screamer",
     "Storm, Queen of Wakanda",
     "Sunpetal Grove",
-    "Surgical Precision",
     "Swamp",
     "Swords to Plowshares",
     "T'Chaka, Venerable King",
     "T'Challa, the Black Panther",
-    "Thalia, the Survivor",
     "The Masters of Evil",
     "Thriving Moor",
     "Tiger Shark, Abyssal Hunter",
@@ -1480,70 +2239,65 @@
     "Wakandan Shield Guard",
     "Wakandan Tusker",
     "Warriors of Wakanda",
-    "Way of the Pyromancer",
-    "Whiplash Wordsmith",
     "Whiplash, Vengeful Engineer",
     "Whirlwind, Killer Cyclone",
     "White Widow, Yelena Belova",
     "Wolverine, Fierce Fighter",
     "Woodwork Prodigy",
-    "Wrath of the Bloodmane",
-    "Yellowjacket, Heartless Marauder",
-    "Yoshimaru, Beloved Companion",
-    "Your Fate Ends Here"
+    "Yellowjacket, Heartless Marauder"
   ],
   "threeD": {
-    "A.I.M. Bot": null,
+    "A.I.M. Bot": "figure",
     "A.I.M. Scientists": "figure",
-    "Abomination, Irradiated Brute": null,
-    "Abomination, Terrifying Titan": null,
+    "Abomination, Irradiated Brute": "figure",
+    "Abomination, Terrifying Titan": "figure",
     "Aerial Doombot": "figure",
     "Agent 13, Sharon Carter": "figure",
     "Agent Phil Coulson": "figure",
-    "Agents of HYDRA": null,
+    "Agents of HYDRA": "figure",
     "Agents of S.H.I.E.L.D.": "figure",
     "Ainok Tracker": "figure",
     "Ajani's Anguish": null,
     "Ant-Man's Air Force": "figure",
     "Ant-Man, Reformed Rogue": "figure",
     "Ashcloud Phoenix": "figure",
-    "Atlas, Sizable Stooge": null,
+    "Atlas, Sizable Stooge": "figure",
     "Austere Command": null,
     "Avengers: Under Siege": null,
-    "Baron Strucker, HYDRA Overlord": null,
+    "Baron Strucker, HYDRA Overlord": "figure",
     "Battering Craghorn": "figure",
-    "Birds of Paradise": null,
+    "Birds of Paradise": "figure",
     "Birnin Zana Plaza": null,
-    "Black Panther, Claws of Bast": null,
-    "Black Panther, Most Dangerous": null,
-    "Black Panther, Vanguard": null,
+    "Black Panther, Claws of Bast": "figure",
+    "Black Panther, Most Dangerous": "figure",
+    "Black Panther, Vanguard": "figure",
     "Bold Biochemist": "figure",
-    "Boomerang, Blade Flinger": null,
+    "Boomerang, Blade Flinger": "figure",
     "Borough Backup": "cues",
-    "Brawn, Amadeus Cho": null,
+    "Brawn, Amadeus Cho": "figure",
     "Castle Doom": null,
     "Chandra's Emberling": null,
     "Clue Token": null,
-    "Common Crook": null,
-    "Crossbones, Malicious Mercenary": null,
+    "Common Crook": "figure",
+    "Crossbones, Malicious Mercenary": "figure",
     "Dark Deed": null,
     "Dark Fortress": null,
     "Depower": "cues",
-    "Doctor Doom": null,
+    "Doctor Doom": "figure",
     "Doom Blade": null,
     "Doom Reigns Supreme": null,
-    "Doom's Servo-Guards": null,
-    "Dora Milaje Elite": null,
+    "Doom's Servo-Guards": "figure",
+    "Dora Milaje Elite": "figure",
     "Dragonskull Summit": null,
     "Eardrum Rattler": null,
-    "Fixer, Techno Terror": null,
+    "Fixer, Techno Terror": "figure",
     "Forest": null,
     "Frozen in Ice": null,
     "Fulminous Forte": null,
     "Future Sight": null,
-    "Gallant Citizen": null,
+    "Gallant Citizen": "figure",
     "Gallia, the Merrymaker": null,
-    "Gamma Grotesque": null,
+    "Gamma Grotesque": "figure",
     "Garruk's Companion": "figure",
     "Gathering Place": null,
     "Ghalta the Immovable": null,
@@ -1551,54 +2305,54 @@
     "Giant-Sized Flying Ant": "figure",
     "Graft Surgeon": null,
     "HULK SMASH!": null,
-    "HYDRA Troopers": null,
+    "HYDRA Troopers": "figure",
     "Helicarrier Strike": "cues",
     "Hell's Kitchen": null,
-    "Hellcat, Undying Vigilante": null,
-    "Hercules, Prince of Power": null,
+    "Hellcat, Undying Vigilante": "figure",
+    "Hercules, Prince of Power": "figure",
     "Hero Token": "figure",
     "Hexhaven Battalion": null,
     "Hidden Lair": null,
     "Hour of Defeat": null,
-    "Hulk, Brutal Brawler": null,
-    "Hulk, Gamma Goliath": null,
-    "Hulk, Strongest There Is": null,
-    "Hulkling, Burgeoning Bruiser": null,
+    "Hulk, Brutal Brawler": "figure",
+    "Hulk, Gamma Goliath": "figure",
+    "Hulk, Strongest There Is": "figure",
+    "Hulkling, Burgeoning Bruiser": "figure",
     "Island": "cues",
     "Jiang Yanggu, Alone": null,
-    "Kang the Conqueror": null,
-    "Kang, Temporal Tyrant": null,
-    "Klaw, Sonic Subjugator": null,
-    "Knight of Wundagore": null,
+    "Kang the Conqueror": "figure",
+    "Kang, Temporal Tyrant": "figure",
+    "Klaw, Sonic Subjugator": "figure",
+    "Knight of Wundagore": "figure",
     "Koth, the Geomancer": null,
     "Lightning Bolt": null,
-    "Loki, God of Mischief": null,
+    "Loki, God of Mischief": "figure",
     "Los Diablos Missile Base": null,
-    "MACH-1, Swooping Scoundrel": null,
+    "MACH-1, Swooping Scoundrel": "figure",
     "Mabel, Valley Hero": null,
-    "Madame Hydra, Reanimated": null,
+    "Madame Hydra, Reanimated": "figure",
     "Manamorphose": null,
     "Medic's Kitesail": null,
-    "Moonstone, Harsh Mistress": null,
+    "Moonstone, Harsh Mistress": "figure",
     "Mountain": null,
-    "Nakia, Wakandan Operative": null,
+    "Nakia, Wakandan Operative": "figure",
     "Nick Fury, Spymaster": "figure",
     "Night's Whisper": null,
     "No Admittance": null,
-    "Okoye, Dora Milaje Leader": null,
-    "Okoye, Mighty and Adored": null,
+    "Okoye, Dora Milaje Leader": "figure",
+    "Okoye, Mighty and Adored": "figure",
     "Opt": null,
     "Peggy Carter, Secret Agent": "figure",
-    "Pharaoh Rama-Tut": null,
+    "Pharaoh Rama-Tut": "figure",
     "Plains": "cues",
     "Pym Particles": "cues",
     "Pyre Rhymer": null,
     "Quake, Agent of S.H.I.E.L.D.": "figure",
     "Quantum Reduction": "cues",
-    "Radioactive Man": null,
+    "Radioactive Man": "figure",
     "Rampant Growth": null,
-    "Red Hulk": null,
-    "Rick Jones, Destined Sidekick": null,
+    "Red Hulk": "figure",
+    "Rick Jones, Destined Sidekick": "figure",
     "Robot Token": "figure",
     "Robotics Mastery": "cues",
     "Room of Refuge": null,
@@ -1608,52 +2362,52 @@
     "Samut, Hazoret's Champion": null,
     "Saproling Token": "figure",
     "Shatterwing Pegasus": null,
-    "She-Hulk, Attorney-at-Law": null,
-    "She-Hulk, Jade Defender": null,
+    "She-Hulk, Attorney-at-Law": "figure",
+    "She-Hulk, Jade Defender": "figure",
     "Shock": null,
-    "Shuri, Vibranium Technologist": null,
-    "Shuri, the Black Panther": null,
+    "Shuri, Vibranium Technologist": "figure",
+    "Shuri, the Black Panther": "figure",
     "Soldier Token": "figure",
-    "Songbird, Sonic Screamer": null,
-    "Storm, Queen of Wakanda": null,
+    "Songbird, Sonic Screamer": "figure",
+    "Storm, Queen of Wakanda": "figure",
     "Strategic Intervention": "cues",
     "Sunpetal Grove": null,
     "Super Suit": "cues",
     "Surgical Precision": null,
     "Swamp": null,
     "Swords to Plowshares": null,
-    "T'Chaka, Venerable King": null,
-    "T'Challa, the Black Panther": null,
+    "T'Chaka, Venerable King": "figure",
+    "T'Challa, the Black Panther": "figure",
     "Thalia, the Survivor": null,
     "Thallid": "figure",
-    "The Masters of Evil": null,
+    "The Masters of Evil": "figure",
     "Thriving Heath": "cues",
     "Thriving Isle": "cues",
     "Thriving Moor": null,
-    "Tiger Shark, Abyssal Hunter": null,
-    "Titania, Proud Pummeler": null,
+    "Tiger Shark, Abyssal Hunter": "figure",
+    "Titania, Proud Pummeler": "figure",
     "Training Compound": null,
-    "Unliving Legionnaire": null,
+    "Unliving Legionnaire": "figure",
     "Vibranium Energy Daggers": null,
     "Villainous Hideout": null,
     "Visions of Villainy": null,
-    "Volcanic Villain": null,
+    "Volcanic Villain": "figure",
     "Volcano Hellion": "figure",
-    "Wakandan Drone Flock": null,
-    "Wakandan Shield Guard": null,
-    "Wakandan Tusker": null,
-    "Warriors of Wakanda": null,
+    "Wakandan Drone Flock": "figure",
+    "Wakandan Shield Guard": "figure",
+    "Wakandan Tusker": "figure",
+    "Warriors of Wakanda": "figure",
     "Wasp, Shrinking Savior": "figure",
     "Way of the Pyromancer": null,
     "Web Up": "cues",
     "Whiplash Wordsmith": null,
-    "Whiplash, Vengeful Engineer": null,
-    "Whirlwind, Killer Cyclone": null,
-    "White Widow, Yelena Belova": null,
-    "Wolverine, Fierce Fighter": null,
-    "Woodwork Prodigy": null,
+    "Whiplash, Vengeful Engineer": "figure",
+    "Whirlwind, Killer Cyclone": "figure",
+    "White Widow, Yelena Belova": "figure",
+    "Wolverine, Fierce Fighter": "figure",
+    "Woodwork Prodigy": "figure",
     "Wrath of the Bloodmane": null,
-    "Yellowjacket, Heartless Marauder": null,
+    "Yellowjacket, Heartless Marauder": "figure",
     "Yoshimaru, Beloved Companion": null,
     "Your Fate Ends Here": null
   }

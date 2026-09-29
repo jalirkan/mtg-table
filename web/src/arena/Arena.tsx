@@ -140,6 +140,8 @@ import { EffectPool } from './scene/effects.ts';
 import { OverlayField } from './scene/overlays.ts';
 import type { FigureRigMap } from './scene/figureRigs.ts';
 import { DuelistLayer } from './scene/DuelistLayer.tsx';
+import { NO_PERSONAL_LOADED, usePersonalModels, usePersonalOverlay, type PersonalLoaded } from './scene/personalModels.ts';
+import { dressPoses, personalChoicesOf } from './personal.ts';
 import { FigureLayer } from './scene/FigureLayer.tsx';
 import { HitProxy } from './scene/HitProxy.tsx';
 import type { RigMap } from './scene/rigs.ts';
@@ -429,6 +431,7 @@ function Scene({
   loopRef,
   look = DEFAULT_LOOK,
   composer = false,
+  personal = NO_PERSONAL_LOADED,
 }: {
   state: ClientState;
   placed: Layout;
@@ -473,6 +476,8 @@ function Scene({
    * primes compile for that target (`scene/prime.ts`), and again when it changes.
    */
   composer?: boolean;
+  /** **The personal tier** (D194, D195): the loaded models, for the figure layer and the seats. */
+  personal?: PersonalLoaded;
 }): JSX.Element {
   const selectable = useMemo(
     () => new Set(state.input?.selectable.cardIds ?? []),
@@ -555,6 +560,7 @@ function Scene({
         look={look}
         composer={composer}
         status={strips}
+        personal={personal.models}
       />
 
       {/* **T4's casting anchor and T6's stack**: the floating mana of each seat,
@@ -584,6 +590,7 @@ function Scene({
         queue={queue}
         look={look.look === 'comic' ? 1 : 0}
         composer={composer}
+        personal={personal.seats}
       />
 
       {/* The Tier-1 primitive kit: 26 meshes, parked invisible, bound to live
@@ -863,7 +870,7 @@ export default function Arena({
   // poses below recompute once per arrival, at commit, never in the frame loop.
   const paletteNames = useMemo(() => paletteNamesOf(placed), [placed]);
   const palettes = useArtPalettes(paletteNames, art);
-  const figures = useMemo(
+  const basePoses = useMemo(
     () =>
       figurePose(placed, state.board?.combat ?? null, figureData.figures, {
         frozen,
@@ -877,9 +884,31 @@ export default function Arena({
     [placed, state.board?.combat, figureData, frozen, palettes],
   );
   /**
+   * **The personal tier** (phase 2, D194, D195; the tier is D190): the dev
+   * route's index (DEV only — a build asks for nothing), THE lookup of each
+   * face-up named figure's card in it (`personalChoicesOf`, hard rule 8's renderer
+   * half), the models those choices and the seats want, and the dressed poses —
+   * a figure is dressed only once its model has loaded, so a failure is the CC0
+   * figure. `?personal=0` draws the CC0 figures for an A/B.
+   */
+  const personalOn = useMemo(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('personal') !== '0';
+    } catch {
+      return true;
+    }
+  }, []);
+  const personalOverlay = usePersonalOverlay(personalOn);
+  const personalChoices = useMemo(() => personalChoicesOf(placed, basePoses, personalOverlay), [placed, basePoses, personalOverlay]);
+  const personal = usePersonalModels(personalOverlay, personalChoices);
+  const figures = useMemo(() => dressPoses(basePoses, personalChoices, personal.fits), [basePoses, personalChoices, personal.fits]);
+  /**
    * **The status layer** (D210): every creature's strip — keyword icons, the bar,
    * pips and marks — a pure function of this frame's layout and poses, handed to
    * `FigureLayer`, which commits it into one instanced field once per snapshot.
+   * It reads the DRESSED poses, so a personal model's strip stands over that
+   * model's own refitted height; `strippable` gates on the pose and the
+   * placement, never on which model the figure wears.
    */
   const strips = useMemo(() => statusLayout(placed, figures), [placed, figures]);
   /**
@@ -1494,6 +1523,7 @@ export default function Arena({
           loopRef={loopRef}
           look={look}
           composer={bloomOn || inkPass}
+          personal={personal}
         />
         {/* **The one post pass** (user decision 6, `scene/Post.tsx`), and three
             things about this line are deliberate. It is **last inside the

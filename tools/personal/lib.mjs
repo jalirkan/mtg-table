@@ -148,7 +148,30 @@ export const SEATS = Object.keys(
   JSON.parse(readFileSync(join(WEB, 'src/arena/figures/duelists.json'), 'utf8')).seats,
 ).filter((k) => !k.startsWith('_'));
 
-export const MANIFEST_VERSION = 1;
+/**
+ * **A seat by its LOOK's name** (D99, D195): `duelists.json`'s `seats` map says
+ * `you` wears the `director` look and `opp` the `villain`, so a manifest may name
+ * a seat either way — `{ seat: "opp" }` and `{ seat: "villain" }` dress the same
+ * duelist. `seatOf` is the one place the two spellings meet.
+ */
+export const SEAT_LOOKS = Object.fromEntries(
+  Object.entries(JSON.parse(readFileSync(join(WEB, 'src/arena/figures/duelists.json'), 'utf8')).seats).filter(([k]) => !k.startsWith('_')),
+);
+/** `you` / `opp` for a seat named by itself or by its look (`director` / `villain`); `null` for anything else. */
+export function seatOf(value) {
+  if (typeof value !== 'string') return null;
+  if (SEATS.includes(value)) return value;
+  for (const [seat, look] of Object.entries(SEAT_LOOKS)) if (look === value) return seat;
+  return null;
+}
+
+/**
+ * **Version 2** (phase 2, D194): the model carries OUR clip set baked in
+ * (`clips`), so the arena binds it with no retarget of its own. A version-1
+ * manifest (phase 1's prepare) is a model with no clips: the dev route's index
+ * skips it and says to run prepare again.
+ */
+export const MANIFEST_VERSION = 2;
 
 /**
  * **The manifest schema**, version 1 — `personal/models/<slug>/manifest.json`,
@@ -156,9 +179,10 @@ export const MANIFEST_VERSION = 1;
  * comments. Every other key is listed here; an unknown key is an error, as in
  * `cues.json` and `traits.json`.
  *
- *   version      1
+ *   version      2
  *   slug         the folder's own name
- *   dresses      [{ card: "<exact card name>" } | { seat: "you" | "opp" }, …] — at least one
+ *   dresses      [{ card: "<exact card name>" } | { seat: "you" | "opp" | "director" | "villain" }, …] — at least one
+ *                (a seat by itself or by its duelist look's name — `seatOf`)
  *   model        "model.glb" — a relative path inside the folder
  *   source       { file, bytes, sha256, sourceTxt } — the downloaded original, untouched
  *   credits      the credit line the licence asks for (CC-BY: title, author, URL, licence)
@@ -172,6 +196,11 @@ export const MANIFEST_VERSION = 1;
  *   dropped      { controlMeshes, nodes, joints, textureSlots }
  *   units        { sourceHeight, height, scale, facing }
  *   prepared     { tool, date, budget }
+ *   clips        { keys: [our clip keys], source, fps, retarget } — the clip set baked into model.glb (v2, D194)
+ *   disabled     optional: true, or the reason as a sentence — keeps the model out of the game's index (the dev
+ *                route skips it and prints the reason)
+ *   paint        optional: { primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }],
+ *                atlas, droppedNormalTextures } — one primitive per base colour (D194); null for an untextured model
  */
 export const MANIFEST_KEYS = [
   'version',
@@ -189,7 +218,10 @@ export const MANIFEST_KEYS = [
   'dropped',
   'units',
   'prepared',
+  'clips',
 ];
+/** Keys a manifest MAY carry (every other key is required). */
+export const MANIFEST_OPTIONAL = ['disabled', 'paint'];
 
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isCount = (v) => Number.isInteger(v) && v >= 0;
@@ -199,10 +231,16 @@ export function validateManifest(m) {
   const errors = [];
   if (!isObject(m)) return ['the manifest is not a JSON object'];
   for (const key of Object.keys(m)) {
-    if (!key.startsWith('_') && !MANIFEST_KEYS.includes(key)) errors.push(`unknown key "${key}"`);
+    if (!key.startsWith('_') && !MANIFEST_KEYS.includes(key) && !MANIFEST_OPTIONAL.includes(key)) errors.push(`unknown key "${key}"`);
   }
   for (const key of MANIFEST_KEYS) if (!(key in m)) errors.push(`missing "${key}"`);
-  if (m.version !== MANIFEST_VERSION) errors.push(`version must be ${MANIFEST_VERSION}`);
+  if (m.version !== MANIFEST_VERSION) {
+    errors.push(
+      m.version === 1
+        ? `version must be ${MANIFEST_VERSION} — this is phase 1's manifest, whose model carries no clips: run prepare.mjs again`
+        : `version must be ${MANIFEST_VERSION}`,
+    );
+  }
   if (!isSlug(m.slug)) errors.push('slug must be a slug (lowercase letters, digits, hyphens)');
   if (!Array.isArray(m.dresses) || m.dresses.length === 0) errors.push('dresses must name at least one card or seat');
   else {
@@ -213,7 +251,9 @@ export function validateManifest(m) {
         return errors.push(`dresses[${i}] must be exactly one of {card} or {seat}`);
       }
       if (keys[0] === 'card' && (typeof d.card !== 'string' || d.card.trim() === '')) errors.push(`dresses[${i}].card is empty`);
-      if (keys[0] === 'seat' && !SEATS.includes(d.seat)) errors.push(`dresses[${i}].seat must be one of ${SEATS.join(', ')}`);
+      if (keys[0] === 'seat' && seatOf(d.seat) === null) {
+        errors.push(`dresses[${i}].seat must be one of ${[...SEATS, ...Object.values(SEAT_LOOKS)].join(', ')}`);
+      }
     });
   }
   if (typeof m.model !== 'string' || !/\.glb$/.test(m.model) || m.model.startsWith('/') || m.model.split(/[\\/]/).includes('..')) {
@@ -251,8 +291,9 @@ export function validateManifest(m) {
   if (!Array.isArray(m.textures)) errors.push('textures must be a list');
   else {
     m.textures.forEach((x, i) => {
-      if (!isObject(x) || !['baseColor', 'normal'].includes(x.slot) || !Array.isArray(x.size) || x.size.some((n) => !isCount(n) || n > 1024)) {
-        errors.push(`textures[${i}] must be a baseColor or normal texture no larger than 1024 px`);
+      const most = x?.slot === 'atlas' ? 2048 : 1024;
+      if (!isObject(x) || !['baseColor', 'normal', 'atlas'].includes(x.slot) || !Array.isArray(x.size) || x.size.some((n) => !isCount(n) || n > most)) {
+        errors.push(`textures[${i}] must be a baseColor or normal texture no larger than 1024 px, or an atlas no larger than 2048`);
       }
     });
   }
@@ -261,6 +302,16 @@ export function validateManifest(m) {
     errors.push('units must be { height, facing: "+z", … }');
   }
   if (!isObject(m.prepared) || typeof m.prepared.date !== 'string') errors.push('prepared must be { tool, date, budget }');
+  const c = m.clips;
+  if (!isObject(c) || !Array.isArray(c.keys) || c.keys.length === 0 || c.keys.some((k) => typeof k !== 'string' || k === '') || !(c.fps > 0)) {
+    errors.push('clips must be { keys: [the baked clip keys], source, fps } — the clip set prepare baked into model.glb');
+  } else if (!c.keys.includes('idle')) errors.push('clips.keys must include idle (a body with no idle shows its bind pose)');
+  if ('disabled' in m && typeof m.disabled !== 'boolean' && !(typeof m.disabled === 'string' && m.disabled.trim() !== '')) {
+    errors.push('disabled must be true, false or the reason (a sentence)');
+  }
+  if ('paint' in m && m.paint !== null && (!isObject(m.paint) || !Array.isArray(m.paint.primitives) || m.paint.primitives.length === 0)) {
+    errors.push('paint must be null or { primitives: [one per base colour], atlas }');
+  }
   return errors;
 }
 
@@ -751,6 +802,92 @@ export function restVertexData(node, prim, skinInfo) {
     }
   }
   return { positions, normals, tangents };
+}
+
+// ---------------------------------------------------------------------------
+// three, in Node: a .glb loaded the way the arena loads it (images stripped)
+// ---------------------------------------------------------------------------
+
+/**
+ * A .glb with every image and texture reference taken out of its JSON chunk:
+ * three cannot decode an image in Node (no `createImageBitmap`), and nothing the
+ * tools read here needs one (`build-figures.mjs`'s `withoutImages`, generalised to
+ * texture references inside material extensions).
+ */
+export function withoutImages(glb) {
+  const jsonLength = glb.readUInt32LE(12);
+  const json = JSON.parse(glb.toString('utf8', 20, 20 + jsonLength));
+  delete json.images;
+  delete json.textures;
+  delete json.samplers;
+  const strip = (o) => {
+    if (o === null || typeof o !== 'object') return;
+    for (const key of Object.keys(o)) {
+      if (/Texture$/.test(key)) delete o[key];
+      else strip(o[key]);
+    }
+  };
+  for (const material of json.materials ?? []) strip(material);
+  let text = Buffer.from(JSON.stringify(json), 'utf8');
+  const pad = (4 - (text.byteLength % 4)) % 4;
+  if (pad > 0) text = Buffer.concat([text, Buffer.alloc(pad, 0x20)]);
+  const rest = glb.subarray(20 + jsonLength);
+  const header = Buffer.alloc(20);
+  header.writeUInt32LE(0x46546c67, 0);
+  header.writeUInt32LE(2, 4);
+  header.writeUInt32LE(20 + text.byteLength + rest.byteLength, 8);
+  header.writeUInt32LE(text.byteLength, 12);
+  header.writeUInt32LE(0x4e4f534a, 16);
+  return Buffer.concat([header, text, rest]);
+}
+
+let threeLoaders = null;
+/**
+ * **A .glb (a path or its bytes) through three's own `GLTFLoader` and
+ * `MeshoptDecoder`** — the loader and decoder the arena uses (`scene/models.ts`),
+ * so a tool measures what the arena draws. Images are stripped first.
+ */
+export async function loadThree(pathOrBytes) {
+  threeLoaders ??= (async () => {
+    const { GLTFLoader } = await import(pathToFileURL(join(WEB, 'node_modules/three/examples/jsm/loaders/GLTFLoader.js')).href);
+    const { MeshoptDecoder } = await import(pathToFileURL(join(WEB, 'node_modules/three/examples/jsm/libs/meshopt_decoder.module.js')).href);
+    return { GLTFLoader, MeshoptDecoder };
+  })();
+  const { GLTFLoader, MeshoptDecoder } = await threeLoaders;
+  const bytes = withoutImages(typeof pathOrBytes === 'string' ? readFileSync(pathOrBytes) : Buffer.from(pathOrBytes));
+  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  return new Promise((ok, bad) => loader.parse(buffer, '', ok, bad));
+}
+
+/** A joint by our name inside a subtree (GLTFLoader suffixes a repeated name `_1`, as for `hero`'s joints). */
+export function boneFinder(root) {
+  const cache = new Map();
+  return (name) => {
+    if (!cache.has(name)) {
+      let found = null;
+      root.traverse((o) => {
+        if (found === null && (o.name === name || new RegExp(`^${name}_\\d+$`).test(o.name)) && o.isBone) found = o;
+      });
+      cache.set(name, found);
+    }
+    return cache.get(name);
+  };
+}
+
+/** Every local TRS under a root, to put a subtree back at rest after a mixer has had it. Returns the restorer. */
+export function snapshot(root) {
+  const saved = [];
+  root.traverse((o) => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]));
+  return () => {
+    for (const [o, p, q, s] of saved) {
+      o.position.copy(p);
+      o.quaternion.copy(q);
+      o.scale.copy(s);
+    }
+    root.updateMatrixWorld(true);
+  };
 }
 
 /** A primitive's vertex positions as drawn at rest, in world space. */

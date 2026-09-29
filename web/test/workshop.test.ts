@@ -48,7 +48,7 @@ import { FIGURE_FRONT_Z, layout, seatFacingY, yawToward, standPointOf, placement
 import { isHidden } from '../src/protocol.ts';
 import type { ClientState } from '../src/reduce.ts';
 import { CATALOG, cardOf, roleOf, rungsOf, workshopEntries, type WorkshopEntry } from '../src/workshop/catalog.ts';
-import { buildCatalog, parseDck } from '../src/workshop/catalogBuild.ts';
+import { buildCatalog, factsFromScript, parseDck, type CardFacts } from '../src/workshop/catalogBuild.ts';
 import { CLIP_CUE, WORKSHOP_CLIP_CUE, clipCueData, requestFor, workshopRegistry } from '../src/workshop/clipCue.ts';
 import { cueRows, unreachedSelectors } from '../src/workshop/cueRows.ts';
 import { PreviewStage, turnPoses, wrapAngle } from '../src/workshop/facing.ts';
@@ -139,8 +139,16 @@ test('workshop: catalog.json is what decks/*.dck and fixtures/games/ produce (no
     .filter((f) => f.endsWith('.jsonl'))
     .sort()
     .map((f) => [f, stateBodies(gamesDir + f)] as const);
-  const built = buildCatalog(decks, recordings, Object.keys((cuesJson as unknown as { cards: Record<string, unknown> }).cards));
+  // The engine's facts (D196) are the committed file's own for the names it says
+  // came from the engine — hermetic, so CI with no engine checks the corpus half;
+  // the test below re-reads the scripts wherever the engine's resources are.
+  const committed = CATALOG as unknown as { engine: string[]; cards: Record<string, CardFacts> };
+  const engineFacts = (name: string): CardFacts | null => (committed.engine.includes(name) ? (committed.cards[name] ?? null) : null);
+  const built = buildCatalog(decks, recordings, Object.keys((cuesJson as unknown as { cards: Record<string, unknown> }).cards), engineFacts);
   assert.deepEqual(JSON.parse(JSON.stringify(built)), JSON.parse(JSON.stringify(CATALOG)), 'catalog.json is stale — run node tools/build-workshop-catalog.ts');
+  // A card the corpus shows is never the engine's.
+  const fromCorpus = buildCatalog(decks, recordings.map(([f]) => [f, stateBodies(gamesDir + f)] as const), []);
+  for (const name of committed.engine) assert.equal(fromCorpus.cards[name], undefined, `${name}: the corpus has its facts, so the engine's must not stand in`);
   // The deck in play comes first, and its printed facts — not a battlefield
   // under Quantum Reduction — are what the pedestal draws.
   assert.equal(CATALOG.decks[0]?.file, 'pacho-shield.dck');
@@ -153,6 +161,46 @@ test('workshop: catalog.json is what decks/*.dck and fixtures/games/ produce (no
     `workshop catalog: ${String(CATALOG.decks.length)} decks, ${String(Object.keys(CATALOG.cards).length)} cards with facts, ` +
       `tokens ${CATALOG.tokens.map((t) => t.name).join(', ')}; never face up: ${CATALOG.missing.join(', ') || 'none'}`,
   );
+});
+
+test('workshop: a deck card the corpus never showed takes its facts from the ENGINE’s card script, formatted as the wire formats them (D196)', () => {
+  // The formatter, on scripts written here (Forge's grammar), against facts the corpus shows Forge sending.
+  const coulson = factsFromScript('Name:Agent Phil Coulson\nManaCost:1 W\nTypes:Legendary Creature Human Spy Hero\nPT:2/2\nK:Vigilance\n');
+  assert.deepEqual(
+    { ...coulson, setCode: 'MSH' },
+    CATALOG.cards['Agent Phil Coulson'],
+    'the engine script formats as the wire does for a card the corpus shows',
+  );
+  assert.deepEqual(factsFromScript('Name:Ant-Man, Reformed Rogue\nManaCost:2 G/U\nTypes:Legendary Creature Human Rogue Hero\nPT:2/3')?.manaCost, '{2}{G/U}');
+  assert.deepEqual(
+    [factsFromScript('Name:Plains\nManaCost:no cost\nTypes:Basic Land Plains')?.types, factsFromScript('Name:Plains\nManaCost:no cost\nTypes:Basic Land Plains')?.manaCost],
+    ['Basic Land - Plains', null],
+  );
+  assert.equal(factsFromScript('Name:S.H.I.E.L.D. Helicarrier\nManaCost:4\nTypes:Artifact Vehicle\nPT:4/5')?.types, 'Artifact - Vehicle');
+  assert.equal(factsFromScript('Name:Front\nTypes:Instant\nALTERNATE\nName:Back\nTypes:Creature Elf\nPT:1/1')?.types, 'Instant', 'the front face only');
+  assert.equal(factsFromScript('Name:Nothing\n'), null);
+  // The cards the personal tier dresses that no committed recording ever showed face up.
+  const committed = CATALOG as unknown as { engine: string[] };
+  for (const name of ['Doctor Doom', 'Hulk, Gamma Goliath', 'Hulk, Brutal Brawler', 'Hulk, Strongest There Is']) {
+    assert.ok(committed.engine.includes(name), `${name}'s facts are not the engine's`);
+    assert.equal(CATALOG.threeD[name], 'figure', `${name} does not stand on the pedestal`);
+  }
+  assert.equal(CATALOG.cards['Doctor Doom']?.types, 'Legendary Creature - Human Scientist Villain');
+});
+
+test('workshop: the engine facts are the engine’s card scripts, read again wherever the engine’s resources are', async (t) => {
+  const { openForgeScripts } = await import('../../tools/forge-scripts.ts');
+  const scripts = openForgeScripts(fileURLToPath(new URL('../../forge-home/res/cardsfolder/cardsfolder.zip', import.meta.url)));
+  if (scripts === null) {
+    t.skip('no forge-home/res (run ./tools/make-forge-home.sh): the engine half is checked where the engine is');
+    return;
+  }
+  const committed = CATALOG as unknown as { engine: string[]; cards: Record<string, CardFacts> };
+  for (const name of committed.engine) {
+    const script = scripts.scriptOf(name);
+    assert.ok(script !== null, `${name}: no script in ${scripts.path}`);
+    assert.deepEqual(factsFromScript(script), committed.cards[name], `${name}: catalog.json's engine facts are not the script's — run node tools/build-workshop-catalog.ts`);
+  }
 });
 
 test('workshop: the list holds every deck card, the tokens, the archetypes and both concealed shapes', () => {
@@ -1166,7 +1214,7 @@ test('useView: the workshop’s spellings, beside the card browser’s and the a
 // The list's thumbnail: the one card image outside a renderer, and why
 // ---------------------------------------------------------------------------
 
-test('liveness: the list thumbnail is the workshop’s one card image outside CardPlane, and a concealed entry never looks its art up', () => {
+test('liveness: the list thumbnail and the inspect view are the workshop’s card images outside CardPlane, and a concealed entry never looks its art up', () => {
   let images = 0;
   for (const file of workshopFiles()) {
     images += (file.code.match(/\bimageUrl\(/g) ?? []).length;
@@ -1178,7 +1226,12 @@ test('liveness: the list thumbnail is the workshop’s one card image outside Ca
       if (imported.from.includes('/render/')) assert.ok(imported.from.endsWith('/render/labels.ts'), `${file.path} imports ${imported.from}`);
     }
   }
-  assert.equal(images, 1, 'one list thumbnail — a second card-image surface is a decision (CLAUDE.md, M4 convention 2)');
+  // Two: the list's thumbnail, and (D196) the inspect view's URL — the SAME image
+  // CardPlane draws for the card, face up only (`inspectUrl`, guarded like art0).
+  // A third card-image surface is a decision (CLAUDE.md, M4 convention 2).
+  assert.equal(images, 2, 'the list thumbnail and the inspect view — a third card-image surface is a decision (CLAUDE.md, M4 convention 2)');
+  const shop = workshopFiles().find((f) => f.path === 'Workshop.tsx')!.code;
+  assert.match(shop, /const inspectUrl = art0 !== null && entry\.concealed === null \? imageUrl\(art0, 'normal'\) : null;/, 'the inspect view looks its art up only face up');
   const claude = readFileSync(fileURLToPath(new URL('../CLAUDE.md', import.meta.url)), 'utf8');
   assert.match(claude, /The workshop \(`#workshop`\) draws its\s+card LIST's thumbnails/, 'the exemption is not written down in M4 convention 2 (web/CLAUDE.md)');
 });

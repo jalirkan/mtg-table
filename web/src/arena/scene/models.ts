@@ -173,6 +173,129 @@ export function loadFigureModels(data: ModelData): Promise<ModelLibrary> {
 const BOX = new THREE.Box3();
 const SIZE = new THREE.Vector3();
 
+// ---------------------------------------------------------------------------
+// The personal tier (phase 2, D195): one user-downloaded model, on this loader
+// ---------------------------------------------------------------------------
+
+/**
+ * A personal model, loaded: its base and its resting-pose variants (`p0`,
+ * `p0@folded`, …, the same `figures/rests.ts` table the CC0 bodies use), keyed
+ * by the OPAQUE id `arena/personal.ts` gave it, and its widest resting width
+ * over its height — what `dressPoses` refits the width clamp with.
+ */
+export interface PersonalModelSet {
+  models: Map<string, LoadedModel>;
+  ratio: number;
+}
+
+const personalCache = new Map<string, Promise<PersonalModelSet>>();
+
+/**
+ * **Load one personal model** through THIS file's loader — three's own
+ * `GLTFLoader` and `MeshoptDecoder`, never drei's `useGLTF` — from the dev
+ * route's same-origin path. The file carries our clip set baked in (prepare's
+ * step 8, D194), so its clips are its own animations by key and nothing is
+ * retargeted here. A failure rejects, and the caller draws the CC0 figure: a
+ * missing or broken file is a supported state, as a missing `figures.glb` is.
+ * Cached per path for the page.
+ */
+export function loadPersonalModel(url: string, id: string): Promise<PersonalModelSet> {
+  const key = `${id}|${url}`;
+  const cached = personalCache.get(key);
+  if (cached !== undefined) return cached;
+  const pending = new Promise<PersonalModelSet>((resolve, reject) => {
+    makeLoader().load(
+      url,
+      (gltf) => {
+        try {
+          resolve(indexPersonalModel(gltf.scene, gltf.animations, id, url));
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      },
+      undefined,
+      (error) => {
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  }).catch((error: unknown) => {
+    personalCache.delete(key);
+    throw error;
+  });
+  personalCache.set(key, pending);
+  return pending;
+}
+
+/** The resting stances whose width a neighbour must clear (`tools/build-figures.mjs`'s WIDTH_STANCES). */
+const WIDTH_STANCES: ReadonlyArray<readonly [clip: string, phase: number]> = [
+  ['idle', 0],
+  ['crouch', 0.85],
+];
+
+/**
+ * A parsed personal model → its {@link PersonalModelSet}. Exported for a test
+ * that loads a prepared file in Node. Throws when the file is not a prepared
+ * personal model (no skinned mesh, no `idle`): the caller keeps the CC0 figure.
+ */
+export function indexPersonalModel(scene: THREE.Object3D, animations: THREE.AnimationClip[], id: string, path: string): PersonalModelSet {
+  const source = scene.children.length === 1 ? scene.children[0]! : scene;
+  let skinned = false;
+  source.traverse((child) => {
+    if ((child as THREE.SkinnedMesh).isSkinnedMesh === true) skinned = true;
+  });
+  if (!skinned) throw new Error('a personal model has no skinned mesh');
+  const clips = new Map<string, THREE.AnimationClip>();
+  for (const clip of animations) if (!hasRootMotion(clip, source.name)) clips.set(clip.name, clip);
+  if (!clips.has('idle')) throw new Error('a personal model has no baked idle (prepare it again)');
+  source.updateMatrixWorld(true);
+  BOX.setFromObject(source);
+  BOX.getSize(SIZE);
+  const height = SIZE.y > 1e-6 ? SIZE.y : 1;
+  const entry: ModelEntry = {
+    path,
+    node: source.name,
+    height,
+    width: SIZE.x,
+    facing: '+z',
+    rootMotion: false,
+    bones: 23,
+    triangles: 0,
+    clips: Object.fromEntries([...clips.keys()].map((k) => [k, k])),
+    rig: 'ubc',
+    retargeted: {},
+    source: '',
+    licence: '',
+    licenceUrl: '',
+    licenceBadge: '',
+    retrieved: '',
+    committable: false,
+  };
+  const base: LoadedModel = {
+    id,
+    entry,
+    source,
+    clips,
+    unitScale: 1 / height,
+    offsetY: -BOX.min.y / height,
+    rotationY: 0,
+    rest: null,
+  };
+  // The widest RESTING stance, as three draws it (the build's rule for the CC0
+  // bodies): the idle's first frame and the kneel's held phase, on the skinned mesh.
+  let width = 0;
+  for (const [clipName, phase] of WIDTH_STANCES) {
+    const clip = clips.get(clipName) ?? clips.get('idle')!;
+    const instance = instantiateFigure(base, { pose: 'bind' });
+    sampleClipInto(instance.object, clip, phase * clip.duration);
+    instance.object.updateMatrixWorld(true);
+    BOX.setFromObject(instance.object, true);
+    width = Math.max(width, BOX.max.x - BOX.min.x);
+  }
+  const models = new Map<string, LoadedModel>([[id, base]]);
+  for (const variant of restVariantsOf(base)) models.set(variant.id, variant);
+  return { models, ratio: width > 0 ? width : SIZE.x / height };
+}
+
 /**
  * A parsed document → the library, one {@link LoadedModel} per manifest entry.
  * Exported for the tests that load `figures.glb` in Node (`web/test/prop-raster.ts`

@@ -11,6 +11,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin, type ViteDevServer } from 'vite';
 
 import { createCardsMiddleware } from './src/cards/devApi.ts';
+import { createPersonalMiddleware, describeIndex } from './src/personal/devRoute.ts';
 import { createSpectateMiddleware } from './src/spectate/devRoute.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -105,8 +106,31 @@ function spectatePlugin(): Plugin {
   };
 }
 
+/**
+ * **The personal tier** (D190, phase 2 — D195): `/personal/index.json` and each
+ * ACTIVE model's `model.glb` and `manifest.json`, answered from the gitignored
+ * `personal/models/` (`src/personal/devRoute.ts`, which builds the index once, now).
+ *
+ * **Dev server only** — `configureServer` and nothing else, D92's rule: the
+ * user's own models are never published, a production page has no Node behind
+ * it, and `vite preview` serves a build. `MTG_TABLE_PERSONAL=off` starts a dev
+ * server without it (the arena then draws the CC0 figures, as a checkout with no
+ * `personal/` folder does).
+ */
+function personalPlugin(): Plugin {
+  return {
+    name: 'mtg-table-personal',
+    configureServer(server: ViteDevServer) {
+      if (process.env['MTG_TABLE_PERSONAL'] === 'off') return;
+      const { handle, index } = createPersonalMiddleware(REPO_ROOT);
+      for (const line of describeIndex(index)) server.config.logger.info(line);
+      server.middlewares.use(handle);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), fixturesPlugin(), cardsPlugin(), spectatePlugin()],
+  plugins: [react(), fixturesPlugin(), cardsPlugin(), spectatePlugin(), personalPlugin()],
   server: {
     port: 5173,
     strictPort: false,

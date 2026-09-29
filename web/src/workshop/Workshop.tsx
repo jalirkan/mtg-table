@@ -117,6 +117,14 @@
  *     (look.ts)                              the look (D137): the toolbar's A/B over
  *                                            holo · comic and each comic option, and
  *                                            the stage exactly as Arena.tsx computes it
+ *   the personal tier (D194–D196) — the user's own models, dev server only
+ *     usePersonalOverlay, usePersonalModels, NO_PERSONAL_LOADED, PersonalLoaded
+ *     (personalModels.ts)                   the index and the models, as Arena.tsx loads them
+ *     EMPTY_PERSONAL, personalChoicesOf, dressPoses, PersonalOverlay (personal.ts)
+ *                                            THE lookup and the dressed poses, as Arena.tsx
+ *                                            dresses; the list's badge reads the overlay
+ *     useCardTexture (useCardTexture.ts)     the inspect view's backdrop and frame: the
+ *                                            texture CardPlane already fetched for the card
  *   the data         figures.json, models.json and cues.json (imported without
  *                    attributes, as Arena.tsx imports them), traits.json (with them,
  *                    as traits.ts does) — the bundler warns on a module imported
@@ -141,6 +149,8 @@ import { CueQueue } from '../arena/cues/queue.ts';
 import type { CueData, Problem } from '../arena/cues/types.ts';
 import { figurePose, type FigurePose } from '../arena/figures/pose.ts';
 import { useArtPalettes } from '../arena/art.ts';
+import { EMPTY_PERSONAL, dressPoses, personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
+import { usePersonalModels, usePersonalOverlay } from '../arena/scene/personalModels.ts';
 import { artRow, type ArtPalette } from '../arena/figures/palette.ts';
 import {
   BODY_STYLES,
@@ -319,6 +329,15 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
     }
   });
   const [autoRest, setAutoRest] = useState(true);
+  /**
+   * **The personal tier's A/B** (D196): the pedestal dressed in the user's own
+   * models where a card has one (`personal`, the default — as the arena draws it
+   * on this dev server), or in the CC0 figures (`repo`). The list's badge says
+   * which cards have one either way.
+   */
+  const [personalOn, setPersonalOn] = useState(true);
+  const overlay = usePersonalOverlay(true);
+  const pedestalOverlay: PersonalOverlay = personalOn ? overlay : EMPTY_PERSONAL;
   const [overrides, setOverrides] = useState<Overrides>(() => readOverrides(storage()));
   const [library, setLibrary] = useState<ModelLibrary | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -397,14 +416,26 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   // so the panel's "drawn" tint and accent are the ones on the pedestal.
   const paletteNames = useMemo(() => (entry.concealed === null && entry.name !== '' ? [entry.name] : []), [entry]);
   const palettes = useArtPalettes(paletteNames, art);
-  const focus = useMemo((): Framing[] => {
+  const restPoses = useMemo(() => {
     const placed = layout(rest, presence ?? {});
     const poses = turnPoses(
       figurePose(placed, rest.board?.combat ?? null, FIGURE_DATA, { models: MODEL_DATA, traits, palettes }),
       turn,
     );
-    return figureIds(entry, options).map((id) => framingOf(placed, poses, id));
-  }, [rest, presence, traits, turn, entry, options, palettes]);
+    return { placed, poses };
+  }, [rest, presence, traits, turn, palettes]);
+  // The personal tier (D195): the same lookup the pedestal makes, so the models it
+  // wants load here (once, for the page) and the framing is the dressed figure's.
+  const personalChoices = useMemo(
+    () => personalChoicesOf(restPoses.placed, restPoses.poses, pedestalOverlay),
+    [restPoses, pedestalOverlay],
+  );
+  const personalLoaded = usePersonalModels(pedestalOverlay, personalChoices, false);
+  const focus = useMemo((): Framing[] => {
+    const dressed = dressPoses(restPoses.poses, personalChoices, personalLoaded.fits);
+    return figureIds(entry, options).map((id) => framingOf(restPoses.placed, dressed, id));
+  }, [restPoses, personalChoices, personalLoaded.fits, entry, options]);
+  const personalNames = useMemo(() => new Set(overlay.cards.keys()), [overlay]);
   const seat = `${entry.key}|${String(options.both)}|${mode}|${options.stance}`;
   // The caption's number: each framed body's DRAWN height in view 1 — its resting
   // rig projected through the table camera (legibility.ts), not the nominal scale.
@@ -617,6 +648,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
       setBloom,
       setLook,
       setAutoRest,
+      setPersonal: setPersonalOn,
       play: (kind: RehearsalKind) => {
         playKind(kind);
       },
@@ -628,6 +660,9 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
 
   const attached = roleOf(entry) === 'attached';
   const art0 = entry.concealed === null ? lookupArt(art, entry.name) : null;
+  // INSPECT (D196): the pedestal's backdrop and frame draw the image CardPlane
+  // draws for this card — the same URL, so the same texture — face up only.
+  const inspectUrl = art0 !== null && entry.concealed === null ? imageUrl(art0, 'normal') : null;
 
   return (
     <div className="workshop">
@@ -688,6 +723,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
         onSelect={setSelected}
         art={art}
         traits={traits}
+        personalNames={personalNames}
       />
 
       <section className="workshop__stage" aria-label="Pedestal">
@@ -702,6 +738,10 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
           onBloom={setBloom}
           look={look}
           onLook={setLook}
+          personal={personalOn}
+          onPersonal={setPersonalOn}
+          personalCount={overlay.entries.length}
+          inspectable={inspectUrl !== null && focus[0]?.pose !== null && focus[0]?.pose !== undefined}
         />
         <div className="workshop__pedestal">
           <Pedestal
@@ -721,6 +761,9 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
             reducedMotion={reducedMotion}
             bloom={bloom}
             look={look}
+            personal={pedestalOverlay}
+            personalLoaded={personalLoaded}
+            inspectUrl={inspectUrl}
           />
           <PedestalCaption focus={focus} drawn={drawn} mode={mode} both={options.both} turn={turn} />
         </div>
@@ -791,6 +834,7 @@ function CardList({
   onSelect,
   art,
   traits,
+  personalNames,
 }: {
   entries: readonly WorkshopEntry[];
   all: number;
@@ -800,6 +844,8 @@ function CardList({
   onSelect: (key: string) => void;
   art: ArtIndex;
   traits: TraitData;
+  /** The cards an active personal model dresses (D196) — the overlay's names; empty in a build. */
+  personalNames: ReadonlySet<string>;
 }): JSX.Element {
   let lastHeading = '';
   return (
@@ -864,7 +910,14 @@ function CardList({
                     {entry.count !== null && entry.count > 1 && <span className="muted"> ×{entry.count}</span>}
                     {entry.section === 'sideboard' && <span className="muted"> (sb)</span>}
                   </span>
-                  <span className="workshop__types muted">{entry.facts.types || entry.note || '—'}</span>
+                  <span className="workshop__types muted">
+                    {entry.concealed === null && personalNames.has(entry.name) && (
+                      <span className="workshop__personal" title="an active personal model dresses this card on this machine (D190: never committed, never published)">
+                        personal
+                      </span>
+                    )}
+                    {entry.facts.types || entry.note || '—'}
+                  </span>
                 </span>
                 <span className={`workshop__rung workshop__rung--${rung.level}`}>{rung.level}</span>
               </button>
@@ -891,6 +944,10 @@ function Toolbar({
   onBloom,
   look,
   onLook,
+  personal,
+  onPersonal,
+  personalCount,
+  inspectable,
 }: {
   options: PedestalOptions;
   onOptions: (next: PedestalOptions | ((o: PedestalOptions) => PedestalOptions)) => void;
@@ -902,6 +959,12 @@ function Toolbar({
   onBloom: (on: boolean) => void;
   look: LookSpec;
   onLook: (look: LookSpec) => void;
+  personal: boolean;
+  onPersonal: (on: boolean) => void;
+  /** Active personal models on this dev server — none in a build. */
+  personalCount: number;
+  /** Whether the card has a figure and an image to inspect. */
+  inspectable: boolean;
 }): JSX.Element {
   const modes: ReadonlyArray<{ id: CameraMode; label: string; what: string }> = [
     {
@@ -916,6 +979,11 @@ function Toolbar({
     },
     { id: 'table', label: 'table distance', what: 'exactly the size it has in view 1 at 1600×900 (fixed camera)' },
     { id: 'wide', label: 'whole table', what: 'view 1 itself — drag to orbit' },
+    {
+      id: 'inspect',
+      label: 'inspect',
+      what: 'the figure in its signature pose, the card’s art box enlarged behind it and its frame and text floating beside it (D196; flat — the depth-relief window is the follow-up)',
+    },
   ];
   return (
     <div className="workshop__toolbar" role="group" aria-label="Pedestal view">
@@ -926,7 +994,8 @@ function Toolbar({
             type="button"
             className={m.id === mode ? 'on' : ''}
             aria-pressed={m.id === mode}
-            title={m.what}
+            title={m.id === 'inspect' && !inspectable ? 'this card has no figure or no image to inspect' : m.what}
+            disabled={m.id === 'inspect' && !inspectable}
             onClick={() => {
               onMode(m.id);
             }}
@@ -934,6 +1003,21 @@ function Toolbar({
             {m.label}
           </button>
         ))}
+      </span>
+      <span
+        className="workshop__seg"
+        title={
+          personalCount === 0
+            ? 'no personal model on this dev server (the gitignored personal tier, D190 — never committed)'
+            : `the pedestal in your own models (${String(personalCount)} active on this dev server — D190: never committed, never published) or in the CC0 figures`
+        }
+      >
+        <button type="button" className={personal ? 'on' : ''} aria-pressed={personal} disabled={personalCount === 0} onClick={() => onPersonal(true)}>
+          personal
+        </button>
+        <button type="button" className={!personal ? 'on' : ''} aria-pressed={!personal} disabled={personalCount === 0} onClick={() => onPersonal(false)}>
+          repo
+        </button>
       </span>
       <label title="Your copy on the left, the opponent's on the right, seen from the same angle">
         <input
@@ -1081,7 +1165,9 @@ function PedestalCaption({
               ? 'view 1'
               : mode === 'front'
                 ? '1× close-up, from the front'
-                : '1× close-up, from your seat'}
+                : mode === 'inspect'
+                  ? 'inspect: the card’s art behind the figure, its frame beside it (flat — no depth relief yet)'
+                  : '1× close-up, from your seat'}
           {size(0) !== '' ? ` · ${size(0)}` : ''}
           {turn !== 0 ? ' · facing preview: the other seat' : ''}
         </span>

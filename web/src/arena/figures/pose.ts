@@ -265,6 +265,14 @@ export interface FigurePose {
    * never looked up. Carried for the look and motion lanes (a rim, a burst, a mote).
    */
   art: string | null;
+  /**
+   * **The personal tier** (phase 2, **D195**): the OPAQUE id (`p0`, `p1`, …) of
+   * the personal model this figure is dressed in, or absent for the CC0 body.
+   * Never set by `figurePose`: `arena/personal.ts`'s `dressPoses` sets it, after
+   * its one name lookup, only on a face-up named figure whose model has loaded
+   * (hard rule 8) — and never a slug, a file name or a card name.
+   */
+  personal?: string;
 }
 
 /** The whole stage for one frame, keyed by card id. */

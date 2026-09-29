@@ -3,7 +3,8 @@
 These load when you work under `web/src/arena/`, on top of the root `CLAUDE.md`
 and `web/CLAUDE.md` (the board's conventions, whose M4 convention 2 this file's
 `CardPlane` mirrors). They are in the order they were written: M7's Tier 1, Tier
-2 and its three later slices, then report 15's three art-direction lanes. The
+2 and its three later slices, report 15's three art-direction lanes, the status
+layer, then the personal tier's loader. The
 workshop (`web/src/workshop/`) draws with this directory's code, and its own
 conventions are `web/CLAUDE.md`'s *Workshop*.
 
@@ -982,3 +983,55 @@ board's `PhaseStrip` reads and sends the same `setPhaseStop`, so it is a second
 drawing of one control, not a second control; its `.arena__phases` class is in
 liveness's widget table with its `pointer-events: auto` rule.
 
+## The personal tier — the conventions D194–D196 added
+
+Five, and the thesis is the tier's own sentence (**D190**): **a personal model is
+a statement about what a card is, and it is drawn from the dev server alone.** The
+user's own models (`personal/models/`, gitignored, never published) dress the
+cards and the seats their manifests name, on this machine; `tools/CLAUDE.md`'s
+*The personal tier* is the pipeline that makes them, `docs/guides/personal-tier.md`
+the manual, `docs/evidence/personal-tier.md` §16–§17 what was measured.
+
+1. **One reader, one lookup, one dressing — pure** (**D195**). `arena/personal.ts`
+   imports no three, no React, no DOM and no clock (`liveness.test.ts`).
+   `personalOverlayOf` is THE reader of the dev route's index: ids are OPAQUE
+   (`p0`, `p1` — never a slug, so none can reach an op log, a label or the wire),
+   a model path is same-origin and relative or the entry is dropped, and the caps
+   apply. `personalChoicesOf` is THE lookup and hard rule 8's renderer half for the
+   tier: the pose's gates (a named, modelled figure — not anonymous, not a swarm,
+   not a silhouette) and the placement's (face up, not a stub) are decided BEFORE
+   the name is read. `personal.test.ts` sweeps the corpus three ways, hostile
+   included, and each gate removed by hand fails it. `dressPoses` dresses a choice
+   only once its model has LOADED — so a failure is the CC0 figure with its props —
+   with no props, no costume, no hair and the height refitted to the model's own
+   resting width (D65 strict). Call both only from `Arena.tsx` (and the workshop's
+   pedestal, as the arena does).
+2. **Dev only, one loader** (**D195**). `scene/personalModels.ts` names
+   `personal/index.json` behind `import.meta.env.DEV` on its own line — a build
+   carries no address of the route (`personal.test.ts` greps `dist`) — and reads it
+   with three's `FileLoader`, once a page, never a poll. A model loads through
+   `scene/models.ts`'s `loadPersonalModel` (its own `GLTFLoader` and
+   `MeshoptDecoder`, never drei's), which builds the base and its resting-pose
+   variants from the clips the file carries: nothing is retargeted in the arena.
+   A same-origin load path in arena code is in liveness's `PATH_ALLOW`, beside the
+   URL clause's `URL_ALLOW`.
+3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
+   `modelOf` — a dressed pose's personal model (its variant, else its base), else
+   the CC0 library's — serves the living figure and the departing body; the rest of
+   the layer is unchanged. `DuelistLayer` builds a seat's duelist from a model that
+   dresses the seat: its own props in it, ours not baked in, the gestures on our
+   clip lane, the stance rules unchanged. Neither takes a click (`raycast` cleared).
+4. **Own colours, one figure's materials** (**D196**). A personal map is the
+   model's OWN colour (`uPaintOwn` 1): the comic look paints the texture as it is,
+   the hologram tints its values; a cutout paint discards under 0.5 alpha. A model
+   of two paints is `dressFigureMeshes`'s primary material plus a SIBLING sharing
+   its uniform objects — so the frame loop writes one material per figure, as
+   ever — marked with it by `applyLook` and disposed with it.
+5. **The budget is the machine's, and it is in `perf.ts`** (**D195**).
+   `PERSONAL_TRI_CAP` (8,000 triangles) and `PERSONAL_CALL_CAP` (2 paints) refuse
+   a model; `PERSONAL_MAX_FIGURES` (4) dresses at most four creatures, in placement
+   order, beside the two duelists. Three personal models at `g1`@316 cost nothing
+   on the GTX 1080 and about 2.6 ms of p50 on SwiftShader, and cross report 13
+   §8.2's 30,000-triangle line, which had no headroom left; measure
+   (`tools/arena-bench.mjs` against the DEV server, `?personal=0` for the A/B)
+   before raising a cap.

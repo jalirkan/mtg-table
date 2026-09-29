@@ -1,9 +1,10 @@
 # The personal tier — models of the real characters, on this machine only
 
-*2026-09-28, **D190**, **D191**, **D192** and **D193**. Phase 1 of 2: the folder, the
-manifest and the pipeline. Phase 2, the loader that draws a personal model in
-the arena and the workshop, is not built — nothing in the game reads
-`personal/` yet (PLAN.md, *The personal tier*).*
+*2026-09-28, **D190**–**D193** (phase 1: the folder, the manifest and the
+pipeline) and **D194**–**D196** (phase 2: the clips baked in, the paint step, the
+verdict file, and the loader that draws a personal model in the arena and the
+workshop — from the Vite dev server only). PLAN.md, *The personal tier*, has the
+status and the follow-ups.*
 
 ## What it is
 
@@ -26,11 +27,12 @@ published".** Everything below follows from it:
   with `git check-ignore --no-index` (git never calls a tracked file ignored, so
   the patterns are asked about directly), and it fails if git ever tracks a file under
   `personal/`.
-- **Never pushed, never in a build, never in CI.** Nothing under `web/src/` or
-  `web/public/` reads it; a production build (`web/dist/`) cannot contain it; CI
-  has no copy. Phase 2 will serve it from the Vite **dev server only**, the way
-  the card library's images are served (**D92**) — never from `vite preview` or
-  a build.
+- **Never pushed, never in a build, never in CI.** A production build
+  (`web/dist/`) cannot contain it — the arena names the route only behind
+  `import.meta.env.DEV`, and `web/test/personal.test.ts` greps the build for the
+  route and every slug; CI has no copy. The Vite **dev server alone** serves it,
+  the way the card library's images are served (**D92**) — never `vite preview`,
+  never a build (*In the game*, below).
 - **Never in a committed picture.** The previews `check.mjs` renders stay in
   `personal/models/<slug>/preview/`, and the headless browser that draws them
   leaves no copy anywhere else: its profile is
@@ -52,7 +54,8 @@ falls back to the repository figure when it is not, so a checkout without
 `personal/` plays exactly as before. **Hard rule 8 still binds:** a personal
 model is chosen by card name only where the arena already draws a named figure,
 and never for a face-down or redacted card, which stays the anonymous disc
-(phase 2's loader enforces it; phase 1 draws nothing).
+(`web/src/arena/personal.ts`'s `personalChoicesOf` decides it, and a corpus test
+with a hostile overlay holds it — D195).
 
 ## The folder
 
@@ -63,8 +66,9 @@ personal/models/<slug>/
   SOURCE.txt          title, URL, author, licence as shown, date — yours to check
   inspect.json        what import.mjs found in the file
   bones.json          optional: your rig map, when the automatic one is wrong or blind
-  model.glb           the prepared figure (prepare.mjs)
+  model.glb           the prepared figure, our clip set baked in (prepare.mjs)
   manifest.json       what it dresses and how it was made (prepare.mjs)
+  check.json          check.mjs's verdict and the sha256 of the model.glb it judged (check.mjs)
   preview/*.png       front, side, back, mid-attack, the sheet, kneel, death (check.mjs)
 ```
 
@@ -95,7 +99,7 @@ information for you.
 
 ```bash
 node tools/personal/import.mjs  ~/Downloads/doctor_doom.zip doctor-doom
-node tools/personal/prepare.mjs doctor-doom --card "Doctor Doom" --seat opp
+node tools/personal/prepare.mjs doctor-doom --card "Doctor Doom" --seat villain
 node tools/personal/check.mjs   doctor-doom
 ```
 
@@ -123,7 +127,7 @@ and writes only `model.glb` and `manifest.json` (**D191** is the decision):
 
 | flag | default | what |
 |---|---|---|
-| `--card "<name>"`, `--seat you\|opp` | the last manifest's | what it dresses; repeatable; at least one |
+| `--card "<name>"`, `--seat you\|opp\|director\|villain` | the last manifest's | what it dresses; repeatable; at least one (a seat by itself or by its duelist look, D99) |
 | `--budget <n>` | 6000 | triangles, after decimation |
 | `--pose t\|none` | `t` | re-pose an A-pose to our T (`none` keeps the source's rest) |
 | `--map auto\|<file>` | `auto` | `auto` reads `bones.json` beside the model when there is one, else the joint names |
@@ -131,6 +135,8 @@ and writes only `model.glb` and `manifest.json` (**D191** is the decision):
 | `--bind <regex>=<joint>` | — | bind the unskinned parts whose name matches to one joint (a pair of wings to `spine_03`) |
 | `--drop <regex>` | — | leave out render meshes whose name matches (a base plane, a shadow disc, eye-occlusion layers) |
 | `--height <m>` | the `agent` body's 1.9139 | the figure's height |
+| `--joints bind\|rest` | `bind` | read the joints AND the vertices at the skin's bind pose, or at the file's rest (its nodes as they stand); `inspect.json`'s *bind vs rest* spread says when there is a choice (D194) |
+| `--disabled ["<reason>"]`, `--enabled` | the last manifest's | keep the model out of the game's index, with the reason the dev server prints |
 
 In order: it strips the control meshes and every node that draws nothing;
 rebuilds the skeleton as `root` plus **our 22 joints** (the ones
@@ -138,8 +144,13 @@ rebuilds the skeleton as `root` plus **our 22 joints** (the ones
 `rigs.ubc.retarget.joints`), each at the source bone's position and in our bind
 orientation, merging every weighted source bone into one of them; turns an A-pose
 into our T; skins what had no skin; stands the model up facing +Z with its feet at
-0 and scales it; decimates to the budget; keeps the base-colour and normal
-textures (downscaling anything over 1024 px); and compresses with meshopt last.
+0 and scales it; decimates to the budget (welding a part on position and UV when
+the simplifier stops at its seams); **bakes our clip set in** — the twelve clips
+`figures.glb` gives the `agent`, carried onto this skeleton by `retarget.mjs`, the
+pelvis scaled by the two hip heights, as the file's own animations named by key
+(D194); runs **the paint step** — one primitive per base colour, every part whose
+UVs sit in one unit tile in a single atlas, base colour only (the normal maps
+go: the arena draws none); and compresses with meshopt last.
 It prints a before/after table.
 
 **`check.mjs <slug>`** plays our clips on the result and judges its rig map:
@@ -167,24 +178,30 @@ turns the arm links onto the agent's directions whatever they pointed at, but
 it cannot fix their lengths, and it turns the flesh with them, so a folded
 forearm carries its vertices behind its joint. It prints the joint-coverage table
 — weight on the model and on the agent, vertices, rotation — the side, facing
-and shape lines and the limb table, then renders the previews through headless
+and shape lines and the limb table; then (step 2c, D194) holds the clips BAKED
+into `model.glb` to the retarget it just ran — every joint within 2° and the
+pelvis within 1% of the height — and renders the previews through headless
 Chromium (`--no-preview` skips them). The browser runs with its background
 services off and every host name answered "not found", and its own net log is
 read back: a connection, a byte sent, a DNS query, an answer or an HTTP cache
 entry beyond 127.0.0.1 fails the run, and so does a copy of `model.glb` in its
 profile. Exit 1 on any failure; the closing OK line lists what was judged and
-nothing more. `docs/evidence/personal-tier.md` is Doom, run through all three.
+nothing more. Either way it writes **`check.json`** — pass or fail, the failures,
+what was judged and the sha256 of the `model.glb` it judged — which is what the
+dev server reads before it will load the model. `docs/evidence/personal-tier.md` is Doom, run through all three.
 
 ## The manifest
 
-`manifest.json`, version 1. `validateManifest` in `tools/personal/lib.mjs` is the
+`manifest.json`, version 2 (a version-1 manifest — phase 1's — names a model with
+no baked clips, and the dev server skips it and says to prepare it again).
+`validateManifest` in `tools/personal/lib.mjs` is the
 schema; an unknown key is an error, and keys starting with `_` are comments.
 
 | key | what |
 |---|---|
-| `version` | `1` |
+| `version` | `2` |
 | `slug` | the folder's own name |
-| `dresses` | `[{ "card": "<exact card name>" } \| { "seat": "you" \| "opp" }, …]` — at least one; the seats are `duelists.json`'s (`opp` wears the `villain` look today) |
+| `dresses` | `[{ "card": "<exact card name>" } \| { "seat": "you" \| "opp" \| "director" \| "villain" }, …]` — at least one; the seats are `duelists.json`'s, named by themselves or by the look they wear (`opp` is the `villain`) |
 | `model` | `"model.glb"`, a relative path inside the folder |
 | `source` | `{ file, bytes, sha256, model, sourceTxt }` — the download, untouched |
 | `credits` | the credit line the licence asks for |
@@ -197,6 +214,9 @@ schema; an unknown key is an error, and keys starting with `_` are comments.
 | `dropped` | `{ controlMeshes, meshesByFlag, controlTriangles, nodes, joints, textureSlots }` |
 | `units` | `{ sourceHeight, height, scale, facing: "+z", up: "+y" }` |
 | `prepared` | `{ tool, date, budget, bytes, sha256 }` |
+| `clips` | `{ keys, source, fps, baked, dropped }` — the clip set baked into `model.glb` (must include `idle`), and the source's own takes it dropped |
+| `paint` | optional: `{ primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }], atlas, droppedNormalTextures }` — one primitive per base colour; `null` for an untextured model |
+| `disabled` | optional: `true`, or the reason as a sentence — the dev server skips the model and prints the reason |
 
 ## The rig map, and `bones.json`
 
@@ -303,3 +323,60 @@ Blender on the original file, exported back to glTF and run through the same thr
 commands. A portable Blender is your call; nothing here installs one.
 `docs/evidence/personal-tier.md` §9 lists what a Blender session would still
 improve on Doom.
+
+## In the game — the loader (phase 2)
+
+**D195** is the decision, **D196** the materials and the workshop. The Vite dev
+server (`npm --prefix web run dev`, `./scripts/play.sh`, `./scripts/spectate.sh`)
+builds an **index** of `personal/models/` when it starts, prints it, and serves
+it at `/personal/index.json`; a production build and `vite preview` have none of
+it, and the CC0 figures draw. A model is **active** when
+
+- its manifest is version 2 (it carries our clip set),
+- it is not `disabled`,
+- `check.json` says `check.mjs` passed, and names the `model.glb` on disk (a model
+  prepared again since its check is skipped until it is checked again).
+
+Every other model is printed as skipped, with why. Two active models that dress
+one card or seat: the first slug keeps it, the other is "shadowed".
+`MTG_TABLE_PERSONAL=off` starts a dev server with no personal route at all.
+
+**What it dresses.** A creature whose FACE-UP name a manifest names wears that
+model — on the battlefield, and as a creature spell on the stack — and so does its
+dying body; a face-down card, a redacted stub, a swarm and a vehicle's silhouette
+never do (hard rule 8). A seat a manifest names (`--seat villain` or `opp`, the
+opponent's; `director` or `you`, yours) has its duelist built from the model, with
+the duelist gestures on our clips. The model brings its own look: none of our
+props, no costume. Everything else is the arena's — where the figure stands, how
+tall (refitted so its own width stays inside its rank slot), its stance, the
+kneel, the translucency of a summoning-sick creature, every cue. `?personal=0`
+draws the CC0 figures at the same frame (the A/B).
+
+**The cap** (`web/src/arena/perf.ts`): a model over **8,000 triangles** or **2
+paints** is never loaded (prepare with `--budget`; the paint step makes most
+models one paint), and at most **4 creatures** are dressed at once, in placement
+order, plus the two duelists. Measured on this machine (evidence §17): on the
+GTX 1080 three personal models cost nothing measurable; on SwiftShader, the
+software floor, about 2.6 ms at the median.
+
+**The workshop** (`#workshop`) badges every card an active model dresses, draws
+the pedestal dressed as the arena is (the *personal / repo* toggle is the A/B),
+and has an **inspect** view: the figure in its signature pose in front of its
+card's art box, the frame and the text floating beside it.
+
+**Adding a model**, end to end:
+
+```bash
+node tools/personal/import.mjs  ~/Downloads/<download> <slug>
+node tools/personal/prepare.mjs <slug> --card "<exact card name>"   # add --seat villain for a duelist
+node tools/personal/check.mjs   <slug>                              # must print OK; writes check.json
+npm --prefix web run dev                                            # restart: the index is built at start
+```
+
+If `check.mjs` fails, read its FAIL lines: a joint on the wrong bone is a
+`bones.json`; a figure whose rest pose is not its bind pose (a large *bind vs
+rest* spread in `inspect.json`) wants the other `--joints`; a part that should not
+be drawn (a base plane, eye-occlusion layers) is a `--drop`. What none of those
+can fix — a mesh modelled in a pose, an unskinned jacket — is Blender work, and
+the model stays `--disabled "<why>"` until then. Evidence §16 is the eight
+downloads, each with what it needed.

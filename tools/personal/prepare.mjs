@@ -9,8 +9,9 @@
  *
  *   node tools/personal/prepare.mjs <slug> [--budget 6000] [--pose t|none]
  *        [--map auto|<bones.json>] [--cloak-to <our joint>] [--height <m>]
- *        [--drop <regex>]… [--bind <regex>=<our joint>]…
- *        [--card "<card name>"]… [--seat you|opp]…
+ *        [--drop <regex>]… [--bind <regex>=<our joint>]… [--joints bind|rest]
+ *        [--card "<card name>"]… [--seat you|opp|director|villain]…
+ *        [--disabled ["<reason>"] | --enabled]
  *   node tools/personal/prepare.mjs doctor-doom --card "Doctor Doom" --seat opp
  *
  * It reads `personal/models/<slug>/source/` (import.mjs unpacked it) and writes
@@ -62,7 +63,28 @@
  *  7. **Textures**: base colour and normal kept (a larger one downscaled to fit
  *     1024 with the `sharp` the CLI already carries); every other texture slot is
  *     dropped and named in the manifest.
- *  8. **meshopt LAST** (`gltf-transform meshopt`, the Tier 2 trap: nothing after it).
+ *  8. **Bake OUR clip set into it** (phase 2, D194): every clip `figures.glb`'s
+ *     `agent` carries (`models.json`'s twelve keys — idle, attack, block, hit,
+ *     die, the kneel and the rest), carried onto this skeleton with
+ *     `retarget.mjs` (the build's world-space delta, the pelvis scaled by the two
+ *     hip heights) and written as the file's own animations, named by key. The
+ *     rotations are the agent's by construction (step 2); the pelvis is NOT — a
+ *     body whose hip stands 6 cm higher than the agent's would sink into the
+ *     table on the agent's own track — so the arena binds these, never
+ *     `figures.glb`'s, and needs no retarget of its own.
+ *  9. **meshopt LAST** (`gltf-transform meshopt`, the Tier 2 trap: nothing after it).
+ *
+ * Two more rules (D194): a material in the spec/gloss workflow (Character
+ * Creator's) has its diffuse texture and factor read as base colour first; and a
+ * part the simplifier cannot bring to its share (a game export whose every
+ * triangle carries its own normals is all seams) is WELDED on position and UV —
+ * its normals averaged, so a hard edge goes soft — and simplified again.
+ *
+ * `--joints bind` (the default) reads the joints AND the vertices at the skin's
+ * bind pose; `--joints rest` reads both at the file's rest pose (its nodes as
+ * they stand). They are the same file when the rest pose is the bind pose; when
+ * they differ (a model exported posed), one of them is the pose the mesh was
+ * made in, and `inspect.json`'s `bind vs rest` spread says there is a choice.
  *
  * The manifest (`lib.mjs`'s `validateManifest` is its schema) records what it
  * dresses, the source's bytes and sha256, the credit line, the rig map used and
@@ -79,6 +101,7 @@ import { pathToFileURL } from 'node:url';
 
 import {
   armAngles,
+  boneFinder,
   BY_POSITION_LIMIT,
   controlReason,
   CORE_JOINTS,
@@ -89,6 +112,7 @@ import {
   GLTF_FUNCTIONS,
   insideSlug,
   inspectDocument,
+  loadThree,
   m4,
   MANIFEST_VERSION,
   OUR_JOINTS,
@@ -100,8 +124,11 @@ import {
   restVertexData,
   round,
   SEATS,
+  SEAT_LOOKS,
+  seatOf,
   skinAtRest,
   slugDir,
+  snapshot,
   THREE,
   trianglesOf,
   validateManifest,
@@ -109,6 +136,7 @@ import {
   WEB,
   weightedJoints,
 } from './lib.mjs';
+import { worldDeltaRetarget } from './retarget.mjs';
 
 // ---------------------------------------------------------------------------
 // Arguments
@@ -118,7 +146,7 @@ const argv = process.argv.slice(2);
 const slug = argv[0];
 if (!slug || slug.startsWith('--')) {
   console.error(
-    'usage: node tools/personal/prepare.mjs <slug> [--budget 6000] [--pose t|none] [--map auto|<file>] [--cloak-to <joint>] [--height <m>] [--drop <regex>]… [--bind <regex>=<joint>]… [--card "<name>"]… [--seat you|opp]…',
+    'usage: node tools/personal/prepare.mjs <slug> [--budget 6000] [--pose t|none] [--map auto|<file>] [--cloak-to <joint>] [--height <m>] [--drop <regex>]… [--bind <regex>=<joint>]… [--joints bind|rest] [--card "<name>"]… [--seat you|opp|director|villain]… [--disabled ["<reason>"]|--enabled]',
   );
   process.exit(2);
 }
@@ -131,6 +159,8 @@ const BUDGET = Number(opt('budget', '6000'));
 const POSE = opt('pose', 't');
 const MAP = opt('map', 'auto');
 const CLOAK_TO = opt('cloak-to', null);
+/** `--joints bind|rest`: which pose the joints AND the vertices are read in (see the header). */
+const JOINTS_AT = opt('joints', 'bind');
 /** `--drop <regex>`: render meshes to leave out (a base plane, a shadow disc, eye-occlusion layers). */
 const DROP = many('drop').map((r) => new RegExp(r, 'i'));
 /** `--bind <regex>=<our joint>`: an unskinned part bound wholly to one joint (a pair of wings to spine_03). */
@@ -145,7 +175,9 @@ const dir = slugDir(slug);
 if (!Number.isInteger(BUDGET) || BUDGET < 500) fail('--budget must be a whole number of triangles, at least 500');
 if (!['t', 'none'].includes(POSE)) fail('--pose must be t or none');
 if (CLOAK_TO !== null && !OUR_JOINTS.includes(CLOAK_TO)) fail(`--cloak-to must be one of our joints: ${OUR_JOINTS.join(', ')}`);
-for (const seat of many('seat')) if (!SEATS.includes(seat)) fail(`--seat must be one of ${SEATS.join(', ')}`);
+for (const seat of many('seat')) if (seatOf(seat) === null) fail(`--seat must be one of ${[...SEATS, ...Object.values(SEAT_LOOKS)].join(', ')}`);
+if (!['bind', 'rest'].includes(JOINTS_AT)) fail('--joints must be bind or rest');
+if (argv.includes('--disabled') && argv.includes('--enabled')) fail('--disabled and --enabled together');
 /** Parts smaller than this are kept whole by the decimator (pins, a buckle, a rope). */
 const KEEP_WHOLE = 300;
 
@@ -195,10 +227,38 @@ const doc = await readDocument(sourceModel);
 const raw = rawJsonOf(sourceModel);
 const before = inspectDocument(doc, raw);
 const root = doc.getRoot();
+// Character Creator exports in the spec/gloss workflow: its diffuse IS the base
+// colour. Read it so, and drop the extension (the arena draws base colour only).
+const specGloss = root.listExtensionsUsed().find((e) => e.extensionName === 'KHR_materials_pbrSpecularGlossiness');
+const specGlossed = [];
+if (specGloss !== undefined) {
+  for (const material of root.listMaterials()) {
+    const sg = material.getExtension('KHR_materials_pbrSpecularGlossiness');
+    if (sg === null) continue;
+    if (material.getBaseColorTexture() === null && sg.getDiffuseTexture() !== null) {
+      material.setBaseColorTexture(sg.getDiffuseTexture());
+      material.getBaseColorTextureInfo().setTexCoord(sg.getDiffuseTextureInfo().getTexCoord());
+    }
+    material.setBaseColorFactor(sg.getDiffuseFactor());
+    material.setExtension('KHR_materials_pbrSpecularGlossiness', null);
+    specGlossed.push(material.getName());
+  }
+  specGloss.dispose();
+}
 const skins = root.listSkins();
 if (skins.length === 0) fail('the model has no skin — it is not rigged (the tier retargets rigs; a static model is a different job)');
 const weightedBySkin = new Map(skins.map((s) => [s, weightedJoints(doc, s)]));
 const skinInfo = new Map(skins.map((s) => [s, skinAtRest(s, weightedBySkin.get(s))]));
+// `--joints bind` reads the vertices where the bind matrices put them too (every
+// joint's K is the reference one); `--joints rest` reads the joints where the
+// file's nodes stand, with the vertices as the skin draws them there. Either way
+// the two agree — a posed export whose rest is not its bind once had its arms
+// read at rest and its joints at bind, and the arms were not where the bones were.
+const vertexInfo = new Map(skins.map((s) => {
+  const info = skinInfo.get(s);
+  return [s, JOINTS_AT === 'bind' ? { ...info, K: info.K.map(() => info.ref) } : info];
+}));
+const bindSpread = Math.max(0, ...skins.map((s) => skinInfo.get(s).bindSpread));
 
 // Every joint of every skin, by name (a name used by two skins must be one joint).
 const jointByName = new Map();
@@ -208,7 +268,7 @@ for (const s of skins) {
   s.listJoints().forEach((j, i) => {
     if (!jointByName.has(j.getName())) {
       jointByName.set(j.getName(), j);
-      bindOf.set(j.getName(), info.bind[i].clone());
+      bindOf.set(j.getName(), JOINTS_AT === 'bind' ? info.bind[i].clone() : new THREE.Vector3().setFromMatrixPosition(m4(j.getWorldMatrix())));
     }
   });
 }
@@ -276,7 +336,7 @@ for (const node of root.listNodes()) {
       console.log(`  skip      ${node.getName()}: a mode-${String(prim.getMode())} primitive (not triangles)`);
       continue;
     }
-    const data = restVertexData(node, prim, skin === null ? null : skinInfo.get(skin));
+    const data = restVertexData(node, prim, skin === null ? null : vertexInfo.get(skin));
     parts.push({ node, prim, skin, rigid, ancestors, data, name: partName(node, ancestors, prim), material: prim.getMaterial()?.getName() ?? null });
   }
 }
@@ -519,6 +579,10 @@ const poseAfter = armAngles(Object.fromEntries([...P].map(([j, p]) => [j, p.toAr
 // ---------------------------------------------------------------------------
 
 const scene = root.listScenes()[0] ?? doc.createScene('Scene');
+// The source's own animations (a Mixamo take, a game's idle) drive ITS skeleton,
+// which is not in the output: they go, and our clip set is baked in below.
+const droppedAnimations = root.listAnimations().map((a) => a.getName() || '(unnamed)');
+for (const animation of root.listAnimations()) animation.dispose();
 for (const s of root.listScenes()) for (const child of s.listChildren()) s.removeChild(child);
 for (const s of root.listScenes()) if (s !== scene) s.dispose();
 const buffer = root.listBuffers()[0] ?? doc.createBuffer();
@@ -528,6 +592,8 @@ scene.addChild(modelNode);
 /** Our joint → its bind world matrix: the source's position, OUR rotation. */
 const WORLD = new Map(OUT_JOINTS.map((j) => [j, new THREE.Matrix4().compose(j === 'root' ? new THREE.Vector3() : P.get(j), AGENT.get(j).q, new THREE.Vector3(1, 1, 1))]));
 const jointNodes = new Map();
+/** Each joint's local rest (translation, rotation), for the clip bake's mirror of this skeleton. */
+const jointLocal = new Map();
 for (const joint of OUT_JOINTS) {
   const parent = joint === 'root' ? null : OUR_PARENT[joint];
   const local = parent === null ? WORLD.get(joint).clone() : WORLD.get(parent).clone().invert().multiply(WORLD.get(joint));
@@ -537,6 +603,7 @@ for (const joint of OUT_JOINTS) {
   local.decompose(t, q, s);
   const node = doc.createNode(joint).setTranslation(t.toArray()).setRotation(q.toArray());
   jointNodes.set(joint, node);
+  jointLocal.set(joint, { t, q });
   (parent === null ? modelNode : jointNodes.get(parent)).addChild(node);
 }
 const ibm = new Float32Array(OUT_JOINTS.length * 16);
@@ -590,6 +657,66 @@ const nodesBefore = before.nodes.total;
 await doc.transform(GLTF_FUNCTIONS.prune({ keepAttributes: true, keepLeaves: false }));
 
 // ---------------------------------------------------------------------------
+// OUR clip set, baked in (D194): figures.glb's agent clips → this skeleton
+// ---------------------------------------------------------------------------
+
+/** 24 frames a second: the build's own sampling rate (`build-figures.mjs`'s humanClips). */
+const CLIP_FPS = 24;
+const bakedClips = await bakeClips();
+
+/**
+ * Carry every clip `models.json` gives the `agent` onto this skeleton with
+ * `retarget.mjs` — the build's formula, proven equal to it by check.mjs step 0 —
+ * and write each as an animation of this document, named by its clip key. The
+ * target is a three mirror of the skeleton just built (the same local rest, joint
+ * for joint), so the clip's tracks name our joints and the pelvis track carries
+ * THIS body's hip, scaled by the two hip heights.
+ */
+async function bakeClips() {
+  const figures3 = await loadThree(join(WEB, 'public/models/figures.glb'));
+  const agentRoot = figures3.scene.getObjectByName(models.models.agent.node);
+  if (agentRoot === undefined) fail('figures.glb has no agent node (three)');
+  const agent = { root: agentRoot, bone: boneFinder(agentRoot) };
+  const agentRest = snapshot(agentRoot);
+  const mirrorRoot = new THREE.Group();
+  mirrorRoot.name = slug;
+  const mirror = new Map();
+  for (const joint of OUT_JOINTS) {
+    const bone = new THREE.Bone();
+    bone.name = joint;
+    const { t, q } = jointLocal.get(joint);
+    bone.position.copy(t);
+    bone.quaternion.copy(q);
+    mirror.set(joint, bone);
+    (joint === 'root' ? mirrorRoot : mirror.get(OUR_PARENT[joint])).add(bone);
+  }
+  mirrorRoot.updateMatrixWorld(true);
+  const target = { root: mirrorRoot, bone: (name) => mirror.get(name) ?? null };
+  const out = [];
+  for (const [key, name] of Object.entries(models.models.agent.clips)) {
+    const source = figures3.animations.find((a) => a.name === name);
+    if (source === undefined) fail(`figures.glb has no clip ${name} (the agent's "${key}")`);
+    agentRest();
+    const clip = worldDeltaRetarget(THREE, { source: agent, target, clip: source, joints: OUR_JOINTS, fps: CLIP_FPS, name: key });
+    const animation = doc.createAnimation(key);
+    let times = null;
+    for (const track of clip.tracks) {
+      const dot = track.name.lastIndexOf('.');
+      const node = jointNodes.get(track.name.slice(0, dot));
+      const path = track.name.slice(dot + 1) === 'quaternion' ? 'rotation' : 'translation';
+      if (node === undefined) fail(`the baked ${key} names a joint this skeleton lacks: ${track.name}`);
+      times ??= doc.createAccessor().setType('SCALAR').setArray(Float32Array.from(track.times)).setBuffer(buffer);
+      const output = doc.createAccessor().setType(path === 'rotation' ? 'VEC4' : 'VEC3').setArray(Float32Array.from(track.values)).setBuffer(buffer);
+      const sampler = doc.createAnimationSampler().setInput(times).setOutput(output).setInterpolation('LINEAR');
+      animation.addSampler(sampler).addChannel(doc.createAnimationChannel().setTargetNode(node).setTargetPath(path).setSampler(sampler));
+    }
+    out.push({ key, from: name, duration: Number(clip.duration.toFixed(4)), tracks: clip.tracks.length });
+  }
+  agentRest();
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Decimate to the budget
 // ---------------------------------------------------------------------------
 
@@ -609,6 +736,18 @@ if (renderTriangles > BUDGET) {
   for (const part of cut) {
     const target = Math.max(12, Math.floor(trianglesOf(part.out) * share));
     decimation.push({ part: part.name, material: part.material, before: trianglesOf(part.out), after: simplify(part.out, target), kept: false });
+  }
+  // A part the simplifier could not bring near its share is all seams — a game
+  // export whose every triangle carries its own normals locks every vertex. Weld
+  // it on position and UV (its normals averaged: a hard edge goes soft) and ask again.
+  for (const part of cut) {
+    const row = decimation.find((d) => d.part === part.name);
+    if (row.after <= 1.15 * Math.max(12, Math.floor(row.before * share))) continue;
+    const before_ = part.out.getAttribute('POSITION').getCount();
+    const merged = weld(part.out);
+    row.welded = { vertices: before_, after: merged };
+    row.after = simplify(part.out, Math.max(12, Math.floor(row.before * share)));
+    console.log(`  welded    ${part.name}: ${String(before_)} → ${String(merged)} vertices (position + UV; normals averaged) — the simplifier had stopped at the seams`);
   }
   // meshopt may stop a little above a target (a seam it will not break); take the excess off the largest part.
   for (let round_ = 0; round_ < 6; round_ += 1) {
@@ -655,6 +794,77 @@ function simplify(prim, target) {
   return trianglesOf(prim);
 }
 
+/**
+ * **Weld a primitive on position and UV** — every vertex that shares both with
+ * another becomes one, its normal the normalised sum, its skin the first one's
+ * (a split vertex carries the same skin on every copy), its tangent dropped. The
+ * indices are remapped; a triangle that collapses is dropped. Returns the vertex
+ * count after.
+ */
+function weld(prim) {
+  const pos = readAll(prim.getAttribute('POSITION'));
+  const count = pos.length / 3;
+  const nor = prim.getAttribute('NORMAL') !== null ? readAll(prim.getAttribute('NORMAL')) : null;
+  const uvA = prim.getAttribute('TEXCOORD_0');
+  const uv = uvA !== null ? readAll(uvA) : null;
+  const keyOf = (i) => {
+    const q = (x) => Math.round(x * 1e6);
+    let key = `${q(pos[i * 3])},${q(pos[i * 3 + 1])},${q(pos[i * 3 + 2])}`;
+    if (uv !== null) key += `|${q(uv[i * 2])},${q(uv[i * 2 + 1])}`;
+    return key;
+  };
+  const first = new Map();
+  const remap = new Uint32Array(count);
+  const keep = [];
+  for (let i = 0; i < count; i += 1) {
+    const key = keyOf(i);
+    let at = first.get(key);
+    if (at === undefined) {
+      at = keep.length;
+      first.set(key, at);
+      keep.push(i);
+    }
+    remap[i] = at;
+  }
+  const n = keep.length;
+  const pick = (accessor, size, Ctor) => {
+    const all = readAll(accessor);
+    const out = new Ctor(n * size);
+    keep.forEach((src, k) => {
+      for (let c = 0; c < size; c += 1) out[k * size + c] = all[src * size + c];
+    });
+    return out;
+  };
+  const summed = nor === null ? null : new Float32Array(n * 3);
+  if (summed !== null) {
+    for (let i = 0; i < count; i += 1) for (let c = 0; c < 3; c += 1) summed[remap[i] * 3 + c] += nor[i * 3 + c];
+    for (let k = 0; k < n; k += 1) {
+      const l = Math.hypot(summed[k * 3], summed[k * 3 + 1], summed[k * 3 + 2]) || 1;
+      for (let c = 0; c < 3; c += 1) summed[k * 3 + c] /= l;
+    }
+  }
+  for (const semantic of prim.listSemantics()) {
+    const accessor = prim.getAttribute(semantic);
+    if (semantic === 'TANGENT') {
+      prim.setAttribute('TANGENT', null);
+      continue;
+    }
+    const size = accessor.getElementSize();
+    const array = semantic === 'NORMAL' && summed !== null ? summed : pick(accessor, size, semantic.startsWith('JOINTS_') ? Uint8Array : Float32Array);
+    prim.setAttribute(semantic, doc.createAccessor().setType(accessor.getType()).setArray(array).setBuffer(buffer));
+  }
+  const old = prim.getIndices().getArray();
+  const index = [];
+  for (let t = 0; t + 2 < old.length; t += 3) {
+    const a = remap[old[t]];
+    const b = remap[old[t + 1]];
+    const c = remap[old[t + 2]];
+    if (a !== b && b !== c && a !== c) index.push(a, b, c);
+  }
+  prim.setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint32Array(index)).setBuffer(buffer));
+  return n;
+}
+
 function readAll(accessor) {
   const size = accessor.getElementSize();
   const out = new Float32Array(accessor.getCount() * size);
@@ -699,6 +909,246 @@ for (const texture of doc.getRoot().listTextures()) {
     downscaled = true;
   }
   for (const slot of slots) textures.push({ name: basename(texture.getURI() || texture.getName() || 'texture'), slot, size, bytes: image.byteLength, downscaled });
+}
+
+// ---------------------------------------------------------------------------
+// The paint (D194): one primitive per base colour, tileable ones in an atlas
+// ---------------------------------------------------------------------------
+
+const paint = await paintStep();
+
+/**
+ * **One draw call per paint.** three draws a primitive per call, and the arena
+ * draws each figure with its own material, so a model of fourteen textured
+ * parts (Character Creator's Coulson) would cost fourteen calls a figure. This
+ * step, which runs only when the model carries a base-colour texture at all:
+ *
+ *  - groups the parts by what they paint with — the base-colour texture, the
+ *    factor, and whether the texture's alpha cuts (MASK or BLEND with an alpha
+ *    channel: hair cards, lashes; the arena discards below 0.5);
+ *  - puts every group whose UVs sit inside ONE unit tile, give or take 1% (a
+ *    UDIM-style offset such as Coulson's `u` 1…2 is such a tile) into a single ATLAS: 512 px tiles
+ *    with an 8 px gutter of copied edge, on a 1024 or 2048 px sheet, each factor
+ *    multiplied into its tile and a part with no texture painted as a swatch of
+ *    its factor; a group whose UVs WRAP (Doom's tunic, `u` up to 1.87 on a
+ *    repeating sampler) keeps its own texture, the factor baked into a copy;
+ *  - merges each paint's parts into one primitive under a material of its own,
+ *    `paint-<n>`, with base colour only — the arena draws no normal map, so the
+ *    normal textures and tangents are dropped (named in the manifest);
+ *  - records every part's vertex range in the merged primitive
+ *    (`manifest.paint`), so check.mjs can still follow a rule-skinned cloak.
+ *
+ * Returns the manifest's `paint` record, or `null` when there is no texture
+ * (an untextured model — the pipeline's own test figure — keeps its parts).
+ */
+async function paintStep() {
+  const prims = bodyMesh.listPrimitives();
+  if (!prims.some((prim) => prim.getMaterial()?.getBaseColorTexture() !== null && prim.getMaterial() !== null)) return null;
+  const partOf = new Map(parts.map((part) => [part.out, part]));
+  const alphaOf = new Map();
+  const hasAlpha = async (texture) => {
+    if (!alphaOf.has(texture)) {
+      const meta = await sharp(Buffer.from(texture.getImage())).metadata();
+      alphaOf.set(texture, meta.hasAlpha === true);
+    }
+    return alphaOf.get(texture);
+  };
+  const uvRange = (prim, set) => {
+    const uv = prim.getAttribute(`TEXCOORD_${String(set)}`);
+    if (uv === null) return null;
+    const lo = [Infinity, Infinity];
+    const hi = [-Infinity, -Infinity];
+    const e = [0, 0];
+    for (let i = 0; i < uv.getCount(); i += 1) {
+      uv.getElement(i, e);
+      for (let k = 0; k < 2; k += 1) {
+        lo[k] = Math.min(lo[k], e[k]);
+        hi[k] = Math.max(hi[k], e[k]);
+      }
+    }
+    return { lo, hi };
+  };
+  // 1 — what each primitive paints with.
+  const groups = new Map();
+  for (const prim of prims) {
+    const m = prim.getMaterial();
+    const texture = m?.getBaseColorTexture() ?? null;
+    const set = m?.getBaseColorTextureInfo()?.getTexCoord() ?? 0;
+    const factor = (m?.getBaseColorFactor() ?? [1, 1, 1, 1]).slice(0, 3).map((x) => Math.round(x * 255) / 255);
+    const mode = m?.getAlphaMode() ?? 'OPAQUE';
+    const cutout = texture !== null && mode !== 'OPAQUE' && (await hasAlpha(texture));
+    const range = texture === null ? null : uvRange(prim, set);
+    // One unit tile, give or take 1% (an exporter's 1.0005 is not a wrap; the remap clamps it).
+    const tile = range === null ? [0, 0] : range.lo.map((x) => Math.floor(x + 0.01));
+    const tileable = range === null || range.hi.every((x, k) => x <= tile[k] + 1.01);
+    const key = `${texture === null ? 'swatch' : String(doc.getRoot().listTextures().indexOf(texture))}|${factor.join(',')}|${cutout ? 'cut' : 'solid'}`;
+    const group = groups.get(key) ?? { key, texture, factor, cutout, members: [], tileable: true, doubleSided: false };
+    group.members.push({ prim, set, tile, part: partOf.get(prim) });
+    group.tileable &&= tileable;
+    group.doubleSided ||= m?.getDoubleSided() === true;
+    groups.set(key, group);
+  }
+  const all = [...groups.values()];
+  const atlasGroups = all.filter((g) => g.tileable);
+  const useAtlas = atlasGroups.length >= 2;
+  const T = 512;
+  const G = 8;
+  const n = atlasGroups.length;
+  const grid = n <= 1 ? 1 : n <= 4 ? 2 : Math.ceil(Math.sqrt(n));
+  const A = useAtlas ? Math.min(2048, grid * T) : 0;
+  const tileSize = useAtlas ? A / grid : 0;
+  const toSrgb = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+  const isWhite = (f) => f.every((x) => x > 0.999);
+  /** The image (RGBA) with a glTF base-colour factor multiplied into it (in sRGB, the factor converted). */
+  const tint = async (bytes, f) => {
+    const { data, info } = await sharp(Buffer.from(bytes)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    if (!isWhite(f)) {
+      const k = f.map(toSrgb);
+      for (let i = 0; i < data.length; i += 4) for (let c = 0; c < 3; c += 1) data[i + c] = Math.round(data[i + c] * k[c]);
+    }
+    return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } });
+  };
+  const outTextures = [];
+  const paints = [];
+  // 2 — the atlas.
+  let atlasTexture = null;
+  if (useAtlas) {
+    const composites = [];
+    const inner = tileSize - 2 * G;
+    for (let k = 0; k < atlasGroups.length; k += 1) {
+      const g = atlasGroups[k];
+      const col = k % grid;
+      const row = Math.floor(k / grid);
+      let tileImg;
+      if (g.texture === null) {
+        const c = g.factor.map((x) => Math.round(255 * toSrgb(x)));
+        tileImg = await sharp({ create: { width: tileSize, height: tileSize, channels: 4, background: { r: c[0], g: c[1], b: c[2], alpha: 1 } } }).png().toBuffer();
+      } else {
+        const resized = await (await tint(g.texture.getImage(), g.factor)).resize(inner, inner, { fit: 'fill' }).png().toBuffer();
+        tileImg = await sharp(resized).extend({ top: G, bottom: G, left: G, right: G, extendWith: 'copy' }).png().toBuffer();
+      }
+      composites.push({ input: tileImg, left: col * tileSize, top: row * tileSize });
+      g.atlas = { col, row };
+    }
+    const png = await sharp({ create: { width: A, height: A, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } } }).composite(composites).png().toBuffer();
+    atlasTexture = doc.createTexture('atlas').setImage(new Uint8Array(png)).setMimeType('image/png').setURI('atlas.png');
+    outTextures.push({ name: 'atlas.png', slot: 'atlas', size: [A, A], bytes: png.byteLength, downscaled: false, tiles: atlasGroups.length });
+    paints.push({ groups: atlasGroups, texture: atlasTexture, cutout: atlasGroups.some((g) => g.cutout), doubleSided: atlasGroups.some((g) => g.doubleSided), atlas: true });
+  }
+  // 3 — the groups that keep a texture of their own (they wrap, or there is only one).
+  for (const g of all) {
+    if (useAtlas && g.tileable) continue;
+    let texture = g.texture;
+    if (texture === null || !isWhite(g.factor)) {
+      const img =
+        texture === null
+          ? await sharp({ create: { width: 4, height: 4, channels: 4, background: { r: Math.round(255 * toSrgb(g.factor[0])), g: Math.round(255 * toSrgb(g.factor[1])), b: Math.round(255 * toSrgb(g.factor[2])), alpha: 1 } } }).png().toBuffer()
+          : await (await tint(texture.getImage(), g.factor)).png().toBuffer();
+      texture = doc.createTexture(`paint-${String(paints.length)}`).setImage(new Uint8Array(img)).setMimeType('image/png').setURI(`paint-${String(paints.length)}.png`);
+    }
+    const size = GLTF.ImageUtils.getSize(texture.getImage(), texture.getMimeType());
+    outTextures.push({ name: basename(texture.getURI() || texture.getName() || 'texture'), slot: 'baseColor', size, bytes: texture.getImage().byteLength, downscaled: false });
+    paints.push({ groups: [g], texture, cutout: g.cutout, doubleSided: g.doubleSided, atlas: false });
+  }
+  // 4 — one primitive per paint.
+  const record = [];
+  for (let k = 0; k < paints.length; k += 1) {
+    const p = paints[k];
+    const material = doc.createMaterial(`paint-${String(k)}`).setBaseColorTexture(p.texture).setBaseColorFactor([1, 1, 1, 1]).setMetallicFactor(0).setRoughnessFactor(1).setDoubleSided(p.doubleSided);
+    if (p.cutout) material.setAlphaMode('MASK').setAlphaCutoff(0.5);
+    const P = [];
+    const N = [];
+    const UV = [];
+    const JO = [];
+    const WE = [];
+    const IX = [];
+    const ranges = [];
+    for (const g of p.groups) {
+      for (const member of g.members) {
+        const prim = member.prim;
+        const base = P.length / 3;
+        const pos = readAll(prim.getAttribute('POSITION'));
+        const count = pos.length / 3;
+        const index = prim.getIndices() !== null ? Array.from(prim.getIndices().getArray()) : Array.from({ length: count }, (_, i) => i);
+        const nor = prim.getAttribute('NORMAL') !== null ? readAll(prim.getAttribute('NORMAL')) : faceNormals(pos, index);
+        const uvA = prim.getAttribute(`TEXCOORD_${String(member.set)}`);
+        const uv = uvA !== null ? readAll(uvA) : new Float32Array(count * 2).fill(0.5);
+        const jo = readAll(prim.getAttribute('JOINTS_0'));
+        const we = readAll(prim.getAttribute('WEIGHTS_0'));
+        for (let i = 0; i < count; i += 1) {
+          P.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+          N.push(nor[i * 3], nor[i * 3 + 1], nor[i * 3 + 2]);
+          let u = uv[i * 2];
+          let v = uv[i * 2 + 1];
+          if (p.atlas) {
+            const c = g.texture === null ? 0.5 : u - member.tile[0];
+            const r = g.texture === null ? 0.5 : v - member.tile[1];
+            u = (g.atlas.col * tileSize + G + Math.min(1, Math.max(0, c)) * (tileSize - 2 * G)) / A;
+            v = (g.atlas.row * tileSize + G + Math.min(1, Math.max(0, r)) * (tileSize - 2 * G)) / A;
+          } else if (g.texture === null) {
+            u = 0.5;
+            v = 0.5;
+          }
+          UV.push(u, v);
+          for (let c = 0; c < 4; c += 1) {
+            JO.push(jo[i * 4 + c]);
+            WE.push(we[i * 4 + c]);
+          }
+        }
+        for (const x of index) IX.push(base + x);
+        ranges.push({ part: member.part?.name ?? '(part)', material: member.part?.material ?? null, first: base, count });
+      }
+    }
+    const prim = doc
+      .createPrimitive()
+      .setMaterial(material)
+      .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(P)).setBuffer(buffer))
+      .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(new Float32Array(N)).setBuffer(buffer))
+      .setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(new Float32Array(UV)).setBuffer(buffer))
+      .setAttribute('JOINTS_0', doc.createAccessor().setType('VEC4').setArray(new Uint8Array(JO)).setBuffer(buffer))
+      .setAttribute('WEIGHTS_0', doc.createAccessor().setType('VEC4').setArray(new Float32Array(WE)).setBuffer(buffer))
+      .setIndices(doc.createAccessor().setType('SCALAR').setArray(P.length / 3 <= 65534 ? new Uint16Array(IX) : new Uint32Array(IX)).setBuffer(buffer));
+    bodyMesh.addPrimitive(prim);
+    record.push({ material: `paint-${String(k)}`, atlas: p.atlas, cutout: p.cutout, texture: outTextures[k].name, triangles: IX.length / 3, parts: ranges });
+  }
+  const droppedNormals = [];
+  for (const prim of prims) {
+    const m = prim.getMaterial();
+    if (m?.getNormalTexture() !== null && m?.getNormalTexture() !== undefined) droppedNormals.push(`${m.getName()}.normal`);
+    bodyMesh.removePrimitive(prim);
+    prim.dispose();
+  }
+  await doc.transform(GLTF_FUNCTIONS.prune({ keepAttributes: true }));
+  textures.length = 0;
+  textures.push(...outTextures);
+  console.log(
+    `  paint       ${String(prims.length)} parts → ${String(record.length)} primitive(s): ${record
+      .map((r) => `${r.material} ${r.atlas ? `(atlas of ${String(atlasGroups.length)} tiles, ${String(A)} px)` : `(${r.texture})`}${r.cutout ? ' cutout' : ''} ${String(r.triangles)} tris`)
+      .join('; ')}`,
+  );
+  return { primitives: record, atlas: useAtlas ? { size: A, tile: tileSize, gutter: G, tiles: atlasGroups.length } : null, droppedNormalTextures: [...new Set(droppedNormals)] };
+}
+
+/** Area-weighted vertex normals for a part that brought none. */
+function faceNormals(pos, index) {
+  const out = new Float32Array(pos.length);
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  for (let t = 0; t + 2 < index.length; t += 3) {
+    a.fromArray(pos, index[t] * 3);
+    b.fromArray(pos, index[t + 1] * 3);
+    c.fromArray(pos, index[t + 2] * 3);
+    const n = b.sub(a).cross(c.sub(a));
+    for (const k of [index[t], index[t + 1], index[t + 2]]) for (let e = 0; e < 3; e += 1) out[k * 3 + e] += n.getComponent(e);
+  }
+  for (let i = 0; i < out.length; i += 3) {
+    const l = Math.hypot(out[i], out[i + 1], out[i + 2]) || 1;
+    out[i] /= l;
+    out[i + 1] /= l;
+    out[i + 2] /= l;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -792,7 +1242,22 @@ const manifest = {
   },
   units: { sourceHeight: round(sourceHeight, 4), height: round(HEIGHT, 4), scale: round(scale, 6), facing: '+z', up: '+y' },
   prepared: { tool: 'tools/personal/prepare.mjs', date: new Date().toISOString(), budget: BUDGET, bytes: bytesOut, sha256: sha256(readFileSync(out)) },
+  paint,
+  clips: {
+    keys: bakedClips.map((c) => c.key),
+    source: "figures.glb's agent clips (models.json), retargeted by tools/personal/retarget.mjs",
+    fps: CLIP_FPS,
+    baked: bakedClips,
+    dropped: droppedAnimations,
+  },
 };
+// `--disabled` keeps it out of the game's index; `--enabled` lets it back; neither keeps the last manifest's word.
+const disabledAt = argv.indexOf('--disabled');
+const disabledReason = disabledAt >= 0 && argv[disabledAt + 1] !== undefined && !argv[disabledAt + 1].startsWith('--') ? argv[disabledAt + 1] : null;
+const disabled = disabledAt >= 0 ? (disabledReason ?? true) : argv.includes('--enabled') ? false : (previous?.disabled ?? false);
+if (disabled !== false) manifest.disabled = disabled;
+if (JOINTS_AT !== 'bind' || bindSpread > 1e-4) manifest.rig.jointsAt = { pose: JOINTS_AT, bindVsRestSpread: round(bindSpread, 6) };
+if (specGlossed.length > 0) manifest.dropped.specularGlossiness = specGlossed;
 const errors = validateManifest(manifest);
 if (errors.length > 0) fail(`the manifest would not validate:\n  ${errors.join('\n  ')}`);
 writeFileSync(insideSlug(slug, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -841,6 +1306,10 @@ if (folded.length > 0) {
 }
 for (const s of skinnedParts) console.log(`  skinned     ${s.part} (${n(s.vertices)} vertices) by ${s.rule}`);
 console.log(`  units       ${round(sourceHeight, 3)} source units tall → ${String(HEIGHT)} m (×${round(scale, 4)}), facing +z, feet at 0`);
+console.log(`  joints at   the ${JOINTS_AT} pose (bind vs rest spread ${String(round(bindSpread, 6))}${bindSpread > 1e-4 ? ' — the file\'s rest pose is NOT its bind pose; the other --joints reads the other one' : ''})`);
+console.log(`  clips       baked: ${bakedClips.map((c) => c.key).join(', ')} (${String(CLIP_FPS)} fps, figures.glb's agent → this skeleton)${droppedAnimations.length > 0 ? `; the source's own dropped: ${droppedAnimations.join(', ')}` : ''}`);
+if (specGlossed.length > 0) console.log(`  spec/gloss  diffuse read as base colour: ${specGlossed.join(', ')}`);
+if (disabled !== false) console.log(`  DISABLED    ${typeof disabled === 'string' ? disabled : 'the manifest says disabled'} — the dev route's index skips this model (--enabled lets it back)`);
 console.log(`  textures    ${textures.map((t) => `${t.name} ${t.slot} ${t.size?.join('×') ?? '?'}${t.downscaled ? ' (downscaled)' : ''}`).join('; ') || 'none'}`);
 if (droppedSlots.length > 0) console.log(`  dropped     texture slots ${droppedSlots.join(', ')}`);
 if (droppedMeshes.length > 0) console.log(`  dropped     by --drop: ${droppedMeshes.join(', ')}`);

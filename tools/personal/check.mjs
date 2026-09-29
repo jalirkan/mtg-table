@@ -52,9 +52,20 @@
  *      first, each limb joint's vertices lie AHEAD of it along its link (a fold
  *      carries them behind), and at attack t = 0.5 both hands, both feet and
  *      the head move into the agent's half-space.
+ *  2c. (phase 2, D194) the clips BAKED into `model.glb` — the ones the arena
+ *      binds — are the ones this check just carried on: every key the manifest
+ *      names is in the file, and each of our five clips sampled at five phases
+ *      puts every joint within 2° and the pelvis within 1% of the height of the
+ *      retarget's (the meshopt quantisation, not 0).
  *
  * The closing OK line lists what was judged and nothing else: the rotation
  * columns hold by construction and are printed as a sanity check, not claimed.
+ *
+ * **The verdict is written down** (phase 2, D194): `check.json` beside the model
+ * — pass or fail, the failures, what was judged, and the sha256 of the
+ * `model.glb` it judged. The dev route's index loads a model only when that file
+ * says it passed and names the model on disk, so a model that fails this check,
+ * or was prepared again since, is never loaded.
  *
  * Then, unless `--no-preview`, it renders turntables — front, side, back and a
  * mid-attack frame, plus a sheet of all four, and the kneel and the death from
@@ -78,12 +89,13 @@
  */
 
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, relative, resolve, sep } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import {
+  boneFinder,
   CORE_JOINTS,
   END_MOVE_MIN,
   FLESH_AGENT_MIN,
@@ -91,20 +103,19 @@ import {
   judgeBody,
   judgeLimbs,
   LIMB_LENGTH_BAND,
+  loadThree,
   netLogReport,
   OUR_JOINTS,
   profileReport,
   REPO,
   SEGMENT_LIMIT_DEG,
   slugDir,
+  snapshot,
   THREE,
   validateManifest,
   WEB,
 } from './lib.mjs';
 import { worldDeltaRetarget } from './retarget.mjs';
-
-const { GLTFLoader } = await import(pathToFileURL(join(WEB, 'node_modules/three/examples/jsm/loaders/GLTFLoader.js')).href);
-const { MeshoptDecoder } = await import(pathToFileURL(join(WEB, 'node_modules/three/examples/jsm/libs/meshopt_decoder.module.js')).href);
 
 const argv = process.argv.slice(2);
 const slug = argv[0];
@@ -147,75 +158,8 @@ const judgedList = [];
 // Loading, in Node
 // ---------------------------------------------------------------------------
 
-/**
- * A .glb with every image and texture reference taken out of its JSON chunk:
- * three cannot decode an image in Node (no `createImageBitmap`), and nothing
- * checked here reads one (`build-figures.mjs`'s `withoutImages`, generalised to
- * texture references inside material extensions).
- */
-function withoutImages(glb) {
-  const jsonLength = glb.readUInt32LE(12);
-  const json = JSON.parse(glb.toString('utf8', 20, 20 + jsonLength));
-  delete json.images;
-  delete json.textures;
-  delete json.samplers;
-  const strip = (o) => {
-    if (o === null || typeof o !== 'object') return;
-    for (const key of Object.keys(o)) {
-      if (/Texture$/.test(key)) delete o[key];
-      else strip(o[key]);
-    }
-  };
-  for (const material of json.materials ?? []) strip(material);
-  let text = Buffer.from(JSON.stringify(json), 'utf8');
-  const pad = (4 - (text.byteLength % 4)) % 4;
-  if (pad > 0) text = Buffer.concat([text, Buffer.alloc(pad, 0x20)]);
-  const rest = glb.subarray(20 + jsonLength);
-  const header = Buffer.alloc(20);
-  header.writeUInt32LE(0x46546c67, 0);
-  header.writeUInt32LE(2, 4);
-  header.writeUInt32LE(20 + text.byteLength + rest.byteLength, 8);
-  header.writeUInt32LE(text.byteLength, 12);
-  header.writeUInt32LE(0x4e4f534a, 16);
-  return Buffer.concat([header, text, rest]);
-}
-
-async function load(path) {
-  const bytes = withoutImages(readFileSync(path));
-  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  const loader = new GLTFLoader();
-  loader.setMeshoptDecoder(MeshoptDecoder);
-  return new Promise((ok, bad) => loader.parse(buffer, '', ok, bad));
-}
-
-/** A joint by our name inside a subtree (GLTFLoader suffixes a repeated name `_1`, as for `hero`'s joints). */
-function boneFinder(root) {
-  const cache = new Map();
-  return (name) => {
-    if (!cache.has(name)) {
-      let found = null;
-      root.traverse((o) => {
-        if (found === null && (o.name === name || new RegExp(`^${name}_\\d+$`).test(o.name)) && o.isBone) found = o;
-      });
-      cache.set(name, found);
-    }
-    return cache.get(name);
-  };
-}
-
-/** Every local TRS under a root, to put a subtree back at rest after a mixer has had it. */
-function snapshot(root) {
-  const saved = [];
-  root.traverse((o) => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]));
-  return () => {
-    for (const [o, p, q, s] of saved) {
-      o.position.copy(p);
-      o.quaternion.copy(q);
-      o.scale.copy(s);
-    }
-    root.updateMatrixWorld(true);
-  };
-}
+/** three's own loader, as the arena loads a model (lib.mjs `loadThree`: images stripped, meshopt decoded). */
+const load = (path) => loadThree(path);
 
 function sample(root, clip, time) {
   const mixer = new THREE.AnimationMixer(root);
@@ -322,13 +266,16 @@ function drawn(list = meshes) {
   }
   return { box, finite };
 }
+/** The centroid of some spans of vertices — `{ mesh, first, count }`, a whole mesh when `first`/`count` are absent. */
 function centroid(list) {
   const c = new THREE.Vector3();
   const v = new THREE.Vector3();
   let n = 0;
-  for (const mesh of list) {
-    const count = mesh.geometry.getAttribute('position').count;
-    for (let i = 0; i < count; i += 1) {
+  for (const span of list) {
+    const mesh = span.mesh ?? span;
+    const first = span.first ?? 0;
+    const count = span.count ?? mesh.geometry.getAttribute('position').count;
+    for (let i = first; i < first + count; i += 1) {
       mesh.getVertexPosition(i, v);
       c.add(v.applyMatrix4(mesh.matrixWorld));
       n += 1;
@@ -375,8 +322,21 @@ const restSize = rest.box.getSize(new THREE.Vector3());
 const restSide = Math.max(restSize.x, restSize.y, restSize.z);
 const restCentre = rest.box.getCenter(new THREE.Vector3());
 const height = restSize.y;
-const cloakMaterials = new Set((manifest?.skinned ?? []).map((s) => s.material).filter(Boolean));
-const cloak = meshes.filter((m) => cloakMaterials.has(m.material?.name));
+// The rule-skinned parts (a cloak): whole primitives by material, or — since the
+// paint step merges parts (D194) — each part's vertex range in its paint's primitive.
+const cloak = [];
+if (Array.isArray(manifest?.paint?.primitives)) {
+  for (const skinned of manifest?.skinned ?? []) {
+    for (const record of manifest.paint.primitives) {
+      const range = record.parts.find((r) => r.part === skinned.part);
+      const mesh = meshes.find((m) => m.material?.name === record.material);
+      if (range !== undefined && mesh !== undefined) cloak.push({ mesh, first: range.first, count: range.count, name: `${skinned.part} in ${record.material}` });
+    }
+  }
+} else {
+  const cloakMaterials = new Set((manifest?.skinned ?? []).map((x) => x.material).filter(Boolean));
+  for (const mesh of meshes) if (cloakMaterials.has(mesh.material?.name)) cloak.push({ mesh, name: mesh.material.name });
+}
 const cloakRest = cloak.length > 0 ? centroid(cloak) : null;
 const spineRest = target.bone('spine_02').matrixWorld.clone();
 const bindWorld = new Map(OUR_JOINTS.map((j) => [j, target.bone(j).getWorldQuaternion(new THREE.Quaternion())]));
@@ -385,7 +345,7 @@ agentRest();
 const agentBind = new Map(OUR_JOINTS.map((j) => [j, agent.bone(j).getWorldQuaternion(new THREE.Quaternion())]));
 const agentBindLocal = new Map(OUR_JOINTS.map((j) => [j, agent.bone(j).quaternion.clone()]));
 console.log(
-  `   rest: ${restSize.toArray().map((x) => x.toFixed(3)).join(' × ')} m, finite ${String(rest.finite)}, skinned-vs-file ${(restError * 1000).toFixed(3)} mm; cloak (rule-skinned) primitives: ${cloak.length > 0 ? cloak.map((m) => m.material.name).join(', ') : 'none'}`,
+  `   rest: ${restSize.toArray().map((x) => x.toFixed(3)).join(' × ')} m, finite ${String(rest.finite)}, skinned-vs-file ${(restError * 1000).toFixed(3)} mm; cloak (rule-skinned) parts: ${cloak.length > 0 ? cloak.map((x) => x.name).join(', ') : 'none'}`,
 );
 check(rest.finite, 'the rest pose has a non-finite vertex');
 check(restError <= 0.001 * height, `at rest the skin moves a vertex ${restError.toFixed(4)} m from where the file puts it (an inverse bind matrix disagrees with its joint)`);
@@ -469,6 +429,56 @@ if (cloakRest !== null) {
   const die = rows.filter((r) => r.where.startsWith('die'));
   const most = die.reduce((a, r) => (r.spineMoved > a.spineMoved ? r : a), die[0]);
   check(most.cloakMoved >= 0.5 * most.spineMoved, `the cloak did not follow the spine in the death (moved ${most.cloakMoved.toFixed(2)} m, spine ${most.spineMoved.toFixed(2)} m)`);
+}
+
+// ---------------------------------------------------------------------------
+// 2c — the clips baked into model.glb are the ones just carried on (D194)
+// ---------------------------------------------------------------------------
+
+console.log('\n2c. the clips baked into model.glb (what the arena binds) against the retarget above');
+{
+  const baked = new Map(gltf.animations.map((a) => [a.name, a]));
+  const keys = manifest?.clips?.keys ?? [];
+  const missing = keys.filter((k) => !baked.has(k));
+  check(keys.length > 0, 'the manifest names no baked clip (phase 1\'s prepare): run prepare.mjs again');
+  check(missing.length === 0, `model.glb lacks the baked clip(s) ${missing.join(', ')} the manifest names`);
+  const agentKeys = Object.keys(models.models.agent.clips);
+  const notBaked = agentKeys.filter((k) => !baked.has(k));
+  check(notBaked.length === 0, `model.glb lacks ${notBaked.join(', ')} of the agent's clip set`);
+  let worstDeg = 0;
+  let worstHip = 0;
+  for (const [key, label] of CLIPS) {
+    const ours = retargeted.get(label);
+    const file = baked.get(key);
+    if (ours === undefined || file === undefined) continue;
+    let deg_ = 0;
+    let hip = 0;
+    for (const phase of [0, 0.25, 0.5, 0.75, 1]) {
+      const t = phase * Math.min(ours.duration, file.duration);
+      modelRest();
+      let stop = sample(modelRoot, ours, t);
+      const want = OUR_JOINTS.map((j) => target.bone(j).quaternion.clone());
+      const wantHip = target.bone('pelvis').position.clone();
+      stop();
+      modelRest();
+      stop = sample(modelRoot, file, t);
+      OUR_JOINTS.forEach((j, i) => {
+        deg_ = Math.max(deg_, angleOf(want[i].clone().invert().multiply(target.bone(j).quaternion)));
+      });
+      hip = Math.max(hip, wantHip.distanceTo(target.bone('pelvis').position));
+      stop();
+    }
+    modelRest();
+    worstDeg = Math.max(worstDeg, deg_);
+    worstHip = Math.max(worstHip, hip);
+    console.log(`   ${key.padEnd(7)} worst joint ${deg_.toFixed(2)}°, pelvis ${(hip * 1000).toFixed(1)} mm`);
+  }
+  check(worstDeg < 2, `a baked clip is ${worstDeg.toFixed(2)}° off the retarget (≥ 2°): model.glb's clips are not ours`);
+  check(worstHip < 0.01 * height, `a baked clip's pelvis is ${(worstHip * 1000).toFixed(1)} mm off the retarget's (over 1% of the height)`);
+  console.log(`   ${String(keys.length)} clips baked (${keys.join(', ')}); worst over five clips × five phases: ${worstDeg.toFixed(2)}°, pelvis ${(worstHip * 1000).toFixed(1)} mm`);
+  judgedList.push(
+    `the ${String(keys.length)} clips baked into model.glb are the retarget's (worst joint ${worstDeg.toFixed(2)}°, pelvis ${(worstHip * 1000).toFixed(1)} mm over five clips × five phases)`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -667,6 +677,7 @@ if (PREVIEW) {
 finish();
 
 function finish() {
+  verdict(failures.length === 0);
   if (failures.length > 0) {
     console.log(`\nFAIL — ${String(failures.length)} assertion(s):\n  ${failures.join('\n  ')}`);
     process.exit(1);
@@ -675,6 +686,27 @@ function finish() {
   console.log(`\nOK — ${slug}: every assertion above held —\n  ${judgedList.join(';\n  ')}.`);
   console.log(`  How it looks is the previews' to show (${PREVIEW ? `personal/models/${slug}/preview/` : 'not rendered: --no-preview'}).`);
   process.exit(0);
+}
+
+/**
+ * **The verdict, beside the model** (D194): what the dev route's index reads
+ * before it will load `model.glb`. It names the bytes it judged, so a model
+ * prepared again since is not loaded on an old pass.
+ */
+function verdict(ok) {
+  const bytes = readFileSync(modelPath);
+  const record = {
+    _what: 'Written by tools/personal/check.mjs. PERSONAL USE ONLY (D190). The dev route loads model.glb only when ok is true and model.sha256 is the file on disk (D194).',
+    version: 1,
+    slug,
+    ok,
+    date: new Date().toISOString(),
+    model: { bytes: bytes.byteLength, sha256: createHash('sha256').update(bytes).digest('hex') },
+    previews: PREVIEW,
+    failures,
+    judged: judgedList,
+  };
+  writeFileSync(insideSlug(slug, 'check.json'), `${JSON.stringify(record, null, 2)}\n`);
 }
 
 // ---------------------------------------------------------------------------

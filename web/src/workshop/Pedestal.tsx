@@ -75,8 +75,11 @@ import { OverlayField } from '../arena/scene/overlays.ts';
 import type { RigMap } from '../arena/scene/rigs.ts';
 import { Table } from '../arena/scene/Table.tsx';
 import { TileField } from '../arena/scene/tiles.ts';
+import { EMPTY_PERSONAL, dressPoses, personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
+import { NO_PERSONAL_LOADED, type PersonalLoaded } from '../arena/scene/personalModels.ts';
+import { useCardTexture } from '../arena/scene/useCardTexture.ts';
 import { turnPoses, type PreviewStage } from './facing.ts';
-import { poseFor, type CameraMode, type Framing } from './framing.ts';
+import { ART_BOX, inspectLayout, poseFor, type CameraMode, type Framing, type Panel } from './framing.ts';
 
 /** The one post pass, lazily — the arena's own `Post`, in the arena's own chunk. */
 const Post = lazy(() => import('../arena/scene/Post.tsx').then((module) => ({ default: module.Post })));
@@ -126,6 +129,20 @@ export interface PedestalProps {
   bloom: boolean;
   /** The look (D137) — the toolbar's A/B; the arena's default when absent. */
   look?: LookSpec;
+  /**
+   * **The personal tier** (D194–D196): the overlay the pedestal dresses with —
+   * the page's own, or the empty one when the toolbar says "repo" — and what has
+   * loaded (`Workshop.tsx` loads it, for the framing too). The pedestal looks each
+   * face-up card up and dresses it exactly as `Arena.tsx` does.
+   */
+  personal?: PersonalOverlay;
+  personalLoaded?: PersonalLoaded;
+  /**
+   * **INSPECT** (D196): the card image `CardPlane` draws for this card (the same
+   * URL, so the same texture), for the art-box backdrop and the frame panel —
+   * `null` for a concealed entry or a card with no art, which draws neither.
+   */
+  inspectUrl?: string | null;
 }
 
 export function Pedestal(props: PedestalProps): JSX.Element {
@@ -224,6 +241,9 @@ function PedestalScene({
   primeRef,
   bloomOn,
   look = DEFAULT_LOOK,
+  personal = EMPTY_PERSONAL,
+  personalLoaded = NO_PERSONAL_LOADED,
+  inspectUrl = null,
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
@@ -237,13 +257,20 @@ function PedestalScene({
   // pedestal must draw what the arena draws.
   const paletteNames = useMemo(() => paletteNamesOf(placed), [placed]);
   const palettes = useArtPalettes(paletteNames, art);
-  const figures = useMemo(
+  const basePoses = useMemo(
     () =>
       turnPoses(
         figurePose(placed, state.board?.combat ?? null, figureData, { frozen, models, traits, palettes }),
         turn,
       ),
     [placed, state.board?.combat, figureData, frozen, models, traits, turn, palettes],
+  );
+  // The personal tier (D195), exactly as `Arena.tsx` dresses: THE lookup over the
+  // face-up named figures, then the dressed poses once a model has loaded.
+  const personalChoices = useMemo(() => personalChoicesOf(placed, basePoses, personal), [placed, basePoses, personal]);
+  const figures = useMemo(
+    () => dressPoses(basePoses, personalChoices, personalLoaded.fits),
+    [basePoses, personalChoices, personalLoaded.fits],
   );
   // The status layer (D210), exactly as `Arena.tsx` lays it out.
   const strips = useMemo(() => statusLayout(placed, figures), [placed, figures]);
@@ -358,7 +385,9 @@ function PedestalScene({
         look={look}
         composer={bloomOn}
         status={strips}
+        personal={personalLoaded.models}
       />
+      {mode === 'inspect' && first !== undefined && inspectUrl !== null && <InspectStage framing={first} url={inspectUrl} />}
       <primitive object={castingField.group} />
       <primitive object={overlays.group} />
       <primitive object={bustField.group} />
@@ -396,6 +425,91 @@ function PedestalScene({
       />
       {!bloomOn && <PedestalRenderer split={splitting} second={second} />}
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// INSPECT (D196): the card's art behind the figure, its frame beside it
+// ---------------------------------------------------------------------------
+
+/** One plane, UV-mapped to the art box of a card image (texture v runs bottom-up). */
+function artBoxGeometry(): THREE.PlaneGeometry {
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  const uv = geometry.getAttribute('uv');
+  const u0 = ART_BOX.left;
+  const u1 = ART_BOX.right;
+  const v0 = 1 - ART_BOX.bottom;
+  const v1 = 1 - ART_BOX.top;
+  // PlaneGeometry's corners: top-left, top-right, bottom-left, bottom-right.
+  uv.setXY(0, u0, v1);
+  uv.setXY(1, u1, v1);
+  uv.setXY(2, u0, v0);
+  uv.setXY(3, u1, v0);
+  uv.needsUpdate = true;
+  return geometry;
+}
+
+/** An alpha map with the art box cut out: the frame and the text stay, the painting is the backdrop's. */
+function frameAlphaMap(): THREE.Texture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 244;
+  canvas.height = 340;
+  const g = canvas.getContext('2d');
+  if (g !== null) {
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, canvas.width, canvas.height);
+    g.fillStyle = '#000000';
+    g.fillRect(
+      ART_BOX.left * canvas.width,
+      ART_BOX.top * canvas.height,
+      (ART_BOX.right - ART_BOX.left) * canvas.width,
+      (ART_BOX.bottom - ART_BOX.top) * canvas.height,
+    );
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/**
+ * **The inspect view's two planes**, from the card image `CardPlane` already
+ * fetched (`useCardTexture`, the same URL — one texture): the ART BOX enlarged
+ * as a backdrop behind the figure, and the card's frame and text, the art box
+ * cut out, as a panel floating at its right. Both are flat and take no click;
+ * where they stand is `framing.ts`'s `inspectLayout`, from the pose. The depth
+ * relief of the painting is the follow-up (PLAN.md): today it is a picture.
+ */
+function InspectStage({ framing, url }: { framing: Framing; url: string }): JSX.Element | null {
+  const texture = useCardTexture(url);
+  const layout = useMemo(() => inspectLayout(framing), [framing]);
+  const artGeometry = useMemo(() => artBoxGeometry(), []);
+  const alphaMap = useMemo(() => frameAlphaMap(), []);
+  useEffect(
+    () => () => {
+      artGeometry.dispose();
+      alphaMap.dispose();
+    },
+    [artGeometry, alphaMap],
+  );
+  if (texture === null || layout === null) return null;
+  const plane = (panel: Panel, key: string, geometry: THREE.BufferGeometry | null, frame: boolean): JSX.Element => (
+    <mesh
+      key={key}
+      position={panel.position}
+      rotation={[0, panel.rotationY, 0]}
+      scale={[panel.width, panel.height, 1]}
+      raycast={() => {}}
+      {...(geometry === null ? {} : { geometry })}
+    >
+      {geometry === null && <planeGeometry args={[1, 1]} />}
+      <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} {...(frame ? { alphaMap, alphaTest: 0.5 } : {})} />
+    </mesh>
+  );
+  return (
+    <group name="inspect">
+      {plane(layout.backdrop, 'art', artGeometry, false)}
+      {plane(layout.frame, 'frame', null, true)}
+    </group>
   );
 }
 

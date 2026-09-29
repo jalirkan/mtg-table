@@ -27,8 +27,8 @@ changing, and the others when a change crosses into them.
 |---|---|
 | [`bridge/CLAUDE.md`](bridge/CLAUDE.md) | The Java bridge: `Snap.java`'s three conventions, the socket's rules, the end of a game, `/health`, the console seat's vocabulary, the build's five self-tests, and reading Forge's source as prose. |
 | [`web/CLAUDE.md`](web/CLAUDE.md) | The TypeScript client: the test suites, the board's conventions (M4, M5 and M6 — M6's also bind the bridge's acts, its reset hook and `ActGuard`), the workshop and the story page. |
-| [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), and Lanes LOOK, MOTION and BODIES. |
-| [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, the card library with the `#cards` browser, and the personal tier's pipeline (`tools/personal/`, D190–D193). |
+| [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), Lanes LOOK, MOTION and BODIES, the status layer (D210–D212), and the personal tier's loader (D194–D196). |
+| [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, the card library with the `#cards` browser, and the personal tier's pipeline (`tools/personal/`, D190–D196). |
 | [`tools/README.md`](tools/README.md) | Every script under `tools/` — what it is for, whether the gate runs it, whether it needs the engine — and *Commands, by task*: every command *Build and run* below does not keep. |
 
 Each rule is written once. `web/test/claude-md.test.ts` fails on a rule — a line
@@ -133,8 +133,9 @@ code; if you think one is wrong, say so in prose first.
    **A personal model is a statement about what a card is, too** (**D190**): it
    is chosen by card name only where `figurePose` already places a named figure,
    and never for a face-down or redacted card, which stays the anonymous disc.
-   Phase 2's loader enforces that; phase 1 draws nothing (`tools/CLAUDE.md`'s
-   *The personal tier*).
+   `web/src/arena/personal.ts`'s one lookup enforces that, and a corpus sweep
+   with a hostile overlay holds it (**D195**; `web/src/arena/CLAUDE.md`'s *The
+   personal tier*).
 9. **Every script must run from `/home/justin-a/code/mtg-table` as its working
    directory** and must read the jar path from
    `/home/justin-a/code/mtg-table/config.json` or the `FORGE_JAR` env var. **Never
@@ -548,11 +549,10 @@ are history from before this rule, and stay.
 | `docs/research/14-engine-upgrade.md` | **Why Forge stays 2.0.14** (D109–D112), and §0, the checklist for the day an official release ships Reality Fracture. |
 | `docs/research/15-art-direction.md` | **Art direction**: the comic look, motion and bodies, and §9's three lanes. Read §9 before touching the figure or prop material, `Post.tsx`, the effects, `cues/`, `figures/` or `scene/props.ts`. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point; chapter 9 maps `WireGuiGame.java` and follows one ask and one act through the threads. |
-| `docs/guides/personal-tier.md` | **The personal tier's manual** (D190–D193): the never-publish rule, the folder, the slug, the manifest, the three commands, `bones.json` and the Sketchfab click-through; `docs/evidence/personal-tier.md` is Doctor Doom run through it. |
+| `docs/guides/personal-tier.md` | **The personal tier's manual** (D190–D196): the never-publish rule, the folder, the slug, the manifest, the three commands, `bones.json`, the Sketchfab click-through, and the loader — how a model reaches the arena and the workshop from the dev server; `docs/evidence/personal-tier.md` is Doctor Doom and the seven others run through it. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
-| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are the docs block's D200–D202 and the personal tier's D190–D193 (a lane keeps the numbers it reserved, D200). |
-| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent block is D210–D212 (the status layer). |
+| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D193 and D194–D196 (a lane keeps the numbers it reserved, D200). |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
