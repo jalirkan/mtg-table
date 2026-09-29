@@ -38,7 +38,7 @@
  * ---------------------------------------------------------------------------
  */
 
-import { AdaptiveDpr, OrbitControls, PerspectiveCamera, Stats } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   Suspense,
@@ -139,7 +139,8 @@ import {
   wantsStage,
   type LookSpec,
 } from './look.ts';
-import { BLOOM_DEFAULT, DPR_FLOOR, GOVERNOR, dprCeiling, lateRate, postOnFloor, rungFrom, worstOf } from './perf.ts';
+import { governorFrame, governorWindow, restartWindow, type GovernorWindow } from './governor.ts';
+import { BLOOM_DEFAULT, dprCeiling, postOnFloor, rungFrom } from './perf.ts';
 import { CardPlane } from './scene/CardPlane.tsx';
 import { CueRunner, type Frameloop } from './scene/CueRunner.tsx';
 import { CastingField } from './scene/casting.ts';
@@ -279,87 +280,31 @@ function DprGovernor({
    */
   onFloor?: () => boolean;
 }): null {
-  const state = useRef({
-    samples: [] as number[],
-    at: 0,
-    last: 0,
-    lastStep: 0,
-    skip: 0,
-  }).current;
-
   /**
-   * Take the step, and start measuring the resolution it produced.
+   * The window and its decision are `perf.ts`'s, pure (D272): a fixed ring written
+   * in place — the frame loop allocates nothing — and counted in time as well as in
+   * frames, so a machine drawing 135 ms frames walks the ladder in about as many
+   * seconds as a machine at sixty frames a second takes rungs. What is left here is
+   * the part that is React's: the resolution (`<Canvas dpr>`) and the composer.
    *
-   * **A step that cannot move is not a step.** At the floor with frames still
-   * late — or at the ceiling with room to spare — the trigger goes on firing,
-   * and resetting the window each time would keep the *other* direction's
-   * decision permanently out of reach (the climb needs a full window, and it
-   * would never get one). Leaving the window alone means the ladder starts
-   * climbing the moment the machine recovers.
-   *
-   * The test is a comparison against the ladder's two ends rather than a call to
-   * `rungFrom`, which builds an array: this runs inside `useFrame` on the frame
-   * the trigger fires, and §9.2 rule 6 is zero allocation there.
+   * **A step that cannot move is not a step** (`governorFrame` answers `'floor'`,
+   * not `'down'`, at the ladder's end, and leaves the window alone), and the rung
+   * below the floor is "degrade, don't stutter" (§9.2 rule 9) one step further:
+   * bloom was measured at p95 82 ms under SwiftShader at this very floor (T7), so a
+   * machine still late here gets its composer — bloom and the ink line with it
+   * (D139) — turned off, and the window restarts, so the next decision is about the
+   * table without it.
    */
-  const step = (now: number, direction: -1 | 1): void => {
-    const stuck = direction < 0 ? dpr <= DPR_FLOOR + 1e-6 : dpr >= dprCeiling() - 1e-6;
-    if (stuck) {
-      // "Degrade, don't stutter" (§9.2 rule 9), one rung further: bloom was
-      // measured at p95 82 ms under SwiftShader at this very floor (T7), so a
-      // machine that is still late here gets its composer — bloom and the ink
-      // line with it (D139) — turned off, and the window restarts, so the next
-      // decision is about the table without it.
-      if (direction < 0 && onFloor !== undefined && onFloor()) {
-        state.lastStep = now;
-        state.samples = [];
-        state.at = 0;
-        state.skip = GOVERNOR.settleFrames;
-      }
-      return;
-    }
-    state.lastStep = now;
-    state.samples = [];
-    state.at = 0;
-    state.skip = GOVERNOR.settleFrames;
-    onStep(direction);
-  };
+  const window_ = useRef<GovernorWindow | null>(null);
+  if (window_.current === null) window_.current = governorWindow();
+  const w = window_.current;
 
   useFrame(() => {
     const now = typeof performance === 'undefined' ? Date.now() : performance.now();
-    const previous = state.last;
-    state.last = now;
-    if (previous === 0) return;
-
-    const delta = now - previous;
-    // `frameloop="demand"` parks the loop whenever the queue drains, so the
-    // first frame after a batch arrives is a gap and not a slow frame. Counting
-    // it would drop the resolution every time the board went quiet.
-    if (delta > GOVERNOR.parkedMs) return;
-    if (state.skip > 0) {
-      state.skip -= 1;
-      return;
-    }
-
-    if (state.samples.length < GOVERNOR.window) state.samples.push(delta);
-    else {
-      state.samples[state.at] = delta;
-      state.at = (state.at + 1) % GOVERNOR.window;
-    }
-
-    if (state.samples.length < GOVERNOR.minSamples) return;
-    if (now - state.lastStep < GOVERNOR.cooldownMs) return;
-
-    if (lateRate(state.samples, GOVERNOR.downMs) > GOVERNOR.lateFraction) {
-      step(now, -1);
-      return;
-    }
-    if (
-      state.samples.length === GOVERNOR.window &&
-      worstOf(state.samples) <= GOVERNOR.upMs &&
-      now - state.lastStep >= GOVERNOR.upQuietMs
-    ) {
-      step(now, 1);
-    }
+    const action = governorFrame(w, now, dpr);
+    if (action === 'down') onStep(-1);
+    else if (action === 'up') onStep(1);
+    else if (action === 'floor' && onFloor !== undefined && onFloor()) restartWindow(w, now);
   });
 
   return null;
@@ -484,6 +429,11 @@ function storeCaption(context: CaptionContext, on: boolean): void {
  */
 const Post = lazy(() =>
   import('./scene/Post.tsx').then((module) => ({ default: module.Post })),
+);
+
+/** `?stats=1`'s panel, lazily too (D272): `stats.js` is a debugging aid, not the arena's. */
+const StatsOverlay = lazy(() =>
+  import('./StatsOverlay.tsx').then((module) => ({ default: module.StatsOverlay })),
 );
 
 /** The scene graph. Everything below `<Canvas>` and nothing above it. */
@@ -1710,9 +1660,8 @@ export default function Arena({
          * **p95 of the frame interval**, which is what §9.4's gate measures and
          * what drei's smoothed fps average could not see (see {@link GOVERNOR}).
          *
-         * `<AdaptiveDpr>` is the second half and is unchanged: it drops the
-         * resolution further while the user is actively orbiting and restores
-         * it when they stop.
+         * drei's `<AdaptiveDpr>` was mounted as the second half and never acted;
+         * it is gone (D272).
          */}
         {/* A pinned `?dpr=` is the user's answer and the ladder does not argue. */}
         {pinnedDpr === null && (
@@ -1733,19 +1682,14 @@ export default function Arena({
             }}
           />
         )}
-        {/* **Dormant in this configuration, and kept so the next reader knows
-            it is.** §9.2 rule 9 names `<AdaptiveDpr>` as the second half of the
-            ladder — it lowers the resolution while the user drags and restores
-            it when they stop. It acts on `performance.current`, which only ever
-            moves when something calls `regress()`, and the only thing here that
-            would is drei's `<OrbitControls regress>` — a prop this file does not
-            pass. So it runs its effect once at mount and never again. It is left
-            in place because it is harmless and because the plan asks for it; the
-            trap it hides is that it writes `current * viewport.initialDpr`, i.e.
-            the resolution the canvas STARTED at, so turning `regress` on would
-            make it undo a governor decision on every mouse-up. Turn one on and
-            the other off. */}
-        <AdaptiveDpr />
+        {/* **No `<AdaptiveDpr />`** (the GPU pass, D272, closing M7 follow-up 6).
+            §9.2 rule 9 named drei's as the ladder's second half; mounted here it was
+            dormant — it acts on `performance.current`, which only drei's
+            `<OrbitControls regress>` moves, a prop this file does not pass — and its
+            one live line was a trap: it writes `current × viewport.initialDpr`, the
+            resolution the canvas STARTED at, so turning `regress` on would have
+            undone every governor decision on a mouse-up. The governor above is the
+            ladder. */}
         {/* The standee's legibility floor measures on this canvas (D261, fix pass 2). */}
         <CanvasSizeReport onSize={onCanvasSize} />
         <Scene
@@ -1805,7 +1749,11 @@ export default function Arena({
             <Post onMount={primeForComposer} bloom={bloomOn} ink={inkPass} />
           </Suspense>
         )}
-        {showStats && <Stats />}
+        {showStats && (
+          <Suspense fallback={null}>
+            <StatsOverlay />
+          </Suspense>
+        )}
       </Canvas>
 
       {/* The DOM sibling layer (§2.1 rule 2): `pointer-events: none` on the

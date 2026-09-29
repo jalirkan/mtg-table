@@ -642,6 +642,9 @@ export function instantiateFigure(model: LoadedModel, options: InstantiateOption
     if ((mesh as unknown as { isMesh?: boolean }).isMesh === true) meshes.push(mesh);
   });
 
+  // The GPU pass (D271): the skeleton is never drawn, so the renderer's walk skips it.
+  hideBoneTrees(clone);
+
   // The mixer is built **by hand** and advanced from `CueRunner`'s single
   // `useFrame`. drei's `useAnimations` registers its own `useFrame` per creature
   // (`mixer.update(delta)`, measured in `@react-three/drei@9.122.0`), which
@@ -649,6 +652,41 @@ export function instantiateFigure(model: LoadedModel, options: InstantiateOption
   // §9.2's "one `useFrame`, and it is in `CueRunner.tsx`".
   const mixer = new THREE.AnimationMixer(clone);
   return { object, meshes, mixer };
+}
+
+/**
+ * **A figure's bones are never drawn, so the renderer need not walk them** (the
+ * GPU pass, D271).
+ *
+ * three's render walks the whole scene graph every frame to find what to draw
+ * (`projectObject`), and stops at an object whose `visible` is false. A body on
+ * the Universal Animation Library's rig is 65 bones, so the bench frame's twelve
+ * skinned bodies put 618 bones in that walk — 71% of the 871 objects it visited,
+ * none of them drawable; the CPU profile gave `projectObject` 7.5% of the main
+ * thread. Visibility is a DRAW flag and nothing else: the skinning reads each
+ * bone's `matrixWorld`, which `updateMatrixWorld` computes whatever `visible` says,
+ * and the raycaster, `Box3.setFromObject` and the prop field's joint reads ignore
+ * it. So the root of each bone tree is hidden — **unless something drawable hangs
+ * under it** (a mesh parented to a bone, which no committed body has and a
+ * personal model could), whose tree stays walked and drawn as before.
+ *
+ * Returns the number of trees hidden. Called at instantiation, once per clone.
+ */
+export function hideBoneTrees(object: THREE.Object3D): number {
+  let hidden = 0;
+  object.traverse((node) => {
+    if ((node as THREE.Bone).isBone !== true) return;
+    if ((node.parent as THREE.Bone | null)?.isBone === true) return;
+    let drawable = false;
+    node.traverse((child) => {
+      const c = child as { isMesh?: boolean; isLine?: boolean; isPoints?: boolean; isSprite?: boolean };
+      if (c.isMesh === true || c.isLine === true || c.isPoints === true || c.isSprite === true) drawable = true;
+    });
+    if (drawable) return;
+    node.visible = false;
+    hidden += 1;
+  });
+  return hidden;
 }
 
 /**

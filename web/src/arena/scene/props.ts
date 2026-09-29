@@ -82,6 +82,8 @@ import { PROP_LOOK, applyPropLook, makePropMaterial, type PropLook, type PropMat
 import { COSTUME_ATTRIBUTE } from './figureMaterial.ts';
 import type { MaterialLook } from '../look.ts';
 import { baseName, instantiateFigure, sampleClipInto, type LoadedModel, type ModelLibrary } from './models.ts';
+import { writeColourAt, writeMatrixAt, writeScalarAt } from './instanceWrite.ts';
+import { refreshWorld, worldChainOf } from './worldChain.ts';
 
 export { baseName };
 
@@ -1383,6 +1385,15 @@ interface KindMesh {
   material: PropMaterial;
   /** Instances written this frame. */
   count: number;
+  /**
+   * The GPU pass (D271): whether this frame wrote a matrix, a colour or an
+   * opacity its buffer did not already hold — {@link commitKind} flags a buffer
+   * for upload only then. A prop's colour and opacity rarely move, and every kind
+   * re-sent both every frame.
+   */
+  matrixDirty: boolean;
+  colourDirty: boolean;
+  opacityDirty: boolean;
 }
 
 const MODE_JOINT = 0;
@@ -1495,9 +1506,16 @@ export class PropField {
   private readonly list: KindMesh[] = [];
   private readonly bindings: Binding[] = [];
   private bound = 0;
-  /** The rig roots a joint prop reads this frame — refreshed once each before reading. */
+  /** The rig roots a joint prop reads this frame. */
   private readonly roots: THREE.Object3D[] = [];
   private rootCount = 0;
+  /**
+   * **The nodes whose world matrices the frame loop refreshes before reading**
+   * (D271): each rig root and every node on the chain from it to a joint a binding
+   * follows, parents first — built at commit ({@link worldChainOf}), walked by
+   * index in {@link bind}. The rest of each rig is the renderer's pass.
+   */
+  private readonly fresh: THREE.Object3D[] = [];
   private readonly binds = new Map<string, JointBinds>();
   /**
    * Slice 4: per model and pose (`id|clip|phase`), each joint's matrix in THAT
@@ -1592,7 +1610,7 @@ export class PropField {
     mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(PROP_CAPACITY * 3), 3);
     mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    const entry: KindMesh = { kind, mesh, opacity, material, count: 0 };
+    const entry: KindMesh = { kind, mesh, opacity, material, count: 0, matrixDirty: false, colourDirty: false, opacityDirty: false };
     applyPropLook(material, this.look);
     this.kinds.set(key, entry);
     this.list.push(entry);
@@ -1684,6 +1702,21 @@ export class PropField {
     }
     for (let i = n; i < this.bound; i++) this.clear(this.bindings[i]!);
     this.bound = n;
+    this.chainFresh();
+  }
+
+  /**
+   * Commit time (D271): the chains the frame loop refreshes — every noted root,
+   * and the path from it to each joint a binding follows (`joint`, `jointB`).
+   */
+  private chainFresh(): void {
+    const reads: THREE.Object3D[] = [];
+    for (let i = 0; i < this.bound; i++) {
+      const b = this.bindings[i]!;
+      if (b.joint !== null) reads.push(b.joint);
+      if (b.jointB !== null) reads.push(b.jointB);
+    }
+    worldChainOf(this.roots.slice(0, this.rootCount), reads, this.fresh);
   }
 
   /** One pose's props → bindings from `n`; returns the next free index. Commit time only. */
@@ -1871,8 +1904,12 @@ export class PropField {
     const clock = this.clock;
     const list = this.list;
     for (let k = 0; k < list.length; k++) list[k]!.count = 0;
-    // The rigs a joint prop reads: their world matrices, fresh for THIS frame's pose.
-    for (let r = 0; r < this.rootCount; r++) this.roots[r]!.updateMatrixWorld(true);
+    // The joints a prop reads: their world matrices, fresh for THIS frame's pose —
+    // each chain from a rig's root to a joint a binding follows, parents first, and
+    // nothing else of the rig (D271: the whole rig was refreshed here and again by
+    // the renderer's own pass moments later).
+    const fresh = this.fresh;
+    for (let r = 0; r < fresh.length; r++) refreshWorld(fresh[r]!);
 
     let drawn = 0;
     for (let i = 0; i < this.bound; i++) {
@@ -1978,12 +2015,13 @@ export class PropField {
       }
 
       const slot = target.count;
-      target.mesh.setMatrixAt(slot, WORLD);
+      // Written where they changed, and the kind remembers whether any did (D271).
+      if (writeMatrixAt(target.mesh.instanceMatrix.array as Float32Array, slot, WORLD)) target.matrixDirty = true;
       COLOUR.copy(b.colour);
       if (pose.frozen) COLOUR.lerp(FREEZE_WASH, FREEZE_MIX);
       if (level !== 1) COLOUR.multiplyScalar(level);
-      target.mesh.setColorAt(slot, COLOUR);
-      target.opacity.setX(slot, opacity);
+      if (writeColourAt(target.mesh.instanceColor!.array as Float32Array, slot, COLOUR)) target.colourDirty = true;
+      if (writeScalarAt(target.opacity.array as Float32Array, slot, opacity)) target.opacityDirty = true;
       target.count = slot + 1;
       drawn += 1;
     }
@@ -2030,6 +2068,7 @@ export class PropField {
     for (let i = 0; i < this.bound; i++) this.clear(this.bindings[i]!);
     this.bound = 0;
     this.rootCount = 0;
+    this.fresh.length = 0;
   }
 }
 
@@ -2046,13 +2085,20 @@ function anchorMatrix(anchor: PropAnchor, into: THREE.Matrix4): THREE.Matrix4 {
   return into.compose(P.set(anchor.at[0], anchor.at[1], anchor.at[2]), Q, S);
 }
 
-/** An empty kind is not drawn at all: `visible` false costs the renderer nothing. */
+/**
+ * An empty kind is not drawn at all: `visible` false costs the renderer nothing.
+ * A drawn kind's buffers are flagged for upload only where this frame changed them
+ * (D271): what three holds is the array as of its last flagged write, and every
+ * write that changes a value flags it, so what is drawn is what the array says.
+ */
 function commitKind(entry: KindMesh): void {
   const mesh = entry.mesh;
   mesh.count = entry.count;
   mesh.visible = entry.count > 0;
-  if (entry.count === 0) return;
-  mesh.instanceMatrix.needsUpdate = true;
-  if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
-  entry.opacity.needsUpdate = true;
+  if (entry.matrixDirty) mesh.instanceMatrix.needsUpdate = true;
+  if (entry.colourDirty && mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
+  if (entry.opacityDirty) entry.opacity.needsUpdate = true;
+  entry.matrixDirty = false;
+  entry.colourDirty = false;
+  entry.opacityDirty = false;
 }

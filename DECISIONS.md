@@ -11409,3 +11409,213 @@ same card — the second surface adds no reveal path.
 - **A standee for the stack's ghost only when it resolves.** A creature spell on
   the stack is face up and named — the ghost stands as a translucent standee, as
   a personal model's ghost does.
+
+---
+
+## D270 — SwiftShader cannot meet §9.4's p95 at the arena's floor: its number is the software rasteriser's floor, reported and never gated, and §9.4 is graded on the real GPU
+
+*Branch `gpu-pass`; the lane's reserved range D270–D274.*
+
+**2026-09-29** (`docs/evidence/gpu-pass.md` §3, §6)
+
+**Decision.**
+
+1. **Where the floor is, named.** Report 09 §9.4's gate is p95 ≤ 20 ms. Under
+   SwiftShader (headless Chromium, `ANGLE (Google, Vulkan 1.3.0 (SwiftShader
+   Device (Subzero)))`) the arena's lowest rung — render dpr 0.6, bloom and the
+   ink off, what the DPR governor settles on — reads **p50 15.7–19.4 ms and p95
+   33.3–34.6 ms at the bench frame** (`g1`@316), and p95 31.7–53.0 ms at the
+   villain tables (`villain-masters-of-evil-33`, `villain-wakanda-232`,
+   `villain-doom-248` near their most crowded frames), on every run of the base
+   tree and of this lane's. It fails §9.4 at every benched frame. It passes only
+   below the floor: `g1`@316 at dpr 0.45 read p95 16.9 ms, and the villain tables
+   did not pass even there. The same frames on the **GTX 1080** (ANGLE on OpenGL)
+   read p95 0.6–8.7 ms, bloom on or off, at render dpr 1 — inside §9.4 by a factor
+   of two at worst.
+2. **What the floor is made of**, so the next lane stops re-discovering it. The
+   frame's WebGL work at the floor — 1152 × 563 drawing buffer, 4× MSAA, synced by
+   a one-pixel `readPixels` — is **about 15 ms** (14.1–17.4 over eight runs), and
+   the one full-table quad of the comic stage (its ground's painted light) is
+   3.8–4.3 ms of it, the 39 card planes 2–3, the ten figures about 2.3; about 6 ms
+   of it does not shrink with the resolution (the vertex work of ~26,000
+   triangles and 83 draw calls), and the page's compositing adds 2–4 ms to the
+   frame interval (§3.3's dpr sweep). None of it is the frame loop's JavaScript:
+   the pass's CPU fixes (D271) moved SwiftShader's numbers by nothing measurable.
+3. **Its p95 is a pacing statistic.** SwiftShader presents on a ~17 ms beat; a
+   frame that misses it reads ~34 ms and the one after it ~0.5 ms, so p95 is the
+   rate of missed beats, not the cost of a slow frame. At the floor 5–10% of
+   frames miss, and p95 reads 34 ms whenever more than one in twenty does.
+4. **No rung for it.** The DPR floor (0.6, §9.2 rule 9) is a legibility line —
+   below it the card art is mush — and dropping resolution further to pass §9.4 on
+   a software rasteriser would be lowering a line to pass. The governor keeps its
+   ladder (1 → 0.75 → 0.6 → the composer off) and reaches the end of it sooner
+   (D272). `tools/arena-bench.mjs` keeps printing SwiftShader's FAIL, and every
+   performance claim names its rasteriser (Tier 2's rule); a SwiftShader FAIL at
+   the floor is this decision, not a regression. A regression on SwiftShader is a
+   higher p50 at the floor than §3's table, read in interleaved pairs.
+
+**Rationale.** Report 09 took SwiftShader as "a hard lower bound and a fair proxy
+for weak integrated graphics". Measured, it is a lower bound but not a proxy that
+§9.4 can grade: its cost is fill and vertex work done on the CPU, its p95 is
+quantised by its own present beat, and the tree's every frame has failed there
+since the comic look (look, motion, bodies, the villain lanes and this pass all
+measured it). The number the owner's machine will see is a real GPU's, and the
+GTX 1080's is two to thirty times inside the gate. An integrated GPU (report 13
+§13 question 3; Lane LOOK follow-up 21) is the machine between the two and is
+still unmeasured.
+
+**Rejected.**
+
+- **A rung below 0.6** (0.5 or 0.45) for a machine still late at the floor with
+  the composer off: it passes §9.4 at `g1`@316 and not at the villain tables, and
+  it is the art the floor exists to protect. If the owner wants the arena usable
+  on a machine with no GPU acceleration at all, that is a question (PLAN.md), not a
+  rung.
+- **Dropping the comic stage's painted ground at the floor** (3.8 ms of the 15):
+  it moved SwiftShader's p50 by 1–2 ms and its p95 by nothing (the missed beats
+  remained) — and it is the look.
+- **Changing §9.4's statistic** to one that folds a missed beat and its catch-up
+  frame into two. The bench now prints a line of drawn frames only beside the
+  old one (`tools/arena-bench.mjs`'s header, the evidence's §1); the gate's
+  number stays what it was, so old numbers still compare.
+
+---
+
+## D271 — The frame loop pays for nothing it did not change: no colour string parsed, no rig refreshed twice, no bone walked to be skipped, no empty kind set up, no unchanged buffer re-sent
+
+*Branch `gpu-pass`; the lane's reserved range D270–D274.*
+
+**2026-09-29** (`docs/evidence/gpu-pass.md` §4)
+
+**Decision.** Five costs the CPU profile and a per-frame census of the pumped
+frame loop found, each removed without a pixel changing:
+
+1. **No `Color.set('<string>')` in the frame loop.** `CueRunner`'s `applyOffsets`
+   parsed every card's resting colour and `TileField.bind` every land's tint from
+   a string every frame — two regular expressions a call, 57–99 calls a frame —
+   against M7 convention 5's rule, in two bodies no scan read. Both use
+   `parsedColour`. `liveness.test.ts` holds every frame-loop body it scans to "a
+   colour arrives parsed", with spliced controls, and puts both bodies (and
+   `applyRigOffset`, the `Map.forEach` walk that replaced a `for…of` iterator, and
+   `TileField`'s own walk off a per-snapshot array) in the allocation scan.
+2. **The prop field refreshes only the joints it reads** (`scene/worldChain.ts`).
+   It called `updateMatrixWorld(true)` on every rig a prop rides — about 68 nodes
+   a body, recomputed again by the renderer's own pass moments later. It now
+   refreshes the chains from each rig's root to the joints its bindings follow,
+   parents first, in a list built at commit: 591 of 2,302 nodes over the
+   library's 38 bodies, with `Object3D.updateMatrixWorld`'s own arithmetic, so
+   every matrix a prop reads is the one it was (`gpu-pass.test.ts` compares them
+   on every body, with a chain missing a link as the control).
+3. **A figure's bone trees are hidden from the render walk** (`models.ts`'s
+   `hideBoneTrees`, at instantiation). three's `projectObject` stops at an
+   invisible object, and `visible` is a draw flag only — skinning reads
+   `matrixWorld`, which `updateMatrixWorld` computes regardless — so 618 bones of
+   871 objects at the bench frame left the walk. A tree with anything drawable
+   under a bone stays walked (the control).
+4. **An empty tile kind is not drawn.** `TileField` wrote `count` and never
+   `visible`, so a kind with no land on the table (the slab at `g1`@316) was set
+   up by the renderer every frame — program, uniforms, vertex array — to draw no
+   instance. It is hidden, and primed at mount like every parked mesh, so its
+   program still compiles there. (three issues no draw call for zero instances, so
+   `gl.info` never counted it: this is setup, not a call.)
+5. **A buffer is flagged for upload only when a value in it changed**
+   (`scene/instanceWrite.ts`: `writeMatrixAt`, `writeColourAt`, `writeScalarAt` —
+   the value as a 32-bit float, bit for bit what three's setters store — used by
+   the tile field and the prop field; the status strip flags its anchors only
+   when one moved). 70 `bufferSubData` a frame at the bench frame, about 40 of
+   them the bytes the GPU already held, are now 31.
+
+Measured on the pumped frame loop (DEV server, the GTX 1080, 240 frames of a
+batch): `Object3D.updateMatrix` calls a frame 1,417 → 984 at `g1`@316, 2,020 →
+1,337 at the Masters of Evil's combat, 1,955 → 1,327 at Wakanda's crowded table;
+`Color.setStyle` 57–99 → 0; `bufferSubData` 70–78 → 20–32; draw calls, triangles,
+programs and bone-texture uploads unchanged; `CueRunner`'s loop 19.2% → 12.7% of
+the main thread over a death batch. Screenshots at the bench frame and four
+others, before and after, are identical byte for byte on SwiftShader and with
+bloom on; on the GTX 1080 with bloom off they differ by at most one level in 16–26
+pixels between any two runs of one build, the GPU's own noise.
+
+**Rationale.** Report 09 §9.1 gives the frame loop 2 ms of CPU and report 13 §8.2
+3 ms; the table is well inside both on this machine, but every one of these was
+work thrown away, and the laptop the arena is for has a slower CPU and a battery.
+None of them could be seen in the GTX 1080's frame rate in a machine shared with
+three other lanes' benches, so each is held by a count a test can read — the
+census, the scan, the chain comparison, the bucket's `visible` — rather than by a
+millisecond.
+
+**Rejected.**
+
+- **Skipping unchanged bone textures** (41% of the twelve uploads a frame were
+  unchanged): three uploads a skeleton's texture from inside its render, and
+  reaching it means patching three.
+- **Figures in the opaque pass** (sorted by program, early depth): 84 of 90 draws
+  are transparent and the switches follow depth order, but it changes the draw
+  order of overlapping transparent things — pixels — and the ink's mark rides the
+  figures' blend state.
+- **`matrixAutoUpdate = false` on parked meshes and hit proxies.** fiber writes
+  their transforms through props; turning the matrix off makes each one a place
+  to forget an `updateMatrix`.
+
+---
+
+## D272 — The DPR governor takes a decided verdict on the frame that decides it and counts its settle in time; its window is pure (`governor.ts`); the dormant `<AdaptiveDpr />` goes and the stats panel is lazy
+
+*Branch `gpu-pass`; the lane's reserved range D270–D274.*
+
+**2026-09-29** (`docs/evidence/gpu-pass.md` §5)
+
+**Decision.**
+
+1. **An early verdict.** The governor stepped when more than half of a
+   16-frame window was late. Once more than eight frames are late, the window's
+   answer at sixteen is "down" whatever the next frames are, so it now steps on
+   that frame (`governor.ts`'s `governorFrame`). The verdict is the full window's
+   — on bursts of 30, 80 and 150 ms uploads of every length from 1 to 24 frames on
+   a fast machine it steps exactly when the full window steps, never later, and
+   never on a burst the full window lets pass (`perf.test.ts`) — only sooner.
+2. **The settle is counted in time as well.** Five frames are discarded after a
+   step (the drawing buffer's reallocation); it now ends at five, or at two once
+   they add up to 85 ms. At sixty frames a second that is the five, as before.
+3. **Measured, SwiftShader at `g1`@316 with bloom on by default:** the ladder
+   (1 → 0.75 → 0.6 → the composer off) took 7.6 and 9.2 s and 57 frames of
+   100–200 ms from the scrub (and once was not done in 14 s) on the base tree, and
+   **4.6–7.2 s and 29–32 frames** on this lane's, interleaved, at loads of 5–11;
+   a model of the same machine (`perf.test.ts`) walks it in 3.9 s against 7.2.
+   The bench's own default line (bloom on, governed) read p50 111–116 ms at all
+   five benched frames on the base tree, still descending when its sample ended,
+   and 15.7–19.7 ms on this lane's, settled. On the GTX 1080 it never steps. At
+   the refresh rate no decision moves.
+4. **The window is pure** — `arena/governor.ts`, a fixed ring written in place (in
+   the allocation scan), driven by `Arena.tsx`'s `DprGovernor` — so a test can run
+   the ladder against a machine's frame times. It lives apart from `perf.ts`
+   because `perf.ts` rides the shared `arena-scene` chunk and only the arena
+   governs.
+5. **`<AdaptiveDpr />` is removed** (M7 follow-up 6): mounted, it never acted —
+   `performance.current` moves only for drei's `<OrbitControls regress>`, which
+   the arena does not pass — and its one live line wrote `current ×
+   viewport.initialDpr`, the resolution the canvas started at. **`?stats=1`'s
+   panel is lazy** (`arena/StatsOverlay.tsx`, reached through `lazy(() =>
+   import(...))` as `Post.tsx` is): `stats.js` was in the arena chunk for every
+   viewer.
+
+**Rationale.** "Degrade, don't stutter" (§9.2 rule 9) was spending five to nine
+seconds stuttering on the slowest machine before it degraded, because a window
+counted in frames is a window counted in seconds when frames are slow. Taking
+the decided verdict early changes no outcome anywhere, which is why it is the
+change made; a window counted in time was the first cut, and it stepped a fast
+machine down on four slow texture uploads (the tests keep it as the control — on
+a vsync-locked display, where the governor cannot climb, that is for the rest of
+the session). Items 4 and 5 keep the pass's own code off the arena's page: with
+them the arena's two chunks together are 0.27 kB gzip smaller than before the
+pass (§7).
+
+**Rejected.**
+
+- **A window counted in time** ("enough" after a quarter-second, or half a
+  second, of late frames): faster on the slow machine, and it takes a burst of
+  long uploads on a fast one for a slow machine — the measured first cut stepped
+  the GTX 1080 to 0.75 at three of ten benches.
+- **Dropping the composer first** (bloom is 95 of the 115 ms a SwiftShader frame
+  costs at the floor with it on): the order of the rungs is the look's, and user
+  decision 6 made bloom the default; the governor keeps the order and walks it
+  faster.

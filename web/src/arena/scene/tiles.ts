@@ -9,8 +9,8 @@
  * Every land on the table is a shallow, procedurally extruded **rounded
  * rectangle** — not a hex tile — sized to the card footprint plus a margin, with
  * the card lying on top of it. All the tiles of one kind are one instance buffer,
- * so the whole terrain of a board costs **4 draw calls** however many lands it
- * has (21 in report 13 §2's frame, 25 at the corpus's busiest): a plateau, the
+ * so the whole terrain of a board costs **at most 4 draw calls** — one per kind
+ * on the table — however many lands it has (21 in report 13 §2's frame, 25 at the corpus's busiest): a plateau, the
  * water, the neutral slab, and one rim mesh for the two-tone (*Thriving*) lands.
  *
  * ---------------------------------------------------------------------------
@@ -38,10 +38,12 @@
 
 import * as THREE from 'three';
 
-import { MAX_TILES, type TileLayout } from '../figures/tiles.ts';
+import { MAX_TILES, type TileLayout, type TilePose } from '../figures/tiles.ts';
 import { TILE_KINDS, type TileKind } from '../figures/types.ts';
 import { CARD_W } from '../layout.ts';
+import { parsedColour } from './colourCache.ts';
 import type { OffsetSource } from './discs.ts';
+import { writeColourAt, writeMatrixAt } from './instanceWrite.ts';
 
 /**
  * The instance buffers hold as many tiles as `tilePose` lays — `MAX_TILES`, 32
@@ -218,6 +220,14 @@ interface Bucket {
   kind: TileKind | 'rim';
   mesh: THREE.InstancedMesh;
   count: number;
+  /**
+   * The GPU pass (D271): whether this frame wrote a value its buffers did not
+   * already hold. A frame that changed nothing uploads nothing — the buffer three
+   * holds is the array as of its last flagged write, and every write that changes
+   * a value flags it, so what is drawn is always what the array says.
+   */
+  matrixDirty: boolean;
+  colourDirty: boolean;
 }
 
 export class TileField {
@@ -225,6 +235,13 @@ export class TileField {
   readonly capacity: number;
   readonly #buckets: Bucket[] = [];
   #water: WaterUniforms = { uTime: { value: 0 } };
+  /**
+   * The layout's tiles, copied into a reused array once per snapshot — a `Map`
+   * iterator is an allocation, and `bind` runs sixty times a second (the disc
+   * field's `refill`, for the same reason).
+   */
+  #listOf: TileLayout | null = null;
+  readonly #list: TilePose[] = [];
 
   constructor(capacity = TILE_CAPACITY) {
     this.capacity = capacity;
@@ -263,7 +280,7 @@ export class TileField {
     mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.group.add(mesh);
-    this.#buckets.push({ kind, mesh, count: 0 });
+    this.#buckets.push({ kind, mesh, count: 0, matrixDirty: false, colourDirty: false });
   }
 
   /**
@@ -291,10 +308,15 @@ export class TileField {
     // 2026-09-26 in headless Chromium: `tileField.counts()` returned `{}` and
     // `gl.info.render.calls` was T2's 59 rather than T4's 62.
     if (this.#buckets.length === 0) this.#build();
+    if (tiles !== this.#listOf) this.#refill(tiles);
     this.#water.uTime.value += dt;
-    for (const bucket of this.#buckets) bucket.count = 0;
+    const buckets = this.#buckets;
+    for (let k = 0; k < buckets.length; k++) buckets[k]!.count = 0;
+    const rim = buckets[buckets.length - 1]!;
 
-    for (const tile of tiles.values()) {
+    const list = this.#list;
+    for (let t = 0; t < list.length; t++) {
+      const tile = list[t]!;
       const bucket = this.#bucketFor(tile.kind);
       if (bucket === null || bucket.count >= this.capacity) continue;
       const offset = offsets.offsetOf(tile.cardId);
@@ -307,43 +329,75 @@ export class TileField {
       QUATERNION.setFromEuler(EULER);
       SCALE.set(1, 1, 1);
       MATRIX.compose(POSITION, QUATERNION, SCALE);
-      bucket.mesh.setMatrixAt(bucket.count, MATRIX);
+      if (writeMatrixAt(bucket.mesh.instanceMatrix.array as Float32Array, bucket.count, MATRIX)) bucket.matrixDirty = true;
 
-      COLOUR.set(tile.tint);
+      // A parsed colour from the cache, never `Color.set('#…')` in the frame loop
+      // (M7 convention 5): that parses the string with two regular expressions,
+      // per tile, per frame (the GPU pass measured it, D271).
+      COLOUR.copy(parsedColour(tile.tint));
       // **Tapped is a pose** (§5.3): the tile dims, so a board scrubbed to
       // mid-turn shows exactly the lands that are spent, with no cue history.
       if (tile.tapped) COLOUR.multiplyScalar(TAPPED_DIM);
       if (offset.glow > 0 && offset.glowColour !== null) {
-        COLOUR.lerp(GLOW.set(offset.glowColour), Math.min(0.55, offset.glow * 0.5));
+        COLOUR.lerp(GLOW.copy(parsedColour(offset.glowColour)), Math.min(0.55, offset.glow * 0.5));
         COLOUR.multiplyScalar(1 + Math.min(0.6, offset.glow * 0.45));
       }
-      bucket.mesh.setColorAt(bucket.count, COLOUR);
+      if (writeColourAt(bucket.mesh.instanceColor!.array as Float32Array, bucket.count, COLOUR)) bucket.colourDirty = true;
       bucket.count += 1;
 
       if (tile.rim === null) continue;
-      const rim = this.#buckets[this.#buckets.length - 1]!;
       if (rim.count >= this.capacity) continue;
       // A hair lower, so the tile sits ON the band rather than z-fighting it.
       POSITION.y -= 0.0012;
       SCALE.set(RIM_SCALE_X, 1, RIM_SCALE_Z);
       MATRIX.compose(POSITION, QUATERNION, SCALE);
-      rim.mesh.setMatrixAt(rim.count, MATRIX);
-      COLOUR.set(tile.rim);
+      if (writeMatrixAt(rim.mesh.instanceMatrix.array as Float32Array, rim.count, MATRIX)) rim.matrixDirty = true;
+      COLOUR.copy(parsedColour(tile.rim));
       if (tile.tapped) COLOUR.multiplyScalar(TAPPED_DIM);
-      rim.mesh.setColorAt(rim.count, COLOUR);
+      if (writeColourAt(rim.mesh.instanceColor!.array as Float32Array, rim.count, COLOUR)) rim.colourDirty = true;
       rim.count += 1;
     }
 
-    for (const bucket of this.#buckets) {
-      bucket.mesh.count = bucket.count;
-      bucket.mesh.instanceMatrix.needsUpdate = true;
-      if (bucket.mesh.instanceColor !== null) bucket.mesh.instanceColor.needsUpdate = true;
+    for (let k = 0; k < buckets.length; k++) {
+      const bucket = buckets[k]!;
+      const mesh = bucket.mesh;
+      mesh.count = bucket.count;
+      // **An empty kind is not drawn** (D271): an `InstancedMesh` at count 0 is
+      // still set up every frame — three binds its program, uploads its uniforms
+      // and binds its vertex array, then issues no draw (so `gl.info` never
+      // counted it) — and `g1`@316, which has no slab land, paid for one every
+      // frame. `prime` shows every bucket once at mount, so a kind's program still
+      // compiles there.
+      mesh.visible = bucket.count > 0;
+      // …and a frame that moved nothing uploads nothing (D271): the buffers are
+      // flagged only when a value this frame wrote differs from the one they hold.
+      if (bucket.matrixDirty) mesh.instanceMatrix.needsUpdate = true;
+      if (bucket.colourDirty) mesh.instanceColor!.needsUpdate = true;
+      bucket.matrixDirty = false;
+      bucket.colourDirty = false;
     }
   }
 
+  /** Once per snapshot, never per frame: the layout's tiles into the reused array. */
+  #refill(tiles: TileLayout): void {
+    this.#listOf = tiles;
+    this.#list.length = 0;
+    for (const tile of tiles.values()) this.#list.push(tile);
+  }
+
+  /**
+   * T7 — draw every bucket once so its program compiles at mount rather than on
+   * the first land of its kind (see `EffectPool.prime`). `count` is untouched, so
+   * an empty bucket draws nothing; the next `bind()` hides it again (D271).
+   */
+  prime(): void {
+    for (let k = 0; k < this.#buckets.length; k++) this.#buckets[k]!.mesh.visible = true;
+  }
+
   #bucketFor(kind: TileKind): Bucket | null {
-    for (const bucket of this.#buckets) {
-      if (bucket.kind === kind) return bucket;
+    const buckets = this.#buckets;
+    for (let k = 0; k < buckets.length; k++) {
+      if (buckets[k]!.kind === kind) return buckets[k]!;
     }
     return null;
   }
@@ -361,6 +415,8 @@ export class TileField {
       (bucket.mesh.material as THREE.Material).dispose();
     }
     this.#buckets.length = 0;
+    this.#listOf = null;
+    this.#list.length = 0;
     this.group.clear();
   }
 }

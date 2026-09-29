@@ -289,3 +289,16 @@ canvases, the program's case for the reads that name their level, and the hostil
 sweep's lookup with no canvas; liveness's standee clause grew the arena's canvas,
 and `personal.test.ts`'s build grep the source maps. Inside `check-all.sh`:
 **1,216 / 1,205 pass / 0 fail / 11 skipped** plus 157 vitest.
+
+### The GPU pass (D270–D272), on `e2c337c`
+
+**1,193 `node --test` + 157 vitest (9 files)** standalone (1,184 pass, 0 fail, 9
+skipped), from `e2c337c`'s **1,184
++ 157**: `gpu-pass.test.ts`'s five (the empty
+tile kind, the unchanged frame's uploads, the instance writers, the prop field's
+joint chains over the library, the bone trees hidden), `perf.test.ts`'s three
+(the governor walking a model of SwiftShader, the early verdict against bursts
+and at the refresh rate, the first cut as the control) and one liveness clause
+(the pass's bodies in the allocation scan; no frame-loop body parses a colour
+string). Inside `check-all.sh`: **1,208 / 1,197 pass
+/ 0 fail / 11 skipped** plus 157 vitest, twice.

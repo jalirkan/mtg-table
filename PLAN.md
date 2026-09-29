@@ -14,17 +14,19 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 334 items still open across 35 follow-up lists** — 308
+**The index below lists 341 items still open across 36 follow-up lists** — 315
 open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
-its own rows on 2026-09-29 by the portrait standee lane, which added seven (35–41
-of the personal tier's list; its fix pass closed 38 and added 42) to the arena caption lane's count at its rebase onto
+its own rows on 2026-09-29 by the GPU pass at its rebase onto the portrait
+standee (the GPU pass closed M7 Tier 1's 6 and Lane LOOK's 16 and added a list of
+nine) over the portrait standee lane's count of 334 across 35, which added seven
+(35–41 of the personal tier's list; its fix pass closed 38 and added 42) to the arena caption lane's count at its rebase onto
 the sound cues (it closed the story page's 1, added a list of six, and removed the two rows
 more villain identity's fix pass had left beside their replacements; the sound-cues
 lane had counted 314 across 33, which missed more villain identity's list), where
 the four paragraphs it replaced, one per merging lane, had each counted a
 different tree. Each list's
-own entries say what is closed. **Of the 32 questions only the owner can settle,
-5 are answered** and 27 stand on the default this plan assumes. (Two stale
+own entries say what is closed. **Of the 33 questions only the owner can settle,
+5 are answered** and 28 stand on the default this plan assumes. (Two stale
 paragraphs that counted 393 and 394 items across 32 lists, left here by more
 villain identity's rebase, were removed at the same recount.)
 
@@ -77,7 +79,6 @@ villain identity's rebase, were removed at the same recount.)
 | [M7 Tier 1](#fu-m7) | 3 | open | The dpr governor cannot climb back on a vsync-locked display | — |
 | [M7 Tier 1](#fu-m7) | 4 | open | §10.7's `?cue=<id>` loop route is not built | — |
 | [M7 Tier 1](#fu-m7) | 5 | open | §7.1's `?cues=<url>` override is a documented refusal, not an omission | `web/src/arena/Arena.tsx` |
-| [M7 Tier 1](#fu-m7) | 6 | open | `<AdaptiveDpr />` is mounted and dormant | — |
 | [M7 Tier 1](#fu-m7) | 7 | open | `drawnEntities()` in `web/src/render/picker.ts` was deliberately not extended | `web/src/render/picker.ts` |
 | [M7 Tier 1](#fu-m7) | 8 | open | `COUNTER_LABELS` in `web/src/render/labels.ts` is keyed by the enum-constant spelling | `web/src/render/labels.ts` |
 | [M7 Tier 1](#fu-m7) | 9 | open | There is no canvas equivalent of `render.test.tsx`'s `data-card-name` sweep | `web/test/render.test.tsx` |
@@ -229,7 +230,6 @@ villain identity's rebase, were removed at the same recount.)
 | [Lane LOOK](#fu-look) | 13 | open | Report 15 §4.2's rest — fog, ambient motes, a comic panel border — is not built | — |
 | [Lane LOOK](#fu-look) | 14 | open | The paint input path has no committed user | — |
 | [Lane LOOK](#fu-look) | 15 | open | The spike's `?ink=hull` URLs now draw the post line | — |
-| [Lane LOOK](#fu-look) | 16 | open | Under SwiftShader the governor reaches its floor later with the comic look | `web/src/arena/perf.ts` |
 | [Lane LOOK](#fu-look) | 18 | open | Aliasing | `web/src/arena/scene/Post.tsx` |
 | [Lane LOOK](#fu-look) | 19 | open | The raster's lights are optimistic | — |
 | [Lane LOOK](#fu-look) | 20 | open | The workshop's front view shows the card upside down | — |
@@ -366,6 +366,15 @@ villain identity's rebase, were removed at the same recount.)
 | [Arena caption](#fu-caption) | 4 | open | A live seat's caption has no moment of its own `c2s` frames | `web/src/liveLog.ts` |
 | [Arena caption](#fu-caption) | 5 | open | Below 1280 px the strip covers the right end of a full land rank | `web/src/arena/caption.ts` |
 | [Arena caption](#fu-caption) | 6 | open | The live seat's cost is measured in Node, not in the browser | `web/src/main.tsx` |
+| [GPU pass](#fu-gpu) | 1 | open | The GTX 1080's frame times are from a shared machine; an idle series is owed | `tools/arena-bench.mjs` |
+| [GPU pass](#fu-gpu) | 2 | open | The middle machine — an integrated GPU, a headed browser — is unmeasured (owner question 33) | — |
+| [GPU pass](#fu-gpu) | 3 | open | Unchanged bone palettes are re-uploaded every frame (41%) | `web/src/arena/scene/models.ts` |
+| [GPU pass](#fu-gpu) | 4 | open | Program switches follow depth order: 84 of 90 drawn items are transparent | `web/src/arena/scene/figureMaterial.ts` |
+| [GPU pass](#fu-gpu) | 5 | open | The comic stage's ground is a quarter of SwiftShader's frame | `web/src/arena/scene/Table.tsx` |
+| [GPU pass](#fu-gpu) | 6 | open | `applyFigures` and the `useFrame` body are outside the allocation scan | `web/test/liveness.test.ts` |
+| [GPU pass](#fu-gpu) | 7 | open | The bench's counters depend on where its sample ends | `tools/arena-bench.mjs` |
+| [GPU pass](#fu-gpu) | 8 | open | The frame body's timing is coarsened to 0.1 ms | `tools/arena-bench.mjs` |
+| [GPU pass](#fu-gpu) | 9 | open | `arena-scene` grew +0.76 kB gzip by the pass's own code | `web/vite.config.ts` |
 
 ### Questions only the owner can settle
 
@@ -403,6 +412,7 @@ villain identity's rebase, were removed at the same recount.)
 | [30](#owner-questions) | Keep the art rung on by default? | open — the plan runs on its default |
 | [31](#owner-questions) | Should a person's skin tone follow its card, or stay slice 4's one tone? | open — the plan runs on its default |
 | [32](#owner-questions) | Keep the portrait standee's ink rim, its legibility floor at 30 px on the canvas you draw (a 1280 × 800 window stands about one standee in six), and its small kneel? | open — the plan runs on its default |
+| [33](#owner-questions) | Is a machine with no GPU acceleration (a software rasteriser) a target for the arena? | open — the plan runs on its default |
 
 ---
 
@@ -437,6 +447,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Arena personal polish: one call a dressed figure, and inspect from the table *(off the plan; the personal tier's follow-up 33)* | 1 day | **built, measured, gated and documented** on branch `arena-personal-polish` (2026-09-29), off `main`'s `9998ec5` — prepare packs every paint into one atlas (a repeating paint laid out over its UV tiles) and merges a model into ONE skinned primitive under ONE material; `check.mjs`, the dev route (from the file) and the reader each count one call a figure; the villain file's worst frame with the tier on 130 → 128 calls, the tier never over the tier off on any of its 401 frames; `I` and an inspect chip open the workshop's inspect view on the card under the pointer, face up only (a hostile corpus sweep); **D240–D241**; five follow-ups; *Arena personal polish*, just above *Deferred* |
 | — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
+| — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated and documented** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c` — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; nine follow-ups; *The GPU pass*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -2454,7 +2465,7 @@ what it found, belongs on other lists:
 
 <a id="fu-m7"></a>
 
-### M7 follow-ups — twelve, 2026-09-13
+### M7 follow-ups — twelve, 2026-09-13 (6 closed by the GPU pass)
 
 From the four builders' own "problems" notes and the two verification passes.
 **None of them stops a game or blocks Tier 2**: the milestone's two commands both
@@ -2494,7 +2505,9 @@ specified and not built (4, 5), and the rest are small debts with a stated cost.
    Loading a cue file over the network is a `fetch`, and §2.1 rule 1 says the
    arena never calls one. Written down in `Arena.tsx` and in the README rather
    than left implied.
-6. **`<AdaptiveDpr />` is mounted and dormant.** It acts on
+6. ~~**`<AdaptiveDpr />` is mounted and dormant.**~~ **Closed by the GPU pass
+   (D272, 2026-09-29): removed** — the governor is the ladder, and the trap below
+   went with it. The entry, for the record: It acts on
    `performance.current`, which only moves when something calls `regress()`, and
    the only candidate is drei's `<OrbitControls regress>` — a prop we do not
    pass. It is harmless and the plan asks for it, but its trap is real and is
@@ -6269,7 +6282,7 @@ undo race.
 
 <a id="fu-look"></a>
 
-### Lane LOOK follow-ups — twenty-one, 2026-09-28 (1 and 2 closed by Lane MOTION's merge, 17 by Lane BODIES')
+### Lane LOOK follow-ups — twenty-one, 2026-09-28 (1 and 2 closed by Lane MOTION's merge, 17 by Lane BODIES', 16 by the GPU pass)
 
 Four are edits owed in files this lane does not own (1–4, and 17); four were
 questions (5–8), three of them closed by the verification pass; the rest are
@@ -6319,6 +6332,9 @@ limits of what was measured or built.
    off draws no composer, and the comic look measured 0.6 ms p95 against the
    hologram's 0.6. What remains is the last sentence: a headed browser on the
    user's desktop and the integrated GPU are still unmeasured (follow-up 21).
+   **Re-measured by the GPU pass (2026-09-29, evidence §5.1)**: with bloom off
+   the merged tree mounts no composer at any benched frame (15–16 programs), and
+   bloom on costs the GTX 1080 p95 +0.2 to +1.2 ms over five frames; still closed.
    The first round's text, for the record:
    That is the quiet series: the GPU idle, load 3–5, 4 alternating rounds, 2.0
    against 3.65 ms. All 13 runs of each give +1.7. With bloom off the comic look
@@ -6363,8 +6379,12 @@ limits of what was measured or built.
     be a personal-only Tier 3 one, if any (question 14, **D54**).
 15. **The spike's `?ink=hull` URLs now draw the post line** (the hull is gone);
     report 15's `after-*-hull*.png` pictures are the only record of it.
-16. **Under SwiftShader the governor reaches its floor later with the comic
-    look** (with bloom on; since D146 bloom off has no composer to shed). The composer carries bloom AND the ink, so its frames are slower, each
+16. ~~**Under SwiftShader the governor reaches its floor later with the comic
+    look**~~ **Closed by the GPU pass (D272, 2026-09-29):** a decided verdict is
+    taken on the frame that decides it and the settle counts in time, so the
+    ladder takes 29–32 frames where it took 57 (4.6–7.2 s against 7.6 s, 9.2 s
+    and once not in 14 s; `docs/evidence/gpu-pass.md` §5.3). The entry, for the
+    record: (with bloom on; since D146 bloom off has no composer to shed). The composer carries bloom AND the ink, so its frames are slower, each
     governor window takes longer to fill, and the rung below the floor fired
     inside the 5 s sample in every governed after-run (programs "29 → 32"),
     against two of five before-runs. The floor state it settles into is inside
@@ -7747,6 +7767,9 @@ downloads). `~/forge` and `~/.forge`: unchanged (evidence §17).
 27. **A floor rung that sheds personal models.** On SwiftShader three models cost
     about 2.6 ms at the median (the worst case D197 allows, about 4 ms); the DPR
     governor could drop them to the CC0 figures below its floor, as it drops bloom.
+    (The GPU pass, D270: SwiftShader fails §9.4 at the floor with or without them
+    — `villain-doom-248` dressed reads p95 30.8 ms there, CC0 35.3 — so such a rung
+    would be for a real slow GPU, which nobody has measured.)
 28. **Upload a paint at load.** A personal texture is uploaded at its first draw;
     `gl.initTexture` at load (as `useCardTexture` does for a card) would take a
     first-frame spike off the table (SwiftShader's max reached 66.7 ms once).
@@ -8095,7 +8118,12 @@ fingerprinted before and after and did not change.
 4. **`g1`@316 on SwiftShader is 91 draw calls**, one over report 13 §8.2's line.
    The next layer that wants a call there gives one back first (the on-card disc
    pass folded into the front pass on frames that do not wrap, or the contact
-   shadows drawn with the discs).
+   shadows drawn with the discs). **Re-graded by the GPU pass** (2026-09-29,
+   evidence §2.4): the 91 is the frame the bench's sample ENDS on, not the
+   rasteriser — SwiftShader plays fewer frames in five seconds and stops at
+   @355–356, where the table draws 89 plus a batch's live effects; the GTX 1080
+   stops at @359–365 and reads 87. The static bench frame draws 83–84 on both. The
+   budget item stands: `g1`'s busy frames are at the line.
 5. **The far seat's strips sit ~30 px above the heads**, over the opponent's
    land rank from the table view: the heads lean toward the lens and the anchor
    is over the stand point. Anchoring at the head's rest-pose position (from the
@@ -8491,7 +8519,11 @@ no job: its tests are in the web step.
    D197's scratch tier (six copies of Doom dressing both seats and four creatures
    at `g1`@316) was two-paint models: 90 calls on the GTX 1080, 95 on
    SwiftShader. Each of the six is one call now, so it should read 84 and 89;
-   the lane measured every dressed figure at one call, not that bench.
+   the lane measured every dressed figure at one call, not that bench. (The GPU
+   pass benched the six active models as they dress `villain-doom-248` and `g1`,
+   not the scratch worst case: Doom's table 118–124 calls and 45,898–48,570
+   triangles against 118–124 and 34,242–36,914 undressed, the GTX 1080's p95
+   0.8–1.9 ms; evidence §2.3.)
 2. **Doom's one sheet is the whole 2048² budget, a quarter of it empty**: the
    tunic laid twice is as wide as the sheet, so the hood sits under it and the
    rest is black — 16 MiB of RGBA8 before mipmaps where his two textures were 8.
@@ -8848,6 +8880,108 @@ unchanged again (evidence §12).
    lives. A long human game in the browser, with the strip on, is the case to
    profile (the story page's follow-up 8 asks the same of the page).
 
+## The GPU pass — the whole arena measured, and what it paid for nothing (2026-09-29, D270–D272)
+
+**Status: built, measured, gated and documented** on branch `gpu-pass` (the
+worktree `mtg-table-t2g`, off `main`'s `e2c337c`); the lane's reserved range
+D270–D274, three used. Eight lanes had each measured only themselves on the
+arena's frame loop; this pass benched the whole on SwiftShader and on the GTX
+1080 at the bench frame, `g1`'s busiest combat, the Masters of Evil's and
+Wakanda's crowded tables and the Doom Legion's with the personal tier on and off,
+profiled the frame loop, removed what it paid for nothing, and graded the two
+open performance items. `docs/evidence/gpu-pass.md` is every table (what drew it,
+the dpr, bloom, the tier, the frame); `web/src/arena/CLAUDE.md`'s *The GPU pass*
+holds its four rules; `docs/guides/gpu-day.md` has the numbers the new card is
+compared against.
+
+```bash
+npm --prefix web run build && npm --prefix web run preview -- --port 5182 &
+node tools/arena-bench.mjs --index 316 --gpu gl --no-bloom --json var/b.json --cpu-profile var/b.cpuprofile
+node tools/profile-top.mjs var/b.cpuprofile        # the top self-time functions, named through the source maps
+```
+
+1. **The frame loop pays for nothing it did not change** (D271): no colour string
+   parsed per card and per land (`Color.setStyle` 57–99 a frame → 0); the prop
+   field refreshes only the joint chains it reads, not whole rigs the renderer
+   refreshes again (`updateMatrix` 1,417 → 984 a frame at the bench frame, 2,020
+   → 1,337 at the Masters' combat); a figure's 65 bones are out of the render walk
+   (618 of the bench frame's 871 objects); an empty tile kind is not set up; a
+   buffer is re-sent only when a value in it changed (`bufferSubData` 70 → 31).
+   `CueRunner`'s share of the main thread over a death batch 19.2% → 12.7%. No
+   pixel moved: the shots are byte-identical on SwiftShader and with bloom on, and
+   within the GTX 1080's own run-to-run noise with bloom off.
+2. **SwiftShader's p95 at the floor is the software floor's** (D270): about 15 ms
+   of WebGL a frame on a ~17 ms present beat, p95 33–35 ms at the bench frame on
+   every tree since the comic look; it passes §9.4 only at dpr 0.45 on `g1`. §9.4
+   is graded on the real GPU — the GTX 1080 reads p95 0.6–8.7 ms at every benched
+   frame — and no rung goes below the legibility floor. Owner question 33.
+3. **The governor walks its ladder in half the frames** (D272): a decided verdict
+   is taken on the frame that decides it, the settle counts in time, and the
+   window is pure (`arena/governor.ts`, run against a model of SwiftShader and
+   bursts of uploads in `perf.test.ts`); SwiftShader reaches the floor rung in
+   29–32 frames where it took 57. The dormant `<AdaptiveDpr />` is gone (M7
+   follow-up 6) and `?stats=1`'s panel is lazy. Lane LOOK's follow-up 16 closed.
+4. **The bench says more** (`tools/arena-bench.mjs`): a `RENDERED` line over the
+   frames the arena drew, `--speed`, `--json`, `--cpu-profile`; and
+   `tools/profile-top.mjs` names a production profile's functions.
+
+Tests: `web/test/gpu-pass.test.ts` (5, each with a negative control),
+`perf.test.ts` (+3), `liveness.test.ts` (+1: the pass's bodies in the allocation
+scan, and no frame-loop body parses a colour string, with spliced controls).
+`npm run build`: `arena-scene` +0.76 kB gzip (the pass's own code), `Arena` −1.03,
+the arena's page 0.27 kB gzip smaller.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9360`
+**283.1 s** and `WSPORT=9370` **275.3 s**, exit 0 both, 48 jobs (1,066.6 s and
+1,015.9 s summed) at a load average of 5.2–12.1, `node --test` 1,208 / 1,197 pass /
+0 fail / 11 skipped and vitest 157 (9 files) each time (`var/check-all-gpu-1.log`,
+`-2.log`). The lane added no step and no job: its tests are in the web step.
+`~/forge` and `~/.forge`: unchanged — a listing of every path under each with its
+size, mtime and mode, and the `~/.forge` files' contents hashed, identical before
+the lane's first command (09:19) and after its second gate (12:01); the jar still
+`3c0a7c38…8e5dd9`.
+
+<a id="fu-gpu"></a>
+### The GPU pass's follow-ups — nine, 2026-09-29
+
+1. **The GTX 1080's frame times are from a shared machine.** Three other lanes'
+   benches and gates ran all day (loads 2–18) and the driver's clocks were seen at
+   P5 (734 MHz) under load as well as P0: the GTX rows read 2–4× slower after 10:30
+   than at 09:26, both builds alike. The counts and the interleaved pairs are the
+   evidence; an idle-machine series (Lane BODIES follow-up 21) is still owed.
+2. **The middle machine is unmeasured.** D270 grades §9.4 on the GTX 1080 and
+   names SwiftShader the floor; an integrated GPU and a headed browser on the
+   user's desktop (Lane LOOK 21, Lane MOTION 8) are where the arena will actually
+   run. Owner question 33 asks whether the software floor is a target at all.
+3. **Unchanged bone palettes are re-uploaded.** 41% of the 12–14 bone-texture
+   uploads a frame carry an unchanged pose (a figure that neither breathes nor
+   plays); skipping them means reaching inside three's render (`Skeleton.update`
+   flags its texture unconditionally).
+4. **Program switches follow depth order.** 84 of 90 drawn items are transparent
+   (the figures and props for their fade), so 29–38 `useProgram` a frame follow the
+   back-to-front sort over 15–16 programs. Figures in the opaque pass would sort by
+   program — a pixel change, and the ink's mark rides the figures' blend state.
+5. **The comic stage's ground is a quarter of SwiftShader's frame** (3.8–4.3 of
+   ~15 ms at the floor, 2.6 of it its texture's sampling). A floor rung that
+   flattens it is the look's call; D270 declined it as a way to pass §9.4 (the
+   missed beats stayed).
+6. **`applyFigures` and the `useFrame` body are outside the allocation scan.**
+   `applyFigures` walks `rigs.values()` with `for…of` (an iterator a frame); the
+   pass put `applyOffsets` in the scan and left this one, which it did not touch.
+7. **The bench's counters depend on where its sample ends.** `--index` plus five
+   seconds at 4× ends at @350–365 on `g1` depending on the rasteriser, which is how
+   the status layer's follow-up 4 came to read as SwiftShader's. A mode that holds
+   a static frame with the loop awake would make counts comparable (the pass's
+   pumped census does it on the DEV server).
+8. **The frame body's timing is coarse.** The page clock is coarsened to 0.1 ms
+   and the pumped `fiber.advance()` swung 2–3× on a loaded machine; the pass
+   timed blocks of 40 frames and holds counts in tests. A cross-origin-isolated
+   bench page would get fine timers.
+9. **`arena-scene` grew by the pass's own code** (+2.18 kB, +0.76 gzip); the
+   arena's page is smaller overall (the lazy stats panel, `<AdaptiveDpr />` gone).
+   The scene chunk has grown with every lane since the workshop (371.93 kB gzip
+   then, 394.12 now).
+
 ---
 
 ## Deferred — out of scope for M0–M7
@@ -8934,3 +9068,4 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 30 | **New, Lane BODIES at merge.** Keep the **art rung** on — every face-up card with no hand-written colour takes its painting's (the Giant-Sized Flying Ant brown, Wasp's aura salmon) — or put it behind a switch until played? The lane left it to you (**D164**); the merge applied it, as the lane's follow-up 13 said "whoever merges LOOK and BODIES" would. | **On** (**D164**, amended). `palette: off` in a `traits.json` row turns it off for a card; there is no page-wide switch. |
 | 31 | **New, more villain identity (its fix pass).** A person's **skin tone**: keep slice 4's one tone for every person — only a transformed body (a Hulk's green, a lava body) paints its skin (D231) — or let a person's tone follow its card, from the card's art palette (a rung like D160's) or a per-deck default? The verifier called the Wakandans, every one in the pale default against art of a Black cast, the lane's most visible mismatch. No likeness either way: a tone is not a face. | **The one tone** (slice 4, D231, D232). The rule is `COSTUME_DEFAULTS.skin` and `traits.test.ts`'s `TRANSFORMED_SKIN`; either answer is a decision and a change to both. |
 | 32 | **New, the portrait standee (its fix passes).** Three looks the fix passes chose for the standee (D261, D262, amended), each from pictures only you can judge (`var/standee/fix/` and `var/standee/fix3/`, gitignored — card-art-derived, never shown to anyone): an **ink rim** round every cut, the figures' own outer ink weight, so a painting over a painting keeps an edge (`rim-compare.png`); a **legibility floor** — a standee whose subject, kneeling, covers under a 30-px square's worth at 1× from the table view is its CC0 body, so the drones, the A.I.M. Bot, Yellowjacket and the Drone Flock never stand (`floor-contact.png`, every standee of seven crowded frames with its size) — judged since fix pass 2 on the canvas your window draws, so **the window's size decides how many stand**: over the recordings a 1600 × 1000 canvas stands 77% of the standee placements (83% of yours, 63% of the opponent's), 1600 × 946 (a replay in a 1600 × 1000 window) 75%, 1280 × 800 17% (20% and 10%; 27 of the 51 cards somewhere, Agent 13, Storm, Moonstone and MACH-1 nearly always), and a replay in a 1280 × 800 window 6% (10 cards) — what it drops are paintings of 23–30 px (`moe-371-floor-compare-1280x800-2x.png`: the Masters of Evil's nine at @371, the fixed floor's over the live floor's CC0 bodies); and a **smaller kneel** — a fifth sunk and 6° of bow, 0.68–0.78 of its standing height from the table, where the first was a sliver at 0.39–0.59 (`tapped-compare.png`). Keep all three, lower the floor for a small window (more standees, smaller than the contact sheet read), or drop the rim? | **All three, at the numbers measured, the floor on the canvas drawn** (`perf.ts`'s `STANDEE_MIN_PX`, `standee.ts`'s `STANDEE_STANCES`, `STANDEE_FRAGMENT`'s rim): a small window draws fewer standees rather than ones nobody can read. A different floor is one number and a re-run of `standee.test.ts`; `?standee=0` is the A/B. |
+| 33 | **New, the GPU pass.** Is a machine with **no GPU acceleration** — a software rasteriser, SwiftShader's class — a target for the arena? At the arena's floor (render dpr 0.6, bloom off) SwiftShader draws p50 16–19 ms and fails §9.4's p95 20 ms at every benched frame; at dpr 0.45 `g1`'s bench frame passes and the villain tables still do not. | **No: it is the floor, reported and never gated** (**D270**); §9.4 is graded on the real GPU, and the DPR floor stays a legibility line. If yes, a rung below 0.6 is a trade of the card art's legibility for frame rate on that machine, yours to make. |

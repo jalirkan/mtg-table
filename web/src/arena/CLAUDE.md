@@ -5,7 +5,7 @@ and `web/CLAUDE.md` (the board's conventions, whose M4 convention 2 this file's
 `CardPlane` mirrors). They are in the order they were written: M7's Tier 1, Tier
 2 and its three later slices, report 15's three art-direction lanes, the status
 layer, the personal tier's loader, villain identity and its second lane, then
-sound and the caption. The workshop (`web/src/workshop/`) draws with this
+sound, the caption and the GPU pass. The workshop (`web/src/workshop/`) draws with this
 directory's code, and its own conventions are `web/CLAUDE.md`'s *Workshop*.
 
 ## The conventions M7 added — the arena
@@ -104,7 +104,7 @@ the status layer put its glyph kit and the tile's row in it), and none of it is
 `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
 named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (397.41 kB gzip
-on this tree, 393.36 before the standee) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
+before the GPU pass, 393.36 before the standee) — with `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
 `dist`, a `vite preview` server and a headless Chromium. Every performance number
@@ -1324,3 +1324,58 @@ than the one that follow-up drew.
    under `mtg-table.arena.caption` inside `try` (`Arena.tsx` alone); `N` is its
    `keys.ts` row, the arena's through `planKey`'s pre-pass because a live 2D
    board's `N` stays Forge's always-no.
+
+## The GPU pass — the conventions D270–D272 added
+
+Four, and the thesis is one sentence: **the frame loop pays for what changed this
+frame, and a SwiftShader number is the software floor's.** The pass measured the
+whole arena after eight lanes had each measured only itself; `docs/evidence/gpu-pass.md`
+is every table (what drew it, the dpr, bloom, the tier, the frame), and
+`docs/guides/gpu-day.md`'s *The numbers the new card is compared against* is the
+short form.
+
+1. **§9.4 is graded on a real GPU; SwiftShader at the floor fails it, and that is
+   D270, not a regression.** At render dpr 0.6 with the composer off the software
+   rasteriser draws about 15 ms of WebGL a frame and presents on a ~17 ms beat,
+   so its p95 is the rate of missed beats (a ~34 ms frame and a ~0.5 ms one) and
+   reads 33–35 ms at the bench frame on every tree since the comic look. A
+   regression there is a higher p50 at the floor, read in interleaved pairs
+   against the base build; on the GTX 1080 it is §9.4 itself. The bench prints a
+   second line of drawn frames only (`RENDERED`), because an idle rAF under
+   `frameloop='demand'` is not a frame, and `--speed`, `--json` and
+   `--cpu-profile` (with `tools/profile-top.mjs`, which names a production
+   profile's functions through the build's source maps) are how the pass's
+   tables were made. No rung goes below the DPR floor: it is a legibility line.
+2. **The frame loop parses no colour string, and every body it reaches is in the
+   allocation scan** (**D271**). `applyOffsets`, its `Map.forEach` walk
+   `applyRigOffset`, `TileField.bind`, the instance writers, `refreshWorld` and
+   the governor's decision joined the scan's body list, and a clause holds every
+   scanned body to a colour that arrives parsed — the rule M7 convention 5 wrote,
+   which two bodies outside the scan broke on every card and land for a milestone.
+   A new frame-loop body goes in the list in the same change.
+3. **A pose field draws only what it holds and re-sends only what moved.** An
+   instanced kind with no instance is hidden (`visible` false) and primed at mount
+   like any parked mesh — three sets up an empty `InstancedMesh` every frame and
+   issues no draw, so `gl.info` never shows the cost — and a buffer is flagged for
+   upload only when a value in it changed: `scene/instanceWrite.ts`'s writers store
+   the float32 three's setters would and say whether it differs. The tile field,
+   the prop field and the status strip's anchors use them; a new field should.
+4. **Nothing drawable hangs under a bone, and the prop field reads only the joints
+   it refreshed.** `instantiateFigure` hides each bone tree (`hideBoneTrees`) so
+   the render walk skips 618 of the bench frame's 871 objects; a tree with a
+   drawable under it is left walked, but a mesh parented to a bone AFTER
+   instantiation would be hidden with it — attach props through the prop field or
+   bake them, as every kind does. `PropField.bind` refreshes the commit's chains
+   from each rig's root to the joints its bindings follow (`scene/worldChain.ts`)
+   and nothing else of the rig; reading another node's `matrixWorld` in the bind
+   means putting it in `chainFresh`'s list.
+
+The DPR governor's window is `arena/governor.ts`, pure and driven by `Arena.tsx`'s
+`DprGovernor` (**D272**): it takes a decided verdict — more than eight late frames
+of sixteen — on the frame that decides it, and counts its settle in time as well
+as in frames, so the slowest machine walks the ladder in about half the frames and
+no decision moves at the refresh rate; `perf.test.ts` runs it against a model of
+SwiftShader and against bursts of uploads on a fast machine, with the first cut (a
+window counted in time) as its control. After changing any rule line above,
+regenerate the rules manifest (`CLAUDE_MD_RULES_WRITE=1 node --test
+web/test/claude-md.test.ts`).

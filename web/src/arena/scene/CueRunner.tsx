@@ -70,7 +70,8 @@ import type { BustField } from './busts.ts';
 import type { DepartedBody, EffectPool } from './effects.ts';
 import { actionFor, type FigureRig, type FigureRigMap } from './figureRigs.ts';
 import type { OverlayField } from './overlays.ts';
-import type { RigMap } from './rigs.ts';
+import { parsedColour } from './colourCache.ts';
+import type { CardRig, RigMap } from './rigs.ts';
 import type { SceneStage } from './SceneStage.ts';
 import type { TileField } from './tiles.ts';
 
@@ -88,7 +89,6 @@ interface OrbitLike {
 
 /** §9.2 rule 6 — allocated once for the life of the page, not once per card per frame. */
 const SCRATCH = new THREE.Color();
-const SCRATCH_2 = new THREE.Color();
 /**
  * **T6's combat freeze** (report 13 §6.4): while a stack exists during combat the
  * figures hold their pose and the table washes out a little. The wash is a lerp
@@ -553,6 +553,9 @@ export function CueRunner({
       // §8.3 rule 3: compile now, at mount, not on the first cue that needs it.
       primeRef.current -= 1;
       pool.prime();
+      // D271: an empty tile bucket is hidden now, so it is shown here once, like
+      // every other parked mesh, and its program compiles at mount.
+      tileField.prime();
       castingField.prime();
       overlays.prime();
       bustField.prime();
@@ -682,50 +685,68 @@ function driveCamera(
  * queue is idle.
  */
 function applyOffsets(rigs: RigMap, stage: SceneStage, now: number): void {
-  const seconds = now / 1000;
-  for (const rig of rigs.values()) {
-    const placement = rig.placement;
-    const offset = stage.offsetOf(placement.cardId);
-    const mesh = rig.mesh;
+  // `Map.forEach` with a module-level callback and the frame's two inputs in a
+  // module-level record: a `Map` iterator (`for…of rigs.values()`) is an object a
+  // frame, and a closure here would be another (§9.2 rule 6; the GPU pass put this
+  // body in the allocation scan, D271).
+  OFFSET_PASS.stage = stage;
+  OFFSET_PASS.seconds = now / 1000;
+  rigs.forEach(applyRigOffset);
+  OFFSET_PASS.stage = null;
+}
 
-    // §5.1's exception, and the only motion in the scene with no cue behind it:
-    // a `presence` bob. It is added here rather than inside `layout()` because
-    // `layout()` is a pure function of STATE and this is a function of TIME —
-    // and it is added to the *rig* and not to an offset, so `skip all` and
-    // `flushAndSnap()` leave the Helicarrier hovering exactly as they found it.
-    const bob =
-      placement.bobAmp > 0
-        ? placement.bobAmp * Math.sin(seconds * 2 * Math.PI * placement.bobHz)
-        : 0;
+/** {@link applyOffsets}' frame state, written once per frame before the walk. */
+const OFFSET_PASS: { stage: SceneStage | null; seconds: number } = { stage: null, seconds: 0 };
 
-    mesh.position.set(
-      placement.position[0] + offset.dx,
-      placement.position[1] + offset.dy + bob,
-      placement.position[2] + offset.dz,
-    );
-    mesh.rotation.set(
-      placement.rotation[0] + offset.dRotX,
-      placement.rotation[1],
-      placement.rotation[2] + offset.dRotZ,
-    );
-    const scale = placement.scale * offset.scale;
-    mesh.scale.set(rig.width * scale * offset.squashX, scale * offset.squashY, 1);
+/** One card's `layout(state) ⊕ offsets[card.id]` — {@link applyOffsets}' walk. */
+function applyRigOffset(rig: CardRig): void {
+  const stage = OFFSET_PASS.stage;
+  if (stage === null) return;
+  const seconds = OFFSET_PASS.seconds;
+  const placement = rig.placement;
+  const offset = stage.offsetOf(placement.cardId);
+  const mesh = rig.mesh;
 
-    const material = rig.material;
-    SCRATCH.set(rig.baseColour);
-    if (offset.tint !== null) SCRATCH.multiply(SCRATCH_2.set(offset.tint));
-    if (offset.glow > 0 && offset.glowColour !== null) {
-      // Lighting up in its own colour, not washing out to white: the glow
-      // colour is the card's colour identity (§7.3) unless a cue file says
-      // otherwise, which is what makes a white creature and a blue one read
-      // differently entering the battlefield.
-      SCRATCH.lerp(SCRATCH_2.set(offset.glowColour), Math.min(0.6, offset.glow * 0.45));
-      SCRATCH.multiplyScalar(1 + Math.min(0.5, offset.glow * 0.35));
-    }
-    material.color.copy(SCRATCH);
-    material.opacity = offset.opacity;
-    rig.uniforms.uDissolve.value = offset.dissolve;
+  // §5.1's exception, and the only motion in the scene with no cue behind it:
+  // a `presence` bob. It is added here rather than inside `layout()` because
+  // `layout()` is a pure function of STATE and this is a function of TIME —
+  // and it is added to the *rig* and not to an offset, so `skip all` and
+  // `flushAndSnap()` leave the Helicarrier hovering exactly as they found it.
+  const bob =
+    placement.bobAmp > 0
+      ? placement.bobAmp * Math.sin(seconds * 2 * Math.PI * placement.bobHz)
+      : 0;
+
+  mesh.position.set(
+    placement.position[0] + offset.dx,
+    placement.position[1] + offset.dy + bob,
+    placement.position[2] + offset.dz,
+  );
+  mesh.rotation.set(
+    placement.rotation[0] + offset.dRotX,
+    placement.rotation[1],
+    placement.rotation[2] + offset.dRotZ,
+  );
+  const scale = placement.scale * offset.scale;
+  mesh.scale.set(rig.width * scale * offset.squashX, scale * offset.squashY, 1);
+
+  const material = rig.material;
+  // Parsed colours from the cache, never `Color.set('#…')` here (M7 convention
+  // 5): that is two regular expressions per card per frame, and the GPU pass's
+  // profile found them on every card of the bench frame (D271).
+  SCRATCH.copy(parsedColour(rig.baseColour));
+  if (offset.tint !== null) SCRATCH.multiply(parsedColour(offset.tint));
+  if (offset.glow > 0 && offset.glowColour !== null) {
+    // Lighting up in its own colour, not washing out to white: the glow
+    // colour is the card's colour identity (§7.3) unless a cue file says
+    // otherwise, which is what makes a white creature and a blue one read
+    // differently entering the battlefield.
+    SCRATCH.lerp(parsedColour(offset.glowColour), Math.min(0.6, offset.glow * 0.45));
+    SCRATCH.multiplyScalar(1 + Math.min(0.5, offset.glow * 0.35));
   }
+  material.color.copy(SCRATCH);
+  material.opacity = offset.opacity;
+  rig.uniforms.uDissolve.value = offset.dissolve;
 }
 
 /**

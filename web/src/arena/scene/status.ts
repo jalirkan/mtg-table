@@ -338,13 +338,20 @@ export class StatusField {
     const count = this.stripCount;
     if (count === 0) return;
     const anchor = this.anchors.array as Float32Array;
+    // The GPU pass (D271): the glyphs are the commit's; the frame writes only the
+    // anchors, and flags them for upload only when one moved — a strip on a card
+    // no cue touches, on a table where nothing hovers, sends nothing.
+    let moved = false;
     for (let s = 0; s < count; s++) {
       const strip = this.strips[s]!;
       const offset = offsets.offsetOf(strip.cardId);
       const bob = strip.bobAmp > 0 ? strip.bobAmp * Math.sin(seconds * 2 * Math.PI * strip.bobHz) : 0;
-      const x = strip.x + offset.dx;
-      const y = strip.y + offset.dy + bob;
-      const z = strip.z + offset.dz;
+      const x = Math.fround(strip.x + offset.dx);
+      const y = Math.fround(strip.y + offset.dy + bob);
+      const z = Math.fround(strip.z + offset.dz);
+      const start = strip.start * 3;
+      if (anchor[start] === x && anchor[start + 1] === y && anchor[start + 2] === z) continue;
+      moved = true;
       const end = strip.start + strip.count;
       for (let i = strip.start; i < end; i++) {
         anchor[i * 3] = x;
@@ -352,7 +359,7 @@ export class StatusField {
         anchor[i * 3 + 2] = z;
       }
     }
-    this.anchors.needsUpdate = true;
+    if (moved) this.anchors.needsUpdate = true;
   }
 
   /** §8.3 rule 3's warm-up: the program is compiled at mount (`FigureLayer`), not on the first strip. */

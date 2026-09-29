@@ -363,6 +363,47 @@ is what makes the number the new card's. The personal tier's line is benched
 against a dev server with `--personal` (`docs/guides/personal-tier.md`, *The
 budget*).
 
+### The numbers the new card is compared against
+
+The GPU pass (2026-09-29, `docs/evidence/gpu-pass.md`, D270–D272) benched the
+whole arena on the GTX 1080 the day this guide was written. Run the same lines on
+the new card, **on an idle machine** — the pass's machine was shared all day, and
+the 1080's frame times swung 2–4× with the load and the driver's clocks (it was
+seen at P5, 734 MHz, under full load) — and put the table in a new evidence file:
+
+```bash
+for spec in "g1.jsonl 316 4" "g1.jsonl 369 1" "villain-masters-of-evil-33.jsonl 388 4" "villain-wakanda-232.jsonl 477 4" "villain-doom-248.jsonl 342 4"; do
+  set -- $spec
+  for bloom in --no-bloom --bloom; do
+    node tools/arena-bench.mjs --url "http://127.0.0.1:5182/?replay=games/$1#arena" \
+      --index $2 --speed $3 --gpu gl $bloom --json "var/gpu-day/bench-${1%.jsonl}-$2$bloom.json"
+  done
+done
+```
+
+The GTX 1080's quietest series (production build of `e2c337c`, 09:26–09:40, load
+4–10, render dpr 1 — `gpu-pass.md` §2.1; the pass's own build draws the same calls
+and triangles):
+
+| frame | bloom off: p50 · p95 ms | calls · triangles (bloom off) | bloom on: p50 · p95 ms |
+|---|---|---|---|
+| `g1` `--index 316` (the bench frame) | 0.5 · 0.7 | 87 · 26,395 | 0.6 · 1.6 |
+| `g1` `--index 369 --speed 1` (its busiest combat) | 0.5 · 0.7 | 89 · 26,621 | 0.6 · 1.3 |
+| Masters of Evil `--index 388` | 0.7 · 1.2 | 97 · 31,354 | 0.8 · 1.4 |
+| Wakanda `--index 477` | 0.6 · 0.8 | 118 · 32,102 | 0.7 · 1.6 |
+| Doom Legion `--index 342` | 0.6 · 0.8 | 124 · 36,914 | 0.6 · 2.0 |
+
+Every one of these is inside report 09 §9.4 (p95 ≤ 20 ms) by ten times, so a new
+card will not show a difference in the gate — look at p50 and at the frame count
+(`frames` in the JSON: ~9,000 in five seconds at the bench frame with bloom off,
+the loop unthrottled). Calls and triangles are the tree's, not the card's: the new
+card must read the same (a different number means a different build, or a sample
+that ended on another frame — the JSON's `endIndex`). SwiftShader's numbers do not
+change with the card (D270: the software floor, p95 33–35 ms at the floor on every
+tree). The CPU side does not change either: the pass's per-frame counts
+(`updateMatrix` 984, `bufferSubData` 31, `Color.setStyle` 0 at the bench frame)
+are the code's.
+
 **The old numbers stay, as history.** Every GPU number in the evidence says the
 GTX 1080 drew it, and it stays true of that card. These files carry the 1080's
 frame times, draw calls or depth timings:
@@ -370,8 +411,8 @@ frame times, draw calls or depth timings:
 - `m7-tier2.md`, `m7-tier2-slice2.md`, `m7-tier2-slice3.md`,
   `m7-tier2-slice4.md` and `workshop.md`;
 - `look.md`, `motion.md` and `bodies.md`;
-- `personal-tier.md`, `status-layer.md`, `villain-identity.md` and
-  `relief-window.md`.
+- `personal-tier.md`, `status-layer.md`, `villain-identity.md`,
+  `relief-window.md` and `gpu-pass.md` (the whole arena, 2026-09-29).
 
 `spectate.md` names the card only as the machine. README's slice-1 cost table
 and its bloom note are 1080 numbers too. Do not edit any of them: the day's

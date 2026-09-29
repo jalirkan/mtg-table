@@ -63,13 +63,35 @@
  * own models (a DEV server with `personal/`, D195): the line is then that PLUS
  * `arena/perf.ts`'s `PERSONAL_TABLE_TRIS`, the personal tier's own (D197).
  *
+ * **The GPU pass (2026-09-29, D270) added four more**, each because a number could
+ * not otherwise say what drew it:
+ *
+ *   --speed <n>        The replay speed the sample plays at (default 4, as ever).
+ *                      `--speed 1` from just before a combat plays that combat's
+ *                      own cues for the whole sample rather than fifty frames.
+ *   RENDERED frames    Every sample now also counts the frames the ARENA drew
+ *                      (`gl.info.render.frame` moved) and prints a second line —
+ *                      p50/p95/max over back-to-back rendered frames only. Under
+ *                      `frameloop='demand'` a replay idles between batches, and
+ *                      an idle rAF with `--disable-frame-rate-limit` is a ~0.1 ms
+ *                      interval that says nothing about the renderer: on the GTX
+ *                      1080 at `g1`@316 most of the old line's frames were those.
+ *                      The first line is kept byte for byte, so old numbers still
+ *                      compare.
+ *   --json <file>      Write the sample's numbers (both lines, the counters, the
+ *                      renderer, the render dpr, the caption) as one JSON object.
+ *   --cpu-profile <f>  Record the DevTools protocol's CPU profile over the sample
+ *                      (100 µs sampling) and write it as a `.cpuprofile`.
+ *                      `tools/profile-top.mjs` names its top self-time functions
+ *                      through the build's own source maps.
+ *
  * It stays **out of `check-all.sh`** (M7 follow-up 10): it wants a built `dist`, a
  * `vite preview` server and a headless Chromium.
  * ---------------------------------------------------------------------------
  */
 
 import { spawn } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { PERSONAL_TABLE_TRIS } from '../web/src/arena/perf.ts';
@@ -149,6 +171,12 @@ if (GPU_FLAGS === undefined) {
   process.exit(2);
 }
 const SAMPLE_MS = Number(arg('ms', '5000'));
+/** D270 — the replay speed the sample plays at; 4 unless asked. */
+const SPEED = String(arg('speed', '4'));
+/** D270 — where to write the sample's numbers as JSON, or null. */
+const JSON_OUT = arg('json', null);
+/** D270 — where to write a CPU profile of the sample, or null. */
+const CPU_PROFILE = arg('cpu-profile', null);
 /**
  * How long to let the scrubbed-to frame settle before sampling.
  *
@@ -374,6 +402,11 @@ try {
    * kept and the 0.55 heuristic is skipped — a bench of a frame with no figures on
    * it is exactly the mistake §8.5 exists to prevent.
    */
+  if (CPU_PROFILE !== null) {
+    await cdp.send('Profiler.enable');
+    await cdp.send('Profiler.setSamplingInterval', { interval: 100 });
+    await cdp.send('Profiler.start');
+  }
   const sample = await evaluate(
     cdp,
     `(async () => {
@@ -388,7 +421,7 @@ try {
       await new Promise((r) => setTimeout(r, ${String(SETTLE_MS)}));
       // Play, fast, so the queue always has something to animate.
       const speed = [...document.querySelectorAll('select')][0];
-      if (speed) { const s = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set; s.call(speed, '4'); speed.dispatchEvent(new Event('change', { bubbles: true })); }
+      if (speed) { const s = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set; s.call(speed, ${JSON.stringify(SPEED)}); speed.dispatchEvent(new Event('change', { bubbles: true })); }
       const play = [...document.querySelectorAll('button')].find((b) => /play/i.test(b.title ?? '') || /play/i.test(b.innerText));
       if (play) play.click();
 
@@ -399,6 +432,11 @@ try {
       // …and the program count, so a first-use shader compile is told apart from
       // an upload (T7: the bloom run's one long frame).
       const programs = [];
+      // D270 — the renderer's own frame counter beside each tick, so the frames
+      // the arena DREW can be told from an idle rAF under frameloop='demand'.
+      const drawn = [];
+      // …and whether the arena's caption strip (D255) was on screen, per tick.
+      let captionTicks = 0;
       const infoFn = window.__mtgArena && window.__mtgArena.info;
       let last = null;
       await new Promise((done) => {
@@ -409,6 +447,9 @@ try {
             const mem = infoFn ? infoFn().memory : null;
             textures.push(mem ? mem.textures : -1);
             programs.push(mem ? (mem.programs ?? -1) : -1);
+            const counters = infoFn ? infoFn().render : null;
+            drawn.push(counters ? (counters.frame ?? -1) : -1);
+            if (document.querySelector('.arena__caption') !== null) captionTicks += 1;
           }
           last = now;
           if (now < stop) requestAnimationFrame(tick);
@@ -446,6 +487,10 @@ try {
         deltas,
         textures,
         programs,
+        drawn,
+        caption: deltas.length > 0 ? captionTicks / deltas.length : 0,
+        // Where the replay's slider stood when the counters below were read.
+        endIndex: Number(range.value),
         body,
         render: counters ? counters.render : gl ? { ...gl.info.render } : null,
         memory: counters ? counters.memory : gl ? { ...gl.info.memory } : null,
@@ -474,6 +519,11 @@ try {
     })()`,
   );
 
+  if (CPU_PROFILE !== null) {
+    const { profile } = await cdp.send('Profiler.stop');
+    writeFileSync(CPU_PROFILE, JSON.stringify(profile));
+    console.log(`arena-bench: CPU profile of the sample → ${CPU_PROFILE}`);
+  }
   // Ordered, for the spike diagnostic below; sorted, for the percentiles.
   const ordered = sample.deltas;
   const deltas = sample.deltas.filter((d) => d > 0).sort((a, b) => a - b);
@@ -483,6 +533,20 @@ try {
   const p95 = at(0.95);
   const max = deltas[deltas.length - 1];
   const fps = 1000 / p50;
+  // D270 — back-to-back RENDERED frames only: tick i counts when the renderer's
+  // frame counter moved on it AND on the tick before, so an idle stretch under
+  // frameloop='demand' (a ~0.1 ms rAF) and the gap that ends it are both left out.
+  const rendered = [];
+  {
+    const drawn = sample.drawn ?? [];
+    for (let i = 1; i < ordered.length; i++) {
+      const moved = (drawn[i] ?? -1) !== (drawn[i - 1] ?? -1);
+      const movedBefore = i >= 2 && (drawn[i - 1] ?? -1) !== (drawn[i - 2] ?? -1);
+      if (moved && movedBefore && ordered[i] > 0) rendered.push(ordered[i]);
+    }
+    rendered.sort((a, b) => a - b);
+  }
+  const rAt = (p) => rendered[Math.min(rendered.length - 1, Math.floor(rendered.length * p))];
 
   console.log(`arena-bench — report 09 §9.4, --gpu ${GPU}`);
   console.log(`  renderer   ${String(sample.renderer)}`);
@@ -493,6 +557,14 @@ try {
   console.log(`  frames     ${String(deltas.length)} in ${String(SAMPLE_MS)} ms`);
   console.log(`  frame ms   p50 ${p50.toFixed(2)} · p95 ${p95.toFixed(2)} · max ${max.toFixed(2)}`);
   console.log(`  fps (p50)  ${fps.toFixed(1)}`);
+  if (rendered.length > 0) {
+    console.log(
+      `  RENDERED   ${String(rendered.length)} back-to-back drawn frames · p50 ${rAt(0.5).toFixed(2)} · p95 ${rAt(0.95).toFixed(2)} · max ${rendered[rendered.length - 1].toFixed(2)} ms (D270)`,
+    );
+  } else {
+    console.log('  RENDERED   no back-to-back drawn frames (the loop idled, or ?glinfo=1 is off)');
+  }
+  console.log(`  caption    on screen for ${(100 * sample.caption).toFixed(0)}% of the sampled frames · speed ${SPEED}× · counters read at transport index ${String(sample.endIndex)}`);
   if (sample.body) {
     console.log(
       `  frame body p50 ${sample.body.p50.toFixed(3)} · p95 ${sample.body.p95.toFixed(3)} · max ${sample.body.max.toFixed(3)} ms (§9.1 budget: 2 ms CPU)`,
@@ -543,6 +615,43 @@ try {
     if (prog.length > 0) {
       console.log(`  programs   ${String(prog[0])} at the first sampled frame → ${String(prog[prog.length - 1])} at the last`);
     }
+  }
+
+  if (JSON_OUT !== null) {
+    writeFileSync(
+      JSON_OUT,
+      JSON.stringify(
+        {
+          url: URL_,
+          gpu: GPU,
+          renderer: sample.renderer,
+          index: INDEX,
+          speed: Number(SPEED),
+          endIndex: sample.endIndex,
+          settleMs: SETTLE_MS,
+          renderDpr: sample.renderDpr,
+          size: sample.size,
+          caption: sample.caption,
+          frames: deltas.length,
+          p50,
+          p95,
+          max,
+          rendered: rendered.length > 0
+            ? { frames: rendered.length, p50: rAt(0.5), p95: rAt(0.95), max: rendered[rendered.length - 1] }
+            : null,
+          render: sample.render,
+          memory: sample.memory,
+          layers: sample.layers,
+          programs: [sample.programs?.[0] ?? -1, sample.programs?.[sample.programs.length - 1] ?? -1],
+          over50: ordered.filter((d) => d > MAX_MS).length,
+          // The raw intervals in order, and the renderer's frame counter beside each.
+          deltas: ordered.map((d) => Number(d.toFixed(2))),
+          drawn: sample.drawn,
+        },
+        null,
+        2,
+      ),
+    );
   }
 
   const failures = [];

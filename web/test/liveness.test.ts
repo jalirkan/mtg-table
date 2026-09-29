@@ -1080,8 +1080,12 @@ test('liveness: the prop field is bound from the disc field, fed by FigureLayer,
     !/buildKindGeometry|bakePose|instantiateFigure|makePropMaterial|swarmMembers\(/.test(bindBody),
     'the prop field builds geometry or bindings in the frame loop',
   );
-  // It reads the rigs the frame loop just posed, and the joint it follows.
-  assert.match(bindBody, /updateMatrixWorld\(true\)/, 'the joint props no longer refresh their rigs before reading');
+  // It reads the rigs the frame loop just posed, and the joint it follows: since
+  // the GPU pass (D271) it refreshes the commit's chains from each rig's root to
+  // the joints it reads — never the whole rig, which the renderer's pass redoes.
+  assert.match(bindBody, /refreshWorld\(fresh\[r\]!\)/, 'the joint props no longer refresh their joints before reading');
+  assert.ok(!/updateMatrixWorld\(/.test(bindBody), 'the prop field refreshes whole rigs again — the renderer does that (D271)');
+  assert.match(source, /worldChainOf\(this\.roots\.slice\(0, this\.rootCount\), reads, this\.fresh\)/, 'the chains are no longer built at commit');
   assert.match(bindBody, /\.matrixWorld/, 'the joint props no longer follow their joints');
   // The emitter hook: a glowing prop reads the clip lane (and nothing else of the cue engine).
   assert.match(bindBody, /\.clipOf\(/, 'the glowing props no longer read the clip lane');
@@ -1222,8 +1226,108 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
   }
 });
 
+/**
+ * **The GPU pass's frame-loop bodies allocate nothing, and no frame-loop body
+ * parses a colour string** (D271, M7 convention 5).
+ *
+ * The pass's CPU profile found two bodies the scans above never read —
+ * `CueRunner`'s `applyOffsets` and `TileField.bind` — each calling
+ * `Color.set(<string>)` on every card and every land, every frame (two regular
+ * expressions and their match arrays a call), and each walking a `Map` with a
+ * `for…of` iterator. They are in the allocation scan now, with the helpers the
+ * pass added (`instanceWrite.ts`'s writers, `worldChain.ts`'s `refreshWorld`),
+ * and every frame-loop body the scans read is held to "a colour arrives parsed":
+ * `parsedColour`, a `Color`, or numbers — never a string handed to `set`.
+ */
+const COLOUR_STRING = /\.set(?:Style)?\(\s*(?:['"`]#|[A-Za-z_$][\w$]*(?:\.[\w$]+)*\.(?:tint|baseColour|glowColour|rim|colour|color|accent|shade)\s*[,)])|\.setStyle\(/;
+
+test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none parses a colour string (D271)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const runner = files.get('scene/CueRunner.tsx') ?? '';
+  const tilesSource = files.get('scene/tiles.ts') ?? '';
+  const tileField = tilesSource.slice(tilesSource.indexOf('export class TileField'));
+  const write = files.get('scene/instanceWrite.ts') ?? '';
+  const chain = files.get('scene/worldChain.ts') ?? '';
+  const layer = files.get('scene/FigureLayer.tsx') ?? '';
+  const departure = layer.slice(layer.indexOf('class DepartureField'));
+  const discs = files.get('scene/discs.ts') ?? '';
+  const propsSource = files.get('scene/props.ts') ?? '';
+  const statusSource = files.get('scene/status.ts') ?? '';
+  const ours: Array<[string, string]> = [
+    ['CueRunner applyOffsets', bodyOf(runner, 'applyOffsets')],
+    ['CueRunner applyRigOffset', bodyOf(runner, 'applyRigOffset')],
+    ['TileField.bind', bodyOf(tileField, 'bind')],
+    ['TileField #bucketFor', bodyOf(tileField, '#bucketFor')],
+    ['instanceWrite writeMatrixAt', bodyOf(write, 'writeMatrixAt')],
+    ['instanceWrite writeColourAt', bodyOf(write, 'writeColourAt')],
+    ['instanceWrite writeScalarAt', bodyOf(write, 'writeScalarAt')],
+    ['worldChain refreshWorld', bodyOf(chain, 'refreshWorld')],
+    // The DPR governor's decision, pure since D272 (`governor.ts`), runs in `Arena.tsx`'s one other
+    // `useFrame` every frame: a fixed ring written in place.
+    ['governor.ts governorFrame', bodyOf(files.get('governor.ts') ?? '', 'governorFrame')],
+    ['governor.ts restartWindow', bodyOf(files.get('governor.ts') ?? '', 'restartWindow')],
+  ];
+  for (const [name, body] of ours) assert.ok(body.length > 20, `could not find the body of ${name}`);
+  // They are the frame loop's: the loop calls applyOffsets, it walks with applyRigOffset,
+  // and the fields write through the helpers.
+  assert.match(runner, /applyOffsets\(rigs, stage, now\);/, 'the frame loop no longer calls applyOffsets');
+  assert.match(ours[0]![1], /rigs\.forEach\(applyRigOffset\)/, 'applyOffsets no longer walks with applyRigOffset — update the body list');
+  assert.match(ours[2]![1], /writeMatrixAt\(/, 'TileField.bind no longer writes through the instance writers');
+  const arena = files.get('Arena.tsx') ?? '';
+  assert.match(arena, /const action = governorFrame\(w, now, dpr\);/, 'the DPR governor no longer decides through perf.ts — update the body list');
+  const propBind = bodyOf(propsSource.slice(propsSource.indexOf('export class PropField')), 'bind');
+  assert.match(propBind, /writeMatrixAt\(/, 'PropField.bind no longer writes through the instance writers');
+
+  const junk = [
+    'const _junk = [t, t];',
+    'const o = { a: 1 };',
+    'for (const e of this.entries.values()) {}',
+    'for (const e of list) {}',
+    'const f = () => 1;',
+    'const s = `${1}`;',
+    'const v = new THREE.Vector3();',
+    'xs.map(id);',
+  ];
+  for (const [name, body] of ours) {
+    for (const line of junk) {
+      assert.ok(allocationsIn(`\n${line}\n${body}`).length > 0, `the allocation scan misses \`${line}\` in ${name}`);
+    }
+    assert.deepEqual(allocationsIn(body), [], `${name} allocates in the frame loop (§9.2 rule 6)`);
+  }
+
+  // Every frame-loop body any scan reads: none hands a string to `Color.set`.
+  const everyBody: Array<[string, string]> = [
+    ...ours,
+    ['DiscField.bind', bodyOf(discs.slice(discs.indexOf('class DiscField')), 'bind')],
+    ['DepartureField.bind', bodyOf(departure, 'bind')],
+    ['PropField.bind', propBind],
+    ['StatusField.bind', bodyOf(statusSource.slice(statusSource.indexOf('export class StatusField')), 'bind')],
+    ['CueRunner applyFigures', bodyOf(runner, 'applyFigures')],
+  ];
+  const parses = [
+    'SCRATCH.set(rig.baseColour);',
+    'COLOUR.set(tile.tint);',
+    'COLOUR.lerp(GLOW.set(offset.glowColour), 0.5);',
+    "SCRATCH.set('#ffffff');",
+    'SCRATCH.setStyle(style);',
+  ];
+  for (const [name, body] of everyBody) {
+    assert.ok(body.length > 20, `could not find the body of ${name}`);
+    for (const line of parses) assert.ok(COLOUR_STRING.test(`\n${line}\n${body}`), `the colour-string clause misses \`${line}\` in ${name}`);
+    // applyFigures writes its tint only when it changed (`appliedTint`), once per change — the one allowed.
+    const checked = name === 'CueRunner applyFigures' ? body.replace(/uniforms\.uTint\.value\.set\(pose\.tint\);/, '') : body;
+    assert.ok(!COLOUR_STRING.test(checked), `${name} parses a colour string in the frame loop — use parsedColour (M7 convention 5)`);
+  }
+});
+
 test('liveness: camera.ts and layout.ts are pure too — the pose math has no renderer', () => {
-  for (const name of ['camera.ts', 'layout.ts', 'colour.ts']) {
+  // `governor.ts` (D272) joined them: the DPR governor's decision, which a test drives
+  // with a machine's frame times — so it has no renderer and reads no clock (time is
+  // an argument).
+  const governor = arenaFiles().find((f) => f.path === 'governor.ts');
+  assert.ok(governor !== undefined, 'governor.ts is missing');
+  assert.ok(!/performance\.now\(|Date\.now\(|requestAnimationFrame\(|setTimeout\(|useFrame/.test(codeOf(governor.source)), 'governor.ts reads a clock of its own');
+  for (const name of ['camera.ts', 'layout.ts', 'colour.ts', 'governor.ts']) {
     const file = arenaFiles().find((f) => f.path === name);
     assert.ok(file !== undefined, `${name} is missing`);
     for (const imported of importsOf(file.source)) {

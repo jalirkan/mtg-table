@@ -49,7 +49,8 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `card-library/make-fixture.ts` | Cuts the committed test slice `fixtures/cards/` out of `var/cards/`. | no | no |
 | `make-negative-fixtures.mjs` | Regenerates `fixtures/negative/redaction/`, the checker's one-defect probes. | no (its output is step 12's) | no |
 | `make-sample-fixture.mjs` | Regenerates `fixtures/synthetic/sample-handwritten.jsonl`. | no | no |
-| `arena-bench.mjs` | The arena's frame times in headless Chromium over a production build (report 09 §9.4; `--gpu gl` for the real GPU), and the frame's draw calls and triangles against their lines (§8.2's 30,000; `--personal` adds the personal tier's, D197). | no | no (a browser) |
+| `arena-bench.mjs` | The arena's frame times in headless Chromium over a production build (report 09 §9.4; `--gpu gl` for the real GPU), and the frame's draw calls and triangles against their lines (§8.2's 30,000; `--personal` adds the personal tier's, D197). Since the GPU pass (D270) also a `RENDERED` line over the frames the arena drew, `--speed`, `--json <file>` and `--cpu-profile <file>`. | no | no (a browser) |
+| `profile-top.mjs` | The top self-time functions of a `.cpuprofile` (`arena-bench.mjs --cpu-profile`), a production build's minified names mapped back through `web/dist`'s source maps to the original file, line and identifier (the GPU pass, D270). | no | no |
 | `story-shot.mjs` | A picture of the `#story` page — or of `#arena`, with the caption strip's lines read off the DOM (D255) — headless, against a dev server you run. | no | no (a browser) |
 | `build-figures.mjs` | Rebuilds `web/public/models/figures.glb` and `models.json` from the CC0 downloads under `var/assets/figures/`, each verified against `tools/assets-manifest.json` first (D54, D67). | no | no |
 | `build-sounds.mjs` | **The sound cues' clips** (D250–D252): synthesises the eleven clips (sine partials, seeded noise, envelopes — no sample, no card art), encodes them to Ogg Opus with headless Chromium's WebCodecs `AudioEncoder`, writes the Ogg container itself, and checks every file decodes in Chromium to its source's length (`--firefox` in Firefox too); `web/public/audio/*.ogg` and `var/sounds/build.json`. Two builds are byte-identical; update `assets-manifest.json`'s `procedural.soundClips` after a change (`sound.test.ts` fails until you do). | no | no (a browser) |
@@ -183,6 +184,8 @@ npm --prefix web run dev:arena       # vite --open "/?replay=games/g1.jsonl#aren
 ./scripts/play.sh --arena            # the live game, in 3D (--no-arena forces 2D)
 node tools/arena-bench.mjs           # report 09 §9.4's frame times; NOT in check-all
 node tools/arena-bench.mjs --index 316 --gpu gl   # Tier 2's bench frame, on the real GPU
+node tools/arena-bench.mjs --index 316 --gpu gl --no-bloom --json var/b.json --cpu-profile var/b.cpuprofile
+node tools/profile-top.mjs var/b.cpuprofile        # the GPU pass: its top ten, named via the source maps
 node tools/build-figures.mjs --src var/assets/figures   # Tier 2: rebuild figures.glb
                                      # + models.json from the CC0 downloads (by hand)
 node tools/build-sounds.mjs --firefox   # D252: rebuild the eleven sound clips (by hand)

@@ -25,12 +25,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { governorFrame, governorWindow, restartWindow, type GovernorConfig } from '../src/arena/governor.ts';
 import {
   DPR_FLOOR,
   GOVERNOR,
   dprCeiling,
   dprRungs,
   lateRate,
+  postOnFloor,
   rungFrom,
   worstOf,
 } from '../src/arena/perf.ts';
@@ -120,4 +122,143 @@ test('perf: the governor’s constants say what the gate says', () => {
   assert.ok(GOVERNOR.parkedMs > GOVERNOR.downMs * 4, 'a parked loop is not a slow frame');
   // With no `window` (this is `node --test`) the ceiling is the plain 1.
   assert.equal(dprCeiling(), 1);
+});
+
+/**
+ * **The governor takes a decided verdict on the frame that decides it** (the GPU
+ * pass, D272).
+ *
+ * `governor.ts`'s `governorFrame` is the component's decision, pure, so the whole
+ * ladder can be run against a machine: each frame costs what the machine's model
+ * says at the rung and composer it is on, and the harness does what `Arena.tsx`'s
+ * `DprGovernor` does with the answer — a rung (`rungFrom`), or the composer off
+ * (`postOnFloor`) and a restarted window. The SwiftShader model is the GPU pass's
+ * own measurement at `g1`@316 (`docs/evidence/gpu-pass.md`: ~135 ms a frame at dpr 1
+ * with bloom, ~120 at 0.75, ~112 at the floor, ~20 at the floor with bloom off).
+ * The control is the window as it was: sixteen frames, and five to settle.
+ */
+type Machine = (dpr: number, composer: boolean) => number;
+
+const SWIFTSHADER: Machine = (dpr, composer) => (composer ? (dpr >= 1 ? 135 : dpr >= 0.75 ? 120 : 112) : dpr >= 1 ? 36 : dpr >= 0.75 ? 25 : 20);
+/** The window as it was: no early verdict, no time-counted settle. */
+const AS_WAS: GovernorConfig = { ...GOVERNOR, settleMs: Number.POSITIVE_INFINITY };
+
+function walk(machine: Machine, config: GovernorConfig, early: boolean, ms = 30_000): { floorAt: number; dpr: number; composer: boolean; steps: number } {
+  const w = governorWindow(config);
+  let dpr = 1;
+  let composer = true;
+  let now = 1000;
+  let steps = 0;
+  let floorAt = -1;
+  while (now < ms) {
+    now += machine(dpr, composer);
+    const action = governorFrame(w, now, dpr, config, early);
+    if (action === 'down' || action === 'up') {
+      dpr = rungFrom(dpr, action === 'down' ? -1 : 1, 1);
+      steps += 1;
+    } else if (action === 'floor') {
+      const drop = postOnFloor(composer, composer);
+      if (drop !== null) {
+        composer = drop.bloom;
+        restartWindow(w, now, config);
+        steps += 1;
+      }
+    }
+    if (floorAt < 0 && dpr <= DPR_FLOOR + 1e-6 && !composer) floorAt = now - 1000;
+  }
+  return { floorAt, dpr, composer, steps };
+}
+
+/** The frame on which a window first says "down", or −1. */
+function firstDown(machine: Machine, config: GovernorConfig, early: boolean, frames = 4000): number {
+  const w = governorWindow(config);
+  let now = 1000;
+  for (let i = 0; i < frames; i++) {
+    now += machine(1, false);
+    if (governorFrame(w, now, 1, config, early) === 'down') return i;
+  }
+  return -1;
+}
+
+test('perf: a slow machine reaches the floor rung in about four seconds, where the window as it was took seven (D272)', () => {
+  if (dprCeiling() !== 1) return; // the model is written for a device dpr of 1 (node has no window)
+  const now_ = walk(SWIFTSHADER, GOVERNOR, true);
+  const was = walk(SWIFTSHADER, AS_WAS, false);
+  // Both end where the ladder ends: the floor, the composer off, three steps.
+  for (const run of [now_, was]) {
+    assert.equal(run.dpr, DPR_FLOOR);
+    assert.equal(run.composer, false);
+    assert.equal(run.steps, 3);
+  }
+  assert.ok(now_.floorAt > 0 && now_.floorAt < 4500, `the governor took ${String(now_.floorAt)} ms to the floor rung`);
+  assert.ok(was.floorAt > 6000, `the control reached the floor in ${String(was.floorAt)} ms — the model no longer shows the slideshow`);
+  console.log(`# perf: SwiftShader's model reaches the floor rung in ${(now_.floorAt / 1000).toFixed(2)} s (the window as it was: ${(was.floorAt / 1000).toFixed(2)} s)`);
+});
+
+test('perf: an early verdict is the verdict the full window would give — on bursts of every length, and at the refresh rate (D272)', () => {
+  // A fast machine (0.5 ms frames) scrubbed onto a crowded board: n frames of uploads
+  // of 30, 80 or 150 ms, then fast again. The early verdict steps on exactly the
+  // bursts the sixteen-frame window steps on, never later — and never on one it lets pass.
+  const burst = (n: number, hitch: number): Machine => {
+    let i = 0;
+    return () => (i++ < n ? hitch : 0.5);
+  };
+  let sooner = 0;
+  for (const hitch of [30, 80, 150]) {
+    for (let n = 1; n <= 24; n++) {
+      const early = firstDown(burst(n, hitch), GOVERNOR, true);
+      const full = firstDown(burst(n, hitch), GOVERNOR, false);
+      assert.equal(early >= 0, full >= 0, `a ${String(n)} × ${String(hitch)} ms burst: early ${String(early)}, full window ${String(full)}`);
+      if (early >= 0) {
+        assert.ok(early <= full, `the early verdict came later than the full window's (${String(n)} × ${String(hitch)} ms)`);
+        if (early < full) sooner += 1;
+      }
+    }
+  }
+  assert.ok(sooner > 0, 'the early verdict was never early — the rule no longer does anything');
+  // At the refresh rate nothing is late, so nothing is decided early: every decision
+  // on the same frame, both ways.
+  const cases: Array<[string, Machine]> = [
+    ['never late', () => 16.7],
+    ['late at every other rung', (dpr) => (dpr > 0.8 ? 16.8 : 16.7)],
+    ['a hitch a second', (() => {
+      let n = 0;
+      return () => (++n % 60 === 0 ? 40 : 16.7);
+    })()],
+  ];
+  for (const [name, machine] of cases) {
+    const trace = (config: GovernorConfig, early: boolean): string[] => {
+      const w = governorWindow(config);
+      const out: string[] = [];
+      let now = 1000;
+      let dpr = 1;
+      for (let i = 0; i < 2000; i++) {
+        now += machine(dpr, false);
+        const action = governorFrame(w, now, dpr, config, early);
+        if (action !== null) out.push(`${String(i)}:${action}`);
+        if (action === 'down' || action === 'up') dpr = rungFrom(dpr, action === 'down' ? -1 : 1, 1);
+      }
+      return out;
+    };
+    assert.deepEqual(trace(GOVERNOR, true), trace(AS_WAS, false), `${name}: the pass changed a decision at the refresh rate`);
+  }
+  // The settle, counted in time, is never shorter than five frames at the refresh rate.
+  assert.ok(GOVERNOR.settleFrames * 16.7 < GOVERNOR.settleMs);
+  assert.ok(GOVERNOR.settleMinFrames >= 2, 'the reallocation frame itself must never end a settle');
+});
+
+test('perf: the negative control — a window "enough" after four frames over a quarter-second steps a fast machine down on a burst the full window lets pass (D272)', () => {
+  // The pass's first cut of the rule, kept here as the control: a burst of five
+  // 80 ms uploads (the first only starts the clock) is four late frames over 320 ms.
+  const firstCut = (samples: number[]): boolean => {
+    const span = samples.reduce((a, b) => a + b, 0);
+    const late = samples.filter((d) => d > GOVERNOR.downMs).length;
+    return samples.length >= 4 && span >= 270 && late / samples.length > GOVERNOR.lateFraction;
+  };
+  assert.ok(firstCut([80, 80, 80, 80]), 'the control no longer fires on the burst');
+  const burst: Machine = (() => {
+    let i = 0;
+    return () => (i++ < 5 ? 80 : 0.5);
+  })();
+  assert.equal(firstDown(burst, GOVERNOR, true), -1, 'the governor stepped a fast machine down on five uploads');
 });

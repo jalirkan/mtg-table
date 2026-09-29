@@ -226,6 +226,16 @@ export const GOVERNOR = {
   step: 0.25,
   /** A frame interval longer than this is the loop having been parked, not a slow frame. */
   parkedMs: 250,
+  /**
+   * **The settle is counted in time as well as in frames** (the GPU pass, D272):
+   * {@link settleFrames} discards the reallocation frames after a step — 83 ms at
+   * sixty frames a second — and on a machine drawing 135 ms frames five of them are
+   * most of a second of a slideshow. It ends at five frames, or at
+   * {@link settleMinFrames} once they add up to this — which at sixty frames a
+   * second is never sooner than the five.
+   */
+  settleMs: 85,
+  settleMinFrames: 2,
 } as const;
 
 /** How much of the window missed {@link GOVERNOR.downMs}. */
