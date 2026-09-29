@@ -291,3 +291,12 @@ jobs, 964.4 s summed, load average 1.08 → 9.31 at most → 8.47) and `WSPORT=9
 **258.7 s** (970.2 s summed, 7.17 → 9.42 → 6.37), exit 0 both, `node --test`
 inside them 1,199 / 1,188 pass / 0 fail / 11 skipped and 157 vitest (9 files) —
 `var/check-all-caption-merge-p1.log` and `-p2.log`. No step and no job added.
+
+## The play-distance audit (D265–D266)
+
+Twice from a deleted `bridge/out` at `GATE_JOBS=4`, branch `play-distance-audit`:
+`WSPORT=9340` **269.2 s** (48 jobs, 994.6 s summed, load average 3.66 → 13.11 at
+most → 11.82) and `WSPORT=9350` **277.6 s** (1,029.2 s summed, 9.62 → 17.86 →
+16.56), exit 0 both, `node --test` inside them 1,206 / 1,195 pass / 0 fail / 11
+skipped and 157 vitest (9 files) — `var/check-all-audit-1.log` and `-2.log`. No
+step and no job added.

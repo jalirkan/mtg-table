@@ -631,9 +631,10 @@ export interface ViewSwitcherItem {
  *     tooltip, and "why can't I pick this?" deserves an answer (the arena's
  *     hint line gives it — spectator only, §8 rule 6).
  *
- * It shares one row with the cue strip (`.arena__strips`), and below 1900 px of
+ * It shares one row with the cue strip (`.arena__strips`), and below 1840 px of
  * width (1400 until the caption's checkbox widened the cue strip, D256; 1800
- * until the sound checkbox joined it too) each
+ * until the sound checkbox joined it too; 1900 until the play-distance audit
+ * fixed the cue strip's status to one width, D265 — `arena/hud.ts`) each
  * button collapses to its key — the label is a separate span that
  * `styles.css` hides, and the full name stays in the tooltip and the accessible
  * name. Both answer the slice-2 verification pass: as a row of its own the

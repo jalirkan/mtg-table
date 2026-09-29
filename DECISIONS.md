@@ -11783,3 +11783,124 @@ question.
    6 says — though at the Masters of Evil's @371 the governor had stepped the GTX
    1080 to 0.75 at the cold scrub in 14 of the 16 paced runs, both builds alike
    (follow-up 10). D271.5 stays.
+
+---
+
+## D265 — The chrome column over the canvas is three in-flow rows held under `HUD_TOP_PX`: the inspect chip beside the credit, a fixed-width cue status with a narrow form below 1400 px, and the switcher's labels from 1840 px
+
+*Branch `play-distance-audit` (worktree `mtg-table-t2a`, off `main`'s `e2c337c`). The
+lane's reserved range is D265–D269 (D200); it used two.*
+
+**2026-09-29** (`docs/evidence/play-distance-audit.md`; the audit of the eight
+lanes merged on 2026-09-28/29, seen together at play distance)
+
+**Amends** D241 point 3 (the inspect chip sat on a row of its own *under* the art
+credit) and D256 point 4 as amended at its rebase (the switcher's labels
+collapsed below 1900 px). **Restores** D85's statement that the chrome over the
+canvas top is `HUD_TOP_PX` (128 CSS px) — the band D85's carriers, D100's
+duelists and the seat plates are measured against.
+
+**Decision.**
+
+1. **The layer's chrome column is three in-flow rows**: the decision bar (or,
+   watching, the "watching" line), the cue strip beside the camera switcher, and
+   the credit line beside the inspect chip. Every other widget the layer mounts is
+   positioned out of the flow (the caption, the plates, the turn-order bar, the
+   game-over row, the overlay). `web/src/arena/hud.ts` records the rows' heights
+   as headless Chromium drew them and `hud.test.ts` holds the sum —
+   **112 px at its worst ordinary case**, a live seat whose prompt wraps (measured
+   113) — under `HUD_TOP_PX`, the layer to those three rows (parsed from
+   `Arena.tsx`), and the out-of-flow widgets to `position: absolute`/`fixed`.
+   A fourth row fails the test with what to do.
+2. **The inspect chip shares the credit's row** (`.arena__creditrow`, layout only,
+   `pointer-events: none`, 15rem short of the right edge for the opponent's plate
+   as the strips are). It gives way before the credit does (`flex-shrink` 4 against
+   the credit's 1, down to its own label, 13ch): the credit is the attribution the
+   art travels with. Its behaviour, its planner and its two faces are D241's.
+3. **The cue strip's status is a fixed width** — a box of 21 characters of the
+   strip's mono face, which the longest status `hud.ts`'s `cueStatusOf` writes
+   (`99+ steps · 99999+ ms`) fills — so the strip is as wide playing as idle, and
+   a batch no longer wraps the switcher onto a row of its own. The strip's gaps are
+   0.25rem (0.35 before).
+4. **Below 1400 px the strip takes its narrow form**: the word *speed* folds into
+   the select's tooltip (the select shows its own `1×`) and the status is the
+   seconds of film left (`4.2 s`, a 6-character box); the whole status is the
+   box's tooltip at every width. From 1280 px the strip and the switcher then hold
+   one row, idle and playing (987 px of a 1,021-px row at 1280 × 800; before, 1,026
+   idle and up to 1,119 playing — two rows in all 192 of the audit's 1280 × 800
+   shots).
+5. **The switcher's labels show from 1840 px** (1900 before): with the fixed
+   status the labelled row needs 1,565 px, which a 1,824-px viewport gives.
+   `hud.ts`'s `CUE_STRIP` carries the measured widths and the three breakpoints;
+   `hud.test.ts` holds the stylesheet to them, the row arithmetic at 1280, 1399,
+   1400 and 1840 px, the strip's markup to the controls that were measured (four
+   buttons, the select, five checkboxes, the status; five views, the director and
+   spectator), and the strip before the audit as its negative control.
+
+**Rationale.** The column had grown past the band nothing held it to. D241's chip
+added a fourth row (to 117 px watching, **137 px at a live seat** with a wrapped
+prompt — the ordinary priority prompt wraps at the prompt's 46ch), and the sound
+and caption checkboxes widened the cue strip until at 1280 × 800 the switcher took
+a second row even idle (150 px watching; 171 px on a replayed human seat, where
+the chip then sat on the turn-order bar's head). The band is what the carriers and
+duelists are measured against, so a column past it hides what those tests say is
+seen: against the live seat's 137 px the opponent's duelist in the shoulder view
+at 1280 × 800 is **64%** visible, under the 70% `camera.test.ts` asserts against
+the 128-px band (71%); and at 1280 × 800 the credit and the chip stood over the far
+rank's creatures in every villain game seen from Pacho's chair. Measured over the corpus at the table
+view, the far seat's status strips under the chrome at 1280 × 746 went from
+**7.34% to 0.50%** (1,971 → 135 of 26,842), and over the audit's seat-1 recordings
+of the villain decks from **21.5% to 6.5%**. The fixed width answers the one
+defect a measurement cannot see in a still: the switcher jumping rows whenever a
+batch started.
+
+**Rejected.**
+- **Raising `HUD_TOP_PX` to the column** (140): honest about the chrome, but it
+  moves the band every far-end test measures against and takes the opponent's
+  duelist in the shoulder view at 1280 × 800 to 61%, under camera.test's 70%;
+  the chrome was what grew, so the chrome is what gives the row back.
+- **Showing the chip only while a card is pointed at**: the column would grow a
+  row whenever the pointer crossed a card — a layout shift under the hand that
+  moves it — and D241's inert chip is how the key is discovered.
+- **One-line prompts** (widening the prompt past 46ch): the prompt is the engine's
+  text and any length; a longer one wraps again.
+- **Short labels for the checkboxes** ("FX", "cap"): D256 rejected "CC" for a
+  learner who reads *caption*; folding the one word the select already shows was
+  enough.
+- **Collapsing the step and skip buttons to glyphs**: the same reason, and not
+  needed.
+
+---
+
+## D266 — The figure budget is spent on the viewer's own seat first
+
+*Branch `play-distance-audit`; the lane's reserved range D265–D269.*
+
+**2026-09-29** (`docs/evidence/play-distance-audit.md` §F5)
+
+**Decision.** `figures/pose.ts`'s `MAX_FIGURES` (12) budget — how many creatures
+carry a model; the rest draw discs — is spent in `budgetOrderOf`'s order: the
+viewer's own seat's placements first, then the other seat's, then the stack, each
+in placement order. `personal.ts`'s lookup spends the personal tier's budget
+(`PERSONAL_MAX_FIGURES`, `PERSONAL_TABLE_TRIS`) in the same order. For a stream
+whose viewer is player 0 — every committed recording, and a live seat — the order
+is the placement order unchanged, so no corpus count moves.
+
+**Rationale.** `layout()` places the seats in the wire's player order, and the
+budget followed it: seen from seat 1 (`./scripts/spectate.sh --seat 1`, which the
+audit used to see each villain deck from Pacho's chair — the composition a bare
+`./scripts/play.sh` gives the user), the villains' twelve took every model and the
+viewer's OWN creatures stood as discs under floating status strips. A seat's
+eyes are what the arena is drawn for (M47: one seat's eyes); the viewer's own
+figures are the ones the viewer plays. `figure-pose.test.ts` sees the committed
+corpus from its other chair (the same boards, the viewer swapped): the budget binds
+on 602 of 5,520 board frames, and in placement order the viewer's creatures would
+have gone without on **599** of them (the four villain recordings); with the
+budget order, no creature of the other seat carries a model while one of the
+viewer's stands as a disc for want of one. Reverting the order fails it at
+`villain-doom-248@305`.
+
+**Rejected.** Alternating the seats (fairness to both, but the viewer's side is
+the one read closest and played); raising `MAX_FIGURES` (a budget, D222 and
+D233's tables are already over the lines); nearest-to-the-camera first (a pose that
+depends on the view, which D85 rejected for the carriers).

@@ -88,10 +88,33 @@ import { attachDataOf, type FigureData, type ModelData, type Stance } from './ty
  *
  * Sized for 12: only 5.6% of the corpus's 3,679 board frames reach 10 creatures
  * and the ceiling is 21 (`human-sideboard-7.jsonl`). Above the cap the surplus
- * degrade to discs, in placement order, which is deterministic — "degrade, don't
- * stutter" (report 09 §9.2 rule 9), applied to the new layer.
+ * degrade to discs, in {@link budgetOrderOf}'s order — the viewer's own seat
+ * first (D266) — which is deterministic: "degrade, don't stutter" (report 09
+ * §9.2 rule 9), applied to the new layer.
  */
 export const MAX_FIGURES = 12;
+
+/**
+ * **The order the figure budget is spent in** (the play-distance audit, D266):
+ * the viewer's own seat's placements first, then the other seat's, then the
+ * stack — each in placement order. `layout()` places the seats in the wire's
+ * player order, so the budget used to go to player 0 whoever was watching: from
+ * seat 1 (`spectate.sh --seat 1`, a villain deck across the table) the villains'
+ * twelve took every model and the viewer's own creatures stood as discs under
+ * floating strips. For a stream whose viewer is player 0 — every committed
+ * recording, and a live seat — this is the placement order unchanged.
+ * `personal.ts`'s lookup spends the personal tier's budget in the same order.
+ */
+export function budgetOrderOf(placements: readonly Placement[]): readonly Placement[] {
+  const rank = (p: Placement): number => (p.kind === 'stack' ? 2 : p.seat === 'you' ? 0 : 1);
+  let sorted = true;
+  for (let i = 1; i < placements.length && sorted; i++) sorted = rank(placements[i - 1]!) <= rank(placements[i]!);
+  if (sorted) return placements;
+  return placements
+    .map((p, i) => [p, i] as const)
+    .sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1])
+    .map(([p]) => p);
+}
 
 /**
  * The stand disc's radius, in world units, at the smallest and largest creature
@@ -630,7 +653,7 @@ function interposeMap(combat: Combat | null): Map<number, number> {
  * The manifestation stage of one frame.
  *
  * One pose per battlefield creature, at most {@link MAX_FIGURES} of them
- * carrying a model, in placement order.
+ * carrying a model, in {@link budgetOrderOf}'s order (your seat first, D266).
  */
 export function figurePose(
   placed: Layout,
@@ -649,7 +672,7 @@ export function figurePose(
 
   const traitData = options.traits ?? TRAITS;
   let withModel = 0;
-  for (const placement of placed.placements) {
+  for (const placement of budgetOrderOf(placed.placements)) {
     const ghost = isGhostCard(placement);
     const creature = !ghost && isFigureCard(placement);
     const candidate = !ghost && !creature && isVehicleCandidate(placement);

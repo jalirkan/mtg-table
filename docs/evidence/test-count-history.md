@@ -322,3 +322,14 @@ its name says so), and liveness's GPU-pass clause reads every body the Tier 2
 scan reads, the standee's `standeeFallOf` among them. Inside `check-all.sh`:
 **1,227 / 1,216 pass / 0 fail / 11 skipped** plus 157 vitest
 (`var/check-all-gpu-fix3.log`).
+
+## The play-distance audit (`play-distance-audit`, D265–D266)
+
+`npm --prefix web test` standalone: **1,191 `node --test` (1,182 pass, 0 fail, 9
+skipped) + 157 vitest (9 files)**, from `e2c337c`'s **1,184 + 157**: the lane's 7
+`node --test` cases — `hud.test.ts`'s four (the column under `HUD_TOP_PX`, the
+fixed-width status, one strip row from 1280 px, the measured controls),
+`figure-pose.test.ts`'s viewer-first budget over the corpus seen from its other
+chair, `caption.test.ts`'s every-view census and liveness's `arena/hud.ts`
+clause — and no vitest. Inside `check-all.sh`: **1,206 / 1,195 pass / 0 fail / 11
+skipped** plus 157 vitest, twice.

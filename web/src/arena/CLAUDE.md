@@ -5,7 +5,7 @@ and `web/CLAUDE.md` (the board's conventions, whose M4 convention 2 this file's
 `CardPlane` mirrors). They are in the order they were written: M7's Tier 1, Tier
 2 and its three later slices, report 15's three art-direction lanes, the status
 layer, the personal tier's loader, villain identity and its second lane, then
-sound, the caption and the GPU pass. The workshop (`web/src/workshop/`) draws with this
+sound, the caption, the GPU pass and the play-distance audit. The workshop (`web/src/workshop/`) draws with this
 directory's code, and its own conventions are `web/CLAUDE.md`'s *Workshop*.
 
 ## The conventions M7 added — the arena
@@ -1237,7 +1237,7 @@ relief-window follow-up names where one would mount.
 
 **Inspect from the table** (**D241**) is navigation, not a renderer:
 `arena/inspect.ts`'s `inspectTargetOf` is THE planner of what the `I` row
-(`keys.ts`'s `inspectCard`) and the `.arena__inspect` chip under the art credit
+(`keys.ts`'s `inspectCard`) and the `.arena__inspect` chip beside the art credit
 open — the workshop's inspect view, `#workshop?card=<name>&view=inspect` — for the
 card under the pointer, else the last clicked, else the last pointed at. It is
 pure (liveness), `Arena.tsx` is its one caller, and it reads a name only after
@@ -1407,3 +1407,33 @@ SwiftShader and against bursts of uploads on a fast machine, with the first cut 
 window counted in time) as its control. After changing any rule line above,
 regenerate the rules manifest (`CLAUDE_MD_RULES_WRITE=1 node --test
 web/test/claude-md.test.ts`).
+
+## The play-distance audit — the conventions D265–D266 added
+
+Two, and the thesis is one sentence: **the lanes were verified alone, so the
+whole is held where they meet.** The audit looked at the eight lanes of
+2026-09-28/29 together, at 1600 × 1000 and 1280 × 800, from both seats and every
+view (`docs/evidence/play-distance-audit.md`, the contact sheets under
+`var/audit/`); PLAN.md's *The play-distance audit* has the defect list, its
+grades and the owner questions it raised.
+
+1. **The chrome column is three rows under `HUD_TOP_PX`** (**D265**). The layer's
+   in-flow rows are the decision bar (or the watching line), the cue strip beside
+   the camera switcher, and the credit line beside the inspect chip; everything
+   else it mounts is positioned out of the flow. `arena/hud.ts` is the column in
+   numbers — each row's height and the strip's widths as headless Chromium drew
+   them, and the three breakpoints (the strip's narrow form below 1400 px, the
+   switcher's labels from 1840) — and `hud.test.ts` holds the sum under
+   `HUD_TOP_PX` (112 px at a live seat whose prompt wraps), the layer to its three
+   rows, the stylesheet to the numbers and the strip to the controls that were
+   measured. **A new widget goes on an existing row or out of the flow**; a
+   control added to the cue strip or a view added to the switcher fails the test
+   until the row is measured again in a browser (the evidence's §F1 says how).
+   The cue status is a fixed width, so a batch never changes the strip's width.
+2. **The figure budget serves the viewer's seat first** (**D266**).
+   `figures/pose.ts`'s `budgetOrderOf` — your seat's placements, the other
+   seat's, then the stack — is the one order `MAX_FIGURES` is spent in, and
+   `personal.ts`'s lookup spends the personal budget in it too. Seen from player 0
+   (every committed recording, a live seat) it is the placement order;
+   `figure-pose.test.ts` sees the corpus from its other chair, where placement
+   order would have left your own creatures as discs on 599 frames.

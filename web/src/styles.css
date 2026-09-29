@@ -2879,10 +2879,29 @@ button.zonerow__open:hover {
   pointer-events: auto;
 }
 
+/*
+ * **The credit line and the inspect chip share one row** (the play-distance
+ * audit, D265): D241 put the chip on a row of its own under the credit, the
+ * column's fourth, and at a live seat whose prompt wraps that took the chrome to
+ * 137 px — past `HUD_TOP_PX` (128), the band the carriers, the duelists and the
+ * seat plates are measured against. The wrapper is layout only and keeps the
+ * layer's `pointer-events: none`; it stops 15rem short of the right edge, as the
+ * strips do, for the opponent's plate.
+ */
+.arena__creditrow {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  column-gap: 0.4rem;
+  min-inline-size: 0;
+  max-inline-size: calc(100% - 15rem);
+}
+
 .arena__credit {
   pointer-events: auto;
-  align-self: flex-start;
-  max-inline-size: min(980px, 92vw);
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 980px;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
   background: #0b0e13c4;
@@ -2905,9 +2924,11 @@ button.zonerow__open:hover {
  */
 .arena__inspect {
   pointer-events: auto;
-  align-self: flex-start;
-  margin-block-start: 0.25rem;
-  max-inline-size: min(560px, 80vw);
+  /* Beside the credit, on its row (D265): it gives way before the credit does
+     (the credit is the attribution the art travels with), down to its label. */
+  flex: 0 4 auto;
+  min-inline-size: 13ch;
+  max-inline-size: 560px;
   padding: 0.12rem 0.45rem;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -3071,7 +3092,9 @@ a.arena__inspect:hover {
   align-self: flex-start;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  /* 0.25rem, not 0.35 (the play-distance audit, D265): ten gaps, 16 px — what
+     the 1280 px row was short of with the strip idle. */
+  gap: 0.25rem;
   margin-block-end: 0.3rem;
   padding: 0.2rem 0.4rem;
   border: 1px solid var(--line);
@@ -3111,6 +3134,49 @@ a.arena__inspect:hover {
 }
 
 /*
+ * **The queue's status is a FIXED width** (the play-distance audit, D265;
+ * `arena/hud.ts`'s `CUE_STRIP`, held by `hud.test.ts`). It grew by ~92 px the
+ * moment a batch started ("idle" → "12 steps · 4155 ms"), so the camera switcher
+ * beside it wrapped onto a row of its own over the opponent's rank whenever cues
+ * played, and back when they stopped. A box of `statusCh.wide` characters holds
+ * the longest status `cueStatusOf` writes, so the strip is as wide playing as
+ * idle. Below `narrowBelowPx` the strip takes its narrow form: the word *speed*
+ * folds into the select's tooltip and the status is the seconds of film left,
+ * in `statusCh.narrow` characters — the whole status is the box's tooltip.
+ */
+.arena__cues-status {
+  display: inline-flex;
+  align-items: center;
+}
+
+.arena__cues-status-wide,
+.arena__cues-status-narrow {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.arena__cues-status-wide {
+  inline-size: 21ch;
+}
+
+.arena__cues-status-narrow {
+  display: none;
+  inline-size: 6ch;
+}
+
+@media (max-width: 1399px) {
+  .arena__cues-speed,
+  .arena__cues-status-wide {
+    display: none;
+  }
+
+  .arena__cues-status-narrow {
+    display: inline-block;
+  }
+}
+
+/*
  * M7 Tier 2 (T8) — the camera switcher: five views, the director, spectator.
  *
  * Beside the cue strip, in the same top-left column, because that is the part of
@@ -3128,15 +3194,19 @@ a.arena__inspect:hover {
  * only: it keeps the layer's `pointer-events: none`, so the canvas still owns
  * every pixel between the two strips. It stops 15rem short of the right edge for
  * the same reason `.arena__decision` does — the opponent's plate is there — and
- * wraps rather than running under it. Below 1900 px each view button collapses
+ * wraps rather than running under it. Below 1840 px each view button collapses
  * to its key; the name stays in the tooltip and in `aria-label`. (It was 1400
  * until the caption's checkbox joined the cue strip, D256: at 1600 px the two
  * strips with their labels then measured 728 + 672 px against the 1,360 the row
  * has, and the switcher wrapped to a row of its own — the defect this row fixed.
  * It was 1800 until the rebase onto the sound cues put their checkbox beside it:
- * the cue strip is 790 px idle and up to 882 px while cues play, so with the
- * labels the row needs 1,560 px, and at 1800 px — 1,540 px of row — the switcher
- * wrapped whenever cues played. At 1900 px the row has 1,640.)
+ * the cue strip was 790 px idle and up to 882 px while cues played, so with the
+ * labels the row needed 1,560 px, and at 1800 px — 1,540 px of row — the switcher
+ * wrapped whenever cues played; 1900 until the play-distance audit fixed the
+ * status's width, D265: the wide strip is now 886 px idle and playing alike, the
+ * labelled row needs 1,565 px, which a viewport of 1,824 px gives, and 1840 keeps
+ * 16 px in hand. `arena/hud.ts`'s `CUE_STRIP` holds every one of these numbers,
+ * and `hud.test.ts` holds this stylesheet to it.)
  */
 .arena__strips {
   align-self: flex-start;
@@ -3147,7 +3217,7 @@ a.arena__inspect:hover {
   max-inline-size: calc(100% - 15rem);
 }
 
-@media (max-width: 1899px) {
+@media (max-width: 1839px) {
   .arena__view-label,
   .arena__views-title {
     display: none;

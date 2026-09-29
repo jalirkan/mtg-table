@@ -326,7 +326,11 @@ export const OPP_SILHOUETTE_SCALE = 0.8;
  * 1600 × 1000, 1280 × 800, 1920 × 1080, 1000 × 1000 and 2560 × 1080 — fixed
  * pixel heights, so the band a pose must keep out of is `HUD_TOP_PX / canvas
  * height` of the frame. The canvas starts 54 px down the window, under the app's
- * own header.
+ * own header. Since the play-distance audit (D265) the band holds the column as
+ * well as the poses: `arena/hud.ts` sums the column's three rows — the inspect
+ * chip beside the credit, the cue strip one row with the switcher from 1280 px —
+ * at 112 px at its worst (a live seat's two-line prompt), and `hud.test.ts`
+ * fails a fourth row.
  */
 export const HUD_TOP_PX = 128;
 

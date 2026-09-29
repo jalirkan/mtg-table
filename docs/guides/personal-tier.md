@@ -414,7 +414,7 @@ and has an **inspect** view: the figure in its signature pose in front of its
 card's art box — a window with depth where the relief cache has the painting's
 depth map (*The relief cache*, below) — the frame and the text floating beside
 it. **From the table** (D241): point at a face-up creature in the arena and press
-**`I`** — or click the *⌕ inspect* chip under the art credit — and the workshop
+**`I`** — or click the *⌕ inspect* chip beside the art credit — and the workshop
 opens on that card's inspect view (`#workshop?card=<name>&view=inspect`), dressed
 exactly when the table was and in the same look; its **▣ arena** link comes back
 to the same frame. A face-down or hidden card is never inspected: the chip and the

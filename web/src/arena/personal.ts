@@ -37,7 +37,7 @@
  */
 
 import { isHidden } from '../protocol.ts';
-import { fitHeight, type FigureLayout, type FigurePose } from './figures/pose.ts';
+import { budgetOrderOf, fitHeight, type FigureLayout, type FigurePose } from './figures/pose.ts';
 import { restModelId } from './figures/rests.ts';
 import type { Layout, Placement, Seat } from './layout.ts';
 import { PERSONAL_CALL_CAP, PERSONAL_MAX_FIGURES, PERSONAL_TABLE_TRIS, PERSONAL_TRI_CAP } from './perf.ts';
@@ -176,7 +176,8 @@ export function seatTriangles(overlay: PersonalOverlay): number {
 
 /**
  * **THE lookup** — card id → the personal model it may wear. Placements in
- * layout order (the ranks before the stack, as `figurePose` reads them), each
+ * budget order (your seat's ranks, the other seat's, then the stack — as
+ * `figurePose` spends its figures, D266), each
  * card once; at most `max` creatures (`PERSONAL_MAX_FIGURES`) and at most
  * `triangles` personal triangles between them (`PERSONAL_TABLE_TRIS` less what
  * the seats' models spend, **D197**) — a creature whose model would cross either
@@ -195,7 +196,7 @@ export function personalChoicesOf(
   if (overlay.cards.size === 0 || max <= 0) return out;
   const seen = new Set<number>();
   let left = triangles;
-  for (const placement of placed.placements) {
+  for (const placement of budgetOrderOf(placed.placements)) {
     if (out.size >= max) break;
     if (placement.kind !== 'creature' && placement.kind !== 'stack') continue;
     if (seen.has(placement.cardId)) continue;

@@ -157,6 +157,7 @@ import { dressPoses, personalChoicesOf } from './personal.ts';
 import { dressStandees, standeeChoicesKeyOf, standeeChoicesOf, type StandeeCanvas } from './standee.ts';
 import { NO_STANDEES, RELIEF_BASE, useReliefIndex, useStandees, type StandeesLoaded } from './scene/reliefCache.ts';
 import { inspectContextOf, inspectTargetOf, type InspectTarget } from './inspect.ts';
+import { cueStatusOf } from './hud.ts';
 import { FigureLayer } from './scene/FigureLayer.tsx';
 import { HitProxy } from './scene/HitProxy.tsx';
 import type { RigMap } from './scene/rigs.ts';
@@ -1801,17 +1802,26 @@ export default function Arena({
             onToggleSpectator={toggleSpectator}
           />
         </div>
-        <ArtCredit art={art} placements={placed.placements} hovered={hovered} />
+        {/* **One row for the credit and the inspect chip** (D265, the
+            play-distance audit): D241 mounted the chip on a row of its own under
+            the credit, and at a live seat whose prompt wraps that fourth row took
+            the chrome column to 137 px — past `HUD_TOP_PX`, the band every
+            far-end pose is measured against. Side by side, the column is three
+            rows again (`arena/hud.ts`, held by `hud.test.ts`). The wrapper is
+            layout only and stays `pointer-events: none`, like `.arena__strips`.
+            D241: the chip is the hover surface's button (the arena has no card
+            zoom), the same target as `I`, and inert with its reason for a
+            face-down or hidden card. */}
+        <div className="arena__creditrow">
+          <ArtCredit art={art} placements={placed.placements} hovered={hovered} />
+          <InspectChip target={inspectTarget} />
+        </div>
         {/* **D255 — the caption strip**, at the mount point the story page's
             follow-up 1 named: the narrator's moment for the frame on screen, as
             plain data from `main.tsx`. It sits over the table's right edge,
             between the seat plates (`.arena__caption`, D256); its root class is
             in liveness.test.ts's widget table and opts back into pointer events. */}
         {captionOn && <CaptionStrip caption={caption} />}
-        {/* D241: the inspect chip — the hover surface's button (the arena has no
-            card zoom), the same target as `I`, and inert with its reason for a
-            face-down or hidden card. */}
-        <InspectChip target={inspectTarget} />
         {hotkeysOpen && (
           <HotkeysOverlay
             onClose={() => {
@@ -1860,8 +1870,9 @@ function CueControls({
   const [, bump] = useReducer((n: number) => n + 1, 0);
   useEffect(() => queue.onChange(bump), [queue]);
 
-  const pending = queue.pendingSteps;
-  const remaining = Math.round(queue.totalRemainingMs());
+  // D265: a fixed-width status (`arena/hud.ts`), so the strip is as wide playing
+  // as idle and a batch never wraps the camera switcher onto a row of its own.
+  const status = cueStatusOf(queue.pendingSteps, queue.totalRemainingMs());
 
   return (
     <div className="arena__cues" role="group" aria-label="Cue playback">
@@ -1880,7 +1891,7 @@ function CueControls({
         onClick={() => {
           queue.stepBatch();
         }}
-        disabled={pending === 0}
+        disabled={queue.pendingSteps === 0}
         title="Play the earliest queued batch through to its end"
       >
         step batch
@@ -1890,7 +1901,7 @@ function CueControls({
         onClick={() => {
           queue.skipCurrent();
         }}
-        disabled={pending === 0}
+        disabled={queue.pendingSteps === 0}
         title="Snap the cue that is playing and pull the rest forward"
       >
         skip cue
@@ -1900,14 +1911,17 @@ function CueControls({
         onClick={() => {
           queue.skipAll();
         }}
-        disabled={pending === 0}
+        disabled={queue.pendingSteps === 0}
         title="Snap everything — the board jumps to exactly what the engine described"
       >
         skip all
       </button>
-      <label>
-        speed{' '}
+      {/* Below `CUE_STRIP.narrowBelowPx` the word folds away (D265) and the
+          select, which shows its own `1×`, says what it is in its tooltip. */}
+      <label title="Cue speed: how fast the animation clock runs">
+        <span className="arena__cues-speed">speed</span>
         <select
+          aria-label="cue speed"
           value={String(queue.speed)}
           onChange={(event) => {
             queue.setSpeed(Number(event.currentTarget.value));
@@ -1992,8 +2006,9 @@ function CueControls({
         />{' '}
         caption
       </label>
-      <span className="muted">
-        {pending > 0 ? `${String(pending)} step${pending === 1 ? '' : 's'} · ${String(remaining)} ms` : 'idle'}
+      <span className="arena__cues-status muted" title={status.title}>
+        <span className="arena__cues-status-wide">{status.wide}</span>
+        <span className="arena__cues-status-narrow">{status.narrow}</span>
       </span>
     </div>
   );

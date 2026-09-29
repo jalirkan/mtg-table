@@ -513,9 +513,9 @@ interface Tally {
   framesHit: number;
 }
 
-/** Every board frame of the corpus at the table view, each thing on it against a rectangle per canvas. */
-function measure(rectFor: (width: number) => CornerRect): Map<string, Tally> {
-  const pose = VIEW_BY_ID.table.pose;
+/** Every board frame of the corpus at a view (the table's by default), each thing on it against a rectangle per canvas. */
+function measure(rectFor: (width: number) => CornerRect, view: keyof typeof VIEW_BY_ID = 'table'): Map<string, Tally> {
+  const pose = VIEW_BY_ID[view].pose;
   const out = new Map<string, Tally>();
   for (const canvas of CANVASES) {
     out.set(`${String(canvas.width)}x${String(canvas.height)}`, { things: 0, hand: 0, stack: 0, battlefield: 0, piles: 0, frames: 0, framesHit: 0 });
@@ -602,5 +602,30 @@ test('caption: over every board frame at the table view the strip covers no hand
   for (const [canvas, t] of measure(bottomCentre)) {
     console.log(`  control (bottom centre) @${canvas}: hand ${String(t.hand)}, battlefield ${String(t.battlefield)} in ${String(t.framesHit)} of ${String(t.frames)} frames`);
     assert.ok(t.hand > t.frames / 2, `@${canvas}: the bottom centre covers a hand card in only ${String(t.hand)} of ${String(t.frames)} frames — the control has no teeth`);
+  }
+});
+
+/**
+ * **The strip in every view, re-measured** (the play-distance audit, 2026-09-29).
+ * D256 measured the table view (held above) and the low view, and printed the
+ * others once over the 20 logs of its day; the rebase onto the villain logs did
+ * not measure them again. They are printed here on every run, over whatever the
+ * corpus is, and two of D256's claims are held: the low view — seat-safe — covers
+ * nothing from 1600 px, and no seat-safe view covers a pile. What the strip does
+ * cover elsewhere is the caption's follow-up 2 (a place per view), whose owner
+ * question the audit's pictures illustrate: the right end of your hand in the
+ * shoulder view, and the stack in the low view below 1600 px.
+ */
+test('caption: the strip in every view, re-measured — the low view covers nothing from 1600 px, and no seat-safe view covers a pile', () => {
+  for (const view of ['shoulder', 'low', 'oppShoulder', 'side'] as const) {
+    for (const [canvas, t] of measure(captionRectOf, view)) {
+      console.log(
+        `  caption @${canvas}, ${view}: ${String(t.framesHit)} of ${String(t.frames)} frames touch it — ` +
+          `hand ${String(t.hand)}, stack ${String(t.stack)}, battlefield ${String(t.battlefield)}, piles ${String(t.piles)}`,
+      );
+      const width = Number(canvas.split('x')[0]);
+      if (view === 'low' && width >= 1600) assert.equal(t.framesHit, 0, `@${canvas}: the low view puts something under the strip`);
+      if (view === 'shoulder' || view === 'low') assert.equal(t.piles, 0, `@${canvas}: the ${view} view puts a pile under the strip`);
+    }
   }
 });

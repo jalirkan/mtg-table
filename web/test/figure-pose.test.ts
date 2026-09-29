@@ -23,7 +23,8 @@ import { fileURLToPath } from 'node:url';
 import cuesJson from '../src/arena/cues/cues.json' with { type: 'json' };
 import figuresJson from '../src/arena/figures/figures.json' with { type: 'json' };
 import modelsJson from '../src/arena/figures/models.json' with { type: 'json' };
-import { MAX_FIGURES, discRadiusFor, figurePose, fitHeight } from '../src/arena/figures/pose.ts';
+import { MAX_FIGURES, budgetOrderOf, discRadiusFor, figurePose, fitHeight } from '../src/arena/figures/pose.ts';
+import { figureFor } from '../src/arena/figures/resolve.ts';
 import { baseModelOf, restOfModel } from '../src/arena/figures/rests.ts';
 import { CARRIER_BOUNDS } from '../src/arena/figures/props.ts';
 import { LIVE_ASPECTS, REST_POSE, projectToNdc } from '../src/arena/camera.ts';
@@ -247,6 +248,97 @@ test('figure-pose: above MAX_FIGURES the surplus degrade to discs', () => {
   assert.equal(poses.size, many.length, 'every creature still has a pose');
   const withModel = [...poses.values()].filter((p) => p.modelId !== null);
   assert.equal(withModel.length, MAX_FIGURES, 'the model cap is the cap');
+});
+
+/**
+ * **The model budget is spent on the viewer's own seat first** (the play-distance
+ * audit, D266). `layout()` places the seats in the wire's player order, and the
+ * budget followed it: from seat 1 — `spectate.sh --seat 1`, a villain deck across
+ * the table — the villains' twelve took every model and the viewer's own
+ * creatures stood as discs under floating strips. Every committed recording is
+ * seen from player 0, so the sweep sees the corpus from its OTHER chair: the same
+ * battlefields, the viewer swapped. Wherever the budget binds, no creature of the
+ * other seat carries a model while one of the viewer's stands as a disc for want
+ * of one. THE CONTROL: the placement order the budget used to follow starves the
+ * viewer's seat on the same frames — a measurement of how often it did.
+ */
+test('figure-pose: the model budget is spent on the viewer’s seat first — the corpus seen from its other chair (D266)', () => {
+  const eligible = (pose: { anonymous: boolean; modelId: string | null }, p: Placement): boolean =>
+    !pose.anonymous && (p.kind === 'creature' || p.kind === 'stack') && figureFor(p.card, DATA).spec.model !== null;
+  let frames = 0;
+  let binding = 0;
+  let starvedBefore = 0;
+  let starvedFrames: string[] = [];
+  const seen = new Map<string, number>();
+  for (const name of readdirSync(FIXTURES + 'games/').sort()) {
+    if (!name.endsWith('.jsonl')) continue;
+    const log = parseFrameLog(readFileSync(FIXTURES + 'games/' + name, 'utf8'));
+    let state = initialState(log.header);
+    const frames_ = log.frames as Frame[];
+    for (let index = 0; index < frames_.length; index++) {
+      state = reduce(state, frames_[index]!);
+      if (frames_[index]!.type !== 'state' || state.board === null) continue;
+      const ids = state.board.players.map((pl) => pl.id);
+      const other = ids.find((id) => id !== (state.hello?.you ?? state.session?.seat ?? ids[0]));
+      if (other === undefined) continue;
+      // The same board, seen from the other chair.
+      const swapped = {
+        ...state,
+        hello: state.hello === null ? null : { ...state.hello, you: other },
+        session: state.session === null ? null : { ...state.session, seat: other },
+      } as ClientState;
+      const placed = layout(swapped, PRESENCE);
+      const poses = figurePose(placed, swapped.board?.combat ?? null, DATA, { models: MODELS });
+      frames += 1;
+      const byId = new Map(placed.placements.filter((p) => p.kind === 'creature' || p.kind === 'stack').map((p) => [p.cardId, p]));
+      let yourDiscs = 0;
+      let theirModels = 0;
+      let wanting = 0;
+      for (const pose of poses.values()) {
+        const p = byId.get(pose.cardId);
+        if (p === undefined || !eligible(pose, p) || (pose as { silhouette?: unknown }).silhouette != null) continue;
+        wanting += 1;
+        if (pose.modelId === null && p.seat === 'you' && p.kind === 'creature') yourDiscs += 1;
+        if (pose.modelId !== null && p.seat === 'opp' && p.kind === 'creature') theirModels += 1;
+      }
+      if (wanting > MAX_FIGURES) binding += 1;
+      assert.ok(
+        yourDiscs === 0 || theirModels === 0,
+        `${name}@${String(index + 1)}, seen from player ${String(other)}: ${String(yourDiscs)} of the viewer's creatures are discs while ${String(theirModels)} of the other seat's carry a model`,
+      );
+      // THE CONTROL: the placement order the budget used to follow.
+      let spent = 0;
+      let starved = 0;
+      for (const p of placed.placements) {
+        const pose = poses.get(p.cardId);
+        if (pose === undefined || (p.kind !== 'creature' && p.kind !== 'stack') || !eligible(pose, p) || (pose as { silhouette?: unknown }).silhouette != null) continue;
+        if (spent >= MAX_FIGURES) {
+          if (p.seat === 'you' && p.kind === 'creature') starved += 1;
+          continue;
+        }
+        spent += 1;
+      }
+      if (starved > 0) {
+        starvedBefore += 1;
+        seen.set(name, (seen.get(name) ?? 0) + 1);
+        if (starvedFrames.length < 3) starvedFrames.push(`${name}@${String(index + 1)} (${String(starved)} of yours)`);
+      }
+    }
+  }
+  console.log(
+    `  seen from the other chair: ${String(frames)} board frames, the budget binds on ${String(binding)}; ` +
+      `in placement order the viewer's own creatures would have gone without on ${String(starvedBefore)} ` +
+      `(${[...seen].map(([f, n]) => `${f} ${String(n)}`).join(', ')}; e.g. ${starvedFrames.join(', ')})`,
+  );
+  assert.ok(frames > 5000, `the sweep saw ${String(frames)} frames`);
+  assert.ok(starvedBefore > 50, 'the placement-order control starves no one — the sweep has no teeth');
+  // Seen from player 0 — every committed recording — the budget order IS the placement order.
+  for (const { state } of fixtureStates().filter((_, i) => i % 7 === 0)) {
+    const placed = layout(state, PRESENCE);
+    const order = budgetOrderOf(placed.placements).filter((p) => p.kind === 'creature' || p.kind === 'stack');
+    const raw = placed.placements.filter((p) => p.kind === 'creature' || p.kind === 'stack');
+    assert.deepEqual(order.map((p) => p.key), raw.map((p) => p.key));
+  }
 });
 
 // ---------------------------------------------------------------------------

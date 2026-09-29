@@ -362,7 +362,6 @@ villain identity's rebase, were removed at the same recount.)
 | [Sound cues](#fu-sound) | 9 | open | The frame-to-ear latency is unmeasured | `web/src/arena/scene/audio.ts` |
 | [Arena caption](#fu-caption) | 1 | open | A caption is up only as long as its frame | `web/src/main.tsx` |
 | [Arena caption](#fu-caption) | 2 | open | The strip does not move with the camera view: the shoulder view puts your hand under it | `web/src/arena/caption.ts` |
-| [Arena caption](#fu-caption) | 3 | open | At 1280 px the two strips take two rows, idle as well as playing since the sound checkbox | `web/src/styles.css` |
 | [Arena caption](#fu-caption) | 4 | open | A live seat's caption has no moment of its own `c2s` frames | `web/src/liveLog.ts` |
 | [Arena caption](#fu-caption) | 5 | open | Below 1280 px the strip covers the right end of a full land rank | `web/src/arena/caption.ts` |
 | [Arena caption](#fu-caption) | 6 | open | The live seat's cost is measured in Node, not in the browser | `web/src/main.tsx` |
@@ -378,6 +377,9 @@ villain identity's rebase, were removed at the same recount.)
 | [GPU pass](#fu-gpu) | 10 | open | At a browser's pacing the cold scrub can step a fast GPU to 0.75, and it never climbs back | `web/src/arena/governor.ts` |
 | [GPU pass](#fu-gpu) | 11 | open | At vsync a real GPU's p50/p95 are saturated (16.7–16.8 ms in every build): the regression signal is the unthrottled p50/p95 in pairs, and D271.5 lengthens the unthrottled drain | `tools/arena-bench.mjs` |
 | [GPU pass](#fu-gpu) | 12 | open | `anchorPosition` builds a closure and a tuple a call for every non-figure effect every frame, outside the scans; the cue layer allocates by design | `web/src/arena/layout.ts` |
+| [Play-distance audit](#fu-audit) | 1 | open | The audit's drivers are scratch: the pictures are not repeatable from the repo | `var/audit/drv/` |
+| [Play-distance audit](#fu-audit) | 2 | open | No committed recording sees a villain deck from Pacho's chair | `fixtures/games/` |
+| [Play-distance audit](#fu-audit) | 3 | open | The far strips under the chrome are measured by a scratch census, not held (owner question 32 first) | `web/test/status.test.ts` |
 
 ### Questions only the owner can settle
 
@@ -416,6 +418,11 @@ villain identity's rebase, were removed at the same recount.)
 | [31](#owner-questions) | Should a person's skin tone follow its card, or stay slice 4's one tone? | open — the plan runs on its default |
 | [32](#owner-questions) | Keep the portrait standee's ink rim, its legibility floor at 30 px on the canvas you draw (a 1280 × 800 window stands about one standee in six), and its small kneel? | open — the plan runs on its default |
 | [33](#owner-questions) | Is a machine with no GPU acceleration (a software rasteriser) a target for the arena? | open — the plan runs on its default |
+| [32](#owner-questions) | The far seat's status strips that still stand under the chrome: anchor them lower, or accept? | open — the plan runs on its default |
+| [33](#owner-questions) | A status strip over a disc floats at a figure's height: anchor it at the disc? | open — the plan runs on its default |
+| [34](#owner-questions) | Your duelist under the turn-order bar at 1280 px (the low and shoulder views): move one, or accept? | open — the plan runs on its default |
+| [35](#owner-questions) | The caption's place per view: the stack under it in the low view below 1600 px, your hand in the shoulder view | open — the plan runs on its default |
+| [36](#owner-questions) | Should a seat's duelist — your own Fury model — follow the deck the seat plays? | open — the plan runs on its default |
 
 ---
 
@@ -451,6 +458,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The portrait standee: a face-up creature's painting on the table *(off the plan; report 15 §9.4's optional item, the likeness experiment's §10)* | 1 day | **built, measured, gated and documented** on branch `standee` (2026-09-29), off `main`'s `e2c337c` — the personal tier's second renderer path: a face-up creature no personal model dresses stands as its painting's near subjects, cut from the relief cache (the dev route measures the cut from each map), where its CC0 body would; turned to the camera on both seats, as tall as its cut under the width clamp, kneeling as a painting can, one draw call; the workshop's pedestal wears it behind the *personal / repo* toggle; a hostile corpus sweep for hard rule 8; **D260–D264**; seven follow-ups; *The personal tier*'s *The portrait standee* |
 | — | The arena's caption: the story at the table *(off the plan; the story page's follow-up 1)* | ½ day | **built, gated and documented** on branch `arena-story-caption` (2026-09-29), off `main`'s `24ba603`, rebased onto `2c7ed8e` — the narrator's moment for the frame on screen in a strip over the arena's right edge, the one or two before it dimmed, each turn's lines under its marker; THE narrator run in `main.tsx` (`story/caption.ts`, by `import()`) and handed down as plain data, the arena importing none (**D255**); a live seat's game recorded off the socket (`liveLog.ts`), its caption the replay's at 5,520 of 5,522 snapshots (4,075 of 4,077 before the rebase); on while watching, off at a live seat, `N` (**D256**); placed by measurement over the corpus; hard rule 8 by rendering every cursor of every fixture; six follow-ups; *The arena's caption*, just above *Deferred* |
 | — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified three times and fixed three times** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
+| — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **D265–D266**; five owner questions (32–36); three follow-ups; *The play-distance audit*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -8130,10 +8138,20 @@ fingerprinted before and after and did not change.
 5. **The far seat's strips sit ~30 px above the heads**, over the opponent's
    land rank from the table view: the heads lean toward the lens and the anchor
    is over the stand point. Anchoring at the head's rest-pose position (from the
-   rig at commit) would bring them down.
+   rig at commit) would bring them down. **The play-distance audit measured what
+   it costs** (the table view, the chrome as Chromium draws it): after D265 the
+   credit row covers 0.5% of the corpus's strips at 1280 × 746 (135 of 26,842, in
+   62 frames — 7.3% before) and, seen from Pacho's chair, 6.5% of the villain
+   decks' (2.1% at 1600 × 946): the far rank's wrapped back row. **Owner question
+   32.**
 6. **Raised hands and held props can reach the strip** — Quake's gauntlets
    attacking (−9 px), Agent 13's muzzle at the ready (−7.6 px). The test holds the
-   head and what is worn on it, not the hands.
+   head and what is worn on it, not the hands. **The play-distance audit's worst
+   case is a personal model**: the user's Hulk (1.21 tall, a fist raised in front
+   of him) puts the strip's bar across his fist at `villain-hulk-family-261`@410
+   (`var/audit/crops/hulk-strips-pp.png`, the CC0 figure below it). The dressed
+   models' resting tops are 0.96–0.98 of their height, so a dressed head clears
+   its strip; a hand or a prop in front of the body is what reaches it.
 7. **The icon size is fixed** (16 CSS px). A tuning row in the workshop — size,
    lift — and an arena setting would let the owner judge it on the table.
 8. **The arena has no tooltip for an icon.** A hover over a card could name its
@@ -8295,7 +8313,10 @@ on its final tree, exit 0 both, the same counts (`var/check-all-villains-fix1.lo
     Pacho's deck (`villain-doom-248` is seen from the Doom Legion's seat; D99
     makes a duelist the seat's). A duelist look keyed to the deck a seat plays
     (`hello_ok.match`, or the recording's `decks`) would put Doom behind his own
-    table.
+    table. **The play-distance audit**: with the personal tier on, the director is
+    the user's own Nick Fury model, standing behind the Doom Legion in every
+    committed villain recording (and Doom behind Pacho's deck); seen from Pacho's
+    chair (`--seat 1`) each is behind his own side. **Owner question 36.**
 ## The relief window — the inspect view's painting with depth (2026-09-29, D225–D226)
 ## The relief window — the inspect view's painting with depth (2026-09-29, D225–D227)
 
@@ -8539,8 +8560,8 @@ no job: its tests are in the web step.
    a model whose `source/` was cleaned needs `import.mjs` on its download first,
    and the flags it was first prepared with (Coulson `--joints rest --budget 8000`
    and his `--drop`s, Peggy's `--drop`) are in its manifest.
-4. **The arena has no card zoom.** The inspect entry is a chip under the art
-   credit and the `I` key; a zoom in the arena (the board's `Z`) would be its
+4. **The arena has no card zoom.** The inspect entry is a chip beside the art
+   credit (on its row since D265) and the `I` key; a zoom in the arena (the board's `Z`) would be its
    natural home, and the relief window's follow-up 1 would mount there too.
 5. **The workshop's list does not scroll to the card `I` opened on** (it is
    selected, off screen in a long list), and its bloom starts at its own default,
@@ -8842,7 +8863,7 @@ its tests are in the web step.
 unchanged again (evidence §12).
 
 <a id="fu-caption"></a>
-### The arena caption's follow-ups — six, 2026-09-29
+### The arena caption's follow-ups — six, 2026-09-29 (3 closed by the play-distance audit)
 
 1. **A caption is up only as long as its frame.** It hides on the next quiet
    frame, so at 1× a moment reads for a replay frame's 400 ms or a paced
@@ -8857,7 +8878,15 @@ unchanged again (evidence §12).
    2,343 frames) or the opponent's piles (their shoulder, 498). A place per view
    is a pose of the view, to be measured as the plates were; at a live seat the
    strip is off by default, and a covered hand card is one it would block.
-3. **At 1280 px the two strips take two rows** — while cues play since this lane,
+   **Re-measured by the play-distance audit** over the 23 logs and the synthetic
+   ones (5,522 board frames; `caption.test.ts` now prints every view every run and
+   holds the low view clear from 1600 px and every seat-safe view clear of the
+   piles): at 1600 × 944 the shoulder view touches the strip in 2,905 frames (1,757
+   hand cards, 1,404 battlefield), their shoulder in 706 (573 piles; 6,828 at
+   1280 × 660), side-on in 3,485; and the **low** view, clear at 1600, puts the
+   stack under it in 531 frames at every canvas from 1024 to 1440 px. **Owner
+   question 35.**
+3. ~~**At 1280 px the two strips take two rows** — while cues play since this lane,
    and idle too since the rebase onto the sound cues: the queue's status grows by
    ~92 px during a batch, and with the sound checkbox beside the caption's the cue
    strip is 790 px idle and up to 882 while cues play, so the two strips need
@@ -8865,7 +8894,12 @@ unchanged again (evidence §12).
    headless Chromium, evidence §12). The camera switcher sits on a second row —
    over the opponent's back rank. A fixed-width status, a shorter one, or the
    checkboxes' labels collapsing below some width as the switcher's do, would
-   hold the row.
+   hold the row.~~ **Closed by the play-distance audit (D265)**: the status is a
+   fixed width (21 characters; below 1400 px the narrow form, 6 — the seconds of
+   film left — with *speed* folded into the select's tooltip) and the strip's
+   gaps are 0.25rem, so at 1280 × 800 the strips need 987 px of the 1,021-px row
+   idle and playing alike (0 of 48 samples wrapped at each of nine widths from 1280
+   to 1900); the switcher's labels show from 1840 px. `hud.test.ts` holds it.
 4. **A live seat's caption has no moment of its own `c2s` frames** — the
    narrator tells a concede and a sideboard answer from the seat's own frames,
    which the socket does not send back; `LiveFrameLog` hears only inbound frames.
@@ -9113,9 +9147,6 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
     (`EXT_disjoint_timer_query_webgl2`), or a `--vsync` run's missed beats over a
     sample long enough to count them — so that a real GPU's regression is a number
     the gate could read. The file: `tools/arena-bench.mjs`.
-
----
-
 12. **An effect's anchor is resolved by a function that allocates, outside every
     scan** (fix pass 3's verifier). `EffectPool.bind` hands every non-figure
     effect to `stage.positionOf`, and `layout.ts`'s `anchorPosition` builds a
@@ -9130,6 +9161,83 @@ load of 1.2–6.8, `node --test` 1,227 / 1,216 pass / 0 fail / 11 skipped and vi
     written in place, `seatOfPlayer` hoisted, and `anchorPosition` in the scan —
     a change to the one module that knows a coordinate, so a lane of its own,
     measured by the same probe. The file: `web/src/arena/layout.ts`.
+
+---
+
+## The play-distance audit — the merged block, seen together (2026-09-29, D265–D266)
+
+**Status: audited, fixed, gated and documented** on branch `play-distance-audit`
+(the worktree `mtg-table-t2a`, off `main`'s `e2c337c`); the lane's reserved range
+D265–D269, two used. Eight lanes merged onto the arena over 2026-09-28/29, each
+verified alone — the status layer, the caption, the sound cues, villain identity
+and its second lane, the arena polish and the personal tier's models — and nobody
+had looked at the whole. `docs/evidence/play-distance-audit.md` is the defect list
+with its grades and every number; the pictures are under `var/audit/` (the
+personal tier is in them, so they stay local, like the tier).
+
+1. **The pictures.** Headless Chromium on the GTX 1080 at `?dpr=1`, 1600 × 1000
+   and 1280 × 800, views 1–4, the personal tier on and off, a crowded and a
+   combat frame of `g1`, the four villain recordings and `human-sideboard-7`, the
+   game-over frame of `g1` — from each file's own seat AND, for the five that
+   `RecordMatch` can replay, from the other chair (`--seat 1`, the same seed: each
+   villain deck across the table from Pacho's, the composition a bare
+   `./scripts/play.sh` gives you): 384 shots before the fixes and 384 after, as
+   twelve labelled contact sheets each (`var/audit/sheets/`, `var/audit/sheets-after/`),
+   a live seat on the socket, an everything-on frame at both sizes, and the
+   before/after pairs in `var/audit/beforeafter/`.
+2. **Fixed (D265): the chrome column is three rows under `HUD_TOP_PX`.** The
+   inspect chip sits beside the credit, not under it; the cue status is a fixed
+   width with a narrow form below 1400 px; the strip's gaps are 0.25rem; the
+   switcher's labels show from 1840 px (1900 before). The column at a live seat
+   whose prompt wraps: **137 px → 113** (the band is 128); at 1280 × 800 the
+   strips keep one row idle and playing (**two rows in 192 of 192** shots before);
+   the far strips the chrome covers at 1280 × 746, over the corpus, **7.3% → 0.5%**.
+   `arena/hud.ts` and `hud.test.ts` (a fourth row, a control added to the strip or
+   a stylesheet number moved fails it; the column and the strip before the audit
+   are its controls). Closes the caption's follow-up 3.
+3. **Fixed (D266): the figure budget serves the viewer's seat first.** From seat 1
+   the villains' twelve took every model and your own creatures stood as discs;
+   `budgetOrderOf` spends it your seat first (the personal lookup too) — for
+   player 0, every committed recording and a live seat, the order unchanged.
+   `figure-pose.test.ts` sees the corpus from its other chair: placement order
+   starved the viewer on 599 frames, the budget order on none.
+4. **Re-measured**: the caption in every view over 23 logs (printed by
+   `caption.test.ts` every run, two of D256's claims held); README's stale 1,400 px
+   switcher breakpoint corrected.
+5. **Graded owner** — five questions, 32–36 below, each with its picture; **accepted**
+   — the game-over banner over the centre, views 3 and 4 putting your carrier
+   under the chrome, the caption gone on the last quiet frames (its follow-up 1),
+   strips drawn over everything (D212), the opponent's duelist 71% seen at 1280 ×
+   800 in the shoulder view (D100's threshold, unchanged), the inert chip's reason
+   cut at 1280 (its tooltip keeps it), and two rows below 1280 px.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9340`
+**269.2 s** and `WSPORT=9350` **277.6 s**, exit 0 both, 48 jobs (994.6 s and
+1,029.2 s summed) at a load average of 3.7–17.9, `node --test` 1,206 / 1,195 pass /
+0 fail / 11 skipped and vitest 157 (9 files) each time
+(`var/check-all-audit-1.log`, `-2.log`). The lane added no step and no job: its
+tests are in the web step. `~/forge` and `~/.forge`: unchanged (evidence §9).
+
+<a id="fu-audit"></a>
+### The play-distance audit's follow-ups — three, 2026-09-29
+
+1. **The audit's drivers are scratch** (`var/audit/drv/`: the shooter, the sheet
+   maker, the DOM check, the row measurer, the live seat, the everything-on frame,
+   the census), gitignored, so the pictures are not repeatable from the repo —
+   the debt Tier 2 slice 2's follow-up 7 and slice 3's follow-up 7 already name. A
+   committed `tools/arena-shots.mjs` (a plan of files, frames, sizes, views and the
+   personal tier, and a sheet) would close all three.
+2. **No committed recording sees a villain deck from Pacho's chair.** The five
+   seat-1 recordings the audit made (`var/spectate/audit-*-seat1.jsonl`, same
+   seeds) are not in the corpus, so every sweep sees the villains near you; D266's
+   test swaps the viewer synthetically. Committing one would put the user's own
+   composition under every sweep — with the corpus counts moved in the same
+   change, as D220 did.
+3. **The far strips under the chrome are measured by a scratch census, not held**
+   (the table view, the chrome's rectangles as Chromium drew them). Owner question
+   32 decides the rule; a test follows it.
+
+---
 
 ## Deferred — out of scope for M0–M7
 
@@ -9216,3 +9324,8 @@ changes the plan, so raise it rather than quietly re-deciding.
 | 31 | **New, more villain identity (its fix pass).** A person's **skin tone**: keep slice 4's one tone for every person — only a transformed body (a Hulk's green, a lava body) paints its skin (D231) — or let a person's tone follow its card, from the card's art palette (a rung like D160's) or a per-deck default? The verifier called the Wakandans, every one in the pale default against art of a Black cast, the lane's most visible mismatch. No likeness either way: a tone is not a face. | **The one tone** (slice 4, D231, D232). The rule is `COSTUME_DEFAULTS.skin` and `traits.test.ts`'s `TRANSFORMED_SKIN`; either answer is a decision and a change to both. |
 | 32 | **New, the portrait standee (its fix passes).** Three looks the fix passes chose for the standee (D261, D262, amended), each from pictures only you can judge (`var/standee/fix/` and `var/standee/fix3/`, gitignored — card-art-derived, never shown to anyone): an **ink rim** round every cut, the figures' own outer ink weight, so a painting over a painting keeps an edge (`rim-compare.png`); a **legibility floor** — a standee whose subject, kneeling, covers under a 30-px square's worth at 1× from the table view is its CC0 body, so the drones, the A.I.M. Bot, Yellowjacket and the Drone Flock never stand (`floor-contact.png`, every standee of seven crowded frames with its size) — judged since fix pass 2 on the canvas your window draws, so **the window's size decides how many stand**: over the recordings a 1600 × 1000 canvas stands 77% of the standee placements (83% of yours, 63% of the opponent's), 1600 × 946 (a replay in a 1600 × 1000 window) 75%, 1280 × 800 17% (20% and 10%; 27 of the 51 cards somewhere, Agent 13, Storm, Moonstone and MACH-1 nearly always), and a replay in a 1280 × 800 window 6% (10 cards) — what it drops are paintings of 23–30 px (`moe-371-floor-compare-1280x800-2x.png`: the Masters of Evil's nine at @371, the fixed floor's over the live floor's CC0 bodies); and a **smaller kneel** — a fifth sunk and 6° of bow, 0.68–0.78 of its standing height from the table, where the first was a sliver at 0.39–0.59 (`tapped-compare.png`). Keep all three, lower the floor for a small window (more standees, smaller than the contact sheet read), or drop the rim? | **All three, at the numbers measured, the floor on the canvas drawn** (`perf.ts`'s `STANDEE_MIN_PX`, `standee.ts`'s `STANDEE_STANCES`, `STANDEE_FRAGMENT`'s rim): a small window draws fewer standees rather than ones nobody can read. A different floor is one number and a re-run of `standee.test.ts`; `?standee=0` is the A/B. |
 | 33 | **New, the GPU pass.** Is a machine with **no GPU acceleration** — a software rasteriser, SwiftShader's class — a target for the arena? At the arena's floor (render dpr 0.6, bloom off) SwiftShader draws p50 16–19 ms and fails §9.4's p95 20 ms at every benched frame; at dpr 0.45 `g1`'s bench frame passes and the villain tables still do not. | **No: it is the floor, reported and never gated** (**D270**); §9.4 is graded on the real GPU, and the DPR floor stays a legibility line. If yes, a rung below 0.6 is a trade of the card art's legibility for frame rate on that machine, yours to make. |
+| 32 | **New, the play-distance audit.** The far seat's **status strips under the chrome**: after D265 the credit row still covers 0.5% of the corpus's strips at 1280 × 746 and, seen from Pacho's chair, 6.5% of the villain decks' (2.1% at 1600 × 946) — the far rank's wrapped back row, whose strips stand ~30 px above the heads (the status layer's follow-up 5). Anchor the far seat's strips at the head, clamp them under the band, or accept? Picture: `var/audit/after/villain-doom-248/1280x800/s1-p1-f390-v1.png`. | **Accept**: the strip is a HUD over its figure, and the chrome is where the far end of the table always was (D100). |
+| 33 | **New, the play-distance audit.** A **status strip over a disc** floats at the height its figure's head would have — a creature with no body (the probe decks' beasts, the Wakandan Tusker) or one past the figure budget. Anchor it at the disc (low, over the card), or keep it where a figure would stand? Picture: `var/audit/shots-after/human-sideboard-7/1600x1000/s0-p1-f1224-v1.png` (21 discs, 11 attacking). | **As it is**: every strip at one height reads as one row per rank. |
+| 34 | **New, the play-distance audit.** **Your duelist under the turn-order bar** (D210's bar at the left edge, D100's stand): at 1280 × 800 the bar hides 30% of your duelist in the low view and 16% in the shoulder view (none at 1600, and none from the table view). Move the bar, move the duelist at narrow canvases, or accept (a duelist is decoration)? Picture: `var/audit/after/villain-doom-248/1280x800/s0-p1-f356-v5.png`. | **Accept**: D100 prints your duelist's share and asserts only that it covers none of your hand or ranks. |
+| 35 | **New, the play-distance audit.** **The caption's place per view** (its follow-up 2, re-measured over 23 logs): the low view — seat-safe — puts the stack under the strip at every canvas from 1024 to 1440 px wide (531 frames), the shoulder view the right end of your hand (1,757 frames at 1600 × 944). A place per view (a pose of the view, measured as the plates were), the strip off in those views, or as it is? Picture: `var/audit/after/villain-doom-248/1280x800/s0-p1-f356-v5.png` (the stack's lower items under the caption) and `…-v2.png`. | **As it is**: on while watching, off at a live seat (D256), where a covered card would be one you cannot click. |
+| 36 | **New, the play-distance audit.** **A seat's duelist follows the seat, not the deck** (D99; villain identity's follow-up 12): with the personal tier on, your own Nick Fury model stands behind the Doom Legion in every committed villain recording, and Doom behind Pacho's deck; from Pacho's chair each stands behind his own side. Key the duelist to the deck a seat plays (`hello_ok.match`, or the recording's `decks`)? Picture: `var/audit/shots-after/villain-doom-248/1600x1000/s0-p1-f388-v1.png` against `…/s1-p1-f390-v1.png`. | **D99**: the duelist is the seat's (the director is you, the villain the other chair). |

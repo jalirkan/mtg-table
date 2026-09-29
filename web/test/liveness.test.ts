@@ -1563,6 +1563,26 @@ test('liveness: the arena imports no narrator — the caption strip is handed pl
 });
 
 /**
+ * **D265 — the chrome column's numbers are data** (`arena/hud.ts`, the
+ * play-distance audit): the rows' measured heights, the cue strip's breakpoints
+ * and the status's two forms. It imports nothing and touches no DOM, clock or
+ * storage, so `hud.test.ts` can hold the column to `HUD_TOP_PX` in Node; the
+ * cue strip is its one caller in the arena (the status's formatter), and the
+ * splice below proves the scan sees an import.
+ */
+test('liveness: arena/hud.ts is pure — the chrome column is numbers, and the cue strip is its one caller (D265)', () => {
+  const hud = codeOf(readFileSync(fileURLToPath(new URL('../src/arena/hud.ts', import.meta.url)), 'utf8'));
+  assert.ok(hud.length > 500, 'arena/hud.ts is gone — move this clause with it');
+  assert.deepEqual(importsOf(hud), [], 'arena/hud.ts imports something: it is numbers and one formatter');
+  assert.ok(importsOf(`import { useState } from 'react';\n${hud}`).length === 1, 'the import scan misses a spliced import');
+  assert.doesNotMatch(hud, /\b(?:window|document|localStorage|sessionStorage|performance|Date\.now|setTimeout|setInterval|fetch|React|THREE)\b/);
+  const callers = arenaFiles()
+    .filter((f) => f.path !== 'hud.ts' && importsOf(f.source).some((i) => i.from === './hud.ts' || i.from.endsWith('/hud.ts')))
+    .map((f) => f.path);
+  assert.deepEqual(callers, ['Arena.tsx'], 'the chrome column is Arena.tsx’s alone');
+});
+
+/**
  * **T8 — the stored view never breaks the page.** `localStorage` can throw (a
  * private window, blocked site data) and can come back empty; the arena renders
  * the table view either way. So every touch of it is inside a `try`, and only

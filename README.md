@@ -1069,7 +1069,7 @@ the handler reads. The ones that are the arena's own:
 | **O** | spectator mode on / off — on by itself in a replay and when your game ends, never while your seat is live |
 | **W** | open **the workshop** (*The workshop*, below) — one card on a pedestal. `V` there comes back to the arena; a replay resumes at its frame. On the 2D board `W` still spends floating white mana, and otherwise says to press `V` first |
 | **M** | **sound on / off** — muted until you turn it on; the choice is kept in this browser, and the cue strip's **sound** checkbox is the same switch (*Sound*, below). On the 2D board it says to press `V` |
-| **I** | **inspect the card under the pointer** (else the last one you clicked): the workshop opens on it in its **inspect** view — its figure in its signature pose in front of its card's painting, dressed in your own model where the personal tier has one, in the look the table is in. The **⌕ inspect** chip under the art credit does the same by click. The workshop's **▣ arena** link comes back to the same frame. Face up and with a figure only: a face-down or hidden card is never inspected, and the chip and the key say so without naming it (D241) |
+| **I** | **inspect the card under the pointer** (else the last one you clicked): the workshop opens on it in its **inspect** view — its figure in its signature pose in front of its card's painting, dressed in your own model where the personal tier has one, in the look the table is in. The **⌕ inspect** chip beside the art credit does the same by click. The workshop's **▣ arena** link comes back to the same frame. Face up and with a figure only: a face-down or hidden card is never inspected, and the chip and the key say so without naming it (D241) |
 | **N** | **the caption** on / off — the story's moment for the frame on screen, in a strip over the table's right edge (*The caption*, below). **On by default in a replay and while spectating, off at a live seat**; the choice is kept per context in this browser. In the arena `N` is always the caption's (the arena has no auto-yield control); on a live 2D board it is still Forge's always-no, and on a replay board it says to press `V` (D256) |
 
 On the 2D board the camera keys do nothing and say so ("the board has no camera;
@@ -1087,7 +1087,11 @@ ability, **CTRL+A** is alpha strike, and **W U B R G C** spend floating mana.
 (play the earliest queued batch to its end), **skip cue** (snap the one that is
 playing and pull the rest forward), **skip all** (the **K** key), and a
 **speed** selector — 0.5×, 1×, 2×, 4×. The animation clock is separate from the
-replay clock, so pausing cues does not pause the frame log. Cues never delay a
+replay clock, so pausing cues does not pause the frame log. The status at the
+strip's end (*idle*, or *12 steps · 4155 ms*) is a fixed width, so the strip and
+the camera switcher beside it keep one row while cues play; below 1,400 px wide
+the word *speed* folds into the selector's tooltip and the status shows the
+seconds of film left (*4.2 s*), which keeps that row at 1,280 px (D265). Cues never delay a
 question: while the engine is waiting on you, long cues are compressed and the
 queue says so. Beside **bloom** are the comic motion lane's two switches, **comic
 FX** and **on twos** (*The comic motion lane*, below), then **sound**, and after
@@ -1183,7 +1187,7 @@ on the machine you are reading it on.
 **M7 Tier 2, slice 2** (evidence in
 [`docs/evidence/m7-tier2-slice2.md`](docs/evidence/m7-tier2-slice2.md);
 decisions **D69–D71** and **D74**). The camera has five named views, picked with
-**1**–**5** or from the switcher that sits in the cue strip's row (below 1,400 px
+**1**–**5** or from the switcher that sits in the cue strip's row (below 1,840 px
 wide it shows only the keys):
 
 | key | view | what you see | at your seat |
