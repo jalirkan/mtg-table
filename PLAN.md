@@ -14,7 +14,7 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The 27 follow-up lists hold 325 items, and 242 of them are open** — 220 open,
+**The 28 follow-up lists hold 327 items, and 244 of them are open** — 222 open,
 16 partly done, 3 not reproduced, 2 standing and 1 accepted — against 83
 closed (M1's six among them). **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
@@ -265,6 +265,8 @@ closed (M1's six among them). **Of the 30 questions only the owner can settle,
 | [Lane BODIES](#fu-bodies) | 29 | open | Two hairs are details by measurement, not by nature | `web/test/traits.test.ts` |
 | [Lane BODIES](#fu-bodies) | 30 | open | The villain duelist's armour shows through his cloak | `web/src/arena/figures/duelists.json` |
 | [Lane BODIES](#fu-bodies) | 31 | open | Peggy's sidearm reads as a grey slab from above | `web/src/arena/scene/props.ts` |
+| [Docs block](#fu-docs) | 1 | open | Mirror the Java guide's section table into `WireGuiGame.java`'s header | `bridge/src/mtgtable/WireGuiGame.java` |
+| [Docs block](#fu-docs) | 2 | open | The Java guide's older citations: seven stale quotes, the inline line numbers | `docs/guides/java-for-typescript-people.md` |
 
 ### Questions only the owner can settle
 
@@ -7169,6 +7171,56 @@ any file the four sides own, and says where.
     above (a `PropAnchor.turn` toward the body's axis) or a darker slide than
     `metal`'s grey would let it read as a pistol; follow-up 23's new `REST_KIT`
     row is the larger version of the same fix.
+
+---
+
+## The docs block — CLAUDE.md split by directory, and the two policies (2026-09-28, D200–D202)
+
+The structure review of `main` on 2026-09-28 found `CLAUDE.md` at ~27,000
+words, loaded whole by every agent on every task, a quarter of it history, and
+the owner took three decisions the same day: **decision numbers are final**
+(**D200**), **Claude commits on branches and merges to `main` on a green gate;
+the user owns pushes, releases and anything public** (**D201**), and
+**`CLAUDE.md` is split into nested per-area files**. The docs block (branch
+`docs-block`, off `102fb1f`, the `mtg-table-t2y` worktree, the reserved range
+D200–D204) did it, in eight commits a reviewer can bisect, and changed no code
+but three test files.
+
+- **History out.** The gate's timing history and the web suite's test-count
+  history moved verbatim to `docs/evidence/gate-history.md` and
+  `docs/evidence/test-count-history.md`; `CLAUDE.md` keeps one current gate
+  paragraph and one current count, and cites no `var/` log.
+- **The policies.** *Commits, branches and merges* and *Decision numbers* in
+  the root `CLAUDE.md`; **D200–D202** (the third: CI's pinned engine fetch is the
+  one exception to "this repo never downloads an engine"); no document states a
+  decision total any more.
+- **Rule 10 points at the lint** (`./tools/lint-bridge.sh --list-rules`), which
+  closed Guards follow-up 6.
+- **The split.** A root `CLAUDE.md` of about 6,200 words and four nested files —
+  `bridge/`, `web/`, `web/src/arena/` and `tools/` — moved byte for byte and
+  held so by `web/test/claude-md.test.ts` against `docs/claude-md-rules.txt`
+  (every rule written exactly once, none lost, every link resolving, the root
+  under 9,000 words).
+- **This file's *Open now*** index, the Java guide's chapter 9 (a map of
+  `WireGuiGame.java`, one ask and one act end to end, the five self-tests), and,
+  in its last two steps, `tools/README.md` and `README.md` brought up to date.
+
+<a id="fu-docs"></a>
+
+### Docs block follow-ups — two, 2026-09-28
+
+1. **Mirror the Java guide's section table into `WireGuiGame.java`'s header.**
+   Chapter 9's table (sections, methods, thread, lock, decision) belongs in the
+   file it maps, as a comment the next reader cannot miss; this lane changed no
+   code, so it is written in the guide only, checked against `102fb1f`. Copy it
+   in with the next bridge change, and keep the two in step.
+2. **The Java guide's older citations.** The docs block re-pointed chapters 2–6's
+   quoted code blocks at the lines the code has moved to, but seven quotes no
+   longer match the code they cite (`bridge/build.sh:32-36`,
+   `Smoke.java:130-131` twice, `Smoke.java:152-155`, `Snap.java:291-294`,
+   `Snap.java:333-345`, `Json.java:132-140`) and the inline `File.java:N`
+   references in chapters 1–8 were not re-checked. Re-quote those seven from the
+   tree and re-point the inline ones.
 
 ---
 

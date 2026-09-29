@@ -607,7 +607,7 @@ are history from before this rule, and stay.
 | `docs/research/13-arena-tier2-plan.md` | **Tier 2's spec, the manifestation stage.** Read in full before touching `web/src/arena/figures/`. |
 | `docs/research/14-engine-upgrade.md` | **Why Forge stays 2.0.14** (D109–D112), and §0, the checklist for the day an official release ships Reality Fracture. |
 | `docs/research/15-art-direction.md` | **Art direction**: the comic look, motion and bodies, and §9's three lanes. Read §9 before touching the figure or prop material, `Post.tsx`, the effects, `cues/`, `figures/` or `scene/props.ts`. |
-| `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point: the `javap`-first workflow, enums on the wire, nullability, the thread asserts. |
+| `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point; chapter 9 maps `WireGuiGame.java` and follows one ask and one act through the threads. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
 | `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent are D200–D202. |

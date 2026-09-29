@@ -3,7 +3,7 @@
 *A primer for reading and changing `bridge/` — nothing more.*
 
 You write TypeScript and Python. You have never written Java. This repo has
-about 3,500 lines of it, and one day you are going to want to add a field to a
+about 16,500 lines of it under `bridge/src`, and one day you are going to want to add a field to a
 card, or find out why a frame is missing, or make the engine tell you something
 it currently doesn't. This guide is exactly enough Java to do that, taught from
 our own files, with no detours into Spring, Maven, dependency injection, or
@@ -37,7 +37,7 @@ roughly the same places. The differences that will actually bite you are these:
 
 | Thing | TypeScript | Java | What that means here |
 |---|---|---|---|
-| **Types** | Erased. A compile-time fiction; at runtime everything is a JS value. | Real. Every value carries its class at runtime; `instanceof` genuinely asks the object. | `Snap.event()` dispatches on `ev instanceof GameEventCardTapped` and that is a real, reliable question (`Snap.java:667`). |
+| **Types** | Erased. A compile-time fiction; at runtime everything is a JS value. | Real. Every value carries its class at runtime; `instanceof` genuinely asks the object. | `Snap.event()` dispatches on `ev instanceof GameEventCardTapped` and that is a real, reliable question (`Snap.java:1705`). |
 | **Where code lives** | Any file; export what you like. | **One public class per file, named exactly like the file.** `HeadlessGuiBase.java` must contain `public class HeadlessGuiBase`. | Renaming a class means renaming the file. |
 | **Modules** | `import { x } from './y'` — paths. | `package mtgtable;` at the top, then `import forge.game.Game;` — **names**, resolved from the classpath, not from disk paths. | Our package is `mtgtable`, so our sources live at `bridge/src/mtgtable/*.java` and the class is `mtgtable.Smoke`. The directory structure *must* mirror the package name. |
 | **Interfaces** | Structural. Any object with the right shape satisfies one. | **Nominal.** You must write `implements IGuiBase` and then implement *every* method, or it won't compile. | `HeadlessGuiBase` has ~45 methods because `IGuiBase` declares ~45. Most are one-liners returning `null`. |
@@ -72,7 +72,7 @@ cards)`. It works on anything `Iterable`.
 **3. `instanceof` with a binding** — this is Java 16+ and reads oddly at first:
 
 ```java
-// bridge/src/mtgtable/Snap.java:667-668
+// bridge/src/mtgtable/Snap.java:1705-1706
 } else if (ev instanceof GameEventCardTapped e) {
     o.obj().n("kind", "tap").n("cardId", e.card().getId()).n("tapped", e.tapped()).end();
 ```
@@ -119,7 +119,7 @@ not a module system and there is no resolution algorithm — it is a search path
 first match wins. Ours has exactly two entries:
 
 ```bash
-# bridge/run.sh:36
+# bridge/run.sh:51
   -cp "$REPO_ROOT/bridge/out:$FORGE_JAR" \
 ```
 
@@ -135,7 +135,7 @@ colon-separated string that you pass by hand.
 Here is the actual compile:
 
 ```bash
-# bridge/build.sh:43-47
+# bridge/build.sh:45-49
 java -m jdk.compiler/com.sun.tools.javac.Main \
      -cp "$FORGE_JAR" \
      -d "$OUT" \
@@ -209,7 +209,7 @@ cannot — two of them couldn't.
 And after the compile:
 
 ```bash
-# bridge/build.sh:54
+# bridge/build.sh:56
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.JsonSelfTest
 ```
 
@@ -221,7 +221,7 @@ later.
 ### And running
 
 ```bash
-# bridge/run.sh:29-37
+# bridge/run.sh:44-52
 exec env -u DISPLAY java \
   -Xmx4096m \
   -Djava.awt.headless=true \
@@ -303,7 +303,7 @@ the first Forge call in any of our processes, and section 6 explains why it
 Read a few:
 
 ```java
-// bridge/src/mtgtable/HeadlessGuiBase.java:205-211
+// bridge/src/mtgtable/HeadlessGuiBase.java:260-266
 @Override public ImageFetcher getImageFetcher() { return null; }
 
 @Override public ISkinImage getSkinIcon(final FSkinProp skinProp) { return null; }
@@ -323,7 +323,7 @@ screen. The file groups them under banner comments (`// Images and skin`,
 Two are subtler and worth noticing, because they show a pattern you'll reuse:
 
 ```java
-// bridge/src/mtgtable/HeadlessGuiBase.java:278-290
+// bridge/src/mtgtable/HeadlessGuiBase.java:333-345
 /** Identity: keep the order the engine proposed. */
 @Override public <T> List<T> order(final String title, final String top,
                                    final int remainingObjectsMin, final int remainingObjectsMax,
@@ -351,7 +351,7 @@ interface will actually ask it; these lobby-level ones stay identity forever.
 Now the 25 lines that matter.
 
 ```java
-// bridge/src/mtgtable/HeadlessGuiBase.java:115-120
+// bridge/src/mtgtable/HeadlessGuiBase.java:170-175
 /** Single thread, named, daemon, so a wedged task cannot keep the JVM alive. */
 private final ExecutorService edt = Executors.newSingleThreadExecutor(r -> {
     final Thread t = new Thread(r, EDT_NAME);
@@ -431,7 +431,7 @@ can't throw if `x` is null. Both are Java idioms worth absorbing.
 ### The three dispatch methods
 
 ```java
-// bridge/src/mtgtable/HeadlessGuiBase.java:171-190
+// bridge/src/mtgtable/HeadlessGuiBase.java:226-245
 @Override public void invokeInEdtNow(final Runnable proc) { proc.run(); }
 
 @Override public void invokeInEdtLater(final Runnable proc) { edt.execute(proc); }
@@ -466,7 +466,7 @@ again.
 One last piece:
 
 ```java
-// bridge/src/mtgtable/HeadlessGuiBase.java:192-196
+// bridge/src/mtgtable/HeadlessGuiBase.java:247-251
 @Override public void runBackgroundTask(final String message, final Runnable task) {
     final Thread t = new Thread(task, BG_NAME);
     t.setDaemon(true);
@@ -501,7 +501,7 @@ with one sentence per engine call.
 ### The class shell
 
 ```java
-// bridge/src/mtgtable/Smoke.java:58-60
+// bridge/src/mtgtable/Smoke.java:56-58
 public final class Smoke {
 
     private Smoke() { }
@@ -515,7 +515,7 @@ the top of `Snap`, `Json` and `Config`. It's the Java way of writing a module.
 ### `main`
 
 ```java
-// bridge/src/mtgtable/Smoke.java:80-102
+// bridge/src/mtgtable/Smoke.java:93-115
 public static void main(final String[] args) {
     final long t0 = System.nanoTime();
 
@@ -550,7 +550,7 @@ line 99-101 says so.
 ### Setup
 
 ```java
-// bridge/src/mtgtable/Smoke.java:105-107
+// bridge/src/mtgtable/Smoke.java:118-120
 final Config cfg = Config.load();
 final String forgeHome = cfg.forgeHomeDir();
 final File deckFile = args.length > 0 ? new File(args[0]).getAbsoluteFile() : cfg.deck();
@@ -578,7 +578,7 @@ runs a class initialiser the first time anyone touches that class — so reading
 `NullPointerException`, permanently, for the life of the JVM.
 
 ```java
-// bridge/src/mtgtable/Smoke.java:136-146
+// bridge/src/mtgtable/Smoke.java:148-155
 System.out.println("ASSETS_DIR    = " + ForgeConstants.ASSETS_DIR);
 ...
 assertUnderRepo(cfg, "USER_DIR", ForgeConstants.USER_DIR);
@@ -607,7 +607,7 @@ overrides). It takes a few seconds and creates Forge's profile directories —
 which is exactly why the `assertUnderRepo` checks come *before* it.
 
 ```java
-// bridge/src/mtgtable/Smoke.java:161-163
+// bridge/src/mtgtable/Smoke.java:172-174
 final int printings = FModel.getMagicDb().getCommonCards().getAllCards().size();
 final int uniqueCards = FModel.getMagicDb().getCommonCards().getUniqueCards().size();
 System.out.println("cards in DB = " + printings + " printings, " + uniqueCards + " unique");
@@ -621,7 +621,7 @@ that the database actually loaded.
 ### 3. The deck
 
 ```java
-// bridge/src/mtgtable/Smoke.java:172-178
+// bridge/src/mtgtable/Smoke.java:183-189
 final Deck deck = DeckSerializer.fromFile(deckFile);
 if (deck == null) {
     throw new IllegalStateException("DeckSerializer.fromFile returned null for " + deckFile);
@@ -645,7 +645,7 @@ APIs, and it's why the explicit `if (deck == null)` check has to be there.
 ### The `auditDeck` loop — your model for iterating Forge collections
 
 ```java
-// bridge/src/mtgtable/Smoke.java:272-281
+// bridge/src/mtgtable/Smoke.java:284-293
 final Map<String, Integer> bySet = new LinkedHashMap<>();
 final List<String> unsupported = new ArrayList<>();
 for (final Map.Entry<forge.item.PaperCard, Integer> e : deck.getMain()) {
@@ -685,7 +685,7 @@ the same predicate ourselves rather than trusting a text search.
 ### 4. Rules and seats
 
 ```java
-// bridge/src/mtgtable/Smoke.java:189-198
+// bridge/src/mtgtable/Smoke.java:201-211
 final GameRules rules = new GameRules(GameType.Constructed);
 rules.setAppliedVariants(EnumSet.of(GameType.Constructed));
 rules.setGamesPerMatch(1);
@@ -717,7 +717,7 @@ human seat, that is the line that changes.
 ### 5. Play it
 
 ```java
-// bridge/src/mtgtable/Smoke.java:206-218
+// bridge/src/mtgtable/Smoke.java:218-230
 final Match match = new Match(rules, players, "mtg-table");
 final Game game = match.createGame();
 final long tGame = System.nanoTime();
@@ -746,7 +746,7 @@ nothing in Smoke takes a snapshot.** `RecordMatch` cannot do that — see sectio
 ### 6. Results
 
 ```java
-// bridge/src/mtgtable/Smoke.java:224-236
+// bridge/src/mtgtable/Smoke.java:236-248
 final GameOutcome outcome = game.getOutcome();
 final int turns = game.getPhaseHandler().getTurn();
 if (outcome == null) {
@@ -773,7 +773,7 @@ wrapping a custom `OutputStream` that (a) passes every byte through untouched
 and (b) reassembles lines and records the ones matching a needle:
 
 ```java
-// bridge/src/mtgtable/Smoke.java:385-395
+// bridge/src/mtgtable/Smoke.java:471-481
 @Override public synchronized void write(final int b) throws IOException {
     out.write(b);
     consume((byte) b);
@@ -870,7 +870,7 @@ The redacted shape is **exactly four keys** — `id`, `zone`, `controller`,
 no power. The browser has a matching type for it:
 
 ```ts
-// web/src/protocol.ts:180-192
+// web/src/protocol.ts:525-535
 export interface RedactedCard {
   id: number;
   zone: string;
@@ -908,7 +908,7 @@ because "the library is a number" is an invariant you can check by eye.
 ### The rest of `card()`, briefly
 
 ```java
-// bridge/src/mtgtable/Snap.java:351-374
+// bridge/src/mtgtable/Snap.java:985-1020
 final CardView.CardStateView st = cv.getCurrentState();
 if (st == null) {
     o.nNull("setCode").nNull("manaCost").nNull("types")
@@ -984,7 +984,7 @@ private boolean done;
 Four booleans and a stack, and they buy you this:
 
 ```java
-// bridge/src/mtgtable/Json.java:349-366
+// bridge/src/mtgtable/Json.java:376-393
 private void beforeValue() {
     if (stack.isEmpty()) {
         if (done) {
@@ -1063,7 +1063,7 @@ snapshots are built in `handleGameEvents`, which our hand-registered
 `Snap` enforces rule 3 itself, at every public entry point:
 
 ```java
-// bridge/src/mtgtable/Snap.java:222-231
+// bridge/src/mtgtable/Snap.java:537-546
 /** Throw unless we are on the Forge game thread. */
 public static void assertGameThread(final String what) {
     if (!ThreadUtil.isGameThread()) {
@@ -1081,7 +1081,7 @@ found that your new code is on the wrong thread. The fix is to get onto the
 right one, the way `RecordMatch` does:
 
 ```java
-// bridge/src/mtgtable/RecordMatch.java:265-272
+// bridge/src/mtgtable/RecordMatch.java:327-335
 game.getAction().invoke(() -> {
     try {
         match.startGame(game);
@@ -1512,15 +1512,231 @@ exactly this distinction, and it's the reason M0 and M1 differ structurally.
 
 ---
 
+## 9. A map of `WireGuiGame.java`, one ask and one act end to end, and the five self-tests
+
+Chapters 3 to 6 teach you to read `HeadlessGuiBase`, `Smoke` and `Snap` — the
+first milestone's files. Everything the seat does since M2 goes through one file
+those chapters never open: `bridge/src/mtgtable/WireGuiGame.java`, **4,211
+lines**, the largest file in the bridge. It is the human seat's `IGuiGame`: every
+one of the 37 members Forge calls on a GUI lands there, and every frame the
+browser sees leaves from there. This chapter is its map. **Every line number here
+was checked on 2026-09-28** against the tree the docs block branched from
+(`102fb1f`; this lane changed no Java). The preamble's warning still holds — when
+the file and this chapter disagree, the file is right — but for this chapter the
+numbers were true when it was written.
+
+### 9.1 The threads you will meet
+
+A TypeScript program has one thread and an event loop. The bridge has several
+threads at once, and **which thread a line runs on is the most important fact
+about it** (hard rules 2 and 3). Four matter here:
+
+| thread | what it is | the TypeScript picture |
+|---|---|---|
+| `Game-0` (and other `Game-n`) | Forge's game thread: it runs the rules, and is the **only** thread allowed to walk Forge's views (`GameView`, `CardView`, …). `Game-n` workers come from Forge's cached pool (`ThreadUtil.invokeInGameThread`). | A worker that owns all the game state; nobody else may touch it. |
+| `mtg-table-EDT` | Our stand-in for Swing's event-dispatch thread: a single-thread executor, `HeadlessGuiBase.java:170-175`. Forge draws prompts from it, and we apply clicks on it. | The browser's main thread: one task at a time, in order. `edt.execute(task)` is `queueMicrotask(task)`. |
+| `mtg-table-io` / `mtg-table-ws` | Where the client's frames arrive: the console, automated and null transports' reader thread, or netty's event loop for the WebSocket (`WsTransport.java:356`). | The code that runs when `socket.onmessage` fires — except it is a thread of its own. |
+| `main` | `MtgTable`'s main thread: it wires the seat, starts the match, then waits for games to start and end. | The script's top level, parked on `await`. |
+
+### 9.2 The file, section by section
+
+The file is cut into sections by its own `// ====` banners. The table gives each
+section's lines, the methods in it, the thread each runs on, the lock it takes,
+and the decision that governs it.
+
+| § | lines | section | methods | thread | lock | governed by |
+|---|---|---|---|---|---|---|
+| — | 84-123 | the class comment | the three rules the file is written to: a push touches only `getId()` on a view; only the game thread may block; no thread of ours is named `Game*` | — | — | report 07 §2.5, hard rules 2-3 |
+| — | 125-666 | construction and injected wiring | the constructor (452), `setHostedMatch`, `setSession`, `setLogFactory`, `awaitGameStart` / `awaitGameEnd` (511-557), the run summary's counters (`unimplemented` … `refreshesSkipped`, 560-661) | `main` | `lifecycle` (the game counters, which `main` waits on) | report 07 §3; **D44** (one log per game) |
+| — | 667-856 | frame emission | `emit` (678), `logC2s` (761), `envelope` (797), `notice` (824), `unimpl`, `fired` | any thread that emits: the game thread (`state`), the EDT (`input`, notices), the transport thread, `main` (game 1's `hello_ok`) | **the current `GameLog`'s monitor**, held across numbering a frame and pushing it (716, 781) | protocol §1 and §8.4; `over` is terminal (the re-check at 737, `OverRaceSelfTest`) |
+| 1 | 857-1065 | `openView`, the wiring hook | `openView` (869), `seedPhaseStops` (956), `resetForGame` (1011) | game 1: the thread that calls `HostedMatch.startMatch` (`main`); later games: the EDT, from an `act: newGame` | `lifecycle`; `deferred` and `inputLock` inside the reset | report 07 §4.1; **D44**, amendment M38 (the one reset hook); **D38** |
+| 2 | 1066-1424 | `handleGameEvents`, THE snapshot hook | `handleGameEvents` (1083), `flushState` (1098), `OutcomeWatcher` (1186), `FinishWatcher` (1208), `engineFinished` (1224), `captureOutcome` (1370), the test hooks | the game thread; a batch that arrives on any other thread is buffered in `deferred` (1085-1092) | `deferred`'s monitor; `emit`'s | hard rule 3, **D5**; **D114** (`FinishWatcher`); amendments M4/M11 |
+| 3 | 1425-1738 | the input path | `InputState` (1430), `engineInput` (1486), `mutateInput` (1497), `inputBody` (1513), `showPromptMessage`, `updateButtons`, `setSelectables`, `setHighlighted`, `setCard`, … | Forge pushes from the EDT, the game thread and the click thread | **`inputLock`**: the struct and its generation change together (1502-1509); the push happens after the lock is released (1510) | **D22** (`inputGen`), amendment M42 (`inputSeen`), protocol §4 |
+| 4 | 1739-1911 | the other pushes | `updateCurrentPlayer` (1749, `AbstractGuiGame`'s own abstract member), the overlays, `message`, `showErrorDialog`, `finishGame` (1812), `engineCrashed` (1834), `afterGameEnd` (1847), `emitOver` (1864) | mostly the EDT; `emitOver` from whichever thread saw the outcome | `this` (so `over` is emitted once); `lifecycle` (games finished) | amendments M4/M11; **D114**; **D115** |
+| 5 | 1912-2024 | `openZones` / `tempShowZones`: hints, not questions | `tempShowZones`, `openZones`, `restoreOldZones`, `hideZones`, the zone-hint helpers | the EDT | `inputLock` (through `engineInput`) | protocol §4.3 |
+| 6 | 2025-2042 | phase stops | `isUiSetToSkipPhase` (2035) | the game thread | none (a `ConcurrentHashMap`) | **D19**, **D38** |
+| 6b | 2043-2265 | the comfort snapshot | the four M6 answers `Snap` cannot compute: stops, the active yield, undo, the yield handles (`handleFor` 2215, `rawYieldKey` 2210 — lint rule 4b's one `getKey()`) | the game thread (inside `Snap.state`) | none | **D41**, **D42** |
+| 7 | 2266-3171 | the ask path | `ask` (2284), `decode` (2349), the option writers, then the blocking members: `getAbilityToPlay` (2473, and its asynchronous menu, 2580-2710), `confirm` (2711), `getChoices` (2803), `order` (2846), `chooseSingleEntityForEffect` (2910), `assignCombatDamage` (2992), `assignGenericAmount` (3054), `manipulateCardList` (3106), `sideboard` (3146), … | **the game thread, which parks** until the answer comes; `getAbilityToPlay` arrives on the EDT and hops (**D22**) | the log's monitor while the ask is numbered (2322-2330); none while parked | protocol §5 and §5.4 (every ask answerable with null); **D15**, **D24**; **D20**, **D22** |
+| 8 | 3172-3905 | the inbound path: acts | `onAct` (3177), `applyAct` (3204), `concede` (3388), `setPhaseStop` (3470), `newGame` (3572), `yieldTo` (3640), `setYield` (3721), `refreshState` (3813), `refreshSnapshot` (3846), `enginePausedForSeat` (3894) | `onAct` on the transport thread; `applyAct` on the **EDT**; `refreshSnapshot` on a second `Game-n` worker | the log's monitor (the act's c2s line) | **D17** (acts on the EDT), **D39** (the refresh hop), **D41**, **D42**, **D114**, amendment M8 |
+| 8b | 3906-4154 | the acts that write the engine from the EDT; answers, resync, disconnect | `notNow` (3926), `engineFacts` (3971), `GuardFeeds` (3980), `pressOk` (4023), `onAnswer` (4043), `onResync` (4078), `onDisconnect` (4133), `close` (4146) | `notNow` / `pressOk` on the EDT; `onAnswer`, `onResync`, `onDisconnect` on the transport thread | none: volatile reads and atomics | **D136**, amendment M48; **D27**, amendment M42; **D24** |
+| 9 | 4155-4211 | answer coercion | `asInt`, `asBool`, `asIntArray`, `asIntMap`, `indexOfIdentity`, `actBody` — the rest is `Ask.java` | any (pure functions) | none | protocol §5.3 |
+
+Three places in the file hop onto Forge's game pool so that a thread named
+`Game-n` may walk the views: `captureOutcome` (the hop at 1376),
+`asyncAbilityMenu` (2595) and `refreshState` (3822). Each carries an `// ALLOW hop:` tag naming its
+argument, and `tools/lint-bridge.sh` fails a fourth (hard rule 3, **D181**).
+
+### 9.3 Java's concurrency words, in TypeScript terms
+
+- **`synchronized (x) { … }`** — only one thread at a time may be inside any
+  block synchronized on the same object `x`; the others wait at the door. JS
+  never needs this, because only one thing runs at a time. The nearest picture is
+  an async mutex (`await lock.acquire(); try { … } finally { lock.release() }`),
+  except that the waiting thread is frozen, not suspended. It is *reentrant*: a
+  thread already holding `x` may enter another block on `x` (that is why `emit`
+  can call `GameLog.s2c`, which is itself `synchronized` on the log).
+- **The monitor** — every Java object carries one lock and one waiting room.
+  `lifecycle.wait()` parks a thread in the room until someone calls
+  `lifecycle.notifyAll()`. JS's nearest is `Atomics.wait` / `Atomics.notify`
+  on a `SharedArrayBuffer` — a thread asleep until another wakes it.
+- **`volatile`** — every read sees the latest write from any thread. In
+  single-threaded JS that is simply true; across workers it is what
+  `Atomics.load` / `Atomics.store` give you. `overEmitted`, `inputSeen` and
+  `ready` are volatile because four threads read them.
+- **`AtomicLong` / `AtomicInteger`** — a counter whose `incrementAndGet()` cannot
+  lose an update to a racing thread: `Atomics.add` on a shared array.
+  `inputGen` is one.
+- **`CompletableFuture<String>`** — a promise you can resolve from outside, like
+  `Promise.withResolvers()`. The difference that matters: **`future.get()`
+  blocks the calling thread** until the value arrives, where `await` only
+  suspends one async function and lets the event loop run everything else. When
+  `Game-0` calls `get()`, the whole rules engine stops on that line.
+- **`ExecutorService` (single thread)** — a queue of tasks drained by one named
+  thread, in order: exactly a JS event loop. `edt.execute(task)` is
+  `queueMicrotask(task)`; the executor at `HeadlessGuiBase.java:170-175` *is*
+  the bridge's event loop.
+- **`ConcurrentHashMap`** — a `Map` that several threads may read and write at
+  once without corrupting it. The reply pool and the ask bookkeeping are built on
+  it.
+
+### 9.4 One ask, end to end: Forge asks the seat to choose
+
+The ask is the one place the rules engine **waits for the browser**.
+`getChoices` is the commonest kind (`choose_list`); the other blocking members
+follow the same path.
+
+1. **Forge, on `Game-0`, calls `getChoices(...)`** (`WireGuiGame.java:2803`). If
+   the caller is not a game thread, it returns Forge's default at once
+   (2807-2809): only the game thread may block, because a parked EDT would stop
+   every prompt.
+2. **`ask("choose_list", opts, writer)`** (2284) asserts it is on a game thread
+   (2285), flushes a fresh `state` first (2297 — the snapshot in which a card
+   revealed for this choice is visible, report 06 W4), mints an `askId` (2298),
+   asks the transport for its timeout (2299) and keeps the option list in
+   `pendingOpts` (2301): an answer's indexes resolve against that list and
+   nothing else.
+3. **The frame is numbered** under the log's monitor, with the same
+   "`over` already sent?" re-check `emit` makes (2320-2330).
+4. **`pool.register(askId, kind)`** (2331; `ReplyPool.java:99`) puts a fresh
+   `CompletableFuture` in the pool *before* the frame goes out, so an answer can
+   never arrive for an ask nobody registered.
+5. **`transport.ask(askId, frame, timeoutMs)`** (2336). Over the socket that is
+   `WsTransport.ask` (`WsTransport.java:404`): remember the frame for a
+   reconnecting client, push it (366; netty writes it from its own loop, 498),
+   then **`pool.await(askId, deadline)`** (`ReplyPool.java:117`), which is
+   `future.get()`. `Game-0` is now parked. While a client is connected there is
+   no deadline (**D24**); a disconnect answers every parked ask with null
+   (`cancelAll`, 178), which is always legal (protocol §5.4).
+6. **The browser answers** `{type:"answer", body:{askId, value}}`. netty's
+   thread parses it and calls `inbound.onAnswer(...)` (`WsTransport.java:601`).
+7. **`WireGuiGame.onAnswer`** (4043) first asserts it is neither the game thread
+   nor the EDT (4044-4045): completing the future from the parked thread itself
+   would deadlock, and an answer must not queue behind prompts. It validates the
+   JSON (4047-4053), logs the `answer` frame (4059), and calls
+   **`pool.complete(askId, value)`** (4070; `ReplyPool.java:146`) — the
+   `resolve()`. A second answer for the same ask finds the future already
+   completed and becomes a *Late answer* notice (4070-4074).
+8. **`Game-0` wakes** inside `get()`. `await` removes the entry on its way out,
+   `ask` decodes the text (2337; a malformed answer is null, 2349-2358) and drops
+   `pendingOpts` (2344).
+9. **`getChoices` turns the indexes into Forge's objects** — `Ask.pick(source,
+   picks)`, or Forge's documented default when the answer was null (2832-2833) —
+   and returns into the engine, which carries on.
+
+In TypeScript terms: the game thread does `const v = await pool.promiseFor(askId)`
+and the socket handler does `pool.resolve(askId, v)` — with the one difference
+that Java's `get()` freezes the whole thread, which is exactly what Forge
+expects of a GUI.
+
+### 9.5 One act, end to end: the player presses Undo
+
+An act is the browser **telling** the engine something; nothing waits for it.
+`undo` is the most careful one, because it writes the engine's state directly.
+
+1. **The browser sends** `{type:"act", body:{action:"undo"}}`. Over the socket,
+   netty's thread calls `inbound.onAct("undo", body)` (`WsTransport.java:585`);
+   at the console, `mtg-table-io` does (`ConsoleTransport.java:576`).
+2. **`onAct`** (`WireGuiGame.java:3177`) asserts it is neither the game thread
+   nor the EDT (3178-3179), logs the `act` (3180), reads **`inputGen` now** —
+   the generation of the input the act arrived under (3184) — and hands the rest
+   to the EDT with `FThreads.invokeInEdtNowOrLater` (3190), which lands in
+   `HeadlessGuiBase`'s single-thread executor (`invokeInEdtLater`, 228). Acts run
+   on the EDT because desktop Forge applies clicks there, serialised with prompt
+   rendering (**D17**). In TypeScript: `queueMicrotask(() => applyAct(...))` on
+   the one loop that also draws the prompts.
+3. **`applyAct`**, on `mtg-table-EDT` (3204): until the engine has asked this
+   seat anything (`!ready || !inputSeen`, 3205) every act but `concede` is
+   dropped with *Not yet*. Then it finds the seat's controller (3223) and, for
+   `undo` (3285), asks **`notNow("undo", …)`** (3290).
+4. **`notNow`** (3926) reads the engine's state once — `engineFacts` (3971)
+   through `GuardFeeds` (3980), one read per condition — and asks
+   **`ActGuard.whyNotNow`** (`ActGuard.java:224`) the eight questions, in order:
+   1. is the game live (the engine has asked this seat something, and it is not
+      over)?
+   2. is no ask pending (its answer would wake a game thread in the middle of
+      the write)?
+   3. is an input up (so `Game-0` is parked in Forge's `showAndWait`)?
+   4. is the input generation still the one the act arrived under (**D22**)?
+   5. is no mana ability being activated on a worker?
+   6. is no OK or pass of ours still with the engine (the mana-lost confirm's
+      worker)?
+   7. is none of our own hops walking the views?
+   8. is no engine thread running?
+
+   Any *no* is a reason: the act is counted, `NOT NOW` goes to stderr, and the
+   seat gets `notice {title:"Not now"}` (3949-3957). **The engine is not
+   touched** (**D136**, amendment M48).
+5. **All quiet: `c.undoLastAction()`** (3293), on the EDT, exactly where desktop
+   Forge's own Ctrl+Z runs it. An undo produces no game event, so nothing would
+   send the new board — hence **`refreshState()`** (3295).
+6. **`refreshState`** (3813) reads the generation on the EDT (3819), counts
+   itself as a hop in flight (3820) and hops onto Forge's pool with
+   `ThreadUtil.invokeInGameThread` (3822) — one of the three tagged hops. On that
+   second `Game-n` worker, **`refreshSnapshot`** (3846) checks again that the
+   generation has not moved (3850) and that the engine is parked for this seat
+   (3856; `enginePausedForSeat`, 3894), and only then flushes a `state` (3860).
+   Its thread name starts with `Game`, and `Game-0` is provably parked: that is
+   **D39**'s argument for why this walk is legal.
+
+The guard's eight conditions are the TypeScript habit `if (store.version !==
+versionWhenClicked) return` grown up: in a single-threaded app "the state moved
+under me" has one cause, and here it has eight, because several threads can be
+inside the engine at once.
+
+### 9.6 The five self-tests, and the bug behind each
+
+`bridge/build.sh` runs five `main()` programs after javac; any failure fails the
+build. There is no JUnit on this machine (a JRE, no Maven), so each is a plain
+class that prints and exits non-zero. Each exists because of a defect that a
+green run did not show.
+
+| self-test | what it checks | the bug it exists for |
+|---|---|---|
+| `JsonSelfTest` | `Json.java`'s writer — escaping, numbers, nesting and nesting errors — with every document round-tripped through Jetty's parser | none shipped: it is M1's rule that a broken escape or nesting check fails the build, "not a fixture three hundred frames in" (`bridge/build.sh`) |
+| `AskSelfTest` | the answer half of all eleven ask kinds, driven by the JSON text a client really sends | in M2 Forge dispatched only two kinds, so nine marshallers had been checked only against a fixture written from the same reading of the protocol; `assign_damage`'s "option 0 is the defender, option *i* is `blockers.get(i-1)`" is a one-off error that yields a well-formed answer either way. It also holds that a wrong-length `manipulate_list` answer is the identity order |
+| `GameLogSelfTest` | the frame log's close path: closed in under a second, exactly *N*+1 lines on disk | `close()` held the log's monitor across its own 30-second `join` while the appender needed that monitor after every line: close burned the whole timeout and returned a truncated file (12,089 of 20,001 lines), and the process's exit killed the appender mid-write |
+| `OverRaceSelfTest` | `over` stays the last frame while another thread emits: it parks an `input`, then an act, on the log's monitor behind `over`, then races 300 rounds | `emit` and `logC2s` checked `overEmitted` *outside* the monitor that numbers a frame, so under load an `input` (or an act) was numbered one past `over`; three gate runs failed 10a, 10b or 10g on it. The fix is the re-check at `WireGuiGame.java:737` and `:782` |
+| `ActGuardSelfTest` | **D136**'s guard: each of the eight conditions refuses on its own, the thread-state reading holds on real threads, and the wiring — `ActGuard.facts` driven with fake feeds, so a condition fed a constant or another condition's feed flips a verdict | an `undo` applied whenever it arrived raced `Game-0` inside `MagicStack`'s undo stack (`clearUndoStack`) and crashed the engine in the story branch's gate run; the wiring half came from Polish 1, after a skeptic showed the decision table alone passed a mis-wired guard |
+
+`OverRaceSelfTest` and `ActGuardSelfTest` load `WireGuiGame`, so they install the
+headless GUI first (hard rule 1) and run under hard rule 6's JVM flags; none of
+the five boots an engine. `bridge/CLAUDE.md`'s *The build's self-tests* is the
+long form.
+
+---
+
 ## Where to go next
 
 - `docs/protocol.md` — the wire contract. Read §3 before changing `Snap`.
 - `docs/research/05-architecture-synthesis.md` — the spec.
-- `CLAUDE.md` — the eleven hard rules, each with a failure behind it.
-- `bridge/src/mtgtable/RecordMatch.java` — the biggest file, and the one that
-  puts everything above together: an `AbstractGuiGame` subclass, a hand-registered
-  event forwarder, a background writer thread, and a `CountDownLatch` for
-  "wait until the game thread says it's done".
+- `CLAUDE.md` — the eleven hard rules, each with a failure behind it — and
+  `bridge/CLAUDE.md`, the bridge's own conventions.
+- Chapter 9 above — the map of `WireGuiGame.java`, the seat itself.
+- `bridge/src/mtgtable/RecordMatch.java` — the AI-vs-AI recorder, and the
+  smallest program that puts everything in chapters 3 to 6 together: an
+  `AbstractGuiGame` subclass, a hand-registered event forwarder, a background
+  writer thread, and a `CountDownLatch` for "wait until the game thread says it's
+  done".
 
 And when in doubt: `javap` the class, read the Forge source as prose, and trust
 the file over this guide.
