@@ -1097,6 +1097,12 @@ queue says so. Beside **bloom** are the comic motion lane's two switches, **comi
 FX** and **on twos** (*The comic motion lane*, below), then **sound**, and after
 them **caption** (the **N** key).
 
+**The engine's prompt**, at the top left beside its buttons, is at most two lines
+(D267), so the chrome never grows over the far side of the table. It takes the
+bar's width before it wraps, so almost every prompt is whole; one that is still
+longer — a targeting trigger that quotes its card's whole ability, at 1,280 px —
+ends in *…*: point at it and it opens in place (it is also its own tooltip).
+
 **Sound** (D250–D252). The arena is **silent until you turn sound on** — tick
 **sound** in the cue strip or press **M** (either is the click a browser needs
 before a page may make a sound); the choice is kept in this browser, and with it

@@ -333,3 +333,19 @@ fixed-width status, one strip row from 1280 px, the measured controls),
 chair, `caption.test.ts`'s every-view census and liveness's `arena/hud.ts`
 clause — and no vitest. Inside `check-all.sh`: **1,206 / 1,195 pass / 0 fail / 11
 skipped** plus 157 vitest, twice.
+
+## The play-distance audit's fix pass (`play-distance-audit`, D267)
+
+`npm --prefix web test` standalone: **1,194 `node --test` (1,185 pass, 0 fail, 9
+skipped) + 157 vitest (9 files)**, from the audit's **1,191 + 157**: three
+`node --test` cases — `hud.test.ts`'s prompt sweep (every distinct prompt of the
+corpus through a per-line model) and turn-order head, and `personal.test.ts`'s
+viewer-first sweep of D266's personal half (the status rule and the credit order
+are clauses of `hud.test.ts`'s first two cases) — and no vitest. Inside
+`check-all.sh`: **1,209 / 1,198 pass / 0 fail / 11 skipped** plus 157 vitest.
+
+### The play-distance audit rebased onto the GPU pass's fix pass 3 (`8ddd286`)
+
+**1,222 `node --test` + 157 vitest (9 files)** standalone (1,213 pass, 0 fail, 9
+skipped): `8ddd286`'s **1,212 + 157** plus the audit's ten (its seven and its fix
+pass's three). No case changed at the rebase.

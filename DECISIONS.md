@@ -11789,7 +11789,7 @@ question.
 ## D265 — The chrome column over the canvas is three in-flow rows held under `HUD_TOP_PX`: the inspect chip beside the credit, a fixed-width cue status with a narrow form below 1400 px, and the switcher's labels from 1840 px
 
 *Branch `play-distance-audit` (worktree `mtg-table-t2a`, off `main`'s `e2c337c`). The
-lane's reserved range is D265–D269 (D200); it used two.*
+lane's reserved range is D265–D269 (D200); it used three (D267 on its fix pass).*
 
 **2026-09-29** (`docs/evidence/play-distance-audit.md`; the audit of the eight
 lanes merged on 2026-09-28/29, seen together at play distance)
@@ -11808,29 +11808,44 @@ duelists and the seat plates are measured against.
    positioned out of the flow (the caption, the plates, the turn-order bar, the
    game-over row, the overlay). `web/src/arena/hud.ts` records the rows' heights
    as headless Chromium drew them and `hud.test.ts` holds the sum —
-   **112 px at its worst ordinary case**, a live seat whose prompt wraps (measured
-   113) — under `HUD_TOP_PX`, the layer to those three rows (parsed from
-   `Arena.tsx`), and the out-of-flow widgets to `position: absolute`/`fixed`.
-   A fourth row fails the test with what to do.
+   **112 px at its worst**, a prompt at its two lines (measured 112.5) — under
+   `HUD_TOP_PX`, the layer to those three rows (parsed from `Arena.tsx`), and the
+   out-of-flow widgets to `position: absolute`/`fixed`. A fourth row fails the
+   test with what to do. *(Corrected on the fix pass: this said "at its worst
+   ordinary case, a live seat whose prompt wraps". It was not the worst — a
+   longer engine prompt wrapped the bar to five lines and the column to 167 px,
+   Quake's 250-character targeting prompt; 17 of the corpus's 350 distinct
+   prompts took it past 128. **D267** holds the prompt at two lines, which makes
+   112 px the worst case for any prompt.)*
 2. **The inspect chip shares the credit's row** (`.arena__creditrow`, layout only,
    `pointer-events: none`, 15rem short of the right edge for the opponent's plate
-   as the strips are). It gives way before the credit does (`flex-shrink` 4 against
-   the credit's 1, down to its own label, 13ch): the credit is the attribution the
-   art travels with. Its behaviour, its planner and its two faces are D241's.
+   as the strips are). It gives way before the credit does, down to its own label
+   (13ch): the credit is the attribution the art travels with. Its behaviour, its
+   planner and its two faces are D241's. *(Corrected on the fix pass: the audit
+   wrote `flex-shrink` 4 against the credit's 1, and a shrink factor is weighted
+   by the item's own width, so both gave way at once — at 1280 px the credit was
+   cut to 586 px, "© Wiza…", while the chip kept 429 of its 560. It is 1,000
+   against 1, the pattern the seat plate's deck name already used: the credit
+   keeps its whole width (648 of 648 px at `human-sideboard-7`@1195) until the
+   chip is at its 86-px floor.)*
 3. **The cue strip's status is a fixed width** — a box of 21 characters of the
    strip's mono face, which the longest status `hud.ts`'s `cueStatusOf` writes
    (`99+ steps · 99999+ ms`) fills — so the strip is as wide playing as idle, and
    a batch no longer wraps the switcher onto a row of its own. The strip's gaps are
-   0.25rem (0.35 before).
+   0.25rem (0.35 before). *(Fix pass: the status sits behind a 1-px rule —
+   beside the caption checkbox with nothing between them it read as that
+   checkbox's label, "caption idle", "caption 2.0 s" — which adds 5.8 px to each
+   form; the numbers below are re-measured with it.)*
 4. **Below 1400 px the strip takes its narrow form**: the word *speed* folds into
    the select's tooltip (the select shows its own `1×`) and the status is the
    seconds of film left (`4.2 s`, a 6-character box); the whole status is the
    box's tooltip at every width. From 1280 px the strip and the switcher then hold
-   one row, idle and playing (987 px of a 1,021-px row at 1280 × 800; before, 1,026
-   idle and up to 1,119 playing — two rows in all 192 of the audit's 1280 × 800
-   shots).
+   one row, idle and playing (993 px of a 1,021-px row at 1280 × 800 — 987 before
+   the fix pass's rule; before the audit, 1,026 idle and up to 1,119 playing — two
+   rows in all 192 of the audit's 1280 × 800 shots).
 5. **The switcher's labels show from 1840 px** (1900 before): with the fixed
-   status the labelled row needs 1,565 px, which a 1,824-px viewport gives.
+   status the labelled row needs 1,571 px (1,565 before the fix pass's rule),
+   which a 1,831-px viewport gives, so 1840 keeps 10 px in hand.
    `hud.ts`'s `CUE_STRIP` carries the measured widths and the three breakpoints;
    `hud.test.ts` holds the stylesheet to them, the row arithmetic at 1280, 1399,
    1400 and 1840 px, the strip's markup to the controls that were measured (four
@@ -11863,7 +11878,9 @@ batch started.
   row whenever the pointer crossed a card — a layout shift under the hand that
   moves it — and D241's inert chip is how the key is discovered.
 - **One-line prompts** (widening the prompt past 46ch): the prompt is the engine's
-  text and any length; a longer one wraps again.
+  text and any length; a longer one wraps again. (The fix pass widens it AND
+  clamps it — **D267** — which is a different answer: the width shortens the
+  common case, the clamp bounds the rest.)
 - **Short labels for the checkboxes** ("FX", "cap"): D256 rejected "CC" for a
   learner who reads *caption*; folding the one word the select already shows was
   enough.
@@ -11904,3 +11921,67 @@ viewer's stands as a disc for want of one. Reverting the order fails it at
 the one read closest and played); raising `MAX_FIGURES` (a budget, D222 and
 D233's tables are already over the lines); nearest-to-the-camera first (a pose that
 depends on the view, which D85 rejected for the carriers).
+
+---
+
+## D267 — The arena's engine prompt is at most two lines on screen; the whole of it stays in the DOM, in its tooltip and on hover
+
+*Branch `play-distance-audit`, its fix pass; the lane's reserved range D265–D269.*
+
+**2026-09-29** (`docs/evidence/play-distance-audit.md` §10; the verifier's first
+major finding)
+
+**Amends** D265 point 1 (its worst case) and M7 E6's decision strip, whose prompt
+was a fixed `max-inline-size: 46ch`. **Keeps** M4's and M7's rule that the
+engine's prompt is rendered verbatim (`render/DecisionPanel.tsx`'s rule 1): the
+text node is `input.prompt`, whole.
+
+**Decision.**
+
+1. **`.arena__decision .prompt` is clamped at two lines** (`HUD_PROMPT.lines` in
+   `arena/hud.ts`; `-webkit-line-clamp`, an ellipsis where it is cut). The whole
+   prompt is still in the DOM — the `role="status"` region announces all of it —
+   it is the element's `title`, and hovering the prompt opens it in place (the
+   column grows while you read and gives the band back when the pointer leaves).
+2. **It starts from nothing and grows** (`flex: 1 1 0`) into the room the bar has
+   beside its buttons, the bar still at most `min(1100px, 100% - 15rem)`: a short
+   prompt keeps its buttons on its line, a long one takes the bar's width rather
+   than its height.
+3. `hud.test.ts` holds the stylesheet to both (the clamp at `HUD_PROMPT.lines`,
+   the zero basis, no width cap, the hover, the tooltip) and sweeps every distinct
+   prompt of the committed corpus through a per-line model (46 characters a line,
+   a floor), Quake's 250-character targeting prompt the red case: unclamped it
+   takes the modelled column to 185 px (Chromium drew 167.1); clamped, no prompt
+   passes `HUD_TOP_PX`.
+
+**Measured** (headless Chromium, every one of the corpus's 350 distinct prompts at
+1280 × 800 and 1600 × 1000, each on the frame it first appears): before, **17** took
+the column past 128 px at both sizes (130.7–167.1); after, **none** — at most
+112.5, and **322** of them are shorter (one line where there were two: the column
+94.7 px), none taller. The clamp cuts **3** at 1280 px — Quake's trigger twice and
+Web Up's, 224–250 characters — and **none** at 1600, where the bar's 1,100 px holds
+them in two lines; a spell's payment prompt (143 characters, "…then shuffle. Pay
+Mana Cost: {1}{G}") is whole in two lines from 1280. The prompt measured 605–671 px
+wide at 1280 for every prompt over 100 characters (342 before, the 46ch).
+
+**Rationale.** The bar is the chrome column's first row, and the column is the
+band every far-end pose is measured against (D85, D100, D265). A prompt of any
+length wrapped it a line at a time — and the prompts that wrapped furthest were
+targeting prompts, whose credit row and inspect chip then stood over the far
+rank the prompt was asking you to click. The engine writes the context first and
+the question last ("…[Card: …]\n\nSelect target creature or land"), so the
+width matters as much as the clamp: at the old 46ch a two-line clamp would have
+cut "Pay Mana Cost" off every spell cast at a live seat.
+
+**Rejected.**
+- **The clamp at the old 46ch**: 143 characters are four lines there, so every
+  spell's payment prompt would have lost its question.
+- **A 46ch basis that grows** (`flex: 1 1 46ch`): measured, a short prompt then
+  pushes its buttons onto a second line of the bar — 27 prompts at 1280 px, the
+  bar 28 → 52 px — because a wrapping flex line is filled by each item's basis.
+- **Keeping the question line** — cutting the context and showing the last
+  paragraph whole — reads structure into an engine string (M5 convention 4's
+  spirit); owner question 39 offers it.
+- **Letting the column grow while a long prompt is up**, or moving the credit row
+  out of the flow when the bar grows: the first is the defect; for the second CSS
+  cannot see the bar's line count, and a second home for the credit is a redesign.

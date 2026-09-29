@@ -23,16 +23,23 @@
  *   - the strip's contents are the ones measured: four buttons, the speed select,
  *     five checkboxes, the status, and a switcher of five views, the director and
  *     spectator — a control added to either fails here until the row is measured
- *     again.
+ *     again;
+ *   - (the fix pass) the engine's prompt is at most two lines, whatever it says:
+ *     every distinct prompt of the committed corpus through a per-line model,
+ *     Quake's 250-character targeting prompt the red case — 167 px of column in
+ *     Chromium before the clamp;
+ *   - (the fix pass) the credit keeps its room until the inspect chip is down to
+ *     its label, the status sits behind a rule of its own, and the turn-order
+ *     bar's head holds "R99 their turn" on one line.
  */
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { VIEWS } from '../src/arena/camera.ts';
-import { CUE_STRIP, HUD_COLUMN_PX, cueStatusOf, hudColumnPx, stripsRowPx } from '../src/arena/hud.ts';
+import { CUE_STRIP, HUD_COLUMN_PX, HUD_PROMPT, TURN_BAR, cueStatusOf, hudColumnPx, promptBarPx, stripsRowPx } from '../src/arena/hud.ts';
 import { HUD_TOP_PX } from '../src/arena/layout.ts';
 
 const read = (rel: string): string => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
@@ -126,10 +133,21 @@ test('hud: the layer mounts three in-flow rows, and their measured heights sum u
   // The credit row: the credit and the chip side by side, the chip with no block margin of its own.
   assert.equal(rule('.arena__creditrow')['display'], 'flex');
   assert.equal(rule('.arena__inspect')['margin-block-start'], undefined, 'the inspect chip is back on a row of its own');
+  // The chip gives way before the credit (D265 point 2): a shrink factor is
+  // weighted by the item's width, so 4 against 1 cut the credit to 586 px while
+  // the chip kept 429 of its 560 at 1280 (the fix pass). Now the credit keeps its
+  // whole width until the chip is down to its label (measured: 648 of 648 px
+  // beside a 367-px chip at human-sideboard-7@1195, 928 of 1,029 beside the chip
+  // at its 86-px floor at villain-doom-248 seen from seat 1 @390).
+  const [chipGrow, chipShrink] = (rule('.arena__inspect')['flex'] ?? '').split(/\s+/).map(Number);
+  const [, creditShrink] = (rule('.arena__credit')['flex'] ?? '').split(/\s+/).map(Number);
+  assert.equal(chipGrow, 0);
+  assert.ok(chipShrink! >= 100 * creditShrink!, `the chip's shrink (${String(chipShrink)}) does not dwarf the credit's (${String(creditShrink)}) — both give way at once`);
+  assert.equal(rule('.arena__inspect')['min-inline-size'], '13ch', 'the chip gives way down to its label, "⌕ inspect · I"');
   assert.match(block, /<div className="arena__creditrow">\s*<ArtCredit [^>]*\/>\s*<InspectChip [^>]*\/>\s*<\/div>/);
 
   const column = hudColumnPx();
-  console.log(`  the chrome column at its worst ordinary case (a live seat, a two-line prompt): ${column.toFixed(1)} px of HUD_TOP_PX ${String(HUD_TOP_PX)}`);
+  console.log(`  the chrome column at its worst (a prompt at its two lines, whatever the engine writes): ${column.toFixed(1)} px of HUD_TOP_PX ${String(HUD_TOP_PX)}`);
   assert.ok(column <= HUD_TOP_PX, `the chrome column is ${column.toFixed(1)} px, past HUD_TOP_PX (${String(HUD_TOP_PX)})`);
   // THE CONTROL: D241's chip on a row of its own under the credit (a 0.25rem margin and its 21 px).
   const before = column + 4 + 21;
@@ -164,6 +182,11 @@ test('hud: the cue strip’s status never writes past its fixed box, in either f
   const both = rule('.arena__cues-status-wide,\n.arena__cues-status-narrow');
   assert.equal(both['overflow'], 'hidden');
   assert.equal(both['white-space'], 'nowrap');
+  // Behind a rule of its own (the fix pass): beside the caption checkbox with
+  // nothing between them it read as that checkbox's label, "caption idle".
+  assert.match(rule('.arena__cues-status')['border-inline-start'] ?? '', /^1px solid /, 'the status has no rule before it — it reads as the caption checkbox’s label');
+  assert.ok(px(rule('.arena__cues-status')['padding-inline-start']) > 0);
+  assert.match(arena.slice(arena.indexOf('function CueControls('), arena.indexOf('function ArtCredit(')), /caption\s*<\/label>\s*<span className="arena__cues-status muted"/, 'the status no longer follows the caption checkbox — look at the strip again');
   // The component writes the formatter's two forms into the two boxes, and nothing else.
   const controls = arena.slice(arena.indexOf('function CueControls('), arena.indexOf('function ArtCredit('));
   assert.match(controls, /const status = cueStatusOf\(queue\.pendingSteps, queue\.totalRemainingMs\(\)\);/);
@@ -217,4 +240,80 @@ test('hud: the strip and the switcher hold the controls that were measured', () 
   assert.equal(VIEWS.length, 5, 'a view was added — the switcher is wider: measure it again (CUE_STRIP.px.switcher)');
   const items = arena.slice(arena.indexOf('const viewItems = useMemo('), arena.indexOf('const queue = useMemo('));
   assert.equal((items.match(/id: '/g) ?? []).length, 1, 'the switcher gained an item besides the views and the director');
+});
+
+// ---------------------------------------------------------------------------
+// 4. The engine's prompt, two lines at most (the fix pass)
+// ---------------------------------------------------------------------------
+
+/** Every distinct `input` prompt of the committed corpus, with where it first appears. */
+function corpusPrompts(): Map<string, string> {
+  const dir = fileURLToPath(new URL('../../fixtures/games/', import.meta.url));
+  const out = new Map<string, string>();
+  for (const name of readdirSync(dir).filter((f) => f.endsWith('.jsonl')).sort()) {
+    readFileSync(dir + name, 'utf8')
+      .split('\n')
+      .forEach((line, index) => {
+        if (!line.includes('"type":"input"')) return;
+        const prompt = (JSON.parse(line) as { body?: { prompt?: unknown } }).body?.prompt;
+        if (typeof prompt === 'string' && prompt !== '' && !out.has(prompt)) out.set(prompt, `${name}@${String(index)}`);
+      });
+  }
+  return out;
+}
+
+test('hud: the engine’s prompt is at most two lines, whatever it says — every prompt of the corpus through a per-line model, Quake’s targeting prompt the red case', () => {
+  // The stylesheet clamps it at HUD_PROMPT.lines, and it starts from nothing and grows into the bar's room.
+  const prompt = rule('.arena__decision .prompt');
+  assert.equal(prompt['-webkit-line-clamp'], String(HUD_PROMPT.lines), 'the prompt is not clamped at HUD_PROMPT.lines');
+  assert.equal(prompt['display'], '-webkit-box');
+  assert.equal(prompt['-webkit-box-orient'], 'vertical');
+  assert.equal(prompt['overflow'], 'hidden');
+  assert.equal(prompt['flex'], '1 1 0', 'a prompt with a basis of its own pushes its buttons onto a second line of the bar when it is short (46ch did, on 27 of the corpus’s prompts at 1280 px)');
+  assert.equal(prompt['max-inline-size'], undefined, 'a width cap on the prompt: a long one wraps into more lines than the bar has room for');
+  // Whole on hover, whole in its tooltip, verbatim in the DOM.
+  assert.equal(rule('.arena__decision .prompt:hover')['-webkit-line-clamp'], 'unset');
+  assert.match(decision, /<p className="prompt" role="status" title=\{input\.prompt\}>\s*\{input\.prompt\}\s*<\/p>/);
+  // The bar's two-line height is the column's row.
+  assert.ok(Math.abs(promptBarPx(Number.POSITIVE_INFINITY) - HUD_COLUMN_PX.decision) < 1, 'HUD_COLUMN_PX.decision is not a prompt at its two lines');
+
+  const prompts = corpusPrompts();
+  const rest = hudColumnPx() - HUD_COLUMN_PX.decision;
+  let clamped = 0;
+  let pastBefore = 0;
+  let longest = ['', ''];
+  for (const [text, where] of prompts) {
+    const column = rest + promptBarPx(text.length);
+    assert.ok(column <= HUD_TOP_PX, `${where}: a ${String(text.length)}-character prompt takes the column to ${column.toFixed(1)} px`);
+    if (promptBarPx(text.length, Number.POSITIVE_INFINITY) > promptBarPx(text.length)) clamped += 1;
+    if (rest + promptBarPx(text.length, Number.POSITIVE_INFINITY) > HUD_TOP_PX) pastBefore += 1;
+    if (text.length > longest[0]!.length) longest = [text, where];
+  }
+  console.log(
+    `  ${String(prompts.size)} distinct prompts in the corpus; the model cuts ${String(clamped)} at ${String(HUD_PROMPT.lines)} lines of ${String(HUD_PROMPT.charsPerLine)} characters, ` +
+      `and unclamped ${String(pastBefore)} would take the column past HUD_TOP_PX — the longest, ${String(longest[0]!.length)} characters at ${longest[1]!}, to ` +
+      `${(rest + promptBarPx(longest[0]!.length, Number.POSITIVE_INFINITY)).toFixed(1)} px (Chromium drew it at 167.1 before the clamp, 112.5 after)`,
+  );
+  assert.ok(prompts.size > 300, `the corpus has ${String(prompts.size)} distinct prompts`);
+  // THE RED CASE: Quake's targeting trigger, unclamped, is past the band — in the model as it was in the browser.
+  const quake = [...prompts.keys()].find((t) => t.startsWith('Quake, Agent of S.H.I.E.L.D.') && t.includes('Select target creature or land'));
+  assert.ok(quake !== undefined, 'the corpus lost Quake’s targeting prompt');
+  assert.ok(rest + promptBarPx(quake.length, Number.POSITIVE_INFINITY) > HUD_TOP_PX, 'Quake’s prompt fits the band unclamped — the red case has no teeth');
+  assert.ok(pastBefore > 0 && clamped >= pastBefore);
+});
+
+test('hud: the turn-order bar’s head holds "R99 their turn" on one line — at the bar’s own 10.5 px it did not', () => {
+  const bar = rule('.arena__phases');
+  const head = rule('.arena__phases-head');
+  assert.equal(px(bar['inline-size']), TURN_BAR.widthPx);
+  assert.equal(px(bar['padding']?.split(/\s+/)[1] ?? bar['padding']), TURN_BAR.padInlinePx);
+  assert.equal(px(head['font-size']), TURN_BAR.headFontPx);
+  assert.equal(head['white-space'], 'nowrap');
+  assert.match(decision, /yours \? 'your turn' : 'their turn'/, 'the head’s words changed — measure it again (TURN_BAR.longestHead)');
+  const room = TURN_BAR.widthPx - 2 * TURN_BAR.padInlinePx;
+  const width = (fontPx: number): number => [...TURN_BAR.longestHead].length * TURN_BAR.monoAdvanceEm * fontPx;
+  console.log(`  "${TURN_BAR.longestHead}": ${width(TURN_BAR.headFontPx).toFixed(1)} px of the head's ${String(room)}`);
+  assert.ok(width(TURN_BAR.headFontPx) <= room, `"${TURN_BAR.longestHead}" is ${width(TURN_BAR.headFontPx).toFixed(1)} px, past the head's ${String(room)}`);
+  // THE CONTROL: the head at the bar's 10.5 px, which cut every opponent's turn from round 10.
+  assert.ok(width(px(bar['font-size'])) > room, 'the head fits at the bar’s own size — the control has no teeth');
 });

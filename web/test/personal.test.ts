@@ -727,6 +727,94 @@ test('personal: THE lookup spends the table’s personal triangle line — the s
   assert.equal(personalChoicesOf(placed, poses, both, PERSONAL_MAX_FIGURES, 0).size, 0);
 });
 
+/**
+ * **The personal budget is spent on the viewer's own seat first** (D266; the
+ * play-distance audit's fix pass — its verifier reverted this lookup to
+ * placement order and every test stayed green). `layout()` places the seats in
+ * the wire's player order, so from seat 1 (`spectate.sh --seat 1`: a villain
+ * deck across the table, the composition a bare `play.sh` gives you) the
+ * placement order hands the personal tier's four figures to the other seat
+ * first. Every committed recording is seen from player 0, so the sweep sees the
+ * corpus from its OTHER chair — the same boards, the viewer swapped — with an
+ * overlay that dresses every name at the per-model cap, so the count cap and the
+ * triangle line both bind. Wherever they do, no creature of the other seat wears
+ * a personal model while one of the viewer's that could goes without. THE
+ * CONTROL: the placement order, over the same frames, starves the viewer's seat.
+ */
+test('personal: THE lookup spends its budget on the viewer’s seat first — the corpus seen from its other chair, the budget binding (D266)', () => {
+  const entry: PersonalEntry = { id: 'p0', url: 'personal/models/x/model.glb', triangles: PERSONAL_TRI_CAP, calls: 1, credits: '' };
+  class Every extends Map<string, PersonalEntry> {
+    override get(): PersonalEntry {
+      return entry;
+    }
+    override get size(): number {
+      return 1;
+    }
+  }
+  const overlay = { ...EMPTY_PERSONAL, entries: [entry], cards: new Every() } as PersonalOverlay;
+  const cap = Math.min(PERSONAL_MAX_FIGURES, Math.floor(PERSONAL_TABLE_TRIS / PERSONAL_TRI_CAP));
+  let frames = 0;
+  let binding = 0;
+  let starvedBefore = 0;
+  const examples: string[] = [];
+  const root = join(REPO, 'fixtures', 'games');
+  for (const name of readdirSync(root).filter((f) => f.endsWith('.jsonl')).sort()) {
+    const log = parseFrameLog(readFileSync(join(root, name), 'utf8'));
+    let state = initialState(log.header);
+    const all = log.frames as Frame[];
+    for (let index = 0; index < all.length; index++) {
+      state = reduce(state, all[index]!);
+      if (all[index]!.type !== 'state' || state.board === null) continue;
+      const ids = state.board.players.map((pl) => pl.id);
+      const other = ids.find((id) => id !== (state.hello?.you ?? state.session?.seat ?? ids[0]));
+      if (other === undefined) continue;
+      const swapped = {
+        ...state,
+        hello: state.hello === null ? null : { ...state.hello, you: other },
+        session: state.session === null ? null : { ...state.session, seat: other },
+      } as ClientState;
+      const placed = layout(swapped);
+      const poses = figurePose(placed, swapped.board?.combat ?? null, DATA, { models: MODELS });
+      frames += 1;
+      // What the lookup could dress with no budget at all, in its own order.
+      const eligible = personalChoicesOf(placed, poses, overlay, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
+      if (eligible.size <= cap) continue;
+      binding += 1;
+      const seatOf = new Map<number, string>();
+      for (const p of placed.placements) if (p.kind === 'creature' && !seatOf.has(p.cardId)) seatOf.set(p.cardId, p.seat);
+      const chosen = personalChoicesOf(placed, poses, overlay);
+      assert.equal(chosen.size, cap, `${name}@${String(index + 1)}: the budget binds, so it is spent to the cap`);
+      const yoursWithout = [...eligible.keys()].filter((id) => seatOf.get(id) === 'you' && !chosen.has(id)).length;
+      const theirsDressed = [...chosen.keys()].filter((id) => seatOf.get(id) === 'opp').length;
+      assert.ok(
+        yoursWithout === 0 || theirsDressed === 0,
+        `${name}@${String(index + 1)}, seen from player ${String(other)}: ${String(yoursWithout)} of the viewer's creatures go without a personal model while ${String(theirsDressed)} of the other seat's wear one`,
+      );
+      // THE CONTROL: the placement order the lookup used to spend its budget in.
+      const seen = new Set<number>();
+      const inPlacementOrder: number[] = [];
+      for (const p of placed.placements) {
+        if ((p.kind !== 'creature' && p.kind !== 'stack') || seen.has(p.cardId)) continue;
+        seen.add(p.cardId);
+        if (eligible.has(p.cardId)) inPlacementOrder.push(p.cardId);
+      }
+      const before = new Set(inPlacementOrder.slice(0, cap));
+      const starved = [...eligible.keys()].filter((id) => seatOf.get(id) === 'you' && !before.has(id)).length;
+      const theirsBefore = [...before].filter((id) => seatOf.get(id) === 'opp').length;
+      if (starved > 0 && theirsBefore > 0) {
+        starvedBefore += 1;
+        if (examples.length < 3) examples.push(`${name}@${String(index + 1)} (${String(starved)} of yours)`);
+      }
+    }
+  }
+  console.log(
+    `  personal, seen from the other chair: ${String(frames)} board frames, the budget (${String(cap)} figures) binds on ${String(binding)}; ` +
+      `in placement order the viewer's creatures would have gone without while the other seat's were dressed on ${String(starvedBefore)} (e.g. ${examples.join(', ')})`,
+  );
+  assert.ok(frames > 5000, `the sweep saw ${String(frames)} frames`);
+  assert.ok(starvedBefore > 50, 'the placement-order control starves no one — the sweep has no teeth');
+});
+
 // ---------------------------------------------------------------------------
 // 5. The dressed pose
 // ---------------------------------------------------------------------------

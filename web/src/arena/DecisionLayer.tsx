@@ -116,8 +116,11 @@ export function DecisionLayer({
         ) : (
           <>
             {/* The engine's own words. `role="status"` and polite, because the
-                prompt changes on nearly every priority pass. */}
-            <p className="prompt" role="status">
+                prompt changes on nearly every priority pass. At most two lines
+                on screen (D265, the audit's fix pass: the bar is the chrome
+                column's first row, under `HUD_TOP_PX`); the whole of it stays in
+                the DOM, is the tooltip, and opens in place on hover. */}
+            <p className="prompt" role="status" title={input.prompt}>
               {input.prompt}
             </p>
             <ArenaButton

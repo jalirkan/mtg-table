@@ -300,3 +300,11 @@ most → 11.82) and `WSPORT=9350` **277.6 s** (1,029.2 s summed, 9.62 → 17.86 
 16.56), exit 0 both, `node --test` inside them 1,206 / 1,195 pass / 0 fail / 11
 skipped and 157 vitest (9 files) — `var/check-all-audit-1.log` and `-2.log`. No
 step and no job added.
+
+## The play-distance audit's fix pass (D267)
+
+Once from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9340`, branch
+`play-distance-audit`: **274.8 s** (48 jobs, 1,029.1 s summed, load average 9.01 →
+13.13 at most → 10.56), exit 0, `node --test` inside it 1,209 / 1,198 pass / 0
+fail / 11 skipped and 157 vitest (9 files) — `var/check-all-audit-fix.log`. No step
+and no job added.

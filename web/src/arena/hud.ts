@@ -15,11 +15,13 @@
  * column to its own band, so it grew past it: D241's inspect chip took a fourth
  * row under the credit line (137 px at a live seat whose prompt wraps), and the
  * sound and caption checkboxes widened the cue strip until, at 1280 × 800, the
- * switcher took a second row of its own (150 px). `hud.test.ts` now holds the
- * column: the rows below, measured in headless Chromium, sum under `HUD_TOP_PX`;
- * the layer mounts exactly these three in-flow rows; and the cue strip keeps one
- * row with the switcher from 1280 px, idle and playing, because its status is a
- * fixed width.
+ * switcher took a second row of its own (150 px); and the engine's prompt, which
+ * the bar wraps, took it to 167 px on a 250-character targeting prompt (the
+ * audit's fix pass). `hud.test.ts` now holds the column: the rows below,
+ * measured in headless Chromium, sum under `HUD_TOP_PX`; the layer mounts
+ * exactly these three in-flow rows; the prompt is at most two lines, whatever
+ * the engine writes; and the cue strip keeps one row with the switcher from
+ * 1280 px, idle and playing, because its status is a fixed width.
  *
  * `[NO three]`, `[NO React]`, `[NO DOM]`, no clock, no storage (`liveness.test.ts`).
  */
@@ -28,14 +30,15 @@
  * **The column's rows, in CSS pixels** — each one's height as headless Chromium
  * drew it (`docs/evidence/play-distance-audit.md`, the live seat and the replay at
  * 1280 × 800 and 1600 × 1000), and the gaps between them from `styles.css`. The
- * decision bar is its WORST ordinary case: a live seat's two-line prompt
- * ("Priority: Human Turn: 1 (Human) Phase: Main phase, precombat Stack: Empty"
- * wraps at the prompt's 46ch).
+ * decision bar is its WORST case: a prompt at {@link HUD_PROMPT}'s two lines
+ * beside its buttons, which is as tall as the bar gets whatever the engine
+ * writes — the corpus's 350 distinct prompts measured 28.2–46.4 px at both sizes
+ * after the fix pass, and 28.2–100.9 before it.
  */
 export const HUD_COLUMN_PX = Object.freeze({
   /** `.arena__layer`'s `padding-block-start` (0.4rem). */
   layerPad: 6.4,
-  /** `.arena__decision`, a two-line prompt beside its buttons (a watching line is 26). */
+  /** `.arena__decision`, a prompt at its two lines beside its buttons (one line is 28, a watching line 26). */
   decision: 46,
   /** `.arena__decision`'s `margin-block-end` (0.3rem). */
   decisionGap: 4.8,
@@ -47,11 +50,59 @@ export const HUD_COLUMN_PX = Object.freeze({
   credit: 21,
 });
 
-/** The column's height over the canvas top, at its worst ordinary case. */
+/** The column's height over the canvas top, at its worst case. */
 export function hudColumnPx(): number {
   const r = HUD_COLUMN_PX;
   return r.layerPad + r.decision + r.decisionGap + r.strips + r.stripsGap + r.credit;
 }
+
+/**
+ * **The engine's prompt, at most two lines** (the audit's fix pass). The prompt
+ * is the engine's text and any length — a trigger's targeting prompt quotes the
+ * card's whole ability before the question, 250 characters in the corpus — and
+ * the bar wrapped all of it, so the column grew a line at a time past
+ * `HUD_TOP_PX` (167 px at five lines) with the credit row over the very rank the
+ * prompt asked you to target. `.arena__decision .prompt` starts from nothing
+ * (`flex: 1 1 0`) and grows into the room the bar has beside its buttons, so a
+ * short prompt keeps its buttons on its line and a long one takes the bar's
+ * width; past `lines` it is cut with an ellipsis. It stays whole in the DOM, in
+ * its tooltip, and in place on hover.
+ *
+ * `lineHeightPx` and `barPadPx` are the bar's as Chromium drew it (a prompt of n
+ * lines is `n × 18.2 + 10` px tall, beside 16.6-px buttons); `charsPerLine` is a
+ * floor for the per-line model `hud.test.ts` sweeps the corpus's prompts
+ * through — the prompt's old fixed 46ch, which a long prompt now never gets less
+ * than from 1280 px (the corpus's prompts over 100 characters measured 605–671 px
+ * there).
+ */
+export const HUD_PROMPT = Object.freeze({
+  lines: 2,
+  lineHeightPx: 18.2,
+  barPadPx: 10,
+  charsPerLine: 46,
+});
+
+/** The bar's height, modelled, for a prompt of `chars` characters clamped at `lines` (or not, with `Infinity`). */
+export function promptBarPx(chars: number, lines: number = HUD_PROMPT.lines): number {
+  const wrapped = Math.max(1, Math.ceil(chars / HUD_PROMPT.charsPerLine));
+  return Math.min(wrapped, lines) * HUD_PROMPT.lineHeightPx + HUD_PROMPT.barPadPx;
+}
+
+/**
+ * **The turn-order bar's head** (D210's `TurnOrderBar`; the audit's fix pass):
+ * `R<round> your turn` / `R<round> their turn` in a monospace face, on one line
+ * inside the bar's fixed width. At the bar's 10.5 px "R12 their turn" was 88.5
+ * px against 88 px of content and every opponent's turn from round 10 read
+ * "R12 their tu…"; the head is 10 px. `monoAdvanceEm` is the face's advance
+ * (DejaVu Sans Mono, 1233/2048, what Chromium resolved `--mono` to here).
+ */
+export const TURN_BAR = Object.freeze({
+  widthPx: 100,
+  padInlinePx: 6,
+  headFontPx: 10,
+  monoAdvanceEm: 0.602,
+  longestHead: 'R99 their turn',
+});
 
 /**
  * **The cue strip and the camera switcher share one row** (slice 2's
@@ -67,8 +118,10 @@ export function hudColumnPx(): number {
  *
  * The widths are headless Chromium's (the audit's measuring driver), for the
  * strip as `CueControls` mounts it — four buttons, the speed select, five
- * checkboxes and the status (`hud.test.ts` holds the markup to that list, so a
- * control added to the strip fails until the row is measured again).
+ * checkboxes and the status behind its rule (`hud.test.ts` holds the markup to
+ * that list, so a control added to the strip fails until the row is measured
+ * again). The rule came on the fix pass — beside the caption checkbox the status
+ * read as its label, "caption idle" — and added 5.8 px to each form.
  */
 export const CUE_STRIP = Object.freeze({
   narrowBelowPx: 1400,
@@ -76,7 +129,7 @@ export const CUE_STRIP = Object.freeze({
   /** The status box, in `ch` of the strip's 11 px mono face. */
   statusCh: Object.freeze({ wide: 21, narrow: 6 }),
   /** Measured widths, CSS px: the cue strip in each form and the switcher both ways. */
-  px: Object.freeze({ wide: 886.3, narrow: 750.7, switcher: 230.1, switcherLabelled: 672 }),
+  px: Object.freeze({ wide: 892.1, narrow: 756.5, switcher: 230.1, switcherLabelled: 672 }),
   /** `.arena__strips`' `column-gap` (0.4rem). */
   gap: 6.4,
   /** What the strips' row keeps back: `.arena__layer`'s inline padding and the opponent's plate's 15rem. */

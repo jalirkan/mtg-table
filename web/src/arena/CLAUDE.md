@@ -1408,7 +1408,7 @@ window counted in time) as its control. After changing any rule line above,
 regenerate the rules manifest (`CLAUDE_MD_RULES_WRITE=1 node --test
 web/test/claude-md.test.ts`).
 
-## The play-distance audit — the conventions D265–D266 added
+## The play-distance audit — the conventions D265–D267 added
 
 Two, and the thesis is one sentence: **the lanes were verified alone, so the
 whole is held where they meet.** The audit looked at the eight lanes of
@@ -1417,19 +1417,25 @@ view (`docs/evidence/play-distance-audit.md`, the contact sheets under
 `var/audit/`); PLAN.md's *The play-distance audit* has the defect list, its
 grades and the owner questions it raised.
 
-1. **The chrome column is three rows under `HUD_TOP_PX`** (**D265**). The layer's
-   in-flow rows are the decision bar (or the watching line), the cue strip beside
-   the camera switcher, and the credit line beside the inspect chip; everything
-   else it mounts is positioned out of the flow. `arena/hud.ts` is the column in
-   numbers — each row's height and the strip's widths as headless Chromium drew
-   them, and the three breakpoints (the strip's narrow form below 1400 px, the
-   switcher's labels from 1840) — and `hud.test.ts` holds the sum under
-   `HUD_TOP_PX` (112 px at a live seat whose prompt wraps), the layer to its three
-   rows, the stylesheet to the numbers and the strip to the controls that were
-   measured. **A new widget goes on an existing row or out of the flow**; a
-   control added to the cue strip or a view added to the switcher fails the test
-   until the row is measured again in a browser (the evidence's §F1 says how).
-   The cue status is a fixed width, so a batch never changes the strip's width.
+1. **The chrome column is three rows under `HUD_TOP_PX`** (**D265**, **D267**).
+   The layer's in-flow rows are the decision bar (or the watching line), the cue
+   strip beside the camera switcher, and the credit line beside the inspect chip;
+   everything else it mounts is positioned out of the flow. `arena/hud.ts` is the
+   column in numbers — each row's height and the strip's widths as headless
+   Chromium drew them, and the three breakpoints (the strip's narrow form below
+   1400 px, the switcher's labels from 1840) — and `hud.test.ts` holds the sum
+   under `HUD_TOP_PX` (112 px at its worst), the layer to its three rows, the
+   stylesheet to the numbers and the strip to the controls that were measured.
+   **A new widget goes on an existing row or out of the flow**; a control added
+   to the cue strip or a view added to the switcher fails the test until the row
+   is measured again in a browser (the evidence's §4 says how). The cue status is
+   a fixed width behind a rule of its own, so a batch never changes the strip's
+   width; the chip gives way before the credit does (a shrink factor of 1,000
+   against 1, because shrinking is weighted by width). **The engine's prompt is
+   at most two lines** (D267): it grows into the bar's room from a zero basis and
+   is cut past two lines, whole in the DOM, in its tooltip and on hover — so no
+   prompt, however long, grows the column; `hud.test.ts` sweeps every prompt of
+   the corpus through a per-line model.
 2. **The figure budget serves the viewer's seat first** (**D266**).
    `figures/pose.ts`'s `budgetOrderOf` — your seat's placements, the other
    seat's, then the stack — is the one order `MAX_FIGURES` is spent in, and
