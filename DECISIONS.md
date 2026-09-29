@@ -11065,7 +11065,7 @@ after a non-uniform `discard`, is undefined in GLSL ES 3.00.
 
    **Accepted, and put to the owner** (PLAN.md's question 32): a smaller window
    draws fewer standees rather than standees nobody can read. Lowering the floor
-   for a small canvas would stand the 25–29 px paintings the contact sheet
+   for a small canvas would stand the 23–30 px paintings the contact sheet
    refused; a floor in device pixels would let the governor's rung change bodies.
    A card now also changes body when the window is resized across its floor —
    at commit, never mid-frame (PLAN.md's personal-tier follow-up 42).
