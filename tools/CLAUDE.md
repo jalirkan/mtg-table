@@ -490,4 +490,7 @@ no more than 10 a second, its depth from a Python venv the tool never installs
 into and never lets download (`HF_HUB_OFFLINE`). Card-art-derived, so it is the
 personal tier's by the same rule as the models: gitignored, served by the dev
 route alone, never committed. `docs/guides/personal-tier.md`'s *The relief cache*
-is its manual.
+is its manual. The day the GTX 1080 is replaced, `docs/guides/gpu-day.md` is the
+guide for this tier's GPU half and the likeness venv's: the driver, the venv's
+torch and `nvcc`, what to run again, and how to roll back. Until that venv's torch
+is replaced, `relief.mjs` wants `--device cpu`; the maps themselves stay current.

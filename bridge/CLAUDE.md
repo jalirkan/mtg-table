@@ -3,7 +3,10 @@
 These load when you work under `bridge/`, on top of the root `CLAUDE.md`, whose
 eleven hard rules are mostly the bridge's own (1–3, 5, 6, 8, 10 and 11). If Java
 is new to you, `docs/guides/java-for-typescript-people.md` is the primer, and its
-chapter 9 is a map of `WireGuiGame.java`, the biggest file here.
+chapter 9 is a map of `WireGuiGame.java`, the biggest file here. The same map
+sits in a comment block at the top of that file, right after the licence, and
+that header is the authoritative copy: a change that moves a section or a member
+it names fixes its line numbers in the same commit, then the guide's table.
 
 Three sets of the bridge's rules live in other files, because each is one rule
 with two ends: `web/CLAUDE.md`'s M6 conventions 2, 3 and 5 (the reset hook in

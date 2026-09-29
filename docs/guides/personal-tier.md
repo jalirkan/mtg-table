@@ -494,7 +494,11 @@ npm --prefix web run dev                              # then #workshop, a card, 
   (`HF_HUB_OFFLINE=1`): the tool never downloads a model. The model uses the GPU
   when torch sees one — about 30 ms a card on the GTX 1080 — and the CPU
   otherwise (`--device cpu`, about 0.11–0.14 s); the back layer is numpy and
-  scipy (both in that venv), about 0.09 s a card either way. The whole deck list
+  scipy (both in that venv), about 0.09 s a card either way. The day the GTX 1080
+  gives way to the RTX 5070 Ti Super has a guide of its own,
+  [`gpu-day.md`](gpu-day.md): the driver, that venv's torch and `nvcc`, and what
+  to run again. The maps stay current (the device is not part of the recipe);
+  until its step 3 replaces the venv's torch, pass `--device cpu`. The whole deck list
   (158 cards) takes about 41 s, and the folder is about 33 MiB.
 - **Idempotent**: a card whose two files are on disk, indexed with this model, cut
   with this art box and made with this recipe (`relief.mjs`'s `recipeOf`), is
