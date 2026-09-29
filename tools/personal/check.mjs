@@ -31,16 +31,29 @@
  *      the prepare step skinned by rule (the cloak) FOLLOWS the spine — its
  *      centroid within 10% of the height of where spine_02's own motion carries
  *      it, and moving when the spine moves;
- *   3. prints the joint-coverage table.
+ *   3. judges the RIG MAP against the `agent` body (`lib.mjs`'s `judgeBody`,
+ *      D192), because step 2's rotations hold by construction for ANY map
+ *      (prepare builds every skeleton in the agent's bind rotations): every
+ *      core joint the agent's skin uses carries skin weight on the model; the
+ *      weighted source bones placed by position carry at most 2% of the weight;
+ *      every `_l` joint, and the vertices it carries, is on the agent's side
+ *      (+x); each foot's vertices are in front of its ankle (a left/right swap
+ *      turns the whole figure round, and the feet then point backwards); and
+ *      every segment points within 60° of the agent's. Prints the joint-coverage
+ *      table (weight, vertices, rotation) and the side, facing and shape lines.
  *
  * Then, unless `--no-preview`, it renders turntables — front, side, back and a
  * mid-attack frame, plus a sheet of all four, and the kneel and the death from
  * the side (where a cloak skinned by rule shows what it does) — to
  * `personal/models/<slug>/preview/*.png` through headless Chromium over CDP, the
- * way `tools/arena-bench.mjs` drives it: a small page written to
- * `var/personal-tier/preview/` that loads the GLB with three from
- * `web/node_modules`, served by a loopback server this script starts and stops.
- * No network: every request the page makes is to 127.0.0.1.
+ * way `tools/arena-bench.mjs` drives it: a small page, answered from memory by a
+ * loopback server this script starts and stops, that loads the GLB with three
+ * from `web/node_modules`. **It writes nothing outside the slug's folder**: the
+ * browser's profile is `personal/models/<slug>/.preview-profile/` for the run
+ * and is deleted after it, its disk cache is sized to nothing, and every answer
+ * is `no-store`. **No network**: background services are off and every host
+ * name resolves to nothing (`--host-resolver-rules`), and Chromium's own net
+ * log, read back before the profile goes, must name no host but 127.0.0.1.
  *
  * Exit 0 when every assertion holds, 1 otherwise.
  */
@@ -51,7 +64,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { extname, join, normalize, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { insideSlug, OUR_JOINTS, REPO, slugDir, THREE, validateManifest, WEB } from './lib.mjs';
+import { CORE_JOINTS, insideSlug, judgeBody, netLogReport, OUR_JOINTS, REPO, SEGMENT_LIMIT_DEG, slugDir, THREE, validateManifest, WEB } from './lib.mjs';
 import { worldDeltaRetarget } from './retarget.mjs';
 
 const { GLTFLoader } = await import(pathToFileURL(join(WEB, 'node_modules/three/examples/jsm/loaders/GLTFLoader.js')).href);
@@ -416,41 +429,124 @@ if (cloakRest !== null) {
 }
 
 // ---------------------------------------------------------------------------
-// 3 — joint coverage
+// 3 — joint coverage, sides, facing and shape: the checks a wrong map fails
 // ---------------------------------------------------------------------------
 
-const dominant = new Map(['root', ...OUR_JOINTS].map((j) => [j, 0]));
-let vertices = 0;
-for (const mesh of meshes) {
-  const si = mesh.geometry.getAttribute('skinIndex');
-  const sw = mesh.geometry.getAttribute('skinWeight');
-  for (let i = 0; i < si.count; i += 1) {
-    let best = 0;
-    for (let k = 1; k < 4; k += 1) if (sw.getComponent(i, k) > sw.getComponent(i, best)) best = k;
-    const name = mesh.skeleton.bones[si.getComponent(i, best)].name;
-    dominant.set(name, (dominant.get(name) ?? 0) + 1);
-    vertices += 1;
+// The rotation columns above hold BY CONSTRUCTION: prepare builds every
+// skeleton in the agent's bind rotations and the clips are the agent's, so a
+// joint turns as the agent's does whichever source bone it was mapped to (the
+// verifier's two wrong maps both read "moved yes", 21/22). What a wrong map
+// changes is where the skin WEIGHT goes and where the joints STAND, so that is
+// what is judged here, against the agent body (lib.mjs `judgeBody`, D192).
+
+/** Our joint a bone counts as: itself, or its nearest ancestor among ours (the agent's fingers → its hand). */
+const OURS = new Set(['root', ...OUR_JOINTS]);
+function ourOf(bone) {
+  for (let b = bone; b !== null && b !== undefined; b = b.parent) {
+    const name = OURS.has(b.name) ? b.name : b.name.replace(/_\d+$/, '');
+    if (OURS.has(name) && b.isBone) return name;
   }
+  return 'root';
 }
-console.log("\n3. joint coverage (each joint's OWN rotation from bind, max over every frame of the five clips; Δ = the largest gap between its world-space delta and the agent's)");
-console.log(`   ${'joint'.padEnd(11)} ${'source bone (+ merged)'.padEnd(40)} ${'verts'.padStart(6)} ${'model°'.padStart(7)} ${'agent°'.padStart(7)} ${'Δ°'.padStart(6)}  moved`);
+
+/** A body at rest: our joints' positions, and per joint the vertices it dominates (centroid, count) and the weight it carries. */
+function bodyStats(root, list, bone) {
+  root.updateMatrixWorld(true);
+  for (const mesh of list) mesh.skeleton.update();
+  const joints = {};
+  for (const j of OUR_JOINTS) joints[j] = new THREE.Vector3().setFromMatrixPosition(bone(j).matrixWorld).toArray();
+  const acc = new Map();
+  const slot = (j) => {
+    if (!acc.has(j)) acc.set(j, { at: new THREE.Vector3(), n: 0, weight: 0 });
+    return acc.get(j);
+  };
+  let totalWeight = 0;
+  const box = new THREE.Box3();
+  const v = new THREE.Vector3();
+  for (const mesh of list) {
+    const names = mesh.skeleton.bones.map(ourOf);
+    const si = mesh.geometry.getAttribute('skinIndex');
+    const sw = mesh.geometry.getAttribute('skinWeight');
+    for (let i = 0; i < si.count; i += 1) {
+      mesh.getVertexPosition(i, v);
+      v.applyMatrix4(mesh.matrixWorld);
+      box.expandByPoint(v);
+      let best = 0;
+      for (let k = 0; k < 4; k += 1) {
+        const w = sw.getComponent(i, k);
+        if (w > sw.getComponent(i, best)) best = k;
+        if (w <= 0) continue;
+        slot(names[si.getComponent(i, k)]).weight += w;
+        totalWeight += w;
+      }
+      const d = slot(names[si.getComponent(i, best)]);
+      d.at.add(v);
+      d.n += 1;
+    }
+  }
+  const mass = {};
+  for (const [j, d] of acc) mass[j] = { at: d.n > 0 ? d.at.multiplyScalar(1 / d.n).toArray() : null, n: d.n, weight: d.weight };
+  return { joints, mass, totalWeight, height: box.max.y - box.min.y };
+}
+
+modelRest();
+agentRest();
+const agentMeshes = [];
+agentRoot.traverse((o) => {
+  if (o.isSkinnedMesh) agentMeshes.push(o);
+});
+const bodyModel = bodyStats(modelRoot, meshes, target.bone);
+const bodyAgent = bodyStats(agentRoot, agentMeshes, agent.bone);
+const judged = judgeBody(bodyModel, bodyAgent, manifest?.rig ?? {});
+for (const p of judged.problems) failures.push(p);
+
+const vertices = Object.values(bodyModel.mass).reduce((a, m) => a + m.n, 0);
+const f1 = (x) => (100 * x).toFixed(1).padStart(5);
+console.log('\n3. joint coverage — the skin weight each joint carries on the model and on the agent (the agent\'s fingers, twists and extra spine counted');
+console.log('   as their joint of ours), the share of vertices it dominates, and its own rotation from bind, largest over every frame of the five clips');
+console.log('   (model° = agent° and Δ ≈ 0 BY CONSTRUCTION — a sanity check of the retarget, not of the map; the weight, side and facing checks are the map\'s)');
+console.log(`   ${'joint'.padEnd(11)} ${'source bone (+ merged)'.padEnd(36)} ${'weight%'.padStart(7)} ${'agent%'.padStart(7)} ${'verts%'.padStart(6)} ${'model°'.padStart(7)} ${'agent°'.padStart(7)} ${'Δ°'.padStart(5)}  moved`);
 for (const j of OUR_JOINTS) {
   const m = moved.get(j);
   const r = manifest?.rig?.joints?.[j] ?? {};
   const merged = (r.followers?.length ?? 0) + (r.byAncestry?.length ?? 0) + (r.byPosition?.length ?? 0);
-  const src = `${r.primary ?? '(synthesised)'}${merged > 0 ? ` (+${String(merged)})` : ''}`;
+  const synth = (manifest?.rig?.synthesised ?? []).includes(j);
+  const src = synth ? '(synthesised)' : `${r.primary ?? '(none)'}${r.primaryWeighted === false ? ' [UNWEIGHTED]' : ''}${merged > 0 ? ` (+${String(merged)})` : ''}`;
   // 1°: the agent's own clips carry compression noise of about half a degree on a joint that does not move.
   const didMove = m.doom > 1;
   const shouldMove = m.agent > 1;
   check(!shouldMove || didMove, `${j} did not move where the agent's did (${m.doom.toFixed(1)}° vs ${m.agent.toFixed(1)}°)`);
   check(m.mismatch < 1, `${j}'s world-space delta differs from the agent's by ${m.mismatch.toFixed(2)}°`);
-  const pct = ((100 * (dominant.get(j) ?? 0)) / Math.max(1, vertices)).toFixed(1);
+  const w = judged.weight[j];
+  const flag = w.agent >= 0.001 && w.share < 0.0001 ? (CORE_JOINTS.includes(j) && !synth ? '  NO WEIGHT' : '  no weight') : '';
   console.log(
-    `   ${j.padEnd(11)} ${src.padEnd(40)} ${`${pct}%`.padStart(6)} ${m.doom.toFixed(1).padStart(7)} ${m.agent.toFixed(1).padStart(7)} ${m.mismatch.toFixed(2).padStart(6)}  ${didMove ? 'yes' : shouldMove ? 'NO' : 'still (as on the agent)'}`,
+    `   ${j.padEnd(11)} ${src.slice(0, 36).padEnd(36)} ${f1(w.share).padStart(7)} ${f1(w.agent).padStart(7)} ${f1(w.verts / Math.max(1, vertices)).padStart(6)} ${m.doom.toFixed(1).padStart(7)} ${m.agent.toFixed(1).padStart(7)} ${m.mismatch.toFixed(2).padStart(5)}  ${didMove ? 'yes' : shouldMove ? 'NO' : 'still (as on the agent)'}${flag}`,
   );
 }
 const unmoved = OUR_JOINTS.filter((j) => moved.get(j).doom <= 1);
-console.log(`   ${String(OUR_JOINTS.length - unmoved.length)}/${String(OUR_JOINTS.length)} joints moved${unmoved.length > 0 ? `; still: ${unmoved.join(', ')}` : ''}; ${String(vertices)} vertices`);
+const weighted = OUR_JOINTS.filter((j) => judged.weight[j].share >= 0.0001).length;
+const placement = manifest?.rig?.placement;
+console.log(
+  `   ${String(OUR_JOINTS.length - unmoved.length)}/${String(OUR_JOINTS.length)} joints turned${unmoved.length > 0 ? ` (still: ${unmoved.join(', ')})` : ''}; ${String(weighted)}/${String(OUR_JOINTS.length)} carry weight; ${String(vertices)} vertices` +
+    (placement ? `; source bones placed by ancestry ${String(placement.byAncestry)}, by position ${String(placement.byPosition)} (${(100 * placement.byPositionWeight).toFixed(2)}% of the weight)` : ''),
+);
+
+const sideRows = judged.sides.filter((x) => x.judged);
+console.log(
+  `\n   sides   ${String(sideRows.filter((x) => x.ok).length)}/${String(sideRows.length)} judged on the agent's side (every _l joint and the vertices it carries at +x, the character's left)` +
+    (sideRows.some((x) => !x.ok) ? `; WRONG: ${sideRows.filter((x) => !x.ok).map((x) => x.what).join(', ')}` : ''),
+);
+console.log(
+  `   facing  the feet's vertices in front of the ankle: left ${judged.facing.l.forward?.toFixed(3) ?? '—'} m (agent ${judged.facing.l.agent?.toFixed(3) ?? '—'}), right ${judged.facing.r.forward?.toFixed(3) ?? '—'} m (agent ${judged.facing.r.agent?.toFixed(3) ?? '—'}) — positive is +z, the way the figure faces`,
+);
+const worstSegment = judged.segments.filter((x) => x.deg !== null).reduce((a, x) => (x.deg > a.deg ? x : a), { deg: -1 });
+console.log(
+  `   shape   ${String(judged.segments.filter((x) => x.deg !== null && x.deg <= SEGMENT_LIMIT_DEG).length)}/${String(judged.segments.length)} segments within ${String(SEGMENT_LIMIT_DEG)}° of the agent's; widest ${worstSegment.a} → ${worstSegment.b} ${worstSegment.deg.toFixed(1)}°`,
+);
+for (const w of judged.warnings) console.log(`   WARN    ${w}`);
+for (const p of judged.problems) console.log(`   FAIL    ${p}`);
+modelRest();
+agentRest();
 
 // ---------------------------------------------------------------------------
 // 4 — previews through headless Chromium
@@ -471,55 +567,95 @@ function finish() {
     console.log(`\nFAIL — ${String(failures.length)} assertion(s):\n  ${failures.join('\n  ')}`);
     process.exit(1);
   }
-  console.log(`\nOK — ${slug} takes our clip set: every joint that moves on the agent moves on it, by the same world-space delta; nothing exploded; the rule-skinned parts follow the spine.`);
+  console.log(
+    `\nOK — ${slug} takes our clip set: its skin weight, sides, facing and skeleton match the agent body's; every joint that moves on the agent moves on it, by the same world-space delta; nothing exploded; the rule-skinned parts follow the spine.`,
+  );
   process.exit(0);
 }
 
 // ---------------------------------------------------------------------------
 
 async function previews() {
-  const pageDir = resolve(REPO, 'var/personal-tier/preview');
-  mkdirSync(pageDir, { recursive: true });
-  writeFileSync(join(pageDir, 'index.html'), page());
+  // The page is answered from memory and every answer is `no-store`: check.mjs
+  // writes nothing outside the slug's folder, and nothing the browser is handed
+  // may be kept by it.
+  const html = page();
   const clipJson = new Map([...retargeted].map(([label, clip]) => [`/clip/${label}.json`, JSON.stringify(THREE.AnimationClip.toJSON(clip))]));
   const threeDir = join(WEB, 'node_modules/three');
   const types = { '.js': 'text/javascript', '.html': 'text/html', '.json': 'application/json', '.glb': 'model/gltf-binary' };
   const server = createServer((req, res) => {
     const url = new URL(req.url, `http://127.0.0.1:${String(PORT)}`);
+    const send = (type, body) => {
+      res.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
+      res.end(body);
+    };
+    if (url.pathname === '/' || url.pathname === '/index.html') return send('text/html', html);
+    if (clipJson.has(url.pathname)) return send('application/json', clipJson.get(url.pathname));
     let file = null;
-    if (url.pathname === '/' || url.pathname === '/index.html') file = join(pageDir, 'index.html');
-    else if (url.pathname === '/model.glb') file = modelPath;
-    else if (clipJson.has(url.pathname)) {
-      res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(clipJson.get(url.pathname));
-      return;
-    } else if (url.pathname.startsWith('/three/')) {
+    if (url.pathname === '/model.glb') file = modelPath;
+    else if (url.pathname.startsWith('/three/')) {
       const p = normalize(join(threeDir, decodeURIComponent(url.pathname.slice('/three/'.length))));
       if (p.startsWith(threeDir + sep)) file = p;
     }
     if (file === null || !existsSync(file)) {
-      res.writeHead(404);
+      res.writeHead(404, { 'cache-control': 'no-store' });
       res.end();
       return;
     }
-    res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' });
-    res.end(readFileSync(file));
+    send(types[extname(file)] ?? 'application/octet-stream', readFileSync(file));
   });
   await new Promise((ok, bad) => {
     server.once('error', bad);
     server.listen(PORT, '127.0.0.1', ok);
   });
-  const profile = resolve(REPO, 'var/personal-tier/chromium-profile');
+  // The browser's profile lives INSIDE the slug's folder for the run, and is
+  // deleted after it (a profile under var/ once kept a 2.3 MB copy of model.glb
+  // in its HTTP cache); the disk cache is also sized to nothing. Chromium's own
+  // net log is written into it and read back before it goes: every request the
+  // browser made must have been to 127.0.0.1.
+  const profile = insideSlug(slug, '.preview-profile');
   rmSync(profile, { recursive: true, force: true });
   mkdirSync(profile, { recursive: true });
+  const netLog = join(profile, 'netlog.json');
   const gpuFlags = { swiftshader: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'], gl: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu'] }[GPU];
   const chromium = spawn(
     opt('chromium', 'chromium'),
-    ['--headless=new', ...gpuFlags, '--no-sandbox', '--disable-dev-shm-usage', `--remote-debugging-port=${String(CDP_PORT)}`, '--window-size=900,900', `--user-data-dir=${profile}`, 'about:blank'],
+    [
+      '--headless=new',
+      ...gpuFlags,
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      `--remote-debugging-port=${String(CDP_PORT)}`,
+      '--window-size=900,900',
+      `--user-data-dir=${profile}`,
+      '--disk-cache-size=1',
+      '--media-cache-size=1',
+      // No network but the loopback: no background services, no component or
+      // spellcheck downloads, and every host name resolves to nothing.
+      '--disable-background-networking',
+      '--disable-component-update',
+      '--disable-sync',
+      '--disable-domain-reliability',
+      '--disable-client-side-phishing-detection',
+      '--disable-breakpad',
+      '--metrics-recording-only',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--no-proxy-server',
+      '--disable-features=SpellcheckService,OptimizationHints,Translate,MediaRouter,AutofillServerCommunication,CertificateTransparencyComponentUpdater,NetworkTimeServiceQuerying',
+      '--disable-default-apps',
+      '--disable-extensions',
+      '--disable-component-extensions-with-background-pages',
+      '--incognito',
+      '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1',
+      `--log-net-log=${netLog}`,
+      'about:blank',
+    ],
     { stdio: ['ignore', 'pipe', 'pipe'] },
   );
   let chromiumErr = '';
   chromium.stderr.on('data', (b) => (chromiumErr += String(b)));
+  const exited = new Promise((ok) => chromium.once('exit', () => ok(true)));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   try {
     let version = null;
@@ -567,12 +703,34 @@ async function previews() {
       const closer = new WebSocket(v.webSocketDebuggerUrl);
       await new Promise((ok) => closer.addEventListener('open', () => ok(undefined)));
       closer.send(JSON.stringify({ id: 9999, method: 'Browser.close' }));
-      await sleep(1200);
+      await Promise.race([exited, sleep(10000)]);
       closer.close();
     } catch {
       /* already gone */
     }
+    if (chromium.exitCode === null && chromium.signalCode === null) {
+      chromium.kill('SIGTERM'); // the one process this script started
+      await Promise.race([exited, sleep(5000)]);
+    }
     server.close();
+    let net = null;
+    try {
+      net = netLogReport(readFileSync(netLog, 'utf8'));
+    } catch (err) {
+      failures.push(`preview: Chromium's net log could not be read (${err.message}), so "no network" is not proven`);
+    }
+    rmSync(profile, { recursive: true, force: true });
+    if (net !== null) {
+      const tried = [...net.attempted].map(([h, n]) => `${h} ×${String(n)}`).join(', ');
+      console.log(
+        `   network (Chromium's own net log): ${String(net.loopback)} requests to 127.0.0.1; ${tried === '' ? 'no other request' : `background requests Chromium tried, each answered "not found" by the resolver rule before any DNS query: ${tried}`}; ` +
+          `${String(net.dnsQueries)} DNS queries; TCP connections beyond the loopback ${String(net.tcpAway.length)}; UDP sockets beyond it ${String(net.udpAway.length)}${net.udpAway.length > 0 ? ` (${[...new Set(net.udpAway)].join(', ')} — connect() only, the resolver's IPv6-reachability probe)` : ''}, bytes sent on one ${String(net.sentAway.length)}. The profile (${relative(REPO, profile)}/) is deleted.`,
+      );
+      if (net.tcpAway.length > 0) failures.push(`preview: the browser opened a TCP connection beyond the loopback: ${net.tcpAway.join(', ')}`);
+      if (net.sentAway.length > 0) failures.push(`preview: the browser sent bytes beyond the loopback: ${net.sentAway.join(', ')}`);
+      if (net.dnsQueries > 0) failures.push(`preview: the browser made ${String(net.dnsQueries)} DNS queries (the resolver rule should answer every name)`);
+      if (net.answered.length > 0) failures.push(`preview: a request beyond the loopback was answered: ${net.answered.join(', ')}`);
+    }
   }
 }
 

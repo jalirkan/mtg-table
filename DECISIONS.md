@@ -8442,6 +8442,88 @@ offset dropped) fails that proof by 8.5°.
   (evidence §9), and it is the user's to install; the pipeline does without it
   and says what a session would still improve.
 
+## D192 — check.mjs judges the rig map by where the weight goes and where the joints stand, never by rotations; its preview browser writes nothing outside the slug and reaches nothing beyond the loopback
+
+*Branch `personal-tier`, fix pass 1 (the launcher's writes named in fix pass 2); the lane's reserved range D190–D199.*
+
+**2026-09-28** (`docs/evidence/personal-tier.md` §13)
+
+**Decision.** Two rules for `tools/personal/check.mjs`, both from the verifier's
+round-1 findings:
+
+1. **A rig map is judged against the `agent` body, by weight, side, facing and
+   shape** (`tools/personal/lib.mjs`'s `judgeBody`). D191 builds every skeleton
+   in the `agent`'s bind rotations and check plays the `agent`'s clips on it, so
+   "every joint turned, by the agent's world-space delta" holds for ANY map — the
+   verifier's two wrong maps (the left hand on an unweighted controller; the arms
+   named side for side) both read "moved yes, 21/22" and exit 0. The rotation
+   columns stay as a sanity check of `retarget.mjs`, labelled as holding by
+   construction. What fails the tool now:
+   - a CORE joint (`CORE_JOINTS`) that the `agent`'s skin uses (≥ 0.1% of its
+     weight, the agent's fingers and twists counted as their joint of ours) and
+     that carries none on the model (< 0.01%), unless prepare synthesised it; a
+     non-core joint in that state is a warning;
+   - weighted source bones placed BY POSITION carrying more than 2% of the skin
+     weight (`rig.placement` in the manifest; any at all is a warning);
+   - an `_l` joint on the other side of its `_r` from the `agent`'s, or the
+     vertices a sided joint dominates on the other side;
+   - a foot whose vertices lie BEHIND its ankle where the `agent`'s lie in front:
+     prepare infers the facing from the arms, so a map that swaps every side
+     passes the side test after prepare turns the figure round, and only the feet
+     (and the toes' segment) say so;
+   - a segment of the skeleton (spine, neck, pelvis → thigh, spine → clavicle,
+     thigh → calf → foot → ball) more than 60° from the `agent`'s. The arm
+     segments are judged by side only: `--pose t` turns them onto the agent's by
+     construction.
+   A joint whose bone carries no weight in the source is a warning, not a
+   failure (Auto-Rig Pro's `arm_twist` marks the shoulder and carries none).
+2. **The preview browser leaves nothing outside `personal/models/<slug>/` and
+   reaches nothing beyond 127.0.0.1.** The page is answered from memory; every
+   answer is `no-store`; the profile is `personal/models/<slug>/.preview-profile/`
+   for the run and is deleted after it (`--incognito`, disk cache sized to
+   nothing); background services are off; and `--host-resolver-rules=MAP *
+   ~NOTFOUND, EXCLUDE 127.0.0.1` answers every host name "not found" before any
+   DNS query. Chromium's own net log is written into the profile and read back
+   before it goes: the run FAILS on a TCP connection, a byte sent, a DNS query or
+   an answered request beyond the loopback. The attempts Chromium still makes
+   (signin's `ListAccounts`, a `www.google.com` call) are printed, not hidden, and
+   so is the resolver's IPv6-reachability probe (a UDP `connect()` to
+   2001:4860:4860::8888, which sends nothing).
+
+   **The one write outside the slug's folder is the snap launcher's** (named in
+   fix pass 2, from the verifier's round 2). Before Chromium itself starts, the
+   snap package's launcher rewrites
+   `~/snap/chromium/common/chromium/Crash Reports/settings.dat` (40 bytes, the
+   crash reporter's own state) and re-creates the symbolic link
+   `~/snap/chromium/<revision>/.config/ibus/bus` → `~/.config/ibus/bus` (the
+   revision is `3520` on this machine). No flag reaches the launcher, any
+   Chromium start does the same (`tools/arena-bench.mjs`, `tools/story-shot.mjs`),
+   and neither path holds a byte of the model. Fix pass 1's run also touched two
+   empty marker files under `~/snap/chromium/common/.cache/`
+   (`mesa_shader_cache/marker`, `radv_builtin_shaders/marker`); fix pass 2's did
+   not. "Writes nothing outside the slug" is the tool's rule and the browser
+   profile's; these two are outside the tool's control, and the evidence names
+   them rather than the rule hiding them.
+
+**Rationale.** A check that cannot fail on the defect it exists for is not a
+check; the discriminating facts of a map are the skin's and the bind positions',
+and the agent body is the reference both are measured against. The preview
+browser is a second writer and a second network client that the tool starts; the
+never-publish rule (D190) and the lane's fetch-nothing rule apply to it as to
+the tool, and a profile under `var/` had kept a 2.3 MB copy of `model.glb` in its
+HTTP cache, with spellcheck and Google requests beside it.
+
+**Rejected.**
+
+- **Checking the map in prepare only.** Prepare is where the map is applied, but
+  check is the tool that reads the result against the agent; prepare warns
+  (unweighted primaries, placement by position) and check decides.
+- **A per-vertex "moved" test.** It would pass the swapped arms too: every
+  vertex moves, just on the wrong side.
+- **Proving "no network" with a live negative control** (Chromium without the
+  resolver rule). That run would reach Google, which this lane may not do; the
+  net-log reader is held on a synthetic log instead (`personal-tier.test.ts`).
+
 ---
 
 ## D200 — A decision's number is final: a lane keeps the block it reserves, gaps are allowed, and no document states a total

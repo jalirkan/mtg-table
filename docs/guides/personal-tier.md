@@ -1,9 +1,9 @@
 # The personal tier — models of the real characters, on this machine only
 
-*2026-09-28, **D190** and **D191**. Phase 1 of 2: the folder, the manifest and the
-pipeline. Phase 2, the loader that draws a personal model in the arena and the
-workshop, is not built — nothing in the game reads `personal/` yet (PLAN.md,
-*The personal tier*).*
+*2026-09-28, **D190**, **D191** and **D192**. Phase 1 of 2: the folder, the
+manifest and the pipeline. Phase 2, the loader that draws a personal model in
+the arena and the workshop, is not built — nothing in the game reads
+`personal/` yet (PLAN.md, *The personal tier*).*
 
 ## What it is
 
@@ -23,7 +23,8 @@ published".** Everything below follows from it:
 - **Never committed.** `.gitignore` ignores `/personal/` — anchored at the
   repository root, so `git add -A` skips it and `tools/personal/` (the committed
   pipeline) is still seen. `web/test/personal-tier.test.ts` holds both halves
-  with `git check-ignore`, and it fails if git ever tracks a file under
+  with `git check-ignore --no-index` (git never calls a tracked file ignored, so
+  the patterns are asked about directly), and it fails if git ever tracks a file under
   `personal/`.
 - **Never pushed, never in a build, never in CI.** Nothing under `web/src/` or
   `web/public/` reads it; a production build (`web/dist/`) cannot contain it; CI
@@ -31,8 +32,15 @@ published".** Everything below follows from it:
   the card library's images are served (**D92**) — never from `vite preview` or
   a build.
 - **Never in a committed picture.** The previews `check.mjs` renders stay in
-  `personal/models/<slug>/preview/`. A screenshot of a personal model does not go
-  into `docs/`, an issue, a pull request or a chat with anyone.
+  `personal/models/<slug>/preview/`, and the headless browser that draws them
+  leaves no copy anywhere else: its profile is
+  `personal/models/<slug>/.preview-profile/` for the run and is deleted after
+  it, and every answer it is given is `no-store` (**D192**). (The snap
+  Chromium's launcher still rewrites its own crash-reporter `settings.dat` and
+  an ibus link under `~/snap/chromium/` on every start, as it does for any
+  Chromium; neither holds anything of the model.) A screenshot of a personal
+  model does not go into `docs/`, an issue, a pull request or a chat with
+  anyone.
 - **The repository tier is unchanged.** D54 still binds everything committed:
   CC0 only, a provenance per asset, nothing from Mixamo, nothing made from card
   art. The personal tier does not relax it; it sits beside it.
@@ -64,7 +72,8 @@ repeated hyphens collapsed: `Doctor Doom` → `doctor-doom`, `Nick Fury, Spymast
 → `nick-fury-spymaster`, `Ant-Man, Reformed Rogue` → `ant-man-reformed-rogue` (a
 hyphen is kept), `T'Challa, the Black Panther` → `tchalla-the-black-panther`. A
 tool writes only inside its own slug's folder — every path goes through one
-guard, `insideSlug` in `tools/personal/lib.mjs`.
+guard, `insideSlug` in `tools/personal/lib.mjs`, and that includes the preview
+browser `check.mjs` starts.
 
 **SOURCE.txt** keeps the project's written-provenance habit for your own files:
 the model's title, its URL, its author, the licence line **as the page showed
@@ -135,8 +144,21 @@ It prints a before/after table.
 the build's retarget reproduces the build's clips, then that idle, attack, hit,
 die and the kneel carried onto the model move every joint the `agent` body moves,
 by the same world-space delta, with no NaN, no exploded skinning, and the cloak
-following the spine; it prints a joint-coverage table and renders the previews
-through headless Chromium (`--no-preview` skips them). Exit 1 on any failure.
+following the spine. Those rotations hold **by construction** — prepare builds
+every skeleton in the `agent`'s bind rotations — so they cannot tell a wrong rig
+map from a right one. What can is judged against the `agent` body (**D192**):
+every core joint carries skin weight where the agent's does (a hand mapped to a
+controller with no weight fails), bones placed by position carry at most 2% of
+the weight, every `_l` joint and its vertices sit on the character's left (+x),
+each foot's vertices are in front of its ankle (a map with left and right
+swapped turns the whole figure round, and its feet then point backwards), and
+every segment points within 60° of the agent's (a thigh mapped to a calf points
+up). It prints the joint-coverage table — weight on the model and on the agent,
+vertices, rotation — and the side, facing and shape lines, then renders the
+previews through headless Chromium (`--no-preview` skips them). The browser runs
+with its background services off and every host name answered "not found", and
+its own net log is read back: a connection, a byte sent, a DNS query or an answer
+beyond 127.0.0.1 fails the run. Exit 1 on any failure.
 `docs/evidence/personal-tier.md` is Doom, run through all three.
 
 ## The manifest
@@ -153,7 +175,7 @@ schema; an unknown key is an error, and keys starting with `_` are comments.
 | `source` | `{ file, bytes, sha256, model, sourceTxt }` — the download, untouched |
 | `credits` | the credit line the licence asks for |
 | `licence` | the licence as the source showed it |
-| `rig` | `{ convention, mapFile, joints: { <our joint>: { primary, followers, by, byAncestry, byPosition } }, synthesised, … }` — the rig map used, and how every weighted source bone was placed |
+| `rig` | `{ convention, mapFile, joints: { <our joint>: { primary, followers, by, primaryWeighted, byAncestry, byPosition } }, synthesised, placement: { byAncestry, byPosition, byPositionWeight }, … }` — the rig map used, how every weighted source bone was placed, and the share of the skin weight placed by position (check.mjs fails over 2%) |
 | `triangles` | `{ source, render, budget, after, parts: [{ part, material, before, after, kept }] }` |
 | `pose` | `{ before: { verdict, upperArmDeg }, fix: "t" \| "none", turnsDeg, after: { … } }` — the arm angle measured before and after |
 | `skinned` | `[{ part, material, rule, vertices }]` — every mesh the tool gave weights to, and by which rule |

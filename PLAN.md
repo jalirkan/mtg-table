@@ -7250,7 +7250,7 @@ jobs whose seconds sum to 939.6 s, at a load average of 0.59 rising to 4.59;
 
 ---
 
-## The personal tier — models of the real characters, local only (2026-09-28, D190–D191)
+## The personal tier — models of the real characters, local only (2026-09-28, D190–D192)
 
 **Status: phase 1 built, run on Doctor Doom, tested and gated** on branch
 `personal-tier` (the worktree `mtg-table-t2x`, off `main`'s `a08c15f`). The
@@ -7266,6 +7266,7 @@ gitignored, never committed) holds; its `committable: false` idea is replaced by
 a manifest inside the personal folder (**D190**'s rejected alternatives).
 `docs/guides/personal-tier.md` is the manual, `docs/evidence/personal-tier.md`
 what was run. The lane's reserved decision range is D190–D199; it used two.
+Fix pass 1 added a third, **D192** (below).
 
 1. **The folder and its rule** (D190). `personal/models/<slug>/` holds the
    download untouched, `source/`, `SOURCE.txt`, `inspect.json`, an optional
@@ -7287,7 +7288,13 @@ what was run. The lane's reserved decision range is D190–D199; it used two.
    clips from `agent`'s; our five clips on the model move every joint the agent's
    do, by the same world-space delta; the skin is the identity at rest; no NaN,
    no explosion; the cloak follows the spine; a coverage table; previews through
-   headless Chromium (ANGLE's SwiftShader).
+   headless Chromium (ANGLE's SwiftShader). **Since fix pass 1 (D192)** the rig
+   map itself is judged against the `agent` body — weight on every core joint,
+   at most 2% of the weight placed by position, sides, each foot's vertices in
+   front of its ankle, segment directions — because the rotations hold by
+   construction for any map; and the preview browser keeps its profile inside
+   the slug's folder (deleted after), is answered `no-store`, and must show
+   nothing beyond 127.0.0.1 in its own net log.
 5. **Doctor Doom, through all three**: 17,473 triangles (14,614 to render + 2,859
    in 59 Auto-Rig Pro control meshes) → **5,996** of a 6,000 budget; 339 joints,
    68 weighted → root + 22, the automatic Auto-Rig Pro map 22/22 with no
@@ -7297,12 +7304,17 @@ what was run. The lane's reserved decision range is D190–D199; it used two.
    21 of 22 joints turning (the left ball joint is still on the agent too), every
    world delta within 0.60° of the agent's. Import 0.16 s, prepare 0.55 s, check
    with previews 2.9 s.
-6. **`web/test/personal-tier.test.ts`** (16 cases, `node --test`): the ignore rule
+6. **`web/test/personal-tier.test.ts`** (16 cases, `node --test`; 23 since fix
+   pass 1): the ignore rule
    both ways, the slug, the manifest validator one defect at a time, our joints
    against the manifest and `figures.glb`, the rig map over synthetic Auto-Rig
    Pro, Mixamo, Unreal (UE5) and VRoid lists plus a VRM table and a `bones.json`
    override, the rest-pose verdict and the flags on a box on two bones built in the
-   test, and the retarget against the build's clips.
+   test, and the retarget against the build's clips. Fix pass 1 added the cloak's
+   height rule, `judgeBody` on synthetic bodies (four cases), the net-log reader,
+   and **the whole pipeline end to end** — import, prepare, check — on a
+   Mixamo-named figure of boxes in an A-pose with an unskinned cape, in a
+   throwaway slug the test deletes, failing the verifier's two wrong maps.
 
 ```bash
 node tools/personal/import.mjs ~/Downloads/doctor_doom.zip doctor-doom
@@ -7315,7 +7327,11 @@ node tools/personal/check.mjs doctor-doom        # --no-preview to skip Chromium
 beside another lane's gate, `node --test` 959 / 951 pass / 0 fail / 8 skipped and
 vitest 120 (8 files) (`var/check-all-personal-tier.log`, evidence §12). The lane
 added no step: its test is in the web step. `~/forge` and `~/.forge` were
-fingerprinted before and after: unchanged.
+fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
+**246.2 s**, exit 0, 48 jobs (955.5 s summed) at a load average of 1.4–8.8,
+`node --test` 966 / 958 pass / 0 fail / 8 skipped and vitest 120 (8 files)
+(`var/check-all-personal-tier-fix1.log`, evidence §13); `~/forge` and
+`~/.forge` unchanged again.
 
 ### The personal tier's follow-ups — seven for phase 2 and eight more, 2026-09-28
 
@@ -7386,6 +7402,81 @@ fingerprinted before and after: unchanged.
 15. **FBX and `.blend` input.** The pipeline reads glTF, GLB and VRM. An FBX or
     `.blend` original needs Blender (or Sketchfab's autoconverted glTF, which is
     what Doom used).
+
+### Fix pass 1 — the verifier's round 1, 2026-09-28 (D192)
+
+The verifier found `check.mjs` unable to fail a wrong rig map — its rotation
+columns hold by construction — and its Chromium profile under `var/` holding a
+copy of `model.glb`, with Google requests beside it; and two minors (prepare's
+helpers untested in the gate; the evidence reading a tautology as a
+measurement). All five are fixed, none skipped: `judgeBody` (weight, placement,
+sides, facing, shape), the preview browser in the slug's folder with a net-log
+proof, the whole pipeline in the test on a figure of boxes, and the evidence's
+§5 note and §13. Re-running round 0's controls found one more: the `.gitignore`
+negative control had gone blind once `tools/personal/` was committed (git never
+calls a tracked file ignored), so `gitIgnores` now asks with `--no-index`.
+Evidence §13 has the Doom numbers and the controls. Two follow-ups, neither
+blocking:
+
+16. **Chromium's last background attempts.** With every service switch this
+    Chromium honours, it still tries signin's `accounts.google.com/ListAccounts`
+    and a `www.google.com/async/…` call (and in some runs GCM's
+    `android.clients.google.com/checkin`); the resolver rule answers each "not
+    found" before any DNS query, and the net log proves nothing left the
+    machine. A switch that stops the attempts themselves would make the log
+    quieter; none of the obvious ones (`--incognito`, `--disable-sync`,
+    `--disable-default-apps`, `--disable-extensions`) did.
+17. **`tools/arena-bench.mjs` and `tools/story-shot.mjs`** start the same
+    Chromium with none of this isolation. They load no personal data, but the
+    lane rule "the tools fetch nothing" is the same; the flag list and the
+    net-log reader (`lib.mjs`'s `netLogReport`) can move to a shared helper.
+
+### Fix pass 2 — the verifier's round 2, 2026-09-28
+
+The verifier's round 2 passed the lane, re-proved every number from its own
+copy of the zip (the same `model.glb`, sha256 `de229ad3…`) and found one major
+and three minors. **The major: fix pass 1 was left uncommitted**, on a claim that
+was false: that `main`'s `CLAUDE.md` still said *"Do not run `git commit`"*.
+`main` had replaced that section with *Commits, branches and merges* (**D201**:
+Claude commits on branches and merges when the gate is green) before fix pass
+1's gate ran; only this worktree, at `a08c15f`, still carries the old text. Fix
+pass 2 commits fix pass 1 and itself on `personal-tier` under D201, and the
+branch stays a fast-forward of `a08c15f`. The minors: `CLAUDE.md`'s section
+heading said D190–D191 while its text cited D192 (now D190–D192, and the docs
+table and this section's heading with it); the snap Chromium launcher's two
+writes outside the repo were half named (both are now named, in D192 and
+evidence §14 — `~/snap/chromium/common/chromium/Crash Reports/settings.dat` and
+the `~/snap/chromium/<revision>/.config/ibus/bus` link); and `retarget.mjs` is a
+proven copy of the build's formula rather than a factored import, which needs
+nothing now and stays follow-up 8. Doom and all eleven controls were run again,
+the verifier's two wrong maps among them (evidence §14): `model.glb` and all
+seven previews came out byte-identical. **Fix pass 2's gate**, from a deleted
+`bridge/out` at `GATE_JOBS=4`, `WSPORT=9000`: **240.4 s**, exit 0, 48 jobs
+(934.4 s summed) at a load average of 2.2–7.6, `node --test` 966 / 958 pass /
+0 fail / 8 skipped and vitest 120 (8 files)
+(`var/check-all-personal-tier-fix2.log`); `~/forge` and `~/.forge` unchanged.
+Two follow-ups, both for the merge:
+
+18. **Move this lane's `CLAUDE.md` text into `main`'s nested files.** `main`
+    split `CLAUDE.md` into a root file and per-area files (`04e69da`:
+    `bridge/`, `web/`, `web/src/arena/`, `tools/`), holds every rule line and
+    bold span to `docs/claude-md-rules.txt` (`web/test/claude-md.test.ts`), and
+    caps the root at 9,000 words. This lane's two edits are written against the
+    old single file: the hard-rule-8 paragraph (*A personal model is a statement
+    about what a card is, too*) belongs in the root beside hard rule 8; the
+    section *The personal tier — the conventions D190–D192 added* belongs in
+    `tools/CLAUDE.md` (the pipeline), with a pointer from the root; then
+    regenerate the manifest (`CLAUDE_MD_RULES_WRITE=1`) and let its diff show
+    the new rules. Phase 2's loader rules will belong in
+    `web/src/arena/CLAUDE.md`.
+19. **Reconcile `main`'s *Commits, branches and merges* bullet with D190.**
+    That bullet (D201) says a personal-only asset is recorded in
+    `tools/assets-manifest.json` as `committable: false`. D190 rejected exactly
+    that: that manifest is the committed CC0 library's provenance, a personal
+    entry in it would publish the fact of the file and blur the line D54 draws,
+    and the personal manifest lives in the gitignored slug folder. At the merge,
+    the bullet should point at D190 and `docs/guides/personal-tier.md`, as a
+    dated note rather than a silent edit.
 
 ---
 

@@ -117,10 +117,16 @@ export function insideSlug(slug, path) {
   return full;
 }
 
-/** Is this path ignored by git? `git check-ignore` exits 0 for yes, 1 for no. */
+/**
+ * Would `.gitignore` keep this path out of git? `git check-ignore` exits 0 for
+ * yes, 1 for no. `--no-index` judges the PATTERNS alone: without it a tracked
+ * file is never reported ignored, so once `tools/personal/` was committed an
+ * unanchored `personal/` rule could no longer be caught by asking about it
+ * (fix pass 1 found the negative control had gone blind that way).
+ */
 export function gitIgnores(path, cwd = REPO) {
   try {
-    execFileSync('git', ['check-ignore', '-q', path], { cwd, stdio: 'ignore' });
+    execFileSync('git', ['check-ignore', '-q', '--no-index', path], { cwd, stdio: 'ignore' });
     return true;
   } catch (err) {
     if (err.status === 1) return false;
@@ -152,7 +158,8 @@ export const MANIFEST_VERSION = 1;
  *   source       { file, bytes, sha256, sourceTxt } — the downloaded original, untouched
  *   credits      the credit line the licence asks for (CC-BY: title, author, URL, licence)
  *   licence      the licence as the source showed it
- *   rig          { convention, mapFile, joints: { <our joint>: { primary, followers, by } }, synthesised, unassigned }
+ *   rig          { convention, mapFile, joints: { <our joint>: { primary, followers, by, primaryWeighted } },
+ *                  synthesised, placement: { byAncestry, byPosition, byPositionWeight } }
  *   triangles    { source, render, budget, after }
  *   pose         { before: { verdict, upperArmDeg:{l,r} }, fix: "t"|"none", after: { … } }
  *   skinned      [{ part, rule, vertices }] — every mesh the tool gave weights to
@@ -223,6 +230,10 @@ export function validateManifest(m) {
       }
     }
     for (const joint of Object.keys(m.rig.joints)) if (!OUR_JOINTS.includes(joint)) errors.push(`rig.joints.${joint} is not one of our joints`);
+    const p = m.rig.placement;
+    if (p !== undefined && (!isObject(p) || !isCount(p.byAncestry) || !isCount(p.byPosition) || !(p.byPositionWeight >= 0 && p.byPositionWeight <= 1))) {
+      errors.push('rig.placement must be { byAncestry, byPosition, byPositionWeight } (counts, and a share of the skin weight from 0 to 1)');
+    }
   }
   const t = m.triangles;
   if (!isObject(t) || !isCount(t.source) || !isCount(t.render) || !isCount(t.after) || !isCount(t.budget)) {
@@ -810,6 +821,249 @@ export function armAngles(positions) {
     else verdict = 'posed';
   }
   return { l: l === null ? null : round(l, 1), r: r === null ? null : round(r, 1), verdict };
+}
+
+// ---------------------------------------------------------------------------
+// The cloak rule
+// ---------------------------------------------------------------------------
+
+/**
+ * **The height rule for a mesh with no skin** (D191), pure: a vertex's height →
+ * its weights on `pelvis` / `spine_02` / `spine_03`, given those joints' bind
+ * heights. At or above `spine_03`: all `spine_03`. Between `spine_02` and
+ * `spine_03`, and between `pelvis` and `spine_02`: a linear blend of the two. At
+ * or below the pelvis: all `pelvis`. The weights sum to 1.
+ */
+export function heightWeights(y, heights) {
+  const chain = ['pelvis', 'spine_02', 'spine_03'];
+  const ys = chain.map((j) => heights[j]);
+  if (ys.some((h) => !Number.isFinite(h))) throw new Error('heightWeights: pelvis, spine_02 and spine_03 heights are needed');
+  if (y >= ys[2]) return { spine_03: 1 };
+  if (y <= ys[0]) return { pelvis: 1 };
+  const k = y >= ys[1] ? 1 : 0;
+  const t = (y - ys[k]) / Math.max(1e-9, ys[k + 1] - ys[k]);
+  return { [chain[k]]: 1 - t, [chain[k + 1]]: t };
+}
+
+// ---------------------------------------------------------------------------
+// Judging a prepared body against the agent's: weight, sides, facing, shape
+// ---------------------------------------------------------------------------
+
+/**
+ * **Why these checks exist** (D192). `prepare.mjs` builds every skeleton in the
+ * `agent`'s bind rotations and `check.mjs` plays the `agent`'s clips on it, so a
+ * joint's rotation on the model equals the agent's for ANY rig map — a map that
+ * names the wrong bone passes every rotation test. What a wrong map changes is
+ * where the WEIGHT goes and where the joints STAND. So a prepared body is judged
+ * against the agent body, from its skin and its bind positions:
+ *
+ *   - **weight**: a joint the agent's skin uses must carry weight on the model
+ *     (a core joint with none fails: the map named a bone that deforms nothing);
+ *     weighted source bones placed "by position" rather than by the map are a
+ *     warning, and a failure over `BY_POSITION_LIMIT` of the skin weight;
+ *   - **sides**: every `_l` joint, and the vertices it carries, on the side the
+ *     agent's is (+x, the character's left — D81);
+ *   - **facing**: each foot's vertices in FRONT of its ankle, as the agent's are —
+ *     a map with left and right swapped everywhere passes the side test (prepare
+ *     turns the whole figure round to match it) and fails this one;
+ *   - **shape**: every segment of the skeleton (the arms apart) points within
+ *     `SEGMENT_LIMIT_DEG` of the agent's — a thigh mapped to a calf points up.
+ *
+ * `body` and `agent` are `{ joints: { <our joint>: [x, y, z] }, mass: { <our
+ * joint>: { at: [x, y, z], n, weight } }, totalWeight, height }`: bind positions,
+ * and for each joint the centroid and count of the vertices it dominates and the
+ * skin weight it carries (a joint outside our 22 counted as its nearest ancestor
+ * of ours — the agent's fingers as its hand). `rig` is the manifest's `rig`.
+ */
+export const SIDED_STEMS = ['clavicle', 'upperarm', 'lowerarm', 'hand', 'thigh', 'calf', 'foot', 'ball'];
+/** Our skeleton's segments, judged by direction. The arms are judged by side only: `--pose t` turns them onto the agent's by construction. */
+export const SEGMENTS = [
+  ['pelvis', 'spine_01'],
+  ['spine_01', 'spine_02'],
+  ['spine_02', 'spine_03'],
+  ['spine_03', 'neck_01'],
+  ['neck_01', 'Head'],
+  ...['l', 'r'].flatMap((s) => [
+    ['pelvis', `thigh_${s}`],
+    ['spine_03', `clavicle_${s}`],
+    [`thigh_${s}`, `calf_${s}`],
+    [`calf_${s}`, `foot_${s}`],
+    [`foot_${s}`, `ball_${s}`],
+  ]),
+];
+/** A joint "carries weight" on the agent at this share of its skin weight … */
+export const AGENT_WEIGHT_MIN = 0.001;
+/** … and "carries none" on the model under this. */
+export const MODEL_WEIGHT_NONE = 0.0001;
+/** Weighted source bones placed by position (not by the map) may carry at most this share of the skin weight. */
+export const BY_POSITION_LIMIT = 0.02;
+/** A segment may point at most this far from the agent's. */
+export const SEGMENT_LIMIT_DEG = 60;
+
+const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const len3 = (a) => Math.hypot(a[0], a[1], a[2]);
+const pct = (x) => `${(100 * x).toFixed(x < 0.001 && x > 0 ? 3 : 1)}%`;
+
+export function judgeBody(body, agent, rig = {}) {
+  const problems = [];
+  const warnings = [];
+  const share = (b, j) => (b.mass[j]?.weight ?? 0) / Math.max(1e-12, b.totalWeight);
+  const synthesised = new Set(rig?.synthesised ?? []);
+
+  // Weight.
+  const weight = {};
+  for (const j of OUR_JOINTS) {
+    const mine = share(body, j);
+    const theirs = share(agent, j);
+    const primary = rig?.joints?.[j]?.primary ?? null;
+    weight[j] = { share: mine, agent: theirs, verts: body.mass[j]?.n ?? 0 };
+    if (theirs >= AGENT_WEIGHT_MIN && mine < MODEL_WEIGHT_NONE) {
+      if (synthesised.has(j)) {
+        warnings.push(`${j} was synthesised (the source has no such bone), so it carries no weight; the agent's carries ${pct(theirs)} — its neighbours move those vertices`);
+      } else {
+        const message = `${j} ← ${primary ?? '(unmapped)'} carries no skin weight (the agent's ${j} carries ${pct(theirs)}): its vertices went to another joint, so the map names a bone that deforms nothing`;
+        (CORE_JOINTS.includes(j) ? problems : warnings).push(message);
+      }
+    }
+    if (rig?.joints?.[j]?.primaryWeighted === false) {
+      warnings.push(
+        `${j} stands where ${primary} stands, which carries no weight in the source: right when that bone marks the joint (Auto-Rig Pro's arm_twist does, its weight on c_arm_twist_offset), wrong when it is a controller somewhere else — look at the joint in the previews`,
+      );
+    }
+  }
+  const placement = rig?.placement ?? null;
+  if (placement === null) warnings.push('the manifest has no rig.placement (it predates it): re-run prepare.mjs to judge what was placed by position');
+  else if (placement.byPosition > 0) {
+    const message = `${String(placement.byPosition)} weighted source bone(s), ${pct(placement.byPositionWeight)} of the skin weight, were placed by POSITION, not by the map: list them in bones.json as followers of the joint they belong to, or fix the map`;
+    (placement.byPositionWeight > BY_POSITION_LIMIT ? problems : warnings).push(message);
+  }
+
+  // Sides: every _l joint, and the vertices it carries, where the agent's are.
+  const sides = [];
+  const sideMin = (b) => 0.01 * b.height;
+  for (const stem of SIDED_STEMS) {
+    const l = `${stem}_l`;
+    const r = `${stem}_r`;
+    if (!body.joints[l] || !body.joints[r] || !agent.joints[l] || !agent.joints[r]) continue;
+    const dx = body.joints[l][0] - body.joints[r][0];
+    const adx = agent.joints[l][0] - agent.joints[r][0];
+    const judged = Math.abs(dx) >= sideMin(body) && Math.abs(adx) >= sideMin(agent);
+    const ok = !judged || Math.sign(dx) === Math.sign(adx);
+    sides.push({ what: `${l} vs ${r}`, x: dx, agent: adx, judged, ok });
+    if (!ok) problems.push(`${l} stands on the figure's ${dx > 0 ? 'left' : 'right'} of ${r} (x ${dx.toFixed(3)}), the agent's on its ${adx > 0 ? 'left' : 'right'}: the map has swapped a side`);
+    for (const j of [l, r]) {
+      const m = body.mass[j];
+      const a = agent.mass[j];
+      if (!m || !a || m.n === 0 || a.n === 0) continue;
+      const x = m.at[0];
+      const ax = a.at[0];
+      const judgedMass = Math.abs(x) >= sideMin(body) && Math.abs(ax) >= sideMin(agent);
+      const okMass = !judgedMass || Math.sign(x) === Math.sign(ax);
+      sides.push({ what: `${j}'s vertices`, x, agent: ax, judged: judgedMass, ok: okMass });
+      if (!okMass) problems.push(`the vertices ${j} carries sit at x ${x.toFixed(3)}, the agent's at x ${ax.toFixed(3)}: they are on the other side`);
+    }
+  }
+
+  // Facing: each foot's vertices in front of its ankle.
+  const facing = {};
+  for (const s of ['l', 'r']) {
+    const fwd = (b) => {
+      const parts = [b.mass[`foot_${s}`], b.mass[`ball_${s}`]].filter((m) => m && m.n > 0);
+      const n = parts.reduce((a, m) => a + m.n, 0);
+      if (n === 0 || !b.joints[`foot_${s}`]) return null;
+      const z = parts.reduce((a, m) => a + m.at[2] * m.n, 0) / n;
+      return z - b.joints[`foot_${s}`][2];
+    };
+    const mine = fwd(body);
+    const theirs = fwd(agent);
+    facing[s] = { forward: mine, agent: theirs };
+    if (mine === null || theirs === null || Math.abs(theirs) < 0.005 * agent.height) {
+      warnings.push(`the ${s === 'l' ? 'left' : 'right'} foot carries no vertices to judge the facing by`);
+    } else if (Math.abs(mine) < 0.005 * body.height) {
+      warnings.push(`the ${s === 'l' ? 'left' : 'right'} foot's vertices are level with its ankle (${mine.toFixed(3)} m): the facing is not judged by it`);
+    } else if (Math.sign(mine) !== Math.sign(theirs)) {
+      problems.push(
+        `the ${s === 'l' ? 'left' : 'right'} foot points BACKWARDS: its vertices are ${Math.abs(mine).toFixed(3)} m ${mine < 0 ? 'behind' : 'in front of'} the ankle, the agent's ${Math.abs(theirs).toFixed(3)} m ${theirs < 0 ? 'behind' : 'in front'} — the figure faces the wrong way, so the map has swapped left and right`,
+      );
+    }
+  }
+
+  // Shape: every segment points roughly where the agent's does.
+  const segments = [];
+  for (const [a, b] of SEGMENTS) {
+    if (!body.joints[a] || !body.joints[b] || !agent.joints[a] || !agent.joints[b]) continue;
+    const d = sub3(body.joints[b], body.joints[a]);
+    const e = sub3(agent.joints[b], agent.joints[a]);
+    const ld = len3(d);
+    const le = len3(e);
+    if (ld < 1e-9 || le < 1e-9) {
+      segments.push({ a, b, deg: null });
+      warnings.push(`${a} and ${b} stand at one point, so ${a} → ${b} has no direction`);
+      continue;
+    }
+    const cos = Math.max(-1, Math.min(1, (d[0] * e[0] + d[1] * e[1] + d[2] * e[2]) / (ld * le)));
+    const deg = (Math.acos(cos) * 180) / Math.PI;
+    segments.push({ a, b, deg });
+    if (deg > SEGMENT_LIMIT_DEG) problems.push(`${a} → ${b} points ${deg.toFixed(0)}° away from the agent's (over ${String(SEGMENT_LIMIT_DEG)}°): a joint is mapped to the wrong bone`);
+  }
+
+  return { problems, warnings, weight, sides, facing, segments };
+}
+
+// ---------------------------------------------------------------------------
+// The preview browser's network, from its own net log (check.mjs)
+// ---------------------------------------------------------------------------
+
+/** An address as the net log writes it (`1.2.3.4:80`, `[2001:db8::1]:443`) → its host. */
+export function hostOf(address) {
+  return String(address).replace(/^\[([^\]]*)\](:\d+)?$/, '$1').replace(/^([^:]+):\d+$/, '$1');
+}
+
+/**
+ * **What Chromium's net log says the browser did on the network** (D192):
+ * requests to the loopback; requests elsewhere (and whether any got an answer);
+ * real DNS queries; TCP connections and UDP sockets to anything but the
+ * loopback, and whether a byte was sent on one. `check.mjs` fails on a TCP
+ * connection, a byte sent, a DNS query or an answer beyond the loopback. A log
+ * cut short by the browser's exit is closed before it is parsed. Pure over the
+ * log's text; `personal-tier.test.ts` holds it on a synthetic log.
+ */
+export function netLogReport(text) {
+  const LOOPBACK = /^(127\.\d+\.\d+\.\d+|::1|localhost)$/;
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = JSON.parse(`${text.replace(/,\s*$/, '')}]}`);
+  }
+  const type = Object.fromEntries(Object.entries(json.constants.logEventTypes).map(([k, v]) => [v, k]));
+  const report = { loopback: 0, attempted: new Map(), answered: [], dnsQueries: 0, tcpAway: [], udpAway: [], sentAway: [] };
+  const urlOf = new Map(); // source id → url host
+  const peerOf = new Map(); // source id → a non-loopback peer
+  for (const event of json.events ?? []) {
+    const name = type[event.type] ?? '';
+    const params = event.params ?? {};
+    const id = event.source?.id;
+    if (name === 'URL_REQUEST_START_JOB' && typeof params.url === 'string') {
+      const host = new URL(params.url).hostname.replace(/^\[|\]$/g, '');
+      urlOf.set(id, host);
+      if (LOOPBACK.test(host)) report.loopback += 1;
+      else report.attempted.set(host, (report.attempted.get(host) ?? 0) + 1);
+    }
+    if (name === 'HTTP_TRANSACTION_READ_RESPONSE_HEADERS' && urlOf.has(id) && !LOOPBACK.test(urlOf.get(id))) report.answered.push(urlOf.get(id));
+    if (/^(DNS_TRANSACTION|HOST_RESOLVER_SYSTEM_TASK|HOST_RESOLVER_DNS_TASK|HOST_RESOLVER_MANAGER_DNS_TASK)/.test(name) && event.phase !== 2) report.dnsQueries += 1;
+    if (/^TCP_CONNECT/.test(name)) {
+      for (const a of [params.address, ...(Array.isArray(params.address_list) ? params.address_list : [])]) {
+        if (a !== undefined && !LOOPBACK.test(hostOf(a))) report.tcpAway.push(hostOf(a));
+      }
+    }
+    if (name === 'UDP_CONNECT' && params.address !== undefined && !LOOPBACK.test(hostOf(params.address))) {
+      report.udpAway.push(hostOf(params.address));
+      peerOf.set(id, hostOf(params.address));
+    }
+    if (/BYTES_SENT$/.test(name) && peerOf.has(id)) report.sentAway.push(peerOf.get(id));
+  }
+  return report;
 }
 
 // ---------------------------------------------------------------------------

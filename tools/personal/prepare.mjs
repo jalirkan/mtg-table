@@ -79,11 +79,13 @@ import { pathToFileURL } from 'node:url';
 
 import {
   armAngles,
+  BY_POSITION_LIMIT,
   controlReason,
   CORE_JOINTS,
   detectRigMap,
   findSourceModel,
   GLTF,
+  heightWeights,
   GLTF_FUNCTIONS,
   insideSlug,
   inspectDocument,
@@ -375,6 +377,19 @@ for (const name of weightedNames) {
   }
 }
 
+// How much of the skin weight the map placed, and how much was placed by guess
+// (check.mjs fails a body with more than BY_POSITION_LIMIT of it by position).
+const sourceWeight = new Map();
+for (const s of skins) for (const [name, st] of weightedBySkin.get(s)) sourceWeight.set(name, (sourceWeight.get(name) ?? 0) + st.weight);
+const totalSourceWeight = [...sourceWeight.values()].reduce((a, w) => a + w, 0);
+const byPositionNames = OUR_JOINTS.flatMap((j) => placedBy.get(j).position);
+const placement = {
+  byAncestry: OUR_JOINTS.reduce((a, j) => a + placedBy.get(j).ancestry.length, 0),
+  byPosition: byPositionNames.length,
+  byPositionWeight: round(byPositionNames.reduce((a, n) => a + (sourceWeight.get(n) ?? 0), 0) / Math.max(1e-12, totalSourceWeight), 6),
+};
+const unweightedPrimaries = OUR_JOINTS.filter((j) => rigMap.joints[j].primary !== null && !weightedNames.has(rigMap.joints[j].primary));
+
 // ---------------------------------------------------------------------------
 // Weights on OUR joints (index 0 is `root`, 1.. are OUR_JOINTS)
 // ---------------------------------------------------------------------------
@@ -430,18 +445,10 @@ for (const part of parts) {
   part.weights = weights;
 }
 
-/** The cloak rule (D191): above spine_03 → spine_03; spine_02..spine_03 and pelvis..spine_02 blend linearly; below the pelvis → pelvis. */
+/** The cloak rule (D191, `lib.mjs`'s `heightWeights`): above spine_03 → spine_03; spine_02..spine_03 and pelvis..spine_02 blend linearly; below the pelvis → pelvis. */
 function heightRule(y, acc) {
-  const chain = ['pelvis', 'spine_02', 'spine_03'];
-  const ys = chain.map((j) => P.get(j).y);
-  if (y >= ys[2]) acc[INDEX.get('spine_03')] = 1;
-  else if (y <= ys[0]) acc[INDEX.get('pelvis')] = 1;
-  else {
-    const k = y >= ys[1] ? 1 : 0;
-    const t = (y - ys[k]) / Math.max(1e-9, ys[k + 1] - ys[k]);
-    acc[INDEX.get(chain[k])] = 1 - t;
-    acc[INDEX.get(chain[k + 1])] = t;
-  }
+  const weights = heightWeights(y, { pelvis: P.get('pelvis').y, spine_02: P.get('spine_02').y, spine_03: P.get('spine_03').y });
+  for (const [joint, w] of Object.entries(weights)) acc[INDEX.get(joint)] = w;
 }
 
 /** The four largest influences, renormalised (a vertex with none is bound to the pelvis). */
@@ -752,12 +759,14 @@ const manifest = {
           primary: rigMap.joints[j].primary,
           followers: rigMap.joints[j].followers,
           by: rigMap.joints[j].by,
+          primaryWeighted: rigMap.joints[j].primary === null ? null : weightedNames.has(rigMap.joints[j].primary),
           byAncestry: placedBy.get(j).ancestry,
           byPosition: placedBy.get(j).position,
         },
       ]),
     ),
     synthesised,
+    placement,
     pelvis: 'placed between the two thigh pivots',
     rotations: "our bind rotations (figures.glb's agent), so the world-space-delta retarget is the identity on rotations",
     sourceJoints: jointByName.size,
@@ -806,6 +815,17 @@ for (const j of OUR_JOINTS) {
   ].filter(Boolean);
   console.log(`              ${j.padEnd(11)} ← ${(m.primary ?? '—').padEnd(24)} ${extra.join(', ')}`);
 }
+if (unweightedPrimaries.length > 0) {
+  console.log(
+    `  WARN        a joint stands where an UNWEIGHTED bone stands (right if the bone marks the joint, as Auto-Rig Pro's arm_twist does; wrong for a controller elsewhere — check.mjs judges it): ${unweightedPrimaries.map((j) => `${j} ← ${rigMap.joints[j].primary}`).join(', ')}`,
+  );
+}
+if (placement.byPosition > 0) {
+  console.log(
+    `  WARN        ${String(placement.byPosition)} weighted bone(s), ${(100 * placement.byPositionWeight).toFixed(2)}% of the skin weight, placed by POSITION, not by the map — check.mjs fails over ${String(100 * BY_POSITION_LIMIT)}%; list them in bones.json`,
+  );
+}
+console.log(`  placement   ${String(placement.byAncestry)} weighted bone(s) by ancestry, ${String(placement.byPosition)} by position`);
 console.log(`  triangles   ${n(before.triangles.total)} → ${n(renderTriangles)} without the control shapes → ${n(afterTriangles)} (budget ${n(BUDGET)})`);
 for (const d of decimation) console.log(`              ${d.part.padEnd(28)} ${n(d.before).padStart(6)} → ${n(d.after).padStart(6)}${d.kept ? '  (kept whole)' : ''}`);
 console.log(`  pose        ${poseBefore.verdict} → ${poseAfter.verdict}: upper arm ${String(poseBefore.l)}° / ${String(poseBefore.r)}° → ${String(poseAfter.l)}° / ${String(poseAfter.r)}° below the horizontal (read back from the file: ${String(afterInspect.restPose?.l)}° / ${String(afterInspect.restPose?.r)}°)`);
