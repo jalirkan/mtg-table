@@ -187,7 +187,7 @@ import { PreviewStage, turnPoses } from './facing.ts';
 import { framingOf, type CameraMode, type Framing } from './framing.ts';
 import { WORKSHOP_KEYMAP, workshopActionFor, type WorkshopKeyAction } from './keys.ts';
 import { LEGIBLE_PX, METER_HEIGHT, METER_WIDTH, drawnHeightPx, measure, type MeterRow } from './legibility.ts';
-import { cardFromLocation, cardsHref, workshopHref } from './links.ts';
+import { WORKSHOP_VIEW_INSPECT, cardFromLocation, cardsHref, workshopHref, workshopViewFromLocation } from './links.ts';
 import { Pedestal, RELIEF_BASE, useReliefIndex } from './Pedestal.tsx';
 import { inspectPlan, inspectSourceOf } from './relief.ts';
 import {
@@ -273,6 +273,28 @@ function locationCard(): string | null {
   }
 }
 
+/** D241 — whether the location asks for the inspect view (`view=inspect`: the arena's `I`). */
+function locationInspects(): boolean {
+  try {
+    return workshopViewFromLocation(window.location.hash, window.location.search) === WORKSHOP_VIEW_INSPECT;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The note for a `card=` the catalog has no exact entry for (D241: the arena's `I`
+ * names a card on the table; a token no recording showed is not listed) — the
+ * page then opens on the nearest match or the first card, and says so.
+ */
+function unlistedNote(entries: readonly WorkshopEntry[]): string | null {
+  const card = locationCard();
+  if (card === null) return null;
+  const wanted = card.trim().toLowerCase();
+  if (entries.some((e) => e.key.toLowerCase() === wanted || e.label.toLowerCase() === wanted)) return null;
+  return `the workshop lists no card named “${card}” (it shows the decks under decks/ and the tokens the recordings saw)`;
+}
+
 function initialSelection(entries: readonly WorkshopEntry[]): string {
   const has = (key: string | null): key is string => key !== null && entries.some((e) => e.key === key);
   const named = entryNamed(entries, locationCard());
@@ -319,8 +341,9 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState<PedestalOptions>(DEFAULT_OPTIONS);
   // The figure's FRONT by default (D143: from your own seat you see its back —
-  // `1× from your seat` is one click away).
-  const [mode, setMode] = useState<CameraMode>('front');
+  // `1× from your seat` is one click away) — or INSPECT when the location asks for
+  // it (D241: the arena's `I`, `#workshop?card=<name>&view=inspect`).
+  const [mode, setMode] = useState<CameraMode>(() => (locationInspects() ? 'inspect' : 'front'));
   const [turn, setTurn] = useState(0);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotion);
   const [bloom, setBloom] = useState<boolean>(BLOOM_DEFAULT);
@@ -344,7 +367,15 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
    * on this dev server), or in the CC0 figures (`repo`). The list's badge says
    * which cards have one either way.
    */
-  const [personalOn, setPersonalOn] = useState(true);
+  // As the arena reads it (`?personal=0` draws the CC0 figures), so `I` from a
+  // table in either state opens the inspect view in the same one (D241).
+  const [personalOn, setPersonalOn] = useState<boolean>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('personal') !== '0';
+    } catch {
+      return true;
+    }
+  });
   const overlay = usePersonalOverlay(true);
   const pedestalOverlay: PersonalOverlay = personalOn ? overlay : EMPTY_PERSONAL;
   /**
@@ -357,7 +388,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const reliefIndex = useReliefIndex();
   const [overrides, setOverrides] = useState<Overrides>(() => readOverrides(storage()));
   const [library, setLibrary] = useState<ModelLibrary | null>(null);
-  const [note, setNote] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(() => unlistedNote(entries));
 
   const entry = useMemo(
     () => entries.find((e) => e.key === selected) ?? entries[0]!,
@@ -378,19 +409,21 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   // where it is — so a reload or a copied link opens this card.
   useEffect(() => {
     try {
-      const hash = workshopHref(cardWordOf(entry));
+      // The inspect view rides in the URL too (D241), so a reload keeps it.
+      const hash = workshopHref(cardWordOf(entry), mode === 'inspect' ? WORKSHOP_VIEW_INSPECT : null);
       if (window.location.hash === hash) return;
       window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
     } catch {
       // No history to write to: the selection stands without it.
     }
-  }, [entry]);
+  }, [entry, mode]);
 
   // A hand-edited hash (`#workshop?card=coulson`) selects its card.
   useEffect(() => {
     const onHash = (): void => {
       const named = entryNamed(entries, locationCard());
       if (named !== null) setSelected(named);
+      if (locationInspects()) setMode('inspect');
     };
     window.addEventListener('hashchange', onHash);
     return () => {
@@ -711,6 +744,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
               event.preventDefault();
               onSetView?.('arena');
             }}
+            title="Back to the arena — a replay resumes at the frame it was on, a live game keeps its socket (the way back from I, D241)"
           >
             ▣ arena
           </a>

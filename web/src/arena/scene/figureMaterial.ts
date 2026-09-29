@@ -51,10 +51,11 @@
  * face, and a dark texel is lifted with its own hue rather than blued
  * (`comicPaintOwn`, **D198**) — and the hologram tint the texture's VALUES with the palette, so the
  * hologram still reads as the card's colour; `USE_PAINT_CUTOFF` discards a texel
- * whose alpha is under 0.5 (hair cards, lashes). A model of more than one paint
- * is one material per paint, the first the figure's own and the rest SIBLINGS
- * that share its per-figure uniform objects ({@link dressFigureMeshes}), so every
- * write the frame loop makes to the one it holds reaches all of them.
+ * whose alpha is under 0.5 (hair cards, lashes). Since **D240** a personal
+ * model is ONE paint — prepare packs every texture into one atlas — so a dressed
+ * figure is one material and one draw call, like a committed body
+ * ({@link dressFigureMeshes}); D196's sibling materials for a second paint are
+ * gone.
  *
  * ---------------------------------------------------------------------------
  * `#include <colorspace_fragment>`: three's built-in shaders end with it; a
@@ -541,22 +542,16 @@ export function markPainted(material: THREE.Material, painted: boolean): void {
 export function applyLook(material: FigureMaterial, look: number): void {
   material.uniforms.uLook.value = look;
   markPainted(material, look > 0);
-  // A painted model's other paints share the uniform (D196); the mark is blend state, each its own.
-  const siblings = SIBLINGS.get(material);
-  if (siblings !== undefined) for (const sibling of siblings) markPainted(sibling, look > 0);
 }
 
 // ---------------------------------------------------------------------------
-// A model of more than one paint (the personal tier, D196)
+// A personal model's paint (the personal tier, D196; one paint since D240)
 // ---------------------------------------------------------------------------
-
-/** A figure's primary material → the materials of its other paints. */
-const SIBLINGS = new WeakMap<FigureMaterial, FigureMaterial[]>();
 
 /**
  * **What a mesh of a loaded model paints with**: its source material's map — a
- * personal model's base colour (prepare's paint step, D194) — or `null` for a
- * committed body, which carries none (D67). Read before the mesh's material is
+ * personal model's base colour (prepare's paint step, D194, D240) — or `null` for
+ * a committed body, which carries none (D67). Read before the mesh's material is
  * replaced, from the source material every clone shares.
  */
 export function paintOfMesh(mesh: THREE.Mesh): PaintInput | null {
@@ -568,49 +563,24 @@ export function paintOfMesh(mesh: THREE.Mesh): PaintInput | null {
 }
 
 /**
- * **One figure's materials, onto its meshes** — built at commit, never in the
- * frame loop. A committed body (no map anywhere) gets ONE material on every mesh,
- * exactly as before; a personal model gets one per paint: the first is the
- * figure's own (the one its rig holds and the frame loop writes), and each other
- * paint a SIBLING whose uniforms are the first one's uniform OBJECTS but for its
- * own map — so `uOpacity`, `uTint`, `uLook`, `uMaterialize` and `uDrain`, written
- * to the first, reach every paint; {@link applyLook} marks the siblings too, and
- * disposing the first disposes them.
+ * **One figure's material, onto its meshes** — built at commit, never in the frame
+ * loop — and it is ONE material, the figure's own: the one its rig holds and the
+ * frame loop writes. A committed body (no map anywhere) gets it on every mesh; a
+ * personal model is one skinned primitive under one paint since **D240**
+ * (prepare's atlas; `check.mjs`, the dev route and `personal.ts`'s reader each
+ * refuse a file of more), so its paint is the first mesh's map. D196's SIBLING
+ * materials — a second material per extra paint, sharing the first one's uniform
+ * objects — went with the second paint: one figure, one material, one call.
  */
 export function dressFigureMeshes(meshes: readonly THREE.Mesh[], tint: string, unitScale: number): FigureMaterial {
-  const paints = meshes.map(paintOfMesh);
-  const first = paints.find((p) => p !== null) ?? null;
-  const primary = makeFigureMaterial(tint, unitScale, first ?? {});
-  const siblings: FigureMaterial[] = [];
-  const byMap = new Map<THREE.Texture, FigureMaterial>();
-  if (first?.map) byMap.set(first.map, primary);
-  meshes.forEach((mesh, i) => {
-    const paint = paints[i] ?? null;
-    if (paint === null || paint.map === null || paint.map === undefined) {
-      mesh.material = primary;
-      return;
-    }
-    let material = byMap.get(paint.map);
-    if (material === undefined) {
-      material = makeFigureMaterial(tint, unitScale, paint);
-      material.uniforms = { ...primary.uniforms, uPaintMap: { value: paint.map } };
-      byMap.set(paint.map, material);
-      siblings.push(material);
-    }
-    mesh.material = material;
-  });
-  if (siblings.length > 0) {
-    SIBLINGS.set(primary, siblings);
-    primary.addEventListener('dispose', () => {
-      for (const sibling of siblings) sibling.dispose();
-    });
+  let paint: PaintInput | null = null;
+  for (const mesh of meshes) {
+    paint = paintOfMesh(mesh);
+    if (paint !== null) break;
   }
-  return primary;
-}
-
-/** The materials of a figure's other paints (D196) — for a mount-time prime or a test. */
-export function siblingsOf(material: FigureMaterial): readonly FigureMaterial[] {
-  return SIBLINGS.get(material) ?? [];
+  const material = makeFigureMaterial(tint, unitScale, paint ?? {});
+  for (const mesh of meshes) mesh.material = material;
+  return material;
 }
 
 // ---------------------------------------------------------------------------

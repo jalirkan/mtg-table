@@ -650,9 +650,9 @@ function buildBody(
 
 /**
  * **A seat's personal body** (D195): the model as it is — its own props are in
- * it and ours are not baked in, its costume is its texture (one material per
- * paint, D196) — tinted at the edge with the seat's colour like any duelist, and
- * never a click target.
+ * it and ours are not baked in, its costume is its texture (one material, one
+ * draw call — D196, D240) — tinted at the edge with the seat's colour like any
+ * duelist, and never a click target.
  */
 function personalBody(seat: Seat, key: string, look: DuelistLook, model: LoadedModel, data: DuelistData, instance: FigureInstance): DuelistBody {
   const base = new THREE.Color(look.tint).lerp(new THREE.Color(seat === 'you' ? '#8fd3c4' : '#d68f9a'), look.seatMix);

@@ -73,7 +73,8 @@ export type KeyActionId =
   | 'cameraView'
   | 'cameraDirector'
   | 'toggleSpectator'
-  | 'openWorkshop';
+  | 'openWorkshop'
+  | 'inspectCard';
 
 /**
  * **M7 Tier 2 (T8) — the arena's camera, by key.** The ids are `camera.ts`'s
@@ -348,6 +349,24 @@ export const KEYMAP: readonly KeyBinding[] = [
     milestone: 'M7',
   },
   {
+    // **Inspect from the table** (D241): the card under the pointer — else the
+    // last one clicked — opens the workshop's inspect view on it
+    // (`#workshop?card=<name>&view=inspect`), dressed and in the look the arena
+    // is in; the workshop's back link returns to the same frame. A picture key
+    // like `W`: navigation, no act, legal on a replay and behind an open ask —
+    // from the arena, which says which card it is (`KeyContext.inspect`, from
+    // `arena/inspect.ts`'s planner) and why when there is none, and NEVER for a
+    // face-down or hidden card. On the board it says where it lives, as the
+    // camera rows do. `I` is bound by nothing else here and by nothing in Forge.
+    id: 'inspectCard',
+    chord: 'I',
+    keys: ['i'],
+    ctrl: false,
+    what: "inspect the card under the pointer (or the last one clicked) in the workshop: its figure in front of its painting — face up only; the workshop's arena link comes back to this frame",
+    forge: 'divergence: Forge has no 3D figures to inspect (its card zoom is our Z)',
+    milestone: 'M7',
+  },
+  {
     // **M5 — the one real dead end M4 handed over.** LAST on purpose:
     // `bindingFor` is a first-match lookup, so with an empty pool `C` is still
     // Forge's SHORTCUT_SHOWCOMBAT and `B` is still pass-to-before-my-turn, and
@@ -483,6 +502,14 @@ export interface KeyContext {
    * no branch for them and must not grow one (CLAUDE.md M4 convention 4).
    */
   arena?: boolean;
+  /**
+   * **D241** — what `I` would inspect in the arena: the card under the pointer,
+   * else the last one clicked, as `arena/inspect.ts`'s planner decided it (a
+   * link for a face-up card with a figure, or the reason there is none — a
+   * face-down or hidden card is always a reason). Absent or `null`: nothing
+   * hovered or clicked. The board leaves it unset.
+   */
+  inspect?: { href: string; name: string } | { why: string } | null;
 }
 
 export type KeyPlan =
@@ -514,6 +541,11 @@ export type KeyPlan =
   | { kind: 'camera'; choice: CameraKeyChoice }
   /** **M7 Tier 2 (T8)** — spectator mode on / off. Local, sends nothing. */
   | { kind: 'spectator' }
+  /**
+   * **D241** — open the workshop's inspect view on this card: navigation to
+   * `href` (`#workshop?card=<name>&view=inspect`), which sends nothing.
+   */
+  | { kind: 'inspect'; href: string; name: string }
   /** Bound, understood, and deliberately does nothing yet — with the reason. */
   | { kind: 'inert'; why: string };
 
@@ -692,6 +724,26 @@ export function planKey(event: KeyEventLike, ctx: KeyContext): KeyResolution | n
         };
       }
       return { binding, plan: { kind: 'view', id: 'openWorkshop' } };
+
+    case 'inspectCard': {
+      // D241 — a picture key: navigation, never an act. The arena says which
+      // card (and why not); the board has no figures to inspect and says so.
+      if (ctx.arena !== true) {
+        return {
+          binding,
+          plan: { kind: 'inert', why: "inspects a card's figure from the 3D arena — press V first" },
+        };
+      }
+      const target = ctx.inspect ?? null;
+      if (target === null) {
+        return {
+          binding,
+          plan: { kind: 'inert', why: 'no card under the pointer and none clicked — hover or click a face-up card, then press I' },
+        };
+      }
+      if ('why' in target) return { binding, plan: { kind: 'inert', why: target.why } };
+      return { binding, plan: { kind: 'inspect', href: target.href, name: target.name } };
+    }
 
     case 'toggleSpectator':
       if (ctx.arena !== true) {

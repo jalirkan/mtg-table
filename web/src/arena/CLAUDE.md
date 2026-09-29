@@ -347,7 +347,7 @@ camera rules still hold under all of it.
    is stored — and a stored spectator-only view shows the table at a live seat.
 5. **The camera keys are keymap rows, and on the board they are `inert`**
    (**D74**, M4 convention 4). `1`–`5`, `6`/`0` and `O` are three of `keys.ts`'s
-   24 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
+   25 rows; `keys.ts` may not import `arena/` (**D49**), so it spells the ids as
    `CAMERA_KEYS` and `keys.test.ts` holds the two maps together. On the board each
    plans an `inert` whose reason names `V` — never a `view`, which `Board.tsx`'s
    silent `default:` would swallow.
@@ -1024,18 +1024,20 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    convention 2). `DuelistLayer` builds a seat's duelist from a model that
    dresses the seat: its own props in it, ours not baked in, the gestures on our
    clip lane, the stance rules unchanged. Neither takes a click (`raycast` cleared).
-4. **Own colours, one figure's materials** (**D196**). A personal map is the
-   model's OWN colour (`uPaintOwn` 1): the comic look paints the texture as it is,
-   the hologram tints its values; a cutout paint discards under 0.5 alpha. A model
-   of two paints is `dressFigureMeshes`'s primary material plus a SIBLING sharing
-   its uniform objects — so the frame loop writes one material per figure, as
-   ever — marked with it by `applyLook` and disposed with it. **"Black is blue"
+4. **Own colours, ONE material a figure** (**D196**, **D240**). A personal map is
+   the model's OWN colour (`uPaintOwn` 1): the comic look paints the texture as it
+   is, the hologram tints its values; a cutout paint discards under 0.5 alpha.
+   Since D240 a prepared model is one skinned primitive under one paint (prepare's
+   atlas, `tools/CLAUDE.md`'s *The personal tier*), so `dressFigureMeshes` puts ONE
+   material on every mesh — D196's sibling material for a second paint is gone, and
+   the frame loop writes one material per figure, as ever. **"Black is blue"
    is the CC0 palette's rule, never a model's** (**D198**): `comicPaintOwn` lifts a
    dark own texel in value from `COMIC.ownFloor` with its own hue (a neutral stays
    neutral), and prepare has already exposed a texture too dark to read unlit.
 5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
-   `PERSONAL_TRI_CAP` (8,000 triangles) and `PERSONAL_CALL_CAP` (2 paints) refuse
-   a model, in the dev route and in the reader; `PERSONAL_MAX_FIGURES` (4) dresses
+   `PERSONAL_TRI_CAP` (8,000 triangles) and `PERSONAL_CALL_CAP` (ONE draw call a
+   figure since **D240** — the dev route counts the primitives in the very
+   `model.glb` it serves) refuse a model, in the dev route and in the reader; `PERSONAL_MAX_FIGURES` (4) dresses
    at most four creatures; and `PERSONAL_TABLE_TRIS` (36,000) is the most personal
    triangles on the table at once, which `personalChoicesOf` spends — the seats'
    models first (`seatTriangles`), then the creatures in placement order, one that
@@ -1045,7 +1047,9 @@ the manual, `docs/evidence/personal-tier.md` §16–§18 what was measured.
    1080 with p95 unchanged, 53,407 and 95 on SwiftShader with the median 4 ms
    slower — and on the status layer, whose strip is one call more, 91 calls and
    50,305 triangles on the GTX 1080, 95 and 53,297–53,421 on SwiftShader, where
-   the CC0 table reads 87 and 89 (evidence §19). Measure with `tools/arena-bench.mjs --personal` against the DEV server
+   the CC0 table reads 87 and 89 (evidence §19); since D240 a dressed figure is one
+   call, and over every frame of `villain-doom-248` the tier on draws no more calls
+   than the tier off (`docs/evidence/arena-personal-polish.md`). Measure with `tools/arena-bench.mjs --personal` against the DEV server
    (`?personal=0` for the A/B, `MTG_TABLE_PERSONAL_DIR` for a scratch tier) before
    moving any of the four.
 
@@ -1095,8 +1099,6 @@ own depth (`layout.ts`'s `proxySizeOf`, which `HitProxy` reads), so a click on a
 front card's centre is the front card's; and a back-row figure steps ±0.035 aside
 when every step back is covered, with `figure-pose.test.ts` telling a figure
 *boxed in* — nowhere clear on its card — from one standing on another card.
-The workshop's relief window (D225, D226; `web/CLAUDE.md`'s *The relief window*)
-The workshop's relief window (D225–D227; `web/CLAUDE.md`'s *The relief window*)
 The workshop's relief window (D225–D228; `web/CLAUDE.md`'s *The relief window*)
 is the personal tier's inspect backdrop, and it is not a card: nothing under
 `arena/` draws or reads it, `CardPlane` stays the one card renderer, and only its
@@ -1105,3 +1107,14 @@ layers `RELIEF_CLIFF` — `tools/personal/relief.mjs` reads those two too, and
 changing either makes every map stale — and, since its keep mask,
 `RELIEF_MAP_VERSION`, which `relief.mjs`'s `RECIPE_VERSION` must equal). The arena's own card zoom has
 no window yet — PLAN.md's relief-window follow-up names where one would mount.
+
+**Inspect from the table** (**D241**) is navigation, not a renderer:
+`arena/inspect.ts`'s `inspectTargetOf` is THE planner of what the `I` row
+(`keys.ts`'s `inspectCard`) and the `.arena__inspect` chip under the art credit
+open — the workshop's inspect view, `#workshop?card=<name>&view=inspect` — for the
+card under the pointer, else the last clicked, else the last pointed at. It is
+pure (liveness), `Arena.tsx` is its one caller, and it reads a name only after
+the placement's gates: a face-down, hidden or redacted card is `inert` with its
+reason and never named (`inspect.test.ts` sweeps the corpus made hostile, with an
+ungated control). The arena answers the plan with a hash and nothing else — no
+act — and the workshop's ▣ arena link comes back to the same frame.

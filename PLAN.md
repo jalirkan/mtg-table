@@ -14,27 +14,12 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The 31 follow-up lists hold 385 items, and 289 of them are open** — 265 open,
-18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 96 closed
-(M1's six among them; the personal tier's list was added, with its 18 and 19
-closed, when that lane merged; its phase 2 closed ten and opened seven, and its
-fix pass 1 recounted it and opened three; the status layer's list of twelve was
-added when that lane merged; villain identity's list of seven was added, and it
-closed the status layer's 2; its fix pass added five). **Of the 30 questions
-only the owner can settle, 5 are answered** and 25 stand on the default this
-plan assumes.
-**The 31 follow-up lists hold 381 items, and 285 of them are open** — 261 open,
-18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 96
-**The 31 follow-up lists hold 386 items, and 289 of them are open** — 265 open,
-18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 97
-**The 31 follow-up lists hold 388 items, and 290 of them are open** — 266 open,
-18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 98
-closed (M1's six among them; the personal tier's list was added, with its 18 and
-19 closed, when that lane merged; its phase 2 closed ten and opened seven, and
-its fix pass 1 recounted it and opened three; the status layer's list of twelve
-was added when that lane merged; the relief window's list of eight was added by
-that lane, which closed the personal tier's 25, and its fix pass closed one of
-its own and added five, and its second fix pass closed one more and added two). **Of the 30 questions only the owner can settle,
+**The index below lists 305 items still open across 32 follow-up lists** — 281
+open, 18 partly done, 3 not reproduced, 2 standing and 1 accepted — counted from
+its own rows on 2026-09-29 by the arena personal polish lane (which closed the
+personal tier's 33 and added a list of five), where the four paragraphs it
+replaced, one per merging lane, had each counted a different tree. Each list's
+own entries say what is closed. **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
@@ -304,7 +289,6 @@ its own and added five, and its second fix pass closed one more and added two). 
 | [Personal tier](#fu-personal) | 30 | open | A model prepared again needs a dev-server restart | `web/src/personal/devRoute.ts` |
 | [Personal tier](#fu-personal) | 31 | open | The inspect view's art box is the modern frame's, measured once | `web/src/workshop/framing.ts` |
 | [Personal tier](#fu-personal) | 32 | open | One exposure target for every model, set on eight | `tools/personal/lib.mjs` |
-| [Personal tier](#fu-personal) | 33 | open | The worst case passes §8.2's 90-call line on SwiftShader (95) | `tools/personal/prepare.mjs` |
 | [Personal tier](#fu-personal) | 34 | open | `arena-bench --personal` is a flag the caller must remember | `tools/arena-bench.mjs` |
 | [Status layer](#fu-status) | 1 | open | g1 predates M49: step 6 does not compare the keywords' values | `tools/wire-drift.mjs` |
 | [Status layer](#fu-status) | 3 | open | The bar does not animate its drain | `web/src/arena/cues/stage.ts` |
@@ -342,6 +326,11 @@ its own and added five, and its second fix pass closed one more and added two). 
 | [Relief window](#fu-relief) | 13 | open | The first commit's co-author line is not the brief's | — |
 | [Relief window](#fu-relief) | 14 | open | An internal cut keeps a few of the subject's pixels on the back layer | `tools/personal/relief_depth.py` |
 | [Relief window](#fu-relief) | 15 | open | A painted rim travels with its subject — a light outline at ±40° | `tools/personal/relief_depth.py` |
+| [Arena personal polish](#fu-polish) | 1 | open | The personal tier's worst case is not re-benched with one-call models | `tools/arena-bench.mjs` |
+| [Arena personal polish](#fu-polish) | 2 | open | Doom's one sheet is the whole 2048² budget, a quarter of it empty | `tools/personal/lib.mjs` |
+| [Arena personal polish](#fu-polish) | 3 | open | The main checkout's `personal/` must be prepared again (owner action) | `docs/guides/personal-tier.md` |
+| [Arena personal polish](#fu-polish) | 4 | open | The arena has no card zoom: inspect is a chip under the credit and `I` | `web/src/arena/Arena.tsx` |
+| [Arena personal polish](#fu-polish) | 5 | open | The workshop's list does not scroll to the card `I` opened; its bloom is its own | `web/src/workshop/Workshop.tsx` |
 
 ### Questions only the owner can settle
 
@@ -408,6 +397,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Villain identity: a recording of the Doom Legion, and every villain reading as itself *(off the plan)* | 1 day | **built, gated and documented** on branch `villain-identity` (2026-09-29), off `main`'s `9dfdce4` — `fixtures/games/villain-doom-248.jsonl`, chosen by census over 440 seeds (26 of 27 names face up, twelve of fifteen identity subjects on the table, Doom's Plan paid off); every corpus count moved to the new truth; three defects it found fixed (a land that rose twice, a back row that took the front card's click, a back-row figure with nowhere to stand); a villain rung, fifteen new `traits.json` rows, seven cue rows and two shared kit pieces (`mask`, `cowl`); the workshop lists the Doom Legion second; **D220–D221**; a fix pass after its first verification (**D222**: the crowded table measured at every frame, over the bench's lines before identity; the Legionnaire, the Troopers, Crossbones and Madame Hydra re-dressed; the raster's one-sided cloak Doom's alone); twelve follow-ups; *Villain identity*, just above *Deferred* |
 | — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated and documented** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting into the gitignored `personal/relief/` (158 cards, 28.5 s, 14.4 MB); the dev route serves it; the workshop's inspect view draws the art box as a window whose vertices recede along their rays from the camera's seat, clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D226**; eight follow-ups; *The relief window*, just above *Deferred* |
 | — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated, documented and fixed once** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting, in two layers, into the gitignored `personal/relief/` (158 cards, 43.5 s, 30.45 MiB); the dev route serves it; the workshop's inspect view draws the art box as a window — the painting cut at its silhouettes, what it hides filled in behind it, both clipped to a still rectangle — clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D227**; thirteen follow-ups, one closed; *The relief window*, just above *Deferred* |
+| — | Arena personal polish: one call a dressed figure, and inspect from the table *(off the plan; the personal tier's follow-up 33)* | 1 day | **built, measured, gated and documented** on branch `arena-personal-polish` (2026-09-29), off `main`'s `9998ec5` — prepare packs every paint into one atlas (a repeating paint laid out over its UV tiles) and merges a model into ONE skinned primitive under ONE material; `check.mjs`, the dev route (from the file) and the reader each count one call a figure; the villain file's worst frame with the tier on 130 → 128 calls, the tier never over the tier off on any of its 401 frames; `I` and an inspect chip open the workshop's inspect view on the card under the pointer, face up only (a hostile corpus sweep); **D240–D241**; five follow-ups; *Arena personal polish*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -7428,7 +7418,7 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 `~/.forge` unchanged again.
 
 <a id="fu-personal"></a>
-### The personal tier's follow-ups — thirty-four, 2026-09-28 (1–7, 9, 11, 18, 19, 21 and 25 closed; 13 and 16 partly)
+### The personal tier's follow-ups — thirty-four, 2026-09-28 (1–7, 9, 11, 18, 19, 21, 25 and 33 closed; 13 and 16 partly)
 
 **Phase 2, the loader** — **all seven closed by phase 2** (D194–D196, *Phase 2*
 below): the index and its one reader (1), the dev-only route and the build grep
@@ -7769,11 +7759,16 @@ names the Hulk's face too).
     (a dark costume with one white emblem) would be judged by the emblem.
     `--exposure <gain>` is the override today; a per-model note in the manifest,
     or a target read off the card's art, would be the next step.
-33. **The worst case passes §8.2's 90-call line on SwiftShader** (95; 90 on the
+33. ~~**The worst case passes §8.2's 90-call line on SwiftShader** (95; 90 on the
     GTX 1080, and 91 there on the status layer, whose strip is one call more —
     evidence §19): a two-paint model is one call more than the body it replaces.
     Folding a wrapping paint (Doom's tunic) into the atlas — its UVs brought into
-    one tile, the texture repeated into it — would make every model one call.
+    one tile, the texture repeated into it — would make every model one call.~~
+    **Closed by the arena personal polish lane** (2026-09-29, **D240**, *Arena
+    personal polish* below): every model is one skinned primitive under one
+    material — the tunic laid twice into its region of Doom's one atlas — and each
+    dressed figure measures one call on both GPUs; the re-bench of this worst case
+    itself is that lane's follow-up 1.
 34. **`arena-bench --personal` is a flag the caller must remember.** The page
     could put a count of dressed figures in `info().layers` (a number, never an
     id), and the bench pick its line from what was drawn.
@@ -8214,6 +8209,85 @@ see evidence §16.
     green, his coat against the fire) moves with him and at ±40° reads as a light
     outline over the darker fill beside it. It is the painting's own line;
     `CONTOUR_PX` 2 would thin it and let a little more ink stay behind.
+
+---
+
+## Arena personal polish — one call a dressed figure, and inspect from the table (2026-09-29, D240–D241)
+
+**Status: built, measured, gated and documented** on branch
+`arena-personal-polish` (the worktree `mtg-table-t2q2`, off `main`'s `9998ec5`);
+the lane's reserved range D240–D244, two used. `docs/evidence/arena-personal-polish.md`
+is what was measured; the manual is `docs/guides/personal-tier.md`'s *The atlas*.
+
+1. **One call a dressed figure** (D240, closing the personal tier's follow-up 33).
+   `tools/personal/prepare.mjs`'s paint step makes every model ONE skinned
+   primitive under ONE material: one paint keeps its own texture, several are
+   regions of one atlas (`lib.mjs`'s `uvSpanOf`, `packAtlas`, `tileTexels`) — a
+   repeating paint laid out over the whole UV tiles it spans (Doom's tunic twice
+   side by side), skyline-packed on the smallest sheet that holds the regions at
+   their own size, else scaled alike to fit 2048 (`ATLAS_MAX`, the texture
+   budget). The manifest records the sheet and every region; `validateManifest`,
+   `check.mjs` (step 1), the dev route (counting the file's own primitives,
+   `glbDrawsOf`) and the arena's reader all hold a model to one call
+   (`PERSONAL_CALL_CAP` 1), and `dressFigureMeshes` is one material a figure (the
+   sibling materials are gone). All six active models were prepared and checked
+   again: Doom 2048 × 2048 at ×0.984, Coulson 2048 × 1536 at ×0.484, Peggy
+   1056 × 1568 and the MCU Wasp 1040 × 1568 at ×1 (D194's 496-px tiles had
+   shrunk their 1024-px paints), the Hulks and Fury their own texture.
+2. **Measured, bloom off, on the GTX 1080 and on SwiftShader alike** (an exact
+   frame census, `var/polish/census.mjs`): every dressed figure is one call;
+   `villain-doom-248`'s worst frame (`@392`/`@393`) with the tier on **130 → 128**
+   (tier off 128), and over all 401 frames the tier on drew more calls than the
+   tier off on 257 frames before and on none after; `g1`@316 **78 → 77** (off
+   83), @355 **85 → 84** (off 89); the pedestal with Doom 13 → 12.
+   `tools/arena-bench.mjs --index 316 --personal --no-bloom`: GTX 1080 81 calls,
+   38,637 triangles, p95 3.9 ms (OK); SwiftShader 86 calls, 41,825 triangles,
+   p95 35.0 ms — §9.4's p95 fails there with the tier off too (33.3 ms).
+3. **Inspect from the table** (D241). `I` (`keys.ts`'s `inspectCard`, inert on
+   the board) and an *⌕ inspect* chip under the arena's art credit open the
+   workshop on `#workshop?card=<name>&view=inspect` for the card under the
+   pointer, else the last clicked — through ONE pure planner,
+   `arena/inspect.ts`'s `inspectTargetOf`, which reads a name only after the
+   placement's face-up gates: a face-down or hidden card is inert with its
+   reason and never named. The workshop reads the view word (and `?personal=0`),
+   keeps it while inspecting, says when it lists no such card, and its ▣ arena
+   link comes back to the same frame (`replayCursors`). `inspect.test.ts` sweeps
+   the corpus made hostile: 60,840 concealed placements, all inert, where an
+   ungated planner would have opened 10,228.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9190` **250.3 s** and `WSPORT=9200` **250.9 s**,
+exit 0 both, 48 jobs (960.7 s and 955.3 s summed) at a load average of 0.1–9.8,
+`node --test` 1,114 / 1,103 pass / 0 fail / 11 skipped and vitest 124 (8 files)
+each time (`var/check-all-polish-p1.log`, `-p2.log`). The lane added no step and
+no job: its tests are in the web step.
+`~/forge` and `~/.forge`: unchanged (evidence §8).
+
+<a id="fu-polish"></a>
+### Arena personal polish's follow-ups — five, 2026-09-29
+
+1. **The personal tier's worst case is not re-benched with one-call models.**
+   D197's scratch tier (six copies of Doom dressing both seats and four creatures
+   at `g1`@316) was two-paint models: 90 calls on the GTX 1080, 95 on
+   SwiftShader. Each of the six is one call now, so it should read 84 and 89;
+   the lane measured every dressed figure at one call, not that bench.
+2. **Doom's one sheet is the whole 2048² budget, a quarter of it empty**: the
+   tunic laid twice is as wide as the sheet, so the hood sits under it and the
+   rest is black — 16 MiB of RGBA8 before mipmaps where his two textures were 8.
+   Drawing the tunic's repeat at 512 px a tile would fit a smaller sheet at half
+   its density; a decision on density, not a packer fix.
+3. **The main checkout's `personal/` must be prepared again** (the owner's
+   action, after the merge): its Doom is two primitives, which the dev route now
+   skips ("prepare it again"); the other five load as they are but keep D194's
+   atlases. `docs/guides/personal-tier.md`'s *The atlas* has the two commands;
+   a model whose `source/` was cleaned needs `import.mjs` on its download first,
+   and the flags it was first prepared with (Coulson `--joints rest --budget 8000`
+   and his `--drop`s, Peggy's `--drop`) are in its manifest.
+4. **The arena has no card zoom.** The inspect entry is a chip under the art
+   credit and the `I` key; a zoom in the arena (the board's `Z`) would be its
+   natural home, and the relief window's follow-up 1 would mount there too.
+5. **The workshop's list does not scroll to the card `I` opened on** (it is
+   selected, off screen in a long list), and its bloom starts at its own default,
+   not at the arena's checkbox.
 
 ---
 

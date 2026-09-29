@@ -63,7 +63,11 @@
  *     whole; the rest share what is left in proportion.
  *  7. **Textures**: base colour and normal kept (a larger one downscaled to fit
  *     1024 with the `sharp` the CLI already carries); every other texture slot is
- *     dropped and named in the manifest.
+ *     dropped and named in the manifest. Then **the paint step** (D194, D240):
+ *     every part merged into ONE skinned primitive under ONE material — a model of
+ *     several paints packed into one atlas (a repeating paint laid out over the UV
+ *     tiles it spans), at most `ATLAS_MAX` (2048) px a side — so a dressed figure
+ *     is one draw call; the normal maps go (the arena draws base colour only).
  *  8. **Bake OUR clip set into it** (phase 2, D194): every clip `figures.glb`'s
  *     `agent` carries (`models.json`'s twelve keys — idle, attack, block, hit,
  *     die, the kneel and the rest), carried onto this skeleton with
@@ -113,6 +117,9 @@ import { pathToFileURL } from 'node:url';
 
 import {
   armAngles,
+  ATLAS_GUTTER,
+  ATLAS_MAX,
+  ATLAS_SWATCH,
   boneFinder,
   BY_POSITION_LIMIT,
   controlReason,
@@ -133,6 +140,7 @@ import {
   MANIFEST_VERSION,
   OUR_JOINTS,
   OUR_PARENT,
+  packAtlas,
   personalIO,
   rawJsonOf,
   readDocument,
@@ -147,7 +155,9 @@ import {
   slugDir,
   snapshot,
   THREE,
+  tileTexels,
   trianglesOf,
+  uvSpanOf,
   validateManifest,
   vrmHumanBonesOf,
   WEB,
@@ -937,7 +947,7 @@ for (const texture of doc.getRoot().listTextures()) {
 }
 
 // ---------------------------------------------------------------------------
-// The paint (D194): one primitive per base colour, tileable ones in an atlas
+// The paint (D194, D240): ONE primitive under ONE material — every paint in one atlas
 // ---------------------------------------------------------------------------
 
 const paint = await paintStep();
@@ -946,7 +956,8 @@ const paint = await paintStep();
 // The exposure (fix pass 1, D198): an unlit figure's paint IS its value
 // ---------------------------------------------------------------------------
 
-if (paint !== null) paint.exposure = await exposureStep();
+paint.exposure = await exposureStep();
+if (paint.atlas !== null) for (const region of paint.atlas.regions) region.gain = paint.exposure.gain;
 
 /**
  * **Measure the painted surface and lift it when it is too dark to read unlit**
@@ -1025,32 +1036,44 @@ async function exposureStep() {
 }
 
 /**
- * **One draw call per paint.** three draws a primitive per call, and the arena
- * draws each figure with its own material, so a model of fourteen textured
- * parts (Character Creator's Coulson) would cost fourteen calls a figure. This
- * step, which runs only when the model carries a base-colour texture at all:
+ * **One draw call a figure** (D194, and since D240 exactly one). three draws a
+ * primitive per call, and the arena draws each figure with its own material, so
+ * a model of fourteen textured parts (Character Creator's Coulson) would cost
+ * fourteen calls a figure, and a model of two paints (Doom's hood and tunic) two
+ * — the one call over report 13 §8.2's line the personal tier's worst case paid
+ * (PLAN follow-up 33). This step makes every prepared model ONE skinned primitive
+ * under ONE material:
  *
- *  - groups the parts by what they paint with — the base-colour texture, the
+ *  - it groups the parts by what they paint with — the base-colour texture, the
  *    factor, and whether the texture's alpha cuts (MASK or BLEND with an alpha
  *    channel: hair cards, lashes; the arena discards below 0.5);
- *  - puts every group whose UVs sit inside ONE unit tile, give or take 1% (a
- *    UDIM-style offset such as Coulson's `u` 1…2 is such a tile) into a single ATLAS: 512 px tiles
- *    with an 8 px gutter of copied edge, on a 1024 or 2048 px sheet, each factor
- *    multiplied into its tile and a part with no texture painted as a swatch of
- *    its factor; a group whose UVs WRAP (Doom's tunic, `u` up to 1.87 on a
- *    repeating sampler) keeps its own texture, the factor baked into a copy;
- *  - merges each paint's parts into one primitive under a material of its own,
- *    `paint-<n>`, with base colour only — the arena draws no normal map, so the
- *    normal textures and tangents are dropped (named in the manifest);
- *  - records every part's vertex range in the merged primitive
- *    (`manifest.paint`), so check.mjs can still follow a rule-skinned cloak.
+ *  - with ONE group, that paint is the model's: its own texture (the factor
+ *    baked into a copy), repeating as it came — or, untextured, its factor alone,
+ *    the UVs kept as they are;
+ *  - with more, every group is a REGION of one ATLAS (`lib.mjs`'s `packAtlas`):
+ *    the paint's texture, factor multiplied in, repeated over as many whole UV
+ *    tiles as its parts' UVs span (`uvSpanOf` — Doom's tunic wraps to `u` 1.87 on
+ *    a repeating texture, so its region is the tunic twice side by side), an
+ *    untextured part a swatch of its factor; `ATLAS_GUTTER` px of copied edge
+ *    round each (wrapped, for a repeating paint), on a sheet of at most
+ *    `ATLAS_MAX` px a side, every region scaled alike when they would not fit at
+ *    their own size. Each part's UVs are remapped from its own tile into its
+ *    group's region, so the texel a vertex names is the one it named before;
+ *    a region that does not cut has its alpha set opaque, so the one material
+ *    may be a cutout (MASK) for the hair cards alone;
+ *  - merges every part into ONE primitive under ONE material, `paint-0`, base
+ *    colour only — the arena draws no normal map, so the normal textures and
+ *    tangents are dropped (named in the manifest); double-sided if any part was;
+ *  - records every part's vertex range in it (`manifest.paint`, so check.mjs can
+ *    still follow a rule-skinned cloak) and, for an atlas, the sheet's size, the
+ *    scale and every region: its source, factor, span, rectangle and parts.
  *
- * Returns the manifest's `paint` record, or `null` when there is no texture
- * (an untextured model — the pipeline's own test figure — keeps its parts).
+ * The exposure step (D198) runs AFTER this, on the one texture: its one gain
+ * reaches every source's region alike, and the record names it per region.
+ * Returns the manifest's `paint` record.
  */
 async function paintStep() {
   const prims = bodyMesh.listPrimitives();
-  if (!prims.some((prim) => prim.getMaterial()?.getBaseColorTexture() !== null && prim.getMaterial() !== null)) return null;
   const partOf = new Map(parts.map((part) => [part.out, part]));
   const alphaOf = new Map();
   const hasAlpha = async (texture) => {
@@ -1075,7 +1098,7 @@ async function paintStep() {
     }
     return { lo, hi };
   };
-  // 1 — what each primitive paints with.
+  // 1 — what each primitive paints with, and the whole UV tiles it spans.
   const groups = new Map();
   for (const prim of prims) {
     const m = prim.getMaterial();
@@ -1085,155 +1108,189 @@ async function paintStep() {
     const mode = m?.getAlphaMode() ?? 'OPAQUE';
     const cutout = texture !== null && mode !== 'OPAQUE' && (await hasAlpha(texture));
     const range = texture === null ? null : uvRange(prim, set);
-    // One unit tile, give or take 1% (an exporter's 1.0005 is not a wrap; the remap clamps it).
-    const tile = range === null ? [0, 0] : range.lo.map((x) => Math.floor(x + 0.01));
-    const tileable = range === null || range.hi.every((x, k) => x <= tile[k] + 1.01);
+    const { origin, span } = range === null ? { origin: [0, 0], span: [1, 1] } : uvSpanOf(range.lo, range.hi);
     const key = `${texture === null ? 'swatch' : String(doc.getRoot().listTextures().indexOf(texture))}|${factor.join(',')}|${cutout ? 'cut' : 'solid'}`;
-    const group = groups.get(key) ?? { key, texture, factor, cutout, members: [], tileable: true, doubleSided: false };
-    group.members.push({ prim, set, tile, part: partOf.get(prim) });
-    group.tileable &&= tileable;
+    const group = groups.get(key) ?? { key, texture, factor, cutout, members: [], span: [1, 1], doubleSided: false };
+    group.members.push({ prim, set, origin, part: partOf.get(prim) });
+    group.span = group.span.map((s, k) => Math.max(s, span[k]));
     group.doubleSided ||= m?.getDoubleSided() === true;
     groups.set(key, group);
   }
   const all = [...groups.values()];
-  const atlasGroups = all.filter((g) => g.tileable);
-  const useAtlas = atlasGroups.length >= 2;
-  const T = 512;
-  const G = 8;
-  const n = atlasGroups.length;
-  const grid = n <= 1 ? 1 : n <= 4 ? 2 : Math.ceil(Math.sqrt(n));
-  const A = useAtlas ? Math.min(2048, grid * T) : 0;
-  const tileSize = useAtlas ? A / grid : 0;
+  const useAtlas = all.length >= 2;
   const toSrgb = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
   const isWhite = (f) => f.every((x) => x > 0.999);
-  /** The image (RGBA) with a glTF base-colour factor multiplied into it (in sRGB, the factor converted). */
-  const tint = async (bytes, f) => {
+  const nameOf = (texture) => basename(texture.getURI() || texture.getName() || 'texture');
+  /** The image as RGBA texels, a glTF base-colour factor multiplied in (in sRGB, the factor converted). */
+  const tinted = async (bytes, f) => {
     const { data, info } = await sharp(Buffer.from(bytes)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     if (!isWhite(f)) {
       const k = f.map(toSrgb);
       for (let i = 0; i < data.length; i += 4) for (let c = 0; c < 3; c += 1) data[i + c] = Math.round(data[i + c] * k[c]);
     }
-    return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } });
+    return { data, width: info.width, height: info.height };
   };
-  const outTextures = [];
-  const paints = [];
-  // 2 — the atlas.
-  let atlasTexture = null;
-  if (useAtlas) {
+  const cutout = all.some((g) => g.cutout);
+  const doubleSided = all.some((g) => g.doubleSided);
+  let texture = null;
+  let atlas = null;
+  let outTexture = null;
+  // 2a — one paint: the model's own texture (or its factor alone).
+  if (!useAtlas) {
+    const g = all[0];
+    texture = g.texture;
+    if (texture !== null && !isWhite(g.factor)) {
+      const { data, width, height } = await tinted(texture.getImage(), g.factor);
+      const img = await sharp(data, { raw: { width, height, channels: 4 } }).png().toBuffer();
+      texture = doc.createTexture('paint-0').setImage(new Uint8Array(img)).setMimeType('image/png').setURI('paint-0.png');
+    }
+    if (texture !== null) {
+      const size = GLTF.ImageUtils.getSize(texture.getImage(), texture.getMimeType());
+      outTexture = { name: nameOf(texture), slot: 'baseColor', size, bytes: texture.getImage().byteLength, downscaled: false };
+    }
+  } else {
+    // 2b — every paint a region of one sheet.
+    const natural = [];
+    for (const g of all) {
+      if (g.texture === null) {
+        natural.push({ w: ATLAS_SWATCH, h: ATLAS_SWATCH });
+        continue;
+      }
+      const size = GLTF.ImageUtils.getSize(g.texture.getImage(), g.texture.getMimeType()) ?? [512, 512];
+      natural.push({ w: size[0] * g.span[0], h: size[1] * g.span[1] });
+    }
+    const packed = packAtlas(natural, { max: ATLAS_MAX, gutter: ATLAS_GUTTER });
+    if (packed === null) fail(`the paints do not pack into one ${String(ATLAS_MAX)} px sheet even at 1/64 — ${String(all.length)} paints`);
     const composites = [];
-    const inner = tileSize - 2 * G;
-    for (let k = 0; k < atlasGroups.length; k += 1) {
-      const g = atlasGroups[k];
-      const col = k % grid;
-      const row = Math.floor(k / grid);
-      let tileImg;
+    for (let k = 0; k < all.length; k += 1) {
+      const g = all[k];
+      const r = packed.rects[k];
+      let raw;
       if (g.texture === null) {
         const c = g.factor.map((x) => Math.round(255 * toSrgb(x)));
-        tileImg = await sharp({ create: { width: tileSize, height: tileSize, channels: 4, background: { r: c[0], g: c[1], b: c[2], alpha: 1 } } }).png().toBuffer();
+        raw = await sharp({ create: { width: r.w, height: r.h, channels: 4, background: { r: c[0], g: c[1], b: c[2], alpha: 1 } } })
+          .extend({ top: ATLAS_GUTTER, bottom: ATLAS_GUTTER, left: ATLAS_GUTTER, right: ATLAS_GUTTER, extendWith: 'copy' })
+          .raw()
+          .toBuffer();
       } else {
-        const resized = await (await tint(g.texture.getImage(), g.factor)).resize(inner, inner, { fit: 'fill' }).png().toBuffer();
-        tileImg = await sharp(resized).extend({ top: G, bottom: G, left: G, right: G, extendWith: 'copy' }).png().toBuffer();
+        const { data, width, height } = await tinted(g.texture.getImage(), g.factor);
+        // A region that does not cut is opaque: the one material may be a cutout for the hair cards alone.
+        if (!g.cutout) for (let i = 3; i < data.length; i += 4) data[i] = 255;
+        const tiled = tileTexels(data, width, height, g.span[0], g.span[1]);
+        const wraps = g.span[0] > 1 || g.span[1] > 1;
+        raw = await sharp(Buffer.from(tiled.buffer, tiled.byteOffset, tiled.byteLength), { raw: { width: width * g.span[0], height: height * g.span[1], channels: 4 } })
+          .resize(r.w, r.h, { fit: 'fill' })
+          .extend({ top: ATLAS_GUTTER, bottom: ATLAS_GUTTER, left: ATLAS_GUTTER, right: ATLAS_GUTTER, extendWith: wraps ? 'repeat' : 'copy' })
+          .raw()
+          .toBuffer();
       }
-      composites.push({ input: tileImg, left: col * tileSize, top: row * tileSize });
-      g.atlas = { col, row };
+      composites.push({ input: raw, raw: { width: r.w + 2 * ATLAS_GUTTER, height: r.h + 2 * ATLAS_GUTTER, channels: 4 }, left: r.x - ATLAS_GUTTER, top: r.y - ATLAS_GUTTER });
+      g.region = r;
     }
-    const png = await sharp({ create: { width: A, height: A, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } } }).composite(composites).png().toBuffer();
-    atlasTexture = doc.createTexture('atlas').setImage(new Uint8Array(png)).setMimeType('image/png').setURI('atlas.png');
-    outTextures.push({ name: 'atlas.png', slot: 'atlas', size: [A, A], bytes: png.byteLength, downscaled: false, tiles: atlasGroups.length });
-    paints.push({ groups: atlasGroups, texture: atlasTexture, cutout: atlasGroups.some((g) => g.cutout), doubleSided: atlasGroups.some((g) => g.doubleSided), atlas: true });
+    const png = await sharp({ create: { width: packed.width, height: packed.height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } } })
+      .composite(composites)
+      .png()
+      .toBuffer();
+    texture = doc.createTexture('atlas').setImage(new Uint8Array(png)).setMimeType('image/png').setURI('atlas.png');
+    outTexture = { name: 'atlas.png', slot: 'atlas', size: [packed.width, packed.height], bytes: png.byteLength, downscaled: packed.scale < 1, tiles: all.length };
+    atlas = {
+      size: [packed.width, packed.height],
+      budget: ATLAS_MAX,
+      scale: packed.scale,
+      gutter: ATLAS_GUTTER,
+      regions: all.map((g) => ({
+        source: g.texture === null ? null : nameOf(g.texture),
+        factor: g.factor,
+        cutout: g.cutout,
+        span: g.span,
+        rect: [g.region.x, g.region.y, g.region.w, g.region.h],
+        parts: g.members.map((m) => m.part?.name ?? '(part)'),
+      })),
+    };
   }
-  // 3 — the groups that keep a texture of their own (they wrap, or there is only one).
+  // 3 — ONE primitive, ONE material.
+  const material = doc.createMaterial('paint-0').setBaseColorFactor(texture === null ? [...all[0].factor, 1] : [1, 1, 1, 1]).setMetallicFactor(0).setRoughnessFactor(1).setDoubleSided(doubleSided);
+  if (texture !== null) material.setBaseColorTexture(texture);
+  if (cutout) material.setAlphaMode('MASK').setAlphaCutoff(0.5);
+  // An untextured single paint keeps its UVs as they came (nothing samples them; a
+  // test traces its vertices by them), a part that had none at the centre.
+  const keepUv = texture === null && prims.some((p) => p.getAttribute('TEXCOORD_0') !== null);
+  const writeUv = texture !== null || keepUv;
+  const P = [];
+  const N = [];
+  const UV = [];
+  const JO = [];
+  const WE = [];
+  const IX = [];
+  const ranges = [];
   for (const g of all) {
-    if (useAtlas && g.tileable) continue;
-    let texture = g.texture;
-    if (texture === null || !isWhite(g.factor)) {
-      const img =
-        texture === null
-          ? await sharp({ create: { width: 4, height: 4, channels: 4, background: { r: Math.round(255 * toSrgb(g.factor[0])), g: Math.round(255 * toSrgb(g.factor[1])), b: Math.round(255 * toSrgb(g.factor[2])), alpha: 1 } } }).png().toBuffer()
-          : await (await tint(texture.getImage(), g.factor)).png().toBuffer();
-      texture = doc.createTexture(`paint-${String(paints.length)}`).setImage(new Uint8Array(img)).setMimeType('image/png').setURI(`paint-${String(paints.length)}.png`);
-    }
-    const size = GLTF.ImageUtils.getSize(texture.getImage(), texture.getMimeType());
-    outTextures.push({ name: basename(texture.getURI() || texture.getName() || 'texture'), slot: 'baseColor', size, bytes: texture.getImage().byteLength, downscaled: false });
-    paints.push({ groups: [g], texture, cutout: g.cutout, doubleSided: g.doubleSided, atlas: false });
-  }
-  // 4 — one primitive per paint.
-  const record = [];
-  for (let k = 0; k < paints.length; k += 1) {
-    const p = paints[k];
-    const material = doc.createMaterial(`paint-${String(k)}`).setBaseColorTexture(p.texture).setBaseColorFactor([1, 1, 1, 1]).setMetallicFactor(0).setRoughnessFactor(1).setDoubleSided(p.doubleSided);
-    if (p.cutout) material.setAlphaMode('MASK').setAlphaCutoff(0.5);
-    const P = [];
-    const N = [];
-    const UV = [];
-    const JO = [];
-    const WE = [];
-    const IX = [];
-    const ranges = [];
-    for (const g of p.groups) {
-      for (const member of g.members) {
-        const prim = member.prim;
-        const base = P.length / 3;
-        const pos = readAll(prim.getAttribute('POSITION'));
-        const count = pos.length / 3;
-        const index = prim.getIndices() !== null ? Array.from(prim.getIndices().getArray()) : Array.from({ length: count }, (_, i) => i);
-        const nor = prim.getAttribute('NORMAL') !== null ? readAll(prim.getAttribute('NORMAL')) : faceNormals(pos, index);
-        const uvA = prim.getAttribute(`TEXCOORD_${String(member.set)}`);
-        const uv = uvA !== null ? readAll(uvA) : new Float32Array(count * 2).fill(0.5);
-        const jo = readAll(prim.getAttribute('JOINTS_0'));
-        const we = readAll(prim.getAttribute('WEIGHTS_0'));
-        for (let i = 0; i < count; i += 1) {
-          P.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
-          N.push(nor[i * 3], nor[i * 3 + 1], nor[i * 3 + 2]);
-          let u = uv[i * 2];
-          let v = uv[i * 2 + 1];
-          if (p.atlas) {
-            const c = g.texture === null ? 0.5 : u - member.tile[0];
-            const r = g.texture === null ? 0.5 : v - member.tile[1];
-            u = (g.atlas.col * tileSize + G + Math.min(1, Math.max(0, c)) * (tileSize - 2 * G)) / A;
-            v = (g.atlas.row * tileSize + G + Math.min(1, Math.max(0, r)) * (tileSize - 2 * G)) / A;
-          } else if (g.texture === null) {
-            u = 0.5;
-            v = 0.5;
-          }
-          UV.push(u, v);
-          for (let c = 0; c < 4; c += 1) {
-            JO.push(jo[i * 4 + c]);
-            WE.push(we[i * 4 + c]);
-          }
+    for (const member of g.members) {
+      const prim = member.prim;
+      const base = P.length / 3;
+      const pos = readAll(prim.getAttribute('POSITION'));
+      const count = pos.length / 3;
+      const index = prim.getIndices() !== null ? Array.from(prim.getIndices().getArray()) : Array.from({ length: count }, (_, i) => i);
+      const nor = prim.getAttribute('NORMAL') !== null ? readAll(prim.getAttribute('NORMAL')) : faceNormals(pos, index);
+      const uvA = prim.getAttribute(`TEXCOORD_${String(keepUv ? 0 : member.set)}`);
+      const uv = uvA !== null ? readAll(uvA) : new Float32Array(count * 2).fill(0.5);
+      const jo = readAll(prim.getAttribute('JOINTS_0'));
+      const we = readAll(prim.getAttribute('WEIGHTS_0'));
+      for (let i = 0; i < count; i += 1) {
+        P.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+        N.push(nor[i * 3], nor[i * 3 + 1], nor[i * 3 + 2]);
+        let u = uv[i * 2];
+        let v = uv[i * 2 + 1];
+        if (useAtlas) {
+          const r = g.region;
+          const c = g.texture === null ? 0.5 : Math.min(1, Math.max(0, (u - member.origin[0]) / g.span[0]));
+          const w = g.texture === null ? 0.5 : Math.min(1, Math.max(0, (v - member.origin[1]) / g.span[1]));
+          u = (r.x + c * r.w) / atlas.size[0];
+          v = (r.y + w * r.h) / atlas.size[1];
+        } else if (g.texture === null && !keepUv) {
+          u = 0.5;
+          v = 0.5;
         }
-        for (const x of index) IX.push(base + x);
-        ranges.push({ part: member.part?.name ?? '(part)', material: member.part?.material ?? null, first: base, count });
+        UV.push(u, v);
+        for (let c = 0; c < 4; c += 1) {
+          JO.push(jo[i * 4 + c]);
+          WE.push(we[i * 4 + c]);
+        }
       }
+      for (const x of index) IX.push(base + x);
+      ranges.push({ part: member.part?.name ?? '(part)', material: member.part?.material ?? null, first: base, count });
     }
-    const prim = doc
-      .createPrimitive()
-      .setMaterial(material)
-      .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(P)).setBuffer(buffer))
-      .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(new Float32Array(N)).setBuffer(buffer))
-      .setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(new Float32Array(UV)).setBuffer(buffer))
-      .setAttribute('JOINTS_0', doc.createAccessor().setType('VEC4').setArray(new Uint8Array(JO)).setBuffer(buffer))
-      .setAttribute('WEIGHTS_0', doc.createAccessor().setType('VEC4').setArray(new Float32Array(WE)).setBuffer(buffer))
-      .setIndices(doc.createAccessor().setType('SCALAR').setArray(P.length / 3 <= 65534 ? new Uint16Array(IX) : new Uint32Array(IX)).setBuffer(buffer));
-    bodyMesh.addPrimitive(prim);
-    record.push({ material: `paint-${String(k)}`, atlas: p.atlas, cutout: p.cutout, texture: outTextures[k].name, triangles: IX.length / 3, parts: ranges });
   }
+  const prim = doc
+    .createPrimitive()
+    .setMaterial(material)
+    .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(P)).setBuffer(buffer))
+    .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(new Float32Array(N)).setBuffer(buffer))
+    .setAttribute('JOINTS_0', doc.createAccessor().setType('VEC4').setArray(new Uint8Array(JO)).setBuffer(buffer))
+    .setAttribute('WEIGHTS_0', doc.createAccessor().setType('VEC4').setArray(new Float32Array(WE)).setBuffer(buffer))
+    .setIndices(doc.createAccessor().setType('SCALAR').setArray(P.length / 3 <= 65534 ? new Uint16Array(IX) : new Uint32Array(IX)).setBuffer(buffer));
+  if (writeUv) prim.setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(new Float32Array(UV)).setBuffer(buffer));
   const droppedNormals = [];
-  for (const prim of prims) {
-    const m = prim.getMaterial();
+  for (const old of prims) {
+    const m = old.getMaterial();
     if (m?.getNormalTexture() !== null && m?.getNormalTexture() !== undefined) droppedNormals.push(`${m.getName()}.normal`);
-    bodyMesh.removePrimitive(prim);
-    prim.dispose();
+    bodyMesh.removePrimitive(old);
+    old.dispose();
   }
+  bodyMesh.addPrimitive(prim);
   await doc.transform(GLTF_FUNCTIONS.prune({ keepAttributes: true }));
   textures.length = 0;
-  textures.push(...outTextures);
+  if (outTexture !== null) textures.push(outTexture);
+  const record = [{ material: 'paint-0', atlas: useAtlas, cutout, texture: outTexture?.name ?? null, triangles: IX.length / 3, parts: ranges }];
   console.log(
-    `  paint       ${String(prims.length)} parts → ${String(record.length)} primitive(s): ${record
-      .map((r) => `${r.material} ${r.atlas ? `(atlas of ${String(atlasGroups.length)} tiles, ${String(A)} px)` : `(${r.texture})`}${r.cutout ? ' cutout' : ''} ${String(r.triangles)} tris`)
-      .join('; ')}`,
+    `  paint       ${String(prims.length)} part(s), ${String(all.length)} paint(s) → ONE primitive, ONE material: ` +
+      (useAtlas
+        ? `an atlas of ${String(all.length)} region(s), ${atlas.size.join('×')} px at ×${String(atlas.scale)}${all.some((g) => g.span[0] > 1 || g.span[1] > 1) ? ` (repeating: ${all.filter((g) => g.span[0] > 1 || g.span[1] > 1).map((g) => `${g.texture === null ? 'swatch' : nameOf(g.texture)} ${g.span.join('×')} tiles`).join(', ')})` : ''}`
+        : outTexture !== null
+          ? `its own ${outTexture.name} (${outTexture.size?.join('×') ?? '?'})`
+          : 'untextured (its factor)') +
+      `${cutout ? ', cutout' : ''}${doubleSided ? ', double-sided' : ''}, ${String(IX.length / 3)} tris`,
   );
-  return { primitives: record, atlas: useAtlas ? { size: A, tile: tileSize, gutter: G, tiles: atlasGroups.length } : null, droppedNormalTextures: [...new Set(droppedNormals)] };
+  return { primitives: record, atlas, droppedNormalTextures: [...new Set(droppedNormals)] };
 }
 
 /** Area-weighted vertex normals for a part that brought none. */

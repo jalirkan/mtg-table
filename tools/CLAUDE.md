@@ -422,7 +422,7 @@ root `CLAUDE.md`.
    skin is the identity at rest), skins an unskinned cloak by height
    (`spine_03` / `spine_02` / `pelvis`), decimates with the meshoptimizer the CLI
    pins, keeps base colour ≤ 1024 px (normal maps kept until the paint step
-   drops them, an atlas ≤ 2048 px — **D194**), and runs meshopt last. The
+   drops them, an atlas ≤ 2048 px — **D194**, **D240**), and runs meshopt last. The
    automatic rig map knows Auto-Rig Pro, Mixamo, Unreal, VRM and Character
    Creator; `bones.json` beside the model overrides it joint by joint.
 5. **There is one retarget, and it is proven.** `tools/personal/retarget.mjs` is
@@ -456,9 +456,13 @@ root `CLAUDE.md`.
    dev server prints every skip with its reason. **Prepare bakes our clip set in**
    (the `agent`'s twelve clips through `retarget.mjs`, the hip scaled — the
    rotations would bind as they are, the absolute hip would not) and runs **the
-   paint step** (one primitive per base colour, the tileable ones in one atlas,
-   base colour only), so the arena loads a file that already speaks its rig, clips
-   and draw-call budget and retargets nothing. **`--joints bind|rest` reads the
+   paint step** — since **D240** ONE skinned primitive under ONE material: several
+   paints are regions of one atlas of at most `ATLAS_MAX` (2048) px, a repeating
+   paint laid out over the whole UV tiles it spans (`lib.mjs`'s `uvSpanOf`,
+   `packAtlas`, `tileTexels`), base colour only — so the arena loads a file that
+   already speaks its rig, clips and draw-call budget (one call a figure) and
+   retargets nothing; `check.mjs` fails a file that draws more, and the dev route
+   counts the primitives in the very file it serves. **`--joints bind|rest` reads the
    joints and the vertices in ONE pose** — phase 1 read them in two, and a model
    whose rest is not its bind came out with folded arms or a backwards foot.
 7. **Prepare exposes the paint, once, in the file** (**D198**). The arena draws a

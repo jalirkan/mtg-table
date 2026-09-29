@@ -200,7 +200,11 @@ export const MANIFEST_VERSION = 2;
  *   disabled     optional: true, or the reason as a sentence — keeps the model out of the game's index (the dev
  *                route skips it and prints the reason)
  *   paint        optional: { primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }],
- *                atlas, droppedNormalTextures } — one primitive per base colour (D194); null for an untextured model
+ *                atlas, droppedNormalTextures, exposure } — since D240 exactly ONE primitive under one material (a
+ *                figure is one draw call); `atlas` null for a model of one paint, else { size: [w, h], budget,
+ *                scale, gutter, regions: [{ source, factor, cutout, span, rect, parts, gain }] }. A manifest from
+ *                before D240 may carry two primitives or `paint: null`: check.mjs fails its model and the dev
+ *                route skips it — prepare it again
  */
 export const MANIFEST_KEYS = [
   'version',
@@ -291,7 +295,7 @@ export function validateManifest(m) {
   if (!Array.isArray(m.textures)) errors.push('textures must be a list');
   else {
     m.textures.forEach((x, i) => {
-      const most = x?.slot === 'atlas' ? 2048 : 1024;
+      const most = x?.slot === 'atlas' ? ATLAS_MAX : 1024;
       if (!isObject(x) || !['baseColor', 'normal', 'atlas'].includes(x.slot) || !Array.isArray(x.size) || x.size.some((n) => !isCount(n) || n > most)) {
         errors.push(`textures[${i}] must be a baseColor or normal texture no larger than 1024 px, or an atlas no larger than 2048`);
       }
@@ -311,6 +315,13 @@ export function validateManifest(m) {
   }
   if ('paint' in m && m.paint !== null && (!isObject(m.paint) || !Array.isArray(m.paint.primitives) || m.paint.primitives.length === 0)) {
     errors.push('paint must be null or { primitives: [one per base colour], atlas }');
+  } else if (isObject(m.paint) && m.paint.primitives.length !== 1) {
+    errors.push(`paint.primitives has ${String(m.paint.primitives.length)} entries: since D240 a prepared model is ONE primitive under one material (one draw call a figure) — prepare it again`);
+  } else if (isObject(m.paint) && isObject(m.paint.atlas)) {
+    const size = m.paint.atlas.size;
+    if (!Array.isArray(size) || size.length !== 2 || size.some((n) => !isCount(n) || n < 1 || n > ATLAS_MAX)) {
+      errors.push(`paint.atlas.size must be [width, height], each at most ${String(ATLAS_MAX)} px (D240's texture budget)`);
+    }
   }
   return errors;
 }
@@ -1710,4 +1721,126 @@ export function exposureGain(mode, p90, { target = EXPOSURE_TARGET, max = EXPOSU
   if (mode !== 'auto') return Number(mode);
   if (!(p90 > 0) || p90 >= target) return 1;
   return Math.min(max, target / p90);
+}
+
+// ---------------------------------------------------------------------------
+// The atlas (D240): one material a figure, every paint in one sheet
+// ---------------------------------------------------------------------------
+
+/**
+ * **The texture budget of a prepared model** (D240): its one base-colour texture
+ * is at most `ATLAS_MAX` px a side — 2048², 16 MiB of RGBA8 on the GPU before
+ * mipmaps. A model of one paint keeps its own texture (≤ 1024 px since D191, so
+ * well inside it); a model of several is packed into one sheet no larger than
+ * this, scaled down as a whole when its paints would not fit at their own size.
+ */
+export const ATLAS_MAX = 2048;
+/** The copied (or, for a repeating paint, wrapped) edge around every region: mip levels 0–3 stay inside it. */
+export const ATLAS_GUTTER = 8;
+/** A swatch region's side, for a part painted by its factor alone. */
+export const ATLAS_SWATCH = 16;
+
+/**
+ * **Which whole UV tiles a primitive's UVs cover** (D240): the integer tile its
+ * range starts in, give or take 1% (an exporter's −0.004 or 1.0005 is not a
+ * wrap), and how many tiles each axis spans from there — 1 for a paint whose UVs
+ * sit in one tile, 2 for Doom's tunic (`u` up to 1.87 on a repeating texture).
+ */
+export function uvSpanOf(lo, hi) {
+  const origin = lo.map((x) => Math.floor(x + 0.01));
+  const span = hi.map((x, k) => Math.max(1, Math.ceil(x - origin[k] - 0.01)));
+  return { origin, span };
+}
+
+/**
+ * **Pack regions into one sheet** (D240) — a skyline packer, bottom-left, the
+ * tallest region first. `regions` are natural sizes in px (a paint's texture
+ * times the tiles its UVs span); each is placed with `gutter` px on every side.
+ * At scale 1, every sheet width from the widest region up to `max` (in steps of
+ * 16) is tried and the sheet of least area whose height fits `max` is kept (the
+ * squarer on a tie) — so Peggy's 1024² beside her two 512² is 1568 × 1040, not a
+ * 2048 square. When nothing fits at scale 1, the largest scale (to 1/1000) at
+ * which they fit a `max`-wide sheet — every region scaled alike, so the paints
+ * keep their texel density relative to each other. The height is cut to what the
+ * regions use (a multiple of 4). Returns the inner rectangle of each region, in
+ * input order, or `null` when nothing fits even at 1/64.
+ */
+export function packAtlas(regions, { max = ATLAS_MAX, gutter = ATLAS_GUTTER } = {}) {
+  const order = regions.map((_, i) => i).sort((a, b) => regions[b].h - regions[a].h || regions[b].w - regions[a].w || a - b);
+  /** The regions on a sheet `width` wide at `scale`, bottom-left on the skyline; `null` if one is wider than the sheet or the stack is taller than `max`. */
+  const tryPack = (width, scale) => {
+    const rects = new Array(regions.length);
+    let skyline = [{ x: 0, y: 0, w: width }];
+    let height = 0;
+    for (const i of order) {
+      const w = Math.max(1, Math.round(regions[i].w * scale));
+      const h = Math.max(1, Math.round(regions[i].h * scale));
+      const cw = w + 2 * gutter;
+      const ch = h + 2 * gutter;
+      if (cw > width) return null;
+      let best = null;
+      for (let k = 0; k < skyline.length; k += 1) {
+        const x = skyline[k].x;
+        if (x + cw > width) break;
+        let y = 0;
+        for (let j = k; j < skyline.length && skyline[j].x < x + cw; j += 1) y = Math.max(y, skyline[j].y);
+        if (best === null || y < best.y || (y === best.y && x < best.x)) best = { x, y };
+      }
+      if (best === null || best.y + ch > max) return null;
+      rects[i] = { x: best.x + gutter, y: best.y + gutter, w, h };
+      height = Math.max(height, best.y + ch);
+      // The skyline under the new region is its top; what it covers of the segments either side is cut away.
+      const next = [];
+      for (const seg of skyline) {
+        const end = seg.x + seg.w;
+        if (end <= best.x || seg.x >= best.x + cw) next.push(seg);
+        else {
+          if (seg.x < best.x) next.push({ x: seg.x, y: seg.y, w: best.x - seg.x });
+          if (end > best.x + cw) next.push({ x: best.x + cw, y: seg.y, w: end - best.x - cw });
+        }
+      }
+      next.push({ x: best.x, y: best.y + ch, w: cw });
+      next.sort((p, q) => p.x - q.x);
+      skyline = [];
+      for (const seg of next) {
+        const last = skyline[skyline.length - 1];
+        if (last !== undefined && last.y === seg.y && last.x + last.w === seg.x) last.w += seg.w;
+        else skyline.push({ ...seg });
+      }
+    }
+    return { width, height: Math.min(max, Math.ceil(height / 4) * 4), scale, rects };
+  };
+  const widest = Math.max(...regions.map((r) => r.w)) + 2 * gutter;
+  let best = null;
+  for (let width = Math.ceil(Math.max(16, widest) / 16) * 16; width <= max; width += 16) {
+    const packed = tryPack(width, 1);
+    if (packed === null) continue;
+    const area = packed.width * packed.height;
+    const bestArea = best === null ? Infinity : best.width * best.height;
+    if (area < bestArea || (area === bestArea && Math.max(packed.width, packed.height) < Math.max(best.width, best.height))) best = packed;
+  }
+  if (best !== null) return best;
+  let lo = 1 / 64;
+  if (tryPack(max, lo) === null) return null;
+  let hi = 1;
+  for (let k = 0; k < 20; k += 1) {
+    const mid = (lo + hi) / 2;
+    if (tryPack(max, mid) !== null) lo = mid;
+    else hi = mid;
+  }
+  return tryPack(max, Math.floor(lo * 1000) / 1000);
+}
+
+/** RGBA texels (`w` × `h`) repeated `su` × `sv` times — a repeating paint laid out over the tiles its UVs span. */
+export function tileTexels(rgba, w, h, su, sv) {
+  if (su === 1 && sv === 1) return rgba;
+  const W = w * su;
+  const out = new Uint8Array(W * h * sv * 4);
+  for (let ty = 0; ty < sv; ty += 1) {
+    for (let y = 0; y < h; y += 1) {
+      const row = rgba.subarray(y * w * 4, (y + 1) * w * 4);
+      for (let tx = 0; tx < su; tx += 1) out.set(row, ((ty * h + y) * W + tx * w) * 4);
+    }
+  }
+  return out;
 }

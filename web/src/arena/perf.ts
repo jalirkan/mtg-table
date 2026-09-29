@@ -248,8 +248,10 @@ export function worstOf(samples: readonly number[]): number {
  * **The personal tier's budget** (phase 2, **D195**; its triangle line is **D197**,
  * `docs/guides/personal-tier.md`). A personal model (`personal/models/<slug>/`,
  * dev server only, D190) replaces a CC0 body of 1,400 triangles and one draw call
- * — and its props — with one of up to {@link PERSONAL_TRI_CAP} triangles and one
- * call per paint (its own texture, its own program variant).
+ * — and its props — with one of up to {@link PERSONAL_TRI_CAP} triangles and, since
+ * **D240**, exactly one draw call too: prepare folds every paint into one atlas
+ * under one material, so a dressed figure is ONE skinned primitive (its own
+ * texture, its own program variant).
  *
  * **Report 13 §8.2's 30,000 triangles is the REPOSITORY tier's line** — the CC0
  * table, the build, what anyone else can run — and it has no headroom at
@@ -258,16 +260,28 @@ export function worstOf(samples: readonly number[]): number {
  * product of caps: at most {@link PERSONAL_TABLE_TRIS} personal triangles on the
  * table at once, the duelists' models counted first. The worst case is therefore
  * that number exactly — measured with `tools/arena-bench.mjs --index 316
- * --personal`, the budget filled by six 6,000-triangle, two-paint models (both
- * duelists and four creatures), on the GTX 1080 and on SwiftShader
- * (`docs/evidence/personal-tier.md` §18). A model over either per-model cap is
+ * --personal`, the budget filled by six 6,000-triangle models (both duelists and
+ * four creatures), on the GTX 1080 and on SwiftShader
+ * (`docs/evidence/personal-tier.md` §18; they were two-paint models then, and a
+ * dressed figure has been one call since D240 —
+ * `docs/evidence/arena-personal-polish.md`). A model over either per-model cap is
  * never loaded (the dev route and the overlay both say why); a creature whose
  * model would cross the sum, or past {@link PERSONAL_MAX_FIGURES}, keeps its CC0
  * figure, in placement order — "degrade, don't stutter" (report 09 §9.2 rule 9).
  */
 export const PERSONAL_TRI_CAP = 8000;
-/** The most paints (draw calls a figure) a personal model may bring. */
-export const PERSONAL_CALL_CAP = 2;
+/**
+ * **The draw calls a personal model may cost a figure: ONE** (**D240**, PLAN
+ * follow-up 33). `tools/personal/prepare.mjs` packs every paint into one atlas and
+ * merges every part into one skinned primitive under one material, and
+ * `check.mjs` fails a file that draws more; the dev route counts the primitives
+ * in the very `model.glb` it would serve and skips a file of more (a model
+ * prepared before D240 — Doom's hood and tunic were two), and the arena's reader
+ * holds the index to the same number. It was 2 (D195): a two-paint figure was one
+ * call more than the CC0 body it replaced, and the worst case crossed report 13
+ * §8.2's 90-call line by that.
+ */
+export const PERSONAL_CALL_CAP = 1;
 /** The most creatures dressed in personal models at once (the two duelists are not counted). */
 export const PERSONAL_MAX_FIGURES = 4;
 /**

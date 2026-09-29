@@ -448,6 +448,8 @@ test('every KeyActionId is handled in at least one renderer’s dispatcher', () 
     // T8: the arena's camera rows plan `camera` / `spectator` only where there
     // is a camera; with this on, their dispatch in Arena.tsx is checked too.
     arena: true,
+    // D241: a face-up card under the pointer, so `I` plans a real `inspect`.
+    inspect: { href: '#workshop?card=Doctor+Doom&view=inspect', name: 'Doctor Doom' },
   };
 
   const unhandled: string[] = [];
@@ -575,6 +577,49 @@ test('W opens the workshop from the arena, says so on the board, and still spend
   assert.equal(planKey(ev('w', { ctrlKey: true }), ARENA), null);
   assert.equal(planKey(ev('w', { target: { tagName: 'INPUT' } }), ARENA), null);
   assert.equal(chordFor('openWorkshop'), 'W');
+});
+
+// ---------------------------------------------------------------------------
+// D241 — I: inspect from the table
+// ---------------------------------------------------------------------------
+
+test('I inspects the card the arena names, says why when it names none, is inert on the board, and never acts', () => {
+  const link = { href: '#workshop?card=Doctor+Doom&view=inspect', name: 'Doctor Doom' };
+  assert.deepEqual(planKey(ev('i'), { ...ARENA, inspect: link })?.plan, { kind: 'inspect', ...link });
+  // A picture key: legal on a replay and behind an open ask — it is navigation, and it sends nothing.
+  assert.deepEqual(planKey(ev('i'), { ...ARENA, live: false, askOpen: true, inspect: link })?.plan, { kind: 'inspect', ...link });
+  // The arena's planner said why not (a face-down card, a card with no figure): the key says it.
+  const hidden = planKey(ev('i'), { ...ARENA, inspect: { why: 'a face-down or hidden card is never inspected' } });
+  assert.deepEqual(hidden?.plan, { kind: 'inert', why: 'a face-down or hidden card is never inspected' });
+  // Nothing hovered and nothing clicked.
+  for (const inspect of [undefined, null]) {
+    const none = planKey(ev('i'), { ...ARENA, inspect });
+    assert.equal(none?.plan.kind, 'inert');
+    assert.match(none?.plan.kind === 'inert' ? none.plan.why : '', /hover or click a face-up card/);
+  }
+  // On the board: bound, and says where it lives — even with a link in the context, which only the arena gives.
+  const board = planKey(ev('i'), { ...LIVE, inspect: link });
+  assert.equal(board?.binding.id, 'inspectCard');
+  assert.equal(board?.plan.kind, 'inert');
+  assert.match(board?.plan.kind === 'inert' ? board.plan.why : '', /press V/);
+  // Ctrl+I is the browser's; a text field owns its letters; the chip prints the chord.
+  assert.equal(planKey(ev('i', { ctrlKey: true }), { ...ARENA, inspect: link }), null);
+  assert.equal(planKey(ev('i', { target: { tagName: 'INPUT' } }), { ...ARENA, inspect: link }), null);
+  assert.equal(chordFor('inspectCard'), 'I');
+  // No other row takes I.
+  assert.deepEqual(KEYMAP.filter((b) => b.keys.includes('i')).map((b) => b.id), ['inspectCard']);
+});
+
+test('the I dispatcher is the arena’s: it navigates to the plan’s href and sends no act', () => {
+  const arena = readFileSync(fileURLToPath(new URL('../src/arena/Arena.tsx', import.meta.url)), 'utf8');
+  const at = arena.indexOf("case 'inspect':");
+  assert.ok(at > 0, 'Arena.tsx has no case for the inspect plan');
+  const branch = arena.slice(at, arena.indexOf('return;', at));
+  assert.match(branch, /openInspect\(plan\.href\)/);
+  assert.doesNotMatch(branch, /onAct|onAnswer/, 'inspect is navigation: it must send nothing');
+  // The context's `inspect` comes from the one planner, fed the hovered card, else the last clicked.
+  assert.match(arena, /inspect: inspectContextOf\(inspectTarget\)/);
+  assert.match(arena, /inspectTargetOf\(/);
 });
 
 test('the W dispatcher in main.tsx listens in the capture phase, and only where the arena is really mounted', () => {

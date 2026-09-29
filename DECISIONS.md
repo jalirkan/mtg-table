@@ -9910,3 +9910,178 @@ now to the texel.
   grey a painting that carries its own tones (Fury's face), and a screen-space
   grid stands still while the painting slides behind it, a screen door in the
   window. The painting stays unlit and unmarked.
+
+---
+
+## D240 — A dressed figure is ONE draw call: prepare packs every paint into one atlas — a repeating paint laid out over the UV tiles it spans — and merges the model into one skinned primitive under one material; `PERSONAL_CALL_CAP` is 1
+
+*Branch `arena-personal-polish` (worktree `mtg-table-t2q2`, off `main`'s
+`9998ec5`). The lane's reserved range is D240–D244 (D200); it used two.*
+
+**2026-09-29** (`docs/evidence/arena-personal-polish.md`; the manual is
+`docs/guides/personal-tier.md`'s *The atlas*; PLAN.md's personal-tier follow-up
+33, closed)
+
+**Supersedes in part** D194 point 2 (one primitive per PAINT, an atlas only where
+the UVs sit in one tile, a wrapping paint keeping its own texture) and D196 point
+2 (a model of two paints as a primary material and a SIBLING); amends D195 point
+4 and D197 (`PERSONAL_CALL_CAP` 2 → 1).
+
+**Decision.**
+
+1. **One primitive, one material, every model.** `tools/personal/prepare.mjs`'s
+   paint step groups the parts by what they paint with (the base-colour texture,
+   the factor, whether the alpha cuts) as before, and then: one group keeps its
+   own texture (the factor baked into a copy; a repeating paint repeats as it
+   came), untextured its factor alone; two or more are REGIONS of one atlas. Every
+   part is then merged into ONE skinned primitive, `paint-0`, under ONE material
+   (MASK if any region cuts — a region that does not cut has its alpha set
+   opaque; double-sided if any part was), its parts' vertex ranges recorded as
+   before. `model.glb` has exactly one mesh, one primitive and one material.
+2. **A repeating paint is laid out over the tiles its UVs span** (`lib.mjs`'s
+   `uvSpanOf`: the whole UV tiles a primitive covers, 1% either side not a wrap).
+   Its region is the texture repeated that many times across and down (Doom's
+   tunic, `u` to 1.87 on a repeating texture: twice side by side), each part's
+   UVs are remapped from its own tile origin into the region, so the texel a
+   vertex names is the one it named before — a triangle that crossed the tile
+   edge crosses into the next copy, exactly as REPEAT sampling drew it. Its
+   gutter is WRAPPED (`extendWith: 'repeat'`), a one-tile region's copied.
+3. **The packer and the texture budget** (`lib.mjs`'s `packAtlas`, `ATLAS_MAX`
+   2048, `ATLAS_GUTTER` 8). Regions at their natural size (the source texture,
+   ≤ 1024 px since D191, times its span), skyline-packed bottom-left, tallest
+   first; at scale 1 on the sheet of least area whose width and height are at
+   most 2048 (widths in steps of 16), else every region scaled alike to the
+   largest scale that fits 2048 wide — never a sheet over 2048² (16 MiB of RGBA8
+   before mipmaps). What the models need: **Doom** 2048 × 2048 at ×0.984 (the
+   hood 1008² and the tunic twice, 2015 × 1008 — the one sheet that needs the
+   whole budget, and 1,024² of it empty, because the tunic is as wide as the
+   sheet); **Coulson** 2048 × 1536 at ×0.484 (twelve 1024² paints at 496 px,
+   D194's density); **the Hulks** their own 1024² (one paint, no atlas); Fury his
+   own 512²; Peggy 1056 × 1568 and the MCU Wasp 1040 × 1568, both at ×1 — D194's
+   fixed 512-px tiles had shrunk their 1024-px paints to 496. The manifest
+   records the sheet (`paint.atlas`: size, budget, scale, gutter, and per region
+   its source, factor, span, rectangle, parts and the exposure gain it carries);
+   `validateManifest` refuses two primitives and a sheet over 2048.
+4. **The exposure (D198) is unchanged and runs after the packing**, on the one
+   texture, so its one gain reaches every source's region alike — recorded per
+   region. The resample moved two measurements a little: Doom's p90 0.0267 →
+   0.0258 (the atlas at ×0.984), gain ×7.491 → ×7.752; Peggy's ×1.347 → ×1.299
+   (her 1024-px paint at its own size again).
+5. **Every gate counts ONE.** `check.mjs` step 1 fails a `model.glb` that draws
+   more than one call a figure (meshes, skinned meshes, materials and material
+   groups all counted) and lists "one skinned primitive under one material" in
+   what it judged; the dev route reads the primitives and materials out of the
+   very `model.glb` it would serve (its glTF JSON chunk, `glbDrawsOf`) — not the
+   manifest's word — and skips a model of more, or a file that is not a glTF
+   binary, with "prepare it again"; `arena/perf.ts`'s `PERSONAL_CALL_CAP` is 1,
+   which the dev route and `personal.ts`'s reader both hold the index to.
+   `figureMaterial.ts`'s `dressFigureMeshes` is one material on every mesh — the
+   SIBLING materials of D196 are gone with the second paint.
+6. **Measured** (bloom off; the census reads `gl.info.render` at the exact frame
+   and counts the dressed figures in the scene graph, `var/polish/census.mjs`):
+   on the GTX 1080 and on SwiftShader alike, **every dressed figure costs exactly
+   one call**, the villain duelist and Doom's card included. `villain-doom-248`'s
+   worst frame (`@392`/`@393`, the static sweep of all 401 frames) with the tier
+   on: **130 → 128 calls**, where the tier off is 128; over the whole sweep the
+   tier on was over the tier off on 257 frames by up to 2 calls before, and on
+   none after (equal on 259, fewer on 142 — a dressed figure sheds its props).
+   `g1`@316 tier on 78 → 77 (off 83), @355 85 → 84 (off 89). The pedestal with
+   Doom dressed: 13 → 12 calls.
+
+**Rationale.** The personal tier's worst case crossed report 13 §8.2's 90-call
+line by exactly its second paints (evidence §19), and the villain table — over
+the bench's 120 before any identity (D222) — paid two more for Doom alone. A
+figure's draw call is the one number the tier adds that no budget could spend
+away: the triangles are a sum the lookup spends (D197), the calls were a product
+of paints. Folding them in the tool that runs once per model keeps the arena's
+loader a plain load (D194's argument): the check, the route and the reader each
+count the file and refuse the rest. Repeating the wrapping texture into its
+region is the only fold that draws exactly what REPEAT drew: the UV range is
+kept, the image is laid out to match it.
+
+**Rejected.**
+
+- **Clamping or wrapping a wrapping part's UVs into one tile** (`u mod 1` per
+  vertex). A triangle that crosses the tile edge would then sample the whole
+  texture backwards across its face; splitting every such triangle changes the
+  mesh the check judged.
+- **Keeping D194's fixed 512-px tiles.** They made every paint the same size —
+  Peggy's and the Wasp's 1024-px bodies drawn at 496 — and would have put Doom's
+  tunic, which needs two tiles across, at a quarter of its density.
+- **Merging the paints at runtime** (a canvas atlas at load). The Node-side check
+  would not see what the arena draws (D194's rejected alternative), and the page
+  would pay the packing on every load.
+- **A texture array or a second UV set with an index** to keep each paint at its
+  own texture. One draw call either way, but a program variant of its own, and
+  the paint input path (D144, D196) reads one map.
+- **Keeping the sibling materials "just in case".** With every gate counting one,
+  the only path that could reach them is a model the route refuses; one material
+  a figure is also what the frame loop writes.
+
+---
+
+## D241 — Inspect from the table: `I` — and a chip beside the art credit — opens the workshop's inspect view on the card under the pointer, face up and with a figure only; the workshop's arena link comes back to the same frame
+
+*Branch `arena-personal-polish`; the lane's reserved range D240–D244.*
+
+**2026-09-29** (`docs/evidence/arena-personal-polish.md` §5–§6)
+
+**Decision.**
+
+1. **A keymap row** (`web/src/keys.ts`, `inspectCard`, chord `I` — bound by no
+   other row and by nothing in Forge): in the arena it plans `{ kind: 'inspect',
+   href, name }` for the card the arena names in `KeyContext.inspect`, or an
+   `inert` with the arena's reason; on the board it is `inert` and says "press V
+   first", as the camera rows do. A picture key: navigation, legal on a replay and
+   behind an open ask, and it sends nothing. `Arena.tsx`'s `case 'inspect'` sets
+   `window.location.hash` to the href — nothing else.
+2. **THE planner is `arena/inspect.ts`'s `inspectTargetOf(placement, pose)`**,
+   pure, fed the card under the pointer, else the last one clicked, else the last
+   one pointed at (so the pointer can travel from a card to the chip). Its gates,
+   all before the name is read: something to inspect; the placement drawn face up
+   and not a redacted stub (`Placement.back`, `isHidden` — hard rule 8's renderer
+   half, the same order `personal.ts`'s lookup keeps); a NAMED figure (a model,
+   not the anonymous disc — the inspect view is the figure in front of its
+   painting; `W` opens the workshop on anything). A face-down, hidden or redacted
+   card is `inert` with "a face-down or hidden card is never inspected", and is
+   never named — not in the chip, not in the key's hint, not in the URL.
+3. **The arena has no card zoom, so the button is on the hover surface**: an
+   inspect chip under the art credit (`.arena__inspect`, in the layer's widget
+   table with its `pointer-events: auto` rule) — a link, `⌕ inspect <name> · I`,
+   for an inspectable card, and an inert chip with its reason otherwise.
+4. **The URL is the workshop's own deep link with a view word**:
+   `#workshop?card=<name>&view=inspect` (`workshop/links.ts`'s `workshopHref(name,
+   'inspect')`, `workshopViewFromLocation`; spelled again in `arena/inspect.ts`
+   because nothing under `arena/` imports `workshop/`, D102, and a test holds the
+   two equal). The workshop opens its inspect camera when the location asks for
+   it, keeps `view=inspect` in its URL while inspecting (a reload stays there),
+   reads `?personal=0` as the arena does (so the pedestal is dressed exactly when
+   the table was), and the look is the page's own `?look=` query, which a hash
+   change leaves alone — the same look. A name the catalog has no exact entry for
+   opens the nearest match and says so.
+5. **The way back is the workshop's ▣ arena link**, and it returns to the same
+   frame: the replay's cursor survives the unmount (`main.tsx`'s `replayCursors`,
+   the mechanism the story page uses, D128); a live seat's socket is page-scoped
+   and survives, and the workshop's header already says when the game is waiting.
+
+**Rationale.** The inspect view is where the personal tier's models and the
+relief window are seen best, and the only way to it was to leave the table and
+find the card in the workshop's list. It is navigation from a picture to a page,
+so it belongs in the one keymap as a picture key and nowhere near the engine; and
+because it names a card, it is gated exactly as the other statement about what a
+card is (the personal lookup, D195) is gated — before the name is read, swept
+over the corpus made hostile with an ungated control that would leak.
+
+**Rejected.**
+
+- **Opening the inspect view INSIDE the arena** (an overlay on the canvas). A
+  second scene with the inspect camera would duplicate the pedestal's; the
+  workshop already is the arena pointed at one card (D102).
+- **Selecting a card by clicking it for inspection alone.** A click on the table
+  is `clickCard` to the engine (never gated, amendment M8); hover plus `I` asks
+  nothing of the game, and the last click is only remembered.
+- **Offering inspect for every face-up card.** A land or an instant has no figure
+  to stand in front of its painting; the chip says so and points at `W`.
+- **Importing the workshop's catalog into the arena** to know whether a card is
+  listed. D102 keeps the arena free of `workshop/`; the workshop says when a name
+  is not listed.

@@ -84,8 +84,9 @@ together, and each is a defect that was actually hit.
    the post-render sweep and never inside render; the sweep bumps a version only
    when a rect actually moved. Use the isomorphic layout-effect shim already in
    that file, or `renderToStaticMarkup` starts printing SSR warnings.
-4. **One keymap table.** `web/src/keys.ts` is the **24** rows (18 at M4; M7 added
-   `V` and `K`, Tier 2's slice 2 the three camera rows, the workshop `W`) plus two pure
+4. **One keymap table.** `web/src/keys.ts` is the **25** rows (18 at M4; M7 added
+   `V` and `K`, Tier 2's slice 2 the three camera rows, the workshop `W`, and the
+   arena's inspect `I`, D241) plus two pure
    functions (`bindingFor`, `planKey`); the handler and the `?`/`H` overlay both read it,
    and a test asserts every chord in `KEYMAP` appears in the overlay's markup.
    Adding a key is a row, never a new branch in a handler. Its dispatchers are
@@ -123,7 +124,7 @@ draws Forge's documented defaults, disabled, with the legend saying so;
 "hold priority" control**: Forge has no such feature, so D31's disabled toggle
 was removed rather than enabled.
 
-`npm --prefix web test` is **1060 `node --test` + 122 vitest (8 files)** standalone on
+`npm --prefix web test` is **1,099 `node --test` + 124 vitest (8 files)** standalone on
 this tree. Inside `check-all.sh` it is two jobs, `13b-render` (`vitest run`) and
 `13c-node` (`node --test`, after step 10, because its ws-log suite replays the
 logs `MTGTABLE_WS_LOGS` names, and after the build job `13a-build`, because
@@ -358,7 +359,10 @@ second, and renumbered them **D105–D108**. The workshop and `#cards` link to e
 
    Its URL is `#workshop?card=<name>` — read by `links.ts`'s `cardFromLocation`,
    the hash's query first as `#cards` reads its own, and written back as the list
-   moves. **`links.ts` is the one workshop module another page imports**:
+   moves — and `&view=inspect` opens (and, while inspecting, keeps) the inspect
+   camera (`workshopViewFromLocation`, **D241**): the arena's `I` writes it, the
+   page reads `?personal=0` as the arena does, and its ▣ arena link is the way
+   back to the same frame. **`links.ts` is the one workshop module another page imports**:
    `cards/CardDetail.tsx`'s *View in 3D* (live for a creature, a Vehicle, or a
    card with its own `cues.json` entry; greyed with the reason otherwise), and it
    imports only `catalog.json` and a type — so keep it that way, or the card

@@ -436,7 +436,7 @@ const Figure = memo(function Figure({
 
   const built = useMemo(() => {
     const instance = instantiateFigure(model);
-    // One material, or one per paint for a personal model (D196), on every mesh.
+    // One material on every mesh — a personal model is one paint too since D240.
     const material = dressFigureMeshes(instance.meshes, pose.tint, model.unitScale);
 
     // Two actions per clip: the cue lane's and the rest lane's (on the clip's

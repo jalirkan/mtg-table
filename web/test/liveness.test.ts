@@ -159,6 +159,8 @@ test('liveness: every widget the arena layer mounts can be clicked', () => {
     // T8's camera switcher: five views, the director, spectator.
     ViewSwitcher: ['.arena__views'],
     ArtCredit: ['.arena__credit'],
+    // D241: the inspect chip — a link to the workshop's inspect view, beside the credit.
+    InspectChip: ['.arena__inspect'],
     HotkeysOverlay: ['.overlay'],
   };
 
@@ -2229,4 +2231,37 @@ test('liveness: the personal tier — the reader is pure, the load paths are an 
   const layer = files.get('scene/FigureLayer.tsx') ?? '';
   assert.match(layer, /function modelOf\(pose: FigurePose/, 'FigureLayer lost its one model-source choice');
   assert.equal((layer.match(/library\.get\(pose\.modelId\)/g) ?? []).length, 1, 'FigureLayer chooses a model somewhere other than modelOf');
+});
+
+/**
+ * **Inspect from the table** (D241): `arena/inspect.ts` is THE planner of what
+ * `I` and the inspect chip open — pure, reading a card's name only after its
+ * placement's gates — and `Arena.tsx` is its one caller in the arena; what the
+ * arena does with the answer is navigation (a hash), never an act.
+ */
+test('liveness: the inspect planner is pure, Arena.tsx is its one caller, and inspecting only navigates (D241)', () => {
+  const files = new Map(arenaFiles().map((f) => [f.path, codeOf(f.source)]));
+  const planner = files.get('inspect.ts') ?? '';
+  assert.ok(planner.length > 500, 'arena/inspect.ts is gone — move this clause with it');
+  for (const imported of importsOf(planner)) {
+    assert.ok(
+      ['../protocol.ts', './figures/pose.ts', './layout.ts'].includes(imported.from),
+      `arena/inspect.ts imports ${imported.from}: the planner is pure`,
+    );
+  }
+  assert.ok(!/\b(window|document|localStorage|sessionStorage|performance|Date\.now|setTimeout|setInterval|fetch|XMLHttpRequest|THREE|React)\b/.test(planner), 'arena/inspect.ts touches the DOM, a clock, storage, three or React');
+  // The gates before the name: the placement's back and stub test, then the figure, THEN `.name`.
+  const body = planner.slice(planner.indexOf('export function inspectTargetOf('));
+  const gate = body.indexOf('placement.back || isHidden(placement.card)');
+  const read = body.indexOf('.name');
+  assert.ok(gate > 0 && read > gate, 'inspectTargetOf reads the name before the face-up gate');
+  const callers = [...files].filter(([path, code]) => path !== 'inspect.ts' && /\binspectTargetOf\(/.test(code)).map(([path]) => path);
+  assert.deepEqual(callers, ['Arena.tsx'], 'the planner is Arena.tsx’s alone');
+  // What the arena does with it: a hash, never an act.
+  const arena = files.get('Arena.tsx') ?? '';
+  const open = arena.slice(arena.indexOf('function openInspect('), arena.indexOf('function InspectChip('));
+  assert.match(open, /window\.location\.hash = href;/);
+  assert.doesNotMatch(open, /onAct|onAnswer|clickCard/);
+  const chip = arena.slice(arena.indexOf('function InspectChip('), arena.indexOf('function nameOf('));
+  assert.doesNotMatch(chip, /onAct|onAnswer|onClick/, 'the chip is a link, not a control');
 });

@@ -5,9 +5,11 @@ pipeline) and **D194**–**D196** (phase 2: the clips baked in, the paint step, 
 verdict file, and the loader that draws a personal model in the arena and the
 workshop — from the Vite dev server only); 2026-09-29, **D225**–**D226** (the
 relief cache: a depth map of every card's painting, and the workshop's inspect
-view drawing the painting as a window with depth — *The relief cache*, below).
-PLAN.md, *The personal tier* and *The relief window*, has the status and the
-follow-ups.*
+view drawing the painting as a window with depth — *The relief cache*, below);
+**D240**–**D241** (a dressed figure is ONE draw call — every paint in one atlas,
+*The atlas*, below — and `I` in the arena opens the inspect view on the card
+under the pointer). PLAN.md, *The personal tier*, *The relief window* and *Arena
+personal polish*, has the status and the follow-ups.*
 
 ## What it is
 
@@ -152,9 +154,10 @@ into our T; skins what had no skin; stands the model up facing +Z with its feet 
 the simplifier stops at its seams); **bakes our clip set in** — the twelve clips
 `figures.glb` gives the `agent`, carried onto this skeleton by `retarget.mjs`, the
 pelvis scaled by the two hip heights, as the file's own animations named by key
-(D194); runs **the paint step** — one primitive per base colour, every part whose
-UVs sit in one unit tile in a single atlas, base colour only (the normal maps
-go: the arena draws none); **exposes the paint** — the arena draws the model
+(D194); runs **the paint step** — every part merged into ONE skinned primitive
+under ONE material, a model of several paints packed into one atlas (a repeating
+paint laid out over the UV tiles it spans), base colour only (the normal maps
+go: the arena draws none — *The atlas*, below, D240); **exposes the paint** — the arena draws the model
 unlit, so a texture authored for a lit renderer (Doom's: 85% of his surface under
 linear luminance 0.02) is lifted until its surface's 90th percentile reads 0.2,
 one gain for the model, hue held, recorded in the manifest's `paint.exposure`
@@ -218,12 +221,12 @@ schema; an unknown key is an error, and keys starting with `_` are comments.
 | `triangles` | `{ source, render, budget, after, parts: [{ part, material, before, after, kept }] }` |
 | `pose` | `{ before: { verdict, upperArmDeg }, fix: "t" \| "none", turnsDeg, after: { … } }` — the arm angle measured before and after |
 | `skinned` | `[{ part, material, rule, vertices }]` — every mesh the tool gave weights to, and by which rule |
-| `textures` | `[{ name, slot: "baseColor" \| "normal", size, bytes, downscaled }]` — no side over 1024 |
+| `textures` | `[{ name, slot: "baseColor" \| "normal" \| "atlas", size, bytes, downscaled }]` — a paint's own texture no side over 1024, the atlas no side over 2048 (D240) |
 | `dropped` | `{ controlMeshes, meshesByFlag, controlTriangles, nodes, joints, textureSlots }` |
 | `units` | `{ sourceHeight, height, scale, facing: "+z", up: "+y" }` |
 | `prepared` | `{ tool, date, budget, bytes, sha256 }` |
 | `clips` | `{ keys, source, fps, baked, dropped }` — the clip set baked into `model.glb` (must include `idle`), and the source's own takes it dropped |
-| `paint` | optional: `{ primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }], atlas, droppedNormalTextures, exposure: { mode, target, max, gain, before, after, capped } }` — one primitive per base colour; `exposure` the surface's linear-luminance p10/p50/p90 before and after the gain (D198); `null` for an untextured model |
+| `paint` | optional: `{ primitives: [{ material, atlas, cutout, texture, triangles, parts: [{ part, first, count }] }], atlas, droppedNormalTextures, exposure: { mode, target, max, gain, before, after, capped } }` — since D240 exactly ONE primitive (`paint-0`), its parts' vertex ranges; `atlas` `null` for a model of one paint, else `{ size: [w, h], budget: 2048, scale, gutter, regions: [{ source, factor, cutout, span, rect, parts, gain }] }`; `exposure` the surface's linear-luminance p10/p50/p90 before and after the gain (D198). A manifest from before D240 (two primitives, or `null` for an untextured model) fails `validateManifest`: prepare it again |
 | `disabled` | optional: `true`, or the reason as a sentence — the dev server skips the model and prints the reason |
 
 ## The rig map, and `bones.json`
@@ -376,9 +379,12 @@ a model's. Under `?look=holo` it is a hologram tinted by its card's colour.
 
 **The budget** (`web/src/arena/perf.ts`, D195 and D197):
 
-- a model over **8,000 triangles** (`PERSONAL_TRI_CAP`) or **2 paints**
-  (`PERSONAL_CALL_CAP`) is never loaded — prepare it again with a smaller
-  `--budget`; the paint step makes most models one paint;
+- a model over **8,000 triangles** (`PERSONAL_TRI_CAP`) is never loaded —
+  prepare it again with a smaller `--budget`; and since **D240** a model is **one
+  draw call a figure** (`PERSONAL_CALL_CAP` = 1): the dev route counts the
+  primitives and materials in the very `model.glb` it would serve and skips a file
+  of more — one prepared before the atlas held every paint (Doom's hood and tunic
+  were two) — with "prepare it again";
 - at most **4 creatures** (`PERSONAL_MAX_FIGURES`) are dressed at once, in
   placement order;
 - and at most **36,000 personal triangles** (`PERSONAL_TABLE_TRIS`) are on the
@@ -393,15 +399,23 @@ its own line on top of it. Its worst case, measured (evidence §18): the budget
 filled by six 6,000-triangle, two-paint models at `g1`@316 is 50,225 triangles and
 90 draw calls on the GTX 1080, p95 unchanged at 0.6 ms; on SwiftShader, the
 software floor, 53,407 and 95, the median 4 ms slower than the CC0 table, which
-already fails §9.4 there. `node tools/arena-bench.mjs --personal` holds a frame
-to §8.2's line plus this one.
+already fails §9.4 there. Since D240 each of those six figures is one call, not
+two — a dressed figure never costs more calls than the CC0 body it replaces
+(`docs/evidence/arena-personal-polish.md`: over every frame of the villain
+recording the tier on draws no more calls than the tier off). `node
+tools/arena-bench.mjs --personal` holds a frame to §8.2's line plus this one.
 
 **The workshop** (`#workshop`) badges every card an active model dresses, draws
 the pedestal dressed as the arena is (the *personal / repo* toggle is the A/B),
 and has an **inspect** view: the figure in its signature pose in front of its
 card's art box — a window with depth where the relief cache has the painting's
 depth map (*The relief cache*, below) — the frame and the text floating beside
-it.
+it. **From the table** (D241): point at a face-up creature in the arena and press
+**`I`** — or click the *⌕ inspect* chip under the art credit — and the workshop
+opens on that card's inspect view (`#workshop?card=<name>&view=inspect`), dressed
+exactly when the table was and in the same look; its **▣ arena** link comes back
+to the same frame. A face-down or hidden card is never inspected: the chip and the
+key say so and name nothing.
 
 **Adding a model**, end to end:
 
@@ -419,6 +433,54 @@ be drawn (a base plane, eye-occlusion layers) is a `--drop`. What none of those
 can fix — a mesh modelled in a pose, an unskinned jacket — is Blender work, and
 the model stays `--disabled "<why>"` until then. Evidence §16 is the eight
 downloads, each with what it needed.
+
+## The atlas — one draw call a figure (D240)
+
+three draws one call per primitive, and the arena draws each figure with its
+own material, so a model's draw calls are its PRIMITIVES. prepare's paint step
+makes that one for every model: the parts are grouped by what they paint with
+(the base-colour texture, the factor, whether its alpha cuts), and
+
+- **one paint** keeps its own texture (the factor baked into a copy, a
+  repeating texture repeating as it came) — or, untextured, its factor;
+- **two or more** become REGIONS of one atlas. A region is the paint at its own
+  size (≤ 1024 px since D191) times the whole UV tiles its parts span — a paint
+  whose UVs WRAP (Doom's tunic reaches `u` 1.87 on a repeating texture) is laid
+  out twice side by side, so every triangle samples what REPEAT drew, a triangle
+  across the tile edge included — with an 8 px gutter (copied; wrapped for a
+  repeating paint), skyline-packed, tallest first, on the smallest sheet that
+  holds them at their own size, or all scaled alike to fit;
+- and every part is merged into ONE skinned primitive under ONE material (a
+  cutout — MASK — if any region cuts; a region that does not is made opaque).
+
+**The texture budget is 2048 px a side** (`ATLAS_MAX`; 16 MiB of RGBA8 before
+mipmaps). What the models need:
+
+| model | paints | the texture |
+|---|---|---|
+| Doctor Doom | 2 (the hood; the tunic, repeating, 2 × 1 tiles) | **2048 × 2048** at ×0.984 — the whole budget: the tunic laid twice is as wide as the sheet |
+| Agent Phil Coulson | 12 (Character Creator's parts, the hair a cutout) | 2048 × 1536 at ×0.484 (each 1024 px paint at 496 px) |
+| the Hulks | 1 | its own 1024 × 1024 |
+| Nick Fury | 1 | its own 512 × 512 |
+| Peggy Carter | 3 | 1056 × 1568 at ×1 |
+| the MCU Wasp | 2 | 1040 × 1568 at ×1 |
+
+`manifest.json`'s `paint.atlas` records the sheet — its size, the budget, the
+scale, the gutter and every region (its source, factor, span, rectangle, parts
+and the exposure gain it carries; the exposure runs on the one texture after the
+packing, so its one gain reaches every region). `check.mjs` fails a model that
+draws more than one call a figure; the dev route skips one and says "prepare it
+again". **A model prepared before D240 must be prepared and checked again** —
+Doom's two paints are skipped until it is:
+
+```bash
+node tools/personal/prepare.mjs doctor-doom         # the last manifest's cards and seats, the default flags
+node tools/personal/check.mjs   doctor-doom
+```
+
+(A model whose `source/` was cleaned away needs `import.mjs` on its download
+first; `prepare.mjs` takes the flags it was first prepared with — `--joints`,
+`--drop`, `--budget` — which its manifest records.)
 
 ## The relief cache — the painting behind the figure, with depth
 

@@ -142,6 +142,7 @@ import type { FigureRigMap } from './scene/figureRigs.ts';
 import { DuelistLayer } from './scene/DuelistLayer.tsx';
 import { NO_PERSONAL_LOADED, usePersonalModels, usePersonalOverlay, type PersonalLoaded } from './scene/personalModels.ts';
 import { dressPoses, personalChoicesOf } from './personal.ts';
+import { inspectContextOf, inspectTargetOf, type InspectTarget } from './inspect.ts';
 import { FigureLayer } from './scene/FigureLayer.tsx';
 import { HitProxy } from './scene/HitProxy.tsx';
 import type { RigMap } from './scene/rigs.ts';
@@ -400,6 +401,7 @@ function Scene({
   onAct,
   showGrid,
   onHover,
+  onPicked,
   queue,
   stage,
   pool,
@@ -439,6 +441,8 @@ function Scene({
   onAct: ((act: ActBody) => void) | null;
   showGrid: boolean;
   onHover: (cardId: number | null) => void;
+  /** D241: a card was clicked — the arena remembers it for `I` and the inspect chip (a view note, never an act). */
+  onPicked: (cardId: number) => void;
   queue: CueQueue;
   stage: SceneStage;
   pool: EffectPool;
@@ -499,12 +503,13 @@ function Scene({
 
   const clickCard = useCallback(
     (cardId: number) => {
+      onPicked(cardId);
       // Verbatim. The engine decides whether this click means anything — a click
       // it does not want comes back as `notice{title:"Not selectable"}`, which
       // is a fact the player is entitled to (amendment M8).
       onAct?.({ action: 'clickCard', cardId });
     },
-    [onAct],
+    [onAct, onPicked],
   );
 
   return (
@@ -749,6 +754,19 @@ export default function Arena({
   /** The look, parsed once from the flags `main.tsx` kept (D137). */
   const look = useMemo<LookSpec>(() => (lookQuery === null ? DEFAULT_LOOK : lookFromSearch(lookQuery)), [lookQuery]);
   const [hoverId, setHoverId] = useState<number | null>(null);
+  /**
+   * **D241 — the card `I` and the inspect chip would open**: the one under the
+   * pointer, else the last one clicked, else the last one pointed at (so the
+   * pointer can travel from a card to the chip). View notes, like the hover:
+   * nothing here reaches an act, and `arena/inspect.ts`'s planner gates every one
+   * face up before a name is read.
+   */
+  const [clickedId, setClickedId] = useState<number | null>(null);
+  const [pointedId, setPointedId] = useState<number | null>(null);
+  const onHover = useCallback((cardId: number | null) => {
+    setHoverId(cardId);
+    if (cardId !== null) setPointedId(cardId);
+  }, []);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
   /**
    * **User decision 6's toggle.** The URL flag (`?bloom=1` / `?bloom=0`) sets where
@@ -971,6 +989,12 @@ export default function Arena({
     () => placed.placements.find((p) => p.cardId === hoverId) ?? null,
     [placed, hoverId],
   );
+  /** D241: what `I` and the chip would inspect — THE planner, fed the card and its figure. */
+  const inspectTarget = useMemo((): InspectTarget => {
+    const id = hoverId ?? clickedId ?? pointedId;
+    const placement = id === null ? null : (placed.placements.find((p) => p.cardId === id) ?? null);
+    return inspectTargetOf(placement, placement === null ? undefined : figures.get(placement.cardId));
+  }, [placed, figures, hoverId, clickedId, pointedId]);
   const waiting = useMemo(() => awaitingHuman(state), [state]);
 
   // The three objects that outlive every frame, and every one of them is
@@ -1234,6 +1258,8 @@ export default function Arena({
     overlay: hotkeysOpen ? 'hotkeys' : 'none',
     // T8: this renderer has a camera, so `1`–`6` and `O` mean something here.
     arena: true,
+    // D241: the card `I` would inspect, or why there is none.
+    inspect: inspectContextOf(inspectTarget),
   };
 
   useEffect(() => {
@@ -1320,6 +1346,11 @@ export default function Arena({
           return;
         case 'spectator':
           toggleSpectator();
+          return;
+        // **D241 — inspect from the table.** Navigation to the workshop's
+        // inspect view, and nothing else: no act, whatever the seat.
+        case 'inspect':
+          openInspect(plan.href);
           return;
         case 'inert':
           setHint(plan.why);
@@ -1491,7 +1522,8 @@ export default function Arena({
           art={art}
           onAct={onAct}
           showGrid={showGrid}
-          onHover={setHoverId}
+          onHover={onHover}
+          onPicked={setClickedId}
           queue={queue}
           stage={stage}
           pool={pool}
@@ -1580,6 +1612,10 @@ export default function Arena({
           />
         </div>
         <ArtCredit art={art} placements={placed.placements} hovered={hovered} />
+        {/* D241: the inspect chip — the hover surface's button (the arena has no
+            card zoom), the same target as `I`, and inert with its reason for a
+            face-down or hidden card. */}
+        <InspectChip target={inspectTarget} />
         {hotkeysOpen && (
           <HotkeysOverlay
             onClose={() => {
@@ -1780,6 +1816,42 @@ function ArtCredit({
       Card images and data from <a href="https://scryfall.com">Scryfall</a>
       {shown.length > 0 && <> · art by {shown.join(', ')}</>}
       {rest > 0 && <> +{rest} more</>} · © Wizards of the Coast · Unofficial Fan Content
+    </span>
+  );
+}
+
+/**
+ * **D241 — open the workshop's inspect view**: the hash is the view (`useView`),
+ * so this is a link followed, and the page's `?` query — the look, `?personal=`
+ * — rides along untouched. The workshop's ▣ arena link comes back to the frame
+ * this replay was on (`main.tsx`'s `replayCursors`); a live socket survives.
+ */
+function openInspect(href: string): void {
+  window.location.hash = href;
+}
+
+/**
+ * **The inspect chip** (D241): a link to the workshop's inspect view for the
+ * card `I` would open — named, because it is face up and has a figure — or an
+ * inert chip that says why not (nothing pointed at, no figure, or a face-down or
+ * hidden card, which is never named). Its class is in `liveness.test.ts`'s layer
+ * table and opts back into pointer events in `styles.css`.
+ */
+function InspectChip({ target }: { target: InspectTarget }): JSX.Element {
+  if (target.kind === 'inspect') {
+    return (
+      <a
+        className="arena__inspect"
+        href={target.href}
+        title={`Inspect ${target.name} in the workshop — its figure in front of its painting (I); the workshop's ▣ arena link comes back to this frame`}
+      >
+        ⌕ inspect <strong>{target.name}</strong> · I
+      </a>
+    );
+  }
+  return (
+    <span className="arena__inspect arena__inspect--inert" title={target.why} aria-disabled="true">
+      ⌕ inspect · I <span className="arena__inspect-why">{target.why}</span>
     </span>
   );
 }

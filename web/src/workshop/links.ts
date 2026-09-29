@@ -17,7 +17,9 @@
  *    opens the id or says it has no library.
  *  - {@link cardFromLocation}: `card` from the hash's query (`#workshop?card=…`,
  *    how the browser keeps its own state — `#cards?open=…`), else the page's
- *    (`?view=workshop&card=…`, `/?card=peggy#workshop`).
+ *    (`?view=workshop&card=…`, `/?card=peggy#workshop`);
+ *    {@link workshopViewFromLocation} reads `view=inspect` the same way (D241:
+ *    the arena's `I` opens the inspect view on the card under the pointer).
  *
  * **This is the one workshop module the card browser may import** (D94, D102):
  * `web/src/cards/` reaches no arena, render or workshop page code, so this file
@@ -34,10 +36,36 @@ const CATALOG = catalogJson as unknown as CatalogFile;
 
 /** The query key both spellings of the workshop's deep link use. */
 export const CARD_PARAM = 'card';
+/**
+ * **D241** — the workshop's own view word, after the card: `view=inspect` opens
+ * its INSPECT camera (the figure in front of its card's painting). The arena's
+ * `I` and inspect chip write it (`arena/inspect.ts`'s `inspectHref`, spelled
+ * there because nothing under `arena/` imports this directory — D102 —
+ * and `inspect.test.ts` holds the two equal).
+ */
+export const VIEW_PARAM = 'view';
+export const WORKSHOP_VIEW_INSPECT = 'inspect';
 
-/** `#workshop?card=<name>` — the workshop opened on exactly this catalog name. */
-export function workshopHref(name: string): string {
-  return `#workshop?${new URLSearchParams({ [CARD_PARAM]: name }).toString()}`;
+/** `#workshop?card=<name>` — the workshop opened on exactly this catalog name (and, with `view`, that camera). */
+export function workshopHref(name: string, view: typeof WORKSHOP_VIEW_INSPECT | null = null): string {
+  const query = new URLSearchParams({ [CARD_PARAM]: name });
+  if (view !== null) query.set(VIEW_PARAM, view);
+  return `#workshop?${query.toString()}`;
+}
+
+/**
+ * **D241** — whether the location asks for the inspect view: `view=inspect` in
+ * the hash's query (`#workshop?card=…&view=inspect`), else in the page's. Any
+ * other `view` word — the page's own `?view=workshop` among them — is not.
+ */
+export function workshopViewFromLocation(hash: string, search: string): typeof WORKSHOP_VIEW_INSPECT | null {
+  const q = hash.indexOf('?');
+  const query = q >= 0 ? hash.slice(q + 1) : search.replace(/^\?/, '');
+  try {
+    return new URLSearchParams(query).get(VIEW_PARAM) === WORKSHOP_VIEW_INSPECT ? WORKSHOP_VIEW_INSPECT : null;
+  } catch {
+    return null;
+  }
 }
 
 /** `#cards?open=<scryfall id>` — the card browser's own deep link (its detail panel, opened). */

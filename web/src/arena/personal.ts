@@ -15,8 +15,9 @@
  * the pure half — no three, no React, no DOM, no clock (`liveness.test.ts`):
  *
  *  - {@link personalOverlayOf} is THE reader of the index. Every entry is checked
- *    (a same-origin relative `.glb` path, a triangle and a paint count, a card or
- *    a seat), and one over `perf.ts`'s caps is dropped with its reason. Each
+ *    (a same-origin relative `.glb` path, a triangle and a draw-call count, a card
+ *    or a seat), and one over `perf.ts`'s caps is dropped with its reason — since
+ *    D240 a model is one draw call a figure, and an entry of more is dropped. Each
  *    entry's id is OPAQUE (`p0`, `p1`, … in the index's order): nothing in the
  *    arena ever holds a slug, and no id reaches an op log, a label or the wire.
  *  - {@link personalChoicesOf} is THE lookup, and it is hard rule 8's renderer
@@ -49,7 +50,7 @@ export interface PersonalEntry {
   readonly url: string;
   /** Triangles after prepare's decimation. */
   readonly triangles: number;
-  /** Paints: one draw call each (prepare's paint step, D194). */
+  /** The draw calls a figure costs: one since D240 (prepare's paint step folds every paint into one atlas). */
   readonly calls: number;
   /** The credit line the model's licence asks for (shown in the workshop only). */
   readonly credits: string;
@@ -116,12 +117,12 @@ export function personalOverlayOf(raw: unknown): PersonalOverlay {
     if (!isLocalModelPath(url)) return void skipped.push(`${where}: its model path is not a same-origin relative .glb`);
     const triangles = model['triangles'];
     const calls = model['calls'];
-    if (!isCount(triangles) || !isCount(calls) || calls === 0) return void skipped.push(`${where}: no triangle or paint count`);
+    if (!isCount(triangles) || !isCount(calls) || calls === 0) return void skipped.push(`${where}: no triangle or draw-call count`);
     if (triangles > PERSONAL_TRI_CAP) {
       return void skipped.push(`${where}: ${String(triangles)} triangles, over PERSONAL_TRI_CAP (${String(PERSONAL_TRI_CAP)})`);
     }
     if (calls > PERSONAL_CALL_CAP) {
-      return void skipped.push(`${where}: ${String(calls)} paints, over PERSONAL_CALL_CAP (${String(PERSONAL_CALL_CAP)})`);
+      return void skipped.push(`${where}: ${String(calls)} draw calls a figure, over PERSONAL_CALL_CAP (${String(PERSONAL_CALL_CAP)}) — prepare it again (D240)`);
     }
     const names = Array.isArray(model['cards']) ? model['cards'].filter((c): c is string => typeof c === 'string' && c !== '') : [];
     const seatNames = Array.isArray(model['seats']) ? model['seats'].filter((s): s is string => typeof s === 'string') : [];

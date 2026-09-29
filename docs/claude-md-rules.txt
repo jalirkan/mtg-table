@@ -103,7 +103,7 @@
 **ten** files and by nothing else: `ZoneRow`, `HandFan`, `PlayerRail`,
 3. **The rect registry (`web/src/render/rects.ts`) is namespaced and
 **the id spaces collide** — the committed corpus has a `stack[].id` that is
-4. **One keymap table.** `web/src/keys.ts` is the **24** rows (18 at M4; M7 added
+4. **One keymap table.** `web/src/keys.ts` is the **25** rows (18 at M4; M7 added
 5. **Arrows are decoration and never the only channel** (**D30**). The overlay is
 6. **Keep the testable half pure.** `labels.ts`, `resolve.ts`, `arrows.ts` and
 1. **A question is answered on the board iff EVERY one of its options is already
@@ -217,11 +217,12 @@
 1. **One reader, one lookup, one dressing — pure** (**D195**). `arena/personal.ts`
 2. **Dev only, one loader** (**D195**). `scene/personalModels.ts` names
 3. **The model-source choice is one function** (**D195**). `FigureLayer`'s
-4. **Own colours, one figure's materials** (**D196**). A personal map is the
+4. **Own colours, ONE material a figure** (**D196**, **D240**). A personal map is
 5. **The budget is a sum, and it is in `perf.ts`** (**D195**, **D197**).
 1. **A Villain is a person, and the rows dress it.** `figures.json`'s
 2. **A mask is a face, and a cowl carries it from behind.** `mask` (a prop kind,
 3. **A row the corpus cannot reach is named, never kept in silence.**
+**Inspect from the table** (**D241**) is navigation, not a renderer:
 span: does not play on the engine we run
 span: `GuiBase.setInterface(new HeadlessGuiBase(...))` is the FIRST Forge call in any process.
 span: Never touch `forge.GuiDesktop`
@@ -406,7 +407,7 @@ span: never gate a click on `selectable`
 span: render `buttons.*.label` verbatim
 span: the dots are live as of M6
 span: no "hold priority" control
-span: 1060 `node --test` + 122 vitest (8 files)
+span: 1,099 `node --test` + 124 vitest (8 files)
 span: A question is answered on the board iff EVERY one of its options is already drawn there
 span: what `Board.tsx` mounts
 span: If you add or remove a surface that mounts cards, update `drawnEntities` in the same change
@@ -602,10 +603,11 @@ span: a personal model is a statement about what a card is, and it is drawn from
 span: One reader, one lookup, one dressing — pure
 span: Dev only, one loader
 span: The model-source choice is one function
-span: Own colours, one figure's materials
+span: Own colours, ONE material a figure
 span: "Black is blue" is the CC0 palette's rule, never a model's
 span: The budget is a sum, and it is in `perf.ts`
 span: a villain reads as itself through data on the shared kit.
 span: A Villain is a person, and the rows dress it.
 span: A mask is a face, and a cowl carries it from behind.
 span: A row the corpus cannot reach is named, never kept in silence.
+span: Inspect from the table

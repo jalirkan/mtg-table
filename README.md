@@ -1051,7 +1051,7 @@ same mechanism: there is no transport to answer with, so `onAct` is `null` and
 every button, card and control is inert. That is one prop, not two code paths.
 
 **Keys.** There is **one keymap** for both renderers (`web/src/keys.ts`), so
-**`?` or `H`** lists all twenty-four rows in the arena as well — the same table
+**`?` or `H`** lists all twenty-five rows in the arena as well — the same table
 the handler reads. The ones that are the arena's own:
 
 | key | what it does |
@@ -1062,6 +1062,7 @@ the handler reads. The ones that are the arena's own:
 | **6** or **0** | the auto director (spectating only) |
 | **O** | spectator mode on / off — on by itself in a replay and when your game ends, never while your seat is live |
 | **W** | open **the workshop** (*The workshop*, below) — one card on a pedestal. `V` there comes back to the arena; a replay resumes at its frame. On the 2D board `W` still spends floating white mana, and otherwise says to press `V` first |
+| **I** | **inspect the card under the pointer** (else the last one you clicked): the workshop opens on it in its **inspect** view — its figure in its signature pose in front of its card's painting, dressed in your own model where the personal tier has one, in the look the table is in. The **⌕ inspect** chip under the art credit does the same by click. The workshop's **▣ arena** link comes back to the same frame. Face up and with a figure only: a face-down or hidden card is never inspected, and the chip and the key say so without naming it (D241) |
 
 On the 2D board the camera keys do nothing and say so ("the board has no camera;
 press V"). They never answer the engine, so they work behind an open question

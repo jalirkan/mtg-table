@@ -161,9 +161,35 @@ interface Fake {
   check?: 'ok' | 'fail' | 'none' | 'stale';
   model?: boolean;
   triangles?: number;
+  /** The primitives (one per paint) in the fake `model.glb` — one since D240. */
   paints?: number;
+  /** A `model.glb` that is not a glTF binary at all. */
+  junk?: boolean;
   /** `paint.exposure.gain` (D198); absent: a model prepared before the exposure step. */
   exposure?: number;
+}
+
+/**
+ * **A `model.glb` of a few bytes that IS a glTF binary** (D240: the route counts the
+ * primitives and materials in the file it would serve) — a header and a JSON chunk
+ * naming one mesh of `primitives` primitives and as many materials, nothing more.
+ */
+function fakeGlb(slug: string, primitives = 1): Buffer {
+  const json = Buffer.from(
+    JSON.stringify({
+      asset: { version: '2.0', generator: `fake ${slug}` },
+      meshes: [{ primitives: Array.from({ length: primitives }, (_, i) => ({ attributes: {}, material: i })) }],
+      materials: Array.from({ length: primitives }, (_, i) => ({ name: `paint-${String(i)}` })),
+    }),
+  );
+  const padded = Buffer.concat([json, Buffer.alloc((4 - (json.length % 4)) % 4, 0x20)]);
+  const header = Buffer.alloc(20);
+  header.writeUInt32LE(0x46546c67, 0);
+  header.writeUInt32LE(2, 4);
+  header.writeUInt32LE(20 + padded.length, 8);
+  header.writeUInt32LE(padded.length, 12);
+  header.writeUInt32LE(0x4e4f534a, 16);
+  return Buffer.concat([header, padded]);
 }
 
 /** A folder of synthetic models: a manifest, a `model.glb` of a few bytes, a `check.json` as asked. */
@@ -172,7 +198,7 @@ function fakeTier(models: readonly Fake[]): string {
   for (const m of models) {
     const folder = join(dir, m.slug);
     mkdirSync(folder, { recursive: true });
-    const glb = Buffer.from(`glTF-fake-${m.slug}`);
+    const glb = m.junk === true ? Buffer.from(`not-a-glb-${m.slug}`) : fakeGlb(m.slug, m.paints ?? 1);
     if (m.model !== false) writeFileSync(join(folder, 'model.glb'), glb);
     writeFileSync(join(folder, 'SOURCE.txt'), 'the download, never served');
     mkdirSync(join(folder, 'preview'), { recursive: true });
@@ -209,7 +235,7 @@ test('personal: the index — active only when version 2, not disabled, and chec
   const dir = fakeTier([
     { slug: 'doctor-doom', dresses: [{ card: 'Doctor Doom' }, { seat: 'villain' }], exposure: 7.491 },
     { slug: 'doctor-doom-v2', dresses: [{ card: 'Doctor Doom' }] },
-    { slug: 'hulk', dresses: [{ card: 'Hulk, Gamma Goliath' }, { card: 'Hulk, Brutal Brawler' }], paints: 2, exposure: 1 },
+    { slug: 'hulk', dresses: [{ card: 'Hulk, Gamma Goliath' }, { card: 'Hulk, Brutal Brawler' }], exposure: 1 },
     { slug: 'nick-fury', disabled: 'its jacket is akimbo' },
     { slug: 'peggy', disabled: true },
     { slug: 'wasp', check: 'fail' },
@@ -222,7 +248,9 @@ test('personal: the index — active only when version 2, not disabled, and chec
     // Over a per-model cap (D195): skipped HERE, with why, and shadowing nothing —
     // 'a-big-doom' sorts before 'doctor-doom' and dresses the same card.
     { slug: 'a-big-doom', dresses: [{ card: 'Doctor Doom' }], triangles: PERSONAL_TRI_CAP + 1 },
+    // D240: a file of two primitives — Doom as he was prepared before the atlas held every paint.
     { slug: 'many-paints', paints: PERSONAL_CALL_CAP + 1 },
+    { slug: 'not-a-glb', junk: true },
   ]);
   try {
     const index = buildPersonalIndex(REPO, { dir, seatLooks: LOOKS });
@@ -230,7 +258,7 @@ test('personal: the index — active only when version 2, not disabled, and chec
     assert.deepEqual(index.models.map((m) => m.slug), ['director', 'doctor-doom', 'hulk']);
     const doom = index.models.find((m) => m.slug === 'doctor-doom')!;
     assert.deepEqual([doom.cards, doom.seats, doom.model, doom.calls], [['Doctor Doom'], ['opp'], 'personal/models/doctor-doom/model.glb', 1]);
-    assert.equal(index.models.find((m) => m.slug === 'hulk')!.calls, 2);
+    assert.equal(index.models.find((m) => m.slug === 'hulk')!.calls, 1, 'one draw call a figure, counted in the file');
     assert.deepEqual(index.models.find((m) => m.slug === 'director')!.seats, ['you']);
     const why = Object.fromEntries(index.skipped.map((s) => [s.slug, s.why]));
     assert.match(why['doctor-doom-v2'] ?? '', /shadowed for Doctor Doom \(kept by doctor-doom\)/);
@@ -243,13 +271,14 @@ test('personal: the index — active only when version 2, not disabled, and chec
     assert.match(why['no-model'] ?? '', /no model\.glb/);
     assert.match(why['Bad Slug'] ?? '', /not a slug/);
     assert.match(why['a-big-doom'] ?? '', new RegExp(`^${String(PERSONAL_TRI_CAP + 1)} triangles, over PERSONAL_TRI_CAP \\(${String(PERSONAL_TRI_CAP)}\\) — never loaded`));
-    assert.match(why['many-paints'] ?? '', new RegExp(`^${String(PERSONAL_CALL_CAP + 1)} paints, over PERSONAL_CALL_CAP`));
+    assert.match(why['many-paints'] ?? '', /^2 primitive\(s\) under 2 material\(s\) — 2 draw calls a figure, over PERSONAL_CALL_CAP \(1\): prepared before D240 .* run tools\/personal\/prepare\.mjs again, then check\.mjs$/);
+    assert.match(why['not-a-glb'] ?? '', /not a glTF binary/);
     const lines = describeIndex(index);
-    assert.match(lines[0] ?? '', /3 active model\(s\), 11 skipped/);
+    assert.match(lines[0] ?? '', /3 active model\(s\), 12 skipped/);
     assert.ok(lines.some((l) => /^ {2}skipped {2}a-big-doom: \d+ triangles, over PERSONAL_TRI_CAP/.test(l)), 'the start lines list an over-cap model as skipped, with why');
     // D198: the start lines say how each model's paint was exposed, and which was never exposed.
     assert.ok(lines.some((l) => /^ {2}active {3}doctor-doom: .*, exposed ×7\.491$/.test(l)), lines.join('\n'));
-    assert.ok(lines.some((l) => /^ {2}active {3}hulk: .* 2 paint\(s\)$/.test(l)), 'a gain of 1 says nothing');
+    assert.ok(lines.some((l) => /^ {2}active {3}hulk: .* 1 draw call\(s\) a figure$/.test(l)), 'a gain of 1 says nothing');
     assert.ok(lines.some((l) => /^ {2}active {3}director: .*never exposed: prepare it again \(D198\)$/.test(l)));
     // No folder at all is an empty index, not an error.
     assert.deepEqual(buildPersonalIndex(REPO, { dir: join(dir, 'nowhere'), seatLooks: LOOKS }).models, []);
@@ -280,7 +309,7 @@ test('personal: the route — the index, an active model’s model.glb and manif
     assert.equal(glb.status, 200);
     assert.equal(glb.headers.get('content-type'), 'model/gltf-binary');
     assert.equal(glb.headers.get('cache-control'), 'no-store');
-    assert.equal(Buffer.from(await glb.arrayBuffer()).toString(), 'glTF-fake-doctor-doom');
+    assert.deepEqual(Buffer.from(await glb.arrayBuffer()), fakeGlb('doctor-doom'));
     assert.equal((await fetch(`${origin}/personal/models/doctor-doom/manifest.json`)).status, 200);
     for (const path of [
       '/personal/models/doctor-doom/SOURCE.txt',
@@ -456,7 +485,7 @@ test('personal: personalOverlayOf — THE reader: opaque ids, the caps, the seat
   const overlay = personalOverlayOf({
     version: 1,
     models: [
-      { slug: 'doctor-doom', model: 'personal/models/doctor-doom/model.glb', cards: ['Doctor Doom'], seats: ['opp'], triangles: 5996, calls: 2, credits: 'c' },
+      { slug: 'doctor-doom', model: 'personal/models/doctor-doom/model.glb', cards: ['Doctor Doom'], seats: ['opp'], triangles: 5996, calls: 1, credits: 'c' },
       { slug: 'too-big', model: 'personal/models/too-big/model.glb', cards: ['Big'], seats: [], triangles: PERSONAL_TRI_CAP + 1, calls: 1 },
       { slug: 'too-many', model: 'personal/models/too-many/model.glb', cards: ['Many'], seats: [], triangles: 10, calls: PERSONAL_CALL_CAP + 1 },
       { slug: 'offsite', model: 'https://example.com/model.glb', cards: ['Offsite'], seats: [], triangles: 10, calls: 1 },
@@ -476,6 +505,9 @@ test('personal: personalOverlayOf — THE reader: opaque ids, the caps, the seat
   for (const name of ['Big', 'Many', 'Offsite', 'Root', 'Climb']) assert.equal(overlay.cards.has(name), false, name);
   assert.equal(overlay.skipped.length, 6);
   assert.ok(overlay.skipped.some((s) => /PERSONAL_TRI_CAP/.test(s)) && overlay.skipped.some((s) => /PERSONAL_CALL_CAP/.test(s)));
+  // D240: one draw call a figure — a two-call entry (a model prepared before the atlas held every paint) is left out.
+  assert.equal(PERSONAL_CALL_CAP, 1);
+  assert.ok(overlay.skipped.some((s) => /2 draw calls a figure, over PERSONAL_CALL_CAP \(1\) — prepare it again \(D240\)/.test(s)), overlay.skipped.join('; '));
   assert.deepEqual(overlay.withheld, ['disabled']);
   for (const junk of [null, 'x', { version: 2, models: [] }, { version: 1 }]) assert.equal(personalOverlayOf(junk), EMPTY_PERSONAL);
   for (const bad of ['https://x/y.glb', '//x/y.glb', '/a.glb', 'a/../b.glb', 'a//b.glb', 'a.glb?x=1', 'a.gltf', 'javascript:a.glb']) {

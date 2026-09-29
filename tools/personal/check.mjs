@@ -245,6 +245,22 @@ modelRoot.traverse((o) => {
 const skeletonNames = meshes[0]?.skeleton.bones.map((b) => b.name) ?? [];
 console.log(`\n1. ${relative(REPO, modelPath)}: ${String(meshes.length)} skinned primitives, skeleton ${String(skeletonNames.length)} joints, manifest ${manifestErrors.length === 0 ? 'valid' : 'INVALID'}`);
 check(meshes.length > 0, 'no skinned mesh in model.glb');
+// ONE draw call a figure (D240): one skinned primitive under one material, and
+// nothing else that draws — prepare's paint step folds every paint into one atlas.
+{
+  const drawn = [];
+  modelRoot.traverse((o) => {
+    if (o.isMesh) drawn.push(o);
+  });
+  const materials = new Set(drawn.flatMap((o) => (Array.isArray(o.material) ? o.material : [o.material])));
+  const groups = drawn.reduce((a, o) => a + (Array.isArray(o.material) ? Math.max(1, o.geometry.groups.length) : 1), 0);
+  console.log(`   draws: ${String(drawn.length)} mesh(es), ${String(meshes.length)} skinned, ${String(materials.size)} material(s) — ${String(groups)} draw call(s) a figure`);
+  check(
+    drawn.length === 1 && meshes.length === 1 && materials.size === 1 && groups === 1,
+    `model.glb draws ${String(groups)} call(s) a figure (${String(drawn.length)} mesh(es), ${String(materials.size)} material(s)): since D240 a prepared model is ONE skinned primitive under ONE material — run prepare.mjs again`,
+  );
+  if (drawn.length === 1 && materials.size === 1) judgedList.push('one skinned primitive under one material: one draw call a figure (D240)');
+}
 check(JSON.stringify(skeletonNames) === JSON.stringify(['root', ...OUR_JOINTS]), `the skeleton is not root + our 22 joints: ${skeletonNames.join(', ')}`);
 for (const j of OUR_JOINTS) check(target.bone(j) !== null, `model.glb has no joint ${j}`);
 if (meshes.length === 0 || OUR_JOINTS.some((j) => target.bone(j) === null)) finish(); // nothing below can run

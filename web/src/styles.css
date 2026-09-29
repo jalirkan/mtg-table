@@ -2897,6 +2897,45 @@ button.zonerow__open:hover {
   color: var(--ink);
 }
 
+/*
+ * **The inspect chip** (D241): the hover surface's button — the arena has no card
+ * zoom — for the card `I` would inspect. A link when that card is face up with a
+ * figure; inert, with its reason, otherwise (a face-down card is never named).
+ * In the layer, so it opts back into pointer events (liveness.test.ts's table).
+ */
+.arena__inspect {
+  pointer-events: auto;
+  align-self: flex-start;
+  margin-block-start: 0.25rem;
+  max-inline-size: min(560px, 80vw);
+  padding: 0.12rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #0b0e13d9;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+a.arena__inspect:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__inspect--inert {
+  color: var(--muted);
+  cursor: default;
+}
+
+.arena__inspect-why {
+  margin-inline-start: 0.35rem;
+  opacity: 0.8;
+}
+
 /* Board ⇄ arena. A link, because the hash really is the state. */
 .viewtoggle {
   flex: 0 0 auto;

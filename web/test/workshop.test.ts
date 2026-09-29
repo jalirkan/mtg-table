@@ -560,7 +560,12 @@ test('workshop: the table-distance camera’s arithmetic — view 1’s depth sc
 
 test('workshop: the pedestal opens on the figure’s FRONT, and its canvas is opaque (the verification pass; D143, D146)', () => {
   const workshop = readFileSync(fileURLToPath(new URL('../src/workshop/Workshop.tsx', import.meta.url)), 'utf8');
-  assert.match(workshop, /useState<CameraMode>\('front'\)/, 'the workshop no longer opens on the figure’s front');
+  // …unless the location asks for the inspect view (D241: the arena's `I`, `#workshop?card=<name>&view=inspect`).
+  assert.match(
+    workshop,
+    /useState<CameraMode>\(\(\) => \(locationInspects\(\) \? 'inspect' : 'front'\)\)/,
+    'the workshop no longer opens on the figure’s front (or on inspect when the URL asks for it)',
+  );
   const pedestal = readFileSync(fileURLToPath(new URL('../src/workshop/Pedestal.tsx', import.meta.url)), 'utf8');
   assert.match(pedestal, /gl=\{\{ antialias: true, alpha: false, preserveDrawingBuffer: false \}\}/, 'the pedestal’s canvas is not opaque — a painted figure’s alpha is the ink’s mark');
 });

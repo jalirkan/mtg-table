@@ -43,14 +43,17 @@
  *    (its sha256), so a model prepared again since its check is not loaded on an
  *    old pass;
  *  - it is within `arena/perf.ts`'s per-model caps (`PERSONAL_TRI_CAP`
- *    triangles, `PERSONAL_CALL_CAP` paints) — the arena's reader applies them
+ *    triangles; `PERSONAL_CALL_CAP` draw calls a figure — ONE since **D240**,
+ *    counted as the primitives of the very `model.glb` on disk, read from its
+ *    glTF JSON, so a model prepared before prepare folded every paint into one
+ *    atlas is skipped with "prepare it again") — the arena's reader applies them
  *    too, and the start lines must say what the arena will draw.
  *
  * Every other model is listed under `skipped` with why, and the server prints the
  * same lines at start. When two active models dress the same card or seat, the
  * first in slug order keeps it and the other is said to be shadowed. What the
  * index carries per model is what the arena needs and nothing more: its path,
- * the cards and seats it dresses, its triangles and paints (the budget), and the
+ * the cards and seats it dresses, its triangles and draw calls (the budget), and the
  * credit line its licence asks for.
  *
  * It fetches nothing and writes nothing. This file must never be imported by
@@ -86,7 +89,7 @@ export interface PersonalIndexModel {
   /** `you` / `opp` — a manifest's `director` / `villain` read as its seat. */
   seats: string[];
   triangles: number;
-  /** One per paint: prepare's paint step (the draw calls a figure costs). */
+  /** The draw calls a figure costs: the primitives in `model.glb` (one since D240, prepare's paint step). */
   calls: number;
   bytes: number;
   credits: string;
@@ -135,6 +138,30 @@ function readSeatLooks(repoRoot: string): Record<string, string> {
   } catch {
     return { you: 'director', opp: 'villain' };
   }
+}
+
+/**
+ * **What a `model.glb` draws** (D240): its meshes' primitives — one draw call a
+ * figure each — and its materials, read from the file's own glTF JSON chunk (the
+ * header, then the first chunk, which must be JSON). `null` for bytes that are
+ * not a glTF 2 binary. Exported for a test.
+ */
+export function glbDrawsOf(bytes: Buffer): { primitives: number; materials: number } | null {
+  if (bytes.byteLength < 20 || bytes.readUInt32LE(0) !== 0x46546c67 || bytes.readUInt32LE(4) !== 2) return null;
+  const length = bytes.readUInt32LE(12);
+  if (bytes.readUInt32LE(16) !== 0x4e4f534a || 20 + length > bytes.byteLength) return null;
+  let json: unknown;
+  try {
+    json = JSON.parse(bytes.subarray(20, 20 + length).toString('utf8'));
+  } catch {
+    return null;
+  }
+  if (!isRecord(json)) return null;
+  const meshes = Array.isArray(json['meshes']) ? json['meshes'] : [];
+  let primitives = 0;
+  for (const mesh of meshes) if (isRecord(mesh) && Array.isArray(mesh['primitives'])) primitives += mesh['primitives'].length;
+  const materials = Array.isArray(json['materials']) ? json['materials'].length : 0;
+  return { primitives, materials };
 }
 
 /**
@@ -213,7 +240,11 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
     // reader, so the lines the server prints at start are what the arena draws —
     // and an over-cap model shadows no other model's card or seat.
     const triangles = isRecord(manifest['triangles']) && typeof manifest['triangles']['after'] === 'number' ? manifest['triangles']['after'] : -1;
-    const paint = isRecord(manifest['paint']) && Array.isArray(manifest['paint']['primitives']) ? manifest['paint']['primitives'].length : 1;
+    const draws = glbDrawsOf(bytes);
+    if (draws === null) {
+      skip('model.glb is not a glTF binary — run tools/personal/prepare.mjs again');
+      continue;
+    }
     if (triangles < 0) {
       skip('its manifest carries no triangle count — run tools/personal/prepare.mjs again');
       continue;
@@ -222,8 +253,16 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
       skip(`${String(triangles)} triangles, over PERSONAL_TRI_CAP (${String(PERSONAL_TRI_CAP)}) — never loaded; prepare it again with a smaller --budget`);
       continue;
     }
-    if (paint > PERSONAL_CALL_CAP) {
-      skip(`${String(paint)} paints, over PERSONAL_CALL_CAP (${String(PERSONAL_CALL_CAP)}) — never loaded`);
+    // One draw call a figure (D240): the file itself, not the manifest's word for it.
+    if (draws.primitives > PERSONAL_CALL_CAP || draws.materials > PERSONAL_CALL_CAP) {
+      skip(
+        `${String(draws.primitives)} primitive(s) under ${String(draws.materials)} material(s) — ${String(draws.primitives)} draw calls a figure, over PERSONAL_CALL_CAP (${String(PERSONAL_CALL_CAP)}): ` +
+          'prepared before D240 folded every paint into one atlas — run tools/personal/prepare.mjs again, then check.mjs',
+      );
+      continue;
+    }
+    if (draws.primitives === 0) {
+      skip('model.glb draws nothing — run tools/personal/prepare.mjs again');
       continue;
     }
     const dresses = Array.isArray(manifest['dresses']) ? manifest['dresses'].filter(isRecord) : [];
@@ -256,7 +295,7 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
       cards,
       seats,
       triangles,
-      calls: paint,
+      calls: draws.primitives,
       bytes: bytes.byteLength,
       credits: typeof manifest['credits'] === 'string' ? manifest['credits'] : '',
       clips,
@@ -353,7 +392,7 @@ export function describeIndex(index: PersonalIndex): string[] {
   const out = [`personal tier: ${String(index.models.length)} active model(s), ${String(index.skipped.length)} skipped (dev server only, D190)`];
   for (const m of index.models) {
     const paint = m.exposure === null ? ' — its paint was never exposed: prepare it again (D198)' : m.exposure === 1 ? '' : `, exposed ×${String(m.exposure)}`;
-    out.push(`  active   ${m.slug}: ${[...m.cards, ...m.seats.map((s) => `seat ${s}`)].join(', ')} — ${String(m.triangles)} triangles, ${String(m.calls)} paint(s)${paint}`);
+    out.push(`  active   ${m.slug}: ${[...m.cards, ...m.seats.map((s) => `seat ${s}`)].join(', ')} — ${String(m.triangles)} triangles, ${String(m.calls)} draw call(s) a figure${paint}`);
   }
   for (const s of index.skipped) out.push(`  skipped  ${s.slug}: ${s.why}`);
   return out;

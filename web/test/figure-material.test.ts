@@ -49,9 +49,9 @@ import {
   dressFigureMeshes,
   makeFigureMaterial,
   markPainted,
-  siblingsOf,
 } from '../src/arena/scene/figureMaterial.ts';
 import { PROP_LOOK, applyPropLook, makePropMaterial } from '../src/arena/scene/propMaterial.ts';
+import { PERSONAL_CALL_CAP } from '../src/arena/perf.ts';
 
 test('figure material: a committed body is the one program — no paint define, no vertex colours, the hologram until commit', () => {
   const material = makeFigureMaterial('#3a6ea5', 1);
@@ -108,7 +108,7 @@ test('figure material: the paint input path — a map and vertex colours multipl
   for (const m of [mapped, coloured, both]) m.dispose();
 });
 
-test('figure material: a personal model paints in its own colours, a cutout discards, and its paints share one figure (D196)', () => {
+test('figure material: a personal model paints in its own colours, a cutout discards, and a figure is ONE material (D196, D240)', () => {
   const own = makeFigureMaterial('#3a6ea5', 1, { map: new THREE.Texture(), own: true, cutout: true });
   assert.equal(own.uniforms.uPaintOwn.value, 1, 'a personal map is its own colour');
   assert.equal(own.defines.USE_PAINT_CUTOFF, '', 'a cutout map discards');
@@ -119,42 +119,30 @@ test('figure material: a personal model paints in its own colours, a cutout disc
   assert.equal(plain[0]!.material, one);
   assert.equal(plain[1]!.material, one);
   assert.deepEqual(one.defines ?? {}, {}, 'a committed body stays the one program');
-  assert.equal(siblingsOf(one).length, 0);
   one.dispose();
-  // A personal model of two paints: the first material is the figure's, the second a sibling sharing its uniform OBJECTS.
-  const a = new THREE.Texture();
-  const b = new THREE.Texture();
-  const cut = new THREE.MeshStandardMaterial({ map: b });
+  // A personal model (D240: one skinned primitive under one paint): its map, its cutout, the figure's one material.
+  const atlas = new THREE.Texture();
+  const cut = new THREE.MeshStandardMaterial({ map: atlas });
   cut.alphaTest = 0.5;
-  const meshes = [
-    new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ map: a })),
-    new THREE.Mesh(new THREE.BufferGeometry(), cut),
-    new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ map: a })),
-  ];
-  const primary = dressFigureMeshes(meshes, '#a33a3a', 1);
-  const [sibling] = siblingsOf(primary);
-  assert.ok(sibling !== undefined, 'the second paint is a sibling');
-  assert.equal(meshes[0]!.material, primary);
-  assert.equal(meshes[2]!.material, primary, 'the same map is the same material');
-  assert.equal(meshes[1]!.material, sibling);
-  assert.equal(primary.uniforms.uPaintMap.value, a);
-  assert.equal(sibling.uniforms.uPaintMap.value, b, 'each paint keeps its own map');
-  assert.equal(sibling.defines.USE_PAINT_CUTOFF, '', 'the cutout is the paint\'s own');
-  for (const name of ['uTint', 'uOpacity', 'uLook', 'uMaterialize', 'uDrain', 'uDrainTo', 'uCostumeOn', 'uPaintOwn'] as const) {
-    assert.equal(sibling.uniforms[name], primary.uniforms[name], `${name} is a copy in the sibling: the frame loop's write would miss it`);
-  }
-  primary.uniforms.uOpacity.value = 0.4;
-  assert.equal(sibling.uniforms.uOpacity.value, 0.4);
-  applyLook(primary, 1);
-  assert.equal(sibling.blending, THREE.CustomBlending, 'the sibling is marked painted with its figure (D146)');
-  applyLook(primary, 0);
-  assert.equal(sibling.blending, THREE.NormalBlending);
-  let disposed = false;
-  sibling.addEventListener('dispose', () => {
-    disposed = true;
-  });
-  primary.dispose();
-  assert.ok(disposed, 'disposing the figure disposes its other paints');
+  const meshes = [new THREE.Mesh(new THREE.BufferGeometry(), cut)];
+  const figure = dressFigureMeshes(meshes, '#a33a3a', 1);
+  assert.equal(meshes[0]!.material, figure);
+  assert.equal(figure.uniforms.uPaintMap.value, atlas, 'the atlas is the figure’s paint');
+  assert.equal(figure.uniforms.uPaintOwn.value, 1);
+  assert.equal(figure.defines.USE_PAINT_CUTOFF, '', 'the cutout is the paint’s own');
+  applyLook(figure, 1);
+  assert.equal(figure.blending, THREE.CustomBlending, 'the figure is marked painted (D146)');
+  applyLook(figure, 0);
+  assert.equal(figure.blending, THREE.NormalBlending);
+  figure.dispose();
+  // The negative control's shape: two meshes of two maps would draw both with the FIRST map — which is why
+  // check.mjs, the dev route and the reader refuse a model of more than one primitive (PERSONAL_CALL_CAP = 1).
+  const two = [new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ map: atlas })), new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ map: new THREE.Texture() }))];
+  const shared = dressFigureMeshes(two, '#a33a3a', 1);
+  assert.equal(two[0]!.material, shared);
+  assert.equal(two[1]!.material, shared, 'one figure, one material: there are no sibling materials since D240');
+  assert.equal(PERSONAL_CALL_CAP, 1, 'the dev route and the reader hold a figure to one call');
+  shared.dispose();
 });
 
 test('figure material: a model’s own dark paint keeps its hue — lifted from uOwnFloor, never mixed toward "black is blue" (D198)', () => {

@@ -199,3 +199,13 @@ skipped; without it, 1,066 pass, 9 skipped. Inside `check-all.sh` with the venv
 exported: **1,090 / 1,082 pass / 0 fail / 8 skipped** plus 122 vitest (without
 it the gate's count would read 1,079 pass / 11 skipped, as the first fix pass's
 did).
+
+## Arena personal polish (`arena-personal-polish`, D240–D241)
+
+`npm --prefix web test` is **1,099 `node --test` + 124 vitest (8 files)**
+standalone (1,090 pass, 0 fail, 9 skipped): seven cases on `9998ec5`'s tree —
+`personal-tier`'s atlas helpers (the paint step's case rewritten for one
+primitive and a colour trace), `inspect.test.ts`'s three (the planner, the href,
+the hostile corpus sweep), two in `keys.test.ts` (the `I` row and its
+dispatcher) and one liveness clause (the inspect planner). Inside `check-all.sh`:
+**1,114 / 1,103 pass / 0 fail / 11 skipped** plus 124 vitest, twice.

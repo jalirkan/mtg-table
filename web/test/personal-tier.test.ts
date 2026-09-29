@@ -149,6 +149,15 @@ interface Lib {
   weightedQuantile(samples: [number, number][], q: number): number;
   EXPOSURE_TARGET: number;
   EXPOSURE_MAX: number;
+  // D240: the atlas.
+  ATLAS_MAX: number;
+  ATLAS_GUTTER: number;
+  uvSpanOf(lo: number[], hi: number[]): { origin: number[]; span: number[] };
+  packAtlas(
+    regions: { w: number; h: number }[],
+    options?: { max?: number; gutter?: number },
+  ): { width: number; height: number; scale: number; rects: { x: number; y: number; w: number; h: number }[] } | null;
+  tileTexels(rgba: Uint8Array, w: number, h: number, su: number, sv: number): Uint8Array;
 }
 
 const lib = (await import(new URL('../../tools/personal/lib.mjs', import.meta.url).href)) as Lib;
@@ -268,7 +277,10 @@ test('personal-tier: a well-formed manifest validates', () => {
   const m = validManifest();
   m['dresses'] = [{ card: 'Doctor Doom' }, { seat: 'villain' }, { seat: 'director' }];
   m['disabled'] = 'its jacket is modelled akimbo';
-  m['paint'] = { primitives: [{ material: 'paint-0', atlas: true, cutout: false, texture: 'atlas.png', triangles: 10, parts: [] }], atlas: { size: 1024 } };
+  m['paint'] = {
+    primitives: [{ material: 'paint-0', atlas: true, cutout: false, texture: 'atlas.png', triangles: 10, parts: [] }],
+    atlas: { size: [2048, 1536], budget: 2048, scale: 0.484, gutter: 8, regions: [] },
+  };
   m['textures'] = [{ name: 'atlas.png', slot: 'atlas', size: [2048, 2048], bytes: 1, downscaled: false }];
   assert.deepEqual(lib.validateManifest(m), []);
   assert.deepEqual([lib.seatOf('villain'), lib.seatOf('director'), lib.seatOf('opp'), lib.seatOf('nobody')], ['opp', 'you', 'opp', null]);
@@ -298,6 +310,17 @@ test('personal-tier: the manifest validator names each defect', () => {
     ['baked clips with no idle', (m) => (m['clips'] = { keys: ['attack'], fps: 24 }), /idle/],
     ['disabled, but empty', (m) => (m['disabled'] = ''), /disabled must be/],
     ['a 4096 px atlas', (m) => (m['textures'] = [{ name: 'atlas.png', slot: 'atlas', size: [4096, 4096] }]), /2048/],
+    // D240: one primitive under one material — a two-paint record is from before the atlas held every paint.
+    [
+      'two primitives',
+      (m) => (m['paint'] = { primitives: [{ material: 'paint-0', parts: [] }, { material: 'paint-1', parts: [] }], atlas: null }),
+      /paint\.primitives has 2 entries: since D240 a prepared model is ONE primitive/,
+    ],
+    [
+      'an atlas over the texture budget',
+      (m) => (m['paint'] = { primitives: [{ material: 'paint-0', parts: [] }], atlas: { size: [2048, 2064] } }),
+      /paint\.atlas\.size .* at most 2048 px \(D240's texture budget\)/,
+    ],
   ];
   for (const [what, spoil, expect] of defects) {
     const m = validManifest();
@@ -1202,9 +1225,22 @@ for (const [s, o] of [
 }
 type Doc = Document;
 type Prim = ReturnType<ReturnType<Doc['createMesh']>['listPrimitives']>[number];
-/** The body primitive's vertices: each one's u (its source index), its weights by our joint name, and its skin joints. */
-function bodyVertices(doc: Doc, rename: (name: string) => string): { prim: Prim; uv: number[]; tuples: Map<string, number>[] } {
-  const prim = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives()).find((p) => p.getMaterial()?.getName() === 'Body')!;
+/** A part's vertex range in the one primitive prepare writes (D240), from its manifest. */
+type Range = { first: number; count: number };
+function partRange(dir: string, part: string): Range {
+  const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { paint: { primitives: { parts: { part: string; first: number; count: number }[] }[] } };
+  assert.equal(manifest.paint.primitives.length, 1, 'D240: one primitive');
+  const range = manifest.paint.primitives[0]!.parts.find((p) => p.part === part);
+  assert.ok(range !== undefined, `no ${part} in the manifest's paint record`);
+  return range;
+}
+/**
+ * The body's vertices: each one's u (its source index), its weights by our joint name, and its skin joints — in
+ * the source, the primitive whose material is `Body`; in a prepared file (D240: ONE primitive), the body's range.
+ */
+function bodyVertices(doc: Doc, rename: (name: string) => string, range: Range | null = null): { prim: Prim; uv: number[]; tuples: Map<string, number>[]; first: number } {
+  const prims = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives());
+  const prim = range === null ? prims.find((p) => p.getMaterial()?.getName() === 'Body')! : prims[0]!;
   const skin = doc.getRoot().listSkins()[0]!;
   const names = skin.listJoints().map((j) => rename(j.getName()));
   const J = prim.getAttribute('JOINTS_0')!;
@@ -1212,7 +1248,8 @@ function bodyVertices(doc: Doc, rename: (name: string) => string): { prim: Prim;
   const T = prim.getAttribute('TEXCOORD_0')!;
   const uv: number[] = [];
   const tuples: Map<string, number>[] = [];
-  for (let i = 0; i < J.getCount(); i += 1) {
+  const first = range?.first ?? 0;
+  for (let i = first; i < (range === null ? J.getCount() : range.first + range.count); i += 1) {
     const j = J.getElement(i, [0, 0, 0, 0]);
     const w = W.getElement(i, [0, 0, 0, 0]);
     const tuple = new Map<string, number>();
@@ -1222,7 +1259,7 @@ function bodyVertices(doc: Doc, rename: (name: string) => string): { prim: Prim;
     tuples.push(tuple);
     uv.push(T.getElement(i, [0, 0])[0] ?? NaN);
   }
-  return { prim, uv, tuples };
+  return { prim, uv, tuples, first };
 }
 
 test('personal-tier: prepare on a figure of boxes — the A-posed two-bone arms turned to T with the rest skin intact, and decimation keeping every weight', { timeout: 120_000 }, async () => {
@@ -1252,13 +1289,13 @@ test('personal-tier: prepare on a figure of boxes — the A-posed two-bone arms 
     const joints = skin.listJoints();
     const ibm = skin.getInverseBindMatrices()!;
     const M = joints.map((j, k) => new THREE.Matrix4().fromArray(j.getWorldMatrix() as number[]).multiply(new THREE.Matrix4().fromArray(ibm.getElement(k, new Array(16).fill(0)))));
-    const got = bodyVertices(doc, (n) => n);
+    const got = bodyVertices(doc, (n) => n, partRange(dir, 'Body'));
     const P = got.prim.getAttribute('POSITION')!;
     const J = got.prim.getAttribute('JOINTS_0')!;
     const W = got.prim.getAttribute('WEIGHTS_0')!;
     let worst = 0;
     const rest: THREE.Vector3[] = [];
-    for (let i = 0; i < P.getCount(); i += 1) {
+    for (let i = got.first; i < got.first + got.uv.length; i += 1) {
       const v = new THREE.Vector3(...(P.getElement(i, [0, 0, 0]) as [number, number, number]));
       const at = v.clone().applyMatrix4(M[0]!);
       rest.push(at);
@@ -1272,7 +1309,7 @@ test('personal-tier: prepare on a figure of boxes — the A-posed two-bone arms 
     // …and the rest they agree on is the T: each hand's vertices level with its shoulder (at 45° they were 0.4 m below it).
     const shoulder = (side: string) => new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().fromArray(joints.find((j) => j.getName() === `upperarm_${side}`)!.getWorldMatrix() as number[]));
     for (const side of ['l', 'r']) {
-      const hand = rest.filter((_, i) => [...got.tuples[i]!].sort((a, b) => b[1] - a[1])[0]?.[0] === `hand_${side}`);
+      const hand = rest.filter((_, i) => [...got.tuples[i]!].sort((a, b) => b[1] - a[1])[0]?.[0] === `hand_${side}`); // rest[i] is the body's i-th vertex
       assert.ok(hand.length > 0, `no vertex on hand_${side}`);
       const y = hand.reduce((a, v) => a + v.y, 0) / hand.length;
       assert.ok(Math.abs(y - shoulder(side).y) < 0.05, `hand_${side}'s vertices sit ${(y - shoulder(side).y).toFixed(3)} m from its shoulder's height`);
@@ -1337,11 +1374,17 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
     assert.equal(report.restPose?.verdict, 'T');
     const skin = doc.getRoot().listSkins()[0]!;
     const jointNames = skin.listJoints().map((j) => j.getName());
-    const capePrim = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives()).find((p) => p.getMaterial()?.getName() === 'Cape')!;
+    // D240: the box of two materials (Body, Cape) is ONE skinned primitive under ONE material — one draw call a figure.
+    const allPrims = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives());
+    assert.equal(doc.getRoot().listMeshes().length, 1, 'one mesh');
+    assert.equal(allPrims.length, 1, 'two materials in, ONE primitive out (D240)');
+    assert.equal(doc.getRoot().listMaterials().length, 1, 'ONE material');
+    const cape = partRange(dir, 'Cape');
+    const capePrim = allPrims[0]!;
     const J = capePrim.getAttribute('JOINTS_0')!;
     const W = capePrim.getAttribute('WEIGHTS_0')!;
     const dominant = new Set<string>();
-    for (let i = 0; i < J.getCount(); i += 1) {
+    for (let i = cape.first; i < cape.first + cape.count; i += 1) {
       const j = J.getElement(i, [0, 0, 0, 0]);
       const w = W.getElement(i, [0, 0, 0, 0]);
       const k = w.indexOf(Math.max(...w));
@@ -1352,6 +1395,8 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
     const checked = node(['tools/personal/check.mjs', SLUG, '--no-preview']);
     assert.equal(checked.status, 0, checked.out);
     assert.match(checked.out, /skinned-vs-file 0\.0\d\d mm/);
+    assert.match(checked.out, /draws: 1 mesh\(es\), 1 skinned, 1 material\(s\) — 1 draw call\(s\) a figure/);
+    assert.match(checked.out, /one skinned primitive under one material: one draw call a figure \(D240\)/);
     assert.match(checked.out, /22\/22 carry weight/);
     assert.match(checked.out, /sides\s+(\d+)\/\1 judged on the agent's side/);
     // The limb check (D193) on the right map: every link, both limbs' proportions, the flesh and the ends.
@@ -1408,37 +1453,86 @@ test('personal-tier: the whole pipeline on a figure of boxes — import, prepare
 });
 
 /**
- * **The paint step** (D194): one primitive per base colour, the tileable ones in
- * one atlas — so a model of many textured parts costs a draw call or two a
- * figure, not one per part. The figure of boxes, textured: its body and its cape
- * each get an 8 × 8 PNG of their own. With both inside one UV tile they share an
- * atlas (one primitive); with the body's UVs wrapping (u up to 1.5, a repeating
- * texture), the body keeps its own texture and the cape its own (two). Every
- * part's vertex range is recorded, and a `--disabled` reason reaches the manifest.
+ * **The atlas helpers** (D240): which whole UV tiles a primitive spans, the shelf
+ * packer (scale 1 on the smallest sheet that holds it, else every region scaled
+ * alike to fit 2048), and a repeating paint laid out over its tiles.
  */
-test('personal-tier: the paint step — tileable parts share an atlas, a wrapping one keeps its texture, every part’s range recorded; --disabled with a reason', { timeout: 120_000 }, async () => {
+test('personal-tier: the atlas helpers — the UV span, the packer and its budget, a repeating paint tiled', () => {
+  assert.deepEqual(lib.uvSpanOf([0, 0], [1, 1]), { origin: [0, 0], span: [1, 1] });
+  assert.deepEqual(lib.uvSpanOf([-0.004, 0], [1.0005, 0.99]), { origin: [0, 0], span: [1, 1] }, 'a 1% overhang is not a wrap');
+  assert.deepEqual(lib.uvSpanOf([0.02, 0], [1.87, 1]), { origin: [0, 0], span: [2, 1] }, "Doom's tunic: u to 1.87 is two tiles");
+  assert.deepEqual(lib.uvSpanOf([1.0, 0], [2.0, 1]), { origin: [1, 0], span: [1, 1] }, "Coulson's UDIM-style u 1…2 is one tile of its own");
+  // Doom: the hood (1024²) and the tunic twice (2048 × 1024) cannot sit at scale 1 in 2048 with their gutters.
+  const doom = lib.packAtlas([{ w: 1024, h: 1024 }, { w: 2048, h: 1024 }])!;
+  assert.deepEqual([doom.width, doom.height], [2048, 2048]);
+  assert.ok(doom.scale > 0.98 && doom.scale < 1, `Doom's scale ${String(doom.scale)}`);
+  // Coulson's twelve 1024² paints: a 2048 × 1536 sheet, each about 496 px.
+  const coulson = lib.packAtlas(Array.from({ length: 12 }, () => ({ w: 1024, h: 1024 })))!;
+  assert.deepEqual([coulson.width, coulson.height], [2048, 1536]);
+  assert.equal(coulson.rects[0]!.w, 496);
+  // Every rectangle inside the sheet, its gutter included, and no two overlapping.
+  for (const packed of [doom, coulson, lib.packAtlas([{ w: 8, h: 8 }, { w: 16, h: 8 }, { w: 16, h: 16 }])!]) {
+    assert.ok(packed.width <= lib.ATLAS_MAX && packed.height <= lib.ATLAS_MAX);
+    const g = lib.ATLAS_GUTTER;
+    packed.rects.forEach((r, i) => {
+      assert.ok(r.x >= g && r.y >= g && r.x + r.w + g <= packed.width && r.y + r.h + g <= packed.height, `rect ${String(i)} leaves the sheet`);
+      packed.rects.forEach((q, j) => {
+        if (j <= i) return;
+        const apart = r.x + r.w + g <= q.x - g || q.x + q.w + g <= r.x - g || r.y + r.h + g <= q.y - g || q.y + q.h + g <= r.y - g;
+        assert.ok(apart, `rects ${String(i)} and ${String(j)} overlap (gutters included)`);
+      });
+    });
+  }
+  const small = lib.packAtlas([{ w: 8, h: 8 }, { w: 16, h: 8 }])!;
+  assert.equal(small.scale, 1, 'what fits at its own size is not scaled');
+  assert.equal(lib.packAtlas([{ w: 4096 * 70, h: 4096 * 70 }]), null, 'nothing fits even at 1/64');
+  // A 2 × 1 texture repeated twice across and once down.
+  const t = lib.tileTexels(new Uint8Array([1, 1, 1, 1, 2, 2, 2, 2]), 2, 1, 2, 1);
+  assert.deepEqual(Array.from(t).filter((_, i) => i % 4 === 0), [1, 2, 1, 2]);
+});
+
+/**
+ * **The paint step, ONE draw call a figure** (D194, D240). The figure of boxes,
+ * textured: its body and its cape each get a 64 × 64 PNG of their own, the left
+ * half one colour and the right half another. With both inside one UV tile they
+ * are two regions of one atlas; with the body's UVs WRAPPING (u up to 1.5 on a
+ * repeating texture — Doom's tunic) the body's region is its texture twice side
+ * by side, and it is STILL one primitive under one material. Untextured, two
+ * factors are two swatches of one atlas. Each time, every body vertex's atlas
+ * texel is the colour its own UV named in its own texture (a colour trace), every
+ * part's range is recorded, check.mjs passes the file and follows the cape.
+ */
+test('personal-tier: the paint step — every paint in one atlas, a wrapping one repeated into its region, ONE primitive under ONE material; --disabled with a reason', { timeout: 180_000 }, async () => {
   const slug = `${SLUG}-paint`;
   const dir = lib.slugDir(slug);
   const createdPersonal = !existsSync(join(REPO, 'personal'));
   const createdModels = !existsSync(lib.MODELS_DIR);
   const { createRequire } = await import('node:module');
-  const sharp = createRequire(join(REPO, 'web/package.json'))('sharp') as (input?: unknown, options?: unknown) => { png(): { toBuffer(): Promise<Buffer> } };
-  // A two-tone swatch: a single-colour texture is folded into the material's factor by gltf-transform's prune.
-  const swatch = (r: number, g: number, b: number): Promise<Buffer> => {
-    const raw = Buffer.alloc(8 * 8 * 3);
-    for (let i = 0; i < 64; i += 1) raw.set(i % 2 === 0 ? [r, g, b] : [255 - r, 255 - g, 255 - b], i * 3);
-    return sharp(raw, { raw: { width: 8, height: 8, channels: 3 } }).png().toBuffer();
+  type Sharp = (input?: unknown, options?: unknown) => { png(): { toBuffer(): Promise<Buffer> }; ensureAlpha(): { raw(): { toBuffer(o: { resolveWithObject: true }): Promise<{ data: Buffer; info: { width: number; height: number } }> } } };
+  const sharp = createRequire(join(REPO, 'web/package.json'))('sharp') as Sharp;
+  const BODY: [number[], number[]] = [[200, 40, 40], [40, 200, 40]];
+  const CAPE: [number[], number[]] = [[40, 40, 200], [220, 200, 30]];
+  /** The left half one colour, the right half another (a one-colour texture is folded into the factor by prune). */
+  const halves = ([left, right]: [number[], number[]]): Promise<Buffer> => {
+    const raw = Buffer.alloc(64 * 64 * 3);
+    for (let y = 0; y < 64; y += 1) for (let x = 0; x < 64; x += 1) raw.set(x < 32 ? left : right, (y * 64 + x) * 3);
+    return sharp(raw, { raw: { width: 64, height: 64, channels: 3 } }).png().toBuffer();
   };
-  const textured = async (wrap: boolean): Promise<Uint8Array> => {
+  const variant = async (kind: 'tile' | 'wrap' | 'factors'): Promise<Uint8Array> => {
     const io = new NodeIO();
     const doc = await io.readBinary(await boxFigure(45, 2));
     const root = doc.getRoot();
     const byName = new Map(root.listMaterials().map((m) => [m.getName(), m]));
     const body = byName.get('Body')!;
     const cape = byName.get('Cape')!;
-    body.setBaseColorTexture(doc.createTexture('body').setImage(new Uint8Array(await swatch(200, 40, 40))).setMimeType('image/png'));
-    cape.setBaseColorTexture(doc.createTexture('cape').setImage(new Uint8Array(await swatch(40, 40, 200))).setMimeType('image/png'));
-    if (wrap) {
+    if (kind === 'factors') {
+      body.setBaseColorFactor([0.8, 0.1, 0.1, 1]);
+      cape.setBaseColorFactor([0.1, 0.1, 0.8, 1]);
+      return io.writeBinary(doc);
+    }
+    body.setBaseColorTexture(doc.createTexture('body').setImage(new Uint8Array(await halves(BODY))).setMimeType('image/png'));
+    cape.setBaseColorTexture(doc.createTexture('cape').setImage(new Uint8Array(await halves(CAPE))).setMimeType('image/png'));
+    if (kind === 'wrap') {
       const prim = root.listMeshes().flatMap((m) => m.listPrimitives()).find((p) => p.getMaterial() === body)!;
       const uv = prim.getAttribute('TEXCOORD_0')!;
       const e = [0, 0];
@@ -1451,51 +1545,94 @@ test('personal-tier: the paint step — tileable parts share an atlas, a wrappin
   };
   mkdirSync(dir, { recursive: true });
   try {
-    for (const wrap of [false, true]) {
-      writeFileSync(join(dir, 'figure.glb'), await textured(wrap));
+    for (const kind of ['tile', 'wrap', 'factors'] as const) {
+      const source = await variant(kind);
+      writeFileSync(join(dir, 'figure.glb'), source);
       assert.equal(node(['tools/personal/import.mjs', join(dir, 'figure.glb'), slug]).status, 0);
-      const args = ['tools/personal/prepare.mjs', slug, '--card', 'Selftest Figure', '--budget', '600'];
-      if (wrap) args.push('--disabled', 'a test model, disabled with its reason');
+      const args = ['tools/personal/prepare.mjs', slug, '--card', 'Selftest Figure', '--budget', '600', '--exposure', 'off'];
+      if (kind === 'wrap') args.push('--disabled', 'a test model, disabled with its reason');
+      else args.push('--enabled');
       const prepared = node(args);
       assert.equal(prepared.status, 0, prepared.out);
       const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as {
-        paint: { primitives: { material: string; atlas: boolean; triangles: number; parts: { part: string; first: number; count: number }[] }[] } | null;
+        paint: {
+          primitives: { material: string; atlas: boolean; triangles: number; parts: { part: string; first: number; count: number }[] }[];
+          atlas: { size: number[]; scale: number; regions: { source: string | null; span: number[]; rect: number[]; parts: string[]; gain: number }[] } | null;
+        };
         textures: { slot: string; size: number[] }[];
         disabled?: unknown;
       };
       assert.deepEqual(lib.validateManifest(manifest), []);
-      const primitives = manifest.paint!.primitives;
-      if (!wrap) {
-        assert.equal(primitives.length, 1, 'two tileable parts: one atlas, one primitive');
-        assert.equal(primitives[0]!.atlas, true);
-        assert.deepEqual(manifest.textures.map((t) => [t.slot, t.size]), [['atlas', [1024, 1024]]]);
-        assert.equal(manifest.disabled, undefined);
-      } else {
-        assert.equal(primitives.length, 2, 'the body wraps: it keeps its own texture beside the cape’s');
-        assert.ok(primitives.every((p) => !p.atlas));
+      assert.match(prepared.out, /paint {7}\d+ part\(s\), 2 paint\(s\) → ONE primitive, ONE material: an atlas of 2 region\(s\)/);
+      const [record] = manifest.paint.primitives;
+      assert.equal(manifest.paint.primitives.length, 1, `${kind}: ONE primitive`);
+      assert.equal(record!.atlas, true);
+      const atlas = manifest.paint.atlas!;
+      assert.ok(atlas.size.every((n) => n <= lib.ATLAS_MAX), JSON.stringify(atlas.size));
+      assert.deepEqual(manifest.textures.map((t) => [t.slot, t.size]), [['atlas', atlas.size]]);
+      assert.equal(atlas.regions.length, 2);
+      assert.ok(atlas.regions.every((r) => r.gain === 1), 'every region records the exposure gain it carries');
+      const bodyRegion = atlas.regions.find((r) => r.parts.includes('Body'))!;
+      assert.deepEqual(bodyRegion.span, kind === 'wrap' ? [2, 1] : [1, 1], `${kind}: the body's region spans the tiles its UVs cover`);
+      if (kind === 'wrap') {
         assert.equal(manifest.disabled, 'a test model, disabled with its reason');
         assert.match(prepared.out, /DISABLED\s+a test model, disabled with its reason/);
-      }
-      // Every part's vertices are recorded, back to back, and the file draws exactly them.
+        assert.match(prepared.out, /repeating: body\S* 2×1 tiles|repeating: .* 2×1 tiles/);
+      } else assert.equal(manifest.disabled, undefined);
+      // The file: one mesh, one primitive, one material, the atlas its base colour; every part's vertices, back to back.
       const doc = (await lib.readDocument(join(dir, 'model.glb'))) as Document;
       const prims = doc.getRoot().listMeshes().flatMap((m) => m.listPrimitives());
-      assert.equal(prims.length, primitives.length);
-      for (const record of primitives) {
-        const prim = prims.find((p) => p.getMaterial()?.getName() === record.material)!;
-        assert.ok(prim !== undefined, `${record.material} is not in the file`);
-        let next = 0;
-        for (const part of record.parts) {
-          assert.equal(part.first, next, `${record.material}: ${part.part} does not start where the one before it ended`);
-          next += part.count;
-        }
-        assert.equal(next, prim.getAttribute('POSITION')!.getCount(), `${record.material}: the ranges do not cover the primitive`);
-        assert.equal(prim.getMaterial()?.getBaseColorTexture() !== null, true, `${record.material} has no base colour`);
-        assert.equal(prim.getAttribute('TANGENT'), null, 'no tangent: the arena draws no normal map');
+      assert.equal(prims.length, 1, `${kind}: two materials in, ONE primitive out`);
+      assert.equal(doc.getRoot().listMaterials().length, 1, `${kind}: ONE material`);
+      const prim = prims[0]!;
+      assert.equal(prim.getMaterial()?.getName(), record!.material);
+      assert.equal(prim.getAttribute('TANGENT'), null, 'no tangent: the arena draws no normal map');
+      let next = 0;
+      for (const part of record!.parts) {
+        assert.equal(part.first, next, `${part.part} does not start where the one before it ended`);
+        next += part.count;
       }
-      assert.deepEqual(new Set(primitives.flatMap((p) => p.parts.map((x) => x.part))).size, 2, 'the body and the cape');
+      assert.equal(next, prim.getAttribute('POSITION')!.getCount(), 'the ranges do not cover the primitive');
+      assert.deepEqual(new Set(record!.parts.map((x) => x.part)).size, 2, 'the body and the cape');
+      // The colour trace: each body vertex's texel in the atlas is the colour its own UV named in its own paint.
+      const image = prim.getMaterial()!.getBaseColorTexture()!.getImage()!;
+      const { data, info } = await sharp(Buffer.from(image)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const body = record!.parts.find((p) => p.part === 'Body')!;
+      const src = (await new NodeIO().readBinary(source)).getRoot().listMeshes().flatMap((m) => m.listPrimitives()).find((p) => p.getMaterial()?.getName() === 'Body')!;
+      const srcU = src.getAttribute('TEXCOORD_0')!;
+      const uv = prim.getAttribute('TEXCOORD_0')!;
+      const count = srcU.getCount();
+      let traced = 0;
+      for (let i = body.first; i < body.first + body.count; i += 1) {
+        const [u, v] = uv.getElement(i, [0, 0]) as [number, number];
+        const texel = (() => {
+          const x = Math.min(info.width - 1, Math.floor(u * info.width));
+          const y = Math.min(info.height - 1, Math.floor(v * info.height));
+          const o = (y * info.width + x) * 4;
+          return [data[o]!, data[o + 1]!, data[o + 2]!];
+        })();
+        if (kind === 'factors') {
+          assert.ok(texel[0]! > 150 && texel[2]! < 120, `vertex ${String(i)}: the body's swatch is not its factor (${texel.join(',')})`);
+          traced += 1;
+          continue;
+        }
+        // Back through the recorded region to the u the vertex had: the box's source u is its index over the
+        // source count (× 1.5 when wrapping), so a u off that lattice (meshopt's 12-bit UVs aside) was not remapped from a real one.
+        const across = (u * info.width - bodyRegion.rect[0]!) / bodyRegion.rect[2]!;
+        const want = across * bodyRegion.span[0]!;
+        const k = (want / (kind === 'wrap' ? 1.5 : 1)) * (count - 1);
+        assert.ok(Math.abs(k - Math.round(k)) < 0.25, `vertex ${String(i)}: u ${want.toFixed(4)} is no source vertex's (index ${k.toFixed(3)})`);
+        const frac = want - Math.floor(want);
+        if (frac < 0.05 || frac > 0.95 || Math.abs(frac - 0.5) < 0.05) continue; // near a colour edge
+        const expected = frac < 0.5 ? BODY[0] : BODY[1];
+        assert.ok(expected.every((c, n) => Math.abs(c - texel[n]!) <= 6), `vertex ${String(i)} (u ${want.toFixed(3)}): atlas ${texel.join(',')} ≠ its paint's ${expected.join(',')}`);
+        traced += 1;
+      }
+      assert.ok(traced > 20, `${kind}: only ${String(traced)} body vertices traced`);
       const checked = node(['tools/personal/check.mjs', slug, '--no-preview']);
       assert.equal(checked.status, 0, checked.out);
-      assert.match(checked.out, /cloak \(rule-skinned\) parts: Cape in paint-\d/, 'check follows the rule-skinned cape inside its merged primitive');
+      assert.match(checked.out, /draws: 1 mesh\(es\), 1 skinned, 1 material\(s\) — 1 draw call\(s\) a figure/);
+      assert.match(checked.out, /cloak \(rule-skinned\) parts: Cape in paint-0/, 'check follows the rule-skinned cape inside its merged primitive');
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
