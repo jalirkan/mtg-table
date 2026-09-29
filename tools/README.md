@@ -53,8 +53,127 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `story-shot.mjs` | A picture of the `#story` page, headless, against a dev server you run. | no | no (a browser) |
 | `build-figures.mjs` | Rebuilds `web/public/models/figures.glb` and `models.json` from the CC0 downloads under `var/assets/figures/`, each verified against `tools/assets-manifest.json` first (D54, D67). | no | no |
 
-Two files here are data, not scripts: `assets-manifest.json` (every CC0 asset's
-URL, bytes, sha256 and licence badge, read by `build-figures.mjs`; D54) and
-`card-library/README.md`. The other `card-library/*.ts` files are modules the
-scripts above import. The two commands a player runs, `scripts/play.sh` and
+Three files here are not scripts: `assets-manifest.json` (every CC0 asset's
+URL, bytes, sha256 and licence badge, read by `build-figures.mjs`; D54),
+`card-library/README.md` (the card library's manual) and `CLAUDE.md` (the
+conventions for working here: the gate step by step, CI, the checker's flags,
+the narrator and the card library). The other `card-library/*.ts` files —
+`config.ts`, `db.ts`, `deck.ts`, `model.ts`, `scryfall.ts` and `store.ts` — are
+modules the scripts above import: `scryfall.ts` is the one door to Scryfall and
+`store.ts` the image cache's paths (`tools/CLAUDE.md`, *Card library*). The two commands a player runs, `scripts/play.sh` and
 `scripts/spectate.sh`, live in `scripts/`; 6b runs `spectate.sh --no-serve`.
+
+## Commands, by task
+
+The root `CLAUDE.md` keeps the ten commands a newcomer types most; these are the
+rest, moved here from its *Build and run* on 2026-09-28 (the docs block) as they
+stood, run from the repo root like everything else. Each script's own header is
+still its manual.
+
+### The bridge, the recorders, the checkers and the deck tools
+
+```bash
+./tools/check-all.sh                        # THE pre-commit gate; runs everything below, GATE_JOBS
+                                            # (min(4, nproc/4)) at a time; a log per job and a timing
+                                            # table under var/check-all/<run>/ (D129, D130); the last
+                                            # GATE_KEEP_RUNS (20) runs are kept
+GATE_JOBS=1 ./tools/check-all.sh            # the serial gate: the old order and lines (not bytes), then the table
+./tools/check-forge.sh                      # gate: asserts the jar + 8 classes, prints sha256
+./tools/make-forge-home.sh                  # symlink res, profile properties, custom-card overlay
+./tools/lint-bridge.sh                      # the banned-accessor grep (hard rule 10), bridge/src + tools/
+./tools/lint-bridge-selftest.sh             # D180: every lint rule fires on a planted snippet (step 2b)
+./bridge/build.sh                           # javac via the jdk.compiler module; runs the lint
+./bridge/run.sh mtgtable.Smoke              # M0
+./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --seed 42 \
+    --out fixtures/games/g1.jsonl           # M1
+node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
+node tools/check-redaction-selftest.mjs      # the checker's own negative controls
+node tools/narrate.mjs fixtures/games/g1.jsonl   # D123: a frame log as a turn-by-turn story
+                                            # (--turn N|A-B, --summary, --seat, --json)
+node tools/narrate-selftest.mjs             # its gate, check-all's 12d (--write-golden
+                                            # regenerates fixtures/narrate/)
+npm --prefix web run dev                    # then /?replay=games/g1.jsonl#story — THE STORY
+                                            # PAGE (D124–D128): the same narrator, in step
+                                            # with the replay (☰ story in the replay bar)
+./scripts/spectate.sh --story               # two AIs, followed live on #story
+node tools/story-shot.mjs --url '<page>' --frame 208 --out var/story/story-g1.png
+                                            # a picture of #story, headless (not in the gate)
+./bridge/run.sh mtgtable.MtgTable --transport console --seed 42   # M2: PLAY A GAME
+./bridge/run.sh mtgtable.MtgTable --transport auto --seed 11      # the seat, automated
+./bridge/run.sh mtgtable.MtgTable --transport null --seed 42      # every ask -> null
+printf "\n\n\n\nq\n" | ./bridge/run.sh mtgtable.MtgTable --transport console \
+    --seed 42                               # the scripted smoke; check-all runs it
+npm --prefix web run dev:replay             # opens /?replay=games/g1.jsonl
+npm --prefix web test && npm --prefix web run build   # `test` = node --test THEN vitest
+node tools/fetch-art.ts                     # every decks/*.dck -> web/public/art.json (M4 needs it)
+node tools/card-library/build.ts            # D90: Scryfall bulk + MSH/MSC -> var/cards/cards.sqlite
+node tools/card-library/images.ts --all-decks   # D90: cache every decks/ card's image
+npm --prefix web run dev                    # then /#cards — the card browser (dev server ONLY)
+./tools/ten-games.sh                        # M5's exit criterion + match setup's rows 11-14; check-all's 9c
+./tools/ten-games.sh --jobs 4               # D129: four rows at a time (~2 minutes instead of ~6)
+./tools/ten-games.sh --games 3              # the first three rows, for a quick look
+./tools/ten-games.sh --seed 13              # match setup: one row, you vs decks/doom-legion.dck, Reckless
+./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
+    --ai-deck decks/doom-legion.dck --ai-profile Reckless   # match setup: the AI's deck + Forge profile
+node tools/check-deck.mjs decks/doom-legion.dck --scryfall   # match setup: is every card in the engine?
+./tools/check-engine-crash.sh               # D115: a card the engine cannot build fails the run
+                                            # (~8 s, a scratch Forge home under var/; check-all's 12c)
+node tools/wire-drift.mjs fixtures/games/g1.jsonl var/check-all-record.jsonl   # step 6 (D113)
+node tools/build-deck.ts                    # D116: every AI deck's .dck, written from decks/specs/*.json
+node tools/build-deck.ts --check            # D116: exit 1 if a .dck is not its spec's (--pool RG: the pool)
+                                            # gate step 12e since D183; needs var/cards/cards.sqlite
+./tools/deck-smoke.sh                       # D116/D117: 5 games per AI deck, the AI piloting it; NOT in the gate
+./bridge/run.sh mtgtable.MtgTable --transport auto --probe --mana-lost-prompt \
+    --seed 7 --game-id human-amount-7 \
+    --deck decks/amount-probe.dck --deck2 decks/morph-probe.dck   # M5: a probe run
+node tools/audit-deck.mjs decks/pacho-shield.dck   # per card: ok / missing / broken on the
+                                            # configured engine; read-only, a throwaway home
+                                            # under var/audit-deck/; needs bridge/out. Not in
+                                            # check-all. decks/fra-rw-aggro.dck: 19/31/0, exit 1
+./tools/javap-seam-diff.sh <old.jar> <new.jar>     # the bridge's Forge API, diffed (read-only)
+./tools/undo-race-repro.sh                  # D136: the undo race, held open, guarded and not (~15 s)
+./scripts/spectate.sh                       # SPECTATE: two AIs, your deck vs match.aiDeck, followed in the arena
+./scripts/spectate.sh --seed 7 --seat 1     # the same game from the other chair (M47)
+./scripts/spectate.sh --no-serve --no-follow --seed 7   # record + redaction-check only, print the URL
+./bridge/run.sh mtgtable.RecordMatch --deck decks/pacho-shield.dck --ai-deck decks/doom-legion.dck \
+    --profile Default --ai-profile Reckless --seed 7 --seat 0 --pace 600 \
+    --out var/spectate/x.jsonl              # what spectate.sh runs (--profile/--ai-profile imply --match)
+node tools/same-game.mjs a.jsonl b.jsonl    # are two recordings of one seed the same game (either seat)?
+```
+
+### `./scripts/play.sh`'s flags
+
+A bare `./scripts/play.sh` plays three games against `config.json`'s
+`match.aiDeck` and lingers while the browser is connected (the root
+`CLAUDE.md`'s *Build and run* says why).
+
+```bash
+./scripts/play.sh                                   # THREE games vs decks/doom-legion.dck, a random seed
+./scripts/play.sh --seed 42                         # a reproducible shuffle
+./scripts/play.sh --mirror --ai-profile Cautious    # match setup: the AI's deck and Forge profile
+./scripts/play.sh --ai-deck decks/masters-of-evil.dck   # D116: B/R villain aggro
+./scripts/play.sh --ai-deck decks/hulk-family.dck       # D116: R/G gamma stompy
+./scripts/play.sh --ai-deck decks/wakanda.dck           # D116: G/W go-wide
+./scripts/play.sh --port 8643 --web-port 5174       # beside a running one
+./scripts/play.sh --no-open --no-keep-open          # no browser; exit the moment the match ends
+./scripts/play.sh -- --games 1                      # one game (your --games wins)
+./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
+```
+
+### The arena, the workshop and their assets
+
+```bash
+npm --prefix web run dev:arena       # vite --open "/?replay=games/g1.jsonl#arena"
+                                     # another fixture is a URL edit, not an argument
+./scripts/play.sh --arena            # the live game, in 3D (--no-arena forces 2D)
+node tools/arena-bench.mjs           # report 09 §9.4's frame times; NOT in check-all
+node tools/arena-bench.mjs --index 316 --gpu gl   # Tier 2's bench frame, on the real GPU
+node tools/build-figures.mjs --src var/assets/figures   # Tier 2: rebuild figures.glb
+                                     # + models.json from the CC0 downloads (by hand)
+npm --prefix web run dev             # then /#workshop — THE WORKSHOP: one card on a
+                                     # pedestal with the arena's own renderer (W in
+                                     # the arena; #workshop?card=<name>; View in 3D
+                                     # in #cards); docs/evidence/workshop.md
+node tools/build-workshop-catalog.ts # decks + fixtures/games + cues.json's names
+                                     # -> workshop/catalog.json
+```
