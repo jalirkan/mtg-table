@@ -23,6 +23,14 @@ added when that lane merged; villain identity's list of seven was added, and it
 closed the status layer's 2; its fix pass added five). **Of the 30 questions
 only the owner can settle, 5 are answered** and 25 stand on the default this
 plan assumes.
+**The 31 follow-up lists hold 381 items, and 285 of them are open** — 261 open,
+18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 96
+closed (M1's six among them; the personal tier's list was added, with its 18 and
+19 closed, when that lane merged; its phase 2 closed ten and opened seven, and
+its fix pass 1 recounted it and opened three; the status layer's list of twelve
+was added when that lane merged; the relief window's list of eight was added by
+that lane, which closed the personal tier's 25). **Of the 30 questions only the owner can settle,
+5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
 
@@ -284,7 +292,6 @@ plan assumes.
 | [Personal tier](#fu-personal) | 22 | open | The ends at attack t = 0.5 caught no arm fold | — |
 | [Personal tier](#fu-personal) | 23 | open | The preview profile stays in the slug's folder, not under `var/` | `tools/personal/check.mjs` |
 | [Personal tier](#fu-personal) | 24 | open | Prepare's fold warning looks only at the forearm | — |
-| [Personal tier](#fu-personal) | 25 | open | The inspect view's depth relief: the painting as a window, not a picture | `web/src/workshop/Pedestal.tsx` |
 | [Personal tier](#fu-personal) | 26 | open | Per-model tuning: the MCU Wasp's wings shrink her, Coulson's shirt shows through his jacket | — |
 | [Personal tier](#fu-personal) | 27 | open | A floor rung that sheds personal models on a slow machine | `web/src/arena/perf.ts` |
 | [Personal tier](#fu-personal) | 28 | open | Upload a personal model's paint at load, not at its first draw | `web/src/arena/scene/personalModels.ts` |
@@ -317,6 +324,14 @@ plan assumes.
 | [Villain identity](#fu-villain-identity) | 10 | open | The Doombots and Servo-Guards read as machines, not as robots in Doom's shape | `web/src/arena/figures/figures.json` |
 | [Villain identity](#fu-villain-identity) | 11 | open | Crossbones is the biggest villain by height alone; the body has no bulk variant | `tools/assets-manifest.json` |
 | [Villain identity](#fu-villain-identity) | 12 | open | Duelists are per seat: a villain-seat replay stands the S.H.I.E.L.D. director behind the villains | `web/src/arena/figures/duelists.json` |
+| [Relief window](#fu-relief) | 1 | open | The same window on the arena's hover — and the board's zoom | `web/src/arena/Arena.tsx` |
+| [Relief window](#fu-relief) | 2 | open | A death rehearsed on the inspect view falls into the painting | `web/src/workshop/framing.ts` |
+| [Relief window](#fu-relief) | 3 | open | The rubber sheet at a silhouette: layers, or the gap filled | `tools/personal/relief_depth.py` |
+| [Relief window](#fu-relief) | 4 | open | A sharper colour map: Scryfall's `art_crop`, with its own depth | `web/src/workshop/relief.ts` |
+| [Relief window](#fu-relief) | 5 | open | The fetched images kept in a second cache beside the card library's | `tools/personal/relief.mjs` |
+| [Relief window](#fu-relief) | 6 | open | A personal model's reach behind its stand point is measured in the browser, not held by a test | `web/test/workshop.test.ts` |
+| [Relief window](#fu-relief) | 7 | open | A map computed while the workshop is open needs a reload | `web/src/workshop/Pedestal.tsx` |
+| [Relief window](#fu-relief) | 8 | open | The relief's 24,576 triangles are not benched on SwiftShader | `tools/arena-bench.mjs` |
 
 ### Questions only the owner can settle
 
@@ -381,6 +396,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The personal tier, phase 1: the folder, the manifest and the pipeline *(off the plan; the user's decision of 2026-09-28 — "this can never ever ever be sold or published")* | 1 day | **built, gated and documented** on branch `personal-tier` (2026-09-28), off `main`'s `a08c15f` and rebased onto `f2c934d` — `tools/personal/` (import, prepare, check) over a gitignored `personal/models/<slug>/`, Doctor Doom run through it, three verification rounds; **D190–D193**; gate green at `GATE_JOBS=4`, 262.4 s; *The personal tier*, just above *Deferred* |
 | — | The personal tier, phase 2: the loader, the other seven models, the workshop | 1 day | **built, gated and documented** on branch `personal-tier-2` (2026-09-28), off `main`'s `096c952` — the clip set baked in, the paint step, `--joints`, `check.json`; a dev-server index and route; THE lookup (hard rule 8, a hostile corpus sweep); Doom as the villain duelist and on his card, and Coulson, Fury, Peggy, the MCU Wasp and the Hulks on theirs; the workshop's badge, toggle and inspect view; the catalog's engine facts; **D194–D196**; gate green twice at `GATE_JOBS=4`, 241.7 s and 241.3 s; **fix pass 1** (2026-09-29): the personal tier's own triangle line, a sum benched at its worst case (**D197**), a model's own colours exposed and never blued (**D198**), three minors; gate green at 241.5 s; *The personal tier*'s *Phase 2* |
 | — | Villain identity: a recording of the Doom Legion, and every villain reading as itself *(off the plan)* | 1 day | **built, gated and documented** on branch `villain-identity` (2026-09-29), off `main`'s `9dfdce4` — `fixtures/games/villain-doom-248.jsonl`, chosen by census over 440 seeds (26 of 27 names face up, twelve of fifteen identity subjects on the table, Doom's Plan paid off); every corpus count moved to the new truth; three defects it found fixed (a land that rose twice, a back row that took the front card's click, a back-row figure with nowhere to stand); a villain rung, fifteen new `traits.json` rows, seven cue rows and two shared kit pieces (`mask`, `cowl`); the workshop lists the Doom Legion second; **D220–D221**; a fix pass after its first verification (**D222**: the crowded table measured at every frame, over the bench's lines before identity; the Legionnaire, the Troopers, Crossbones and Madame Hydra re-dressed; the raster's one-sided cloak Doom's alone); twelve follow-ups; *Villain identity*, just above *Deferred* |
+| — | The relief window: the inspect view's painting with depth *(off the plan; the owner's idea, the personal tier's follow-up 25)* | 1 day | **built, gated and documented** on branch `relief-window` (2026-09-29), off `main`'s `9dfdce4` — `tools/personal/relief.mjs` (+ `relief_depth.py`, Depth Anything V2 Small in the likeness venv) makes a depth map of every card's painting into the gitignored `personal/relief/` (158 cards, 28.5 s, 14.4 MB); the dev route serves it; the workshop's inspect view draws the art box as a window whose vertices recede along their rays from the camera's seat, clear of every figure by measurement, with a *relief* toggle; the Helicarrier framed by its hull; **D225–D226**; eight follow-ups; *The relief window*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -7401,7 +7417,7 @@ fingerprinted before and after: unchanged. **Fix pass 1's gate**, the same way:
 `~/.forge` unchanged again.
 
 <a id="fu-personal"></a>
-### The personal tier's follow-ups — thirty-four, 2026-09-28 (1–7, 9, 11, 18, 19 and 21 closed; 13 and 16 partly)
+### The personal tier's follow-ups — thirty-four, 2026-09-28 (1–7, 9, 11, 18, 19, 21 and 25 closed; 13 and 16 partly)
 
 **Phase 2, the loader** — **all seven closed by phase 2** (D194–D196, *Phase 2*
 below): the index and its one reader (1), the dev-only route and the build grep
@@ -7669,10 +7685,12 @@ range D194–D199, five used (D197 and D198 by fix pass 1, below). Evidence
 its tests are in the web step, its pipeline is by hand (it needs the user's
 downloads). `~/forge` and `~/.forge`: unchanged (evidence §17).
 
-25. **The inspect view's depth relief.** Today the art box is a flat picture
+25. ~~**The inspect view's depth relief.** Today the art box is a flat picture
     behind the figure. The follow-up the owner named: the painting as a WINDOW —
     the frame panel in front, the art behind it with depth (a relief or a few
-    layers), the figure between.
+    layers), the figure between.~~ **Closed by the relief window** (2026-09-29,
+    D225–D226, *The relief window* below): a depth map per card in the personal
+    tier, the art box a displaced plane seen as a window.
 26. **Per-model tuning.** The MCU Wasp's wide wings make the width clamp draw her
     small (a measure that leaves the wings out, or a per-model width note in the
     manifest); Coulson's shirt shows through his decimated jacket (a per-part
@@ -8019,6 +8037,79 @@ on its final tree, exit 0 both, the same counts (`var/check-all-villains-fix1.lo
     makes a duelist the seat's). A duelist look keyed to the deck a seat plays
     (`hello_ok.match`, or the recording's `decks`) would put Doom behind his own
     table.
+## The relief window — the inspect view's painting with depth (2026-09-29, D225–D226)
+
+**Status: built, tested, gated and documented** on branch `relief-window` (the
+worktree `mtg-table-t2r2`, off `main`'s `9dfdce4`); the lane's reserved range
+D225–D228, two used. The owner's idea — *inspect a card and the art box becomes
+a window: the painting with real depth and parallax as the camera moves, the
+figure standing in front of it* — and the personal tier's follow-up 25.
+`docs/evidence/relief-window.md` is what was run; the guide's *The relief cache*
+is the manual; the pictures are in `var/relief/pictures/` (gitignored).
+
+1. **The relief cache** (D225): `node tools/personal/relief.mjs --all` — every
+   card in `art.json` and every personal model's card, 158 — takes the card's
+   `normal` image from the card library's cache (37) or fetches it once through
+   its `ScryfallClient` (121, kept in `personal/relief/source/`), runs Depth
+   Anything V2 Small on the art box in the likeness venv's Python (offline, every
+   cache pinned; ~32 ms a card on the GTX 1080, ~0.12 s on the CPU) and writes an
+   8-bit map per card and an index into the gitignored `personal/relief/`: 28.5 s
+   and 14.4 MB for all 158. Idempotent; a flat image gives a flat map.
+2. **The route**: the dev server serves the index, cut down, and a map it lists;
+   nothing else; a build names none of it.
+3. **The window** (D226): the inspect view's art box is one 128 × 96 plane whose
+   vertices recede along their rays from the camera's seat by the map — 0.3 of the
+   backdrop's height at most — so the painting is the card's from the seat and
+   shows its depth as you orbit; its nearest point stands where the flat picture
+   stood, 0.8 of the figure's height behind it, measured clear of every figure at
+   rest and in every clip but `die`; unlit, no ink mark, no halftone (measured);
+   a *relief* toggle in the toolbar; a flying hull framed by its length.
+4. **The tests**: `relief.test.ts` (the Python step on synthetic images when
+   `MTG_TABLE_LIKENESS` names a venv; the CLI's guard, selection, currency,
+   environment and pacing; THE reader), the route in `personal.test.ts`, one
+   backdrop per face-up card and none for a concealed one in `workshop.test.ts`
+   (hostile copy, ungated control), the figures' reach, the liveness clause.
+
+**The gate**, twice from a deleted `bridge/out` at `GATE_JOBS=4`: `WSPORT=9140`
+**244.6 s** and `WSPORT=9150` **244.5 s**, exit 0 both, 48 jobs, `node --test`
+1,087 / 1,078 pass / 0 fail / 9 skipped and vitest 122 (8 files)
+(`var/check-all-relief-p1.log`, `-p2.log`); the lane added no step and no job.
+`~/forge` and `~/.forge`: unchanged (evidence §8).
+
+<a id="fu-relief"></a>
+### The relief window's follow-ups — eight, 2026-09-29
+
+1. **The same window on the arena's hover — and the board's zoom.** The arena
+   mounts it beside `ArtCredit`: `Arena.tsx`'s `hovered` placement (the `hoverId`
+   state), gated as `ArtCredit` gates it (`!hovered.back`, a face-up card), as a
+   small scene of its own over the canvas, reading the same relief index through
+   the DEV-gated base. The board's zoom (`render/CardZoom.tsx`) is DOM; a window
+   there needs a lazy canvas, since the 2D entry chunk carries no `three` (D49).
+2. **A death rehearsed on the inspect view falls into the painting**: `die` takes
+   a body ~0.89 of its height backward and a drone ~1.46, past the window at 0.8
+   (the flat picture's 0.7 too). Moving the window back for the death alone, or
+   turning the fall toward the camera on the pedestal, are both decisions.
+3. **The rubber sheet at a silhouette.** Where the map jumps (Peggy's pistol,
+   Fury's coat) the plane stretches the painting across the jump. Two known
+   answers: cut the painting into layers at its depth edges, or fill what the near
+   layer uncovers (inpainting, a second model) — both more than a blur.
+4. **A sharper colour map.** The art box of a `normal` image is 410 px wide;
+   Scryfall's `art_crop` is ~626. It is a different crop, so it needs its own map
+   (the tool cuts the map from the colour map's own pixels) and a second texture
+   from the CDN — D225's rejected alternative, revisitable.
+5. **The fetched images live in a second cache** (`personal/relief/source/`, 121
+   images) beside the card library's (`var/cards/images/`). The library's own
+   `images.ts --all-decks` would fetch the same files into the library's cache,
+   and the tool would then fetch nothing.
+6. **A personal model's reach is measured in the browser, not held by a test**:
+   the four measured (0.26–0.53 world units clear) are the driver's numbers; the
+   models are never in CI. A dev-server check — the model's rest bounds against
+   `INSPECT_WINDOW`, printed at start beside its triangles — would hold it.
+7. **A map computed while the workshop is open needs a reload**: the page reads
+   the index once (the route reads it per request).
+8. **The relief's cost on SwiftShader** is not benched: the pedestal draws one
+   card, +24,574 triangles and +0 calls on the GTX 1080. `tools/arena-bench.mjs`
+   benches the arena, not the workshop.
 
 ---
 

@@ -78,8 +78,18 @@ import { TileField } from '../arena/scene/tiles.ts';
 import { EMPTY_PERSONAL, dressPoses, personalChoicesOf, type PersonalOverlay } from '../arena/personal.ts';
 import { NO_PERSONAL_LOADED, type PersonalLoaded } from '../arena/scene/personalModels.ts';
 import { useCardTexture } from '../arena/scene/useCardTexture.ts';
+import { RELIEF_GRID } from '../arena/perf.ts';
 import { turnPoses, type PreviewStage } from './facing.ts';
-import { ART_BOX, inspectLayout, poseFor, type CameraMode, type Framing, type Panel } from './framing.ts';
+import { ART_BOX, poseFor, type CameraMode, type Framing, type Panel } from './framing.ts';
+import {
+  EMPTY_RELIEF,
+  RELIEF_FRAGMENT,
+  RELIEF_VERTEX,
+  artBoxUv,
+  reliefIndexOf,
+  type InspectPlan,
+  type ReliefIndex,
+} from './relief.ts';
 
 /** The one post pass, lazily — the arena's own `Post`, in the arena's own chunk. */
 const Post = lazy(() => import('../arena/scene/Post.tsx').then((module) => ({ default: module.Post })));
@@ -138,11 +148,13 @@ export interface PedestalProps {
   personal?: PersonalOverlay;
   personalLoaded?: PersonalLoaded;
   /**
-   * **INSPECT** (D196): the card image `CardPlane` draws for this card (the same
-   * URL, so the same texture), for the art-box backdrop and the frame panel —
-   * `null` for a concealed entry or a card with no art, which draws neither.
+   * **INSPECT** (D196, D226): `relief.ts`'s plan — the card image `CardPlane`
+   * draws for this card (the same URL, so the same texture) for the art-box
+   * backdrop and the frame panel, the depth map when there is one and the
+   * toolbar says relief, and where each stands. `null` for a concealed entry or a
+   * card with no figure or no art, which draws neither.
    */
-  inspectUrl?: string | null;
+  inspect?: InspectPlan | null;
 }
 
 export function Pedestal(props: PedestalProps): JSX.Element {
@@ -243,7 +255,7 @@ function PedestalScene({
   look = DEFAULT_LOOK,
   personal = EMPTY_PERSONAL,
   personalLoaded = NO_PERSONAL_LOADED,
-  inspectUrl = null,
+  inspect = null,
 }: PedestalProps & {
   loopRef: { current: Frameloop };
   primeRef: { current: number };
@@ -352,6 +364,29 @@ function PedestalScene({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seat, mode, size.height, camera, invalidate]);
 
+  // The dev handle's orbit, for the evidence's parallax pictures (D226): turn the
+  // camera about the vertical through the orbit's target by `deg`, as a drag
+  // would. DEV only, and never from a frame loop.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const handle = window as unknown as { __mtgWorkshop?: Record<string, unknown> };
+    handle.__mtgWorkshop = {
+      ...(handle.__mtgWorkshop ?? {}),
+      orbitBy: (deg: number) => {
+        const controls = controlsRef.current;
+        if (controls === null) return;
+        const t = controls.target;
+        const dx = camera.position.x - t.x;
+        const dz = camera.position.z - t.z;
+        const a = (deg * Math.PI) / 180;
+        camera.position.set(t.x + dx * Math.cos(a) + dz * Math.sin(a), camera.position.y, t.z - dx * Math.sin(a) + dz * Math.cos(a));
+        camera.lookAt(t);
+        controls.update();
+        invalidate();
+      },
+    };
+  }, [camera, invalidate]);
+
   // The stage exactly as `Arena.tsx` computes it (D141): the seats' shown colours
   // and the combat burst, from the synthetic board.
   const stageOn = wantsStage(look);
@@ -387,7 +422,7 @@ function PedestalScene({
         status={strips}
         personal={personalLoaded.models}
       />
-      {mode === 'inspect' && first !== undefined && inspectUrl !== null && <InspectStage framing={first} url={inspectUrl} />}
+      {mode === 'inspect' && inspect !== null && <InspectStage plan={inspect} />}
       <primitive object={castingField.group} />
       <primitive object={overlays.group} />
       <primitive object={bustField.group} />
@@ -429,8 +464,114 @@ function PedestalScene({
 }
 
 // ---------------------------------------------------------------------------
-// INSPECT (D196): the card's art behind the figure, its frame beside it
+// INSPECT (D196, D226): the card's art behind the figure — a window with depth
+// — and its frame beside it
 // ---------------------------------------------------------------------------
+
+/**
+ * **The relief cache's address — DEV only** (D225): in a build this is `null`,
+ * the string is not in the chunk (`personal.test.ts` greps `dist`), no index is
+ * asked for and every backdrop is flat. The Vite dev server's personal route
+ * (`web/src/personal/devRoute.ts`) serves the gitignored `personal/relief/` —
+ * card-art-derived depth maps, never committed — and nothing else serves it.
+ */
+export const RELIEF_BASE: string | null = import.meta.env.DEV ? 'personal/relief/' : null;
+
+let reliefPromise: Promise<ReliefIndex> | null = null;
+let reliefResolved: ReliefIndex | null = null;
+
+/** The relief index, once a page (three's `FileLoader`, never a `fetch` and never a poll). */
+function loadReliefIndex(): Promise<ReliefIndex> {
+  if (RELIEF_BASE === null) return Promise.resolve(EMPTY_RELIEF);
+  reliefPromise ??= new Promise<ReliefIndex>((resolve) => {
+    new THREE.FileLoader().setResponseType('json').load(
+      `${RELIEF_BASE}index.json`,
+      (data) => {
+        resolve(reliefIndexOf(data));
+      },
+      undefined,
+      () => {
+        // No route (MTG_TABLE_PERSONAL=off), no cache yet, a 404: every backdrop is flat.
+        resolve(EMPTY_RELIEF);
+      },
+    );
+  }).then((index) => {
+    reliefResolved = index;
+    if (index.dropped.length > 0) console.info(`[workshop] relief: ${index.dropped.join('; ')}`);
+    return index;
+  });
+  return reliefPromise;
+}
+
+/** **The relief index** — empty until it has loaded, and forever in a build. */
+export function useReliefIndex(): ReliefIndex {
+  const [index, setIndex] = useState<ReliefIndex>(() => reliefResolved ?? EMPTY_RELIEF);
+  useEffect(() => {
+    if (RELIEF_BASE === null) return;
+    let live = true;
+    void loadReliefIndex().then((loaded) => {
+      if (live) setIndex(loaded);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  return index;
+}
+
+/** URL → the depth map's upload. Module scope: one per page, as `useCardTexture`'s. */
+const depthCache = new Map<string, Promise<THREE.Texture>>();
+
+/**
+ * A depth map, as the vertex shader samples it: DATA, not colour
+ * (`NoColorSpace`, so the upload converts nothing), linear, no mipmaps (a vertex
+ * fetch reads level 0), uploaded at once (`gl.initTexture`).
+ */
+function loadDepthTexture(url: string, gl: THREE.WebGLRenderer): Promise<THREE.Texture> {
+  const cached = depthCache.get(url);
+  if (cached !== undefined) return cached;
+  const pending = new THREE.TextureLoader().loadAsync(url).then((texture) => {
+    texture.colorSpace = THREE.NoColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+    gl.initTexture(texture);
+    return texture;
+  });
+  pending.catch(() => {
+    depthCache.delete(url);
+  });
+  depthCache.set(url, pending);
+  return pending;
+}
+
+function useDepthTexture(url: string | null): THREE.Texture | null {
+  const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  useEffect(() => {
+    setTexture(null);
+    if (url === null) return;
+    let live = true;
+    loadDepthTexture(url, gl)
+      .then((loaded) => {
+        if (!live) return;
+        setTexture(loaded);
+        invalidate();
+      })
+      .catch(() => {
+        // A map that did not arrive: the backdrop is drawn flat, at the window.
+        if (live) setTexture(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [url, gl, invalidate]);
+  return texture;
+}
 
 /** One plane, UV-mapped to the art box of a card image (texture v runs bottom-up). */
 function artBoxGeometry(): THREE.PlaneGeometry {
@@ -472,26 +613,65 @@ function frameAlphaMap(): THREE.Texture {
 }
 
 /**
- * **The inspect view's two planes**, from the card image `CardPlane` already
- * fetched (`useCardTexture`, the same URL — one texture): the ART BOX enlarged
- * as a backdrop behind the figure, and the card's frame and text, the art box
- * cut out, as a panel floating at its right. Both are flat and take no click;
- * where they stand is `framing.ts`'s `inspectLayout`, from the pose. The depth
- * relief of the painting is the follow-up (PLAN.md): today it is a picture.
+ * **The inspect view's planes**, from `relief.ts`'s plan and the card image
+ * `CardPlane` already fetched (`useCardTexture`, the same URL — one texture):
+ *
+ *  - **the painting** — the ART BOX enlarged behind the figure. With a depth map
+ *    (and the toolbar's relief on) it is ONE subdivided plane (`RELIEF_GRID`,
+ *    built once per mount) at the window, whose vertex shader sends every vertex
+ *    back along its ray from the inspect camera's seat by how far its texel is
+ *    (`relief.ts`'s `RELIEF_VERTEX`): from the seat it is the card's painting
+ *    pixel for pixel, and orbiting shows its depth. Its material is built once
+ *    per card, at commit, when both textures have arrived. Without one — no map,
+ *    the toggle off, a build, a map that did not load — it is the flat plane at
+ *    the window, as D196 drew it.
+ *  - **the frame** — the card's frame and text with the art box cut out, floating
+ *    at the figure's right.
+ *
+ * Both take no click and neither is a card: `CardPlane` draws the card, and
+ * this is its painting pulled out behind the figure (D196, D225). Nothing here
+ * runs per frame — the orbit moves the camera, the planes stand still, and the
+ * parallax is the geometry's.
  */
-function InspectStage({ framing, url }: { framing: Framing; url: string }): JSX.Element | null {
-  const texture = useCardTexture(url);
-  const layout = useMemo(() => inspectLayout(framing), [framing]);
+function InspectStage({ plan }: { plan: InspectPlan }): JSX.Element | null {
+  const texture = useCardTexture(plan.image);
+  const depth = useDepthTexture(plan.depth?.url ?? null);
+  const layout = plan.layout;
   const artGeometry = useMemo(() => artBoxGeometry(), []);
   const alphaMap = useMemo(() => frameAlphaMap(), []);
+  // The relief's grid: one geometry for every card this mount shows (its UVs are
+  // 0–1 over the art box, which is the depth map's frame too).
+  const reliefGeometry = useMemo(() => new THREE.PlaneGeometry(1, 1, RELIEF_GRID[0], RELIEF_GRID[1]), []);
+  const relief = plan.depth !== null ? layout.relief : 0;
+  const [eyeX, eyeY, eyeZ] = layout.camera.position;
+  // The material, once per card at commit: the painting, its depth, how far it
+  // reaches, and the seat whose rays it recedes along.
+  const reliefMaterial = useMemo(() => {
+    if (texture === null || depth === null || relief <= 0) return null;
+    const [u0, v0, du, dv] = artBoxUv();
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        map: { value: texture },
+        uDepth: { value: depth },
+        uRelief: { value: relief },
+        uEye: { value: new THREE.Vector3(eyeX, eyeY, eyeZ) },
+        uArtBox: { value: new THREE.Vector4(u0, v0, du, dv) },
+      },
+      vertexShader: RELIEF_VERTEX,
+      fragmentShader: RELIEF_FRAGMENT,
+      side: THREE.DoubleSide,
+    });
+  }, [texture, depth, relief, eyeX, eyeY, eyeZ]);
+  useEffect(() => () => reliefMaterial?.dispose(), [reliefMaterial]);
   useEffect(
     () => () => {
       artGeometry.dispose();
       alphaMap.dispose();
+      reliefGeometry.dispose();
     },
-    [artGeometry, alphaMap],
+    [artGeometry, alphaMap, reliefGeometry],
   );
-  if (texture === null || layout === null) return null;
+  if (texture === null) return null;
   const plane = (panel: Panel, key: string, geometry: THREE.BufferGeometry | null, frame: boolean): JSX.Element => (
     <mesh
       key={key}
@@ -505,9 +685,26 @@ function InspectStage({ framing, url }: { framing: Framing; url: string }): JSX.
       <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} {...(frame ? { alphaMap, alphaTest: 0.5 } : {})} />
     </mesh>
   );
+  const backdrop = layout.backdrop;
   return (
     <group name="inspect">
-      {plane(layout.backdrop, 'art', artGeometry, false)}
+      {reliefMaterial !== null ? (
+        <mesh
+          key="relief"
+          name="inspect:relief"
+          position={backdrop.position}
+          rotation={[0, backdrop.rotationY, 0]}
+          scale={[backdrop.width, backdrop.height, 1]}
+          geometry={reliefGeometry}
+          material={reliefMaterial}
+          // The receding vertices leave the plane's own bounds (up to `relief` behind it).
+          frustumCulled={false}
+          raycast={() => {}}
+        />
+      ) : (
+        // Flat: the picture at the window, where the relief's nearest point stands.
+        plane(backdrop, 'art', artGeometry, false)
+      )}
       {plane(layout.frame, 'frame', null, true)}
     </group>
   );

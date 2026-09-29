@@ -3,8 +3,11 @@
 *2026-09-28, **D190**–**D193** (phase 1: the folder, the manifest and the
 pipeline) and **D194**–**D196** (phase 2: the clips baked in, the paint step, the
 verdict file, and the loader that draws a personal model in the arena and the
-workshop — from the Vite dev server only). PLAN.md, *The personal tier*, has the
-status and the follow-ups.*
+workshop — from the Vite dev server only); 2026-09-29, **D225**–**D226** (the
+relief cache: a depth map of every card's painting, and the workshop's inspect
+view drawing the painting as a window with depth — *The relief cache*, below).
+PLAN.md, *The personal tier* and *The relief window*, has the status and the
+follow-ups.*
 
 ## What it is
 
@@ -396,7 +399,9 @@ to §8.2's line plus this one.
 **The workshop** (`#workshop`) badges every card an active model dresses, draws
 the pedestal dressed as the arena is (the *personal / repo* toggle is the A/B),
 and has an **inspect** view: the figure in its signature pose in front of its
-card's art box, the frame and the text floating beside it.
+card's art box — a window with depth where the relief cache has the painting's
+depth map (*The relief cache*, below) — the frame and the text floating beside
+it.
 
 **Adding a model**, end to end:
 
@@ -414,3 +419,64 @@ be drawn (a base plane, eye-occlusion layers) is a `--drop`. What none of those
 can fix — a mesh modelled in a pose, an unskinned jacket — is Blender work, and
 the model stays `--disabled "<why>"` until then. Evidence §16 is the eight
 downloads, each with what it needed.
+
+## The relief cache — the painting behind the figure, with depth
+
+**D225** is the cache, **D226** the window it is drawn as;
+`docs/evidence/relief-window.md` is what was measured. The workshop's **inspect**
+view (`#workshop`, the *inspect* camera) stands the figure in front of its card's
+art box. With the relief cache that art box is a **window**: from where the view
+opens it is the card's painting exactly, pixel for pixel, and as you orbit (drag)
+the painting shows its depth — the near figure in it comes forward, the sky goes
+back — while the figure stands in front of it, as clear of it as it was of the
+flat picture. The toolbar's **relief** checkbox is the A/B; without a depth map
+(or in a build) the painting is the flat picture it always was.
+
+**What it is.** `personal/relief/` holds one depth map per card —
+`<scryfall id>.png`, the art box's crop (410 × 301 px for a `normal` image),
+8-bit greyscale, **near = 255** — and `index.json` (Scryfall id → file, size,
+model, device, date, the art box it was cut with, where the image came from). A
+map is Depth Anything V2 Small's relative depth of the painting, each map
+normalised to its own range (its 1st percentile 0, its 99th 255) and blurred
+1.5 px; a painting with no contrast at all gives a flat map (255, the window)
+rather than the floor the model would invent. `source/` keeps the card images
+the tool had to fetch, so nothing is fetched twice; `.cache/` is where the Python
+step's libraries may write (nothing has).
+
+**It is derived from card art, so it is personal.** Like `art.json` it is a cache
+of what Scryfall serves, and like the models it is **never committed, never
+published and never shown to anyone**: `.gitignore`'s `/personal/` covers it,
+`web/test/personal-tier.test.ts` holds that, the dev server alone serves it
+(`/personal/relief/index.json` and a map the index lists — never `source/`, never
+`.cache/`), and a build carries no address of it. A picture of the inspect view
+stays in `var/`.
+
+**The command** (from the repository root):
+
+```bash
+node tools/personal/relief.mjs --all                  # every card in web/public/art.json, and every personal model's card
+node tools/personal/relief.mjs --card "Doctor Doom"   # one card (repeatable); --force computes it again
+node tools/personal/relief.mjs --all --dry-run        # what it would fetch and compute, doing neither
+npm --prefix web run dev                              # then #workshop, a card, inspect — the dev server prints how many maps it has
+```
+
+- **The image** is the card's `normal` image — the one `art.json` names and the
+  inspect view draws, so the depth lines up with the painting: from the card
+  library's cache (`var/cards/images/`, read only) when it has it, else fetched
+  once through the card library's `ScryfallClient` (`config.json`'s
+  `scryfallUserAgent`, no more than 10 requests a second, logged and printed) and
+  kept in `personal/relief/source/`.
+- **The depth** runs in a Python venv with torch, `transformers` < 5 and the
+  model's weights already in its Hugging Face cache — the likeness experiment's
+  `var/likeness/` is one (`--likeness <dir>` or `MTG_TABLE_LIKENESS` names
+  another: `<dir>/venv/bin/python`, `<dir>/cache/hf`). The hub is offline
+  (`HF_HUB_OFFLINE=1`): the tool never downloads a model. It uses the GPU when
+  torch sees one — about 35 ms a card on the GTX 1080, the whole deck list (158
+  cards) in under half a minute with the fetches — and the CPU otherwise
+  (`--device cpu`, about 0.13 s a card).
+- **Idempotent**: a card whose map is on disk, indexed with this model and cut
+  with this art box, is skipped. Moving `framing.ts`'s `ART_BOX` makes every map
+  stale: the inspect view draws them flat until the tool runs again.
+- **It writes nothing outside `personal/relief/`**: every path goes through one
+  guard, and the Python step's HOME, TMPDIR and CUDA cache are pinned inside
+  `personal/relief/.cache/`.

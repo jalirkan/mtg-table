@@ -173,6 +173,11 @@ test('personal-tier: git ignores personal/ and everything under it', { skip: ins
     'personal/models/doctor-doom/source/scene.gltf',
     'personal/models/any-slug/manifest.json',
     'personal/anything-else.txt',
+    // The relief cache (D225): depth maps derived from card art, the kept images, the Python caches.
+    'personal/relief/index.json',
+    'personal/relief/1f98293e-9d94-4185-8546-8beaf281dfa3.png',
+    'personal/relief/source/1f98293e-9d94-4185-8546-8beaf281dfa3.jpg',
+    'personal/relief/.cache/tmp/x',
   ]) {
     assert.equal(lib.gitIgnores(path), true, `${path} is NOT ignored — a personal model could be committed by \`git add -A\``);
   }
@@ -183,7 +188,15 @@ test('personal-tier: the negative control — the pipeline and its docs are NOT 
   // the half of the rule that catches it. `gitIgnores` asks with `--no-index`:
   // git never reports a TRACKED file as ignored, so once tools/personal/ was
   // committed, asking without it let the unanchored rule through (fix pass 1).
-  for (const path of ['tools/personal/lib.mjs', 'tools/personal/prepare.mjs', 'docs/guides/personal-tier.md', 'web/test/personal-tier.test.ts']) {
+  for (const path of [
+    'tools/personal/lib.mjs',
+    'tools/personal/prepare.mjs',
+    'tools/personal/relief.mjs',
+    'tools/personal/relief_depth.py',
+    'web/src/workshop/relief.ts',
+    'docs/guides/personal-tier.md',
+    'web/test/personal-tier.test.ts',
+  ]) {
     assert.equal(lib.gitIgnores(path), false, `${path} is ignored — the committed pipeline would vanish`);
   }
   const tracked = execFileSync('git', ['ls-files', '--', 'personal'], { cwd: REPO, encoding: 'utf8' }).trim();

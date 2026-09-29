@@ -58,7 +58,7 @@ import {
   type PersonalEntry,
   type PersonalOverlay,
 } from '../src/arena/personal.ts';
-import { buildPersonalIndex, createPersonalMiddleware, describeIndex } from '../src/personal/devRoute.ts';
+import { buildPersonalIndex, buildReliefIndex, createPersonalMiddleware, describeIndex, describeRelief } from '../src/personal/devRoute.ts';
 import { isFaceDown, isHidden, type AnyCard, type Frame } from '../src/protocol.ts';
 import { initialState, reduce, type ClientState } from '../src/reduce.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
@@ -96,6 +96,12 @@ test('personal: the route is the dev server’s alone — configureServer, never
   // The arena names the route behind import.meta.env.DEV, in one module.
   const loader = readFileSync(join(REPO, 'web/src/arena/scene/personalModels.ts'), 'utf8');
   assert.match(loader, /const INDEX_URL: string \| null = import\.meta\.env\.DEV \? 'personal\/index\.json' : null;/);
+  // …and the workshop names the relief cache (D225) the same way, in one module, and nowhere else.
+  const pedestal = readFileSync(join(REPO, 'web/src/workshop/Pedestal.tsx'), 'utf8');
+  assert.match(pedestal, /export const RELIEF_BASE: string \| null = import\.meta\.env\.DEV \? 'personal\/relief\/' : null;/);
+  const code = (file: string): string => readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const naming = sources().filter((file) => !file.endsWith('personal/devRoute.ts') && /['"`]personal\/relief/.test(code(file)));
+  assert.deepEqual(naming.map((f) => f.slice(REPO.length)), ['web/src/workshop/Pedestal.tsx'], 'the relief route is named in one browser module, behind the DEV gate');
 });
 
 /** Every string a personal build must not carry: the route's prefix, and any slug of this machine's folder. */
@@ -292,6 +298,110 @@ test('personal: the route — the index, an active model’s model.glb and manif
   } finally {
     server.close();
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+const RELIEF_A = '1f98293e-9d94-4185-8546-8beaf281dfa3';
+const RELIEF_B = '9b1f213a-e1d4-4a0f-954b-c83915698d98';
+const RELIEF_BOX = { left: 0.08, right: 0.92, top: 0.112, bottom: 0.555 };
+
+/** A synthetic relief cache: an index as `relief.mjs` writes it, and what else lies in the folder. */
+function fakeRelief(): string {
+  const dir = mkdtempSync(join(tmpdir(), 'mtg-relief-route-'));
+  const entry = (id: string, extra: Record<string, unknown> = {}): Record<string, unknown> => ({
+    card: `the card ${id.slice(0, 4)}`,
+    file: `${id}.png`,
+    width: 410,
+    height: 301,
+    bytes: 20000,
+    model: 'depth-anything/Depth-Anything-V2-Small-hf',
+    box: RELIEF_BOX,
+    source: 'library',
+    sourceSha256: '0'.repeat(64),
+    ...extra,
+  });
+  writeFileSync(
+    join(dir, 'index.json'),
+    JSON.stringify({
+      version: 1,
+      model: 'depth-anything/Depth-Anything-V2-Small-hf',
+      reliefs: {
+        [RELIEF_A]: entry(RELIEF_A),
+        // listed, but its file is missing
+        [RELIEF_B]: entry(RELIEF_B),
+        'not-an-id': entry('not-an-id'),
+        '11111111-1111-1111-1111-111111111111': entry('11111111-1111-1111-1111-111111111111', { file: '../models/doctor-doom/model.glb' }),
+        '22222222-2222-2222-2222-222222222222': entry('22222222-2222-2222-2222-222222222222', { box: null }),
+      },
+    }),
+  );
+  writeFileSync(join(dir, `${RELIEF_A}.png`), 'depth-map-a');
+  writeFileSync(join(dir, '22222222-2222-2222-2222-222222222222.png'), 'boxless');
+  // On disk and never served: an unlisted map, the kept card image, the Python caches.
+  writeFileSync(join(dir, '33333333-3333-3333-3333-333333333333.png'), 'unlisted');
+  mkdirSync(join(dir, 'source'));
+  writeFileSync(join(dir, 'source', `${RELIEF_A}.jpg`), 'card art, never served');
+  mkdirSync(join(dir, '.cache', 'tmp'), { recursive: true });
+  writeFileSync(join(dir, '.cache', 'tmp', 'x'), 'x');
+  return dir;
+}
+
+test('personal: the relief cache (D225) — its index read per request and cut down to what the page needs, a map it lists served, nothing else; no-store', async () => {
+  const models = fakeTier([]);
+  const reliefDir = fakeRelief();
+  const { handle } = createPersonalMiddleware(REPO, { dir: models, reliefDir, seatLooks: LOOKS });
+  const server = createServer((req, res) =>
+    handle(req, res, () => {
+      res.statusCode = 418;
+      res.end();
+    }),
+  );
+  await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
+  const address = server.address();
+  const origin = `http://127.0.0.1:${String(typeof address === 'object' && address !== null ? address.port : 0)}`;
+  try {
+    const index = await fetch(`${origin}/personal/relief/index.json`);
+    assert.equal(index.status, 200);
+    assert.equal(index.headers.get('cache-control'), 'no-store');
+    const body = (await index.json()) as { version: number; model: string; reliefs: Record<string, Record<string, unknown>> };
+    assert.equal(body.version, 1);
+    assert.deepEqual(Object.keys(body.reliefs), [RELIEF_A], 'only a Scryfall id, as <id>.png, on disk, with a size and a box');
+    assert.deepEqual(body.reliefs[RELIEF_A], { file: `${RELIEF_A}.png`, width: 410, height: 301, box: RELIEF_BOX }, 'the card, the source and the timings stay on disk');
+    const map = await fetch(`${origin}/personal/relief/${RELIEF_A}.png`);
+    assert.equal(map.status, 200);
+    assert.equal(map.headers.get('content-type'), 'image/png');
+    assert.equal(map.headers.get('cache-control'), 'no-store');
+    assert.equal(Buffer.from(await map.arrayBuffer()).toString(), 'depth-map-a');
+    for (const path of [
+      `/personal/relief/${RELIEF_B}.png`,
+      '/personal/relief/33333333-3333-3333-3333-333333333333.png',
+      '/personal/relief/22222222-2222-2222-2222-222222222222.png',
+      `/personal/relief/source/${RELIEF_A}.jpg`,
+      '/personal/relief/.cache/tmp/x',
+      `/personal/relief/${RELIEF_A.toUpperCase()}.png`,
+      `/personal/relief/%2e%2e/models/${RELIEF_A}.png`,
+      `/personal/relief/..%2f${RELIEF_A}.png`,
+      '/personal/relief/index.json.bak',
+      '/personal/relief/',
+    ]) {
+      const res = await fetch(`${origin}${path}`);
+      assert.equal(res.status, 404, path);
+      assert.equal(res.headers.get('cache-control'), 'no-store', path);
+    }
+    // Read per request: a map relief.mjs adds while the server runs is served on the next ask.
+    writeFileSync(join(reliefDir, `${RELIEF_B}.png`), 'depth-map-b');
+    const again = (await (await fetch(`${origin}/personal/relief/index.json`)).json()) as { reliefs: Record<string, unknown> };
+    assert.deepEqual(Object.keys(again.reliefs).sort(), [RELIEF_A, RELIEF_B].sort());
+    assert.equal((await fetch(`${origin}/personal/relief/${RELIEF_B}.png`)).status, 200);
+    assert.equal((await fetch(`${origin}/personal/index.json`)).status, 200, 'the models’ index is still the models’');
+    assert.equal((await fetch(`${origin}/fixtures/games/g1.jsonl`)).status, 418, 'not ours: handed to the next middleware');
+    assert.match(describeRelief(buildReliefIndex(reliefDir)), /^personal relief: 2 depth map\(s\)/);
+    // No folder, or no index: an empty one, not an error.
+    assert.deepEqual(buildReliefIndex(join(reliefDir, 'nowhere')), { version: 1, model: null, reliefs: {} });
+  } finally {
+    server.close();
+    rmSync(models, { recursive: true, force: true });
+    rmSync(reliefDir, { recursive: true, force: true });
   }
 });
 

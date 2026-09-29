@@ -9526,3 +9526,157 @@ bench's 120 or §8.2's line for one recording; a crowded-table budget in the are
 now — props shed past a figure count, as `MAX_FIGURES` sheds models (PLAN.md's
 villain-identity follow-up 4: an arena change, measured against every view);
 taking the recording out of the corpus (it is the deck a bare `play.sh` plays).
+## D225 — The relief cache: a depth map of every card's painting, made on this machine from card art, a personal-tier cache like `art.json` — gitignored, served by the dev route alone, never committed
+
+*Branch `relief-window` (worktree `mtg-table-t2r2`, off `main`'s `9dfdce4`); the
+lane's reserved range D225–D228.*
+
+**2026-09-29** (the owner's idea: "inspect a card and the art box becomes a
+window"; `docs/evidence/relief-window.md` is what was run, `docs/guides/personal-tier.md`'s
+*The relief cache* the manual)
+
+**Decision.**
+
+1. **A depth map per card, in the personal tier.** `tools/personal/relief.mjs`
+   writes `personal/relief/<scryfall id>.png` for every card in
+   `web/public/art.json` (and every card a personal model dresses) and an
+   `index.json` (Scryfall id → file, size, model, device, date, the art box it
+   was cut with, where the image came from, the time). It is **derived from card
+   art**, so it is the personal tier's by D190's rule: `/personal/` is
+   gitignored (the tier test holds the relief paths too), nothing under it is
+   committed, and a picture of it stays in `var/`. It is a CACHE, like
+   `art.json`: regenerated, never edited, and not needed — without it the inspect
+   view is the flat picture D196 drew.
+2. **The map.** Depth Anything V2 Small (`depth-anything/Depth-Anything-V2-Small-hf`)
+   on the card's `normal` image cut to `framing.ts`'s `ART_BOX` — the exact
+   pixels the inspect view draws, so depth and colour line up by construction —
+   stored 8-bit greyscale at the crop's size (410 × 301), **near = 255**, each map
+   normalised to its own 1st–99th percentile of the model's relative inverse depth
+   and blurred 1.5 px (the browser's grid samples it every ~3.2 px). Eight bits
+   because the browser decodes a PNG to 8-bit channels anyway and 256 steps over
+   the relief are far under a pixel. **A flat image gives a flat map** (255, the
+   window): the model invents a floor on a uniform grey with a painting's spread
+   (raw 0.39–4.98 against Peggy's −0.48–6.51), so a crop whose luma standard
+   deviation is under 2 levels is not asked.
+3. **The image comes from what is already here, and a fetch is paced.** The card
+   library's cache (`var/cards/images/<id>/normal.jpg`, read only) first, then the
+   tool's own copy (`personal/relief/source/`), and only then one GET of
+   `art.json`'s CDN URL through the card library's `ScryfallClient`
+   (`config.json`'s User-Agent, logged), no more than 10 requests in any second,
+   measured from the previous request's logged start with a 2 ms margin.
+4. **The depth step runs in a Python venv the tool never changes.** `relief_depth.py`
+   is run with a venv's own python (`--likeness <dir>`, default `var/likeness`, the
+   likeness experiment's), with the hub OFFLINE (the weights must already be in
+   its Hugging Face cache), bytecode off, and every other place a library could
+   write — HOME, TMPDIR, the CUDA cache — pinned inside `personal/relief/.cache/`.
+   The CLI writes only inside `personal/relief/` (`insideRelief`), and the step
+   refuses any output not directly in its `--out-dir`.
+5. **Served by the dev route alone** (D92's rule, D195's route):
+   `/personal/relief/index.json`, read per request and cut down to what the page
+   needs (per map its file, size and art box — never the card's name or where its
+   image came from), and `/personal/relief/<id>.png` only when that index lists
+   it. `source/` and `.cache/` are never served; a build names none of it.
+
+**Rationale.** The owner wants the painting to have depth; a monocular depth
+model gives a usable relief of a painting in ~35 ms (the likeness experiment's
+route A measured the model on this machine), and the only honest place for
+anything computed from card art is the tier that is never published. Cutting the
+map from the very image the page draws is what makes the depth line up with no
+registration step; keeping the map a cache keeps the repository's rule — nothing
+from card art is committed — mechanical.
+
+**Rejected.**
+
+- **Scryfall's `art_crop` as the source.** Sharper, but a different crop of the
+  painting from the one the inspect view draws (the `normal` image's art box), so
+  the depth would need registering to it — or the page would need a second image
+  from the CDN. The colour map stays D196's one texture; an `art_crop` colour map
+  is a follow-up that would bring its own map.
+- **16-bit maps.** The browser's decoder hands WebGL 8 bits.
+- **Committing a map, or a picture of one, as a fixture.** The tests use a
+  synthetic gradient and a flat grey they encode themselves.
+- **Letting the tool download the model.** Downloads are the owner's; the tool
+  says where it looked and stops.
+- **The flat gate as a rescale** (e.g. multiplying the relief by the image's
+  contrast). It would flatten a painting's quiet passages; the gate only stops
+  the model being asked about an image that carries nothing.
+
+---
+
+## D226 — The inspect view's art box is a WINDOW: a 128 × 96 plane whose vertices recede along their rays from the camera's seat by the depth map, at most 0.3 of the backdrop's height, its nearest point where the flat picture stood
+
+*Branch `relief-window`; the lane's reserved range D225–D228.*
+
+**2026-09-29** (`docs/evidence/relief-window.md`; the pictures are in `var/relief/`)
+
+**Decision.**
+
+1. **One displaced plane per card, built at commit.** With the relief on and a map
+   in the cache, `Pedestal.tsx`'s `InspectStage` draws the painting as ONE
+   `PlaneGeometry(1, 1, 128, 96)` (`perf.ts`'s `RELIEF_GRID`: 24,576 triangles,
+   one draw call — +24,574 triangles and +0 calls against the flat quad, measured
+   with bloom off) with a `ShaderMaterial` built once per card when both textures
+   have arrived (`useMemo`), the painting as its colour map through the art box's
+   UV, the depth map fetched in the vertex shader. Nothing of it runs per frame:
+   the orbit moves the camera and the parallax is the geometry's. Without a map,
+   with the toolbar's *relief* off, in a build, or while the map loads, it is D196's
+   flat picture.
+2. **Along the RAY, not the normal — a window, not a bas-relief.** Every vertex
+   starts on the flat picture's plane (the window) and goes back along its ray
+   from the inspect camera's seat until it is `(1 − depth) × RELIEF_DEPTH ×
+   backdrop height` behind that plane. Stated as the brief states it: the plane's
+   base is pushed back by the relief and each vertex comes toward the camera by
+   `depth × RELIEF_DEPTH`. From the seat the painting is the card's pixel for
+   pixel and its box a rectangle; orbiting shows the depth. The first cut
+   displaced along the normal, and its far content shrank toward the middle and
+   the box's edge went ragged from the seat itself.
+3. **`RELIEF_DEPTH` = 0.3 of the backdrop's height** (1.45 × the figure's): ~0.37
+   world units for a body. At ±25° of orbit the painting's figure stands visibly
+   off its background; the rubber-sheet stretch at a silhouette (Peggy's pistol,
+   Fury's coat) is the price, softened by the map's 1.5 px blur.
+4. **The window stands where the figure cannot reach** (`framing.ts`'s
+   `INSPECT_WINDOW` = 0.8 of the figure's height behind its stand point; the flat
+   backdrop's was 0.7). Measured by `workshop.test.ts` over all 66 figures the
+   catalog stands: at rest the farthest anything reaches behind a stand point is
+   0.598 of its height (the Air Force's swarm), in every clip but `die` 0.751 (a
+   drone's attack wind-up — through the old 0.7). Since the relief only recedes
+   from the window, nothing in it comes nearer the figure than the flat picture
+   did; the personal models measured in the browser keep 0.26–0.53 world units
+   clear. `die` falls through it (a body ~0.89 of its height backward, a drone
+   ~1.46), as it fell through the flat picture — a follow-up.
+5. **A flying hull is framed by its length** (`INSPECT_HULL` = 0.6): a Vehicle's
+   silhouette has its thickness as its `height`, which framed the Helicarrier's
+   inspect view at a quarter of its hull with the camera inside it; it is now a
+   subject 0.6 hull lengths tall, its middle 0.45 of that above the floor.
+6. **Unlit, no ink mark, no halftone.** The painting is drawn as it is (the flat
+   picture's colour: sRGB sampled linear, three's `colorspace_fragment`). Marking
+   it for the ink (D146) was measured: the interior gains almost nothing (the
+   blurred map is too smooth for the depth-edge line), and what it does draw is
+   the window's outer border and the creases the reconstruction makes at a
+   silhouette — lines the painter never drew, tracing the relief's own artefacts,
+   and at an oblique orbit the ragged profile of its edge. Halftone is a shading
+   device for a lit form; the painting carries its own shading. The figure keeps
+   its full ink line against the painting either way (its own mark).
+7. **Hard rule 8.** `relief.ts`'s `inspectSourceOf` is the inspect view's one way
+   to a card's image and so to its map: a concealed entry looks nothing up, and
+   `inspectPlan` builds one backdrop for a face-up card with a figure and an image
+   and none for anything else — swept over the catalog with a hostile copy (each
+   concealed shape handed a name of its own) whose ids the relief index is never
+   asked about, and an ungated source as the negative control.
+
+**Rationale.** The brief is a window, and a window keeps its frame still while
+what is behind it moves — which is exactly displacement along the viewing rays.
+Measuring the figures' reach rather than guessing a margin is how the rest of the
+arena places things (D55, D100); the old 0.7 was a guess, and a drone's wind-up
+went through it.
+
+**Rejected.**
+
+- **Displacement along the plane's normal** (the brief's literal reading, and
+  the first cut): a bas-relief whose outline changes from the seat — pictures in
+  the evidence.
+- **The comic ink over the painting** (point 6), and a halftone.
+- **A per-frame uniform** (the eye following the orbiting camera): the painting
+  would never show its depth, since every vertex would stay on its own pixel.
+- **The same window on the arena's card zoom.** A follow-up, with its mount
+  point in PLAN.md; the inspect view is this lane's deliverable.

@@ -11,7 +11,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin, type ViteDevServer } from 'vite';
 
 import { createCardsMiddleware } from './src/cards/devApi.ts';
-import { createPersonalMiddleware, describeIndex } from './src/personal/devRoute.ts';
+import { PERSONAL_RELIEF_DIR, buildReliefIndex, createPersonalMiddleware, describeIndex, describeRelief } from './src/personal/devRoute.ts';
 import { createSpectateMiddleware } from './src/spectate/devRoute.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -109,7 +109,8 @@ function spectatePlugin(): Plugin {
 /**
  * **The personal tier** (D190, phase 2 — D195): `/personal/index.json` and each
  * ACTIVE model's `model.glb` and `manifest.json`, answered from the gitignored
- * `personal/models/` (`src/personal/devRoute.ts`, which builds the index once, now).
+ * `personal/models/` (`src/personal/devRoute.ts`, which builds the index once, now);
+ * and the relief cache's index and depth maps (D225), from `personal/relief/`.
  *
  * **Dev server only** — `configureServer` and nothing else, D92's rule: the
  * user's own models are never published, a production page has no Node behind
@@ -134,6 +135,8 @@ function personalPlugin(): Plugin {
       }
       const { handle, index } = createPersonalMiddleware(REPO_ROOT, dir === undefined ? {} : { dir });
       for (const line of describeIndex(index)) server.config.logger.info(line);
+      // The relief cache (D225): the workshop's inspect view's depth maps, read per request.
+      server.config.logger.info(describeRelief(buildReliefIndex(resolve(REPO_ROOT, PERSONAL_RELIEF_DIR))));
       server.middlewares.use(handle);
     },
   };

@@ -231,3 +231,9 @@ glob `fixtures/games/` (11, 12b, 12d and the web suite).
 Its fix pass (D222), the same way at `WSPORT` 9120: **250.1 s** and, on the final
 tree, **251.0 s**, exit 0 both, 48 jobs, the same test counts
 (`var/check-all-villains-fix1-run1.log`, `var/check-all-villains-fix1.log`).
+## The relief window (D225–D226)
+
+Twice from a deleted `bridge/out` at `GATE_JOBS=4`, branch `relief-window` off
+`9dfdce4`: `WSPORT=9140` **244.6 s** (48 jobs, 944.1 s summed, load average
+2.4–6.1) and `WSPORT=9150` **244.5 s** (940.9 s summed, 5.5–8.8), exit 0 both —
+`var/check-all-relief-p1.log`, `-p2.log`. The lane added no step and no job.

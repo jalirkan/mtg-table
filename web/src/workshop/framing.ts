@@ -189,7 +189,9 @@ export function tablePixels(height: number, point: readonly [number, number, num
  * **The art box of a card image**, as fractions of a Scryfall `normal` image
  * (488 × 680, the modern frame): left, right, top and bottom of the painting.
  * Measured on the frame, not per card; a full-art or showcase frame is a
- * follow-up (PLAN.md, the depth-relief window).
+ * follow-up (PLAN.md, the relief window). `tools/personal/relief.mjs` cuts its
+ * depth maps with this same box and records it, so moving it makes every map
+ * stale (`relief.ts`'s reader then draws the backdrop flat until the tool runs).
  */
 export const ART_BOX = Object.freeze({ left: 0.08, right: 0.92, top: 0.112, bottom: 0.555 });
 /** The art box's aspect (width over height) on a 488 × 680 image. */
@@ -208,9 +210,39 @@ export interface Panel {
 /** What the inspect view stands where: the camera, the art behind the figure, and the frame beside it. */
 export interface InspectLayout {
   camera: Pose;
+  /**
+   * The painting: its plane is the WINDOW — where the flat picture stands, and
+   * where the relief's nearest point stands (`relief.ts`'s vertex shader sends
+   * every farther point back from it, along its ray from the camera).
+   */
   backdrop: Panel;
   frame: Panel;
+  /** How far behind the figure's stand point the window — the painting's NEAREST point — stands, in world units. */
+  window: number;
+  /** How far behind the window the painting's FARTHEST point stands, in world units — 0 when flat. */
+  relief: number;
 }
+
+/**
+ * **Where the window stands**: the painting's nearest point is this many figure
+ * heights behind the figure's stand point (D226). Measured, not chosen: over every
+ * figure the catalog stands (`workshop.test.ts`), the farthest any body or prop
+ * reaches behind its stand point is 0.60 of its height at rest (the Air Force's
+ * swarm) and 0.75 in a clip (a drone's attack wind-up) — so 0.8 clears both, where
+ * the flat backdrop's 0.7 let the drone's wind-up through. Only `die` reaches
+ * past it (a body falls ~0.89 of its height backward, a drone ~1.46): a death
+ * rehearsed on the inspect view falls into the painting, as it fell through the
+ * flat one (PLAN.md, the relief window's follow-up).
+ */
+export const INSPECT_WINDOW = 0.8;
+
+/**
+ * **A flying hull is framed by its length**: the inspect view treats a Vehicle's
+ * silhouette as a subject this many hull lengths tall, its middle 0.45 of that
+ * above the composition's floor — so a 1.5-long carrier is framed as a 0.9-tall
+ * figure, the size of a body, and its window stands behind the hull's middle.
+ */
+export const INSPECT_HULL = 0.6;
 
 /**
  * **INSPECT**: the figure in its signature pose, the card's ART BOX enlarged as a
@@ -218,24 +250,38 @@ export interface InspectLayout {
  * its right, and a camera in front of the figure framing all three. Every
  * coordinate is from the framing — the pose's stand point, height and facing —
  * so the layout is `layout.ts`'s and the arena's, with the two planes added. A
- * card with no figure is framed as the close-up. No depth relief yet: the art is
- * flat (PLAN.md's follow-up — the window).
+ * card with no figure is framed as the close-up.
+ *
+ * **The relief** (D226): `reliefDepth` is `perf.ts`'s `RELIEF_DEPTH` when the
+ * painting is drawn with its depth — a fraction of the backdrop's height — and 0
+ * when it is flat. The painting then fills the slab from the window back: its
+ * nearest point stays at the {@link INSPECT_WINDOW}, its farthest `relief`
+ * behind it, so the figure is exactly as clear of it as of the flat picture. The
+ * camera does not move with it: flat and relief are an A/B from one place.
  */
-export function inspectLayout(framing: Framing): InspectLayout | null {
+export function inspectLayout(framing: Framing, reliefDepth = 0): InspectLayout | null {
   const pose = framing.pose;
   if (pose === null) return null;
-  const h = Math.max(0.3, pose.height);
+  // A Vehicle's silhouette flies, and its `height` is the hull's THICKNESS: it is
+  // framed by its LENGTH (`width`) instead, standing on a floor below its middle —
+  // sized by its thickness the composition was a quarter of the hull's length and
+  // the camera sat inside the hull (the Helicarrier, measured by this lane).
+  const hull = pose.silhouette !== null;
+  const h = hull ? INSPECT_HULL * pose.width : Math.max(0.3, pose.height);
   const fx = Math.sin(pose.facingY) * FIGURE_FRONT_Z;
   const fz = Math.cos(pose.facingY) * FIGURE_FRONT_Z;
   const turn = Math.atan2(fx, fz);
   // The camera's right, looking back at the figure's front.
   const rx = fz;
   const rz = -fx;
-  const [px, py, pz] = pose.position;
+  const [px, poseY, pz] = pose.position;
+  const py = hull ? poseY - 0.45 * h : poseY;
   const backHeight = 1.45 * h;
   const backWidth = backHeight * ART_ASPECT;
+  const windowAt = INSPECT_WINDOW * h;
+  const relief = Math.max(0, reliefDepth) * backHeight;
   const backdrop: Panel = {
-    position: [px - fx * 0.7 * h, py + backHeight / 2 - 0.02 * h, pz - fz * 0.7 * h],
+    position: [px - fx * windowAt, py + backHeight / 2 - 0.02 * h, pz - fz * windowAt],
     rotationY: turn,
     width: backWidth,
     height: backHeight,
@@ -257,7 +303,7 @@ export function inspectLayout(framing: Framing): InspectLayout | null {
     position: [centre[0] + fx * distance, centre[1] + lift * distance, centre[2] + fz * distance],
     target: centre,
   };
-  return { camera, backdrop, frame };
+  return { camera, backdrop, frame, window: windowAt, relief };
 }
 
 export function poseFor(mode: CameraMode, framing: Framing, canvasHeight: number): Pose {

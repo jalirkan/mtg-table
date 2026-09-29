@@ -476,4 +476,15 @@ root `CLAUDE.md`.
 node tools/personal/import.mjs <download.zip|.gltf|.glb|.vrm> <slug>   # unpack + inspect.json
 node tools/personal/prepare.mjs <slug> --card "<name>" [--seat villain] [--budget 6000] [--joints bind|rest] [--exposure auto|off|<gain>] [--disabled "<why>"]
 node tools/personal/check.mjs <slug>          # our clips on it, the map judged, previews (headless Chromium), check.json
+node tools/personal/relief.mjs --all          # the relief cache (D225): every card's depth map -> personal/relief/
 ```
+
+**The relief cache is the tier's second folder** (**D225**): `personal/relief/`,
+a depth map of every card's painting for the workshop's inspect view (D226),
+written by `relief.mjs` alone through its own write guard (`insideRelief`), its
+images from the card library's cache or fetched through its `ScryfallClient` at
+no more than 10 a second, its depth from a Python venv the tool never installs
+into and never lets download (`HF_HUB_OFFLINE`). Card-art-derived, so it is the
+personal tier's by the same rule as the models: gitignored, served by the dev
+route alone, never committed. `docs/guides/personal-tier.md`'s *The relief cache*
+is its manual.

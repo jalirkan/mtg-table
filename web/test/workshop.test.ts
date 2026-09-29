@@ -53,15 +53,21 @@ import { CLIP_CUE, WORKSHOP_CLIP_CUE, clipCueData, requestFor, workshopRegistry 
 import { cueRows, unreachedSelectors } from '../src/workshop/cueRows.ts';
 import { PreviewStage, turnPoses, wrapAngle } from '../src/workshop/facing.ts';
 import {
+  INSPECT_HULL,
+  INSPECT_WINDOW,
   TABLE_FRAME_HEIGHT,
   closePose,
   framingOf,
   frontPose,
+  inspectLayout,
   tableDepthOf,
   tableForward,
   tablePixels,
   tablePose,
 } from '../src/workshop/framing.ts';
+import { lookupArt, parseArtFile, type ArtIndex } from '../src/art.ts';
+import { RELIEF_DEPTH } from '../src/arena/perf.ts';
+import { inspectPlan, inspectSourceOf, type InspectSource, type ReliefEntry, type ReliefIndex } from '../src/workshop/relief.ts';
 import {
   DEFAULT_OPTIONS,
   IDS,
@@ -611,6 +617,187 @@ test('workshop: the caption is the body as DRAWN in view 1 — projected skinned
 });
 
 // ---------------------------------------------------------------------------
+// INSPECT: the relief window (D225, D226)
+// ---------------------------------------------------------------------------
+
+/** A synthetic art index naming every catalog card, and the hostile names below, each with an id of its own. */
+function syntheticArt(extra: readonly string[]): { art: ArtIndex; idOf: Map<string, string> } {
+  const cards: Record<string, unknown> = {};
+  const idOf = new Map<string, string>();
+  const names = [...new Set([...ENTRIES.map((e) => e.name).filter((n) => n !== ''), ...extra])];
+  names.forEach((name, i) => {
+    const hex = i.toString(16).padStart(12, '0');
+    const id = `00000000-0000-4000-8000-${hex}`;
+    idOf.set(name, id);
+    cards[name] = { front: `https://cards.scryfall.io/normal/front/0/0/${id}.jpg`, back: null, artist: 'test', setCode: 'TST', collectorNumber: String(i), scryfallId: id };
+  });
+  return { art: parseArtFile({ cards, misses: [] }), idOf };
+}
+
+/** A relief index that has a map for every id — and remembers every id it was asked about. */
+function spyRelief(): { index: ReliefIndex; asked: string[] } {
+  const asked: string[] = [];
+  const byId = {
+    get(id: string): ReliefEntry {
+      asked.push(id);
+      return { id, file: `${id}.png`, width: 410, height: 301 };
+    },
+    has(id: string): boolean {
+      asked.push(id);
+      return true;
+    },
+  } as unknown as ReadonlyMap<string, ReliefEntry>;
+  return { index: { byId, dropped: [] }, asked };
+}
+
+const framingFor = (e: WorkshopEntry) => {
+  const state = pedestalState(e, DEFAULT_OPTIONS);
+  return framingOf(layout(state, PRESENCE), posesOf(state), figureIds(e, DEFAULT_OPTIONS)[0]!);
+};
+
+test('workshop: the inspect view builds ONE backdrop per face-up card with a figure, and none for a concealed one — the depth map asked about by face-up ids alone (hard rule 8, negative control)', () => {
+  // Hostile: the two concealed shapes handed a real name — each its own, so a
+  // leak is an id no face-up card has.
+  const hostile = ENTRIES.filter((e) => e.concealed !== null).flatMap((e, i) => [
+    { ...e, key: `${e.key}#hostile-${String(i)}`, name: `Hostile Secret ${String(i)}` },
+  ]);
+  const { art, idOf } = syntheticArt(hostile.map((e) => e.name));
+  const secretIds = new Set(hostile.map((e) => idOf.get(e.name)!));
+  const { index, asked } = spyRelief();
+  let planes = 0;
+  let relief = 0;
+  let faceUpWithFigure = 0;
+  for (const e of [...ENTRIES, ...hostile]) {
+    const framing = framingFor(e);
+    const source = inspectSourceOf(e, art);
+    const plan = inspectPlan(framing, source, index, { on: true, base: 'relief/' });
+    if (e.concealed !== null) {
+      assert.equal(source, null, `${e.key}: a concealed card looked its art up`);
+      assert.equal(plan, null, `${e.key}: a concealed card got an inspect backdrop`);
+      continue;
+    }
+    if (framing.pose === null || source === null) {
+      assert.equal(plan, null, `${e.key}: a backdrop with no figure or no image`);
+      continue;
+    }
+    faceUpWithFigure += 1;
+    assert.ok(plan !== null, `${e.key}: no inspect plan`);
+    // ONE backdrop: one painting, at the window, with its depth map (the spy has one for every id).
+    planes += 1;
+    assert.equal(plan.image, source.url);
+    assert.equal(plan.depth?.url, `relief/${source.scryfallId}.png`);
+    if (plan.depth !== null) relief += 1;
+    // Off, or in a build (no route): the same one backdrop, flat.
+    assert.equal(inspectPlan(framing, source, index, { on: false, base: 'relief/' })?.depth, null);
+    assert.equal(inspectPlan(framing, source, index, { on: true, base: null })?.depth, null);
+  }
+  assert.ok(faceUpWithFigure >= 60, `only ${String(faceUpWithFigure)} face-up cards with a figure`);
+  assert.equal(planes, faceUpWithFigure);
+  assert.equal(relief, faceUpWithFigure);
+  assert.ok(asked.length > 0 && asked.every((id) => !secretIds.has(id)), 'the relief index was asked about a concealed card');
+  // The negative control: the same plan behind a source with the gate taken out
+  // (the art looked up by name whatever the card's concealment) builds a
+  // backdrop — and asks for a depth map — for a face-down card.
+  const ungated = (e: WorkshopEntry): InspectSource | null => {
+    const hit = lookupArt(art, e.name);
+    return hit === null ? null : { url: hit.front, scryfallId: hit.scryfallId };
+  };
+  const leaks = hostile.filter((e) => inspectPlan(framingFor(e), ungated(e), index, { on: true, base: 'relief/' }) !== null);
+  assert.ok(leaks.length >= 1, 'the negative control found no leak — the test would pass with the gate removed');
+  assert.ok(asked.some((id) => secretIds.has(id)), 'the ungated control never reached the relief index');
+});
+
+test('workshop: the relief never comes nearer the figure than the flat picture — the window stands clear of every figure’s bounds at rest and in every clip but die (D226, measured)', async () => {
+  const THREE = await import('three');
+  const raster = await import('./prop-raster.ts');
+  const { instantiateFigure, clipFor } = await import('../src/arena/scene/models.ts');
+  const library = await raster.loadLibrary();
+  const V = new THREE.Vector3();
+  const CLIPS = ['attack', 'hit', 'block', 'summon', 'crouch', 'channel', 'grow', 'shrink', 'pistolDraw', 'radioCall', 'jet'] as const;
+  const clipReach = new Map<string, { reach: number; at: string; die: number }>();
+  let worstRest = { reach: 0, at: '' };
+  let worstClip = { reach: 0, at: '' };
+  let worstDie = 0;
+  let measured = 0;
+  for (const e of ENTRIES) {
+    if (e.concealed !== null) continue;
+    const framing = framingFor(e);
+    const pose = framing.pose;
+    // A body, or a Vehicle's flying hull (framed by its length, INSPECT_HULL).
+    if (pose === null || (pose.modelId === null && pose.silhouette === null)) continue;
+    const flat = inspectLayout(framing, 0);
+    const deep = inspectLayout(framing, RELIEF_DEPTH);
+    assert.ok(flat !== null && deep !== null);
+    // The relief's plane IS the window — the flat picture's plane — and its depth goes back from it.
+    assert.deepEqual(deep.backdrop, flat.backdrop, `${e.key}: the relief moved the window`);
+    const h = pose.silhouette !== null ? INSPECT_HULL * pose.width : Math.max(0.3, pose.height);
+    assert.ok(Math.abs(deep.window - INSPECT_WINDOW * h) < 1e-9);
+    assert.ok(Math.abs(deep.relief - RELIEF_DEPTH * deep.backdrop.height) < 1e-9 && flat.relief === 0);
+    const fx = Math.sin(pose.facingY) * FIGURE_FRONT_Z;
+    const fz = Math.cos(pose.facingY) * FIGURE_FRONT_Z;
+    /** How far behind the stand point, in the inspect view's figure heights (the window is INSPECT_WINDOW of them). */
+    const behind = (x: number, z: number): number => -((x - pose.position[0]) * fx + (z - pose.position[2]) * fz) / h;
+    let rest = -Infinity;
+    for (const layer of raster.figureLayers(pose, library)) {
+      for (let i = 0; i + 2 < layer.tris.length; i += 3) rest = Math.max(rest, behind(layer.tris[i]!, layer.tris[i + 2]!));
+    }
+    if (rest > worstRest.reach) worstRest = { reach: rest, at: e.key };
+    assert.ok(rest < INSPECT_WINDOW - 0.05, `${e.key}: at rest the figure reaches ${rest.toFixed(3)} of its height behind its stand point — the window is ${String(INSPECT_WINDOW)}`);
+    // The clips: the body a cue can play on the pedestal (a ring swarm's rig is never drawn).
+    const ring = pose.swarm > 0 && pose.formation === 'ring';
+    const key = `${String(pose.modelId)}|${JSON.stringify(pose.clips)}`;
+    if (pose.modelId !== null && !ring && !clipReach.has(key)) {
+      const model = library.get(pose.modelId);
+      assert.ok(model !== undefined);
+      let reach = { reach: -Infinity, at: '', die: -Infinity };
+      for (const name of [...CLIPS, 'die' as const]) {
+        const clip = clipFor(model, name, pose.clips[name]);
+        if (clip === null) continue;
+        const figure = instantiateFigure(model);
+        figure.object.position.set(pose.position[0], pose.position[1], pose.position[2]);
+        figure.object.rotation.set(0, pose.facingY, 0);
+        figure.object.scale.setScalar(pose.height);
+        const action = figure.mixer.clipAction(clip);
+        action.play();
+        action.setEffectiveWeight(1);
+        for (let k = 0; k <= 10; k++) {
+          action.time = (k / 10) * clip.duration;
+          figure.mixer.update(0);
+          figure.object.updateMatrixWorld(true);
+          for (const mesh of figure.meshes) {
+            const skinned = mesh as InstanceType<typeof THREE.SkinnedMesh>;
+            const position = skinned.geometry.getAttribute('position');
+            for (let i = 0; i < position.count; i += 2) {
+              V.fromBufferAttribute(position, i);
+              skinned.applyBoneTransform(i, V);
+              V.applyMatrix4(skinned.matrixWorld);
+              const b = behind(V.x, V.z);
+              if (name === 'die') reach.die = Math.max(reach.die, b);
+              else if (b > reach.reach) reach = { ...reach, reach: b, at: `${name}@${(k / 10).toFixed(1)}` };
+            }
+          }
+        }
+      }
+      clipReach.set(key, reach);
+    }
+    const reach = pose.modelId === null ? undefined : clipReach.get(key);
+    if (reach !== undefined) {
+      if (reach.reach > worstClip.reach) worstClip = { reach: reach.reach, at: `${e.key} ${reach.at}` };
+      worstDie = Math.max(worstDie, reach.die);
+      assert.ok(reach.reach < INSPECT_WINDOW, `${e.key}: ${reach.at} reaches ${reach.reach.toFixed(3)} of its height behind its stand point — through the window`);
+    }
+    measured += 1;
+  }
+  assert.ok(measured >= 60, `only ${String(measured)} figures measured`);
+  // The flat backdrop's old 0.7 let a clip through; 0.8 is the measured number, not a guess.
+  assert.ok(worstClip.reach > 0.7, `the worst clip reaches ${worstClip.reach.toFixed(3)} — if it no longer passes 0.7, INSPECT_WINDOW can come forward`);
+  console.log(
+    `relief window (${String(measured)} figures): worst at rest ${worstRest.reach.toFixed(3)} h (${worstRest.at}), worst clip ${worstClip.reach.toFixed(3)} h (${worstClip.at}); ` +
+      `die reaches ${worstDie.toFixed(3)} h — through the window (the flat one too); the window ${String(INSPECT_WINDOW)} h, the relief ${String(RELIEF_DEPTH)} × the backdrop behind it`,
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Tuning: overrides through the arena's validators, in this browser only
 // ---------------------------------------------------------------------------
 
@@ -1103,6 +1290,26 @@ test('liveness: one useFrame in the workshop — the renderer, after CueRunner �
   assert.match(pedestal, /<CueRunner\b/, 'the pedestal is driven by the arena’s own frame loop');
 });
 
+test('liveness: the relief window (D226) — relief.ts is pure and THE reader of the relief index, called only by the pedestal’s loader; the plane is built at commit, never in a frame loop', () => {
+  const files = workshopFiles();
+  const readers = files.filter((f) => /\breliefIndexOf\(/.test(f.code) && f.path !== 'relief.ts');
+  assert.deepEqual(readers.map((f) => f.path), ['Pedestal.tsx'], 'the relief index is read by one loader');
+  const pedestal = files.find((f) => f.path === 'Pedestal.tsx')!.code;
+  assert.equal((pedestal.match(/reliefIndexOf\(/g) ?? []).length, 1);
+  assert.match(pedestal, /new THREE\.FileLoader\(\)\.setResponseType\('json'\)\.load\(\s*`\$\{RELIEF_BASE\}index\.json`/, 'the index is loaded with three’s FileLoader, from the DEV-gated base');
+  // InspectStage: one grid geometry per mount and one material per card, both at commit (useMemo); no frame hook.
+  const stage = pedestal.slice(pedestal.indexOf('function InspectStage('), pedestal.indexOf('const B_POSITION'));
+  assert.ok(stage.length > 500, 'InspectStage moved — move this check with it');
+  assert.match(stage, /useMemo\(\(\) => new THREE\.PlaneGeometry\(1, 1, RELIEF_GRID\[0\], RELIEF_GRID\[1\]\), \[\]\)/);
+  assert.match(stage, /const reliefMaterial = useMemo\(\(\) => \{/);
+  assert.ok(!/useFrame|requestAnimationFrame/.test(stage), 'the inspect view runs nothing per frame');
+  // One backdrop: the relief mesh OR the flat plane, never both.
+  assert.match(stage, /\{reliefMaterial !== null \? \(\s*<mesh\s+key="relief"[\s\S]*?\) : \(\s*plane\(backdrop, 'art', artGeometry, false\)\s*\)\}/);
+  // relief.ts carries no three and no React (the pure-modules clause below holds it too) and no DEV gate of its own.
+  const relief = files.find((f) => f.path === 'relief.ts')!;
+  assert.ok(!/import\.meta\.env/.test(relief.code), 'relief.ts must run under node --test: the route is named in Pedestal.tsx');
+});
+
 test('liveness: the pure modules import no three and no React', () => {
   for (const file of workshopFiles()) {
     if (['Workshop.tsx', 'Pedestal.tsx', 'legibility.ts', 'data.ts'].includes(file.path)) continue;
@@ -1251,12 +1458,15 @@ test('liveness: the list thumbnail and the inspect view are the workshop’s car
       if (imported.from.includes('/render/')) assert.ok(imported.from.endsWith('/render/labels.ts'), `${file.path} imports ${imported.from}`);
     }
   }
-  // Two: the list's thumbnail, and (D196) the inspect view's URL — the SAME image
-  // CardPlane draws for the card, face up only (`inspectUrl`, guarded like art0).
-  // A third card-image surface is a decision (CLAUDE.md, M4 convention 2).
+  // Two: the list's thumbnail, and (D196, D226) the inspect view's image — the SAME
+  // image CardPlane draws for the card, face up only, through relief.ts's one way
+  // in. A third card-image surface is a decision (CLAUDE.md, M4 convention 2).
   assert.equal(images, 2, 'the list thumbnail and the inspect view — a third card-image surface is a decision (CLAUDE.md, M4 convention 2)');
+  const relief = workshopFiles().find((f) => f.path === 'relief.ts')!.code;
+  assert.match(relief, /const hit = entry\.concealed === null \? lookupArt\(art, entry\.name\) : null;/, 'the inspect view looks its art up only face up');
+  assert.match(relief, /return \{ url: imageUrl\(hit, 'normal'\), scryfallId: hit\.scryfallId \};/);
   const shop = workshopFiles().find((f) => f.path === 'Workshop.tsx')!.code;
-  assert.match(shop, /const inspectUrl = art0 !== null && entry\.concealed === null \? imageUrl\(art0, 'normal'\) : null;/, 'the inspect view looks its art up only face up');
+  assert.match(shop, /const inspectSource = useMemo\(\(\) => inspectSourceOf\(entry, art\), \[entry, art\]\);/, 'the workshop reaches the inspect image only through inspectSourceOf');
   const claude = readFileSync(fileURLToPath(new URL('../CLAUDE.md', import.meta.url)), 'utf8');
   assert.match(claude, /The workshop \(`#workshop`\) draws its\s+card LIST's thumbnails/, 'the exemption is not written down in M4 convention 2 (web/CLAUDE.md)');
 });

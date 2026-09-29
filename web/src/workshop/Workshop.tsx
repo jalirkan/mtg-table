@@ -112,6 +112,10 @@
  *     CAMERA, REST_POSE, VIEW_BY_ID, Pose, CameraDirector (subclassed, inert),
  *     CameraFrame, RequestOutcome (camera.ts)
  *     BLOOM_DEFAULT (perf.ts) · colourHex, colourIdOf (colour.ts)
+ *     RELIEF_DEPTH, RELIEF_GRID (perf.ts)    the relief window's two numbers (D226): how
+ *                                            far the painting's depth reaches behind the
+ *                                            window, and the plane's grid (relief.ts,
+ *                                            Pedestal.tsx's InspectStage)
  *     lookFromSearch, lookSpecOf, LookSpec, COMIC, DEFAULT_LOOK, HOLO_BACKGROUND,
  *     combatStageOf, stageColoursOf, stageIdentitiesOf, wantsInkPass, wantsStage
  *     (look.ts)                              the look (D137): the toolbar's A/B over
@@ -180,7 +184,8 @@ import { framingOf, type CameraMode, type Framing } from './framing.ts';
 import { WORKSHOP_KEYMAP, workshopActionFor, type WorkshopKeyAction } from './keys.ts';
 import { LEGIBLE_PX, METER_HEIGHT, METER_WIDTH, drawnHeightPx, measure, type MeterRow } from './legibility.ts';
 import { cardFromLocation, cardsHref, workshopHref } from './links.ts';
-import { Pedestal } from './Pedestal.tsx';
+import { Pedestal, RELIEF_BASE, useReliefIndex } from './Pedestal.tsx';
+import { inspectPlan, inspectSourceOf } from './relief.ts';
 import {
   DEFAULT_OPTIONS,
   HOST_ENTRY,
@@ -338,6 +343,14 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
   const [personalOn, setPersonalOn] = useState(true);
   const overlay = usePersonalOverlay(true);
   const pedestalOverlay: PersonalOverlay = personalOn ? overlay : EMPTY_PERSONAL;
+  /**
+   * **The relief window's A/B** (D226): the inspect view's painting displaced by
+   * its depth map (`relief`, the default wherever the personal tier has one), or
+   * the flat picture D196 drew. The index is the dev route's, read once a page —
+   * empty in a build, where every backdrop is flat.
+   */
+  const [reliefOn, setReliefOn] = useState(true);
+  const reliefIndex = useReliefIndex();
   const [overrides, setOverrides] = useState<Overrides>(() => readOverrides(storage()));
   const [library, setLibrary] = useState<ModelLibrary | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -436,6 +449,15 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
     return figureIds(entry, options).map((id) => framingOf(restPoses.placed, dressed, id));
   }, [restPoses, personalChoices, personalLoaded.fits, entry, options]);
   const personalNames = useMemo(() => new Set(overlay.cards.keys()), [overlay]);
+  // INSPECT (D196, D226): the pedestal's backdrop and frame draw the image CardPlane
+  // draws for this card — the same URL, so the same texture — face up only, through
+  // relief.ts's one way in; the plan adds the depth map when the relief cache has one.
+  const inspectSource = useMemo(() => inspectSourceOf(entry, art), [entry, art]);
+  const reliefAvailable = inspectSource !== null && RELIEF_BASE !== null && reliefIndex.byId.has(inspectSource.scryfallId);
+  const inspect = useMemo(
+    () => (mode === 'inspect' ? inspectPlan(focus[0], inspectSource, reliefIndex, { on: reliefOn, base: RELIEF_BASE }) : null),
+    [mode, focus, inspectSource, reliefIndex, reliefOn],
+  );
   const seat = `${entry.key}|${String(options.both)}|${mode}|${options.stance}`;
   // The caption's number: each framed body's DRAWN height in view 1 — its resting
   // rig projected through the table camera (legibility.ts), not the nominal scale.
@@ -642,6 +664,7 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
       setLook,
       setAutoRest,
       setPersonal: setPersonalOn,
+      setRelief: setReliefOn,
       play: (kind: RehearsalKind) => {
         playKind(kind);
       },
@@ -653,9 +676,6 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
 
   const attached = roleOf(entry) === 'attached';
   const art0 = entry.concealed === null ? lookupArt(art, entry.name) : null;
-  // INSPECT (D196): the pedestal's backdrop and frame draw the image CardPlane
-  // draws for this card — the same URL, so the same texture — face up only.
-  const inspectUrl = art0 !== null && entry.concealed === null ? imageUrl(art0, 'normal') : null;
 
   return (
     <div className="workshop">
@@ -734,7 +754,10 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
           personal={personalOn}
           onPersonal={setPersonalOn}
           personalCount={overlay.entries.length}
-          inspectable={inspectUrl !== null && focus[0]?.pose !== null && focus[0]?.pose !== undefined}
+          inspectable={inspectSource !== null && focus[0]?.pose !== null && focus[0]?.pose !== undefined}
+          relief={reliefOn}
+          onRelief={setReliefOn}
+          reliefAvailable={reliefAvailable}
         />
         <div className="workshop__pedestal">
           <Pedestal
@@ -756,9 +779,16 @@ export default function Workshop({ art, onSetView, waiting = null }: WorkshopPro
             look={look}
             personal={pedestalOverlay}
             personalLoaded={personalLoaded}
-            inspectUrl={inspectUrl}
+            inspect={inspect}
           />
-          <PedestalCaption focus={focus} drawn={drawn} mode={mode} both={options.both} turn={turn} />
+          <PedestalCaption
+            focus={focus}
+            drawn={drawn}
+            mode={mode}
+            both={options.both}
+            turn={turn}
+            relief={inspect === null ? null : inspect.depth !== null}
+          />
         </div>
         <QueueBar
           queue={queue}
@@ -942,6 +972,9 @@ function Toolbar({
   onPersonal,
   personalCount,
   inspectable,
+  relief,
+  onRelief,
+  reliefAvailable,
 }: {
   options: PedestalOptions;
   onOptions: (next: PedestalOptions | ((o: PedestalOptions) => PedestalOptions)) => void;
@@ -959,6 +992,11 @@ function Toolbar({
   personalCount: number;
   /** Whether the card has a figure and an image to inspect. */
   inspectable: boolean;
+  /** The relief window (D226): the inspect view's painting displaced by its depth map, or flat. */
+  relief: boolean;
+  onRelief: (on: boolean) => void;
+  /** Whether this dev server's relief cache has a depth map for this card — never in a build. */
+  reliefAvailable: boolean;
 }): JSX.Element {
   const modes: ReadonlyArray<{ id: CameraMode; label: string; what: string }> = [
     {
@@ -976,7 +1014,7 @@ function Toolbar({
     {
       id: 'inspect',
       label: 'inspect',
-      what: 'the figure in its signature pose, the card’s art box enlarged behind it and its frame and text floating beside it (D196; flat — the depth-relief window is the follow-up)',
+      what: 'the figure in its signature pose, the card’s art box enlarged behind it — a window with depth where the relief cache has the painting’s depth map — and its frame and text floating beside it (D196, D226); drag to orbit',
     },
   ];
   return (
@@ -998,6 +1036,25 @@ function Toolbar({
           </button>
         ))}
       </span>
+      <label
+        title={
+          !reliefAvailable
+            ? 'no depth map for this card on this dev server — the relief tool (relief.mjs) makes them: the personal tier’s relief cache, D225, card-art-derived and never committed'
+            : mode !== 'inspect'
+              ? 'the inspect view’s painting with depth (D226) — switch to inspect'
+              : 'the painting displaced by its depth map, parallax as you orbit (D226) — off: the flat picture'
+        }
+      >
+        <input
+          type="checkbox"
+          checked={relief && reliefAvailable}
+          disabled={!reliefAvailable || mode !== 'inspect'}
+          onChange={(event) => {
+            onRelief(event.currentTarget.checked);
+          }}
+        />{' '}
+        relief
+      </label>
       <span
         className="workshop__seg"
         title={
@@ -1126,6 +1183,7 @@ function PedestalCaption({
   mode,
   both,
   turn,
+  relief,
 }: {
   focus: readonly Framing[];
   /** Each framed body's drawn height in view 1 at 1600×900, px; `null` until figures.glb is in. */
@@ -1133,6 +1191,8 @@ function PedestalCaption({
   mode: CameraMode;
   both: boolean;
   turn: number;
+  /** INSPECT: whether the painting is drawn with its depth (D226); `null` outside inspect. */
+  relief: boolean | null;
 }): JSX.Element {
   const size = (i: number): string => {
     const f = focus[i];
@@ -1160,7 +1220,9 @@ function PedestalCaption({
               : mode === 'front'
                 ? '1× close-up, from the front'
                 : mode === 'inspect'
-                  ? 'inspect: the card’s art behind the figure, its frame beside it (flat — no depth relief yet)'
+                  ? relief === true
+                    ? 'inspect: the card’s art behind the figure, with depth — orbit for the parallax — its frame beside it'
+                    : 'inspect: the card’s art behind the figure (flat), its frame beside it'
                   : '1× close-up, from your seat'}
           {size(0) !== '' ? ` · ${size(0)}` : ''}
           {turn !== 0 ? ' · facing preview: the other seat' : ''}

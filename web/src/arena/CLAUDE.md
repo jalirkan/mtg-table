@@ -1095,3 +1095,9 @@ own depth (`layout.ts`'s `proxySizeOf`, which `HitProxy` reads), so a click on a
 front card's centre is the front card's; and a back-row figure steps ±0.035 aside
 when every step back is covered, with `figure-pose.test.ts` telling a figure
 *boxed in* — nowhere clear on its card — from one standing on another card.
+The workshop's relief window (D225, D226; `web/CLAUDE.md`'s *The relief window*)
+is the personal tier's inspect backdrop, and it is not a card: nothing under
+`arena/` draws or reads it, `CardPlane` stays the one card renderer, and only its
+two numbers live here, in `perf.ts` (`RELIEF_DEPTH`, `RELIEF_GRID`). The arena's
+own card zoom has no window yet — PLAN.md's relief-window follow-up names where
+one would mount.

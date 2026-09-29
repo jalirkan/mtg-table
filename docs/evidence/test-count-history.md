@@ -163,3 +163,12 @@ per-fixture cases for the twentieth recording. Inside `check-all.sh`:
 **1,092 / 1,084 pass / 0 fail / 8 skipped**, and 124 vitest. Its fix pass (D222)
 extended the census, the raster's one-sided rows and the villain costume list in
 place and added no case: the same counts, standalone and inside the gate.
+## The relief window (`relief-window`, off `9dfdce4`)
+
+`npm --prefix web test` is **1,072 `node --test` + 122 vitest (8 files)**
+standalone (1,065 pass, 7 skipped with `web/dist` built): twelve new cases on
+`9dfdce4`'s 1,060 — `relief.test.ts`'s eight (its depth-step case skips unless
+`MTG_TABLE_LIKENESS` names a venv; run with one, it passed in 5.8 s), one route
+case in `personal.test.ts`, and three in `workshop.test.ts` (one backdrop per
+face-up card, the figures' reach, the liveness clause). Inside `check-all.sh`:
+**1,087 / 1,078 pass / 0 fail / 9 skipped** plus 122 vitest, both runs.

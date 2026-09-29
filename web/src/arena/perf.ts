@@ -279,3 +279,23 @@ export const PERSONAL_MAX_FIGURES = 4;
  * the line `tools/arena-bench.mjs --personal` holds a frame to.
  */
 export const PERSONAL_TABLE_TRIS = 36000;
+
+/**
+ * **The relief window** (D225, D226): the workshop's INSPECT view draws the
+ * card's painting as a displaced plane — the personal tier's depth map
+ * (`tools/personal/relief.mjs`, never committed) sending each vertex back from
+ * the window along its ray from the camera's seat. Two numbers, and both are the
+ * page's cost as much as its look:
+ *
+ * - `RELIEF_DEPTH` — how far the painting's farthest point stands behind its
+ *   nearest, as a fraction of the backdrop's HEIGHT (1.45 × the figure's): 0.3 is
+ *   ~0.44 of a figure. The nearest point stays on the window, where the flat
+ *   picture stood, so the figure in front is as clear of it as before
+ *   (`workshop.test.ts` measures every figure).
+ * - `RELIEF_GRID` — the plane's segments across and down: 128 × 96 is 12,288
+ *   quads, 24,576 triangles in ONE draw call, built once per card at commit (the
+ *   map is ~410 × 301 px, so a vertex every ~3.2 px of it). The pedestal draws one
+ *   card; the arena draws none of it.
+ */
+export const RELIEF_DEPTH = 0.3;
+export const RELIEF_GRID: readonly [number, number] = Object.freeze([128, 96] as [number, number]);

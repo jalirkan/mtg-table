@@ -14,10 +14,22 @@
  *     GET /personal/index.json                    the index (below)
  *     GET /personal/models/<slug>/model.glb       an ACTIVE model's prepared file
  *     GET /personal/models/<slug>/manifest.json   …and its manifest
+ *     GET /personal/relief/index.json             the relief cache's index (D225)
+ *     GET /personal/relief/<scryfall id>.png      a depth map that index lists
  *
  * Everything else under `/personal/` is a 404 — the download, `source/`, the
- * previews, `check.json`, a disabled or failing model's files. Every answer is
- * `no-store`: the browser is not asked to keep a copy.
+ * previews, `check.json`, a disabled or failing model's files, the relief
+ * cache's kept card images (`relief/source/`) and its Python caches. Every answer
+ * is `no-store`: the browser is not asked to keep a copy.
+ *
+ * **The relief cache** (D225) is `personal/relief/`: depth maps
+ * `tools/personal/relief.mjs` computed from each card's painting — derived from
+ * card art, so personal, gitignored and never published, like the models. Its
+ * index is read from disk on every request (a map the tool adds while the dev
+ * server runs is served at the next page load), sanitised to what the workshop's
+ * inspect view needs — per map its file, size and the art box it was cut with —
+ * and a map is served only when that index lists it, by a Scryfall id, as
+ * `<id>.png`.
  *
  * **The index is built once, when the dev server starts**, from every
  * `personal/models/<slug>/manifest.json`. A model is ACTIVE when:
@@ -53,6 +65,10 @@ import { PERSONAL_CALL_CAP, PERSONAL_TRI_CAP } from '../arena/perf.ts';
 
 /** Where the personal tier lives, relative to the repo root (`.gitignore`'s `/personal/`). */
 export const PERSONAL_MODELS_DIR = 'personal/models';
+/** The relief cache (D225): depth maps derived from card art, relative to the repo root. */
+export const PERSONAL_RELIEF_DIR = 'personal/relief';
+/** A Scryfall id — the only name a depth map may have. */
+const SCRYFALL_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** The URL prefix the route answers. */
 export const PERSONAL_PREFIX = '/personal/';
 /** A slug: lowercase letters and digits in hyphen-separated runs (`tools/personal/lib.mjs`'s `isSlug`). */
@@ -92,6 +108,8 @@ export interface PersonalIndex {
 export interface PersonalRouteOptions {
   /** The folder of models; `<repoRoot>/personal/models` by default. A test points it at a temp dir. */
   dir?: string;
+  /** The relief cache; `<repoRoot>/personal/relief` by default. A test points it at a temp dir. */
+  reliefDir?: string;
   /** `duelists.json`'s seat → look map, read from the repo by default. */
   seatLooks?: Readonly<Record<string, string>>;
 }
@@ -247,6 +265,57 @@ export function buildPersonalIndex(repoRoot: string, options: PersonalRouteOptio
   return { version: 1, builtAt: new Date().toISOString(), models, skipped };
 }
 
+/** One depth map, as the relief index serves it: what the inspect view needs and nothing more. */
+export interface ReliefIndexEntry {
+  file: string;
+  width: number;
+  height: number;
+  box: { left: number; right: number; top: number; bottom: number };
+}
+
+/** The relief cache's index, as served (`workshop/relief.ts`'s `reliefIndexOf` reads it). */
+export interface ReliefIndex {
+  version: 1;
+  model: string | null;
+  reliefs: Record<string, ReliefIndexEntry>;
+}
+
+/**
+ * **The relief index** from `<dir>/index.json` (written by
+ * `tools/personal/relief.mjs`), read NOW: every entry whose key is a Scryfall id,
+ * whose file is exactly `<id>.png` and on disk, with a size and an art box. The
+ * card's name, the image's source and the timings stay on disk — the page needs
+ * none of them. No folder, or no index: an empty one.
+ */
+export function buildReliefIndex(dir: string): ReliefIndex {
+  const out: ReliefIndex = { version: 1, model: null, reliefs: {} };
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8'));
+  } catch {
+    return out;
+  }
+  if (!isRecord(raw) || raw['version'] !== 1 || !isRecord(raw['reliefs'])) return out;
+  out.model = typeof raw['model'] === 'string' ? raw['model'] : null;
+  for (const [id, entry] of Object.entries(raw['reliefs'])) {
+    if (!SCRYFALL_ID.test(id) || !isRecord(entry) || entry['file'] !== `${id}.png`) continue;
+    const { width, height, box } = entry;
+    if (typeof width !== 'number' || typeof height !== 'number' || !isRecord(box)) continue;
+    const edges = ['left', 'right', 'top', 'bottom'].map((k) => box[k]);
+    if (!edges.every((v) => typeof v === 'number')) continue;
+    const file = join(dir, `${id}.png`);
+    if (!existsSync(file) || statSync(file).size === 0) continue;
+    const [left, right, top, bottom] = edges as number[];
+    out.reliefs[id] = { file: `${id}.png`, width, height, box: { left: left!, right: right!, top: top!, bottom: bottom! } };
+  }
+  return out;
+}
+
+/** The start line for the relief cache: how many maps, and that they are personal. */
+export function describeRelief(index: ReliefIndex): string {
+  return `personal relief: ${String(Object.keys(index.reliefs).length)} depth map(s) for the workshop's inspect view (card-art-derived, dev server only — D225)`;
+}
+
 /** The lines the dev server prints at start: what is active, and what was skipped and why. */
 export function describeIndex(index: PersonalIndex): string[] {
   const out = [`personal tier: ${String(index.models.length)} active model(s), ${String(index.skipped.length)} skipped (dev server only, D190)`];
@@ -264,6 +333,7 @@ export function createPersonalMiddleware(
   options: PersonalRouteOptions = {},
 ): { handle: (req: IncomingMessage, res: ServerResponse, next: () => void) => void; index: PersonalIndex } {
   const dir = options.dir ?? resolve(repoRoot, PERSONAL_MODELS_DIR);
+  const reliefDir = resolve(options.reliefDir ?? resolve(repoRoot, PERSONAL_RELIEF_DIR));
   const index = buildPersonalIndex(repoRoot, options);
   const active = new Set(index.models.map((m) => m.slug));
   const body = JSON.stringify(index);
@@ -279,6 +349,32 @@ export function createPersonalMiddleware(
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.end(body);
+      return;
+    }
+    // The relief cache (D225): its index, read now, and a map it lists — nothing else.
+    if (rest === 'relief/index.json') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify(buildReliefIndex(reliefDir)));
+      return;
+    }
+    if (rest.startsWith('relief/')) {
+      const map = /^relief\/([^/]+)\.png$/.exec(rest);
+      const id = map?.[1] ?? '';
+      const file = resolve(reliefDir, `${id}.png`);
+      if (
+        map === null ||
+        !SCRYFALL_ID.test(id) ||
+        !file.startsWith(reliefDir + '/') ||
+        buildReliefIndex(reliefDir).reliefs[id] === undefined
+      ) {
+        res.statusCode = 404;
+        res.end('not a served relief file (only a depth map the relief index lists is)');
+        return;
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'image/png');
+      res.end(readFileSync(file));
       return;
     }
     const match = /^models\/([^/]+)\/(model\.glb|manifest\.json)$/.exec(rest);

@@ -54,6 +54,7 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `build-figures.mjs` | Rebuilds `web/public/models/figures.glb` and `models.json` from the CC0 downloads under `var/assets/figures/`, each verified against `tools/assets-manifest.json` first (D54, D67). | no | no |
 | `personal/import.mjs` | **The personal tier** (D190): copies a model the user downloaded into the gitignored `personal/models/<slug>/`, unpacks it into `source/`, drafts `SOURCE.txt`, and writes `inspect.json` — meshes, skins, the rest pose (T or A, from the bind matrices), control meshes, unskinned meshes, game-asset names. `docs/guides/personal-tier.md` is the manual. | no | no |
 | `personal/prepare.mjs` | Makes it a figure our clips drive (D191, D194): strips the rig's control shapes, rebuilds the skeleton on our 22 joints (the joints and the vertices read in one pose, `--joints`), turns an A-pose to T, skins what had no skin, decimates to `--budget` (welding a part the simplifier stops on), bakes our clip set in, runs the paint step (one primitive per base colour, an atlas where the UVs allow), exposes a paint too dark to read unlit (`--exposure`, D198), meshopt last. Writes only `model.glb` and `manifest.json` in the slug's folder. | no | no |
+| `personal/relief.mjs` | **The relief cache** (D225): a depth map of every card's painting for the workshop's inspect view (D226) — `--all` (every card in `web/public/art.json` and every personal model's card) or `--card "<name>"`; the card's `normal` image from the card library's cache, else fetched once through its `ScryfallClient` (≤ 10 a second, kept in `personal/relief/source/`); Depth Anything V2 Small on the art box by `personal/relief_depth.py` in the likeness venv's Python (`--likeness`, offline, every cache pinned); `personal/relief/<scryfall id>.png` (8-bit, near = 255) and `index.json`. Idempotent (`--force`); ~35 ms a card on the GTX 1080, ~0.13 s on the CPU. Card-art-derived: gitignored, never committed. | no (`web/test/relief.test.ts` runs the Python step on synthetic images when `MTG_TABLE_LIKENESS` names a venv) | no (the venv) |
 | `personal/check.mjs` | Plays our clip set (idle, attack, hit, die, kneel) on a prepared model by the build's world-space-delta retarget, and judges the rig map against the `agent` body — weight on every core joint, sides, the feet's facing, the branches (D192), and each spine, arm and leg link's direction, proportion and flesh, and the chain ends at attack t = 0.5 (D193) — with a joint-coverage table and a limb table; renders previews through headless Chromium (`--no-preview`), whose profile stays in the slug's folder and is read and deleted, and whose net log must show no connection, byte, DNS query or cache entry beyond 127.0.0.1. Its closing line lists what was judged. Since D194 it also holds the clips baked into `model.glb` to the retarget, and writes `check.json` (the verdict and the model's sha256) — what the dev server reads before it loads a model. | no (`web/test/personal-tier.test.ts` runs the whole pipeline on a figure of boxes, `--no-preview`) | no (a browser) |
 
 Three files here are not scripts: `assets-manifest.json` (every CC0 asset's
@@ -68,7 +69,8 @@ modules the scripts above import: `scryfall.ts` is the one door to Scryfall and
 the cloak's height rule, `judgeBody`, `judgeLimbs`, the net-log reader and the
 preview profile's reader) and
 `personal/retarget.mjs` (the build's retarget as a function, proven against
-the build's own clips), and `forge-scripts.ts` (Forge's `cardsfolder.zip` read
+the build's own clips), `personal/relief_depth.py` (the relief's depth step,
+Python, run by `relief.mjs` alone), and `forge-scripts.ts` (Forge's `cardsfolder.zip` read
 by hand — a card's script by its name — for `build-workshop-catalog.ts`, D196). The two commands a player runs, `scripts/play.sh` and
 `scripts/spectate.sh`, live in `scripts/`; 6b runs `spectate.sh --no-serve`.
 
@@ -185,4 +187,8 @@ npm --prefix web run dev             # then /#workshop — THE WORKSHOP: one car
                                      # in #cards); docs/evidence/workshop.md
 node tools/build-workshop-catalog.ts # decks + fixtures/games + cues.json's names
                                      # -> workshop/catalog.json
+node tools/personal/relief.mjs --all # the relief cache (D225): every card's depth map
+                                     # for the workshop's inspect view -> personal/relief/
+                                     # (gitignored; --card "<name>", --force, --device cpu,
+                                     # --likeness <venv root>; the dev server serves it)
 ```
