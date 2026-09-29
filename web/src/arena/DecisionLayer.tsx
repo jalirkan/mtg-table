@@ -655,7 +655,7 @@ export interface ViewSwitcherItem {
  * **The director's shot changes no width** (D265, the audit's third fix pass).
  * It was drawn as text in the director's button — " · Table", " · Opp.
  * shoulder" — which grew the switcher from 230 px to 283–336 the moment `6` was
- * pressed and wrapped it under the cue strip at 1280, 1400 and 1840 px: the
+ * pressed and wrapped it under the cue strip at 1280, 1400 and 1840 px (and 1920 for the longest shot): the
  * column 126 px, 144 with `I`, past `HUD_TOP_PX`. The shot is always one of the
  * five views, and each has a button here, so the shot is MARKED on that button
  * (`arena__view--shot`, a dashed border where the solid one was — the same
