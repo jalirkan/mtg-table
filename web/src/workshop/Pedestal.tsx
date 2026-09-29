@@ -635,10 +635,11 @@ const BACK_BEHIND = 0.01;
  *    subjects hide, filled in. Their vertex shader sends every vertex back along
  *    its ray from the inspect camera's seat by how far its texel is
  *    (`relief.ts`'s `RELIEF_VERTEX`); their fragment shader cuts the front at a
- *    silhouette and both at the window's rectangle (`RELIEF_FRAGMENT`). From
- *    the seat it is the card's painting (but for a seam a pixel wide along each
- *    cut — the back image is a JPEG), and orbiting shows its depth behind a
- *    still frame. The materials are built once per card, at
+ *    silhouette (the vertex's jump and the map's keep mask, D228) and both at
+ *    the window's rectangle (`RELIEF_FRAGMENT`). From the seat it is the
+ *    card's painting (but for a pixel here and there along a cut: the back
+ *    image is a JPEG, and a triangle interpolates), and orbiting shows its
+ *    depth behind a still frame. The materials are built once per card, at
  *    commit, when the three textures have arrived. Without them — no map, the
  *    toggle off, a build, a map that did not load — it is the flat plane at the
  *    window, as D196 drew it.
@@ -684,8 +685,9 @@ function InspectStage({ plan }: { plan: InspectPlan }): JSX.Element | null {
           uArtBox: { value: new THREE.Vector4(...boxes.colour) },
           uDepthBox: { value: new THREE.Vector4(...boxes.depth) },
           uCell: { value: new THREE.Vector2(1 / RELIEF_GRID[0], 1 / RELIEF_GRID[1]) },
-          // The back layer is never cut at a silhouette: it is what the cut shows.
-          uCut: { value: back ? 2 : RELIEF_CLIFF },
+          // The silhouette's cut: the front's alone — the shader never cuts the
+          // back layer (`uLayer` 1), because it is what the cut shows.
+          uCut: { value: RELIEF_CLIFF },
           uWindow: { value: new THREE.Vector3(...clip.centre) },
           uFront: { value: new THREE.Vector3(...clip.front) },
           uRight: { value: new THREE.Vector3(...clip.right) },

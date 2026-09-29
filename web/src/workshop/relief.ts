@@ -26,15 +26,18 @@
  * otherwise (`web/test/workshop.test.ts`, with an ungated source as its negative
  * control).
  *
- * **Two layers** (D227). The FRONT is the painting at its depth (the map's red),
- * CUT wherever the map jumps at a silhouette (`perf.ts`'s `RELIEF_CLIFF`) —
- * the triangles that would otherwise stretch the subject's edge across the gap
- * an orbit opens (the rubber sheet D226 accepted and the verifier did not). The
- * BACK stands behind it at the farthest depth near each silhouette (the green),
- * coloured by `<id>.back.jpg` — the painting with what its subjects hide filled
- * in, soft, and continued past its edges — so the gap shows what was behind the
- * subject, out of focus. From the seat the two are one picture: the back keeps
- * the painting's own pixels wherever the front is cut. And both are clipped to
+ * **Two layers** (D227, D228). The FRONT is the painting at its depth (the map's
+ * red), CUT wherever the map jumps at a silhouette (`perf.ts`'s `RELIEF_CLIFF`)
+ * — the triangles that would otherwise stretch the subject's edge across the gap
+ * an orbit opens (the rubber sheet D226 accepted and the verifier did not) — and
+ * pixel by pixel where the map's blue, the front's keep mask, says so: the
+ * subject keeps its painted contour, and the background beside it is cut. The
+ * BACK stands behind it at the far side of each silhouette (the green), coloured
+ * by `<id>.back.jpg` — the painting with its subjects filled by the background
+ * just across each silhouette, mirrored and out of focus, and continued past its
+ * edges the same way — so the gap shows what was behind the subject. From the
+ * seat the two are one picture: the back keeps the painting's own pixels
+ * wherever the front is cut, and a texel past it. And both are clipped to
  * the WINDOW — the flat picture's rectangle, on its plane — so the frame stays
  * still while the painting moves behind it, as a window's does.
  *
@@ -42,8 +45,10 @@
  * when its file is `<id>.png`, it has a size and a back layer (`<id>.back.jpg`,
  * the same margin on every side), and it was cut with THIS art box
  * (`framing.ts`'s `ART_BOX`) — a box moved since, or a map made before the back
- * layer, is stale, and the backdrop is flat until the tool runs again, rather
- * than a depth that no longer lines up with its painting.
+ * layer or with an older recipe (the dev route serves those without a back,
+ * `perf.ts`'s `RELIEF_MAP_VERSION`), is stale, and the backdrop is flat until
+ * the tool runs again, rather than a depth that no longer lines up with its
+ * painting or a blue the shader would misread.
  *
  * `[NO three]`, `[NO React]`: `node --test` drives every line of it, and the
  * shaders are strings (`Pedestal.tsx`'s `InspectStage` compiles them, once per
@@ -121,7 +126,7 @@ export function reliefIndexOf(data: unknown): ReliefIndex {
     }
     const back = raw['back'];
     if (!isRecord(back) || back['file'] !== `${id}.back.jpg`) {
-      dropped.push(`${id}: made before the back layer (D227) — run tools/personal/relief.mjs again`);
+      dropped.push(`${id}: made before the back layer (D227) or its keep mask (D228) — run tools/personal/relief.mjs again`);
       continue;
     }
     const bw = back['width'];
@@ -283,8 +288,8 @@ export function windowClipOf(panel: Panel): WindowClip {
  * `vCut` is the vertex's SILHOUETTE test (D227): how far its depth and its four
  * neighbours' one grid cell away (`uCell`) differ. The fragment shader cuts the
  * front layer where it passes `RELIEF_CLIFF`; `tools/personal/relief.mjs` builds
- * the back layer to the same test. `vDepthUv` is where the fragment reads the map
- * for its own, per-pixel cut.
+ * the keep mask and the back layer to the same test. `vDepthUv` is where the
+ * fragment reads the keep mask (the map's blue) for its own, per-pixel cut.
  */
 export const RELIEF_VERTEX = /* glsl */ `
   uniform sampler2D uDepth;
@@ -330,14 +335,16 @@ export const RELIEF_VERTEX = /* glsl */ `
  * `colorspace_fragment`). No band, no halftone and no ink mark: D226 says why,
  * with the pictures. Two cuts, and nothing else:
  *
- *  - **the silhouette**, twice: a vertex whose map jumps (`vCut > uCut`) — its
- *    triangles would stretch across the gap an orbit opens — and, pixel by
- *    pixel, the band the front's map grew past the silhouette (its red over the
- *    painting's own blue by more than `uCut`: the background's pixels, carried
- *    at the subject's depth). Where the front is cut, the back layer behind it
- *    is drawn — the same pixels from the seat, the background at its own depth
- *    and what the subject hid (filled in) as the camera moves. The back's
- *    `uCut` is over 1, so it is never cut.
+ *  - **the silhouette**, twice, on the FRONT only (`uLayer` 0): a vertex whose
+ *    map jumps (`vCut > uCut`) — its triangles would stretch across the gap an
+ *    orbit opens — and, pixel by pixel, the map's blue: the front's KEEP MASK
+ *    (D228), 1 where the front is drawn and 0 where it is cut, decided by
+ *    `tools/personal/relief.mjs` texel for texel (sampled linearly, so the cut
+ *    falls on a texel edge). The subject and its painted contour are always
+ *    kept, so they move with the subject; the band the red was grown across is
+ *    cut. Where the front is cut, the back layer behind it is drawn — the
+ *    painting's own pixels there, so from the seat the two layers are one
+ *    picture, and what the subject hid (filled in) as the camera moves.
  *  - **the window** — the ray from the camera (three's `cameraPosition`) to the
  *    fragment crosses the window's plane outside its rectangle (or the fragment
  *    is on that plane, outside it: `t` up to a hair over 1): a fragment the
@@ -349,6 +356,7 @@ export const RELIEF_FRAGMENT = /* glsl */ `
   uniform sampler2D map;
   uniform sampler2D uDepth;
   uniform float uCut;
+  uniform float uLayer;
   uniform vec3 uWindow;
   uniform vec3 uFront;
   uniform vec3 uRight;
@@ -359,9 +367,7 @@ export const RELIEF_FRAGMENT = /* glsl */ `
   varying float vCut;
   varying vec3 vWorld;
   void main() {
-    if ( vCut > uCut ) discard;
-    vec4 d = texture2D( uDepth, vDepthUv );
-    if ( d.r - d.b > uCut ) discard;
+    if ( uLayer < 0.5 && ( vCut > uCut || texture2D( uDepth, vDepthUv ).b < 0.5 ) ) discard;
     vec3 ray = vWorld - cameraPosition;
     float toward = dot( ray, uFront );
     if ( toward < 0.0 ) {

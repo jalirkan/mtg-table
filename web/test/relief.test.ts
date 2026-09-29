@@ -10,20 +10,28 @@
  *
  *  1. **The depth step** (`tools/personal/relief_depth.py`, CPU mode) on a
  *     generated gradient: the front map alone is the art box's crop, 8-bit
- *     greyscale, and spans the range; the two layers (D227) are an RGB PNG the
- *     crop's size — red never under blue, green never over it — and a back JPEG
- *     the crop plus its margin; on a flat grey every layer is flat (255 — the
- *     window) and says so; a job that names a file outside `--out-dir` writes
- *     nothing. **The two layers' own function**, `layers()`, on a synthetic
- *     depth — a near square on a far ground and a floor ramp: the cut holds none
- *     of the square's pixels when the near side is grown (and some when it is
- *     not: the control), the back layer stands at the far side under the square
- *     and wears the ground's colour there, the cut cells keep the painting's own
- *     pixels, and a smooth slope is neither cut nor grown. These need the
- *     likeness venv (numpy, and torch for the step), so they run only when
+ *     greyscale, and spans the range; the two layers (D227, D228) are an RGB PNG
+ *     the crop's size — red the front's depth spanning the range, green never
+ *     nearer than it, blue a keep mask of 0 and 255 alone — and a back JPEG the
+ *     crop plus its margin; on a flat grey every layer is flat (255 — the
+ *     window, nothing cut) and says so; a job that names a file outside
+ *     `--out-dir` writes nothing. **The two layers' own function**, `layers()`,
+ *     on a synthetic depth — a near square with a painted contour on a far
+ *     ground of two colours, a floor ramp, and a near slab running off the
+ *     painting's edge: the cut holds none of the square's pixels, its contour
+ *     included, when the near side is grown (and some when it is not: the
+ *     control); the back stands at the far side under the square and wears the
+ *     colour of the ground just across each side of it — never the square's,
+ *     never its contour's, never a mean of the two grounds (the fill a push-pull
+ *     gave, round 2's cream); wherever the front is cut the back keeps the
+ *     painting, a texel past it; a smooth slope is neither cut nor grown; past
+ *     the reach of an orbit the slab is its own back layer; the margin mirrors
+ *     the painting and skips the frame's line. These need the likeness venv
+ *     (numpy and scipy, and torch for the step), so they run only when
  *     `MTG_TABLE_LIKENESS` names one (never by finding it under `var/`: a test
- *     whose result depends on what lies in `var/` is not a test, web/CLAUDE.md)
- *     — `docs/evidence/relief-window.md` has their run.
+ *     whose result depends on what lies in `var/` is not a test, web/CLAUDE.md;
+ *     `tools/check-all.sh` says in its web step whether they ran) —
+ *     `docs/evidence/relief-window.md` has their run.
  *  2. **The CLI's pure half** (`tools/personal/relief.mjs`): the write guard,
  *     the file names, the card selection, what counts as current (the recipe
  *     and both files), the offline and pinned environment.
@@ -39,7 +47,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { crc32, deflateSync, inflateSync } from 'node:zlib';
 
-import { RELIEF_CLIFF, RELIEF_DEPTH, RELIEF_GRID } from '../src/arena/perf.ts';
+import { RELIEF_CLIFF, RELIEF_DEPTH, RELIEF_GRID, RELIEF_MAP_VERSION } from '../src/arena/perf.ts';
 import { ART_BOX } from '../src/workshop/framing.ts';
 import {
   RELIEF_FRAGMENT,
@@ -65,6 +73,10 @@ interface ReliefCli {
   DILATE_PX: number;
   BLUR_PX: number;
   MARGIN: number;
+  CONTOUR_PX: number;
+  SEAM_PX: number;
+  REACH_PX: number;
+  RECIPE_VERSION: number;
   isScryfallId(id: unknown): boolean;
   sameBox(a: unknown, b: unknown): boolean;
   selectCards(
@@ -311,7 +323,7 @@ test(
 const NEEDS_VENV = PYTHON !== '' && existsSync(PYTHON) ? false : 'set MTG_TABLE_LIKENESS to a venv root (torch, transformers < 5, Depth Anything V2 Small cached) to run the Python step';
 
 test(
-  'relief: the two layers through the step (D227) — an RGB map the crop’s size (red never under blue, green never over it) and a back JPEG the crop plus its margin; a flat grey is 255 in every layer; a back file that is not <id>.back.jpg is refused',
+  'relief: the two layers through the step (D227, D228) — an RGB map the crop’s size (red the front’s depth, green never nearer, blue a keep mask of 0 and 255) and a back JPEG the crop plus its margin; a flat grey is 255 in every layer; a back file that is not <id>.back.jpg is refused',
   { skip: NEEDS_VENV },
   async () => {
     const dir = mkdtempSync(join(tmpdir(), 'mtg-relief-layers-'));
@@ -343,19 +355,23 @@ test(
       const byType = (type: string): Array<Record<string, unknown>> => run.lines.filter((l) => l['type'] === type);
       const done = new Map(byType('done').map((l) => [l['id'], l]));
       const margin = Math.round(cli.MARGIN * 301);
-      // The map: RGB, the crop's size; blue the painting's own depth, spanning the range.
+      // The map: RGB, the crop's size; red the front's depth, spanning the range;
+      // green never nearer than it; blue the front's keep mask (D228), 0 or 255 and nothing between.
       const map = decodePng(readFileSync(join(out, `${ID_A}.png`)));
       assert.deepEqual([map.width, map.height, map.bitDepth, map.colorType], [410, 301, 8, 2], 'the two layers’ map is 8-bit RGB, the crop’s size');
-      let blueMin = 255;
-      let blueMax = 0;
+      let redMin = 255;
+      let redMax = 0;
+      let kept = 0;
       for (let i = 0; i < map.width * map.height; i++) {
         const [r, g, b] = [map.pixels[i * 3]!, map.pixels[i * 3 + 1]!, map.pixels[i * 3 + 2]!];
-        assert.ok(r >= b - 1, `red (the front, grown at a silhouette) is never under blue at ${String(i)}: ${String(r)} < ${String(b)}`);
-        assert.ok(g <= b + 1, `green (the back) is never nearer than blue at ${String(i)}: ${String(g)} > ${String(b)}`);
-        blueMin = Math.min(blueMin, b);
-        blueMax = Math.max(blueMax, b);
+        assert.ok(g <= r + 1, `green (the back) is never nearer than red (the front) at ${String(i)}: ${String(g)} > ${String(r)}`);
+        assert.ok(b === 0 || b === 255, `blue is a keep mask — 0 or 255 — at ${String(i)}: ${String(b)}`);
+        redMin = Math.min(redMin, r);
+        redMax = Math.max(redMax, r);
+        if (b === 255) kept += 1;
       }
-      assert.ok(blueMin <= 8 && blueMax >= 247, `blue is the map normalised to its own range: ${String(blueMin)}–${String(blueMax)}`);
+      assert.ok(redMin <= 8 && redMax >= 247, `red is the map normalised to its own range: ${String(redMin)}–${String(redMax)}`);
+      assert.ok(kept > 0.5 * map.width * map.height, `most of the front is drawn (${String(kept)} texels kept)`);
       // The back layer's colour: the crop plus its margin on every side.
       assert.deepEqual(jpegSize(readFileSync(join(out, `${ID_A}.back.jpg`))), { width: 410 + 2 * margin, height: 301 + 2 * margin });
       assert.deepEqual(
@@ -365,7 +381,7 @@ test(
       // A flat grey: every layer at the window, and nothing to fill.
       const flat = decodePng(readFileSync(join(out, `${ID_B}.png`)));
       assert.equal(done.get(ID_B)?.['flat'], true);
-      assert.ok(flat.pixels.every((v) => v === 255), 'a flat image is 255 in every layer');
+      assert.ok(flat.pixels.every((v) => v === 255), 'a flat image is 255 in every layer — at the window, and nothing cut');
       assert.equal(done.get(ID_B)?.['cut'], 0);
       assert.equal(done.get(ID_B)?.['hidden'], 0);
       // A back file anywhere but beside its map is refused before anything is written.
@@ -377,7 +393,16 @@ test(
   },
 );
 
-/** `relief_depth.py`'s `layers()` on a synthetic depth, in the venv's python (numpy only; no model). */
+/**
+ * `relief_depth.py`'s `layers()` on a synthetic depth, in the venv's python
+ * (numpy and scipy; no model). The scene: a far ground of two colours (blue on
+ * the left, green on the right) with the card frame's black line along its top
+ * row; a floor ramp rising toward the viewer; a near red square with a painted
+ * black contour two pixels wide, standing on the tail of the square's soft depth
+ * edge (0.18: not far enough over the ground to be a subject by itself — the
+ * ink line a depth model's soft edge leaves behind, round 2's dark seam); and a
+ * near yellow slab, a door, running off the top and right edges of the painting.
+ */
 const LAYERS_PROBE = `
 import json, sys
 sys.path.insert(0, 'tools/personal')
@@ -386,81 +411,134 @@ import relief_depth as rd
 h, w = 301, 410
 ys = np.arange(h)[:, None] * np.ones((1, w))
 norm = np.where(ys > 230, np.minimum(1.0, 0.1 + (ys - 230) * 0.014), 0.1)
+rgb = np.zeros((h, w, 3)); rgb[:, :205, 2] = 1.0; rgb[:, 205:, 1] = 1.0
+rgb[0] = 0.0
+ring = np.zeros((h, w), bool); ring[78:182, 148:262] = True; ring[80:180, 150:260] = False
+sides = ring.copy(); sides[:86, :156] = False; sides[:86, 254:] = False; sides[174:, :156] = False; sides[174:, 254:] = False
+norm[ring] = 0.18
+rgb[ring] = 0.0
 norm[80:180, 150:260] = 0.9
-rgb = np.zeros((h, w, 3)); rgb[..., 2] = 1.0
 rgb[80:180, 150:260] = [1.0, 0.0, 0.0]
 square = np.zeros((h, w), bool); square[80:180, 150:260] = True
+norm[0:220, 300:410] = 0.8
+rgb[0:220, 300:410] = [1.0, 1.0, 0.0]
 out = {}
-for d in (DILATE, 0):
-    m = rd.layers(norm, rgb, d, BLUR, CLIFF, [GX, GY], MARGIN)
+for d, c in ((DILATE, CONTOUR), (0, CONTOUR), (DILATE, 0)):
+    m = rd.layers(norm, rgb, d, BLUR, CLIFF, [GX, GY], MARGIN, c, SEAM, REACH)
     k = m['margin']
     inner = m['colour'][k:k + h, k:k + w]
-    out[str(d)] = {
+    seen = rd.grow(m['cut'], SEAM)
+    ring_back = inner[sides]
+    out[f'{d}/{c}'] = {
         'subjectInCut': int((m['cut'] & square).sum()),
+        'ringInCut': int((m['cut'] & sides).sum()),
+        'ringOnBack': int((ring_back.max(axis=1) < 0.2).sum()),
         'cut': int(m['cut'].sum()),
-        'frontBeside': float(m['front'][130, 145]), 'ownBeside': float(m['own'][130, 145]),
+        'frontBeside': float(m['front'][130, 143]), 'ownBeside': float(m['own'][130, 143]),
         'backUnder': float(m['back'][130, 205]), 'ownUnder': float(m['own'][130, 205]),
-        'colourUnder': [float(v) for v in inner[130, 205]],
+        'colourLeft': [float(v) for v in inner[130, 160]],
+        'colourRight': [float(v) for v in inner[130, 250]],
         'colourFar': [float(v) for v in inner[20, 20]],
         'rampCut': int(m['cut'][240:290, 20:110].sum()),
         'rampGrown': float(np.abs(m['front'][240:290, 20:110] - m['own'][240:290, 20:110]).max()),
         'backLeOwn': bool((m['back'] <= m['own'] + 1e-9).all()),
         'frontGeOwn': bool((m['front'] >= m['own'] - 1e-9).all()),
-        'cutKeepsPainting': float(np.abs(inner[m['cut'] | m['band']] - rgb[m['cut'] | m['band']]).max()) if (m['cut'] | m['band']).any() else 0.0,
+        'seenKeepsPainting': float(np.abs(inner[seen] - rgb[seen]).max()),
         'band': int(m['band'].sum()),
         'rampBand': int(m['band'][240:290, 20:110].sum()),
+        'slabNearEdge': [float(m['back'][120, 305]), [float(v) for v in inner[120, 305]]],
+        'slabPastReach': [float(m['back'][120, 405]), float(m['own'][120, 405]), [float(v) for v in inner[120, 405]]],
+        'slabMargin': [float(v) for v in m['colour'][k + 120, k + w + 6]],
+        'topMargin': [float(v) for v in m['colour'][k - 1, k + 20]],
         'colourShape': list(m['colour'].shape), 'margin': k,
     }
 seeds = np.zeros((5, 9), bool); seeds[2, 0] = True; seeds[2, 8] = True
 vals = np.zeros((5, 9)); vals[2, 0] = 1.0; vals[2, 8] = 2.0
 nv = rd.nearest_value(seeds, vals)
 out['nearest'] = [float(nv[2, 1]), float(nv[2, 7]), float(nv[0, 2])]
-v = np.zeros((8, 8, 3)); v[:, :4] = 0.2; v[:, 4:] = 0.8
-k = np.zeros((8, 8), bool); k[:, 0] = True; k[:, 7] = True
-f = rd.fill_in(v, k)
-out['fill'] = [float(f[3, 0, 0]), float(f[3, 7, 0]), float(f[3, 3, 0]), float(f[3, 4, 0])]
+# The fill, unblurred: a texel takes the painting mirrored across its nearest seed, or the seed where the mirror leaves the seeds…
+rd.FILL_SIGMA = (0.0, 0.0, 40.0)
+row = np.zeros((5, 9, 3)); row[:, :4, 0] = [0.1, 0.2, 0.3, 0.4]
+hide = np.zeros((5, 9), bool); hide[:, 4:] = True
+f = rd.fill_behind(row, hide, ~hide, np.zeros((5, 9)), np.zeros((5, 9)), 0.12)
+out['mirror'] = [round(float(v), 6) for v in f[2, :, 0]]
+# …and only a seed at the far side's depth serves: the nearer seeds (a subject's own interior) never do.
+depth = np.zeros((5, 9)); depth[:, 2:4] = 0.9
+g = rd.fill_behind(row, hide, ~hide, depth, np.full((5, 9), 0.1), 0.12)
+out['farOnly'] = [round(float(v), 6) for v in g[2, 4:, 0]]
+# The blur reads the fill and its seeds alone: a kept pixel of the subject beside the hole (1.0) never hazes it.
+rd.FILL_SIGMA = (1.5, 1.5, 40.0)
+row2 = np.zeros((5, 9, 3)); row2[:, :3, 0] = 0.2; row2[:, 3, 0] = 1.0
+hide2 = np.zeros((5, 9), bool); hide2[:, 4:] = True
+seeds2 = np.zeros((5, 9), bool); seeds2[:, :3] = True
+b2 = rd.fill_behind(row2, hide2, seeds2, np.zeros((5, 9)), np.zeros((5, 9)), 0.12)
+out['blurAmong'] = [round(float(v), 6) for v in b2[2, 4:, 0]]
 print(json.dumps(out))
 `;
 
 test(
-  'relief: layers() on a synthetic depth (D227) — grown, the cut holds none of the near square’s pixels (ungrown it does: the control); the back stands at the far side under it and wears the ground’s colour; the cut cells keep the painting; a floor ramp — 0.14 of the range over 10 px, 0.03 over 2 — is neither cut nor grown',
+  'relief: layers() on a synthetic depth (D227, D228) — grown, the cut holds none of the near square’s pixels nor its painted contour (ungrown, or with no contour, it does: the controls); the back stands at the far side under it and wears the ground just across each side, never the square, its contour or a mean; the seat sees the painting wherever the front is cut; a floor ramp is neither cut nor grown; past an orbit’s reach a slab is its own back layer; the margin mirrors and skips the frame’s line',
   { skip: NEEDS_VENV },
   () => {
     const dir = mkdtempSync(join(tmpdir(), 'mtg-relief-probe-'));
     try {
-      const script = LAYERS_PROBE.replace('DILATE', String(cli.DILATE_PX))
-        .replace('BLUR', String(cli.BLUR_PX))
-        .replace('CLIFF', String(RELIEF_CLIFF))
-        .replace('GX', String(RELIEF_GRID[0]))
-        .replace('GY', String(RELIEF_GRID[1]))
-        .replace('MARGIN', String(cli.MARGIN));
+      const script = LAYERS_PROBE.replaceAll('DILATE', String(cli.DILATE_PX))
+        .replaceAll('CONTOUR', String(cli.CONTOUR_PX))
+        .replaceAll('BLUR', String(cli.BLUR_PX))
+        .replaceAll('CLIFF', String(RELIEF_CLIFF))
+        .replaceAll('GX', String(RELIEF_GRID[0]))
+        .replaceAll('GY', String(RELIEF_GRID[1]))
+        .replaceAll('MARGIN', String(cli.MARGIN))
+        .replaceAll('SEAM', String(cli.SEAM_PX))
+        .replaceAll('REACH', String(cli.REACH_PX));
       const ran = spawnSync(PYTHON, ['-c', script], { cwd: cli.REPO, env: cli.pythonEnv(LIKENESS, join(dir, 'cache')), encoding: 'utf8' });
       assert.equal(ran.status, 0, ran.stderr);
       const probe = JSON.parse(ran.stdout.trim().split('\n').at(-1) ?? '{}') as Record<string, Record<string, unknown> & number[]>;
-      const grown = probe[String(cli.DILATE_PX)]!;
-      const bare = probe['0']!;
+      const grown = probe[`${String(cli.DILATE_PX)}/${String(cli.CONTOUR_PX)}`]!;
+      const bare = probe[`0/${String(cli.CONTOUR_PX)}`]!;
+      const inkless = probe[`${String(cli.DILATE_PX)}/0`]!;
       assert.ok((grown['cut'] as number) > 0, 'the square’s silhouette is cut');
       assert.equal(grown['subjectInCut'], 0, 'grown, the cut falls on the ground’s pixels — the square keeps its edge');
       assert.ok((bare['subjectInCut'] as number) > 100, `ungrown, the cut takes the square’s edge (${String(bare['subjectInCut'])} px) — the control`);
-      assert.ok(Math.abs((grown['frontBeside'] as number) - 0.9) < 0.02 && Math.abs((grown['ownBeside'] as number) - 0.1) < 0.02, 'red is grown past the silhouette; blue is not');
-      assert.ok(Math.abs((bare['frontBeside'] as number) - 0.1) < 0.02);
+      // D228: the painted contour stays on the front, and the back does not keep a copy of it.
+      // (Its sides: within 6 px of a corner, the cut cells' square growth outruns the dilation's disc by a pixel or two.)
+      assert.equal(grown['ringInCut'], 0, 'the square’s painted contour is never cut from the front');
+      assert.equal(grown['ringOnBack'], 0, 'and the back fills where it was — no ink line stays behind when the camera moves');
+      assert.ok((inkless['ringInCut'] as number) > 100, `with no contour allowance the ink line is cut from the front (${String(inkless['ringInCut'])} px) — the control`);
+      assert.ok((inkless['ringOnBack'] as number) > 100, `and the back keeps it, the dark seam of round 2 (${String(inkless['ringOnBack'])} px) — the control`);
+      assert.ok(Math.abs((grown['frontBeside'] as number) - 0.9) < 0.02 && (grown['ownBeside'] as number) < 0.2, 'red is grown past the silhouette; the painting’s own depth is not');
+      assert.ok((bare['frontBeside'] as number) < 0.2);
       assert.ok(Math.abs((grown['backUnder'] as number) - 0.1) < 0.02 && Math.abs((grown['ownUnder'] as number) - 0.9) < 0.02, 'the back stands at the far side under the square');
-      const [r, g, b] = grown['colourUnder'] as unknown as number[];
-      assert.ok(r! < 0.05 && g! < 0.05 && b! > 0.95, `under the square the back wears the ground’s blue, not the square’s red: ${String([r, g, b])}`);
+      // D228: the fill is the ground just across each side of the square — blue on the left, green on the right — never a mean.
+      const [lr, lg, lb] = grown['colourLeft'] as unknown as number[];
+      assert.ok(lr! < 0.05 && lg! < 0.05 && lb! > 0.95, `under the square’s left side the back wears the blue across it: ${String([lr, lg, lb])}`);
+      const [rr, rg, rb] = grown['colourRight'] as unknown as number[];
+      assert.ok(rr! < 0.05 && rg! > 0.95 && rb! < 0.05, `under its right side, the green across it — not a mean of the two, which push-pull gave: ${String([rr, rg, rb])}`);
       assert.deepEqual(grown['colourFar'], [0, 0, 1], 'away from the square the back is the painting');
       assert.ok((grown['band'] as number) > 0, 'the grown band is cut pixel by pixel');
-      assert.equal(grown['cutKeepsPainting'], 0, 'wherever the front is cut — cells and band — the back keeps the painting’s own pixels: from the seat the two layers are one picture');
+      assert.equal(grown['seenKeepsPainting'], 0, 'wherever the front is cut — cells and band — and a texel past it, the back keeps the painting’s own pixels: from the seat the two layers are one picture');
       assert.equal(grown['rampCut'], 0, 'a smooth slope is not cut');
       assert.equal(grown['rampBand'], 0, 'nor cut pixel by pixel');
       assert.ok((grown['rampGrown'] as number) < 1e-9, 'a smooth slope is not grown');
       assert.equal(grown['backLeOwn'], true);
       assert.equal(grown['frontGeOwn'], true);
+      // D228: the reach. Beside the slab's silhouette the back is the far side and the ground; past an orbit's reach, the slab itself.
+      const [nearDepth, nearColour] = grown['slabNearEdge'] as unknown as [number, number[]];
+      assert.ok(Math.abs(nearDepth - 0.1) < 0.03 && nearColour[0]! < 0.05 && nearColour[1]! > 0.95, `just inside the slab’s edge the back is the far side, in the ground’s green: ${String(nearDepth)} ${String(nearColour)}`);
+      const [pastDepth, pastOwn, pastColour] = grown['slabPastReach'] as unknown as [number, number, number[]];
+      assert.ok(Math.abs(pastDepth - pastOwn) < 1e-6 && Math.abs(pastOwn - 0.8) < 0.02, `past an orbit’s reach the back stands at the slab’s own depth: ${String(pastDepth)}`);
+      assert.deepEqual(pastColour, [1, 1, 0], 'and is the slab');
+      const slabMargin = grown['slabMargin'] as unknown as number[];
+      assert.ok(slabMargin[0]! > 0.9 && slabMargin[1]! > 0.9 && slabMargin[2]! < 0.1, `past the painting’s edge the slab continues as itself, not as the sky behind its other edge: ${String(slabMargin)}`);
+      // D228: the margin mirrors the painting from inside its edge — the frame's black line is not copied into it.
+      const top = grown['topMargin'] as unknown as number[];
+      assert.ok(top[2]! > 0.9 && top[0]! < 0.1, `above the first row the margin continues the blue ground, not the frame’s black line: ${String(top)}`);
       const margin = Math.round(cli.MARGIN * 301);
       assert.deepEqual(grown['colourShape'], [301 + 2 * margin, 410 + 2 * margin, 3]);
       assert.deepEqual(probe['nearest'], [1, 2, 1], 'each texel takes the value of its nearest seed');
-      const [k0, k7, f3, f4] = probe['fill'] as number[];
-      assert.ok(Math.abs(k0! - 0.2) < 1e-9 && Math.abs(k7! - 0.8) < 1e-9, 'push-pull keeps what is known');
-      assert.ok(f3! > 0.2 && f3! < 0.8 && f4! > 0.2 && f4! < 0.8 && f3! < f4!, 'and fills between it');
+      assert.deepEqual(probe['mirror'], [0.1, 0.2, 0.3, 0.4, 0.3, 0.2, 0.1, 0.4, 0.4], 'the fill mirrors the painting across its nearest seed, and takes the seed where the mirror leaves the seeds');
+      assert.deepEqual(probe['farOnly'], [0.2, 0.2, 0.2, 0.2, 0.2], 'only a seed at the far side’s depth serves — the nearer ones beside the hole never do');
+      assert.deepEqual(probe['blurAmong'], [0.2, 0.2, 0.2, 0.2, 0.2], 'the fill’s blur never reads a kept pixel of the subject beside it (a dark haze beside Peggy’s pistol)');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -527,7 +605,23 @@ test('relief: a map is current only when both files are on disk and indexed with
   const root = mkdtempSync(join(tmpdir(), 'mtg-relief-current-'));
   try {
     const recipe = cli.recipeOf(RELIEF_GRID, RELIEF_CLIFF);
-    assert.deepEqual(recipe, { version: 2, dilatePx: cli.DILATE_PX, blurPx: cli.BLUR_PX, cliff: RELIEF_CLIFF, grid: [...RELIEF_GRID], margin: cli.MARGIN });
+    assert.deepEqual(recipe, {
+      version: cli.RECIPE_VERSION,
+      dilatePx: cli.DILATE_PX,
+      blurPx: cli.BLUR_PX,
+      cliff: RELIEF_CLIFF,
+      grid: [...RELIEF_GRID],
+      margin: cli.MARGIN,
+      contourPx: cli.CONTOUR_PX,
+      seamPx: cli.SEAM_PX,
+      reachPx: cli.REACH_PX,
+    });
+    // D228: the tool's version is the page's — a map of another version is served without its back and drawn flat.
+    assert.equal(cli.RECIPE_VERSION, RELIEF_MAP_VERSION, 'relief.mjs’s RECIPE_VERSION is perf.ts’s RELIEF_MAP_VERSION');
+    assert.equal(cli.RECIPE_VERSION, 3);
+    // D228: the reach covers what a 40° orbit uncovers behind a whole range of depth (RELIEF_DEPTH of the crop's 301 px).
+    assert.ok(cli.REACH_PX >= RELIEF_DEPTH * 301 * Math.tan((40 * Math.PI) / 180), `REACH_PX ${String(cli.REACH_PX)} < what 40° uncovers`);
+    assert.equal(cli.sameRecipe({ ...recipe, version: 2 }, recipe), false, 'a version-2 map (its blue the painting’s depth) is stale');
     const entry = (extra: Record<string, unknown> = {}) => ({ model: cli.MODEL_ID, box: BOX, recipe, back: `${ID_A}.back.jpg`, ...extra });
     const index = { version: 1, reliefs: { [ID_A]: entry(), [ID_B]: { ...entry({ back: `${ID_B}.back.jpg` }), box: { ...BOX, top: 0.1 } } } };
     assert.equal(cli.isCurrent(index, ID_A, BOX, recipe, root), false, 'no file yet');
@@ -623,7 +717,7 @@ test('relief: reliefIndexOf — THE reader keeps a map only when its file is <id
   assert.equal(isArtBox({ ...BOX, left: 0.081 }), false);
 });
 
-test('relief: the shaders — the vertex fetch recedes each vertex along its ray from the seat by (1 − depth) × uRelief; the fragment cuts the front at a silhouette and both layers at the window, and is the painting, unlit, through three’s colour space', () => {
+test('relief: the shaders — the vertex fetch recedes each vertex along its ray from the seat by (1 − depth) × uRelief; the fragment cuts the front at a silhouette by the map’s keep mask (D228) and both layers at the window, and is the painting, unlit, through three’s colour space', () => {
   assert.match(RELIEF_VERTEX, /texture2D\( uDepth, clamp\( at, 0\.0, 1\.0 \) \)/, 'the depth map is sampled at the layer’s depth UV (its edge past it)');
   assert.match(RELIEF_VERTEX, /return mix\( d\.r, d\.g, uLayer \);/, 'red for the front layer, green for the back');
   assert.match(RELIEF_VERTEX, /vec2 at = \( uv - uDepthBox\.xy \) \/ uDepthBox\.zw;/);
@@ -633,9 +727,9 @@ test('relief: the shaders — the vertex fetch recedes each vertex along its ray
   // The silhouette test: the vertex and its four neighbours one cell away.
   for (const side of ['east', 'west', 'north', 'south']) assert.match(RELIEF_VERTEX, new RegExp(`float ${side} = depthAt\\( at [+-] vec2\\(`));
   assert.match(RELIEF_VERTEX, /vCut = max\(.*\) - min\(.*\);/);
-  // The cuts (D227): the vertex's, the grown band's pixel by pixel, and the window's rectangle.
-  assert.match(RELIEF_FRAGMENT, /if \( vCut > uCut \) discard;/);
-  assert.match(RELIEF_FRAGMENT, /if \( d\.r - d\.b > uCut \) discard;/);
+  // The cuts (D227, D228): the front's alone — the vertex's jump and the map's keep mask (blue under one half) — and the window's rectangle.
+  assert.match(RELIEF_FRAGMENT, /if \( uLayer < 0\.5 && \( vCut > uCut \|\| texture2D\( uDepth, vDepthUv \)\.b < 0\.5 \) \) discard;/);
+  assert.doesNotMatch(RELIEF_FRAGMENT, /d\.r - d\.b/, 'the blue is a keep mask now, never a depth to compare');
   assert.match(RELIEF_FRAGMENT, /vec3 ray = vWorld - cameraPosition;/, 'the window is seen from wherever the camera is');
   assert.match(RELIEF_FRAGMENT, /abs\( dot\( onWindow, uRight \) \) > uHalf\.x \|\| abs\( dot\( onWindow, uUp \) \) > uHalf\.y/);
   assert.match(RELIEF_FRAGMENT, /#include <colorspace_fragment>/);

@@ -9793,3 +9793,120 @@ floor.
   out-of-focus background should look like.
 - **A PNG back image**: exact, and about four times the bytes; JPEG q95 at 4:4:4
   costs seams of a few levels, which point 4 measured.
+
+---
+
+## D228 — The relief's back layer filled from what lies ACROSS each silhouette, mirrored; the front's cut decided per texel by the tool as a keep mask that keeps each subject's painted contour; the far side only within an orbit's reach
+
+*Branch `relief-window`; the lane's reserved range D225–D228, its last number.
+The fix pass after the verifier's round 2, the same day as D225–D227.*
+
+**2026-09-29** (`docs/evidence/relief-window.md` §13–§16; the pictures are in
+`var/relief/fix2/`)
+
+**Supersedes in part** D227 point 2 (the pixel cut read off red against blue:
+now a keep mask the tool writes), point 3 (blue the painting's own depth: now the
+keep mask; green the far side everywhere: now only within reach) and point 4
+(the fill by push-pull, the margin by push-pull; the cut cells kept as the
+painting has them, subject pixels included). D227's two layers on one grid, its
+window, its recipe and its cost stand.
+
+**The verifier's round 2** (major): on Fury, the back layer's fill was visibly
+the wrong colour at ±25° — a flat cream silhouette of his coat where it had
+stood, seen through the floating frame's empty art window, and beige halos round
+his painted head, pistol hand and coat edge where the painting is green and
+orange; Peggy the same, milder; and at yaw 0 a thin dark seam outlining every
+cut subject. (Minor: a pale band along one edge of the window at ±25° on every
+card — the back layer's margin.) Push-pull averaged every pixel just across a
+cut — sparks, green, the subject's own dark contour — into one soft mean, and the
+cut cells kept the subject's painted edge on the BACK layer, which stayed behind
+when the subject moved.
+
+**Decision.**
+
+1. **The front's cut is decided by the tool, texel for texel, and written as the
+   map's blue: a KEEP MASK** (255 drawn, 0 cut). It is the cells the vertex test
+   cuts (as D227) and the band the red was grown across, LESS the subject and its
+   painted contour — every texel nearer than the far side of its nearest cut by
+   more than `RELIEF_CLIFF`, grown `CONTOUR_PX` (3). The depth model's edge is
+   soft over a few pixels and the painting's ink line lies in it; kept on the
+   front, the line moves with the subject. The shader discards a front fragment
+   where the blue, sampled linearly, is under one half (`uLayer` exempts the back),
+   so the cut falls on a texel's edge.
+2. **The back image keeps the painting exactly where the seat sees it** — the cut,
+   grown `SEAM_PX` (1) for the texture filter's half texel — **and fills the rest
+   of every subject**, contour included, so no copy of an edge stays behind.
+3. **The fill is what lies across the silhouette, mirrored.** A texel to fill
+   takes the painting MIRRORED across its nearest seed (the texel as far beyond
+   the seed as the seed is beyond it; the seed itself where the mirror leaves the
+   seeds), from seeds that stand clear of every subject by its contour and a
+   guard (2 px) and — per bin of `RELIEF_CLIFF` of the texel's far-side depth —
+   only seeds at that depth: behind a head the sky beside it, behind a fist the
+   coat, never the subject's own interior and never a mean of every colour round
+   it. Then a blur of the fill and its seeds alone (σ 1.5 px beside the
+   silhouette to 4.5 px at 40 px from it) — never of a kept pixel of the subject,
+   which hazed the fill beside Peggy's pistol.
+4. **Only within an orbit's reach.** A subject moves over what is behind it by
+   its depth over that far side × `RELIEF_DEPTH` × the crop's 301 px × the tangent
+   of the orbit; `REACH_PX` (80) covers a whole range at 40° (75.8 px). Within
+   that reach of a cut (plus the dilation and two cells) the back layer is the far
+   side and the fill; past it, the painting at its own depth, eased over 12 px.
+   Peggy's door runs off the painting's edge: past the window's frame it is now
+   more door, where it was the fill of the sky behind its other edge.
+5. **The margin is the painting mirrored**, from 2 px inside the edge (the art
+   box's first row is the card frame's black line), blurred σ 1 px at the edge to
+   4 px at the margin's end — no longer push-pull toward the painting's mean.
+6. **The map's version is 3**, and the page reads no other. `perf.ts`'s
+   `RELIEF_MAP_VERSION` is the page's copy and `relief.mjs`'s `RECIPE_VERSION`
+   the tool's (a test holds them equal); the dev route serves a map of another
+   version without its back layer, so a version-2 map — whose blue is a depth the
+   shader would misread as a mask — is drawn flat until the tool runs again, and
+   the dev server's start line counts them. The recipe records `contourPx`,
+   `seamPx` and `reachPx`.
+7. **The depth step uses scipy's exact distance transform** (in the likeness venv
+   beside numpy; nothing installed): the nearest seed and the distance to a cut,
+   where the jump flooding it replaces cost ~130 ms a call and the fill needs one
+   per depth bin. The back layer is ~0.09 s a card; 158 cards in 40.6 s on the
+   GTX 1080; `personal/relief/` 32.89 MiB.
+8. **The figure and the window** (D226, D227 point 8): the window stands clear of
+   every figure at rest and through every clip; DYING is the exception — the
+   lethal rehearsal takes the body through the window, flat or relief (the
+   verifier measured −0.137 world units for Fury). `workshop.test.ts`'s title
+   says so; stepping the window back during a death is PLAN's relief follow-up 2.
+
+**Rationale.** What an orbit uncovers behind a silhouette is a band as wide as
+the parallax, right beside it, so the fill must be what lies right beside it —
+continued, not averaged. Mirroring keeps the painting's own texture and colour at
+the scale it was painted; the depth bins keep a subject's interior out of what it
+hides; the keep mask puts the ink line with the thing it outlines. From the seat
+nothing changed: the back holds the painting wherever the front is not drawn,
+now to the texel.
+
+**Rejected.**
+
+- **OpenCV's Telea or Navier–Stokes inpainting** (the verifier's first option;
+  cv2 is in the venv). Tried on Fury and Peggy with the same hole and the same
+  clean rim (`personal/scratch/relief-fix2/fill-ab-mirror-telea-ns.png`, mirror |
+  Telea | NS; 40–80 ms a card): both diffuse inward from EVERY known pixel round
+  the hole and take no depth, so the subject's own kept interior bleeds in —
+  Fury's coat spreads a dark blob into what it hides — and a large hole comes out
+  one flat colour. The mirror keeps the fire's texture and the depth bins keep
+  the coat out.
+- **The nearest seed without a mirror**: streaks the rim's pixels straight out —
+  a sparkle becomes a line.
+- **The far side read off the painting's own depth** instead of the grown red
+  (tried, `var/relief/fix2/c/`, `_fury-fist-abc.png`): a thin subject's cut then
+  finds the background behind it (Peggy's pistol filled cleanly), but a fist
+  over its own coat finds the sky too and opens a bright hole in the coat.
+- **Feathering the per-pixel discard** (the verifier's second option for the
+  seam): it blends the front's edge over a back layer that no longer holds the
+  painting there, and a blend of two layers at different depths is a smear once
+  the camera moves.
+- **A smaller margin** (the verifier's second option for the band): it was the
+  margin's fill that was wrong, not its width; 0.25 of the height is what 40°
+  uncovers at the deepest (0.3 × 301 × tan 40° = 76 px).
+- **The figures' halftone screened into the painting** — D226 rejected it by
+  argument; now pictured (`var/relief/fix2/halftone/halftone-ab.png`): the dots
+  grey a painting that carries its own tones (Fury's face), and a screen-space
+  grid stands still while the painting slides behind it, a screen door in the
+  window. The painting stays unlit and unmarked.

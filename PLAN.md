@@ -27,12 +27,14 @@ plan assumes.
 18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 96
 **The 31 follow-up lists hold 386 items, and 289 of them are open** — 265 open,
 18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 97
+**The 31 follow-up lists hold 388 items, and 290 of them are open** — 266 open,
+18 partly done, 3 not reproduced, 2 standing and 1 accepted — against 98
 closed (M1's six among them; the personal tier's list was added, with its 18 and
 19 closed, when that lane merged; its phase 2 closed ten and opened seven, and
 its fix pass 1 recounted it and opened three; the status layer's list of twelve
 was added when that lane merged; the relief window's list of eight was added by
 that lane, which closed the personal tier's 25, and its fix pass closed one of
-its own and added five). **Of the 30 questions only the owner can settle,
+its own and added five, and its second fix pass closed one more and added two). **Of the 30 questions only the owner can settle,
 5 are answered** and 25 stand on the default this plan assumes.
 
 ### Open follow-ups
@@ -334,11 +336,12 @@ its own and added five). **Of the 30 questions only the owner can settle,
 | [Relief window](#fu-relief) | 6 | open | A personal model's reach behind its stand point is measured in the browser, not held by a test | `web/test/workshop.test.ts` |
 | [Relief window](#fu-relief) | 7 | open | A map computed while the workshop is open needs a reload | `web/src/workshop/Pedestal.tsx` |
 | [Relief window](#fu-relief) | 8 | open | The relief's 49,152 triangles are not benched on SwiftShader | `tools/arena-bench.mjs` |
-| [Relief window](#fu-relief) | 9 | open | The back layer's fill is push-pull — soft, and flat behind a large subject at 40° | `tools/personal/relief_depth.py` |
 | [Relief window](#fu-relief) | 10 | open | From the seat the relief shows nothing new: the parallax needs a drag | `web/src/workshop/Pedestal.tsx` |
 | [Relief window](#fu-relief) | 11 | open | The floating frame panel crosses the painting at +25° and +40° | `web/src/workshop/framing.ts` |
 | [Relief window](#fu-relief) | 12 | open | The Helicarrier's hull overhangs its painting's left edge | `web/src/workshop/framing.ts` |
 | [Relief window](#fu-relief) | 13 | open | The first commit's co-author line is not the brief's | — |
+| [Relief window](#fu-relief) | 14 | open | An internal cut keeps a few of the subject's pixels on the back layer | `tools/personal/relief_depth.py` |
+| [Relief window](#fu-relief) | 15 | open | A painted rim travels with its subject — a light outline at ±40° | `tools/personal/relief_depth.py` |
 
 ### Questions only the owner can settle
 
@@ -8054,8 +8057,9 @@ D225–D228, three used — and **fixed once** after the verifier's round 1 (bel
 a window: the painting with real depth and parallax as the camera moves, the
 figure standing in front of it* — and the personal tier's follow-up 25.
 `docs/evidence/relief-window.md` is what was run; the guide's *The relief cache*
-is the manual; the pictures are in `var/relief/pictures/` and the fix pass's in
-`var/relief/fix1/` (gitignored).
+is the manual; the pictures are in `var/relief/pictures/`, the fix passes' in
+`var/relief/fix1/` and `var/relief/fix2/` (gitignored; the fix passes' map
+renderings under `personal/scratch/`).
 
 1. **The relief cache** (D225): `node tools/personal/relief.mjs --all` — every
    card in `art.json` and every personal model's card, 158 — takes the card's
@@ -8107,8 +8111,29 @@ vitest 122 (`var/check-all-relief-fix1.log`; a first run at 9140 collided with
 another worktree's gate on 9135–9141 and failed at 10a in 0.0 s — evidence §12).
 `~/forge` and `~/.forge`: unchanged.
 
+**The second fix pass** (D228, evidence §13–§16). The verifier's round 2: one
+major — on Fury the back layer's FILL was the wrong colour at ±25° (a cream
+ghost of his coat through the floating frame's art window, beige halos round his
+head and pistol where the painting is green and orange; Peggy the same, milder;
+a thin dark seam round every cut subject at yaw 0) — and five minors. The fill is
+now **what lies across each silhouette, mirrored**, from pixels at that far
+side's depth only, blurred among itself; the front's cut is **a keep mask the
+tool writes into the map's blue**, which keeps each subject's painted contour on
+the front (no copy of an edge stays on the back); the back layer is the far side
+**only within an orbit's reach** (Peggy's door, running off the painting, now
+continues as a door past the frame); the margin is the painting **mirrored**
+from inside its edge. The map is version 3, and the dev route serves an older
+one without its back (drawn flat). Seat fidelity (the painting alone, figures
+hidden): 0.19–0.69% of the window's pixels differ by more than 24 levels, 0.03–0.48%
+inside its outline, single-pixel lines at a few edges. All 158 cards: 40.6 s,
+32.89 MiB. The minors: the figure-reach test and D228 name DYING as the
+exception; `check-all.sh` says whether the relief's three Python tests ran (and
+the gate below ran them); the fix pass's map renderings moved under `personal/`;
+the co-author line left (13). Follow-up 9 is closed; 14–15 are new. The gate:
+see evidence §16.
+
 <a id="fu-relief"></a>
-### The relief window's follow-ups — thirteen, 2026-09-29 (eight, and five from the fix pass)
+### The relief window's follow-ups — fifteen, 2026-09-29 (eight, five from the fix pass, two from the second)
 
 1. **The same window on the arena's hover — and the board's zoom.** The arena
    mounts it beside `ArtCredit`: `Arena.tsx`'s `hovered` placement (the `hoverId`
@@ -8118,8 +8143,12 @@ another worktree's gate on 9135–9141 and failed at 10a in 0.0 s — evidence �
    there needs a lazy canvas, since the 2D entry chunk carries no `three` (D49).
 2. **A death rehearsed on the inspect view falls into the painting**: `die` takes
    a body ~0.89 of its height backward and a drone ~1.46, past the window at 0.8
-   (the flat picture's 0.7 too). Moving the window back for the death alone, or
-   turning the fall toward the camera on the pedestal, are both decisions.
+   (the flat picture's 0.7 too). The verifier measured the lethal rehearsal live:
+   the nearest figure vertex −0.137 world units through the window for Fury,
+   −0.113 Doom, −0.070 Peggy, −0.044 Wasp; hit, block, enter and attack stay
+   0.14 or more in front. `workshop.test.ts`'s title and D228 name dying as the
+   exception. Moving the window back for the death alone, fading the body, or
+   turning the fall toward the camera on the pedestal, are all decisions.
 3. ~~**The rubber sheet at a silhouette.** Where the map jumps (Peggy's pistol,
    Fury's coat) the plane stretches the painting across the jump. Two known
    answers: cut the painting into layers at its depth edges, or fill what the near
@@ -8144,12 +8173,16 @@ another worktree's gate on 9135–9141 and failed at 10a in 0.0 s — evidence �
    card, +49,150 triangles and +1 call on the GTX 1080 since the fix pass (two
    layers; the first cut's one was +24,574 and +0). `tools/arena-bench.mjs`
    benches the arena, not the workshop.
-9. **The back layer's fill is push-pull** — soft by construction, which reads as
+9. ~~**The back layer's fill is push-pull** — soft by construction, which reads as
    the background out of focus at ±25°; at 40° behind a large subject it is broad
-   and sometimes one colour (Fury's coat at −40°). A learned inpainting (a second
-   model in the venv, in `relief_depth.py`'s `layers()`, a new recipe version)
-   would give it texture; OpenCV's inpainting is in the likeness venv and was not
-   tried (D227).
+   and sometimes one colour (Fury's coat at −40°).~~ **Closed by the second fix
+   pass** (D228). The date was wrong: the verifier's round 2 found the fill's
+   wrong colour already at 25° — a cream silhouette of Fury's coat at +25°, beige
+   halos at −25° — because push-pull averaged a mixed rim (sparks, green, the
+   subject's own contour) into one mean. The fill is now the painting across the
+   silhouette, mirrored, from the far side's depth only; OpenCV's Telea and NS
+   were tried against it and rejected (D228, with the picture). A learned
+   inpainting remains the step past it.
 10. **From the seat the relief shows nothing new** (the verifier's reading, and
     D226's design: the window is the painting from the seat). The parallax needs
     a drag. An ease into the inspect view from a few degrees off its seat would
@@ -8163,9 +8196,24 @@ another worktree's gate on 9135–9141 and failed at 10a in 0.0 s — evidence �
     by its length (`INSPECT_HULL`) is wider than a backdrop sized by the subject's
     height; the backdrop could take the hull's length as its width.
 13. **The first commit's co-author line** (`ee604b4`) names the model that wrote
-    it, where the brief asked for another line; the fix pass's commit does the
-    same. Left as it is (the verifier's minor, skipped): rewriting a commit is
-    the owner's call, and the brief keeps the branch a fast-forward of `9dfdce4`.
+    it, where the brief asked for another line; the fix passes' commits do the
+    same (they follow the session's own attribution instruction, which the brief
+    does not override). Left as it is (the verifier's minor, skipped twice):
+    rewriting a commit is the owner's call, and the brief keeps the branch a
+    fast-forward of `9dfdce4`.
+14. **An internal cut keeps a few of the subject's pixels on the back layer.**
+    Where a subject's depth steps inside it (Peggy's pistol against her hand and
+    sleeve), the cut cells lie over the subject; from the seat they show the back
+    layer, so the back keeps them as painted, and they stay behind as small dark
+    flecks when the camera moves (Peggy's pistol at −25°, `var/relief/fix2/d/`).
+    Standing the back layer at the subject's own depth in those cells would carry
+    them with it, at the price of a small stretch on the back; a finer grid would
+    shrink them.
+15. **A painted rim travels with its subject.** The keep mask holds 3 px of a
+    subject's contour on the front, so a painted halo (Fury's head against the
+    green, his coat against the fire) moves with him and at ±40° reads as a light
+    outline over the darker fill beside it. It is the painting's own line;
+    `CONTOUR_PX` 2 would thin it and let a little more ink stay behind.
 
 ---
 

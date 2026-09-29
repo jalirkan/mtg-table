@@ -382,26 +382,33 @@ duelists on it). **Inspect** is a camera mode (`framing.ts`'s `inspectLayout`, p
 the figure in its signature pose, the card's art box enlarged behind it, the frame
 and text with the art window cut out floating beside it.
 
-**The relief window** (**D225**–**D227**; `docs/guides/personal-tier.md`'s *The
+**The relief window** (**D225**–**D228**; `docs/guides/personal-tier.md`'s *The
 relief cache*). Where the personal tier's relief cache (`personal/relief/`,
 `tools/personal/relief.mjs` — depth maps derived from card art, so never
 committed) has the card's map, the art box is a window: two layers on one
 subdivided grid (`perf.ts`'s `RELIEF_GRID`) whose vertices recede along their
 rays from the inspect camera's seat by the map (`workshop/relief.ts`'s
 `RELIEF_VERTEX`, at most `RELIEF_DEPTH` of the backdrop's height) — the FRONT,
-the painting cut at every silhouette (`RELIEF_CLIFF`, by grid cell and pixel by
-pixel), and the BACK behind it, what the silhouettes hide filled in — both
-clipped to the window's rectangle (`RELIEF_FRAGMENT`), so from the seat it is the
-painting and orbiting shows its depth behind a still frame, its nearest point on
-the flat picture's plane and the figure as clear of it (`INSPECT_WINDOW`,
-measured densely over every figure). It is not a card — `CardPlane` still draws
-the card — but the inspect view's backdrop, built once per card at commit and
-drawn unlit, with no ink mark and no halftone. Four rules hold it: **`relief.ts` is pure and the one reader of
+the painting cut at every silhouette (`RELIEF_CLIFF` by grid cell, and pixel by
+pixel by the map's blue, a KEEP MASK the tool decides, which keeps each
+subject's painted contour on the front so it moves with it), and the BACK behind
+it, what the silhouettes hide filled with the background just across them,
+mirrored and out of focus, within what an orbit can reach — both clipped to the
+window's rectangle (`RELIEF_FRAGMENT`), so from the seat it is the painting and
+orbiting shows its depth behind a still frame, its nearest point on the flat
+picture's plane and the figure as clear of it (`INSPECT_WINDOW`, measured densely
+over every figure and every clip; a death falls through it, flat or relief). It
+is not a card — `CardPlane` still draws the card — but the inspect view's
+backdrop, built once per card at commit and drawn unlit, with no ink mark and no
+halftone. Five rules hold it: **`relief.ts` is pure and the one reader of
 the relief index**; **`inspectSourceOf` is the inspect view's one way to a card's
 image and so to its map**, face up only, and `workshop.test.ts` sweeps the
 catalog with a hostile copy and an ungated control; **the route is named once,
 `Pedestal.tsx`'s DEV-gated `RELIEF_BASE`**, so a build has none and draws every
-backdrop flat; and **nothing of the relief runs in a frame loop**. The toolbar's
+backdrop flat; **a map is drawn only at `perf.ts`'s `RELIEF_MAP_VERSION`** (the
+dev route serves any other without its back layer, so it is flat until the tool
+runs again, rather than a blue the shader misreads); and **nothing of the relief
+runs in a frame loop**. The toolbar's
 *relief* checkbox is the A/B. **A deck card no recording showed face up takes its facts
 from the engine's card script** (`catalog.json`'s `engine` list, `tools/forge-scripts.ts`):
 facts are still what Forge puts on the wire, never typed by hand.

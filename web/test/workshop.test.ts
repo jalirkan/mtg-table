@@ -709,7 +709,7 @@ test('workshop: the inspect view builds ONE backdrop per face-up card with a fig
   assert.ok(asked.some((id) => secretIds.has(id)), 'the ungated control never reached the relief index');
 });
 
-test('workshop: the relief never comes nearer the figure than the flat picture — the window stands clear of every figure’s bounds at rest and in every clip but die (D226, measured)', async () => {
+test('workshop: the relief never comes nearer the figure than the flat picture — the window stands clear of every figure’s bounds at rest and through every clip; DYING is the exception: a death falls through the window, flat or relief (D226, D228, measured; PLAN’s relief follow-up 2)', async () => {
   const THREE = await import('three');
   const raster = await import('./prop-raster.ts');
   const { instantiateFigure, clipFor } = await import('../src/arena/scene/models.ts');

@@ -1,4 +1,4 @@
-# Evidence — the relief window (D225, D226)
+# Evidence — the relief window (D225–D228)
 
 Branch `relief-window`, off `main` at `9dfdce4`, in the worktree
 `mtg-table-t2r2`, on 2026-09-29. Everything below was run on this machine that
@@ -15,7 +15,11 @@ personal tier (D196) built the flat version; this lane gives it depth.
 **§1–§8 are the first cut** (commit `ee604b4`, D225, D226). **§9–§12 are the fix
 pass** after the verifier's round 1 (D227): the painting is now two layers, cut
 at its silhouettes, clipped to a still window. Where §1–§8 describe the map or
-the plane, §9 supersedes them; the rest stands.
+the plane, §9 supersedes them; the rest stands. **§13–§16 are the second fix
+pass** after the verifier's round 2 (D228): the back layer filled from across
+each silhouette, mirrored; the front's cut a keep mask in the map's blue; the far
+side only within an orbit's reach. Where §9–§12 describe the map's blue, the
+fill or the margin, §13 supersedes them.
 
 ---
 
@@ -410,6 +414,12 @@ control: a margin of 0.06 fails, naming the drone).
 
 ## 11. The pictures (`var/relief/fix1/`, gitignored)
 
+(Moved by the second fix pass, the verifier's round-2 minor: the map renderings
+and the map copies below — `viz-fury*.png`, `viz2-*.png`, `viz3-*.png`,
+`fury-dilation-maps.png`, `maps-*/`, `L4maps/` and a copy of Doom's map and back
+image — are card-art-derived data, so they now live in the gitignored
+`personal/scratch/relief-fix1/`; the screenshots stay in `var/relief/fix1/`.)
+
 Made by `var/relief/fix1/shot.mjs` (the verifier's driver, copied: headless
 Chromium over CDP through ANGLE on the GTX 1080, the dev server on 5215, devtools
 on 9158, its profile under `var/` and deleted, the browser closed over CDP; a new
@@ -523,3 +533,224 @@ each (the same sha256 before and after), `~/forge`'s 21,367 files and the conten
 of `~/.forge`'s seven (`var/relief/fix1/forge-fp/`). The main checkout: `git
 status` clean, and nothing under its `var/likeness/` newer than any of the fix
 pass's four markers.
+
+## 13. The second fix pass — the fill, the seam, the margin (D228)
+
+The verifier's round 2 (not passed): **major** — on Fury the back layer's fill
+was visibly the wrong colour at ±25°, not only at 40° as follow-up 9 had it: at
++25° a flat cream silhouette of his coat where it had stood, seen through the
+floating frame's empty art window, with a cream blob beside his hand; at −25°
+beige halos round his painted head, pistol hand and coat edge where the painting
+is green and orange; Peggy the same, milder, round her rifle, hand and the door's
+edge; and at yaw 0 a thin dark seam outlining every cut subject. **Minor** — a
+pale band along one window edge at ±25° on every card (the margin); the reach
+test's title not naming dying; the relief's three Python tests skipped in the
+gate without a word; card-art-derived copies in `var/relief/fix1/`; the
+co-author line.
+
+**What was wrong, measured on the maps** (`personal/scratch/relief-fix2/`,
+gitignored: `fury-maps-before.png` is round 2's back image and three planes). The
+back image's hidden region was one soft cream mean — push-pull over every pixel
+just across a cut, sparks, green and the subject's own dark contour together —
+and a thin dark line traced every silhouette on the BACK layer: the depth
+model's edge is soft over a few pixels, the painting's ink line lies in it, and
+round 2 cut those pixels from the front (red over blue) and kept them on the
+back as painted. When the subject moved, its outline stayed behind: the dark
+seam, and the beige between it and the subject.
+
+**The steps, each pictured** (`var/relief/fix2/`; `a/` to `d/` are the relief at
+±25° and 0° of Fury and Peggy, `<card>-before-after-yaw<y>.png` round 2's shot
+beside the step's):
+
+1. **`a/` — a keep mask, a contour allowance, a mirrored fill.** The front's
+   cut is written into the map's blue by the tool (255 drawn, 0 cut) and spares
+   the subject grown 3 px (its painted contour); the back keeps the painting
+   where the cut shows it, a pixel past it, and fills the rest of the subject by
+   mirroring the painting across the nearest clean seed. The cream ghost and the
+   halos were gone at once (`a/nick-fury-spymaster-before-after-yaw+25.png`, `-25`),
+   and the yaw-0 seam with them (`a/nick-fury-spymaster-yaw0-diff.png`: only the
+   window's outline and a few one-pixel rows remain). Left: a pale band past
+   Peggy's door at −25° (`a/_peggy-m25-rightedge.png`) — the door runs off the
+   painting's edge and its whole back layer stood at the sky's depth, filled.
+2. **`b/` — the reach.** Only within what a 40° orbit can uncover behind a
+   silhouette is the back the far side; past it, the painting at its own depth.
+   The door now continues as a door past the frame (`b/…-before-after-yaw-25.png`).
+   Left: a dark haze beside Peggy's pistol — the fill's blur read the pistol's
+   kept pixels (`personal/scratch/relief-fix2/peggy-rifle-back.png`).
+3. **`c/` — the far side read off the painting's own depth** (to fill the pistol
+   whole). Peggy's pistol came out clean; Fury's fist opened a bright orange hole
+   in his own coat (`c/_fury-fist-abc.png`: `a`, `b`, `c` side by side). Rejected.
+4. **`d/` — the red's far side again, and the blur among the fill and its seeds
+   alone.** The haze is gone and the fist keeps its coat
+   (`d/_rifle-fist-round2-b-d.png`: round 2, `b`, `d` for Peggy's pistol at ±25°
+   and Fury's fist at ±25°). This is the committed recipe (version 3).
+
+**OpenCV's Telea and Navier–Stokes**, the verifier's suggestion, fed the same
+hole and the same clean rim
+(`personal/scratch/relief-fix2/fill-ab-mirror-telea-ns.png`: mirror | Telea | NS
+for Fury and Peggy; 40–80 ms a card): both diffuse in from every known pixel
+round the hole and take no depth, so the subject's kept interior bleeds into what
+it hides (a dark blob of Fury's coat) and a large hole is one flat colour. The
+mirror keeps the fire's texture; the depth bins keep the coat out. Rejected (D228).
+
+**The result, as D228 states it.** `<id>.png` is RGB version 3: red the front's
+depth, green the back's (the far side within reach, the painting's own past it),
+blue the front's keep mask. `<id>.back.jpg` is the painting with its subjects
+filled by the background mirrored across each silhouette, the painting itself
+wherever the seat sees it, and a margin mirrored from inside the edge.
+
+## 14. Measured
+
+**The relief cache, all 158 cards** (`node tools/personal/relief.mjs --all
+--force`, the model on the GTX 1080; `var/relief/fix2/relief-all-force.log`):
+**40.6 s**, 0 fetched (37 images from the card library's cache, 121 kept), the
+model's median 30 ms a card, the back layer's median 88 ms (max 123 ms);
+`personal/relief/` **32.89 MiB** — the maps 8.14 MiB, the back images 14.46 MiB,
+`source/` 10.12 MiB, `.cache/` empty. A second `--all` finds all 158 current in
+0.05 s. On the CPU (`--device cpu`, the five picture cards): the model 106–137 ms
+a card, the back layer 83–106 ms.
+
+**From the seat** — the painting alone (a new `--bare` in the driver hides every
+object but the inspect group, so an idle figure's sway and the Helicarrier's bob
+are not counted), relief against flat at yaw 0, the share of the window's pixels
+(510 × 372) that differ by more than 24 levels
+(`var/relief/fix2/seatdiff.py`, `var/relief/fix2/bare/`):
+
+| card | the window | inside its outline (4 px in, 16 px off the bottom) | > 48 levels inside |
+|---|---|---|---|
+| Nick Fury, Spymaster | 0.687% | 0.482% | 0.075% |
+| Peggy Carter, Secret Agent | 0.420% | 0.291% | 0.040% |
+| Doctor Doom | 0.188% | 0.070% | 0.008% |
+| Wasp, Shrinking Savior | 0.316% | 0.025% | 0.020% |
+| S.H.I.E.L.D. Helicarrier | 0.315% | 0.030% | 0.020% |
+
+What is left is the window's own outline and single-pixel rows at a few strong
+horizontal edges (Fury's coat hem and boot, a pipe: `bare/_nick-fury-spymaster-diff.png`)
+— a triangle's interpolation between vertices at different depths, not a seam.
+The camera stands exactly at the shader's `uEye` (`var/relief/fix2/eye.mjs`).
+On the round-2 shots with the figures in (`a/` against `var/verify/pics/shots/`)
+the inside share fell from 1.036% to 0.409% on Fury and from 0.449% to 0.271% on
+Peggy.
+
+**The back layer, fill share** (the step's own lines, `relief-all-force.log`):
+the cut 11–25% of a painting's texels, the fill 19–42%.
+
+## 15. The pictures (`var/relief/fix2/`, gitignored)
+
+Made by `var/relief/shot.mjs` (headless Chromium over CDP through ANGLE on the
+GTX 1080, `--gpu gl`, the dev server on 5215, devtools on 9151, its profile under
+`var/` and deleted, closed over CDP; new: `--bare`), composed by
+`var/relief/fix2/zoom.py`, `sbs.py`, `var/relief/sheet.py`, measured by
+`seatdiff.py`.
+
+- `final/<card>-{flat,relief}-yaw{-25,0,+25}.png` for `doctor-doom`,
+  `nick-fury-spymaster`, `peggy-carter-secret-agent`, `wasp-shrinking-savior`
+  and `shield-helicarrier` — thirty pictures, the four personal models dressed;
+  `final/sbs-<card>-yaw<y>.png`, flat left and relief right; `final/<card>-sheet.png`,
+  flat above relief at the three angles; `final/<card>-before-after-yaw<y>.png`,
+  round 2's relief (the verifier's own shots, `var/verify/pics/shots/`) beside
+  this pass's, zoomed on the window.
+- `final40/<card>-relief-yaw{-40,+40}.png` and `final40/sheet-pm40.png`;
+  `final40/_fury-40-zoom.png`, round 2 at +40° beside this pass at ±40°.
+- `bare/` — the seat measure's painting-only pictures and Fury's difference map.
+- `halftone/` — the halftone A/B (below).
+- `a/` … `d/` — the steps of §13.
+
+**What looked right.** Fury at ±25°: no cream ghost and no halo — what his coat
+uncovers is the fire beside it, continued, and through the floating frame's art
+window at +25° one sees fire, not a silhouette; no dark outline at yaw 0. Peggy:
+no pale fringe round her back or hand; her door continues past the frame as a
+door. Doom's three stand apart cleanly, as before. The Wasp's painted arm and
+hand lost the dotted outline round them. The Helicarrier's left edge continues
+its sky where it was a pale band. Every window edge continues the painting
+mirrored, soft, where it was a cream smear.
+
+**What is still the method's.** A few dark flecks beside Peggy's pistol at −25°
+(follow-up 14: cut cells inside the subject keep its pixels on the back); a
+painted rim — Fury's head and coat against the fire — travels with him and at
+±40° reads as a light outline over the darker fill (follow-up 15); at 40° the
+mirrored fill streaks a little where the hole is wide; the Wasp's right edge
+shows torn shards where the painting's building meets its cuts; the frame panel
+still crosses the painting at +25° (follow-up 11) and a death still falls
+through the window (follow-up 2).
+
+**Ink and halftone — now with the halftone's picture** (the verifier's round 2
+read §5's halftone as argued only). `var/relief/fix2/halftone/halftone-ab.png`
+(Fury, Doom and Peggy at 0° and +25°) and `halftone-ab-fury-zoom.png` put the
+figures' own screen — `look.ts`'s 5 CSS px cell on a 45° grid, the dots darkening
+by 0.34, screened into the painting's dark tones (the driver's `--halftone`
+patches both layers' fragment shader for the shot) — beside the committed,
+unscreened painting. The screen reads as a print texture laid over a painting
+that already has its own tones: it greys Fury's face and the tower's mid-tones
+with dots the painter never put there, and, being a screen-space grid, it stays
+still while the painting slides behind it — a screen door in the window. The
+painting stays unlit and unmarked; the ink stays off for §5's reason (it traces
+the reconstruction's seams, which this pass hid).
+
+## 16. The second fix pass: tests, controls, the gate, `~/forge`
+
+**The tests.** `relief.test.ts`: the two layers through the step now assert
+red spanning the range, green never nearer than red, and blue a keep mask of 0
+and 255 alone; `layers()` runs on a richer synthetic — a near red square with a
+2 px black contour on the tail of its soft depth edge, a ground of two colours
+(blue left, green right) with the frame's black line on its top row, a floor
+ramp, and a yellow door running off the top and right edges — and asserts: no
+pixel of the square or of its contour's sides cut from the front, none of the
+contour left on the back; under the square's left side the blue across it, under
+its right side the green (never a mean); the painting wherever the front is cut
+and a pixel past it; the ramp neither cut nor grown; beside the door's edge the
+far side in green, past an orbit's reach the door itself at its own depth, and
+past the painting's edge still door; the top margin blue, not the frame's line;
+and three small cases of the fill — the mirror (0.3, 0.2, 0.1, then the seed),
+only seeds at the far side's depth serving, and the blur never reading a kept
+pixel of the subject. The recipe: version 3 with `contourPx`, `seamPx`,
+`reachPx`; `RECIPE_VERSION` equals `perf.ts`'s `RELIEF_MAP_VERSION`; `REACH_PX`
+at least `RELIEF_DEPTH` × 301 × tan 40°. The shader: the front's cut reads the
+keep mask. `personal.test.ts`: a version-2 map with its back on disk is served
+without its back (the back image a 404) and the start line counts it.
+`workshop.test.ts`: the reach test's title names dying as the exception.
+
+**The controls** (each broken in place, run, restored; the file compared after):
+
+| broken | what failed |
+|---|---|
+| no contour allowance (`grow(occluder, 0)`) | "the square's painted contour is never cut from the front" |
+| every seed serves (no depth bins) | "only a seed at the far side's depth serves" |
+| the nearest seed, no mirror | "the fill mirrors the painting across its nearest seed" |
+| no reach (the far side everywhere) | "past an orbit's reach the back stands at the slab's own depth" |
+| the margin mirrored from the edge (`EDGE_TRIM_PX = 0`) | "above the first row the margin continues the blue ground, not the frame's black line" |
+| no seam guard | "wherever the front is cut … the back keeps the painting's own pixels" |
+| the fill's blur over every pixel | "the fill's blur never reads a kept pixel of the subject" |
+| the dev route serving any recipe's back | "a map made with an older recipe is served without its back layer" |
+
+**`npm --prefix web test`** with `MTG_TABLE_LIKENESS` set: 1,075 `node --test`
+(1,069 pass, 0 fail, 6 skipped — the relief's three Python cases RUN) + 122
+vitest (8 files). **`npm --prefix web run build`**: exit 0; no `personal/`
+path, no `reliefIndexOf` and no `RELIEF_BASE` in the built JavaScript (only the
+source maps carry the comments, as §3 says).
+
+**`tools/check-all.sh`** now prints, in its web step and after `check-all OK`,
+whether the relief's three Python tests ran or were skipped, and says in its
+comment how to run them (export `MTG_TABLE_LIKENESS`; the gate itself never finds
+a venv under `var/`).
+
+**The gate** from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9140`, with
+`MTG_TABLE_LIKENESS` exported (so the relief's Python tests ran in it, and it
+said so): **258.0 s**, exit 0, 48 jobs (985.0 s summed) at a load average of
+2.1–16.4, `node --test` **1,090 / 1,082 pass / 0 fail / 8 skipped** and vitest
+122 (8 files) — `var/check-all-relief-fix2.log`,
+`var/check-all/20260929-052046-1765885/`. Ports 9140–9146 were free.
+
+**`~/forge` and `~/.forge`: unchanged** across the pass (the gate's JVM runs
+among them) — the jar's sha256 (`3c0a7c38…8e5dd9`), a listing of every path,
+size and mtime under each and the content of `~/.forge`'s files, the same sha256
+before and after (`var/relief/fix2/forge-fp/`); `~/forge`'s 21,367 files and
+`~/.forge`'s seven. **The main checkout's likeness venv was written once, by
+mistake, and put back**: a scratch timing run of its python (numpy, scipy's
+`ndimage`) without `PYTHONDONTWRITEBYTECODE` wrote 147 bytecode caches (`.pyc`)
+into its `site-packages` at 04:35; they were deleted — those 147 files and the
+23 `__pycache__` folders that held only them — and a `find -newer` over its
+`var/likeness/` then finds no file (three older `__pycache__` folders keep a new
+mtime). Every run after that used `-B`; `relief.mjs` and the tests set
+`PYTHONDONTWRITEBYTECODE` themselves and wrote nothing there. The main checkout's
+`git status` is clean.

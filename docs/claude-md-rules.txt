@@ -128,7 +128,7 @@
 4. **Tuning leaves the browser only by the clipboard** (**D103**). Overrides live
 5. **A page of its own, by `#cards`'s rules** (**D94**, **D102**):
 **The personal tier on the pedestal** (**D196**; the arena's conventions are
-**The relief window** (**D225**–**D227**; `docs/guides/personal-tier.md`'s *The
+**The relief window** (**D225**–**D228**; `docs/guides/personal-tier.md`'s *The
 1. **One narrator** (**D124**). `web/src/story/narrate.ts` is the narration —
 **erasable TypeScript with no import at all**, because Node runs it by type
 2. **A page over the replay, not a renderer** (**D125**). Lazy through
@@ -445,6 +445,7 @@ span: The personal tier on the pedestal
 span: `relief.ts` is pure and the one reader of the relief index
 span: `inspectSourceOf` is the inspect view's one way to a card's image and so to its map
 span: the route is named once, `Pedestal.tsx`'s DEV-gated `RELIEF_BASE`
+span: a map is drawn only at `perf.ts`'s `RELIEF_MAP_VERSION`
 span: nothing of the relief runs in a frame loop
 span: A deck card no recording showed face up takes its facts from the engine's card script
 span: the story is the narrator's text beside the replay's cursor — one narrator, one cursor, and nothing on the page the log did not show its seat.

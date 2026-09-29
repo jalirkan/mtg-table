@@ -248,3 +248,12 @@ was running at the same moment with its step-10 servers on 9135–9141, so 10a's
 `GET /health` on 9140 was answered by the other gate's server and its own log had
 no `WS LISTENING` line — a port collision between two gates, not this branch.
 The fix pass added no step and no job.
+
+## The relief window's second fix pass (D228)
+
+Once from a deleted `bridge/out` at `GATE_JOBS=4`, branch `relief-window`, with
+`MTG_TABLE_LIKENESS` exported so the relief's three Python-step tests ran inside
+the gate (the gate now says which): `WSPORT=9140` **258.0 s** (48 jobs, 985.0 s
+summed, load average 2.1–16.4), exit 0 — `var/check-all-relief-fix2.log`,
+`var/check-all/20260929-052046-1765885/`. The pass added no step and no job; the
+web step and the closing line print whether the relief's Python tests ran.

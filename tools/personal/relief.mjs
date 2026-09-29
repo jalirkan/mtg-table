@@ -12,7 +12,7 @@
  *   node tools/personal/relief.mjs --card "Doctor Doom"   one card (repeatable)
  *        [--force]                 compute again what is already there
  *        [--device auto|cuda|cpu]  the model on the GPU when torch sees one (~30 ms a card on the GTX 1080), else on
- *                                  the CPU (~0.11–0.14 s); the back layer is numpy, ~0.13 s a card either way
+ *                                  the CPU (~0.11–0.14 s); the back layer is numpy and scipy, ~0.09 s a card either way
  *        [--likeness <dir>]        the Python venv and its caches (default var/likeness, or $MTG_TABLE_LIKENESS)
  *        [--dry-run]               say what would be done; fetch nothing, run nothing, write nothing
  *
@@ -42,11 +42,14 @@
  *     255 — red the FRONT layer (the painting's depth, the near side of every
  *     silhouette grown {@link DILATE_PX} px past it so the cut falls in the
  *     background), green the BACK layer (the far side of the nearest
- *     silhouette, under everything nearer), blue the painting's own depth; and
- *     `personal/relief/<id>.back.jpg`, the back layer's colour — the painting
- *     with what its near subjects hide filled in from the background (soft), and
- *     continued {@link MARGIN} of its height past every edge, for the view past
- *     the window's frame (D227);
+ *     silhouette, under everything nearer), blue the FRONT layer's keep mask
+ *     (255 drawn, 0 cut — the subject and its painted contour always drawn,
+ *     {@link CONTOUR_PX}); and `personal/relief/<id>.back.jpg`, the back
+ *     layer's colour — the painting with its near subjects filled in by the
+ *     background just across each silhouette, mirrored and out of focus, except
+ *     where the seat sees it through the front's cut, and continued
+ *     {@link MARGIN} of its height past every edge (mirrored), for the view past
+ *     the window's frame (D227, D228);
  *  3. **the index** — `personal/relief/index.json`: Scryfall id → files, sizes,
  *     the recipe, model, device, date, the art box it was cut with, where the
  *     image came from and how long it took.
@@ -96,7 +99,7 @@ export const FLAT_BELOW = 2.0;
  * than `RELIEF_CLIFF` — a smooth slope is left as it is), so the cells the
  * browser cuts at a silhouette (`RELIEF_CLIFF`, one grid cell either side) hold
  * the background's pixels and never the subject's; the grown band itself the
- * browser cuts pixel by pixel (red against blue). Measured over the five
+ * browser cuts pixel by pixel (the blue keep mask). Measured over the five
  * picture cards (docs/evidence/relief-window.md §9): the subject's share of the
  * cut cells is 32–37% ungrown, 11–21% at 6 px and 2–12% at 8–12 px, where it
  * stops falling (what is left is the subjects' own inner slopes).
@@ -104,11 +107,40 @@ export const FLAT_BELOW = 2.0;
 export const DILATE_PX = 10;
 /** **The back layer's margin**: the painting continued this fraction of the crop's height past every edge. */
 export const MARGIN = 0.25;
+/**
+ * **The subject's painted contour** (D228): the subject — every texel nearer than
+ * the far side of its nearest cut by more than `RELIEF_CLIFF` — grown this many
+ * pixels before the front is cut and the back is filled. The depth model's edge is
+ * soft over a few pixels and the painting's ink line sits in it; grown, the line
+ * stays on the FRONT (it moves with the subject) and the back fills it (no copy of
+ * the edge stays behind — round 2's dark seam and halos).
+ */
+export const CONTOUR_PX = 3;
+/**
+ * **The seam guard** (D228): where the seat sees the back through the front's cut,
+ * the back keeps the painting's own pixels this far past the cut, so the texture
+ * filter's half texel at the cut's edge never reads the fill.
+ */
+export const SEAM_PX = 1;
+/**
+ * **How far behind a silhouette an orbit can see** (D228), in pixels of the map
+ * for a whole range of depth: a subject moves over what is behind it by its depth
+ * over that far side × `RELIEF_DEPTH` (0.3 of the window's height — the crop's
+ * 301 px) × the tangent of the orbit, and 0.3 × 301 × tan 40° is 75.8 px. Within
+ * that reach (measured from the cut, plus the dilation and two cells) the back
+ * layer stands at the far side and wears the fill; past it, it is the painting at
+ * its own depth — so a subject that runs off the painting's edge (Peggy's door)
+ * continues past the window's frame as itself. `web/test/relief.test.ts` holds it
+ * over `RELIEF_DEPTH` × 301 × tan 40°, so a deeper relief cannot outrun it.
+ */
+export const REACH_PX = 80;
 /** What a map is, in one line, for the index. */
 export const ENCODING =
   `<id>.png: 8-bit RGB the size of the art box crop, near = 255, each map its own 1st-99th percentile of relative inverse depth blurred ${String(BLUR_PX)} px - ` +
   `red the front layer (the near side of every silhouette grown ${String(DILATE_PX)} px), green the back layer (the far side of the nearest silhouette under everything nearer), ` +
-  `blue the painting's own; <id>.back.jpg: the back layer's colour, the crop with what its near subjects hide filled in and ${String(MARGIN)} of its height continued past every edge; ` +
+  `blue the front layer's keep mask (255 drawn, 0 cut; the subject and ${String(CONTOUR_PX)} px of its contour always drawn); ` +
+  `<id>.back.jpg: the back layer's colour, the crop with its near subjects filled by the background across each silhouette (mirrored, blurred) except where the front is cut, ` +
+  `and ${String(MARGIN)} of its height continued past every edge (mirrored); ` +
   'a flat image is 255 in every layer';
 /**
  * The fetch pacing: at most 10 requests in any second, one at a time — the gap
@@ -119,12 +151,31 @@ export const ENCODING =
 export const FETCH_GAP_MS = 102;
 
 /**
+ * **The recipe's version**: 3 since the blue channel became the front's keep mask
+ * and the fill a mirror (D228). `web/src/workshop/relief.ts`'s
+ * `RELIEF_MAP_VERSION` is the page's copy — its reader draws any other map flat,
+ * because a version-2 map's blue is a depth and the shader would read it as a
+ * mask — and `web/test/relief.test.ts` holds the two equal.
+ */
+export const RECIPE_VERSION = 3;
+
+/**
  * **The recipe** a map is made with — recorded per map, and a map made with any
  * other is stale. `grid` and `cliff` are `perf.ts`'s `RELIEF_GRID` and
  * `RELIEF_CLIFF` (the cut the back layer is built to meet); `main()` reads them.
  */
 export function recipeOf(grid, cliff) {
-  return { version: 2, dilatePx: DILATE_PX, blurPx: BLUR_PX, cliff, grid: [grid[0], grid[1]], margin: MARGIN };
+  return {
+    version: RECIPE_VERSION,
+    dilatePx: DILATE_PX,
+    blurPx: BLUR_PX,
+    cliff,
+    grid: [grid[0], grid[1]],
+    margin: MARGIN,
+    contourPx: CONTOUR_PX,
+    seamPx: SEAM_PX,
+    reachPx: REACH_PX,
+  };
 }
 
 /** Two recipes the same (their JSON, key order included — both are made by {@link recipeOf}). */
@@ -365,7 +416,17 @@ export function runDepth({ python, jobs, device, env, outDir, blurPx = BLUR_PX, 
     });
     child.on('error', fail);
     child.on('close', (code) => done({ code, lines, stderr }));
-    const back = recipe === null ? null : { cliff: recipe.cliff, cells: recipe.grid, margin: recipe.margin };
+    const back =
+      recipe === null
+        ? null
+        : {
+            cliff: recipe.cliff,
+            cells: recipe.grid,
+            margin: recipe.margin,
+            contourPx: recipe.contourPx,
+            seamPx: recipe.seamPx,
+            reachPx: recipe.reachPx,
+          };
     child.stdin.end(JSON.stringify({ jobs, blurPx: recipe === null ? blurPx : recipe.blurPx, flatBelow, ...(recipe === null ? {} : { dilatePx: recipe.dilatePx, back }) }));
   });
 }

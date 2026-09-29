@@ -183,3 +183,19 @@ cases passed, the step's two in ~12 s together), and the layers' boxes and the
 window. `workshop.test.ts`'s figure-reach case gained its dense pass (+2 s).
 Inside `check-all.sh`: **1,090 / 1,079 pass / 0 fail / 11 skipped** plus 122
 vitest.
+
+## The relief window's second fix pass (`relief-window`, D228)
+
+`npm --prefix web test` is **1,075 `node --test` + 122 vitest (8 files)**
+standalone: no case added, the relief's cases rewritten (the two layers through
+the step read blue as a keep mask; `layers()` on a richer synthetic with its
+controls, and the fill's mirror, depth bins and blur; the recipe's version held
+equal to `perf.ts`'s `RELIEF_MAP_VERSION`), the route's case given an
+older-recipe map, the reach test's title naming dying. **The relief's three
+Python-step cases skip unless `MTG_TABLE_LIKENESS` names a venv — in a plain `npm
+test` and in `check-all.sh` alike — and the gate now prints which** (the
+verifier's round-2 minor). Standalone with the venv: 1,069 pass, 0 fail, 6
+skipped; without it, 1,066 pass, 9 skipped. Inside `check-all.sh` with the venv
+exported: **1,090 / 1,082 pass / 0 fail / 8 skipped** plus 122 vitest (without
+it the gate's count would read 1,079 pass / 11 skipped, as the first fix pass's
+did).

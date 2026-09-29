@@ -312,3 +312,14 @@ export const RELIEF_GRID: readonly [number, number] = Object.freeze([128, 96] as
  * either makes every map stale).
  */
 export const RELIEF_CLIFF = 0.12;
+/**
+ * **The depth map's version** (D228): what its three channels mean to the
+ * shader. 3 is red the front's depth, green the back's, blue the FRONT's keep
+ * mask (255 drawn, 0 cut — cut pixel for pixel by `tools/personal/relief.mjs`,
+ * which builds the back image to exactly that cut). A version-2 map's blue is the
+ * painting's own depth, which the shader would misread as a mask, so the dev
+ * route serves a map of any other version without its back layer and the inspect
+ * view draws that painting flat until the tool runs again. `relief.mjs`'s
+ * `RECIPE_VERSION` is the tool's copy; `web/test/relief.test.ts` holds them equal.
+ */
+export const RELIEF_MAP_VERSION = 3;

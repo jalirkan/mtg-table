@@ -1767,8 +1767,24 @@ s13_skipped() {
 # the two halves of package.json's own `test` script, the same commands -- so
 # only the ~9 s half waits for step 10.  It waits for the build as well, because
 # personal.test.ts reads the web/dist that job writes (D195).
+# The relief's three Python-step tests (web/test/relief.test.ts: the depth step on
+# a synthetic gradient and its flat gate, the two layers through the step, and
+# layers() with its controls) need the likeness venv -- torch, transformers,
+# numpy and scipy -- and run only when MTG_TABLE_LIKENESS names one; nothing
+# here sets it, because a gate that found it under var/ would pass or fail on
+# what lies there.  Export it before the gate to run them (the variable passes
+# through to npm test).  This line says which it was, so a green gate cannot
+# hide that they were skipped (the relief window's verifier, round 2).
+relief_python_note() {
+  if [ -n "${MTG_TABLE_LIKENESS:-}" ] && [ -x "${MTG_TABLE_LIKENESS}/venv/bin/python" ]; then
+    printf '(relief: the three Python-step tests RUN -- MTG_TABLE_LIKENESS=%s)\n' "$MTG_TABLE_LIKENESS"
+  else
+    printf '(relief: the three Python-step tests are SKIPPED -- export MTG_TABLE_LIKENESS=<the likeness venv root> to run them)\n'
+  fi
+}
 s13_web() {
   hdr 13 "web -- npm run build && npm test (includes the arena's six headless suites)"
+  relief_python_note
   [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
   (cd web && npm run build) || die "npm run build"
   (cd web && MTGTABLE_WS_LOGS="${WS_LOGS:-}" npm test) || die "npm test"
@@ -1784,6 +1800,7 @@ s13_render() {
 }
 s13_node() {
   [ -d web/node_modules ] || die "web/node_modules is missing -- run (cd web && npm install)"
+  relief_python_note
   (cd web && MTGTABLE_WS_LOGS="${WS_LOGS:-}" npm run test:node) || die "npm test (node --test)"
 }
 
@@ -2101,10 +2118,12 @@ if [ "$GATE_JOBS" = "1" ]; then
   run_serial
   assemble
   printf '\ncheck-all OK\n'
+  relief_python_note
   write_table
 else
   run_parallel
   assemble
   write_table
   printf '\ncheck-all OK\n'
+  relief_python_note
 fi

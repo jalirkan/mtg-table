@@ -62,7 +62,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
 
-import { PERSONAL_CALL_CAP, PERSONAL_TRI_CAP } from '../arena/perf.ts';
+import { PERSONAL_CALL_CAP, PERSONAL_TRI_CAP, RELIEF_MAP_VERSION } from '../arena/perf.ts';
 
 /** Where the personal tier lives, relative to the repo root (`.gitignore`'s `/personal/`). */
 export const PERSONAL_MODELS_DIR = 'personal/models';
@@ -272,7 +272,11 @@ export interface ReliefIndexEntry {
   width: number;
   height: number;
   box: { left: number; right: number; top: number; bottom: number };
-  /** The back layer's colour (D227): `<id>.back.jpg` and its size, or `null` for a map made before it. */
+  /**
+   * The back layer's colour (D227): `<id>.back.jpg` and its size, or `null` for a
+   * map made before it — or with a recipe other than `RELIEF_MAP_VERSION` (D228:
+   * its blue is not the front's keep mask) — which the page draws flat.
+   */
   back: { file: string; width: number; height: number } | null;
 }
 
@@ -288,9 +292,11 @@ export interface ReliefIndex {
  * `tools/personal/relief.mjs`), read NOW: every entry whose key is a Scryfall id,
  * whose file is exactly `<id>.png` and on disk, with a size and an art box — and
  * its back layer when the entry names exactly `<id>.back.jpg`, on disk, with a
- * size (`null` otherwise: a map made before the back layer, which the page draws
- * flat). The card's name, the image's source, the recipe and the timings stay on
- * disk — the page needs none of them. No folder, or no index: an empty one.
+ * size, made with THIS recipe version (`perf.ts`'s `RELIEF_MAP_VERSION`; `null`
+ * otherwise: a map made before the back layer, or before the keep mask, which the
+ * page draws flat). The card's name, the image's source, the rest of the recipe
+ * and the timings stay on disk — the page needs none of them. No folder, or no
+ * index: an empty one.
  */
 export function buildReliefIndex(dir: string): ReliefIndex {
   const out: ReliefIndex = { version: 1, model: null, reliefs: {} };
@@ -313,8 +319,15 @@ export function buildReliefIndex(dir: string): ReliefIndex {
     const [left, right, top, bottom] = edges as number[];
     const { backWidth, backHeight } = entry;
     const backFile = join(dir, `${id}.back.jpg`);
+    const recipe = entry['recipe'];
+    const current = isRecord(recipe) && recipe['version'] === RELIEF_MAP_VERSION;
     const back =
-      entry['back'] === `${id}.back.jpg` && typeof backWidth === 'number' && typeof backHeight === 'number' && existsSync(backFile) && statSync(backFile).size > 0
+      current &&
+      entry['back'] === `${id}.back.jpg` &&
+      typeof backWidth === 'number' &&
+      typeof backHeight === 'number' &&
+      existsSync(backFile) &&
+      statSync(backFile).size > 0
         ? { file: `${id}.back.jpg`, width: backWidth, height: backHeight }
         : null;
     out.reliefs[id] = { file: `${id}.png`, width, height, box: { left: left!, right: right!, top: top!, bottom: bottom! }, back };
@@ -329,7 +342,9 @@ export function describeRelief(index: ReliefIndex): string {
   const stale = all.length - layered;
   return (
     `personal relief: ${String(all.length)} depth map(s) for the workshop's inspect view (card-art-derived, dev server only — D225)` +
-    (stale > 0 ? `; ${String(stale)} made before the back layer (D227), drawn flat — run tools/personal/relief.mjs --all` : '')
+    (stale > 0
+      ? `; ${String(stale)} made before the back layer or with an older recipe than version ${String(RELIEF_MAP_VERSION)} (D227, D228), drawn flat — run tools/personal/relief.mjs --all`
+      : '')
   );
 }
 
