@@ -29,7 +29,7 @@ changing, and the others when a change crosses into them.
 | [`web/CLAUDE.md`](web/CLAUDE.md) | The TypeScript client: the test suites, the board's conventions (M4, M5 and M6 — M6's also bind the bridge's acts, its reset hook and `ActGuard`), the workshop and the story page. |
 | [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), and Lanes LOOK, MOTION and BODIES. |
 | [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, and the card library with the `#cards` browser. |
-| [`tools/README.md`](tools/README.md) | Every script under `tools/`: what it is for, whether the gate runs it, whether it needs the engine. |
+| [`tools/README.md`](tools/README.md) | Every script under `tools/` — what it is for, whether the gate runs it, whether it needs the engine — and *Commands, by task*: every command *Build and run* below does not keep. |
 
 Each rule is written once. `web/test/claude-md.test.ts` fails on a rule that
 appears in two of these files, on one that vanished from them, and on one missing
@@ -448,7 +448,7 @@ as **48 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
 desktop), each after the jobs it depends on; `GATE_JOBS=1` is the serial gate,
 the same checks as 32 jobs one after another. From a deleted `bridge/out` it
 takes about **four minutes** at `GATE_JOBS=4` (239.0 s and 240.5 s on
-`102fb1f`), about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
+`102fb1f`; 259.2 s on the docs block's `502ad9d`, whose code is `102fb1f`'s), about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
 about **fifteen** serially (907.4 s on `f6bad35`); each of those commit messages
 carries its runs. Every run leaves a log per job, `gate.log` and a timing table
 under `var/check-all/<run>/`, and only the last `GATE_KEEP_RUNS` runs (default
@@ -503,7 +503,7 @@ that go with it:
 ## Decision numbers
 
 **A decision's number is final** (**D200**). A lane reserves a block of numbers
-before it starts (this lane's was D200–D204), writes its decisions inside it and
+before it starts (the docs block's was D200–D204), writes its decisions inside it and
 keeps those numbers when it merges, whatever landed first; an unused number stays
 unused. Gaps between blocks are allowed, so a number says nothing about how many
 decisions there are, and **no document states a total** — point at

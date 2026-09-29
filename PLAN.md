@@ -327,6 +327,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | Polish 1: the skeptics' nine minors *(off the plan)* | ½ day | **built, gated and documented** on branch `polish-1` (2026-09-28), off `main`'s `f6bad35` — `ActGuard`'s wiring under its self-test, 10g holding both halves of the late undo, the narrator's N1 from the decks alone and its pair check both ways, a 416 read as `lost`, `same-game.mjs` saying what it sets aside, a docs correction, a liveness clause written for the merge pass, and `var/check-all/` pruned to 20 runs; no wire change, no step, no decision; *Polish 1*, after *The undo race* |
 | — | Lane LOOK: the comic look, to production *(report 15 §9.1, the first art-direction lane; the user approved the direction)* | 1 day | **built, verified, documented and committed** on branch `look` (2026-09-28), rebased onto the undo race's `f6bad35` — every figure, dying body, duelist and painted prop in the comic look by default: three cel bands from a lens-fixed key, halftone, a rim, an ink line inside bloom's pass that inks only what is painted, a contact shadow, a mid-value stage in each seat's shown colours; `?look=holo` the hologram; a seat's figures facing the opponent (question 13, answered); **D137–D146**, written as D120–D129; one verification pass; twenty-one follow-ups, half of one closed at merge; *Lane LOOK*, after *Guards* |
 | — | Lane BODIES: resting poses, hair, faces, coats that drape, the art's own colours *(report 15 §9.3, the third art-direction lane)* | 1 day | **built, verified three times, documented and committed** on branch `bodies` (2026-09-28), rebased onto Lane MOTION's `e2aee03` — every person rests in a pose of its own (a model variant), wears hair and a comic face and a coat that drapes from the hips, and a card with no hand-written look takes its colours from its own painting (drawn since the merge); **D156–D165**, written as D140–D149; at merge the verifier's two open majors fixed (a figure that mounts tapped lands in its kneel; the art rung drawn, its test failing with any gate removed), Lane LOOK's follow-up 17 and the polish lane's poll clause applied; with Lanes LOOK and MOTION, **rebased onto `main`'s `a08c15f`** (after CI, Polish 1 and Guards), Polish 1's follow-ups 1 and 2 applied (the arena's `lost` word) and the final skeptic's minors fixed or written down; *Lane BODIES*, just above *Deferred* (its *Onto `main`'s `a08c15f`*) |
+| — | The docs block: `CLAUDE.md` split by directory, and the owner's two policies *(off the plan; the structure review of 2026-09-28)* | ½ day | **built, gated and documented** on branch `docs-block` (2026-09-28), off `main`'s `102fb1f` — the history out of `CLAUDE.md` into two evidence files; **D200** (decision numbers are final), **D201** (Claude commits on branches and merges on a green gate; pushes, releases and anything public are the user's), **D202** (CI's pinned engine fetch); rule 10 pointing at the lint; a root `CLAUDE.md` of about 5,500 words and four nested files, held by `web/test/claude-md.test.ts`; *Open now*; the Java guide's map of `WireGuiGame.java`; gate green at `GATE_JOBS=4`, 259.2 s; *The docs block*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -7176,8 +7177,9 @@ any file the four sides own, and says where.
 
 ## The docs block — CLAUDE.md split by directory, and the two policies (2026-09-28, D200–D202)
 
-The structure review of `main` on 2026-09-28 found `CLAUDE.md` at ~27,000
-words, loaded whole by every agent on every task, a quarter of it history, and
+The structure review of `main` on 2026-09-28 found `CLAUDE.md` loaded whole by
+every agent on every task (33,784 words on `102fb1f`), more than a tenth of it
+gate-timing and test-count history, and
 the owner took three decisions the same day: **decision numbers are final**
 (**D200**), **Claude commits on branches and merges to `main` on a green gate;
 the user owns pushes, releases and anything public** (**D201**), and
@@ -7204,6 +7206,13 @@ but three test files.
 - **This file's *Open now*** index, the Java guide's chapter 9 (a map of
   `WireGuiGame.java`, one ask and one act end to end, the five self-tests), and,
   in its last two steps, `tools/README.md` and `README.md` brought up to date.
+
+**The gate**, from a deleted `bridge/out` on `502ad9d` at `GATE_JOBS=4`, `WSPORT`
+9010: **259.2 s**, exit 0, 48 jobs whose seconds sum to 994.4 s, at a load
+average of 1.95 rising to 16.3 beside other lanes' work; `node --test` inside it
+1009 / 1001 pass / 0 fail / 8 skipped, and 121 vitest. Standalone, `npm --prefix
+web test` is 999 + 121. `~/forge` and `~/.forge` were fingerprinted before and
+after and did not change.
 
 <a id="fu-docs"></a>
 

@@ -8286,8 +8286,11 @@ one that passed).
 5. The notes on older entries that say a decision was *written as* one number and
    renumbered at a merge stay, as history from before this rule.
 
-**Rationale.** Six merges renumbered a lane's block to close the gap in front of
-it (D150–D154 → D124–D128, D160–D166 → D129–D135, D170 → D136, D120–D129 →
+**Rationale.** Eleven lanes renumbered their decisions at a merge: five because
+another lane had landed the same numbers first (match setup's D102–D105, the
+hardening pass's D109–D111, more villains' D109–D110, spectating's D109–D113 and
+the narrator's D109), and six to close the gap in front of a reserved block
+(D150–D154 → D124–D128, D160–D166 → D129–D135, D170 → D136, D120–D129 →
 D137–D146, D130–D138 → D147–D155, D140–D149 → D156–D165). Each was a pass over
 every file the lane had written; Lane BODIES' was 308 citations in 29 files,
 chosen line by line with `git blame`, because Lanes LOOK and MOTION had used the
