@@ -97,7 +97,7 @@ full before touching it; `docs/evidence/m7-arena.md` is what was measured.
 Two more things worth knowing before you change anything here. **The arena chunk
 must stay lazy** (**D49**): `lazy(() => import('./arena/Arena.tsx'))` is the only
 way in, nothing under `arena/` may be imported statically from the 2D path, and
-`npm run build`'s own output is the check — the 2D entry chunk is 94.67 kB gzip
+`npm run build`'s own output is the check — the 2D entry chunk is 94.68 kB gzip (94.67 on 0a93c9d: the lazy chunks' hashed names, the same code)
 on this tree (94.68 before the play-distance audit's third fix pass, byte for
 byte the same code: only the lazy chunks' hashed names in its import map
 differ, and gzip packs them a few bytes differently), the same size before and

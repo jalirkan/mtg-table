@@ -505,3 +505,16 @@ shared `ref`, the trap this pass found. Not measured: the browser. Chromium ship
 its own V8, and a young-generation scavenge of a few kilobytes a second is below
 anything the frame-time bench can show (§6), so the bench was not re-run for a
 change of two names.
+
+### 9.4 Two things the second verifier noted, kept as written
+
+The allocating form, `anchorPosition`, is dearer for the cue layer than it was:
+its `card` case read 14 GC events per 5M calls on the base and 43 now, because it
+always allocates a tuple where it used to hand back the placement's own. The cue
+layer reaches it through `anchorDelta` and `figureYawTo` when a cue is BUILT — per
+batch, not per frame — which is the "by design" side of rule 2's boundary, so it
+stays. And `anchors.test.ts`'s test-local reference imports its constants
+(`anchorsFor`, `playerAnchorFor`, `STACK_ANCHOR`, `TABLE_ANCHOR`, `CARD_W`) from
+the module under test, so a moved constant would move both and read 0
+differences: the test holds the resolver's ARITHMETIC against the reference, not
+the table's values, which `layout.test.ts` holds on its own.
