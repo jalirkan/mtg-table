@@ -11612,7 +11612,10 @@ The resolver is now `anchorPositionInto`, writing into the stage's one scratch
 tuple, and it and every helper it reaches are in the GPU pass's allocation scan:
 the scans hold the scene bodies AND the resolver, 0 events per 5M on every kind.
 The cue layer, which rebuilds its effect objects every frame by design, stays
-outside.)*
+outside. D275's fix pass found the compiled resolver still boxing a fractional
+`above` height in one state — 3 events per 5M, every kind in turn — through a
+feedback slot V8 shares among a function's `ref.id` reads; the two cases read
+their ref through a name of their own, and every state measured reads 0.)*
 
 ---
 
@@ -12216,15 +12219,17 @@ a `PerformanceObserver`'s `gc` entries; two runs each, identical). Through
 `card` 14 → **0**, `player` (yours) 43 → **0**, `player` (the opponent's) 114 →
 **0**, `zone`/`combat`/`casting` (yours) 43 → **0**, (the opponent's) 818 → **0**,
 `stack` 43 → **0**, `table` 43 → **0**, `above`/`beside` 57 → **0**, `figure` (it
-resolves nothing here) 0 → 0, every kind in turn from the first call 268 → **0**;
+resolves nothing here) 0 → 0, every kind in turn from the first call 269 → **0**
+(in this probe's loop; a loop of another shape read 3 until the fix pass below);
 the controls a fixed tuple 0 and a kept fresh tuple 43 in both trees. The base
 tree's 43, 14 and 0 are §13's numbers exactly, read by a script of the same shape
 (§13's was lost with its worktree). `EffectPool.bind` over a turn banner and a life
 number, per 2M binds: 38 → **3** — and 0 for either alone, so the 3 is the
 engine-level residue §13 found in `#apply` with more than one effect live, not
-the anchor. The allocating form reads 43 for every kind after, by contract. The
-card path's walk costs about 9 ns a call more than the Map it replaced (34 against
-25 ns at `g1`@316); a frame resolves a few dozen anchors at most.
+the anchor. The allocating form reads a tuple's 43 for every kind that resolves
+after, by contract, and 19 for `figure` (a tuple for an answer of `null`). The
+card path's walk costs about 10 ns a call more than the Map it replaced (33–34
+against 23–26 ns at `g1`@316); a frame resolves a few dozen anchors at most.
 
 Unchanged: every answer. `web/test/anchors.test.ts` keeps the resolver as it stood
 at `0a93c9d` as a test-local reference and compares it, `Object.is` per number,
@@ -12235,7 +12240,8 @@ anchor kind of every board frame of the 23 committed recordings from four chairs
 against fresh tuples (4,820 binds of random effects of every kind, 0 slot values
 different), and the director's shot through the scratch against fresh tuples
 (equal; a director that kept the scratch frames a different shot, the control).
-Eleven source splices each turn a test red (the evidence's §4).
+Eleven source splices each turn a test red (the evidence's §4; fifty after the fix
+pass, §9).
 
 **Rationale.** The resolver's cost was per live effect per frame and bought
 nothing — a tuple read once and dropped — so it goes, and the module that knows a
@@ -12264,3 +12270,68 @@ scene reads every frame is scanned, what a cue decides every frame is a value.
   per-layout `WeakMap` index is module state whose build lands on the first frame
   after each snapshot.
 - **Pooling the cue layer's effect objects** (above).
+
+**The fix pass (2026-09-29, after a verifier).** *"Allocates nothing" was true of
+the source and not of every compiled form of it.* The verifier's own probe — a
+module-level loop calling `stage.positionOf` over every kind in turn and reading
+the answer's first number — read **3** GC events per 5M calls on the first cut in
+6 runs of 6, where `tools/anchor-gc-probe.ts`'s `mixed` read 0; and the evidence
+had put the in-process mode's 2–4 for `above` down to the probe's own ref. Both
+were the resolver's (`docs/evidence/anchor-scratch.md` §9):
+
+1. **What boxed.** V8 gives every `ref.id` read in one function ONE feedback slot
+   (the bytecode generator shares a named load's slot per variable and name), so
+   the `card`, `above` and `beside` cases' reads recorded three shapes of ref
+   between them. In the compiled states where the optimising compiler
+   (Turbofan; with Maglev as the top tier the count was 0) still held those three
+   maps for `ref` at `ref.height` — which states those were turned on the mix of
+   shapes and on what was inlined and when, and could not be predicted from the
+   source — it compiled the read as a polymorphic load that finds nothing on two of them,
+   so its answer was `undefined` or the number, a tagged value, and a fractional
+   height was boxed into a fresh 16-byte heap number on every `above` call
+   (`--print-opt-code`: an `AllocateInYoungGeneration` of 0x10 and a
+   `heap_number_map` store inside `anchorPositionInto`; a sampling heap profile
+   put all 5.7 MB of the 5M calls there). A whole height took the small-integer
+   path and boxed nothing; `beside`'s offset boxed the same way (a 1.5).
+2. **The fix: the two cases read their ref through a name of their own**
+   (`const above = ref;`, `const beside = ref;`). `above.id` then has a slot of
+   its own that only ever sees an `above` ref, so the compiler knows the shape
+   and reads the height as the double it is. No answer moved (the corpus sweep,
+   16,001,784, 0). Chosen by a matrix — every kind and eleven subsets of kinds,
+   each with fractional and whole numbers, a fresh process each — over two other
+   forms: reading the number before `ref.id` (53 events over the matrix, where the
+   first cut read 9: it boxed in the subsets instead), and destructuring
+   `const { id, height } = ref` (24); the case-local name read 0 in every cell.
+   esbuild keeps the name (`const a=t,o=Yb(e,a.id)` in the built chunk).
+3. **Measured after**, Node v24.20.0, no flags, two interleaved runs a tree (every
+   count within one event of its twin):
+   the verifier's state (`tools/anchor-gc-direct.ts`, now committed, every kind,
+   height 0.6) **3 → 0**; the probe's new `set` and `direct` cases, twelve sets of
+   kinds × three pairs of numbers each, 0 on all 72 (the first cut 1–3 on eight,
+   the base 35–335); the in-process mode, `above` 3 and `beside` 2 → 0; and on the
+   pool's own path, `EffectPool.bind` over every anchor kind at once (a banner, a
+   life number, a glow on a card, a strand from above a card, two glows beside
+   one, a mote to a casting anchor), per 2M binds: 733 (base) → 72 (first cut) →
+   **68**, where the same effects bound through each answer looked up once read 68
+   in every tree — so the resolver's share on the pool's path is now 0, and the
+   68 (and the banner-and-life 3) are the pool's own, §13's residue.
+4. **Held.** `liveness.test.ts` fails a number read off `ref.` in the resolver
+   other than its `kind`, `id`, `player`, `zone` and `ground`, and anchors both
+   aliases. Three gaps the verifier found in the scans are closed with them: the
+   purity clause for `layout.ts`, `camera.ts`, `colour.ts` and `governor.ts` now
+   rejects a clock, a timer, the DOM, storage, `Math.random`, a module-level
+   `let` or `var` and a module-level `new` not typed `Readonly…` (it checked
+   imports only); the allocation patterns reject a string literal joined with `+`
+   (`byKey.get("c:" + id)` passed); and the resolver's bodies may call no method
+   but a string's `charCodeAt` and `Math`'s (a member call passed the helper
+   clause). `anchors.test.ts` binds the casting field through the scratch and
+   through fresh tuples over every board frame's stack and random tethers, 1,320
+   binds and 3,111 tethers, 0 differences, with a resolver read late as the
+   control — the one caller that had no test. 50 source splices (52 test runs),
+   every one red.
+
+*Allocation-free is a claim about the compiled states measured.* The scans hold
+the source; a GC probe is the engine's and stays out of the gate; and the state
+that boxed moved with as little as two more `import`s in the measuring script. So
+the reproducer is kept as it ran, and the arena `CLAUDE.md`'s GPU rule 2 names the
+trap: a fractional number read off a shape-shared name.

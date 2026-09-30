@@ -337,3 +337,11 @@ most → 9.90), run `var/check-all/20260929-194047-3311947/`, and `WSPORT=9390`
 `var/check-all-anchor-1.log`, `-2.log`. A first run on the tree before a pass of
 comment-only edits: 259.8 s, exit 0 (`var/check-all-anchor-0.log`). No step and no
 job added.
+
+### Its fix pass (D275's fix-pass note)
+
+Once from a deleted `bridge/out` at `GATE_JOBS=4`, `WSPORT=9380`, branch
+`anchor-scratch`: **262.5 s** (48 jobs, 974.2 s summed, load average 1.08 → 8.06
+at most → 7.19), exit 0, `node --test` inside it 1,246 / 1,235 pass / 0 fail / 11
+skipped and 159 vitest (9 files) — `var/check-all-anchor-fix.log`, run
+`var/check-all/20260929-204714-3612767/`. No step and no job added.

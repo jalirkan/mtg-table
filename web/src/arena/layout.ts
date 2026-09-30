@@ -1512,6 +1512,10 @@ export function restPositionOf(placed: Layout, cardId: number): [number, number,
  * A caller that KEEPS an answer calls {@link anchorPosition}, which hands this a
  * fresh tuple. A card's answer is a copy of its placement's position, never the
  * placement's own tuple, so no caller can write the layout through it.
+ * **No construct here allocates, and neither may the compiled code**: the `above`
+ * and `beside` cases read their ref through a name of their own, because the
+ * compiler boxed a fractional height or offset read through the shared `ref`
+ * (their comments; `docs/evidence/anchor-scratch.md` §9).
  */
 export function anchorPositionInto(
   out: [number, number, number],
@@ -1579,19 +1583,32 @@ export function anchorPositionInto(
       z = TABLE_ANCHOR.z;
       break;
     case 'above': {
-      const base = restPositionOf(placed, ref.id);
+      // **Read through a name of this case's own** (D275's fix pass). V8 gives
+      // every `ref.id` in one function ONE feedback slot, so the `card`, `above`
+      // and `beside` cases' reads saw three shapes of ref between them; the
+      // optimising compiler carried those three into `ref.height`, compiled it as
+      // a read that finds nothing on two of them — `undefined` or the number, a
+      // tagged answer — and boxed a height like 0.55 into a fresh heap number on
+      // every call (3 GC events per 5M calls, every kind in turn;
+      // `docs/evidence/anchor-scratch.md` §9). `above.id` has a slot of its own
+      // that only ever sees this shape, so the height is read as the double it is.
+      // `liveness.test.ts` holds the form; esbuild's minifier keeps the name.
+      const above = ref;
+      const base = restPositionOf(placed, above.id);
       if (base === null) return null;
       x = base[0];
-      y = base[1] + ref.height;
+      y = base[1] + above.height;
       z = base[2];
       break;
     }
     case 'beside': {
       // `dx` is in CARD WIDTHS: a cue says "one card to the left", never "0.72
       // units to the left", so this stays the only file that owns the number.
-      const base = restPositionOf(placed, ref.id);
+      // Read through `beside` for `above`'s reason: an offset like 1.5 was boxed.
+      const beside = ref;
+      const base = restPositionOf(placed, beside.id);
       if (base === null) return null;
-      x = base[0] + ref.dx * (CARD_W + 0.08);
+      x = base[0] + beside.dx * (CARD_W + 0.08);
       y = base[1] + 0.02;
       z = base[2];
       break;

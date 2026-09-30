@@ -993,6 +993,11 @@ const ALLOCATIONS: ReadonlyArray<[string, RegExp]> = [
   // count instead.
   ['a sort', /\.sort\(/],
   ['an array cleared by `length = 0`', /\.length\s*=\s*0\b/],
+  // D275's fix pass: a string literal joined with `+` builds a string as surely as
+  // a template does — `placed.byKey.get("c:" + cardId)` is the key D275 removed,
+  // spelled so the template rule cannot see it. (Two strings held in names and
+  // joined are beyond a grep; a literal on either side is not.)
+  ['a string joined with `+`', /['"`]\s*\+(?!\+)|(?<!\+)\+=?\s*['"`]/],
 ];
 
 /**
@@ -1221,6 +1226,7 @@ test('liveness: the frame loop’s Tier 2 bodies allocate nothing — the disc f
     'xs.map(id);',
     'const k = Object.keys(o);',
     'const p = entry.pose.position.slice();',
+    "const key = 'c:' + id;",
   ];
   for (const [name, body] of bodies) {
     for (const line of junk) {
@@ -1366,6 +1372,35 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
   }
   // The control: a helper the resolver does not reach, spliced in, is caught.
   assert.deepEqual(unscannedCalls(`${bodyNamed('layout.ts anchorPositionInto')}\nconst stand = frontStand(placement);`), ['frontStand']);
+  // …and a METHOD call, which the clause above does not see (`X.y(`; D275's fix
+  // pass, after the verifier): the resolver's bodies call a method of a string and
+  // `Math`'s, and nothing else — a helper reached through an object is a call too.
+  const METHODS = new Set(['charCodeAt']);
+  const unlistedMethods = (body: string): string[] =>
+    [...codeOf(body).matchAll(/([A-Za-z_$][\w$]*)\s*\??\.\s*([A-Za-z_$][\w$]*)\s*\(/g)]
+      .filter((m) => m[1] !== 'Math' && !METHODS.has(m[2]!))
+      .map((m) => `${m[1]!}.${m[2]!}`);
+  for (const fn of RESOLVER_BODIES) {
+    assert.deepEqual(unlistedMethods(bodyNamed(`layout.ts ${fn}`)), [], `layout.ts ${fn} calls a method the allocation scan does not read (D275)`);
+  }
+  assert.deepEqual(unlistedMethods(`${bodyNamed('layout.ts placementOf')}\nconst hit = placed.byKey.get(key);\nconst stand = figures.frontStand(placement);`), ['byKey.get', 'figures.frontStand']);
+  // D275's fix pass — what the compiler allocates, where no construct does. V8
+  // shares ONE feedback slot among a function's `ref.id` reads, so a height or
+  // offset read through the shared `ref` was compiled as a read that may find
+  // nothing (the card's shape has no `height`) and a fractional one was boxed
+  // into a heap number every call (`docs/evidence/anchor-scratch.md` §9). The
+  // `above` and `beside` cases read their ref through a name of their own; a
+  // number read off `ref.` in the resolver, other than its `kind`, `id`,
+  // `player`, `zone` and `ground` (integers, strings and a boolean, never boxed),
+  // fails here.
+  const resolverBody = bodyNamed('layout.ts anchorPositionInto');
+  const refNumbers = (body: string): string[] =>
+    [...body.matchAll(/\bref\.([A-Za-z_$][\w$]*)/g)].map((m) => m[1]!).filter((field) => !['kind', 'id', 'player', 'zone', 'ground'].includes(field));
+  assert.deepEqual(refNumbers(resolverBody), [], 'anchorPositionInto reads a fractional number through the shared `ref` — read it through a name of its case\'s own (D275\'s fix pass)');
+  assert.match(resolverBody, /const above = ref;\s*const base = restPositionOf\(placed, above\.id\);[\s\S]*?y = base\[1\] \+ above\.height;/, 'the `above` case no longer reads its ref through `above`');
+  assert.match(resolverBody, /const beside = ref;\s*const base = restPositionOf\(placed, beside\.id\);[\s\S]*?x = base\[0\] \+ beside\.dx \* /, 'the `beside` case no longer reads its ref through `beside`');
+  // The control: the height read back through the shared `ref` is caught.
+  assert.deepEqual(refNumbers(resolverBody.replace('above.height', 'ref.height')), ['height']);
 
   const junk = [
     'const _junk = [t, t];',
@@ -1378,6 +1413,8 @@ test('liveness: the GPU pass’s frame-loop bodies allocate nothing, and none pa
     'xs.map(id);',
     'list.sort();',
     'list.length = 0;',
+    "const hit = placed.byKey.get('c:' + cardId);",
+    'key += "!";',
   ];
   for (const [name, body] of ours) {
     for (const line of junk) {
@@ -1432,6 +1469,23 @@ test('liveness: camera.ts and layout.ts are pure too — the pose math has no re
   const governor = arenaFiles().find((f) => f.path === 'governor.ts');
   assert.ok(governor !== undefined, 'governor.ts is missing');
   assert.ok(!/performance\.now\(|Date\.now\(|requestAnimationFrame\(|setTimeout\(|useFrame/.test(codeOf(governor.source)), 'governor.ts reads a clock of its own');
+  // D275's fix pass: "pure" was only "imports no renderer" — a clock read, a DOM
+  // global or a module-level cache spliced into `layout.ts` passed. Now each of the
+  // four reads no clock, starts no timer, touches no DOM or storage, draws no
+  // random number, and keeps no module state: no module-level `let` or `var`, and a
+  // module-level `new` only as a constant typed `Readonly…` (the three read-only
+  // sets they hold). A module-level object literal is still beyond a grep.
+  const impurities = (code: string): string[] => {
+    const found: string[] = [];
+    if (/\bsetTimeout\(|\bsetInterval\(|requestAnimationFrame\(|performance\.now\(|Date\.now\(|\bnew Date\(|useFrame/.test(code)) found.push('a clock or a timer');
+    if (/\bdocument\.|\bwindow\.|\bglobalThis\b|\bnavigator\.|localStorage|sessionStorage|matchMedia/.test(code)) found.push('the DOM or storage');
+    if (/Math\.random\(/.test(code)) found.push('a random number');
+    if (/^(?:export\s+)?(?:let|var)\s/m.test(code)) found.push('a module-level let or var');
+    for (const m of code.matchAll(/^(?:export\s+)?const\s+[A-Za-z_$][\w$]*\s*(?::\s*([^=\n]+?))?\s*=\s*new\s/gm)) {
+      if (!(m[1] ?? '').trim().startsWith('Readonly')) found.push('a module-level object built with new');
+    }
+    return found;
+  };
   for (const name of ['camera.ts', 'layout.ts', 'colour.ts', 'governor.ts']) {
     const file = arenaFiles().find((f) => f.path === name);
     assert.ok(file !== undefined, `${name} is missing`);
@@ -1441,6 +1495,26 @@ test('liveness: camera.ts and layout.ts are pure too — the pose math has no re
         `${name} imports ${imported.from}`,
       );
     }
+    assert.deepEqual(impurities(codeOf(file.source)), [], `${name} is no longer pure`);
+  }
+  // The controls, each spliced into layout.ts — into the resolver's body, or at
+  // module level before it — and each named by exactly its own clause.
+  const layoutCode = codeOf(arenaFiles().find((f) => f.path === 'layout.ts')!.source);
+  const inBody = (line: string): string => layoutCode.replace('  let x: number;\n', `  let x: number;\n  ${line}\n`);
+  const atTop = (line: string): string => layoutCode.replace('export function anchorPositionInto(', `${line}\nexport function anchorPositionInto(`);
+  const spliced: Array<[string, string, string]> = [
+    ['const _now = Date.now();', inBody('const _now = Date.now();'), 'a clock or a timer'],
+    ['const _t = performance.now();', inBody('const _t = performance.now();'), 'a clock or a timer'],
+    ['const w = window.innerWidth;', inBody('const w = window.innerWidth;'), 'the DOM or storage'],
+    ["document.title = '';", inBody("document.title = '';"), 'the DOM or storage'],
+    ['const r = Math.random();', inBody('const r = Math.random();'), 'a random number'],
+    ['let calls = 0;', atTop('let calls = 0;'), 'a module-level let or var'],
+    ['const CACHE = new Map<number, number>();', atTop('const CACHE = new Map<number, number>();'), 'a module-level object built with new'],
+    ['export const SCRATCH: Float64Array = new Float64Array(3);', atTop('export const SCRATCH: Float64Array = new Float64Array(3);'), 'a module-level object built with new'],
+  ];
+  for (const [line, code, what] of spliced) {
+    assert.notEqual(code, layoutCode, `could not splice \`${line}\``);
+    assert.deepEqual(impurities(code), [what], `the purity clause misses \`${line}\``);
   }
 });
 
@@ -1853,6 +1927,7 @@ test('liveness: slice 3’s frame-loop bodies allocate nothing — the figure an
     'const s = `${1}`;',
     'const v = new THREE.Vector3();',
     'const c = [...xs];',
+    "const key = 'c:' + id;",
   ];
   for (const [name, body] of bodies) {
     for (const line of junk) {
@@ -2265,6 +2340,7 @@ test('liveness: the comic motion lane allocates nothing in the loop, writes the 
     'const v = new THREE.Vector3();',
     'const c = [...xs];',
     'const p = entry.pose.position.slice();',
+    "const key = 'c:' + id;",
   ];
   for (const [name, body] of bodies) {
     for (const line of junk) {

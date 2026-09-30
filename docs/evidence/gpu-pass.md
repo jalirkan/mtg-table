@@ -1180,7 +1180,12 @@ pass, 0 for any single kind. Rule 2 says *scene-side* for that reason.
 the resolver writes into the stage's one scratch tuple and is in the scan; a
 probe of this section's shape reads the base tree's 43, 14 and 0 exactly, and 0
 for every kind after. Rule 2 now says the scans hold the scene bodies AND the
-resolver; the cue layer stays outside.)*
+resolver; the cue layer stays outside. Its fix pass (§9 there) found the
+"engine-level" kind of residue in the resolver itself — a fractional `above`
+height boxed through a feedback slot V8 shares among a function's `ref.id` reads,
+3 per 5M in one compiled state — and removed it; bound through the pool, every
+anchor kind at once reads the same count through the resolver as through answers
+looked up, so what `#apply` keeps is the pool's own.)*
 
 **Negative controls**, spliced into the worktree's file and restored (the file
 compared equal to its copy after): `set('#ffffff')` put back — liveness fails

@@ -383,3 +383,16 @@ pool through the scratch against fresh tuples; the camera director's copy — an
 the resolver's bodies, its callers and its helper closure as clauses of
 liveness's GPU-pass case; no vitest. Inside `check-all.sh`: **1,245 / 1,234
 pass / 0 fail / 11 skipped** plus 159 vitest.
+
+### The anchor resolver's fix pass (D275)
+
+**1,231 `node --test` + 159 vitest (9 files)** standalone (1,222 pass, 0 fail, 9
+skipped), from **1,230 + 159**: `anchors.test.ts`'s seventh case, the casting
+field bound through the stage's scratch against fresh tuples (every board frame's
+stack and random tethers, a resolver read late its control); and, as clauses of
+existing cases, liveness's purity case (a clock, a timer, the DOM, storage,
+randomness and module state in the four pure modules, eight spliced controls)
+and its GPU-pass case (a fractional number read off the shared `ref`, the
+resolver's method calls, a string joined with `+` in every scan's patterns). No
+vitest. Inside `check-all.sh`: **1,246 / 1,235 pass / 0 fail / 11 skipped** plus
+159 vitest.

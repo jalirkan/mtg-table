@@ -30,7 +30,10 @@
  *     speed lines resolving two or three anchors each); and the camera director,
  *     which KEEPS the points it frames, copies them — its shot through the scratch
  *     is the shot through fresh tuples, and the shot a director that kept the
- *     scratch would have taken is the control.
+ *     scratch would have taken is the control. The casting field's tethers, the
+ *     third caller, are held the same way (D275's fix pass): drawn through the
+ *     scratch, instance for instance, what they draw through fresh tuples, with a
+ *     resolver that reads after its next resolve as the control.
  *
  * `liveness.test.ts` holds the source half: the resolver and every helper it
  * reaches are in the GPU pass's allocation scan, with spliced controls.
@@ -66,6 +69,8 @@ import {
   type Seat,
   type SeatAnchors,
 } from '../src/arena/layout.ts';
+import { FORM_KINDS, spellForms, type SpellForm, type TetherRef } from '../src/arena/figures/casting.ts';
+import { CastingField } from '../src/arena/scene/casting.ts';
 import { EffectPool } from '../src/arena/scene/effects.ts';
 import { SceneStage } from '../src/arena/scene/SceneStage.ts';
 import type { Frame } from '../src/protocol.ts';
@@ -589,4 +594,89 @@ test('anchors: the camera director copies the points it frames — its shot thro
   const wrong = solveFraming(kept, orbitFromPose(REST_POSE), options);
   assert.ok(right !== null && wrong !== null);
   assert.ok(!right.position.every((v, i) => Math.abs(v - wrong.position[i]!) < 1e-6), 'a kept scratch would frame the same shot — the control is blind');
+});
+
+/** Every mesh of the casting field as drawn: visibility, count, and each drawn instance's matrix and colour. */
+function castingOf(field: CastingField): number[] {
+  const out: number[] = [];
+  for (const object of field.group.children) {
+    const mesh = object as THREE.InstancedMesh;
+    out.push(mesh.visible ? 1 : 0, mesh.count, ...mesh.instanceMatrix.array.slice(0, mesh.count * 16));
+    if (mesh.instanceColor !== null) out.push(...mesh.instanceColor.array.slice(0, mesh.count * 3));
+  }
+  return out;
+}
+
+test('anchors: the casting field draws its tethers through the scratch as it did through fresh tuples — each is read before the next resolve (D275)', () => {
+  // The third caller of `stage.positionOf` (D275's fix pass; the verifier spliced a
+  // second resolve between a tether's resolve and its read, and nothing went red).
+  // Every board frame's own stack, as `Arena.tsx` builds its forms, and on a sample
+  // of boards random forms at both seats with one to three tethers each — to cards
+  // on the board, an id that is not, every player and a stranger — bound through
+  // the stage's one scratch tuple and through a fresh tuple an answer. No body has
+  // a figure (an empty figure layout), so every tether's far end is resolved.
+  const next = rng(2750);
+  const viaScratch = new CastingField();
+  const viaFresh = new CastingField();
+  const sloppyField = new CastingField();
+  let binds = 0;
+  let tethers = 0;
+  let sloppyDiffers = 0;
+  const differences: string[] = [];
+  for (const [i, board] of BOARDS.entries()) {
+    const viewer = board.placed.viewerId;
+    const seatOfPlayer = (id: number): Seat => (viewer === null || id === viewer ? 'you' : 'opp');
+    const corpus = spellForms(board.state.board, seatOfPlayer, () => '#ffd166');
+    const random: SpellForm[] = [];
+    if (i % 7 === 0) {
+      const ids = [...board.placed.placements.map((p) => p.cardId), ...ABSENT_IDS];
+      const players = [...(board.state.board?.players.map((p) => p.id) ?? []), STRANGER];
+      const n = 1 + Math.floor(next() * 3);
+      for (let index = 0; index < n; index++) {
+        const aims: TetherRef[] = [];
+        const m = 1 + Math.floor(next() * 3);
+        for (let t = 0; t < m; t++) {
+          aims.push(next() < 0.7 ? { kind: 'card', id: ids[Math.floor(next() * ids.length)]! } : { kind: 'player', id: players[Math.floor(next() * players.length)]! });
+        }
+        const player = players[Math.floor(next() * players.length)]!;
+        random.push({
+          stackItemId: 9_000 + index,
+          sourceCardId: null,
+          player,
+          seat: seatOfPlayer(player),
+          index,
+          kind: FORM_KINDS[Math.floor(next() * FORM_KINDS.length)]!,
+          colour: '#06d6a0',
+          tethers: aims,
+        });
+      }
+    }
+    for (const forms of [corpus, random]) {
+      if (forms.length === 0) continue;
+      const stage = new SceneStage(board.placed);
+      const fresh = (ref: AnchorRef): Tuple | null => anchorPosition(board.placed, ref);
+      // The control: a resolver whose caller would read its answer after the next
+      // resolve — the scratch then holds the table's point, not the target's.
+      const sloppy = (ref: AnchorRef): Tuple | null => {
+        const at = stage.positionOf(ref);
+        stage.positionOf({ kind: 'table' });
+        return at;
+      };
+      viaScratch.bind([], forms, stage.positionOf, new Map(), 0);
+      viaFresh.bind([], forms, fresh, new Map(), 0);
+      sloppyField.bind([], forms, sloppy, new Map(), 0);
+      binds += 1;
+      tethers += viaFresh.counts()['tethers']!;
+      const a = castingOf(viaScratch);
+      const b = castingOf(viaFresh);
+      const at = a.findIndex((v, k) => !Object.is(v, b[k]));
+      if (at >= 0 || a.length !== b.length) differences.push(`${board.file}@${String(board.index)}: value ${String(at)}`);
+      const c = castingOf(sloppyField);
+      if (c.length !== b.length || c.some((v, k) => !Object.is(v, b[k]))) sloppyDiffers += 1;
+    }
+  }
+  console.log(`  anchors: the casting field bound ${String(binds)} times, ${String(tethers)} tethers drawn — ${String(differences.length)} differences; a resolver read late differs on ${String(sloppyDiffers)}`);
+  assert.ok(binds > 500 && tethers > 1000, 'the sweep is too small to say anything');
+  assert.deepEqual(differences.slice(0, 10), []);
+  assert.ok(sloppyDiffers > binds / 2, 'a resolver read after its next resolve draws the same tethers — the comparison is blind');
 });

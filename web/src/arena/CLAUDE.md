@@ -105,8 +105,10 @@ after the portrait standee and the GPU pass
 (90.40 before the status layer put its glyph kit and the tile's row in it),
 and none of it is `three`. **Since the workshop the arena's scene
 is a chunk two lazy pages share** — `three`, fiber, drei and `arena/scene/`,
-named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (398.40 kB gzip
-on this tree, 397.41 before the GPU pass and 393.36 before the standee) — with
+named `arena-scene-*.js` by `vite.config.ts`'s `chunkFileNames` (398.66 kB gzip
+on this tree, 398.52 before the anchor resolver's D275 — the 398.40 this line
+said had gone stale by then — 397.41 before the GPU pass and 393.36 before the
+standee) — with
 `Arena-*.js` and `Workshop-*.js` on top, and the one
 stylesheet carries the workshop's rules. And
 **`tools/arena-bench.mjs` is not in the gate**, on purpose: it wants a built
@@ -1384,8 +1386,14 @@ short form.
    `layout.ts` calls it. The cue layer stays outside: it rebuilds its effect
    objects, their refs and keys every frame by design (a cue is a pure function of
    its `t`, D50), and the two queries it asks `layout.ts` (`deltaTo`, `yawTo`)
-   keep the allocating form. A new frame-loop body goes in the list in the same
-   change.
+   keep the allocating form. The scans read source, and the compiled code can
+   still allocate where no construct does: a fractional number read off a name the
+   compiler has seen in several shapes was boxed into a heap number on every call
+   (D275's fix pass — V8 shares one feedback slot among a function's `ref.id`
+   reads), so the resolver's `above` and `beside` cases read their ref through a
+   name of their own and the scan fails a number read off `ref.`; a GC probe
+   (`tools/anchor-gc-probe.ts`) is how such a thing is found, and it is not in the
+   gate. A new frame-loop body goes in the list in the same change.
 3. **A pose field draws only what it holds and re-sends only what moved.** An
    instanced kind with no instance is hidden (`visible` false) and primed at mount
    like any parked mesh — three sets up an empty `InstancedMesh` every frame and
