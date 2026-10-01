@@ -627,6 +627,15 @@ New game and Next game have a session to act in). Ctrl-C (or the match ending an
 the linger window closing) stops the JVM and exits 0. **Close every mtg-table board
 tab first**: the first `/ws` client takes the seat and a second is refused 4001.
 
+**A game you play has no clock** (**D286**). `--transport ws` and `console` put no
+wall-clock limit on a game, so thinking for an hour is fine; `--transport null` and
+`auto` keep their 900 s, and `--game-timeout <sec>` sets either (`0` is none). The
+one limit a `ws` session keeps is for nobody being there: it ends after **3600 s
+with no `/ws` client connected** (`--idle-timeout <sec>`, `0` is off), so a bridge
+you started and never opened does not run for ever. A client that is connected
+never starts that clock, however long it sits; a read-only `/observe` follower does
+not count as one.
+
 **The page.** One line of chrome across the top — the seat, the socket's state
 (`open` / `reconnecting` / `refused`) and its URL, the frames in and out, the
 Scryfall credit, and two buttons: **Resync** (ask the bridge to re-send the state

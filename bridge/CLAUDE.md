@@ -65,6 +65,14 @@ amendment M42**: it is emitted only once the engine has pushed one for this game
 you something" while every act is being dropped. A client may read its first
 `input` as that guard lifting.
 
+**A human seat has no wall clock** (**D286**). `--transport ws` and `console` put no
+limit on a game; `null` and `auto` keep 900 s, and `--game-timeout <sec>` overrides
+either (0 is none). What a `ws` session keeps instead is `--idle-timeout` (default
+3600 s, 0 off): no `/ws` client connected for that long ends it, because the engine
+parks on `input` with no deadline and nothing else would. `/observe` never counts as
+a client. Keep any new wait on the seat under the same rule as the ask timeout: no
+deadline while a client is connected.
+
 **`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
 amendment **M50**). Any number of followers on the same port; an observer is
 caught up from the transport's cache (`hello_ok`, the last `state`,
