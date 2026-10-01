@@ -12526,3 +12526,73 @@ the full gate (nothing under it reads `scripts/`).
   stop is the only way this mode ends in normal use.
 - **Letting `--engine-only` default to `--games 1`** — ForgeCoach's New game / Next
   game would then find a closed socket, which is M6's dead end again.
+
+
+## D286 — A human seat has no wall-clock limit on a game; an unattended `ws` session ends after an hour with no client, and `--game-timeout` / `--idle-timeout` say otherwise
+
+*Branch `c/game-timeout`; outside every reserved range (D285 is the last number written; D200).*
+
+**2026-10-01** (the owner's request: he plays real games from ForgeCoach, and a slow thinker must never lose one to a timer)
+
+**Decision.** `MtgTable` no longer applies its flat 900 s wall clock to a seat a
+person is playing.
+
+- **The limit is per transport.** `--transport ws` and `--transport console` have
+  **no** limit on a game by default; `--transport null` and `auto` keep 900 s,
+  exactly as before. `--game-timeout <sec>` overrides either way (`0` is none), and
+  the run prints `game limit = …` at the top of the park so a log says which rule
+  it ran under. `RecordMatch`'s own 600 s is a different process and is untouched.
+- **A `ws` game with no client attached has its own limit.** The engine parks on
+  the seat's `input` with no deadline of any kind — only an `ask` has one, and
+  only `NO_CLIENT_ASK_TIMEOUT_MS`'s 120 s while nobody is connected, after which it
+  takes §5.4's default and the game parks again on the next `input` — so the
+  wall clock was the only thing that ended a session nobody was attached to (a
+  bridge started by `play.sh --engine-only` and never opened, or a tab closed
+  mid-game). `NO_CLIENT_GAME_TIMEOUT_SEC` = **3600 s** replaces it: the clock runs
+  only while no `/ws` client is connected, restarts each time one leaves, and
+  never counts an `/observe` follower (`WsTransport.connected()` is `/ws` only, so
+  ForgeCoach's read-only follow cannot keep a seatless JVM alive).
+  `--idle-timeout <sec>` overrides it (`0` is off). On expiry the run prints
+  `ABANDONED: no client connected for N s`, the summary says so in place of "the
+  game thread is wedged", and it exits 1, as a timeout always did.
+- **The gate and the tools need no edit.** Every JVM step already runs under the
+  shell's `timeout` (`GAME_TIMEOUT`, 300 s; D129), which is the protection for
+  an automated run over `ws`, and the transports they use with nobody at the
+  keyboard (`null`, `auto`) keep the in-process 900 s unchanged.
+- **No wire change, so no protocol amendment**: no frame, field or act moved; the
+  only observable difference is how long the JVM lives.
+
+**Why it existed.** `GAME_TIMEOUT_SEC = 900` was written at M0/M1 ("give up
+rather than hang forever if the engine wedges") for the automated runs, when
+every game was a machine's. It first cost something at M4, where a live game
+driven one browser round-trip per click for thirteen turns hit it (PLAN.md, M4's
+harness note: "a human plays faster than one tool call per click"), and it was
+never revisited. Nothing in the history ties it to a leak guard; the leak it
+incidentally prevented is the one above, which is why that case gets its own
+limit rather than being dropped.
+
+**Rejected.**
+
+- **Raising the constant** (to two hours, say) — a long game is not a bounded
+  quantity, and any number is a game some player loses to it.
+- **Removing it everywhere** — an automated `null` / `auto` run that wedges would
+  hang a hand-run script for ever; only the gate has the shell `timeout`.
+- **Pausing the clock while an `input` or `ask` is outstanding** — the seat is
+  almost always in one, so it is the same as no limit, with a more complicated way
+  to get there.
+- **A `config.json` key** — the only values anyone sets are for a test, and the
+  flags are what the gate's and the tools' command lines already use; a key would
+  be a third place that says what the limit is.
+- **Letting the observer count as a client** — ForgeCoach follows read-only on
+  `/observe` and could then hold a seatless JVM for ever; D280 already says an
+  observer reaches nothing the seat's lifecycle reads.
+
+**Measured** with the pinned jar (sha256 `3c0a7c38…8e5dd9`), port 8682, seed 42:
+`--transport ws --idle-timeout 6`, no client: `ABANDONED` after 6 s, `finished =
+false`, exit 1. `--idle-timeout 5` with a client connected for 20 s: the JVM was
+alive at 21 s, long past the 5 s limit, and `ABANDONED` fired about 5 s after the
+client left. `--transport ws --game-timeout 4`: `TIMED OUT after 4s`.
+`--transport null`: `game limit = 900 s (the default for --transport null)`,
+`MTGTABLE OK`. A bare `ws` run prints `game limit = none … ends after 3600 s with
+no client connected`. `bridge/build.sh` (lint, its self-test, javac and the six
+self-tests) and `web/test/claude-md.test.ts` pass. The full gate was not run.

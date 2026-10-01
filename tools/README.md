@@ -183,6 +183,8 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
                                                     # the match flags and defaults are the same; Ctrl-C stops it
 ./scripts/play.sh --engine-only --seed 42 --games 1 # a reproducible single game for the coach
 ./scripts/play.sh -- --games 1                      # one game (your --games wins)
+./scripts/play.sh -- --game-timeout 7200            # D286: a wall clock on the game (a human seat has none; 0 = none)
+./scripts/play.sh -- --idle-timeout 600             # D286: end a ws session after 600 s with no client (default 3600; 0 = off)
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
 ```
 

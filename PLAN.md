@@ -476,6 +476,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The anchor resolver: the frame loop's last allocation outside the scans *(off the plan; the GPU pass's follow-up 12)* | ½ day | **built, measured, gated, documented, verified and fixed** on branch `anchor-scratch` (2026-09-29), off `main`'s `0a93c9d` — `layout.ts`'s `anchorPositionInto` writes into the stage's one scratch tuple, the opponent's anchors are built once, `placementOf` builds no key string, and the resolver and its helpers are in the allocation scan (**D275**); GC events per 5M resolves through `stage.positionOf` 14–818 → 0 on every kind, the turn banner and the life number bound through the pool 38 → 3 per 2M; every answer the one it was over the whole corpus; the camera director copies the points it frames; the cue layer stays outside by design; **its fix pass** (a verifier's loop read 3 per 5M): a fractional `above` height boxed through V8's shared `ref.id` feedback slot, read through a name of its case's own, every state measured 0, the reproducer committed, three gaps in the scans closed and the casting field's scratch tested; two follow-ups; *The anchor resolver*, just above *Deferred* |
 | — | The observer socket and the Origin check *(off the plan; for ForgeCoach, on the owner's approval)* | ½ day | **built, tested and documented** on branch `c/observe-endpoint` (2026-10-01), off `main`'s `b95e286` — `ws://127.0.0.1:<port>/observe`, a read-only copy of the seat's frames for any number of followers that can never act, answer, resync or hold the seat, bounded at 8 MB unflushed per observer; and an `Origin` allowlist on `/ws` and `/observe` (`config.json`'s `wsAllowedOrigins`) so a page from elsewhere gets 403 (amendment **M50**, **D280**–**D282**); `WsObserveSelfTest` is the build's sixth self-test; three follow-ups; *The observer socket*, just above *Deferred* |
 | — | `play.sh --engine-only`: the bridge alone, for ForgeCoach *(off the plan; on the owner's approval)* | ¼ day | **built and verified, gate not run** on branch `c/engine-only` (2026-10-01), off `main`'s `1be90a7` — `scripts/play.sh`'s steps 1–4 and a wait, no vite and no browser, the match flags and the `--games 3 --keep-open` defaults unchanged (**D285**); *The engine-only mode*, just above *Deferred* |
+| — | A human game has no wall-clock limit *(off the plan; the owner's request, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/game-timeout` (2026-10-01), off `main`'s `df7a3bc` — `MtgTable`'s 900 s game timeout now applies to `null` / `auto` only; `ws` and `console` have none, a seatless `ws` game ends after 3600 s with no `/ws` client; `--game-timeout` and `--idle-timeout` (**D286**); *The game timeout*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9592,6 +9593,31 @@ inside the command itself. `web/test/claude-md.test.ts` is unaffected: no
 in the gate, and this change adds none.
 
 No follow-up list of its own.
+
+## The game timeout — a human game has no clock (2026-10-01, D286)
+
+**Status: built and verified; the full gate was not run** (the gate's JVM steps
+run under the shell's `timeout` and use `null`, `auto` and automated `ws`
+clients; none passes a new flag). Branch `c/game-timeout`, off `main`'s `df7a3bc`;
+D286. The owner plays real games from ForgeCoach, where thirty to sixty minutes
+is an ordinary game, and `MtgTable`'s flat 900 s limit (M4's harness note above
+met it first) would have torn the session down mid-game.
+
+```bash
+./bridge/run.sh mtgtable.MtgTable --transport ws ...                  # no game limit; ends after 3600 s with no /ws client
+./bridge/run.sh mtgtable.MtgTable --transport ws --idle-timeout 6     # what was measured (with --port 8682)
+./bridge/run.sh mtgtable.MtgTable --transport ws --game-timeout 4     # an explicit wall clock, 0 = none
+./bridge/run.sh mtgtable.MtgTable --transport null                    # unchanged: 900 s
+```
+
+Checked, with the pinned jar: the three cases above, a connected client idling
+past the idle limit without ending the session, and `null`'s 900 s default;
+`bridge/build.sh` and `web/test/claude-md.test.ts` pass.
+
+Follow-up: **the limits have no self-test.** `MtgTable.run` is the only caller,
+and the build's self-tests do not boot an engine; the idle path was measured by
+hand (D286). A test would need `awaitGameEnd` lifted into a class that takes a
+`Transport`-shaped `connected()` and a clock.
 
 ## Deferred — out of scope for M0–M7
 

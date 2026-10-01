@@ -103,8 +103,30 @@ public final class MtgTable {
 
     private MtgTable() { }
 
-    /** Give up rather than hang forever if the engine wedges. */
+    /**
+     * Give up rather than hang forever if the engine wedges: the wall-clock limit
+     * on one game for a transport with nobody at the keyboard ({@code null},
+     * {@code auto}).  <b>D286:</b> a human seat ({@code ws}, {@code console}) has
+     * no such limit unless {@code --game-timeout <sec>} asks for one -- a slow
+     * thinker must never lose a game to a timer.  See {@link #gameLimitSec}.
+     */
     private static final long GAME_TIMEOUT_SEC = 900L;
+
+    /**
+     * <b>D286.</b>  What replaces the wall clock on a {@code ws} seat: how long a
+     * game may run with <b>no {@code /ws} client connected</b> before the JVM
+     * gives up on it.  The engine parks on the seat's {@code input} with no
+     * deadline of any kind (only an {@code ask} has one, and only the no-client
+     * 120 s), so without this an abandoned session -- a bridge started by
+     * {@code play.sh --engine-only} and never connected to, or a tab closed
+     * mid-game -- would hold a JVM for ever.  The clock restarts every time a
+     * client leaves, and does not run while one is connected.
+     * {@code --idle-timeout <sec>} overrides it; 0 turns it off.
+     */
+    private static final long NO_CLIENT_GAME_TIMEOUT_SEC = 3600L;
+
+    /** "For ever", as a deadline {@code WireGuiGame.await} can add to {@code nanoTime} without overflow. */
+    private static final long ONE_YEAR_MS = 365L * 24 * 3600 * 1000;
 
     /**
      * {@code --keep-open}: how long the WebSocket server lingers after
@@ -320,9 +342,16 @@ public final class MtgTable {
         // did.
         boolean finished = true;
         int played = 0;
+        final long limitSec = gameLimitSec(a);
+        final long idleSec = transport instanceof WsTransport ? a.idleTimeoutSec : 0L;
+        System.out.println("game limit    = " + (limitSec == 0 ? "none" : limitSec + " s")
+                + (a.gameTimeoutSec == null ? "  (the default for --transport " + a.transport + ")"
+                        : "  (--game-timeout)")
+                + (idleSec == 0 ? "" : "; ends after " + idleSec + " s with no client connected"
+                        + (a.idleTimeoutFlag ? "  (--idle-timeout)" : "")));
         while (true) {
             final int n = played + 1;
-            finished = gui.awaitGameEnd(n, GAME_TIMEOUT_SEC * 1000L);
+            finished = awaitGameEnd(gui, transport, n, limitSec, idleSec);
             if (!finished) {
                 break;
             }
@@ -379,8 +408,9 @@ public final class MtgTable {
         }
         System.out.println();
         System.out.println("== summary ==");
-        System.out.println("finished       = " + finished + (finished ? "" : "  (TIMED OUT after "
-                + GAME_TIMEOUT_SEC + "s -- the game thread is wedged)"));
+        System.out.println("finished       = " + finished + (finished ? "" : abandoned != null
+                ? "  (" + abandoned + ")"
+                : "  (TIMED OUT after " + limitSec + "s -- the game thread is wedged)"));
         System.out.println("games          = " + gui.gamesFinished() + " played of " + a.games
                 + " asked for, last game id " + gui.gameId()
                 + ", matchOver = " + gui.matchOver());
@@ -469,6 +499,56 @@ public final class MtgTable {
                     + EngineCrash.describe(gui.engineFailure()), gui.engineFailure());
         }
         System.out.println("MTGTABLE OK");
+    }
+
+    /** Set by {@link #awaitGameEnd} when it gives up for want of a client; read by the summary. */
+    private static volatile String abandoned;
+
+    /**
+     * <b>D286.</b>  The wall-clock limit on one game, in seconds; 0 is none.
+     * {@code --game-timeout} wins; otherwise a human seat ({@code ws},
+     * {@code console}) has none and {@code null} / {@code auto} keep 900 s.
+     */
+    private static long gameLimitSec(final Args a) {
+        if (a.gameTimeoutSec != null) {
+            return a.gameTimeoutSec;
+        }
+        return "ws".equals(a.transport) || "console".equals(a.transport) ? 0L : GAME_TIMEOUT_SEC;
+    }
+
+    /**
+     * Wait for game {@code n} to end.  With a limit, exactly the old
+     * {@code awaitGameEnd(n, limit)}.  Without one, wait for ever -- except that
+     * on a {@code ws} seat the wait ends once no client has been connected for
+     * {@code idleSec} (0: never), because nothing else would (see
+     * {@link #NO_CLIENT_GAME_TIMEOUT_SEC}).  Only {@code /ws} counts, never an
+     * observer ({@link WsTransport#connected()}).
+     */
+    private static boolean awaitGameEnd(final WireGuiGame gui, final Transport transport, final int n,
+                                        final long limitSec, final long idleSec)
+            throws InterruptedException {
+        if (limitSec > 0) {
+            return gui.awaitGameEnd(n, limitSec * 1000L);
+        }
+        final WsTransport ws = transport instanceof WsTransport ? (WsTransport) transport : null;
+        if (ws == null || idleSec <= 0) {
+            return gui.awaitGameEnd(n, ONE_YEAR_MS);
+        }
+        long since = System.nanoTime();
+        while (true) {
+            if (gui.awaitGameEnd(n, CONNECT_POLL_MS)) {
+                return true;
+            }
+            final long now = System.nanoTime();
+            if (ws.connected()) {
+                since = now;
+            } else if ((now - since) / 1_000_000_000L >= idleSec) {
+                abandoned = "ABANDONED: no client connected for " + idleSec
+                        + " s, so the session ends; --idle-timeout 0 turns this off";
+                System.out.println(abandoned);
+                return false;
+            }
+        }
     }
 
     /**
@@ -778,6 +858,14 @@ public final class MtgTable {
         /** {@code --transport ws} only; 0 means "whatever config.json's wsPort says". */
         int port;
         boolean keepOpen;
+        /**
+         * {@code --game-timeout <sec>} (D286): the wall-clock limit on one game; 0 is none;
+         * null is the transport's default ({@link #gameLimitSec}).
+         */
+        Long gameTimeoutSec;
+        /** {@code --idle-timeout <sec>} (D286): {@code ws} only; 0 is off. */
+        long idleTimeoutSec = NO_CLIENT_GAME_TIMEOUT_SEC;
+        boolean idleTimeoutFlag;
         /** {@code --games}: {@code GameRules.setGamesPerMatch}. */
         int games = 1;
         /** {@code --probe}: {@code AutoTransport}'s M5 probe policy. */
@@ -818,6 +906,19 @@ public final class MtgTable {
                 case "--seed":      a.seed = Long.parseLong(need(argv, ++i, k)); break;
                 case "--port":      a.port = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--keep-open": a.keepOpen = true; break;
+                case "--game-timeout":
+                    a.gameTimeoutSec = Long.parseLong(need(argv, ++i, k));
+                    if (a.gameTimeoutSec < 0) {
+                        throw new IllegalArgumentException("--game-timeout is seconds, 0 for none");
+                    }
+                    break;
+                case "--idle-timeout":
+                    a.idleTimeoutSec = Long.parseLong(need(argv, ++i, k));
+                    a.idleTimeoutFlag = true;
+                    if (a.idleTimeoutSec < 0) {
+                        throw new IllegalArgumentException("--idle-timeout is seconds, 0 for off");
+                    }
+                    break;
                 case "--games":     a.games = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--probe":     a.probe = true; break;
                 case "--mana-lost-prompt":
@@ -834,6 +935,7 @@ public final class MtgTable {
                         + "[--deck2|--ai-deck <path>] [--ai-profile Default|Cautious|Reckless|Experimental] "
                         + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--games <n>] "
+                        + "[--game-timeout <sec>] [--idle-timeout <sec>] "
                         + "[--probe] [--mana-lost-prompt] [--no-mana-lost-prompt]");
                 }
             }
