@@ -302,6 +302,7 @@ public final class MtgTable {
             // script reads it.
             final int p = ((WsTransport) transport).port();
             System.out.println("WS LISTENING ws://127.0.0.1:" + p + "/ws");
+            System.out.println("WS OBSERVE   ws://127.0.0.1:" + p + "/observe");
             System.out.println("WS HEALTH    http://127.0.0.1:" + p + "/health");
             System.out.flush();
         }
@@ -451,6 +452,10 @@ public final class MtgTable {
                     + ws.framesDropped() + " emitted with nobody connected, "
                     + ws.framesIn() + " read, "
                     + ws.preSessionDrops() + " read before the session existed (amendment M20)");
+            System.out.println("ws observers   = " + ws.observerConnects() + " accepted, "
+                    + ws.observerOverflows() + " dropped as too far behind, "
+                    + ws.observerFramesIn() + " messages from them released unread, "
+                    + ws.originRefusals() + " upgrades refused by Origin (amendment M50)");
         }
         System.out.println("engine crash   = " + (gui.engineFailure() == null ? "none"
                 : EngineCrash.describe(gui.engineFailure())));
@@ -562,7 +567,7 @@ public final class MtgTable {
             return t;
         }
         case "console": return new ConsoleTransport();
-        case "ws":      return new WsTransport(a.port > 0 ? a.port : cfg.wsPort());
+        case "ws":      return new WsTransport(a.port > 0 ? a.port : cfg.wsPort(), cfg.wsAllowedOrigins());
         default:
             throw new IllegalArgumentException("--transport must be null|auto|console|ws, got "
                     + a.transport);

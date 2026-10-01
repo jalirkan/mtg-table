@@ -76,7 +76,12 @@ These are not "later". They are decisions, and they are what keeps this project
 finishable. Anything on this list is a closed question, not a backlog item.
 
 - **No multiplayer.** One human seat, one AI seat, one JVM, one browser tab. No
-  lobby, no matchmaking, no spectators, no second human.
+  lobby, no matchmaking, no spectators, no second human. *Lifted in part on
+  2026-10-01 by **D280**, on the owner's approval:* `ws://127.0.0.1:8642/observe`
+  is a read-only copy of the seat's own frames for any number of local followers
+  (ForgeCoach), which can never act, answer or hold the seat (amendment M50).
+  Still a no: a second seat, a second human, a lobby, and any view the seat
+  itself is not shown.
 - **No deck builder.** Decks are `.dck` files you already have. Editing them is
   Forge's job, or a text editor's.
 - **No card-library package.** Nothing published, nothing the engine, the bridge
@@ -87,7 +92,11 @@ finishable. Anything on this list is a closed question, not a backlog item.
   browser at `#cards` now exist as **tools**. What is still a no: a package, a
   route outside the Vite dev server, any proxy of Scryfall, and any deck editing.
 - **No accounts, no auth, no sessions, no users.** The socket binds loopback and
-  trusts whatever connects. That is the security model.
+  trusts whatever connects — except a web page from an origin it was not told
+  about (**D281**): a browser's upgrade to `/ws` or `/observe` must carry an
+  `Origin` on `config.json`'s `wsAllowedOrigins` (loopback on any port and
+  `https://jalirkan.github.io` by default), or it is refused 403, so a page you
+  happen to have open cannot take the seat. That is the security model.
 - **No packaging, no installer, no Docker, no release artifact.** You run it from
   the checkout with the commands below. Forge stays where you installed it.
 - **No delta protocol.** Every `state` frame is a full coalesced snapshot. Deltas
@@ -217,7 +226,7 @@ the first failure: `check-forge.sh` → `lint-bridge.sh` (the banned-accessor
 grep over `bridge/src` and `tools/**/*.java`, D182, the three game-thread hops
 among it, D181) → **2b**, `lint-bridge-selftest.sh` (every rule of the lint
 fires on a planted snippet, and a rule with no case fails, D180) →
-`bridge/build.sh` (javac plus five self-tests) → `Smoke` → a `RecordMatch`
+`bridge/build.sh` (javac plus six self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
 `fixtures/games/g1.jsonl` (`tools/wire-drift.mjs`: the same non-state frames,
 event stream, phase walk and final board, every board cut at a turn, phase or
@@ -346,8 +355,14 @@ node tools/build-deck.ts --check                     # every AI deck is written 
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
 #   ws://127.0.0.1:8642/ws   the frames        (one client at a time; a second is
 #                                               refused with close code 4001)
+#   ws://127.0.0.1:8642/observe   a read-only copy of the seat's frames, any number
+#                                 (M50: catch-up on connect, then every frame; what
+#                                 an observer sends is ignored — ForgeCoach's live mode)
 #   http://127.0.0.1:8642/health   200 "ok" once the game is ready, 503 "starting"
 #                                  before it — what scripts/play.sh polls
+#   A browser page may open either socket only from an Origin on config.json's
+#   wsAllowedOrigins (loopback on any port, https://jalirkan.github.io); others
+#   get 403.  Node tools send no Origin and are always let in (D281).
 node tools/ws-smoke.mjs --port 8642                      # connect -> resync -> concede
 node tools/ws-smoke.mjs --port 8642 --disconnect-mid-ask # drop, reconnect, finish
 node tools/ws-auto-play.mjs --port 8642 --log var/ws-auto.jsonl   # a whole game
@@ -478,7 +493,7 @@ side by side on GitHub's `ubuntu-latest`.
 | job | what it runs |
 |---|---|
 | `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
-| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its five self-tests, on Temurin 21 |
+| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its six self-tests, on Temurin 21 |
 | `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
 
 **The engine in CI.** CI is the one place anything downloads Forge, and it
@@ -491,7 +506,7 @@ it, extracts **the jar alone**, fails unless the jar's sha256 is the pin in
 `FORGE_JAR` at it (hard rule 9; `config.json` is not edited). Only that jar is
 kept, in the Actions cache under a key naming the asset and both digests — never
 in git and never as an artifact. `res/` is not extracted and
-`tools/make-forge-home.sh` is not run: none of the five self-tests boots an engine
+`tools/make-forge-home.sh` is not run: none of the six self-tests boots an engine
 or reads `res/`.
 
 **What stays local.** `./tools/check-all.sh` — Smoke, the recordings and the
@@ -2475,9 +2490,10 @@ mtg-table/
                              CLAUDE.md, each loaded under its directory
   .gitignore
   config.json                { forgeJar, forgeHome, deck, manaLostPrompt, match: {deck,
-                             aiDeck, aiProfile, games}, wsPort, webPort,
-                             scryfallUserAgent }. `match` is read by scripts/play.sh
-                             and scripts/spectate.sh only (D106, D122)
+                             aiDeck, aiProfile, games}, wsPort, wsAllowedOrigins,
+                             webPort, scryfallUserAgent }. `match` is read by
+                             scripts/play.sh and scripts/spectate.sh only (D106,
+                             D122); wsAllowedOrigins by the ws bridge (D281)
 
   decks/README.md            what every deck here is, and tools/check-deck.mjs
   decks/pacho-shield.dck     the deck (40 cards, MSH + MSC), plus .txt as typed
@@ -2542,7 +2558,9 @@ mtg-table/
                              ActGuard ActGuardSelfTest (D136: when undo/useMana may run)
                              NullTransport AutoTransport ConsoleTransport
                              WsTransport (M3: netty, ws://127.0.0.1:<port>/ws,
-                             GET /health, one client, cancelAll on disconnect)
+                             GET /health, one client, cancelAll on disconnect;
+                             M50: /observe, the Origin allowlist)
+                             WsObserveSelfTest (M50: observers and Origin, live)
     out/                     gitignored
 
   web/                       the SPA. A pure function of the frame stream.

@@ -9,7 +9,10 @@ by the audits listed below.
 
 Transport: JSON text frames over `ws://127.0.0.1:8642/ws`, one message per frame.
 `GET /health` on the same port answers `200 ok` and is the readiness check, not a
-frame (amendment **M13**). Loopback bind only, no auth (an explicit non-goal). The same frames, in the same
+frame (amendment **M13**). `ws://127.0.0.1:8642/observe` on the same port is a
+read-only copy of the seat's stream for any number of followers, and both socket
+paths refuse a browser page whose `Origin` is not on `config.json`'s
+`wsAllowedOrigins` (amendment **M50**). Loopback bind only, no auth (an explicit non-goal). The same frames, in the same
 shapes, are what `var/games/<id>/frames.jsonl` contains (§8), so a log replays
 through exactly the reducer a live socket feeds.
 
@@ -24,6 +27,21 @@ A browser is not one.
 ---
 
 ## Amendments
+
+### 2026-10-01 — the observer socket and the Origin check
+
+Applied by the observe-endpoint lane (branch `c/observe-endpoint`), on the
+owner's approval, for ForgeCoach (`https://jalirkan.github.io/ForgeCoach/`), a
+static page that follows a live game read-only. One row. It adds a socket path
+and a handshake check and changes **no frame**: no key, no type, no `seq` rule,
+so it is not a `v` bump, every committed recording is untouched, and a client
+of `/ws` from a non-browser (every Node tool here) or from the board's own page
+sees exactly what it saw. Decisions **D280**–**D282**; held by
+`mtgtable.WsObserveSelfTest`, the build's sixth self-test.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M50 | §2, §2.5, §8, M10, M13, M16, M19 | **`/observe`: a read-only copy of the seat's stream, any number of followers, never the seat; and an `Origin` allowlist on `/ws` and `/observe` both.** **(1) The path.** `ws://127.0.0.1:<port>/observe`, same port as `/ws`. **On connect, once a session exists**, an observer is sent the cached `hello_ok`, the last `state`, then this game's `over` if it has one or else the last `input` of this game if the engine has pushed one (M42's rule, read off the stream: `hello_ok` clears both), then every `ask` still outstanding — each the seat's own frame **byte for byte, same `seq`, same `t`**, and with the seat's redaction, because it is the same string (hard rule 8 is not reopened: an observer sees what the seat sees and nothing more). **After that it receives every session frame the seat is sent** — everything the session emits, in the order it reaches the seat's socket, whether or not a seat is connected — **and nothing else**: never a verbatim re-delivery the seat gets on a `resync` or a reconnect (M10; the observer already has that frame), and never a `seq: 0` frame (§2.5: each answers something the seat's own connection did). Catch-up and fan-out are ordered by one monitor, so an observer sees neither a gap nor a duplicate between them. **Before any session exists** an observer is sent nothing, then `openView`'s frames as they are pushed. **Between games** it stays connected: one that joins after `over` is told that game's `hello_ok`, last `state` and `over`, and the next game's `hello_ok` (M38) reaches every observer when it is emitted — read it as "a new game began", exactly as the seat does; one that joins after that `hello_ok` and before the new game's first `state` is sent the previous game's last `state` after it, which is what a reconnecting seat is sent in the same instant. **(2) Read-only.** Every message an observer sends — an `act`, an `answer`, a `resync`, a `ping`, garbage, a binary frame — is **released unread**: not parsed, not logged, not answered, never in the frame log, never reaching `onAct`/`onAnswer`/`onResync`. An observer's connect and disconnect touch nothing but the observer set: **not the seat** (M13's one-client rule counts `/ws` only, so a second `/ws` is still refused **4001** with any number of observers on, and an observer on before the seat never keeps the seat out), **not a resync** (M16's implicit resync is the seat's alone, so no `resync` line is written for one), **not the reply pool** (M19: no `cancelAll`, no `reopen`, and with no seat connected an ask still parks for `NO_CLIENT_ASK_TIMEOUT_MS`, not forever), and not `awaitNextGame`'s linger. Measured on a live seed-42 game with `tools/ws-auto-play.mjs` in the seat and five observers coming and going: the observer connected the moment the port bound received **2,447** frames, exactly the seat's 2,448 minus its one verbatim re-delivery, same bytes, same order, and the same `type@seq` series as the frame log's s2c lines; the log's 440 c2s lines are the seat's 439 sends plus its one implicit resync; eight observer messages, among them `act: concede`, changed nothing. **(3) Bounded.** Each observer carries the bytes handed to it and not yet flushed; one that would pass **8 MB** (`OBSERVER_BACKLOG_BYTES`) is disconnected on the spot — the TCP connection closed with no close frame, because one would queue behind the backlog that is the problem, so the client sees **1006** and may reconnect for a fresh catch-up. The game thread pays one enqueue per frame per observer and never waits on one. **(4) Closing.** When the server closes (the session's `over`, `--keep-open`'s end), every observer is sent close **1000** (`"game over"` or `"server closing"`), as the seat is; an observer that connects to a closing server is closed 1000 at once. **(5) The `Origin` check, on both paths.** A browser sends `Origin` on every websocket upgrade and a page cannot forge it, and a websocket is not subject to CORS — so before this row any page the user had open could open `/ws` while the board was not connected, and act (concede) or sit on every ask. The upgrade request is now checked before any handshake: **no `Origin` header is allowed** (a non-browser client, which could send any header it liked anyway), and otherwise the origin must match `config.json`'s **`wsAllowedOrigins`**, default `["http://127.0.0.1:*", "http://localhost:*", "https://jalirkan.github.io"]` (`:*` is any port, or none) — else **HTTP 403** and the connection closed: no socket, no `notice`, no close code, nothing counted as a connection, one stderr line and the run summary's `ws observers` line. `"null"` (a `file:` page, a sandboxed frame) is refused and cannot be listed. **(6) The run** prints `WS OBSERVE   ws://127.0.0.1:<port>/observe` after `WS LISTENING`, and its summary gains `ws observers = N accepted, N dropped as too far behind, N messages from them released unread, N upgrades refused by Origin`. | observe endpoint |
 
 ### 2026-09-28 — the status layer: a card's keywords
 
@@ -639,6 +657,9 @@ and the `notice` that answers a **dropped** c2s frame — unparseable JSON, a
 non-object, an unknown `type`, an `act` with no `action`, an `answer` with no
 `askId`, a binary frame (amendment **M18**). None is in the frame log; a session
 frame still starts at 1.
+
+None of the three ever reaches an observer on `/observe` (amendment **M50**),
+and nothing an observer sends is answered at all — not even its `ping`.
 
 **One drop gets no reply at all** (amendment **M20**): a frame that arrives
 before the session exists. A `notice` for it would be a pre-handshake frame, and

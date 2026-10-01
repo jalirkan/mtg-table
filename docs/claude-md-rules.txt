@@ -62,6 +62,7 @@
 **D190** and `docs/guides/personal-tier.md`, and `tools/CLAUDE.md`'s *The
 **A decision's number is final** (**D200**). A lane reserves a block of numbers
 **The socket's own two rules.** The ask timeout over ws is **0 — infinite —
+**`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 **`GET /health` is the session's readiness, not the port's** (amendment M15): 503
 **and anything it sends in that window is dropped with no reply** (amendment M20
@@ -353,6 +354,9 @@ span: and as of the M6 verification fix the two post-`over` waits obey the same 
 span: no deadline while a client is connected
 span: one client at a time
 span: The `input` half is conditional as of amendment M42
+span: `/observe` is a read-only copy of the seat, and never the seat
+span: Nothing an observer does may reach the seat
+span: Both paths check `Origin`
 span: Two end-of-game rules from the 2026-09-27 hardening pass.
 span: An `act: newGame` sent the instant `over` arrives is QUEUED
 span: And an exception out of Forge's game loop fails the run

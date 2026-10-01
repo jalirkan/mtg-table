@@ -10,6 +10,7 @@
     "games": 3
   },
   "wsPort": 8642,
+  "wsAllowedOrigins": ["http://127.0.0.1:*", "http://localhost:*", "https://jalirkan.github.io"],
   "webPort": 5173,
   "scryfallUserAgent": "mtg-table/0.1 (local hobby client; github.com/jalirkan/mtg-table)"
 }

@@ -14,9 +14,10 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 349 items still open across 37 follow-up lists** — 323
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — counted from
-its own rows on 2026-09-29 by the anchor resolver's lane (D275), on `0a93c9d`,
+**The index below lists 352 items still open across 38 follow-up lists** — 326
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the observer
+socket's three (D280–D282, 2026-10-01, a list of its own) added to the count
+made from its own rows on 2026-09-29 by the anchor resolver's lane (D275), on `0a93c9d`,
 which closed the GPU pass's 12 and added its 13 and 14 to the same list, over the
 play-distance audit's fix pass 2's count of 348 across 37, made at its rebase
 onto `8ddd286` (the audit closed the arena caption's 3 and added a list of three,
@@ -387,6 +388,9 @@ villain identity's rebase, were removed at the same recount.)
 | [Play-distance audit](#fu-audit) | 3 | open | The far strips under the chrome are measured by a scratch census, not held (owner question 34 first) | `web/test/status.test.ts` |
 | [Play-distance audit](#fu-audit) | 4 | open | The caption's every-view census counts the strip's cap against a card's box, so the low view's "stack under it" is a near miss drawn | `web/test/caption.test.ts` |
 | [Play-distance audit](#fu-audit) | 5 | open | The bar's and the credit row's widths are Chromium's on this machine's fonts; a new face or label moves them and no browser re-checks | `web/src/arena/hud.ts` |
+| [Observer socket](#fu-observe) | 1 | open | No gate step plays a real game with an observer attached; the live check was a scratch client | `tools/check-all.sh` |
+| [Observer socket](#fu-observe) | 2 | open | An observer's catch-up of an outstanding `ask` is held by reading, not by a test | `bridge/src/mtgtable/WsObserveSelfTest.java` |
+| [Observer socket](#fu-observe) | 3 | open | ForgeCoach's `live.ts` and README still say mtg-table has no observer endpoint (another repository, the owner's) | — |
 
 ### Questions only the owner can settle
 
@@ -470,6 +474,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The GPU pass: the whole arena measured, and what it paid for nothing *(off the plan)* | 1 day | **built, measured, gated, documented, verified three times and fixed three times** on branch `gpu-pass` (2026-09-29), off `main`'s `e2c337c`, rebased onto `a46bd96` (the portrait standee) — both rasterisers benched at five tables, bloom, the personal tier and the governor; the frame loop's CPU profiled; five costs it paid for nothing removed with no pixel moved (**D271**); SwiftShader's p95 named the software floor and §9.4 graded on the real GPU (**D270**); the governor's decided verdict and time-counted settle, `<AdaptiveDpr />` gone, the stats panel lazy (**D272**); the bench's `RENDERED` line, `--json`, `--cpu-profile` and `tools/profile-top.mjs`; **its fix pass** (after a skeptic's re-measure): the GTX 1080's unthrottled max traced to the WebGL command buffer draining and §9.4 on a real GPU read at a browser's pacing, `--vsync` (**D273**), the prop field's and the status strip's upload flags held by tests, the governor driven through its defaults, the numbers restated; **its fix pass 2** (after a second verifier): rebased onto the portrait standee and re-benched there with its standees on and off, the tile field's colour flags held by a test, the saturated `--vsync` line named and the unthrottled pairs made the regression signal; eleven follow-ups; *The GPU pass*, just above *Deferred* |
 | — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c`, rebased onto `8ddd286` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **its fix pass 2** (a second verifier): rebased onto `8ddd286`, the decision bar one line of items so no hint or notice grows the column (136.7 → 112.5 px), the credit drawn whole beside the chip and its Fan Content notice never cut, the chip's key whole at its floor, your duelist from the table view looked at (it stands; owner question 41); **its fix pass 3** (a third verifier): the director's shot a dashed mark on its view's button, not text that wrapped the switcher (the column 146.3 → 112.5 px), every key that can change the chrome pressed in a browser from 1280 to 1920 px, the credit's own 980-px cap dropped, the notice's tooltip tested; **D265–D267**; eight owner questions (34–41); five follow-ups; *The play-distance audit*, just above *Deferred* |
 | — | The anchor resolver: the frame loop's last allocation outside the scans *(off the plan; the GPU pass's follow-up 12)* | ½ day | **built, measured, gated, documented, verified and fixed** on branch `anchor-scratch` (2026-09-29), off `main`'s `0a93c9d` — `layout.ts`'s `anchorPositionInto` writes into the stage's one scratch tuple, the opponent's anchors are built once, `placementOf` builds no key string, and the resolver and its helpers are in the allocation scan (**D275**); GC events per 5M resolves through `stage.positionOf` 14–818 → 0 on every kind, the turn banner and the life number bound through the pool 38 → 3 per 2M; every answer the one it was over the whole corpus; the camera director copies the points it frames; the cue layer stays outside by design; **its fix pass** (a verifier's loop read 3 per 5M): a fractional `above` height boxed through V8's shared `ref.id` feedback slot, read through a name of its case's own, every state measured 0, the reproducer committed, three gaps in the scans closed and the casting field's scratch tested; two follow-ups; *The anchor resolver*, just above *Deferred* |
+| — | The observer socket and the Origin check *(off the plan; for ForgeCoach, on the owner's approval)* | ½ day | **built, tested and documented** on branch `c/observe-endpoint` (2026-10-01), off `main`'s `b95e286` — `ws://127.0.0.1:<port>/observe`, a read-only copy of the seat's frames for any number of followers that can never act, answer, resync or hold the seat, bounded at 8 MB unflushed per observer; and an `Origin` allowlist on `/ws` and `/observe` (`config.json`'s `wsAllowedOrigins`) so a page from elsewhere gets 403 (amendment **M50**, **D280**–**D282**); `WsObserveSelfTest` is the build's sixth self-test; three follow-ups; *The observer socket*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9501,6 +9506,67 @@ follow-ups 13 and 14 (two frame-loop binds no scan reads; two walks of the
 placements `placementOf` could now be), in [that list](#fu-gpu).
 
 ---
+
+## The observer socket — a read-only follower, and the Origin check (2026-10-01, D280–D282)
+
+**Status: built, tested and documented** on branch `c/observe-endpoint`, off
+`main`'s `b95e286`; the lane's reserved range D280–D284, three used. Amendment
+**M50**. ForgeCoach (`https://jalirkan.github.io/ForgeCoach/`) follows a game
+while it is played; the only socket was the seat's, which a follower could
+take. `WsTransport` now serves `/observe` beside `/ws` — catch-up from the
+transport's cache, then every frame the seat is sent, same bytes and `seq`;
+nothing an observer sends reaches anything; its connect and disconnect touch
+neither the seat, the reply pool nor the frame log; 8 MB unflushed and it is
+dropped (D280, D282). Both paths now refuse a browser `Origin` that is not on
+`config.json`'s `wsAllowedOrigins` (D281), closing the hole that let any open
+page take the seat while the board was away.
+
+```bash
+./bridge/build.sh                                  # WsObserveSelfTest, the sixth self-test (95 checks)
+./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42 --keep-open
+#   ws://127.0.0.1:8642/observe   any number, read-only
+```
+
+Measured, on this lane's sandbox with the pinned jar: a live seed-42 game with
+`tools/ws-auto-play.mjs` in the seat and five observers coming and going — the
+observer connected the moment the port bound received 2,447 frames, the seat's 2,448
+minus its one verbatim re-delivery, byte for byte and in order; a late observer's
+four catch-up frames were the frame log's own and its tail the same stream; a
+second `/ws` was refused 4001; eight observer messages (an `act: concede` among
+them) changed nothing and wrote nothing to the log; `https://evil.example` and
+`null` were 403 on both paths. Five source splices (no Origin check, observer
+frames dispatched, no backlog bound, an observer as the seat, a stale `input`
+after `over`) each turn the self-test red.
+
+**The gate**, in this lane's sandbox (4 cores; the pinned jar fetched from the
+tagged release and checked against its sha256; Node v24.20.0): `GATE_JOBS=1
+SKIP_DECKS=1 ./tools/check-all.sh` from a deleted `bridge/out` — **check-all OK,
+32 jobs, 1390.3 s** (12e skipped: no local card index). Two earlier runs failed,
+neither on this change: under Node 22 (the sandbox's default) 10e's early-connect
+loop exits 13, because Node 22's `WebSocket` fires `error` and no `close` on a
+refused connect; and at `GATE_JOBS=2` 10f's seed-42 game came out a 14-turn
+game with no `ability_menu` (0 `clickAbility`). Seed 42 is not one game on this
+machine: unmodified `main` played its canonical 22-turn game in 3 of 4 serial
+runs and a 56-turn one in the fourth; this branch played the canonical one in 5
+of 8 standalone runs, the 56-turn one once, and the 14-turn one twice (both
+right after the loaded gate), and the canonical one in the serial gate's 10f —
+D113's load nondeterminism, which 10f's `>= 1` assertion does not tolerate.
+
+<a id="fu-observe"></a>
+### The observer socket's follow-ups — three, 2026-10-01
+
+1. **No gate step plays a real game with an observer attached.** The self-test
+   drives a real `WsTransport` with pushed strings; the live comparison above was
+   a scratch client. A step-10 variant that attaches an observer to 10c and
+   compares its stream with the client log would hold the whole path.
+2. **An observer's catch-up of an outstanding `ask` is held by reading, not by a
+   test.** `Transport.ask` asserts a game thread, and the self-test may neither
+   name a `Game*` thread nor hop onto the pool (hard rules 3 and 10), so the ask
+   half of `admitObserver` — the same `outstanding` + `isPending` walk `resend`
+   uses — has no check of its own.
+3. **ForgeCoach still says mtg-table has no observer endpoint** (`src/live.ts`'s
+   header, README *Live mode*). That repository is the owner's; this lane did not
+   touch it.
 
 ## Deferred — out of scope for M0–M7
 

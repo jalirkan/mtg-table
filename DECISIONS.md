@@ -12335,3 +12335,138 @@ the source; a GC probe is the engine's and stays out of the gate; and the state
 that boxed moved with as little as two more `import`s in the measuring script. So
 the reproducer is kept as it ran, and the arena `CLAUDE.md`'s GPU rule 2 names the
 trap: a fractional number read off a shape-shared name.
+
+---
+
+## D280 — A read-only observer socket, `/observe`, on the seat's port: the seat's own frames by reference, caught up from the transport's cache, and nothing an observer does reaches the seat
+
+*Branch `c/observe-endpoint`; the lane's reserved range D280–D284, three used.*
+
+**2026-10-01** (amendment **M50**; the owner's approval, for ForgeCoach)
+
+**Decision.** `WsTransport` serves a second websocket path, `/observe`, beside
+`/ws`. An observer is caught up on connect from the strings the transport
+already caches for the seat — `hello_ok`, the last `state`, this game's `over`
+or else its last `input`, every outstanding `ask` — and then handed every frame
+`push()` is handed, the same string the seat gets, so the same bytes, `seq` and
+redaction. It never counts as the seat: `connected()`, the ask timeout, the
+4001 refusal, `onResync`, `onDisconnect`, `ReplyPool.reopen` and the frame log
+see `/ws` only, and everything an observer sends is released unread. Catch-up
+and fan-out run under one monitor in the transport, so an observer sees no gap
+and no duplicate between them. `README.md`'s *no spectators* non-goal is lifted
+in part to exactly this.
+
+**Rationale.** ForgeCoach follows a game while it is played. Its only options
+were the seat socket — which, admitted first or during a board reload, *took the
+seat*: asks went to a client that never answers, the board was refused 4001 and
+stopped retrying, and on its disconnect M19's `cancelAll` spent the parked asks
+on §5.4's defaults, while M16 wrote its connect into the player's log as a
+`resync` — or polling `frames.jsonl` through a file server the user starts by
+hand. The transport already holds every string a follower needs and already
+caches what a late joiner needs, all built on the game thread and gated by
+`Snap`; a copy of those strings is a follower that cannot see more than the seat
+and cannot walk a view (hard rule 3), and adds no fourth `CardView` exemption
+(hard rule 10). The cached `input` is the seat's M42 rule read off the stream
+(`hello_ok` clears it, only a push sets it), and `over` takes its place once a
+game is over because nothing but `over` follows it on the seat's stream
+(`OverRaceSelfTest`'s invariant) — the seat would never be sent that stale
+`input` again, so an observer must not be either.
+
+**Rejected.**
+
+- **Letting a second `/ws` client in as read-only** — M13's refusal is how the
+  board knows not to fight another board, and "the seat is whoever connected
+  first" is exactly the hazard; a separate path makes read-only a property of the
+  URL, not of a client's good behaviour.
+- **Calling `onResync` for an observer's catch-up** — it re-emits a fresh,
+  logged `input`, writes a `resync` line into the player's log (M16) and gives
+  the seat a frame it did not ask for.
+- **Re-delivering the seat's verbatim repeats and `seq: 0` frames to observers**
+  — a repeat is one the observer already has, and each out-of-band frame answers
+  something the seat's own connection did (its ping, its refused twin, its
+  dropped frame).
+- **An omniscient observer** — that is a new redaction mode (*Spectating*'s
+  rule); an observer is the seat's eyes and no more.
+- **A second port** — one more thing for `play.sh` and ForgeCoach to find, and
+  the `/health` readiness rule would have to be stated twice.
+
+## D281 — Both socket paths check `Origin` against `config.json`'s `wsAllowedOrigins`: no header is allowed, loopback on any port and ForgeCoach by default, and anything else is a 403 before the handshake
+
+*Branch `c/observe-endpoint`; the lane's reserved range D280–D284.*
+
+**2026-10-01** (amendment **M50**)
+
+**Decision.** `WsTransport`'s `Door` handler, ahead of netty's handshake, reads
+the upgrade request's `Origin` on `/ws` and on `/observe`. **No header** is
+allowed. Otherwise the origin must equal an entry of `config.json`'s
+`wsAllowedOrigins`, or match an entry ending `:*` with any port or none; the
+default — also what a config without the key gets — is `http://127.0.0.1:*`,
+`http://localhost:*` and `https://jalirkan.github.io`. Anything else is answered
+**HTTP 403** with `Connection: close`: no socket, no `notice`, nothing counted as
+a connection, one `WS ORIGIN REFUSED` stderr line and a count in the run summary.
+Entries are validated and lower-cased at startup (`scheme://host`,
+`scheme://host:port` or `scheme://host:*`, http or https), so a typo stops the
+bridge rather than locking the board out; `[]` admits non-browser clients only.
+
+**Rationale.** README's *the socket binds loopback and trusts whatever
+connects* assumed loopback keeps strangers out. It keeps out other machines, and
+nothing else: a websocket is not subject to CORS, so any web page the user has
+open could open `ws://127.0.0.1:8642/ws` while the board was not connected and
+send `act: concede`, or hold the seat and sit on every ask. A browser always
+sends `Origin` on the upgrade and script cannot set it, so it is the one header
+that tells the board's page from someone else's. A non-browser client sends
+none — measured: Node's global `WebSocket` (`tools/ws-smoke.mjs`,
+`tools/ws-auto-play.mjs`, `web/test/`) and the JDK's — and a local process could
+forge any header anyway, so refusing a missing header would break every tool and
+protect nothing. The board is served from the Vite dev server or `vite preview`
+on a loopback port by either name, so the loopback entries take any port;
+ForgeCoach is an https page whose origin carries no path.
+
+**Rejected.**
+
+- **A token in the URL** — the board would have to learn it from somewhere the
+  attacker's page cannot read, which is a second channel to build; and every
+  tool and recording command would change.
+- **Checking `Host` instead** — that answers DNS rebinding, not a page on
+  another origin connecting straight to `127.0.0.1`.
+- **Exact ports for the board** — `webPort`, `vite preview`'s 4173 and a dev
+  server that moved to a free port would each need a config edit.
+- **Allowing `"null"`** — every `file:` page and sandboxed frame shares it.
+
+## D282 — Fan-out to observers is bounded per observer: 8 MB handed and not yet flushed, and an observer past it is disconnected at once, never waited on
+
+*Branch `c/observe-endpoint`; the lane's reserved range D280–D284.*
+
+**2026-10-01** (amendment **M50**)
+
+**Decision.** `push()` — called from the game thread, the EDT and the io and
+netty threads — encodes a frame once and hands each observer a reference-counted
+duplicate with `writeAndFlush`, which off the event loop is an enqueue. Each
+observer counts the bytes it has been handed and not yet flushed (decremented by
+the write's own completion); a frame that would take it past
+`OBSERVER_BACKLOG_BYTES` (8 MB) removes it from the set and closes its channel
+at once, with no close frame, so the client sees 1006 and may reconnect for a
+fresh catch-up. The seat's own writes are unchanged.
+
+**Rationale.** A follower is a page in a tab the user may background, or a
+machine that sleeps with the socket open; netty buffers without limit, so an
+observer that stops reading would grow the bridge's heap a full `state` at a
+time, and anything that waited for it would stall the game. Counting our own
+bytes needs no netty internals (water marks count differently on and off the
+event loop) and makes the bound exact. 8 MB is about a hundred of the corpus's
+largest `state` frames: a reader that is merely slow never nears it. A close
+frame would queue behind the backlog that is the problem. Measured by
+`WsObserveSelfTest`: an observer with a 4 KB receive buffer that never reads is
+dropped while 384 frames of 64 KB (24 MB) are pushed past it, and the 384
+pushes return in 95–122 ms (five runs, this sandbox's 4 cores) — under a third
+of a millisecond each, with the encoding.
+
+**Rejected.**
+
+- **Dropping frames for a slow observer and keeping it** — a follower with a
+  hole in its stream renders a board that never happened; disconnecting it and
+  letting it catch up from the cache is honest.
+- **Blocking `push()` on a full observer** — the game thread would wait on a
+  browser tab.
+- **A cap on the number of observers** — each is bounded, a loopback page is
+  already Origin-checked, and the owner asked for any number.

@@ -104,4 +104,19 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
     -Dsentry.uncaught.handler.enabled=false \
     -cp "$OUT:$FORGE_JAR" mtgtable.ActGuardSelfTest "$REPO_ROOT/forge-home"
 
+# Unit-check amendment M50 (D280-D282): the read-only observer socket and the
+# Origin allowlist, on a real WsTransport bound to a free loopback port, driven
+# by raw-socket clients that choose their own Origin header.  A disallowed
+# Origin is a 403 on both paths; an observer is never the seat (a second /ws is
+# still refused 4001, onResync/onDisconnect never fire for one); everything an
+# observer sends reaches nothing; a late observer's catch-up is the cached
+# frames byte for byte; and one that stops reading is dropped at the backlog
+# bound without holding up push().  No game and no Forge class -- the netty in
+# the jar is all it loads -- and it writes nothing; hard rule 6's flags anyway,
+# because it runs the bridge's own netty server.
+env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
+    -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
+    -Dsentry.uncaught.handler.enabled=false \
+    -cp "$OUT:$FORGE_JAR" mtgtable.WsObserveSelfTest
+
 echo "build OK"
