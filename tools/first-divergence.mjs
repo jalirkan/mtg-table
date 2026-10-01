@@ -70,7 +70,13 @@ function load(path) {
         }
       }
     }
-    for (const e of b.events ?? []) {
+    for (const raw of b.events ?? []) {
+      // Amendment M52: an unblocked attacker is `blockerIds: []`; a recording
+      // made before it wrote the attacker as its own one blocker.  Read both as
+      // the newer form, so a pair across the change compares the game alone.
+      const e = raw.kind === 'blockers'
+        ? { ...raw, blocks: raw.blocks.map((x) => ({ ...x, blockerIds: x.blockerIds.filter((id) => id !== x.attackerId) })) }
+        : raw;
       events.push({ e, turn: b.turn, phase: b.phase, active: b.activePlayer });
       if (e.kind === 'attackers' && e.player !== viewer) {
         attackers += e.bands.reduce((n, band) => n + band.attackerIds.length, 0);
@@ -113,7 +119,7 @@ function describe(g, k) {
     const ids = e.bands.flatMap((band) => band.attackerIds);
     text = `declares attackers [${ids.map(nm).join(', ') || 'none'}]`;
   } else if (e.kind === 'blockers') {
-    const blocked = e.blocks.filter((x) => !(x.blockerIds.length === 1 && x.blockerIds[0] === x.attackerId));
+    const blocked = e.blocks.filter((x) => x.blockerIds.length > 0);
     text = `declares blockers [${blocked.map((x) => `${x.blockerIds.map(nm).join('+')} on ${nm(x.attackerId)}`).join('; ') || 'none'}]`;
   } else if (e.kind === 'cast') {
     text = `casts ${nm(e.cardId)}`;

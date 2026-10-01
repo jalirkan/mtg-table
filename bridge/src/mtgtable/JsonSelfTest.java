@@ -32,6 +32,9 @@ import mtgtable.Json.JsonOut;
  * round-tripped through {@link Json#parse(String)} -- Jetty's parser, the same
  * one the browser's {@code JSON.parse} agrees with -- so "it looks right" is
  * never the standard.
+ *
+ * <p>It also holds {@code Snap.block}, the {@code blockers} event's one entry
+ * (amendment M52, D290): a pure function over ids, so it needs no engine.
  */
 public final class JsonSelfTest {
 
@@ -47,6 +50,7 @@ public final class JsonSelfTest {
         nesting();
         nestingErrors();
         parsing();
+        blockersEvent();
 
         System.out.println("JsonSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -196,6 +200,52 @@ public final class JsonSelfTest {
     }
 
     // ------------------------------------------------------------------
+
+    /**
+     * {@code Snap.block}, the {@code blockers} event's one entry (amendment M52,
+     * D290): Forge hands an UNBLOCKED attacker over as its own one blocker, and
+     * the wire must say {@code []} for it, as {@code state.combat} does.  A pure
+     * function over ids, so no engine and no {@code CardView} is needed.
+     */
+    private static void blockersEvent() {
+        eq("blockers: Forge's unblocked sentinel (the attacker as its own blocker) is []",
+           "{\"attackerId\":12,\"blockerIds\":[]}",
+           blockDoc(12, List.of(Integer.valueOf(12))));
+        eq("blockers: a real block is relayed as Forge ordered it",
+           "{\"attackerId\":12,\"blockerIds\":[31,30]}",
+           blockDoc(12, List.of(Integer.valueOf(31), Integer.valueOf(30))));
+        eq("blockers: an empty list stays empty",
+           "{\"attackerId\":12,\"blockerIds\":[]}",
+           blockDoc(12, List.of()));
+        eq("blockers: a null list is written as []",
+           "{\"attackerId\":12,\"blockerIds\":[]}",
+           blockDoc(12, null));
+        eq("blockers: another attacker's id is not dropped, only this one's",
+           "{\"attackerId\":12,\"blockerIds\":[13]}",
+           blockDoc(12, List.of(Integer.valueOf(13))));
+        final List<Integer> withNull = new ArrayList<>();
+        withNull.add(null);
+        withNull.add(Integer.valueOf(31));
+        eq("blockers: a null id is skipped",
+           "{\"attackerId\":12,\"blockerIds\":[31]}",
+           blockDoc(12, withNull));
+        eq("blockers: two entries in one array nest correctly",
+           "[{\"attackerId\":1,\"blockerIds\":[]},{\"attackerId\":2,\"blockerIds\":[5]}]",
+           twoBlocks());
+    }
+
+    private static String blockDoc(final int attacker, final List<Integer> blockers) {
+        final JsonOut o = new JsonOut();
+        Snap.block(o, attacker, blockers);
+        return o.done();
+    }
+
+    private static String twoBlocks() {
+        final JsonOut o = new JsonOut().arr();
+        Snap.block(o, 1, List.of(Integer.valueOf(1)));
+        Snap.block(o, 2, List.of(Integer.valueOf(5)));
+        return o.end().done();
+    }
 
     private static void eq(final String what, final String expected, final String actual) {
         checks++;

@@ -83,6 +83,12 @@
 // under this step the day g1 is re-recorded on purpose.  A committed file that
 // carries the key is compared with it, as every other key is.
 //
+// And one ENCODING the committed file may predate, in both modes (amendment
+// M52, D290): a `blockers` event's unblocked attacker, `[n]` (itself) before
+// and `[]` since.  When the committed file carries the old spelling, both files'
+// self-blocks are read as `[]`, and a line says how many (the comment above
+// `selfBlocks` below).
+//
 // What the default gives up, and says so: a board field that differs only in a
 // snapshot taken BETWEEN two phase boundaries, is in no event, is not on the
 // stack, and has changed back by the next boundary (a creature tapped and
@@ -181,6 +187,39 @@ for (const [key, amendment] of LATER_KEYS) {
   const count = { n: 0 };
   for (const f of B) strip(f, key, count);
   if (count.n > 0) newer.push(`${key} (${amendment}): removed from ${String(count.n)} object(s) of the fresh file`);
+}
+
+// One ENCODING the committed file may predate (amendment M52, D290): a
+// `blockers` event's unblocked attacker.  Before M52 the bridge relayed Forge's
+// sentinel, the attacker as its own one blocker (`blockerIds: [n]`); since, it
+// writes `[]`, which is what `state.combat` always said.  A creature cannot
+// block itself, so the two spell one fact.  When the committed file carries the
+// old spelling anywhere, every such entry in BOTH files is read as `[]` before
+// comparing, and a line says how many: the same game then compares the same,
+// and an old fixture still equals itself.  What it gives up, until g1 is
+// re-recorded on purpose: a fresh file that went back to the old spelling is
+// not caught here -- `JsonSelfTest`'s blockers cases hold that on every build.
+// A committed file in the new spelling turns the rewrite off.
+const isSelfBlock = (x) => Array.isArray(x?.blockerIds) && x.blockerIds.length === 1 && x.blockerIds[0] === x.attackerId;
+function selfBlocks(L, rewrite) {
+  let n = 0;
+  for (const f of L) {
+    if (f.type !== 'state') continue;
+    for (const e of f.body?.events ?? []) {
+      if (e?.kind !== 'blockers' || !Array.isArray(e.blocks)) continue;
+      for (const x of e.blocks) {
+        if (!isSelfBlock(x)) continue;
+        n += 1;
+        if (rewrite) x.blockerIds = [];
+      }
+    }
+  }
+  return n;
+}
+if (selfBlocks(A, false) > 0) {
+  const na = selfBlocks(A, true);
+  const nb = selfBlocks(B, true);
+  newer.push(`M52's unblocked attacker \`blockerIds: []\`: its ${String(na)} self-block(s) and the fresh file's ${String(nb)} read as []`);
 }
 const clip = (s, n = 300) => (s.length > n ? `${s.slice(0, n)}…` : s);
 

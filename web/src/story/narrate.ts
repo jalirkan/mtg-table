@@ -1252,8 +1252,9 @@ function createNarrator(rawHeader: unknown, opts: NarratorOptions): Narrator {
   };
 
   const onBlockers = (cur: Cur, e: WireEvent): void => {
-    // state.combat is the authority on who blocked what (amendment M7); the
-    // event's own map sends an unblocked attacker to itself.
+    // state.combat is the authority on who blocked what (amendment M7). Since
+    // M52 the event says `[]` for an unblocked attacker, as state.combat does;
+    // a recording made before M52 sends it to itself, so the self-filter stays.
     const blocks = new Map<unknown, number[]>();
     const bands = cur.body.combat?.bands;
     if (Array.isArray(bands)) {

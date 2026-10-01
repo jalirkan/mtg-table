@@ -70,7 +70,10 @@
 // before comparing, and a line says so.  Only that direction: a key A has and B
 // lacks is an emitter that STOPPED writing it, and is reported like any other
 // difference.  `--keep-amended` turns the rule off.  The table is
-// `AMENDED_KEYS` below; a row is an amendment, never a convenience.
+// `AMENDED_KEYS` below; a row is an amendment, never a convenience.  One
+// amendment changed a VALUE's spelling rather than adding a key: M52's unblocked
+// attacker, `blockerIds: []` where an older recording has the attacker itself.
+// When A carries the old spelling, both files' self-blocks are read as `[]`.
 //
 // Options:
 //   --only-dir <s2c|c2s>  compare only frames the emitter wrote, or only the
@@ -237,6 +240,7 @@ function load(path, drop = new Map()) {
       delete frame.body[dropKey];
     }
     for (const key of deepDrop) dropDeep(frame, key);
+    if (selfBlocksAsEmpty) unblockSelf(frame);
     const canon = JSON.stringify(scrub(frame));
     counts.set(canon, (counts.get(canon) ?? 0) + 1);
     const type = label(frame);
@@ -301,6 +305,38 @@ if (!opt.keepAmended) {
       amendedNotes.push(`  amendment ${amendment}: a card's ${key} is absent from A (A predates it) and ` +
         `present in B -- dropped from B at any depth (--keep-amended compares it)`);
     }
+  }
+}
+
+// One ENCODING an amendment changed (M52, D290): a `blockers` event's
+// unblocked attacker was its own one blocker (`blockerIds: [n]`, Forge's
+// sentinel, relayed) and is `[]` since.  A creature cannot block itself, so the
+// two spell one fact.  When A carries the old spelling anywhere, every such entry
+// in A and in B is read as `[]`, and a line says so; `--keep-amended` turns it off.
+const isSelfBlock = (x) => Array.isArray(x?.blockerIds) && x.blockerIds.length === 1 && x.blockerIds[0] === x.attackerId;
+/** Rewrite a state frame's self-blocks to `[]`; how many it rewrote. */
+function unblockSelf(frame) {
+  let n = 0;
+  if (frame?.type !== 'state') return n;
+  for (const e of frame.body?.events ?? []) {
+    if (e?.kind !== 'blockers' || !Array.isArray(e.blocks)) continue;
+    for (const x of e.blocks) if (isSelfBlock(x)) { x.blockerIds = []; n++; }
+  }
+  return n;
+}
+let selfBlocksAsEmpty = false;
+if (!opt.keepAmended) {
+  try {
+    for (const raw of readFileSync(opt.files[0], 'utf8').split('\n')) {
+      if (!raw.includes('"blockers"')) continue;
+      if (unblockSelf(JSON.parse(raw)) > 0) { selfBlocksAsEmpty = true; break; }
+    }
+  } catch {
+    // load() below reports an unreadable or malformed file properly
+  }
+  if (selfBlocksAsEmpty) {
+    amendedNotes.push('  amendment M52: A spells an unblocked attacker as its own blocker (A predates it) -- ' +
+      'every such entry in A and B read as blockerIds: [] (--keep-amended compares them)');
   }
 }
 

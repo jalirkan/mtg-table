@@ -993,8 +993,9 @@ export default function Arena({
    *
    * It takes `state.board.combat` and not the `blockers` event, because
    * `state.combat` is the authority on who blocked what (amendment **M7**): an
-   * unblocked attacker arrives as its own blocker, and a pose derived from the
-   * event would have to un-derive that.
+   * unblocked attacker arrives as its own blocker in a recording made before
+   * amendment **M52**, and a pose derived from the event would have to
+   * un-derive that.
    */
   /**
    * **T6's combat freeze is a pose** (report 13 §6.4): a stack during a combat
