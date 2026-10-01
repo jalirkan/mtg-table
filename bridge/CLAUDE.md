@@ -90,6 +90,21 @@ the handshake (D281): none is allowed (every Node tool sends none), otherwise
 `https://jalirkan.github.io`), else 403. A new client that is a browser page
 must be served from an allowed origin; a new tool needs nothing.
 
+**A LAN server is the token's, and loopback is never asked for it** (D287–D289,
+amendment **M51**). `--lan` binds `0.0.0.0` and mints a 128-bit pairing token per
+run; `LanGate`, first in the pipeline and present only then, refuses 403 any
+request from a non-loopback peer without it — `?token=` on `/ws` and `/observe`,
+`?token=` or the `mtgtable_token` cookie elsewhere (the cookie never opens a
+socket) — compared through SHA-256 and `MessageDigest.isEqual`, and never
+logged. `Door` then also admits `Origin: http://<Host>`, **for a non-loopback
+peer only** (on loopback that is DNS rebinding). `--site-dir` adds `Site`, which
+serves a built ForgeCoach at `/` — `GET`/`HEAD`, no listing, `.gz` as
+`application/octet-stream` with no `Content-Encoding`, and a path checked as text,
+as a normalised path and as a real path before a byte is read. With neither flag
+the pipeline, the bind and every answer are M50's. A change to what a phone can
+reach goes through `LanGate`; a change to what the site can reach goes through
+`WsTransport.sitePath` and the real-path check, and `WsLanSelfTest` holds both.
+
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 sent the instant `over` arrives is QUEUED** (**D114**, amendment **M45**): `over`
 goes out at the outcome, while Forge is still finishing the game and has yet to
@@ -147,7 +162,12 @@ to think.
 
 ## The build's self-tests
 
-`bridge/build.sh` runs **six** self-tests after javac (the sixth,
+`bridge/build.sh` runs **seven** self-tests after javac (the seventh,
+`mtgtable.WsLanSelfTest`, is amendment **M51**'s: real `WsTransport`s on free
+ports, a phone played from 127.0.0.1 by swapping the transport's loopback
+predicate — the token on every path, the cookie never on a socket, content types,
+every traversal spelling and a symlink out of the root, and `http://<Host>` as an
+Origin for a remote peer and never a loopback one; the sixth,
 `mtgtable.WsObserveSelfTest`, is amendment **M50**'s: a real `WsTransport` on a
 free port, raw-socket clients choosing their own `Origin` — 403s, an observer
 that is never the seat, sends that reach nothing, a byte-for-byte catch-up, and

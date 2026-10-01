@@ -16,12 +16,25 @@
  */
 package mtgtable;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -55,7 +69,11 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
@@ -80,7 +98,10 @@ import io.netty.util.ReferenceCountUtil;
  * {@code HttpServerCodec} &rarr; {@code HttpObjectAggregator(1 MB)} &rarr;
  * {@code ChunkedWriteHandler} &rarr; {@link Health} &rarr; {@link Door} &rarr;
  * {@code WebSocketServerProtocolHandler("/ws", null, false, 1 MB)} &rarr;
- * {@code WebSocketFrameAggregator(1 MB)} &rarr; {@link WsHandler}.
+ * {@code WebSocketFrameAggregator(1 MB)} &rarr; {@link WsHandler}.  Amendment
+ * <b>M51</b> adds two handlers, each only when asked for: {@link LanGate} in
+ * front of {@link Health} on a LAN server, and {@link Site} between
+ * {@link Health} and {@link Door} when a site directory is served.
  *
  * <p>{@link Door} (amendment <b>M50</b>, D280&ndash;D282) checks the upgrade
  * request's {@code Origin} against the allowlist and answers <b>403</b> to one
@@ -208,6 +229,31 @@ import io.netty.util.ReferenceCountUtil;
  * pass {@value #OBSERVER_BACKLOG_BYTES} is disconnected at once rather than
  * buffered -- a slow or dead follower costs the game thread one enqueue per
  * frame and never more.
+ *
+ * <h2>LAN play and the static site (amendment M51, D287&ndash;D289)</h2>
+ *
+ * <p>Two options, both off unless asked for, and with both off the pipeline,
+ * the bind and every answer are exactly what they were:
+ *
+ * <ul>
+ *   <li><b>a pairing token</b> ({@code --lan}): the server binds
+ *       {@code 0.0.0.0} instead of {@code 127.0.0.1}, and {@link LanGate}, the
+ *       first handler after the HTTP codec, answers <b>403</b> to every request
+ *       from a non-loopback address that does not present the token -- as
+ *       {@code ?token=} on {@value #SEAT_PATH} and {@value #OBSERVE_PATH}, and
+ *       as {@code ?token=} or the {@value #TOKEN_COOKIE} cookie a valid page
+ *       request is handed on anything else.  A loopback client never needs it.
+ *       The {@link Door} then also admits an {@code Origin} equal to
+ *       {@code http://<the request's Host>} -- the page this server served --
+ *       but only from a non-loopback client, which has shown the token.</li>
+ *   <li><b>a site directory</b> ({@code --site-dir}): {@link Site} serves the
+ *       files under it at {@code /} for {@code GET} and {@code HEAD}, with
+ *       {@code index.html} for {@code /}, no directory listing, and a path that
+ *       cannot leave the directory ({@link #sitePath}, then the real path
+ *       checked again).  It is ForgeCoach's built site, so a phone on the same
+ *       network loads its page from the same origin as the socket and never
+ *       meets mixed content.</li>
+ * </ul>
  */
 public final class WsTransport implements Transport {
 
@@ -297,10 +343,47 @@ public final class WsTransport implements Transport {
     private static final Pattern ORIGIN_ENTRY =
             Pattern.compile("^(http|https)://[a-z0-9.-]+(:([0-9]{1,5}|\\*))?$");
 
+    /** The query parameter a non-loopback client presents the pairing token in (M51, D287). */
+    static final String TOKEN_PARAM = "token";
+
+    /**
+     * The cookie a non-loopback page request that presented a valid token is
+     * handed (M51, D287), so the page's own scripts, styles and samples --
+     * which a browser requests without the page's query -- are admitted too.
+     * {@code HttpOnly} and {@code SameSite=Strict}; never accepted on a socket
+     * path, where the query is required.
+     */
+    static final String TOKEN_COOKIE = "mtgtable_token";
+
+    /** The largest file {@link Site} will serve; ForgeCoach's largest is about a megabyte. */
+    static final long MAX_SITE_FILE = 64L << 20;
+
+    /** Where a LAN server binds (M51): every interface. */
+    static final String LAN_BIND = "0.0.0.0";
+
+    /** Where every other server binds, as it always has. */
+    static final String LOOPBACK_BIND = "127.0.0.1";
+
+    /** A {@code Host} header worth comparing an {@code Origin} with: a name or IPv4 address, an optional port. */
+    private static final Pattern HOST_HEADER = Pattern.compile("^[a-z0-9.-]+(:[0-9]{1,5})?$");
+
     private final int port;
 
     /** The allowlist, validated and lower-cased once (D281). */
     private final List<String> allowedOrigins;
+
+    /** The pairing token, or null when this is not a LAN server (M51). */
+    private final String lanToken;
+
+    /** The site's real, absolute root, or null when no site is served (M51). */
+    private final Path siteRoot;
+
+    /**
+     * Whether a peer address counts as this machine.  Package-private and
+     * replaceable only so {@code WsLanSelfTest} can play a phone from
+     * 127.0.0.1; nothing else assigns it.
+     */
+    Predicate<InetAddress> loopback = InetAddress::isLoopbackAddress;
 
     private Inbound inbound;
     private ReplyPool pool;
@@ -352,6 +435,10 @@ public final class WsTransport implements Transport {
     private final AtomicLong observerOverflows = new AtomicLong();
     private final AtomicLong observerFramesIn = new AtomicLong();
     private final AtomicLong originRefusals = new AtomicLong();
+    private final AtomicLong tokenRefusals = new AtomicLong();
+    private final AtomicLong siteServed = new AtomicLong();
+    private final AtomicLong siteMissing = new AtomicLong();
+    private final AtomicLong siteRefused = new AtomicLong();
 
     private volatile boolean closed;
     private volatile boolean sawOver;
@@ -370,8 +457,314 @@ public final class WsTransport implements Transport {
      *         board out
      */
     public WsTransport(final int port, final List<String> allowedOrigins) {
+        this(port, allowedOrigins, null, null);
+    }
+
+    /**
+     * @param lanToken the pairing token (M51, D287): non-null makes this a LAN
+     *        server, bound to every interface, that admits a non-loopback client
+     *        only with it; null is the loopback server it always was
+     * @param siteDir a directory to serve at {@code /} (M51, D288), which must
+     *        hold an {@code index.html}; null serves nothing
+     * @throws IllegalArgumentException on a bad allowlist entry, a token that
+     *         is not URL-safe, or a site directory with no {@code index.html}
+     */
+    public WsTransport(final int port, final List<String> allowedOrigins, final String lanToken,
+            final Path siteDir) {
         this.port = port;
         this.allowedOrigins = validOrigins(allowedOrigins);
+        if (lanToken != null && !lanToken.matches("^[A-Za-z0-9_-]{16,}$")) {
+            throw new IllegalArgumentException("a LAN token is at least 16 URL-safe characters");
+        }
+        this.lanToken = lanToken;
+        if (siteDir != null) {
+            try {
+                this.siteRoot = siteDir.toRealPath();
+            } catch (final IOException e) {
+                throw new IllegalArgumentException("--site-dir " + siteDir + " does not exist", e);
+            }
+            if (!Files.isRegularFile(siteRoot.resolve("index.html"))) {
+                throw new IllegalArgumentException("--site-dir " + siteRoot
+                        + " has no index.html at its root -- is it a built ForgeCoach site?");
+            }
+        } else {
+            this.siteRoot = null;
+        }
+    }
+
+    // ==================================================================
+    // LAN play and the site (amendment M51): the pure decisions, which
+    // WsLanSelfTest holds as tables
+    // ==================================================================
+
+    /** A fresh pairing token: 128 random bits, base64url without padding (22 characters). */
+    static String newToken() {
+        final byte[] b = new byte[16];
+        new SecureRandom().nextBytes(b);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
+    }
+
+    /**
+     * Whether {@code presented} is the token, in time that does not depend on
+     * where the two first differ, nor on their lengths: both are hashed and
+     * the digests compared with {@link MessageDigest#isEqual}.
+     */
+    static boolean tokenMatches(final String presented, final String token) {
+        if (presented == null || token == null) {
+            return false;
+        }
+        try {
+            final MessageDigest a = MessageDigest.getInstance("SHA-256");
+            final MessageDigest b = MessageDigest.getInstance("SHA-256");
+            return MessageDigest.isEqual(a.digest(presented.getBytes(StandardCharsets.UTF_8)),
+                    b.digest(token.getBytes(StandardCharsets.UTF_8)));
+        } catch (final NoSuchAlgorithmException e) {
+            throw new IllegalStateException("no SHA-256 in this JRE", e);
+        }
+    }
+
+    /**
+     * The LAN gate's decision for one HTTP request (M51, D287).  Every request
+     * is admitted when there is no token (not a LAN server) or the peer is
+     * this machine.  Otherwise the query's token is required on a socket path,
+     * and the query's or the cookie's anywhere else.
+     */
+    static boolean lanAdmits(final boolean fromLoopback, final boolean socketPath, final String queryToken,
+            final String cookieToken, final String token) {
+        if (token == null || fromLoopback) {
+            return true;
+        }
+        if (tokenMatches(queryToken, token)) {
+            return true;
+        }
+        return !socketPath && tokenMatches(cookieToken, token);
+    }
+
+    /**
+     * The LAN mode's one addition to the {@code Origin} rule (M51, D288): the
+     * page this server served itself, whose origin is {@code http://} and the
+     * {@code Host} the browser asked for.  Never applied to a loopback peer --
+     * there it would admit a page that rebinds its own name to 127.0.0.1 -- and
+     * only to a non-loopback peer that has already shown the token.
+     */
+    static boolean sameOrigin(final String origin, final String host) {
+        if (origin == null || host == null) {
+            return false;
+        }
+        final String h = host.trim().toLowerCase(Locale.ROOT);
+        return HOST_HEADER.matcher(h).matches()
+                && origin.trim().toLowerCase(Locale.ROOT).equals("http://" + h);
+    }
+
+    /** The query's {@value #TOKEN_PARAM}, or null (a malformed query is no token). */
+    static String queryToken(final String uri) {
+        try {
+            final List<String> v = new QueryStringDecoder(uri).parameters().get(TOKEN_PARAM);
+            return v == null || v.isEmpty() ? null : v.get(0);
+        } catch (final IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /** The {@value #TOKEN_COOKIE} cookie's value, or null. */
+    static String cookieToken(final String cookieHeader) {
+        if (cookieHeader == null) {
+            return null;
+        }
+        try {
+            for (final Cookie c : ServerCookieDecoder.STRICT.decode(cookieHeader)) {
+                if (TOKEN_COOKIE.equals(c.name())) {
+                    return c.value();
+                }
+            }
+        } catch (final RuntimeException e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * The file a <b>decoded</b> request path names under the site's root, or
+     * null when it names nothing the site may serve (M51, D288).  {@code /} is
+     * {@code index.html}.  Refused before anything touches the disk: a path
+     * that does not start with {@code /}, one with a NUL or a backslash, a
+     * {@code .} or {@code ..} segment, an absolute remainder ({@code //etc}),
+     * and anything that normalises outside the root.  The caller then requires
+     * a regular file whose REAL path is still under the root, so a symlink
+     * cannot lead out either.
+     */
+    static Path sitePath(final Path root, final String decodedPath) {
+        if (root == null || decodedPath == null || !decodedPath.startsWith("/")
+                || decodedPath.indexOf('\0') >= 0 || decodedPath.indexOf('\\') >= 0) {
+            return null;
+        }
+        String rel = decodedPath.substring(1);
+        if (rel.isEmpty()) {
+            rel = "index.html";
+        }
+        if (rel.startsWith("/")) {
+            return null;
+        }
+        for (final String seg : rel.split("/", -1)) {
+            if (".".equals(seg) || "..".equals(seg)) {
+                return null;
+            }
+        }
+        final Path p = root.resolve(rel).normalize();
+        return p.startsWith(root) ? p : null;
+    }
+
+    /**
+     * The {@code Content-Type} for a served file, by its extension.  A
+     * {@code .gz} -- ForgeCoach's {@code samples/*.jsonl.gz} -- is opaque bytes
+     * and is never sent with {@code Content-Encoding}: the page fetches the
+     * compressed file and decompresses it itself, and a browser told the body
+     * was gzip-encoded would hand it the decompressed text instead.
+     */
+    static String contentType(final String fileName) {
+        final String n = fileName.toLowerCase(Locale.ROOT);
+        final int dot = n.lastIndexOf('.');
+        switch (dot < 0 ? "" : n.substring(dot + 1)) {
+        case "html": case "htm":   return "text/html; charset=utf-8";
+        case "js": case "mjs":     return "text/javascript; charset=utf-8";
+        case "css":                return "text/css; charset=utf-8";
+        case "json": case "map":   return "application/json";
+        case "webmanifest":        return "application/manifest+json";
+        case "txt":                return "text/plain; charset=utf-8";
+        case "svg":                return "image/svg+xml";
+        case "png":                return "image/png";
+        case "jpg": case "jpeg":   return "image/jpeg";
+        case "gif":                return "image/gif";
+        case "webp":               return "image/webp";
+        case "ico":                return "image/x-icon";
+        case "woff2":              return "font/woff2";
+        case "woff":               return "font/woff";
+        case "wasm":               return "application/wasm";
+        default:                   return "application/octet-stream";   // .gz among them
+        }
+    }
+
+    /**
+     * This machine's non-loopback IPv4 addresses, best guess first (M51): the
+     * one the default route leaves from (a UDP {@code connect}, which sends
+     * nothing), then private ranges before others and virtual interfaces
+     * (docker, bridges, VPNs) last.  Every candidate is returned, because the
+     * guess is a guess.
+     */
+    static List<String> lanAddresses() {
+        String routed = null;
+        try (DatagramSocket s = new DatagramSocket()) {
+            s.connect(InetAddress.getByAddress(new byte[] { 8, 8, 8, 8 }), 53);
+            final InetAddress a = s.getLocalAddress();
+            if (a instanceof Inet4Address && !a.isAnyLocalAddress() && !a.isLoopbackAddress()) {
+                routed = a.getHostAddress();
+            }
+        } catch (final IOException | RuntimeException e) {
+            // no default route: rank by name alone
+        }
+        final List<String[]> found = new ArrayList<>();
+        try {
+            for (final NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!ni.isUp() || ni.isLoopback()) {
+                    continue;
+                }
+                for (final InetAddress a : Collections.list(ni.getInetAddresses())) {
+                    if (a instanceof Inet4Address && !a.isLoopbackAddress()) {
+                        found.add(new String[] { a.getHostAddress(), ni.getName() });
+                    }
+                }
+            }
+        } catch (final IOException e) {
+            // no interface list: the routed address, if any, is all there is
+        }
+        found.sort((x, y) -> Integer.compare(rank(x[0], x[1]), rank(y[0], y[1])));
+        final Set<String> out = new LinkedHashSet<>();
+        if (routed != null) {
+            out.add(routed);
+        }
+        for (final String[] f : found) {
+            out.add(f[0]);
+        }
+        return new ArrayList<>(out);
+    }
+
+    private static int rank(final String ip, final String iface) {
+        final String n = iface.toLowerCase(Locale.ROOT);
+        final boolean virtual = n.startsWith("docker") || n.startsWith("br-") || n.startsWith("veth")
+                || n.startsWith("virbr") || n.startsWith("vmnet") || n.startsWith("vboxnet")
+                || n.startsWith("tun") || n.startsWith("tap") || n.startsWith("wg")
+                || n.startsWith("zt") || n.startsWith("tailscale") || n.startsWith("lxc")
+                || n.startsWith("cni") || n.startsWith("flannel");
+        final int range = ip.startsWith("192.168.") ? 0 : ip.startsWith("10.") ? 1
+                : ip.matches("^172\\.(1[6-9]|2[0-9]|3[01])\\..*") ? 2 : ip.startsWith("169.254.") ? 4 : 3;
+        return (virtual ? 10 : 0) + range;
+    }
+
+    /** Whether this server is a LAN server (M51). */
+    public boolean lan() {
+        return lanToken != null;
+    }
+
+    /** The pairing token, or null.  Printed once, in the phone's URL. */
+    String lanToken() {
+        return lanToken;
+    }
+
+    /** The served site's root, or null. */
+    public Path siteRoot() {
+        return siteRoot;
+    }
+
+    /** Requests answered 403 for want of the token (M51). */
+    public long tokenRefusals() {
+        return tokenRefusals.get();
+    }
+
+    /** Site files served (M51). */
+    public long siteServed() {
+        return siteServed.get();
+    }
+
+    /** Site requests answered 404 (M51). */
+    public long siteMissing() {
+        return siteMissing.get();
+    }
+
+    /** Site requests refused: a path that would leave the root, a method other than GET or HEAD (M51). */
+    public long siteRefused() {
+        return siteRefused.get();
+    }
+
+    /** The address the server is bound to, once it is. */
+    String boundHost() {
+        final Channel s = server;
+        return s != null && s.localAddress() instanceof InetSocketAddress
+                ? ((InetSocketAddress) s.localAddress()).getAddress().getHostAddress() : null;
+    }
+
+    private boolean fromLoopback(final Channel ch) {
+        final SocketAddress r = ch.remoteAddress();
+        return r instanceof InetSocketAddress && ((InetSocketAddress) r).getAddress() != null
+                && loopback.test(((InetSocketAddress) r).getAddress());
+    }
+
+    private static String pathOf(final String uri) {
+        final int q = uri.indexOf('?');
+        return q < 0 ? uri : uri.substring(0, q);
+    }
+
+    /** A short plain-text answer that closes the connection. */
+    private static void plain(final ChannelHandlerContext ctx, final HttpResponseStatus status, final String text) {
+        final byte[] payload = text.getBytes(StandardCharsets.US_ASCII);
+        final FullHttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,
+                Unpooled.wrappedBuffer(payload));
+        res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=us-ascii");
+        res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, payload.length);
+        res.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+        if (status == HttpResponseStatus.METHOD_NOT_ALLOWED) {
+            res.headers().set(HttpHeaderNames.ALLOW, "GET, HEAD");
+        }
+        ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
     }
 
     /** Validate and lower-case an allowlist (D281). */
@@ -538,7 +931,17 @@ public final class WsTransport implements Transport {
                  p.addLast(new HttpServerCodec());
                  p.addLast(new HttpObjectAggregator(MAX_HTTP_CONTENT));
                  p.addLast(new ChunkedWriteHandler());
+                 // Amendment M51: the token gate goes first, in front of
+                 // /health, the site and both sockets, and exists only on a
+                 // LAN server; the site only when one was given.  With
+                 // neither, this pipeline is M50's, handler for handler.
+                 if (lanToken != null) {
+                     p.addLast(new LanGate());
+                 }
                  p.addLast(new Health());
+                 if (siteRoot != null) {
+                     p.addLast(new Site());
+                 }
                  // Amendment M50: the Origin check, then the route.  The
                  // websocket handlers are added by the Door once it has read
                  // the upgrade request's path -- the seat's for /ws, an
@@ -546,15 +949,18 @@ public final class WsTransport implements Transport {
                  p.addLast(new Door());
              }
          });
+        // Loopback, and that is a decision, not an oversight: no TLS, and
+        // README's NON-GOALS says so out loud.  The one exception is a LAN
+        // server (amendment M51, D287), which binds every interface and puts
+        // the pairing token in front of everything a non-loopback peer asks.
+        final String host = lanToken != null ? LAN_BIND : LOOPBACK_BIND;
         try {
-            // Loopback ONLY, and that is a decision, not an oversight: no auth,
-            // no TLS, and README's NON-GOALS says so out loud.
-            server = b.bind(new InetSocketAddress("127.0.0.1", port)).sync().channel();
+            server = b.bind(new InetSocketAddress(host, port)).sync().channel();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("interrupted binding 127.0.0.1:" + port, e);
+            throw new IllegalStateException("interrupted binding " + host + ":" + port, e);
         } catch (final RuntimeException e) {
-            throw new IllegalStateException("cannot bind 127.0.0.1:" + port
+            throw new IllegalStateException("cannot bind " + host + ":" + port
                     + " -- another mtg-table server is probably already running there", e);
         }
     }
@@ -1104,6 +1510,154 @@ public final class WsTransport implements Transport {
     }
 
     /**
+     * The pairing token's gate (amendment <b>M51</b>, D287), on a LAN server
+     * only, in front of every other handler: a request from a non-loopback
+     * peer without the token -- {@code ?token=} on a socket path,
+     * {@code ?token=} or the cookie elsewhere ({@link #lanAdmits}) -- is
+     * answered <b>403</b> and closed, whatever it asked for, {@code /health}
+     * included.  A loopback peer passes untouched, so the desktop's browser,
+     * {@code play.sh}'s readiness poll and every tool see exactly what they
+     * saw.  Websocket frames after a handshake pass through.
+     */
+    private final class LanGate extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+            if (msg instanceof FullHttpRequest) {
+                final FullHttpRequest req = (FullHttpRequest) msg;
+                final String path = pathOf(req.uri());
+                final boolean socket = SEAT_PATH.equals(path) || OBSERVE_PATH.equals(path);
+                if (!lanAdmits(fromLoopback(ctx.channel()), socket, queryToken(req.uri()),
+                        cookieToken(req.headers().get(HttpHeaderNames.COOKIE)), lanToken)) {
+                    tokenRefusals.incrementAndGet();
+                    // The path only: a wrong token is not repeated into the log.
+                    System.err.println("WS LAN REFUSED " + req.method() + " " + path + " from "
+                            + ctx.channel().remoteAddress() + ": no valid pairing token");
+                    ReferenceCountUtil.release(msg);
+                    plain(ctx, HttpResponseStatus.FORBIDDEN,
+                            "pairing token required: open the URL ./scripts/play.sh --lan printed");
+                    return;
+                }
+            }
+            ctx.fireChannelRead(msg);
+        }
+    }
+
+    /**
+     * The static site (amendment <b>M51</b>, D288): ForgeCoach's built files,
+     * served at {@code /} on the socket's port so a phone loads the page from
+     * the same origin as the socket.  It answers every HTTP request whose path
+     * is not {@value #SEAT_PATH}, {@value #OBSERVE_PATH} or {@code /health}
+     * (those go on untouched): {@code GET} and {@code HEAD} only (else 405),
+     * {@code index.html} for {@code /}, a regular file whose real path is under
+     * the root or nothing ({@link #sitePath}; 403 for a path that would leave
+     * it, 404 for one that names no file, a directory included -- there is no
+     * listing).  {@code Cache-Control: no-cache} on HTML so a refreshed site is
+     * picked up, and no {@code Content-Encoding} on anything
+     * ({@link #contentType}).  On a LAN server, a non-loopback page request
+     * that presented the token in its query is handed the
+     * {@value #TOKEN_COOKIE} cookie for the page's own assets.
+     *
+     * <p>The file is read on the event loop.  The site is a handful of files
+     * of at most about a megabyte, read once per page load; a game frame
+     * waits behind one such read at worst.
+     */
+    private final class Site extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+            if (msg instanceof FullHttpRequest) {
+                final FullHttpRequest req = (FullHttpRequest) msg;
+                final String path = pathOf(req.uri());
+                if (!SEAT_PATH.equals(path) && !OBSERVE_PATH.equals(path) && !"/health".equals(path)) {
+                    try {
+                        serve(ctx, req);
+                    } finally {
+                        ReferenceCountUtil.release(msg);
+                    }
+                    return;
+                }
+            }
+            ctx.fireChannelRead(msg);
+        }
+
+        private void serve(final ChannelHandlerContext ctx, final FullHttpRequest req) {
+            final boolean head = HttpMethod.HEAD.equals(req.method());
+            if (!head && !HttpMethod.GET.equals(req.method())) {
+                siteRefused.incrementAndGet();
+                plain(ctx, HttpResponseStatus.METHOD_NOT_ALLOWED, "method not allowed");
+                return;
+            }
+            final String decoded;
+            try {
+                decoded = new QueryStringDecoder(req.uri()).path();
+            } catch (final IllegalArgumentException e) {
+                siteRefused.incrementAndGet();
+                plain(ctx, HttpResponseStatus.BAD_REQUEST, "bad request");
+                return;
+            }
+            final Path p = sitePath(siteRoot, decoded);
+            if (p == null) {
+                siteRefused.incrementAndGet();
+                System.err.println("WS SITE REFUSED " + ctx.channel().remoteAddress()
+                        + ": a path that would leave the site");
+                plain(ctx, HttpResponseStatus.FORBIDDEN, "forbidden");
+                return;
+            }
+            final byte[] bytes;
+            try {
+                if (!Files.isRegularFile(p)) {
+                    siteMissing.incrementAndGet();
+                    plain(ctx, HttpResponseStatus.NOT_FOUND, "not found");
+                    return;
+                }
+                final Path real = p.toRealPath();
+                if (!real.startsWith(siteRoot)) {
+                    siteRefused.incrementAndGet();
+                    System.err.println("WS SITE REFUSED " + ctx.channel().remoteAddress()
+                            + ": a link that leads out of the site");
+                    plain(ctx, HttpResponseStatus.FORBIDDEN, "forbidden");
+                    return;
+                }
+                if (Files.size(real) > MAX_SITE_FILE) {
+                    siteRefused.incrementAndGet();
+                    plain(ctx, HttpResponseStatus.FORBIDDEN, "too large");
+                    return;
+                }
+                bytes = Files.readAllBytes(real);
+            } catch (final IOException e) {
+                siteMissing.incrementAndGet();
+                plain(ctx, HttpResponseStatus.NOT_FOUND, "not found");
+                return;
+            }
+            final String type = contentType(p.getFileName().toString());
+            final boolean html = type.startsWith("text/html");
+            final FullHttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+                    HttpResponseStatus.OK, head ? Unpooled.EMPTY_BUFFER : Unpooled.wrappedBuffer(bytes));
+            res.headers().set(HttpHeaderNames.CONTENT_TYPE, type);
+            res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
+            res.headers().set(HttpHeaderNames.CACHE_CONTROL, html ? "no-cache" : "max-age=3600");
+            res.headers().set("X-Content-Type-Options", "nosniff");
+            if (html) {
+                // The page's URL carries the token: never let it travel as a Referer.
+                res.headers().set("Referrer-Policy", "no-referrer");
+                if (lanToken != null && !fromLoopback(ctx.channel())
+                        && tokenMatches(queryToken(req.uri()), lanToken)) {
+                    res.headers().add(HttpHeaderNames.SET_COOKIE,
+                            TOKEN_COOKIE + "=" + lanToken + "; Path=/; HttpOnly; SameSite=Strict");
+                }
+            }
+            final boolean keepAlive = HttpUtil.isKeepAlive(req);
+            res.headers().set(HttpHeaderNames.CONNECTION, keepAlive ? HttpHeaderValues.KEEP_ALIVE
+                    : HttpHeaderValues.CLOSE);
+            siteServed.incrementAndGet();
+            if (keepAlive) {
+                ctx.writeAndFlush(res);
+            } else {
+                ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
+            }
+        }
+    }
+
+    /**
      * The door to both sockets (amendment <b>M50</b>): the {@code Origin}
      * check, then the route.
      *
@@ -1138,7 +1692,12 @@ public final class WsTransport implements Transport {
                 final boolean observe = OBSERVE_PATH.equals(path);
                 if (observe || SEAT_PATH.equals(path)) {
                     final String origin = req.headers().get(HttpHeaderNames.ORIGIN);
-                    if (!originAllowed(origin, allowedOrigins)) {
+                    // M51 (D288): on a LAN server, the page this server served
+                    // to a non-loopback peer -- which LanGate has already made
+                    // show the token -- is its own origin, http://<Host>.
+                    final boolean ownPage = lanToken != null && !fromLoopback(ctx.channel())
+                            && sameOrigin(origin, req.headers().get(HttpHeaderNames.HOST));
+                    if (!ownPage && !originAllowed(origin, allowedOrigins)) {
                         originRefusals.incrementAndGet();
                         System.err.println("WS ORIGIN REFUSED " + path + " from " + origin
                                 + " (" + ctx.channel().remoteAddress() + "): not in wsAllowedOrigins");
@@ -1152,6 +1711,13 @@ public final class WsTransport implements Transport {
                         ReferenceCountUtil.release(msg);
                         ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
                         return;
+                    }
+                    if (q >= 0) {
+                        // M51: a LAN client's `?token=` (checked by LanGate)
+                        // goes no further.  Netty's handshaker matches the
+                        // path exactly, so the query is dropped here rather
+                        // than taught to it.
+                        req.setUri(path);
                     }
                     final ChannelPipeline p = ctx.pipeline();
                     if (p.get(H_FRAMES) == null) {

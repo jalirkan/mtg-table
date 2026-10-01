@@ -12596,3 +12596,170 @@ client left. `--transport ws --game-timeout 4`: `TIMED OUT after 4s`.
 `MTGTABLE OK`. A bare `ws` run prints `game limit = none … ends after 3600 s with
 no client connected`. `bridge/build.sh` (lint, its self-test, javac and the six
 self-tests) and `web/test/claude-md.test.ts` pass. The full gate was not run.
+
+## D287 — LAN play binds every interface behind a per-run pairing token: 128 random bits in the URL, required of every non-loopback request and never of a loopback one
+
+*Branch `c/lan-play`; the lane's reserved range D287–D289, all three used.*
+
+**2026-10-01** (amendment **M51**; the owner's approval: play from a phone on the same Wi-Fi)
+
+**Decision.** `MtgTable --transport ws --lan` (and `scripts/play.sh --lan`, which
+implies `--engine-only`) binds `0.0.0.0` instead of `127.0.0.1` and mints a token
+per run — `SecureRandom`, 16 bytes, base64url without padding — printed only in
+the phone URLs, one per non-loopback IPv4 address with the default route's source
+address first. `WsTransport.LanGate`, the first handler after the HTTP codec on a
+LAN server and absent otherwise, answers 403 to any request from a non-loopback
+peer that does not present it: `?token=` on `/ws` and `/observe`; `?token=` or the
+`mtgtable_token` cookie (`HttpOnly`, `SameSite=Strict`, set on an HTML response to
+a request that carried the token in its query) on everything else, `/health`
+included. Loopback peers pass untouched. The compare is SHA-256 of both sides
+through `MessageDigest.isEqual`. A refusal logs the method, path and peer, never
+the token; the token stays in `var/play/server.log` (gitignored), where `play.sh`
+reads the URLs from.
+
+**Rationale.** A phone can only reach the bridge over the network, and the seat
+is the whole game: a stranger's connection could concede, sit on every ask, or
+read the board. The Origin check (D281) does not help — a non-browser client
+sends whatever header it likes — so something the stranger does not have is
+needed, and on a home network with no accounts (README's NON-GOALS) a secret in
+a URL the owner opens is the smallest such thing: no pairing screen, no store, a
+new one on every run, and a QR code makes it one scan. 128 bits cannot be
+guessed online at any rate a bridge can answer. The cookie exists because a
+browser requests the page's assets without the page's query string and the
+owner's page must load; it is never accepted on a socket, where the client
+(ForgeCoach) sends the query itself, so a cross-site page cannot ride it to the
+seat. Loopback keeps needing nothing because the desktop already trusts its own
+processes (D281's reasoning) and the github.io flow must not change.
+
+**Rejected.**
+
+- **A token on loopback too** — github.io's ForgeCoach, `play.sh`'s poll and
+  every tool would need it, and a local process could read the log anyway.
+- **Static assets without the token** — they are public ForgeCoach files, but a
+  server that answers anyone on the network is one more thing to reason about;
+  with the cookie nothing is served to a peer that has not shown the token.
+- **The token on the command line from `play.sh`** — visible in `ps` to every
+  user of the machine; minted in the JVM, it appears in one file under `var/`.
+- **TLS** — a self-signed certificate is a warning page on the phone and a
+  public one needs a name; the token is for a network the owner trusts, and the
+  docs say exactly that.
+- **A cookie on the socket** — a cookie rides along with any request to the
+  host, so it would make the Origin check the only defence again.
+
+## D288 — On a LAN server the page the bridge served is its own Origin, for non-loopback peers only; and `--site-dir` serves a static directory at `/` with no way out of it
+
+*Branch `c/lan-play`; the lane's reserved range D287–D289.*
+
+**2026-10-01** (amendment **M51**)
+
+**Decision.** (1) `Door` admits, in addition to M50's `wsAllowedOrigins`, an
+`Origin` equal to `http://` + the request's `Host` (validated as a name or IPv4
+address with an optional port), **only on a LAN server and only from a
+non-loopback peer**. (2) `--site-dir <dir>` (with or without `--lan`) adds
+`WsTransport.Site` between `Health` and `Door`: `GET`/`HEAD` only, `index.html`
+for `/`, the path percent-decoded and refused (403) if it holds a NUL, a
+backslash, a `.` or `..` segment or a doubled leading slash or normalises
+outside the root, 404 unless it names a regular file (no directory listing),
+403 if the file's real path leaves the root, content types by extension with
+`.gz` as `application/octet-stream` and no `Content-Encoding` anywhere,
+`Cache-Control: no-cache` and `Referrer-Policy: no-referrer` on HTML,
+`nosniff` on everything. The file is read whole on the event loop (at most
+64 MB; ForgeCoach's largest is about 1 MB). `/ws`, `/observe` and `/health`
+pass through it. (3) `Door` strips a query from a socket path's URI before the
+handshake.
+
+**Rationale.** (1) The phone's page is served by the bridge at the address the
+phone typed, so its origin is `http://<that address>:<port>` — a different value
+for every network and every DHCP lease, which no allowlist can name. Matching it
+against `Host` is the same-origin rule a browser itself applies; a page from
+elsewhere has its own origin, which matches nothing. Restricting it to
+non-loopback peers closes DNS rebinding: a hostile name rebound to 127.0.0.1
+sends `Origin: http://evil:8642` with `Host: evil:8642`, which would match, and a
+loopback peer needs no token — so for loopback, M50's list alone decides. A
+rebinding attack on the LAN address still needs the token. (2) Serving a static
+directory is the smallest thing that gets the page and the socket onto one
+origin; netty is already in the jar, and the handler is one class. The site is
+the attacker-reachable surface, so path handling is belt and braces: textual
+refusal before the disk, `normalize` + `startsWith`, then the real path again,
+each held by `WsLanSelfTest` (and a symlink out of the root by a planted link).
+`.gz` must not be `Content-Encoding: gzip`, or the browser hands ForgeCoach the
+inflated bytes and its own `DecompressionStream` fails on them. `index.html` is
+`no-cache` so a refreshed site is picked up; the hashed assets may be cached.
+(3) Netty's handshaker compares the URI exactly, and `/ws?token=` must
+upgrade; stripping it also keeps the token out of anything later in the pipe.
+
+**Rejected.**
+
+- **Allowing every `http://` origin on a LAN server** — any plain-http page
+  open in the desktop's browser, where no token is needed, could then take the
+  seat, which is the hole D281 closed.
+- **Listing the LAN address in `wsAllowedOrigins`** — it changes with the
+  network; a config edit per Wi-Fi.
+- **Serving the site from a second port or from vite** — a second origin is the
+  mixed-content problem again, and vite is a dev server with a dependency tree.
+- **A directory index or an SPA fallback** — ForgeCoach routes by hash, and a
+  listing is a map of the disk for anyone on the network.
+
+## D289 — `play.sh --lan` fetches ForgeCoach's built site as a zip from its Pages site, caches it a day under `var/forgecoach/`, and falls back to the cache offline
+
+*Branch `c/lan-play`; the lane's reserved range D287–D289.*
+
+**2026-10-01** (amendment **M51**)
+
+**Decision.** Unless `--site-dir` names a local build, `play.sh --lan` downloads
+`https://jalirkan.github.io/ForgeCoach/forgecoach-site.zip` (ForgeCoach's own
+build with Vite's `base: './'`, files at the zip's root) with `curl` into
+`var/forgecoach/forgecoach-site.zip` when there is no copy, the copy is older
+than a day, or `--refresh-site` is given; a download is accepted only if it is a
+complete zip (`unzip -t`). If the download fails, the cached copy is used and its
+date printed; with neither, the script stops before the build with a message
+naming the URL, the cache path and `--site-dir`. The zip is unpacked (`unzip`, or
+Python's `zipfile`) into `var/forgecoach/site.new`, checked for `index.html` at
+its root and swapped into `var/forgecoach/site`, whenever it is newer than the
+last unpack. The bridge gets `--lan --site-dir var/forgecoach/site`. After
+`/health`, the script reprints the bridge's `WS LAN PAGE` lines — the best guess
+first, the rest as alternatives — and, if `qrencode` is installed, a terminal QR
+code of the first; without it, nothing is said.
+
+**Rationale.** The site belongs to ForgeCoach (its own repository, its own
+release cadence); copying it into this repo would be a second copy to drift, and
+building it here would need its toolchain. Its Pages site is already where the
+owner gets ForgeCoach, so a zip beside it is the same trust and the same
+version. A day is long enough that a game night needs no network and short
+enough that a ForgeCoach fix arrives without a flag. `var/` is where this repo
+keeps everything it downloads (hard rule: write only under the repo), and the
+swap through `site.new` means a failed unpack never leaves a half site.
+
+**Rejected.**
+
+- **Vendoring the built site** — another project's build output in this repo's
+  history, stale on every ForgeCoach change.
+- **Downloading on every run** — the game would need the internet to start.
+- **The bridge fetching it** — Java's HTTP client through the user's proxy
+  settings, in the process that holds the seat; a shell `curl` is simpler and
+  fails before anything is built.
+
+**Measured** with the pinned jar (sha256 `3c0a7c38…8e5dd9`) in a container
+whose one non-loopback address is `192.0.2.2`, `./scripts/play.sh --engine-only
+--lan --port 8692 --site-dir <ForgeCoach built with --base ./> --seed 42`: it
+printed `http://192.0.2.2:8692/?token=<22 characters>`. Through `192.0.2.2`: the
+page 403 without the token and with a wrong one, 200 with it (`text/html;
+charset=utf-8`, `no-cache`, the cookie set); the page's JS 403 without the
+cookie, 200 with it (`text/javascript`); `samples/human-auto-42.jsonl.gz` 200,
+`application/octet-stream`, no `Content-Encoding`, byte-identical to the file;
+`/health` 403 without the token, 200 with it; upgrades to `/ws` and `/observe`
+403 without the token and with the cookie alone, `/observe` 101 with the token
+and `Origin: http://192.0.2.2:8692`, 403 with a foreign Origin; a Node
+`WebSocket` to `ws://192.0.2.2:8692/ws?token=<T>` received `hello_ok` (seq 1).
+Through `127.0.0.1`, no token: the page 200, `/health` 200, `/ws` `hello_ok`,
+and `Origin: http://evil.example:8692` with `Host: evil.example:8692` 403.
+`/../../../etc/passwd` (sent as is), `/%2e%2e/%2e%2e/etc/passwd` and
+`/assets/..%2f..%2f..%2fconfig.json` 403; `/assets/` 404; `POST /` 405. Ctrl-C
+left no process. The cache path: no cache and the zip not yet published (404) —
+the script stopped before the build with the message above; a two-day-old cached
+zip and a 404 — `could not download it; using the cached copy of …`, unpacked,
+served. `bridge/build.sh` (the lint, its self-test, javac and the seven
+self-tests) passes; `WsLanSelfTest` fails under each of five planted mutants
+(the gate always admitting, the same-origin rule on loopback, no real-path
+check, the cookie opening a socket, `.gz` as `application/gzip`). The full gate
+was not run.

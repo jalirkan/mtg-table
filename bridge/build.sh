@@ -119,4 +119,18 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
     -Dsentry.uncaught.handler.enabled=false \
     -cp "$OUT:$FORGE_JAR" mtgtable.WsObserveSelfTest
 
+# Unit-check amendment M51 (D287-D289): LAN play's pairing token, the static
+# ForgeCoach site and the same-origin rule, on real WsTransports bound to free
+# ports.  A phone is played from 127.0.0.1 by swapping the transport's loopback
+# predicate: without the token a non-loopback peer gets 403 on the page, an
+# asset, /health and both sockets; the cookie the page hands back admits assets
+# and never a socket; content types, no Content-Encoding on a .jsonl.gz; every
+# traversal spelling and a symlink out of the root refused; http://<Host> is an
+# allowed Origin for a remote peer and never for a loopback one (DNS
+# rebinding).  No game, no Forge class; it writes a scratch site under var/.
+env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
+    -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
+    -Dsentry.uncaught.handler.enabled=false \
+    -cp "$OUT:$FORGE_JAR" mtgtable.WsLanSelfTest "$REPO_ROOT/var/lan-selftest"
+
 echo "build OK"
