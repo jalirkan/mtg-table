@@ -240,7 +240,9 @@ public final class WsLanSelfTest {
         final String q = "?token=" + TOKEN;
         final String cookie = WsTransport.TOKEN_COOKIE + "=" + TOKEN;
         try {
-            eq("a LAN server binds every interface", "0.0.0.0", ws.boundHost());
+            // 0.0.0.0 on an IPv4-only host, 0:0:0:0:0:0:0:0 where the JVM binds dual-stack (CI).
+            eq("a LAN server binds every interface", true,
+                    java.net.InetAddress.getByName(ws.boundHost()).isAnyLocalAddress());
 
             // -- the token ---------------------------------------------------
             eq("remote: the page without the token is 403", 403, get(port, "/", null).status);
