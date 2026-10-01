@@ -172,7 +172,8 @@ export interface FigurePose {
    * The attacker this figure is blocking, from **`state.combat`** and never from
    * the `blockers` event (§3.9). Amendment **M7** is protocol law here: an
    * unblocked attacker arrives as `{attackerId: n, blockerIds: [n]}` — Forge's
-   * own encoding — and `state.combat` is the authority on who blocked what.
+   * own encoding — in a recording made before amendment **M52** (since then it
+   * is `[]`), and `state.combat` is the authority on who blocked what.
    */
   interposesId: number | null;
   /**
@@ -633,7 +634,10 @@ function stanceOf(card: AnyCard, interposesId: number | null): Stance {
  *
  * The self-block guard is amendment **M7**'s: an *unblocked* attacker is
  * relayed as its own blocker, and rendering that as "blocks itself" is the
- * defect `cues/resolve.ts` already documents on the event side.
+ * defect `cues/resolve.ts` already documents on the event side. That encoding
+ * was only ever the `blockers` event's, and only before amendment **M52**:
+ * `state.combat` has never carried it (no committed recording does), so here
+ * the guard is belt and braces.
  */
 function interposeMap(combat: Combat | null): Map<number, number> {
   const out = new Map<number, number>();

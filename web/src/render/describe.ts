@@ -108,11 +108,15 @@ export function describeEvent(event: GameEvent): string {
         )
         .join(' | ')}`;
     case 'blockers':
+      // An unblocked attacker is `blockerIds: []` (amendment M52); a recording
+      // made before M52 writes it as its own one blocker, which is the same fact.
       return `player ${String(event.defendingPlayer)}: ${event.blocks
-        .map(
-          (b) =>
-            `#${String(b.attackerId)} blocked by ${b.blockerIds.map((id) => `#${String(id)}`).join(', ')}`,
-        )
+        .map((b) => {
+          const by = b.blockerIds.filter((id) => id !== b.attackerId);
+          return by.length === 0
+            ? `#${String(b.attackerId)} unblocked`
+            : `#${String(b.attackerId)} blocked by ${by.map((id) => `#${String(id)}`).join(', ')}`;
+        })
         .join(' | ')}`;
     case 'damage':
       // §10.6: damageType is always present and null for player damage.

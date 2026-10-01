@@ -273,8 +273,9 @@ export function cardIdsOf(event: GameEvent): number[] {
     case 'blockers': {
       const ids: number[] = [];
       for (const block of event.blocks) {
-        // M7: an unblocked attacker maps to itself. That is Forge's encoding,
-        // relayed verbatim — never render it as "blocked by itself".
+        // An unblocked attacker is `blockerIds: []` (amendment M52), which adds
+        // nothing here. A recording made before M52 maps it to itself (M7), and
+        // that is skipped — never render it as "blocked by itself".
         if (block.blockerIds.length === 1 && block.blockerIds[0] === block.attackerId) continue;
         ids.push(...block.blockerIds);
       }
@@ -598,6 +599,7 @@ export function cuesFor(
     case 'blockers': {
       const out: Cue[] = [];
       for (const block of event.blocks) {
+        // M52's unblocked attacker (`[]`) makes no cue; a pre-M52 one (itself) neither.
         if (block.blockerIds.length === 1 && block.blockerIds[0] === block.attackerId) continue;
         for (const id of block.blockerIds) {
           const cue = make(

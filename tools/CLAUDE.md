@@ -73,10 +73,12 @@ stack wherever both recordings caught the same items on it, flush boundaries
 aside — **D113**, because under load the same game cuts its event stream into
 different frames; the ids inside a `stats` event compared as a set in both modes,
 **D121**, because their order follows HotSpot identity hashes;
-`tools/wire-drift-selftest.mjs` runs first and must still reject fourteen drifts
+`tools/wire-drift-selftest.mjs` runs first and must still reject fifteen drifts
 and accept a reordered `stats` event; a key a later amendment added that g1
 predates — amendment **M49**'s `keywords` — is removed from the fresh file and
-said so, until g1 is re-recorded on purpose; `STRICT_G1=1` is the old byte-for-byte
+said so, and an encoding g1 predates — amendment **M52**'s unblocked attacker,
+`blockerIds: []` where g1 has the attacker itself — is read as the new one in
+both files and said so, until g1 is re-recorded on purpose; `STRICT_G1=1` is the old byte-for-byte
 diff) → **6b** (**spectating**, amendment **M47**, ~20 s): `./scripts/spectate.sh
 --no-serve` records seed 5 of your deck against the villain deck PACED from seat 0
 and at engine speed from seat 1 — `paceMs`, both handshakes' `match` with each

@@ -547,6 +547,22 @@ for (const file of files) {
     assert.ok(events > 0, `${file}: no events at all — the test proves nothing`);
   });
 
+  test(`${file}: no attacker is ever described as blocked by itself`, () => {
+    // Every committed recording predates amendment M52 and spells an unblocked
+    // attacker as its own one blocker (M7); the line must still say "unblocked".
+    for (const frame of parseFrameLog(text).frames) {
+      if (frame.type !== 'state') continue;
+      for (const event of (frame as StateFrame).body.events) {
+        if (event.kind !== 'blockers') continue;
+        for (const part of describeEvent(event).split(' | ')) {
+          const m = /#(\d+) blocked by (.*)$/.exec(part);
+          if (m === null) continue;
+          assert.ok(!m[2]!.split(', ').includes(`#${m[1]!}`), `${file}: ${part}`);
+        }
+      }
+    }
+  });
+
   test(`${file}: a zone event with a null from/to renders rather than throwing`, () => {
     // The M1 blocker in one assertion (§3.6): a token created straight onto the
     // battlefield has `from: null`, and one that ceases to exist has `to: null`.
@@ -760,4 +776,12 @@ test('the corpus proves a library can carry revealed cards (amendment P2)', (t) 
       'fixtures/games/future-sight.jsonl — or P2 is only ever proved by its own absence.',
   );
   t.diagnostic(`library.cards carries content in: ${libraryCardsWithContent.slice(0, 6).join(', ')}`);
+});
+
+test('a blockers event: an unblocked attacker reads "unblocked" in both spellings (amendments M7, M52)', () => {
+  const line = (blockerIds: number[]): string =>
+    describeEvent({ kind: 'blockers', defendingPlayer: 1, blocks: [{ attackerId: 12, blockerIds }] });
+  assert.equal(line([]), 'player 1: #12 unblocked', 'M52: the bridge writes []');
+  assert.equal(line([12]), 'player 1: #12 unblocked', 'M7: a recording made before M52 writes the attacker');
+  assert.equal(line([31, 30]), 'player 1: #12 blocked by #31, #30');
 });

@@ -12763,3 +12763,79 @@ self-tests) passes; `WsLanSelfTest` fails under each of five planted mutants
 (the gate always admitting, the same-origin rule on loopback, no real-path
 check, the cookie opening a socket, `.gz` as `application/gzip`). The full gate
 was not run.
+
+
+## D290 — The `blockers` event drops Forge's unblocked-attacker sentinel: an unblocked attacker is `blockerIds: []`, as `state.combat` says, and readers accept the old `[n]` from every recording made before
+
+*Branch `c/blockers-event`; D290 alone (the test-gaps lane, working at the same time, has written none).*
+
+**2026-10-01** (amendment **M52**, superseding **M7**; for ForgeCoach, whose
+coach and post-game review read the event and told the owner an unblocked
+attacker was "blocked by itself")
+
+**Decision.** `Snap.block` writes each entry of the `blockers` event's `blocks`
+with the attacker's own id dropped from its `blockerIds`, so an unblocked
+attacker is `{attackerId: n, blockerIds: []}`. Every attacker keeps its entry.
+The committed recordings are not re-recorded: they keep `[n]`, and every reader
+— this repo's and ForgeCoach's — reads `[n]` with `n === attackerId` as `[]`.
+Gate step 6 (`tools/wire-drift.mjs`) and 9b (`tools/fixture-multiset-diff.mjs`)
+read both files' self-blocks as `[]` when the committed file carries one, and
+say how many.
+
+**Rationale.** `javap -c forge.game.phase.PhaseHandler` on the pinned jar shows
+the payload: for every attacker of every defender the defending player controls,
+`putAll(att, combat.getBlockers(att).isEmpty() ? List.of(att) : combat.getBlockers(att))`.
+The attacker is a sentinel for "nobody blocked it", and Forge's own reader of the
+event, `GameLogFormatter`, treats it as one (an empty list or a first value equal
+to the key is "didn't block"). M7 (2026-09-11) chose to relay the sentinel and
+document it, on the reasoning that the bridge should not second-guess Forge. But
+the bridge already projects every event into the wire's own vocabulary, and a
+sentinel whose meaning is fixed — a creature can never block itself — is
+encoding, not information: dropping it loses nothing, and keeping it put a trap
+in every reader. Two readers fell into it: this repo's `render/describe.ts`
+(the board's event log printed "#12 blocked by #12") and ForgeCoach's coach,
+which is the owner's main way of playing. `state.combat` never carried the
+sentinel (none of the 1,365 bands in the 23 committed recordings names its own
+attacker), so after this the event and the state agree, entry for entry.
+
+`[]` rather than omitting the entry: the event's job is to say what the
+defending player declared, and "this attacker went unblocked" is part of it; an
+omitted entry would make "unblocked" and "the bridge dropped it" the same
+picture, and every reader that walks `blocks` already handles `[]` (the
+`combat_end` event and `state.combat` use it).
+
+Not re-recording the fixtures: frame indices into them are cited across the
+docs and tests (the same reason M44 and M49 gave), the old spelling is still
+valid wire, and a reader must accept it anyway for any log a user recorded
+before this. The gate's comparisons rewrite the old spelling only while the
+committed file carries it, so they switch themselves off when g1 is re-recorded
+on purpose; until then a regression to `[n]` is not visible to step 6, and
+`JsonSelfTest`'s blockers cases — seven, run on every build — are what hold it
+(with the filter removed from `Snap.block`, two of them fail and the build stops).
+
+**Rejected.**
+
+- **Keep relaying `[n]` (M7)** — see the rationale; the defect was real in two
+  readers, one of them in this repo.
+- **Omit unblocked attackers** — loses a fact the event carries today, and
+  makes an empty `blocks` ambiguous.
+- **Re-record every fixture** — churn across every cited frame index, for a
+  change every reader must tolerate anyway.
+- **Make `tools/check-redaction.mjs` fail `[n]`** — it runs over the committed
+  corpus, which is all `[n]`; a file carries no stamp that says which side of
+  M52 it was recorded on.
+
+**Measured** with the pinned jar (sha256 `3c0a7c38…8e5dd9`): seed 42 through
+`RecordMatch` (gate step 5's command) — 19 entries, 14 `[]` and 5 real blocks,
+where `fixtures/games/g1.jsonl` has the same 5 and 14 self-blocks; `wire-drift`
+against g1 SAME on every question with the rewrite (14 and 0 self-blocks read
+as `[]`), and DIFFER on the event stream at event #431 without it; seed 42
+through `--transport auto` (9b's command) and through `--transport ws --port
+8712` with `tools/ws-auto-play.mjs` — 10 entries each, 9 `[]` and 1 real; in
+all three, each of the 48 entries equals the attacker's `state.combat` band in
+the same frame (g1: 5 of 19). 9b's multiset diff against `human-auto-42.jsonl`
+reports no difference in any `blockers` event (its residue is the known input
+re-pushes and one re-partitioned flush); `check-redaction.mjs` passes the three
+fresh logs, the client log (`--client-log`) and the corpus; `narrate-selftest`
+passes with both goldens byte-identical; `first-divergence.mjs` calls g1 and the
+fresh recording IDENTICAL.

@@ -9649,6 +9649,32 @@ connect to `ws://<location.host>/ws?token=<the page's token>` when it is served
 over http by the bridge**. No TLS (the token is readable to anyone who can read
 the network's traffic); it is a home-network feature, and the docs say so.
 
+## The blockers event — an unblocked attacker has no blockers (2026-10-01, D290)
+
+**Status: built and verified; the full gate was not run** (steps 2b, 5, 6 and
+its self-test, 8's redaction over the corpus and the fresh logs, 9b's
+comparison, 12d and the web suite were run by hand — D290's *Measured*). The
+web suite's node half failed one test, `motion.test.ts`'s pre-lane film digest
+(same op count, another sha256), and fails identically on `main`'s `0a32d1b`
+in this container, so it is not this change; vitest's 159 passed.
+Branch `c/blockers-event`, off `main`'s `0a32d1b`; amendment **M52**, superseding
+M7, and D290. Forge hands an unblocked attacker to `GameEventBlockersDeclared`
+as its own one blocker; the bridge relayed that, and ForgeCoach's coach said
+"blocked by itself". The bridge now writes `[]`, which is what `state.combat`
+always said; no fixture is re-recorded, and readers accept both spellings.
+
+```bash
+./bridge/build.sh                                                  # JsonSelfTest: 45 checks, seven of them Snap.block's
+node tools/wire-drift-selftest.mjs                                 # 24 cases: M52's spelling accepted, a real block dropped rejected
+node tools/wire-drift.mjs fixtures/games/g1.jsonl var/check-all-record.jsonl   # "predates M52's unblocked attacker …"
+```
+
+No follow-up list of its own. Two notes: **g1 and the human fixtures still
+carry `[n]`**, so step 6 and 9b rewrite it and cannot see a regression to it
+until g1 is re-recorded on purpose (the build's self-test can); and **ForgeCoach
+reads the event too** — its reader must treat `[]` and `[attackerId]` alike,
+which is a change in that repo, not this one.
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

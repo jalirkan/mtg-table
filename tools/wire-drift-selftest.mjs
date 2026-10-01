@@ -16,6 +16,8 @@
 //     (what a busy machine does to a recording: measured, docs/evidence/hardening.md)
 //   a STATS-ID REORDER both must accept (decision D121: the ids inside a `stats`
 //     event are a set; their order follows HotSpot identity hashes)
+//   M49's newer key and M52's newer spelling of an unblocked attacker both
+//     must accept, since g1 predates them
 //   DRIFT both must reject
 //     (what a changed emitter does: the step's reason to exist)
 //
@@ -131,6 +133,36 @@ const cases = [
     e.to = { ...e.to, zone: e.to.zone === 'graveyard' ? 'exile' : 'graveyard' };
     return L;
   }],
+  // ---- amendment M52: an encoding the committed file predates -----------------
+  // g1 relays an unblocked attacker as its own blocker; a fresh recording writes
+  // `[]`.  Both modes read g1's spelling as `[]` in both files (wire-drift.mjs).
+  ['unblocked attackers written as M52 does (`blockerIds: []`; g1 predates it)', 0, 0, (L) => {
+    let n = 0;
+    for (const i of stateIdx(L)) {
+      for (const e of L[i].body.events) {
+        if (e.kind !== 'blockers') continue;
+        for (const b of e.blocks) {
+          if (b.blockerIds.length === 1 && b.blockerIds[0] === b.attackerId) { b.blockerIds = []; n += 1; }
+        }
+      }
+    }
+    if (n === 0) throw new Error('no unblocked attacker in a blockers event');
+    return L;
+  }],
+  ['M52 spelling AND a real block dropped (the rewrite hides nothing else)', 1, 1, (L) => {
+    let real = false;
+    for (const i of stateIdx(L)) {
+      for (const e of L[i].body.events) {
+        if (e.kind !== 'blockers') continue;
+        for (const b of e.blocks) {
+          if (b.blockerIds.length === 1 && b.blockerIds[0] === b.attackerId) b.blockerIds = [];
+          else if (!real && b.blockerIds.length > 0) { b.blockerIds = []; real = true; }
+        }
+      }
+    }
+    if (!real) throw new Error('no real block in a blockers event');
+    return L;
+  }],
   // ---- drift: a different wire ----------------------------------------------
   ['one id dropped from a `stats` event (D121 compares the SET)', 1, 1, (L) => {
     const f = L[stateIdx(L).find((i) => L[i].body.events.some((e) => e.kind === 'stats' && e.cardIds.length >= 2))];
@@ -236,6 +268,6 @@ if (bad > 0) {
 }
 const count = (d, st) => cases.filter(([, a, b]) => a === d && b === st).length;
 console.log(`wire-drift-selftest: ${String(cases.length)} cases, every verdict as expected -- `
-  + `${String(count(0, 0))} accepted by both (the identical copy, D121's reordered stats ids and M49's newer keywords), `
+  + `${String(count(0, 0))} accepted by both (the identical copy, D121's reordered stats ids, M49's newer keywords and M52's unblocked attackers), `
   + `${String(count(0, 1))} re-partitions accepted by `
   + `default and rejected by --strict, ${String(count(1, 1))} drifts rejected by both`);

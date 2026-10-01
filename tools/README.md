@@ -22,7 +22,7 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `make-forge-home.sh` | Builds the checkout's default `forge-home/`: `res/` symlinked beside the jar, the profile properties, D14's one-card overlay. Idempotent; run once per checkout. | no (the gate builds a home per job) | no |
 | `villain-deck.sh` | Sourced, never run: `$VILLAIN`, the one deck the gate seats the AI behind (`VILLAIN_DECK` overrides). | sourced by 6b, 9c, 9e | no |
 | `wire-drift.mjs` | Is a fresh AI-vs-AI recording the same wire as `fixtures/games/g1.jsonl`? Six questions a re-partition of the event stream cannot move (D113); `--strict` is byte for byte. | step 6 | no |
-| `wire-drift-selftest.mjs` | Step 6's controls: the comparison must reject fourteen drifts and accept a reordered `stats` event (D121) and a fresh file's M49 `keywords` over a committed file that predates them (D210). | step 6; CI | no |
+| `wire-drift-selftest.mjs` | Step 6's controls: the comparison must reject fifteen drifts and accept a reordered `stats` event (D121), a fresh file's M49 `keywords` over a committed file that predates them (D210), and a fresh file's M52 unblocked attackers (`blockerIds: []`) over a committed file that spells them as themselves (D290). | step 6; CI | no |
 | `same-game.mjs` | Are two recordings of one seed the same game, from either seat? | step 6b | no |
 | `fixture-multiset-diff.mjs` | Two frame logs compared as a multiset with `seq` stripped: content drift without frame-order noise. | step 9b (advisory) | no |
 | `ten-games.sh` | M5's exit criterion and match setup's rows 11–14: fourteen `--transport auto` games, eight-plus assertions each. `--jobs N`, `--seed N`, `--games N`. | step 9c | boots Forge |

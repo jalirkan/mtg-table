@@ -1476,6 +1476,38 @@ public final class Snap {
     }
 
     /**
+     * One entry of the {@code blockers} event's {@code blocks}:
+     * {@code {"attackerId":n,"blockerIds":[...]}}, with the attacker's own id
+     * dropped from its blockers (amendment M52, D290).
+     *
+     * <p>Forge builds {@code GameEventBlockersDeclared}'s map in
+     * {@code PhaseHandler.declareBlockersTurnBasedAction} as
+     * {@code putAll(att, combat.getBlockers(att).isEmpty() ? List.of(att) : combat.getBlockers(att))}
+     * (javap -c on the pinned jar), so an UNBLOCKED attacker arrives as its
+     * own one blocker -- a sentinel, which Forge's own {@code GameLogFormatter}
+     * reads back as "didn't block" (an empty list, or a first value equal to
+     * the key).  A creature can never block itself, so the attacker's id in its
+     * own list is never a block, and the wire says what {@code state.combat}
+     * says for the same attacker: {@code blockerIds: []}.
+     *
+     * <p>Pure, and package-private so {@code JsonSelfTest} drives it without a
+     * {@code CardView} (hard rule 10's lint keeps that type in this file).
+     */
+    static void block(final JsonOut o, final int attackerId, final Collection<Integer> blockerIds) {
+        o.obj().n("attackerId", attackerId);
+        o.key("blockerIds").arr();
+        if (blockerIds != null) {
+            for (final Integer b : blockerIds) {
+                if (b != null && b.intValue() != attackerId) {
+                    o.v(b.intValue());
+                }
+            }
+        }
+        o.end();
+        o.end();
+    }
+
+    /**
      * {@code {"kind":"player"|"card","id":n}}, or null.
      *
      * <p>Every {@code defender} on the wire -- {@code combat.bands[].defender}
@@ -1649,15 +1681,13 @@ public final class Snap {
                         if (entry.getKey() == null) {
                             continue;   // a block with no attacker is not a block
                         }
-                        o.obj().n("attackerId", entry.getKey().getId());
-                        o.key("blockerIds").arr();
+                        final List<Integer> ids = new ArrayList<>();
                         for (final CardView b : entry.getValue()) {
                             if (b != null) {
-                                o.v(b.getId());
+                                ids.add(Integer.valueOf(b.getId()));
                             }
                         }
-                        o.end();
-                        o.end();
+                        block(o, entry.getKey().getId(), ids);
                     }
                 }
             }

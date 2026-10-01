@@ -52,7 +52,8 @@ java -m jdk.compiler/com.sun.tools.javac.Main \
 # check has to fail here, not three hundred frames into a fixture -- and there
 # is no JUnit on this machine (JRE only, no Maven), so the test is a main().
 # It needs the Forge jar on the classpath because Json.parse delegates to
-# org.eclipse.jetty.util.ajax.JSON, which is bundled in it.
+# org.eclipse.jetty.util.ajax.JSON, which is bundled in it.  It also holds
+# Snap.block, the `blockers` event's entry (amendment M52, D290).
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.JsonSelfTest
 
 # Unit-check the ask path's answer marshalling on every build, for the same

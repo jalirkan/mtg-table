@@ -179,7 +179,9 @@ polish-1 — the WIRING holds: `WireGuiGame.engineFacts` is `ActGuard.facts` ove
 its `GuardFeeds`, one read apiece, and the self-test drives `facts` with a fake
 `ActGuard.Feeds`, so a condition fed a constant or another condition's feed
 flips a verdict; eleven such mis-wirings, one at a time, each fail it):
-`mtgtable.JsonSelfTest`,
+`mtgtable.JsonSelfTest` (the JSON writer and, since amendment M52, `Snap.block`
+— the `blockers` event's entry, where Forge's unblocked-attacker sentinel, the
+attacker as its own blocker, must come out as `[]`; D290),
 `mtgtable.AskSelfTest` (the ask path's answer marshalling — index 0 is the
 defending player, a wrong-length `manipulate_list` answer is the identity order,
 and so on), `mtgtable.GameLogSelfTest` (the frame log's close path: close in
