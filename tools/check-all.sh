@@ -151,6 +151,13 @@
 #                                 that index -- built from Scryfall, so NOT in CI
 #                                 -- and fails without it; SKIP_DECKS=1 skips it
 #                                 and says so
+#                                 Then 12f: tools/coach-helper-selftest.mjs --
+#                                 the coach helper (D292) against a FAKE
+#                                 `claude`: /health, the stream translated to
+#                                 NDJSON, the flags, the Origin and token rules,
+#                                 the body limit, one question at a time, and a
+#                                 client that leaves killing the child (~7 s; no
+#                                 real CLI, no network)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -243,7 +250,8 @@
 #   - step 11's fresh half and 12d's narrator read EVERY fresh recording, so
 #     they depend on every job that records one;
 #   - 12b (the catalog), 12c (the crash check, its own scratch Forge home) and
-#     12e (the AI decks against their specs) depend on nothing but the build.
+#     12e (the AI decks against their specs) depend on nothing but the build,
+#     and neither does 12f (the coach helper, which needs no build at all).
 #
 # Step 10's servers listen on WSPORT+0 .. WSPORT+7 (10a..10h) when GATE_JOBS >
 # 1, so all eight can be up at once; GATE_JOBS=1 keeps the single WSPORT.
@@ -322,10 +330,12 @@ case "$GATE_JOBS" in
   '' | *[!0-9]* | 0) echo "check-all: GATE_JOBS must be a positive integer, got '$GATE_JOBS'" >&2; exit 2 ;;
 esac
 
-# Port 8643, not config.json's 8642: a developer with `scripts/play.sh` running
-# should be able to run the gate without the two fighting over a port.  With
-# GATE_JOBS > 1, 10a..10h listen on WSPORT+0 .. WSPORT+7 (D131).
-WSPORT="${WSPORT:-8643}"
+# Port 8644, not config.json's 8642 or 8643: a developer with `scripts/play.sh`
+# running should be able to run the gate without the two fighting over a port,
+# and play.sh holds 8642 (the bridge) and, since D292, 8643 (the coach helper,
+# config.json's coachPort).  With GATE_JOBS > 1, 10a..10h listen on WSPORT+0 ..
+# WSPORT+7 (D131), so 8644..8651.
+WSPORT="${WSPORT:-8644}"
 case "$WSPORT" in '' | *[!0-9]*) echo "check-all: WSPORT must be a port number, got '$WSPORT'" >&2; exit 2 ;; esac
 
 # One directory per run: every job's log, the timing table, gate.log (D130).
@@ -1856,6 +1866,22 @@ s12e_skipped() {
   printf '\n(12e skipped: SKIP_DECKS=1 -- the AI decks were NOT checked against their specs; web/test/deck-specs.test.ts, the hermetic half, still runs in step 13)\n'
 }
 
+# 12f. D292: the coach helper (tools/coach-helper.mjs), which scripts/play.sh
+#      starts beside the bridge so ForgeCoach can coach through the logged-in
+#      Claude Code CLI.  Its self-test puts a FAKE `claude` first on the
+#      helper's PATH -- the real CLI is never run, so nothing here needs a login
+#      or the network -- and holds the contract ForgeCoach is built against:
+#      /health, the stream-json -> NDJSON translation with exactly one terminal
+#      line, the CLI's flags (every tool off, no MCP, no session, dontAsk, one
+#      turn, the user text on stdin), the Origin and LAN-token rules, the 512 KB
+#      body limit, one question at a time, and a client that disconnects
+#      killing the child and its process group.  Its servers bind port 0.
+s12f_coach() {
+  printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
+  node tools/coach-helper-selftest.mjs \
+    || die "coach-helper-selftest.mjs (12f: the coach helper broke its contract with ForgeCoach -- see the FAIL lines above)"
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -1990,6 +2016,7 @@ if [ "${SKIP_DECKS:-0}" = "1" ]; then
 else
   job 12e-decks   12 both     s12e_decks        "$PRE"
 fi
+job 12f-coach     12 both     s12f_coach        "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
@@ -2012,7 +2039,7 @@ fi
 # and nothing waits for the ten-games rows, and the build is right behind them
 # because `node --test` waits for it too; Smoke is early because 9c and 9e
 # wait for it.  Anything not named runs after, in table order.
-PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks"
+PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
 PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash"

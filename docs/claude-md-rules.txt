@@ -84,6 +84,11 @@
 **Never pass `--pre-amendment` to `check-redaction.mjs`.** It downgrades a
 **`--client-log` is different and is safe to pass** (amendment M17): it relaxes
 **And never pass `--opponent-library-ok`,** which gets the identical treatment:
+1. **The contract changes in both repositories or not at all.** The paths, the
+2. **Claude runs with nothing to act with.** `--tools ""`, `--strict-mcp-config`
+**Never `--dangerously-skip-permissions`** or `bypassPermissions`, and never a
+3. **It is M50's and M51's door, not a new one**: the Origin list is
+4. **Its self-test never runs the real CLI.** `coach-helper-selftest.mjs` (gate
 **The narrator (D123) tells a frame log as a story, and it is hard rule 8's
 1. **It is a tool, not a package, and the game never reads it** (**D90**,
 **D91**). No `package.json`, no npm dependency: `node:sqlite` with FTS5, `fetch`,
@@ -392,7 +397,7 @@ span: eight fresh `--transport ws` servers
 span: three games back to back over one socket
 span: It plays `decks/yield-probe.dck`
 span: Since the 2026-09-27 hardening pass 10g's server runs with `MTGTABLE_HOLD_GAME_END_MS=2000`
-span: Pass `WSPORT=<n>` if 8643 is busy
+span: Pass `WSPORT=<n>` if 8644 is busy
 span: `GATE_ONLY="<job> …"` runs those jobs alone
 span: Adding a step is adding a JOB
 span: Every JVM step runs under `timeout`
@@ -404,6 +409,11 @@ span: Never pass `--pre-amendment` to `check-redaction.mjs`.
 span: `--client-log` is different and is safe to pass
 span: And never pass `--opponent-library-ok`,
 span: nothing in the repo passes it
+span: The contract changes in both repositories or not at all.
+span: Claude runs with nothing to act with.
+span: Never `--dangerously-skip-permissions`
+span: It is M50's and M51's door, not a new one
+span: Its self-test never runs the real CLI.
 span: The narrator (D123) tells a frame log as a story, and it is hard rule 8's third reader.
 span: A name is read from the event's own frame or the one before it and never remembered
 span: A change to the narration is a `--write-golden` and a read diff, never a hand edit of the goldens.

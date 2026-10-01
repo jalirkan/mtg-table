@@ -35,6 +35,8 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `check-engine-crash.sh` | A card the engine cannot build, planted in a scratch Forge home, must fail `MtgTable` and `RecordMatch` with an error `notice` and a null `over` (D115). | step 12c | boots Forge |
 | `narrate-selftest.mjs` | The narrator's gate: every fixture and every fresh log told as a story with hard rule 8 held, six negative controls, the goldens (D123). | step 12d; CI | no |
 | `narrate.mjs` | A frame log as a turn-by-turn story (`--turn`, `--summary`, `--seat`, `--json`); a shell over `web/src/story/narrate.ts`. | no (its self-test is 12d) | no |
+| `coach-helper.mjs` | **The coach helper** (D292): a loopback HTTP service on `coachPort` (8643) that ForgeCoach's coach calls instead of the Claude API — `GET /health`, `POST /coach` — answered by the logged-in Claude Code CLI (`claude -p`, every tool off), streamed back as NDJSON; `--lan` binds 0.0.0.0 behind the bridge's pairing token. `scripts/play.sh` starts it when `claude` is on PATH. Its header is the contract. | no (its self-test is 12f) | no (the `claude` CLI) |
+| `coach-helper-selftest.mjs` | The coach helper's contract against a FAKE `claude` put first on its PATH: `/health`, the stream-json → NDJSON translation and its one terminal line, the CLI's flags, the Origin and LAN-token rules, the private-network preflight, the 512 KB limit, one question at a time, a disconnect killing the child's process group (D292); ~7 s, no real CLI, no network. | step 12f; CI | no |
 | `build-deck.ts` | Writes every AI deck's `.dck` from `decks/specs/*.json`; `--check` fails when one differs (D116); `--pool RG` lists castable cards. Needs `var/cards/cards.sqlite`. | step 12e (`--check`, D183); not CI | no |
 | `check-deck.mjs` | Will the engine play this `.dck`, card for card? A static pass over Forge's scripts, then `Smoke` on the deck (`--no-engine` skips it), then `--scryfall`. | no | boots Forge (unless `--no-engine`) |
 | `deck-smoke.sh` | Five games per AI deck with the AI piloting it; asserts it casts and attacks (D116, D117). | no | boots Forge |
@@ -176,13 +178,17 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
 ./scripts/play.sh --ai-deck decks/masters-of-evil.dck   # D116: B/R villain aggro
 ./scripts/play.sh --ai-deck decks/hulk-family.dck       # D116: R/G gamma stompy
 ./scripts/play.sh --ai-deck decks/wakanda.dck           # D116: G/W go-wide
-./scripts/play.sh --port 8643 --web-port 5174       # beside a running one
+./scripts/play.sh --port 8652 --web-port 5174       # beside a running one (it shares the first one's coach helper)
 ./scripts/play.sh --no-open --no-keep-open          # no browser; exit the moment the match ends
 ./scripts/play.sh --engine-only                     # D285: ONLY the engine, for ForgeCoach (no vite, no browser);
                                                     # prints "Engine ready on ws://127.0.0.1:8642/ws — open
                                                     # https://jalirkan.github.io/ForgeCoach/ and click Play";
                                                     # the match flags and defaults are the same; Ctrl-C stops it
 ./scripts/play.sh --engine-only --seed 42 --games 1 # a reproducible single game for the coach
+                                                    # every mode also starts the COACH HELPER (D292) when `claude`
+                                                    # is on PATH and prints "Coach: Claude Code on this PC (no API key
+                                                    # needed) — http://127.0.0.1:8643"; log var/play/coach.log
+./scripts/play.sh --engine-only --no-coach          # D292: no coach helper ("Coach: off (--no-coach) — …")
 ./scripts/play.sh --engine-only --lan               # M51/D287-D289: ForgeCoach from a PHONE on the same Wi-Fi --
                                                     # binds 0.0.0.0 behind a fresh pairing token, serves ForgeCoach's
                                                     # site (var/forgecoach/, cached a day) on the ws port, prints
@@ -194,6 +200,18 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
 ./scripts/play.sh -- --game-timeout 7200            # D286: a wall clock on the game (a human seat has none; 0 = none)
 ./scripts/play.sh -- --idle-timeout 600             # D286: end a ws session after 600 s with no client (default 3600; 0 = off)
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
+```
+
+### The coach helper (D292)
+
+```bash
+node tools/coach-helper.mjs                         # http://127.0.0.1:8643 (config.json coachPort; --port N)
+COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan --ws-port 8642   # 0.0.0.0, the bridge's token (--token <T> too)
+node tools/coach-helper-selftest.mjs                # its self-test, a fake claude (gate 12f, CI)
+curl -s http://127.0.0.1:8643/health                # {"ok":true,"helper":1,"claude":"…","models":["opus","sonnet","haiku"]}
+curl -sN http://127.0.0.1:8643/coach -H 'Content-Type: application/json' \
+    --data '{"system":"You are a terse Magic coach.","user":"Land before attacking?","model":"haiku"}'
+                                                    # NDJSON: {"type":"text",…} … then {"type":"done",…} or {"type":"error",…}
 ```
 
 ### The arena, the workshop and their assets

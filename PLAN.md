@@ -481,6 +481,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | A human game has no wall-clock limit *(off the plan; the owner's request, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/game-timeout` (2026-10-01), off `main`'s `df7a3bc` — `MtgTable`'s 900 s game timeout now applies to `null` / `auto` only; `ws` and `console` have none, a seatless `ws` game ends after 3600 s with no `/ws` client; `--game-timeout` and `--idle-timeout` (**D286**); *The game timeout*, just above *Deferred* |
 | — | LAN play: ForgeCoach from a phone on the same Wi-Fi *(off the plan; on the owner's approval)* | ½ day | **built and verified, gate not run** on branch `c/lan-play` (2026-10-01), off `main`'s `e511c37` — `play.sh --lan` (implies `--engine-only`): the bridge binds `0.0.0.0` behind a per-run 128-bit pairing token every non-loopback request must carry (loopback needs none), serves ForgeCoach's built site (downloaded as a zip from its Pages site and cached a day under `var/forgecoach/`, or `--site-dir`) on the ws port, admits the page's own `http://<Host>` Origin from a non-loopback peer, and prints the phone URLs (and a QR code with `qrencode`) (amendment **M51**, **D287**–**D289**); `WsLanSelfTest` is the build's seventh self-test; *LAN play*, just above *Deferred* |
 | — | The test gaps: the observer, the idle limit and Node 22 in the gate *(off the plan; the follow-ups of D280–D289)* | ¼ day | **built and verified, gate not run** on branch `c/test-gaps` (2026-10-01), off `main`'s `0a32d1b`, `af0512a` merged in — 10c plays with two `/observe` followers (one from before the session, compared frame for frame with the bridge's log and the seat's; one opened while the seat holds an `ask`, which must be caught up on it), a new **10h** proves `--idle-timeout` both ways, `ws-smoke` and `ws-auto-play` survive Node 22's `WebSocket`, and `GATE_ONLY` runs named jobs alone (**D291**); two follow-ups; *The test gaps*, just above *Deferred* |
+| — | The coach helper: ForgeCoach coaches through the logged-in Claude Code CLI *(off the plan; on the owner's approval, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/coach-helper` (2026-10-01), off `main`'s `cb7d041` — `tools/coach-helper.mjs` on `coachPort` 8643: `GET /health`, `POST /coach` answered by `claude -p` with every tool off and streamed as NDJSON, M50's Origin list and M51's token; `play.sh` starts it beside the engine in every mode (`--no-coach`); the gate's `WSPORT` moves to 8644; gate step **12f** and CI run its self-test against a fake `claude` (**D292**); *The coach helper*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9748,6 +9749,39 @@ seat exited 10. `npm --prefix web run build && npm --prefix web test` (Node 24):
    for the ask. A client log already needs `--client-log` for M10's verbatim
    re-deliveries; whether `seq` should also mean wire order (one monitor for
    both) is a decision, not a test.
+
+## The coach helper — coaching without an API key (2026-10-01, D292)
+
+**Status: built and verified; the full gate was not run** (the new step, 12f,
+was run alone through the gate's runner; nothing else in the gate reads the
+helper, and the port move only changes which ports step 10 binds). Branch
+`c/coach-helper`, off `main`'s `cb7d041`; D292. The owner plays in ForgeCoach
+with Claude Code logged in on the same PC; the helper lets ForgeCoach's coach use
+that login instead of an API key.
+
+```bash
+./scripts/play.sh --engine-only                 # ... Coach: Claude Code on this PC (no API key needed) — http://127.0.0.1:8643
+./scripts/play.sh --engine-only --no-coach      # Coach: off (--no-coach) — ForgeCoach will ask for an API key or offer Copy prompt
+node tools/coach-helper.mjs                     # alone; --port, --lan (COACH_HELPER_TOKEN), --ws-port, --busy-wait, --timeout
+node tools/coach-helper-selftest.mjs            # 57 checks against a fake claude, ~7 s (gate 12f, CI)
+```
+
+Checked: the CLI's flags and stream-json shapes by hand on Claude Code 2.1.287;
+one real call through the helper with `curl` (haiku) — ten `text` lines and a
+`done` naming `claude-haiku-4-5-20251001`; the self-test green, and red under four
+planted mutants; 12f through `GATE_ONLY` (4.2 s); `play.sh`'s coach block in a
+harness (this container has no engine), `bash -n`; `web/test/claude-md.test.ts`
+with `docs/claude-md-rules.txt` regenerated for the root `CLAUDE.md`'s job count
+and localhost line and `tools/CLAUDE.md`'s new section and `WSPORT` line.
+
+No follow-up list of its own. Notes, outside this repo or unmeasured:
+**ForgeCoach must call `http://127.0.0.1:8643`** (`/health` first, then `/coach`,
+reading the NDJSON) **and, when it is the LAN page, `http://<location.hostname>:8643/…?token=<the page's token>`**;
+**a logged-out CLI was not reproduced** here (the container's CLI is
+authenticated by its host), so its message rests on the documented error code and
+text; and a browser with local-network-access prompts (Chrome's newer
+replacement for private network access preflights) may ask the owner once
+before the github.io page reaches `127.0.0.1`.
 
 ## Deferred — out of scope for M0–M7
 
