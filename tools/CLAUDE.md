@@ -198,7 +198,7 @@ README's *Continuous integration*). Three jobs on `ubuntu-latest`: **`web`**
 hermetic because `MTGTABLE_WS_LOGS` is unset and `web/public/art.json` is absent,
 and every reader of it already falls back to the empty index), **`bridge`**
 (`tools/lint-bridge-selftest.sh`, `tools/lint-bridge.sh`, `tools/check-forge.sh`, then `./bridge/build.sh` — javac
-and its five self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
+and its six self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
 to carry `jdk.compiler` and `jdk.jdeps`, and a Temurin JRE image is not built
 to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, the
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
@@ -211,7 +211,7 @@ the digest GitHub publishes, extracts **the jar alone**, fails unless its sha256
 is `3c0a7c38…8e5dd9`, and hands it to the scripts as `FORGE_JAR` (hard rule 9;
 `config.json` untouched). Only the jar is cached, in the Actions cache under a key
 naming the asset and both digests — never in git, never as an artifact. `res/` is
-not extracted and `make-forge-home.sh` is not run, because none of the five
+not extracted and `make-forge-home.sh` is not run, because none of the six
 self-tests boots an engine or reads `res/` (measured: `OverRaceSelfTest` and
 `ActGuardSelfTest` pass over an empty Forge home with no profile and write nothing
 outside `var/`); **a self-test that starts needing `res/` fails CI first**, and

@@ -19,7 +19,7 @@
 #                                 lint declares FIRES on a snippet planted in a
 #                                 scratch copy, and a rule with no case fails
 #                                 (D180; ~1 s)
-#   3. bridge/build.sh            javac + the five self-tests (build.sh re-runs 2b and 2)
+#   3. bridge/build.sh            javac + the six self-tests (build.sh re-runs 2b and 2)
 #   4. mtgtable.Smoke             boots the engine, proves the prefs and the card overlay
 #   5. mtgtable.RecordMatch       a FRESH recording into var/, not a committed fixture
 #   6. the VALUE-LEVEL drift check  tools/wire-drift.mjs: that fresh recording is

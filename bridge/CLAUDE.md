@@ -65,6 +65,23 @@ amendment M42**: it is emitted only once the engine has pushed one for this game
 you something" while every act is being dropped. A client may read its first
 `input` as that guard lifting.
 
+**`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
+amendment **M50**). Any number of followers on the same port; an observer is
+caught up from the transport's cache (`hello_ok`, the last `state`,
+this game's `over` or else its last `input`, every outstanding `ask`) and then
+handed every string `push()` is handed — the seat's bytes, `seq` and redaction —
+under the one `fanout` monitor, so neither a gap nor a duplicate. **Nothing an
+observer does may reach the seat**: its messages are released unread, and
+`connected()`, the ask timeout, the 4001 refusal, `onResync`, `onDisconnect`,
+`ReplyPool.reopen`, `awaitNextGame` and the frame log count `/ws` only — a
+change that lets an observer into any of them reopens the hazard the path exists
+to close. Writes to it are bounded (8 MB unflushed, then it is dropped, D282),
+because `push()` runs on the game thread. **Both paths check `Origin`** before
+the handshake (D281): none is allowed (every Node tool sends none), otherwise
+`config.json`'s `wsAllowedOrigins` (default loopback on any port and
+`https://jalirkan.github.io`), else 403. A new client that is a browser page
+must be served from an allowed origin; a new tool needs nothing.
+
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 sent the instant `over` arrives is QUEUED** (**D114**, amendment **M45**): `over`
 goes out at the outcome, while Forge is still finishing the game and has yet to
@@ -122,7 +139,12 @@ to think.
 
 ## The build's self-tests
 
-`bridge/build.sh` runs **five** self-tests after javac (the fifth,
+`bridge/build.sh` runs **six** self-tests after javac (the sixth,
+`mtgtable.WsObserveSelfTest`, is amendment **M50**'s: a real `WsTransport` on a
+free port, raw-socket clients choosing their own `Origin` — 403s, an observer
+that is never the seat, sends that reach nothing, a byte-for-byte catch-up, and
+an observer that never reads dropped at the bound while `push()` keeps
+returning; the fifth,
 `mtgtable.ActGuardSelfTest`, is **D136**'s guard: each of its eight conditions
 refuses on its own, the thread-state reading holds on real threads, and — since
 polish-1 — the WIRING holds: `WireGuiGame.engineFacts` is `ActGuard.facts` over

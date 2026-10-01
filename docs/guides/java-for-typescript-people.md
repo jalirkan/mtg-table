@@ -1516,7 +1516,7 @@ exactly this distinction, and it's the reason M0 and M1 differ structurally.
 
 ---
 
-## 9. A map of `WireGuiGame.java`, one ask and one act end to end, and the five self-tests
+## 9. A map of `WireGuiGame.java`, one ask and one act end to end, and the six self-tests
 
 Chapters 3 to 6 teach you to read `HeadlessGuiBase`, `Smoke` and `Snap` — the
 first milestone's files. Everything the seat does since M2 goes through one file
@@ -1718,9 +1718,9 @@ versionWhenClicked) return` grown up: in a single-threaded app "the state moved
 under me" has one cause, and here it has eight, because several threads can be
 inside the engine at once.
 
-### 9.6 The five self-tests, and the bug behind each
+### 9.6 The six self-tests, and the bug behind each
 
-`bridge/build.sh` runs five `main()` programs after javac; any failure fails the
+`bridge/build.sh` runs six `main()` programs after javac; any failure fails the
 build. There is no JUnit on this machine (a JRE, no Maven), so each is a plain
 class that prints and exits non-zero. Each exists because of a defect that a
 green run did not show.
@@ -1731,11 +1731,12 @@ green run did not show.
 | `AskSelfTest` | the answer half of all eleven ask kinds, driven by the JSON text a client really sends | in M2 Forge dispatched only two kinds, so nine marshallers had been checked only against a fixture written from the same reading of the protocol; `assign_damage`'s "option 0 is the defender, option *i* is `blockers.get(i-1)`" is a one-off error that yields a well-formed answer either way. It also holds that a wrong-length `manipulate_list` answer is the identity order |
 | `GameLogSelfTest` | the frame log's close path: closed in under a second, exactly *N*+1 lines on disk | `close()` held the log's monitor across its own 30-second `join` while the appender needed that monitor after every line: close burned the whole timeout and returned a truncated file (12,089 of 20,001 lines), and the process's exit killed the appender mid-write |
 | `OverRaceSelfTest` | `over` stays the last frame while another thread emits: it parks an `input`, then an act, on the log's monitor behind `over`, then races 300 rounds | `emit` and `logC2s` checked `overEmitted` *outside* the monitor that numbers a frame, so under load an `input` (or an act) was numbered one past `over`; three gate runs failed 10a, 10b or 10g on it. The fix is the re-check at `WireGuiGame.java:865` and `:910` |
+| `WsObserveSelfTest` | amendment **M50**: a real `WsTransport` on a free loopback port, driven by raw-socket clients that pick their own `Origin` — a disallowed one is a 403 on `/ws` and `/observe`, an observer is never the seat (a second `/ws` is still refused 4001; `onResync` and `onDisconnect` never fire for one), nothing an observer sends reaches anything, a late observer's catch-up is the cached frames byte for byte, and one that never reads is dropped at the 8 MB backlog bound while `push()` keeps returning | none shipped: it was written with the observer socket (**D280**–**D282**), because "a follower can never act" and "a stalled follower can never stall the game" are each invisible in a green game |
 | `ActGuardSelfTest` | **D136**'s guard: each of the eight conditions refuses on its own, the thread-state reading holds on real threads, and the wiring — `ActGuard.facts` driven with fake feeds, so a condition fed a constant or another condition's feed flips a verdict | an `undo` applied whenever it arrived raced `Game-0` inside `MagicStack`'s undo stack (`clearUndoStack`) and crashed the engine in the story branch's gate run; the wiring half came from Polish 1, after a skeptic showed the decision table alone passed a mis-wired guard |
 
 `OverRaceSelfTest` and `ActGuardSelfTest` load `WireGuiGame`, so they install the
 headless GUI first (hard rule 1) and run under hard rule 6's JVM flags; none of
-the five boots an engine. `bridge/CLAUDE.md`'s *The build's self-tests* is the
+the six boots an engine. `bridge/CLAUDE.md`'s *The build's self-tests* is the
 long form.
 
 ---

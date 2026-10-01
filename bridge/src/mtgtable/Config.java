@@ -203,6 +203,35 @@ public final class Config {
         return num("wsPort");
     }
 
+    /**
+     * The {@code Origin}s a browser page may open {@code /ws} or
+     * {@code /observe} from (amendment M50, D281): {@code "wsAllowedOrigins"},
+     * an array of {@code scheme://host}, {@code scheme://host:port} or
+     * {@code scheme://host:*} strings.  A missing key means
+     * {@link WsTransport#DEFAULT_ALLOWED_ORIGINS}, so an older
+     * {@code config.json} still parses; {@code []} admits non-browser clients
+     * only.  Each entry's shape is checked by {@code WsTransport}'s
+     * constructor, so a typo fails at startup.
+     */
+    public java.util.List<String> wsAllowedOrigins() {
+        final Object v = values.get("wsAllowedOrigins");
+        if (v == null) {
+            return WsTransport.DEFAULT_ALLOWED_ORIGINS;
+        }
+        if (!(v instanceof Object[])) {
+            throw new IllegalStateException("key \"wsAllowedOrigins\" is not an array of strings in " + file);
+        }
+        final java.util.List<String> out = new java.util.ArrayList<>();
+        for (final Object e : (Object[]) v) {
+            if (!(e instanceof String)) {
+                throw new IllegalStateException("key \"wsAllowedOrigins\" holds a non-string ("
+                        + e + ") in " + file);
+            }
+            out.add((String) e);
+        }
+        return out;
+    }
+
     /** The Vite dev-server port. */
     public int webPort() {
         return num("webPort");

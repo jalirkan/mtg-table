@@ -18,13 +18,22 @@ package mtgtable;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -61,16 +70,25 @@ import io.netty.util.ReferenceCountUtil;
  *
  * <pre>
  *   ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --seed 42
- *   ws://127.0.0.1:8642/ws          the frames
+ *   ws://127.0.0.1:8642/ws          the frames -- the seat, one client at a time
+ *   ws://127.0.0.1:8642/observe     a read-only copy of them, any number (M50)
  *   http://127.0.0.1:8642/health    200 "ok", for readiness polling
  * </pre>
  *
  * <h2>The pipeline</h2>
  *
  * {@code HttpServerCodec} &rarr; {@code HttpObjectAggregator(1 MB)} &rarr;
- * {@code ChunkedWriteHandler} &rarr; {@link Health} &rarr;
+ * {@code ChunkedWriteHandler} &rarr; {@link Health} &rarr; {@link Door} &rarr;
  * {@code WebSocketServerProtocolHandler("/ws", null, false, 1 MB)} &rarr;
  * {@code WebSocketFrameAggregator(1 MB)} &rarr; {@link WsHandler}.
+ *
+ * <p>{@link Door} (amendment <b>M50</b>, D280&ndash;D282) checks the upgrade
+ * request's {@code Origin} against the allowlist and answers <b>403</b> to one
+ * it does not allow, on both socket paths, and only then adds the last three
+ * handlers: the seat's above for {@value #SEAT_PATH}, or an observer's for
+ * {@value #OBSERVE_PATH} ({@code WebSocketServerProtocolHandler("/observe",
+ * null, false, 64 KB)}, the same aggregator at 64 KB, and
+ * {@link ObserverHandler}).  The seat's pipeline is the one M3 built.
  *
  * <p>{@link Health} sits <b>before</b> the websocket handler and forwards
  * anything that is not {@code GET /health} untouched, because netty's own
@@ -159,6 +177,37 @@ import io.netty.util.ReferenceCountUtil;
  * {@value #NO_CLIENT_ASK_TIMEOUT_MS} ms and the game degrades to protocol section
  * 5.4's documented defaults rather than parking a game thread against a socket
  * nobody is on the other end of.
+ *
+ * <h2>Observers (amendment M50, D280)</h2>
+ *
+ * <p>{@value #OBSERVE_PATH} is a <b>read-only copy of the seat's stream</b>,
+ * for a follower such as ForgeCoach that must never be able to take the seat.
+ * An observer is not a client in any sense the rest of this class means:
+ * {@link #connected()}, the ask timeout, {@code awaitNextGame}'s linger, the
+ * one-seat refusal, {@code onResync}, {@code onDisconnect} and the frame log
+ * never see one.  What it gets:
+ *
+ * <ol>
+ *   <li>on connect, once a session exists: the cached {@code hello_ok}, the
+ *       last {@code state}, then this game's {@code over} if it has one, or
+ *       else the last {@code input} of this game if the engine has pushed one,
+ *       then every ask still outstanding -- each frame the seat's own bytes,
+ *       same {@code seq}, same {@code t};</li>
+ *   <li>after that, every frame {@link #push} is handed -- the session's
+ *       stream, which is what the seat is sent, with the same redaction,
+ *       because it is the same string -- whether or not a seat is connected;
+ *       and nothing else: never a verbatim re-delivery to the seat (a repeat
+ *       the observer already has) and never an out-of-band {@code seq: 0}
+ *       frame (each answers something the seat's own connection did).</li>
+ * </ol>
+ *
+ * <p>Catch-up and fan-out happen under one monitor ({@link #fanout}), so an
+ * observer sees neither a gap nor a duplicate between the two.  Everything it
+ * sends is released unread.  Writes to it are <b>bounded</b>: each observer
+ * carries the bytes it has been handed and not yet flushed, and one that would
+ * pass {@value #OBSERVER_BACKLOG_BYTES} is disconnected at once rather than
+ * buffered -- a slow or dead follower costs the game thread one enqueue per
+ * frame and never more.
  */
 public final class WsTransport implements Transport {
 
@@ -205,12 +254,58 @@ public final class WsTransport implements Transport {
     /** How long {@link #close()} waits for the queued tail of the stream to drain. */
     static final long DRAIN_MS = 1_000L;
 
+    /** The seat's path: one client at a time (amendment M13). */
+    static final String SEAT_PATH = "/ws";
+
+    /** The read-only observers' path: any number, never the seat (amendment M50). */
+    static final String OBSERVE_PATH = "/observe";
+
+    /**
+     * The largest message an observer may send before netty closes it (1009).
+     * Nothing an observer sends is read, so this is netty's own default, stated.
+     */
+    static final int MAX_OBSERVER_IN_FRAME = 1 << 16;
+
+    /**
+     * How many bytes one observer may have been handed and not yet flushed to
+     * its socket.  A follower that falls this far behind -- it stopped reading,
+     * or its machine went to sleep with the socket open -- is disconnected on
+     * the spot, so the game never holds more than this per observer and never
+     * waits on one.  8 MB is some hundred full {@code state} frames at the
+     * corpus's largest; a reader that is merely slow never comes near it.
+     */
+    static final long OBSERVER_BACKLOG_BYTES = 8L << 20;
+
+    /**
+     * The {@code Origin}s a browser page may open either socket from when
+     * {@code config.json} names none ({@code "wsAllowedOrigins"}, D281): the
+     * board itself on any loopback port, by either name, and ForgeCoach.  A
+     * request with no {@code Origin} header at all is a non-browser client --
+     * every Node tool in this repo, the JDK's -- and is always allowed.
+     */
+    static final List<String> DEFAULT_ALLOWED_ORIGINS = Collections.unmodifiableList(Arrays.asList(
+            "http://127.0.0.1:*",
+            "http://localhost:*",
+            "https://jalirkan.github.io"));
+
+    /** Pipeline names of the three websocket handlers {@link Door} adds once it knows the path. */
+    private static final String H_PROTOCOL = "ws-protocol";
+    private static final String H_AGGREGATOR = "ws-aggregator";
+    private static final String H_FRAMES = "ws-frames";
+
+    /** One allowlist entry: a scheme, a host, and an optional port or {@code *}. */
+    private static final Pattern ORIGIN_ENTRY =
+            Pattern.compile("^(http|https)://[a-z0-9.-]+(:([0-9]{1,5}|\\*))?$");
+
     private final int port;
+
+    /** The allowlist, validated and lower-cased once (D281). */
+    private final List<String> allowedOrigins;
 
     private Inbound inbound;
     private ReplyPool pool;
     private EventLoopGroup group;
-    private Channel server;
+    private volatile Channel server;
 
     /** The one connected websocket channel, or null.  Written on the event loop. */
     private volatile Channel client;
@@ -238,15 +333,110 @@ public final class WsTransport implements Transport {
     /** c2s frames thrown away because the session did not exist yet (amendment M20). */
     private final AtomicLong preSessionDrops = new AtomicLong();
 
+    /** This game's {@code over}, so an observer that joins after it is told (M50). */
+    private volatile String lastOver;
+
+    /**
+     * The one monitor that orders the cache, the seat's write and every
+     * observer's write in {@link #push}, and an observer's catch-up against all
+     * three.  Nothing inside it blocks: a write from a thread other than the
+     * event loop is an enqueue, and on the event loop a non-blocking socket
+     * write.
+     */
+    private final Object fanout = new Object();
+
+    /** The connected observers.  Never the seat. */
+    private final Set<Observer> observers = ConcurrentHashMap.newKeySet();
+
+    private final AtomicLong observerConnects = new AtomicLong();
+    private final AtomicLong observerOverflows = new AtomicLong();
+    private final AtomicLong observerFramesIn = new AtomicLong();
+    private final AtomicLong originRefusals = new AtomicLong();
+
     private volatile boolean closed;
     private volatile boolean sawOver;
 
+    /** The seat and its observers with the default Origin allowlist. */
     public WsTransport(final int port) {
+        this(port, DEFAULT_ALLOWED_ORIGINS);
+    }
+
+    /**
+     * @param allowedOrigins the Origin allowlist (D281): {@code scheme://host},
+     *        {@code scheme://host:port} or {@code scheme://host:*}; an empty list
+     *        admits non-browser clients only
+     * @throws IllegalArgumentException on an entry of any other shape, so a typo
+     *         in {@code config.json} fails at startup rather than locking the
+     *         board out
+     */
+    public WsTransport(final int port, final List<String> allowedOrigins) {
         this.port = port;
+        this.allowedOrigins = validOrigins(allowedOrigins);
+    }
+
+    /** Validate and lower-case an allowlist (D281). */
+    static List<String> validOrigins(final List<String> entries) {
+        final List<String> out = new ArrayList<>();
+        for (final String e : entries) {
+            final String v = e == null ? "" : e.trim().toLowerCase(Locale.ROOT);
+            if (!ORIGIN_ENTRY.matcher(v).matches()) {
+                throw new IllegalArgumentException("not an Origin allowlist entry: \"" + e
+                        + "\" -- write scheme://host, scheme://host:port or scheme://host:*");
+            }
+            out.add(v);
+        }
+        return Collections.unmodifiableList(out);
+    }
+
+    /**
+     * Whether a handshake carrying this {@code Origin} header may open a socket
+     * (amendment M50, D281).
+     *
+     * <p>No header at all is allowed: a browser always sends one on a websocket
+     * upgrade, so its absence means a non-browser client, which could set any
+     * header it liked anyway.  Otherwise the origin must equal an entry, or
+     * match a {@code :*} entry with a port or with none (a browser leaves the
+     * default port out).  {@code "null"} -- a {@code file:} page, a sandboxed
+     * frame -- matches nothing unless it is listed, and it cannot be: the entry
+     * pattern refuses it.
+     */
+    static boolean originAllowed(final String origin, final List<String> allow) {
+        if (origin == null) {
+            return true;
+        }
+        final String o = origin.trim().toLowerCase(Locale.ROOT);
+        for (final String a : allow) {
+            if (a.endsWith(":*")) {
+                final String base = a.substring(0, a.length() - 2);
+                if (o.equals(base)) {
+                    return true;
+                }
+                if (o.startsWith(base + ":")) {
+                    final String p = o.substring(base.length() + 1);
+                    if (!p.isEmpty() && p.length() <= 5 && p.chars().allMatch(Character::isDigit)) {
+                        return true;
+                    }
+                }
+            } else if (o.equals(a)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The allowlist this server checks, as configured. */
+    public List<String> allowedOrigins() {
+        return allowedOrigins;
     }
 
     /** The port this server is bound to. */
     public int port() {
+        final Channel s = server;
+        if (port == 0 && s != null && s.localAddress() instanceof InetSocketAddress) {
+            // Port 0 is "any free port": the self-test's, so it never collides
+            // with a gate job's server.
+            return ((InetSocketAddress) s.localAddress()).getPort();
+        }
         return port;
     }
 
@@ -287,6 +477,31 @@ public final class WsTransport implements Transport {
         return preSessionDrops.get();
     }
 
+    /** Observers accepted on {@value #OBSERVE_PATH} over the session (M50). */
+    public long observerConnects() {
+        return observerConnects.get();
+    }
+
+    /** Observers connected right now. */
+    public int observers() {
+        return observers.size();
+    }
+
+    /** Observers disconnected because they fell {@value #OBSERVER_BACKLOG_BYTES} bytes behind. */
+    public long observerOverflows() {
+        return observerOverflows.get();
+    }
+
+    /** Messages observers sent, every one released unread. */
+    public long observerFramesIn() {
+        return observerFramesIn.get();
+    }
+
+    /** Upgrade requests answered 403 because of their {@code Origin} (D281). */
+    public long originRefusals() {
+        return originRefusals.get();
+    }
+
     // ==================================================================
     // Transport
     // ==================================================================
@@ -324,18 +539,11 @@ public final class WsTransport implements Transport {
                  p.addLast(new HttpObjectAggregator(MAX_HTTP_CONTENT));
                  p.addLast(new ChunkedWriteHandler());
                  p.addLast(new Health());
-                 // The explicit frame size is the point of the four-argument
-                 // constructor: the default is netty's 64 KB, and the 1 MB
-                 // HttpObjectAggregator above bounds only the HANDSHAKE.
-                 p.addLast(new WebSocketServerProtocolHandler("/ws", null, false, MAX_WS_FRAME));
-                 // "One protocol frame per websocket message" was an assumption,
-                 // not a rule: a client that fragments one frame across a
-                 // TextWebSocketFrame(final=false) plus ContinuationWebSocketFrames
-                 // had its first fragment parsed as truncated JSON and dropped
-                 // and the rest discarded in silence.  The aggregator makes the
-                 // assumption true instead.
-                 p.addLast(new WebSocketFrameAggregator(MAX_WS_FRAME));
-                 p.addLast(new WsHandler());
+                 // Amendment M50: the Origin check, then the route.  The
+                 // websocket handlers are added by the Door once it has read
+                 // the upgrade request's path -- the seat's for /ws, an
+                 // observer's for /observe -- so each channel carries one set.
+                 p.addLast(new Door());
              }
          });
         try {
@@ -364,24 +572,31 @@ public final class WsTransport implements Transport {
      */
     @Override
     public void push(final String frameJson) {
-        switch (frameType(frameJson)) {
-        case "hello_ok":
-            lastHello = frameJson;
-            // Amendment M42, the transport's own half: a handshake opens a NEW
-            // game (M38) and the cached `input` belongs to the one that just
-            // ended, so nothing may re-deliver it.  The rule -- an `input`
-            // reaches a client only after the engine has asked -- is kept in
-            // WireGuiGame.onResync, which owns `inputSeen`; this line is what
-            // makes it true for the fallback below it as well, and it costs one
-            // assignment per game.
-            lastInput = null;
-            break;
-        case "state":    lastState = frameJson; break;
-        case "input":    lastInput = frameJson; break;
-        case "over":     sawOver = true; break;
-        default: break;
+        synchronized (fanout) {
+            switch (frameType(frameJson)) {
+            case "hello_ok":
+                lastHello = frameJson;
+                // Amendment M42, the transport's own half: a handshake opens a NEW
+                // game (M38) and the cached `input` belongs to the one that just
+                // ended, so nothing may re-deliver it.  The rule -- an `input`
+                // reaches a client only after the engine has asked -- is kept in
+                // WireGuiGame.onResync, which owns `inputSeen`; this line is what
+                // makes it true for the fallback below it as well, and it costs one
+                // assignment per game.  The previous game's `over` goes with it
+                // (M50: it is what an observer joining between games is told).
+                lastInput = null;
+                lastOver = null;
+                break;
+            case "state":    lastState = frameJson; break;
+            case "input":    lastInput = frameJson; break;
+            case "over":     sawOver = true; lastOver = frameJson; break;
+            default: break;
+            }
+            write(frameJson);
+            if (!observers.isEmpty()) {
+                fanOut(frameJson);
+            }
         }
-        write(frameJson);
     }
 
     /**
@@ -403,9 +618,14 @@ public final class WsTransport implements Transport {
     @Override
     public String ask(final String askId, final String askFrameJson, final long timeoutMs) {
         Transport.assertGameThread("Transport.ask");
-        outstanding.put(askId, askFrameJson);
         try {
-            push(askFrameJson);
+            // One step under the fan-out monitor, so an observer's catch-up
+            // either finds the ask outstanding and sends it, or misses it and
+            // gets it from this push -- never both (M50).
+            synchronized (fanout) {
+                outstanding.put(askId, askFrameJson);
+                push(askFrameJson);
+            }
             final long deadline = connected() ? timeoutMs : NO_CLIENT_ASK_TIMEOUT_MS;
             if (deadline != timeoutMs) {
                 System.err.println("WS ASK " + askId + " parks for " + deadline
@@ -443,6 +663,14 @@ public final class WsTransport implements Transport {
         closed = true;
         if (pool != null) {
             pool.cancelAll();
+        }
+        // Observers first, and without waiting on any of them: each is told
+        // 1000 behind whatever it has queued, and the seat's drain below is
+        // the time they get to flush it.
+        for (final Observer o : observers) {
+            observers.remove(o);
+            o.ch.writeAndFlush(new CloseWebSocketFrame(OVER_CLOSE_CODE,
+                    sawOver ? "game over" : "server closing")).addListener(ChannelFutureListener.CLOSE);
         }
         final Channel ch = client;
         if (ch != null && ch.isActive()) {
@@ -496,6 +724,116 @@ public final class WsTransport implements Transport {
         }
         framesOut.incrementAndGet();
         ch.writeAndFlush(new TextWebSocketFrame(frameJson));
+    }
+
+    // ==================================================================
+    // Observers (amendment M50, D280)
+    // ==================================================================
+
+    /** One read-only follower on {@value #OBSERVE_PATH}. */
+    private static final class Observer {
+        final Channel ch;
+        /** Bytes handed to netty for this channel and not yet flushed. */
+        final AtomicLong backlog = new AtomicLong();
+
+        Observer(final Channel ch) {
+            this.ch = ch;
+        }
+    }
+
+    /**
+     * Hand one session frame to every observer: encoded once, shared by
+     * reference count.  Called under {@link #fanout}, from {@link #push}.
+     */
+    private void fanOut(final String frameJson) {
+        final ByteBuf bytes = Unpooled.copiedBuffer(frameJson, StandardCharsets.UTF_8);
+        try {
+            for (final Observer o : observers) {
+                send(o, bytes);
+            }
+        } finally {
+            bytes.release();
+        }
+    }
+
+    /**
+     * One frame to one observer, or the observer is dropped.  Never blocks and
+     * never queues more than {@value #OBSERVER_BACKLOG_BYTES} bytes for it: an
+     * observer that would pass the bound is removed and its channel closed at
+     * once -- no close frame, because one would wait behind the very backlog
+     * that is the problem -- so it sees an abnormal close (1006) and may
+     * reconnect for a fresh catch-up.
+     */
+    private void send(final Observer o, final ByteBuf bytes) {
+        if (!o.ch.isActive()) {
+            observers.remove(o);
+            return;
+        }
+        final int n = bytes.readableBytes();
+        if (o.backlog.addAndGet(n) > OBSERVER_BACKLOG_BYTES) {
+            if (observers.remove(o)) {
+                observerOverflows.incrementAndGet();
+                System.err.println("WS OBSERVER DROPPED " + o.ch.remoteAddress() + ": more than "
+                        + OBSERVER_BACKLOG_BYTES + " bytes behind");
+            }
+            o.ch.close();
+            return;
+        }
+        o.ch.writeAndFlush(new TextWebSocketFrame(bytes.retainedDuplicate()))
+            .addListener(f -> o.backlog.addAndGet(-n));
+    }
+
+    /** {@link #send} for one string, on the catch-up path. */
+    private void send(final Observer o, final String frameJson) {
+        final ByteBuf bytes = Unpooled.copiedBuffer(frameJson, StandardCharsets.UTF_8);
+        try {
+            send(o, bytes);
+        } finally {
+            bytes.release();
+        }
+    }
+
+    /**
+     * Admit an observer: catch it up, then add it to the fan-out -- both under
+     * {@link #fanout}, so no frame falls between the two or lands in both.
+     *
+     * <p>Before the session exists there is nothing to catch up on: it is
+     * simply added, and {@code openView}'s own frames reach it as they are
+     * pushed.  Between games it is caught up on the game that just ended -- its
+     * {@code hello_ok}, its last {@code state} and its {@code over} -- and the
+     * next game's {@code hello_ok} follows when there is one.
+     */
+    private void admitObserver(final Observer o) {
+        synchronized (fanout) {
+            if (lastHello != null) {
+                send(o, lastHello);
+                final String state = lastState;
+                if (state != null) {
+                    send(o, state);
+                }
+                // The seat's rule, read off the stream the seat was sent: once
+                // `over` is out nothing else is (OverRaceSelfTest's invariant),
+                // and before the engine's first push there is no `input` (M42;
+                // `lastInput` is nulled by every hello_ok and set only by a push).
+                if (lastOver != null) {
+                    send(o, lastOver);
+                } else if (lastInput != null) {
+                    send(o, lastInput);
+                }
+                final Map<String, String> pending;
+                synchronized (outstanding) {
+                    pending = new LinkedHashMap<>(outstanding);
+                }
+                for (final Map.Entry<String, String> e : pending.entrySet()) {
+                    if (pool != null && pool.isPending(e.getKey())) {
+                        send(o, e.getValue());
+                    }
+                }
+            }
+            if (o.ch.isActive()) {
+                observers.add(o);
+            }
+        }
     }
 
     /**
@@ -762,6 +1100,148 @@ public final class WsTransport implements Transport {
                 }
             }
             ctx.fireChannelRead(msg);
+        }
+    }
+
+    /**
+     * The door to both sockets (amendment <b>M50</b>): the {@code Origin}
+     * check, then the route.
+     *
+     * <p><b>The Origin check (D281).</b>  The socket binds loopback and has no
+     * auth (README's NON-GOALS), and a loopback bind keeps out other machines
+     * and nothing else: any page the user has open in a browser can open
+     * {@code ws://127.0.0.1:8642/ws}, because a websocket is not subject to
+     * CORS.  With the board not connected that page got the seat -- it could
+     * concede, or sit on every ask.  A browser always sends {@code Origin} on
+     * the upgrade and a page cannot forge it, so an upgrade to either path
+     * whose {@code Origin} is not on the allowlist is answered <b>403</b> and
+     * closed before any handshake: no socket, no {@code notice}, nothing
+     * counted as a connection.  No header means no browser, and is allowed.
+     *
+     * <p><b>The route.</b>  The websocket handlers are added HERE, once the
+     * path is known, and only for one of the two paths: the seat's three
+     * (exactly the handlers M3 put in {@code initChannel}) for
+     * {@value #SEAT_PATH}, an observer's for {@value #OBSERVE_PATH}.  A channel
+     * therefore carries one set, and nothing from an observer can reach
+     * {@link WsHandler}, {@link Transport.Inbound} or the seat.  Any other path
+     * goes on with no websocket handler at all, as it went past the old ones
+     * unmatched.
+     */
+    private final class Door extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+            if (msg instanceof FullHttpRequest) {
+                final FullHttpRequest req = (FullHttpRequest) msg;
+                final String uri = req.uri();
+                final int q = uri.indexOf('?');
+                final String path = q < 0 ? uri : uri.substring(0, q);
+                final boolean observe = OBSERVE_PATH.equals(path);
+                if (observe || SEAT_PATH.equals(path)) {
+                    final String origin = req.headers().get(HttpHeaderNames.ORIGIN);
+                    if (!originAllowed(origin, allowedOrigins)) {
+                        originRefusals.incrementAndGet();
+                        System.err.println("WS ORIGIN REFUSED " + path + " from " + origin
+                                + " (" + ctx.channel().remoteAddress() + "): not in wsAllowedOrigins");
+                        final byte[] payload = "origin not allowed".getBytes(StandardCharsets.US_ASCII);
+                        final FullHttpResponse res = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN,
+                                Unpooled.wrappedBuffer(payload));
+                        res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=us-ascii");
+                        res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, payload.length);
+                        res.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+                        ReferenceCountUtil.release(msg);
+                        ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
+                        return;
+                    }
+                    final ChannelPipeline p = ctx.pipeline();
+                    if (p.get(H_FRAMES) == null) {
+                        if (observe) {
+                            p.addLast(H_PROTOCOL, new WebSocketServerProtocolHandler(
+                                    OBSERVE_PATH, null, false, MAX_OBSERVER_IN_FRAME));
+                            p.addLast(H_AGGREGATOR, new WebSocketFrameAggregator(MAX_OBSERVER_IN_FRAME));
+                            p.addLast(H_FRAMES, new ObserverHandler());
+                        } else {
+                            // The explicit frame size is the point of the
+                            // four-argument constructor: the default is netty's
+                            // 64 KB, and the 1 MB HttpObjectAggregator in front
+                            // bounds only the HANDSHAKE.
+                            p.addLast(H_PROTOCOL, new WebSocketServerProtocolHandler(
+                                    SEAT_PATH, null, false, MAX_WS_FRAME));
+                            // "One protocol frame per websocket message" was an
+                            // assumption, not a rule: a client that fragments one
+                            // frame across a TextWebSocketFrame(final=false) plus
+                            // ContinuationWebSocketFrames had its first fragment
+                            // parsed as truncated JSON and dropped and the rest
+                            // discarded in silence.  The aggregator makes the
+                            // assumption true instead.
+                            p.addLast(H_AGGREGATOR, new WebSocketFrameAggregator(MAX_WS_FRAME));
+                            p.addLast(H_FRAMES, new WsHandler());
+                        }
+                    }
+                }
+            }
+            ctx.fireChannelRead(msg);
+        }
+    }
+
+    /**
+     * An observer's frame handler (amendment <b>M50</b>): it sends, and it
+     * never listens.
+     *
+     * <p>Every message an observer sends is <b>released unread</b> -- not
+     * parsed, not logged, not answered, not counted as a seat's frame -- so no
+     * byte from {@value #OBSERVE_PATH} can reach {@code onAct},
+     * {@code onAnswer} or {@code onResync}.  Its connect and its disconnect
+     * touch nothing but the observer set: no {@code pool.reopen()}, no
+     * {@code onResync}, no {@code onDisconnect}, no frame-log line.
+     */
+    private final class ObserverHandler extends ChannelInboundHandlerAdapter {
+
+        private Observer me;
+
+        @Override
+        public void userEventTriggered(final ChannelHandlerContext ctx, final Object evt) {
+            if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete) {
+                if (closed) {
+                    ctx.writeAndFlush(new CloseWebSocketFrame(OVER_CLOSE_CODE, "server closing"))
+                       .addListener(ChannelFutureListener.CLOSE);
+                    return;
+                }
+                me = new Observer(ctx.channel());
+                observerConnects.incrementAndGet();
+                admitObserver(me);
+                System.err.println("WS OBSERVER CONNECT " + ctx.channel().remoteAddress()
+                        + " (" + observers.size() + " watching)");
+                return;
+            }
+            ctx.fireUserEventTriggered(evt);
+        }
+
+        @Override
+        public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+            if (msg instanceof WebSocketFrame) {
+                observerFramesIn.incrementAndGet();
+                ReferenceCountUtil.release(msg);
+                return;
+            }
+            ctx.fireChannelRead(msg);
+        }
+
+        @Override
+        public void channelInactive(final ChannelHandlerContext ctx) {
+            if (me != null && observers.remove(me)) {
+                System.err.println("WS OBSERVER DISCONNECT " + ctx.channel().remoteAddress()
+                        + " (" + observers.size() + " watching)");
+            }
+            ctx.fireChannelInactive();
+        }
+
+        @Override
+        public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
+            if (me != null) {
+                observers.remove(me);
+            }
+            ctx.close();
         }
     }
 
