@@ -59,6 +59,9 @@
 #   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
 #   ./scripts/play.sh -- --games 1          # one game only (your --games wins)
 #   ./scripts/play.sh --engine-only         # ONLY the engine: no vite, no browser (below)
+#   ./scripts/play.sh --engine-only --lan   # ...and play from a phone on the same Wi-Fi (below)
+#   ./scripts/play.sh --lan --refresh-site  # ...re-downloading ForgeCoach's site first
+#   ./scripts/play.sh --lan --site-dir ../ForgeCoach/dist   # ...serving a local ForgeCoach build
 #
 # Everything after `--` goes to `mtgtable.MtgTable` untouched, so a flag this
 # script has never heard of still reaches the bridge:
@@ -70,6 +73,30 @@
 # reducer are untouched and `#arena` is all that changes.  `V` switches back to
 # the board mid-game without dropping a frame; `?arena=off` is the kill switch
 # if WebGL will not start.
+#
+# --lan (amendment M51, D287-D289) is --engine-only for a PHONE on the same Wi-Fi.
+# A phone cannot use the github.io page against this machine -- an https page may
+# not open ws:// to a LAN address (mixed content; only localhost is exempt) -- so
+# the bridge serves ForgeCoach ITSELF, over plain http on the ws port, and the
+# phone opens http://<this machine's LAN IP>:<wsPort>/?token=<T>.  It implies
+# --engine-only, and:
+#
+#   - binds 0.0.0.0 instead of 127.0.0.1, behind a fresh 128-bit pairing token per
+#     run: every request from another machine (the page, its files, /health, /ws,
+#     /observe) without it is a 403.  This machine needs no token, so the desktop's
+#     browser -- github.io's ForgeCoach included -- works exactly as before;
+#   - downloads ForgeCoach's built site, https://jalirkan.github.io/ForgeCoach/
+#     forgecoach-site.zip, into var/forgecoach/ (re-downloaded when older than a
+#     day, or with --refresh-site; offline, the cached copy; neither is an error
+#     that says so) and the bridge serves it at / (--site-dir <path> serves a local
+#     ForgeCoach build instead, e.g. its dist/ built with --base ./);
+#   - prints the phone URL for every non-loopback IPv4 address, best guess first,
+#     and a QR code of the first if `qrencode` is installed.
+#
+# THE TOKEN IS THE ONLY LOCK.  It is for a home network you trust: anyone on the
+# same network who sees the URL can take the seat.  Ctrl-C stops it, and the next
+# run has a new token.  D286's idle limit still applies: an hour with no /ws client
+# ends the session.
 #
 # --engine-only is steps 1-4 and then a wait: no vite, no browser, no `web/node_modules`
 # needed.  It is for a client that is not this repo's board -- ForgeCoach
@@ -104,6 +131,11 @@ WS_PORT="$(cfg_get wsPort || echo 8642)"
 WEB_PORT="$(cfg_get webPort || echo 5173)"
 OPEN=1
 ENGINE_ONLY=0                    # D285: steps 1-4 only, see the header
+LAN=0                            # M51: a phone on the same Wi-Fi, see the header
+REFRESH_SITE=0                   # M51: re-download ForgeCoach's site even if cached
+SITE_DIR=""                      # M51: serve this ForgeCoach build instead of the download
+SITE_URL="https://jalirkan.github.io/ForgeCoach/forgecoach-site.zip"
+SITE_CACHE="var/forgecoach"
 ARENA=0                          # M7: --arena opens /#arena instead of the board
 KEEP_OPEN=1                      # M6: the default, see the header
 PASSTHROUGH=()
@@ -129,6 +161,9 @@ while [ $# -gt 0 ]; do
     --port)      WS_PORT="$2"; shift 2 ;;
     --web-port)  WEB_PORT="$2"; shift 2 ;;
     --engine-only) ENGINE_ONLY=1; shift ;;
+    --lan)       LAN=1; ENGINE_ONLY=1; shift ;;
+    --refresh-site) REFRESH_SITE=1; shift ;;
+    --site-dir)  SITE_DIR="$2"; shift 2 ;;
     --no-open)   OPEN=0; shift ;;
     --arena)     ARENA=1; shift ;;
     --no-arena)  ARENA=0; shift ;;
@@ -138,7 +173,7 @@ while [ $# -gt 0 ]; do
     --ai-deck|--deck2) AI_DECK="$2"; shift 2 ;;
     --ai-profile) AI_PROFILE="$2"; shift 2 ;;
     --mirror)    AI_DECK=""; shift ;;
-    --help|-h)   sed -n '5,91p' "$0"; exit 0 ;;
+    --help|-h)   sed -n '5,118p' "$0"; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
   esac
@@ -197,6 +232,7 @@ if ! passthrough_has --ai-profile; then
 fi
 say "match"
 [ "$ENGINE_ONLY" = "1" ] && echo "mode: engine only (no vite, no browser) — D285"
+[ "$LAN" = "1" ] && echo "mode: LAN — a phone on the same network, behind a pairing token (amendment M51)"
 if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
   echo "you:  $(deck_name "$DECK")  [$DECK]"; fi
 if passthrough_has --deck2 --ai-deck; then echo "AI:   (the --ai-deck after --)"
@@ -204,6 +240,67 @@ elif [ -n "$AI_DECK" ]; then echo "AI:   $(deck_name "$AI_DECK")  [$AI_DECK]"
 else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck is null)"; fi
 passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
   || echo "AI profile: $AI_PROFILE"
+
+# --------------------------------------------------------------------------
+# 0b: --lan's site (amendment M51, D289) -- before anything slow, so a missing
+#     site costs a second and not a build
+# --------------------------------------------------------------------------
+
+# unpack_zip ZIP DIR -- `unzip`, or Python's zipfile where there is none.  Both
+# refuse a member that would land outside DIR.
+unpack_zip() {
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -q "$1" -d "$2"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -m zipfile -e "$1" "$2"
+  else
+    die "neither unzip nor python3 is installed, so $1 cannot be unpacked"
+  fi
+}
+zip_ok() {   # a complete zip, not an HTML error page or a cut-off download
+  if command -v unzip >/dev/null 2>&1; then unzip -tq "$1" >/dev/null 2>&1
+  else python3 -c 'import sys,zipfile; sys.exit(zipfile.ZipFile(sys.argv[1]).testzip() is not None)' "$1" 2>/dev/null; fi
+}
+fetch_site() {
+  local zip="$SITE_CACHE/forgecoach-site.zip" site="$SITE_CACHE/site" stamp="$SITE_CACHE/site.stamp" fresh=0
+  mkdir -p "$SITE_CACHE"
+  if [ "$REFRESH_SITE" = "1" ] || [ ! -f "$zip" ] || [ -n "$(find "$zip" -mmin +1440 2>/dev/null)" ]; then
+    echo "downloading $SITE_URL"
+    if command -v curl >/dev/null 2>&1 \
+        && curl -fsSL --max-time 120 -o "$zip.part" "$SITE_URL" && zip_ok "$zip.part"; then
+      mv -f "$zip.part" "$zip"
+      fresh=1
+    else
+      rm -f "$zip.part"
+      [ -f "$zip" ] || die "could not download $SITE_URL and there is no cached copy in $zip -- check the network (or curl), or pass --site-dir <a built ForgeCoach>"
+      echo "  could not download it; using the cached copy of $(date -r "$zip" '+%Y-%m-%d %H:%M')"
+    fi
+  else
+    echo "ForgeCoach's site: the cached copy of $(date -r "$zip" '+%Y-%m-%d %H:%M') (under a day old; --refresh-site re-downloads)"
+  fi
+  if [ "$fresh" = "1" ] || [ ! -f "$site/index.html" ] || [ ! -f "$stamp" ] || [ "$zip" -nt "$stamp" ]; then
+    rm -rf "$site.new"
+    mkdir -p "$site.new"
+    unpack_zip "$zip" "$site.new" || die "could not unpack $zip"
+    [ -f "$site.new/index.html" ] || die "$zip has no index.html at its root -- not ForgeCoach's site zip"
+    rm -rf "$site"
+    mv "$site.new" "$site"
+    touch "$stamp"
+  fi
+  SITE_DIR="$site"
+}
+SITE_ARGS=()
+if [ "$LAN" = "1" ] || [ -n "$SITE_DIR" ]; then
+  say "ForgeCoach's site"
+  if [ -n "$SITE_DIR" ]; then
+    [ -f "$SITE_DIR/index.html" ] || die "--site-dir $SITE_DIR has no index.html at its root -- build ForgeCoach with --base ./ first"
+    echo "serving $SITE_DIR (--site-dir)"
+  else
+    fetch_site
+  fi
+  SITE_ARGS+=(--site-dir "$SITE_DIR")
+  [ "$LAN" = "1" ] && SITE_ARGS+=(--lan)
+fi
 
 # --------------------------------------------------------------------------
 # 1 + 2: the gate and the build
@@ -268,7 +365,8 @@ case " ${PASSTHROUGH[*]+${PASSTHROUGH[*]}} " in
 esac
 ./bridge/run.sh mtgtable.MtgTable --transport ws --port "$WS_PORT" \
     "${MATCH_ARGS[@]+"${MATCH_ARGS[@]}"}" \
-    "${KEEP_ARGS[@]+"${KEEP_ARGS[@]}"}" "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}" \
+    "${KEEP_ARGS[@]+"${KEEP_ARGS[@]}"}" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" \
+    "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}" \
     >>"$SERVER_LOG" 2>&1 &
 SERVER_PID=$!
 echo "pid $SERVER_PID · log $SERVER_LOG"
@@ -314,6 +412,30 @@ if [ "$ENGINE_ONLY" = "1" ]; then
   printf 'Engine ready on ws://127.0.0.1:%s/ws — open https://jalirkan.github.io/ForgeCoach/ and click Play\n' "$WS_PORT"
   echo "  (observers: ws://127.0.0.1:$WS_PORT/observe · log: $SERVER_LOG · Ctrl-C stops it)"
   echo "  keep every mtg-table board tab closed: the first /ws client takes the seat"
+  if [ "$LAN" = "1" ]; then
+    # The bridge prints one `WS LAN PAGE` line per address, best guess first,
+    # just after the readiness flip; give it a moment to land in the log.
+    PAGES=()
+    for _ in $(seq 1 20); do
+      mapfile -t PAGES < <(sed -n 's/^WS LAN PAGE  //p' "$SERVER_LOG")
+      [ "${#PAGES[@]}" -gt 0 ] && break
+      sleep 0.25
+    done
+    say "LAN — open this on your phone (same Wi-Fi), then click Play"
+    if [ "${#PAGES[@]}" -eq 0 ]; then
+      echo "  no non-loopback IPv4 address found -- is this machine on a network? (log: $SERVER_LOG)"
+    else
+      echo "  ${PAGES[0]}"
+      [ "${#PAGES[@]}" -gt 1 ] && echo "  other addresses of this machine, if that one does not load:"
+      for u in "${PAGES[@]:1}"; do echo "    $u"; done
+      if command -v qrencode >/dev/null 2>&1; then
+        echo
+        qrencode -t ANSIUTF8 -m 2 "${PAGES[0]}" || true
+      fi
+    fi
+    echo "  this desktop needs no token: http://127.0.0.1:$WS_PORT/ or https://jalirkan.github.io/ForgeCoach/"
+    echo "  the token is the only lock -- for a home network you trust; the next run has a new one"
+  fi
   SERVER_RC=0
   wait "$SERVER_PID" || SERVER_RC=$?
   say "the bridge exited ($SERVER_RC) — its last lines:"

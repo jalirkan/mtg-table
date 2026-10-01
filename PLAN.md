@@ -477,6 +477,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The observer socket and the Origin check *(off the plan; for ForgeCoach, on the owner's approval)* | ½ day | **built, tested and documented** on branch `c/observe-endpoint` (2026-10-01), off `main`'s `b95e286` — `ws://127.0.0.1:<port>/observe`, a read-only copy of the seat's frames for any number of followers that can never act, answer, resync or hold the seat, bounded at 8 MB unflushed per observer; and an `Origin` allowlist on `/ws` and `/observe` (`config.json`'s `wsAllowedOrigins`) so a page from elsewhere gets 403 (amendment **M50**, **D280**–**D282**); `WsObserveSelfTest` is the build's sixth self-test; three follow-ups; *The observer socket*, just above *Deferred* |
 | — | `play.sh --engine-only`: the bridge alone, for ForgeCoach *(off the plan; on the owner's approval)* | ¼ day | **built and verified, gate not run** on branch `c/engine-only` (2026-10-01), off `main`'s `1be90a7` — `scripts/play.sh`'s steps 1–4 and a wait, no vite and no browser, the match flags and the `--games 3 --keep-open` defaults unchanged (**D285**); *The engine-only mode*, just above *Deferred* |
 | — | A human game has no wall-clock limit *(off the plan; the owner's request, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/game-timeout` (2026-10-01), off `main`'s `df7a3bc` — `MtgTable`'s 900 s game timeout now applies to `null` / `auto` only; `ws` and `console` have none, a seatless `ws` game ends after 3600 s with no `/ws` client; `--game-timeout` and `--idle-timeout` (**D286**); *The game timeout*, just above *Deferred* |
+| — | LAN play: ForgeCoach from a phone on the same Wi-Fi *(off the plan; on the owner's approval)* | ½ day | **built and verified, gate not run** on branch `c/lan-play` (2026-10-01), off `main`'s `e511c37` — `play.sh --lan` (implies `--engine-only`): the bridge binds `0.0.0.0` behind a per-run 128-bit pairing token every non-loopback request must carry (loopback needs none), serves ForgeCoach's built site (downloaded as a zip from its Pages site and cached a day under `var/forgecoach/`, or `--site-dir`) on the ws port, admits the page's own `http://<Host>` Origin from a non-loopback peer, and prints the phone URLs (and a QR code with `qrencode`) (amendment **M51**, **D287**–**D289**); `WsLanSelfTest` is the build's seventh self-test; *LAN play*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9618,6 +9619,35 @@ Follow-up: **the limits have no self-test.** `MtgTable.run` is the only caller,
 and the build's self-tests do not boot an engine; the idle path was measured by
 hand (D286). A test would need `awaitGameEnd` lifted into a class that takes a
 `Transport`-shaped `connected()` and a clock.
+
+## LAN play — ForgeCoach from a phone (2026-10-01, D287–D289)
+
+**Status: built and verified; the full gate was not run** (nothing in it passes
+`--lan` or `--site-dir`, and without them the transport is M50's, held by
+`WsObserveSelfTest` and step 10's seven servers). Branch `c/lan-play`, off
+`main`'s `e511c37`; amendment **M51**, D287–D289, the lane's whole reserved range.
+An https page may not open `ws://` to a LAN address, so a phone cannot use
+github.io's ForgeCoach against the desktop; in LAN mode the bridge serves
+ForgeCoach itself on the ws port and the phone opens one URL.
+
+```bash
+./scripts/play.sh --engine-only --lan                  # bind 0.0.0.0, a fresh token, ForgeCoach's site at /
+./scripts/play.sh --lan --refresh-site                 # re-download the site first (else: cached a day)
+./scripts/play.sh --lan --site-dir ../ForgeCoach/dist  # serve a local ForgeCoach build (vite build --base ./)
+./bridge/run.sh mtgtable.MtgTable --transport ws --lan --site-dir var/forgecoach/site --keep-open
+```
+
+Checked, with the pinned jar, through the container's non-loopback address and
+through loopback: D289's *Measured*. `bridge/build.sh` (seven self-tests;
+`WsLanSelfTest` fails under five planted mutants), the lint's self-test and
+`web/test/claude-md.test.ts` pass.
+
+Follow-ups, outside this repo or for the owner: **ForgeCoach must publish
+`forgecoach-site.zip`** (its build with `--base ./`, files at the zip's root) on
+its Pages site — until it does, `--lan` needs `--site-dir` — **and its page must
+connect to `ws://<location.host>/ws?token=<the page's token>` when it is served
+over http by the bridge**. No TLS (the token is readable to anyone who can read
+the network's traffic); it is a home-network feature, and the docs say so.
 
 ## Deferred — out of scope for M0–M7
 

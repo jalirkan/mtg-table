@@ -20,8 +20,8 @@
 #              snippet, D180) and tools/lint-bridge.sh (a grep over bridge/src
 #              and tools/**/*.java; neither needs a jar), then the pinned engine --
 #              the official forge-2.0.14 release asset, its jar checked against
-#              the repo's pin (D110) -- and ./bridge/build.sh: javac plus its six
-#              self-tests.  None of the six boots an engine or reads Forge's
+#              the repo's pin (D110) -- and ./bridge/build.sh: javac plus its seven
+#              self-tests.  None of the seven boots an engine or reads Forge's
 #              res/ (measured: the two that install the headless GUI,
 #              OverRaceSelfTest and ActGuardSelfTest, pass over an empty Forge
 #              home -- no res/, no profile -- and write nothing outside var/), so

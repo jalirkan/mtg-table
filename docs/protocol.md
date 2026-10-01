@@ -12,7 +12,9 @@ Transport: JSON text frames over `ws://127.0.0.1:8642/ws`, one message per frame
 frame (amendment **M13**). `ws://127.0.0.1:8642/observe` on the same port is a
 read-only copy of the seat's stream for any number of followers, and both socket
 paths refuse a browser page whose `Origin` is not on `config.json`'s
-`wsAllowedOrigins` (amendment **M50**). Loopback bind only, no auth (an explicit non-goal). The same frames, in the same
+`wsAllowedOrigins` (amendment **M50**). Loopback bind only, no auth (an explicit non-goal) — except a
+LAN server (`--lan`, amendment **M51**), which binds every interface behind a
+per-run pairing token and may serve ForgeCoach's static site on the same port. The same frames, in the same
 shapes, are what `var/games/<id>/frames.jsonl` contains (§8), so a log replays
 through exactly the reducer a live socket feeds.
 
@@ -27,6 +29,23 @@ A browser is not one.
 ---
 
 ## Amendments
+
+### 2026-10-01 — LAN play: the pairing token and the static site
+
+Applied by the LAN-play lane (branch `c/lan-play`), on the owner's approval, so
+the owner can play ForgeCoach from a phone on the same Wi-Fi. One row. It adds an
+HTTP surface and a credential on the socket's port, both off unless asked for, and
+changes **no frame**: no key, no type, no `seq` rule, so it is not a `v` bump and
+every recording is untouched. Without `--lan` and `--site-dir` the server binds,
+answers and refuses exactly as M50 left it, save one fix any client sees: a query
+string on `/ws` or `/observe` is now dropped before netty's handshaker, which
+matched the path exactly and left such an upgrade hanging. Decisions
+**D287**–**D289**; held by `mtgtable.WsLanSelfTest`, the build's seventh
+self-test.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M51 | §2, M13, M15, M50 | **`--lan`: every interface, behind a pairing token; `--site-dir`: ForgeCoach's static site on the socket's port.** **(1) Why.** An https page may not open `ws://` to a LAN address (mixed content; only loopback is exempt), so a phone cannot use `https://jalirkan.github.io/ForgeCoach/` against the desktop. In LAN mode the bridge serves ForgeCoach itself over plain http on the ws port, and the phone opens `http://<desktop's LAN IP>:<wsPort>/?token=<T>`; the page then connects to `ws://<same host>/ws?token=<T>` — the same origin, so no mixed content. **(2) The bind.** `MtgTable --transport ws --lan` binds **`0.0.0.0`** instead of `127.0.0.1`. **(3) The token.** One per run: 128 bits from `SecureRandom`, base64url without padding (22 characters), printed only in the phone URLs (`WS LAN PAGE  http://<ip>:<port>/?token=<T>`, one line per non-loopback IPv4 address, best guess first — the default route's source address, then private ranges, virtual interfaces last; `WS LAN SEAT  ws://…/ws?token=<T>` when no site is served). **A loopback peer never needs it** (the desktop's browser, github.io's ForgeCoach, `play.sh`'s `/health` poll and every tool see what they saw). **A non-loopback peer must present it on every request**, `/health` included, or is answered **HTTP 403** (`text/plain`, `Connection: close`) before any other handler: on `/ws` and `/observe` as the query parameter **`token`**; on anything else as `token` or as the cookie **`mtgtable_token`**, which the server sets (`Path=/; HttpOnly; SameSite=Strict`) on an HTML response to a non-loopback request whose query carried a valid token, because a browser fetches the page's scripts, styles and samples without the page's query. The cookie never opens a socket. The comparison hashes both strings (SHA-256) and compares the digests with `MessageDigest.isEqual`, so its time depends on neither the first difference nor the length. The query is stripped from a socket path's URI before the handshake, and the token is never logged (a refusal logs the method, the path and the peer). **(4) `Origin`.** M50's check is unchanged and still runs on both paths; on a LAN server it additionally admits an `Origin` equal to **`http://` + the request's `Host` header** (case-insensitive, `Host` a name or IPv4 address with an optional port) — the page this server served — **only from a non-loopback peer**, which has already shown the token. A loopback peer gets M50's list alone, so a page whose name rebinds to 127.0.0.1 is still refused. **(5) The site.** `--site-dir <path>` (with or without `--lan`; a directory holding `index.html` at its root, checked at startup) is served at `/` for **`GET` and `HEAD` only** (else **405**, `Allow: GET, HEAD`): `/` is `index.html`; a request's path is percent-decoded, and one with a NUL, a backslash, a `.` or `..` segment, a doubled leading slash, or that normalises outside the root is **403**; a name that is not a regular file — a directory included, so there is no listing — is **404**; a file whose real path (symlinks resolved) leaves the root is **403**. `Content-Type` by extension: `text/html; charset=utf-8`, `text/javascript; charset=utf-8`, `text/css; charset=utf-8`, `application/json`, `image/svg+xml`, `image/png` (and jpeg, gif, webp, ico, woff/woff2, wasm, txt, webmanifest), anything else — **`.gz` among it — `application/octet-stream`, and never a `Content-Encoding`**: ForgeCoach fetches its `samples/*.jsonl.gz` and decompresses them itself. Every file carries `X-Content-Type-Options: nosniff`; HTML carries **`Cache-Control: no-cache`** and `Referrer-Policy: no-referrer` (its URL holds the token), everything else `max-age=3600`. `/ws`, `/observe` and `/health` are untouched by it, and without `--site-dir` no request outside them is answered, as before. **(6) The run** prints `WS SITE      http://127.0.0.1:<port>/  (<dir>)` and `WS LAN       bound 0.0.0.0:<port> …` after `WS HEALTH`, then the `WS LAN PAGE` lines, and its summary gains `ws lan / site = N requests refused for want of the token, N site files served, N not found, N refused`. **(7) What it is not.** The token is the only gate between the network and the seat: no TLS, so anyone who can read the network's traffic can read it; it is for a home network. D286's idle limit still ends a session after an hour with no `/ws` client. | LAN play |
 
 ### 2026-10-01 — the observer socket and the Origin check
 

@@ -97,11 +97,20 @@ finishable. Anything on this list is a closed question, not a backlog item.
   `Origin` on `config.json`'s `wsAllowedOrigins` (loopback on any port and
   `https://jalirkan.github.io` by default), or it is refused 403, so a page you
   happen to have open cannot take the seat. That is the security model.
+  *Lifted in part on 2026-10-01 by **D287**, on the owner's approval:* LAN play
+  (`./scripts/play.sh --lan`, amendment M51) puts a per-run pairing token in front
+  of every request from another machine. It is a shared secret in a URL, not an
+  account, and still a no: users, logins, sessions that outlive a run.
 - **No packaging, no installer, no Docker, no release artifact.** You run it from
   the checkout with the commands below. Forge stays where you installed it.
 - **No delta protocol.** Every `state` frame is a full coalesced snapshot. Deltas
   are a documented future server-side change, not a v1 feature.
 - **Localhost only.** No deployment, no remote access, no tunnel, no TLS.
+  *Lifted in part on 2026-10-01 by **D287**–**D289**, on the owner's approval:*
+  `./scripts/play.sh --lan` binds every interface so a phone on the same home
+  network can play, behind a pairing token, serving ForgeCoach's static site on
+  the socket's port. Still a no: anything beyond the local network, a tunnel, TLS,
+  and a LAN bind that is not asked for by that flag.
 - **No rules logic in the client.** No mana-payability prediction, no targeting
   validation, no phase-stop logic, no legality checks. If the browser has to
   compute a rules answer, the design is wrong.
@@ -226,7 +235,7 @@ the first failure: `check-forge.sh` → `lint-bridge.sh` (the banned-accessor
 grep over `bridge/src` and `tools/**/*.java`, D182, the three game-thread hops
 among it, D181) → **2b**, `lint-bridge-selftest.sh` (every rule of the lint
 fires on a planted snippet, and a rule with no case fails, D180) →
-`bridge/build.sh` (javac plus six self-tests) → `Smoke` → a `RecordMatch`
+`bridge/build.sh` (javac plus seven self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
 `fixtures/games/g1.jsonl` (`tools/wire-drift.mjs`: the same non-state frames,
 event stream, phase walk and final board, every board cut at a turn, phase or
@@ -337,6 +346,12 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 ./scripts/play.sh --engine-only         # ONLY the engine, for ForgeCoach (D285): no vite, no browser
 #   prints "Engine ready on ws://127.0.0.1:8642/ws — open https://jalirkan.github.io/ForgeCoach/
 #   and click Play"; same match flags and defaults; Ctrl-C stops it
+./scripts/play.sh --engine-only --lan   # ...and play from a PHONE on the same Wi-Fi (M51, D287-D289)
+#   binds 0.0.0.0 behind a fresh pairing token, serves ForgeCoach's site on the ws
+#   port (downloaded into var/forgecoach/, cached a day; --refresh-site, or
+#   --site-dir <a ForgeCoach build>), prints http://<LAN IP>:8642/?token=<T> for
+#   every address (and a QR code if qrencode is installed).  For a HOME network:
+#   the token is the only lock.
 
 # Match setup — WHAT you play against (amendment M44; "Choosing decks and the AI"
 #   below has the whole story).  A bare ./scripts/play.sh is your deck against
@@ -496,7 +511,7 @@ side by side on GitHub's `ubuntu-latest`.
 | job | what it runs |
 |---|---|
 | `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
-| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its six self-tests, on Temurin 21 |
+| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its seven self-tests, on Temurin 21 |
 | `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
 
 **The engine in CI.** CI is the one place anything downloads Forge, and it
@@ -509,7 +524,7 @@ it, extracts **the jar alone**, fails unless the jar's sha256 is the pin in
 `FORGE_JAR` at it (hard rule 9; `config.json` is not edited). Only that jar is
 kept, in the Actions cache under a key naming the asset and both digests — never
 in git and never as an artifact. `res/` is not extracted and
-`tools/make-forge-home.sh` is not run: none of the six self-tests boots an engine
+`tools/make-forge-home.sh` is not run: none of the seven self-tests boots an engine
 or reads `res/`.
 
 **What stays local.** `./tools/check-all.sh` — Smoke, the recordings and the
@@ -626,6 +641,34 @@ same match flags (`--deck`, `--ai-deck`, `--ai-profile`, `--mirror`, `--seed`,
 New game and Next game have a session to act in). Ctrl-C (or the match ending and
 the linger window closing) stops the JVM and exits 0. **Close every mtg-table board
 tab first**: the first `/ws` client takes the seat and a second is refused 4001.
+
+**Playing from a phone: `./scripts/play.sh --engine-only --lan`** (**D287**–**D289**,
+amendment M51). An https page may not open `ws://` to another machine's address
+(mixed content; only localhost is exempt), so the phone cannot use the github.io
+page against the desktop. In LAN mode the bridge serves ForgeCoach itself, over
+plain http on the socket's port, and the phone opens one URL — the page then talks
+to the socket on the same origin. `--lan` implies `--engine-only` and:
+
+- binds `0.0.0.0` instead of `127.0.0.1`, behind a **pairing token** made fresh on
+  every run (128 random bits). Every request from another machine — the page, its
+  files, `/health`, `/ws`, `/observe` — without it is refused 403. This machine
+  needs no token, so the desktop's browser, github.io's ForgeCoach included, works
+  exactly as before;
+- downloads ForgeCoach's built site
+  (`https://jalirkan.github.io/ForgeCoach/forgecoach-site.zip`) into
+  `var/forgecoach/`, again when the copy is over a day old or you pass
+  `--refresh-site`, and uses the cached copy when offline (with neither it says so
+  and stops). `--site-dir <path>` serves a local ForgeCoach build instead (one
+  built with `vite build --base ./`);
+- prints `http://<this machine's LAN IP>:<wsPort>/?token=<T>` for every network
+  address, the best guess first, and a QR code of it if `qrencode` is installed.
+  Open it on the phone (same Wi-Fi) and click Play.
+
+**The token is the only lock, and there is no TLS.** Anyone on the same network
+who sees the URL — or can read the network's traffic — can take the seat. Use it
+on a home network you trust, and stop it (Ctrl-C) when you are done; the next run
+has a new token. The idle limit below still applies: an hour with no `/ws` client
+ends the session.
 
 **A game you play has no clock** (**D286**). `--transport ws` and `console` put no
 wall-clock limit on a game, so thinking for an hour is fine; `--transport null` and
@@ -2587,6 +2630,8 @@ mtg-table/
                              GET /health, one client, cancelAll on disconnect;
                              M50: /observe, the Origin allowlist)
                              WsObserveSelfTest (M50: observers and Origin, live)
+                             (M51: --lan's token gate and --site-dir's static site,
+                             in WsTransport) WsLanSelfTest (M51, live)
     out/                     gitignored
 
   web/                       the SPA. A pure function of the frame stream.
@@ -2932,7 +2977,8 @@ mtg-table/
                              images/<scryfallId>/<size>[.back].<ext> (D93)
   scripts/play.sh            M3/M6: check-forge -> build -> the ws bridge -> /health ->
                              vite.  Defaults to --games 3 --keep-open (M6);
-                             --engine-only (D285) stops after /health, for ForgeCoach
+                             --engine-only (D285) stops after /health, for ForgeCoach;
+                             --lan (D287-D289) for ForgeCoach on a phone
   scripts/spectate.sh        spectating (D118–D122): two AIs recorded by RecordMatch,
                              paced, into var/spectate/, followed live in the arena
 ```

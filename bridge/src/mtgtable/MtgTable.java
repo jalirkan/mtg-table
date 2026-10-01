@@ -59,6 +59,8 @@ import mtgtable.Json.JsonOut;
  *   ./bridge/run.sh mtgtable.MtgTable --transport auto    --seed 42
  *   ./bridge/run.sh mtgtable.MtgTable --transport null    --seed 42
  *   ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8642 --keep-open
+ *   ./bridge/run.sh mtgtable.MtgTable --transport ws --keep-open \
+ *       --lan --site-dir var/forgecoach/site        # M51: a phone on the LAN
  *   ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42 \
  *       --ai-deck decks/morph-probe.dck --ai-profile Reckless
  * </pre>
@@ -193,6 +195,12 @@ public final class MtgTable {
         // boots, so a typo costs a second and not FModel.initialize.  Never
         // empty: see Bootstrap.createAiPlayer for the branch that saves prefs.
         final String aiProfile = Bootstrap.resolveAiProfile(cfg.forgeHomeDir(), a.aiProfile);
+        // M51: a --site-dir that is not a built site fails here, in a second,
+        // rather than after the engine has booted.
+        if (a.siteDir != null && !new File(resolve(cfg, a.siteDir), "index.html").isFile()) {
+            throw new IllegalArgumentException("--site-dir " + resolve(cfg, a.siteDir)
+                    + " has no index.html at its root -- is it a built ForgeCoach site?");
+        }
 
         System.out.println("== mtg-table M2 ==");
         System.out.println("transport     = " + a.transport);
@@ -326,6 +334,7 @@ public final class MtgTable {
             System.out.println("WS LISTENING ws://127.0.0.1:" + p + "/ws");
             System.out.println("WS OBSERVE   ws://127.0.0.1:" + p + "/observe");
             System.out.println("WS HEALTH    http://127.0.0.1:" + p + "/health");
+            printLan((WsTransport) transport, p);
             System.out.flush();
         }
 
@@ -486,6 +495,11 @@ public final class MtgTable {
                     + ws.observerOverflows() + " dropped as too far behind, "
                     + ws.observerFramesIn() + " messages from them released unread, "
                     + ws.originRefusals() + " upgrades refused by Origin (amendment M50)");
+            if (ws.lan() || ws.siteRoot() != null) {
+                System.out.println("ws lan / site  = " + ws.tokenRefusals() + " requests refused for want of the token, "
+                        + ws.siteServed() + " site files served, " + ws.siteMissing() + " not found, "
+                        + ws.siteRefused() + " refused (amendment M51)");
+            }
         }
         System.out.println("engine crash   = " + (gui.engineFailure() == null ? "none"
                 : EngineCrash.describe(gui.engineFailure())));
@@ -637,6 +651,33 @@ public final class MtgTable {
         }
     }
 
+    /**
+     * Amendment M51: what a LAN server or a served site adds to the readiness
+     * lines.  {@code scripts/play.sh --lan} reprints the {@code WS LAN PAGE}
+     * lines (and a QR code of the first); the token appears nowhere else.
+     */
+    private static void printLan(final WsTransport ws, final int p) {
+        if (ws.siteRoot() != null) {
+            System.out.println("WS SITE      http://127.0.0.1:" + p + "/  (" + ws.siteRoot() + ")");
+        }
+        if (!ws.lan()) {
+            return;
+        }
+        System.out.println("WS LAN       bound " + WsTransport.LAN_BIND + ":" + p
+                + " -- every non-loopback request must carry the pairing token (amendment M51)");
+        final List<String> ips = WsTransport.lanAddresses();
+        if (ips.isEmpty()) {
+            System.out.println("WS LAN       no non-loopback IPv4 address found on this machine");
+        }
+        for (final String ip : ips) {
+            if (ws.siteRoot() != null) {
+                System.out.println("WS LAN PAGE  http://" + ip + ":" + p + "/?token=" + ws.lanToken());
+            } else {
+                System.out.println("WS LAN SEAT  ws://" + ip + ":" + p + "/ws?token=" + ws.lanToken());
+            }
+        }
+    }
+
     private static Transport transport(final Args a, final Config cfg) {
         switch (a.transport) {
         case "null":    return new NullTransport();
@@ -647,7 +688,13 @@ public final class MtgTable {
             return t;
         }
         case "console": return new ConsoleTransport();
-        case "ws":      return new WsTransport(a.port > 0 ? a.port : cfg.wsPort(), cfg.wsAllowedOrigins());
+        case "ws":
+            // Amendment M51 (D287, D288): --lan binds every interface behind a
+            // fresh pairing token, --site-dir serves a built ForgeCoach at `/`.
+            // Neither given is the loopback server M50 left.
+            return new WsTransport(a.port > 0 ? a.port : cfg.wsPort(), cfg.wsAllowedOrigins(),
+                    a.lan ? WsTransport.newToken() : null,
+                    a.siteDir == null ? null : resolve(cfg, a.siteDir).toPath());
         default:
             throw new IllegalArgumentException("--transport must be null|auto|console|ws, got "
                     + a.transport);
@@ -858,6 +905,10 @@ public final class MtgTable {
         /** {@code --transport ws} only; 0 means "whatever config.json's wsPort says". */
         int port;
         boolean keepOpen;
+        /** {@code --lan} (M51, D287): bind every interface behind a fresh pairing token; {@code ws} only. */
+        boolean lan;
+        /** {@code --site-dir <path>} (M51, D288): serve this built ForgeCoach at {@code /}; {@code ws} only. */
+        String siteDir;
         /**
          * {@code --game-timeout <sec>} (D286): the wall-clock limit on one game; 0 is none;
          * null is the transport's default ({@link #gameLimitSec}).
@@ -906,6 +957,8 @@ public final class MtgTable {
                 case "--seed":      a.seed = Long.parseLong(need(argv, ++i, k)); break;
                 case "--port":      a.port = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--keep-open": a.keepOpen = true; break;
+                case "--lan":       a.lan = true; break;
+                case "--site-dir":  a.siteDir = need(argv, ++i, k); break;
                 case "--game-timeout":
                     a.gameTimeoutSec = Long.parseLong(need(argv, ++i, k));
                     if (a.gameTimeoutSec < 0) {
@@ -934,7 +987,7 @@ public final class MtgTable {
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2|--ai-deck <path>] [--ai-profile Default|Cautious|Reckless|Experimental] "
                         + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
-                        + "[--game-id <id>] [--port <n>] [--keep-open] [--games <n>] "
+                        + "[--game-id <id>] [--port <n>] [--keep-open] [--lan] [--site-dir <path>] [--games <n>] "
                         + "[--game-timeout <sec>] [--idle-timeout <sec>] "
                         + "[--probe] [--mana-lost-prompt] [--no-mana-lost-prompt]");
                 }
@@ -947,6 +1000,9 @@ public final class MtgTable {
                 // lied about which seat it was redacted for.
                 throw new IllegalArgumentException("--seat 1 is not supported: HostedMatch sorts "
                         + "human seats first, so the human seat is always player 0");
+            }
+            if ((a.lan || a.siteDir != null) && !"ws".equals(a.transport)) {
+                throw new IllegalArgumentException("--lan and --site-dir need --transport ws");
             }
             if (a.games < 1) {
                 throw new IllegalArgumentException("--games must be at least 1, got " + a.games);
