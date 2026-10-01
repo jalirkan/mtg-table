@@ -475,6 +475,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The play-distance audit: the merged block, seen together *(off the plan)* | 1 day | **audited, fixed, gated and documented** on branch `play-distance-audit` (2026-09-29), off `main`'s `e2c337c`, rebased onto `8ddd286` — 768 pictures (384 before and after: six recordings, both sizes, views 1–4, the personal tier on and off, both seats where `RecordMatch` can replay one) as labelled contact sheets under `var/audit/`; the defect list graded fix / owner / accept; the chrome column three rows under `HUD_TOP_PX` again (the inspect chip beside the credit, a fixed-width cue status, one strip row from 1280 px, labels from 1840) and the figure budget your seat first; **its fix pass** (the verifier's findings): the engine's prompt at most two lines, so no prompt grows the column past the band (17 of 350 did, to 167 px), the credit kept whole before the chip, the cue status behind a rule, the turn-order head whole, D266's personal half tested; **its fix pass 2** (a second verifier): rebased onto `8ddd286`, the decision bar one line of items so no hint or notice grows the column (136.7 → 112.5 px), the credit drawn whole beside the chip and its Fan Content notice never cut, the chip's key whole at its floor, your duelist from the table view looked at (it stands; owner question 41); **its fix pass 3** (a third verifier): the director's shot a dashed mark on its view's button, not text that wrapped the switcher (the column 146.3 → 112.5 px), every key that can change the chrome pressed in a browser from 1280 to 1920 px, the credit's own 980-px cap dropped, the notice's tooltip tested; **D265–D267**; eight owner questions (34–41); five follow-ups; *The play-distance audit*, just above *Deferred* |
 | — | The anchor resolver: the frame loop's last allocation outside the scans *(off the plan; the GPU pass's follow-up 12)* | ½ day | **built, measured, gated, documented, verified and fixed** on branch `anchor-scratch` (2026-09-29), off `main`'s `0a93c9d` — `layout.ts`'s `anchorPositionInto` writes into the stage's one scratch tuple, the opponent's anchors are built once, `placementOf` builds no key string, and the resolver and its helpers are in the allocation scan (**D275**); GC events per 5M resolves through `stage.positionOf` 14–818 → 0 on every kind, the turn banner and the life number bound through the pool 38 → 3 per 2M; every answer the one it was over the whole corpus; the camera director copies the points it frames; the cue layer stays outside by design; **its fix pass** (a verifier's loop read 3 per 5M): a fractional `above` height boxed through V8's shared `ref.id` feedback slot, read through a name of its case's own, every state measured 0, the reproducer committed, three gaps in the scans closed and the casting field's scratch tested; two follow-ups; *The anchor resolver*, just above *Deferred* |
 | — | The observer socket and the Origin check *(off the plan; for ForgeCoach, on the owner's approval)* | ½ day | **built, tested and documented** on branch `c/observe-endpoint` (2026-10-01), off `main`'s `b95e286` — `ws://127.0.0.1:<port>/observe`, a read-only copy of the seat's frames for any number of followers that can never act, answer, resync or hold the seat, bounded at 8 MB unflushed per observer; and an `Origin` allowlist on `/ws` and `/observe` (`config.json`'s `wsAllowedOrigins`) so a page from elsewhere gets 403 (amendment **M50**, **D280**–**D282**); `WsObserveSelfTest` is the build's sixth self-test; three follow-ups; *The observer socket*, just above *Deferred* |
+| — | `play.sh --engine-only`: the bridge alone, for ForgeCoach *(off the plan; on the owner's approval)* | ¼ day | **built and verified, gate not run** on branch `c/engine-only` (2026-10-01), off `main`'s `1be90a7` — `scripts/play.sh`'s steps 1–4 and a wait, no vite and no browser, the match flags and the `--games 3 --keep-open` defaults unchanged (**D285**); *The engine-only mode*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9567,6 +9568,30 @@ D113's load nondeterminism, which 10f's `>= 1` assertion does not tolerate.
 3. **ForgeCoach still says mtg-table has no observer endpoint** (`src/live.ts`'s
    header, README *Live mode*). That repository is the owner's; this lane did not
    touch it.
+
+## The engine-only mode — the bridge alone, for ForgeCoach (2026-10-01, D285)
+
+**Status: built and verified; the full gate was not run** (nothing under it reads
+`scripts/`). Branch `c/engine-only`, off `main`'s `1be90a7`; outside the observer
+lane's range, so D285. ForgeCoach (`https://jalirkan.github.io/ForgeCoach/`) is now
+where the owner plays ordinary games, over the seat socket; an open mtg-table board
+tab would take the seat first, so he needs the engine with no vite and no tab.
+
+```bash
+./scripts/play.sh --engine-only                       # three games vs match.aiDeck, lingers while a client is connected
+./scripts/play.sh --engine-only --seed 42 --games 1   # what was measured (with --port 8672)
+#   Engine ready on ws://127.0.0.1:8642/ws — open https://jalirkan.github.io/ForgeCoach/ and click Play
+```
+
+Checked, with the pinned jar: `/health` `ok`; a Node `WebSocket` to `/ws` got
+`hello_ok` and `state`; `kill -INT` stopped the script and the JVM, closed the
+port and exited 0 (twice); `bash -n`, `tools/lint-bridge.sh` (31 rules) and
+`tools/lint-bridge-selftest.sh` (60 cases) pass; the build's six self-tests ran
+inside the command itself. `web/test/claude-md.test.ts` is unaffected: no
+`CLAUDE.md` rule line was touched. There is no shell lint or test of `scripts/`
+in the gate, and this change adds none.
+
+No follow-up list of its own.
 
 ## Deferred — out of scope for M0–M7
 

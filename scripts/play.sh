@@ -58,6 +58,7 @@
 #   ./scripts/play.sh --no-open             # do not launch a browser
 #   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
 #   ./scripts/play.sh -- --games 1          # one game only (your --games wins)
+#   ./scripts/play.sh --engine-only         # ONLY the engine: no vite, no browser (below)
 #
 # Everything after `--` goes to `mtgtable.MtgTable` untouched, so a flag this
 # script has never heard of still reaches the bridge:
@@ -69,6 +70,20 @@
 # reducer are untouched and `#arena` is all that changes.  `V` switches back to
 # the board mid-game without dropping a frame; `?arena=off` is the kill switch
 # if WebGL will not start.
+#
+# --engine-only is steps 1-4 and then a wait: no vite, no browser, no `web/node_modules`
+# needed.  It is for a client that is not this repo's board -- ForgeCoach
+# (https://jalirkan.github.io/ForgeCoach/), whose Play button connects to the
+# bridge's seat socket ws://127.0.0.1:<wsPort>/ws from the browser (its Origin is on
+# config.json's wsAllowedOrigins, D281).  The match flags are the same and so are
+# the defaults (--games 3, --keep-open), because that client's New game / Next game
+# needs the session to outlive an `over` exactly as the board's does.  It prints
+# "Engine ready on ws://...", then runs until Ctrl-C (or SIGTERM) or until the
+# match is over and the linger window has closed; either way the JVM is stopped
+# and its pid reaped, and the script exits 0 (D285).  Do NOT keep an mtg-table
+# board tab open beside it: the first /ws client takes the seat and a second one
+# is refused 4001 (M13).  --arena, --web-port and --no-open mean nothing here and
+# are ignored.
 #
 # The ports come from config.json (`wsPort`, `webPort`) and are overridable with
 # --port / --web-port.  The web port is vite's `strictPort: false`, so if 5173 is
@@ -88,6 +103,7 @@ unset MTG_TABLE_CONFIG
 WS_PORT="$(cfg_get wsPort || echo 8642)"
 WEB_PORT="$(cfg_get webPort || echo 5173)"
 OPEN=1
+ENGINE_ONLY=0                    # D285: steps 1-4 only, see the header
 ARENA=0                          # M7: --arena opens /#arena instead of the board
 KEEP_OPEN=1                      # M6: the default, see the header
 PASSTHROUGH=()
@@ -112,6 +128,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --port)      WS_PORT="$2"; shift 2 ;;
     --web-port)  WEB_PORT="$2"; shift 2 ;;
+    --engine-only) ENGINE_ONLY=1; shift ;;
     --no-open)   OPEN=0; shift ;;
     --arena)     ARENA=1; shift ;;
     --no-arena)  ARENA=0; shift ;;
@@ -121,7 +138,7 @@ while [ $# -gt 0 ]; do
     --ai-deck|--deck2) AI_DECK="$2"; shift 2 ;;
     --ai-profile) AI_PROFILE="$2"; shift 2 ;;
     --mirror)    AI_DECK=""; shift ;;
-    --help|-h)   sed -n '5,76p' "$0"; exit 0 ;;
+    --help|-h)   sed -n '5,91p' "$0"; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
   esac
@@ -179,6 +196,7 @@ if ! passthrough_has --ai-profile; then
   MATCH_ARGS+=(--ai-profile "$AI_PROFILE")
 fi
 say "match"
+[ "$ENGINE_ONLY" = "1" ] && echo "mode: engine only (no vite, no browser) — D285"
 if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
   echo "you:  $(deck_name "$DECK")  [$DECK]"; fi
 if passthrough_has --deck2 --ai-deck; then echo "AI:   (the --ai-deck after --)"
@@ -198,7 +216,7 @@ echo "jar OK"
 say "build"
 ./bridge/build.sh || die "bridge/build.sh failed"
 
-[ -d web/node_modules ] || die "web/node_modules is missing — run: npm --prefix web install"
+[ "$ENGINE_ONLY" = "1" ] || [ -d web/node_modules ] || die "web/node_modules is missing — run: npm --prefix web install"
 
 # --------------------------------------------------------------------------
 # 3: the bridge, in the background
@@ -281,6 +299,28 @@ for i in $(seq 1 120); do          # 120 × 0.5 s = 60 s; a cold FModel.initiali
 done
 [ "$READY" = "1" ] || { tail -30 "$SERVER_LOG" >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
 echo "ready"
+
+# --------------------------------------------------------------------------
+# 4b: --engine-only stops here and waits (D285)
+# --------------------------------------------------------------------------
+
+if [ "$ENGINE_ONLY" = "1" ]; then
+  # `wait` is interrupted at once by a trapped signal, unlike a sleep loop.  The
+  # terminal's Ctrl-C also reaches the JVM (same process group); either order ends
+  # here, with stop() reaping whatever is left.
+  on_signal() { printf '\nsignal received\n'; stop; exit 0; }
+  trap on_signal INT TERM
+  say "engine"
+  printf 'Engine ready on ws://127.0.0.1:%s/ws — open https://jalirkan.github.io/ForgeCoach/ and click Play\n' "$WS_PORT"
+  echo "  (observers: ws://127.0.0.1:$WS_PORT/observe · log: $SERVER_LOG · Ctrl-C stops it)"
+  echo "  keep every mtg-table board tab closed: the first /ws client takes the seat"
+  SERVER_RC=0
+  wait "$SERVER_PID" || SERVER_RC=$?
+  say "the bridge exited ($SERVER_RC) — its last lines:"
+  tail -20 "$SERVER_LOG"
+  stop
+  exit "$SERVER_RC"
+fi
 
 # --------------------------------------------------------------------------
 # 5: the board

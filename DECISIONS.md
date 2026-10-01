@@ -12470,3 +12470,59 @@ of a millisecond each, with the encoding.
   browser tab.
 - **A cap on the number of observers** — each is bounded, a loopback page is
   already Origin-checked, and the owner asked for any number.
+
+## D285 — `./scripts/play.sh --engine-only` is the bridge alone, for ForgeCoach: `play.sh`'s steps 1–4 and then a wait, with the match flags and defaults unchanged
+
+*Branch `c/engine-only`; outside the observer lane's reserved range D280–D284 (its D283 and D284 stay unused, D200).*
+
+**2026-10-01** (the owner's approval, for ForgeCoach)
+
+**Decision.** `scripts/play.sh` takes `--engine-only`. It runs check-forge, the
+build, the bridge in the background (`var/play/server.log`) and the `/health` poll
+exactly as a bare run does, skips the `web/node_modules` check, vite and the
+browser, prints `Engine ready on ws://127.0.0.1:<wsPort>/ws — open
+https://jalirkan.github.io/ForgeCoach/ and click Play`, and `wait`s on the JVM. It
+ends on Ctrl-C or SIGTERM (a trap runs `stop()`, which TERMs the JVM, waits up to
+3 s, KILLs what is left and reaps it, and the script exits 0) or when the JVM
+exits on its own — the match over and the linger window closed — in which case it
+prints the log's last lines and exits with the JVM's status. Every match flag
+(`--deck`, `--ai-deck`/`--deck2`, `--ai-profile`, `--mirror`, `--seed`, `--games`,
+`--port`, `--no-keep-open`, everything after `--`) and both defaults (`--games 3`,
+`--keep-open`, D106's `config.json` `match` block) are the same code path as a
+bare run, because it is the same script. `--arena`, `--web-port` and `--no-open`
+are accepted and mean nothing.
+
+**Rationale.** The owner now plays ordinary games from ForgeCoach, which connects
+from his browser to the seat socket; the origin is already allowed (D281). He needs
+the engine and nothing that competes for the seat: an open mtg-table board tab is a
+`/ws` client, and the first one takes the seat while the second is refused 4001
+(M13), so "start `play.sh` and ignore its tab" is not an option, and `--no-open`
+alone still leaves vite running for nothing. `--keep-open` and three games stay the
+default because the need is M6's own: ForgeCoach's New game / Next game, like the
+board's row, appears at an `over` and needs a JVM that has not exited. A flag on
+`play.sh` rather than a new script because steps 1–4 are 140 lines of match setup
+— the `--deck`/`--ai-deck`/`--ai-profile` validation, which must fail in a second
+and not after a build (M44), the `config.json` defaults, the games rule and the
+`--` passthrough — plus the `/health` poll and the stop function; a second script
+would copy them and drift, and the two would disagree about what "the match" is.
+`spectate.sh` is a separate script for the opposite reason: it runs a different
+class (`RecordMatch`) with different flags.
+
+**Measured** with the pinned jar (sha256 `3c0a7c38…8e5dd9`), `--engine-only --seed 42
+--games 1 --port 8672`: `/health` answered `ok`; a Node `WebSocket` to `/ws` with no
+`Origin` received `hello_ok` (seq 1) and `state` (seq 2); `kill -INT` of the script
+printed `signal received` and `stopping the bridge`, left no `play.sh` or JVM
+process and no listener on 8672, and the script exited 0. It was not run through
+the full gate (nothing under it reads `scripts/`).
+
+**Rejected.**
+
+- **`scripts/engine.sh`** — see the rationale; and it would be a third place that
+  says what a match is.
+- **`--no-open` plus telling the owner to close the tab** — vite still runs, and the
+  failure (a refused seat, or worse a board that took it first) is silent from
+  ForgeCoach's side.
+- **Exiting 130 on Ctrl-C** — `play.sh` has always exited 0 when stopped, and the
+  stop is the only way this mode ends in normal use.
+- **Letting `--engine-only` default to `--games 1`** — ForgeCoach's New game / Next
+  game would then find a closed socket, which is M6's dead end again.
