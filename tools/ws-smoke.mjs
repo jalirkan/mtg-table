@@ -71,12 +71,23 @@
 //       bridge is wrong" — see the message this prints when `winner` comes back
 //       non-null.
 //
+//   node tools/ws-smoke.mjs --port 8643 --hold 6
+//       the first variant, connected EARLY (the retry loop below, before the
+//       session exists) and holding the seat, idle, for 6 s after the resync
+//       before it concedes.  Gate step 10h runs it against a server started
+//       with `--idle-timeout 3` (D286, D291): a connected `/ws` client is what
+//       keeps a session alive, so the session must outlive twice its idle limit
+//       and end in the concede's `over`, never `ABANDONED`.  The early connect
+//       is what makes that deterministic: the client is on the socket before
+//       the idle clock starts, rather than a `/health` poll's second later.
+//
 // Options:
 //   --port <n>                 default 8642
 //   --timeout <seconds>        whole-run cap, default 120
 //   --log <path>               write every frame received (one JSON per line)
 //   --disconnect-mid-ask       the second variant
 //   --concede-before-input     the third variant (amendment M11's exception path)
+//   --hold <seconds>           the first variant, connected early, idle this long before the concede
 //   --quiet                    only the verdict
 //
 // Exit: 0 on success, non-zero with a reason on stderr otherwise.
@@ -95,6 +106,7 @@ const opt = {
   log: null,
   disconnectMidAsk: false,
   concedeBeforeInput: false,
+  hold: 0,
   quiet: false,
 };
 for (let i = 0; i < args.length; i++) {
@@ -109,6 +121,7 @@ for (let i = 0; i < args.length; i++) {
   else if (k === '--log') opt.log = need(k);
   else if (k === '--disconnect-mid-ask') opt.disconnectMidAsk = true;
   else if (k === '--concede-before-input') opt.concedeBeforeInput = true;
+  else if (k === '--hold') opt.hold = Number.parseInt(need(k), 10);
   else if (k === '--quiet') opt.quiet = true;
   else if (k === '--help' || k === '-h') { usage(); process.exit(0); }
   else die(`unknown argument ${k}`);
@@ -117,11 +130,15 @@ if (!Number.isFinite(opt.port) || opt.port <= 0) die(`--port must be a positive 
 if (opt.disconnectMidAsk && opt.concedeBeforeInput) {
   die('--disconnect-mid-ask and --concede-before-input are different variants; pass one');
 }
+if (!Number.isFinite(opt.hold) || opt.hold < 0) die('--hold must be a non-negative number of seconds');
+if (opt.hold > 0 && (opt.disconnectMidAsk || opt.concedeBeforeInput)) {
+  die('--hold belongs to the first variant (connect -> resync -> concede)');
+}
 
 function usage() {
   process.stdout.write(
     'usage: node tools/ws-smoke.mjs [--port 8642] [--timeout 120] [--log path]\n' +
-      '                              [--disconnect-mid-ask | --concede-before-input]\n' +
+      '                              [--disconnect-mid-ask | --concede-before-input | --hold <s>]\n' +
       '                              [--quiet]\n',
   );
 }
@@ -209,22 +226,39 @@ class Conn {
     this.#hook = fn;
   }
 
+  /**
+   * Open one socket.  The promise settles on `open`, or on the FIRST of
+   * `error` and `close` -- never on `close` alone.
+   *
+   * Node 22's `WebSocket` (undici) fires `error` and NO `close` on a refused
+   * connect; Node 24's fires both.  Waiting for `close` alone left the promise
+   * pending on Node 22, nothing else held the event loop, and Node exited 13
+   * ("unsettled top-level await") out of `openEarly`'s retry loop -- gate step
+   * 10e's failure under the sandbox's Node 22 (PLAN.md, *The observer socket*).
+   * `close`, when it comes, still overwrites the code: it carries the real one,
+   * which is where a refusal (≥ 4000) shows up.
+   */
   #connect() {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(URL_WS);
       this.#ws = ws;
-      ws.onopen = () => resolve();
-      ws.onerror = () => {
-        // onerror carries nothing useful in the WHATWG API; onclose follows and
-        // carries the code, which is where a refusal (≥ 4000) shows up.
-      };
-      ws.onclose = (e) => {
-        this.closed = { code: e.code ?? 0, reason: e.reason ?? '' };
+      let settled = false;
+      const lost = (code, reason, overwrite) => {
+        if (this.closed === null || overwrite) this.closed = { code, reason };
         // Wake anything parked on expect(), so a dropped socket fails the test
         // instead of hanging it out to the whole-run timeout.
         for (const w of this.#waiters.splice(0)) w.wake();
-        reject(new Error(`socket closed before open: ${String(e.code)} ${String(e.reason)}`));
+        if (!settled) {
+          settled = true;
+          reject(new Error(`socket closed before open: ${String(code)} ${String(reason)}`));
+        }
       };
+      ws.onopen = () => {
+        settled = true;
+        resolve();
+      };
+      ws.onerror = (e) => lost(1006, e?.message ?? 'error', false);
+      ws.onclose = (e) => lost(e.code ?? 0, e.reason ?? '', true);
       ws.onmessage = (e) => this.#receive(String(e.data));
     });
   }
@@ -332,8 +366,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** connect → resync → concede → over. */
 async function variantResync() {
-  say(`ws-smoke: connect → resync → concede, at ${URL_WS}`);
-  const c = await Conn.open();
+  say(`ws-smoke: connect → resync → ${opt.hold > 0 ? `hold ${String(opt.hold)} s → ` : ''}concede, at ${URL_WS}`);
+  // --hold connects as early as the port allows (see the header): the hold is
+  // only a test of the idle limit if the seat was taken before its clock began.
+  const connectedAt = Date.now();
+  const c = opt.hold > 0 ? await Conn.openEarly(Math.max(5_000, opt.timeout * 500)) : await Conn.open();
   say('  open');
 
   // Contract (b): hello_ok, then a full state, then the current input.  The
@@ -356,6 +393,15 @@ async function variantResync() {
   await c.expect('input', mark);
   say('  s2c  input   (after resync)');
 
+  if (opt.hold > 0) {
+    say(`  hold the seat, idle, for ${String(opt.hold)} s`);
+    await sleep(opt.hold * 1000);
+    if (c.closed) {
+      throw new Error(`the server closed the seat (${String(c.closed.code)} ${c.closed.reason}) while it was held: ` +
+        'a connected client did not keep the session alive (D286)');
+    }
+  }
+
   // The concede lands while `inputSeen` may still be false — which is the point:
   // the pre-input guard must send it down `applyAct`'s "end the session" path
   // rather than into Match.prepareAllZones.  Either way, `over`.
@@ -363,6 +409,10 @@ async function variantResync() {
   const over = await c.expect('over', 0, 60_000);
   say(`  s2c  over    winner=${JSON.stringify(over.body.winner)} reason=${JSON.stringify(over.body.reason)}`);
   c.drop();
+  if (opt.hold > 0) {
+    return `held the seat ${String(((Date.now() - connectedAt) / 1000).toFixed(1))} s, ` +
+      `idle for ${String(opt.hold)} of them, and the concede still reached \`over\``;
+  }
   return 'connect → resync → concede reached `over` with no exception';
 }
 
@@ -497,11 +547,13 @@ async function variantConcedeBeforeInput() {
 // Run
 // ---------------------------------------------------------------------------
 
+// NOT unref'd: this timer is what holds the event loop while a promise waits on
+// a socket event, so a pending connect can only ever end in this message --
+// never in Node's exit 13 for an unsettled top-level await (see #connect).
 const wholeRun = setTimeout(() => {
   process.stderr.write(`ws-smoke FAILED: the whole run exceeded ${String(opt.timeout)} s\n`);
   process.exit(1);
 }, opt.timeout * 1000);
-wholeRun.unref?.();
 
 try {
   const variant = opt.disconnectMidAsk

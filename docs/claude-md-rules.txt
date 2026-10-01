@@ -75,8 +75,9 @@
 **D121**, because their order follows HotSpot identity hashes;
 **9c**, **M5's exit criterion** (`tools/ten-games.sh`: ten consecutive
 **`sideboard` ask**, which needs a session that survives `over`
-**seven fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
+**eight fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
 **three games back to back over one socket** (`--games 3 --comfort`), which is
+**`GATE_ONLY="<job> …"` runs those jobs alone** (**D291**), over a build you
 **Adding a step is adding a JOB** (D129): a function that prints its own `===`
 **Every JVM step runs under `timeout`** (`GAME_TIMEOUT`, default 300 s,
 **CI runs the gate's engine-free half, and only that**
@@ -380,18 +381,19 @@ span: There are 37 members and the class will not compile without it
 span: `check-all.sh` is what you run before saying you are done
 span: since the gate-speed lane it runs its steps CONCURRENTLY
 span: `GATE_JOBS=1` is the serial gate
-span: `WSPORT+0` .. `WSPORT+6`
+span: `WSPORT+0` .. `WSPORT+7`
 span: Every job boots Forge in a home of its own
 span: Only the last `GATE_KEEP_RUNS` runs are kept
 span: thirteen numbered steps
 span: step 6, the value-level drift check
 span: match setup added rows 11–14
 span: no Forge preferences file touched
-span: seven fresh `--transport ws` servers
+span: eight fresh `--transport ws` servers
 span: three games back to back over one socket
 span: It plays `decks/yield-probe.dck`
 span: Since the 2026-09-27 hardening pass 10g's server runs with `MTGTABLE_HOLD_GAME_END_MS=2000`
 span: Pass `WSPORT=<n>` if 8643 is busy
+span: `GATE_ONLY="<job> …"` runs those jobs alone
 span: Adding a step is adding a JOB
 span: Every JVM step runs under `timeout`
 span: CI runs the gate's engine-free half, and only that

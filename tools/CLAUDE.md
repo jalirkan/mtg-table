@@ -24,8 +24,8 @@ N`, each row a job of the gate's own pool with all its assertions;
 `ten-games.sh --jobs N` is the same thing standalone); 9c's rows and 9e after
 Smoke, so an engine that cannot boot fails once; `node --test` after the six
 step-10 jobs whose logs `MTGTABLE_WS_LOGS` names, while `npm run build` and `vitest run` start at once (D131); step 11's fresh half
-and 12d after every recorder. Step 10's seven servers listen on **`WSPORT+0` ..
-`WSPORT+6`** (all on `WSPORT` serially). **Every job boots Forge in a home of its
+and 12d after every recorder. Step 10's eight servers listen on **`WSPORT+0` ..
+`WSPORT+7`** (all on `WSPORT` serially). **Every job boots Forge in a home of its
 own** (D129, amended at merge): `var/check-all/<run>/<job>/`, built as the job
 starts by `tools/config.sh`'s `forge_home_make` — a `forge-home/` whose `res/` is
 the jar's, a `userDir` and `cacheDir` of its own, D14's overlay copied in, and a
@@ -57,9 +57,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **twelve** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **12b**, **12c**, **12d** and **12e**; 9d and 10g
-added by **M6**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **thirteen** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d** and **12e**; 9d and 10g
+added by **M6**, 10h by **D291**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -112,9 +112,17 @@ the profile's values read back from the in-game AI, **no Forge preferences file
 touched** (`~/.forge/preferences/`, `var/forge/preferences/` and the job's own
 home's fingerprinted before and after), and `--ai-profile NoSuchProfile` refused before
 `FModel.initialize`; it runs even under `SKIP_TEN=1` →
-**seven fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
+**eight fresh `--transport ws` servers** — the `ws-smoke` doorstep test (10a), its
 `--disconnect-mid-ask` variant (10b), a whole game through
-`tools/ws-auto-play.mjs` (10c), that same client with `--refuse-first-ask` (10d),
+`tools/ws-auto-play.mjs` (10c) — which since **D291** is also the observer step:
+a `tools/ws-observe.mjs` follower joins before the session exists and its whole
+stream must be the bridge log's s2c frames, same `seq`, `type` and body bytes, no
+gap, no duplicate, nothing out of band, and agree with the seat's client log
+(`ws-observe --check`, which also accepts a late joiner only with the catch-up
+M50 promises); and the seat runs `--observe-at-ask`, holding its first `ask`
+unanswered while a second observer joins, which must be caught up on that ask
+byte for byte (exit 10 otherwise; with `admitObserver`'s ask loop removed it
+fails while the build's self-tests stay green) — that same client with `--refuse-first-ask` (10d),
 which drops the socket on the first `ask` FRAME and is the only thing in the repo
 that exercises `ReplyPool.cancelAll()` with a game thread actually parked (the
 gate asserts the server's own `cancelling 1 pending ask(s)` line), and
@@ -153,7 +161,12 @@ the bridge QUEUED it and RELEASED it (`NEW GAME QUEUED` / `NEW GAME RELEASED`),
 that no game ended with `OVER WITHOUT A gameOver STATE`, and that every game's
 log carries a `gameOver` state — the window that, unheld, ended game 3 at once
 once in two runs; `ws-auto-play` itself exits **8** on an `over` with no
-`gameOver` state in front of it. Each of the seven is asserted for exactly one `over`,
+`gameOver` state in front of it. **10h** (**D286**, **D291**) is the idle limit:
+a `--idle-timeout 3` session with nobody in the seat and an observer attached
+must print `ABANDONED`, exit 1 without `MTGTABLE OK` and close the observer, and
+a second one whose seat `ws-smoke --hold 6` takes before the session exists and
+holds idle for twice the limit must end in its concede's `over`; about 25 s, on
+`WSPORT+7`. Each of 10a–10g and 10h's second session is asserted for exactly one `over`,
 `over` last, and its log through `check-redaction.mjs` — including the CLIENT
 log, which is a different shape on purpose. Then `check-redaction.mjs` over the
 committed fixtures (`games/` **and** `synthetic/`) *and* every fresh recording →
@@ -177,7 +190,10 @@ FAILS 12e with that command, and `SKIP_DECKS=1` skips it and says so; about a
 tenth of a second) → `npm run build && npm test`.
 `SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes. **Pass
 `WSPORT=<n>` if 8643 is busy** — step 10 starts **seven** servers: on `WSPORT`,
-one after another, serially; on `WSPORT` .. `WSPORT+6`, at once, in parallel.
+one after another, serially; on `WSPORT` .. `WSPORT+7`, at once, in parallel.
+**`GATE_ONLY="<job> …"` runs those jobs alone** (**D291**), over a build you
+already made — their dependencies are not run — and says it was a partial run:
+it is for re-running a step while you work on it, and it is never the gate.
 **Adding a step is adding a JOB** (D129): a function that prints its own `===`
 header and calls `die`, one `job <id> <step> both <function> "<deps>"` line in the
 table at the bottom of `tools/check-all.sh`, in the serial order — and then the

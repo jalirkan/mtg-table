@@ -79,7 +79,7 @@
 #                                 touched, and an unknown profile refused before
 #                                 the engine boots.  It runs even with
 #                                 SKIP_TEN=1, which skips 9c's rows 11-14.
-#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: seven fresh servers on a
+#  10. mtgtable.MtgTable --transport ws   THE M3 STEP: eight fresh servers on a
 #                                 loopback socket -- the ws-smoke doorstep test
 #                                 (connect -> resync -> concede), the same test's
 #                                 --disconnect-mid-ask variant, a full unattended
@@ -113,6 +113,16 @@
 #                                 draw `notice {title:"Not now"}`.
 #                                 Each asserts exactly one `over`, `over` last,
 #                                 and its log through check-redaction.mjs.
+#                                 Since D291 10c also plays with two /observe
+#                                 followers (amendment M50): one joined before
+#                                 the session, whose whole stream must be the
+#                                 seat's frames byte for byte, and one opened
+#                                 while the seat holds its first `ask` open,
+#                                 whose catch-up must carry that ask.  And 10h
+#                                 (D286, D291) is the idle limit: a seatless
+#                                 session with an observer attached ends
+#                                 ABANDONED after --idle-timeout 3, and a client
+#                                 holding the seat 6 s keeps one alive.
 #  11. tools/check-redaction.mjs  over every committed fixture (games AND synthetic)
 #                                 AND every fresh recording this run produced
 #  12. check-redaction-selftest   the checker's own negative controls: twelve
@@ -210,7 +220,7 @@
 # and stderr go to var/check-all/<run>/<job>.log.  Most steps are one job; a
 # few are split where the halves are independent -- 6b's two recordings and
 # their comparison; 9c's fourteen rows (`tools/ten-games.sh --run-row N`) and
-# their report (`--report`); step 10's seven servers, 10a..10g; step 11's
+# their report (`--report`); step 10's eight servers, 10a..10h; step 11's
 # committed fixtures and its fresh recordings; step 13's `npm run build`,
 # `vitest run` and `node --test`.  The scheduler starts the next READY job
 # (every dependency passed) in a fixed priority order whenever fewer than
@@ -235,8 +245,8 @@
 #   - 12b (the catalog), 12c (the crash check, its own scratch Forge home) and
 #     12e (the AI decks against their specs) depend on nothing but the build.
 #
-# Step 10's servers listen on WSPORT+0 .. WSPORT+6 (10a..10g) when GATE_JOBS >
-# 1, so all seven can be up at once; GATE_JOBS=1 keeps the single WSPORT.
+# Step 10's servers listen on WSPORT+0 .. WSPORT+7 (10a..10h) when GATE_JOBS >
+# 1, so all eight can be up at once; GATE_JOBS=1 keeps the single WSPORT.
 #
 # The console shows one line when a job starts and one when it ends, then a
 # TIMING TABLE -- every job's start and end (seconds since the gate started),
@@ -258,7 +268,8 @@
 # Usage:  ./tools/check-all.sh            # ~5 minutes at GATE_JOBS=4 (D129); ~15 serially
 #         GATE_JOBS=1 ./tools/check-all.sh        # the serial gate, one step at a time
 #         GATE_JOBS=8 ./tools/check-all.sh        # eight at a time (needs ~16 GB free)
-#         WSPORT=8750 ./tools/check-all.sh        # step 10's ports: 8750..8756 in parallel
+#         WSPORT=8750 ./tools/check-all.sh        # step 10's ports: 8750..8757 in parallel
+#         GATE_ONLY="10c-auto 10h-idle" ./tools/check-all.sh   # those jobs alone, over an existing build (D291)
 #         SKIP_WEB=1 ./tools/check-all.sh # engine side only (no node_modules yet)
 #         GAME_TIMEOUT=600 ./tools/check-all.sh   # a slower machine
 #         SKIP_DRIFT=1 ./tools/check-all.sh       # no 9b re-recording (~30 s)
@@ -313,7 +324,7 @@ esac
 
 # Port 8643, not config.json's 8642: a developer with `scripts/play.sh` running
 # should be able to run the gate without the two fighting over a port.  With
-# GATE_JOBS > 1, 10a..10g listen on WSPORT+0 .. WSPORT+6 (D131).
+# GATE_JOBS > 1, 10a..10h listen on WSPORT+0 .. WSPORT+7 (D131).
 WSPORT="${WSPORT:-8643}"
 case "$WSPORT" in '' | *[!0-9]*) echo "check-all: WSPORT must be a port number, got '$WSPORT'" >&2; exit 2 ;; esac
 
@@ -363,7 +374,7 @@ hdr() { printf '\n=== %s. %s ===\n' "$1" "$2"; }
 # The last line of a frame log is `over` (section 8.4).  A `$(tail -n 1 ...)`
 # and a pattern, never `tail | grep`: no pipe for pipefail to judge (D132).
 last_is_over() { [[ "$(tail -n 1 "$1")" == *'"type":"over"'* ]]; }
-# Step 10's port for sub-step k (0 = 10a .. 6 = 10g).
+# Step 10's port for sub-step k (0 = 10a .. 7 = 10h).
 ws_port() { if [ "$GATE_JOBS" -gt 1 ]; then echo $(( WSPORT + $1 )); else echo "$WSPORT"; fi; }
 
 # Every job boots Forge in a HOME OF ITS OWN (D129, amended at merge): before
@@ -1054,7 +1065,7 @@ s09e_match() {
 # code, which is MtgTable's `MTGTABLE OK` path and nothing else.
 #
 # Seven JOBS since D129/D131, one per server, each on its own port -- WSPORT+0
-# for 10a up to WSPORT+6 for 10g when GATE_JOBS > 1, all of them WSPORT
+# for 10a up to WSPORT+7 for 10h when GATE_JOBS > 1, all of them WSPORT
 # serially -- and each with its own game ids, server log and client log, so
 # nothing one of them asserts can be satisfied by another's files.  Every job
 # is its own subshell, so WSPORT and WS_PID below are that job's own.
@@ -1068,10 +1079,33 @@ ws_stop() {
     WS_PID=""
   fi
 }
-ws_job() {   # $1 the sub-step's index (10a = 0 .. 10g = 6): its port and its EXIT trap
+OBS_PID=""
+ws_job() {   # $1 the sub-step's index (10a = 0 .. 10h = 7): its port and its EXIT trap
   WSPORT="$(ws_port "$1")"
   WS_PID=""
-  trap ws_stop EXIT
+  OBS_PID=""
+  trap 'ws_stop; obs_stop' EXIT
+}
+# An /observe follower a step started (tools/ws-observe.mjs, D291).
+obs_stop() {
+  if [ -n "${OBS_PID:-}" ]; then
+    kill "$OBS_PID" 2>/dev/null || true
+    wait "$OBS_PID" 2>/dev/null || true
+    OBS_PID=""
+  fi
+}
+obs_start() {  # $1 its output, $2.. ws-observe's own flags.  Before ws_start: it retries until the port binds.
+  local out="$1"
+  shift
+  rm -f "$out" "$out.log"
+  node tools/ws-observe.mjs --port "$WSPORT" --out "$out" --quiet "$@" > "$out.log" 2>&1 &
+  OBS_PID=$!
+}
+obs_finish() {  # $1 its output, $2 what; the follower must have exited 0 by itself
+  local rc=0
+  wait "$OBS_PID" || rc=$?
+  OBS_PID=""
+  [ "$rc" = "0" ] || { cat "$1.log" >&2 2>/dev/null || true; die "the /observe follower for $2 exited $rc (log: $1.log)"; }
 }
 # Readiness is GET /health on the socket's own port (contract (a)), polled with
 # node because node is already a dependency of this gate and curl is not.
@@ -1178,13 +1212,38 @@ s10b_drop() {
 #      than failing, because the bridge half of M3 is testable without it and a
 #      red gate that means "the other agent has not landed yet" teaches everyone
 #      to ignore the gate.
+#
+#      Since D291 it is also the observer step (amendment M50; PLAN.md's observer
+#      follow-ups 1 and 2).  A tools/ws-observe.mjs follower is started BEFORE
+#      the server, retries until the port binds and so joins before the session
+#      exists; after the game its stream must be exactly what the seat was sent
+#      -- every s2c frame of the bridge's log, same seq, type and body bytes, no
+#      gap, no duplicate, nothing out of band -- and agree with the seat's own
+#      client log (ws-observe --check; a follower that joins late passes only
+#      with the catch-up the transport promises, which the check searches for).
+#      And the seat runs --observe-at-ask: on its first `ask` it holds the
+#      answer, opens a SECOND observer while the game thread is parked on that
+#      ask, and exits 10 unless the catch-up carries the ask byte for byte (with
+#      the seat's own hello_ok and last state in front of it) -- the half of
+#      admitObserver no self-test can reach, because Transport.ask asserts a
+#      game thread.  Two observers, asserted from the server's summary.  With
+#      admitObserver's ask loop removed, the seat exits 10 here while the
+#      build's self-tests stay green (D291's negative control).
 s10c_auto() {
   ws_job 2
   if [ "$HAVE_AUTOPLAY" = "1" ]; then
+    obs_start var/check-all-ws-auto-observed.jsonl --timeout "$GAME_TIMEOUT"
     ws_start check-all-ws-auto var/check-all-ws-auto.log
-    node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --log var/ws-auto-13.jsonl \
-      || die "tools/ws-auto-play.mjs did not finish a game against 127.0.0.1:$WSPORT"
+    node tools/ws-auto-play.mjs --port "$WSPORT" --timeout 300 --observe-at-ask --log var/ws-auto-13.jsonl \
+      || die "tools/ws-auto-play.mjs did not finish a game against 127.0.0.1:$WSPORT (exit 10 is --observe-at-ask: \
+an observer that joined while an ask was open was not caught up on it)"
     ws_finish check-all-ws-auto var/check-all-ws-auto.log "the full ws game"
+    obs_finish var/check-all-ws-auto-observed.jsonl "the full ws game"
+    node tools/ws-observe.mjs --check var/check-all-ws-auto-observed.jsonl \
+        --bridge-log var/games/check-all-ws-auto/frames.jsonl --seat-log var/ws-auto-13.jsonl \
+      || die "the /observe follower's stream is not the seat's (var/check-all-ws-auto-observed.jsonl)"
+    grep -q "^ws observers   = 2 accepted, 0 dropped" var/check-all-ws-auto.log || \
+      die "the full ws game did not accept exactly two observers, none dropped: $(grep '^ws observers' var/check-all-ws-auto.log)"
     grep -E "^(winner|player turns|ask kinds|ws connections|ws frames)" var/check-all-ws-auto.log || true
     grep -q "^UNIMPL members = none$" var/check-all-ws-auto.log || \
       die "the ws game hit an unimplemented IGuiGame member: $(grep "^UNIMPL members" var/check-all-ws-auto.log)"
@@ -1579,6 +1638,66 @@ it is there (decks/yield-probe.dck exists to guarantee the repeat)"
   echo "OK: the yielded ability came back to the top of the stack and the engine never asked again"
 }
 
+# 10h. D286's idle limit, and the end of a game nobody plays (D291; PLAN.md's
+#      game-timeout follow-up).  A `ws` seat has no game clock; what ends a
+#      session nobody is in is --idle-timeout, the time with no /ws client
+#      connected, and `/observe` never counts as one.  Two short sessions on one
+#      port, one after the other:
+#        (1) --idle-timeout 3, nobody in the seat and a tools/ws-observe.mjs
+#            follower attached the whole time: the bridge must print
+#            `ABANDONED: no client connected for 3 s`, its summary
+#            `finished = false (ABANDONED ...)`, exit 1 without MTGTABLE OK,
+#            promptly, with one observer and no /ws client accepted -- and the
+#            follower must be closed by the server after its `hello_ok`
+#            (`--until close`).  Its frame log has no `over` by design (the
+#            game never ended), so it is held to neither check-redaction.mjs
+#            nor 12d.
+#        (2) --idle-timeout 3 again, and ws-smoke --hold 6: a client that
+#            connects before the session exists (no /health wait, so it is on
+#            the socket before the idle clock starts), resyncs, sits idle 6 s
+#            -- twice the limit -- and concedes.  The session must end in that
+#            `over` with MTGTABLE OK and no ABANDONED line.
+#      About 25 s.  Its own port, WSPORT+7.
+s10h_idle() {
+  ws_job 7
+  printf '\n=== 10h. --idle-timeout: a seatless ws session ends ABANDONED, a connected client keeps one alive ===\n'
+  local rc t0 dt
+  obs_start var/check-all-ws-idle-observed.jsonl --until close --timeout "$GAME_TIMEOUT"
+  WS_EXTRA="--idle-timeout 3" ws_start check-all-ws-idle var/check-all-ws-idle.log
+  t0=$SECONDS
+  rc=0
+  wait "$WS_PID" || rc=$?
+  WS_PID=""
+  dt=$(( SECONDS - t0 ))
+  capped "$rc" && die "the seatless ws session was still running after ${GAME_TIMEOUT}s: --idle-timeout 3 never ended it (log: var/check-all-ws-idle.log)"
+  [ "$rc" = "1" ] || { tail -20 var/check-all-ws-idle.log >&2; die "the seatless ws session exited $rc; an abandoned session fails the run, exit 1 (log: var/check-all-ws-idle.log)"; }
+  grep -q "^ABANDONED: no client connected for 3 s" var/check-all-ws-idle.log || \
+    die "the seatless ws session did not end through the idle limit -- no ABANDONED line (log: var/check-all-ws-idle.log)"
+  grep -q "^finished       = false  (ABANDONED" var/check-all-ws-idle.log || \
+    die "the seatless session's summary does not say it was abandoned (log: var/check-all-ws-idle.log)"
+  ! grep -q "^MTGTABLE OK$" var/check-all-ws-idle.log || \
+    die "an abandoned session printed MTGTABLE OK (log: var/check-all-ws-idle.log)"
+  grep -q "^ws observers   = 1 accepted" var/check-all-ws-idle.log || \
+    die "the observer was not attached to the seatless session: $(grep '^ws observers' var/check-all-ws-idle.log) -- without it this proves nothing about /observe not counting"
+  grep -q "^ws connections = 0 accepted" var/check-all-ws-idle.log || \
+    die "a /ws client reached the seatless session: $(grep '^ws connections' var/check-all-ws-idle.log)"
+  [ "$dt" -le 30 ] || die "the seatless session took ${dt}s after /health to end under --idle-timeout 3"
+  obs_finish var/check-all-ws-idle-observed.jsonl "the seatless session"
+  echo "OK: nobody in the seat, one observer attached: ABANDONED after the 3 s idle limit, exit 1, ${dt}s after /health"
+
+  WS_EXTRA="--idle-timeout 3" ws_start check-all-ws-idle-held var/check-all-ws-idle-held.log no-health-wait
+  node tools/ws-smoke.mjs --port "$WSPORT" --timeout 120 --hold 6 --log var/check-all-ws-idle-held-frames.jsonl \
+    || die "tools/ws-smoke.mjs --hold 6 failed against 127.0.0.1:$WSPORT under --idle-timeout 3 (log: var/check-all-ws-idle-held.log)"
+  ws_finish check-all-ws-idle-held var/check-all-ws-idle-held.log "the held session"
+  grep -q "^WS LISTENING ws://127.0.0.1:$WSPORT/ws$" var/check-all-ws-idle-held.log || \
+    die "the ws server did not print its WS LISTENING line (contract (a); log: var/check-all-ws-idle-held.log)"
+  ! grep -q "ABANDONED" var/check-all-ws-idle-held.log || \
+    die "a session whose seat was held was ABANDONED: a connected /ws client must keep it alive (D286; log: var/check-all-ws-idle-held.log)"
+  grep -q "ends after 3 s with no client connected  (--idle-timeout)" var/check-all-ws-idle-held.log || \
+    die "the held session did not run under --idle-timeout 3: $(grep '^game limit' var/check-all-ws-idle-held.log)"
+  echo "OK: a client held the seat idle for 6 s, twice the 3 s limit, and the session ended in its concede"
+}
+
 # ---------------------------------------------------------------------------
 # Steps 11-13.
 # ---------------------------------------------------------------------------
@@ -1706,6 +1825,7 @@ s12d_narrate() {
   narrate_add var/ws-auto-13.jsonl var/games/check-all-ws-auto/frames.jsonl
   narrate_add var/ws-auto-refuse-13.jsonl var/games/check-all-ws-refuse/frames.jsonl
   narrate_add var/check-all-ws-m11-frames.jsonl var/games/check-all-ws-m11/frames.jsonl
+  narrate_add var/check-all-ws-idle-held-frames.jsonl var/games/check-all-ws-idle-held/frames.jsonl
   narrate_add var/ws-auto-probe-42.jsonl var/games/check-all-ws-probe/frames.jsonl
   narrate_add var/ws-auto-3g.jsonl var/games/check-all-ws-3g/frames.jsonl
   narrate_add var/ws-auto-3g-g2.jsonl var/games/check-all-ws-3g-g2/frames.jsonl
@@ -1855,9 +1975,10 @@ job 10d-refuse    10 both     s10d_refuse       "$PRE"
 job 10e-m11       10 both     s10e_m11          "$PRE"
 job 10f-probe     10 both     s10f_probe        "$PRE"
 job 10g-three     10 both     s10g_three        "$PRE"
+job 10h-idle      10 both     s10h_idle         "$PRE"
 # Every job that writes a frame log step 11's fresh half or 12d reads.
 RECORDERS="05-record 06b-paced 06b-seat1 07-null 08-console 09-auto 09d-sideboard 09e-match"
-RECORDERS="$RECORDERS 10a-smoke 10b-drop 10c-auto 10d-refuse 10e-m11 10f-probe 10g-three"
+RECORDERS="$RECORDERS 10a-smoke 10b-drop 10c-auto 10d-refuse 10e-m11 10f-probe 10g-three 10h-idle"
 job 11-fixtures   11 both     s11_fixtures      "$PRE"
 job 11-fresh      11 both     s11_fresh         "$RECORDERS"
 job 12-selftest   12 both     s12_selftest      "$PRE"
@@ -1894,7 +2015,7 @@ fi
 PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
-PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 08-console 12c-crash"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash"
 
 # ---------------------------------------------------------------------------
 # The runner (D130).
@@ -1915,6 +2036,9 @@ note_load() {   # NL = the 1-minute load average now; LOAD_MAX = the run's highe
 }
 
 active() {   # is this job part of this mode's run?
+  if [ -n "${GATE_ONLY:-}" ]; then
+    case " $GATE_ONLY " in *" $1 "*) ;; *) return 1 ;; esac
+  fi
   case "${J_MODE[$1]}" in
     both) return 0 ;;
     serial) [ "$GATE_JOBS" = "1" ] ;;
@@ -2054,7 +2178,7 @@ run_parallel() {
     pending+=("$id")
   done
   printf 'check-all: %d jobs, %s at a time, step 10 on ports %s-%s, logs in %s/\n' \
-      "${#pending[@]}" "$GATE_JOBS" "$WSPORT" "$(( WSPORT + 6 ))" "$RUN_DIR"
+      "${#pending[@]}" "$GATE_JOBS" "$WSPORT" "$(( WSPORT + 7 ))" "$RUN_DIR"
   trap 'echo; echo "check-all: interrupted -- stopping every job" >&2; abort_running; assemble; write_table; exit 130' INT TERM
   while :; do
     launched=1
@@ -2112,18 +2236,32 @@ run_parallel() {
 }
 
 # ---------------------------------------------------------------------------
+# GATE_ONLY (D291): named jobs alone, for re-running a step while working on it.
+# Every job named must exist; the jobs it depends on are NOT run (a dependency
+# outside the run counts as passed), so the build they read must already be
+# there.  Its OK line says it was partial: it is never the gate.
+# ---------------------------------------------------------------------------
+if [ -n "${GATE_ONLY:-}" ]; then
+  for id in $GATE_ONLY; do
+    [ -n "${J_MODE[$id]:-}" ] || { echo "check-all: GATE_ONLY names '$id', which is not a job (see the job table)" >&2; exit 2; }
+  done
+  [ -d bridge/out/mtgtable ] || { echo "check-all: GATE_ONLY runs no build -- run ./bridge/build.sh first" >&2; exit 2; }
+  echo "check-all: GATE_ONLY=\"$GATE_ONLY\" -- those jobs alone, NOT the gate"
+fi
+
+# ---------------------------------------------------------------------------
 # Run.
 # ---------------------------------------------------------------------------
 if [ "$GATE_JOBS" = "1" ]; then
   run_serial
   assemble
-  printf '\ncheck-all OK\n'
+  printf '\ncheck-all OK%s\n' "${GATE_ONLY:+ (GATE_ONLY: $GATE_ONLY -- a partial run, not the gate)}"
   relief_python_note
   write_table
 else
   run_parallel
   assemble
   write_table
-  printf '\ncheck-all OK\n'
+  printf '\ncheck-all OK%s\n' "${GATE_ONLY:+ (GATE_ONLY: $GATE_ONLY -- a partial run, not the gate)}"
   relief_python_note
 fi
