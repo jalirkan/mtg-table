@@ -1,0 +1,590 @@
+#!/usr/bin/env node
+// mtg-table — tools/coach-helper.mjs
+// Copyright (C) 2026 mtg-table contributors.
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// THE COACH HELPER (D292): AI coaching for ForgeCoach with no API key, through
+// the Claude Code CLI already logged in on this machine.  ForgeCoach
+// (https://jalirkan.github.io/ForgeCoach/) calls it over HTTP; it runs
+// `claude -p` (headless Claude Code) with every tool off and streams the answer
+// back as NDJSON.  Plain Node 22+, no dependencies.  scripts/play.sh starts it
+// beside the engine when `claude` is on PATH (--no-coach skips it).
+//
+//   node tools/coach-helper.mjs                      # http://127.0.0.1:8643
+//   node tools/coach-helper.mjs --port 8700          # config.json `coachPort` otherwise
+//   COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan [--ws-port 8642]
+//   node tools/coach-helper.mjs --lan --token <T>    # the same; the env keeps <T> off `ps`
+//
+// THE CONTRACT (ForgeCoach is built against exactly this):
+//
+//   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"]}
+//                    or 200 {"ok":false,"helper":1,"error":"<plain words>"} when `claude`
+//                    is missing or `claude --version` fails.  It does not prove a login:
+//                    only a real call can, and a logged-out CLI answers /coach with the
+//                    error line below.
+//   POST /coach   {"system": string, "user": string, "model"?: "opus"|"sonnet"|"haiku"}
+//                 (default "sonnet"; body at most 512 KB, else 413)
+//                 -> 200 Content-Type: application/x-ndjson, one JSON object a line:
+//                    {"type":"text","text":"<delta>"}            ... the answer, as it streams
+//                    {"type":"thinking","text":"<delta>"}        ... only when the CLI shows any
+//                    then EXACTLY ONE of
+//                    {"type":"done","stopReason":<string|null>,"model":"<model that answered>"}
+//                    {"type":"error","message":"<plain words>"}
+//                 400 / 403 / 404 / 405 / 413 / 429 carry one {"type":"error","message":...}
+//                 JSON body.  A client that disconnects kills the `claude` process
+//                 and its whole process group.
+//
+//   ONE QUESTION AT A TIME.  A /coach that arrives while another is running waits
+//   up to 5 s (--busy-wait <ms>) for it to finish or be cancelled -- which absorbs
+//   ForgeCoach's "abort the old question, ask the new one" race -- and is then
+//   answered 429 {"type":"error","message":"the coach is busy ..."}.
+//
+// WHO MAY CALL IT (amendments M50 and M51's rules, applied to this port):
+//
+//   - It binds 127.0.0.1; with --lan, 0.0.0.0, and then every request from a
+//     non-loopback peer must carry the pairing token -- `?token=<T>` or the header
+//     `X-ForgeCoach-Token` -- or is 403.  Compared as SHA-256 digests with
+//     crypto.timingSafeEqual; never logged (a logged path is cut at its `?`).
+//     A loopback peer never needs it.  An OPTIONS preflight needs no token (a
+//     browser cannot add one to it), only an allowed Origin.
+//   - Origin: allowed if it matches config.json's `wsAllowedOrigins` (the bridge's
+//     M50 list, read the same way: MTG_TABLE_CONFIG, else the repo's config.json;
+//     default http://127.0.0.1:*, http://localhost:*, https://jalirkan.github.io).
+//     With --lan, a NON-LOOPBACK peer is also allowed the origin of the page the
+//     bridge served it: http://<the request's Host> as M51 says, and -- because that
+//     page lives on the bridge's port, not this one -- http://<Host's name>:<wsPort>
+//     (config.json `wsPort`, --ws-port).  A loopback peer gets the list alone, so a
+//     name that rebinds to 127.0.0.1 is still refused.  No Origin at all is allowed
+//     from loopback only (curl, Node).  Anything else: 403.
+//   - CORS: an allowed Origin is echoed in Access-Control-Allow-Origin (with Vary:
+//     Origin); a preflight is 204 with Allow-Methods GET, POST, OPTIONS, Allow-Headers
+//     Content-Type, X-ForgeCoach-Token, and Access-Control-Allow-Private-Network: true
+//     (Chrome's private network access, an https github.io page calling 127.0.0.1).
+//
+// HOW IT RUNS CLAUDE (each flag checked against Claude Code 2.1.287's own --help
+// and a real call; D292 says why each one is there):
+//
+//   claude -p --output-format stream-json --include-partial-messages --verbose
+//          --model <alias> --system-prompt <system>      (--system-prompt-file <tmp>
+//                                                          when it is over 100 KB:
+//                                                          Linux caps one argv string
+//                                                          at 128 KB)
+//          --tools "" --strict-mcp-config --no-session-persistence
+//          --permission-mode dontAsk --max-turns 1
+//          [--safe-mode] [--disable-slash-commands]       (when this CLI's --help has them)
+//
+//   with the user text on STDIN (never argv), in a fresh empty temp directory
+//   (removed afterwards), as the leader of its own process group.  NEVER
+//   --dangerously-skip-permissions: with no tools there is nothing to permit, and
+//   dontAsk denies whatever is not pre-approved instead of asking.
+//
+// Run from the repo root (hard rule 9), like every tool here.  Its self-test is
+// tools/coach-helper-selftest.mjs (a fake `claude` on PATH; gate step 12f, CI).
+
+import { execFile, spawn } from 'node:child_process';
+import { createHash, timingSafeEqual } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export const HELPER_VERSION = 1;
+export const MODELS = ['opus', 'sonnet', 'haiku'];
+export const DEFAULT_MODEL = 'sonnet';
+export const DEFAULT_PORT = 8643;
+export const MAX_BODY = 512 * 1024;
+export const DEFAULT_ALLOWED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'];
+const ORIGIN_ENTRY = /^(http|https):\/\/[a-z0-9.-]+(:([0-9]{1,5}|\*))?$/;
+const ARGV_SYSTEM_MAX = 100 * 1024;
+const NOT_INSTALLED = 'the claude CLI is not installed or not on PATH — install Claude Code, then run `claude` once in a terminal to log in';
+const NOT_LOGGED_IN = 'not logged in — run `claude` once in a terminal to log in';
+
+// ---------------------------------------------------------------------------
+// The pieces the self-test checks directly.
+// ---------------------------------------------------------------------------
+
+/** M50's originAllowed, the bridge's WsTransport.originAllowed in JS: exact, or a `:*` entry with any port or none. */
+export function originAllowed(origin, allow) {
+  const o = String(origin).trim().toLowerCase();
+  for (const a of allow) {
+    if (a.endsWith(':*')) {
+      const base = a.slice(0, -2);
+      if (o === base) return true;
+      if (o.startsWith(base + ':') && /^[0-9]{1,5}$/.test(o.slice(base.length + 1))) return true;
+    } else if (o === a) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** `name[:port]` of a Host header or an http origin, lowercased; null if it is neither. */
+function hostPort(s, defaultPort) {
+  const m = /^([a-z0-9.-]+)(?::([0-9]{1,5}))?$/.exec(String(s).trim().toLowerCase());
+  return m ? { host: m[1], port: m[2] ? Number(m[2]) : defaultPort } : null;
+}
+
+/**
+ * M51's own-page rule, for this port: an `http://` origin whose host is the
+ * request's Host name and whose port is the Host's own (http://<Host>, M51
+ * verbatim) or the bridge's ws port (where the LAN page really lives).
+ */
+export function lanOwnOrigin(origin, hostHeader, wsPort) {
+  if (!origin || !hostHeader) return false;
+  const o = String(origin).trim().toLowerCase();
+  if (!o.startsWith('http://')) return false;
+  const oh = hostPort(o.slice('http://'.length), 80);
+  const hh = hostPort(hostHeader, 80);
+  if (!oh || !hh || oh.host !== hh.host) return false;
+  return oh.port === hh.port || oh.port === Number(wsPort);
+}
+
+export function isLoopback(addr) {
+  if (!addr) return false;
+  const a = addr.startsWith('::ffff:') ? addr.slice(7) : addr;
+  return a === '::1' || /^127\./.test(a);
+}
+
+export function tokenMatches(given, token) {
+  if (typeof given !== 'string' || typeof token !== 'string' || token === '') return false;
+  const d = (s) => createHash('sha256').update(s, 'utf8').digest();
+  return timingSafeEqual(d(given), d(token));
+}
+
+/** Plain words for a failed call, from whatever the CLI said. */
+export function plainError({ code, status, text, stderr, model }) {
+  const said = [text, stderr].filter(Boolean).join(' ').trim();
+  const tail = said ? ` (${said.slice(0, 240)})` : '';
+  if (code === 'authentication_failed' || status === 401 || status === 403
+      || /not logged in|invalid api key|please run \/login|\/login|oauth token|authenticat/i.test(said)) {
+    return NOT_LOGGED_IN;
+  }
+  if (code === 'rate_limit' || status === 429 || /rate.?limit|usage limit|limit reached|out of extra usage/i.test(said)) {
+    return `Claude usage limit reached — try again later${tail}`;
+  }
+  if (code === 'billing_error' || /credit balance|billing/i.test(said)) return `Claude account billing problem${tail}`;
+  if (code === 'model_not_found' || status === 404) return `the model "${model}" is not available to this Claude account${tail}`;
+  if (/unknown option|unrecognized option|unknown argument/i.test(said)) {
+    return `this claude CLI is too old for the coach helper — update Claude Code (claude update)${tail}`;
+  }
+  if (code === 'server_error' || status === 500 || status === 529 || /overloaded/i.test(said)) {
+    return `Claude is overloaded or had a server error — try again in a moment${tail}`;
+  }
+  return said ? `Claude Code failed: ${said.slice(0, 300)}` : 'Claude Code failed with no message';
+}
+
+/**
+ * Turns the CLI's stream-json lines into the contract's NDJSON events.
+ * `push(line)` per stdout line; `end(exit)` when the process is gone.  `emit`
+ * gets each event; exactly one terminal event is emitted, ever.
+ */
+export function makeTranslator(emit, requestedModel) {
+  let model = null;
+  let stopReason = null;
+  let sawText = false;
+  let apiError = null;
+  let finished = false;
+  const finish = (ev) => {
+    if (finished) return;
+    finished = true;
+    emit(ev);
+  };
+  return {
+    get finished() { return finished; },
+    push(line) {
+      if (finished || !line.trim()) return;
+      let o;
+      try { o = JSON.parse(line); } catch { return; }
+      if (!o || typeof o !== 'object') return;
+      if (o.type === 'system' && o.subtype === 'init' && typeof o.model === 'string' && !model) model = o.model;
+      if (o.type === 'stream_event' && o.event) {
+        const e = o.event;
+        if (e.type === 'message_start' && e.message && typeof e.message.model === 'string') model = e.message.model;
+        else if (e.type === 'content_block_delta' && e.delta) {
+          if (e.delta.type === 'text_delta' && typeof e.delta.text === 'string' && e.delta.text !== '') {
+            sawText = true;
+            emit({ type: 'text', text: e.delta.text });
+          } else if (e.delta.type === 'thinking_delta' && typeof e.delta.thinking === 'string' && e.delta.thinking !== '') {
+            emit({ type: 'thinking', text: e.delta.thinking });
+          }
+        } else if (e.type === 'message_delta' && e.delta && 'stop_reason' in e.delta) {
+          stopReason = e.delta.stop_reason ?? stopReason;
+        }
+      } else if (o.type === 'assistant' && (o.error || o.is_api_error_message)) {
+        const blocks = (o.message && Array.isArray(o.message.content)) ? o.message.content : [];
+        apiError = { code: o.error ?? null, text: blocks.filter((b) => b && b.type === 'text').map((b) => b.text).join(' ') };
+      } else if (o.type === 'rate_limit_event' && o.rate_limit_info && o.rate_limit_info.status === 'rejected') {
+        apiError = apiError ?? { code: 'rate_limit', text: '' };
+      } else if (o.type === 'result') {
+        if (o.is_error || apiError) {
+          finish({
+            type: 'error',
+            message: plainError({
+              code: apiError?.code, status: o.api_error_status ?? undefined,
+              text: apiError?.text || (typeof o.result === 'string' ? o.result : '') || (Array.isArray(o.errors) ? o.errors.join('; ') : ''),
+              model: requestedModel,
+            }),
+          });
+          return;
+        }
+        if (!sawText && typeof o.result === 'string' && o.result !== '') emit({ type: 'text', text: o.result });
+        if (!model && o.modelUsage && typeof o.modelUsage === 'object') model = Object.keys(o.modelUsage)[0] ?? null;
+        finish({ type: 'done', stopReason: stopReason ?? o.stop_reason ?? null, model: model ?? requestedModel });
+      }
+    },
+    end({ code, signal, spawnError, stderr, cancelled }) {
+      if (finished) return;
+      if (cancelled) { finished = true; return; }
+      if (spawnError && spawnError.code === 'ENOENT') { finish({ type: 'error', message: NOT_INSTALLED }); return; }
+      if (spawnError) { finish({ type: 'error', message: `could not start claude: ${spawnError.message}` }); return; }
+      if (apiError) { finish({ type: 'error', message: plainError({ ...apiError, stderr, model: requestedModel }) }); return; }
+      const how = signal ? `was stopped by ${signal}` : `exited with status ${code}`;
+      const said = (stderr || '').trim().split('\n').filter(Boolean).slice(-3).join(' ');
+      finish({ type: 'error', message: said ? plainError({ stderr: said, model: requestedModel }) : `Claude Code ${how} before it answered` });
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Configuration.
+// ---------------------------------------------------------------------------
+
+function readConfig() {
+  const file = process.env.MTG_TABLE_CONFIG || fileURLToPath(new URL('../config.json', import.meta.url));
+  let c = {};
+  try { c = JSON.parse(readFileSync(file, 'utf8')); } catch (e) {
+    if (e.code !== 'ENOENT') throw new Error(`cannot read ${file}: ${e.message}`);
+  }
+  const origins = c.wsAllowedOrigins ?? DEFAULT_ALLOWED_ORIGINS;
+  if (!Array.isArray(origins)) throw new Error(`"wsAllowedOrigins" in ${file} is not an array of strings`);
+  for (const o of origins) {
+    if (typeof o !== 'string' || !ORIGIN_ENTRY.test(o)) throw new Error(`"wsAllowedOrigins" in ${file} holds a bad entry: ${JSON.stringify(o)}`);
+  }
+  return { file, coachPort: c.coachPort, wsPort: c.wsPort, origins };
+}
+
+function parseArgs(argv) {
+  const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, busyWaitMs: 5000, timeoutS: 300 };
+  for (let i = 0; i < argv.length; i++) {
+    const f = argv[i];
+    const val = () => {
+      if (i + 1 >= argv.length) throw new Error(`${f} needs a value`);
+      return argv[++i];
+    };
+    if (f === '--port') a.port = Number(val());
+    else if (f === '--lan') a.lan = true;
+    else if (f === '--token') a.token = val();
+    else if (f === '--ws-port') a.wsPort = Number(val());
+    else if (f === '--busy-wait') a.busyWaitMs = Number(val());
+    else if (f === '--timeout') a.timeoutS = Number(val());
+    else if (f === '--help' || f === '-h') a.help = true;
+    else throw new Error(`unknown flag ${f} (--help)`);
+  }
+  return a;
+}
+
+// ---------------------------------------------------------------------------
+// The CLI.
+// ---------------------------------------------------------------------------
+
+let cliInfo = null;   // { at, ok, version, error, help }
+
+function run(file, args, timeoutMs) {
+  return new Promise((resolve) => {
+    execFile(file, args, { timeout: timeoutMs, maxBuffer: 4 << 20, cwd: tmpdir() }, (error, stdout, stderr) => {
+      resolve({ error, stdout: String(stdout), stderr: String(stderr) });
+    });
+  });
+}
+
+async function claudeInfo(maxAgeMs = 60_000) {
+  if (cliInfo && Date.now() - cliInfo.at < maxAgeMs) return cliInfo;
+  const v = await run('claude', ['--version'], 15_000);
+  if (v.error) {
+    const error = v.error.code === 'ENOENT' ? NOT_INSTALLED
+      : `\`claude --version\` failed${v.error.killed ? ' (timed out)' : ''}: ${(v.stderr || v.stdout || v.error.message).trim().slice(0, 200)}`;
+    cliInfo = { at: Date.now(), ok: false, error, help: '' };
+    return cliInfo;
+  }
+  const h = await run('claude', ['--help'], 15_000);
+  cliInfo = { at: Date.now(), ok: true, version: v.stdout.trim(), help: h.error ? '' : h.stdout + h.stderr };
+  return cliInfo;
+}
+
+export function claudeArgs({ model, systemArg, help }) {
+  const args = ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose',
+    '--model', model, ...systemArg,
+    '--tools', '', '--strict-mcp-config', '--no-session-persistence',
+    '--permission-mode', 'dontAsk', '--max-turns', '1'];
+  if (/--safe-mode\b/.test(help)) args.push('--safe-mode');
+  if (/--disable-slash-commands\b/.test(help)) args.push('--disable-slash-commands');
+  return args;
+}
+
+// ---------------------------------------------------------------------------
+// The server.
+// ---------------------------------------------------------------------------
+
+export function startHelper(opts) {
+  const { port, lan, token, wsPort, origins, busyWaitMs, timeoutS, log = (s) => console.log(s) } = opts;
+  let active = null;          // { kill(), done: Promise } of the running question
+  const live = new Set();     // every child still alive, for shutdown
+
+  const send = (res, status, obj, headers = {}) => {
+    const body = JSON.stringify(obj);
+    res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body), ...headers });
+    res.end(body);
+  };
+
+  const server = createServer(async (req, res) => {
+    const t0 = Date.now();
+    const peer = req.socket.remoteAddress;
+    const loop = isLoopback(peer);
+    const url = new URL(req.url ?? '/', 'http://helper.invalid');
+    const path = url.pathname;
+    const origin = req.headers.origin;
+    const say = (status, extra = '') => log(`COACH ${req.method} ${path} from ${peer}${origin ? ` origin ${origin}` : ''} -> ${status}${extra}`);
+
+    // Origin first for a preflight (it carries no token); token first for the rest (M51's order).
+    const originOk = origin === undefined ? loop
+      : originAllowed(origin, origins) || (lan && !loop && lanOwnOrigin(origin, req.headers.host, wsPort));
+    const cors = originOk && origin !== undefined ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+
+    if (req.method === 'OPTIONS') {
+      if (!originOk) { send(res, 403, { type: 'error', message: 'origin not allowed' }); say(403, ' (origin)'); return; }
+      res.writeHead(204, {
+        ...cors,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-ForgeCoach-Token',
+        'Access-Control-Allow-Private-Network': 'true',
+        'Access-Control-Max-Age': '600',
+        'Content-Length': '0',
+      });
+      res.end();
+      say(204);
+      return;
+    }
+    if (lan && !loop) {
+      const given = url.searchParams.get('token') ?? req.headers['x-forgecoach-token'];
+      if (!tokenMatches(given, token)) {
+        send(res, 403, { type: 'error', message: 'pairing token missing or wrong' });
+        say(403, ' (token)');
+        return;
+      }
+    }
+    if (!originOk) { send(res, 403, { type: 'error', message: 'origin not allowed' }); say(403, ' (origin)'); return; }
+
+    if (path === '/health') {
+      if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
+      const info = await claudeInfo();
+      send(res, 200, info.ok
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS }
+        : { ok: false, helper: HELPER_VERSION, error: info.error }, cors);
+      say(200, info.ok ? '' : ' (claude unavailable)');
+      return;
+    }
+    if (path !== '/coach') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+    if (req.method !== 'POST') { send(res, 405, { type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+
+    // The body, at most MAX_BODY bytes.
+    if (Number(req.headers['content-length'] ?? 0) > MAX_BODY) {
+      send(res, 413, { type: 'error', message: 'request too large (at most 512 KB)' }, { ...cors, Connection: 'close' });
+      say(413);
+      req.destroy();
+      return;
+    }
+    let body;
+    try {
+      body = await new Promise((resolve, reject) => {
+        const parts = [];
+        let n = 0;
+        req.on('data', (c) => {
+          n += c.length;
+          if (n > MAX_BODY) { reject(Object.assign(new Error('too large'), { status: 413 })); return; }
+          parts.push(c);
+        });
+        req.on('end', () => resolve(Buffer.concat(parts).toString('utf8')));
+        req.on('error', reject);
+      });
+    } catch (e) {
+      if (e.status === 413) {
+        send(res, 413, { type: 'error', message: 'request too large (at most 512 KB)' }, { ...cors, Connection: 'close' });
+        say(413);
+        req.destroy();
+      }
+      return;
+    }
+    let q;
+    try { q = JSON.parse(body); } catch { send(res, 400, { type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+    const model = q?.model ?? DEFAULT_MODEL;
+    if (!q || typeof q.system !== 'string' || typeof q.user !== 'string' || q.user.trim() === '') {
+      send(res, 400, { type: 'error', message: 'expected {"system": string, "user": non-empty string, "model"?: "opus"|"sonnet"|"haiku"}' }, cors);
+      say(400);
+      return;
+    }
+    if (!MODELS.includes(model)) { send(res, 400, { type: 'error', message: `model must be one of ${MODELS.join(', ')}` }, cors); say(400); return; }
+
+    // One question at a time; a short wait absorbs abort-then-ask.
+    if (active) {
+      await Promise.race([active.done, new Promise((r) => setTimeout(r, busyWaitMs))]);
+      if (active) {
+        send(res, 429, { type: 'error', message: 'the coach is busy with another question — try again in a moment' }, { ...cors, 'Retry-After': '2' });
+        say(429);
+        return;
+      }
+    }
+    if (res.destroyed || req.socket.destroyed) { say('-', ' (client left while waiting)'); return; }
+    let release;
+    const slot = { done: new Promise((r) => { release = r; }), kill: () => {} };
+    active = slot;
+
+    const info = await claudeInfo();
+    res.writeHead(200, { ...cors, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+    res.flushHeaders();
+    const write = (ev) => { if (!res.destroyed && !res.writableEnded) res.write(JSON.stringify(ev) + '\n'); };
+    let outcome = '';
+    const tr = makeTranslator((ev) => {
+      write(ev);
+      if (ev.type === 'done' || ev.type === 'error') {
+        outcome = ev.type === 'done' ? `done ${ev.model} ${ev.stopReason}` : 'error';
+        res.end();
+      }
+    }, model);
+    const finishSlot = () => { if (active === slot) active = null; release(); };
+
+    if (!info.ok) {
+      tr.end({ spawnError: { code: 'ENOENT', message: info.error } });
+      finishSlot();
+      say(200, ` (${outcome}: claude unavailable)`);
+      return;
+    }
+
+    const dir = mkdtempSync(join(tmpdir(), 'forgecoach-coach-'));
+    let systemArg = ['--system-prompt', q.system];
+    if (Buffer.byteLength(q.system, 'utf8') > ARGV_SYSTEM_MAX) {
+      // Outside the working directory, so the CLI's cwd stays empty.
+      const sp = join(mkdtempSync(join(tmpdir(), 'forgecoach-system-')), 'system.txt');
+      writeFileSync(sp, q.system);
+      systemArg = ['--system-prompt-file', sp];
+    }
+    const args = claudeArgs({ model, systemArg, help: info.help });
+    let child;
+    let stderr = '';
+    let cancelled = false;
+    let timedOut = false;
+    const killGroup = (sig) => {
+      if (!child || child.exitCode !== null || child.signalCode !== null) return;
+      try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch { /* gone */ } }
+    };
+    const stopChild = () => {
+      killGroup('SIGTERM');
+      setTimeout(() => killGroup('SIGKILL'), 2000).unref();
+    };
+    try {
+      child = spawn('claude', args, { cwd: dir, detached: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    } catch (e) {
+      tr.end({ spawnError: e });
+      cleanup();
+      finishSlot();
+      say(200, ` (${outcome})`);
+      return;
+    }
+    live.add(child);
+    slot.kill = () => { cancelled = true; stopChild(); };
+    const timer = setTimeout(() => { timedOut = true; stopChild(); }, timeoutS * 1000);
+    res.on('close', () => {
+      if (!tr.finished) { cancelled = true; stopChild(); }
+    });
+    child.stdin.on('error', () => { /* a child that died before reading */ });
+    child.stdin.end(q.user);
+    let buf = '';
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', (d) => {
+      buf += d;
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i);
+        buf = buf.slice(i + 1);
+        tr.push(line);
+      }
+    });
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (d) => { if (stderr.length < 16384) stderr += d; });
+    let spawnError = null;
+    child.on('error', (e) => { spawnError = e; });
+    child.on('close', (code, signal) => {
+      clearTimeout(timer);
+      live.delete(child);
+      if (buf) tr.push(buf);
+      // The leader is gone; anything it left in the group goes with it.
+      try { process.kill(-child.pid, 'SIGKILL'); } catch { /* none */ }
+      if (timedOut && !tr.finished) {
+        tr.end({ spawnError: { message: `no answer within ${timeoutS} s` } });
+      } else {
+        tr.end({ code, signal, spawnError, stderr, cancelled });
+      }
+      cleanup();
+      finishSlot();
+      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}; ${Date.now() - t0} ms)`);
+    });
+    function cleanup() {
+      rmSync(dir, { recursive: true, force: true });
+      if (systemArg[0] === '--system-prompt-file') rmSync(join(systemArg[1], '..'), { recursive: true, force: true });
+    }
+  });
+
+  server.on('clientError', (err, socket) => { socket.destroy(); });
+  return {
+    server,
+    listen: () => new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(port, lan ? '0.0.0.0' : '127.0.0.1', () => resolve(server.address().port));
+    }),
+    close: () => {
+      for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
+      server.close();
+      server.closeAllConnections?.();
+    },
+  };
+}
+
+async function main() {
+  let a;
+  let cfg;
+  try {
+    a = parseArgs(process.argv.slice(2));
+    cfg = readConfig();
+  } catch (e) {
+    console.error(`coach-helper: ${e.message}`);
+    process.exit(2);
+  }
+  if (a.help) {
+    const src = readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n');
+    console.log(src.slice(4, src.findIndex((l) => l.startsWith('import '))).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+    return;
+  }
+  const port = a.port ?? (Number.isInteger(cfg.coachPort) ? cfg.coachPort : DEFAULT_PORT);
+  const wsPort = a.wsPort ?? (Number.isInteger(cfg.wsPort) ? cfg.wsPort : 8642);
+  if (!Number.isInteger(port) || port < 0 || port > 65535) { console.error('coach-helper: --port must be a port number'); process.exit(2); }
+  if (a.lan && !/^[A-Za-z0-9_-]{16,}$/.test(a.token)) {
+    console.error('coach-helper: --lan needs the pairing token (COACH_HELPER_TOKEN or --token; 16+ characters of [A-Za-z0-9_-])');
+    process.exit(2);
+  }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, busyWaitMs: a.busyWaitMs, timeoutS: a.timeoutS });
+  let bound;
+  try { bound = await h.listen(); } catch (e) {
+    console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
+    process.exit(1);
+  }
+  const info = await claudeInfo(0);
+  console.log(`COACH LISTENING http://127.0.0.1:${bound}`);
+  if (a.lan) console.log(`COACH LAN       bound 0.0.0.0:${bound}; non-loopback requests need the pairing token; the LAN page's origin is http://<host>:${wsPort}`);
+  console.log(`COACH CLAUDE    ${info.ok ? info.version : info.error}`);
+  console.log(`COACH ORIGINS   ${cfg.origins.join(' ')}  (from ${cfg.file})`);
+  const stop = () => { h.close(); process.exit(0); };
+  process.on('SIGINT', stop);
+  process.on('SIGTERM', stop);
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();

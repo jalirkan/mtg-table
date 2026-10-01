@@ -109,7 +109,8 @@ finishable. Anything on this list is a closed question, not a backlog item.
   *Lifted in part on 2026-10-01 by **D287**–**D289**, on the owner's approval:*
   `./scripts/play.sh --lan` binds every interface so a phone on the same home
   network can play, behind a pairing token, serving ForgeCoach's static site on
-  the socket's port. Still a no: anything beyond the local network, a tunnel, TLS,
+  the socket's port — and, since **D292**, the coach helper on its own port
+  behind the same token. Still a no: anything beyond the local network, a tunnel, TLS,
   and a LAN bind that is not asked for by that flag.
 - **No rules logic in the client.** No mana-payability prediction, no targeting
   validation, no phase-stop logic, no legality checks. If the browser has to
@@ -338,7 +339,7 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 #   last `over` (--keep-open) for as long as the browser stays connected, which
 #   is the window the board's New Game row needs.  Pass your own --games to
 #   override, --no-keep-open to turn the linger off.
-./scripts/play.sh --seed 42 --no-open --port 8643
+./scripts/play.sh --seed 42 --no-open --port 8652
 ./scripts/play.sh -- --games 1          # one game (your --games wins)
 #   --port/--web-port override config.json's wsPort/webPort; --no-open skips the
 #   browser; everything after `--` goes to mtgtable.MtgTable untouched.
@@ -352,6 +353,9 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 #   --site-dir <a ForgeCoach build>), prints http://<LAN IP>:8642/?token=<T> for
 #   every address (and a QR code if qrencode is installed).  For a HOME network:
 #   the token is the only lock.
+#   Every mode also starts the COACH HELPER (D292) when `claude` is on PATH:
+#   "Coach: Claude Code on this PC (no API key needed) — http://127.0.0.1:8643"
+#   ("Coaching without an API key" below); --no-coach skips it.
 
 # Match setup — WHAT you play against (amendment M44; "Choosing decks and the AI"
 #   below has the whole story).  A bare ./scripts/play.sh is your deck against
@@ -669,6 +673,42 @@ who sees the URL — or can read the network's traffic — can take the seat. Us
 on a home network you trust, and stop it (Ctrl-C) when you are done; the next run
 has a new token. The idle limit below still applies: an hour with no `/ws` client
 ends the session.
+
+**Coaching without an API key** (**D292**). ForgeCoach's coach can use the
+Claude Code CLI already logged in on this machine instead of an API key. `./scripts/play.sh` — every mode,
+`--engine-only` and `--lan` included — starts `tools/coach-helper.mjs` beside the
+engine whenever the `claude` command is on your PATH, and says so in one line:
+
+```
+Coach: Claude Code on this PC (no API key needed) — http://127.0.0.1:8643
+Coach: claude CLI not found — ForgeCoach will ask for an API key or offer Copy prompt
+```
+
+ForgeCoach finds the helper at `http://127.0.0.1:8643` (`config.json`'s
+`coachPort`), sends it the coaching prompt it would have sent the API, and the
+helper runs `claude -p` (headless Claude Code) and streams the answer back. What
+that means for you:
+
+- **Set-up is Claude Code itself**: install it and run `claude` once in a terminal
+  to log in. The coach then uses your Claude subscription's usage, exactly as
+  typing the question into Claude Code would. Without it ForgeCoach asks for an
+  API key or offers *Copy prompt*, as before.
+- **Claude gets nothing to act with**: every tool off, no MCP servers, no
+  session saved, an empty temporary folder as its working directory, one turn.
+  It reads the prompt and answers; it cannot open a file or run a command.
+- **One question at a time.** A second question waits up to five seconds for the
+  first to finish or be cancelled; closing or moving on in ForgeCoach cancels the
+  question, and the `claude` process is stopped.
+- **Who may call it** is who may open the engine's socket: pages from
+  `wsAllowedOrigins` (loopback and `https://jalirkan.github.io`), anything on this
+  machine with no `Origin`, and — under `--lan` — the phone's page, with the same
+  pairing token the engine uses. The helper's log is `var/play/coach.log`.
+- `--no-coach` skips it; it stops with the engine. Run it on its own with
+  `node tools/coach-helper.mjs` (`tools/README.md` has the commands and a
+  `curl` to try it).
+
+Your browser may ask once whether ForgeCoach may reach devices on your local
+network: that is the github.io page calling `127.0.0.1`, and it is this helper.
 
 **A game you play has no clock** (**D286**). `--transport ws` and `console` put no
 wall-clock limit on a game, so thinking for an hour is fine; `--transport null` and
@@ -2978,7 +3018,8 @@ mtg-table/
   scripts/play.sh            M3/M6: check-forge -> build -> the ws bridge -> /health ->
                              vite.  Defaults to --games 3 --keep-open (M6);
                              --engine-only (D285) stops after /health, for ForgeCoach;
-                             --lan (D287-D289) for ForgeCoach on a phone
+                             --lan (D287-D289) for ForgeCoach on a phone; starts the
+                             coach helper beside the engine (D292; --no-coach)
   scripts/spectate.sh        spectating (D118–D122): two AIs recorded by RecordMatch,
                              paced, into var/spectate/, followed live in the arena
 ```

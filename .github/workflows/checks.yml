@@ -5,7 +5,7 @@
 # What this is NOT: tools/check-all.sh.  The gate boots Forge and plays games --
 # Smoke, RecordMatch, the fourteen ten-games rows, seven WebSocket servers, the
 # engine-crash probe -- and it stays a LOCAL command, run before every commit
-# (CLAUDE.md, "Build and run").  Nothing here plays a game or starts a server.
+# (CLAUDE.md, "Build and run").  Nothing here plays a game or starts an engine.
 # What this IS: every check that needs no running engine, on every push to main
 # and every pull request, in three jobs that run side by side:
 #
@@ -28,8 +28,10 @@
 #              only the jar is extracted and only the jar is cached.
 #   redaction  the committed corpus through tools/check-redaction.mjs, the
 #              checker's own negative controls, the narrator's self-test
-#              (12d), the wire-drift comparison's self-test (step 6's) and the
-#              workshop catalog check (12b) -- plain Node, no npm install.
+#              (12d), the wire-drift comparison's self-test (step 6's), the
+#              workshop catalog check (12b) and the coach helper's self-test
+#              (12f, D292: a loopback HTTP server and a FAKE `claude` -- no real
+#              CLI, no login, no network) -- plain Node, no npm install.
 #
 # Also local only: tools/arena-bench.mjs (a built dist, a preview server and a
 # headless Chromium), the card library's real build (Scryfall's bulk file),
@@ -185,3 +187,6 @@ jobs:
       # Step 12b: web/src/workshop/catalog.json is what the repo makes.
       - name: build-workshop-catalog.ts --check
         run: node tools/build-workshop-catalog.ts --check
+      # Step 12f: the coach helper's contract with ForgeCoach, against a fake claude.
+      - name: coach-helper-selftest.mjs
+        run: node tools/coach-helper-selftest.mjs

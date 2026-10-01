@@ -53,7 +53,8 @@
 #   ./scripts/play.sh --seed 42             # a reproducible shuffle
 #   ./scripts/play.sh --ai-deck decks/morph-probe.dck --ai-profile Reckless
 #   ./scripts/play.sh --deck decks/pacho-shield.dck --mirror --ai-profile Cautious
-#   ./scripts/play.sh --port 8643           # a second bridge beside a running one
+#   ./scripts/play.sh --port 8652           # a second bridge beside a running one
+#   ./scripts/play.sh --engine-only --no-coach   # no coach helper (D292)
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser
 #   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
@@ -112,6 +113,16 @@
 # is refused 4001 (M13).  --arena, --web-port and --no-open mean nothing here and
 # are ignored.
 #
+# THE COACH HELPER (D292).  When the `claude` CLI (Claude Code) is on PATH, every
+# mode also starts tools/coach-helper.mjs once the bridge is ready, on
+# config.json's `coachPort` (8643): ForgeCoach's coach then asks Claude through
+# the CLI already logged in on this machine, with no API key.  It prints one
+# `Coach:` line either way, logs to var/play/coach.log, and is stopped with the
+# bridge.  --no-coach skips it.  With --lan it binds 0.0.0.0 behind the bridge's
+# own pairing token (handed over in the environment, never on a command line).
+# A helper already answering on that port -- a second play.sh beside a running
+# one -- is used as it is.
+#
 # The ports come from config.json (`wsPort`, `webPort`) and are overridable with
 # --port / --web-port.  The web port is vite's `strictPort: false`, so if 5173 is
 # busy vite picks another and prints it; the URL below is the one it was ASKED
@@ -138,6 +149,8 @@ SITE_URL="https://jalirkan.github.io/ForgeCoach/forgecoach-site.zip"
 SITE_CACHE="var/forgecoach"
 ARENA=0                          # M7: --arena opens /#arena instead of the board
 KEEP_OPEN=1                      # M6: the default, see the header
+COACH=1                          # D292: the coach helper, when `claude` is on PATH
+COACH_PORT="$(cfg_get coachPort || echo 8643)"
 PASSTHROUGH=()
 
 # Match setup (M44): config.json's `match` block, then the flags.  `cfg_get`
@@ -173,7 +186,8 @@ while [ $# -gt 0 ]; do
     --ai-deck|--deck2) AI_DECK="$2"; shift 2 ;;
     --ai-profile) AI_PROFILE="$2"; shift 2 ;;
     --mirror)    AI_DECK=""; shift ;;
-    --help|-h)   sed -n '5,118p' "$0"; exit 0 ;;
+    --no-coach)  COACH=0; shift ;;
+    --help|-h)   sed -n '5,129p' "$0"; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
   esac
@@ -325,10 +339,22 @@ SERVER_LOG="var/play/server.log"
 
 SERVER_PID=""
 VITE_PID=""
+COACH_PID=""
+COACH_LOG="var/play/coach.log"
 
 stop() {
   # Idempotent: this runs from the trap AND from the normal exit path.
   trap - INT TERM EXIT
+  if [ -n "$COACH_PID" ] && kill -0 "$COACH_PID" 2>/dev/null; then
+    # SIGTERM: the helper kills a running `claude` (its whole process group) and exits.
+    kill "$COACH_PID" 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      kill -0 "$COACH_PID" 2>/dev/null || break
+      sleep 0.2
+    done
+    kill -9 "$COACH_PID" 2>/dev/null || true
+    wait "$COACH_PID" 2>/dev/null || true
+  fi
   if [ -n "$VITE_PID" ] && kill -0 "$VITE_PID" 2>/dev/null; then
     kill "$VITE_PID" 2>/dev/null || true
     for _ in 1 2 3 4 5 6 7 8 9 10; do
@@ -399,6 +425,67 @@ done
 echo "ready"
 
 # --------------------------------------------------------------------------
+# 4a: the coach helper (D292) -- after /health, because --lan's token is the
+#     bridge's and is only in its log once it is ready
+# --------------------------------------------------------------------------
+
+http_get() {   # print the body of a GET, or nothing
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsS --max-time 2 "$1" 2>/dev/null || true
+  else
+    node -e 'fetch(process.argv[1]).then(r => r.text()).then(t => process.stdout.write(t)).catch(() => {});' "$1" 2>/dev/null || true
+  fi
+}
+NO_COACH_TAIL="ForgeCoach will ask for an API key or offer Copy prompt"
+COACH_LINE=""
+start_coach() {
+  local url="http://127.0.0.1:$COACH_PORT" body token=""
+  if [ "$COACH" != "1" ]; then COACH_LINE="Coach: off (--no-coach) — $NO_COACH_TAIL"; return 0; fi
+  if ! command -v claude >/dev/null 2>&1; then COACH_LINE="Coach: claude CLI not found — $NO_COACH_TAIL"; return 0; fi
+  if ! command -v node >/dev/null 2>&1; then COACH_LINE="Coach: node not found, so the coach helper cannot run — $NO_COACH_TAIL"; return 0; fi
+  body="$(http_get "$url/health")"
+  case "$body" in
+    *'"helper":1'*'"ok":true'*|*'"ok":true'*'"helper":1'*)
+      COACH_LINE="Coach: Claude Code on this PC (no API key needed) — $url (a helper already running there)"; return 0 ;;
+  esac
+  local args=(--port "$COACH_PORT")
+  if [ "$LAN" = "1" ]; then
+    # The bridge's token, read from its own phone-URL line; it reaches the
+    # helper in the environment so it never shows in `ps`.
+    for _ in $(seq 1 20); do
+      token="$(sed -n 's/^WS LAN \(PAGE\|SEAT\)  .*[?&]token=\([A-Za-z0-9_-]*\).*/\2/p' "$SERVER_LOG" | head -1)"
+      [ -n "$token" ] && break
+      sleep 0.25
+    done
+    [ -n "$token" ] && args+=(--lan --ws-port "$WS_PORT")
+  fi
+  : > "$COACH_LOG"
+  COACH_HELPER_TOKEN="$token" node tools/coach-helper.mjs "${args[@]}" >>"$COACH_LOG" 2>&1 &
+  COACH_PID=$!
+  for _ in $(seq 1 40); do          # 40 x 0.25 s; it answers in well under a second
+    kill -0 "$COACH_PID" 2>/dev/null || break
+    body="$(http_get "$url/health")"
+    [ -n "$body" ] && break
+    sleep 0.25
+  done
+  case "$body" in
+    *'"ok":true'*)
+      COACH_LINE="Coach: Claude Code on this PC (no API key needed) — $url"
+      if [ "$LAN" = "1" ]; then
+        if [ -n "$token" ]; then COACH_LINE="$COACH_LINE (and from the phone, with the same token)"
+        else COACH_LINE="$COACH_LINE (this machine only: no LAN token in $SERVER_LOG)"; fi
+      fi ;;
+    *'"ok":false'*)
+      COACH_LINE="Coach: the claude CLI is there but not working ($(printf '%s' "$body" | sed -n 's/.*"error":"\([^"]*\)".*/\1/p')) — $NO_COACH_TAIL" ;;
+    *)
+      COACH_LINE="Coach: the coach helper did not start ($(tail -1 "$COACH_LOG" 2>/dev/null)) — $NO_COACH_TAIL"
+      kill "$COACH_PID" 2>/dev/null || true
+      COACH_PID="" ;;
+  esac
+}
+start_coach
+
+# --------------------------------------------------------------------------
 # 4b: --engine-only stops here and waits (D285)
 # --------------------------------------------------------------------------
 
@@ -412,6 +499,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
   printf 'Engine ready on ws://127.0.0.1:%s/ws — open https://jalirkan.github.io/ForgeCoach/ and click Play\n' "$WS_PORT"
   echo "  (observers: ws://127.0.0.1:$WS_PORT/observe · log: $SERVER_LOG · Ctrl-C stops it)"
   echo "  keep every mtg-table board tab closed: the first /ws client takes the seat"
+  echo "$COACH_LINE"
   if [ "$LAN" = "1" ]; then
     # The bridge prints one `WS LAN PAGE` line per address, best guess first,
     # just after the readiness flip; give it a moment to land in the log.
@@ -455,6 +543,7 @@ URL="http://127.0.0.1:$WEB_PORT/?ws=1"
 [ "$ARENA" = "1" ] && URL="$URL#arena"
 
 say "$([ "$ARENA" = "1" ] && echo "arena" || echo "board") — $URL"
+echo "$COACH_LINE"
 cat <<EOF
   Space  press the button the engine FOCUSED (input.buttons.focus, amendment
          M39 — its label is Forge's: OK / Auto / …). "Space = OK" was never a

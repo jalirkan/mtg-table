@@ -12940,3 +12940,152 @@ hello_ok, state, input)").
 **Measured** with the pinned jar (sha256 `3c0a7c38…8e5dd9`), each step run on its
 own with `GATE_ONLY`, under Node v22.22.0 and v24.20.0: PLAN.md's *The test gaps*.
 The full gate was not run.
+
+## D292 — ForgeCoach coaches through the logged-in Claude Code CLI: `tools/coach-helper.mjs`, a loopback HTTP service on 8643 that runs `claude -p` with every tool off and streams NDJSON, started by `play.sh` beside the engine
+
+*Branch `c/coach-helper`; D292 alone, the next number after D291.*
+
+**2026-10-01** (the owner's approval, for ForgeCoach)
+
+**Decision.** `tools/coach-helper.mjs` (plain Node 22+, no dependencies) answers
+ForgeCoach's coaching prompts with the Claude Code CLI the owner is already
+logged in to, so the coach needs no API key. Its header is the contract
+ForgeCoach is built against:
+
+- `GET /health` → 200 `{"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"]}`,
+  or 200 `{"ok":false,"helper":1,"error":"<plain words>"}` when `claude` is not on
+  PATH or `claude --version` fails. It does not prove a login (only a call can).
+- `POST /coach` `{"system","user","model"?}` (model `opus`/`sonnet`/`haiku`,
+  default `sonnet`; at most 512 KB, else **413**) → 200
+  `application/x-ndjson`: `{"type":"text","text"}` deltas, `{"type":"thinking","text"}`
+  when the CLI shows any (2.1.287 sends empty thinking deltas, which are
+  dropped), then exactly one of `{"type":"done","stopReason","model"}` (the
+  model that answered, from the stream's `message_start`) or
+  `{"type":"error","message"}` in plain words — `not logged in — run \`claude\`
+  once in a terminal to log in`, a usage limit with the CLI's own reset text, a
+  model not available, a CLI too old for a flag, an overload. 400 / 403 / 404 /
+  405 / 413 / 429 carry one `{"type":"error","message"}` body.
+- **One question at a time:** a `/coach` that arrives while one runs waits up to
+  5 s (`--busy-wait`) for it to finish or be cancelled, then is **429** with
+  `Retry-After: 2`. A client that disconnects kills the child's whole process
+  group (SIGTERM, SIGKILL after 2 s), and so does the 300 s timeout.
+- **Who may call it** is M50's and M51's rule on this port: binds `127.0.0.1`;
+  `--lan` binds `0.0.0.0` and a non-loopback request must carry the pairing
+  token as `?token=` or `X-ForgeCoach-Token` (SHA-256 digests compared with
+  `timingSafeEqual`, never logged; a logged path is cut at `?`), a loopback one
+  never. Origin: `config.json`'s `wsAllowedOrigins`, read as the bridge reads it
+  (`MTG_TABLE_CONFIG`, else the repo's `config.json`, else M50's three
+  defaults), matched by a port of `WsTransport.originAllowed`; under `--lan`, a
+  non-loopback peer is also allowed `http://<Host>` (M51 verbatim) **and
+  `http://<Host's name>:<wsPort>`** — see below; no `Origin` is allowed from
+  loopback only; anything else is 403. A preflight is 204 with the allowed
+  Origin echoed, `GET, POST, OPTIONS`, `Content-Type, X-ForgeCoach-Token` and
+  `Access-Control-Allow-Private-Network: true`, and needs no token (a browser
+  cannot add one to a preflight).
+
+**How it runs Claude**, each flag read off 2.1.287's `--help` and a real call:
+`claude -p --output-format stream-json --include-partial-messages --verbose
+--model <alias> --system-prompt <system> --tools "" --strict-mcp-config
+--no-session-persistence --permission-mode dontAsk --max-turns 1`, plus
+`--safe-mode` and `--disable-slash-commands` when that CLI's `--help` lists them;
+the user text on **stdin**; the working directory a fresh empty
+`$TMPDIR/forgecoach-coach-*`, removed afterwards; the child the leader of its own
+process group (`detached`). A system prompt over 100 KB goes by
+`--system-prompt-file` from a second temp directory, because Linux caps one argv
+string at 128 KB (`MAX_ARG_STRLEN`). Why each: `--tools ""` is the CLI's own
+"disable all tools" (its `init` event then lists `"tools":[]`);
+`--strict-mcp-config` with no `--mcp-config` loads no MCP server (`"mcp_servers":[]`);
+`--no-session-persistence` writes no transcript; `dontAsk` denies anything not
+pre-approved rather than asking — nothing is approved, and there is no tool to
+approve anyway — where the contract's draft said `default`, which 2.1.287 also
+accepts but which in `-p` leaves a would-be prompt to the host; `--max-turns 1`
+is accepted though `--help` does not list it; `--safe-mode` keeps the owner's
+hooks, CLAUDE.md files, plugins and skills out of a coaching call, and
+`--disable-slash-commands` its skills (`"slash_commands":[]`); `--bare` was
+rejected because it reads `ANTHROPIC_API_KEY` only and never the OAuth login,
+which is the whole point. **Never `--dangerously-skip-permissions`.** The
+stream's shapes (measured): text arrives as `stream_event` /
+`content_block_delta` / `text_delta`, the stop reason in `message_delta`, the
+model in `message_start`, and the end as one `result` line; an API failure is
+an `assistant` line with `"error":"<code>"` (`model_not_found`,
+`authentication_failed`, `rate_limit`, …) and `is_api_error_message`, then a
+`result` with `is_error: true` and `api_error_status`, and no text deltas at
+all. A CLI that emits no partial messages still answers: the `result` text is
+sent as one `text` line.
+
+**`play.sh`** starts it in every mode (bare, `--engine-only`, `--lan`) once the
+bridge's `/health` answers, on `config.json`'s new **`coachPort`** (8643), when
+`claude` and `node` are on PATH, logging to `var/play/coach.log`, and stops it
+first in `stop()`. It prints one line: `Coach: Claude Code on this PC (no API key
+needed) — http://127.0.0.1:8643`, or `Coach: claude CLI not found — ForgeCoach
+will ask for an API key or offer Copy prompt` (and `off (--no-coach)`, `node not
+found`, `there but not working (<error>)`, `did not start (<log line>)` with the
+same tail). A helper already answering `/health` on the port — a second `play.sh`
+beside a running one — is used as it is. Under `--lan` it reads the token from the
+bridge's own `WS LAN PAGE`/`WS LAN SEAT` line and hands it over as
+`COACH_HELPER_TOKEN` (`--token` also works) so it never shows in `ps`, with
+`--lan --ws-port <wsPort>`. `--no-coach` skips it.
+
+**The gate's ports move from 8643 to 8644** (`WSPORT`, so 8644..8651 in
+parallel): `check-all.sh`'s own reason for not using 8642 — "a developer with
+`scripts/play.sh` running should be able to run the gate" — now covers 8643
+too. **Gate step 12f** (`tools/coach-helper-selftest.mjs`, the 50th job, the
+34th serially, about 4–7 s) and CI's `redaction` job run the helper against a
+fake `claude`.
+
+**Rationale.** The owner plays in ForgeCoach and has Claude Code logged in on the
+same PC; an API key is a second bill and a secret in the browser's storage. A
+static https page cannot run a CLI, so something local must, and this repo is
+already what the owner starts before a game — `play.sh` is where the engine,
+its port and its token live. A separate port rather than a path on the bridge's:
+the bridge is Java with hard rules about its threads and its one serialiser,
+and a process spawner in it would be a new thread family and a new door for
+nothing; the helper is about 600 lines of Node beside it that the bridge never knows
+about. Tools off, stdin and an empty folder because the coach needs to read and
+answer, nothing else, and a call that cannot read the disk is no way around hard
+rule 8.
+
+**The two places this differs from the contract as first drafted**, both for it
+to work, neither changing what ForgeCoach sends or reads:
+
+- **The LAN page's origin.** M51's rule is `http://<request Host>`, and on the
+  bridge that IS the page. Here the page comes from the bridge's port (8642) and
+  the request goes to 8643, so `http://<Host>` alone would refuse every phone.
+  The helper also admits `http://<Host's name>:<wsPort>` — same host name, the
+  bridge's port, non-loopback peers with the token only.
+- **The token is handed over in the environment** (`COACH_HELPER_TOKEN`), not as
+  `--token <T>` on the command line, which every local user can read in `ps`.
+  `--token` is still accepted.
+
+**Measured** (Claude Code 2.1.287, Node v22.22.0, in the container): the CLI's
+flags and event shapes above, by hand with tiny prompts — `"tools":[]`,
+`"mcp_servers":[]`, `"slash_commands":[]`, `--system-prompt-file`, `--max-turns`
+and `--permission-mode default` all accepted, an unknown flag `error: unknown
+option`, `--model nosuchmodel` the `model_not_found` shape; one real call through
+the helper with `curl` (haiku, a one-sentence question): ten `text` lines and
+`{"type":"done","stopReason":"end_turn","model":"claude-haiku-4-5-20251001"}`,
+about 5 s, the temp directory gone afterwards. `node tools/coach-helper-selftest.mjs`:
+57 checks, about 7 s, including from the container's non-loopback address (the
+LAN half); it failed, one or two checks each, under four planted mutants (the
+group kill reduced to the leader, the LAN origin admitted from loopback, the
+private-network header dropped, the token check removed). The gate runner ran
+12f alone (`GATE_ONLY`, 4.2 s). `play.sh`'s coach block was run in a harness —
+the found, off, not-found, `--lan` (403 without the token from the non-loopback
+address, 200 with it; the token absent from `ps`) and already-running cases —
+because this container has no Forge engine; `bash -n scripts/play.sh` passes.
+The full gate was not run, and a logged-out CLI was not reproduced (this
+container's CLI is authenticated by its host): the message for it is matched on
+the `authentication_failed` code, a 401/403 status, or the CLI's `Not logged in
+· Please run /login` text.
+
+**Rejected.**
+
+- **`--bare`** — the leanest mode, but it never reads the OAuth login.
+- **`--permission-mode default`** (the draft's) — accepted, but `dontAsk` says
+  what is meant: nothing is ever approved.
+- **A path on the bridge's port** — see the rationale.
+- **Queueing every concurrent question** — ForgeCoach asks again when the board
+  moves on; a queue would answer stale questions in order. A short wait absorbs
+  abort-then-ask, and 429 says the rest.
+- **The real CLI in the gate or CI** — it costs the owner's usage, needs a login
+  CI does not have, and its answers are not reproducible.

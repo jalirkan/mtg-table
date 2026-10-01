@@ -57,9 +57,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **thirteen** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d** and **12e**; 9d and 10g
-added by **M6**, 10h by **D291**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **fourteen** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d**, **12e** and **12f**; 9d and 10g
+added by **M6**, 10h by **D291**, 12f by **D292**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -187,9 +187,13 @@ the same game; about a second) → **12e**, `node tools/build-deck.ts --check`
 every name re-resolved against the local card index `var/cards/cards.sqlite` —
 which only `node tools/card-library/build.ts` makes, so a checkout without it
 FAILS 12e with that command, and `SKIP_DECKS=1` skips it and says so; about a
-tenth of a second) → `npm run build && npm test`.
+tenth of a second) → **12f**, `tools/coach-helper-selftest.mjs` (**D292**: the
+coach helper ForgeCoach calls instead of the Claude API, against a FAKE `claude`
+first on its PATH — never the real CLI, so no login and no network; about seven
+seconds) → `npm run build && npm test`.
 `SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes. **Pass
-`WSPORT=<n>` if 8643 is busy** — step 10 starts **seven** servers: on `WSPORT`,
+`WSPORT=<n>` if 8644 is busy** (8644 since **D292**: `play.sh` holds 8642 for the
+bridge and 8643 for the coach helper) — step 10 starts **eight** servers: on `WSPORT`,
 one after another, serially; on `WSPORT` .. `WSPORT+7`, at once, in parallel.
 **`GATE_ONLY="<job> …"` runs those jobs alone** (**D291**), over a build you
 already made — their dependencies are not run — and says it was a partial run:
@@ -220,7 +224,7 @@ and its seven self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
 to carry `jdk.compiler` and `jdk.jdeps`, and a Temurin JRE image is not built
 to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, the
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
-`wire-drift-selftest.mjs` and 12b's catalog check; not 12e, whose card index only
+`wire-drift-selftest.mjs`, 12b's catalog check and 12f's coach helper; not 12e, whose card index only
 the network build makes — D183). **It is the one place anything
 downloads the engine, and the pin still holds there**: the bridge job fetches
 `forge-installer-2.0.14.tar.bz2` (301,832,993 bytes) from Forge's tagged
@@ -261,6 +265,33 @@ the single largest hidden-information surface in the game — from a failure to 
 warning. The shape is legitimately reachable (Opposition Agent, Bribery, Gonti)
 and **nothing in the repo passes it**, so the day a recording needs it is the day
 someone types it on the command line and says why in the commit message.
+
+## The coach helper — the conventions D292 added
+
+`tools/coach-helper.mjs` lets ForgeCoach coach through the Claude Code CLI the
+owner is already logged in to, with no API key; `scripts/play.sh` starts it on
+`coachPort` (8643) beside the bridge. Its header is the contract ForgeCoach is
+built against, and four things about it are rules:
+
+1. **The contract changes in both repositories or not at all.** The paths, the
+   JSON shapes, the NDJSON lines (exactly one terminal `done` or `error`), the
+   port and the Origin and token rules are what ForgeCoach's code reads; a change
+   is a new decision and a change on ForgeCoach's side in the same breath.
+2. **Claude runs with nothing to act with.** `--tools ""`, `--strict-mcp-config`
+   with no config, `--no-session-persistence`, `--permission-mode dontAsk`,
+   `--max-turns 1`, an empty temp working directory, the user text on stdin.
+   **Never `--dangerously-skip-permissions`** or `bypassPermissions`, and never a
+   tool: a coach needs none to answer, and a call with no tool cannot read the
+   disk, the engine's logs or anything past the redacted prompt it is handed —
+   so it is no way around hard rule 8.
+3. **It is M50's and M51's door, not a new one**: the Origin list is
+   `wsAllowedOrigins`, read the way the bridge reads it; `--lan` takes the
+   bridge's own token (in the environment, never argv) and the token is never
+   logged.
+4. **Its self-test never runs the real CLI.** `coach-helper-selftest.mjs` (gate
+   12f, CI) puts a fake `claude` first on PATH; a real call costs the owner's
+   usage and needs a login CI does not have, so it is measured by hand
+   (D292's *Measured*).
 
 ## The narrator
 
