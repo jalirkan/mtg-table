@@ -79,7 +79,10 @@ preview profile's reader) and
 the build's own clips), `personal/relief_depth.py` (the relief's depth step,
 Python, run by `relief.mjs` alone), and `forge-scripts.ts` (Forge's `cardsfolder.zip` read
 by hand — a card's script by its name — for `build-workshop-catalog.ts`, D196). The two commands a player runs, `scripts/play.sh` and
-`scripts/spectate.sh`, live in `scripts/`; 6b runs `spectate.sh --no-serve`.
+`scripts/spectate.sh`, live in `scripts/` — `play.sh --engine-only` (D285) is the
+bridge alone, for a client that is not the board (ForgeCoach); 6b runs
+`spectate.sh --no-serve`. Neither is in the gate or linted: the lint reads
+`*.java`, and the gate has no shell-syntax step.
 
 ## Commands, by task
 
@@ -174,6 +177,11 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
 ./scripts/play.sh --ai-deck decks/wakanda.dck           # D116: G/W go-wide
 ./scripts/play.sh --port 8643 --web-port 5174       # beside a running one
 ./scripts/play.sh --no-open --no-keep-open          # no browser; exit the moment the match ends
+./scripts/play.sh --engine-only                     # D285: ONLY the engine, for ForgeCoach (no vite, no browser);
+                                                    # prints "Engine ready on ws://127.0.0.1:8642/ws — open
+                                                    # https://jalirkan.github.io/ForgeCoach/ and click Play";
+                                                    # the match flags and defaults are the same; Ctrl-C stops it
+./scripts/play.sh --engine-only --seed 42 --games 1 # a reproducible single game for the coach
 ./scripts/play.sh -- --games 1                      # one game (your --games wins)
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
 ```

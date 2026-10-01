@@ -334,6 +334,9 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 #   --port/--web-port override config.json's wsPort/webPort; --no-open skips the
 #   browser; everything after `--` goes to mtgtable.MtgTable untouched.
 #   Ctrl-C stops both halves.
+./scripts/play.sh --engine-only         # ONLY the engine, for ForgeCoach (D285): no vite, no browser
+#   prints "Engine ready on ws://127.0.0.1:8642/ws — open https://jalirkan.github.io/ForgeCoach/
+#   and click Play"; same match flags and defaults; Ctrl-C stops it
 
 # Match setup — WHAT you play against (amendment M44; "Choosing decks and the AI"
 #   below has the whole story).  A bare ./scripts/play.sh is your deck against
@@ -609,6 +612,20 @@ the match ends, and everything after `--` is handed to `mtgtable.MtgTable`
 untouched — including a `--games` of your own, which wins. `--deck`,
 `--ai-deck`, `--mirror` and `--ai-profile` choose what you play against:
 *Choosing decks and the AI*, below.
+
+**Playing from ForgeCoach instead: `./scripts/play.sh --engine-only`** (**D285**).
+[ForgeCoach](https://jalirkan.github.io/ForgeCoach/) is where the owner plays
+ordinary games, connecting from the browser to the bridge's seat socket
+`ws://127.0.0.1:<wsPort>/ws` (its origin is on `wsAllowedOrigins`, **D281**). That
+needs the engine and nothing else, so `--engine-only` runs steps 1–4 above —
+`check-forge`, the build, the bridge in the background, `/health` — skips vite and
+the browser, prints `Engine ready on ws://127.0.0.1:8642/ws — open
+https://jalirkan.github.io/ForgeCoach/ and click Play`, and waits. It takes the
+same match flags (`--deck`, `--ai-deck`, `--ai-profile`, `--mirror`, `--seed`,
+`--games`, `--port`) and the same defaults (three games, `--keep-open`, so ForgeCoach's
+New game and Next game have a session to act in). Ctrl-C (or the match ending and
+the linger window closing) stops the JVM and exits 0. **Close every mtg-table board
+tab first**: the first `/ws` client takes the seat and a second is refused 4001.
 
 **The page.** One line of chrome across the top — the seat, the socket's state
 (`open` / `reconnecting` / `refused`) and its URL, the frames in and out, the
@@ -2905,7 +2922,8 @@ mtg-table/
                              syncs and icons, and the image cache
                              images/<scryfallId>/<size>[.back].<ext> (D93)
   scripts/play.sh            M3/M6: check-forge -> build -> the ws bridge -> /health ->
-                             vite.  Defaults to --games 3 --keep-open (M6)
+                             vite.  Defaults to --games 3 --keep-open (M6);
+                             --engine-only (D285) stops after /health, for ForgeCoach
   scripts/spectate.sh        spectating (D118–D122): two AIs recorded by RecordMatch,
                              paced, into var/spectate/, followed live in the arena
 ```
