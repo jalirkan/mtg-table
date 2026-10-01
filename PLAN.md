@@ -14,8 +14,10 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 352 items still open across 38 follow-up lists** — 326
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the observer
+**The index below lists 352 items still open across 39 follow-up lists** — 326
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the test
+gaps lane (D291, 2026-10-01) closed the observer socket's 1 and 2 and added a
+list of two; the observer
 socket's three (D280–D282, 2026-10-01, a list of its own) added to the count
 made from its own rows on 2026-09-29 by the anchor resolver's lane (D275), on `0a93c9d`,
 which closed the GPU pass's 12 and added its 13 and 14 to the same list, over the
@@ -388,9 +390,9 @@ villain identity's rebase, were removed at the same recount.)
 | [Play-distance audit](#fu-audit) | 3 | open | The far strips under the chrome are measured by a scratch census, not held (owner question 34 first) | `web/test/status.test.ts` |
 | [Play-distance audit](#fu-audit) | 4 | open | The caption's every-view census counts the strip's cap against a card's box, so the low view's "stack under it" is a near miss drawn | `web/test/caption.test.ts` |
 | [Play-distance audit](#fu-audit) | 5 | open | The bar's and the credit row's widths are Chromium's on this machine's fonts; a new face or label moves them and no browser re-checks | `web/src/arena/hud.ts` |
-| [Observer socket](#fu-observe) | 1 | open | No gate step plays a real game with an observer attached; the live check was a scratch client | `tools/check-all.sh` |
-| [Observer socket](#fu-observe) | 2 | open | An observer's catch-up of an outstanding `ask` is held by reading, not by a test | `bridge/src/mtgtable/WsObserveSelfTest.java` |
 | [Observer socket](#fu-observe) | 3 | open | ForgeCoach's `live.ts` and README still say mtg-table has no observer endpoint (another repository, the owner's) | — |
+| [Test gaps](#fu-test-gaps) | 1 | open | `awaitNextGame`'s `sawClient` is per wait: a client that leaves between `over` and the wait costs a session the 30 s grace (10e, under load) | `bridge/src/mtgtable/MtgTable.java` |
+| [Test gaps](#fu-test-gaps) | 2 | open | Frames reach the socket out of `seq` order when two threads emit at once (5, 3, 4 seen); numbering and pushing are not one step | `bridge/src/mtgtable/WireGuiGame.java` |
 
 ### Questions only the owner can settle
 
@@ -478,6 +480,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | `play.sh --engine-only`: the bridge alone, for ForgeCoach *(off the plan; on the owner's approval)* | ¼ day | **built and verified, gate not run** on branch `c/engine-only` (2026-10-01), off `main`'s `1be90a7` — `scripts/play.sh`'s steps 1–4 and a wait, no vite and no browser, the match flags and the `--games 3 --keep-open` defaults unchanged (**D285**); *The engine-only mode*, just above *Deferred* |
 | — | A human game has no wall-clock limit *(off the plan; the owner's request, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/game-timeout` (2026-10-01), off `main`'s `df7a3bc` — `MtgTable`'s 900 s game timeout now applies to `null` / `auto` only; `ws` and `console` have none, a seatless `ws` game ends after 3600 s with no `/ws` client; `--game-timeout` and `--idle-timeout` (**D286**); *The game timeout*, just above *Deferred* |
 | — | LAN play: ForgeCoach from a phone on the same Wi-Fi *(off the plan; on the owner's approval)* | ½ day | **built and verified, gate not run** on branch `c/lan-play` (2026-10-01), off `main`'s `e511c37` — `play.sh --lan` (implies `--engine-only`): the bridge binds `0.0.0.0` behind a per-run 128-bit pairing token every non-loopback request must carry (loopback needs none), serves ForgeCoach's built site (downloaded as a zip from its Pages site and cached a day under `var/forgecoach/`, or `--site-dir`) on the ws port, admits the page's own `http://<Host>` Origin from a non-loopback peer, and prints the phone URLs (and a QR code with `qrencode`) (amendment **M51**, **D287**–**D289**); `WsLanSelfTest` is the build's seventh self-test; *LAN play*, just above *Deferred* |
+| — | The test gaps: the observer, the idle limit and Node 22 in the gate *(off the plan; the follow-ups of D280–D289)* | ¼ day | **built and verified, gate not run** on branch `c/test-gaps` (2026-10-01), off `main`'s `0a32d1b`, `af0512a` merged in — 10c plays with two `/observe` followers (one from before the session, compared frame for frame with the bridge's log and the seat's; one opened while the seat holds an `ask`, which must be caught up on it), a new **10h** proves `--idle-timeout` both ways, `ws-smoke` and `ws-auto-play` survive Node 22's `WebSocket`, and `GATE_ONLY` runs named jobs alone (**D291**); two follow-ups; *The test gaps*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9547,7 +9550,7 @@ SKIP_DECKS=1 ./tools/check-all.sh` from a deleted `bridge/out` — **check-all O
 32 jobs, 1390.3 s** (12e skipped: no local card index). Two earlier runs failed,
 neither on this change: under Node 22 (the sandbox's default) 10e's early-connect
 loop exits 13, because Node 22's `WebSocket` fires `error` and no `close` on a
-refused connect; and at `GATE_JOBS=2` 10f's seed-42 game came out a 14-turn
+refused connect (fixed in `tools/ws-smoke.mjs` by D291); and at `GATE_JOBS=2` 10f's seed-42 game came out a 14-turn
 game with no `ability_menu` (0 `clickAbility`). Seed 42 is not one game on this
 machine: unmodified `main` played its canonical 22-turn game in 3 of 4 serial
 runs and a 56-turn one in the fourth; this branch played the canonical one in 5
@@ -9558,15 +9561,20 @@ D113's load nondeterminism, which 10f's `>= 1` assertion does not tolerate.
 <a id="fu-observe"></a>
 ### The observer socket's follow-ups — three, 2026-10-01
 
-1. **No gate step plays a real game with an observer attached.** The self-test
+1. ~~**No gate step plays a real game with an observer attached.** The self-test
    drives a real `WsTransport` with pushed strings; the live comparison above was
    a scratch client. A step-10 variant that attaches an observer to 10c and
-   compares its stream with the client log would hold the whole path.
-2. **An observer's catch-up of an outstanding `ask` is held by reading, not by a
+   compares its stream with the client log would hold the whole path.~~
+   **Closed by D291** (*The test gaps*): 10c's `tools/ws-observe.mjs` follower
+   joins before the session and is held to the bridge's log and the seat's.
+2. ~~**An observer's catch-up of an outstanding `ask` is held by reading, not by a
    test.** `Transport.ask` asserts a game thread, and the self-test may neither
    name a `Game*` thread nor hop onto the pool (hard rules 3 and 10), so the ask
    half of `admitObserver` — the same `outstanding` + `isPending` walk `resend`
-   uses — has no check of its own.
+   uses — has no check of its own.~~ **Closed by D291**: 10c's seat
+   (`ws-auto-play --observe-at-ask`) holds its first real `ask` open while a
+   second observer joins, and fails unless that catch-up carries it byte for
+   byte; with the walk removed the step fails and the build's self-tests pass.
 3. **ForgeCoach still says mtg-table has no observer endpoint** (`src/live.ts`'s
    header, README *Live mode*). That repository is the owner's; this lane did not
    touch it.
@@ -9615,10 +9623,13 @@ Checked, with the pinned jar: the three cases above, a connected client idling
 past the idle limit without ending the session, and `null`'s 900 s default;
 `bridge/build.sh` and `web/test/claude-md.test.ts` pass.
 
-Follow-up: **the limits have no self-test.** `MtgTable.run` is the only caller,
+Follow-up: ~~**the limits have no self-test.** `MtgTable.run` is the only caller,
 and the build's self-tests do not boot an engine; the idle path was measured by
 hand (D286). A test would need `awaitGameEnd` lifted into a class that takes a
-`Transport`-shaped `connected()` and a clock.
+`Transport`-shaped `connected()` and a clock.~~ **Closed by D291** with a gate
+step rather than a self-test: **10h** runs a real seatless session (an observer
+attached) to `ABANDONED` under `--idle-timeout 3`, and a held one past it. The
+`--game-timeout` wall clock is still measured by hand only.
 
 ## LAN play — ForgeCoach from a phone (2026-10-01, D287–D289)
 
@@ -9674,6 +9685,69 @@ carry `[n]`**, so step 6 and 9b rewrite it and cannot see a regression to it
 until g1 is re-recorded on purpose (the build's self-test can); and **ForgeCoach
 reads the event too** — its reader must treat `[]` and `[attackerId]` alike,
 which is a change in that repo, not this one.
+
+## The test gaps — the observer, the idle limit and Node 22 in the gate (2026-10-01, D291)
+
+**Status: built and verified; the full gate was not run** (each new or changed
+step was run on its own, below). Branch `c/test-gaps`, off `main`'s `0a32d1b`,
+`main`'s `af0512a` (the blockers event, D290) merged in; D291. It closes the
+observer socket's follow-ups 1 and 2, the game timeout's one, and 10e's Node 22
+failure, all four recorded by D280–D289's lanes.
+
+```bash
+GATE_ONLY="10c-auto 10e-m11 10h-idle" GATE_JOBS=1 WSPORT=8722 ./tools/check-all.sh   # what was run, over ./bridge/build.sh
+node tools/ws-observe.mjs --port 8643 --out var/observed.jsonl                       # a follower; start it before the server
+node tools/ws-observe.mjs --check var/observed.jsonl --bridge-log var/games/<id>/frames.jsonl --seat-log var/ws-auto.jsonl
+node tools/ws-auto-play.mjs --port 8643 --observe-at-ask                             # an observer caught up on an open ask
+node tools/ws-smoke.mjs --port 8643 --hold 6                                         # a seat held idle (pair with --idle-timeout 3)
+```
+
+- **10c** plays its seed-13 game with two `/observe` followers: `ws-observe`,
+  joined before the session, whose 1,158–1,208 frames were every s2c frame of the
+  bridge's log byte for byte and in the seat's order; and the seat's own, opened
+  on the first ask (`a1`, an `order`, about 1.2–1.9 s in) while the seat held it,
+  whose catch-up was `hello_ok, state, input, ask` — the ask the seat's string.
+- **10h** (new, `WSPORT+7`): a seatless session with a follower attached ended
+  `ABANDONED` 2–3 s after `/health` under `--idle-timeout 3`, exit 1; a seat
+  held idle 6 s under the same limit ended in its concede, `MTGTABLE OK`.
+- **`ws-smoke`, `ws-auto-play` and `ws-observe` on Node 22**: a refused connect
+  settles on `error`; 10e's early-connect loop no longer exits 13.
+- **`GATE_ONLY`** runs named jobs alone over an existing build, and says so.
+
+Measured with the pinned jar (sha256 `3c0a7c38…8e5dd9`; `bridge/build.sh` green
+on the merged tree, seven self-tests): under Node v22.22.0, 10c, 10e and 10h
+serially (twice; 41.8 / 37.1 / 25.6 s and 42.7 / 10.3 / 38.2 s) and 10a, 10b,
+10d, 10f and 10g at `GATE_JOBS=3`, all green; under Node v24.20.0, 10c, 10e and
+10h at `GATE_JOBS=3` (51.2 / 46.8 / 34.4 s) and serially after the merge — that
+run failed the first, sequence-ordered `--check` on frames 5, 3, 4 (follow-up 2;
+D291), and the set-and-seat-order check passes the same files. The final runs,
+the checker as committed, on the merged tree: Node 22 serially 49.1 / 12.1 /
+34.3 s, Node 24 serially 75.9 / 8.0 / 25.8 s, all green. Before the fix,
+`ws-smoke --concede-before-input` against a closed port exited 13 under Node 22
+and timed out cleanly under Node 24; after it, both time out cleanly. With
+`admitObserver`'s ask loop disabled the build's seven self-tests passed and 10c's
+seat exited 10. `npm --prefix web run build && npm --prefix web test` (Node 24):
+`node --test` 1,254 / 1,245 pass / 0 fail / 9 skipped, vitest 159 (9 files);
+`docs/claude-md-rules.txt` regenerated for the two rule lines this lane changed;
+`narrate-selftest.mjs` passes 10h's held pair.
+
+<a id="fu-test-gaps"></a>
+### The test gaps' follow-ups — two, 2026-10-01
+
+1. **A client that leaves between `over` and the post-game wait costs the
+   session 30 s.** `MtgTable.awaitNextGame`'s `sawClient` starts false in each
+   wait, so a scripted client that reads `over` and closes before the wait
+   begins is "nobody ever attached", and the session sits out `KEEP_OPEN_MS`
+   (30 s) before it ends. Seen in 10e in three of six runs here (37–47 s against
+   7–10 s); harmless to a result, a cost to the gate's wall time.
+2. **Frames reach the socket out of `seq` order when two threads emit at once.**
+   10c, Node 24, load ~7: the game thread's `input`s 3 and 4 and the `input` a
+   `resync` re-emits (5) arrived 5, 3, 4 — at the seat and the observer alike,
+   while the log is in `seq` order. `seq` is numbered under the log's monitor
+   and the push follows it outside, the shape slice 4's follow-up 13(d) records
+   for the ask. A client log already needs `--client-log` for M10's verbatim
+   re-deliveries; whether `seq` should also mean wire order (one monitor for
+   both) is a decision, not a test.
 
 ## Deferred — out of scope for M0–M7
 

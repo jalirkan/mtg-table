@@ -37,6 +37,8 @@ node tools/ws-smoke.mjs --port 8642 --disconnect-mid-ask # drop mid-ask, reconne
 node tools/ws-smoke.mjs --port 8642 --concede-before-input   # M11's exception path
 node tools/ws-auto-play.mjs --port 8642 --log var/ws-auto.jsonl   # a whole game
 node tools/ws-auto-play.mjs --port 8642 --refuse-first-ask        # drop ON an `ask`
+node tools/ws-observe.mjs --port 8642 --out var/observed.jsonl    # follow /observe (start it first)
+node tools/ws-observe.mjs --check var/observed.jsonl --bridge-log var/games/<id>/frames.jsonl
 node tools/check-redaction.mjs var/ws-auto.jsonl         # a CLIENT log (amendment M17)
 ```
 
@@ -71,14 +73,17 @@ either (0 is none). What a `ws` session keeps instead is `--idle-timeout` (defau
 3600 s, 0 off): no `/ws` client connected for that long ends it, because the engine
 parks on `input` with no deadline and nothing else would. `/observe` never counts as
 a client. Keep any new wait on the seat under the same rule as the ask timeout: no
-deadline while a client is connected.
+deadline while a client is connected. Gate step 10h holds both halves on a real
+session (D291): seatless with an observer attached it ends `ABANDONED`, and a
+client holding the seat idle for twice the limit keeps it.
 
 **`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
 amendment **M50**). Any number of followers on the same port; an observer is
 caught up from the transport's cache (`hello_ok`, the last `state`,
 this game's `over` or else its last `input`, every outstanding `ask`) and then
 handed every string `push()` is handed — the seat's bytes, `seq` and redaction —
-under the one `fanout` monitor, so neither a gap nor a duplicate. **Nothing an
+under the one `fanout` monitor, so neither a gap nor a duplicate. Gate step 10c
+holds that on a real game, and the catch-up of an open `ask` with it (D291). **Nothing an
 observer does may reach the seat**: its messages are released unread, and
 `connected()`, the ask timeout, the 4001 refusal, `onResync`, `onDisconnect`,
 `ReplyPool.reopen`, `awaitNextGame` and the frame log count `/ws` only — a

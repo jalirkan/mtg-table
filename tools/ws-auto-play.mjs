@@ -49,13 +49,26 @@
  * all. It mirrors `AutoTransport.setProbe(true)` line for line; the two must
  * agree for the same reason the rest of this file mirrors that class.
  *
+ * `--observe-at-ask` holds an observer's catch-up of an open `ask` (amendment
+ * M50, D280; PLAN.md's observer follow-up 2, closed by D291): on the first `ask`
+ * FRAME it answers nothing, opens a SECOND socket on `/observe` while the game
+ * thread is parked on that ask, and requires the observer's catch-up to carry
+ * the seat's own bytes -- its first frame the `hello_ok` this seat was sent, then
+ * the seat's last `state`, and the ask itself, the same string, so the same
+ * `seq` -- before it answers and plays on. It exits **10** if the observer's
+ * catch-up lacks the ask or differs from the seat's frames by a byte, and if no
+ * ask was raised in the whole game (nothing was tested). Gate step 10c.
+ *
  * `--refuse-first-ask` is the cancelAll() coverage nothing else in the repo has:
  * it plays normally until the first `ask` FRAME, drops the socket while a game
  * thread is parked inside `ReplyPool.await`, reconnects a few seconds later and
  * finishes the game (see `dropOnAsk`).
  *
  * Exit 0 when an `over` frame arrives; non-zero on timeout, on a protocol
- * violation, or on a socket that never opened -- and **8 on an `over` with no
+ * violation, or on a socket that never opened (**5**, on Node 22 as on Node 24:
+ * Node 22's `WebSocket` fires `error` and no `close` on a refused connect, so
+ * `error` before `open` fails the run itself -- with nothing else holding the
+ * event loop, waiting for a `close` would have let Node exit 0) -- and **8 on an `over` with no
  * `state` carrying `gameOver` in front of it in the same game** (decision D114):
  * this client never concedes before the engine has asked it something, so the
  * only way that shape reaches it is a game ended by something other than
@@ -132,7 +145,8 @@ function usage(message) {
       '                                  [--new-game-delay-ms 40000]\n' +
       '                                  [--require-yield-repeat] [--require-late-undo]\n' +
       '                                  [--undo-race]\n' +
-      '                                  [--refuse-first-ask [--reconnect-after 5000]]\n',
+      '                                  [--refuse-first-ask [--reconnect-after 5000]]\n' +
+      '                                  [--observe-at-ask]\n',
   );
   process.exit(2);
 }
@@ -141,6 +155,7 @@ const args = {
   port: 8642, url: null, timeoutS: 300, log: null, resyncAfter: 12, quiet: false,
   refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false, games: 1, comfort: false,
   newGameDelayMs: 0, requireYieldRepeat: false, requireLateUndo: false, undoRace: false,
+  observeAtAsk: false,
 };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
@@ -193,6 +208,8 @@ for (let i = 2; i < process.argv.length; i++) {
     case '--require-late-undo': args.requireLateUndo = true; break;
     // D136's reproduction on its own: see the header.
     case '--undo-race': args.undoRace = true; break;
+    // D291: an observer's catch-up of an open ask, held (see the header).
+    case '--observe-at-ask': args.observeAtAsk = true; break;
     case '--reconnect-after': args.reconnectAfterMs = Number.parseInt(next(), 10); break;
     case '--help': case '-h': usage(null); break;
     default: usage(`unknown argument ${JSON.stringify(a)}`);
@@ -203,6 +220,7 @@ if (!Number.isFinite(args.timeoutS) || args.timeoutS <= 0) usage('--timeout must
 if (!Number.isFinite(args.reconnectAfterMs) || args.reconnectAfterMs < 0) usage('--reconnect-after must be a non-negative integer');
 if (!Number.isFinite(args.games) || args.games <= 0) usage('--games must be a positive integer');
 if (!Number.isFinite(args.newGameDelayMs) || args.newGameDelayMs < 0) usage('--new-game-delay-ms must be a non-negative integer');
+if (args.observeAtAsk && args.refuseFirstAsk) usage('--observe-at-ask and --refuse-first-ask both take the first ask; pass one');
 const URL_ = args.url ?? `ws://127.0.0.1:${args.port}/ws`;
 
 // ---------------------------------------------------------------------------
@@ -378,6 +396,16 @@ let failure = null;
 let refusedAskId = null;
 /** True between our own deliberate close and the reconnect that follows it. */
 let reconnectPending = false;
+/**
+ * --observe-at-ask (D291): the raw text of the frame being handled, and of the
+ * last `hello_ok` and `state` this seat was sent -- the bytes an observer's
+ * catch-up must repeat. `observe` is null until the first ask, then
+ * {askId, verdict: 'pending' | 'ok' | <why not>}; while it is pending the policy
+ * sends nothing, so the game thread stays parked on the ask.
+ */
+let rawFrame = '';
+const seatRaw = { hello_ok: null, state: null };
+let observe = null;
 
 // ---------------------------------------------------------------------------
 // Sending
@@ -523,6 +551,8 @@ function onFrame(text) {
   stats.in += 1;
   lastFrameAt = Date.now();
   writeLine({ ...frame, dir: 's2c' });
+  rawFrame = text;
+  if (frame.type === 'hello_ok' || frame.type === 'state') seatRaw[frame.type] = text;
 
   const body = frame.body;
   switch (frame.type) {
@@ -1444,6 +1474,15 @@ function onAsk(body) {
     dropOnAsk(askId, kind, body);
     return;
   }
+  if (args.observeAtAsk && observe === null) {
+    observeAtAsk(askId, kind, body, rawFrame);
+    return;
+  }
+  answerAsk(askId, kind, body);
+}
+
+/** The policy's half of an ask: everything after the flags above have had their say. */
+function answerAsk(askId, kind, body) {
   if (askId === refusedAskId) {
     // The server cancelled this one at the drop (contract (c)): it resolved to
     // its §5.4 default with no `answer` line, and answering it now would be a
@@ -1479,6 +1518,70 @@ function onAsk(body) {
     say(`ASK LOOP: more than ${ASK_REPEAT_CAP} identical ${kind} asks with no progress — conceding`);
     act('concede');
   }
+}
+
+/**
+ * `--observe-at-ask` (D291): while the game thread is parked on this ask, open
+ * an observer and hold its catch-up to the seat's bytes; then answer.
+ *
+ * `WsTransport.admitObserver` sends a joining observer `hello_ok`, the last
+ * `state`, the last `input` (or this game's `over`) and every ask still pending
+ * in the reply pool, under the fan-out monitor (amendment M50). The ask half had
+ * no check: `Transport.ask` asserts a game thread, which the self-test may not
+ * name (hard rules 3 and 10). Here the engine itself raises the ask and this
+ * seat simply does not answer it until the observer has been caught up, so the
+ * ask is outstanding by construction -- and since the seat was connected for
+ * every push, its last `hello_ok` and `state` ARE the transport's cache.
+ */
+function observeAtAsk(askId, kind, body, askText) {
+  observe = { askId, verdict: 'pending' };
+  const url = URL_.replace(/\/ws(\?|$)/, '/observe$1');
+  say(`OBSERVE-AT-ASK ${kind} ${askId}: holding the answer, opening ${url}`);
+  const got = [];
+  let done = false;
+  const ws = new WebSocket(url);
+  const settle = (verdict) => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    try { ws.close(1000, 'caught up'); } catch { /* already gone */ }
+    observe.verdict = verdict;
+    if (verdict !== 'ok') {
+      fail(`--observe-at-ask: ${verdict}`, 10);
+      return;
+    }
+    say(`OBSERVE-AT-ASK ok: the observer's catch-up carried ${askId} byte for byte ` +
+      `(${got.length} frame(s): ${got.map((t) => JSON.parse(t).type).join(', ')}); answering it now`);
+    lastActivity = Date.now();
+    answerAsk(askId, kind, body);
+  };
+  const timer = setTimeout(() => settle(
+    `the observer's catch-up never carried the open ask ${askId} within 10 s ` +
+      `(got ${got.length} frame(s): ${got.map((t) => JSON.parse(t).type).join(', ') || 'none'})`), 10_000);
+  ws.addEventListener('message', (e) => {
+    if (done) return;
+    const text = String(e.data);
+    got.push(text);
+    if (text !== askText) {
+      // Before the ask, only what the catch-up is made of: a live frame here
+      // would mean the game thread moved while this seat held its answer.
+      const type = JSON.parse(text).type;
+      if (!['hello_ok', 'state', 'input', 'ask'].includes(type)) {
+        settle(`frame ${got.length} of the observer's catch-up is a \`${type}\`, before the open ask`);
+      }
+      return;
+    }
+    // The ask arrived: the same string as the seat's, so the same seq and body.
+    if (got[0] !== seatRaw.hello_ok) {
+      settle(`the observer's first frame is not the \`hello_ok\` this seat was sent, byte for byte`);
+    } else if (got[1] !== seatRaw.state) {
+      settle(`the observer's second frame is not the last \`state\` this seat was sent, byte for byte`);
+    } else {
+      settle('ok');
+    }
+  });
+  ws.addEventListener('error', () => settle(`the observer socket errored (${url})`));
+  ws.addEventListener('close', (e) => settle(`the observer socket closed (${String(e.code)}) before the open ask reached it`));
 }
 
 /**
@@ -1557,6 +1660,7 @@ function tick() {
   }
 
   guardedActTimers(now);                       // D136: --undo-race and --comfort's undo steps
+  if (observe !== null && observe.verdict === 'pending') return;   // D291: the ask is held open
   if (pendingInput === null) return;
   if (now < comfortHoldUntil) return;          // --comfort: see comfortStep()
   const quiet = now - lastActivity;
@@ -1572,6 +1676,13 @@ function tick() {
 }
 
 function finish() {
+  if (args.observeAtAsk && failure === null && over && observe === null) {
+    failure = {
+      message: '--observe-at-ask: no ask was raised in the whole game, so no observer was caught up on one '
+        + '(seed 13 on the default deck raises several)',
+      code: 10,
+    };
+  }
   if (args.undoRace && failure === null) {
     // D136's reproduction: "Not now" is the fixed bridge, no notice is the race.
     if (race.verdict === 'applied') {
@@ -1664,6 +1775,7 @@ function finish() {
       : '') +
     (args.probe ? `probe acts ${probeActs.useMana} useMana, ${probeActs.clickAbility} clickAbility · ` : '') +
     (refusedAskId === null ? '' : `refused ${refusedAskId} and reconnected · `) +
+    (observe === null ? '' : `observed at ${observe.askId}: ${observe.verdict} · `) +
     (args.undoRace ? `undoRace ${race.sent ? `sent at depth ${race.depth}, ${race.verdict ?? 'no verdict'}`
       : 'never offered an undo'} · ` : '') +
     (matchSeen === null ? 'match none · '
@@ -1734,8 +1846,14 @@ function openSocket(what) {
   });
 
   socket.addEventListener('error', () => {
-    // The event carries nothing useful; `close` follows with the code.
+    // The event carries nothing useful; on Node 24 `close` follows with the
+    // code. Node 22 fires NO `close` after a refused connect, and nothing else
+    // would hold the event loop (every timer here is unref'd), so a socket that
+    // never opened fails the run from here (D291).
     say('socket error');
+    if (!opened && mine === socket && !over && failure === null) {
+      fail(`could not connect to ${URL_} (${what})`, 5);
+    }
   });
 
   socket.addEventListener('close', (event) => {

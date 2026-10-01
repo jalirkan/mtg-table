@@ -201,14 +201,14 @@ All commands are run from the repository root.
 ```bash
 ./tools/check-all.sh                 # GATE_JOBS=min(4, nproc/4) steps at once: ~4 minutes
 GATE_JOBS=1 ./tools/check-all.sh     # the serial gate, one step after another: ~15 minutes
-GATE_JOBS=8 WSPORT=8750 ./tools/check-all.sh   # more at once; step 10 on 8750..8756
+GATE_JOBS=8 WSPORT=8750 ./tools/check-all.sh   # more at once; step 10 on 8750..8757
 ```
 
 **It runs its steps concurrently** (D129–D135). Every step is a job with its
 own log under `var/check-all/<run>/`, and `GATE_JOBS` of them run at once —
 four on a 16-thread machine — each JVM a process of its own with its own game
-ids, `var/` paths, **Forge home** and, for step 10's seven servers, its own port
-(`WSPORT`..`WSPORT+6`). The Forge home is what makes the `var/` paths honest:
+ids, `var/` paths, **Forge home** and, for step 10's eight servers, its own port
+(`WSPORT`..`WSPORT+7`). The Forge home is what makes the `var/` paths honest:
 every job boots Forge in `var/check-all/<run>/<job>/` (and every ten-games row in
 `var/ten-games/home-<seed>/`) — its own `userDir`, `cacheDir` and `config.json`,
 built by `tools/config.sh`'s `forge_home_make` — where every JVM used to share

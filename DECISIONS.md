@@ -12839,3 +12839,104 @@ re-pushes and one re-partitioned flush); `check-redaction.mjs` passes the three
 fresh logs, the client log (`--client-log`) and the corpus; `narrate-selftest`
 passes with both goldens byte-identical; `first-divergence.mjs` calls g1 and the
 fresh recording IDENTICAL.
+
+## D291 — The observer, the idle limit and Node 22 are held by the gate: 10c plays with two `/observe` followers, 10h runs `--idle-timeout` both ways, and the socket tools settle a connect on `error`
+
+*Branch `c/test-gaps`; D291 alone (the blockers lane took D290 on `main` while this lane worked).*
+
+**2026-10-01** (the follow-ups D280–D289 left: the observer socket's 1 and 2, the
+game timeout's one, and 10e's Node 22 failure recorded under *The observer socket*)
+
+**Decision.** Four gaps, closed in the gate rather than by hand:
+
+- **10c is also the observer step.** `tools/ws-observe.mjs` (new) is started
+  before 10c's server, retries until the port binds, and so joins `/observe`
+  before the session exists; it writes every frame it is sent verbatim and exits
+  at the `over`. After the game, `ws-observe --check` requires the stream to be
+  exactly the transport's promise (M50): a catch-up from the cache at some
+  admission moment — the last `hello_ok`, the last `state`, this game's `over`
+  or else its last `input`, every ask still pending (pending: its frame is in
+  the bridge's log and its `answer` is not yet) — and then every s2c frame of the
+  bridge's log after that moment, same `seq`, same `type`, the same body bytes,
+  no gap, no duplicate, no `seq: 0` frame; it searches every moment from "before
+  the session" to the last frame, so a follower that happens to join late passes
+  only with the right catch-up. The live part is compared with the log as a
+  **set**, and its order with the **seat's**: a frame is numbered under the log's
+  monitor and pushed after it, so two threads emitting at once reach the socket
+  out of `seq` order — measured on this lane's fourth Node 24 run, the game
+  thread's `input`s 3 and 4 and the resync's re-emitted `input` 5 reached the
+  seat AND the observer as 5, 3, 4, which a first, sequence-ordered version of
+  the check failed. With `--seat-log`, every s2c line of the seat's client log
+  whose `seq` the observer was also sent must be the same frame, compared as
+  parsed JSON (the client log re-encodes), and the frames the seat received once
+  must have reached the observer in the same order. The server's summary must
+  say `ws observers = 2 accepted, 0 dropped`.
+- **The ask half of `admitObserver` is held by the seat.** `ws-auto-play
+  --observe-at-ask` (10c's seat) takes its first real `ask` and does not answer
+  it: the game thread stays parked in `ReplyPool.await`, the policy sends nothing,
+  and a second socket joins `/observe`. Its catch-up must be the `hello_ok` this
+  seat was sent, then this seat's last `state`, then (after the `input`) the ask —
+  each the same string, so the same `seq` — with nothing but catch-up frames in
+  front of the ask, within 10 s; then the seat answers and plays on. Anything
+  else, or a game with no ask at all, exits **10**. Since the seat received every
+  push, its last `hello_ok` and `state` ARE the transport's cache; this is what
+  the self-test cannot reach, because `Transport.ask` asserts a game thread and
+  `WsObserveSelfTest` may not name one (hard rules 3 and 10).
+- **10h is the idle limit (D286), both ways.** A new job on `WSPORT+7`, two short
+  sessions on one port: `--idle-timeout 3` with nobody in the seat and a
+  `ws-observe --until close` follower attached — `ABANDONED: no client connected
+  for 3 s`, `finished = false (ABANDONED …)`, exit 1, no `MTGTABLE OK`, one
+  observer and no `/ws` client accepted, within 30 s of `/health`, and the
+  follower closed by the server after its `hello_ok`; then `--idle-timeout 3`
+  with `ws-smoke --hold 6`, a seat taken before the session exists (no `/health`
+  wait, so it is on the socket before the idle clock starts) and held idle for
+  twice the limit — the concede's `over`, `MTGTABLE OK`, no `ABANDONED`. Its
+  held session's logs join `RECORDERS` and 12d's list; the abandoned one has no
+  `over` by design and goes to neither.
+- **The socket tools settle a connect on `error` as well as `close`.** Node 22's
+  `WebSocket` fires `error` and no `close` on a refused connect; `ws-smoke`'s
+  `Conn.#connect` waited for `close`, so `openEarly`'s first refused attempt
+  never settled, nothing held the event loop (the whole-run timer was unref'd)
+  and Node exited 13. Now the first of `error` / `close` settles it (`close`
+  still overwrites the code, which is where a ≥ 4000 refusal shows), and the
+  whole-run timer is held, so a pending wait can only end in a verdict.
+  `ws-auto-play` fails a socket that errors before it opens (exit 5) — on Node
+  22 it would otherwise have exited **0** with nothing done, every timer being
+  unref'd — and `ws-observe` is written the same way.
+- **`GATE_ONLY="<job> …"`** runs the named jobs alone, over an existing build
+  (their dependencies are not run), validates the ids, and prints a `check-all
+  OK (GATE_ONLY: … -- a partial run, not the gate)` line. It is how each step
+  above was run on its own; it is never the gate.
+
+**Rejected.**
+
+- **A self-test case for the ask catch-up.** It needs `Transport.ask` on a game
+  thread: naming a `Game*` thread or hopping onto Forge's pool is banned (hard
+  rules 3 and 10), and relaxing the assert for a test is the kind of hole the
+  lint exists to keep shut. A real engine raises the ask for free in 10c.
+- **A separate step for the observer.** 10c already plays a whole seed-13 game,
+  which raises asks from its first turns (`a1`, an `order`, about 1 s in); a new
+  step would boot a JVM and play a game for nothing. The cost to 10c is the
+  follower and one held answer, milliseconds.
+- **Lifting `awaitGameEnd` into a class with a fake clock** (the game timeout's
+  follow-up as written) — a unit test of the loop would not show that the real
+  `WsTransport.connected()` ignores an observer, which 10h does with one attached.
+- **`--idle-timeout 2` and a `/health`-polled client** — the poll is one second
+  apart and a loaded machine adds more, so the client could arrive after the
+  clock had already run out; the early connect removes the race instead.
+- **Comparing the observer with the seat's client log alone** — the seat misses
+  every frame emitted while it was away, re-receives verbatim ones, and its log
+  re-encodes the JSON; the bridge's own log is the record of what was sent.
+
+**Negative controls.** `ws-observe --check` rejects a dropped line (a gap), a
+duplicated one, one changed body, two adjacent live frames swapped (with
+`--seat-log`), a stream cut before the `over`, and a late
+catch-up carrying an older `state`; it accepts a correct late catch-up built from
+the log at seq 600. With `admitObserver`'s ask loop disabled (`if (false && …)`)
+the build and all seven self-tests passed and 10c's seat exited 10 ("the
+observer's catch-up never carried the open ask a1 within 10 s (got 3 frame(s):
+hello_ok, state, input)").
+
+**Measured** with the pinned jar (sha256 `3c0a7c38…8e5dd9`), each step run on its
+own with `GATE_ONLY`, under Node v22.22.0 and v24.20.0: PLAN.md's *The test gaps*.
+The full gate was not run.
