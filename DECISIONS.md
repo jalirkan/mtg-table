@@ -14127,3 +14127,93 @@ and the profile as before (D105), and nothing of the search reaches a frame.
 decision, and the gate's recordings must stay Forge's); a new profile name
 (profiles are `.ai` files, D311); a ForgeCoach-side switch now (the launcher's
 contract is D303's, changed in both repositories or not at all — a follow-up).
+
+## D315 — The cube lab records the games it plays: `run --record-all` / `--record-every N` writes both chairs of every game, gzipped, from the worker JVM, through `RecordMatch`'s own recorder; `tools/ml` reads a run folder with `--run-dir`
+
+*Branch `c/lab-record`; D315 (written as D313 and renumbered before merge: the
+search AI holds D312–D314, the evaluator D316–D317).*
+
+**2026-10-03** (the owner's goal: every one of a night's ~50,000 cube-lab games
+becomes training data for the position evaluator of D305)
+
+**Decision.** `tools/cubelab.sh run … --record-all` (or `--record-every N`: every
+game of each draft whose seed is a multiple of N) makes the worker that plays a
+game write that game's frame log while it plays, once per seat:
+`<out>/games/<seed>/g<n>-seat0.jsonl.gz` (drafter A's view) and `-seat1`
+(drafter B's), with the cube's markdown copied to `<out>/cube.md`. Off by
+default; a run without the flags writes what it wrote before (its game rows
+gain only `cpuMs` and `gameCpuMs`, the worker's CPU time).
+
+- **One serialiser, reused, not a second one** (hard rule 8; the cube lab's
+  follow-up 2). `mtgtable.SeatRecorder` (new, in the bridge, names no
+  `CardView`) wraps `RecordMatch`'s `SpectatorGui`, a hand-registered
+  `GameEventForwarder` and `RecordMatch`'s unpaced `BoundaryFlusher`, and
+  writes `RecordMatch`'s session header and `hello_ok` with its match block.
+  Two recorders on one game are two viewers; each forwarder is registered
+  before its own flusher, which flushes only it. `CubeLab.java` attaches them
+  before the game starts and finishes them inside the same `GameAction.invoke`
+  body that runs `match.startGame` — the game thread, where `RecordMatch`
+  finishes its own — so the lab still makes no hop and starts no thread
+  (`GameLog`'s appender aside); the lint's `CardView` list stays three.
+  `RecordMatch`'s `unsupported` and `sha256` became package-private; its
+  behaviour is unchanged.
+- **Gzip in `GameLog`** (`new GameLog(file, true)`): the deflater sits above
+  the byte counter, so `bytes()` is the size on disk. No sync flush per line
+  (it would cost most of the compression), so a killed worker leaves a gzip
+  that ends early; `encode.py` reads it up to the cut, and with no `over` it
+  gives no rows. `GameLogSelfTest` holds the round trip.
+- **Metadata.** The header's `seed` is the game's seed; a `lab` block names
+  `run`, `cube`, `cubeFile`, `cubeSha`, `format`, `match`, `draftSeed`, `game`,
+  `gameSeed` and `onPlay`; `hello_ok.match` names the decks `cubelab <seed> A`
+  / `B` (the other chair's by name and count only, as always), so D305's split
+  keeps both chairs of a game in one group and `--group-by match` holds a
+  draft's decks out. The other chair's deck path is never in a log.
+- **`--run-dir`** on `encode.py` and `dataset.py`: the run's `games/` and
+  `frames/`, the run's own `cube.md` as the vocabulary (else `run.json`'s
+  `cubeFile`), refused when its sha256 is not the run's `cubeSha`; several run
+  folders make one dataset only when they drafted one cube; `dataset.py`
+  writes to `<run>/dataset/` unless `--out` says otherwise.
+- **The redaction checker reads `.gz`, and A3 learned the revealed library
+  top** (the cube lab's follow-up 1): while a player controls, face up, one of
+  the twelve "play with the top card of your library revealed" permanents in
+  the 2.0.14 jar (Courser of Kruphix is in the owner's cubes) or one of the
+  three that reveal every player's, ONE card of their library is public and
+  not a leak. Two cards still fail, and so does Experimental Frenzy, which
+  Forge scripts `MayLookAt$ Player` but whose Oracle text is a private look.
+  Three probes in `fixtures/negative/redaction/a3-revealed-top-*`.
+- **Held by:** gate 12g now runs `--record-every 2` (seed 8 recorded, seed 7
+  not), runs `check-redaction.mjs` over both chairs and `encode.py --run-dir`
+  over the run; `web/test/cubelab-record.test.ts` runs the checker over the
+  committed recording `fixtures/cubelab/recorded/` (one game, both chairs) with
+  a planted-leak negative control; `tools/ml/tests/test_rundir.py` reads that
+  run, scrambles its hidden zones (no feature moves), cuts a gzip short and
+  builds a dataset from it.
+- **Not done: the AI's chosen action** for a policy target. Forge's choices are
+  made inside `PlayerControllerAi`; logging them needs D309's controller seam
+  (`bridge/src/mtgtable/ai/`, the search AI's), so it is not cheap here. A
+  seat's own casts, land drops, attacks and blocks are already in its log's
+  `events` after each decision state, which is enough for a first policy
+  target; passes and target choices are not.
+
+**Measured** (this container: 4 shared cores at a load of 15–30, then 130;
+synergy cube, grid, seeds 101–108, one game each, `--jobs 2`, two rounds of
+each arm in turn). The recordings change no game: every seed played the same
+number of turns in all four runs (153 turns over the 8 games each time). Wall
+time could not be measured here — the arms differed by −37% and +117% per turn
+with the load — so CPU time per turn is the number: the worker's, off 1,338 /
+1,307 ms and on 1,307 / 1,654 ms (+12% over both rounds), the game thread's,
+off 383 / 385 ms and on 373 / 441 ms (+6%); within the 30% budget, and the
+wall-clock figure is the PC's to measure (`tools/ml/README.md`). Disk: 148 KiB
+a game for both chairs gzipped (median 142, max 252; 672 state frames, 7.7
+KiB a turn), so 50,000 games are about 7 GiB.
+
+**Rejected.**
+
+- **Replaying through `RecordMatch`** (`--record M`): a Forge boot a game, and a
+  game that is not the counted one.
+- **A recorder of the lab's own** — a second card serialiser (hard rule 8).
+- **One omniscient log per game** — a new redaction mode, and the dataset is
+  per viewer anyway.
+- **Plain `.jsonl`** — about 6× the disk at night scale.
+- **Recording a separate side file of every engine choice** — needs the AI
+  seam above.
