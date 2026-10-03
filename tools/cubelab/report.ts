@@ -288,7 +288,7 @@ a{color:var(--acc)}code{font-size:12px}
 <h2>Win rate by primary theme</h2><p class="dim">The theme most of a deck's spells carry, when at least ${PRIMARY_MIN} do.</p><div class="wrap">${groupTable(s.byTheme, 'theme')}</div>
 <h2>Average curve by pair</h2><div class="wrap"><table><thead><tr><th>pair</th><th>decks</th><th>0–1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6+</th><th>avg MV</th></tr></thead><tbody>${curveRows}</tbody></table></div>
 <h2>Sample decks of the top pairs</h2><p class="dim">For each of the three best pairs with two or more decks, the deck of that pair that won the most games.</p><div class="decks">${samples}</div>
-<h2>Cards</h2><p class="dim">Click a heading to sort. Win % in deck is over the decisive games of the decks that played the card. <span class="tag">AI?</span> = Forge marks it AI:RemAIDeck (its AI plays it poorly).</p>
+<h2>Cards</h2><p class="dim">${s.run.format === 'winston' ? 'Winston deals every stack card into a pool, so pick % is 100% by construction; avg pick # says how early a card went. ' : ''}Click a heading to sort. Win % in deck is over the decisive games of the decks that played the card. <span class="tag">AI?</span> = Forge marks it AI:RemAIDeck (its AI plays it poorly).</p>
 <div class="wrap"><table id="cards"><thead><tr><th>card</th><th>section</th><th>rating</th><th>dealt</th><th>picked</th><th>pick %</th><th>avg pick #</th><th>in deck</th><th>deck %</th><th>W–L</th><th>win % in deck</th><th>95% CI</th></tr></thead><tbody>${cardsRows}</tbody></table></div>
 <h2>Never played</h2><p>${s.neverPlayed.length === 0 ? '<span class="dim">Every nonland card made a deck at least once.</span>' : s.neverPlayed.map((c) => `${esc(c.name)} <span class="dim">(picked ${c.picked}/${c.dealt})</span>`).join(' · ')}</p>
 <h2>Recorded games</h2>${recs}
@@ -321,7 +321,9 @@ export function renderMarkdown(s: Summary, minGames = 6): string {
   grp('By primary theme', s.byTheme);
   const played = s.cards.filter((c) => c.games.wins + c.games.losses >= minGames);
   const byRate = [...played].sort((a, b) => (b.games.rate ?? 0) - (a.games.rate ?? 0));
-  L.push(`## Cards by win % in deck (at least ${minGames} decisive games)`, '', '| card | in deck | W–L | win % | 95% CI | pick % |', '|---|---|---|---|---|---|');
+  L.push(`## Cards by win % in deck (at least ${minGames} decisive games)`, '');
+  if (s.run.format === 'winston') L.push('Winston deals every stack card into a pool, so pick % is 100% by construction (avg pick # is in the HTML).', '');
+  L.push('| card | in deck | W–L | win % | 95% CI | pick % |', '|---|---|---|---|---|---|');
   const row = (c: CardRow): string => `| ${c.name} | ${c.inDeck} | ${c.games.wins}–${c.games.losses} | ${pct(c.games.rate)} | ${ci(c.games)} | ${pct(c.pickRate)} |`;
   for (const c of byRate.slice(0, 12)) L.push(row(c));
   if (byRate.length > 24) L.push('| … | | | | | |');

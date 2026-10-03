@@ -55,17 +55,18 @@ export function engineFacts(env: EngineEnv, names: string[], log: (s: string) =>
   const file = path.join(dir, `${key}.json`);
   if (!fs.existsSync(file)) {
     fs.mkdirSync(dir, { recursive: true });
-    const namesFile = path.join(dir, `${key}.names.txt`);
+    const namesFile = path.join(dir, `${key}.${process.pid}.names.txt`);
     fs.writeFileSync(namesFile, `${names.join('\n')}\n`);
     log(`facts: booting the engine to look up ${names.length} cards ...`);
     const t0 = Date.now();
     const home = env.homes[0] as string;
-    const r = spawnSync('env', javaArgs(env, home, ['facts', '--names', namesFile, '--out', `${file}.part`]),
+    const part = `${file}.${process.pid}.part`;      // two runs at once never share a partial file
+    const r = spawnSync('env', javaArgs(env, home, ['facts', '--names', namesFile, '--out', part]),
       { cwd: env.repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 600_000 });
-    if (r.status !== 0 || !fs.existsSync(`${file}.part`)) {
+    if (r.status !== 0 || !fs.existsSync(part)) {
       throw new Error(`the facts JVM failed (exit ${r.status}${r.signal ? `, ${r.signal}` : ''}):\n${(r.stderr ?? '').split('\n').slice(-25).join('\n')}`);
     }
-    fs.renameSync(`${file}.part`, file);
+    fs.renameSync(part, file);
     log(`facts: ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   }
   const doc = JSON.parse(fs.readFileSync(file, 'utf8')) as { cards: Fact[] };
