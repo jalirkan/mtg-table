@@ -1,10 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:41:18-04:00",
+ "updated": "2026-10-03T14:45:32-04:00",
+ "heartbeat": "2026-10-03T14:45:32-04:00",
  "paused": false,
+ "state": "running",
+ "idleSince": null,
+ "idleReason": null,
  "host": {
-  "load1": 9.63,
-  "memUsedGb": 9.7,
+  "load1": 15.62,
+  "memUsedGb": 18.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 1853,
   "pressure": 0,
@@ -20,22 +24,60 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-03T14:40:49-04:00",
-   "elapsed": 29,
-   "done": 1271,
+   "elapsed": 284,
+   "done": 1440,
    "total": 20000,
    "unit": "drafts",
-   "ratePerHour": null,
-   "eta": null,
+   "ratePerHour": 2383.9,
+   "eta": "2026-10-03T22:32:40-04:00",
    "workers": 7,
    "workersMax": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-03T14:40:51-04:00",
+   "dataUpdated": "2026-10-03T14:45:06-04:00",
+   "memGb": 8.39,
+   "live": {
+    "night.drafts": 1440,
+    "night.games": 1440,
+    "night.engine_error_rate": 0,
+    "elapsed_s": 256,
+    "night.cpu_ms_per_turn": 397,
+    "night.engine_errors": 0,
+    "night.mean_game_ms": 5555,
+    "night.mean_game_s": 5.5549,
+    "night.median_game_s": 3.3285,
+    "night.ms_per_turn": 280,
+    "night.night_drafts_done": 1439,
+    "night.nights": 1,
+    "night.planned_drafts": 20000,
+    "night.recorded_bytes_per_game": 171180,
+    "night.recorded_errors": 2,
+    "night.recorded_games": 1440,
+    "night.runs": 6,
+    "night.timeouts": 1,
+    "pressure_events": 0,
+    "workers": 7
+   },
+   "liveHeadline": [
+    "night.drafts",
+    "night.games",
+    "night.engine_error_rate"
+   ],
+   "cubes": [],
+   "publicCubes": true,
    "pressureEvents": [],
    "detail": "lab-J029-run1"
   }
  ],
  "queue": [
+  {
+   "publicTitle": "Decision records pilot re-run",
+   "publicEst": "~60 min",
+   "id": "J027",
+   "title": "Decision records pilot, re-run after the reveal-leak fix (D352): 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded, redaction-checked mechanically",
+   "cpu": "heavy",
+   "est": "~60 min"
+  },
   {
    "publicTitle": null,
    "publicEst": null,
@@ -279,8 +321,8 @@
   }
  ],
  "runner": {
-  "commit": "6fbcdea",
-  "started": "2026-10-03T13:10:50-04:00",
+  "commit": "5e6ba2a",
+  "started": "2026-10-03T14:45:31-04:00",
   "dryRun": false
  }
 }
