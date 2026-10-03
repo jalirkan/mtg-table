@@ -13463,6 +13463,70 @@ survive every generation; only the list and its counts are the loop's); a
 separate machine-readable list beside the markdown (two sources of truth for
 one cube; `check` and `run` already read the markdown).
 
+## D301 — The cube lab learns card values and pair synergy from its own games: a regularised logistic model of who won from the two decks, the prior ratings as its baseline, AI-limited cards held at the prior
+
+**Context.** The lab's drafters pick by Forge's draft ranks (D294's editable
+ratings) plus a hand-weighted theme term. The owner approved (2026-10-03) a
+drafting and deckbuilding AI learned on his own machine from the lab's
+self-play, with no LLM.
+
+**Decision.** `tools/cubelab.sh learn <run-dir...> --out <x.ratings.tsv>`
+(`tools/cubelab/learn.ts`, pure TypeScript, no dependency, no engine) fits one
+logistic model over every decisive game: logit P(A wins) = beta·play +
+alpha·(Σz_A − Σz_B) + Σdelta_A − Σdelta_B + Σs_A − Σs_B, the opponent's deck
+entering as negative features. z is the prior rating standardised; delta, a
+card's deviation from its prior, and s, a pair's synergy, carry Gaussian priors
+(L2 shrinkage, `tauCard` 0.25, `tauPair` 0.15 logits); pairs are only the most
+frequent nonland ones (`minPairGames` 8, `maxPairs` 300). Newton's method on a
+Cholesky factorisation gives the MAP fit and the posterior SDs and is
+deterministic. It writes a ratings TSV the lab already reads (rating = prior +
+K·delta, K the prior's own exchange rate rating-SD ÷ alpha when alpha is clearly
+positive, else 150) with each card's effective sample and status, a synergy TSV
+(`run --synergy`, `--deck-synergy on`), a Markdown summary and a JSON. Forge's
+`AI:RemAIDeck` cards are kept at the prior and in no pair — their outcomes are a
+fact about the AI — and every output marks them `ai-limited`. A five-fold
+held-out check by draft compares the model's log loss with the prior-only
+model's, with the interval of the difference, so a small sample says it is
+noise. The learning options are a named table (`DEFAULT_LEARN`, the guide's
+table, the TSV headers, `learn.json`) rather than `Weights`, so a run's
+`weights` — and every existing run folder's resume check — are unchanged.
+
+**Rejected.** Per-card win rates (D297's `winRateShrunk`): a card's rate is its
+deck's rate, so a card that rides in the best archetype looks strong; the model
+credits each card net of its deckmates and the opponent. A neural net or a
+dependency: a few hundred parameters and a few thousand games need no more than
+a logistic model, and the lab has no package. Learning the hand weights
+themselves (synergy, lean, commitAt): a later step, once the card values are
+signal.
+
+## D302 — Self-play and the head-to-head: seat A drafts and builds with the learned values, seat B with the baseline, on the same seeds every iteration; A's win rate with Wilson's interval is the evidence
+
+**Context.** A learned value that predicts held-out games is not yet a better
+drafter: the question is whether drafting and building with it makes decks that
+win, when Forge's AI plays both sides.
+
+**Decision.** `tools/cubelab.sh selfplay <cube.md>` loops: self-play drafts with
+the current values on both seats → `learn` from every game so far, always
+against the original prior → a head-to-head where seat A uses the new ratings
+and pairs (`runMixedDraft`: A's chooser sees each card as its learned twin, A's
+deckbuilder builds with them, `--deck-synergy` adds the pairs) and seat B the
+baseline. Head-to-head seeds are the same every iteration (common random
+numbers) and their games are never learned from, so the deals stay held out
+(the first real run did learn from them, and its second iteration's number is
+reported as optimistic for that reason). Seats keep D294's alternation of who opens and D295's of who is on
+the play, so A has no edge but its values; the summary reports A's decisive-game
+win rate with Wilson's 95% interval, and `--deck-h2h` the deckbuilder alone.
+Every phase is an ordinary run folder (`run.json` gains an additive `learned`
+block naming the files and their sha256, part of the resume check). `run.ts`,
+`lab.ts`, `pick.ts`, `draft.ts` and `deck.ts` take the pair table as an optional
+argument; without one nothing changes.
+
+**Rejected.** Judging the learned builder by its own deck score (circular: each
+builder is best by its own measure — the summary prints both views only as a
+distance). Iterating on learned-on-learned priors (compounding a small sample's
+noise). Best-of-three for the evidence: `--games 1` buys more independent drafts
+for the same games.
+
 ## D303 — The match launcher: the coach helper's `POST /match` takes two decklists from ForgeCoach, writes them under `var/match/`, and `play.sh` — which owns the engine — restarts the bridge on them
 
 *Branch `c/match-launcher`; D303 alone (D298–D302 are other lanes').*

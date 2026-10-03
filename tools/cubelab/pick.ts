@@ -7,6 +7,8 @@
 //               + colour term                         (lean before commitment, penalties after)
 //               + fixing   for a land or fixer that makes the committed colours
 //               - remAIDeck for a card Forge says its AI plays poorly
+//               + pairs    learned pair synergy with the same picks synergy counts
+//                          (only under `run --synergy <tsv>`, D301; 0 without a table)
 //
 // A drafter COMMITS to its best two colours once `commitAt` of its expected
 // picks are made (a third of them by default) and re-derives the pair from its
@@ -18,6 +20,7 @@
 // `splashSources` ways to make it.  Every number is a Weights field.
 
 import { castableIn, COLOURS, type LabCard } from './cards.ts';
+import { pairPoints, type PairTable } from './pairs.ts';
 import type { Weights } from './weights.ts';
 
 export interface DrafterState {
@@ -75,9 +78,9 @@ export function synergyCount(card: LabCard, among: LabCard[], cap: number): numb
   return total;
 }
 
-export interface ScoreParts { rating: number; synergy: number; colour: number; fixing: number; ai: number; total: number }
+export interface ScoreParts { rating: number; synergy: number; colour: number; fixing: number; ai: number; pairs: number; total: number }
 
-export function scoreCard(card: LabCard, s: DrafterState, w: Weights): ScoreParts {
+export function scoreCard(card: LabCard, s: DrafterState, w: Weights, table?: PairTable): ScoreParts {
   const isCommitted = committed(s, w);
   const pair = topPair(s.picks);
   const rating = card.land ? card.rating * w.landScale : card.rating;
@@ -111,12 +114,13 @@ export function scoreCard(card: LabCard, s: DrafterState, w: Weights): ScorePart
     }
   }
   const ai = card.remAIDeck ? -w.remAIDeck : 0;
-  return { rating, synergy, colour, fixing, ai, total: rating + synergy + colour + fixing + ai };
+  const pairs = table ? pairPoints(table, card.name, among) : 0;
+  return { rating, synergy, colour, fixing, ai, pairs, total: rating + synergy + colour + fixing + ai + pairs };
 }
 
 /** A set taken at once: its best card, plus `setRest` times each other card (negatives count as nothing). */
-export function setValue(cards: LabCard[], s: DrafterState, w: Weights): number {
-  const v = cards.map((c) => Math.max(0, scoreCard(c, s, w).total)).sort((a, b) => b - a);
+export function setValue(cards: LabCard[], s: DrafterState, w: Weights, table?: PairTable): number {
+  const v = cards.map((c) => Math.max(0, scoreCard(c, s, w, table).total)).sort((a, b) => b - a);
   let sum = 0;
   v.forEach((x, i) => { sum += i === 0 ? x : x * w.setRest; });
   return sum;

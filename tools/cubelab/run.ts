@@ -25,7 +25,9 @@ import { parseCube } from './cube.ts';
 import { dckText } from './deck.ts';
 import { engineFacts, runPool, type EngineEnv, type ForgeBuild, type GameRow, type MatchJob } from './engine.ts';
 import { loadCube, runDraft, type DrafterOut, type DraftOut, type Format, type LoadedCube } from './lab.ts';
+import { parseSynergy } from './pairs.ts';
 import { parseRatings } from './ratings.ts';
+import { reRated, runMixedDraft, type MixedMode } from './selfplay.ts';
 import type { CardInfo } from './report.ts';
 import type { Weights } from './weights.ts';
 
@@ -44,6 +46,12 @@ export interface RunOptions {
   gameTimeoutSec: number;
   winstonCards: number;
   weights: Weights;
+  /** Learned pair synergy for both drafters (`--synergy <tsv>`, D301). */
+  synergyFile?: string | null;
+  /** ...and for both deckbuilders (`--deck-synergy`). */
+  deckSynergy?: boolean;
+  /** Head-to-head (D302): seat A drafts and/or builds with these, seat B with the baseline (`--ratings`, no pairs). */
+  mixed?: { mode: MixedMode; ratingsFile: string; synergyFile: string | null; deckSynergy: boolean };
 }
 
 /** A drafter's line in drafts.jsonl: the draft side, plus which deck played and Forge's own build. */
@@ -84,6 +92,11 @@ export interface RunMeta {
   missing: string[];
   themeNames: Record<string, string>;
   archetypes: Record<string, string>;
+  /** D301-D302: the learned files this run drafted or built with (absent for a plain run). */
+  learned?: {
+    synergyFile: string | null; synergySha: string | null; deckSynergy: boolean;
+    mixed: { mode: MixedMode; ratingsFile: string; ratingsSha: string; synergyFile: string | null; synergySha: string | null; deckSynergy: boolean } | null;
+  };
 }
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
@@ -106,6 +119,27 @@ export function defaultRatings(cubeFile: string): string | null {
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<void> {
   const t0 = Date.now();
   const { lc, text } = loadForRun(env, o.cubeFile, o.ratingsFile, o.weights, say);
+  const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
+  const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
+  let draftOne = (seed: number): DraftOut => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+  let learnedMeta: RunMeta['learned'];
+  if (o.synergyFile || o.mixed) {
+    if (o.synergyFile) {
+      const t = parseSynergy(fs.readFileSync(o.synergyFile, 'utf8'));
+      lc.pairs = t;
+      if (o.deckSynergy) lc.deckPairs = t;
+    }
+    let mixedMeta = null;
+    if (o.mixed) {
+      const m = o.mixed;
+      const t = m.synergyFile ? parseSynergy(fs.readFileSync(m.synergyFile, 'utf8')) : undefined;
+      const learned = reRated(lc, parseRatings(fs.readFileSync(m.ratingsFile, 'utf8')), t);
+      draftOne = (seed) => runMixedDraft(lc, learned, m.mode, o.format, seed, o.weights, o.winstonCards, m.deckSynergy ? t : undefined);
+      mixedMeta = { mode: m.mode, ratingsFile: rel(m.ratingsFile), ratingsSha: shaOf(m.ratingsFile) as string, synergyFile: m.synergyFile ? rel(m.synergyFile) : null, synergySha: shaOf(m.synergyFile), deckSynergy: m.deckSynergy };
+      say(`head-to-head (${m.mode}): seat A ${m.ratingsFile}${m.synergyFile ? ` + ${m.synergyFile}` : ''}${m.deckSynergy ? ' (deck pairs on)' : ''}, seat B the baseline`);
+    }
+    learnedMeta = { synergyFile: o.synergyFile ? rel(o.synergyFile) : null, synergySha: shaOf(o.synergyFile), deckSynergy: !!o.deckSynergy, mixed: mixedMeta };
+  }
   if (lc.missing.length > 0) say(`WARNING: ${lc.missing.length} card(s) not in the engine, drafted without them: ${lc.missing.map((m) => m.listed).join(', ')} (run check)`);
   const meta: RunMeta = {
     v: 1, cube: lc.cube.title, cubeFile: path.relative(env.repo, path.resolve(o.cubeFile)), cubeSha: sha(text),
@@ -114,6 +148,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     gameTimeoutSec: o.gameTimeoutSec, winstonCards: o.winstonCards, weights: o.weights,
     forgeJar: process.env.FORGE_JAR ?? '', missing: lc.missing.map((m) => m.listed),
     themeNames: lc.cube.themeNames, archetypes: lc.cube.archetypes,
+    ...(learnedMeta ? { learned: learnedMeta } : {}),
   };
   fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
@@ -122,8 +157,8 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (fs.existsSync(metaFile)) {
     const old = JSON.parse(fs.readFileSync(metaFile, 'utf8')) as RunMeta;
     const same = (k: (m: RunMeta) => unknown): boolean => JSON.stringify(k(old)) === JSON.stringify(k(meta));
-    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards])) {
-      throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder or weights -- use a new --out`);
+    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null])) {
+      throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder, weights or learned files -- use a new --out`);
     }
     if (fs.existsSync(jsonl)) {
       for (const line of fs.readFileSync(jsonl, 'utf8').split('\n')) if (line.trim()) done.add((JSON.parse(line) as DraftRecord).seed);
@@ -147,7 +182,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   for (let i = 0; i < o.drafts; i++) {
     const seed = o.seed + i;
     if (done.has(seed)) continue;
-    const d = runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+    const d = draftOne(seed);
     outs.set(seed, d);
     const deckPath = (side: string, kind: string): string => path.join(o.out, 'decks', `${seed}-${side}${kind}.dck`);
     const sides = d.drafters.map((dr) => {

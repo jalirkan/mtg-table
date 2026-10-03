@@ -14,8 +14,9 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 364 items still open across 41 follow-up lists** — 338
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — Omega's
+**The index below lists 369 items still open across 42 follow-up lists** — 343
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the
+drafting AI's learning loop (D301–D302, 2026-10-03) added a list of five; Omega's
 evolve loop (D299–D300, 2026-10-03) added a list of six; the cube lab
 (D293–D296, 2026-10-03) added a list of six; the test
 gaps lane (D291, 2026-10-01) closed the observer socket's 1 and 2 and added a
@@ -407,6 +408,11 @@ villain identity's rebase, were removed at the same recount.)
 | [Omega evolve](#fu-omega-evolve) | 4 | open | `run` has no lock, and concurrent lab runs share `var/cubelab/homes/<k>` | `tools/cubelab/run.ts` |
 | [Omega evolve](#fu-omega-evolve) | 5 | open | Re-deciding a generation is a manual delete of its `result.json` | `tools/cubelab/evolve-run.ts` |
 | [Omega evolve](#fu-omega-evolve) | 6 | open | No gate step runs `evolve`; its tests are engine-free | `tools/check-all.sh` |
+| [Draft learning](#fu-draft-learn) | 1 | open | Every card's learned delta is inside its own noise: the overnight run on the PC is what makes per-card values signal | `tools/cubelab/learn.ts` |
+| [Draft learning](#fu-draft-learn) | 2 | open | The first run's iteration 2 learned from iteration 1's head-to-head deals (fixed since); re-run it | `tools/cubelab/learncmd.ts` |
+| [Draft learning](#fu-draft-learn) | 3 | open | Learned pairs are added on top of the theme term, which they partly re-count | `tools/cubelab/pick.ts` |
+| [Draft learning](#fu-draft-learn) | 4 | open | Under Winston, the learned seat's blind-card expectation is the baseline's | `tools/cubelab/selfplay.ts` |
+| [Draft learning](#fu-draft-learn) | 5 | open | The hand weights (synergy, lean, commitAt, the deck score's) are not learned | `tools/cubelab/weights.ts` |
 
 ### Questions only the owner can settle
 
@@ -498,6 +504,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The coach helper: ForgeCoach coaches through the logged-in Claude Code CLI *(off the plan; on the owner's approval, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/coach-helper` (2026-10-01), off `main`'s `cb7d041` — `tools/coach-helper.mjs` on `coachPort` 8643: `GET /health`, `POST /coach` answered by `claude -p` with every tool off and streamed as NDJSON, M50's Origin list and M51's token; `play.sh` starts it beside the engine in every mode (`--no-coach`); the gate's `WSPORT` moves to 8644; gate step **12f** and CI run its self-test against a fake `claude` (**D292**); *The coach helper*, just above *Deferred* |
 | — | The cube lab: two Forge AIs draft a two-player cube, build decks and play them *(off the plan; the owner's request, for cube design)* | 1 day | **built, run and documented, gate not run** on branch `c/cube-lab` (2026-10-03), off `main`'s `4204bc6` — `tools/cubelab.sh check / ratings init / run / report` over `tools/cubelab/` (TypeScript) and one Java worker, `CubeLab.java`: Grid and Winston drafts with Forge's ranks as editable ratings plus theme synergy and late colour commitment, 40-card 16–17-land decks, a best of three per draft with the play alternating, sharded over `--jobs` JVMs with a watchdog, JSONL per draft, a self-contained HTML report and ForgeCoach's `meta.json`; four cubes under `cubes/` (synergy, modern, vintage, pauper); gate step **12g** (**D293–D297**); six follow-ups; *The cube lab*, just above *Deferred* |
 | — | Omega and the cube lab's evolve loop: a cube that changes by simulation *(off the plan; the owner's approval)* | ½ day | **built, tested, run small (2 × 15 drafts: no swap passes; 24 leads, 28 rating-limited) and documented, gate not run** on branch `c/omega-evolve` (2026-10-03), off `main`'s `78efcdf`, `f69caf1` (D298) merged in — `tools/cubelab.sh evolve`: generations of grid drafts on a cube, per-card evidence against Wilson-interval thresholds (dead, dominant by wins, dominant by first picks; else *insufficient data*), at most six swaps a generation from a seed pool under the cube's constraints, AI:RemoveDeck cards never cut on AI numbers and AI:All never auto-added, `cubes/omega-notes.tsv` overriding; the cube document written back line for line with an iteration-log entry, a changelog and an HTML page; Omega v1, its 938-card pool and notes under `cubes/` (**D299–D300**); *Omega and the evolve loop*, just above *Deferred* |
+| — | The drafting and deckbuilding AI, learned from the cube lab's self-play *(off the plan; the owner's approval)* | ½ day | **built, tested, run small and documented, gate not run** on branch `c/draft-learn` (2026-10-03), off `main`'s `78efcdf`, main merged in through `db9fddb` — `tools/cubelab.sh learn` (a regularised logistic model of who won from the two decks: card values against the prior ratings, pair synergy, AI-limited cards held at the prior; ratings + synergy TSVs, a held-out check) and `selfplay` (self-play → learn → learned seat A vs baseline seat B, paired with a baseline control); `run --synergy`, `--deck-synergy` (**D301–D302**). First run: learned drafter 27–13 (67.5%, [52%, 80%]) against the baseline where the control went 15–25; *The drafting AI*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9942,6 +9949,84 @@ node --test web/test/cubelab-evolve.test.ts        # 17 tests
    friendlier.
 6. **No gate step runs `evolve`**; its tests are engine-free (step 13 and CI).
    A one-generation, two-draft smoke beside 12g would cover the loop's I/O.
+
+## The drafting AI — card values and pair synergy learned from self-play (2026-10-03, D301–D302)
+
+**Status: built, tested, run small on the synergy cube and documented; the full
+gate was not run** (`./bridge/build.sh`, the lint and the cube-lab suites are
+green). Branch `c/draft-learn`. The owner approved a drafting and deckbuilding
+AI learned on his own machine from the lab's self-play, with no LLM.
+`docs/guides/cube-lab.md`'s *Learning the drafters' values from the games* is the
+manual.
+
+```bash
+tools/cubelab.sh learn var/cubelab/runs/synergy-grid-40 --cube cubes/synergy-cube-180.md \
+    --out var/cubelab/learned/synergy.ratings.tsv          # seconds, no engine
+tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/synergy-grid-40 \
+    --iterations 2 --drafts-per-iter 30 --h2h 40 --games 1 --deck-synergy on --jobs 2
+```
+
+- **The model** (`learn.ts`): logit P(A wins) = play + alpha·prior + card
+  deltas + pair synergy, the opponent's deck negative; Gaussian priors (0.25 and
+  0.15 logits), Newton + Cholesky, deterministic. On planted synthetic data
+  (120 cards, 4,000 games) the learned ratings rank-correlate 0.79 with the
+  truth against the prior's 0.41, and 11 of 16 planted pairs land in the top 24
+  of 540.
+- **Learning from the 40-draft run** (95 decisive games): the prior ratings
+  barely predict wins (alpha 0.04 ± 0.15); a card's posterior SD falls only 4%
+  below its prior (median 27 games in one deck); held-out log loss 0.663 against
+  the prior-only model's 0.702, a difference of −0.040 ± 0.063 — inside noise.
+- **Self-play, 2 iterations × 30 drafts + 40 head-to-head drafts each, `--games
+  1`, two workers** (the machine at load 30): the learned drafter (seat A, its
+  ratings and pairs, pairs in its deckbuilder too) against the baseline (seat B)
+  won **27–13 = 67.5% [52.0%, 79.9%]** after iteration 1 and **29–11 = 72.5%
+  [57.2%, 83.9%]** after iteration 2. The **control** — the same 40 seeds, both
+  seats baseline — went **15–25 for A (37.5% [24.2%, 53.0%])**, so seat A has no
+  edge of its own on those deals. Paired by seed with the control, iteration 1
+  turned 16 losses into wins and 4 wins into losses (exact sign test p = 0.012);
+  iteration 2, 17 and 3 (p = 0.003) — but iteration 2 had learned from iteration
+  1's head-to-head games on the same deals, so its number is optimistic
+  (follow-up 2, fixed in the code since).
+- **What the learner did**: it moved toward white and black aggro and
+  artifacts (Shadowspear +0.28 logit, Brimaz, Mentor of the Meek, Blood Artist,
+  Soul Warden) and away from blue card draw (Consider −0.18, Mind Stone,
+  Mulldrifter, Emry); the learned seat played no RG and almost no red. Every one
+  of those deltas is inside its own 95% interval: the gain is many small tilts
+  in one direction, not any card known to be good.
+- **The deckbuilder**: over 360 pools rebuilt both ways offline, the learned
+  build changes 3.9 spells a deck and the colours or splash of half the pools,
+  +3.4 points a spell by the learned measure and −0.2 by the baseline's (each
+  builder wins by its own measure; the head-to-head is the strength test).
+- **Two engine hangs** (seeds 1018 and 1019, both workers at once, at load
+  ~77): the watchdog recorded each as an engine error after 760 s and started a
+  fresh worker — the cube lab's follow-up 4's restart path, seen for the first
+  time.
+- **For the PC, overnight** (≈ 1,600 games at four workers):
+  `tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/synergy-grid-40 --iterations 4 --drafts-per-iter 300 --h2h 400 --deck-h2h 200 --games 1 --deck-synergy on --jobs 4 --out var/cubelab/selfplay/synergy-overnight`.
+  400 head-to-head drafts give a ±5-point interval; per-card values need about
+  700 decisive games for a card's SD to halve and about 5,000 to tell a
+  ±0.1-logit card from its prior.
+
+<a id="fu-draft-learn"></a>
+### The drafting AI's follow-ups — five, 2026-10-03
+
+1. **No card's learned value is signal yet.** 193 games give a median 47 games
+   in one deck per card and every delta's interval crosses zero; the
+   head-to-head shows the tilt helps in aggregate. The overnight command above
+   is the next step; the guide's *How much is signal* is the arithmetic.
+2. **The first run's second iteration is optimistic.** It learned from
+   iteration 1's head-to-head games, whose seeds the head-to-head repeats;
+   `selfplay` now keeps them out. Re-run before quoting iteration 2.
+3. **Learned pairs re-count part of the theme term.** `pick.ts` adds a pair's
+   points on top of `synergy × √shared themes`, and the games that taught the
+   pair were drafted with that term on. Fitting the theme weight inside the
+   model (a feature per theme count) would separate them.
+4. **Winston's blind-card expectation is the baseline's for both seats** in a
+   head-to-head (`winstonDraft` computes it from the shared cards); the grid,
+   which every measured run used, has none.
+5. **The hand weights are not learned.** `synergy`, `lean`, `commitAt` and the
+   deck score's weights stay D294's; once card values are signal, a search over
+   them with the head-to-head as its objective is the next layer.
 
 ## The ML dataset — frames to position rows for a learned evaluator (2026-10-03, D305)
 

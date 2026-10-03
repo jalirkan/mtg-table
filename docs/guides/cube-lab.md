@@ -180,6 +180,8 @@ the same two decks, not one of the counted ones.
 | `--winston-cards N` | 90 | the size of the Winston stack |
 | `--weights <file.json>` | | a partial object of the weights below |
 | `--weight name=value` | | one weight; repeatable; wins over `--weights` |
+| `--synergy <tsv>` | | learned pair synergy for both drafters (`learn` writes it; D301) |
+| `--deck-synergy on\|off` | `off` | ...and for both deckbuilders (needs `--synergy`) |
 
 ## The weights
 
@@ -440,6 +442,134 @@ some 5–15 pools and plays some 10–25 decisive games, so only clear cases pas
 table says how many drafts would settle the rest. Two hundred drafts a
 generation is where most leads resolve.
 
+## Learning the drafters' values from the games (D301–D302)
+
+The ratings start as Forge's draft ranks and the synergy term is a hand
+weight. `learn` and `selfplay` replace guesses with what the lab's own games
+say — on your machine, from Forge's games, no LLM and no network.
+
+```bash
+# fit card values and pair synergy from any run folders (no engine; seconds)
+tools/cubelab.sh learn var/cubelab/runs/synergy-grid-40 --cube cubes/synergy-cube-180.md \
+    --out var/cubelab/learned/synergy.ratings.tsv
+# -> synergy.ratings.tsv  synergy.synergy.tsv  synergy.learn.md (.html)  synergy.learn.json
+
+# draft with them (both drafters), and build with the pairs too
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 40 --jobs 2 \
+    --ratings var/cubelab/learned/synergy.ratings.tsv \
+    --synergy var/cubelab/learned/synergy.synergy.tsv --deck-synergy on
+
+# the loop: self-play -> learn -> learned drafter vs baseline drafter, I times
+tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/synergy-grid-40 \
+    --iterations 2 --drafts-per-iter 30 --h2h 40 --games 1 --deck-synergy on --jobs 2
+```
+
+**The model** (`tools/cubelab/learn.ts`). Every decisive game is one
+observation, the two played decks entering with opposite signs:
+
+```
+logit P(A wins) = beta · (A on the play ? +1 : −1)
+                + alpha · (Σ z over A's deck − Σ z over B's)        z = the prior rating, standardised
+                + Σ delta over A's deck − Σ delta over B's          a card's deviation from its prior
+                + Σ s over A's pairs   − Σ s over B's pairs         a pair's synergy
+```
+
+`delta ~ N(0, tauCard²)` and `s ~ N(0, tauPair²)`: an L2 penalty that is a
+prior, so a card seen in four games stays where its rating put it and one seen
+in four hundred goes where the games say. Pairs are only the `maxPairs` most
+frequent nonland pairs with at least `minPairGames` decisive games in one deck.
+Basic lands are no feature. Solved by Newton's method with a Cholesky
+factorisation in plain TypeScript; the same games give the same files, byte for
+byte. **alpha** says how well the prior ratings predict wins at all.
+
+**What it writes.** `<x>.ratings.tsv` is a ratings file the lab already reads
+(`--ratings`): `rating = prior + K · delta`, plus the prior, delta, its
+posterior SD, the card's **effective sample** (decisive games it was in exactly
+one deck of), its wins and a status — `learned`, `unseen` (no game: kept at the
+prior) or **`ai-limited`**: Forge's `AI:RemAIDeck` cards are kept at the prior
+whatever their games say and are in no pair, because Forge's AI plays them
+poorly and their record is the AI's, not the card's. `<x>.synergy.tsv` is
+`a  b  points  logit  sd  games`, points = K · s. K, the rating points per
+logit, is the prior's own exchange rate (rating SD ÷ alpha) when alpha is
+clearly above zero, else `pointsPerLogitFallback` (150); the header says which.
+`<x>.learn.md` is the readable summary — the movers, the pairs, alpha, the
+effective samples — and the **held-out check**: the games split by draft into
+five folds, each predicted by a model fitted on the other four, the full model's
+log loss against the prior-only model's (alpha and the play), with the 95%
+interval of the difference. If that interval crosses zero, the learned values
+are not yet signal.
+
+**Prior.** `--prior <tsv>`, else the ratings beside `--cube`, else the first
+run's ratings file. Always learn against the original ratings, never against
+an earlier learned file — `selfplay` does — so nothing compounds.
+
+**Picking with pairs** (`--synergy`): a card gains the points of every pair it
+makes with the picks the theme term counts (after commitment, the on-colour
+ones). **Building with pairs** (`--deck-synergy on`): a candidate spell gains
+its points with the spells already chosen, and the deck's score adds its pairs'
+points per spell (`parts.pairs`). Off by default; without a synergy file
+nothing changes.
+
+**Self-play** (`selfplay`, `tools/cubelab/selfplay.ts`). Values v0 are the
+cube's ratings (or learned from `--from` runs). Each iteration plays
+`--drafts-per-iter` drafts with the current values on both seats, learns from
+every self-play game so far, then plays `--h2h` **head-to-head** drafts: seat A drafts
+and builds with the new values, seat B with the baseline ratings and no pairs,
+on the same seeds every iteration (so iterations differ only by the values; the head-to-head games are never learned from, so those deals stay held out).
+Who opens and who is on the play alternate as in any run, so a seat has no
+edge of its own: **A's win rate over decisive games, with Wilson's 95%
+interval, is the evidence the drafting AI got stronger.** A **control** runs first
+(`--control on`, the default): the same head-to-head seeds with both seats on
+the baseline — what seat A wins on those deals with nothing learned — and each
+iteration is paired with it seed by seed: how many drafts the learned seat
+turned from a loss into a win and back, with the exact sign test's p. `--deck-h2h N` adds
+a head-to-head of the deckbuilder alone (both draft with the baseline; A builds
+with the learned values). At the end every pool is rebuilt both ways offline
+and the summary reports the change in deck value judged both ways (each builder
+is best by its own measure, so this says how far apart they are, not which is
+stronger). Everything is under `--out` (default
+`var/cubelab/selfplay/<cube>-<seed>/`): `iter-<i>/selfplay/` and
+`iter-<i>/h2h/` are ordinary run folders (`report` reads them),
+`values-<i>.*` the learned files, `summary.md`, `summary.html` (self-contained) and `summary.json` the table.
+Game play is Forge's AI on both sides in every mode: a better drafter shows up
+only as better decks.
+
+**How much is signal.** A 95% interval of ±5 points around 50% needs 385
+decisive games; ±3 points needs 1,068. With `--games 1` that is a draft a game
+(independent games are worth more than a best of three's correlated ones). Per
+card, the data add precision of about a quarter per game the card is in (p(1−p)
+near 0.5) against the prior's 1/0.25² = 16, so a card's posterior SD halves
+(0.25 → 0.125 logits) after about 190 games in one deck; on the synergy cube a
+card is in one of the two decks in about 28% of games, so that is about 700
+decisive games, and telling a card ±0.1 logit (≈ ±2.5 points of win rate) from
+its prior at 95% takes about 5,000. Run it overnight on the PC:
+
+```bash
+tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/synergy-grid-40 \
+    --iterations 4 --drafts-per-iter 300 --h2h 400 --deck-h2h 200 --games 1 \
+    --deck-synergy on --jobs 4 --out var/cubelab/selfplay/synergy-overnight
+```
+
+| `learn` option (`--learn name=value`) | default | |
+|---|---|---|
+| `tauCard` | 0.25 | prior SD of a card's delta, logits |
+| `tauPair` | 0.15 | prior SD of a pair's synergy, logits |
+| `tauFixed` | 10 | prior SD of alpha and the play term (weak) |
+| `minPairGames` | 8 | a pair needs this many decisive games in one deck |
+| `maxPairs` | 300 | at most this many pair features |
+| `pointsPerLogit` | 0 | rating points per logit; 0 = auto (rating SD ÷ alpha) |
+| `pointsPerLogitMin`, `…Max` | 50, 400 | the auto rate's clamp |
+| `pointsPerLogitFallback` | 150 | when alpha is not two SDs above zero |
+| `minPairPoints` | 1 | smaller pairs are left out of the synergy TSV |
+| `maxIter`, `tol` | 50, 1e-7 | Newton's method |
+| `folds` | 5 | held-out check, by draft; 0 = none |
+
+`selfplay` takes `run`'s flags (`--jobs`, `--games`, `--seed`, `--format`,
+`--profiles`, `--ratings` for the baseline, `--weights`, `--weight`,
+`--game-timeout`) plus `--iterations` (2), `--drafts-per-iter` (30), `--h2h`
+(= drafts per iteration), `--deck-h2h` (0), `--deck-synergy on|off` (off),
+`--control on|off` (on),
+`--from <run-dir>` (repeatable) and `--learn name=value`.
 ## What it does not do
 
 - It never touches the game: no bridge code, no wire, nothing the board reads.

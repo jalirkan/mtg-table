@@ -24,6 +24,7 @@
 // decision procedure, so the tests can drive the rules with a script.
 
 import type { LabCard } from './cards.ts';
+import type { PairTable } from './pairs.ts';
 import { scoreCard, setValue, type DrafterState } from './pick.ts';
 import { shuffle, type Rng } from './rng.ts';
 import type { Weights } from './weights.ts';
@@ -80,8 +81,8 @@ export const lineName = (l: number): string => (l < 3 ? `row ${l + 1}` : `col ${
 const lineCards = (g: (LabCard | null)[], l: number): LabCard[] =>
   (LINES[l] ?? []).map((i) => g[i]).filter((c): c is LabCard => c != null);
 
-/** The AI chooser: the line or pile with the best set value (pick.ts). */
-export function aiChooser(w: Weights): Chooser {
+/** The AI chooser: the line or pile with the best set value (pick.ts); `table` adds learned pair synergy (D301). */
+export function aiChooser(w: Weights, table?: PairTable): Chooser {
   return {
     gridLine(d, grid, taken) {
       let best = -1;
@@ -90,14 +91,14 @@ export function aiChooser(w: Weights): Chooser {
         if (l === taken) continue;
         const cs = lineCards(grid, l);
         if (cs.length === 0) continue;
-        const v = setValue(cs, d.state, w);
+        const v = setValue(cs, d.state, w, table);
         if (v > bv) { bv = v; best = l; }
       }
       return best;
     },
     takePile(d, pile, index, blindValue) {
       const margin = [w.winstonMargin1, w.winstonMargin2, w.winstonMargin3][index] ?? 0;
-      return setValue(pile, d.state, w) >= blindValue + margin;
+      return setValue(pile, d.state, w, table) >= blindValue + margin;
     },
   };
 }
