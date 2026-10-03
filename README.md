@@ -18,6 +18,23 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 15:20 (EDT)
+
+- **Merged:** the post-game review (D353, mtg-table #37) and the evaluator gates (D354, #36). Both
+  are on main at 9ca3329. D352 is the reveal-leak hold.
+- **New jobs:**
+  - J027: the decision-records pilot re-run.
+  - J028: the post-game review smoke.
+  - J034-J037: the evaluator's three gates. J034 trains on night 1 and runs gate 1; J035 builds the
+    gate-2 truth tables (one night, resumable); J036 scores gate 2; J037 is the gate-3 SPRT.
+  - J034 is hard after J029 because it needs night 1's recordings. Each gate is hard after the one
+    before, because it needs that gate's output.
+  - All four are pinned to 9ca3329 so the truth tables and the rankers share one code version.
+  - A gate FAIL is a result, not a job failure.
+- **Queue depth:** J029 (to about 19:30), J027, J028, the three SPRTs (J030-J032, up to 14 h each),
+  J033, then J034-J037. That's well over 48 h.
+- Cloud cadence: step 1, about 1 clean hour.
+
 ### 2026-10-03 14:50 (EDT)
 
 - **J020 is re-posted as J029 and goes first.** Your reading was right: one timed-out game
