@@ -10,6 +10,8 @@
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
 //   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
 //   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
+//   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
+//           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -24,6 +26,8 @@ import { buildMeta, DEFAULT_META } from './meta.ts';
 import { aggregate, renderHtml, renderMarkdown, type CardInfo, type Recording } from './report.ts';
 import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
+import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
+import { defaultNotes, evolve } from './evolve-run.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const say = (s: string): void => { process.stdout.write(`${s}\n`); };
@@ -38,6 +42,9 @@ function usage(msg?: string): never {
                         [--weights <json>] [--weight name=value]...
        tools/cubelab.sh report <out> [--min-games N]
        tools/cubelab.sh meta <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]
+       tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
+                        [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
+                        [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
 `);
   process.exit(2);
 }
@@ -181,6 +188,35 @@ function writeMeta(out: string, f: Map<string, string[]>): string {
   return file;
 }
 
+async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<number> {
+  const env = engineEnv(REPO);
+  const poolFile = one(f, 'pool');
+  if (!poolFile) usage('evolve needs --pool <pool.tsv>');
+  const profiles = (one(f, 'profiles') ?? 'Default,Default').split(',');
+  if (profiles.length !== 2 || profiles.some((p) => !p)) usage('--profiles wants two names, e.g. Default,Reckless');
+  let weights = DEFAULT_WEIGHTS;
+  for (const wf of f.get('weights') ?? []) weights = mergeWeights(weights, JSON.parse(fs.readFileSync(wf, 'utf8')) as Record<string, unknown>);
+  weights = mergeWeights(weights, parseWeightArgs(f.get('weight') ?? []));
+  let knobs = mergeKnobs(EVOLVE_DEFAULTS, f.get('evolve') ?? []);
+  if (one(f, 'swaps') !== undefined) knobs = { ...knobs, swaps: int(f, 'swaps', knobs.swaps) };
+  const notes = one(f, 'notes') ?? defaultNotes(cubeFile);
+  const seed = int(f, 'seed', 1);
+  const jobs = Math.max(1, int(f, 'jobs', 1));
+  if (jobs > env.homes.length) usage(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
+  const date = one(f, 'date') ?? new Date().toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) usage(`--date wants YYYY-MM-DD, got ${date}`);
+  const o = {
+    cubeFile, poolFile, notesFile: fs.existsSync(notes) ? notes : null, generations: Math.max(1, int(f, 'generations', 1)),
+    drafts: Math.max(1, int(f, 'drafts-per-gen', 30)), jobs, seed,
+    out: one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`),
+    games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
+    ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date,
+  };
+  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}`);
+  await evolve(env, o, say);
+  return 0;
+}
+
 async function main(): Promise<number> {
   const [cmd, ...rest] = process.argv.slice(2);
   const { pos, f } = flags(rest);
@@ -190,6 +226,7 @@ async function main(): Promise<number> {
     case 'run': if (!pos[0]) usage('run needs a cube file'); return run(pos[0], f);
     case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);
     case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
+    case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);
   }
 }

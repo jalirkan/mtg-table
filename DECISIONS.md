@@ -13346,6 +13346,123 @@ some normal pools on raw card quality and teach the meta guidance to stretch
 when it need not); falling back to Forge's builder (it is the 11-spell builder
 D294 replaced).
 
+## D299 — The cube lab's evolve loop: generations of drafts, and a swap only where a card's evidence passes a threshold; AI-limited cards are never cut on AI numbers, and Justin's notes win over every number
+
+*Branch `c/omega-evolve`; the block D299–D300, given by the coordinator after D298.*
+
+**2026-10-03** (the owner's approval: "Omega", a 180-card two-player
+greatest-hits cube that evolves by simulation)
+
+**Decision.** `tools/cubelab.sh evolve <cube.md> --pool <pool.tsv>
+--generations G --drafts-per-gen N` runs the lab (`runLab`, unchanged) on the
+cube going in, reads every card's numbers from `buildMeta` (D297) plus the share
+of its grids in which it went in the first line taken, and assesses each card
+(`tools/cubelab/evolve.ts`, pure). A card is cut only when its evidence passes a
+threshold: **dead** (it sat at least 8 times in a pool whose played deck could
+cast it, and the Wilson upper bound of the share of those decks that played it
+is at most 0.35), **dominant by wins** (the Wilson
+lower bound of its win rate at least the run's mean + 0.05, over at least 20
+decisive games) or **dominant by picks** (the lower bound of its first-line
+rate at least 0.75, and a shrunk win rate at least the mean); a lead short of
+its threshold is reported as *insufficient data* with the drafts per
+generation that would likely settle it. At most six swaps a generation; each
+cut takes the best-fitting pool card rated at least `deadMinRating` (colour class, shared themes and roles,
+mana value, rating — capped below the cut's when it was dominant — and how much
+it helps the themes and colours winning least) that keeps every constraint of
+the starting cube: its size, singleton, each colour's nonland count within 2,
+the land count, the fixing count, two gold signposts per pair. A card cut
+once is not re-added.
+
+The owner's AI-limited policy is written into the assessment: a card Forge
+marks `AI:RemoveDeck:All` or `:Random` is **never cut on AI numbers** — they are
+reported apart, marked AI-limited, with what the numbers alone would have
+said; an `AI:RemoveDeck:All` card is **never auto-added** (the AI cannot
+evaluate it) and the ones that fit the weakest archetypes are listed as
+human-test candidates. `cubes/<cube>-notes.tsv` (`keep` / `cut` / `try`, from
+Justin's real games) overrides everything: `keep` is never cut, `cut` is cut
+now and never added, `try` is added first when a cut makes room, AI:All or not.
+Two more kinds of card are never cut on AI evidence, because the lab's own
+choices explain it. A **land** (`builder-limited`, cut by a note only): the
+deckbuilder plays a dual or a fetchland only in its own pair's decks and a
+colourless land never, so a land's deck rate and win rate are its pair's. A card **rated under
+`deadMinRating`** (60; `rating-limited`): the drafters pick by rating, so a
+low-rated card nobody plays may be weak or only underrated, and the data cannot
+tell which — the remedy is a rating, not a cut. Both were measured, not
+supposed: the first selection over Omega v1's 30 drafts found 29 dead cards, of
+which 25 were rated under 55 by Forge's ranks (Delver of Secrets 19.7,
+Ephemerate 22.9, Reflector Mage 32.5 — the halved set-file scale of the cube
+lab's follow-up 3), one was Kolaghan's Command (below) and 3 were the BR/WB fixing lands (Badlands, Bloodstained Mire,
+Marsh Flats; no BR deck was built in 60), and it would have swapped Grave Titan,
+Council's Judgment and Badlands for higher-rated cards — evolving the cube
+toward Forge's ratings rather than toward better games.
+
+Every threshold and fit weight is a named knob in `EVOLVE_DEFAULTS`
+(`--evolve name=value`), in the guide's *The evolve knobs* table and recorded in
+`<out>/evolve.json` — the cube-lab rule 4 of `tools/CLAUDE.md`, in a table of
+its own: they decide the loop, not a draft, so they stay out of `weights.ts`
+and `run.json` (adding them there would change every run's weights and refuse
+every existing run folder's resume).
+
+**Rationale.** Thirty drafts give a card about 27 deals and 10–25 decisive
+games; at that size most differences are inside the interval, and a loop that
+swapped on point estimates would chase noise and oscillate. Thresholds on the
+interval's edge make a swap mean something and make "run more drafts" the
+honest answer otherwise. "Dead" is measured where the card had its chance — in
+a pool whose deck could cast it — because a deck rate per draft dealt mixes the
+card with its colours' popularity: Kolaghan's Command, rated 67, was picked 18
+times in Omega's 30 drafts and never played, because no BR deck was built; that
+says something about BR, which the changelog reports, not about the card. An
+added card must be rated at least `deadMinRating` for the same reason a
+low-rated card is never cut: the drafters would pass it over and the next
+generation would learn nothing (the first full selection swapped Kolaghan's
+Command for Carnage Interpreter, which Forge has no rank for). The first-line rate
+is the grid's version of "first pick": 3 of 9 cards go there at random.
+
+**Rejected.** Cutting the lowest shrunk win rates each generation (a fixed
+quota swaps noise when nothing is wrong); the lab's ratings as the add order
+alone (they are Forge's draft ranks, D294 follow-up 3, and know nothing of
+the cube's gaps); letting AI numbers cut an AI-limited card with a warning (the
+owner's explicit wish is that they never do).
+
+## D300 — An evolved cube is the same markdown document, written back line for line; each generation leaves its run, its stats, an HTML section and a changelog entry, and a finished generation is never re-run
+
+**2026-10-03**
+
+**Decision.** `parseCube` keeps, per card, the item as written, its source
+line, the line's prefix (`WU: `, `Fetchlands (LND GY): `) and separator (an
+optional `src` field), and `tools/cubelab/cubedoc.ts`'s `writeCubeDoc` puts an
+edited list back: a cut card leaves its line, an added one joins its section (a
+gold card its pair's line, a land a line of its own, anything else the
+section's last line), the section headings, the format-counts table, the title's
+`version N` are recounted, and one entry is appended to `## Iteration log`
+listing each swap and its evidence. Every other line is copied. All five
+committed cubes write back byte for byte, and parse → write → parse lists the
+same cards with the same tags (`web/test/cubelab-evolve.test.ts`).
+
+A generation writes `gen-NN/{input.md, run/, cube.md, stats.json,
+section.html, result.json}`, and the out folder `evolve.json`, `changelog.md`,
+`index.html` and the latest cube; `result.json` is written last, so a
+generation that has one (made from the same input) is skipped on a re-run and
+one without it resumes its run folder by seed. Generation g plays seeds
+`S + (g−1)·N` onward, fresh drafts each time; when the generations just before
+it drafted the same list (compared card by card, since a no-swap generation's
+document still gains a log entry), their drafts are pooled with its own, so
+repeated *insufficient data* accumulates evidence rather than starting over.
+A lock file, `evolve.lock`, keeps a second process out of a folder in use.
+
+Omega v1 (`cubes/omega-cube-180.md`) and its 938-card seed pool
+(`cubes/omega-seed-pool.tsv`) are committed as given; `cubes/omega-notes.tsv`
+starts with v1's own *Power choices* exclusions as `cut` lines (the Power
+Nine, fast mana, Oko and the other draft-deciders, the cheat plans, the two-card
+wins, Strip Mine and Wasteland), so the loop never adds a card the design
+ruled out; Justin's game notes go below them.
+
+**Rejected.** Regenerating the whole document from a template (the prose —
+design principles, power choices, cards to watch — is the owner's and must
+survive every generation; only the list and its counts are the loop's); a
+separate machine-readable list beside the markdown (two sources of truth for
+one cube; `check` and `run` already read the markdown).
+
 ## D303 — The match launcher: the coach helper's `POST /match` takes two decklists from ForgeCoach, writes them under `var/match/`, and `play.sh` — which owns the engine — restarts the bridge on them
 
 *Branch `c/match-launcher`; D303 alone (D298–D302 are other lanes').*

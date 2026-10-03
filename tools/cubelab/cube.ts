@@ -30,6 +30,13 @@ export interface CubeCard {
   roles: string[];
   /** The gold pair prefix (`WU`) when the line had one. */
   pair?: string;
+  /**
+   * Where and how the card was written, so a writer can put an edited list back
+   * line for line (cubedoc.ts, the evolve loop, D299): the item as written (a
+   * trailing `.` dropped), the source line's index, the line's prefix (`WU: `,
+   * `Fetchlands (LND GY): ` or ''), its separator and what ended it (`.` or '').
+   */
+  src?: { item: string; line: number; prefix: string; sep: ' · ' | ', ' | ''; end: string };
 }
 
 export interface CubeSection { name: string; expected: number; parsed: number }
@@ -74,8 +81,9 @@ export function parseCube(text: string): Cube {
   let title = '';
   let inList = false;
   let section: CubeSection | null = null;
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.trimEnd();
+  const lines = text.split(/\r?\n/);
+  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+    const line = (lines[lineNo] as string).trimEnd();
     if (!title) {
       const t = /^#\s+(.+)$/.exec(line);
       if (t?.[1]) { title = t[1].trim(); continue; }
@@ -104,7 +112,10 @@ export function parseCube(text: string): Cube {
       groupTags = landM[2] ?? '';
       body = landM[3];
     }
-    const items = body.includes(' · ') ? body.split(' · ') : landKind ? body.split(',') : [body];
+    const sep: ' · ' | ', ' | '' = body.includes(' · ') ? ' · ' : landKind ? ', ' : '';
+    const items = sep === ' · ' ? body.split(' · ') : sep ? body.split(',') : [body];
+    const prefix = line.slice(0, line.length - body.length);
+    const end = /\.\s*$/.test(body) ? '.' : '';
     for (const item of items) {
       const { name: n0, themes: own, roles: ownRoles } = splitItem(item);
       if (!n0) continue;
@@ -113,7 +124,8 @@ export function parseCube(text: string): Cube {
       const roles = [...new Set([...g.roles, ...ownRoles])];
       let name = n0;
       if (landKind && /^pathways?$/i.test(landKind) && !/Pathway$/.test(name)) name = `${name} Pathway`;
-      const card: CubeCard = { name, section: section.name, themes, roles };
+      const card: CubeCard = { name, section: section.name, themes, roles,
+        src: { item: item.trim().replace(/\.$/, ''), line: lineNo, prefix, sep, end } };
       if (pairM?.[1]) card.pair = wubrg(pairM[1]);
       cards.push(card);
       section.parsed++;
