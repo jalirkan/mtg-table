@@ -233,9 +233,17 @@ IDLE_EXPIRED=0
 PORT_EXPLICIT=0                  # D308: --port given, so this is a second bridge on purpose
 PASSTHROUGH=()
 
-# D303: the coach helper's /match asks for a restart with SIGUSR1.  Trapped
-# before anything else, because an untrapped USR1 would end this script.
-trap 'MATCH_PENDING=1' USR1
+# D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
+# before anything else, because an untrapped USR1 would end this script, and
+# taken (usr1_on) only while this script waits: bash 5.2 running a trap in the
+# middle of parsing a $( ) fails with "unexpected EOF while looking for matching
+# `)'", which set -e makes fatal -- the helper re-sends the signal during a slow
+# restart, and play.sh died mid-restart, taking the helper and the POST with it.
+# A signal ignored is not lost: the helper re-sends it every 2 s until it sees
+# its request taken up, and restart_match looks once more after each restart.
+trap '' USR1
+usr1_on() { trap 'MATCH_PENDING=1' USR1; }
+usr1_off() { trap '' USR1; }
 
 # A TEST SEAM, for tools/match-launcher-selftest.mjs only: a node script that
 # stands in for the bridge (it answers /health and prints the lines this script
@@ -554,12 +562,14 @@ BRIDGE_ARGS=(--transport ws --port "$WS_PORT"
     "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}")
 LAN_TOKEN=""                     # D303: the first run's pairing token, for a restart
 start_bridge() {   # start_bridge ARGS... -- the bridge in the background, SERVER_PID
+  usr1_on            # so the bridge starts with USR1 at its default, not ignored
   if [ -n "$LAN_TOKEN" ]; then
     MTGTABLE_LAN_TOKEN="$LAN_TOKEN" "${ENGINE[@]}" "$@" >>"$SERVER_LOG" 2>&1 &
   else
     "${ENGINE[@]}" "$@" >>"$SERVER_LOG" 2>&1 &
   fi
   SERVER_PID=$!
+  usr1_off
 }
 start_bridge "${BRIDGE_ARGS[@]}"
 echo "pid $SERVER_PID · log $SERVER_LOG"
@@ -786,6 +796,7 @@ restart_match() {
   id="${req[1]}"
   [ "$id" = "$LAST_REQ_ID" ] && return 0
   LAST_REQ_ID="$id"
+  MATCH_PENDING=1   # look once more when this one is done: USR1 is ignored until then
   if [ "$wake" = "1" ] && [ "$IDLE" != "1" ]; then
     # D308: /engine/start while an engine runs (the helper checks too; this is the race).
     match_write status "$id" ready
@@ -935,11 +946,11 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       # INT/TERM are taken at once, and the --idle-exit-after limit is checked.
       if [ "$IDLE_EXIT_SEC" -gt 0 ] && [ $((SECONDS - IDLE_SINCE_S)) -ge "$IDLE_EXIT_SEC" ]; then IDLE_EXPIRED=1; break; fi
       sleep 1 &
-      wait $! 2>/dev/null || true
+      usr1_on; wait $! 2>/dev/null || true; usr1_off
       continue
     fi
     SERVER_RC=0
-    wait "$SERVER_PID" || SERVER_RC=$?
+    usr1_on; wait "$SERVER_PID" || SERVER_RC=$?; usr1_off
     [ "$MATCH_PENDING" = "1" ] && continue
     kill -0 "$SERVER_PID" 2>/dev/null && continue
     if [ "$MATCH_ON" = "1" ]; then
@@ -1029,7 +1040,7 @@ while kill -0 "$VITE_PID" 2>/dev/null; do
     tail -20 "$SERVER_LOG"
     break
   fi
-  sleep 1
+  usr1_on; sleep 1; usr1_off
 done
 
 stop

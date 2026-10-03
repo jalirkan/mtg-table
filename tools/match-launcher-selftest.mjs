@@ -147,6 +147,9 @@ const events = () => (existsSync(EVENTS) ? readFileSync(EVENTS, 'utf8').split('\
 const starts = () => events().filter((e) => e.start);
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 const argOf = (argv, f) => { const i = argv.indexOf(f); return i >= 0 ? argv[i + 1] : undefined; };
+// After the engine exits, play.sh notices, logs and writes engine.json ("idle")
+// through a node of its own: under load that takes seconds, not a fixed 600 ms.
+const untilIdle = async (port) => { for (let i = 0; i < 100; i++) { const h = await http({ port }).catch(() => null); if (h?.json?.engine === 'idle') return; await sleep(100); } };
 
 function deck(name, main, sideboard) {
   const d = { name, main };
@@ -298,6 +301,15 @@ try {
   r = await post(A.coachPort, { ...req1, aiProfile: 'Cautious' });
   const r2 = await post(A.coachPort, { ...req1, aiProfile: 'Experimental' });
   check('two POSTs back to back: both started', r.status === 200 && r2.status === 200 && r2.json?.aiProfile === 'Experimental', `${r.status} ${r2.status} ${r2.body}`);
+  // The helper re-sends SIGUSR1 until play.sh takes a request up, so on a slow
+  // machine one lands in the middle of a restart.  Bash 5.2 running a trap while
+  // it parses a $( ) fails with "unexpected EOF while looking for matching `)'",
+  // set -e ended play.sh, and its exit took the helper with it: the POST got
+  // "socket hang up".  Here a signal every millisecond for a whole restart.
+  const storm = setInterval(() => { try { process.kill(A.proc.pid, 'SIGUSR1'); } catch { /* gone */ } }, 1);
+  r = await post(A.coachPort, { ...req1, aiProfile: 'Cautious' }).catch((e) => ({ status: 0, body: e.message }));
+  clearInterval(storm);
+  check('SIGUSR1 at any moment of a restart: 200, play.sh still up', r.status === 200 && r.json?.aiProfile === 'Cautious' && A.proc.exitCode === null, `${r.status} ${r.body} exit ${A.proc.exitCode}`);
   check('never two engines at once', !events().some((e) => e.overlap) && !events().some((e) => e.bindError), JSON.stringify(events().filter((e) => e.overlap || e.bindError)));
   check('the decks of old matches are pruned to the last 5', readdirSync(join(DIR, 'a', 'match')).filter((n) => /^m\d{13}$/.test(n)).length <= 5);
 
@@ -338,7 +350,7 @@ try {
   const z1 = onZ()[0];
   for (let i = 0; i < 100 && alive(z1?.pid); i++) await sleep(100);
   check('the idle limit stopped the engine', !alive(z1?.pid) && events().some((e) => e.pid === z1.pid && e.idleExit));
-  await sleep(500);
+  await untilIdle(Z.coachPort);
   check('play.sh stayed up', Z.proc.exitCode === null);
   r = await http({ port: Z.coachPort });
   check('/health: engine idle, match 1, with idleSince and exitsAt', r.status === 200 && r.json?.engine === 'idle' && r.json?.match === 1
@@ -346,6 +358,7 @@ try {
   r = await http({ port: Z.coachPort, path: '/match' });
   check('GET /match: idle, no current match', r.status === 200 && r.json?.state === 'idle' && r.json?.match === null, r.body);
   check('no engine answers on the ws port', await http({ port: Z.port }).then(() => false, () => true));
+  for (let i = 0; i < 50 && !/engine asleep/.test(Z.out()); i++) await sleep(100);   // it says so just after engine.json
   check('play.sh said so', /engine asleep/.test(Z.out()));
   const zn = onZ().length;
   r = await post(Z.coachPort, req1);
@@ -361,7 +374,7 @@ try {
   // ...and it can fall asleep again, then Ctrl-C while asleep cleans up.
   const zlast = z2.at(-1);
   for (let i = 0; i < 100 && alive(zlast.pid); i++) await sleep(100);
-  await sleep(600);
+  await untilIdle(Z.coachPort);
   r = await http({ port: Z.coachPort });
   check('asleep again after the next match', Z.proc.exitCode === null && r.json?.engine === 'idle', r.body);
   // D308: POST /engine/start wakes it on the last match setup.
@@ -384,7 +397,7 @@ try {
   check('POST /engine/start while running: 200 already true', r.status === 200 && r.json?.ok === true && r.json?.already === true && r.json?.yourDeck?.name === NAME && onZ().length === zs + 1, `${r.status} ${r.body}`);
   const zwl = zw.at(-1);
   for (let i = 0; i < 100 && alive(zwl.pid); i++) await sleep(100);
-  await sleep(600);
+  await untilIdle(Z.coachPort);
   r = await http({ port: Z.coachPort });
   check('asleep once more', r.json?.engine === 'idle', r.body);
 
@@ -405,7 +418,7 @@ try {
   check('...and the first play.sh is running its engine again', Z.proc.exitCode === null && r.json?.engine === 'running', r.body);
   const zl2 = onZ().at(-1);
   for (let i = 0; i < 100 && alive(zl2.pid); i++) await sleep(100);
-  await sleep(600);
+  await untilIdle(Z.coachPort);
   Z.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && Z.proc.exitCode === null; i++) await sleep(50);
   check('Ctrl-C while asleep: play.sh exited 0', Z.proc.exitCode === 0, String(Z.proc.exitCode));
@@ -416,7 +429,7 @@ try {
   const W = await startPlay(['--', '--idle-timeout', '1'], 'wake');
   const onW = () => starts().filter((e) => argOf(e.argv, '--port') === String(W.port));
   for (let i = 0; i < 100 && alive(onW()[0]?.pid); i++) await sleep(100);
-  await sleep(600);
+  await untilIdle(W.coachPort);
   r = await http({ port: W.coachPort });
   check('asleep', r.json?.engine === 'idle', r.body);
   r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
