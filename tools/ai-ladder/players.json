@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "comment": "The AI ladder's players (D315): a name, an AI kind and its parameters. A name is permanent: never edit the kind or params of a player that has played (the ladder keys results by name AND config hash, so an edit would split it in two); add a new name instead. Anchors are stock Forge and are always in the pool; forge-default is fixed at 1500. tools/ai-ladder/kinds.ts lists the kinds and their parameters. `ai-ladder.sh tune` appends here and never overwrites.",
+  "players": [
+    {"name":"forge-default","kind":"forge","params":{"profile":"Default"},"anchor":true,"note":"Forge 2.0.14's AI, Default.ai profile. The rating scale's zero: 1500."},
+    {"name":"forge-reckless","kind":"forge","params":{"profile":"Reckless"},"anchor":true,"note":"Reckless.ai; D311 measured it about +10 points over Default on the cube pairs."},
+    {"name":"forge-cautious","kind":"forge","params":{"profile":"Cautious"},"anchor":true},
+    {"name":"forge-experimental","kind":"forge","params":{"profile":"Experimental"},"anchor":true,"note":"Experimental.ai: 30 knob values, not simulation (D311)."},
+    {"name":"policy-outlet","kind":"policy","params":{"profile":"Default","outlets":"on"},"note":"D310's sacrifice-outlet policy in front of the Default AI."},
+    {"name":"policy-outlet-reckless","kind":"policy","params":{"profile":"Reckless","outlets":"on"}},
+    {"name":"search-v1","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500},"note":"The determinized rollout search (branch c/search-ai, D312). Reported unavailable until it merges."}
+  ]
+}

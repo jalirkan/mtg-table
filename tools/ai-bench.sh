@@ -10,7 +10,7 @@
 #
 #   ./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt \
 #        --a Experimental --b Default [--games 20] [--jobs 3] [--seed 1] \
-#        [--timeout 300] [--run NAME]
+#        [--timeout 300] [--mirror] [--run NAME]
 #   ./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
 #   ./tools/ai-bench.sh --selftest [--no-engine]
 #
@@ -19,7 +19,9 @@
 # lobby-player AIOption, not a profile key), and the sacrifice-outlet policy
 # (D310: +outlets acts, +shadow only counts what it would have done).  Game g of
 # a pair gives config A the pair's first deck when g is even, and seat 0 when
-# g/2 is even, so every four games cover both decks on both seats.
+# g/2 is even, so every four games cover both decks on both seats.  --mirror
+# (D315, the AI ladder) gives games 4k/4k+3 and 4k+1/4k+2 one seed each: the
+# same deck in the same seat, the configs swapped -- each deal from both sides.
 #
 # --jobs K runs K JVMs, each with every K-th game and a Forge home of its own
 # under var/ai-bench/<run>/home-<i>/ (tools/config.sh's forge_home_make, D129's
@@ -95,7 +97,7 @@ case "$mode" in
     exit "$rc"
     ;;
   *)
-    sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
     ;;
 esac

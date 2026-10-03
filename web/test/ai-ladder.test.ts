@@ -1,0 +1,374 @@
+/*
+ * mtg-table — web/test/ai-ladder.test.ts
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * The AI ladder (tools/ai-ladder/, D315–D318), engine-free, on synthetic
+ * results from players with known strengths:
+ *
+ *  - the Bradley-Terry fit recovers known Elo differences, keeps the anchor at
+ *    1500, gives finite ratings to an unbeaten player, and its Hessian and
+ *    bootstrap intervals cover the truth and roughly agree;
+ *  - the SPRT accepts H1 for a clearly stronger player, H0 for a weaker one, and
+ *    under elo = elo0 accepts H1 about as rarely as alpha says;
+ *  - the tuner's grid and seeded sample, and successive halving finding the
+ *    strongest of eight synthetic configs;
+ *  - the scheduler (new players first, the anchor share, the most informative
+ *    pair, fixed deal slots), the league's promotion rule, the registry (hashes,
+ *    unknown kinds unavailable, never overwrite), the results log (ai-bench line
+ *    mapping, dedup, torn lines, mirror blocks) and ladder.json's schema 1 keys.
+ */
+
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+import { rng } from '../../tools/cubelab/rng.ts';
+import { KINDS, resolveParams, unavailable } from '../../tools/ai-ladder/kinds.ts';
+import { decide } from '../../tools/ai-ladder/league.ts';
+import { bootstrap, expected, fit, solve } from '../../tools/ai-ladder/rating.ts';
+import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Player } from '../../tools/ai-ladder/registry.ts';
+import { buildLadder, renderHtml } from '../../tools/ai-ladder/report.ts';
+import { appendResults, blockKey, fromBench, hashIndex, outcomes, readResults, type GameRecord, type Outcome } from '../../tools/ai-ladder/results.ts';
+import { batchPairs, choose, hostBase, mkey, type SchedPlayer, type SchedState } from '../../tools/ai-ladder/schedule.ts';
+import { bounds, pairScores, sprtState, type SprtParams } from '../../tools/ai-ladder/sprt.ts';
+import { grid, halving, sample, scoreOf, type Tally } from '../../tools/ai-ladder/tune.ts';
+
+const REPO = fileURLToPath(new URL('../../', import.meta.url));
+
+/** n mirrored pairs of a vs b: each pair is two games; `corr` makes the deal favour one side. */
+function games(a: string, b: string, eloA: number, eloB: number, pairs: number, seed: number, corr = 0): Outcome[] {
+  const r = rng(seed, `${a}-${b}`);
+  const p = expected(eloA, eloB);
+  const out: Outcome[] = [];
+  for (let k = 0; k < pairs; k++) {
+    const tilt = corr * (r.next() - 0.5);             // the deal: the same for both games of the pair
+    for (let g = 0; g < 2; g++) {
+      const q = Math.min(0.99, Math.max(0.01, p + (g === 0 ? tilt : -tilt)));
+      out.push({ a, b, s: r.next() < q ? 1 : 0, block: `${a}|${b}|${seed}|${k}` });
+    }
+  }
+  return out;
+}
+
+// ------------------------------------------------------------ rating
+
+test('solve: a small linear system', () => {
+  const x = solve([[4, 1, 0], [1, 3, 1], [0, 1, 2]], [1, 2, 3]);
+  assert.ok(Math.abs(4 * x[0]! + x[1]! - 1) < 1e-9 && Math.abs(x[0]! + 3 * x[1]! + x[2]! - 2) < 1e-9 && Math.abs(x[1]! + 2 * x[2]! - 3) < 1e-9);
+});
+
+test('Bradley-Terry recovers known Elo differences with the anchor fixed at 1500', () => {
+  const truth: Record<string, number> = { 'forge-default': 1500, x: 1600, y: 1420, z: 1550 };
+  const names = Object.keys(truth);
+  const g: Outcome[] = [];
+  let seed = 1;
+  for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) g.push(...games(names[i]!, names[j]!, truth[names[i]!]!, truth[names[j]!]!, 600, seed++));
+  const f = fit(names, g, { anchor: 'forge-default' });
+  assert.ok(f.converged);
+  const d = f.ratings.get('forge-default')!;
+  assert.equal(d.rating, 1500);
+  assert.equal(d.se, 0);
+  for (const n of ['x', 'y', 'z']) {
+    const r = f.ratings.get(n)!;
+    assert.ok(Math.abs(r.rating - truth[n]!) < 3 * r.se + 5, `${n}: ${r.rating.toFixed(1)} vs ${truth[n]} (se ${r.se.toFixed(1)})`);
+    assert.ok(r.lo < truth[n]! + 10 && r.hi > truth[n]! - 10, `${n}: CI ${r.lo.toFixed(0)}-${r.hi.toFixed(0)} covers ${truth[n]}`);
+    assert.ok(r.se > 5 && r.se < 25, `${n}: se ${r.se}`);
+  }
+  // the ordering is right
+  const R = (n: string): number => f.ratings.get(n)!.rating;
+  assert.ok(R('x') > R('z') && R('z') > R('forge-default') && R('forge-default') > R('y'));
+});
+
+test('an unbeaten player gets a finite rating, a player with no games is unrated at the prior', () => {
+  const g: Outcome[] = Array.from({ length: 10 }, (_, k) => ({ a: 'x', b: 'forge-default', s: 1 as const, block: `b${k}` }));
+  const f = fit(['forge-default', 'x', 'idle'], g, { anchor: 'forge-default' });
+  const x = f.ratings.get('x')!;
+  assert.ok(Number.isFinite(x.rating) && x.rating > 1600 && x.rating < 2400, `x = ${x.rating}`);
+  assert.ok(x.hi > x.lo);
+  const idle = f.ratings.get('idle')!;
+  assert.equal(idle.rated, false);
+  assert.equal(idle.rating, 1500);
+});
+
+test('bootstrap over mirror blocks: intervals cover the truth and are in the Hessian\'s range', () => {
+  const g = [...games('x', 'forge-default', 1560, 1500, 250, 7, 0.4), ...games('y', 'forge-default', 1450, 1500, 250, 8, 0.4), ...games('x', 'y', 1560, 1450, 250, 9, 0.4)];
+  const names = ['forge-default', 'x', 'y'];
+  const o = { anchor: 'forge-default' };
+  const h = fit(names, g, o);
+  const b = bootstrap(h, names, g, o, 150, 3);
+  for (const n of ['x', 'y']) {
+    const hr = h.ratings.get(n)!, br = b.ratings.get(n)!;
+    assert.equal(br.rating, hr.rating, 'the point estimate is the full-data fit');
+    const truth = n === 'x' ? 1560 : 1450;
+    assert.ok(br.lo < truth && br.hi > truth, `${n}: bootstrap ${br.lo.toFixed(0)}-${br.hi.toFixed(0)} covers ${truth}`);
+    const ratio = (br.hi - br.lo) / (hr.hi - hr.lo);
+    assert.ok(ratio > 0.6 && ratio < 2.0, `${n}: bootstrap/Hessian width ratio ${ratio.toFixed(2)}`);
+  }
+});
+
+// ------------------------------------------------------------ SPRT
+
+const P: SprtParams = { elo0: 0, elo1: 20, alpha: 0.05, beta: 0.05, minPairs: 8, maxGames: 20000 };
+
+function runSprt(trueElo: number, seed: number, corr = 0.3): ReturnType<typeof sprtState> {
+  const r = rng(seed, 'sprt');
+  const p = expected(1500 + trueElo, 1500);
+  const gs: Array<{ block: string; aWon: boolean | null }> = [];
+  for (let k = 0; ; k++) {
+    const tilt = corr * (r.next() - 0.5);
+    for (let g = 0; g < 2; g++) {
+      const q = Math.min(0.99, Math.max(0.01, p + (g === 0 ? tilt : -tilt)));
+      const draw = r.next() < 0.02;
+      gs.push({ block: `k${k}`, aWon: draw ? null : r.next() < q });
+    }
+    if (k % 10 === 9) {
+      const st = sprtState(pairScores(gs), P);
+      if (st.result !== 'continue') return st;
+    }
+  }
+}
+
+test('SPRT bounds are the Wald bounds', () => {
+  const b = bounds({ alpha: 0.05, beta: 0.05 });
+  assert.ok(Math.abs(b.upper - Math.log(19)) < 1e-12 && Math.abs(b.lower + Math.log(19)) < 1e-12);
+});
+
+test('SPRT: a clearly stronger A is accepted (H1), a weaker one rejected (H0)', () => {
+  let h1 = 0, h0 = 0, n = 0, used = 0;
+  for (let s = 0; s < 20; s++) {
+    const st = runSprt(70, 100 + s);
+    if (st.result === 'H1') h1++;
+    used += st.games;
+    n++;
+    if (runSprt(-30, 300 + s).result === 'H0') h0++;
+  }
+  assert.ok(h1 >= 19, `H1 accepted ${h1}/20 at +70 Elo`);
+  assert.ok(h0 >= 19, `H0 accepted ${h0}/20 at -30 Elo`);
+  assert.ok(used / n < 2500, `a +70 Elo gap is decided in ${Math.round(used / n)} games on average`);
+});
+
+test('SPRT: at the H0 boundary (A = B), H1 is accepted about as rarely as alpha', () => {
+  let h1 = 0;
+  const N = 120;
+  for (let s = 0; s < N; s++) if (runSprt(0, 1000 + s).result === 'H1') h1++;
+  assert.ok(h1 / N <= 0.1, `false H1 rate ${h1}/${N}`);
+});
+
+test('SPRT: the game limit gives inconclusive; too few pairs never decide', () => {
+  const st = sprtState(Array.from({ length: 5 }, () => ({ x: 1, games: 2 })), P);
+  assert.equal(st.result, 'continue', 'five perfect pairs are not enough (minPairs 8)');
+  const lim = sprtState(Array.from({ length: 50 }, (_, k) => ({ x: k % 2, games: 2 })), { ...P, maxGames: 100 });
+  assert.equal(lim.result, 'inconclusive');
+  assert.equal(lim.games, 100);
+});
+
+test('pairScores: two games of a block are one observation; draws drop out', () => {
+  const ps = pairScores([
+    { block: 'p1', aWon: true }, { block: 'p1', aWon: false },
+    { block: 'p2', aWon: true }, { block: 'p2', aWon: null },
+    { block: 'p3', aWon: null }, { block: 'p3', aWon: null },
+  ]);
+  assert.deepEqual(ps, [{ x: 0.5, games: 2 }, { x: 1, games: 1 }]);
+});
+
+// ------------------------------------------------------------ tuner
+
+test('grid and sample', () => {
+  const g = grid({ profile: 'Default', outlets: 'on' }, [['profile', ['Default', 'Cautious', 'Reckless', 'Experimental']], ['outlets', ['on', 'off']]]);
+  assert.equal(g.length, 8);
+  assert.equal(g[0]!.label, 'profile=Default,outlets=on');
+  assert.equal(g[7]!.label, 'profile=Experimental,outlets=off');
+  assert.equal(new Set(g.map((c) => c.label)).size, 8);
+  const s1 = sample(g, 3, 5), s2 = sample(g, 3, 5);
+  assert.deepEqual(s1.map((c) => c.id), s2.map((c) => c.id), 'seeded');
+  assert.equal(s1.length, 3);
+  assert.deepEqual(sample(g, 20, 5), g);
+});
+
+test('successive halving finds the strongest of eight synthetic configs, with the same deals for all', async () => {
+  const g = grid({}, [['budgetMs', [500, 1500, 3000, 6000]], ['depth', [1, 2]]]);
+  const strength = (id: number): number => [0, 20, 35, 60, 10, 30, 110, 45][id]!;   // id 6 is best by 50
+  let wins = 0;
+  for (let trial = 0; trial < 10; trial++) {
+    const seen: number[][] = [];
+    const res = await halving(g, { eta: 2, blocks: 2, maxRounds: 6 }, async (alive, round, blocks) => {
+      seen.push(alive.map((c) => c.id));
+      const out = new Map<number, Tally>();
+      for (const c of alive) {
+        const r = rng(trial * 100 + round, `c${c.id}`);
+        const t: Tally = { wins: 0, losses: 0, draws: 0 };
+        for (let k = 0; k < blocks * 40; k++) { if (r.next() < expected(1500 + strength(c.id), 1520)) t.wins++; else t.losses++; }
+        out.set(c.id, t);
+      }
+      return out;
+    });
+    assert.deepEqual(seen.map((s) => s.length), [8, 4, 2], 'eight, four, two');
+    assert.equal(res.rounds.length, 3);
+    assert.equal(res.rounds[1]!.blocks, 4, 'round 2 plays twice the blocks');
+    if (res.winner.id === 6) wins++;
+    assert.ok(scoreOf(res.totals.get(res.winner.id)!) > 0.4);
+  }
+  assert.ok(wins >= 8, `the best config won ${wins}/10 tunes`);
+});
+
+// ------------------------------------------------------------ league
+
+test('league promotion: SPRT H1 AND no regression against forge-default', () => {
+  const st = (result: 'H1' | 'H0' | 'continue' | 'inconclusive') => ({ llr: 3, lower: -2.94, upper: 2.94, pairs: 100, games: 200, score: 0.56, result });
+  const opt = { minForgeGames: 80, forgeMargin: 0 };
+  const T = (w: number, l: number): Tally => ({ wins: w, losses: l, draws: 0 });
+  assert.equal(decide(st('H1'), T(60, 40), T(55, 45), opt).verdict, 'promote');
+  const forgot = decide(st('H1'), T(45, 55), T(60, 40), opt);
+  assert.equal(forgot.verdict, 'reject');
+  assert.match(forgot.reason, /forgets Forge/);
+  assert.equal(decide(st('H0'), T(60, 40), T(55, 45), opt).verdict, 'reject');
+  assert.equal(decide(st('inconclusive'), T(60, 40), T(55, 45), opt).verdict, 'reject');
+  assert.equal(decide(st('continue'), T(60, 40), T(55, 45), opt).verdict, 'continue');
+  assert.equal(decide(st('H1'), T(20, 10), T(55, 45), opt).verdict, 'continue', 'waits for enough forge games');
+  assert.equal(decide(st('H1'), T(50, 40), null, opt).verdict, 'promote', 'best = forge-default: just beat 50%');
+  assert.equal(decide(st('H1'), T(40, 50), null, opt).verdict, 'reject');
+  assert.equal(decide(st('H1'), T(50, 50), T(52, 48), { ...opt, forgeMargin: 30 }).verdict, 'promote', 'a margin tolerates a small dip');
+});
+
+// ------------------------------------------------------------ scheduler
+
+const sp = (name: string, rating: number, se: number, games: number, anchor = false): SchedPlayer => ({ name, rating, se, games, anchor });
+const st0 = (): SchedState => ({ batches: 0, anchorBatches: 0, pairGames: new Map(), running: new Map() });
+const OPT = { anchor: 'forge-default', newGames: 40, anchorShare: 0.25 };
+
+test('scheduler: a new player first, against forge-default', () => {
+  const ps = [sp('forge-default', 1500, 0, 900, true), sp('forge-reckless', 1560, 20, 900, true), sp('new-one', 1500, 350, 0)];
+  const c = choose(ps, st0(), OPT)!;
+  assert.deepEqual([c.a, c.b], ['new-one', 'forge-default']);
+  assert.match(c.why, /new/);
+  // once it is running, rule 1 does not fire for it again (rules 2 and 3 may still pick it: it is the most uncertain)
+  const st = st0();
+  st.running.set(mkey('new-one', 'forge-default'), 1);
+  assert.doesNotMatch(choose(ps, st, OPT)!.why, /^new/);
+});
+
+test('scheduler: the anchor share, then the most informative pair', () => {
+  const ps = [sp('forge-default', 1500, 0, 900, true), sp('p', 1600, 30, 500), sp('q', 1610, 30, 500), sp('r', 1300, 15, 500)];
+  const st = st0();
+  st.batches = 10; st.anchorBatches = 1;                      // 10% < 25%: an anchor batch is due
+  const a = choose(ps, st, OPT)!;
+  assert.equal(a.why, 'anchor share');
+  assert.equal(a.b, 'forge-default');
+  st.anchorBatches = 5;
+  const b = choose(ps, st, OPT)!;
+  assert.equal(b.why, 'most informative');
+  assert.deepEqual([b.a, b.b].sort(), ['p', 'q'], 'the close, uncertain pair');
+  st.running.set(mkey('p', 'q'), 3);
+  const c = choose(ps, st, OPT)!;
+  assert.notDeepEqual([c.a, c.b].sort(), ['p', 'q'], 'a pair already running is discounted');
+  assert.deepEqual(choose(ps, st, OPT), c, 'deterministic');
+});
+
+test('deal slots: fixed by the block number; hosts get different bases', () => {
+  assert.deepEqual(batchPairs(0, 10, 10), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(batchPairs(1_000_003, 10, 2), batchPairs(1_000_003, 10, 2));
+  assert.deepEqual(batchPairs(3, 10, 2), [6, 7]);
+  assert.deepEqual(batchPairs(5, 3, 2), [1, 2]);
+  assert.notEqual(hostBase('pc-one'), hostBase('pc-two'));
+  assert.equal(hostBase('pc-one') % 1_000_000, 0);
+});
+
+// ------------------------------------------------------------ registry
+
+test('the committed registry: anchors, hashes, an unmerged kind is unavailable, not a crash', () => {
+  const reg = parseRegistry(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8'));
+  const ps = players(reg, REPO);
+  const by = new Map(ps.map((p) => [p.name, p]));
+  assert.equal(by.get('forge-default')!.cfg, 'Default');
+  assert.ok(by.get('forge-default')!.anchor);
+  assert.equal(by.get('forge-reckless')!.cfg, 'Reckless');
+  assert.equal(by.get('policy-outlet')!.cfg, 'Default+outlets');
+  assert.equal(new Set(ps.map((p) => p.hash)).size, ps.length, 'no two players share a config');
+  const odd = resolvePlayer({ name: 'mystery', kind: 'neural-net', params: { layers: 3 } }, REPO);
+  assert.match(odd.unavailable!, /unknown kind/);
+  assert.equal(odd.cfg, null);
+  assert.ok(resolvePlayer({ name: 'se', kind: 'search-eval', params: { model: 'abc123' } }, REPO).unavailable);
+});
+
+test('search kind: params map onto the bench\'s +search syntax; defaults fill the hash', () => {
+  const p = resolveParams('search', { budgetMs: 500 });
+  assert.equal(KINDS.search!.cfg(p), 'Default+outlets+search:ms=500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab');
+  assert.equal(configHash('policy', resolveParams('policy', { outlets: 'on' })), configHash('policy', resolveParams('policy', { profile: 'Default', outlets: 'on' })));
+  assert.throws(() => resolveParams('search', { budgetMs: 10 }), /50\.\.60000/);
+  assert.throws(() => resolveParams('policy', { depth: 2 }), /no parameter depth/);
+  assert.equal(unavailable('forge', REPO), null);
+});
+
+test('addPlayer never overwrites', () => {
+  const reg = parseRegistry(JSON.stringify({ version: 1, players: [{ name: 'forge-default', kind: 'forge', params: {} }, { name: 'x-t1', kind: 'forge', params: {} }] }));
+  assert.equal(addPlayer(reg, { name: 'x-t1', kind: 'forge', params: { profile: 'Reckless' } }), 'x-t1-2');
+  assert.equal(reg.players.length, 3);
+  assert.deepEqual(reg.players[1]!.params, {});
+});
+
+// ------------------------------------------------------------ results and report
+
+const mkPlayer = (name: string, cfg: string, anchor = false): Player => {
+  const kind = cfg.includes('+outlets') ? 'policy' : 'forge';
+  const prof = cfg.split('+')[0]!;
+  return resolvePlayer({ name, kind, params: kind === 'policy' ? { profile: prof, outlets: 'on' } : { profile: prof }, anchor }, REPO);
+};
+
+test('results: ai-bench lines become ladder lines; dedup across files; torn lines skipped; mirror blocks', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-'));
+  const A = mkPlayer('policy-outlet', 'Default+outlets'), B = mkPlayer('forge-default', 'Default', true);
+  const info = { host: 'h1', run: 'r1', batch: 3, purpose: 'ladder', set: 'tools/ai-bench/pairs-cube.txt', bseed: 1_000_007, pairIndex: [6, 7], a: A, b: B, at: '2026-10-03T10:00:00.000Z' };
+  const lines = [0, 1, 2, 3].map((g) => ({ pair: 1, game: g, seed: 99 + (g === 3 ? 0 : g === 2 ? 1 : g), a: 'Default+outlets', b: 'Default', aDeck: 'x.dck', bDeck: 'y.dck', aSeat: g < 2 ? 0 : 1, winner: ['A', 'B', 'draw', 'A'][g]!, turns: 9, ms: 4000, timeout: g === 2, error: '' }));
+  const recs = lines.map((l) => fromBench(l, info));
+  assert.equal(recs[0]!.pair, 7, 'the batch file\'s pair 1 is the set\'s pair 7');
+  assert.equal(recs[0]!.id, 'h1:r1:3:7:0');
+  assert.deepEqual(recs.map((r) => r.w), ['a', 'b', 'd', 'a']);
+  assert.equal(blockKey(recs[0]!), blockKey(recs[3]!), 'games 0 and 3 are one deal');
+  assert.equal(blockKey(recs[1]!), blockKey(recs[2]!), 'games 1 and 2 are one deal');
+  assert.notEqual(blockKey(recs[0]!), blockKey(recs[1]!));
+  appendResults(dir, 'h1', recs);
+  mkdirSync(join(dir, 'results'), { recursive: true });
+  writeFileSync(join(dir, 'results', 'h2.jsonl'), JSON.stringify(recs[0]) + '\n{"v":1,"id":"torn');   // a copy of a line, and a torn one
+  const back = readResults(dir);
+  assert.equal(back.length, 4);
+  const o = outcomes(back, hashIndex([A, B]));
+  assert.equal(o.length, 3, 'the draw is not an outcome');
+  assert.deepEqual(o.map((x) => x.a), ['policy-outlet', 'policy-outlet', 'policy-outlet']);
+  // a config edited under the same name is rated apart, as name@hash
+  const edited = mkPlayer('policy-outlet', 'Reckless+outlets');
+  assert.equal(outcomes(back, hashIndex([edited, B]))[0]!.a, `policy-outlet@${A.hash}`);
+});
+
+test('ladder.json schema 1 and the HTML page', () => {
+  const A = mkPlayer('policy-outlet', 'Default+outlets'), B = mkPlayer('forge-default', 'Default', true), C = mkPlayer('forge-reckless', 'Reckless', true);
+  const r = rng(4, 'report');
+  const recs: GameRecord[] = [];
+  let i = 0;
+  for (const run of ['r1', 'r2', 'r3']) {
+    for (const [x, y, p] of [[A, B, 0.6], [C, B, 0.58], [A, C, 0.52]] as Array<[Player, Player, number]>) {
+      for (let g = 0; g < 40; g++) {
+        recs.push({ v: 1, id: `h:${run}:${i++}`, at: `2026-10-0${run.slice(1)}T0${g % 10}:00:00.000Z`, host: 'h', run, batch: 0, purpose: 'ladder', a: x.name, b: y.name, ah: x.hash, bh: y.hash, ac: x.cfg!, bc: y.cfg!, set: 's', pair: 0, g: g % 4, seed: g, bseed: 1, aDeck: 'd', bDeck: 'e', aSeat: 0, w: g === 7 ? 'd' : r.next() < p ? 'a' : 'b', turns: 8, ms: 3800, timeout: g === 7, error: false });
+      }
+    }
+  }
+  const doc = buildLadder({ players: [B, C, A], recs, sprt: [], tune: [], league: null, priorSd: 350, bootstrap: 0, now: '2026-10-03T12:00:00.000Z' });
+  assert.equal(doc.schema, 'mtg-table/ai-ladder');
+  assert.equal(doc.version, 1);
+  assert.deepEqual(Object.keys(doc), ['schema', 'version', 'generatedAt', 'anchor', 'scale', 'ci', 'totals', 'players', 'history', 'sprt', 'tune', 'league']);
+  assert.deepEqual(Object.keys(doc.players[0]!), ['name', 'kind', 'params', 'hash', 'anchor', 'registered', 'available', 'unavailable', 'rating', 'lo', 'hi', 'rated', 'games', 'wins', 'losses', 'draws', 'vsAnchor']);
+  assert.equal(doc.totals.games, 360);
+  assert.equal(doc.totals.draws, 9);
+  assert.equal(doc.history.length, 3, 'one point per run');
+  const d = doc.players.find((p) => p.name === 'forge-default')!;
+  assert.equal(d.rating, 1500);
+  assert.equal(d.vsAnchor, null);
+  const a = doc.players.find((p) => p.name === 'policy-outlet')!;
+  assert.ok(a.vsAnchor && a.vsAnchor.wins + a.vsAnchor.losses === 117);
+  const html = renderHtml(doc);
+  for (const h of ['Ladder', 'Rating over time', 'Recent SPRT outcomes', 'Tuner results']) assert.ok(html.includes(`<h2>${h}</h2>`), h);
+  assert.ok(!/(src|href)="https?:/.test(html), 'self-contained: nothing loads from a URL');
+  assert.ok(html.includes('<polyline'), 'the chart is drawn');
+});

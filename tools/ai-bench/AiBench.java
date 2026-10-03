@@ -75,7 +75,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *
  * <pre>
  *   play     --pairs FILE --a CFG --b CFG [--games N] [--seed S] [--shard I/K]
- *            [--timeout SEC] --out FILE.jsonl
+ *            [--timeout SEC] [--mirror] --out FILE.jsonl
  *   report   FILE.jsonl ... [--by-pair]
  *   selftest [--no-engine]
  * </pre>
@@ -93,6 +93,12 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * function of {@code --seed}, the pair and g ({@code MyRandom}); Forge's AI also
  * reads the wall clock (its 5 s evaluation timeout), so a rerun is the same deal
  * of the same decks, not always the same game.
+ *
+ * <p>{@code --mirror} (the AI ladder's hook, D315) changes only the seed: games
+ * 4k and 4k+3 share one, and 4k+1 and 4k+2 another.  Those two games put the
+ * same deck in the same seat and swap only which config controls it, so each
+ * deal is played once from each side ({@link #gameSeed}).  Without the flag the
+ * seeds are what they always were.
  */
 public final class AiBench {
 
@@ -182,8 +188,10 @@ public final class AiBench {
         int shard = 0;
         int shards = 1;
         int timeoutSec = 300;
+        boolean mirror = false;
         for (int i = 0; i < argv.length; i++) {
             switch (argv[i]) {
+            case "--mirror": mirror = true; break;
             case "--pairs": pairsFile = new File(argv[++i]); break;
             case "--out": out = new File(argv[++i]); break;
             case "--a": a = new Cfg(argv[++i]); break;
@@ -232,7 +240,7 @@ public final class AiBench {
                     final String[] pair = pairs.get(pi);
                     final boolean aFirstDeck = g % 2 == 0;
                     final boolean aSeat0 = (g / 2) % 2 == 0;
-                    final long gameSeed = seed * 1_000_003L + pi * 10_007L + g;
+                    final long gameSeed = gameSeed(seed, pi, g, mirror);
                     final ByteArrayOutputStream noise = new ByteArrayOutputStream();
                     System.setOut(new PrintStream(noise, true, "UTF-8"));   // Forge prints a lot during a game
                     String line;
@@ -249,6 +257,21 @@ public final class AiBench {
             }
         }
         return 0;
+    }
+
+    /**
+     * The seed of game g of pair pi.  With {@code mirror}, games 4k and 4k+3 (and
+     * 4k+1 and 4k+2) share a seed: the same deck in the same seat, the configs
+     * swapped (D315).  The shared value is the lower game's own seed, so the first
+     * game of each mirrored pair keeps the seed a plain run would give it.
+     */
+    static long gameSeed(final long seed, final int pi, final int g, final boolean mirror) {
+        int k = g;
+        if (mirror) {
+            final int r = g % 4;
+            k = g - r + (r == 3 ? 0 : r == 2 ? 1 : r);
+        }
+        return seed * 1_000_003L + pi * 10_007L + k;
     }
 
     static List<String[]> readPairs(final File f) throws IOException {
@@ -560,6 +583,10 @@ public final class AiBench {
             threw = true;
         }
         check(threw, "Cfg refuses an unknown option");
+        check(gameSeed(3, 2, 6, false) == 3 * 1_000_003L + 2 * 10_007L + 6, "plain seeds are unchanged");
+        check(gameSeed(3, 2, 4, true) == gameSeed(3, 2, 7, true) && gameSeed(3, 2, 5, true) == gameSeed(3, 2, 6, true)
+                && gameSeed(3, 2, 4, true) != gameSeed(3, 2, 5, true) && gameSeed(3, 2, 5, true) == gameSeed(3, 2, 5, false),
+                "--mirror: games 4k/4k+3 and 4k+1/4k+2 share a seed");
         if (engine) {
             scenarios();
         }
