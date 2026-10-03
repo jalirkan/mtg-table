@@ -29,7 +29,7 @@ import java.util.Locale;
  * {@code ms} (wall-clock budget per searched decision, default 1500),
  * {@code cands} (the most candidates searched, Forge's own answer and "pass"
  * included, default 6), {@code turns} (rollout horizon: 1 = to the end of the
- * NEXT turn, default 1), {@code rounds} (determinizations every candidate must
+ * NEXT turn; default 0, the end of this turn), {@code rounds} (determinizations every candidate must
  * finish before the search may overrule Forge, default 2), {@code margin} (how
  * much better, in leaf points, an alternative's mean must be than Forge's own,
  * default 20), {@code maxrounds} (stop early after this many complete rounds,
@@ -78,7 +78,7 @@ public final class SearchConfig {
     public static SearchConfig parse(final String text) {
         int ms = 1500;
         int cands = 6;
-        int turns = 1;
+        int turns = 0;
         int rounds = 2;
         int margin = 20;
         int maxRounds = 12;

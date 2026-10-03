@@ -1043,7 +1043,7 @@ public final class MtgTable {
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2|--ai-deck <path>] [--ai-profile Default|Cautious|Reckless|Experimental] "
-                        + "[--ai-policy plain|outlets|search] [--ai-search ms=1500,turns=1,...] "
+                        + "[--ai-policy plain|outlets|search] [--ai-search ms=1500,turns=0,...] "
                         + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--lan] [--site-dir <path>] [--games <n>] "
                         + "[--game-timeout <sec>] [--idle-timeout <sec>] "

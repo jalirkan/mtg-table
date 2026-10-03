@@ -13996,3 +13996,119 @@ tuning `.ai` knobs as the main road (one profile moved the needle ten points,
 the rest nothing measurable — knobs inside a greedy player); an LLM opponent
 (the owner's constraint); a learned policy before a search exists to use a
 learned evaluator.
+
+## D312 — The search AI: a determinized rollout search after Forge's own answer, at main-phase priority, attacks and blocks; Default AIs play both seats of each copy to the end of the next turn, and the AI never sees the opponent's hand or library order
+
+*Branch `c/search-ai`, off `main`'s `e49800e`; D312–D314.*
+
+**2026-10-03** (roadmap step 2 of D311; the owner's ask: an opponent for his
+own games that plays combo, sacrifice and synergy cards well, on his PC, no LLM)
+
+**Decision.** `mtgtable.ai.SearchPolicy`, behind D309's seam, reconsiders three
+of Forge's answers in `PolicyControllerAi`: (p) what to play with priority in
+our own main phase on an empty stack (pass included; not a land drop), (a) the
+attack declaration, (b) the block declaration. Forge answers first (and keeps
+its own 5 s limit); D310's outlet policy keeps every priority it claims; then
+the search builds at most six candidates — Forge's answer first; pass, every
+other play Forge's per-card judgment accepts (RemAIDeck cards included) and
+affordable untargeted spells it declines; no attack, all-in, Forge's minus or
+plus one creature; no block, Forge's minus one blocker or plus one legal block —
+and scores each by rollouts. A rollout copies the game, redeals what the AI
+cannot see, forces the candidate as the AI seat's first answer
+(`RolloutController`), lets Forge's plain Default AI play **both** seats with
+the copy's own game loop (`PhaseHandler.mainLoopStep`) to the end of the turn
+(`turns=0`) or the next (`turns=1`), and scores the leaf: win/loss first, then
+life on a concave curve, cards in hand, poison, and every permanent through
+Forge's `GameStateEvaluator.evalCard`. A round plays every candidate on one
+determinization with one engine seed (common random numbers); rounds repeat
+until the wall-clock budget (default 1.5 s) or twelve rounds; an alternative
+replaces Forge's answer only when its mean beats Forge's by 20 points over at
+least two complete rounds. Every failure — a copy that throws, Forge's
+candidate unmappable onto the copy, a budget too short for two rounds — is
+Forge's answer, counted (`search.fallback.*`). `SearchConfig` holds the knobs
+(`ms, cands, turns, rounds, margin, maxrounds, what`).
+
+**What the AI may know** — the rule, in `Determinizer`'s header: everything
+public, its own hand, its own decklist, and the opponent's decklist (the
+owner's ruling for the cubes). Since the decklist minus the opponent's public
+cards is the multiset of their hand plus library, each copy pools the
+opponent's hand and library, orders them canonically (name, then id), shuffles
+them with the search's own seed and deals the hand size back; the AI's own
+library is shuffled too. The determinization is a function of that multiset,
+the public hand size and the seed alone; the self-test requires two games that
+differ only in the hidden split and order to determinize identically. Known
+limit, counted: the opponent's face-down cards keep their identity in the copy.
+
+**Randomness and threads.** Each rollout installs a seeded `MyRandom` and
+restores the real one, so the search neither consumes nor perturbs the real
+game's random stream (and a bench game's deal stays the deal). Everything runs
+on the game thread inside Forge's own callback: no thread of ours, no
+`invokeInGameThread` (the lint's `HOP_ALLOW` is unchanged), no view walked, no
+wire touched — a copy's events go to the copy's own bus. While a copy is built
+`PolicyLobbyPlayerAi.createIngamePlayer` seats a plain controller (a
+thread-local flag), so a copy never searches and the bench's per-game counters
+stay the real game's.
+
+**Rejected.** Forge's `SpellAbilityPicker` / `GameSimulator` as they are (they
+read the opponent's real hand and library, score with a second copy that
+throws the same way, and search neither combat nor the opponent's reply);
+Forge's own `GameStateEvaluator.getScoreForGameState` as the leaf (it copies the
+game again to simulate combat, and weighs a life point at 2 against a 2/2's
+~150); enumerating targets and modes (Forge's `canPlaySa` picks them; the
+search ranks Forge's acceptable plays, which is where its greed loses);
+reflection onto `PhaseHandler.givePriorityToPlayer` (the public
+`onStackResolved` sets it); a search on every priority (instant-speed
+responses stay Forge's and the outlet policy's — a later step).
+
+## D313 — Forge's `Couldn't map` is the sideboard: an all-zones static ability affects a sideboard card the copier never copies; `LenientGameCopier` maps such cards to a zoneless stand-in while copying
+
+**2026-10-03**
+
+**Decision.** `mtgtable.ai.LenientGameCopier` extends Forge's `GameCopier` and
+overrides `find` (public, virtual; the copier's private `IEntityMap` calls it)
+only while `makeCopy` runs: a card in a zone `GameCopier` does not copy (its
+seven are battlefield, hand, graveyard, library, exile, stack, command) or in no
+zone maps to a stand-in `Card` of the copy that lives in no zone. Everything in
+the seven zones still goes through Forge's strict lookup, and after the copy
+every lookup is strict. Each stand-in is counted (`search.standInDecisions`,
+`search.standInCards`).
+
+**Why.** D311 measured the failure (15 of 20 cube games under Forge's full
+simulation) but not its cause. The self-test now pins it: on a board with
+Tarmogoyf and Grist, the Hunger Tide in the AI's sideboard, Forge's
+`GameCopier.makeCopy()` throws `Couldn't map Grist, the Hunger Tide`, because
+`StaticEffect.removeMapped` maps every card a live static affects, and a
+characteristic-defining or all-zones static (Tarmogoyf's P/T, Grist's type
+change, Anax, Hero of Light) also affects that card in the sideboard. A
+Forge-built cube deck carries a sideboard, so most cube decisions hit it (the
+pilot: 59% of searched decisions needed a stand-in). `removeMapped` only strips
+the effect's layers from the mapped copies so that the copy's own
+`checkStateEffects` can re-apply them; stripping a stand-in is a no-op, and the
+copy is the game it would have been. After the workaround the bench's copier
+errors are 0 (D312's evidence).
+
+**Rejected.** Catching the exception and falling back (it would fall back on
+most cube decisions); stripping the sideboard from the decks (changes the game
+and Forge's wish/learn effects); copying through `GameSnapshot`
+(`EXPERIMENTAL_RESTORE_SNAPSHOT` is a game-wide switch on the real game);
+patching the jar (D309).
+
+## D314 — The game's AI seat takes the search only when asked: `MtgTable --ai-policy plain|outlets|search` (default plain), `--ai-search <k=v,...>`, and `play.sh --ai-search`
+
+**2026-10-03**
+
+**Decision.** `MtgTable` seats `Bootstrap.createAiPlayer` (Forge's own AI,
+byte-for-byte the old seat) unless `--ai-policy` says otherwise: `outlets` seats
+`Bootstrap.createAiSeat` with D310's policy acting, `search` adds D312's search
+behind it; `--ai-search ms=…,turns=…` sets the search's knobs (and implies
+`search`), validated before the engine boots. `scripts/play.sh --ai-search`
+(and `--ai-search-ms <n>`) pass them through as `PASSTHROUGH`, so a match
+ForgeCoach restarts through the launcher (D303) keeps them. The startup banner
+prints the policy; the wire does not change — `hello_ok.match` names the deck
+and the profile as before (D105), and nothing of the search reaches a frame.
+`RecordMatch`, the gate and every recording stay plain Forge.
+
+**Rejected.** Making the search the default (a 1–2 s think at each searched
+decision, and the gate's recordings must stay Forge's); a new profile name
+(profiles are `.ai` files, D311); a ForgeCoach-side switch now (the launcher's
+contract is D303's, changed in both repositories or not at all — a follow-up).
