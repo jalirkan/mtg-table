@@ -6,7 +6,7 @@
 //            [--synergy-out <tsv>] [--learn name=value]...
 //            -> x.ratings.tsv, x.synergy.tsv, x.learn.md (+ .html), x.learn.json.  No engine.
 //   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h 0]
-//            [--deck-synergy on|off] [--from <run-dir>]... [--seed 1] [--jobs K] [--games 3]
+//            [--deck-synergy on|off] [--control on|off] [--from <run-dir>]... [--seed 1] [--jobs K] [--games 3]
 //            [--format grid] [--out <dir>] [--ratings <tsv>] [--learn name=value]...
 //            [--profiles A,B] [--game-timeout <sec>] [--weights <json>] [--weight name=value]...
 //
@@ -24,7 +24,7 @@ import {
 import { parseSynergy } from './pairs.ts';
 import { parseRatings } from './ratings.ts';
 import { defaultRatings, loadForRun, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
-import { deckQuality, gamesForHalfWidth, headToHead, reRated, writeJson, type DeckQuality, type H2H } from './selfplay.ts';
+import { deckQuality, gamesForHalfWidth, headToHead, pairedVsControl, reRated, writeJson, type DeckQuality, type H2H, type Paired } from './selfplay.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs, type Weights } from './weights.ts';
 
 type Flags = Map<string, string[]>;
@@ -118,12 +118,16 @@ interface IterRow {
   values: { ratings: string; synergy: string };
   learned: { drafts: number; games: number; alpha: number; alphaSd: number; pointsPerLogit: number; cv: Learned['cv']; medianCardGames: number; pairs: number; rankCorrWithPrior: number | null };
   h2h: H2H & { dir: string };
+  /** Paired by seed with the control (both seats baseline), when there is one. */
+  paired: Paired | null;
 }
 
 export interface SelfplaySummary {
   cube: string;
   options: Record<string, unknown>;
   baseline: string;
+  /** Both seats baseline on the head-to-head seeds: what seat A wins with no learning. */
+  control: (H2H & { dir: string }) | null;
   iterations: IterRow[];
   deckH2H: (H2H & { dir: string }) | null;
   deckQuality: DeckQuality | null;
@@ -158,6 +162,14 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
   const heldOut: string[] = [];
   let cur: { ratings: string; synergy: string | null } = { ratings: baseline, synergy: null };
   const rows: IterRow[] = [];
+  let control: SelfplaySummary['control'] = null;
+  const controlDir = path.join(out, 'control');
+  if (h > 0 && onOff(f, 'control', true)) {
+    say(`== control: ${h} draft(s) on the head-to-head seeds, both seats baseline`);
+    await runLab(env, { ...common(), drafts: h, seed: seed + 500_000, out: controlDir, ratingsFile: baseline }, say);
+    control = { ...headToHead(readRunData(controlDir).recs), dir: controlDir };
+    say(`control: A won ${control.winsA} of ${control.winsA + control.winsB} = ${pct(control.rate)} [${pct(control.lo)}, ${pct(control.hi)}]`);
+  }
   if (from.length > 0) {
     const p = learnPaths(path.join(out, 'values-0.ratings.tsv'));
     learnFromRuns(repo, from, baseline, p.ratings, lo, say);
@@ -191,8 +203,9 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
       iteration: i, selfplay: sp, values: { ratings: p.ratings, synergy: p.synergy },
       learned: { drafts: l.drafts, games: l.games, alpha: l.alpha.value, alphaSd: l.alpha.sd, pointsPerLogit: l.pointsPerLogit, cv: l.cv, medianCardGames: ess[Math.floor(ess.length / 2)] ?? 0, pairs: l.pairsConsidered, rankCorrWithPrior: l.rankCorrWithPrior },
       h2h: { ...hh, dir: hd },
+      paired: control && h > 0 ? pairedVsControl(readRunData(hd).recs, readRunData(controlDir).recs) : null,
     });
-    writeSummary(out, summaryOf(cubeFile, f, baseline, rows, null, null));
+    writeSummary(out, summaryOf(cubeFile, f, baseline, control, rows, null, null));
   }
   let deckRow: (H2H & { dir: string }) | null = null;
   if (deckH > 0) {
@@ -210,7 +223,7 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
   const pools: string[][] = [];
   for (const d of [...data, ...heldOut]) for (const r of readRunData(d).recs) for (const dr of r.drafters) pools.push(dr.pool);
   const dq = deckQuality(pools, lc, learnedLc, w, table);
-  const s = summaryOf(cubeFile, f, baseline, rows, deckRow, dq);
+  const s = summaryOf(cubeFile, f, baseline, control, rows, deckRow, dq);
   writeSummary(out, s);
   say(`selfplay: ${path.join(out, 'summary.md')}`);
   return 0;
@@ -218,22 +231,25 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
 
 const pct = (x: number | null): string => (x === null ? '-' : `${(x * 100).toFixed(1)}%`);
 
-function summaryOf(cube: string, f: Flags, baseline: string, rows: IterRow[], deckRow: SelfplaySummary['deckH2H'], dq: DeckQuality | null): SelfplaySummary {
+function summaryOf(cube: string, f: Flags, baseline: string, control: SelfplaySummary['control'], rows: IterRow[], deckRow: SelfplaySummary['deckH2H'], dq: DeckQuality | null): SelfplaySummary {
   const games = rows.reduce((s, r) => s + r.h2h.games, 0);
   const drafts = rows.reduce((s, r) => s + r.h2h.drafts, 0);
   return {
     cube, options: Object.fromEntries([...f.entries()].map(([k, v]) => [k, v.length === 1 ? v[0] : v])), baseline,
-    iterations: rows, deckH2H: deckRow, deckQuality: dq,
+    control, iterations: rows, deckH2H: deckRow, deckQuality: dq,
     gamesNeeded: { halfWidth5: gamesForHalfWidth(0.05), halfWidth3: gamesForHalfWidth(0.03), gamesPerDraft: drafts ? Math.round(games / drafts * 100) / 100 : null },
   };
 }
 
 export function renderSelfplayMd(s: SelfplaySummary): string {
   const o: string[] = [`# Self-play — ${path.basename(s.cube)}`, '', `Baseline (and prior): \`${s.baseline}\`. Options: \`${JSON.stringify(s.options)}\`.`, ''];
-  o.push('## Learned drafter (A) against the baseline drafter (B)', '', '| iteration | learned from (drafts / games) | alpha ± 95% | held-out log loss learned / prior-only | median games per card | A win rate (decisive games) | 95% CI | matches A–B |', '|---|---|---|---|---|---|---|---|');
+  o.push('## Learned drafter (A) against the baseline drafter (B)', '');
+  if (s.control) o.push(`**Control** (both seats baseline, the same seeds): A won ${s.control.winsA}–${s.control.winsB} = ${pct(s.control.rate)} [${pct(s.control.lo)}, ${pct(s.control.hi)}] — what seat A wins on these deals with nothing learned.`, '');
+  o.push('| iteration | learned from (drafts / games) | alpha ± 95% | held-out log loss learned / prior-only | median games per card | A win rate (decisive games) | 95% CI | matches A–B | paired with the control: loss→win / win→loss, sign-test p |', '|---|---|---|---|---|---|---|---|---|');
   for (const r of s.iterations) {
     const cv = r.learned.cv ? `${r.learned.cv.logLossLearned.toFixed(4)} / ${r.learned.cv.logLossPrior.toFixed(4)}` : '-';
-    o.push(`| ${r.iteration} | ${r.learned.drafts} / ${r.learned.games} | ${r.learned.alpha.toFixed(4)} ± ${(1.96 * r.learned.alphaSd).toFixed(4)} | ${cv} | ${r.learned.medianCardGames} | ${r.h2h.winsA}–${r.h2h.winsB} = ${pct(r.h2h.rate)} | [${pct(r.h2h.lo)}, ${pct(r.h2h.hi)}] | ${r.h2h.matchesA}–${r.h2h.matchesB} |`);
+    const pr = r.paired ? `${r.paired.lossToWin} / ${r.paired.winToLoss}, p = ${r.paired.p === null ? '-' : r.paired.p.toPrecision(2)}` : '-';
+    o.push(`| ${r.iteration} | ${r.learned.drafts} / ${r.learned.games} | ${r.learned.alpha.toFixed(4)} ± ${(1.96 * r.learned.alphaSd).toFixed(4)} | ${cv} | ${r.learned.medianCardGames} | ${r.h2h.winsA}–${r.h2h.winsB} = ${pct(r.h2h.rate)} | [${pct(r.h2h.lo)}, ${pct(r.h2h.hi)}] | ${r.h2h.matchesA}–${r.h2h.matchesB} | ${pr} |`);
   }
   if (s.deckH2H) {
     const d = s.deckH2H;

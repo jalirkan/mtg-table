@@ -36,7 +36,7 @@ import { scoreCard } from '../../tools/cubelab/pick.ts';
 import { parseRatings } from '../../tools/cubelab/ratings.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import type { DraftRecord } from '../../tools/cubelab/run.ts';
-import { deckQuality, gamesForHalfWidth, headToHead, reRated, runMixedDraft } from '../../tools/cubelab/selfplay.ts';
+import { deckQuality, gamesForHalfWidth, headToHead, pairedVsControl, reRated, runMixedDraft, signTest } from '../../tools/cubelab/selfplay.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 
 // ------------------------------------------------------------ a planted world
@@ -285,4 +285,10 @@ test('deck quality offline, head-to-head arithmetic, and the games a CI needs', 
   assert.deepEqual([h.winsA, h.winsB, h.draws, h.games, h.matchesA, h.matchesB, h.rate], [3, 1, 1, 5, 2, 0, 0.75]);
   assert.ok(h.lo !== null && h.lo < 0.75 && h.hi !== null && h.hi > 0.75);
   assert.equal(gamesForHalfWidth(0.05), 385);
+  // The paired sign test against the control: 16 of 20 discordant drafts flipped to A.
+  assert.ok(Math.abs(signTest(16, 20) - 0.01182) < 1e-4);
+  assert.equal(signTest(5, 10), 1);
+  const ctl = [{ seed: 1, match: { winner: 'B' } }, { seed: 2, match: { winner: 'A' } }, { seed: 3, match: { winner: 'B' } }];
+  const now = [{ seed: 1, match: { winner: 'A' } }, { seed: 2, match: { winner: 'B' } }, { seed: 3, match: { winner: 'A' } }, { seed: 9, match: { winner: 'A' } }];
+  assert.deepEqual(pairedVsControl(now, ctl), { pairs: 3, lossToWin: 2, winToLoss: 1, p: 1 });
 });

@@ -151,6 +151,35 @@ export function headToHead(recs: Array<{ match: { games: Array<{ winner: string 
   return { drafts: recs.length, games: a + b + d, winsA: a, winsB: b, draws: d, rate: n ? a / n : null, lo, hi, matchesA: ma, matchesB: mb };
 }
 
+/**
+ * Paired by seed against the control (both seats baseline, same seeds): how many
+ * drafts the learned seat turned from a loss into a win and back, and the exact
+ * two-sided sign-test p of that split (McNemar's test, exact).
+ */
+export interface Paired { pairs: number; lossToWin: number; winToLoss: number; p: number | null }
+
+export function pairedVsControl(h2h: Array<{ seed: number; match: { winner: string } }>, control: Array<{ seed: number; match: { winner: string } }>): Paired {
+  const c = new Map(control.map((r) => [r.seed, r.match.winner]));
+  let n = 0, up = 0, down = 0;
+  for (const r of h2h) {
+    const was = c.get(r.seed);
+    if (was === undefined) continue;
+    n++;
+    if (was === 'B' && r.match.winner === 'A') up++;
+    if (was === 'A' && r.match.winner === 'B') down++;
+  }
+  return { pairs: n, lossToWin: up, winToLoss: down, p: up + down > 0 ? signTest(up, up + down) : null };
+}
+
+/** Exact two-sided binomial test of k successes in n at p = 1/2. */
+export function signTest(k: number, n: number): number {
+  const pmf: number[] = [];
+  let c = 1;
+  for (let i = 0; i <= n; i++) { pmf.push(c / 2 ** n); c = c * (n - i) / (i + 1); }
+  const obs = pmf[k] as number;
+  return Math.min(1, pmf.filter((x) => x <= obs * (1 + 1e-9)).reduce((a, b) => a + b, 0));
+}
+
 /** Decisive games needed for a 95% interval of half-width `h` around a rate near 0.5. */
 export const gamesForHalfWidth = (h: number): number => Math.ceil((1.96 * 0.5 / h) ** 2);
 

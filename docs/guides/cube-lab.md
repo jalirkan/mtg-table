@@ -518,7 +518,11 @@ and builds with the new values, seat B with the baseline ratings and no pairs,
 on the same seeds every iteration (so iterations differ only by the values; the head-to-head games are never learned from, so those deals stay held out).
 Who opens and who is on the play alternate as in any run, so a seat has no
 edge of its own: **A's win rate over decisive games, with Wilson's 95%
-interval, is the evidence the drafting AI got stronger.** `--deck-h2h N` adds
+interval, is the evidence the drafting AI got stronger.** A **control** runs first
+(`--control on`, the default): the same head-to-head seeds with both seats on
+the baseline — what seat A wins on those deals with nothing learned — and each
+iteration is paired with it seed by seed: how many drafts the learned seat
+turned from a loss into a win and back, with the exact sign test's p. `--deck-h2h N` adds
 a head-to-head of the deckbuilder alone (both draft with the baseline; A builds
 with the learned values). At the end every pool is rebuilt both ways offline
 and the summary reports the change in deck value judged both ways (each builder
@@ -564,6 +568,7 @@ tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/syne
 `--profiles`, `--ratings` for the baseline, `--weights`, `--weight`,
 `--game-timeout`) plus `--iterations` (2), `--drafts-per-iter` (30), `--h2h`
 (= drafts per iteration), `--deck-h2h` (0), `--deck-synergy on|off` (off),
+`--control on|off` (on),
 `--from <run-dir>` (repeatable) and `--learn name=value`.
 ## What it does not do
 
