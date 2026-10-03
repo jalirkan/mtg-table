@@ -2,9 +2,9 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T13:50:22-04:00
+- time: 2026-10-03T13:51:12-04:00
 - runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00
-- running: nothing
+- running: runner idle (queue blocked behind failed J019); hand-run evolve 4x600 unrecorded is using the machine; forgecoach-neveridle stopgap active
 - load: 16.34; memory 16.2/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J016, J017, J018, J020, J021, J022
 - waiting: nothing
