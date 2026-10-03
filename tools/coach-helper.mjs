@@ -425,7 +425,7 @@ export function startHelper(opts) {
       if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
       const info = await claudeInfo();
       const matchCap = match && match.available() ? 1 : 0;   // D303
-      const eng = matchCap ? match.engine() : null;           // D308: engine running | idle
+      const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }

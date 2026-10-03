@@ -725,7 +725,10 @@ connection drops, ForgeCoach reconnects, and the new match begins, with the AI's
 deck still named by its name and card count only. `play.sh` prints a
 `Match launcher:` line under the `Coach:` one; the helper now starts even
 without `claude` on your PATH, for this. `--no-match` turns it off (`--no-coach`
-turns off both). `docs/match-launcher.md` is the request and reply.
+turns off both). `docs/match-launcher.md` is the request and reply. The match
+set-up also picks **which AI** you face (**D333**): Forge, Forge with the
+sacrifice-outlet policy, or the search AI (`aiPolicy`), whatever `play.sh` was
+started with.
 
 **A game you play has no clock** (**D286**). `--transport ws` and `console` put no
 wall-clock limit on a game, so thinking for an hour is fine; `--transport null` and
