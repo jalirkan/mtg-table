@@ -281,8 +281,21 @@ public final class Bootstrap {
     public static PolicyLobbyPlayerAi createAiSeat(final String name, final int avatar, final String profile,
                                                    final AIOption simulation,
                                                    final PolicyLobbyPlayerAi.Outlets outlets) {
+        return createAiSeat(name, avatar, profile, simulation, outlets, null);
+    }
+
+    /**
+     * {@link #createAiSeat(String, int, String, AIOption, PolicyLobbyPlayerAi.Outlets)}
+     * with the determinized rollout search (D312) in front of Forge's priority,
+     * attack and block decisions; {@code search} null = none.  Used by the bench
+     * and by {@code MtgTable --ai-policy search} (opt-in, D314).
+     */
+    public static PolicyLobbyPlayerAi createAiSeat(final String name, final int avatar, final String profile,
+                                                   final AIOption simulation,
+                                                   final PolicyLobbyPlayerAi.Outlets outlets,
+                                                   final mtgtable.ai.SearchConfig search) {
         checkAiProfile(profile);
-        final PolicyLobbyPlayerAi p = new PolicyLobbyPlayerAi(name, simulation, outlets);
+        final PolicyLobbyPlayerAi p = new PolicyLobbyPlayerAi(name, simulation, outlets, search);
         p.setAiProfile(profile);
         p.setAvatarIndex(avatar);
         p.setSleeveIndex(0);
