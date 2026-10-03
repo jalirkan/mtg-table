@@ -145,34 +145,13 @@ and real checks of the coach and board through Justin's Claude Code and browser.
   `tools/check-redaction.mjs`, `tools/ai-bench*` recording flags, `tools/ml/dataset.py` /
   `policy_data.py`: decision records and search stats in recordings (branch
   `c/decision-records`). **The multi-night queue runs wait for this to land.**
-- mtg-table `tools/coach-helper.mjs` (`/coach` thinking option) and ForgeCoach's coach panel
-  and Settings: capping the coach's thinking (branches `c/helper-thinking`,
-  `c/coach-thinking-state`).
-
-- mtg-table `tools/runner/`, `tools/runner.sh`, `tools/cubelab/engine.ts` (pool control
-  file), `tools/ai-bench.sh` and `tools/ai-bench/` (resumable play),
-  `tools/ai-ladder/bench.ts`: the lab runner (branch `c/lab-runner`).
-- mtg-table `tools/cubelab/bridge.ts`, `tools/cubelab/run.ts`, `tools/cubelab/cli.ts`, the
-  cube-lab queue, and `tools/ml/matchup*`: the matchup model (PR #26).
-- mtg-table `tools/coach-helper.mjs`, `tools/match-launcher-selftest.mjs`,
-  `scripts/play.sh`: the match-launcher "socket hang up" fix (branch
-  `c/match-launcher-hangup`).
-- ForgeCoach `src/lab/`, `src/ui/lab/`, and the site navigation: the `#lab` progress page
-  (branch `c/lab-page`).
-- mtg-table `tools/coach-grade*` and the search AI's rollout code under `bridge/src/mtgtable/`,
-  plus ForgeCoach `src/bench/` and `bench/coach/`: the engine-graded coach bench (branches
-  `c/coach-grader`, `c/coach-regret`).
-- mtg-table `tools/cubelab/evolve*.ts`: evolve's false-discovery control and confirmation
-  (branch `c/evolve-rigor`).
-- ForgeCoach `src/cube/score.ts`, `src/cube/flatness.ts`: review fixes (branch
-  `c/review-fixes`).
-- mtg-table `tools/cubelab/run.ts`, `queue.ts`, `tools/ml/matchup*`, the ai-ladder deck-set
-  seeds: the second review's fixes (branch `c/review2-fixes`).
-- mtg-table `POST /match` in `tools/coach-helper.mjs` (an `aiPolicy` field), plus ForgeCoach
-  `src/draft/launch.ts` and `src/ui/draft/Setup.tsx`: choosing the opponent AI (branch
-  `c/match-ai-policy`, a separate cloud session).
-- ForgeCoach `src/lab/ladder.ts` and the `#lab` page: the AI leaderboard (branch
-  `c/ladder-page`, a separate cloud session).
+- mtg-table `bridge/src/mtgtable/ai/SearchConfig.java` and the search's override and horizon
+  options, `bridge/src/mtgtable/grade/` (interval math, scale, hidden-information guard), and
+  `tools/coach-grade*`: the engine review's week-1 fixes (branch `c/engine-week1`).
+- ForgeCoach site-wide small fixes from a product QA pass (branch `c/qa-pass`, a separate
+  cloud session).
+- The lab runner (`tools/runner/`) is merged. Fixes found while installing it on the PC go on a
+  `pc/runner-*` branch, as allowed above.
 
 ## Safety rules
 
