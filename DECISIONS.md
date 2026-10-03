@@ -14892,3 +14892,68 @@ every key added is one more thing to vet); a free-form `--ai-search` string
 (only an enum and an integer may reach a command line); making a missing
 `aiPolicy` mean `plain` (it would silently undo a `play.sh --ai-search` start
 for every client that predates this); the search as the default (D314).
+
+## D346 — The coach helper caps thinking per question: `POST /coach` takes `"thinking": "off"|"low"|"default"`, set on the child through `MAX_THINKING_TOKENS` and `CLAUDE_CODE_EFFORT_LEVEL`, and `/health` advertises it
+
+*Branch `c/helper-thinking`; D346, the next number free of every lane's claim (open branches hold numbers up to about D345).*
+
+**2026-10-03**
+
+**Context.** Measured on the owner's PC (job J013, Claude Code CLI 2.1.288)
+with the helper's flags: Haiku (`--model haiku`) thinks before every answer —
+1.2k–3.5k thinking tokens, 79–94% of its output — and its first visible word
+arrives at 15–38 s, while Sonnet answers in about 7 s with near-zero thinking.
+The CLI's init line says `per_turn_effort_active: true` for Sonnet and `false`
+for Haiku: Haiku has no effort levels, so it thinks on a fixed budget. The CLI
+also streams that thinking as empty deltas, so the helper forwards no
+`thinking` line and ForgeCoach shows nothing until the first word.
+
+**Decision.** `/coach` takes an optional `"thinking"`. Absent is `"default"`
+and the child runs exactly as before (its environment untouched). Present, it
+must be one of the three strings — anything else, `null` included, is **400**
+and no `claude` starts. The value reaches the child **only through its
+environment** (`spawn`'s `env`, never argv, never a shell string), using the two
+variables Claude Code documents for this
+(code.claude.com/docs/en/env-vars, `MAX_THINKING_TOKENS` and
+`CLAUDE_CODE_EFFORT_LEVEL`; code.claude.com/docs/en/model-config, *Extended
+thinking* and *Adjust effort level*):
+
+| `thinking` | child env |
+|---|---|
+| `default` | unchanged |
+| `low` | `MAX_THINKING_TOKENS=1024`, `CLAUDE_CODE_EFFORT_LEVEL=low` |
+| `off` | `MAX_THINKING_TOKENS=0`, `CLAUDE_CODE_EFFORT_LEVEL=low` |
+
+`MAX_THINKING_TOKENS` is the fixed budget the docs give a model without
+adaptive reasoning — `0` turns thinking off on the Anthropic API, and 1,024 is
+the CLI's floor for a nonzero budget — which is Haiku's case. Models with
+adaptive reasoning (Sonnet, Opus) ignore a nonzero budget and, on the newest
+ones, cannot have thinking turned off at all; for them the effort level is the
+documented control, so both `off` and `low` set it to `low`. "off" therefore
+means *as little thinking as the model allows*. The environment variable wins
+over a user's `--effort`, `/effort` or `effortLevel` setting (env-vars page),
+which is what a per-question cap needs. `/health` carries
+`"thinking": ["off","low","default"]` beside `models` — additive, so an older
+ForgeCoach is unaffected and a newer one sends the field only when it sees the key.
+
+**Measured** (this container, CLI 2.1.288, one short mulligan question, Haiku
+4.5, the helper's flags): default — one thinking block, 389 output tokens,
+5.3 s; `off` — no thinking block, 35 output tokens, 1.8 s. J014 re-runs J012's
+comparison on the owner's PC with it.
+
+**Checked.** `tools/coach-helper-selftest.mjs` (gate 12f): the fake `claude`
+records the two variables; `off` and `low` reach it with the values above,
+`default` and an absent field reach it with neither (the self-test strips both
+from its own environment first), the argv is identical for all three, eight bad
+values are 400 with no child started, and `/health` advertises the list.
+
+**Rejected.** `--effort` on argv (Haiku has no effort levels, and the env
+variable overrides the flag anyway, so a user's own `CLAUDE_CODE_EFFORT_LEVEL`
+would silently beat it); `--settings '{"alwaysThinkingEnabled":false}'` (a
+settings toggle, not a per-request cap, and it does not give `low`);
+`CLAUDE_CODE_DISABLE_THINKING=1` (the docs call it a proxy compatibility
+switch that only omits the parameter, so a model that thinks by default may
+still think); a numeric budget on the wire (three named levels are all a
+client needs, and only an enum reaches the child); making `off` the default
+(Sonnet's answers are what J012 scored; a change of default is J014's verdict
+to make, not this one's).

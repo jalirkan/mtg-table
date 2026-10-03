@@ -20,7 +20,10 @@
 // Origin rules and the private-network preflight; the body limit; one question
 // at a time with the rest queued (D325: the queued and running lines, positions,
 // a full queue's 429, superseding by key, a queued client leaving, /health's
-// queue, --queue-max 0); a client that disconnects kills the child and
+// queue, --queue-max 0); "thinking" (D346: off and low reach the child as
+// MAX_THINKING_TOKENS and CLAUDE_CODE_EFFORT_LEVEL in its env, default and absent
+// leave the env alone, the argv is the same for all three, a bad value is 400 and
+// /health advertises the three); a client that disconnects kills the child and
 // its grandchild; and in --lan mode, from this machine's non-loopback address,
 // the token rule (query or header, loopback exempt), the LAN page's origin, and
 // no Origin refused off loopback.  The LAN half is skipped, and says so, on a
@@ -65,6 +68,7 @@ function go(user) {
   fs.writeFileSync(path.join(process.env.FAKE_CLAUDE_CALLS, 'call-' + process.pid + '.json'), JSON.stringify({
     argv, stdin: user, cwd: process.cwd(), cwdEntries: fs.readdirSync(process.cwd()), pid: process.pid,
     systemFile: sp >= 0 ? fs.readFileSync(argv[sp + 1], 'utf8').length : null,
+    env: { MAX_THINKING_TOKENS: process.env.MAX_THINKING_TOKENS ?? null, CLAUDE_CODE_EFFORT_LEVEL: process.env.CLAUDE_CODE_EFFORT_LEVEL ?? null },
   }));
   out({ type: 'system', subtype: 'init', model: 'claude-fake-1', tools: [] });
   if (mode === 'ok' || mode === 'slowfinish') {
@@ -120,9 +124,14 @@ const check = (name, ok, detail = '') => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const helpers = [];
 
+// The thinking variables (D346) are the helper's to set: none come from the shell running this.
+const BASE_ENV = { ...process.env };
+delete BASE_ENV.MAX_THINKING_TOKENS;
+delete BASE_ENV.CLAUDE_CODE_EFFORT_LEVEL;
+
 async function startHelper(args, env = {}) {
   const p = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', '0', ...args], {
-    env: { ...process.env, PATH: FAKE_PATH, FAKE_CLAUDE_CALLS: CALLS, MTG_TABLE_CONFIG: join(DIR, 'config.json'), ...env },
+    env: { ...BASE_ENV, PATH: FAKE_PATH, FAKE_CLAUDE_CALLS: CALLS, MTG_TABLE_CONFIG: join(DIR, 'config.json'), ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   helpers.push(p);
@@ -214,6 +223,7 @@ try {
   let r = await http({ port: P });
   check('ok with the CLI there', r.status === 200 && json(r.body)?.ok === true && json(r.body)?.helper === 1
     && json(r.body)?.claude === '9.9.9 (Claude Code)' && JSON.stringify(json(r.body)?.models) === '["opus","sonnet","haiku"]', r.body);
+  check('/health advertises "thinking": off, low, default (D346)', JSON.stringify(json(r.body)?.thinking) === '["off","low","default"]', r.body);
 
   const hMissing = await startHelper([], { PATH: NODE_ONLY });
   r = await http({ port: hMissing.port });
@@ -254,6 +264,26 @@ try {
   r = await coach(P, { system: 's', user: 'MODE:ok' });
   c = lastCall();
   check('the model defaults to sonnet', c.argv[c.argv.indexOf('--model') + 1] === 'sonnet');
+  const plainArgv = JSON.stringify(c.argv);
+  check('no "thinking": the child\'s env has neither thinking variable', c.env.MAX_THINKING_TOKENS === null && c.env.CLAUDE_CODE_EFFORT_LEVEL === null, JSON.stringify(c.env));
+
+  // ------------------------------------------------------------- thinking (D346)
+  console.log('== /coach, "thinking"');
+  const wantEnv = { default: { MAX_THINKING_TOKENS: null, CLAUDE_CODE_EFFORT_LEVEL: null },
+    low: { MAX_THINKING_TOKENS: '1024', CLAUDE_CODE_EFFORT_LEVEL: 'low' },
+    off: { MAX_THINKING_TOKENS: '0', CLAUDE_CODE_EFFORT_LEVEL: 'low' } };
+  for (const t of ['off', 'low', 'default']) {
+    r = await coach(P, { system: 's', user: 'MODE:ok', model: 'haiku', thinking: t });
+    c = lastCall();
+    check(`thinking "${t}": the child's env is ${JSON.stringify(wantEnv[t])}`, JSON.stringify(c.env) === JSON.stringify(wantEnv[t]) && lines(r.body).at(-1)?.type === 'done', `${JSON.stringify(c.env)} ${r.body}`);
+    check(`thinking "${t}": the argv is the plain one but for --model`, JSON.stringify(c.argv) === plainArgv.replace('"sonnet"', '"haiku"'), c.argv.join(' '));
+  }
+  for (const bad of ['none', 'OFF', '', 0, null, true, ['off'], { level: 'off' }]) {
+    lastCall();
+    r = await coach(P, { system: 's', user: 'MODE:ok', thinking: bad });
+    check(`thinking ${JSON.stringify(bad)}: 400, no child started`, r.status === 400 && /"thinking" must be one of off, low, default/.test(json(r.body)?.message ?? '') && readdirSync(CALLS).length === 0, `${r.status} ${r.body}`);
+  }
+  check('the helper logs a non-default thinking', /; haiku; thinking off;/.test(h.log()) && /; haiku; thinking low;/.test(h.log()), h.log().slice(-600));
 
   r = await coach(P, { system: 's', user: 'MODE:nopartial' });
   check('no partial messages: the result text, then done', JSON.stringify(lines(r.body)) === JSON.stringify([
