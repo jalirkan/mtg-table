@@ -538,6 +538,29 @@ probe('m47-yourprofile-is-a-path.jsonl',
   'yourProfile must be a Forge AI profile name',
   (fs) => withMatch(fs, (m) => { m.yourProfile = 'forge-home/res/ai/Default.ai'; }));
 
+/*
+ * Amendment M56 -- `hello_ok.match.aiPolicy`, who answers for the AI seat
+ * (MtgTable --ai-policy: plain | outlets | search).  Optional, so the control
+ * adds it as the bridge writes it; the probe puts a knob string there, the
+ * shape a flag smuggled through the launcher would take.
+ */
+{
+  const fs = slice();
+  withMatch(fs, (m) => { m.aiPolicy = 'search'; });
+  write('m56-aipolicy-present.jsonl', fs);
+  manifest.push({
+    file: 'm56-aipolicy-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M56: the baseline plus hello_ok.match.aiPolicy exactly as MtgTable writes it -- ' +
+      'the control for the m56 probe',
+  });
+  console.log('  PASS  m56-aipolicy-present.jsonl  (a well-formed hello_ok.match.aiPolicy, no defect)');
+}
+
+probe('m56-aipolicy-not-a-policy.jsonl',
+  'amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path',
+  'aiPolicy must be one of plain, outlets, search',
+  (fs) => withMatch(fs, (m) => { m.aiPolicy = 'search ms=3000'; }));
+
 {
   const name = 'm47-pace-not-a-number.jsonl';
   const fs = slice();

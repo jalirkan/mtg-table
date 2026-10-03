@@ -400,6 +400,8 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     // ---- the snapshot index an `act` resolves against (built on the game thread)
     private volatile Map<Integer, CardView> cardIndex = Map.of();
     private volatile Map<Integer, PlayerView> playerIndex = Map.of();
+    /** {@link Snap#labelIndex} of {@link #cardIndex}: each card's gated label, for the EDT's notices. */
+    private volatile Map<Integer, String> labelIndex = Map.of();
     /**
      * The ids the last frame concealed, cached on the game thread for the same
      * reason {@link #cardIndex} is: {@link #notice} is reached from the EDT, from
@@ -1158,6 +1160,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             }
         }
         cardIndex = Map.of();
+        labelIndex = Map.of();
         playerIndex = Map.of();
         concealedNow = Set.of();
         abilityIndex.clear();
@@ -1255,7 +1258,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // frame conceals.  All three are built on the game thread and read
             // from the EDT and the io thread: the click path and the notice path
             // never walk the graph.
-            cardIndex = Snap.cardIndex(gameView);
+            final Map<Integer, CardView> cix = Snap.cardIndex(gameView);
+            cardIndex = cix;
+            labelIndex = Snap.labelIndex(cix, viewer);
             final Map<Integer, PlayerView> pix = new HashMap<>();
             for (final PlayerView pv : Snap.playerList(gameView)) {
                 pix.put(Integer.valueOf(pv.getId()), pv);
@@ -3364,7 +3369,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 // Forge's own answer for "that click did nothing".  The
                 // ITriggerEvent argument is a desktop mouse event; null is what
                 // Forge's remote client sends for exactly this reason.
-                notice("warn", "Not selectable", "card " + cv.getId() + " cannot be selected now");
+                // Named only when the viewer may see it: the label was gated on
+                // the game thread with the frame (hard rules 3 and 8).
+                notice("warn", "Not selectable", Snap.noticeName(cv.getId(),
+                        labelIndex.get(Integer.valueOf(cv.getId()))) + " cannot be selected now");
             }
             break;
         }

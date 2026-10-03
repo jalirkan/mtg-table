@@ -16195,3 +16195,42 @@ measured here; an end-of-turn playout about 0.1 s there, 0.4 s here):
 - **Bridge drafts** (no single pool list).
 - **A truth seed equal to the rankers'** (shared deals would correlate a
   ranker's pick with the truth's noise).
+
+## D355 — A game the watchdog ends records cleanly: a batch that reaches a recorder off the game thread is held for the game thread's final frame, never snapshotted and never counted as an error
+
+**2026-10-03**
+
+*Branch `c/followups`; D355, the next number free at push.*
+
+**Finding.** In the overnight queue one game hit the cube lab's deadline
+(normal/peasant, seed 77, 16 turns, reason `Timeout`), and its `recorded` row
+said `errors: 2, decisionErrors: 0`; every other game said 0. The two logs were
+complete — final `state`, `over` last — but each seat had counted one snapshot
+failure. The watchdog (`CubeLab.playGame`, and the same call in
+`AiBench` and `RecordMatch`) ends the game with `Game.setGameOver(Draw)` from
+its MAIN thread, and `setGameOver` fires `GameEventGameOutcome` on the calling
+thread (javap, 2.0.14: `fireEvent` at offset 158). Each recorder's
+`BoundaryFlusher` flushes on that event, so `SpectatorGui.handleGameEvents` ran
+on `main`, `Snap.state` refused the off-thread walk (hard rule 3), and the batch
+— the outcome event — was dropped with one error per seat.
+`TimeoutSelfTest` reproduces it deterministically: the game thread parks at
+turn 3, main ends the game, and before this change both seats count 1.
+
+**Decision.** `SpectatorGui.handleGameEvents` checks `ThreadUtil.isGameThread()`
+first; off it, the batch goes into the same `held` list D352 uses (now guarded
+by its own monitor, because this writer is not the game thread) and nothing is
+walked. The game thread's own `finish()` — `startGame` returns once the game is
+over — flushes, prepends the held events to the final `state` frame and writes
+`over`, exactly as for a game that ended by the rules. A timeout is therefore a
+normal end in the recording (the frame log has no `Timeout` reason; the lab's
+row keeps `timeout: true` and `reason: "Timeout"`), and `errors` again means
+"a snapshot failed, the log is incomplete". `SeatRecorder.offThreadBatches()`
+counts the held batches for the self-test. Gate step 12j runs it and the
+redaction checker on both logs.
+
+**Rejected.** Ending the game on the game thread: the watchdog fires because
+that thread is busy, and a hop onto Forge's `Game` pool is a fourth hop (hard
+rule 3). Skipping only `BoundaryFlusher`'s off-thread flush: the forwarder's own
+500 ms clock flushes from `receiveGameEvent` on the same thread, so the guard
+belongs where the walk would start. Subtracting timeouts from `errors` in the
+lab: it would hide the dropped outcome event, and any other off-thread flush.

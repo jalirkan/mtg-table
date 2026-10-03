@@ -57,6 +57,9 @@ const REQUIRED = [
   ['m47-yourprofile-on-a-human-seat.jsonl', 'fail'],
   ['m47-yourprofile-is-a-path.jsonl', 'fail'],
   ['m47-pace-not-a-number.jsonl', 'fail'],
+  // Amendment M56: the AI seat's policy, one word of a fixed set.
+  ['m56-aipolicy-present.jsonl', 'pass'],
+  ['m56-aipolicy-not-a-policy.jsonl', 'fail'],
   // Amendment M49 (the status layer): a full card's keywords -- constants only,
   // [] when face down, never on a stub, and on every full card or none.
   ['m49-keywords-present.jsonl', 'pass'],
