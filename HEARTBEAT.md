@@ -2,10 +2,10 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T14:18:13-04:00
+- time: 2026-10-03T14:19:09-04:00
 - runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00
-- running: J020 commands 1/2, 738/20000 drafts, 2234.7/h, ETA 2026-10-03T22:55:23-04:00, 7 worker(s)
-- load: 14.48; memory 12.1/30.5 GB, swap 1874 MB, pressure 0% (lab budget 23.4 GB)
+- running: J020 (runner, 6 workers) + hand-run unrecorded evolve at 3 workers (reported as J021 when done); PC cadence step 1, clean since 14:10
+- load: 19.67 20.11 18.04
 - queue: J023, J024, J025, J026
 - waiting: nothing
 - last finished: J019 failed at 2026-10-03T13:41:11-04:00

@@ -16,7 +16,7 @@ tick(){ f="$SRC/var/usage-$(date +%F).txt"; read -r a b c < "$f" 2>/dev/null || 
 while true; do
   if runner_busy; then
     idle=0; tick runner
-    for u in forgecoach-hand-evolve forgecoach-filler-job; do
+    for u in forgecoach-filler-job; do   # the hand-run evolve may share the machine with the runner (cloud session, 14:30 note)
       systemctl --user is-active --quiet $u && { systemctl --user stop $u; say "runner has work: stopped $u"; }
     done
   elif hand_busy; then idle=0; tick filler
