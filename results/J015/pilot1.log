@@ -1,0 +1,164 @@
+==== J015 pilot1 started 2026-10-03T13:30:14-04:00 in unit lab-J015-pilot1, 1 worker(s)
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (54 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 54 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 45 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 277 frame(s) lost the race and were dropped
+OverRaceSelfTest: 6496 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:38854): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:38864): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:38868 (1 watching)
+WS CONNECT /127.0.0.1:38870 (connection #1)
+WS REFUSED /127.0.0.1:38880: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:38890 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:38890 (1 watching)
+WS DISCONNECT /127.0.0.1:38870 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:38902 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:38902 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:38918 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:40292 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:40292: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 37 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:36116: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:36130: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:36144: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:36148: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:36170: no valid pairing token
+WS SITE REFUSED /127.0.0.1:36306: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:36312: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:36324: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:36338: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:36340: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:36354: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33866: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33874: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33890: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33894: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33900: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:33902: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:33912: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:33924: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:33940: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:33954 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:33954 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:33970 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:33970 (0 watching)
+WS CONNECT /127.0.0.1:33980 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:33980 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:33990): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:34002): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:34008 (1 watching)
+WS CONNECT /127.0.0.1:60078 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:60078 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:60090 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:60090 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:37685 (/127.0.0.1:60102): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:41682: a path that would leave the site
+WS CONNECT /127.0.0.1:49652 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:49652 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:49666): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:35985 (/127.0.0.1:49680): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 6.3 us + predict 2.9 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8029 checks)
+grade selftest: 70 check(s), 0 failure(s)
+build OK
+Language 'en-US' loaded successfully.
+(ThreadUtil first call): Running with priority 5
+Read cards: 33617 archived files in 0 ms (25 parts) using thread pool
+Read cards: 1 files in 0 ms (1 parts) using thread pool
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+The card A-Alrund's Epiphany was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Baba Lysaga, Night Witch was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Divide by Zero was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Esika's Chariot was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Faceless Haven was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Fires of Invention was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Goldspan Dragon was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Hullbreaker Horror was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Kumano Faces Kakkazan was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Luminarch Aspirant was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Monster Manual was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Omnath, Locus of Creation was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-The Meathook Massacre was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Unholy Heat was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Blinding Radiance was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Goblin Bruiser was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Ogre Painbringer was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Titanic Pelagosaur was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Treetop Recluse was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+Read cards: 836 files in 0 ms (8 parts) using thread pool
+[coach-grade] FModel.initialize 1923 ms
+ok   the viewer's deck (from the log header) and the opponent's list are read
+ok   the viewer's life is the log's (14)
+ok   the opponent's hand size is the log's (4)
+ok   every card of the viewer's battlefield maps back to its wire id (11)
+hidden has neither ManaCost nor Color
+ok   one seed, one rebuilt spec
+     fidelity: [face-down #56 is a guess from the hidden cards]
+     spec:
+       turn=12
+       activeplayer=p0
+       activephase=COMBAT_DECLARE_ATTACKERS
+       p0life=14
+       p0landsplayed=1
+       p0hand=Garruk's Companion|Id:33
+       p0battlefield=Forest|Id:5;Forest|Id:9;Forest|Id:8;Garruk's Companion|Id:34;Forest|Id:11;Garruk's Companion|Id:26;Garruk's Companion|Id:21;Forest|Id:14;Garruk's Companion|Id:32;Garruk's Companion|Id:22;Forest|Id:6
+       p0graveyard=Garruk's Companion|Id:28
+       p0library=Garruk's Companion;Forest;Garruk's Companion;Forest;Garruk's Companion;Forest;Forest;Forest;Garruk's Companion;Forest;Forest;Garruk's Companion;Garruk's Companion;Forest;Garruk's Companion;Garruk's Companion;Forest;Forest;Forest;Garruk's Companion;Forest;Garruk's Companion;Garruk's Companion;Garruk's Companion;Garruk's Companion;Garruk's Companion;Garruk's Companion
+       p1life=20
+       p1landsplayed=0
+       p1hand=Mountain;Ashcloud Phoenix;Mountain;Mountain
+       p1battlefield=Mountain|Id:67|Tapped;Mountain|Id:64|Tapped;Mountain|Id:63|Tapped;Mountain|Id:66;Ainok Tracker|Id:49|Tapped;Mountain|Id:62;Ashcloud Phoenix|Id:56|SummonSick|FaceDown
+       p1graveyard=Ainok Tracker|Id:55
+       p1library=Mountain;Ainok Tracker;Battering Craghorn;Mountain;Battering Craghorn;Battering Craghorn;Mountain;Mountain;Mountain;Ainok Tracker;Ashcloud Phoenix;Ainok Tracker;Ashcloud Phoenix;Ashcloud Phoenix;Mountain;Ainok Tracker;Mountain;Battering Craghorn;Battering Craghorn;Mountain;Ashcloud Phoenix;Battering Craghorn;Mountain;Battering Craghorn;Ainok Tracker;Battering Craghorn;Mountain;Ainok Tracker
+ok   CRN: one round seed gives every option's copy the same opponent library, in order (Mountain,Battering Craghorn,Battering Craghorn,Mountain,Ainok Tracker,Ashcloud Phoenix,Ashcloud Phoenix,Ashcloud Phoenix,Ashcloud Phoenix,Battering Craghorn,Mountain,Battering Craghorn,Battering Craghorn,Ainok Tracker,Ainok Tracker,Mountain,Mountain,Battering Craghorn,Mountain,Mountain,Battering Craghorn,Mountain,Ainok Tracker,Ainok Tracker,Mountain,Mountain,Mountain,Battering Craghorn / Mountain,Battering Craghorn,Battering Craghorn,Mountain,Ainok Tracker,Ashcloud Phoenix,Ashcloud Phoenix,Ashcloud Phoenix,Ashcloud Phoenix,Battering Craghorn,Mountain,Battering Craghorn,Battering Craghorn,Ainok Tracker,Ainok Tracker,Mountain,Mountain,Battering Craghorn,Mountain,Mountain,Battering Craghorn,Mountain,Ainok Tracker,Ainok Tracker,Mountain,Mountain,Mountain,Battering Craghorn)
+ok   another round seed, another deal
+{"v":1,"key":"human-trample-7.jsonl#live941:attack","type":"attack","turn":12,"phase":"COMBAT_DECLARE_ATTACKERS","seat":0,"opponent":"deck:decks/morph-probe.dck","ownDeck":"deck:decks/trample-probe.dck","fidelity":["face-down #56 is a guess from the hidden cards"],"status":"ok","measure":"leaf","rounds":5,"playouts":10,"stop":"target","best":"attack:21,22,26,32,34","spread":0.10199094354566629,"noise":0.012416652051760117,"retired":0,"forgeChoice":"attack:21,22,26,32,34","notes":[],"options":[{"token":"attack:none","label":"no attack","forge":false,"n":5,"winRate":0.644660574715562,"winLo":0.6198272706120418,"winHi":0.6694938788190823,"regret":0.10199094354566636,"regretLo":0.07715763944214613,"regretHi":0.1268242476491866,"pairedN":5,"best":false,"active":true,"failed":false,"errors":0},{"token":"attack:21,22,26,32,34","label":"attack with Garruk's Companion #21, Garruk's Companion #22, Garruk's Companion #26, Garruk's Companion #32, Garruk's Companion #34","forge":true,"n":5,"winRate":0.7466515182612283,"winLo":0.7218182141577081,"winHi":0.7714848223647486,"regret":0.0,"regretLo":0.0,"regretHi":0.0,"pairedN":0,"best":true,"active":true,"failed":false,"errors":0}],"config":{"seed":3,"target":5,"initial":5,"batch":20,"zElim":2.5758293035489,"race":false,"horizon":1,"maxTurns":40,"yardstick":"forge-default","interval":"t, sample sd","leafScale":500.0,"leafScaleSource":"default"},"counters":{"grade.evaluated":10,"search.copyUs":38131,"search.playUs":1272976},"ms":1514,"msPerPlayout":151}
+ok   the grade ran (ok null)
+ok   2 options, 10 playouts (at most 20), 1532 ms
+ok   attack:none: win rate 0.644660574715562 [0.6198272706120418, 0.6694938788190823], regret 0.10199094354566636 [0.07715763944214613, 0.1268242476491866]
+ok   attack:21,22,26,32,34: win rate 0.7466515182612283 [0.7218182141577081, 0.7714848223647486], regret 0.0 [0.0, 0.0]
+ok   exactly one best option
+coach-grade selftest: 12 check(s), 0 failure(s)
+Language 'en-US' loaded successfully.
+(ThreadUtil first call): Running with priority 5
+Read cards: 33617 archived files in 0 ms (25 parts) using thread pool
+Read cards: 1 files in 0 ms (1 parts) using thread pool
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+The card A-Alrund's Epiphany was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Baba Lysaga, Night Witch was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Divide by Zero was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Esika's Chariot was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Faceless Haven was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Fires of Invention was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Goldspan Dragon was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Hullbreaker Horror was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Kumano Faces Kakkazan was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Luminarch Aspirant was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Monster Manual was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Omnath, Locus of Creation was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-The Meathook Massacre was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Unholy Heat was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Blinding Radiance was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Goblin Bruiser was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Ogre Painbringer was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Titanic Pelagosaur was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Treetop Recluse was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+Read cards: 836 files in 0 ms (8 parts) using thread pool
+[coach-grade] FModel.initialize 1908 ms
+hidden has neither ManaCost nor Color
