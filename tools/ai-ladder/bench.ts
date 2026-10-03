@@ -21,6 +21,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { loadavg } from 'node:os';
 import { join, relative } from 'node:path';
 
+import { controlReader, type Control } from '../runner/control.ts';
 import type { Player } from './registry.ts';
 import { appendResults, fromBench, type BenchLine, type GameRecord } from './results.ts';
 
@@ -152,16 +153,30 @@ export interface DriveOptions {
   next: () => BatchSpec | null;
   done: (r: BatchResult) => void;
   log?: (s: string) => void;
+  /** The lab runner's control file (tools/runner/control.ts, D334); default: LAB_CONTROL, none when unset. */
+  control?: () => Control;
+  /** How long a held pool waits before it looks again (ms). */
+  pollMs?: number;
 }
 
-/** Keep every worker busy until `next()` runs dry or the deadline nears; resolves when the last batch ends. */
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Keep every worker busy until `next()` runs dry or the deadline nears; resolves when the last batch ends.
+ * Under a control file, no batch starts while `paused`, and at most `maxWorkers` run at once (a worker is
+ * one JVM per batch, so a lower cap frees memory as batches end).
+ */
 export async function drive(engine: Engine, opt: DriveOptions): Promise<void> {
+  const control = opt.control ?? controlReader();
+  const pollMs = opt.pollMs ?? 2000;
   const free = Array.from({ length: engine.workers }, (_, i) => i);
   const running = new Map<number, Promise<void>>();
   const times: number[] = [];
   const estimate = (): number => (times.length ? times.slice(-8).reduce((s, x) => s + x, 0) / Math.min(8, times.length) : 0);
   const fill = (): void => {
     while (free.length && !engine.stopped) {
+      const c = control();
+      if (c.paused || running.size >= (c.maxWorkers ?? engine.workers)) return;
       if (Date.now() + estimate() > opt.deadline) return;
       const spec = opt.next();
       if (!spec) return;
@@ -179,8 +194,15 @@ export async function drive(engine: Engine, opt: DriveOptions): Promise<void> {
     }
   };
   fill();
-  while (running.size) {
-    await Promise.race(running.values());
+  for (;;) {
+    if (running.size) {
+      // A held pool also wakes on the clock, so a lifted pause or a raised cap is seen between batch ends.
+      await Promise.race([...running.values(), sleep(pollMs)]);
+    } else if (control().paused && !engine.stopped) {
+      await sleep(pollMs);                    // paused with nothing in flight: hold, never end the run
+    } else {
+      break;
+    }
     fill();
   }
 }

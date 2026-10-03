@@ -24,12 +24,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.RandomAccessFile;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -78,7 +80,7 @@ import mtgtable.ai.SearchConfig;
  *
  * <pre>
  *   play     --pairs FILE --a CFG --b CFG [--games N] [--seed S] [--shard I/K]
- *            [--timeout SEC] [--mirror] --out FILE.jsonl
+ *            [--timeout SEC] [--mirror] --out FILE.jsonl [--done FILE.jsonl ...]
  *   report   FILE.jsonl ... [--by-pair]
  *   paired   --control FILE.jsonl ... --treatment FILE.jsonl ...
  *   selftest [--no-engine]
@@ -103,8 +105,26 @@ import mtgtable.ai.SearchConfig;
  * same deck in the same seat and swap only which config controls it, so each
  * deal is played once from each side ({@link #gameSeed}).  Without the flag the
  * seeds are what they always were.
+ *
+ * <p>{@code play} RESUMES (D334): a game already in {@code --out}, or in any
+ * {@code --done} file (the run's other shards, so a run restarted with another
+ * {@code --jobs} also skips them), with the same pair, game, seed, configs and
+ * decks is not played again, and a torn last line in {@code --out} (a JVM killed
+ * mid-write) is cut off first.  A game there with the same pair and game number
+ * but another seed, config or deck refuses the run: it is a different
+ * experiment, and the folder wants a new {@code --run}.
+ *
+ * <p>The lab runner's control file (tools/runner/control.ts): with
+ * {@code LAB_CONTROL} set, {@code play} reads it before every game; while
+ * {@code paused} it holds, and when {@code maxWorkers} is at or below this
+ * JVM's slot ({@code LAB_SLOT}, default the shard index) it exits
+ * {@value #EXIT_PARKED} after the game in hand so tools/ai-bench.sh can start it
+ * again later.  Unset, nothing changes.
  */
 public final class AiBench {
+
+    /** The exit code of a shard let go by the control file's maxWorkers. */
+    static final int EXIT_PARKED = 75;
 
     private AiBench() { }
 
@@ -204,9 +224,11 @@ public final class AiBench {
         int shards = 1;
         int timeoutSec = 300;
         boolean mirror = false;
+        final List<File> doneFiles = new ArrayList<>();
         for (int i = 0; i < argv.length; i++) {
             switch (argv[i]) {
             case "--mirror": mirror = true; break;
+            case "--done": doneFiles.add(new File(argv[++i])); break;
             case "--pairs": pairsFile = new File(argv[++i]); break;
             case "--out": out = new File(argv[++i]); break;
             case "--a": a = new Cfg(argv[++i]); break;
@@ -227,12 +249,19 @@ public final class AiBench {
             throw new IllegalArgumentException("play needs --pairs, --out, --a and --b");
         }
         final List<String[]> pairs = readPairs(pairsFile);
+        final Done done = readDone(out, doneFiles);
+        final String control = System.getenv("LAB_CONTROL");
+        final int slot = parseSlot(System.getenv("LAB_SLOT"), shard);
 
         final Config cfg = Config.load();
         Bootstrap.installGui(cfg.forgeHomeDir());           // hard rule 1: the FIRST Forge call
         final long initMs = Bootstrap.initializeModel(false);
         System.out.println("[ai-bench] FModel.initialize " + initMs + " ms; shard " + shard + "/" + shards
                 + "; " + pairs.size() + " pair(s) x " + games + " game(s); A=" + a.text + " B=" + b.text);
+        if (!done.sig.isEmpty() || done.torn > 0) {
+            System.out.println("[ai-bench] resuming: " + done.sig.size() + " game(s) already played"
+                    + (done.torn > 0 ? "; a torn last line was cut off" : ""));
+        }
         final Map<String, Deck> decks = new LinkedHashMap<>();
         for (final String[] p : pairs) {
             for (int k = 0; k < 2; k++) {
@@ -244,6 +273,7 @@ public final class AiBench {
 
         final PrintStream realOut = System.out;
         out.getParentFile().mkdirs();
+        int skipped = 0;
         try (Writer w = new OutputStreamWriter(new FileOutputStream(out, true), StandardCharsets.UTF_8)) {
             int idx = -1;
             for (int pi = 0; pi < pairs.size(); pi++) {
@@ -256,6 +286,21 @@ public final class AiBench {
                     final boolean aFirstDeck = g % 2 == 0;
                     final boolean aSeat0 = (g / 2) % 2 == 0;
                     final long gameSeed = gameSeed(seed, pi, g, mirror);
+                    final String have = done.sig.get(pi + "/" + g);
+                    if (have != null) {
+                        final String want = sig(gameSeed, a.text, b.text, aFirstDeck ? pair[0] : pair[1], aFirstDeck ? pair[1] : pair[0]);
+                        if (!have.equals(want)) {
+                            throw new IllegalArgumentException("the run folder already holds pair " + pi + " game " + g
+                                    + " of another configuration (" + have + ", this run wants " + want + ") -- use a new --run");
+                        }
+                        skipped++;
+                        continue;
+                    }
+                    if (awaitTurn(control, slot, realOut, 2000) == EXIT_PARKED) {
+                        realOut.println("[ai-bench] parked: the control file's maxWorkers is at or below slot " + slot
+                                + " (" + skipped + " game(s) skipped as already played)");
+                        return EXIT_PARKED;
+                    }
                     final ByteArrayOutputStream noise = new ByteArrayOutputStream();
                     System.setOut(new PrintStream(noise, true, "UTF-8"));   // Forge prints a lot during a game
                     String line;
@@ -271,7 +316,121 @@ public final class AiBench {
                 }
             }
         }
+        if (skipped > 0) {
+            realOut.println("[ai-bench] " + skipped + " game(s) skipped as already played");
+        }
         return 0;
+    }
+
+    /** The games a resumed shard already has: "pair/game" to its {@link #sig}; how many torn bytes were cut. */
+    static final class Done {
+        final Map<String, String> sig = new HashMap<>();
+        int torn;
+    }
+
+    static String sig(final long seed, final String a, final String b, final String aDeck, final String bDeck) {
+        return "seed " + seed + ", " + a + " vs " + b + ", " + aDeck + " / " + bDeck;
+    }
+
+    /**
+     * Read what is already played: {@code own} (this shard's --out; a torn last
+     * line is truncated away, on disk) and {@code others} (read only, complete
+     * lines only -- another shard may be writing its last one right now).
+     */
+    @SuppressWarnings("unchecked")
+    static Done readDone(final File own, final List<File> others) throws IOException {
+        final Done d = new Done();
+        final List<File> all = new ArrayList<>();
+        all.add(own);
+        all.addAll(others);
+        for (final File f : all) {
+            if (f == null || !f.isFile() || (f != own && f.getCanonicalFile().equals(own.getCanonicalFile()))) {
+                continue;
+            }
+            final byte[] bytes = Files.readAllBytes(f.toPath());
+            int end = bytes.length;
+            while (end > 0 && bytes[end - 1] != '\n') {
+                end--;
+            }
+            if (end < bytes.length && f == own) {
+                try (RandomAccessFile raf = new RandomAccessFile(f, "rw")) {
+                    raf.setLength(end);
+                }
+                d.torn += bytes.length - end;
+            }
+            int lineNo = 0;
+            for (final String l : new String(bytes, 0, end, StandardCharsets.UTF_8).split("\n")) {
+                lineNo++;
+                if (l.isBlank()) {
+                    continue;
+                }
+                final Map<String, Object> m;
+                try {
+                    m = (Map<String, Object>) Json.parse(l);
+                } catch (final RuntimeException e) {
+                    throw new IOException(f + " line " + lineNo + " is not a game line: " + e.getMessage());
+                }
+                final String key = m.get("pair") + "/" + m.get("game");
+                final String s = sig(((Number) m.get("seed")).longValue(), String.valueOf(m.get("a")), String.valueOf(m.get("b")),
+                        String.valueOf(m.get("aDeck")), String.valueOf(m.get("bDeck")));
+                final String prev = d.sig.putIfAbsent(key, s);
+                if (prev != null && !prev.equals(s)) {
+                    throw new IOException("pair/game " + key + " appears twice with different settings in the run folder");
+                }
+            }
+        }
+        return d;
+    }
+
+    static int parseSlot(final String env, final int dflt) {
+        if (env == null || env.isBlank()) {
+            return dflt;
+        }
+        try {
+            return Integer.parseInt(env.trim());
+        } catch (final NumberFormatException e) {
+            return dflt;
+        }
+    }
+
+    /** The control file as a map; empty when absent or unreadable (= no control). */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> readControl(final String path) {
+        try {
+            final Object o = Json.parse(new String(Files.readAllBytes(new File(path).toPath()), StandardCharsets.UTF_8));
+            return o instanceof Map ? (Map<String, Object>) o : Map.of();
+        } catch (final IOException | RuntimeException e) {
+            return Map.of();
+        }
+    }
+
+    /**
+     * Before a game: 0 to play it, {@link #EXIT_PARKED} when maxWorkers is at or
+     * below {@code slot}; holds (polling every {@code pollMs}) while paused.
+     */
+    static int awaitTurn(final String control, final int slot, final PrintStream log, final long pollMs) throws InterruptedException {
+        if (control == null || control.isEmpty()) {
+            return 0;
+        }
+        boolean said = false;
+        for (;;) {
+            final Map<String, Object> c = readControl(control);
+            final Object mw = c.get("maxWorkers");
+            if (mw instanceof Number && slot >= Math.max(1, ((Number) mw).intValue())) {
+                return EXIT_PARKED;
+            }
+            if (!Boolean.TRUE.equals(c.get("paused"))) {
+                if (said) {
+                    log.println("[ai-bench] resumed");
+                }
+                return 0;
+            }
+            if (!said) {
+                log.println("[ai-bench] paused by the control file; the next game waits");
+                said = true;
+            }
+            Thread.sleep(pollMs);
+        }
     }
 
     /**
@@ -826,11 +985,54 @@ public final class AiBench {
         check(v != null && Math.abs(v[0] - 0.5) < 1e-9 && v[1] == 4 && v[5] == 3 && Math.abs(v[4] - 1) < 1e-6,
                 "vs 50%: deals 1/2, 1/2, 2/2, 0/1 score 50%, p = 1, three mirrored");
         check(Math.abs(phi(1.959963984540054) - 0.975) < 1e-6 && Math.abs(elo(0.5)) < 1e-9, "phi and elo");
+        resumeChecks();
         if (engine) {
             scenarios();
         }
         System.out.println("ai-bench selftest: " + checks + " check(s), " + failures + " failure(s)");
         return failures == 0 ? 0 : 1;
+    }
+
+    /** D334: resume (torn line, other shards, a different configuration) and the control file, no engine. */
+    static void resumeChecks() throws Exception {
+        System.out.println("== ai-bench selftest: resume and the control file");
+        final File dir = Files.createTempDirectory("ai-bench-resume").toFile();
+        final File own = new File(dir, "shard-0.jsonl");
+        final File other = new File(dir, "shard-1.jsonl");
+        final String g0 = "{\"pair\":0,\"game\":0,\"seed\":11,\"a\":\"Default\",\"b\":\"Default\",\"aDeck\":\"x.dck\",\"bDeck\":\"y.dck\"}";
+        final String g1 = "{\"pair\":0,\"game\":1,\"seed\":12,\"a\":\"Default\",\"b\":\"Default\",\"aDeck\":\"y.dck\",\"bDeck\":\"x.dck\"}";
+        Files.write(own.toPath(), (g0 + "\n{\"pair\":0,\"game\":2,\"se").getBytes(StandardCharsets.UTF_8));
+        Files.write(other.toPath(), (g1 + "\n{\"pair\":0,\"ga").getBytes(StandardCharsets.UTF_8));
+        final Done d = readDone(own, List.of(own, other));
+        check(d.sig.size() == 2 && d.sig.containsKey("0/0") && d.sig.containsKey("0/1"), "resume: complete lines of this shard and the others count");
+        check(d.torn > 0 && new String(Files.readAllBytes(own.toPath()), StandardCharsets.UTF_8).equals(g0 + "\n"),
+                "resume: this shard's torn last line is cut off on disk");
+        check(new String(Files.readAllBytes(other.toPath()), StandardCharsets.UTF_8).endsWith("\"ga"),
+                "resume: another shard's file is only read");
+        check(d.sig.get("0/0").equals(sig(11, "Default", "Default", "x.dck", "y.dck")), "resume: a game's signature is its seed, configs and decks");
+        Files.write(other.toPath(), (g1.replace("\"seed\":12", "\"seed\":99") + "\n" + g1 + "\n").getBytes(StandardCharsets.UTF_8));
+        boolean threw = false;
+        try {
+            readDone(own, List.of(other));
+        } catch (final IOException e) {
+            threw = true;
+        }
+        check(threw, "resume: one game with two different settings is refused");
+        final File ctl = new File(dir, "control.json");
+        final PrintStream quiet = new PrintStream(new ByteArrayOutputStream(), true, "UTF-8");
+        check(awaitTurn(null, 3, quiet, 10) == 0 && awaitTurn(ctl.getPath(), 3, quiet, 10) == 0, "control: unset or absent means play");
+        Files.write(ctl.toPath(), "{\"paused\":false,\"maxWorkers\":2}".getBytes(StandardCharsets.UTF_8));
+        check(awaitTurn(ctl.getPath(), 1, quiet, 10) == 0 && awaitTurn(ctl.getPath(), 2, quiet, 10) == EXIT_PARKED,
+                "control: maxWorkers 2 keeps slots 0-1 and parks slot 2");
+        Files.write(ctl.toPath(), "{\"paused\":tr".getBytes(StandardCharsets.UTF_8));
+        check(awaitTurn(ctl.getPath(), 5, quiet, 10) == 0, "control: a torn file means no control");
+        Files.write(ctl.toPath(), "{\"paused\":true,\"maxWorkers\":1}".getBytes(StandardCharsets.UTF_8));
+        check(awaitTurn(ctl.getPath(), 1, quiet, 10) == EXIT_PARKED,
+                "control: a parked slot exits even while paused (its memory comes back); the hold itself is the smoke test's");
+        for (final File f : new File[] {own, other, ctl}) {
+            Files.deleteIfExists(f.toPath());
+        }
+        Files.deleteIfExists(dir.toPath());
     }
 
     /**

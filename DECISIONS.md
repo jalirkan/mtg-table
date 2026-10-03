@@ -14892,3 +14892,84 @@ every key added is one more thing to vet); a free-form `--ai-search` string
 (only an enum and an integer may reach a command line); making a missing
 `aiPolicy` mean `plain` (it would silently undo a `play.sh --ai-search` start
 for every client that predates this); the search as the default (D314).
+
+## D334 — The lab runner: a systemd user service, not Claude, runs the pc-jobs queue; every job step is a transient unit in a budgeted slice; pilots are checked mechanically; workers are sized from the pilot's measured peak; the pools back off on memory pressure through one control file
+
+*Branch `c/lab-runner`; D334, the first number above everything on `main` at push time
+(D331 and D333 leave D326–D332 to lanes not yet pushed).*
+
+**2026-10-03** (Justin's decisions of 10:50, after systemd-oomd killed Firefox and the
+Claude desktop app 2.5 minutes after a benchmark started seven Forge JVMs; the PC
+session's `RUNNER-SPEC.md` on `pc-results`)
+
+**The fault.** Every job the PC session started lived in the Claude app's cgroup. The
+benchmark, its watchers and Justin's way of reaching the session died together, and
+nothing budgeted memory. The orchestration was ad-hoc scripts, and a status was reported
+without a check.
+
+**Decided.** `tools/runner.sh` (`tools/runner/`, TypeScript run by Node, no build) is a
+systemd user service, `forgecoach-runner.service`. It is enabled by `tools/runner.sh
+install`, with `loginctl enable-linger` as Justin's one sudo step. It runs from its own
+checkout (`~/code/lab/runner`), checks jobs out in its own clones (`~/code/lab/<repo>`,
+`-light` for a light job), and never touches Justin's checkouts. Its loop is the pc-jobs
+README's rules, as code: id order, `after:`, one heavy job and one light job, and nothing
+heavy while someone holds a socket to the bridge.
+
+1. **Units.** Every shell step is `systemd-run --user --unit=lab-<id>-<step>
+   --slice=forgecoach-lab.slice` with `MemoryHigh`/`MemoryMax` from a budget (RAM minus a
+   7 GB reserve; the slice's own `MemoryMax` is the budget), `Nice=10`,
+   `KillMode=control-group` and an exit-code file. The slice asks oomd to act inside it
+   (`ManagedOOMMemoryPressure=kill`), and a drop-in asks it to avoid the desktop's
+   `app-*.scope`s. A runner restart never stops a job. A restart reconciles: it adopts a
+   live unit, reads one that ended, and resumes a resumable step or restarts a
+   non-resumable job from the top, its `clean:` folders moved aside.
+2. **A machine-checkable job format, backward compatible.** New lines are `check:` and
+   `abort:` (a closed expression language parsed by hand: comparisons, `between`, `%`,
+   `and`/`or`/`not`, arithmetic; never eval; an unknown value fails a check), `metrics:`
+   (built-in extractors for ai-bench, cube-lab runs, the overnight queue, evolve, the
+   coach bench and the ladder, or `sh:` printing JSON), `progress:`, `resumable:`,
+   `max_workers:`, `mem_per_worker_gb:`, `headline:`, `clean:`, `timeout:`, `control:` and
+   `collect:`. **A job without `check:` lines runs only to its pilot** and waits with
+   `needs: check` until a person or the PC session approves it, so nothing unchecked runs
+   unattended.
+3. **Workers from the pilot:** the peak `VmHWM` of the step's Java processes, then
+   `min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, passed as
+   `{workers}` and `$JOBS`.
+4. **Pressure backoff** (`backoff.ts`, pure). PSI `some avg10` and the swap-in rate drop
+   one worker at a time, then pause. The hard line (40%, or the unit at 95% of its
+   `MemoryMax`) stops the job: `waiting`, reason `memory`, retried later with one worker
+   fewer and without its passed pilot. Every event is recorded in STATUS and status.json.
+5. **One control file for every pool** (`LAB_CONTROL`, `{paused, maxWorkers}`), read
+   before the next game or match by the cube lab's `runPool`, ai-bench's `play` (each JVM;
+   a parked one exits 75 and the script restarts it later) and the ladder's `drive`.
+   Absent or torn, nothing changes.
+6. **`ai-bench play` resumes.** A game already in any shard of the run (same pair, game,
+   seed, configs, decks) is skipped, a torn last line is cut off, a different
+   configuration in the folder is refused, and an inherited `flock` keeps one `play` per
+   folder.
+7. **status.json, schema 1,** every 10 s locally (and on `127.0.0.1:8645` with CORS),
+   pushed with `HEARTBEAT.md` to `pc-results` every 4.5 minutes and on each state change.
+   A **public copy** goes to ForgeCoach's orphan `lab-status` branch, rebuilt from an
+   allowlist: ids, cleaned titles, numbers, timestamps, fixed words. So does a sanitised
+   `ladder.json` whose fields are exactly the leaderboard page's `LADDER_FIELDS`. The
+   runner keeps `HEARTBEAT.md`'s `## Messages` section as written.
+
+**Checked.** `web/test/lab-runner.test.ts` (node, step 13) covers the language, job files
+(every `pc-jobs` file parses), scheduling, sizing, the unit lines, backoff, the
+extractors, both allowlists, the runner end to end over real git repositories with a fake
+systemd (eleven scenarios, restarts and memory stops among them), the cube-lab pool under
+the control file with a fake `java`, and the ladder's `drive`. On Forge 2.0.14 at smoke
+size (14 games, one JVM at a time), it ran ai-bench killed and resumed, the run lock,
+`maxWorkers 1` parking and restarting a shard, a pause holding a JVM, and the cube-lab pool
+under `maxWorkers 1`. The systemd half (real units, limits, oomd, measured peaks, adoption)
+can only be shown on the PC: `tools/runner/jobs/J010-runner-shakedown.md`.
+
+**Rejected.** Keeping the Claude session as the orchestrator (it shares fate with the
+desktop app, and judgement is not needed to run a command). A system-level service (needs
+root, and the jobs are Justin's). A worktree of Justin's checkout per job (`git checkout
+main` fails while main is checked out elsewhere; clones never conflict). `eval`, or a
+general expression library, for checks. Pausing by `SIGSTOP` (a stopped JVM keeps its
+memory and Forge's AI reads the wall clock). Dynamic work-stealing in ai-bench (it would
+change which shard holds a game; parking and resuming keeps D309's deterministic shards).
+A timer-based backoff (the spec's "pressure, not a timer"). Pushing status.json's history
+to the public branch (one commit, replaced, is the value; the history is on `pc-results`).
