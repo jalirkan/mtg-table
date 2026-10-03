@@ -167,7 +167,11 @@ to think.
 
 ## The build's self-tests
 
-`bridge/build.sh` runs **seven** self-tests after javac (the seventh,
+`bridge/build.sh` runs **eight** self-tests after javac (the eighth,
+`mtgtable.eval.EvalSelfTest`, is **D316**'s: the position evaluator's Java
+encoder and forward pass against Python's golden rows, features and P(win) in
+`fixtures/eval/`, its schema refusals, and D305's hidden-zone scrambler in Java;
+the seventh,
 `mtgtable.WsLanSelfTest`, is amendment **M51**'s: real `WsTransport`s on free
 ports, a phone played from 127.0.0.1 by swapping the transport's loopback
 predicate — the token on every path, the cookie never on a socket, content types,
