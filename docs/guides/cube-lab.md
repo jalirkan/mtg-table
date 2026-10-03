@@ -513,9 +513,9 @@ nothing changes.
 **Self-play** (`selfplay`, `tools/cubelab/selfplay.ts`). Values v0 are the
 cube's ratings (or learned from `--from` runs). Each iteration plays
 `--drafts-per-iter` drafts with the current values on both seats, learns from
-every game so far, then plays `--h2h` **head-to-head** drafts: seat A drafts
+every self-play game so far, then plays `--h2h` **head-to-head** drafts: seat A drafts
 and builds with the new values, seat B with the baseline ratings and no pairs,
-on the same seeds every iteration (so iterations differ only by the values).
+on the same seeds every iteration (so iterations differ only by the values; the head-to-head games are never learned from, so those deals stay held out).
 Who opens and who is on the play alternate as in any run, so a seat has no
 edge of its own: **A's win rate over decisive games, with Wilson's 95%
 interval, is the evidence the drafting AI got stronger.** `--deck-h2h N` adds

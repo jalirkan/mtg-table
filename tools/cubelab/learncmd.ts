@@ -155,6 +155,7 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
   fs.mkdirSync(out, { recursive: true });
   say(`selfplay: ${cubeFile}, ${iterations} iteration(s) x ${n} self-play draft(s) + ${h} head-to-head draft(s)${deckH ? ` + ${deckH} deck-only head-to-head` : ''}, baseline ${baseline}, deck pairs ${deckSyn ? 'on' : 'off'}, out ${out}`);
   const data = [...from];
+  const heldOut: string[] = [];
   let cur: { ratings: string; synergy: string | null } = { ratings: baseline, synergy: null };
   const rows: IterRow[] = [];
   if (from.length > 0) {
@@ -180,7 +181,9 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
       await runLab(env, { ...common(), drafts: h, seed: seed + 500_000, out: hd, ratingsFile: baseline,
         mixed: { mode: 'draft+deck', ratingsFile: p.ratings, synergyFile: p.synergy, deckSynergy: deckSyn } }, say);
       hh = headToHead(readRunData(hd).recs);
-      data.push(hd);
+      // Never learned from: the head-to-head seeds repeat every iteration, so
+      // learning from them would test the next values on deals they were fitted to.
+      heldOut.push(hd);
       say(`head-to-head ${i}: A (learned) won ${hh.winsA} of ${hh.winsA + hh.winsB} decisive games = ${pct(hh.rate)} [${pct(hh.lo)}, ${pct(hh.hi)}]; matches ${hh.matchesA}-${hh.matchesB}`);
     }
     const ess = l.cards.filter((c) => c.status === 'learned').map((c) => c.games).sort((a, b) => a - b);
@@ -205,7 +208,7 @@ export async function selfplayCommand(repo: string, cubeFile: string, f: Flags, 
   const learnedLc = reRated(lc, parseRatings(fs.readFileSync(cur.ratings, 'utf8')));
   const table = deckSyn && cur.synergy ? parseSynergy(fs.readFileSync(cur.synergy, 'utf8')) : undefined;
   const pools: string[][] = [];
-  for (const d of data) for (const r of readRunData(d).recs) for (const dr of r.drafters) pools.push(dr.pool);
+  for (const d of [...data, ...heldOut]) for (const r of readRunData(d).recs) for (const dr of r.drafters) pools.push(dr.pool);
   const dq = deckQuality(pools, lc, learnedLc, w, table);
   const s = summaryOf(cubeFile, f, baseline, rows, deckRow, dq);
   writeSummary(out, s);
@@ -239,7 +242,7 @@ export function renderSelfplayMd(s: SelfplaySummary): string {
   if (s.deckQuality) {
     const q = s.deckQuality;
     o.push('', '## Deck quality, offline (every pool rebuilt both ways, no games)', '',
-      `${q.pools} pools. Learned build minus baseline build, mean per pool: **${q.learnedView >= 0 ? '+' : ''}${q.learnedView}** rating points per spell judged by the learned values${s.options['deck-synergy'] === 'on' ? ' and pairs' : ''}; **${q.baselineView >= 0 ? '+' : ''}${q.baselineView}** judged by the baseline ratings. ${q.cardsChanged} spells changed per deck; ${q.coloursChanged} of ${q.pools} pools changed colours. (Each builder is best by its own measure by construction; this says how far apart they are, not which is stronger — the head-to-head is that.)`);
+      `${q.pools} pools. Learned build minus baseline build, mean per pool: **${q.learnedView >= 0 ? '+' : ''}${q.learnedView}** rating points per spell judged by the learned values${s.options['deck-synergy'] === 'on' ? ' and pairs' : ''}; **${q.baselineView >= 0 ? '+' : ''}${q.baselineView}** judged by the baseline ratings. ${q.cardsChanged} spells changed per deck; ${q.coloursChanged} of ${q.pools} pools changed colours or splash. (Each builder is best by its own measure by construction; this says how far apart they are, not which is stronger — the head-to-head is that.)`);
   }
   const g = s.gamesNeeded;
   o.push('', '## How much data is signal', '', `A 95% interval of ±5 points around 50% needs ${g.halfWidth5} decisive games${g.gamesPerDraft ? ` (≈ ${Math.ceil(g.halfWidth5 / g.gamesPerDraft)} head-to-head drafts at ${g.gamesPerDraft} games a draft)` : ''}; ±3 points needs ${g.halfWidth3}${g.gamesPerDraft ? ` (≈ ${Math.ceil(g.halfWidth3 / g.gamesPerDraft)} drafts)` : ''}.`);

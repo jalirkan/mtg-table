@@ -18,9 +18,10 @@
 //
 // THE LOOP (`tools/cubelab.sh selfplay`).  Values v0 = the cube's ratings TSV
 // (or learned from --from runs).  For each iteration i = 1..I: N self-play
-// drafts with v(i-1) on both seats -> learn from every game so far (the
-// --from runs, every self-play run, every head-to-head run; always against
-// the ORIGINAL prior, so nothing compounds) -> v(i) -> H head-to-head drafts,
+// drafts with v(i-1) on both seats -> learn from every self-play game so far
+// (the --from runs and every self-play run, never a head-to-head: its seeds
+// repeat, so they stay held out; always against the ORIGINAL prior, so
+// nothing compounds) -> v(i) -> H head-to-head drafts,
 // A = v(i), B = baseline, on the same H seeds every iteration (common random
 // numbers: the iterations differ only by the values).  Everything lands under
 // <out>/: iter-<i>/{selfplay,h2h}/ (ordinary run folders, readable by
@@ -93,7 +94,7 @@ export interface DeckQuality {
   baselineView: number;
   /** Mean spells changed per deck. */
   cardsChanged: number;
-  /** Pools where the two builds chose different colours. */
+  /** Pools where the two builds chose different colours or splash. */
   coloursChanged: number;
 }
 

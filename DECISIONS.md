@@ -13511,7 +13511,9 @@ against the original prior → a head-to-head where seat A uses the new ratings
 and pairs (`runMixedDraft`: A's chooser sees each card as its learned twin, A's
 deckbuilder builds with them, `--deck-synergy` adds the pairs) and seat B the
 baseline. Head-to-head seeds are the same every iteration (common random
-numbers). Seats keep D294's alternation of who opens and D295's of who is on
+numbers) and their games are never learned from, so the deals stay held out
+(the first real run did learn from them, and its second iteration's number is
+reported as optimistic for that reason). Seats keep D294's alternation of who opens and D295's of who is on
 the play, so A has no edge but its values; the summary reports A's decisive-game
 win rate with Wilson's 95% interval, and `--deck-h2h` the deckbuilder alone.
 Every phase is an ordinary run folder (`run.json` gains an additive `learned`
