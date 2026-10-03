@@ -122,7 +122,7 @@ public final class Anytime {
         while (n > Math.max(2, fit)) {
             int worst = -1;
             for (int i = 1; i < active.length; i++) {
-                if (active[i] && (worst < 0 || standing(leaves, i) < standing(leaves, worst))) {
+                if (active[i] && (worst < 0 || standing(leaves, i) <= standing(leaves, worst))) {   // ties: the later (lower-ranked) goes first
                     worst = i;
                 }
             }

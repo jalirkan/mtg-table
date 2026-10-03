@@ -126,7 +126,7 @@ export const KINDS: Record<string, Kind> = {
       if (p.untapped !== undefined) kv.push(`untapped=${p.untapped}`);
       if (p.oracle === 'on') kv.push('oracle=1');
       if (p.anytime === 'on') kv.push('anytime=1');
-      if (p.rank === 'prior') kv.push('rank=prior', `gen=${p.gen ?? 24}`);
+      if (p.rank === 'prior') kv.push('rank=prior', `gen=${p.gen ?? Math.max(24, Number(p.cands))}`);
       if (p.rollout !== undefined) kv.push(`rollout=${p.rollout}`);
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },

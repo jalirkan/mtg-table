@@ -982,7 +982,11 @@ public final class SearchPolicy {
                 prior.put(cands.get(i), p.leaf);
                 scored++;
             } catch (final CopyFailed e) {
-                // The search's own first copy will fail the same way and fall back: rank nothing.
+                // The search's own first copy will most likely fail the same way and
+                // fall back; rank nothing, but never search more than `cands`.
+                while (cands.size() > cfg.maxCandidates) {
+                    cands.remove(cands.size() - 1);
+                }
                 return;
             } catch (final RuntimeException | StackOverflowError e) {
                 drop.add(cands.get(i));
@@ -1321,6 +1325,12 @@ public final class SearchPolicy {
         final boolean[] any = new boolean[k];
         Arrays.fill(any, true);
         final int most = Anytime.most(any, leaves);
+        if (most == 0 && Anytime.count(active) <= 1 && rep.n.length > 0 && rep.n[0] > 0) {
+            // Every alternative was unmappable: nothing to choose between (D312's
+            // path returns Forge's answer with no fallback label either).
+            sink.add("search.anytime.noAlternatives", 1);
+            return null;
+        }
         if (most == 0) {
             sink.add("search.fallback.budget", 1);
             rep.fallback = "budget";

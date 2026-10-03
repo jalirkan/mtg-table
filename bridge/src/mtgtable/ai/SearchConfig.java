@@ -149,7 +149,7 @@ public final class SearchConfig {
         if (!(z >= 0 && z <= 5) || !(untapped >= 0 && untapped <= 1000)) {
             throw new IllegalArgumentException("search z must be 0..5 and untapped 0..1000");
         }
-        if (generate < maxCandidates || generate > 64) {
+        if (rankPrior && (generate < maxCandidates || generate > 64)) {
             throw new IllegalArgumentException("search gen must be cands..64, got " + generate);
         }
         if (!"leaf".equals(prior) && !"eval".equals(prior)) {
@@ -291,6 +291,7 @@ public final class SearchConfig {
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout);
+        // gen is read only under rank=prior (and validated there).
     }
 
     @Override

@@ -708,7 +708,7 @@ probe('m55-frame-is-not-a-state.jsonl',
 {
   const fs = slice();
   const b = withDecision(fs);
-  b.search.options[0].prior = 410.5;
+  // Forge's own answer (options[0]) is never scored by the prior (M56).
   if (b.search.options[1]) b.search.options[1].prior = 388;
   b.search.generated = 9;
   write('m56-search-prior-present.jsonl', fs);

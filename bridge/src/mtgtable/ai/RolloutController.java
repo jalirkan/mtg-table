@@ -136,8 +136,13 @@ final class RolloutController extends PlayerControllerAi implements RolloutForci
             if (ph.getTurn() != turn) {
                 return true;
             }
+            // Triggers waiting to go on the stack (an ETB, a combat-damage
+            // trigger) are part of the answer's effect: not applied until they resolve.
+            if (!g.getStack().isEmpty() || g.getStack().hasSimultaneousStackEntries()) {
+                return false;
+            }
             if (kind == 'p') {
-                return g.getStack().isEmpty();
+                return true;
             }
             final PhaseType at = ph.getPhase();
             return at != null && at.isAfter(PhaseType.COMBAT_DAMAGE);
