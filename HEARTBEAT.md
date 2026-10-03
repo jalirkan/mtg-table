@@ -2,10 +2,10 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T17:50:39-04:00
+- time: 2026-10-03T17:55:12-04:00
 - runner: 5e6ba2a, up since 2026-10-03T14:45:31-04:00
 - running: J029 commands 1/2, 15749/20000 drafts, 5515.1/h, ETA 2026-10-03T18:36:54-04:00, 7 worker(s)
-- load: 14.38; memory 14.6/30.5 GB, swap 1851 MB, pressure 0% (lab budget 23.4 GB)
+- load: 17.48 14.15 14.57
 - queue: J027, J028, J034, J038, J039, J040, J041, J042, J043, J044, J045, J046
 - waiting: nothing
 - last finished: J021 done at 2026-10-03T15:22:00-04:00
