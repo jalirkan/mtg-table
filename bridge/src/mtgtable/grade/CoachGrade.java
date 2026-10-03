@@ -72,7 +72,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *              --opp-deck D | --opp-pool P (a list of cards, a .dck, or "N Name" lines)
  *              --opp-known "Name; 2 Name" | FILE (AI picks the player saw: drawn first)
  *              --opp-deck-public "<reason>" (live modes only: the opponent's list is shared)
- *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json]   (D349)
+ *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N]   (D349)
  *   settings:  --playouts N (rounds an option still in the race ends with; 200)
  *              --initial N (40) --batch N (20) --no-race --seed S (1)
  *              --horizon T (-1 = to the end; else turns past this one, then the leaf evaluator)
@@ -663,7 +663,7 @@ public final class CoachGrade {
     // ------------------------------------------------------------------
 
     /**
-     * {@code fit-scale --logs DIR|FILE[,...] [--out FILE] [--bootstrap 200]}:
+     * {@code fit-scale --logs DIR|FILE[,...] [--out FILE] [--bootstrap 200] [--max-logs N]}:
      * every recorded game under the paths (frame logs, {@code .jsonl} or
      * {@code .jsonl.gz}, one seat's view each, ending in {@code over} with a
      * winner) gives one position per turn -- the last state of the turn, where a
@@ -683,6 +683,17 @@ public final class CoachGrade {
             }
         }
         logs.sort(null);
+        final int maxLogs = f.i("max-logs", Integer.MAX_VALUE);
+        if (logs.size() > maxLogs) {
+            // An evenly spaced, deterministic subset (logs are sorted by path, so both seats of a game stay together mostly).
+            final List<File> sub = new ArrayList<>();
+            for (int i = 0; i < maxLogs; i++) {
+                sub.add(logs.get((int) ((long) i * logs.size() / maxLogs)));
+            }
+            System.err.println("[coach-grade] fit-scale: " + logs.size() + " logs found, " + maxLogs + " used (--max-logs)");
+            logs.clear();
+            logs.addAll(sub);
+        }
         if (logs.isEmpty()) {
             throw new IllegalArgumentException("fit-scale needs --logs DIR|FILE[,...] holding recorded games");
         }
