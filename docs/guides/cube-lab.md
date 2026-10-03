@@ -182,6 +182,10 @@ the same two decks, not one of the counted ones.
 | `--weight name=value` | | one weight; repeatable; wins over `--weights` |
 | `--synergy <tsv>` | | learned pair synergy for both drafters (`learn` writes it; D301) |
 | `--deck-synergy on\|off` | `off` | ...and for both deckbuilders (needs `--synergy`) |
+| `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
+| `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
+| `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |
+| `--bridge-ratings even\|own` | `even` | rescale each cube's ratings to the pool's scale per draft, or keep them |
 
 ## The weights
 
@@ -570,6 +574,108 @@ tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/syne
 (= drafts per iteration), `--deck-h2h` (0), `--deck-synergy on|off` (off),
 `--control on|off` (on),
 `--from <run-dir>` (repeatable) and `--learn name=value`.
+## Bridge drafts and the overnight queue (D322–D323)
+
+The matchup model (`tools/ml/matchup.py`, D324; `tools/ml/README.md`) rates
+every card of every cube on ONE scale from games between whole decks. Games
+inside one cube can only rank that cube's cards against each other; a
+**bridge draft** puts two cubes' cards into one pool, so the decks it makes
+link the cubes' scales, the way cross-pool games anchor an Elo ladder.
+
+```bash
+tools/cubelab.sh run --bridge pauper,modern-era --drafts 40 --games 1 --jobs 4
+tools/cubelab.sh run --bridge fair-fight,vintage --bridge-ratio 0.6,0.4 --drafts 40 --jobs 4
+```
+
+**The pool** is sampled afresh for every draft from the draft's seed (rng
+stream `bridge`, D294's rule: the same seed gives the same pool, picks and
+decks anywhere): each cube gives its share (half each by default), spread
+over that cube's own sections in proportion, so each half keeps its cube's
+colour balance; a card both cubes list is taken once and the next card of the
+same section stands in. A cube is named by its id (`fair-fight` for
+`cubes/fair-fight-cube-180.md`) or a path.
+
+**Ratings.** Each cube's ratings file (or Forge's ranks) rates its own
+cards, and those scales differ: a drafter comparing them takes mostly the
+stronger cube's cards, and the weaker cube's cards then rarely meet the other
+cube's in a game. So by default (`--bridge-ratings even`) each draft rescales
+each cube's cards to the pool's own mean and SD: within a cube the order is
+kept, between the cubes the halves weigh the same. The model reads only what
+was played, so this changes which cards meet, not what a game says.
+`matchup.py`'s report shows each bridge deck's share from each cube.
+
+**What it writes.** Every draft line in `drafts.jsonl` carries
+`bridge: {sources, shares, from}` — `from` names the cube each card of the
+pool came from — and `run.json` a `bridge` block (the sources with their
+sha256, the shares, the size, the ratings mode); `cubeFile` reads
+`bridge:<a>+<b>`. A run without `--bridge` writes exactly what it wrote
+before. `report` reads a bridge folder like any other.
+
+### The overnight queue
+
+`tools/cubelab.sh queue` plans and plays a night of normal and bridge drafts
+over all the committed cubes, into one root folder that every night adds to:
+
+```bash
+tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7            # print the plan, play nothing
+tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7 --record-every 1   # play it; resumable
+python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup/night-1
+tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-1/power.tsv
+```
+
+| flag | default | |
+|---|---|---|
+| `--night N` | | the night; its plan is `<root>/night-N.json`, written once and re-read on a re-run |
+| `--drafts D` | | the night's drafts (a new night only) |
+| `--bridge-share x` | 0.2 | the share of bridge drafts |
+| `--games N` | 1 | games a draft: fixed for the root (independent games are worth more than a best of three's) |
+| `--chunk N` | 250 | drafts per run call; chunks of every key are interleaved, so a night cut short has some of everything |
+| `--min-drafts N` | 20 | a key that would get fewer gets none, and its share goes to the rest |
+| `--cubes a,b,…` | every `cubes/*-cube-180.md` | |
+| `--power <tsv>` | | the matchup model's `power.tsv`: its `sd` column drives the allocation |
+| `--bridge-ratings even\|own` | `even` | as for `run` |
+| `--record-every N` | 0 | passed to every run: record every game of every Nth draft in the worker, both chairs (needs D315, the lab-record lane; the queue stops if the lab cannot) |
+| `--root <dir>` | `var/cubelab/queue` | |
+
+**No double work.** A draft is a function of its pool key (`normal/<cube>` or
+`bridge/<a>+<b>`, a pair keyed in one order) and its seed. The root's
+`queue.json` hands out each key's seeds once across all nights, the planner
+refuses a plan that would repeat one, every key keeps one run folder that
+nights append to, and `run` skips a seed its `drafts.jsonl` already holds, so
+re-running a night plays only what never finished. One engine lookup covers
+every cube's cards at the start; every chunk's lookup is then a subset of it
+(the facts cache reuses a file that covers the names).
+
+**Where the drafts go.** The bridge share is fixed; inside each half the
+drafts follow weights, printed by `plan`:
+
+- a cube's weight is Σ over its cards of var_c / m_c: var_c is the card's
+  uncertainty (`--power`'s `sd`², else 1 / (16 + g_c/4), g_c its decisive
+  games so far under the root, POOLED BY NAME across cubes), m_c the number of
+  cubes listing it, so a card five cubes share is paid for once and a cube
+  whose cards are well covered elsewhere gets fewer drafts;
+- a pair's weight is novelty × link × uncertainty: novelty = 1 − shared /
+  the smaller cube (Omega and Vintage share 108 of 180 cards, so their mix is
+  mostly an in-cube draft again); link by power tier (flat: Pauper, Peasant,
+  Fair Fight; middle: Synergy, Modern-Era; powered: Omega, Vintage): 1.0 for
+  adjacent tiers, which chain the levels, 0.7 for flat with powered (lopsided
+  games teach a logistic model little), 0.4 within a tier; a pair whose
+  novelty × link is under 0.25 is skipped (Omega+Vintage 0.16, Fair
+  Fight+Pauper 0.18).
+
+The queue's knobs are `QUEUE_DEFAULTS` in `tools/cubelab/queue.ts` (the
+plan file records them) and the tiers its `TIERS` table:
+
+| knob | default | what it does |
+|---|---|---|
+| `bridgeShare` | 0.2 | the night's share of bridge drafts (`--bridge-share`) |
+| `linkAdjacent` | 1.0 | a pair's link for adjacent power tiers |
+| `linkFar` | 0.7 | ...for flat with powered |
+| `linkSame` | 0.4 | ...for two cubes of one tier |
+| `minPairWeight` | 0.25 | a pair whose novelty × link is under this is skipped |
+| `tau` | 0.25 | the prior SD (logits) behind var_c from game counts when there is no `--power` |
+| `minDrafts` | 20 | a key under this many drafts gets none (`--min-drafts`) |
+
 ## What it does not do
 
 - It never touches the game: no bridge code, no wire, nothing the board reads.

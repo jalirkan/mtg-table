@@ -52,7 +52,9 @@ export function engineFacts(env: EngineEnv, names: string[], log: (s: string) =>
   const stamp = fs.existsSync(helper) ? String(fs.statSync(helper).mtimeMs) : '';
   const key = createHash('sha1').update([jar, stamp, ...names].join('\n')).digest('hex').slice(0, 16);
   const dir = path.join(env.repo, 'var/cubelab/facts');
-  const file = path.join(dir, `${key}.json`);
+  let file = path.join(dir, `${key}.json`);
+  // A cached lookup made for a superset of these names (the queue warms all cubes' union once) answers too.
+  if (!fs.existsSync(file)) file = coveringFacts(dir, jar, stamp, names) ?? file;
   if (!fs.existsSync(file)) {
     fs.mkdirSync(dir, { recursive: true });
     const namesFile = path.join(dir, `${key}.${process.pid}.names.txt`);
@@ -67,11 +69,28 @@ export function engineFacts(env: EngineEnv, names: string[], log: (s: string) =>
       throw new Error(`the facts JVM failed (exit ${r.status}${r.signal ? `, ${r.signal}` : ''}):\n${(r.stderr ?? '').split('\n').slice(-25).join('\n')}`);
     }
     fs.renameSync(part, file);
+    fs.writeFileSync(file.replace(/\.json$/, '.key'), `${jar}\n${stamp}\n`);
     log(`facts: ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   }
   const doc = JSON.parse(fs.readFileSync(file, 'utf8')) as { cards: Fact[] };
   for (const f of doc.cards) if (f.oracle) f.oracle = f.oracle.replace(/\\n/g, '\n');
-  return doc.cards;
+  // Exactly the names asked for, in their order (a covering file holds more).
+  const byListed = new Map(doc.cards.map((f) => [f.listed, f]));
+  return names.map((n) => byListed.get(n)).filter((f): f is Fact => !!f);
+}
+
+/** A cached facts file for the same jar and helper that lists every one of `names`, if there is one. */
+function coveringFacts(dir: string, jar: string, stamp: string, names: string[]): string | null {
+  if (!fs.existsSync(dir)) return null;
+  for (const f of fs.readdirSync(dir).filter((x) => /^[0-9a-f]{16}\.json$/.test(x))) {
+    const stampFile = path.join(dir, f.replace(/\.json$/, '.key'));
+    if (!fs.existsSync(stampFile) || fs.readFileSync(stampFile, 'utf8') !== `${jar}\n${stamp}\n`) continue;
+    try {
+      const listed = new Set((JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) as { cards: Fact[] }).cards.map((c) => c.listed));
+      if (names.every((n) => listed.has(n))) return path.join(dir, f);
+    } catch { /* a file being written: skip it */ }
+  }
+  return null;
 }
 
 export interface MatchJob {

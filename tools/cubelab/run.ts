@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { Fact } from './cards.ts';
+import { loadBridge, type BridgeMeta, type BridgeOptions, type BridgeTag } from './bridge.ts';
 import { parseCube } from './cube.ts';
 import { dckText } from './deck.ts';
 import { engineFacts, runPool, type EngineEnv, type ForgeBuild, type GameRow, type MatchJob } from './engine.ts';
@@ -52,6 +53,8 @@ export interface RunOptions {
   deckSynergy?: boolean;
   /** Head-to-head (D302): seat A drafts and/or builds with these, seat B with the baseline (`--ratings`, no pairs). */
   mixed?: { mode: MixedMode; ratingsFile: string; synergyFile: string | null; deckSynergy: boolean };
+  /** A bridge run (`--bridge a,b`): every draft's pool sampled from these cubes (bridge.ts). */
+  bridge?: BridgeOptions;
 }
 
 /** A drafter's line in drafts.jsonl: the draft side, plus which deck played and Forge's own build. */
@@ -70,6 +73,8 @@ export interface DraftRecord extends Omit<DraftOut, 'drafters' | 'ms'> {
   drafters: [DrafterRecord, DrafterRecord];
   match: { games: GameRow[]; winsA: number; winsB: number; winner: 'A' | 'B' | 'draw'; engineError?: string; worker: number };
   ms: DraftOut['ms'] & { match: number };
+  /** A bridge draft's pool: its source cubes and which cube each card came from (bridge.ts; absent in a normal run). */
+  bridge?: BridgeTag;
 }
 
 export interface RunMeta {
@@ -97,6 +102,8 @@ export interface RunMeta {
     synergyFile: string | null; synergySha: string | null; deckSynergy: boolean;
     mixed: { mode: MixedMode; ratingsFile: string; ratingsSha: string; synergyFile: string | null; synergySha: string | null; deckSynergy: boolean } | null;
   };
+  /** A bridge run's source cubes, shares and pool size (bridge.ts; absent in a normal run). */
+  bridge?: BridgeMeta;
 }
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
@@ -118,10 +125,15 @@ export function defaultRatings(cubeFile: string): string | null {
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<void> {
   const t0 = Date.now();
-  const { lc, text } = loadForRun(env, o.cubeFile, o.ratingsFile, o.weights, say);
+  const bridge = o.bridge ? loadBridge(env, o.bridge, o.weights, say, sha) : null;
+  const { lc, text } = bridge ?? loadForRun(env, o.cubeFile, o.ratingsFile, o.weights, say);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
   const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
   let draftOne = (seed: number): DraftOut => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
+  if (bridge) {
+    if (o.synergyFile || o.mixed) throw new Error('--bridge drafts with each cube\'s ratings; it takes no --synergy or head-to-head');
+    draftOne = (seed) => bridge.draft(seed, o.format, o.weights, o.winstonCards);
+  }
   let learnedMeta: RunMeta['learned'];
   if (o.synergyFile || o.mixed) {
     if (o.synergyFile) {
@@ -149,6 +161,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     forgeJar: process.env.FORGE_JAR ?? '', missing: lc.missing.map((m) => m.listed),
     themeNames: lc.cube.themeNames, archetypes: lc.cube.archetypes,
     ...(learnedMeta ? { learned: learnedMeta } : {}),
+    ...(bridge ? { bridge: bridge.meta } : {}),
   };
   fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
@@ -157,7 +170,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (fs.existsSync(metaFile)) {
     const old = JSON.parse(fs.readFileSync(metaFile, 'utf8')) as RunMeta;
     const same = (k: (m: RunMeta) => unknown): boolean => JSON.stringify(k(old)) === JSON.stringify(k(meta));
-    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null])) {
+    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null, m.bridge ?? null])) {
       throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder, weights or learned files -- use a new --out`);
     }
     if (fs.existsSync(jsonl)) {
