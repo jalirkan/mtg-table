@@ -1,0 +1,19 @@
+{
+  "gen": 1,
+  "inputSha": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc",
+  "outputSha": "6c79b99e214e25a0056de8528ad34b9d1b17a2449ecd67e0a2b9daf18f39f3f7",
+  "versionIn": 1,
+  "versionOut": 1,
+  "seeds": [
+    5000001,
+    5000400
+  ],
+  "confirmSeeds": [
+    6000001,
+    6000241
+  ],
+  "swaps": [],
+  "verdict": "Insufficient data: no card was confirmed at 400 drafts; 6 lead(s) to watch — about 4000 drafts per generation would find half of them. Run more drafts. Discovery: 1 candidate(s) of 376 tests at a false-discovery rate of 0.1; confirmation on 241 fresh drafts: 0 confirmed, 1 not. 37 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+  "date": "2026-10-03",
+  "notesSha": "aca3679648a621fc6a8f7afc9a090f09a089fd579d461d744b499d99600696d5"
+}
