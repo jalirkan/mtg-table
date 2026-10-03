@@ -78,7 +78,7 @@ import mtgtable.ai.SearchConfig;
  *
  * <pre>
  *   play     --pairs FILE --a CFG --b CFG [--games N] [--seed S] [--shard I/K]
- *            [--timeout SEC] --out FILE.jsonl
+ *            [--timeout SEC] [--mirror] --out FILE.jsonl
  *   report   FILE.jsonl ... [--by-pair]
  *   paired   --control FILE.jsonl ... --treatment FILE.jsonl ...
  *   selftest [--no-engine]
@@ -97,6 +97,12 @@ import mtgtable.ai.SearchConfig;
  * function of {@code --seed}, the pair and g ({@code MyRandom}); Forge's AI also
  * reads the wall clock (its 5 s evaluation timeout), so a rerun is the same deal
  * of the same decks, not always the same game.
+ *
+ * <p>{@code --mirror} (the AI ladder's hook, D318) changes only the seed: games
+ * 4k and 4k+3 share one, and 4k+1 and 4k+2 another.  Those two games put the
+ * same deck in the same seat and swap only which config controls it, so each
+ * deal is played once from each side ({@link #gameSeed}).  Without the flag the
+ * seeds are what they always were.
  */
 public final class AiBench {
 
@@ -197,8 +203,10 @@ public final class AiBench {
         int shard = 0;
         int shards = 1;
         int timeoutSec = 300;
+        boolean mirror = false;
         for (int i = 0; i < argv.length; i++) {
             switch (argv[i]) {
+            case "--mirror": mirror = true; break;
             case "--pairs": pairsFile = new File(argv[++i]); break;
             case "--out": out = new File(argv[++i]); break;
             case "--a": a = new Cfg(argv[++i]); break;
@@ -247,7 +255,7 @@ public final class AiBench {
                     final String[] pair = pairs.get(pi);
                     final boolean aFirstDeck = g % 2 == 0;
                     final boolean aSeat0 = (g / 2) % 2 == 0;
-                    final long gameSeed = seed * 1_000_003L + pi * 10_007L + g;
+                    final long gameSeed = gameSeed(seed, pi, g, mirror);
                     final ByteArrayOutputStream noise = new ByteArrayOutputStream();
                     System.setOut(new PrintStream(noise, true, "UTF-8"));   // Forge prints a lot during a game
                     String line;
@@ -264,6 +272,21 @@ public final class AiBench {
             }
         }
         return 0;
+    }
+
+    /**
+     * The seed of game g of pair pi.  With {@code mirror}, games 4k and 4k+3 (and
+     * 4k+1 and 4k+2) share a seed: the same deck in the same seat, the configs
+     * swapped (D318).  The shared value is the lower game's own seed, so the first
+     * game of each mirrored pair keeps the seed a plain run would give it.
+     */
+    static long gameSeed(final long seed, final int pi, final int g, final boolean mirror) {
+        int k = g;
+        if (mirror) {
+            final int r = g % 4;
+            k = g - r + (r == 3 ? 0 : r == 2 ? 1 : r);
+        }
+        return seed * 1_000_003L + pi * 10_007L + k;
     }
 
     static List<String[]> readPairs(final File f) throws IOException {
@@ -426,6 +449,8 @@ public final class AiBench {
         long turnSum;
         long evalTimeouts;
         final List<Long> ms = new ArrayList<>();
+        /** Per deal (pair + seed; a mirrored deal's two games share both): A's wins and decisive games. */
+        final Map<String, int[]> deals = new LinkedHashMap<>();
         final Map<String, Long> aCounts = new TreeMap<>();
         final Map<String, Long> bCounts = new TreeMap<>();
         final Map<String, Long> focusCounts = new TreeMap<>();
@@ -479,6 +504,13 @@ public final class AiBench {
                 t.ms.add(ms);
                 t.turnSum += ((Number) m.get("turns")).longValue();
                 t.evalTimeouts += ((Number) m.get("aiEvalTimeouts")).longValue();
+                if ("A".equals(w) || "B".equals(w)) {
+                    final int[] d = t.deals.computeIfAbsent(m.get("focusDeck") + "#" + m.get("seed"), k -> new int[2]);
+                    d[1]++;
+                    if ("A".equals(w)) {
+                        d[0]++;
+                    }
+                }
                 final boolean aHasFocus = m.get("aDeck").equals(m.get("focusDeck"));
                 for (final String side : new String[] {"aStats", "bStats"}) {
                     final Map<String, Object> st = (Map<String, Object>) m.get(side);
@@ -527,6 +559,13 @@ public final class AiBench {
                     t.ms.isEmpty() ? 0 : t.ms.get(t.ms.size() - 1) / 1000.0,
                     t.games == 0 ? 0 : (double) t.turnSum / t.games, t.evalTimeouts,
                     t.games == 0 ? 0 : (double) t.evalTimeouts / t.games));
+            final double[] vs = versusHalf(t.deals.values());
+            if (vs != null) {
+                System.out.println(String.format(Locale.ROOT,
+                        "  A vs the known 50%%: %.1f%% over %d deal(s)%s, 95%% CI %.1f-%.1f%%, p = %.3f (%+.0f Elo, CI %+.0f to %+.0f)",
+                        100 * vs[0], (int) vs[1], vs[5] > 0 ? String.format(Locale.ROOT, " (%d mirrored, both sides played)", (int) vs[5]) : "",
+                        100 * vs[2], 100 * vs[3], vs[4], elo(vs[0]), elo(vs[2]), elo(vs[3])));
+            }
             System.out.println("  RemAIDeck cards left in hand at game end: A " + t.aRemHand + ", B " + t.bRemHand);
             System.out.println("  A counters:     " + t.aCounts);
             System.out.println("  B counters:     " + t.bCounts);
@@ -680,6 +719,65 @@ public final class AiBench {
         return 0;
     }
 
+    /**
+     * A's score against the KNOWN 50% (D318, the methodology review's M1): with
+     * A and B swapping deck and seat, a config tied with its opponent scores
+     * exactly 50% by symmetry, so no separate control run is needed -- and a
+     * control's own luck does not leak into the effect.  The unit is the deal:
+     * a mirrored deal (ai-bench --mirror) is A's share of its two decisive games,
+     * because the two are correlated; otherwise each game is its own deal.
+     * Returns {mean, deals, lo, hi, two-sided p, mirrored deals}, normal
+     * approximation with the variance shrunk by one pseudo-deal toward 1/4;
+     * null with fewer than two deals.
+     */
+    static double[] versusHalf(final java.util.Collection<int[]> deals) {
+        final List<Double> xs = new ArrayList<>();
+        int mirrored = 0;
+        for (final int[] d : deals) {
+            if (d[1] > 0) {
+                xs.add((double) d[0] / d[1]);
+                if (d[1] > 1) {
+                    mirrored++;
+                }
+            }
+        }
+        final int n = xs.size();
+        if (n < 2) {
+            return null;
+        }
+        double mean = 0;
+        for (final double x : xs) {
+            mean += x;
+        }
+        mean /= n;
+        double var = 0;
+        for (final double x : xs) {
+            var += (x - mean) * (x - mean);
+        }
+        // one pseudo-deal at a single game's null variance (1/4): with a handful of
+        // deals that all split 1-1 the sample variance is 0, and an interval of
+        // zero width would be a claim the data cannot make; at large n it is noise
+        var = (var + 0.25) / n;
+        final double se = Math.sqrt(var / n);
+        final double z = (mean - 0.5) / se;
+        final double p = Math.min(1, 2 * (1 - phi(Math.abs(z))));
+        return new double[] {mean, n, Math.max(0, mean - 1.96 * se), Math.min(1, mean + 1.96 * se), p, mirrored};
+    }
+
+    /** The standard normal CDF (Abramowitz-Stegun 7.1.26 through erf). */
+    static double phi(final double x) {
+        final double t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.sqrt(2));
+        final double y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t
+                * Math.exp(-x * x / 2);
+        return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+    }
+
+    /** Elo from a score (clamped away from 0 and 1). */
+    static double elo(final double s) {
+        final double c = Math.min(0.999, Math.max(0.001, s));
+        return -400 * Math.log10(1 / c - 1);
+    }
+
     static double pct(final int k, final int n) {
         return n == 0 ? 0 : 100.0 * k / n;
     }
@@ -720,6 +818,14 @@ public final class AiBench {
             threw = true;
         }
         check(threw, "Cfg refuses an unknown option");
+        check(gameSeed(3, 2, 6, false) == 3 * 1_000_003L + 2 * 10_007L + 6, "plain seeds are unchanged");
+        check(gameSeed(3, 2, 4, true) == gameSeed(3, 2, 7, true) && gameSeed(3, 2, 5, true) == gameSeed(3, 2, 6, true)
+                && gameSeed(3, 2, 4, true) != gameSeed(3, 2, 5, true) && gameSeed(3, 2, 5, true) == gameSeed(3, 2, 5, false),
+                "--mirror: games 4k/4k+3 and 4k+1/4k+2 share a seed");
+        final double[] v = versusHalf(List.of(new int[] {1, 2}, new int[] {1, 2}, new int[] {2, 2}, new int[] {0, 1}));
+        check(v != null && Math.abs(v[0] - 0.5) < 1e-9 && v[1] == 4 && v[5] == 3 && Math.abs(v[4] - 1) < 1e-6,
+                "vs 50%: deals 1/2, 1/2, 2/2, 0/1 score 50%, p = 1, three mirrored");
+        check(Math.abs(phi(1.959963984540054) - 0.975) < 1e-6 && Math.abs(elo(0.5)) < 1e-9, "phi and elo");
         if (engine) {
             scenarios();
         }
