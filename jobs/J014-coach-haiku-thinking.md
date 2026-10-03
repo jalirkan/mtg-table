@@ -16,6 +16,12 @@ how much faster is it now? A rough read: 28 cases, one answer each.
 This job starts its OWN helper from the branch, on port 8653, so it never touches a
 `play.sh` that may be running (its helper stays on 8643). Don't change code or settings.
 
+**Don't touch a checkout a heavy job is using.** If J003 (or any heavy job) runs in
+`/home/justin-a/code/mtg-table`, do this job's mtg-table steps in the separate main
+worktree (`~/code/mtg-table-main`, which J008 used: `git -C ~/code/mtg-table-main pull`),
+not in the checkout J003 is running from. The same applies to the final `git checkout main`
+lines.
+
 ## Pilot
 ```bash
 cd /home/justin-a/code/mtg-table && git fetch && git checkout main && git pull
