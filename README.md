@@ -108,6 +108,14 @@ and real checks of the coach and board through Justin's Claude Code and browser.
 
 ### Areas being worked on (updated by the cloud session)
 
+- mtg-table `bridge/src/mtgtable/ai/` (decision hooks), `bridge/src/mtgtable/SeatRecorder.java`,
+  `tools/check-redaction.mjs`, `tools/ai-bench*` recording flags, `tools/ml/dataset.py` /
+  `policy_data.py`: decision records and search stats in recordings (branch
+  `c/decision-records`). **The multi-night queue runs wait for this to land.**
+- mtg-table `tools/coach-helper.mjs` (`/coach` thinking option) and ForgeCoach's coach panel
+  and Settings: capping the coach's thinking (branches `c/helper-thinking`,
+  `c/coach-thinking-state`).
+
 - mtg-table `tools/runner/`, `tools/runner.sh`, `tools/cubelab/engine.ts` (pool control
   file), `tools/ai-bench.sh` and `tools/ai-bench/` (resumable play),
   `tools/ai-ladder/bench.ts`: the lab runner (branch `c/lab-runner`).
