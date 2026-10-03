@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:06:10-04:00",
+ "updated": "2026-10-03T14:08:07-04:00",
  "paused": false,
  "host": {
-  "load1": 22.53,
-  "memUsedGb": 16.4,
+  "load1": 26.63,
+  "memUsedGb": 25.3,
   "memTotalGb": 30.5,
-  "swapUsedMb": 934,
-  "pressure": 0,
+  "swapUsedMb": 2011,
+  "pressure": 16.96,
   "cpus": 16,
   "budgetGb": 23.4
  },
@@ -20,18 +20,25 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-03T13:57:43-04:00",
-   "elapsed": 507,
-   "done": 0,
-   "total": null,
+   "elapsed": 624,
+   "done": 66,
+   "total": 20000,
    "unit": "drafts",
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 7,
+   "ratePerHour": 381,
+   "eta": "2026-10-05T18:26:59-04:00",
+   "workers": 6,
    "workersMax": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-03T13:57:43-04:00",
-   "pressureEvents": [],
+   "dataUpdated": "2026-10-03T14:08:07-04:00",
+   "pressureEvents": [
+    {
+     "at": "2026-10-03T14:08:06-04:00",
+     "kind": "drop",
+     "workers": 6,
+     "pressure": 17
+    }
+   ],
    "detail": "lab-J020-run1"
   }
  ],
