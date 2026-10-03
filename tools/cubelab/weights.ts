@@ -60,6 +60,10 @@ export interface Weights {
   maxSplash: number;
   /** ...or this many, on the second pass, for a pool where no pair reaches 23 spells otherwise. */
   maxSplashStretch: number;
+  /** Deck score, second pass only: points lost per spell outside a three-colour build's best pair (D298). */
+  deckThreeColour: number;
+  /** Deck score, second pass only: points lost for playing 18 lands (D298). */
+  deckEighteenLands: number;
   /** A splash needs this many sources of its colour in the deck (basics included, at most 2 of them). */
   splashDeckSources: number;
   /** Spell choice: points per other candidate sharing a theme with this card (the same sqrt shape as picking). */
@@ -94,6 +98,8 @@ export const DEFAULT_WEIGHTS: Weights = {
   deckSplash: 3,
   maxSplash: 3,
   maxSplashStretch: 7,
+  deckThreeColour: 1.5,
+  deckEighteenLands: 2,
   splashDeckSources: 3,
   buildSynergy: 3,
   sixteenLandsAt: 2.5,

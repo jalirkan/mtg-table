@@ -11,9 +11,12 @@
 // cards it splashes (D294).  Forge's own evaluator (LimitedDeckEvaluator) liked
 // an 11-spell, 29-land deck; this one cannot build one, because a deck here is
 // always 40 cards with 16 or 17 lands — `checkDeck` is the rule and the tests
-// hold it.  Forge's BoosterDeckBuilder still runs beside it in the engine (the
-// JSONL's `forge` block) and plays instead under `--builder forge`, or when
-// this builder cannot reach 23 castable spells.
+// hold it.  A pool too thin for any two-colour build to reach 23 spells gets a
+// second pass (D298) that also tries a wider splash, 18 lands with 22 spells,
+// and three full colours; the deck says `stretched`.  Forge's
+// BoosterDeckBuilder still runs beside it in the engine (the JSONL's `forge`
+// block) and plays instead under `--builder forge`, or when even the second
+// pass finds nothing.
 
 import { BASIC_OF, castableIn, colourPairs, COLOURS, type Colour, type LabCard } from './cards.ts';
 import { splashColourOf, synergyCount } from './pick.ts';
@@ -26,7 +29,7 @@ export const bucketOf = (cmc: number): number => Math.min(5, Math.max(0, cmc - 1
 
 export interface DeckBuild {
   builder: 'lab';
-  /** The two main colours (WUBRG order). */
+  /** The main colours (WUBRG order): two, or three for a thin pool's three-colour build. */
   colors: string;
   splash: string | null;
   /** [count, name], spells first (in choice order), then nonbasic lands, then basics. */
@@ -44,7 +47,10 @@ export interface DeckBuild {
   parts: Record<string, number>;
   /** The next best builds, for the report: colours, splash and score. */
   alternatives: Array<{ colors: string; splash: string | null; score: number }>;
-  /** Built on the second pass, which allows `maxSplashStretch` splash cards (the pool was thin). */
+  /**
+   * Built on the second pass, for a pool where no two-colour build reaches 23
+   * spells (D298): a splash of up to `maxSplashStretch` cards, 18 lands, or three colours.
+   */
   stretched: boolean;
 }
 
@@ -60,7 +66,28 @@ export function countNames(cards: LabCard[]): Map<string, number> {
 /** Can a land (or fixer) make colour `c` for this deck? */
 const makes = (card: LabCard, c: string): boolean => card.produces.includes(c);
 
-function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weights, maxSplash: number): DeckBuild | null {
+/** The ten three-colour sets, WUBRG-ordered strings. */
+export function colourTriples(): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < 5; i++) for (let k = i + 1; k < 5; k++) for (let m = k + 1; m < 5; m++) out.push(`${COLOURS[i]}${COLOURS[k]}${COLOURS[m]}`);
+  return out;
+}
+
+/** How many of `spells` a two-colour subset of `colors` cannot cast (0 for two colours). */
+export function thirdColourCards(spells: LabCard[], colors: string): number {
+  if (colors.length < 3) return 0;
+  let best = 0;
+  for (const pair of colourPairs()) {
+    if (![...pair].every((k) => colors.includes(k))) continue;
+    best = Math.max(best, spells.filter((c) => castableIn(c, pair)).length);
+  }
+  return spells.length - best;
+}
+
+interface BuildOpts { maxSplash: number; eighteen: boolean; stretched: boolean }
+
+function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weights, o: BuildOpts): DeckBuild | null {
+  const { maxSplash } = o;
   const allowed = pair + (splash ?? '');
   // Candidates: castable in the pair, or a legal splash card of `splash`.
   const cands: Candidate[] = [];
@@ -102,11 +129,11 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     return chosen;
   };
 
-  let chosen = choose(23);
-  if (chosen.length < 23) return null;
+  let landCount = o.eighteen ? 18 : 17;
+  let chosen = choose(DECK_SIZE - landCount);
+  if (chosen.length < DECK_SIZE - landCount) return null;
   const avg = chosen.reduce((s, x) => s + x.card.cmc, 0) / chosen.length;
-  let landCount = 17;
-  if (avg <= w.sixteenLandsAt) {
+  if (!o.eighteen && avg <= w.sixteenLandsAt) {
     const more = choose(24);
     if (more.length === 24) { chosen = more; landCount = 16; }
   }
@@ -114,7 +141,9 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
 
   // Lands: every nonbasic in the pool that makes two deck colours (a fetch
   // counts the basic types it finds), or that makes the splash colour at all.
-  // At most landCount - 7, so the main colours keep basics.
+  // At most landCount - 7, so the main colours keep basics.  A three-colour
+  // build needs at least one land or fixer making its least-used colour, and
+  // every colour used by some spell; three colours on basics alone is not a deck.
   const nonbasic = pool.filter((c) => c.land
     && ([...allowed].filter((k) => makes(c, k)).length >= 2 || (splash !== null && makes(c, splash))));
   nonbasic.sort((x, y) => [...pair].filter((k) => makes(y, k)).length - [...pair].filter((k) => makes(x, k)).length || y.rating - x.rating);
@@ -131,13 +160,25 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     if (need > 2) return null;                       // a splash on basics alone is not a splash
     if (need > 0) { basics[splash as Colour] = need; slots -= need; }
   }
-  const p0 = pair[0] as Colour;
-  const p1 = pair[1] as Colour;
-  const w0 = Math.max(1, pipW[p0] ?? 0);
-  const w1 = Math.max(1, pipW[p1] ?? 0);
-  const n0 = Math.round(slots * w0 / (w0 + w1));
-  basics[p0] = (basics[p0] ?? 0) + n0;
-  basics[p1] = (basics[p1] ?? 0) + (slots - n0);
+  if (pair.length === 3) {
+    for (const k of pair) {
+      if (spells.every((c) => !(c.pips[k as Colour] ?? 0))) return null;     // a colour no spell uses: build the pair instead
+      const src = lands.filter((l) => makes(l, k)).length + spells.filter((c) => c.fixer && makes(c, k)).length;
+      const minor = (pipW[k] ?? 0) <= Math.min(...[...pair].map((x) => pipW[x] ?? 0));
+      if (minor && src === 0) return null;
+    }
+  }
+  // Basics split across the main colours by pip weight (largest remainder; ties in WUBRG order).
+  const ws = [...pair].map((k) => Math.max(1, pipW[k] ?? 0));
+  const wsum = ws.reduce((s, x) => s + x, 0);
+  const exact = ws.map((x) => slots * x / wsum);
+  const n = exact.map(Math.floor);
+  const order = exact.map((x, i) => [x - Math.floor(x), i] as const).sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  for (let r = slots - n.reduce((s, x) => s + x, 0), j = 0; r > 0; r--, j++) {
+    const i = order[j % order.length]?.[1] ?? 0;
+    n[i] = (n[i] ?? 0) + 1;
+  }
+  [...pair].forEach((k, i) => { basics[k as Colour] = (basics[k as Colour] ?? 0) + (n[i] ?? 0); });
 
   // Score.
   const curve = [0, 0, 0, 0, 0, 0];
@@ -158,6 +199,8 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     curve: -w.deckCurve * curvePenalty,
     creatures: -w.deckCreatures * Math.max(0, w.creaturesMin - creatures),
     splash: -w.deckSplash * splashCards,
+    threeColour: -w.deckThreeColour * thirdColourCards(spells, pair),
+    eighteenLands: o.eighteen ? -w.deckEighteenLands : 0,
   };
   const score = Object.values(parts).reduce((s, x) => s + x, 0);
 
@@ -172,21 +215,27 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     creatures, themes, score: Math.round(score * 10) / 10,
     parts: Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, Math.round(v * 10) / 10])),
     alternatives: [],
-    stretched: maxSplash > w.maxSplash,
+    stretched: o.stretched,
   };
 }
 
 /**
- * The best deck the pool makes.  A first pass allows `maxSplash` splash cards; a
- * pool too thin for any pair to reach 23 spells gets a second pass allowing
- * `maxSplashStretch` (the deck says `stretched`); null when that fails too.
+ * The best deck the pool makes.  A first pass builds two colours plus at most a
+ * `maxSplash`-card splash on 16-17 lands.  A pool too thin for any pair to reach
+ * 23 spells gets a second pass (D298) scoring three kinds of build together: a
+ * splash of up to `maxSplashStretch` cards, 18 lands with 22 spells, and three
+ * full colours on 17 or 18 lands (the deck says `stretched`).  Null when that
+ * fails too.
  */
 export function buildDeck(pool: LabCard[], w: Weights): DeckBuild | null {
-  return buildPass(pool, w, w.maxSplash) ?? buildPass(pool, w, w.maxSplashStretch);
+  return buildPass(pool, w, false) ?? buildPass(pool, w, true);
 }
 
-function buildPass(pool: LabCard[], w: Weights, maxSplash: number): DeckBuild | null {
+function buildPass(pool: LabCard[], w: Weights, thin: boolean): DeckBuild | null {
   const builds: DeckBuild[] = [];
+  const tries: BuildOpts[] = thin
+    ? [{ maxSplash: w.maxSplashStretch, eighteen: false, stretched: true }, { maxSplash: w.maxSplash, eighteen: true, stretched: true }]
+    : [{ maxSplash: w.maxSplash, eighteen: false, stretched: false }];
   for (const pair of colourPairs()) {
     const splashes: Array<string | null> = [null];
     for (const s of COLOURS) {
@@ -196,8 +245,18 @@ function buildPass(pool: LabCard[], w: Weights, maxSplash: number): DeckBuild | 
       if (sources >= 1 && worth) splashes.push(s);
     }
     for (const s of splashes) {
-      const b = buildOne(pool, pair, s, w, maxSplash);
-      if (b) builds.push(b);
+      for (const o of tries) {
+        const b = buildOne(pool, pair, s, w, o);
+        if (b) builds.push(b);
+      }
+    }
+  }
+  if (thin) {
+    for (const triple of colourTriples()) {
+      for (const eighteen of [false, true]) {
+        const b = buildOne(pool, triple, null, w, { maxSplash: 0, eighteen, stretched: true });
+        if (b) builds.push(b);
+      }
     }
   }
   if (builds.length === 0) return null;
@@ -211,13 +270,16 @@ export interface DeckCheckInput {
   main: Array<[number, string]>;
   colors: string;
   splash: string | null;
+  /** A thin pool's build (D298): 18 lands and three main colours are allowed too. */
+  stretched?: boolean;
 }
 
 /**
  * The lab's deck rules, as a list of what is wrong (empty = legal): exactly 40
- * cards; 16 or 17 lands; no nonbasic card more often than the pool holds it;
- * every spell castable in the two colours plus the splash; a splash is one
- * colour, at most `maxSplash` cards, each needing at most one pip of it.
+ * cards; 16 or 17 lands (up to 18 when `stretched`); no nonbasic card more
+ * often than the pool holds it; two main colours (or three when `stretched`,
+ * with no splash), every spell castable in them plus the splash; a splash is
+ * one colour, at most `maxSplash` cards, each needing at most one pip of it.
  */
 export function checkDeck(d: DeckCheckInput, pool: LabCard[], byName: Map<string, LabCard>, maxSplash: number): string[] {
   const errs: string[] = [];
@@ -227,7 +289,10 @@ export function checkDeck(d: DeckCheckInput, pool: LabCard[], byName: Map<string
   const have = countNames(pool);
   let lands = 0;
   let splashN = 0;
-  if (d.colors.length !== 2) errs.push(`main colours "${d.colors}" are not two colours`);
+  const maxLands = d.stretched ? 18 : 17;
+  if (d.colors.length === 3 && d.stretched) {
+    if (d.splash) errs.push(`a three-colour deck "${d.colors}" with a splash "${d.splash}"`);
+  } else if (d.colors.length !== 2) errs.push(`main colours "${d.colors}" are not two colours`);
   if (d.splash && (d.splash.length !== 1 || d.colors.includes(d.splash))) errs.push(`splash "${d.splash}" is not one other colour`);
   for (const [n, name] of d.main) {
     if (basicNames.has(name)) { lands += n; continue; }
@@ -239,7 +304,7 @@ export function checkDeck(d: DeckCheckInput, pool: LabCard[], byName: Map<string
     if (d.splash && splashColourOf(card, d.colors) === d.splash) { splashN += n; continue; }
     errs.push(`${name} (${card.colors}) is off-colour for ${d.colors}${d.splash ? `+${d.splash}` : ''}`);
   }
-  if (lands < 16 || lands > 17) errs.push(`${lands} lands, not 16-17`);
+  if (lands < 16 || lands > maxLands) errs.push(`${lands} lands, not 16-${maxLands}`);
   if (splashN > maxSplash) errs.push(`${splashN} splash cards, more than ${maxSplash}`);
   return errs;
 }

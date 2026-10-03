@@ -135,8 +135,12 @@ support, is built and scored, and the best one plays:
   `deckSplash` × splash cards.
 
 Every deck is **40 cards with 16–17 lands**, two colours plus at most a
-`maxSplash`-card splash. When no pair reaches 23 spells, a second pass allows
-`maxSplashStretch` splash cards (the report counts these as *stretched*); when
+`maxSplash`-card splash. When no pair reaches 23 spells (a thin Winston pool),
+a second pass (D298) scores three kinds of build together and plays the best:
+a splash of up to `maxSplashStretch` cards; **18 lands and 22 spells**
+(−`deckEighteenLands`); and **three full colours** on 17 or 18 lands, which
+needs a land or fixer making its least-used colour (−`deckThreeColour` per
+spell outside its best pair). The report counts these as *stretched*; when
 even that fails, Forge's `BoosterDeckBuilder` builds the deck. Forge's builder
 runs for every pool anyway, and the JSONL keeps its deck beside the lab's
 (`--builder forge` plays Forge's decks instead, to compare).
@@ -208,6 +212,8 @@ ones.
 | `deckSplash` | 3 | deck score lost per splash card |
 | `maxSplash` | 3 | splash cards allowed |
 | `maxSplashStretch` | 7 | splash cards allowed on the second pass, for a thin pool |
+| `deckThreeColour` | 1.5 | second pass: points lost per spell outside a three-colour build's best pair |
+| `deckEighteenLands` | 2 | second pass: points lost for an 18-land build |
 | `splashDeckSources` | 3 | sources of the splash colour a deck needs |
 | `buildSynergy` | 3 | spell choice: points per √(other candidates sharing a theme) |
 | `sixteenLandsAt` | 2.5 | 16 lands when the spells' average mana value is at most this |
