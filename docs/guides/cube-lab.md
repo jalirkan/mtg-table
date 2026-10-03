@@ -314,7 +314,7 @@ say — on your machine, from Forge's games, no LLM and no network.
 # fit card values and pair synergy from any run folders (no engine; seconds)
 tools/cubelab.sh learn var/cubelab/runs/synergy-grid-40 --cube cubes/synergy-cube-180.md \
     --out var/cubelab/learned/synergy.ratings.tsv
-# -> synergy.ratings.tsv  synergy.synergy.tsv  synergy.learn.md  synergy.learn.json
+# -> synergy.ratings.tsv  synergy.synergy.tsv  synergy.learn.md (.html)  synergy.learn.json
 
 # draft with them (both drafters), and build with the pairs too
 tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 40 --jobs 2 \
@@ -388,7 +388,7 @@ is best by its own measure, so this says how far apart they are, not which is
 stronger). Everything is under `--out` (default
 `var/cubelab/selfplay/<cube>-<seed>/`): `iter-<i>/selfplay/` and
 `iter-<i>/h2h/` are ordinary run folders (`report` reads them),
-`values-<i>.*` the learned files, `summary.md` and `summary.json` the table.
+`values-<i>.*` the learned files, `summary.md`, `summary.html` (self-contained) and `summary.json` the table.
 Game play is Forge's AI on both sides in every mode: a better drafter shows up
 only as better decks.
 

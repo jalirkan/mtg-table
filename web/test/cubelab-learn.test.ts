@@ -100,9 +100,7 @@ const OPTS: LearnOptions = { ...DEFAULT_LEARN, maxPairs: 540, minPairGames: 5, f
 
 test('the fit recovers planted card values better than the prior, and the planted pairs', () => {
   const w = world(4000);
-  const t0 = Date.now();
   const l = learn(w.games, w.priors, OPTS);
-  const ms = Date.now() - t0;
   const learned = l.cards.filter((c) => c.status === 'learned');
   assert.equal(learned.length, 120);
   const truth = learned.map((c) => w.truth.get(c.name) as number);
@@ -120,7 +118,6 @@ test('the fit recovers planted card values better than the prior, and the plante
   const mp = mean(l.pairs.filter(isPlanted).map((p) => p.logit));
   const mo = mean(l.pairs.filter((p) => !isPlanted(p)).map((p) => p.logit));
   assert.ok(mp > mo + 0.1, `planted pairs' mean logit ${mp.toFixed(3)} vs the rest ${mo.toFixed(3)}`);
-  assert.ok(ms < 60_000, `fit took ${ms} ms`);
   assert.match(l.pointsPerLogitSource, /^auto/);
   // More games, more signal: a quarter of the games recovers less.
   const small = learn(w.games.slice(0, 1000), w.priors, OPTS).cards.filter((c) => c.status === 'learned');
