@@ -13,6 +13,7 @@
 //   gen-NN/stats.json    every card's numbers and assessment, the balance, the decision
 //   gen-NN/section.html  the generation as an HTML section
 //   gen-NN/result.json   written last: the generation is done
+//   evolve.lock          the running process's pid (a second evolve on the folder is refused)
 //   changelog.md, index.html, <cube>.md (the latest cube)
 //
 // Generation g plays seeds S + (g−1)·N .. S + g·N − 1 (fresh drafts every
@@ -93,8 +94,30 @@ function readRunDir(out: string): { meta: RunMeta; cards: Record<string, CardInf
   return { meta, cards, recs };
 }
 
+/** One evolve per folder: a second process would append the same seeds and share the workers' Forge homes. */
+function lock(out: string): () => void {
+  const file = path.join(out, 'evolve.lock');
+  if (fs.existsSync(file)) {
+    const pid = Number(fs.readFileSync(file, 'utf8').trim());
+    let alive = false;
+    try { process.kill(pid, 0); alive = pid > 0; } catch { alive = false; }
+    if (alive) throw new Error(`${out} is in use by evolve pid ${pid} -- wait for it, or stop it first`);
+  }
+  fs.writeFileSync(file, `${process.pid}\n`);
+  return () => { try { fs.unlinkSync(file); } catch { /* already gone */ } };
+}
+
 export async function evolve(env: EngineEnv, o: EvolveOptions, say: (s: string) => void): Promise<void> {
   fs.mkdirSync(o.out, { recursive: true });
+  const unlock = lock(o.out);
+  try {
+    await evolveLocked(env, o, say);
+  } finally {
+    unlock();
+  }
+}
+
+async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) => void): Promise<void> {
   const startText = fs.readFileSync(o.cubeFile, 'utf8');
   const startCube = parseCube(startText);
   for (const w of startCube.warnings) say(`cube: ${w}`);

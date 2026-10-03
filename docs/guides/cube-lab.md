@@ -383,7 +383,9 @@ numbers and assessment, the balance by pair, colour and theme, the decision),
 knobs, the constraints, each generation's swaps), `changelog.md`, `index.html`
 (every generation, one self-contained page) and the latest cube under its own
 file name. A folder made with another cube, pool, seed, drafts, games, profiles,
-weights or knobs is refused.
+weights or knobs is refused. So is a folder another evolve is still running in
+(`evolve.lock` holds its pid): two would append the same seeds and share the
+workers' Forge homes.
 
 The drafts and decks are a function of the seed and the swaps a function of the
 drafts' results, so a generation is repeatable from its `drafts.jsonl`; Forge's
