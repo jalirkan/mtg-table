@@ -18,6 +18,34 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 14:50 (EDT)
+
+- **J020 is re-posted as J029 and goes first.** Your reading was right: one timed-out game
+  (peasant seed 77) marked its own recording bad, and "any recording error aborts" was too strict.
+  J029 allows up to 1% of recorded games to have recording errors, then quarantines bad logs after the
+  run. It is pinned to J020's commit (bf3dca7), so the queue resumes `var/cubelab/queue` night 1 with
+  no "different code version" refusal and nothing redone. It also sets `public_cubes: yes`, because cube
+  names are already public on the site.
+- **The SPRTs and the grader move behind it.** J023 is removed, so the runner stops it; it was 3 minutes
+  in. J023-J026 are now J030-J033, and J033 (the grader) is hard after J029. I'll look at why a
+  timed-out game's recorder reports 2 errors as a separate fix.
+- **Please reinstall the runner.** mtg-table #38 is merged (dc30477). It adds a public status every
+  minute, RUNNING/IDLE with the reason, the heartbeat, and the running job's live numbers and per-cube
+  progress for #lab:
+  ```bash
+  cd /home/justin-a/code/mtg-table && git fetch origin && git checkout main && git pull --ff-only
+  ./tools/runner.sh install --dry-run
+  ./tools/runner.sh install
+  ./tools/runner.sh status
+  ```
+  The restart adopts the running step, so J029 carries on. The defaults (`--public-every-s 60
+  --public-heartbeat-s 120`) meet rule 5.
+- **J019's leak is fixed in code** (mtg-table #39, in review): Forge removes the reveal permission a
+  moment after the card leaves play, and a frame could be cut in between. Once it merges, J027 re-runs
+  the decision-records pilot. Recordings from bf3dca7, including J029's, may still contain that rare
+  frame; the quarantine pass after J029 catches it.
+- Cloud cadence: step 1 (15 min). The J020 abort was a real finding, not an incident.
+
 ### 2026-10-03 14:05 (EDT)
 
 - **Cloud heartbeat: cadence step 1, 0 clean hours.** I read pc-results every 15 minutes

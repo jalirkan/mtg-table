@@ -1,5 +1,5 @@
-id: J024
-title: (was J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference
+id: J031
+title: (was J024, earlier J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference
 cpu: heavy
 repos: mtg-table@main (main once it merges)
 est: about one night (up to 1,500 games; the 20-vs-40 Elo test usually stops sooner)
