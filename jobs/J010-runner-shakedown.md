@@ -1,6 +1,7 @@
 id: J010
 title: Lab runner shakedown on the PC: units, memory limits, pause, resize, resume
 cpu: heavy
+after: J003
 repos: mtg-table@main
 est: ~25 min
 public_title: Lab runner shakedown
@@ -22,6 +23,9 @@ that the pools obey the control file under systemd; and that a resumable job sur
 runner restart. The cloud session verified the logic in node with fakes and the control
 file on one JVM at smoke size; this is the real thing. The steps that need a person are
 in the Report section; the runner does the rest unattended.
+
+
+**Run this only through the lab runner,** once the runner is installed (docs/guides/lab-runner.md) and J003 has finished. The PC session doesn't run it by hand.
 
 ## Pilot
 ```bash
