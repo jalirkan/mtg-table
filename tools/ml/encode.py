@@ -556,9 +556,13 @@ class TurnTally:
     spells_game: dict[int, int] = field(default_factory=dict)
     mulligans: dict[int, int] = field(default_factory=dict)
 
-    def apply(self, events: list[dict[str, Any]]) -> None:
+    def apply(self, events: list[dict[str, Any]], stack: list[dict[str, Any]] | None = None) -> None:
+        """A `cast` is a spell when its card moved to the stack in the same
+        batch, or when the state's own stack item says it is no ability (a
+        flush boundary can cut the cast from its zone move)."""
         to_stack = {e.get("cardId") for e in events
                     if e.get("kind") == "zone" and (e.get("to") or {}).get("zone") == "stack"}
+        spell_items = {it.get("id") for it in (stack or []) if it.get("isAbility") is False}
         for e in events:
             k = e.get("kind")
             if k == "turn":
@@ -569,7 +573,7 @@ class TurnTally:
                 self.lands_game[p] = self.lands_game.get(p, 0) + 1
             elif k == "cast":
                 p = e.get("controller")
-                if e.get("cardId") in to_stack:
+                if e.get("cardId") in to_stack or e.get("stackId") in spell_items:
                     self.spells_turn[p] = self.spells_turn.get(p, 0) + 1
                     self.spells_game[p] = self.spells_game.get(p, 0) + 1
                 else:
@@ -818,7 +822,7 @@ def encode_game(game: Game, schema: Schema, phases: list[str] | None = None) -> 
         if f.get("type") != "state":
             continue
         st = f.get("body") or {}
-        tally.apply(st.get("events") or [])
+        tally.apply(st.get("events") or [], st.get("stack"))
         if st.get("gameOver") or st.get("priority") != seat or st.get("phase") not in want:
             continue
         vec = encode_state(st, seat, schema, tally)
